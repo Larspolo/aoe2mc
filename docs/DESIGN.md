@@ -244,5 +244,12 @@ not walk, jump, shoot, attack or make sounds by itself. `units.SIEGE_CREW` holds
 | Trebuchet | `warden` | 0.6 unpacked, 0.36 packed | `game/trebuchet.py` sets the size when a pack or an unpack ends |
 | Bombard Cannon, Houfnice | `ghast` | 0.3 | |
 | Siege Tower | `sniffer` | 0.5 | the units inside ride the crew (`game/siege_tower.py`) |
-| War Wagon, Elite War Wagon | `horse` | 0.7 | |
 | Organ Gun, Rocket Cart, Cobra Car, Hussite Wagon | unchanged | 1.0 | a cart with the present crew |
+
+The War Wagon and the Elite War Wagon are no siege units in AoE2 (armor classes cavalry and archer): one `horse` pulls
+a cart (owner, #2737; AoE2 has two horses). The horse is the unit: it walks with `aoe moveto`, has the hit points and
+the name line, and shoots as a siege unit of the plugin (blast 0, `combat.range_command`). The cart is an
+`item_display` of a `chest` that rides the horse, behind it and down on the ground (`units.cart`, `CART_AT`,
+`CART_SCALE`). Its item has the `custom_model_data` `aoe2mc:war_wagon`: without a resource pack it is a vanilla chest;
+with `--resource-pack` the pack draws the cart model (`aoe2mc.cart_model`: plank walls, an iron rim, a plank roof,
+two wheels). A passenger keeps its own rotation, so the plugin turns the cart with its horse each tick (#2746).

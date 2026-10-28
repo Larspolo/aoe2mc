@@ -14,8 +14,8 @@ from game import ai, run
 
 
 def test_siege_units_are_minecarts():
-    assert all(units.siege(n) for n in ("BATTERING_RAM", "COBRA_CAR", "MANGONEL", "TREBUCHET", "WAR_WAGON"))
-    assert not any(units.siege(n) for n in ("MILITIA", "KNIGHT", "WAR_GALLEY", "PETARD", "VILLAGER_MALE"))
+    assert all(units.siege(n) for n in ("BATTERING_RAM", "COBRA_CAR", "MANGONEL", "TREBUCHET"))
+    assert not any(units.siege(n) for n in ("MILITIA", "KNIGHT", "WAR_GALLEY", "PETARD", "VILLAGER_MALE", "WAR_WAGON"))
 
 
 def test_the_speed_of_a_siege_unit_goes_through_the_plugin():

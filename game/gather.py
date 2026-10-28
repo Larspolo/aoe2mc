@@ -79,6 +79,7 @@ import relic_victory  # noqa: E402
 import repair  # noqa: E402
 import scenario  # noqa: E402
 import score  # noqa: E402
+import spectator  # noqa: E402
 import siege_tower  # noqa: E402
 import sudden_death  # noqa: E402
 import stance  # noqa: E402
@@ -136,6 +137,7 @@ MINES = {t['name']: tuple(t['mine']) for t in ROWS if 'mine' in t}   # as in AoE
 MINE_BLOCKS = {"gold": ("gold_ore", "raw_gold_block", "stone"),                # the blocks of the converter's heap
                "stone": ("cobblestone", "andesite", "stone", "tuff")}
 STEPS = [(dx, dz) for dx in (-1, 0, 1) for dz in (-1, 0, 1) if dx or dz]
+CLOSED = 2000                # cells: a search this long checks if its goals are in a closed region (Map.closed, #2881)
 NUMBER = r"(-?[\d.]+(?:E-?\d+)?)[df]"
 CIVILIANS = tuple(t['name'] for t in ROWS if t.get('civilian'))
 SELECT = "aoe2mc.selected"                                         # entity tag of the selected units
@@ -413,7 +415,7 @@ class Map:
             if d > dist[c]:
                 continue
             seen += 1
-            if limit and seen > limit:
+            if limit and seen > limit or seen == CLOSED and self.closed(start, goals, ok, water):
                 return None
             x, z = c
             for dx, dz in STEPS:
@@ -427,6 +429,28 @@ class Map:
                     dist[n], prev[n] = nd, c
                     heapq.heappush(todo, (nd + h(*n), -nd, n))
         return None
+
+    def closed(self, start, goals, ok, water=False, cap=None):
+        """True when the goals are in a closed region of fewer than cap cells without start: a flood from the goals
+        (the steps of path() are the same both ways) ends before cap cells. path() stops then after CLOSED cells: a
+        search to an enclosed goal looked at all PATH_CELLS cells, 0.7 s each, and an order of 13 units of de-64.3
+        held the live replay for 8 s (#2881). A flood before each search made the many short searches slow."""
+        todo, cap = [c for c in goals if ok(*c)], cap or 2 * CLOSED
+        seen = set(todo)
+        while todo:
+            x, z = todo.pop()
+            for dx, dz in STEPS:
+                n = (x + dx, z + dz)
+                if n == start and (not dx or not dz or ok(x + dx, z) and ok(x, z + dz)):
+                    return False                                    # a step from start ignores the height (path())
+                if n in seen or not ok(*n) or not water and abs(self.y(*n) - self.y(x, z)) > 1 or \
+                        dx and dz and not (ok(x + dx, z) and ok(x, z + dz)):
+                    continue
+                if len(seen) >= cap:
+                    return False
+                seen.add(n)
+                todo.append(n)
+        return True
 
     def pick_ground(self, eye, d, reach=64):
         """The block cell (x, z) of the ground that the ray from eye in direction d hits first, or None."""
@@ -812,7 +836,7 @@ class Gather:
         pos = self.positions([u for u, n in self.soldiers.items() if n == self.soldiers[uuid]])
         if uuid not in pos:
             return
-        near = {u for u, p in pos.items() if math.dist(p, pos[uuid]) <= TYPE_REACH}
+        near = {u for u, p in pos.items() if math.dist(p, pos[uuid]) <= TYPE_REACH} - self.unpickable()
         for u in sorted(self.selected - near):
             self.command(f"data merge entity {u} {{Glowing:0b}}")
             self.command(f"tag {u} remove {SELECT}")
@@ -857,7 +881,7 @@ class Gather:
             self.command(f"aoe box-clear {name}")
         (x0, x1), (z0, z1) = sorted((first[0], cell[0])), sorted((first[1], cell[1]))
         pos = {k: v.pos for k, v in self.villagers.items()} | self.positions(list(self.soldiers) + sorted(self.herd()))
-        inside = {u for u, p in pos.items() if x0 <= p[0] < x1 + 1 and z0 <= p[2] < z1 + 1} - garrison.inside(self)
+        inside = {u for u, p in pos.items() if x0 <= p[0] < x1 + 1 and z0 <= p[2] < z1 + 1} - self.unpickable()
         pick = inside & self.soldiers.keys() or inside - self.flock or inside   # herdables come last (#1791)
         self.choose(pick, min(pick, default=None))
         self.command(f"title {name} actionbar " + json.dumps({"text": f"Selected: {len(pick)} units"}))
@@ -1396,7 +1420,12 @@ class Gather:
         army = self.selected and self.selected <= set(self.soldiers)
         hunters = self.selected & self.villagers.keys()               # villagers take an animal to hunt (#1058)
         return (set(self.soldiers) | (set(self.enemies) if army else set()) | (set(self.prey) if hunters else set())
-                | self.herd()) - garrison.inside(self)
+                | self.herd()) - self.unpickable()
+
+    def unpickable(self):
+        """The UUIDs that no click selects: the units inside a building (garrison.inside, #808) and the units of a
+        trigger "Disable Object Selection" (scenario.selection, #2854)."""
+        return garrison.inside(self) | vars(self).get("unselectable", set())
 
     def herd(self):
         """The UUIDs of the live own herdable animals (#1791): a right click selects them, as in AoE2."""
@@ -1407,7 +1436,7 @@ class Gather:
         of the mark) or None. kind: "enemy" or "unit" (key: UUID), "fort" (target UUID), "building" (an own footprint
         that takes a garrison or trains units), "tree", "mine", "bush", "farm" (tile) or "ground" (block cell).
         places: {UUID: feet} of pickable(). The click and the pointing mark use it, so both pick the same (#989)."""
-        held = garrison.inside(self)
+        held = self.unpickable()
         at = {k: v.pos for k, v in self.villagers.items() if k not in held} | \
             {k: p for k, p in places.items() if k in self.pickable()}
         if u := pick_unit(eye, d, at):
@@ -1929,6 +1958,7 @@ class Gather:
             elif self.victory == "king-of-the-hill":                   # the monument in the center (#2360)
                 hill.tick(self, self.tick * NORMAL)
             score.tick(self)
+            spectator.tick(self)                                       # the sidebar of the spectators (#2900)
             if self.victory in ("time-limit", "score"):                # after the conquest: it wins before (#2356)
                 time_limit.tick(self, self.tick * NORMAL)
             treaty.tick(self, self.tick * NORMAL)

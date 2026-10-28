@@ -196,3 +196,6 @@ Moved from `docs/LEARNINGS.md` (improve run, 2026-10-26).
 - A new player gets an item through the datapack pulse (`item replace entity @s weapon.offhand`, a tag against
   repeats), not through `Data.Player` of `level.dat`: the 26.3 client ignored a `Player` tag that the converter
   wrote (#966). The datapack also works on a server, where `level.dat` has no player.
+- A unit in a chunk that is not loaded is no entity for a command: `execute unless entity @e[tag=X]` is true before a
+  player comes near, so a "unit is dead" test fired at once on a server with no player (#2618). Test the absence only
+  where the unit was: a `marker` entity that follows the unit each tick is not loaded either (`OBJECT_TESTS`).

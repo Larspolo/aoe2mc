@@ -8,6 +8,8 @@ The heal aura (aura, #2432): the complete Settlements of a Muisca player heal th
 5/10/15/15 hit points per AoE2 minute in the Dark/Feudal/Castle/Imperial Age (civs.HEAL_AURA, the key "heal_aura").
 The Achaemenid Military Town Center (military, #2496): the own military units within 16 tiles of it heal 20 hit points
 per AoE2 minute and walk 15 % faster (the "aura" of its line in game/data/train.jsonl, train.ONE_BUILDING).
+The heroes (heroes, #2688): an own unit with the key "regen" of data/units.jsonl (combat.REGEN: Attila the Hun and
+Alaric the Goth of Battle Royale, 30 hit points per AoE2 minute) regenerates in each civilization and age.
 
 Minecraft feature: the same Health change as the monk heal (monk.py). The `regeneration` effect is not used: its rates
 (1 health per 50, 25, 12 ... ticks) do not match the AoE2 rates, and the plugin cancels the natural heal of AoE2 units
@@ -30,6 +32,7 @@ def tick(g, dt):
     import combat                                                  # combat imports gather, gather imports this module
     aura(g, dt)
     military(g, dt)
+    heroes(g, dt)
     if civs.civ(g) not in civs.REGEN:
         return
     g.regen_time = vars(g).get("regen_time", 0.0) + dt
@@ -49,6 +52,20 @@ def tick(g, dt):
             new = round(min(h[1], h[0] + rate * dt / 60), 3)
             g.command((repair.crew(u) + "data modify entity @s" if ship else f"data modify entity {u}")
                       + f" Health set value {new}f")
+
+
+def heroes(g, dt):
+    """Give the own units of combat.REGEN (the heroes) their hit points of dt AoE2 seconds back."""
+    import combat                                                  # combat imports gather, gather imports this module
+    if not (names := {u: n for u, n in vars(g).get("soldiers", {}).items() if n in combat.REGEN}):
+        return
+    g.hero_time = vars(g).get("hero_time", 0.0) + dt
+    if g.hero_time < EVERY:
+        return
+    dt, g.hero_time = g.hero_time, 0.0
+    for u, n in sorted(names.items()):
+        if (h := monk.health(g, u)) and h[0] < h[1]:
+            g.command(f"data modify entity {u} Health set value {round(min(h[1], h[0] + combat.REGEN[n] * dt / 60), 3)}f")
 
 
 def aura(g, dt):

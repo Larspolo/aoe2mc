@@ -280,10 +280,12 @@ def has(what, name):
 
 def cost(g, name, base, player=None):
     """The cost `base` ({resource: amount}) of name with the cost bonuses of the civilization of the player of g, or of
-    another player (an ally: repair.cost, #1361)."""
+    another player (an ally: repair.cost, #1361). A cost of a scenario trigger (g.trigger_costs, #2776) wins."""
     import build                                                   # build imports gather, gather imports this module
     out, age = dict(base), build.ages(g)
     own = player is None or player == g.player
+    if own and name in vars(g).get("trigger_costs", {}):            # "Change Object Cost" of a scenario (#2776)
+        return dict(g.trigger_costs[name])
     for what, r, c in [*COSTS.get(civ(g, player), []), *policy(g)[1].get("costs", ()) * own]:   # (#2485)
         if has(what, name):
             for k in [r] if r else list(out):
@@ -310,6 +312,8 @@ def missing(g, name):
     The AoE2 setting "Full Tech Tree" (aoe2mc.json "full_tech_tree", run.py --full-tech-tree) also gives the ONLY items,
     with the exceptions of FULL (#2354)."""
     import gather                                                  # gather imports this module
+    if name in vars(g).get("trigger_menus", {}):                   # "Enable/Disable Object" of a scenario (#2775)
+        return not g.trigger_menus[name]
     c = real(g)
     if g.data.get("full_tech_tree") and (f := FULL.get(name)) != "own" and (f or name in GENERIC or name in ONLY):
         return f == "none"

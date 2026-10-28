@@ -15,6 +15,7 @@ Usage:
     python3 game/run.py WORLD --play --record F.jsonl  # Record Game: --replay --replay-file F.jsonl plays it (#2649)
     python3 game/run.py WORLD --play --bot --treaty 20:00   # the AoE2 setting "Treaty length": no attack before 20:00 (#2297)
     python3 game/run.py WORLD --play --reveal all  # no fog of war: also the enemy units out of sight show (game/fog.py)
+    python3 game/run.py WORLD --play --reveal explored  # the whole map starts explored on the minimap (#2932)
     python3 game/run.py WORLD --play --speed 2     # twice the AoE2 Normal speed: /tick rate 40 and shorter steps (#2057)
     python3 game/run.py WORLD --play --resources high  # the AoE2 setting "Starting resources" (#2264)
     python3 game/run.py WORLD --play --age castle      # the AoE2 setting "Starting age" (#2265)
@@ -153,11 +154,79 @@ SPIGOT = "world-settings:\n  default:\n    entity-activation-range:\n" + "".join
     f"      {k}: 0\n" for k in ("animals", "monsters", "raiders", "misc", "water", "villagers", "flying-monsters"))
 
 
-def properties(game_port, rcon_port, password):
+PROMPT = "The units of aoe2mc need this resource pack: they get the look of AoE2."
+
+
+def pack_file(world):
+    """resourcepacks/resources.zip of the world (--resource-pack, #2738), or None."""
+    path = os.path.join(world, "resourcepacks", "resources.zip")
+    return path if os.path.isfile(path) else None
+
+
+RELEASE = os.path.join(HERE, "release.json")                        # the tag and pack SHA-1 of a bundle (#2741)
+RELEASE_URL = "https://github.com/Larspolo/aoe2mc/releases/download/{tag}/aoe2mc-resourcepack.zip"
+
+
+class ReleasePack:
+    """The resource pack of the GitHub release of the bundle (#2741): the players download it from there."""
+
+    def __init__(self, url, sha1):
+        self.url, self.sha1 = url, sha1
+
+    def stop(self):
+        pass
+
+
+def pack_source(path):
+    """The source of the world pack path for the players: the release link when the app bundle (sys.frozen) has
+    RELEASE (the workflow bundles.yml writes it on a tag) and the world pack has the SHA-1 of the release pack; else
+    the local PackServer (#2740). A world of another version has another pack: the client refuses a wrong SHA-1."""
+    sha1 = hashlib.sha1(open(path, "rb").read()).hexdigest()
+    release = json.load(open(RELEASE)) if getattr(sys, "frozen", False) and os.path.isfile(RELEASE) else {}
+    if release.get("tag") and release.get("sha1") == sha1:
+        return ReleasePack(RELEASE_URL.format(tag=release["tag"]), sha1)
+    return PackServer(path)
+
+
+class PackServer:
+    """Serve only the resource pack of the world over HTTP on 127.0.0.1 (#2740): the Minecraft server does not host
+    it, it sends only the URL and the SHA-1 to each player who joins."""
+
+    def __init__(self, path):
+        import http.server
+        data = open(path, "rb").read()
+        self.sha1 = hashlib.sha1(data).hexdigest()
+
+        class Handler(http.server.BaseHTTPRequestHandler):
+            def do_GET(h):
+                if h.path != "/resources.zip":
+                    return h.send_error(404)
+                h.send_response(200)
+                h.send_header("Content-Type", "application/zip")
+                h.send_header("Content-Length", str(len(data)))
+                h.end_headers()
+                h.wfile.write(data)
+
+            def log_message(h, *args):
+                pass
+
+        self.http = http.server.ThreadingHTTPServer(("127.0.0.1", 0), Handler)   # port 0: a free port, no race
+        self.url = f"http://127.0.0.1:{self.http.server_address[1]}/resources.zip"
+        threading.Thread(target=self.http.serve_forever, daemon=True).start()
+
+    def stop(self):
+        self.http.shutdown()
+        self.http.server_close()
+
+
+def properties(game_port, rcon_port, password, pack=None):
     """server.properties: only local players can join (127.0.0.1). They play in creative mode (#292).
     A missing white-list becomes "true" in 26.3: then no player can join (#285). Each player is an operator
-    (op_joined): the output of RCON and console commands (the "fill" of a falling building) must not go to its chat (#1799)."""
-    return (f"online-mode=false\nserver-ip=127.0.0.1\nserver-port={game_port}\nwhite-list=false\n"
+    (op_joined): the output of RCON and console commands (the "fill" of a falling building) must not go to its chat (#1799).
+    pack: the PackServer of the world (#2740) or its ReleasePack (#2741). The units have no vanilla look without it: the player must accept it."""
+    extra = (f"resource-pack={pack.url}\nresource-pack-sha1={pack.sha1}\nrequire-resource-pack=true\n"
+             f"resource-pack-prompt={json.dumps({'text': PROMPT})}\n") if pack else ""
+    return extra + (f"online-mode=false\nserver-ip=127.0.0.1\nserver-port={game_port}\nwhite-list=false\n"
             f"enable-rcon=true\nrcon.port={rcon_port}\nrcon.password={password}\n"
             "spawn-protection=0\nmax-tick-time=-1\nenable-query=false\nbroadcast-rcon-to-ops=false\n"
             "broadcast-console-to-ops=false\n"
@@ -182,16 +251,22 @@ def batches(cmds, limit=rcon.MAX):
     return out
 
 
+SPECTATORS = ('team add spec "Spectators"', "team modify spec color gray")   # the team of the spectators (#2898)
+
+
 class Game:
     """A running server with an RCON connection. Use it in a `with` block, so that the server always stops.
     people: the people of a game (`--people`); sides: Minecraft name -> AoE2 player (#1310)."""
     people = 1
+    spectators = frozenset()                         # the Minecraft players without a side (#2898)
 
     def __init__(self, world, version=mc_check.DEFAULT_VERSION, timeout=300, server="paper"):
         self.world, self.version, self.timeout, self.kind = os.path.abspath(world), version, timeout, server
         self.server = self.rcon = None
         self.lock, self.seen = threading.Lock(), 0     # the op thread and the game send commands
         self.sides = {}
+        import units                                 # a world with the resource pack: own armor and weapons (#2742, #2744)
+        units.ASSETS = pack_file(self.world) is not None
 
     def start(self):
         java, jvm, plugins = mc_check.java_for(self.version), [], []
@@ -212,8 +287,10 @@ class Game:
         for p in plugins:
             os.makedirs(os.path.join(self.folder, "plugins"), exist_ok=True)
             shutil.copy(p, os.path.join(self.folder, "plugins", "aoe2mc-plugin.jar"))
+        path = pack_file(self.world)
+        self.pack = pack_source(path) if path else None
         with open(os.path.join(self.folder, "server.properties"), "w") as f:
-            f.write(properties(self.game_port, self.port, password))
+            f.write(properties(self.game_port, self.port, password, self.pack))
         if self.kind == "paper":
             with open(os.path.join(self.folder, "spigot.yml"), "w") as f:
                 f.write(SPIGOT)
@@ -253,11 +330,17 @@ class Game:
     def side(self, name):
         """Put Minecraft player name on the team of its AoE2 player in a game of more people (decision #1308, option
         A): the join order. The first one gets player 1, the second player 2; a later one gets no side. A player who
-        joins again keeps its side. A later menu (option C) changes this table only."""
+        joins again keeps its side. A later menu (option C) changes this table only. A later one is a spectator (#2898):
+        the game mode spectator flies through blocks and uses no items, and the team spec is no team of a player, so
+        no Gather reads its clicks (Gather.who). With one person all Minecraft players play player 1 (who "@a")."""
         n = self.sides.get(name) or next((k for k in range(1, self.people + 1) if k not in self.sides.values()), 0)
         if self.people > 1 and n:
             self.sides[name] = n
             self.command(f"team join p{n} {name}")
+        elif self.people > 1:
+            for cmd in [*SPECTATORS * (not self.spectators), f"team join spec {name}", f"gamemode spectator {name}"]:
+                self.command(cmd)                    # a join again: force-gamemode made it creative
+            self.spectators = {*self.spectators, name}
 
     def choose(self, name, n):
         """The menu "Choose your player" (lobby.py, #1563): Minecraft player name plays AoE2 player n, when no other
@@ -266,6 +349,9 @@ class Game:
             return False
         self.sides[name] = n
         self.command(f"team join p{n} {name}")
+        if name in getattr(self, "spectators", ()):  # a spectator who takes a free side plays again (#2898)
+            self.spectators = self.spectators - {name}
+            self.command(f"gamemode creative {name}")
         return True
 
     def _op_loop(self):
@@ -294,6 +380,9 @@ class Game:
             except (OSError, subprocess.TimeoutExpired):
                 self.server.p.kill()
                 self.server.p.wait()
+        if getattr(self, "pack", None):
+            self.pack.stop()
+            self.pack = None
         if getattr(self, "folder", None):
             shutil.rmtree(self.folder, ignore_errors=True)
         if getattr(self, "usercache", None) and os.path.exists(self.usercache):
@@ -421,6 +510,8 @@ SETTINGS = {
     "teams": None,                    # {player: team or None} in place of the scenario's (team_choices, #2296)
     "treaty": "0:00",                 # "Treaty length" (MM:SS): before it no player can attack another (treaty.py, #2297)
     "turbo": False,                   # "Turbo Mode" (civs.turbo, #2359)
+    "unlock_speed": False,            # "Lock Speed" off: the button "Game speed" of the Game menu (diplomacy.faster, #2933)
+    "unlock_teams": False,            # "Lock Teams" off: the stance row of the Diplomacy page (diplomacy.STANCES, #2934)
     "victory": "standard",            # "Victory" (VICTORIES)
     "victory_value": None,            # the years of "time-limit", the points of "score" (time_limit.YEARS, POINTS)
 }
@@ -467,6 +558,7 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
     data["end_age"] = train.STARTS[settings["end_age"]]["ages"]  # the last age (build.locked, #2346)
     data["full_tech_tree"] = settings["full_tech_tree"]          # (#2354)
     data["turbo"] = settings["turbo"]                            # (#2359)
+    data["unlock_teams"] = settings["unlock_teams"]              # diplomacy.items (#2934)
     data["shared_exploration"] = settings["shared_exploration"] == "on"   # fog.shares (#2602)
     data["resources"] = settings["resources"]                    # the Regicide start resources of the level (#2388)
     if settings["resources"] in gather.RANDOM:                   # each Gather picks the same level (gather.level, #2489)
@@ -477,11 +569,13 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
     g.reveal = reveal                                # "all": no fog of war for the units (fog.py, #1389)
     g.victory = settings["victory"]                              # Gather.run: the wonder and relic wins only in "standard"
     g.victory_value = settings["victory_value"]                  # time_limit.tick (#2356)
+    g.unlock_speed = settings["unlock_speed"]                    # the Game menu of player 1 (diplomacy.faster, #2933)
     if people > 1:                                   # one Gather for each person, in the join order (#1308, #1310)
         g.bots = [Side(make(n)) for n in range(2, people + 1)]
         for s in g.bots:                             # the same trees, bushes and mines, as with a bot
             s.g.map.trees, s.g.map.bushes, s.g.map.mines = g.map.trees, g.map.bushes, g.map.mines
             s.g.reveal, s.g.peers = reveal, [g, *(o.g for o in g.bots)]   # its fog sees all units (#1631)
+            s.g.unlock_speed = settings["unlock_speed"]          # each person has the Game menu (#2933)
         for name in list(game.sides):                # players who joined before the teams were there
             game.side(name)
         print(f"{people} people: the first Minecraft player who joins plays player 1, the second player 2.",
@@ -709,8 +803,9 @@ def main(argv=None):
                     "from this game time (default 10:00)")
     ap.add_argument("--treaty", default="0:00", metavar="MM:SS", help="--play: the AoE2 setting \"Treaty length\": "
                     "no player can attack another player before this game time (default 0:00: no treaty)")
-    ap.add_argument("--reveal", choices=["normal", "all"], default="normal", help="--play: AoE2 \"Reveal map\" "
-                    "(default normal: enemy units out of sight are hidden; all: all units show)")
+    ap.add_argument("--reveal", choices=["normal", "explored", "all"], default="normal", help="--play: AoE2 \"Reveal "
+                    "map\" (default normal: enemy units out of sight are hidden; explored: also, but the whole map "
+                    "starts explored on the minimap; all: all units show)")
     ap.add_argument("--age", choices=["dark", "feudal", "castle", "imperial", "post-imperial"], default="dark",
                     help="--play: the AoE2 setting \"Starting age\" of each player, with the technologies of the "
                     "earlier ages (default dark; post-imperial: all technologies)")
@@ -738,6 +833,10 @@ def main(argv=None):
                     "through the own units and buildings)")
     ap.add_argument("--turbo", action="store_true", help="--play: the AoE2 setting \"Turbo Mode\": buildings, "
                     "gatherers and builders work 2.5 times faster (not villagers, trade units, castles, towers, wonders)")
+    ap.add_argument("--unlock-speed", action="store_true", help="--play: the AoE2 setting \"Lock Speed\" off: the "
+                    "button \"Game speed\" of the Game menu changes the speed of the game (1, 1.5, 2, as --speed)")
+    ap.add_argument("--unlock-teams", action="store_true", help="--play: the AoE2 setting \"Lock Teams\" off: each "
+                    "player sets its stance (ally, neutral, enemy) to each other player on the Diplomacy page")
     ap.add_argument("--mode", choices=sorted(MODES), default="standard", help="--play: the AoE2 game mode (default "
                     "standard; " + "; ".join(f"{k}: {v['help']}" for k, v in sorted(MODES.items()) if k != "standard") + ")")
     ap.add_argument("--empire-wars", action="store_true", help="--play: the AoE2 setting \"Empire Wars Mode\" on top "

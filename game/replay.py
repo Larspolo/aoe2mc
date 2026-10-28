@@ -70,6 +70,9 @@ EFFECT = "aoe2mc.effect"    # entity tag of the texts above a building (#843)
 FOLLOWED = "aoe2mc.followed"  # the tag of the entity that the spectators of --follow look through (#1095)
 TRAIL = 3                   # tiles: a follower farther than this from its target walks to it again (#2551)
 TRAIL_MS = 1000             # ms of game time between two checks of the followers (#2551)
+FIGHT_MS = 60000            # ms of game time: an attack order this near in time to one of a fight joins it (#2948)
+FIGHT_TILES = 12            # tiles: an attack order this near to one of a fight joins it (#2948)
+FIGHT_UNITS = 10            # attacking units of a large fight (#2948)
 FAR = 8                     # tiles: a target unit this far from the tile of the ORDER (its place in AoE2) is no attack
                             # target: in de-64.3 a spearman chased a villager 200 blocks from it across the map (#2635)
 FOLLOW_MS = 15000           # ms of game time: the camera of --follow changes its unit at most this often (#738)
@@ -190,6 +193,46 @@ def runs(cmd, tiles):
             out, line = out + [line], cmd
         line += f" {y},{x},{x}"
     return out + [line] * (line != cmd)
+
+
+def owners(objects, events):
+    """{object ID: player} of a record (#2948): the start objects (`ref`, no animals: a herd changes its owner) and
+    each ID that a player selects in a command (a player selects only own units and buildings)."""
+    out = {o["ref"]: o["player"] for o in objects
+           if o.get("ref") is not None and o.get("player") and not units.animal(o["name"])}
+    for e in events:
+        if e["kind"] in aoe2mc.UNIT_USE | aoe2mc.BUILDING_USE and e.get("player"):
+            out.update(dict.fromkeys(e.get("objects", ()), e["player"]))
+    return out
+
+
+def fights(events, owner):
+    """The large fights of a record (#2948): the record has no deaths (#1086), so a fight is a group of attack orders
+    (an ORDER on a unit or building of another player, not of Gaia, and an ATTACK_MOVE), each less than FIGHT_MS and FIGHT_TILES from
+    another one of the group, of two or more players and FIGHT_UNITS or more attacking units. owner: owners().
+    Returns [{"start", "end" (ms), "tile" [x, y], "players", "units"}], the largest first."""
+    groups = []
+    for e in events:
+        p, t = e.get("player"), e.get("target")
+        if "tile" not in e or not p or not (e["kind"] == "attack_move" or
+                                            e["kind"] == "order" and owner.get(t) not in (None, 0, p)):
+            continue
+        near = [g for g in groups if e["time"] - g[-1]["time"] <= FIGHT_MS
+                and any(math.dist(e["tile"], f["tile"]) <= FIGHT_TILES for f in g)]
+        for g in near[1:]:                                          # the order joins two groups
+            near[0] += g
+            groups.remove(g)
+        if near:
+            near[0].append(e)
+        else:
+            groups.append([e])
+    out = []
+    for g in groups:
+        players, ids = sorted({e["player"] for e in g}), {i for e in g for i in e.get("objects", ())}
+        if len(players) > 1 and len(ids) >= FIGHT_UNITS:
+            out.append({"start": min(e["time"] for e in g), "end": max(e["time"] for e in g), "players": players,
+                        "tile": [round(sum(e["tile"][k] for e in g) / len(g), 1) for k in (0, 1)], "units": len(ids)})
+    return sorted(out, key=lambda f: (-f["units"], f["start"]))
 
 
 def sail(g, v):
@@ -736,6 +779,37 @@ class Replay:
             [f"execute as @a[gamemode=spectator] run spectate @e[tag={FOLLOWED},limit=1] @s"] * \
             (getattr(self.game, "kind", "paper") == "vanilla")
 
+    @functools.cached_property
+    def trainings(self):
+        """aoe2mc.training of the timeline: (end ms, QUEUE event, building ID) for each unit."""
+        self.unknown_research
+        return aoe2mc.training(self.data.get("timeline", ()), research=True)
+
+    def production(self, t):
+        """{player: [(name, count, start, end), ...]}: the units in training or in the queue of their building at game
+        time t (ms, #2809), grouped by name in the order of the next end; start and end are those of the first one.
+        A technology in research or in the queue is (name, start, end, kind), kind "age" for an age-up (#2810)."""
+        out, tech = {}, {}
+        for end, e, _ in self.trainings:
+            if e["kind"] == "research" and e["time"] <= t < end:
+                n = e["technology"]
+                tech.setdefault(e["player"], []).append(
+                    (n, end - aoe2mc.RESEARCH_S[n] * 1000, end, "age" if n.endswith(" Age") else "research"))
+            elif e["time"] <= t < end and e.get("name"):
+                out.setdefault(e["player"], {}).setdefault(e["name"], []).append(end)
+        return {p: sorted([(n, len(ends), min(ends) - aoe2mc.train_ms(n), min(ends))
+                           for n, ends in out.get(p, {}).items()] + tech.get(p, []), key=lambda item: item[2] if isinstance(item[3], str) else item[3])
+                for p in sorted(set(out) | set(tech))}
+
+    @functools.cached_property
+    def unknown_research(self):
+        """The technologies of the timeline with no RESEARCH_S value: no production item, one log line (#2810)."""
+        names = sorted({e.get("technology", "") for e in self.data.get("timeline", ())
+                        if e["kind"] == "research" and e.get("technology", "") not in aoe2mc.RESEARCH_S})
+        if names:
+            print(f"research with no time (not in the production): {', '.join(names)}", file=sys.stderr)
+        return names
+
     def spawns(self):
         """A "spawn" event for each unit that a QUEUE command trains, at the end of its training."""
         return [{"time": end, "player": e["player"], "kind": "spawn", "type": e["type"], "name": e["name"],
@@ -814,7 +888,7 @@ class Replay:
         v.name, v.player, v.job = e["name"], e["player"], start_job(e["name"])
         self.new.append((e["player"], v))
         self.pop[e["player"]] = self.pop.get(e["player"], 0) + 1
-        out = [f"summon {kind} {pos[0]} {pos[1]} {pos[2]} {nbt.snbt()}"]
+        out = [f"summon {kind} {pos[0]} {pos[1]} {pos[2]} {units.summon_snbt(nbt)}"]
         if self.ai:                                                 # the AoE2 values: plugin commands (#632)
             import combat                                           # combat -> gather -> build -> replay
             out += [combat.stats_command(v.uuid, v.name)] + [c for c in [combat.range_command(v.uuid, v.name, self.T)] if c]
@@ -823,13 +897,24 @@ class Replay:
 
     def rally(self, e, v):
         """The unit v of spawn event e walks to the gather point of its building, with a temporary negative ID, as
-        after a MOVE (a point on the ground) or an ORDER (a point on a resource or an object). Returns the commands."""
+        after a MOVE (a point on the ground) or an ORDER (a point on a resource or an object). Returns the commands.
+        A point on the ground: the free cell nearest to it that no other unit stands on or walks to (#2880), so that
+        the collision of the entities does not push the units of one gather point apart."""
         p = self.points.get(e.get("building"))
         if p is None:
             return []
         self.rallied += 1
         i = -self.rallied
         self.units[i] = v
+        if p.get("target") is None and p.get("tile"):
+            m, T = self.grid(), self.T
+            tx, tz = p["tile"][0] * T, p["tile"][1] * T
+            taken = {tuple(u.path[-1]) if u.path else u.cell for u in self.units.values() if u is not v}
+            free = [(x, z) for x in range(int(tx) - 2 * T, int(tx) + 2 * T + 1)
+                    for z in range(int(tz) - 2 * T, int(tz) + 2 * T + 1) if m.free(x, z) and (x, z) not in taken]
+            if free:                                                    # formation() keeps a cell of a group of one
+                c = min(free, key=lambda c: ((c[0] - tx) ** 2 + (c[1] - tz) ** 2, c))
+                p = dict(p, tile=[c[0] / T, c[1] / T])
         return self.move(dict(p, time=e["time"], kind="order" if p.get("target") is not None else "move",
                               objects=[i], names=[v.name]))
 
@@ -1480,15 +1565,17 @@ class Replay:
 
     def go(self, i, v, tile, path, t):
         """Unit i walks on path to its resource `tile` from game time t on, and gathers there. Returns the commands
-        (Paper: the first leg)."""
+        (Paper: the first leg). An empty path on Paper: an order to its cell all the same. The replay unit is there, but
+        its entity can be on the way to an old goal: a builder of de-64.3 walked on 30 blocks and stood there (#2634)."""
         v.tree = tile
-        if self.ai and path and not ship(v.name):                  # a boat has no path finding: /tp steps
-            cmds, due = self.order(v, path[LEG - 1:-1:LEG] + [path[-1]], t)
+        if self.ai and not ship(v.name):                            # a boat has no path finding: /tp steps
+            cmds, due = self.order(v, path[LEG - 1:-1:LEG] + [path[-1]] if path else [v.cell], t)
             if v.path:
                 self.moving[i] = due
             else:
                 self.moving.pop(i, None)                            # it was on a walk: it stops (#1177)
                 self.start(i, v, due)
+                self.rest(i, due)                                   # a builder has no work check: settle()
             return cmds
         v.path = path
         due = self.next_step(v, t)
@@ -2248,3 +2335,16 @@ class Replay:
         span = (events[-1]["time"] - start) / 1000 / speed if events else 0                 # at the start speed
         return {"events": n, "commands": self.sent, "busy": round(self.busy, 2), "lag": round(lag, 2),
                 "rate": round(self.sent / self.busy) if self.busy else 0, "need": round(self.sent / span) if span else 0}
+
+
+if __name__ == "__main__":
+    import argparse
+    ap = argparse.ArgumentParser(description="Information of a recorded game for the live replay.")
+    ap.add_argument("record", help="the .aoe2record file")
+    ap.add_argument("--fights", action="store_true", help="print the large fights of the record (#2948)")
+    a = ap.parse_args()
+    if a.fights:
+        timeline = aoe2mc.read_timeline(a.record) or []
+        for f in fights(timeline, owners(aoe2mc.read_record(a.record)[5], timeline)):
+            print(f"{mmss(f['start'])}-{mmss(f['end'])} tile ({f['tile'][0]:g}, {f['tile'][1]:g}) "
+                  f"players {', '.join(map(str, f['players']))} units {f['units']}")

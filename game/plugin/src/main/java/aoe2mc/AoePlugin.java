@@ -35,6 +35,7 @@ import org.bukkit.entity.Camel;
 import org.bukkit.entity.Creeper;
 import org.bukkit.entity.Display;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.ItemDisplay;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Minecart;
 import org.bukkit.entity.Mob;
@@ -108,10 +109,14 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *                                              a gate of the team (#1325, Gates.java): its iron bars in the box rise
  *                                              while an own or allied unit is near or walks a path through it; the
  *                                              units of the team plan their paths with the gate raised (#1656)
+ *   aoe gate lock|unlock <x> <z>               the trigger effects "Lock Gate", "Unlock Gate" (#2762): the gates
+ *                                              with the block column x z keep their bars down for all units
  *   aoe goals <selector>                       the goals of the first unit (#436), for checks
  *   aoe hide <players> <uuid> ...              Player#hideEntity: the players do not see these entities, also a
  *                                              player that joins later (#1302: the enemy units out of sight in the
  *                                              view of one replay player)
+ *   aoe hide <players> view <uuid> ...         the same for these players only (the view of a spectator, #2901):
+ *                                              the minimap and a player that joins later do not change
  *   aoe stance <selector> <aggressive|defensive|stand_ground|no_attack>
  *                                              the AoE2 stance of a unit (#1104): no_attack never attacks without an
  *                                              order, stand_ground attacks only an enemy in its range and does not walk,
@@ -373,6 +378,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     private static final double CHASE = 12.0;
     private static final double MELEE = 2.0;          // stand ground: the blocks to an enemy that a melee unit attacks
     static final String CARRIER = "aoe2mc.carrier";                  // the tag of the mob that carries a siege unit
+    static final String NO_TARGET = "aoe2mc.notarget";               // no unit or tower chooses it as a target (#2826)
     private static final double[] CLIMB = {0.75, 0.15};               // up and forward (blocks per tick) out of water
     private static final double STEP = 1.25;                         // a step of 1 block with snow[layers=2] (#851)
     private static final double CARRIER_SCALE = 0.3;                 // a pig of 0.27 blocks: the minecart stays low
@@ -992,6 +998,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         Bukkit.getScheduler().runTaskTimer(this, ghost::tick, 1L, 1L);
         Bukkit.getScheduler().runTaskTimer(this, border::tick, 4L, 4L);
         Bukkit.getScheduler().runTaskTimer(this, this::siege, 1L, 1L);
+        Bukkit.getScheduler().runTaskTimer(this, this::carts, 1L, 1L);
         Bukkit.getScheduler().runTaskTimer(this, this::burn, 20L, 20L);
         Bukkit.getScheduler().runTaskTimer(this, this::watch, 20L, 20L);
         Bukkit.getScheduler().runTaskTimer(this, this::towers, 2L, 2L);
@@ -1158,6 +1165,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     // A mounted unit: the horse has the order, the rider the target (#710).
     private void attackBack(LivingEntity victim, LivingEntity attacker, Stats t) {
         if (victim instanceof Mob mob && idle(mob, t) && !sameTeam(mob, attacker)
+                && !attacker.getScoreboardTags().contains(NO_TARGET)
                 && mob.getLocation().distanceSquared(attacker.getLocation()) <= Math.pow(stanceRange(mob), 2)) {
             engage(mob, attacker);
             Mob fighter = rider(mob) != null ? rider(mob) : mob;      // it turns and swings first: its first hit
@@ -1695,6 +1703,21 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         }
     }
 
+    // The cart of a War Wagon (#2746) is an item display that rides its horse (units.cart). A passenger keeps its own
+    // rotation (Entity#positionRider moves it, but turns only a living passenger): the cart turns with the body of the
+    // horse here, so it stays behind the horse after a turn. No vanilla feature does it.
+    private void carts() {
+        for (UUID id : List.copyOf(stats.keySet())) {
+            if (Bukkit.getEntity(id) instanceof AbstractHorse h) {
+                for (Entity p : h.getPassengers()) {
+                    if (p instanceof ItemDisplay d && d.getYaw() != h.getBodyYaw()) {
+                        d.setRotation(h.getBodyYaw(), 0);
+                    }
+                }
+            }
+        }
+    }
+
     // aoe charge and aoe detonate (#2165): the values go to the crew of a ship, which has the AoE2 values (#1386).
     private boolean charges(CommandSender sender, String selector, Map<UUID, Charge> to, String ticks, String attack,
                             String shots, String blast, String bonus) {
@@ -2217,10 +2240,12 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     // team -> the teams that it is neutral to (aoe neutral, #1645): no automatic attack on their units, as in AoE2
     private static final Map<String, Set<String>> NEUTRAL = new HashMap<>();
 
-    /** True when the units of a do not attack b by themselves: the same side, an ally, or a neutral stance. */
+    /** True when the units of a do not attack b by themselves: the same side, an ally, a neutral stance, or the tag
+     *  NO_TARGET on b. */
     private static boolean calm(Entity a, Entity b) {
         String s = side(b);         // no side (the crew of a siege unit, #1820): Set.of().contains(null) throws
-        return sameTeam(a, b) || s != null && NEUTRAL.getOrDefault(side(a), Set.of()).contains(s);
+        return sameTeam(a, b) || s != null && NEUTRAL.getOrDefault(side(a), Set.of()).contains(s)
+                || b.getScoreboardTags().contains(NO_TARGET);       // "Disable Unit Targeting" of a trigger (#2826)
     }
 
     // team -> the elevation factors up, low, high (aoe elevation, #2307); the blocks of one level, 0: no rule
@@ -2260,13 +2285,14 @@ public final class AoePlugin extends JavaPlugin implements Listener {
 
     // The team name, else the player tag aoe2mc.pN: the pulse of the datapack puts a unit in its team only when its
     // chunk is loaded, and two units without a team are not enemies (#986: idle soldiers killed their neighbours).
+    // Gaia (the tag aoe2mc.p0 of the triggers, #2916) has no side.
     static String side(Entity e) {
         Team t = Bukkit.getScoreboardManager().getMainScoreboard().getEntityTeam(e);
         if (t != null) {
             return t.getName();
         }
         for (String tag : e.getScoreboardTags()) {
-            if (tag.matches("aoe2mc\\.p\\d+")) {
+            if (tag.matches("aoe2mc\\.p[1-9]\\d*")) {
                 return tag.substring(7);
             }
         }
@@ -2393,6 +2419,9 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         }
         if (args.length == 8 && args[0].equals("gate")) {              // the portcullis of a gate (#1325, #1656)
             return gates.command(sender, args);
+        }
+        if (args.length == 4 && args[0].equals("gate")) {              // lock and unlock a gate (#2762)
+            return gates.lock(sender, args);
         }
         if (args.length >= 2 && args[0].equals("minimap")) {           // #1237, #1238, #1567
             return minimap.command(sender, args);
@@ -2637,6 +2666,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         }
         if (args.length >= 3 && (args[0].equals("hide") || args[0].equals("show"))) {   // one command per second (#1302)
             boolean hide = args[0].equals("hide");
+            boolean view = args[2].equals("view");                     // only these players (#2901)
             var who = players(sender, args[1]);
             int n = 0;
             for (int i = 2; i < args.length; i++) {
@@ -2646,7 +2676,9 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                 } catch (IllegalArgumentException e) {
                     continue;
                 }
-                if (hide) {
+                if (view) {
+                    // the global set stays: the minimap dots and the players that join later (#2901)
+                } else if (hide) {
                     hidden.add(u);
                 } else {
                     hidden.remove(u);

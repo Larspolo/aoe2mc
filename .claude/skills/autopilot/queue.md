@@ -54,7 +54,10 @@ new sub-issues, no `needs-human`. Still answer an owner comment on it (step 3).
    feature list of `docs/ROADMAP.md` with the `roadmap` skill (the goals take turns). Priority: that of the epic, else `P3`. Never `P0` or `P1`, except for
    a `tooling` ticket that blocks other tickets. Look for duplicates first, and list the open issues again just
    before you make the tickets: parallel runs make the same follow-ups at the same time (#300, #301).
+   Run that list in its own tool call and read it before the create calls: a list and the creates in one call made 7 copies (#2778).
    Read the gap lists from main, not from your branch (`git fetch origin main`, `git show
    origin/main:tests/data/civ_bonuses.jsonl`), and also list the issues closed in the last 2 hours: #2340 copied
    #2309, which merged while the branch was 20 minutes old, and #2306 copied the closed #2249.
 4. Prefer tickets that depend on no open ticket and change other files than the claimed tickets (fewer conflicts).
+5. An epic takes at most 100 sub-issues (GitHub: 422 "Parent cannot have more than 100 sub-issues", #2538): a new
+   ticket of a full epic says "Part of #E" in its body only; name it in the refill comment on the epic.

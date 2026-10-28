@@ -1,9 +1,11 @@
 package aoe2mc;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -25,6 +27,8 @@ import org.bukkit.util.BoundingBox;
  * enemy unit cannot plan through the bars: it walks around the wall, or it stops at the bars. A gate goes when the
  * blocks above all its bars are air (destroyed: the plugin fills the box of a destroyed building with air).
  * A second call with the same box replaces the gate (a redraw after Fortified Wall).
+ * "aoe gate lock X Z" locks the gates with the block column X Z (the trigger effect "Lock Gate", #2762): their bars stay
+ * down for all units, so the path finding goes around. "aoe gate unlock X Z" ends the lock.
  */
 final class Gates {
     static final int PERIOD = 10;                         // ticks between two checks: a unit waits at most 0.5 s
@@ -36,6 +40,7 @@ final class Gates {
     private final Map<String, Gate> gates = new LinkedHashMap<>();
     private final Map<String, Boolean> open = new LinkedHashMap<>();
     private final Map<String, Integer> hold = new LinkedHashMap<>();   // gate -> the tick until which raise() keeps it open
+    private final Set<String> locked = new HashSet<>();   // the locked gates (#2762)
 
     boolean command(CommandSender sender, String[] args) {
         int[] v = new int[6];
@@ -72,6 +77,38 @@ final class Gates {
         return true;
     }
 
+    /** "aoe gate lock|unlock X Z": lock or unlock the gates with the block column X Z. A locked gate lowers its bars. */
+    boolean lock(CommandSender sender, String[] args) {
+        boolean on = args[1].equals("lock");
+        if (!on && !args[1].equals("unlock")) {
+            sender.sendMessage("Usage: aoe gate lock|unlock <x> <z>");
+            return true;
+        }
+        double x, z;
+        try {
+            x = Integer.parseInt(args[2]) + 0.5;
+            z = Integer.parseInt(args[3]) + 0.5;
+        } catch (NumberFormatException e) {
+            sender.sendMessage("Bad number: " + e.getMessage());
+            return true;
+        }
+        int n = 0;
+        for (Map.Entry<String, Gate> en : gates.entrySet()) {
+            BoundingBox b = en.getValue().box();
+            if (b.getMinX() <= x && x <= b.getMaxX() && b.getMinZ() <= z && z <= b.getMaxZ()) {
+                n++;
+                if (on && locked.add(en.getKey())) {
+                    hold.remove(en.getKey());
+                    set(en.getValue(), en.getKey(), false);
+                } else if (!on) {
+                    locked.remove(en.getKey());
+                }
+            }
+        }
+        sender.sendMessage((on ? "Locked " : "Unlocked ") + n + " gates");
+        return true;
+    }
+
     /** True when a gate exists. */
     boolean any() {
         return !gates.isEmpty();
@@ -82,7 +119,7 @@ final class Gates {
     void raise(Mob mob) {
         String side = AoePlugin.side(mob);
         gates.forEach((key, g) -> {
-            if (AoePlugin.allied(side, g.team()) && standing(g)) {
+            if (AoePlugin.allied(side, g.team()) && standing(g) && !locked.contains(key)) {
                 hold.put(key, Bukkit.getCurrentTick() + HOLD);
                 if (!open.getOrDefault(key, false)) {
                     set(g, key, true);
@@ -97,7 +134,14 @@ final class Gates {
             if (!standing(g)) {
                 open.remove(en.getKey());
                 hold.remove(en.getKey());
+                locked.remove(en.getKey());
                 return true;
+            }
+            if (locked.contains(en.getKey())) {                         // the bars stay down (#2762)
+                if (open.getOrDefault(en.getKey(), false)) {
+                    set(g, en.getKey(), false);
+                }
+                return false;
             }
             BoundingBox b = g.box();
             boolean near = Bukkit.getCurrentTick() < hold.getOrDefault(en.getKey(), 0);

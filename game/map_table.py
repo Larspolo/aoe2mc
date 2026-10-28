@@ -48,7 +48,9 @@ def score(g, name, objective):
 
 
 def tick(g):
-    """Send the selection of each player that clicked the framed map to the block of the pixel."""
+    """Send the selection of each player that clicked the framed map to the block of the pixel. With no selection,
+    move the view there, as a click on the AoE2 minimap: the player is the camera, so a tp to the ground that keeps
+    the yaw and pitch, the form of the trigger effect "Change View" (#2610, #2788)."""
     if not getattr(g, "paper", False):
         return
     who = g.who
@@ -60,5 +62,9 @@ def tick(g):
             continue
         g.command(f"scoreboard players reset {name} {CLICK}")
         x, z = score(g, name, X), score(g, name, Z)
-        if x is not None and z is not None and g.selected:
+        if x is None or z is None:
+            continue
+        if g.selected:
             g.walk_to(name, (x, z))
+        elif (y := g.map.y(x, z)) is not None:
+            g.command(f"tp {name} {x + 0.5} {y} {z + 0.5}")

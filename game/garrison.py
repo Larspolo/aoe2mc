@@ -36,7 +36,7 @@ import math
 
 import civs
 import table
-from aoe2mc import GARRISONED
+from aoe2mc import GARRISONED, MADE_INSIDE
 
 ROWS = table.load("buildings.jsonl")                            # the keys "garrison" and "arrows" (#2034)
 
@@ -170,9 +170,21 @@ def dock_order(g, player, rect):
     return rect
 
 
+def adopt(g):
+    """The units that a trigger made inside an own building ("Create Garrisoned Object", aoe2mc.MADE_INSIDE, #2764)
+    join its garrison, so UNGARRISON lets them out. The tag goes: each unit joins once."""
+    for u, (x, _, z) in g.where(None, f"@e[tag={MADE_INSIDE},tag=aoe2mc.p{g.player}]").items():
+        rect = next((r for r in holders(g) if r[0] <= x < r[1] and r[2] <= z < r[3]), None)
+        if rect is not None:
+            g.garrisons.setdefault(rect, []).append(u)
+            g.command(f"tag {u} remove {MADE_INSIDE}")
+
+
 def tick(g):
     """The units at the door of their building go in (a full building: they stay at the door), and the units of a
     fallen building come out (only the plugin takes the hit points of a building)."""
+    if g.paper:
+        adopt(g)
     held = [r for r, us in g.garrisons.items() if us]
     if not g.entering and not (held and g.paper):
         return

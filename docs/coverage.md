@@ -787,7 +787,7 @@ Most common results: decorations (126), trees (53), flags (39).
 | ELITE_THROWING_AXEMAN | drowned | no |
 | ELITE_TURTLE_SHIP | dark_oak_boat (pillager, skeleton) | no |
 | ELITE_WAR_ELEPHANT | ravager (zombie) | no |
-| ELITE_WAR_WAGON | minecart (horse) | no |
+| ELITE_WAR_WAGON | horse (item_display) | no |
 | ELITE_WOAD_RAIDER | zombie | no |
 | FAST_FIRE_SHIP | mangrove_boat (blaze) | no |
 | FIRE_GALLEY | mangrove_boat (blaze) | no |
@@ -927,7 +927,7 @@ Most common results: decorations (126), trees (53), flags (39).
 | VMDL | villager | no |
 | WAR_ELEPHANT | ravager (zombie) | no |
 | WAR_GALLEY | dark_oak_boat (skeleton, skeleton) | no |
-| WAR_WAGON | minecart (horse) | no |
+| WAR_WAGON | horse (item_display) | no |
 | WATER_BUFFALO | cow | no |
 | WOAD_RAIDER | zombie | no |
 | XOLOTL_WARRIOR | horse (zombie) | no |

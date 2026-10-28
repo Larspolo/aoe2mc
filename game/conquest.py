@@ -34,6 +34,13 @@ def alive(g, n):
         for sel in (f"@e[tag=aoe2mc.p{n},tag=!{MOUNT}]", f"@e[tag=aoe2mc.building,team=p{n},tag=!aoe2mc.wall]"))
 
 
+def scored(g, n):
+    """The scenario mode: the score #p<n> of aoe_lost, for the trigger condition "Player Defeated" (#2710)."""
+    from gather import has_mode                                     # gather imports this module
+    if has_mode(g, "scenario"):
+        g.command(f"scoreboard players set #p{n} aoe_lost 1")
+
+
 def tick(g):
     """Check the players each EVERY seconds: defeat the ones without units and buildings, end the game."""
     if g.ended or g.victory == "custom" or g.clock() < vars(g).get("conquest_at", 0.0):   # a scenario: triggers (#2567)
@@ -45,6 +52,7 @@ def tick(g):
             seen.add(n)
         elif n in seen:
             lost.add(n)
+            scored(g, n)
             if n == g.player:
                 return cheats.end("Defeat", "red")(g, None)
             cheats.destroy(g, n)

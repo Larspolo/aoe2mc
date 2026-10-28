@@ -12,8 +12,7 @@ TABLE = {"BATTERING_RAM": ("iron_golem", 0.5), "CAPPED_RAM": ("iron_golem", 0.55
          "MANGONEL": ("breeze", 0.8), "ONAGER": ("breeze", 0.8), "SIEGE_ONAGER": ("breeze", 0.8),
          "SCORPION": ("piglin", 1.0), "HEAVY_SCORPION": ("piglin", 1.0),
          "TREBUCHET": ("warden", 0.6), "TREBUCHET_PACKED": ("warden", 0.36),
-         "BOMBARD_CANNON": ("ghast", 0.3), "HOUFNICE": ("ghast", 0.3), "SIEGE_TOWER": ("sniffer", 0.5),
-         "WAR_WAGON": ("horse", 0.7), "ELITE_WAR_WAGON": ("horse", 0.7)}
+         "BOMBARD_CANNON": ("ghast", 0.3), "HOUFNICE": ("ghast", 0.3), "SIEGE_TOWER": ("sniffer", 0.5)}
 
 
 def crew(name):

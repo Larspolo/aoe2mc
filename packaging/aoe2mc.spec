@@ -18,8 +18,12 @@ HIDDEN = collect_submodules("AoE2ScenarioParser") + collect_submodules("mgz") + 
 # from the workflow (gradlew jar): game/run.py takes it in a frozen app, so the user needs a Java runtime, no JDK.
 GAME = os.path.join(ROOT, "game")
 JAR = os.path.join(GAME, "plugin", "aoe2mc-plugin.jar")
-# all data files of game/data (table.load: train, units, buildings; #1913)
-GAME_DATAS = DATAS + [(os.path.join(GAME, "data", "*.jsonl"), "data")] + [(JAR, "plugin")] * os.path.exists(JAR)
+# all data files of game/data (table.load: train, units, buildings; #1913), in their own folder: data/ has files of the
+# same names (table.FROZEN, #2839)
+GAME_DATAS = DATAS + [(os.path.join(GAME, "data", "*.jsonl"), "game_data")] + [(JAR, "plugin")] * os.path.exists(JAR)
+# the tag and the SHA-1 of the resource pack of the release (the workflow writes it on a tag, run.RELEASE, #2741)
+RELEASE = os.path.join(ROOT, "packaging", "release.json")
+GAME_DATAS += [(RELEASE, ".")] * os.path.exists(RELEASE)
 
 
 def analysis(script, datas=DATAS):
