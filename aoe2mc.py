@@ -3114,14 +3114,17 @@ def effect_units(e, T):
 def damage_lines(e, c):
     """The commands of "Damage Object" (#2571): a `damage` of each unit of the effect (effect_units) by its amount.
     The amount is in AoE2 hit points: the game program gives each unit max_health = its AoE2 hit points
-    (combat.stats_command); a vanilla world keeps the health of the mob. A negative amount heals in AoE2: not yet."""
+    (combat.stats_command); a vanilla world keeps the health of the mob. A negative amount heals, as in AoE2: the
+    commands of "Heal Object" (heal_commands, #2907)."""
     q, stats = e.get("quantity") or 0, c.stats
-    found = effect_units(e, c.T) if q > 0 else None
+    found = effect_units(e, c.T) if q else None
     if found is None:
-        stats["damage (heal or building, not supported yet)" if q else "damage (no amount)"] += 1
+        stats["damage (building, not supported yet)" if q else "damage (no amount)"] += 1
         return []
     at = found[0]                                                      # Gaia: not the players (effect_units)
     stats["damage"] += 1
+    if q < 0:
+        return heal_commands(at, -q, c)
     return [f"execute as {at} run damage @s {q}"]                      # damage takes one entity
 
 
@@ -3217,9 +3220,13 @@ def heal_lines(e, c):
     if found is None:
         stats["heal (building or no amount, not supported yet)" if q else "heal (no amount)"] += 1
         return []
-    c.setup["scoreboard objectives add aoe_hp dummy"] = c.setup["scoreboard objectives add aoe_max dummy"] = None
     stats["heal"] += 1
-    at = found[0]                                                      # Gaia: not the players (effect_units)
+    return heal_commands(found[0], q, c)                               # Gaia: not the players (effect_units)
+
+
+def heal_commands(at, q, c):
+    """The units of selector `at` get q AoE2 hit points back, not above their maximum (heal_lines, damage_lines)."""
+    c.setup["scoreboard objectives add aoe_hp dummy"] = c.setup["scoreboard objectives add aoe_max dummy"] = None
     return [f"execute as {at} store result score @s aoe_hp run data get entity @s Health",
             f"execute as {at} store result score @s aoe_max run attribute @s minecraft:max_health get",
             f"execute as {at} run scoreboard players add @s aoe_hp {q}",

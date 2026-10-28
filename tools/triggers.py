@@ -75,7 +75,7 @@ MAP = {
     ("effect", "REMOVE_OBJECT"): "`kill @e[tag=aoe2mc.pN,type=..,x=..,y=..,z=..,dx=..,dy=..,dz=..]` (timer triggers: #656)",
     ("effect", "REPLACE_OBJECT"): "`tag` of the old units, `execute at` each one `run summon` of the new entity of the target player (`units.make_entity()`), then `kill` of the old units and their mounts (#2703); buildings: not supported yet",
     ("effect", "KILL_OBJECT"): "`kill @e[tag=aoe2mc.pN,type=..,x=..,y=..,z=..,dx=..,dy=..,dz=..]`, no area: the whole map (#2568)",
-    ("effect", "DAMAGE_OBJECT"): "`execute as @e[tag=aoe2mc.pN,type=..,x=..,dx=..] run damage @s N` (N in AoE2 hit points; timer and area triggers: #2571); heal: not supported yet",
+    ("effect", "DAMAGE_OBJECT"): "`execute as @e[tag=aoe2mc.pN,type=..,x=..,dx=..] run damage @s N` (N in AoE2 hit points; timer and area triggers: #2571); a negative N heals with the commands of `HEAL_OBJECT` (#2907); a building: not supported yet",
     ("effect", "HEAL_OBJECT"): "`execute as @e[tag=aoe2mc.pN,type=..,x=..,dx=..] store result score` of Health and max_health, `scoreboard players add`, then `store result entity @s Health` (AoE2 hit points, not above the maximum, #2692)",
     ("effect", "INITIATE_RESEARCH"): "the order `research <ref> <technology>` in the storage `aoe2mc:orders`: the scenario mode of the game program starts it at the selected building as a click of its menu, and the player pays (#2772)",
     ("effect", "TELEPORT_OBJECT"): "`tp @e[tag=aoe2mc.pN,x=..,dx=..] x y z` and the mounts of the riders (#2569)",
