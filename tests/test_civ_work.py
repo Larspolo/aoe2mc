@@ -67,6 +67,6 @@ def test_the_castle_reads_the_civilization_with_civ():
 def test_each_entry_is_a_known_civilization_and_kind():
     import buildings
     known = {c for v in buildings.CIV_ARCH.values() for c in v.split()}
-    kinds = {"farm", "food", "gold", "hunt", "sheep", "stone", "wood"}
+    kinds = {"farm", "food", "gold", "hunt", "oyster", "sheep", "stone", "wood"}
     assert set(civs.WORK) <= known and all(set(w) <= kinds for w in civs.WORK.values())
     assert list(civs.WORK) == sorted(civs.WORK)
