@@ -5,6 +5,9 @@ description: Refresh the data files of the owner's dashboard artifact (aoe2mc Au
 
 # Dashboard refresh
 
+Since 2026-10-28 (owner decision A) the workflow `dashboard-site.yml` builds the same page with `tools/dashboard_site.py`
+and publishes it to GitHub Pages each pacer cycle. This skill is the fallback for the claude.ai artifact.
+
 The dashboard artifact has four tabs (Activity, Progress, Tickets, Setup). Its page reads data files that are
 attached to the artifact: one dataset document for each file in the collection `datasets`. The account has no GitHub
 connector, so this skill writes a saved copy (#982). It is not the #1 dashboard (`tools/dashboard.py`).

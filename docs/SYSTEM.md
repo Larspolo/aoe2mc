@@ -12,7 +12,7 @@ controls, read `docs/STEERING.md`. This document links to them and does not copy
 | Scheduled tasks (owner's account) | "aoe2mc autopilot", "aoe2mc autopilot haiku" and "aoe2mc autopilot deep" have no schedule: the pacer starts them (since 2026-10-28 the workflow `pacer.yml` through their API triggers, #3194). With the pacer session: "aoe2mc pacer heartbeat" wakes it each hour at :36. |
 | Pacer | The workflow `pacer.yml` (`tools/pacer.py`, #3193): every 10 minutes it starts the runs that the quota target misses, through the API triggers of the scheduled tasks. Fallback (`pacer = "session"` in `agent.toml`): one long-lived cloud session (skill `pacer`). |
 | Runs | Cloud sessions of the autopilot task. Each run follows the skill `autopilot` with the argument `max`: tickets, one PR each. Many runs work at the same time. |
-| Skills (`.claude/skills/`) | The procedures: `autopilot` (the work cycle), `verify` (checks before a push), `ticket` (write and split tickets), `design` (design tickets), `improve` (process review), `roadmap` (epics from `docs/ROADMAP.md`), `pacer`, `operator` (checks and repairs the start of the runs, only in an owner session), `human` (guides the owner through the `needs-human` tickets on the owner's computer), `demo` (a demo game on the owner's computer: a ticket for each feedback in the chat, the cause of each crash, `game/demo_watch.py`), `dashboard-refresh` (the data files of the owner's dashboard artifact, #982). |
+| Skills (`.claude/skills/`) | The procedures: `autopilot` (the work cycle), `verify` (checks before a push), `ticket` (write and split tickets), `design` (design tickets), `improve` (process review), `roadmap` (epics from `docs/ROADMAP.md`), `pacer`, `operator` (checks and repairs the start of the runs, only in an owner session), `human` (guides the owner through the `needs-human` tickets on the owner's computer), `demo` (a demo game on the owner's computer: a ticket for each feedback in the chat, the cause of each crash, `game/demo_watch.py`), `dashboard-refresh` (the data files of the owner's dashboard artifact, #982; a fallback since the GitHub Pages site, `dashboard-site.yml`). |
 | Rules (`CLAUDE.md`, `docs/LEARNINGS.md`) | Each session loads them. `CLAUDE.md` has the commands, the code map and the rules. `docs/LEARNINGS.md` has the lessons for all runs. |
 | Tools (`tools/`) | `claim.py` (locks), `usage.py` (quota and the number of runs), `dashboard.py` (the status issue and the pick order), `health.py` (numbers for the review), `tokens.py` (the token sinks of a run), `operator_check.py` (the checks of the `operator` skill), `owner_tasks.py` (the tickets of the `human` skill). |
 | GitHub | The issues are the tickets. Issue #1 (label `agent-status`) is the status issue: the dashboard in its body, the run reports as comments. The labels are in `.github/labels.txt`. |
@@ -30,6 +30,7 @@ controls, read `docs/STEERING.md`. This document links to them and does not copy
 | `claims.yml` (Claims) | A ticket closes, each day | Deletes the claim refs of closed tickets and old comment locks. The runs cannot delete refs (403). |
 | `dashboard.yml` (Dashboard) | Every 10 minutes (not on events: the API rate limit, #2168) | Writes the dashboard in the body of the status issue (`tools/dashboard.py`). |
 | `pacer.yml` (Pacer) | One run loops for 5.5 hours (a cycle every 10 minutes), then starts the next run; the cron (`*/30`) only restarts a dead loop: GitHub fires the cron schedules of this repository a few times per day | Only while `pacer = "workflow"` in `[pacing]` of `agent.toml`: starts the runs that the quota target misses through the API trigger of each task (`tools/pacer.py`, #3193), in place of the pacer session. Secrets: `CLAUDE_CODE_OAUTH_TOKEN` (the quota read), `PACER_URL_<TASK>` and `PACER_TOKEN_<TASK>` for `MAIN`, `HAIKU`, `DEEP`. A task takes at most 30 API starts per hour, an account 100. |
+| `dashboard-site.yml` (Dashboard site) | Each pacer cycle (`pacer.yml` starts it), the cron as a fallback, by hand | Builds the owner's dashboard (`tools/dashboard_site.py`: the page of `tools/dashboard_artifact/`, the data of `tools/dashboard_data.py`) and publishes it to GitHub Pages (owner decision A, 2026-10-28). It replaces the hourly Claude task "aoe2mc dashboard refresh" and the artifact (skill `dashboard-refresh`, now a fallback). |
 | `coverage.yml` (Coverage) | Each push to `main` | Writes `docs/coverage.md`, `MAX` of `tests/test_coverage.py` and a column of `docs/DESIGN.md`. PRs do not change these files, so they do not conflict there. |
 | `metrics.yml` (Metrics) | Each 15 minutes, by hand with `days` | Writes the status issue comments to the orphan branch `metrics` (`tools/metrics_log.py`, one file per day). `tools/health.py` reads them and only the newest comments from the API (#1983). |
 | `labels.yml` (Labels) | A change of `.github/labels.txt` | Creates the labels. |
@@ -226,6 +227,7 @@ of `tools/bootstrap.py` (they copy this repository) and the tests that need a sp
 | `tools/bootstrap.py` | generic | None (sets up this system in a new repository, #906). |
 | `tools/claim.py` | generic | None (`agent.toml`). |
 | `tools/usage.py` | generic | None. |
+| `tools/dashboard_site.py` | specific | The owner's dashboard page and its runtime (GitHub Pages). |
 | `tools/pacer.py` | generic | None (the API triggers come from the secrets of `pacer.yml`, #3193). |
 | `tools/dashboard.py` | generic | None (`agent.toml`). |
 | `tools/feedback.py` | generic | None (`agent.toml`). |
@@ -293,6 +295,7 @@ of `tools/bootstrap.py` (they copy this repository) and the tests that need a sp
 | `tests/test_merge_jsonl.py` | generic | None (a test of `tools/merge_jsonl.py`). |
 | `tests/test_merge_jsonl_order.py` | generic | None (a test of `tools/merge_jsonl.py`: the line order of a move, #3065). |
 | `tests/test_pacer.py` | generic | None (a test of `tools/usage.py`). |
+| `tests/test_dashboard_site.py` | specific | None (a test of `tools/dashboard_site.py`). |
 | `tests/test_pacer_script.py` | generic | None (a test of `tools/pacer.py`). |
 | `tests/test_usage.py` | generic | None (a test of `tools/usage.py`). |
 | `tests/test_usage_status_once.py` | generic | None (a test of `tools/usage.py`). |
@@ -305,6 +308,7 @@ of `tools/bootstrap.py` (they copy this repository) and the tests that need a sp
 | `.github/workflows/claims.yml` | generic | None. |
 | `.github/workflows/close.yml` | generic | None. It closes the issues with the label `close` (#1740). |
 | `.github/workflows/dashboard.yml` | generic | None. |
+| `.github/workflows/dashboard-site.yml` | specific | The owner's dashboard page on GitHub Pages (`tools/dashboard_site.py`, `tools/dashboard_artifact/`). |
 | `.github/workflows/pacer.yml` | generic | The secrets of the API triggers, one pair per lane (#3193). |
 | `.github/workflows/coverage.yml` | specific | The coverage of the AoE2 types. |
 | `.github/workflows/metrics.yml` | generic | None. |
