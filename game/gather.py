@@ -1347,6 +1347,9 @@ class Gather:
             return
         if market.open_menu(self, name, self.map.pick_ground(eye, d)):  # an own market: buy and sell (#1252)
             return
+        if garrison.open_menu(self, name, self.map.pick_ground(eye, d)) or \
+                garrison.open_menu(self, name, fleet.pick(self, eye, d)):   # units inside an own tower come out (#2970)
+            return
         if fleet.build_order(self, name, eye, d):                    # the fishing ships build a fish trap (#1438)
             return
         if fleet.fish_order(self, name, eye, d):                     # the fishing ships fish (#1384)

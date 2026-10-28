@@ -149,6 +149,23 @@ def order(g, player, cell):
     return rect
 
 
+def open_menu(g, player, cell):
+    """Open the menu of an own building with no training menu (a tower, a keep, a house of the Khmer), at the block cell
+    (x, z), when units are inside: its item UNGARRISON lets them out (#2970). Returns its footprint, or None."""
+    import build, menu, train                                      # train imports this module
+    rect = next((r for r in holders(g) if cell and r[0] <= cell[0] < r[1] and r[2] <= cell[1] < r[3]), None)
+    if rect is None or not getattr(g, "garrisons", {}).get(rect) or train.home(g, cell) is not None:
+        return None
+    name = holders(g)[rect]["name"]
+
+    def click(p, slot, shift):
+        if slot == ungarrison(name)[0]:
+            out(g, rect)
+            menu.close(g, p)
+    menu.show(g, player, build.pretty(name), [ungarrison(name)], click)
+    return rect
+
+
 def unit_name(g, u):
     """The AoE2 name of own unit u: "VILLAGER", a soldier, or a herdable animal (gather.Gather.flock, #2342)."""
     return "VILLAGER" if u in g.villagers else g.soldiers.get(u) or vars(g).get("prey", {}).get(u, "")
