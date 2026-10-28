@@ -30,8 +30,7 @@ def server():
     httpd.shutdown()
 
 
-def run(monkeypatch, k, runs, env, argv=(), mode="workflow"):
-    monkeypatch.setattr(pacer, "MODE", mode)
+def run(monkeypatch, k, runs, env, argv=()):
     monkeypatch.setattr(pacer.usage, "read_usage", lambda: {"five_hour": (0.2, 0, "allowed")})
     monkeypatch.setattr(pacer.usage, "fire", lambda *a, skip=(), status=None: (k, {t: 0 if t in skip else n for t, n in runs.items()}, "x"))
     monkeypatch.setattr(pacer.usage, "read_status", lambda: ([], ""))
@@ -72,15 +71,7 @@ def test_a_dry_run_sends_nothing(monkeypatch, server, capsys):
     assert got == [] and 'Would start {"haiku": 0, "main": 2}' in capsys.readouterr().out
 
 
-def test_the_script_starts_no_run_while_the_session_paces(monkeypatch, server, capsys):
-    url, got = server
-    env = {"PACER_URL_MAIN": f"{url}/main", "PACER_TOKEN_MAIN": "tm"}
-    assert run(monkeypatch, 8, {}, env, mode="session") == 0
-    assert got == [] and "start no run" in capsys.readouterr().out
-
-
-def test_the_session_pacer_gets_no_run_while_the_workflow_paces(monkeypatch, capsys):
-    monkeypatch.setattr(pacer.usage, "PACER", "workflow")
+def test_a_session_gets_no_run_from_fire(monkeypatch, capsys):
     monkeypatch.setattr(pacer.usage, "read_usage", lambda: {"five_hour": (0.2, 0, "allowed")})
     monkeypatch.setattr(pacer.usage, "fire", lambda *a, status=None: (8, {"haiku": 5}, "inputs"))
     monkeypatch.setattr(pacer.usage, "read_status", lambda: ([], ""))

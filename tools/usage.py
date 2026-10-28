@@ -44,7 +44,6 @@ WAIT = CONFIG.get("pacing", {}).get("max_waiting_prs", 10)   # flow brake: open 
 QUEUE = CONFIG.get("pacing", {}).get("max_ci_queue", 5)      # flow brake: queued CI runs (no runner yet)
 PR_MINUTES = CONFIG.get("pacing", {}).get("pr_minutes", 30)  # Automerge merges a green PR in a few minutes
 MAX_FIRE = CONFIG.get("pacing", {}).get("max_fire", 8)   # runs that the pacer starts per cycle: each run needs a few minutes to claim its ticket; the same as agent.toml (the pacer used an old 4, 2026-10-28)
-PACER = CONFIG.get("pacing", {}).get("pacer", "session")   # who starts the runs: the session (skill pacer) or pacer.yml
 REFILL = CONFIG.get("pacing", {}).get("refill_runs", 1)   # runs beyond the ready tickets: each refills one epic (#609, #650)
 CALL = ["claude", "-p", "Reply with OK.", "--model", "claude-haiku-5-5", "--output-format", "stream-json", "--verbose"]
 
@@ -314,8 +313,7 @@ def main(argv=None):
     burn, burn7 = burns(status[0], a.burn)
     if a.fire:
         k, runs, line = fire(usage, now, burn, burn7, status=status)
-        if PACER == "workflow":                                 # pacer.yml starts the runs: the session must not (#3193)
-            k, runs, line = 0, dict.fromkeys(runs, 0), 'pacer = "workflow" in agent.toml: the session starts no run · ' + line
+        k, runs, line = 0, dict.fromkeys(runs, 0), "pacer.yml starts the runs: the session starts no run · " + line   # #3193, #3427
         print(k)
         for n, r in runs.items():
             print(f"{n} {r}")
