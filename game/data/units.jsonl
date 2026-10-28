@@ -47,7 +47,7 @@
 {"name": "COUSTILLIER", "hp": 115, "attack": 8, "melee": 2, "pierce": 2, "range": 0, "reload": 1.9, "bonus": {}, "classes": ["cavalry", "unique"], "sight": 5}
 {"name": "ELITE_TEUTONIC_KNIGHT", "hp": 110, "attack": 17, "melee": 8, "pierce": 2, "range": 0, "reload": 2.0, "bonus": {"building": 4}, "classes": ["infantry", "unique"], "sight": 7}
 {"name": "FLAMING_CAMEL", "hp": 55, "attack": 20, "melee": 0, "pierce": 0, "range": 0, "reload": 2.0, "bonus": {"building": 200, "cavalry": 50, "camel": 50, "elephant": 130, "siege": 25}, "classes": ["camel", "unique"]}
-{"name": "FLEMISH_MILITIA", "hp": 40, "attack": 5, "melee": 1, "pierce": 1, "range": 0, "reload": 2.0, "bonus": {"cavalry": 6, "camel": 4, "elephant": 6}, "classes": ["infantry", "unique"], "sight": 7}
+{"name": "FLEMISH_MILITIA", "hp": 40, "attack": 5, "melee": 1, "pierce": 1, "range": 0, "reload": 2.0, "bonus": {"camel": 4, "cavalry": 6, "elephant": 6, "ship": 4}, "classes": ["infantry", "unique"], "sight": 7, "note": "the wiki infobox of the Feudal Age, revision 1090747 (#2155); no class of shock infantry (+2)"}
 {"name": "GBETO", "hp": 40, "attack": 10, "melee": 0, "pierce": 0, "range": 5, "reload": 2.0, "bonus": {}, "classes": ["infantry", "unique"], "sight": 8, "melee_ranged": true}
 {"name": "GENGHIS_KHAN", "hp": 300, "attack": 25, "melee": 2, "pierce": 2, "range": 5, "reload": 2.0, "bonus": {"siege": 3}, "classes": ["archer", "cavalry", "unique"], "sight": 4}
 {"name": "GENOESE_CROSSBOWMAN", "hp": 45, "attack": 6, "melee": 1, "pierce": 0, "range": 4, "reload": 2.0, "bonus": {"cavalry": 5, "camel": 4, "elephant": 5}, "classes": ["archer", "unique"], "sight": 8}

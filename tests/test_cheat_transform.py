@@ -66,7 +66,7 @@ def test_the_new_unit_has_its_aoe2_values():
     server, g = setup("VILLAGER_MALE")
     cheats.apply(g, "Steve", "grab your pitchforks")
     stats = next(c for c in server.log if c.startswith("aoe stats "))
-    assert re.fullmatch(r"aoe stats \S+ 40 5 1 1 0 infantry,unique camel:4,cavalry:6,elephant:6 \d+", stats)
+    assert re.fullmatch(r"aoe stats \S+ 40 5 1 1 0 infantry,unique camel:4,cavalry:6,elephant:6,ship:4 \d+", stats)   # ship: #2155
 
 
 def test_a_unit_with_full_health_keeps_the_full_health():
