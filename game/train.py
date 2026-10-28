@@ -81,7 +81,7 @@ import monk  # noqa: E402
 import record  # noqa: E402
 import table  # noqa: E402
 
-DATA = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "train.jsonl")
+DATA = os.path.join(table.DIR, "train.jsonl")
 
 
 def load(path=DATA):
