@@ -5,7 +5,7 @@ from test_castle_upgrades import BARRACKS, setup
 from test_forging import menus
 
 import units
-from game import build, civs, train
+from game import civs, train
 
 IMPERIAL = ("FEUDAL_AGE", "CASTLE_AGE", "IMPERIAL_AGE")
 UNIT = 29                                                              # after the Ibirapema Warrior upgrade (28)
@@ -19,7 +19,7 @@ def menu(civ, other="FRANKS", other_team=1, ages=IMPERIAL):
 
 
 def test_the_values_are_those_of_aoe2():
-    assert build.AGE["CONDOTTIERO"] == 3 and len(train.HELP["CONDOTTIERO"]) <= 50   # cost and time: the menu tests
+    assert len(train.HELP["CONDOTTIERO"]) <= 50                         # cost, time and age: the menu tests
     assert units.classify("CONDOTTIERO")["id"] == "minecraft:zombie"     # combat values and speed: data files (#2223)
     assert set(civs.MISSING["CONDOTTIERO"]) == {r["name"] for r in civs.ROWS} - {"ITALIANS"}
 
