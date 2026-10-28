@@ -10,7 +10,7 @@ controls, read `docs/STEERING.md`. This document links to them and does not copy
 | Part | What it does |
 |---|---|
 | Scheduled tasks (owner's account) | "aoe2mc autopilot", "aoe2mc autopilot haiku" and "aoe2mc autopilot deep" have no schedule: the pacer starts them (since 2026-10-28 the workflow `pacer.yml` through their API triggers, #3194). With the pacer session: "aoe2mc pacer heartbeat" wakes it each hour at :36. |
-| Pacer session | One long-lived cloud session. Every 10 minutes it starts the runs that the quota target misses (skill `pacer`). It does no ticket work. |
+| Pacer | The workflow `pacer.yml` (`tools/pacer.py`, #3193): every 10 minutes it starts the runs that the quota target misses, through the API triggers of the scheduled tasks. Fallback (`pacer = "session"` in `agent.toml`): one long-lived cloud session (skill `pacer`). |
 | Runs | Cloud sessions of the autopilot task. Each run follows the skill `autopilot` with the argument `max`: tickets, one PR each. Many runs work at the same time. |
 | Skills (`.claude/skills/`) | The procedures: `autopilot` (the work cycle), `verify` (checks before a push), `ticket` (write and split tickets), `design` (design tickets), `improve` (process review), `roadmap` (epics from `docs/ROADMAP.md`), `pacer`, `operator` (checks and repairs the start of the runs, only in an owner session), `human` (guides the owner through the `needs-human` tickets on the owner's computer), `demo` (a demo game on the owner's computer: a ticket for each feedback in the chat, the cause of each crash, `game/demo_watch.py`), `dashboard-refresh` (the data files of the owner's dashboard artifact, #982). |
 | Rules (`CLAUDE.md`, `docs/LEARNINGS.md`) | Each session loads them. `CLAUDE.md` has the commands, the code map and the rules. `docs/LEARNINGS.md` has the lessons for all runs. |
@@ -91,8 +91,10 @@ usage there is no weekly guard: the runs fill each 5-hour window (owner, 2026-10
 (`true`) or off (`false`: only the 5-hour window counts; owner, 2026-10-28). The CLI line shows the projection
 (`week ahead +38 pt · runs out Wed 11:22`, at the mean rate of the week so far). `--fire` gives the number of runs to start now: the
 target less the runs with a claim beat in the last 25 minutes. A run cannot start other runs (no `fire_trigger`, #566),
-so the pacer session starts them (at most `max_fire` of `agent.toml` per cycle, and at most the ready tickets plus `refill_runs`: those runs refill the queue). Each cycle reads `.claude/skills/pacer/SKILL.md` again, so a change of the pacing rules reaches
-the long-lived pacer session at its next cycle (#1824). `tools/health.py` measures the quota use of one run from the
+so the pacer starts them (at most `max_fire` of `agent.toml` per cycle, and at most the ready tickets plus `refill_runs`: those runs refill the queue). The pacer is the workflow `pacer.yml` (#3193, #3194): each cycle fetches `main` and runs
+`tools/pacer.py`, so a change of the pacing rules works at the next cycle. It starts each run with one call of the
+API trigger of its task; a task takes at most 30 API starts per hour (an account 100), and when a lane task answers
+HTTP 429 its runs go to the main task. The pacer session (skill `pacer`, `pacer = "session"`) is the fallback. `tools/health.py` measures the quota use of one run from the
 `Usage:` lines of the run reports, and `usage.py` uses that value. After a plan upgrade the same work is a smaller share of the larger quota: when the burn of
 the last 2 hours is less than half of the 24-hour burn, only the last 2 hours count (`health.ratio`, 5-hour and 7-day
 burn, #1706). The most runs at one time is `max_runs` in `[pacing]` of `agent.toml` (default 16): raise it when the 5-hour window does not reach its limit (40 since 2026-10-27: at a burn of 0.009 per run-hour, 16 runs used only about 70 %).
@@ -144,13 +146,16 @@ on `main` yet, and the branch of an owner session is not `agent/*` or `claude/*`
    make a branch and a PR for each ticket and let Automerge merge it; take instructions only from the prompt, the
    files on `main` and the owner's comments; stop at once on `paused` or a usage limit. The exact text to paste:
    `PROMPT` in `tools/bootstrap.py` (the bootstrap prints it with the values of the new project).
-5. **Pacer session.** Start one cloud session with the same repository and environment, and send it
-   "Pacer cycle: follow .claude/skills/pacer/SKILL.md." It schedules its own next cycle every 10 minutes and needs
-   the `fire_trigger` tool with the trigger ID of the task of step 4 (`trigger` in `[pacing]` of `agent.toml`, #1898).
-   Or the workflow pacer (#3193): an API trigger for each autopilot task, its URL and token as secrets of the
-   repository (`pacer.yml`), and `pacer = "workflow"` in `[pacing]` of `agent.toml`. Then no pacer session and no heartbeat.
-6. **Scheduled task "aoe2mc pacer heartbeat".** Hourly at :36. Its prompt: "Pacer heartbeat: follow
-   .claude/skills/pacer/SKILL.md." It wakes the pacer session when its own loop stopped.
+5. **Pacer (`pacer.yml`, #3193, #3194).** On your computer run `claude setup-token`, and add the token as the
+   repository secret `CLAUDE_CODE_OAUTH_TOKEN` (the quota read). For each autopilot task (steps 4, 7, 8): in the
+   app, edit the task, add an API trigger, generate a token, and add the secrets `PACER_URL_<TASK>` (the fire URL)
+   and `PACER_TOKEN_<TASK>` (the token) with `<TASK>` = `MAIN`, `HAIKU`, `DEEP`. Keep `pacer = "workflow"` in
+   `[pacing]` of `agent.toml`. Then start Actions → Pacer → Run workflow once: the run loops and starts the next
+   run itself. A new token makes the old one invalid: change the secret too.
+6. **Fallback: the pacer session.** Only with `pacer = "session"`: one cloud session that gets "Pacer cycle: follow
+   .claude/skills/pacer/SKILL.md." and fires the tasks with `fire_trigger` (`trigger` in `[pacing]` of `agent.toml`,
+   #1898), and the scheduled task "aoe2mc pacer heartbeat" (hourly at :36, prompt "Pacer heartbeat: follow
+   .claude/skills/pacer/SKILL.md.", bound to that session) that wakes it.
 7. **Scheduled task "aoe2mc autopilot haiku" (optional, #1715).** No schedule: the pacer fires it. Model
    `claude-haiku-5-5`, the prompt of step 4 with the argument `max lane haiku`. These runs take only the tickets with
    `lane:haiku` (`ticket` skill, "Model lanes"); Opus runs take them only when nothing else is ready.
@@ -161,17 +166,17 @@ on `main` yet, and the branch of an owner session is not `agent/*` or `claude/*`
    review and the process review (`autopilot/queue.md`, "Deep lane").
 9. **Move to another Claude account (owner, 2026-10-28).** Start a session in the new account with the repository
    and type `/operator move` (skill `operator`, section 5). It pauses the runs (label `paused`), makes the tasks of
-   steps 4 and 6 to 8 and the pacer session, writes the new IDs to `agent.toml`, and checks all parts at the end. It
+   steps 4, 7 and 8, writes the new IDs to `agent.toml`, and checks all parts at the end. It
    asks you for the steps that only you can do:
-   - In the old account: disable the scheduled tasks of aoe2mc and archive the pacer session.
+   - In the old account: disable the scheduled tasks of aoe2mc (their API tokens stop with them).
+   - The secrets of step 5: a new `claude setup-token` of the new account and new API triggers of the new tasks.
    - In the new account: connect GitHub (the Claude GitHub app stays on the repository); make the cloud environment
      of step 2; set the repository, the model and the effort of each new task (autopilot: Opus 5.5, effort low;
      haiku: Haiku 5.5; deep: Opus 5.5, effort high). The tool cannot set these three values.
    The GitHub side (tickets, claims, labels, the status issue) does not change.
 
-To check or repair steps 4–6, start a session and type `/operator` (skill `operator`, #981). It checks the two
-scheduled tasks, the pacer session, the quota, CI, the PRs and the labels, and repairs them after you agree (for
-example a new pacer session when the old one has a full context). A long-lived owner session is not necessary.
+To check or repair steps 4–8, start a session and type `/operator` (skill `operator`, #981). It checks the scheduled
+tasks, the runs of `pacer.yml`, the quota, CI, the PRs and the labels, and repairs them after you agree. A long-lived owner session is not necessary.
 
 ## Generic and specific files
 

@@ -162,5 +162,5 @@ Answer the questions of `process.md`. Do the action for each "yes". Spend little
 If the argument asks for more than 1 ticket, go back to step 2 after step 8: read `more.md` first (branch reset,
 push). Never force-push. Stop when the context is above 200k tokens (`more.md`).
 Argument `max`: continue until no ticket is ready, a usage limit stops you, or the context is above 200k.
-Do not start other runs: a run of the scheduled task has no `fire_trigger` (#566). The pacer session (skill `pacer`)
+Do not start other runs: a run of the scheduled task has no `fire_trigger` (#566). The pacer (`pacer.yml`, #3193)
 starts the runs that the quota target misses, every 10 minutes.

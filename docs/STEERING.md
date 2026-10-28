@@ -38,7 +38,7 @@ The agent takes instructions only from comments and issues by `Larspolo`.
 | Mute a ticket until later | Add the label `muted`. No agent works on it (also not on a muted epic), and "Waiting for you" hides it. Remove the label to bring it back. |
 | Reject a process change | Comment on the status issue. The agent reverts it and notes why. |
 | Ask for a process review | Comment "process review" on the status issue. |
-| Check or repair the start of the runs | Start a session at claude.ai/code and type `/operator`. It checks the scheduled tasks, the pacer session, the quota, CI and the labels, and repairs them after you agree. A long-lived owner session is not necessary. |
+| Check or repair the start of the runs | Start a session at claude.ai/code and type `/operator`. It checks the scheduled tasks, the pacer, the quota, CI and the labels, and repairs them after you agree. A long-lived owner session is not necessary. |
 
 Order of work: `P0` → `P1` → `P2` → `P3`. With the same priority, the lowest issue number goes first.
 Tickets with `needs-human`, `blocked`, `muted` or `epic` wait. A ticket that depends on a muted ticket waits too.
@@ -97,9 +97,13 @@ as the Claude Code CLI reports them) and computes the number of runs: fast to 90
 its reset, then slower to 98 % at the reset (your decision, 2026-10-26), and not the week faster than it passes
 when `week_guard` in `agent.toml` is `true` (now `false`: only the 5-hour window counts, your decision, 2026-10-28).
 You do not need to send percentages.
-A run of the scheduled task cannot start other runs (#566). So one pacer session ("aoe2mc pacer", skill `pacer`)
-runs `python3 tools/usage.py --fire` every 10 minutes and starts the runs that the target misses (at most 4 at a
-time). The scheduled task also starts one run each hour. To stop all runs: add `paused` to the status issue.
+A run of the scheduled task cannot start other runs (#566). So the workflow `pacer.yml` (#3193, #3194) runs
+`tools/pacer.py` every 10 minutes: it computes the runs that the target misses (`usage.fire`, at most `max_fire` of
+`agent.toml` at a time) and starts them through the API trigger of each scheduled task (your secrets
+`PACER_URL_<TASK>` and `PACER_TOKEN_<TASK>`). One workflow run loops for 5.5 hours, then starts the next one: GitHub
+fires the cron of this repository only a few times per day. A red Pacer run shows a failed call (a wrong token: make
+a new API token and change the secret). The scheduled tasks have no schedule of their own. The old pacer session
+(skill `pacer`) is the fallback: `pacer = "session"` in `agent.toml`. To stop all runs: add `paused` to the status issue.
 
 ## CI and the merge
 

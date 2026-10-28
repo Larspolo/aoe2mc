@@ -21,5 +21,5 @@ above 200k each call costs more than 3 times a call of a fresh run (about 65k), 
 for less (2026-10-28).
 
 Argument `max`: continue until no ticket is ready, a usage limit stops you, or the context is above 200k tokens.
-Do not start other runs: a run of the scheduled task has no `fire_trigger` (#566). The pacer session (skill `pacer`)
+Do not start other runs: a run of the scheduled task has no `fire_trigger` (#566). The pacer (`pacer.yml`, #3193)
 starts the runs that the quota target misses, every 10 minutes. A fresh run has a small context, so it works faster.

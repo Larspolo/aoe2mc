@@ -7,7 +7,7 @@ reset, so that each window reaches the limit (#587).
     python3 tools/usage.py --target     # only the number of runs (rule 4 of the scheduled task)
     python3 tools/usage.py --json
     python3 tools/usage.py --sample     # Usage: <now> · usage 30.0% · resets <time> · runs 9 · week 56.0% · release 61.2%
-    python3 tools/usage.py --fire       # the number of runs that the pacer session starts now (skill `pacer`, #566)
+    python3 tools/usage.py --fire       # the number of runs that the pacer starts now (`tools/pacer.py`, #3193)
     python3 tools/usage.py --flow       # exit 1 when the flow brake is on: the runs repair PRs, no new ticket
 
 The flow brake (owner, 2026-10-27): the quota is not the only bottleneck. When CI, merge conflicts or anything else
