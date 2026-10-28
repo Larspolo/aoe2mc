@@ -55,6 +55,7 @@ FIREWORK_COLORS = {"black": 0x1E1B1B, "blue": 0x253192, "brown": 0x51301A, "cyan
 FLAT = 16                   # tiles of the flat map that draws one design
 MAX_FILL = 32768            # blocks of one /fill command
 FORMATION = 2              # blocks between the units of a group in a formation (#410)
+FAR_TILES = 30            # a Line walk to a target farther than this takes 2 columns, not a wide row (#3417)
 LEG = 48                    # path cells of one plugin order: within the reach of a Minecraft path search (#438)
 CATCH_UP = 1.5              # the largest factor of the walk speed of a unit behind its replay position (#1168)
 CLOSE = 5000                # ms of game time in which a unit behind its replay position closes the lag (#1291)
@@ -283,20 +284,23 @@ def live(make, speed=1.0, start=0, restart=None, **kw):
         restart()
 
 
-def formation_cells(free, group, target, kind="Line", T=4):
+def formation_cells(free, group, target, kind="Line", T=4, long=False):
     """The end cell {key: (x, z)} of each unit of a group that walks to the block point target (#410): rows across the
     walk direction, the first row on the target and the others behind it, FORMATION blocks apart (AoE2 line formation).
     A slot snaps to the next free cell (free(x, z)), one unit per cell. group: (key, x, z, rank, weak) of each unit. The
     units of the lowest rank take the front rows (gather.rank, the AoE2 unit order, #3414), then the units nearest to the
     target, and in a row they keep their order from left to right, so that the paths do not cross. Staggered doubles
     the gaps, Flank splits each row into two halves 4 slots apart, Box puts the weak units inside a square of the others
-    (the formations of AoE2, #2553)."""
+    (the formations of AoE2, #2553). long: a Line walk farther than FAR_TILES takes a long column of 2 units across
+    (1 for 2 units), as in AoE2 (#3417); the replay keeps the formation of the record."""
     n, S = len(group), FORMATION * (2 if kind == "Staggered" else 1)
     tx, tz = target
     cx, cz = (sum(u[k] for u in group) / n for k in (1, 2))
     d = math.hypot(tx - cx, tz - cz)
     dx, dz = ((tx - cx) / d, (tz - cz) / d) if d > 0.5 else (0.0, -1.0)    # walk direction (else north)
     cols = min(n, max(1, math.ceil(math.sqrt(n)) if kind == "Box" else round(math.sqrt(2 * n))))
+    if long and kind == "Line" and d > FAR_TILES * T:
+        cols = 1 if n == 2 else min(n, 2)
     rows = -(-n // cols)
     r = max(2 * T, math.ceil(max(cols, rows) * S) + 4 * S * (kind == "Flank"))
     x0, z0 = int(tx), int(tz)

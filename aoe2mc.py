@@ -6027,7 +6027,7 @@ def convert_campaign(src, out, only=None, name=None, **kw):
     chosen = [(i, re.sub(r'[\\/:*?"<>|]', "_", fn), data) for i, (fn, data) in enumerate(entries, 1)
               if only is None or i == only]
     if version == b"1.00":
-        old = []
+        old, done = [], []
         for i, fn, data in chosen:
             stem = os.path.splitext(fn)[0]
             if fn.lower().endswith(".scx"):
@@ -6037,10 +6037,12 @@ def convert_campaign(src, out, only=None, name=None, **kw):
                         f.write(data)
                     try:
                         convert(path, os.path.join(out, f"{i} {stem}"), name=f"{name} {i}" if name else stem, **kw)
+                        done.append({"number": i, "name": stem, "world": f"{i} {stem}"})
                         continue
                     except ScxFormatError as e:   # another format version, or a file that scx.py cannot read
                         print(f"{i} {fn}: {e}")
             old.append((i, fn, data))
+        write_index(out, title, done)
         if old:
             os.makedirs(out, exist_ok=True)
             for i, fn, data in old:
@@ -6050,6 +6052,13 @@ def convert_campaign(src, out, only=None, name=None, **kw):
             raise SystemExit(OLD_CAMPAIGN_STEPS.format(ext=", ".join(exts), out=out,
                                                        files="\n".join(f"  {i} {fn}" for i, fn, _ in old)))
         return
+    index = []
+    for i, (fn, _) in enumerate(entries, 1):               # the names of the world folders (as the loop below)
+        stem = re.sub(r"\.aoe2scenario$", "", re.sub(r'[\\/:*?"<>|]', "_", fn), flags=re.I)
+        index.append({"number": i, "name": stem, "world": f"{i} {stem}"})
+        if only is not None and i != only:                 # --scenario N: the other worlds do not exist
+            index[-1]["converted"] = False
+    write_index(out, title, index)
     for i, fn, data in chosen:
         stem = re.sub(r"\.aoe2scenario$", "", fn, flags=re.I)
         with tempfile.TemporaryDirectory() as tmp:
@@ -6057,6 +6066,13 @@ def convert_campaign(src, out, only=None, name=None, **kw):
             with open(path, "wb") as f:
                 f.write(data)
             convert(path, os.path.join(out, f"{i} {stem}"), name=f"{name} {i}" if name else stem, **kw)
+
+
+def write_index(out, title, scenarios):
+    """out/campaign.json: the campaign name and its scenarios in order, for the game program (#3504)."""
+    os.makedirs(out, exist_ok=True)
+    with open(os.path.join(out, "campaign.json"), "w", encoding="utf-8") as f:
+        json.dump({"name": title, "scenarios": scenarios}, f, indent=1, ensure_ascii=False)
 
 
 def game_time(text):

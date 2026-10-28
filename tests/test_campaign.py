@@ -50,13 +50,13 @@ def test_read_campaign(camp):
 
 def test_one_world_per_scenario(camp, tmp_path):
     run(camp, tmp_path / "out")
-    assert sorted(p.name for p in (tmp_path / "out").iterdir()) == ["1 S1", "2 S2"]
+    assert sorted(p.name for p in (tmp_path / "out").iterdir()) == ["1 S1", "2 S2", "campaign.json"]
     assert all((tmp_path / "out" / w / "level.dat").exists() for w in ("1 S1", "2 S2"))
 
 
 def test_only_one_scenario(camp, tmp_path):
     run(camp, tmp_path / "out", "--scenario", 2)
-    assert [p.name for p in (tmp_path / "out").iterdir()] == ["2 S2"]
+    assert sorted(p.name for p in (tmp_path / "out").iterdir()) == ["2 S2", "campaign.json"]
 
 
 def error(*args):
@@ -114,7 +114,7 @@ def test_cpx_writes_old_scenarios_and_steps(tmp_path):
 def test_cpx_one_scenario(tmp_path):
     with pytest.raises(SystemExit), contextlib.redirect_stdout(io.StringIO()):
         aoe2mc.main([str(cpx(tmp_path / "old.cpx", OLD)), str(tmp_path / "out"), "--scenario", "2"])
-    assert [p.name for p in (tmp_path / "out").iterdir()] == ["2 Zwei.scx"]
+    assert sorted(p.name for p in (tmp_path / "out").iterdir()) == ["2 Zwei.scx", "campaign.json"]
 
 
 def scx_bytes(tmp_path, name, players):
@@ -129,10 +129,10 @@ def test_cpx_converts_its_scx_scenarios(tmp_path):
     a, b = scx_bytes(tmp_path, "a.scx", {1: (1, 0, (8, 8))}), scx_bytes(tmp_path, "b.scx", {1: (2, 1, (4, 4))})
     c = cpx(tmp_path / "old.cpx", [("Erste.scx", a), ("Zweite.scx", b)])
     run(c, tmp_path / "out")
-    assert sorted(p.name for p in (tmp_path / "out").iterdir()) == ["1 Erste", "2 Zweite"]
+    assert sorted(p.name for p in (tmp_path / "out").iterdir()) == ["1 Erste", "2 Zweite", "campaign.json"]
     assert (tmp_path / "out" / "2 Zweite" / "level.dat").exists()
     run(c, tmp_path / "one", "--scenario", "2")
-    assert [p.name for p in (tmp_path / "one").iterdir()] == ["2 Zweite"]
+    assert sorted(p.name for p in (tmp_path / "one").iterdir()) == ["2 Zweite", "campaign.json"]
 
 
 def test_cpx_with_other_formats_converts_the_rest_and_gives_the_steps(tmp_path):
@@ -144,5 +144,5 @@ def test_cpx_with_other_formats_converts_the_rest_and_gives_the_steps(tmp_path):
     msg = str(e.value.code)
     assert "(.scn, .scx)" in msg and "  2 Alt.scx\n  3 Karte.scn" in msg and "Gut" not in msg
     assert "2 Alt.scx: " in out.getvalue() and "1.18" in out.getvalue()
-    assert sorted(p.name for p in (tmp_path / "out").iterdir()) == ["1 Gut", "2 Alt.scx", "3 Karte.scn"]
+    assert sorted(p.name for p in (tmp_path / "out").iterdir()) == ["1 Gut", "2 Alt.scx", "3 Karte.scn", "campaign.json"]
     assert (tmp_path / "out" / "1 Gut" / "level.dat").exists()

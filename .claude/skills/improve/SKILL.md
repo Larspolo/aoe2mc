@@ -196,9 +196,9 @@ Comment 3–5 lines: the result of step 0 and the misses, the numbers of the sev
 "no change: largest loss X, below the threshold"), and what you expect. The owner can reject the change in a comment. Then revert it
 and add the reason to `docs/LEARNINGS.md`.
 
-Then set the next review: `python3 tools/claim.py 0 --reviewed change` after a change (the next review comes after 50
-merged PRs), or `--reviewed none` when no loss was large enough for a change (the gap doubles, at most 200 merged PRs,
-#898, #1697, #2039).
+Then set the next review: `python3 tools/claim.py 0 --reviewed change` after a change (the next review comes after 200
+merged PRs and 4 hours), or `--reviewed none` when no loss was large enough for a change (the gap doubles, at most 800
+merged PRs, #898, #1697, #2039, #3465).
 
 ## Guardrails
 

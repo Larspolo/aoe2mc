@@ -65,14 +65,14 @@ The details are in the text at the top of `tools/claim.py`.
 | Ticket | `claim/N` (`claim/N-2` ... after a release) | `claim.py N`. The owner beats each 20 minutes (`--beat`). After 30 minutes without a beat the claim is stale: another run can take it over (`--takeover`). `--guard` before each push. |
 | Owner comment | `claim/comment-ID` | `claim.py ID --comment`: one run acts on one owner comment. |
 | Refill | `claim/refill-E-S` | `claim.py E --refill`: one run makes the sub-issues of epic E (E = 0: the whole queue, one per hour). |
-| Process review | `claim/review-<gap>pr-<last>-<k>` | `claim.py 0 --review`: one run runs the `improve` skill after `gap` merged PRs (50). A review with no change doubles the gap (#2039). |
+| Process review | `claim/review-<gap>pr-<last>-<k>` | `claim.py 0 --review`: one run runs the `improve` skill after `gap` merged PRs (200) and at least 4 hours after the last review (#3465). A review with no change doubles the gap (#2039). |
 | Roadmap review | `claim/roadmap-100pr-<last>-<k>` | `claim.py 0 --roadmap`: one run reviews `docs/ROADMAP.md` after 100 merged PRs. |
 
 Other rules against conflicts: one ticket per PR, new tests in a new file, new table entries on their own line in
 alphabetical order, `merge=union` in `.gitattributes` for files where runs only add lines.
 
 Clock or count (#2039). A rule that waits for work counts merged PRs, because the speed of the project changes and a
-fixed time measures a different amount of work: the process review (50 PRs, 100 or 200 after a review with no change),
+fixed time measures a different amount of work: the process review (200 PRs and 4 hours, 400 or 800 PRs after a review with no change),
 the roadmap review (100), `Start after: N PRs after #M` and the window of `tools/health.py` (50). A rule that finds a
 stopped run or follows a real clock stays in minutes, because a stopped run merges nothing: the claim beat (20), a
 stale claim (30, or 10 with the label `conflict`), a "Started by" comment (30), the Automerge sweep (10), an old PR in
