@@ -108,8 +108,11 @@ building checks the full menu from the data (#2099).
 The combat values of a new unit are one new line in `game/data/units.jsonl` (`combat.STATS`, #1912), of a new building
 one in `game/data/buildings.jsonl` (`combat.BUILDINGS`); its line of sight is the key `"sight"` there (#1913; epic #1909 moves more tables).
 The converter tables are lines in `data/*.jsonl` too (#1917): an animal in `animals.jsonl`, an infantry design in `lines.jsonl`, a footprint in `footprint.jsonl` (the first match wins: put a longer name before its part).
-An item that some civilizations do not have goes into the list `"missing"` of each such line of
-`game/data/civs.jsonl` (`civs.MISSING`, #1914; also `unique`, `costs`, `units`, `twice`), not into `civs.py`.
+An item that few civilizations have (a unique or regional unit, building or technology) gets the key `"civs"` (the
+civilizations that have it, sorted) on its own line of `game/data/train.jsonl` or `game/data/build.jsonl`
+(`civs.ONLY`, #2235): no change of `game/data/civs.jsonl`. An item that most civilizations have goes into the list
+`"missing"` of each line of `game/data/civs.jsonl` without it (`civs.MISSING` joins both, #1914; also `unique`,
+`costs`, `units`, `twice`), not into `civs.py`.
 A new data line needs no test of its values: `tests/test_data_files.py` checks the form of each line of `game/data/`
 (keys, types, names that exist, #1916), and `tests/test_data_keys.py` checks that the code reads each key (#2188): a new key needs no test line. Test the behavior that the code computes
 from it (a fight, a menu, a bonus).
