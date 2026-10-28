@@ -181,6 +181,7 @@ NOT_SAVED = (                                                          # the fie
     "share",                                                           # bot.py: the techs of the human player
     "spectator_at",                                                    # spectator.py: the next check time
     "spectator_sent",                                                  # spectator.tick: a load sends them again
+    "spectator_views",                                                 # spectator.views: each spectator chooses again
     "speed",                                                           # run.py: the --speed option
     "sudden_death_at",                                                 # sudden_death.py: the next check time
     "tech_state_at",                                                   # scenario.py: the next check time

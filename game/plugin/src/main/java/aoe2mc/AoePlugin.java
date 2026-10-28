@@ -112,6 +112,8 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *   aoe hide <players> <uuid> ...              Player#hideEntity: the players do not see these entities, also a
  *                                              player that joins later (#1302: the enemy units out of sight in the
  *                                              view of one replay player)
+ *   aoe hide <players> view <uuid> ...         the same for these players only (the view of a spectator, #2901):
+ *                                              the minimap and a player that joins later do not change
  *   aoe stance <selector> <aggressive|defensive|stand_ground|no_attack>
  *                                              the AoE2 stance of a unit (#1104): no_attack never attacks without an
  *                                              order, stand_ground attacks only an enemy in its range and does not walk,
@@ -2647,6 +2649,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         }
         if (args.length >= 3 && (args[0].equals("hide") || args[0].equals("show"))) {   // one command per second (#1302)
             boolean hide = args[0].equals("hide");
+            boolean view = args[2].equals("view");                     // only these players (#2901)
             var who = players(sender, args[1]);
             int n = 0;
             for (int i = 2; i < args.length; i++) {
@@ -2656,7 +2659,9 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                 } catch (IllegalArgumentException e) {
                     continue;
                 }
-                if (hide) {
+                if (view) {
+                    // the global set stays: the minimap dots and the players that join later (#2901)
+                } else if (hide) {
                     hidden.add(u);
                 } else {
                     hidden.remove(u);
