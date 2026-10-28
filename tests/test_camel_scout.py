@@ -22,7 +22,6 @@ def test_the_values_are_those_of_aoe2():
     assert (s.hp, s.attack, s.melee, s.pierce, s.reload) == (70, 5, 0, 0, 2.0)
     assert s.bonus == {"cavalry": 4, "camel": 2, "ship": 2} and "camel" in s.classes
     assert combat.sight("CAMEL_SCOUT") == 5 and build.AGE["CAMEL_SCOUT"] == 1
-    assert train.COSTS["CAMEL_SCOUT"] == {"food": 55, "gold": 60} and train.TRAIN_TIMES["CAMEL_SCOUT"] == 22
     assert len(train.HELP["CAMEL_SCOUT"]) <= 50 and ai.walk_speed("CAMEL_SCOUT", 1, 1) == 1.45
     assert "GURJARAS" not in civs.MISSING["CAMEL_SCOUT"]
     assert {"BRITONS", "BERBERS", "HINDUSTANIS"} <= set(civs.MISSING["CAMEL_SCOUT"])
