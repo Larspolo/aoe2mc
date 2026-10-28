@@ -455,7 +455,7 @@ def train_time(g, building, name):
     TRAINS (Mapuche Settlements, #2432), else 1."""
     import build                                                   # build imports gather, gather imports this module
     t = TRAINS.get(civ(g), {}).get(building)
-    return t["time"][min(build.ages(g), 3)] if t and any(name in line for line in t["lines"]) else 1
+    return t.get("time", (1,) * 4)[min(build.ages(g), 3)] if t and any(name in line for line in t["lines"]) else 1
 
 
 def train_rate(g, name):
