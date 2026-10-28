@@ -47,14 +47,16 @@ def test_a_villager_kills_the_animal_and_carries_its_food_to_the_town_center(ani
     g.hunt("a")
     v = g.villagers["v"]
     assert v.state == "to_prey" and v.job == "butcher"                 # the hunter look
-    hits = 0
-    for _ in range(4000):
+    hits = steps = 0
+    for steps in range(1, 4001):
         g.step()
         hits = sum(c.startswith("damage a 3 minecraft:mob_attack by v") for c in server.log)
         if food(server) >= 20:
             break
     assert "a" not in server.entities and hits == -(-HP[animal] // 3)   # the vanilla health in hits of 3
-    assert food(server) >= 20 and g.map.carcasses == {(8, 2): gather.HUNT_FOOD[animal] - food(server) - v.load}
+    lost = gather.HUNT_FOOD[animal] - food(server) - v.load - g.map.carcasses[(8, 2)]   # the decay (#2310)
+    assert food(server) >= 20 and list(g.map.carcasses) == [(8, 2)]
+    assert 0 < lost <= gather.DECAY[animal] * steps * g.tick * gather.NORMAL
     assert any(c == "scoreboard players add Food aoe_res 10" for c in server.log)
     drops = set().union(*g.map.drops["food"])                          # it carried the food to the town center
     assert any(max(abs(v.cell[0] - a), abs(v.cell[1] - b)) <= 1 for a, b in drops) or v.state != "idle"
@@ -123,6 +125,7 @@ def test_a_villager_hunts_a_deer_and_aegis_kills_a_sheep_on_paper(tmp_path):
     with contextlib.redirect_stdout(io.StringIO()):
         aoe2mc.convert(str(tmp_path / "m.json"), str(tmp_path / "W"))
     data = json.load(open(tmp_path / "W" / "aoe2mc.json"))
+    data["players"]["1"]["civ"] = "JURCHENS"                          # no decay (#2310): the villager gets all 140 food
     deer, sheep = (next(o["uuid"] for o in data["objects"] if o["name"] == n) for n in ("DEER", "SHEEP"))
     with run.Game(tmp_path / "W") as game:
         game.forceload()
