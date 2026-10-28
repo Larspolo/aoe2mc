@@ -875,6 +875,19 @@ def turn_map(k, size, terrain, elevation, objects, players):
     return np.rot90(terrain, k).copy(), np.rot90(elevation, k).copy()
 
 
+def turn_timeline(timeline, size, k):
+    """Turn the tiles of the timeline events by k quarter turns. A wall tile is a tile index: its middle turns, as the
+    trigger tiles do (#3029). The other tiles are points."""
+    for e in timeline:
+        for key in ("tile", "end"):
+            if key not in e:
+                continue
+            if e["kind"] == "wall":
+                e[key] = [int(v) for v in turn_tile(e[key][0] + 0.5, e[key][1] + 0.5, size, k)]
+            else:
+                e[key] = [round(float(v), 3) for v in turn_tile(*e[key], size, k)]
+
+
 # --------------------------------------------------------------------------------------------
 # Columns: the terrain of each Minecraft (x, z) column, as numpy arrays.
 # --------------------------------------------------------------------------------------------
@@ -5627,10 +5640,7 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
         c["area"] = turn_area(c["area"], size, buildings.TURN)
     for e in (e for t in texts.get("triggers", ()) for e in t["effects"] if min(e.get("tile", [-1])) >= 0):
         e["tile"] = [int(v) for v in turn_tile(e["tile"][0] + 0.5, e["tile"][1] + 0.5, size, buildings.TURN)]
-    for e in timeline or ():
-        for k in ("tile", "end"):
-            if k in e:
-                e[k] = [round(float(v), 3) for v in turn_tile(*e[k], size, buildings.TURN)]
+    turn_timeline(timeline or (), size, buildings.TURN)
     tick("read")
     name = name or os.path.splitext(os.path.basename(src))[0]
     terrain, elevation = turn_map(buildings.TURN, size, terrain, elevation, objects, players)
