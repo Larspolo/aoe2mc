@@ -76,6 +76,8 @@ MAP = {
     ("effect", "CHANGE_OBJECT_SPEED"): "`attribute @e[..] minecraft:movement_speed base set V` of the units in the area and their mounts, V from the walk speed of the game program (game/ai.py, #2694)",
     ("effect", "DISABLE_UNIT_ATTACKABLE"): "`data merge entity @s {Invulnerable:1b}` of the units of the player in the area (#2695)",
     ("effect", "ENABLE_UNIT_ATTACKABLE"): "`data merge entity @s {Invulnerable:0b}` of the units in the area, not the garrisoned ones (#2695)",
+    ("effect", "DISABLE_UNIT_TARGETING"): "`tag @e[..] add aoe2mc.notarget` of the units of the player in the area: no unit or tower chooses them as a target, an attack order still hits (#2826)",
+    ("effect", "ENABLE_UNIT_TARGETING"): "`tag @e[..] remove aoe2mc.notarget` of the units of the player in the area (#2826)",
     ("effect", "FREEZE_OBJECT"): "`data merge entity @s {NoAI:1b}` of the units in the area and their mounts (#2608)",
     ("effect", "CHANGE_VIEW"): "`tp @a[team=pN] x y z` to the tile, on the ground (the player is the camera, #2610)",
     ("effect", "PLAY_SOUND"): "`playsound` of the vanilla sound of the name part (`data/sounds.jsonl`), at the tile or at each player (#2644)",

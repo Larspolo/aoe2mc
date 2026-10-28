@@ -2169,6 +2169,7 @@ def seat_count(ship):
     return 1 if "_chest_" in str(ship["id"]) else 2      # a chest boat has one seat
 CHAIN = 4                   # units per boat seat: each garrisoned unit rides the unit below it (#382)
 GARRISONED = "aoe2mc.garrisoned"    # entity tag of a unit inside its building (#807; the game program: #808)
+NO_TARGET = "aoe2mc.notarget"       # entity tag: no unit or tower chooses it as a target (AoePlugin calm, #2826)
 MADE_INSIDE = "aoe2mc.made_inside"  # entity tag of a unit that a trigger made inside a building: the game program adds
                                     # it to the garrison of the building (#2764)
 GARRISON_CELLS = 20         # free cells of a building in aoe2mc.json: the largest AoE2 garrison (castle, #808)
@@ -2867,6 +2868,7 @@ CREATE_OBJECT = 11
 DAMAGE_OBJECT = 24                                                 # "Damage Object" (#2571)
 DECLARE_VICTORY = 13                                               # "Declare Victory" (#2542)
 DISABLE_UNIT_ATTACKABLE = 98                                       # "Disable Unit Attackable" (#2695)
+DISABLE_UNIT_TARGETING = 61                                        # "Disable Unit Targeting" (#2826)
 DIFFICULTY_LEVEL = 19                                              # the condition "Difficulty Level" (#2704)
 DIPLOMACY_STATE = 24                                               # the condition "Diplomacy State" (#2757)
 DISPLAY_INSTRUCTIONS = 20
@@ -2874,6 +2876,7 @@ DISPLAY_TIMER = 37                                                 # "Display Ti
 ENABLE_DISABLE_OBJECT = 38                                         # "Enable/Disable Object" (#2775)
 ENABLE_DISABLE_TECHNOLOGY = 39                                     # "Enable/Disable Technology" (#2775)
 ENABLE_UNIT_ATTACKABLE = 99                                       # "Enable Unit Attackable" (#2695)
+ENABLE_UNIT_TARGETING = 62                                         # "Enable Unit Targeting" (#2826)
 DISPLAY_TIMER_TRIGGERED = 55                                       # the condition of its score (#2702)
 FREEZE_OBJECT = 22                                                 # "Freeze Object" (#2608)
 HEAL_OBJECT = 34                                                   # "Heal Object" (#2692)
@@ -3401,6 +3404,14 @@ def attackable_lines(e, c):
     return [f"execute as {unit_selector(e, c.T)}{guard} run data merge entity @s {{Invulnerable:{int(disable)}b}}"]
 
 
+def targeting_lines(e, c):
+    """The command of "Disable Unit Targeting" and "Enable Unit Targeting" (#2826): the tag NO_TARGET of the units of
+    the player in the area. The game program chooses no tagged unit as a target; an attack order still hits it (AoE2)."""
+    if min(e.get("area", [-1])) < 0:
+        return []
+    return [f"tag {unit_selector(e, c.T)} {'add' if e['type'] == DISABLE_UNIT_TARGETING else 'remove'} {NO_TARGET}"]
+
+
 def freeze_lines(e, c):
     """The commands of "Freeze Object" (#2608): the units of the player in the area and the mounts of the riders get
     NoAI, so they stay in their place (AoE2: they do not move until a new order)."""
@@ -3712,11 +3723,13 @@ EFFECTS = {
     DEACTIVATE_TRIGGER: switch_lines,
     DECLARE_VICTORY: victory_lines,
     DISABLE_UNIT_ATTACKABLE: attackable_lines,
+    DISABLE_UNIT_TARGETING: targeting_lines,
     DISPLAY_INSTRUCTIONS: instruction_lines,
     DISPLAY_TIMER: timer_lines,
     ENABLE_DISABLE_OBJECT: menu_lines,
     ENABLE_DISABLE_TECHNOLOGY: menu_lines,
     ENABLE_UNIT_ATTACKABLE: attackable_lines,
+    ENABLE_UNIT_TARGETING: targeting_lines,
     FREEZE_OBJECT: freeze_lines,
     HEAL_OBJECT: heal_lines,
     KILL_OBJECT: object_lines,
