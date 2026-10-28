@@ -59,6 +59,8 @@ def test_the_live_cannon_galleons_become_elite_and_the_dock_trains_them():
     server, g = imperial()
     g.techs.add("CHEMISTRY")
     g.soldiers |= {"cg": "CANNON_GALLEON", "gal": "GALLEY"}
+    for u in g.soldiers:                                             # alive at the census (#3122)
+        g.game.entities.setdefault(u, {"Pos": (0.5, 64.0, 0.5)})
     slot = train.ITEMS["ELITE_CANNON_GALLEON_UPGRADE"][0]
     assert train.order(g, "Steve", train.open_menu(g, "Steve", (15, 12)), slot) == 1
     assert (g.stock["wood"], g.stock["gold"]) == (2000 - 525, 2000 - 500)

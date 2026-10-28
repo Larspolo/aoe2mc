@@ -42,6 +42,7 @@ def test_the_demolition_ship_needs_its_upgrade_in_the_castle_age():
     g.techs |= {"FEUDAL_AGE", "CASTLE_AGE"}
     g.stock["gold"] = 300
     g.soldiers["raft"] = "DEMOLITION_RAFT"
+    g.game.entities.setdefault("raft", {"Pos": (0.5, 64.0, 0.5)})          # alive at the census (#3122)
     train.open_menu(g, "Steve", (15, 12))
     menu = menus(server)[-1]
     assert "4:book:Demolition Ship:25 wood · 75 gold · 20 s · research" in menu
@@ -59,6 +60,8 @@ def test_the_demolition_ship_needs_its_upgrade_in_the_castle_age():
 def test_heavy_warships_and_heavy_demolition_ship_upgrade_the_live_ships():
     server, g = imperial(techs=["MEDIUM_WARSHIPS", "DEMOLITION_SHIP_UPGRADE"])
     g.soldiers |= {"war": "WAR_GALLEY", "fire": "FIRE_SHIP", "demo": "DEMOLITION_SHIP", "fish": "FISHING_SHIP"}
+    for u in g.soldiers:                                             # alive at the census (#3122)
+        g.game.entities.setdefault(u, {"Pos": (0.5, 64.0, 0.5)})
     train.open_menu(g, "Steve", (15, 12))
     menu = menus(server)[-1]
     assert "3:book:Heavy Warships:400 wood · 315 gold · 65 s · research" in menu
@@ -84,6 +87,8 @@ def test_heavy_warships_and_heavy_demolition_ship_upgrade_the_live_ships():
 def test_a_civilization_gets_only_the_new_ships_that_it_has():
     server, g = imperial("VIKINGS", ["MEDIUM_WARSHIPS", "DEMOLITION_SHIP_UPGRADE"])   # no fast fire ship, no demolition ships
     g.soldiers |= {"war": "WAR_GALLEY", "fire": "FIRE_SHIP"}
+    for u in g.soldiers:                                             # alive at the census (#3122)
+        g.game.entities.setdefault(u, {"Pos": (0.5, 64.0, 0.5)})
     train.open_menu(g, "Steve", (15, 12))
     menu = menus(server)[-1]
     assert "Heavy Warships" in menu and "Heavy Demolition Ship" not in menu and "Demolition" not in menu

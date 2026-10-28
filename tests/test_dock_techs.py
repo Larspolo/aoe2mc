@@ -36,6 +36,8 @@ def test_each_research_gives_the_own_ships_1_pierce_armor():
     server, g = setup(3)
     g.stock.update(food=300, gold=600)
     g.soldiers.update({GALLEY: "GALLEY", SHIP: "TRANSPORT_SHIP"})
+    for u in g.soldiers:                                             # alive at the census (#3122)
+        g.game.entities.setdefault(u, {"Pos": (0.5, 64.0, 0.5)})
     for tech, n in (("CAREENING", 1), ("DRY_DOCK", 2)):
         server.log.clear()
         assert train.order(g, "Steve", train.open_menu(g, "Steve", (9, 9)), train.ITEMS[tech][0]) == 1

@@ -14,6 +14,7 @@ def stable(civ="HINDUSTANIS", techs=("HEAVY_CAMEL_RIDER_UPGRADE",)):
     server, g = setup(ages=IMPERIAL, techs=techs)
     g.data["players"] = {"1": {"civ": civ}}
     g.soldiers["hc"] = "HEAVY_CAMEL_RIDER"
+    g.game.entities.setdefault("hc", {"Pos": (0.5, 64.0, 0.5)})          # alive at the census (#3122)
     return server, g
 
 

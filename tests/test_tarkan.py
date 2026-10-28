@@ -29,6 +29,7 @@ def test_the_castle_of_the_huns_trains_the_tarkan():
 def test_the_upgrade_changes_the_live_and_the_new_units():
     server, g = setup("HUNS", food=2000, wood=0, gold=2000, ages=3)
     g.soldiers["ta"] = "TARKAN"
+    g.game.entities.setdefault("ta", {"Pos": (0.5, 64.0, 0.5)})          # alive at the census (#3122)
     train.open_menu(g, "Steve", CASTLE)
     assert " 5:book:Elite Tarkan:1000 food · 500 gold · 45 s · research " in menus(server)[-1] + " "
     assert train.queue(g, "Steve", CASTLE, "ELITE_TARKAN_UPGRADE")

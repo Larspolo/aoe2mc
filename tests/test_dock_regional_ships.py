@@ -72,6 +72,8 @@ def test_heavy_warships_gives_the_chinese_the_dragon_ship_and_the_others_the_fas
     for civ, new in (("CHINESE", "DRAGON_SHIP"), ("BRITONS", "FAST_FIRE_SHIP")):
         server, g = imperial(civ, ["MEDIUM_WARSHIPS"])
         g.soldiers |= {"fire": "FIRE_SHIP"}
+        for u in g.soldiers:                                             # alive at the census (#3122)
+            g.game.entities.setdefault(u, {"Pos": (0.5, 64.0, 0.5)})
         train.open_menu(g, "Steve", (15, 12))
         assert train.order(g, "Steve", DOCK, 3) == 1
         train.tick(g, 65)
