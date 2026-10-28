@@ -2817,6 +2817,7 @@ def team_lines(objects, players):
 ACCUMULATE_ATTRIBUTE = 8                                           # a resource of a player (#2655)
 AND = 57                                                           # the conditions "AND" and "OR" (#2765)
 ATTACK_MOVE = 30                                                   # "Attack Move" (#2647)
+BUILD_OBJECT = 108                                                 # "Build Object" (#2863)
 CHANGE_COLOR_MOOD = 72
 CHANGE_DIPLOMACY = 1                                               # "Change Diplomacy" (#2645)
 CHANGE_OBJECT_ARMOR = 31                                           # "Change Object Armor" (#2755)
@@ -2838,6 +2839,7 @@ CHANGE_VIEW = 16                                                   # "Change Vie
 CLEAR_INSTRUCTIONS = 21                                            # "Clear Instructions" (#2609)
 CLEAR_TIMER = 57                                                   # "Clear Timer" (#2696)
 COMPARE_VARIABLES = 78                                             # the condition "Compare Variables" (#2698)
+COUNT_UNITS_INTO_VARIABLE = 101                                    # "Count Units into Variable" (#2697)
 CREATE_GARRISONED_OBJECT = 49                                      # "Create Garrisoned Object" (#2764)
 CREATE_OBJECT = 11
 DAMAGE_OBJECT = 24                                                 # "Damage Object" (#2571)
@@ -2863,6 +2865,7 @@ LOAD_KEY_VALUE = 81                                                # "Load Key V
 LOCK_GATE = 7                                                      # "Lock Gate", "Unlock Gate" (#2762)
 MIRROR_DIPLOMACY = 109                                             # "Mirror Diplomacy" (#2822)
 MODIFY_ATTRIBUTE = 51                                              # "Modify Attribute" (#2763)
+MODIFY_ATTRIBUTE_FOR_CLASS = 104                                   # "Modify Attribute for Class" (#2859)
 MODIFY_RESOURCE = 52                                               # "Modify Resource" (#2576)
 MODIFY_RESOURCE_BY_VARIABLE = 53                                   # "Modify Resource by Variable" (#2768)
 MODIFY_VARIABLE_BY_RESOURCE = 86                                   # "Modify Variable by Resource" (#2823)
@@ -3407,6 +3410,18 @@ def variable_by_variable_lines(e, c):
     return [f"scoreboard players operation #v{a} aoe_var {('', '+', '-', '*', '/')[op - 1]}= #v{b} aoe_var"]
 
 
+def count_lines(e, c):
+    """The command of "Count Units into Variable" (#2697): the score #vN of aoe_var (N: variable2) is the number of
+    units of the player and type in the area (effect_units; no area: the whole map). A building has no entity: no line."""
+    v = e.get("variable2", -1)
+    found = effect_units(e, c.T) if v >= 0 else None
+    if found is None:
+        c.stats["count units into variable (not supported)"] += 1
+        return []
+    c.stats["count units into variable"] += 1
+    return [f"execute store result score #v{v} aoe_var if entity {found[0]}"]
+
+
 def variable_range(c):
     """The `matches` range of the comparison of a "Variable Value" condition (#2611): Equal, Less, Larger,
     Less or Equal, Larger or Equal."""
@@ -3579,8 +3594,12 @@ def attribute_lines(e, c):
     """The command of "Modify Attribute" (#2763): the change "<player> <name> <Stats field> <operation> <quantity>"
     goes into the list of the data storage aoe2mc:attributes. A converted world has no combat values: the scenario mode
     of the game program (game/scenario.py attributes) empties the list and changes the values of the unit type of the
-    player (train.stats). An attribute outside STAT_ATTRIBUTES and CLASS_ATTRIBUTES: not supported in the stats."""
+    player (train.stats). An attribute outside STAT_ATTRIBUTES and CLASS_ATTRIBUTES: not supported in the stats.
+    "Modify Attribute for Class" (#2859): one line for the class, the name "@<ObjectClass name>" (train.applies)."""
+    from AoE2ScenarioParser.datasets.trigger_lists import ObjectClass
     _, name = e.get("object") or (None, None)
+    if e["type"] == MODIFY_ATTRIBUTE_FOR_CLASS:                        # also the units that the player trains later
+        name = f"@{ObjectClass(e['group']).name.lower()}" if e.get("group") in set(ObjectClass) else None
     a = e.get("attribute")
     field = STAT_ATTRIBUTES.get(a) or CLASS_ATTRIBUTES.get((a, e.get("class")))
     q = e.get("aa") if a in (8, 9) else e.get("quantity")
@@ -3648,6 +3667,21 @@ def foundation_lines(e, c):
         return []
     (x, y), p = e["tile"], e["player"]
     return [f'data modify storage aoe2mc:orders list append value "found {p} {name} {x} {y}"']
+
+
+def build_lines(e, c):
+    """The command of "Build Object" (#2863): the order "build <player> <building> <x1> <y1> <x2> <y2>" goes into the
+    storage aoe2mc:orders (ANY: no object type; -1: no area, the whole map). The scenario mode of the game program
+    (game/scenario.py finish) completes the construction sites of the player with their middle tile in the area at
+    once. The selected objects of the effect are converted buildings, never sites: no order for them. A unit type or
+    Gaia: no order."""
+    kind, name = e.get("object") or (None, None)
+    a = e.get("area", [-1] * 4)
+    if kind not in (None, "B") or e["player"] <= 0:
+        return []
+    x0, y0, x1, y1 = (min(a[0], a[2]), min(a[1], a[3]), max(a[0], a[2]), max(a[1], a[3])) if min(a) >= 0 else [-1] * 4
+    p, name = e["player"], name or "ANY"
+    return [f'data modify storage aoe2mc:orders list append value "build {p} {name} {x0} {y0} {x1} {y1}"']
 
 
 def gate_lines(e, c):
@@ -3880,9 +3914,12 @@ def visibility_lines(e, c):
 # (effect, kinds, techs) -> value. A new effect is one line here, in alphabetical order (#2792): parallel trigger
 # tickets conflicted in one expression of read_scenario. The older effects still have their entry there.
 EFFECT_KEYS = {
+    COUNT_UNITS_INTO_VARIABLE: {"variable2": "variable2"},   # (#2697)
     INITIATE_RESEARCH: {"selected": lambda e, kinds, techs: list(e.selected_object_ids or []),   # (#2772)
                         "technology": lambda e, kinds, techs: techs.get(e.technology, str(e.technology))},
     LOAD_KEY_VALUE: {"quantity": "quantity", "variable": "variable"},   # (#2887)
+    MODIFY_ATTRIBUTE_FOR_CLASS: {"attribute": "object_attributes", "operation": "operation", "quantity": "quantity",
+                                 "class": "armour_attack_class", "aa": "armour_attack_quantity", "group": "object_group2"},
     STORE_KEY_VALUE: {"variable": "variable"},                         # (#2887)
     TRAIN_UNIT: {"quantity": "quantity", "selected": lambda e, kinds, techs: list(e.selected_object_ids or [])},   # (#2772)
 }
@@ -3893,6 +3930,7 @@ EFFECT_KEYS = {
 EFFECTS = {
     ACTIVATE_TRIGGER: switch_lines,
     ATTACK_MOVE: order_lines,
+    BUILD_OBJECT: build_lines,
     CHANGE_COLOR_MOOD: mood_lines,
     CHANGE_DIPLOMACY: diplomacy_lines,
     CHANGE_OBJECT_ARMOR: attack_lines,
@@ -3913,6 +3951,7 @@ EFFECTS = {
     CHANGE_VIEW: view_lines,
     CLEAR_INSTRUCTIONS: clear_lines,
     CLEAR_TIMER: clear_timer_lines,
+    COUNT_UNITS_INTO_VARIABLE: count_lines,
     CREATE_GARRISONED_OBJECT: garrisoned_lines,
     CREATE_OBJECT: object_lines,
     DAMAGE_OBJECT: damage_lines,
@@ -3935,6 +3974,7 @@ EFFECTS = {
     LOCK_GATE: gate_lines,
     MIRROR_DIPLOMACY: mirror_lines,
     MODIFY_ATTRIBUTE: attribute_lines,
+    MODIFY_ATTRIBUTE_FOR_CLASS: attribute_lines,
     MODIFY_RESOURCE: resource_lines,
     MODIFY_RESOURCE_BY_VARIABLE: resource_by_variable_lines,
     MODIFY_VARIABLE_BY_RESOURCE: variable_by_resource_lines,
@@ -4186,8 +4226,9 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
         load += [run] * t["enabled"]
     names = sorted({f"#v{x[k]}" for t in triggers for x in t["conditions"] + t["effects"]
                     for k in ("variable", "variable2")   # "Modify Variable by Variable" has two (#2713)
-                    if x["type"] in (VARIABLE_VALUE, CHANGE_VARIABLE, COMPARE_VARIABLES, MODIFY_VARIABLE_BY_RESOURCE,
-                                     MODIFY_VARIABLE_BY_VARIABLE, LOAD_KEY_VALUE, STORE_KEY_VALUE)   # (#2887)
+                    if x["type"] in (VARIABLE_VALUE, CHANGE_VARIABLE, COMPARE_VARIABLES, COUNT_UNITS_INTO_VARIABLE,
+                                     MODIFY_VARIABLE_BY_RESOURCE, MODIFY_VARIABLE_BY_VARIABLE,
+                                     LOAD_KEY_VALUE, STORE_KEY_VALUE)   # (#2887)
                     and x.get(k, -1) >= 0})
     if names:
         load[:0] = ["scoreboard objectives add aoe_var dummy"] + \
