@@ -230,6 +230,7 @@ class Replay:
         self.hunted = {}                        # object ID of a hunted animal -> the tile of its carcass (#1229)
         self.prey = {}                          # carcass tile -> UUID of its animal that is still alive (#1281)
         self.points = {}                        # object ID of a building -> its last GATHER POINT event (#1227)
+        self.stances, self.charging = {}, {}    # object ID -> stance of the record; its stance after an attack-move (#2552)
         self.patrols = {}                       # object ID -> [patrol tiles, index of the tile it walks to, step] (#2550)
         self.adopted, self.rallied = {}, 0      # temporary ID of a unit at a gather point -> its object ID (#1227)
         self.effects = {}                       # entity tag of a research text -> game time (ms) of its end (#843)
@@ -303,7 +304,7 @@ class Replay:
     def commands(self, e):
         """The commands of one timeline event (an empty list for the events that change nothing visible)."""
         kind = e["kind"]
-        if kind in ("move", "order", "stop", "delete", "garrison"):   # another order ends the patrol (#2550)
+        if kind in ("attack_move", "move", "order", "stop", "delete", "garrison"):   # another order ends the patrol (#2550)
             for i in e.get("objects") or ():
                 self.patrols.pop(i, None)
         if kind == "patrol" and e.get("objects") and e.get("tile"):
@@ -316,7 +317,9 @@ class Replay:
             self.points.update(dict.fromkeys(e["objects"], e))
             return []
         if kind in ("move", "order") and e.get("objects"):
-            return self.move(e)
+            return self.calm(e["objects"]) + self.move(e)
+        if kind == "attack_move" and e.get("objects") and e.get("tile"):
+            return self.attack_move(e)
         if kind == "garrison" and e.get("objects"):
             return self.move(dict(e, kind="order", garrison=True))
         if kind == "ungarrison" and e.get("objects"):
@@ -901,8 +904,38 @@ class Replay:
         if not self.ai or stance not in combat.STANCES:
             return []
         self.grid()
-        group = [self.unit(i, name, e["player"]) for i, name in zip(e["objects"], e.get("names") or [None] * len(e["objects"]))]
-        return [combat.stance_command(v.uuid, stance) for v in group if v is not None and self.gather.military(v.name)]
+        group = [(i, self.unit(i, name, e["player"])) for i, name in zip(e["objects"], e.get("names") or [None] * len(e["objects"]))]
+        group = [(i, v) for i, v in group if v is not None and self.gather.military(v.name)]
+        for i, _ in group:
+            self.stances[i] = stance
+            self.charging.pop(i, None)                                  # the new stance stays after an attack-move
+        return [combat.stance_command(v.uuid, stance) for _, v in group]
+
+    def attack_move(self, e):
+        """ATTACK MOVE (#2552): the group walks to the tile as with MOVE, and on Paper its military units take the
+        aggressive stance for the walk, so the mob AI attacks each enemy in sight on the way (the stance goals of the
+        plugin, #1104). A unit that the record set to another stance gets it back at the end of the walk (calm())."""
+        import combat                                                   # combat -> gather -> build -> replay
+        out = self.calm(e["objects"]) + self.move(dict(e, kind="move"))
+        if not self.ai:
+            return out
+        for i in e["objects"]:
+            if (v := self.units.get(i)) is None or not self.gather.military(v.name):
+                continue
+            out.append(combat.stance_command(v.uuid, "aggressive"))
+            if self.stances.get(i, "aggressive") != "aggressive":
+                self.charging[i] = self.stances[i]
+        return out
+
+    def calm_at(self, i):
+        """The game time (ms) at the end of the last leg of unit i (0: no leg, or no unit)."""
+        return (getattr(self.units.get(i), "leg", None) or (0, 0, 0))[2]
+
+    def calm(self, ids):
+        """The stance commands that give the units of an ended attack-move their stance of the record again (#2552)."""
+        import combat
+        back = {i: self.charging.pop(i) for i in ids if i in self.charging}
+        return [combat.stance_command(self.units[i].uuid, s) for i, s in back.items() if i in self.units]
 
     def stop(self, e):
         """STOP: the selected units stand where they are (#2549): no more legs, steps or gather steps. On Paper
@@ -1209,6 +1242,7 @@ class Replay:
                 out += self.patrol_on(i, at) if i in self.patrols else []
             else:
                 self.moving[i] = due
+        out += self.calm([i for i in self.charging if i not in self.moving and self.calm_at(i) <= t])   # (#2552)
         out += self.enter(t)
         self.crew.command = out.append
         for i, due in list(self.working.items()):
@@ -1923,8 +1957,9 @@ class Replay:
              self.minimap_buildings(set(), set()) * (self.pov is None) +
              self.overview())
         census = self.census if bar and self.ai else lambda: None
-        while k < len(events) or self.moving or self.builds:
+        while k < len(events) or self.moving or self.builds or self.charging:
             step = min([*self.moving.values(), *self.working.values(), *self.effects.values(),   # walk, gather, text
+                        *[self.calm_at(i) for i in self.charging if i not in self.moving],         # an attack-move ends
                         *[self.burst] * bool(self.flares),                                        # a flare column
                         *(due for due, _ in self.builds.values()),                                # a build ends
                         *(at for _, _, at in self.entering.values() if at is not None),            # go in
