@@ -58,7 +58,8 @@ def test_a_click_on_a_selected_villager_opens_the_menu_and_a_choice_closes_it():
     assert "Steve" in g.menus
     cmds = [c for c in server.log if c.startswith(("aoe menu Steve Build ", "aoe menu-add Steve Build "))]
     specs = [x for c in cmds for x in c.split(" ")[4:]]                 # more commands below the RCON limit (#1647)
-    assert cmds[0].startswith(f"aoe menu Steve Build {len(build.MENU) - 1}:") and all(len(c) <= 1446 for c in cmds)
+    last = max(i for i, n in enumerate(build.MENU) if not build.hidden(g, n))   # the mule cart: 2 civs only (#2194)
+    assert cmds[0].startswith(f"aoe menu Steve Build {last}:") and all(len(c) <= 1446 for c in cmds)
     assert "0:spruce_stairs:House:25%20wood%0A25%20s" in specs and len(specs) == sum(not build.hidden(g, n) for n in build.MENU)
     g.menus["Steve"]("Steve", 0, False)                                # the player clicks the house
     assert server.chosen == 1 and build.chosen(g, "Steve") == "HOUSE"
