@@ -788,6 +788,36 @@ def start(g, setting):
             research(g, {"name": t}, start=True)
 
 
+HASTE_EVERY = 2.0                                                  # AoE2 seconds between two checks of haste()
+
+
+def haste(g, dt):
+    """The own military units within the "attack_aura" range (tiles from the footprint) of an upgraded own building
+    attack "rate" times as fast (the Defensive Town Center: +17.65 %, 8 tiles, #2497): a unit that comes in or goes out
+    gets its values again, with the reload / rate. g.hasted: {uuid: rate} of the fast units. A trebuchet keeps its
+    values (the values of its state: trebuchet.stats_command)."""
+    import combat, trebuchet                                       # both import this module: import them late
+    auras = [(r, a) for r, n in vars(g).get("upgraded", {}).items() if (a := value("attack_aura", n))]
+    hasted = vars(g).get("hasted", {})
+    g.haste_time = vars(g).get("haste_time", 0.0) + dt if auras or hasted else 0.0
+    if g.haste_time < HASTE_EVERY:
+        return
+    g.haste_time, own, T = 0.0, homes(g), g.map.T
+    fast = {u: rate for u, (x, _, z) in g.positions(sorted(u for u, n in g.soldiers.items() if n != trebuchet.NAME)).items()
+            if (rate := max([a["rate"] for r, a in auras if r in own
+                             and max(r[0] - x, x - r[1], r[2] - z, z - r[3]) <= a["range"] * T], default=1)) != 1}
+    for u in sorted(fast.keys() ^ hasted.keys() | {u for u in fast if fast[u] != hasted.get(u)}):
+        name = g.soldiers.get(u)
+        if name is None:
+            continue
+        s = stats(g, name)
+        s = s._replace(reload=s.reload / fast.get(u, 1))
+        g.command(combat.stats_command(u, name, s, civs.taken(g, name), civs.friendly(g, name)))
+        if cmd := combat.range_command(u, name, T, s=s):
+            g.command(cmd)
+    g.hasted = fast
+
+
 def research(g, entry, start=False, rect=None):
     """A technology is complete: keep it in g.techs and give the live villagers and military units the new values.
     start: a technology of the start age (start()): no text and no bonus of an age or technology. An upgrade of one
@@ -800,6 +830,9 @@ def research(g, entry, start=False, rect=None):
         return
     if entry["name"] in ONE_BUILDING:
         vars(g).setdefault("upgraded", {})[rect] = entry["name"]
+        build.retower(g, g.techs, rect)                            # the values of this building only (#2497)
+        if value("arrows", entry["name"]):
+            g.command(garrison.arrows_command(g, rect))
         return
     if entry["name"] in g.techs:                                   # a repeat: "going above and beyond" (#968)
         g.repeats[entry["name"]] = g.repeats.get(entry["name"], 0) + 1
@@ -843,6 +876,8 @@ def research(g, entry, start=False, rect=None):
                 g.command(cmd)
             g.command(combat.label_command(uuid, new))               # the name of a new unit (units.pretty)
     import trebuchet                                               # trebuchet imports this module: import it late
+    if vars(g).get("hasted"):                                      # the values below have no haste: haste() sends
+        g.hasted = {}                                              # them again (#2497)
     for uuid, name in [(u["uuid"], u["name"]) for u in g.units if "uuid" in u] + list(g.soldiers.items()):
         if stats(g, name) != combat.stats(name):
             g.command(trebuchet.stats_command(g, uuid) if name == trebuchet.NAME   # the armor of its state (#1409)
