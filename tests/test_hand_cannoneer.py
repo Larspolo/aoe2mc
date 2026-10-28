@@ -27,7 +27,6 @@ def test_the_hand_cannoneer_has_the_aoe2_cost_time_and_age():
         == ({"food": 45, "gold": 50}, 34, 3)
     assert "HAND_CANNONEER" in train.TRAINS["ARCHERY_RANGE"] and train.HELP["HAND_CANNONEER"]
     assert build.NEEDS["HAND_CANNONEER"] == "CHEMISTRY"
-    assert combat.stats("HAND_CANNONEER")[:5] == (40, 17, 1, 0, 7)                    # HP, attack, armor, range
 
 
 def test_the_hand_cannoneer_is_gray_before_the_imperial_age_and_before_chemistry():

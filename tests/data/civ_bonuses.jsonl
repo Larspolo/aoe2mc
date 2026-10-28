@@ -1,6 +1,6 @@
 {"name": "ACHAEMENIDS: Shipyards work 15% faster (-13.04% time taken).", "civ": "ACHAEMENIDS", "bonus": "Shipyards work 15% faster (-13.04% time taken).", "later": "play:naval"}
 {"name": "ACHAEMENIDS: Town Centers can be upgraded to be more powerful starting in the Civic Age.", "civ": "ACHAEMENIDS", "bonus": "Town Centers can be upgraded to be more powerful starting in the Civic Age.", "later": "play:ages"}
-{"name": "ACHAEMENIDS: Stable technologies research 50% faster (-33% time taken).", "civ": "ACHAEMENIDS", "bonus": "Stable technologies research 50% faster (-33% time taken).", "gap": "play:tech"}
+{"name": "ACHAEMENIDS: Stable technologies research 50% faster (-33% time taken).", "civ": "ACHAEMENIDS", "bonus": "Stable technologies research 50% faster (-33% time taken).", "in": "RESEARCH_TIME"}
 {"name": "ARMENIANS: Mule Carts cost -25%. Mule Carts replace Lumber Camps and Mining Camps.", "civ": "ARMENIANS", "bonus": "Mule Carts cost -25%. Mule Carts replace Lumber Camps and Mining Camps.", "later": "play:gather"}
 {"name": "ARMENIANS: Mule Cart technologies are 40% more effective.", "civ": "ARMENIANS", "bonus": "Mule Cart technologies are 40% more effective.", "later": "play:gather"}
 {"name": "ARMENIANS: Fortified Churches replace Monasteries, and the first one constructed receives a free Relic.", "civ": "ARMENIANS", "bonus": "Fortified Churches replace Monasteries, and the first one constructed receives a free Relic.", "later": "play:monks"}
@@ -53,7 +53,7 @@
 {"name": "CHINESE: Town Centers support 15 population (instead of 5) and have +7 Line of Sight.", "civ": "CHINESE", "bonus": "Town Centers support 15 population (instead of 5) and have +7 Line of Sight.", "gap": "play:train"}
 {"name": "CHINESE: Technologies are 5%/10%/15% cheaper in the Feudal/Castle/Imperial Age, respectively.", "civ": "CHINESE", "bonus": "Technologies are 5%/10%/15% cheaper in the Feudal/Castle/Imperial Age, respectively.", "in": "COSTS"}
 {"name": "CHINESE: Fire Galley line and Fire Lancers move 5%/10% faster in the Castle/Imperial Age.", "civ": "CHINESE", "bonus": "Fire Galley line and Fire Lancers move 5%/10% faster in the Castle/Imperial Age.", "later": "play:naval"}
-{"name": "CUMANS: A second Town Center can be built in the Feudal Age.", "civ": "CUMANS", "bonus": "A second Town Center can be built in the Feudal Age.", "gap": "play:build"}
+{"name": "CUMANS: A second Town Center can be built in the Feudal Age.", "civ": "CUMANS", "bonus": "A second Town Center can be built in the Feudal Age.", "in": "game/build.py"}
 {"name": "CUMANS: Archery Ranges and Stables cost wood -75.", "civ": "CUMANS", "bonus": "Archery Ranges and Stables cost wood -75.", "in": "COSTS"}
 {"name": "CUMANS: Siege Workshop and Battering Ram available in Feudal Age; Capped Ram upgrade available in Castle Age.", "civ": "CUMANS", "bonus": "Siege Workshop and Battering Ram available in Feudal Age; Capped Ram upgrade available in Castle Age.", "later": "play:ages"}
 {"name": "CUMANS: Mounted units move 5%/10%/15% faster in the Feudal/Castle/Imperial Age.", "civ": "CUMANS", "bonus": "Mounted units move 5%/10%/15% faster in the Feudal/Castle/Imperial Age.", "in": "UNITS"}
@@ -80,7 +80,7 @@
 {"name": "GOTHS: Infantry units are 15%/20%/25%/30% cheaper in the Dark/Feudal/Castle/Imperial Age.", "civ": "GOTHS", "bonus": "Infantry units are 15%/20%/25%/30% cheaper in the Dark/Feudal/Castle/Imperial Age.", "in": "COSTS"}
 {"name": "GOTHS: Infantry units have +1/+2/+3 attack bonus against Standard Buildings in the Feudal/Castle/Imperial Age.", "civ": "GOTHS", "bonus": "Infantry units have +1/+2/+3 attack bonus against Standard Buildings in the Feudal/Castle/Imperial Age.", "later": "play:fight"}
 {"name": "GOTHS: Hunters carry food +15; hunt lasts 20% longer.", "civ": "GOTHS", "bonus": "Hunters carry food +15; hunt lasts 20% longer.", "later": "play:hunt"}
-{"name": "GOTHS: Loom is researched instantly.", "civ": "GOTHS", "bonus": "Loom is researched instantly.", "gap": "play:tech"}
+{"name": "GOTHS: Loom is researched instantly.", "civ": "GOTHS", "bonus": "Loom is researched instantly.", "in": "RESEARCH_TIME"}
 {"name": "GOTHS: +10 population cap in the Imperial Age.", "civ": "GOTHS", "bonus": "+10 population cap in the Imperial Age.", "gap": "play:train"}
 {"name": "GURJARAS: Start the game with a Camel Scout.", "civ": "GURJARAS", "bonus": "Start the game with a Camel Scout.", "later": "play:setup"}
 {"name": "GURJARAS: Starts with 2 Forage Bushes with food 175 each under the Town Center.", "civ": "GURJARAS", "bonus": "Starts with 2 Forage Bushes with food 175 each under the Town Center.", "later": "play:setup"}
@@ -111,7 +111,7 @@
 {"name": "JURCHENS: Mounted units and Fire Lancers attack 25% faster starting in the Feudal Age.", "civ": "JURCHENS", "bonus": "Mounted units and Fire Lancers attack 25% faster starting in the Feudal Age.", "gap": "play:fight"}
 {"name": "JURCHENS: Siege Engineers available in the Castle Age.", "civ": "JURCHENS", "bonus": "Siege Engineers available in the Castle Age.", "later": "play:ages"}
 {"name": "JURCHENS: Siege and fortification technologies cost wood -75%.", "civ": "JURCHENS", "bonus": "Siege and fortification technologies cost wood -75%.", "in": "COSTS"}
-{"name": "JURCHENS: Siege and fortification technologies are researched 100% faster.", "civ": "JURCHENS", "bonus": "Siege and fortification technologies are researched 100% faster.", "gap": "play:tech"}
+{"name": "JURCHENS: Siege and fortification technologies are researched 100% faster.", "civ": "JURCHENS", "bonus": "Siege and fortification technologies are researched 100% faster.", "in": "RESEARCH_TIME"}
 {"name": "JURCHENS: Military units receive -50% friendly fire damage.", "civ": "JURCHENS", "bonus": "Military units receive -50% friendly fire damage.", "later": "play:fight"}
 {"name": "KHITANS: The effects of Forging and Iron Casting are doubled.", "civ": "KHITANS", "bonus": "The effects of Forging and Iron Casting are doubled.", "in": "TWICE"}
 {"name": "KHITANS: Skirmishers, Genitours, and the Spearman and Scout Cavalry lines are trained and upgraded 15% faster.", "civ": "KHITANS", "bonus": "Skirmishers, Genitours, and the Spearman and Scout Cavalry lines are trained and upgraded 15% faster.", "in": "TRAIN_RATE"}
@@ -157,9 +157,9 @@
 {"name": "MUISCA: Settlements cost -33% and heal allied human units within 3 tiles by 5/10/15/15 HP/min in the Dark/Feudal/Castle/Imperial Age.", "civ": "MUISCA", "bonus": "Settlements cost -33% and heal allied human units within 3 tiles by 5/10/15/15 HP/min in the Dark/Feudal/Castle/Imperial Age.", "later": "play:build"}
 {"name": "MUISCA: The Champi Scout line and Archery Range units have +1/2/3 melee armor in the Feudal/Castle/Imperial Age.", "civ": "MUISCA", "bonus": "The Champi Scout line and Archery Range units have +1/2/3 melee armor in the Feudal/Castle/Imperial Age.", "gap": "play:fight"}
 {"name": "MUISCA: Monks regain faith 100% faster.", "civ": "MUISCA", "bonus": "Monks regain faith 100% faster.", "later": "play:monks"}
-{"name": "MUISCA: Caravan and Guilds are free.", "civ": "MUISCA", "bonus": "Caravan and Guilds are free.", "gap": "play:market"}
+{"name": "MUISCA: Caravan and Guilds are free.", "civ": "MUISCA", "bonus": "Caravan and Guilds are free.", "in": "COSTS"}
 {"name": "PERSIANS: Start the game with food +50, wood +50.", "civ": "PERSIANS", "bonus": "Start the game with food +50, wood +50.", "in": "START"}
-{"name": "PERSIANS: Town Centers and Docks have double hit points and work 5%/10%/15%/20% faster in the Dark/Feudal/Castle/Imperial Age.", "civ": "PERSIANS", "bonus": "Town Centers and Docks have double hit points and work 5%/10%/15%/20% faster in the Dark/Feudal/Castle/Imperial Age.", "gap": "play:train"}
+{"name": "PERSIANS: Town Centers and Docks have double hit points and work 5%/10%/15%/20% faster in the Dark/Feudal/Castle/Imperial Age.", "civ": "PERSIANS", "bonus": "Town Centers and Docks have double hit points and work 5%/10%/15%/20% faster in the Dark/Feudal/Castle/Imperial Age.", "in": "WORK_RATE"}
 {"name": "PERSIANS: Parthian Tactics available in the Castle Age.", "civ": "PERSIANS", "bonus": "Parthian Tactics available in the Castle Age.", "later": "play:ages"}
 {"name": "PERSIANS: Can build Caravanserais in the Imperial Age.", "civ": "PERSIANS", "bonus": "Can build Caravanserais in the Imperial Age.", "later": "play:market"}
 {"name": "POLES: Villagers regenerate 10/15/20 hit points per minute in the Feudal/Castle/Imperial Age.", "civ": "POLES", "bonus": "Villagers regenerate 10/15/20 hit points per minute in the Feudal/Castle/Imperial Age.", "later": "play:health"}
@@ -178,12 +178,12 @@
 {"name": "ROMANS: Infantry receives double the effect from Blacksmith armor upgrades.", "civ": "ROMANS", "bonus": "Infantry receives double the effect from Blacksmith armor upgrades.", "gap": "play:tech"}
 {"name": "ROMANS: Scorpions cost gold -50%.", "civ": "ROMANS", "bonus": "Scorpions cost gold -50%.", "in": "COSTS"}
 {"name": "SARACENS: The commodity trading fee is 5%.", "civ": "SARACENS", "bonus": "The commodity trading fee is 5%.", "in": "game/market.py"}
-{"name": "SARACENS: Markets cost wood 75.", "civ": "SARACENS", "bonus": "Markets cost wood 75.", "gap": "play:market"}
+{"name": "SARACENS: Markets cost wood 75.", "civ": "SARACENS", "bonus": "Markets cost wood 75.", "in": "COSTS"}
 {"name": "SARACENS: Transport Ships have double hit points and +20 carry capacity.", "civ": "SARACENS", "bonus": "Transport Ships have double hit points and +20 carry capacity.", "later": "play:naval"}
 {"name": "SARACENS: Galleys attack 25% faster.", "civ": "SARACENS", "bonus": "Galleys attack 25% faster.", "later": "play:naval"}
 {"name": "SARACENS: Camel units +25% hit points.", "civ": "SARACENS", "bonus": "Camel units +25% hit points.", "in": "UNITS"}
 {"name": "SAXONS: Mills, Lumber Camps, and Mining Camps provide food 35 when built.", "civ": "SAXONS", "bonus": "Mills, Lumber Camps, and Mining Camps provide food 35 when built.", "gap": "play:build"}
-{"name": "SAXONS: Foot soldiers cost -5% per Town Center or Castle controlled (maximum -20%).", "civ": "SAXONS", "bonus": "Foot soldiers cost -5% per Town Center or Castle controlled (maximum -20%).", "gap": "play:train"}
+{"name": "SAXONS: Foot soldiers cost -5% per Town Center or Castle controlled (maximum -20%).", "civ": "SAXONS", "bonus": "Foot soldiers cost -5% per Town Center or Castle controlled (maximum -20%).", "in": "COST_PER"}
 {"name": "SAXONS: Towers and Castles fire +100% base arrows starting in Castle Age.", "civ": "SAXONS", "bonus": "Towers and Castles fire +100% base arrows starting in Castle Age.", "gap": "play:arrows"}
 {"name": "SAXONS: Longships and Catapult Galleons have +20% hit points.", "civ": "SAXONS", "bonus": "Longships and Catapult Galleons have +20% hit points.", "later": "play:naval"}
 {"name": "SHU: Lumberjacks generate food 0.7 for every wood 10.", "civ": "SHU", "bonus": "Lumberjacks generate food 0.7 for every wood 10.", "in": "EXTRA"}
@@ -197,7 +197,7 @@
 {"name": "SLAVS: Arson and Gambesons are free.", "civ": "SLAVS", "bonus": "Arson and Gambesons are free.", "in": "COSTS"}
 {"name": "SLAVS: Siege Workshop units are 15% cheaper.", "civ": "SLAVS", "bonus": "Siege Workshop units are 15% cheaper.", "in": "COSTS"}
 {"name": "SLAVS: Monks move 20% faster.", "civ": "SLAVS", "bonus": "Monks move 20% faster.", "later": "play:monks"}
-{"name": "SPANISH: Builders work 30% faster (20% for Wonders).", "civ": "SPANISH", "bonus": "Builders work 30% faster (20% for Wonders).", "gap": "play:build"}
+{"name": "SPANISH: Builders work 30% faster (20% for Wonders).", "civ": "SPANISH", "bonus": "Builders work 30% faster (20% for Wonders).", "in": "BUILD"}
 {"name": "SPANISH: Blacksmith upgrades don't cost gold.", "civ": "SPANISH", "bonus": "Blacksmith upgrades don't cost gold.", "in": "COSTS"}
 {"name": "SPANISH: Cannon Galleon projectiles can track moving targets and move faster.", "civ": "SPANISH", "bonus": "Cannon Galleon projectiles can track moving targets and move faster.", "later": "play:naval"}
 {"name": "SPANISH: Gunpowder units fire 18% faster.", "civ": "SPANISH", "bonus": "Gunpowder units fire 18% faster.", "in": "UNITS"}

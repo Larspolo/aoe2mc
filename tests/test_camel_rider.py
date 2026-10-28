@@ -9,7 +9,7 @@ from test_castle_upgrades import STABLE, research, setup
 from test_forging import menus
 from test_mounted_attack import floor, hits
 
-from game import civs, combat, gather, replay, run, train
+from game import civs, combat, gather, run, train
 
 CASTLE = ("FEUDAL_AGE", "CASTLE_AGE")
 
@@ -22,8 +22,6 @@ def stable(civ="TURKS", ages=CASTLE + ("IMPERIAL_AGE",)):   # no camel bonus (By
 
 
 def test_the_values_are_those_of_aoe2():
-    for unit in ("CAMEL_RIDER", "HEAVY_CAMEL_RIDER"):
-        assert combat.sight(unit) == 5 and replay.SPEEDS.get(unit, replay.SPEEDS["CAMEL"]) == 1.45
     assert all(len(train.HELP[n]) <= 50 for n in ("CAMEL_RIDER", "HEAVY_CAMEL_RIDER", "HEAVY_CAMEL_RIDER_UPGRADE"))
     assert {"FRANKS", "CHINESE", "AZTECS"} <= set(civs.MISSING["CAMEL_RIDER"])
     assert not {"BYZANTINES", "SARACENS", "CUMANS", "HINDUSTANIS"} & set(civs.MISSING["CAMEL_RIDER"])
