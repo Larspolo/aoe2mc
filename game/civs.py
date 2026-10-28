@@ -5,7 +5,7 @@ issue. BY_KEY[key][civ] (or value(key, civ, default)) holds the value of each ke
 file and the code that applies it (repair.py, build.py, train.py ...), no new line here. The tables in capitals below
 are the older names of some keys.
 Bonuses that the game program cannot use yet: Japanese fishing ships, Malian oyster gatherers, the elevation
-(Georgians, Tatars), the Lithuanian relics, the Aztec and Slav monks, and the ships.
+(Georgians, Tatars), the Lithuanian relics, the Slav monks, and the ships.
 CHURCH_RATE is the Georgian bonus of the Fortified Church (#1930): build.rise and repair.rate multiply the work of the
 villagers in the 21-tile square around it (church_rate).
 """
@@ -130,6 +130,8 @@ TRAIN_RATE = {r["name"]: [tuples(b) for b in r["train_rate"]] for r in ROWS if "
 HP = {r["name"]: r["hp"] for r in ROWS if "hp" in r}
 ARROWS = {r["name"]: tuples(r["arrows"]) for r in ROWS if "arrows" in r}   # factor of the base arrows in each age (#2178)
 GARRISON = {r["name"]: r["garrison"] for r in ROWS if "garrison" in r}   # units inside a building (garrison.size, #2117)
+HEAL_RANGE = {r["name"]: r["heal_range"] for r in ROWS if "heal_range" in r}   # factor of the monk heal range (#2269)
+TECH_HP = {r["name"]: [tuples(b) for b in r["tech_hp"]] for r in ROWS if "tech_hp" in r}
 EARLIER = {r["name"]: set(r["earlier"]) for r in ROWS if "earlier" in r}   # one age earlier (build.locked, #2268)
 HP_AGE = {r["name"]: r["hp_age"] for r in ROWS if "hp_age" in r}   # the factor of all buildings in each age (Byzantines)
 ALSO = {r["name"]: r["also"] for r in ROWS if "also" in r}
@@ -156,6 +158,7 @@ LOOT = {r["name"]: r["loot"] for r in ROWS if "loot" in r}
 REVEAL = {r["name"]: [tuple(b) for b in r["reveal"]] for r in ROWS if "reveal" in r}
 RELIC_ATTACK = {r["name"]: tuples(r["relic_attack"]) for r in ROWS if "relic_attack" in r}
 FAITH = {r["name"]: r["faith"] for r in ROWS if "faith" in r}
+HERD_FOOD = {r["name"]: {b: tuple(v) for b, v in r["herd_food"].items()} for r in ROWS if "herd_food" in r}
 
 
 def tagged(n, group):

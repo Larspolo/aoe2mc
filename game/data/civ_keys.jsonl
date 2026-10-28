@@ -20,6 +20,8 @@
 {"name": "fallen", "text": "The part of the cost of a fallen own unit that the player gets back (Tupi). game/spoils.py.", "issue": 2271}
 {"name": "farm_upgrades", "text": "The factor of the food of the farm upgrades (Sicilians: +125 %). train.research.", "issue": 2230}
 {"name": "garrison", "text": "The units inside a building, {building: units} (garrison.size).", "issue": 2117}
+{"name": "heal_range", "text": "The factor of the heal range of the monks.", "issue": 2269}
+{"name": "herd_food", "text": "Herdable animals in a building make food (garrison.pasture), {building: [size, a, b]}: at most size animals in each, a × ln(F / b + 1) food per AoE2 minute for F food of the animals in all of them (Gurjara mills: 10, 15, 200, AoE2 DE wiki).", "issue": 2342}
 {"name": "hp", "text": "The hit points factor of a building, {building: factor} (Persians). build.values and combat.setup apply it before the technologies (Masonry).", "issue": 1895}
 {"name": "hp_age", "text": "The factor of the hit points of all its buildings, walls and gates in each age (Byzantines).", "issue": 2116}
 {"name": "kill_gold", "text": "The gold for each military unit that a mounted unit kills (Mapuche). game/spoils.py.", "issue": 2271}
@@ -41,6 +43,7 @@
 {"name": "smith_units", "text": "[group of GROUPS, blacksmith technologies, times in the Dark, Feudal, Castle and Imperial Age]: the units of the group get the effect of each technology that many times, also when the test of the effect does not cover them (train.smith).", "issue": 2174}
 {"name": "start", "text": "The start-resource bonus, {resource: change of START}. In AoE2 the bonus comes with the first town center (a Nomad start gets it later); here it is in the start stock. The extra villagers of the Chinese (+3) and Mayans (+1) are units of the map, not of the stock. Lithuanians: +100 food for each town center, here only for the first one.", "issue": 1269}
 {"name": "tech_gifts", "text": "The resources for each technology but an age, {resource: amount} (Spanish). train.research gives them.", "issue": 2175}
+{"name": "tech_hp", "text": "[group of GROUPS, building, hit points]: the units of the group get the hit points for each technology of the menu of that building that the player has (the Aztec monks: +5 for each monastery technology).", "issue": 2269}
 {"name": "town_center", "text": "The resources that the first town center gives (Tupi +25 of each): in the start stock when the player has a town center at the start, else when its first town center is complete (build.rise).", "issue": 2293}
 {"name": "train_rate", "text": "The train rate of unit groups: [group of GROUPS, factor, also the upgrades] (Aztec military units, Khitan skirmishers ...). train.seconds divides by civs.train_rate().", "issue": 1927}
 {"name": "twice", "text": "The technologies whose effect the civilization gets twice (train.stats).", "issue": 1561}
