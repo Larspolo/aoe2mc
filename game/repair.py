@@ -155,6 +155,7 @@ def resume(g, u, key, state):
     if isinstance(key, str) and (pos := g.pos(key)):
         cell = (math.floor(pos[0]), math.floor(pos[2]))
         goals = shore(g, cell) if g.soldiers.get(key) in fleet.SPEEDS else g.map.around({cell})
+        vars(g).setdefault("repair_at", {})[key] = pos             # unit_tick stops a repair of a unit that moves (#2987)
     elif isinstance(key, tuple) and key in owners(g):
         goals = g.map.around({(x, z) for x in range(key[0], key[1]) for z in range(key[2], key[3])})
     else:
