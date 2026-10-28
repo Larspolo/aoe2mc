@@ -74,8 +74,7 @@ class Bot:
         """Find the villagers of the player (the entities must be loaded) and make the objective of the resources."""
         g = self.g
         g.command(f'scoreboard objectives add {g.board} dummy "Player {g.player}"')
-        for r in gather.RESOURCES:                                     # spending and gathering add to these (#2833)
-            g.command(f"scoreboard players set {r} {g.board} {g.stock[r.lower()]}")
+        g.show_stock()                                                 # spending and gathering add to these (#2833)
         for o in g.units:
             if pos := g.pos(o["uuid"]):
                 g.villagers[o["uuid"]] = gather.Villager(o["uuid"], pos)
