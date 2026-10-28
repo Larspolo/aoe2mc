@@ -19,6 +19,7 @@ Usage:
     python3 game/run.py WORLD --play --end-age castle  # the AoE2 setting "Ending age" (#2346)
     python3 game/run.py WORLD --play --all-techs       # the AoE2 setting "All Techs" (#2298)
     python3 game/run.py WORLD --play --full-tech-tree  # the AoE2 setting "Full Tech Tree" (#2354)
+    python3 game/run.py WORLD --play --turbo           # the AoE2 setting "Turbo Mode" (#2359)
     python3 game/run.py WORLD --play --victory conquest  # the AoE2 setting "Victory": no wonder or relic win (#2316)
     python3 game/run.py WORLD --play --victory time-limit --victory-value 300   # the highest score at 300 years (#2356)
     python3 game/run.py WORLD --play --victory king-of-the-hill   # hold the monument in the center (#2360)
@@ -387,6 +388,7 @@ SETTINGS = {
     "sudden_death": False,            # "Sudden Death Mode" on top of the mode (ON_TOP, #2490)
     "teams": None,                    # {player: team or None} in place of the scenario's (team_choices, #2296)
     "treaty": "0:00",                 # "Treaty length" (MM:SS): before it no player can attack another (treaty.py, #2297)
+    "turbo": False,                   # "Turbo Mode" (civs.turbo, #2359)
     "victory": "standard",            # "Victory" (VICTORIES)
     "victory_value": None,            # the years of "time-limit", the points of "score" (time_limit.YEARS, POINTS)
 }
@@ -432,6 +434,7 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
     data["all_techs"] = settings["all_techs"]                    # one data for all Gathers: the people and the bot (#2298)
     data["end_age"] = train.STARTS[settings["end_age"]]["ages"]  # the last age (build.locked, #2346)
     data["full_tech_tree"] = settings["full_tech_tree"]          # (#2354)
+    data["turbo"] = settings["turbo"]                            # (#2359)
     data["resources"] = settings["resources"]                    # the Regicide start resources of the level (#2388)
     if settings["resources"] in gather.RANDOM:                   # each Gather picks the same level (gather.level, #2489)
         print(f"Random starting resources: {gather.level(settings['resources'], data)}.", file=sys.stderr)
@@ -477,6 +480,10 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
     if not state and scout.used(data):               # the scout of each civilization (#2391), not twice after a load
         for x in [g, *(s.g for s in g.bots)]:
             scout.swap(x)
+    import start_buildings
+    if not state and start_buildings.used(data):     # the Georgian mule cart (#2429), not twice after a load
+        for x in [g, *(s.g for s in g.bots)]:
+            start_buildings.place(x)
     for x in [g, *(s.g for s in g.bots)]:
         x.modes = frozenset(modes)                               # gather.has_mode: build.locked, Gather.run (#2490)
         if MODES[settings["mode"]].get("bots") or x is g:
@@ -661,6 +668,8 @@ def main(argv=None):
     ap.add_argument("--pop-limit", type=pop_limit, default=200, metavar="N",
                     help="--play: the AoE2 setting \"Population limit\" of each player: 25 to 250 in steps of 25, 300, "
                     "400 or 500 (default 200)")
+    ap.add_argument("--turbo", action="store_true", help="--play: the AoE2 setting \"Turbo Mode\": buildings, "
+                    "gatherers and builders work 2.5 times faster (not villagers, trade units, castles, towers, wonders)")
     ap.add_argument("--mode", choices=sorted(MODES), default="standard", help="--play: the AoE2 game mode (default "
                     "standard; " + "; ".join(f"{k}: {v['help']}" for k, v in sorted(MODES.items()) if k != "standard") + ")")
     ap.add_argument("--empire-wars", action="store_true", help="--play: the AoE2 setting \"Empire Wars Mode\" on top "
