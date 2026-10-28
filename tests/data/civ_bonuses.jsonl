@@ -128,7 +128,7 @@
 {"name": "LITHUANIANS: Spearman line and Skirmishers move 10% faster.", "civ": "LITHUANIANS", "bonus": "Spearman line and Skirmishers move 10% faster.", "in": "UNITS"}
 {"name": "LITHUANIANS: Each garrisoned Relic gives +1 attack to Knights and Leitis (maximum +4).", "civ": "LITHUANIANS", "bonus": "Each garrisoned Relic gives +1 attack to Knights and Leitis (maximum +4).", "in": "RELIC_ATTACK"}
 {"name": "MACEDONIANS: Take 10% less damage from enemies on higher elevation.", "civ": "MACEDONIANS", "bonus": "Take 10% less damage from enemies on higher elevation.", "in": "ELEVATION"}
-{"name": "MACEDONIANS: Recruitment Doctrines are available at the Barracks, Archery Range, and Stable.", "civ": "MACEDONIANS", "bonus": "Recruitment Doctrines are available at the Barracks, Archery Range, and Stable.", "later": "play:military-train"}
+{"name": "MACEDONIANS: Recruitment Doctrines are available at the Barracks, Archery Range, and Stable.", "civ": "MACEDONIANS", "bonus": "Recruitment Doctrines are available at the Barracks, Archery Range, and Stable.", "in": "doctrines"}
 {"name": "MACEDONIANS: Infantry armor upgrades also benefit cavalry.", "civ": "MACEDONIANS", "bonus": "Infantry armor upgrades also benefit cavalry.", "in": "SMITH_UNITS"}
 {"name": "MACEDONIANS: Siege weapons have +1 pierce armor and +30% anti-building damage.", "civ": "MACEDONIANS", "bonus": "Siege weapons have +1 pierce armor and +30% anti-building damage.", "in": "UNITS"}
 {"name": "MAGYARS: Forging, Iron Casting, and Blast Furnace are free.", "civ": "MAGYARS", "bonus": "Forging, Iron Casting, and Blast Furnace are free.", "in": "COSTS"}
