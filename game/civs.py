@@ -47,6 +47,7 @@ RULES = {
     "spearmen, skirmishers": lambda n, s: "spearman" in s.classes or tagged(n, "skirmishers"),
     "units": lambda n, s: True,
     "villagers": lambda n, s: n.startswith("VILLAGER"),
+    "warships": lambda n, s: "ship" in s.classes and not tagged(n, "fishing ships"),   # not the transport and trade ships
 }
 TAGS = {r["name"]: tuple(r["groups"]) for r in table.load("units.jsonl") if "groups" in r}
 GROUPS = {g: (lambda f, g: lambda n, s: g in TAGS.get(n, ()) or f(n, s))(RULES.get(g, lambda n, s: False), g)
@@ -89,6 +90,7 @@ SMITH_UNITS = {r["name"]: [tuples(b) for b in r["smith_units"]] for r in ROWS if
 ONLY = {r["name"]: set(r["civs"]) for f in ("train.jsonl", "build.jsonl") for r in table.load(f) if "civs" in r}
 MISSING = {t: tuple(sorted(r["name"] for r in ROWS if t in r["missing"] or r["name"] not in ONLY.get(t, (r["name"],))))
            for t in sorted({t for r in ROWS for t in r["missing"]} | set(ONLY))}
+GENERIC = frozenset(t for r in ROWS for t in r["missing"])   # the AoE2 setting "All Techs" gives them to all (#2298)
 ELEPHANTS = tuple(r["name"] for r in ROWS if r["name"] not in MISSING["BATTLE_ELEPHANT"])   # the battle elephant (#1556)
 EAGLES = tuple(r["name"] for r in ROWS if r["name"] not in MISSING["EAGLE_SCOUT"])   # the eagle line (#1555)
 LANCERS = tuple(r["name"] for r in ROWS if r["name"] not in MISSING["STEPPE_LANCER"])   # the steppe lancers (#1557)
@@ -102,6 +104,8 @@ ECONOMY = tuple(sorted(r["name"] for r in TECH_ROWS if r.get("economy")))   # th
 WORK = {r["name"]: r["work"] for r in ROWS if "work" in r}
 LAST = {r["name"]: r["last"] for r in ROWS if "last" in r}   # resources last longer: a gathered unit takes 1 / factor (#2112)
 START = {r["name"]: r["start"] for r in ROWS if "start" in r}
+TOWN_CENTER = {r["name"]: r["town_center"] for r in ROWS if "town_center" in r}
+BUSHES = {r["name"]: r["bushes"] for r in ROWS if "bushes" in r}
 DROP = {r["name"]: r["drop"] for r in ROWS if "drop" in r}
 SHARED = dict(sorted((n, r["name"]) for r in ROWS for n in r.get("shared", ())))
 NOT_SHARED = {n: tuple(sorted(r["name"] for r in ROWS if n in r.get("not_shared", ())))
@@ -237,10 +241,11 @@ def speed(g, name):
 
 def missing(g, name):
     """True when the civilization of the player of g does not have unit or technology name (MISSING), also not as the
-    shared unit of an allied player (SHARED, gather.allied)."""
+    shared unit of an allied player (SHARED, gather.allied). The AoE2 setting "All Techs" (aoe2mc.json "all_techs",
+    run.py --all-techs, #2298) gives each civilization the GENERIC items; the unique items stay with their civilization."""
     import gather                                                  # gather imports this module
     c = civ(g)
-    if c not in MISSING.get(name, ()):
+    if c not in MISSING.get(name, ()) or g.data.get("all_techs") and name in GENERIC:
         return False
     players = g.data.get("players", {})
     return name not in SHARED or c in NOT_SHARED.get(name, ()) or not any(

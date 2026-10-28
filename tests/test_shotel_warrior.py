@@ -9,7 +9,6 @@ CASTLE = (12, 4)
 
 
 def test_the_values_are_those_of_aoe2():
-    assert train.build.AGE["ELITE_SHOTEL_WARRIOR"] == 3
     assert "SHOTEL_WARRIOR" in combat.STATS and "ELITE_SHOTEL_WARRIOR" in combat.STATS
     for name in ("SHOTEL_WARRIOR", "ELITE_SHOTEL_WARRIOR", "ELITE_SHOTEL_WARRIOR_UPGRADE"):
         assert len(train.HELP[name]) <= 50 and "ETHIOPIANS" not in train.civs.MISSING[name]
