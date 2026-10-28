@@ -84,7 +84,8 @@ def full(g, name, player):
     who = next((b.g for b in g.bots if b.g.player == player), g)   # an allied bot: its techs and age
     if name not in combat.WALLS:
         return build.values(who, name).hp
-    return combat.wall(build.design(who, name, player), build.ages(who), civs.civ(who, player)).hp
+    return combat.wall(build.design(who, name, player), build.ages(who), civs.civ(who, player),
+                       civs.handicap(who.data, player)).hp
 
 
 def uuid(rect):
