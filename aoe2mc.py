@@ -2703,7 +2703,7 @@ def team_lines(objects, players):
 TIMER, SEND_CHAT, DISPLAY_INSTRUCTIONS, IN_AREA = 10, 3, 20, 5   # AoE2 condition and effect IDs (AoE2ScenarioParser)
 OWN_OBJECTS, OWN_FEWER_OBJECTS = 3, 4                              # conditions on the units of a player (#2573)
 COUNTED = (IN_AREA, OWN_OBJECTS, OWN_FEWER_OBJECTS)                # conditions that count units: the tick function
-CREATE_OBJECT, REMOVE_OBJECT, CHANGE_OWNERSHIP, CHANGE_COLOR_MOOD = 11, 15, 18, 72
+CREATE_OBJECT, KILL_OBJECT, REMOVE_OBJECT, CHANGE_OWNERSHIP, CHANGE_COLOR_MOOD = 11, 14, 15, 18, 72
 DAMAGE_OBJECT = 24                                                     # "Damage Object" (#2571)
 TELEPORT_OBJECT = 35
 
@@ -2733,7 +2733,8 @@ def area_selector(c, T):
 
 def object_lines(t, e, T, ground, players, stats):
     """The commands of "Create Object" and "Remove Object" (#656): a summon of the entity of units.make_entity at
-    the middle of the tile, or a kill of the units of the player and type in the area (area_selector).
+    the middle of the tile, or a kill of the units of the player and type in the area (area_selector). "Kill Object"
+    (#2568) is the same kill, also with no area (the whole map): Minecraft shows the death, as AoE2.
     Buildings and other objects are not supported yet: they count in stats."""
     kind, name = e.get("object") or (None, None)
     if e["type"] == CREATE_OBJECT and min(e.get("tile", [-1])) >= 0:
@@ -2753,12 +2754,16 @@ def object_lines(t, e, T, ground, players, stats):
             part.pop("UUID", None)
             parts += list(part.get("Passengers", []))
         return [f"summon {kind} {x + 0.5} {int(ground[x, z])} {z + 0.5} {nbt.snbt()}"]
-    if e["type"] == REMOVE_OBJECT and min(e.get("area", [-1])) >= 0:
+    if e["type"] == KILL_OBJECT or e["type"] == REMOVE_OBJECT and min(e.get("area", [-1])) >= 0:
+        word = "kill" if e["type"] == KILL_OBJECT else "remove"
+        if name is None and e["player"] <= 0 and e["type"] == KILL_OBJECT:   # Gaia units have no tag: a kill
+            stats["kill (not supported yet)"] += 1                     # of all would kill the decor entities too
+            return []
         if (found := effect_units(e, T)) is None:
-            stats["remove (not supported yet)"] += 1
+            stats[f"{word} (not supported yet)"] += 1
             return []
         at, top, nbt = found
-        stats["remove"] += 1
+        stats[word] += 1
         ride = [f"execute as {at} on vehicle run kill @s"] if top is not None and top is not nbt else []
         return ride + [f"kill {at}"]                                       # a rider: its mount goes too
     return []
@@ -2770,8 +2775,8 @@ def effect_units(e, T):
     A type with no entity (a building): None."""
     kind, name = e.get("object") or (None, None)
     at = area_selector(e, T)
-    if e["player"] <= 0:
-        at = re.sub(r"tag=aoe2mc\.p-?\d+,?", "", at)
+    if e["player"] <= 0:                                           # never a player (#2568)
+        at = re.sub(r"tag=aoe2mc\.p-?\d+,?", "type=!minecraft:player,", at)
     if name is None:
         return at, None, None
     nbt = units.make_entity(dict(name=name, player=0), {}, (0.0, 0.0, 0.0), np.random.default_rng(0)) \
@@ -2779,7 +2784,7 @@ def effect_units(e, T):
     if nbt is None:
         return None
     top = units.top_entity(nbt)
-    return (f"@e[type={top['id']},{at[3:]}" if at != "@e[]" else f"@e[type={top['id']}]"), top, nbt
+    return f"@e[type={top['id']},{at[3:]}".replace(",type=!minecraft:player", ""), top, nbt
 
 
 def damage_lines(e, T, stats):
@@ -2791,7 +2796,7 @@ def damage_lines(e, T, stats):
     if found is None:
         stats["damage (heal or building, not supported yet)" if q else "damage (no amount)"] += 1
         return []
-    at = found[0] if found[1] or e["player"] > 0 else f"@e[type=!minecraft:player,{found[0][3:]}"   # Gaia: not the players
+    at = found[0]                                                      # Gaia: not the players (effect_units)
     stats["damage"] += 1
     return [f"execute as {at} run damage @s {q}"]                      # damage takes one entity
 def owner_lines(e, T, stats):
@@ -2858,7 +2863,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
             continue
         lines = []
         for e in t["effects"]:
-            if e["type"] in (CREATE_OBJECT, REMOVE_OBJECT):
+            if e["type"] in (CREATE_OBJECT, KILL_OBJECT, REMOVE_OBJECT):
                 lines += object_lines(t, e, T, ground, players, stats)
                 continue
             if e["type"] == CHANGE_OWNERSHIP:
