@@ -83,7 +83,7 @@
 {"name": "GOTHS: Loom is researched instantly.", "civ": "GOTHS", "bonus": "Loom is researched instantly.", "in": "RESEARCH_TIME"}
 {"name": "GOTHS: +10 population cap in the Imperial Age.", "civ": "GOTHS", "bonus": "+10 population cap in the Imperial Age.", "gap": "play:train"}
 {"name": "GURJARAS: Start the game with a Camel Scout.", "civ": "GURJARAS", "bonus": "Start the game with a Camel Scout.", "later": "play:setup"}
-{"name": "GURJARAS: Starts with 2 Forage Bushes with food 175 each under the Town Center.", "civ": "GURJARAS", "bonus": "Starts with 2 Forage Bushes with food 175 each under the Town Center.", "later": "play:setup"}
+{"name": "GURJARAS: Starts with 2 Forage Bushes with food 175 each under the Town Center.", "civ": "GURJARAS", "bonus": "Starts with 2 Forage Bushes with food 175 each under the Town Center.", "in": "BUSHES"}
 {"name": "GURJARAS: Can garrison Mills with herdable animals to produce food.", "civ": "GURJARAS", "bonus": "Can garrison Mills with herdable animals to produce food.", "later": "play:garrison"}
 {"name": "GURJARAS: Mounted units deal +20%/+30%/+40% bonus damage in the Feudal/Castle/Imperial Age.", "civ": "GURJARAS", "bonus": "Mounted units deal +20%/+30%/+40% bonus damage in the Feudal/Castle/Imperial Age.", "later": "play:fight"}
 {"name": "HINDUSTANIS: Villagers are 8/13/18/23% cheaper in the Dark/Feudal/Castle/Imperial Age.", "civ": "HINDUSTANIS", "bonus": "Villagers are 8/13/18/23% cheaper in the Dark/Feudal/Castle/Imperial Age.", "in": "COSTS"}
@@ -101,7 +101,7 @@
 {"name": "ITALIANS: Advancing to the next Age is 15% cheaper.", "civ": "ITALIANS", "bonus": "Advancing to the next Age is 15% cheaper.", "in": "COSTS"}
 {"name": "ITALIANS: Foot archers (except Skirmishers) and Condottieri +1/+1 armor.", "civ": "ITALIANS", "bonus": "Foot archers (except Skirmishers) and Condottieri +1/+1 armor.", "in": "UNITS"}
 {"name": "ITALIANS: Dock and University technologies are 25% cheaper.", "civ": "ITALIANS", "bonus": "Dock and University technologies are 25% cheaper.", "in": "COSTS"}
-{"name": "ITALIANS: Fishing Ships are 15% cheaper.", "civ": "ITALIANS", "bonus": "Fishing Ships are 15% cheaper.", "later": "play:naval"}
+{"name": "ITALIANS: Fishing Ships are 15% cheaper.", "civ": "ITALIANS", "bonus": "Fishing Ships are 15% cheaper.", "in": "COSTS"}
 {"name": "ITALIANS: Gunpowder units are 20% cheaper.", "civ": "ITALIANS", "bonus": "Gunpowder units are 20% cheaper.", "in": "COSTS"}
 {"name": "JAPANESE: Fishing Ships have double hit points, +2 pierce armor, and work 5%/10%/15%/20% faster in the Dark/Feudal/Castle/Imperial Age.", "civ": "JAPANESE", "bonus": "Fishing Ships have double hit points, +2 pierce armor, and work 5%/10%/15%/20% faster in the Dark/Feudal/Castle/Imperial Age.", "later": "play:naval"}
 {"name": "JAPANESE: Mills, Lumber Camps and Mining Camps are 50% cheaper.", "civ": "JAPANESE", "bonus": "Mills, Lumber Camps and Mining Camps are 50% cheaper.", "in": "COSTS"}
@@ -123,7 +123,7 @@
 {"name": "KOREANS: Stone Miners work 20% faster.", "civ": "KOREANS", "bonus": "Stone Miners work 20% faster.", "in": "WORK"}
 {"name": "KOREANS: Padded Archer Armor-line technologies, Watch Tower line upgrades, and the Bombard Tower technology are free (Bombard Tower requires Chemistry).", "civ": "KOREANS", "bonus": "Padded Archer Armor-line technologies, Watch Tower line upgrades, and the Bombard Tower technology are free (Bombard Tower requires Chemistry).", "in": "COSTS"}
 {"name": "KOREANS: Archer and infantry units cost wood -50%.", "civ": "KOREANS", "bonus": "Archer and infantry units cost wood -50%.", "in": "COSTS"}
-{"name": "KOREANS: Warships cost wood -20%.", "civ": "KOREANS", "bonus": "Warships cost wood -20%.", "later": "play:naval"}
+{"name": "KOREANS: Warships cost wood -20%.", "civ": "KOREANS", "bonus": "Warships cost wood -20%.", "in": "COSTS"}
 {"name": "LITHUANIANS: Each Town Center (including starting one) provides food +100.", "civ": "LITHUANIANS", "bonus": "Each Town Center (including starting one) provides food +100.", "in": "START"}
 {"name": "LITHUANIANS: Spearman line and Skirmishers move 10% faster.", "civ": "LITHUANIANS", "bonus": "Spearman line and Skirmishers move 10% faster.", "in": "UNITS"}
 {"name": "LITHUANIANS: Each garrisoned Relic gives +1 attack to Knights and Leitis (maximum +4).", "civ": "LITHUANIANS", "bonus": "Each garrisoned Relic gives +1 attack to Knights and Leitis (maximum +4).", "later": "play:monks"}
@@ -135,7 +135,8 @@
 {"name": "MAGYARS: Scout Cavalry line is 15% cheaper.", "civ": "MAGYARS", "bonus": "Scout Cavalry line is 15% cheaper.", "in": "COSTS"}
 {"name": "MAGYARS: Villagers kill predators in one strike.", "civ": "MAGYARS", "bonus": "Villagers kill predators in one strike.", "later": "play:hunt"}
 {"name": "MALAY: Advancing in Age is +66% faster.", "civ": "MALAY", "bonus": "Advancing in Age is +66% faster.", "in": "AGE_RATE"}
-{"name": "MALAY: Fish Traps are 33% cheaper and provide food 3×.", "civ": "MALAY", "bonus": "Fish Traps are 33% cheaper and provide food 3×.", "later": "play:naval"}
+{"name": "MALAY: Fish Traps are 33% cheaper.", "civ": "MALAY", "bonus": "Fish Traps are 33% cheaper.", "in": "COSTS"}
+{"name": "MALAY: Fish Traps provide food 3×.", "civ": "MALAY", "bonus": "Fish Traps provide food 3×.", "later": "play:naval"}
 {"name": "MALAY: Battle Elephants are 25% cheaper in the Castle Age, 35% cheaper in the Imperial Age.", "civ": "MALAY", "bonus": "Battle Elephants are 25% cheaper in the Castle Age, 35% cheaper in the Imperial Age.", "in": "COSTS"}
 {"name": "MALAY: Infantry armor upgrades are free.", "civ": "MALAY", "bonus": "Infantry armor upgrades are free.", "in": "COSTS"}
 {"name": "MALIANS: Buildings cost wood -15% (except Farms and starting Town Center).", "civ": "MALIANS", "bonus": "Buildings cost wood -15% (except Farms and starting Town Center).", "in": "COSTS"}
@@ -221,7 +222,7 @@
 {"name": "THRACIANS: All buildings except Town Centers can be built on any elevation.", "civ": "THRACIANS", "bonus": "All buildings except Town Centers can be built on any elevation.", "later": "play:build"}
 {"name": "THRACIANS: Forts and towers increase the work rate of nearby miners and lumberjacks in a square of aura range 8 by 15% and serve as resource drop sites for the respective resources.", "civ": "THRACIANS", "bonus": "Forts and towers increase the work rate of nearby miners and lumberjacks in a square of aura range 8 by 15% and serve as resource drop sites for the respective resources.", "later": "play:gather"}
 {"name": "THRACIANS: Shepherds and hunters generate gold 3 per minute while gathering from animals (excluding Foxes).", "civ": "THRACIANS", "bonus": "Shepherds and hunters generate gold 3 per minute while gathering from animals (excluding Foxes).", "in": "PER_MINUTE"}
-{"name": "TUPI: Start with +25 of each resource once the first Town Center is built.", "civ": "TUPI", "bonus": "Start with +25 of each resource once the first Town Center is built.", "later": "play:setup"}
+{"name": "TUPI: Start with +25 of each resource once the first Town Center is built.", "civ": "TUPI", "bonus": "Start with +25 of each resource once the first Town Center is built.", "in": "TOWN_CENTER"}
 {"name": "TUPI: Villagers can garrison in Settlements (max 5).", "civ": "TUPI", "bonus": "Villagers can garrison in Settlements (max 5).", "later": "play:garrison"}
 {"name": "TUPI: Fallen units, except ships and siege weapons, return 15% of their cost.", "civ": "TUPI", "bonus": "Fallen units, except ships and siege weapons, return 15% of their cost.", "in": "FALLEN"}
 {"name": "TUPI: Archery Range and Barracks technologies cost food -50%.", "civ": "TUPI", "bonus": "Archery Range and Barracks technologies cost food -50%.", "in": "COSTS"}
@@ -241,7 +242,7 @@
 {"name": "VIETNAMESE: Conscription is free.", "civ": "VIETNAMESE", "bonus": "Conscription is free.", "in": "COSTS"}
 {"name": "VIETNAMESE: Economic technologies (except Coinage and Banking) cost no wood and are researched 100% faster.", "civ": "VIETNAMESE", "bonus": "Economic technologies (except Coinage and Banking) cost no wood and are researched 100% faster.", "in": "COSTS"}
 {"name": "VIKINGS: Wheelbarrow and Hand Cart free.", "civ": "VIKINGS", "bonus": "Wheelbarrow and Hand Cart free.", "in": "COSTS"}
-{"name": "VIKINGS: Warships cost -10%/-15%/-20% in the Feudal/Castle/Imperial Age.", "civ": "VIKINGS", "bonus": "Warships cost -10%/-15%/-20% in the Feudal/Castle/Imperial Age.", "later": "play:naval"}
+{"name": "VIKINGS: Warships cost -10%/-15%/-20% in the Feudal/Castle/Imperial Age.", "civ": "VIKINGS", "bonus": "Warships cost -10%/-15%/-20% in the Feudal/Castle/Imperial Age.", "in": "COSTS"}
 {"name": "VIKINGS: Infantry have +20% hit points starting from the Feudal Age.", "civ": "VIKINGS", "bonus": "Infantry have +20% hit points starting from the Feudal Age.", "in": "UNITS"}
 {"name": "WEI: Receive one free Villager for each economic technology researched", "civ": "WEI", "bonus": "Receive one free Villager for each economic technology researched", "in": "ECONOMY_VILLAGERS"}
 {"name": "WEI: Hei Guang Cavalry +20%/30% hit points in Castle/Imperial Age", "civ": "WEI", "bonus": "Hei Guang Cavalry +20%/30% hit points in Castle/Imperial Age", "in": "UNITS"}
@@ -250,4 +251,4 @@
 {"name": "WU: Barracks, Archery Ranges, Stables, Siege Workshops, Castles, and Docks provide food +55 when constructed.", "civ": "WU", "bonus": "Barracks, Archery Ranges, Stables, Siege Workshops, Castles, and Docks provide food +55 when constructed.", "in": "BUILT_FOOD"}
 {"name": "WU: Infantry regenerate 10/15/30 hit points per minute in Feudal/Castle/Imperial Age.", "civ": "WU", "bonus": "Infantry regenerate 10/15/30 hit points per minute in Feudal/Castle/Imperial Age.", "in": "REGEN"}
 {"name": "WU: Jian Swordsmen and Hei Guang Cavalry have +2 attack in Imperial Age.", "civ": "WU", "bonus": "Jian Swordsmen and Hei Guang Cavalry have +2 attack in Imperial Age.", "later": "play:military-train"}
-{"name": "WU: Careening and Dry Dock are free.", "civ": "WU", "bonus": "Careening and Dry Dock are free.", "later": "play:naval"}
+{"name": "WU: Careening and Dry Dock are free.", "civ": "WU", "bonus": "Careening and Dry Dock are free.", "in": "COSTS"}

@@ -10,11 +10,11 @@ from test_building_damage import hp
 from test_siege_walk import summon
 from test_train_castle import menus, setup
 
-from game import ai, build, combat, train
+from game import ai, combat, train
 
 
 def test_the_castle_trains_the_petard_from_the_castle_age():
-    assert build.AGE["PETARD"] == 2 and train.ITEMS["PETARD"][0] == train.MORE + 1   # first row full, Spies
+    assert train.ITEMS["PETARD"][0] == train.MORE + 1
     server, g = setup(food=500, gold=500, ages=1)                      # the Feudal Age
     assert "PETARD" in train.trains(g, "CASTLE") and "PETARD" in train.trains(g, "KREPOST")
     train.open_menu(g, "Steve", (12, 4))

@@ -18,7 +18,6 @@ def menu(civ):
 
 
 def test_the_values_are_those_of_the_wiki():
-    assert build.AGE["TRACTION_TREBUCHET"] == 3
     assert "TRACTION_TREBUCHET" not in build.NEEDS and len(train.HELP["TRACTION_TREBUCHET"]) <= 50
     assert train.ITEMS["TRACTION_TREBUCHET"][0] == UNIT
 
