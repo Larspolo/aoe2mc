@@ -58,7 +58,7 @@ def test_an_order_walks_next_to_its_target():
 def test_a_new_id_takes_the_spawned_unit():
     tl = [queue(t=0), dict(time=30000, player=1, kind="move", objects=[500], tile=[1.5, 7.5], names=["VILLAGER_MALE"])]
     r, sent, _ = play(tl, [TC])
-    uuid = re.search(r"UUID: \[I; ([-\d, ]+)\]", next(c for c in sent if c.startswith("summon")))[1]
+    uuid = re.search(r"UUID:\[I;([-\d,]+)\]", next(c for c in sent if c.startswith("summon")))[1]
     v = r.units[500]
     assert v.uuid == replay.units.uuid_str([int(n) for n in uuid.split(",")])
     assert tps(sent, v.uuid)[-1] == (6, 30)

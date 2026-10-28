@@ -15,6 +15,8 @@ The minimap (#2583, epic #2580): each update also sends the sight of the player 
 (Minimap.java: `aoe minimap fog T N pN`, `see pN`, `dim pN`, minimap()): unexplored tiles are black, explored tiles out
 of sight dark, and an enemy building shows on the minimap of a team only after a tile of it was in its sight. A saved
 game keeps the explored tiles (savegame.explored, #2677): after a load the first update sends them all again.
+The team spec of the spectators (#2898) gets no hide and no minimap fog: Minimap.java draws the whole map for a player
+with no team fog (#2899). The game mode spectator shows no held item, so a spectator sees map 0 only in a follow view.
 
     fog.tick(g)    # gather.Gather.run: once each EVERY seconds, on Paper only; run.Side.step for player 2 (#1631)
 """
