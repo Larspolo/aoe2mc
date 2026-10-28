@@ -37,7 +37,7 @@ MAP = {
     ("condition", "VARIABLE_VALUE"): "`execute if score #vN aoe_var matches ..` in the tick function, once (#2611)",
     ("condition", "CHANCE"): "`execute store result score ... run random value 1..100` once per second (alone, after the timers or with the ticked conditions: #2574)",
     ("condition", "PLAYER_DEFEATED"): "`execute unless entity @e[team=pN]`",
-    ("condition", "ACCUMULATE_ATTRIBUTE"): NO_ECONOMY,
+    ("condition", "ACCUMULATE_ATTRIBUTE"): "`execute if score Gold aoe_resN matches Q..`: the resource scores of the game program (#2655)",
     ("condition", "RESEARCH_TECHNOLOGY"): "`if score #pN.NAME aoe_tech matches 1..` in the tick function: the scenario mode of the game program sets the score of each researched technology (#2656)",
     ("condition", "DIFFICULTY_LEVEL"): "`execute if score #level aoe_difficulty matches N` (the game program sets the score, #2704)",
     ("condition", "OBJECT_SELECTED"): "not supported: Minecraft has no selection",
