@@ -393,14 +393,21 @@ def costs(g):
     """The new costs of "Change Object Cost" (aoe2mc.cost_lines, #2776): read and empty the list of the data storage
     COSTS, and keep each cost in trigger_costs of the side of its player (the people and the bots): civs.cost uses it
     in place of the cost with the civilization bonuses, in the menus and when the player pays. A later line wins."""
-    new = re.findall(r'"(\d+) (\w+)((?: [a-z]+=\d+)*)"', g.command(f"data get storage {COSTS} list") or "")
+    new = re.findall(r'"(\d+) (\w+)((?: \+?[a-z]+=\d+)*)"', g.command(f"data get storage {COSTS} list") or "")
     if new:
         g.command(f"data remove storage {COSTS} list")
     sides = {x.player: x for x in [g, *(s.g for s in g.bots)]}
     for player, name, cost in new:
         if int(player) in sides:
-            vars(sides[int(player)]).setdefault("trigger_costs", {})[name] = \
-                {r: int(v) for r, v in (part.split("=") for part in cost.split())}
+            side = sides[int(player)]
+            pairs = [part.split("=") for part in cost.split()]
+            if any(r.startswith("+") for r, _ in pairs):          # "Set Object Cost" (#2857): one resource, the rest stays
+                import build                                       # build imports gather, gather imports civs
+                base = build.price(side, name) if name in build.COSTS else train.price(side, name)
+                pairs = [(r.lstrip("+"), v) for r, v in pairs]
+                vars(side).setdefault("trigger_costs", {})[name] = {k: v for k, v in {**base, **{r: int(v) for r, v in pairs}}.items() if v}
+            else:
+                vars(side).setdefault("trigger_costs", {})[name] = {r: int(v) for r, v in pairs}
 
 
 def times(g):
@@ -567,8 +574,7 @@ def setup(g, mode="scenario", start=True):
     for x, p in rows.items():
         x.stock.update(p.get("resources", {}))
         x.pop_limit = p.get("pop_limit", x.pop_limit)
-        for r in gather.RESOURCES:                                     # the sidebar of the resources (Gather.setup)
-            x.command(f"scoreboard players set {r} {x.board} {x.stock[r.lower()]}")
+        x.show_stock()                                                 # the sidebar of the resources (Gather.setup)
         train.sidebar(x)
     return g
 
@@ -814,6 +820,9 @@ def stance(players, n, m, kind):
         return
     if kind != "ally":
         row.pop("team")
+        return
+    if other.get("team") is None and row.get("team") is not None:
+        other["team"] = row["team"]                                    # m joins n: n keeps its other allies (#2997)
         return
     if other.get("team") is None:
         other["team"] = 1 + max((p["team"] for p in players.values() if p.get("team") is not None), default=0)

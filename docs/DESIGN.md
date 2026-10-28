@@ -49,7 +49,7 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | AoE2 feature | Minecraft block | Used today in |
 |---|---|---|
 | Door, main entrance | `*_door` (front: south side), or an open arch for large gates | `pasture`, `tomb`, `yurt`, `house` +31 more |
-| Window | `glass_pane`; `iron_bars` for fortified buildings | `barracks`, `ring`, `arena_inside`, `archery_range` +19 more |
+| Window | `glass_pane`; `iron_bars` for fortified buildings | `barracks`, `ring`, `arena_inside`, `tower` +19 more |
 | Archery target | `target` | `archery_range` |
 | Bow and arrow work | `fletching_table` | `archery_range` |
 | Forge, smithy | `blast_furnace`, `anvil`, `smithing_table`, `cauldron` (water) | `blacksmith` |
@@ -62,7 +62,7 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Straw bed of a poor house, a camp or a barracks (inside) | `straw_bed` | `mill_room`, `lumber_camp`, `mining_camp`, `barracks` |
 | Hearth in a hut or yurt | lit `campfire` in the middle (the smoke goes through the roof), `*_carpet` rugs around it | `hearth_room`, `furnish_worship`, `furnish`, `throne_hall` +24 more |
 | Bedroll in a tent | `*_bed` (player color) on the floor along the canvas | `furnish`, `mill_room`, `hearth_room`, `lumber_camp` +3 more |
-| Spears in a rack | `lightning_rod` | `nine_bands`, `storage`, `army_tent`, `shrine` +21 more |
+| Spears in a rack | `lightning_rod` | `nine_bands`, `storage`, `army_tent`, `feitoria` +21 more |
 | Map table of a commander | `cartography_table` | `study`, `command_tent`, `harbor`, `market` +2 more |
 | Cushion | `red_wool` next to a low `*_slab[type=top]` table | `pavilion`, `scaffold_walk`, `scaffolding`, `cart` +46 more |
 | Table with a light (inside) | `*_slab[type=top]` with a `lantern` on it, a `*_stairs` stool | `town_hall`, `furnish`, `pagoda`, `hall_of_heroes` +41 more |
@@ -91,7 +91,7 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Counting room (inside) | `cartography_table` with a `lantern`, `lectern[has_book=true]` | `market`, `feitoria`, `keep_inside`, `throne_hall` +6 more |
 | Market stall | lean-to of roof stairs on `*_fence` posts; wool awning in stripes for flat-roof sets | `fish_trap`, `nine_bands`, `outpost`, `flagship` +38 more |
 | Cloth awning or tent roof that slopes | `*_wool_stairs` and `*_wool_slab` (player color or `white_*`) | `command_tent`, `pasture`, `stupa`, `army_tent` +22 more |
-| Upper floor (inside) | `*_planks` floor and a `ladder` | `helepolis`, `wooden_fort`, `outpost`, `tower` +39 more |
+| Upper floor (inside) | `*_planks` floor and a `ladder` | `helepolis`, `tower`, `wooden_fort`, `outpost` +39 more |
 | Painted trim (deck edge, band) | `*_concrete` (player color) | `torii`, `stupa`, `pyramid`, `feitoria` +2 more |
 | Painted plaster roof or ledge | `*_concrete_stairs` and `*_concrete_slab` | no design |
 | Red-painted stone (Indian, Mesoamerican, East Asian temples) | `cinnabar`, `cinnabar_bricks`, `polished_cinnabar`, `chiseled_cinnabar` | `rekha_deul`, `pagoda` |
@@ -140,8 +140,8 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Yurt felt | `blue_wool` with a zig-zag of `white_wool` (or the inverse), a flat dome with a `spruce_trapdoor` crown ring | `yurt`, `pasture`, `market`, `pavilion` +8 more |
 | Pavilion cloth | stripes of `*_wool` (player color) on `white_wool`, a `yellow_wool` valance, a white cone | `pavilion`, `command_tent`, `pasture`, `army_tent` +8 more |
 | Thatch | `hay_block` | `settlement`, `hut`, `mill_room`, `granary` +20 more |
-| Wicker wall of a hut | `mangrove_roots` between `spruce_log[axis=y]` posts | `hut`, `barricade`, `log_pile`, `wooden_fort` +22 more |
-| Palisade stakes | `*_log[axis=y]` of two heights, `spruce_fence` tips | `crane`, `outpost`, `wooden_fort`, `barricade` +41 more |
+| Wicker wall of a hut | `mangrove_roots` between `spruce_log[axis=y]` posts | `hut`, `barricade`, `log_pile`, `shipyard` +22 more |
+| Palisade stakes | `*_log[axis=y]` of two heights, `spruce_fence` tips | `crane`, `outpost`, `barricade`, `dock` +41 more |
 | Gold statue, finial | `gold_block` | `buddha_statue`, `throne_hall`, `dome_rock`, `ring` +17 more |
 | Painted wood (torii) | `red_concrete`, `black_concrete` pillar feet, a `spruce_planks` bark top with `spruce_stairs` upturned ends | `torii`, `wooden_fort`, `dock`, `storage` +7 more |
 | Name plaque (torii) | `blue_stained_glass_pane` between the beams | `torii`, `cathedral` |
@@ -150,7 +150,7 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Scaffolding, building site | `scaffolding` posts, `spruce_slab` decks, `ladder` | `scaffold_walk`, `scaffolding`, `tower`, `market` |
 | Standing stones with lintels | `stone`, `andesite`, `tuff` posts, a ring of `stone` on top | `stonehenge`, `dome_rock`, `mole`, `mining_camp` +7 more |
 | Stone seats of a theatre | `stone_bricks` rising outward, `smooth_stone` and slabs on top | `theatre`, `fortified_church`, `port`, `donjon` +43 more |
-| Spire tip, finial | `lightning_rod` | `nine_bands`, `storage`, `army_tent`, `shrine` +21 more |
+| Spire tip, finial | `lightning_rod` | `nine_bands`, `storage`, `army_tent`, `feitoria` +21 more |
 | Copper roof, copper dome | `weathered_cut_copper`, `weathered_copper` | `cathedral` |
 | Slate spire | `deepslate_tiles` | `hall_of_heroes`, `cathedral` |
 | Pinnacle | the `accent_wall` of the style (`*_wall`) | `ring`, `garden`, `courtyard_walls`, `storage` +23 more |
@@ -162,7 +162,7 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Bartizan (corner turret) | stone, `smooth_quartz` cap, `lightning_rod` | `temple_of_heaven`, `taj`, `stupa`, `dome_rock` +26 more |
 | Terracotta roof (Portuguese, Sicilian, Polish) | `brick` stairs | `oracles_temple`, `folwark`, `svan_tower`, `shelter` +13 more |
 | Portcullis, grille | `iron_bars` | `arena_inside`, `tower`, `donjon`, `krepost` +4 more |
-| Wooden hoarding | wood slab (top) or `spruce_planks` with a `*_fence` rail | `helepolis`, `crane`, `shipyard`, `wooden_fort` +48 more |
+| Wooden hoarding | wood slab (top) or `spruce_planks` with a `*_fence` rail | `helepolis`, `crane`, `shipyard`, `outpost` +48 more |
 | Coat of arms | `*_wall_banner` (player color) over the gate | `throne_hall`, `town_hall`, `keep_inside`, `arena_inside` +42 more |
 | Lamp | `lantern` | `hang`, `keep_inside`, `furnish`, `mill_room` +36 more |
 | Lamp inside a room | `lantern[hanging=true]` under a ceiling, or on an `iron_chain` | `hang`, `lumber_camp`, `shipyard`, `blacksmith` +39 more |
@@ -188,7 +188,7 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Prang (Khmer lotus-bud tower) | rings of `stone_bricks` and `chiseled_stone_bricks`, `gold_block` tip | `temple`, `harbor`, `hall_of_heroes`, `feitoria` +10 more |
 | Checkered stone base | `polished_deepslate` in a checker pattern in the main stone | `caravanserai`, `stone_head` |
 | Gilded dome | `gold_block` | `buddha_statue`, `throne_hall`, `dome_rock`, `ring` +17 more |
-| Raised portal (pishtaq) of an arched gate | wall over the roof line, `chiseled_sandstone` frame, upside-down stairs as the arch | `pillar`, `statues`, `shrine`, `caravanserai` +9 more |
+| Raised portal (pishtaq) of an arched gate | wall over the roof line, `chiseled_sandstone` frame, upside-down stairs as the arch | `pillar`, `statues`, `caravanserai`, `sanchi_stupa` +9 more |
 | Siege engine under construction | `spruce_slab`, `spruce_fence` and `spruce_log` | `barricade`, `dock`, `tower`, `market` +11 more |
 | Stair to a roof terrace | `*_stairs` of the roof material | `storage`, `shelter`, `furnish_worship`, `town_hall` +43 more |
 | Sail | `*_wool` (player color) | `yurt`, `pavilion`, `command_tent`, `pasture` +23 more |

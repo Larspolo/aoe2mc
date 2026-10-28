@@ -50,6 +50,7 @@ def setup(g, mode="defend-the-wonder", start=True):
         g.wonder = combat.target_uuid([x0, z0, x1, z1])                # wonder.tick gives it its target
     for n, h in playing.items():
         h.stock.update(MODE["sides"][side(g, n)] if start else {})
+        h.show_stock()                                                 # the board holds the stock too (#3111)
         home = next((r for r, k in sorted(train.homes(h).items()) if k == "TOWN_CENTER"), None)
         if start and home:
             middle = ((home[0] + home[1]) // 2, (home[2] + home[3]) // 2)
