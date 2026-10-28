@@ -178,6 +178,8 @@ NOT_SAVED = (                                                          # the fie
     "score_at",                                                        # score.py: the next check time
     "shapes",                                                          # build.py: the shown building to place
     "share",                                                           # bot.py: the techs of the human player
+    "spectator_at",                                                    # spectator.py: the next check time
+    "spectator_sent",                                                  # spectator.tick: a load sends them again
     "speed",                                                           # run.py: the --speed option
     "sudden_death_at",                                                 # sudden_death.py: the next check time
     "tech_state_at",                                                   # scenario.py: the next check time

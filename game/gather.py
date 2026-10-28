@@ -79,6 +79,7 @@ import relic_victory  # noqa: E402
 import repair  # noqa: E402
 import scenario  # noqa: E402
 import score  # noqa: E402
+import spectator  # noqa: E402
 import siege_tower  # noqa: E402
 import sudden_death  # noqa: E402
 import stance  # noqa: E402
@@ -1934,6 +1935,7 @@ class Gather:
             elif self.victory == "king-of-the-hill":                   # the monument in the center (#2360)
                 hill.tick(self, self.tick * NORMAL)
             score.tick(self)
+            spectator.tick(self)                                       # the sidebar of the spectators (#2900)
             if self.victory in ("time-limit", "score"):                # after the conquest: it wins before (#2356)
                 time_limit.tick(self, self.tick * NORMAL)
             treaty.tick(self, self.tick * NORMAL)
