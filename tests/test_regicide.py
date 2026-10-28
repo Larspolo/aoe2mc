@@ -23,7 +23,8 @@ def game(king2=True):
     objects += [{"kind": "unit", "name": "KING", "player": 2, "uuid": "k-2", "tile": [10.5, 10.5]}] * king2
     server = FakeServer({"k-2": {"Pos": (10.5, 64.0, 10.5)}, "m-3": {"Pos": (18.5, 64.0, 2.5)}, "Steve": {}})
     g = gather.Gather(server, grid([[64] * 20 for _ in range(20)], objects)).setup()
-    g.players = {str(p): {"color": "blue"} for p in (0, 1, 2, 3)}
+    g.players = g.data["players"] = {str(p): {"color": "blue", "arch": "western"} for p in (0, 1, 2, 3)}
+    g.data.update(tile_size=1, level_height=1)                     # build.found draws the Castle site (#2388)
     owner = {o["uuid"]: o["player"] for o in objects if "uuid" in o}
     server.kings = set()
     command = server.command
@@ -57,7 +58,8 @@ def test_each_player_with_a_town_center_has_one_king(monkeypatch):
     server, g, spy = game()
     monkeypatch.setattr(train, "summon", spy)
     regicide.setup(g)
-    assert [(name, player) for name, player, pos in server.summoned] == [("KING", 1)]   # player 2 has its own
+    assert [(name, player) for name, player, pos in server.summoned if name == "KING"] == [("KING", 1)]   # player 2
+    server.summoned = server.summoned[:1]                          # has its own; the villagers: test_regicide_start.py
     (_, _, (x, _, z)), = server.summoned
     assert 1 <= x <= 7 and 1 <= z <= 7                             # next to the town center of player 1
     assert "tag k-2 add aoe2mc.king" in server.log and g.kings == {1, 2}   # player 3: no town center, no King
@@ -68,8 +70,9 @@ def test_a_loaded_game_gets_no_second_king(monkeypatch):
     server, g, spy = game()
     monkeypatch.setattr(train, "summon", spy)
     regicide.setup(g)
+    n = len(server.summoned)
     regicide.setup(g)                                              # the tag stays on the King in the world
-    assert len(server.summoned) == 1
+    assert len(server.summoned) == n and [u[0] for u in server.summoned].count("KING") == 1   # no more villagers too
 
 
 def test_the_death_of_a_rival_king_defeats_its_player(monkeypatch):
@@ -132,11 +135,11 @@ def test_play_sets_up_the_mode(mode, tmp_path, monkeypatch):
         def run(self, seconds):
             seen.append(getattr(self, "mode", "standard"))
     monkeypatch.setattr(gather, "Gather", FakeGather)
-    monkeypatch.setattr(regicide, "setup", lambda g, m: seen.append(f"setup {m}"))
+    monkeypatch.setattr(regicide, "setup", lambda g, m, r: seen.append(f"setup {m} {r}"))
     import combat
     monkeypatch.setattr(combat, "setup", lambda game, data: None)
     run.play(FakeGame(), str(tmp_path), mode=mode)
-    assert seen == (["setup regicide", "regicide"] if mode == "regicide" else ["standard"])
+    assert seen == (["setup regicide standard", "regicide"] if mode == "regicide" else ["standard"])
 
 
 def test_the_mode_option_goes_to_play(tmp_path, monkeypatch):

@@ -8,6 +8,10 @@ tag stays in the world, so a loaded game (savegame) finds its Kings again and gi
 King and no town center is not in the mode: only the conquest rule (conquest.py) can defeat it.
 gather.Gather.run calls tick() each conquest.EVERY seconds. A defeated player goes into the sets of conquest.py
 (g.defeated, g.conquest_seen), so conquest.tick gives the "Victory" when only allies are left.
+A new King comes with the other start items of the mode (#2388): the units of "more" (7 villagers) and a construction
+site of each building of "sites" (the Castle, free) next to the town center. "start" holds the starting resources
+of each level of run.py --resources, and "swap" the technologies that the mode puts in place of others (train.unlocked:
+Treason for Spies). Treason lets the enemy Kings glow (reveal).
 """
 import json
 import os
@@ -27,11 +31,15 @@ def has_king(g, n):
     return "passed" in g.command(f"execute if entity @e[tag=aoe2mc.p{n},tag={KING}]")
 
 
-def setup(g, mode="regicide"):
+def setup(g, mode="regicide", resources=None):
     """Give each player (not Gaia) its Kings: tag the ones of the scenario, else summon the start units of the mode in
-    front of its first town center. g.kings: the players that have a King, the players of the mode."""
+    front of its first town center, with the more units and buildings of the mode. resources: the level of the
+    starting resources (None: a loaded game keeps its stock). g.kings: the players that have a King, the players of the
+    mode."""
     import train                                                       # train imports gather, gather imports this module
     gathers = {x.player: x for x in [g, *(s.g for s in g.bots)]}       # an own unit goes to the Gather of its player
+    for x in gathers.values():
+        start(x, MODES[mode], resources)
     g.kings = set()
     for n in sorted(int(p) for p in g.players if int(p)):
         for o in g.data["objects"]:
@@ -41,14 +49,51 @@ def setup(g, mode="regicide"):
             tc = next((o["footprint"] for o in g.data["objects"] if o["kind"] == "building" and o["player"] == n
                        and o["name"] == "TOWN_CENTER" and "footprint" in o), None)
             cells = tc and g.map.front((tc[0], tc[2], tc[1], tc[3]))  # footprint (x0, z0, x1, z1) -> rect
-            for k, name in enumerate(MODES[mode]["units"] if cells else ()):
+            more = [u for u, c in MODES[mode].get("more", {}).items() for _ in range(c)]
+            for k, name in enumerate([*MODES[mode]["units"], *more] if cells else ()):
                 x, z = cells[k % len(cells)]
                 uuid = train.summon(gathers.get(n, g), name, (x + 0.5, float(g.map.y(x, z)), z + 0.5), player=n)
-                if uuid:
+                if uuid and k < len(MODES[mode]["units"]):
                     g.command(f"tag {uuid} add {KING}")
+            if tc and n in gathers:
+                for name, count in sorted(MODES[mode].get("sites", {}).items()):
+                    for _ in range(count):
+                        found(gathers[n], name, ((tc[0] + tc[2]) // 2, (tc[1] + tc[3]) // 2))
         if has_king(g, n):
             g.kings.add(n)
     return g
+
+
+def start(x, line, level):
+    """The starting resources of the mode (its key "start") in place of those of level for the Gather x: the
+    civilization bonuses stay (#2388)."""
+    import gather                                                      # gather imports this module
+    for r, v in line.get("start", {}).get(level, {}).items():
+        x.stock[r] = max(0, x.stock[r] + v - gather.LEVELS[level][r])
+        x.command(f"scoreboard players set {r.capitalize()} {x.board} {x.stock[r]}")
+
+
+def found(x, name, cell):
+    """A free construction site of building name of the Gather x next to the block cell (the town center), if there
+    is room."""
+    import build                                                       # build imports gather, gather imports this module
+    rect = build.near(x, name, cell)
+    if rect is None:
+        return
+    price = build.price(x, name)
+    build.found(x, name, rect)
+    for r, v in price.items():                                         # build.found pays: give it back
+        x.stock[r] += v
+        x.command(f"scoreboard players add {r.capitalize()} {x.board} {v}")
+
+
+def reveal(g, seconds):
+    """Treason (#2388): the Kings of the enemies of the player of g glow for `seconds` AoE2 seconds. The Minecraft
+    effect Glowing shows a mob through the blocks."""
+    import gather                                                      # gather imports this module
+    real = max(1, round(seconds / getattr(g, "speed", 1.0)))
+    for n in sorted(int(p) for p in g.players if int(p) and not gather.allied(g.players, g.player, int(p))):
+        g.command(f"effect give @e[tag=aoe2mc.p{n},tag={KING}] minecraft:glowing {real} 0 true")
 
 
 def tick(g):

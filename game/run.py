@@ -428,7 +428,10 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
         import sudden_death
         for x in [g, *(s.g for s in g.bots)]:
             x.mode = settings["mode"]                # build.locked of each player (#2407)
-        (sudden_death if settings["mode"] == "sudden-death" else regicide).setup(g, settings["mode"])
+        if settings["mode"] == "sudden-death":
+            sudden_death.setup(g, settings["mode"])
+        else:                                        # a loaded game keeps its stock (#2388)
+            regicide.setup(g, settings["mode"], None if state else settings["resources"])
     import replay
     import treaty as treaties
     if replay.aoe2mc.game_time(settings["treaty"]):              # after the Gathers: they set the neutral stances
