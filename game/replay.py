@@ -249,11 +249,11 @@ def live(make, speed=1.0, start=0, restart=None, **kw):
     (it puts the world back to its start state), then a fresh replay from `start` jumps forward to T: the same state
     as a new replay with a jump to T. Speed and pause stay. Without restart a jump back changes nothing. Returns the
     stats of the last run."""
-    to, paused, stats = None, False, {}
+    to, paused, stats = start or None, False, {}              # the first run jumps to start: its state (#3025)
     while True:
         r = make()
         r.pov = stats.get("view", r.pov)                            # the view stays too (#1303)
-        stats = r.run(speed, start, to=to, paused=paused, rewind=restart is not None, **kw)
+        stats = r.run(speed, 0, to=to, paused=paused, rewind=restart is not None, **kw)   # events before start: the jump
         if stats.get("rewind") is None:
             return stats
         to, speed, paused = max(start, stats["rewind"]), stats["speed"], stats["paused"]
