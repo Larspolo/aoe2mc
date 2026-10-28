@@ -30,3 +30,26 @@ def test_no_test_copies_a_value_of_train_jsonl():
             with open(os.path.join(ROOT, "tests", name), encoding="utf-8") as f:
                 bad += [f"{name}:{i}" for i, line in enumerate(f, 1) if COPY.search(line)]
     assert not bad, f"a test copies a cost, a train time or an age of train.jsonl (#2182): {bad}"
+
+
+# A literal combat value of units.jsonl or buildings.jsonl (sight, a stat) or a walk speed of replay.jsonl or of a ship
+# (#2223): tests/test_data_files.py checks the form, the wiki gives the value. A behavior test compares computed values.
+STAT = re.compile(r"(?:combat\.sight\([^)]*\)|replay\.SPEEDS(?:\[[^\]]*\]|\.get\([^)]*\))|fleet\.SPEEDS\[[^\]]*\]"
+                  r"|combat\.(?:STATS|BUILDINGS)\[[^\]]*\]\.\w+(?:\[[^\]]*\])?|combat\.stats\(\"[A-Z_]+\"\)(?:\.\w+|\[[^\]]*\])?)"
+                  r" *== *\(?-?\d")
+
+
+def test_no_test_copies_a_combat_value_or_a_speed():
+    bad = []
+    for name in sorted(os.listdir(os.path.join(ROOT, "tests"))):
+        if name.endswith(".py") and name != "test_conflict_prone.py":
+            with open(os.path.join(ROOT, "tests", name), encoding="utf-8") as f:
+                bad += [f"{name}:{i}" for i, line in enumerate(f, 1) if STAT.search(line)]
+    assert not bad, f"a test copies a sight, a stat or a speed of a data file (#2223): {bad}"
+
+
+def test_the_stat_lint_finds_the_copies():
+    assert STAT.search('assert combat.sight("MONK") == 11') and STAT.search("replay.SPEEDS[unit] == 0.6")
+    assert STAT.search('combat.stats("SAVAR") == (145, 14') and STAT.search('combat.BUILDINGS["DOCK"].hp == 1800')
+    assert not STAT.search('combat.BUILDINGS["DOCK"].classes == ("building", combat.STANDARD)')
+    assert not STAT.search("combat.sight(unit) == combat.sight(base) + 2")

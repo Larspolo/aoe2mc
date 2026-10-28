@@ -21,7 +21,6 @@ def menu(civ):
 def test_the_values_are_those_of_the_wiki():
     assert build.AGE["MOUNTED_TREBUCHET"] == 3                         # the cost and time: test_data_files.py (#2182)
     assert "MOUNTED_TREBUCHET" not in build.NEEDS and len(train.HELP["MOUNTED_TREBUCHET"]) <= 50
-    assert combat.stats("MOUNTED_TREBUCHET")[:6] == (75, 30, 2, 4, 10, 6.5) and combat.sight("MOUNTED_TREBUCHET") == 13
     assert train.ITEMS["MOUNTED_TREBUCHET"][0] == UNIT
 
 
