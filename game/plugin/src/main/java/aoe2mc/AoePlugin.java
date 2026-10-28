@@ -183,6 +183,9 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *                                              carrier first (#836): an invisible small pig that walks for it
  *   aoe view <player> <x> <z>                  the player goes above the block x z and faces it (#1830, Alerts.view):
  *                                              the "Go to" menu, game/goto.py
+ *   aoe volley <selector> <n> <attack>         each shot of the unit fires n more arrows at its target, each with this
+ *                                              AoE2 attack and no bonus (0: the values of the unit): the Armenian
+ *                                              galleys and dromons (#2379, game/train.py volley_command)
  *   aoe box <player> <x> <z> <dye>             draw the selection box from this corner to the look (#795, Border.java)
  *   aoe box-clear <player>                     end the border of the selection box
  *   aoego <x> <z>                              (no permission) the player goes to a view of an alert place of the
@@ -343,6 +346,9 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     }
 
     private final Map<UUID, Charge> charges = new HashMap<>();
+    // the extra arrows of each shot of a unit (aoe volley, #2379): {arrows, attack of each, 0: the attack of the unit}
+    private final Map<UUID, int[]> volleys = new HashMap<>();
+    private static final String VOLLEY = "aoe2mc.volley.";      // the tag of an extra arrow, with its attack
     private final Map<UUID, Integer> charged = new HashMap<>();      // the first tick of the next charge attack
     private final Map<UUID, Charge> detonations = new HashMap<>();
     private final Map<UUID, Double> sights = new HashMap<>();       // the line of sight of a unit in blocks (#775)
@@ -416,8 +422,12 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                 next = now + range.ticks;
                 blast(mob, t, range);
             } else if (now >= next && near && mob instanceof RangedEntity r) {
+                int[] extra = volleys.getOrDefault(mob.getUniqueId(), new int[] {0, 0});
                 if (mob instanceof AbstractSkeleton || mob instanceof Pillager) {
                     shoot(mob, t);            // the vanilla shot misses (#634), and fails for a crossbow (#633)
+                    for (int k = 0; k < extra[0]; k++) {
+                        shoot(mob, t).addScoreboardTag(VOLLEY + extra[1]);   // onHit gives it its attack (#2379)
+                    }
                 } else {
                     r.rangedAttack(t, 1.0f);
                 }
@@ -426,6 +436,9 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                 Building b = buildings.get(t.getUniqueId());
                 if (a != null && b != null) {           // the arrow sticks in the walls: the shot hits (#608)
                     hit(t, b, damage(a, b, mob, t));
+                    for (int k = 0; k < extra[0]; k++) {
+                        hit(t, b, damage(volley(a, extra[1]), b, mob, t));
+                    }
                     hitEffect(t, b, mob);
                     alerts.hit(t, true, mob);
                 } else if (a != null && range.pass > 0) {   // a chakram flies on through the units (#1638), not buildings
@@ -640,12 +653,30 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         return to.setY(to.getY() + 0.5 * ARROW_GRAVITY * ticks * ticks);
     }
 
-    private static void shoot(Mob mob, LivingEntity t) {
+    private static Arrow shoot(Mob mob, LivingEntity t) {
         Vector to = lead(mob, mob.getEyeLocation(), t);
         Arrow a = mob.launchProjectile(Arrow.class, to.normalize().multiply(ARROW_SPEED));
         a.setPickupStatus(AbstractArrow.PickupStatus.DISALLOWED);
         boolean bow = mob.getEquipment().getItemInMainHand().getType() == Material.BOW;
         mob.getWorld().playSound(mob, bow ? Sound.ENTITY_SKELETON_SHOOT : Sound.ITEM_CROSSBOW_SHOOT, 1.0f, 1.0f);
+        return a;
+    }
+
+    // The values of an extra arrow of a volley (aoe volley, #2379): attack 0 keeps the values of the unit, else that
+    // attack with no bonus (AoE2 DE: the extra projectile of an Armenian galley deals 1 attack).
+    private static Stats volley(Stats a, int attack) {
+        return attack <= 0 ? a : new Stats(attack, a.melee(), a.pierce(), a.ranged(), a.pierces(), a.classes(), Map.of(),
+                a.reload(), a.taken());
+    }
+
+    // The values of the projectile p of a unit with the values a: those of its tag (an extra arrow), else a.
+    private static Stats volley(Projectile p, Stats a) {
+        for (String tag : p.getScoreboardTags()) {
+            if (tag.startsWith(VOLLEY)) {
+                return volley(a, Integer.parseInt(tag.substring(VOLLEY.length())));
+            }
+        }
+        return a;
     }
 
     // Each 2 ticks: a building with an attack (aoe building with attack, range and reload: a town center, a castle,
@@ -1004,6 +1035,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         }
         if (ev.getDamager() instanceof Projectile p) {     // a cancelled hit lets the arrow fly on: one hit per arrow
             p.remove();
+            a = volley(p, a);                                // an extra arrow of a volley (#2379)
         }
         harm(victim, t, a, fort != null ? ev.getDamager() : from);     // a unit does not attack back at a building
     }
@@ -1278,6 +1310,9 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             from = p.getShooter() instanceof Entity shooter ? shooter : null;
         }
         Stats a = from == null ? null : stats.get(from.getUniqueId());
+        if (a != null && ev.getAttacker() instanceof Projectile p) {
+            a = volley(p, a);                                // an extra arrow of an Armenian galley (#2379)
+        }
         if (a != null && c.isValid() && !sameTeam(from, c)) {
             harm(c, stats.get(c.getUniqueId()), a, from);
         }
@@ -2590,6 +2625,28 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                 n++;
             }
             sender.sendMessage("View: " + n + " players");
+            return true;
+        }
+        if (args.length == 4 && args[0].equals("volley")) {           // the Armenian galleys and dromons (#2379)
+            int[] v;
+            try {
+                v = new int[] {Integer.parseInt(args[2]), Integer.parseInt(args[3])};
+            } catch (NumberFormatException e) {
+                sender.sendMessage("Bad number: " + e.getMessage());
+                return true;
+            }
+            int n = 0;
+            for (Entity e : select(sender, args[1])) {
+                if (rider(e) instanceof RangedEntity) {
+                    e = rider(e);                                // a mounted archer: the rider shoots (#710)
+                }
+                e = sailors(e);                                     // a ship: its crew shoots (#1386)
+                if (e instanceof Mob mob) {
+                    volleys.put(mob.getUniqueId(), v);
+                    n++;
+                }
+            }
+            sender.sendMessage("Volley: " + n + " units");
             return true;
         }
         if ((args.length == 2 || args.length == 3) && args[0].equals("where")) {

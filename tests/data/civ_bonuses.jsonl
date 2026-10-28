@@ -1,11 +1,11 @@
-{"name": "ACHAEMENIDS: Shipyards work 15% faster (-13.04% time taken).", "civ": "ACHAEMENIDS", "bonus": "Shipyards work 15% faster (-13.04% time taken).", "later": "play:naval"}
+{"name": "ACHAEMENIDS: Shipyards work 15% faster (-13.04% time taken).", "civ": "ACHAEMENIDS", "bonus": "Shipyards work 15% faster (-13.04% time taken).", "in": "WORK_RATE"}
 {"name": "ACHAEMENIDS: Town Centers can be upgraded to be more powerful starting in the Civic Age.", "civ": "ACHAEMENIDS", "bonus": "Town Centers can be upgraded to be more powerful starting in the Civic Age.", "later": "play:ages"}
 {"name": "ACHAEMENIDS: Stable technologies research 50% faster (-33% time taken).", "civ": "ACHAEMENIDS", "bonus": "Stable technologies research 50% faster (-33% time taken).", "in": "RESEARCH_TIME"}
 {"name": "ARMENIANS: Mule Carts cost -25%. Mule Carts replace Lumber Camps and Mining Camps.", "civ": "ARMENIANS", "bonus": "Mule Carts cost -25%. Mule Carts replace Lumber Camps and Mining Camps.", "in": "COSTS"}
 {"name": "ARMENIANS: Mule Cart technologies are 40% more effective.", "civ": "ARMENIANS", "bonus": "Mule Cart technologies are 40% more effective.", "in": "MORE"}
 {"name": "ARMENIANS: Fortified Churches replace Monasteries, and the first one constructed receives a free Relic.", "civ": "ARMENIANS", "bonus": "Fortified Churches replace Monasteries, and the first one constructed receives a free Relic.", "later": "play:monks"}
 {"name": "ARMENIANS: Long Swordsman and above, and Spearman line available one Age earlier.", "civ": "ARMENIANS", "bonus": "Long Swordsman and above, and Spearman line available one Age earlier.", "in": "EARLIER"}
-{"name": "ARMENIANS: The Galley line and Dromons* fire one additional projectile each, which deal 1 attack and advertised attack, respectively.", "civ": "ARMENIANS", "bonus": "The Galley line and Dromons* fire one additional projectile each, which deal 1 attack and advertised attack, respectively.", "later": "play:naval"}
+{"name": "ARMENIANS: The Galley line and Dromons* fire one additional projectile each, which deal 1 attack and advertised attack, respectively.", "civ": "ARMENIANS", "bonus": "The Galley line and Dromons* fire one additional projectile each, which deal 1 attack and advertised attack, respectively.", "in": "volley"}
 {"name": "ATHENIANS: Athenians can be changed between Economic, Naval, and Military at the Town Center.", "civ": "ATHENIANS", "bonus": "Athenians can be changed between Economic, Naval, and Military at the Town Center.", "later": "play:setup"}
 {"name": "ATHENIANS: Lumberjacks generate food 1 for every wood 14.7.", "civ": "ATHENIANS", "bonus": "Lumberjacks generate food 1 for every wood 14.7.", "in": "EXTRA"}
 {"name": "ATHENIANS: Hoplites move 15% faster.", "civ": "ATHENIANS", "bonus": "Hoplites move 15% faster.", "later": "play:military-train"}
@@ -62,7 +62,7 @@
 {"name": "DANES: Barracks and Siege Workshop technologies cost gold -66%.", "civ": "DANES", "bonus": "Barracks and Siege Workshop technologies cost gold -66%.", "in": "COSTS"}
 {"name": "DANES: Varangian Guards and Longships move 10% faster.", "civ": "DANES", "bonus": "Varangian Guards and Longships move 10% faster.", "in": "UNITS"}
 {"name": "DRAVIDIANS: Receive wood 200 when advancing to the next Age.", "civ": "DRAVIDIANS", "bonus": "Receive wood 200 when advancing to the next Age.", "in": "AGE_GIFTS"}
-{"name": "DRAVIDIANS: Fishermen, Oyster gatherers, and Fishing Ships carry +15.", "civ": "DRAVIDIANS", "bonus": "Fishermen, Oyster gatherers, and Fishing Ships carry +15.", "later": "play:naval"}
+{"name": "DRAVIDIANS: Fishermen, Oyster gatherers, and Fishing Ships carry +15.", "civ": "DRAVIDIANS", "bonus": "Fishermen, Oyster gatherers, and Fishing Ships carry +15.", "in": "CARRY"}
 {"name": "DRAVIDIANS: Barracks technologies cost -50%.", "civ": "DRAVIDIANS", "bonus": "Barracks technologies cost -50%.", "in": "COSTS"}
 {"name": "DRAVIDIANS: Siege units cost wood -33%.", "civ": "DRAVIDIANS", "bonus": "Siege units cost wood -33%.", "in": "COSTS"}
 {"name": "DRAVIDIANS: Skirmishers and Elephant Archers attack 25% faster.", "civ": "DRAVIDIANS", "bonus": "Skirmishers and Elephant Archers attack 25% faster.", "in": "UNITS"}
@@ -136,7 +136,7 @@
 {"name": "MAGYARS: Villagers kill predators in one strike.", "civ": "MAGYARS", "bonus": "Villagers kill predators in one strike.", "in": "PREDATOR_HIT"}
 {"name": "MALAY: Advancing in Age is +66% faster.", "civ": "MALAY", "bonus": "Advancing in Age is +66% faster.", "in": "AGE_RATE"}
 {"name": "MALAY: Fish Traps are 33% cheaper.", "civ": "MALAY", "bonus": "Fish Traps are 33% cheaper.", "in": "COSTS"}
-{"name": "MALAY: Fish Traps provide food 3×.", "civ": "MALAY", "bonus": "Fish Traps provide food 3×.", "later": "play:naval"}
+{"name": "MALAY: Fish Traps provide food 3×.", "civ": "MALAY", "bonus": "Fish Traps provide food 3×.", "in": "trap_food"}
 {"name": "MALAY: Battle Elephants are 25% cheaper in the Castle Age, 35% cheaper in the Imperial Age.", "civ": "MALAY", "bonus": "Battle Elephants are 25% cheaper in the Castle Age, 35% cheaper in the Imperial Age.", "in": "COSTS"}
 {"name": "MALAY: Infantry armor upgrades are free.", "civ": "MALAY", "bonus": "Infantry armor upgrades are free.", "in": "COSTS"}
 {"name": "MALIANS: Buildings cost wood -15% (except Farms and starting Town Center).", "civ": "MALIANS", "bonus": "Buildings cost wood -15% (except Farms and starting Town Center).", "in": "COSTS"}
