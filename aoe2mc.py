@@ -4759,6 +4759,23 @@ def skin_texture(model, tone):
     return im
 
 
+def stored_png(im):
+    """The PNG bytes of the RGBA image im with stored (not compressed) deflate blocks: the zlib of Pillow gives other
+    bytes on each system, and the release pack must have the bytes of the world pack of each system (#2741)."""
+    w, h = im.size
+    rgba = im.convert("RGBA").tobytes()
+    raw = b"".join(b"\0" + rgba[y * w * 4:(y + 1) * w * 4] for y in range(h))   # filter 0 on each row
+    blocks = [raw[i:i + 65535] for i in range(0, len(raw), 65535)] or [b""]
+    data = b"\x78\x01" + b"".join(bytes([k == len(blocks) - 1]) + len(b).to_bytes(2, "little") +
+                                  (len(b) ^ 0xFFFF).to_bytes(2, "little") + b for k, b in enumerate(blocks))
+    data += zlib.adler32(raw).to_bytes(4, "big")
+
+    def chunk(kind, body):
+        return len(body).to_bytes(4, "big") + kind + body + zlib.crc32(kind + body).to_bytes(4, "big")
+    return b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", w.to_bytes(4, "big") + h.to_bytes(4, "big") + bytes([8, 6, 0, 0, 0])) \
+        + chunk(b"IDAT", data) + chunk(b"IEND", b"")
+
+
 # The armor of the units with a look (#2742, units.LOOKS): the boxes (u, v, w, h, d) of the 64 x 32 equipment layers
 # "humanoid" (helmet, chestplate, boots) and "humanoid_leggings", by armor slot; the base layer is dyeable (dyed
 # leather takes the color of its item, as vanilla leather does), the overlay has the accent and crest colors.
@@ -4904,8 +4921,8 @@ def write_resourcepack(out):
     world (26.x: LevelResource.MAP_RESOURCE_FILE; a world of an older version had resources.zip at its top, and the
     client moves it there, ResourcePackLocationFileFix). The zombie, skeleton and drowned units get a human face, the
     skeleton horses a brown coat (#2752), the War Wagon its cart (cart_model, #2746), and each unit with armor its own
-    armor (#2742, units.dressed, #2743). Same bytes for each conversion: sorted names, a fixed time."""
-    import io
+    armor (#2742, units.dressed, #2743). Same bytes for each conversion and on each system (the release pack of #2741):
+    sorted names, a fixed time, no deflate (the zlib of each Python and Pillow gives other bytes: stored_png)."""
     import zipfile
     files = {"pack.mcmeta": json.dumps({"pack": {
         "description": "aoe2mc: units with a human face, their own armor and AoE2 weapons", "pack_format": MC["resource_format"],
@@ -4916,19 +4933,13 @@ def write_resourcepack(out):
         "fallback": VANILLA_CHEST}}, indent=1).encode()
     files["assets/aoe2mc/models/item/war_wagon.json"] = json.dumps(cart_model(), indent=1).encode()
     for path, (model, tone) in SKINS.items():
-        buf = io.BytesIO()
-        skin_texture(model, tone).save(buf, "PNG")
-        files["assets/minecraft/textures/" + path] = buf.getvalue()
+        files["assets/minecraft/textures/" + path] = stored_png(skin_texture(model, tone))
     for name, hero in units.dressed().items():                      # the armor of each unit (#2742, #2743)
         if units.asset(name) != name:                                  # ELITE_X wears the asset of X
             continue
         n, layers = name.lower(), {}
         for layer, images in armor_textures(name, hero).items():
-            pngs = []
-            for im in images:
-                buf = io.BytesIO()
-                im.save(buf, "PNG")
-                pngs.append(buf.getvalue())
+            pngs = [stored_png(im) for im in images]
             # a unit with no line in data/looks.jsonl shares the textures of the same look and materials
             tex = n if name in units.LOOKS else "look_" + hashlib.sha1(b"".join(pngs)).hexdigest()[:12]
             layers[layer] = [{"texture": f"aoe2mc:{tex}", "dyeable": {"color_when_undyed": 0xFFFFFF}}, {"texture": f"aoe2mc:{tex}_overlay"}]
@@ -4936,18 +4947,18 @@ def write_resourcepack(out):
                 files[f"assets/aoe2mc/textures/entity/equipment/{layer}/{tex}{end}.png"] = png
         files[f"assets/aoe2mc/equipment/{n}.json"] = json.dumps({"layers": layers}, indent=1).encode()
     for w in sorted({w for _, w in units.WEAPONS}):                 # the AoE2 weapons (#2744)
-        buf = io.BytesIO()
-        weapon_texture(w).save(buf, "PNG")
-        files[f"assets/aoe2mc/textures/item/{w}.png"] = buf.getvalue()
+        files[f"assets/aoe2mc/textures/item/{w}.png"] = stored_png(weapon_texture(w))
         files[f"assets/aoe2mc/models/item/{w}.json"] = json.dumps(
             {"parent": "minecraft:item/" + ("generated" if w == "shield" else "handheld"),
              "textures": {"layer0": f"aoe2mc:item/{w}"}}).encode()
         files[f"assets/aoe2mc/items/{w}.json"] = json.dumps(
             {"model": {"type": "minecraft:model", "model": f"aoe2mc:item/{w}"}}).encode()
     os.makedirs(os.path.join(out, "resourcepacks"), exist_ok=True)
-    with zipfile.ZipFile(os.path.join(out, "resourcepacks", "resources.zip"), "w", zipfile.ZIP_DEFLATED) as z:
+    with zipfile.ZipFile(os.path.join(out, "resourcepacks", "resources.zip"), "w", zipfile.ZIP_STORED) as z:
         for name in sorted(files):
-            z.writestr(zipfile.ZipInfo(name, (1980, 1, 1, 0, 0, 0)), files[name], zipfile.ZIP_DEFLATED)
+            info = zipfile.ZipInfo(name, (1980, 1, 1, 0, 0, 0))
+            info.create_system = 3                                     # Windows writes 0: other bytes
+            z.writestr(info, files[name], zipfile.ZIP_STORED)
     return sorted(files)
 
 
