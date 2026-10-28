@@ -237,7 +237,7 @@ def units(g, name, s):
             s = s._replace(bonus={**s.bonus, v[6:]: s.bonus.get(v[6:], 0) + c})
         elif v == "bonus" and isinstance(c, float):                # a factor of each bonus (#2248)
             s = s._replace(bonus={k: math.floor(n * c + 0.5) for k, n in s.bonus.items()})
-        elif v not in ("speed", "taken") and not v.startswith("bonus:"):
+        elif v not in ("friendly", "speed", "taken") and not v.startswith("bonus:"):
             old = getattr(s, v)
             s = s._replace(**{v: round(old * c, 3 if v == "reload" else None) if isinstance(c, float) else old + c})
     return s
@@ -247,6 +247,13 @@ def taken(g, name):
     """The factor of the bonus damage that unit name of the player of g takes (UNITS, value "taken"), else 1 (#2248)."""
     import combat                                                  # combat imports gather, gather imports this module
     return math.prod(c for v, c in changes(g, name, combat.stats(name)) if v == "taken")
+
+
+def friendly(g, name):
+    """The factor of the friendly fire (the blast of an own or allied unit) that unit name of the player of g takes
+    (UNITS, value "friendly"), else 1 (Jurchen military units, #2418)."""
+    import combat                                                  # combat imports gather, gather imports this module
+    return math.prod(c for v, c in changes(g, name, combat.stats(name)) if v == "friendly")
 
 
 def has(what, name):
