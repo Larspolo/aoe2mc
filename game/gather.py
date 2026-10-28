@@ -79,6 +79,7 @@ import relic_victory  # noqa: E402
 import repair  # noqa: E402
 import scenario  # noqa: E402
 import score  # noqa: E402
+import spectator  # noqa: E402
 import siege_tower  # noqa: E402
 import sudden_death  # noqa: E402
 import stance  # noqa: E402
@@ -136,6 +137,7 @@ MINES = {t['name']: tuple(t['mine']) for t in ROWS if 'mine' in t}   # as in AoE
 MINE_BLOCKS = {"gold": ("gold_ore", "raw_gold_block", "stone"),                # the blocks of the converter's heap
                "stone": ("cobblestone", "andesite", "stone", "tuff")}
 STEPS = [(dx, dz) for dx in (-1, 0, 1) for dz in (-1, 0, 1) if dx or dz]
+CLOSED = 2000                # cells: a search this long checks if its goals are in a closed region (Map.closed, #2881)
 NUMBER = r"(-?[\d.]+(?:E-?\d+)?)[df]"
 CIVILIANS = tuple(t['name'] for t in ROWS if t.get('civilian'))
 SELECT = "aoe2mc.selected"                                         # entity tag of the selected units
@@ -413,7 +415,7 @@ class Map:
             if d > dist[c]:
                 continue
             seen += 1
-            if limit and seen > limit:
+            if limit and seen > limit or seen == CLOSED and self.closed(start, goals, ok, water):
                 return None
             x, z = c
             for dx, dz in STEPS:
@@ -427,6 +429,28 @@ class Map:
                     dist[n], prev[n] = nd, c
                     heapq.heappush(todo, (nd + h(*n), -nd, n))
         return None
+
+    def closed(self, start, goals, ok, water=False, cap=None):
+        """True when the goals are in a closed region of fewer than cap cells without start: a flood from the goals
+        (the steps of path() are the same both ways) ends before cap cells. path() stops then after CLOSED cells: a
+        search to an enclosed goal looked at all PATH_CELLS cells, 0.7 s each, and an order of 13 units of de-64.3
+        held the live replay for 8 s (#2881). A flood before each search made the many short searches slow."""
+        todo, cap = [c for c in goals if ok(*c)], cap or 2 * CLOSED
+        seen = set(todo)
+        while todo:
+            x, z = todo.pop()
+            for dx, dz in STEPS:
+                n = (x + dx, z + dz)
+                if n == start and (not dx or not dz or ok(x + dx, z) and ok(x, z + dz)):
+                    return False                                    # a step from start ignores the height (path())
+                if n in seen or not ok(*n) or not water and abs(self.y(*n) - self.y(x, z)) > 1 or \
+                        dx and dz and not (ok(x + dx, z) and ok(x, z + dz)):
+                    continue
+                if len(seen) >= cap:
+                    return False
+                seen.add(n)
+                todo.append(n)
+        return True
 
     def pick_ground(self, eye, d, reach=64):
         """The block cell (x, z) of the ground that the ray from eye in direction d hits first, or None."""
@@ -1934,6 +1958,7 @@ class Gather:
             elif self.victory == "king-of-the-hill":                   # the monument in the center (#2360)
                 hill.tick(self, self.tick * NORMAL)
             score.tick(self)
+            spectator.tick(self)                                       # the sidebar of the spectators (#2900)
             if self.victory in ("time-limit", "score"):                # after the conquest: it wins before (#2356)
                 time_limit.tick(self, self.tick * NORMAL)
             treaty.tick(self, self.tick * NORMAL)

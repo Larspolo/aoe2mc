@@ -409,20 +409,33 @@ def slots(building, name):
     return slot + SHIFTS.get(building, {}).get(name, 0), item, label
 
 
+def added(g, building, name):
+    """(AoE2 button, seconds) of unit name in building from "Add Train Location" (scenario.locations, #2865), or None.
+    An upgraded unit keeps the entry of its line: the castle trains the man-at-arms in place of the militia."""
+    got = getattr(g, "trigger_trains", {}).get(building, {})
+    old = {new: old for t in UPGRADES for old, new in lines(t)}
+    while name not in got and name in old:
+        name = old[name]
+    return got.get(name)
+
+
 def placed(g, building, name):
-    """slots() of name, at the slot of the AoE2 button that a scenario trigger gave it (g.trigger_places, #2864): the
-    buttons 1 to 8 are the first row, 9 and up the row under the queue (MORE). Button 0 or less keeps the slot."""
+    """slots() of name, at the slot of the AoE2 button that a scenario trigger gave it (g.trigger_places, #2864; "Add
+    Train Location" in building: added(), #2865, its button 0 is the first): the buttons 1 to 8 are the first row, 9 and
+    up the row under the queue (MORE). Button 0 or less keeps the slot."""
     slot, item, label = slots(building, name)
-    button = vars(g).get("trigger_places", {}).get(name, [None, 0])[1]
+    got = added(g, building, name)
+    button = vars(g).get("trigger_places", {}).get(name, [None, 0])[1] or (max(got[0], 1) if got else 0)
     return (button - 1 if button < ROW else MORE + button - ROW) if button > 0 else slot, item, label
 
 
 def covered(g, building, name):
-    """True when a scenario trigger moved another item onto the slot of name in the menu of building (#2864): the
-    moved item takes the slot."""
+    """True when a scenario trigger moved or added another item onto the slot of name in the menu of building (#2864,
+    #2865): the moved or added item takes the slot."""
     moved = vars(g).get("trigger_places", {})
-    return name not in moved and placed(g, building, name)[0] in {placed(g, b, n)[0] for n, (b, _) in moved.items()
-                                                                  if b == building}
+    new = getattr(g, "trigger_trains", {}).get(building, {})
+    return name not in moved and added(g, building, name) is None and placed(g, building, name)[0] in \
+        {placed(g, b, n)[0] for n, (b, _) in moved.items() if b == building} | {placed(g, building, n)[0] for n in new}
 
 
 def line_upgrades(line):
@@ -446,6 +459,7 @@ def trains(g, building):
     out += [line[0] for line in more] + [t for line in more for t in line_upgrades(line)]   # Mapuche (#2432, #2487)
     moved = vars(g).get("trigger_places", {})                      # "Change Train/Technology Location" (#2864)
     out = [n for n in out if moved.get(n, [building])[0] == building] + [n for n, (b, _) in moved.items() if b == building]
+    out += [n for n in getattr(g, "trigger_trains", {}).get(building, {}) if n in COSTS]   # Add Train Location (#2865)
     for _ in UPGRADES:                                             # a line of upgrades: mangonel, onager, siege onager
         out = [new.get(n, n) for n in out]                         # the castle: the elite unique unit (#1624)
     return tuple(dict.fromkeys(out))                               # the camel scout becomes the camel rider (#2130)
@@ -666,6 +680,8 @@ def repeatable(g, name):
     and the gather tables take count()."""
     if name in civs.policies(g).get("effects", ()):                # a policy: each one but the active one (#2485)
         return name != civs.policy(g)[0]
+    if count(g, name) < vars(g).get("trigger_stacks", {}).get(name, 0):   # "Enable Technology Stacking" (#2866)
+        return True
     return name not in g.techs or name in AGAIN or getattr(g, "beyond", False) and name not in REQUIRES and name not in UPGRADES \
         and value("walls", name) is None and count(g, name) < REPEAT
 
@@ -804,10 +820,12 @@ def seconds(g, name, building=None, k=None):
     (civs.train_rate: Aztec military units, Khitan skirmishers, #1927) and its age-up rate (civs.age_rate: the Malay, #1926),
     times its research time of the technology (civs.research_time: the Gothic Loom at once, #2172) and its time factor
     at building (civs.train_time: Mapuche Settlements, #2432), and of the Recruitment Doctrine k of a unit (doctrine(),
-    default the present one, #2483)."""
+    default the present one, #2483). The time of "Add Train Location" at building replaces TRAIN_TIMES (#2865)."""
     age, time = value("faster", name, (9, 0))
     base = vars(g).get("trigger_times", {}).get(name)                  # "Change Technology Research Time" (#2820)
-    return (base if base is not None else time if build.ages(g) >= age else TRAIN_TIMES[name]) / (civs.work_rate(g, building) if building else 1) \
+    own = (added(g, building, name) or (0, 0))[1] if building else 0   # Add Train Location (#2865)
+    return (own or (base if base is not None else time if build.ages(g) >= age else TRAIN_TIMES[name])) \
+        / (civs.work_rate(g, building) if building else 1) \
         / civs.train_rate(g, name) / civs.age_rate(g, name) * civs.research_time(g, name) / civs.turbo(g, name) \
         * (civs.train_time(g, building, name) if building else 1) \
         * (doctrine(g, building, k)[2] if building and name not in TECHS else 1)

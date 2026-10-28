@@ -38,10 +38,11 @@ def test_two_created_knights_have_no_fixed_uuid():
     assert "UUID" not in a + b and "Passengers" in a                   # the rider stays on its horse
 
 
-def test_create_object_of_a_building_is_not_supported_yet():
+def test_create_object_of_a_building_is_an_order_of_the_scenario_mode():
     stats = Counter()
-    assert lines([effect(aoe2mc.CREATE_OBJECT, "MONASTERY", kind="B", tile=(3, 5))], stats) == []
-    assert stats == Counter({"create (not supported yet)": 1})
+    assert lines([effect(aoe2mc.CREATE_OBJECT, "MONASTERY", kind="B", tile=(3, 5))], stats) == [
+        'data modify storage aoe2mc:orders list append value "create 1 MONASTERY 3 5"']   # #2911
+    assert stats == Counter(create=1)
 
 
 def test_remove_object_kills_the_units_of_the_player_in_the_area():
@@ -84,4 +85,4 @@ def test_the_triggers_scenario_removes_the_archers(tmp_path):
     path = os.path.join(tmp_path, "W", "datapacks", "aoe2mc", "data", "aoe2mc", "function", "trigger", f"{ids[0]}.mcfunction")
     with open(path) as f:
         assert f.read().startswith("kill @e[type=minecraft:skeleton,tag=aoe2mc.p2,tag=!aoe2mc.mount,x=0,y=-64,z=0,dx=95,")
-    assert "timer and area triggers (chat, instructions, objects): 3, 1 create (not supported yet), 1 remove" in out.getvalue()
+    assert "timer and area triggers (chat, instructions, objects): 3, 1 create, 1 remove" in out.getvalue()

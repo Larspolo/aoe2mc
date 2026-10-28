@@ -24,6 +24,10 @@ aoe_techstate: tech_states() sets it to the AoE2 TechnologyState from the queues
 The condition "Object Has Action" (#2867) tests the score #r<ref> of aoe_action: actions() sets it to the AoE2
 UnitAIAction of the order of the villager (ACTIONS).
 
+The condition "Victory Timer" (#2906) tests the score #p<N>.<type> of aoe_vic: victory_timers() sets it to the years
+that are left on the wonder (type 0), relic (1) or King of the Hill (2) timer of player N, and resets it when the timer
+stops. A player with two wonders: the lower timer, as its boss bar.
+
 The condition "Difficulty Level" (#2704) tests the score #level of aoe_difficulty: setup() sets it to the AoE2 value
 ("aoe2" of game/data/difficulty.jsonl) of the setting "AI difficulty" (run.py --ai-difficulty).
 
@@ -36,6 +40,7 @@ aoe2mc:tasks (aoe2mc.task_lines): tasks() walks the tagged units there with the 
     scenario.tick(g)       # the book, the tasks, the orders
 """
 import json
+import math
 import os
 import re
 import sys
@@ -61,6 +66,7 @@ TIMES = "aoe2mc:times"                                                 # "Change
 PLACES = "aoe2mc:places"                                               # "Change Train/Technology Location" (#2864)
 UNSELECTABLE = "aoe2mc.unselectable"                                   # the tag of "Disable Object Selection" (aoe2mc)
 NAMES = "aoe2mc:names"                                                 # the storage of "Change Technology Name" (#2821)
+LOCATIONS = "aoe2mc:locations"                                         # the storage of "Add Train Location" (#2865)
 READS = "aoe2mc:reads"                                                 # "Modify Variable by Attribute" (#2858)
 NEAR = 3                                                               # blocks: a patrol turns back this near its point
 LEVELS = {r["name"]: r["aoe2"] for r in table.load("difficulty.jsonl")}  # "AI difficulty" -> AoE2 DifficultyLevel
@@ -120,8 +126,11 @@ def tick(g):
     gather.Gather.run calls it in the scenario mode. Also the technologies of the triggers (research, #2577)."""
     research(g)
     garrisons(g)
+    fallen(g)
+    owners(g)
     tech_states(g)
     actions(g)
+    victory_timers(g)
     if g.clock() < vars(g).get("book_at", 0.0):
         return
     g.book_at = g.clock() + EVERY
@@ -135,6 +144,8 @@ def tick(g):
     costs(g)
     times(g)
     names(g)
+    civ_names(g)
+    locations(g)
     places(g)
     messages = g.data.get("messages", {})
     text = re.sub(r"<[^<>]*>", "", messages.get("instructions", "")).strip()   # AoE2 color tags (book_pages)
@@ -180,25 +191,29 @@ def orders(g):
     gives each tagged ranged unit its new range (ranges) and removes the tag. An "Unload" order (#2773): unload(). A
     "Lock Gate" or "Unlock Gate" order (aoe2mc.gate_lines, #2762) locks or unlocks the gate of its reference: gate(). A
     "Place Foundation" order (aoe2mc.foundation_lines, #2825): foundation(). "Train Unit" and "Initiate Research"
-    (aoe2mc.train_lines, #2772): queues(). A "Build Object" order (aoe2mc.build_lines, #2863): finish()."""
+    (aoe2mc.train_lines, #2772): queues(). A "Build Object" order (aoe2mc.build_lines, #2863): finish(). A "Create
+    Object" order of a building (aoe2mc.object_lines, #2911): foundation(), then the site is complete at once."""
     got = g.command(f"data get storage {ORDERS} list") or ""
     new = re.findall(r'"(patrol|attack_move|range|stance|stop) (aoe_order[\w.]+) ?(-?\d+(?: -?\d+)*)?"', got)
     unloads = re.findall(r'"unload (\d+) (\d+) ?(-?\d+ -?\d+ -?\d+)?"', got)
     gates = re.findall(r'"(lock|unlock) (\d+)"', got)
-    found = re.findall(r'"found (\d+) (\w+) (\d+) (\d+)"', got)
+    found = re.findall(r'"(found|create) (\d+) (\w+) (\d+) (\d+)"', got)
     queued = re.findall(r'"(train|research) (\d+) (\w+) ?(\d+)?"', got)
+    rallies = re.findall(r'"rally (\d+) (\w+) (\d+) (\d+) ?(\d+ \d+ \d+ \d+)?"', got)
     builds = re.findall(r'"build (\d+) (\w+) (-?\d+) (-?\d+) (-?\d+) (-?\d+)"', got)
-    if new or unloads or gates or found or queued or builds:
+    if new or unloads or gates or found or queued or builds or rallies:
         g.command(f"data remove storage {ORDERS} list")
     queues(g, queued)
     for player, ref, where in unloads:
         unload(g, int(player), int(ref), where)
     for order, ref in gates:
         gate(g, order, int(ref))
-    for player, name, x, y in found:
-        foundation(g, int(player), name, (int(x), int(y)))
+    for order, player, name, x, y in found:
+        foundation(g, int(player), name, (int(x), int(y)), done=order == "create")
     for player, name, *area in builds:
         finish(g, int(player), name, [int(v) for v in area])
+    for player, which, x, y, area in rallies:
+        rally(g, int(player), which, (int(x), int(y)), [int(v) for v in area.split()])
     patrols = vars(g).setdefault("patrols", [])
     for order, tag, where in new:
         p, sel = [int(v) for v in where.split()], f"@e[tag={tag}]"
@@ -263,11 +278,12 @@ def selection(g):
         g.choose(g.selected - g.unselectable)
 
 
-def foundation(g, player, name, tile):
+def foundation(g, player, name, tile, done=False):
     """A "Place Foundation" order (aoe2mc.foundation_lines, #2825): the construction site of building name of the
     player (a person or a bot) with the tile in its middle, for free as in AoE2, when the place is free and flat as for
     a click of the player (build.free, shore, water, level). Its villagers build it as any site. A wall, a gate, a
-    building that the game program cannot build or a blocked place: nothing."""
+    building that the game program cannot build or a blocked place: nothing. done: "Create Object" (#2911), the
+    building is complete at once (build.rise with no end of work, as finish)."""
     import build                                                       # build imports gather
     if name not in build.MENU or name in build.WALLS + build.GATES:
         return
@@ -278,7 +294,9 @@ def foundation(g, player, name, tile):
         T = x.map.T
         rect = build.area(x, name, (tile[0] * T + T // 2, tile[1] * T + T // 2))
         if ok(x, rect) and build.level(x, name, rect):
-            build.found(x, name, rect, free=True)
+            site = build.found(x, name, rect, free=True)
+            if done:
+                build.rise(x, site, float("inf"))
 
 
 def finish(g, player, name, area):
@@ -296,6 +314,31 @@ def finish(g, player, name, area):
             tx, ty = (x0 + x1) // 2 // T, (z0 + z1) // 2 // T
             if area[0] < 0 or area[0] <= tx <= area[2] and area[1] <= ty <= area[3]:
                 build.rise(x, site, float("inf"))
+
+
+def rally(g, player, which, tile, area):
+    """A "Set Building Gather Point" order (aoe2mc.rally_lines, #2853): the rally point of the building with the
+    reference which (a number), or of each building of the type which with its middle in the tile area, of the player
+    (a person or a bot) is the block of the tile, as the menu item "Rally point" sets it (train.rally): its new units
+    walk there (train.go). Only a building that trains units (train.units_of) has one. A bot gets no marker: AoE2 shows
+    the flag to its owner only."""
+    T = g.map.T
+    cell = tuple(int((v + 0.5) * T) for v in tile)
+    inside = lambda f: area and all(a * T <= (lo + hi) / 2 < (b + 1) * T for a, b, lo, hi in
+                                    ((area[0], area[2], f[0], f[2]), (area[1], area[3], f[1], f[3])))
+    for x in [g, *(s.g for s in g.bots)]:
+        if x.player != player or "objects" not in x.data:
+            continue
+        homes = train.homes(x)
+        for o in x.data["objects"]:
+            rect = tuple(o["footprint"][i] for i in (0, 2, 1, 3)) if o.get("footprint") else None
+            if rect not in homes or not train.units_of(homes[rect]) or \
+                    not (o.get("ref") == int(which) if which.isdigit() else o["name"] == which and inside(o["footprint"])):
+                continue
+            if x is g:
+                train.rally(x, rect, cell)
+            else:
+                x.rally[rect] = cell, None
 
 
 def unload(g, player, ref, where):
@@ -383,6 +426,34 @@ def names(g):
             vars(sides[int(player)]).setdefault("trigger_names", {})[name] = re.sub(r"\\(.)", r"\1", text)
 
 
+def civ_names(g):
+    """The new civilization names of "Change Civilization Name" (aoe2mc.civ_name_lines, #2905): read and empty the list
+    "civs" of the data storage NAMES, and keep each name in trigger_civs {player: name} of each side (the people and
+    the bots): all players see it next to the player name (lobby.name, diplomacy.name). A later line wins."""
+    got = g.command(f"data get storage {NAMES} civs") or ""
+    new = re.findall(r'"(\d+) ((?:[^"\\]|\\.)*)"|\'(\d+) ((?:[^\'\\]|\\.)*)\'', got)
+    if new:
+        g.command(f"data remove storage {NAMES} civs")
+    for found in new:
+        player, text = found[:2] if found[0] else found[2:]
+        for x in [g, *(s.g for s in g.bots)]:
+            vars(x).setdefault("trigger_civs", {})[player] = re.sub(r"\\(.)", r"\1", text)
+
+
+def locations(g):
+    """The new train locations of "Add Train Location" (aoe2mc.train_location_lines, #2865): read and empty the list of
+    the data storage LOCATIONS, and keep each one in trigger_trains {building: {unit: (button, seconds)}} of the side
+    of its player (the people and the bots): the menu of that building offers the unit (train.trains, train.placed).
+    The unit stays in its first building."""
+    new = re.findall(r'"(\d+) (\w+) (\w+) (\d+) (\d+)"', g.command(f"data get storage {LOCATIONS} list") or "")
+    if new:
+        g.command(f"data remove storage {LOCATIONS} list")
+    sides = {x.player: x for x in [g, *(s.g for s in g.bots)]}
+    for player, unit, building, button, time in new:
+        if int(player) in sides:
+            vars(sides[int(player)]).setdefault("trigger_trains", {}).setdefault(building, {})[unit] = int(button), int(time)
+
+
 def attributes(g):
     """The changes of "Modify Attribute" (aoe2mc.attribute_lines, #2763): read and empty the list of the data storage
     ATTRIBUTES, and add each change to trigger_attributes of the side of its player (the people and the bots; a
@@ -428,12 +499,16 @@ def menus(g):
     the list of the data storage MENUS, and keep each item in trigger_menus of the side of its player (True: on). An
     item that is off is not in the menus (civs.missing); an item that is on is there also when the civilization does
     not have it or the age is not reached (train.unlocked): as in AoE2, the age technology only enables its items."""
-    new = re.findall(r'"(\d+) (\w+) (on|off)"', g.command(f"data get storage {MENUS} list") or "")
+    new = re.findall(r'"(\d+) (\w+) (on|off|stack \d+)"', g.command(f"data get storage {MENUS} list") or "")
     if new:
         g.command(f"data remove storage {MENUS} list")
     sides = {x.player: x for x in [g, *(s.g for s in g.bots)]}
     for player, name, on in new:
-        if int(player) in sides:
+        if int(player) not in sides:
+            continue
+        if on.startswith("stack"):                                 # "Enable/Disable Technology Stacking" (#2866)
+            vars(sides[int(player)]).setdefault("trigger_stacks", {})[name] = int(on.split()[1])
+        else:
             vars(sides[int(player)]).setdefault("trigger_menus", {})[name] = on == "on"
 
 
@@ -459,6 +534,7 @@ def setup(g, mode="scenario"):
     g.command("scoreboard objectives add aoe_difficulty dummy")        # the condition "Difficulty Level" (#2704)
     g.command(f"scoreboard players set #level aoe_difficulty {LEVELS[level]}")
     g.command("scoreboard objectives add aoe_dipstate dummy")         # the condition "Diplomacy State" (#2757)
+    g.command("scoreboard objectives add aoe_vic dummy")              # the condition "Victory Timer" (#2906)
     states(g)
     rows = {x: g.players.get(str(x.player), {}) for x in sides}
     if not any("resources" in p or "pop_limit" in p for p in rows.values()):
@@ -535,6 +611,39 @@ def garrisons(g):
                 sent[o["ref"]] = n
 
 
+def fallen(g):
+    """Once per game second: the score #f<ref> of aoe_fallen is 1 when a converted building of the triggers
+    (aoe2mc.json "fallen", #2910) has fallen: its target entity is gone (combat.target_uuid). Set once per building."""
+    import combat                                                  # combat imports gather
+    if not g.data.get("fallen") or g.clock() < vars(g).get("fallen_at", 0.0):
+        return
+    g.fallen_at = g.clock() + 1.0
+    sent = vars(g).setdefault("fallen_sent", set())
+    objects = {o["ref"]: o for o in g.data.get("objects", ()) if o.get("ref") is not None and "footprint" in o}
+    for ref in g.data["fallen"]:
+        o = objects.get(ref)
+        if ref in sent or o is None or o["name"] not in combat.BUILDINGS:   # no target entity: it does not fall
+            continue
+        if "passed" not in g.command(f"execute if entity {combat.target_uuid(o['footprint'])}"):
+            g.command(f"scoreboard players set #f{ref} aoe_fallen 1")
+            sent.add(ref)
+
+
+def owners(g):
+    """Once per game second: the score #o<ref> of aoe_owner is the player of a converted building of the triggers
+    (aoe2mc.json "owners", #2940) in aoe2mc.json "objects": a monk conversion changes it (monk.win). One command each
+    time the owner changes."""
+    if not g.data.get("owners") or g.clock() < vars(g).get("owners_at", 0.0):
+        return
+    g.owners_at = g.clock() + 1.0
+    sent = vars(g).setdefault("owners_sent", {})
+    objects = {o["ref"]: o for o in g.data.get("objects", ()) if o.get("ref") is not None and "footprint" in o}
+    for ref in g.data["owners"]:
+        if (o := objects.get(ref)) is not None and sent.get(ref) != o["player"]:
+            g.command(f"scoreboard players set #o{ref} aoe_owner {o['player']}")
+            sent[ref] = o["player"]
+
+
 def tech_states(g):
     """Once per game second: the score #p<N>.<technology> of aoe_techstate of each pair of aoe2mc.json "tech_states"
     (the conditions "Researching Technology" and "Technology State", #2769) is the AoE2 TechnologyState of the
@@ -585,6 +694,38 @@ def actions(g):
         if sent.get(ref) != (v := ACTIONS.get(states.get(uuids.get(ref)), 0)):
             g.command(f"scoreboard players set #r{ref} aoe_action {v}")
             sent[ref] = v
+
+
+def timers(g):
+    """The years that are left on each running victory timer: {(player, AoE2 VictoryTimerType): years}. Type 0 is the
+    lowest wonder timer of the player (wonder.tick), 1 the relic timer (relic_victory.tick), 2 King of the Hill
+    (hill.tick)."""
+    import wonder                                                      # wonder -> cheats -> gather: import it late
+    left = {}
+    for t in vars(g).get("wonders", {}).values():
+        left[(t["player"], 0)] = min(left.get((t["player"], 0), t["left"]), t["left"])
+    if t := vars(g).get("relic_timer"):
+        left[(t["player"], 1)] = t["left"]
+    if (s := vars(g).get("hill")) and s.get("owner") is not None:
+        left[(s["owner"], 2)] = s["left"]
+    return {k: max(math.ceil(v / wonder.YEAR), 0) for k, v in left.items()}
+
+
+def victory_timers(g):
+    """Once per game second: the score #p<N>.<type> of aoe_vic is the years left on that timer (timers), for the
+    condition "Victory Timer" of the triggers (#2906). A timer that stops resets its score: no test matches it. One
+    command per change."""
+    if g.clock() < vars(g).get("victory_timer_at", 0.0):
+        return
+    g.victory_timer_at = g.clock() + 1.0
+    sent, now = vars(g).setdefault("victory_timer_sent", {}), timers(g)
+    for (n, kind), y in sorted(now.items()):
+        if sent.get((n, kind)) != y:
+            g.command(f"scoreboard players set #p{n}.{kind} aoe_vic {y}")
+            sent[(n, kind)] = y
+    for n, kind in sorted(set(sent) - set(now)):
+        g.command(f"scoreboard players reset #p{n}.{kind} aoe_vic")
+        del sent[(n, kind)]
 
 
 def tech_state(x, name):

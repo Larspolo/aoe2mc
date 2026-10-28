@@ -26,7 +26,8 @@ RECORDS = (".aoe2record", ".mgz", ".mgx", ".mgl")                  # --at works 
 RANDOM_MAPS = ("arabia", "arena", "black_forest", "gold_rush", "highland", "islands", "mediterranean", "nomad")  # (#1871)
 VALUES = (("name", "--name"), ("tile_size", "--tile-size"), ("level_height", "--level-height"),
           ("architecture", "--architecture"), ("seed", "--seed"))
-FLAGS = (("preview", "--preview"), ("no_units", "--no-units"))
+FLAGS = (("preview", "--preview"), ("no_units", "--no-units"), ("resource_pack", "--resource-pack"))
+PACK_TEXT = "AoE2 look (resource pack, 4.8 MB, about +1 % frame time)"   # docs/resourcepack.md, "Cost" (#2747)
 GAME = Path(__file__).resolve().parent / "game" / "run.py"
 PLAY_VALUES = (("server", "--server"), ("people", "--people"), ("reveal", "--reveal"))
 PLAY_FLAGS = (("play", "--play"), ("bot", "--bot"), ("cheats", "--cheats"))
@@ -276,6 +277,7 @@ def window():
     checks.grid(row=len(rows), column=1, sticky="w")
     ttk.Checkbutton(checks, text="Preview image", variable=v["preview"]).pack(side="left")
     ttk.Checkbutton(checks, text="No units", variable=v["no_units"]).pack(side="left", padx=8)
+    ttk.Checkbutton(checks, text=PACK_TEXT, variable=v["resource_pack"]).pack(side="left")
     go = ttk.Button(f, text="Convert")
     go.grid(row=len(rows) + 1, column=1, pady=6)
 

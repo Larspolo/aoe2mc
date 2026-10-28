@@ -33,9 +33,7 @@ def test_set_copies_the_variable_to_aoe_set_and_drops_the_earlier_changes():
                                         "scoreboard players reset #p1.gold aoe_res"]
 
 
-def test_multiply_divide_gaia_and_a_missing_variable_write_no_line():
-    assert effect(Operation.MULTIPLY)[1] == []
-    assert effect(Operation.DIVIDE)[1] == []
+def test_gaia_and_a_missing_variable_write_no_line():   # multiply and divide: #2941
     assert effect(Operation.ADD, player=0)[1] == []
     assert effect(Operation.ADD, variable=-1)[1] == []
 
