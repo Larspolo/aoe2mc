@@ -184,6 +184,8 @@ NOT_SAVED = (                                                          # the fie
     "tech_state_sent",                                                 # scenario.tech_states: a load sends them again
     "unselectable",                                                    # scenario.selection: the world keeps the tags, the next check reads them
     "victory",                                                         # run.py: from the saved settings
+    "victory_timer_at",                                                # scenario.py: the next check time
+    "victory_timer_sent",                                              # scenario.victory_timers: a load sends them again
     "victory_value",                                                   # run.py: from the saved settings
     "wall_start",                                                      # build.py: the first corner of a wall
     "who",                                                             # the player name on the server
