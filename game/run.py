@@ -69,6 +69,7 @@ import urllib.request
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path[:0] = [HERE, os.path.join(os.path.dirname(HERE), "tools")]
 import mc_check  # noqa: E402
+import rcon  # noqa: E402
 import table  # noqa: E402
 from rcon import Rcon  # noqa: E402
 
@@ -232,6 +233,24 @@ def properties(game_port, rcon_port, password, pack=None):
             "gamemode=creative\nforce-gamemode=true\n")
 
 
+def batches(cmds, limit=rcon.MAX):
+    """The commands that send cmds in this order: `aoe batch` commands of at most limit bytes, each command in them
+    URL-encoded with "+" for a space (the plugin decodes it, #2761). A batch of one command, and a command that is too
+    long for a batch, go as they are."""
+    out, part, size = [], [], len("aoe batch")
+    for c in [*cmds, None]:
+        e = c and c.replace("%", "%25").replace("+", "%2B").replace(" ", "+")
+        if part and (c is None or size + 1 + len(e.encode()) > limit):
+            out.append(part[0][0] if len(part) == 1 else "aoe batch " + " ".join(x for _, x in part))
+            part, size = [], len("aoe batch")
+        if c is not None and size + 1 + len(e.encode()) > limit:
+            out.append(c)
+        elif c is not None:
+            part.append((c, e))
+            size += 1 + len(e.encode())
+    return out
+
+
 SPECTATORS = ('team add spec "Spectators"', "team modify spec color gray")   # the team of the spectators (#2898)
 
 
@@ -290,6 +309,13 @@ class Game:
     def command(self, cmd):
         with self.lock:
             return self.rcon.command(cmd)
+
+    def batch(self, cmds):
+        """Send cmds in this order and drop the answers. On Paper they go in `aoe batch` commands (`batches`): each
+        RCON command waits for the main thread of the server, 2 to 5 ms at a tick of 45 ms, and the live replay of
+        de-63.0 fell behind its clock after 16 minutes (#2761)."""
+        for c in batches(cmds) if self.kind == "paper" else cmds:
+            self.command(c)
 
     def op_joined(self):
         """Give operator rights to each player who joined since the last call (/gamemode, /tp without RCON, #292).
