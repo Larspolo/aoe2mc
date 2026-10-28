@@ -108,6 +108,8 @@ STILL = 4000                # ms of game time: a walking unit that stands this l
 HOME = 4                    # blocks: a unit farther than this from the end of its walk walks to it again (settle, #2633)
 HOME_MS = 20000             # ms of game time after the end of a walk: then settle() uses /tp (replay_drift: stuck at 30 s)
 PATH_CELLS = 20000          # cells that one path search may look at: a unit with no path stays (no time lag)
+PATH_FAR = 200              # cells per block of straight way that the search of a walk order may look at (up to 5 ×
+# PATH_CELLS): a way of 270 blocks around a forest needed more than PATH_CELLS, and the unit got one straight leg (#2881)
 # The walk speed of common units, tiles per game second (AoE2 DE), the ages and the Society buildings: one line per
 # name in data/replay.jsonl (#2034). A walk speed name is the start of the unit names.
 ROWS = table.load("replay.jsonl")
@@ -556,7 +558,7 @@ class Replay:
             for state in (self.working, self.arriving, self.entering):
                 state.pop(i, None)
             if self.ai:
-                v.pos = self.at(v, e["time"])                       # it stops its leg where it is
+                v.pos = self.stop_at(v, e["time"])                  # it stops its leg where it is
             v.path = self.map.path(v.cell, goals, PATH_CELLS) or []
             due = self.walk_end(v, e["time"]) + work
             out += self.go(i, v, None, v.path, e["time"])
@@ -1221,8 +1223,9 @@ class Replay:
                     continue
                 f[3] = None
             at = self.at(v, t)
-            if math.dist((at[0], at[2]), (to[0], to[2])) > reach and (
-                    f[2] is None or i not in self.moving and f[2] != to or math.dist(f[2], to) > reach):
+            walks = i in self.moving or (getattr(v, "leg", None) or (0, 0, 0))[2] > t   # a walk with no path has one leg:
+            if math.dist((at[0], at[2]), (to[0], to[2])) > reach and (           # no new search on each step (#2881)
+                    f[2] is None or not walks and f[2] != to or math.dist(f[2], to) > reach):
                 f[2] = to
                 out += self.move(dict(time=t, player=v.player, kind="move", objects=[i], tile=[to[0] / self.T, to[2] / self.T]))
         return out
@@ -1336,12 +1339,13 @@ class Replay:
             out, group = self.attack(group, target, e) if (target := self.enemy(e)) else ([], group)
             out += self.target_mark(e) if target else []            # the red order marker (#845)
             for i, v in group:
-                v.pos = self.at(v, e["time"])                       # it stops its leg where it is
+                v.pos = self.stop_at(v, e["time"])                  # it stops its leg where it is
                 end = slots.get(v) or min(goals, key=lambda c: (math.dist(c, v.cell), c))
-                path = self.map.path(v.cell, {end}, PATH_CELLS)
+                limit = min(5 * PATH_CELLS, max(PATH_CELLS, int(PATH_FAR * math.dist(v.cell, end))))
+                path = self.map.path(v.cell, {end}, limit)
                 if path is None and (cmds := self.side(i, v)):
                     out += cmds
-                    path = self.map.path(v.cell, {end}, PATH_CELLS)
+                    path = self.map.path(v.cell, {end}, limit)
                 if path is None and (cmds := self.detour(i, v, tile, e["time"])) is not None:
                     out += cmds
                     continue
@@ -1522,6 +1526,23 @@ class Replay:
             return v.pos
         f = (t - t0) / (t1 - t0)
         return tuple(a + f * (b - a) for a, b in zip(start, v.pos))
+
+    def stop_at(self, v, t):
+        """The place where walking unit v stops its leg at game time t (ms) for a new order: at(), or the middle of the
+        nearest free cell when the straight line of the leg crosses a lake or a forest there. The path of the new order
+        starts at this place: from a blocked cell the search found no path, and the unit got one straight leg to its
+        goal (eagle scout 15315 of de-63.0: 490 blocks, 180 blocks behind its replay position for 2 minutes, #2881)."""
+        pos = self.at(v, t)
+        x, z = math.floor(pos[0]), math.floor(pos[2])
+        if pos == v.pos or self.map.free(x, z):
+            return pos
+        for r in range(1, LEG + 1):                                 # rings around the cell, the nearest first
+            ring = [(x + dx, z + dz) for dx in range(-r, r + 1) for dz in (-r, r)] + \
+                   [(x + dx, z + dz) for dx in (-r, r) for dz in range(1 - r, r)]
+            if near := [c for c in ring if self.map.free(*c)]:
+                c = min(near, key=lambda c: (math.dist(c, (x, z)), c))
+                return c[0] + 0.5, float(self.map.y(*c)), c[1] + 0.5
+        return pos
 
     def formation(self, group, tile):
         """The end cell of each unit of a group that walks to a tile (#410), in the formation of the record (#2553):
