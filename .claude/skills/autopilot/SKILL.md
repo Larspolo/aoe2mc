@@ -33,7 +33,8 @@ Use the GitHub MCP tools (`mcp__github__*`) when the session has them. Else use 
 Several runs work at the same time. Each run runs `python3 tools/claim.py N --beat` for its ticket N at least every
 20 minutes (after each verify level and before each push). A ticket with `in-progress`, and its PR, belong to another
 run while `python3 tools/claim.py N --stale` exits 1 or a run changed them in the last 30 minutes: do not touch
-them. Takeovers, stalled PRs, hand-offs: `overlap.md`. A PR whose CI runs or is green waits for `automerge.yml`.
+them. A beat or guard that says another run took your ticket over: stop that ticket at once (no push, no comment,
+no release) and pick the next one. Takeovers, stalled PRs, hand-offs: `overlap.md`.
 
 ## 1. Start
 
@@ -102,10 +103,9 @@ Before the pick, check the open epics with no open sub-issue (at most 3 per run)
 (N = the target and R = the ready tickets on the stderr line of `python3 tools/usage.py --fire`): `queue.md`.
 If there is no candidate, go to step 8 and report "No ticket is ready".
 Claim it with `python3 tools/claim.py N`. It pushes a unique commit to the ref `claim/N` without force, so only one
-run can win (#211). Exit 1: another run owns the ticket, pick the next candidate (do not comment). It also exits 1
-when another branch commented "Started by" less than 30 minutes ago (#288), or when an open PR of another
-branch closes the ticket and changed less than 30 minutes ago (#491), or when the issue is closed (#2339). Never comment "Started by" before exit 0.
-Exit 0: add `in-progress` and comment "Started by `<your branch>`." (one line).
+run can win (#211). Exit 0: the ticket is yours; the tool added `in-progress` and "Started by `<your branch>`.".
+Exit 1: it names the run that was first (a claim, a "Started by" of the last 30 minutes, an open PR changed in the
+last 30 minutes, or a closed issue): pick the next candidate. Never comment "Started by" yourself (#288, #1749).
 Each time you remove `in-progress` without a merge (hand-off, `blocked`, `needs-human`), run
 `python3 tools/claim.py N --release` too, else no other run can claim the ticket again.
 The workflow `claims.yml` deletes the refs when the ticket closes.
