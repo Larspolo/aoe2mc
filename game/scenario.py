@@ -170,14 +170,17 @@ def orders(g):
     (aoe2mc.stop_lines, #2754) stops the tagged units (`aoe stop`), ends their patrols as a new order of a person does
     (gather.Gather.end_patrols, #2674) and removes the tag. An "Unload" order (#2773): unload(). A "Lock Gate" or
     "Unlock Gate" order (aoe2mc.gate_lines, #2762) locks or unlocks the gate of its reference: gate(). A "Place
-    Foundation" order (aoe2mc.foundation_lines, #2825): foundation()."""
+    Foundation" order (aoe2mc.foundation_lines, #2825): foundation(). "Train Unit" and "Initiate Research"
+    (aoe2mc.train_lines, #2772): queues()."""
     got = g.command(f"data get storage {ORDERS} list") or ""
     new = re.findall(r'"(patrol|attack_move|stance|stop) (aoe_order[\w.]+) ?(-?\d+(?: -?\d+)*)?"', got)
     unloads = re.findall(r'"unload (\d+) (\d+) ?(-?\d+ -?\d+ -?\d+)?"', got)
     gates = re.findall(r'"(lock|unlock) (\d+)"', got)
     found = re.findall(r'"found (\d+) (\w+) (\d+) (\d+)"', got)
-    if new or unloads or gates or found:
+    queued = re.findall(r'"(train|research) (\d+) (\w+) ?(\d+)?"', got)
+    if new or unloads or gates or found or queued:
         g.command(f"data remove storage {ORDERS} list")
+    queues(g, queued)
     for player, ref, where in unloads:
         unload(g, int(player), int(ref), where)
     for order, ref in gates:
@@ -246,6 +249,22 @@ def unload(g, player, ref, where):
                 x.command(f"aoe moveto {u} {where}")
 
 
+def queues(g, queued):
+    """The "train <ref> <unit> <quantity>" and "research <ref> <technology>" orders of the triggers (#2772): queue them
+    at the converted building of that reference, for its player (the people and the bots), as clicks of its menu
+    (train.queue): the player pays, and a full queue, a missing technology or too few resources stop the rest."""
+    sides = {x.player: x for x in [g, *(s.g for s in g.bots)]}
+    refs = {o["ref"]: o for o in g.data.get("objects", ()) if o["kind"] == "building" and o.get("ref") is not None}
+    for _, ref, name, n in queued:
+        o = refs.get(int(ref))
+        if o is None or (x := sides.get(o["player"])) is None:
+            continue
+        x0, z0, _, _ = o["footprint"]
+        for _ in range(int(n or 1)):
+            if not train.queue(x, getattr(x, "who", "@a"), (x0, z0), name):
+                break
+
+
 def costs(g):
     """The new costs of "Change Object Cost" (aoe2mc.cost_lines, #2776): read and empty the list of the data storage
     COSTS, and keep each cost in trigger_costs of the side of its player (the people and the bots): civs.cost uses it
@@ -278,11 +297,12 @@ def names(g):
 
 def attributes(g):
     """The changes of "Modify Attribute" (aoe2mc.attribute_lines, #2763): read and empty the list of the data storage
-    ATTRIBUTES, and add each change to trigger_attributes of the side of its player (the people and the bots):
+    ATTRIBUTES, and add each change to trigger_attributes of the side of its player (the people and the bots; a
+    unit type or a class "@<class>" of "Modify Attribute for Class", train.applies, #2859):
     train.stats applies them in order, so the units that the player trains later get the new values. The units of the
     type that exist get the new values at once (the same commands as a technology, train.research)."""
     import civs, combat                                                # combat -> gather -> scenario
-    new = re.findall(r'"(\d+) (\w+) (\w+) ([1-5]) (-?[\d.]+)"', g.command(f"data get storage {ATTRIBUTES} list") or "")
+    new = re.findall(r'"(\d+) (@?\w+) (\w+) ([1-5]) (-?[\d.]+)"', g.command(f"data get storage {ATTRIBUTES} list") or "")
     if new:
         g.command(f"data remove storage {ATTRIBUTES} list")
     sides = {x.player: x for x in [g, *(s.g for s in g.bots)]}
@@ -290,11 +310,12 @@ def attributes(g):
         if (x := sides.get(int(player))) is None or field not in combat.Stats._fields:
             continue
         vars(x).setdefault("trigger_attributes", []).append([name, field, int(op), float(q)])
-        s = train.stats(x, name)
-        for uuid in [u["uuid"] for u in x.units if "uuid" in u and u["name"] == name] + \
-                [u for u, n in x.soldiers.items() if n == name]:
-            x.command(combat.stats_command(uuid, name, s, civs.taken(x, name), civs.friendly(x, name)))
-            if field == "range" and (cmd := combat.range_command(uuid, name, x.map.T, s=s)):
+        for uuid, n in [(u["uuid"], u["name"]) for u in x.units if "uuid" in u] + list(x.soldiers.items()):
+            if not train.applies(name, n):                             # a type, or a class (#2859)
+                continue
+            s = train.stats(x, n)
+            x.command(combat.stats_command(uuid, n, s, civs.taken(x, n), civs.friendly(x, n)))
+            if field == "range" and (cmd := combat.range_command(uuid, n, x.map.T, s=s)):
                 x.command(cmd)
 
 
