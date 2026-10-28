@@ -182,7 +182,7 @@
 {"name": "SARACENS: Transport Ships have double hit points and +20 carry capacity.", "civ": "SARACENS", "bonus": "Transport Ships have double hit points and +20 carry capacity.", "later": "play:naval"}
 {"name": "SARACENS: Galleys attack 25% faster.", "civ": "SARACENS", "bonus": "Galleys attack 25% faster.", "later": "play:naval"}
 {"name": "SARACENS: Camel units +25% hit points.", "civ": "SARACENS", "bonus": "Camel units +25% hit points.", "in": "UNITS"}
-{"name": "SAXONS: Mills, Lumber Camps, and Mining Camps provide food 35 when built.", "civ": "SAXONS", "bonus": "Mills, Lumber Camps, and Mining Camps provide food 35 when built.", "gap": "play:build"}
+{"name": "SAXONS: Mills, Lumber Camps, and Mining Camps provide food 35 when built.", "civ": "SAXONS", "bonus": "Mills, Lumber Camps, and Mining Camps provide food 35 when built.", "in": "BUILT_FOOD"}
 {"name": "SAXONS: Foot soldiers cost -5% per Town Center or Castle controlled (maximum -20%).", "civ": "SAXONS", "bonus": "Foot soldiers cost -5% per Town Center or Castle controlled (maximum -20%).", "in": "COST_PER"}
 {"name": "SAXONS: Towers and Castles fire +100% base arrows starting in Castle Age.", "civ": "SAXONS", "bonus": "Towers and Castles fire +100% base arrows starting in Castle Age.", "in": "ARROWS"}
 {"name": "SAXONS: Longships and Catapult Galleons have +20% hit points.", "civ": "SAXONS", "bonus": "Longships and Catapult Galleons have +20% hit points.", "later": "play:naval"}
@@ -247,7 +247,7 @@
 {"name": "WEI: Hei Guang Cavalry +20%/30% hit points in Castle/Imperial Age", "civ": "WEI", "bonus": "Hei Guang Cavalry +20%/30% hit points in Castle/Imperial Age", "in": "UNITS"}
 {"name": "WEI: Xianbei Raider +20%/30% hit points in Castle/Imperial Age (the unit is not in the game program yet, #2160)", "civ": "WEI", "bonus": "Xianbei Raider +20%/30% hit points in Castle/Imperial Age (the unit is not in the game program yet, #2160)", "later": "play:military-train"}
 {"name": "WEI: Traction Trebuchets and Lou Chuans cost -25%", "civ": "WEI", "bonus": "Traction Trebuchets and Lou Chuans cost -25%", "in": "COSTS"}
-{"name": "WU: Barracks, Archery Ranges, Stables, Siege Workshops, Castles, and Docks provide food +55 when constructed.", "civ": "WU", "bonus": "Barracks, Archery Ranges, Stables, Siege Workshops, Castles, and Docks provide food +55 when constructed.", "gap": "play:build"}
+{"name": "WU: Barracks, Archery Ranges, Stables, Siege Workshops, Castles, and Docks provide food +55 when constructed.", "civ": "WU", "bonus": "Barracks, Archery Ranges, Stables, Siege Workshops, Castles, and Docks provide food +55 when constructed.", "in": "BUILT_FOOD"}
 {"name": "WU: Infantry regenerate 10/15/30 hit points per minute in Feudal/Castle/Imperial Age.", "civ": "WU", "bonus": "Infantry regenerate 10/15/30 hit points per minute in Feudal/Castle/Imperial Age.", "in": "REGEN"}
 {"name": "WU: Jian Swordsmen and Hei Guang Cavalry have +2 attack in Imperial Age.", "civ": "WU", "bonus": "Jian Swordsmen and Hei Guang Cavalry have +2 attack in Imperial Age.", "later": "play:military-train"}
 {"name": "WU: Careening and Dry Dock are free.", "civ": "WU", "bonus": "Careening and Dry Dock are free.", "later": "play:naval"}

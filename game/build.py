@@ -60,6 +60,7 @@ GATES = tuple(r["name"] for r in ROWS if r.get("gate"))          # on 4 own wall
 NEEDS = {r["name"]: r["needs"] for r in ROWS if "needs" in r}     # a unit or building after a technology (#1380)
 SHORE = ("DOCK",)                                                  # on water next to the land, as in AoE2 (#1382)
 WATER = ("FISH_TRAP",)                                             # on free water only, ships build it (#1438)
+MOVES = {r["name"] for r in table.load("buildings.jsonl") if r.get("moves")}   # a mob when complete (cart, #2209)
 GHOST = 400                                                        # block displays of one ghost: a coarser shape above
 CRANE = 1.2                                                        # the build speed factor of Treadmill Crane (#1422)
 NOT_UNITS = ("block_display", "interaction", "item_display", "marker", "text_display")   # ghosts, name lines
@@ -553,6 +554,9 @@ def rise(g, site, work):
         site["done"] = True
         for p in [p for p in ring if p not in hit]:                    # the ring goes: the design, the water or air
             g.command("setblock {} {} {} ".format(*p) + site["under"].get(p, "minecraft:air"))
+        if site["name"] in MOVES and site["player"] == g.player:
+            cart(g, site)
+            return True
         x0, x1, z0, z1 = site["footprint"]
         s, T = footprint(site["name"]), g.map.T
         if "FARM" in site["name"]:                                     # free ground again: the farmer stands on it
@@ -568,7 +572,45 @@ def rise(g, site, work):
         target(g, site)
         if site["name"] in GATES:
             portcullis(g, site)
+        if site["player"] == g.player and (food := civs.built_food(g, site["name"])):
+            g.earn("food", food)                                       # Saxon camps, Wu military buildings (#2114)
     return site["progress"] >= 1
+
+
+def cart(g, site):
+    """A complete building that moves (MOVES: the mule cart, AoE2 DE wiki "Mule Cart", #2209): its blocks go, and a
+    mob with its AoE2 values stands in their place. It takes move orders as a trade cart, and the mob path finding moves
+    it (Minecraft features first). Its footprint and its drop cells follow the mob (moved_carts)."""
+    import train                                                   # train imports this module
+    x0, x1, z0, z1 = site["footprint"]
+    cells = {(x, z) for x in range(x0, x1) for z in range(z0, z1)}
+    g.map.blocked -= cells                                         # the cart blocks no path (found blocked them)
+    y = min(g.map.y(x, z) for x, z in cells)
+    top = max((b[0][4] for c in site["commands"] if (b := box(c))), default=y)
+    if top >= y:
+        g.command(f"fill {x0} {y} {z0} {x1 - 1} {top} {z1 - 1} minecraft:air")
+    x, z = (x0 + x1) // 2, (z0 + z1) // 2
+    site["uuid"] = uuid = train.summon(g, site["name"], (x + 0.5, float(g.map.y(x, z)), z + 0.5))
+    if uuid:
+        site["cells"] = cells
+        g.map.drop_site(site["name"], cells)
+
+
+def moved_carts(g):
+    """Move the footprint and the drop cells of each complete cart (cart) under its mob, with the same size: the next
+    villager carries its load to the new place. A dead cart is no drop site."""
+    for site in [s for s in g.sites if "cells" in s]:
+        if not (p := g.pos(site["uuid"])):
+            for r in g.map.drops:
+                g.map.drops[r] = [d for d in g.map.drops[r] if d is not site["cells"]]
+            del site["cells"]
+            continue
+        x0, x1, z0, z1 = site["footprint"]
+        w, d = x1 - x0, z1 - z0
+        x0, z0 = math.floor(p[0]) - w // 2, math.floor(p[2]) - d // 2
+        site["footprint"] = (x0, x0 + w, z0, z0 + d)
+        site["cells"].clear()
+        site["cells"].update((x, z) for x in range(x0, x0 + w) for z in range(z0, z0 + d))
 
 
 def folwark(g, farm, tile):
