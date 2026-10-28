@@ -170,7 +170,7 @@
 {"name": "TRANSPORT_SHIP", "hp": 70, "attack": 0, "melee": 0, "pierce": 2, "range": 0, "reload": 0.0, "bonus": {}, "classes": [], "sight": 5, "note": "AoE2 DE wiki (#1385)", "sail": 1.45}
 {"name": "TREBUCHET", "hp": 150, "attack": 200, "melee": 2, "pierce": 8, "range": 16, "reload": 10.0, "bonus": {"building": 250}, "classes": ["siege"], "sight": 19, "note": "AoE2 DE wiki: 150 HP (#1351); packed", "min_range": 4, "building_sight": "only"}
 {"name": "BOMBARD_CANNON", "hp": 80, "attack": 40, "melee": 2, "pierce": 5, "range": 12, "reload": 6.5, "bonus": {"building": 200, "heavysiege": 40, "siege": 20}, "classes": ["gunpowder", "siege"], "melee_ranged": true, "blast": 0.5, "min_range": 5}
-{"name": "PETARD", "hp": 50, "attack": 25, "melee": 0, "pierce": 2, "range": 0, "reload": 2.0, "bonus": {"building": 500, "siege": 60}, "classes": []}
+{"name": "PETARD", "hp": 50, "attack": 25, "melee": 0, "pierce": 2, "range": 0, "reload": 2.0, "bonus": {"building": 500, "castle": 100, "siege": 60, "wall": 900}, "classes": [], "sight": 4, "note": "AoE2 DE wiki (#2192): one blast (BLAST), then it dies", "blast": 0.5}
 {"name": "ALFRED_THE_ALPACA", "hp": 140, "attack": 120, "melee": 20, "pierce": 20, "range": 0, "reload": 2.0, "bonus": {"building": 100}, "classes": ["cavalry"], "sight": 6}
 {"name": "COBRA_CAR", "hp": 500, "attack": 10, "melee": 10, "pierce": 10, "range": 10, "reload": 0.25, "bonus": {"building": 10}, "classes": ["siege"]}
 {"name": "FURIOUS_THE_MONKEY_BOY", "hp": 9, "attack": 99, "melee": 99, "pierce": 99, "range": 0, "reload": 0.9, "bonus": {"building": 999}, "classes": [], "sight": 12, "fighter": true}

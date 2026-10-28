@@ -70,7 +70,7 @@ def test_a_complete_krepost_shoots_and_trains_the_konnik():
     shot = [c for c in server.log if c.startswith("aoe building ") and " 10 " in c]
     assert shot, [c for c in server.log if c.startswith("aoe building")]
     rect = next(r for r, n in train.homes(g).items() if n == "KREPOST")
-    assert train.trains(g, train.homes(g)[rect]) == ("KONNIK", "ELITE_KONNIK_UPGRADE")
+    assert train.trains(g, train.homes(g)[rect]) == ("KONNIK", "PETARD", "ELITE_KONNIK_UPGRADE")
 
 
 @pytest.mark.mc
