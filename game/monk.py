@@ -132,7 +132,7 @@ def order(g, player, cell):
     monks = [u for u in sorted(g.selected) if g.soldiers.get(u) in MONKS]
     if not cell or not monks or not g.paper:
         return False
-    import ai, civs                                                # ai imports gather, gather imports this module
+    import ai, train                                               # ai imports gather, gather imports this module
     T, held = g.map.T, carriers(g)
     free = [i for i, r in enumerate(relics(g)) if r["at"] and max(abs(r["at"][0] - cell[0]), abs(r["at"][1] - cell[1])) <= REACH
             and i not in [t for k, t in g.fetching.values() if k == "relic"]]
@@ -148,7 +148,7 @@ def order(g, player, cell):
     g.new_order(go)
     for m, target in go.items():
         name = g.soldiers[m]
-        ai.move(g, m, name, T, x + 0.5, g.map.y(x, z), z + 0.5, ai.NORMAL * civs.speed(g, name))
+        ai.move(g, m, name, T, x + 0.5, g.map.y(x, z), z + 0.5, ai.NORMAL * train.speed(g, name, m))
         g.fetching[m] = target
     g.mark(player, {to})
     return True
@@ -328,13 +328,14 @@ def take(g, uuid):
 def heresy(g, player):
     """True when player researched Heresy (#1582): its Gather is g, a bot of g (bot.Bot) or the human Gather that the bot
     of g shares."""
-    return any(h.player == player and "HERESY" in h.techs
-               for h in [g, *(b.g for b in g.bots), *filter(None, [getattr(g, "share", None)])])
+    import build                                                   # build imports gather, which imports this module
+    return any(h.player == player and "HERESY" in h.techs for h in [g, *build.sides(g)])   # also a second person (#3106)
 
 
 def die(g, uuid):
     """The enemy unit uuid dies in place of a conversion (Heresy of its player), with its horse, camel, boat or rider."""
     name = g.enemies.pop(uuid)
+    owners.killed(g, {uuid})                                           # update_enemies keeps it out (#2996)
     for run in (f"execute as {uuid} on vehicle run ", f"execute as {uuid} on passengers run ", ""):
         g.command(run + ("kill @s" if run else f"kill {uuid}"))
     g.command(f"tellraw @a[team=p{g.player}] " + json.dumps({"text": f"The {units.pretty(name)} dies (Heresy).",
@@ -359,7 +360,8 @@ def resist(g, uuid):
     """The extra conversion intervals of the unit uuid: Devotion and Faith of its player (RESIST), from the Gather of
     that player (g or one of its bots)."""
     player = owners.player(g, uuid)                                # also a unit of the game (#2992)
-    techs = next((x.techs for x in (g, *(b.g for b in g.bots)) if x.player == player), ())
+    import build                                                   # build imports gather, which imports this module
+    techs = next((x.techs for x in (g, *build.sides(g)) if x.player == player), ())   # also a second person (#3106)
     return sum(RESIST.get(t, 0) for t in techs)
 
 
@@ -400,7 +402,7 @@ def convert(g, dt):
             del g.faith[m]
     if not g.converting:
         return
-    import ai                                                      # ai imports gather, gather imports this module
+    import ai, train                                               # ai imports gather, gather imports this module
     pos = g.positions(sorted(set(g.converting) | {t for t, _, _ in g.converting.values()}))
     for m, job in sorted(g.converting.items()):
         if m not in g.converting:
@@ -412,7 +414,8 @@ def convert(g, dt):
             continue
         if not near(g, m, target, pos):
             job[1:] = [0.0, 0]
-            ai.move(g, m, g.soldiers.get(m, "MONK"), g.map.T, *spot(g, m, target, pos))   # walk into range; the order follows the target
+            name = g.soldiers.get(m, "MONK")
+            ai.move(g, m, name, g.map.T, *spot(g, m, target, pos), ai.NORMAL * train.speed(g, name, m))   # walk into range; the order follows the target
             continue
         if job[1] == 0 and job[2] == 0:
             g.command(f"aoe stop {m}")                             # in range: it stands and chants

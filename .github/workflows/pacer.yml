@@ -55,6 +55,7 @@ jobs:
               gh workflow run pacer.yml --repo "$GITHUB_REPOSITORY" --ref main
               exit 1
             fi
+            gh workflow run dashboard-site.yml --repo "$GITHUB_REPOSITORY" --ref main || true   # the dashboard, fresh each cycle
             sleep 600
           done
           gh workflow run pacer.yml --repo "$GITHUB_REPOSITORY" --ref main   # the next loop

@@ -276,6 +276,7 @@ AGES = ("Dark Age", "Feudal Age", "Castle Age", "Imperial Age")    # the age aft
 STARTS = {r["name"]: r for r in table.load("setup.jsonl") if "ages" in r}
 SWAPS = {r["name"]: r["swap"] for r in table.load("setup.jsonl") if "swap" in r}   # a game mode: {old: new} (#2388)
 AGAIN = {r["name"] for r in ROWS if r.get("again")}                # a technology that a player researches again (Treason)
+SPAM = 1.0                                                         # seconds: one more click on the same building in this time opens no new menu (#3267)
 QUEUE = 15                                                         # units in the queue of one building, as in AoE2
 HOUSING = {r["name"]: r["housing"] for r in BUILDING_ROWS if "housing" in r}   # population of a complete building
 AGE_COUNT = {r["name"]: r["age_count"] for r in BUILDING_ROWS if "age_count" in r}   # types of the age rule: the Settlement 2 (#2420)
@@ -451,6 +452,28 @@ def covered(g, building, name):
         {placed(g, b, n)[0] for n, (b, _) in moved.items() if b == building} | {placed(g, building, n)[0] for n in new}
 
 
+def layout(g, rect):
+    """{name: (slot, item, label)} of each shown item of the menu of building rect (#3098). An item keeps its slot
+    (placed()) when no earlier item has it; else it takes the first free slot from MORE. Full Tech Tree gives a
+    civilization regional items that share the slot of a generic item (Armored Elephant, Battering Ram)."""
+    building = homes(g)[rect]
+    names = [n for n in trains(g, building) if offered(g, rect, n) and not covered(g, building, n)]
+    used = {RALLY[0]} if units_of(g, building) else set()          # the items of show() after the trained ones
+    used |= {garrison.ungarrison(building)[0]} if getattr(g, "garrisons", {}).get(rect) else set()
+    out = {}
+    for name in names:
+        slot, item, label = placed(g, building, name)
+        if slot in used or slot in {s for s, *_ in out.values()}:
+            continue
+        out[name] = slot, item, label
+    for name in names:
+        if name not in out:
+            taken = used | {s for s, *_ in out.values()}
+            slot = next(s for s in range(MORE, 54) if s not in taken)
+            out[name] = (slot, *placed(g, building, name)[1:])
+    return {n: out[n] for n in names}
+
+
 def line_upgrades(line):
     """The upgrade technologies (UPGRADES) of one unit line (a list of unit names), in the order of the line. The elite
     upgrade of a unique unit stays at the castle (the Goth barracks, #2685)."""
@@ -491,10 +514,15 @@ def lore(g):
             menu.lore(g, material, ITEMS[name][2], HELP[name])
 
 
-def open_menu(g, player, cell):
-    """Open the menu of the own training building at the block cell (x, z) for player. Returns its footprint, or None."""
+def open_menu(g, player, cell, click=False):
+    """Open the menu of the own training building at the block cell (x, z) for player. Returns its footprint, or None.
+    click: a stick use of the player, which opens no new menu SPAM seconds after one on the same building (#3267)."""
     rect = home(g, cell)
+    opened = vars(g).setdefault("menu_opened", {})
+    if click and rect is not None and opened.get(player, (None, -SPAM))[0] == rect and g.clock() - opened[player][1] < SPAM:
+        return rect                                                    # a spam click: the uses that came before the menu showed (#3267)
     if rect is not None:
+        opened[player] = rect, g.clock()
         show(g, player, rect)
     return rect
 
@@ -514,8 +542,7 @@ def show(g, player, rect):
     items = [(slot, build.LOCKED if build.locked(g, name) else item, names.get(name, label),
               (" · ".join(f"{v} {r}" for r, v in price(g, name, building).items()) or "free") + f" · {round(seconds(g, name, building), 1):g} s · "
               + state(name))
-             for name in trains(g, building) if offered(g, rect, name) and not covered(g, building, name)
-             for slot, item, label in [placed(g, building, name)]]
+             for name, (slot, item, label) in layout(g, rect).items()]
     items += [RALLY] if units_of(g, building) else []
     items += [garrison.ungarrison(building)] if getattr(g, "garrisons", {}).get(rect) else []   # only with units inside (#808)
     if building == "MARKET":                                           # the buy and sell rows under the queue (#1286)
@@ -598,8 +625,7 @@ def order(g, player, rect, slot, shift=False):
         cancel(g, player, rect, slot - ROW)
         show(g, player, rect)
         return 0
-    name = next((n for n in trains(g, homes(g)[rect])                # the shown item of the slot (one per line of upgrades)
-                 if placed(g, homes(g)[rect], n)[0] == slot and offered(g, rect, n) and not covered(g, homes(g)[rect], n)), None)
+    name = next((n for n, (s, *_) in layout(g, rect).items() if s == slot), None)   # the shown item of the slot (#3098)
     n = 0
     while name and n < (SHIFT if shift else 1) and queue(g, player, rect[::2], name):
         n += 1

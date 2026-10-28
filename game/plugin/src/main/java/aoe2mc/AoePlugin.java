@@ -116,6 +116,9 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *                                              player that joins later (#1302: the enemy units out of sight in the
  *                                              view of one replay player). With team=T in the selector: only a
  *                                              player of team T that joins later, and no spectator (#2921)
+ *   aoe hide <players> team                    each player sees the units of the hides of its own team (or of all
+ *                                              players) as hidden and all other units of the hides (a person who
+ *                                              joins a team or changes it, #3070)
  *   aoe hide <players> view <uuid> ...         the same for these players only (the view of a spectator, #2901):
  *                                              the minimap and a player that joins later do not change
  *   aoe stance <selector> <aggressive|defensive|stand_ground|no_attack>
@@ -130,6 +133,8 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *                                              friendly: the factor of the blast damage of own and allied units on it
  *                                              (Jurchen military units 0.5, #2418, default 1)
  *   aoe stop <selector>                        stop the walk and turn the AI off: the unit stands still (#437)
+ *   aoe unwear <selector>                      forget the kept blocks of the damage stages of each building target: the
+ *                                              next stage keeps the blocks of a new design (a wall technology, #3071)
  *   aoe range <selector> <blocks> <ticks> [blast [min [pass [part]]]]
  *                                              a ranged unit shoots from this range, one shot per ticks (#515); a
  *                                              shot with a blast radius in blocks hits all units near the target, and
@@ -710,7 +715,8 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     // Each 2 ticks: a building with an attack (aoe building with attack, range and reload: a town center, a castle,
     // #1111) shoots one arrow per reload at the nearest unit of another team in its range. As in AoE2, the range counts
     // from the edge of its footprint. Each garrisoned villager or foot archer adds an arrow (aoe arrows, #1113): all
-    // arrows of a shot go to the same target, as in AoE2. Not at a rider (its horse is the target), a garrisoned unit or a building.
+    // arrows of a shot go to the same target, as in AoE2. Not at a rider (its horse is the target), a garrisoned unit or a building;
+    // the crew of a ship or a siege unit is a target (#3015).
     private void towers() {
         for (var en : buildings.entrySet()) {
             Building f = en.getValue();
@@ -725,7 +731,8 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             double bestD = f.range * f.range;
             for (Entity o : fort.getWorld().getNearbyEntities(c, f.range + half, f.range + 16, f.range + half)) {
                 if (o instanceof LivingEntity le && le.isValid() && stats.containsKey(le.getUniqueId())
-                        && !buildings.containsKey(le.getUniqueId()) && !le.isInvulnerable() && le.getVehicle() == null
+                        && !buildings.containsKey(le.getUniqueId()) && !le.isInvulnerable()
+                        && !(le.getVehicle() instanceof LivingEntity v && stats.containsKey(v.getUniqueId()))   // the crew of a ship counts (#3015)
                         && !calm(fort, le)) {
                     var p = le.getLocation();
                     double dx = Math.max(0, Math.max(b[0] - p.getX(), p.getX() - b[3] - 1));
@@ -1190,8 +1197,10 @@ public final class AoePlugin extends JavaPlugin implements Listener {
 
     // The AoE2 default stance (#733): a military unit without an order and without a target attacks its attacker.
     // A mounted unit: the horse has the order, the rider the target (#710).
+    // The crew of a siege unit keeps NoAI: unit() would turn on its brain for good (a warden digs, #3016). watch()
+    // gives the idle siege unit its target with the siege rules (#1820).
     private void attackBack(LivingEntity victim, LivingEntity attacker, Stats t) {
-        if (victim instanceof Mob mob && idle(mob, t) && !sameTeam(mob, attacker)
+        if (victim instanceof Mob mob && !(mob.getVehicle() instanceof Minecart) && idle(mob, t) && !sameTeam(mob, attacker)
                 && !attacker.getScoreboardTags().contains(NO_TARGET)
                 && mob.getLocation().distanceSquared(attacker.getLocation()) <= Math.pow(stanceRange(mob), 2)) {
             engage(mob, attacker);
@@ -1336,7 +1345,10 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             for (Entity o : best != null || "only".equals(mode) ? List.<Entity>of() : e.getNearbyEntities(r, r, r)) {
                 if (o instanceof LivingEntity le && le.isValid() && stats.containsKey(le.getUniqueId())
                         && !buildings.containsKey(le.getUniqueId()) && !calm(crew, le) && !le.isInvulnerable()
-                        && le.getVehicle() == null && e.getLocation().distanceSquared(le.getLocation()) <= bestD) {
+                        && !(le.getVehicle() instanceof LivingEntity v && stats.containsKey(v.getUniqueId()))   // a crew counts (#3015)
+                        && !(mob != null && afloat(le) && !(mob.getVehicle() instanceof Boat)
+                            && !ranged(rider(mob) != null ? rider(mob) : mob))   // a land melee unit cannot reach a ship (#1658)
+                        && e.getLocation().distanceSquared(le.getLocation()) <= bestD) {
                     best = le;
                     bestD = e.getLocation().distanceSquared(le.getLocation());
                 }
@@ -1412,7 +1424,10 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             from = p.getShooter() instanceof Entity shooter ? shooter : null;
         }
         Stats a = from == null ? null : stats.get(from.getUniqueId());
-        if (a != null && ev.getAttacker() instanceof Projectile p) {
+        Building fort = from == null ? null : buildings.get(from.getUniqueId());
+        if (fort != null && ev.getAttacker() instanceof Projectile) {
+            a = fort.stats;                                  // the arrow of a tower, castle or town center (#3015)
+        } else if (a != null && ev.getAttacker() instanceof Projectile p) {
             a = volley(p, a);                                // an extra arrow of an Armenian galley (#2379)
         }
         if (a != null && c.isValid() && !sameTeam(from, c)) {
@@ -1613,7 +1628,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     /** Show the damage stage of building t (#1522): at each stage a fixed random share of its blocks above the floor
      *  is worn (worn()) or gone (holes, cobwebs at the last stage), more at each stage, so that almost destroyed looks clearly
      *  other than a little damaged. The blocks go anywhere in the building, not from the top as a construction site
-     *  (build.rise). A repair puts the blocks of each stage back. No change to barriers, block entities and fluids: the
+     *  (build.rise). A repair puts the blocks of each stage back. No change to barriers, block entities, fluids and gate bars (#3073): the
      *  units never stand in a block (a hole only removes one), and no item drops (no block updates). */
     private void wear(Entity t, Building b, int stage) {
         Wear w = wear.get(t.getUniqueId());
@@ -1628,7 +1643,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                     for (int z = b.b[2]; z <= b.b[5]; z++) {
                         Block block = world.getBlockAt(x, y, z);
                         Material m = block.getType();
-                        if (!m.isAir() && m != Material.BARRIER && !block.isLiquid()
+                        if (!m.isAir() && m != Material.BARRIER && !block.isLiquid() && !gates.holds(world, x, y, z)
                                 && !(block.getState() instanceof org.bukkit.block.TileState)) {
                             w.blocks.put(Block.getBlockKey(x, y, z), block.getBlockData());
                         }
@@ -2506,7 +2521,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                     rider(mob).setTarget(null);
                 }
                 if (gates.any()) {                                     // through an own gate (#1325, #1656)
-                    gates.raise(mob);
+                    gates.raise(mob, goal);
                 }
                 dry(mob, goal);
                 mob.getPathfinder().moveTo(goal, speed);
@@ -2718,6 +2733,23 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             var who = players(sender, args[1]);
             String team = selectorTeam(args[1]);
             int n = 0;
+            if (hide && args[2].equals("team")) {                  // the hides of the own team only (#3070)
+                for (var u : hidden.keySet()) {
+                    Entity e = Bukkit.getEntity(u);
+                    if (e != null) {
+                        for (Player p : who) {
+                            if (hiddenFor(p, u)) {
+                                p.hideEntity(this, e);
+                            } else {
+                                p.showEntity(this, e);
+                            }
+                        }
+                        n++;
+                    }
+                }
+                sender.sendMessage("Hidden: " + n + " entities, " + who.size() + " players");
+                return true;
+            }
             if (!hide && args[2].equals("all")) {                  // a spectator sees through the fog of all teams (#2921)
                 for (var h : hidden.entrySet()) {
                     Entity e = Bukkit.getEntity(h.getKey());
@@ -2794,6 +2826,16 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                 }
             }
             sender.sendMessage("Stopped " + n + " units");
+            return true;
+        }
+        if (args.length == 2 && args[0].equals("unwear")) {            // a redraw after a wall technology (#3071)
+            int n = 0;
+            for (Entity e : select(sender, args[1])) {
+                if (wear.remove(e.getUniqueId()) != null) {
+                    n++;
+                }
+            }
+            sender.sendMessage("Unwear: " + n + " buildings");
             return true;
         }
         if (args.length >= 3 && args[0].equals("menu")) {

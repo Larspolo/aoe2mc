@@ -173,8 +173,11 @@ NOT_SAVED = (                                                          # the fie
     "home",                                                            # bot.py: the town center of a bot
     "hurried",                                                         # regen.military: again in its next pass
     "kings",                                                           # regicide.setup makes it again
+    "left_full",                                                       # amounts.py: the full amounts, from aoe2mc.json again
+    "left_shown",                                                      # amounts.py: the shown numbers, a load shows them again
     "limit_at",                                                        # time_limit.py: the next check time
     "limit_shown",                                                     # time_limit.py: the shown text
+    "menu_opened",                                                     # train.open_menu: the time of the last open (spam clicks, #3267)
     "noui",                                                            # the cheat "noui": only the hints
     "owners_at",                                                       # scenario.owners: the next check time
     "owners_sent",                                                     # scenario.owners: a load sets the same score again
@@ -406,6 +409,7 @@ def load(g, d):
     """Put the saved state d (dump) on the Gather of each player that it names, and show the resources again."""
     import build
     import gather
+    import owners
     import train
     for x in sides(g):
         p = d["players"].get(str(x.player))
@@ -453,6 +457,10 @@ def load(g, d):
     if "stances" in d:
         g.command(gather.allies_command(g.players))
         g.command(gather.neutral_command(g.players))
+        owners.update_enemies(g)                                       # the saved enemies and allies (#2996)
+    for x in sides(g):                                                 # a razed building leaves the forts again (#2985)
+        for u in vars(x).get("razed", {}):
+            x.free(u)                                                  # the first call frees it for all sides
     gates_again(g)                                                     # the sites are back: their bars and plugin gates (#2762)
 
 

@@ -52,6 +52,7 @@ from units import TEAM_COLOR, VILLAGER_JOBS, animal, pretty  # noqa: E402
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import build  # noqa: E402
 import replay  # noqa: E402  (build imports it too)
+import amounts  # noqa: E402
 import battle_royale  # noqa: E402
 import bossbar  # noqa: E402
 import capture_relic  # noqa: E402
@@ -1082,6 +1083,7 @@ class Gather:
                 self.dead[v.prey] = tile
                 self.map.carcasses[tile] = self.map.carcasses.get(tile, 0) + hunt_food(name)
                 self.map.rot[tile] = DECAY.get("COW" if name.startswith("COW_") else name, 0) * civs.decay(self)
+                self.body(tile)
                 if herdable(name):
                     self.map.herds.add(tile)
         v.tree, v.prey, v.path = self.dead.get(v.prey), None, []
@@ -1094,6 +1096,21 @@ class Gather:
             food = self.map.carcasses[tile] = max(0, self.map.carcasses.get(tile, 0) - rate * dt)
             if not food:
                 del self.map.rot[tile]
+                self.unbody(tile)
+
+    def body(self, tile):
+        """Show the body of a carcass: a raw beef item display that lies flat on the middle of its tile, until its food
+        is gone (#3272). A display entity has no AI, hit box or drops, and a kill by its tag removes it."""
+        x, z = (int(c * self.map.T + self.map.T // 2) for c in tile)
+        self.command(f"kill @e[type=item_display,tag=aoe_carcass_{tile[0]}_{tile[1]}]")   # a second kill on the tile
+        self.command(f"summon item_display {x + 0.5} {self.map.y(x, z) + 0.05} {z + 0.5} {{Tags:[\"aoe_carcass\","
+                     f"\"aoe_carcass_{tile[0]}_{tile[1]}\"],item:{{id:\"minecraft:beef\",count:1}},"
+                     f"transformation:{{left_rotation:[0.7071f,0f,0f,0.7071f],right_rotation:[0f,0f,0f,1f],"
+                     f"translation:[0f,0f,0f],scale:[1.2f,1.2f,1.2f]}}}}")
+
+    def unbody(self, tile):
+        """Remove the body of an empty carcass (#3272)."""
+        self.command(f"kill @e[type=item_display,tag=aoe_carcass_{tile[0]}_{tile[1]}]")
 
     def goals(self, tile):
         """The cells where a villager works a resource: on a farm, else next to it."""
@@ -1179,6 +1196,7 @@ class Gather:
         map_table.tick(self)
         menu.clicks(self)
         cheats.clicks(self)
+        cheats.taunts(self)
         self.command(f"execute as {self.who} unless items entity @s container.* minecraft:carrot_on_a_stick[!custom_data] "
                      "run give @s minecraft:carrot_on_a_stick")       # not a group item
         if self.calls % GROUP_GIVE == 0:
@@ -1222,7 +1240,7 @@ class Gather:
 
     def hold(self, name, uses):
         """A command stick use on Paper (#1786, owner feedback): the first use of a held right click is also a click,
-        so it waits for HOLD seconds. A next use in that time (or two uses in one call) is a held right click: the cell
+        so it waits for HOLD seconds, but corner 1 shows at once (#3268). A next use in that time (or two uses in one call) is a held right click: the cell
         of the first use is corner 1 of the selection box, and the drag of #992 goes on until the release. A hold never
         gives an order first: a held click on the ground would send the selected villagers to walk."""
         if name in self.holds:
@@ -1230,9 +1248,14 @@ class Gather:
             return
         if name in self.pending or uses > 1:
             look = self.pending.pop(name, (None, None))[1] or self.look(name)
-            self.drag(name, look and fleet.pick(self, *look))
+            if name in self.corners:                                   # corner 1 of the first use (#3268)
+                self.holds[name] = self.clock()
+            else:
+                self.drag(name, look and fleet.pick(self, *look))
             return
-        self.pending[name] = self.clock(), self.look(name)
+        self.pending[name] = self.clock(), (look := self.look(name))
+        if (cell := look and fleet.pick(self, *look)) and name not in self.corners:
+            self.box(name, cell)                                       # the box shows at once, no wait (#3268)
 
     def short(self):
         """The players whose stick use got no next use in HOLD seconds: a short click, with the look of the use.
@@ -1240,6 +1263,8 @@ class Gather:
         due = sorted(n for n, (t, _) in self.pending.items() if self.clock() - t >= HOLD)
         for n in due:
             self.looks[n] = self.pending.pop(n)[1]
+            if self.corners.pop(n, None) is not None:                  # a click: no box (#3268)
+                self.command(f"aoe box-clear {n}")
         return due
 
     def deselect(self):
@@ -1367,9 +1392,9 @@ class Gather:
             return
         if garrison.order(self, name, fleet.pick(self, eye, d)):     # fishing ships go into a dock on the water (#1949)
             return
-        if train.open_menu(self, name, self.map.pick_ground(eye, d)):  # an own town center or barracks (#620, #654)
+        if train.open_menu(self, name, self.map.pick_ground(eye, d), True):  # an own town center or barracks (#620, #654)
             return
-        if train.open_menu(self, name, fleet.pick(self, eye, d)):     # a dock is on the water (#1383)
+        if train.open_menu(self, name, fleet.pick(self, eye, d), True):     # a dock is on the water (#1383)
             return
         if market.open_menu(self, name, self.map.pick_ground(eye, d)):  # an own market: buy and sell (#1252)
             return
@@ -1398,11 +1423,11 @@ class Gather:
     def new_order(self, units):
         """A new order ends each old order of the units, as in AoE2 (#3007): the repair of a Serjeant (#2128), the
         trigger patrols (#2674), the walk into a building, a siege tower or a transport ship, a conversion, a relic
-        trip and the farm of a farmer. Each order function calls it before it sets its own state."""
+        trip, the farm of a farmer and the route of a trade cart (#3278). Each order function calls it before it sets its own state."""
         units = set(units)
         repair.drop(self, units)
         self.end_patrols(units)
-        for key in ("entering", "boarding", "loading", "converting", "fetching"):
+        for key in ("entering", "boarding", "loading", "converting", "fetching", "trade"):
             table = vars(self).get(key, {})
             for u in units & table.keys():
                 del table[u]
@@ -1670,7 +1695,8 @@ class Gather:
                         self.harvest(v.tree)
                         self.tend(v)
                     elif v.tree in self.map.carcasses:
-                        pass                                           # a carcass has no blocks
+                        if src[v.tree] <= 0:                           # a carcass has no blocks, only its body
+                            self.unbody(v.tree)
                     elif v.tree in self.map.fish:                      # a shore fish: its mob goes when empty (#2349)
                         if src[v.tree] <= 0:
                             fleet.remove(self, v.tree)
@@ -1699,6 +1725,7 @@ class Gather:
         trade.tick(self)
         trade.heal(self, self.tick * NORMAL)
         train.haste(self, self.tick * NORMAL)
+        amounts.tick(self)                                             # before the bar: tests read its last command
         bossbar.tick(self)
         for site in self.sites:
             builders = [v for v in [*self.villagers.values(), *self.ships.values()] if v.state == "build" and v.site is site]
@@ -1914,6 +1941,11 @@ class Gather:
         self.command(f"fill {fx0} {min(ys) - 2} {fz0} {fx1 - 1} {max(ys) + 3} {fz1 - 1} air replace minecraft:barrier")
         if flat or not felled:
             self.stump(sx, sz, ys)
+        if flat:                                                       # a building may go on the stump, as in AoE2 (#3265)
+            for x in range(fx0, fx1):
+                for z in range(fz0, fz1):
+                    self.map.blocked.discard((x, z))
+                    self.map.ground[z][x] = ys[0]
         self.trunks.pop(tile, None)
 
     def berries(self, tile):

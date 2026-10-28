@@ -190,7 +190,7 @@ class Bot:
         g = self.g
         mine = g.positions(sorted(g.soldiers))                         # a dead soldier is not in it
         self.charged = len(mine) >= self.group or self.charged and bool(mine)
-        if not self.charged:
+        if not self.charged or self.foe is None:                      # no enemy: no attack (#3107)
             return
         live = {t for t in set(self.targets.values()) if "passed" in g.command(f"execute if entity {t}")}
         self.targets = {u: t for u, t in self.targets.items() if u in mine and t in live}
@@ -198,8 +198,9 @@ class Bot:
             return                                                     # all soldiers fight units
         units = {o["uuid"] for o in g.data["objects"] if o["kind"] == "unit" and o["player"] == self.foe and o.get("uuid")
                  and not herd.herdable(o["name"])}                     # AoE2: a sheep is captured, not attacked (#2049)
-        if self.share:                                                 # also the units that player 1 trained
-            units |= self.share.villagers.keys() | self.share.soldiers.keys()
+        for x in build.sides(g) if self.share else ():                 # also the units that the foe trained (#3107)
+            if x.player == self.foe:
+                units |= x.villagers.keys() | x.soldiers.keys()
         seen, T = g.seen_tiles(), g.map.T                              # the AoE2 AI sees only its sight (#2050)
         near = {k: p for k, p in g.positions(sorted(units)).items() if (int(p[0] // T), int(p[2] // T)) in seen}
         self.targets = {u: t for u, t in self.targets.items()          # a unit that comes in sight goes before a

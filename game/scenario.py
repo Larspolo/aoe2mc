@@ -118,6 +118,13 @@ def chat(who, text):
     return out
 
 
+def ending(who, messages, won):
+    """The chat lines of the end of the game for who: its "victory" text when won, else its "loss" text, without the
+    AoE2 color tags (#3298). No text, no line."""
+    text = re.sub(r"<[^<>]*>", "", messages.get("victory" if won else "loss") or "").strip()
+    return chat(who, text)
+
+
 def unread(who):
     """The selector of the people of who that have no book yet (TAG)."""
     return f"{who[:-1]},tag=!{TAG}]" if who.endswith("]") else f"{who}[tag=!{TAG}]"
@@ -576,10 +583,12 @@ def menus(g):
 def bot_seats(players, people):
     """[(player, foe)] of the bots of the scenario mode (#2543): one bot for each computer player of aoe2mc.json
     "players" after the seats of the people. Its foe is the first human player of the scenario that is not its ally
-    (gather.allied), else player 1, as run.bot_seat. A human seat that no person takes stays idle, as in AoE2."""
+    (gather.allied), else the first other player that is not its ally, else None: no enemy, no attack (#3107). A human seat that no person takes stays idle, as in AoE2."""
     computer = sorted(int(p) for p, row in players.items() if row.get("computer") and int(p) > people)
     humans = sorted(int(p) for p, row in players.items() if not row.get("computer") and int(p) > 0)
-    return [(b, next((p for p in humans if not gather.allied(players, b, p)), 1)) for b in computer]
+    others = sorted(int(p) for p in players if int(p) > 0)
+    return [(b, next((p for p in [*humans, *others] if p != b and not gather.allied(players, b, p)), None))
+            for b in computer]
 
 
 def setup(g, mode="scenario", start=True):
@@ -607,6 +616,8 @@ def setup(g, mode="scenario", start=True):
         print("The world has no scenario start values: the game starts with the lobby settings.", file=sys.stderr)
         return g
     for x, p in rows.items():
+        if "age" in p:                                                 # the starting age of the editor (#3296)
+            train.start(x, p["age"])                                   # before the stock: no age cost (train.start)
         x.stock.update(p.get("resources", {}))
         x.pop_limit = p.get("pop_limit", x.pop_limit)
         x.show_stock()                                                 # the sidebar of the resources (Gather.setup)
@@ -908,6 +919,8 @@ def diplomacy(g):
     g.command(gather.allies_command(g.players))
     if not treaty.holds(g):
         g.command(gather.neutral_command(g.players))
+    import owners                                                      # owners -> build -> gather -> this module
+    owners.update_enemies(g)                                           # the new enemies and allies (#2996)
 
 
 def visibility(g):
