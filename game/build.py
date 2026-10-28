@@ -49,6 +49,7 @@ import monk  # noqa: E402
 import record  # noqa: E402
 from replay import Replay  # noqa: E402
 import table  # noqa: E402
+import units  # noqa: E402
 
 # The buildings of the menu (in menu order), the age of each building, unit and age, and the technology that each
 # needs: one line per name in data/build.jsonl (#2028). Cost and time as in AoE2 (seconds of one builder).
@@ -551,15 +552,26 @@ def clear(g, cells):
     (#1769): else the blocks of the site suffocate it. On Paper all mobs of all players and the animals, else the own
     units. A rider moves with its vehicle: a /tp of a passenger dismounts it. Returns {UUID: cell}."""
     xs, zs = [x for x, _ in cells], [z for _, z in cells]
+    area = "x={},y=-64,z={},dx={},dy=400,dz={}".format(min(xs), min(zs), max(xs) - min(xs), max(zs) - min(zs))
+    moved = {}
+    sea = sorted(g.map.around(cells, water=True))                      # boats first, to the water (#3112): a tp of
+    boats = (g.where(None, f"@e[type=#minecraft:boat,{area}]") if g.paper   # a boat keeps its riders (crews)
+             else g.positions(sorted({*g.ships, *(u for u, n in g.soldiers.items() if units.is_boat(units.classify(n)))})))
+    for u, (fx, fy, fz) in sorted(boats.items()) if sea else ():
+        if (math.floor(fx), math.floor(fz)) in cells:
+            x, z = min(sea, key=lambda c: ((c[0] + 0.5 - fx) ** 2 + (c[1] + 0.5 - fz) ** 2, c))
+            y = g.map.sea(x, z)
+            g.command(f"tp {u} {x + 0.5} {y} {z + 0.5}")
+            if (v := g.ships.get(u)) is not None:
+                v.pos, v.path = (x + 0.5, y, z + 0.5), []
+            moved[u] = (x, z)
     ring = sorted(g.map.around(cells))
     if not ring:
-        return {}
-    sel = "@e[type=!player,{}x={},y=-64,z={},dx={},dy=400,dz={}]".format(
-        "".join(f"type=!{t}," for t in NOT_UNITS), min(xs), min(zs), max(xs) - min(xs), max(zs) - min(zs))
-    pos = g.where(None, sel) if g.paper else g.positions(sorted({*g.villagers, *g.soldiers}))
-    moved = {}
+        return moved
+    sel = "@e[type=!player,{}{}]".format("".join(f"type=!{t}," for t in NOT_UNITS), area)
+    pos = g.where(None, sel) if g.paper else g.positions(sorted({*g.villagers, *g.soldiers} - moved.keys()))
     for u, (fx, fy, fz) in sorted(pos.items()):
-        if (math.floor(fx), math.floor(fz)) in cells:
+        if u not in moved and (math.floor(fx), math.floor(fz)) in cells:
             x, z = min(ring, key=lambda c: ((c[0] + 0.5 - fx) ** 2 + (c[1] + 0.5 - fz) ** 2, c))
             y = g.map.y(x, z)
             to = f"{x + 0.5} {y} {z + 0.5}"
@@ -770,6 +782,8 @@ def upgrade(g, site, old, redraw=True):
     if redraw and site["name"] in GATES:                               # the redraw cleared the portcullis
         portcullis(g, site)
     uuid = combat.target_uuid([x0, z0, x1, z1])
+    if redraw:                                                         # the damage stages keep the new blocks (#3071)
+        g.command(f"aoe unwear {uuid}")
     box = combat.building_box({"footprint": [x0, z0, x1, z1]}, g.map.ground)
     for c in [c for c in combat.building(uuid, name, site["player"], box, T, s=new) if c.startswith("aoe building ")] \
             + [f"scoreboard players set {uuid} aoe_hp {min(new.hp, hp + new.hp - old.hp)}", combat.label_command(uuid, name)]:
@@ -881,4 +895,4 @@ def sides(g):
     """The Gathers of all sides of the game of g: player 1 holds the bots and the other people (run.py, Gather.bots),
     a bot knows player 1 (share), a person the others (peers)."""
     first = g.peers[0] if g.peers else getattr(g, "share", None) or g
-    return [first, *(b.g for b in first.bots)]
+    return [first, *(b.g for b in getattr(first, "bots", ()))]

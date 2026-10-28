@@ -1222,7 +1222,7 @@ class Gather:
 
     def hold(self, name, uses):
         """A command stick use on Paper (#1786, owner feedback): the first use of a held right click is also a click,
-        so it waits for HOLD seconds. A next use in that time (or two uses in one call) is a held right click: the cell
+        so it waits for HOLD seconds, but corner 1 shows at once (#3268). A next use in that time (or two uses in one call) is a held right click: the cell
         of the first use is corner 1 of the selection box, and the drag of #992 goes on until the release. A hold never
         gives an order first: a held click on the ground would send the selected villagers to walk."""
         if name in self.holds:
@@ -1230,9 +1230,14 @@ class Gather:
             return
         if name in self.pending or uses > 1:
             look = self.pending.pop(name, (None, None))[1] or self.look(name)
-            self.drag(name, look and fleet.pick(self, *look))
+            if name in self.corners:                                   # corner 1 of the first use (#3268)
+                self.holds[name] = self.clock()
+            else:
+                self.drag(name, look and fleet.pick(self, *look))
             return
-        self.pending[name] = self.clock(), self.look(name)
+        self.pending[name] = self.clock(), (look := self.look(name))
+        if (cell := look and fleet.pick(self, *look)) and name not in self.corners:
+            self.box(name, cell)                                       # the box shows at once, no wait (#3268)
 
     def short(self):
         """The players whose stick use got no next use in HOLD seconds: a short click, with the look of the use.
@@ -1240,6 +1245,8 @@ class Gather:
         due = sorted(n for n, (t, _) in self.pending.items() if self.clock() - t >= HOLD)
         for n in due:
             self.looks[n] = self.pending.pop(n)[1]
+            if self.corners.pop(n, None) is not None:                  # a click: no box (#3268)
+                self.command(f"aoe box-clear {n}")
         return due
 
     def deselect(self):
@@ -1398,11 +1405,11 @@ class Gather:
     def new_order(self, units):
         """A new order ends each old order of the units, as in AoE2 (#3007): the repair of a Serjeant (#2128), the
         trigger patrols (#2674), the walk into a building, a siege tower or a transport ship, a conversion, a relic
-        trip and the farm of a farmer. Each order function calls it before it sets its own state."""
+        trip, the farm of a farmer and the route of a trade cart (#3278). Each order function calls it before it sets its own state."""
         units = set(units)
         repair.drop(self, units)
         self.end_patrols(units)
-        for key in ("entering", "boarding", "loading", "converting", "fetching"):
+        for key in ("entering", "boarding", "loading", "converting", "fetching", "trade"):
             table = vars(self).get(key, {})
             for u in units & table.keys():
                 del table[u]
@@ -1914,6 +1921,11 @@ class Gather:
         self.command(f"fill {fx0} {min(ys) - 2} {fz0} {fx1 - 1} {max(ys) + 3} {fz1 - 1} air replace minecraft:barrier")
         if flat or not felled:
             self.stump(sx, sz, ys)
+        if flat:                                                       # a building may go on the stump, as in AoE2 (#3265)
+            for x in range(fx0, fx1):
+                for z in range(fz0, fz1):
+                    self.map.blocked.discard((x, z))
+                    self.map.ground[z][x] = ys[0]
         self.trunks.pop(tile, None)
 
     def berries(self, tile):

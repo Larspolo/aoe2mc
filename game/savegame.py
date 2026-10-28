@@ -407,6 +407,7 @@ def load(g, d):
     """Put the saved state d (dump) on the Gather of each player that it names, and show the resources again."""
     import build
     import gather
+    import owners
     import train
     for x in sides(g):
         p = d["players"].get(str(x.player))
@@ -454,6 +455,7 @@ def load(g, d):
     if "stances" in d:
         g.command(gather.allies_command(g.players))
         g.command(gather.neutral_command(g.players))
+        owners.update_enemies(g)                                       # the saved enemies and allies (#2996)
     for x in sides(g):                                                 # a razed building leaves the forts again (#2985)
         for u in vars(x).get("razed", {}):
             x.free(u)                                                  # the first call frees it for all sides

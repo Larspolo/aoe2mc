@@ -230,7 +230,10 @@ def fish_order(g, name, eye, d):
     boats = {u for u in g.selected if replay.fisher(g.soldiers.get(u, ""))}
     cell = boats and pick(g, eye, d)
     tile = cell and next((t for t, c in g.map.traps.items() if cell in c), (cell[0] // g.map.T, cell[1] // g.map.T))
-    if not tile or g.map.fish.get(tile, 0) <= 0 or not fish(g, boats, tile):
+    if not tile or g.map.fish.get(tile, 0) <= 0:
+        return False
+    g.new_order(boats)
+    if not fish(g, boats, tile):
         return False
     g.mark(name, g.map.spot(tile))
     return True
@@ -256,6 +259,7 @@ def trade_order(g, player, cell):
     cogs = [v for u in sorted(g.selected) if g.soldiers.get(u, "").startswith(COG) and (v := ship(g, u))]
     if rect is None or not cogs or len(own) < 2:
         return None
+    g.new_order({v.uuid for v in cogs})
     mid = lambda r: ((r[0] + r[1]) / 2, (r[2] + r[3]) / 2)            # noqa: E731
     for v in cogs:
         home = min((r for r in own if r != rect), key=lambda r: (math.dist(mid(r), v.cell), r))
@@ -312,7 +316,10 @@ def build_order(g, name, eye, d):
     site = cell and next((s for s in g.sites if s["progress"] < 1 and s["name"] in build.WATER
                           and s["footprint"][0] <= cell[0] < s["footprint"][1]
                           and s["footprint"][2] <= cell[1] < s["footprint"][3]), None)
-    if not site or not build_site(g, boats, site):
+    if not site:
+        return False
+    g.new_order(boats)
+    if not build_site(g, boats, site):
         return False
     x0, x1, z0, z1 = site["footprint"]
     g.mark(name, {(x0, z0), (x1 - 1, z1 - 1)})

@@ -46,11 +46,11 @@ def test_a_held_click_draws_the_box_from_the_first_cell():
     server, g, now = paper()
     g.select("v-1")
     look(server, (2.5, 2.5), (2.5, 8.5))
-    assert use(server, g) == []
+    assert use(server, g) == [] and any(c.startswith("aoe box Steve 2 8 ") for c in server.log)   # at once (#3268)
     look(server, (2.5, 2.5), (10.5, 18.5))
     now[0] = 0.2                                                       # the next use of the held button
     assert use(server, g) == [] and g.holds == {"Steve": 0.2} and g.corners["Steve"] == (2, 8)
-    assert hints.state(g, "Steve")[0] == "drag" and any(c.startswith("aoe box Steve 2 8 ") for c in server.log)
+    assert hints.state(g, "Steve")[0] == "drag"
     for t in (0.4, 0.6):
         now[0] = t
         assert use(server, g) == [] and g.holds == {"Steve": t}

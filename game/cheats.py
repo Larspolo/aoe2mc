@@ -27,7 +27,7 @@ bar and the hints, or shows them again.
 "sharing is caring" (#969) sends the income of the player (Gather.earn: gathering, fishing, trade, relics) to its allies
 (gather.allied) in equal parts, for ever, as in AoE2. With no ally the player keeps it.
 Excluded and partial codes (owner, #820, #985):
-- "!mute", "!nomute": excluded. The game program has no taunts, so the codes have nothing to silence.
+- "!mute", "!nomute": not yet. Taunts play only in replays (#2234), not in the live chat: #3318 adds both (#2961).
 - "marco": done as it is. The fog of war hides only units, not the map: "marco" only answers in the chat ("polo").
 """
 import os
@@ -112,14 +112,17 @@ def destroy(g, n):
     else:
         dead = {o.get("uuid") for o in g.data["objects"] if o["player"] == n}
         g.enemies = {u: k for u, k in g.enemies.items() if u not in dead}
+    import owners                                                      # owners -> build -> gather -> this module
+    owners.killed(g, {o["uuid"] for o in g.data["objects"] if o["player"] == n and o.get("uuid")}
+                  | {u for u, p in g.data.get(owners.KEY, {}).items() if p == n})   # update_enemies keeps them out (#2996)
 
 
 def ruin(g, n):
     """Remove the construction sites (complete or not) and the queues of player n, also of a bot (#1657): a site has no
     target entity until it is complete, so `aoe destroy` leaves its blocks, and the queue of a bot spawns new units.
     The blocks of each site become air (above the water: a fish trap or a dock keeps it), and the bot of player n stops."""
-    import combat, fleet                                           # they import gather, which imports this module
-    gathers = [g, *(b.g for b in g.bots)]
+    import build, combat, fleet                                    # they import gather, which imports this module
+    gathers = build.sides(g)                                       # also from a second person (#3106)
     for h in gathers:
         for s in [s for s in h.sites if s["player"] == n]:
             x0, x1, z0, z1 = s["footprint"]
@@ -134,8 +137,9 @@ def ruin(g, n):
         h.sites = [s for s in h.sites if s["player"] != n]
         if h.player == n:
             h.queues.clear()
-    vars(g).setdefault("fallen_bots", []).extend(b.g for b in g.bots if b.g.player == n and getattr(b.g, "share", None))
-    g.bots = [b for b in g.bots if b.g.player != n or not getattr(b.g, "share", None)]   # a person keeps its Side: over() titles it (#1936)
+    first = gathers[0]                                             # the Gather that runs Gather.run
+    vars(first).setdefault("fallen_bots", []).extend(b.g for b in first.bots if b.g.player == n and getattr(b.g, "share", None))
+    first.bots = [b for b in first.bots if b.g.player != n or not getattr(b.g, "share", None)]   # a person keeps its Side: over() titles it (#1936)
 
 
 def flag(attr, text):
