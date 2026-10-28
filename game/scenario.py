@@ -57,6 +57,7 @@ ORDERS = "aoe2mc:orders"                                               # the dat
 ATTRIBUTES = "aoe2mc:attributes"                                       # the storage of "Modify Attribute" (#2763)
 MENUS = "aoe2mc:menus"                                                 # the storage of "Enable/Disable" (#2775)
 COSTS = "aoe2mc:costs"                                                 # the storage of "Change Object Cost" (#2776)
+TIMES = "aoe2mc:times"                                                 # "Change Technology Research Time" (#2820)
 PLACES = "aoe2mc:places"                                               # "Change Train/Technology Location" (#2864)
 UNSELECTABLE = "aoe2mc.unselectable"                                   # the tag of "Disable Object Selection" (aoe2mc)
 NAMES = "aoe2mc:names"                                                 # the storage of "Change Technology Name" (#2821)
@@ -132,6 +133,7 @@ def tick(g):
     attributes(g)
     reads(g)
     costs(g)
+    times(g)
     names(g)
     places(g)
     messages = g.data.get("messages", {})
@@ -337,6 +339,19 @@ def costs(g):
         if int(player) in sides:
             vars(sides[int(player)]).setdefault("trigger_costs", {})[name] = \
                 {r: int(v) for r, v in (part.split("=") for part in cost.split())}
+
+
+def times(g):
+    """The new research times of "Change Technology Research Time" (aoe2mc.tech_time_lines, #2820): read and empty the
+    list of the data storage TIMES, and keep each time (AoE2 seconds) in trigger_times of the side of its player (the
+    people and the bots): train.seconds uses it in place of the time of game/data/train.jsonl. A later line wins."""
+    new = re.findall(r'"(\d+) (\w+) (\d+)"', g.command(f"data get storage {TIMES} list") or "")
+    if new:
+        g.command(f"data remove storage {TIMES} list")
+    sides = {x.player: x for x in [g, *(s.g for s in g.bots)]}
+    for player, name, s in new:
+        if int(player) in sides:
+            vars(sides[int(player)]).setdefault("trigger_times", {})[name] = int(s)
 
 
 def places(g):

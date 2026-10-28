@@ -120,6 +120,7 @@ MAP = {
     ("effect", "TRIBUTE"): "`scoreboard players add`/`remove` on `#pN.<resource> aoe_res`; the game program puts it into the stock (`--mode scenario`: `scenario.resources`, #2576)",
     ("effect", "MODIFY_RESOURCE"): "`scoreboard players add`/`remove` on `#pN.<resource> aoe_res`, a set on `aoe_set`; the game program puts it into the stock (`--mode scenario`: `scenario.resources`, #2576)",
     ("effect", "MODIFY_RESOURCE_BY_VARIABLE"): "`scoreboard players operation #pN.<resource> aoe_res += or -= #vM aoe_var`, a set is `operation = #vM aoe_var` on `aoe_set`; add, subtract and set only, multiply and divide are not supported (#2768)",
+    ("effect", "CHANGE_TECHNOLOGY_RESEARCH_TIME"): "the time in the storage `aoe2mc:times`: the scenario mode of the game program uses it when the player researches the technology (`train.seconds`, #2820)",
     ("effect", "CHANGE_OBJECT_COST"): "the cost in the storage `aoe2mc:costs`: the scenario mode of the game program uses it in the menus and when the player pays (#2776)",
     ("effect", "CHANGE_TECHNOLOGY_COST"): "the cost of the technology in the storage `aoe2mc:costs`: the scenario mode of the game program uses it in the menus and when the player pays (#2819)",
     ("effect", "CHANGE_TECHNOLOGY_LOCATION"): "`data modify storage aoe2mc:places list append value \"<player> <technology> <building> <button>\"`: the scenario mode of the game program moves the item to the menu of the building, at the slot of the AoE2 button (#2864)",

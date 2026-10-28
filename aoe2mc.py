@@ -492,6 +492,9 @@ def read_scenario(path):
                                                if e.effect_type == MODIFY_VARIABLE_BY_RESOURCE else {}),
                                             **({"technology": techs.get(e.technology, str(e.technology))}   # #2577
                                                if e.effect_type in (CHANGE_TECHNOLOGY_NAME, RESEARCH_TECHNOLOGY) else {}),
+                                            **({"technology": techs.get(e.technology, str(e.technology)),
+                                                "quantity": e.quantity}                     # (#2820)
+                                               if e.effect_type == CHANGE_TECHNOLOGY_RESEARCH_TIME else {}),
                                             **({"unit": e.time_unit, "timer": e.timer}   # "Display Timer" (#2572)
                                                if e.effect_type == DISPLAY_TIMER else {}),
                                             **({"timer": e.timer} if e.effect_type == CLEAR_TIMER else {}),   # (#2696)
@@ -2841,6 +2844,7 @@ CHANGE_PLAYER_NAME = 45                                            # "Change Pla
 CHANGE_TECHNOLOGY_COST = 63                                        # "Change Technology Cost" (#2819)
 CHANGE_TECHNOLOGY_LOCATION = 47                                    # "Change Technology Location" (#2864)
 CHANGE_TECHNOLOGY_NAME = 65                                        # "Change Technology Name" (#2821)
+CHANGE_TECHNOLOGY_RESEARCH_TIME = 64                               # "Change Technology Research Time" (#2820)
 CHANGE_TRAIN_LOCATION = 46                                         # "Change Train Location" (#2864)
 CHANGE_VARIABLE = 56                                               # the scenario variables (#2611)
 CHANGE_VIEW = 16                                                   # "Change View" (#2610)
@@ -3597,6 +3601,18 @@ def cost_lines(e, c, what="change object cost"):
     return [f'data modify storage aoe2mc:costs list append value "{" ".join([str(e["player"]), name, *cost])}"']
 
 
+def tech_time_lines(e, c):
+    """The command of "Change Technology Research Time" (#2820): the new research time (seconds) of the technology of
+    the player goes into the list of the data storage aoe2mc:times as one text "<player> <name> <seconds>". The
+    scenario mode of the game program (game/scenario.py times) empties the list and uses the time (train.seconds)."""
+    name, q = e.get("technology", ""), e.get("quantity", -1)
+    if not re.fullmatch(r"\w+", name or "") or e["player"] <= 0 or q < 0:
+        c.stats["change technology research time (not supported)"] += 1
+        return []
+    c.stats["change technology research time"] += 1
+    return [f'data modify storage aoe2mc:times list append value "{e["player"]} {name} {q}"']
+
+
 def tech_cost_lines(e, c):
     """The command of "Change Technology Cost" (#2819): the text of cost_lines with the technology name of
     game/data/train.jsonl (an ID with no name: not supported). civs.cost gives the price to the menu (train.price)."""
@@ -4018,6 +4034,7 @@ EFFECTS = {
     CHANGE_TECHNOLOGY_COST: tech_cost_lines,
     CHANGE_TECHNOLOGY_LOCATION: location_lines,
     CHANGE_TECHNOLOGY_NAME: tech_name_lines,
+    CHANGE_TECHNOLOGY_RESEARCH_TIME: tech_time_lines,
     CHANGE_TRAIN_LOCATION: location_lines,
     CHANGE_VARIABLE: variable_lines,
     CHANGE_VIEW: view_lines,
