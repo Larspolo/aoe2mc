@@ -2,7 +2,7 @@
 {"name": "also", "text": "Technologies with an effect on one more group of GROUPS too, {technology: group} (Bohemians: Fervor and Sanctity for the villagers). train.stats, train.speed.", "issue": 2173}
 {"name": "arrows", "text": "The factor of the base arrows of the buildings in each age (Dark, Feudal, Castle, Imperial).", "issue": 2178}
 {"name": "attack_gold", "text": "The factor of the gold that units with the key \"attack_gold\" of units.jsonl make while they attack enemy units (Varangians: Varangian Guards 1.5). game/spoils.py.", "issue": 2376}
-{"name": "aura", "text": "The own complete buildings that make the gatherers of some resources work faster near them and take these resources, {\"buildings\", \"resources\", \"rate\", \"range\": tiles from the footprint} (Thracian forts and towers). gather.Map.drop_site, Gather.aura_rate.", "issue": 2378}
+{"name": "aura", "text": "The own complete buildings that make the gatherers of some resources work faster near them and take these resources, {\"buildings\", \"resources\", \"rate\", \"range\": tiles from the footprint} (Thracian forts and towers). gather.Map.drop_site adds them to the drop sites, Gather.aura_rate gives the rate.", "issue": 2378}
 {"name": "build", "text": "The build speed of the builders (a factor). build.rise multiplies the work of the builders (civs.build_rate).", "issue": 1893}
 {"name": "build_of", "text": "The build speed of some buildings, {building: factor} (Sicilian fortifications and town centers). build.rise (civs.build_rate).", "issue": 2115}
 {"name": "build_wonder", "text": "The build speed of the builders of a wonder (Spanish: 20 % for wonders). build.rise (civs.build_rate).", "issue": 1893}
@@ -28,15 +28,18 @@
 {"name": "heal_aura", "text": "The own complete buildings that heal the allied units of a group near them, {building: {\"range\": tiles from the footprint, \"group\": GROUPS, \"rate\": hit points per AoE2 minute in each age}} (Muisca Settlements). regen.aura.", "issue": 2432}
 {"name": "heal_range", "text": "The factor of the heal range of the monks.", "issue": 2269}
 {"name": "herd_food", "text": "Herdable animals in a building make food (garrison.pasture), {building: [size, a, b]}: at most size animals in each, a × ln(F / b + 1) food per AoE2 minute for F food of the animals in all of them (Gurjara mills: 10, 15, 200, AoE2 DE wiki).", "issue": 2342}
+{"name": "housing", "text": "The population that a building supports in place of train.HOUSING, {building: population} (Chinese town centers 15, Inca houses 10). train.limit.", "issue": 2118}
 {"name": "hp", "text": "The hit points factor of a building, {building: factor} (Persians). build.values and combat.setup apply it before the technologies (Masonry).", "issue": 1895}
 {"name": "hp_age", "text": "The factor of the hit points of all its buildings, walls and gates in each age (Byzantines).", "issue": 2116}
 {"name": "kill_gold", "text": "The gold for each military unit that a mounted unit kills (Mapuche). game/spoils.py.", "issue": 2271}
 {"name": "last", "text": "Resources last longer, {kind: factor}: a gathered unit takes 1 / factor.", "issue": 2112}
+{"name": "lead", "text": "The units whose shots lead a moving target as with Ballistics, without the technology (Spanish Cannon Galleons). train.lead_command, AoePlugin.lead.", "issue": 2430}
 {"name": "loot", "text": "The part of the cost of a destroyed enemy building that the player gets (Danes). game/spoils.py.", "issue": 2271}
 {"name": "missing", "text": "The technologies and units that the civilization does not have (the availability chart of each civilization): the menu does not show them (train.unlocked). The items that few civilizations have name them in the key \"civs\" of their line in train.jsonl or build.jsonl (civs.ONLY, #2235), not here.", "issue": 1373}
 {"name": "more", "text": "Technologies whose effect change is multiplied, {technology: factor} (Varangians: Bloodlines and Caravan +50 %). train.stats, train.speed.", "issue": 2173}
 {"name": "not_shared", "text": "The shared items of an ally that the civilization does not get (Turks: no Elite Skirmisher).", "issue": 1619}
 {"name": "per_minute", "text": "A resource for each AoE2 minute of work of a gather kind, {kind: [resource, amount]}: Thracian hunters and shepherds 3 gold while they gather from animals.", "issue": 2308}
+{"name": "pop_cap", "text": "The extra population limit from an age on, [age, extra] (Goths: +10 in the Imperial Age). train.max_pop adds it, also to the population setting of the game.", "issue": 2118}
 {"name": "predator_hit", "text": "The attack bonus of the villagers against predators (Magyars: they kill a wolf in one strike). civs.predator_hit, Gather.", "issue": 2310}
 {"name": "regen", "text": "The regeneration of units: [group of GROUPS or a list of unit names, hit points per AoE2 minute in the Dark, Feudal, Castle and Imperial Age] (Polish villagers, Georgian mounted units, Wu infantry, Thracian elite skirmishers, Bengali ships). A third value: the rule counts only with no enemy unit within that many tiles (Puru cavalry, #2334). regen.tick gives them back.", "issue": 2247}
 {"name": "relic_attack", "text": "[units, attack per relic in an own monastery, most] (Lithuanian knights and Leitis). game/monk.py.", "issue": 2314}
@@ -46,6 +49,7 @@
 {"name": "research_time", "text": "[technologies (a rule of has), factor of the research time] (Achaemenid stable technologies 50 % faster, Jurchen siege and fortification technologies 100 % faster, the Gothic Loom at once).", "issue": 2172}
 {"name": "reveal", "text": "The enemy buildings that the player sees under the fog of war (fog.revealed): [building, true: only the ones of aoe2mc.json and only at the start of the game] (Mapuche castles, Vietnamese start town centers).", "issue": 2311}
 {"name": "shared", "text": "The shared unique units of its team bonus: an ally of the civilization has them too (\"Team bonus\").", "issue": 1619}
+{"name": "sight", "text": "The extra line of sight of an own building in tiles, {building: tiles} (Chinese town centers +7). Gather.seen_tiles.", "issue": 2118}
 {"name": "ship_work", "text": "The factor of the work rate of a fishing ship in each age, [Dark, Feudal, Castle, Imperial] (Japanese). fleet.rate multiplies by civs.ship_work().", "issue": 2333}
 {"name": "smith_units", "text": "[group of GROUPS, blacksmith technologies, times in the Dark, Feudal, Castle and Imperial Age]: the units of the group get the effect of each technology that many times, also when the test of the effect does not cover them (train.smith).", "issue": 2174}
 {"name": "start", "text": "The start-resource bonus, {resource: change of START}. In AoE2 the bonus comes with the first town center (a Nomad start gets it later); here it is in the start stock. The extra villagers of the Chinese (+3) and Mayans (+1) are units of the map, not of the stock. Lithuanians: +100 food for each town center, here only for the first one.", "issue": 1269}

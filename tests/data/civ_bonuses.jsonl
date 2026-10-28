@@ -8,7 +8,7 @@
 {"name": "ARMENIANS: The Galley line and Dromons* fire one additional projectile each, which deal 1 attack and advertised attack, respectively.", "civ": "ARMENIANS", "bonus": "The Galley line and Dromons* fire one additional projectile each, which deal 1 attack and advertised attack, respectively.", "in": "volley"}
 {"name": "ATHENIANS: Athenians can be changed between Economic, Naval, and Military at the Town Center.", "civ": "ATHENIANS", "bonus": "Athenians can be changed between Economic, Naval, and Military at the Town Center.", "later": "play:setup"}
 {"name": "ATHENIANS: Lumberjacks generate food 1 for every wood 14.7.", "civ": "ATHENIANS", "bonus": "Lumberjacks generate food 1 for every wood 14.7.", "in": "EXTRA"}
-{"name": "ATHENIANS: Hoplites move 15% faster.", "civ": "ATHENIANS", "bonus": "Hoplites move 15% faster.", "later": "play:military-train"}
+{"name": "ATHENIANS: Hoplites move 15% faster.", "civ": "ATHENIANS", "bonus": "Hoplites move 15% faster.", "in": "UNITS"}
 {"name": "AZTECS: Start the game with an Eagle Scout.", "civ": "AZTECS", "bonus": "Start the game with an Eagle Scout.", "later": "play:setup"}
 {"name": "AZTECS: Villagers carry +3 extra resources.", "civ": "AZTECS", "bonus": "Villagers carry +3 extra resources.", "in": "CARRY"}
 {"name": "AZTECS: All military units are created 15% faster.", "civ": "AZTECS", "bonus": "All military units are created 15% faster.", "in": "TRAIN_RATE"}
@@ -50,7 +50,7 @@
 {"name": "CELTS: Siege weapons fire 25% faster.", "civ": "CELTS", "bonus": "Siege weapons fire 25% faster.", "in": "UNITS"}
 {"name": "CELTS: Non-Celt herdable animals can be converted regardless of units next to them.", "civ": "CELTS", "bonus": "Non-Celt herdable animals can be converted regardless of units next to them.", "in": "game/herd.py"}
 {"name": "CHINESE: Start game with +3 Villagers, but with food -200, wood -50.", "civ": "CHINESE", "bonus": "Start game with +3 Villagers, but with food -200, wood -50.", "in": "START"}
-{"name": "CHINESE: Town Centers support 15 population (instead of 5) and have +7 Line of Sight.", "civ": "CHINESE", "bonus": "Town Centers support 15 population (instead of 5) and have +7 Line of Sight.", "gap": "play:train"}
+{"name": "CHINESE: Town Centers support 15 population (instead of 5) and have +7 Line of Sight.", "civ": "CHINESE", "bonus": "Town Centers support 15 population (instead of 5) and have +7 Line of Sight.", "in": "HOUSING"}
 {"name": "CHINESE: Technologies are 5%/10%/15% cheaper in the Feudal/Castle/Imperial Age, respectively.", "civ": "CHINESE", "bonus": "Technologies are 5%/10%/15% cheaper in the Feudal/Castle/Imperial Age, respectively.", "in": "COSTS"}
 {"name": "CHINESE: Fire Galley line and Fire Lancers move 5%/10% faster in the Castle/Imperial Age.", "civ": "CHINESE", "bonus": "Fire Galley line and Fire Lancers move 5%/10% faster in the Castle/Imperial Age.", "in": "UNITS"}
 {"name": "CUMANS: A second Town Center can be built in the Feudal Age.", "civ": "CUMANS", "bonus": "A second Town Center can be built in the Feudal Age.", "in": "game/build.py"}
@@ -81,7 +81,7 @@
 {"name": "GOTHS: Infantry units have +1/+2/+3 attack bonus against Standard Buildings in the Feudal/Castle/Imperial Age.", "civ": "GOTHS", "bonus": "Infantry units have +1/+2/+3 attack bonus against Standard Buildings in the Feudal/Castle/Imperial Age.", "in": "UNITS"}
 {"name": "GOTHS: Hunters carry food +15; hunt lasts 20% longer.", "civ": "GOTHS", "bonus": "Hunters carry food +15; hunt lasts 20% longer.", "in": ["CARRY", "LAST"]}
 {"name": "GOTHS: Loom is researched instantly.", "civ": "GOTHS", "bonus": "Loom is researched instantly.", "in": "RESEARCH_TIME"}
-{"name": "GOTHS: +10 population cap in the Imperial Age.", "civ": "GOTHS", "bonus": "+10 population cap in the Imperial Age.", "gap": "play:train"}
+{"name": "GOTHS: +10 population cap in the Imperial Age.", "civ": "GOTHS", "bonus": "+10 population cap in the Imperial Age.", "in": "POP_CAP"}
 {"name": "GURJARAS: Start the game with a Camel Scout.", "civ": "GURJARAS", "bonus": "Start the game with a Camel Scout.", "later": "play:setup"}
 {"name": "GURJARAS: Starts with 2 Forage Bushes with food 175 each under the Town Center.", "civ": "GURJARAS", "bonus": "Starts with 2 Forage Bushes with food 175 each under the Town Center.", "in": "BUSHES"}
 {"name": "GURJARAS: Can garrison Mills with herdable animals to produce food.", "civ": "GURJARAS", "bonus": "Can garrison Mills with herdable animals to produce food.", "in": "HERD_FOOD"}
@@ -96,7 +96,7 @@
 {"name": "HUNS: Trebuchets have +35% accuracy against units and small targets.", "civ": "HUNS", "bonus": "Trebuchets have +35% accuracy against units and small targets.", "later": "play:siege"}
 {"name": "INCAS: Military units cost food -15%/-20%/-25%/-30% in Dark/Feudal/Castle/Imperial Ages", "civ": "INCAS", "bonus": "Military units cost food -15%/-20%/-25%/-30% in Dark/Feudal/Castle/Imperial Ages", "in": "COSTS"}
 {"name": "INCAS: Villagers benefit from Blacksmith infantry technologies starting in the Castle Age.", "civ": "INCAS", "bonus": "Villagers benefit from Blacksmith infantry technologies starting in the Castle Age.", "in": "SMITH_UNITS"}
-{"name": "INCAS: Houses and Settlements support 10 population.", "civ": "INCAS", "bonus": "Houses and Settlements support 10 population.", "gap": "play:train"}
+{"name": "INCAS: Houses and Settlements support 10 population.", "civ": "INCAS", "bonus": "Houses and Settlements support 10 population.", "in": "HOUSING"}
 {"name": "INCAS: Buildings cost stone -15%.", "civ": "INCAS", "bonus": "Buildings cost stone -15%.", "in": "COSTS"}
 {"name": "ITALIANS: Advancing to the next Age is 15% cheaper.", "civ": "ITALIANS", "bonus": "Advancing to the next Age is 15% cheaper.", "in": "COSTS"}
 {"name": "ITALIANS: Foot archers (except Skirmishers) and Condottieri +1/+1 armor.", "civ": "ITALIANS", "bonus": "Foot archers (except Skirmishers) and Condottieri +1/+1 armor.", "in": "UNITS"}
@@ -200,12 +200,12 @@
 {"name": "SLAVS: Monks move 20% faster.", "civ": "SLAVS", "bonus": "Monks move 20% faster.", "in": "UNITS"}
 {"name": "SPANISH: Builders work 30% faster (20% for Wonders).", "civ": "SPANISH", "bonus": "Builders work 30% faster (20% for Wonders).", "in": "BUILD"}
 {"name": "SPANISH: Blacksmith upgrades don't cost gold.", "civ": "SPANISH", "bonus": "Blacksmith upgrades don't cost gold.", "in": "COSTS"}
-{"name": "SPANISH: Cannon Galleon projectiles can track moving targets and move faster.", "civ": "SPANISH", "bonus": "Cannon Galleon projectiles can track moving targets and move faster.", "later": "play:naval"}
+{"name": "SPANISH: Cannon Galleon projectiles can track moving targets and move faster.", "civ": "SPANISH", "bonus": "Cannon Galleon projectiles can track moving targets and move faster.", "in": "lead"}
 {"name": "SPANISH: Gunpowder units fire 18% faster.", "civ": "SPANISH", "bonus": "Gunpowder units fire 18% faster.", "in": "UNITS"}
 {"name": "SPANISH: Receive gold 20 for each technology researched.", "civ": "SPANISH", "bonus": "Receive gold 20 for each technology researched.", "in": "TECH_GIFTS"}
 {"name": "SPARTANS: A Polemarch is spawned for free in both the Civic Age and Classical Age.", "civ": "SPARTANS", "bonus": "A Polemarch is spawned for free in both the Civic Age and Classical Age.", "later": "play:ages"}
 {"name": "SPARTANS: Villagers and Fishing Ships drop off 10% more food.", "civ": "SPARTANS", "bonus": "Villagers and Fishing Ships drop off 10% more food.", "in": "DROP"}
-{"name": "SPARTANS: The Elite Hoplite upgrade is available in the Classical Age.", "civ": "SPARTANS", "bonus": "The Elite Hoplite upgrade is available in the Classical Age.", "later": "play:ages"}
+{"name": "SPARTANS: The Elite Hoplite upgrade is available in the Classical Age.", "civ": "SPARTANS", "bonus": "The Elite Hoplite upgrade is available in the Classical Age.", "in": "EARLIER"}
 {"name": "TATARS: Herdable animals contain food +50%.", "civ": "TATARS", "bonus": "Herdable animals contain food +50%.", "in": "LAST"}
 {"name": "TATARS: Units deal +20% damage when attacking from higher elevations (+50% instead of +25%).", "civ": "TATARS", "bonus": "Units deal +20% damage when attacking from higher elevations (+50% instead of +25%).", "in": "ELEVATION"}
 {"name": "TATARS: Parthian Tactics and Thumb Ring are free.", "civ": "TATARS", "bonus": "Parthian Tactics and Thumb Ring are free.", "in": "COSTS"}
