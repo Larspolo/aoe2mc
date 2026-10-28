@@ -2850,6 +2850,8 @@ COMPARE_VARIABLES = 78                                             # the conditi
 COUNT_UNITS_INTO_VARIABLE = 101                                    # "Count Units into Variable" (#2697)
 CREATE_GARRISONED_OBJECT = 49                                      # "Create Garrisoned Object" (#2764)
 CREATE_OBJECT = 11
+CREATE_OBJECT_ARMOR = 78                                           # "Create Object Armor" (#2855)
+CREATE_OBJECT_ATTACK = 77                                          # "Create Object Attack" (#2855)
 DAMAGE_OBJECT = 24                                                 # "Damage Object" (#2571)
 DECLARE_VICTORY = 13                                               # "Declare Victory" (#2542)
 DISABLE_OBJECT_SELECTION = 70                                      # "Disable Object Selection" (#2854)
@@ -3627,6 +3629,22 @@ def attribute_lines(e, c):
     return [f'data modify storage aoe2mc:attributes list append value "{e["player"]} {name} {field} {e["operation"]} {q:g}"']
 
 
+def create_lines(e, c):
+    """The command of "Create Object Attack" and "Create Object Armor" (#2855): AoE2 gives the unit type of the player
+    one more attack (armor) entry of the class, and the entries of one class add up. So the change is an add of the
+    value to the Stats field of the class (CLASS_ATTRIBUTES), in the data storage aoe2mc:attributes as "Modify
+    Attribute" (attribute_lines): the scenario mode of the game program applies it (train.stats). A class outside
+    CLASS_ATTRIBUTES (a bonus class): not supported in the stats."""
+    _, name = e.get("object") or (None, None)
+    field = CLASS_ATTRIBUTES.get((9 if e["type"] == CREATE_OBJECT_ATTACK else 8, e.get("class")))
+    q = e.get("aa")
+    if not name or e["player"] <= 0 or not field or q is None or q < 0:
+        c.stats["create object attack or armor (not supported)"] += 1
+        return []
+    c.stats["create object attack or armor"] += 1
+    return [f'data modify storage aoe2mc:attributes list append value "{e["player"]} {name} {field} 2 {q:g}"']
+
+
 def variable_by_attribute_lines(e, c):
     """The command of "Modify Variable by Attribute" (#2858): "<player> <name> <Stats field> <operation> <variable>"
     goes into the list of the data storage aoe2mc:reads. A converted world has no combat values: the scenario mode of
@@ -3964,6 +3982,8 @@ EFFECT_KEYS = {
     CHANGE_TRAIN_LOCATION: {"button": "button_location",                                                       # #2864
                             "object2": lambda e, kinds, techs: kinds.get(e.object_list_unit_id_2)},
     COUNT_UNITS_INTO_VARIABLE: {"variable2": "variable2"},   # (#2697)
+    CREATE_OBJECT_ARMOR: {"class": "armour_attack_class", "aa": "armour_attack_quantity"},   # (#2855)
+    CREATE_OBJECT_ATTACK: {"class": "armour_attack_class", "aa": "armour_attack_quantity"},  # (#2855)
     INITIATE_RESEARCH: {"selected": lambda e, kinds, techs: list(e.selected_object_ids or []),   # (#2772)
                         "technology": lambda e, kinds, techs: techs.get(e.technology, str(e.technology))},
     MODIFY_ATTRIBUTE_FOR_CLASS: {"attribute": "object_attributes", "operation": "operation", "quantity": "quantity",
@@ -4006,6 +4026,8 @@ EFFECTS = {
     COUNT_UNITS_INTO_VARIABLE: count_lines,
     CREATE_GARRISONED_OBJECT: garrisoned_lines,
     CREATE_OBJECT: object_lines,
+    CREATE_OBJECT_ARMOR: create_lines,
+    CREATE_OBJECT_ATTACK: create_lines,
     DAMAGE_OBJECT: damage_lines,
     DEACTIVATE_TRIGGER: switch_lines,
     DECLARE_VICTORY: victory_lines,
