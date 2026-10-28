@@ -169,6 +169,17 @@ def game_command():
     return sys.executable, "-u", str(GAME)
 
 
+def game_problem():
+    """None when the game program of game_command() is there, else the text for the user (#3051): pip and pipx
+    install the converter and the window, not game/run.py."""
+    if os.path.exists(game_command()[-1]):
+        return None
+    if getattr(sys, "frozen", False):
+        return "The game program (aoe2mc-game) is not next to the window. Install the release again."
+    return ("This install has no game program (game/run.py): pip and pipx install the converter and the window only.\n"
+            "Install the release with the game program, or use the repository folder: python3 game/run.py WORLD")
+
+
 def start_game(args, write, done, cmd=None):
     """Start the game program with args as a child process. A thread sends each line of its output to write, and its
     exit code to done at the end. stdin is a pipe: with no stdin, input() in run.main() ends the game at once."""
@@ -368,6 +379,9 @@ def window():
         if o["bot"] and str(o["people"]).strip() not in ("", "1"):
             messagebox.showerror("aoe2mc", "The bot plays player 2: use it with one person only.")
             return
+        if problem := game_problem():
+            messagebox.showerror("aoe2mc", problem)
+            return
         if problem := java_problem(jdk=needs_jdk(o["server"])):
             messagebox.showerror("aoe2mc", problem)
             return
@@ -417,8 +431,8 @@ def window():
                     messagebox.showerror("aoe2mc", item[1])
                 else:
                     v["world"].set(item[2])
-                    messagebox.showinfo("aoe2mc", f"The world is in {item[2]}.\nOpen it in Minecraft Java 26.3, "
-                                        "or start a game on it in the tab \"Play\".")
+                    tip = ", or start a game on it in the tab \"Play\"" if game_problem() is None else ""
+                    messagebox.showinfo("aoe2mc", f"The world is in {item[2]}.\nOpen it in Minecraft Java 26.3{tip}.")
         root.after(100, poll)
 
     go.configure(command=start)

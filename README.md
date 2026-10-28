@@ -68,7 +68,8 @@ system shows a warning the first time. The steps below go past it.
 Two ways:
 
 - Install the command `aoe2mc`: `pip install .` in the repository folder, or
-  `pipx install git+https://github.com/Larspolo/aoe2mc`.
+  `pipx install git+https://github.com/Larspolo/aoe2mc`. This installs the converter and the window, not the game
+  program: use the installer of the release, or the repository folder.
 - Run the script from the repository folder: `pip install -r requirements.txt`, then use `python aoe2mc.py`.
 
 ## Use
