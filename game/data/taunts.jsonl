@@ -1,0 +1,105 @@
+{"name": "1", "text": "Yes."}
+{"name": "2", "text": "No."}
+{"name": "3", "text": "Food please."}
+{"name": "4", "text": "Wood please."}
+{"name": "5", "text": "Gold please."}
+{"name": "6", "text": "Stone please."}
+{"name": "7", "text": "Ahh!"}
+{"name": "8", "text": "All hail, king of the losers!"}
+{"name": "9", "text": "Ooh!"}
+{"name": "10", "text": "I'll beat you back to Age of Empires."}
+{"name": "11", "text": "(Herb laugh)"}
+{"name": "12", "text": "Ah! being rushed."}
+{"name": "13", "text": "Sure, blame it on your ISP."}
+{"name": "14", "text": "Start the game already!"}
+{"name": "15", "text": "Don't point that thing at me!"}
+{"name": "16", "text": "Enemy sighted!"}
+{"name": "17", "text": "It is good to be the king."}
+{"name": "18", "text": "Monk! I need a monk!"}
+{"name": "19", "text": "Long time, no siege."}
+{"name": "20", "text": "My granny could scrap better than that."}
+{"name": "21", "text": "Nice town, I'll take it."}
+{"name": "22", "text": "Quit touching me!"}
+{"name": "23", "text": "Raiding party!"}
+{"name": "24", "text": "Dadgum."}
+{"name": "25", "text": "Eh, smite me."}
+{"name": "26", "text": "The wonder, the wonder, the... no!"}
+{"name": "27", "text": "You played two hours to die like this?"}
+{"name": "28", "text": "Yeah, well, you should see the other guy."}
+{"name": "29", "text": "Roggan."}
+{"name": "30", "text": "Wololo."}
+{"name": "31", "text": "Attack an enemy now."}
+{"name": "32", "text": "Cease creating extra villagers."}
+{"name": "33", "text": "Create extra villagers."}
+{"name": "34", "text": "Build a navy."}
+{"name": "35", "text": "Stop building a navy."}
+{"name": "36", "text": "Wait for my signal to attack."}
+{"name": "37", "text": "Build a wonder."}
+{"name": "38", "text": "Give me your extra resources."}
+{"name": "39", "text": "(Ally sound)"}
+{"name": "40", "text": "(Enemy sound)"}
+{"name": "41", "text": "(Neutral sound)"}
+{"name": "42", "text": "What age are you in?"}
+{"name": "43", "text": "What is your strategy?"}
+{"name": "44", "text": "How many resources do you have?"}
+{"name": "45", "text": "Retreat now!"}
+{"name": "46", "text": "Flare the location of your army."}
+{"name": "47", "text": "Attack in direction of the flared location."}
+{"name": "48", "text": "I'm being attacked, please help!"}
+{"name": "49", "text": "Build a forward base at the flared location."}
+{"name": "50", "text": "Build a fortification at the flared location."}
+{"name": "51", "text": "Keep your army close to mine and fight with me."}
+{"name": "52", "text": "Build a market at the flared location."}
+{"name": "53", "text": "Rebuild your base at the flared location."}
+{"name": "54", "text": "Build a wall between the two flared locations."}
+{"name": "55", "text": "Build a wall around your town."}
+{"name": "56", "text": "Train units which counter the enemy's army."}
+{"name": "57", "text": "Stop training counter units."}
+{"name": "58", "text": "Prepare to send me all your resources so I can vanquish our foes!"}
+{"name": "59", "text": "Stop sending me extra resources."}
+{"name": "60", "text": "Prepare to train a large army, I will send you as many resources as I can"}
+{"name": "61", "text": "Attack player 1! (Blue)"}
+{"name": "62", "text": "Attack player 2! (Red)"}
+{"name": "63", "text": "Attack player 3! (Green)"}
+{"name": "64", "text": "Attack player 4! (Yellow)"}
+{"name": "65", "text": "Attack player 5! (Cyan)"}
+{"name": "66", "text": "Attack player 6! (Purple)"}
+{"name": "67", "text": "Attack player 7! (Gray)"}
+{"name": "68", "text": "Attack player 8! (Orange)"}
+{"name": "69", "text": "Delete the object on the flared location."}
+{"name": "70", "text": "Delete your excess villagers."}
+{"name": "71", "text": "Delete excess warships."}
+{"name": "72", "text": "Focus on training infantry units."}
+{"name": "73", "text": "Focus on training cavalry units."}
+{"name": "74", "text": "Focus on training ranged units."}
+{"name": "75", "text": "Focus on training warships."}
+{"name": "76", "text": "Attack the enemy with Militia."}
+{"name": "77", "text": "Attack the enemy with Archers."}
+{"name": "78", "text": "Attack the enemy with Skirmishers."}
+{"name": "79", "text": "Attack the enemy with a mix of Archers and Skirmishers."}
+{"name": "80", "text": "Attack the enemy with Scout Cavalry."}
+{"name": "81", "text": "Attack the enemy with Men-at-Arms."}
+{"name": "82", "text": "Attack the enemy with Eagle Scouts."}
+{"name": "83", "text": "Attack the enemy with Towers."}
+{"name": "84", "text": "Attack the enemy with Crossbowmen."}
+{"name": "85", "text": "Attack the enemy with Cavalry Archers."}
+{"name": "86", "text": "Attack the enemy with Unique Units."}
+{"name": "87", "text": "Attack the enemy with Knights."}
+{"name": "88", "text": "Attack the enemy with Battle Elephants."}
+{"name": "89", "text": "Attack the enemy with Scorpions."}
+{"name": "90", "text": "Attack the enemy with Monks."}
+{"name": "91", "text": "Attack the enemy with Monks and Mangonels."}
+{"name": "92", "text": "Attack the enemy with Eagle Warriors."}
+{"name": "93", "text": "Attack the enemy with Halberdiers and Rams."}
+{"name": "94", "text": "Attack the enemy with Elite Eagle Warriors."}
+{"name": "95", "text": "Attack the enemy with Arbalests."}
+{"name": "96", "text": "Attack the enemy with Champions."}
+{"name": "97", "text": "Attack the enemy with Galleys."}
+{"name": "98", "text": "Attack the enemy with Fire Galleys."}
+{"name": "99", "text": "Attack the enemy with Demolition Rafts."}
+{"name": "100", "text": "Attack the enemy with War Galleys."}
+{"name": "101", "text": "Attack the enemy with Fire Ships."}
+{"name": "102", "text": "Attack the enemy with Unique Warships."}
+{"name": "103", "text": "Use an Onager to cut down trees at the flared location."}
+{"name": "104", "text": "Don't resign!"}
+{"name": "105", "text": "You can resign again."}

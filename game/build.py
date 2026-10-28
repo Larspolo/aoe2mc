@@ -714,7 +714,8 @@ def target(g, site):
     wall, name = site["name"] in combat.WALLS, line(g, design(g, site["name"], site["player"]))   # the hit points of the age
                                                                        # (#1322), a guard tower or keep (#1374)
     s = combat.wall(name, ages(g), civs.civ(g, site["player"])) if wall else values(g, name)   # Chemistry (#1375), Masonry (#1398)
-    for c in combat.building(uuid, name, site["player"], box, g.map.T, s=s, low=minimum(g, name)) \
+    for c in combat.building(uuid, name, site["player"], box, g.map.T, s=s, low=minimum(g, name),
+                             factor=civs.arrows(g, name, site["player"])) \
             + [f"tag {uuid} add {combat.WALL_TAG}"] * wall + [combat.label_command(uuid, name)]:
         g.command(c)
     for o in sides(g):                     # each other side can attack it: the bot and player 1 alike (#1819)
