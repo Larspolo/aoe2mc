@@ -33,7 +33,7 @@ import json
 import os
 import re
 import sys
-from collections import defaultdict
+from collections import Counter, defaultdict
 from datetime import datetime
 
 W_IN, W_5M, W_1H, W_READ, W_OUT = 1.0, 1.25, 2.0, 0.1, 5.0
@@ -205,6 +205,26 @@ def phase(name, inp):
     return "read"
 
 
+def calls(records):
+    """(calls per phase, calls per `label()`, pairs of consecutive labels) of one chain of records (#3459): the
+    frequent sequences are the candidates for one combined script call."""
+    by_phase, by_label, pairs, last = Counter(), Counter(), Counter(), None
+    for r in records:
+        content = (r.get("message") or {}).get("content")
+        if r.get("type") != "assistant" or not isinstance(content, list):
+            continue
+        for b in content:
+            if b.get("type") == "tool_use":
+                name, inp = b.get("name", ""), b.get("input") or {}
+                lab = label(name, inp)
+                by_phase[phase(name, inp)] += 1
+                by_label[lab] += 1
+                if last:
+                    pairs[(last, lab)] += 1
+                last = lab
+    return by_phase, by_label, pairs
+
+
 def phases(records):
     """{ticket: {phase: minutes}} of one chain of records, in the order of the tickets; the time before the first
     claim counts for the first ticket (key None when no claim won)."""
@@ -365,6 +385,8 @@ def main(argv=None):
     ap.add_argument("file", nargs="?", help="a transcript (default: the newest session of this directory)")
     ap.add_argument("--top", type=int, help="print the N largest sinks, one per line")
     ap.add_argument("--verify", action="store_true", help="print each check command kind: minutes and count (#1704)")
+    ap.add_argument("--calls", type=int, metavar="N", help="print the tool calls per phase and the N most frequent "
+                    "calls and pairs of calls (#3459)")
     ap.add_argument("--phases", action="store_true", help="print the measured phase minutes of each claimed ticket")
     a = ap.parse_args(argv)
     path = a.file or newest()
@@ -378,6 +400,14 @@ def main(argv=None):
         for s, (m, n) in verify(c).items():
             v[s][0] += m
             v[s][1] += n
+    if a.calls:
+        ph, lab, pairs = calls(chains[0])
+        print(f"calls {sum(ph.values())}: " + ", ".join(f"{k} {n}" for k, n in ph.most_common()))
+        for k, n in lab.most_common(a.calls):
+            print(f"  {n:4d}x  {k}")
+        for (x, y), n in pairs.most_common(a.calls):
+            print(f"  {n:4d}x  {x} -> {y}")
+        return 0
     if a.phases:
         for n, p in phases(chains[0]).items():
             print(f"#{n}: " + ",".join(f"{k}={m:.0f}" for k, m in p.items()))

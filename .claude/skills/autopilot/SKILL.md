@@ -113,7 +113,7 @@ The workflow `claims.yml` deletes the refs when the ticket closes.
 1. Branch: use the branch that the session instructions name. Else `git fetch origin main` and
    `git checkout -b agent/<number>-<short-slug> origin/main`.
 2. Beat (`python3 tools/claim.py N --beat`) at least every 20 minutes until you open the PR.
-   Read the ticket body and all its comments first: the owner's comments win over the body. Read only the code that the ticket needs (see the code map in `CLAUDE.md`). Use Grep, not full-file reads.
+   Read the ticket and its comments (the claim prints them, #3459) first: the owner's comments win. Read only the code that the ticket needs (see the code map in `CLAUDE.md`). Use Grep, not full-file reads.
 3. For a bug, write a failing test first. Then change the code. Keep the diff small and in the existing style.
    Put new tests in a new file `tests/test_<topic>.py`: parallel tickets that append to the end of one test file
    conflict (66 merge conflicts in 6 hours on 2026-10-25).
