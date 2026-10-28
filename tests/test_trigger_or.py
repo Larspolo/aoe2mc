@@ -2,7 +2,6 @@
 and the trigger fires when all conditions of one group hold. "AND" is the default between two conditions."""
 import contextlib
 import io
-from collections import Counter
 
 import aoe2mc
 from tools import scenarios
@@ -47,12 +46,6 @@ def test_a_looping_or_trigger_fires_again_only_after_no_group_holds():
                          f"execute if entity {sel} run scoreboard players set #3.or aoe_trig 1",
                          "execute if score #v2 aoe_var matches 3.. run scoreboard players set #3.or aoe_trig 1",
                          "execute if score #3.or aoe_trig matches 0 run scoreboard players reset #3 aoe_trig"]
-
-
-def test_or_with_a_chance_gives_no_trigger():
-    stats = Counter()
-    assert tick([dict(type=aoe2mc.TRIGGER_CHANCE, timer=0, inverted=False, quantity=50), OR, VALUE], stats=stats)[1] == {}
-    assert stats["OR with a chance, or with a timer in a disabled trigger (not supported yet)"] == 1   # a timer: #2791
 
 
 def test_read_scenario_keeps_the_display_order_of_the_conditions(tmp_path):

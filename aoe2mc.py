@@ -3744,15 +3744,20 @@ def victory_lines(e, c):
 
 def switch_lines(e, c):
     """The commands of "Activate Trigger" and "Deactivate Trigger" (#2575): the score #N of aoe_on of trigger N (in
-    c.switch), and the start (c.timed: its ticks) or the clear of its timer. An area trigger can fire again."""
+    c.switch), and the start (c.timed: its ticks) or the clear of its timer. An area trigger can fire again. The
+    timers of its "OR" groups (c.clocks: [(group, ticks)], #2815) start and stop the same way."""
     k, up = e.get("trigger"), e["type"] == ACTIVATE_TRIGGER
     if k not in c.switch:
         return []
-    fn = f"aoe2mc:trigger/{k}"
+    fn, clocks = f"aoe2mc:trigger/{k}", c.clocks.get(k, ())
     if up and k in c.timed:                                            # an active timer runs on: AoE2 counts from
         more = [f"execute unless score #{k} aoe_on matches 1 run schedule function {fn} {c.timed[k]}t replace"]   # now
     else:
         more = [f"scoreboard players reset #{k} aoe_trig"] if up else [f"schedule clear {fn}"] * (k in c.timed)
+    for g, ticks in clocks:
+        more += [f"execute unless score #{k} aoe_on matches 1 run {x}" for x in (
+            f"scoreboard players reset #{k}.t{g} aoe_trig", f"schedule function {fn}_t{g} {ticks}t replace")] if up \
+            else [f"schedule clear {fn}_t{g}"]
     return more + [f"scoreboard players set #{k} aoe_on {int(up)}"]
 
 
@@ -3855,7 +3860,7 @@ EFFECTS = {
     UNLOCK_GATE: gate_lines,
 }
 # The context of the effects of trigger t: a handler can add function files (files) and load lines (setup, the keys)
-Effect = namedtuple("Effect", "t T ground players stats mood files setup switch timed", defaults=((), {}))
+Effect = namedtuple("Effect", "t T ground players stats mood files setup switch timed clocks", defaults=((), {}, {}))
 
 
 # The test of each condition on a score (execute if <test>), one line per condition in alphabetical order (#2613):
@@ -3916,7 +3921,8 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
     the box of the area (#2620), "Bring Object to Object" the other tag within one tile of it (#2771). An inverted
     object condition swaps the two tests of OBJECT_TESTS. "OR" splits the conditions into groups (or_groups, #2765):
     one tick line per group, and the trigger fires when one group holds; the timer of a group sets the score
-    #N.t<group> of aoe_trig (#2791). The commands of each effect come from its handler in EFFECTS.
+    #N.t<group> of aoe_trig (#2791), the "Chance" of a group rolls the score #N.c<group> once per second (#2815).
+    The commands of each effect come from its handler in EFFECTS.
     A disabled trigger runs only after an "Activate Trigger" (#2575): the score #N of aoe_on is 1 while a trigger that
     such an effect names is on (switch_lines). live: the triggers that get a function; None: all that give commands
     (an effect may name only a function that exists). A "Chance" trigger cannot be activated yet."""
@@ -3939,6 +3945,9 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
     load += [f"scoreboard players set #{t['id']} aoe_on 0" for t in triggers if t["id"] in off and not t["enabled"]]
     timed = {t["id"]: max(20 * min(max(c["timer"] for c in g) for g in gs), 1) for t in triggers   # 1 tick at least;
              if (gs := or_groups(t["conditions"])) and all(c["type"] == TIMER for g in gs for c in g)}   # OR: the first
+    clocks = {t["id"]: ts for t in triggers if t["id"] not in timed and len(gs := or_groups(t["conditions"])) > 1
+              and (ts := [(k, max(20 * max(x), 1)) for k, g in enumerate(gs)
+                          if (x := [c["timer"] for c in g if c["type"] == TIMER])])}   # the OR timers (#2815)
     for t in triggers:
         groups = or_groups(t["conditions"])
         conds = sum(groups, [])
@@ -3953,12 +3962,11 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
                for c in conds):                                        # no object, or a building: blocks, no entity
             stats["object condition (not an entity, not supported yet)"] += t["enabled"]
             continue
-        # "OR" with a timer and other conditions (#2791): the timer of a group is a schedule that sets the score
-        # #N.t<group> of aoe_trig, and the tick line of the group tests it
-        clocked = len(groups) > 1 and (TIMER, False) in rest and rest != {(TIMER, False)}
-        if len(groups) > 1 and chance or clocked and not t["enabled"]:
-            stats["OR with a chance, or with a timer in a disabled trigger (not supported yet)"] += t["enabled"]
-            continue
+        # "OR" with a timer and other conditions (#2791) or a chance (#2815): the timer of a group is a schedule that
+        # sets the score #N.t<group> of aoe_trig, its chance a roll of the score #N.c<group>; the tick line of the
+        # group tests them
+        rolled = len(groups) > 1 and chance
+        clocked = len(groups) > 1 and (TIMER, False) in rest and (rest != {(TIMER, False)} or rolled)
         if not (t["enabled"] or t["id"] in on and t["id"] not in chancy) or not conds or \
                 not (rest == {(TIMER, False)} or rest <= {(k, False) for k in TICKED + (TIMER,) * clocked} | {(k, True) for k in INVERTED}) or \
                 chance and len([c for c in conds if c["type"] == TRIGGER_CHANCE]) > 1 or \
@@ -3975,7 +3983,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
                     or c["type"] == TRIGGER_ACTIVE and c.get("trigger") not in switch
                     for c in conds):                                   # unit classes: not yet
             continue
-        ctx = Effect(t, T, ground, players, stats, mood, files, setup, switch, timed)
+        ctx = Effect(t, T, ground, players, stats, mood, files, setup, switch, timed, clocks)
         lines = [line for e in t["effects"] if e["type"] in EFFECTS for line in EFFECTS[e["type"]](e, ctx)]
         if not lines:
             continue
@@ -3989,10 +3997,20 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
                 continue
             clock, at = f"#{n}.t{k} aoe_trig", f"schedule function {fn}_t{k} {max(20 * max(timers), 1)}t replace"
             files[f"data/aoe2mc/function/trigger/{n}_t{k}.mcfunction"] = f"scoreboard players set {clock} 1\n"
-            load.append(at)
+            load += [at] * t["enabled"]                                # a disabled one: at its activation
             lines += [f"scoreboard players reset {clock}", at] * t["looping"]   # the timer starts again
             groups_tests[k].append(f"if score {clock} matches 1")
             groups_unless[k].append(f"unless score {clock} matches 1")
+        for k, g in enumerate(groups) if rolled else ():
+            if not (qs := [c["quantity"] for c in g if c["type"] == TRIGGER_CHANCE]):
+                continue
+            roll, again = f"#{n}.c{k} aoe_trig", f"schedule function {fn}_c{k} 20t replace"   # once per second
+            files[f"data/aoe2mc/function/trigger/{n}_c{k}.mcfunction"] = "\n".join(
+                [f"execute store result score {roll} run random value 1..100",
+                 again if t["looping"] else f"execute unless score #{n} aoe_trig matches 1 run {again}"]) + "\n"
+            load.append(again)
+            groups_tests[k].append(f"if score {roll} matches ..{qs[0]}")
+            groups_unless[k].append(f"unless score {roll} matches ..{qs[0]}")
         for i, c in enumerate(conds):
             tests, unless = groups_tests[which[i]], groups_unless[which[i]]
             if c["type"] in SCORE_TESTS:                               # a score of the world or the game
@@ -4045,7 +4063,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
                 [f"execute if score #{n}.or aoe_trig matches 0 run scoreboard players reset #{n} aoe_trig"]
         timers = [c["timer"] for c in conds if c["type"] == TIMER]
         ticks = timed.get(n) or max(20 * max(timers, default=0), 1)  # a schedule needs at least 1 tick
-        if chance:
+        if chance and not rolled:
             q = next(c["quantity"] for c in conds if c["type"] == TRIGGER_CHANCE)
             roll = f"{fn}_chance"
             again = f"schedule function {roll} 20t replace"
