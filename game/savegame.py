@@ -11,7 +11,9 @@ The save also keeps the wonder and relic victory timers and the market prices (#
 settings of the command line (`run.py` options, "settings"), the attack time and wave of the bot (#2325), the relics and the monk
 orders (#2412: `monk.relics`, the conversions and the rest of the monks), the orders of the ships, the routes of the
 trade carts and the state of the trebuchets (#2413), the passed time of the treaty (#2409), and the units inside the
-transport ships and siege towers and the units on the way to them (#2411).
+transport ships and siege towers and the units on the way to them (#2411). The military units and villagers that the
+player trained, and the new names of the upgrades, go into the save too (#2532): the world has their mobs, the Gather
+counts them, gives them orders and upgrades them.
 """
 import json
 import os
@@ -20,7 +22,8 @@ import time
 
 FILE = "savegame.json"
 FIELDS = ("stock", "spare", "seconds", "repeats", "pop")              # dicts and numbers of Gather, as they are
-PACKED = ("queues", "trained", "sites", "rally")                       # with tuples (a building rect, a cell): pack()
+PACKED = ("queues", "trained", "sites", "rally",                       # with tuples (a building rect, a cell): pack()
+          "soldiers", "units")                                         # the units of the game, trained or upgraded (#2532)
 OPTIONAL = ("limit_left", "policy", "rates", "relic_timer", "switches", "wonder_shown", "wonders",   # only on a Gather that
             "wonders_gone")                                            # has them (#2324; the policy: #2515)
 MONK = ("carrier_at", "converting", "faith", "fetching", "heal_time", "monk_at", "relic_gold", "relic_homes",
