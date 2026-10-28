@@ -35,7 +35,7 @@ MAP = {
     ("condition", "DESTROY_OBJECT"): "`execute unless entity @e[tag=ref-N]`",
     ("condition", "CAPTURE_OBJECT"): "`execute if entity @e[tag=ref-N,team=pN]`",
     ("condition", "VARIABLE_VALUE"): "`execute if score <variable> aoe_var matches ..`",
-    ("condition", "CHANCE"): "`execute store result score ... run random value 1..100`",
+    ("condition", "CHANCE"): "`execute store result score ... run random value 1..100` once per second (alone, after the timers or with the areas: #2574)",
     ("condition", "PLAYER_DEFEATED"): "`execute unless entity @e[team=pN]`",
     ("condition", "ACCUMULATE_ATTRIBUTE"): NO_ECONOMY,
     ("condition", "RESEARCH_TECHNOLOGY"): NO_ECONOMY,
