@@ -25,6 +25,8 @@ def fake_server(answers):
                 text = conn.recv(size - 8)[:-2].decode()
                 if kind == rcon.LOGIN:
                     rid, text = (rid if text == "pw" else -1), ""
+                elif kind != rcon.COMMAND:                         # like the server: an end mark of the client
+                    text = f"Unknown request {kind:x}"
                 else:
                     text = answers[text]
                 for i in range(0, max(len(text), 1), 4096):       # like the server: packets of 4096 bytes

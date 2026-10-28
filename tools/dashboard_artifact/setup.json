@@ -21,18 +21,11 @@
   "where": "Scheduled task “aoe2mc autopilot deep” (argument max lane deep), .claude/skills/autopilot/queue.md (Deep lane)"
  },
  {
-  "part": "Pacer session",
+  "part": "Pacer",
   "group": "Runs",
-  "when": "A cycle every 10 minutes",
-  "does": "Runs on Haiku. Reads the 5-hour and 7-day usage and starts 0 to 8 new runs, so that usage follows the target: the lane runs (haiku, deep) for their ready tickets and the refill first, then Opus runs",
-  "where": ".claude/skills/pacer, tools/usage.py --fire"
- },
- {
-  "part": "Pacer heartbeat",
-  "group": "Runs",
-  "when": "Hourly at :36",
-  "does": "Wakes the pacer session when its 10-minute chain has stopped",
-  "where": "Scheduled task “aoe2mc pacer heartbeat”"
+  "when": "A cycle every 10 minutes (GitHub workflow pacer.yml)",
+  "does": "A script with no Claude session. Reads the 5-hour and 7-day usage and starts 0 to 8 new runs through the API triggers of the tasks, so that usage follows the target: the lane runs (haiku, deep) for their ready tickets and the refill first, then Opus runs",
+  "where": ".github/workflows/pacer.yml, tools/pacer.py, tools/usage.py --fire"
  },
  {
   "part": "Quota target",

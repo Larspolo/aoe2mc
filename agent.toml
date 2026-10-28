@@ -13,7 +13,7 @@ paused = "paused"               # this label on the status issue stops all runs
 
 [pacing]
 max_runs = 40                   # the most runs at one time (tools/usage.py): 16 used only about 70 % of a 5-hour window at burn 0.009
-max_fire = 8                    # the most runs that the pacer starts in one 10-minute cycle (tools/usage.py)
+max_fire = 2                    # the most runs that the pacer starts in one 15-minute cycle (tools/usage.py): about 2 tickets per 15 minutes (owner, 2026-10-28)
 refill_runs = 3                # runs beyond the ready tickets: each refills one epic (tools/usage.py); 1 left 3 ready for 40 runs
 week_free = 0.60                # below this 7-day usage the runs fill each 5-hour window, no weekly pace (tools/usage.py)
 week_guard = false              # true: the 7-day usage limits the runs (week_free, #1695); false: only the 5-hour window counts (owner, 2026-10-28)
@@ -22,7 +22,7 @@ max_ci_queue = 5                # flow brake: at this many queued CI runs the pa
 pr_minutes = 30                 # an agent PR older than this waits for a fix, a conflict merge or CI, not for the quota
 weights = { haiku = 0.25, deep = 4.0 }   # a lane run in Opus runs: the start value until the Usage: lines measure it (#1727); deep: high effort, at least 4.5 times the tokens of a low-effort run (2026-10-28)
 reserved = ["haiku", "deep"]    # lanes whose tickets Opus runs never take (#1994); with deep, only deep runs do the reviews and the refill (claim.py)
-pacer = "workflow"              # who starts the runs: "session" (the pacer session, skill pacer) or "workflow" (pacer.yml, tools/pacer.py, #3193)
+pacer = "workflow"              # pacer.yml starts the runs (tools/pacer.py, #3193); another value stops its loop
 trigger = "trig_01QTrgkK5PZmqPwQ96rKp3QE"   # the scheduled task "aoe2mc autopilot": the pacer fires it (#1898)
 
 [commands]

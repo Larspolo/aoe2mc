@@ -9,10 +9,10 @@ controls, read `docs/STEERING.md`. This document links to them and does not copy
 
 | Part | What it does |
 |---|---|
-| Scheduled tasks (owner's account) | "aoe2mc autopilot", "aoe2mc autopilot haiku" and "aoe2mc autopilot deep" have no schedule: the pacer starts them (since 2026-10-28 the workflow `pacer.yml` through their API triggers, #3194). With the pacer session: "aoe2mc pacer heartbeat" wakes it each hour at :36. |
-| Pacer | The workflow `pacer.yml` (`tools/pacer.py`, #3193): every 10 minutes it starts the runs that the quota target misses, through the API triggers of the scheduled tasks. Fallback (`pacer = "session"` in `agent.toml`): one long-lived cloud session (skill `pacer`). |
+| Scheduled tasks (owner's account) | "aoe2mc autopilot", "aoe2mc autopilot haiku" and "aoe2mc autopilot deep" have no schedule: the pacer starts them (since 2026-10-28 the workflow `pacer.yml` through their API triggers, #3194). |
+| Pacer | The workflow `pacer.yml` (`tools/pacer.py`, #3193): every 15 minutes it starts (at most `max_fire` = 2 runs) the runs that the quota target misses, through the API triggers of the scheduled tasks. |
 | Runs | Cloud sessions of the autopilot task. Each run follows the skill `autopilot` with the argument `max`: tickets, one PR each. Many runs work at the same time. |
-| Skills (`.claude/skills/`) | The procedures: `autopilot` (the work cycle), `verify` (checks before a push), `ticket` (write and split tickets), `design` (design tickets), `improve` (process review), `roadmap` (epics from `docs/ROADMAP.md`), `pacer`, `operator` (checks and repairs the start of the runs, only in an owner session), `human` (guides the owner through the `needs-human` tickets on the owner's computer), `demo` (a demo game on the owner's computer: a ticket for each feedback in the chat, the cause of each crash, `game/demo_watch.py`). |
+| Skills (`.claude/skills/`) | The procedures: `autopilot` (the work cycle), `verify` (checks before a push), `ticket` (write and split tickets), `design` (design tickets), `improve` (process review), `roadmap` (epics from `docs/ROADMAP.md`), `human` (guides the owner through the `needs-human` tickets on the owner's computer), `demo` (a demo game on the owner's computer: a ticket for each feedback in the chat, the cause of each crash, `game/demo_watch.py`). |
 | Denied tools (`.claude/settings.json`) | The `deny` list removes the session tools that no skill uses (`Artifact`, `Workflow`, the `Suggest*` and `Search*` tools ...) from each session of the repository: their descriptions were about 19,000 of the 66,000 base tokens of each call (2026-10-28). A rule in a file that the SessionStart hook writes works only from the next session, so the list is in the repository. |
 | Rules (`CLAUDE.md`, `docs/LEARNINGS.md`) | Each session loads them. `CLAUDE.md` has the commands, the code map and the rules. `docs/LEARNINGS.md` has the lessons for all runs. |
 | Tools (`tools/`) | `claim.py` (locks), `usage.py` (quota and the number of runs), `dashboard.py` (the status issue and the pick order), `health.py` (numbers for the review), `tokens.py` (the token sinks of a run), `operator_check.py` (the checks of the `operator` skill), `owner_tasks.py` (the tickets of the `human` skill). |
@@ -30,7 +30,7 @@ controls, read `docs/STEERING.md`. This document links to them and does not copy
 | `unconflict.yml` (Unconflict) | Every 20 minutes, after each merge | Merges `main` into a conflicted agent PR when git solves the conflict alone (`merge=union` files) or both sides only add lines (`tools/unconflict.py`, #1864; not the same `def` on both sides, and the merge passes `ruff check`, #2631), and starts CI. |
 | `claims.yml` (Claims) | A ticket closes, each day | Deletes the claim refs of closed tickets and old comment locks. The runs cannot delete refs (403). |
 | `dashboard.yml` (Dashboard) | Every 10 minutes (not on events: the API rate limit, #2168) | Writes the dashboard in the body of the status issue (`tools/dashboard.py`). |
-| `pacer.yml` (Pacer) | One run loops for 5.5 hours (a cycle every 10 minutes), then starts the next run; the cron (`*/30`) only restarts a dead loop: GitHub fires the cron schedules of this repository a few times per day | Only while `pacer = "workflow"` in `[pacing]` of `agent.toml`: starts the runs that the quota target misses through the API trigger of each task (`tools/pacer.py`, #3193), in place of the pacer session. Secrets: `CLAUDE_CODE_OAUTH_TOKEN` (the quota read), `PACER_URL_<TASK>` and `PACER_TOKEN_<TASK>` for `MAIN`, `HAIKU`, `DEEP`. A task takes at most 30 API starts per hour, an account 100. |
+| `pacer.yml` (Pacer) | One run loops for 5.5 hours (a cycle every 15 minutes), then starts the next run; the cron (`*/30`) only restarts a dead loop: GitHub fires the cron schedules of this repository a few times per day | Only while `pacer = "workflow"` in `[pacing]` of `agent.toml`: starts the runs that the quota target misses through the API trigger of each task (`tools/pacer.py`, #3193). Secrets: `CLAUDE_CODE_OAUTH_TOKEN` (the quota read), `PACER_URL_<TASK>` and `PACER_TOKEN_<TASK>` for `MAIN`, `HAIKU`, `DEEP`. A task takes at most 30 API starts per hour, an account 100. |
 | `dashboard-site.yml` (Dashboard site) | Each pacer cycle (`pacer.yml` starts it), the cron as a fallback, by hand | Builds the owner's dashboard (`tools/dashboard_site.py`: the page of `tools/dashboard_artifact/`, the data of `tools/dashboard_data.py`) and publishes it to GitHub Pages (owner decision A, 2026-10-28). It replaces the hourly Claude task "aoe2mc dashboard refresh" and the artifact (the skill `dashboard-refresh` was removed with the `Artifact` tool, 2026-10-28). |
 | `coverage.yml` (Coverage) | Each push to `main` | Writes `docs/coverage.md`, `MAX` of `tests/test_coverage.py` and a column of `docs/DESIGN.md`. PRs do not change these files, so they do not conflict there. |
 | `metrics.yml` (Metrics) | Each 15 minutes, by hand with `days` | Writes the status issue comments to the orphan branch `metrics` (`tools/metrics_log.py`, one file per day). `tools/health.py` reads them and only the newest comments from the API (#1983). |
@@ -38,7 +38,7 @@ controls, read `docs/STEERING.md`. This document links to them and does not copy
 
 ## The loop of a run
 
-1. The pacer (`pacer.yml`, or the pacer session) starts a run. The cloud clones the repository on the session
+1. The pacer (`pacer.yml`) starts a run. The cloud clones the repository on the session
    branch `claude/<name>`.
 2. The run reads `CLAUDE.md` and follows the skill `autopilot`. It stops at once when the status issue has `paused`.
    It runs `tools/usage.py --fire`: when the running runs reach the target, it only finishes stalled PRs.
@@ -96,7 +96,7 @@ target less the runs with a claim beat in the last 25 minutes. A run cannot star
 so the pacer starts them (at most `max_fire` of `agent.toml` per cycle, and at most the ready tickets plus `refill_runs`: those runs refill the queue). The pacer is the workflow `pacer.yml` (#3193, #3194): each cycle fetches `main` and runs
 `tools/pacer.py`, so a change of the pacing rules works at the next cycle. It starts each run with one call of the
 API trigger of its task; a task takes at most 30 API starts per hour (an account 100), and when a lane task answers
-HTTP 429 its runs go to the main task. The pacer session (skill `pacer`, `pacer = "session"`) is the fallback. `tools/health.py` measures the quota use of one run from the
+HTTP 429 its runs go to the main task. `tools/health.py` measures the quota use of one run from the
 `Usage:` lines of the run reports, and `usage.py` uses that value. After a plan upgrade the same work is a smaller share of the larger quota: when the burn of
 the last 2 hours is less than half of the 24-hour burn, only the last 2 hours count (`health.ratio`, 5-hour and 7-day
 burn, #1706). The most runs at one time is `max_runs` in `[pacing]` of `agent.toml` (default 16): raise it when the 5-hour window does not reach its limit (40 since 2026-10-27: at a burn of 0.009 per run-hour, 16 runs used only about 70 %).
@@ -155,22 +155,19 @@ on `main` yet.
    and `PACER_TOKEN_<TASK>` (the token) with `<TASK>` = `MAIN`, `HAIKU`, `DEEP`. Keep `pacer = "workflow"` in
    `[pacing]` of `agent.toml`. Then start Actions → Pacer → Run workflow once: the run loops and starts the next
    run itself. A new token makes the old one invalid: change the secret too.
-6. **Fallback: the pacer session.** Only with `pacer = "session"`: one cloud session that gets "Pacer cycle: follow
-   .claude/skills/pacer/SKILL.md." and fires the tasks with `fire_trigger` (`trigger` in `[pacing]` of `agent.toml`,
-   #1898), and the scheduled task "aoe2mc pacer heartbeat" (hourly at :36, prompt "Pacer heartbeat: follow
-   .claude/skills/pacer/SKILL.md.", bound to that session) that wakes it.
+6. (Removed in #3427: the pacer session, skill `pacer`.)
 7. **Scheduled task "aoe2mc autopilot haiku" (optional, #1715).** No schedule: the pacer fires it. Model
    `claude-haiku-5-5`, the prompt of step 4 with the argument `max lane haiku`. These runs take only the tickets with
    `lane:haiku` (`ticket` skill, "Model lanes"); Opus runs take them only when nothing else is ready.
-   `tools/health.py` prints one line per lane (runs, PRs, minutes, tokens). `/operator` makes the task for you.
+   `tools/health.py` prints one line per lane (runs, PRs, minutes, tokens). `docs/OPERATOR.md`, section 3, makes the task.
 8. **Scheduled task "aoe2mc autopilot deep" (owner, 2026-10-28).** No schedule: the pacer fires it. Model
    `claude-opus-5-5` at effort high (the owner's setting; the main task runs at low effort), the prompt of step 4 with the argument
    `max lane deep`. These runs take the tickets with `lane:deep` and do the epic check, the queue refill, the roadmap
    review and the process review (`autopilot/queue.md`, "Deep lane").
-9. **Move to another Claude account (owner, 2026-10-28).** Start a session in the new account with the repository
-   and type `/operator move` (skill `operator`, section 5). It pauses the runs (label `paused`), makes the tasks of
-   steps 4, 7 and 8, writes the new IDs to `agent.toml`, and checks all parts at the end. It
-   asks you for the steps that only you can do:
+9. **Move to another Claude account (owner, 2026-10-28).** Follow `docs/OPERATOR.md`, section 4 (or start a session
+   in the new account with the repository and let it follow the section). The steps pause the runs (label `paused`),
+   make the tasks of steps 4, 7 and 8, write the new IDs to `agent.toml`, and check all parts at the end. The steps
+   that only you can do:
    - In the old account: disable the scheduled tasks of aoe2mc (their API tokens stop with them).
    - The secrets of step 5: a new `claude setup-token` of the new account and new API triggers of the new tasks.
    - In the new account: connect GitHub (the Claude GitHub app stays on the repository); make the cloud environment
@@ -178,7 +175,7 @@ on `main` yet.
      haiku: Haiku 5.5; deep: Opus 5.5, effort high). The tool cannot set these three values.
    The GitHub side (tickets, claims, labels, the status issue) does not change.
 
-To check or repair steps 4–8, start a session and type `/operator` (skill `operator`, #981). It checks the scheduled
+To check or repair steps 4–8, follow `docs/OPERATOR.md` (#981). It checks the scheduled
 tasks, the runs of `pacer.yml`, the quota, CI, the PRs and the labels, and repairs them after you agree. A long-lived owner session is not necessary.
 
 ## Generic and specific files
@@ -215,10 +212,9 @@ of `tools/bootstrap.py` (they copy this repository) and the tests that need a sp
 | `.claude/skills/design/SKILL.md` | specific | The design of buildings, units and animals. |
 | `.claude/skills/improve/SKILL.md` | generic | The project name. |
 | `.claude/skills/roadmap/SKILL.md` | specific | The three goals of aoe2mc. |
-| `.claude/skills/operator/SKILL.md` | generic | The task and session names (`aoe2mc autopilot`, `aoe2mc pacer`). |
+| `docs/OPERATOR.md` | generic | None (NAME is the name of `repo` in `agent.toml`). |
 | `.claude/skills/human/SKILL.md` | specific | The preparation of a play test (worlds, `game/run.py`, Minecraft 26.3). |
 | `.claude/skills/demo/SKILL.md` | specific | The demo game (`--random-map arabia`, `game/run.py`, `game/demo_watch.py`, the Minecraft client folders of macOS). |
-| `.claude/skills/pacer/SKILL.md` | generic | The trigger ID, the repository path and name (it runs before the clone, so it cannot read `agent.toml`). |
 | `.claude/settings.json` | generic | The permission rules name the repository (they cannot read `agent.toml`). |
 | `.claude/hooks/session-start.sh` | generic | The Python packages and the setup version file name. |
 | `.claude/hooks/guard-main.sh` | generic | None. |

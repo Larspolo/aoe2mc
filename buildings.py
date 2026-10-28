@@ -1998,10 +1998,20 @@ def tower(c, w, st, col, T, ctx, kind="watch"):
             c.walls(0, w, y, y + 1, 0, w, f"{col}_wool")
     c.door(mid - (w > 3), 1, w - 1, wood=st.wood.removesuffix("_planks"))
     stone_top = st.shape == "flat" and not (st.torons and not high)
-    if w >= 4:                                                            # hollow shaft, a ladder to the lookout (#256)
+    lx, lz, bx = w - 2, 1, 1                                              # ladder and barrel cells (x, z, x)
+    if w >= 4 and rnd:                                                    # round shaft: the cells with wall all round (#3096)
+        m, X, Z = c.disc_mask(cc, cc, w / 2 - 0.2)
+        m = m & np.roll(m, 1, 0) & np.roll(m, -1, 0) & np.roll(m, 1, 1) & np.roll(m, -1, 1)
+        c._fill_mask(m, 1, hb - 1, "air")
+        lz = int(Z[m].min())
+        lx, bx = int(X[m & (Z == lz)].max()), int(X[m & (Z == lz)].min())
+        dx = mid - (w > 3)
+        c.box(dx, dx + 1, 1, 3, int(Z[m & (X == dx)].max()) + 1, w - 1, "air")   # the way from the door
+    elif w >= 4:                                                          # hollow shaft, a ladder to the lookout (#256)
         c.box(1, w - 1, 1, hb - 1, 1, w - 1, "air")
-        c.set(1, 1, 1, "barrel[facing=up]")
-        c.set(1, hb - 2, 1, "lantern[hanging=true]")
+    if w >= 4:
+        c.set(bx, 1, lz, "barrel[facing=up]")
+        c.set(bx, hb - 2, lz, "lantern[hanging=true]")
     if stone_top:                                                         # stone lookout with merlons
         if rnd:
             c.cylinder(cc, cc, w / 2 + 0.8, hb, hb + 2, stone)
@@ -2044,7 +2054,7 @@ def tower(c, w, st, col, T, ctx, kind="watch"):
     if top >= 0:
         c.flag(mid, top + 1, mid, col, 2)
     if w >= 4:                                                            # through the lookout floor
-        c.box(w - 2, w - 1, 1, hb + stone_top + 1, 1, 2, "ladder[facing=south]")
+        c.box(lx, lx + 1, 1, hb + stone_top + 1, lz, lz + 1, "ladder[facing=south]")
     if kind == "bombard":                                                 # cannon barrels out of the lookout
         for x, z, ax in ((mid, w, "z"), (mid, w + 1, "z"), (w, mid, "x"), (w + 1, mid, "x"),
                          (mid, -1, "z"), (mid, -2, "z"), (-1, mid, "x"), (-2, mid, "x")):
