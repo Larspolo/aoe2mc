@@ -125,6 +125,7 @@ def test_a_villager_hunts_a_deer_and_aegis_kills_a_sheep_on_paper(tmp_path):
     with contextlib.redirect_stdout(io.StringIO()):
         aoe2mc.convert(str(tmp_path / "m.json"), str(tmp_path / "W"))
     data = json.load(open(tmp_path / "W" / "aoe2mc.json"))
+    data["players"]["1"]["civ"] = "JURCHENS"                          # no decay (#2310): the villager gets all 140 food
     deer, sheep = (next(o["uuid"] for o in data["objects"] if o["name"] == n) for n in ("DEER", "SHEEP"))
     with run.Game(tmp_path / "W") as game:
         game.forceload()
