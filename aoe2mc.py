@@ -406,7 +406,8 @@ def read_scenario(path):
     goals = sorted((t.description_order, i, (t.description or t.name or "").strip())   # the objectives that the game lists
                    for i, t in enumerate(scn.trigger_manager.triggers) if t.display_as_objective)
     texts["objectives"] = "\n".join(f"- {g}" for _, _, g in goals if g)
-    techs = {t.ID: t.name for t in TechInfo}                    # the names of game/data/train.jsonl
+    other = {r["tech"]: r["name"] for r in units.rows("tech_names.jsonl")}   # the names of game/data/train.jsonl
+    techs = {t.ID: other.get(t.name, t.name) for t in TechInfo}
     entities = {u.reference_id for us in scn.unit_manager.units for u in us   # the objects that are entities with the
                 if kinds.get(u.unit_const, ("?",))[0] in ("U", "H")}         # tag aoe2mc.r<ref> (#2617), not blocks
     texts["triggers"] = [dict(id=t.trigger_id, name=t.name, enabled=bool(t.enabled), looping=bool(t.looping),
