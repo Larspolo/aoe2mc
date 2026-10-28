@@ -113,6 +113,8 @@ civilizations that have it, sorted) on its own line of `game/data/train.jsonl` o
 (`civs.ONLY`, #2235): no change of `game/data/civs.jsonl`. An item that most civilizations have goes into the list
 `"missing"` of each line of `game/data/civs.jsonl` without it (`civs.MISSING` joins both, #1914; also `unique`,
 `costs`, `units`, `twice`), not into `civs.py`.
+A new key of `game/data/civs.jsonl` (a civilization bonus) is one line in `game/data/civ_keys.jsonl` (what it does, its
+issue) and `civs.value("key", civ, default)` in the module that applies it: no new table or comment in `game/civs.py` (#2281).
 A new data line needs no test of its values: `tests/test_data_files.py` checks the form of each line of `game/data/`
 (keys, types, names that exist, #1916), and `tests/test_data_keys.py` checks that the code reads each key (#2188): a new key needs no test line. Test the behavior that the code computes
 from it (a fight, a menu, a bonus).
