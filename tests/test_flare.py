@@ -111,4 +111,5 @@ def test_the_flare_commands_run_on_a_server(tmp_path):
         flare.tick(g)
         bad = ("Unknown", "Incorrect", "Expected", "Invalid", "Malformed")
         assert not [o for o in out if any(b in o for b in bad)], out
-        assert "aoe_flare" in game.command("scoreboard objectives list")
+        # not "scoreboard objectives list": the server cuts its answer after about 150 characters (#2965)
+        assert "already exists" in game.command(f"scoreboard objectives add {flare.OBJECTIVE} trigger")
