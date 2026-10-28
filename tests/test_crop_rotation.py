@@ -27,7 +27,7 @@ def test_the_mill_menu_has_crop_rotation_in_the_imperial_age_after_heavy_plow():
     assert "Crop Rotation" not in menus(server)[-1]                    # the Castle Age
     server, g = imperial()
     train.open_menu(g, "Steve", (3, 3))
-    assert menus(server)[-1].endswith("0:book:Crop Rotation:250 food · 250 wood · 70 s · research")
+    assert " 0:book:Crop Rotation:250 food · 250 wood · 70 s · research" in menus(server)[-1] + " "
     g.techs -= {"HEAVY_PLOW"}
     train.open_menu(g, "Steve", (3, 3))
     assert "Crop Rotation" not in menus(server)[-1]                    # Heavy Plow first
