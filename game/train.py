@@ -333,7 +333,7 @@ def unlocked(g, name):
     """True when the player has the age of technology name (TECH_AGE). As in AoE2, the menu shows a technology only
     from its age, but a building or unit of a later age as a gray item (build.locked), and never one that the
     civilization of the player does not have (civs.missing: also not as a team bonus of an ally, #1619)."""
-    return TECH_AGE.get(name, 0) <= build.ages(g) and AFTER.get(name, "") in {""} | set(getattr(g, "techs", ())) \
+    return TECH_AGE.get(name, 0) - civs.earlier(g, name) <= build.ages(g) and AFTER.get(name, "") in {""} | set(getattr(g, "techs", ())) \
         and not (hasattr(g, "data") and civs.missing(g, name)) \
         and (name not in UPGRADES or name in REQUIRES or bool(lines(name, g)))   # not of this civilization (#1373), no
                                                                    # new unit (#1483); an age also upgrades (#2130)
