@@ -3042,6 +3042,9 @@ def plan_walls(objects):
                 continue
             on_x = any((int(ux + d), ty) in walls for d in (-2.5, -3, 2, 2.5))
             on_z = any((tx, int(uy + d)) in walls for d in (-2.5, -3, 2, 2.5))
+            if (ux % 1 == 0.5) != (uy % 1 == 0.5):
+                # the center of a 4 x 1 gate gives its axis; a wall line beside it does not (#3091)
+                on_z, on_x = ux % 1 == 0.5, ux % 1 != 0.5
             gates[id(o)] = on_z and not on_x
             for d in range(-2, 2):
                 walls.add((tx, int(uy) + d) if gates[id(o)] else (int(ux) + d, ty))
