@@ -511,7 +511,7 @@ class Gather:
     speed = 1.0                                                        # times the Normal speed: shorter real steps (#2057)
 
     def __init__(self, game, data, player=1, tick=0.25, carry=10, chop=None, log=None, clock=time.monotonic,
-                 cheats=False, start=None, resources="standard"):
+                 cheats=False, start=None, resources="standard", pop_limit=None):
         self.game, self.data, self.map, self.player = game, data, Map(data, player), player
         if player != 1:
             self.board = f"aoe_res{player}"                            # its own resources: its team sidebar (#1309)
@@ -521,6 +521,7 @@ class Gather:
         self.chop = dict(chop) if isinstance(chop, dict) else dict.fromkeys(WORK_SECONDS, chop)
         self.log, self.clock, self.t0 = log, clock, clock()
         self.cheats = cheats                                           # the AoE2 cheat codes in the chat (#816)
+        self.pop_limit = pop_limit                                     # AoE2 "Population limit", else train.LIMIT (#2266)
         if start is None:                                              # units, no building: a Nomad start (#1212)
             kinds = {o["kind"] for o in data["objects"] if o.get("player") == player}
             nomad = "unit" in kinds and "building" not in kinds
