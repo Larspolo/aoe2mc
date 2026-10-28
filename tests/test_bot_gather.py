@@ -54,7 +54,7 @@ def test_the_bot_gathers_all_four_resources():
     work = sorted(v.res for v in b.g.villagers.values())
     assert work == ["food", "food", "gold", "stone", "wood"]          # the shares of bot.SHARE, food first
     drops = [c for c in server.log if c.startswith("scoreboard players add") and c.split()[-1] != "0"]
-    assert drops and all(c.split()[4] == "aoe_bot2" for c in drops)    # no point goes to the sidebar of player 1
+    assert drops and all(c.split()[4] == "aoe_res2" for c in drops)    # no point goes to the sidebar of player 1
 
 
 def test_the_sidebar_of_player_1_does_not_change():
@@ -62,7 +62,7 @@ def test_the_sidebar_of_player_1_does_not_change():
     before = len(server.log)
     for _ in range(500):
         b.step()
-    assert not [c for c in server.log[before:] if "aoe_res" in c]
+    assert not [c for c in server.log[before:] if "aoe_res" in c.split()]
     assert b.g.villagers.keys().isdisjoint(me.villagers) and not me.selected
     assert all(n == 0 for n in me.stock.values())
 
@@ -128,4 +128,4 @@ def test_the_bot_gathers_on_a_server(tmp_path):
         assert all(n == 0 for n in me.stock.values())
         for r in gather.RESOURCES:                                     # the objective of the bot, not the sidebar
             assert "has 0 " in game.command(f"scoreboard players get {r} aoe_res")
-            assert "has 0 " not in game.command(f"scoreboard players get {r} aoe_bot2")
+            assert "has 0 " not in game.command(f"scoreboard players get {r} aoe_res2")

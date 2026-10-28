@@ -27,7 +27,7 @@ def test_the_wood_of_the_player_goes_to_the_ally():
     server.log.clear()
     g.earn("wood", 10)
     assert g.stock["wood"] == 0 and ally.stock["wood"] == 10 and foe.stock["wood"] == 0
-    assert server.log == ["scoreboard players add Wood aoe_bot2 10"]       # the board of the ally bot
+    assert server.log == ["scoreboard players add Wood aoe_res2 10"]       # the board of the ally bot
 
 
 def test_two_allies_share_in_equal_parts():
