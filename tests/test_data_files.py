@@ -199,7 +199,7 @@ def check_setup(row):                                      # a value of a settin
 
 
 def check_taunts(row):                                     # a taunt: its number and AoE2 text (#2234)
-    form(row, {"name": str, "text": str})
+    form(row, {"name": str, "text": str}, {"sound": str})                  # sound: a vanilla match (#2662)
     assert row["name"].isdigit() and row["name"] == str(int(row["name"])) and row["text"], row["name"]
 
 
