@@ -215,6 +215,7 @@ NOT_SAVED = (                                                          # the fie
     "win_at",                                                          # scenario.py: the next check time
     "wonder",                                                          # defend_wonder.setup makes it again
     "wonder_at",                                                       # wonder.py: the next check time
+    "work_on",                                                         # bot.py: a setup value (#3271)
 )
 SKIP = ("session.lock",)                                               # the lock of the running server
 

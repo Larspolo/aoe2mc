@@ -625,6 +625,7 @@ class Gather:
     chop: seconds per unit, one number for all resources or {resource: seconds} ("farm" for farms); default
     WORK_SECONDS, the AoE2 rates at Normal speed (#413). start: the start resources, default START as in AoE2 (#973),
     and NOMAD more for a player with units and no building (#1212); a missing resource starts at 0 ({} for none)."""
+    work_on = True                                                     # #3271: work on after a build or a tree; a bot gives its own tasks
     cheats = False                                                     # also for the adapters of Gather.__new__
     aegis = False                                                      # the cheat "aegis": all work is instant (#817)
     beyond = free_techs = noui = False                                 # cheats: repeat and free technologies, no UI (#968)
@@ -1140,6 +1141,25 @@ class Gather:
         T, oyster = self.map.T, v.tree in self.map.oysters
         full = [t for t, k in self.home(self.source(v)).items() if k > 0 and (t in self.map.oysters) == oyster]
         return min(full, key=lambda t: math.dist(v.cell, ((t[0] + 0.5) * T, (t[1] + 0.5) * T)), default=None)
+
+    def next_task(self, site, who):
+        """AoE2: the builders of a complete own site work on (#3271). A farm: one builder farms it. A camp (a drop site of
+        one or two resources, not a town center): the builders gather the nearest source of its resources. Else idle."""
+        if not who or not self.work_on or site.get("player", self.player) != self.player:
+            return
+        x0, x1, z0, z1 = site["footprint"]
+        if "FARM" in site["name"]:
+            if (tile := self.map.farm_at.get((x0, z0))) and tile not in self.farmers:
+                self.send(tile, {min(who)})
+            return
+        res = [r for r, names in DROP_SITES.items() if site["name"] in names]
+        if not 0 < len(res) < 3:
+            return
+        T, mid = self.map.T, ((x0 + x1) / 2, (z0 + z1) / 2)
+        full = [t for r in res for t, k in self.home(self.map.bushes if r == "food" else self.map.trees if r == "wood"
+                                                     else self.map.mines.get(r, {})).items() if k > 0]
+        if tile := min(full, key=lambda t: (math.dist(mid, ((t[0] + 0.5) * T, (t[1] + 0.5) * T)), t), default=None):
+            self.send(tile, who)
 
     def home(self, sources):
         """The sources {tile: amount} that nearest() may take: all. The bot takes only the ones at its base (#1810)."""
@@ -1667,8 +1687,8 @@ class Gather:
                     if self.map.farms[v.tree] <= 0:                    # an empty farm: the farmer stops
                         self.farmers.pop(v.tree, None)
                         v.tree = None
-                elif v.res != "wood" and self.source(v).get(v.tree, 0) <= 0:
-                    v.tree = self.nearest(v)                           # as in AoE2: the next bush or mine, or stop
+                elif (v.res != "wood" or self.work_on) and self.source(v).get(v.tree, 0) <= 0:
+                    v.tree = self.nearest(v)                           # as in AoE2: the next tree, bush or mine, or stop (#3271)
                 if self.source(v).get(v.tree, 0) > 0:
                     self.go(v, "to_tree", self.goals(v.tree))
                 else:
@@ -1751,6 +1771,8 @@ class Gather:
                         fleet.fish(self, {v.uuid}, fleet.trap(self, site))
                     else:
                         self.set(v, "idle")
+                if not nxt:
+                    self.next_task(site, {v.uuid for v in builders if v.uuid in self.villagers})
         self.idle()
 
     def work_time(self, res, herd=False, pos=None):
