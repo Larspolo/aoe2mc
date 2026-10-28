@@ -22,6 +22,7 @@ max_ci_queue = 5                # flow brake: at this many queued CI runs the pa
 pr_minutes = 30                 # an agent PR older than this waits for a fix, a conflict merge or CI, not for the quota
 weights = { haiku = 0.25, deep = 4.0 }   # a lane run in Opus runs: the start value until the Usage: lines measure it (#1727); deep: high effort, at least 4.5 times the tokens of a low-effort run (2026-10-28)
 reserved = ["haiku", "deep"]    # lanes whose tickets Opus runs never take (#1994); with deep, only deep runs do the reviews and the refill (claim.py)
+pacer = "session"               # who starts the runs: "session" (the pacer session, skill pacer) or "workflow" (pacer.yml, tools/pacer.py, #3193)
 trigger = "trig_01QTrgkK5PZmqPwQ96rKp3QE"   # the scheduled task "aoe2mc autopilot": the pacer fires it (#1898)
 
 [commands]
