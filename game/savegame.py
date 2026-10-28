@@ -21,10 +21,21 @@ import time
 FILE = "savegame.json"
 FIELDS = ("stock", "spare", "seconds", "repeats", "pop")              # dicts and numbers of Gather, as they are
 PACKED = ("queues", "trained", "sites", "rally")                       # with tuples (a building rect, a cell): pack()
-OPTIONAL = ("limit_left", "rates", "relic_timer", "wonder_shown", "wonders", "wonders_gone")   # only on a Gather that has them (#2324)
+OPTIONAL = ("limit_left", "policy", "rates", "relic_timer", "switches", "wonder_shown", "wonders",   # only on a Gather that
+            "wonders_gone")                                            # has them (#2324; the policy: #2515)
 MONK = ("carrier_at", "converting", "faith", "fetching", "heal_time", "monk_at", "relic_gold", "relic_homes",
         "relic_time", "relics")                                        # game/monk.py: the relics and monk orders (#2412)
 ROUTES = ("trade", "trebs")                                            # trade.py, trebuchet.py: as OPTIONAL (#2413)
+COUNTERS = (                                                           # the parts that a tick did not use yet (#2514):
+    "aura_time",                                                       # regen.py
+    "cart_heal",                                                       # trade.py
+    "garrison_heal",                                                   # garrison.py
+    "herd_food",
+    "regen_time",
+    "repair_hp",                                                       # repair.py
+    "repair_owed",
+    "whole",                                                           # garrison.py: the units healed in full
+)
 LEFT = (                                                               # Gather: the resources left on the map (#2453)
     "crops",
     "dead",
@@ -57,14 +68,20 @@ SCORE = (                                                              # Gather:
     "razed",
     "tributes",                                                        # diplomacy.py
 )
+SPOILS = (                                                             # spoils.py: the plugin scores that gave gold
+    "attack_ticks",                                                    # (the world keeps the scores, #2513)
+    "kills",
+)
 RIDERS = ("berths", "boarding", "cargo", "loading", "towers", "unloads")   # transport.py, siege_tower.py (#2411)
 KEPT = (                                                               # the fields of Gather that only some have, pack():
+    *COUNTERS,
     *LEFT,                                                             # one tuple per line, in alphabetical order
     *MONK,                                                             # (parallel tickets add one, #2453)
     *OPTIONAL,
     *RIDERS,
     *ROUTES,
     *SCORE,
+    *SPOILS,
     *VICTORY,
 )
 JOB = ("state", "load", "res", "job", "lap", "prey")                  # fields of a gather.Villager, as they are
@@ -75,13 +92,16 @@ SETTINGS = (                                                           # run.py 
     "bot_attack",
     "cheats",
     "civ",
+    "empire_wars",
     "end_age",
     "full_tech_tree",
     "handicap",
     "mode",
     "people",
     "pop_limit",
+    "regicide",
     "reveal",
+    "sudden_death",
     "teams",
     "treaty",
     "victory",

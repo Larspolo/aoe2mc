@@ -22,7 +22,9 @@ cannot be captured (herd.tick).
 
 An injured unit in a garrison gets its hit points back, as in AoE2 DE (#1262, AoE2 wiki "Garrison"): 0.2 per second in
 a castle, 0.1 in a town center or tower (HEAL), 6 times as fast after Herbal Medicine (HERBAL, #1585). Siege units and
-ships do not heal (monk.healable). The same Health change as the monk heal (monk.py); a full unit stays full inside
+ships do not heal (monk.healable). A mule cart gets a share of its hit points per AoE2 minute back (REPAIR: 24 % in a town
+center or tower, 48 % in a castle, CART_HERBAL times as fast after Herbal Medicine, AoE2 DE wiki "Mule Cart", #2505),
+for free. The same Health change as the monk heal (monk.py); a full unit stays full inside
 (Invulnerable), so it is read only once (g.whole).
 
     garrison.heal(g, dt)                # gather.Gather.step: dt AoE2 seconds of healing
@@ -42,6 +44,8 @@ SIZES = {r["name"]: r["garrison"] for r in ROWS if "garrison" in r}   # units in
 BY = {r["name"]: tuple(r["garrison_by"]) for r in ROWS if "garrison_by" in r}   # only these units go in (Khmer house)
 HEAL = {"CASTLE": 0.2}                                           # hit points per AoE2 second inside, else 0.1
 HERBAL = 6                  # Herbal Medicine: units inside heal 6 times as fast (AoE2 DE wiki, #1585)
+REPAIR = {r["name"]: (r["repair"], r.get("repair_in", {})) for r in ROWS if "repair" in r}   # a cart: the share of its
+CART_HERBAL = 3             # hit points per AoE2 minute in any building, and in some; Herbal Medicine: 3 times (#2505)
 HEAL_EVERY = 5.0            # AoE2 seconds between two heal passes (fewer commands)
 BASE = {r["name"]: r["arrows"] for r in ROWS if "arrows" in r}   # arrows of an empty building (AoE2 wiki), else 1
 FISHER = "FISHING_SHIP"     # the only unit that goes into a dock (#1949)
@@ -310,11 +314,18 @@ def heal(g, dt):
     names = {o["uuid"]: o["name"] for o in g.units if o.get("uuid") in g.villagers} | g.soldiers
     herbal = HERBAL if "HERBAL_MEDICINE" in getattr(g, "techs", ()) else 1
     for rect, us in sorted(g.garrisons.items()):
-        rate = HEAL.get(homes[rect]["name"], 0.1) * herbal if rect in homes else 0.0
+        home = homes[rect]["name"] if rect in homes else None
+        rate = HEAL.get(home, 0.1) * herbal if home else 0.0
         for u in us:
-            if u in g.whole or not rate or not monk.healable(names.get(u, "VILLAGER")) or not (h := monk.health(g, u)):
+            name = names.get(u, "VILLAGER")
+            if u in g.whole or not home or not (name in REPAIR or monk.healable(name)) or not (h := monk.health(g, u)):
                 continue
             if h[0] >= h[1]:
                 g.whole.add(u)
                 continue
-            g.command(f"data modify entity {u} Health set value {round(min(h[1], h[0] + rate * dt), 2)}f")
+            if name in REPAIR:                                     # a cart: a share of its hit points (#2505)
+                share, more = REPAIR[name]
+                up = more.get(home, share) * h[1] / 60 * (CART_HERBAL if herbal > 1 else 1)
+            else:
+                up = rate
+            g.command(f"data modify entity {u} Health set value {round(min(h[1], h[0] + up * dt), 2)}f")
