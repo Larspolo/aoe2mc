@@ -277,7 +277,7 @@ def main(argv=None):
         profile = tuple(aoe2mc.game_time(t) for t in a.profile.split("-")) if a.profile else None
         with contextlib.ExitStack() as stack:
             log = stack.enter_context(open(a.log, "w")) if a.log else None
-            samples = measure(a.src, a.speed, until, a.every, log, a.version, a.server_log, profile)
+            samples = measure(a.src, a.speed, until, a.every, log, a.version, a.server_log, profile=profile)
     else:
         ap.error("give a record, a world or --read FILE")
     print(table(analyze(samples)))
