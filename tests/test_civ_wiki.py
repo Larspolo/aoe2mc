@@ -24,6 +24,7 @@ TABLES = (                                                            # one per 
     "AGE_VILLAGERS",
     "BUILD_OF",
     "COSTS",
+    "COST_PER",
     "EXTRA",
     "DROP",
     "GARRISON",
