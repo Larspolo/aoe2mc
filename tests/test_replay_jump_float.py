@@ -38,6 +38,7 @@ def test_a_trigger_jump_on_a_server(tiny_world, tmp_path):
     import shutil
     import threading
     import time
+    import urllib.parse
 
     import mc_shot
     from test_mc_check import mojang_reachable
@@ -54,8 +55,9 @@ def test_a_trigger_jump_on_a_server(tiny_world, tmp_path):
         at, command = {}, game.command
 
         def timed(c):
-            if c.startswith("tellraw @a "):
-                at[json.loads(c[len("tellraw @a "):])[-1]["text"]] = time.monotonic() - t0
+            for one in [urllib.parse.unquote_plus(x) for x in c.split(" ")[2:]] if c.startswith("aoe batch ") else [c]:
+                if one.startswith("tellraw @a "):                      # also in a batch (#2761)
+                    at[json.loads(one[len("tellraw @a "):])[-1]["text"]] = time.monotonic() - t0
             return command(c)
         game.command = timed
 

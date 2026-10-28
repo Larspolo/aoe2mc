@@ -101,6 +101,9 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *   aoe attack <selector> <target selector>    Mob#setTarget: the mob attacks with its own AI
  *   aoe ballistics <team> on|off               Ballistics of the player (#1549): its archers and buildings aim where a
  *                                              moving target will be
+ *   aoe batch <command> ...                    run the commands in this order, each URL-encoded ("+" is a space): one
+ *                                              RCON round trip for many commands, with no feedback in the log (#2761:
+ *                                              a round trip took 2 to 5 ms at a 45 ms tick, the replay fell behind)
  *   aoe gate <team> <x0> <y0> <z0> <x1> <y1> <z1>
  *                                              a gate of the team (#1325, Gates.java): its iron bars in the box rise
  *                                              while an own or allied unit is near or walks a path through it; the
@@ -807,6 +810,8 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     }
 
     private static final Map<String, String> HELP = new HashMap<>();   // "material:name" -> help line (aoe lore)
+    // the sender of aoe batch: the rights of the console, and its feedback goes nowhere (the console logs each line)
+    private CommandSender quiet;
 
     private static String text(String s) {
         return URLDecoder.decode(s, StandardCharsets.UTF_8);
@@ -2331,6 +2336,17 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                 BALLISTICS.remove(args[1]);
             }
             sender.sendMessage("Ballistics: " + BALLISTICS);
+            return true;
+        }
+        if (args.length >= 2 && args[0].equals("batch")) {              // many commands in one round trip (#2761)
+            if (quiet == null) {
+                quiet = Bukkit.createCommandSender(feedback -> { });
+            }
+            int n = 0;
+            for (int i = 1; i < args.length; i++) {
+                n += Bukkit.dispatchCommand(quiet, text(args[i])) ? 1 : 0;
+            }
+            sender.sendMessage("Batch: " + n + "/" + (args.length - 1));
             return true;
         }
         if (args.length == 7 && args[0].equals("charge")) {            // Siphons (#2165)
