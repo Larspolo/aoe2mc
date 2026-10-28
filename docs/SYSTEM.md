@@ -50,7 +50,7 @@ controls, read `docs/STEERING.md`. This document links to them and does not copy
 8. CI runs the quick checks. Automerge merges the PR when they are green. The merge closes the ticket. Claims
    deletes the claim ref. Dashboard updates the status issue.
 9. The run reports on the status issue (a comment with a `Usage:` line and a `Metrics:` line per ticket) and takes
-   the next ticket. It stops when no ticket is ready, a usage limit stops it, or its context is half full.
+   the next ticket. It stops when no ticket is ready, a usage limit stops it, or its context is above 200k tokens.
 
 ## The locks
 

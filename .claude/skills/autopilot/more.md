@@ -16,8 +16,10 @@ of the last ticket is merged or closed (`/pulls?head=OWNER:<branch>&state=open` 
 the open PR. While you wait for that merge, beat both claims (the PR's ticket and the local one) at least every 10
 minutes: a conflicted PR can wait 45 minutes, and #2713 was taken over as "stuck" with its tested commit still local. After `checkout -B` the upstream is
 `origin/main`, so a bare `git push` fails: check that the output shows `-> <branch>`, else the PR has old commits.
-Stop when the context is more than half full.
+Stop when the context is above 200k tokens (`python3 tools/tokens.py` prints it as `peak`). The window has 1M, but
+above 200k each call costs more than 3 times a call of a fresh run (about 65k), so a new run does the next ticket
+for less (2026-10-28).
 
-Argument `max`: continue until no ticket is ready, a usage limit stops you, or the context is more than half full.
+Argument `max`: continue until no ticket is ready, a usage limit stops you, or the context is above 200k tokens.
 Do not start other runs: a run of the scheduled task has no `fire_trigger` (#566). The pacer session (skill `pacer`)
 starts the runs that the quota target misses, every 10 minutes. A fresh run has a small context, so it works faster.
