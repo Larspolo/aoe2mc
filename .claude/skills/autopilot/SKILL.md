@@ -101,6 +101,8 @@ Claim it with `python3 tools/claim.py N`. It pushes a unique commit to the ref `
 run can win (#211). Exit 0: the ticket is yours; the tool added `in-progress` and "Started by `<your branch>`.".
 Exit 1: it names the run that was first (a claim, a "Started by" of the last 30 minutes, an open PR changed in the
 last 30 minutes, or a closed issue): pick the next candidate. Never comment "Started by" yourself (#288, #1749).
+Exit 2 (of each `claim.py` call): a git or GitHub error, not another run (#3064): wait one minute and run the
+command one more time.
 Each time you give a ticket back without a merge (hand-off, `blocked`, `needs-human`), run
 `python3 tools/claim.py N --release`: it releases the claim and removes `in-progress` (#3234), so that another run
 can claim the ticket again.

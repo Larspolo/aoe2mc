@@ -73,6 +73,12 @@ def git(*args, check=True):
     return subprocess.run(["git", *args], capture_output=True, text=True, check=check)
 
 
+def fail(text):
+    """Exit 2 on a git or GitHub error: `sys.exit(text)` exits 1, the code of "another run owns it" (#3064)."""
+    print(text, file=sys.stderr)
+    sys.exit(2)
+
+
 def slot(number, k):
     return f"claim/{number}" if k == 1 else f"claim/{number}-{k}"
 
@@ -170,7 +176,12 @@ def push(sha, ref, remote="origin"):
         return True
     if "[rejected]" in r.stdout:                  # not a fast-forward: the ref exists
         return False
-    sys.exit(f"git push failed:\n{r.stdout}{r.stderr}")
+    # A push at the same time as the push of another run: "[remote rejected] (failed to update ref)", "cannot lock
+    # ref". The ref then exists, with the commit of the run that was first.
+    tip = git("ls-remote", remote, f"refs/heads/{ref}", check=False)
+    if tip.returncode == 0 and tip.stdout.strip():
+        return tip.stdout.split("\t")[0] == sha
+    fail(f"git push failed:\n{r.stdout}{r.stderr}")
 
 
 def claim(number, takeover=False, remote="origin", limit=STALE):
@@ -241,7 +252,7 @@ def merged_since(last, gap, remote="origin"):
     try:
         return len(merges(since=datetime.datetime.fromisoformat(last.replace("Z", "+00:00"))))
     except Exception as e:                              # exit 2 like a git error, not 1 ("another run does it")
-        sys.exit(f"GitHub API failed for the merged PRs: {e}")
+        fail(f"GitHub API failed for the merged PRs: {e}")
 
 
 def utc(now=None):
@@ -309,7 +320,7 @@ def api(path):
     try:
         return get(path)
     except Exception as e:                              # exit 2 like a git error, not 1 ("owned by another run")
-        sys.exit(f"GitHub API failed for {path}: {e}")
+        fail(f"GitHub API failed for {path}: {e}")
 
 
 def started_by_other(comments, me, now, limit=RECENT):
@@ -542,4 +553,7 @@ def main(argv=None):
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    try:
+        sys.exit(main())
+    except subprocess.CalledProcessError as e:          # git(check=True): network, permission, a missing remote
+        fail(f"git {' '.join(e.cmd[1:])} failed:\n{e.stdout or ''}{e.stderr or ''}")
