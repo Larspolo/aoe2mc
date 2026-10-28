@@ -30,6 +30,7 @@ TABLES = (                                                            # one per 
     "GARRISON",
     "REPAIR",
     "REPAIR_COST",
+    "RESEARCH_TIME",
     "START",
     "TRAIN_RATE",
     "TWICE",
