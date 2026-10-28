@@ -1,5 +1,5 @@
 {"name": "ACHAEMENIDS: Shipyards work 15% faster (-13.04% time taken).", "civ": "ACHAEMENIDS", "bonus": "Shipyards work 15% faster (-13.04% time taken).", "in": "WORK_RATE"}
-{"name": "ACHAEMENIDS: Town Centers can be upgraded to be more powerful starting in the Civic Age.", "civ": "ACHAEMENIDS", "bonus": "Town Centers can be upgraded to be more powerful starting in the Civic Age.", "later": "play:ages"}
+{"name": "ACHAEMENIDS: Town Centers can be upgraded to be more powerful starting in the Civic Age.", "civ": "ACHAEMENIDS", "bonus": "Town Centers can be upgraded to be more powerful starting in the Civic Age.", "in": "game/data/train.jsonl"}
 {"name": "ACHAEMENIDS: Stable technologies research 50% faster (-33% time taken).", "civ": "ACHAEMENIDS", "bonus": "Stable technologies research 50% faster (-33% time taken).", "in": "RESEARCH_TIME"}
 {"name": "ARMENIANS: Mule Carts cost -25%. Mule Carts replace Lumber Camps and Mining Camps.", "civ": "ARMENIANS", "bonus": "Mule Carts cost -25%. Mule Carts replace Lumber Camps and Mining Camps.", "in": "COSTS"}
 {"name": "ARMENIANS: Mule Cart technologies are 40% more effective.", "civ": "ARMENIANS", "bonus": "Mule Cart technologies are 40% more effective.", "in": "MORE"}
