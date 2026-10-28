@@ -139,6 +139,7 @@ def order(g, player, cell):
     units = [u for u in sorted(g.selected) if (unit_name(g, u).startswith(by) if by else u not in flock)]
     if not units:                                                  # a soldier on a Khmer house, a sheep on a tower: no
         return None                                                # garrison order
+    g.new_order(units)
     for u in units:
         if (v := g.villagers.get(u)) is not None:                  # the villager stops its work
             v.state, v.path, v.goal, v.site = "garrison", [], None, None
@@ -179,6 +180,7 @@ def dock_order(g, player, rect):
     pier = fleet.pier(g, rect)
     if not boats or not pier or not g.paper:
         return None
+    g.new_order({v.uuid for v in boats})
     for v in boats:
         v.tree, v.site, v.prey = None, None, None                  # it stops its fishing; the load stays
         if fleet.sail_to(g, v, "garrison", pier):

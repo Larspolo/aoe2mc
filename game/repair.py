@@ -138,10 +138,9 @@ def unit_hp(g, u):
 def send(g, who, key, goals):
     """The villagers who walk to goals and repair key (a building footprint, or the UUID of a siege unit)."""
     g.repairs = vars(g).get("repairs", {})
+    g.new_order(who)
     for u in who:
         v = g.villagers[u]
-        for t in [t for t, f in g.farmers.items() if f == u]:
-            del g.farmers[t]
         v.tree, v.site, v.prey = None, None, None
         g.repairs[u] = key
         g.task(v, "BUILDER")

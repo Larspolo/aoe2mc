@@ -89,6 +89,7 @@ def order(g, player, ship):
         return False
     vars(g).setdefault("berths", {})[ship] = berth[ship]
     vars(g).get("unloads", {}).pop(ship, None)                     # a boarding order ends an unload order
+    g.new_order(who)
     for u in who:
         if (v := g.villagers.get(u)) is not None:                  # the villager stops its work
             v.state, v.path, v.goal, v.site = "garrison", [], None, None
