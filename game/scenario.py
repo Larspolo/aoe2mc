@@ -5,6 +5,7 @@ settings. The converter writes them into aoe2mc.json "players" ("resources", "po
 them (a random map, a recorded game, an old scenario) keeps the lobby values.
 Each person also gets a written book with the scenario texts (aoe2mc.json "messages": objectives, hints,
 instructions ...), as the "Objectives" window of AoE2 DE, and the chat shows the instructions at the start (#2541).
+The trigger effect "Research Technology" (#2577) sets a score of the datapack; tick() gives the technology.
 """
 import json
 import os
@@ -55,7 +56,9 @@ def unread(who):
 
 def tick(g):
     """Give each person who joined since the last check the book, and show the instructions in the chat: the people,
-    not the bots (bot.Bot), once each EVERY seconds. gather.Gather.run calls it in the scenario mode."""
+    not the bots (bot.Bot), once each EVERY seconds. gather.Gather.run calls it in the scenario mode. Also the
+    technologies of the triggers (research, #2577)."""
+    research(g)
     if g.clock() < vars(g).get("book_at", 0.0):
         return
     g.book_at = g.clock() + EVERY
@@ -95,3 +98,24 @@ def setup(g, mode="scenario"):
             x.command(f"scoreboard players set {r} {x.board} {x.stock[r.lower()]}")
         train.sidebar(x)
     return g
+
+
+def research(g):
+    """Once per game second: give each technology of a fired "Research Technology" effect (aoe2mc.json "research",
+    #2577) to its player at no cost, as the start age technologies (train.research), and reset its score. A loop
+    trigger sets it again. A technology that the game program does not know: one line, then no more checks."""
+    if g.clock() < vars(g).get("scenario_at", 0.0):
+        return
+    g.scenario_at = g.clock() + 1.0
+    sides = {x.player: x for x in [g, *(s.g for s in g.bots)]}
+    skip = vars(g).setdefault("research_skip", set())
+    for r in g.data.get("research", ()):
+        if r["score"] in skip or not re.search(r" has [1-9]", g.command(f"scoreboard players get {r['score']} aoe_tech")):
+            continue
+        g.command(f"scoreboard players set {r['score']} aoe_tech 0")
+        if r["technology"] not in train.TECHS or r["player"] not in sides:
+            skip.add(r["score"])
+            print(f"Research Technology: the game program has no {r['technology']} for player {r['player']}.",
+                  file=sys.stderr)
+            continue
+        train.research(sides[r["player"]], {"name": r["technology"], "player": "@a"}, start=True)
