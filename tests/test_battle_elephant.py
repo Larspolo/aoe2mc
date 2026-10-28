@@ -55,6 +55,7 @@ def test_a_trained_battle_elephant_is_a_ravager_with_a_rider():
 def test_the_elite_upgrade_changes_the_live_and_the_new_units():
     server, g = player(ages=("FEUDAL_AGE", "CASTLE_AGE", "IMPERIAL_AGE"))
     g.soldiers["e"] = "BATTLE_ELEPHANT"
+    g.game.entities.setdefault("e", {"Pos": (0.5, 64.0, 0.5)})          # alive at the census (#3122)
     rect = train.open_menu(g, "Steve", STABLE)
     assert f" {train.MORE + 1}:book:Elite Battle Elephant:1100 food · 700 gold · 100 s · research" in menu(server)
     assert train.order(g, "Steve", rect, train.MORE + 1) == 1

@@ -16,7 +16,7 @@
 {"name": "HERO_POWER_CAST", "text": "not supported: Chronicles only, the game program has no hero powers"}
 {"name": "LOCAL_TECH_RESEARCHED", "text": "not supported: Chronicles only, the game program has no local technologies"}
 {"name": "OBJECTS_IN_AREA", "text": "`execute if entity @e[team=pN,x=..,z=..,dx=..,dz=..]`"}
-{"name": "OBJECT_ATTACKED", "text": "`execute if entity @e[tag=aoe2mc.rN,nbt=!{HurtTime:0s}]` in the tick function: the unit took damage from any attacker in the last 10 ticks, vanilla has no attacker in a selector (units, #2779); a building: not supported yet"}
+{"name": "OBJECT_ATTACKED", "text": "`execute if entity @e[tag=aoe2mc.rN,predicate=aoe2mc:attacked]` in the tick function: the unit took damage from any attacker in the last 10 ticks (HurtTime, or the tag aoe2mc.hit of an AoE2 hit of the game program, #3085), vanilla has no attacker in a selector (units, #2779); a building: not supported yet"}
 {"name": "OBJECT_HAS_ACTION", "text": "`execute if score #rN aoe_action matches A` (`unless` when inverted) in the tick function: the scenario mode of the game program sets the AoE2 UnitAIAction of the villager state (`scenario.ACTIONS`: build, gather, hunt, move, enter, repair, idle, #2867); another action, a target object or no unit object: not supported yet"}
 {"name": "OBJECT_HAS_TARGET", "text": "not supported: Minecraft has no readable target of a mob"}
 {"name": "OBJECT_HP", "text": "`execute store result score ... run data get entity @e[tag=aoe2mc.rN,limit=1] Health` in the tick function, then `if score ... matches` (#2701)"}

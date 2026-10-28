@@ -28,6 +28,7 @@ def test_the_castle_of_the_armenians_trains_the_composite_bowman():
 def test_the_upgrade_changes_the_live_and_the_new_units():
     server, g = setup("ARMENIANS", food=0, wood=2000, gold=2000, ages=3)
     g.soldiers["cb"] = "COMPOSITE_BOWMAN"
+    g.game.entities.setdefault("cb", {"Pos": (0.5, 64.0, 0.5)})          # alive at the census (#3122)
     train.open_menu(g, "Steve", CASTLE)
     assert " 5:book:Elite Composite Bowman:600 wood · 500 gold · 45 s · research " in menus(server)[-1] + " "
     assert train.queue(g, "Steve", CASTLE, "ELITE_COMPOSITE_BOWMAN_UPGRADE")

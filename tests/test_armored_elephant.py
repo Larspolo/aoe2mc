@@ -16,6 +16,7 @@ def workshop(civ="HINDUSTANIS", ages=CASTLE + ("IMPERIAL_AGE",)):
     server, g = setup(ages)
     g.data["players"] = {"1": {"civ": civ}}
     g.soldiers["e"] = "ARMORED_ELEPHANT"
+    g.game.entities.setdefault("e", {"Pos": (0.5, 64.0, 0.5)})          # alive at the census (#3122)
     return server, g
 
 

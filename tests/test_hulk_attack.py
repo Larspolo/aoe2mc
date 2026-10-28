@@ -12,6 +12,7 @@ def test_each_technology_gives_the_hulks_the_aoe2_attack():
     g.techs |= {"CASTLE_AGE", "IMPERIAL_AGE"}
     g.stock.update(gold=1000)
     g.soldiers[HULK] = "HULK"
+    g.game.entities.setdefault(HULK, {"Pos": (0.5, 64.0, 0.5)})          # alive at the census (#3122)
     for tech, n in (("FORGING", 1), ("IRON_CASTING", 2), ("BLAST_FURNACE", 4)):
         server.log.clear()
         assert train.order(g, "Steve", train.open_menu(g, "Steve", (11, 3)), train.ITEMS[tech][0]) == 1

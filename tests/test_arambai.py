@@ -29,6 +29,7 @@ def test_the_castle_of_the_burmese_trains_the_arambai():
 def test_the_upgrade_changes_the_live_and_the_new_units():
     server, g = setup("BURMESE", food=2000, wood=75, gold=2000, ages=3)
     g.soldiers["ar"] = "ARAMBAI"
+    g.game.entities.setdefault("ar", {"Pos": (0.5, 64.0, 0.5)})          # alive at the census (#3122)
     train.open_menu(g, "Steve", CASTLE)
     assert " 5:book:Elite Arambai:1000 food · 750 gold · 65 s · research " in menus(server)[-1] + " "
     assert train.queue(g, "Steve", CASTLE, "ELITE_ARAMBAI_UPGRADE")

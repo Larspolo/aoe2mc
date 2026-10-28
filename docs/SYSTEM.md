@@ -128,7 +128,7 @@ Only the owner can do these steps. An agent that needs a change makes a `needs-h
 For a new project, `python3 tools/bootstrap.py DIR --repo OWNER/NAME` copies the generic files, writes `agent.toml` and
 the starts of the specific files, and prints these steps for the new repository (`--github`: also the labels and the
 status issue). Merge the first PR of the bootstrap by hand: Automerge cannot merge it, because the workflows are not
-on `main` yet, and the branch of an owner session is not `agent/*` or `claude/*`.
+on `main` yet.
 
 1. **GitHub.** Install the Claude GitHub app on the repository. Make the repository public (free Actions minutes).
    Add the ruleset `Protect main` (Settings → Rules): no force push, no delete of `main`. Give the workflows write
@@ -303,7 +303,7 @@ of `tools/bootstrap.py` (they copy this repository) and the tests that need a sp
 | `tests/test_generic_tools.py` | specific | The tools of aoe2mc that generic files may name (`OPTIONAL`, #1963). |
 | `tests/test_generic_words.py` | specific | The words of aoe2mc that the generic files must not contain (#1900). |
 | `.github/workflows/ci.yml` | specific | The Python, Java and Minecraft steps, the test markers. The red-`main` ticket is generic. |
-| `.github/workflows/automerge.yml` | generic | The branch prefixes `claude/*` and `agent/*`. |
+| `.github/workflows/automerge.yml` | generic | The branch prefixes `claude/*`, `agent/*` and `ccr-*` (#3382). |
 | `.github/workflows/unconflict.yml` | generic | None. |
 | `.github/workflows/claims.yml` | generic | None. |
 | `.github/workflows/close.yml` | generic | None. It closes the issues with the label `close` (#1740). |

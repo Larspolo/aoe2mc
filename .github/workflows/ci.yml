@@ -80,7 +80,7 @@ jobs:
   # a workflow. A job after `quick`: the sweep needs its check run completed.
   sweep:
     needs: quick
-    if: github.event_name == 'workflow_dispatch' && (startsWith(github.ref_name, 'agent/') || startsWith(github.ref_name, 'claude/'))
+    if: github.event_name == 'workflow_dispatch' && (startsWith(github.ref_name, 'agent/') || startsWith(github.ref_name, 'claude/') || startsWith(github.ref_name, 'ccr-'))
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:

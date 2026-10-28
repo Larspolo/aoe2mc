@@ -16,6 +16,7 @@ def stable(civ="CUMANS", ages=IMPERIAL):   # no bonus to the hit points (the Mon
     server, g = setup(ages=ages)
     g.data["players"] = {"1": {"civ": civ}}
     g.soldiers["sl"] = "STEPPE_LANCER"
+    g.game.entities.setdefault("sl", {"Pos": (0.5, 64.0, 0.5)})          # alive at the census (#3122)
     return server, g
 
 

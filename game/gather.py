@@ -47,7 +47,7 @@ import types
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from aoe2mc import PASSABLE_OBJECTS, WOODS, object_footprint, object_mob, player_color, tree_kind  # noqa: E402
-from units import TEAM_COLOR, VILLAGER_JOBS, animal, pretty  # noqa: E402
+from units import IDLE_JOB, TEAM_COLOR, VILLAGER_JOBS, animal, pretty  # noqa: E402
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import build  # noqa: E402
@@ -567,6 +567,7 @@ class Villager:
         self.res = "wood"                                              # the resource of the load
         self.site = None                                               # the construction site that it builds
         self.goal, self.moved, self.tries = None, 0.0, 0               # Paper: walk cell, time of the last step, orders
+        self.anchor, self.anchor_far = pos, math.inf                   # the place and the distance to the goal of the last progress (#3372)
         self.lap = 0                                                   # step of a farmer over its farm (#591)
         self.prey = None                                               # the UUID of the animal that it hunts (#1058)
 
@@ -995,7 +996,7 @@ class Gather:
 
     def task(self, v, name):
         """Give the villager the look of its AoE2 task (`LUMBERJACK` ...), with the table of the converter."""
-        job = dict(VILLAGER_JOBS).get(name, "none")
+        job = dict(VILLAGER_JOBS).get(name, IDLE_JOB)
         if v.job != job:                                               # a merge keeps the level and the type
             v.job = job
             self.command(profession(v.uuid, job))
@@ -1693,6 +1694,10 @@ class Gather:
                     self.second(v)
                     if v.tree in self.map.farms:
                         self.harvest(v.tree)
+                        if src[v.tree] <= 0 and getattr(self, "reseeds", 0) > 0:   # a queued reseed: new at once (#3283)
+                            self.reseeds -= 1
+                            src[v.tree] = self.map.farm_food
+                            self.harvest(v.tree)
                         self.tend(v)
                     elif v.tree in self.map.carcasses:
                         if src[v.tree] <= 0:                           # a carcass has no blocks, only its body
@@ -1783,6 +1788,7 @@ class Gather:
             ai.move(self, v.uuid, "VILLAGER", self.map.T, x + 0.5, self.map.y(x, z), z + 0.5,
                     NORMAL * train.speed(self, "VILLAGER", v.uuid) * math.prod(PACE.get(t, 1) ** train.count(self, t) for t in self.techs))
         v.moved, v.tries = self.clock(), v.tries + 1
+        v.anchor, v.anchor_far = v.pos, math.inf
 
     def second(self, v):
         """One unit that v gathers earns the second resource of the civilization (civs.EXTRA, #2113): Poles and Puru
@@ -1820,8 +1826,11 @@ class Gather:
             return
         step, v.pos, now = math.dist(pos, v.pos), pos, self.clock()
         v.walked += step
-        v.moved = now if step >= 0.05 else v.moved
-        far, still = math.dist((pos[0], pos[2]), (v.goal[0] + 0.5, v.goal[1] + 0.5)), now - v.moved
+        far = math.dist((pos[0], pos[2]), (v.goal[0] + 0.5, v.goal[1] + 0.5))
+        # a crowd pushes a villager back and forth: only a move of 0.5 blocks or a nearer goal counts as progress (#3372)
+        if math.dist(pos, v.anchor) >= 0.5 or v.anchor_far - far >= 0.25:
+            v.anchor, v.anchor_far, v.moved = pos, far, now
+        still = now - v.moved
         if still >= 5 and far >= 2 and v.tries < 2:                    # a second order, as the plugin drops one
             self.move(v)
         elif far < 1.5 or still >= 1 and far < 2 or still >= 5:
@@ -1994,13 +2003,17 @@ class Gather:
         """A farm shows its food: the wheat gets younger (age 7 when full), and an empty farm is dirt."""
         food = self.map.farms[tile]
         age = min(7, math.ceil(7 * food / self.map.farm_food))
-        if self.crops.get(tile, 7) == age:                             # the converter's farm: mostly age 7
+        before = self.crops.get(tile, 7)
+        if before == age:                                              # the converter's farm: mostly age 7
             return
         self.crops[tile] = age
         x0, x1, z0, z1 = self.map.feet[tile]
         ys = [y for x in range(x0, x1) for z in range(z0, z1) if (y := self.map.y(x, z)) is not None] or [0]
         box = f"{x0} {min(ys) - 1} {z0} {x1 - 1} {max(ys)} {z1 - 1}"
-        if food > 0:
+        if food > 0 and before == 0:                                   # a reseeded farm (#3283): farmland and wheat again
+            self.command(f"fill {box} minecraft:farmland replace minecraft:dirt")
+            self.command(f"fill {x0} {min(ys)} {z0} {x1 - 1} {max(ys)} {z1 - 1} minecraft:wheat[age={age}] replace air")
+        elif food > 0:
             self.command(f"fill {box} minecraft:wheat[age={age}] replace minecraft:wheat")
         else:
             self.command(f"fill {box} air replace minecraft:wheat")
@@ -2048,3 +2061,10 @@ class Gather:
             treaty.tick(self, self.tick * NORMAL)
             record.tick(self, self.tick * NORMAL)                      # the game time of Record Game (#2649)
             time.sleep(max(0.0, self.tick / self.speed - (time.monotonic() - t)))   # a step stays tick game seconds
+
+
+def reseed(g, entry):
+    """FARM_RESEED (the mill, #3283): one more queued reseed. An empty own farm takes it in Gather.run, as in AoE2."""
+    g.reseeds = getattr(g, "reseeds", 0) + 1
+    for player in g.people():
+        g.command(f"tellraw {player} " + json.dumps({"text": f"Reseeds queued: {g.reseeds}", "color": "gray"}))

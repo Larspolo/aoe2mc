@@ -19,7 +19,8 @@ epics have no goal left that an agent can do.
 2. Pick the goal: the goal whose newest epic is the oldest (the lowest issue number of the newest epics of the
    three goals; a goal without an epic first). Tie: the order of the file. Goal 4 (the agent system) takes no turn:
    its epics come from the `improve` skill and the owner.
-3. In that goal, take the first missing feature without an epic.
+3. In that goal, take the first missing feature without an epic. Grep the code for it first: a ticket can do a
+   feature with no epic (`play:taunts` by #3318). Then mark it `[x]` with the ticket in the next PR, and take the next one.
 4. Make the epic with the `ticket` skill: the title is an instruction, the body has the goal (what the player sees),
    the acceptance criteria (with a check that the whole feature is covered: `ticket` skill, "Split an L ticket"),
    the Minecraft feature that does the job (CLAUDE.md), the line "Roadmap: `<key>`", and
