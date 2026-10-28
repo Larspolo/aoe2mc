@@ -101,6 +101,7 @@ def test_the_run_loop_checks_the_kings_only_in_regicide(monkeypatch):
         monkeypatch.setattr(m, "tick", lambda g, m=m: calls.append(m.__name__))
     monkeypatch.setattr(gather.wonder, "tick", lambda g, dt: None)
     monkeypatch.setattr(gather.relic_victory, "tick", lambda g, dt: None)
+    monkeypatch.setattr(gather.score, "tick", lambda g: None)          # not a win (#2355)
     monkeypatch.setattr(gather.time, "sleep", lambda s: None)
     for mode, kings in ((None, 0), ("standard", 0), ("regicide", 3)):
         calls.clear()

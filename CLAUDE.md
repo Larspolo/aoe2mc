@@ -16,7 +16,7 @@ The README already uses this style. Keep it.
 |---|---|
 | Install | `python3 -m pip install -r requirements-dev.txt` (a `pip` on the PATH can be another Python) |
 | Lint | `ruff check .` |
-| Fast tests (~5 min; after a merge only the changed test files, `verify`) | `python3 -m pytest` (use `python3 -m`: a `pytest` on the PATH can be another Python) |
+| Fast tests (~2 min; after a merge only the changed test files, `verify`) | `python3 -m pytest -n auto` (all cores, #2415; use `python3 -m`: a `pytest` on the PATH can be another Python) |
 | Slow tests (~2 min) | `python3 -m pytest -m slow` |
 | Test scenario | `python3 tools/scenarios.py tiny OUT.aoe2scenario` (or `gallery`, `stress`, `buildings`, `units`, `village`, `facing`, `walls`, `river` (raised river with dock, bridge, boats), `river_town`, `four_civs`, `battle`, `triggers` (timer, area, create and remove triggers; count with `tools/triggers.py FILE...`), `large` (480 × 480 tiles, #690), `owner_loop` (the play-test map of the `human` skill, #1674), `moods` (the village with `--mood NIGHT`, a map color mood, #1598)) |
 | Convert | `python3 aoe2mc.py IN.aoe2scenario OUTWorld --preview` |
@@ -120,6 +120,8 @@ A new data line needs no test of its values: `tests/test_data_files.py` checks t
 from it (a fight, a menu, a bonus).
 The same for a new command of the Paper plugin: its line in the command list at the top of `AoePlugin.java` and its
 `if` block in `onCommand` go in alphabetical order of the command name, not after the last one (#795 and #813 conflicted).
+A new game setting of `game/run.py` (a lobby setting, epic #2263) is one line in `run.SETTINGS` and an option of the
+same name, not a new keyword of `play()` (#2373).
 
 ## How to verify
 
