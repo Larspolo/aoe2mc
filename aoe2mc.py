@@ -2824,8 +2824,10 @@ def team_lines(objects, players):
 # AoE2 condition and effect IDs (AoE2ScenarioParser), one per line in alphabetical order (#2613)
 ACCUMULATE_ATTRIBUTE = 8                                           # a resource of a player (#2655)
 AND = 57                                                           # the conditions "AND" and "OR" (#2765)
+ADD_TRAIN_LOCATION = 102                                           # "Add Train Location" (#2865)
 ATTACK_MOVE = 30                                                   # "Attack Move" (#2647)
 BUILD_OBJECT = 108                                                 # "Build Object" (#2863)
+CHANGE_CIVILIZATION_NAME = 48                                      # "Change Civilization Name" (#2905)
 CHANGE_COLOR_MOOD = 72
 CHANGE_DIPLOMACY = 1                                               # "Change Diplomacy" (#2645)
 CHANGE_OBJECT_ARMOR = 31                                           # "Change Object Armor" (#2755)
@@ -2852,6 +2854,7 @@ CLEAR_INSTRUCTIONS = 21                                            # "Clear Inst
 CLEAR_TIMER = 57                                                   # "Clear Timer" (#2696)
 COMPARE_VARIABLES = 78                                             # the condition "Compare Variables" (#2698)
 COUNT_UNITS_INTO_VARIABLE = 101                                    # "Count Units into Variable" (#2697)
+CREATE_DECISION = 90                                               # "Create Decision" (#2886)
 CREATE_GARRISONED_OBJECT = 49                                      # "Create Garrisoned Object" (#2764)
 CREATE_OBJECT = 11
 CREATE_OBJECT_ARMOR = 78                                           # "Create Object Armor" (#2855)
@@ -2881,7 +2884,9 @@ LOAD_KEY_VALUE = 81                                                # "Load Key V
 LOCK_GATE = 7                                                      # "Lock Gate", "Unlock Gate" (#2762)
 MIRROR_DIPLOMACY = 109                                             # "Mirror Diplomacy" (#2822)
 MODIFY_ATTRIBUTE = 51                                              # "Modify Attribute" (#2763)
+MODIFY_ATTRIBUTE_BY_VARIABLE = 79                                  # "Modify Attribute by Variable" (#2856)
 MODIFY_ATTRIBUTE_FOR_CLASS = 104                                   # "Modify Attribute for Class" (#2859)
+MODIFY_OBJECT_ATTRIBUTE = 105                                      # "Modify Object Attribute" (#2860)
 MODIFY_RESOURCE = 52                                               # "Modify Resource" (#2576)
 MODIFY_RESOURCE_BY_VARIABLE = 53                                   # "Modify Resource by Variable" (#2768)
 MODIFY_VARIABLE_BY_ATTRIBUTE = 87                                  # "Modify Variable by Attribute" (#2858)
@@ -2905,6 +2910,7 @@ RESEARCHED = 9                                                     # the conditi
 RESEARCHING_TECH = 17                                              # the condition "Researching Technology" (#2769)
 RESEARCH_TECHNOLOGY = 2                                            # "Research Technology" (#2577)
 SEND_CHAT = 3
+SET_BUILDING_GATHER_POINT = 54                                     # "Set Building Gather Point" (#2853)
 SET_PLAYER_VISIBILITY = 41                                         # "Set Player Visibility" (#2774)
 STOP_OBJECT = 29                                                   # "Stop Object" (#2754)
 STORE_KEY_VALUE = 82                                               # "Store Key Value" (#2887)
@@ -3080,9 +3086,14 @@ def object_lines(e, c):
     """The commands of "Create Object" and "Remove Object" (#656): a summon of the entity of units.make_entity at
     the middle of the tile, or a kill of the units of the player and type in the area (area_selector). "Kill Object"
     (#2568) is the same kill, also with no area (the whole map): Minecraft shows the death, as AoE2.
-    Buildings and other objects are not supported yet: they count in stats."""
+    A building of a player (#2911): the order "create <player> <building> <x> <y>" goes into the storage aoe2mc:orders,
+    and game/scenario.py create puts the complete building there. Other objects are not supported yet: they count in stats."""
     t, T, ground, players, stats = c.t, c.T, c.ground, c.players, c.stats
     kind, name = e.get("object") or (None, None)
+    if e["type"] == CREATE_OBJECT and kind == "B" and e["player"] > 0 and min(e.get("tile", [-1])) >= 0:
+        stats["create"] += 1
+        (x, y), p = e["tile"], e["player"]
+        return [f'data modify storage aoe2mc:orders list append value "create {p} {name} {x} {y}"']
     if e["type"] == CREATE_OBJECT and min(e.get("tile", [-1])) >= 0:
         x, z = (int((v + 0.5) * T) for v in e["tile"])
         o = dict(name=name, player=max(e["player"], 0), rotation=math.pi / 2)
@@ -3145,22 +3156,47 @@ def damage_lines(e, c):
     return [f"execute as {at} run damage @s {q}"]                      # damage takes one entity
 
 
-def attack_lines(e, c):
+def attack_lines(e, c, armor=None, q=None):
     """The commands of "Change Object Attack" and "Change Object Armor" (#2755): the units of the player in the area and
     the mounts of the riders get an attribute modifier of `quantity` AoE2 points, add or subtract: minecraft:attack_damage
     (the attack classes 3 pierce and 4 melee) or minecraft:armor. The game program sets these attributes from
-    combat.STATS, so the points are AoE2 points. The modifier ID is the trigger and the effect: one modifier each."""
-    q, stats = e.get("quantity") or 0, c.stats
-    armor = e["type"] == CHANGE_OBJECT_ARMOR
+    combat.STATS, so the points are AoE2 points. The modifier ID is the trigger and the effect: one modifier each.
+    A set (#2909) removes the modifiers of all add and subtract effects of the same kind of the scenario (also of
+    "Modify Object Attribute"; a unit that does not have one ignores the command), then sets the base value.
+    armor and q: the kind and the points of "Modify Object Attribute" (object_attribute_lines)."""
+    q, stats = (e.get("quantity") if q is None else q) or 0, c.stats
+    armor = e["type"] == CHANGE_OBJECT_ARMOR if armor is None else armor
     op = OPERATIONS.get(e.get("operation"))
-    if op not in ("add", "remove") or not q or (not armor and e.get("armour_class") not in (3, 4)):
+    if op not in ("add", "remove", "set") or not q and op != "set" or (not armor and e.get("armour_class") not in (3, 4)):
         stats["change object attack or armor (not supported yet)"] += 1
         return []
     stats["change object armor" if armor else "change object attack"] += 1
     at = unit_selector(e, c.T)
     attr = "minecraft:armor" if armor else "minecraft:attack_damage"
+    if op == "set":
+        kind = CHANGE_OBJECT_ARMOR if armor else CHANGE_OBJECT_ATTACK
+        old = [f"aoe2mc:trig_{t['id']}_{i}" for t in c.triggers for i, f in enumerate(t["effects"])
+               if (f["type"] == kind or f["type"] == MODIFY_OBJECT_ATTRIBUTE and f.get("attribute") == 8 + (not armor))
+               and OPERATIONS.get(f.get("operation")) in ("add", "remove")]
+        return [f"execute as {at} run attribute @s {attr} modifier remove {m}" for m in old] + \
+            [f"execute as {at} run attribute @s {attr} base set {max(q, 0)}"]
     value = q if op == "add" else -q
     return [f"execute as {at} run attribute @s {attr} modifier add aoe2mc:trig_{c.t['id']}_{effect_index(e, c)} {value} add_value"]
+
+
+def object_attribute_lines(e, c):
+    """The commands of "Modify Object Attribute" (#2860): the value of the units of the effect, not of the unit type, with
+    the handler of the effect that changes one value of units: hit points (hp_lines), the movement speed (speed_lines:
+    only a set), armor and attack (attack_lines: the armor or attack points of the class). Another attribute: no line."""
+    a, stats = e.get("attribute"), c.stats
+    if a in (8, 9):
+        lines = attack_lines(e, c, armor=a == 8, q=e.get("aa"))
+    elif a == 0 or (a == 5 and e.get("operation") == 1):
+        lines = (hp_lines if a == 0 else speed_lines)(e, c)
+    else:
+        lines = []
+    stats["modify object attribute" if lines else "modify object attribute (not supported)"] += 1
+    return lines
 
 
 def garrisoned_lines(e, c):
@@ -3294,6 +3330,20 @@ def location_lines(e, c):
     return [f'data modify storage aoe2mc:places list append value "{e["player"]} {name} {building} {e.get("button", -1)}"']
 
 
+def civ_name_lines(e, c):
+    """The command of "Change Civilization Name" (#2905): the new name (with no AoE2 color tags) of the civilization of
+    the player goes into the list "civs" of the data storage aoe2mc:names as one text "<player> <name>". A converted world
+    shows no civilization: the scenario mode of the game program (game/scenario.py civ_names) shows it next to the player
+    name. A name of the game files only (string_id, no message): not supported."""
+    msg = re.sub(r"<[^<>]*>", "", e["message"]).replace("\r", "").replace("\n", " ").strip()
+    if e["player"] <= 0 or not msg:
+        c.stats["change civilization name (not supported)"] += 1
+        return []
+    c.stats["change civilization name"] += 1
+    text = f"{e['player']} {msg}".replace("\\", "\\\\").replace('"', '\\"')
+    return [f'data modify storage aoe2mc:names civs append value "{text}"']
+
+
 def tech_name_lines(e, c):
     """The command of "Change Technology Name" (#2821): the new name (with no AoE2 color tags) of the technology of the
     player goes into the list of the data storage aoe2mc:names as one text "<player> <technology> <name>". A converted
@@ -3307,6 +3357,21 @@ def tech_name_lines(e, c):
     c.stats["change technology name"] += 1
     text = f"{e['player']} {tech} {msg}".replace("\\", "\\\\").replace('"', '\\"')
     return [f'data modify storage aoe2mc:names list append value "{text}"']
+
+
+def train_location_lines(e, c):
+    """The command of "Add Train Location" (#2865): "<player> <unit> <building> <button> <seconds>" goes into the list of
+    the data storage aoe2mc:locations. A converted world has no menus: the scenario mode of the game program
+    (game/scenario.py locations) empties the list and adds the unit to the menu of the building of the player, at the
+    AoE2 button with the train time (no time: the time of the unit). The hotkey: not supported (no keys in a menu)."""
+    _, unit = e.get("object") or (None, None)
+    _, building = e.get("building") or (None, None)
+    if not unit or not building or unit.isdigit() or building.isdigit() or e["player"] <= 0:
+        c.stats["add train location (not supported)"] += 1
+        return []
+    c.stats["add train location"] += 1
+    return [f'data modify storage aoe2mc:locations list append value '
+            f'"{e["player"]} {unit} {building} {max(e.get("button") or 0, 0)} {max(e.get("seconds") or 0, 0)}"']
 
 
 def player_name_lines(e, c):
@@ -3665,11 +3730,9 @@ STAT_ATTRIBUTES = {0: "hp", 10: "reload", 12: "range"}
 CLASS_ATTRIBUTES = {(8, 3): "pierce", (8, 4): "melee", (9, 3): "attack", (9, 4): "attack"}
 
 
-def attribute_lines(e, c):
-    """The command of "Modify Attribute" (#2763): the change "<player> <name> <Stats field> <operation> <quantity>"
-    goes into the list of the data storage aoe2mc:attributes. A converted world has no combat values: the scenario mode
-    of the game program (game/scenario.py attributes) empties the list and changes the values of the unit type of the
-    player (train.stats). An attribute outside STAT_ATTRIBUTES and CLASS_ATTRIBUTES: not supported in the stats.
+def attribute_head(e):
+    """"<player> <name> <Stats field> <operation>" of "Modify Attribute" and "Modify Attribute by Variable", or None
+    for an attribute outside STAT_ATTRIBUTES and CLASS_ATTRIBUTES (not supported in the stats).
     "Modify Attribute for Class" (#2859): one line for the class, the name "@<ObjectClass name>" (train.applies)."""
     from AoE2ScenarioParser.datasets.trigger_lists import ObjectClass
     _, name = e.get("object") or (None, None)
@@ -3677,12 +3740,38 @@ def attribute_lines(e, c):
         name = f"@{ObjectClass(e['group']).name.lower()}" if e.get("group") in set(ObjectClass) else None
     a = e.get("attribute")
     field = STAT_ATTRIBUTES.get(a) or CLASS_ATTRIBUTES.get((a, e.get("class")))
-    q = e.get("aa") if a in (8, 9) else e.get("quantity")
-    if not name or e["player"] <= 0 or not field or e.get("operation") not in range(1, 6) or q is None:
+    if name and e["player"] > 0 and field and e.get("operation") in range(1, 6):
+        return f'{e["player"]} {name} {field} {e["operation"]}'
+
+
+def attribute_lines(e, c):
+    """The command of "Modify Attribute" (#2763): the change "<player> <name> <Stats field> <operation> <quantity>"
+    goes into the list of the data storage aoe2mc:attributes. A converted world has no combat values: the scenario mode
+    of the game program (game/scenario.py attributes) empties the list and changes the values of the unit type of the
+    player (train.stats)."""
+    q = e.get("aa") if e.get("attribute") in (8, 9) else e.get("quantity")
+    if not (head := attribute_head(e)) or q is None:
         c.stats["modify attribute (not supported)"] += 1
         return []
     c.stats["modify attribute"] += 1
-    return [f'data modify storage aoe2mc:attributes list append value "{e["player"]} {name} {field} {e["operation"]} {q:g}"']
+    return [f'data modify storage aoe2mc:attributes list append value "{head} {q:g}"']
+
+
+def attribute_by_variable_lines(e, c):
+    """The commands of "Modify Attribute by Variable" (#2856): the change of attribute_lines with the score #v<N> of
+    aoe_var (the AoE2 variable N) as the quantity, when the trigger fires. Minecraft feature: a macro function puts the
+    score from the storage aoe2mc:attribute_by_variable into the text of the list line."""
+    if not (head := attribute_head(e)) or e.get("variable", -1) < 0:
+        c.stats["modify attribute by variable (not supported)"] += 1
+        return []
+    c.stats["modify attribute by variable"] += 1
+    c.setup["scoreboard objectives add aoe_var dummy"] = None            # an unset variable stores 0, as in AoE2
+    c.files["data/aoe2mc/function/attribute_by_variable.mcfunction"] = \
+        '$data modify storage aoe2mc:attributes list append value "$(head) $(q)"\n'
+    return [f'data modify storage aoe2mc:attribute_by_variable head set value "{head}"',
+            f"execute store result storage aoe2mc:attribute_by_variable q int 1 run scoreboard players get "
+            f"#v{e['variable']} aoe_var",
+            "function aoe2mc:attribute_by_variable with storage aoe2mc:attribute_by_variable"]
 
 
 def create_lines(e, c):
@@ -3810,6 +3899,20 @@ def gate_lines(e, c):
     order = "lock" if e["type"] == LOCK_GATE else "unlock"
     return [f'data modify storage aoe2mc:orders list append value "{order} {ref}"' for ref in e.get("selected", ())
             if ref >= 0]
+
+
+def rally_lines(e, c):
+    """The commands of "Set Building Gather Point" (#2853): the order "rally <player> <ref> <x> <y>" of each selected
+    building, or with no selection one order "rally <player> <name> <x> <y> <x1> <y1> <x2> <y2>" for the buildings of
+    the type in the area, goes into the storage aoe2mc:orders. game/scenario.py rally sets the rally point of each own
+    building of the player that trains units (train.rally): its new units walk to the tile. No tile or Gaia: no order."""
+    (x, y), p, a = e.get("tile", [-1, -1]), e["player"], e.get("area", [-1])
+    if p <= 0 or min(x, y) < 0:
+        return []
+    name, put = (e.get("object") or (None, None))[1], 'data modify storage aoe2mc:orders list append value "rally'
+    if any(ref >= 0 for ref in e.get("selected", ())):
+        return [f'{put} {p} {ref} {x} {y}"' for ref in e["selected"] if ref >= 0]
+    return [f'{put} {p} {name} {x} {y} {" ".join(map(str, a))}"'] if name and min(a, default=-1) >= 0 else []
 
 
 def unload_lines(e, c):
@@ -4009,6 +4112,24 @@ def chat_lines(e, c):
     return [f"tellraw @a {text}"] if (text := message_text(e)) else []
 
 
+def decision_lines(e, c):
+    """The commands of "Create Decision" (#2886): the question and its two options in the chat of each player, as the
+    decision box of AoE2 DE. A click on option k runs `/trigger aoe_decision set <decision id × 10 + k>` (a trigger
+    objective: no operator rights); the tick function keeps the last click in #last of aoe_decision (DECISION_TICK)
+    for the condition "Decision Triggered". Only string IDs of the game files, no texts: not supported."""
+    plain = lambda t: re.sub(r"<[^<>]*>", "", t or "").replace("\r", "").strip()
+    texts = [plain(e["message"]), plain(e.get("option1")), plain(e.get("option2"))]
+    if not all(texts) or e.get("decision", -1) < 0:
+        c.stats["create decision (no text, not supported yet)"] += 1
+        return []
+    c.setup["scoreboard objectives add aoe_decision trigger"] = None
+    c.stats["create decision"] += 1
+    click = lambda k: {"text": f"[{texts[k]}]", "color": "gold", "click_event": {
+        "action": "run_command", "command": f"/trigger aoe_decision set {e['decision'] * 10 + k}"}}
+    return ["scoreboard players enable @a aoe_decision",
+            "tellraw @a " + json.dumps([texts[0], " ", click(1), " ", click(2)], ensure_ascii=False)]
+
+
 def instruction_lines(e, c):
     """The commands of "Display Instructions": a subtitle for the display time of the effect (AoE2 default: 10 s)."""
     if not (text := message_text(e)):
@@ -4033,31 +4154,46 @@ def visibility_lines(e, c):
 # (effect, kinds, techs) -> value. A new effect is one line here, in alphabetical order (#2792): parallel trigger
 # tickets conflicted in one expression of read_scenario. The older effects still have their entry there.
 EFFECT_KEYS = {
+    ADD_TRAIN_LOCATION: {"building": lambda e, kinds, techs: kinds.get(e.object_list_unit_id_2), "button": "button_location",
+                         "seconds": "train_time"},
     CHANGE_TECHNOLOGY_LOCATION: {"button": "button_location", "object2": lambda e, kinds, techs: kinds.get(   # #2864
         e.object_list_unit_id_2), "technology": lambda e, kinds, techs: techs.get(e.technology, str(e.technology))},
     CHANGE_TRAIN_LOCATION: {"button": "button_location",                                                       # #2864
                             "object2": lambda e, kinds, techs: kinds.get(e.object_list_unit_id_2)},
     COUNT_UNITS_INTO_VARIABLE: {"variable2": "variable2"},   # (#2697)
+    CREATE_DECISION: {"decision": "decision_id", "option1": "message_option1", "option2": "message_option2"},
     CREATE_OBJECT_ARMOR: {"class": "armour_attack_class", "aa": "armour_attack_quantity"},   # (#2855)
     CREATE_OBJECT_ATTACK: {"class": "armour_attack_class", "aa": "armour_attack_quantity"},  # (#2855)
     INITIATE_RESEARCH: {"selected": lambda e, kinds, techs: list(e.selected_object_ids or []),   # (#2772)
                         "technology": lambda e, kinds, techs: techs.get(e.technology, str(e.technology))},
     LOAD_KEY_VALUE: {"quantity": "quantity", "variable": "variable"},   # (#2887)
+    MODIFY_ATTRIBUTE_BY_VARIABLE: {"attribute": "object_attributes", "class": "armour_attack_class",   # (#2856)
+                                   "operation": "operation", "variable": "variable"},
     MODIFY_ATTRIBUTE_FOR_CLASS: {"attribute": "object_attributes", "operation": "operation", "quantity": "quantity",
                                  "class": "armour_attack_class", "aa": "armour_attack_quantity", "group": "object_group2"},
+    MODIFY_OBJECT_ATTRIBUTE: {"aa": "armour_attack_quantity", "armour_class": "armour_attack_class",   # (#2860)
+                              "attribute": "object_attributes", "operation": "operation", "quantity": "quantity"},
     MODIFY_VARIABLE_BY_ATTRIBUTE: {"attribute": "object_attributes", "class": "armour_attack_class",   # (#2858)
                                    "operation": "operation", "variable": "variable"},
+    SET_BUILDING_GATHER_POINT: {"selected": lambda e, kinds, techs: list(e.selected_object_ids or [])},
     STORE_KEY_VALUE: {"variable": "variable"},                         # (#2887)
     TRAIN_UNIT: {"quantity": "quantity", "selected": lambda e, kinds, techs: list(e.selected_object_ids or [])},   # (#2772)
 }
+
+
+# The tick lines of "Create Decision" (decision_lines, #2886): the last click of a player goes into #last
+DECISION_TICK = ["execute as @a[scores={aoe_decision=1..}] run scoreboard players operation #last aoe_decision = @s "
+                 "aoe_decision", "scoreboard players set @a[scores={aoe_decision=1..}] aoe_decision 0"]
 
 
 # The handler of each trigger effect: (effect, Effect context) -> commands. A new effect is one line here, in
 # alphabetical order, and its handler function (#2613): no change of trigger_files.
 EFFECTS = {
     ACTIVATE_TRIGGER: switch_lines,
+    ADD_TRAIN_LOCATION: train_location_lines,
     ATTACK_MOVE: order_lines,
     BUILD_OBJECT: build_lines,
+    CHANGE_CIVILIZATION_NAME: civ_name_lines,
     CHANGE_COLOR_MOOD: mood_lines,
     CHANGE_DIPLOMACY: diplomacy_lines,
     CHANGE_OBJECT_ARMOR: attack_lines,
@@ -4083,6 +4219,7 @@ EFFECTS = {
     CLEAR_INSTRUCTIONS: clear_lines,
     CLEAR_TIMER: clear_timer_lines,
     COUNT_UNITS_INTO_VARIABLE: count_lines,
+    CREATE_DECISION: decision_lines,
     CREATE_GARRISONED_OBJECT: garrisoned_lines,
     CREATE_OBJECT: object_lines,
     CREATE_OBJECT_ARMOR: create_lines,
@@ -4109,7 +4246,9 @@ EFFECTS = {
     LOCK_GATE: gate_lines,
     MIRROR_DIPLOMACY: mirror_lines,
     MODIFY_ATTRIBUTE: attribute_lines,
+    MODIFY_ATTRIBUTE_BY_VARIABLE: attribute_by_variable_lines,
     MODIFY_ATTRIBUTE_FOR_CLASS: attribute_lines,
+    MODIFY_OBJECT_ATTRIBUTE: object_attribute_lines,
     MODIFY_RESOURCE: resource_lines,
     MODIFY_RESOURCE_BY_VARIABLE: resource_by_variable_lines,
     MODIFY_VARIABLE_BY_ATTRIBUTE: variable_by_attribute_lines,
@@ -4122,6 +4261,7 @@ EFFECTS = {
     REPLACE_OBJECT: replace_lines,
     RESEARCH_TECHNOLOGY: research_lines,
     SEND_CHAT: chat_lines,
+    SET_BUILDING_GATHER_POINT: rally_lines,
     SET_PLAYER_VISIBILITY: visibility_lines,
     STOP_OBJECT: stop_lines,
     STORE_KEY_VALUE: key_lines,
@@ -4132,8 +4272,10 @@ EFFECTS = {
     UNLOAD: unload_lines,
     UNLOCK_GATE: gate_lines,
 }
-# The context of the effects of trigger t: a handler can add function files (files) and load lines (setup, the keys)
-Effect = namedtuple("Effect", "t T ground players stats mood files setup switch timed clocks", defaults=((), {}, {}))
+# The context of the effects of trigger t: a handler can add function files (files) and load lines (setup, the keys);
+# triggers: all triggers of the scenario (attack_lines)
+Effect = namedtuple("Effect", "t T ground players stats mood files setup switch timed clocks triggers",
+                    defaults=((), {}, {}, ()))
 
 
 # The test of each condition on a score (execute if <test>), one line per condition in alphabetical order (#2613):
@@ -4263,7 +4405,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
                     or c["type"] == TRIGGER_ACTIVE and c.get("trigger") not in switch
                     for c in conds):                                   # unit classes: not yet
             continue
-        ctx = Effect(t, T, ground, players, stats, mood, files, setup, switch, timed, clocks)
+        ctx = Effect(t, T, ground, players, stats, mood, files, setup, switch, timed, clocks, triggers)
         lines = [line for e in t["effects"] if e["type"] in EFFECTS for line in EFFECTS[e["type"]](e, ctx)]
         if not lines:
             continue
@@ -4378,6 +4520,8 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
                  "aoe_vic"):                                                        # the scores of the game program
         if any(f" {word} " in x for x in tick):
             setup[f"scoreboard objectives add {word} dummy"] = None
+    if "scoreboard objectives add aoe_decision trigger" in setup:     # the clicks of "Create Decision" (#2886)
+        tick += DECISION_TICK
     if switch:
         setup["scoreboard objectives add aoe_on dummy"] = None
     load[:0] = setup

@@ -66,6 +66,7 @@ TIMES = "aoe2mc:times"                                                 # "Change
 PLACES = "aoe2mc:places"                                               # "Change Train/Technology Location" (#2864)
 UNSELECTABLE = "aoe2mc.unselectable"                                   # the tag of "Disable Object Selection" (aoe2mc)
 NAMES = "aoe2mc:names"                                                 # the storage of "Change Technology Name" (#2821)
+LOCATIONS = "aoe2mc:locations"                                         # the storage of "Add Train Location" (#2865)
 READS = "aoe2mc:reads"                                                 # "Modify Variable by Attribute" (#2858)
 NEAR = 3                                                               # blocks: a patrol turns back this near its point
 LEVELS = {r["name"]: r["aoe2"] for r in table.load("difficulty.jsonl")}  # "AI difficulty" -> AoE2 DifficultyLevel
@@ -141,6 +142,8 @@ def tick(g):
     costs(g)
     times(g)
     names(g)
+    civ_names(g)
+    locations(g)
     places(g)
     messages = g.data.get("messages", {})
     text = re.sub(r"<[^<>]*>", "", messages.get("instructions", "")).strip()   # AoE2 color tags (book_pages)
@@ -186,25 +189,29 @@ def orders(g):
     gives each tagged ranged unit its new range (ranges) and removes the tag. An "Unload" order (#2773): unload(). A
     "Lock Gate" or "Unlock Gate" order (aoe2mc.gate_lines, #2762) locks or unlocks the gate of its reference: gate(). A
     "Place Foundation" order (aoe2mc.foundation_lines, #2825): foundation(). "Train Unit" and "Initiate Research"
-    (aoe2mc.train_lines, #2772): queues(). A "Build Object" order (aoe2mc.build_lines, #2863): finish()."""
+    (aoe2mc.train_lines, #2772): queues(). A "Build Object" order (aoe2mc.build_lines, #2863): finish(). A "Create
+    Object" order of a building (aoe2mc.object_lines, #2911): foundation(), then the site is complete at once."""
     got = g.command(f"data get storage {ORDERS} list") or ""
     new = re.findall(r'"(patrol|attack_move|range|stance|stop) (aoe_order[\w.]+) ?(-?\d+(?: -?\d+)*)?"', got)
     unloads = re.findall(r'"unload (\d+) (\d+) ?(-?\d+ -?\d+ -?\d+)?"', got)
     gates = re.findall(r'"(lock|unlock) (\d+)"', got)
-    found = re.findall(r'"found (\d+) (\w+) (\d+) (\d+)"', got)
+    found = re.findall(r'"(found|create) (\d+) (\w+) (\d+) (\d+)"', got)
     queued = re.findall(r'"(train|research) (\d+) (\w+) ?(\d+)?"', got)
+    rallies = re.findall(r'"rally (\d+) (\w+) (\d+) (\d+) ?(\d+ \d+ \d+ \d+)?"', got)
     builds = re.findall(r'"build (\d+) (\w+) (-?\d+) (-?\d+) (-?\d+) (-?\d+)"', got)
-    if new or unloads or gates or found or queued or builds:
+    if new or unloads or gates or found or queued or builds or rallies:
         g.command(f"data remove storage {ORDERS} list")
     queues(g, queued)
     for player, ref, where in unloads:
         unload(g, int(player), int(ref), where)
     for order, ref in gates:
         gate(g, order, int(ref))
-    for player, name, x, y in found:
-        foundation(g, int(player), name, (int(x), int(y)))
+    for order, player, name, x, y in found:
+        foundation(g, int(player), name, (int(x), int(y)), done=order == "create")
     for player, name, *area in builds:
         finish(g, int(player), name, [int(v) for v in area])
+    for player, which, x, y, area in rallies:
+        rally(g, int(player), which, (int(x), int(y)), [int(v) for v in area.split()])
     patrols = vars(g).setdefault("patrols", [])
     for order, tag, where in new:
         p, sel = [int(v) for v in where.split()], f"@e[tag={tag}]"
@@ -269,11 +276,12 @@ def selection(g):
         g.choose(g.selected - g.unselectable)
 
 
-def foundation(g, player, name, tile):
+def foundation(g, player, name, tile, done=False):
     """A "Place Foundation" order (aoe2mc.foundation_lines, #2825): the construction site of building name of the
     player (a person or a bot) with the tile in its middle, for free as in AoE2, when the place is free and flat as for
     a click of the player (build.free, shore, water, level). Its villagers build it as any site. A wall, a gate, a
-    building that the game program cannot build or a blocked place: nothing."""
+    building that the game program cannot build or a blocked place: nothing. done: "Create Object" (#2911), the
+    building is complete at once (build.rise with no end of work, as finish)."""
     import build                                                       # build imports gather
     if name not in build.MENU or name in build.WALLS + build.GATES:
         return
@@ -284,7 +292,9 @@ def foundation(g, player, name, tile):
         T = x.map.T
         rect = build.area(x, name, (tile[0] * T + T // 2, tile[1] * T + T // 2))
         if ok(x, rect) and build.level(x, name, rect):
-            build.found(x, name, rect, free=True)
+            site = build.found(x, name, rect, free=True)
+            if done:
+                build.rise(x, site, float("inf"))
 
 
 def finish(g, player, name, area):
@@ -302,6 +312,31 @@ def finish(g, player, name, area):
             tx, ty = (x0 + x1) // 2 // T, (z0 + z1) // 2 // T
             if area[0] < 0 or area[0] <= tx <= area[2] and area[1] <= ty <= area[3]:
                 build.rise(x, site, float("inf"))
+
+
+def rally(g, player, which, tile, area):
+    """A "Set Building Gather Point" order (aoe2mc.rally_lines, #2853): the rally point of the building with the
+    reference which (a number), or of each building of the type which with its middle in the tile area, of the player
+    (a person or a bot) is the block of the tile, as the menu item "Rally point" sets it (train.rally): its new units
+    walk there (train.go). Only a building that trains units (train.units_of) has one. A bot gets no marker: AoE2 shows
+    the flag to its owner only."""
+    T = g.map.T
+    cell = tuple(int((v + 0.5) * T) for v in tile)
+    inside = lambda f: area and all(a * T <= (lo + hi) / 2 < (b + 1) * T for a, b, lo, hi in
+                                    ((area[0], area[2], f[0], f[2]), (area[1], area[3], f[1], f[3])))
+    for x in [g, *(s.g for s in g.bots)]:
+        if x.player != player or "objects" not in x.data:
+            continue
+        homes = train.homes(x)
+        for o in x.data["objects"]:
+            rect = tuple(o["footprint"][i] for i in (0, 2, 1, 3)) if o.get("footprint") else None
+            if rect not in homes or not train.units_of(homes[rect]) or \
+                    not (o.get("ref") == int(which) if which.isdigit() else o["name"] == which and inside(o["footprint"])):
+                continue
+            if x is g:
+                train.rally(x, rect, cell)
+            else:
+                x.rally[rect] = cell, None
 
 
 def unload(g, player, ref, where):
@@ -387,6 +422,34 @@ def names(g):
         player, name, text = found[:3] if found[0] else found[3:]
         if int(player) in sides:
             vars(sides[int(player)]).setdefault("trigger_names", {})[name] = re.sub(r"\\(.)", r"\1", text)
+
+
+def civ_names(g):
+    """The new civilization names of "Change Civilization Name" (aoe2mc.civ_name_lines, #2905): read and empty the list
+    "civs" of the data storage NAMES, and keep each name in trigger_civs {player: name} of each side (the people and
+    the bots): all players see it next to the player name (lobby.name, diplomacy.name). A later line wins."""
+    got = g.command(f"data get storage {NAMES} civs") or ""
+    new = re.findall(r'"(\d+) ((?:[^"\\]|\\.)*)"|\'(\d+) ((?:[^\'\\]|\\.)*)\'', got)
+    if new:
+        g.command(f"data remove storage {NAMES} civs")
+    for found in new:
+        player, text = found[:2] if found[0] else found[2:]
+        for x in [g, *(s.g for s in g.bots)]:
+            vars(x).setdefault("trigger_civs", {})[player] = re.sub(r"\\(.)", r"\1", text)
+
+
+def locations(g):
+    """The new train locations of "Add Train Location" (aoe2mc.train_location_lines, #2865): read and empty the list of
+    the data storage LOCATIONS, and keep each one in trigger_trains {building: {unit: (button, seconds)}} of the side
+    of its player (the people and the bots): the menu of that building offers the unit (train.trains, train.placed).
+    The unit stays in its first building."""
+    new = re.findall(r'"(\d+) (\w+) (\w+) (\d+) (\d+)"', g.command(f"data get storage {LOCATIONS} list") or "")
+    if new:
+        g.command(f"data remove storage {LOCATIONS} list")
+    sides = {x.player: x for x in [g, *(s.g for s in g.bots)]}
+    for player, unit, building, button, time in new:
+        if int(player) in sides:
+            vars(sides[int(player)]).setdefault("trigger_trains", {}).setdefault(building, {})[unit] = int(button), int(time)
 
 
 def attributes(g):
