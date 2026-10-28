@@ -126,6 +126,7 @@ def tick(g):
     gather.Gather.run calls it in the scenario mode. Also the technologies of the triggers (research, #2577)."""
     research(g)
     garrisons(g)
+    fallen(g)
     tech_states(g)
     actions(g)
     victory_timers(g)
@@ -497,12 +498,16 @@ def menus(g):
     the list of the data storage MENUS, and keep each item in trigger_menus of the side of its player (True: on). An
     item that is off is not in the menus (civs.missing); an item that is on is there also when the civilization does
     not have it or the age is not reached (train.unlocked): as in AoE2, the age technology only enables its items."""
-    new = re.findall(r'"(\d+) (\w+) (on|off)"', g.command(f"data get storage {MENUS} list") or "")
+    new = re.findall(r'"(\d+) (\w+) (on|off|stack \d+)"', g.command(f"data get storage {MENUS} list") or "")
     if new:
         g.command(f"data remove storage {MENUS} list")
     sides = {x.player: x for x in [g, *(s.g for s in g.bots)]}
     for player, name, on in new:
-        if int(player) in sides:
+        if int(player) not in sides:
+            continue
+        if on.startswith("stack"):                                 # "Enable/Disable Technology Stacking" (#2866)
+            vars(sides[int(player)]).setdefault("trigger_stacks", {})[name] = int(on.split()[1])
+        else:
             vars(sides[int(player)]).setdefault("trigger_menus", {})[name] = on == "on"
 
 
@@ -603,6 +608,24 @@ def garrisons(g):
             if o.get("ref") is not None and sent.get(o["ref"], 0) != n:   # the objective starts with no score: 0
                 g.command(f"scoreboard players set #g{o['ref']} aoe_gar {n}")
                 sent[o["ref"]] = n
+
+
+def fallen(g):
+    """Once per game second: the score #f<ref> of aoe_fallen is 1 when a converted building of the triggers
+    (aoe2mc.json "fallen", #2910) has fallen: its target entity is gone (combat.target_uuid). Set once per building."""
+    import combat                                                  # combat imports gather
+    if not g.data.get("fallen") or g.clock() < vars(g).get("fallen_at", 0.0):
+        return
+    g.fallen_at = g.clock() + 1.0
+    sent = vars(g).setdefault("fallen_sent", set())
+    objects = {o["ref"]: o for o in g.data.get("objects", ()) if o.get("ref") is not None and "footprint" in o}
+    for ref in g.data["fallen"]:
+        o = objects.get(ref)
+        if ref in sent or o is None or o["name"] not in combat.BUILDINGS:   # no target entity: it does not fall
+            continue
+        if "passed" not in g.command(f"execute if entity {combat.target_uuid(o['footprint'])}"):
+            g.command(f"scoreboard players set #f{ref} aoe_fallen 1")
+            sent.add(ref)
 
 
 def tech_states(g):

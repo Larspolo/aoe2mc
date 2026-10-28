@@ -29,7 +29,7 @@ def test_disable_tags_the_units_in_the_area_and_enable_removes_the_tag():
 
 
 def test_gaia_units_and_no_area():
-    assert "type=!player" in lines([effect(aoe2mc.DISABLE_OBJECT_SELECTION, player=0)])[0]
+    assert "tag=aoe2mc.p0," in lines([effect(aoe2mc.DISABLE_OBJECT_SELECTION, player=0)])[0]   # #2916
     assert lines([effect(aoe2mc.DISABLE_OBJECT_SELECTION, area=(-1, -1, -1, -1))]) == []
 
 

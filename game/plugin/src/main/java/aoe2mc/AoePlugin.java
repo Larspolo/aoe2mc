@@ -2303,13 +2303,14 @@ public final class AoePlugin extends JavaPlugin implements Listener {
 
     // The team name, else the player tag aoe2mc.pN: the pulse of the datapack puts a unit in its team only when its
     // chunk is loaded, and two units without a team are not enemies (#986: idle soldiers killed their neighbours).
+    // Gaia (the tag aoe2mc.p0 of the triggers, #2916) has no side.
     static String side(Entity e) {
         Team t = Bukkit.getScoreboardManager().getMainScoreboard().getEntityTeam(e);
         if (t != null) {
             return t.getName();
         }
         for (String tag : e.getScoreboardTags()) {
-            if (tag.matches("aoe2mc\\.p\\d+")) {
+            if (tag.matches("aoe2mc\\.p[1-9]\\d*")) {
                 return tag.substring(7);
             }
         }

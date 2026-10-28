@@ -32,7 +32,7 @@ MONK = ("carrier_at", "converting", "faith", "fetching", "heal_time", "monk_at",
         "relic_time", "relics")                                        # game/monk.py: the relics and monk orders (#2412)
 ORDERS = ("patrols", "trigger_attributes", "trigger_costs",            # scenario.py: the patrols (#2647), attributes (#2763),
           "trigger_menus", "trigger_names",                            # costs (#2776), menu items (#2775), names (#2821)
-          "trigger_places", "trigger_times",                           # the menu places (#2864), times (#2820),
+          "trigger_places", "trigger_stacks", "trigger_times",         # the menu places (#2864), stacking (#2866), times (#2820),
           "trigger_trains", "trigger_civs")                            # train locations (#2865), civilization names (#2905)
 ROUTES = ("trade", "trebs")                                            # trade.py, trebuchet.py: as OPTIONAL (#2413)
 CHEATS = (                                                             # game/cheats.py: the cheats that the player
@@ -153,6 +153,8 @@ NOT_SAVED = (                                                          # the fie
     "defender",                                                        # defend_wonder.setup makes it again
     "enemies",                                                         # the enemy units of aoe2mc.json: a dead one has no position
     "explore_at",                                                      # score.py: the next check time
+    "fallen_at",                                                       # scenario.fallen: the next check time
+    "fallen_sent",                                                     # scenario.fallen: a load sets the same score again
     "flares",                                                          # flare.py: the flares of a replay
     "fog",                                                             # fog.py: the next tick hides the units again; explored()
     "garrison_sent",                                                   # scenario.garrisons: a load sends them again
