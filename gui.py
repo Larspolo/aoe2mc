@@ -109,6 +109,11 @@ def javas():
             + sorted(glob.glob(os.path.join(cache, "jdk-*", "*", "bin", "java"))) if j]
 
 
+def needs_jdk(server):
+    """True when the game program builds the Paper plugin: only a checkout does, an app bundle brings the jar (#3050)."""
+    return server != "vanilla" and not getattr(sys, "frozen", False)
+
+
 def java_problem(version="26.3", jdk=True, system=None, found=None, run=subprocess.run, exists=os.path.exists):
     """None when game/run.py finds the Java of the Minecraft version (and javac for the Paper plugin, jdk), else the
     text for the user with the install step of the system (#1776)."""
@@ -363,7 +368,7 @@ def window():
         if o["bot"] and str(o["people"]).strip() not in ("", "1"):
             messagebox.showerror("aoe2mc", "The bot plays player 2: use it with one person only.")
             return
-        if problem := java_problem(jdk=o["server"] != "vanilla"):
+        if problem := java_problem(jdk=needs_jdk(o["server"])):
             messagebox.showerror("aoe2mc", problem)
             return
         play.state(["disabled"])
