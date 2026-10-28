@@ -1505,6 +1505,8 @@ class Gather:
             spoils.loot(self, uuid)                                    # Danes (#2271)
             score.razed(self, uuid)                                    # the military score (#2355)
             x0, y0, z0, x1, _, z1 = self.forts.pop(uuid)
+            if self.paper:                                             # its square leaves the minimap (#2582)
+                self.command(f"aoe minimap unbuild {x0} {z0}")
             for o in build.sides(self):                                # the other sides attack it no more (#1819)
                 o.forts.pop(uuid, None)
             for x in range(x0, x1 + 1):
