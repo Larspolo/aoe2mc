@@ -273,6 +273,7 @@ of `tools/bootstrap.py` (they copy this repository) and the tests that need a sp
 | `tests/test_health_reviews.py` | generic | None (a test of `tools/health.py`). |
 | `tests/test_health_takeovers.py` | generic | None (a test of `tools/health.py`). |
 | `tests/test_health_misses.py` | generic | None (a test of `tools/health.py`). |
+| `tests/test_health_until_pages.py` | generic | None (a test of `tools/health.py`, #3072). |
 | `tests/test_operator.py` | generic | None (a test of `tools/operator_check.py`). |
 | `tests/test_owner_tasks.py` | generic | None (a test of `tools/owner_tasks.py`). |
 | `tests/test_owner_tasks_close.py` | generic | None (a test of `tools/owner_tasks.py`). |
