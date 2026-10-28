@@ -117,7 +117,7 @@ The workflow `claims.yml` deletes the refs when the ticket closes.
 3. For a bug, write a failing test first. Then change the code. Keep the diff small and in the existing style.
    Put new tests in a new file `tests/test_<topic>.py`: parallel tickets that append to the end of one test file
    conflict (66 merge conflicts in 6 hours on 2026-10-25).
-4. Verify with the `verify` skill. The level depends on the change.
+4. Verify with the `verify` skill. The level depends on the change. The full suite once, before the push (#3460).
 5. Improve the process (step 9, `process.md`) now, so that the changes go into the same PR.
 6. Stage only the files of the ticket: read `git status --short` first (no `logs/`, worlds or images; not
    `docs/coverage.md` or a `MAX` change in `tests/test_coverage.py`: `coverage.yml` does it on main).
