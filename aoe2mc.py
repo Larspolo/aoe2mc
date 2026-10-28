@@ -417,7 +417,9 @@ def read_scenario(path):
                                             area=[e.area_x1, e.area_y1, e.area_x2, e.area_y2],
                                             **({"mood": ColorMood(e.color_mood).name}     # "Change Color Mood" (#1876)
                                                if e.effect_type == CHANGE_COLOR_MOOD and
-                                               getattr(e, "color_mood", None) in set(ColorMood) else {}))
+                                               getattr(e, "color_mood", None) in set(ColorMood) else {}),
+                                            **({"trigger": e.trigger_id}       # "(De)activate Trigger" (#2575)
+                                               if e.effect_type in (ACTIVATE_TRIGGER, DEACTIVATE_TRIGGER) else {}))
                                        for e in t.effects])
                          for t in scn.trigger_manager.triggers]
     mood = mm.map_color_mood                 # a ColorMood, or a string that the parser does not know (#1594)
@@ -2686,6 +2688,7 @@ def team_lines(objects, players):
 
 TIMER, SEND_CHAT, DISPLAY_INSTRUCTIONS, IN_AREA = 10, 3, 20, 5   # AoE2 condition and effect IDs (AoE2ScenarioParser)
 CREATE_OBJECT, REMOVE_OBJECT, CHANGE_COLOR_MOOD = 11, 15, 72
+ACTIVATE_TRIGGER, DEACTIVATE_TRIGGER = 8, 9
 
 
 def turn_area(area, size, k):
@@ -2760,6 +2763,42 @@ def mood_lines(e):
     return [f"time set {MOODS[e['mood']]}", f"weather {'rain' if e['mood'] in RAIN else 'clear'}"]
 
 
+def trigger_lines(t, live, timer, T, ground, players, stats, mood):
+    """The commands of the effects of trigger t (trigger_files). "Activate Trigger" and "Deactivate Trigger" set the
+    score #N of aoe_on of a trigger in live, and start or clear its timer (#2575)."""
+    lines = []
+    for e in t["effects"]:
+        if e["type"] in (CREATE_OBJECT, REMOVE_OBJECT):
+            lines += object_lines(t, e, T, ground, players, stats)
+            continue
+        if e["type"] == CHANGE_COLOR_MOOD:
+            lines += mood_lines(e) if mood else []
+            continue
+        if e["type"] in (ACTIVATE_TRIGGER, DEACTIVATE_TRIGGER):
+            k, up = e.get("trigger"), e["type"] == ACTIVATE_TRIGGER
+            if k not in live:
+                continue
+            fn = f"aoe2mc:trigger/{k}"
+            if up and k in timer:            # an active timer runs on: AoE2 counts from the activation
+                lines.append(f"execute unless score #{k} aoe_on matches 1 run schedule function {fn} {timer[k]}t replace")
+            elif up:
+                lines.append(f"scoreboard players reset #{k} aoe_trig")        # an area trigger can fire again
+            elif k in timer:
+                lines.append(f"schedule clear {fn}")
+            lines.append(f"scoreboard players set #{k} aoe_on {int(up)}")
+            continue
+        msg = re.sub(r"<[^<>]*>", "", e["message"]).replace("\r", "").strip()   # AoE2 color tags
+        if not msg:
+            continue
+        text = json.dumps({"text": msg}, ensure_ascii=False)
+        if e["type"] == SEND_CHAT:
+            lines.append(f"tellraw @a {text}")
+        elif e["type"] == DISPLAY_INSTRUCTIONS:
+            ticks = 20 * (e["time"] if e["time"] > 0 else 10)          # AoE2 default: 10 s
+            lines += [f"title @a times 10 {ticks} 20", f"title @a subtitle {text}", 'title @a title ""']
+    return lines
+
+
 def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=True):
     """(load lines, files) for the triggers that only have timer conditions (#648) or only "Objects in Area"
     conditions (#649): one function per trigger. The load function schedules a timer trigger at the AoE2 time (all
@@ -2767,38 +2806,37 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
     areas; the score #N of aoe_trig marks a fired trigger, so it fires once. A looping area trigger fires again after
     the units leave an area. "Send Chat" is a tellraw, "Display Instructions" a subtitle for its display time;
     "Create Object" and "Remove Object": object_lines (#656). "Change Color Mood": mood_lines (#1876), only with mood.
-    A disabled trigger does not run."""
+    A disabled trigger runs only after an "Activate Trigger" (#2575): the score #N of aoe_on is 1 while a trigger that
+    such an effect names is on. Its timer counts from the activation; "Deactivate Trigger" clears it."""
     load, files, tick = [], {}, []
     stats = Counter() if stats is None else stats
     ground = np.zeros((0, 0), np.int16) if ground is None else ground
+    switch = {e["trigger"] for t in triggers for e in t["effects"] if e.get("trigger") is not None}
+    on = {e.get("trigger") for t in triggers for e in t["effects"] if e["type"] == ACTIVATE_TRIGGER}
+    known = {t["id"]: t for t in triggers if (t["enabled"] or t["id"] in on) and t["conditions"] and
+             {(c["type"], c["inverted"]) for c in t["conditions"]} in ({(TIMER, False)}, {(IN_AREA, False)}) and
+             not any(c.get("group", -1) >= 0 or c.get("class", -1) >= 0 for c in t["conditions"])}  # classes: not yet
+    timer = {n: max(20 * max(c["timer"] for c in t["conditions"]), 1)       # a schedule needs at least 1 tick
+             for n, t in known.items() if t["conditions"][0]["type"] == TIMER}
+    live = set(known)
+    while True:                      # a trigger with no lines gives no file: no effect may name its function
+        body = {n: trigger_lines(known[n], live, timer, T, ground, players, Counter(), mood) for n in live}
+        if all(body.values()):
+            break
+        live = {n for n in live if body[n]}
+    body = {n: trigger_lines(known[n], live, timer, T, ground, players, stats, mood) for n in known}  # count once
+    if switch & live:
+        load.append("scoreboard objectives add aoe_on dummy")
     for t in triggers:
-        conds = t["conditions"]
-        kinds = {(c["type"], c["inverted"]) for c in conds}
-        if not t["enabled"] or not conds or kinds not in ({(TIMER, False)}, {(IN_AREA, False)}) or \
-                any(c.get("group", -1) >= 0 or c.get("class", -1) >= 0 for c in conds):   # unit classes: not yet
+        n = t["id"]
+        if n not in live:
             continue
-        lines = []
-        for e in t["effects"]:
-            if e["type"] in (CREATE_OBJECT, REMOVE_OBJECT):
-                lines += object_lines(t, e, T, ground, players, stats)
-                continue
-            if e["type"] == CHANGE_COLOR_MOOD:
-                lines += mood_lines(e) if mood else []
-                continue
-            msg = re.sub(r"<[^<>]*>", "", e["message"]).replace("\r", "").strip()   # AoE2 color tags
-            if not msg:
-                continue
-            text = json.dumps({"text": msg}, ensure_ascii=False)
-            if e["type"] == SEND_CHAT:
-                lines.append(f"tellraw @a {text}")
-            elif e["type"] == DISPLAY_INSTRUCTIONS:
-                ticks = 20 * (e["time"] if e["time"] > 0 else 10)          # AoE2 default: 10 s
-                lines += [f"title @a times 10 {ticks} 20", f"title @a subtitle {text}", 'title @a title ""']
-        if not lines:
-            continue
-        fn, n = f"aoe2mc:trigger/{t['id']}", t["id"]
+        conds, lines, fn = t["conditions"], body[n], f"aoe2mc:trigger/{n}"
+        if n in switch:
+            load += [f"scoreboard players set #{n} aoe_on 1"] * t["enabled"]
+            lines += [f"scoreboard players set #{n} aoe_on 0"] * (not t["looping"])   # it fired: off until activated
         if conds[0]["type"] == IN_AREA:
-            tests, unless = [], []
+            tests, unless = [f"if score #{n} aoe_on matches 1"] * (n in switch), []
             for i, c in enumerate(conds):
                 sel, q = area_selector(c, T), max(c["quantity"], 1)
                 if q == 1:
@@ -2814,10 +2852,9 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
             lines.append(f"scoreboard players set #{n} aoe_trig 1")
             files[f"data/aoe2mc/function/trigger/{n}.mcfunction"] = "\n".join(lines) + "\n"
             continue
-        ticks = max(20 * max(c["timer"] for c in conds), 1)          # a schedule needs at least 1 tick
-        run = f"schedule function {fn} {ticks}t replace"
+        run = f"schedule function {fn} {timer[n]}t replace"
         files[f"data/aoe2mc/function/trigger/{n}.mcfunction"] = "\n".join(lines + [run] * t["looping"]) + "\n"
-        load.append(run)
+        load += [run] * t["enabled"]
     if tick:
         load.insert(0, "scoreboard objectives add aoe_trig dummy")
         files["data/minecraft/tags/function/tick.json"] = {"values": ["aoe2mc:tick"]}
