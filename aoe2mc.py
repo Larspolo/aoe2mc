@@ -470,6 +470,9 @@ def read_scenario(path):
                                                if e.effect_type == MIRROR_DIPLOMACY else {}),
                                             **({"target": e.target_player, "visibility": e.visibility_state}   # (#2774)
                                                if e.effect_type == SET_PLAYER_VISIBILITY else {}),
+                                            **({"target": e.target_player, "visibility": e.visibility_state,   # #2862
+                                                "selected": list(e.selected_object_ids or [])}
+                                               if e.effect_type == CHANGE_OBJECT_VISIBILITY else {}),
                                             **({"target": e.target_player, "quantity": e.quantity,   # (#2576)
                                                 "resource": e.tribute_list} if e.effect_type == TRIBUTE else {}),
                                             **({"operation": e.operation, "quantity": e.quantity,
@@ -2140,6 +2143,7 @@ def free_carpets(E, cols):
 def seat_count(ship):
     return 1 if "_chest_" in str(ship["id"]) else 2      # a chest boat has one seat
 CHAIN = 4                   # units per boat seat: each garrisoned unit rides the unit below it (#382)
+NAME_HIDDEN = "aoe2mc.name_hidden"  # entity tag of a unit whose name tag a trigger hid with the unit (#2862)
 GARRISONED = "aoe2mc.garrisoned"    # entity tag of a unit inside its building (#807; the game program: #808)
 NO_TARGET = "aoe2mc.notarget"       # entity tag: no unit or tower chooses it as a target (AoePlugin calm, #2826)
 MADE_INSIDE = "aoe2mc.made_inside"  # entity tag of a unit that a trigger made inside a building: the game program adds
@@ -2823,6 +2827,7 @@ CHANGE_OBJECT_NAME = 26                                            # "Change Obj
 CHANGE_OBJECT_PLAYER_COLOR = 58                                    # "Change Object Player Color" (#2824)
 CHANGE_OBJECT_SPEED = 33                                           # "Change Object Speed" (#2694)
 CHANGE_OBJECT_STANCE = 36                                          # "Change Object Stance" (#2705)
+CHANGE_OBJECT_VISIBILITY = 107                                     # "Change Object Visibility" (#2862)
 CHANGE_OWNERSHIP = 18
 CHANGE_PLAYER_COLOR = 89                                           # "Change Player Color" (#2712)
 CHANGE_PLAYER_NAME = 45                                            # "Change Player Name" (#2711)
@@ -2835,6 +2840,7 @@ CHANGE_VIEW = 16                                                   # "Change Vie
 CLEAR_INSTRUCTIONS = 21                                            # "Clear Instructions" (#2609)
 CLEAR_TIMER = 57                                                   # "Clear Timer" (#2696)
 COMPARE_VARIABLES = 78                                             # the condition "Compare Variables" (#2698)
+COUNT_UNITS_INTO_VARIABLE = 101                                    # "Count Units into Variable" (#2697)
 CREATE_GARRISONED_OBJECT = 49                                      # "Create Garrisoned Object" (#2764)
 CREATE_OBJECT = 11
 DAMAGE_OBJECT = 24                                                 # "Damage Object" (#2571)
@@ -2858,6 +2864,7 @@ KILL_OBJECT = 14
 LOCK_GATE = 7                                                      # "Lock Gate", "Unlock Gate" (#2762)
 MIRROR_DIPLOMACY = 109                                             # "Mirror Diplomacy" (#2822)
 MODIFY_ATTRIBUTE = 51                                              # "Modify Attribute" (#2763)
+MODIFY_ATTRIBUTE_FOR_CLASS = 104                                   # "Modify Attribute for Class" (#2859)
 MODIFY_RESOURCE = 52                                               # "Modify Resource" (#2576)
 MODIFY_RESOURCE_BY_VARIABLE = 53                                   # "Modify Resource by Variable" (#2768)
 MODIFY_VARIABLE_BY_RESOURCE = 86                                   # "Modify Variable by Resource" (#2823)
@@ -3395,6 +3402,18 @@ def variable_by_variable_lines(e, c):
     return [f"scoreboard players operation #v{a} aoe_var {('', '+', '-', '*', '/')[op - 1]}= #v{b} aoe_var"]
 
 
+def count_lines(e, c):
+    """The command of "Count Units into Variable" (#2697): the score #vN of aoe_var (N: variable2) is the number of
+    units of the player and type in the area (effect_units; no area: the whole map). A building has no entity: no line."""
+    v = e.get("variable2", -1)
+    found = effect_units(e, c.T) if v >= 0 else None
+    if found is None:
+        c.stats["count units into variable (not supported)"] += 1
+        return []
+    c.stats["count units into variable"] += 1
+    return [f"execute store result score #v{v} aoe_var if entity {found[0]}"]
+
+
 def variable_range(c):
     """The `matches` range of the comparison of a "Variable Value" condition (#2611): Equal, Less, Larger,
     Less or Equal, Larger or Equal."""
@@ -3484,6 +3503,30 @@ def attackable_lines(e, c):
     return [f"execute as {unit_selector(e, c.T)}{guard} run data merge entity @s {{Invulnerable:{int(disable)}b}}"]
 
 
+def object_visibility_lines(e, c):
+    """The commands of "Change Object Visibility" (#2862): the selected units and the units of the player in the area,
+    and the mounts of the riders, get the effect invisibility with no particles (the entity tag Invisible is only for
+    armor stands), and a shown name tag hides with them. "Explored" hides them too: AoE2 shows no units in the fog.
+    "Visible" clears the effect and shows the name tag again. Minecraft cannot hide an entity from one player only:
+    all players see the change, whatever the target player."""
+    if e.get("visibility") not in (0, 1, 2):
+        return []
+    sels = [f"@e[tag=aoe2mc.r{r}]" for r in e.get("selected", ())] + \
+        [unit_selector(e, c.T)] * (min(e.get("area", [-1])) >= 0)
+    c.stats["change object visibility"] += bool(sels)
+    if e["visibility"] == 0:
+        return [line for at in sels for line in (
+            f"execute as {at} on vehicle run effect clear @s minecraft:invisibility",
+            f"execute as {at} run effect clear @s minecraft:invisibility",
+            f"execute as {at[:-1]},tag={NAME_HIDDEN}] run data merge entity @s {{CustomNameVisible:1b}}",
+            f"tag {at[:-1]},tag={NAME_HIDDEN}] remove {NAME_HIDDEN}")]
+    return [line for at in sels for line in (
+        f"execute as {at} on vehicle run effect give @s minecraft:invisibility infinite 0 true",
+        f"execute as {at} run effect give @s minecraft:invisibility infinite 0 true",
+        f"tag {at[:-1]},nbt={{CustomNameVisible:1b}}] add {NAME_HIDDEN}",
+        f"execute as {at} run data merge entity @s {{CustomNameVisible:0b}}")]
+
+
 def targeting_lines(e, c):
     """The command of "Disable Unit Targeting" and "Enable Unit Targeting" (#2826): the tag NO_TARGET of the units of
     the player in the area. The game program chooses no tagged unit as a target; an attack order still hits it (AoE2)."""
@@ -3543,8 +3586,12 @@ def attribute_lines(e, c):
     """The command of "Modify Attribute" (#2763): the change "<player> <name> <Stats field> <operation> <quantity>"
     goes into the list of the data storage aoe2mc:attributes. A converted world has no combat values: the scenario mode
     of the game program (game/scenario.py attributes) empties the list and changes the values of the unit type of the
-    player (train.stats). An attribute outside STAT_ATTRIBUTES and CLASS_ATTRIBUTES: not supported in the stats."""
+    player (train.stats). An attribute outside STAT_ATTRIBUTES and CLASS_ATTRIBUTES: not supported in the stats.
+    "Modify Attribute for Class" (#2859): one line for the class, the name "@<ObjectClass name>" (train.applies)."""
+    from AoE2ScenarioParser.datasets.trigger_lists import ObjectClass
     _, name = e.get("object") or (None, None)
+    if e["type"] == MODIFY_ATTRIBUTE_FOR_CLASS:                        # also the units that the player trains later
+        name = f"@{ObjectClass(e['group']).name.lower()}" if e.get("group") in set(ObjectClass) else None
     a = e.get("attribute")
     field = STAT_ATTRIBUTES.get(a) or CLASS_ATTRIBUTES.get((a, e.get("class")))
     q = e.get("aa") if a in (8, 9) else e.get("quantity")
@@ -3848,8 +3895,11 @@ EFFECT_KEYS = {
         e.object_list_unit_id_2), "technology": lambda e, kinds, techs: techs.get(e.technology, str(e.technology))},
     CHANGE_TRAIN_LOCATION: {"button": "button_location",                                                       # #2864
                             "object2": lambda e, kinds, techs: kinds.get(e.object_list_unit_id_2)},
+    COUNT_UNITS_INTO_VARIABLE: {"variable2": "variable2"},   # (#2697)
     INITIATE_RESEARCH: {"selected": lambda e, kinds, techs: list(e.selected_object_ids or []),   # (#2772)
                         "technology": lambda e, kinds, techs: techs.get(e.technology, str(e.technology))},
+    MODIFY_ATTRIBUTE_FOR_CLASS: {"attribute": "object_attributes", "operation": "operation", "quantity": "quantity",
+                                 "class": "armour_attack_class", "aa": "armour_attack_quantity", "group": "object_group2"},
     TRAIN_UNIT: {"quantity": "quantity", "selected": lambda e, kinds, techs: list(e.selected_object_ids or [])},   # (#2772)
 }
 
@@ -3869,6 +3919,7 @@ EFFECTS = {
     CHANGE_OBJECT_PLAYER_COLOR: object_color_lines,
     CHANGE_OBJECT_SPEED: speed_lines,
     CHANGE_OBJECT_STANCE: stance_lines,
+    CHANGE_OBJECT_VISIBILITY: object_visibility_lines,
     CHANGE_OWNERSHIP: owner_lines,
     CHANGE_PLAYER_COLOR: color_lines,
     CHANGE_PLAYER_NAME: player_name_lines,
@@ -3880,6 +3931,7 @@ EFFECTS = {
     CHANGE_VIEW: view_lines,
     CLEAR_INSTRUCTIONS: clear_lines,
     CLEAR_TIMER: clear_timer_lines,
+    COUNT_UNITS_INTO_VARIABLE: count_lines,
     CREATE_GARRISONED_OBJECT: garrisoned_lines,
     CREATE_OBJECT: object_lines,
     DAMAGE_OBJECT: damage_lines,
@@ -3900,6 +3952,7 @@ EFFECTS = {
     LOCK_GATE: gate_lines,
     MIRROR_DIPLOMACY: mirror_lines,
     MODIFY_ATTRIBUTE: attribute_lines,
+    MODIFY_ATTRIBUTE_FOR_CLASS: attribute_lines,
     MODIFY_RESOURCE: resource_lines,
     MODIFY_RESOURCE_BY_VARIABLE: resource_by_variable_lines,
     MODIFY_VARIABLE_BY_RESOURCE: variable_by_resource_lines,
@@ -4150,8 +4203,8 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
         load += [run] * t["enabled"]
     names = sorted({f"#v{x[k]}" for t in triggers for x in t["conditions"] + t["effects"]
                     for k in ("variable", "variable2")   # "Modify Variable by Variable" has two (#2713)
-                    if x["type"] in (VARIABLE_VALUE, CHANGE_VARIABLE, COMPARE_VARIABLES, MODIFY_VARIABLE_BY_RESOURCE,
-                                     MODIFY_VARIABLE_BY_VARIABLE) and x.get(k, -1) >= 0})
+                    if x["type"] in (VARIABLE_VALUE, CHANGE_VARIABLE, COMPARE_VARIABLES, COUNT_UNITS_INTO_VARIABLE,
+                                     MODIFY_VARIABLE_BY_RESOURCE, MODIFY_VARIABLE_BY_VARIABLE) and x.get(k, -1) >= 0})
     if names:
         load[:0] = ["scoreboard objectives add aoe_var dummy"] + \
             [f"scoreboard players add {v} aoe_var 0" for v in names]   # AoE2 variables start at 0

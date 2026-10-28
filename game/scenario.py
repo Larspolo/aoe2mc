@@ -308,11 +308,12 @@ def names(g):
 
 def attributes(g):
     """The changes of "Modify Attribute" (aoe2mc.attribute_lines, #2763): read and empty the list of the data storage
-    ATTRIBUTES, and add each change to trigger_attributes of the side of its player (the people and the bots):
+    ATTRIBUTES, and add each change to trigger_attributes of the side of its player (the people and the bots; a
+    unit type or a class "@<class>" of "Modify Attribute for Class", train.applies, #2859):
     train.stats applies them in order, so the units that the player trains later get the new values. The units of the
     type that exist get the new values at once (the same commands as a technology, train.research)."""
     import civs, combat                                                # combat -> gather -> scenario
-    new = re.findall(r'"(\d+) (\w+) (\w+) ([1-5]) (-?[\d.]+)"', g.command(f"data get storage {ATTRIBUTES} list") or "")
+    new = re.findall(r'"(\d+) (@?\w+) (\w+) ([1-5]) (-?[\d.]+)"', g.command(f"data get storage {ATTRIBUTES} list") or "")
     if new:
         g.command(f"data remove storage {ATTRIBUTES} list")
     sides = {x.player: x for x in [g, *(s.g for s in g.bots)]}
@@ -320,11 +321,12 @@ def attributes(g):
         if (x := sides.get(int(player))) is None or field not in combat.Stats._fields:
             continue
         vars(x).setdefault("trigger_attributes", []).append([name, field, int(op), float(q)])
-        s = train.stats(x, name)
-        for uuid in [u["uuid"] for u in x.units if "uuid" in u and u["name"] == name] + \
-                [u for u, n in x.soldiers.items() if n == name]:
-            x.command(combat.stats_command(uuid, name, s, civs.taken(x, name), civs.friendly(x, name)))
-            if field == "range" and (cmd := combat.range_command(uuid, name, x.map.T, s=s)):
+        for uuid, n in [(u["uuid"], u["name"]) for u in x.units if "uuid" in u] + list(x.soldiers.items()):
+            if not train.applies(name, n):                             # a type, or a class (#2859)
+                continue
+            s = train.stats(x, n)
+            x.command(combat.stats_command(uuid, n, s, civs.taken(x, n), civs.friendly(x, n)))
+            if field == "range" and (cmd := combat.range_command(uuid, n, x.map.T, s=s)):
                 x.command(cmd)
 
 
