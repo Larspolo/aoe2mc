@@ -143,9 +143,14 @@ def check_replay(row):                                     # a walk speed (a nam
     assert len(row) == 2 and row.get("age", 1) in (1, 2, 3) and row.get("walk", 1) > 0, row["name"]
 
 
+def check_taunts(row):                                     # a taunt: its number and AoE2 text (#2234)
+    form(row, {"name": str, "text": str})
+    assert row["name"].isdigit() and row["name"] == str(int(row["name"])) and row["text"], row["name"]
+
+
 CHECKS = {"build.jsonl": check_build, "buildings.jsonl": check_buildings, "cheats.jsonl": check_cheats,
           "civs.jsonl": check_civs, "gather.jsonl": check_gather, "monk.jsonl": check_monk,
-          "replay.jsonl": check_replay, "train.jsonl": check_train, "units.jsonl": check_units}
+          "replay.jsonl": check_replay, "taunts.jsonl": check_taunts, "train.jsonl": check_train, "units.jsonl": check_units}
 
 
 # The keys with two types by design: an "effect" is data, a list of data (#2155) or the name of a function of
