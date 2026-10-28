@@ -15,7 +15,7 @@ the claim, remove `lane:haiku`, comment why in one line, and take the next one. 
 
 ## Deep lane (step 5)
 
-The main runs work at low effort (owner, 2026-10-28). The scheduled task "aoe2mc autopilot deep" runs at the default
+The main runs work at low effort (owner, 2026-10-28). The scheduled task "aoe2mc autopilot deep" runs at high
 effort for the work where the thinking matters more than the typing (`ticket` skill, "Model lanes"). When the argument
 names `lane deep`, run `git config aoe2mc.lane deep` first (the claims and the report then name the lane). Pick with
 `python3 tools/cycle_start.py --lane deep`. A deep run does the epic check and the queue refill of step 5, the roadmap
