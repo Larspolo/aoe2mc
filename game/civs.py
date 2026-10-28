@@ -81,7 +81,7 @@ GROUPS = {g: (lambda f, g: lambda n, s: g in TAGS.get(n, ()) or f(n, s))(RULES.g
 # that few civilizations have are in ONLY, not here.
 # "units": the bonuses of the land units (#1090): [group of GROUPS, value, change in the Dark, Feudal, Castle and
 # Imperial Age]; value is a field of combat.Stats, "speed" (the walk speed) or "bonus:CLASS" (the attack against a
-# class of combat.Stats.classes, #2249); an int adds, a float multiplies ("fire 25 % faster" is the reload / 1.25). "costs": the cost bonuses (#1091): [what, resource or null (all), change in each
+# class of combat.Stats.classes, #2249; a float multiplies it, #2272); an int adds, a float multiplies ("fire 25 % faster" is the reload / 1.25). "costs": the cost bonuses (#1091): [what, resource or null (all), change in each
 # age]; what is a group of GROUPS (units), "buildings", "buildings but farms", "technologies", "ages", "BUILDING
 # technologies" (the technologies of the menu of that building, #1925) or a list of names; a float multiplies the cost
 # (0.0: free), an int adds to it; AoE2 rounds half up (35 × 0.75 = 26). "twice": the technologies whose effect it gets
@@ -136,7 +136,9 @@ ECONOMY = tuple(sorted(r["name"] for r in TECH_ROWS if r.get("economy")))   # th
 # "not_shared": the shared items that it does not get from an ally (Turks: no Elite Skirmisher).
 # "build", "build_wonder": the build speed of the builders (Spanish: 20 % for wonders). "build_of": the build speed of
 # some buildings, {building: factor} (Sicilian fortifications and town centers, #2115). "built_food": the food that
-# a complete building gives, {building: food} (Saxons, Wu, #2114). "repair": the repair rate.
+# a complete building gives, {building: food} (Saxons, Wu, #2114). "built_units": the herdables that a complete
+# building gives, {building: [unit, number in the Dark, Feudal, Castle and Imperial Age]} (Tatar sheep, #2313).
+# "repair": the repair rate.
 # "repair_cost": the team bonus of the repair cost of buildings (Georgians). "repair_team": the team bonus of the
 # repair rate (Saxons). "work_rate": the train and research rate of a building in each age (Persians). "train_rate":
 # [group of GROUPS, factor, also the upgrades] (#1927). "hp": the hit points factor of a building (Persians).
@@ -157,6 +159,7 @@ BUILD = {r["name"]: r["build"] for r in ROWS if "build" in r}
 BUILD_WONDER = {r["name"]: r["build_wonder"] for r in ROWS if "build_wonder" in r}
 BUILD_OF = {r["name"]: r["build_of"] for r in ROWS if "build_of" in r}
 BUILT_FOOD = {r["name"]: r["built_food"] for r in ROWS if "built_food" in r}
+BUILT_UNITS = {r["name"]: {b: tuples(v) for b, v in r["built_units"].items()} for r in ROWS if "built_units" in r}
 REPAIR = {r["name"]: r["repair"] for r in ROWS if "repair" in r}
 REPAIR_COST = {r["name"]: r["repair_cost"] for r in ROWS if "repair_cost" in r}
 REPAIR_TEAM = {r["name"]: r["repair_team"] for r in ROWS if "repair_team" in r}
@@ -207,6 +210,9 @@ ECONOMY_VILLAGERS = {r["name"]: r["economy_villagers"] for r in ROWS if "economy
 FALLEN = {r["name"]: r["fallen"] for r in ROWS if "fallen" in r}
 KILL_GOLD = {r["name"]: r["kill_gold"] for r in ROWS if "kill_gold" in r}
 LOOT = {r["name"]: r["loot"] for r in ROWS if "loot" in r}
+# "reveal": the enemy buildings that the player sees under the fog of war (fog.revealed, #2311): [building, true: only
+# the ones of aoe2mc.json and only at the start of the game] (Mapuche castles, Vietnamese start town centers).
+REVEAL = {r["name"]: [tuple(b) for b in r["reveal"]] for r in ROWS if "reveal" in r}
 # The relic and monk bonuses (game/monk.py, #2314): "relic_attack" [units, attack per relic in an own monastery, most]
 # (Lithuanian knights and Leitis), "faith" the factor of the speed of the monks that regain faith (Muisca: 100 % faster).
 RELIC_ATTACK = {r["name"]: tuples(r["relic_attack"]) for r in ROWS if "relic_attack" in r}
@@ -264,7 +270,9 @@ def units(g, name, s):
     if name in names:                                              # the relics in own monasteries (monk.relic_tick)
         s = s._replace(attack=s.attack + min(each * sum(r["home"] is not None for r in getattr(g, "relics", ())), most))
     for v, c in changes(g, name, s):
-        if v.startswith("bonus:") and c:                           # the attack against a class (#2249)
+        if v.startswith("bonus:") and isinstance(c, float):        # a factor of the attack against a class (#2272)
+            s = s._replace(bonus={**s.bonus, v[6:]: math.floor(s.bonus.get(v[6:], 0) * c + 0.5)})
+        elif v.startswith("bonus:") and c:                         # the attack against a class (#2249)
             s = s._replace(bonus={**s.bonus, v[6:]: s.bonus.get(v[6:], 0) + c})
         elif v == "bonus" and isinstance(c, float):                # a factor of each bonus (#2248)
             s = s._replace(bonus={k: math.floor(n * c + 0.5) for k, n in s.bonus.items()})
@@ -367,6 +375,14 @@ def build_rate(g, name):
 def built_food(g, name):
     """The food that a complete building name of the player of g gives (BUILT_FOOD), else 0."""
     return BUILT_FOOD.get(civ(g), {}).get(name, 0)
+
+
+def built_units(g, name):
+    """(unit, number) of the herdables that a complete building name of the player of g gives in its age
+    (BUILT_UNITS), else None."""
+    import build                                                   # build imports gather, gather imports this module
+    unit, n = BUILT_UNITS.get(civ(g), {}).get(name, (None, (0,) * 4))
+    return (unit, n[build.ages(g)]) if n[build.ages(g)] else None
 
 
 def church_rate(g, pos):

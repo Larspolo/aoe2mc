@@ -16,6 +16,7 @@ Usage:
     python3 game/run.py WORLD --play --resources high  # the AoE2 setting "Starting resources" (#2264)
     python3 game/run.py WORLD --play --age castle      # the AoE2 setting "Starting age" (#2265)
     python3 game/run.py WORLD --play --all-techs       # the AoE2 setting "All Techs" (#2298)
+    python3 game/run.py WORLD --play --victory conquest  # the AoE2 setting "Victory": no wonder or relic win (#2316)
     python3 game/run.py WORLD --play --civ 1=BRITONS --civ 2=FRANKS   # the civilization of each player (#2267)
     python3 game/run.py WORLD --play --teams 1,1,2,2   # the team of each player, - is no team (#2296)
     python3 game/run.py WORLD --play --load SAVE   # go on with a saved game: Ctrl-C of --play saves into saves/ (#2255)
@@ -323,13 +324,14 @@ def team_choices(value, players):
 
 def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attack="10:00", reveal="normal", people=1,
          speed=1.0, state=None, resources="standard", civ=None, teams=None,
-         all_techs=False, age="dark", pop_limit=None):
+         all_techs=False, age="dark", victory="standard", pop_limit=None):
     """state: the saved state of the players (savegame.dump) for a loaded game (#2255).
     resources: the AoE2 setting "Starting resources" of each player and bot (gather.LEVELS, #2264).
     civ: {player: civilization} in place of the civilization of the scenario (civ_choices, #2267).
     teams: {player: team or None} in place of the teams of the scenario (team_choices, #2296).
     all_techs: the AoE2 setting "All Techs" for all players and bots (civs.missing, #2298).
     age: the AoE2 setting "Starting age" of each player and bot (train.STARTS, #2265).
+    victory: the AoE2 setting "Victory": "standard" (conquest, a wonder or all relics) or "conquest" (#2316).
     pop_limit: the AoE2 setting "Population limit" of each player and bot (train.LIMITS, #2266)."""
     import gather
 
@@ -355,6 +357,7 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
     game.people = people
     g = make(1)
     g.reveal = reveal                                # "all": no fog of war for the units (fog.py, #1389)
+    g.victory = victory                              # Gather.run: the wonder and relic wins only in "standard"
     if people > 1:                                   # one Gather for each person, in the join order (#1308, #1310)
         g.bots = [Side(make(n)) for n in range(2, people + 1)]
         for s in g.bots:                             # the same trees, bushes and mines, as with a bot
@@ -520,6 +523,8 @@ def main(argv=None):
                     "the Death Match resources)")
     ap.add_argument("--all-techs", action="store_true", help="--play: the AoE2 setting \"All Techs\": each civilization "
                     "has the generic units and technologies that its tech tree does not have (the bonuses stay)")
+    ap.add_argument("--victory", choices=["standard", "conquest"], default="standard", help="--play: the AoE2 setting "
+                    "\"Victory\" (default standard: conquest, a wonder or all relics; conquest: only the conquest)")
     ap.add_argument("--pop-limit", type=pop_limit, default=200, metavar="N",
                     help="--play: the AoE2 setting \"Population limit\" of each player: 25 to 250 in steps of 25, 300, "
                     "400 or 500 (default 200)")
@@ -563,7 +568,7 @@ def main(argv=None):
             with open(a.log, "w") if a.log else contextlib.nullcontext() as log:
                 g = play(game, a.world, log, a.cheats, a.bot, bot_attack=a.bot_attack, reveal=a.reveal,
                          people=a.people, speed=a.speed, state=state, resources=a.resources, civ=civ,
-                         teams=teams, all_techs=a.all_techs, age=a.age, pop_limit=a.pop_limit)
+                         teams=teams, all_techs=a.all_techs, age=a.age, victory=a.victory, pop_limit=a.pop_limit)
             if not getattr(g, "ended", None):
                 return
             print(f"The game ended ({g.ended}). The server stays up: type commands, Ctrl-C stops it.",
