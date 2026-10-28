@@ -267,6 +267,7 @@ STARTS = {r["name"]: r for r in table.load("setup.jsonl") if "ages" in r}
 QUEUE = 15                                                         # units in the queue of one building, as in AoE2
 HOUSING = {r["name"]: r["housing"] for r in BUILDING_ROWS if "housing" in r}   # population of a complete building
 LIMIT = 200                                                        # the AoE2 population limit
+LIMITS = (*range(25, 251, 25), 300, 400, 500)                      # the AoE2 setting "Population limit" (#2266)
 REPEAT = 256                                                       # researches of one technology: "going above and beyond"
 CENSUS = 2.0                                                       # AoE2 seconds between two counts of the live units
 MORE = 18                                                          # the first slot of the item row under the queue row
@@ -780,8 +781,9 @@ def limit(g):
 
 
 def max_pop(g):
-    """The highest population limit: LIMIT, 1000 with the cheat "my cpu can handle it" (#968)."""
-    return getattr(g, "pop_cap", None) or LIMIT
+    """The highest population limit: the setting of the game (Gather.pop_limit, run.py --pop-limit, #2266), else LIMIT;
+    1000 with the cheat "my cpu can handle it" (#968)."""
+    return getattr(g, "pop_cap", None) or getattr(g, "pop_limit", None) or LIMIT
 
 
 def census(g):
