@@ -11,6 +11,7 @@ Usage:
     python3 game/run.py WORLD --play --bot        # also a bot plays player 2: its villagers gather (game/bot.py)
     python3 game/run.py WORLD --play --bot --bot-attack 5:00   # its soldiers attack player 1 from 5:00 (default 10:00)
     python3 game/run.py WORLD --play --log F.jsonl  # also write a timed event log (tools/measure_gather.py reads it)
+    python3 game/run.py WORLD --play --bot --treaty 20:00   # the AoE2 setting "Treaty length": no attack before 20:00 (#2297)
     python3 game/run.py WORLD --play --reveal all  # no fog of war: also the enemy units out of sight show (game/fog.py)
     python3 game/run.py WORLD --play --speed 2     # twice the AoE2 Normal speed: /tick rate 40 and shorter steps (#2057)
     python3 game/run.py WORLD --play --resources high  # the AoE2 setting "Starting resources" (#2264)
@@ -326,7 +327,8 @@ def team_choices(value, players):
 
 def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attack="10:00", reveal="normal", people=1,
          speed=1.0, state=None, resources="standard", civ=None, teams=None,
-         all_techs=False, age="dark", victory="standard", pop_limit=None, end_age="imperial", mode="standard"):
+         all_techs=False, age="dark", victory="standard", pop_limit=None, end_age="imperial", mode="standard",
+         treaty="0:00"):
     """state: the saved state of the players (savegame.dump) for a loaded game (#2255).
     resources: the AoE2 setting "Starting resources" of each player and bot (gather.LEVELS, #2264).
     civ: {player: civilization} in place of the civilization of the scenario (civ_choices, #2267).
@@ -337,7 +339,8 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
     "last-man-standing" (conquest.last_man, #2358).
     pop_limit: the AoE2 setting "Population limit" of each player and bot (train.LIMITS, #2266).
     end_age: the AoE2 setting "Ending age" of each player and bot (build.locked, #2346).
-    mode: the AoE2 game mode: "standard" or "regicide" (each player has a King, regicide.MODES, #2347)."""
+    mode: the AoE2 game mode: "standard" or "regicide" (each player has a King, regicide.MODES, #2347).
+    treaty: the AoE2 setting "Treaty length" (MM:SS, #2297): before it no player can attack another (treaty.py)."""
     import gather, train
 
     def make(player):
@@ -377,11 +380,12 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
         import bot as bots
         import replay
         player, foe = bot_seat(data["players"], people)
+        attack = max(bot_attack, treaty, key=replay.aoe2mc.game_time)   # the bot waits for the treaty too
         g.bots = [*g.bots, bots.Bot(game, data, player=player, share=g, log=log, foe=foe,
-                                    attack=replay.aoe2mc.game_time(bot_attack) / 1000,
+                                    attack=replay.aoe2mc.game_time(attack) / 1000,
                                     resources=resources, pop_limit=pop_limit).setup()]
         print(f"A bot plays player {player}: {len(g.bots[-1].g.villagers)} villagers gather, its soldiers attack "
-              f"player {foe} at {bot_attack}.", file=sys.stderr)
+              f"player {foe} at {attack}.", file=sys.stderr)
     import combat
     combat.setup(game, data)                         # AoE2 hit points and damage (#514)
     if not state and age != "dark":                  # after the base values: the technologies change them
@@ -392,6 +396,10 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
         import regicide
         g.mode = mode
         regicide.setup(g, mode)
+    import replay
+    import treaty as treaties
+    if replay.aoe2mc.game_time(treaty):              # after the Gathers: they set the neutral stances
+        treaties.start(g, replay.aoe2mc.game_time(treaty) / 1000)
     if game.kind == "paper":                         # the view square of each player on map 0 (#1762)
         import replay
         game.command(f"aoe minimap frame {replay.FRAME * data['tile_size']}")
@@ -535,6 +543,8 @@ def main(argv=None):
                     "order in which they join (#1310); with --bot the bot plays player N + 1")
     ap.add_argument("--bot-attack", default="10:00", metavar="MM:SS", help="--bot: its soldiers attack its foe "
                     "from this game time (default 10:00)")
+    ap.add_argument("--treaty", default="0:00", metavar="MM:SS", help="--play: the AoE2 setting \"Treaty length\": "
+                    "no player can attack another player before this game time (default 0:00: no treaty)")
     ap.add_argument("--reveal", choices=["normal", "all"], default="normal", help="--play: AoE2 \"Reveal map\" "
                     "(default normal: enemy units out of sight are hidden; all: all units show)")
     ap.add_argument("--age", choices=["dark", "feudal", "castle", "imperial", "post-imperial"], default="dark",
@@ -602,7 +612,7 @@ def main(argv=None):
                 g = play(game, a.world, log, a.cheats, a.bot, bot_attack=a.bot_attack, reveal=a.reveal,
                          people=a.people, speed=a.speed, state=state, resources=a.resources, civ=civ,
                          teams=teams, all_techs=a.all_techs, age=a.age, victory=a.victory, pop_limit=a.pop_limit,
-                         end_age=a.end_age, mode=a.mode)
+                         end_age=a.end_age, mode=a.mode, treaty=a.treaty)
             if not getattr(g, "ended", None):
                 return
             print(f"The game ended ({g.ended}). The server stays up: type commands, Ctrl-C stops it.",
