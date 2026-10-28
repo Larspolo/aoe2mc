@@ -59,7 +59,7 @@ Section `PRs` lists the open agent PRs (branch `claude/*`, `agent/*` or `ccr-*`,
 
 Section `Main CI` red (the last run on main, or the night run with the full suite) and no "Fix main" merge after it:
 find the open `P0` ticket "Fix main: ..." or make one (`P0`, `bug`, `size:S`: the failing test and the commit that
-broke it), and do it first. CI makes the same ticket by itself.
+broke it), and do it first. CI makes the same ticket by itself. Make it only under a lock (`overlap.md`, "Fix main").
 
 ## 3. Read the owner's feedback
 
