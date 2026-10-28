@@ -26,6 +26,7 @@ Usage:
     python3 game/run.py WORLD --play --mode empire-wars   # the AoE2 game mode "Empire Wars": a town at work (#2408)
     python3 game/run.py WORLD --play --mode sudden-death   # the AoE2 game mode "Sudden Death": one town center (#2407)
     python3 game/run.py WORLD --play --mode battle-royale  # "Battle Royale": the Corruption takes the map (#2439)
+    python3 game/run.py WORLD --play --mode capture-the-relic   # "Capture the Relic": the center relic wins (#2440)
     python3 game/run.py WORLD --play --mode defend-the-wonder   # "Defend the Wonder": player 1 has a Wonder (#2441)
     python3 game/run.py WORLD --play --mode wonder-race   # "Wonder Race": no attacks, the first wonder wins (#2406)
     python3 game/run.py WORLD --play --civ 1=BRITONS --civ 2=FRANKS   # the civilization of each player (#2267)
@@ -338,6 +339,7 @@ def team_choices(value, players):
 # change of the --mode lines of main() (#2408).
 MODES = {
     "battle-royale": "the Corruption takes the map from its border to its center (battle_royale.py)",
+    "capture-the-relic": "the first player who brings the relic of the map center into an own monastery wins",
     "defend-the-wonder": "player 1 defends a Wonder for 250 years, the others win when it falls",
     "empire-wars": "each player starts with a town and 27 villagers at work, in the Feudal Age when --age is dark",
     "regicide": "each player has a King, a player whose King dies is defeated",
@@ -364,8 +366,7 @@ SETTINGS = {
     "end_age": "imperial",            # "Ending age" (build.locked, #2346)
     "full_tech_tree": False,          # "Full Tech Tree": the full tech tree and no civilization bonuses (civs.civ, #2354)
     "mode": "standard",               # the game mode (MODES; regicide.py #2347, sudden_death.py #2407, empire_wars.py #2408,
-                                      # battle_royale.py #2439, defend_wonder.py #2441,
-                                      # treaty.ENDLESS #2406)
+                                      # battle_royale.py #2439, defend_wonder.py #2441, capture_relic.py #2440)
     "pop_limit": None,                # "Population limit" (train.LIMITS, #2266)
     "resources": "standard",          # "Starting resources" (gather.LEVELS, #2264)
     "teams": None,                    # {player: team or None} in place of the scenario's (team_choices, #2296)
@@ -453,15 +454,18 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
         import defend_wonder
         g.mode = settings["mode"]
         defend_wonder.setup(g, settings["mode"], start=not state)
+    elif settings["mode"] == "wonder-race":                      # no setup: the endless treaty below (#2406)
+        g.mode = settings["mode"]
     elif settings["mode"] != "standard":                         # after the bots: their Kings go to their Gathers (#2347)
         import battle_royale
+        import capture_relic
         import regicide
         import sudden_death
         for x in [g, *(s.g for s in g.bots)]:
-            x.mode = settings["mode"]                # build.locked of each player (#2407), wonder.RACE (#2406)
-        setups = {"battle-royale": battle_royale, "sudden-death": sudden_death}
-        if settings["mode"] in setups or settings["mode"] in regicide.MODES:   # Wonder Race has no setup (#2406)
-            setups.get(settings["mode"], regicide).setup(g, settings["mode"])
+            x.mode = settings["mode"]                # build.locked of each player (#2407)
+        if settings["mode"] != "capture-the-relic" or not state:   # a loaded game has the relic in its save (#2440)
+            {"battle-royale": battle_royale, "capture-the-relic": capture_relic,
+             "sudden-death": sudden_death}.get(settings["mode"], regicide).setup(g, settings["mode"])
     import replay
     import treaty as treaties
     if settings["mode"] in treaties.ENDLESS:                     # Wonder Race: a treaty with no end (#2406)

@@ -143,7 +143,7 @@
 {"name": "MALIANS: Barracks units have +1/+2/+3 pierce armor in the Feudal/Castle/Imperial Age.", "civ": "MALIANS", "bonus": "Barracks units have +1/+2/+3 pierce armor in the Feudal/Castle/Imperial Age.", "in": "UNITS"}
 {"name": "MALIANS: Villagers drop off gold +10%: gold miners work 10% faster.", "civ": "MALIANS", "bonus": "Villagers drop off gold +10%: gold miners work 10% faster.", "in": "WORK"}
 {"name": "MAPUCHE: Foragers drop off food +25%.", "civ": "MAPUCHE", "bonus": "Foragers drop off food +25%.", "in": "DROP"}
-{"name": "MAPUCHE: Settlements can train the Spearman and Skirmisher lines in 2.15×/1.61×/same time as regular production buildings in the Feudal/Castle/Imperial Ages, respectively.", "civ": "MAPUCHE", "bonus": "Settlements can train the Spearman and Skirmisher lines in 2.15×/1.61×/same time as regular production buildings in the Feudal/Castle/Imperial Ages, respectively.", "later": "play:military-train"}
+{"name": "MAPUCHE: Settlements can train the Spearman and Skirmisher lines in 2.15×/1.61×/same time as regular production buildings in the Feudal/Castle/Imperial Ages, respectively.", "civ": "MAPUCHE", "bonus": "Settlements can train the Spearman and Skirmisher lines in 2.15×/1.61×/same time as regular production buildings in the Feudal/Castle/Imperial Ages, respectively.", "in": "TRAINS"}
 {"name": "MAPUCHE: Infantry, Slingers, and Skirmishers get +5/10/15 hit points in the Feudal/Castle/Imperial Age.", "civ": "MAPUCHE", "bonus": "Infantry, Slingers, and Skirmishers get +5/10/15 hit points in the Feudal/Castle/Imperial Age.", "in": "UNITS"}
 {"name": "MAPUCHE: Mounted units generate gold +3 per military unit killed.", "civ": "MAPUCHE", "bonus": "Mounted units generate gold +3 per military unit killed.", "in": "KILL_GOLD"}
 {"name": "MAPUCHE: Enemy Castles are revealed on the map.", "civ": "MAPUCHE", "bonus": "Enemy Castles are revealed on the map.", "in": "REVEAL"}
@@ -155,7 +155,7 @@
 {"name": "MONGOLS: Scout Cavalry-line and Steppe Lancers +20/30% hit points in the Castle/Imperial Age.", "civ": "MONGOLS", "bonus": "Scout Cavalry-line and Steppe Lancers +20/30% hit points in the Castle/Imperial Age.", "in": "UNITS"}
 {"name": "MONGOLS: Hunters work 40% faster.", "civ": "MONGOLS", "bonus": "Hunters work 40% faster.", "in": "WORK"}
 {"name": "MUISCA: Advancing to the next Age costs gold -50%.", "civ": "MUISCA", "bonus": "Advancing to the next Age costs gold -50%.", "in": "COSTS"}
-{"name": "MUISCA: Settlements cost -33% and heal allied human units within 3 tiles by 5/10/15/15 HP/min in the Dark/Feudal/Castle/Imperial Age.", "civ": "MUISCA", "bonus": "Settlements cost -33% and heal allied human units within 3 tiles by 5/10/15/15 HP/min in the Dark/Feudal/Castle/Imperial Age.", "later": "play:build"}
+{"name": "MUISCA: Settlements cost -33% and heal allied human units within 3 tiles by 5/10/15/15 HP/min in the Dark/Feudal/Castle/Imperial Age.", "civ": "MUISCA", "bonus": "Settlements cost -33% and heal allied human units within 3 tiles by 5/10/15/15 HP/min in the Dark/Feudal/Castle/Imperial Age.", "in": ["COSTS", "HEAL_AURA"]}
 {"name": "MUISCA: The Champi Scout line and Archery Range units have +1/2/3 melee armor in the Feudal/Castle/Imperial Age.", "civ": "MUISCA", "bonus": "The Champi Scout line and Archery Range units have +1/2/3 melee armor in the Feudal/Castle/Imperial Age.", "in": "UNITS"}
 {"name": "MUISCA: Monks regain faith 100% faster.", "civ": "MUISCA", "bonus": "Monks regain faith 100% faster.", "in": "FAITH"}
 {"name": "MUISCA: Caravan and Guilds are free.", "civ": "MUISCA", "bonus": "Caravan and Guilds are free.", "in": "COSTS"}
@@ -223,7 +223,7 @@
 {"name": "THRACIANS: Forts and towers increase the work rate of nearby miners and lumberjacks in a square of aura range 8 by 15% and serve as resource drop sites for the respective resources.", "civ": "THRACIANS", "bonus": "Forts and towers increase the work rate of nearby miners and lumberjacks in a square of aura range 8 by 15% and serve as resource drop sites for the respective resources.", "in": "AURA"}
 {"name": "THRACIANS: Shepherds and hunters generate gold 3 per minute while gathering from animals (excluding Foxes).", "civ": "THRACIANS", "bonus": "Shepherds and hunters generate gold 3 per minute while gathering from animals (excluding Foxes).", "in": "PER_MINUTE"}
 {"name": "TUPI: Start with +25 of each resource once the first Town Center is built.", "civ": "TUPI", "bonus": "Start with +25 of each resource once the first Town Center is built.", "in": "TOWN_CENTER"}
-{"name": "TUPI: Villagers can garrison in Settlements (max 5).", "civ": "TUPI", "bonus": "Villagers can garrison in Settlements (max 5).", "later": "play:garrison"}
+{"name": "TUPI: Villagers can garrison in Settlements (max 5).", "civ": "TUPI", "bonus": "Villagers can garrison in Settlements (max 5).", "in": "GARRISON"}
 {"name": "TUPI: Fallen units, except ships and siege weapons, return 15% of their cost.", "civ": "TUPI", "bonus": "Fallen units, except ships and siege weapons, return 15% of their cost.", "in": "FALLEN"}
 {"name": "TUPI: Archery Range and Barracks technologies cost food -50%.", "civ": "TUPI", "bonus": "Archery Range and Barracks technologies cost food -50%.", "in": "COSTS"}
 {"name": "TURKS: Gunpowder units have +25% hit points.", "civ": "TURKS", "bonus": "Gunpowder units have +25% hit points.", "in": "UNITS"}
