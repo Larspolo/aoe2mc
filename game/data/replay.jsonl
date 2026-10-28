@@ -56,6 +56,7 @@
 {"name": "TEMPLE_GUARD", "walk": 0.95}
 {"name": "VARANGIAN_GUARD", "walk": 1.05}
 {"name": "XIANBEI_RAIDER", "walk": 1.4}
+{"name": "CONDOTTIERO", "walk": 1.2}
 {"name": "CHAMPION", "walk": 0.96}
 {"name": "TWO_HANDED_SWORDSMAN", "walk": 0.96}
 {"name": "WINGED_HUSSAR", "walk": 1.5}
