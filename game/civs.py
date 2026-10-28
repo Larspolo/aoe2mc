@@ -23,8 +23,9 @@ speed, per age. train.stats applies them before the technologies; the walk speed
 "bonus" with a float multiplies the bonus damage that the unit deals (Gurjara mounted units, Bohemian spearmen,
 #2248); the value "taken" is the factor of the bonus damage that the unit takes (Bengali elephants, Sicilian units:
 taken(), the plugin applies it at each hit); the value "bonus:CLASS" adds attack against a class (#2249). Bonuses of
-this kind that the game program cannot use yet: the elevation (Georgians, Tatars), the Lithuanian relics, the Aztec and Slav monks, and the ships.
+this kind that the game program cannot use yet: the Lithuanian relics, the Slav monks, and the ships.
 REGEN holds the regeneration of the units (#2247): regen.tick gives them their hit points back.
+ELEVATION holds the elevation factors of the damage (#2307): combat.elevation and the plugin (aoe elevation).
 """
 import math
 import os
@@ -44,6 +45,7 @@ RULES = {
     "champi scout line, archery range units": lambda n, s: "CHAMPI_" in n   # the wiki: all archers but the conquistador
         or "archer" in s.classes and not tagged(n, "conquistador type"),     # type (#2116)
     "elephants": lambda n, s: "elephant" in s.classes,
+    "fire galley line, fire lancers": lambda n, s: tagged(n, "fire galley line") or tagged(n, "fire lancers"),
     "foot archers": lambda n, s: foot_archer(s),
     "foot archers but skirmishers": lambda n, s: foot_archer(s) and not tagged(n, "skirmishers"),
     "foot archers but skirmishers, condottieri": lambda n, s: GROUPS["foot archers but skirmishers"](n, s),
@@ -80,7 +82,7 @@ GROUPS = {g: (lambda f, g: lambda n, s: g in TAGS.get(n, ()) or f(n, s))(RULES.g
 # that few civilizations have are in ONLY, not here.
 # "units": the bonuses of the land units (#1090): [group of GROUPS, value, change in the Dark, Feudal, Castle and
 # Imperial Age]; value is a field of combat.Stats, "speed" (the walk speed) or "bonus:CLASS" (the attack against a
-# class of combat.Stats.classes, #2249); an int adds, a float multiplies ("fire 25 % faster" is the reload / 1.25). "costs": the cost bonuses (#1091): [what, resource or null (all), change in each
+# class of combat.Stats.classes, #2249; a float multiplies it, #2272); an int adds, a float multiplies ("fire 25 % faster" is the reload / 1.25). "costs": the cost bonuses (#1091): [what, resource or null (all), change in each
 # age]; what is a group of GROUPS (units), "buildings", "buildings but farms", "technologies", "ages", "BUILDING
 # technologies" (the technologies of the menu of that building, #1925) or a list of names; a float multiplies the cost
 # (0.0: free), an int adds to it; AoE2 rounds half up (35 × 0.75 = 26). "twice": the technologies whose effect it gets
@@ -135,7 +137,9 @@ ECONOMY = tuple(sorted(r["name"] for r in TECH_ROWS if r.get("economy")))   # th
 # "not_shared": the shared items that it does not get from an ally (Turks: no Elite Skirmisher).
 # "build", "build_wonder": the build speed of the builders (Spanish: 20 % for wonders). "build_of": the build speed of
 # some buildings, {building: factor} (Sicilian fortifications and town centers, #2115). "built_food": the food that
-# a complete building gives, {building: food} (Saxons, Wu, #2114). "repair": the repair rate.
+# a complete building gives, {building: food} (Saxons, Wu, #2114). "built_units": the herdables that a complete
+# building gives, {building: [unit, number in the Dark, Feudal, Castle and Imperial Age]} (Tatar sheep, #2313).
+# "repair": the repair rate.
 # "repair_cost": the team bonus of the repair cost of buildings (Georgians). "repair_team": the team bonus of the
 # repair rate (Saxons). "work_rate": the train and research rate of a building in each age (Persians). "train_rate":
 # [group of GROUPS, factor, also the upgrades] (#1927). "hp": the hit points factor of a building (Persians).
@@ -144,6 +148,8 @@ ECONOMY = tuple(sorted(r["name"] for r in TECH_ROWS if r.get("economy")))   # th
 WORK = {r["name"]: r["work"] for r in ROWS if "work" in r}
 LAST = {r["name"]: r["last"] for r in ROWS if "last" in r}   # resources last longer: a gathered unit takes 1 / factor (#2112)
 START = {r["name"]: r["start"] for r in ROWS if "start" in r}
+DECAY = {r["name"]: r["decay"] for r in ROWS if "decay" in r}   # the factor of the decay of carcasses (Jurchens: 0, #2310)
+PREDATOR_HIT = {r["name"]: r["predator_hit"] for r in ROWS if "predator_hit" in r}   # villager attack bonus (Magyars)
 TOWN_CENTER = {r["name"]: r["town_center"] for r in ROWS if "town_center" in r}
 BUSHES = {r["name"]: r["bushes"] for r in ROWS if "bushes" in r}
 DROP = {r["name"]: r["drop"] for r in ROWS if "drop" in r}
@@ -154,6 +160,7 @@ BUILD = {r["name"]: r["build"] for r in ROWS if "build" in r}
 BUILD_WONDER = {r["name"]: r["build_wonder"] for r in ROWS if "build_wonder" in r}
 BUILD_OF = {r["name"]: r["build_of"] for r in ROWS if "build_of" in r}
 BUILT_FOOD = {r["name"]: r["built_food"] for r in ROWS if "built_food" in r}
+BUILT_UNITS = {r["name"]: {b: tuples(v) for b, v in r["built_units"].items()} for r in ROWS if "built_units" in r}
 REPAIR = {r["name"]: r["repair"] for r in ROWS if "repair" in r}
 REPAIR_COST = {r["name"]: r["repair_cost"] for r in ROWS if "repair_cost" in r}
 REPAIR_TEAM = {r["name"]: r["repair_team"] for r in ROWS if "repair_team" in r}
@@ -162,6 +169,11 @@ TRAIN_RATE = {r["name"]: [tuples(b) for b in r["train_rate"]] for r in ROWS if "
 HP = {r["name"]: r["hp"] for r in ROWS if "hp" in r}
 ARROWS = {r["name"]: tuples(r["arrows"]) for r in ROWS if "arrows" in r}   # factor of the base arrows in each age (#2178)
 GARRISON = {r["name"]: r["garrison"] for r in ROWS if "garrison" in r}   # units inside a building (garrison.size, #2117)
+HEAL_RANGE = {r["name"]: r["heal_range"] for r in ROWS if "heal_range" in r}   # factor of the monk heal range (#2269)
+# [group of GROUPS, building, hit points]: the units of the group get the hit points for each technology of the menu of
+# that building that the player has (the Aztec monks: +5 for each monastery technology, #2269).
+TECH_HP = {r["name"]: [tuples(b) for b in r["tech_hp"]] for r in ROWS if "tech_hp" in r}
+EARLIER = {r["name"]: set(r["earlier"]) for r in ROWS if "earlier" in r}   # one age earlier (build.locked, #2268)
 HP_AGE = {r["name"]: r["hp_age"] for r in ROWS if "hp_age" in r}   # the factor of all buildings in each age (Byzantines)
 # Technologies with another effect for the civilization (#2173, train.stats, train.speed): "also" gives the effect to
 # one more group of GROUPS too (Bohemians: Fervor and Sanctity for the villagers), "more" multiplies the change of the
@@ -195,7 +207,8 @@ AGE_VILLAGERS = {"BENGALIS": 2}                                    # each own to
 TECH_GIFTS = {r["name"]: r["tech_gifts"] for r in ROWS if "tech_gifts" in r}
 # "regen": the regeneration of units (#2247): [group of GROUPS or a list of unit names, hit points per AoE2 minute in
 # the Dark, Feudal, Castle and Imperial Age] (Polish villagers, Georgian mounted units, Wu infantry, Thracian elite
-# skirmishers). regen.tick gives them back.
+# skirmishers, Bengali ships). A third value: the rule counts only with no enemy unit within that many tiles (Puru cavalry,
+# #2334). regen.tick gives them back.
 REGEN = {r["name"]: [tuples(b) for b in r["regen"]] for r in ROWS if "regen" in r}
 ECONOMY_VILLAGERS = {r["name"]: r["economy_villagers"] for r in ROWS if "economy_villagers" in r}
 # Resources for kills and deaths (game/spoils.py, #2271): "fallen" the part of the cost of a fallen own unit (Tupi),
@@ -204,6 +217,30 @@ ECONOMY_VILLAGERS = {r["name"]: r["economy_villagers"] for r in ROWS if "economy
 FALLEN = {r["name"]: r["fallen"] for r in ROWS if "fallen" in r}
 KILL_GOLD = {r["name"]: r["kill_gold"] for r in ROWS if "kill_gold" in r}
 LOOT = {r["name"]: r["loot"] for r in ROWS if "loot" in r}
+# "reveal": the enemy buildings that the player sees under the fog of war (fog.revealed, #2311): [building, true: only
+# the ones of aoe2mc.json and only at the start of the game] (Mapuche castles, Vietnamese start town centers).
+REVEAL = {r["name"]: [tuple(b) for b in r["reveal"]] for r in ROWS if "reveal" in r}
+# The elevation factors of the damage (#2307, AoE2 wiki "Elevation"): "up" multiplies the hits of a unit or building of
+# the civilization from higher ground, "low" the hits that it takes from lower ground, "high" the hits that it takes
+# from higher ground. The key "elevation" of a line in civs.jsonl changes them (Tatars, Georgians, Macedonians).
+ELEVATION = {r["name"]: r["elevation"] for r in ROWS if "elevation" in r}
+ELEVATION_BASE = {"up": 1.25, "low": 0.75, "high": 1.0}
+
+
+def elevation(civ):
+    """The elevation factors (up, low, high) of civilization civ (ELEVATION_BASE and its key "elevation")."""
+    e = {**ELEVATION_BASE, **ELEVATION.get(civ, {})}
+    return e["up"], e["low"], e["high"]
+
+
+# The relic and monk bonuses (game/monk.py, #2314): "relic_attack" [units, attack per relic in an own monastery, most]
+# (Lithuanian knights and Leitis), "faith" the factor of the speed of the monks that regain faith (Muisca: 100 % faster).
+RELIC_ATTACK = {r["name"]: tuples(r["relic_attack"]) for r in ROWS if "relic_attack" in r}
+FAITH = {r["name"]: r["faith"] for r in ROWS if "faith" in r}
+# Herdable animals in a building make food (garrison.pasture, #2342): "herd_food" {building: [size, a, b]}, at most size
+# animals in each, a × ln(F / b + 1) food per AoE2 minute for F food of the animals in all of them (Gurjara mills: 10, 15,
+# 200, AoE2 DE wiki).
+HERD_FOOD = {r["name"]: {b: tuple(v) for b, v in r["herd_food"].items()} for r in ROWS if "herd_food" in r}
 
 
 def tagged(n, group):
@@ -242,19 +279,26 @@ def smith(g, name, s):
     return {t: c[age] for k, techs, c in SMITH_UNITS.get(civ(g), []) if c[age] and GROUPS[k](name, s) for t in techs}
 
 
-def regen(g, name, s):
+def regen(g, name, s, foe=math.inf):
     """The hit points per AoE2 minute that unit name (combat.Stats s) of the player of g regenerates in its age (REGEN),
-    else 0. Two rules of one civilization add up."""
+    else 0. Two rules of one civilization add up. foe: the tiles from the unit to the nearest enemy unit; a rule with a
+    radius counts only when foe is more than it."""
     import build                                                   # build imports gather, gather imports this module
     age = build.ages(g)
-    return sum(c[age] for k, c in REGEN.get(civ(g), []) if (name in k if isinstance(k, tuple) else GROUPS[k](name, s)))
+    return sum(c[age] for k, c, *near in REGEN.get(civ(g), []) if foe > (near or [-1])[0]
+               and (name in k if isinstance(k, tuple) else GROUPS[k](name, s)))
 
 
 def units(g, name, s):
-    """The combat.Stats s of unit name with the bonuses of the civilization of the player of g (UNITS), the walk speed
-    aside (speed)."""
+    """The combat.Stats s of unit name with the bonuses of the civilization of the player of g (UNITS, RELIC_ATTACK), the
+    walk speed aside (speed)."""
+    names, each, most = RELIC_ATTACK.get(civ(g), ((), 0, 0))
+    if name in names:                                              # the relics in own monasteries (monk.relic_tick)
+        s = s._replace(attack=s.attack + min(each * sum(r["home"] is not None for r in getattr(g, "relics", ())), most))
     for v, c in changes(g, name, s):
-        if v.startswith("bonus:") and c:                           # the attack against a class (#2249)
+        if v.startswith("bonus:") and isinstance(c, float):        # a factor of the attack against a class (#2272)
+            s = s._replace(bonus={**s.bonus, v[6:]: math.floor(s.bonus.get(v[6:], 0) * c + 0.5)})
+        elif v.startswith("bonus:") and c:                         # the attack against a class (#2249)
             s = s._replace(bonus={**s.bonus, v[6:]: s.bonus.get(v[6:], 0) + c})
         elif v == "bonus" and isinstance(c, float):                # a factor of each bonus (#2248)
             s = s._replace(bonus={k: math.floor(n * c + 0.5) for k, n in s.bonus.items()})
@@ -327,6 +371,12 @@ def civ(g, player=None):
     return g.data.get("players", {}).get(str(g.player if player is None else player), {}).get("civ")
 
 
+def earlier(g, name):
+    """1 when the civilization of the player of g has the building, unit or technology name one age earlier (EARLIER:
+    the Armenian spearman in the Dark Age, the Cuman siege workshop in the Feudal Age, #2268), else 0."""
+    return int(hasattr(g, "data") and name in EARLIER.get(civ(g), ()))
+
+
 def age_rate(g, name):
     """The factor of the research rate of technology name for the civilization of the player of g: AGE_RATE for an
     age, else 1."""
@@ -357,6 +407,14 @@ def build_rate(g, name):
 def built_food(g, name):
     """The food that a complete building name of the player of g gives (BUILT_FOOD), else 0."""
     return BUILT_FOOD.get(civ(g), {}).get(name, 0)
+
+
+def built_units(g, name):
+    """(unit, number) of the herdables that a complete building name of the player of g gives in its age
+    (BUILT_UNITS), else None."""
+    import build                                                   # build imports gather, gather imports this module
+    unit, n = BUILT_UNITS.get(civ(g), {}).get(name, (None, (0,) * 4))
+    return (unit, n[build.ages(g)]) if n[build.ages(g)] else None
 
 
 def church_rate(g, pos):
@@ -427,6 +485,17 @@ def drop(g, kind):
 def work(g, kind):
     """The work-rate factor of the civilization of the player of g for gather kind (WORK), else 1."""
     return WORK.get(civ(g), {}).get(kind, 1)
+
+
+def decay(g):
+    """The factor of the decay of the carcasses that the player of g kills (DECAY), else 1 (#2310)."""
+    return DECAY.get(civ(g), 1)
+
+
+def predator_hit(g):
+    """The attack bonus of the villagers of the player of g against predators (PREDATOR_HIT), else 0 (#2310): the
+    Magyars get +30 (AoE2 wiki, "Magyars"), so a villager kills each predator in one strike."""
+    return PREDATOR_HIT.get(civ(g), 0)
 
 
 def last(g, kind):
