@@ -522,6 +522,7 @@ class Gather:
             nomad = "unit" in kinds and "building" not in kinds
             start = civs.start(self, {r: v + NOMAD.get(r, 0) * nomad for r, v in START.items()})   # #1269
         self.stock = {**dict.fromkeys(DROP_SITES, 0), **start}             # at the drop sites (#973)
+        self.spare = {}                                                # the fractions of the drop-off bonus (#2111)
         self.units = [o for o in data["objects"] if o["kind"] == "unit" and o["player"] == player
                       and "VILLAGER" in o["name"]]
         self.villagers, self.selected = {}, set()
@@ -540,6 +541,7 @@ class Gather:
         self.players, self.sites = data.get("players", {}), []         # construction sites (#417)
         self.farmers, self.crops = {}, {}                              # farm tile -> UUID of its farmer, wheat age
         self.trunks = {}                                               # tree tile -> logs of its trunk on the ground
+        self.seconds = {}                                              # resource -> fraction of civs.EXTRA (#2113)
         self.bushes = {}                                               # bush tile -> the block of its last look
         self.menus = {}                                                # player -> handler of its open menu (#619)
         self.stances = {}                                              # uuid -> stance other than aggressive (#1107)
@@ -926,6 +928,15 @@ class Gather:
             if part := n // len(to) + (i < n % len(to)):
                 h.stock[res] += part
                 h.command(f"scoreboard players add {res.capitalize()} {h.board} {part}")
+
+    def deliver(self, res, n, forage=False):
+        """Earn the load n of resource res at a drop site with the drop-off bonus of the civilization (civs.DROP: food,
+        forage for a load of a fruit bush, #2111). AoE2 keeps the fractions: the next load gets them."""
+        f = civs.drop(self, res) * (civs.drop(self, "forage") if forage else 1)
+        self.spare[res] = self.spare.get(res, 0) + n * f
+        if whole := int(self.spare[res] + 1e-9):
+            self.spare[res] -= whole
+            self.earn(res, whole)
 
     def event(self, v, name):
         if self.log:
@@ -1342,7 +1353,7 @@ class Gather:
                 v.timer = 0.0
                 self.set(v, "chop" if self.source(v).get(v.tree, 0) > 0 else "idle")
             elif v.state == "to_drop":
-                self.earn(v.res, v.load)
+                self.deliver(v.res, v.load, v.res == "food" and v.tree in self.map.bushes)
                 v.load = 0
                 self.event(v, "drop")
                 if v.tree in self.map.farms:
@@ -1365,6 +1376,7 @@ class Gather:
                     v.load += 1
                     src[v.tree] -= 1
                     self.work(v)
+                    self.second(v)
                     if v.tree in self.map.farms:
                         self.harvest(v.tree)
                         self.tend(v)
@@ -1425,6 +1437,16 @@ class Gather:
             ai.move(self, v.uuid, "VILLAGER", self.map.T, x + 0.5, self.map.y(x, z), z + 0.5,
                     NORMAL * civs.speed(self, "VILLAGER") * math.prod(PACE.get(t, 1) ** train.count(self, t) for t in self.techs))
         v.moved, v.tries = self.clock(), v.tries + 1
+
+    def second(self, v):
+        """One unit that v gathers earns the second resource of the civilization (civs.EXTRA, #2113): Poles and Puru
+        stone miners, Portuguese foragers, Shu lumberjacks. The fractions add up, so small amounts earn the exact sum."""
+        if bonus := civs.extra(self, "forage" if v.tree in self.map.bushes else v.res):
+            res, n = bonus
+            self.seconds[res] = self.seconds.get(res, 0) + n
+            if whole := int(self.seconds[res] + 1e-9):
+                self.seconds[res] -= whole
+                self.earn(res, whole)
 
     def limit(self, res=None):
         """The resources res that a villager carries, with the technologies of the player (CARRY, and FOOD_CARRY for

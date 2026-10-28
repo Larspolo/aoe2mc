@@ -2,6 +2,8 @@
 of the own civilization (AoE2 DE, #1090)."""
 import pytest
 
+import buildings
+
 from game import ai, civs, combat, gather, train
 
 from test_civ_work import setup
@@ -60,7 +62,8 @@ def test_more_bonuses():
 
 
 def test_the_table_names_known_civilizations_and_groups_in_order():
-    assert list(civs.UNITS) == sorted(civs.UNITS) and set(civs.UNITS) <= {r["name"] for r in civs.ROWS}   # #2116: Mapuche
+    assert list(civs.UNITS) == sorted(civs.UNITS)                     # a civilization without a castle unit too (Shu)
+    assert set(civs.UNITS) <= {c for v in buildings.CIV_ARCH.values() for c in v.split()}
     assert list(civs.GROUPS) == sorted(civs.GROUPS)
     for civ, rules in civs.UNITS.items():
         for group, value, change in rules:
