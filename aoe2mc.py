@@ -2824,6 +2824,7 @@ def team_lines(objects, players):
 # AoE2 condition and effect IDs (AoE2ScenarioParser), one per line in alphabetical order (#2613)
 ACCUMULATE_ATTRIBUTE = 8                                           # a resource of a player (#2655)
 AND = 57                                                           # the conditions "AND" and "OR" (#2765)
+ADD_TRAIN_LOCATION = 102                                           # "Add Train Location" (#2865)
 ATTACK_MOVE = 30                                                   # "Attack Move" (#2647)
 BUILD_OBJECT = 108                                                 # "Build Object" (#2863)
 CHANGE_COLOR_MOOD = 72
@@ -2882,6 +2883,7 @@ LOCK_GATE = 7                                                      # "Lock Gate"
 MIRROR_DIPLOMACY = 109                                             # "Mirror Diplomacy" (#2822)
 MODIFY_ATTRIBUTE = 51                                              # "Modify Attribute" (#2763)
 MODIFY_ATTRIBUTE_FOR_CLASS = 104                                   # "Modify Attribute for Class" (#2859)
+MODIFY_OBJECT_ATTRIBUTE = 105                                      # "Modify Object Attribute" (#2860)
 MODIFY_RESOURCE = 52                                               # "Modify Resource" (#2576)
 MODIFY_RESOURCE_BY_VARIABLE = 53                                   # "Modify Resource by Variable" (#2768)
 MODIFY_VARIABLE_BY_ATTRIBUTE = 87                                  # "Modify Variable by Attribute" (#2858)
@@ -2922,6 +2924,7 @@ UNITS_GARRISONED = 18                                              # the conditi
 UNLOAD = 17                                                        # "Unload" (#2773)
 UNLOCK_GATE = 6
 VARIABLE_VALUE = 22
+VICTORY_TIMER = 56                                                 # the condition "Victory Timer" (#2906)
 # The AoE2 UnitAIAction values of "Object Has Action" that the game program knows (game/scenario.py ACTIONS, #2867):
 # build, gather, hunt, move, enter (garrison), repair, idle. The others (attack, convert, heal ...): not supported yet.
 OBJECT_ACTIONS = (3, 10, 11, 14, 18, 19, 24)
@@ -2946,6 +2949,7 @@ TICKED = COUNTED + (                                               # conditions 
     TRIGGER_ACTIVE,
     UNITS_GARRISONED,
     VARIABLE_VALUE,
+    VICTORY_TIMER,
 )
 VARIABLES = (                                                      # conditions and effects with a variable #vN of aoe_var:
     CHANGE_VARIABLE,                                               # it starts at 0 (trigger_files), one per line
@@ -3037,6 +3041,8 @@ CONDITION_KEYS = {
     TRIGGER_CHANCE: {"quantity": "quantity"},                                            # (#2574)
     UNITS_GARRISONED: {"quantity": "quantity", "unit": "unit_object"},                   # (#2714)
     VARIABLE_VALUE: {"quantity": "quantity", "variable": "variable", "comparison": "comparison"},   # (#2611)
+    VICTORY_TIMER: {"quantity": "quantity", "player": "source_player", "comparison": "comparison",   # (#2906)
+                    "timer_type": "victory_timer_type"},
 }
 STORES = ("food", "wood", "stone", "gold")      # the resource of a tribute_list (AoE2 attributes 0 to 3)
 OPERATIONS = {1: "set", 2: "add", 3: "remove"}  # set, add, subtract of Modify Resource (AoE2ScenarioParser Operation)
@@ -3077,9 +3083,14 @@ def object_lines(e, c):
     """The commands of "Create Object" and "Remove Object" (#656): a summon of the entity of units.make_entity at
     the middle of the tile, or a kill of the units of the player and type in the area (area_selector). "Kill Object"
     (#2568) is the same kill, also with no area (the whole map): Minecraft shows the death, as AoE2.
-    Buildings and other objects are not supported yet: they count in stats."""
+    A building of a player (#2911): the order "create <player> <building> <x> <y>" goes into the storage aoe2mc:orders,
+    and game/scenario.py create puts the complete building there. Other objects are not supported yet: they count in stats."""
     t, T, ground, players, stats = c.t, c.T, c.ground, c.players, c.stats
     kind, name = e.get("object") or (None, None)
+    if e["type"] == CREATE_OBJECT and kind == "B" and e["player"] > 0 and min(e.get("tile", [-1])) >= 0:
+        stats["create"] += 1
+        (x, y), p = e["tile"], e["player"]
+        return [f'data modify storage aoe2mc:orders list append value "create {p} {name} {x} {y}"']
     if e["type"] == CREATE_OBJECT and min(e.get("tile", [-1])) >= 0:
         x, z = (int((v + 0.5) * T) for v in e["tile"])
         o = dict(name=name, player=max(e["player"], 0), rotation=math.pi / 2)
@@ -3133,24 +3144,28 @@ def effect_units(e, T):
 def damage_lines(e, c):
     """The commands of "Damage Object" (#2571): a `damage` of each unit of the effect (effect_units) by its amount.
     The amount is in AoE2 hit points: the game program gives each unit max_health = its AoE2 hit points
-    (combat.stats_command); a vanilla world keeps the health of the mob. A negative amount heals in AoE2: not yet."""
+    (combat.stats_command); a vanilla world keeps the health of the mob. A negative amount heals, as in AoE2: the
+    commands of "Heal Object" (heal_commands, #2907)."""
     q, stats = e.get("quantity") or 0, c.stats
-    found = effect_units(e, c.T) if q > 0 else None
+    found = effect_units(e, c.T) if q else None
     if found is None:
-        stats["damage (heal or building, not supported yet)" if q else "damage (no amount)"] += 1
+        stats["damage (building, not supported yet)" if q else "damage (no amount)"] += 1
         return []
     at = found[0]                                                      # Gaia: not the players (effect_units)
     stats["damage"] += 1
+    if q < 0:
+        return heal_commands(at, -q, c)
     return [f"execute as {at} run damage @s {q}"]                      # damage takes one entity
 
 
-def attack_lines(e, c):
+def attack_lines(e, c, armor=None, q=None):
     """The commands of "Change Object Attack" and "Change Object Armor" (#2755): the units of the player in the area and
     the mounts of the riders get an attribute modifier of `quantity` AoE2 points, add or subtract: minecraft:attack_damage
     (the attack classes 3 pierce and 4 melee) or minecraft:armor. The game program sets these attributes from
-    combat.STATS, so the points are AoE2 points. The modifier ID is the trigger and the effect: one modifier each."""
-    q, stats = e.get("quantity") or 0, c.stats
-    armor = e["type"] == CHANGE_OBJECT_ARMOR
+    combat.STATS, so the points are AoE2 points. The modifier ID is the trigger and the effect: one modifier each.
+    armor and q: the kind and the points of "Modify Object Attribute" (object_attribute_lines)."""
+    q, stats = (e.get("quantity") if q is None else q) or 0, c.stats
+    armor = e["type"] == CHANGE_OBJECT_ARMOR if armor is None else armor
     op = OPERATIONS.get(e.get("operation"))
     if op not in ("add", "remove") or not q or (not armor and e.get("armour_class") not in (3, 4)):
         stats["change object attack or armor (not supported yet)"] += 1
@@ -3160,6 +3175,21 @@ def attack_lines(e, c):
     attr = "minecraft:armor" if armor else "minecraft:attack_damage"
     value = q if op == "add" else -q
     return [f"execute as {at} run attribute @s {attr} modifier add aoe2mc:trig_{c.t['id']}_{effect_index(e, c)} {value} add_value"]
+
+
+def object_attribute_lines(e, c):
+    """The commands of "Modify Object Attribute" (#2860): the value of the units of the effect, not of the unit type, with
+    the handler of the effect that changes one value of units: hit points (hp_lines), the movement speed (speed_lines:
+    only a set), armor and attack (attack_lines: the armor or attack points of the class). Another attribute: no line."""
+    a, stats = e.get("attribute"), c.stats
+    if a in (8, 9):
+        lines = attack_lines(e, c, armor=a == 8, q=e.get("aa"))
+    elif a == 0 or (a == 5 and e.get("operation") == 1):
+        lines = (hp_lines if a == 0 else speed_lines)(e, c)
+    else:
+        lines = []
+    stats["modify object attribute" if lines else "modify object attribute (not supported)"] += 1
+    return lines
 
 
 def garrisoned_lines(e, c):
@@ -3236,9 +3266,13 @@ def heal_lines(e, c):
     if found is None:
         stats["heal (building or no amount, not supported yet)" if q else "heal (no amount)"] += 1
         return []
-    c.setup["scoreboard objectives add aoe_hp dummy"] = c.setup["scoreboard objectives add aoe_max dummy"] = None
     stats["heal"] += 1
-    at = found[0]                                                      # Gaia: not the players (effect_units)
+    return heal_commands(found[0], q, c)                               # Gaia: not the players (effect_units)
+
+
+def heal_commands(at, q, c):
+    """The units of selector `at` get q AoE2 hit points back, not above their maximum (heal_lines, damage_lines)."""
+    c.setup["scoreboard objectives add aoe_hp dummy"] = c.setup["scoreboard objectives add aoe_max dummy"] = None
     return [f"execute as {at} store result score @s aoe_hp run data get entity @s Health",
             f"execute as {at} store result score @s aoe_max run attribute @s minecraft:max_health get",
             f"execute as {at} run scoreboard players add @s aoe_hp {q}",
@@ -3302,6 +3336,21 @@ def tech_name_lines(e, c):
     c.stats["change technology name"] += 1
     text = f"{e['player']} {tech} {msg}".replace("\\", "\\\\").replace('"', '\\"')
     return [f'data modify storage aoe2mc:names list append value "{text}"']
+
+
+def train_location_lines(e, c):
+    """The command of "Add Train Location" (#2865): "<player> <unit> <building> <button> <seconds>" goes into the list of
+    the data storage aoe2mc:locations. A converted world has no menus: the scenario mode of the game program
+    (game/scenario.py locations) empties the list and adds the unit to the menu of the building of the player, at the
+    AoE2 button with the train time (no time: the time of the unit). The hotkey: not supported (no keys in a menu)."""
+    _, unit = e.get("object") or (None, None)
+    _, building = e.get("building") or (None, None)
+    if not unit or not building or unit.isdigit() or building.isdigit() or e["player"] <= 0:
+        c.stats["add train location (not supported)"] += 1
+        return []
+    c.stats["add train location"] += 1
+    return [f'data modify storage aoe2mc:locations list append value '
+            f'"{e["player"]} {unit} {building} {max(e.get("button") or 0, 0)} {max(e.get("seconds") or 0, 0)}"']
 
 
 def player_name_lines(e, c):
@@ -4043,6 +4092,8 @@ def visibility_lines(e, c):
 # (effect, kinds, techs) -> value. A new effect is one line here, in alphabetical order (#2792): parallel trigger
 # tickets conflicted in one expression of read_scenario. The older effects still have their entry there.
 EFFECT_KEYS = {
+    ADD_TRAIN_LOCATION: {"building": lambda e, kinds, techs: kinds.get(e.object_list_unit_id_2), "button": "button_location",
+                         "seconds": "train_time"},
     CHANGE_TECHNOLOGY_LOCATION: {"button": "button_location", "object2": lambda e, kinds, techs: kinds.get(   # #2864
         e.object_list_unit_id_2), "technology": lambda e, kinds, techs: techs.get(e.technology, str(e.technology))},
     CHANGE_TRAIN_LOCATION: {"button": "button_location",                                                       # #2864
@@ -4055,6 +4106,8 @@ EFFECT_KEYS = {
     LOAD_KEY_VALUE: {"quantity": "quantity", "variable": "variable"},   # (#2887)
     MODIFY_ATTRIBUTE_FOR_CLASS: {"attribute": "object_attributes", "operation": "operation", "quantity": "quantity",
                                  "class": "armour_attack_class", "aa": "armour_attack_quantity", "group": "object_group2"},
+    MODIFY_OBJECT_ATTRIBUTE: {"aa": "armour_attack_quantity", "armour_class": "armour_attack_class",   # (#2860)
+                              "attribute": "object_attributes", "operation": "operation", "quantity": "quantity"},
     MODIFY_VARIABLE_BY_ATTRIBUTE: {"attribute": "object_attributes", "class": "armour_attack_class",   # (#2858)
                                    "operation": "operation", "variable": "variable"},
     SET_BUILDING_GATHER_POINT: {"selected": lambda e, kinds, techs: list(e.selected_object_ids or [])},
@@ -4067,6 +4120,7 @@ EFFECT_KEYS = {
 # alphabetical order, and its handler function (#2613): no change of trigger_files.
 EFFECTS = {
     ACTIVATE_TRIGGER: switch_lines,
+    ADD_TRAIN_LOCATION: train_location_lines,
     ATTACK_MOVE: order_lines,
     BUILD_OBJECT: build_lines,
     CHANGE_COLOR_MOOD: mood_lines,
@@ -4121,6 +4175,7 @@ EFFECTS = {
     MIRROR_DIPLOMACY: mirror_lines,
     MODIFY_ATTRIBUTE: attribute_lines,
     MODIFY_ATTRIBUTE_FOR_CLASS: attribute_lines,
+    MODIFY_OBJECT_ATTRIBUTE: object_attribute_lines,
     MODIFY_RESOURCE: resource_lines,
     MODIFY_RESOURCE_BY_VARIABLE: resource_by_variable_lines,
     MODIFY_VARIABLE_BY_ATTRIBUTE: variable_by_attribute_lines,
@@ -4171,6 +4226,8 @@ SCORE_TESTS = {
     TRIGGER_ACTIVE: lambda c: f"score #{c['trigger']} aoe_on matches {int(not c['inverted'])}",   # #2699
     UNITS_GARRISONED: lambda c: f"score #g{c['unit']} aoe_gar matches {max(c['quantity'], 1)}..",   # #2714
     VARIABLE_VALUE: lambda c: f"score #v{c['variable']} aoe_var matches {variable_range(c)}",
+    # the years left on a timer of the player (VictoryTimerType: 0 wonder, 1 relic, 2 king of the hill, #2906)
+    VICTORY_TIMER: lambda c: f"score #p{c['player']}.{c['timer_type']} aoe_vic matches {variable_range(c)}",
 }
 
 
@@ -4264,6 +4321,8 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
                     or c["type"] == COMPARE_VARIABLES and compare_test(c) is None
                     or c["type"] == OBJECT_HP and (c.get("ref", -1) < 0 or variable_range(c) is None)
                     or c["type"] == UNITS_GARRISONED and c.get("unit", -1) < 0
+                    or c["type"] == VICTORY_TIMER and (c.get("player", -1) <= 0 or c.get("timer_type") not in (0, 1, 2)
+                                                       or variable_range(c) is None)
                     or c["type"] == OBJECT_HAS_ACTION and (c.get("ref", -1) < 0 or c.get("next", -1) >= 0
                                                            or c.get("action") not in OBJECT_ACTIONS)
                     or c["type"] in VISIBLE and (c.get("ref") is None or c["ref"] < 0 or c.get("player", -1) <= 0)
@@ -4382,7 +4441,8 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
     if names:
         load[:0] = ["scoreboard objectives add aoe_var dummy"] + \
             [f"scoreboard players add {v} aoe_var 0" for v in names]   # AoE2 variables start at 0
-    for word in ("aoe_action", "aoe_difficulty", "aoe_gar", "aoe_lost", "aoe_seen", "aoe_tech", "aoe_techstate"):  # the game program
+    for word in ("aoe_action", "aoe_difficulty", "aoe_gar", "aoe_lost", "aoe_seen", "aoe_tech", "aoe_techstate",
+                 "aoe_vic"):                                                        # the scores of the game program
         if any(f" {word} " in x for x in tick):
             setup[f"scoreboard objectives add {word} dummy"] = None
     if switch:
