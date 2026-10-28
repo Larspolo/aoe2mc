@@ -17,30 +17,9 @@ BONUSES = {}                                                           # civ -> 
 with open(os.path.join(ROOT, "tests", "data", "civ_bonuses.jsonl")) as f:
     for r in map(json.loads, f):
         BONUSES.setdefault(r.pop("civ"), []).append(r)
-TABLES = (                                                            # one per line: parallel tickets add one
-    "AGE_GIFTS",
-    "AGE_NO_BUILDINGS",
-    "AGE_RATE",
-    "AGE_VILLAGERS",
-    "ARROWS",
-    "BUILD",
-    "BUILD_OF",
-    "COSTS",
-    "COST_PER",
-    "EXTRA",
-    "DROP",
-    "GARRISON",
-    "LAST",
-    "REPAIR",
-    "REPAIR_COST",
-    "RESEARCH_TIME",
-    "START",
-    "TRAIN_RATE",
-    "TWICE",
-    "UNITS",
-    "WORK",
-    "WORK_RATE",
-)
+# The tables of game/civs.py that the list names: no list of names here, so parallel tickets with a new table do not
+# conflict (#2239). A typo in an "in" value is no name of civs and no file: test_each_bonus_has_one_known_state fails.
+TABLES = sorted({r["in"] for rows in BONUSES.values() for r in rows if r.get("in", "").isupper() and hasattr(civs, r["in"])})
 KEYS = set(re.findall(r"`(play:[a-z-]+)`", open(os.path.join(ROOT, "docs", "ROADMAP.md")).read()))
 
 
@@ -58,6 +37,14 @@ def test_each_bonus_has_one_known_state():
                 assert r["in"] in TABLES or os.path.isfile(os.path.join(ROOT, r["in"])), (civ, r)
             else:
                 assert r.get("gap", r.get("later")) in KEYS, (civ, r)
+
+
+def test_each_table_is_keyed_by_civilizations():
+    known = {c for v in buildings.CIV_ARCH.values() for c in v.split()}
+    assert {"COSTS", "START", "WORK"} <= set(TABLES)
+    for name in TABLES:
+        table = getattr(civs, name)
+        assert isinstance(table, (dict, tuple)) and set(table) <= known, name
 
 
 def test_each_bonus_of_a_table_has_its_entry():
