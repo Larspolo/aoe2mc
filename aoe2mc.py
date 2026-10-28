@@ -473,8 +473,8 @@ def read_scenario(path):
                                                if e.effect_type == CHANGE_VARIABLE else {}),
                                             **({"target": e.target_player}                # "Change Ownership" (#2570)
                                                if e.effect_type == CHANGE_OWNERSHIP else {}),
-                                            **({"color": e.player_color}                 # (#2712)
-                                               if e.effect_type == CHANGE_PLAYER_COLOR else {}),
+                                            **({"color": e.player_color}                 # (#2712, #2824)
+                                               if e.effect_type in (CHANGE_OBJECT_PLAYER_COLOR, CHANGE_PLAYER_COLOR) else {}),
                                             **({"target": e.target_player,                # "Replace Object" (#2703)
                                                 "object2": kinds.get(e.object_list_unit_id_2)}
                                                if e.effect_type == REPLACE_OBJECT else {}),
@@ -2824,6 +2824,7 @@ CHANGE_COLOR_MOOD = 72
 CHANGE_DIPLOMACY = 1                                               # "Change Diplomacy" (#2645)
 CHANGE_OBJECT_COST = 40                                            # "Change Object Cost" (#2776)
 CHANGE_OBJECT_NAME = 26                                            # "Change Object Name" (#2616)
+CHANGE_OBJECT_PLAYER_COLOR = 58                                    # "Change Object Player Color" (#2824)
 CHANGE_OBJECT_SPEED = 33                                           # "Change Object Speed" (#2694)
 CHANGE_OBJECT_STANCE = 36                                          # "Change Object Stance" (#2705)
 CHANGE_OWNERSHIP = 18
@@ -3506,6 +3507,20 @@ def color_lines(e, c):
     return [f"team modify p{n} color {units.TEAM_COLOR[buildings.COLOR_NAMES[color - 1]]}"]
 
 
+def object_color_lines(e, c):
+    """The command of "Change Object Player Color" (#2824): the name of each unit of the effect (effect_units) gets the
+    hex color of the player color (PlayerColorId 1 to 8, units.HEX: as the names of the converter). The owner and its
+    team stay, so the glow keeps the team color: one unit cannot have another team color without another team."""
+    color = e.get("color")
+    found = effect_units(e, c.T) if isinstance(color, int) and 1 <= color <= len(buildings.COLOR_NAMES) else None
+    if found is None:
+        c.stats["change object player color (not supported yet)"] += 1
+        return []
+    c.stats["change object player color"] += 1
+    return [f"execute as {found[0]} run data modify entity @s CustomName.color set value "
+            f"\"{units.HEX[buildings.COLOR_NAMES[color - 1]]}\""]
+
+
 def victory_lines(e, c):
     """The command of "Declare Victory" (#2542): the score #p<player> of aoe_win is 1, and the scenario mode of the
     game program ends the game. The load function adds the objective (c.setup)."""
@@ -3567,6 +3582,7 @@ EFFECTS = {
     CHANGE_DIPLOMACY: diplomacy_lines,
     CHANGE_OBJECT_COST: cost_lines,
     CHANGE_OBJECT_NAME: name_lines,
+    CHANGE_OBJECT_PLAYER_COLOR: object_color_lines,
     CHANGE_OBJECT_SPEED: speed_lines,
     CHANGE_OBJECT_STANCE: stance_lines,
     CHANGE_OWNERSHIP: owner_lines,
