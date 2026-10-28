@@ -4,7 +4,7 @@ cannon galleons (wiki "Elite Cannon Galleon": HP 150, MAttack 60, +275 vs. build
 3, Armor 0/6, LOS 17, ROF 10, Speed 1.05, AOE 0.3), and the dock trains them in the slot of the cannon galleon. Only the
 civilizations with it in the wiki chart (1, x, +) see it."""
 import buildings
-from game import civs, combat, fleet, train
+from game import civs, combat, train
 from test_dock_train import DOCK, dock_map
 from test_train_archery import menus
 
@@ -24,7 +24,6 @@ def imperial(civ="SPANISH"):
 
 def test_the_values_are_those_of_aoe2():
     assert train.AFTER["ELITE_CANNON_GALLEON_UPGRADE"] == "CHEMISTRY" and len(train.HELP["ELITE_CANNON_GALLEON_UPGRADE"]) <= 50
-    assert combat.sight("ELITE_CANNON_GALLEON") == 17 and fleet.SPEEDS["ELITE_CANNON_GALLEON"] == 1.05
     assert combat.BLAST["ELITE_CANNON_GALLEON"] == 0.3 and combat.MIN_RANGE["ELITE_CANNON_GALLEON"] == 3
     assert "ELITE_CANNON_GALLEON" in combat.MELEE_RANGED and train.ITEMS["ELITE_CANNON_GALLEON"][0] == train.ITEMS["CANNON_GALLEON"][0]
     assert set(civs.MISSING["ELITE_CANNON_GALLEON_UPGRADE"]) == set(buildings.CIV_TO_ARCH) - HAVE

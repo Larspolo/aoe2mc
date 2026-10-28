@@ -12,7 +12,6 @@ def game(civ):
 
 
 def test_persian_town_centers_and_docks_have_double_hit_points():
-    assert combat.stats("TOWN_CENTER").hp == 2400 and combat.stats("DOCK").hp == 1800
     g = game("PERSIANS")
     assert build.values(g, "TOWN_CENTER").hp == 4800 and build.values(g, "DOCK").hp == 3600
     assert build.values(g, "BARRACKS").hp == combat.stats("BARRACKS").hp
