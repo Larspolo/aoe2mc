@@ -752,7 +752,7 @@ TRAIN = {r["name"]: (r["seconds"], r["building"]) for r in units.rows("train.jso
 RESEARCH_S = {"Loom": 25, "Town Watch": 25, "Town Patrol": 40, "Wheelbarrow": 75, "Hand Cart": 55,
               "Feudal Age": 130, "Castle Age": 160, "Imperial Age": 190}   # the town center researches: they delay units
 UNIT_USE = {"move", "order", "build", "wall", "patrol", "follow", "formation", "attack_move", "back_to_work", "stance",
-            "garrison"}
+            "garrison", "autoscout"}
 BUILDING_USE = {"queue", "research", "gather_point", "ungarrison", "sell", "buy"}
 WORK = re.compile(r"TREE|.*BUSH|.*_MINE|.*FARM")                     # an ORDER on these: a villager gathers
 
