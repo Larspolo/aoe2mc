@@ -9,7 +9,7 @@
 {"name": "ATHENIANS: Athenians can be changed between Economic, Naval, and Military at the Town Center.", "civ": "ATHENIANS", "bonus": "Athenians can be changed between Economic, Naval, and Military at the Town Center.", "later": "play:setup"}
 {"name": "ATHENIANS: Lumberjacks generate food 1 for every wood 14.7.", "civ": "ATHENIANS", "bonus": "Lumberjacks generate food 1 for every wood 14.7.", "in": "EXTRA"}
 {"name": "ATHENIANS: Hoplites move 15% faster.", "civ": "ATHENIANS", "bonus": "Hoplites move 15% faster.", "later": "play:military-train"}
-{"name": "AZTECS: Start the game with an Eagle Scout.", "civ": "AZTECS", "bonus": "Start the game with an Eagle Scout.", "later": "play:setup"}
+{"name": "AZTECS: Start the game with an Eagle Scout.", "civ": "AZTECS", "bonus": "Start the game with an Eagle Scout.", "in": "game/data/civs.jsonl"}
 {"name": "AZTECS: Villagers carry +3 extra resources.", "civ": "AZTECS", "bonus": "Villagers carry +3 extra resources.", "in": "CARRY"}
 {"name": "AZTECS: All military units are created 15% faster.", "civ": "AZTECS", "bonus": "All military units are created 15% faster.", "in": "TRAIN_RATE"}
 {"name": "AZTECS: Monks gain 5 HP for every researched Monastery technology.", "civ": "AZTECS", "bonus": "Monks gain 5 HP for every researched Monastery technology.", "in": "TECH_HP"}
@@ -82,7 +82,7 @@
 {"name": "GOTHS: Hunters carry food +15; hunt lasts 20% longer.", "civ": "GOTHS", "bonus": "Hunters carry food +15; hunt lasts 20% longer.", "in": ["CARRY", "LAST"]}
 {"name": "GOTHS: Loom is researched instantly.", "civ": "GOTHS", "bonus": "Loom is researched instantly.", "in": "RESEARCH_TIME"}
 {"name": "GOTHS: +10 population cap in the Imperial Age.", "civ": "GOTHS", "bonus": "+10 population cap in the Imperial Age.", "gap": "play:train"}
-{"name": "GURJARAS: Start the game with a Camel Scout.", "civ": "GURJARAS", "bonus": "Start the game with a Camel Scout.", "later": "play:setup"}
+{"name": "GURJARAS: Start the game with a Camel Scout.", "civ": "GURJARAS", "bonus": "Start the game with a Camel Scout.", "in": "game/data/civs.jsonl"}
 {"name": "GURJARAS: Starts with 2 Forage Bushes with food 175 each under the Town Center.", "civ": "GURJARAS", "bonus": "Starts with 2 Forage Bushes with food 175 each under the Town Center.", "in": "BUSHES"}
 {"name": "GURJARAS: Can garrison Mills with herdable animals to produce food.", "civ": "GURJARAS", "bonus": "Can garrison Mills with herdable animals to produce food.", "in": "HERD_FOOD"}
 {"name": "GURJARAS: Mounted units deal +20%/+30%/+40% bonus damage in the Feudal/Castle/Imperial Age.", "civ": "GURJARAS", "bonus": "Mounted units deal +20%/+30%/+40% bonus damage in the Feudal/Castle/Imperial Age.", "in": "UNITS"}
@@ -147,7 +147,7 @@
 {"name": "MAPUCHE: Infantry, Slingers, and Skirmishers get +5/10/15 hit points in the Feudal/Castle/Imperial Age.", "civ": "MAPUCHE", "bonus": "Infantry, Slingers, and Skirmishers get +5/10/15 hit points in the Feudal/Castle/Imperial Age.", "in": "UNITS"}
 {"name": "MAPUCHE: Mounted units generate gold +3 per military unit killed.", "civ": "MAPUCHE", "bonus": "Mounted units generate gold +3 per military unit killed.", "in": "KILL_GOLD"}
 {"name": "MAPUCHE: Enemy Castles are revealed on the map.", "civ": "MAPUCHE", "bonus": "Enemy Castles are revealed on the map.", "in": "REVEAL"}
-{"name": "MAYANS: Start the game with an Eagle Scout.", "civ": "MAYANS", "bonus": "Start the game with an Eagle Scout.", "later": "play:setup"}
+{"name": "MAYANS: Start the game with an Eagle Scout.", "civ": "MAYANS", "bonus": "Start the game with an Eagle Scout.", "in": "game/data/civs.jsonl"}
 {"name": "MAYANS: Start the game with +1 Villager, but with food -50.", "civ": "MAYANS", "bonus": "Start the game with +1 Villager, but with food -50.", "in": "START"}
 {"name": "MAYANS: Resources last 15% longer.", "civ": "MAYANS", "bonus": "Resources last 15% longer.", "in": "LAST"}
 {"name": "MAYANS: Foot archers (except Skirmishers) are 10%/20%/30% cheaper in the Feudal/Castle/Imperial Age.", "civ": "MAYANS", "bonus": "Foot archers (except Skirmishers) are 10%/20%/30% cheaper in the Feudal/Castle/Imperial Age.", "in": "COSTS"}

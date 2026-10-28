@@ -387,6 +387,10 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
         import train
         for x in [g, *(s.g for s in g.bots)]:
             train.start(x, age)
+    import scout
+    if not state and scout.used(data):               # the scout of each civilization (#2391), not twice after a load
+        for x in [g, *(s.g for s in g.bots)]:
+            scout.swap(x)
     if mode != "standard":                           # after the bots: their Kings go to their Gathers (#2347)
         import regicide
         g.mode = mode
