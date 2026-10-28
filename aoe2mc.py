@@ -2860,6 +2860,7 @@ CREATE_OBJECT = 11
 CREATE_OBJECT_ARMOR = 78                                           # "Create Object Armor" (#2855)
 CREATE_OBJECT_ATTACK = 77                                          # "Create Object Attack" (#2855)
 DAMAGE_OBJECT = 24                                                 # "Damage Object" (#2571)
+DECISION_TRIGGERED = 75                                            # the condition "Decision Triggered" (#2888)
 DECLARE_VICTORY = 13                                               # "Declare Victory" (#2542)
 DELETE_KEY = 83                                                    # "Delete Key" (#2887)
 DISABLE_OBJECT_SELECTION = 70                                      # "Disable Object Selection" (#2854)
@@ -2936,6 +2937,7 @@ VISIBLE = (OBJECT_NOT_VISIBLE, OBJECT_VISIBLE, OBJECT_VISIBLE_MULTIPLAYER)  # th
 TICKED = COUNTED + (                                               # conditions of the tick function, one per line
     ACCUMULATE_ATTRIBUTE,
     COMPARE_VARIABLES,
+    DECISION_TRIGGERED,
     DIFFICULTY_LEVEL,
     DIPLOMACY_STATE,
     DISPLAY_TIMER_TRIGGERED,
@@ -2997,6 +2999,7 @@ OBJECT_TESTS = {DESTROY_OBJECT: ("if entity @e[tag=aoe2mc.m{ref}] unless entity 
 TICKED += tuple(OBJECT_TESTS)
 INVERTED = tuple(OBJECT_TESTS) + (                                  # conditions with an inverted test in the tick
     COMPARE_VARIABLES,                                                 # function, one per line in alphabetical order
+    DECISION_TRIGGERED,
     OBJECT_HAS_ACTION,
     TRIGGER_ACTIVE,                                                    # (parallel tickets add lines, #2791)
 )
@@ -3024,6 +3027,7 @@ CONDITION_KEYS = {
     BRING_OBJECT_TO_OBJECT: {"next": "next_object",                                      # (#2771)
                              "next_unit": lambda c, entities, techs: c.next_object in entities},
     COMPARE_VARIABLES: {"variable": "variable", "variable2": "variable2", "comparison": "comparison"},   # (#2698)
+    DECISION_TRIGGERED: {"decision": "decision_id", "option": "decision_option"},          # (#2888)
     DIFFICULTY_LEVEL: {"quantity": "quantity"},                                          # (#2704)
     DIPLOMACY_STATE: {"player": "source_player", "target": "target_player", "diplomacy": "quantity"},   # the stance (#2757)
     DISPLAY_TIMER_TRIGGERED: {"slot": "timer_id"},                                       # (#2702)
@@ -4265,6 +4269,7 @@ Effect = namedtuple("Effect", "t T ground players stats mood files setup switch 
 SCORE_TESTS = {
     ACCUMULATE_ATTRIBUTE: resource_score,
     COMPARE_VARIABLES: compare_test,
+    DECISION_TRIGGERED: lambda c: f"score #last aoe_decision matches {c['decision'] * 10 + c['option']}",   # #2888
     DIFFICULTY_LEVEL: lambda c: f"score #level aoe_difficulty matches {c.get('quantity', 0)}",
     DIPLOMACY_STATE: lambda c: f"score #p{c['player']}.p{c['target']} aoe_dipstate matches {c['diplomacy'] + 1}",
     DISPLAY_TIMER_TRIGGERED: lambda c: f"score #done{c.get('slot', 0)} aoe_timer matches 1..",   # set at 0 (#2702)
@@ -4372,6 +4377,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
                     and (c.get("player", -1) <= 0 or not c.get("technology"))
                     or c["type"] == ACCUMULATE_ATTRIBUTE and resource_score(c) is None
                     or c["type"] == COMPARE_VARIABLES and compare_test(c) is None
+                    or c["type"] == DECISION_TRIGGERED and (c.get("decision", -1) < 0 or c.get("option") not in (1, 2))
                     or c["type"] == OBJECT_HP and (c.get("ref", -1) < 0 or variable_range(c) is None)
                     or c["type"] == UNITS_GARRISONED and c.get("unit", -1) < 0
                     or c["type"] == VICTORY_TIMER and (c.get("player", -1) <= 0 or c.get("timer_type") not in (0, 1, 2)
@@ -4416,7 +4422,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
             if c["type"] in SCORE_TESTS:                               # a score of the world or the game
                 test = SCORE_TESTS[c["type"]](c)
                 no = c["type"] == COMPARE_VARIABLES and compare_negated(c) or \
-                    c["type"] == OBJECT_HAS_ACTION and c["inverted"]   # "not equal" or "inverted": unless
+                    c["type"] in (DECISION_TRIGGERED, OBJECT_HAS_ACTION) and c["inverted"]   # "not equal", "inverted": unless
                 tests.append(f"{'unless' if no else 'if'} {test}")
                 unless.append(f"{'if' if no else 'unless'} {test}")
                 continue
@@ -4500,6 +4506,8 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
             setup[f"scoreboard objectives add {word} dummy"] = None
     if "scoreboard objectives add aoe_decision trigger" in setup:     # the clicks of "Create Decision" (#2886)
         tick += DECISION_TICK
+    if any(" aoe_decision " in x for x in tick):                       # "Decision Triggered" (#2888)
+        setup["scoreboard objectives add aoe_decision trigger"] = None
     if switch:
         setup["scoreboard objectives add aoe_on dummy"] = None
     load[:0] = setup
