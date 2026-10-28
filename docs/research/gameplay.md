@@ -259,6 +259,9 @@ The owner decides on the platform first (decision ticket). The other tickets dep
   are a guess that the owner can tune (#2661).
 - Click on the minimap (#2585, option A): a map in an item frame (a "map table") near the own town center. A right
   click with the selection wand on a pixel of the framed map sends the selection there (#2586).
+- Resources left (#3275, option B, #3284): a `text_display` above each partially drained tree, fruit bush, mine, farm
+  and carcass shows the whole amount left (`game/amounts.py`). A full resource shows nothing; a carcass shows from the
+  kill, because it rots at once.
 
 ## Pitfalls of the game program
 
