@@ -18,7 +18,7 @@ def stable(civ="HINDUSTANIS", techs=("HEAVY_CAMEL_RIDER_UPGRADE",)):
 
 
 def test_the_values_are_those_of_aoe2():
-    assert train.AFTER["IMPERIAL_CAMEL_RIDER_UPGRADE"] == "HEAVY_CAMEL_RIDER_UPGRADE"
+    assert train.BY_KEY["after"]["IMPERIAL_CAMEL_RIDER_UPGRADE"] == "HEAVY_CAMEL_RIDER_UPGRADE"
     assert len(train.HELP["IMPERIAL_CAMEL_RIDER_UPGRADE"]) <= 50
     assert civs.MISSING["IMPERIAL_CAMEL_RIDER_UPGRADE"] == tuple(sorted({r["name"] for r in civs.ROWS} - {"HINDUSTANIS"}))
 

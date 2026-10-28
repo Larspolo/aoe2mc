@@ -60,13 +60,13 @@ def test_a_sheep_carcass_is_a_herd_and_a_deer_carcass_not():
 
 def test_the_castle_reads_the_civilization_with_civ():
     g = setup("CELTS")
-    techs = tuple(n for n, c in train.CIV_TECHS.items() if c == "CELTS")          # the unique technologies (#2021, #2043)
+    techs = tuple(n for n, c in train.BY_KEY["civ"].items() if c == "CELTS")          # the unique technologies (#2021, #2043)
     assert train.trains(g, "CASTLE") == tuple(n for n in [train.UNIQUE.get("CELTS")] if n in train.COSTS) + train.TRAINS["CASTLE"] + techs
 
 
 def test_each_entry_is_a_known_civilization_and_kind():
     import buildings
     known = {c for v in buildings.CIV_ARCH.values() for c in v.split()}
-    kinds = {"farm", "food", "gold", "hunt", "sheep", "stone", "wood"}
+    kinds = {"farm", "food", "gold", "hunt", "oyster", "sheep", "stone", "wood"}
     assert set(civs.WORK) <= known and all(set(w) <= kinds for w in civs.WORK.values())
     assert list(civs.WORK) == sorted(civs.WORK)

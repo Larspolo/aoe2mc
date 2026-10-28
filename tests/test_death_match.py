@@ -11,7 +11,7 @@ def settings(**given):
 
 def test_death_match_starts_with_the_ultra_resources_in_the_post_imperial_age():
     s = settings(mode="death-match")
-    assert s["resources"] == "ultra" and s["age"] == "post-imperial"
+    assert s["resources"] == "ultra" and run.MODES["death-match"]["age"] == "post-imperial"
     assert gather.LEVELS["ultra"] == {"food": 20000, "wood": 20000, "gold": 10000, "stone": 5000}
     data = grid([[64] * 8 for _ in range(8)], [{"kind": "building", "name": "TOWN_CENTER", "player": p,
                                                 "footprint": [p * 2, 1, p * 2 + 1, 2]} for p in (1, 2)])
@@ -23,12 +23,13 @@ def test_death_match_starts_with_the_ultra_resources_in_the_post_imperial_age():
 def test_a_given_setting_wins_over_the_mode():
     s = settings(mode="death-match", resources="high", age="castle")
     assert s["resources"] == "high" and s["age"] == "castle"
+    assert settings(mode="death-match", age="castle")["resources"] == "ultra"
 
 
 def test_the_other_modes_keep_their_defaults():
     assert settings() == run.SETTINGS
     assert settings(mode="regicide")["resources"] == "standard"
-    assert settings(mode="empire-wars")["age"] == "feudal" and settings(mode="empire-wars")["resources"] == "standard"
+    assert settings(mode="empire-wars")["resources"] == "standard"
 
 
 def test_each_mode_default_is_a_setting_that_exists():

@@ -33,4 +33,4 @@ def test_run_offers_each_level(capsys):
     with pytest.raises(SystemExit):
         run.main(["--help"])
     help_text = capsys.readouterr().out
-    assert "--resources {" + ",".join(gather.LEVELS) + "}" in help_text
+    assert "--resources {" + ",".join([*gather.LEVELS, *gather.RANDOM]) + "}" in help_text

@@ -24,7 +24,7 @@ gate), a complete wall tile loses its target.
 A complete gate gets a portcullis across its passage (#1325, #1656, portcullis()): iron bars from the ground to the top
 of the passage. On Paper the plugin raises them while an own or allied unit is near or walks a path through the gate
 (aoe gate, Gates.java), as the AoE2 gate (the decision #1323).
-Fortified Wall (#1326, train.WALL_UPGRADES): the new and the complete own stone walls and gates get the fortified design
+Fortified Wall (#1326, the key "walls" of train.jsonl): the new and the complete own stone walls and gates get the fortified design
 and its hit points (design(), upgrade()); a damaged one keeps its lost hit points, as in AoE2.
 """
 import json
@@ -50,6 +50,7 @@ import table  # noqa: E402
 ROWS = table.load("build.jsonl")
 COSTS = {r["name"]: r["cost"] for r in ROWS if "cost" in r}
 BUILD_TIMES = {r["name"]: r["time"] for r in ROWS if "time" in r}
+MILITARY = {r["name"] for r in ROWS if r.get("military")}         # the AoE2 "Handicap" speeds them up (civs.work_rate, #2474)
 FOLWARK_SHARE, FOLWARK_REACH = 0.1, 4                               # of the food of a farm; tiles from the Folwark
 MENU = list(COSTS)                                                 # trigger value N -> MENU[N - 1]
 OBJECTIVE = "aoe_build"
@@ -193,8 +194,13 @@ def locked(g, name):
         return f"Needs the {('Dark', 'Feudal', 'Castle', 'Imperial')[age]} Age"
     if g is not None and name in NEEDS and NEEDS[name] not in getattr(g, "techs", ()):
         return "Needs " + pretty(NEEDS[name].removesuffix("_TECH"))
-    if name == "TOWN_CENTER" and getattr(g, "mode", None) == "sudden-death" and town_center(g):
+    from gather import has_mode                                        # gather imports this module
+    if name == "TOWN_CENTER" and has_mode(g, "sudden-death") and town_center(g):
         return "Sudden Death: only one town center"                    # (#2407)
+    if getattr(g, "mode", None) == "capture-the-relic":
+        import combat                                                  # combat -> gather -> build: import it late
+        if combat.STANDS_FOR.get(name, name) == "MONASTERY":           # the fortified church too (#1930)
+            return "Capture the Relic: no more monasteries"            # (#2458)
     if g is not None and name == "TOWN_CENTER" and ages(g) < (1 if civs.civ(g) == "CUMANS" else 2) and town_center(g):
         return "Needs the Castle Age"                                  # a second one (AoE2; the Cumans: Feudal, #1951)
 
@@ -642,7 +648,7 @@ def design(g, name, player):
     """The design of building name of player: a stone wall (gate) of the player after Fortified Wall is a fortified
     wall (gate), #1326."""
     import train                                                       # train imports this module
-    new = {old: wall for t, walls in train.WALL_UPGRADES.items() if t in getattr(g, "techs", ()) for old, wall in walls.items()}
+    new = {old: wall for t, walls in train.BY_KEY["walls"].items() if t in getattr(g, "techs", ()) for old, wall in walls.items()}
     return new.get(name, name) if player == g.player else name
 
 
@@ -651,7 +657,7 @@ def line(g, name, techs=None):
     those of the guard tower (keep), #1374. techs: the technologies (default: those of the player)."""
     import train                                                       # train imports this module
     techs = getattr(g, "techs", ()) if techs is None else techs
-    for t, towers in train.TOWER_UPGRADES.items():                     # in the research order
+    for t, towers in train.BY_KEY["towers"].items():                  # in the research order
         name = towers.get(name, name) if t in techs else name
     return name
 
@@ -665,7 +671,8 @@ def values(g, name, techs=None):
     name = line(g, name, techs)
     wall = name in combat.WALLS or name.endswith(("_WALL", "_GATE"))   # its age: combat.wall (upgrade, #1372)
     s = civs.hp(civs.civ(g) if hasattr(g, "data") else None, name, combat.stats(name),
-                0 if wall else sum(t in techs for t in AGE_TECHS))    # before Masonry (#1895), of the age (#2116)
+                0 if wall else sum(t in techs for t in AGE_TECHS),    # before Masonry (#1895), of the age (#2116)
+                civs.handicap(g.data, g.player) if hasattr(g, "data") else 1)   # #2474
     for t in sorted(techs):
         s = train.TECHS[t](name, s)
     return s
@@ -706,7 +713,7 @@ def upgrade(g, site, old, redraw=True):
     import combat, repair                                              # combat -> gather -> build: import it late
     x0, x1, z0, z1 = site["footprint"]
     name, T = design(g, site["name"], site["player"]), g.map.T
-    new = combat.wall(name, ages(g), civs.civ(g, site["player"]))
+    new = combat.wall(name, ages(g), civs.civ(g, site["player"]), civs.handicap(g.data, site["player"]))
     if new == old or (hp := repair.hp(g, (x0, x1, z0, z1))) is None or hp <= 0:
         return
     for c in Replay(g, g.data, getattr(g.game, "version", VERSION_NAME)).building(
@@ -763,14 +770,15 @@ def target(g, site):
     """A complete building of combat.BUILDINGS gets its target entity, as a building of the map (combat.setup): the
     AoE2 hit points, and the arrows of a town center, tower or castle (#1202). wonder.tick makes the one of a wonder."""
     import combat                                                      # combat -> gather -> build: import it late
-    if site["name"] not in combat.BUILDINGS and site["name"] not in combat.WALLS or site["name"] == "WONDER":
+    if site["name"] not in combat.BUILDINGS and site["name"] not in combat.WALLS or site["name"] == "WONDER" \
+            or site.get("lasting"):                                    # the monastery of Capture the Relic (#2458)
         return
     x0, x1, z0, z1 = site["footprint"]
     uuid = combat.target_uuid([x0, z0, x1, z1])
     box = combat.building_box({"footprint": [x0, z0, x1, z1]}, g.map.ground)
     wall, name = site["name"] in combat.WALLS, line(g, design(g, site["name"], site["player"]))   # the hit points of the age
                                                                        # (#1322), a guard tower or keep (#1374)
-    s = combat.wall(name, ages(g), civs.civ(g, site["player"])) if wall else values(g, name)   # Chemistry (#1375), Masonry (#1398)
+    s = combat.wall(name, ages(g), civs.civ(g, site["player"]), civs.handicap(g.data, site["player"])) if wall else values(g, name)   # Chemistry (#1375), Masonry (#1398)
     for c in combat.building(uuid, name, site["player"], box, g.map.T, s=s, low=minimum(g, name),
                              factor=civs.arrows(g, name, site["player"])) \
             + [f"tag {uuid} add {combat.WALL_TAG}"] * wall + [combat.label_command(uuid, name)]:
