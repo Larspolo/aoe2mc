@@ -23,6 +23,7 @@
 {"name": "faith", "text": "The factor of the speed of the monks that regain faith after a conversion (Muisca: 100 % faster). game/monk.py.", "issue": 2314}
 {"name": "fallen", "text": "The part of the cost of a fallen own unit that the player gets back (Tupi). game/spoils.py.", "issue": 2271}
 {"name": "farm_upgrades", "text": "The factor of the food of the farm upgrades (Sicilians: +125 %). train.research.", "issue": 2230}
+{"name": "free_relic", "text": "The free relics of the first complete own building of a kind, {building: relics} (Armenians: one relic in the first Fortified Church). monk.free_relic puts them into it.", "issue": 2419}
 {"name": "garrison", "text": "The units inside a building, {building: units} (garrison.size).", "issue": 2117}
 {"name": "heal_range", "text": "The factor of the heal range of the monks.", "issue": 2269}
 {"name": "herd_food", "text": "Herdable animals in a building make food (garrison.pasture), {building: [size, a, b]}: at most size animals in each, a × ln(F / b + 1) food per AoE2 minute for F food of the animals in all of them (Gurjara mills: 10, 15, 200, AoE2 DE wiki).", "issue": 2342}
@@ -51,6 +52,7 @@
 {"name": "tech_hp", "text": "[group of GROUPS, building, hit points]: the units of the group get the hit points for each technology of the menu of that building that the player has (the Aztec monks: +5 for each monastery technology).", "issue": 2269}
 {"name": "town_center", "text": "The resources that the first town center gives (Tupi +25 of each): in the start stock when the player has a town center at the start, else when its first town center is complete (build.rise).", "issue": 2293}
 {"name": "train_rate", "text": "The train rate of unit groups: [group of GROUPS, factor, also the upgrades] (Aztec military units, Khitan skirmishers ...). train.seconds divides by civs.train_rate().", "issue": 1927}
+{"name": "transport", "text": "More units in a transport ship of the civilization (Saracens: +20). transport.size.", "issue": 2344}
 {"name": "trap_food", "text": "The factor of the food of a new own fish trap (Malay 3×). gather.Map sets it (Map.trap_food).", "issue": 2333}
 {"name": "twice", "text": "The technologies whose effect the civilization gets twice (train.stats).", "issue": 1561}
 {"name": "unique", "text": "The unique unit of its castle (train.UNIQUE).", "issue": 1914}
