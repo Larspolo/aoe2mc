@@ -34,7 +34,7 @@ def test_timer_chat_gives_a_function_and_a_schedule(tmp_path):
     t = trig(3, [(aoe2mc.TIMER, 10)], [(aoe2mc.SEND_CHAT, "<BLUE>Hello, \"Lars\"", -1),
                                        (aoe2mc.DISPLAY_INSTRUCTIONS, "Go north.", 4)])
     aoe2mc.write_datapack(str(tmp_path), [], np.zeros((4, 4), np.int16), triggers=[t])
-    assert "schedule function aoe2mc:trigger/3 200t replace" in read(tmp_path, "load.mcfunction")
+    assert "schedule function aoe2mc:trigger/3 200t replace" in read(tmp_path, "start.mcfunction")
     assert read(tmp_path, "trigger/3.mcfunction").splitlines() == [
         'tellraw @a {"text": "Hello, \\"Lars\\""}', "title @a times 10 80 20",
         'title @a subtitle {"text": "Go north."}', 'title @a title ""']
