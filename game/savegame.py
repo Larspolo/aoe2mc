@@ -7,7 +7,8 @@ the train and research queues, the construction sites (also the done ones: the b
 points (#2257), and the orders of the units (#2258): the job, target and load of each villager, the farmers, stances,
 control groups and garrisons. A villager keeps no path: after the load it walks again with Minecraft path finding (P2).
 The save also keeps the wonder and relic victory timers and the market prices (#2324), the game settings of the
-command line (`run.py` options, "settings") and the attack time and wave of the bot (#2325).
+command line (`run.py` options, "settings") and the attack time and wave of the bot (#2325), and the game seconds of the
+treaty that have passed ("treaty_time", #2409): the treaty of a loaded game goes on, it does not start again.
 """
 import json
 import os
@@ -21,7 +22,8 @@ OPTIONAL = ("rates", "relic_timer", "wonder_shown", "wonders", "wonders_gone")  
 JOB = ("state", "load", "res", "job", "lap", "prey")                  # fields of a gather.Villager, as they are
 IDLE = ("to_rally", "to_repair", "repair")                             # orders that the save does not keep yet
 BOT = ("time", "charged", "attack")                                    # fields of a bot.Bot, as they are (#2325)
-SETTINGS = ("all_techs", "bot", "bot_attack", "cheats", "civ", "people", "reveal", "teams", "victory")   # run.py options
+SETTINGS = ("all_techs", "bot", "bot_attack", "cheats", "civ", "end_age", "mode", "people", "pop_limit", "reveal", "teams",
+            "treaty", "victory")                                       # run.py options (#2325, #2409)
 SKIP = ("session.lock",)                                               # the lock of the running server
 
 
@@ -66,6 +68,8 @@ def dump(g):
         d["players"][str(b.g.player)]["bot"] = {f: getattr(b, f) for f in BOT}
     if getattr(g.game, "settings", None):
         d["settings"] = dict(g.game.settings)
+    if getattr(g.game, "treaty", 0):                                   # treaty.start: the time goes on (#2409)
+        d["treaty_time"] = g.game.treaty_time
     return d
 
 
