@@ -35,6 +35,7 @@ TABLES = (                                                            # one per 
     "REPAIR",
     "REPAIR_COST",
     "RESEARCH_TIME",
+    "SMITH_UNITS",
     "START",
     "TECH_GIFTS",
     "TRAIN_RATE",
