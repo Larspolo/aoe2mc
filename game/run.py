@@ -28,6 +28,7 @@ Usage:
     python3 game/run.py WORLD --play --mode battle-royale  # "Battle Royale": the Corruption takes the map (#2439)
     python3 game/run.py WORLD --play --mode capture-the-relic   # "Capture the Relic": the center relic wins (#2440)
     python3 game/run.py WORLD --play --mode defend-the-wonder   # "Defend the Wonder": player 1 has a Wonder (#2441)
+    python3 game/run.py WORLD --play --mode wonder-race   # "Wonder Race": no attacks, the first wonder wins (#2406)
     python3 game/run.py WORLD --play --civ 1=BRITONS --civ 2=FRANKS   # the civilization of each player (#2267)
     python3 game/run.py WORLD --play --teams 1,1,2,2   # the team of each player, - is no team (#2296)
     python3 game/run.py WORLD --play --load SAVE   # go on with a saved game: Ctrl-C of --play saves into saves/ (#2255)
@@ -43,6 +44,7 @@ import contextlib
 import glob
 import hashlib
 import json
+import math
 import os
 import re
 import secrets
@@ -355,6 +357,7 @@ MODES = {
     "regicide": "each player has a King, a player whose King dies is defeated",
     "standard": "the AoE2 rules",
     "sudden-death": "one town center, a player who loses it is defeated",
+    "wonder-race": "no player can attack another, the first complete wonder wins",
 }
 VICTORIES = {                        # the AoE2 setting "Victory" (--victory, Gather.run): one per line, in alphabetical order
     "conquest": "only the conquest (#2316)",
@@ -435,13 +438,16 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
     if bot:                                          # after the people, next to their Sides (#1794)
         import bot as bots
         import replay
+        import treaty as treaties
         player, foe = bot_seat(data["players"], people)
         attack = max(bot_attack, settings["treaty"], key=replay.aoe2mc.game_time)   # the bot waits for the treaty too
+        if settings["mode"] in treaties.ENDLESS:     # Wonder Race: the bot never attacks (#2406)
+            attack = "never"
         g.bots = [*g.bots, bots.Bot(game, data, player=player, share=g, log=log, foe=foe,
-                                    attack=replay.aoe2mc.game_time(attack) / 1000,
+                                    attack=math.inf if attack == "never" else replay.aoe2mc.game_time(attack) / 1000,
                                     resources=settings["resources"], pop_limit=settings["pop_limit"]).setup()]
         print(f"A bot plays player {player}: {len(g.bots[-1].g.villagers)} villagers gather, its soldiers attack "
-              f"player {foe} at {attack}.", file=sys.stderr)
+              f"player {foe} {'never' if attack == 'never' else 'at ' + attack}.", file=sys.stderr)
     import combat
     combat.setup(game, data)                         # AoE2 hit points and damage (#514)
     if settings["mode"] == "empire-wars" and settings["age"] == "dark":   # the start age of the mode (#2408)
@@ -463,6 +469,8 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
         import defend_wonder
         g.mode = settings["mode"]
         defend_wonder.setup(g, settings["mode"], start=not state)
+    elif settings["mode"] == "wonder-race":                      # no setup: the endless treaty below (#2406)
+        g.mode = settings["mode"]
     elif settings["mode"] != "standard":                         # after the bots: their Kings go to their Gathers (#2347)
         import battle_royale
         import capture_relic
@@ -475,7 +483,9 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
              "sudden-death": sudden_death}.get(settings["mode"], regicide).setup(g, settings["mode"])
     import replay
     import treaty as treaties
-    if replay.aoe2mc.game_time(settings["treaty"]):              # after the Gathers: they set the neutral stances
+    if settings["mode"] in treaties.ENDLESS:                     # Wonder Race: a treaty with no end (#2406)
+        treaties.start(g, math.inf, (state or {}).get("treaty_time", 0.0))
+    elif replay.aoe2mc.game_time(settings["treaty"]):            # after the Gathers: they set the neutral stances
         treaties.start(g, replay.aoe2mc.game_time(settings["treaty"]) / 1000, (state or {}).get("treaty_time", 0.0))   # #2409
     if game.kind == "paper":                         # the view square of each player on map 0 (#1762)
         import replay
