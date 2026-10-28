@@ -43,6 +43,7 @@ WAIT = CONFIG.get("pacing", {}).get("max_waiting_prs", 10)   # flow brake: open 
 QUEUE = CONFIG.get("pacing", {}).get("max_ci_queue", 5)      # flow brake: queued CI runs (no runner yet)
 PR_MINUTES = CONFIG.get("pacing", {}).get("pr_minutes", 30)  # Automerge merges a green PR in a few minutes
 MAX_FIRE = CONFIG.get("pacing", {}).get("max_fire", 4)   # runs that the pacer starts per cycle: each run needs a few minutes to claim its ticket
+REFILL = CONFIG.get("pacing", {}).get("refill_runs", 1)   # runs beyond the ready tickets: each refills one epic (#609, #650)
 CALL = ["claude", "-p", "Reply with OK.", "--model", "claude-haiku-5-5", "--output-format", "stream-json", "--verbose"]
 
 
@@ -113,25 +114,35 @@ def week_line(usage, now):
     return line + (f" · runs out {at:%a %H:%M}" if out < reset7 else " · lasts to the reset")
 
 
-def runs_to_start(target, claims, ready, paused, hi=MAX_FIRE):
-    """The number of runs that the pacer starts now: the runs that the target misses, not more than the ready tickets,
-    but 1 when no ticket is ready: that run refills the queue (#609).
+def runs_to_start(target, claims, ready, paused, hi=MAX_FIRE, refill=REFILL):
+    """The number of runs that the pacer starts now: the runs that the target misses, not more than the ready tickets
+    and `refill` more: these refill the queue, one epic each, then take a new ticket (#609). One refill run left the
+    queue at 3 ready tickets for 40 target runs (2026-10-28).
     Runs that the scheduled task starts cannot start other runs (no `fire_trigger`, #566)."""
     if paused or not target:
         return 0
-    return max(0, min(target - claims, max(ready, 1), hi))
+    return max(0, min(target - claims, ready + refill, hi))
 
 
-def lane_plan(target, claims, ready, ready_haiku, weight, paused, hi=MAX_FIRE):
+def refill_runs(issues, now, minutes=60, refill=REFILL):
+    """`refill` when an open ticket is newer than `minutes` (the refills still find work), else 1: when the epics have
+    no goal left, the refill runs find nothing and stop, and one run is enough to start the next epic (`roadmap`).
+    issues: the open issues and PRs; now: Unix seconds."""
+    new = any("pull_request" not in i and now - datetime.datetime.fromisoformat(
+        i["created_at"].replace("Z", "+00:00")).timestamp() < minutes * 60 for i in issues)
+    return refill if new else min(refill, 1)
+
+
+def lane_plan(target, claims, ready, ready_haiku, weight, paused, hi=MAX_FIRE, refill=REFILL):
     """(K, H): the runs that the pacer starts now, and the H of them for the Haiku task (#1715, #1727). The target and
     the claims are in Opus runs, and a Haiku run counts `weight`. The ready `lane:haiku` tickets get Haiku runs first
-    (cheap), then Opus runs take the rest of the target: at most the other ready tickets, but 1 when none is ready
-    (it refills the queue, #609). The pacer starts the H runs on the Opus task when the Haiku task does not exist."""
+    (cheap), then Opus runs take the rest of the target: at most the other ready tickets and `refill` more (they refill
+    the queue, #609). The pacer starts the H runs on the Opus task when the Haiku task does not exist."""
     if paused or not target:
         return 0, 0
     room = target - claims
     h = max(0, min(ready_haiku, hi, math.floor(room / weight + 1e-9))) if room > 0 else 0
-    o = max(0, min(math.floor(room - h * weight + 1e-9), max(ready - h, 1), hi - h))
+    o = max(0, min(math.floor(room - h * weight + 1e-9), ready - h + refill, hi - h))
     return h + o, h
 
 
@@ -245,13 +256,15 @@ def main(argv=None):
         weights, source = health.lane_weights(health.status_comments())
         eq = claims if lanes is None else health.opus_equivalent(claims, lanes, weights)   # in Opus runs (#1727)
         target = target_runs(usage, now, burn, burn7=burn7)
-        k, h = lane_plan(target, eq, ready, len(dashboard.candidates(open_all, lane="haiku")), weights["haiku"], paused)
+        refill = refill_runs(open_all, now)
+        k, h = lane_plan(target, eq, ready, len(dashboard.candidates(open_all, lane="haiku")), weights["haiku"], paused,
+                         refill=refill)
         cap, flow = read_flow(now)
         if cap is not None:                                     # the flow is the bottleneck: Opus runs repair the PRs
             k, h = min(k, cap), 0
         print(k)
         print(f"haiku {h}")
-        print(f"{describe(usage, now, burn, burn7)} · claims {claims} ({eq:.2f} Opus runs) · ready {ready} · "
+        print(f"{describe(usage, now, burn, burn7)} · claims {claims} ({eq:.2f} Opus runs) · ready {ready} · refill {refill} · "
               f"paused {paused} · {flow} · weights " + ", ".join(f"{n} {w:.2f} ({source[n]})" for n, w in weights.items()),
               file=sys.stderr)
     elif a.target:

@@ -36,8 +36,12 @@ R < N, and make at most 2 × N − R tickets, so the queue stays at most twice t
 again, a large queue only waits). Do this at most once per run, in about 10 minutes.
 Lock it first: `python3 tools/claim.py 0 --refill` (one run per 10 minutes). Exit 1: another run makes the whole
 refill; then refill one open epic instead (the first one with open goals that an agent can do, under its lock below):
-up to 5 sub-issues (within the cap) for its open goals, then pick again (#650: 10 runs closed tickets faster than one
-refill made them).
+up to 10 sub-issues (within the cap) for its open goals, then pick again. The pacer starts `refill_runs` runs more
+than the ready tickets for this (`agent.toml`): many runs close tickets faster than one refill makes them (#650;
+2026-10-28: 3 ready tickets for 40 target runs). It starts them only while an open ticket is less than 60 minutes old
+(`usage.refill_runs`), else 1: an empty refill run costs quota.
+Give each new ticket `lane:haiku` when a Haiku run can do it as well as an Opus run (`ticket` skill, "Model lanes"):
+judge each ticket, do not aim at a number.
 Also lock each epic E with `python3 tools/claim.py E --refill` before you make its tickets (exit 1: skip that epic, #505).
 A `muted` ticket or epic (the owner mutes it until later, 2026-10-26) is out of all these steps: no split, no check, no
 new sub-issues, no `needs-human`. Still answer an owner comment on it (step 3).
@@ -45,7 +49,7 @@ new sub-issues, no `needs-human`. Still answer an owner comment on it (step 3).
    first with `python3 tools/claim.py N --refill` (exit 1: skip it).
 2. For each open epic whose sub-issues are all closed: make a sub-issue for each acceptance criterion that is
    still open and that an agent can do. A criterion that needs the owner stays on the epic.
-3. Make up to 12 new tickets (within the cap) for the remaining goals of the open epics, and for the fallbacks in
+3. Make up to 20 new tickets (within the cap) for the remaining goals of the open epics, and for the fallbacks in
    `docs/coverage.md`. When the open epics have no goal left that an agent can do, make the next epic from the
    feature list of `docs/ROADMAP.md` with the `roadmap` skill (the goals take turns). Priority: that of the epic, else `P3`. Never `P0` or `P1`, except for
    a `tooling` ticket that blocks other tickets. Look for duplicates first, and list the open issues again just

@@ -9,7 +9,8 @@ Writes tools/mcdata/<version>.json with:
     blocks:   {block name: {property: [allowed values]}}
     entities: [entity names]
     biomes:   [biome names]
-The tests use this file to check every block state, entity and biome that the converter makes.
+    sounds:   [sound event names] (playsound, #2662)
+The tests use this file to check every block state, entity, biome and sound that the converter makes.
 Source: misode/mcmeta on GitHub (branch <version>-summary), which holds the data reports of each release.
 (PrismarineJS is some versions behind and has old entity and biome lists.)
 """
@@ -34,14 +35,14 @@ def get(version, path):
 def main(version):
     blocks = {name: props for name, (props, _default) in get(version, "blocks/data.json").items()}
     reg = get(version, "registries/data.json")
-    entities, biomes = sorted(reg["entity_type"]), sorted(reg["worldgen/biome"])
+    entities, biomes, sounds = sorted(reg["entity_type"]), sorted(reg["worldgen/biome"]), sorted(reg["sound_event"])
     data = {"version": version, "source": BASE.format(version=version), "blocks": blocks, "entities": entities,
-            "biomes": biomes}
+            "biomes": biomes, "sounds": sounds}
     os.makedirs(OUT, exist_ok=True)
     path = os.path.join(OUT, f"{version}.json")
     with open(path, "w") as f:
         json.dump(data, f, separators=(",", ":"), sort_keys=True)
-    print(f"Wrote {path}: {len(blocks)} blocks, {len(entities)} entities, {len(biomes)} biomes")
+    print(f"Wrote {path}: {len(blocks)} blocks, {len(entities)} entities, {len(biomes)} biomes, {len(sounds)} sounds")
 
 
 if __name__ == "__main__":

@@ -68,9 +68,11 @@ import goto  # noqa: E402
 import herd  # noqa: E402
 import hill  # noqa: E402
 import hints  # noqa: E402
+import map_table  # noqa: E402
 import market  # noqa: E402
 import menu  # noqa: E402
 import monk  # noqa: E402
+import record  # noqa: E402
 import regen  # noqa: E402
 import regicide  # noqa: E402
 import relic_victory  # noqa: E402
@@ -726,6 +728,8 @@ class Gather:
             self.command(allies_command(self.data.get("players", {})))   # allies do not shoot each other (#1315)
             self.command(neutral_command(self.data.get("players", {})))  # no automatic attack on neutrals (#1645)
         self.forage()
+        if self.paper:
+            map_table.setup(self)                                      # the framed minimap (#2586)
         cheats.setup(self)
         bossbar.setup(self)
         for o in self.units:                                           # the entities must be loaded (forceload)
@@ -894,12 +898,14 @@ class Gather:
         import ai                                                      # ai imports this module
         monks = self.monks()
         repair.drop(self, self.selected)                               # Serjeants stop a repair (#2128)
+        self.end_patrols(self.selected)
         trebs = {u for u in self.selected if self.soldiers.get(u) == trebuchet.NAME}
         for u in sorted(trebs):                                        # it unpacks first (#1351)
             trebuchet.unpack(self, u, target)
         fleet.attack(self, {u for u in self.selected if replay.ship(self.soldiers.get(u, ""))}, target)   # (#1386)
         for u in sorted(self.selected - monks - trebs):
             self.command(ai.speed_command(u, self.soldiers[u], self.map.T, NORMAL * train.speed(self, self.soldiers[u], u)))
+        record.ordered(self, "order", self.selected, target=target)    # Record Game (#2649)
         if not monks and not trebs:
             return self.command(f"aoe attack @e[tag={SELECT}] {target}")
         return [self.command(f"aoe attack {u} {target}") for u in sorted(self.selected - monks - trebs)]
@@ -1120,6 +1126,7 @@ class Gather:
         build.tick(self)
         flare.tick(self)
         hints.tick(self)
+        map_table.tick(self)
         menu.clicks(self)
         cheats.clicks(self)
         self.command(f"execute as {self.who} unless items entity @s container.* minecraft:carrot_on_a_stick[!custom_data] "
@@ -1335,6 +1342,13 @@ class Gather:
                 and (cell := fleet.pick(self, eye, d)) and self.map.wet(*cell):
             self.walk_to(name, cell)                                   # the ships sail on the water (#1383)
 
+    def end_patrols(self, units):
+        """A new order ends the trigger patrols of the units, as in AoE2 DE (#2674): their patrol tags of
+        scenario.orders go, so the next leg does not walk them back. No command when no patrol walks."""
+        for tag, _, _ in vars(self).get("patrols", ()):
+            for u in sorted(units):
+                self.command(f"tag {u} remove {tag}")
+
     def shore_fish(self, eye, d):
         """The tile of the shore fish under the water surface that the ray from eye in direction d hits (fleet.pick), or
         None: villagers fish it from the land (#1283, #2349)."""
@@ -1351,6 +1365,7 @@ class Gather:
         import ai                                                      # ai imports this module
         units = self.selected if units is None else set(units)
         repair.drop(self, units)                                       # Serjeants stop a repair (#2128)
+        self.end_patrols(units)
         boats = {u for u in units if replay.ship(self.soldiers.get(u, ""))}
         out = fleet.order(self, boats, cell)                           # a ship sails on the water (#1383)
         transport.aim(self, out, cell)                                 # a loaded ship unloads at a land cell (#1385)
@@ -1372,6 +1387,7 @@ class Gather:
                 ai.move(self, u, unit, self.map.T, x + 0.5, self.map.y(x, z), z + 0.5, NORMAL * train.speed(self, unit, u))
         if out and name:
             self.mark(name, {cell})
+            record.ordered(self, "move", set(out), cell)               # Record Game (#2649)
         return out
 
     def pickable(self):
@@ -1916,4 +1932,5 @@ class Gather:
             if self.victory in ("time-limit", "score"):                # after the conquest: it wins before (#2356)
                 time_limit.tick(self, self.tick * NORMAL)
             treaty.tick(self, self.tick * NORMAL)
+            record.tick(self, self.tick * NORMAL)                      # the game time of Record Game (#2649)
             time.sleep(max(0.0, self.tick / self.speed - (time.time() - t)))   # a step stays tick game seconds

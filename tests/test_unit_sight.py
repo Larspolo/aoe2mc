@@ -45,6 +45,7 @@ WIKI = {"CATAPULT_GALLEON": 14, "DRAGON_SHIP": 6, "DROMON": 14, "LOU_CHUAN": 15,
          "MOUNTED_TREBUCHET": 13,   # (#2191)
          "BOLAS_RIDER": 7, "ELITE_BOLAS_RIDER": 7,   # (#2135)
          "IBIRAPEMA_WARRIOR": 5, "ELITE_IBIRAPEMA_WARRIOR": 5,   # (#2158)
+         "XIANBEI_RAIDER": 6,   # (#2160)
          "HEI_GUANG_CAVALRY": 4,
          "XOLOTL_WARRIOR": 4,   # (#2009)
          "CARAVEL": 9,   # (#1934)

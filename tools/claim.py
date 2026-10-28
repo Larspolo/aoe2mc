@@ -12,6 +12,7 @@ a second push of another claim commit is never a fast-forward. Later claims of t
     python3 tools/claim.py N --beat       # show that the own run is alive (at least every 20 minutes)
     python3 tools/claim.py N --stale      # exit 0: the owner made no claim or beat for 30 minutes (stopped run),
                                           # 10 minutes when its PR has the label `conflict` (#1773)
+    python3 tools/claim.py 0 --stuck      # list the `in-progress` tickets of stopped runs (no beat for 30 minutes)
     python3 tools/claim.py N --guard      # before each push: beat, and exit 1 when a PR of another branch closes N
                                           # or a union merge brought back LEARNINGS lines that main removed (#563)
     python3 tools/claim.py N --guard --pr-branch B   # the same, but the open PR of branch B (taken over) is allowed
@@ -314,6 +315,37 @@ def head_time(p):
     return datetime.datetime.fromisoformat(t.replace("Z", "+00:00")).timestamp()
 
 
+def stuck(tickets, tips, now, limit=STALE):
+    """[(number, reason)] of the `in-progress` tickets whose run stopped: the claim had no beat for `limit` seconds,
+    the run released it and left the label, or the ticket has no claim ref and no change for `limit` seconds.
+    tickets: {number: Unix time of the last change}; tips: {number: (subject, Unix time) of its highest slot}.
+    Only the claim decides, not the PR: Unconflict and Automerge merge main into the PR of a stopped run and
+    comment on it, so #2160 and #2228 looked alive for 6 hours with red CI, and #2049 had no PR to find."""
+    out = []
+    for n, changed_at in sorted(tickets.items()):
+        line, t = tips.get(n, (None, changed_at))
+        if now - t >= limit and (line is None or line.startswith("Release") or stale(line, t, now, limit)):
+            out.append((n, f"{(line or 'no claim').split(' by ')[0]}, {(now - t) / 60:.0f} min ago"))
+    return out
+
+
+def tips(remote="origin"):
+    """{ticket: (subject, Unix time)} of the highest claim slot of each ticket, with one ls-remote and one fetch."""
+    top = {}
+    for line in git("ls-remote", remote, "refs/heads/claim/*").stdout.splitlines():
+        sha, ref = line.split("\t")
+        m = re.fullmatch(r"refs/heads/claim/(\d+)(?:-(\d+))?", ref)
+        if m and int(m.group(2) or 1) >= top.get(int(m.group(1)), (0, ""))[0]:
+            top[int(m.group(1))] = (int(m.group(2) or 1), sha)
+    if top:
+        git("fetch", "-q", remote, *[f"refs/heads/{slot(n, k)}" for n, (k, _) in top.items()])
+    out = {}
+    for n, (_, sha) in top.items():
+        t, _, line = git("log", "-1", "--format=%ct %s", sha).stdout.strip().partition(" ")
+        out[n] = (line, int(t))
+    return out
+
+
 def stale_limit(number, remote="origin"):
     """CONFLICT seconds when a PR of ticket `number` waits on a merge conflict (`conflict_pr`), else STALE."""
     if not on_github(remote):
@@ -332,6 +364,8 @@ def main(argv=None):
     g.add_argument("--beat", action="store_true", help="show that the own run is alive")
     g.add_argument("--stale", action="store_true", help="exit 0 when the open claim had no beat for 30 "
                    "minutes (10 when its PR has the label `conflict` and no new commit for 10 minutes)")
+    g.add_argument("--stuck", action="store_true", help="list the in-progress tickets of stopped runs (number 0); "
+                   "exit 1: none")
     g.add_argument("--guard", action="store_true", help="before a push: beat; exit 1 when another branch has a PR")
     g.add_argument("--comment", action="store_true", help="lock the owner comment with this ID")
     g.add_argument("--refill", action="store_true", help="lock the new sub-issues of this epic (0: the whole refill)")
@@ -377,6 +411,16 @@ def main(argv=None):
             return 0
         print(f"refill {key}: another run makes the tickets")
         return 1
+    if a.stuck:
+        issues = api("issues?state=open&labels=in-progress&per_page=100")
+        tickets = {i["number"]: datetime.datetime.fromisoformat(i["updated_at"].replace("Z", "+00:00")).timestamp()
+                   for i in issues if "pull_request" not in i}
+        pulls = api("pulls?state=open&per_page=100")
+        found = stuck(tickets, tips(a.remote), time.time())
+        for n, reason in found:
+            pr = next((p["number"] for p in pulls if closes(n).search(prose(p["body"]))), None)
+            print(f"#{n} {f'PR #{pr}' if pr else 'no PR'}: {reason}")
+        return 0 if found else 1
     if a.show or a.stale:
         found = refs(a.number, a.remote)
         for k in sorted(found):

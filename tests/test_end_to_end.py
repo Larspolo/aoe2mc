@@ -262,6 +262,6 @@ def test_player_teams(tiny_world):
         assert f"team modify p{n} color {color}" in load and f"team join p{n} @e[tag=aoe2mc.p{n},team=]" in pulse
     assert load[-1].startswith("schedule") and pulse[-1].startswith("schedule")
     tags = {str(t) for e in world_reader.World(path).entities() for t in e.get("Tags", [])}
-    assert {t for t in tags if not t.startswith("aoe2mc.t")} - {aoe2mc.units.MOUNT} == {f"aoe2mc.p{n}" for n in owners}
+    assert {t for t in tags if not t.startswith(("aoe2mc.t", "aoe2mc.r"))} - {aoe2mc.units.MOUNT} == {f"aoe2mc.p{n}" for n in owners}
     types = {t for t in tags if t.startswith("aoe2mc.t")}                 # the unit type tags (#681)
     assert types and types <= {f"aoe2mc.t{o['id']}" for o in data["objects"] if o["kind"] == "unit" and o["player"]}

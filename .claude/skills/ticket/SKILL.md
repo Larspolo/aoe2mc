@@ -120,16 +120,19 @@ is only in a document is lost: milestones 2 and 3 of the replay research (#31) w
 
 ## Model lanes
 
-A cheap Haiku run takes the tickets with the label `lane:haiku` (#1715). Add it only when all of these are true:
-- `size:S`, and the body names each file and function to change, the exact values (from the wiki, with the source)
-  and, for a menu item, the slot (see "Rules").
-- A merged PR did the same pattern (name it in the body, for example "as #1572"). Examples: "Research X at Y",
-  "Train X at Y".
-- Verify level 1 is enough: no server, no screenshot, no look to judge.
-- Not a decision, design, check, process or epic ticket, and no "Depends on:" that is open.
-When you are not sure, do not add it: an Opus run takes the ticket.
-While `reserved` in `[pacing]` of `agent.toml` names the lane, Opus runs never take its tickets (#1994): make
-enough `lane:haiku` tickets in the refill, else the Haiku runs find none.
+A cheap Haiku run takes the tickets with the label `lane:haiku` (#1715). Add it when a Haiku run can do the ticket as
+well as an Opus run. Judge each ticket: there is no quota of Haiku tickets.
+- Haiku does well: a clear goal and a clear end, a change at a known place (the body names the files or the
+  function to change), a pattern that the code already has, values that the body gives or that a data file or a
+  merged PR shows. Size S or a small M. Tests and a slow test run are fine.
+- Opus does better: open design questions, a look to judge (renders, screenshots), a bug with an unknown cause,
+  changes across many modules, checks in the real platform (server, client), process, decision, check and epic tickets.
+  On hard coding tests Haiku 5.5 is far below Opus 5.5 (SWE-bench Pro about 65 % against 90 %), on clear tasks near it.
+- Measured here (#1717): Haiku runs merged 9 of 9 PRs, take about 2.4 times as long (34 min against 14 min) and use
+  a small part of the quota of an Opus run (`weights` in `python3 tools/usage.py --fire`).
+When you are not sure, do not add it: an Opus run takes the ticket. A Haiku run that finds the ticket unclear
+removes the label (`autopilot` skill, `queue.md`).
+While `reserved` in `[pacing]` of `agent.toml` names the lane, Opus runs never take its tickets (#1994).
 
 ## Rules
 
