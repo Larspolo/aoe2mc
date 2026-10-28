@@ -11,6 +11,8 @@ player loads it with the world. Without the option, the world is the same as bef
     assets/minecraft/textures/entity/zombie/husk.png
     assets/minecraft/textures/entity/zombie/zombie.png
     assets/minecraft/textures/entity/zombie_villager/zombie_villager.png
+    assets/minecraft/items/chest.json                (#2746)
+    assets/aoe2mc/models/item/war_wagon.json         (#2746)
 ```
 
 - `pack.mcmeta`: `pack_format`, `min_format` and `max_format` are `VERSIONS[...]["resource_format"]` in `aoe2mc.py`
@@ -22,6 +24,11 @@ player loads it with the world. Without the option, the world is the same as bef
 - The zombie model uses only the top half (64 × 32): the left arm and leg mirror the right ones. The zombie villager
   has a 8 × 10 × 8 head, a nose box at (24, 0), and its clothes come from the overlays `zombie_villager/type/*.png`
   and `profession/*.png`, which the pack does not change.
+- The cart of the War Wagon (#2746) is a vanilla `chest` item with the `custom_model_data` string `aoe2mc:war_wagon`
+  (`units.cart`). `items/chest.json` selects the cart model for it and keeps the vanilla chest definition
+  (`VANILLA_CHEST`, from the 26.3 client jar) as the fallback. So the entity is the same with and without the pack.
+- A model box out of 0..16 pixels needs an explicit `uv` on each face: else the face reads its texture from the
+  neighbors in the atlas (`cart_model`).
 - The zip has the same bytes for each conversion: sorted names and a fixed time (a release holds the same bytes).
 
 ## Client behavior (26.3, checked with `tools/mc_shot.py`)

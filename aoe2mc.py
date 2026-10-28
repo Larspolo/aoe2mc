@@ -3849,6 +3849,45 @@ SKINS = {   # texture -> (model, skin color); the hair, clothes and face colors 
     "entity/zombie/zombie.png": ("zombie", (226, 176, 136)),
     "entity/zombie_villager/zombie_villager.png": ("villager", (214, 160, 120)),
 }
+# The cart of the War Wagon in the pack (#2746, the AoE2 model: a box wagon with plank walls, an iron rim, a plank roof
+# and two large wheels): boxes (from, to) in pixels of a block at scale 1, 16 = 1 block, the ground at y 0, the horse
+# at -z; vanilla block textures, the wheels have the rings of a log top on their sides. cart_model() scales them.
+CART_BOXES = [((-2, 6, -8), (18, 8, 24), "smooth_stone"),                     # the iron rim of the floor
+              ((-1, 8, -7), (17, 27, 23), "dark_oak_log"),                     # the walls of vertical planks
+              ((-1.5, 17, -7.5), (17.5, 18, 23.5), "iron_block"),              # the band
+              ((-1.5, 20, 3), (17.5, 24, 11), "black_concrete"),               # the windows
+              ((-3, 27, -9), (19, 29, 25), "smooth_stone"),                    # the iron rim of the roof
+              ((-2, 29, -8), (18, 30, 24), "oak_planks"),                      # the roof
+              ((-4, 0, 8), (-2, 16, 24), "dark_oak_planks", "spruce_log_top"),   # the wheels
+              ((18, 0, 8), (20, 16, 24), "dark_oak_planks", "spruce_log_top"),
+              ((3, 8, -16), (4, 9, -8), "stripped_oak_log"),                   # the shafts to the horse
+              ((12, 8, -16), (13, 9, -8), "stripped_oak_log")]
+VANILLA_CHEST = {"type": "minecraft:select", "property": "minecraft:local_time", "pattern": "MM-dd",   # items/chest.json
+                 "cases": [{"when": ["12-24", "12-25", "12-26"], "model": {
+                     "type": "minecraft:special", "base": "minecraft:item/chest",
+                     "model": {"type": "minecraft:chest", "texture": "minecraft:christmas"}}}],
+                 "fallback": {"type": "minecraft:special", "base": "minecraft:item/chest",
+                              "model": {"type": "minecraft:chest", "texture": "minecraft:normal"}}}
+
+
+def cart_model():
+    """The item model of the War Wagon cart (CART_BOXES): the cart display has the scale units.CART_SCALE for the
+    vanilla chest, so the boxes shrink by it around the middle (8, 8, 8) of the model. Each face has its uv: a face
+    out of 0..16 with no uv reads its texture from the neighbors in the atlas."""
+    names = sorted({t for b in CART_BOXES for t in b[2:]})
+    out = []
+    for lo, hi, side, *wheel in CART_BOXES:
+        at = [[round(8 + (v - 8) / k, 3) for v, k in zip(p, units.CART_SCALE)] for p in (lo, hi)]
+        size = [h - v for v, h in zip(lo, hi)]                       # the uv in the texture: at most one texture
+        faces = {f: {"uv": [0, 0, min(size[a], 16), min(size[b], 16)],
+                     "texture": f"#t{names.index(wheel[0] if wheel and f in ('east', 'west') else side)}"}
+                 for f, a, b in (("north", 0, 1), ("south", 0, 1), ("east", 2, 1), ("west", 2, 1), ("up", 0, 2),
+                                 ("down", 0, 2))}
+        out.append({"from": at[0], "to": at[1], "faces": faces})
+    textures = {f"t{k}": f"minecraft:block/{t}" for k, t in enumerate(names)} | {"particle": "minecraft:block/dark_oak_log"}
+    return {"textures": textures, "elements": out}
+
+
 HAIR, SHIRT, PANTS, SHOES, EYE, MOUTH = (74, 50, 30), (122, 92, 56), (72, 64, 110), (52, 40, 30), (50, 90, 160), (140, 60, 50)
 
 
@@ -3895,13 +3934,18 @@ def skin_texture(model, tone):
 def write_resourcepack(out):
     """--resource-pack (#2738): resourcepacks/resources.zip in the world folder, which single player loads with the
     world (26.x: LevelResource.MAP_RESOURCE_FILE; a world of an older version had resources.zip at its top, and the
-    client moves it there, ResourcePackLocationFileFix). The zombie units get a human face. Same bytes for each
-    conversion: sorted names, a fixed time."""
+    client moves it there, ResourcePackLocationFileFix). The zombie units get a human face, the War Wagon its cart
+    (cart_model, #2746). Same bytes for each conversion: sorted names, a fixed time."""
     import io
     import zipfile
     files = {"pack.mcmeta": json.dumps({"pack": {
         "description": "aoe2mc: units with a human face", "pack_format": MC["resource_format"],
         "min_format": MC["resource_format"], "max_format": MC["resource_format"]}}, indent=1).encode()}
+    files["assets/minecraft/items/chest.json"] = json.dumps({"model": {   # a chest with the cart data: the cart (#2746)
+        "type": "minecraft:select", "property": "minecraft:custom_model_data", "index": 0,
+        "cases": [{"when": "aoe2mc:war_wagon", "model": {"type": "minecraft:model", "model": "aoe2mc:item/war_wagon"}}],
+        "fallback": VANILLA_CHEST}}, indent=1).encode()
+    files["assets/aoe2mc/models/item/war_wagon.json"] = json.dumps(cart_model(), indent=1).encode()
     for path, (model, tone) in SKINS.items():
         buf = io.BytesIO()
         skin_texture(model, tone).save(buf, "PNG")
