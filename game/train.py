@@ -408,8 +408,10 @@ def slots(building, name):
 
 
 def line_upgrades(line):
-    """The upgrade technologies (UPGRADES) of one unit line (a list of unit names), in the order of the line."""
-    return [t for n in line for t in UPGRADES if UPGRADES[t] == (n, UPGRADES[t][1]) and UPGRADES[t][1] in line]
+    """The upgrade technologies (UPGRADES) of one unit line (a list of unit names), in the order of the line. The elite
+    upgrade of a unique unit stays at the castle (the Goth barracks, #2685)."""
+    return [t for n in line for t in UPGRADES if UPGRADES[t] == (n, UPGRADES[t][1]) and UPGRADES[t][1] in line
+            and n not in UNIQUE.values()]
 
 
 def trains(g, building):
@@ -421,7 +423,8 @@ def trains(g, building):
         + ["SERJEANT"] * (building == "DONJON")                    # and the spearman line (AoE2 DE wiki, #1873)
     out = unique + list(TRAINS[building]) + [f"ELITE_{n}_UPGRADE" for n in unique if f"ELITE_{n}_UPGRADE" in COSTS]   # (#1760)
     out += [n for n, c in BY_KEY["civ"].items() if c == civs.civ(g)] * (building == "CASTLE")   # the unique technologies (#2021)
-    more = civs.TRAINS.get(civs.civ(g), {}).get(building, {}).get("lines", ())
+    more = civs.TRAINS.get(civs.civ(g), {}).get(building, {})
+    more = more.get("lines", ()) if more.get("after", "") in {"", *g.techs} else ()   # after a technology: Anarchy (#2685)
     out += [line[0] for line in more] + [t for line in more for t in line_upgrades(line)]   # Mapuche (#2432, #2487)
     for _ in UPGRADES:                                             # a line of upgrades: mangonel, onager, siege onager
         out = [new.get(n, n) for n in out]                         # the castle: the elite unique unit (#1624)
@@ -858,6 +861,9 @@ def research(g, entry, start=False, rect=None):
             build.upgrade(g, site, combat.wall(site["name"], build.ages(g), civs.civ(g), civs.handicap(g.data, g.player)))
     build.retower(g, before)                                       # the complete own towers get the new values (#1374),
                                                                    # the buildings those of Masonry and Fletching (#1398, #1408)
+    if entry["name"] in build.AGE_TECHS and not start:             # the timeline of the recap book (#2660)
+        import recap                                               # recap imports this module
+        recap.aged(g, entry["name"])
     if entry["name"] in build.AGE_TECHS:                           # the base arrows of the new age (civs.ARROWS, #2178)
         names = {n for names, _ in civs.ARROWS.get(civs.civ(g), ()) for n in names}
         for rect in [r for r, o in garrison.holders(g).items() if o["name"] in names]:
