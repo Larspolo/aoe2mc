@@ -322,7 +322,8 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
     teams: {player: team or None} in place of the teams of the scenario (team_choices, #2296).
     all_techs: the AoE2 setting "All Techs" for all players and bots (civs.missing, #2298).
     age: the AoE2 setting "Starting age" of each player and bot (train.STARTS, #2265).
-    victory: the AoE2 setting "Victory": "standard" (conquest, a wonder or all relics) or "conquest" (#2316)."""
+    victory: the AoE2 setting "Victory": "standard" (conquest, a wonder or all relics), "conquest" (#2316) or
+    "last-man-standing" (conquest.last_man, #2358)."""
     import gather
 
     def make(player):
@@ -512,8 +513,9 @@ def main(argv=None):
                     "the Death Match resources)")
     ap.add_argument("--all-techs", action="store_true", help="--play: the AoE2 setting \"All Techs\": each civilization "
                     "has the generic units and technologies that its tech tree does not have (the bonuses stay)")
-    ap.add_argument("--victory", choices=["standard", "conquest"], default="standard", help="--play: the AoE2 setting "
-                    "\"Victory\" (default standard: conquest, a wonder or all relics; conquest: only the conquest)")
+    ap.add_argument("--victory", choices=["standard", "conquest", "last-man-standing"], default="standard",
+                    help="--play: the AoE2 setting \"Victory\" (default standard: conquest, a wonder or all relics; "
+                    "conquest: only the conquest; last-man-standing: a conquest that only one player wins, #2358)")
     ap.add_argument("--log", metavar="FILE", help="--play: write one JSON line per villager event (time, state, load)")
     ap.add_argument("--load", metavar="SAVE", help="--play: go on with a saved game (a folder of saves/: the end of "
                     "--play with Ctrl-C saves the world and the resources, technologies and ages there)")
