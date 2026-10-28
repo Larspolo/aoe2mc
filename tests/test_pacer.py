@@ -8,7 +8,7 @@ def test_start_the_missing_runs_up_to_the_cycle_limit():
 
 
 def test_start_no_more_runs_than_ready_tickets_and_the_refill_runs():
-    assert usage.runs_to_start(target=15, claims=1, ready=2, paused=False, refill=1) == 3
+    assert usage.runs_to_start(target=15, claims=1, ready=2, paused=False, refill=1, hi=8) == 3
     assert usage.runs_to_start(target=15, claims=1, ready=0, paused=False, refill=1) == 1     # a refill run (#609)
 
 
