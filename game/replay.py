@@ -390,6 +390,8 @@ class Replay:
             return self.build(e)
         if kind == "spawn":
             return self.spawn(e)
+        if kind == "summon" and e.get("objects") and e.get("tile"):
+            return self.summon(e)
         if kind == "gather_point" and e.get("objects"):
             self.points.update(dict.fromkeys(e["objects"], e))
             return []
@@ -445,7 +447,8 @@ class Replay:
         for x, y in tiles:
             if (name, x, y) not in self.seen:
                 self.seen.add((name, x, y))
-                self.pay(e["player"], name)
+                if not e.get("free"):                               # a setup of the game program (#3028)
+                    self.pay(e["player"], name)
                 k = len(self.placed)
                 out += self.building(name, e["player"], x, y)
                 if len(self.placed) > k:
@@ -740,7 +743,7 @@ class Replay:
                 for us in self.garrisons.values():
                     us[:] = [u for u in us if u != i]
                 self.pop[e["player"]] = max(0, self.pop.get(e["player"], 0) - 1)
-                self.lost[v.player] = self.lost.get(v.player, 0) + 1
+                self.lost[v.player] = self.lost.get(v.player, 0) + (not e.get("free"))   # a scout swap (#3028)
                 out.append(f"kill {v.uuid}")
         return out
 
@@ -888,22 +891,47 @@ class Replay:
         k = self.trained[rect] = self.trained.get(rect, -1) + 1
         x, z = cells[k % len(cells)]
         pos = (x + 0.5, self.map.sea(x, z) if boat else float(self.map.y(x, z)), z + 0.5)
-        o = dict(name=e["name"], player=e["player"], rotation=math.pi / 2, hero=prefix == "H")   # it faces south
+        v, out = self.newcomer(e, pos, prefix == "H")
+        if v is None:
+            return []
+        self.new.append((e["player"], v))
+        return out + self.rally(e, v)
+
+    def newcomer(self, e, pos, hero=False):
+        """(gather.Villager, the summon commands) of the unit e["name"] of player e["player"] at pos (it faces south),
+        or (None, [])."""
+        o = dict(name=e["name"], player=e["player"], rotation=math.pi / 2, hero=hero)
         nbt = units.make_entity(o, {int(p): v for p, v in self.data["players"].items()}, pos, self.rng)
         if nbt is None:
-            return []
+            return None, []
         kind = str(nbt.pop("id"))
         del nbt["Pos"]
         v = self.gather.Villager(units.uuid_str(nbt["UUID"]), pos)
         v.name, v.player, v.job = e["name"], e["player"], start_job(e["name"])
-        self.new.append((e["player"], v))
         self.pop[e["player"]] = self.pop.get(e["player"], 0) + 1
         out = [f"summon {kind} {pos[0]} {pos[1]} {pos[2]} {units.summon_snbt(nbt)}"]
         if self.ai:                                                 # the AoE2 values: plugin commands (#632)
             import combat                                           # combat -> gather -> build -> replay
             out += [combat.stats_command(v.uuid, v.name)] + [c for c in [combat.range_command(v.uuid, v.name, self.T)] if c]
             out.append(f"tag {v.uuid} add {COUNTED}")              # census() counts it
-        return out + self.rally(e, v)
+        return v, out
+
+    def summon(self, e):
+        """A unit that a setup of the game program summoned (record.summoned: the scout of a civilization, the
+        villagers of Empire Wars, #3028): at the block of its tile, with the ID of the record. No cost."""
+        prefix, _ = self.kinds.get(e["type"], ("?", ""))
+        if prefix not in ("U", "H"):
+            return []
+        m = self.grid()
+        x, z = (min(self.n - 1, max(0, int(c * self.T))) for c in e["tile"])
+        y = m.sea(x, z) if ship(e["name"]) else m.y(x, z)
+        v, out = self.newcomer(e, (x + 0.5, float(y if y is not None else m.sea(x, z)), z + 0.5), prefix == "H")
+        if v is None:
+            return []
+        self.units[e["objects"][0]] = v
+        if e["name"].startswith("VILLAGER"):
+            self.villager(e["player"], 1)
+        return out
 
     def rally(self, e, v):
         """The unit v of spawn event e walks to the gather point of its building, with a temporary negative ID, as

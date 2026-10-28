@@ -620,6 +620,9 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
         import train
         for x in [g, *(s.g for s in g.bots)]:
             train.start(x, settings["age"])
+    if settings["record"]:                                       # the orders of the people and the bots (#2649), and
+        import record                                            # the objects of the setups below at 0:00 (#3028)
+        record.start([g, *(b.g for b in g.bots)], settings["record"])
     import scout
     if not state and scout.used(data):               # the scout of each civilization (#2391), not twice after a load
         for x in [g, *(s.g for s in g.bots)]:
@@ -642,9 +645,9 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
         treaties.start(g, math.inf, (state or {}).get("treaty_time", 0.0))
     elif replay.aoe2mc.game_time(settings["treaty"]):            # after the Gathers: they set the neutral stances
         treaties.start(g, replay.aoe2mc.game_time(settings["treaty"]) / 1000, (state or {}).get("treaty_time", 0.0))   # #2409
-    if settings["record"]:                                       # the orders of the people and the bots (#2649)
+    if settings["record"]:                                       # the setups end, the game starts (#3028)
         import record
-        record.start([g, *(b.g for b in g.bots)], settings["record"])
+        record.play([g, *(b.g for b in g.bots)])
     if game.kind == "paper":                         # the view square of each player on map 0 (#1762)
         import replay
         game.command("aoe minimap on")               # the dots of the units, as in the live replay (#2581)
