@@ -54,6 +54,7 @@ ORDERS = "aoe2mc:orders"                                               # the dat
 ATTRIBUTES = "aoe2mc:attributes"                                       # the storage of "Modify Attribute" (#2763)
 MENUS = "aoe2mc:menus"                                                 # the storage of "Enable/Disable" (#2775)
 COSTS = "aoe2mc:costs"                                                 # the storage of "Change Object Cost" (#2776)
+TIMES = "aoe2mc:times"                                                 # "Change Technology Research Time" (#2820)
 NEAR = 3                                                               # blocks: a patrol turns back this near its point
 LEVELS = {r["name"]: r["aoe2"] for r in table.load("difficulty.jsonl")}  # "AI difficulty" -> AoE2 DifficultyLevel
 
@@ -122,6 +123,7 @@ def tick(g):
     visible(g)
     attributes(g)
     costs(g)
+    times(g)
     messages = g.data.get("messages", {})
     text = re.sub(r"<[^<>]*>", "", messages.get("instructions", "")).strip()   # AoE2 color tags (book_pages)
     for who in sorted({x.who for x in [g, *(s.g for s in g.bots if not hasattr(s, "charged"))]}):
@@ -230,6 +232,19 @@ def costs(g):
         if int(player) in sides:
             vars(sides[int(player)]).setdefault("trigger_costs", {})[name] = \
                 {r: int(v) for r, v in (part.split("=") for part in cost.split())}
+
+
+def times(g):
+    """The new research times of "Change Technology Research Time" (aoe2mc.tech_time_lines, #2820): read and empty the
+    list of the data storage TIMES, and keep each time (AoE2 seconds) in trigger_times of the side of its player (the
+    people and the bots): train.seconds uses it in place of the time of game/data/train.jsonl. A later line wins."""
+    new = re.findall(r'"(\d+) (\w+) (\d+)"', g.command(f"data get storage {TIMES} list") or "")
+    if new:
+        g.command(f"data remove storage {TIMES} list")
+    sides = {x.player: x for x in [g, *(s.g for s in g.bots)]}
+    for player, name, s in new:
+        if int(player) in sides:
+            vars(sides[int(player)]).setdefault("trigger_times", {})[name] = int(s)
 
 
 def attributes(g):

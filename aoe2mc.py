@@ -514,6 +514,9 @@ def read_scenario(path):
                                                if e.effect_type == MODIFY_RESOURCE_BY_VARIABLE else {}),
                                             **({"technology": techs.get(e.technology, str(e.technology))}   # #2577
                                                if e.effect_type == RESEARCH_TECHNOLOGY else {}),
+                                            **({"technology": techs.get(e.technology, str(e.technology)),
+                                                "quantity": e.quantity}                     # (#2820)
+                                               if e.effect_type == CHANGE_TECHNOLOGY_RESEARCH_TIME else {}),
                                             **({"unit": e.time_unit, "timer": e.timer}   # "Display Timer" (#2572)
                                                if e.effect_type == DISPLAY_TIMER else {}),
                                             **({"timer": e.timer} if e.effect_type == CLEAR_TIMER else {}),   # (#2696)
@@ -2858,6 +2861,7 @@ CHANGE_OBJECT_STANCE = 36                                          # "Change Obj
 CHANGE_OWNERSHIP = 18
 CHANGE_PLAYER_COLOR = 89                                           # "Change Player Color" (#2712)
 CHANGE_PLAYER_NAME = 45                                            # "Change Player Name" (#2711)
+CHANGE_TECHNOLOGY_RESEARCH_TIME = 64                               # "Change Technology Research Time" (#2820)
 CHANGE_VARIABLE = 56                                               # the scenario variables (#2611)
 CHANGE_VIEW = 16                                                   # "Change View" (#2610)
 CLEAR_INSTRUCTIONS = 21                                            # "Clear Instructions" (#2609)
@@ -3436,6 +3440,18 @@ def cost_lines(e, c):
     return [f'data modify storage aoe2mc:costs list append value "{" ".join([str(e["player"]), name, *cost])}"']
 
 
+def tech_time_lines(e, c):
+    """The command of "Change Technology Research Time" (#2820): the new research time (seconds) of the technology of
+    the player goes into the list of the data storage aoe2mc:times as one text "<player> <name> <seconds>". The
+    scenario mode of the game program (game/scenario.py times) empties the list and uses the time (train.seconds)."""
+    name, q = e.get("technology", ""), e.get("quantity", -1)
+    if not re.fullmatch(r"\w+", name or "") or e["player"] <= 0 or q < 0:
+        c.stats["change technology research time (not supported)"] += 1
+        return []
+    c.stats["change technology research time"] += 1
+    return [f'data modify storage aoe2mc:times list append value "{e["player"]} {name} {q}"']
+
+
 # The ObjectAttribute IDs of "Modify Attribute" that the game program has in combat.Stats (#2763): attribute ->
 # the Stats field; armor (8) and attack (9) by their class (3 pierce, 4 melee), as in AoE2.
 STAT_ATTRIBUTES = {0: "hp", 10: "reload", 12: "range"}
@@ -3702,6 +3718,7 @@ EFFECTS = {
     CHANGE_OWNERSHIP: owner_lines,
     CHANGE_PLAYER_COLOR: color_lines,
     CHANGE_PLAYER_NAME: player_name_lines,
+    CHANGE_TECHNOLOGY_RESEARCH_TIME: tech_time_lines,
     CHANGE_VARIABLE: variable_lines,
     CHANGE_VIEW: view_lines,
     CLEAR_INSTRUCTIONS: clear_lines,
