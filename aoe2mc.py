@@ -405,8 +405,12 @@ def read_scenario(path):
                    for i, t in enumerate(scn.trigger_manager.triggers) if t.display_as_objective)
     texts["objectives"] = "\n".join(f"- {g}" for _, _, g in goals if g)
     techs = {t.ID: t.name for t in TechInfo}                    # the names of game/data/train.jsonl
+    entities = {u.reference_id for us in scn.unit_manager.units for u in us   # the objects that are entities with the
+                if kinds.get(u.unit_const, ("?",))[0] in ("U", "H")}         # tag aoe2mc.r<ref> (#2617), not blocks
     texts["triggers"] = [dict(id=t.trigger_id, name=t.name, enabled=bool(t.enabled), looping=bool(t.looping),
                               conditions=[dict(type=c.condition_type, timer=c.timer, inverted=bool(c.inverted),
+                                               **({"ref": c.unit_object, "unit": c.unit_object in entities}   # #2618
+                                                  if c.condition_type in OBJECT_TESTS else {}),
                                                **({"quantity": c.quantity, "player": c.source_player,
                                                    "area": [c.area_x1, c.area_y1, c.area_x2, c.area_y2],
                                                    "object": c.object_list, "group": c.object_group,
@@ -2805,6 +2809,17 @@ TIME_UNITS = {0: 5, 1: 60, 2: 1, 3: 1}  # TimeUnit (years, minutes, seconds, m:s
 COUNTED = (IN_AREA, OWN_OBJECTS, OWN_FEWER_OBJECTS)                # conditions that count units: the tick function
 TICKED = COUNTED + (ACCUMULATE_ATTRIBUTE, DIFFICULTY_LEVEL, RESEARCHED, VARIABLE_VALUE)  # conditions of the tick function
 ATTRIBUTES = ("Food", "Wood", "Stone", "Gold")     # attributes 0-3: the score holders of gather.RESOURCES (#2655)
+DESTROY_OBJECT = 6                                                     # the condition "Destroy Object" (#2618)
+# The conditions on one object of the map (its tag aoe2mc.r<ref>, #2617): the test of the tick function when it holds,
+# when it does not hold (a looping trigger fires again after that), and the tick lines before the test. "Destroy
+# Object": a marker entity follows the unit; the unit is dead when the marker is loaded and the unit is not there. A
+# unit in a chunk that is not loaded is no entity for a command, and its marker is not loaded too (#2618).
+OBJECT_TESTS = {DESTROY_OBJECT: ("if entity @e[tag=aoe2mc.m{ref}] unless entity @e[tag=aoe2mc.r{ref}]",
+                                 "if entity @e[tag=aoe2mc.r{ref}]",
+                                 ("execute as @e[tag=aoe2mc.r{ref}] at @s unless entity @e[tag=aoe2mc.m{ref}] run "
+                                  "summon marker ~ ~ ~ {{Tags:[\"aoe2mc.m{ref}\"]}}",
+                                  "execute as @e[tag=aoe2mc.r{ref}] at @s run tp @e[tag=aoe2mc.m{ref}] ~ ~ ~"))}
+TICKED += tuple(OBJECT_TESTS)
 STORES = ("food", "wood", "stone", "gold")      # the resource of a tribute_list (AoE2 attributes 0 to 3)
 OPERATIONS = {1: "set", 2: "add", 3: "remove"}  # set, add, subtract of Modify Resource (AoE2ScenarioParser Operation)
 STANCES = (0, 1, 3)                                # DiplomacyState: ally, neutral, enemy
@@ -3289,8 +3304,9 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
     areas; the score #N of aoe_trig marks a fired trigger, so it fires once. A looping area trigger fires again after
     the units leave an area. A "Variable Value" condition runs in the tick function as an area (#2611), a "Research
     Technology" condition too: the game program sets the score #p<player>.<technology> of aoe_tech (#2656), and an
-    "Accumulate Attribute" condition of a resource: resource_score (#2655). The
-    commands of each effect come from its handler in EFFECTS.
+    "Accumulate Attribute" condition of a resource: resource_score (#2655). A "Destroy Object" condition
+    (OBJECT_TESTS) tests the tag aoe2mc.r<ref> of its unit and its marker (#2618). The commands of each effect come
+    from its handler in EFFECTS.
     A disabled trigger does not run."""
     load, files, tick, setup = [], {}, [], {}
     stats = Counter() if stats is None else stats
@@ -3302,6 +3318,10 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
         # once per second, as AoE2 does, with `random value 1..100`
         chance = (TRIGGER_CHANCE, False) in kinds
         rest = kinds - {(TRIGGER_CHANCE, False)}
+        if any(c["type"] in OBJECT_TESTS and (c.get("ref", -1) is None or c.get("ref", -1) < 0 or not c.get("unit"))
+               for c in conds):                                        # no object, or a building: blocks, no entity
+            stats["object condition (not an entity, not supported yet)"] += t["enabled"]
+            continue
         if not t["enabled"] or not conds or not (rest == {(TIMER, False)} or rest <= {(k, False) for k in TICKED}) or \
                 chance and len([c for c in conds if c["type"] == TRIGGER_CHANCE]) > 1 or \
                 any(c.get("group", -1) >= 0 or c.get("class", -1) >= 0 for c in conds) or \
@@ -3321,6 +3341,12 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
                 test = SCORE_TESTS[c["type"]](c)
                 tests.append(f"if {test}")
                 unless.append(f"unless {test}")
+                continue
+            if c["type"] in OBJECT_TESTS:                              # the tag of the object (#2618)
+                test, other, before = OBJECT_TESTS[c["type"]]
+                counts += [x.format(ref=c["ref"]) for x in before]
+                tests.append(test.format(ref=c["ref"]))
+                unless.append(other.format(ref=c["ref"]))
                 continue
             if c["type"] not in COUNTED:                               # a timer or the chance
                 continue
