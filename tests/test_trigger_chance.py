@@ -42,9 +42,9 @@ def test_looping_chance_fires_again():
 def test_chance_with_an_area_fires_only_when_both_are_true():
     _, files = aoe2mc.trigger_files([trig(3, 50, area=[(1, [0, 0, 1, 1]), (2, [-1, -1, -1, -1])])], T=4)
     roll = files[ROLL.format(3)].splitlines()
-    assert roll[2] == "execute store result score #3.1 aoe_trig if entity @e[tag=aoe2mc.p1,tag=!aoe2mc.mount]"
+    assert roll[2] == "execute store result score #3.2 aoe_trig if entity @e[tag=aoe2mc.p1,tag=!aoe2mc.mount]"
     assert roll[3] == ("execute if entity @e[tag=aoe2mc.p1,tag=!aoe2mc.mount,x=0,y=-64,z=0,dx=7,dy=383,dz=7] "
-                       "if score #3.1 aoe_trig matches 2.. if score #3.c aoe_trig matches ..50 "
+                       "if score #3.2 aoe_trig matches 2.. if score #3.c aoe_trig matches ..50 "
                        "unless score #3 aoe_trig matches 1 run function aoe2mc:trigger/3")
     assert TICK not in files                                     # no check each tick: the roll checks the areas
 
