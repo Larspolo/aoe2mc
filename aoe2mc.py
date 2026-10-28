@@ -2869,6 +2869,7 @@ MODIFY_ATTRIBUTE = 51                                              # "Modify Att
 MODIFY_ATTRIBUTE_FOR_CLASS = 104                                   # "Modify Attribute for Class" (#2859)
 MODIFY_RESOURCE = 52                                               # "Modify Resource" (#2576)
 MODIFY_RESOURCE_BY_VARIABLE = 53                                   # "Modify Resource by Variable" (#2768)
+MODIFY_VARIABLE_BY_ATTRIBUTE = 87                                  # "Modify Variable by Attribute" (#2858)
 MODIFY_VARIABLE_BY_RESOURCE = 86                                   # "Modify Variable by Resource" (#2823)
 MODIFY_VARIABLE_BY_VARIABLE = 100                                  # "Modify Variable by Variable" (#2713)
 OBJECT_HAS_ACTION = 28                                             # the condition "Object Has Action" (#2867)
@@ -3605,6 +3606,21 @@ def attribute_lines(e, c):
     return [f'data modify storage aoe2mc:attributes list append value "{e["player"]} {name} {field} {e["operation"]} {q:g}"']
 
 
+def variable_by_attribute_lines(e, c):
+    """The command of "Modify Variable by Attribute" (#2858): "<player> <name> <Stats field> <operation> <variable>"
+    goes into the list of the data storage aoe2mc:reads. A converted world has no combat values: the scenario mode of
+    the game program (game/scenario.py reads) empties the list and changes the score #v<variable> of aoe_var by the
+    value of the unit type of the player (train.stats). The attributes: STAT_ATTRIBUTES and CLASS_ATTRIBUTES."""
+    _, name = e.get("object") or (None, None)
+    a, v = e.get("attribute"), e.get("variable", -1)
+    field = STAT_ATTRIBUTES.get(a) or CLASS_ATTRIBUTES.get((a, e.get("class")))
+    if not name or e["player"] <= 0 or not field or e.get("operation") not in range(1, 6) or v < 0:
+        c.stats["modify variable by attribute (not supported)"] += 1
+        return []
+    c.stats["modify variable by attribute"] += 1
+    return [f'data modify storage aoe2mc:reads list append value "{e["player"]} {name} {field} {e["operation"]} {v}"']
+
+
 def menu_lines(e, c):
     """The command of "Enable/Disable Object" and "Enable/Disable Technology" (#2775): "<player> <name> on|off" goes
     into the list of the data storage aoe2mc:menus. A converted world has no menus: the scenario mode of the game
@@ -3914,6 +3930,8 @@ EFFECT_KEYS = {
                         "technology": lambda e, kinds, techs: techs.get(e.technology, str(e.technology))},
     MODIFY_ATTRIBUTE_FOR_CLASS: {"attribute": "object_attributes", "operation": "operation", "quantity": "quantity",
                                  "class": "armour_attack_class", "aa": "armour_attack_quantity", "group": "object_group2"},
+    MODIFY_VARIABLE_BY_ATTRIBUTE: {"attribute": "object_attributes", "class": "armour_attack_class",   # (#2858)
+                                   "operation": "operation", "variable": "variable"},
     TRAIN_UNIT: {"quantity": "quantity", "selected": lambda e, kinds, techs: list(e.selected_object_ids or [])},   # (#2772)
 }
 
@@ -3970,6 +3988,7 @@ EFFECTS = {
     MODIFY_ATTRIBUTE_FOR_CLASS: attribute_lines,
     MODIFY_RESOURCE: resource_lines,
     MODIFY_RESOURCE_BY_VARIABLE: resource_by_variable_lines,
+    MODIFY_VARIABLE_BY_ATTRIBUTE: variable_by_attribute_lines,
     MODIFY_VARIABLE_BY_RESOURCE: variable_by_resource_lines,
     MODIFY_VARIABLE_BY_VARIABLE: variable_by_variable_lines,
     PATROL: order_lines,
@@ -4223,6 +4242,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
     names = sorted({f"#v{x[k]}" for t in triggers for x in t["conditions"] + t["effects"]
                     for k in ("variable", "variable2")   # "Modify Variable by Variable" has two (#2713)
                     if x["type"] in (VARIABLE_VALUE, CHANGE_VARIABLE, COMPARE_VARIABLES, COUNT_UNITS_INTO_VARIABLE,
+                                     MODIFY_VARIABLE_BY_ATTRIBUTE,
                                      MODIFY_VARIABLE_BY_RESOURCE, MODIFY_VARIABLE_BY_VARIABLE) and x.get(k, -1) >= 0})
     if names:
         load[:0] = ["scoreboard objectives add aoe_var dummy"] + \
