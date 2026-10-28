@@ -2947,11 +2947,12 @@ OBJECT_TESTS = {DESTROY_OBJECT: ("if entity @e[tag=aoe2mc.m{ref}] unless entity 
                  # "Capture Object": the unit has the tag of the player of the condition (its owner, #2570)
                  CAPTURE_OBJECT: ("if entity @e[tag=aoe2mc.r{ref},tag=aoe2mc.p{player}]",
                                   "unless entity @e[tag=aoe2mc.r{ref},tag=aoe2mc.p{player}]", ()),
-                 # "Object Attacked": the unit took damage in the last 10 ticks (HurtTime, #2779). Vanilla has no
+                 # "Object Attacked": the unit took damage in the last 10 ticks (HurtTime, #2779) or an AoE2 hit of the
+                 # game program (tag aoe2mc.hit: attacked_predicate, #3085). Vanilla has no
                  # attacker of a hurt entity in a selector: each attacker counts (a "near unit of the player" test
                  # misses the archers), the source player of the condition is not tested
-                 OBJECT_ATTACKED: ("if entity @e[tag=aoe2mc.r{ref},nbt=!{{HurtTime:0s}}]",
-                                   "unless entity @e[tag=aoe2mc.r{ref},nbt=!{{HurtTime:0s}}]", ()),
+                 OBJECT_ATTACKED: ("if entity @e[tag=aoe2mc.r{ref},predicate=aoe2mc:attacked]",
+                                   "unless entity @e[tag=aoe2mc.r{ref},predicate=aoe2mc:attacked]", ()),
                  # "Bring Object to Area": the unit is in the box of the area ({box}: area_box, #2620)
                  BRING_OBJECT_TO_AREA: ("if entity @e[tag=aoe2mc.r{ref}{box}]",
                                         "unless entity @e[tag=aoe2mc.r{ref}{box}]", ()),
@@ -3121,6 +3122,15 @@ def hp_runs(found, c):
         return [f"execute as {at} {'on vehicle ' * mounted}run"]
     c.files["data/aoe2mc/predicate/rider.json"] = rider_predicate()
     return [f"execute as {at} unless predicate aoe2mc:rider run", f"execute as {at} if predicate aoe2mc:rider on vehicle run"]
+
+
+def attacked_predicate():
+    """The predicate aoe2mc:attacked: a vanilla hit (HurtTime) or an AoE2 hit of the Paper plugin, which cancels the
+    vanilla hit and sets the tag aoe2mc.hit for 10 ticks (#3085). A selector cannot test "or"."""
+    def nbt(text):
+        return {"type": "minecraft:entity_properties", "entity": "this", "predicate": {"minecraft:nbt": text}}
+    return {"type": "minecraft:any_of",
+            "terms": [{"type": "minecraft:inverted", "term": nbt("{HurtTime:0s}")}, nbt('{Tags:["aoe2mc.hit"]}')]}
 
 
 def rider_predicate():
@@ -4660,6 +4670,8 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
                 continue
             if c["type"] in OBJECT_TESTS:                              # the tag of the object (#2618)
                 test, other, before = OBJECT_TESTS[c["type"]]
+                if c["type"] == OBJECT_ATTACKED:
+                    files["data/aoe2mc/predicate/attacked.json"] = attacked_predicate()
                 at = dict(ref=c["ref"], player=c.get("player"), box=area_box(c.get("area", [-1] * 4), T), next=c.get("next"),
                           near=T)
                 if c["inverted"]:                                      # the condition holds while the test fails
