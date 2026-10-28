@@ -566,6 +566,8 @@ def rise(g, site, work):
         target(g, site)
         if site["name"] in GATES:
             portcullis(g, site)
+        if site["player"] == g.player and (food := civs.built_food(g, site["name"])):
+            g.earn("food", food)                                       # Saxon camps, Wu military buildings (#2114)
     return site["progress"] >= 1
 
 

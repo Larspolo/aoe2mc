@@ -22,9 +22,8 @@ UNITS holds the bonuses of the land units of combat.STATS (#1090): hit points, a
 speed, per age. train.stats applies them before the technologies; the walk speed goes through speed(). The value
 "bonus" with a float multiplies the bonus damage that the unit deals (Gurjara mounted units, Bohemian spearmen,
 #2248); the value "taken" is the factor of the bonus damage that the unit takes (Bengali elephants, Sicilian units:
-taken(), the plugin applies it at each hit). Bonuses of this kind that the game program cannot use yet: the bonus
-damage of Bengali cavalry and Japanese mounted archers against some classes and of Goth infantry against buildings,
-the elevation (Georgians, Tatars), the Lithuanian relics, the Slav monks, and the ships.
+taken(), the plugin applies it at each hit); the value "bonus:CLASS" adds attack against a class (#2249). Bonuses of
+this kind that the game program cannot use yet: the elevation (Georgians, Tatars), the Lithuanian relics, the Slav monks, and the ships.
 REGEN holds the regeneration of the units (#2247): regen.tick gives them their hit points back.
 """
 import math
@@ -79,8 +78,8 @@ GROUPS = {g: (lambda f, g: lambda n, s: g in TAGS.get(n, ()) or f(n, s))(RULES.g
 # have (the availability chart of each civilization, #1373): the menu does not show them (train.unlocked). The items
 # that few civilizations have are in ONLY, not here.
 # "units": the bonuses of the land units (#1090): [group of GROUPS, value, change in the Dark, Feudal, Castle and
-# Imperial Age]; value is a field of combat.Stats or "speed" (the walk speed); an int adds, a float multiplies ("fire
-# 25 % faster" is the reload / 1.25). "costs": the cost bonuses (#1091): [what, resource or null (all), change in each
+# Imperial Age]; value is a field of combat.Stats, "speed" (the walk speed) or "bonus:CLASS" (the attack against a
+# class of combat.Stats.classes, #2249); an int adds, a float multiplies ("fire 25 % faster" is the reload / 1.25). "costs": the cost bonuses (#1091): [what, resource or null (all), change in each
 # age]; what is a group of GROUPS (units), "buildings", "buildings but farms", "technologies", "ages", "BUILDING
 # technologies" (the technologies of the menu of that building, #1925) or a list of names; a float multiplies the cost
 # (0.0: free), an int adds to it; AoE2 rounds half up (35 × 0.75 = 26). "twice": the technologies whose effect it gets
@@ -130,7 +129,8 @@ ECONOMY = tuple(sorted(r["name"] for r in TECH_ROWS if r.get("economy")))   # th
 # "shared": the shared unique units of its team bonus: an ally of the civilization has them too ("Team bonus", #1619).
 # "not_shared": the shared items that it does not get from an ally (Turks: no Elite Skirmisher).
 # "build", "build_wonder": the build speed of the builders (Spanish: 20 % for wonders). "build_of": the build speed of
-# some buildings, {building: factor} (Sicilian fortifications and town centers, #2115). "repair": the repair rate.
+# some buildings, {building: factor} (Sicilian fortifications and town centers, #2115). "built_food": the food that
+# a complete building gives, {building: food} (Saxons, Wu, #2114). "repair": the repair rate.
 # "repair_cost": the team bonus of the repair cost of buildings (Georgians). "repair_team": the team bonus of the
 # repair rate (Saxons). "work_rate": the train and research rate of a building in each age (Persians). "train_rate":
 # [group of GROUPS, factor, also the upgrades] (#1927). "hp": the hit points factor of a building (Persians).
@@ -146,6 +146,7 @@ NOT_SHARED = {n: tuple(sorted(r["name"] for r in ROWS if n in r.get("not_shared"
 BUILD = {r["name"]: r["build"] for r in ROWS if "build" in r}
 BUILD_WONDER = {r["name"]: r["build_wonder"] for r in ROWS if "build_wonder" in r}
 BUILD_OF = {r["name"]: r["build_of"] for r in ROWS if "build_of" in r}
+BUILT_FOOD = {r["name"]: r["built_food"] for r in ROWS if "built_food" in r}
 REPAIR = {r["name"]: r["repair"] for r in ROWS if "repair" in r}
 REPAIR_COST = {r["name"]: r["repair_cost"] for r in ROWS if "repair_cost" in r}
 REPAIR_TEAM = {r["name"]: r["repair_team"] for r in ROWS if "repair_team" in r}
@@ -170,6 +171,9 @@ RESEARCH_TIME = {r["name"]: [tuples(b) for b in r["research_time"]] for r in ROW
 # "extra": the second resource of a gather kind ("forage": a fruit bush), {kind: [resource, amount for each unit]}: Poles
 # and Puru stone miners, Portuguese foragers, Shu lumberjacks (#2113). Gather.second adds it at each gathered unit.
 EXTRA = {r["name"]: {k: tuple(v) for k, v in r["extra"].items()} for r in ROWS if "extra" in r}
+# "carry": the extra load of a villager, [[gather kind or null (all), extra]]: Aztec villagers +3, Goth hunters +15
+# (#2270). Gather.limit adds it.
+CARRY = {r["name"]: [tuple(b) for b in r["carry"]] for r in ROWS if "carry" in r}
 # The age-up bonuses (#1926, AoE2 DE wiki): train.research applies AGE_GIFTS and AGE_VILLAGERS at the end of each age,
 # train.seconds divides the time of an age by AGE_RATE, and train.missing needs no buildings for AGE_NO_BUILDINGS (the
 # game program has no other building needs). The Muisca gold discount of the ages is in COSTS (civs.jsonl).
@@ -185,6 +189,12 @@ TECH_GIFTS = {r["name"]: r["tech_gifts"] for r in ROWS if "tech_gifts" in r}
 # skirmishers). regen.tick gives them back.
 REGEN = {r["name"]: [tuples(b) for b in r["regen"]] for r in ROWS if "regen" in r}
 ECONOMY_VILLAGERS = {r["name"]: r["economy_villagers"] for r in ROWS if "economy_villagers" in r}
+# Resources for kills and deaths (game/spoils.py, #2271): "fallen" the part of the cost of a fallen own unit (Tupi),
+# "kill_gold" the gold for each military unit that a mounted unit kills (Mapuche), "loot" the part of the cost of a
+# destroyed enemy building (Danes).
+FALLEN = {r["name"]: r["fallen"] for r in ROWS if "fallen" in r}
+KILL_GOLD = {r["name"]: r["kill_gold"] for r in ROWS if "kill_gold" in r}
+LOOT = {r["name"]: r["loot"] for r in ROWS if "loot" in r}
 
 
 def tagged(n, group):
@@ -235,9 +245,11 @@ def units(g, name, s):
     """The combat.Stats s of unit name with the bonuses of the civilization of the player of g (UNITS), the walk speed
     aside (speed)."""
     for v, c in changes(g, name, s):
-        if v == "bonus" and isinstance(c, float):                  # a factor of each bonus (#2248)
+        if v.startswith("bonus:") and c:                           # the attack against a class (#2249)
+            s = s._replace(bonus={**s.bonus, v[6:]: s.bonus.get(v[6:], 0) + c})
+        elif v == "bonus" and isinstance(c, float):                # a factor of each bonus (#2248)
             s = s._replace(bonus={k: math.floor(n * c + 0.5) for k, n in s.bonus.items()})
-        elif v not in ("speed", "taken"):
+        elif v not in ("speed", "taken") and not v.startswith("bonus:"):
             old = getattr(s, v)
             s = s._replace(**{v: round(old * c, 3 if v == "reload" else None) if isinstance(c, float) else old + c})
     return s
@@ -332,6 +344,11 @@ def build_rate(g, name):
     return BUILD_OF.get(c, {}).get(name) or (BUILD_WONDER.get(c, BUILD.get(c, 1)) if name == "WONDER" else BUILD.get(c, 1))
 
 
+def built_food(g, name):
+    """The food that a complete building name of the player of g gives (BUILT_FOOD), else 0."""
+    return BUILT_FOOD.get(civ(g), {}).get(name, 0)
+
+
 def church_rate(g, pos):
     """The factor of the work of a villager of the player of g at block position pos (x, z): CHURCH_RATE for a Georgian
     in the 21-tile square around a complete own Fortified Church (AoE2 wiki "Georgians"; also to build and repair,
@@ -412,3 +429,8 @@ def extra(g, kind):
     """The second resource of gather kind for the civilization of the player of g: (resource, amount for each unit)
     (EXTRA), else None."""
     return EXTRA.get(civ(g), {}).get(kind)
+
+
+def carry(g, kind):
+    """The extra load of a villager of the player of g for gather kind (CARRY), else 0."""
+    return sum(n for k, n in CARRY.get(civ(g), ()) if k in (None, kind))

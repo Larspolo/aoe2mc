@@ -771,6 +771,10 @@ def census(g):
     """Count the live villagers and military units of the player (a dead unit has no position) and show the counts.
     A dead villager leaves g.villagers, the selection and its farm: the idle count and the bot see only live ones (#1039)."""
     live = g.positions(list(g.villagers) + list(g.soldiers))
+    import spoils                                                      # spoils imports this module
+    spoils.fallen(g, {u: "VILLAGER" if u in g.villagers else g.soldiers[u] for u in [*g.villagers, *g.soldiers]
+                      if u not in live})                               # Tupi (#2271)
+    spoils.kills(g)                                                    # Mapuche (#2271)
     for u in [u for u in g.villagers if u not in live]:
         del g.villagers[u]
         g.selected.discard(u)
