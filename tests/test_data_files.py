@@ -116,7 +116,7 @@ def check_gather(row):
                               "farm": int, "dark": bool, "ship": list, "civilian": bool, "mine": list, "carry": int,
                               "pace": float, "watch": bool})
     n = row["name"]
-    assert len(row) > 1 and set(row.get("drop", ())) <= RES and set(row.get("work", {})) <= RES, n
+    assert len(row) > 1 and set(row.get("drop", ())) <= RES | {"meat"} and set(row.get("work", {})) <= RES, n
     assert all(isinstance(v, NUMBER) for v in row.get("work", {}).values()), n
     if "mine" in row:                                      # [the resource, its amount, the villager name of the miner]
         res, amount, miner = row["mine"]
