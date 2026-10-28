@@ -139,9 +139,15 @@ def raw_samples(comments):
 
 
 def lane_weights(comments, need=10):
-    """({lane: weight}, {lane: "measured" or "start"}): the quota of one lane run in Opus runs. Least squares of the
+    """({lane: weight}, {lane: "measured" or "start"}): the quota of one lane run in Opus runs (lane_fit, #1727)."""
+    return lane_fit(comments, need)[:2]
+
+
+def lane_fit(comments, need=10):
+    """({lane: weight}, {lane: "measured", "start" or "noisy, fit W"}, {lane: standard error}, pairs). Least squares of the
     5-hour usage rise of each interval on its Opus and lane claim-hours; a lane with fewer than `need` intervals with
-    its runs keeps the start weight of `agent.toml` (#1727)."""
+    its runs keeps the start weight of `agent.toml` (#1727). A fit whose standard error is larger than its weight keeps
+    the start weight too ("noisy"): the weight of 50 PRs jumped from 0.40 to the clip 1.00 in 40 minutes (#2852)."""
     rows = []
     for a, b in zip(raw_samples(comments), raw_samples(comments)[1:]):
         h = (b[0] - a[0]).total_seconds() / 3600
@@ -149,14 +155,23 @@ def lane_weights(comments, need=10):
             lane = {k: h * (a[4].get(k, 0) + b[4].get(k, 0)) / 2 for k in LANES}
             rows.append((b[1] - a[1], h * (a[3] + b[3]) / 2 - sum(lane.values()), lane))
     fit = [k for k in LANES if sum(r[2][k] > 0 for r in rows) >= need]
-    weights, source = dict(LANES), dict.fromkeys(LANES, "start")
+    weights, source, errors = dict(LANES), dict.fromkeys(LANES, "start"), {}
     if fit and sum(r[1] > 0 for r in rows) >= need:
         x = numpy.array([[r[1]] + [r[2][k] for k in fit] for r in rows])
-        b = numpy.linalg.lstsq(x, numpy.array([r[0] for r in rows]), rcond=None)[0]
-        if b[0] > 0:
-            for k, v in zip(fit, b[1:]):
-                weights[k], source[k] = min(max(v / b[0], 0.02), 1.0), "measured"
-    return weights, source
+        y = numpy.array([r[0] for r in rows])
+        b = numpy.linalg.lstsq(x, y, rcond=None)[0]
+        dof = len(rows) - x.shape[1]
+        if b[0] > 0 and dof > 0:
+            cov = numpy.sum((y - x @ b) ** 2) / dof * numpy.linalg.pinv(x.T @ x)
+            for i, k in enumerate(fit, 1):                                 # the error of b[i] / b[0] (delta method)
+                g = numpy.zeros(len(b))
+                g[0], g[i] = -b[i] / b[0] ** 2, 1 / b[0]
+                w, errors[k] = b[i] / b[0], float(numpy.sqrt(max(g @ cov @ g, 0.0)))
+                if errors[k] > abs(w):
+                    source[k] = f"noisy, fit {w:.2f}"
+                else:
+                    weights[k], source[k] = min(max(w, 0.02), 1.0), "measured"
+    return weights, source, errors, len(rows)
 
 
 def opus_equivalent(claims, lanes, weights):
@@ -558,8 +573,9 @@ def report(since, runs, jobs, status_comments, comments, prs, files, files_of=No
                + ("; ".join(f"{k} {fmt(m)} ({n}x)" for k, (m, n) in vm) or "-"))
     for name, (n, pr, mins, eq) in sorted(lanes(status_comments).items()):
         out.append(f"Lane {name}: {n} runs, {pr} PRs, median {fmt(med(mins))} min, median {fmt(med(eq))}M eq")
-    weights, source = lane_weights(status_comments)
-    out.append("Lane weights (a lane run in Opus runs, #1727): " + ", ".join(f"{k} {w:.2f} ({source[k]})" for k, w in weights.items()))
+    weights, source, errors, pairs = lane_fit(status_comments)
+    out.append(f"Lane weights (a lane run in Opus runs, #1727; {pairs} pairs, ± standard error, #2852): " + ", ".join(
+        f"{k} {w:.2f}{f' ± {errors[k]:.2f}' if k in errors else ''} ({source[k]})" for k, w in weights.items()))
     rw = release_per_week([p for p in weekly(status_comments) if p[0] >= since])
     out.append("Release per 1 % of 7-day quota: " + ("-" if rw is None else
                f"{rw[0]:.2f} points ({rw[1]:g} % to {rw[2]:g} %)"))

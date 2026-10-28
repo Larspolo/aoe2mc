@@ -373,6 +373,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     private static final double CHASE = 12.0;
     private static final double MELEE = 2.0;          // stand ground: the blocks to an enemy that a melee unit attacks
     static final String CARRIER = "aoe2mc.carrier";                  // the tag of the mob that carries a siege unit
+    static final String NO_TARGET = "aoe2mc.notarget";               // no unit or tower chooses it as a target (#2826)
     private static final double[] CLIMB = {0.75, 0.15};               // up and forward (blocks per tick) out of water
     private static final double STEP = 1.25;                         // a step of 1 block with snow[layers=2] (#851)
     private static final double CARRIER_SCALE = 0.3;                 // a pig of 0.27 blocks: the minecart stays low
@@ -1157,6 +1158,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     // A mounted unit: the horse has the order, the rider the target (#710).
     private void attackBack(LivingEntity victim, LivingEntity attacker, Stats t) {
         if (victim instanceof Mob mob && idle(mob, t) && !sameTeam(mob, attacker)
+                && !attacker.getScoreboardTags().contains(NO_TARGET)
                 && mob.getLocation().distanceSquared(attacker.getLocation()) <= Math.pow(stanceRange(mob), 2)) {
             engage(mob, attacker);
             Mob fighter = rider(mob) != null ? rider(mob) : mob;      // it turns and swings first: its first hit
@@ -2231,10 +2233,12 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     // team -> the teams that it is neutral to (aoe neutral, #1645): no automatic attack on their units, as in AoE2
     private static final Map<String, Set<String>> NEUTRAL = new HashMap<>();
 
-    /** True when the units of a do not attack b by themselves: the same side, an ally, or a neutral stance. */
+    /** True when the units of a do not attack b by themselves: the same side, an ally, a neutral stance, or the tag
+     *  NO_TARGET on b. */
     private static boolean calm(Entity a, Entity b) {
         String s = side(b);         // no side (the crew of a siege unit, #1820): Set.of().contains(null) throws
-        return sameTeam(a, b) || s != null && NEUTRAL.getOrDefault(side(a), Set.of()).contains(s);
+        return sameTeam(a, b) || s != null && NEUTRAL.getOrDefault(side(a), Set.of()).contains(s)
+                || b.getScoreboardTags().contains(NO_TARGET);       // "Disable Unit Targeting" of a trigger (#2826)
     }
 
     // team -> the elevation factors up, low, high (aoe elevation, #2307); the blocks of one level, 0: no rule
