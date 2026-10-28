@@ -93,7 +93,7 @@
 {"name": "HUNS: Start the game with wood -100, but with the population cap at the maximum.", "civ": "HUNS", "bonus": "Start the game with wood -100, but with the population cap at the maximum.", "in": "START"}
 {"name": "HUNS: On Nomadic maps, the first Town Center spawns a Hunnic Horse.", "civ": "HUNS", "bonus": "On Nomadic maps, the first Town Center spawns a Hunnic Horse.", "in": "nomad_unit"}
 {"name": "HUNS: Mounted archers are 10%/20% cheaper in the Castle/Imperial Age.", "civ": "HUNS", "bonus": "Mounted archers are 10%/20% cheaper in the Castle/Imperial Age.", "in": "COSTS"}
-{"name": "HUNS: Trebuchets have +35% accuracy against units and small targets.", "civ": "HUNS", "bonus": "Trebuchets have +35% accuracy against units and small targets.", "later": "play:siege"}
+{"name": "HUNS: Trebuchets have +35% accuracy against units and small targets.", "civ": "HUNS", "bonus": "Trebuchets have +35% accuracy against units and small targets.", "in": "accuracy"}
 {"name": "INCAS: Military units cost food -15%/-20%/-25%/-30% in Dark/Feudal/Castle/Imperial Ages", "civ": "INCAS", "bonus": "Military units cost food -15%/-20%/-25%/-30% in Dark/Feudal/Castle/Imperial Ages", "in": "COSTS"}
 {"name": "INCAS: Villagers benefit from Blacksmith infantry technologies starting in the Castle Age.", "civ": "INCAS", "bonus": "Villagers benefit from Blacksmith infantry technologies starting in the Castle Age.", "in": "SMITH_UNITS"}
 {"name": "INCAS: Houses and Settlements support 10 population.", "civ": "INCAS", "bonus": "Houses and Settlements support 10 population.", "in": "HOUSING"}
@@ -171,7 +171,7 @@
 {"name": "PORTUGUESE: Foragers generate wood in addition to food (wood 0.33 food per).", "civ": "PORTUGUESE", "bonus": "Foragers generate wood in addition to food (wood 0.33 food per).", "in": "EXTRA"}
 {"name": "PURU: Villagers gathering from Stone Mines generate food 0.69 stone per.", "civ": "PURU", "bonus": "Villagers gathering from Stone Mines generate food 0.69 stone per.", "in": "EXTRA"}
 {"name": "PURU: Stone Mines last 30% longer.", "civ": "PURU", "bonus": "Stone Mines last 30% longer.", "in": "LAST"}
-{"name": "PURU: Villagers and Fishing Ships gather from Oysters 15% faster.", "civ": "PURU", "bonus": "Villagers and Fishing Ships gather from Oysters 15% faster.", "later": "play:naval"}
+{"name": "PURU: Villagers and Fishing Ships gather from Oysters 15% faster.", "civ": "PURU", "bonus": "Villagers and Fishing Ships gather from Oysters 15% faster.", "in": "WORK"}
 {"name": "PURU: Cavalry units heal 25 hit points per minute when no enemy units are within 10 tiles radius, starting in the Classical Age.", "civ": "PURU", "bonus": "Cavalry units heal 25 hit points per minute when no enemy units are within 10 tiles radius, starting in the Classical Age.", "in": "REGEN"}
 {"name": "PURU: Lemboi cost -10/19/27% and gain +1/2/3 attack in the Civic/Classical/Imperial Ages respectively.", "civ": "PURU", "bonus": "Lemboi cost -10/19/27% and gain +1/2/3 attack in the Civic/Classical/Imperial Ages respectively.", "later": "play:military-train"}
 {"name": "ROMANS: Villagers gather, build, and repair 5% faster.", "civ": "ROMANS", "bonus": "Villagers gather, build, and repair 5% faster.", "in": "WORK"}
@@ -218,7 +218,7 @@
 {"name": "TEUTONS: Infantry and mounted units receive +1/+2 melee armor in the Castle/Imperial Age.", "civ": "TEUTONS", "bonus": "Infantry and mounted units receive +1/+2 melee armor in the Castle/Imperial Age.", "in": "UNITS"}
 {"name": "THRACIANS: Elite Skirmisher upgrade is free.", "civ": "THRACIANS", "bonus": "Elite Skirmisher upgrade is free.", "in": "COSTS"}
 {"name": "THRACIANS: (Elite/Imperial) Skirmishers regenerate 5 (10) hit points per minute.", "civ": "THRACIANS", "bonus": "(Elite/Imperial) Skirmishers regenerate 5 (10) hit points per minute.", "in": "REGEN"}
-{"name": "THRACIANS: Battle Drills is available in the Classical Age.", "civ": "THRACIANS", "bonus": "Battle Drills is available in the Classical Age.", "later": "play:ages"}
+{"name": "THRACIANS: Battle Drills is available in the Classical Age.", "civ": "THRACIANS", "bonus": "Battle Drills is available in the Classical Age.", "in": "EARLIER"}
 {"name": "THRACIANS: All buildings except Town Centers can be built on any elevation.", "civ": "THRACIANS", "bonus": "All buildings except Town Centers can be built on any elevation.", "gap": "play:build"}
 {"name": "THRACIANS: Forts and towers increase the work rate of nearby miners and lumberjacks in a square of aura range 8 by 15% and serve as resource drop sites for the respective resources.", "civ": "THRACIANS", "bonus": "Forts and towers increase the work rate of nearby miners and lumberjacks in a square of aura range 8 by 15% and serve as resource drop sites for the respective resources.", "in": "AURA"}
 {"name": "THRACIANS: Shepherds and hunters generate gold 3 per minute while gathering from animals (excluding Foxes).", "civ": "THRACIANS", "bonus": "Shepherds and hunters generate gold 3 per minute while gathering from animals (excluding Foxes).", "in": "PER_MINUTE"}
