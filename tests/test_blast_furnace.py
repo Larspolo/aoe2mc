@@ -15,7 +15,7 @@ def imperial(*techs):
 
 def test_the_menu_shows_blast_furnace_after_iron_casting_in_the_slot_of_forging():
     slot = train.ITEMS["FORGING"][0]
-    assert train.ITEMS["BLAST_FURNACE"][0] == slot and train.AFTER["BLAST_FURNACE"] == "IRON_CASTING"
+    assert train.ITEMS["BLAST_FURNACE"][0] == slot and train.BY_KEY["after"]["BLAST_FURNACE"] == "IRON_CASTING"
     server, g = imperial()
     train.open_menu(g, "Steve", (11, 3))
     assert ":book:Blast Furnace:" not in menus(server)[-1] and train.queue(g, "Steve", (11, 3), "BLAST_FURNACE") is None

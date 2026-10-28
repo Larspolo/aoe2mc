@@ -17,8 +17,8 @@ WIKI = {"CLINKER_CONSTRUCTION": ({"food": 150, "wood": 100}, 50, 2, None),
 def test_the_cost_time_and_age_are_those_of_aoe2():
     for name, (cost, time, age, after) in WIKI.items():
         assert name in train.TRAINS["UNIVERSITY"] and train.HELP[name], name
-        assert train.COSTS[name] == cost and train.TRAIN_TIMES[name] == time and train.TECH_AGE[name] == age, name
-        assert train.AFTER.get(name) == after, name
+        assert train.COSTS[name] == cost and train.TRAIN_TIMES[name] == time and train.BY_KEY["age"][name] == age, name
+        assert train.BY_KEY["after"].get(name) == after, name
 
 
 def test_a_civilization_with_it_sees_it_one_without_it_does_not():
