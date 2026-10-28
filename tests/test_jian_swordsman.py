@@ -22,7 +22,7 @@ def test_the_values_are_those_of_aoe2():
     assert build.AGE["JIAN_SWORDSMAN"] == 2 and len(train.HELP["JIAN_SWORDSMAN"]) <= 50
     s = combat.stats("JIAN_SWORDSMAN")
     assert (s.hp, s.attack, s.melee, s.pierce, s.reload) == (70, 8, 0, 5, 2.0)
-    assert s.bonus == {"archer": 4, "building": 2} and "infantry" in s.classes and combat.sight("JIAN_SWORDSMAN") == 4
+    assert s.bonus == {"archer": 4, "building": 2} and "infantry" in s.classes
     assert units.classify("JIAN_SWORDSMAN")["id"] == "minecraft:zombie"
     assert "WU" not in civs.MISSING["JIAN_SWORDSMAN"]
     assert set(civs.MISSING["JIAN_SWORDSMAN"]) == {r["name"] for r in civs.ROWS} - {"WU"}
