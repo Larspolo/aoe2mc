@@ -14,6 +14,8 @@ docs/DECISIONS.md merge=union
 # and the workflow unconflict.yml. Without the driver, git merges them as text.
 # One JSON object per civilization (#1914); table.load() stops on a name in two lines.
 game/data/civs.jsonl merge=jsonl
+# One JSON object per key of civs.jsonl: what it does, its issue (#2281).
+game/data/civ_keys.jsonl merge=jsonl
 # One JSON object per menu item; runs add a line at the end of a building block. train.load() stops on a name in two lines (#1702).
 game/data/train.jsonl merge=jsonl
 # One JSON object per unit (#1912); table.load() stops on a name in two lines.

@@ -79,7 +79,7 @@
 {"name": "GEORGIANS: Mounted units regenerate 2/8/14 hit points per minute in the Feudal/Castle/Imperial Age.", "civ": "GEORGIANS", "bonus": "Mounted units regenerate 2/8/14 hit points per minute in the Feudal/Castle/Imperial Age.", "in": "REGEN"}
 {"name": "GOTHS: Infantry units are 15%/20%/25%/30% cheaper in the Dark/Feudal/Castle/Imperial Age.", "civ": "GOTHS", "bonus": "Infantry units are 15%/20%/25%/30% cheaper in the Dark/Feudal/Castle/Imperial Age.", "in": "COSTS"}
 {"name": "GOTHS: Infantry units have +1/+2/+3 attack bonus against Standard Buildings in the Feudal/Castle/Imperial Age.", "civ": "GOTHS", "bonus": "Infantry units have +1/+2/+3 attack bonus against Standard Buildings in the Feudal/Castle/Imperial Age.", "in": "UNITS"}
-{"name": "GOTHS: Hunters carry food +15; hunt lasts 20% longer.", "civ": "GOTHS", "bonus": "Hunters carry food +15; hunt lasts 20% longer.", "in": "CARRY"}
+{"name": "GOTHS: Hunters carry food +15; hunt lasts 20% longer.", "civ": "GOTHS", "bonus": "Hunters carry food +15; hunt lasts 20% longer.", "in": ["CARRY", "LAST"]}
 {"name": "GOTHS: Loom is researched instantly.", "civ": "GOTHS", "bonus": "Loom is researched instantly.", "in": "RESEARCH_TIME"}
 {"name": "GOTHS: +10 population cap in the Imperial Age.", "civ": "GOTHS", "bonus": "+10 population cap in the Imperial Age.", "gap": "play:train"}
 {"name": "GURJARAS: Start the game with a Camel Scout.", "civ": "GURJARAS", "bonus": "Start the game with a Camel Scout.", "later": "play:setup"}
@@ -89,7 +89,7 @@
 {"name": "HINDUSTANIS: Villagers are 8/13/18/23% cheaper in the Dark/Feudal/Castle/Imperial Age.", "civ": "HINDUSTANIS", "bonus": "Villagers are 8/13/18/23% cheaper in the Dark/Feudal/Castle/Imperial Age.", "in": "COSTS"}
 {"name": "HINDUSTANIS: Camel Riders attack 20% faster.", "civ": "HINDUSTANIS", "bonus": "Camel Riders attack 20% faster.", "in": "UNITS"}
 {"name": "HINDUSTANIS: Gunpowder units have +1/+1 armor.", "civ": "HINDUSTANIS", "bonus": "Gunpowder units have +1/+1 armor.", "in": "UNITS"}
-{"name": "HINDUSTANIS: Can build Caravanserais in the Imperial Age.", "civ": "HINDUSTANIS", "bonus": "Can build Caravanserais in the Imperial Age.", "later": "play:market"}
+{"name": "HINDUSTANIS: Can build Caravanserais in the Imperial Age.", "civ": "HINDUSTANIS", "bonus": "Can build Caravanserais in the Imperial Age.", "in": "game/data/build.jsonl"}
 {"name": "HUNS: Start the game with wood -100, but with the population cap at the maximum.", "civ": "HUNS", "bonus": "Start the game with wood -100, but with the population cap at the maximum.", "in": "START"}
 {"name": "HUNS: On Nomadic maps, the first Town Center spawns a Hunnic Horse.", "civ": "HUNS", "bonus": "On Nomadic maps, the first Town Center spawns a Hunnic Horse.", "later": "play:setup"}
 {"name": "HUNS: Mounted archers are 10%/20% cheaper in the Castle/Imperial Age.", "civ": "HUNS", "bonus": "Mounted archers are 10%/20% cheaper in the Castle/Imperial Age.", "in": "COSTS"}
@@ -162,7 +162,7 @@
 {"name": "PERSIANS: Start the game with food +50, wood +50.", "civ": "PERSIANS", "bonus": "Start the game with food +50, wood +50.", "in": "START"}
 {"name": "PERSIANS: Town Centers and Docks have double hit points and work 5%/10%/15%/20% faster in the Dark/Feudal/Castle/Imperial Age.", "civ": "PERSIANS", "bonus": "Town Centers and Docks have double hit points and work 5%/10%/15%/20% faster in the Dark/Feudal/Castle/Imperial Age.", "in": "WORK_RATE"}
 {"name": "PERSIANS: Parthian Tactics available in the Castle Age.", "civ": "PERSIANS", "bonus": "Parthian Tactics available in the Castle Age.", "in": "EARLIER"}
-{"name": "PERSIANS: Can build Caravanserais in the Imperial Age.", "civ": "PERSIANS", "bonus": "Can build Caravanserais in the Imperial Age.", "later": "play:market"}
+{"name": "PERSIANS: Can build Caravanserais in the Imperial Age.", "civ": "PERSIANS", "bonus": "Can build Caravanserais in the Imperial Age.", "in": "game/data/build.jsonl"}
 {"name": "POLES: Villagers regenerate 10/15/20 hit points per minute in the Feudal/Castle/Imperial Age.", "civ": "POLES", "bonus": "Villagers regenerate 10/15/20 hit points per minute in the Feudal/Castle/Imperial Age.", "in": "REGEN"}
 {"name": "POLES: Stone miners generate gold 33% in addition to stone.", "civ": "POLES", "bonus": "Stone miners generate gold 33% in addition to stone.", "in": "EXTRA"}
 {"name": "POLES: Bloodlines and Scout Cavalry-line upgrades cost food -50%.", "civ": "POLES", "bonus": "Bloodlines and Scout Cavalry-line upgrades cost food -50%.", "in": "COSTS"}
@@ -220,7 +220,7 @@
 {"name": "THRACIANS: (Elite/Imperial) Skirmishers regenerate 5 (10) hit points per minute.", "civ": "THRACIANS", "bonus": "(Elite/Imperial) Skirmishers regenerate 5 (10) hit points per minute.", "in": "REGEN"}
 {"name": "THRACIANS: Battle Drills is available in the Classical Age.", "civ": "THRACIANS", "bonus": "Battle Drills is available in the Classical Age.", "later": "play:ages"}
 {"name": "THRACIANS: All buildings except Town Centers can be built on any elevation.", "civ": "THRACIANS", "bonus": "All buildings except Town Centers can be built on any elevation.", "later": "play:build"}
-{"name": "THRACIANS: Forts and towers increase the work rate of nearby miners and lumberjacks in a square of aura range 8 by 15% and serve as resource drop sites for the respective resources.", "civ": "THRACIANS", "bonus": "Forts and towers increase the work rate of nearby miners and lumberjacks in a square of aura range 8 by 15% and serve as resource drop sites for the respective resources.", "later": "play:gather"}
+{"name": "THRACIANS: Forts and towers increase the work rate of nearby miners and lumberjacks in a square of aura range 8 by 15% and serve as resource drop sites for the respective resources.", "civ": "THRACIANS", "bonus": "Forts and towers increase the work rate of nearby miners and lumberjacks in a square of aura range 8 by 15% and serve as resource drop sites for the respective resources.", "in": "AURA"}
 {"name": "THRACIANS: Shepherds and hunters generate gold 3 per minute while gathering from animals (excluding Foxes).", "civ": "THRACIANS", "bonus": "Shepherds and hunters generate gold 3 per minute while gathering from animals (excluding Foxes).", "in": "PER_MINUTE"}
 {"name": "TUPI: Start with +25 of each resource once the first Town Center is built.", "civ": "TUPI", "bonus": "Start with +25 of each resource once the first Town Center is built.", "in": "TOWN_CENTER"}
 {"name": "TUPI: Villagers can garrison in Settlements (max 5).", "civ": "TUPI", "bonus": "Villagers can garrison in Settlements (max 5).", "later": "play:garrison"}
@@ -244,7 +244,7 @@
 {"name": "VIKINGS: Wheelbarrow and Hand Cart free.", "civ": "VIKINGS", "bonus": "Wheelbarrow and Hand Cart free.", "in": "COSTS"}
 {"name": "VIKINGS: Warships cost -10%/-15%/-20% in the Feudal/Castle/Imperial Age.", "civ": "VIKINGS", "bonus": "Warships cost -10%/-15%/-20% in the Feudal/Castle/Imperial Age.", "in": "COSTS"}
 {"name": "VIKINGS: Infantry have +20% hit points starting from the Feudal Age.", "civ": "VIKINGS", "bonus": "Infantry have +20% hit points starting from the Feudal Age.", "in": "UNITS"}
-{"name": "WEI: Receive one free Villager for each economic technology researched", "civ": "WEI", "bonus": "Receive one free Villager for each economic technology researched", "in": "ECONOMY_VILLAGERS"}
+{"name": "WEI: Receive one free Villager for each economic technology researched", "civ": "WEI", "bonus": "Receive one free Villager for each economic technology researched", "in": "economy_villagers"}
 {"name": "WEI: Hei Guang Cavalry +20%/30% hit points in Castle/Imperial Age", "civ": "WEI", "bonus": "Hei Guang Cavalry +20%/30% hit points in Castle/Imperial Age", "in": "UNITS"}
 {"name": "WEI: Xianbei Raider +20%/30% hit points in Castle/Imperial Age (the unit is not in the game program yet, #2160)", "civ": "WEI", "bonus": "Xianbei Raider +20%/30% hit points in Castle/Imperial Age (the unit is not in the game program yet, #2160)", "later": "play:military-train"}
 {"name": "WEI: Traction Trebuchets and Lou Chuans cost -25%", "civ": "WEI", "bonus": "Traction Trebuchets and Lou Chuans cost -25%", "in": "COSTS"}
