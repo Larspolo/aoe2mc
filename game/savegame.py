@@ -30,6 +30,7 @@ OPTIONAL = ("limit_left", "policy", "rates", "relic_timer", "switches", "upgrade
             "wonders_gone")                                            # Gather that has them (#2324; the policy: #2515)
 MONK = ("carrier_at", "converting", "faith", "fetching", "heal_time", "monk_at", "relic_gold", "relic_homes",
         "relic_time", "relics")                                        # game/monk.py: the relics and monk orders (#2412)
+ORDERS = ("patrols",)                                                  # scenario.py: the patrols of the triggers (#2647)
 ROUTES = ("trade", "trebs")                                            # trade.py, trebuchet.py: as OPTIONAL (#2413)
 CHEATS = (                                                             # game/cheats.py: the cheats that the player
     "aegis",                                                           # turned on (#2533)
@@ -97,6 +98,7 @@ KEPT = (                                                               # the fie
     *LEFT,                                                             # one tuple per line, in alphabetical order
     *MONK,                                                             # (parallel tickets add one, #2453)
     *OPTIONAL,
+    *ORDERS,
     *RIDERS,
     *ROUTES,
     *SCORE,
@@ -107,7 +109,8 @@ KEPT = (                                                               # the fie
 JOB = ("state", "load", "res", "job", "lap", "prey")                  # fields of a gather.Villager, as they are
 BOT = ("time", "charged", "attack")                                    # fields of a bot.Bot, as they are (#2325)
 SETTINGS = (                                                           # run.py options (#2325, #2409): one per line,
-    "all_techs",                                                       # in alphabetical order (parallel tickets add)
+    "ai_difficulty",                                                   # in alphabetical order (parallel tickets add)
+    "all_techs",
     "bot",
     "bot_attack",
     "cheats",
@@ -136,6 +139,7 @@ NOT_SAVED = (                                                          # the fie
     "bots",                                                            # run.play makes the bots again
     "capture",                                                         # herd.py: a tick timer
     "census",                                                          # train.py: a tick timer
+    "chop",                                                            # bot.py: the setup value of the AI difficulty
     "conquest_at",                                                     # conquest.py: the next check time
     "data",                                                            # aoe2mc.json of the world
     "defend_at",                                                       # defend_wonder.py: the next check time
