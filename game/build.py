@@ -28,8 +28,8 @@ Fortified Wall (#1326, the key "walls" of train.jsonl): the new and the complete
 and its hit points (design(), upgrade()); a damaged one keeps its lost hit points, as in AoE2.
 Minimap (#2582, epic #2580): on Paper each building is a square in the player color on map 0 (`aoe minimap building`,
 Minimap.java) from its foundation on (found()), and its square goes when it falls (gather.Gather.fall: `aoe minimap
-unbuild`). run.play draws the buildings of the start (minimap()). Enemy buildings show too, also out of sight: the fog
-of the minimap is #2583.
+unbuild`). run.play draws the buildings of the start (minimap()). With the fog of war, the plugin shows an enemy
+building to a team only after a tile of it was in its sight (fog.minimap, #2583).
 """
 import json
 import math
