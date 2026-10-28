@@ -113,6 +113,13 @@ def main_ci():
 RED = ("failure", "timed_out", "cancelled")
 
 
+def fixed_after(closed, start):
+    """The "Fix main" issues of `closed` that closed after `start` (a "YYYY-MM-DDTHH:MM" UTC time of a red run), as
+    "#N title". A fix merged by a PR closes its ticket, so the Main CI line names it (#3225)."""
+    return [f"#{i['number']} {i['title']}" for i in closed
+            if i["title"].startswith("Fix main") and (i.get("closed_at") or "") > start]
+
+
 def section(title, lines):
     print(f"{title}: " + ("none" if not lines else lines[0] if len(lines) == 1 else "\n  " + "\n  ".join(lines)))
 
@@ -159,9 +166,12 @@ def main(argv=None):
     red = [c for c in ci if c[1] in RED]
     done = subprocess.run(["git", "log", f"origin/{CONFIG['branch']}", f"--since={min(t for *_, t in red)}Z",
                            "--format=%s", "--grep=^Fix main"], capture_output=True, text=True).stdout.split("\n")[0] if red else ""
+    closed = fixed_after(dashboard.api("issues?state=closed&sort=updated&direction=desc&per_page=100"),
+                         min(t for *_, t in red)) if red else []
     section("Main CI", [" · ".join(f"{n} {c} ({sha}, {t})" for n, c, sha, t in ci) + (
         "" if not red else " → red: open P0 tickets \"Fix main\": " + ("; ".join(fix) or "none")
-        + (f"; merged after the red run: {done}" if done else ""))])
+        + (f"; merged after the red run: {done}" if done else "")
+        + (f"; closed after the red run: {'; '.join(closed)}" if closed else ""))])
     code, text = tool("feedback.py")
     section("Feedback (lock each with `claim.py ID --comment`)", [t for t in text.splitlines() if re.match(r"\d+ #\d+ ", t)])
     section("Triage (no priority label)", [f"#{n} {i['title']}" for n, i in sorted(issues.items())
