@@ -1,6 +1,7 @@
 """The process review and the roadmap review start after a count of merged PRs (#898, #2039): `claim.py 0 --review`,
 `--reviewed`, `--roadmap`."""
 from test_claim import clones, tool  # noqa: F401
+from test_claim_refill import deep
 
 import claim
 
@@ -11,6 +12,7 @@ BODY = 'Dashboard\n<!-- agent-state: {"last_run": "2026-10-26T07:00:00Z", "runs"
 
 def test_the_review_lock_wins_once(clones):                                    # noqa: F811
     a, b, _ = clones
+    deep(clones)
     assert tool(a, "0", "--review").returncode == 0                             # a local remote: no state, no count
     assert tool(b, "0", "--review").returncode == 1                             # the same review
     assert tool(a, "0", "--roadmap").returncode == 0 and tool(b, "0", "--roadmap").returncode == 1

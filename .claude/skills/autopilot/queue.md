@@ -13,10 +13,22 @@ also with the argument `max` (a Haiku call costs 5 times more above 100k prompt 
 reached 91k to 200k; the pacer starts a fresh run with a 65k context for the next ticket, 2026-10-28). A ticket that is not as clear as its label says: release
 the claim, remove `lane:haiku`, comment why in one line, and take the next one. Write the report with `tools/report.py` (`report.md`): it adds `· lane haiku` from the git config (#1982).
 
+## Deep lane (step 5)
+
+The main runs work at low effort (owner, 2026-10-28). The scheduled task "aoe2mc autopilot deep" runs at the default
+effort for the work where the thinking matters more than the typing (`ticket` skill, "Model lanes"). When the argument
+names `lane deep`, run `git config aoe2mc.lane deep` first (the claims and the report then name the lane). Pick with
+`python3 tools/cycle_start.py --lane deep`. A deep run does the epic check and the queue refill of step 5, the roadmap
+review and the process review: while `reserved` in `[pacing]` of `agent.toml` names `deep`, `claim.py` gives those
+locks (`--review`, `--roadmap`, `--refill`) only to deep runs, and the other runs skip them. Stop when no `lane:deep`
+ticket is ready and the refill is done: the main runs take the other tickets for less.
+
 ## Large tickets (step 4)
 
 If the size is L, split it into S or M sub-issues with the `ticket` skill. Give the parent label `epic`.
 If the top candidate of step 5 has `size:L`, split it now (`ticket` skill), then pick again.
+While `reserved` in `agent.toml` names `deep`, only a deep run splits (`claim.py E --refill` exits 1 in the other
+runs): give the ticket `lane:deep` and pick the next one.
 
 ## Epics and refill (step 5)
 

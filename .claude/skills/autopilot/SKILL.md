@@ -15,7 +15,7 @@ The rare cases are in files next to this one (#1700). Read a file only when its 
 |---|---|
 | `github.md` | You need a `gh api` path (issues, labels, PRs, CI, sweep) or the list of labels. |
 | `overlap.md` | A ticket, branch or PR of another run is in your way: a stale claim, a stalled PR, a takeover. |
-| `queue.md` | Step 4 or 5: a `size:L` ticket, the epic check, the queue refill, the haiku lane. |
+| `queue.md` | Step 4 or 5: a `size:L` ticket, the epic check, the queue refill, the haiku and deep lanes. |
 | `conflict.md` | A PR has a merge conflict (label `conflict`, or `mergeable_state` is `dirty`). |
 | `owner.md` | You must ask the owner, the auto mode denies an action, a ticket is wrong, or step 7 needs a check ticket. |
 | `process.md` | Step 6.5 (the questions of step 9) and after step 8 (the review slot). |
@@ -38,7 +38,7 @@ no release) and pick the next one. Takeovers, stalled PRs, hand-offs: `overlap.m
 
 ## 1. Start
 
-Steps 1 to 5 read GitHub in one call: `python3 tools/cycle_start.py` (`--lane haiku` in the Haiku lane). Run it at the
+Steps 1 to 5 read GitHub in one call: `python3 tools/cycle_start.py` (`--lane L` in lane L). Run it at the
 start and before each later ticket, act on its sections, and call the API only for what it does not show.
 1. Exit 3 (label `paused`): stop now, do not comment. No status issue: make it (`report.md`).
 2. Note the start time (`date -u +%FT%TZ`) and keep a short list of time sinks during the run
@@ -92,9 +92,9 @@ Candidates: open issues without `needs-human`, `blocked`, `epic`, `agent-status`
 least overlap with the work in progress (files and functions that open PRs change or claimed tickets name, #487),
 then the lowest issue number.
 Section `Candidates` shows them in this order, without held tickets (`dashboard.py --next`: all of them).
-Tickets with `lane:haiku` come after all others: take one only when nothing else is ready (#1715).
-**Haiku lane** (the argument names `lane haiku`): read `queue.md`, section "Haiku lane", before the pick.
-Before the pick, check the open epics with no open sub-issue (at most 3 per run), and refill the queue when R < N
+A main run never takes a ticket of a `reserved` lane (`lane:haiku`, `lane:deep`, #1994).
+**Lane runs** (the argument names `lane haiku` or `lane deep`): read `queue.md`, section of the lane, before the pick.
+Before the pick (only deep runs while `reserved` names `deep`), check the open epics with no open sub-issue (at most 3 per run), and refill the queue when R < N
 (N = the target and R = the ready tickets on the stderr line of `python3 tools/usage.py --fire`): `queue.md`.
 If there is no candidate, go to step 8 and report "No ticket is ready".
 Claim it with `python3 tools/claim.py N`. It pushes a unique commit to the ref `claim/N` without force, so only one

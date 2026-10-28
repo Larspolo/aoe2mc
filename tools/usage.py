@@ -133,17 +133,30 @@ def refill_runs(issues, now, minutes=60, refill=REFILL):
     return refill if new else min(refill, 1)
 
 
-def lane_plan(target, claims, ready, ready_haiku, weight, paused, hi=MAX_FIRE, refill=REFILL):
-    """(K, H): the runs that the pacer starts now, and the H of them for the Haiku task (#1715, #1727). The target and
-    the claims are in Opus runs, and a Haiku run counts `weight`. The ready `lane:haiku` tickets get Haiku runs first
-    (cheap), then Opus runs take the rest of the target: at most the other ready tickets and `refill` more (they refill
-    the queue, #609). The pacer starts the H runs on the Opus task when the Haiku task does not exist."""
+def plan(target, claims, ready, lanes, paused, hi=MAX_FIRE, refill=REFILL, refill_lane=None):
+    """(K, {lane: runs}): the runs that the pacer starts now and the runs of each lane among them (#1715, #1727).
+    lanes: [(name, ready tickets of the lane, weight)] in the order of their start. The target and the claims are in Opus
+    runs, and a lane run counts its weight. Each lane gets runs for its ready tickets while the room lasts;
+    `refill_lane` (the deep lane, 2026-10-28) also gets the `refill` runs: the queue refill is its work. The Opus runs
+    take the rest of the target: at most the other ready tickets, and the `refill` runs when no lane refills (#609).
+    A lane run that counts more than one Opus run (deep: 4) starts also when the room holds only one: else the main
+    runs fill each small room first, and its tickets wait for ever. Its claim then counts its weight."""
     if paused or not target:
-        return 0, 0
-    room = target - claims
-    h = max(0, min(ready_haiku, hi, math.floor(room / weight + 1e-9))) if room > 0 else 0
-    o = max(0, min(math.floor(room - h * weight + 1e-9), ready - h + refill, hi - h))
-    return h + o, h
+        return 0, {name: 0 for name, *_ in lanes}
+    room, left, rest, out = target - claims, hi, ready, {}
+    for name, n, w in lanes:
+        want = n + (refill if name == refill_lane else 0)
+        fit = math.floor(room / w + 1e-9) or int(room >= 1)
+        k = max(0, min(want, left, fit)) if room > 0 else 0
+        out[name], room, left, rest = k, room - k * w, left - k, rest - min(k, n)
+    o = max(0, min(math.floor(room + 1e-9), rest + (0 if refill_lane else refill), left))
+    return o + sum(out.values()), out
+
+
+def lane_plan(target, claims, ready, ready_haiku, weight, paused, hi=MAX_FIRE, refill=REFILL):
+    """(K, H): `plan` with the Haiku lane alone."""
+    k, lanes = plan(target, claims, ready, [("haiku", ready_haiku, weight)], paused, hi, refill)
+    return k, lanes["haiku"]
 
 
 def waiting_prs(prs, now, minutes=PR_MINUTES):
@@ -257,13 +270,15 @@ def main(argv=None):
         eq = claims if lanes is None else health.opus_equivalent(claims, lanes, weights)   # in Opus runs (#1727)
         target = target_runs(usage, now, burn, burn7=burn7)
         refill = refill_runs(open_all, now)
-        k, h = lane_plan(target, eq, ready, len(dashboard.candidates(open_all, lane="haiku")), weights["haiku"], paused,
-                         refill=refill)
+        lanes = [(n, len(dashboard.candidates(open_all, lane=n)), weights[n]) for n in weights]   # agent.toml order
+        k, runs = plan(target, eq, ready, lanes, paused, refill=refill,
+                       refill_lane="deep" if "deep" in dashboard.RESERVED else None)
         cap, flow = read_flow(now)
         if cap is not None:                                     # the flow is the bottleneck: Opus runs repair the PRs
-            k, h = min(k, cap), 0
+            k, runs = min(k, cap), dict.fromkeys(runs, 0)
         print(k)
-        print(f"haiku {h}")
+        for n, r in runs.items():
+            print(f"{n} {r}")
         print(f"{describe(usage, now, burn, burn7)} · claims {claims} ({eq:.2f} Opus runs) · ready {ready} · refill {refill} · "
               f"paused {paused} · {flow} · weights " + ", ".join(f"{n} {w:.2f} ({source[n]})" for n, w in weights.items()),
               file=sys.stderr)
