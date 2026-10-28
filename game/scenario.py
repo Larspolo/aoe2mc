@@ -166,16 +166,18 @@ def orders(g):
     (aoe2mc.stop_lines, #2754) stops the tagged units (`aoe stop`), ends their patrols as a new order of a person does
     (gather.Gather.end_patrols, #2674) and removes the tag. An "Unload" order (#2773): unload(). A "Lock Gate" or
     "Unlock Gate" order (aoe2mc.gate_lines, #2762) locks or unlocks the gate of its reference: gate(). A "Place
-    Foundation" order (aoe2mc.foundation_lines, #2825): foundation(). A "Build Object" order (aoe2mc.build_lines,
-    #2863): finish()."""
+    Foundation" order (aoe2mc.foundation_lines, #2825): foundation(). "Train Unit" and "Initiate Research"
+    (aoe2mc.train_lines, #2772): queues(). A "Build Object" order (aoe2mc.build_lines, #2863): finish()."""
     got = g.command(f"data get storage {ORDERS} list") or ""
     new = re.findall(r'"(patrol|attack_move|stance|stop) (aoe_order[\w.]+) ?(-?\d+(?: -?\d+)*)?"', got)
     unloads = re.findall(r'"unload (\d+) (\d+) ?(-?\d+ -?\d+ -?\d+)?"', got)
     gates = re.findall(r'"(lock|unlock) (\d+)"', got)
     found = re.findall(r'"found (\d+) (\w+) (\d+) (\d+)"', got)
+    queued = re.findall(r'"(train|research) (\d+) (\w+) ?(\d+)?"', got)
     builds = re.findall(r'"build (\d+) (\w+) (-?\d+) (-?\d+) (-?\d+) (-?\d+)"', got)
-    if new or unloads or gates or found or builds:
+    if new or unloads or gates or found or queued or builds:
         g.command(f"data remove storage {ORDERS} list")
+    queues(g, queued)
     for player, ref, where in unloads:
         unload(g, int(player), int(ref), where)
     for order, ref in gates:
@@ -261,6 +263,22 @@ def unload(g, player, ref, where):
         for u in garrison.out(x, rect) if rect is not None else []:
             if where:
                 x.command(f"aoe moveto {u} {where}")
+
+
+def queues(g, queued):
+    """The "train <ref> <unit> <quantity>" and "research <ref> <technology>" orders of the triggers (#2772): queue them
+    at the converted building of that reference, for its player (the people and the bots), as clicks of its menu
+    (train.queue): the player pays, and a full queue, a missing technology or too few resources stop the rest."""
+    sides = {x.player: x for x in [g, *(s.g for s in g.bots)]}
+    refs = {o["ref"]: o for o in g.data.get("objects", ()) if o["kind"] == "building" and o.get("ref") is not None}
+    for _, ref, name, n in queued:
+        o = refs.get(int(ref))
+        if o is None or (x := sides.get(o["player"])) is None:
+            continue
+        x0, z0, _, _ = o["footprint"]
+        for _ in range(int(n or 1)):
+            if not train.queue(x, getattr(x, "who", "@a"), (x0, z0), name):
+                break
 
 
 def costs(g):
