@@ -8,6 +8,10 @@ player loads it with the world. Without the option, the world is the same as bef
 ```
 <world>/resourcepacks/resources.zip
     pack.mcmeta
+    assets/minecraft/textures/entity/horse/horse_skeleton.png
+    assets/minecraft/textures/entity/skeleton/skeleton.png
+    assets/minecraft/textures/entity/zombie/drowned.png
+    assets/minecraft/textures/entity/zombie/drowned_outer_layer.png
     assets/minecraft/textures/entity/zombie/husk.png
     assets/minecraft/textures/entity/zombie/zombie.png
     assets/minecraft/textures/entity/zombie_villager/zombie_villager.png
@@ -22,6 +26,11 @@ player loads it with the world. Without the option, the world is the same as bef
 - The zombie model uses only the top half (64 × 32): the left arm and leg mirror the right ones. The zombie villager
   has a 8 × 10 × 8 head, a nose box at (24, 0), and its clothes come from the overlays `zombie_villager/type/*.png`
   and `profession/*.png`, which the pack does not change.
+- The archers (`skeleton`), skirmishers (`drowned`) and cavalry archer horses (`skeleton_horse`) get a human look
+  too (#2752). The skeleton texture is 64 × 32 (`SKIN_SIZE`) with 2 wide arms and legs: the model keeps its thin
+  limbs. The drowned model has its own left arm (32, 48) and leg (16, 48), and `drowned_outer_layer.png` is empty (no
+  seaweed). The skeleton horse uses the horse model: one brown coat on the whole texture and the eyes at (3, 21) and
+  (16, 21) (`HORSE_EYES`).
 - The zip has the same bytes for each conversion: sorted names and a fixed time (a release holds the same bytes).
 
 ## Client behavior (26.3, checked with `tools/mc_shot.py`)

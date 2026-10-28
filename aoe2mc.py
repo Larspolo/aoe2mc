@@ -3616,21 +3616,38 @@ SKIN_BOXES = {
     "zombie": [(0, 0, 8, 8, 8, "head"), (16, 16, 8, 12, 4, "shirt"), (40, 16, 4, 12, 4, "arm"), (0, 16, 4, 12, 4, "leg")],
     "villager": [(0, 0, 8, 10, 8, "head"), (24, 0, 2, 4, 2, "skin"), (16, 20, 8, 12, 6, "shirt"),
                  (44, 22, 4, 12, 4, "arm"), (0, 22, 4, 12, 4, "leg")],
+    # the skeleton model (64 x 32, #2752): thin arms and legs; a pack cannot change the shape
+    "skeleton": [(0, 0, 8, 8, 8, "head"), (16, 16, 8, 12, 4, "shirt"), (40, 16, 2, 12, 2, "arm"), (0, 16, 2, 12, 2, "leg")],
 }
+# the drowned model has its own left arm and leg in the lower half (#2752)
+SKIN_BOXES["drowned"] = SKIN_BOXES["zombie"] + [(32, 48, 4, 12, 4, "arm"), (16, 48, 4, 12, 4, "leg")]
+SKIN_SIZE = {"skeleton": (64, 32)}                                     # the others: 64 x 64
 SKINS = {   # texture -> (model, skin color); the hair, clothes and face colors are the same for all
+    "entity/horse/horse_skeleton.png": ("horse", (112, 74, 44)),      # the cavalry archer horses (#2752)
+    "entity/skeleton/skeleton.png": ("skeleton", (220, 170, 128)),    # the archers (#2752)
+    "entity/zombie/drowned.png": ("drowned", (204, 150, 108)),        # the skirmishers (#2752)
+    "entity/zombie/drowned_outer_layer.png": ("none", None),          # no seaweed over the clothes
     "entity/zombie/husk.png": ("zombie", (196, 140, 98)),
     "entity/zombie/zombie.png": ("zombie", (226, 176, 136)),
     "entity/zombie_villager/zombie_villager.png": ("villager", (214, 160, 120)),
 }
+HORSE_EYES = ((3, 21), (16, 21))                                       # the eyes of the 26.3 horse texture
 HAIR, SHIRT, PANTS, SHOES, EYE, MOUTH = (74, 50, 30), (122, 92, 56), (72, 64, 110), (52, 40, 30), (50, 90, 160), (140, 60, 50)
 
 
 def skin_texture(model, tone):
     """A 64 x 64 entity texture with a human skin tone and face (#2738): each box of the model gets the color of its
-    part on all six faces, the head gets hair, and the front of the head eyes, brows and a mouth."""
+    part on all six faces, the head gets hair, and the front of the head eyes, brows and a mouth. A horse gets one
+    coat color and eyes (#2752), the model "none" an empty overlay."""
     from PIL import Image, ImageDraw
-    im = Image.new("RGBA", (64, 64), (0, 0, 0, 0))
+    im = Image.new("RGBA", SKIN_SIZE.get(model, (64, 64)), (0, 0, 0, 0))
+    if model == "none":                                                # an empty overlay
+        return im
     d = ImageDraw.Draw(im)
+    if model == "horse":                                               # a brown coat on all faces, dark eyes (#2752)
+        d.rectangle([0, 0, 63, 63], fill=tone)
+        d.point(HORSE_EYES, fill=HAIR)
+        return im
     dark = tuple(int(c * 0.8) for c in tone)
 
     def box(u, v, w, h, k, color, rows=None):                  # rows: only the top (>0) or bottom (<0) rows of the sides
@@ -3668,7 +3685,8 @@ def skin_texture(model, tone):
 def write_resourcepack(out):
     """--resource-pack (#2738): resourcepacks/resources.zip in the world folder, which single player loads with the
     world (26.x: LevelResource.MAP_RESOURCE_FILE; a world of an older version had resources.zip at its top, and the
-    client moves it there, ResourcePackLocationFileFix). The zombie units get a human face. Same bytes for each
+    client moves it there, ResourcePackLocationFileFix). The zombie, skeleton and drowned units get a human face, the
+    skeleton horses a brown coat (#2752). Same bytes for each
     conversion: sorted names, a fixed time."""
     import io
     import zipfile

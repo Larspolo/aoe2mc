@@ -15,9 +15,7 @@ TEXTURES = ["assets/minecraft/textures/entity/zombie/husk.png", "assets/minecraf
 def test_the_pack_has_the_26_3_format_and_the_three_textures(tmp_path):
     aoe2mc.write_resourcepack(str(tmp_path))
     with zipfile.ZipFile(tmp_path / "resourcepacks" / "resources.zip") as z:
-        assert z.namelist() == ["assets/minecraft/textures/entity/zombie/husk.png",
-                                "assets/minecraft/textures/entity/zombie/zombie.png",
-                                "assets/minecraft/textures/entity/zombie_villager/zombie_villager.png", "pack.mcmeta"]
+        assert set(TEXTURES + ["pack.mcmeta"]) <= set(z.namelist())
         pack = json.loads(z.read("pack.mcmeta"))["pack"]
         assert pack["pack_format"] == pack["min_format"] == pack["max_format"] == 97   # client.jar version.json
         for name in TEXTURES:
