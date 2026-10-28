@@ -642,6 +642,8 @@ def read_timeline(path):
             to = a.payload["target_player_id"]
             e["to"] = int.from_bytes(to, "little") if isinstance(to, bytes) else int(to)
             e.update((r, int(round(a.payload.get(r) or 0))) for r in ("food", "wood", "gold", "stone"))
+        if kind == "flare" and "targets" in a.payload:             # one flag per player slot: the receivers (#2403)
+            e["to"] = [i for i, f in enumerate(a.payload["targets"]) if f]
         if kind == "special" and e.get("order") == "Garrison":     # the garrison command of AoE2 DE (#809)
             ids = e.get("objects", [])                              # mgz reads the IDs one byte early
             e["kind"], e["objects"] = "garrison", [i >> 8 for i in ids] if all(i & 255 == 0 for i in ids) else ids

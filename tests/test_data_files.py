@@ -62,7 +62,7 @@ def check_train(row):
     form(row, {"name": str, "building": (str, type(None)), "slot": int, "item": str, "label": str, "cost": dict,
                "time": int, "help": str},
          {"age": int, "after": str, "civ": str, "civs": list, "faster": list, "upgrade": list, "note": str,
-          "resist": int, "tribute_fee": int})
+          "resist": int, "tribute_fee": int, "full_tech_tree": str})
     n = row["name"]
     only(row)
     assert row["building"] is None or row["building"] in NAMES["buildings.jsonl"], n
@@ -136,7 +136,8 @@ def check_gather(row):
 
 def check_build(row):
     form(row, {"name": str}, {"cost": dict, "time": int, "icon": str, "age": int, "needs": str, "gate": bool,
-                              "wall": bool, "age_tech": int, "bot": int, "near": str, "civs": list})
+                              "wall": bool, "age_tech": int, "bot": int, "near": str, "civs": list,
+                              "full_tech_tree": str})
     n = row["name"]
     only(row)
     assert set(row.get("cost", {})) <= RES and all(isinstance(v, int) for v in row.get("cost", {}).values()), n

@@ -378,7 +378,7 @@ def trains(g, building):
     """The units and technologies of the own building: a castle trains the unique unit of the player's civilization,
     a Krepost the Konnik, a Donjon the Serjeant."""
     new = {old: unit for t in UPGRADES if t in g.techs for old, unit in lines(t, g)}   # the barracks trains the new unit
-    unique = [n for n in [UNIQUE.get(civs.civ(g))] if n in COSTS] * (building == "CASTLE") \
+    unique = [n for n in [UNIQUE.get(civs.real(g))] if n in COSTS] * (building == "CASTLE") \
         + ["KONNIK"] * (building == "KREPOST") \
         + ["SERJEANT"] * (building == "DONJON")                    # and the spearman line (AoE2 DE wiki, #1873)
     out = unique + list(TRAINS[building]) + [f"ELITE_{n}_UPGRADE" for n in unique if f"ELITE_{n}_UPGRADE" in COSTS]   # (#1760)
@@ -814,6 +814,7 @@ def census(g):
     spoils.fallen(g, dead)                                             # Tupi (#2271)
     score.fallen(g, dead)                                              # #2355
     spoils.kills(g)                                                    # Mapuche (#2271)
+    spoils.attacks(g)                                                  # Varangian Guard (#2376)
     for u in [u for u in g.villagers if u not in live]:
         del g.villagers[u]
         g.selected.discard(u)
@@ -914,6 +915,9 @@ def summon(g, name, pos, rotation=math.pi / 2, player=None):
     g.command(f"summon {kind} {pos[0]} {pos[1]} {pos[2]} {nbt.snbt()}")
     import combat, gather                                          # both import gather, gather imports this module
     g.command(combat.stats_command(uuid, name, stats(g, name), civs.taken(g, name), civs.friendly(g, name)))
+    import spoils                                                  # spoils imports this module
+    if cmd := spoils.tag_command(uuid, name):                      # its hits make gold (#2376)
+        g.command(cmd)
     if cmd := combat.range_command(uuid, name, g.map.T, s=stats(g, name)):   # an archer shoots from its range (#670)
         g.command(cmd)
     if cmd := volley_command(g, uuid, name):                       # an Armenian galley shoots twice (#2379)
