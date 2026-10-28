@@ -3114,16 +3114,25 @@ def attack_lines(e, c, armor=None, q=None):
     the mounts of the riders get an attribute modifier of `quantity` AoE2 points, add or subtract: minecraft:attack_damage
     (the attack classes 3 pierce and 4 melee) or minecraft:armor. The game program sets these attributes from
     combat.STATS, so the points are AoE2 points. The modifier ID is the trigger and the effect: one modifier each.
+    A set (#2909) removes the modifiers of all add and subtract effects of the same kind of the scenario (also of
+    "Modify Object Attribute"; a unit that does not have one ignores the command), then sets the base value.
     armor and q: the kind and the points of "Modify Object Attribute" (object_attribute_lines)."""
     q, stats = (e.get("quantity") if q is None else q) or 0, c.stats
     armor = e["type"] == CHANGE_OBJECT_ARMOR if armor is None else armor
     op = OPERATIONS.get(e.get("operation"))
-    if op not in ("add", "remove") or not q or (not armor and e.get("armour_class") not in (3, 4)):
+    if op not in ("add", "remove", "set") or not q and op != "set" or (not armor and e.get("armour_class") not in (3, 4)):
         stats["change object attack or armor (not supported yet)"] += 1
         return []
     stats["change object armor" if armor else "change object attack"] += 1
     at = unit_selector(e, c.T)
     attr = "minecraft:armor" if armor else "minecraft:attack_damage"
+    if op == "set":
+        kind = CHANGE_OBJECT_ARMOR if armor else CHANGE_OBJECT_ATTACK
+        old = [f"aoe2mc:trig_{t['id']}_{i}" for t in c.triggers for i, f in enumerate(t["effects"])
+               if (f["type"] == kind or f["type"] == MODIFY_OBJECT_ATTRIBUTE and f.get("attribute") == 8 + (not armor))
+               and OPERATIONS.get(f.get("operation")) in ("add", "remove")]
+        return [f"execute as {at} run attribute @s {attr} modifier remove {m}" for m in old] + \
+            [f"execute as {at} run attribute @s {attr} base set {max(q, 0)}"]
     value = q if op == "add" else -q
     return [f"execute as {at} run attribute @s {attr} modifier add aoe2mc:trig_{c.t['id']}_{effect_index(e, c)} {value} add_value"]
 
@@ -4001,8 +4010,10 @@ EFFECTS = {
     UNLOAD: unload_lines,
     UNLOCK_GATE: gate_lines,
 }
-# The context of the effects of trigger t: a handler can add function files (files) and load lines (setup, the keys)
-Effect = namedtuple("Effect", "t T ground players stats mood files setup switch timed clocks", defaults=((), {}, {}))
+# The context of the effects of trigger t: a handler can add function files (files) and load lines (setup, the keys);
+# triggers: all triggers of the scenario (attack_lines)
+Effect = namedtuple("Effect", "t T ground players stats mood files setup switch timed clocks triggers",
+                    defaults=((), {}, {}, ()))
 
 
 # The test of each condition on a score (execute if <test>), one line per condition in alphabetical order (#2613):
@@ -4125,7 +4136,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
                     or c["type"] == TRIGGER_ACTIVE and c.get("trigger") not in switch
                     for c in conds):                                   # unit classes: not yet
             continue
-        ctx = Effect(t, T, ground, players, stats, mood, files, setup, switch, timed, clocks)
+        ctx = Effect(t, T, ground, players, stats, mood, files, setup, switch, timed, clocks, triggers)
         lines = [line for e in t["effects"] if e["type"] in EFFECTS for line in EFFECTS[e["type"]](e, ctx)]
         if not lines:
             continue
