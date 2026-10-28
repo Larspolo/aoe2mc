@@ -200,7 +200,7 @@
 {"name": "SLAVS: Monks move 20% faster.", "civ": "SLAVS", "bonus": "Monks move 20% faster.", "in": "UNITS"}
 {"name": "SPANISH: Builders work 30% faster (20% for Wonders).", "civ": "SPANISH", "bonus": "Builders work 30% faster (20% for Wonders).", "in": "BUILD"}
 {"name": "SPANISH: Blacksmith upgrades don't cost gold.", "civ": "SPANISH", "bonus": "Blacksmith upgrades don't cost gold.", "in": "COSTS"}
-{"name": "SPANISH: Cannon Galleon projectiles can track moving targets and move faster.", "civ": "SPANISH", "bonus": "Cannon Galleon projectiles can track moving targets and move faster.", "later": "play:naval"}
+{"name": "SPANISH: Cannon Galleon projectiles can track moving targets and move faster.", "civ": "SPANISH", "bonus": "Cannon Galleon projectiles can track moving targets and move faster.", "in": "lead"}
 {"name": "SPANISH: Gunpowder units fire 18% faster.", "civ": "SPANISH", "bonus": "Gunpowder units fire 18% faster.", "in": "UNITS"}
 {"name": "SPANISH: Receive gold 20 for each technology researched.", "civ": "SPANISH", "bonus": "Receive gold 20 for each technology researched.", "in": "TECH_GIFTS"}
 {"name": "SPARTANS: A Polemarch is spawned for free in both the Civic Age and Classical Age.", "civ": "SPARTANS", "bonus": "A Polemarch is spawned for free in both the Civic Age and Classical Age.", "later": "play:ages"}
