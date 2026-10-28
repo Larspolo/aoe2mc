@@ -881,4 +881,4 @@ def sides(g):
     """The Gathers of all sides of the game of g: player 1 holds the bots and the other people (run.py, Gather.bots),
     a bot knows player 1 (share), a person the others (peers)."""
     first = g.peers[0] if g.peers else getattr(g, "share", None) or g
-    return [first, *(b.g for b in first.bots)]
+    return [first, *(b.g for b in getattr(first, "bots", ()))]

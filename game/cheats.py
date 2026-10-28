@@ -118,8 +118,8 @@ def ruin(g, n):
     """Remove the construction sites (complete or not) and the queues of player n, also of a bot (#1657): a site has no
     target entity until it is complete, so `aoe destroy` leaves its blocks, and the queue of a bot spawns new units.
     The blocks of each site become air (above the water: a fish trap or a dock keeps it), and the bot of player n stops."""
-    import combat, fleet                                           # they import gather, which imports this module
-    gathers = [g, *(b.g for b in g.bots)]
+    import build, combat, fleet                                    # they import gather, which imports this module
+    gathers = build.sides(g)                                       # also from a second person (#3106)
     for h in gathers:
         for s in [s for s in h.sites if s["player"] == n]:
             x0, x1, z0, z1 = s["footprint"]
@@ -134,7 +134,8 @@ def ruin(g, n):
         h.sites = [s for s in h.sites if s["player"] != n]
         if h.player == n:
             h.queues.clear()
-    g.bots = [b for b in g.bots if b.g.player != n or not getattr(b.g, "share", None)]   # a person keeps its Side: over() titles it (#1936)
+    first = gathers[0]                                             # the Gather that runs Gather.run
+    first.bots = [b for b in first.bots if b.g.player != n or not getattr(b.g, "share", None)]   # a person keeps its Side: over() titles it (#1936)
 
 
 def flag(attr, text):

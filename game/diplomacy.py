@@ -181,8 +181,9 @@ def cost(g, n):
 
 
 def receiver(g, n):
-    """The Gather of player n (g itself or a bot), or None."""
-    return next((x for x in [g] + [b.g for b in g.bots] if x.player == n), None)
+    """The Gather of player n (g itself, a bot or another person: build.sides, #3106), or None."""
+    import build                                                   # build imports gather, which imports this module
+    return next((x for x in [g, *build.sides(g)] if x.player == n), None)
 
 
 def send(g, player, n, res):

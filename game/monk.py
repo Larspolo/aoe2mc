@@ -328,8 +328,8 @@ def take(g, uuid):
 def heresy(g, player):
     """True when player researched Heresy (#1582): its Gather is g, a bot of g (bot.Bot) or the human Gather that the bot
     of g shares."""
-    return any(h.player == player and "HERESY" in h.techs
-               for h in [g, *(b.g for b in g.bots), *filter(None, [getattr(g, "share", None)])])
+    import build                                                   # build imports gather, which imports this module
+    return any(h.player == player and "HERESY" in h.techs for h in [g, *build.sides(g)])   # also a second person (#3106)
 
 
 def die(g, uuid):
@@ -359,7 +359,8 @@ def resist(g, uuid):
     """The extra conversion intervals of the unit uuid: Devotion and Faith of its player (RESIST), from the Gather of
     that player (g or one of its bots)."""
     player = owners.player(g, uuid)                                # also a unit of the game (#2992)
-    techs = next((x.techs for x in (g, *(b.g for b in g.bots)) if x.player == player), ())
+    import build                                                   # build imports gather, which imports this module
+    techs = next((x.techs for x in (g, *build.sides(g)) if x.player == player), ())   # also a second person (#3106)
     return sum(RESIST.get(t, 0) for t in techs)
 
 

@@ -67,11 +67,11 @@ def owners(g):
     """{block footprint (x0, x1, z0, z1): (name, player)} of the own and the allied buildings with AoE2 hit points (a
     target entity): the start ones and the complete construction sites of the player and of the bots (#1361)."""
     from gather import allied                                      # gather imports this module
-    import combat
+    import build, combat
     mine = {g.player} | {int(p) for p in g.players if int(p) and allied(g.players, g.player, int(p))}   # no Gaia
     out = {(x0, x1, z0, z1): (o["name"], o["player"]) for o in g.data["objects"] if o["kind"] == "building"
            and o["name"] in combat.BUILDINGS and o["player"] in mine and "footprint" in o for x0, z0, x1, z1 in [o["footprint"]]}
-    return out | {tuple(s["footprint"]): (s["name"], s["player"]) for s in g.sites + [s for b in g.bots for s in b.g.sites]
+    return out | {tuple(s["footprint"]): (s["name"], s["player"]) for s in [s for h in build.sides(g) for s in h.sites]
                   if s.get("done") and s["player"] in mine and (s["name"] in combat.BUILDINGS or s["name"] in combat.WALLS)}
 
 
@@ -85,7 +85,7 @@ def full(g, name, player, rect=None):
     player (combat.wall, as build.target, #1360), a watch tower those of its tower technology (build.line, #1374), a
     building those of Masonry (build.values, #1398) and of its upgrade of one building at the footprint rect (#2497)."""
     import build, civs, combat                                     # build imports gather
-    who = next((b.g for b in g.bots if b.g.player == player), g)   # an allied bot: its techs and age
+    who = next((x for x in build.sides(g) if x.player == player and x is not g), g)   # an ally: its techs and age (#3106)
     if name not in combat.WALLS:
         return build.values(who, name, rect=rect).hp
     return combat.wall(build.design(who, name, player), build.ages(who), civs.civ(who, player),
