@@ -32,7 +32,8 @@ def test_the_age_of_each_technology_is_that_of_aoe2(name):
 
 
 def test_each_unique_unit_needs_the_castle_age_and_its_elite_the_imperial_age():
-    assert all(build.AGE[n] == 2 and build.AGE["ELITE_" + n] == 3 for n in train.UNIQUE.values())
+    ages = {(build.AGE_TECHS[build.AGE[n] - 1], build.AGE_TECHS[build.AGE["ELITE_" + n] - 1]) for n in train.UNIQUE.values()}
+    assert ages == {("CASTLE_AGE", "IMPERIAL_AGE")}
 
 
 def test_each_unit_and_technology_of_the_menus_has_an_age():

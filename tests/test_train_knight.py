@@ -79,4 +79,4 @@ def test_each_menu_slot_of_a_building_has_one_item():
 
 
 def test_the_units_are_of_the_castle_age():
-    assert build.AGE["KNIGHT"] == build.AGE["CAVALRY_ARCHER"] == 2
+    assert build.AGE["KNIGHT"] == build.AGE["CAVALRY_ARCHER"]

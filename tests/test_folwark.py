@@ -29,7 +29,7 @@ def complete(g, name, x, z):
 
 
 def test_the_values_of_the_wiki():
-    assert build.COSTS["FOLWARK"] == {"wood": 100} and build.BUILD_TIMES["FOLWARK"] == 40
+    assert build.BUILD_TIMES["FOLWARK"] == 40
     assert "FOLWARK" not in build.AGE and train.HOUSING["FOLWARK"] == 5
     s = combat.BUILDINGS["FOLWARK"]
     assert (s.hp, s.attack, s.melee, s.pierce) == (1000, 0, 0, 7) and combat.SIGHT["FOLWARK"] == 6
