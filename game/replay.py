@@ -1472,15 +1472,17 @@ class Replay:
 
     def go(self, i, v, tile, path, t):
         """Unit i walks on path to its resource `tile` from game time t on, and gathers there. Returns the commands
-        (Paper: the first leg)."""
+        (Paper: the first leg). An empty path on Paper: an order to its cell all the same. The replay unit is there, but
+        its entity can be on the way to an old goal: a builder of de-64.3 walked on 30 blocks and stood there (#2634)."""
         v.tree = tile
-        if self.ai and path and not ship(v.name):                  # a boat has no path finding: /tp steps
-            cmds, due = self.order(v, path[LEG - 1:-1:LEG] + [path[-1]], t)
+        if self.ai and not ship(v.name):                            # a boat has no path finding: /tp steps
+            cmds, due = self.order(v, path[LEG - 1:-1:LEG] + [path[-1]] if path else [v.cell], t)
             if v.path:
                 self.moving[i] = due
             else:
                 self.moving.pop(i, None)                            # it was on a walk: it stops (#1177)
                 self.start(i, v, due)
+                self.rest(i, due)                                   # a builder has no work check: settle()
             return cmds
         v.path = path
         due = self.next_step(v, t)
