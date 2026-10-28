@@ -43,10 +43,11 @@ def test_the_values_are_those_of_the_wiki():
 def test_each_ship_shows_in_the_dock_of_its_civs_in_the_imperial_age(name):
     cost, time, _, have = WIKI[name]
     slot, item = train.ITEMS[name][:2]
-    price = " · ".join(f"{cost[k]} {k}" for k in ("wood", "gold"))
     for civ in sorted(have):
         server, g = imperial(civ)
         train.open_menu(g, "Steve", (15, 12))
+        own = train.civs.cost(g, name, cost)                           # the Wei: a Lou Chuan costs -25 % (#2246)
+        price = " · ".join(f"{own[k]} {k}" for k in ("wood", "gold"))
         t = round(time / train.civs.train_rate(g, name), 1)            # the Aztecs: 15 % faster (#1927)
         assert f"{slot}:{item}:{LABELS[name]}:{price} · {t:g} s · queue 0/15" in menus(server)[-1], civ
     server, g = imperial(sorted(have)[0])
