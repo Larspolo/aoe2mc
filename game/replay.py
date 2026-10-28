@@ -714,6 +714,9 @@ class Replay:
                 self.razed[e["player"]] = self.razed.get(e["player"], 0) + 1
                 if start:
                     self.starts.remove(start)
+                    import combat
+                    if self.ai and start[2] in combat.BUILDINGS:    # its target takes no more attacks or arrows (#3037)
+                        out += [f"kill {combat.target_uuid([rect[0], rect[2], rect[1], rect[3]])}"]
                 else:
                     del self.placed[new]
                     self.added -= 1
