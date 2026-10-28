@@ -47,6 +47,7 @@ RULES = {
     "gunpowder": lambda n, s: "gunpowder" in s.classes,
     "infantry": lambda n, s: "infantry" in s.classes,
     "infantry, mounted": lambda n, s: "infantry" in s.classes or mounted(s),
+    "land siege, Lou Chuans": lambda n, s: "siege" in s.classes,   # the ships of the group: "groups" (data/units.jsonl)
     "military": lambda n, s: not n.startswith("VILLAGER"),
     "military units": lambda n, s: not civilian(n),
     "mounted": lambda n, s: mounted(s),
@@ -99,6 +100,8 @@ ECONOMY = tuple(sorted(r["name"] for r in TECH_ROWS if r.get("economy")))   # th
                                                                             # Banking (AoE2 wiki "Burgundians")
 # The bonuses of each civilization, keys of its line in data/civs.jsonl (AoE2 DE, the AoE2 wiki):
 # "work": the work-rate factor of each gather kind (a missing kind is 1).
+# "drop": the factor of a load at the drop site: "food" for each food load (also of the fishing ships), "forage" for
+# a load of a fruit bush only (#2111).
 # "start": the start-resource bonus (#1269), {resource: change of START}. In AoE2 the bonus comes with the first town
 # center (a Nomad start gets it later); here it is in the start stock. The extra villagers of the Chinese (+3) and
 # Mayans (+1) are units of the map, not of the stock. Lithuanians: +100 food for each town center, here only for the
@@ -112,6 +115,7 @@ ECONOMY = tuple(sorted(r["name"] for r in TECH_ROWS if r.get("economy")))   # th
 # [group of GROUPS, factor, also the upgrades] (#1927). "hp": the hit points factor of a building (Persians).
 WORK = {r["name"]: r["work"] for r in ROWS if "work" in r}
 START = {r["name"]: r["start"] for r in ROWS if "start" in r}
+DROP = {r["name"]: r["drop"] for r in ROWS if "drop" in r}
 SHARED = dict(sorted((n, r["name"]) for r in ROWS for n in r.get("shared", ())))
 NOT_SHARED = {n: tuple(sorted(r["name"] for r in ROWS if n in r.get("not_shared", ())))
               for n in sorted({n for r in ROWS for n in r.get("not_shared", ())})}
@@ -292,6 +296,11 @@ def start(g, base):
     """The start resources `base` with the start bonus of the civilization of the player of g (START)."""
     bonus = START.get(civ(g), {})
     return {r: max(0, v + bonus.get(r, 0)) for r, v in base.items()}
+
+
+def drop(g, kind):
+    """The drop-off factor of the civilization of the player of g for kind ("food", "forage": DROP), else 1."""
+    return DROP.get(civ(g), {}).get(kind, 1)
 
 
 def work(g, kind):
