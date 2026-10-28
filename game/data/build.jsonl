@@ -99,6 +99,7 @@
 {"name": "MOUNTED_CROSSBOWMAN", "age": 2}
 {"name": "ONAGER", "age": 3}
 {"name": "PALADIN", "age": 3}
+{"name": "PETARD", "age": 2}
 {"name": "PIKEMAN", "age": 2}
 {"name": "SCORPION", "age": 2}
 {"name": "SCOUT_CAVALRY", "age": 1}
