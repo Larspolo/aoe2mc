@@ -75,7 +75,8 @@ def show(g):
 
 def close(g):
     """Remove the boss bar: the game ended (cheats.over), or the treaty ended."""
-    if vars(g.game).pop("treaty_bar", None) is not None:
+    game = getattr(g, "game", None)                                    # a test Gather can have none
+    if game is not None and vars(game).pop("treaty_bar", None) is not None:
         g.command(f"bossbar remove {BAR}")
 
 
