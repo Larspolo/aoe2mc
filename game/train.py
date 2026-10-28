@@ -105,7 +105,8 @@ TRAINS |= {b: sum((TRAINS[m] for m in ms), ()) for b, ms in MENUS.items()}
 SLOTS = {r["name"]: r["slot"] for r in ROWS}
 # An upgrade of one building (the key "one_building", #2484: the Achaemenid town centers): it changes only the building
 # that researches it, and that building takes only one of them (g.upgraded: footprint -> name). Its "aura": the
-# villagers within "range" tiles of that building work "rate" times as fast (Gather.aura_rate).
+# villagers within "range" tiles of that building work "rate" times as fast (Gather.aura_rate); the own military units
+# heal "heal" hit points per AoE2 minute and walk "speed" times as fast (regen.military, #2496).
 ONE_BUILDING = {r["name"]: r.get("aura") for r in ROWS if r.get("one_building")}
 SHIFTS = {b: {n: sum(1 + max(SLOTS[x] for x in TRAINS[p]) for p in ms[:i]) for i, m in enumerate(ms) for n in TRAINS[m]}
           for b, ms in MENUS.items()}
@@ -755,12 +756,13 @@ def seconds(g, name, building=None, k=None):
         * (doctrine(g, building, k)[2] if building and name not in TECHS else 1)
 
 
-def speed(g, name):
+def speed(g, name, uuid=None):
     """The factor of the walk speed of unit name: the bonus of the civilization (civs.speed) and the technologies of the
     player (the key "walk": Fervor, #1261; Squires for the class infantry, #1415; Husbandry for the mounted units, #1416), with
-    the changes of civs.ALSO and civs.MORE (Bohemian Fervor for the villagers, Varangian Caravan +50 %, #2173)."""
+    the changes of civs.ALSO and civs.MORE (Bohemian Fervor for the villagers, Varangian Caravan +50 %, #2173); unit uuid
+    near a Military Town Center walks faster (g.hurried, regen.military, #2496)."""
     also, more = civs.ALSO.get(civs.civ(g), {}), civs.MORE.get(civs.civ(g), {})
-    return civs.speed(g, name) * math.prod((1 + (f - 1) * more[t] if t in more else f) ** count(g, t)
+    return civs.speed(g, name) * vars(g).get("hurried", {}).get(uuid, 1) * math.prod((1 + (f - 1) * more[t] if t in more else f) ** count(g, t)
                                            for t, (unit, f) in BY_KEY["walk"].items() if faster(unit, name) or t in also and faster(also[t], name))
 
 
