@@ -2721,6 +2721,7 @@ DECLARE_VICTORY = 13                                                   # "Declar
 TELEPORT_OBJECT = 35
 FREEZE_OBJECT = 22                                                     # "Freeze Object" (#2608)
 RESEARCH_TECHNOLOGY = 2
+CHANGE_VIEW = 16                                                       # "Change View" (#2610)
 CLEAR_INSTRUCTIONS = 21                                                # "Clear Instructions" (#2609)
 
 
@@ -2862,6 +2863,18 @@ def freeze_lines(e, T):
             f"execute as {at} run data merge entity @s {{NoAI:1b}}"]
 
 
+def view_lines(e, T, ground):
+    """The commands of "Change View" (#2610): in Minecraft the player is the camera, so a tp of the players of the
+    team pN (team_lines) to the middle of the tile, on the ground. Player -1 or 0: all players."""
+    if min(e.get("tile", [-1])) < 0:
+        return []
+    x, z = (int((v + 0.5) * T) for v in e["tile"])
+    if not (0 <= x < ground.shape[0] and 0 <= z < ground.shape[1]):
+        return []
+    who = f"@a[team=p{e['player']}]" if e["player"] > 0 else "@a"
+    return [f"tp {who} {x + 0.5} {int(ground[x, z])} {z + 0.5}"]
+
+
 def mood_lines(e):
     """The commands of "Change Color Mood" (#1876): the time of day (MOODS) and the rain (RAIN) of the new mood, as
     at the conversion. The game rules advance_time and advance_weather are 0, so they stay. The fog (FOG) is a
@@ -2921,6 +2934,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
     "Declare Victory" sets the score #p<player> of aoe_win to 1: the scenario mode of the game program ends the game.
     "Freeze Object": freeze_lines (#2608).
     "Research Technology": a score in aoe_tech for the game program (research_list, #2577).
+    "Change View": view_lines (#2610).
     "Clear Instructions": title @a clear (#2609).
     A disabled trigger does not run."""
     load, files, tick, win = [], {}, [], False
@@ -2965,6 +2979,9 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
                 continue
             if e["type"] == FREEZE_OBJECT:
                 lines += freeze_lines(e, T)
+                continue
+            if e["type"] == CHANGE_VIEW:
+                lines += view_lines(e, T, ground)
                 continue
             if e["type"] == CLEAR_INSTRUCTIONS:                            # no message
                 lines.append("title @a clear")

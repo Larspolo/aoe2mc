@@ -93,8 +93,14 @@ def bot_seats(players, people):
 
 
 def setup(g, mode="scenario"):
-    """Put the scenario start values on the Gather of each player (the people and the bots) and show them."""
+    """Put the scenario start values on the Gather of each player (the people and the bots) and show them. The victory
+    setting of the scenario (aoe2mc.json "victory", #2566) replaces --victory: "custom" ends the game only by its
+    triggers (no conquest, wonder or relic win, #2567)."""
     sides = [g, *(s.g for s in g.bots)]
+    win = g.data.get("victory")
+    for x in sides if win else ():
+        x.victory = win["condition"]
+        x.victory_value = win.get("years", win.get("score", getattr(x, "victory_value", None)))
     rows = {x: g.players.get(str(x.player), {}) for x in sides}
     if not any("resources" in p or "pop_limit" in p for p in rows.values()):
         print("The world has no scenario start values: the game starts with the lobby settings.", file=sys.stderr)
