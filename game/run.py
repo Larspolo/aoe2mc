@@ -291,6 +291,15 @@ def bot_seat(players, people):
     return player, next((p for p in range(1, player) if not gather.allied(players, player, p)), 1)
 
 
+def pop_limit(text):
+    """The value of --pop-limit: a population limit that AoE2 DE offers (train.LIMITS, #2266)."""
+    import train
+    if not text.isdigit() or int(text) not in train.LIMITS:
+        raise argparse.ArgumentTypeError(f"{text} is no AoE2 population limit: use one of "
+                                         + ", ".join(map(str, train.LIMITS)))
+    return int(text)
+
+
 def civ_choices(values):
     """{player: civilization} of the --civ values ("1=BRITONS", #2267). An unknown name stops with the list of names."""
     import civs
@@ -316,7 +325,7 @@ def team_choices(value, players):
 
 def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attack="10:00", reveal="normal", people=1,
          speed=1.0, state=None, resources="standard", civ=None, teams=None,
-         all_techs=False, age="dark", victory="standard", full_tech_tree=False):
+         all_techs=False, age="dark", victory="standard", pop_limit=None, full_tech_tree=False):
     """state: the saved state of the players (savegame.dump) for a loaded game (#2255).
     resources: the AoE2 setting "Starting resources" of each player and bot (gather.LEVELS, #2264).
     civ: {player: civilization} in place of the civilization of the scenario (civ_choices, #2267).
@@ -324,13 +333,15 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
     all_techs: the AoE2 setting "All Techs" for all players and bots (civs.missing, #2298).
     age: the AoE2 setting "Starting age" of each player and bot (train.STARTS, #2265).
     victory: the AoE2 setting "Victory": "standard" (conquest, a wonder or all relics) or "conquest" (#2316).
+    pop_limit: the AoE2 setting "Population limit" of each player and bot (train.LIMITS, #2266).
     full_tech_tree: the AoE2 setting "Full Tech Tree": the full tech tree and no civilization bonuses (civs.civ, #2354)."""
     import gather
 
     def make(player):
         who = "@a" if people == 1 else f"@a[team=p{player}]"
         for _ in range(60):                          # entities load in other threads
-            g = gather.Gather(game, data, player=player, log=log, cheats=cheats, resources=resources)
+            g = gather.Gather(game, data, player=player, log=log, cheats=cheats, resources=resources,
+                              pop_limit=pop_limit)
             g.who = who
             g.setup()
             if len(g.villagers) == len(g.units):
@@ -365,7 +376,7 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
         player, foe = bot_seat(data["players"], people)
         g.bots = [*g.bots, bots.Bot(game, data, player=player, share=g, log=log, foe=foe,
                                     attack=replay.aoe2mc.game_time(bot_attack) / 1000,
-                                    resources=resources).setup()]
+                                    resources=resources, pop_limit=pop_limit).setup()]
         print(f"A bot plays player {player}: {len(g.bots[-1].g.villagers)} villagers gather, its soldiers attack "
               f"player {foe} at {bot_attack}.", file=sys.stderr)
     import combat
@@ -519,6 +530,9 @@ def main(argv=None):
                     "civilization has the full tech tree and its unique units, but no civilization and team bonuses")
     ap.add_argument("--victory", choices=["standard", "conquest"], default="standard", help="--play: the AoE2 setting "
                     "\"Victory\" (default standard: conquest, a wonder or all relics; conquest: only the conquest)")
+    ap.add_argument("--pop-limit", type=pop_limit, default=200, metavar="N",
+                    help="--play: the AoE2 setting \"Population limit\" of each player: 25 to 250 in steps of 25, 300, "
+                    "400 or 500 (default 200)")
     ap.add_argument("--log", metavar="FILE", help="--play: write one JSON line per villager event (time, state, load)")
     ap.add_argument("--load", metavar="SAVE", help="--play: go on with a saved game (a folder of saves/: the end of "
                     "--play with Ctrl-C saves the world and the resources, technologies and ages there)")
@@ -559,7 +573,7 @@ def main(argv=None):
             with open(a.log, "w") if a.log else contextlib.nullcontext() as log:
                 g = play(game, a.world, log, a.cheats, a.bot, bot_attack=a.bot_attack, reveal=a.reveal,
                          people=a.people, speed=a.speed, state=state, resources=a.resources, civ=civ,
-                         teams=teams, all_techs=a.all_techs, age=a.age, victory=a.victory,
+                         teams=teams, all_techs=a.all_techs, age=a.age, victory=a.victory, pop_limit=a.pop_limit,
                          full_tech_tree=a.full_tech_tree)
             if not getattr(g, "ended", None):
                 return
