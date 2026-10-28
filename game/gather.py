@@ -522,6 +522,7 @@ class Gather:
             nomad = "unit" in kinds and "building" not in kinds
             start = civs.start(self, {r: v + NOMAD.get(r, 0) * nomad for r, v in START.items()})   # #1269
         self.stock = {**dict.fromkeys(DROP_SITES, 0), **start}             # at the drop sites (#973)
+        self.spare = {}                                                # the fractions of the drop-off bonus (#2111)
         self.units = [o for o in data["objects"] if o["kind"] == "unit" and o["player"] == player
                       and "VILLAGER" in o["name"]]
         self.villagers, self.selected = {}, set()
@@ -540,6 +541,7 @@ class Gather:
         self.players, self.sites = data.get("players", {}), []         # construction sites (#417)
         self.farmers, self.crops = {}, {}                              # farm tile -> UUID of its farmer, wheat age
         self.trunks = {}                                               # tree tile -> logs of its trunk on the ground
+        self.seconds = {}                                              # resource -> fraction of civs.EXTRA (#2113)
         self.bushes = {}                                               # bush tile -> the block of its last look
         self.menus = {}                                                # player -> handler of its open menu (#619)
         self.stances = {}                                              # uuid -> stance other than aggressive (#1107)
@@ -927,6 +929,15 @@ class Gather:
                 h.stock[res] += part
                 h.command(f"scoreboard players add {res.capitalize()} {h.board} {part}")
 
+    def deliver(self, res, n, forage=False):
+        """Earn the load n of resource res at a drop site with the drop-off bonus of the civilization (civs.DROP: food,
+        forage for a load of a fruit bush, #2111). AoE2 keeps the fractions: the next load gets them."""
+        f = civs.drop(self, res) * (civs.drop(self, "forage") if forage else 1)
+        self.spare[res] = self.spare.get(res, 0) + n * f
+        if whole := int(self.spare[res] + 1e-9):
+            self.spare[res] -= whole
+            self.earn(res, whole)
+
     def event(self, v, name):
         if self.log:
             self.log.write(json.dumps({"t": round(self.clock() - self.t0, 3), "villager": v.uuid, "event": name,
@@ -1071,7 +1082,9 @@ class Gather:
             self.hunt(u)
             self.command(glow(u))
             return
-        if kind == "unit" and u in self.selected and u in self.villagers:   # a click on a selected villager (#621)
+        import combat                                                  # combat imports this module
+        if kind == "unit" and u in self.selected and (u in self.villagers   # a click on a selected villager (#621)
+                                                      or self.soldiers.get(u) in combat.REPAIRS):   # or Serjeant (#2129)
             build.open_menu(self, name)
             return
         if kind == "unit" and u in self.selected and siege_tower.out(self, u):   # its units come out (#1362)
@@ -1108,6 +1121,8 @@ class Gather:
                 fleet.build_site(self, self.selected, site)            # the selected fishing ships build it (#1438)
             elif site and self.selected & self.villagers.keys() and not self.row_busy(site):
                 self.build(site)                                       # the selected villagers build it at once, as in AoE2 (#1654)
+            if site:
+                repair.build_order(self, site, self.selected)          # the selected Serjeants build a Donjon (#2129)
             return
         if monk.order(self, name, self.map.pick_ground(eye, d)):      # a monk to a relic or to a monastery (#1246)
             return
@@ -1137,6 +1152,7 @@ class Gather:
             self.mark(name, self.map.spot(tile))
         elif self.selected and (site := build.pick(self, eye, d)):
             self.build(site)
+            repair.build_order(self, site, self.selected)              # Serjeants build a Donjon (#2129)
             x0, x1, z0, z1 = site["footprint"]
             self.mark(name, {(x0, z0), (x1 - 1, z1 - 1)})
         elif self.selected and (cell := self.map.pick_ground(eye, d)) and self.map.free(*cell):
@@ -1336,7 +1352,7 @@ class Gather:
                 v.timer = 0.0
                 self.set(v, "chop" if self.source(v).get(v.tree, 0) > 0 else "idle")
             elif v.state == "to_drop":
-                self.earn(v.res, v.load)
+                self.deliver(v.res, v.load, v.res == "food" and v.tree in self.map.bushes)
                 v.load = 0
                 self.event(v, "drop")
                 if v.tree in self.map.farms:
@@ -1359,6 +1375,7 @@ class Gather:
                     v.load += 1
                     src[v.tree] -= 1
                     self.work(v)
+                    self.second(v)
                     if v.tree in self.map.farms:
                         self.harvest(v.tree)
                         self.tend(v)
@@ -1387,8 +1404,11 @@ class Gather:
         bossbar.tick(self)
         for site in self.sites:
             builders = [v for v in [*self.villagers.values(), *self.ships.values()] if v.state == "build" and v.site is site]
+            men = repair.raisers(self, site)                           # Serjeants at their Donjon site (#2129)
             # AoE2: n builders need 3 / (n + 2) of the time of one
-            if builders and build.rise(self, site, math.inf if self.aegis else self.tick * NORMAL * (len(builders) + 2) / 3):
+            n = len(builders) + len(men)
+            if n and build.rise(self, site, math.inf if self.aegis else self.tick * NORMAL * (n + 2) / 3):
+                repair.drop(self, men)                                 # complete: the Serjeants stand
                 if nxt := build.next_tile(self, site):                 # a wall line: on to its next tile (#1322)
                     self.build(nxt, {v.uuid for v in builders})
                     continue
@@ -1416,6 +1436,16 @@ class Gather:
             ai.move(self, v.uuid, "VILLAGER", self.map.T, x + 0.5, self.map.y(x, z), z + 0.5,
                     NORMAL * civs.speed(self, "VILLAGER") * math.prod(PACE.get(t, 1) ** train.count(self, t) for t in self.techs))
         v.moved, v.tries = self.clock(), v.tries + 1
+
+    def second(self, v):
+        """One unit that v gathers earns the second resource of the civilization (civs.EXTRA, #2113): Poles and Puru
+        stone miners, Portuguese foragers, Shu lumberjacks. The fractions add up, so small amounts earn the exact sum."""
+        if bonus := civs.extra(self, "forage" if v.tree in self.map.bushes else v.res):
+            res, n = bonus
+            self.seconds[res] = self.seconds.get(res, 0) + n
+            if whole := int(self.seconds[res] + 1e-9):
+                self.seconds[res] -= whole
+                self.earn(res, whole)
 
     def limit(self, res=None):
         """The resources res that a villager carries, with the technologies of the player (CARRY, and FOOD_CARRY for

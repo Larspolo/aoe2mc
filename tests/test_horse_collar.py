@@ -2,6 +2,7 @@
 A click queues it once; after the research the live and the new farms of the player have 75 more food (#726)."""
 from urllib.parse import unquote
 
+from menu_line import item, labels, order
 from test_gather import FakeServer, grid
 
 from game import gather, train
@@ -36,7 +37,9 @@ def research(g):
 def test_the_mill_menu_has_horse_collar():
     server, g = setup()
     assert train.open_menu(g, "Steve", (2, 3)) == (2, 4, 2, 4)
-    assert menus(server) == ["aoe menu Steve Mill 0:book:Horse Collar:75 food · 75 wood · 20 s · research"]
+    cmd, = menus(server)
+    assert cmd.startswith("aoe menu Steve Mill ") and labels(cmd) == order(g, "MILL")   # the full menu
+    assert item(cmd, "Horse Collar") == "0:book:Horse Collar:75 food · 75 wood · 20 s · research"
 
 
 def test_a_click_queues_horse_collar_once_and_takes_its_cost():
@@ -44,7 +47,7 @@ def test_a_click_queues_horse_collar_once_and_takes_its_cost():
     rect = train.open_menu(g, "Steve", (3, 3))
     assert train.order(g, "Steve", rect, 0, shift=True) == 1 and (g.stock["food"], g.stock["wood"]) == (425, 425)
     assert train.order(g, "Steve", rect, 0) == 0 and (g.stock["food"], g.stock["wood"]) == (425, 425)
-    assert menus(server)[-1].endswith("0:book:Horse Collar:75 food · 75 wood · 20 s · researching")
+    assert item(menus(server)[-1], "Horse Collar") == "0:book:Horse Collar:75 food · 75 wood · 20 s · researching"
 
 
 def test_not_enough_resources():

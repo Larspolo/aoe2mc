@@ -2,13 +2,11 @@
 seconds). After the research the villagers carry 3 more resources and walk 10 % faster, as in AoE2 (#728)."""
 from urllib.parse import unquote
 
+from menu_line import item
 from test_gather import FakeServer, grid, tiny
-from test_train_menu import IMPERIAL, RALLY
 
 from game import ai, gather, train
 
-CASTLE = " 4:bell:Castle Age:800 food · 200 gold · 160 s · needs 2 of archery range, stable, blacksmith, market (0/2)" \
-    + IMPERIAL                                                     # the next ages (#1080)
 
 
 def setup(food=175, wood=50):
@@ -37,8 +35,7 @@ def test_no_wheelbarrow_in_the_dark_age():
 def test_the_town_center_menu_has_wheelbarrow():
     server, g = setup()
     train.open_menu(g, "Steve", (3, 3))
-    assert " 3:book:Wheelbarrow:175 food · 50 wood · 75 s · research" + CASTLE in menus(server)[-1]   # Town Watch (slot 6) comes after it (#1454)
-    assert menus(server)[-1].endswith(RALLY)
+    assert item(menus(server)[-1], "Wheelbarrow") == "3:book:Wheelbarrow:175 food · 50 wood · 75 s · research"
 
 
 def test_a_click_queues_wheelbarrow_once_and_takes_its_cost():
@@ -46,8 +43,7 @@ def test_a_click_queues_wheelbarrow_once_and_takes_its_cost():
     rect = train.open_menu(g, "Steve", (3, 3))
     assert train.order(g, "Steve", rect, 3, shift=True) == 1 and (g.stock["food"], g.stock["wood"]) == (825, 950)
     assert train.order(g, "Steve", rect, 3) == 0 and g.stock["food"] == 825
-    assert " 3:book:Wheelbarrow:175 food · 50 wood · 75 s · researching" + CASTLE in menus(server)[-1]   # Town Watch (slot 6) comes after it (#1454)
-    assert menus(server)[-1].endswith(RALLY)
+    assert item(menus(server)[-1], "Wheelbarrow") == "3:book:Wheelbarrow:175 food · 50 wood · 75 s · researching"
 
 
 def test_wheelbarrow_gives_more_carry_after_75_seconds():

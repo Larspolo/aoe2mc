@@ -77,8 +77,9 @@ def check_train(row):
 
 
 def check_civs(row):
-    form(row, {"name": str, "missing": list}, {"unique": str, "units": list, "costs": list, "twice": list})
+    form(row, {"name": str, "missing": list}, {"unique": str, "units": list, "costs": list, "twice": list, "drop": dict})
     n, known = row["name"], NAMES["train.jsonl"] | NAMES["units.jsonl"] | NAMES["buildings.jsonl"]
+    assert set(row.get("drop", {})) <= {"food", "forage"} and all(isinstance(v, NUMBER) for v in row.get("drop", {}).values()), n
     assert set(row["missing"]) <= known and row["missing"] == sorted(set(row["missing"])), n
     assert row.get("unique", "MILITIA") in NAMES["units.jsonl"], n
     assert set(row.get("twice", ())) <= NAMES["train.jsonl"], n
