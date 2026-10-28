@@ -2705,6 +2705,7 @@ def team_lines(objects, players):
 # AoE2 condition and effect IDs (AoE2ScenarioParser), one per line in alphabetical order (#2613)
 CHANGE_COLOR_MOOD = 72
 CHANGE_OWNERSHIP = 18
+CLEAR_INSTRUCTIONS = 21                                            # "Clear Instructions" (#2609)
 CREATE_OBJECT = 11
 DAMAGE_OBJECT = 24                                                 # "Damage Object" (#2571)
 DISPLAY_INSTRUCTIONS = 20
@@ -2916,6 +2917,11 @@ def message_text(e):
     return json.dumps({"text": msg}, ensure_ascii=False) if msg else None
 
 
+def clear_lines(e, c):
+    """The command of "Clear Instructions" (#2609): no message, the shown instructions go."""
+    return ["title @a clear"]
+
+
 def chat_lines(e, c):
     """The command of "Send Chat": a tellraw to all players."""
     return [f"tellraw @a {text}"] if (text := message_text(e)) else []
@@ -2934,6 +2940,7 @@ def instruction_lines(e, c):
 EFFECTS = {
     CHANGE_COLOR_MOOD: mood_lines,
     CHANGE_OWNERSHIP: owner_lines,
+    CLEAR_INSTRUCTIONS: clear_lines,
     CREATE_OBJECT: object_lines,
     DAMAGE_OBJECT: damage_lines,
     DISPLAY_INSTRUCTIONS: instruction_lines,
