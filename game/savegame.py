@@ -21,7 +21,8 @@ import time
 FILE = "savegame.json"
 FIELDS = ("stock", "spare", "seconds", "repeats", "pop")              # dicts and numbers of Gather, as they are
 PACKED = ("queues", "trained", "sites", "rally")                       # with tuples (a building rect, a cell): pack()
-OPTIONAL = ("limit_left", "rates", "relic_timer", "wonder_shown", "wonders", "wonders_gone")   # only on a Gather that has them (#2324)
+OPTIONAL = ("limit_left", "policy", "rates", "relic_timer", "switches", "wonder_shown", "wonders",   # only on a Gather that
+            "wonders_gone")                                            # has them (#2324; the policy: #2515)
 MONK = ("carrier_at", "converting", "faith", "fetching", "heal_time", "monk_at", "relic_gold", "relic_homes",
         "relic_time", "relics")                                        # game/monk.py: the relics and monk orders (#2412)
 ROUTES = ("trade", "trebs")                                            # trade.py, trebuchet.py: as OPTIONAL (#2413)
