@@ -33,25 +33,26 @@ def function(name, files):
 
 
 def test_a_set_is_one_base_set_per_unit():
-    line, = lines([effect(SET, 2000)])
+    line, ride = lines([effect(SET, 2000)])                                  # a rider: its mount (#2976)
     assert line.startswith("execute as @e[tag=aoe2mc.p1,") and line.endswith(
         " run attribute @s minecraft:max_health base set 1024")               # the limit of the attribute
+    assert " on vehicle run " in ride
 
 
 def test_a_set_below_one_is_one():
-    line, = lines([effect(SET, -5)])
+    line = lines([effect(SET, -5)])[0]
     assert line.endswith(" run attribute @s minecraft:max_health base set 1")
 
 
 def test_a_set_keeps_a_value_in_range():
-    line, = lines([effect(SET, 150)])
+    line = lines([effect(SET, 150)])[0]
     assert line.endswith(" run attribute @s minecraft:max_health base set 150")
 
 
 def test_add_and_subtract_read_the_base_and_set_it_with_the_macro():
     stats = Counter()
     _, files = build([effect(ADD, 20), effect(SUBTRACT, 5)], stats)
-    add, sub = lines([effect(ADD, 20), effect(SUBTRACT, 5)])
+    add, _, sub, _ = lines([effect(ADD, 20), effect(SUBTRACT, 5)])
     assert add.endswith(" run function aoe2mc:hp/add_20") and sub.endswith(" run function aoe2mc:hp/subtract_5")
     body = function("hp/add_20", files)
     assert body[0] == "execute store result score #hp aoe_hp run attribute @s minecraft:max_health base get"
@@ -101,6 +102,7 @@ def test_read_scenario_keeps_the_operation_and_the_amount(tmp_path):
 
 @pytest.mark.mc
 def test_the_hp_functions_change_the_max_health_on_a_server(tmp_path):
+    import json
     import os
     import re
 
@@ -116,7 +118,7 @@ def test_the_hp_functions_change_the_max_health_on_a_server(tmp_path):
         dst = os.path.join(world, "datapacks", "aoe2mc", path)
         os.makedirs(os.path.dirname(dst), exist_ok=True)
         with open(dst, "w") as f:
-            f.write(text)
+            f.write(text if isinstance(text, str) else json.dumps(text))   # the predicate aoe2mc:rider (#2976)
     with run.Game(world) as game:
         game.forceload()
         game.command("scoreboard objectives add aoe_hp dummy")       # the load function of the converted world

@@ -24,8 +24,8 @@ def lines(effects, stats=None, T=4):
 def test_heal_object_raises_the_health_of_each_unit_up_to_its_maximum():
     stats = Counter()
     load, found = lines([effect(20)], stats)
-    at = "execute as @e[tag=aoe2mc.p1,tag=!aoe2mc.mount,x=8,y=-64,z=12,dx=11,dy=383,dz=11]"
-    assert found == [f"{at} store result score @s aoe_hp run data get entity @s Health",
+    at = "execute as @e[tag=aoe2mc.p1,tag=!aoe2mc.mount,x=8,y=-64,z=12,dx=11,dy=383,dz=11] unless predicate aoe2mc:rider"
+    assert found[:5] == [f"{at} store result score @s aoe_hp run data get entity @s Health",
                      f"{at} store result score @s aoe_max run attribute @s minecraft:max_health get",
                      f"{at} run scoreboard players add @s aoe_hp 20",
                      f"{at} run scoreboard players operation @s aoe_hp < @s aoe_max",

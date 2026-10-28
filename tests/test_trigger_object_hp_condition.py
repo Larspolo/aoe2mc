@@ -19,8 +19,8 @@ def files(ref=7, quantity=20, comparison=LESS, looping=False):
 
 def test_the_tick_function_stores_the_health_of_the_object():
     tick = files()[1]["data/aoe2mc/function/tick.mcfunction"]
-    assert "execute if entity @e[tag=aoe2mc.r7,limit=1] store result score #4.0 aoe_trig run data get entity " \
-           "@e[tag=aoe2mc.r7,limit=1] Health" in tick
+    assert "execute as @e[tag=aoe2mc.r7,limit=1] unless predicate aoe2mc:rider store result score #4.0 aoe_trig " \
+           "run data get entity @s Health" in tick                    # a rider: its mount (#2976)
 
 
 def test_the_trigger_fires_when_the_health_is_less_than_the_quantity():

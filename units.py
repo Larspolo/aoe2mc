@@ -43,6 +43,7 @@ HORSE_ARMOR = {1: "leather", 2: "leather", 3: "iron", 4: "diamond", "unique": "g
 
 FLY_HEIGHT = 6
 MOUNT = "aoe2mc.mount"     # the tag of the vehicle and the crew of a unit: in the team, but not counted as a unit (#1045)
+MOUNTS = ("minecraft:camel", "minecraft:horse", "minecraft:ravager", "minecraft:skeleton_horse")  # mounted(): they keep the hit points of the rider (#2976)
 FLY_LOW = {"minecraft:bee": 2}  # insects fly near the flowers
 DATA = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
 

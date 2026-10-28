@@ -10,7 +10,7 @@ import test_trigger_heal as heal
 def test_a_negative_damage_gives_the_commands_of_heal_object():
     stats = Counter()
     found = damage.lines([damage.effect(-20)], stats)
-    assert found == heal.lines([heal.effect(20)])[1] and len(found) == 5
+    assert found == heal.lines([heal.effect(20)])[1] and len(found) == 10
     assert found[2].endswith(" run scoreboard players add @s aoe_hp 20") and stats == Counter(damage=1)
 
 
