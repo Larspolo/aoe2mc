@@ -58,8 +58,7 @@ up to 10 sub-issues (within the cap) for its open goals, then pick again. The pa
 than the ready tickets for this (`agent.toml`): many runs close tickets faster than one refill makes them (#650;
 2026-10-28: 3 ready tickets for 40 target runs). It starts them only while an open ticket is less than 60 minutes old
 (`usage.refill_runs`), else 1: an empty refill run costs quota.
-Give `lane:haiku` to each new `size:S` ticket that names the place of its change and needs no look at a render or the
-real game, and when you are not sure (`ticket` skill, "Model lanes"); judge the others, do not aim at a number.
+Give each new ticket its lane (`ticket` skill, "Model lanes").
 Also lock each epic E with `python3 tools/claim.py E --refill` before you make its tickets (exit 1: skip that epic, #505).
 A `muted` ticket or epic (the owner mutes it until later, 2026-10-26) is out of all these steps: no split, no check, no
 new sub-issues, no `needs-human`. Still answer an owner comment on it (step 3).
