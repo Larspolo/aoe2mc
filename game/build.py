@@ -39,6 +39,7 @@ from buildings import footprint  # noqa: E402
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import civs  # noqa: E402
+import herd  # noqa: E402
 import menu as chest  # noqa: E402  (menu() below is the chat text)
 from replay import Replay  # noqa: E402
 import table  # noqa: E402
@@ -574,6 +575,8 @@ def rise(g, site, work):
             portcullis(g, site)
         if site["player"] == g.player and (food := civs.built_food(g, site["name"])):
             g.earn("food", food)                                       # Saxon camps, Wu military buildings (#2114)
+        if site["player"] == g.player and (born := civs.built_units(g, site["name"])):
+            herd.spawn(g, site["footprint"], *born)                    # Tatar sheep at a town center (#2313)
     return site["progress"] >= 1
 
 

@@ -209,7 +209,7 @@
 {"name": "TATARS: Herdable animals contain food +50%.", "civ": "TATARS", "bonus": "Herdable animals contain food +50%.", "in": "LAST"}
 {"name": "TATARS: Units deal +20% damage when attacking from higher elevations (+50% instead of +25%).", "civ": "TATARS", "bonus": "Units deal +20% damage when attacking from higher elevations (+50% instead of +25%).", "later": "play:fight"}
 {"name": "TATARS: Parthian Tactics and Thumb Ring are free.", "civ": "TATARS", "bonus": "Parthian Tactics and Thumb Ring are free.", "in": "COSTS"}
-{"name": "TATARS: Two Sheep spawn near newly-constructed Town Centers starting in the Castle Age.", "civ": "TATARS", "bonus": "Two Sheep spawn near newly-constructed Town Centers starting in the Castle Age.", "later": "play:build"}
+{"name": "TATARS: Two Sheep spawn near newly-constructed Town Centers starting in the Castle Age.", "civ": "TATARS", "bonus": "Two Sheep spawn near newly-constructed Town Centers starting in the Castle Age.", "in": "BUILT_UNITS"}
 {"name": "TEUTONS: Monks have double healing range.", "civ": "TEUTONS", "bonus": "Monks have double healing range.", "later": "play:monks"}
 {"name": "TEUTONS: Towers garrison twice as many units.", "civ": "TEUTONS", "bonus": "Towers garrison twice as many units.", "in": "GARRISON"}
 {"name": "TEUTONS: Murder Holes and Herbal Medicine are free.", "civ": "TEUTONS", "bonus": "Murder Holes and Herbal Medicine are free.", "in": "COSTS"}
