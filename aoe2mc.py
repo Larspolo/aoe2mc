@@ -770,7 +770,16 @@ def training(timeline):
     return out
 
 
-def name_timeline(objects, timeline, window=16):
+SHORE = 2                   # tiles: a click this near the water can move a ship (name_timeline, #2629)
+
+
+def near(mask, r):
+    """The tiles at most r tiles (also diagonal) from a True tile of the bool array mask."""
+    pad, (w, h) = np.pad(np.asarray(mask, bool), r), np.shape(mask)
+    return np.any([pad[r + dx:r + dx + w, r + dy:r + dy + h] for dx in range(-r, r + 1) for dy in range(-r, r + 1)], 0)
+
+
+def name_timeline(objects, timeline, window=16, water=None):
     """The object IDs of a recorded game (#407). Start objects keep the ID of the record (`ref`, also GAIA animals
     that a player takes). The game gives each new object the next free ID, in the order that it makes them:
     a foundation at its BUILD or WALL command (one per wall tile), a unit when its training ends (the queue of its
@@ -778,25 +787,33 @@ def name_timeline(objects, timeline, window=16):
     too, so match each predicted object to the first ID in the next `window` IDs that the commands use in the same
     way (a building ID in QUEUE and RESEARCH, of the building that trains its units; a unit ID in MOVE, ORDER and
     BUILD; a building or ship ID as the target of GARRISON) and not before the object exists. A building that is not matched gets the name of its units' building.
+    water (a bool array of the water tiles): a ship is not matched to an ID whose first MOVE goes to a land tile more
+    than SHORE tiles from the water (#2629): a ship cannot go there, a click on the shore can. Such an ID gets the
+    last land unit that its player trained before its first use (a military unit when it does not build or gather).
     Adds "names" (a name or None per ID of "objects") and the "target_name" of a new target ID to the events and
     returns {id: name}."""
     names = {o["ref"]: o["name"] for o in objects if o.get("ref") is not None}
     top = max(names, default=0)
-    used = {}             # new ID -> [time of its first use, "B", "U" or None, {building of its units}, a worker]
+    used = {}             # new ID -> [time of its first use, "B", "U" or None, {building of its units}, a worker,
+    #                       its first MOVE goes inland (None: no MOVE yet), the player of its first use]
+    far = None if water is None else ~near(water, SHORE)       # the tiles that a ship cannot go to
     for e in timeline:                                   # not SPECIAL and others: their numbers are not all IDs
         role = "U" if e["kind"] in UNIT_USE else "B" if e["kind"] in BUILDING_USE else None
         work = e["kind"] in ("build", "wall") or e["kind"] == "order" and WORK.match(names.get(e.get("target"), ""))
         for i in e.get("objects", ()) if role else ():
             if i > top:
-                u = used.setdefault(i, [e["time"], None, set(), False])
+                u = used.setdefault(i, [e["time"], None, set(), False, None, e.get("player")])
                 u[1], u[3] = u[1] or role, u[3] or bool(work)
+                if e["kind"] == "move" and u[4] is None and far is not None and "tile" in e:
+                    x, y = (min(max(int(v), 0), n - 1) for v, n in zip(e["tile"], far.shape))
+                    u[4] = bool(far[x, y])
                 if e["kind"] == "queue" and train(e.get("name", "")):
                     u[2].add(train(e["name"])[1])
         if role == "U" and e.get("target", 0) > top:
-            u = used.setdefault(e["target"], [e["time"], None, set(), False])
+            u = used.setdefault(e["target"], [e["time"], None, set(), False, None, None])
             if e["kind"] == "garrison":                  # its target is a building or a ship (#912)
                 u[1] = u[1] or "G"
-    made, seen = [], set()               # (time ms, command time, "B" or "U", name)
+    made, seen, inland = [], set(), set()   # (time ms, command time, "B" or "U", name); IDs that no ship takes
     for e in timeline:
         kind, t = e["kind"], e["time"]
         if kind in ("build", "wall") and "tile" in e and e.get("name"):
@@ -816,13 +833,22 @@ def name_timeline(objects, timeline, window=16):
                (used[i][1] in (role, None) or used[i][1] == "G" and (role == "B" or "SHIP" in name)) and
                used[i][0] >= t - 5000 and used[i][2] <= {name} and   # 5 s: the training times are estimates
                not (used[i][3] and "VILLAGER" not in name)]         # only villagers build and gather on land (#765)
+        if (train(name) or (0, ""))[1] == "DOCK":           # a ship does not go inland (#2629): a land unit
+            inland |= {i for i in ids[:1] if used[i][4]}     # takes the ID (below)
+            ids = [i for i in ids if not used[i][4]]
         i = ids[0] if ids else nxt if nxt not in used else None
         if i is not None:
             names[i] = name             # a unit skips a GARRISON target: a later building can take it
             nxt = next((j for j in range(nxt, i) if used.get(j, (0, None))[1] == "G" and j not in names), i + 1)
-    for i, u in used.items():
+    trained = [(end, e.get("player"), e.get("name", "")) for end, e, _ in training(timeline)
+               if (train(e.get("name", "")) or (0, "DOCK"))[1] != "DOCK"]
+    for i, u in sorted(used.items()):
         if i not in names and len(u[2]) == 1:
             names[i] = next(iter(u[2]))
+        elif i not in names and i in inland:             # the last land unit of its player (#2629), a soldier
+            land = [(end, n) for end, p, n in trained if p == u[5] and end <= u[0] + 5000]   # when it does not work
+            if pick := [x for x in land if "VILLAGER" not in x[1]] * (not u[3]) or land:
+                names[i] = max(pick)[1]
     for e in timeline:
         if e.get("objects"):
             e["names"] = [names.get(i) for i in e["objects"]]
@@ -2744,6 +2770,7 @@ PLAY_SOUND = 4                                                     # "Play Sound
 REMOVE_OBJECT = 15
 RESEARCH_TECHNOLOGY = 2                                            # "Research Technology" (#2577)
 SEND_CHAT = 3
+TASK_OBJECT = 12                                                   # "Task Object" (#2646)
 TELEPORT_OBJECT = 35
 TIMER = 10
 TRIBUTE = 5                                                        # "Tribute" (#2576)
@@ -2934,6 +2961,25 @@ def variable_range(c):
     return {0: f"{q}", 1: f"..{q - 1}", 2: f"{q + 1}..", 3: f"..{q}", 4: f"{q}.."}.get(c.get("comparison"))
 
 
+def task_lines(e, c):
+    """The commands of "Task Object" (#2646), effect i of trigger t: the units of the player in the area get the tag
+    aoe_task<t>_<i>, and the storage aoe2mc:tasks gets the key k<t>_<i> with the block of the middle of the tile, on the
+    ground. Vanilla has no walk-to command: the scenario mode of the game program reads the storage (scenario.tasks)
+    and walks the tagged units there with the Paper plugin (aoe moveto). A rider gives its tag to its horse (units.MOUNT):
+    the plugin walks the horse. No area or no tile: no line."""
+    T, ground = c.T, c.ground
+    if min(e.get("tile", [-1])) < 0 or min(e.get("area", [-1])) < 0:
+        return []
+    x, z = (int((v + 0.5) * T) for v in e["tile"])
+    if not (0 <= x < ground.shape[0] and 0 <= z < ground.shape[1]):
+        return []
+    k = f"{c.t['id']}_{next(i for i, x in enumerate(c.t['effects']) if x is e)}"
+    return [f"tag {unit_selector(e, T)} add aoe_task{k}",
+            f"execute as @e[tag=aoe_task{k}] on vehicle run tag @s add aoe_task{k}",
+            f"execute as @e[tag=aoe_task{k}] on vehicle on passengers run tag @s remove aoe_task{k}",
+            f"data modify storage aoe2mc:tasks k{k} set value [{x + 0.5}d, {int(ground[x, z])}.0d, {z + 0.5}d]"]
+
+
 def unit_selector(e, T):
     """The area_selector of the units of the player of an effect. A Gaia unit has no tag (units.make_entity): the
     entities with no tag and not the players."""
@@ -3085,6 +3131,7 @@ EFFECTS = {
     REMOVE_OBJECT: object_lines,
     RESEARCH_TECHNOLOGY: research_lines,
     SEND_CHAT: chat_lines,
+    TASK_OBJECT: task_lines,
     TELEPORT_OBJECT: teleport_lines,
     TRIBUTE: resource_lines,
 }
@@ -3659,7 +3706,8 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
     record = src.lower().endswith(RECORDS)
     timeline = read_timeline(src) if record else None
     if timeline is not None:
-        name_timeline(objects, timeline)
+        name_timeline(objects, timeline, water=np.vectorize(lambda t: terrain_style(tnames.get(int(t), "GRASS_1"))["depth"] > 0,
+                                                            otypes=[bool])(terrain))
     at_stats = Counter()
     if at is not None:
         if timeline is None:
