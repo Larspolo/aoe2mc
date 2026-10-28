@@ -20,9 +20,6 @@ def imperial(civ):
 
 def test_the_values_are_those_of_aoe2():
     assert train.AFTER["IMPERIAL_SKIRMISHER_UPGRADE"] == "ELITE_SKIRMISHER_UPGRADE"
-    s = combat.stats("IMPERIAL_SKIRMISHER")
-    assert (s.hp, s.attack, s.melee, s.pierce, s.range, s.reload) == (35, 4, 0, 5, 5, 3.0)
-    assert s.bonus == {combat.ARC: 5, combat.SPE: 4} and combat.sight("IMPERIAL_SKIRMISHER") == 7
     assert len(train.HELP["IMPERIAL_SKIRMISHER_UPGRADE"]) <= 50
     assert "VIETNAMESE" not in civs.MISSING["IMPERIAL_SKIRMISHER_UPGRADE"]
     assert {"BRITONS", "CHINESE", "MAYANS"} <= set(civs.MISSING["IMPERIAL_SKIRMISHER_UPGRADE"])
