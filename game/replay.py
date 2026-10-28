@@ -1033,8 +1033,6 @@ class Replay:
                 v.pos = (at[0], float(y), at[1])
             v.leg = (v.pos, e["time"], e["time"])                  # a new order starts here, not on the old leg
             out += self.look(v, "none") + [f"aoe stop {v.uuid}"] * self.ai
-            if self.ai and not ship(v.name):                        # a mob behind its leg stops short (#2633)
-                self.rest(i, e["time"])
         return out
 
     def move(self, e):

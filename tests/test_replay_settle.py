@@ -40,11 +40,3 @@ def test_a_new_order_ends_the_checks():
     orders = run(Entity(at=(10.5, 42.5)), walk)
     assert len(orders) == 2 and not [c for c in orders if c.startswith("tp ")]
 
-
-def test_a_unit_behind_its_leg_walks_to_the_place_of_its_stop():
-    walk = [dict(time=1000, player=1, kind="move", objects=[7], tile=[12.5, 10.5]),
-            dict(time=8000, player=1, kind="stop", objects=[7])]
-    orders = run(Entity(at=(10.5, 42.5)), walk)
-    x = float(orders[1].split()[3])
-    assert 10.5 + replay.HOME < x < 50.5 and orders[1].startswith("aoe moveto u1 ")   # on the leg, not its end
-    assert orders[-1] == "tp u1 " + orders[1].split(" ", 3)[3]
