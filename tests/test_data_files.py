@@ -172,12 +172,14 @@ def check_setup(row):                                      # a value of a settin
                               "sites": dict, "swap": dict, "wonder_years": int, "sides": dict,
                               "treaty": str,                                  # Wonder Race (#2406)
                               "help": str, "module": str, "loaded": str, "bots": bool,   # a game mode (#2521)
-                              "side_buildings": dict, "ring": dict, "infinite": bool, "random": list})
-    assert sum(k in row for k in ("resources", "ages", "units", "buildings", "level", "wonder_years", "random")) == 1, row["name"]   # a resource level, a start age
+                              "side_buildings": dict, "ring": dict, "infinite": bool, "random": list,
+                              "turbo": float, "slow": list})
+    assert sum(k in row for k in ("resources", "ages", "units", "buildings", "level", "wonder_years", "random", "turbo")) == 1, row["name"]   # a resource level, a start age
     assert all(set(v) == {"food", "wood", "gold", "stone"} for v in row.get("sides", {}).values()), row["name"]   # #2441
     assert set(row.get("random", ())) <= {r["name"] for r in table.load("setup.jsonl") if "resources" in r}, row["name"]   # #2489
     assert set(row.get("units", ())) <= NAMES["units.jsonl"], row["name"]  # (#2265) or a game mode (#2347)
     assert row.get("treaty", "endless") == "endless", row["name"]   # Wonder Race: a treaty with no end (#2406)
+    assert set(row.get("slow", ())) <= NAMES["train.jsonl"] | NAMES["build.jsonl"], row["name"]   # Turbo (#2359)
     assert row.get("loaded", "skip") in ("skip", "start") and ("help" in row or "module" not in row), row["name"]
     assert os.path.exists(os.path.join(os.path.dirname(table.__file__), row["module"] + ".py")) if "module" in row else True, row["name"]
     assert set(row.get("resources", RES)) == {"food", "wood", "gold", "stone"}, row["name"]

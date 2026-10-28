@@ -564,7 +564,8 @@ def rise(g, site, work):
     if site.get("player", g.player) == g.player:
         x0, x1, z0, z1 = site["footprint"]                                 # the builders stand at its edge
         work *= CRANE ** ("TREADMILL_CRANE" in getattr(g, "techs", ())) * civs.build_rate(g, site["name"]) \
-            * civs.church_rate(g, ((x0 + x1) / 2, (z0 + z1) / 2))      # the Georgian Fortified Church (#1930)
+            * civs.church_rate(g, ((x0 + x1) / 2, (z0 + z1) / 2)) \
+            * civs.turbo(g, site["name"])                              # Georgian Fortified Church (#1930), Turbo (#2359)
     site["progress"] = min(1.0, site["progress"] + work / BUILD_TIMES[site["name"]])
     cmds, ring = site["commands"], site.get("ring", {})
     k = len(cmds) if site["progress"] >= 1 else math.floor(site["progress"] * len(cmds))
