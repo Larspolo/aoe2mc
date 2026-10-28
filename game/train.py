@@ -378,12 +378,19 @@ def lines(t, g=None):
 
 def slots(building, name):
     """(slot, item, label) of name in the menu of building: ITEMS, with the slot shift of SHIFTS. A unit line of
-    civs.TRAINS (the Mapuche Settlement) comes after the items of the building, one slot per line (#2432)."""
+    civs.TRAINS (the Mapuche Settlement) comes after the items of the building, one slot per line (#2432), then the
+    upgrades of each line, one slot per line (#2487)."""
     slot, item, label = ITEMS[name]
     lines = [line for c in civs.TRAINS.values() for line in c.get(building, {}).get("lines", ())]
+    lines += [line_upgrades(line) for line in lines]                   # then the upgrades of each line (#2487)
     if (i := next((k for k, line in enumerate(lines) if name in line), None)) is not None:
         return 1 + max(slots(building, n)[0] for n in TRAINS[building]) + i, item, label
     return slot + SHIFTS.get(building, {}).get(name, 0), item, label
+
+
+def line_upgrades(line):
+    """The upgrade technologies (UPGRADES) of one unit line (a list of unit names), in the order of the line."""
+    return [t for n in line for t in UPGRADES if UPGRADES[t] == (n, UPGRADES[t][1]) and UPGRADES[t][1] in line]
 
 
 def trains(g, building):
@@ -395,7 +402,8 @@ def trains(g, building):
         + ["SERJEANT"] * (building == "DONJON")                    # and the spearman line (AoE2 DE wiki, #1873)
     out = unique + list(TRAINS[building]) + [f"ELITE_{n}_UPGRADE" for n in unique if f"ELITE_{n}_UPGRADE" in COSTS]   # (#1760)
     out += [n for n, c in CIV_TECHS.items() if c == civs.civ(g)] * (building == "CASTLE")   # the unique technologies (#2021)
-    out += [line[0] for line in civs.TRAINS.get(civs.civ(g), {}).get(building, {}).get("lines", ())]   # Mapuche (#2432)
+    more = civs.TRAINS.get(civs.civ(g), {}).get(building, {}).get("lines", ())
+    out += [line[0] for line in more] + [t for line in more for t in line_upgrades(line)]   # Mapuche (#2432, #2487)
     for _ in UPGRADES:                                             # a line of upgrades: mangonel, onager, siege onager
         out = [new.get(n, n) for n in out]                         # the castle: the elite unique unit (#1624)
     return tuple(dict.fromkeys(out))                               # the camel scout becomes the camel rider (#2130)
@@ -671,6 +679,8 @@ def stats(g, name):
     for group, building, hp in civs.TECH_HP.get(civs.civ(g), ()):   # the Aztec monks (#2269)
         if civs.GROUPS[group](name, s):
             s = s._replace(hp=s.hp + hp * sum(t in g.techs for t in TRAINS[building] if t in TECHS))
+    if name.startswith("VILLAGER") and (f := civs.handicap(g.data, g.player)) != 1:   # the AoE2 "Handicap" (#2474)
+        s = s._replace(hp=round(s.hp * f))
     return s
 
 
@@ -737,7 +747,7 @@ def research(g, entry, start=False):
     if entry["name"] in WALL_UPGRADES:                             # the complete own walls become the new wall (#1326)
         for site in [s for s in g.sites if s["name"] in WALL_UPGRADES[entry["name"]] and s.get("done")
                      and s["player"] == g.player]:
-            build.upgrade(g, site, combat.wall(site["name"], build.ages(g), civs.civ(g)))
+            build.upgrade(g, site, combat.wall(site["name"], build.ages(g), civs.civ(g), civs.handicap(g.data, g.player)))
     build.retower(g, before)                                       # the complete own towers get the new values (#1374),
                                                                    # the buildings those of Masonry and Fletching (#1398, #1408)
     if entry["name"] in build.AGE_TECHS:                           # the base arrows of the new age (civs.ARROWS, #2178)
@@ -779,7 +789,8 @@ def research(g, entry, start=False):
     if entry["name"] in REQUIRES:                                  # an age: all players see it, as in AoE2
         import ai                                                  # ai imports gather, gather imports this module
         for site in [s for s in g.sites if s["name"] in combat.WALLS and s.get("done") and s["player"] == g.player]:   # #1372
-            build.upgrade(g, site, combat.wall(build.design(g, site["name"], g.player), build.ages(g) - 1, civs.civ(g)),
+            build.upgrade(g, site, combat.wall(build.design(g, site["name"], g.player), build.ages(g) - 1, civs.civ(g),
+                                                      civs.handicap(g.data, g.player)),
                           redraw=False)
         for uuid, name in g.soldiers.items():                      # the walk speed of the age (civs.UNITS, Celts)
             if civs.speed(g, name) != 1:
@@ -951,6 +962,8 @@ def summon(g, name, pos, rotation=math.pi / 2, player=None):
         g.command(cmd)
     if cmd := lead_command(g, uuid, name):                         # a Spanish cannon galleon aims ahead (#2430)
         g.command(cmd)
+    if cmd := combat.accuracy_command(uuid, name, civs.value("accuracy", civs.civ(g), {}).get(name, 0.0)):
+        g.command(cmd)                                             # a Hun trebuchet hits units more often (#2479)
     if cmd := combat.sight_command(uuid, name, g.map.T, s=stats(g, name)):   # it attacks enemies in sight (#775)
         g.command(cmd)
     import ai                                                      # ai imports gather, gather imports this module
