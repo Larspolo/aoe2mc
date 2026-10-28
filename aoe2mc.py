@@ -433,6 +433,8 @@ def read_scenario(path):
                                                **({"player": c.source_player,                 # (#2656)
                                                    "technology": techs.get(c.technology, str(c.technology))}
                                                   if c.condition_type == RESEARCHED else {}),
+                                               **({"player": c.source_player}                 # (#2710)
+                                                  if c.condition_type == PLAYER_DEFEATED else {}),
                                                **({"quantity": c.quantity, "unit": c.unit_object}   # (#2714)
                                                   if c.condition_type == UNITS_GARRISONED else {}))
                                           for c in in_order(t.conditions, t.condition_order)],
@@ -2786,12 +2788,14 @@ FREEZE_OBJECT = 22                                                 # "Freeze Obj
 HEAL_OBJECT = 34                                                   # "Heal Object" (#2692)
 IN_AREA = 5
 KILL_OBJECT = 14
+MODIFY_ATTRIBUTE = 51                                              # "Modify Attribute" (#2763)
 MODIFY_RESOURCE = 52                                               # "Modify Resource" (#2576)
 OBJECT_HP = 23                                                     # "Object HP", the hit points of one object (#2701)
 OR = 29
 OWN_FEWER_OBJECTS = 4                                              # conditions on the units of a player (#2573)
 OWN_OBJECTS = 3
 PATROL = 19                                                        # "Patrol" (#2647)
+PLAYER_DEFEATED = 13                                               # the condition "Player Defeated" (#2710)
 PLAY_SOUND = 4                                                     # "Play Sound" (#2644)
 REMOVE_OBJECT = 15
 REPLACE_OBJECT = 43                                                # "Replace Object" (#2703)
@@ -2809,8 +2813,16 @@ UNITS_GARRISONED = 18                                              # the conditi
 VARIABLE_VALUE = 22
 TIME_UNITS = {0: 5, 1: 60, 2: 1, 3: 1}  # TimeUnit (years, minutes, seconds, m:ss) -> game seconds; a year as game/wonder.py YEAR
 COUNTED = (IN_AREA, OWN_OBJECTS, OWN_FEWER_OBJECTS)                # conditions that count units: the tick function
-TICKED = COUNTED + (ACCUMULATE_ATTRIBUTE, DIFFICULTY_LEVEL, DISPLAY_TIMER_TRIGGERED, OBJECT_HP, RESEARCHED,
-                     UNITS_GARRISONED, VARIABLE_VALUE)  # conditions of the tick function
+TICKED = COUNTED + (                                               # conditions of the tick function, one per line
+    ACCUMULATE_ATTRIBUTE,
+    DIFFICULTY_LEVEL,
+    DISPLAY_TIMER_TRIGGERED,
+    OBJECT_HP,
+    PLAYER_DEFEATED,
+    RESEARCHED,
+    UNITS_GARRISONED,
+    VARIABLE_VALUE,
+)
 ATTRIBUTES = ("Food", "Wood", "Stone", "Gold")     # attributes 0-3: the score holders of gather.RESOURCES (#2655)
 BRING_OBJECT_TO_AREA = 1                                               # the condition "Bring Object to Area" (#2620)
 DESTROY_OBJECT = 6                                                     # the condition "Destroy Object" (#2618)
@@ -3223,6 +3235,28 @@ def cost_lines(e, c):
     return [f'data modify storage aoe2mc:costs list append value "{" ".join([str(e["player"]), name, *cost])}"']
 
 
+# The ObjectAttribute IDs of "Modify Attribute" that the game program has in combat.Stats (#2763): attribute ->
+# the Stats field; armor (8) and attack (9) by their class (3 pierce, 4 melee), as in AoE2.
+STAT_ATTRIBUTES = {0: "hp", 10: "reload", 12: "range"}
+CLASS_ATTRIBUTES = {(8, 3): "pierce", (8, 4): "melee", (9, 3): "attack", (9, 4): "attack"}
+
+
+def attribute_lines(e, c):
+    """The command of "Modify Attribute" (#2763): the change "<player> <name> <Stats field> <operation> <quantity>"
+    goes into the list of the data storage aoe2mc:attributes. A converted world has no combat values: the scenario mode
+    of the game program (game/scenario.py attributes) empties the list and changes the values of the unit type of the
+    player (train.stats). An attribute outside STAT_ATTRIBUTES and CLASS_ATTRIBUTES: not supported in the stats."""
+    _, name = e.get("object") or (None, None)
+    a = e.get("attribute")
+    field = STAT_ATTRIBUTES.get(a) or CLASS_ATTRIBUTES.get((a, e.get("class")))
+    q = e.get("aa") if a in (8, 9) else e.get("quantity")
+    if not name or e["player"] <= 0 or not field or e.get("operation") not in range(1, 6) or q is None:
+        c.stats["modify attribute (not supported)"] += 1
+        return []
+    c.stats["modify attribute"] += 1
+    return [f'data modify storage aoe2mc:attributes list append value "{e["player"]} {name} {field} {e["operation"]} {q:g}"']
+
+
 def order_lines(e, c):
     """The commands of "Patrol" and "Attack Move" (#2647). Vanilla has no walk-to command: the units of the player in
     the area get the tag aoe_order<trigger>_<effect index> (tag_lines: a rider gives it to its horse), and the order
@@ -3415,6 +3449,8 @@ EFFECT_KEYS = {
     DEACTIVATE_TRIGGER: {"trigger": "trigger_id"},                                   # (#2575)
     DISPLAY_TIMER: {"unit": "time_unit", "timer": "timer"},                          # (#2572)
     HEAL_OBJECT: {"quantity": "quantity"},
+    MODIFY_ATTRIBUTE: {"attribute": "object_attributes", "operation": "operation", "quantity": "quantity",   # #2763
+                       "class": "armour_attack_class", "aa": "armour_attack_quantity"},
     MODIFY_RESOURCE: {"operation": "operation", "quantity": "quantity", "resource": "tribute_list"},
     PLAY_SOUND: {"sound": lambda e, kinds, techs: e.sound_name or ""},               # (#2644)
     REPLACE_OBJECT: {"target": "target_player",                                      # (#2703)
@@ -3452,6 +3488,7 @@ EFFECTS = {
     FREEZE_OBJECT: freeze_lines,
     HEAL_OBJECT: heal_lines,
     KILL_OBJECT: object_lines,
+    MODIFY_ATTRIBUTE: attribute_lines,
     MODIFY_RESOURCE: resource_lines,
     PATROL: order_lines,
     PLAY_SOUND: sound_lines,
@@ -3476,6 +3513,7 @@ SCORE_TESTS = {
     ACCUMULATE_ATTRIBUTE: resource_score,
     DIFFICULTY_LEVEL: lambda c: f"score #level aoe_difficulty matches {c.get('quantity', 0)}",
     DISPLAY_TIMER_TRIGGERED: lambda c: f"score #done{c.get('slot', 0)} aoe_timer matches 1..",   # set at 0 (#2702)
+    PLAYER_DEFEATED: lambda c: f"score #p{c['player']} aoe_lost matches 1..",   # conquest, regicide (#2710)
     RESEARCHED: lambda c: f"score #p{c['player']}.{c['technology']} aoe_tech matches 1..",
     UNITS_GARRISONED: lambda c: f"score #g{c['unit']} aoe_gar matches {max(c['quantity'], 1)}..",   # #2714
     VARIABLE_VALUE: lambda c: f"score #v{c['variable']} aoe_var matches {variable_range(c)}",
@@ -3557,6 +3595,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
                     or c["type"] == ACCUMULATE_ATTRIBUTE and resource_score(c) is None
                     or c["type"] == OBJECT_HP and (c.get("ref", -1) < 0 or variable_range(c) is None)
                     or c["type"] == UNITS_GARRISONED and c.get("unit", -1) < 0
+                    or c["type"] == PLAYER_DEFEATED and c.get("player", -1) <= 0   # Gaia: no defeat (#2710)
                     for c in conds):                                   # unit classes: not yet
             continue
         ctx = Effect(t, T, ground, players, stats, mood, files, setup, switch, timed)
@@ -3645,7 +3684,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
     if names:
         load[:0] = ["scoreboard objectives add aoe_var dummy"] + \
             [f"scoreboard players add {v} aoe_var 0" for v in names]   # AoE2 variables start at 0
-    for word in ("aoe_difficulty", "aoe_gar", "aoe_tech"):            # a score that only the game program sets
+    for word in ("aoe_difficulty", "aoe_gar", "aoe_lost", "aoe_tech"):   # a score that only the game program sets
         if any(f" {word} " in x for x in tick):
             setup[f"scoreboard objectives add {word} dummy"] = None
     if switch:

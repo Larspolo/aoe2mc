@@ -46,6 +46,7 @@ SLOT = "inventory.26"                                                  # the las
 TAG = "aoe_book"                                                       # a person who has the book
 EVERY = 1.0                                                            # seconds between two checks for new people
 ORDERS = "aoe2mc:orders"                                               # the data storage of the trigger orders (#2647)
+ATTRIBUTES = "aoe2mc:attributes"                                       # the storage of "Modify Attribute" (#2763)
 COSTS = "aoe2mc:costs"                                                 # the storage of "Change Object Cost" (#2776)
 NEAR = 3                                                               # blocks: a patrol turns back this near its point
 LEVELS = {r["name"]: r["aoe2"] for r in table.load("difficulty.jsonl")}  # "AI difficulty" -> AoE2 DifficultyLevel
@@ -110,6 +111,7 @@ def tick(g):
     g.book_at = g.clock() + EVERY
     tasks(g)
     orders(g)
+    attributes(g)
     costs(g)
     messages = g.data.get("messages", {})
     text = re.sub(r"<[^<>]*>", "", messages.get("instructions", "")).strip()   # AoE2 color tags (book_pages)
@@ -181,6 +183,28 @@ def costs(g):
         if int(player) in sides:
             vars(sides[int(player)]).setdefault("trigger_costs", {})[name] = \
                 {r: int(v) for r, v in (part.split("=") for part in cost.split())}
+
+
+def attributes(g):
+    """The changes of "Modify Attribute" (aoe2mc.attribute_lines, #2763): read and empty the list of the data storage
+    ATTRIBUTES, and add each change to trigger_attributes of the side of its player (the people and the bots):
+    train.stats applies them in order, so the units that the player trains later get the new values. The units of the
+    type that exist get the new values at once (the same commands as a technology, train.research)."""
+    import civs, combat                                                # combat -> gather -> scenario
+    new = re.findall(r'"(\d+) (\w+) (\w+) ([1-5]) (-?[\d.]+)"', g.command(f"data get storage {ATTRIBUTES} list") or "")
+    if new:
+        g.command(f"data remove storage {ATTRIBUTES} list")
+    sides = {x.player: x for x in [g, *(s.g for s in g.bots)]}
+    for player, name, field, op, q in new:
+        if (x := sides.get(int(player))) is None or field not in combat.Stats._fields:
+            continue
+        vars(x).setdefault("trigger_attributes", []).append([name, field, int(op), float(q)])
+        s = train.stats(x, name)
+        for uuid in [u["uuid"] for u in x.units if "uuid" in u and u["name"] == name] + \
+                [u for u, n in x.soldiers.items() if n == name]:
+            x.command(combat.stats_command(uuid, name, s, civs.taken(x, name), civs.friendly(x, name)))
+            if field == "range" and (cmd := combat.range_command(uuid, name, x.map.T, s=s)):
+                x.command(cmd)
 
 
 def bot_seats(players, people):
