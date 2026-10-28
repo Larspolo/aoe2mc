@@ -44,6 +44,7 @@ COUNTERS = (                                                           # the par
     "cart_heal",                                                       # trade.py
     "garrison_heal",                                                   # garrison.py
     "herd_food",
+    "hero_time",                                                       # regen.py: the heroes
     "military_time",                                                   # regen.py
     "regen_time",
     "repair_hp",                                                       # repair.py
