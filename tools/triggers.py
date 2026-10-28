@@ -44,6 +44,7 @@ MAP = {
     ("effect", "SEND_CHAT"): "`tellraw @a[team=pN] {\"text\": ...}`",
     ("effect", "DISPLAY_INSTRUCTIONS"): "`title @a actionbar` (short text) or `title @a subtitle`",
     ("effect", "CLEAR_INSTRUCTIONS"): "`title @a clear` (#2609)",
+    ("effect", "CLEAR_TIMER"): "`bossbar remove aoe2mc:timerN` and `schedule clear aoe2mc:timer/N` of the slot N (#2696)",
     ("effect", "CREATE_OBJECT"): "`summon` of the entity of `units.make_entity()` (units, timer triggers: #656); buildings: not supported yet",
     ("effect", "REMOVE_OBJECT"): "`kill @e[tag=aoe2mc.pN,type=..,x=..,y=..,z=..,dx=..,dy=..,dz=..]` (timer triggers: #656)",
     ("effect", "REPLACE_OBJECT"): "`tag` of the old units, `execute at` each one `run summon` of the new entity of the target player (`units.make_entity()`), then `kill` of the old units and their mounts (#2703); buildings: not supported yet",
