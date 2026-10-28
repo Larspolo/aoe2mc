@@ -6,6 +6,8 @@ whole context again. This tool reads all of it and prints one short section per 
 
     python3 tools/cycle_start.py                # at the start of a run and before each later ticket
     python3 tools/cycle_start.py --lane haiku   # the pick list of the Haiku lane
+    python3 tools/cycle_start.py --last N       # a later ticket of the run: within a priority, the tickets of the
+                                                # same epic or files as ticket N first
 
 Sections: `Status` (exit 3 when the status issue has `paused`: stop), `Usage` (keep the line for the report of step 8),
 `Stuck` (`claim.py 0 --stuck`), `Flow brake` (`usage.py --flow`), `PRs` (the open agent PRs that need work: red CI,
@@ -81,6 +83,22 @@ def pr_work(pr, open_issues, checks, beat, now, me=""):
     return f"{what}; no live claim: take it over (`overlap.md`), then `merge_main.py --push {ticket}` or fix at step 6.8"
 
 
+def related(issue, last):
+    """True when `issue` has the epic ("Part of #E") or a file or function name of `last`. A later ticket of a run on the
+    code that the run already read costs less: 3 trigger tickets in one run cost $1.69 each, 2026-10-28."""
+    epics = lambda i: set(re.findall(r"Part of #(\d+)", i.get("body") or ""))
+    return bool(epics(issue) & epics(last) or dashboard.names(issue.get("body")) & dashboard.names(last.get("body")))
+
+
+def prefer(picks, last, lane=None):
+    """The pick order with the tickets related to `last` first within each priority (and lane group). The sort is
+    stable: the order of `dashboard.candidates` stays inside each group."""
+    def group(i):
+        prio = next((k for k, p in enumerate(dashboard.PRIORITY) if p in dashboard.labels(i)), len(dashboard.PRIORITY))
+        return lane is None and any(n.startswith(dashboard.LANE) for n in dashboard.labels(i)), prio
+    return sorted(picks, key=lambda i: (group(i), not related(i, last)))
+
+
 def main_ci():
     """[(name, conclusion or status, short sha, start time)] of the last CI run on main and of the last night run."""
     out = []
@@ -102,6 +120,7 @@ def section(title, lines):
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--lane", help="the pick list of this lane (haiku, #1715)")
+    ap.add_argument("--last", type=int, help="the last ticket of this run: related tickets first")
     a = ap.parse_args(argv)
     now = datetime.datetime.now(datetime.timezone.utc)
     me = subprocess.run(["git", "branch", "--show-current"], capture_output=True, text=True).stdout.strip()
@@ -151,9 +170,12 @@ def main(argv=None):
     busy = dashboard.work(open_all, {n: [f["filename"] for f in dashboard.pages(f"pulls/{n}/files", 3)] for n in pr_numbers})
     hold = {n for n, (m, s) in held.items() if m < STALE and not s.startswith("Release")}
     picks = [i for i in dashboard.candidates(open_all, busy, lane=a.lane) if i["number"] not in hold]
+    last = dashboard.api(f"issues/{a.last}") if a.last else None
+    if last:
+        picks = prefer(picks, last, a.lane)
     section(f"Candidates ({len(picks)} ready, pick order)", [
         f"#{i['number']} {i['title']} ({dashboard.tag(i, 'P')}, {dashboard.tag(i, 'size:')}, overlap "
-        f"{len(dashboard.overlap(i, busy))})" for i in picks[:SHOW]])
+        f"{len(dashboard.overlap(i, busy))}{', related' if last and related(i, last) else ''})" for i in picks[:SHOW]])
     return 0
 
 
