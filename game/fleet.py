@@ -17,6 +17,7 @@ dock), and each arrival at home gives the gold of the AoE2 trade formula (trade.
 """
 import math
 
+import civs
 import gather
 import replay
 import table
@@ -331,16 +332,19 @@ def nearest(g, tile):
 
 def rate(g, fish):
     """Food per game second of an own fishing ship at fish: the AoE2 DE rate (gather.SHIP_WORK) with the dock
-    technologies of the player (gather.SHIP_TECHS, #1439)."""
+    technologies of the player (gather.SHIP_TECHS, #1439) and the bonus of its civilization in its age (civs.ship_work)."""
     import train                                                      # train imports this module
     return gather.SHIP_WORK["trap" if fish in g.map.traps else "shore" if fish in g.map.shore else "deep"] * \
-        math.prod(f ** train.count(g, t) for t, (f, _) in gather.SHIP_TECHS.items()) * gather.civs.turbo(g)
+        math.prod(f ** train.count(g, t) for t, (f, _) in gather.SHIP_TECHS.items()) * civs.ship_work(g) * \
+        gather.civs.turbo(g)
 
 
 def carry(g):
-    """Food of one trip of an own fishing ship: CARRY and the more food of the dock technologies (#1439)."""
+    """Food of one trip of an own fishing ship: CARRY, the more food of the dock technologies (#1439) and of the
+    civilization (the kind "ship" of civs.CARRY, not the villager bonus of all kinds)."""
     import train                                                      # train imports this module
-    n = CARRY + sum(c * train.count(g, t) for t, (_, c) in gather.SHIP_TECHS.items())
+    n = CARRY + sum(n for k, n in civs.CARRY.get(civs.civ(g), ()) if k == "ship") + \
+        sum(c * train.count(g, t) for t, (_, c) in gather.SHIP_TECHS.items())
     return n if gather.civs.turbo(g) == 1 else round(n * gather.civs.turbo(g))   # Turbo Mode (#2359)
 
 

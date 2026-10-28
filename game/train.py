@@ -299,6 +299,16 @@ def fire_commands(g, uuid, name, techs=None):
         out.append(f"aoe charge {uuid} {max(1, round(c['reload'] / gather.NORMAL * 20))} {c['attack']} {c['shots']} "
                    f"{blast} {bonus}" if kind == "charge" else f"aoe detonate {uuid} {c['attack']} {blast} {bonus}")
     return out
+
+
+def volley_command(g, uuid, name):
+    """The plugin command of the extra projectile in each shot of own unit name (the key "volley" of data/civs.jsonl:
+    the Armenian galley line and dromons, #2379), else None. Minecraft feature: one more Arrow entity; the plugin gives
+    it its AoE2 damage."""
+    attack = civs.value("volley", civs.civ(g), {}).get(name)
+    return None if attack is None else f"aoe volley {uuid} 1 {attack}"
+
+
 ORDERS = {r["name"] for r in UNIT_ROWS if r.get("orders")}         # not military, but they take move orders (summon)
 
 
@@ -700,6 +710,8 @@ def research(g, entry, start=False):
         g.repeats[entry["name"]] = g.repeats.get(entry["name"], 0) + 1
     before = set(g.techs)
     g.techs.add(entry["name"])
+    if start:                                                      # free: not in the score (score.py, #2355)
+        vars(g).setdefault("given", set()).add(entry["name"])
     if (more := gather.FARM_TECHS.get(entry["name"])):             # the new and the live own farms get more food
         more = round(more * civs.FARM_UPGRADES.get(civs.civ(g), 1))
         g.map.farm_food += more
@@ -726,6 +738,8 @@ def research(g, entry, start=False):
             g.soldiers[uuid] = new
             g.command(combat.stats_command(uuid, new, stats(g, new), civs.taken(g, new)))
             if cmd := combat.range_command(uuid, new, g.map.T, s=stats(g, new)):   # the range and blast of an onager
+                g.command(cmd)
+            if cmd := volley_command(g, uuid, new):               # a war galley of the Armenians (#2379)
                 g.command(cmd)
             g.command(combat.label_command(uuid, new))               # the name of a new unit (units.pretty)
     import trebuchet                                               # trebuchet imports this module: import it late
@@ -772,7 +786,7 @@ def research(g, entry, start=False):
         g.command(f"scoreboard players add {r.capitalize()} {g.board} {v}")
     if entry["name"] in civs.ECONOMY:                              # Wei: free villagers at an own town center (#2175)
         rects = [r for r, n in homes(g).items() if n == "TOWN_CENTER"]
-        for _ in range(civs.ECONOMY_VILLAGERS.get(civs.civ(g), 0) * bool(rects)):
+        for _ in range(civs.value("economy_villagers", civs.civ(g), 0) * bool(rects)):
             if spawn(g, rects[0], "VILLAGER_MALE"):
                 g.pop += 1
     g.command(f"tellraw {entry['player']} " + json.dumps({"text": f"{ITEMS[entry['name']][2]} is researched.",
@@ -795,8 +809,10 @@ def census(g):
     A dead villager leaves g.villagers, the selection and its farm: the idle count and the bot see only live ones (#1039)."""
     live = g.positions(list(g.villagers) + list(g.soldiers))
     import spoils                                                      # spoils imports this module
-    spoils.fallen(g, {u: "VILLAGER" if u in g.villagers else g.soldiers[u] for u in [*g.villagers, *g.soldiers]
-                      if u not in live})                               # Tupi (#2271)
+    import score                                                       # score imports this module
+    dead = {u: "VILLAGER" if u in g.villagers else g.soldiers[u] for u in [*g.villagers, *g.soldiers] if u not in live}
+    spoils.fallen(g, dead)                                             # Tupi (#2271)
+    score.fallen(g, dead)                                              # #2355
     spoils.kills(g)                                                    # Mapuche (#2271)
     for u in [u for u in g.villagers if u not in live]:
         del g.villagers[u]
@@ -899,6 +915,8 @@ def summon(g, name, pos, rotation=math.pi / 2, player=None):
     import combat, gather                                          # both import gather, gather imports this module
     g.command(combat.stats_command(uuid, name, stats(g, name), civs.taken(g, name)))
     if cmd := combat.range_command(uuid, name, g.map.T, s=stats(g, name)):   # an archer shoots from its range (#670)
+        g.command(cmd)
+    if cmd := volley_command(g, uuid, name):                       # an Armenian galley shoots twice (#2379)
         g.command(cmd)
     if cmd := combat.sight_command(uuid, name, g.map.T, s=stats(g, name)):   # it attacks enemies in sight (#775)
         g.command(cmd)

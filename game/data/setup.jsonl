@@ -9,3 +9,4 @@
 {"name": "imperial", "ages": 3}
 {"name": "post-imperial", "ages": 4, "skip": ["SPIES"], "note": "AoE2 wiki \"Post-Imperial Age\": all technologies, not Spies/Treason, Flemish Revolution, First Crusade (not in the game program)"}
 {"name": "turbo", "turbo": 2.5, "slow": ["BOMBARD_TOWER", "CASTLE", "FISHING_SHIP", "KEEP", "TRADE_CART", "TRADE_COG", "VILLAGER_MALE", "WATCH_TOWER", "WONDER"], "note": "AoE2 wiki \"Turbo Random Map\": buildings work, villagers and fishing ships gather, carry and villagers build 2.5 times faster; not the slow items (#2359)"}
+{"name": "regicide", "units": ["KING"], "note": "AoE2 wiki \"Regicide (game mode)\": each player starts with a King, a player whose Kings all died is defeated (#2347)"}

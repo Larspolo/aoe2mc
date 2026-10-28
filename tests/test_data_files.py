@@ -84,6 +84,11 @@ def only(row):
     assert cs and cs == sorted(set(cs)) and set(cs) < NAMES["civs.jsonl"], row["name"]
 
 
+def check_civ_keys(row):                                   # a key of civs.jsonl: what it does, its issue (#2281)
+    form(row, {"name": str, "text": str, "issue": int})
+    assert row["text"] and row["issue"] > 0, row["name"]
+
+
 def check_civs(row):
     form(row, {"name": str, "missing": list}, {"unique": str})
     for k, v in row.items():                               # a rule, not a list of keys: parallel tickets add keys (#2239)
@@ -156,9 +161,11 @@ def check_replay(row):                                     # a walk speed (a nam
 
 
 def check_setup(row):                                      # a value of a setting of the game setup (#2264)
-    form(row, {"name": str}, {"resources": dict, "ages": int, "skip": list, "note": str, "turbo": float, "slow": list})
-    assert len({"resources", "ages", "turbo"} & set(row)) == 1, row["name"]   # a resource level, start age (#2265), Turbo
-    assert set(row.get("slow", ())) <= NAMES["train.jsonl"] | NAMES["build.jsonl"], row["name"]   # (#2359)
+    form(row, {"name": str}, {"resources": dict, "ages": int, "skip": list, "note": str, "units": list,
+                              "turbo": float, "slow": list})
+    assert sum(k in row for k in ("resources", "ages", "units", "turbo")) == 1, row["name"]   # a resource level, a
+    assert set(row.get("units", ())) <= NAMES["units.jsonl"], row["name"]  # start age (#2265), a game mode (#2347)
+    assert set(row.get("slow", ())) <= NAMES["train.jsonl"] | NAMES["build.jsonl"], row["name"]   # or Turbo (#2359)
     assert set(row.get("resources", RES)) == {"food", "wood", "gold", "stone"}, row["name"]
     assert all(isinstance(v, int) and v >= 0 for v in row.get("resources", {}).values()), row["name"]
     assert row.get("ages", 0) in range(5) and set(row.get("skip", ())) <= NAMES["train.jsonl"], row["name"]
@@ -169,10 +176,20 @@ def check_taunts(row):                                     # a taunt: its number
     assert row["name"].isdigit() and row["name"] == str(int(row["name"])) and row["text"], row["name"]
 
 
-CHECKS = {"build.jsonl": check_build, "buildings.jsonl": check_buildings, "cheats.jsonl": check_cheats,
-          "civs.jsonl": check_civs, "gather.jsonl": check_gather, "monk.jsonl": check_monk,
-          "replay.jsonl": check_replay, "setup.jsonl": check_setup, "taunts.jsonl": check_taunts,
-          "train.jsonl": check_train, "units.jsonl": check_units}
+CHECKS = {                                                 # one file per line: parallel tickets add files (#2281)
+    "build.jsonl": check_build,
+    "buildings.jsonl": check_buildings,
+    "cheats.jsonl": check_cheats,
+    "civ_keys.jsonl": check_civ_keys,
+    "civs.jsonl": check_civs,
+    "gather.jsonl": check_gather,
+    "monk.jsonl": check_monk,
+    "replay.jsonl": check_replay,
+    "setup.jsonl": check_setup,
+    "taunts.jsonl": check_taunts,
+    "train.jsonl": check_train,
+    "units.jsonl": check_units,
+}
 
 
 # The keys with two types by design: an "effect" is data, a list of data (#2155) or the name of a function of
