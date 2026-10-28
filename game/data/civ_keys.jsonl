@@ -25,6 +25,7 @@
 {"name": "farm_upgrades", "text": "The factor of the food of the farm upgrades (Sicilians: +125 %). train.research.", "issue": 2230}
 {"name": "free_relic", "text": "The free relics of the first complete own building of a kind, {building: relics} (Armenians: one relic in the first Fortified Church). monk.free_relic puts them into it.", "issue": 2419}
 {"name": "garrison", "text": "The units inside a building, {building: units} (garrison.size).", "issue": 2117}
+{"name": "heal_aura", "text": "The own complete buildings that heal the allied units of a group near them, {building: {\"range\": tiles from the footprint, \"group\": GROUPS, \"rate\": hit points per AoE2 minute in each age}} (Muisca Settlements). regen.aura.", "issue": 2432}
 {"name": "heal_range", "text": "The factor of the heal range of the monks.", "issue": 2269}
 {"name": "herd_food", "text": "Herdable animals in a building make food (garrison.pasture), {building: [size, a, b]}: at most size animals in each, a × ln(F / b + 1) food per AoE2 minute for F food of the animals in all of them (Gurjara mills: 10, 15, 200, AoE2 DE wiki).", "issue": 2342}
 {"name": "housing", "text": "The population that a building supports in place of train.HOUSING, {building: population} (Chinese town centers 15, Inca houses 10). train.limit.", "issue": 2118}
@@ -36,6 +37,7 @@
 {"name": "loot", "text": "The part of the cost of a destroyed enemy building that the player gets (Danes). game/spoils.py.", "issue": 2271}
 {"name": "missing", "text": "The technologies and units that the civilization does not have (the availability chart of each civilization): the menu does not show them (train.unlocked). The items that few civilizations have name them in the key \"civs\" of their line in train.jsonl or build.jsonl (civs.ONLY, #2235), not here.", "issue": 1373}
 {"name": "more", "text": "Technologies whose effect change is multiplied, {technology: factor} (Varangians: Bloodlines and Caravan +50 %). train.stats, train.speed.", "issue": 2173}
+{"name": "nomad_unit", "text": "The unit that the first town center of a Nomad start spawns in front of it (Huns: a tamed Hunnic Horse, a Minecraft horse with Tame). Gather.town_center summons it.", "issue": 2466}
 {"name": "not_shared", "text": "The shared items of an ally that the civilization does not get (Turks: no Elite Skirmisher).", "issue": 1619}
 {"name": "per_minute", "text": "A resource for each AoE2 minute of work of a gather kind, {kind: [resource, amount]}: Thracian hunters and shepherds 3 gold while they gather from animals.", "issue": 2308}
 {"name": "pop_cap", "text": "The extra population limit from an age on, [age, extra] (Goths: +10 in the Imperial Age). train.max_pop adds it, also to the population setting of the game.", "issue": 2118}
@@ -56,6 +58,7 @@
 {"name": "tech_hp", "text": "[group of GROUPS, building, hit points]: the units of the group get the hit points for each technology of the menu of that building that the player has (the Aztec monks: +5 for each monastery technology).", "issue": 2269}
 {"name": "town_center", "text": "The resources that the first town center gives (Tupi +25 of each): in the start stock when the player has a town center at the start, else when its first town center is complete (build.rise).", "issue": 2293}
 {"name": "train_rate", "text": "The train rate of unit groups: [group of GROUPS, factor, also the upgrades] (Aztec military units, Khitan skirmishers ...). train.seconds divides by civs.train_rate().", "issue": 1927}
+{"name": "trains", "text": "More units that an own building trains, {building: {\"lines\": [unit line, ...], \"time\": the factor of the train time in each age}} (Mapuche Settlements: the spearman and skirmisher lines). train.trains, train.slots, train.seconds.", "issue": 2432}
 {"name": "transport", "text": "More units in a transport ship of the civilization (Saracens: +20). transport.size.", "issue": 2344}
 {"name": "trap_food", "text": "The factor of the food of a new own fish trap (Malay 3×). gather.Map sets it (Map.trap_food).", "issue": 2333}
 {"name": "twice", "text": "The technologies whose effect the civilization gets twice (train.stats).", "issue": 1561}

@@ -447,15 +447,18 @@ class Replay:
 
     def flare(self, e, name, color):
         """A flare of the record (#2402): the bell, the light column of the game program (flare.py) in the player color
-        at the block of its tile for flare.SECONDS of game time, and a chat line in the player color."""
+        at the block of its tile for flare.SECONDS of game time, and a chat line in the player color. On Paper
+        also a mark on the live minimap (#2405)."""
         import flare
         x, z = (min(self.n - 1, max(0, int(c * self.T))) for c in e["tile"])
         y = self.ground[z][x] if self.ground[z][x] is not None else next(
             (g for row in self.ground for g in row if g is not None), 64)    # water: the height of the land
         rgb = FIREWORK_COLORS.get(self.data["players"].get(str(e.get("player")), {}).get("color"), FIREWORK_COLORS["white"])
         self.flares.append((x, y, z, e["time"] + flare.SECONDS * 1000, rgb))    # the column in the player color (#2442)
+        ticks = max(1, round(flare.SECONDS * 20 / self.speed))          # the game time of the flare at the replay speed
         return [f"playsound {flare.SOUND} master @a {x} {y} {z} 1 1 1", flare.particles(x, y, z, "@a", rgb),
-                "tellraw @a " + json.dumps([text(f"<{name}> ", color), text("Flare", "gold")])]
+                "tellraw @a " + json.dumps([text(f"<{name}> ", color), text("Flare", "gold")])] + \
+            [f"aoe minimap flare {x} {z} p{e.get('player')} {ticks}"] * self.ai   # a blinking cross on the minimap (#2405)
 
     @functools.lru_cache(maxsize=None)
     def height(self, name, player):
