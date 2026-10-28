@@ -54,6 +54,7 @@ ORDERS = "aoe2mc:orders"                                               # the dat
 ATTRIBUTES = "aoe2mc:attributes"                                       # the storage of "Modify Attribute" (#2763)
 MENUS = "aoe2mc:menus"                                                 # the storage of "Enable/Disable" (#2775)
 COSTS = "aoe2mc:costs"                                                 # the storage of "Change Object Cost" (#2776)
+NAMES = "aoe2mc:names"                                                 # the storage of "Change Technology Name" (#2821)
 NEAR = 3                                                               # blocks: a patrol turns back this near its point
 LEVELS = {r["name"]: r["aoe2"] for r in table.load("difficulty.jsonl")}  # "AI difficulty" -> AoE2 DifficultyLevel
 
@@ -122,6 +123,7 @@ def tick(g):
     visible(g)
     attributes(g)
     costs(g)
+    names(g)
     messages = g.data.get("messages", {})
     text = re.sub(r"<[^<>]*>", "", messages.get("instructions", "")).strip()   # AoE2 color tags (book_pages)
     for who in sorted({x.who for x in [g, *(s.g for s in g.bots if not hasattr(s, "charged"))]}):
@@ -252,6 +254,22 @@ def costs(g):
         if int(player) in sides:
             vars(sides[int(player)]).setdefault("trigger_costs", {})[name] = \
                 {r: int(v) for r, v in (part.split("=") for part in cost.split())}
+
+
+def names(g):
+    """The new names of "Change Technology Name" (aoe2mc.tech_name_lines, #2821): read and empty the list of the data
+    storage NAMES, and keep each name in trigger_names of the side of its player (the people and the bots): the menus
+    of that player show it (train.show). A later line wins. Minecraft prints a text with a double quote in single
+    quotes."""
+    got = g.command(f"data get storage {NAMES} list") or ""
+    new = re.findall(r'"(\d+) (\w+) ((?:[^"\\]|\\.)*)"|\'(\d+) (\w+) ((?:[^\'\\]|\\.)*)\'', got)
+    if new:
+        g.command(f"data remove storage {NAMES} list")
+    sides = {x.player: x for x in [g, *(s.g for s in g.bots)]}
+    for found in new:
+        player, name, text = found[:3] if found[0] else found[3:]
+        if int(player) in sides:
+            vars(sides[int(player)]).setdefault("trigger_names", {})[name] = re.sub(r"\\(.)", r"\1", text)
 
 
 def attributes(g):
