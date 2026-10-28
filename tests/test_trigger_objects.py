@@ -30,7 +30,7 @@ def test_create_object_summons_the_unit_with_the_player_tag():
     stats = Counter()
     summon, = lines([effect(aoe2mc.CREATE_OBJECT, "MILITIA", tile=(3, 5))], stats)
     assert summon.startswith("summon minecraft:zombie 14.5 70 22.5 {")   # the middle of tile (3, 5), on the ground
-    assert 'Tags: ["aoe2mc.p1"]' in summon and "Pos" not in summon and stats == Counter(create=1)
+    assert 'Tags: ["aoe2mc.p1", "aoe2mc.t74"]' in summon and "Pos" not in summon and stats == Counter(create=1)
 
 
 def test_two_created_knights_have_no_fixed_uuid():
