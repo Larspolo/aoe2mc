@@ -41,7 +41,8 @@ def setup(g, mode="regicide", start=True):
     for x in gathers.values():
         start_stock(x, MODES[mode], level)
     g.kings = set()
-    for n in sorted(int(p) for p in g.players if int(p)):
+    lost = vars(g).get("defeated", set())                              # a loaded game: its King died before the save
+    for n in sorted(int(p) for p in g.players if int(p) and int(p) not in lost):
         for o in g.data["objects"]:
             if o["kind"] == "unit" and o["player"] == n and o["name"] in MODES[mode]["units"] and "uuid" in o:
                 g.command(f"tag {o['uuid']} add {KING}")
