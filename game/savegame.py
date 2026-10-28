@@ -253,7 +253,8 @@ def dump(g):
                                      **{f: pack(getattr(x, f)) for f in PACKED}, **orders(x),
                                      **{f: pack(vars(x)[f]) for f in KEPT if f in vars(x)},
                                      "map": {f: pack(getattr(x.map, f)) for f in MAP},
-                                     **({"explored": runs} if (runs := explored(x)) else {})}
+                                     **({"explored": runs} if (runs := explored(x)) else {}),
+                                     **({"known": sorted(map(list, k))} if (k := vars(x).get("fog", {}).get("known")) else {})}
                     for x in sides(g)}}
     for b in bots(g):
         d["players"][str(b.g.player)]["bot"] = {f: getattr(b, f) for f in BOT}
@@ -405,6 +406,8 @@ def load(g, d):
             fog = vars(x).setdefault("fog", {"hidden": set(), "at": None})
             fog.pop("map", None)
             fog["explored"] = {(tx, ty) for ty, x0, x1 in p["explored"] for tx in range(x0, x1 + 1)}
+        if "known" in p:                                               # the seen buildings: fog.know after the load (#3079)
+            vars(x).setdefault("fog", {"hidden": set(), "at": None}).update(known={tuple(k) for k in p["known"]})
         if "villagers" in p:                                           # a save from before #2258 has no orders
             give_orders(x, p)
         board_again(x)

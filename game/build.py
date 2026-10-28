@@ -529,18 +529,22 @@ def minimap_square(rect, player):
     return "aoe minimap building {} {} {} {} p{}".format(*rect, player)
 
 
-def minimap(g):
-    """The minimap commands of the buildings at the start of a game (#2582): the buildings of aoe2mc.json (not Gaia)
-    and the construction sites of each side (a loaded game), not the buildings that fell before the save (score.razed
-    of a side, #2981): the sites keep them."""
+def squares(g):
+    """{(x0, z0, x1, z1): player} of the building squares on the minimap: the buildings of aoe2mc.json (not Gaia) and
+    the construction sites of each side (a loaded game), not the buildings that fell (score.razed of a side, #2981):
+    the sites keep them."""
     import combat                                                      # combat -> gather -> build: import it late
-    sides = [g, *(b.g for b in g.bots)]
     rects = {tuple(o["footprint"]): o["player"] for o in g.data["objects"]
              if o["kind"] == "building" and o["player"] > 0 and "footprint" in o}
-    for x in sides:
+    for x in sides(g):
         rects.update({(f[0], f[2], f[1], f[3]): s["player"] for s in x.sites for f in [s["footprint"]]})
-    gone = {u for x in sides for u in vars(x).get("razed", {})}
-    return [minimap_square(r, p) for r, p in sorted(rects.items()) if combat.target_uuid(r) not in gone]
+    gone = {u for x in sides(g) for u in vars(x).get("razed", {})}
+    return {r: p for r, p in rects.items() if not gone or combat.target_uuid(r) not in gone}   # fog.remember: each tick
+
+
+def minimap(g):
+    """The minimap commands of the buildings at the start of a game (#2582, squares)."""
+    return [minimap_square(r, p) for r, p in sorted(squares(g).items())]
 
 
 def clear(g, cells):

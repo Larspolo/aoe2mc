@@ -16,7 +16,7 @@ def commands(tmp_path, monkeypatch, kind):
     (tmp_path / "aoe2mc.json").write_text('{"players": [], "tile_size": 4}')
 
     class FakeGather:
-        bots, villagers, units, ended, speed, sites, data = (), [], [], None, 1.0, [], {"objects": []}
+        bots, villagers, units, ended, speed, sites, data, peers = (), [], [], None, 1.0, [], {"objects": []}, ()
 
         def __init__(self, *a, **k):
             pass
