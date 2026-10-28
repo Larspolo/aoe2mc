@@ -5,7 +5,8 @@ ref exists, so the ref `claim/N` decides who owns ticket N. The claim commit has
 a second push of another claim commit is never a fast-forward. Later claims of the same ticket use
 `claim/N-2`, `claim/N-3` ...: the ref with the highest number owns the ticket.
 
-    python3 tools/claim.py N              # claim ticket N; exit 0: yours, exit 1: another run owns it
+    python3 tools/claim.py N              # claim ticket N; exit 0: yours (it adds `in-progress` and "Started by"),
+                                          # exit 1: it names the run that was first
     python3 tools/claim.py N --release    # give your claim back (needs-human, blocked, hand-off)
     python3 tools/claim.py N --takeover   # take the ticket from a dead run (stale or released claim, #502)
     python3 tools/claim.py N --show       # print the claim refs and the owner
@@ -96,6 +97,34 @@ def changed(ref, remote="origin"):
     """Commit time (Unix seconds) of the tip of a remote ref: the claim, the last beat or the release."""
     git("fetch", "-q", remote, f"refs/heads/{ref}")
     return int(git("log", "-1", "--format=%ct", "FETCH_HEAD").stdout.strip())
+
+
+def owner(subject_line):
+    """The branch of a claim, beat or release line ("Claim #N by <branch> (...)"), in backticks."""
+    words = subject_line.split(" ")
+    return f"`{words[3]}`" if len(words) > 3 else "another run"
+
+
+def first(number, remote="origin"):
+    """The run that holds ticket `number` and its last sign of life: the text of a lost claim."""
+    found = refs(number, remote)
+    if not found:
+        return "another run"
+    ref = slot(number, max(found))
+    line = subject(ref, remote)
+    return f"{owner(line)} (its last {line.split(' ')[0].lower()} {(time.time() - changed(ref, remote)) / 60:.0f} min ago)"
+
+
+def start(number):
+    """Add `in-progress` and the comment "Started by `<branch>`." after a won claim. A run that commented by hand
+    without the claim worked on one ticket with another run (#288, #1749), so only the claim writes them."""
+    from dashboard import FOOTER, api as call
+    try:
+        call(f"issues/{number}/labels", "POST", {"labels": ["in-progress"]})
+        call(f"issues/{number}/comments", "POST", {"body": f"Started by `{who()}`.{FOOTER}"})
+        print(f"added in-progress and \"Started by `{who()}`.\" to #{number}")
+    except Exception as e:                              # the claim ref is the lock: the ticket is yours anyway
+        print(f"the claim is yours, but the label or the comment failed ({e}): add them by hand")
 
 
 def stale(subject_line, last, now, limit=STALE):
@@ -225,8 +254,10 @@ def release(number, remote="origin", word="Release"):
     if not found:
         return None
     ref = slot(number, max(found))
-    if subject(ref, remote).split(" ")[3:4] != [who()]:      # "Claim #N by <branch> (...)", "Beat #N by <branch>"
-        sys.exit(f"{ref} belongs to another run: {subject(ref, remote)}")
+    line = subject(ref, remote)
+    if line.split(" ")[3:4] != [who()]:                      # "Claim #N by <branch> (...)", "Beat #N by <branch>"
+        sys.exit(f"{ref} belongs to another run: {owner(line)} took #{number} over ({line}). Stop the work on #{number}"
+                 f" now: no push, no comment, no release; pick the next ticket.")
     sha = git("commit-tree", EMPTY_TREE, "-p", "FETCH_HEAD", "-m", f"{word} #{number} by {who()}{lane()}").stdout.strip()
     return ref if push(sha, ref, remote) else None
 
@@ -463,19 +494,22 @@ def main(argv=None):
     if not a.takeover and on_github(a.remote):
         other = started_by_other(api(f"issues/{a.number}/comments?per_page=100"), who(), time.time())
         if other:
-            print(f"owned by another run: {other} commented \"Started by\" less than 30 minutes ago")
+            print(f"owned by another run: `{other}` was first (\"Started by\" less than 30 minutes ago). Pick the next"
+                  " candidate, do not comment.")
             return 1
         pulls = api("pulls?state=open&per_page=100")
         pr = active_pr(pulls, a.number, who(), time.time())
         if pr:
-            print(f"owned by another run: its PR #{pr} closes #{a.number} and changed less than 30 minutes ago")
+            print(f"owned by another run: its PR #{pr} closes #{a.number} and changed less than 30 minutes ago. Pick the"
+                  " next candidate, do not comment.")
             return 1
     ref = claim(a.number, a.takeover, a.remote, stale_limit(a.number, a.remote) if a.takeover else STALE)
     if ref:
         print(f"claimed {ref}")
+        if on_github(a.remote) and not a.takeover:
+            start(a.number)
         return 0
-    found = refs(a.number, a.remote)
-    print(f"owned by another run: {subject(slot(a.number, max(found)), a.remote) if found else '?'}")
+    print(f"owned by another run: {first(a.number, a.remote)} was first. Pick the next candidate, do not comment.")
     return 1
 
 
