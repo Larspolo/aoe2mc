@@ -73,6 +73,7 @@ import relic_victory  # noqa: E402
 import repair  # noqa: E402
 import score  # noqa: E402
 import siege_tower  # noqa: E402
+import sudden_death  # noqa: E402
 import stance  # noqa: E402
 import table  # noqa: E402
 import trade  # noqa: E402
@@ -1809,6 +1810,8 @@ class Gather:
             conquest.tick(self)                                        # not in step(): the bot steps its own Gather
             if self.mode == "regicide":                                # a player without its King loses (#2347)
                 regicide.tick(self)
+            elif self.mode == "sudden-death":                          # a player without its town center loses (#2407)
+                sudden_death.tick(self)
             fog.tick(self)                                             # after the bots: their units too (#1389)
             herd.tick(self)                                            # all players: the bots capture too (#1792)
             if self.victory == "standard":                             # a wonder or all relics win too (#2316)
