@@ -409,7 +409,7 @@ def read_scenario(path):
                                                    "area": [c.area_x1, c.area_y1, c.area_x2, c.area_y2],
                                                    "object": c.object_list, "group": c.object_group,
                                                    "class": c.object_type}
-                                                  if c.condition_type == IN_AREA else {}))
+                                                  if c.condition_type in COUNTED else {}))
                                           for c in t.conditions],
                               effects=[dict(type=e.effect_type, message=e.message or "", player=e.source_player,
                                             time=e.display_time, object=kinds.get(e.object_list_unit_id),
@@ -2687,6 +2687,8 @@ def team_lines(objects, players):
 
 
 TIMER, SEND_CHAT, DISPLAY_INSTRUCTIONS, IN_AREA = 10, 3, 20, 5   # AoE2 condition and effect IDs (AoE2ScenarioParser)
+OWN_OBJECTS, OWN_FEWER_OBJECTS = 3, 4                              # conditions on the units of a player (#2573)
+COUNTED = (IN_AREA, OWN_OBJECTS, OWN_FEWER_OBJECTS)                # conditions that count units: the tick function
 CREATE_OBJECT, REMOVE_OBJECT, CHANGE_OWNERSHIP, CHANGE_COLOR_MOOD = 11, 15, 18, 72
 
 
@@ -2779,8 +2781,10 @@ def mood_lines(e):
 
 
 def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=True):
-    """(load lines, files) for the triggers that only have timer conditions (#648) or only "Objects in Area"
-    conditions (#649): one function per trigger. The load function schedules a timer trigger at the AoE2 time (all
+    """(load lines, files) for the triggers that only have timer conditions (#648) or only "Objects in Area",
+    "Own Objects" and "Own Fewer Objects" conditions (#649, #2573): one function per trigger. "Own Objects" counts the
+    units of the player on the whole map (Q or more), "Own Fewer Objects" Q or fewer; buildings are blocks with no
+    entity, so they do not count. The load function schedules a timer trigger at the AoE2 time (all
     timers must pass: the largest). The tick function runs an area trigger when units of its player are in all its
     areas; the score #N of aoe_trig marks a fired trigger, so it fires once. A looping area trigger fires again after
     the units leave an area. "Send Chat" is a tellraw, "Display Instructions" a subtitle for its display time;
@@ -2792,7 +2796,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
     for t in triggers:
         conds = t["conditions"]
         kinds = {(c["type"], c["inverted"]) for c in conds}
-        if not t["enabled"] or not conds or kinds not in ({(TIMER, False)}, {(IN_AREA, False)}) or \
+        if not t["enabled"] or not conds or not (kinds == {(TIMER, False)} or kinds <= {(k, False) for k in COUNTED}) or \
                 any(c.get("group", -1) >= 0 or c.get("class", -1) >= 0 for c in conds):   # unit classes: not yet
             continue
         lines = []
@@ -2818,11 +2822,17 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
         if not lines:
             continue
         fn, n = f"aoe2mc:trigger/{t['id']}", t["id"]
-        if conds[0]["type"] == IN_AREA:
+        if conds[0]["type"] in COUNTED:
             tests, unless = [], []
             for i, c in enumerate(conds):
-                sel, q = area_selector(c, T), max(c["quantity"], 1)
-                if q == 1:
+                whole = c["type"] != IN_AREA                           # Own (Fewer) Objects: the whole map
+                sel = area_selector(dict(c, area=[-1] * 4) if whole else c, T)
+                q = max(c["quantity"], 0 if c["type"] == OWN_FEWER_OBJECTS else 1)
+                if c["type"] == OWN_FEWER_OBJECTS:                     # count the units: q or fewer
+                    tick.append(f"execute store result score #{n}.{i} aoe_trig if entity {sel}")
+                    tests.append(f"if score #{n}.{i} aoe_trig matches ..{q}")
+                    unless.append(f"unless score #{n}.{i} aoe_trig matches ..{q}")
+                elif q == 1:
                     tests.append(f"if entity {sel}")
                     unless.append(f"unless entity {sel}")
                 else:                                                  # count the units: q or more
