@@ -52,7 +52,7 @@ def test_the_upgrade_changes_the_live_and_the_new_units():
     assert " 20:book:Elite Fire Lancer:750 food · 400 gold · 50 s · research " in menus(server)[-1] + " "
     research(g, BARRACKS, "ELITE_FIRE_LANCER_UPGRADE")
     assert g.soldiers["fl"] == "ELITE_FIRE_LANCER"
-    assert combat.stats_command("fl", "ELITE_FIRE_LANCER") in server.log
+    assert combat.stats_command("fl", "ELITE_FIRE_LANCER", train.stats(g, "ELITE_FIRE_LANCER")) in server.log   # Jurchens: #2116
     train.open_menu(g, "Steve", BARRACKS)
     menu = menus(server)[-1] + " "
     assert " 19:pillager_spawn_egg:Elite Fire Lancer:45 wood · 45 gold · 25 s · queue 0/15 " in menu

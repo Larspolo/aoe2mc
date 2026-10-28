@@ -13,6 +13,8 @@ Usage:
     python3 game/run.py WORLD --play --log F.jsonl  # also write a timed event log (tools/measure_gather.py reads it)
     python3 game/run.py WORLD --play --reveal all  # no fog of war: also the enemy units out of sight show (game/fog.py)
     python3 game/run.py WORLD --play --speed 2     # twice the AoE2 Normal speed: /tick rate 40 and shorter steps (#2057)
+    python3 game/run.py WORLD --play --resources high  # the AoE2 setting "Starting resources" (#2264)
+    python3 game/run.py WORLD --play --load SAVE   # go on with a saved game: Ctrl-C of --play saves into saves/ (#2255)
     python3 game/run.py WORLD --replay [--speed 4] [--follow N] [--view N]  # replay the recorded game of the world (game/replay.py), then wait for Ctrl-C
 
 Join with Minecraft (multiplayer, localhost): players play in creative mode and get operator rights.
@@ -284,13 +286,15 @@ def bot_seat(players, people):
 
 
 def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attack="10:00", reveal="normal", people=1,
-         speed=1.0):
+         speed=1.0, state=None, resources="standard"):
+    """state: the saved state of the players (savegame.dump) for a loaded game (#2255).
+    resources: the AoE2 setting "Starting resources" of each player and bot (gather.LEVELS, #2264)."""
     import gather
 
     def make(player):
         who = "@a" if people == 1 else f"@a[team=p{player}]"
         for _ in range(60):                          # entities load in other threads
-            g = gather.Gather(game, data, player=player, log=log, cheats=cheats)
+            g = gather.Gather(game, data, player=player, log=log, cheats=cheats, resources=resources)
             g.who = who
             g.setup()
             if len(g.villagers) == len(g.units):
@@ -317,7 +321,8 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
         import replay
         player, foe = bot_seat(data["players"], people)
         g.bots = [*g.bots, bots.Bot(game, data, player=player, share=g, log=log, foe=foe,
-                                    attack=replay.aoe2mc.game_time(bot_attack) / 1000).setup()]
+                                    attack=replay.aoe2mc.game_time(bot_attack) / 1000,
+                                    resources=resources).setup()]
         print(f"A bot plays player {player}: {len(g.bots[-1].g.villagers)} villagers gather, its soldiers attack "
               f"player {foe} at {bot_attack}.", file=sys.stderr)
     import combat
@@ -329,6 +334,10 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
           f"{len(g.villagers)} villagers of player 1. Hold the carrot on a stick: right click a villager to select it,\n"
           "then right click a tree, a fruit bush or a mine. To build: /trigger aoe_build set N (the menu is in the chat),\n"
           "then right click the ground. Right click your town center to train a villager (50 food). Ctrl-C stops.", file=sys.stderr)
+    game.g = g                                       # main saves its state on Ctrl-C (#2255)
+    if state:
+        import savegame
+        savegame.load(g, state)
     if speed != 1:                                   # Minecraft makes the mobs, paths and plugin faster (#2057)
         game.command(f"tick rate {TICKS * speed:g}")
         g.speed = speed
@@ -451,10 +460,20 @@ def main(argv=None):
                     "from this game time (default 10:00)")
     ap.add_argument("--reveal", choices=["normal", "all"], default="normal", help="--play: AoE2 \"Reveal map\" "
                     "(default normal: enemy units out of sight are hidden; all: all units show)")
+    ap.add_argument("--resources", choices=["standard", "low", "medium", "high", "ultra"], default="standard",
+                    help="--play: the AoE2 setting \"Starting resources\" of each player (default standard; ultra: "
+                    "the Death Match resources)")
     ap.add_argument("--log", metavar="FILE", help="--play: write one JSON line per villager event (time, state, load)")
+    ap.add_argument("--load", metavar="SAVE", help="--play: go on with a saved game (a folder of saves/: the end of "
+                    "--play with Ctrl-C saves the world and the resources, technologies and ages there)")
     a = ap.parse_args(argv)
     if not os.path.isfile(os.path.join(a.world, "level.dat")):
         sys.exit(f"no level.dat in {a.world}")
+    import savegame
+    state = None
+    if a.load:                                       # the saved world replaces the world (the player files stay)
+        state = savegame.read(a.load)
+        restore(os.path.join(a.load, "world"), a.world)
     if hasattr(signal, "SIGBREAK"):                  # Windows: the window (gui.stop_game) sends Ctrl-Break (#1775)
         signal.signal(signal.SIGBREAK, signal.default_int_handler)
     game = Game(a.world, a.version, server=a.server)
@@ -472,7 +491,7 @@ def main(argv=None):
         if a.play:
             with open(a.log, "w") if a.log else contextlib.nullcontext() as log:
                 g = play(game, a.world, log, a.cheats, a.bot, bot_attack=a.bot_attack, reveal=a.reveal,
-                         people=a.people, speed=a.speed)
+                         people=a.people, speed=a.speed, state=state, resources=a.resources)
             if not getattr(g, "ended", None):
                 return
             print(f"The game ended ({g.ended}). The server stays up: type commands, Ctrl-C stops it.",
@@ -483,7 +502,12 @@ def main(argv=None):
         pass
     finally:
         print("Stopping the server ...", file=sys.stderr)
-        game.stop()
+        state = savegame.dump(game.g) if getattr(game, "g", None) else None
+        game.stop()                                  # the server writes the world when it stops
+        if state:
+            saves = os.path.join(os.path.dirname(os.path.abspath(a.world)), "saves")
+            print(f"Saved the game: python3 game/run.py {a.world} --play --load "
+                  f"{savegame.write(saves, a.world, state)}", file=sys.stderr)
 
 
 if __name__ == "__main__":
