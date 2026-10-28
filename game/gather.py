@@ -1327,6 +1327,8 @@ class Gather:
         """Free the footprints of the buildings whose target the plugin removed: paths go through them."""
         for uuid in [u for u in self.sieged if "passed" not in self.command(f"execute if entity {u}")]:
             self.sieged.discard(uuid)
+            import spoils                                              # spoils imports this module
+            spoils.loot(self, uuid)                                    # Danes (#2271)
             x0, y0, z0, x1, _, z1 = self.forts.pop(uuid)
             for o in build.sides(self):                                # the other sides attack it no more (#1819)
                 o.forts.pop(uuid, None)
