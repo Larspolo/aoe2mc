@@ -513,7 +513,7 @@ def read_scenario(path):
                                                 "resource": e.tribute_list}
                                                if e.effect_type == MODIFY_RESOURCE_BY_VARIABLE else {}),
                                             **({"technology": techs.get(e.technology, str(e.technology))}   # #2577
-                                               if e.effect_type == RESEARCH_TECHNOLOGY else {}),
+                                               if e.effect_type in (CHANGE_TECHNOLOGY_NAME, RESEARCH_TECHNOLOGY) else {}),
                                             **({"unit": e.time_unit, "timer": e.timer}   # "Display Timer" (#2572)
                                                if e.effect_type == DISPLAY_TIMER else {}),
                                             **({"timer": e.timer} if e.effect_type == CLEAR_TIMER else {}),   # (#2696)
@@ -2858,6 +2858,7 @@ CHANGE_OBJECT_STANCE = 36                                          # "Change Obj
 CHANGE_OWNERSHIP = 18
 CHANGE_PLAYER_COLOR = 89                                           # "Change Player Color" (#2712)
 CHANGE_PLAYER_NAME = 45                                            # "Change Player Name" (#2711)
+CHANGE_TECHNOLOGY_NAME = 65                                        # "Change Technology Name" (#2821)
 CHANGE_VARIABLE = 56                                               # the scenario variables (#2611)
 CHANGE_VIEW = 16                                                   # "Change View" (#2610)
 CLEAR_INSTRUCTIONS = 21                                            # "Clear Instructions" (#2609)
@@ -3200,6 +3201,21 @@ def name_lines(e, c):
     stats["change object name"] += 1
     return [f"execute as {found[0]} run data modify entity @s CustomName.text set value "   # one entity
             f"{json.dumps(msg, ensure_ascii=False)}"]
+
+
+def tech_name_lines(e, c):
+    """The command of "Change Technology Name" (#2821): the new name (with no AoE2 color tags) of the technology of the
+    player goes into the list of the data storage aoe2mc:names as one text "<player> <technology> <name>". A converted
+    world has no menus: the scenario mode of the game program (game/scenario.py names) shows it in the menus. A name
+    of the game files only (string_id, no message): not supported."""
+    msg = re.sub(r"<[^<>]*>", "", e["message"]).replace("\r", "").replace("\n", " ").strip()
+    tech = e.get("technology", "")
+    if e["player"] <= 0 or not msg or not re.fullmatch(r"[A-Z0-9_]+", tech):
+        c.stats["change technology name (not supported)"] += 1
+        return []
+    c.stats["change technology name"] += 1
+    text = f"{e['player']} {tech} {msg}".replace("\\", "\\\\").replace('"', '\\"')
+    return [f'data modify storage aoe2mc:names list append value "{text}"']
 
 
 def player_name_lines(e, c):
@@ -3702,6 +3718,7 @@ EFFECTS = {
     CHANGE_OWNERSHIP: owner_lines,
     CHANGE_PLAYER_COLOR: color_lines,
     CHANGE_PLAYER_NAME: player_name_lines,
+    CHANGE_TECHNOLOGY_NAME: tech_name_lines,
     CHANGE_VARIABLE: variable_lines,
     CHANGE_VIEW: view_lines,
     CLEAR_INSTRUCTIONS: clear_lines,
