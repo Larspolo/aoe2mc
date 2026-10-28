@@ -88,6 +88,7 @@
 {"name": "HEAVY_HEI_GUANG_CAVALRY", "age": 3}
 {"name": "HEAVY_MOUNTED_CROSSBOWMAN", "age": 3}
 {"name": "HEI_GUANG_CAVALRY", "age": 2}
+{"name": "HOUFNICE", "age": 3, "needs": "CHEMISTRY"}
 {"name": "HULK", "age": 1}
 {"name": "HUSSAR", "age": 3}
 {"name": "IMPERIAL_AGE", "age": 2, "age_tech": 3}

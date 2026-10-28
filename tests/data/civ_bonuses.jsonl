@@ -58,7 +58,7 @@
 {"name": "CUMANS: Siege Workshop and Battering Ram available in Feudal Age; Capped Ram upgrade available in Castle Age.", "civ": "CUMANS", "bonus": "Siege Workshop and Battering Ram available in Feudal Age; Capped Ram upgrade available in Castle Age.", "later": "play:ages"}
 {"name": "CUMANS: Mounted units move 5%/10%/15% faster in the Feudal/Castle/Imperial Age.", "civ": "CUMANS", "bonus": "Mounted units move 5%/10%/15% faster in the Feudal/Castle/Imperial Age.", "in": "UNITS"}
 {"name": "DANES: Villagers and Fishing Ships drop off food +5%.", "civ": "DANES", "bonus": "Villagers and Fishing Ships drop off food +5%.", "in": "DROP"}
-{"name": "DANES: Units and buildings loot 25% of target's cost when destroying enemy buildings (except walls and gates).", "civ": "DANES", "bonus": "Units and buildings loot 25% of target's cost when destroying enemy buildings (except walls and gates).", "later": "play:fight"}
+{"name": "DANES: Units and buildings loot 25% of target's cost when destroying enemy buildings (except walls and gates).", "civ": "DANES", "bonus": "Units and buildings loot 25% of target's cost when destroying enemy buildings (except walls and gates).", "in": "LOOT"}
 {"name": "DANES: Barracks and Siege Workshop technologies cost gold -66%.", "civ": "DANES", "bonus": "Barracks and Siege Workshop technologies cost gold -66%.", "in": "COSTS"}
 {"name": "DANES: Varangian Guards and Longships move 10% faster.", "civ": "DANES", "bonus": "Varangian Guards and Longships move 10% faster.", "in": "UNITS"}
 {"name": "DRAVIDIANS: Receive wood 200 when advancing to the next Age.", "civ": "DRAVIDIANS", "bonus": "Receive wood 200 when advancing to the next Age.", "in": "AGE_GIFTS"}
@@ -144,7 +144,7 @@
 {"name": "MAPUCHE: Foragers drop off food +25%.", "civ": "MAPUCHE", "bonus": "Foragers drop off food +25%.", "in": "DROP"}
 {"name": "MAPUCHE: Settlements can train the Spearman and Skirmisher lines in 2.15×/1.61×/same time as regular production buildings in the Feudal/Castle/Imperial Ages, respectively.", "civ": "MAPUCHE", "bonus": "Settlements can train the Spearman and Skirmisher lines in 2.15×/1.61×/same time as regular production buildings in the Feudal/Castle/Imperial Ages, respectively.", "later": "play:military-train"}
 {"name": "MAPUCHE: Infantry, Slingers, and Skirmishers get +5/10/15 hit points in the Feudal/Castle/Imperial Age.", "civ": "MAPUCHE", "bonus": "Infantry, Slingers, and Skirmishers get +5/10/15 hit points in the Feudal/Castle/Imperial Age.", "in": "UNITS"}
-{"name": "MAPUCHE: Mounted units generate gold +3 per military unit killed.", "civ": "MAPUCHE", "bonus": "Mounted units generate gold +3 per military unit killed.", "later": "play:fight"}
+{"name": "MAPUCHE: Mounted units generate gold +3 per military unit killed.", "civ": "MAPUCHE", "bonus": "Mounted units generate gold +3 per military unit killed.", "in": "KILL_GOLD"}
 {"name": "MAPUCHE: Enemy Castles are revealed on the map.", "civ": "MAPUCHE", "bonus": "Enemy Castles are revealed on the map.", "later": "play:fog"}
 {"name": "MAYANS: Start the game with an Eagle Scout.", "civ": "MAYANS", "bonus": "Start the game with an Eagle Scout.", "later": "play:setup"}
 {"name": "MAYANS: Start the game with +1 Villager, but with food -50.", "civ": "MAYANS", "bonus": "Start the game with +1 Villager, but with food -50.", "in": "START"}
@@ -223,7 +223,7 @@
 {"name": "THRACIANS: Shepherds and hunters generate gold 3 per minute while gathering from animals (excluding Foxes).", "civ": "THRACIANS", "bonus": "Shepherds and hunters generate gold 3 per minute while gathering from animals (excluding Foxes).", "later": "play:gather"}
 {"name": "TUPI: Start with +25 of each resource once the first Town Center is built.", "civ": "TUPI", "bonus": "Start with +25 of each resource once the first Town Center is built.", "later": "play:setup"}
 {"name": "TUPI: Villagers can garrison in Settlements (max 5).", "civ": "TUPI", "bonus": "Villagers can garrison in Settlements (max 5).", "later": "play:garrison"}
-{"name": "TUPI: Fallen units, except ships and siege weapons, return 15% of their cost.", "civ": "TUPI", "bonus": "Fallen units, except ships and siege weapons, return 15% of their cost.", "later": "play:fight"}
+{"name": "TUPI: Fallen units, except ships and siege weapons, return 15% of their cost.", "civ": "TUPI", "bonus": "Fallen units, except ships and siege weapons, return 15% of their cost.", "in": "FALLEN"}
 {"name": "TUPI: Archery Range and Barracks technologies cost food -50%.", "civ": "TUPI", "bonus": "Archery Range and Barracks technologies cost food -50%.", "in": "COSTS"}
 {"name": "TURKS: Gunpowder units have +25% hit points.", "civ": "TURKS", "bonus": "Gunpowder units have +25% hit points.", "in": "UNITS"}
 {"name": "TURKS: Chemistry is free.", "civ": "TURKS", "bonus": "Chemistry is free.", "in": "COSTS"}
