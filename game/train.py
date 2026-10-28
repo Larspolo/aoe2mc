@@ -61,6 +61,7 @@ the new and the complete own watch towers get the AoE2 hit points, attack and ar
 It researches Shipwright in the Imperial Age (#1490, SHIPWRIGHT): the ships of the dock cost 20 % less wood (price())
 and train 54 % faster (tick()); the technologies of the dock do not change.
 """
+import functools
 import json
 import math
 import os
@@ -205,9 +206,13 @@ def effect(e):
     """The function (name, s) -> s of the key "effect" of a technology of data/train.jsonl (#2029): the name of a
     function of this module (an effect with real logic), or {"if": [tests], "add": {field: n}, "times": {field: f},
     "bonus": {class: n}}. The unit gets the change when one of the tests holds (test(); no "if": each unit). {}: no
-    change of the combat values, the effect is in another place (its "note")."""
+    change of the combat values, the effect is in another place (its "note"). A list: each change in turn (an age gives
+    the eagle scout and the Flemish Militia other values, #2155)."""
     if isinstance(e, str):
         return globals()[e]
+    if isinstance(e, list):
+        changes = [effect(x) for x in e]
+        return lambda name, s: functools.reduce(lambda s, f: f(name, s), changes, s)
     if not e:
         return lambda name, s: s
 
@@ -227,7 +232,8 @@ TECHS = {r["name"]: effect(r["effect"]) for r in ROWS if "effect" in r}   # a te
 # (#1415, #1416): the key "walk" of data/train.jsonl
 SPEEDS = {r["name"]: tuple(r["walk"]) for r in ROWS if "walk" in r}
 SHIPWRIGHT = (0.8, 1.54)                                           # Shipwright: ships cost 80 % wood, train 54 % faster
-FASTER = {"EAGLE_SCOUT": (2, 35)}                                  # unit: the age and its train time from it (#1555)
+FASTER = {r["name"]: tuple(r["faster"]) for r in ROWS if "faster" in r}   # unit: the age and its train time from it
+#                                                                    (#1555), the key "faster" of data/train.jsonl (#2155)
 CONSCRIPT = (tuple(r["name"] for r in BUILDING_ROWS if r.get("conscription")),   # Conscription: these buildings
              next(r["factor"] for r in ROWS if r["name"] == "CONSCRIPTION"))      # train faster (#1455)
 ARROWSLITS = {r["name"]: r["arrowslits"] for r in BUILDING_ROWS if "arrowslits" in r}   # the attack of each tower (#1504)
