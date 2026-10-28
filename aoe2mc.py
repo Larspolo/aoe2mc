@@ -2711,6 +2711,7 @@ CREATE_OBJECT, KILL_OBJECT, REMOVE_OBJECT, CHANGE_OWNERSHIP, CHANGE_COLOR_MOOD =
 DAMAGE_OBJECT = 24                                                     # "Damage Object" (#2571)
 TELEPORT_OBJECT = 35
 FREEZE_OBJECT = 22                                                     # "Freeze Object" (#2608)
+CLEAR_INSTRUCTIONS = 21                                                # "Clear Instructions" (#2609)
 
 
 def turn_area(area, size, k):
@@ -2908,6 +2909,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
     "Damage Object": damage_lines (#2571). "Display Timer": timer_lines (#2572).
     "Teleport Object": teleport_lines (#2569).
     "Freeze Object": freeze_lines (#2608).
+    "Clear Instructions": title @a clear (#2609).
     A disabled trigger does not run."""
     load, files, tick = [], {}, []
     stats = Counter() if stats is None else stats
@@ -2942,6 +2944,9 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
                 continue
             if e["type"] == FREEZE_OBJECT:
                 lines += freeze_lines(e, T)
+                continue
+            if e["type"] == CLEAR_INSTRUCTIONS:                            # no message
+                lines.append("title @a clear")
                 continue
             msg = re.sub(r"<[^<>]*>", "", e["message"]).replace("\r", "").strip()   # AoE2 color tags
             if not msg:
