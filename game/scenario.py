@@ -131,8 +131,9 @@ def orders(g):
     the tag. A new patrol with the same tag (a looping trigger) replaces the old one. A "Change Object Stance" order
     (aoe2mc.stance_lines, #2705) sets the stance of the tagged units and removes the tag. A "Stop Object" order
     (aoe2mc.stop_lines, #2754) stops the tagged units (`aoe stop`), ends their patrols as a new order of a person does
-    (gather.Gather.end_patrols, #2674) and removes the tag."""
-    new = re.findall(r'"(patrol|attack_move|stance|stop) (aoe_order[\w.]+) ?(-?\d+(?: -?\d+)*)?"',
+    (gather.Gather.end_patrols, #2674) and removes the tag. A "Change Object Range" order (aoe2mc.range_lines, #2767)
+    gives each tagged ranged unit its new range (ranges) and removes the tag."""
+    new = re.findall(r'"(patrol|attack_move|range|stance|stop) (aoe_order[\w.]+) ?(-?\d+(?: -?\d+)*)?"',
                      g.command(f"data get storage {ORDERS} list") or "")
     if new:
         g.command(f"data remove storage {ORDERS} list")
@@ -142,6 +143,10 @@ def orders(g):
         if order == "stance":                                          # "Change Object Stance" (#2705)
             import combat                                              # combat -> gather -> scenario
             g.command(f"aoe stance {sel} {combat.STANCES[p[0]]}")
+            g.command(f"tag {sel} remove {tag}")
+            continue
+        if order == "range":                                           # "Change Object Range" (#2767)
+            ranges(g, tag, *p)
             g.command(f"tag {sel} remove {tag}")
             continue
         if order == "stop":                                            # "Stop Object" (#2754)
@@ -165,6 +170,23 @@ def orders(g):
             g.command(f"aoe moveto @e[tag={tag}] {' '.join(map(str, points[q[2] % 2]))}")
         elif "passed" not in g.command(f"execute if entity @e[tag={tag}]"):
             patrols.remove(q)
+
+
+def ranges(g, tag, operation, quantity):
+    """Send the new range of each ranged unit with the tag (`aoe range`): the AoE2 operation (1 set, 2 add, 3 subtract,
+    4 multiply, 5 divide) on its range in tiles, not below 0. The own units have the values with the technologies of
+    the player (train.stats). A melee unit keeps its range: Minecraft gives it no shot."""
+    import combat                                                  # combat -> gather -> scenario
+    own = {u["uuid"]: u["name"] for u in g.units if "uuid" in u} | dict(g.soldiers)
+    every = {o["uuid"]: o["name"] for o in g.data.get("objects", []) if o["kind"] == "unit" and "uuid" in o} | own
+    for uuid, name in sorted(every.items()):
+        s = train.stats(g, name) if uuid in own else combat.stats(name)
+        if s.range <= 0 or "passed" not in g.command(f"execute as {uuid} if entity @s[tag={tag}]"):
+            continue
+        r = s.range
+        new = [quantity, r + quantity, r - quantity, r * quantity, r / quantity if quantity else r][operation - 1]
+        if cmd := combat.range_command(uuid, name, g.map.T, s=s._replace(range=max(0, new))):
+            g.command(cmd)
 
 
 def bot_seats(players, people):
