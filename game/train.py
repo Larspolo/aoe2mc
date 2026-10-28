@@ -98,6 +98,13 @@ TRAINS["DONJON"] = ("SPEARMAN",)                                  # trains() add
 TRAINS["FOLWARK"] = TRAINS["MILL"]                                 # the mill of the Poles (#1874)
 TRAINS["KREPOST"] = ("PETARD",)                                     # trains() adds the Konnik (#1872); wiki: the petard (#2192)
 TRAINS["FORTIFIED_CHURCH"] = TRAINS["MONASTERY"]                  # the monastery of the Armenians, Georgians (#1930)
+# A building with the menus of other buildings: the key "menus" of data/buildings.jsonl (the mule cart: the lumber and
+# mining camp, #2208). The items of each later menu move right of the slots of the earlier ones (SHIFTS, slots()).
+MENUS = {r["name"]: r["menus"] for r in BUILDING_ROWS if "menus" in r}
+TRAINS |= {b: sum((TRAINS[m] for m in ms), ()) for b, ms in MENUS.items()}
+SLOTS = {r["name"]: r["slot"] for r in ROWS}
+SHIFTS = {b: {n: sum(1 + max(SLOTS[x] for x in TRAINS[p]) for p in ms[:i]) for i, m in enumerate(ms) for n in TRAINS[m]}
+          for b, ms in MENUS.items()}
 # The unique unit of each civilization (AoE2 DE, "unique" in data/civs.jsonl, #1914), trained at its castle. A unit
 # without COSTS is not in the menu yet: it has no AoE2 combat values in combat.STATS.
 UNIQUE = civs.UNIQUE
@@ -347,6 +354,12 @@ def lines(t, g=None):
     return tuple(p for p in out if g is None or not hasattr(g, "data") or not civs.missing(g, p[1]))
 
 
+def slots(building, name):
+    """(slot, item, label) of name in the menu of building: ITEMS, with the slot shift of SHIFTS."""
+    slot, item, label = ITEMS[name]
+    return slot + SHIFTS.get(building, {}).get(name, 0), item, label
+
+
 def trains(g, building):
     """The units and technologies of the own building: a castle trains the unique unit of the player's civilization,
     a Krepost the Konnik, a Donjon the Serjeant."""
@@ -396,7 +409,7 @@ def show(g, player, rect):
     items = [(slot, build.LOCKED if build.locked(g, name) else item, label,
               (" · ".join(f"{v} {r}" for r, v in price(g, name).items()) or "free") + f" · {round(seconds(g, name, building), 1):g} s · "
               + state(name))
-             for name in trains(g, building) if repeatable(g, name) and unlocked(g, name) for slot, item, label in [ITEMS[name]]]
+             for name in trains(g, building) if repeatable(g, name) and unlocked(g, name) for slot, item, label in [slots(building, name)]]
     items += [RALLY] if units_of(building) else []
     items += [garrison.ungarrison(building)] if getattr(g, "garrisons", {}).get(rect) else []   # only with units inside (#808)
     if building == "MARKET":                                           # the buy and sell rows under the queue (#1286)
@@ -479,7 +492,7 @@ def order(g, player, rect, slot, shift=False):
         show(g, player, rect)
         return 0
     name = next((n for n in trains(g, homes(g)[rect])                # the shown item of the slot (one per line of upgrades)
-                 if ITEMS[n][0] == slot and repeatable(g, n) and unlocked(g, n)), None)
+                 if slots(homes(g)[rect], n)[0] == slot and repeatable(g, n) and unlocked(g, n)), None)
     n = 0
     while name and n < (SHIFT if shift else 1) and queue(g, player, rect[::2], name):
         n += 1
