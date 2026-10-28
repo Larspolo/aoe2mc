@@ -86,6 +86,8 @@
 {"name": "ELITE_BALLISTA_ELEPHANT", "hp": 280, "attack": 10, "melee": 0, "pierce": 3, "range": 5, "reload": 2.5, "bonus": {"building": 8}, "classes": ["cavalry", "elephant", "siege", "unique", "heavysiege"]}
 {"name": "ELITE_BERSERK", "hp": 62, "attack": 14, "melee": 2, "pierce": 1, "range": 0, "reload": 2.0, "bonus": {"building": 3}, "classes": ["infantry", "unique"], "sight": 7}
 {"name": "ELITE_BOLAS_RIDER", "hp": 65, "attack": 6, "melee": 0, "pierce": 2, "range": 5, "reload": 2.0, "bonus": {"camel": 3, "cavalry": 3, "ram": 2}, "classes": ["archer", "cavalry", "unique"], "sight": 7, "note": "the wiki infobox (#2135)"}
+{"name": "IBIRAPEMA_WARRIOR", "hp": 80, "attack": 8, "melee": 2, "pierce": 1, "range": 0, "reload": 2.0, "bonus": {"standard": 1}, "classes": ["infantry", "unique"], "sight": 5, "note": "the wiki infobox (#2158); no class shock infantry and no frontal area attack here"}
+{"name": "ELITE_IBIRAPEMA_WARRIOR", "hp": 90, "attack": 11, "melee": 2, "pierce": 1, "range": 0, "reload": 2.0, "bonus": {"standard": 2}, "classes": ["infantry", "unique"], "sight": 5, "note": "the wiki infobox (#2158); no class shock infantry and no frontal area attack here"}
 {"name": "ELITE_BOYAR", "hp": 130, "attack": 14, "melee": 8, "pierce": 3, "range": 0, "reload": 1.9, "bonus": {}, "classes": ["cavalry", "unique"], "sight": 5}
 {"name": "ELITE_CAMEL_ARCHER", "hp": 60, "attack": 8, "melee": 1, "pierce": 1, "range": 4, "reload": 2.0, "bonus": {}, "classes": ["archer", "camel", "unique"], "sight": 5}
 {"name": "ELITE_CATAPHRACT", "hp": 150, "attack": 12, "melee": 2, "pierce": 1, "range": 0, "reload": 1.7, "bonus": {"infantry": 18}, "classes": ["cavalry", "unique"], "sight": 5}
@@ -216,3 +218,4 @@
 {"name": "CHAMPI_WARRIOR", "hp": 55, "attack": 9, "melee": 0, "pierce": 3, "range": 0, "reload": 2.0, "bonus": {"siege": 3, "standard": 2}, "classes": ["infantry"], "sight": 6}
 {"name": "ELITE_CHAMPI_WARRIOR", "hp": 65, "attack": 11, "melee": 0, "pierce": 4, "range": 0, "reload": 2.0, "bonus": {"siege": 3, "standard": 3}, "classes": ["infantry"], "sight": 6}
 {"name": "SAVAR", "hp": 145, "attack": 14, "melee": 3, "pierce": 4, "range": 0, "reload": 1.8, "bonus": {"archer": 2}, "classes": ["cavalry"], "sight": 5, "note": "the wiki infobox \"Savar\" (#2014): base +2 vs. archers"}
+{"name": "JIAN_SWORDSMAN", "hp": 70, "attack": 8, "melee": 0, "pierce": 5, "range": 0, "reload": 2.0, "bonus": {"archer": 4, "building": 2}, "classes": ["infantry", "unique"], "sight": 4, "note": "the wiki infobox (#2134): the shielded form, base values (sight 4 without Tracking)"}

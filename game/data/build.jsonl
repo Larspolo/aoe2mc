@@ -33,6 +33,7 @@
 {"name": "BATTERING_RAM", "age": 2}
 {"name": "BATTLE_ELEPHANT", "age": 2}
 {"name": "BOLAS_RIDER", "age": 2}
+{"name": "IBIRAPEMA_WARRIOR", "age": 2}
 {"name": "BOMBARD_CANNON", "age": 3, "needs": "CHEMISTRY"}
 {"name": "CAMEL_RIDER", "age": 2}
 {"name": "CANNON_GALLEON", "age": 3, "needs": "CHEMISTRY"}
@@ -53,6 +54,7 @@
 {"name": "ELEPHANT_ARCHER", "age": 2}
 {"name": "ELITE_BATTLE_ELEPHANT", "age": 3}
 {"name": "ELITE_BOLAS_RIDER", "age": 3}
+{"name": "ELITE_IBIRAPEMA_WARRIOR", "age": 3}
 {"name": "ELITE_CANNON_GALLEON", "age": 3}
 {"name": "ELITE_CARAVEL", "age": 3}
 {"name": "ELITE_EAGLE_WARRIOR", "age": 3}
@@ -132,3 +134,4 @@
 {"name": "IMPERIAL_CAMEL_RIDER", "age": 3}
 {"name": "SAVAR", "age": 3}
 {"name": "LEGIONARY", "age": 3}
+{"name": "JIAN_SWORDSMAN", "age": 2}
