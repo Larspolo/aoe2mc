@@ -469,6 +469,8 @@ def read_scenario(path):
                                             **({"object2": kinds.get(e.object_list_unit_id_2),   # (#2764)
                                                 "selected": list(e.selected_object_ids or [])}
                                                if e.effect_type == CREATE_GARRISONED_OBJECT else {}),
+                                            **({"selected": list(e.selected_object_ids or [])}   # (#2762)
+                                               if e.effect_type in (LOCK_GATE, UNLOCK_GATE) else {}),
                                             **({"target": e.target_player, "diplomacy": e.diplomacy}   # (#2645)
                                                if e.effect_type == CHANGE_DIPLOMACY else {}),
                                             **({"target": e.target_player, "quantity": e.quantity,   # (#2576)
@@ -2823,6 +2825,7 @@ FREEZE_OBJECT = 22                                                 # "Freeze Obj
 HEAL_OBJECT = 34                                                   # "Heal Object" (#2692)
 IN_AREA = 5
 KILL_OBJECT = 14
+LOCK_GATE = 7                                                      # "Lock Gate", "Unlock Gate" (#2762)
 MODIFY_RESOURCE = 52                                               # "Modify Resource" (#2576)
 OBJECT_HP = 23                                                     # "Object HP", the hit points of one object (#2701)
 OR = 29
@@ -2843,6 +2846,7 @@ ACTIVATE_TRIGGER, DEACTIVATE_TRIGGER = 8, 9
 TIMER = 10
 TRIBUTE = 5                                                        # "Tribute" (#2576)
 TRIGGER_CHANCE = 20                                                # the condition "Chance" (#2574)
+UNLOCK_GATE = 6
 UNITS_GARRISONED = 18                                              # the condition "Units Garrisoned" (#2714)
 VARIABLE_VALUE = 22
 TIME_UNITS = {0: 5, 1: 60, 2: 1, 3: 1}  # TimeUnit (years, minutes, seconds, m:ss) -> game seconds; a year as game/wonder.py YEAR
@@ -3305,6 +3309,15 @@ def stop_lines(e, c):
     return tag_lines(e, c.T, tag) + [f'data modify storage aoe2mc:orders list append value "stop {tag}"']
 
 
+def gate_lines(e, c):
+    """The commands of "Lock Gate" and "Unlock Gate" (#2762): the order "lock <ref>" or "unlock <ref>" of each selected
+    gate goes into the storage aoe2mc:orders. game/scenario.py orders puts the portcullis on the gate and locks it with
+    the Paper plugin (`aoe gate lock`): vanilla has no gate that knows its player."""
+    order = "lock" if e["type"] == LOCK_GATE else "unlock"
+    return [f'data modify storage aoe2mc:orders list append value "{order} {ref}"' for ref in e.get("selected", ())
+            if ref >= 0]
+
+
 def view_lines(e, c):
     """The commands of "Change View" (#2610): in Minecraft the player is the camera, so a tp of the players of the
     team pN (team_lines) to the middle of the tile, on the ground. Player -1 or 0: all players."""
@@ -3468,6 +3481,7 @@ EFFECTS = {
     FREEZE_OBJECT: freeze_lines,
     HEAL_OBJECT: heal_lines,
     KILL_OBJECT: object_lines,
+    LOCK_GATE: gate_lines,
     MODIFY_RESOURCE: resource_lines,
     PATROL: order_lines,
     PLAY_SOUND: sound_lines,
@@ -3479,6 +3493,7 @@ EFFECTS = {
     TASK_OBJECT: task_lines,
     TELEPORT_OBJECT: teleport_lines,
     TRIBUTE: resource_lines,
+    UNLOCK_GATE: gate_lines,
 }
 # The context of the effects of trigger t: a handler can add function files (files) and load lines (setup, the keys)
 Effect = namedtuple("Effect", "t T ground players stats mood files setup switch timed", defaults=((), {}))
