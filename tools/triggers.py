@@ -41,7 +41,7 @@ MAP = {
     ("condition", "COMPARE_VARIABLES"): "`execute if score #vA aoe_var <op> #vB aoe_var` in the tick function, once; `unless` for not equal and inverted (#2698)",
     ("condition", "VARIABLE_VALUE"): "`execute if score #vN aoe_var matches ..` in the tick function, once (#2611)",
     ("condition", "AND"): "the default between two conditions: all conditions of one group in one `execute if ... if ...` line (#2765)",
-    ("condition", "OR"): "one `execute if ... run function` line per group in the tick function, with the same fire score `#N aoe_trig`: the trigger runs once (not yet with a timer or a chance, #2765)",
+    ("condition", "OR"): "one `execute if ... run function` line per group in the tick function, with the same fire score `#N aoe_trig`: the trigger runs once (#2765); a timer of a group: a `schedule` sets `#N.t<group> aoe_trig`, the line of the group tests it (#2791); not yet with a chance or in a disabled trigger",
     ("condition", "CHANCE"): "`execute store result score ... run random value 1..100` once per second (alone, after the timers or with the ticked conditions: #2574)",
     ("condition", "PLAYER_DEFEATED"): "`if score #pN aoe_lost matches 1..` in the tick function: the scenario mode of the game program sets the score when it defeats player N (conquest, regicide, #2710)",
     ("condition", "ACCUMULATE_ATTRIBUTE"): "`execute if score Gold aoe_resN matches Q..`: the resource scores of the game program (#2655)",
