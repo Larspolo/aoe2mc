@@ -15,7 +15,9 @@ epics have no goal left that an agent can do.
 
 1. List the epics: `gh api "repos/OWNER/NAME/issues?labels=epic&state=all&per_page=100"` (`repo` in `agent.toml`). A feature has an
    epic when an epic body names its key ("Roadmap: `<key>`") or the roadmap line names an epic number. A `muted` epic
-   counts too: do not make a second epic for its feature, and do not give it sub-issues.
+   counts too: do not make a second epic for its feature, and do not give it sub-issues. A plain ticket that names the
+   key (an owner request, `play:farm-reseed` in #3283) does not count: grep the open and the closed issues of the last day
+   for the key and the topic, and make tickets only for the parts that it leaves out (#3422, #3423).
 2. Pick the goal: the goal whose newest epic is the oldest (the lowest issue number of the newest epics of the
    three goals; a goal without an epic first). Tie: the order of the file. Goal 4 (the agent system) takes no turn:
    its epics come from the `improve` skill and the owner.

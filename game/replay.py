@@ -283,6 +283,49 @@ def live(make, speed=1.0, start=0, restart=None, **kw):
         restart()
 
 
+def formation_cells(free, group, target, kind="Line", T=4):
+    """The end cell {key: (x, z)} of each unit of a group that walks to the block point target (#410): rows across the
+    walk direction, the first row on the target and the others behind it, FORMATION blocks apart (AoE2 line formation).
+    A slot snaps to the next free cell (free(x, z)), one unit per cell. group: (key, x, z, rank, weak) of each unit. The
+    units of the lowest rank take the front rows (gather.rank, the AoE2 unit order, #3414), then the units nearest to the
+    target, and in a row they keep their order from left to right, so that the paths do not cross. Staggered doubles
+    the gaps, Flank splits each row into two halves 4 slots apart, Box puts the weak units inside a square of the others
+    (the formations of AoE2, #2553)."""
+    n, S = len(group), FORMATION * (2 if kind == "Staggered" else 1)
+    tx, tz = target
+    cx, cz = (sum(u[k] for u in group) / n for k in (1, 2))
+    d = math.hypot(tx - cx, tz - cz)
+    dx, dz = ((tx - cx) / d, (tz - cz) / d) if d > 0.5 else (0.0, -1.0)    # walk direction (else north)
+    cols = min(n, max(1, math.ceil(math.sqrt(n)) if kind == "Box" else round(math.sqrt(2 * n))))
+    rows = -(-n // cols)
+    r = max(2 * T, math.ceil(max(cols, rows) * S) + 4 * S * (kind == "Flank"))
+    x0, z0 = int(tx), int(tz)
+    todo = {(x, z) for x in range(x0 - r, x0 + r + 1) for z in range(z0 - r, z0 + r + 1) if free(x, z)}
+    group = sorted(group, key=lambda u: (u[3], (tx - u[1]) * dx + (tz - u[2]) * dz))
+    slots = []                                                      # (key, row, offset across the walk)
+    if kind == "Box":
+        cells = [(q, j) for q in range(rows) for j in range(cols)][:n]
+        inner = [c for c in cells if 0 < c[0] < rows - 1 and 0 < c[1] < cols - 1]
+        outer = [c for c in cells if c not in inner]
+        weak = [u for u in group if u[4]]
+        order = weak + [u for u in group if not u[4]]
+        cells = inner[:len(weak)] + outer + inner[len(weak):]
+        slots = [(u[0], q, (j - (cols - 1) / 2) * S) for u, (q, j) in zip(order, cells)]
+    else:
+        for q in range(rows):
+            row = sorted(group[q * cols:q * cols + cols], key=lambda u: u[1] * -dz + u[2] * dx)
+            for j, u in enumerate(row):
+                gap = (2 * S if j >= len(row) / 2 else -2 * S) if kind == "Flank" and len(row) > 1 else 0
+                slots.append((u[0], q, (j - (len(row) - 1) / 2) * S + gap))
+    out = {}
+    for key, q, off in slots:
+        px, pz = tx - dx * q * S - dz * off, tz - dz * q * S + dx * off
+        if todo:
+            out[key] = c = min(todo, key=lambda c: ((c[0] - px) ** 2 + (c[1] - pz) ** 2, c))
+            todo.discard(c)
+    return out
+
+
 class Replay:
     """The timeline of aoe2mc.json `data` on a server (game.command sends one command)."""
 
@@ -1475,49 +1518,15 @@ class Replay:
         return tuple(a + f * (b - a) for a, b in zip(start, v.pos))
 
     def formation(self, group, tile):
-        """The end cell of each unit of a group that walks to a tile (#410): rows across the walk direction, the
-        first row on the target and the others behind it, FORMATION blocks apart (AoE2 line formation). A slot
-        snaps to the next free cell, one unit per cell. The units nearest to the target take the first row, and
-        in a row they keep their order from left to right, so that the paths do not cross. The formation of the
-        record (#2553): Staggered doubles the gaps, Flank splits each row into two halves 4 slots apart, Box puts
-        the ranged and civilian units inside a square of the others."""
+        """The end cell of each unit of a group that walks to a tile (#410), in the formation of the record (#2553):
+        formation_cells. The ranged and civilian units are the weak ones inside a Box."""
         import combat                                                   # combat -> gather -> build -> replay
-        m, n, S = self.map, len(group), FORMATION
         ids = {v: i for i, v in self.units.items()}
         kind = collections.Counter(self.formations.get(ids.get(v), "Line") for v in group).most_common(1)[0][0]
-        S *= 2 if kind == "Staggered" else 1
-        tx, tz = tile[0] * self.T, tile[1] * self.T
-        cx, cz = (sum(v.pos[k] for v in group) / n for k in (0, 2))
-        d = math.hypot(tx - cx, tz - cz)
-        dx, dz = ((tx - cx) / d, (tz - cz) / d) if d > 0.5 else (0.0, -1.0)    # walk direction (else north)
-        cols = min(n, max(1, math.ceil(math.sqrt(n)) if kind == "Box" else round(math.sqrt(2 * n))))
-        rows = -(-n // cols)
-        r = max(2 * self.T, math.ceil(max(cols, rows) * S) + 4 * S * (kind == "Flank"))
-        x0, z0 = int(tx), int(tz)
-        todo = {(x, z) for x in range(x0 - r, x0 + r + 1) for z in range(z0 - r, z0 + r + 1) if m.free(x, z)}
-        group = sorted(group, key=lambda v: (tx - v.pos[0]) * dx + (tz - v.pos[2]) * dz)
-        slots = []                                                      # (unit, row, offset across the walk)
-        if kind == "Box":
-            cells = [(q, j) for q in range(rows) for j in range(cols)][:n]
-            inner = [c for c in cells if 0 < c[0] < rows - 1 and 0 < c[1] < cols - 1]
-            outer = [c for c in cells if c not in inner]
-            weak = [v for v in group if combat.stats(v.name).range > 0 or not self.gather.military(v.name)]
-            order = weak + [v for v in group if v not in weak]
-            cells = inner[:len(weak)] + outer + inner[len(weak):]
-            slots = [(v, q, (j - (cols - 1) / 2) * S) for v, (q, j) in zip(order, cells)]
-        else:
-            for q in range(rows):
-                row = sorted(group[q * cols:q * cols + cols], key=lambda v: v.pos[0] * -dz + v.pos[2] * dx)
-                for j, v in enumerate(row):
-                    gap = (2 * S if j >= len(row) / 2 else -2 * S) if kind == "Flank" and len(row) > 1 else 0
-                    slots.append((v, q, (j - (len(row) - 1) / 2) * S + gap))
-        out = {}
-        for v, q, off in slots:
-            px, pz = tx - dx * q * S - dz * off, tz - dz * q * S + dx * off
-            if todo:
-                out[v] = c = min(todo, key=lambda c: ((c[0] - px) ** 2 + (c[1] - pz) ** 2, c))
-                todo.discard(c)
-        return out
+        weak = (lambda v: combat.stats(v.name).range > 0 or not self.gather.military(v.name)) if kind == "Box" \
+            else (lambda v: False)
+        return formation_cells(self.map.free, [(v, v.pos[0], v.pos[2], 0, weak(v)) for v in group],
+                               (tile[0] * self.T, tile[1] * self.T), kind, self.T)
 
     def next_step(self, v, t):
         """The game time (ms) at which unit v reaches the next cell of its path when it leaves at t, or None."""
