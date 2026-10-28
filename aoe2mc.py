@@ -419,6 +419,9 @@ def read_scenario(path):
                                                **({"quantity": c.quantity, "player": c.source_player,   # (#2655)
                                                    "attribute": c.attribute}
                                                   if c.condition_type == ACCUMULATE_ATTRIBUTE else {}),
+                                               **({"quantity": c.quantity, "ref": c.unit_object,   # (#2701)
+                                                   "comparison": c.comparison}
+                                                  if c.condition_type == OBJECT_HP else {}),
                                                **({"player": c.source_player,                 # (#2656)
                                                    "technology": techs.get(c.technology, str(c.technology))}
                                                   if c.condition_type == RESEARCHED else {}))
@@ -2786,6 +2789,7 @@ FREEZE_OBJECT = 22                                                 # "Freeze Obj
 IN_AREA = 5
 KILL_OBJECT = 14
 MODIFY_RESOURCE = 52                                               # "Modify Resource" (#2576)
+OBJECT_HP = 23                                                     # "Object HP", the hit points of one object (#2701)
 OWN_FEWER_OBJECTS = 4                                              # conditions on the units of a player (#2573)
 OWN_OBJECTS = 3
 PATROL = 19                                                        # "Patrol" (#2647)
@@ -2803,7 +2807,7 @@ TRIGGER_CHANCE = 20                                                # the conditi
 VARIABLE_VALUE = 22
 TIME_UNITS = {0: 5, 1: 60, 2: 1, 3: 1}  # TimeUnit (years, minutes, seconds, m:ss) -> game seconds; a year as game/wonder.py YEAR
 COUNTED = (IN_AREA, OWN_OBJECTS, OWN_FEWER_OBJECTS)                # conditions that count units: the tick function
-TICKED = COUNTED + (ACCUMULATE_ATTRIBUTE, DIFFICULTY_LEVEL, RESEARCHED, VARIABLE_VALUE)  # conditions of the tick function
+TICKED = COUNTED + (ACCUMULATE_ATTRIBUTE, DIFFICULTY_LEVEL, OBJECT_HP, RESEARCHED, VARIABLE_VALUE)  # conditions of the tick function
 ATTRIBUTES = ("Food", "Wood", "Stone", "Gold")     # attributes 0-3: the score holders of gather.RESOURCES (#2655)
 STORES = ("food", "wood", "stone", "gold")      # the resource of a tribute_list (AoE2 attributes 0 to 3)
 OPERATIONS = {1: "set", 2: "add", 3: "remove"}  # set, add, subtract of Modify Resource (AoE2ScenarioParser Operation)
@@ -3308,6 +3312,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
                 any(c["type"] == VARIABLE_VALUE and (c.get("variable", -1) < 0 or variable_range(c) is None)
                     or c["type"] == RESEARCHED and (c.get("player", -1) <= 0 or not c.get("technology"))
                     or c["type"] == ACCUMULATE_ATTRIBUTE and resource_score(c) is None
+                    or c["type"] == OBJECT_HP and (c.get("ref", -1) < 0 or variable_range(c) is None)
                     for c in conds):                                   # unit classes: not yet
             continue
         ctx = Effect(t, T, ground, players, stats, mood, files, setup)
@@ -3321,6 +3326,14 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
                 test = SCORE_TESTS[c["type"]](c)
                 tests.append(f"if {test}")
                 unless.append(f"unless {test}")
+                continue
+            if c["type"] == OBJECT_HP:                                 # the Health of the object (tag aoe2mc.r<ref>): none when dead
+                tag = f"aoe2mc.r{c['ref']}"
+                counts += [f"scoreboard players reset #{n}.{i} aoe_trig",
+                           f"execute if entity @e[tag={tag},limit=1] store result score #{n}.{i} aoe_trig "
+                           f"run data get entity @e[tag={tag},limit=1] Health"]
+                tests.append(f"if score #{n}.{i} aoe_trig matches {variable_range(c)}")
+                unless.append(f"unless score #{n}.{i} aoe_trig matches {variable_range(c)}")
                 continue
             if c["type"] not in COUNTED:                               # a timer or the chance
                 continue
