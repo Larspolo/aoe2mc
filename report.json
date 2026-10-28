@@ -1,0 +1,64 @@
+{
+ "castle_high": {
+  "stock": {
+   "food": 1000,
+   "gold": 700,
+   "stone": 800,
+   "wood": 1000
+  },
+  "ages": 2,
+  "age_techs": [
+   "FEUDAL_AGE",
+   "CASTLE_AGE"
+  ],
+  "pop_limit": 15,
+  "tc_menu": [
+   "FEUDAL_AGE",
+   "CASTLE_AGE",
+   "IMPERIAL_AGE"
+  ],
+  "level": {
+   "food": 1000,
+   "wood": 1000,
+   "gold": 700,
+   "stone": 800
+  },
+  "queue IMPERIAL_AGE": false,
+  "queue CASTLE_AGE": false,
+  "stock after queue": {
+   "food": 1000,
+   "gold": 700,
+   "stone": 800,
+   "wood": 1000
+  }
+ },
+ "dark_standard": {
+  "stock": {
+   "food": 200,
+   "gold": 100,
+   "stone": 200,
+   "wood": 200
+  },
+  "ages": 0,
+  "age_techs": [],
+  "pop_limit": 15,
+  "tc_menu": [
+   "FEUDAL_AGE",
+   "CASTLE_AGE",
+   "IMPERIAL_AGE"
+  ],
+  "level": {
+   "food": 200,
+   "wood": 200,
+   "gold": 100,
+   "stone": 200
+  },
+  "queue FEUDAL_AGE": false,
+  "stock after queue": {
+   "food": 200,
+   "gold": 100,
+   "stone": 200,
+   "wood": 200
+  }
+ }
+}
