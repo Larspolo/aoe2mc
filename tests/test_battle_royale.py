@@ -18,8 +18,9 @@ import run  # noqa: E402
 
 def fake(map_size=24, T=4):
     log = []
-    return types.SimpleNamespace(data={"map_size": map_size}, map=types.SimpleNamespace(T=T, n=map_size * T),
-                                 ended=None, command=lambda c: log.append(c) or "", log=log)
+    return types.SimpleNamespace(data={"map_size": map_size, "objects": []}, map=types.SimpleNamespace(T=T, n=map_size * T),
+                                 ended=None, command=lambda c: log.append(c) or "", log=log, sieged=set(), forts={},
+                                 villagers={}, units=[], enemies={}, stock={}, board="aoe_res")
 
 
 def boxes(cmds):
@@ -34,6 +35,7 @@ def boxes(cmds):
 
 def test_setup_puts_the_border_on_the_map_square():
     g = battle_royale.setup(fake())
+    g.log[:] = [c for c in g.log if not c.startswith("scoreboard")]   # no stone (#2686)
     assert g.log[:3] == ["worldborder center 48.0 48.0", "worldborder damage buffer 0", "worldborder set 96.0"]
     assert "30:00" in g.log[3]
 
