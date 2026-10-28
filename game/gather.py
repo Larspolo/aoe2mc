@@ -78,6 +78,7 @@ import trade  # noqa: E402
 import transport  # noqa: E402
 import train  # noqa: E402
 import trebuchet  # noqa: E402
+import treaty  # noqa: E402
 import wonder  # noqa: E402
 
 RESOURCES = ("Wood", "Food", "Gold", "Stone")
@@ -1162,6 +1163,8 @@ class Gather:
             train.rally(self, rect, cell, self.map.pick_tree(eye, d))
             return
         kind, u, _ = self.target(eye, d, self.positions(sorted(self.pickable()))) or (None, None, None)
+        if kind in ("enemy", "fort") and treaty.refuse(self, name):   # no attack before the end of the treaty (#2297)
+            return
         if kind == "enemy":
             monk.convert_order(self, self.monks(), u)                    # the monks convert it, the others attack (#1245)
             self.attack(u)
@@ -1805,4 +1808,5 @@ class Gather:
             if self.victory == "standard":                             # a wonder or all relics win too (#2316)
                 wonder.tick(self, self.tick * NORMAL)                  # game seconds, as train.tick
                 relic_victory.tick(self, self.tick * NORMAL)
+            treaty.tick(self, self.tick * NORMAL)
             time.sleep(max(0.0, self.tick / self.speed - (time.time() - t)))   # a step stays tick game seconds

@@ -54,5 +54,5 @@ def test_tatar_herdables_have_50_percent_more_food():
 
 
 def test_a_civilization_with_no_bonus_lasts_as_in_aoe2():
-    g = type("G", (), {"data": {"players": {"1": {"civ": "GOTHS"}}}, "player": 1})()
-    assert "GOTHS" not in civs.LAST and civs.last(g, "wood") == 1
+    g = type("G", (), {"data": {"players": {"1": {"civ": "FRANKS"}}}, "player": 1})()
+    assert "FRANKS" not in civs.LAST and civs.last(g, "wood") == 1
