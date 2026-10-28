@@ -24,6 +24,7 @@ def bare(player, objects, **kw):
     g = gather.Gather.__new__(gather.Gather)
     g.player, g.data, g.map, g.paper, g.players = player, {"objects": objects}, types.SimpleNamespace(T=T), True, PLAYERS
     g.villagers, g.soldiers, g.selected, g.dead, g.bots = {}, {}, set(), {}, []
+    g.flock = {o["uuid"] for o in objects if o["player"] == player}
     g.prey = {o["uuid"]: o["name"] for o in objects if o["player"] in (0, player)}
     g.enemies = {o["uuid"]: o["name"] for o in objects if o["player"] not in (0, player)}
     g.sent, g.now = [], 0.0
