@@ -39,6 +39,7 @@ from buildings import footprint  # noqa: E402
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import civs  # noqa: E402
+import herd  # noqa: E402
 import menu as chest  # noqa: E402  (menu() below is the chat text)
 from replay import Replay  # noqa: E402
 import table  # noqa: E402
@@ -184,8 +185,8 @@ def ages(g):
 
 def locked(g, name):
     """The text "Needs the ... Age" when the player is not yet in the AoE2 age of building or unit name, else None."""
-    if g is not None and AGE.get(name, 0) > ages(g):
-        return f"Needs the {('Dark', 'Feudal', 'Castle', 'Imperial')[AGE[name]]} Age"
+    if g is not None and (age := AGE.get(name, 0) - civs.earlier(g, name)) > ages(g):
+        return f"Needs the {('Dark', 'Feudal', 'Castle', 'Imperial')[age]} Age"
     if g is not None and name in NEEDS and NEEDS[name] not in getattr(g, "techs", ()):
         return "Needs " + pretty(NEEDS[name].removesuffix("_TECH"))
     if g is not None and name == "TOWN_CENTER" and ages(g) < (1 if civs.civ(g) == "CUMANS" else 2) and town_center(g):
@@ -575,6 +576,8 @@ def rise(g, site, work):
             portcullis(g, site)
         if site["player"] == g.player and (food := civs.built_food(g, site["name"])):
             g.earn("food", food)                                       # Saxon camps, Wu military buildings (#2114)
+        if site["player"] == g.player and (born := civs.built_units(g, site["name"])):
+            herd.spawn(g, site["footprint"], *born)                    # Tatar sheep at a town center (#2313)
     return site["progress"] >= 1
 
 
