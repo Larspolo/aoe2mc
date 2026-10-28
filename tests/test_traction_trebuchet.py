@@ -25,10 +25,10 @@ def test_the_values_are_those_of_the_wiki():
 
 def test_the_wei_see_it_and_not_the_bombard_cannon():
     server, g, text = menu("WEI")
-    assert f"{UNIT}:chest_minecart:Traction Trebuchet:175 wood · 210 gold · 70 s · queue 0/15" in text
+    assert f"{UNIT}:chest_minecart:Traction Trebuchet:131 wood · 158 gold · 70 s · queue 0/15" in text   # -25 % (#2246)
     assert "Bombard Cannon" not in text and not train.queue(g, "Steve", (3, 3), "BOMBARD_CANNON")
     assert train.queue(g, "Steve", (3, 3), "TRACTION_TREBUCHET")
-    assert g.stock["wood"] == 1000 - 175 and g.stock["gold"] == 1000 - 210
+    assert g.stock["wood"] == 1000 - 131 and g.stock["gold"] == 1000 - 158
 
 
 def test_the_turks_see_the_bombard_cannon_and_not_it():
