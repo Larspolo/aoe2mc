@@ -152,11 +152,54 @@ SPIGOT = "world-settings:\n  default:\n    entity-activation-range:\n" + "".join
     f"      {k}: 0\n" for k in ("animals", "monsters", "raiders", "misc", "water", "villagers", "flying-monsters"))
 
 
-def properties(game_port, rcon_port, password):
+PROMPT = "The units of aoe2mc need this resource pack: they get the look of AoE2."
+
+
+def pack_file(world):
+    """resourcepacks/resources.zip of the world (--resource-pack, #2738), or None."""
+    path = os.path.join(world, "resourcepacks", "resources.zip")
+    return path if os.path.isfile(path) else None
+
+
+class PackServer:
+    """Serve only the resource pack of the world over HTTP on 127.0.0.1 (#2740): the Minecraft server does not host
+    it, it sends only the URL and the SHA-1 to each player who joins."""
+
+    def __init__(self, path):
+        import http.server
+        data = open(path, "rb").read()
+        self.sha1 = hashlib.sha1(data).hexdigest()
+
+        class Handler(http.server.BaseHTTPRequestHandler):
+            def do_GET(h):
+                if h.path != "/resources.zip":
+                    return h.send_error(404)
+                h.send_response(200)
+                h.send_header("Content-Type", "application/zip")
+                h.send_header("Content-Length", str(len(data)))
+                h.end_headers()
+                h.wfile.write(data)
+
+            def log_message(h, *args):
+                pass
+
+        self.http = http.server.ThreadingHTTPServer(("127.0.0.1", 0), Handler)   # port 0: a free port, no race
+        self.url = f"http://127.0.0.1:{self.http.server_address[1]}/resources.zip"
+        threading.Thread(target=self.http.serve_forever, daemon=True).start()
+
+    def stop(self):
+        self.http.shutdown()
+        self.http.server_close()
+
+
+def properties(game_port, rcon_port, password, pack=None):
     """server.properties: only local players can join (127.0.0.1). They play in creative mode (#292).
     A missing white-list becomes "true" in 26.3: then no player can join (#285). Each player is an operator
-    (op_joined): the output of RCON and console commands (the "fill" of a falling building) must not go to its chat (#1799)."""
-    return (f"online-mode=false\nserver-ip=127.0.0.1\nserver-port={game_port}\nwhite-list=false\n"
+    (op_joined): the output of RCON and console commands (the "fill" of a falling building) must not go to its chat (#1799).
+    pack: the PackServer of the world (#2740). The units have no vanilla look without it: the player must accept it."""
+    extra = (f"resource-pack={pack.url}\nresource-pack-sha1={pack.sha1}\nrequire-resource-pack=true\n"
+             f"resource-pack-prompt={json.dumps({'text': PROMPT})}\n") if pack else ""
+    return extra + (f"online-mode=false\nserver-ip=127.0.0.1\nserver-port={game_port}\nwhite-list=false\n"
             f"enable-rcon=true\nrcon.port={rcon_port}\nrcon.password={password}\n"
             "spawn-protection=0\nmax-tick-time=-1\nenable-query=false\nbroadcast-rcon-to-ops=false\n"
             "broadcast-console-to-ops=false\n"
@@ -173,6 +216,8 @@ class Game:
         self.server = self.rcon = None
         self.lock, self.seen = threading.Lock(), 0     # the op thread and the game send commands
         self.sides = {}
+        import units                                 # a world with the resource pack: units in their own armor (#2742)
+        units.ASSETS = pack_file(self.world) is not None
 
     def start(self):
         java, jvm, plugins = mc_check.java_for(self.version), [], []
@@ -193,8 +238,10 @@ class Game:
         for p in plugins:
             os.makedirs(os.path.join(self.folder, "plugins"), exist_ok=True)
             shutil.copy(p, os.path.join(self.folder, "plugins", "aoe2mc-plugin.jar"))
+        path = pack_file(self.world)
+        self.pack = PackServer(path) if path else None
         with open(os.path.join(self.folder, "server.properties"), "w") as f:
-            f.write(properties(self.game_port, self.port, password))
+            f.write(properties(self.game_port, self.port, password, self.pack))
         if self.kind == "paper":
             with open(os.path.join(self.folder, "spigot.yml"), "w") as f:
                 f.write(SPIGOT)
@@ -268,6 +315,9 @@ class Game:
             except (OSError, subprocess.TimeoutExpired):
                 self.server.p.kill()
                 self.server.p.wait()
+        if getattr(self, "pack", None):
+            self.pack.stop()
+            self.pack = None
         if getattr(self, "folder", None):
             shutil.rmtree(self.folder, ignore_errors=True)
         if getattr(self, "usercache", None) and os.path.exists(self.usercache):

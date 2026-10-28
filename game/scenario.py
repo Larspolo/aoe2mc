@@ -7,7 +7,8 @@ them (a random map, a recorded game, an old scenario) keeps the lobby values. re
 Each person also gets a written book with the scenario texts (aoe2mc.json "messages": objectives, hints,
 instructions ...), as the "Objectives" window of AoE2 DE, and the chat shows the instructions at the start (#2541).
 The trigger effect "Research Technology" (#2577) sets a score of the datapack; research() (in tick()) gives the
-technology.
+technology. The conditions "Object Visible" and "Object Not Visible" (#2756) test a score that visible() sets from the
+sight of the player (the fog of the game program).
 
 A scenario trigger with the effect "Declare Victory" ends the game (#2542): its datapack function sets the score
 #p<N> of aoe_win to 1 (aoe2mc.trigger_files), and victory() reads it with RCON once per conquest.EVERY seconds. Player N
@@ -16,6 +17,9 @@ world.
 A trigger with the effect "Change Diplomacy" sets the score #p<N>.p<M> of aoe_dip to the stance + 1 and #any to 1
 (#2645): diplomacy() changes the stance of player N to player M in the players of aoe2mc.json and sends the plugin
 commands of the alliances and neutral stances (gather.allies_command, gather.neutral_command).
+
+The conditions "Researching Technology" and "Technology State" (#2769) test the score #p<N>.<technology> of
+aoe_techstate: tech_states() sets it to the AoE2 TechnologyState from the queues and g.techs of player N.
 
 The condition "Difficulty Level" (#2704) tests the score #level of aoe_difficulty: setup() sets it to the AoE2 value
 ("aoe2" of game/data/difficulty.jsonl) of the setting "AI difficulty" (run.py --ai-difficulty).
@@ -34,6 +38,7 @@ import re
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import fog  # noqa: E402
 import garrison  # noqa: E402
 import gather  # noqa: E402
 import rcon  # noqa: E402
@@ -46,6 +51,8 @@ SLOT = "inventory.26"                                                  # the las
 TAG = "aoe_book"                                                       # a person who has the book
 EVERY = 1.0                                                            # seconds between two checks for new people
 ORDERS = "aoe2mc:orders"                                               # the data storage of the trigger orders (#2647)
+ATTRIBUTES = "aoe2mc:attributes"                                       # the storage of "Modify Attribute" (#2763)
+MENUS = "aoe2mc:menus"                                                 # the storage of "Enable/Disable" (#2775)
 COSTS = "aoe2mc:costs"                                                 # the storage of "Change Object Cost" (#2776)
 NEAR = 3                                                               # blocks: a patrol turns back this near its point
 LEVELS = {r["name"]: r["aoe2"] for r in table.load("difficulty.jsonl")}  # "AI difficulty" -> AoE2 DifficultyLevel
@@ -105,11 +112,15 @@ def tick(g):
     gather.Gather.run calls it in the scenario mode. Also the technologies of the triggers (research, #2577)."""
     research(g)
     garrisons(g)
+    tech_states(g)
     if g.clock() < vars(g).get("book_at", 0.0):
         return
     g.book_at = g.clock() + EVERY
     tasks(g)
     orders(g)
+    menus(g)
+    visible(g)
+    attributes(g)
     costs(g)
     messages = g.data.get("messages", {})
     text = re.sub(r"<[^<>]*>", "", messages.get("instructions", "")).strip()   # AoE2 color tags (book_pages)
@@ -124,6 +135,24 @@ def tick(g):
         g.command(f"tag {sel} add {TAG}")
 
 
+def gate(g, order, ref):
+    """Lock or unlock (order) the converted gate with the reference ref (#2762): the first order puts the portcullis
+    of the game program on it (build.portcullis: the iron bars and `aoe gate`), then the plugin locks it
+    (`aoe gate lock X Z`: the bars stay down for all units) or unlocks it (an own or allied unit opens it again).
+    A diagonal gate has no portcullis yet: no lock."""
+    import build                                                       # build imports gather
+    kind = lambda o: next((n for n in sorted(build.GATES, key=len, reverse=True) if n in o["name"]), None)
+    o = next((o for o in g.data.get("objects", ()) if o.get("ref") == ref and kind(o) and o.get("footprint")), None)
+    if o is None or o["footprint"][2] - o["footprint"][0] == o["footprint"][3] - o["footprint"][1]:
+        return
+    x0, z0, x1, z1 = o["footprint"]
+    done = vars(g).setdefault("gate_refs", set())                      # the gates with a portcullis
+    if ref not in done:
+        done.add(ref)
+        build.portcullis(g, {"name": kind(o), "player": o["player"], "footprint": [x0, x1, z0, z1]})
+    g.command(f"aoe gate {order} {(x0 + x1) // 2} {(z0 + z1) // 2}")
+
+
 def orders(g):
     """The "Patrol" and "Attack Move" orders of the triggers (aoe2mc.order_lines, #2647): read and empty the list of
     the data storage ORDERS, and walk the tagged units with the Paper plugin (`aoe moveto`, Minecraft path finding).
@@ -134,11 +163,18 @@ def orders(g):
     (aoe2mc.stance_lines, #2705) sets the stance of the tagged units and removes the tag. A "Stop Object" order
     (aoe2mc.stop_lines, #2754) stops the tagged units (`aoe stop`), ends their patrols as a new order of a person does
     (gather.Gather.end_patrols, #2674) and removes the tag. A "Change Object Range" order (aoe2mc.range_lines, #2767)
-    gives each tagged ranged unit its new range (ranges) and removes the tag."""
-    new = re.findall(r'"(patrol|attack_move|range|stance|stop) (aoe_order[\w.]+) ?(-?\d+(?: -?\d+)*)?"',
-                     g.command(f"data get storage {ORDERS} list") or "")
-    if new:
+    gives each tagged ranged unit its new range (ranges) and removes the tag. An "Unload" order (#2773): unload(). A
+    "Lock Gate" or "Unlock Gate" order (aoe2mc.gate_lines, #2762) locks or unlocks the gate of its reference: gate()."""
+    got = g.command(f"data get storage {ORDERS} list") or ""
+    new = re.findall(r'"(patrol|attack_move|range|stance|stop) (aoe_order[\w.]+) ?(-?\d+(?: -?\d+)*)?"', got)
+    unloads = re.findall(r'"unload (\d+) (\d+) ?(-?\d+ -?\d+ -?\d+)?"', got)
+    gates = re.findall(r'"(lock|unlock) (\d+)"', got)
+    if new or unloads or gates:
         g.command(f"data remove storage {ORDERS} list")
+    for player, ref, where in unloads:
+        unload(g, int(player), int(ref), where)
+    for order, ref in gates:
+        gate(g, order, int(ref))
     patrols = vars(g).setdefault("patrols", [])
     for order, tag, where in new:
         p, sel = [int(v) for v in where.split()], f"@e[tag={tag}]"
@@ -191,6 +227,19 @@ def ranges(g, tag, operation, quantity):
             g.command(cmd)
 
 
+def unload(g, player, ref, where):
+    """An "Unload" order (aoe2mc.unload_lines, #2773): the units inside the building ref of the player (a person or a
+    bot: garrison.holders) come out (garrison.out), and `aoe moveto` walks them to the block "x y z" when the order has
+    one. A building that fell or that is not of the player: nothing."""
+    for x in [g, *(s.g for s in g.bots)]:
+        if x.player != player or "objects" not in x.data:
+            continue
+        rect = next((r for r, o in garrison.holders(x).items() if o.get("ref") == ref), None)
+        for u in garrison.out(x, rect) if rect is not None else []:
+            if where:
+                x.command(f"aoe moveto {u} {where}")
+
+
 def costs(g):
     """The new costs of "Change Object Cost" (aoe2mc.cost_lines, #2776): read and empty the list of the data storage
     COSTS, and keep each cost in trigger_costs of the side of its player (the people and the bots): civs.cost uses it
@@ -203,6 +252,42 @@ def costs(g):
         if int(player) in sides:
             vars(sides[int(player)]).setdefault("trigger_costs", {})[name] = \
                 {r: int(v) for r, v in (part.split("=") for part in cost.split())}
+
+
+def attributes(g):
+    """The changes of "Modify Attribute" (aoe2mc.attribute_lines, #2763): read and empty the list of the data storage
+    ATTRIBUTES, and add each change to trigger_attributes of the side of its player (the people and the bots):
+    train.stats applies them in order, so the units that the player trains later get the new values. The units of the
+    type that exist get the new values at once (the same commands as a technology, train.research)."""
+    import civs, combat                                                # combat -> gather -> scenario
+    new = re.findall(r'"(\d+) (\w+) (\w+) ([1-5]) (-?[\d.]+)"', g.command(f"data get storage {ATTRIBUTES} list") or "")
+    if new:
+        g.command(f"data remove storage {ATTRIBUTES} list")
+    sides = {x.player: x for x in [g, *(s.g for s in g.bots)]}
+    for player, name, field, op, q in new:
+        if (x := sides.get(int(player))) is None or field not in combat.Stats._fields:
+            continue
+        vars(x).setdefault("trigger_attributes", []).append([name, field, int(op), float(q)])
+        s = train.stats(x, name)
+        for uuid in [u["uuid"] for u in x.units if "uuid" in u and u["name"] == name] + \
+                [u for u, n in x.soldiers.items() if n == name]:
+            x.command(combat.stats_command(uuid, name, s, civs.taken(x, name), civs.friendly(x, name)))
+            if field == "range" and (cmd := combat.range_command(uuid, name, x.map.T, s=s)):
+                x.command(cmd)
+
+
+def menus(g):
+    """The items of "Enable/Disable Object" and "Enable/Disable Technology" (aoe2mc.menu_lines, #2775): read and empty
+    the list of the data storage MENUS, and keep each item in trigger_menus of the side of its player (True: on). An
+    item that is off is not in the menus (civs.missing); an item that is on is there also when the civilization does
+    not have it or the age is not reached (train.unlocked): as in AoE2, the age technology only enables its items."""
+    new = re.findall(r'"(\d+) (\w+) (on|off)"', g.command(f"data get storage {MENUS} list") or "")
+    if new:
+        g.command(f"data remove storage {MENUS} list")
+    sides = {x.player: x for x in [g, *(s.g for s in g.bots)]}
+    for player, name, on in new:
+        if int(player) in sides:
+            vars(sides[int(player)]).setdefault("trigger_menus", {})[name] = on == "on"
 
 
 def bot_seats(players, people):
@@ -226,6 +311,8 @@ def setup(g, mode="scenario"):
     level = (getattr(g.game, "settings", None) or {}).get("ai_difficulty", "standard")
     g.command("scoreboard objectives add aoe_difficulty dummy")        # the condition "Difficulty Level" (#2704)
     g.command(f"scoreboard players set #level aoe_difficulty {LEVELS[level]}")
+    g.command("scoreboard objectives add aoe_dipstate dummy")         # the condition "Diplomacy State" (#2757)
+    states(g)
     rows = {x: g.players.get(str(x.player), {}) for x in sides}
     if not any("resources" in p or "pop_limit" in p for p in rows.values()):
         print("The world has no scenario start values: the game starts with the lobby settings.", file=sys.stderr)
@@ -237,6 +324,34 @@ def setup(g, mode="scenario"):
             x.command(f"scoreboard players set {r} {x.board} {x.stock[r.lower()]}")
         train.sidebar(x)
     return g
+
+
+def visible(g):
+    """The conditions "Object Visible" and "Object Not Visible" of the triggers (#2756): set the score #r<ref>.p<player>
+    of aoe_seen to 1 when a tile of the object is in the sight of the player (its own units and buildings, and those of
+    its allies with "Shared Exploration": fog.shares), else 0, also for a dead unit or a player not in the game.
+    aoe2mc.json "visible" lists the pairs (aoe2mc.visible_list). A converted world has no fog: the game program has it."""
+    pairs = g.data.get("visible", ())
+    if not pairs:
+        return
+    sides, T = fog.gathers(g), g.map.T
+    objs = {o["ref"]: o for o in g.data["objects"] if o.get("ref") is not None}
+    want = {u for h in sides for u in [*h.villagers, *h.soldiers]} | {o["uuid"] for o in objs.values() if "uuid" in o}
+    pos = g.where(want)
+    sight = {}
+    for ref, player in pairs:
+        if player not in sight:
+            me = next((h for h in sides if h.player == player), None)
+            sight[player] = set().union(*(h.seen_tiles(pos) for h in sides if fog.shares(me, h))) if me else set()
+        o = objs.get(ref, {})
+        if "footprint" in o:                                           # a building: [x0, z0, x1, z1) in blocks
+            x0, z0, x1, z1 = o["footprint"]
+            tiles = {(x, z) for x in range(x0 // T, (x1 - 1) // T + 1) for z in range(z0 // T, (z1 - 1) // T + 1)}
+        elif "uuid" in o:                                              # a unit: where it is now, nothing when dead
+            tiles = {(int(pos[o["uuid"]][0] // T), int(pos[o["uuid"]][2] // T))} if o["uuid"] in pos else set()
+        else:
+            tiles = {tuple(int(v) for v in o["tile"])} if "tile" in o else set()
+        g.command(f"scoreboard players set #r{ref}.p{player} aoe_seen {int(bool(tiles & sight[player]))}")
 
 
 def research(g):
@@ -273,6 +388,35 @@ def garrisons(g):
                 sent[o["ref"]] = n
 
 
+def tech_states(g):
+    """Once per game second: the score #p<N>.<technology> of aoe_techstate of each pair of aoe2mc.json "tech_states"
+    (the conditions "Researching Technology" and "Technology State", #2769) is the AoE2 TechnologyState of the
+    technology for player N (tech_state). One command per change; a player with no Gather keeps no score."""
+    if g.clock() < vars(g).get("tech_state_at", 0.0):
+        return
+    g.tech_state_at = g.clock() + 1.0
+    sides = {x.player: x for x in [g, *(s.g for s in g.bots)]}
+    sent = vars(g).setdefault("tech_state_sent", {})
+    for n, name in g.data.get("tech_states", ()):
+        if n in sides and name in train.TECHS and sent.get((n, name)) != (v := tech_state(sides[n], name)):
+            g.command(f"scoreboard players set #p{n}.{name} aoe_techstate {v}")
+            sent[(n, name)] = v
+
+
+def tech_state(x, name):
+    """The AoE2 TechnologyState of technology name for the Gather x: 3 researched, 2 researching (the head of a queue),
+    4 queued, -1 disabled (the civilization does not have it), 1 ready (train.unlocked: its age and its technology
+    before it), else 0."""
+    if name in x.techs:
+        return 3
+    queues = [[e["name"] for e in q] for q in x.queues.values()]
+    if any(q[:1] == [name] for q in queues):
+        return 2
+    if any(name in q for q in queues):
+        return 4
+    return -1 if train.civs.missing(x, name) else 1 if train.unlocked(x, name) else 0
+
+
 def victory(g):
     """End the game when a trigger declared the victory of a player (the score #p<N> of aoe_win is 1)."""
     import cheats, conquest                                            # they import gather: import them late
@@ -280,6 +424,7 @@ def victory(g):
         return
     g.win_at = g.clock() + conquest.EVERY
     diplomacy(g)
+    visibility(g)
     for n in sorted(int(p) for p in g.players if int(p)):
         got = re.search(r" has (-?\d+) ", g.command(f"scoreboard players get #p{n} aoe_win") or "")
         if got and int(got[1]) > 0:
@@ -287,6 +432,7 @@ def victory(g):
 
 
 STANCES = {1: "ally", 2: "neutral", 4: "enemy"}                       # the score of aoe_dip: DiplomacyState + 1
+SCORES = {kind: score for score, kind in STANCES.items()}
 
 
 def stance(players, n, m, kind):
@@ -307,6 +453,16 @@ def stance(players, n, m, kind):
     row["team"] = other["team"]
 
 
+def states(g):
+    """Set the score #p<N>.p<M> of aoe_dipstate to the stance of player N to player M + 1 (STANCES): the condition
+    "Diplomacy State" of the converted world tests it (#2757)."""
+    ns = sorted(int(p) for p in g.players if int(p))
+    for n, m in ((n, m) for n in ns for m in ns if n != m):
+        kind = "ally" if gather.allied(g.players, n, m) else \
+            "neutral" if m in g.players[str(n)].get("neutral", ()) else "enemy"
+        g.command(f"scoreboard players set #p{n}.p{m} aoe_dipstate {SCORES[kind]}")
+
+
 def diplomacy(g):
     """Apply the stances that "Change Diplomacy" triggers set (the scores of aoe_dip), then reset the scores. During a
     treaty (treaty.holds) all players stay neutral: the end of the treaty sends the new stances."""
@@ -321,9 +477,30 @@ def diplomacy(g):
             if got and int(got[1]) in STANCES:
                 stance(g.players, n, m, STANCES[int(got[1])])
                 g.command(f"scoreboard players reset #p{n}.p{m} aoe_dip")
+    states(g)
     g.command(gather.allies_command(g.players))
     if not treaty.holds(g):
         g.command(gather.neutral_command(g.players))
+
+
+def visibility(g):
+    """Apply "Set Player Visibility" (#2774, aoe2mc.visibility_lines): the score #p<N>.p<M> of aoe_vis is the state + 1.
+    "Visible" puts M into the list "sees" of player N in the players of aoe2mc.json (fog.update then does not hide the
+    units of M from N), "explored" and "invisible" take it out again. Then reset the scores."""
+    got = re.search(r" has (-?\d+) ", g.command("scoreboard players get #any aoe_vis") or "")
+    if not got or int(got[1]) < 1:
+        return
+    g.command("scoreboard players reset #any aoe_vis")
+    ns = sorted(int(p) for p in g.players if int(p))
+    for n in ns:
+        for m in ns:
+            got = n != m and re.search(r" has (-?\d+) ", g.command(f"scoreboard players get #p{n}.p{m} aoe_vis") or "")
+            if got and int(got[1]) in (1, 2, 3):
+                row = g.players[str(n)]
+                sees = set(row.get("sees", [])) - {m} | ({m} if int(got[1]) == 1 else set())
+                row.pop("sees", None)
+                row.update({"sees": sorted(sees)} if sees else {})
+                g.command(f"scoreboard players reset #p{n}.p{m} aoe_vis")
 
 
 def resources(g):

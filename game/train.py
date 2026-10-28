@@ -364,8 +364,10 @@ def ship(name, s):
 def unlocked(g, name):
     """True when the player has the age of technology name (the key "age"). As in AoE2, the menu shows a technology only
     from its age, but a building or unit of a later age as a gray item (build.locked), and never one that the
-    civilization of the player does not have (civs.missing: also not as a team bonus of an ally, #1619)."""
-    return value("age", name, 0) - civs.earlier(g, name) <= build.ages(g) and value("after", name, "") in {""} | set(getattr(g, "techs", ())) \
+    civilization of the player does not have (civs.missing: also not as a team bonus of an ally, #1619). An item that
+    a scenario trigger turned on (g.trigger_menus, #2775) needs no age."""
+    return (value("age", name, 0) - civs.earlier(g, name) <= build.ages(g) or getattr(g, "trigger_menus", {}).get(name, False)) \
+        and value("after", name, "") in {""} | set(getattr(g, "techs", ())) \
         and not (hasattr(g, "data") and civs.missing(g, name)) \
         and (name not in UPGRADES or name in REQUIRES or bool(lines(name, g))) and not swapped(g, name)   # not of this
                                                                    # civilization (#1373), no new unit (#1483); an
@@ -725,6 +727,10 @@ def age(g):
     return AGES[build.ages(g)]
 
 
+OPERATIONS = {1: lambda v, q: q, 2: lambda v, q: v + q, 3: lambda v, q: v - q,   # the AoE2 Operation of a trigger:
+              4: lambda v, q: v * q, 5: lambda v, q: v / q if q else v}   # set, add, subtract, multiply, divide
+
+
 def stats(g, name):
     """The combat values of AoE2 unit name with the bonuses of the civilization (civs.UNITS) and the technologies of
     the player (combat.stats and TECHS), twice for civs.TWICE (#1561), n times for civs.SMITH_UNITS (#2174), and the
@@ -743,6 +749,10 @@ def stats(g, name):
             s = s._replace(hp=s.hp + hp * sum(t in g.techs for t in TRAINS[building] if t in TECHS))
     if name.startswith("VILLAGER") and (f := civs.handicap(g.data, g.player)) != 1:   # the AoE2 "Handicap" (#2474)
         s = s._replace(hp=round(s.hp * f))
+    for unit, field, op, q in vars(g).get("trigger_attributes", ()):   # "Modify Attribute" of a scenario (#2763)
+        if unit == name:
+            v = max(0, OPERATIONS[op](getattr(s, field), q))
+            s = s._replace(**{field: v if field in ("range", "reload") else int(v)})   # AoE2: whole hit points, armor
     return s
 
 
