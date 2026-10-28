@@ -41,6 +41,7 @@ sys.path.insert(0, ROOT)
 import aoe2mc  # noqa: E402
 import buildings  # noqa: E402
 import table  # noqa: E402
+import replay_input  # noqa: E402
 import units  # noqa: E402
 
 # Dye color of a player (aoe2mc.PLAYER_COLORS) -> text color of /tellraw and /title
@@ -2289,6 +2290,8 @@ class Replay:
         self.control = {"speed": speed, "paused": paused, "view": self.pov,     # the view: replay_input VIEW (#1303)
                         "players": {p: self.player(p) for p in sorted(int(q) for q in self.data["players"]) if p}} | \
             ({"jump": to} if to is not None else {})
+        self.control["fights"] = fights(self.data.get("timeline", []), owners(self.data.get("objects", []),
+                                                                             self.data.get("timeline", [])))
         end, shown, counted = events[-1]["time"] if events else start, None, -math.inf
         send = self.send if bar else lambda cmds: None
         send([f'bossbar add {BAR} ""', f"bossbar set {BAR} color white",
@@ -2298,6 +2301,8 @@ class Replay:
              # over the start objects of the base image, so the start buildings get their squares (#1940)
              self.minimap_buildings(set(), set()) * (self.pov is None) +
              self.overview())
+        if to is None:                                              # not again after a jump back (#2949)
+            send(replay_input.fight_lines(self.control["fights"], self.control["players"]))
         census = self.census if bar and self.ai else lambda: None
         look = self.look_around if bar and self.ai else lambda: None          # as census: a server of run.py --replay
         while k < len(events) or self.moving or self.builds or self.charging or self.idle:
