@@ -4316,6 +4316,63 @@ def armor_textures(name):
     return out
 
 
+# The AoE2 weapons of --resource-pack (#2744, units.WEAPONS): 16 x 16 item textures, drawn as the vanilla tools on the
+# diagonal from the handle (bottom left) to the tip (top right). A part: (kind, from, to, color[, side]): "shaft" pixels
+# of the diagonal, "blade" a two pixels wide diagonal, "head" crosswise pixels at each step (side: from, to; +
+# is the lower right side), "arc" a bow limb (radius) with its string, "disc" a round shield.
+WOOD, LIGHT, DARK, IRON, STEEL, STRING = (112, 78, 44), (160, 120, 70), (70, 48, 28), (205, 205, 215), (110, 110, 125), (225, 225, 225)
+WEAPON_ART = {
+    "axe": [("shaft", 1, 12, WOOD), ("head", 9, 12, IRON, (-3, -1)), ("head", 10, 11, STEEL, (1, 1))],
+    "bow": [("arc", 11, 0, WOOD)],
+    "club": [("shaft", 1, 8, WOOD), ("head", 9, 14, DARK, (-1, 1))],
+    "crossbow": [("shaft", 1, 12, WOOD), ("head", 10, 10, DARK, (-5, 5)), ("shaft", 13, 13, STEEL)],
+    "halberd": [("shaft", 0, 12, WOOD), ("blade", 13, 15, IRON), ("head", 9, 11, IRON, (-3, -1)),
+                ("head", 10, 10, STEEL, (1, 2))],
+    "javelin": [("shaft", 0, 12, LIGHT), ("shaft", 13, 15, IRON)],
+    "longbow": [("arc", 15, 0, WOOD)],
+    "mace": [("shaft", 1, 9, WOOD), ("head", 10, 13, STEEL, (-1, 1)), ("head", 11, 12, IRON, (-2, 2))],
+    "shield": [("disc", 7, 0, WOOD)],
+    "sickle": [("shaft", 1, 5, WOOD), ("blade", 6, 10, IRON), ("head", 11, 11, IRON, (-2, 0)),
+               ("head", 11, 11, IRON, (-4, -3)), ("head", 10, 10, IRON, (-5, -5))],
+    "spear": [("shaft", 0, 11, WOOD), ("blade", 12, 15, IRON), ("head", 12, 12, IRON, (-1, 1))],
+    "sword": [("shaft", 1, 3, DARK), ("head", 4, 4, STEEL, (-2, 2)), ("blade", 5, 14, IRON)],
+    "throwing_axe": [("shaft", 3, 10, LIGHT), ("head", 8, 10, IRON, (-2, -1))],
+}
+
+
+def weapon_texture(kind):
+    """The 16 x 16 item texture of an AoE2 weapon (WEAPON_ART, #2744)."""
+    from PIL import Image
+    im = Image.new("RGBA", (16, 16), (0, 0, 0, 0))
+
+    def put(x, y, color):
+        if 0 <= x < 16 and 0 <= y < 16:
+            im.putpixel((x, y), color + (255,))
+    for part, a, b, color, *side in WEAPON_ART[kind]:
+        for i in range(a, b + 1):
+            if part in ("shaft", "blade"):
+                put(i, 15 - i, color)
+                if part == "blade":
+                    put(i - 1, 15 - i, color)                   # the second pixel of the blade, its upper left
+            elif part == "head":
+                for k in range(side[0][0], side[0][1] + 1):    # crosswise: (1, 1) per step, no gaps
+                    put(i + k, 15 - i + k, color)
+                    put(i + k + 1, 15 - i + k, color) if k < side[0][1] else None
+        if part == "arc":                                       # a limb around the corner (16, 16), the string across
+            for t in range(64):
+                ang = math.pi + t / 63 * math.pi / 2
+                put(round(16 + a * math.cos(ang)), round(16 + a * math.sin(ang)), color)
+            for i in range(16 - a, 16):
+                put(i, 31 - a - i, STRING)
+        if part == "disc":                                      # the rim of iron, the boss in the middle
+            for y in range(16):
+                for x in range(16):
+                    r = math.hypot(x - 7.5, y - 7.5)
+                    if r <= a + 0.5:
+                        put(x, y, STEEL if r > a - 0.7 or r < 1.6 else color)
+    return im
+
+
 def write_resourcepack(out):
     """--resource-pack (#2738): resourcepacks/resources.zip in the world folder, which single player loads with the
     world (26.x: LevelResource.MAP_RESOURCE_FILE; a world of an older version had resources.zip at its top, and the
@@ -4325,7 +4382,7 @@ def write_resourcepack(out):
     import io
     import zipfile
     files = {"pack.mcmeta": json.dumps({"pack": {
-        "description": "aoe2mc: units with a human face and their own armor", "pack_format": MC["resource_format"],
+        "description": "aoe2mc: units with a human face, their own armor and AoE2 weapons", "pack_format": MC["resource_format"],
         "min_format": MC["resource_format"], "max_format": MC["resource_format"]}}, indent=1).encode()}
     files["assets/minecraft/items/chest.json"] = json.dumps({"model": {   # a chest with the cart data: the cart (#2746)
         "type": "minecraft:select", "property": "minecraft:custom_model_data", "index": 0,
@@ -4346,6 +4403,15 @@ def write_resourcepack(out):
                 im.save(buf, "PNG")
                 files[f"assets/aoe2mc/textures/entity/equipment/{layer}/{n}{end}.png"] = buf.getvalue()
         files[f"assets/aoe2mc/equipment/{n}.json"] = json.dumps({"layers": layers}, indent=1).encode()
+    for w in sorted({w for _, w in units.WEAPONS}):                 # the AoE2 weapons (#2744)
+        buf = io.BytesIO()
+        weapon_texture(w).save(buf, "PNG")
+        files[f"assets/aoe2mc/textures/item/{w}.png"] = buf.getvalue()
+        files[f"assets/aoe2mc/models/item/{w}.json"] = json.dumps(
+            {"parent": "minecraft:item/" + ("generated" if w == "shield" else "handheld"),
+             "textures": {"layer0": f"aoe2mc:item/{w}"}}).encode()
+        files[f"assets/aoe2mc/items/{w}.json"] = json.dumps(
+            {"model": {"type": "minecraft:model", "model": f"aoe2mc:item/{w}"}}).encode()
     os.makedirs(os.path.join(out, "resourcepacks"), exist_ok=True)
     with zipfile.ZipFile(os.path.join(out, "resourcepacks", "resources.zip"), "w", zipfile.ZIP_DEFLATED) as z:
         for name in sorted(files):
