@@ -2472,7 +2472,7 @@ PALETTE_CACHE = {}
 # Blocks that need a block entity, or Minecraft shows them wrong (banners are invisible without one).
 BE_TYPES = [("decorated_pot", "decorated_pot"), ("oak_sign", "sign"), ("wall_banner", "banner"), ("_banner", "banner"), ("bell", "bell"), ("campfire", "campfire"),
             ("barrel", "barrel"), ("chest", "chest"), ("blast_furnace", "blast_furnace"),
-            ("smoker", "smoker"), ("furnace", "furnace"), ("lectern", "lectern"), ("_shelf", "shelf"), ("_bed", "bed")]
+            ("smoker", "smoker"), ("furnace", "furnace"), ("lectern", "lectern"), ("_shelf", "shelf"), ("_skull", "skull"), ("_bed", "bed")]
 
 
 def block_entity_type(state):
