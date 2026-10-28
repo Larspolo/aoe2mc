@@ -730,6 +730,21 @@ class Replay:
             [f"execute as @a[gamemode=spectator] run spectate @e[tag={FOLLOWED},limit=1] @s"] * \
             (getattr(self.game, "kind", "paper") == "vanilla")
 
+    @functools.cached_property
+    def trainings(self):
+        """aoe2mc.training of the timeline: (end ms, QUEUE event, building ID) for each unit."""
+        return aoe2mc.training(self.data.get("timeline", ()))
+
+    def production(self, t):
+        """{player: [(name, count, start, end), ...]}: the units in training or in the queue of their building at game
+        time t (ms, #2809), grouped by name in the order of the next end; start and end are those of the first one."""
+        out = {}
+        for end, e, _ in self.trainings:
+            if e["time"] <= t < end and e.get("name"):
+                out.setdefault(e["player"], {}).setdefault(e["name"], []).append(end)
+        return {p: sorted(((n, len(ends), min(ends) - aoe2mc.train_ms(n), min(ends)) for n, ends in names.items()),
+                          key=lambda item: item[3]) for p, names in out.items()}
+
     def spawns(self):
         """A "spawn" event for each unit that a QUEUE command trains, at the end of its training."""
         return [{"time": end, "player": e["player"], "kind": "spawn", "type": e["type"], "name": e["name"],
@@ -1472,15 +1487,17 @@ class Replay:
 
     def go(self, i, v, tile, path, t):
         """Unit i walks on path to its resource `tile` from game time t on, and gathers there. Returns the commands
-        (Paper: the first leg)."""
+        (Paper: the first leg). An empty path on Paper: an order to its cell all the same. The replay unit is there, but
+        its entity can be on the way to an old goal: a builder of de-64.3 walked on 30 blocks and stood there (#2634)."""
         v.tree = tile
-        if self.ai and path and not ship(v.name):                  # a boat has no path finding: /tp steps
-            cmds, due = self.order(v, path[LEG - 1:-1:LEG] + [path[-1]], t)
+        if self.ai and not ship(v.name):                            # a boat has no path finding: /tp steps
+            cmds, due = self.order(v, path[LEG - 1:-1:LEG] + [path[-1]] if path else [v.cell], t)
             if v.path:
                 self.moving[i] = due
             else:
                 self.moving.pop(i, None)                            # it was on a walk: it stops (#1177)
                 self.start(i, v, due)
+                self.rest(i, due)                                   # a builder has no work check: settle()
             return cmds
         v.path = path
         due = self.next_step(v, t)

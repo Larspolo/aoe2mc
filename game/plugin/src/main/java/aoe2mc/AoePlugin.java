@@ -35,6 +35,7 @@ import org.bukkit.entity.Camel;
 import org.bukkit.entity.Creeper;
 import org.bukkit.entity.Display;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.ItemDisplay;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Minecart;
 import org.bukkit.entity.Mob;
@@ -105,6 +106,8 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *                                              a gate of the team (#1325, Gates.java): its iron bars in the box rise
  *                                              while an own or allied unit is near or walks a path through it; the
  *                                              units of the team plan their paths with the gate raised (#1656)
+ *   aoe gate lock|unlock <x> <z>               the trigger effects "Lock Gate", "Unlock Gate" (#2762): the gates
+ *                                              with the block column x z keep their bars down for all units
  *   aoe goals <selector>                       the goals of the first unit (#436), for checks
  *   aoe hide <players> <uuid> ...              Player#hideEntity: the players do not see these entities, also a
  *                                              player that joins later (#1302: the enemy units out of sight in the
@@ -987,6 +990,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         Bukkit.getScheduler().runTaskTimer(this, ghost::tick, 1L, 1L);
         Bukkit.getScheduler().runTaskTimer(this, border::tick, 4L, 4L);
         Bukkit.getScheduler().runTaskTimer(this, this::siege, 1L, 1L);
+        Bukkit.getScheduler().runTaskTimer(this, this::carts, 1L, 1L);
         Bukkit.getScheduler().runTaskTimer(this, this::burn, 20L, 20L);
         Bukkit.getScheduler().runTaskTimer(this, this::watch, 20L, 20L);
         Bukkit.getScheduler().runTaskTimer(this, this::towers, 2L, 2L);
@@ -1690,6 +1694,21 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         }
     }
 
+    // The cart of a War Wagon (#2746) is an item display that rides its horse (units.cart). A passenger keeps its own
+    // rotation (Entity#positionRider moves it, but turns only a living passenger): the cart turns with the body of the
+    // horse here, so it stays behind the horse after a turn. No vanilla feature does it.
+    private void carts() {
+        for (UUID id : List.copyOf(stats.keySet())) {
+            if (Bukkit.getEntity(id) instanceof AbstractHorse h) {
+                for (Entity p : h.getPassengers()) {
+                    if (p instanceof ItemDisplay d && d.getYaw() != h.getBodyYaw()) {
+                        d.setRotation(h.getBodyYaw(), 0);
+                    }
+                }
+            }
+        }
+    }
+
     // aoe charge and aoe detonate (#2165): the values go to the crew of a ship, which has the AoE2 values (#1386).
     private boolean charges(CommandSender sender, String selector, Map<UUID, Charge> to, String ticks, String attack,
                             String shots, String blast, String bonus) {
@@ -2377,6 +2396,9 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         }
         if (args.length == 8 && args[0].equals("gate")) {              // the portcullis of a gate (#1325, #1656)
             return gates.command(sender, args);
+        }
+        if (args.length == 4 && args[0].equals("gate")) {              // lock and unlock a gate (#2762)
+            return gates.lock(sender, args);
         }
         if (args.length >= 2 && args[0].equals("minimap")) {           // #1237, #1238, #1567
             return minimap.command(sender, args);
