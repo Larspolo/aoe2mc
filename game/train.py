@@ -820,8 +820,10 @@ def seconds(g, name, building=None, k=None):
     at building (civs.train_time: Mapuche Settlements, #2432), and of the Recruitment Doctrine k of a unit (doctrine(),
     default the present one, #2483). The time of "Add Train Location" at building replaces TRAIN_TIMES (#2865)."""
     age, time = value("faster", name, (9, 0))
+    base = vars(g).get("trigger_times", {}).get(name)                  # "Change Technology Research Time" (#2820)
     own = (added(g, building, name) or (0, 0))[1] if building else 0   # Add Train Location (#2865)
-    return (own or (time if build.ages(g) >= age else TRAIN_TIMES[name])) / (civs.work_rate(g, building) if building else 1) \
+    return (own or (base if base is not None else time if build.ages(g) >= age else TRAIN_TIMES[name])) \
+        / (civs.work_rate(g, building) if building else 1) \
         / civs.train_rate(g, name) / civs.age_rate(g, name) * civs.research_time(g, name) / civs.turbo(g, name) \
         * (civs.train_time(g, building, name) if building else 1) \
         * (doctrine(g, building, k)[2] if building and name not in TECHS else 1)
