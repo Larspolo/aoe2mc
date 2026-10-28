@@ -68,6 +68,7 @@ import goto  # noqa: E402
 import herd  # noqa: E402
 import hill  # noqa: E402
 import hints  # noqa: E402
+import map_table  # noqa: E402
 import market  # noqa: E402
 import menu  # noqa: E402
 import monk  # noqa: E402
@@ -727,6 +728,8 @@ class Gather:
             self.command(allies_command(self.data.get("players", {})))   # allies do not shoot each other (#1315)
             self.command(neutral_command(self.data.get("players", {})))  # no automatic attack on neutrals (#1645)
         self.forage()
+        if self.paper:
+            map_table.setup(self)                                      # the framed minimap (#2586)
         cheats.setup(self)
         bossbar.setup(self)
         for o in self.units:                                           # the entities must be loaded (forceload)
@@ -895,6 +898,7 @@ class Gather:
         import ai                                                      # ai imports this module
         monks = self.monks()
         repair.drop(self, self.selected)                               # Serjeants stop a repair (#2128)
+        self.end_patrols(self.selected)
         trebs = {u for u in self.selected if self.soldiers.get(u) == trebuchet.NAME}
         for u in sorted(trebs):                                        # it unpacks first (#1351)
             trebuchet.unpack(self, u, target)
@@ -1122,6 +1126,7 @@ class Gather:
         build.tick(self)
         flare.tick(self)
         hints.tick(self)
+        map_table.tick(self)
         menu.clicks(self)
         cheats.clicks(self)
         self.command(f"execute as {self.who} unless items entity @s container.* minecraft:carrot_on_a_stick[!custom_data] "
@@ -1337,6 +1342,13 @@ class Gather:
                 and (cell := fleet.pick(self, eye, d)) and self.map.wet(*cell):
             self.walk_to(name, cell)                                   # the ships sail on the water (#1383)
 
+    def end_patrols(self, units):
+        """A new order ends the trigger patrols of the units, as in AoE2 DE (#2674): their patrol tags of
+        scenario.orders go, so the next leg does not walk them back. No command when no patrol walks."""
+        for tag, _, _ in vars(self).get("patrols", ()):
+            for u in sorted(units):
+                self.command(f"tag {u} remove {tag}")
+
     def shore_fish(self, eye, d):
         """The tile of the shore fish under the water surface that the ray from eye in direction d hits (fleet.pick), or
         None: villagers fish it from the land (#1283, #2349)."""
@@ -1353,6 +1365,7 @@ class Gather:
         import ai                                                      # ai imports this module
         units = self.selected if units is None else set(units)
         repair.drop(self, units)                                       # Serjeants stop a repair (#2128)
+        self.end_patrols(units)
         boats = {u for u in units if replay.ship(self.soldiers.get(u, ""))}
         out = fleet.order(self, boats, cell)                           # a ship sails on the water (#1383)
         transport.aim(self, out, cell)                                 # a loaded ship unloads at a land cell (#1385)
