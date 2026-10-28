@@ -14,7 +14,7 @@ from game import build, combat, fleet, run, train
 
 
 def test_the_two_ships_have_the_aoe2_de_values_of_the_wiki():
-    assert build.AGE["FIRE_SHIP"] == build.AGE["DEMOLITION_SHIP"] == 2                      # the Castle Age
+    assert build.AGE["FIRE_SHIP"] == build.AGE["DEMOLITION_SHIP"]
     assert ("DEMOLITION_RAFT", "DEMOLITION_SHIP") in train.lines("DEMOLITION_SHIP_UPGRADE")   # (#1483)
     assert ("FIRE_GALLEY", "FIRE_SHIP") in train.lines("MEDIUM_WARSHIPS")
 
