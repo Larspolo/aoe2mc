@@ -358,6 +358,7 @@ def map_description(d, path):
 def read_scenario(path):
     from AoE2ScenarioParser.scenarios.aoe2_de_scenario import AoE2DEScenario
     from AoE2ScenarioParser.datasets.terrains import TerrainId
+    from AoE2ScenarioParser.datasets.techs import TechInfo
     from AoE2ScenarioParser.datasets.trigger_lists import ColorMood, VictoryCondition
 
     with contextlib.redirect_stdout(io.StringIO()):   # the parser prints a lot of status text
@@ -403,6 +404,7 @@ def read_scenario(path):
     goals = sorted((t.description_order, i, (t.description or t.name or "").strip())   # the objectives that the game lists
                    for i, t in enumerate(scn.trigger_manager.triggers) if t.display_as_objective)
     texts["objectives"] = "\n".join(f"- {g}" for _, _, g in goals if g)
+    techs = {t.ID: t.name for t in TechInfo}                    # the names of game/data/train.jsonl
     texts["triggers"] = [dict(id=t.trigger_id, name=t.name, enabled=bool(t.enabled), looping=bool(t.looping),
                               conditions=[dict(type=c.condition_type, timer=c.timer, inverted=bool(c.inverted),
                                                **({"quantity": c.quantity, "player": c.source_player,
@@ -427,6 +429,8 @@ def read_scenario(path):
                                                if e.effect_type == CHANGE_VARIABLE else {}),
                                             **({"target": e.target_player}                # "Change Ownership" (#2570)
                                                if e.effect_type == CHANGE_OWNERSHIP else {}),
+                                            **({"technology": techs.get(e.technology, str(e.technology))}   # #2577
+                                               if e.effect_type == RESEARCH_TECHNOLOGY else {}),
                                             **({"unit": e.time_unit, "timer": e.timer}   # "Display Timer" (#2572)
                                                if e.effect_type == DISPLAY_TIMER else {}),
                                             **({"sound": e.sound_name or ""}             # "Play Sound" (#2644)
@@ -2583,7 +2587,8 @@ def write_region(path, chunks):
 
 
 def write_objects(path, size, T, H, players, objects, cols, ground, timeline=None, mood="DEFAULT", map_ground=None,
-                  victory=None, messages=None):
+                  victory=None, messages=None,
+                  research=()):
     """aoe2mc.json: the data that a game program needs (docs/research/gameplay.md). Tiles are in the turned grid
     (--orientation): block x = tile x × T, block z = tile y × T. Units have the UUID of their entity, buildings
     their footprint [x0, z0, x1, z1) in blocks. Objects of a recorded game have their object ID ("ref").
@@ -2596,6 +2601,7 @@ def write_objects(path, size, T, H, players, objects, cols, ground, timeline=Non
     and the "names" of the selected objects (name_timeline).
     "players" of a scenario also have its "resources" (food, wood, gold, stone), "pop_limit" and "computer" (#2539).
     "mood": the map color mood of a DE scenario (ColorMood name, #1594), else "DEFAULT".
+    "research": the "Research Technology" effects of the triggers (research_list, #2577), if any.
     "map_ground": the map bytes of map 0 without the objects (map_colors), one hex string per pixel row z: the live
     minimap of the plugin paints them where no live object is (#1940).
     "victory" (DE scenarios only): the victory setting of the scenario, {"condition": a name of run.VICTORIES or
@@ -2635,6 +2641,8 @@ def write_objects(path, size, T, H, players, objects, cols, ground, timeline=Non
         data["victory"] = victory
     if messages and (texts := {k: v for k, v in messages.items() if k in CHAPTERS and (v or "").strip()}):
         data["messages"] = texts
+    if research:
+        data["research"] = list(research)
     if map_ground is not None:
         data["map_ground"] = [bytes(row).hex() for row in np.asarray(map_ground, np.uint8)]
     with open(path, "w") as f:
@@ -2729,6 +2737,7 @@ OWN_FEWER_OBJECTS = 4                                              # conditions 
 OWN_OBJECTS = 3
 PLAY_SOUND = 4                                                     # "Play Sound" (#2644)
 REMOVE_OBJECT = 15
+RESEARCH_TECHNOLOGY = 2                                            # "Research Technology" (#2577)
 SEND_CHAT = 3
 TELEPORT_OBJECT = 35
 TIMER = 10
@@ -2927,6 +2936,17 @@ def freeze_lines(e, c):
             f"execute as {at} run data merge entity @s {{NoAI:1b}}"]
 
 
+def research_lines(e, c):
+    """The command of "Research Technology" (#2577): the score #r<trigger>.<effect index> of aoe_tech is 1. A
+    converted world has no technologies: the scenario mode of the game program reads the score (research_list)."""
+    if not e.get("technology") or e["player"] <= 0:
+        return []
+    c.setup["scoreboard objectives add aoe_tech dummy"] = None
+    c.stats["research"] += 1
+    i = next(i for i, x in enumerate(c.t["effects"]) if x is e)
+    return [f"scoreboard players set #r{c.t['id']}.{i} aoe_tech 1"]   # the game program reads it
+
+
 def view_lines(e, c):
     """The commands of "Change View" (#2610): in Minecraft the player is the camera, so a tp of the players of the
     team pN (team_lines) to the middle of the tile, on the ground. Player -1 or 0: all players."""
@@ -3035,6 +3055,7 @@ EFFECTS = {
     KILL_OBJECT: object_lines,
     PLAY_SOUND: sound_lines,
     REMOVE_OBJECT: object_lines,
+    RESEARCH_TECHNOLOGY: research_lines,
     SEND_CHAT: chat_lines,
     TELEPORT_OBJECT: teleport_lines,
 }
@@ -3111,6 +3132,16 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
         files["data/minecraft/tags/function/tick.json"] = {"values": ["aoe2mc:tick"]}
         files["data/aoe2mc/function/tick.mcfunction"] = "\n".join(tick) + "\n"
     return load, files
+
+
+def research_list(triggers):
+    """The "Research Technology" effects that trigger_files writes, for aoe2mc.json "research" (#2577): the score of
+    the effect in aoe_tech (1: the trigger fired), its player and its technology (a name of game/data/train.jsonl). A
+    converted world has no technologies: the scenario mode of the game program gives them (game/scenario.py)."""
+    found = "".join(trigger_files(triggers)[1].get(f"data/aoe2mc/function/trigger/{t['id']}.mcfunction", "")
+                    for t in triggers)
+    return [dict(score=f"#r{t['id']}.{i}", player=e["player"], technology=e["technology"])
+            for t in triggers for i, e in enumerate(t["effects"]) if f"#r{t['id']}.{i} aoe_tech 1" in found]
 
 
 # The map of the world goes into the off-hand of each player once, through the tag aoe2mc_map (#966).
@@ -3721,7 +3752,8 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
     shade *= np.where(depth > 0, np.clip(1.6 - 0.2 * depth, 1, 1.4), 1)     # shallow water is lighter, as on a map item
     img = Image.fromarray(np.clip(img * shade[..., None], 0, 255).astype(np.uint8))
     write_objects(os.path.join(out, "aoe2mc.json"), size, T, H, players, objects, cols, ground, timeline,
-                  texts.get("mood", "DEFAULT"), map_colors(np.asarray(img))[0], texts.get("global_victory"), texts)
+                  texts.get("mood", "DEFAULT"), map_colors(np.asarray(img))[0], texts.get("global_victory"), texts,
+                  research_list(texts.get("triggers", [])))
     triggers, tstats = texts.get("triggers", []), Counter()
     haze = FOG.get(texts.get("mood")) if mood == "on" and (fog or ambience == "full") else None
     n, amb = write_datapack(out, objects, ground, cols.biome_names, ambience, players, triggers, T, tstats, haze,
