@@ -2729,6 +2729,7 @@ CHANGE_VARIABLE, VARIABLE_VALUE = 56, 22                               # the sce
 TICKED = COUNTED + (VARIABLE_VALUE,)                               # conditions of the tick function
 FREEZE_OBJECT = 22                                                     # "Freeze Object" (#2608)
 RESEARCH_TECHNOLOGY = 2
+CHANGE_OBJECT_NAME = 26                                                # "Change Object Name" (#2616)
 CHANGE_VIEW = 16                                                       # "Change View" (#2610)
 CLEAR_INSTRUCTIONS = 21                                                # "Clear Instructions" (#2609)
 
@@ -2824,6 +2825,20 @@ def damage_lines(e, T, stats):
     at = found[0]                                                      # Gaia: not the players (effect_units)
     stats["damage"] += 1
     return [f"execute as {at} run damage @s {q}"]                      # damage takes one entity
+
+
+def name_lines(e, T, stats):
+    """The commands of "Change Object Name" (#2616): the new name (with no AoE2 color tags) on the CustomName text of
+    each unit of the effect (effect_units). The label of a unit is on its top entity (units.make_entity), and the
+    selector has no mounts: the rider gets the name. Only the text changes, so the player color stays."""
+    msg = re.sub(r"<[^<>]*>", "", e["message"]).replace("\r", "").strip()
+    found = effect_units(e, T) if msg else None
+    if found is None:
+        stats["change object name (not supported yet)" if msg else "change object name (no name)"] += 1
+        return []
+    stats["change object name"] += 1
+    return [f"execute as {found[0]} run data modify entity @s CustomName.text set value "   # one entity
+            f"{json.dumps(msg, ensure_ascii=False)}"]
 def owner_lines(e, T, stats):
     """The commands of "Change Ownership" (#2570): the units of the player in the area (area_selector) and their
     mounts get the tag and the team of the target player. A temporary tag marks them first: the selector uses the old
@@ -2962,6 +2977,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
     "Change Variable": variable_lines; a "Variable Value" condition runs in the tick function as an area (#2611).
     "Declare Victory" sets the score #p<player> of aoe_win to 1: the scenario mode of the game program ends the game.
     "Freeze Object": freeze_lines (#2608).
+    "Change Object Name": name_lines (#2616).
     "Research Technology": a score in aoe_tech for the game program (research_list, #2577).
     "Change View": view_lines (#2610).
     "Clear Instructions": title @a clear (#2609).
@@ -3013,6 +3029,9 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
                 continue
             if e["type"] == FREEZE_OBJECT:
                 lines += freeze_lines(e, T)
+                continue
+            if e["type"] == CHANGE_OBJECT_NAME:
+                lines += name_lines(e, T, stats)
                 continue
             if e["type"] == CHANGE_VIEW:
                 lines += view_lines(e, T, ground)
