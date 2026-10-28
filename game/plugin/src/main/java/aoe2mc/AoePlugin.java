@@ -666,7 +666,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     // attack with no bonus (AoE2 DE: the extra projectile of an Armenian galley deals 1 attack).
     private static Stats volley(Stats a, int attack) {
         return attack <= 0 ? a : new Stats(attack, a.melee(), a.pierce(), a.ranged(), a.pierces(), a.classes(), Map.of(),
-                a.reload(), a.taken());
+                a.reload(), a.taken(), a.friendly());
     }
 
     // The values of the projectile p of a unit with the values a: those of its tag (an extra arrow), else a.
