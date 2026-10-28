@@ -11,7 +11,7 @@ OLD = sorted(k.upper() for k in civs.KEYS if hasattr(civs, k.upper()) and k not 
 
 def test_each_key_of_a_civilization_line_has_its_description():
     keys = {k for r in table.load("civs.jsonl") for k in r} - {"name"}
-    assert sorted(keys - set(civs.KEYS)) == []
+    assert sorted(keys - set(civs.KEYS)) == [], "give each new key its line in game/data/civ_keys.jsonl (#2281)"
     assert {"COSTS", "UNITS", "WORK", "WORK_RATE"} <= set(OLD)
     assert civs.KEYS["regen"].endswith("(#2247)") and "regeneration" in civs.KEYS["regen"]
 

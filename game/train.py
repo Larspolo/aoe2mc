@@ -262,6 +262,8 @@ REQUIRES = {r["name"]: (r["requires"][0], *map(tuple, r["requires"][1:]))   # an
             for r in ROWS if "requires" in r}                      # one of the third list alone
 TECH_AGE = {r["name"]: r["age"] for r in ROWS if "age" in r}       # the age of a technology (build.AGE)
 AGES = ("Dark Age", "Feudal Age", "Castle Age", "Imperial Age")    # the age after each researched age (index: ages)
+# AoE2 DE setting "Starting age" (game/data/setup.jsonl): the researched ages and the skipped technologies (#2265)
+STARTS = {r["name"]: r for r in table.load("setup.jsonl") if "ages" in r}
 QUEUE = 15                                                         # units in the queue of one building, as in AoE2
 HOUSING = {r["name"]: r["housing"] for r in BUILDING_ROWS if "housing" in r}   # population of a complete building
 LIMIT = 200                                                        # the AoE2 population limit
@@ -671,8 +673,23 @@ def faster(unit, name):
     return unit == name or unit in civs.GROUPS and civs.GROUPS[unit](name, s) or unit.islower() and unit in s.classes
 
 
-def research(g, entry):
-    """A technology is complete: keep it in g.techs and give the live villagers and military units the new values."""
+def start(g, setting):
+    """The AoE2 DE setting "Starting age" (STARTS, run.py --age): the player starts with the ages and with all
+    technologies of the earlier ages that its civilization has (AoE2 wiki "Random map"); "post-imperial" with all
+    technologies except "skip" (wiki "Post-Imperial Age"). No age bonus pays: the player does not advance (#2265)."""
+    s = STARTS[setting]
+    for t in build.AGE_TECHS[:s["ages"]]:
+        research(g, {"name": t}, start=True)
+    skip = (*build.AGE_TECHS, *s.get("skip", ()))
+    while todo := [t for t in TECHS if t not in g.techs and t not in skip and TECH_AGE.get(t, 0) < s["ages"]
+                   and unlocked(g, t)]:                            # in passes: a technology after the one before it
+        for t in todo:
+            research(g, {"name": t}, start=True)
+
+
+def research(g, entry, start=False):
+    """A technology is complete: keep it in g.techs and give the live villagers and military units the new values.
+    start: a technology of the start age (start()): no text and no bonus of an age or technology."""
     import combat, gather                                          # gather imports this module
     if entry["name"] in g.techs:                                   # a repeat: "going above and beyond" (#968)
         g.repeats[entry["name"]] = g.repeats.get(entry["name"], 0) + 1
@@ -702,7 +719,7 @@ def research(g, entry):
     if entry["name"] in UPGRADES:                                  # the live units of the line get the new name
         for uuid, new in [(u, new) for old, new in lines(entry["name"], g) for u, n in g.soldiers.items() if n == old]:
             g.soldiers[uuid] = new
-            g.command(combat.stats_command(uuid, new, stats(g, new)))
+            g.command(combat.stats_command(uuid, new, stats(g, new), civs.taken(g, new)))
             if cmd := combat.range_command(uuid, new, g.map.T, s=stats(g, new)):   # the range and blast of an onager
                 g.command(cmd)
             g.command(combat.label_command(uuid, new))               # the name of a new unit (units.pretty)
@@ -710,7 +727,7 @@ def research(g, entry):
     for uuid, name in [(u["uuid"], u["name"]) for u in g.units if "uuid" in u] + list(g.soldiers.items()):
         if stats(g, name) != combat.stats(name):
             g.command(trebuchet.stats_command(g, uuid) if name == trebuchet.NAME   # the armor of its state (#1409)
-                      else combat.stats_command(uuid, name, stats(g, name)))
+                      else combat.stats_command(uuid, name, stats(g, name), civs.taken(g, name)))
         if name == trebuchet.NAME and trebuchet.state(g, uuid) != "unpacked":
             continue                                               # packed: range 0, the unpack sends the range (#1414)
         if stats(g, name).range != combat.stats(name).range:          # Fletching (#724)
@@ -730,6 +747,8 @@ def research(g, entry):
         for uuid, name in g.soldiers.items():                      # the walk speed of the age (civs.UNITS, Celts)
             if civs.speed(g, name) != 1:
                 g.command(ai.speed_command(uuid, name, g.map.T, gather.NORMAL * speed(g, name)))
+        if start:
+            return
         for r, v in civs.AGE_GIFTS.get(civs.civ(g), {}).items():    # Dravidians, Ethiopians (#1926)
             g.stock[r] += v
             g.command(f"scoreboard players add {r.capitalize()} {g.board} {v}")
@@ -740,6 +759,8 @@ def research(g, entry):
         g.command(f"title @a[team=p{g.player}] title " + json.dumps({"text": age(g), "color": "gold"}))  # the own team only
         g.command("tellraw @a " + json.dumps({"text": f"Player {g.player} advances to the {age(g)}.", "color": "gold"}))
         g.command("playsound minecraft:ui.toast.challenge_complete master @a ~ ~ ~ 1 1 1")
+        return
+    if start:
         return
     for r, v in civs.TECH_GIFTS.get(civs.civ(g), {}).items():       # Spanish: 20 gold, not for an age (#2175)
         g.stock[r] += v
@@ -870,7 +891,7 @@ def summon(g, name, pos, rotation=math.pi / 2, player=None):
     uuid = units.uuid_str(nbt["UUID"])
     g.command(f"summon {kind} {pos[0]} {pos[1]} {pos[2]} {nbt.snbt()}")
     import combat, gather                                          # both import gather, gather imports this module
-    g.command(combat.stats_command(uuid, name, stats(g, name)))
+    g.command(combat.stats_command(uuid, name, stats(g, name), civs.taken(g, name)))
     if cmd := combat.range_command(uuid, name, g.map.T, s=stats(g, name)):   # an archer shoots from its range (#670)
         g.command(cmd)
     if cmd := combat.sight_command(uuid, name, g.map.T, s=stats(g, name)):   # it attacks enemies in sight (#775)

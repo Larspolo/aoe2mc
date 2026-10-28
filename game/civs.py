@@ -26,6 +26,7 @@ RULES = {
     "cavalry archers": lambda n, s: "archer" in s.classes and "cavalry" in s.classes,
     "champi scout line, archery range units": lambda n, s: "CHAMPI_" in n   # the wiki: all archers but the conquistador
         or "archer" in s.classes and not tagged(n, "conquistador type"),     # type (#2116)
+    "elephants": lambda n, s: "elephant" in s.classes,
     "foot archers": lambda n, s: foot_archer(s),
     "foot archers but skirmishers": lambda n, s: foot_archer(s) and not tagged(n, "skirmishers"),
     "foot archers but skirmishers, condottieri": lambda n, s: GROUPS["foot archers but skirmishers"](n, s),
@@ -33,6 +34,8 @@ RULES = {
     "infantry": lambda n, s: "infantry" in s.classes,
     "infantry, mounted": lambda n, s: "infantry" in s.classes or mounted(s),
     "infantry, slingers, skirmishers": lambda n, s: "infantry" in s.classes or tagged(n, "slingers") or tagged(n, "skirmishers"),
+    "land military units but siege": lambda n, s: not civilian(n) and "siege" not in s.classes
+        and not GROUPS["ships"](n, s),
     "land siege, Lou Chuans": lambda n, s: "siege" in s.classes,   # the ships of the group: "groups" (data/units.jsonl)
     "military": lambda n, s: not n.startswith("VILLAGER"),
     "military units": lambda n, s: not civilian(n),
@@ -44,6 +47,7 @@ RULES = {
     "skirmishers, elephant archers": lambda n, s: tagged(n, "skirmishers"),
     "skirmishers, genitours, spearman and scout lines": lambda n, s: "spearman" in s.classes
         or tagged(n, "skirmishers") or tagged(n, "scout line"),
+    "spearman line": lambda n, s: "spearman" in s.classes,
     "spearmen, skirmishers": lambda n, s: "spearman" in s.classes or tagged(n, "skirmishers"),
     "units": lambda n, s: True,
     "villagers": lambda n, s: n.startswith("VILLAGER"),
@@ -104,6 +108,8 @@ ECONOMY = tuple(sorted(r["name"] for r in TECH_ROWS if r.get("economy")))   # th
 WORK = {r["name"]: r["work"] for r in ROWS if "work" in r}
 LAST = {r["name"]: r["last"] for r in ROWS if "last" in r}   # resources last longer: a gathered unit takes 1 / factor (#2112)
 START = {r["name"]: r["start"] for r in ROWS if "start" in r}
+DECAY = {r["name"]: r["decay"] for r in ROWS if "decay" in r}   # the factor of the decay of carcasses (Jurchens: 0, #2310)
+PREDATOR_HIT = {r["name"]: r["predator_hit"] for r in ROWS if "predator_hit" in r}   # villager attack bonus (Magyars)
 TOWN_CENTER = {r["name"]: r["town_center"] for r in ROWS if "town_center" in r}
 BUSHES = {r["name"]: r["bushes"] for r in ROWS if "bushes" in r}
 DROP = {r["name"]: r["drop"] for r in ROWS if "drop" in r}
@@ -129,6 +135,8 @@ FARM_UPGRADES = {r["name"]: r["farm_upgrades"] for r in ROWS if "farm_upgrades" 
 #                                                                   farm upgrades (Sicilians: +125 %, train.research, #2230)
 RESEARCH_TIME = {r["name"]: [tuples(b) for b in r["research_time"]] for r in ROWS if "research_time" in r}
 EXTRA = {r["name"]: {k: tuple(v) for k, v in r["extra"].items()} for r in ROWS if "extra" in r}
+DROP_EXTRA = {r["name"]: {k: tuple(v) for k, v in r["drop_extra"].items()} for r in ROWS if "drop_extra" in r}
+PER_MINUTE = {r["name"]: {k: tuple(v) for k, v in r["per_minute"].items()} for r in ROWS if "per_minute" in r}
 CARRY = {r["name"]: [tuple(b) for b in r["carry"]] for r in ROWS if "carry" in r}
 # The age-up bonuses (#1926, AoE2 DE wiki): train.research applies AGE_GIFTS and AGE_VILLAGERS at the end of each age,
 # train.seconds divides the time of an age by AGE_RATE, and train.missing needs no buildings for AGE_NO_BUILDINGS (the
@@ -142,6 +150,8 @@ REGEN = {r["name"]: [tuples(b) for b in r["regen"]] for r in ROWS if "regen" in 
 FALLEN = {r["name"]: r["fallen"] for r in ROWS if "fallen" in r}
 KILL_GOLD = {r["name"]: r["kill_gold"] for r in ROWS if "kill_gold" in r}
 LOOT = {r["name"]: r["loot"] for r in ROWS if "loot" in r}
+RELIC_ATTACK = {r["name"]: tuples(r["relic_attack"]) for r in ROWS if "relic_attack" in r}
+FAITH = {r["name"]: r["faith"] for r in ROWS if "faith" in r}
 
 
 def tagged(n, group):
@@ -189,15 +199,26 @@ def regen(g, name, s):
 
 
 def units(g, name, s):
-    """The combat.Stats s of unit name with the bonuses of the civilization of the player of g (UNITS), the walk speed
-    aside (speed)."""
+    """The combat.Stats s of unit name with the bonuses of the civilization of the player of g (UNITS, RELIC_ATTACK), the
+    walk speed aside (speed)."""
+    names, each, most = RELIC_ATTACK.get(civ(g), ((), 0, 0))
+    if name in names:                                              # the relics in own monasteries (monk.relic_tick)
+        s = s._replace(attack=s.attack + min(each * sum(r["home"] is not None for r in getattr(g, "relics", ())), most))
     for v, c in changes(g, name, s):
         if v.startswith("bonus:") and c:                           # the attack against a class (#2249)
             s = s._replace(bonus={**s.bonus, v[6:]: s.bonus.get(v[6:], 0) + c})
-        elif v != "speed" and not v.startswith("bonus:"):
+        elif v == "bonus" and isinstance(c, float):                # a factor of each bonus (#2248)
+            s = s._replace(bonus={k: math.floor(n * c + 0.5) for k, n in s.bonus.items()})
+        elif v not in ("speed", "taken") and not v.startswith("bonus:"):
             old = getattr(s, v)
             s = s._replace(**{v: round(old * c, 3 if v == "reload" else None) if isinstance(c, float) else old + c})
     return s
+
+
+def taken(g, name):
+    """The factor of the bonus damage that unit name of the player of g takes (UNITS, value "taken"), else 1 (#2248)."""
+    import combat                                                  # combat imports gather, gather imports this module
+    return math.prod(c for v, c in changes(g, name, combat.stats(name)) if v == "taken")
 
 
 def has(what, name):
@@ -359,6 +380,17 @@ def work(g, kind):
     return WORK.get(civ(g), {}).get(kind, 1)
 
 
+def decay(g):
+    """The factor of the decay of the carcasses that the player of g kills (DECAY), else 1 (#2310)."""
+    return DECAY.get(civ(g), 1)
+
+
+def predator_hit(g):
+    """The attack bonus of the villagers of the player of g against predators (PREDATOR_HIT), else 0 (#2310): the
+    Magyars get +30 (AoE2 wiki, "Magyars"), so a villager kills each predator in one strike."""
+    return PREDATOR_HIT.get(civ(g), 0)
+
+
 def last(g, kind):
     """The factor of how long a resource of gather kind lasts for the civilization of the player of g (LAST), else 1:
     as in AoE2, the villager gets the same amount per trip, but the source loses less (Mayans, Puru, Tatar herds)."""
@@ -369,6 +401,18 @@ def extra(g, kind):
     """The second resource of gather kind for the civilization of the player of g: (resource, amount for each unit)
     (EXTRA), else None."""
     return EXTRA.get(civ(g), {}).get(kind)
+
+
+def drop_extra(g, kind):
+    """The second resource of a load of gather kind at the drop site for the civilization of the player of g:
+    (resource, factor of the load) (DROP_EXTRA), else None."""
+    return DROP_EXTRA.get(civ(g), {}).get(kind)
+
+
+def per_minute(g, kind):
+    """The resource that the work of gather kind earns for the civilization of the player of g: (resource, amount for
+    each AoE2 minute) (PER_MINUTE), else None."""
+    return PER_MINUTE.get(civ(g), {}).get(kind)
 
 
 def carry(g, kind):

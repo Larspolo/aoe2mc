@@ -38,6 +38,10 @@ Each relic in an own monastery gives 30 gold per AoE2 minute (GOLD, AoE2 wiki "R
 with a relic does not heal (AoE2 rule). A killed monk drops the relic at its place, and a fallen monastery drops its
 relics at its door.
 
+Civilization bonuses (#2314, AoE2 DE wiki): each relic in an own monastery gives +1 attack to the Lithuanian knights
+and Leitis, at most +4 (civs.RELIC_ATTACK, civs.units; relic_tick sends the new values), and Muisca monks regain faith
+100 % faster (civs.FAITH: the rest after a conversion is half as long).
+
     monk.order(g, player, cell)   # gather.Gather.click: a relic or a monastery at the block cell; True when it was one
     monk.relic_tick(g, dt)        # gather.Gather.step: pick up, put in, drop, and the gold
 """
@@ -183,10 +187,22 @@ def relic_tick(g, dt):
                 g.command(f"kill @e[type=item_display,tag=aoe_relic_{i}]")
                 relics(g)[i].update(monk=None, home=target)
                 g.carrier_at.pop(m, None)
+    if (n := sum(r["home"] is not None for r in relics(g))) != getattr(g, "relic_homes", 0):
+        g.relic_homes = n
+        rearm(g)
     g.relic_gold += GOLD * dt * sum(r["home"] in homes for r in relics(g))
     if (n := int(g.relic_gold)) > 0:
         g.relic_gold -= n
         g.earn("gold", n)
+
+
+def rearm(g):
+    """The own units of civs.RELIC_ATTACK get the attack of the relics in own monasteries (Lithuanians, #2314)."""
+    import civs, combat, train                                     # they import gather, gather imports this module
+    names = civs.RELIC_ATTACK.get(civs.civ(g), ((),))[0]
+    for uuid, name in [(u["uuid"], u["name"]) for u in g.units if "uuid" in u] + list(g.soldiers.items()):
+        if name in names:
+            g.command(combat.stats_command(uuid, name, train.stats(g, name)))
 
 
 def healable(name):
@@ -347,6 +363,12 @@ def spot(g, m, target, pos):
     return x + 0.5, g.map.y(x, z) or y0, z + 0.5
 
 
+def faith(g):
+    """The factor of the speed of the own monks that regain faith after a conversion (civs.FAITH: Muisca 2, #2314)."""
+    import civs                                                    # civs imports gather, gather imports this module
+    return civs.FAITH.get(civs.civ(g), 1)
+
+
 def convert(g, dt):
     """dt AoE2 seconds of the conversion orders of g.converting and of the rest of the monks after a conversion."""
     for m in list(g.faith):
@@ -386,5 +408,5 @@ def convert(g, dt):
                 (win if fort else die if heresy(g, owner) else take)(g, target)
                 for k in group:
                     del g.converting[k]
-                for k in rest:
-                    g.faith[k] = ILLUMINATED if "ILLUMINATION" in g.techs else REST   # the group in range (Theocracy: one)
+                for k in rest:                                     # the group in range (Theocracy: one)
+                    g.faith[k] = (ILLUMINATED if "ILLUMINATION" in g.techs else REST) / faith(g)
