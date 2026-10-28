@@ -118,6 +118,10 @@ LANCERS = tuple(r["name"] for r in ROWS if r["name"] not in MISSING["STEPPE_LANC
 FIRE_LANCERS = tuple(r["name"] for r in ROWS if r["name"] not in MISSING["FIRE_LANCER"])   # the fire lancer (#1953)
 CHURCH_RATE, CHURCH_NEAR = 1.1, 10.5                              # +10 % work in the 21-tile square around a Fortified
                                                                   # Church (tiles from its center, #1930)
+# "aura" (#2378): the own complete buildings that make the gatherers of some resources work faster near them and take
+# these resources: {"buildings", "resources", "rate", "range": tiles from the footprint} (Thracian forts and towers).
+# gather.Map.drop_site adds them to the drop sites, Gather.aura_rate gives the rate.
+AURA = {r["name"]: r["aura"] for r in ROWS if "aura" in r}
 TECH_ROWS = table.load("train.jsonl")
 SMITH = tuple(sorted(r["name"] for r in TECH_ROWS if r.get("building") == "BLACKSMITH"))   # the blacksmith (#1452)
 ECONOMY = tuple(sorted(r["name"] for r in TECH_ROWS if r.get("economy")))   # the economic technologies but Coinage and
