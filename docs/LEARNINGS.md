@@ -28,6 +28,7 @@ and `tests/test_learnings.py` fails above 80 lines (#1698).
 - The label `close` (#1740) works only with the owner's `autoMode` allow rule (`~/.claude/settings.json`, written by the setup script in the environment settings, 2026-10-27): without it the label and a skill text about it got "Auto-Mode Bypass". `claude auto-mode config` shows the allow lines.
 - A background `-m mc` run imports the code of the working tree: do not `git checkout` another branch there until it ends (#1664 tested main's `units.py` for 10 minutes). Do the next ticket in a `git worktree`.
 - `$TMPDIR` is empty in the cloud sessions: `cat > $TMPDIR/x.py <<EOF` writes `/x.py`, and a `cat > $TMPDIR/x` without a heredoc waits for input until the 120 s timeout (#2032). Use the scratchpad path.
+- A run with an open PR that does the next ticket in a local commit (`more.md`): beat the claim of the PR's ticket too (`claim.py N --beat`) until it merges. A red PR with no beat for 10 minutes is "stalled": another run took #2211 over while its run worked on #2173.
 
 ## Code
 
