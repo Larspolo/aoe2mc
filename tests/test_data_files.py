@@ -189,6 +189,9 @@ def check_setup(row):                                      # a value of a settin
     assert all(isinstance(v, int) and v >= 0 for v in row.get("resources", {}).values()), row["name"]
     assert row.get("ages", 0) in range(5) and set(row.get("skip", ())) <= NAMES["train.jsonl"], row["name"]
     assert set(row.get("buildings", ())) <= NAMES["build.jsonl"] and set(row.get("villagers", ())) <= RES, row["name"]
+    assert set(row.get("sites", ())) <= NAMES["buildings.jsonl"] and set(row.get("more", ())) <= NAMES["train.jsonl"], row["name"]
+    assert all(set(v) == RES for v in row.get("start", {}).values()) and set(row.get("start", ())) <= NAMES["setup.jsonl"]
+    assert set(row.get("swap", {}).items()) <= {(a, b) for a in NAMES["train.jsonl"] for b in NAMES["train.jsonl"]}
     assert set(row.get("side_buildings", ())) <= set(row.get("sides", ())), row["name"]   # #2462
     assert all(set(v) <= NAMES["build.jsonl"] for v in row.get("side_buildings", {}).values()), row["name"]
     assert {row["ring"][k] for k in ("wall", "gate")} <= NAMES["build.jsonl"] if "ring" in row else True, row["name"]

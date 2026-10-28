@@ -7,13 +7,17 @@
 {"name": "level", "type": "str", "kind": true, "text": "A game mode with the resource level of this name when --resources is standard.", "issue": 2438}
 {"name": "loaded", "type": "str", "text": "What a game mode does in a loaded game: skip or start.", "issue": 2521}
 {"name": "module", "type": "str", "text": "The module of game/ with setup(g, mode) of a game mode.", "issue": 2521}
+{"name": "more", "type": "dict", "text": "The extra start units of a game mode: the number of each unit of train.jsonl.", "issue": 2459}
 {"name": "note", "type": "str", "text": "The source of the values (the AoE2 wiki page) and the issue.", "issue": 2264}
 {"name": "random", "type": "list", "kind": true, "text": "A resource level that is one of these levels, at random.", "issue": 2489}
 {"name": "resources", "type": "dict", "kind": true, "text": "A resource level: the start amount of food, wood, gold and stone.", "issue": 2264}
 {"name": "ring", "type": "dict", "text": "A ring of walls with a gate around each base: radius, wall and gate.", "issue": 2462}
 {"name": "side_buildings", "type": "dict", "text": "The start buildings of each side of a game mode.", "issue": 2462}
 {"name": "sides", "type": "dict", "text": "The start resources of each side of a game mode (ally, attacker, defender).", "issue": 2441}
+{"name": "sites", "type": "dict", "text": "The start buildings of a game mode of buildings.jsonl that each player gets on a free site of the map.", "issue": 2459}
 {"name": "skip", "type": "list", "text": "The technologies of train.jsonl that a start age does not research.", "issue": 2265}
+{"name": "start", "type": "dict", "text": "The start resources of a game mode for each resource level of --resources.", "issue": 2459}
+{"name": "swap", "type": "dict", "text": "The technologies of train.jsonl that a game mode puts in place of others (old: new).", "issue": 2459}
 {"name": "treaty", "type": "str", "text": "The treaty of a game mode: endless, no player can attack another.", "issue": 2406}
 {"name": "units", "type": "list", "kind": true, "text": "A game mode with these start units of units.jsonl (an empty list: no change).", "issue": 2347}
 {"name": "villagers", "type": "dict", "text": "The start villagers of a game mode at each resource.", "issue": 2408}
