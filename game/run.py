@@ -82,6 +82,7 @@ AGENT = {"User-Agent": "aoe2mc (https://github.com/Larspolo/aoe2mc)"}   # the Pa
 
 PLUGIN = os.path.join(HERE, "plugin")                               # the Paper plugin: aoe moveto, aoe attack (#435)
 BUNDLED = os.path.join(PLUGIN, "aoe2mc-plugin.jar")                # the jar in an app bundle (#1778): no JDK needed
+STOP_LINE = "\x03"                                                  # the Stop of the window on Windows (gui.STOP_LINE, #3003)
 
 
 def plugin_jar(version):
@@ -750,7 +751,9 @@ def console(game):
     (#1777: the command line of the window, gui.py). It ends at the end of stdin (EOF)."""
     def read():
         for line in sys.stdin:
-            if line := line.strip().lstrip("/"):
+            if line.strip() == STOP_LINE:            # the Stop of the window on Windows (gui.stop_game, #3003)
+                interrupt()
+            elif line := line.strip().lstrip("/"):
                 try:
                     print(game.command(line), flush=True)
                 except Exception as e:                # one failed command (too long, no server) keeps the line open
@@ -758,6 +761,14 @@ def console(game):
     t = threading.Thread(target=read, daemon=True)
     t.start()
     return t
+
+
+def interrupt():
+    """A KeyboardInterrupt in the main thread, as Ctrl-C gives, also when it sleeps (#3003)."""
+    if hasattr(signal, "pthread_kill"):
+        signal.pthread_kill(threading.main_thread().ident, signal.SIGINT)
+    else:                                            # Windows: the C handler of SIGINT also wakes a sleep of the main thread
+        signal.raise_signal(signal.SIGINT)
 
 
 def given(ap, argv):
@@ -777,7 +788,7 @@ def ctrl_c():
     that the parent ignores (a background job, nohup): then the game did not stop, and gui.stop_game killed the server
     after 30 s with no save (#2658)."""
     signal.signal(signal.SIGINT, signal.default_int_handler)
-    if hasattr(signal, "SIGBREAK"):                  # Windows: the window (gui.stop_game) sends Ctrl-Break (#1775)
+    if hasattr(signal, "SIGBREAK"):                  # Windows: Ctrl-Break in a console (the window sends STOP_LINE, #3003)
         signal.signal(signal.SIGBREAK, signal.default_int_handler)
 
 
