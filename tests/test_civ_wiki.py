@@ -25,6 +25,7 @@ TABLES = (                                                            # one per 
     "BUILD_OF",
     "COSTS",
     "COST_PER",
+    "DROP",
     "GARRISON",
     "REPAIR",
     "REPAIR_COST",
