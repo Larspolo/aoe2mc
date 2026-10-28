@@ -238,6 +238,7 @@ def build_order(g, site, units):
     men = sorted(u for u in units if combat.REPAIRS.get(g.soldiers.get(u)) == site["name"])
     if not men or site["progress"] >= 1 or site.get("player", g.player) != g.player:
         return []
+    g.new_order(men)
     x0, x1, z0, z1 = rect = site["footprint"]
     march(g, men, rect, g.map.around({(x, z) for x in range(x0, x1) for z in range(z0, z1)}), "raising", site)
     return men

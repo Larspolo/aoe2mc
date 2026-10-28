@@ -1398,11 +1398,11 @@ class Gather:
     def new_order(self, units):
         """A new order ends each old order of the units, as in AoE2 (#3007): the repair of a Serjeant (#2128), the
         trigger patrols (#2674), the walk into a building, a siege tower or a transport ship, a conversion, a relic
-        trip and the farm of a farmer. Each order function calls it before it sets its own state."""
+        trip, the farm of a farmer and the route of a trade cart (#3278). Each order function calls it before it sets its own state."""
         units = set(units)
         repair.drop(self, units)
         self.end_patrols(units)
-        for key in ("entering", "boarding", "loading", "converting", "fetching"):
+        for key in ("entering", "boarding", "loading", "converting", "fetching", "trade"):
             table = vars(self).get(key, {})
             for u in units & table.keys():
                 del table[u]
