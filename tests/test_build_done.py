@@ -25,7 +25,7 @@ def done(name, objects=()):
         g.step()
         if site["progress"] == 1:
             break
-    assert site["progress"] == 1 and g.villagers["v0"].state == "idle"
+    assert site["progress"] == 1 and g.villagers["v0"].state in ("idle", "to_tree")   # a camp or farm: work on (#3271)
     x0, x1, z0, z1 = site["footprint"]
     return server, g, {(x, z) for x in range(x0, x1) for z in range(z0, z1)}
 

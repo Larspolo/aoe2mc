@@ -71,6 +71,7 @@ class Bot:
         self.failed = set()                                            # sources that a villager could not reach
         self.sides = (None, {})                                        # (own and foe places, {tile: at home}) (#1810)
         self.g.home = self.home                                        # the next bush or mine of Gather.nearest too
+        self.g.work_on = False                                         # the bot gives the tasks after a build or a tree (#3271)
 
     def setup(self):
         """Find the villagers of the player (the entities must be loaded) and make the objective of the resources."""
