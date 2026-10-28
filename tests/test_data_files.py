@@ -90,6 +90,7 @@ def check_civs(row):
         "cost_per": list,
         "costs": list,
         "drop": dict,
+        "farm_upgrades": float,
         "twice": list,
         "unique": str,
         "units": list,
