@@ -917,6 +917,8 @@ def diplomacy(g):
     g.command(gather.allies_command(g.players))
     if not treaty.holds(g):
         g.command(gather.neutral_command(g.players))
+    import owners                                                      # owners -> build -> gather -> this module
+    owners.update_enemies(g)                                           # the new enemies and allies (#2996)
 
 
 def visibility(g):

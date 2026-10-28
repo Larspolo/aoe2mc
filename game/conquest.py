@@ -120,6 +120,8 @@ def last_man(g, left, lost, allied, allies_command):
     if len(left) > 1 and all(allied(g.players, a, b) for a in left for b in left):
         for n in left:
             g.players[str(n)].pop("team", None)
+        import owners                                                  # owners -> build -> gather -> cheats
+        owners.update_enemies(g)                                       # the last allies are enemies (#2996)
         if g.paper:
             g.command(allies_command(g.players))
         g.command("tellraw @a " + json.dumps({"text": "Only allies are left: the alliances end. The last player alive "
