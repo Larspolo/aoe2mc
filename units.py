@@ -593,6 +593,15 @@ def top_entity(nbt):
     return nbt
 
 
+@functools.lru_cache(maxsize=None)
+def type_ids():
+    """{name: AoE2 unit ID} of the units and heroes of AoE2ScenarioParser: the type tag of a unit that a trigger or
+    the game program makes (#2974). A name is in one enum only; UnitInfo wins, as in aoe2mc.object_kinds."""
+    from AoE2ScenarioParser.datasets.heroes import HeroInfo
+    from AoE2ScenarioParser.datasets.units import UnitInfo
+    return {e.name: e.ID for e in HeroInfo} | {e.name: e.ID for e in UnitInfo}
+
+
 def make_entity(o, players, pos, rng, desc=None):
     """Entity NBT for AoE2 unit o at block position pos, or None. desc: the result of classify(), if known."""
     desc = desc or classify(o["name"], o.get("hero", False))
@@ -611,8 +620,9 @@ def make_entity(o, players, pos, rng, desc=None):
     ref = [String(f"aoe2mc.r{o.get('ref')}")] * (o.get("ref_tag", False) and o.get("ref") is not None)
     # the player tag, also aoe2mc.p0 of Gaia (the Gaia triggers, #2916): the datapack puts the tagged units in the
     # player team (#358, not p0); area triggers (#681)
+    kind = o["id"] if "id" in o else type_ids().get(o["name"])           # the ID of the scenario wins (#2974)
     label["Tags"] = List[String]([String(f"aoe2mc.p{o['player']}")] +
-                                 [String(f"aoe2mc.t{o.get('id')}")] * ("id" in o) + ref)
+                                 [String(f"aoe2mc.t{kind}")] * (kind is not None) + ref)
     stack = [nbt]              # the horse, boat or crew of the unit: the same team, but no unit of its own (#1045)
     while stack:
         e = stack.pop()

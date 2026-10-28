@@ -3031,7 +3031,7 @@ def object_lines(e, c):
         return [f'data modify storage aoe2mc:orders list append value "create {p} {name} {x} {y}"']
     if e["type"] == CREATE_OBJECT and min(e.get("tile", [-1])) >= 0:
         x, z = (int((v + 0.5) * T) for v in e["tile"])
-        o = dict(name=name, player=max(e["player"], 0), rotation=math.pi / 2)
+        o = dict(name=name, player=max(e["player"], 0), rotation=math.pi / 2, hero=kind == "H")
         nbt = units.make_entity(o, players or {}, (x + 0.5, 0.0, z + 0.5), np.random.default_rng(t["id"])) \
             if kind in ("U", "H") and 0 <= x < ground.shape[0] and 0 <= z < ground.shape[1] else None
         if nbt is None:
@@ -3182,7 +3182,8 @@ def garrisoned_lines(e, c):
     A holder that is not a building with rooms (a ship, a ram) or no selected object: not supported yet."""
     kind, name = e.get("object2") or (None, None)
     holders = [r for r in e.get("selected", []) if r in buildings.INSIDE]
-    nbt = units.make_entity(dict(name=name, player=max(e["player"], 0), rotation=math.pi / 2), c.players or {},
+    nbt = units.make_entity(dict(name=name, player=max(e["player"], 0), rotation=math.pi / 2, hero=kind == "H"),
+                            c.players or {},
                             (0.0, 0.0, 0.0), np.random.default_rng(c.t["id"])) if kind in ("U", "H") else None
     if nbt is None or not holders:
         c.stats["create garrisoned (not supported yet)"] += 1
@@ -3385,7 +3386,8 @@ def replace_lines(e, c):
     T, stats = c.T, c.stats
     kind, name = e.get("object2") or (None, None)
     found = effect_units(e, T) if e.get("object") else None
-    nbt = units.make_entity(dict(name=name, player=max(e.get("target", -1), 0), rotation=math.pi / 2), c.players or {},
+    nbt = units.make_entity(dict(name=name, player=max(e.get("target", -1), 0), rotation=math.pi / 2, hero=kind == "H"),
+                            c.players or {},
                             (0.0, 0.0, 0.0), np.random.default_rng(c.t["id"])) if kind in ("U", "H") else None
     if found is None or nbt is None:
         stats["replace (not supported yet)"] += 1

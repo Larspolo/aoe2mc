@@ -91,7 +91,7 @@ def test_the_scout_appears_after_30_seconds_as_a_rider_on_a_horse():
     summon, = [c for c in server.log if c.startswith("summon")]
     assert re.match(r"summon minecraft:horse 11.5 64.0 6.5 ", summon)   # one cell out: the rider sits back (#767)
     flat = re.sub(r"\s", "", summon)
-    assert "Passengers:[{" in flat and "minecraft:zombie" in flat and 'Tags:["aoe2mc.p1"]' in flat   # the rider
+    assert "Passengers:[{" in flat and "minecraft:zombie" in flat and 'Tags:["aoe2mc.p1","aoe2mc.t448"]' in flat   # the rider
     assert g.soldiers == {uuid: "SCOUT_CAVALRY"}
 
 
