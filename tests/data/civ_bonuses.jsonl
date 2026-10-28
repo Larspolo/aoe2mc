@@ -146,7 +146,7 @@
 {"name": "MAPUCHE: Settlements can train the Spearman and Skirmisher lines in 2.15×/1.61×/same time as regular production buildings in the Feudal/Castle/Imperial Ages, respectively.", "civ": "MAPUCHE", "bonus": "Settlements can train the Spearman and Skirmisher lines in 2.15×/1.61×/same time as regular production buildings in the Feudal/Castle/Imperial Ages, respectively.", "later": "play:military-train"}
 {"name": "MAPUCHE: Infantry, Slingers, and Skirmishers get +5/10/15 hit points in the Feudal/Castle/Imperial Age.", "civ": "MAPUCHE", "bonus": "Infantry, Slingers, and Skirmishers get +5/10/15 hit points in the Feudal/Castle/Imperial Age.", "in": "UNITS"}
 {"name": "MAPUCHE: Mounted units generate gold +3 per military unit killed.", "civ": "MAPUCHE", "bonus": "Mounted units generate gold +3 per military unit killed.", "in": "KILL_GOLD"}
-{"name": "MAPUCHE: Enemy Castles are revealed on the map.", "civ": "MAPUCHE", "bonus": "Enemy Castles are revealed on the map.", "later": "play:fog"}
+{"name": "MAPUCHE: Enemy Castles are revealed on the map.", "civ": "MAPUCHE", "bonus": "Enemy Castles are revealed on the map.", "in": "REVEAL"}
 {"name": "MAYANS: Start the game with an Eagle Scout.", "civ": "MAYANS", "bonus": "Start the game with an Eagle Scout.", "later": "play:setup"}
 {"name": "MAYANS: Start the game with +1 Villager, but with food -50.", "civ": "MAYANS", "bonus": "Start the game with +1 Villager, but with food -50.", "in": "START"}
 {"name": "MAYANS: Resources last 15% longer.", "civ": "MAYANS", "bonus": "Resources last 15% longer.", "in": "LAST"}
@@ -238,7 +238,7 @@
 {"name": "VARANGIANS: Varangian Guards generate gold +50%.", "civ": "VARANGIANS", "bonus": "Varangian Guards generate gold +50%.", "later": "play:military-train"}
 {"name": "VARANGIANS: Longships and Catapult Galleons attack 15% faster.", "civ": "VARANGIANS", "bonus": "Longships and Catapult Galleons attack 15% faster.", "in": "UNITS"}
 {"name": "VIETNAMESE: Foot archers and Skirmishers +20% hit points.", "civ": "VIETNAMESE", "bonus": "Foot archers and Skirmishers +20% hit points.", "in": "UNITS"}
-{"name": "VIETNAMESE: Reveal enemy initial Town Centers location at the start of the game.", "civ": "VIETNAMESE", "bonus": "Reveal enemy initial Town Centers location at the start of the game.", "later": "play:fog"}
+{"name": "VIETNAMESE: Reveal enemy initial Town Centers location at the start of the game.", "civ": "VIETNAMESE", "bonus": "Reveal enemy initial Town Centers location at the start of the game.", "in": "REVEAL"}
 {"name": "VIETNAMESE: Conscription is free.", "civ": "VIETNAMESE", "bonus": "Conscription is free.", "in": "COSTS"}
 {"name": "VIETNAMESE: Economic technologies (except Coinage and Banking) cost no wood and are researched 100% faster.", "civ": "VIETNAMESE", "bonus": "Economic technologies (except Coinage and Banking) cost no wood and are researched 100% faster.", "in": "COSTS"}
 {"name": "VIKINGS: Wheelbarrow and Hand Cart free.", "civ": "VIKINGS", "bonus": "Wheelbarrow and Hand Cart free.", "in": "COSTS"}

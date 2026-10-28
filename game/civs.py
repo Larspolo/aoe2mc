@@ -207,6 +207,9 @@ ECONOMY_VILLAGERS = {r["name"]: r["economy_villagers"] for r in ROWS if "economy
 FALLEN = {r["name"]: r["fallen"] for r in ROWS if "fallen" in r}
 KILL_GOLD = {r["name"]: r["kill_gold"] for r in ROWS if "kill_gold" in r}
 LOOT = {r["name"]: r["loot"] for r in ROWS if "loot" in r}
+# "reveal": the enemy buildings that the player sees under the fog of war (fog.revealed, #2311): [building, true: only
+# the ones of aoe2mc.json and only at the start of the game] (Mapuche castles, Vietnamese start town centers).
+REVEAL = {r["name"]: [tuple(b) for b in r["reveal"]] for r in ROWS if "reveal" in r}
 # The relic and monk bonuses (game/monk.py, #2314): "relic_attack" [units, attack per relic in an own monastery, most]
 # (Lithuanian knights and Leitis), "faith" the factor of the speed of the monks that regain faith (Muisca: 100 % faster).
 RELIC_ATTACK = {r["name"]: tuples(r["relic_attack"]) for r in ROWS if "relic_attack" in r}
