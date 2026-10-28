@@ -25,6 +25,7 @@ TABLES = (                                                            # one per 
     "BUILD_OF",
     "BUILT_FOOD",
     "COSTS",
+    "EXTRA",
     "DROP",
     "GARRISON",
     "REPAIR",
