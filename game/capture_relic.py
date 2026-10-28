@@ -4,9 +4,9 @@ one relic lies at the center of the map, and the first player whose monk carries
 once (AoE2 wiki "Capture the Relic": "the first team's Monk to pick it up and take it to their Monastery immediately
 wins"). Its allies win with it, and the rivals see "Defeat" (cheats.over).
 The relic is one of monk.relics with the key "center": the pot block of the converter's relics (monk.POT) and the same
-monk orders (monk.order, monk.relic_tick). Each Gather (the human player, each bot) holds its own list of the relics,
-so setup() adds the center relic to each list and places one pot. A loaded game (savegame) has the relic in its saved
-lists and its world: run.play calls setup() only for a new game.
+monk orders (monk.order, monk.relic_tick). All Gathers of a game (the people, each bot) share one list of the relics
+(#3116), so setup() adds the center relic once and places one pot. A loaded game (savegame) has the relic in its saved
+list and its world: run.play calls setup() only for a new game.
 gather.Gather.run calls tick() at each step. The relics of the scenario stay, but only the center relic wins.
 Each player with a town center also starts with a complete, free monastery next to it that nothing can destroy, and
 cannot build more monasteries (#2458, wiki: "a pre-built, indestructible Monastery, though at the cost of not being able
@@ -51,7 +51,7 @@ def monastery(g):
 
 
 def setup(g, mode="capture-the-relic"):
-    """Put the relic at the map center: a pot block, and an entry with "center" in the relics of each Gather. Give
+    """Put the relic at the map center: a pot block, and an entry with "center" in the shared relic list. Give
     each player with a town center its lasting monastery."""
     x, z = center(g)
     for h in fog.gathers(g):

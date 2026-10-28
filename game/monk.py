@@ -36,7 +36,8 @@ monk to it, and the monk picks it up: the pot block goes, and an item display of
 `ride` command). A right click on an own monastery sends the monk with the relic to its door, and the relic goes in.
 Each relic in an own monastery gives 30 gold per AoE2 minute (GOLD, AoE2 wiki "Relic (Age of Empires II)"). A monk
 with a relic does not heal (AoE2 rule). A killed monk drops the relic at its place, and a fallen monastery drops its
-relics at its door.
+relics at its door. All sides of a game share one list of the relics (#3116: run.play, bot.Bot), so each relic exists
+once: the key "player" of a relic names the player of its monk or monastery (own).
 
 Civilization bonuses (#2314, AoE2 DE wiki): each relic in an own monastery gives +1 attack to the Lithuanian knights
 and Leitis, at most +4 (civs.RELIC_ATTACK, civs.units; relic_tick sends the new values), and Muisca monks regain faith
@@ -86,8 +87,9 @@ POT = "minecraft:decorated_pot"
 
 
 def relics(g):
-    """[{"at": block cell or None, "monk": UUID or None, "home": monastery footprint or None}] of the relics of the
-    map (aoe2mc.json, kind "other"). Made at the first call."""
+    """[{"at": block cell or None, "monk": UUID or None, "home": monastery footprint or None, "player": the player of
+    the monk or the monastery (not on the ground)}] of the relics of the map (aoe2mc.json, kind "other"). Made at the
+    first call."""
     if not hasattr(g, "relics"):
         T = g.map.T
         g.relics = [{"at": (int(o["tile"][0] * T), int(o["tile"][1] * T)), "monk": None, "home": None}
@@ -96,18 +98,25 @@ def relics(g):
     return g.relics
 
 
+def own(g, r):
+    """True when relic r is with a monk or in a monastery of the player of g. A relic with no "player" (on the ground,
+    or set by a test) counts for each side."""
+    return r.get("player", g.player) == g.player
+
+
 def free_relic(g, site):
     """Put the free relics of the civilization (key free_relic, {building: relics}) into the complete own building
     site: only into the first one of the game (AoE2 DE wiki "Armenians": the first Fortified Church, #2419)."""
     import civs                                                    # civs imports gather, gather imports this module
     n = civs.value("free_relic", civs.civ(g), {}).get(site["name"], 0)
-    if n and not any(r.get("free") for r in relics(g)):
-        g.relics += [{"at": None, "monk": None, "home": tuple(site["footprint"]), "free": True} for _ in range(n)]
+    if n and not any(r.get("free") and own(g, r) for r in relics(g)):      # one for each player (#3116)
+        g.relics += [{"at": None, "monk": None, "home": tuple(site["footprint"]), "free": True, "player": g.player}
+                     for _ in range(n)]
 
 
 def carriers(g):
-    """{monk UUID: relic index} of the monks that carry a relic."""
-    return {r["monk"]: i for i, r in enumerate(relics(g)) if r["monk"]}
+    """{monk UUID: relic index} of the own monks that carry a relic."""
+    return {r["monk"]: i for i, r in enumerate(relics(g)) if r["monk"] and own(g, r)}
 
 
 def monasteries(g):
@@ -155,6 +164,7 @@ def drop(g, i, cell):
     g.command(f"kill @e[type=item_display,tag=aoe_relic_{i}]")
     g.command(f"setblock {x} {g.map.y(x, z)} {z} {POT} keep")
     r.update(at=cell, monk=None, home=None)
+    r.pop("player", None)
 
 
 def relic_tick(g, dt):
@@ -176,7 +186,7 @@ def relic_tick(g, dt):
             x, _, z = g.carrier_at.pop(m)                          # set at the pick up
             drop(g, i, (math.floor(x), math.floor(z)))
     for i, r in enumerate(relics(g)):
-        if r["home"] and r["home"] not in homes:                   # the monastery fell: the relics come out
+        if r["home"] and own(g, r) and r["home"] not in homes:     # the monastery fell: the relics come out
             taken = {q["at"] for q in relics(g) if q["at"]}        # one relic on each cell, one pot each (#3010)
             ring = sorted(g.map.front(r["home"]))
             cells = ring + sorted(g.map.around(set(ring)))
@@ -197,14 +207,14 @@ def relic_tick(g, dt):
                           f"item:{{id:\"{POT}\",count:1}},transformation:{{left_rotation:[0f,0f,0f,1f],"
                           f"right_rotation:[0f,0f,0f,1f],translation:[0f,0.4f,0f],scale:[0.5f,0.5f,0.5f]}}}}")
                 g.command(f"ride @e[type=item_display,tag=aoe_relic_{target},limit=1] mount {m}")
-                r.update(at=None, monk=m)
+                r.update(at=None, monk=m, player=g.player)
                 g.carrier_at[m] = pos[m]
             elif kind == "home":                                   # put it in; the monk stays outside
                 i = carriers(g)[m]
                 g.command(f"kill @e[type=item_display,tag=aoe_relic_{i}]")
                 relics(g)[i].update(monk=None, home=target)
                 g.carrier_at.pop(m, None)
-    if (n := sum(r["home"] is not None for r in relics(g))) != getattr(g, "relic_homes", 0):
+    if (n := sum(r["home"] is not None and own(g, r) for r in relics(g))) != getattr(g, "relic_homes", 0):
         g.relic_homes = n
         rearm(g)
     g.relic_gold += GOLD * dt * sum(r["home"] in homes for r in relics(g))
