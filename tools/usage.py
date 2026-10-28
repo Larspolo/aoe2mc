@@ -43,7 +43,7 @@ WEEK_GUARD = CONFIG.get("pacing", {}).get("week_guard", True)   # false: the 7-d
 WAIT = CONFIG.get("pacing", {}).get("max_waiting_prs", 10)   # flow brake: open agent PRs older than PR_MINUTES
 QUEUE = CONFIG.get("pacing", {}).get("max_ci_queue", 5)      # flow brake: queued CI runs (no runner yet)
 PR_MINUTES = CONFIG.get("pacing", {}).get("pr_minutes", 30)  # Automerge merges a green PR in a few minutes
-MAX_FIRE = CONFIG.get("pacing", {}).get("max_fire", 4)   # runs that the pacer starts per cycle: each run needs a few minutes to claim its ticket
+MAX_FIRE = CONFIG.get("pacing", {}).get("max_fire", 8)   # runs that the pacer starts per cycle: each run needs a few minutes to claim its ticket; the same as agent.toml (the pacer used an old 4, 2026-10-28)
 REFILL = CONFIG.get("pacing", {}).get("refill_runs", 1)   # runs beyond the ready tickets: each refills one epic (#609, #650)
 CALL = ["claude", "-p", "Reply with OK.", "--model", "claude-haiku-5-5", "--output-format", "stream-json", "--verbose"]
 
@@ -283,7 +283,7 @@ def main(argv=None):
         for n, r in runs.items():
             print(f"{n} {r}")
         print(f"{describe(usage, now, burn, burn7)} · claims {claims} ({eq:.2f} Opus runs) · ready {ready} · refill {refill} · "
-              f"paused {paused} · {flow} · weights " + ", ".join(f"{n} {w:.2f} ({source[n]})" for n, w in weights.items()),
+              f"paused {paused} · {flow} · max_fire {MAX_FIRE} · weights " + ", ".join(f"{n} {w:.2f} ({source[n]})" for n, w in weights.items()),
               file=sys.stderr)
     elif a.target:
         print(target_runs(usage, now, burn, burn7=burn7))

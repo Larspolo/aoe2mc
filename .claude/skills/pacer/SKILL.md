@@ -27,6 +27,9 @@ So one pacer session starts them. It does no ticket work, it does not comment on
    Then call `fire_trigger` K minus the sum of all lane lines times, with the `trigger_id` of
    `trigger` in `[pacing]` of `agent.toml` (the Opus task, #1898). If that value is empty, start no Opus run and reply "no trigger in agent.toml: the owner must run
    /operator".
+   Fire exactly these numbers. They are already inside `max_fire` (the stderr line shows its value): never cut them
+   to a cap from your memory or from an earlier cycle. On 2026-10-28 the pacer fired 4 Haiku runs for H = 8, from an
+   old "cap of 4 per cycle".
    If the tools are deferred, load them first with ToolSearch (`select:mcp__claude-code-remote__fire_trigger,mcp__claude-code-remote__list_triggers`).
 4. Schedule the next cycle: `mcp__claude-code-remote__send_later`, `delay_minutes` 10, message
    "Pacer cycle: follow .claude/skills/pacer/SKILL.md." Keep only one pending cycle: do not schedule a second one.
