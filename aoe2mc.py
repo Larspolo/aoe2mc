@@ -2813,6 +2813,7 @@ REPLACE_OBJECT = 43                                                # "Replace Ob
 RESEARCHED = 9                                                     # the condition "Research Technology" (#2656)
 RESEARCH_TECHNOLOGY = 2                                            # "Research Technology" (#2577)
 SEND_CHAT = 3
+STOP_OBJECT = 29                                                   # "Stop Object" (#2754)
 TASK_OBJECT = 12                                                   # "Task Object" (#2646)
 TELEPORT_OBJECT = 35
 ACTIVATE_TRIGGER, DEACTIVATE_TRIGGER = 8, 9
@@ -3203,6 +3204,14 @@ def stance_lines(e, c):
     return tag_lines(e, c.T, tag) + [f'data modify storage aoe2mc:orders list append value "stance {tag} {e["stance"]}"']
 
 
+def stop_lines(e, c):
+    """The commands of "Stop Object" (#2754). Vanilla has no command that ends the walk order of a mob: as order_lines,
+    the units of the player in the area get the tag aoe_order<trigger>_<effect index>, and the order "stop <tag>" goes
+    into the storage aoe2mc:orders. game/scenario.py orders stops them (`aoe stop`) and ends their patrols."""
+    tag = f"aoe_order{c.t['id']}_{effect_index(e, c)}"
+    return tag_lines(e, c.T, tag) + [f'data modify storage aoe2mc:orders list append value "stop {tag}"']
+
+
 def view_lines(e, c):
     """The commands of "Change View" (#2610): in Minecraft the player is the camera, so a tp of the players of the
     team pN (team_lines) to the middle of the tile, on the ground. Player -1 or 0: all players."""
@@ -3368,6 +3377,7 @@ EFFECTS = {
     REPLACE_OBJECT: replace_lines,
     RESEARCH_TECHNOLOGY: research_lines,
     SEND_CHAT: chat_lines,
+    STOP_OBJECT: stop_lines,
     TASK_OBJECT: task_lines,
     TELEPORT_OBJECT: teleport_lines,
     TRIBUTE: resource_lines,
