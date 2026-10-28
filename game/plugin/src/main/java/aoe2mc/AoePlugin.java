@@ -708,7 +708,8 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     // Each 2 ticks: a building with an attack (aoe building with attack, range and reload: a town center, a castle,
     // #1111) shoots one arrow per reload at the nearest unit of another team in its range. As in AoE2, the range counts
     // from the edge of its footprint. Each garrisoned villager or foot archer adds an arrow (aoe arrows, #1113): all
-    // arrows of a shot go to the same target, as in AoE2. Not at a rider (its horse is the target), a garrisoned unit or a building.
+    // arrows of a shot go to the same target, as in AoE2. Not at a rider (its horse is the target), a garrisoned unit or a building;
+    // the crew of a ship or a siege unit is a target (#3015).
     private void towers() {
         for (var en : buildings.entrySet()) {
             Building f = en.getValue();
@@ -723,7 +724,8 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             double bestD = f.range * f.range;
             for (Entity o : fort.getWorld().getNearbyEntities(c, f.range + half, f.range + 16, f.range + half)) {
                 if (o instanceof LivingEntity le && le.isValid() && stats.containsKey(le.getUniqueId())
-                        && !buildings.containsKey(le.getUniqueId()) && !le.isInvulnerable() && le.getVehicle() == null
+                        && !buildings.containsKey(le.getUniqueId()) && !le.isInvulnerable()
+                        && !(le.getVehicle() instanceof LivingEntity v && stats.containsKey(v.getUniqueId()))   // the crew of a ship counts (#3015)
                         && !calm(fort, le)) {
                     var p = le.getLocation();
                     double dx = Math.max(0, Math.max(b[0] - p.getX(), p.getX() - b[3] - 1));
@@ -1334,7 +1336,10 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             for (Entity o : best != null || "only".equals(mode) ? List.<Entity>of() : e.getNearbyEntities(r, r, r)) {
                 if (o instanceof LivingEntity le && le.isValid() && stats.containsKey(le.getUniqueId())
                         && !buildings.containsKey(le.getUniqueId()) && !calm(crew, le) && !le.isInvulnerable()
-                        && le.getVehicle() == null && e.getLocation().distanceSquared(le.getLocation()) <= bestD) {
+                        && !(le.getVehicle() instanceof LivingEntity v && stats.containsKey(v.getUniqueId()))   // a crew counts (#3015)
+                        && !(mob != null && afloat(le) && !(mob.getVehicle() instanceof Boat)
+                            && !ranged(rider(mob) != null ? rider(mob) : mob))   // a land melee unit cannot reach a ship (#1658)
+                        && e.getLocation().distanceSquared(le.getLocation()) <= bestD) {
                     best = le;
                     bestD = e.getLocation().distanceSquared(le.getLocation());
                 }
@@ -1410,7 +1415,10 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             from = p.getShooter() instanceof Entity shooter ? shooter : null;
         }
         Stats a = from == null ? null : stats.get(from.getUniqueId());
-        if (a != null && ev.getAttacker() instanceof Projectile p) {
+        Building fort = from == null ? null : buildings.get(from.getUniqueId());
+        if (fort != null && ev.getAttacker() instanceof Projectile) {
+            a = fort.stats;                                  // the arrow of a tower, castle or town center (#3015)
+        } else if (a != null && ev.getAttacker() instanceof Projectile p) {
             a = volley(p, a);                                // an extra arrow of an Armenian galley (#2379)
         }
         if (a != null && c.isValid() && !sameTeam(from, c)) {
