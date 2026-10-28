@@ -31,5 +31,5 @@ def order(g, building):
     """The (slot, label) of each item of the menu of building of the player of g, from the data: the units and
     technologies of train.TRAINS that the player can order now (train.trains, repeatable, unlocked), in that order, and
     the rally point of a building that trains units."""
-    return [train.ITEMS[n][::2] for n in train.trains(g, building) if train.repeatable(g, n) and train.unlocked(g, n)] \
+    return [train.slots(building, n)[::2] for n in train.trains(g, building) if train.repeatable(g, n) and train.unlocked(g, n)] \
         + [train.RALLY[::2]] * bool(train.units_of(building))

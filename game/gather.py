@@ -85,6 +85,8 @@ ROWS = table.load("gather.jsonl")
 DROP_SITES = {r.lower(): tuple(t["name"] for t in ROWS if r.lower() in t.get("drop", ())) for r in RESOURCES}
 MEAT_SITES = tuple(t["name"] for t in ROWS if "meat" in t.get("drop", ()))   # hunted food only (mule cart, #2194)
 START = replay.START                                               # the AoE2 standard start resources (#973)
+# AoE2 DE setting "Starting resources" (wiki "Random map", without the civilization bonus): run.py --resources (#2264)
+LEVELS = {r["name"]: r["resources"] for r in table.load("setup.jsonl")}
 NOMAD = {"wood": 275, "stone": 100}     # AoE2 Nomad (wiki "Nomad (map)"): no building at the start, the cost of a town center
 TREE_WOOD = 100                                                    # wood in one tree, as in AoE2
 # plants of the ground that are not in #minecraft:replaceable: the trunk on a slope removes them from its row (#1124)
@@ -509,7 +511,7 @@ class Gather:
     speed = 1.0                                                        # times the Normal speed: shorter real steps (#2057)
 
     def __init__(self, game, data, player=1, tick=0.25, carry=10, chop=None, log=None, clock=time.monotonic,
-                 cheats=False, start=None):
+                 cheats=False, start=None, resources="standard"):
         self.game, self.data, self.map, self.player = game, data, Map(data, player), player
         if player != 1:
             self.board = f"aoe_res{player}"                            # its own resources: its team sidebar (#1309)
@@ -522,7 +524,8 @@ class Gather:
         if start is None:                                              # units, no building: a Nomad start (#1212)
             kinds = {o["kind"] for o in data["objects"] if o.get("player") == player}
             nomad = "unit" in kinds and "building" not in kinds
-            start = civs.start(self, {r: v + NOMAD.get(r, 0) * nomad for r, v in START.items()})   # #1269
+            base = LEVELS[resources]
+            start = civs.start(self, {r: v + NOMAD.get(r, 0) * nomad for r, v in base.items()})   # #1269
         self.stock = {**dict.fromkeys(DROP_SITES, 0), **start}             # at the drop sites (#973)
         self.spare = {}                                                # the fractions of the drop-off bonus (#2111)
         self.units = [o for o in data["objects"] if o["kind"] == "unit" and o["player"] == player
