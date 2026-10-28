@@ -30,6 +30,8 @@ game/data/monk.jsonl merge=jsonl
 game/data/replay.jsonl merge=jsonl
 # One JSON object per option value of the game setup (#2264); table.load() stops on a name in two lines.
 game/data/setup.jsonl merge=jsonl
+# One JSON object per taunt, named by its number (#2234).
+game/data/taunts.jsonl merge=jsonl
 # One JSON object per bonus of the wiki list, named "CIV: bonus" (#2100): two tickets that close two bonuses do not conflict.
 tests/data/civ_bonuses.jsonl merge=jsonl
 # The converter tables (#1917): one JSON object per line; the order of animals.jsonl and footprint.jsonl matters (the first match wins).
