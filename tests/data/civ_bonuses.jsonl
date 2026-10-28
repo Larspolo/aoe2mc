@@ -83,7 +83,7 @@
 {"name": "GOTHS: Loom is researched instantly.", "civ": "GOTHS", "bonus": "Loom is researched instantly.", "in": "RESEARCH_TIME"}
 {"name": "GOTHS: +10 population cap in the Imperial Age.", "civ": "GOTHS", "bonus": "+10 population cap in the Imperial Age.", "gap": "play:train"}
 {"name": "GURJARAS: Start the game with a Camel Scout.", "civ": "GURJARAS", "bonus": "Start the game with a Camel Scout.", "later": "play:setup"}
-{"name": "GURJARAS: Starts with 2 Forage Bushes with food 175 each under the Town Center.", "civ": "GURJARAS", "bonus": "Starts with 2 Forage Bushes with food 175 each under the Town Center.", "later": "play:setup"}
+{"name": "GURJARAS: Starts with 2 Forage Bushes with food 175 each under the Town Center.", "civ": "GURJARAS", "bonus": "Starts with 2 Forage Bushes with food 175 each under the Town Center.", "in": "BUSHES"}
 {"name": "GURJARAS: Can garrison Mills with herdable animals to produce food.", "civ": "GURJARAS", "bonus": "Can garrison Mills with herdable animals to produce food.", "later": "play:garrison"}
 {"name": "GURJARAS: Mounted units deal +20%/+30%/+40% bonus damage in the Feudal/Castle/Imperial Age.", "civ": "GURJARAS", "bonus": "Mounted units deal +20%/+30%/+40% bonus damage in the Feudal/Castle/Imperial Age.", "later": "play:fight"}
 {"name": "HINDUSTANIS: Villagers are 8/13/18/23% cheaper in the Dark/Feudal/Castle/Imperial Age.", "civ": "HINDUSTANIS", "bonus": "Villagers are 8/13/18/23% cheaper in the Dark/Feudal/Castle/Imperial Age.", "in": "COSTS"}
@@ -221,7 +221,7 @@
 {"name": "THRACIANS: All buildings except Town Centers can be built on any elevation.", "civ": "THRACIANS", "bonus": "All buildings except Town Centers can be built on any elevation.", "later": "play:build"}
 {"name": "THRACIANS: Forts and towers increase the work rate of nearby miners and lumberjacks in a square of aura range 8 by 15% and serve as resource drop sites for the respective resources.", "civ": "THRACIANS", "bonus": "Forts and towers increase the work rate of nearby miners and lumberjacks in a square of aura range 8 by 15% and serve as resource drop sites for the respective resources.", "later": "play:gather"}
 {"name": "THRACIANS: Shepherds and hunters generate gold 3 per minute while gathering from animals (excluding Foxes).", "civ": "THRACIANS", "bonus": "Shepherds and hunters generate gold 3 per minute while gathering from animals (excluding Foxes).", "later": "play:gather"}
-{"name": "TUPI: Start with +25 of each resource once the first Town Center is built.", "civ": "TUPI", "bonus": "Start with +25 of each resource once the first Town Center is built.", "later": "play:setup"}
+{"name": "TUPI: Start with +25 of each resource once the first Town Center is built.", "civ": "TUPI", "bonus": "Start with +25 of each resource once the first Town Center is built.", "in": "TOWN_CENTER"}
 {"name": "TUPI: Villagers can garrison in Settlements (max 5).", "civ": "TUPI", "bonus": "Villagers can garrison in Settlements (max 5).", "later": "play:garrison"}
 {"name": "TUPI: Fallen units, except ships and siege weapons, return 15% of their cost.", "civ": "TUPI", "bonus": "Fallen units, except ships and siege weapons, return 15% of their cost.", "in": "FALLEN"}
 {"name": "TUPI: Archery Range and Barracks technologies cost food -50%.", "civ": "TUPI", "bonus": "Archery Range and Barracks technologies cost food -50%.", "in": "COSTS"}
