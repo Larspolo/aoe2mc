@@ -24,6 +24,10 @@ aoe_techstate: tech_states() sets it to the AoE2 TechnologyState from the queues
 The condition "Object Has Action" (#2867) tests the score #r<ref> of aoe_action: actions() sets it to the AoE2
 UnitAIAction of the order of the villager (ACTIONS).
 
+The condition "Victory Timer" (#2906) tests the score #p<N>.<type> of aoe_vic: victory_timers() sets it to the years
+that are left on the wonder (type 0), relic (1) or King of the Hill (2) timer of player N, and resets it when the timer
+stops. A player with two wonders: the lower timer, as its boss bar.
+
 The condition "Difficulty Level" (#2704) tests the score #level of aoe_difficulty: setup() sets it to the AoE2 value
 ("aoe2" of game/data/difficulty.jsonl) of the setting "AI difficulty" (run.py --ai-difficulty).
 
@@ -36,6 +40,7 @@ aoe2mc:tasks (aoe2mc.task_lines): tasks() walks the tagged units there with the 
     scenario.tick(g)       # the book, the tasks, the orders
 """
 import json
+import math
 import os
 import re
 import sys
@@ -121,6 +126,7 @@ def tick(g):
     garrisons(g)
     tech_states(g)
     actions(g)
+    victory_timers(g)
     if g.clock() < vars(g).get("book_at", 0.0):
         return
     g.book_at = g.clock() + EVERY
@@ -422,6 +428,7 @@ def setup(g, mode="scenario"):
     g.command("scoreboard objectives add aoe_difficulty dummy")        # the condition "Difficulty Level" (#2704)
     g.command(f"scoreboard players set #level aoe_difficulty {LEVELS[level]}")
     g.command("scoreboard objectives add aoe_dipstate dummy")         # the condition "Diplomacy State" (#2757)
+    g.command("scoreboard objectives add aoe_vic dummy")              # the condition "Victory Timer" (#2906)
     states(g)
     rows = {x: g.players.get(str(x.player), {}) for x in sides}
     if not any("resources" in p or "pop_limit" in p for p in rows.values()):
@@ -548,6 +555,38 @@ def actions(g):
         if sent.get(ref) != (v := ACTIONS.get(states.get(uuids.get(ref)), 0)):
             g.command(f"scoreboard players set #r{ref} aoe_action {v}")
             sent[ref] = v
+
+
+def timers(g):
+    """The years that are left on each running victory timer: {(player, AoE2 VictoryTimerType): years}. Type 0 is the
+    lowest wonder timer of the player (wonder.tick), 1 the relic timer (relic_victory.tick), 2 King of the Hill
+    (hill.tick)."""
+    import wonder                                                      # wonder -> cheats -> gather: import it late
+    left = {}
+    for t in vars(g).get("wonders", {}).values():
+        left[(t["player"], 0)] = min(left.get((t["player"], 0), t["left"]), t["left"])
+    if t := vars(g).get("relic_timer"):
+        left[(t["player"], 1)] = t["left"]
+    if (s := vars(g).get("hill")) and s.get("owner") is not None:
+        left[(s["owner"], 2)] = s["left"]
+    return {k: max(math.ceil(v / wonder.YEAR), 0) for k, v in left.items()}
+
+
+def victory_timers(g):
+    """Once per game second: the score #p<N>.<type> of aoe_vic is the years left on that timer (timers), for the
+    condition "Victory Timer" of the triggers (#2906). A timer that stops resets its score: no test matches it. One
+    command per change."""
+    if g.clock() < vars(g).get("victory_timer_at", 0.0):
+        return
+    g.victory_timer_at = g.clock() + 1.0
+    sent, now = vars(g).setdefault("victory_timer_sent", {}), timers(g)
+    for (n, kind), y in sorted(now.items()):
+        if sent.get((n, kind)) != y:
+            g.command(f"scoreboard players set #p{n}.{kind} aoe_vic {y}")
+            sent[(n, kind)] = y
+    for n, kind in sorted(set(sent) - set(now)):
+        g.command(f"scoreboard players reset #p{n}.{kind} aoe_vic")
+        del sent[(n, kind)]
 
 
 def tech_state(x, name):

@@ -2909,6 +2909,7 @@ UNITS_GARRISONED = 18                                              # the conditi
 UNLOAD = 17                                                        # "Unload" (#2773)
 UNLOCK_GATE = 6
 VARIABLE_VALUE = 22
+VICTORY_TIMER = 56                                                 # the condition "Victory Timer" (#2906)
 # The AoE2 UnitAIAction values of "Object Has Action" that the game program knows (game/scenario.py ACTIONS, #2867):
 # build, gather, hunt, move, enter (garrison), repair, idle. The others (attack, convert, heal ...): not supported yet.
 OBJECT_ACTIONS = (3, 10, 11, 14, 18, 19, 24)
@@ -2933,6 +2934,7 @@ TICKED = COUNTED + (                                               # conditions 
     TRIGGER_ACTIVE,
     UNITS_GARRISONED,
     VARIABLE_VALUE,
+    VICTORY_TIMER,
 )
 ATTRIBUTES = ("Food", "Wood", "Stone", "Gold")     # attributes 0-3: the score holders of gather.RESOURCES (#2655)
 BRING_OBJECT_TO_AREA = 1                                               # the condition "Bring Object to Area" (#2620)
@@ -3013,6 +3015,8 @@ CONDITION_KEYS = {
     TRIGGER_CHANCE: {"quantity": "quantity"},                                            # (#2574)
     UNITS_GARRISONED: {"quantity": "quantity", "unit": "unit_object"},                   # (#2714)
     VARIABLE_VALUE: {"quantity": "quantity", "variable": "variable", "comparison": "comparison"},   # (#2611)
+    VICTORY_TIMER: {"quantity": "quantity", "player": "source_player", "comparison": "comparison",   # (#2906)
+                    "timer_type": "victory_timer_type"},
 }
 STORES = ("food", "wood", "stone", "gold")      # the resource of a tribute_list (AoE2 attributes 0 to 3)
 OPERATIONS = {1: "set", 2: "add", 3: "remove"}  # set, add, subtract of Modify Resource (AoE2ScenarioParser Operation)
@@ -4058,6 +4062,8 @@ SCORE_TESTS = {
     TRIGGER_ACTIVE: lambda c: f"score #{c['trigger']} aoe_on matches {int(not c['inverted'])}",   # #2699
     UNITS_GARRISONED: lambda c: f"score #g{c['unit']} aoe_gar matches {max(c['quantity'], 1)}..",   # #2714
     VARIABLE_VALUE: lambda c: f"score #v{c['variable']} aoe_var matches {variable_range(c)}",
+    # the years left on a timer of the player (VictoryTimerType: 0 wonder, 1 relic, 2 king of the hill, #2906)
+    VICTORY_TIMER: lambda c: f"score #p{c['player']}.{c['timer_type']} aoe_vic matches {variable_range(c)}",
 }
 
 
@@ -4151,6 +4157,8 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
                     or c["type"] == COMPARE_VARIABLES and compare_test(c) is None
                     or c["type"] == OBJECT_HP and (c.get("ref", -1) < 0 or variable_range(c) is None)
                     or c["type"] == UNITS_GARRISONED and c.get("unit", -1) < 0
+                    or c["type"] == VICTORY_TIMER and (c.get("player", -1) <= 0 or c.get("timer_type") not in (0, 1, 2)
+                                                       or variable_range(c) is None)
                     or c["type"] == OBJECT_HAS_ACTION and (c.get("ref", -1) < 0 or c.get("next", -1) >= 0
                                                            or c.get("action") not in OBJECT_ACTIONS)
                     or c["type"] in VISIBLE and (c.get("ref") is None or c["ref"] < 0 or c.get("player", -1) <= 0)
@@ -4271,7 +4279,8 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
     if names:
         load[:0] = ["scoreboard objectives add aoe_var dummy"] + \
             [f"scoreboard players add {v} aoe_var 0" for v in names]   # AoE2 variables start at 0
-    for word in ("aoe_action", "aoe_difficulty", "aoe_gar", "aoe_lost", "aoe_seen", "aoe_tech", "aoe_techstate"):  # the game program
+    for word in ("aoe_action", "aoe_difficulty", "aoe_gar", "aoe_lost", "aoe_seen", "aoe_tech", "aoe_techstate",
+                 "aoe_vic"):                                                        # the scores of the game program
         if any(f" {word} " in x for x in tick):
             setup[f"scoreboard objectives add {word} dummy"] = None
     if switch:
