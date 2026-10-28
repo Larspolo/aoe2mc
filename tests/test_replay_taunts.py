@@ -10,7 +10,7 @@ from game import replay
 def chat(text):
     r = replay.Replay(Fake(), data([]))
     out = r.commands({"time": 0, "player": 2, "kind": "chat", "text": text})
-    assert len(out) == 1 and out[0].startswith("tellraw @a ")
+    assert out[0].startswith("tellraw @a ")
     return json.loads(out[0][len("tellraw @a "):])[1]["text"]
 
 

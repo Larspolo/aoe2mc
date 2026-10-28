@@ -36,6 +36,8 @@ game/data/monk.jsonl merge=jsonl
 game/data/replay.jsonl merge=jsonl
 # One JSON object per option value of the game setup (#2264); table.load() stops on a name in two lines.
 game/data/setup.jsonl merge=jsonl
+# One JSON object per level of "AI difficulty" of the bot (#2661).
+game/data/difficulty.jsonl merge=jsonl
 # One JSON object per taunt, named by its number (#2234).
 game/data/taunts.jsonl merge=jsonl
 # One JSON object per bonus of the wiki list, named "CIV: bonus" (#2100): two tickets that close two bonuses do not conflict.
