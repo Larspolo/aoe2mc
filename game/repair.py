@@ -22,6 +22,10 @@ of a unit (AoE2 wiki "Villager (Age of Empires II)": "The bonus does not apply t
 Civilization bonuses of the rate (civs.repair_rate): Roman repairers work 5 % faster, and the Saxon team bonus makes
 the repairers of the Saxons and their allies 25 % faster (AoE2 wiki "Saxons", #1929). The two factors multiply.
 
+Mule carts (#2504): a mule cart (build.MOVES) is a building that moves. Villagers repair it as a siege unit, but at
+the building rate and for half its build cost with the Georgian team bonus (cost): 7.5 food and 30 wood for the full
+hit points, as the AoE2 wiki "Mule Cart" says. Its mob is a mule with the hit points itself, not a crew (body).
+
 Ships (#1661): AoE2 repairs ships at the siege rate, for half the training cost, from the shore: a villager repairs
 from up to REACH tiles away. So a right click with selected villagers on an own damaged ship (fleet.SPEEDS) sends them
 to the free land cells within REACH tiles of the ship. A ship far from the shore (no such cell) is not a repair order.
@@ -116,11 +120,18 @@ def crew(u):
     return f"execute as {u} on passengers run "
 
 
+def body(g, u):
+    """The prefix of a command that runs on the mob of unit u with its hit points: the crew of a siege unit or ship,
+    the mob itself of a mule cart (build.MOVES, a mule with no passenger, #2504)."""
+    import build                                                   # build imports gather
+    return f"execute as {u} run " if g.soldiers.get(u) in build.MOVES else crew(u)
+
+
 def unit_hp(g, u):
-    """(Health, max_health) of siege unit u, or None when the server gives no number (dead, unloaded)."""
+    """(Health, max_health) of siege unit, ship or mule cart u, or None when the server gives no number (dead, unloaded)."""
     from gather import NUMBER                                      # gather imports this module
-    hp = re.findall(NUMBER, g.command(crew(u) + "data get entity @s Health").rsplit(":", 1)[-1])
-    top = re.findall(r"(-?[\d.]+)", g.command(crew(u) + "attribute @s minecraft:max_health get").rsplit(" is ", 1)[-1])
+    hp = re.findall(NUMBER, g.command(body(g, u) + "data get entity @s Health").rsplit(":", 1)[-1])
+    top = re.findall(r"(-?[\d.]+)", g.command(body(g, u) + "attribute @s minecraft:max_health get").rsplit(" is ", 1)[-1])
     return (float(hp[0]), float(top[0])) if hp and top else None
 
 
@@ -163,12 +174,12 @@ def shore(g, cell):
 
 
 def unit_order(g, player, u):
-    """The selected villagers repair the own damaged siege unit or ship u. Returns True, or False (no own siege unit
-    or ship, it has its full hit points, a ship far from the shore, or no villager is selected)."""
-    import fleet                                                   # fleet imports gather
+    """The selected villagers repair the own damaged siege unit, ship or mule cart u. Returns True, or False (no own
+    siege unit, ship or mule cart, it has its full hit points, a ship far from the shore, or no villager is selected)."""
+    import build, fleet                                            # build and fleet import gather
     import units                                                   # the converter's table (gather puts it on the path)
     name, who = g.soldiers.get(u), sorted(g.selected & g.villagers.keys())
-    if not name or not (units.siege(name) or name in fleet.SPEEDS) or not who or not (pos := g.pos(u)):
+    if not name or not (units.siege(name) or name in fleet.SPEEDS or name in build.MOVES) or not who or not (pos := g.pos(u)):
         return False
     cell = (math.floor(pos[0]), math.floor(pos[2]))
     goals = shore(g, cell) if name in fleet.SPEEDS else g.map.around({cell})
@@ -316,18 +327,20 @@ def charge(g, key, vs, full, share, name):
 def unit_tick(g, u, vs, dt):
     """dt AoE2 seconds of repair of siege unit or ship u by the villagers vs: its crew gets Health back, the stock pays
     half the training cost for the full hit points. It stops when the unit is full, dead or moves."""
-    import train                                                   # train imports gather
+    import build, train                                            # build and train import gather
     name, h, pos = g.soldiers.get(u), unit_hp(g, u), g.pos(u)
     start = vars(g).get("repair_at", {}).get(u)
     if not name or not h or not 0 < h[0] < h[1] or not pos or not start or math.dist(pos, start) > STILL:
         stop(g, u, vs)                                             # full, dead, or it moves (AoE2)
         return
-    gain = h[1] - h[0] if g.aegis else min(h[1] - h[0], rate(g, vs) * SIEGE * dt)
+    cart = name in build.MOVES                                     # a mule cart is a building: its rate and cost (#2504)
+    gain = h[1] - h[0] if g.aegis else min(h[1] - h[0], rate(g, vs) * (1 if cart else SIEGE) * dt)
     new = min(h[1], round(h[0] + gain, 2))                         # Health in steps of 0.01: pay for those
-    full = {r: v * SHARE for r, v in train.price(g, name).items()} if name in train.COSTS else {}   # no Georgian bonus (#1929)
+    full = cost(g, name) if cart else {r: v * SHARE for r, v in train.price(g, name).items()} if name in train.COSTS else {}
+    #                                                                a unit: no Georgian bonus (#1929)
     if not charge(g, u, vs, full, (new - h[0]) / h[1], name):
         return
-    g.command(crew(u) + f"data modify entity @s Health set value {new}f")
+    g.command(body(g, u) + f"data modify entity @s Health set value {new}f")
     g.command(f"aoe label {u}")                                   # the hearts: a data change fires no event (#1521)
     if new >= h[1]:
         stop(g, u, vs)

@@ -319,6 +319,8 @@ class Replay:
             return self.back(e)[0]
         if kind == "delete" and e.get("objects"):
             return self.delete(e)
+        if kind == "stance" and e.get("objects"):
+            return self.stance(e)
         if kind == "formation" and e.get("objects"):                # the shape of the next walks of the group (#2553)
             self.formations.update(dict.fromkeys(e["objects"], e.get("formation", "Line")))
             return []
@@ -882,6 +884,17 @@ class Replay:
             else:
                 rest.append((i, v))
         return out, rest
+
+    def stance(self, e):
+        """STANCE: the military units of the selection get the AoE2 stance of the record on Paper (#2548): the stance
+        goals of the plugin (combat.stance_command, #1104). An unknown stance changes nothing."""
+        import combat                                                   # combat -> gather -> build -> replay
+        stance = str(e.get("stance", "")).lower().replace(" ", "_")
+        if not self.ai or stance not in combat.STANCES:
+            return []
+        self.grid()
+        group = [self.unit(i, name, e["player"]) for i, name in zip(e["objects"], e.get("names") or [None] * len(e["objects"]))]
+        return [combat.stance_command(v.uuid, stance) for v in group if v is not None and self.gather.military(v.name)]
 
     def move(self, e):
         """MOVE and ORDER: each selected unit gets a path to the target. Its steps come later (steps()). A group
