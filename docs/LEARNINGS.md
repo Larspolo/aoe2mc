@@ -31,6 +31,7 @@ and `tests/test_learnings.py` fails above 80 lines (#1698).
 - A run with an open PR that does the next ticket in a local commit (`more.md`): beat the claim of the PR's ticket too (`claim.py N --beat`) until it merges. A red PR with no beat for 10 minutes is "stalled": another run took #2211 over while its run worked on #2173.
 - Wait for a background command by the task ID of its own result: a typed file name from an earlier task waits the full 580 s for nothing (#2342, #2357).
 - `git stash` during an unfinished merge drops `MERGE_HEAD`: the next commit is no merge commit. To test main without your change, use `git worktree add` (#2281).
+- The fast suite stops at one percent and runs on: add `-o faulthandler_timeout=90` (pytest dumps the stack of a test that runs longer). #2484: `train.start()` looped for ever on a technology that never goes into `g.techs`.
 
 ## Code
 

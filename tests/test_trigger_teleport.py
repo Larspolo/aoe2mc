@@ -24,7 +24,7 @@ def test_teleport_moves_the_units_in_the_area_to_the_middle_of_the_tile():
 
 
 def test_gaia_units_have_no_player_tag_and_the_players_stay():
-    assert all("aoe2mc.p" not in line and "@e[type=!player," in line for line in lines([effect(player=0)]))
+    assert all("aoe2mc.p" not in line and "@e[tag=,type=!player," in line for line in lines([effect(player=0)]))
 
 
 def test_no_target_tile_or_area_gives_no_line():
