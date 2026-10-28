@@ -50,6 +50,10 @@ import time
 import zlib
 from collections import Counter, namedtuple
 
+# Installed package (#3056): the short imports (import units) find the modules next to this file.
+if __package__:
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
 import numpy as np
 from nbtlib import File
 from nbtlib.tag import Byte, ByteArray, Compound, Double, Float, Int, IntArray, List, Long, LongArray, String
