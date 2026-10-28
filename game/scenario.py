@@ -3,8 +3,16 @@ The scenario mode of the game program (#2540, epic #2538; run.py --mode scenario
 resources and the population limit of the scenario (tab "Players" of the AoE2 DE scenario editor), not with the lobby
 settings. The converter writes them into aoe2mc.json "players" ("resources", "pop_limit", #2539). A player without
 them (a random map, a recorded game, an old scenario) keeps the lobby values.
+
+A scenario trigger with the effect "Declare Victory" ends the game (#2542): its datapack function sets the score
+#p<N> of aoe_win to 1 (aoe2mc.trigger_files), and tick() reads it with RCON once per conquest.EVERY seconds. Player N
+and its allies see "Victory", the others "Defeat" (cheats.over). Minecraft feature: a scoreboard, no own logic in the
+world.
+
+    scenario.tick(g)    # gather.Gather.run, in the scenario mode
 """
 import os
+import re
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -26,3 +34,15 @@ def setup(g, mode="scenario"):
             x.command(f"scoreboard players set {r} {x.board} {x.stock[r.lower()]}")
         train.sidebar(x)
     return g
+
+
+def tick(g):
+    """End the game when a trigger declared the victory of a player (the score #p<N> of aoe_win is 1)."""
+    import cheats, conquest                                            # they import gather: import them late
+    if g.ended or g.clock() < vars(g).get("win_at", 0.0):
+        return
+    g.win_at = g.clock() + conquest.EVERY
+    for n in sorted(int(p) for p in g.players if int(p)):
+        got = re.search(r" has (-?\d+) ", g.command(f"scoreboard players get #p{n} aoe_win") or "")
+        if got and int(got[1]) > 0:
+            return cheats.over(g, lambda m: gather.allied(g.players, n, m))   # allies win together
