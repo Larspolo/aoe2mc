@@ -143,6 +143,7 @@ def ruin(g, n):
         if h.player == n:
             h.queues.clear()
     first = gathers[0]                                             # the Gather that runs Gather.run
+    vars(first).setdefault("fallen_bots", []).extend(b.g for b in first.bots if b.g.player == n and getattr(b.g, "share", None))
     first.bots = [b for b in first.bots if b.g.player != n or not getattr(b.g, "share", None)]   # a person keeps its Side: over() titles it (#1936)
 
 

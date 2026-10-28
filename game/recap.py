@@ -5,7 +5,8 @@ that give orders leave the hotbar (the wand, the control groups, "Go to", the Ga
 and the selection wand of vanilla). The map in the off-hand and the scenario book stay: they only show.
 The pages: the result, the score and the game time; the score parts of each player (score.points); and for each player
 its units (trained, alive, lost), buildings (built, lost), technologies and the game times of its ages.
-Minecraft features: a written book (scenario.written), `clear` and `item replace entity`. A bot has no book.
+Minecraft features: a written book (scenario.written), `clear` and `item replace entity`. A bot has no book, but its
+pages are in the book of each person, also after its defeat (cheats.ruin keeps its Gather in g.fallen_bots, #3281).
 
     recap.give(g, won)        # cheats.over, after the titles
     recap.aged(g, name)       # train.research: the game time of an age
@@ -44,7 +45,8 @@ def parts(g, won):
     """The pages of the recap book of the game of g, won(player) as in cheats.over: [(title or None, text)]. Each
     player of the map (with objects or a Gather) has its result; a player with a Gather (a person or a bot) also has its score and values."""
     sides = fog.gathers(g)
-    points = score.points(g)
+    sides += [h for h in vars(g).get("fallen_bots", ()) if all(h is not o for o in sides)]   # defeated bots (#3281)
+    points = score.points(g, sides)
     gone = {u for h in sides for u in vars(h).get("razed", {})}
     placed = {o.get("player") for o in g.data.get("objects", ())}       # not the empty player slots of a scenario
     out = [("Recap", f"Game time: {mmss(game_time(g))}\n\n" + "\n".join(
