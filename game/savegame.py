@@ -8,22 +8,9 @@ points (#2257), and the orders of the units (#2258): the job, target and load of
 the repair, #2380), the farmers, stances, control groups and garrisons. A villager keeps no path: after the load it walks
 again with Minecraft path finding (P2).
 The save also keeps the wonder and relic victory timers and the market prices (#2324), the game settings of the
-SETTINGS = (                                                           # run.py options (#2325, #2409): one per line
-    "all_techs",
-    "bot",
-    "bot_attack",
-    "cheats",
-    "civ",
-    "end_age",
-    "full_tech_tree",
-    "mode",
-    "people",
-    "pop_limit",
-    "reveal",
-    "teams",
-    "treaty",
-    "victory",
-)
+command line (`run.py` options, "settings"), the attack time and wave of the bot (#2325), the relics and the monk
+orders (#2412: `monk.relics`, the conversions and the rest of the monks), the orders of the ships, the routes of the
+trade carts and the state of the trebuchets (#2413), and the passed time of the treaty (#2409).
 """
 import json
 import os
