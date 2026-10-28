@@ -39,6 +39,7 @@ MID, MID_LEFT = 0.90, 2.0   # aim: this share is used this many hours before the
 END = 0.98          # aim: this share is used when the 5-hour window resets
 LO, HI = 1, CONFIG.get("pacing", {}).get("max_runs", 16)   # bounds of the number of runs (`agent.toml`, #1706)
 FREE7 = CONFIG.get("pacing", {}).get("week_free", 0.60)   # below this 7-day usage only the 5-hour window counts (owner, 2026-10-27)
+WEEK_GUARD = CONFIG.get("pacing", {}).get("week_guard", True)   # false: the 7-day usage does not count (owner, 2026-10-28)
 WAIT = CONFIG.get("pacing", {}).get("max_waiting_prs", 10)   # flow brake: open agent PRs older than PR_MINUTES
 QUEUE = CONFIG.get("pacing", {}).get("max_ci_queue", 5)      # flow brake: queued CI runs (no runner yet)
 PR_MINUTES = CONFIG.get("pacing", {}).get("pr_minutes", 30)  # Automerge merges a green PR in a few minutes
@@ -65,13 +66,15 @@ def read_usage(timeout=120):
     return parse(r.stdout.splitlines())
 
 
-def target_runs(usage, now, burn=BURN, end=END, lo=LO, hi=HI, mid=MID, mid_left=MID_LEFT, burn7=None, free7=FREE7):
+def target_runs(usage, now, burn=BURN, end=END, lo=LO, hi=HI, mid=MID, mid_left=MID_LEFT, burn7=None, free7=FREE7,
+                week=WEEK_GUARD):
     """The number of runs that uses `mid` of the 5-hour window `mid_left` hours before its reset, and `end` at the
     reset, with a guard for the 7-day window. burn7 (the share of the 7-day quota of one run-hour, measured): a week
     used ahead of the time gets at most the runs that its budget (1 - used) carries to the 7-day reset (#1695). This
     count can be 0, below `lo`: the week has no budget for a run now, and the budget per hour grows while the reset
     comes nearer. Without burn7 the count of a week ahead by more than 10 points is half. Below `free7` of the 7-day
-    usage there is no guard: the runs hit the 5-hour limit, not the weekly pace (owner, 2026-10-27)."""
+    usage there is no guard: the runs hit the 5-hour limit, not the weekly pace (owner, 2026-10-27). With `week` false
+    (`week_guard` of `agent.toml`) there is no guard at all (owner, 2026-10-28)."""
     if not usage or "five_hour" not in usage:
         return None
     used, reset, status = usage["five_hour"]
@@ -84,7 +87,7 @@ def target_runs(usage, now, burn=BURN, end=END, lo=LO, hi=HI, mid=MID, mid_left=
         aim, hours = end, left
     hours = max(hours, 0.25)                                    # the last quarter hour: use what is left
     n = round(max(aim - used, 0) / hours / burn)
-    if "seven_day" in usage:                                    # do not use the week faster than it passes
+    if week and "seven_day" in usage:                           # do not use the week faster than it passes
         used7, reset7, status7 = usage["seven_day"]
         if status7 == "rejected":
             return 0

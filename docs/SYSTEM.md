@@ -85,7 +85,8 @@ tiny CLI call. It computes the target number of runs: 90 % of the 5-hour window 
 that has passed, the count is at most the runs that the rest of the 7-day budget (1 − used) carries to the 7-day reset
 at the measured 7-day burn per run-hour (`health.weekly_burn`, default `BURN7`). This count can be 0: the runs then
 wait until the budget per hour is large enough again (#1695). Below `week_free` of `agent.toml` (60 %) of the 7-day
-usage there is no weekly guard: the runs fill each 5-hour window (owner, 2026-10-27). The CLI line shows the projection
+usage there is no weekly guard: the runs fill each 5-hour window (owner, 2026-10-27). `week_guard` of `agent.toml` turns the weekly guard on
+(`true`) or off (`false`: only the 5-hour window counts; owner, 2026-10-28). The CLI line shows the projection
 (`week ahead +38 pt · runs out Wed 11:22`, at the mean rate of the week so far). `--fire` gives the number of runs to start now: the
 target less the runs with a claim beat in the last 25 minutes. A run cannot start other runs (no `fire_trigger`, #566),
 so the pacer session starts them (at most `max_fire` of `agent.toml` per cycle, and at most the ready tickets plus `refill_runs`: those runs refill the queue). Each cycle reads `.claude/skills/pacer/SKILL.md` again, so a change of the pacing rules reaches

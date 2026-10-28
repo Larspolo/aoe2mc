@@ -15,10 +15,10 @@ def five(used=0.3):
 
 def test_a_week_far_ahead_gets_the_runs_that_its_budget_carries_to_the_reset():
     u = five() | {"seven_day": (0.52, NOW + 145 * H, "allowed")}         # 52 % used after 23 h of 168 h
-    n = usage.target_runs(u, NOW, burn7=0.0053, free7=0)
+    n = usage.target_runs(u, NOW, burn7=0.0053, free7=0, week=True)
     assert n == 0 and 0.52 + n * 145 * 0.0053 <= 1.0                     # one run would use 0.77: 129 % at the reset
     u = five() | {"seven_day": (0.3, NOW + 134 * H, "allowed")}          # 30 % after 20 % of the week
-    n = usage.target_runs(u, NOW, burn7=0.001, free7=0)
+    n = usage.target_runs(u, NOW, burn7=0.001, free7=0, week=True)
     assert n == 5 and 0.3 + n * 134 * 0.001 <= 1.0 < 0.3 + (n + 1) * 134 * 0.001
     assert usage.target_runs(u, NOW, burn7=0.0001, free7=0) == usage.target_runs(five(), NOW) == 11   # a large budget: no cap
 
@@ -26,7 +26,7 @@ def test_a_week_far_ahead_gets_the_runs_that_its_budget_carries_to_the_reset():
 def test_a_week_behind_the_time_keeps_the_count():
     u = five() | {"seven_day": (0.2, NOW + 4 * 86400, "allowed")}         # 20 % used after 43 % of the week
     assert usage.target_runs(u, NOW, burn7=0.05) == usage.target_runs(u, NOW) == usage.target_runs(five(), NOW)
-    assert usage.target_runs(five() | {"seven_day": (0.9, NOW + H, "rejected")}, NOW, burn7=0.005) == 0
+    assert usage.target_runs(five() | {"seven_day": (0.9, NOW + H, "rejected")}, NOW, burn7=0.005, week=True) == 0
 
 
 def test_the_line_shows_the_weekly_projection():

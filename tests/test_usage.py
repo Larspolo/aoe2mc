@@ -31,6 +31,6 @@ def test_target_slows_down_when_ahead_and_speeds_up_near_the_reset():
 
 def test_target_guards_the_week_and_stops_at_the_limit():
     fast_week = {"five_hour": (0.3, NOW + 7200, "allowed"), "seven_day": (0.8, NOW + 5 * 86400, "allowed")}
-    assert usage.target_runs(fast_week, NOW) == 5                          # half of 11: 80 % used after 2 of 7 days
+    assert usage.target_runs(fast_week, NOW, week=True) == 5                         # half of 11: 80 % used after 2 of 7 days
     assert usage.target_runs({"five_hour": (1.0, NOW + 600, "rejected")}, NOW) == 0
     assert usage.target_runs({}, NOW) is None
