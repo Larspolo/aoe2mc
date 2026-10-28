@@ -78,6 +78,7 @@
 {"name": "GALLEON", "age": 3}
 {"name": "GALLEY", "age": 1}
 {"name": "GENITOUR", "age": 2}
+{"name": "GRENADIER", "age": 2}
 {"name": "HALBERDIER", "age": 3}
 {"name": "HAND_CANNONEER", "age": 3, "needs": "CHEMISTRY"}
 {"name": "HEAVY_CAMEL_RIDER", "age": 3}
