@@ -433,7 +433,7 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
     import replay
     import treaty as treaties
     if replay.aoe2mc.game_time(settings["treaty"]):              # after the Gathers: they set the neutral stances
-        treaties.start(g, replay.aoe2mc.game_time(settings["treaty"]) / 1000)
+        treaties.start(g, replay.aoe2mc.game_time(settings["treaty"]) / 1000, (state or {}).get("treaty_time", 0.0))   # #2409
     if game.kind == "paper":                         # the view square of each player on map 0 (#1762)
         import replay
         game.command(f"aoe minimap frame {replay.FRAME * data['tile_size']}")
