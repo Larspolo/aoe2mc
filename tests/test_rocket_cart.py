@@ -28,8 +28,8 @@ def test_a_korean_player_sees_the_rocket_cart_and_not_the_mangonel():
     server, g = player("KOREANS")
     train.open_menu(g, "Steve", WORKSHOP)
     menu = menus(server)[-1] + " "
-    assert " 8:firework_rocket:Rocket Cart:135 wood · 155 gold · 40 s · queue 0/15 " in menu
-    assert " 9:book:Heavy Rocket Cart:800 wood · 600 gold · 75 s · research " in menu
+    assert " 20:firework_rocket:Rocket Cart:135 wood · 155 gold · 40 s · queue 0/15 " in menu
+    assert " 21:book:Heavy Rocket Cart:800 wood · 600 gold · 75 s · research " in menu
     assert "Mangonel" not in menu and "Onager" not in menu
     assert train.queue(g, "Steve", WORKSHOP, "MANGONEL") is None
 
@@ -54,7 +54,7 @@ def test_the_upgrade_changes_live_and_new_rocket_carts():
     assert combat.stats_command(uuid, "HEAVY_ROCKET_CART", train.stats(g, "HEAVY_ROCKET_CART")) in server.log
     assert "HEAVY_ROCKET_CART" in train.trains(g, "SIEGE_WORKSHOP")
     train.open_menu(g, "Steve", WORKSHOP)
-    assert " 8:firework_rocket:Heavy Rocket Cart:" in menus(server)[-1]
+    assert " 20:firework_rocket:Heavy Rocket Cart:" in menus(server)[-1]
     assert train.queue(g, "Steve", WORKSHOP, "HEAVY_ROCKET_CART")
     new, = train.tick(g, 40)
     assert g.soldiers[new] == "HEAVY_ROCKET_CART"
