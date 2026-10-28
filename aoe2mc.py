@@ -434,7 +434,8 @@ def read_scenario(path):
                                             **({"mood": ColorMood(e.color_mood).name}     # "Change Color Mood" (#1876)
                                                if e.effect_type == CHANGE_COLOR_MOOD and
                                                getattr(e, "color_mood", None) in set(ColorMood) else {}),
-                                            **({"quantity": e.quantity} if e.effect_type == DAMAGE_OBJECT else {}),
+                                            **({"quantity": e.quantity}
+                                               if e.effect_type in (DAMAGE_OBJECT, HEAL_OBJECT) else {}),
                                             **({"stance": e.attack_stance}                # (#2705)
                                                if e.effect_type == CHANGE_OBJECT_STANCE else {}),
                                             **({"quantity": e.quantity, "variable": e.variable,   # (#2611)
@@ -442,6 +443,8 @@ def read_scenario(path):
                                                if e.effect_type == CHANGE_VARIABLE else {}),
                                             **({"target": e.target_player}                # "Change Ownership" (#2570)
                                                if e.effect_type == CHANGE_OWNERSHIP else {}),
+                                            **({"color": e.player_color}                 # (#2712)
+                                               if e.effect_type == CHANGE_PLAYER_COLOR else {}),
                                             **({"target": e.target_player,                # "Replace Object" (#2703)
                                                 "object2": kinds.get(e.object_list_unit_id_2)}
                                                if e.effect_type == REPLACE_OBJECT else {}),
@@ -2777,6 +2780,7 @@ CHANGE_OBJECT_NAME = 26                                            # "Change Obj
 CHANGE_OBJECT_STANCE = 36                                          # "Change Object Stance" (#2705)
 CHANGE_OWNERSHIP = 18
 CHANGE_PLAYER_NAME = 45                                            # "Change Player Name" (#2711)
+CHANGE_PLAYER_COLOR = 89                                           # "Change Player Color" (#2712)
 CHANGE_VARIABLE = 56                                               # the scenario variables (#2611)
 CHANGE_VIEW = 16                                                   # "Change View" (#2610)
 CLEAR_INSTRUCTIONS = 21                                            # "Clear Instructions" (#2609)
@@ -2788,6 +2792,7 @@ DIFFICULTY_LEVEL = 19                                              # the conditi
 DISPLAY_INSTRUCTIONS = 20
 DISPLAY_TIMER = 37                                                 # "Display Timer" (#2572)
 FREEZE_OBJECT = 22                                                 # "Freeze Object" (#2608)
+HEAL_OBJECT = 34                                                   # "Heal Object" (#2692)
 IN_AREA = 5
 KILL_OBJECT = 14
 MODIFY_RESOURCE = 52                                               # "Modify Resource" (#2576)
@@ -2919,6 +2924,25 @@ def damage_lines(e, c):
     at = found[0]                                                      # Gaia: not the players (effect_units)
     stats["damage"] += 1
     return [f"execute as {at} run damage @s {q}"]                      # damage takes one entity
+
+
+def heal_lines(e, c):
+    """The commands of "Heal Object" (#2692): each unit of the effect (effect_units) gets `quantity` AoE2 hit points
+    back, not above its maximum. The scores aoe_hp (Health) and aoe_max (max_health) of the unit give the new Health:
+    the score is the Health without its decimals. The game program gives max_health = its AoE2 hit points."""
+    q, stats = e.get("quantity") or 0, c.stats
+    found = effect_units(e, c.T) if q > 0 else None
+    if found is None:
+        stats["heal (building or no amount, not supported yet)" if q else "heal (no amount)"] += 1
+        return []
+    c.setup["scoreboard objectives add aoe_hp dummy"] = c.setup["scoreboard objectives add aoe_max dummy"] = None
+    stats["heal"] += 1
+    at = found[0]                                                      # Gaia: not the players (effect_units)
+    return [f"execute as {at} store result score @s aoe_hp run data get entity @s Health",
+            f"execute as {at} store result score @s aoe_max run attribute @s minecraft:max_health get",
+            f"execute as {at} run scoreboard players add @s aoe_hp {q}",
+            f"execute as {at} run scoreboard players operation @s aoe_hp < @s aoe_max",
+            f"execute as {at} store result entity @s Health float 1 run scoreboard players get @s aoe_hp"]
 
 
 def name_lines(e, c):
@@ -3233,6 +3257,16 @@ def diplomacy_lines(e, c):
     return [f"scoreboard players set #p{a}.p{b} aoe_dip {e['diplomacy'] + 1}", "scoreboard players set #any aoe_dip 1"]
 
 
+def color_lines(e, c):
+    """The command of "Change Player Color" (#2712): the team p<player> gets the chat color of the new player color
+    (PlayerColorId 1 to 8, units.TEAM_COLOR). It colors the names and the glow of the units; wool and banners stay."""
+    n, color = e["player"], e.get("color")
+    if n <= 0 or not isinstance(color, int) or not 1 <= color <= len(buildings.COLOR_NAMES):
+        return []
+    c.stats["change player color"] += 1
+    return [f"team modify p{n} color {units.TEAM_COLOR[buildings.COLOR_NAMES[color - 1]]}"]
+
+
 def victory_lines(e, c):
     """The command of "Declare Victory" (#2542): the score #p<player> of aoe_win is 1, and the scenario mode of the
     game program ends the game. The load function adds the objective (c.setup)."""
@@ -3269,6 +3303,7 @@ EFFECTS = {
     CHANGE_OBJECT_STANCE: stance_lines,
     CHANGE_OWNERSHIP: owner_lines,
     CHANGE_PLAYER_NAME: player_name_lines,
+    CHANGE_PLAYER_COLOR: color_lines,
     CHANGE_VARIABLE: variable_lines,
     CHANGE_VIEW: view_lines,
     CLEAR_INSTRUCTIONS: clear_lines,
@@ -3279,6 +3314,7 @@ EFFECTS = {
     DISPLAY_INSTRUCTIONS: instruction_lines,
     DISPLAY_TIMER: timer_lines,
     FREEZE_OBJECT: freeze_lines,
+    HEAL_OBJECT: heal_lines,
     KILL_OBJECT: object_lines,
     MODIFY_RESOURCE: resource_lines,
     PATROL: order_lines,
