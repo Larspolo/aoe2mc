@@ -22,9 +22,9 @@ UNITS holds the bonuses of the land units of combat.STATS (#1090): hit points, a
 speed, per age. train.stats applies them before the technologies; the walk speed goes through speed(). Bonuses of
 this kind that the game program cannot use yet: the bonus damage (Bengali elephants and Sicilian units take less,
 Gurjara mounted units and Bohemian spearmen deal more, Bengali cavalry and Japanese mounted archers against some
-classes, Goth infantry against buildings), the elevation (Georgians, Tatars),
-the Lithuanian relics, the Aztec and Slav monks, and the ships.
+classes, Goth infantry against buildings), the Lithuanian relics, the Aztec and Slav monks, and the ships.
 REGEN holds the regeneration of the units (#2247): regen.tick gives them their hit points back.
+ELEVATION holds the elevation factors of the damage (#2307): combat.elevation and the plugin (aoe elevation).
 """
 import math
 import os
@@ -187,6 +187,17 @@ ECONOMY_VILLAGERS = {r["name"]: r["economy_villagers"] for r in ROWS if "economy
 FALLEN = {r["name"]: r["fallen"] for r in ROWS if "fallen" in r}
 KILL_GOLD = {r["name"]: r["kill_gold"] for r in ROWS if "kill_gold" in r}
 LOOT = {r["name"]: r["loot"] for r in ROWS if "loot" in r}
+# The elevation factors of the damage (#2307, AoE2 wiki "Elevation"): "up" multiplies the hits of a unit or building of
+# the civilization from higher ground, "low" the hits that it takes from lower ground, "high" the hits that it takes
+# from higher ground. The key "elevation" of a line in civs.jsonl changes them (Tatars, Georgians, Macedonians).
+ELEVATION = {r["name"]: r["elevation"] for r in ROWS if "elevation" in r}
+ELEVATION_BASE = {"up": 1.25, "low": 0.75, "high": 1.0}
+
+
+def elevation(civ):
+    """The elevation factors (up, low, high) of civilization civ (ELEVATION_BASE and its key "elevation")."""
+    e = {**ELEVATION_BASE, **ELEVATION.get(civ, {})}
+    return e["up"], e["low"], e["high"]
 
 
 def tagged(n, group):

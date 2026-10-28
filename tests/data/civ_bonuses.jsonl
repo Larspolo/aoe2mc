@@ -75,7 +75,7 @@
 {"name": "FRANKS: Foragers work 15% faster.", "civ": "FRANKS", "bonus": "Foragers work 15% faster.", "in": "WORK"}
 {"name": "GEORGIANS: Start with a Mule Cart. Mule Carts replace Lumber Camps and Mining Camps.", "civ": "GEORGIANS", "bonus": "Start with a Mule Cart. Mule Carts replace Lumber Camps and Mining Camps.", "later": "play:gather"}
 {"name": "GEORGIANS: Fortified Churches replace Monasteries, and provide +10% work rate to Villagers in a 21-tile square.", "civ": "GEORGIANS", "bonus": "Fortified Churches replace Monasteries, and provide +10% work rate to Villagers in a 21-tile square.", "later": "play:monks"}
-{"name": "GEORGIANS: Units and buildings receive -20% damage (-40% instead of -25%) when fighting from higher elevation.", "civ": "GEORGIANS", "bonus": "Units and buildings receive -20% damage (-40% instead of -25%) when fighting from higher elevation.", "later": "play:fight"}
+{"name": "GEORGIANS: Units and buildings receive -20% damage (-40% instead of -25%) when fighting from higher elevation.", "civ": "GEORGIANS", "bonus": "Units and buildings receive -20% damage (-40% instead of -25%) when fighting from higher elevation.", "in": "ELEVATION"}
 {"name": "GEORGIANS: Mounted units regenerate 2/8/14 hit points per minute in the Feudal/Castle/Imperial Age.", "civ": "GEORGIANS", "bonus": "Mounted units regenerate 2/8/14 hit points per minute in the Feudal/Castle/Imperial Age.", "in": "REGEN"}
 {"name": "GOTHS: Infantry units are 15%/20%/25%/30% cheaper in the Dark/Feudal/Castle/Imperial Age.", "civ": "GOTHS", "bonus": "Infantry units are 15%/20%/25%/30% cheaper in the Dark/Feudal/Castle/Imperial Age.", "in": "COSTS"}
 {"name": "GOTHS: Infantry units have +1/+2/+3 attack bonus against Standard Buildings in the Feudal/Castle/Imperial Age.", "civ": "GOTHS", "bonus": "Infantry units have +1/+2/+3 attack bonus against Standard Buildings in the Feudal/Castle/Imperial Age.", "in": "UNITS"}
@@ -127,7 +127,7 @@
 {"name": "LITHUANIANS: Each Town Center (including starting one) provides food +100.", "civ": "LITHUANIANS", "bonus": "Each Town Center (including starting one) provides food +100.", "in": "START"}
 {"name": "LITHUANIANS: Spearman line and Skirmishers move 10% faster.", "civ": "LITHUANIANS", "bonus": "Spearman line and Skirmishers move 10% faster.", "in": "UNITS"}
 {"name": "LITHUANIANS: Each garrisoned Relic gives +1 attack to Knights and Leitis (maximum +4).", "civ": "LITHUANIANS", "bonus": "Each garrisoned Relic gives +1 attack to Knights and Leitis (maximum +4).", "later": "play:monks"}
-{"name": "MACEDONIANS: Take 10% less damage from enemies on higher elevation.", "civ": "MACEDONIANS", "bonus": "Take 10% less damage from enemies on higher elevation.", "later": "play:fight"}
+{"name": "MACEDONIANS: Take 10% less damage from enemies on higher elevation.", "civ": "MACEDONIANS", "bonus": "Take 10% less damage from enemies on higher elevation.", "in": "ELEVATION"}
 {"name": "MACEDONIANS: Recruitment Doctrines are available at the Barracks, Archery Range, and Stable.", "civ": "MACEDONIANS", "bonus": "Recruitment Doctrines are available at the Barracks, Archery Range, and Stable.", "later": "play:military-train"}
 {"name": "MACEDONIANS: Infantry armor upgrades also benefit cavalry.", "civ": "MACEDONIANS", "bonus": "Infantry armor upgrades also benefit cavalry.", "in": "SMITH_UNITS"}
 {"name": "MACEDONIANS: Siege weapons have +1 pierce armor and +30% anti-building damage.", "civ": "MACEDONIANS", "bonus": "Siege weapons have +1 pierce armor and +30% anti-building damage.", "later": "play:siege"}
@@ -206,7 +206,7 @@
 {"name": "SPARTANS: Villagers and Fishing Ships drop off 10% more food.", "civ": "SPARTANS", "bonus": "Villagers and Fishing Ships drop off 10% more food.", "in": "DROP"}
 {"name": "SPARTANS: The Elite Hoplite upgrade is available in the Classical Age.", "civ": "SPARTANS", "bonus": "The Elite Hoplite upgrade is available in the Classical Age.", "later": "play:ages"}
 {"name": "TATARS: Herdable animals contain food +50%.", "civ": "TATARS", "bonus": "Herdable animals contain food +50%.", "in": "LAST"}
-{"name": "TATARS: Units deal +20% damage when attacking from higher elevations (+50% instead of +25%).", "civ": "TATARS", "bonus": "Units deal +20% damage when attacking from higher elevations (+50% instead of +25%).", "later": "play:fight"}
+{"name": "TATARS: Units deal +20% damage when attacking from higher elevations (+50% instead of +25%).", "civ": "TATARS", "bonus": "Units deal +20% damage when attacking from higher elevations (+50% instead of +25%).", "in": "ELEVATION"}
 {"name": "TATARS: Parthian Tactics and Thumb Ring are free.", "civ": "TATARS", "bonus": "Parthian Tactics and Thumb Ring are free.", "in": "COSTS"}
 {"name": "TATARS: Two Sheep spawn near newly-constructed Town Centers starting in the Castle Age.", "civ": "TATARS", "bonus": "Two Sheep spawn near newly-constructed Town Centers starting in the Castle Age.", "later": "play:build"}
 {"name": "TEUTONS: Monks have double healing range.", "civ": "TEUTONS", "bonus": "Monks have double healing range.", "later": "play:monks"}
