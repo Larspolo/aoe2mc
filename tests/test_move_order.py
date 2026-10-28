@@ -1,13 +1,13 @@
 """game/gather.py: a right click on free ground with selected units moves them there, as the move order of AoE2
-(#1368): each unit to its own free cell near the click, military units with `aoe moveto` of the plugin at their AoE2
-speed, villagers stop their work and walk there."""
+(#1368): each unit to its own free cell near the click (2 or more military units in the line formation, #3414),
+military units with `aoe moveto` of the plugin at their AoE2 speed, villagers stop their work and walk there."""
 import math
 import re
 
 import pytest
 from test_gather import FakeServer, grid
 
-from game import ai, gather, train
+from game import ai, gather, replay, train
 
 STEVE = {"Pos": (8.5, 64.0, 12.5), "Rotation": (-90.0, 30.0)}  # looks east and down at the ground near x = 10
 
@@ -38,8 +38,8 @@ def test_a_click_on_the_ground_sends_each_soldier_to_its_own_free_cell_near_it()
     g.click("Steve")
     to = moves(server)
     assert set(to) == {"m0", "m1", "m2"} and len(set(to.values())) == 3          # different cells
-    assert to["m0"] == (cell[0] + 0.5, cell[1] + 0.5)                            # the nearest one: the clicked cell
-    assert all(math.dist(p, (cell[0] + 0.5, cell[1] + 0.5)) <= 1.5 for p in to.values())
+    assert (cell[0] + 0.5, cell[1] + 0.5) in to.values()                         # the first row on the clicked cell
+    assert all(math.dist(p, (cell[0] + 0.5, cell[1] + 0.5)) <= 2 * replay.FORMATION for p in to.values())   # #3414
     speed = ai.speed_command("m0", "MILITIA", g.map.T, gather.NORMAL * train.speed(g, "MILITIA"))
     assert speed in server.log
     assert any(c.startswith("particle ") for c in server.log)                     # the order marker

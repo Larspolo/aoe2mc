@@ -539,6 +539,19 @@ def military(name):
     return not name.startswith(CIVILIANS) and (animal(name) or ("military",))[0] == "military"
 
 
+def rank(name):
+    """The place of a unit in an AoE2 formation, from the front (AoE2 wiki "Unit formation", #3414): 0 melee cavalry,
+    camels and elephants, 1 infantry, 2 archers (also on horse), 3 gunpowder foot units, 4 the siege units and the
+    civilians (monks, trade carts, kings)."""
+    import combat                                                      # combat imports this module
+    s = combat.stats(name)
+    if "siege" in s.classes or not military(name):
+        return 4
+    if "gunpowder" in s.classes and "cavalry" not in s.classes:
+        return 3
+    return 2 if s.range > 0 else 0 if {"cavalry", "camel", "elephant"} & set(s.classes) else 1
+
+
 def soldier(name):
     """True for a unit that takes move orders as a soldier (g.soldiers), not the jobs of a villager: a military unit, a
     monk, a trade cart, a ship, and the units with the key "orders" or "moves" (train.ORDERS, build.MOVES). One rule for
@@ -1451,10 +1464,10 @@ class Gather:
 
     def walk_to(self, name, cell, units=None):
         """The selected units walk to the free block cell (x, z), as the move order of AoE2 (#1368): each one to its own
-        free cell near it, the nearest cells first (no formation yet). Military units walk with the plugin path finding
-        at their AoE2 speed; villagers stop their work and walk there. Ships sail to the water near it (fleet.order, also
-        at a water cell). units: these units, not the selection, and no mark (transport.tick, #1515). Returns the cells
-        {uuid: cell}."""
+        free cell near it, the nearest cells first; 2 or more military units end in the AoE2 line formation (#3414:
+        replay.formation_cells, rank). Military units walk with the plugin path finding at their AoE2 speed; villagers
+        stop their work and walk there. Ships sail to the water near it (fleet.order, also at a water cell). units: these
+        units, not the selection, and no mark (transport.tick, #1515). Returns the cells {uuid: cell}."""
         import ai                                                      # ai imports this module
         units = self.selected if units is None else set(units)
         self.new_order(units)
@@ -1462,10 +1475,15 @@ class Gather:
         out = fleet.order(self, boats, cell)                           # a ship sails on the water (#1383)
         transport.aim(self, out, cell)                                 # a loaded ship unloads at a land cell (#1385)
         herd = self.herd()
-        who = sorted(u for u in units - boats if u in self.villagers or u in self.soldiers or u in herd)
+        army = sorted(u for u in units - boats - herd if u in self.soldiers)
+        pos = self.positions(army) if len(army) > 1 else {}            # 2 or more: the AoE2 line formation (#3414)
+        if len(pos) > 1:
+            out |= replay.formation_cells(self.map.free, [(u, p[0], p[2], rank(self.soldiers[u]), False)
+                                                          for u, p in pos.items()], (cell[0] + 0.5, cell[1] + 0.5), "Line", self.map.T)
+        who = sorted(u for u in units - boats - out.keys() if u in self.villagers or u in self.soldiers or u in herd)
         r = math.isqrt(len(who)) + 2
         cells = sorted(((x, z) for x in range(cell[0] - r, cell[0] + r + 1) for z in range(cell[1] - r, cell[1] + r + 1)
-                        if self.map.free(x, z)), key=lambda c: (math.dist(c, cell), c))
+                        if self.map.free(x, z) and (x, z) not in out.values()), key=lambda c: (math.dist(c, cell), c))
         out |= dict(zip(who, cells))
         for u, (x, z) in [(u, c) for u, c in out.items() if u not in boats]:
             if u in self.villagers:
