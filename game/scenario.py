@@ -540,15 +540,20 @@ def bot_seats(players, people):
     return [(b, next((p for p in humans if not gather.allied(players, b, p)), 1)) for b in computer]
 
 
-def setup(g, mode="scenario"):
+def setup(g, mode="scenario", start=True):
     """Put the scenario start values on the Gather of each player (the people and the bots) and show them. The victory
     setting of the scenario (aoe2mc.json "victory", #2566) replaces --victory: "custom" ends the game only by its
-    triggers (no conquest, wonder or relic win, #2567)."""
+    triggers (no conquest, wonder or relic win, #2567). start False (a loaded game, run.py): the save keeps the stock
+    and the scores, so only the victory and the population limit of each player are set again."""
     sides = [g, *(s.g for s in g.bots)]
     win = g.data.get("victory")
     for x in sides if win else ():
         x.victory = win["condition"]
         x.victory_value = win.get("years", win.get("score", getattr(x, "victory_value", None)))
+    if not start:
+        for x in sides:
+            x.pop_limit = g.players.get(str(x.player), {}).get("pop_limit", x.pop_limit)
+        return g
     level = (getattr(g.game, "settings", None) or {}).get("ai_difficulty", "standard")
     g.command("scoreboard objectives add aoe_difficulty dummy")        # the condition "Difficulty Level" (#2704)
     g.command(f"scoreboard players set #level aoe_difficulty {LEVELS[level]}")
