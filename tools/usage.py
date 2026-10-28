@@ -239,9 +239,10 @@ def describe(usage, now, burn=BURN, burn7=None):
     return " · ".join(out + [week] * bool(week)) + f" · burn {burn:.3f} · max {HI} runs · target {target_runs(usage, now, burn, burn7=burn7)} runs"
 
 
-def fire(usage, now, burn=BURN, burn7=None):
+def fire(usage, now, burn=BURN, burn7=None, skip=()):
     """(K, {lane: runs}, line): the runs that the pacer starts now, and the line of its inputs (`--fire`,
-    `tools/pacer.py`). Reads GitHub and the claim refs."""
+    `tools/pacer.py`). Reads GitHub and the claim refs. `skip`: lanes that can start no run now (the hourly limit
+    of their task): they count no ready tickets, so the main runs get the room."""
     import dashboard
     import health
     open_all = dashboard.pages("issues?state=open")
@@ -254,7 +255,7 @@ def fire(usage, now, burn=BURN, burn7=None):
     eq = claims if lanes is None else health.opus_equivalent(claims, lanes, weights)   # in Opus runs (#1727)
     target = target_runs(usage, now, burn, burn7=burn7)
     refill = refill_runs(open_all, now)
-    lanes = [(n, len(dashboard.candidates(open_all, lane=n)), weights[n]) for n in weights]   # agent.toml order
+    lanes = [(n, 0 if n in skip else len(dashboard.candidates(open_all, lane=n)), weights[n]) for n in weights]   # agent.toml order
     k, runs = plan(target, eq, ready, lanes, paused, refill=refill,
                    refill_lane="deep" if "deep" in dashboard.RESERVED else None)
     cap, flow = read_flow(now)
