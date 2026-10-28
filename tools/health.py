@@ -139,8 +139,16 @@ def raw_samples(comments):
 
 
 def lane_weights(comments, need=10):
-    """({lane: weight}, {lane: "measured" or "start"}): the quota of one lane run in Opus runs (lane_fit, #1727)."""
-    return lane_fit(comments, need)[:2]
+    """({lane: weight}, {lane: "cost", "measured" or "start"}): the quota of one lane run in Opus runs. A lane with
+    `need` runs with a `cost` (and as many Opus runs) gets the ratio of the median costs (#3457: the fit had an error
+    of half its value), else the fit of lane_fit (#1727)."""
+    weights, source = lane_fit(comments, need)[:2]
+    costs = run_costs(comments)
+    if len(costs.get("opus", ())) >= need and (base := numpy.median(costs["opus"])) > 0:
+        for k in weights:
+            if len(costs.get(k, ())) >= need:
+                weights[k], source[k] = max(float(numpy.median(costs[k]) / base), 0.02), "cost"
+    return weights, source
 
 
 def lane_fit(comments, need=10):
