@@ -12,9 +12,9 @@
 {"name": "ARCHER", "hp": 30, "attack": 4, "melee": 0, "pierce": 0, "range": 4, "reload": 2.0, "bonus": {"spearman": 3}, "classes": ["archer"], "groups": ["archer line"]}
 {"name": "CROSSBOWMAN", "hp": 35, "attack": 5, "melee": 0, "pierce": 0, "range": 5, "reload": 2.0, "bonus": {"spearman": 3}, "classes": ["archer"], "groups": ["archer line"]}
 {"name": "ARBALESTER", "hp": 40, "attack": 6, "melee": 0, "pierce": 0, "range": 5, "reload": 2.0, "bonus": {"spearman": 3}, "classes": ["archer"], "groups": ["archer line"]}
-{"name": "SKIRMISHER", "hp": 30, "attack": 2, "melee": 0, "pierce": 3, "range": 4, "reload": 3.0, "bonus": {"archer": 3, "spearman": 3}, "classes": ["archer"], "groups": ["skirmishers"]}
-{"name": "ELITE_SKIRMISHER", "hp": 35, "attack": 3, "melee": 0, "pierce": 4, "range": 5, "reload": 3.0, "bonus": {"archer": 4, "spearman": 3}, "classes": ["archer"], "groups": ["skirmishers"]}
-{"name": "IMPERIAL_SKIRMISHER", "hp": 35, "attack": 4, "melee": 0, "pierce": 5, "range": 5, "reload": 3.0, "bonus": {"archer": 5, "spearman": 4}, "classes": ["archer"], "groups": ["skirmishers"]}
+{"name": "SKIRMISHER", "hp": 30, "attack": 2, "melee": 0, "pierce": 3, "range": 4, "reload": 3.0, "bonus": {"archer": 3, "spearman": 3}, "classes": ["archer", "skirmisher"], "groups": ["skirmishers"]}
+{"name": "ELITE_SKIRMISHER", "hp": 35, "attack": 3, "melee": 0, "pierce": 4, "range": 5, "reload": 3.0, "bonus": {"archer": 4, "spearman": 3}, "classes": ["archer", "skirmisher"], "groups": ["skirmishers"]}
+{"name": "IMPERIAL_SKIRMISHER", "hp": 35, "attack": 4, "melee": 0, "pierce": 5, "range": 5, "reload": 3.0, "bonus": {"archer": 5, "spearman": 4}, "classes": ["archer", "skirmisher"], "groups": ["skirmishers"]}
 {"name": "LONGBOWMAN", "hp": 35, "attack": 6, "melee": 0, "pierce": 0, "range": 5, "reload": 2.0, "bonus": {"spearman": 2}, "classes": ["archer", "unique"]}
 {"name": "CAVALRY_ARCHER", "hp": 50, "attack": 6, "melee": 0, "pierce": 0, "range": 4, "reload": 2.0, "bonus": {"spearman": 2}, "classes": ["archer", "cavalry"], "sight": 5}
 {"name": "HEAVY_CAVALRY_ARCHER", "hp": 60, "attack": 7, "melee": 1, "pierce": 0, "range": 4, "reload": 2.0, "bonus": {"spearman": 4}, "classes": ["archer", "cavalry"]}
