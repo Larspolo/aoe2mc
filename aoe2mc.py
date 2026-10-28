@@ -2757,10 +2757,11 @@ def ambience_lines(biome_names):
 
 
 def team_lines(objects, players):
-    """(load, pulse) commands: one team per player with units, in the player color (#358). The pulse puts new
-    units in their team: a load function reaches only the entities of loaded chunks."""
+    """(load, pulse) commands: one team per player with units or of the scenario (1 to 8), in the player color (#358,
+    #3088). The pulse puts new units in their team: a load function reaches only the entities of loaded chunks."""
     load, pulse = [], []
-    for n in sorted({o["player"] for o in objects if o["kind"] == "U" and o["player"]}):
+    ids = {o["player"] for o in objects if o["kind"] == "U" and o["player"]} | {n for n in players if 0 < n <= 8}
+    for n in sorted(ids):
         p = players.get(n, {})
         civ = "" if p.get("civ") in (None, "RANDOM") else str(p["civ"]).replace("_", " ").title()
         load += [f'team add p{n} "Player {n}{f" ({civ})" if civ else ""}"',

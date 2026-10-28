@@ -256,8 +256,9 @@ def test_player_teams(tiny_world):
     with open(os.path.join(path, "aoe2mc.json")) as f:
         data = json.load(f)
     owners = {o["player"] for o in data["objects"] if o["kind"] == "unit" and o["player"]}
-    assert owners and {int(line.split()[2][1:]) for line in load if line.startswith("team add")} == owners
-    for n in owners:
+    teams = owners | {int(n) for n in data["players"] if 0 < int(n) <= 8}   # a player with no units has a team too (#3088)
+    assert owners and {int(line.split()[2][1:]) for line in load if line.startswith("team add")} == teams
+    for n in teams:
         color = aoe2mc.units.TEAM_COLOR[data["players"][str(n)]["color"]]
         assert f"team modify p{n} color {color}" in load and f"team join p{n} @e[tag=aoe2mc.p{n},team=]" in pulse
     assert load[-1].startswith("schedule") and pulse[-1].startswith("schedule")
