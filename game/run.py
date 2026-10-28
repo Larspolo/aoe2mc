@@ -170,6 +170,8 @@ class Game:
 
     def __init__(self, world, version=mc_check.DEFAULT_VERSION, timeout=300, server="paper"):
         self.world, self.version, self.timeout, self.kind = os.path.abspath(world), version, timeout, server
+        from train import units                      # new units get the weapon models of the world pack (#2744)
+        units.ITEM_MODELS = os.path.exists(os.path.join(self.world, "resourcepacks", "resources.zip"))
         self.server = self.rcon = None
         self.lock, self.seen = threading.Lock(), 0     # the op thread and the game send commands
         self.sides = {}

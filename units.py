@@ -79,6 +79,12 @@ LINES = {r["name"]: (r["mob"], tuple(tuple(p[:1]) + (int(p[1][1:], 16),) if isin
                      r["main"], r["off"], *([tags(r)] if "tags" in r else [])) for r in rows("lines.jsonl")}
 TRIM = Compound({"material": String("minecraft:gold"), "pattern": String("minecraft:sentry")})
 
+# --resource-pack (#2744): a hand item gets the AoE2 weapon model aoe2mc:<weapon> (the component minecraft:item_model);
+# its id stays, as the mob fights with it (a bow shoots). A line of data/weapons.jsonl names a part of the unit name
+# (upper case, the main hand only) or a vanilla item (lower case: the item or its last word); the first match wins.
+WEAPONS = [(r["name"], r["weapon"]) for r in rows("weapons.jsonl")]
+ITEM_MODELS = False     # aoe2mc._convert sets it from --resource-pack, game/run.py when the world has the pack
+
 # The names of data/units.jsonl (#2035), one line each; the keys of a line:
 # "tier": the upgrade step of a standard unit line (other units are "unique", "elite" or "hero").
 # "invisible": the reason to skip an invisible marker or internal unit (a keyword; place_objects, classify() and
@@ -147,6 +153,27 @@ def armor_items(pieces):
 
 def hands(main=None, off=None):
     return {slot: item(n) for slot, n in (("mainhand", main), ("offhand", off)) if n}
+
+
+def weapon(item_id, unit=""):
+    """The AoE2 weapon model of the hand item item_id ("iron_sword") of the unit, else None (#2744)."""
+    for name, w in WEAPONS:
+        if name in unit if name.isupper() else item_id == name or item_id.endswith("_" + name):
+            return w
+    return None
+
+
+def weapon_models(nbt, unit):
+    """Give the hand items of the entity, its mount and its crew the weapon models of the resource pack (#2744)."""
+    stack = [nbt]
+    while stack:
+        e = stack.pop()
+        stack += list(e.get("Passengers", []))
+        for slot, it in e.get("equipment", {}).items():
+            w = slot in ("mainhand", "offhand") and "id" in it and \
+                weapon(str(it["id"]).removeprefix("minecraft:"), unit if slot == "mainhand" else "")
+            if w:
+                it.setdefault("components", Compound({}))["minecraft:item_model"] = String("aoe2mc:" + w)
 
 
 def no_trades():
@@ -474,6 +501,8 @@ def make_entity(o, players, pos, rng, desc=None):
             stack += list(e.get("Passengers", []))
             if e is not label:
                 e["Tags"] = List[String]([String(f"aoe2mc.p{o['player']}"), String(MOUNT)])
+    if ITEM_MODELS:
+        weapon_models(nbt, o["name"])
     return nbt
 
 

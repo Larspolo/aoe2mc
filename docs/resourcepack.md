@@ -11,6 +11,9 @@ player loads it with the world. Without the option, the world is the same as bef
     assets/minecraft/textures/entity/zombie/husk.png
     assets/minecraft/textures/entity/zombie/zombie.png
     assets/minecraft/textures/entity/zombie_villager/zombie_villager.png
+    assets/aoe2mc/items/<weapon>.json          (#2744: one for each weapon of data/weapons.jsonl)
+    assets/aoe2mc/models/item/<weapon>.json
+    assets/aoe2mc/textures/item/<weapon>.png
 ```
 
 - `pack.mcmeta`: `pack_format`, `min_format` and `max_format` are `VERSIONS[...]["resource_format"]` in `aoe2mc.py`
@@ -23,6 +26,17 @@ player loads it with the world. Without the option, the world is the same as bef
   has a 8 × 10 × 8 head, a nose box at (24, 0), and its clothes come from the overlays `zombie_villager/type/*.png`
   and `profession/*.png`, which the pack does not change.
 - The zip has the same bytes for each conversion: sorted names and a fixed time (a release holds the same bytes).
+
+## Weapons (#2744)
+
+- With the option, `units.make_entity` gives each hand item of a unit (also of its rider and crew) the component
+  `minecraft:item_model` `aoe2mc:<weapon>` (`units.weapon_models`). The item id stays: the mob fights with it (a bow
+  shoots, a crossbow loads). `data/weapons.jsonl`: a part of the unit name (upper case, main hand only) or a vanilla
+  item (lower case: the item or its last word, `iron_sword` -> `sword`); the first line that matches wins.
+- `units.ITEM_MODELS` switches it on: `_convert` sets it from the option, `game/run.Game` when the world has the pack
+  (trained units get the same items).
+- The models are flat 16 × 16 items (`item/handheld`, the shield `item/generated`), drawn by `aoe2mc.weapon_texture()`
+  from `WEAPON_ART` on the diagonal of the vanilla tools.
 
 ## Client behavior (26.3, checked with `tools/mc_shot.py`)
 
