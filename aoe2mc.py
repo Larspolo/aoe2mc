@@ -457,7 +457,8 @@ def read_scenario(path):
             garrisoned = u.garrisoned_in_id not in (None, -1)
             objects.append(dict(kind="U" if prefix == "H" else prefix, hero=prefix == "H", name=name, id=u.unit_const,
                                 player=player, x=u.x, y=u.y, rotation=float(u.rotation or 0), garrisoned=garrisoned,
-                                ref=u.reference_id, holder=u.garrisoned_in_id if garrisoned else None))
+                                ref=u.reference_id, holder=u.garrisoned_in_id if garrisoned else None,
+                                ref_tag=True))      # the tag aoe2mc.r<ref> for the triggers (#2617), not in a record
     return size, terrain, elevation, terrain_names, texts, objects, players
 
 
