@@ -95,7 +95,8 @@ def check_civs(row):
     assert row.get("unique", "MILITIA") in NAMES["units.jsonl"], n
     assert set(row.get("twice", ())) <= NAMES["train.jsonl"], n
     for group, value, ages in row.get("units", ()):
-        assert group in civs.GROUPS and value in (*combat.Stats._fields, "speed"), (n, group, value)
+        classes = {f"bonus:{c}" for t in (*combat.STATS.values(), *combat.BUILDINGS.values()) for c in t.classes}
+        assert group in civs.GROUPS and value in (*combat.Stats._fields, "speed", *classes), (n, group, value)   # (#2249)
         assert len(ages) == 4 and all(isinstance(a, NUMBER) for a in ages), (n, group)
     for what, ages in row.get("arrows", ()):                 # the factor of the base arrows of buildings (#2178)
         assert set(what) <= NAMES["buildings.jsonl"] and len(ages) == 4 and all(isinstance(a, int) for a in ages), n
