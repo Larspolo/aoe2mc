@@ -24,8 +24,8 @@ speed, per age. train.stats applies them before the technologies; the walk speed
 #2248); the value "taken" is the factor of the bonus damage that the unit takes (Bengali elephants, Sicilian units:
 taken(), the plugin applies it at each hit). Bonuses of this kind that the game program cannot use yet: the bonus
 damage of Bengali cavalry and Japanese mounted archers against some classes and of Goth infantry against buildings,
-the Georgian and Polish regeneration, the elevation (Georgians, Tatars),
-the Lithuanian relics, the Aztec and Slav monks, and the ships.
+the elevation (Georgians, Tatars), the Lithuanian relics, the Aztec and Slav monks, and the ships.
+REGEN holds the regeneration of the units (#2247): regen.tick gives them their hit points back.
 """
 import math
 import os
@@ -170,6 +170,10 @@ AGE_VILLAGERS = {"BENGALIS": 2}                                    # each own to
 # "tech_gifts": the resources for each technology but an age (Spanish), "economy_villagers": the free villagers for
 # each economic technology (Wei, #2175).
 TECH_GIFTS = {r["name"]: r["tech_gifts"] for r in ROWS if "tech_gifts" in r}
+# "regen": the regeneration of units (#2247): [group of GROUPS or a list of unit names, hit points per AoE2 minute in
+# the Dark, Feudal, Castle and Imperial Age] (Polish villagers, Georgian mounted units, Wu infantry, Thracian elite
+# skirmishers). regen.tick gives them back.
+REGEN = {r["name"]: [tuples(b) for b in r["regen"]] for r in ROWS if "regen" in r}
 ECONOMY_VILLAGERS = {r["name"]: r["economy_villagers"] for r in ROWS if "economy_villagers" in r}
 
 
@@ -207,6 +211,14 @@ def smith(g, name, s):
     import build                                                   # build imports gather, gather imports this module
     age = build.ages(g)
     return {t: c[age] for k, techs, c in SMITH_UNITS.get(civ(g), []) if c[age] and GROUPS[k](name, s) for t in techs}
+
+
+def regen(g, name, s):
+    """The hit points per AoE2 minute that unit name (combat.Stats s) of the player of g regenerates in its age (REGEN),
+    else 0. Two rules of one civilization add up."""
+    import build                                                   # build imports gather, gather imports this module
+    age = build.ages(g)
+    return sum(c[age] for k, c in REGEN.get(civ(g), []) if (name in k if isinstance(k, tuple) else GROUPS[k](name, s)))
 
 
 def units(g, name, s):
