@@ -353,6 +353,8 @@ Read these files first:
 - [`docs/STEERING.md`](docs/STEERING.md): how the owner steers the work with GitHub issues.
 - [`docs/ROADMAP.md`](docs/ROADMAP.md): the plan.
 - [`docs/DESIGN.md`](docs/DESIGN.md): the rules for building, object and unit designs.
+- [`docs/SYSTEM.md`](docs/SYSTEM.md): the agent system that does the work, and the setup steps of the owner
+  ("Setup steps of the owner"; a move to another Claude account: step 9, `/operator move`).
 
 ## Known limits
 

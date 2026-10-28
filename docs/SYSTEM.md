@@ -154,6 +154,15 @@ on `main` yet, and the branch of an owner session is not `agent/*` or `claude/*`
    `claude-opus-5-5` at effort high (the owner's setting; the main task runs at low effort), the prompt of step 4 with the argument
    `max lane deep`. These runs take the tickets with `lane:deep` and do the epic check, the queue refill, the roadmap
    review and the process review (`autopilot/queue.md`, "Deep lane").
+9. **Move to another Claude account (owner, 2026-10-28).** Start a session in the new account with the repository
+   and type `/operator move` (skill `operator`, section 5). It pauses the runs (label `paused`), makes the tasks of
+   steps 4 and 6 to 8 and the pacer session, writes the new IDs to `agent.toml`, and checks all parts at the end. It
+   asks you for the steps that only you can do:
+   - In the old account: disable the scheduled tasks of aoe2mc and archive the pacer session.
+   - In the new account: connect GitHub (the Claude GitHub app stays on the repository); make the cloud environment
+     of step 2; set the repository, the model and the effort of each new task (autopilot: Opus 5.5, effort low;
+     haiku: Haiku 5.5; deep: Opus 5.5, effort high). The tool cannot set these three values.
+   The GitHub side (tickets, claims, labels, the status issue) does not change.
 
 To check or repair steps 4–6, start a session and type `/operator` (skill `operator`, #981). It checks the two
 scheduled tasks, the pacer session, the quota, CI, the PRs and the labels, and repairs them after you agree (for
