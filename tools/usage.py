@@ -191,22 +191,42 @@ def read_flow(now):
     return flow_cap(len(waiting_prs(prs, now)), queued)
 
 
-def measured_burn7():
-    """The share of the 7-day quota of one run-hour that `tools/health.py` measures from the `Usage:` lines, or None."""
+def read_status():
+    """(comments, note): the status comments of `tools/health.py`, read once for the burns and the lane weights of
+    --fire (#3069: three reads, and a failed one changed the burn with no message). A failed read gives no comments,
+    so the defaults BURN, BURN7 and the start weights, and a note for the stderr line."""
     try:
         import health
-        return health.weekly_burn(health.status_comments(), datetime.datetime.now(datetime.timezone.utc))
+        return health.status_comments(), ""
+    except Exception as e:                                      # no GitHub access, a 5xx
+        return [], f" · status comments failed ({type(e).__name__}: {str(e)[:100]}): default burns, start weights"
+
+
+def measured_burn7(comments=None):
+    """The share of the 7-day quota of one run-hour that `tools/health.py` measures from the `Usage:` lines, or None.
+    comments: those of read_status, else it reads them."""
+    try:
+        import health
+        comments = health.status_comments() if comments is None else comments
+        return health.weekly_burn(comments, datetime.datetime.now(datetime.timezone.utc))
     except Exception:                                           # no GitHub access: the old guard
         return None
 
 
-def measured_burn():
-    """The burn that `tools/health.py` measures from the `Usage:` lines of the status issue, or None."""
+def measured_burn(comments=None):
+    """The burn that `tools/health.py` measures from the `Usage:` lines of the status issue, or None.
+    comments: those of read_status, else it reads them."""
     try:
         import health
-        return health.measured_burn(health.status_comments(), datetime.datetime.now(datetime.timezone.utc))
+        comments = health.status_comments() if comments is None else comments
+        return health.measured_burn(comments, datetime.datetime.now(datetime.timezone.utc))
     except Exception:                                           # no GitHub access: use the default
         return None
+
+
+def burns(comments, burn=None):
+    """(burn, burn7): `burn` (--burn), else measured from the comments of read_status, else BURN and BURN7."""
+    return burn or measured_burn(comments) or BURN, measured_burn7(comments) or BURN7
 
 
 def sample_line(usage, now, claims, release=None, lanes=None):
@@ -239,10 +259,12 @@ def describe(usage, now, burn=BURN, burn7=None):
     return " · ".join(out + [week] * bool(week)) + f" · burn {burn:.3f} · max {HI} runs · target {target_runs(usage, now, burn, burn7=burn7)} runs"
 
 
-def fire(usage, now, burn=BURN, burn7=None, skip=()):
+def fire(usage, now, burn=BURN, burn7=None, skip=(), status=None):
     """(K, {lane: runs}, line): the runs that the pacer starts now, and the line of its inputs (`--fire`,
     `tools/pacer.py`). Reads GitHub and the claim refs. `skip`: lanes that can start no run now (the hourly limit
-    of their task): they count no ready tickets, so the main runs get the room."""
+    of their task): they count no ready tickets, so the main runs get the room. `status`: read_status() of the
+    burns, else it reads the status comments."""
+    comments, note = status or read_status()
     import dashboard
     import health
     open_all = dashboard.pages("issues?state=open")
@@ -251,7 +273,7 @@ def fire(usage, now, burn=BURN, burn7=None, skip=()):
     t = datetime.datetime.now(datetime.timezone.utc)
     lanes = health.lane_claims(t)
     claims = health.active_claims(t) if lanes is None else sum(lanes.values())
-    weights, source = health.lane_weights(health.status_comments())
+    weights, source = health.lane_weights(comments)
     eq = claims if lanes is None else health.opus_equivalent(claims, lanes, weights)   # in Opus runs (#1727)
     target = target_runs(usage, now, burn, burn7=burn7)
     refill = refill_runs(open_all, now)
@@ -263,7 +285,7 @@ def fire(usage, now, burn=BURN, burn7=None, skip=()):
         k, runs = min(k, cap), dict.fromkeys(runs, 0)
     line = (f"{describe(usage, now, burn, burn7)} · claims {claims} ({eq:.2f} Opus runs) · ready {ready} · refill {refill} · "
             f"paused {paused} · {flow} · max_fire {MAX_FIRE} · weights "
-            + ", ".join(f"{n} {w:.2f} ({source[n]})" for n, w in weights.items()))
+            + ", ".join(f"{n} {w:.2f} ({source[n]})" for n, w in weights.items()) + note)
     return k, runs, line
 
 
@@ -288,9 +310,10 @@ def main(argv=None):
         t = datetime.datetime.now(datetime.timezone.utc)
         print(sample_line(usage, now, health.active_claims(t), release_percent(), health.lane_claims(t)))
         return
-    burn, burn7 = a.burn or measured_burn() or BURN, measured_burn7() or BURN7
+    status = read_status()
+    burn, burn7 = burns(status[0], a.burn)
     if a.fire:
-        k, runs, line = fire(usage, now, burn, burn7)
+        k, runs, line = fire(usage, now, burn, burn7, status=status)
         if PACER == "workflow":                                 # pacer.yml starts the runs: the session must not (#3193)
             k, runs, line = 0, dict.fromkeys(runs, 0), 'pacer = "workflow" in agent.toml: the session starts no run · ' + line
         print(k)

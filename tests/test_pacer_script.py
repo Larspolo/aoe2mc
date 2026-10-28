@@ -33,9 +33,8 @@ def server():
 def run(monkeypatch, k, runs, env, argv=(), mode="workflow"):
     monkeypatch.setattr(pacer, "MODE", mode)
     monkeypatch.setattr(pacer.usage, "read_usage", lambda: {"five_hour": (0.2, 0, "allowed")})
-    monkeypatch.setattr(pacer.usage, "fire", lambda *a, skip=(): (k, {t: 0 if t in skip else n for t, n in runs.items()}, "x"))
-    monkeypatch.setattr(pacer.usage, "measured_burn", lambda: None)
-    monkeypatch.setattr(pacer.usage, "measured_burn7", lambda: None)
+    monkeypatch.setattr(pacer.usage, "fire", lambda *a, skip=(), status=None: (k, {t: 0 if t in skip else n for t, n in runs.items()}, "x"))
+    monkeypatch.setattr(pacer.usage, "read_status", lambda: ([], ""))
     with pytest.raises(SystemExit) as e:
         pacer.main(list(argv), env=env)
     return e.value.code
@@ -83,9 +82,8 @@ def test_the_script_starts_no_run_while_the_session_paces(monkeypatch, server, c
 def test_the_session_pacer_gets_no_run_while_the_workflow_paces(monkeypatch, capsys):
     monkeypatch.setattr(pacer.usage, "PACER", "workflow")
     monkeypatch.setattr(pacer.usage, "read_usage", lambda: {"five_hour": (0.2, 0, "allowed")})
-    monkeypatch.setattr(pacer.usage, "fire", lambda *a: (8, {"haiku": 5}, "inputs"))
-    monkeypatch.setattr(pacer.usage, "measured_burn", lambda: None)
-    monkeypatch.setattr(pacer.usage, "measured_burn7", lambda: None)
+    monkeypatch.setattr(pacer.usage, "fire", lambda *a, status=None: (8, {"haiku": 5}, "inputs"))
+    monkeypatch.setattr(pacer.usage, "read_status", lambda: ([], ""))
     pacer.usage.main(["--fire"])
     out, err = capsys.readouterr()
     assert out.split() == ["0", "haiku", "0"] and "the session starts no run" in err
