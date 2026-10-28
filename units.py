@@ -361,9 +361,9 @@ def siege_crew(n):
 
 @functools.lru_cache(maxsize=None)
 def siege(n):
-    """A siege unit: a minecart with a crew. The game program walks it on a carrier mob of the plugin (#836)."""
-    d = classify(n)
-    return bool(d) and d["id"] == "minecraft:minecart"
+    """A siege unit: a minecart with a crew. The game program walks it on a carrier mob of the plugin (#836).
+    A hero siege unit of a campaign is one too (its hero flag, #3020)."""
+    return any(d and d["id"] == "minecraft:minecart" for d in (classify(n), classify(n, True)))
 
 
 def wagon(n):
