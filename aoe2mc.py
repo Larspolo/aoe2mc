@@ -2818,6 +2818,7 @@ ACCUMULATE_ATTRIBUTE = 8                                           # a resource 
 AND = 57                                                           # the conditions "AND" and "OR" (#2765)
 ADD_TRAIN_LOCATION = 102                                           # "Add Train Location" (#2865)
 ATTACK_MOVE = 30                                                   # "Attack Move" (#2647)
+BUILD_OBJECT = 108                                                 # "Build Object" (#2863)
 CHANGE_COLOR_MOOD = 72
 CHANGE_DIPLOMACY = 1                                               # "Change Diplomacy" (#2645)
 CHANGE_OBJECT_ARMOR = 31                                           # "Change Object Armor" (#2755)
@@ -3661,6 +3662,21 @@ def foundation_lines(e, c):
     return [f'data modify storage aoe2mc:orders list append value "found {p} {name} {x} {y}"']
 
 
+def build_lines(e, c):
+    """The command of "Build Object" (#2863): the order "build <player> <building> <x1> <y1> <x2> <y2>" goes into the
+    storage aoe2mc:orders (ANY: no object type; -1: no area, the whole map). The scenario mode of the game program
+    (game/scenario.py finish) completes the construction sites of the player with their middle tile in the area at
+    once. The selected objects of the effect are converted buildings, never sites: no order for them. A unit type or
+    Gaia: no order."""
+    kind, name = e.get("object") or (None, None)
+    a = e.get("area", [-1] * 4)
+    if kind not in (None, "B") or e["player"] <= 0:
+        return []
+    x0, y0, x1, y1 = (min(a[0], a[2]), min(a[1], a[3]), max(a[0], a[2]), max(a[1], a[3])) if min(a) >= 0 else [-1] * 4
+    p, name = e["player"], name or "ANY"
+    return [f'data modify storage aoe2mc:orders list append value "build {p} {name} {x0} {y0} {x1} {y1}"']
+
+
 def gate_lines(e, c):
     """The commands of "Lock Gate" and "Unlock Gate" (#2762): the order "lock <ref>" or "unlock <ref>" of each selected
     gate goes into the storage aoe2mc:orders. game/scenario.py orders puts the portcullis on the gate and locks it with
@@ -3908,6 +3924,7 @@ EFFECTS = {
     ACTIVATE_TRIGGER: switch_lines,
     ADD_TRAIN_LOCATION: train_location_lines,
     ATTACK_MOVE: order_lines,
+    BUILD_OBJECT: build_lines,
     CHANGE_COLOR_MOOD: mood_lines,
     CHANGE_DIPLOMACY: diplomacy_lines,
     CHANGE_OBJECT_ARMOR: attack_lines,
