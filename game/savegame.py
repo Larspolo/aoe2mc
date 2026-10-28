@@ -10,7 +10,8 @@ again with Minecraft path finding (P2).
 The save also keeps the wonder and relic victory timers and the market prices (#2324), the game settings of the
 command line (`run.py` options, "settings"), the attack time and wave of the bot (#2325), the relics and the monk
 orders (#2412: `monk.relics`, the conversions and the rest of the monks), the orders of the ships, the routes of the
-trade carts and the state of the trebuchets (#2413), and the passed time of the treaty (#2409).
+trade carts and the state of the trebuchets (#2413), the passed time of the treaty (#2409), and the units inside the
+transport ships and siege towers and the units on the way to them (#2411).
 """
 import json
 import os
@@ -24,6 +25,7 @@ OPTIONAL = ("rates", "relic_timer", "wonder_shown", "wonders", "wonders_gone")  
 MONK = ("carrier_at", "converting", "faith", "fetching", "heal_time", "monk_at", "relic_gold", "relic_homes",
         "relic_time", "relics")                                        # game/monk.py: the relics and monk orders (#2412)
 ROUTES = ("trade", "trebs")                                            # trade.py, trebuchet.py: as OPTIONAL (#2413)
+RIDERS = ("berths", "boarding", "cargo", "loading", "towers", "unloads")   # transport.py, siege_tower.py (#2411)
 JOB = ("state", "load", "res", "job", "lap", "prey")                  # fields of a gather.Villager, as they are
 BOT = ("time", "charged", "attack")                                    # fields of a bot.Bot, as they are (#2325)
 SETTINGS = (                                                           # run.py options (#2325, #2409): one per line,
@@ -81,7 +83,7 @@ def dump(g):
     the player of the bot (#2325)."""
     d = {"players": {str(x.player): {**{f: getattr(x, f) for f in FIELDS}, "techs": sorted(x.techs),
                                      **{f: pack(getattr(x, f)) for f in PACKED}, **orders(x),
-                                     **{f: pack(vars(x)[f]) for f in OPTIONAL + MONK + ROUTES if f in vars(x)}}
+                                     **{f: pack(vars(x)[f]) for f in OPTIONAL + MONK + ROUTES + RIDERS if f in vars(x)}}
                     for x in sides(g)}}
     for b in bots(g):
         d["players"][str(b.g.player)]["bot"] = {f: getattr(b, f) for f in BOT}
@@ -178,6 +180,18 @@ def give_orders(x, p):
     sail_again(x, p)
 
 
+def board_again(x):
+    """The units of the Gather x on the way to a transport ship or a siege tower walk to it again (#2411): the ship's
+    shore cell, the tower's feet. Minecraft path finding (P2), as transport.order and siege_tower.order."""
+    import ai
+    import train
+    walks = [(u, c[0] + 0.5, x.map.y(*c), c[1] + 0.5) for u, (_, c) in sorted(vars(x).get("loading", {}).items())]
+    walks += [(u, *p) for u, t in sorted(vars(x).get("boarding", {}).items()) if (p := x.pos(t))]
+    for u, *at in walks:
+        name = "VILLAGER" if u in x.villagers else x.soldiers.get(u, "")
+        ai.move(x, u, name, x.map.T, *at, ai.NORMAL * train.speed(x, name))
+
+
 def load(g, d):
     """Put the saved state d (dump) on the Gather of each player that it names, and show the resources again."""
     import gather
@@ -189,11 +203,12 @@ def load(g, d):
         for f in FIELDS:
             setattr(x, f, type(getattr(x, f))(p[f]))
         x.techs = set(p["techs"])
-        for f in PACKED + OPTIONAL + MONK + ROUTES:                             # the next tick shows the boss bars again
+        for f in PACKED + OPTIONAL + MONK + ROUTES + RIDERS:                   # the next tick shows the boss bars again
             if f in p:                                                 # a save before #2257 has no queues
                 setattr(x, f, unpack(p[f]))
         if "villagers" in p:                                           # a save from before #2258 has no orders
             give_orders(x, p)
+        board_again(x)
         for r in gather.RESOURCES:                                     # the sidebar of the resources (Gather.setup)
             x.command(f"scoreboard players set {r} {x.board} {x.stock[r.lower()]}")
         train.sidebar(x)
