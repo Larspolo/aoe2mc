@@ -122,6 +122,8 @@ The same for a new command of the Paper plugin: its line in the command list at 
 `if` block in `onCommand` go in alphabetical order of the command name, not after the last one (#795 and #813 conflicted).
 A new game setting of `game/run.py` (a lobby setting, epic #2263) is one line in `run.SETTINGS` and an option of the
 same name, not a new keyword of `play()` (#2373).
+A new game mode (`--mode`) is one line in `game/data/setup.jsonl` (keys `"help"`, `"module"`, `"age"`, `"loaded"`,
+`"bots"`: `run.MODES`) and its module with `setup(g, mode)`, not a change of `play()` (#2521).
 
 ## How to verify
 
