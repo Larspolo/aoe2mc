@@ -9,13 +9,14 @@ Several runs work at the same time: the owner wants maximum use of the quota. Ea
 it runs `python3 tools/claim.py N --beat` for its ticket N at least every 20 minutes (after each verify level and
 before each push). A usage limit stops all runs at about the same time, and a stopped run never
 continues (#231). So a ticket with `in-progress`, and its PR, belong to the other run while
-`python3 tools/claim.py N --stale` exits 1, or the ticket, its branch or its PR changed less than 30 minutes ago:
-do not touch them. Else the other run stopped: take the ticket over with `python3 tools/claim.py N --takeover`
-and say so in a comment. Exit 1 means that another run took it over first: leave it.
+`python3 tools/claim.py N --stale` exits 1, or the ticket, its branch or its PR changed less than 30 minutes ago by a
+run: do not touch them. A merge commit or a comment of a workflow (Unconflict, Automerge) does not count: these
+workflows also change the PR of a stopped run (`python3 tools/claim.py 0 --stuck`, "Stuck tickets"). Else the
+other run stopped: take the ticket over with `python3 tools/claim.py N --takeover` and say so in a comment. Exit 1 means that another run took it over first: leave it.
 A ticket with `in-progress` and no claim ref (older runs): the same rule with the ticket, branch and PR times only.
 The workflow `automerge.yml` merges an agent PR when its CI is green (#232, #370). A PR whose CI runs or is green waits
 for that workflow: it is not stalled. Exception: a PR with red CI, label `conflict` or a merge conflict, and with no new
-commit and no new comment for 30 minutes, is stalled. A PR with label `conflict`, no new commit for 10 minutes and a
+commit and no new comment of a run for 30 minutes, is stalled. A PR with label `conflict`, no new commit for 10 minutes and a
 ticket claim with no beat for 10 minutes is stalled too, also when Automerge commented later: its run reported and went
 on (`claim.py N --stale` and `--takeover` use 10 minutes then, #1773). Take it over at once
 (`python3 tools/claim.py N --takeover` with the ticket number N, then comment "Taken over by `<your branch>`: stalled."), for example when its run stopped. Then read the PR comments again: if an older "Taken over by" comment of another branch is less than
@@ -25,6 +26,15 @@ from the current local branch), push with `git push origin HEAD:<branch of the P
 A PR whose ticket has no `in-progress` label is free: any run can fix it (hand-off).
 If your usage limit stops you, the next run continues your work through this rule.
 
+
+## Stuck tickets
+
+`python3 tools/claim.py 0 --stuck` (autopilot step 2) prints one line for each `in-progress` ticket whose run stopped:
+no beat for 30 minutes, a release that left the label, or no claim ref and no change for 30 minutes. Only the claim
+decides: bots keep the PR of a stopped run busy (#2160 and #2161 stayed red for 6 hours, #2049 had no PR to find).
+Take over the first ticket (`python3 tools/claim.py N --takeover`, then comment "Taken over by `<your branch>`: stuck.").
+Exit 1 there: another run was first, take the next line. With a PR: fix it at step 6.8. With no PR: do the ticket
+from step 6 (start from its branch when it has one). That is the work of this cycle.
 
 ## The flow brake
 

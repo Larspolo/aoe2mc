@@ -32,9 +32,8 @@ Use the GitHub MCP tools (`mcp__github__*`) when the session has them. Else use 
 
 Several runs work at the same time. Each run runs `python3 tools/claim.py N --beat` for its ticket N at least every
 20 minutes (after each verify level and before each push). A ticket with `in-progress`, and its PR, belong to another
-run while `python3 tools/claim.py N --stale` exits 1, or the ticket, its branch or its PR changed less than 30 minutes
-ago: do not touch them. A takeover, a stalled PR, a hand-off: `overlap.md`. A PR whose CI runs or is green waits for
-the workflow `automerge.yml`: it is not stalled.
+run while `python3 tools/claim.py N --stale` exits 1 or a run changed them in the last 30 minutes: do not touch
+them. Takeovers, stalled PRs, hand-offs: `overlap.md`. A PR whose CI runs or is green waits for `automerge.yml`.
 
 ## 1. Start
 
@@ -46,6 +45,8 @@ the workflow `automerge.yml`: it is not stalled.
    Step 8 reports them. Run `python3 tools/usage.py --sample` (about 2 s) and keep its `Usage:` line for step 8.
 
 ## 2. Finish open work first
+
+First `python3 tools/claim.py 0 --stuck`: exit 0 → `overlap.md`, "Stuck tickets".
 
 List open PRs. For each PR that the agent opened (branch `claude/*` or `agent/*`) and that no other run owns:
 - Its ticket has `needs-human` or `blocked`, or is closed → skip the PR: it waits for the owner or another
