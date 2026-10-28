@@ -117,6 +117,8 @@ ECONOMY = tuple(sorted(r["name"] for r in TECH_ROWS if r.get("economy")))   # th
 # "repair_cost": the team bonus of the repair cost of buildings (Georgians). "repair_team": the team bonus of the
 # repair rate (Saxons). "work_rate": the train and research rate of a building in each age (Persians). "train_rate":
 # [group of GROUPS, factor, also the upgrades] (#1927). "hp": the hit points factor of a building (Persians).
+# "research_time": [technologies (a rule of has), factor of the research time] (#2172: Achaemenid stable technologies
+# 50 % faster, Jurchen siege and fortification technologies 100 % faster, the Gothic Loom at once).
 WORK = {r["name"]: r["work"] for r in ROWS if "work" in r}
 LAST = {r["name"]: r["last"] for r in ROWS if "last" in r}   # resources last longer: a gathered unit takes 1 / factor (#2112)
 START = {r["name"]: r["start"] for r in ROWS if "start" in r}
@@ -134,6 +136,7 @@ WORK_RATE = {r["name"]: {b: tuple(v) for b, v in r["work_rate"].items()} for r i
 TRAIN_RATE = {r["name"]: [tuples(b) for b in r["train_rate"]] for r in ROWS if "train_rate" in r}
 HP = {r["name"]: r["hp"] for r in ROWS if "hp" in r}
 GARRISON = {r["name"]: r["garrison"] for r in ROWS if "garrison" in r}   # units inside a building (garrison.size, #2117)
+RESEARCH_TIME = {r["name"]: [tuples(b) for b in r["research_time"]] for r in ROWS if "research_time" in r}
 # "extra": the second resource of a gather kind ("forage": a fruit bush), {kind: [resource, amount for each unit]}: Poles
 # and Puru stone miners, Portuguese foragers, Shu lumberjacks (#2113). Gather.second adds it at each gathered unit.
 EXTRA = {r["name"]: {k: tuple(v) for k, v in r["extra"].items()} for r in ROWS if "extra" in r}
@@ -244,6 +247,12 @@ def age_rate(g, name):
     age, else 1."""
     import build                                                   # build imports gather, gather imports this module
     return AGE_RATE.get(civ(g), 1) if name in build.AGE_TECHS else 1
+
+
+def research_time(g, name):
+    """The factor of the research time of technology name for the civilization of the player of g (RESEARCH_TIME),
+    else 1."""
+    return math.prod(f for what, f in RESEARCH_TIME.get(civ(g), ()) if has(what, name))
 
 
 def build_rate(g, name):
