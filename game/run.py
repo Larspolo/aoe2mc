@@ -19,6 +19,7 @@ Usage:
     python3 game/run.py WORLD --play --end-age castle  # the AoE2 setting "Ending age" (#2346)
     python3 game/run.py WORLD --play --all-techs       # the AoE2 setting "All Techs" (#2298)
     python3 game/run.py WORLD --play --victory conquest  # the AoE2 setting "Victory": no wonder or relic win (#2316)
+    python3 game/run.py WORLD --play --mode regicide   # the AoE2 game mode "Regicide": each player has a King (#2347)
     python3 game/run.py WORLD --play --civ 1=BRITONS --civ 2=FRANKS   # the civilization of each player (#2267)
     python3 game/run.py WORLD --play --teams 1,1,2,2   # the team of each player, - is no team (#2296)
     python3 game/run.py WORLD --play --load SAVE   # go on with a saved game: Ctrl-C of --play saves into saves/ (#2255)
@@ -326,7 +327,8 @@ def team_choices(value, players):
 
 def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attack="10:00", reveal="normal", people=1,
          speed=1.0, state=None, resources="standard", civ=None, teams=None,
-         all_techs=False, age="dark", victory="standard", pop_limit=None, end_age="imperial", treaty="0:00"):
+         all_techs=False, age="dark", victory="standard", pop_limit=None, end_age="imperial", mode="standard",
+         treaty="0:00"):
     """state: the saved state of the players (savegame.dump) for a loaded game (#2255).
     resources: the AoE2 setting "Starting resources" of each player and bot (gather.LEVELS, #2264).
     civ: {player: civilization} in place of the civilization of the scenario (civ_choices, #2267).
@@ -336,6 +338,7 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
     victory: the AoE2 setting "Victory": "standard" (conquest, a wonder or all relics) or "conquest" (#2316).
     pop_limit: the AoE2 setting "Population limit" of each player and bot (train.LIMITS, #2266).
     end_age: the AoE2 setting "Ending age" of each player and bot (build.locked, #2346).
+    mode: the AoE2 game mode: "standard" or "regicide" (each player has a King, regicide.MODES, #2347).
     treaty: the AoE2 setting "Treaty length" (MM:SS, #2297): before it no player can attack another (treaty.py)."""
     import gather, train
 
@@ -388,6 +391,10 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
         import train
         for x in [g, *(s.g for s in g.bots)]:
             train.start(x, age)
+    if mode != "standard":                           # after the bots: their Kings go to their Gathers (#2347)
+        import regicide
+        g.mode = mode
+        regicide.setup(g, mode)
     import replay
     import treaty as treaties
     if replay.aoe2mc.game_time(treaty):              # after the Gathers: they set the neutral stances
@@ -501,6 +508,18 @@ def console(game):
     return t
 
 
+def given(ap, argv):
+    """The names (dest) of the options of ap that the command line argv gives: parse it with no defaults."""
+    defaults = [(x, x.default) for x in ap._actions]
+    for x, _ in defaults:
+        x.default = argparse.SUPPRESS
+    try:
+        return set(vars(ap.parse_args(argv)))
+    finally:
+        for x, d in defaults:
+            x.default = d
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0].strip(),
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -543,6 +562,8 @@ def main(argv=None):
     ap.add_argument("--pop-limit", type=pop_limit, default=200, metavar="N",
                     help="--play: the AoE2 setting \"Population limit\" of each player: 25 to 250 in steps of 25, 300, "
                     "400 or 500 (default 200)")
+    ap.add_argument("--mode", choices=["standard", "regicide"], default="standard", help="--play: the AoE2 game mode "
+                    "(default standard; regicide: each player has a King, a player whose King dies is defeated)")
     ap.add_argument("--log", metavar="FILE", help="--play: write one JSON line per villager event (time, state, load)")
     ap.add_argument("--load", metavar="SAVE", help="--play: go on with a saved game (a folder of saves/: the end of "
                     "--play with Ctrl-C saves the world and the resources, technologies and ages there)")
@@ -553,6 +574,10 @@ def main(argv=None):
                     "(no team), for example 1,1,2,2: allies do not fight and share their team bonuses (default: the "
                     "teams of the scenario)")
     a = ap.parse_args(argv)
+    import savegame
+    state = savegame.read(a.load) if a.load else None
+    if state:                                        # the settings of the save, but the options given here win (#2325)
+        savegame.settings(a, state, given(ap, argv))
     civ = civ_choices(a.civ)
     import train
     if min(train.STARTS[a.age]["ages"], 3) > train.STARTS[a.end_age]["ages"]:   # post-imperial is the Imperial Age
@@ -563,15 +588,13 @@ def main(argv=None):
     if a.teams is not None:
         with open(os.path.join(a.world, "aoe2mc.json")) as f:
             teams = team_choices(a.teams, json.load(f).get("players", {}))
-    import savegame
-    state = None
     if a.load:                                       # the saved world replaces the world (the player files stay)
-        state = savegame.read(a.load)
         restore(os.path.join(a.load, "world"), a.world)
     if hasattr(signal, "SIGBREAK"):                  # Windows: the window (gui.stop_game) sends Ctrl-Break (#1775)
         signal.signal(signal.SIGBREAK, signal.default_int_handler)
     game = Game(a.world, a.version, server=a.server)
     game.people = a.people                           # the join order counts from the first player (#1310)
+    game.settings = {k: getattr(a, k) for k in savegame.SETTINGS}   # savegame.dump keeps them (#2325)
     try:
         game.start()
         print(f"Server is ready. RCON on 127.0.0.1:{game.port}. Ctrl-C stops the server.", file=sys.stderr)
@@ -587,7 +610,7 @@ def main(argv=None):
                 g = play(game, a.world, log, a.cheats, a.bot, bot_attack=a.bot_attack, reveal=a.reveal,
                          people=a.people, speed=a.speed, state=state, resources=a.resources, civ=civ,
                          teams=teams, all_techs=a.all_techs, age=a.age, victory=a.victory, pop_limit=a.pop_limit,
-                         end_age=a.end_age, treaty=a.treaty)
+                         end_age=a.end_age, mode=a.mode, treaty=a.treaty)
             if not getattr(g, "ended", None):
                 return
             print(f"The game ended ({g.ended}). The server stays up: type commands, Ctrl-C stops it.",

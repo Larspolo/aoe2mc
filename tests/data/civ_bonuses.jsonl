@@ -89,7 +89,7 @@
 {"name": "HINDUSTANIS: Villagers are 8/13/18/23% cheaper in the Dark/Feudal/Castle/Imperial Age.", "civ": "HINDUSTANIS", "bonus": "Villagers are 8/13/18/23% cheaper in the Dark/Feudal/Castle/Imperial Age.", "in": "COSTS"}
 {"name": "HINDUSTANIS: Camel Riders attack 20% faster.", "civ": "HINDUSTANIS", "bonus": "Camel Riders attack 20% faster.", "in": "UNITS"}
 {"name": "HINDUSTANIS: Gunpowder units have +1/+1 armor.", "civ": "HINDUSTANIS", "bonus": "Gunpowder units have +1/+1 armor.", "in": "UNITS"}
-{"name": "HINDUSTANIS: Can build Caravanserais in the Imperial Age.", "civ": "HINDUSTANIS", "bonus": "Can build Caravanserais in the Imperial Age.", "later": "play:market"}
+{"name": "HINDUSTANIS: Can build Caravanserais in the Imperial Age.", "civ": "HINDUSTANIS", "bonus": "Can build Caravanserais in the Imperial Age.", "in": "game/data/build.jsonl"}
 {"name": "HUNS: Start the game with wood -100, but with the population cap at the maximum.", "civ": "HUNS", "bonus": "Start the game with wood -100, but with the population cap at the maximum.", "in": "START"}
 {"name": "HUNS: On Nomadic maps, the first Town Center spawns a Hunnic Horse.", "civ": "HUNS", "bonus": "On Nomadic maps, the first Town Center spawns a Hunnic Horse.", "later": "play:setup"}
 {"name": "HUNS: Mounted archers are 10%/20% cheaper in the Castle/Imperial Age.", "civ": "HUNS", "bonus": "Mounted archers are 10%/20% cheaper in the Castle/Imperial Age.", "in": "COSTS"}
@@ -162,7 +162,7 @@
 {"name": "PERSIANS: Start the game with food +50, wood +50.", "civ": "PERSIANS", "bonus": "Start the game with food +50, wood +50.", "in": "START"}
 {"name": "PERSIANS: Town Centers and Docks have double hit points and work 5%/10%/15%/20% faster in the Dark/Feudal/Castle/Imperial Age.", "civ": "PERSIANS", "bonus": "Town Centers and Docks have double hit points and work 5%/10%/15%/20% faster in the Dark/Feudal/Castle/Imperial Age.", "in": "WORK_RATE"}
 {"name": "PERSIANS: Parthian Tactics available in the Castle Age.", "civ": "PERSIANS", "bonus": "Parthian Tactics available in the Castle Age.", "in": "EARLIER"}
-{"name": "PERSIANS: Can build Caravanserais in the Imperial Age.", "civ": "PERSIANS", "bonus": "Can build Caravanserais in the Imperial Age.", "later": "play:market"}
+{"name": "PERSIANS: Can build Caravanserais in the Imperial Age.", "civ": "PERSIANS", "bonus": "Can build Caravanserais in the Imperial Age.", "in": "game/data/build.jsonl"}
 {"name": "POLES: Villagers regenerate 10/15/20 hit points per minute in the Feudal/Castle/Imperial Age.", "civ": "POLES", "bonus": "Villagers regenerate 10/15/20 hit points per minute in the Feudal/Castle/Imperial Age.", "in": "REGEN"}
 {"name": "POLES: Stone miners generate gold 33% in addition to stone.", "civ": "POLES", "bonus": "Stone miners generate gold 33% in addition to stone.", "in": "EXTRA"}
 {"name": "POLES: Bloodlines and Scout Cavalry-line upgrades cost food -50%.", "civ": "POLES", "bonus": "Bloodlines and Scout Cavalry-line upgrades cost food -50%.", "in": "COSTS"}
