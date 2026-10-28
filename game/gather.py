@@ -63,6 +63,7 @@ import fog  # noqa: E402
 import garrison  # noqa: E402
 import goto  # noqa: E402
 import herd  # noqa: E402
+import hill  # noqa: E402
 import hints  # noqa: E402
 import market  # noqa: E402
 import menu  # noqa: E402
@@ -534,6 +535,7 @@ class Gather:
     speed = 1.0                                                        # times the Normal speed: shorter real steps (#2057)
     later = {}                                                         # the bonus of the first town center (civs.TOWN_CENTER)
     victory = "standard"                                               # AoE2 "Victory"; "conquest": no wonder, no relics (#2316)
+                                                                       # "king-of-the-hill": hill.py (#2360)
     mode = "standard"                                                  # AoE2 game mode; "regicide": the King (#2347),
                                                                        # "wonder-race" (#2406)
 
@@ -1819,6 +1821,8 @@ class Gather:
                 wonder.tick(self, self.tick * NORMAL)                  # game seconds, as train.tick
             if self.victory == "standard" and self.mode not in wonder.RACE:   # Wonder Race: only a wonder (#2406)
                 relic_victory.tick(self, self.tick * NORMAL)
+            elif self.victory == "king-of-the-hill":                   # the monument in the center (#2360)
+                hill.tick(self, self.tick * NORMAL)
             score.tick(self)
             treaty.tick(self, self.tick * NORMAL)
             time.sleep(max(0.0, self.tick / self.speed - (time.time() - t)))   # a step stays tick game seconds
