@@ -161,6 +161,9 @@ RESEARCH_TIME = {r["name"]: [tuples(b) for b in r["research_time"]] for r in ROW
 # "extra": the second resource of a gather kind ("forage": a fruit bush), {kind: [resource, amount for each unit]}: Poles
 # and Puru stone miners, Portuguese foragers, Shu lumberjacks (#2113). Gather.second adds it at each gathered unit.
 EXTRA = {r["name"]: {k: tuple(v) for k, v in r["extra"].items()} for r in ROWS if "extra" in r}
+# "carry": the extra load of a villager, [[gather kind or null (all), extra]]: Aztec villagers +3, Goth hunters +15
+# (#2270). Gather.limit adds it.
+CARRY = {r["name"]: [tuple(b) for b in r["carry"]] for r in ROWS if "carry" in r}
 # The age-up bonuses (#1926, AoE2 DE wiki): train.research applies AGE_GIFTS and AGE_VILLAGERS at the end of each age,
 # train.seconds divides the time of an age by AGE_RATE, and train.missing needs no buildings for AGE_NO_BUILDINGS (the
 # game program has no other building needs). The Muisca gold discount of the ages is in COSTS (civs.jsonl).
@@ -395,3 +398,8 @@ def extra(g, kind):
     """The second resource of gather kind for the civilization of the player of g: (resource, amount for each unit)
     (EXTRA), else None."""
     return EXTRA.get(civ(g), {}).get(kind)
+
+
+def carry(g, kind):
+    """The extra load of a villager of the player of g for gather kind (CARRY), else 0."""
+    return sum(n for k, n in CARRY.get(civ(g), ()) if k in (None, kind))

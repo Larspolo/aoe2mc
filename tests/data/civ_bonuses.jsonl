@@ -10,7 +10,7 @@
 {"name": "ATHENIANS: Lumberjacks generate food 1 for every wood 14.7.", "civ": "ATHENIANS", "bonus": "Lumberjacks generate food 1 for every wood 14.7.", "later": "play:gather"}
 {"name": "ATHENIANS: Hoplites move 15% faster.", "civ": "ATHENIANS", "bonus": "Hoplites move 15% faster.", "later": "play:military-train"}
 {"name": "AZTECS: Start the game with an Eagle Scout.", "civ": "AZTECS", "bonus": "Start the game with an Eagle Scout.", "later": "play:setup"}
-{"name": "AZTECS: Villagers carry +3 extra resources.", "civ": "AZTECS", "bonus": "Villagers carry +3 extra resources.", "later": "play:gather"}
+{"name": "AZTECS: Villagers carry +3 extra resources.", "civ": "AZTECS", "bonus": "Villagers carry +3 extra resources.", "in": "CARRY"}
 {"name": "AZTECS: All military units are created 15% faster.", "civ": "AZTECS", "bonus": "All military units are created 15% faster.", "in": "TRAIN_RATE"}
 {"name": "AZTECS: Monks gain 5 HP for every researched Monastery technology.", "civ": "AZTECS", "bonus": "Monks gain 5 HP for every researched Monastery technology.", "later": "play:monks"}
 {"name": "AZTECS: Start with gold +50.", "civ": "AZTECS", "bonus": "Start with gold +50.", "in": "START"}
@@ -79,7 +79,7 @@
 {"name": "GEORGIANS: Mounted units regenerate 2/8/14 hit points per minute in the Feudal/Castle/Imperial Age.", "civ": "GEORGIANS", "bonus": "Mounted units regenerate 2/8/14 hit points per minute in the Feudal/Castle/Imperial Age.", "in": "REGEN"}
 {"name": "GOTHS: Infantry units are 15%/20%/25%/30% cheaper in the Dark/Feudal/Castle/Imperial Age.", "civ": "GOTHS", "bonus": "Infantry units are 15%/20%/25%/30% cheaper in the Dark/Feudal/Castle/Imperial Age.", "in": "COSTS"}
 {"name": "GOTHS: Infantry units have +1/+2/+3 attack bonus against Standard Buildings in the Feudal/Castle/Imperial Age.", "civ": "GOTHS", "bonus": "Infantry units have +1/+2/+3 attack bonus against Standard Buildings in the Feudal/Castle/Imperial Age.", "later": "play:fight"}
-{"name": "GOTHS: Hunters carry food +15; hunt lasts 20% longer.", "civ": "GOTHS", "bonus": "Hunters carry food +15; hunt lasts 20% longer.", "later": "play:hunt"}
+{"name": "GOTHS: Hunters carry food +15; hunt lasts 20% longer.", "civ": "GOTHS", "bonus": "Hunters carry food +15; hunt lasts 20% longer.", "in": "CARRY"}
 {"name": "GOTHS: Loom is researched instantly.", "civ": "GOTHS", "bonus": "Loom is researched instantly.", "in": "RESEARCH_TIME"}
 {"name": "GOTHS: +10 population cap in the Imperial Age.", "civ": "GOTHS", "bonus": "+10 population cap in the Imperial Age.", "gap": "play:train"}
 {"name": "GURJARAS: Start the game with a Camel Scout.", "civ": "GURJARAS", "bonus": "Start the game with a Camel Scout.", "later": "play:setup"}

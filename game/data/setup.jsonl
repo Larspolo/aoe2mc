@@ -1,0 +1,5 @@
+{"name": "standard", "resources": {"food": 200, "wood": 200, "gold": 100, "stone": 200}}
+{"name": "low", "resources": {"food": 200, "wood": 200, "gold": 100, "stone": 200}}
+{"name": "medium", "resources": {"food": 500, "wood": 500, "gold": 300, "stone": 400}}
+{"name": "high", "resources": {"food": 1000, "wood": 1000, "gold": 700, "stone": 800}}
+{"name": "ultra", "resources": {"food": 20000, "wood": 20000, "gold": 10000, "stone": 5000}}
