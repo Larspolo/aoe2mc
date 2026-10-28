@@ -73,6 +73,9 @@ TRAIL_MS = 1000             # ms of game time between two checks of the follower
 FIGHT_MS = 60000            # ms of game time: an attack order this near in time to one of a fight joins it (#2948)
 FIGHT_TILES = 12            # tiles: an attack order this near to one of a fight joins it (#2948)
 FIGHT_UNITS = 10            # attacking units of a large fight (#2948)
+CAMERA_MS = 10000           # ms of game time: a shot of the camera plan is held at least this long (#3366)
+CAMERA_TILES = 10           # tiles: the new buildings of a build shot lie this near to each other (#3366)
+CAMERA_BUILDS = 5           # new buildings in CAMERA_MS near each other that make a build shot (#3366)
 FAR = 8                     # tiles: a target unit this far from the tile of the ORDER (its place in AoE2) is no attack
                             # target: in de-64.3 a spearman chased a villager 200 blocks from it across the map (#2635)
 FOLLOW_MS = 15000           # ms of game time: the camera of --follow changes its unit at most this often (#738)
@@ -233,6 +236,23 @@ def fights(events, owner):
             out.append({"start": min(e["time"] for e in g), "end": max(e["time"] for e in g), "players": players,
                         "tile": [round(sum(e["tile"][k] for e in g) / len(g), 1) for k in (0, 1)], "units": len(ids)})
     return sorted(out, key=lambda f: (-f["units"], f["start"]))
+
+
+def camera_plan(events, owner):
+    """Where the automatic camera looks during a record (#3366): a fight shot at the start of each large fight
+    (fights()), and a build shot where CAMERA_BUILDS or more new buildings lie within CAMERA_TILES of each other
+    in CAMERA_MS. A fight wins: a build shot less than CAMERA_MS from a fight shot is left out, and two shots
+    are at least CAMERA_MS apart. The camera holds a shot until the next one. owner: owners().
+    Returns [{"time" (ms), "tile" [x, y], "why": "fight" or "build"}], sorted by time."""
+    plan = [{"time": f["start"], "tile": f["tile"], "why": "fight"} for f in fights(events, owner)]
+    builds = sorted((e for e in events if e["kind"] == "build" and "tile" in e), key=lambda e: e["time"])
+    for e in builds:
+        near = [b for b in builds if 0 <= b["time"] - e["time"] < CAMERA_MS and math.dist(b["tile"], e["tile"]) <= CAMERA_TILES]
+        if len(near) < CAMERA_BUILDS or any(abs(s["time"] - e["time"]) < CAMERA_MS for s in plan):
+            continue
+        tile = [round(sum(b["tile"][k] for b in near) / len(near), 1) for k in (0, 1)]
+        plan.append({"time": e["time"], "tile": tile, "why": "build"})
+    return sorted(plan, key=lambda s: s["time"])
 
 
 def sail(g, v):
