@@ -26,11 +26,11 @@ DOOR = 2.5                  # blocks from the tower: there a unit goes in
 
 def fits(g, u):
     """True for a unit that goes into a siege tower: a villager, an infantry unit or a foot archer."""
-    import combat                                                  # combat imports gather, gather imports this module
+    import civs, combat                                            # combat imports gather, gather imports this module
     if u in g.villagers:
         return True
-    classes = combat.stats(g.soldiers.get(u, "")).classes
-    return combat.INF in classes or combat.ARC in classes and combat.CAV not in classes
+    s = combat.stats(g.soldiers.get(u, ""))
+    return combat.INF in s.classes or combat.ARC in s.classes and not civs.mounted(s)
 
 
 def order(g, player, tower):
