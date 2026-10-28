@@ -21,6 +21,7 @@ a second push of another claim commit is never a fast-forward. Later claims of t
     python3 tools/claim.py N --guard --pr-branch B   # the same, but the open PR of branch B (taken over) is allowed
     python3 tools/claim.py ID --comment   # lock owner comment ID (autopilot step 3); exit 1: another run handles it
     python3 tools/claim.py E --refill     # lock the sub-issues of epic E (0: the whole queue refill, autopilot step 5)
+    python3 tools/claim.py 0 --fixmain --state SHA   # lock the "Fix main" ticket of the break in commit SHA (step 2)
     python3 tools/claim.py 0 --review     # lock the process review after 50 merged PRs (`improve` skill, #898, #2039)
     python3 tools/claim.py 0 --reviewed change   # after the review: "change" or "none" sets the next gap
     python3 tools/claim.py 0 --roadmap    # lock the review of docs/ROADMAP.md after 100 merged PRs (`roadmap` skill)
@@ -39,6 +40,9 @@ closed sub-issues of epic E (a new lock when a sub-issue closes), or the UTC hou
 (the whole refill), for a ticket E with no sub-issue (#855) and for an epic E with all sub-issues closed (its count
 cannot change any more, #3057). A slot lock `N-<slot>` also holds the count lock `N`: the first new sub-issue of
 that run changes the state to N, and a second run made the same sub-issues again (#3454).
+One break of main gave 8 "Fix main" tickets in 6 minutes (#3480). So a run locks the ticket before it makes it:
+`--fixmain` pushes `claim/fixmain-SHA` once (SHA: the commit that broke main, default the head of `origin/main`). All
+lanes use it: a red main stops all runs.
 
 Parallel runs read the same `runs` counter of the status issue, so "every 5th run" lost 7 of 10 process reviews
 (#898). So `--review` locks one review: `claim/review-<gap>pr-<last review>-<k>`, and only when `gap` PRs merged after
@@ -233,6 +237,12 @@ def claim_refill(epic, state, remote="origin"):
         return False
     msg = f"Claim refill {epic}-{state} by {who()} ({uuid.uuid4().hex})"
     return push(git("commit-tree", EMPTY_TREE, "-m", msg).stdout.strip(), f"claim/refill-{epic}-{state}", remote)
+
+
+def claim_fixmain(sha, remote="origin"):
+    """Lock the "Fix main" ticket of the break in commit `sha`: True when this run pushed `claim/fixmain-SHA` first."""
+    msg = f"Claim fixmain {sha} by {who()} ({uuid.uuid4().hex})"
+    return push(git("commit-tree", EMPTY_TREE, "-m", msg).stdout.strip(), f"claim/fixmain-{sha}", remote)
 
 
 def agent_state(body):
@@ -464,10 +474,12 @@ def main(argv=None):
     g.add_argument("--guard", action="store_true", help="before a push: beat; exit 1 when another branch has a PR")
     g.add_argument("--comment", action="store_true", help="lock the owner comment with this ID")
     g.add_argument("--refill", action="store_true", help="lock the new sub-issues of this epic (0: the whole refill)")
+    g.add_argument("--fixmain", action="store_true", help="lock the Fix main ticket of the break in --state SHA (number 0)")
     g.add_argument("--review", action="store_true", help="lock the process review after its gap of merged PRs (number 0)")
     g.add_argument("--reviewed", choices=("change", "none"), help="after the review: set the next gap")
     g.add_argument("--roadmap", action="store_true", help="lock the roadmap review after 100 merged PRs (number 0)")
-    ap.add_argument("--state", help="--refill: the state part of the lock (default: closed sub-issues, or the hour)")
+    ap.add_argument("--state", help="--refill: the state part of the lock (default: closed sub-issues, or the hour); "
+                    "--fixmain: the commit that broke main (default: the head of origin/main)")
     ap.add_argument("--pr-branch", metavar="BRANCH", help="--guard: the branch of a PR that this run took over")
     ap.add_argument("--remote", default="origin")
     a = ap.parse_args(argv)
@@ -476,6 +488,13 @@ def main(argv=None):
             print(f"claimed comment {a.number}")
             return 0
         print(f"comment {a.number}: another run handles it")
+        return 1
+    if a.fixmain:
+        sha = (a.state or git("rev-parse", f"{a.remote}/main", check=False).stdout.strip())[:7]
+        if claim_fixmain(sha, a.remote):
+            print(f"claimed fixmain {sha}")
+            return 0
+        print(f"fixmain {sha}: another run makes the ticket")
         return 1
     if (a.review or a.roadmap or a.refill) and not deep_lane():
         print(f"the deep lane does the {'process review' if a.review else 'roadmap review' if a.roadmap else 'queue refill'}"
