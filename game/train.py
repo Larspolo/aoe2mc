@@ -766,13 +766,17 @@ def max_pop(g):
 def census(g):
     """Count the live villagers and military units of the player (a dead unit has no position) and show the counts.
     A dead villager leaves g.villagers, the selection and its farm: the idle count and the bot see only live ones (#1039)."""
-    live = g.positions(list(g.villagers) + [u for u, n in g.soldiers.items() if n not in build.MOVES])   # a building
+    live = g.positions(list(g.villagers) + list(g.soldiers))
+    import spoils                                                      # spoils imports this module
+    spoils.fallen(g, {u: "VILLAGER" if u in g.villagers else g.soldiers[u] for u in [*g.villagers, *g.soldiers]
+                      if u not in live})                               # Tupi (#2271)
+    spoils.kills(g)                                                    # Mapuche (#2271)
     for u in [u for u in g.villagers if u not in live]:
         del g.villagers[u]
         g.selected.discard(u)
         for t in [t for t, f in g.farmers.items() if f == u]:
             del g.farmers[t]
-    g.pop, g.census = len(live), 0.0
+    g.pop, g.census = sum(g.soldiers.get(u) not in build.MOVES for u in live), 0.0   # a mule cart is a building
     sidebar(g)
 
 
