@@ -780,14 +780,18 @@ def research(g, entry, start=False):
 
 
 def limit(g):
-    """The population limit: 5 per complete own town center and house, 20 per castle, at most max_pop()."""
-    return min(max_pop(g), sum(HOUSING.get(n, 0) for n in owned(g)))
+    """The population limit: 5 per complete own town center and house, 20 per castle (civs.HOUSING: other values of
+    a civilization, #2118), at most max_pop()."""
+    own = civs.HOUSING.get(civs.civ(g), {})
+    return min(max_pop(g), sum(own.get(n, HOUSING.get(n, 0)) for n in owned(g)))
 
 
 def max_pop(g):
-    """The highest population limit: the setting of the game (Gather.pop_limit, run.py --pop-limit, #2266), else LIMIT;
-    1000 with the cheat "my cpu can handle it" (#968)."""
-    return getattr(g, "pop_cap", None) or getattr(g, "pop_limit", None) or LIMIT
+    """The highest population limit: the setting of the game (Gather.pop_limit, run.py --pop-limit, #2266), else LIMIT,
+    with the extra limit of civs.POP_CAP from its age (the Goths, #2118); 1000 with the cheat "my cpu can handle it"
+    (#968)."""
+    age, extra = civs.POP_CAP.get(civs.civ(g), (0, 0))
+    return getattr(g, "pop_cap", None) or (getattr(g, "pop_limit", None) or LIMIT) + extra * (build.ages(g) >= age)
 
 
 def census(g):

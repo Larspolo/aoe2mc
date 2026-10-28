@@ -98,6 +98,9 @@ def check_civs(row):
     for t, group in row.get("also", {}).items():                   # one more group gets the effect (#2173)
         assert group in civs.GROUPS and isinstance(train.EFFECTS.get(t, {}), dict) and t in train.TECHS | train.SPEEDS, (n, t)
     assert all(t in train.TECHS and isinstance(f, NUMBER) for t, f in row.get("more", {}).items()), n
+    for key in ("housing", "sight"):                                    # building -> number (#2118)
+        assert set(row.get(key, {})) <= NAMES["buildings.jsonl"] and all(type(v) is int for v in row.get(key, {}).values()), n
+    assert len(row.get("pop_cap", (0, 0))) == 2, n
     for group, value, ages in row.get("units", ()):
         classes = {f"bonus:{c}" for t in (*combat.STATS.values(), *combat.BUILDINGS.values()) for c in t.classes}
         assert group in civs.GROUPS and value in (*combat.Stats._fields, "speed", "taken", *classes), (n, group, value)   # (#2249)
