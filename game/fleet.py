@@ -206,7 +206,7 @@ def fish(g, uuids, tile):
     """The own fishing ships uuids sail to the fish on tile and gather it (#1384). Returns the ships with a path."""
     out = set()
     for v in [v for u in sorted(uuids) if replay.fisher(g.soldiers.get(u, "")) and (v := ship(g, u))]:
-        v.res, v.tree = "food", tile
+        v.res, v.tree = g.map.resource(tile), tile                    # an oyster: gold (#2465)
         if sail_to(g, v, "to_tree", spots(g, tile)):
             out.add(v.uuid)
     return out
@@ -314,6 +314,11 @@ def remove(g, tile):
         return
     g.map.fish.pop(tile, None)
     g.map.shore.discard(tile)
+    if tile in g.map.oysters:                                          # the sea pickles of an oyster (#2465)
+        g.map.oysters.discard(tile)
+        T = g.map.T
+        g.command(f"fill {tile[0] * T} -64 {tile[1] * T} {tile[0] * T + T - 1} 319 {tile[1] * T + T - 1} "
+                  "minecraft:water replace minecraft:sea_pickle")
     if kind := g.map.fish_mobs.pop(tile, None):
         T = g.map.T
         at = f"@e[type=minecraft:{kind},x={tile[0] * T},y=-64,z={tile[1] * T},dx={T - 1},dy=383,dz={T - 1}]"
@@ -323,18 +328,22 @@ def remove(g, tile):
 
 def nearest(g, tile):
     """The fish with food nearest to tile, or None: the next fish of a ship, as the next bush of a villager. Not a
-    fish trap: the ship of an empty trap stops, as a farmer at an empty farm."""
+    fish trap: the ship of an empty trap stops, as a farmer at an empty farm. An oyster: the next oyster (#2465)."""
     if tile in g.map.traps:
         return tile if g.map.fish.get(tile, 0) > 0 else None
-    return min((t for t, k in g.map.fish.items() if k > 0 and t not in g.map.traps), key=lambda t: (math.dist(t, tile), t),
-               default=None)
+    oyster = tile in g.map.oysters
+    return min((t for t, k in g.map.fish.items() if k > 0 and t not in g.map.traps and (t in g.map.oysters) == oyster),
+               key=lambda t: (math.dist(t, tile), t), default=None)
 
 
 def rate(g, fish):
     """Food per game second of an own fishing ship at fish: the AoE2 DE rate (gather.SHIP_WORK) with the dock
-    technologies of the player (gather.SHIP_TECHS, #1439) and the bonus of its civilization in its age (civs.ship_work)."""
+    technologies of the player (gather.SHIP_TECHS, #1439) and the bonus of its civilization in its age (civs.ship_work).
+    An oyster: gold, with the bonus of the gather kind "oyster" (civs.work: Puru, #2465)."""
     import train                                                      # train imports this module
-    return gather.SHIP_WORK["trap" if fish in g.map.traps else "shore" if fish in g.map.shore else "deep"] * \
+    oyster = fish in g.map.oysters
+    return gather.SHIP_WORK["oyster" if oyster else "trap" if fish in g.map.traps else "shore" if fish in g.map.shore
+                            else "deep"] * civs.work(g, "oyster") ** oyster * \
         math.prod(f ** train.count(g, t) for t, (f, _) in gather.SHIP_TECHS.items()) * civs.ship_work(g)
 
 
@@ -376,7 +385,7 @@ def work(g, v, dt):
             if not docks or not sail_to(g, v, "to_drop", docks):
                 v.state = "idle"
     elif v.state == "to_drop":
-        g.deliver("food", v.load, kind="ship")                         # the drop-off bonus (#2111, #2308)
+        g.deliver("gold" if v.res == "gold" else "food", v.load, kind="ship")   # an oyster: gold; the drop-off bonus (#2308)
         v.load = 0
         g.event(v, "drop")
         v.tree = v.tree if m.fish.get(v.tree, 0) > 0 else nearest(g, v.tree)

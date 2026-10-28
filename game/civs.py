@@ -4,7 +4,7 @@ data/civs.jsonl (#1914), and each key of those lines has one line in data/civ_ke
 issue. BY_KEY[key][civ] (or value(key, civ, default)) holds the value of each key: a new key is one line in each data
 file and the code that applies it (repair.py, build.py, train.py ...), no new line here. The tables in capitals below
 are the older names of some keys.
-Bonuses that the game program cannot use yet: oyster gatherers (Malians, Dravidians), the Slav monks and the ships.
+Bonuses that the game program cannot use yet: the gold of the Malian oyster gatherers, the Slav monks and the ships.
 The key "church_rate" is the Georgian bonus of the Fortified Church (#1930, #2377): build.rise, repair.rate and
 Gather.work_time multiply the work of the villagers in the 21-tile square around it (church_rate).
 """
