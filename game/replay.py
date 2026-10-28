@@ -1249,8 +1249,8 @@ class Replay:
         Minecraft has no "explore" goal: own choice of the tile, the plugin walks (#2678)."""
         self.explore()                                              # the sight of the units now
         out = []
-        for i in e["objects"]:
-            if self.unit(i, None, e["player"]) is not None:
+        for i, name in zip(e["objects"], e.get("names") or [None] * len(e["objects"])):
+            if self.unit(i, name, e["player"]) is not None:             # a trained scout: its name gives its unit
                 self.scouts[i] = set()
                 out += self.scout_on(i, e["time"])
         return out
