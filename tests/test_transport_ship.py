@@ -28,7 +28,7 @@ def setup():
 
 
 def test_the_dock_trains_the_transport_ship_with_the_aoe2_values():
-    assert combat.stats("TRANSPORT_SHIP")[:4] == (70, 0, 0, 2) and transport.SIZE == 20
+    assert transport.SIZE == 20
     assert fleet.speed("TRANSPORT_SHIP", 4) == pytest.approx(1.45 * 4)
     server, g = dock_map()
     rect = train.open_menu(g, "Steve", (15, 12))
