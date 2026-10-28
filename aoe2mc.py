@@ -2706,6 +2706,7 @@ COUNTED = (IN_AREA, OWN_OBJECTS, OWN_FEWER_OBJECTS)                # conditions 
 CREATE_OBJECT, KILL_OBJECT, REMOVE_OBJECT, CHANGE_OWNERSHIP, CHANGE_COLOR_MOOD = 11, 14, 15, 18, 72
 DAMAGE_OBJECT = 24                                                     # "Damage Object" (#2571)
 TELEPORT_OBJECT = 35
+FREEZE_OBJECT = 22                                                     # "Freeze Object" (#2608)
 
 
 def turn_area(area, size, k):
@@ -2825,10 +2826,25 @@ def teleport_lines(e, T, ground):
     x, z = (int((v + 0.5) * T) for v in e["tile"])
     if not (0 <= x < ground.shape[0] and 0 <= z < ground.shape[1]):
         return []
-    at, to = area_selector(e, T), f"{x + 0.5} {int(ground[x, z])} {z + 0.5}"
-    if e["player"] <= 0:                                               # Gaia units have no player tag: not the players
-        at = re.sub(r"tag=aoe2mc\.p-?\d+", "type=!player", at)
+    at, to = unit_selector(e, T), f"{x + 0.5} {int(ground[x, z])} {z + 0.5}"
     return [f"execute as {at} on vehicle run tp @s {to}", f"tp {at} {to}"]
+
+
+def unit_selector(e, T):
+    """The area_selector of the units of the player of an effect. A Gaia unit has no tag (units.make_entity): the
+    entities with no tag and not the players."""
+    at = area_selector(e, T)
+    return re.sub(r"tag=aoe2mc\.p-?\d+", "tag=,type=!player", at) if e["player"] <= 0 else at
+
+
+def freeze_lines(e, T):
+    """The commands of "Freeze Object" (#2608): the units of the player in the area and the mounts of the riders get
+    NoAI, so they stay in their place (AoE2: they do not move until a new order)."""
+    if min(e.get("area", [-1])) < 0:
+        return []
+    at = unit_selector(e, T)
+    return [f"execute as {at} on vehicle run data merge entity @s {{NoAI:1b}}",
+            f"execute as {at} run data merge entity @s {{NoAI:1b}}"]
 
 
 def mood_lines(e):
@@ -2851,6 +2867,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
     "Create Object" and "Remove Object": object_lines (#656). "Change Color Mood": mood_lines (#1876), only with mood. "Change Ownership": owner_lines (#2570).
     "Damage Object": damage_lines (#2571).
     "Teleport Object": teleport_lines (#2569).
+    "Freeze Object": freeze_lines (#2608).
     A disabled trigger does not run."""
     load, files, tick = [], {}, []
     stats = Counter() if stats is None else stats
@@ -2877,6 +2894,9 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
                 continue
             if e["type"] == TELEPORT_OBJECT:
                 lines += teleport_lines(e, T, ground)
+                continue
+            if e["type"] == FREEZE_OBJECT:
+                lines += freeze_lines(e, T)
                 continue
             msg = re.sub(r"<[^<>]*>", "", e["message"]).replace("\r", "").strip()   # AoE2 color tags
             if not msg:
