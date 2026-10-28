@@ -424,10 +424,13 @@ class Side:
 
 def bot_seat(players, people):
     """(player, foe) of the bot (#1794): it plays the player after the people, and attacks the first person who is
-    not its ally (aoe2mc.json teams, gather.allied), else player 1."""
+    not its ally (aoe2mc.json teams, gather.allied), else the first other player that is not its ally, else None: no
+    enemy, no attack (#3107)."""
     import gather
     player = people + 1
-    return player, next((p for p in range(1, player) if not gather.allied(players, player, p)), 1)
+    others = sorted(int(p) for p in players if int(p) > 0)
+    return player, next((p for p in [*range(1, player), *others] if p != player
+                         and not gather.allied(players, player, p)), None)
 
 
 def pop_limit(text):
@@ -605,7 +608,7 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
         import replay
         import treaty as treaties
         attack = max(bot_attack, settings["treaty"], key=replay.aoe2mc.game_time)   # the bot waits for the treaty too
-        if settings["mode"] in treaties.ENDLESS:     # Wonder Race: the bot never attacks (#2406)
+        if settings["mode"] in treaties.ENDLESS or foe is None:   # Wonder Race (#2406), no enemy (#3107): no attack
             attack = "never"
         g.bots = [*g.bots, bots.Bot(game, data, player=player, share=g, log=log, foe=foe,
                                     attack=math.inf if attack == "never" else replay.aoe2mc.game_time(attack) / 1000,
@@ -614,7 +617,7 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
         at = math.inf if attack == "never" else \
             replay.aoe2mc.game_time(attack) / 1000 * bots.LEVELS[settings["ai_difficulty"]]["attack"]
         print(f"A bot ({settings['ai_difficulty']}) plays player {player}: {len(g.bots[-1].g.villagers)} villagers "
-              f"gather, its soldiers attack player {foe} "
+              f"gather, its soldiers attack {'no player (no enemy)' if foe is None else f'player {foe}'} "
               f"{'never' if at == math.inf else 'at %d:%02d' % divmod(round(at), 60)}.", file=sys.stderr)
     import combat
     combat.setup(game, data)                         # AoE2 hit points and damage (#514)
