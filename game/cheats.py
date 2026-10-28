@@ -27,7 +27,7 @@ bar and the hints, or shows them again.
 "sharing is caring" (#969) sends the income of the player (Gather.earn: gathering, fishing, trade, relics) to its allies
 (gather.allied) in equal parts, for ever, as in AoE2. With no ally the player keeps it.
 Excluded and partial codes (owner, #820, #985):
-- "!mute", "!nomute": excluded. The game program has no taunts, so the codes have nothing to silence.
+- "!mute", "!nomute": not yet. Taunts play only in replays (#2234), not in the live chat: #3318 adds both (#2961).
 - "marco": done as it is. The fog of war hides only units, not the map: "marco" only answers in the chat ("polo").
 """
 import os
