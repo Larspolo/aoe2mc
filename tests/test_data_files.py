@@ -168,7 +168,8 @@ def check_replay(row):                                     # a walk speed (a nam
 
 def check_setup(row):                                      # a value of a setting of the game setup (#2264)
     form(row, {"name": str}, {"resources": dict, "ages": int, "skip": list, "note": str, "units": list,
-                              "age": str, "buildings": dict, "villagers": dict, "level": str, "wonder_years": int, "sides": dict,
+                              "age": str, "buildings": dict, "villagers": dict, "level": str, "start": dict, "more": dict,
+                              "sites": dict, "swap": dict, "wonder_years": int, "sides": dict,
                               "treaty": str,                                  # Wonder Race (#2406)
                               "help": str, "module": str, "loaded": str, "bots": bool,   # a game mode (#2521)
                               "side_buildings": dict, "ring": dict, "infinite": bool, "random": list})
@@ -183,6 +184,9 @@ def check_setup(row):                                      # a value of a settin
     assert all(isinstance(v, int) and v >= 0 for v in row.get("resources", {}).values()), row["name"]
     assert row.get("ages", 0) in range(5) and set(row.get("skip", ())) <= NAMES["train.jsonl"], row["name"]
     assert set(row.get("buildings", ())) <= NAMES["build.jsonl"] and set(row.get("villagers", ())) <= RES, row["name"]
+    assert set(row.get("sites", ())) <= NAMES["buildings.jsonl"] and set(row.get("more", ())) <= NAMES["train.jsonl"], row["name"]
+    assert all(set(v) == RES for v in row.get("start", {}).values()) and set(row.get("start", ())) <= NAMES["setup.jsonl"]
+    assert set(row.get("swap", {}).items()) <= {(a, b) for a in NAMES["train.jsonl"] for b in NAMES["train.jsonl"]}
     assert set(row.get("side_buildings", ())) <= set(row.get("sides", ())), row["name"]   # #2462
     assert all(set(v) <= NAMES["build.jsonl"] for v in row.get("side_buildings", {}).values()), row["name"]
     assert {row["ring"][k] for k in ("wall", "gate")} <= NAMES["build.jsonl"] if "ring" in row else True, row["name"]

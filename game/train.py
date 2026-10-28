@@ -266,6 +266,9 @@ REQUIRES = {r["name"]: (r["requires"][0], *map(tuple, r["requires"][1:]))   # an
 AGES = ("Dark Age", "Feudal Age", "Castle Age", "Imperial Age")    # the age after each researched age (index: ages)
 # AoE2 DE setting "Starting age" (game/data/setup.jsonl): the researched ages and the skipped technologies (#2265)
 STARTS = {r["name"]: r for r in table.load("setup.jsonl") if "ages" in r}
+SWAPS = {r["name"]: r["swap"] for r in table.load("setup.jsonl") if "swap" in r}   # a game mode: {old: new} (#2388)
+AGAIN = {r["name"] for r in ROWS if r.get("again")}                # a technology that a player researches again (Treason)
+GLOW = {r["name"]: r["glow"] for r in ROWS if "glow" in r}         # the enemy Kings glow for so many seconds (#2388)
 QUEUE = 15                                                         # units in the queue of one building, as in AoE2
 HOUSING = {r["name"]: r["housing"] for r in BUILDING_ROWS if "housing" in r}   # population of a complete building
 AGE_COUNT = {r["name"]: r["age_count"] for r in BUILDING_ROWS if "age_count" in r}   # types of the age rule: the Settlement 2 (#2420)
@@ -358,8 +361,16 @@ def unlocked(g, name):
     civilization of the player does not have (civs.missing: also not as a team bonus of an ally, #1619)."""
     return value("age", name, 0) - civs.earlier(g, name) <= build.ages(g) and value("after", name, "") in {""} | set(getattr(g, "techs", ())) \
         and not (hasattr(g, "data") and civs.missing(g, name)) \
-        and (name not in UPGRADES or name in REQUIRES or bool(lines(name, g)))   # not of this civilization (#1373), no
-                                                                   # new unit (#1483); an age also upgrades (#2130)
+        and (name not in UPGRADES or name in REQUIRES or bool(lines(name, g))) and not swapped(g, name)   # not of this
+                                                                   # civilization (#1373), no new unit (#1483); an
+                                                                   # age also upgrades (#2130)
+
+
+def swapped(g, name):
+    """True when the game mode of g puts another technology in place of name, or name is the technology of another
+    mode (SWAPS: Treason only in Regicide, in place of Spies, #2388)."""
+    swap = SWAPS.get(getattr(g, "mode", "standard"), {})
+    return name in swap or name not in swap.values() and any(name in s.values() for s in SWAPS.values())
 
 
 def homes(g):
@@ -612,7 +623,7 @@ def repeatable(g, name):
     and the gather tables take count()."""
     if name in civs.policies(g).get("effects", ()):                # a policy: each one but the active one (#2485)
         return name != civs.policy(g)[0]
-    return name not in g.techs or getattr(g, "beyond", False) and name not in REQUIRES and name not in UPGRADES \
+    return name not in g.techs or name in AGAIN or getattr(g, "beyond", False) and name not in REQUIRES and name not in UPGRADES \
         and value("walls", name) is None and count(g, name) < REPEAT
 
 
@@ -793,6 +804,9 @@ def research(g, entry, start=False):
             g.command(garrison.arrows_command(g, rect))
     if entry["name"] == "BALLISTICS" and getattr(g, "paper", False):   # the plugin aims the arrows of the player (#1549)
         g.command(f"aoe ballistics p{g.player} on")
+    if entry["name"] in GLOW:                                      # Treason: the enemy Kings glow (#2388)
+        import regicide                                            # regicide imports gather, gather imports this module
+        regicide.reveal(g, GLOW[entry["name"]])
     if entry["name"] == "SPIES":                                   # the enemy units show for ever (#2193)
         import fog                                                 # fog imports gather, gather imports this module
         fog.reveal(g)
