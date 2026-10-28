@@ -320,8 +320,9 @@ class Replay:
             name, color = self.player(e["player"]) if e.get("player") else ("Game", "white")
             return ["tellraw @a " + json.dumps([text(f"<{name}> ", color), text(taunt(e["text"]))])]
         name, color = self.player(e.get("player"))
-        if kind == "flare" and e.get("tile"):
-            return self.flare(e, name, color)
+        if kind == "flare" and e.get("tile"):                     # a view player sees only its flares (#2403)
+            seen = self.pov is None or self.pov == e.get("player") or self.pov in e.get("to", [self.pov])
+            return self.flare(e, name, color) if seen else []
         if kind == "age" and e.get("age"):
             self.age(e)
             return ["title @a subtitle " + json.dumps(text(name, color)),
