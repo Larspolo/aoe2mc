@@ -680,6 +680,8 @@ def repeatable(g, name):
     and the gather tables take count()."""
     if name in civs.policies(g).get("effects", ()):                # a policy: each one but the active one (#2485)
         return name != civs.policy(g)[0]
+    if count(g, name) < vars(g).get("trigger_stacks", {}).get(name, 0):   # "Enable Technology Stacking" (#2866)
+        return True
     return name not in g.techs or name in AGAIN or getattr(g, "beyond", False) and name not in REQUIRES and name not in UPGRADES \
         and value("walls", name) is None and count(g, name) < REPEAT
 

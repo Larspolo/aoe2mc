@@ -92,6 +92,35 @@ player loads it with the world. Without the option, the world is the same as bef
   `resource-pack-prompt` (`run.PROMPT`). Before the join the client shows "This server requires the use of a custom
   resource pack." with the prompt text and the buttons "Proceed" and "Disconnect". `mc_shot.Client` at 1280 × 720:
   click (407, 488) for "Proceed"; the player is in `list` only after it.
+- Release (#2741): `bundles.yml` builds the pack once (`packaging/release_pack.py`, the bytes of the world pack) as
+  `aoe2mc-resourcepack.zip`, and `installers.yml` attaches it to the release of a tag. On a tag each bundle gets
+  `release.json` (the tag and the SHA-1 of that pack). The game program of the bundle (`run.pack_source`) then sends
+  the release link, when the world pack has that SHA-1; else (a world of another version, a run from the source) it
+  uses the local `PackServer`.
+
+## Cost (#2747)
+
+Measured on 2026-10-28 on the `battle` scenario of `tools/scenarios.py` (about 60 units, 256 × 256 blocks), the same
+world without and with `--resource-pack`, Minecraft 26.3. The help of `--resource-pack` and the launcher check box
+(`gui.PACK_TEXT`) show these numbers: change them together (`tests/test_resourcepack_cost.py`).
+
+| Measure | Without the pack | With the pack | Difference |
+|---|---|---|---|
+| `resources.zip` size | 0 MB | 4.8 MB | +4.8 MB (`ZIP_STORED`: no compression, see "Pitfalls") |
+| Download from the local HTTP server of the game program | - | 0.01 s | at 10 Mbit/s about 4 s, once per world |
+| Server tick time, mean (`tools/tick_cost.py --world`) | 3.2 ms | 3.1 ms | none (noise): the same entities, the pack changes only the client |
+| Client frame time, median | 94.6 ms | 95.8 ms | +1 % |
+| Client frame time, P95 | 115.6 ms | 119.5 ms | +3 % |
+
+Method, to measure again:
+1. `python3 tools/pack_cost.py --seconds 20 --out DIR`: the size, the local download time and the client frame times.
+   It opens each world in the real client in single player, 12 blocks above the spawn, looks down at the units, and
+   runs the vanilla debug profiler (F3 + L). `DIR/without.png` and `DIR/with.png` show the view: check that the pack
+   is on. The client draws in software under Xvfb (5 to 10 frames per second): only the difference counts.
+2. `python3 tools/tick_cost.py --world DIR/without` and `--world DIR/with`: the line "with the pack" of each is the
+   server tick time of the world with its data pack.
+3. The world has the same entities with and without the pack (`world_reader`: 239 in both): the armor, the weapons
+   and the cart are item components and models, so the server does the same work.
 
 ## Pitfalls
 
@@ -100,3 +129,7 @@ player loads it with the world. Without the option, the world is the same as bef
   `ResourcePackLocationFileFix` moves it only when the client upgrades a world of an older version.
 - `mc_shot.py --at Y` is the player position: the eye is 1.62 blocks higher. For a face at eye level of a unit on a
   block at y, use `--at X y+0.1 Z`.
+- The same pack bytes on each system (#2741) need more than sorted names and a fixed time: the deflate of `zipfile`
+  and of Pillow's PNG writer depends on the zlib of each build (Linux, Windows and macOS gave 3 SHA-1s), and
+  `zipfile.ZipInfo` writes `create_system` 0 on Windows. Use `ZIP_STORED`, `stored_png()` and `create_system = 3`; the
+  `bundles.yml` step "The world pack of the frozen command line is the release pack" checks it on each system.

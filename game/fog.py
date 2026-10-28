@@ -114,10 +114,11 @@ def revealed(g, start=False):
     return out
 
 
-def commands(g, verb, uuids):
-    """The plugin commands "aoe hide" or "aoe show" of the sorted uuids for the team of the player, below RCON_MAX."""
+def commands(g, verb, uuids, who=None):
+    """The plugin commands "aoe hide" or "aoe show" of the sorted uuids for the team of the player (who: other
+    players, for example "Alex view": the view of a spectator, #2901), below RCON_MAX."""
     import replay
-    who, k = f"@a[team=p{g.player}]", (replay.RCON_MAX - 40) // 37   # UUIDs per command (36 characters and a space)
+    who, k = who or f"@a[team=p{g.player}]", (replay.RCON_MAX - 40) // 37   # UUIDs per command (36 characters and a space)
     return [f"aoe {verb} {who} {' '.join(uuids[i:i + k])}" for i in range(0, len(uuids), k)]
 
 
@@ -161,7 +162,7 @@ def tick(g):
 def minimap(g, state):
     """The commands of the fog of the team of g on the minimap (#2583, Minimap.java): the fog starts all unexplored,
     then only the changes of the tiles in sight (state["tiles"] of update) and of the explored tiles out of sight, as
-    the live replay does for its view player (Replay.minimap_fog)."""
+    the live replay does for its view player (Replay.minimap_fog). With g.reveal "explored" all tiles start explored."""
     import replay
     T, team = g.map.T, f"p{g.player}"
     n = g.data.get("map_size") or len(getattr(g.map, "ground", ())) // T   # tiles of a map side
@@ -171,6 +172,8 @@ def minimap(g, state):
     explored = state.setdefault("explored", set())
     explored |= inside
     new = "map" not in state
+    if new and getattr(g, "reveal", "normal") == "explored":       # AoE2 "Reveal map: Explored": no black tile (#2932)
+        explored |= {(x, y) for x in range(n) for y in range(n)}
     old_see, old_dim = state.get("map") or (set(), set())
     state["map"] = (inside, explored - inside)
     return [f"aoe minimap fog {T} {n} {team}"] * new + replay.runs(f"aoe minimap see {team}", inside - old_see) + \

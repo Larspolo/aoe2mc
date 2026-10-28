@@ -21,6 +21,9 @@ JAR = os.path.join(GAME, "plugin", "aoe2mc-plugin.jar")
 # all data files of game/data (table.load: train, units, buildings; #1913), in their own folder: data/ has files of the
 # same names (table.FROZEN, #2839)
 GAME_DATAS = DATAS + [(os.path.join(GAME, "data", "*.jsonl"), "game_data")] + [(JAR, "plugin")] * os.path.exists(JAR)
+# the tag and the SHA-1 of the resource pack of the release (the workflow writes it on a tag, run.RELEASE, #2741)
+RELEASE = os.path.join(ROOT, "packaging", "release.json")
+GAME_DATAS += [(RELEASE, ".")] * os.path.exists(RELEASE)
 
 
 def analysis(script, datas=DATAS):

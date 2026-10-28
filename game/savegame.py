@@ -32,7 +32,7 @@ MONK = ("carrier_at", "converting", "faith", "fetching", "heal_time", "monk_at",
         "relic_time", "relics")                                        # game/monk.py: the relics and monk orders (#2412)
 ORDERS = ("patrols", "trigger_attributes", "trigger_costs",            # scenario.py: the patrols (#2647), attributes (#2763),
           "trigger_menus", "trigger_names",                            # costs (#2776), menu items (#2775), names (#2821)
-          "trigger_places", "trigger_times",                           # the menu places (#2864), times (#2820),
+          "trigger_places", "trigger_stacks", "trigger_times",         # the menu places (#2864), stacking (#2866), times (#2820),
           "trigger_trains", "trigger_civs")                            # train locations (#2865), civilization names (#2905)
 ROUTES = ("trade", "trebs")                                            # trade.py, trebuchet.py: as OPTIONAL (#2413)
 CHEATS = (                                                             # game/cheats.py: the cheats that the player
@@ -132,6 +132,8 @@ SETTINGS = (                                                           # run.py 
     "sudden_death",
     "teams",
     "treaty",
+    "unlock_speed",
+    "unlock_teams",
     "victory",
     "victory_value",
 )
@@ -153,6 +155,8 @@ NOT_SAVED = (                                                          # the fie
     "defender",                                                        # defend_wonder.setup makes it again
     "enemies",                                                         # the enemy units of aoe2mc.json: a dead one has no position
     "explore_at",                                                      # score.py: the next check time
+    "fallen_at",                                                       # scenario.fallen: the next check time
+    "fallen_sent",                                                     # scenario.fallen: a load sets the same score again
     "flares",                                                          # flare.py: the flares of a replay
     "fog",                                                             # fog.py: the next tick hides the units again; explored()
     "garrison_sent",                                                   # scenario.garrisons: a load sends them again
@@ -167,6 +171,8 @@ NOT_SAVED = (                                                          # the fie
     "limit_at",                                                        # time_limit.py: the next check time
     "limit_shown",                                                     # time_limit.py: the shown text
     "noui",                                                            # the cheat "noui": only the hints
+    "owners_at",                                                       # scenario.owners: the next check time
+    "owners_sent",                                                     # scenario.owners: a load sets the same score again
     "peers",                                                           # run.py: the players of the game
     "player",                                                          # run.py: the player number
     "record",                                                          # record.py: run.play opens the file of --record again
@@ -181,11 +187,13 @@ NOT_SAVED = (                                                          # the fie
     "share",                                                           # bot.py: the techs of the human player
     "spectator_at",                                                    # spectator.py: the next check time
     "spectator_sent",                                                  # spectator.tick: a load sends them again
+    "spectator_views",                                                 # spectator.views: each spectator chooses again
     "speed",                                                           # run.py: the --speed option
     "sudden_death_at",                                                 # sudden_death.py: the next check time
     "tech_state_at",                                                   # scenario.py: the next check time
     "tech_state_sent",                                                 # scenario.tech_states: a load sends them again
     "trade_sent",                                                      # scenario.trading: a load sends them again
+    "unlock_speed",                                                    # run.py: from the saved settings
     "unselectable",                                                    # scenario.selection: the world keeps the tags, the next check reads them
     "victory",                                                         # run.py: from the saved settings
     "victory_timer_at",                                                # scenario.py: the next check time
@@ -246,6 +254,8 @@ def dump(g):
         d["settings"] = dict(g.game.settings)
     if getattr(g.game, "treaty", 0):                                   # treaty.start: the time goes on (#2409)
         d["treaty_time"] = g.game.treaty_time
+    if g.data.get("unlock_teams"):                                     # the stances of the Diplomacy page (#2934)
+        d["stances"] = {n: {k: p[k] for k in ("team", "neutral") if k in p} for n, p in sorted(g.players.items())}
     return d
 
 
@@ -392,6 +402,14 @@ def load(g, d):
     for b in bots(g):                                                  # its attack time and wave go on (#2325)
         for f, v in d["players"].get(str(b.g.player), {}).get("bot", {}).items():
             setattr(b, f, v)
+    for n, row in d.get("stances", {}).items():                        # diplomacy.change (#2934)
+        p = g.players.setdefault(n, {})
+        p.pop("team", None)
+        p.pop("neutral", None)
+        p.update(row)
+    if "stances" in d:
+        g.command(gather.allies_command(g.players))
+        g.command(gather.neutral_command(g.players))
 
 
 def settings(a, d, given=()):

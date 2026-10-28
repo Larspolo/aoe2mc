@@ -9,6 +9,9 @@ receiver gets the full amount. A player needs a complete own market to send trib
 of the sender lower the fee (FEES, #1606).
 The receiver is the Gather of that player (the human player or a bot of g.bots). A player without a Gather (no program
 plays it) keeps its tribute in g.tributes.
+With the lobby setting "Lock Teams" off (run.py --unlock-teams, #2934), row 5 holds the stance of the player to that
+player: a click goes to the next stance (STANCES: ally, neutral, enemy, ally), as scenario.stance sets it for the
+trigger "Change Diplomacy" (an alliance is a team), and the chat tells the other player.
 gather.Gather.clicks gives the item and opens the menu.
 """
 import json
@@ -33,7 +36,10 @@ ITEM = ('minecraft:carrot_on_a_stick[item_model="minecraft:writable_book",item_n
 BUTTONS = {0: ("writable_book", "Diplomacy", "Send tribute to other players."),   # slot: the buttons of the Game menu
            1: ("end_rod", "Flare", "Show the place that you look at to your team."),   # (#1234)
            3: ("writable_book", "Save", "Save the game. Load it with run.py --load.")}     # savegame.py (#2259)
+SPEED_SLOT = 4                                                     # the button "Game speed" with --unlock-speed (#2933)
+SPEEDS = (1.0, 1.5, 2.0)                                           # times the Normal speed, as run.py --speed
 RESOURCES = {"food": "wheat", "wood": "oak_log", "gold": "gold_ingot", "stone": "cobblestone"}   # rows 1-4
+STANCES = {"ally": "lime_dye", "neutral": "yellow_dye", "enemy": "red_dye"}   # row 5, in click order (#2934)
 LOT = 100                                                          # the resource of one click
 SHIFT = 5                                                          # tributes of a shift click (500)
 FEE = 30                                                           # the tribute fee in percent, paid by the sender
@@ -54,14 +60,16 @@ def in_hand(g, player):
 
 def open_menu(g, player):
     """The Game menu: one item for each button; "Choose your player" in a game of more people (lobby.py, #1563)."""
-    buttons = BUTTONS | ({lobby.SLOT: lobby.BUTTON} if lobby.shown(g) else {})
+    buttons = BUTTONS | ({lobby.SLOT: lobby.BUTTON} if lobby.shown(g) else {}) | \
+        ({SPEED_SLOT: ("clock", "Game speed", f"Now {main(g).speed:g}. Click: {after(main(g).speed):g}.")}
+         if getattr(g, "unlock_speed", False) else {})   # AoE2 "Lock Speed" off (#2933)
     menu.show(g, player, "Game menu", [(s, m, n, lore) for s, (m, n, lore) in buttons.items()],
               lambda p, slot, shift: button(g, p, slot))
 
 
 def button(g, player, slot):
-    """A click on the Game menu: the Diplomacy page, a flare at the look of the player (the menu closes, #1234), or a
-    save of the game (#2259)."""
+    """A click on the Game menu: the Diplomacy page, a flare at the look of the player (the menu closes, #1234), a
+    save of the game (#2259), or the next game speed (#2933)."""
     if slot == 0:
         return show(g, player)
     if slot == 1:
@@ -72,6 +80,35 @@ def button(g, player, slot):
         return savegame.save(g, player)
     if slot == lobby.SLOT and lobby.shown(g):
         return lobby.show(g, player)
+    if slot == SPEED_SLOT and getattr(g, "unlock_speed", False):
+        menu.close(g, player)
+        return faster(g)
+
+
+def main(g):
+    """The Gather of player 1 that runs the game (run.play: game.g), else g."""
+    return getattr(g.game, "g", None) or g
+
+
+def after(speed):
+    """The next speed of SPEEDS; after the last one the first."""
+    return next((s for s in SPEEDS if s > speed), SPEEDS[0])
+
+
+def faster(g):
+    """The next game speed for all players (AoE2 "Lock Speed" off, #2933), as run.py --speed: the server ticks faster
+    and the steps of the Gathers are shorter. t0 moves, so that the game time of recap.game_time does not jump."""
+    import run
+    x = main(g)
+    old, new = x.speed, after(x.speed)
+    now = x.clock()
+    for h in [x, *(b.g for b in x.bots)]:
+        h.speed = new
+        h.t0 = now - (now - h.t0) * old / new
+    g.command(f"tick rate {run.TICKS * new:g}")
+    g.command("tellraw @a " + json.dumps({"text": f"Player {g.player} set the game speed to {new:g}.",
+                                          "color": "gold"}))
+    return new
 
 
 def others(g):
@@ -92,7 +129,41 @@ def items(g):
         out.append((i, f"{color}_wool", name(g, n), ""))
         out += [(9 * (r + 1) + i, m, f"Send {LOT} {res}", f"{cost(g, LOT)} {res} with the fee")
                 for r, (res, m) in enumerate(RESOURCES.items())]
+        if g.data.get("unlock_teams"):
+            k = stance(g, n)
+            out.append((9 * (len(RESOURCES) + 1) + i, STANCES[k], f"Stance: {k.capitalize()}",
+                        f"Click: {following(k).capitalize()}"))
     return out
+
+
+def stance(g, n):
+    """The stance of the player g to player n: "ally" (the same team), "neutral" or "enemy" (scenario.states)."""
+    import gather
+    return "ally" if gather.allied(g.players, g.player, n) else \
+        "neutral" if n in g.players.get(str(g.player), {}).get("neutral", ()) else "enemy"
+
+
+def following(kind):
+    """The stance after kind in the click order of STANCES."""
+    kinds = list(STANCES)
+    return kinds[(kinds.index(kind) + 1) % len(kinds)]
+
+
+def change(g, player, n):
+    """A click on the stance of player n (#2934): the next stance, the alliance and neutral commands of the plugin (not
+    during a treaty: all players stay neutral, as scenario.diplomacy), and a chat line to the players of team pN."""
+    import gather
+    import scenario
+    import treaty
+    kind = following(stance(g, n))
+    scenario.stance(g.players, g.player, n, kind)
+    g.command(gather.allies_command(g.players))
+    if not treaty.holds(g):
+        g.command(gather.neutral_command(g.players))
+    g.command(f"tellraw @a[team=p{n}] " + json.dumps({"text": f"Player {g.player} changed its stance to you: "
+                                                              f"{kind.capitalize()}.", "color": "gold"}))
+    show(g, player)
+    return kind
 
 
 def show(g, player):
@@ -135,8 +206,11 @@ def send(g, player, n, res):
 
 def order(g, player, slot, shift=False):
     """A click on the Diplomacy page: the resource item in column i sends tribute to player others(g)[i] (a shift
-    click: SHIFT tributes, while the stock allows). Returns the number of tributes."""
+    click: SHIFT tributes, while the stock allows). Returns the number of tributes. Row 5: the stance (change)."""
     col, row, players = slot % 9, slot // 9, others(g)
+    if row == len(RESOURCES) + 1 and col < len(players) and g.data.get("unlock_teams"):
+        change(g, player, players[col])
+        return 0
     k = 0
     while 1 <= row <= len(RESOURCES) and col < len(players) and k < (SHIFT if shift else 1) \
             and send(g, player, players[col], list(RESOURCES)[row - 1]):
