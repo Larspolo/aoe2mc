@@ -6,7 +6,9 @@ forest tiles as objects (FOREST_TREES) yet.
 
 Read: `#const`, `#define`, `if`/`elseif`/`else`/`endif`, `start_random`/`percent_chance`/`end_random`,
 <PLAYER_SETUP> (no effect here), <LAND_GENERATION> (`base_terrain`, `create_player_lands`, `create_land` with
-`terrain_type`, `land_percent`, `number_of_tiles`, `base_size`, `clumping_factor`, `land_position`) and
+`terrain_type`, `land_percent`, `number_of_tiles`, `base_size`, `clumping_factor`, `land_position` and the borders
+`left_border`, `right_border`, `top_border`, `bottom_border`: percent of the map size at the low x, high x, low y and
+high y side that the land does not take) and
 <TERRAIN_GENERATION> (`create_terrain` with `base_terrain`, `number_of_clumps`, `number_of_tiles`, `land_percent`,
 `spacing_to_other_terrain_types`, `set_avoid_player_start_areas`, `clumping_factor`). Other sections and attributes:
 a warning. All randomness comes from numpy.random.default_rng(seed).
@@ -27,6 +29,7 @@ FOREST_TREES = dict(sorted((t, r["name"]) for r in RMAP for t in r.get("forest",
 SHORE_FISH = next(r["name"] for r in RMAP if r.get("shore_fish"))
 SIZES = {1: 120, 2: 120, 3: 144, 4: 144, 5: 168, 6: 168, 7: 200, 8: 200}    # AoE2 map size of a player count
 LABELS = ((120, "TINY_MAP"), (144, "SMALL_MAP"), (168, "MEDIUM_MAP"), (200, "LARGE_MAP"), (220, "HUGE_MAP"))
+BORDERS = ("left_border", "right_border", "top_border", "bottom_border")   # of create_land (low x, high x, low y, high y)
 RING = 0.35                     # the circle of the player lands: radius in map sizes
 AVOID = 13                      # set_avoid_player_start_areas: default tiles from a player origin
 STEPS = ((1, 0), (-1, 0), (0, 1), (0, -1))
@@ -134,12 +137,13 @@ def value(word, consts):
 def grow(owner, lands, free, rng):
     """Grow the lands at the same time, one tile each in turn, as AoE2 does: a land takes a free tile next to it. A
     higher clumping factor tries more tiles and takes the one with most tiles of the land around it (round lands).
-    lands: [{"id", "cells" (start tiles), "target" (tiles), "clump"}]; free: a bool array of the tiles to take."""
+    lands: [{"id", "cells" (start tiles), "target" (tiles), "clump", "box" (optional: (x0, x1, y0, y1), the tiles
+    that the land can take)}]; free: a bool array of the tiles to take."""
     n = owner.shape[0]
     for land in lands:
         land["front"], land["seen"], land["count"] = [], set(), 0
         for c in land["cells"]:
-            if free[c] and owner[c] < 0:
+            if free[c] and owner[c] < 0 and inside(land, c):
                 owner[c] = land["id"]
                 land["count"] += 1
         for c in zip(*np.nonzero(owner == land["id"])):
@@ -154,7 +158,7 @@ def grow(owner, lands, free, rng):
                 c = front[k]
                 front[k] = front[-1]
                 front.pop()
-                if owner[c] >= 0 or not free[c]:
+                if owner[c] >= 0 or not free[c] or not inside(land, c):
                     continue
                 owner[c] = land["id"]
                 land["count"] += 1
@@ -163,6 +167,12 @@ def grow(owner, lands, free, rng):
                 break
         if not busy:
             return
+
+
+def inside(land, c):
+    """True when tile c is in the borders of the land (its "box"), or the land has no borders."""
+    x0, x1, y0, y1 = land.get("box", (0, 1 << 30, 0, 1 << 30))
+    return x0 <= c[0] < x1 and y0 <= c[1] < y1
 
 
 def near(c, n):
@@ -232,13 +242,15 @@ def generate(text, seed, players=2, size=None, warn=None):
             base = value(attrs["base_size"][0], consts) if "base_size" in attrs else 3
             clump = value(attrs["clumping_factor"][0], consts) if "clumping_factor" in attrs else 8
             kind = value(attrs["terrain_type"][0], consts) if "terrain_type" in attrs else 0
+            edge = {a: value(attrs[a][0], consts) * n // 100 if a in attrs else 0 for a in BORDERS}
+            box = (edge["left_border"], n - edge["right_border"], edge["top_border"], n - edge["bottom_border"])
             if cmd == "create_player_lands":
                 total, turn = tiles(attrs, consts, n), rng.uniform(0, 2 * np.pi)
                 for p in range(1, players + 1):
                     a = turn + 2 * np.pi * (p - 1) / players
                     c = (int(round((n - 1) / 2 + RING * n * np.cos(a))), int(round((n - 1) / 2 + RING * n * np.sin(a))))
                     starts.append({"player": p, "x": c[0], "y": c[1], "base_size": base})
-                    lands.append({"id": len(lands), "cells": square(c, base, n), "clump": clump,
+                    lands.append({"id": len(lands), "cells": square(c, base, n), "clump": clump, "box": box,
                                   "target": max(total // players, (2 * base + 1) ** 2)})
                     kinds[len(lands) - 1] = kind
             else:
@@ -246,11 +258,11 @@ def generate(text, seed, players=2, size=None, warn=None):
                     c = tuple(min(n - 1, value(v, consts) * n // 100) for v in attrs["land_position"][:2])
                 else:
                     c = tuple(int(v) for v in rng.integers(0, n, 2))
-                lands.append({"id": len(lands), "cells": square(c, base, n), "clump": clump,
+                lands.append({"id": len(lands), "cells": square(c, base, n), "clump": clump, "box": box,
                               "target": tiles(attrs, consts, n, (2 * base + 1) ** 2)})
                 kinds[len(lands) - 1] = kind
             for a in set(attrs) - {"base_size", "clumping_factor", "terrain_type", "land_percent", "number_of_tiles",
-                                   "land_position"}:
+                                   "land_position", *BORDERS}:
                 warn(f"{cmd}: {a} is not read yet")
         else:
             warn(f"{cmd} is not read yet")
@@ -370,13 +382,15 @@ create_terrain FOREST { base_terrain GRASS2 number_of_clumps 6 number_of_tiles 1
   spacing_to_other_terrain_types 2 }
 create_terrain DIRT3 { base_terrain GRASS number_of_clumps 10 land_percent 3 }
 """
-# Nomad: a sea in the middle as Mediterranean, but no town center at the start: the villagers stand apart (NOMADS) and
-# the player builds the town center.
+# Nomad: one large land with a sea ring at the map edges (AoE2 wiki "Nomad (map)", #2336), and no town center at the
+# start: the villagers stand apart (NOMADS) and the player builds the town center.
 NOMAD = """
 <LAND_GENERATION>
-base_terrain GRASS
-create_player_lands { terrain_type GRASS2 land_percent 30 base_size 12 clumping_factor 15 }
-create_land { terrain_type WATER land_position 50 50 base_size 8 land_percent 20 clumping_factor 20 }
+base_terrain WATER
+create_player_lands { terrain_type GRASS2 land_percent 30 base_size 12 clumping_factor 15
+  left_border 6 right_border 6 top_border 6 bottom_border 6 }
+create_land { terrain_type GRASS land_position 50 50 base_size 12 land_percent 42 clumping_factor 20
+  left_border 6 right_border 6 top_border 6 bottom_border 6 }
 <TERRAIN_GENERATION>
 create_terrain FOREST { base_terrain GRASS number_of_clumps 8 land_percent 6 set_avoid_player_start_areas 16
   spacing_to_other_terrain_types 2 clumping_factor 15 }
