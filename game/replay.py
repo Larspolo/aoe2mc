@@ -839,7 +839,7 @@ class Replay:
         v.name, v.player, v.job = e["name"], e["player"], start_job(e["name"])
         self.new.append((e["player"], v))
         self.pop[e["player"]] = self.pop.get(e["player"], 0) + 1
-        out = [f"summon {kind} {pos[0]} {pos[1]} {pos[2]} {nbt.snbt()}"]
+        out = [f"summon {kind} {pos[0]} {pos[1]} {pos[2]} {units.summon_snbt(nbt)}"]
         if self.ai:                                                 # the AoE2 values: plugin commands (#632)
             import combat                                           # combat -> gather -> build -> replay
             out += [combat.stats_command(v.uuid, v.name)] + [c for c in [combat.range_command(v.uuid, v.name, self.T)] if c]

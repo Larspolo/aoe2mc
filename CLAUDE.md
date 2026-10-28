@@ -131,7 +131,9 @@ A new game mode (`--mode`) is one line in `game/data/setup.jsonl` (keys `"help"`
 A new trigger effect of the converter is one line in `aoe2mc.EFFECTS` (its ID constant on its own line, both in
 alphabetical order), its handler `x_lines(e, c)` and the keys that it reads from the scenario effect one line
 in `aoe2mc.EFFECT_KEYS` (#2792), not a change of `trigger_files` (#2613) or `read_scenario`; a condition on a score
-is one line in `aoe2mc.SCORE_TESTS` (#2704), a condition of the tick function one line in `aoe2mc.TICKED` (#2769).
+is one line in `aoe2mc.SCORE_TESTS` (#2704), a condition of the tick function one line in `aoe2mc.TICKED` (#2769). The keys of a new
+condition are one line in `aoe2mc.CONDITION_KEYS`, a new aoe2mc.json list of the scenario mode one line in
+`aoe2mc.TRIGGER_LISTS` (both in alphabetical order, #2832).
 
 ## How to verify
 

@@ -148,7 +148,7 @@ that has no path stays where it is.
 | `--border {diorama,island,natural,table,wall,none}` | `diorama` | Edge outside the map. `diorama`: the map stands on a plinth of stone bricks. `island`: the map floats on a cone of rock and earth. `natural`: the ground slopes down into a ring of sea. `table`: the map lies on a dark oak table with legs, lanterns and a banner in a player color on each corner. `wall`: a low wall with a tower in a player color at each corner. `none`: no blocks. All keep the vanilla world border at the map edge. Images: `docs/images/border-*.png`. |
 | `--mood {on,off}` | `on` | The map color mood of a DE scenario. `on`: the time of day (Night and Darkness at midnight, Evening and Twilight at sunset, all others at noon) and rain in the wet moods (Murky, Rainforest, Swamp; snow in the cold biomes). `off`: noon for all maps, no rain and no fog. |
 | `--fog` | off | Fog in the fog moods (Brumous, Misty, Murky): the fog starts 4 blocks away and ends 48 blocks away. `--ambience full` turns it on too. Minecraft then shows an "Experimental Settings" warning when the world opens. `--mood off` turns it off. |
-| `--resource-pack` | off | A resource pack in the world (`resourcepacks/resources.zip`): single player loads it with the world, and the zombie units get a human face. |
+| `--resource-pack` | off | A resource pack in the world (`resourcepacks/resources.zip`): single player loads it with the world, the zombie units get a human face, and the units hold AoE2 weapons (halberd, spear, long bow ...). |
 
 ## Campaigns
 
