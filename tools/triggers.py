@@ -54,6 +54,7 @@ MAP = {
     ("effect", "TELEPORT_OBJECT"): "`tp @e[tag=aoe2mc.pN,x=..,dx=..] x y z` and the mounts of the riders (#2569)",
     ("effect", "CHANGE_OBJECT_NAME"): "`execute as @e[tag=aoe2mc.pN,type=..,x=..,dx=..] run data modify entity @s CustomName.text set value \"...\"` (the player color stays, #2616)",
     ("effect", "CHANGE_OWNERSHIP"): "`tag` `aoe2mc.pN` and `team join pN` of the units in the area and their mounts (timer and area triggers: #2570); Gaia: not supported yet",
+    ("effect", "CHANGE_OBJECT_SPEED"): "`attribute @e[..] minecraft:movement_speed base set V` of the units in the area and their mounts, V from the walk speed of the game program (game/ai.py, #2694)",
     ("effect", "FREEZE_OBJECT"): "`data merge entity @s {NoAI:1b}` of the units in the area and their mounts (#2608)",
     ("effect", "CHANGE_VIEW"): "`tp @a[team=pN] x y z` to the tile, on the ground (the player is the camera, #2610)",
     ("effect", "PLAY_SOUND"): "`playsound` of the vanilla sound of the name part (`data/sounds.jsonl`), at the tile or at each player (#2644)",
