@@ -1,0 +1,20 @@
+{"name": "age", "type": "str", "text": "The start age of a game mode when --age is dark (setup.jsonl line of an age).", "issue": 2408}
+{"name": "ages", "type": "int", "kind": true, "text": "A start age: the number of ages that the players have at the start (0 Dark ... 4 Post-Imperial).", "issue": 2265}
+{"name": "bots", "type": "bool", "text": "A game mode that the bots can play.", "issue": 2521}
+{"name": "buildings", "type": "dict", "kind": true, "text": "A game mode with a start town: the number of each building of build.jsonl.", "issue": 2408}
+{"name": "help", "type": "str", "text": "The help text of a game mode for --mode.", "issue": 2521}
+{"name": "infinite", "type": "bool", "text": "A resource level where a cost does not lower the stock.", "issue": 2489}
+{"name": "level", "type": "str", "kind": true, "text": "A game mode with the resource level of this name when --resources is standard.", "issue": 2438}
+{"name": "loaded", "type": "str", "text": "What a game mode does in a loaded game: skip or start.", "issue": 2521}
+{"name": "module", "type": "str", "text": "The module of game/ with setup(g, mode) of a game mode.", "issue": 2521}
+{"name": "note", "type": "str", "text": "The source of the values (the AoE2 wiki page) and the issue.", "issue": 2264}
+{"name": "random", "type": "list", "kind": true, "text": "A resource level that is one of these levels, at random.", "issue": 2489}
+{"name": "resources", "type": "dict", "kind": true, "text": "A resource level: the start amount of food, wood, gold and stone.", "issue": 2264}
+{"name": "ring", "type": "dict", "text": "A ring of walls with a gate around each base: radius, wall and gate.", "issue": 2462}
+{"name": "side_buildings", "type": "dict", "text": "The start buildings of each side of a game mode.", "issue": 2462}
+{"name": "sides", "type": "dict", "text": "The start resources of each side of a game mode (ally, attacker, defender).", "issue": 2441}
+{"name": "skip", "type": "list", "text": "The technologies of train.jsonl that a start age does not research.", "issue": 2265}
+{"name": "treaty", "type": "str", "text": "The treaty of a game mode: endless, no player can attack another.", "issue": 2406}
+{"name": "units", "type": "list", "kind": true, "text": "A game mode with these start units of units.jsonl (an empty list: no change).", "issue": 2347}
+{"name": "villagers", "type": "dict", "text": "The start villagers of a game mode at each resource.", "issue": 2408}
+{"name": "wonder_years", "type": "int", "kind": true, "text": "A game mode with a wonder victory after this number of years (0: at once).", "issue": 2406}
