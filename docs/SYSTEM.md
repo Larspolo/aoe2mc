@@ -242,6 +242,7 @@ of `tools/bootstrap.py` (they copy this repository) and the tests that need a sp
 | `tests/test_claim_conflict.py` | generic | None (a test of `tools/claim.py`). |
 | `tests/test_claim_first.py` | generic | None (a test of `tools/claim.py`). |
 | `tests/test_claim_refill.py` | generic | None (a test of `tools/claim.py`). |
+| `tests/test_claim_release_label.py` | generic | None (a test of `tools/claim.py`). |
 | `tests/test_refill_all_closed.py` | generic | None (a test of `tools/claim.py`). |
 | `tests/test_claim_revived.py` | generic | None (a test of `tools/claim.py`). |
 | `tests/test_claim_takeover.py` | generic | None (a test of `tools/claim.py`). |
@@ -249,6 +250,7 @@ of `tools/bootstrap.py` (they copy this repository) and the tests that need a sp
 | `tests/test_deep_lane.py` | generic | None (a test of `tools/usage.py`, `tools/claim.py` and `tools/dashboard.py`). |
 | `tests/test_dashboard_claimed.py` | generic | None (a test of `tools/dashboard.py`). |
 | `tests/test_dashboard_decide.py` | generic | None (a test of `tools/dashboard.py`). |
+| `tests/test_dashboard_fresh.py` | generic | None (a test of `tools/dashboard.py`). |
 | `tests/test_dashboard_muted.py` | generic | None (a test of `tools/dashboard.py`). |
 | `tests/test_dashboard_overlap.py` | generic | None (a test of `tools/dashboard.py`). |
 | `tests/test_dashboard_process.py` | generic | None (a test of `tools/dashboard.py`). |
@@ -257,6 +259,7 @@ of `tools/bootstrap.py` (they copy this repository) and the tests that need a sp
 | `tests/test_dashboard_start_prs.py` | generic | None (a test of `tools/dashboard.py`). |
 | `tests/test_feedback.py` | generic | None (a test of `tools/feedback.py`). |
 | `tests/test_feedback_gap.py` | generic | None (a test of `tools/feedback.py`). |
+| `tests/test_feedback_quote.py` | generic | None (a test of `tools/feedback.py`). |
 | `tests/test_health.py` | generic | None (a test of `tools/health.py`). |
 | `tests/test_health_compare.py` | generic | None (a test of `tools/health.py`). |
 | `tests/test_health_conflicts.py` | generic | None (a test of `tools/health.py`). |

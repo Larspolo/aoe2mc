@@ -115,6 +115,19 @@ jobs:
           # a command of the plugin (typed, as in a terminal): "Stance: ..." only when the bundle loaded its jar
           printf 'aoe stance @e[limit=1]\n' | "$game" "$GITHUB_WORKSPACE/out-tiny" | tee game.out
           grep -q "Stance:" game.out
+      - name: Stop the frozen game program from a program with no console (the window, #3003)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        timeout-minutes: 15
+        run: |
+          python tools/scenarios.py tiny tiny.aoe2scenario > $null
+          dist\aoe2mc\aoe2mc.exe tiny.aoe2scenario out-tiny
+          if ($LASTEXITCODE) { exit 1 }
+          # pythonw has no console, as aoe2mc-gui.exe: the stop of the window must work without one
+          $p = Start-Process -Wait -PassThru -FilePath pythonw -ArgumentList "packaging\stop_check.py", `
+            "$PWD\dist\aoe2mc\aoe2mc-game.exe", "$PWD\out-tiny", "$PWD\stop.log"
+          Get-Content stop.log
+          exit $p.ExitCode
       - uses: actions/upload-artifact@v4
         with:
           name: aoe2mc-${{ matrix.name }}

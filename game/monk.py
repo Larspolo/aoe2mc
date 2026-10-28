@@ -298,10 +298,7 @@ def convert_order(g, monks, target):
 def take(g, uuid):
     """Give the enemy unit uuid to the player of g: its tag, team and name color, and those of its horse, boat or crew
     (units.MOUNT). Its old order stops, and then it takes orders as a unit of its new player."""
-    import gather                                                  # gather imports this module
-    name, new = g.enemies.pop(uuid), g.player
-    obj = next((o for o in g.data["objects"] if o.get("uuid") == uuid), {})
-    old, obj["player"] = owners.player(g, uuid), new
+    name, new, old = g.enemies[uuid], g.player, owners.player(g, uuid)
     for run in ("", f"execute as {uuid} on vehicle run ", f"execute as {uuid} on passengers run "):
         who = "@s" if run else uuid
         for cmd in (f"tag {who} remove aoe2mc.p{old}", f"tag {who} add aoe2mc.p{new}", f"team join p{new} {who}"):
@@ -309,12 +306,7 @@ def take(g, uuid):
     color = units.HEX.get(g.players.get(str(new), {}).get("color", ""), "#FFFFFF")
     g.command(f'data modify entity {uuid} CustomName.color set value "{color}"')
     g.command(f"aoe stop {uuid}")
-    if gather.military(name) or name in MONKS:
-        g.soldiers[uuid] = name
-    elif pos := g.pos(uuid):
-        g.villagers[uuid] = gather.Villager(uuid, pos)
-        g.units.append({"kind": "unit", "name": name, "player": new, "uuid": uuid,
-                        "tile": [math.floor(pos[0]) / g.map.T, math.floor(pos[2]) / g.map.T]})
+    owners.give(g, uuid, new)                                      # the lists of all sides (#2993)
     g.command(f"tellraw @a[team=p{g.player}] " + json.dumps({"text": f"A monk converts the {units.pretty(name)}.", "color": "gold"}))
 
 

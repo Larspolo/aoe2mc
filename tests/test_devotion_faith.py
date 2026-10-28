@@ -6,7 +6,7 @@ from types import SimpleNamespace
 from test_monk_convert import setup, until_converted
 from test_monk_train import MONASTERY, monastery
 
-from game import civs, monk, train
+from game import civs, gather, monk, train
 
 
 def test_the_values_are_those_of_aoe2():
@@ -44,7 +44,8 @@ def times(techs, chance):
     """AoE2 seconds until the monk of player 1 converts a militia of player 2 (a bot) with techs; chance 0: the
     random tries always convert, 1: never (only the sure interval)."""
     server, g = setup(("foe", "MILITIA", 2, 12.5))
-    g.bots = [SimpleNamespace(g=SimpleNamespace(player=2, techs=set(techs)))]
+    g.bots = [SimpleNamespace(g=gather.Gather(server, g.data, player=2))]       # owners.give reads its lists (#2993)
+    g.bots[0].g.techs = set(techs)
     g.chance.random = lambda: chance
     monk.convert_order(g, {"monk"}, "foe")
     return until_converted(g, "foe", limit=30) / monk.INTERVAL

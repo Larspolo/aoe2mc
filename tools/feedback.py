@@ -35,8 +35,10 @@ MAX_HOURS = 23                            # below the one day of the comment loc
 
 def by_owner(comment, owner=OWNER):
     """A comment of the owner: the owner's login, no footer and no app (`gh api` of a cloud run posts as the app
-    "claude")."""
-    return ((comment.get("user") or {}).get("login") == owner and AGENT not in (comment.get("body") or "")
+    "claude"). The footer counts only outside the quoted lines (">"): a quote reply of a whole agent comment copies
+    the footer (#3068)."""
+    own = "\n".join(line for line in (comment.get("body") or "").splitlines() if not line.lstrip().startswith(">"))
+    return ((comment.get("user") or {}).get("login") == owner and AGENT not in own
             and not comment.get("performed_via_github_app"))
 
 

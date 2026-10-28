@@ -7,7 +7,8 @@ a second push of another claim commit is never a fast-forward. Later claims of t
 
     python3 tools/claim.py N              # claim ticket N; exit 0: yours (it adds `in-progress` and "Started by"),
                                           # exit 1: it names the run that was first
-    python3 tools/claim.py N --release    # give your claim back (needs-human, blocked, hand-off)
+    python3 tools/claim.py N --release    # give your claim back (needs-human, blocked, hand-off); it removes
+                                          # `in-progress` (#3234)
     python3 tools/claim.py N --takeover   # take the ticket from a dead run (stale or released claim, #502)
     python3 tools/claim.py N --show       # print the claim refs and the owner
     python3 tools/claim.py N --beat       # show that the own run is alive (at least every 20 minutes)
@@ -126,6 +127,17 @@ def start(number):
         print(f"added in-progress and \"Started by `{who()}`.\" to #{number}")
     except Exception as e:                              # the claim ref is the lock: the ticket is yours anyway
         print(f"the claim is yours, but the label or the comment failed ({e}): add them by hand")
+
+
+def stop(number):
+    """Remove `in-progress` after a release, as start() adds it: a run that released and left the label held 5
+    tickets for 40 minutes (#3234). A failed call (the label is not there) does not fail the release."""
+    from dashboard import api as call
+    try:
+        call(f"issues/{number}/labels/in-progress", "DELETE")
+        print(f"removed in-progress from #{number}")
+    except Exception as e:                              # the release commit is the lock
+        print(f"released, but the label call failed ({e})")
 
 
 def stale(subject_line, last, now, limit=STALE):
@@ -500,6 +512,8 @@ def main(argv=None):
     if a.release:
         ref = release(a.number, a.remote)
         print(f"released {ref}" if ref else "nothing to release")
+        if ref and on_github(a.remote):
+            stop(a.number)
         return 0
     issue = api(f"issues/{a.number}") if on_github(a.remote) else None
     if isinstance(issue, dict) and issue.get("state") == "closed":   # the candidate list was older (#2339)

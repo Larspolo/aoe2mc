@@ -151,11 +151,17 @@ def verify_field(v, k=4):
     return "verify " + (", ".join(f"{s} {m:.1f}m {n}x" for s, (m, n) in top) or "-")
 
 
+# The PR body, the commit message and the comment files of step 8 (a redirect or tee to such a file, `REPORT_NAME`).
+REPORT_FILE = r"(?i)(?:\bcat >|\btee)\s*\S*(?:body|msg|message|comment)[^/\s]*"
+REPORT_NAME = re.compile(r"body|msg|message|comment", re.I)
+
+
 # The phase of a Bash command: the first pattern that matches (`report.md`, phases; health.PHASES).
 PHASE_RULES = (("conflict", r"merge_main\.py|unconflict\.py|\bgit merge\b"),
                ("ci", r"ship_pr\.py|\bgit push\b|/pulls\b|check-runs|mergeable|claim\.py \d+ --guard"),
                ("report", r"report\.py|tokens\.py|health\.py"),
                ("claim", r"claim\.py|cycle_start\.py|dashboard\.py|feedback\.py|usage\.py"),
+               ("report", REPORT_FILE),
                ("code", r"\bsed -i\b|\bcat >|\bpython3 - <<|\btee\b"))
 ORDER = ("conflict", "verify", "ci", "code", "claim", "report", "read")   # a call with several tools: the first here
 CLAIMED = re.compile(r"claim\.py (\d+)\s*(?:$|[;&|)\n])")          # `claim.py N` with no option: a claim
@@ -169,7 +175,7 @@ def phase(name, inp):
             return "verify"
         return next((k for k, rx in PHASE_RULES if re.search(rx, cmd)), "read")
     if name in ("Edit", "Write", "NotebookEdit", "MultiEdit"):
-        return "code"
+        return "report" if REPORT_NAME.search(os.path.basename(inp.get("file_path", ""))) else "code"
     if name.startswith("mcp__github__"):
         return "ci" if re.search(r"pull_request|check|job", name) else "report" if "comment" in name else "read"
     return "read"
