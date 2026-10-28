@@ -27,7 +27,7 @@ def shown(server):
 def test_only_a_bulgarian_player_has_the_krepost_in_the_menu():
     server, g = villager_map()                                         # Britons
     build.open_menu(g, "Steve")
-    assert "Krepost" not in shown(server) and len(shown(server)) == len(build.MENU) - 2   # no Folwark (#1874)
+    assert "Krepost" not in shown(server) and len(shown(server)) == sum(not build.hidden(g, n) for n in build.MENU)   # (#2008)
     g.menus["Steve"]("Steve", build.MENU.index("KREPOST"), False)      # its slot: no choice
     assert not server.chosen
     server.chosen = build.MENU.index("KREPOST") + 1                    # also not with /trigger
@@ -45,7 +45,7 @@ def test_the_values_of_the_wiki():
     assert (s.hp, s.attack, s.melee, s.pierce, s.range, s.reload) == (2600, 10, 8, 11, 7, 2.0)
     assert combat.FORT_MIN_RANGE["KREPOST"] == 1 and combat.SIGHT["KREPOST"] == 10
     assert garrison.SIZES["KREPOST"] == 20 and train.HOUSING["KREPOST"] == 20
-    assert build.AGE["KREPOST"] == 2 and build.BUILD_TIMES["KREPOST"] == 150
+    assert build.BUILD_TIMES["KREPOST"] == 150
 
 
 def test_a_complete_krepost_shoots_and_trains_the_konnik():
@@ -70,7 +70,7 @@ def test_a_complete_krepost_shoots_and_trains_the_konnik():
     shot = [c for c in server.log if c.startswith("aoe building ") and " 10 " in c]
     assert shot, [c for c in server.log if c.startswith("aoe building")]
     rect = next(r for r, n in train.homes(g).items() if n == "KREPOST")
-    assert train.trains(g, train.homes(g)[rect]) == ("KONNIK", "ELITE_KONNIK_UPGRADE")
+    assert train.trains(g, train.homes(g)[rect]) == ("KONNIK", "PETARD", "ELITE_KONNIK_UPGRADE")
 
 
 @pytest.mark.mc

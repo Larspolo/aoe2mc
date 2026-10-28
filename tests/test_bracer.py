@@ -12,8 +12,7 @@ SMITH = (11, 3)                                                    # a block cel
 
 
 def test_the_values_are_those_of_aoe2():
-    assert train.COSTS["BRACER"] == {"food": 300, "gold": 200} and train.TRAIN_TIMES["BRACER"] == 40
-    assert train.TECH_AGE["BRACER"] == 3 and train.AFTER["BRACER"] == "BODKIN_ARROW"
+    assert train.BY_KEY["after"]["BRACER"] == "BODKIN_ARROW"
     assert "BRACER" in train.TRAINS["BLACKSMITH"] and "BRACER" in civs.SMITH
     assert set(civs.MISSING["BRACER"]) == {"CELTS", "CUMANS", "FRANKS", "MALIANS", "MAPUCHE", "PERSIANS", "ROMANS",
                                            "SLAVS", "TEUTONS"}

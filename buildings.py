@@ -620,6 +620,7 @@ def town_center(c, w, st, col, T, ctx):
         c.set(fx0 + 1 if x0 == 0 else fx1 - 2, 1, w - 2, "hay_block")
     # Main building: the hall stands on posts; a band in the player color at the floor line.
     hp, hh = (ph + 1, 6) if w >= 8 else (ph, 3)     # floor and wall height of the hall
+    c.upper = hp                                     # the garrison stands in the hall, where the player sees it (#2054)
     for x in sorted({hx0, hx1 - 1, *range(hx0, hx1, 3)}):
         for z in sorted({hz0, hz1 - 1, *range(hz0, hz1, 3)}):
             c.box(x, x + 1, 1, hp, z, z + 1, st.timber)
@@ -1702,8 +1703,9 @@ def dock(c, w, st, col, T, ctx):
     for x in list(range(0, w, 3)) + [w - 1]:
         for z in list(range(0, w, 3)) + [w - 1]:
             c.box(x, x + 1, -8, 1, z, z + 1, "spruce_log")                 # piles
-    c.box(0, w, 1, 2, 0, 1, f"{col}_concrete"); c.box(0, 1, 1, 2, 0, w, f"{col}_concrete")   # painted deck edge
-    c.box(w - 1, w, 1, 2, 0, w, f"{col}_concrete"); c.box(0, w, 1, 2, w - 1, w, f"{col}_concrete")
+    # dark deck edge: an edge in the player color looks like the foundation ring of an unfinished dock (#2059)
+    c.box(0, w, 1, 2, 0, 1, "dark_oak_planks"); c.box(0, 1, 1, 2, 0, w, "dark_oak_planks")
+    c.box(w - 1, w, 1, 2, 0, w, "dark_oak_planks"); c.box(0, w, 1, 2, w - 1, w, "dark_oak_planks")
     m = w // 2
     for z in range(m - 1, m + 1):                                          # steps down to the water
         c.set(0, 1, z, "spruce_stairs[facing=east,half=bottom,shape=straight]")
@@ -2737,57 +2739,19 @@ def footprint(name):
     return 2
 
 
+DESIGNS = units.rows("designs.jsonl")   # a part of the name -> the design function and its arguments; the first wins
+
+
 def select(name):
     """AoE2 building name -> (design function, extra arguments)."""
-    rules = [
-        ("BUDDHA_STATUE_A", buddha_statue, {"gold": True}), ("BUDDHA_STATUE_B", buddha_statue, {"gold": True}),
-        ("BUDDHA_STATUE", buddha_statue, {}), ("INDIAN_STATUES", statues, {}), ("OLD_STONE_HEAD", stone_head, {}),
-        ("NINE_BANDS", nine_bands, {}), ("PAGODA_", small_pagoda, {}), ("TORII_GATE", torii, {}),
-        ("TROWULAN_GATE", split_gate, {}), ("REKHA_DEUL_TEMPLE", rekha_deul, {}), ("SVAN_TOWER", svan_tower, {}),
-        ("COURTYARD_WALLS", courtyard_walls, {}), ("MESOPOTAMIAN_PILLAR", pillar, {}),
-        ("MESOPOTAMIAN_GARDEN", garden, {}), ("MESOPOTAMIAN_TOMB", tomb, {}), ("BURNED_BUILDING", burned_building, {}),
-        ("SHIPYARD", shipyard, {}), ("PORT", port, {}), ("MOLE_CONSTRUCTED", mole, {}), ("MOLE_TOP", mole, {}),
-        ("MOLE_BOTTOM", mole, {}), ("MOLE", mole, {"built": False}), ("CHAIN_", harbor_chain, {}),
-        ("FLAGSHIP_OF_NEARCHOS_MOVEABLE", flagship, {}), ("HELEPOLIS", helepolis, {}),
-        ("WOODEN_BRIDGE", wooden_bridge, {}), ("GREAT_PYRAMID", great_pyramid, {}),
-        ("NUBIAN_PYRAMID", nubian_pyramid, {}), ("PYRAMID", great_pyramid, {}),
-        ("DOME_OF_THE_ROCK", dome_rock, {}), ("SANKORE", sankore, {}), ("FISH_TRAP", fish_trap, {}),
-        ("ARCH_OF_CONSTANTINE", arch_of_constantine, {}), ("COLOSSEUM", colosseum, {}), ("GOL_GUMBAZ", gol_gumbaz, {}),
-        ("SANCHI_STUPA", sanchi_stupa, {}), ("STUPA", stupa, {}), ("TEMPLE_OF_HEAVEN", temple_of_heaven, {}),
-        ("MINARET_OF_JAM", minaret_of_jam, {}), ("ORACLES_TEMPLE", oracles_temple, {}), ("MOSQUE", mosque_landmark, {}),
-        ("HALL_OF_HEROES", hall_of_heroes, {}), ("PAGAN_SHRINE", pagan_shrine, {}), ("SHRINE", shrine, {}),
-        ("BRIDGE", bridge, {}), ("AQUEDUCT", aqueduct, {}), ("AMPHITHEATRE", amphitheatre, {}),
-        ("THEATRE", theatre, {}), ("STONEHENGE", stonehenge, {}), ("CONSTRUCTION_CRANE", crane, {}),
-        ("SCAFFOLDING_WALKABLE", scaffold_walk, {}), ("SCAFFOLDING", scaffolding, {}),
-        ("CATHEDRAL", church, {}), ("CHAPEL", monastery, {}), ("MONUMENT", monument, {}), ("ARMY_TENT", army_tent, {}),
-        ("COMMANDER_TENT_DROPSITE", command_tent, {"dropsite": True}), ("COMMANDER_TENT", command_tent, {}),
-        ("COMMAND_POST", command_tent, {}), ("TENT_", army_tent, {}), ("STORAGE", storage, {}),
-        ("PASTURE", pasture, {}), ("SETTLEMENT", settlement, {}), ("WOODEN_FORT", wooden_fort, {}),
-        ("SAPPER_TUNNEL", sapper_tunnel, {}), ("MULE_CART", cart, {}), ("SUPPLY_CART", cart, {"supply": True}),
-        ("PAVILION", pavilion, {}), ("YURT", yurt, {}), ("HUT", hut, {}), ("TRADE_WORKSHOP", blacksmith, {}),
-        ("POENARI", castle, {}), ("TOWER_OF_LONDON", krepost, {}),
-        ("WONDER", wonder, {}), ("TOWN_CENTER", town_center, {}), ("KREPOST", krepost, {}),
-        ("CASTLE", castle, {}), ("FORTRESS", castle, {}), ("DONJON", donjon, {}),
-        ("BOMBARD_TOWER", tower, {"kind": "bombard"}), ("KEEP", tower, {"kind": "keep"}),
-        ("GUARD_TOWER", tower, {"kind": "guard"}), ("GATE", gate, {}), ("OUTPOST", outpost, {}),
-        ("TOWER", tower, {"kind": "watch"}), ("WALL", wall_segment, {}), ("PALISADE", wall_segment, {}),
-        ("FENCE", wall_segment, {}), ("BARRICADE", barricade, {}), ("BARRACKS", barracks, {}), ("ARCHERY_RANGE", archery_range, {}),
-        ("STABLE", stable, {}), ("SIEGE_WORKSHOP", siege_workshop, {}), ("BLACKSMITH", blacksmith, {}),
-        ("MARKET", market, {}), ("CARAVANSERAI", caravanserai, {}), ("FEITORIA", feitoria, {}),
-        ("FORTIFIED_CHURCH", fortified_church, {}), ("MONASTERY", monastery, {}),
-        ("CHURCH", monastery, {}), ("UNIVERSITY", university, {}),
-        ("FOLWARK", folwark, {}), ("MILL", mill, {}), ("LUMBER_CAMP", lumber_camp, {}),
-        ("MINING_CAMP", mining_camp, {}), ("DOCK", dock, {}), ("HARBOR", harbor, {}),
-        ("FARM", farm, {}), ("HOUSE", house, {}),
-    ]
-    for word, fn, kw in rules:
-        if word in name:
-            return fn, kw
+    for r in DESIGNS:
+        if r["name"] in name:
+            return globals()[r["design"]], r.get("args", {})
     return generic, {}
 
 
 def is_wall(name):
-    return any(k in name for k in ("WALL", "PALISADE", "FENCE", "GATE"))
+    return any(r["name"] in name for r in DESIGNS if r.get("wall"))
 
 
 SWAP = {"axis=x": "axis=z", "axis=z": "axis=x", "facing=south": "facing=east", "facing=east": "facing=south",
@@ -2985,8 +2949,10 @@ def place_building(E, cols, B, o, players, walls, gates):
     if gates.get(id(o)) == "diag-":
         c.a = c.a[:, :, ::-1].copy()                                     # mirror: the other diagonal
     if o.get("ref") is not None and fn not in (gate, bridge, wooden_bridge, fish_trap, scaffold_walk, aqueduct):
-        INSIDE[o["ref"]] = ([(x0 + x, z0 + z) for x, z in rooms(c, fx, fz) if cols.inside(x0 + x, z0 + z)],
-                            base + 1, (x0 + fx // 2, z0 + fz // 2))
+        up = getattr(c, "upper", 0)                                      # the floor of an upper hall
+        up = up if up and rooms(c, fx, fz, up) else 0                    # a small hall (--tile-size 1, 2): no room
+        INSIDE[o["ref"]] = ([(x0 + x, z0 + z) for x, z in rooms(c, fx, fz, up) if cols.inside(x0 + x, z0 + z)],
+                            base + 1 + up, (x0 + fx // 2, z0 + fz // 2))
     if BARRIERS and fn not in (gate, bridge, wooden_bridge, fish_trap, scaffold_walk):
         barriers(c, fx, fz, under=fn is town_center)
     if fn in (gate, town_center):           # only the passage is free: units on the towers move out (#577, #865)
@@ -4023,15 +3989,17 @@ def weather(c):
                 c.a[pick[:, 0], pick[:, 1], pick[:, 2]] = c.B("minecraft:" + repl + name[len(base):])
 
 
-def rooms(c, fx, fz):
-    """The local (x, z) of the free cells on the ground floor (2 free blocks on the floor or the ground), the rooms
+def rooms(c, fx, fz, y=0):
+    """The local (x, z) of the free cells on the floor at local y (2 free blocks on the floor or the ground), the rooms
     (air) first, then nearest to the center: there the garrisoned units stand (#807). An open hall has no air, only
-    free space (-1)."""
+    free space (-1). An upper floor (y > 0) gives only room cells: the free space on a lower roof is outside."""
     m, b, air = c.m, c.below, c.B("air")
-    sub = c.a[m:m + fx, b:b + 3, m:m + fz]
+    sub = c.a[m:m + fx, b + y:b + y + 3, m:m + fz]
     free = (sub == -1) | (sub == air)
-    xs, zs = np.nonzero((sub[:, 0] != air) & free[:, 1] & free[:, 2])
+    xs, zs = np.nonzero((sub[:, 0] != air) & ((sub[:, 0] != -1) | (y == 0)) & free[:, 1] & free[:, 2])
     room = (sub[xs, 1, zs] == air) & (sub[xs, 2, zs] == air)
+    if y:
+        xs, zs, room = xs[room], zs[room], room[room]
     order = np.lexsort((zs, xs, (2 * xs - fx + 1) ** 2 + (2 * zs - fz + 1) ** 2, ~room))
     return [(int(xs[i]), int(zs[i])) for i in order]
 

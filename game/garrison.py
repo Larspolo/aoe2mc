@@ -1,9 +1,10 @@
 """Garrisons in the game program (#808, part of #793). An order of the selected units on an own building with room
 sends them into it, as in AoE2: they walk to its door with the plugin (`aoe moveto`), then stand on the free cells
-of its ground floor ("inside" in aoe2mc.json, the cells of the converter, #807), in the state of a garrisoned unit of
-the converter: Invulnerable, NoAI, no visible name and the tag aoe2mc.GARRISONED. They leave the selection, and
-orders skip them. The menu item UNGARRISON of the building (train.show) lets them out next to the door, and so does
-the fall of the building (its target entity of the plugin is gone), alive, as in AoE2.
+of its ground floor, in a town center of its hall upstairs (#2054; "inside" in aoe2mc.json, the cells of the converter,
+#807), in the state of a garrisoned unit of the converter: Invulnerable, NoAI, no visible name and the tag
+aoe2mc.GARRISONED. They leave the selection, and orders skip them. The menu item UNGARRISON of the building
+(train.show) lets them out next to the door, and so does the fall of the building (its target entity of the plugin is
+gone), alive, as in AoE2.
 
     garrison.order(g, player, cell)     # gather.Gather.click: the selection goes into the building at cell
     garrison.tick(g)                    # gather.Gather.step: units at the door go in, a fallen building lets them out
@@ -13,10 +14,17 @@ Each garrisoned villager or foot archer adds one arrow to the shot of its town c
 (#1113): `aoe arrows` of the plugin. An empty town center shoots no arrow, a castle 5 (BASE, #1201).
 A dock takes only fishing ships, at most 5 (#1949): they sail to the water next to it with the /tp steps of fleet.py
 (a boat has no Minecraft path finding), and each one adds an arrow; an empty dock does not shoot, as in AoE2 DE.
+A Gurjara mill takes only herdable animals, at most 10 (civs.HERD_FOOD, BY, #2342), and they make food with no end:
+15 × ln(F / 200 + 1) per AoE2 minute for F food of all animals in own mills (AoE2 DE wiki "Gurjaras"). An animal inside
+cannot be captured (herd.tick).
+
+    garrison.pasture(g, dt)             # gather.Gather.step: dt AoE2 seconds of the food of the animals in mills
 
 An injured unit in a garrison gets its hit points back, as in AoE2 DE (#1262, AoE2 wiki "Garrison"): 0.2 per second in
 a castle, 0.1 in a town center or tower (HEAL), 6 times as fast after Herbal Medicine (HERBAL, #1585). Siege units and
-ships do not heal (monk.healable). The same Health change as the monk heal (monk.py); a full unit stays full inside
+ships do not heal (monk.healable). A mule cart gets a share of its hit points per AoE2 minute back (REPAIR: 24 % in a town
+center or tower, 48 % in a castle, CART_HERBAL times as fast after Herbal Medicine, AoE2 DE wiki "Mule Cart", #2505),
+for free. The same Health change as the monk heal (monk.py); a full unit stays full inside
 (Invulnerable), so it is read only once (g.whole).
 
     garrison.heal(g, dt)                # gather.Gather.step: dt AoE2 seconds of healing
@@ -26,39 +34,43 @@ The live replay (game/replay.py, #809) uses SIZES, cell(), enter() and leave().
 import json
 import math
 
+import civs
+import table
 from aoe2mc import GARRISONED
 
-SIZES = {                                                          # units inside a complete building, as in AoE2
-    "BOMBARD_TOWER": 5,
-    "CASTLE": 20,
-    "DOCK": 5,                                                     # fishing ships only (AoE2 DE wiki, #1949)
-    "GUARD_TOWER": 5,
-    "KEEP": 5,
-    "KREPOST": 20,                                                 # (AoE2 DE wiki, #1872)
-    "TOWN_CENTER": 15,
-    "WATCH_TOWER": 5,
-}
+ROWS = table.load("buildings.jsonl")                            # the keys "garrison" and "arrows" (#2034)
+
+SIZES = {r["name"]: r["garrison"] for r in ROWS if "garrison" in r}   # units inside a complete building, as in AoE2
+BY = {r["name"]: tuple(r["garrison_by"]) for r in ROWS if "garrison_by" in r}   # only these units go in (Khmer house)
 HEAL = {"CASTLE": 0.2}                                           # hit points per AoE2 second inside, else 0.1
 HERBAL = 6                  # Herbal Medicine: units inside heal 6 times as fast (AoE2 DE wiki, #1585)
+REPAIR = {r["name"]: (r["repair"], r.get("repair_in", {})) for r in ROWS if "repair" in r}   # a cart: the share of its
+CART_HERBAL = 3             # hit points per AoE2 minute in any building, and in some; Herbal Medicine: 3 times (#2505)
 HEAL_EVERY = 5.0            # AoE2 seconds between two heal passes (fewer commands)
-BASE = {"CASTLE": 5, "TOWN_CENTER": 0,                           # arrows of an empty building (AoE2 wiki), else 1
-        "DOCK": 0,                                                # (#1949)
-        "KREPOST": 5}                                             # (#1872)
+BASE = {r["name"]: r["arrows"] for r in ROWS if "arrows" in r}   # arrows of an empty building (AoE2 wiki), else 1
 FISHER = "FISHING_SHIP"     # the only unit that goes into a dock (#1949)
 DOOR = 2.5                  # blocks from the door cell: there a unit goes in
 UNGARRISON = (7, "oak_door", "Ungarrison", "Click: all units come out")   # a slot of the first row, before RALLY
-SLOTS = {"DOCK": 26}        # a building with a unit in slot 7 (the demolition raft): the last slot of the third row (#1949)
+SPARE = 26                  # the last slot of the third row: UNGARRISON of a building with an item in slot 7 (the
+                            # demolition raft of the dock #1949, Illumination of the fortified church #1948)
 INSIDE = "{Invulnerable:1b,NoAI:1b,CustomNameVisible:0b}"         # the NBT of a garrisoned unit (#807)
 OUTSIDE = "{Invulnerable:0b}"                                     # NoAI stays: the next order turns on the AI
 CREW = "{Invulnerable:1b}"                                        # the crew of a ship in a dock keeps its AI (#1949)
 
 
+def size(g, name):
+    """The units inside a complete building name of the player of g: the bonus of its civilization (civs.GARRISON: a
+    Khmer house 5, Teuton towers twice, #2117; civs.HERD_FOOD: a Gurjara mill 10 animals, #2342), else SIZES, else 0."""
+    herd = civs.HERD_FOOD.get(civs.civ(g), {}).get(name, (0,))[0]
+    return civs.GARRISON.get(civs.civ(g), {}).get(name, herd or SIZES.get(name, 0))
+
+
 def holders(g):
     """{block footprint (x0, x1, z0, z1): building entry of aoe2mc.json} of the own buildings that take a garrison:
     the start ones and the complete construction sites."""
-    out = {(x0, x1, z0, z1): o for o in g.data["objects"] if o["kind"] == "building" and o["name"] in SIZES
+    out = {(x0, x1, z0, z1): o for o in g.data["objects"] if o["kind"] == "building" and size(g, o["name"])
            and o["player"] == g.player and "footprint" in o for x0, z0, x1, z1 in [o["footprint"]]}
-    return out | {tuple(s["footprint"]): s for s in g.sites if s["name"] in SIZES and s.get("done")}
+    return out | {tuple(s["footprint"]): s for s in g.sites if size(g, s["name"]) and s.get("done")}
 
 
 def start(g):
@@ -71,31 +83,38 @@ def start(g):
     return out
 
 
-def arrows(building, names):
-    """The arrows of one shot of the building with the units `names` inside: its BASE, and 1 more for each villager or
-    foot archer (an archer that is not cavalry, a camel or an elephant), as in AoE2. A bombard tower shoots one cannon
-    ball (#1375). A dock: 1 for each fishing ship, at most SIZES (AoE2 DE: up to 5 arrows, #1949)."""
+def arrows(building, names, factor=1):
+    """The arrows of one shot of the building with the units `names` inside: its BASE (times factor: civs.arrows, #2178),
+    and 1 more for each villager or foot archer (an archer that is not cavalry, a camel or an elephant), as in AoE2. A
+    bombard tower shoots one cannon ball (#1375). A dock: 1 for each fishing ship, at most SIZES (AoE2 DE: up to 5 arrows, #1949). A fortified church:
+    1 for each villager, no soldier (AoE2 DE: villagers and relics, #1948). A building with no attack: none."""
     import combat                                                  # combat imports gather
     if building == "BOMBARD_TOWER":
         return 1
     if building == "DOCK":
         return min(SIZES["DOCK"], sum(n.startswith(FISHER) for n in names))
+    if building == "FORTIFIED_CHURCH":
+        return sum(n.startswith("VILLAGER") for n in names)
+    if building in combat.BUILDINGS and not combat.BUILDINGS[building].attack:   # a Khmer house does not shoot (#2117)
+        return 0
     riders = {combat.CAV, combat.CAM, combat.ELE}
-    return BASE.get(building, 1) + sum(n.startswith("VILLAGER") or combat.ARC in (c := set(combat.stats(n).classes)) and not c & riders
+    return BASE.get(building, 1) * factor + sum(n.startswith("VILLAGER") or combat.ARC in (c := set(combat.stats(n).classes)) and not c & riders
                    for n in names)
 
 
 def arrows_command(g, rect):
     """The plugin command that gives the building rect the arrows of its garrison (#1113)."""
-    import combat
+    import civs, combat
     names = ["VILLAGER" if u in g.villagers else g.soldiers.get(u, "") for u in g.garrisons.get(rect, [])]
     building = holders(g).get(rect, {}).get("name")
-    return f"aoe arrows {combat.target_uuid([rect[0], rect[2], rect[1], rect[3]])} {arrows(building, names)}"
+    return f"aoe arrows {combat.target_uuid([rect[0], rect[2], rect[1], rect[3]])} {arrows(building, names, civs.arrows(g, building))}"
 
 
 def ungarrison(building):
-    """The menu item UNGARRISON of the building, in its slot (SLOTS)."""
-    return (SLOTS.get(building, UNGARRISON[0]), *UNGARRISON[1:])
+    """The menu item UNGARRISON of the building, in its slot: SPARE when a menu item of the building is in its slot."""
+    import train                                                   # train imports garrison
+    used = {train.ITEMS[n][0] for n in train.TRAINS.get(building, ())}
+    return (SPARE if UNGARRISON[0] in used else UNGARRISON[0], *UNGARRISON[1:])
 
 
 def door(g, rect):
@@ -114,14 +133,23 @@ def order(g, player, cell):
         return None
     import ai, train                                               # ai and train import gather, gather imports this module
     x, z = to
-    for u in sorted(g.selected):
+    by, flock = BY.get(homes[rect]["name"]), vars(g).get("flock", set())
+    units = [u for u in sorted(g.selected) if (unit_name(g, u).startswith(by) if by else u not in flock)]
+    if not units:                                                  # a soldier on a Khmer house, a sheep on a tower: no
+        return None                                                # garrison order
+    for u in units:
         if (v := g.villagers.get(u)) is not None:                  # the villager stops its work
             v.state, v.path, v.goal, v.site = "garrison", [], None, None
-        name = "VILLAGER" if u in g.villagers else g.soldiers.get(u, "")
+        name = unit_name(g, u)
         ai.move(g, u, name, g.map.T, x + 0.5, g.map.y(x, z), z + 0.5, ai.NORMAL * train.speed(g, name))
         g.entering[u] = rect
     g.mark(player, {to})
     return rect
+
+
+def unit_name(g, u):
+    """The AoE2 name of own unit u: "VILLAGER", a soldier, or a herdable animal (gather.Gather.flock, #2342)."""
+    return "VILLAGER" if u in g.villagers else g.soldiers.get(u) or vars(g).get("prey", {}).get(u, "")
 
 
 def dock_order(g, player, rect):
@@ -177,7 +205,7 @@ def go_in(g, u, rect, o):
     """Unit u stands inside the building rect (entry o of holders()), on its next free cell (the center without
     "inside" cells)."""
     units, boat = g.garrisons.setdefault(rect, []), vars(g).get("ships", {}).get(u)
-    if len(units) >= SIZES[o["name"]]:                             # full: it stays at the door, as in AoE2
+    if len(units) >= size(g, o["name"]):                           # full: it stays at the door, as in AoE2
         if boat is None:
             g.command(f"aoe stop {u}")
         if (v := g.villagers.get(u) or boat) is not None:
@@ -255,6 +283,25 @@ def inside(g):
             for u in us}
 
 
+def pasture(g, dt):
+    """The herdable animals in the own mills make food for dt AoE2 seconds (civs.HERD_FOOD: Gurjaras, #2342): a × ln(F / b
+    + 1) per AoE2 minute for F food of all of them (AoE2 DE wiki "Gurjaras"), with no end. The fractions add up."""
+    import gather                                                  # gather imports this module
+    pens = civs.HERD_FOOD.get(civs.civ(g), {})
+    if not pens or not g.garrisons:
+        return
+    homes = holders(g)
+    _, a, b = next(iter(pens.values()))
+    f = sum(gather.hunt_food(g.prey.get(u, "")) for rect, us in g.garrisons.items()
+            if homes.get(rect, {}).get("name") in pens for u in us if u in g.flock)
+    if not f:
+        return
+    g.herd_food = vars(g).get("herd_food", 0.0) + a * math.log(f / b + 1) / 60 * dt
+    if (n := int(g.herd_food)) > 0:
+        g.herd_food -= n
+        g.earn("food", n)
+
+
 def heal(g, dt):
     """Give the injured units in the garrisons of g their hit points back for dt AoE2 seconds (HEAL)."""
     import monk                                                    # monk imports gather, gather imports this module
@@ -267,11 +314,18 @@ def heal(g, dt):
     names = {o["uuid"]: o["name"] for o in g.units if o.get("uuid") in g.villagers} | g.soldiers
     herbal = HERBAL if "HERBAL_MEDICINE" in getattr(g, "techs", ()) else 1
     for rect, us in sorted(g.garrisons.items()):
-        rate = HEAL.get(homes[rect]["name"], 0.1) * herbal if rect in homes else 0.0
+        home = homes[rect]["name"] if rect in homes else None
+        rate = HEAL.get(home, 0.1) * herbal if home else 0.0
         for u in us:
-            if u in g.whole or not rate or not monk.healable(names.get(u, "VILLAGER")) or not (h := monk.health(g, u)):
+            name = names.get(u, "VILLAGER")
+            if u in g.whole or not home or not (name in REPAIR or monk.healable(name)) or not (h := monk.health(g, u)):
                 continue
             if h[0] >= h[1]:
                 g.whole.add(u)
                 continue
-            g.command(f"data modify entity {u} Health set value {round(min(h[1], h[0] + rate * dt), 2)}f")
+            if name in REPAIR:                                     # a cart: a share of its hit points (#2505)
+                share, more = REPAIR[name]
+                up = more.get(home, share) * h[1] / 60 * (CART_HERBAL if herbal > 1 else 1)
+            else:
+                up = rate
+            g.command(f"data modify entity {u} Health set value {round(min(h[1], h[0] + up * dt), 2)}f")

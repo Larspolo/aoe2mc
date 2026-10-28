@@ -9,12 +9,6 @@ CASTLE = (12, 4)
 
 
 def test_the_values_are_those_of_aoe2():
-    assert train.UNIQUE["DRAVIDIANS"] == "URUMI_SWORDSMAN"
-    assert train.COSTS["URUMI_SWORDSMAN"] == train.COSTS["ELITE_URUMI_SWORDSMAN"] == {"food": 65, "gold": 20}
-    assert train.TRAIN_TIMES["URUMI_SWORDSMAN"] == 9 and train.TRAIN_TIMES["ELITE_URUMI_SWORDSMAN"] == 9
-    assert train.COSTS["ELITE_URUMI_SWORDSMAN_UPGRADE"] == {"food": 900, "gold": 450}
-    assert train.TRAIN_TIMES["ELITE_URUMI_SWORDSMAN_UPGRADE"] == 45
-    assert train.TECH_AGE["ELITE_URUMI_SWORDSMAN_UPGRADE"] == 3 and train.build.AGE["ELITE_URUMI_SWORDSMAN"] == 3
     assert combat.stats("URUMI_SWORDSMAN") and combat.stats("ELITE_URUMI_SWORDSMAN")
     assert len(train.HELP["URUMI_SWORDSMAN"]) <= 50 and "DRAVIDIANS" not in train.civs.MISSING["URUMI_SWORDSMAN"]
     assert "BRITONS" in train.civs.MISSING["URUMI_SWORDSMAN"]

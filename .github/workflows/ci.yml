@@ -1,6 +1,7 @@
 name: CI
 
-# Quick checks (lint, fast tests: about 1 minute) on each PR and on main, so that Automerge merges a PR soon.
+# Quick checks (lint, fast tests: about 4 minutes) on each PR and on main, so that Automerge merges a PR soon.
+# A PR that changes only Markdown files runs only the doc tests (about 1 minute, `tools/ci_select.py`, #2089).
 # The full suite (slow tests, Minecraft tests, package) runs each night on main, or by hand with "full" (owner
 # decision, 2026-10-26). The runs do the slow and Minecraft checks that a change needs before the push (`verify`).
 # A red run on main opens a P0 ticket, so that the runs fix main first.
@@ -22,8 +23,10 @@ permissions:
   issues: write
 
 concurrency:
-  group: ci-${{ github.ref }}-${{ github.event_name == 'schedule' || inputs.full == true }}   # a quick run does not stop the full run
-  cancel-in-progress: true       # a new push stops the run of the old head
+  # A quick run does not stop the full run. Main gets one group per run: each merge gets a complete run, so a red
+  # main shows (#2145). A group keeps only its newest waiting run, so one group on main also dropped runs.
+  group: ci-${{ github.ref == 'refs/heads/main' && github.run_id || github.ref }}-${{ github.event_name == 'schedule' || inputs.full == true }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}   # a new push to a PR branch stops the run of the old head
 
 jobs:
   quick:
@@ -31,16 +34,46 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2     # a PR checks out its merge commit: HEAD^1 is the base
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
           cache: pip
           cache-dependency-path: requirements*.txt
       - run: pip install -r requirements-dev.txt
+      # Not a job `if` or `paths-ignore`: Automerge waits for a `quick` check with conclusion success.
+      - name: Select the tests
+        id: select
+        if: github.event_name == 'pull_request'
+        run: echo "tests=$(python3 tools/ci_select.py HEAD^1)" >> "$GITHUB_OUTPUT"
       - name: Lint
+        if: steps.select.outputs.tests == ''
         run: ruff check .
       - name: Fast tests
-        run: pytest
+        run: pytest -n auto ${{ steps.select.outputs.tests }}   # all cores (#2415)
+      # Two green PRs can merge into a main whose plugin does not compile (#2418): compile it when the change (a PR
+      # against its base, a merge on main) touches game/plugin, as game/run.py builds it (#2437).
+      - name: Plugin changed
+        id: plugin
+        run: git diff --quiet HEAD^1 -- game/plugin || echo "changed=1" >> "$GITHUB_OUTPUT"
+      - uses: actions/setup-java@v4
+        if: steps.plugin.outputs.changed
+        with:
+          distribution: temurin
+          java-version: "25"
+      - uses: actions/cache@v4
+        if: steps.plugin.outputs.changed
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: plugin-${{ hashFiles('game/plugin/*.kts', 'game/plugin/gradle/wrapper/*') }}
+          restore-keys: plugin-
+      - name: Compile the Paper plugin
+        if: steps.plugin.outputs.changed
+        working-directory: game/plugin
+        run: ./gradlew --no-daemon -q jar
 
   # A CI run that GITHUB_TOKEN started (Unconflict) gives no workflow_run event, and GitHub drops the cron sweep of
   # Automerge: start the sweep after a green quick job, so that the PR merges (#734). A dispatch of GITHUB_TOKEN starts

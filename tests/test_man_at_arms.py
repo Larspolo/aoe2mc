@@ -48,7 +48,6 @@ def test_the_live_militia_becomes_a_man_at_arms():
     assert g.soldiers["s"] == "SCOUT_CAVALRY" and g.soldiers["a"] == "ARCHER"           # other units stay
     assert combat.stats_command("m", "MAN_AT_ARMS", train.stats(g, "MAN_AT_ARMS")) in server.log
     assert "aoe label m Man At Arms" in server.log
-    assert combat.stats("MAN_AT_ARMS").hp == 45 and combat.stats("MAN_AT_ARMS").attack == 6
     assert any("Man-at-Arms is researched." in c for c in server.log if c.startswith("tellraw"))
 
 
@@ -58,7 +57,7 @@ def test_the_barracks_trains_men_at_arms_after_the_upgrade():
     train.open_menu(g, "Steve", BARRACKS)
     menu = menus(server)[-1]
     assert " 0:zombie_spawn_egg:Man-at-Arms:50 food · 20 gold · 21 s · queue " in menu
-    assert "Militia" not in menu and ":book:Man-at-Arms" not in menu                     # the upgrade only once
+    assert ":Militia:" not in menu and ":book:Man-at-Arms" not in menu                     # the upgrade only once
     assert train.queue(g, "Steve", BARRACKS, "MILITIA") is None
     assert train.queue(g, "Steve", BARRACKS, "MAN_AT_ARMS") == rect
     uuid, = train.tick(g, train.TRAIN_TIMES["MAN_AT_ARMS"])

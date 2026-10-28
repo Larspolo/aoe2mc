@@ -1,0 +1,54 @@
+name: Metrics
+
+# Writes the status issue comments (the run reports) to the orphan branch `metrics`, one file per day (#1983):
+# tools/health.py reads the files and only the newest comments from the API. One run at a time writes the branch,
+# so parallel runs never conflict. No issue_comment trigger: it starts one run for each comment of the repository
+# (about 1100 a day), and they push the CI runs out of the pages that health.py reads.
+on:
+  schedule:
+    - cron: "4,19,34,49 * * * *"
+  workflow_dispatch:
+    inputs:
+      days:
+        description: "Read the comments of the last N days again (empty: since the newest stored comment)"
+        required: false
+
+permissions:
+  contents: write    # push the branch metrics
+  issues: read
+
+concurrency:
+  group: metrics
+  cancel-in-progress: false
+
+jobs:
+  metrics:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Check out the branch metrics (or make it)
+        run: |
+          if git fetch -q origin metrics; then
+            git worktree add -q log FETCH_HEAD
+          else
+            git worktree add -q --detach log
+            git -C log checkout -q --orphan metrics
+            git -C log rm -rfq .
+          fi
+      - name: Add the new status comments
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          DAYS: ${{ inputs.days }}
+        run: python3 tools/metrics_log.py log ${DAYS:+--days "$DAYS"}
+      - name: Push the branch metrics
+        run: |
+          cd log
+          git add status 2>/dev/null || true
+          if git diff --cached --quiet; then echo "no change"; exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -q -m "Log the status comments"
+          git push -q origin HEAD:refs/heads/metrics

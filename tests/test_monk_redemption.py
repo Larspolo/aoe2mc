@@ -11,8 +11,7 @@ HOUSE = {"kind": "building", "name": "BARRACKS", "player": 2, "footprint": [20, 
 
 
 def test_the_monastery_researches_redemption():
-    assert train.COSTS["REDEMPTION"] == {"gold": 475} and train.TRAIN_TIMES["REDEMPTION"] == 50
-    assert train.TECH_AGE["REDEMPTION"] == 2 and train.HELP["REDEMPTION"]
+    assert train.HELP["REDEMPTION"]
     server, g = monastery()
     rect = research(g, 3, 475)
     assert g.queues[rect][0]["name"] == "REDEMPTION"

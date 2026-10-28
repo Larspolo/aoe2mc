@@ -52,10 +52,13 @@ from units import TEAM_COLOR, VILLAGER_JOBS, animal, pretty  # noqa: E402
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import build  # noqa: E402
 import replay  # noqa: E402  (build imports it too)
+import battle_royale  # noqa: E402
 import bossbar  # noqa: E402
+import capture_relic  # noqa: E402
 import cheats  # noqa: E402
 import civs  # noqa: E402
 import conquest  # noqa: E402
+import defend_wonder  # noqa: E402
 import diplomacy  # noqa: E402
 import flare  # noqa: E402
 import fleet  # noqa: E402
@@ -63,24 +66,39 @@ import fog  # noqa: E402
 import garrison  # noqa: E402
 import goto  # noqa: E402
 import herd  # noqa: E402
+import hill  # noqa: E402
 import hints  # noqa: E402
 import market  # noqa: E402
 import menu  # noqa: E402
 import monk  # noqa: E402
+import regen  # noqa: E402
+import regicide  # noqa: E402
 import relic_victory  # noqa: E402
 import repair  # noqa: E402
+import scenario  # noqa: E402
+import score  # noqa: E402
 import siege_tower  # noqa: E402
+import sudden_death  # noqa: E402
 import stance  # noqa: E402
+import table  # noqa: E402
+import time_limit  # noqa: E402
 import trade  # noqa: E402
 import transport  # noqa: E402
 import train  # noqa: E402
 import trebuchet  # noqa: E402
+import treaty  # noqa: E402
 import wonder  # noqa: E402
 
 RESOURCES = ("Wood", "Food", "Gold", "Stone")
-DROP_SITES = {"wood": ("TOWN_CENTER", "LUMBER_CAMP"), "food": ("TOWN_CENTER", "MILL", "FOLWARK"),   # as in AoE2 (#389)
-              "gold": ("TOWN_CENTER", "MINING_CAMP"), "stone": ("TOWN_CENTER", "MINING_CAMP")}
+# The gather tables: one line per name in data/gather.jsonl (#2033, `table.load`), values as in AoE2 (#389)
+ROWS = table.load("gather.jsonl")
+DROP_SITES = {r.lower(): tuple(t["name"] for t in ROWS if r.lower() in t.get("drop", ())) for r in RESOURCES}
+MEAT_SITES = tuple(t["name"] for t in ROWS if "meat" in t.get("drop", ()))   # hunted food only (mule cart, #2194)
 START = replay.START                                               # the AoE2 standard start resources (#973)
+# AoE2 DE setting "Starting resources" (wiki "Random map", without the civilization bonus): run.py --resources (#2264)
+LEVELS = {r["name"]: r["resources"] for r in table.load("setup.jsonl") if "resources" in r}
+INFINITE = {r["name"] for r in table.load("setup.jsonl") if r.get("infinite")}   # "Infinite": no cost lowers it (#2489)
+RANDOM = {r["name"]: r["random"] for r in table.load("setup.jsonl") if "random" in r}   # "Random": one of the levels
 NOMAD = {"wood": 275, "stone": 100}     # AoE2 Nomad (wiki "Nomad (map)"): no building at the start, the cost of a town center
 TREE_WOOD = 100                                                    # wood in one tree, as in AoE2
 # plants of the ground that are not in #minecraft:replaceable: the trunk on a slope removes them from its row (#1124)
@@ -90,56 +108,34 @@ BUSH_FOOD = 125                                                    # food in one
 # AoE2 DE work rates per game second (#393): lumberjack 0.39 (empires2_x2_p1.dat, #267), the others the published
 # DE gather rates. Normal game speed is 1.7 game seconds per real second (#413).
 AOE2_WORK, NORMAL = {"wood": 0.39, "food": 0.31, "farm": 0.33, "gold": 0.38, "stone": 0.36, "hunt": 0.41,
-                     "fish": 0.43}, 1.7                            # fish: a fisherman at a shore fish (#1283)
+                     "fish": 0.43, "oyster": 0.38}, 1.7            # fish: a fisherman at a shore fish (#1283)
 WORK_SECONDS = {r: 1 / (w * NORMAL) for r, w in AOE2_WORK.items()}    # real seconds per unit, as at Normal speed
-CARRY = {"HAND_CART": 7, "WHEELBARROW": 3}                         # more resources per trip: 10, 13, 20 (AoE2 wiki, #728, #1453)
+CARRY = {t['name']: t['carry'] for t in ROWS if 'carry' in t}
 FOOD_CARRY = {"HEAVY_PLOW": 1}                                     # more food only per trip, as in AoE2 (#1424)
-PACE = {"HAND_CART": 1.1, "WHEELBARROW": 1.1}                      # the villager walk speed factor, as in AoE2
-WORK_TECHS = {"BOW_SAW": {"wood": 1.2},                            # work rate factors of the economy technologies (AoE2)
-              "DOUBLE_BIT_AXE": {"wood": 1.2},
-              "GOLD_MINING": {"gold": 1.15},
-              "GOLD_SHAFT_MINING": {"gold": 1.15},
-              "STONE_MINING": {"stone": 1.15},
-              "STONE_SHAFT_MINING": {"stone": 1.15},
-              "TWO_MAN_SAW": {"wood": 1.1}}                        # (#1577)
-# Food of a hunted animal, as in AoE2 DE (the AoE2 wiki; a "COW_..." name is a cow, #1058).
-HUNT_FOOD = {"COW": 150,
-             "DEER": 140,
-             "GOAT": 100,
-             "GOOSE": 100,
-             "IBEX": 140,
-             "JAVELINA": 340,
-             "LLAMA": 100,
-             "PIG": 100,
-             "SHEEP": 100,
-             "TURKEY": 100,
-             "WATER_BUFFALO": 150,
-             "WILD_BOAR": 340}
+PACE = {t['name']: t['pace'] for t in ROWS if 'pace' in t}
+WORK_TECHS = {t['name']: t['work'] for t in ROWS if 'work' in t}   # work rate factors (#1577)
+# Food of a hunted animal, as in AoE2 DE (a "COW_..." name is a cow, #1058).
+HUNT_FOOD = {t['name']: t['hunt'] for t in ROWS if 'hunt' in t}
+DECAY = {t['name']: t['decay'] for t in ROWS if 'decay' in t}   # food per game second that a carcass loses (#2310)
 # Food of a fish, as in AoE2 DE (the AoE2 wiki, "Fishing", #1283). Villagers reach the shore fish from the land.
-FISH_FOOD = {"BOX_TURTLES": 200,
-             "DOLPHIN": 350,
-             "FISH_DORADO": 225,
-             "FISH_PERCH": 200,
-             "FISH_SALMON": 225,
-             "FISH_SNAPPER": 225,
-             "FISH_TUNA": 225,
-             "GREAT_FISH_MARLIN": 350,
-             "SHORE_FISH": 200}
-SHORE_FISH = {"BOX_TURTLES", "SHORE_FISH"}
-SHIP_WORK = {"deep": 0.42, "shore": 0.24, "trap": 0.35}            # the work rate of a fishing ship (AoE2 DE wiki)
+FISH_FOOD = {t['name']: t['fish'] for t in ROWS if 'fish' in t}
+SHORE_FISH = {t['name'] for t in ROWS if t.get('shore')}
+# Oysters (AoE2 DE wiki "Oysters", #2465): gold in place of food, gathered as a fish; villagers 22.8 a minute (AOE2_WORK
+# "oyster"), fishing ships 24 (SHIP_WORK). The gather kind "oyster" has its own civilization bonuses (Puru, Dravidians).
+OYSTERS = {t['name'] for t in ROWS if t.get('res') == "gold"}
+SHIP_WORK = {"deep": 0.42, "shore": 0.24, "trap": 0.35, "oyster": 0.4}   # the work rate of a fishing ship (AoE2 DE wiki)
 TRAP_FOOD = 715                                                    # food in one fish trap, as in AoE2 DE (#1438)
-SHIP_TECHS = {"FISHING_LINES": (1.1, 5), "GILLNETS": (1.1, 5)}     # the work rate factor and the more food of a trip (#1439)
-HERDS = {"COW", "GOAT", "GOOSE", "LLAMA", "PIG", "SHEEP", "TURKEY", "WATER_BUFFALO"}   # herdable animals: shepherds (civs.WORK)
+SHIP_TECHS = {t['name']: tuple(t['ship']) for t in ROWS if 'ship' in t}   # the work rate factor and the more food of a trip (#1439)
+HERDS = {t['name'] for t in ROWS if t.get('herd')}   # herdable animals: shepherds (civs.WORK)
 VILLAGER_HIT = 3, 2.0                                              # AoE2 villager attack and reload (game seconds)
 FARM_FOOD = 175                                                    # food in one farm, as in AoE2 DE (no upgrades)
-FARM_TECHS = {"CROP_ROTATION": 175,
-              "HEAVY_PLOW": 125, "HORSE_COLLAR": 75}               # food that a farm technology adds to each farm (AoE2 DE)
-MINES = {"GOLD_MINE": ("gold", 800, "GOLD_MINER"), "STONE_MINE": ("stone", 350, "STONE_MINER")}   # as in AoE2
+FARM_TECHS = {t['name']: t['farm'] for t in ROWS if 'farm' in t}
+MINES = {t['name']: tuple(t['mine']) for t in ROWS if 'mine' in t}   # as in AoE2
 MINE_BLOCKS = {"gold": ("gold_ore", "raw_gold_block", "stone"),                # the blocks of the converter's heap
                "stone": ("cobblestone", "andesite", "stone", "tuff")}
 STEPS = [(dx, dz) for dx in (-1, 0, 1) for dz in (-1, 0, 1) if dx or dz]
 NUMBER = r"(-?[\d.]+(?:E-?\d+)?)[df]"
-CIVILIANS = ("VILLAGER", "REPAIRER", "MONK", "MISSIONARY", "KING", "TRADE", "FISHING_SHIP", "TRANSPORT")
+CIVILIANS = tuple(t['name'] for t in ROWS if t.get('civilian'))
 SELECT = "aoe2mc.selected"                                         # entity tag of the selected units
 TYPE_REACH = 16                                                    # blocks: a second click selects its type this near (#743)
 WAND = "warped_fungus_on_a_stick"     # the selection wand: a second item with its own "used" statistic (#778)
@@ -180,6 +176,12 @@ def only(who, *filters):
     return who[:-1] + "," + ",".join(filters) + "]" if who.endswith("]") else who + "[" + ",".join(filters) + "]"
 
 
+def has_mode(g, name):
+    """True when the game mode name is on: the --mode of g, or a mode on top of it (g.modes: --regicide,
+    --sudden-death, --empire-wars, the AoE2 "Advanced Settings", #2490)."""
+    return getattr(g, "mode", None) == name or name in getattr(g, "modes", ())
+
+
 def allied(players, a, b):
     """True when AoE2 players a and b are allies: the same player, or the same team number of the players of
     aoe2mc.json (`team`). A player with no team is an enemy of all other players (#1312)."""
@@ -210,6 +212,12 @@ def hunt_food(name):
     return HUNT_FOOD.get("COW" if name.startswith("COW_") else name, 0)
 
 
+def predator(name):
+    """True for a predator (an "aggressive" animal of data/animals.jsonl: wolves, big cats, bears): villagers can kill it,
+    and it has no food (#2310)."""
+    return (animal(name) or ("",))[0] == "aggressive"
+
+
 def herdable(name):
     """True for a herdable animal (HERDS): an own one takes move orders (#1791)."""
     return ("COW" if name.startswith("COW_") else name) in HERDS
@@ -231,16 +239,22 @@ class Map:
         self.ground = [[None if v == "-" else int(v) for v in row.split()] for row in data["ground"]]
         self.n = len(self.ground)
         self.blocked, self.trees, self.feet, self.woods, self.bushes = set(), {}, {}, {}, {}
-        self.drops = {r: [] for r in DROP_SITES}                       # resource -> footprints of the drop sites
+        self.drops = {r: [] for r in (*DROP_SITES, "meat")}            # resource -> footprints of the drop sites
         self.mines = {r: {} for r, _, _ in MINES.values()}             # resource -> {tile: amount}
         self.mine_at = {}                                              # block cell -> tile of its mine
         self.farms, self.farm_at = {}, {}                              # farm tile -> food; block cell -> farm tile
         self.farm_food, self.own_farms = FARM_FOOD, set()              # food of a new farm (FARM_TECHS), own farm tiles
         self.carcasses = {}                                            # tile -> food of the carcasses of hunts (#1058)
         self.herds = set()                                             # carcass tiles of herdable animals (HERDS)
+        self.rot = {}                                                  # carcass tile -> food per game second (DECAY)
         self.fish, self.shore = {}, set()                              # tile -> food of a fish (#1283), shore fish
+        self.oysters = set()                                           # the fish tiles that hold gold (OYSTERS, #2465)
         self.fish_mobs, self.docks = {}, []                            # tile -> mob of a fish; own dock cells (#1384)
         self.traps = {}                                                # own fish trap tile -> its cells (#1438)
+        civ = None if data.get("full_tech_tree") else data.get("players", {}).get(str(player), {}).get("civ")   # #2354
+        self.trap_food = round(TRAP_FOOD * civs.value("trap_food", civ, 1))   # food of a new own fish trap (Malay, #2333)
+        self.aura = civs.AURA.get(civ, {})                             # Thracians (#2378)
+        self.auras = []                                                # the cells of own aura buildings
         for o in data["objects"]:
             if o["kind"] == "building":
                 x0, z0, x1, z1 = o["footprint"]
@@ -252,6 +266,8 @@ class Map:
                 self.fish_mobs[tile] = object_mob(o["name"])
                 if o["name"] in SHORE_FISH:                            # the tiles of the shore fish
                     self.shore.add(tile)
+                if o["name"] in OYSTERS:
+                    self.oysters.add(tile)
             elif o["kind"] == "other" and not any(k in o["name"] for k in PASSABLE_OBJECTS):
                 tile = int(o["tile"][0]), int(o["tile"][1])
                 if o["name"] in MINES:                                 # a mine at x.0 covers 2 tiles
@@ -272,6 +288,19 @@ class Map:
                         ("minecraft:oak_log", None) if kind == "dead" else \
                         (f"minecraft:{WOODS.get(kind, 'oak')}_log", f"minecraft:{WOODS.get(kind, 'oak')}_leaves[persistent=true]")
 
+    def heights(self, cells):
+        """The ground heights around cells (at least one)."""
+        return [y for x, z in self.around(cells) if (y := self.y(x, z)) is not None] or [0]
+
+    def emptied(self, cells):
+        """The cells of an empty mine or bush are free ground again, at the lowest height around them (Gather.dig,
+        Gather.berries; savegame.load for the ones that were empty at the save, #2453)."""
+        y = min(self.heights(cells))
+        for x, z in cells:
+            self.ground[z][x] = y
+            self.mine_at.pop((x, z), None)
+        self.blocked -= set(cells)
+
     def building(self, name, rect, tile, own, open_cells=()):
         """Add a building with the block footprint rect = (x0, x1, z0, z1) and its center tile. A farm is ground
         that a farmer stands on; own buildings are drop sites. Construction sites call it when they are complete.
@@ -286,12 +315,19 @@ class Map:
             return
         self.blocked |= cells - {tuple(c) for c in open_cells}
         if own and "FISH_TRAP" in name and tile:                       # the food of the fishing ships (#1438)
-            self.fish[tile], self.traps[tile] = TRAP_FOOD, cells
-        for r, names in DROP_SITES.items():
-            if own and any(k in name for k in names):
-                self.drops[r].append(cells)
+            self.fish[tile], self.traps[tile] = self.trap_food, cells
+        if own:
+            self.drop_site(name, cells)
         if own and "DOCK" in name:                                     # the drop site of the fishing ships (#1384)
             self.docks.append(cells)
+
+    def drop_site(self, name, cells):
+        """Add the cells of an own drop site to the drops of each resource that building name takes."""
+        for r, names in [*DROP_SITES.items(), ("meat", MEAT_SITES)]:
+            if any(k in name for k in names) or r in self.aura.get("resources", ()) and name in self.aura["buildings"]:
+                self.drops[r].append(cells)
+        if name in self.aura.get("buildings", ()):
+            self.auras.append(cells)
 
     def cells(self, tile):
         T = self.T
@@ -305,7 +341,9 @@ class Map:
         return self.cells(tile)
 
     def resource(self, tile):
-        """The resource of the tile of a tree, bush, mine or fish."""
+        """The resource of the tile of a tree, bush, mine or fish (an oyster: gold)."""
+        if tile in self.oysters:
+            return "gold"
         return next((r for r, m in self.mines.items() if tile in m),
                     "food" if tile in self.bushes or tile in self.farms or tile in self.carcasses or tile in self.fish
                     else "wood")
@@ -446,8 +484,14 @@ def profession(uuid, job):
 def job_of(m, tile):
     """The AoE2 task (`LUMBERJACK` ..., units.VILLAGER_JOBS) of a villager at the resource on tile of gather.Map m."""
     res = m.resource(tile)
-    return "FARMER" if tile in m.farms else "HUNTER" if tile in m.carcasses else "FISHERMAN" if tile in m.fish else \
+    return "FARMER" if tile in m.farms else "HUNTER" if tile in m.carcasses else "OYSTER" if tile in m.oysters else \
+        "FISHERMAN" if tile in m.fish else \
         {"wood": "LUMBERJACK", "food": "FORAGER"}.get(res) or next(j for r, _, j in MINES.values() if r == res)
+
+
+def fish_kind(m, tile):
+    """The gather kind of a fish on tile of gather.Map m: "oyster" (gold, #2465), "fish", else None."""
+    return "oyster" if tile in m.oysters else "fish" if tile in m.fish else None
 
 
 def military(name):
@@ -511,6 +555,21 @@ def siege_mark(uuid, name, hp, who):
     return [glow(uuid, SIEGE_GLOW), f"title {who} actionbar " + json.dumps(text)]
 
 
+def level(name, data):
+    """The level of the AoE2 starting resources name. "Random" (RANDOM) is one of its levels, the same for each player
+    and in each run of the world (a seed from the map, as the other random choices of the game program)."""
+    if name not in RANDOM:
+        return name
+    return random.Random(f"{data.get('map_size')}-{len(data.get('objects', ()))}").choice(RANDOM[name])
+
+
+class Endless(dict):
+    """The stock of the AoE2 starting resources "Infinite" (#2489): a cost does not lower an amount, an income raises it."""
+
+    def __setitem__(self, key, value):
+        super().__setitem__(key, max(value, self.get(key, value)))
+
+
 class Gather:
     """The gather game on a running server (game.command sends one command). Call setup(), then step() in a loop.
     log: a text file that gets one JSON line per event (state change or drop), to measure the timing (#289).
@@ -528,9 +587,18 @@ class Gather:
     bots = ()                                                          # run() steps them too (bot.Bot, #856)
     peers = ()                                                         # the Gathers of the other people (fog.py, #1631)
     reveal = "normal"                                                  # AoE2 "Reveal map"; "all": no fog (fog.py, #1389)
+    speed = 1.0                                                        # times the Normal speed: shorter real steps (#2057)
+    later = {}                                                         # the bonus of the first town center (civs.TOWN_CENTER)
+    nomad = False                                                      # a Nomad start: no town center yet (#2466)
+    victory = "standard"                                               # AoE2 "Victory"; "conquest": no wonder, no relics (#2316)
+                                                                       # "king-of-the-hill": hill.py (#2360)
+                                                                       # "time-limit", "score": time_limit.py (#2356)
+    mode = "standard"                                                  # AoE2 game mode; "regicide": the King (#2347),
+                                                                       # "wonder-race" (#2406)
+    modes = frozenset()                                                # the modes on top of it (has_mode, #2490)
 
     def __init__(self, game, data, player=1, tick=0.25, carry=10, chop=None, log=None, clock=time.monotonic,
-                 cheats=False, start=None):
+                 cheats=False, start=None, resources="standard", pop_limit=None):
         self.game, self.data, self.map, self.player = game, data, Map(data, player), player
         if player != 1:
             self.board = f"aoe_res{player}"                            # its own resources: its team sidebar (#1309)
@@ -540,11 +608,20 @@ class Gather:
         self.chop = dict(chop) if isinstance(chop, dict) else dict.fromkeys(WORK_SECONDS, chop)
         self.log, self.clock, self.t0 = log, clock, clock()
         self.cheats = cheats                                           # the AoE2 cheat codes in the chat (#816)
+        self.pop_limit = pop_limit                                     # AoE2 "Population limit", else train.LIMIT (#2266)
+        resources = level(resources, data)
         if start is None:                                              # units, no building: a Nomad start (#1212)
             kinds = {o["kind"] for o in data["objects"] if o.get("player") == player}
             nomad = "unit" in kinds and "building" not in kinds
-            start = civs.start(self, {r: v + NOMAD.get(r, 0) * nomad for r, v in START.items()})   # #1269
+            base = LEVELS[resources]
+            tc = civs.TOWN_CENTER.get(civs.civ(self), {})              # Tupi: with the first town center (#2293)
+            self.later, self.nomad = dict(tc) if nomad else {}, nomad
+            start = civs.start(self, {r: v + NOMAD.get(r, 0) * nomad + tc.get(r, 0) * (not nomad)
+                                      for r, v in base.items()})       # #1269
         self.stock = {**dict.fromkeys(DROP_SITES, 0), **start}             # at the drop sites (#973)
+        if resources in INFINITE:
+            self.stock = Endless(self.stock)
+        self.spare = {}                                                # the fractions of the drop-off bonus (#2111)
         self.units = [o for o in data["objects"] if o["kind"] == "unit" and o["player"] == player
                       and "VILLAGER" in o["name"]]
         self.villagers, self.selected = {}, set()
@@ -556,13 +633,15 @@ class Gather:
         self.enemies = {o["uuid"]: o["name"] for o in data["objects"] if o["kind"] == "unit" and o["player"]
                         and not allied(data.get("players", {}), player, o["player"])}   # no allies (#1312)
         self.prey = {o["uuid"]: o["name"] for o in data["objects"] if o["kind"] == "unit" and o.get("uuid")
-                     and o["player"] in (0, player) and hunt_food(o["name"])}   # animals to hunt (#1058)
+                     and o["player"] in (0, player) and (hunt_food(o["name"]) or predator(o["name"]))}
+        # animals to hunt (#1058), and the predators that villagers kill (#2310)
         self.flock = {o["uuid"] for o in data["objects"] if o["kind"] == "unit" and o.get("uuid")
                       and o["player"] == player and herdable(o["name"])}   # own herdables: select and move (#1791)
         self.seen, self.dead = {}, {}                                  # hunted animal -> last feet position, carcass tile
         self.players, self.sites = data.get("players", {}), []         # construction sites (#417)
         self.farmers, self.crops = {}, {}                              # farm tile -> UUID of its farmer, wheat age
         self.trunks = {}                                               # tree tile -> logs of its trunk on the ground
+        self.seconds = {}                                              # resource -> fraction of civs.EXTRA (#2113)
         self.bushes = {}                                               # bush tile -> the block of its last look
         self.menus = {}                                                # player -> handler of its open menu (#619)
         self.stances = {}                                              # uuid -> stance other than aggressive (#1107)
@@ -602,6 +681,9 @@ class Gather:
         return self.stock["wood"]
 
     def command(self, cmd):
+        if isinstance(getattr(self, "stock", None), Endless) and cmd.startswith("scoreboard players remove ") \
+                and cmd.split()[4:5] == [self.board]:
+            return ""                                                  # "Infinite" resources: the sidebar stays (#2489)
         return self.game.command(cmd)
 
     def pos(self, target):
@@ -643,6 +725,7 @@ class Gather:
             train.lore(self)                                           # the help lines of the menus (#1160)
             self.command(allies_command(self.data.get("players", {})))   # allies do not shoot each other (#1315)
             self.command(neutral_command(self.data.get("players", {})))  # no automatic attack on neutrals (#1645)
+        self.forage()
         cheats.setup(self)
         bossbar.setup(self)
         for o in self.units:                                           # the entities must be loaded (forceload)
@@ -652,6 +735,50 @@ class Gather:
         train.census(self)                                             # the population and the limit (#613)
         self.idle()
         return self
+
+    def forage(self):
+        """The start forage bushes of the civilization (civs.BUSHES, Gurjaras: 2 of 175 food, #2293) on the free tiles
+        next to the own town center of the map, the south side first: AoE2 puts them under the town center, where here
+        the villagers walk through. The blocks of a converted bush: berries around, leaves in the middle, dirt below."""
+        count, food = civs.BUSHES.get(civs.civ(self), (0, 0))
+        tc = next((o for o in self.data["objects"] if o["kind"] == "building" and o["name"] == "TOWN_CENTER"
+                   and o["player"] == self.player), None)
+        if not count or tc is None:
+            return
+        m, T = self.map, self.map.T
+        x0, z0, x1, z1 = tc["footprint"]
+        tx0, tz0, tx1, tz1 = x0 // T, z0 // T, (x1 - 1) // T, (z1 - 1) // T
+        units = {(int(o["tile"][0]), int(o["tile"][1])) for o in self.data["objects"] if o["kind"] == "unit" and "tile" in o}
+        ring = [(x, z) for x in range(tx0 - 1, tx1 + 2) for z in range(tz0 - 1, tz1 + 2)
+                if not (tx0 <= x <= tx1 and tz0 <= z <= tz1) and (x, z) not in units
+                and all(m.free(*c) for c in m.cells((x, z)))]
+        ring.sort(key=lambda t: (abs(t[0] - (tx0 + tx1) / 2) + abs(t[1] - (tz0 + tz1) / 2), -t[1], t[0]))
+        for tile in ring[:count]:
+            m.bushes[tile] = food
+            m.blocked |= m.cells(tile)
+            bx, bz = tile[0] * T, tile[1] * T
+            for x, z in sorted(m.cells(tile)):
+                y = m.y(x, z)
+                self.command(f"setblock {x} {y - 1} {z} minecraft:grass_block")
+                if x in (bx, bx + T - 1) or z in (bz, bz + T - 1):
+                    self.command(f"setblock {x} {y} {z} minecraft:sweet_berry_bush[age=3]")
+                else:
+                    self.command(f"fill {x} {y} {z} {x} {y + 1} {z} minecraft:oak_leaves[persistent=true]")
+
+    def town_center(self, rect=None):
+        """The first own town center is complete (build.rise): the bonus of a Nomad start comes now (civs.TOWN_CENTER,
+        Tupi +25 of each resource, #2293), and the unit of the key "nomad_unit" (Huns: a tamed Hunnic Horse in front
+        of the town center rect, #2466)."""
+        for r, n in sorted(self.later.items()):
+            self.stock[r] += n
+            self.command(f"scoreboard players add {r.capitalize()} {self.board} {n}")
+        self.later = {}
+        if self.nomad and rect and (unit := civs.value("nomad_unit", civs.civ(self))) and (cells := self.map.front(rect)):
+            x, z = cells[0]
+            name = json.dumps({"text": pretty(unit), "color": self.color()})
+            self.command(f"summon minecraft:horse {x + 0.5} {self.map.y(x, z)} {z + 0.5} {{Tame:1b,PersistenceRequired:1b,"
+                         f"Tags:[\"aoe2mc.p{self.player}\"],CustomName:{name}}}")
+        self.nomad = False
 
     def idle(self):
         """Show the number of idle villagers in the sidebar, as the idle villager button of AoE2 (#744), only when it
@@ -745,7 +872,7 @@ class Gather:
         the mouse in AoE2. A release on corner 1 cancels the box (a click with no drag)."""
         for name in sorted(n for n, t in self.holds.items() if self.clock() - t > RELEASE):
             del self.holds[name]
-            cell = (look := self.look(name)) and self.map.pick_ground(*look)
+            cell = (look := self.look(name)) and fleet.pick(self, *look)   # also on deep water (#2060)
             if cell and cell != self.corners.get(name):
                 self.box(name, cell)
                 continue
@@ -766,6 +893,7 @@ class Gather:
         not attack: it converts (monk.convert_order, #1245) or stays."""
         import ai                                                      # ai imports this module
         monks = self.monks()
+        repair.drop(self, self.selected)                               # Serjeants stop a repair (#2128)
         trebs = {u for u in self.selected if self.soldiers.get(u) == trebuchet.NAME}
         for u in sorted(trebs):                                        # it unpacks first (#1351)
             trebuchet.unpack(self, u, target)
@@ -802,10 +930,11 @@ class Gather:
                       if n not in hp or k < 1 or combat.target_uuid([fp[i] for i in (0, 2, 1, 3)]) in alive]
         import combat                                                  # combat imports this module
         printing = monk.PRINTING * ("BLOCK_PRINTING" in getattr(self, "techs", ()))   # the monks see more (#1475)
-        watch = combat.WATCH * len({"TOWN_PATROL", "TOWN_WATCH"} & set(getattr(self, "techs", ())))   # (#1454, #1579)
-        lit = {n for n, _, _ in placed} - combat.WALLS.keys() - {"FARM", "FISH_TRAP"}   # as in AoE2
+        watch = combat.WATCH * len({t['name'] for t in ROWS if t.get('watch')} & set(getattr(self, "techs", ())))   # (#1454, #1579)
+        lit = {n for n, _, _ in placed} - combat.WALLS.keys() - {t['name'] for t in ROWS if t.get('dark')}   # as in AoE2
         return replay.seen(mobs, [(self.player, n, fp) for n, fp, _ in placed], self.player, self.map.T,
-                           lambda n: combat.sight(n) + printing * (n in monk.MONKS) + watch * (n in lit))
+                           lambda n: combat.sight(n) + printing * (n in monk.MONKS) + watch * (n in lit)
+                           + civs.SIGHT.get(civs.civ(self), {}).get(n, 0))   # the Chinese town center (#2118)
 
     def task(self, v, name):
         """Give the villager the look of its AoE2 task (`LUMBERJACK` ...), with the table of the converter."""
@@ -883,25 +1012,43 @@ class Gather:
             if self.aegis or v.timer >= VILLAGER_HIT[1] / NORMAL:
                 v.timer = 0.0
                 self.command(f"rotate {v.uuid} facing entity {v.prey}")
-                self.command(f"damage {v.prey} {1000 if self.aegis else VILLAGER_HIT[0]} minecraft:mob_attack by {v.uuid}")
+                hit = VILLAGER_HIT[0] + civs.predator_hit(self) * predator(self.prey.get(v.prey, ""))
+                self.command(f"damage {v.prey} {1000 if self.aegis else hit} minecraft:mob_attack by {v.uuid}")
                 if not re.search(r" 0\.0f$", self.command(f"data get entity {v.prey} Health")):
                     return                                             # a dead mob stays 20 ticks: no more hits
             else:
                 return
         if v.prey in self.prey:                                        # dead: the first hunter that sees it makes the carcass
             x, _, z = self.seen.get(v.prey, v.pos)
-            tile = self.dead[v.prey] = int(x // self.map.T), int(z // self.map.T)
+            tile = int(x // self.map.T), int(z // self.map.T)
             name = self.prey.pop(v.prey)
-            self.map.carcasses[tile] = self.map.carcasses.get(tile, 0) + hunt_food(name)
-            if herdable(name):
-                self.map.herds.add(tile)
+            if hunt_food(name):                                        # a predator leaves no food (#2310)
+                self.dead[v.prey] = tile
+                self.map.carcasses[tile] = self.map.carcasses.get(tile, 0) + hunt_food(name)
+                self.map.rot[tile] = DECAY.get("COW" if name.startswith("COW_") else name, 0) * civs.decay(self)
+                if herdable(name):
+                    self.map.herds.add(tile)
         v.tree, v.prey, v.path = self.dead.get(v.prey), None, []
         self.set(v, "to_tree" if v.tree else "idle")                   # it stands at the carcass: the next step gathers
+
+    def decay(self, dt):
+        """The carcasses lose food at their AoE2 rate (Map.rot, AoE2 wiki "Hunt": "decay ... begins to subtract from the
+        total food amount as soon as the animal is killed", also while villagers gather it), dt game seconds (#2310)."""
+        for tile, rate in list(self.map.rot.items()):
+            food = self.map.carcasses[tile] = max(0, self.map.carcasses.get(tile, 0) - rate * dt)
+            if not food:
+                del self.map.rot[tile]
 
     def goals(self, tile):
         """The cells where a villager works a resource: on a farm, else next to it."""
         spot = self.map.spot(tile)
         return {c for c in spot if self.map.free(*c)} if tile in self.map.farms else self.map.around(spot)
+
+    def drop_goals(self, v):
+        """The cells next to the drop sites of the load of a villager (a carcass: also the mule cart, #2194)."""
+        build.moved_carts(self)                                        # a mule cart can be at a new place (#2209)
+        meat = self.map.drops["meat"] if v.res == "food" and v.tree in self.map.carcasses else []
+        return set().union(*map(self.map.around, self.map.drops[v.res] + meat))
 
     def source(self, v):
         """The resources left in the tree, bush, mine or farm of a villager: {tile: amount} of its kind."""
@@ -914,9 +1061,10 @@ class Gather:
         return self.map.bushes if v.res == "food" else self.map.trees if v.res == "wood" else self.map.mines[v.res]
 
     def nearest(self, v):
-        """The nearest bush or mine of the resource of v with something left, or None."""
-        T = self.map.T
-        full = [t for t, k in self.home(self.source(v)).items() if k > 0]
+        """The nearest bush or mine of the resource of v with something left, or None. A fish: a fish of the same kind
+        (an oyster after an oyster, #2465)."""
+        T, oyster = self.map.T, v.tree in self.map.oysters
+        full = [t for t, k in self.home(self.source(v)).items() if k > 0 and (t in self.map.oysters) == oyster]
         return min(full, key=lambda t: math.dist(v.cell, ((t[0] + 0.5) * T, (t[1] + 0.5) * T)), default=None)
 
     def home(self, sources):
@@ -948,6 +1096,17 @@ class Gather:
             if part := n // len(to) + (i < n % len(to)):
                 h.stock[res] += part
                 h.command(f"scoreboard players add {res.capitalize()} {h.board} {part}")
+
+    def deliver(self, res, n, forage=False, kind=None):
+        """Earn the load n of resource res at a drop site with the drop-off bonus of the civilization (civs.DROP: food,
+        forage for a load of a fruit bush, #2111), and the second resource of gather kind (civs.DROP_EXTRA: "hunt",
+        "fish", "ship", #2308). AoE2 keeps the fractions: the next load gets them."""
+        f = civs.drop(self, res) * (civs.drop(self, "forage") if forage else 1)
+        for r, m in [(res, n * f)] + [(b[0], n * b[1]) for b in [civs.drop_extra(self, kind)] if b]:
+            self.spare[r] = self.spare.get(r, 0) + m
+            if whole := int(self.spare[r] + 1e-9):
+                self.spare[r] -= whole
+                self.earn(r, whole)
 
     def event(self, v, name):
         if self.log:
@@ -1014,7 +1173,7 @@ class Gather:
             return
         if name in self.pending or uses > 1:
             look = self.pending.pop(name, (None, None))[1] or self.look(name)
-            self.drag(name, look and self.map.pick_ground(*look))
+            self.drag(name, look and fleet.pick(self, *look))
             return
         self.pending[name] = self.clock(), self.look(name)
 
@@ -1028,13 +1187,18 @@ class Gather:
 
     def deselect(self):
         """Paper: a left click with the command stick (the score LEFT of the plugin, AoePlugin.onLeftClick) clears the
-        selection, as a click on empty ground in AoE2 (#1788). Vanilla has no event for it: the empty box (#992)."""
+        selection, as a click on empty ground in AoE2 (#1788), and ends the choice of a building (#2056). Vanilla has no
+        event for it: the empty box (#992)."""
         if "passed" not in self.command(f"execute if entity {only(self.who, f'scores={{{LEFT}=1..}}')}"):
             return
         for name in self.people():
             if name and re.search(r"has [1-9]", self.command(f"scoreboard players get {name} {LEFT}")):
                 self.command(f"scoreboard players reset {name} {LEFT}")
                 self.choose(set())
+                vars(self).get("rows", {}).pop(name, None)             # the sneak clicks of build.place (#1805)
+                vars(self).get("wall_start", {}).pop(name, None)
+                if re.search(r"has [1-9]", self.command(f"scoreboard players get {name} {build.OBJECTIVE}")):
+                    self.command(f"scoreboard players set {name} {build.OBJECTIVE} 0")   # build.ghosts clears the ghost (#2056)
 
     def people(self):
         """The names of the Minecraft players of this Gather: all, or the players of its team (#1310). Not `team list`:
@@ -1073,12 +1237,14 @@ class Gather:
         eye, d = look
         if name in self.wands:                                        # the selection wand (#778)
             self.wands.discard(name)
-            (self.drag if self.paper else self.box)(name, self.map.pick_ground(eye, d))
+            (self.drag if self.paper else self.box)(name, fleet.pick(self, eye, d))   # the water too (#2060)
             return
         if (rect := self.rallying.pop(name, None)) and (cell := self.map.pick_ground(eye, d)):   # the menu item (#707)
             train.rally(self, rect, cell, self.map.pick_tree(eye, d))
             return
         kind, u, _ = self.target(eye, d, self.positions(sorted(self.pickable()))) or (None, None, None)
+        if kind in ("enemy", "fort") and treaty.refuse(self, name):   # no attack before the end of the treaty (#2297)
+            return
         if kind == "enemy":
             monk.convert_order(self, self.monks(), u)                    # the monks convert it, the others attack (#1245)
             self.attack(u)
@@ -1088,7 +1254,9 @@ class Gather:
             self.hunt(u)
             self.command(glow(u))
             return
-        if kind == "unit" and u in self.selected and u in self.villagers:   # a click on a selected villager (#621)
+        import combat                                                  # combat imports this module
+        if kind == "unit" and u in self.selected and (u in self.villagers   # a click on a selected villager (#621)
+                                                      or self.soldiers.get(u) in combat.REPAIRS):   # or Serjeant (#2129)
             build.open_menu(self, name)
             return
         if kind == "unit" and u in self.selected and siege_tower.out(self, u):   # its units come out (#1362)
@@ -1115,7 +1283,9 @@ class Gather:
             self.mark(name, {(x0, z0), (x1, z1)}, "attack")
             import combat                                              # combat imports this module
             what = self.fort_names.get(u, "")
-            full = civs.hp(civs.civ(self, self.fort_players.get(u, 0)), what, combat.stats(what)).hp   # Persians (#1895)
+            owner = self.fort_players.get(u, 0)                        # Persians (#1895), Byzantines in the own age (#2116)
+            full = civs.hp(civs.civ(self, owner), what, combat.stats(what), build.ages(self) if owner == self.player else 0,
+                           civs.handicap(self.data, owner)).hp
             for c in siege_mark(u, what, full, name):
                 self.command(c)
             return
@@ -1125,6 +1295,8 @@ class Gather:
                 fleet.build_site(self, self.selected, site)            # the selected fishing ships build it (#1438)
             elif site and self.selected & self.villagers.keys() and not self.row_busy(site):
                 self.build(site)                                       # the selected villagers build it at once, as in AoE2 (#1654)
+            if site:
+                repair.build_order(self, site, self.selected)          # the selected Serjeants build a Donjon (#2129)
             return
         if monk.order(self, name, self.map.pick_ground(eye, d)):      # a monk to a relic or to a monastery (#1246)
             return
@@ -1148,12 +1320,13 @@ class Gather:
             return
         if fleet.fish_order(self, name, eye, d):                     # the fishing ships fish (#1384)
             return
-        tile = self.map.pick_tree(eye, d)
+        tile = self.map.pick_tree(eye, d) or self.shore_fish(eye, d)
         if tile and self.selected:
             self.send(tile)
             self.mark(name, self.map.spot(tile))
         elif self.selected and (site := build.pick(self, eye, d)):
             self.build(site)
+            repair.build_order(self, site, self.selected)              # Serjeants build a Donjon (#2129)
             x0, x1, z0, z1 = site["footprint"]
             self.mark(name, {(x0, z0), (x1 - 1, z1 - 1)})
         elif self.selected and (cell := self.map.pick_ground(eye, d)) and self.map.free(*cell):
@@ -1161,6 +1334,13 @@ class Gather:
         elif any(replay.ship(self.soldiers.get(u, "")) for u in self.selected) \
                 and (cell := fleet.pick(self, eye, d)) and self.map.wet(*cell):
             self.walk_to(name, cell)                                   # the ships sail on the water (#1383)
+
+    def shore_fish(self, eye, d):
+        """The tile of the shore fish under the water surface that the ray from eye in direction d hits (fleet.pick), or
+        None: villagers fish it from the land (#1283, #2349)."""
+        cell = fleet.pick(self, eye, d)
+        tile = cell and (cell[0] // self.map.T, cell[1] // self.map.T)
+        return tile if tile in self.map.shore and self.map.fish.get(tile, 0) > 0 else None
 
     def walk_to(self, name, cell, units=None):
         """The selected units walk to the free block cell (x, z), as the move order of AoE2 (#1368): each one to its own
@@ -1170,6 +1350,7 @@ class Gather:
         {uuid: cell}."""
         import ai                                                      # ai imports this module
         units = self.selected if units is None else set(units)
+        repair.drop(self, units)                                       # Serjeants stop a repair (#2128)
         boats = {u for u in units if replay.ship(self.soldiers.get(u, ""))}
         out = fleet.order(self, boats, cell)                           # a ship sails on the water (#1383)
         transport.aim(self, out, cell)                                 # a loaded ship unloads at a land cell (#1385)
@@ -1235,7 +1416,7 @@ class Gather:
         """The action bar text of a pointed target (#989): its name and what a right click on it does now."""
         workers = self.selected & self.villagers.keys()
         if kind == "prey":
-            name, act = pretty(self.prey[key]), "hunt" if workers else None
+            name, act = pretty(self.prey[key]), ("attack" if predator(self.prey[key]) else "hunt") if workers else None
         elif kind in ("enemy", "unit"):
             name = ("Enemy " if kind == "enemy" else "") + pretty(self.enemies.get(key) or self.soldiers.get(key)
                                                                   or self.prey.get(key) or "VILLAGER")
@@ -1320,6 +1501,9 @@ class Gather:
         """Free the footprints of the buildings whose target the plugin removed: paths go through them."""
         for uuid in [u for u in self.sieged if "passed" not in self.command(f"execute if entity {u}")]:
             self.sieged.discard(uuid)
+            import spoils                                              # spoils imports this module
+            spoils.loot(self, uuid)                                    # Danes (#2271)
+            score.razed(self, uuid)                                    # the military score (#2355)
             x0, y0, z0, x1, _, z1 = self.forts.pop(uuid)
             for o in build.sides(self):                                # the other sides attack it no more (#1819)
                 o.forts.pop(uuid, None)
@@ -1352,7 +1536,8 @@ class Gather:
                 v.timer = 0.0
                 self.set(v, "chop" if self.source(v).get(v.tree, 0) > 0 else "idle")
             elif v.state == "to_drop":
-                self.earn(v.res, v.load)
+                self.deliver(v.res, v.load, v.res == "food" and v.tree in self.map.bushes,
+                             "hunt" if v.tree in self.map.carcasses else fish_kind(self.map, v.tree))
                 v.load = 0
                 self.event(v, "drop")
                 if v.tree in self.map.farms:
@@ -1368,43 +1553,62 @@ class Gather:
             elif v.state == "chop":
                 v.timer += self.tick
                 src = self.source(v)
-                work = self.work_time("farm" if v.tree in self.map.farms else "hunt" if v.tree in self.map.carcasses else v.res,
-                                      v.tree in self.map.herds)
-                while v.timer >= work and v.load < self.limit(v.res) and src.get(v.tree, 0) > 0:
+                kind = "farm" if v.tree in self.map.farms else "hunt" if v.tree in self.map.carcasses else \
+                    fish_kind(self.map, v.tree) or v.res                # a fisherman: no forage rate (#2349)
+                work = self.work_time(kind, v.tree in self.map.herds, (v.pos[0], v.pos[2])) / self.aura_rate(v, kind)
+                last = civs.last(self, "sheep" if v.tree in self.map.herds else kind)
+                take = 1 if last == 1 else 1 / last                    # 1: the amounts stay whole numbers
+                most = self.limit(v.res, "sheep" if v.tree in self.map.herds else kind)
+                if v.load < most and src.get(v.tree, 0) > 0:
+                    self.trickle(kind, self.tick)
+                while v.timer >= work and v.load < most and src.get(v.tree, 0) > 0:
                     v.timer -= work
                     v.load += 1
-                    src[v.tree] -= 1
+                    src[v.tree] -= take
+                    if src[v.tree] < 1e-6:                             # 455 takes of 1 / 1.3 empty 350 stone
+                        src[v.tree] = 0
                     self.work(v)
+                    self.second(v)
                     if v.tree in self.map.farms:
                         self.harvest(v.tree)
                         self.tend(v)
                     elif v.tree in self.map.carcasses:
                         pass                                           # a carcass has no blocks
+                    elif v.tree in self.map.fish:                      # a shore fish: its mob goes when empty (#2349)
+                        if src[v.tree] <= 0:
+                            fleet.remove(self, v.tree)
                     elif v.res == "food":
                         self.berries(v.tree)
                     elif v.res != "wood":
-                        if src[v.tree] == 0:
+                        if src[v.tree] <= 0:
                             self.dig(v.tree, v.res)
-                    elif src[v.tree] == 0:
+                    elif src[v.tree] <= 0:
                         self.fell(v.tree)
                     else:
                         self.trunk(v.tree)
-                if v.load >= self.limit(v.res) or src.get(v.tree, 0) <= 0:
-                    self.go(v, "to_drop", set().union(*map(self.map.around, self.map.drops[v.res])))
+                if v.load >= most or src.get(v.tree, 0) <= 0:
+                    self.go(v, "to_drop", self.drop_goals(v))
+        self.decay(self.tick * NORMAL)
         train.tick(self, self.tick * NORMAL)
         monk.heal(self, self.tick * NORMAL)
         monk.convert(self, self.tick * NORMAL)
         garrison.heal(self, self.tick * NORMAL)
+        garrison.pasture(self, self.tick * NORMAL)
+        regen.tick(self, self.tick * NORMAL)
         repair.tick(self, self.tick * NORMAL)
         trebuchet.tick(self, self.tick * NORMAL)
         fleet.tick(self, self.tick * NORMAL)
         monk.relic_tick(self, self.tick * NORMAL)
         trade.tick(self)
+        trade.heal(self, self.tick * NORMAL)
         bossbar.tick(self)
         for site in self.sites:
             builders = [v for v in [*self.villagers.values(), *self.ships.values()] if v.state == "build" and v.site is site]
+            men = repair.raisers(self, site)                           # Serjeants at their Donjon site (#2129)
             # AoE2: n builders need 3 / (n + 2) of the time of one
-            if builders and build.rise(self, site, math.inf if self.aegis else self.tick * NORMAL * (len(builders) + 2) / 3):
+            n = len(builders) + len(men)
+            if n and build.rise(self, site, math.inf if self.aegis else self.tick * NORMAL * (n + 2) / 3):
+                repair.drop(self, men)                                 # complete: the Serjeants stand
                 if nxt := build.next_tile(self, site):                 # a wall line: on to its next tile (#1322)
                     self.build(nxt, {v.uuid for v in builders})
                     continue
@@ -1417,27 +1621,63 @@ class Gather:
                         self.set(v, "idle")
         self.idle()
 
-    def work_time(self, res, herd=False):
+    def work_time(self, res, herd=False, pos=None):
         """Real seconds per unit of resource res ("farm" for farms) with the technologies of the player (WORK_TECHS) and
-        the work-rate bonus of its civilization (civs.WORK; herd: the carcass of a herdable animal, for shepherds)."""
+        the work-rate bonus of its civilization (civs.WORK; herd: the carcass of a herdable animal, for shepherds).
+        civs.MORE multiplies the change of a technology (Armenians: the mule cart technologies 40 % more, #2309). At the
+        block position pos (x, z) of the villager, a building near it can add its bonus (civs.church_rate, #2377)."""
         if self.aegis:
             return 0.0                                                 # a full load in one work step
-        rate = civs.work(self, "sheep" if herd else res)
-        return self.chop.get(res, self.chop.get("food")) / rate / math.prod(WORK_TECHS.get(t, {}).get(res, 1) ** train.count(self, t) for t in self.techs)
+        rate, more = civs.work(self, "sheep" if herd else res), civs.MORE.get(civs.civ(self), {})
+        rate *= civs.church_rate(self, pos) if pos else 1
+        return self.chop.get(res, self.chop.get("food")) / rate / civs.turbo(self) / math.prod(
+            (1 + (WORK_TECHS.get(t, {}).get(res, 1) - 1) * more.get(t, 1)) ** train.count(self, t) for t in self.techs)
+
+    def aura_rate(self, v, kind):
+        """The factor of the work rate of v for resource kind: the "rate" of civs.AURA within its "range" (tiles from the
+        footprint) of an own complete aura building that is still a drop site of kind (AoE2 wiki "Thracians"), else 1."""
+        a, m = self.map.aura, self.map
+        if kind not in a.get("resources", ()):
+            return 1
+        x, z, near = v.pos[0], v.pos[2], a["range"] * m.T
+        return a["rate"] if any(max(min(c[0] for c in cs) - x, x - max(c[0] for c in cs) - 1,
+                                    min(c[1] for c in cs) - z, z - max(c[1] for c in cs) - 1) <= near
+                                for cs in m.auras if cs in m.drops[kind]) else 1
 
     def move(self, v):
         import ai                                                      # ai imports gather
         if v.goal:
             x, z = v.goal
             ai.move(self, v.uuid, "VILLAGER", self.map.T, x + 0.5, self.map.y(x, z), z + 0.5,
-                    NORMAL * civs.speed(self, "VILLAGER") * math.prod(PACE.get(t, 1) ** train.count(self, t) for t in self.techs))
+                    NORMAL * train.speed(self, "VILLAGER") * math.prod(PACE.get(t, 1) ** train.count(self, t) for t in self.techs))
         v.moved, v.tries = self.clock(), v.tries + 1
 
-    def limit(self, res=None):
+    def second(self, v):
+        """One unit that v gathers earns the second resource of the civilization (civs.EXTRA, #2113): Poles and Puru
+        stone miners, Portuguese foragers, Shu lumberjacks. The fractions add up, so small amounts earn the exact sum."""
+        if bonus := civs.extra(self, "forage" if v.tree in self.map.bushes else v.res):
+            res, n = bonus
+            self.seconds[res] = self.seconds.get(res, 0) + n
+            if whole := int(self.seconds[res] + 1e-9):
+                self.seconds[res] -= whole
+                self.earn(res, whole)
+
+    def trickle(self, kind, dt):
+        """dt real seconds of work at gather kind earn the resource of the civilization for each AoE2 minute
+        (civs.PER_MINUTE, #2308: Thracian hunters and shepherds 3 gold). The fractions add up as in second."""
+        if bonus := civs.per_minute(self, kind):
+            res, n = bonus
+            self.seconds[res] = self.seconds.get(res, 0) + n * dt * NORMAL / 60
+            if whole := int(self.seconds[res] + 1e-9):
+                self.seconds[res] -= whole
+                self.earn(res, whole)
+
+    def limit(self, res=None, kind=None):
         """The resources res that a villager carries, with the technologies of the player (CARRY, and FOOD_CARRY for
-        food)."""
+        food) and the bonus of its civilization for gather kind (civs.carry, #2270)."""
         more = CARRY | FOOD_CARRY if res == "food" else CARRY
-        return self.carry + sum(more.get(t, 0) * train.count(self, t) for t in self.techs)
+        n = self.carry + sum(more.get(t, 0) * train.count(self, t) for t in self.techs) + civs.carry(self, kind or res)
+        return n if civs.turbo(self) == 1 else round(n * civs.turbo(self))   # Turbo Mode carries more (#2359)
 
     def follow(self, v):
         """Paper: read the position of a walking villager. It arrives 1.5 blocks from the center of its goal cell (there
@@ -1583,26 +1823,21 @@ class Gather:
         self.bushes[tile] = look
         cells = self.map.cells(tile)
         (x0, z0), (x1, z1) = min(cells), max(cells)
-        ys = [y for x, z in self.map.around(cells) if (y := self.map.y(x, z)) is not None] or [0]
+        ys = self.map.heights(cells)
         self.command(f"fill {x0} {min(ys) - 2} {z0} {x1} {max(ys) + 2} {z1} {look} replace minecraft:sweet_berry_bush")
         self.command(f"fill {x0} {min(ys) - 2} {z0} {x1} {max(ys) + 2} {z1} minecraft:barrier replace minecraft:oak_leaves")
         if food <= 0:                                  # as in AoE2, an empty bush frees its tile (#602)
             self.command(f"fill {x0} {min(ys) - 2} {z0} {x1} {max(ys) + 4} {z1} air replace minecraft:barrier")
-            for x, z in cells:
-                self.map.ground[z][x] = min(ys)
-            self.map.blocked -= cells
+            self.map.emptied(cells)
 
     def dig(self, tile, res):
         """An empty mine disappears: its heap and the barriers of its footprint. Its cells are free ground again."""
         spot = self.map.spot(tile)
-        ys = [y for x, z in self.map.around(spot) if (y := self.map.y(x, z)) is not None] or [0]
+        ys = self.map.heights(spot)
         (x0, z0), (x1, z1) = min(spot), max(spot)
         for b in MINE_BLOCKS[res] + ("barrier",):
             self.command(f"fill {x0} {min(ys)} {z0} {x1} {max(ys) + 4} {z1} air replace minecraft:{b}")
-        for x, z in spot:
-            self.map.ground[z][x] = min(ys)
-            self.map.mine_at.pop((x, z), None)
-        self.map.blocked -= spot
+        self.map.emptied(spot)
 
     def tend(self, v):
         """A farmer walks over its farm while it works, as in AoE2 (#591): one cell per food, row by row (the rows
@@ -1646,8 +1881,29 @@ class Gather:
             for b in self.bots:
                 b.step()
             conquest.tick(self)                                        # not in step(): the bot steps its own Gather
+            if has_mode(self, "regicide"):                             # a player without its King loses (#2347)
+                regicide.tick(self)
+            if has_mode(self, "sudden-death"):                         # a player without its town center loses (#2407)
+                sudden_death.tick(self)
+            if self.mode == "battle-royale":                           # the Corruption takes the map (#2439)
+                battle_royale.tick(self, self.tick * NORMAL)
+            elif self.mode == "capture-the-relic":                     # the center relic in a monastery wins (#2440)
+                capture_relic.tick(self)
+            elif self.mode == "defend-the-wonder":                     # the attackers win when the Wonder falls (#2441)
+                defend_wonder.tick(self)
+            elif self.mode == "scenario":                              # the book of the scenario texts (#2541)
+                scenario.tick(self)
             fog.tick(self)                                             # after the bots: their units too (#1389)
             herd.tick(self)                                            # all players: the bots capture too (#1792)
-            wonder.tick(self, self.tick * NORMAL)                      # game seconds, as train.tick
-            relic_victory.tick(self, self.tick * NORMAL)
-            time.sleep(max(0.0, self.tick - (time.time() - t)))
+            if self.victory == "standard" or self.mode in wonder.RACE:  # a wonder or all relics win too (#2316)
+                wonder.tick(self, self.tick * NORMAL)                  # game seconds, as train.tick
+            if self.victory == "standard" and self.mode not in wonder.RACE:   # Defend the Wonder (#2441),
+                                                                       # Wonder Race (#2406): only a wonder
+                relic_victory.tick(self, self.tick * NORMAL)
+            elif self.victory == "king-of-the-hill":                   # the monument in the center (#2360)
+                hill.tick(self, self.tick * NORMAL)
+            score.tick(self)
+            if self.victory in ("time-limit", "score"):                # after the conquest: it wins before (#2356)
+                time_limit.tick(self, self.tick * NORMAL)
+            treaty.tick(self, self.tick * NORMAL)
+            time.sleep(max(0.0, self.tick / self.speed - (time.time() - t)))   # a step stays tick game seconds

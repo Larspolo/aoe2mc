@@ -14,7 +14,7 @@ TECHS = {"PLATE_MAIL_ARMOR": ("CHAIN_MAIL_ARMOR", "Plate Mail Armor", "300 food 
 
 def imperial(*techs):
     """The Imperial Age, with the technologies and the Feudal Age armor before each one."""
-    techs += tuple(train.AFTER[t] for t in techs if t in train.AFTER)
+    techs += tuple(train.BY_KEY["after"][t] for t in techs if t in train.BY_KEY["after"])
     server, g = setup(food=400)
     g.techs |= {"CASTLE_AGE", "IMPERIAL_AGE", *techs}
     g.stock.update(gold=300)
@@ -25,7 +25,7 @@ def imperial(*techs):
 def test_the_menu_shows_the_imperial_armor_after_its_castle_age_armor(tech):
     before, label, cost, _ = TECHS[tech]
     slot = train.ITEMS[before][0]
-    assert train.ITEMS[tech][0] == slot and train.AFTER[tech] == before and train.TECH_AGE[tech] == 3
+    assert train.ITEMS[tech][0] == slot and train.BY_KEY["after"][tech] == before
     assert len(train.HELP[tech]) <= 50
     server, g = imperial()
     train.open_menu(g, "Steve", (11, 3))

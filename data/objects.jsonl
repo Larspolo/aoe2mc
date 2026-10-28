@@ -1,0 +1,71 @@
+{"name": "SALMON", "mob": "salmon"}
+{"name": "DORADO", "mob": "tropical_fish"}
+{"name": "SNAPPER", "mob": "tropical_fish"}
+{"name": "FISH", "mob": "cod", "passable": true}
+{"name": "DOLPHIN", "mob": "dolphin", "passable": true}
+{"name": "BOX_TURTLES", "mob": "turtle", "passable": true}
+{"name": "HOWLER_MONKEY", "mob": "ocelot"}
+{"name": "BUDDHA_STATUE", "monument": true}
+{"name": "INDIAN_STATUES", "monument": true}
+{"name": "OLD_STONE_HEAD", "monument": true}
+{"name": "NINE_BANDS", "monument": true}
+{"name": "PAGODA_", "monument": true}
+{"name": "TORII_GATE", "monument": true}
+{"name": "STUPA", "monument": true}
+{"name": "TROWULAN_GATE", "monument": true}
+{"name": "REKHA_DEUL_TEMPLE", "monument": true}
+{"name": "SVAN_TOWER", "monument": true}
+{"name": "MEDITERRANEAN_COURTYARD_WALLS", "monument": true}
+{"name": "MESOPOTAMIAN_PILLAR", "monument": true}
+{"name": "MESOPOTAMIAN_GARDEN", "monument": true}
+{"name": "MESOPOTAMIAN_TOMB", "monument": true}
+{"name": "BURNED_BUILDING", "monument": true}
+{"name": "CONSTRUCTION_CRANE", "monument": true}
+{"name": "SCAFFOLDING", "monument": true}
+{"name": "THEATRE", "monument": true}
+{"name": "STONEHENGE", "monument": true}
+{"name": "FLOWER", "passable": true}
+{"name": "FERN", "passable": true}
+{"name": "RUG", "passable": true}
+{"name": "GRASS", "passable": true}
+{"name": "PLANT", "passable": true}
+{"name": "OYSTER", "passable": true}
+{"name": "RELIC", "passable": true}
+{"name": "GRAVE", "passable": true}
+{"name": "BONFIRE", "passable": true}
+{"name": "PATH_", "passable": true}
+{"name": "BLACK_TILE", "passable": true}
+{"name": "ICE_NAVIGABLE", "passable": true}
+{"name": "KELP", "passable": true}
+{"name": "WATER_LILY", "passable": true}
+{"name": "FALLEN_LEAVES", "passable": true}
+{"name": "STUMP", "passable": true}
+{"name": "WOODEN_ROAD", "passable": true}
+{"name": "GOLD_MINE", "map_color": 30, "obstacle": true}
+{"name": "STONE_MINE", "map_color": 11, "obstacle": true}
+{"name": "QUARRY", "obstacle": true}
+{"name": "STATUE", "obstacle": true, "decor": "statue"}
+{"name": "TROPAION", "obstacle": true, "decor": "statue"}
+{"name": "STELAE", "obstacle": true, "decor": "statue"}
+{"name": "THOLOS", "obstacle": true}
+{"name": "HERO_SHRINE", "obstacle": true, "decor": "statue"}
+{"name": "WELL", "obstacle": true}
+{"name": "HAY_STACK", "obstacle": true}
+{"name": "MARKET_STALL", "obstacle": true}
+{"name": "FOUNTAIN", "obstacle": true}
+{"name": "MEDITERRANEAN_STALL", "obstacle": true, "decor": "stall"}
+{"name": "MESOPOTAMIAN_STALL", "obstacle": true, "decor": "stall"}
+{"name": "HEAD", "decor": "head"}
+{"name": "IMPALED_CORPSE", "decor": "head"}
+{"name": "IMPALED_CORPSE_ANTIQUITY", "decor": "head"}
+{"name": "TREASURE_CHEST", "decor": "loot"}
+{"name": "LOOT", "decor": "loot"}
+{"name": "ARCHAIC_FENCE", "decor": "fence"}
+{"name": "STAKE_BARRICADE", "decor": "fence"}
+{"name": "WATER_POTS", "decor": "pots"}
+{"name": "AMPHORAE", "decor": "pots"}
+{"name": "LUMBER", "scatter": true}
+{"name": "FLOWER_BED", "scatter": true}
+{"name": "CRATER", "no_blocks": true}
+{"name": "SMOKE", "no_blocks": true}
+{"name": "CRACKS", "no_blocks": true}

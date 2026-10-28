@@ -24,7 +24,7 @@ gate), a complete wall tile loses its target.
 A complete gate gets a portcullis across its passage (#1325, #1656, portcullis()): iron bars from the ground to the top
 of the passage. On Paper the plugin raises them while an own or allied unit is near or walks a path through the gate
 (aoe gate, Gates.java), as the AoE2 gate (the decision #1323).
-Fortified Wall (#1326, train.WALL_UPGRADES): the new and the complete own stone walls and gates get the fortified design
+Fortified Wall (#1326, the key "walls" of train.jsonl): the new and the complete own stone walls and gates get the fortified design
 and its hit points (design(), upgrade()); a damaged one keeps its lost hit points, as in AoE2.
 """
 import json
@@ -39,172 +39,32 @@ from buildings import footprint  # noqa: E402
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import civs  # noqa: E402
+import herd  # noqa: E402
 import menu as chest  # noqa: E402  (menu() below is the chat text)
+import monk  # noqa: E402
 from replay import Replay  # noqa: E402
+import table  # noqa: E402
 
-COSTS = {"HOUSE": {"wood": 25}, "LUMBER_CAMP": {"wood": 100}, "MINING_CAMP": {"wood": 100},   # as in AoE2
-         "MILL": {"wood": 100}, "FARM": {"wood": 60}, "BARRACKS": {"wood": 175},
-         "BLACKSMITH": {"wood": 150},
-         "BOMBARD_TOWER": {"gold": 100, "stone": 125},             # after the technology Bombard Tower (#1375)
-         "ARCHERY_RANGE": {"wood": 175}, "STABLE": {"wood": 175}, "TOWN_CENTER": {"wood": 275, "stone": 100},
-         "CASTLE": {"stone": 650},                                 # the Castle Age: the Imperial Age needs them (#1162)
-         "DOCK": {"wood": 150},                                    # 3 x 3 tiles on water at the shore (#1382)
-         "FISH_TRAP": {"wood": 100},                               # on water, fishing ships build it (#1438)
-         "FOLWARK": {"wood": 100},                                 # the mill of the Poles (civs.MISSING, #1874)
-         "GATE": {"stone": 30},                                    # 4 x 1 tiles (AoE2 DE wiki, #1324)
-         "KREPOST": {"stone": 350},                                # the Bulgarians only (civs.MISSING, #1872)
-         "MARKET": {"wood": 175},                                  # the Feudal Age (#1251)
-         "MONASTERY": {"wood": 175},
-         "PALISADE_GATE": {"wood": 30},
-         "PALISADE_WALL": {"wood": 3},                             # per tile (AoE2 DE wiki, #1322)
-         "SIEGE_WORKSHOP": {"wood": 200},
-         "STONE_WALL": {"stone": 5},                               # per tile
-         "UNIVERSITY": {"wood": 200},
-         "WATCH_TOWER": {"wood": 35, "stone": 125},                # AoE2 DE (wiki: 25 wood before patch 5.8)
-         "WONDER": {"wood": 1000, "gold": 1000, "stone": 1000}}
-BUILD_TIMES = {"HOUSE": 25, "LUMBER_CAMP": 35, "MINING_CAMP": 35, "MILL": 35, "FARM": 15,   # AoE2 seconds,
-               "BARRACKS": 50, "ARCHERY_RANGE": 50, "STABLE": 50, "TOWN_CENTER": 150,                              # one builder
-               "BLACKSMITH": 40,
-               "BOMBARD_TOWER": 80,
-               "CASTLE": 200,
-               "DOCK": 35,
-               "FISH_TRAP": 40,
-               "FOLWARK": 40,
-               "GATE": 70,
-               "KREPOST": 150,
-               "MARKET": 60,
-               "MONASTERY": 40,
-               "PALISADE_GATE": 30,
-               "PALISADE_WALL": 7,
-               "SIEGE_WORKSHOP": 40,
-               "STONE_WALL": 10,
-               "UNIVERSITY": 60,
-               "WATCH_TOWER": 80,
-               "WONDER": 3500}
+# The buildings of the menu (in menu order), the age of each building, unit and age, and the technology that each
+# needs: one line per name in data/build.jsonl (#2028). Cost and time as in AoE2 (seconds of one builder).
+ROWS = table.load("build.jsonl")
+COSTS = {r["name"]: r["cost"] for r in ROWS if "cost" in r}
+BUILD_TIMES = {r["name"]: r["time"] for r in ROWS if "time" in r}
+MILITARY = {r["name"] for r in ROWS if r.get("military")}         # the AoE2 "Handicap" speeds them up (civs.work_rate, #2474)
 FOLWARK_SHARE, FOLWARK_REACH = 0.1, 4                               # of the food of a farm; tiles from the Folwark
 MENU = list(COSTS)                                                 # trigger value N -> MENU[N - 1]
 OBJECTIVE = "aoe_build"
 SNEAK = '{type:"minecraft:entity_properties",entity:"this",predicate:{flags:{is_sneaking:true}}}'   # as gather.SNEAK
-ICONS = {"HOUSE": "spruce_stairs", "LUMBER_CAMP": "oak_log", "MINING_CAMP": "raw_gold_block",   # a block of the
-         "MILL": "white_wool", "FARM": "wheat", "BARRACKS": "stone_brick_wall", "ARCHERY_RANGE": "target",
-         "BLACKSMITH": "anvil", "STABLE": "hay_block",
-         "BOMBARD_TOWER": "polished_basalt",                            # the cannon barrels
-         "CASTLE": "stone_bricks",
-         "DOCK": "dark_oak_planks",                                     # the wood of the pier
-         "FISH_TRAP": "bamboo_fence",                                   # the rods of the basket
-         "FOLWARK": "white_terracotta",                                 # the plaster of the hall
-         "GATE": "iron_bars",                                           # the portcullis
-         "KREPOST": "red_sandstone",                                    # the stone of the walls
-         "MARKET": "barrel",                                            # the goods of the stalls
-         "MONASTERY": "bell",
-         "PALISADE_GATE": "stripped_spruce_log",                        # the beam over the passage
-         "PALISADE_WALL": "spruce_fence",
-         "SIEGE_WORKSHOP": "grindstone",
-         "STONE_WALL": "mossy_stone_bricks",
-         "UNIVERSITY": "bookshelf",
-         "WATCH_TOWER": "cracked_stone_bricks",
-         "WONDER": "weathered_cut_copper_stairs",                       # the copper roof
-         "TOWN_CENTER": "cobblestone"}                                  # design
-AGE_TECHS = ("FEUDAL_AGE", "CASTLE_AGE", "IMPERIAL_AGE")           # the technologies of the ages, in order
-AGE = dict.fromkeys(("ARCHERY_RANGE", "STABLE", "BLACKSMITH", "MARKET", "WATCH_TOWER",   # the AoE2 age of each
-                     "ARCHER", "SKIRMISHER", "SPEARMAN", "SCOUT_CAVALRY", "TRADE_CART",  # building, unit and age
-                     "DEMOLITION_RAFT",
-                     "EAGLE_SCOUT",
-                     "FIRE_GALLEY",
-                     "FISH_TRAP",
-                     "TRADE_COG",
-                     "GALLEY",
-                     "HULK",
-                     "GATE",
-                     "STONE_WALL",
-                     "CASTLE_AGE"), 1) | {"IMPERIAL_AGE": 2} \
-    | dict.fromkeys((                                                  # the Castle Age (#1082): buildings and units
-        "BATTERING_RAM",
-        "BATTLE_ELEPHANT",
-        "CAMEL_RIDER",
-        "CARAVEL",
-        "CASTLE",
-        "CAVALRY_ARCHER",
-        "CROSSBOWMAN",
-        "DEMOLITION_SHIP",
-        "EAGLE_WARRIOR",
-        "ELEPHANT_ARCHER",
-        "ELITE_SKIRMISHER",
-        "FIRE_LANCER",
-        "FIRE_SHIP",
-        "GENITOUR",
-        "HEI_GUANG_CAVALRY",
-        "KNIGHT",
-        "KREPOST",
-        "LIGHT_CAVALRY",
-        "LONG_SWORDSMAN",
-        "LONGSHIP",
-        "MANGONEL",
-        "MISSIONARY",
-        "MONASTERY",
-        "MONK",
-        "PIKEMAN",
-        "SCORPION",
-        "SIEGE_TOWER",
-        "SHRIVAMSHA_RIDER",
-        "SIEGE_WORKSHOP",
-        "STEPPE_LANCER",
-        "TURTLE_SHIP",
-        "UNIVERSITY",
-        "VARANGIAN_GUARD",
-        "WAR_HULK",
-    ), 2) | dict.fromkeys((                                           # the Imperial Age (unique units: train.UNIQUE)
-        "ARBALESTER",
-        "BOMBARD_CANNON",
-        "BOMBARD_TOWER",
-        "CANNON_GALLEON",
-        "FAST_FIRE_SHIP",
-        "GALLEON",
-        "HEAVY_DEMOLITION_SHIP",
-        "CAPPED_RAM",
-        "CATAPULT_GALLEON",
-        "CAVALIER",
-        "CHAMPION",
-        "DRAGON_SHIP",
-        "DROMON",
-        "ELITE_BATTLE_ELEPHANT",
-        "ELITE_CANNON_GALLEON",
-        "ELITE_CARAVEL",
-        "ELITE_EAGLE_WARRIOR",
-        "ELITE_ELEPHANT_ARCHER",
-        "ELITE_FIRE_LANCER",
-        "ELITE_GENITOUR",
-        "ELITE_LONGSHIP",
-        "ELITE_SHRIVAMSHA_RIDER",
-        "ELITE_STEPPE_LANCER",
-        "ELITE_TURTLE_SHIP",
-        "ELITE_VARANGIAN_GUARD",
-        "HALBERDIER",
-        "HAND_CANNONEER",
-        "HEAVY_CAMEL_RIDER",
-        "HEAVY_CAVALRY_ARCHER",
-        "HEAVY_HEI_GUANG_CAVALRY",
-        "HUSSAR",
-        "IMPERIAL_SKIRMISHER",
-        "KEEP",
-        "LOU_CHUAN",
-        "ONAGER",
-        "PALADIN",
-        "THIRISADAI",
-        "SIEGE_RAM",
-        "TREBUCHET",
-        "TWO_HANDED_SWORDSMAN",
-        "WINGED_HUSSAR",
-        "WONDER",
-    ), 3)                                                              # (0: Dark)
-WALLS = ("PALISADE_WALL", "STONE_WALL")                            # a line of 1-tile sites with two clicks (#1322)
-GATES = ("GATE", "PALISADE_GATE")                                  # on 4 own wall tiles in a line (#1324)
-NEEDS = {"BOMBARD_CANNON": "CHEMISTRY",                            # a unit or building after a technology (#1380)
-         "BOMBARD_TOWER": "BOMBARD_TOWER_TECH",                    # (#1375)
-         "CANNON_GALLEON": "CHEMISTRY",                            # (#1484)
-         "HAND_CANNONEER": "CHEMISTRY"}                            # (#1506)
+ICONS = {r["name"]: r["icon"] for r in ROWS if "icon" in r}           # a block of the design
+AGE_TECHS = tuple(r["name"] for r in sorted((r for r in ROWS if "age_tech" in r), key=lambda r: r["age_tech"]))
+AGE = {r["name"]: r["age"] for r in ROWS if "age" in r}           # (0: Dark)
+WALLS = tuple(r["name"] for r in ROWS if r.get("wall"))          # a line of 1-tile sites with two clicks (#1322)
+GATES = tuple(r["name"] for r in ROWS if r.get("gate"))          # on 4 own wall tiles in a line (#1324)
+NEEDS = {r["name"]: r["needs"] for r in ROWS if "needs" in r}     # a unit or building after a technology (#1380)
 SHORE = ("DOCK",)                                                  # on water next to the land, as in AoE2 (#1382)
 WATER = ("FISH_TRAP",)                                             # on free water only, ships build it (#1438)
+FLAT = tuple(r["name"] for r in ROWS if r.get("flat"))                 # on one elevation level also for the Thracians (#2545)
+MOVES = {r["name"] for r in table.load("buildings.jsonl") if r.get("moves")}   # a mob when complete (cart, #2209)
 GHOST = 400                                                        # block displays of one ghost: a coarser shape above
 CRANE = 1.2                                                        # the build speed factor of Treadmill Crane (#1422)
 NOT_UNITS = ("block_display", "interaction", "item_display", "marker", "text_display")   # ghosts, name lines
@@ -223,7 +83,8 @@ def setup(g):
 def tick(g):
     """Players who joined since the last tick get the menu; all players may use the trigger (it locks after use)."""
     who = getattr(g, "who", "@a")                                      # two people: only the own team (#1310)
-    g.command(f"execute as {who} unless score @s {OBJECTIVE} matches 0.. run tellraw @s {menu()}")
+    for text in menu():
+        g.command(f"execute as {who} unless score @s {OBJECTIVE} matches 0.. run tellraw @s {text}")
     g.command(f"scoreboard players add {who} {OBJECTIVE} 0")
     g.command(f"scoreboard players enable {who} {OBJECTIVE}")
     if getattr(g, "paper", False):
@@ -299,8 +160,7 @@ def ghosts(g):
         pos = g.pos(p)
         rot = [float(v) for v in re.findall(gather.NUMBER, g.command(f"data get entity {p} Rotation").rsplit(":", 1)[-1])]
         eye, d = pos and (pos[0], pos[1] + 1.62, pos[2]), len(rot) == 2 and gather.direction(*rot)
-        cell = pos and d and (pick_shore(g, eye, d) if name in SHORE else fleet.pick(g, eye, d) if name in WATER
-                              else g.map.pick_ground(eye, d))
+        cell = pos and d and (fleet.pick(g, eye, d) if name in SHORE + WATER else g.map.pick_ground(eye, d))
         if not cell:
             continue
         rect, spot, way, T = area(g, name, cell), None, None, g.map.T
@@ -314,7 +174,7 @@ def ghosts(g):
                 g.command(c)
             g.ghosts[p] = [name, None, spot, way]
         ok = gate_rect(g, cell) if name in GATES else shore(g, rect) if name in SHORE else water(g, rect) \
-            if name in WATER else free(g, rect)
+            if name in WATER else free(g, rect) and level(g, name, rect)
         color = "green" if ok else "red"                               # a gate: on a wall, a dock: at the shore
         if g.ghosts[p][1] != color:
             g.command(f"aoe ghost-color {p} {color}")
@@ -327,23 +187,35 @@ def ages(g):
 
 
 def locked(g, name):
-    """The text "Needs the ... Age" when the player is not yet in the AoE2 age of building or unit name, else None."""
-    if g is not None and AGE.get(name, 0) > ages(g):
-        return f"Needs the {('Dark', 'Feudal', 'Castle', 'Imperial')[AGE[name]]} Age"
+    """The text "Needs the ... Age" when the player is not yet in the AoE2 age of building or unit name, else None.
+    An age after the AoE2 setting "Ending age" (aoe2mc.json "end_age", run.py --end-age, #2346) stays locked."""
+    if name in AGE_TECHS and AGE_TECHS.index(name) + 1 > getattr(g, "data", {}).get("end_age", len(AGE_TECHS)):
+        return f"The game ends in the {('Dark', 'Feudal', 'Castle', 'Imperial')[g.data['end_age']]} Age"   # #2346
+    if g is not None and (age := AGE.get(name, 0) - civs.earlier(g, name)) > ages(g):
+        return f"Needs the {('Dark', 'Feudal', 'Castle', 'Imperial')[age]} Age"
     if g is not None and name in NEEDS and NEEDS[name] not in getattr(g, "techs", ()):
         return "Needs " + pretty(NEEDS[name].removesuffix("_TECH"))
+    from gather import has_mode                                        # gather imports this module
+    if name == "TOWN_CENTER" and has_mode(g, "sudden-death") and town_center(g):
+        return "Sudden Death: only one town center"                    # (#2407)
+    if getattr(g, "mode", None) == "capture-the-relic":
+        import combat                                                  # combat -> gather -> build: import it late
+        if combat.STANDS_FOR.get(name, name) == "MONASTERY":           # the fortified church too (#1930)
+            return "Capture the Relic: no more monasteries"            # (#2458)
     if g is not None and name == "TOWN_CENTER" and ages(g) < (1 if civs.civ(g) == "CUMANS" else 2) and town_center(g):
         return "Needs the Castle Age"                                  # a second one (AoE2; the Cumans: Feudal, #1951)
 
 
-def town_center(g):
-    """True when the player has a town center: a construction site, or a complete one whose target still stands."""
+def town_center(g, player=None):
+    """True when the player (default g.player) has a town center: a construction site, or a complete one whose target
+    still stands."""
     import combat                                                      # combat imports gather, which imports this module
-    sites = [s for s in getattr(g, "sites", ()) if s["name"] == "TOWN_CENTER" and s["player"] == g.player]
+    player = g.player if player is None else player
+    sites = [s for s in getattr(g, "sites", ()) if s["name"] == "TOWN_CENTER" and s["player"] == player]
     if any(not s.get("done") for s in sites):
         return True
     rects = [o["footprint"] for o in g.data.get("objects", ()) if o["kind"] == "building" and o["name"] == "TOWN_CENTER"
-             and o["player"] == g.player and "footprint" in o]
+             and o["player"] == player and "footprint" in o]
     rects += [[x0, z0, x1, z1] for s in sites for x0, x1, z0, z1 in [s["footprint"]]]
     return any("passed" in g.command(f"execute if entity {combat.target_uuid(r)}") for r in rects)
 
@@ -355,9 +227,12 @@ def hidden(g, name):
 
 
 def menu():
+    """The chat texts of the build menu: two halves, else one command is longer than RCON takes (rcon.MAX, #1930)."""
     lines = [f"/trigger {OBJECTIVE} set {i}: {pretty(n)} ({', '.join(f'{v} {r}' for r, v in COSTS[n].items())})"
              for i, n in enumerate(MENU, 1)]
-    return json.dumps({"text": "Build: " + "\n".join(lines), "color": "gray"})
+    half = (len(lines) + 1) // 2
+    return [json.dumps({"text": text, "color": "gray"})
+            for text in ("Build: " + "\n".join(lines[:half]), "\n".join(lines[half:]))]
 
 
 def price(g, name, player=None):
@@ -407,6 +282,18 @@ def free(g, rect):
     return all(g.map.free(x, z) and (x, z) not in g.map.farm_at for x in range(x0, x1) for z in range(z0, z1))
 
 
+def level(g, name, rect):
+    """True when building name may stand on the ground of the footprint rect (AoE2 wiki "Elevation"): a building of
+    3 × 3 tiles or more, not a farm, needs one elevation level under it (less height difference than one level). The
+    Thracians build the others on any elevation (civ key "any_elevation", #2545), but not the buildings of FLAT (key
+    "flat" of data/build.jsonl: the Town Center)."""
+    if footprint(name) < 3 or "FARM" in name or name not in FLAT and civs.value("any_elevation", civs.civ(g), 0):
+        return True
+    x0, x1, z0, z1 = rect
+    ys = [y for x in range(x0, x1) for z in range(z0, z1) if (y := g.map.y(x, z)) is not None]
+    return not ys or max(ys) - min(ys) < g.data.get("level_height", 3)
+
+
 def shore(g, rect):
     """True when the footprint rect is all free water and touches free land (a dock, #1382): not on land, not on the
     open sea. The builders stand on that land (Gather.build)."""
@@ -421,35 +308,13 @@ def water(g, rect):
     return all(g.map.wet(x, z) for x in range(x0, x1) for z in range(z0, z1))
 
 
-def surface(g, x, z):
-    """The y of the water surface at the water cell (x, z), as Map.sea, or None more than 2 tiles from the land: a
-    dock touches the land, and Map.sea reads the whole map there."""
-    return g.map.sea(x, z, 2 * g.map.T + 1) if any(
-        g.map.y(x + dx, z + dz) is not None for dx in range(-2 * g.map.T - 1, 2 * g.map.T + 2)
-        for dz in range(-2 * g.map.T - 1, 2 * g.map.T + 2)) else None
-
-
-def pick_shore(g, eye, d, reach=64):
-    """The block cell (x, z) of the ground or of the water surface near the land that the ray from eye in direction d
-    hits first, or None: Map.pick_ground goes through the water, and a dock stands on it (#1382)."""
-    for k in range(1, reach * 4):
-        x, y, z = (eye[i] + d[i] * k / 4 for i in range(3))
-        bx, bz = math.floor(x), math.floor(z)
-        if not (0 <= bx < g.map.n and 0 <= bz < g.map.n):
-            return None
-        top = g.map.y(bx, bz)
-        if (top if top is not None else surface(g, bx, bz) or -1e9) > y:
-            return bx, bz
-    return None
-
-
 def place(g, player, name, eye, d):
     """Place a foundation of name at the ground that the player looks at. Returns the site or None."""
     import fleet                                                       # fleet -> gather -> build: import it late
     if need := locked(g, name):                                        # a /trigger choice of a later age
         say(g, player, f"{pretty(name)}: {need}.")
         return None
-    cell = pick_shore(g, eye, d) if name in SHORE else fleet.pick(g, eye, d) if name in WATER else g.map.pick_ground(eye, d)
+    cell = fleet.pick(g, eye, d) if name in SHORE + WATER else g.map.pick_ground(eye, d)   # as the ghost (#2058)
     if cell is None:
         return None
     if name in WALLS:
@@ -465,6 +330,9 @@ def place(g, player, name, eye, d):
         return None
     if name not in SHORE + WATER and not free(g, rect):
         say(g, player, f"No space for the {pretty(name).lower()} here.")
+        return None
+    if not level(g, name, rect):
+        say(g, player, f"The {pretty(name).lower()} must stand on flat ground.")
         return None
     cost = price(g, name)
     if any(g.stock[r] < v for r, v in cost.items()):
@@ -612,18 +480,20 @@ def near(g, name, cell, reach=12):
     return None
 
 
-def found(g, name, rect, way=None, tiles=None):
+def found(g, name, rect, way=None, tiles=None, free=False):
     """Pay for name and put its foundation (a wool ring in the player color) on the free footprint rect. Returns
     the construction site. way: the way of a gate (gate_spot); tiles: the tiles of a diagonal gate, the other tiles
-    of its footprint stay free (#1655)."""
+    of its footprint stay free (#1655). free: no cost (the start town of a game mode, empire_wars.py, #2408)."""
     import fleet                                                       # fleet -> gather -> build: import it late
-    for r, v in price(g, name).items():
+    for r, v in () if free else price(g, name).items():
         g.stock[r] -= v
         g.command(f"scoreboard players remove {r.capitalize()} {g.board} {v}")
     x0, x1, z0, z1 = rect
     color = g.players.get(str(g.player), {}).get("color", "light_gray")
     ring = [(x, g.map.y(x, z) if g.map.y(x, z) is not None else int(fleet.level(g) if name in WATER else g.map.sea(x, z)), z)
             for x in range(x0, x1) for z in range(z0, z1) if x in (x0, x1 - 1) or z in (z0, z1 - 1)]
+    under = {c: "minecraft:water" for c in ring if g.map.y(c[0], c[2]) is None   # a dock or a fish trap: the water
+             and "Test passed" in g.command("execute if block {} {} {} minecraft:water".format(*c))}   # comes back (#2059)
     for c in ring:
         g.command("setblock {} {} {} ".format(*c) + f"minecraft:{color}_wool")
     cells = {(x, z) for x in range(x0, x1) for z in range(z0, z1)} if tiles is None else tile_cells(g, tiles)
@@ -635,7 +505,7 @@ def found(g, name, rect, way=None, tiles=None):
         along_z=z1 - z0 > x1 - x0 if way is None else way,             # a gate along z (#1324) or diagonal (#1655)
         water=int(fleet.level(g)) + 1 if name in WATER else None)      # a fish trap on the open water (#1438)
     site = {"name": name, "player": g.player, "footprint": rect, "commands": cmds, "sent": 0, "progress": 0.0,
-            "ring": dict.fromkeys(ring, f"minecraft:{color}_wool"), "under": {}}   # under: the design blocks on the ring
+            "ring": dict.fromkeys(ring, f"minecraft:{color}_wool"), "under": under}   # under: the design blocks on the ring
     if way is not None:
         site["way"] = way
     if tiles is not None and str(way).startswith("diag"):
@@ -692,7 +562,10 @@ def rise(g, site, work):
     Treadmill Crane: the builders of the player work 20 % faster (CRANE, AoE2 DE wiki, #1422); the civilization
     bonus multiplies with it (civs.build_rate, #1893)."""
     if site.get("player", g.player) == g.player:
-        work *= CRANE ** ("TREADMILL_CRANE" in getattr(g, "techs", ())) * civs.build_rate(g, site["name"])
+        x0, x1, z0, z1 = site["footprint"]                                 # the builders stand at its edge
+        work *= CRANE ** ("TREADMILL_CRANE" in getattr(g, "techs", ())) * civs.build_rate(g, site["name"]) \
+            * civs.church_rate(g, ((x0 + x1) / 2, (z0 + z1) / 2)) \
+            * civs.turbo(g, site["name"])                              # Georgian Fortified Church (#1930), Turbo (#2359)
     site["progress"] = min(1.0, site["progress"] + work / BUILD_TIMES[site["name"]])
     cmds, ring = site["commands"], site.get("ring", {})
     k = len(cmds) if site["progress"] >= 1 else math.floor(site["progress"] * len(cmds))
@@ -711,8 +584,11 @@ def rise(g, site, work):
             g.command("setblock {} {} {} ".format(*p) + ring[p])
     if site["progress"] >= 1 and not site.get("done"):                 # complete: the building works (#419)
         site["done"] = True
-        for p in [p for p in ring if p not in hit]:                    # the ring goes: the design or air
+        for p in [p for p in ring if p not in hit]:                    # the ring goes: the design, the water or air
             g.command("setblock {} {} {} ".format(*p) + site["under"].get(p, "minecraft:air"))
+        if site["name"] in MOVES and site["player"] == g.player:
+            cart(g, site)
+            return True
         x0, x1, z0, z1 = site["footprint"]
         s, T = footprint(site["name"]), g.map.T
         if "FARM" in site["name"]:                                     # free ground again: the farmer stands on it
@@ -723,10 +599,54 @@ def rise(g, site, work):
                        open_cells)
         if "FARM" in site["name"] and site["player"] == g.player:
             folwark(g, site, (x0 // T + s // 2, z0 // T + s // 2))
+        if site["name"] == "TOWN_CENTER" and site["player"] == g.player:
+            g.town_center(tuple(site["footprint"]))
         target(g, site)
         if site["name"] in GATES:
             portcullis(g, site)
+        if site["player"] == g.player and (food := civs.built_food(g, site["name"])):
+            g.earn("food", food)                                       # Saxon camps, Wu military buildings (#2114)
+        if site["player"] == g.player and (born := civs.built_units(g, site["name"])):
+            herd.spawn(g, site["footprint"], *born)                    # Tatar sheep at a town center (#2313)
+        if site["player"] == g.player:
+            monk.free_relic(g, site)                                   # the first Armenian Fortified Church (#2419)
     return site["progress"] >= 1
+
+
+def cart(g, site):
+    """A complete building that moves (MOVES: the mule cart, AoE2 DE wiki "Mule Cart", #2209): its blocks go, and a
+    mob with its AoE2 values stands in their place. It takes move orders as a trade cart, and the mob path finding moves
+    it (Minecraft features first). Its footprint and its drop cells follow the mob (moved_carts)."""
+    import train                                                   # train imports this module
+    x0, x1, z0, z1 = site["footprint"]
+    cells = {(x, z) for x in range(x0, x1) for z in range(z0, z1)}
+    g.map.blocked -= cells                                         # the cart blocks no path (found blocked them)
+    y = min(g.map.y(x, z) for x, z in cells)
+    top = max((b[0][4] for c in site["commands"] if (b := box(c))), default=y)
+    if top >= y:
+        g.command(f"fill {x0} {y} {z0} {x1 - 1} {top} {z1 - 1} minecraft:air")
+    x, z = (x0 + x1) // 2, (z0 + z1) // 2
+    site["uuid"] = uuid = train.summon(g, site["name"], (x + 0.5, float(g.map.y(x, z)), z + 0.5))
+    if uuid:
+        site["cells"] = cells
+        g.map.drop_site(site["name"], cells)
+
+
+def moved_carts(g):
+    """Move the footprint and the drop cells of each complete cart (cart) under its mob, with the same size: the next
+    villager carries its load to the new place. A dead cart is no drop site."""
+    for site in [s for s in g.sites if "cells" in s]:
+        if not (p := g.pos(site["uuid"])):
+            for r in g.map.drops:
+                g.map.drops[r] = [d for d in g.map.drops[r] if d is not site["cells"]]
+            del site["cells"]
+            continue
+        x0, x1, z0, z1 = site["footprint"]
+        w, d = x1 - x0, z1 - z0
+        x0, z0 = math.floor(p[0]) - w // 2, math.floor(p[2]) - d // 2
+        site["footprint"] = (x0, x0 + w, z0, z0 + d)
+        site["cells"].clear()
+        site["cells"].update((x, z) for x in range(x0, x0 + w) for z in range(z0, z0 + d))
 
 
 def folwark(g, farm, tile):
@@ -745,7 +665,7 @@ def design(g, name, player):
     """The design of building name of player: a stone wall (gate) of the player after Fortified Wall is a fortified
     wall (gate), #1326."""
     import train                                                       # train imports this module
-    new = {old: wall for t, walls in train.WALL_UPGRADES.items() if t in getattr(g, "techs", ()) for old, wall in walls.items()}
+    new = {old: wall for t, walls in train.BY_KEY["walls"].items() if t in getattr(g, "techs", ()) for old, wall in walls.items()}
     return new.get(name, name) if player == g.player else name
 
 
@@ -754,7 +674,7 @@ def line(g, name, techs=None):
     those of the guard tower (keep), #1374. techs: the technologies (default: those of the player)."""
     import train                                                       # train imports this module
     techs = getattr(g, "techs", ()) if techs is None else techs
-    for t, towers in train.TOWER_UPGRADES.items():                     # in the research order
+    for t, towers in train.BY_KEY["towers"].items():                  # in the research order
         name = towers.get(name, name) if t in techs else name
     return name
 
@@ -766,7 +686,10 @@ def values(g, name, techs=None):
     import combat, train                                               # combat -> gather -> build: import it late
     techs = getattr(g, "techs", ()) if techs is None else techs
     name = line(g, name, techs)
-    s = civs.hp(civs.civ(g) if hasattr(g, "data") else None, name, combat.stats(name))   # before Masonry (#1895)
+    wall = name in combat.WALLS or name.endswith(("_WALL", "_GATE"))   # its age: combat.wall (upgrade, #1372)
+    s = civs.hp(civs.civ(g) if hasattr(g, "data") else None, name, combat.stats(name),
+                0 if wall else sum(t in techs for t in AGE_TECHS),    # before Masonry (#1895), of the age (#2116)
+                civs.handicap(g.data, g.player) if hasattr(g, "data") else 1)   # #2474
     for t in sorted(techs):
         s = train.TECHS[t](name, s)
     return s
@@ -807,7 +730,7 @@ def upgrade(g, site, old, redraw=True):
     import combat, repair                                              # combat -> gather -> build: import it late
     x0, x1, z0, z1 = site["footprint"]
     name, T = design(g, site["name"], site["player"]), g.map.T
-    new = combat.wall(name, ages(g))
+    new = combat.wall(name, ages(g), civs.civ(g, site["player"]), civs.handicap(g.data, site["player"]))
     if new == old or (hp := repair.hp(g, (x0, x1, z0, z1))) is None or hp <= 0:
         return
     for c in Replay(g, g.data, getattr(g.game, "version", VERSION_NAME)).building(
@@ -864,15 +787,17 @@ def target(g, site):
     """A complete building of combat.BUILDINGS gets its target entity, as a building of the map (combat.setup): the
     AoE2 hit points, and the arrows of a town center, tower or castle (#1202). wonder.tick makes the one of a wonder."""
     import combat                                                      # combat -> gather -> build: import it late
-    if site["name"] not in combat.BUILDINGS and site["name"] not in combat.WALLS or site["name"] == "WONDER":
+    if site["name"] not in combat.BUILDINGS and site["name"] not in combat.WALLS or site["name"] == "WONDER" \
+            or site.get("lasting"):                                    # the monastery of Capture the Relic (#2458)
         return
     x0, x1, z0, z1 = site["footprint"]
     uuid = combat.target_uuid([x0, z0, x1, z1])
     box = combat.building_box({"footprint": [x0, z0, x1, z1]}, g.map.ground)
     wall, name = site["name"] in combat.WALLS, line(g, design(g, site["name"], site["player"]))   # the hit points of the age
                                                                        # (#1322), a guard tower or keep (#1374)
-    s = combat.wall(name, ages(g)) if wall else values(g, name)                  # Chemistry (#1375), Masonry (#1398)
-    for c in combat.building(uuid, name, site["player"], box, g.map.T, s=s, low=minimum(g, name)) \
+    s = combat.wall(name, ages(g), civs.civ(g, site["player"]), civs.handicap(g.data, site["player"])) if wall else values(g, name)   # Chemistry (#1375), Masonry (#1398)
+    for c in combat.building(uuid, name, site["player"], box, g.map.T, s=s, low=minimum(g, name),
+                             factor=civs.arrows(g, name, site["player"])) \
             + [f"tag {uuid} add {combat.WALL_TAG}"] * wall + [combat.label_command(uuid, name)]:
         g.command(c)
     for o in sides(g):                     # each other side can attack it: the bot and player 1 alike (#1819)

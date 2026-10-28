@@ -1,7 +1,7 @@
 """Numbers of the whole system for the `improve` skill: CI, environment, repository and scheduling (#242).
 
-    python3 tools/health.py              # the last 24 hours
-    python3 tools/health.py --hours 72
+    python3 tools/health.py              # the last 50 merged PRs (#2039)
+    python3 tools/health.py --hours 72   # a time window: the night runs, the quota
     python3 tools/health.py --hours 24 --until 2026-10-26T05:15:00Z   # the 24 hours before a time (#489)
     python3 tools/health.py --hours 6 --compare                        # the last 6 hours next to the 6 before (#1697)
     python3 tools/health.py --prs 50 --compare   # the last 50 merged PRs next to the 50 before (#1909)
@@ -25,7 +25,7 @@ import numpy
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from agent_config import CONFIG  # noqa: E402
-from dashboard import api, closes  # noqa: E402
+from dashboard import api, closes, merges  # noqa: E402
 from feedback import by_owner  # noqa: E402
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -36,6 +36,7 @@ DENY_OK = ("docs/", "samples/")           # ... except .png in these folders
 BIG = 1 << 20
 OWNER = CONFIG["owner"]                   # a reopen by the owner is rework (#899)
 STATUS = CONFIG["status"]["label"]
+PRS = 50                                  # the default period: the last 50 merged PRs (#2039)
 MISS_LABELS = {"cleanup", "process", "tooling"}   # an owner ticket of these kinds is a miss of the improve loop (#1909)
 
 
@@ -342,11 +343,16 @@ def data_rows(path=None):
         return [(p, int(n)) for p, n in (s.split() for s in f if s.strip() and not s.startswith("#"))]
 
 
-def status_comments(hours=24):
-    """The comments on the status issue of the last `hours`."""
-    status = api(f"issues?state=open&labels={STATUS}")
-    since = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(hours=hours)
-    return api_pages(f"issues/{status[0]['number']}/comments?since={since:%Y-%m-%dT%H:%M:%SZ}", COMMENT_PAGES) if status else []
+def status_comments(hours=24, since=None):
+    """The comments on the status issue of the last `hours` (or since `since`): the log on the branch `metrics`
+    (`metrics_log.py`, #1983) and the API comments that changed after its newest one; the API alone without the log."""
+    import metrics_log
+    since = since or datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(hours=hours)
+    stored = metrics_log.load(since)
+    last = metrics_log.newest(stored or [])
+    tail = metrics_log.api_comments(metrics_log.parse(last) if last else since)
+    out = {c["id"]: c for c in (stored or []) + tail if c["created_at"] >= f"{since:%Y-%m-%dT%H:%M:%SZ}"}
+    return sorted(out.values(), key=lambda c: (c["created_at"], c["id"]))
 
 
 def count_beating(lines, now, minutes=25):
@@ -397,14 +403,17 @@ def lane_claims(now, minutes=25, remote="origin"):
     return None if lines is None else count_lanes(lines, now, minutes)
 
 
-def review_delays(lines):
-    """[(time, slot minutes, minutes late or None)] of the review locks `review-<minutes>m-<slot>` (tools/claim.py
-    --review, #898), by time. A slot opens one slot length after the review before it (#942): a run that takes it later
-    is late, for example when no run reaches step 9 of the autopilot (a usage limit)."""
-    got = sorted((int(t), int(m)) for k, t, *_ in (x.split(" ", 2) for x in lines)
-                 for m in re.findall(r"^review-(\d+)m-\d+$", k))
-    return [(datetime.datetime.fromtimestamp(t, datetime.timezone.utc), m,
-             None if i == 0 else round((t - got[i - 1][0]) / 60 - m)) for i, (t, m) in enumerate(got)]
+def review_delays(lines, merged=None, since=None):
+    """[(time, gap, PRs late or None)] of the review locks `review-<gap>pr-...` (tools/claim.py --review, #898, #2039),
+    by time. A review opens `gap` merged PRs after the review before it (#942): the PRs that merged between two locks
+    above the gap are late, for example when no run reaches step 9 of the autopilot (a usage limit). The count starts
+    at the lock before, so the PRs of that review itself count too. merged: the merge times after `since`; None for
+    the first lock and when the lock before is before `since` (the merge times do not cover it)."""
+    at = lambda t: datetime.datetime.fromtimestamp(t, datetime.timezone.utc)
+    got = sorted((at(int(t)), int(g)) for k, t, *_ in (x.split(" ", 2) for x in lines)
+                 for g in re.findall(r"^review-(\d+)pr-", k))
+    return [(t, g, None if i == 0 or merged is None or got[i - 1][0] < since else
+             sum(got[i - 1][0] < m <= t for m in merged) - g) for i, (t, g) in enumerate(got)]
 
 
 def active_claims(now, minutes=30):
@@ -454,9 +463,10 @@ def conflicted(comments):
                    if (c.get("body") or "").lstrip().startswith("CI is green, but the merge failed")})
 
 
-def conflict_files(files_of, n=5):
-    """The n files that the most conflicted PRs change: where parallel tickets meet (files_of: PR -> file names)."""
-    return Counter(f for fs in files_of.values() for f in set(fs)).most_common(n)
+def conflict_files(files_of, n=5, prefix=""):
+    """The n files (names that start with prefix) that the most conflicted PRs change: where parallel tickets meet
+    (files_of: PR -> file names)."""
+    return Counter(f for fs in files_of.values() for f in set(fs) if f.startswith(prefix)).most_common(n)
 
 
 RUN = re.compile(r"^(?:Started|Taken over) by `([^`]+)`")
@@ -525,6 +535,9 @@ def report(since, runs, jobs, status_comments, comments, prs, files, files_of=No
     if files_of:
         out.append(f"Files of the {len(files_of)} conflicted PRs (PRs): "
                    + "; ".join(f"{f} {k}" for f, k in conflict_files(files_of)))
+        shared = [(f, k) for f, k in conflict_files(files_of, prefix="tests/") if k > 1]
+        if shared:                                         # a count or a list of the data in a test (owner, #2008)
+            out.append("Test files of 2 or more conflicted PRs (PRs): " + "; ".join(f"{f} {k}" for f, k in shared))
     s = [x for x in samples(status_comments) if x[0] >= since]
     b, r = burn_pairs(s), burn_ratio(s)
     out.append(f"Burn per run-hour (ratio of sums of {len(s)} Usage lines, used by usage.py): "
@@ -559,7 +572,7 @@ def report(since, runs, jobs, status_comments, comments, prs, files, files_of=No
         out.append(f"Data in the code ([lint] data of agent.toml): {sum(n for _, n in data_rows)} literals "
                    f"in {len(data_rows)} places")
     if reviews is not None:                     # the self-improvement loop: each slot gets its review in time (#942)
-        out.append("Review slots (taken UTC, slot min, min late): " + ("; ".join(
+        out.append("Review slots (taken UTC, gap PRs, PRs late): " + ("; ".join(
             f"{t:%m-%d %H:%M} {m} {'-' if late is None else f'{late:+d}'}" for t, m, late in reviews if t >= since) or "-"))
     c2m = claim_to_merge(prs, comments, since)
     out.append(f"Claim to merge (median min of {len(c2m)} PRs): {fmt(med(c2m))}")
@@ -589,16 +602,14 @@ def fetch(since, until=None):
             break
     ci = [r for r in runs if r["name"] == "CI" and r.get("status") == "completed"][:CI_JOB_RUNS]
     jobs = [j for r in ci for j in api(f"actions/runs/{r['id']}/jobs")["jobs"]]
-    status = api(f"issues?state=open&labels={STATUS}")
     # one day more: the "Started by" comment of a ticket that merged in the period can be older
     comments = api_pages(f"issues/comments?since={since - datetime.timedelta(days=1):%Y-%m-%dT%H:%M:%SZ}", COMMENT_PAGES)
-    status_comments = [c for c in comments if status and c["issue_url"].endswith(f"/{status[0]['number']}")
-                       and c["created_at"] >= iso]
+    reports = status_comments(since=since)        # the log and the API (#1982, #1983)
     recent = [c for c in comments if c["created_at"] >= iso or c["body"].startswith("Started by")]
     prs = api_pages("pulls?state=closed&sort=updated&direction=desc", stop=lambda p: p["updated_at"] < iso)
     issues = api_pages(f"issues?state=all&since={iso}")
     events = api_pages("issues/events?", limit=event_pages(since), stop=lambda e: e["created_at"] < iso)
-    return runs, jobs, status_comments, recent, prs, issues, events
+    return runs, jobs, reports, recent, prs, issues, events
 
 
 def clip(until, runs, status_comments, comments, prs, issues, events):
@@ -653,22 +664,15 @@ def period(until, hours, past, only_takeovers=False):
     files_of = {n: [f["filename"] for f in api(f"pulls/{n}/files?per_page=100")] for n in conflicted(comments)}
     from feedback import fetch as unanswered
     refs = claim_refs()
+    merged = sorted(t for p in prs if p.get("merged_at") and (t := ts(p["merged_at"])) >= since)
     text = report(since, runs, jobs, status_comments, comments, prs, git_files(), files_of, issues, events,
-                  unanswered(), None if refs is None else review_delays(refs), data_rows())
+                  unanswered(), None if refs is None else review_delays(refs, merged, since), data_rows())
     return text.replace(" UTC", f" UTC until {until:%Y-%m-%d %H:%M} UTC", 1) if past else text
 
 
 def merge_times(n, until):
-    """The merge times of the newest n + 1 PRs on the default branch up to `until`, newest first: the commits with a PR
-    number at the end of the subject (squash merges, "Title (#N)")."""
-    out = []
-    for page in range(1, 11):
-        cs = api(f"commits?sha={CONFIG['branch']}&per_page=100&page={page}")
-        out += [t for c in cs if re.search(r"\(#\d+\)$", c["commit"]["message"].split("\n")[0])
-                and (t := ts(c["commit"]["committer"]["date"])) <= until]
-        if len(out) > n or len(cs) < 100:
-            break
-    return out[:n + 1]
+    """The merge times of the newest n + 1 PRs on the default branch up to `until`, newest first (`dashboard.merges`)."""
+    return [t for t, _ in merges(until=until, n=n + 1)]
 
 
 def pr_hours(times, until, n):
@@ -698,15 +702,16 @@ def compare(last, before):
 
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
-    ap.add_argument("--hours", type=float, default=24)
-    ap.add_argument("--prs", type=int, help="the period of the last N merged PRs, not of --hours (#1909)")
+    ap.add_argument("--hours", type=float, help="a period of hours, not of merged PRs (the night runs, the quota)")
+    ap.add_argument("--prs", type=int, help="the period of the last N merged PRs (default 50 without --hours, #1909)")
     ap.add_argument("--until", type=utc, help="the end of the period (ISO time, UTC, default now): compare two periods")
     ap.add_argument("--compare", action="store_true", help="also the period before, under each line that differs")
     ap.add_argument("--takeovers", action="store_true", help="one line for each takeover and its cause (#1703)")
     a = ap.parse_args(argv)
     until = a.until or datetime.datetime.now(datetime.timezone.utc)
     hours = before = a.hours
-    if a.prs:
+    if a.prs or not a.hours:                     # a count of merged PRs measures the same work at each speed (#2039)
+        a.prs = a.prs or PRS
         hours, before = pr_hours(merge_times(2 * a.prs, until), until, a.prs)
         print(f"Period: the last {a.prs} merged PRs ({hours:.1f} h), before: the {a.prs} PRs before ({before:.1f} h)")
     text = period(until, hours, bool(a.until), a.takeovers)

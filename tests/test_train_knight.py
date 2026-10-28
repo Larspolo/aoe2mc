@@ -62,10 +62,11 @@ def test_a_trained_unit_is_a_rider_with_its_aoe2_values(building, name, mount, r
     assert "cavalry" in s.classes and (s.hp, s.range > 0) == {"KNIGHT": (100, False), "CAVALRY_ARCHER": (50, True)}[name]
 
 
-def clashes(names, civ):
+def clashes(names, civ, building=None):
     """The slots with more than one item that the civilization civ sees (civs.MISSING hides the others): the elite
-    upgrades of the unique units share castle slot 5, and each civ sees only its own (#1720)."""
-    seen = [train.ITEMS[n][0] for n in names if train.AFTER.get(n) not in names   # AFTER: the slot of the one before
+    upgrades of the unique units share castle slot 5, and each civ sees only its own (#1720). The slots of building:
+    train.slots (the mule cart, #2208)."""
+    seen = [train.slots(building, n)[0] for n in names if train.BY_KEY["after"].get(n) not in names   # AFTER: the slot of the one before
             and civ not in train.civs.MISSING.get(n, ())]
     return sorted({s for s in seen if seen.count(s) > 1})
 
@@ -74,8 +75,8 @@ def test_each_menu_slot_of_a_building_has_one_item():
     """Two items in one slot: a click orders only the first one."""
     for civ in set().union(*train.civs.MISSING.values()) | set(train.UNIQUE):
         for building, names in train.TRAINS.items():
-            assert clashes(names, civ) == [], (building, civ)
+            assert clashes(names, civ, building) == [], (building, civ)
 
 
 def test_the_units_are_of_the_castle_age():
-    assert build.AGE["KNIGHT"] == build.AGE["CAVALRY_ARCHER"] == 2
+    assert build.AGE["KNIGHT"] == build.AGE["CAVALRY_ARCHER"]

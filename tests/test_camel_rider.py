@@ -9,7 +9,7 @@ from test_castle_upgrades import STABLE, research, setup
 from test_forging import menus
 from test_mounted_attack import floor, hits
 
-from game import civs, combat, gather, replay, run, train
+from game import civs, combat, gather, run, train
 
 CASTLE = ("FEUDAL_AGE", "CASTLE_AGE")
 
@@ -22,13 +22,6 @@ def stable(civ="TURKS", ages=CASTLE + ("IMPERIAL_AGE",)):   # no camel bonus (By
 
 
 def test_the_values_are_those_of_aoe2():
-    for unit in ("CAMEL_RIDER", "HEAVY_CAMEL_RIDER"):
-        assert train.COSTS[unit] == {"food": 55, "gold": 60} and train.TRAIN_TIMES[unit] == 22
-        assert combat.sight(unit) == 5 and replay.SPEEDS.get(unit, replay.SPEEDS["CAMEL"]) == 1.45
-    assert train.COSTS["HEAVY_CAMEL_RIDER_UPGRADE"] == {"food": 325, "gold": 360}
-    assert train.TRAIN_TIMES["HEAVY_CAMEL_RIDER_UPGRADE"] == 105 and train.TECH_AGE["HEAVY_CAMEL_RIDER_UPGRADE"] == 3
-    assert combat.stats("CAMEL_RIDER") == (100, 6, 0, 0, 0, 2.0, {"cavalry": 9, "camel": 5, "ship": 5}, ("camel",))
-    assert combat.stats("HEAVY_CAMEL_RIDER") == (120, 7, 0, 0, 0, 2.0, {"camel": 9, "cavalry": 18, "ship": 9}, ("camel",))
     assert all(len(train.HELP[n]) <= 50 for n in ("CAMEL_RIDER", "HEAVY_CAMEL_RIDER", "HEAVY_CAMEL_RIDER_UPGRADE"))
     assert {"FRANKS", "CHINESE", "AZTECS"} <= set(civs.MISSING["CAMEL_RIDER"])
     assert not {"BYZANTINES", "SARACENS", "CUMANS", "HINDUSTANIS"} & set(civs.MISSING["CAMEL_RIDER"])

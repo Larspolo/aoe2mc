@@ -30,8 +30,13 @@ Body:
 <The verify level (1-4) and the commands or checks.>
 
 Depends on: #<n>, #<m>        (only when another ticket must close first)
-Start after: <YYYY-MM-DD HH:MM> UTC   (only when the ticket must wait for a time, for example to measure 24 hours)
+Start after: <N> PRs after #<M>       (only when the ticket must wait for work, for example to measure a change: N merged PRs after PR #M)
+Start after: <YYYY-MM-DD HH:MM> UTC   (only when the ticket must wait for a real time; the speed of the project changes, #2039)
 ```
+
+A new line of a data file in `game/data/` needs no criterion "the values are those of the source" and no test of its values:
+`tests/test_data_files.py` checks the form of each line (#1916). Name a test of behavior: a fight, a menu, a bonus that
+the code computes.
 
 Labels: one priority (`P0`-`P3`), one kind (`bug`, `feature`, `tooling`, `design`, `docs`, `cleanup`),
 one size (`size:S`, `size:M`, `size:L`). Add `needs-human` when only the owner can do it.

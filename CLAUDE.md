@@ -16,7 +16,7 @@ The README already uses this style. Keep it.
 |---|---|
 | Install | `python3 -m pip install -r requirements-dev.txt` (a `pip` on the PATH can be another Python) |
 | Lint | `ruff check .` |
-| Fast tests (~15 s) | `python3 -m pytest` (use `python3 -m`: a `pytest` on the PATH can be another Python) |
+| Fast tests (~2 min; after a merge only the changed test files, `verify`) | `python3 -m pytest -n auto` (all cores, #2415; use `python3 -m`: a `pytest` on the PATH can be another Python) |
 | Slow tests (~2 min) | `python3 -m pytest -m slow` |
 | Test scenario | `python3 tools/scenarios.py tiny OUT.aoe2scenario` (or `gallery`, `stress`, `buildings`, `units`, `village`, `facing`, `walls`, `river` (raised river with dock, bridge, boats), `river_town`, `four_civs`, `battle`, `triggers` (timer, area, create and remove triggers; count with `tools/triggers.py FILE...`), `large` (480 × 480 tiles, #690), `owner_loop` (the play-test map of the `human` skill, #1674), `moods` (the village with `--mood NIGHT`, a map color mood, #1598)) |
 | Convert | `python3 aoe2mc.py IN.aoe2scenario OUTWorld --preview` |
@@ -99,15 +99,35 @@ not change. Do not add a dependency without a ticket that asks for it. Keep func
 Game data (AoE2 units, buildings, technologies, objects, terrains, civilizations, their values) goes in a `.jsonl` data
 file, not in a literal of the code: the fast test of `tools/data_lint.py` fails on a new one (#1909). Where a table is
 still in the code, add each entry on its own line, in alphabetical order, not at the end (#655, #670).
+Never test the number of entries of a data table (`len(combat.SIGHT) == 154`): each new line changes it, and parallel
+tickets conflict there. Test the values (owner, #2008; `tests/test_conflict_prone.py`).
 A new menu item of a building (cost, time, slot, help, age) is one new line in `game/data/train.jsonl`, at the end of
-its building block: the merge driver `tools/merge_jsonl.py` (`merge=jsonl`, #2004) merges the lines by name, and `train.load()` stops on a name in two lines (#1702).
+its building block (a technology also gets its key `"effect"`: the change of the combat values, `train.effect()`, #2029): the merge driver `tools/merge_jsonl.py` (`merge=jsonl`, #2004) merges the lines by name (a line that both sides changed: by key and list item, #2064), and `train.load()` stops on a name in two lines (#1702).
+A menu test checks only its own item (`item()` of `tests/menu_line.py`), never the whole menu line: one `order()` test per
+building checks the full menu from the data (#2099).
 The combat values of a new unit are one new line in `game/data/units.jsonl` (`combat.STATS`, #1912), of a new building
 one in `game/data/buildings.jsonl` (`combat.BUILDINGS`); its line of sight is the key `"sight"` there (#1913; epic #1909 moves more tables).
 The converter tables are lines in `data/*.jsonl` too (#1917): an animal in `animals.jsonl`, an infantry design in `lines.jsonl`, a footprint in `footprint.jsonl` (the first match wins: put a longer name before its part).
-An item that some civilizations do not have goes into the list `"missing"` of each such line of
-`game/data/civs.jsonl` (`civs.MISSING`, #1914; also `unique`, `costs`, `units`, `twice`), not into `civs.py`.
+An item that few civilizations have (a unique or regional unit, building or technology) gets the key `"civs"` (the
+civilizations that have it, sorted) on its own line of `game/data/train.jsonl` or `game/data/build.jsonl`
+(`civs.ONLY`, #2235): no change of `game/data/civs.jsonl`. An item that most civilizations have goes into the list
+`"missing"` of each line of `game/data/civs.jsonl` without it (`civs.MISSING` joins both, #1914; also `unique`,
+`costs`, `units`, `twice`), not into `civs.py`.
+A new key of `game/data/civs.jsonl` (a civilization bonus) is one line in `game/data/civ_keys.jsonl` (what it does, its
+issue) and `civs.value("key", civ, default)` in the module that applies it: no new table or comment in `game/civs.py` (#2281).
+A new key of `game/data/train.jsonl` is one line in `game/data/train_keys.jsonl` and `train.value("key", name, default)`
+in the module that reads it, not a new table of `game/train.py` (#2507).
+A new key of `game/data/setup.jsonl` (a game mode, a lobby setting) is one line in `game/data/setup_keys.jsonl` (`"type"`,
+`"kind": true` for a key of the "one kind" rule, `"text"`, `"issue"`), not a change of `check_setup()` in `tests/test_data_files.py` (#2558).
+A new data line needs no test of its values: `tests/test_data_files.py` checks the form of each line of `game/data/`
+(keys, types, names that exist, #1916), and `tests/test_data_keys.py` checks that the code reads each key (#2188): a new key needs no test line. Test the behavior that the code computes
+from it (a fight, a menu, a bonus).
 The same for a new command of the Paper plugin: its line in the command list at the top of `AoePlugin.java` and its
 `if` block in `onCommand` go in alphabetical order of the command name, not after the last one (#795 and #813 conflicted).
+A new game setting of `game/run.py` (a lobby setting, epic #2263) is one line in `run.SETTINGS` and an option of the
+same name, not a new keyword of `play()` (#2373).
+A new game mode (`--mode`) is one line in `game/data/setup.jsonl` (keys `"help"`, `"module"`, `"age"`, `"loaded"`,
+`"bots"`: `run.MODES`) and its module with `setup(g, mode)`, not a change of `play()` (#2521).
 
 ## How to verify
 
@@ -145,9 +165,11 @@ the tools in `tools/`, CI (`.github/workflows/`), the cloud setup script (`scrip
 hook, `.gitignore` and the claim and dashboard rules. The aim is more closed tickets for the same usage, with the same quality.
 - After each ticket (autopilot step 9): add a learning when something cost you time, correct an instruction
   that was wrong, and make a `tooling` ticket when a tool or test would have found a problem earlier.
+- After each merge conflict that you solve by hand: ask if a structure (a merge driver, a data file, a test that
+  asserts less) could have prevented it. Act only when it is good practice anyway (`autopilot/conflict.md`).
 - Only the owner can change the environment settings (setup script, network, variables), the scheduled task and the
   GitHub settings. When one of them costs time, make a `needs-human` ticket with numbered steps and the exact text.
-- One run per review slot (`tools/claim.py 0 --review`, 45 minutes, longer after reviews with no change): the `improve` skill measures the runs, CI and the environment and makes one larger improvement.
+- One run per review (`tools/claim.py 0 --review`, after 50 merged PRs, more after reviews with no change): the `improve` skill measures the runs, CI and the environment and makes one larger improvement.
 - Never weaken tests, CI or safety rules to save time. List each process change on the status issue.
 Keep this file short: put details in skills or docs.
 

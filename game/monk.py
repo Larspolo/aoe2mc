@@ -38,6 +38,10 @@ Each relic in an own monastery gives 30 gold per AoE2 minute (GOLD, AoE2 wiki "R
 with a relic does not heal (AoE2 rule). A killed monk drops the relic at its place, and a fallen monastery drops its
 relics at its door.
 
+Civilization bonuses (#2314, AoE2 DE wiki): each relic in an own monastery gives +1 attack to the Lithuanian knights
+and Leitis, at most +4 (civs.RELIC_ATTACK, civs.units; relic_tick sends the new values), and Muisca monks regain faith
+100 % faster (civs.FAITH: the rest after a conversion is half as long).
+
     monk.order(g, player, cell)   # gather.Gather.click: a relic or a monastery at the block cell; True when it was one
     monk.relic_tick(g, dt)        # gather.Gather.step: pick up, put in, drop, and the gold
 """
@@ -48,6 +52,7 @@ import re
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import table  # noqa: E402
 import units  # noqa: E402
 
 RATE = 2.5      # hit points per AoE2 second of one monk: 150 per minute
@@ -55,7 +60,8 @@ RANGE = 4       # tiles
 EVERY = 1.0     # AoE2 seconds between two heal passes (fewer commands); a pass heals for all the time since the last one
 STILL = 0.2     # blocks: a monk that moved more since the last pass walks
 CONVERT = 9     # tiles: the conversion range
-MONKS = {"MONK": CONVERT, "MISSIONARY": 7}   # the units that heal, convert and carry relics: their conversion range (#1939)
+# The units that heal, convert and carry relics: their conversion range (#1939, the key "convert" of data/units.jsonl)
+MONKS = {r["name"]: r["convert"] for r in table.load("units.jsonl") if "convert" in r}
 PRINTING = 3    # tiles of conversion range that Block Printing adds (#1457)
 INTERVAL = 1.25  # AoE2 seconds of one conversion interval
 WARM = 4        # the first intervals only warm up
@@ -63,13 +69,15 @@ CHANCE = 0.38   # the chance of each later interval
 SURE = 9        # the 9th interval always converts
 REST = 62       # AoE2 seconds after a conversion before the monk can convert again
 ILLUMINATED = 33   # the rest after Illumination: 87.5 % faster (AoE2 wiki "Illumination", #1583)
-IMMUNE = ("KING", "QUEEN", "KHAN", "CRUSADER_KNIGHT", "HUNNIC_HORSE", "MOUNTED_SAMURAI")
+RULES = table.load("monk.jsonl")                                  # the names of IMMUNE, NEXT and LASTING (#2034)
+IMMUNE = tuple(r["name"] for r in RULES if r.get("immune"))
 TOUCH = 1.5     # blocks between a monk and a building, ram or trebuchet that it converts: next to it (AoE2)
-NEXT = ("RAM", "TREBUCHET", "SIEGE_TOWER")   # the siege units that a monk converts only next to them
-RESIST = {"DEVOTION": 1, "FAITH": 3}   # more warm intervals and a later sure one: +1 s and +4 s (AoE2 DE wiki), 5 s in all (#1584)
+NEXT = tuple(r["name"] for r in RULES if r.get("next"))   # the siege units that a monk converts only next to them
+# More warm intervals and a later sure one: +1 s and +4 s (AoE2 DE wiki), 5 s in all (#1584, "resist" of data/train.jsonl)
+RESIST = {r["name"]: r["resist"] for r in table.load("train.jsonl") if "resist" in r}
 FORT = (14, 0.13, 25)   # a building: warm intervals, chance (38 % / resistance 3) and the sure interval (AoE2 wiki)
-LASTING = ("TOWN_CENTER", "CASTLE", "KREPOST", "MONASTERY", "FORTIFIED_CHURCH", "WALL", "GATE", "WONDER", "FARM",
-           "FISH_TRAP")  # parts of the names of the buildings that no monk converts, also with Redemption
+# Parts of the names of the buildings that no monk converts, also with Redemption
+LASTING = tuple(r["name"] for r in RULES if r.get("lasting"))
 GOLD = 0.5      # gold per AoE2 second of one relic in a monastery: 30 per minute
 REACH = 1       # blocks between the clicked cell and the relic (the ray hits the ground next to the pot)
 NEAR = 2.5      # blocks from the relic or the door: there the monk picks it up or puts it in
@@ -87,6 +95,15 @@ def relics(g):
     return g.relics
 
 
+def free_relic(g, site):
+    """Put the free relics of the civilization (key free_relic, {building: relics}) into the complete own building
+    site: only into the first one of the game (AoE2 DE wiki "Armenians": the first Fortified Church, #2419)."""
+    import civs                                                    # civs imports gather, gather imports this module
+    n = civs.value("free_relic", civs.civ(g), {}).get(site["name"], 0)
+    if n and not any(r.get("free") for r in relics(g)):
+        g.relics += [{"at": None, "monk": None, "home": tuple(site["footprint"]), "free": True} for _ in range(n)]
+
+
 def carriers(g):
     """{monk UUID: relic index} of the monks that carry a relic."""
     return {r["monk"]: i for i, r in enumerate(relics(g)) if r["monk"]}
@@ -95,7 +112,8 @@ def carriers(g):
 def monasteries(g):
     """The footprints of the complete own monasteries."""
     import train                                                   # train imports gather, gather imports this module
-    return {r for r, n in train.homes(g).items() if n == "MONASTERY"}
+    import combat
+    return {r for r, n in train.homes(g).items() if combat.STANDS_FOR.get(n, n) == "MONASTERY"}   # the church too (#1930)
 
 
 def order(g, player, cell):
@@ -178,17 +196,30 @@ def relic_tick(g, dt):
                 g.command(f"kill @e[type=item_display,tag=aoe_relic_{i}]")
                 relics(g)[i].update(monk=None, home=target)
                 g.carrier_at.pop(m, None)
+    if (n := sum(r["home"] is not None for r in relics(g))) != getattr(g, "relic_homes", 0):
+        g.relic_homes = n
+        rearm(g)
     g.relic_gold += GOLD * dt * sum(r["home"] in homes for r in relics(g))
     if (n := int(g.relic_gold)) > 0:
         g.relic_gold -= n
         g.earn("gold", n)
 
 
+def rearm(g):
+    """The own units of civs.RELIC_ATTACK get the attack of the relics in own monasteries (Lithuanians, #2314)."""
+    import civs, combat, train                                     # they import gather, gather imports this module
+    names = civs.RELIC_ATTACK.get(civs.civ(g), ((),))[0]
+    for uuid, name in [(u["uuid"], u["name"]) for u in g.units if "uuid" in u] + list(g.soldiers.items()):
+        if name in names:
+            g.command(combat.stats_command(uuid, name, train.stats(g, name)))
+
+
 def healable(name):
-    """True for an AoE2 unit that a monk heals: no siege unit (a minecart) and no ship (a boat)."""
+    """True for an AoE2 unit that a monk heals: no siege unit (a minecart), no ship (a boat) and no building that moves
+    (the mule cart, AoE2 DE wiki "Mule Cart": "a building which can move and not a unit", #2522)."""
     import combat                                                  # combat imports gather, gather imports this module
-    d = units.classify(name)
-    return combat.SIE not in combat.stats(name).classes and not units.is_boat(d) \
+    d, classes = units.classify(name), combat.stats(name).classes
+    return combat.SIE not in classes and "building" not in classes and not units.is_boat(d) \
         and (d or {}).get("id") != "minecraft:minecart"
 
 
@@ -215,7 +246,8 @@ def heal(g, dt):
     others = sorted(u for u, n in names.items() if u not in inside and healable(n))
     pos = g.positions(others)
     last, g.monk_at = g.monk_at, {m: pos[m] for m in monks if m in pos}
-    reach = RANGE * g.map.T
+    import civs                                                    # civs imports gather, gather imports this module
+    reach = RANGE * civs.HEAL_RANGE.get(civs.civ(g), 1) * g.map.T   # the Teutons: twice (#2269)
     hurt, taken = {}, set()
     for m in monks:
         if m in inside or m in g.converting or m not in pos or m not in last or math.dist(pos[m], last[m]) > STILL:
@@ -342,6 +374,12 @@ def spot(g, m, target, pos):
     return x + 0.5, g.map.y(x, z) or y0, z + 0.5
 
 
+def faith(g):
+    """The factor of the speed of the own monks that regain faith after a conversion (civs.FAITH: Muisca 2, #2314)."""
+    import civs                                                    # civs imports gather, gather imports this module
+    return civs.FAITH.get(civs.civ(g), 1)
+
+
 def convert(g, dt):
     """dt AoE2 seconds of the conversion orders of g.converting and of the rest of the monks after a conversion."""
     for m in list(g.faith):
@@ -381,5 +419,5 @@ def convert(g, dt):
                 (win if fort else die if heresy(g, owner) else take)(g, target)
                 for k in group:
                     del g.converting[k]
-                for k in rest:
-                    g.faith[k] = ILLUMINATED if "ILLUMINATION" in g.techs else REST   # the group in range (Theocracy: one)
+                for k in rest:                                     # the group in range (Theocracy: one)
+                    g.faith[k] = (ILLUMINATED if "ILLUMINATION" in g.techs else REST) / faith(g)

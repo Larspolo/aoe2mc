@@ -9,7 +9,7 @@ When the argument names `lane haiku` (the scheduled task "aoe2mc autopilot haiku
 `git config aoe2mc.lane haiku` first (the claims then tell the pacer that this run is cheap, #1727), pick only with
 `python3 tools/dashboard.py --next --lane haiku`, skip the epic check, the queue refill, the roadmap review and the
 process review, and stop when no `lane:haiku` ticket is ready. A ticket that is not as clear as its label says: release
-the claim, remove `lane:haiku`, comment why in one line, and take the next one. End the `Metrics:` line with `· lane haiku`.
+the claim, remove `lane:haiku`, comment why in one line, and take the next one. Write the report with `tools/report.py` (`report.md`): it adds `· lane haiku` from the git config (#1982).
 
 ## Large tickets (step 4)
 
@@ -50,4 +50,7 @@ new sub-issues, no `needs-human`. Still answer an owner comment on it (step 3).
    feature list of `docs/ROADMAP.md` with the `roadmap` skill (the goals take turns). Priority: that of the epic, else `P3`. Never `P0` or `P1`, except for
    a `tooling` ticket that blocks other tickets. Look for duplicates first, and list the open issues again just
    before you make the tickets: parallel runs make the same follow-ups at the same time (#300, #301).
+   Read the gap lists from main, not from your branch (`git fetch origin main`, `git show
+   origin/main:tests/data/civ_bonuses.jsonl`), and also list the issues closed in the last 2 hours: #2340 copied
+   #2309, which merged while the branch was 20 minutes old, and #2306 copied the closed #2249.
 4. Prefer tickets that depend on no open ticket and change other files than the claimed tickets (fewer conflicts).

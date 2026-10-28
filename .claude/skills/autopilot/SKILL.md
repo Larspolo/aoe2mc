@@ -56,6 +56,7 @@ List open PRs. For each PR that the agent opened (branch `claude/*` or `agent/*`
 - CI red, stalled (`overlap.md`) or owner review comments → take it over and fix it now: continue at
   step 6.8. That is the work of this cycle.
 - Merge conflict (label `conflict`, or `mergeable_state` is `dirty`, often with no CI run) → `conflict.md`.
+- `python3 tools/usage.py --flow` exits 1 (flow brake) → repair one PR or go to step 8: no new ticket (`overlap.md`).
 
 Then read the last CI run on main (`/actions/workflows/ci.yml/runs?branch=main&per_page=1`, `conclusion`: the quick
 checks, after each merge) and the last night run (`...&event=schedule&per_page=1`: the full suite). If one is red,
@@ -89,7 +90,7 @@ For each open issue without a priority label:
 ## 5. Pick and claim one ticket
 
 Candidates: open issues without `needs-human`, `blocked`, `epic`, `agent-status`, `in-progress`, `muted`, and whose
-"Depends on: #n" issues are all closed, whose "Start after:" time is past (#496). Order: `P0`, `P1`, `P2`, `P3`, then the
+"Depends on: #n" issues are all closed, whose "Start after:" time or count of merged PRs is past (#496, #2039). Order: `P0`, `P1`, `P2`, `P3`, then the
 least overlap with the work in progress (files and functions that open PRs change or claimed tickets name, #487),
 then the lowest issue number.
 `python3 tools/dashboard.py --next` prints the candidates in this order (the rule is `dashboard.candidates()`).
@@ -101,7 +102,7 @@ If there is no candidate, go to step 8 and report "No ticket is ready".
 Claim it with `python3 tools/claim.py N`. It pushes a unique commit to the ref `claim/N` without force, so only one
 run can win (#211). Exit 1: another run owns the ticket, pick the next candidate (do not comment). It also exits 1
 when another branch commented "Started by" less than 30 minutes ago (#288), or when an open PR of another
-branch closes the ticket and changed less than 30 minutes ago (#491). Never comment "Started by" before exit 0.
+branch closes the ticket and changed less than 30 minutes ago (#491), or when the issue is closed (#2339). Never comment "Started by" before exit 0.
 Exit 0: add `in-progress` and comment "Started by `<your branch>`." (one line).
 Each time you remove `in-progress` without a merge (hand-off, `blocked`, `needs-human`), run
 `python3 tools/claim.py N --release` too, else no other run can claim the ticket again.

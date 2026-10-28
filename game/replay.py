@@ -40,6 +40,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 import aoe2mc  # noqa: E402
 import buildings  # noqa: E402
+import table  # noqa: E402
 import units  # noqa: E402
 
 # Dye color of a player (aoe2mc.PLAYER_COLORS) -> text color of /tellraw and /title
@@ -62,10 +63,13 @@ RECENT = 10000              # ms: a unit whose last leg ended this short a time 
 TALL = 48                   # blocks above the ground that a DELETE clears for a start building (no height in aoe2mc.json)
 BAR = "aoe2mc:replay"       # the boss bar with the game time (#684)
 POP = "aoe_pop"             # the sidebar objective with the population of each player (#741)
+BURST = 500                 # ms of game time between two bursts of a flare column: a burst lives about 1 s (#2506)
 TEAM_STEP = 10000           # sidebar score of a team game: team key × TEAM_STEP + population, the panel sorts by it (#1189)
 COUNTED = "aoe2mc.pop"      # entity tag of the units that the population counts (#787)
 EFFECT = "aoe2mc.effect"    # entity tag of the texts above a building (#843)
 FOLLOWED = "aoe2mc.followed"  # the tag of the entity that the spectators of --follow look through (#1095)
+TRAIL = 3                   # tiles: a follower farther than this from its target walks to it again (#2551)
+TRAIL_MS = 1000             # ms of game time between two checks of the followers (#2551)
 FOLLOW_MS = 15000           # ms of game time: the camera of --follow changes its unit at most this often (#738)
 EFFECT_MS = 10000           # ms of game time that the research text stays
 SCALE = 4                   # size of the research text: a spectator sees it from 40 blocks
@@ -84,39 +88,15 @@ NEXT = 5                    # tiles: an empty resource sends its villager to the
 NEAR = 2                    # blocks: a unit of the plugin this near to its replay position is at its resource (#766)
 WAIT = 1000                 # ms of game time between two position checks of a unit that is late on its path (#766)
 LATE = 60000                # ms of game time: a unit that is still not at its resource then goes there with /tp
+STILL = 4000                # ms of game time: a walking unit that stands this long on one place gets free (unstick)
 PATH_CELLS = 20000          # cells that one path search may look at: a unit with no path stays (no time lag)
-SPEEDS = {"VILLAGER": 0.8, "MILITIA": 0.9, "MAN_AT_ARMS": 0.9, "SPEARMAN": 1.0, "PIKEMAN": 1.0, "EAGLE": 1.1,
-          "ARCHER": 0.96, "SKIRMISHER": 0.96, "CROSSBOWMAN": 0.96, "CAVALRY_ARCHER": 1.4, "SCOUT": 1.2,
-          "LIGHT_CAVALRY": 1.5, "KNIGHT": 1.35, "CAMEL": 1.45, "MONK": 0.7, "BATTERING_RAM": 0.5, "MANGONEL": 0.6,
-          "ARBALESTER": 0.96,                                                       # (#1500)
-          "CAVALIER": 1.35,                                                         # (#1501)
-          "CHAKRAM_THROWER": 1.15,                                                  # (#1624)
-          "ELITE_FIRE_LANCER": 0.96,                                                # (#1953)
-          "ELITE_GENITOUR": 1.35,                                                   # (#1610)
-          "ELITE_SKIRMISHER": 0.96,                                                 # (#1396)
-          "ELITE_CHAKRAM_THROWER": 1.15,
-          "ELITE_SHRIVAMSHA_RIDER": 1.6,                                            # (#1612)
-          "ELITE_STEPPE_LANCER": 1.45,                                              # (#1557)
-          "ELITE_VARANGIAN_GUARD": 1.05,                                            # (#2011)
-          "FIRE_LANCER": 0.96,                                                      # (#1953)
-          "GENITOUR": 1.35,                                                         # (#1610)
-          "HALBERDIER": 1.0,                                                        # (#1499)
-          "HEAVY_CAMEL_RIDER": 1.45,                                                # (#1550)
-          "HEAVY_CAVALRY_ARCHER": 1.4,                                              # (#1500)
-          "HEAVY_HEI_GUANG_CAVALRY": 1.35,                                          # (#1954)
-          "HEI_GUANG_CAVALRY": 1.35,                                                # (#1954)
-          "HUSSAR": 1.5,                                                            # (#1502)
-          "IMPERIAL_SKIRMISHER": 0.96,                                              # (#1611)
-          "LONG_SWORDSMAN": 0.9,
-          "MISSIONARY": 1.1,                                                        # (#1939)
-          "PALADIN": 1.35,                                                          # (#1501)
-          "SHRIVAMSHA_RIDER": 1.6,                                                  # (#1612)
-          "STEPPE_LANCER": 1.45,                                                    # (#1557)
-          "VARANGIAN_GUARD": 1.05,                                                  # (#2011)
-          "CHAMPION": 0.96,                                                         # (#1498)
-          "TWO_HANDED_SWORDSMAN": 0.96,
-          "WINGED_HUSSAR": 1.5,                                                     # (#1558)
-          "SCORPION": 0.65, "SIEGE_TOWER": 0.96, "TRADE_CART": 1.25}   # walk speed of common units, tiles per game second (AoE2 DE)
+# The walk speed of common units, tiles per game second (AoE2 DE), the ages and the Society buildings: one line per
+# name in data/replay.jsonl (#2034). A walk speed name is the start of the unit names.
+ROWS = table.load("replay.jsonl")
+SPEEDS = {r["name"]: r["walk"] for r in ROWS if "walk" in r}
+AGES = tuple(r["name"] for r in sorted((r for r in ROWS if "age" in r), key=lambda r: r["age"]))   # (#1067)
+SOCIETY = tuple(r["name"] for r in ROWS if r.get("society"))      # the buildings of the Society tab (#1086)
+TAUNTS = {r["name"]: r["text"] for r in table.load("taunts.jsonl")}   # number: the AoE2 text (wiki "Taunt", #2234)
 
 
 def pretty(name):
@@ -130,6 +110,15 @@ def start_job(name):
 
 def text(s, color=None):
     return {"text": s, "color": color} if color else {"text": s}
+
+
+def taunt(chat):
+    """The chat line with the AoE2 text of its taunt: "11" and "11 haha" (a number, then other text) are taunt 11,
+    "11 (Herb laugh)" (#2234). Other lines stay as they are."""
+    n = chat.strip().split(" ", 1)[0]
+    if n not in TAUNTS:
+        return chat
+    return f"{chat} ({TAUNTS[n].removeprefix('(').removesuffix(')')})"
 
 
 def mmss(ms):
@@ -243,8 +232,15 @@ class Replay:
         self.hunted = {}                        # object ID of a hunted animal -> the tile of its carcass (#1229)
         self.prey = {}                          # carcass tile -> UUID of its animal that is still alive (#1281)
         self.points = {}                        # object ID of a building -> its last GATHER POINT event (#1227)
+        self.stances, self.charging = {}, {}    # object ID -> stance of the record; its stance after an attack-move (#2552)
+        self.patrols = {}                       # object ID -> [patrol tiles, index of the tile it walks to, step] (#2550)
+        self.follows = {}                       # object ID -> [target ID, "follow" or "guard", goal, enemy UUID] (#2551)
+        self.trail = math.inf                   # game time (ms) of the next check of the followers (#2551)
         self.adopted, self.rallied = {}, 0      # temporary ID of a unit at a gather point -> its object ID (#1227)
         self.effects = {}                       # entity tag of a research text -> game time (ms) of its end (#843)
+        self.flares = []                        # (x, y, z, game time (ms) of the end, RGB) of the live flares (#2402)
+        self.formations = {}                    # object ID -> the AoE2 formation of the record: Line, Box ... (#2553)
+        self.burst = math.inf                   # game time (ms) of the next burst of the live flares (#2506)
         self.refs = {o["ref"]: o for o in data["objects"] if o.get("ref") is not None}
         self.rng = np.random.default_rng(1)
         self.kinds, self.seen = aoe2mc.object_kinds(), set()
@@ -312,6 +308,16 @@ class Replay:
     def commands(self, e):
         """The commands of one timeline event (an empty list for the events that change nothing visible)."""
         kind = e["kind"]
+        if kind in ("attack_move", "move", "order", "stop", "delete", "garrison", "follow", "guard"):   # another order
+            for i in e.get("objects") or ():                                                            # ends the patrol (#2550)
+                self.patrols.pop(i, None)
+        if kind in aoe2mc.UNIT_USE - {"stance"} | {"delete", "stop"}:   # a new order ends a FOLLOW or GUARD (#2551)
+            for i in e.get("objects") or ():
+                self.follows.pop(i, None)
+        if kind == "patrol" and e.get("objects") and e.get("tile"):
+            return self.patrol(e)
+        if kind in ("follow", "guard") and e.get("objects") and e.get("target") is not None:
+            return self.escort(e)
         if kind in ("build", "wall") and "type" in e and "tile" in e:
             return self.build(e)
         if kind == "spawn":
@@ -320,7 +326,9 @@ class Replay:
             self.points.update(dict.fromkeys(e["objects"], e))
             return []
         if kind in ("move", "order") and e.get("objects"):
-            return self.move(e)
+            return self.calm(e["objects"]) + self.move(e)
+        if kind == "attack_move" and e.get("objects") and e.get("tile"):
+            return self.attack_move(e)
         if kind == "garrison" and e.get("objects"):
             return self.move(dict(e, kind="order", garrison=True))
         if kind == "ungarrison" and e.get("objects"):
@@ -329,10 +337,20 @@ class Replay:
             return self.back(e)[0]
         if kind == "delete" and e.get("objects"):
             return self.delete(e)
+        if kind == "stance" and e.get("objects"):
+            return self.stance(e)
+        if kind == "stop" and e.get("objects"):
+            return self.stop(e)
+        if kind == "formation" and e.get("objects"):                # the shape of the next walks of the group (#2553)
+            self.formations.update(dict.fromkeys(e["objects"], e.get("formation", "Line")))
+            return []
         if kind == "chat" and e.get("text"):
             name, color = self.player(e["player"]) if e.get("player") else ("Game", "white")
-            return ["tellraw @a " + json.dumps([text(f"<{name}> ", color), text(e["text"])])]
+            return ["tellraw @a " + json.dumps([text(f"<{name}> ", color), text(taunt(e["text"]))])]
         name, color = self.player(e.get("player"))
+        if kind == "flare" and e.get("tile"):                     # a view player sees only its flares (#2403)
+            seen = self.pov is None or self.pov == e.get("player") or self.pov in e.get("to", [self.pov])
+            return self.flare(e, name, color) if seen else []
         if kind == "age" and e.get("age"):
             self.age(e)
             return ["title @a subtitle " + json.dumps(text(name, color)),
@@ -445,11 +463,32 @@ class Replay:
                 f"particle minecraft:enchant {x} {top + 1} {z} {(x1 - x0) / 4} 0.5 {(z1 - z0) / 4} 1 60"]
 
     def expire(self, t):
-        """The commands that remove the research texts whose time ended at game time t (ms)."""
+        """The commands that remove the research texts whose time ended at game time t (ms), and the particles of the
+        live flares (a particle burst lives less than a second, as flare.tick in the game program)."""
         done = [tag for tag, end in self.effects.items() if end <= t]
         for tag in done:
             del self.effects[tag]
-        return [f"kill @e[type=text_display,tag={tag}]" for tag in done]
+        import flare                                                # game/: on the path of the replay
+        self.flares = [f for f in self.flares if f[3] > t]
+        self.burst = t + BURST                                      # a step of run() while a flare lives (#2506)
+        return [f"kill @e[type=text_display,tag={tag}]" for tag in done] + \
+            [flare.particles(x, y, z, "@a", rgb) for x, y, z, _, rgb in self.flares]
+
+    def flare(self, e, name, color):
+        """A flare of the record (#2402): the bell, the light column of the game program (flare.py) in the player color
+        at the block of its tile for flare.SECONDS of game time, and a chat line in the player color. On Paper
+        also a mark on the live minimap (#2405)."""
+        import flare
+        x, z = (min(self.n - 1, max(0, int(c * self.T))) for c in e["tile"])
+        y = self.ground[z][x] if self.ground[z][x] is not None else next(
+            (g for row in self.ground for g in row if g is not None), 64)    # water: the height of the land
+        rgb = FIREWORK_COLORS.get(self.data["players"].get(str(e.get("player")), {}).get("color"), FIREWORK_COLORS["white"])
+        self.flares.append((x, y, z, e["time"] + flare.SECONDS * 1000, rgb))    # the column in the player color (#2442)
+        self.burst = min(self.burst, e["time"] + BURST) if len(self.flares) > 1 else e["time"] + BURST
+        ticks = max(1, round(flare.SECONDS * 20 / self.speed))          # the game time of the flare at the replay speed
+        return [f"playsound {flare.SOUND} master @a {x} {y} {z} 1 1 1", flare.particles(x, y, z, "@a", rgb),
+                "tellraw @a " + json.dumps([text(f"<{name}> ", color), text("Flare", "gold")])] + \
+            [f"aoe minimap flare {x} {z} p{e.get('player')} {ticks}"] * self.ai   # a blinking cross on the minimap (#2405)
 
     @functools.lru_cache(maxsize=None)
     def height(self, name, player):
@@ -866,6 +905,103 @@ class Replay:
                 rest.append((i, v))
         return out, rest
 
+    def escort(self, e):
+        """FOLLOW and GUARD (#2551): each unit of the selection walks after the target unit, and a guarding military
+        unit attacks an enemy next to the target (chase()). A target that is no unit of the replay changes nothing."""
+        if e["target"] not in self.units:
+            return []
+        self.grid()
+        for i, name in zip(e["objects"], e.get("names") or [None] * len(e["objects"])):
+            if i != e["target"] and self.unit(i, name, e["player"]) is not None:
+                self.follows[i] = [e["target"], e["kind"], None, None]
+        return self.chase(e["time"])
+
+    def chase(self, t):
+        """The commands of the followers at game time t (#2551): a unit farther than TRAIL tiles from its target walks
+        to the place of the target (the path finding of the plugin, move()) when it does not walk there already; a
+        guard on Paper attacks the nearest enemy within TRAIL tiles of its target (attack()). A dead follower or target
+        ends the follow."""
+        out, reach, self.trail = [], TRAIL * self.T, t + TRAIL_MS
+        for i, f in sorted(self.follows.items()):
+            v, w = self.units.get(i), self.units.get(f[0])
+            if v is None or w is None:
+                del self.follows[i]
+                continue
+            to = self.at(w, t)
+            if f[1] == "guard" and self.ai and self.gather.military(v.name):
+                foes = [(math.dist((p[0], p[2]), (to[0], to[2])), u.uuid) for u in self.units.values()
+                        if u.player not in (0, v.player) and math.dist(((p := self.at(u, t))[0], p[2]), (to[0], to[2])) <= reach]
+                if foes:
+                    enemy = min(foes)[1]
+                    if f[3] != enemy:
+                        f[3] = enemy
+                        out += self.attack([(i, v)], enemy)[0]
+                    continue
+                f[3] = None
+            at = self.at(v, t)
+            if math.dist((at[0], at[2]), (to[0], to[2])) > reach and (
+                    f[2] is None or i not in self.moving and f[2] != to or math.dist(f[2], to) > reach):
+                f[2] = to
+                out += self.move(dict(time=t, player=v.player, kind="move", objects=[i], tile=[to[0] / self.T, to[2] / self.T]))
+        return out
+
+    def stance(self, e):
+        """STANCE: the military units of the selection get the AoE2 stance of the record on Paper (#2548): the stance
+        goals of the plugin (combat.stance_command, #1104). An unknown stance changes nothing."""
+        import combat                                                   # combat -> gather -> build -> replay
+        stance = str(e.get("stance", "")).lower().replace(" ", "_")
+        if not self.ai or stance not in combat.STANCES:
+            return []
+        self.grid()
+        group = [(i, self.unit(i, name, e["player"])) for i, name in zip(e["objects"], e.get("names") or [None] * len(e["objects"]))]
+        group = [(i, v) for i, v in group if v is not None and self.gather.military(v.name)]
+        for i, _ in group:
+            self.stances[i] = stance
+            self.charging.pop(i, None)                                  # the new stance stays after an attack-move
+        return [combat.stance_command(v.uuid, stance) for _, v in group]
+
+    def attack_move(self, e):
+        """ATTACK MOVE (#2552): the group walks to the tile as with MOVE, and on Paper its military units take the
+        aggressive stance for the walk, so the mob AI attacks each enemy in sight on the way (the stance goals of the
+        plugin, #1104). A unit that the record set to another stance gets it back at the end of the walk (calm())."""
+        import combat                                                   # combat -> gather -> build -> replay
+        out = self.calm(e["objects"]) + self.move(dict(e, kind="move"))
+        if not self.ai:
+            return out
+        for i in e["objects"]:
+            if (v := self.units.get(i)) is None or not self.gather.military(v.name):
+                continue
+            out.append(combat.stance_command(v.uuid, "aggressive"))
+            if self.stances.get(i, "aggressive") != "aggressive":
+                self.charging[i] = self.stances[i]
+        return out
+
+    def calm_at(self, i):
+        """The game time (ms) at the end of the last leg of unit i (0: no leg, or no unit)."""
+        return (getattr(self.units.get(i), "leg", None) or (0, 0, 0))[2]
+
+    def calm(self, ids):
+        """The stance commands that give the units of an ended attack-move their stance of the record again (#2552)."""
+        import combat
+        back = {i: self.charging.pop(i) for i in ids if i in self.charging}
+        return [combat.stance_command(self.units[i].uuid, s) for i, s in back.items() if i in self.units]
+
+    def stop(self, e):
+        """STOP: the selected units stand where they are (#2549): no more legs, steps or gather steps. On Paper
+        `aoe stop` ends the walk order and the attack of the plugin (the mob has no AI until its next order, as at the
+        end of a walk). An unknown ID changes nothing."""
+        self.grid()
+        out = []
+        for i, name in zip(e["objects"], e.get("names") or [None] * len(e["objects"])):
+            if (v := self.unit(i, name, e["player"])) is None:
+                continue
+            for state in (self.moving, self.working, self.arriving, self.entering, self.builds):
+                state.pop(i, None)
+            v.pos, v.path = self.at(v, e["time"]), []
+            v.leg = (v.pos, e["time"], e["time"])                  # a new order starts here, not on the old leg
+            out += self.look(v, "none") + [f"aoe stop {v.uuid}"] * self.ai
+        return out
+
     def move(self, e):
         """MOVE and ORDER: each selected unit gets a path to the target. Its steps come later (steps()). A group
         that goes to a tile stops in a formation there (formation()), a unit with no path to its cell goes to the
@@ -927,7 +1063,7 @@ class Replay:
                 path = path or []
                 cmds, due = self.order(v, path[LEG - 1:-1:LEG] + [end], e["time"])
                 out += cmds
-                if v.path:
+                if v.path or i in self.patrols and due > e["time"]:   # a patrol turns at the end (steps(), #2550)
                     self.moving[i] = due
                 else:
                     self.moving.pop(i, None)
@@ -951,6 +1087,30 @@ class Replay:
                 self.moving[i] = due
         return out0 + first + looks + out
 
+    def patrol(self, e):
+        """PATROL: the units walk between their place and the tile, again and again, until another order (AoE2). A
+        second PATROL of a unit on patrol adds a point to its route (AoE2 shift patrol): it walks on through all
+        points and back. The aggressive stance of a military unit attacks the enemies on the way (#1104)."""
+        self.grid()
+        new = []
+        for i, name in zip(e["objects"], e.get("names") or [None] * len(e["objects"])):
+            if i in self.patrols:
+                self.patrols[i][0].append(list(e["tile"]))
+            elif (v := self.unit(i, name, e["player"])) is not None:
+                self.patrols[i] = [[[v.pos[0] / self.T, v.pos[2] / self.T], list(e["tile"])], 1, 1]
+                new.append(i)
+        return self.move(dict(e, kind="move", objects=new, names=None)) if new else []
+
+    def patrol_on(self, i, t):
+        """The walk of unit i on patrol to the next point of its route at game time t (ms): at the last point it
+        turns back (#2550)."""
+        points, k, d = self.patrols[i]
+        if not 0 <= k + d < len(points):
+            d = -d
+        self.patrols[i] = [points, k + d, d]
+        return self.move({"time": t, "player": self.units[i].player, "kind": "move", "objects": [i],
+                          "tile": points[k + d]})
+
     def look(self, v, task):
         """The command that gives villager v the look of the AoE2 task (`LUMBERJACK` ..., "none": no work), when it
         changes (gather.Gather.task)."""
@@ -971,6 +1131,7 @@ class Replay:
         leg of a long walk. It and a walk less than RECENT ms after the last leg read the entity to catch up (catch_up)."""
         import ai                                                   # ai -> replay: import it late
         x, z = legs[0]
+        chain, v.stand = behind, getattr(v, "stand", None) if behind else None   # a new walk: no old place
         behind = behind or (getattr(v, "leg", None) or (0, 0, -RECENT))[2] > t - RECENT
         start = x0, _, z0 = v.pos
         v.pos, v.path = (x + 0.5, float(self.map.y(x, z)), z + 0.5), legs[1:]
@@ -979,34 +1140,57 @@ class Replay:
         due = t + 1000 * d / speed
         v.leg = (start, t, due)                                     # at() reads it
         v.check = t + CLOSE if due - t > 2 * CLOSE else None        # a long leg reads the entity again (recheck())
-        f = min(CATCH_UP, PATH * (self.catch_up(v, d, speed * CLOSE / 1000) if behind else 1.0))
-        return [ai.speed_command(v.uuid, v.name, self.T, self.speed * f),
-                "aoe moveto {} {} {} {}".format(v.uuid, *v.pos)], due
+        at = self.entity(v) if chain or behind and d >= 1 else None
+        free = self.unstick(v, start, t, at) if chain else []
+        f = min(CATCH_UP, PATH * (self.catch_up(v, d, speed * CLOSE / 1000, at) if behind and not free else 1.0))
+        return free + [ai.speed_command(v.uuid, v.name, self.T, self.speed * f),
+                       "aoe moveto {} {} {} {}".format(v.uuid, *v.pos)], due
 
     def recheck(self, v, t):
         """The walk speed command of unit v at game time t, CLOSE ms after the start of its long leg: its lag to the
         replay position on the leg (at()) closes in the next CLOSE ms (catch_up), and a unit with no lag walks at its
         speed again. A turn on a leg (an order back) costs the mob 1 to 3 s of game time that order() cannot see: a
-        villager of de-64.3 stayed 5 to 11 blocks behind for 30 s (#1293). One command per long leg."""
+        villager of de-64.3 stayed 5 to 11 blocks behind for 30 s (#1293). One command per long leg, and the /tp of a
+        unit that stands still (unstick)."""
         import ai                                                   # ai -> replay: import it late
         v.check = None
         speed = next((s for k, s in SPEEDS.items() if v.name.startswith(k)), 1.0) * self.T    # blocks per second
-        f = self.catch_up(v, math.dist(self.at(v, t)[::2], v.pos[::2]), speed * CLOSE / 1000)
-        return ai.speed_command(v.uuid, v.name, self.T, self.speed * min(CATCH_UP, PATH * f))
+        at = self.entity(v)
+        if free := self.unstick(v, v.leg[0], t, at):
+            return free + [ai.speed_command(v.uuid, v.name, self.T, self.speed * PATH)]
+        f = self.catch_up(v, math.dist(self.at(v, t)[::2], v.pos[::2]), speed * CLOSE / 1000, at)
+        return [ai.speed_command(v.uuid, v.name, self.T, self.speed * min(CATCH_UP, PATH * f))]
 
-    def catch_up(self, v, d, reach=None):
+    def entity(self, v):
+        """(x, z) of the entity of unit v, or None."""
+        m = re.findall(self.gather.NUMBER, self.game.command(f"data get entity {v.uuid} Pos").rsplit(":", 1)[-1])
+        return (float(m[0]), float(m[2])) if len(m) == 3 else None
+
+    def unstick(self, v, start, t, at):
+        """The /tp of walking unit v to start (the start of its leg: a free cell of its path) when its entity at stands
+        on the place of the last check of this walk, STILL ms ago or more, and more than NEAR blocks from start.
+        A Minecraft path can have a step that the mob cannot take: in de-64.3 two villagers stood for minutes at the
+        edge of a forest with an order, as the step onto a moss carpet (1/16 block) lifted their heads into the leaves 2
+        blocks over their column (#2304). Returns the commands."""
+        last, v.stand = getattr(v, "stand", None), at and (*at, t)
+        if at is None or last is None or t - last[2] < STILL or math.dist(at, last[:2]) >= 0.5 \
+                or math.dist(at, (start[0], start[2])) <= NEAR:
+            return []
+        v.stand = None
+        return ["tp {} {} {} {}".format(v.uuid, *start)]
+
+    def catch_up(self, v, d, reach=None, at=()):
         """The factor of the walk speed of unit v on a leg of d blocks to v.pos (1 to CATCH_UP): the lag of the entity
         (its distance to v.pos less d) is closed in the first `reach` blocks of the leg (default: all of it). The
         Minecraft path is longer than the straight leg (trees, steps on a slope), and each leg starts at the replay
         time, not at the arrival: without it, villagers of de-64.3 walked at 89 to 94 % of their AoE2 speed (#1168).
         With the whole leg, a lag of 10 blocks on a long leg stayed above 4 blocks for 30 s (#1291). One command per
-        leg that order() gives as behind."""
+        leg that order() gives as behind. at: the (x, z) of the entity (or None) that the caller read (entity())."""
         if d < 1:
             return 1.0
-        m = re.findall(self.gather.NUMBER, self.game.command(f"data get entity {v.uuid} Pos").rsplit(":", 1)[-1])
-        if len(m) != 3:
+        if (at := self.entity(v) if at == () else at) is None:
             return 1.0
-        lag = math.dist((float(m[0]), float(m[2])), (v.pos[0], v.pos[2])) - d
+        lag = math.dist(at, (v.pos[0], v.pos[2])) - d
         return min(CATCH_UP, max(1.0, 1 + lag / min(d, reach or d)))
 
     def at(self, v, t):
@@ -1023,27 +1207,45 @@ class Replay:
         """The end cell of each unit of a group that walks to a tile (#410): rows across the walk direction, the
         first row on the target and the others behind it, FORMATION blocks apart (AoE2 line formation). A slot
         snaps to the next free cell, one unit per cell. The units nearest to the target take the first row, and
-        in a row they keep their order from left to right, so that the paths do not cross."""
+        in a row they keep their order from left to right, so that the paths do not cross. The formation of the
+        record (#2553): Staggered doubles the gaps, Flank splits each row into two halves 4 slots apart, Box puts
+        the ranged and civilian units inside a square of the others."""
+        import combat                                                   # combat -> gather -> build -> replay
         m, n, S = self.map, len(group), FORMATION
+        ids = {v: i for i, v in self.units.items()}
+        kind = collections.Counter(self.formations.get(ids.get(v), "Line") for v in group).most_common(1)[0][0]
+        S *= 2 if kind == "Staggered" else 1
         tx, tz = tile[0] * self.T, tile[1] * self.T
         cx, cz = (sum(v.pos[k] for v in group) / n for k in (0, 2))
         d = math.hypot(tx - cx, tz - cz)
         dx, dz = ((tx - cx) / d, (tz - cz) / d) if d > 0.5 else (0.0, -1.0)    # walk direction (else north)
-        cols = min(n, max(1, round(math.sqrt(2 * n))))
+        cols = min(n, max(1, math.ceil(math.sqrt(n)) if kind == "Box" else round(math.sqrt(2 * n))))
         rows = -(-n // cols)
-        r = max(2 * self.T, math.ceil(max(cols, rows) * S))
+        r = max(2 * self.T, math.ceil(max(cols, rows) * S) + 4 * S * (kind == "Flank"))
         x0, z0 = int(tx), int(tz)
         todo = {(x, z) for x in range(x0 - r, x0 + r + 1) for z in range(z0 - r, z0 + r + 1) if m.free(x, z)}
         group = sorted(group, key=lambda v: (tx - v.pos[0]) * dx + (tz - v.pos[2]) * dz)
+        slots = []                                                      # (unit, row, offset across the walk)
+        if kind == "Box":
+            cells = [(q, j) for q in range(rows) for j in range(cols)][:n]
+            inner = [c for c in cells if 0 < c[0] < rows - 1 and 0 < c[1] < cols - 1]
+            outer = [c for c in cells if c not in inner]
+            weak = [v for v in group if combat.stats(v.name).range > 0 or not self.gather.military(v.name)]
+            order = weak + [v for v in group if v not in weak]
+            cells = inner[:len(weak)] + outer + inner[len(weak):]
+            slots = [(v, q, (j - (cols - 1) / 2) * S) for v, (q, j) in zip(order, cells)]
+        else:
+            for q in range(rows):
+                row = sorted(group[q * cols:q * cols + cols], key=lambda v: v.pos[0] * -dz + v.pos[2] * dx)
+                for j, v in enumerate(row):
+                    gap = (2 * S if j >= len(row) / 2 else -2 * S) if kind == "Flank" and len(row) > 1 else 0
+                    slots.append((v, q, (j - (len(row) - 1) / 2) * S + gap))
         out = {}
-        for q in range(rows):
-            row = sorted(group[q * cols:q * cols + cols], key=lambda v: v.pos[0] * -dz + v.pos[2] * dx)
-            for j, v in enumerate(row):
-                off = (j - (len(row) - 1) / 2) * S
-                px, pz = tx - dx * q * S - dz * off, tz - dz * q * S + dx * off
-                if todo:
-                    out[v] = c = min(todo, key=lambda c: ((c[0] - px) ** 2 + (c[1] - pz) ** 2, c))
-                    todo.discard(c)
+        for v, q, off in slots:
+            px, pz = tx - dx * q * S - dz * off, tz - dz * q * S + dx * off
+            if todo:
+                out[v] = c = min(todo, key=lambda c: ((c[0] - px) ** 2 + (c[1] - pz) ** 2, c))
+                todo.discard(c)
         return out
 
     def next_step(self, v, t):
@@ -1056,7 +1258,7 @@ class Replay:
 
     def steps(self, t):
         """The commands of the steps (/tp), legs (plugin orders) and gather steps that are due at game time t (ms)."""
-        out = self.expire(t)
+        out = self.expire(t) + self.chase(t)
         for i, then in self.built(t):                               # the builders gather or stand idle (#1282)
             out += self.move(then) if then else self.look(self.units[i], "none")
         sink = types.SimpleNamespace(map=self.map, command=out.append)
@@ -1065,7 +1267,7 @@ class Replay:
             w = ship(v.name)
             ok = self.map.wet if w else self.map.free
             if self.ai and not w and t < due and (getattr(v, "check", None) or due) <= t:
-                out.append(self.recheck(v, t))
+                out += self.recheck(v, t)
             if self.ai and not w and due <= t:
                 legs = [c for c in v.path if self.map.free(*c)]        # a new building on a leg end: skip it
                 cmds, at = self.order(v, legs, due, behind=True) if legs else ([], due)
@@ -1086,8 +1288,10 @@ class Replay:
             if due is None:
                 del self.moving[i]
                 self.start(i, v, at)
+                out += self.patrol_on(i, at) if i in self.patrols else []
             else:
                 self.moving[i] = due
+        out += self.calm([i for i in self.charging if i not in self.moving and self.calm_at(i) <= t])   # (#2552)
         out += self.enter(t)
         self.crew.command = out.append
         for i, due in list(self.working.items()):
@@ -1522,7 +1726,7 @@ class Replay:
             name, color = self.label(p)
             times = self.reached.get(p, {})
             ages = ", ".join(f"{pretty(a).removesuffix(' Age')} {mmss(times[a]) if a in times else '-'}"
-                             for a in ("FEUDAL_AGE", "CASTLE_AGE", "IMPERIAL_AGE"))
+                             for a in AGES)
             out.append("tellraw @a " + json.dumps([text(name, color), text(
                 f": {ages}, technologies {self.researched.get(p, 0)}")]))
         return out
@@ -1535,7 +1739,7 @@ class Replay:
         for e in self.data.get("timeline", []):
             p = e.get("player")
             name = e.get("name") or self.kinds.get(e.get("type"), ("?", ""))[1]
-            if e["kind"] == "build" and name in ("CASTLE", "WONDER") and (p, tuple(e.get("tile", ()))) not in seen:
+            if e["kind"] == "build" and name in SOCIETY and (p, tuple(e.get("tile", ()))) not in seen:
                 seen.add((p, tuple(e.get("tile", ()))))
                 built[p, name] = built.get((p, name), 0) + 1
             elif e["kind"] == "tribute" and e.get("to"):
@@ -1545,9 +1749,10 @@ class Replay:
         for p in self.ranked(self.pop.keys() | self.vhigh.keys() | sent.keys() | got.keys() | {q for q, _ in built}
                              - {None}):
             name, color = self.label(p)
+            counts = "".join(f"{n.lower()}s {built.get((p, n), 0)}, " for n in SOCIETY)   # castles N, wonders N
             out.append("tellraw @a " + json.dumps([text(name, color), text(
-                f": castles {built.get((p, 'CASTLE'), 0)}, wonders {built.get((p, 'WONDER'), 0)}, tribute sent "
-                f"{sent.get(p, 0)}, received {got.get(p, 0)}, villager high {self.vhigh.get(p, 0)} (est.)")]))
+                f": {counts}tribute sent {sent.get(p, 0)}, received {got.get(p, 0)}, villager high "
+                f"{self.vhigh.get(p, 0)} (est.)")]))
         return out
 
     def timeline_commands(self, end):
@@ -1801,8 +2006,11 @@ class Replay:
              self.minimap_buildings(set(), set()) * (self.pov is None) +
              self.overview())
         census = self.census if bar and self.ai else lambda: None
-        while k < len(events) or self.moving or self.builds:
+        while k < len(events) or self.moving or self.builds or self.charging:
             step = min([*self.moving.values(), *self.working.values(), *self.effects.values(),   # walk, gather, text
+                        *[self.calm_at(i) for i in self.charging if i not in self.moving],         # an attack-move ends
+                        *[self.burst] * bool(self.flares),                                        # a flare column
+                        *[self.trail] * bool(self.follows),                                       # a follow (#2551)
                         *(due for due, _ in self.builds.values()),                                # a build ends
                         *(at for _, _, at in self.entering.values() if at is not None),            # go in
                         *[c for i in self.moving if self.ai and (c := getattr(self.units[i], "check", None))]],

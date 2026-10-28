@@ -81,7 +81,7 @@ minutes of run time (or tickets) per day:
    token sinks (`Tokens:` lines). The phase shares in minutes come second.
 4. **Quality:** rework (owner corrections, reopened tickets, follow-ups of merged work), bugs found by check tickets,
    red night CI runs.
-5. **Weak spots:** merge conflicts, takeovers (`tools/health.py --takeovers`: the cause of each, #1703), refused commands, slow tests, tools missing in the environment.
+5. **Weak spots:** merge conflicts (and the `Conflict:` sentences of the run reports: causes that come again need a structure, `autopilot/conflict.md`), takeovers (`tools/health.py --takeovers`: the cause of each, #1703), refused commands, slow tests, tools missing in the environment.
 6. **Reuse:** what is aoe2mc-specific in the skills, tools and workflows, and how hard it is to set it up for
    another project (epic #909).
 7. **Code structure** (#1909): how easy the code is to change. The line `Data in the code` of `tools/health.py`
@@ -160,7 +160,7 @@ next fix goes one level up. A level-1 rule that stays is debt: make a ticket for
 
 **Fix all places** (#1909). Before you make the ticket, find all other places with the same pattern (Grep, `ast`,
 a lint). Make one epic for all of them (`ticket` skill), with the place of this loss as the first
-sub-issue: the pilot. The other sub-issues can wait for the numbers of the pilot ("Start after:"), but the epic and
+sub-issue: the pilot. The other sub-issues can wait for the numbers of the pilot ("Start after: N PRs after #M"), but the epic and
 its full scope exist at once, so the owner sees the whole plan. #1702 moved one table to a data file and waited
 24 hours; the owner then made the epic #1909 for all tables.
 
@@ -196,8 +196,9 @@ Comment 3–5 lines: the result of step 0 and the misses, the numbers of the sev
 "no change: largest loss X, below the threshold"), and what you expect. The owner can reject the change in a comment. Then revert it
 and add the reason to `docs/LEARNINGS.md`.
 
-Then set the next review slot: `python3 tools/claim.py 0 --reviewed change` after a change (the next slot is 45
-minutes), or `--reviewed none` when no loss was large enough for a change (the slot doubles, at most 2 hours, #898, #1697).
+Then set the next review: `python3 tools/claim.py 0 --reviewed change` after a change (the next review comes after 50
+merged PRs), or `--reviewed none` when no loss was large enough for a change (the gap doubles, at most 200 merged PRs,
+#898, #1697, #2039).
 
 ## Guardrails
 

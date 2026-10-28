@@ -28,20 +28,6 @@ def dye(p, players):
     name = players.get(p, {}).get("color") if p else None
     return DYES.index(name) if name in DYES else 0
 
-# Upgrade steps of the standard unit lines. Other units are "unique", "elite" or "hero".
-TIER = {
-    "MILITIA": 1, "MAN_AT_ARMS": 2, "LONG_SWORDSMAN": 3, "TWO_HANDED_SWORDSMAN": 4, "CHAMPION": 4,
-    "SPEARMAN": 1, "PIKEMAN": 2, "HALBERDIER": 3,
-    "ARCHER": 1, "CROSSBOWMAN": 2, "ARBALESTER": 3,
-    "SKIRMISHER": 1, "ELITE_SKIRMISHER": 2, "IMPERIAL_SKIRMISHER": 3, "HAND_CANNONEER": 3,
-    "SCOUT_CAVALRY": 1, "LIGHT_CAVALRY": 2, "HUSSAR": 3, "WINGED_HUSSAR": 4,
-    "KNIGHT": 2, "CAVALIER": 3, "PALADIN": 4,
-    "CAMEL_SCOUT": 1, "CAMEL_RIDER": 2, "HEAVY_CAMEL_RIDER": 3, "IMPERIAL_CAMEL_RIDER": 4,
-    "CAVALRY_ARCHER": 2, "HEAVY_CAVALRY_ARCHER": 3,
-    "EAGLE_SCOUT": 1, "EAGLE_WARRIOR": 2, "ELITE_EAGLE_WARRIOR": 3,
-    "BATTLE_ELEPHANT": 2, "ELITE_BATTLE_ELEPHANT": 3, "STEPPE_LANCER": 2, "ELITE_STEPPE_LANCER": 3,
-}
-
 ARMOR = {   # tier -> (helmet, chestplate, leggings, boots material); None = empty
     1: ("leather", None, None, None),
     2: ("chainmail", "chainmail", None, None),
@@ -55,32 +41,9 @@ ARMOR = {   # tier -> (helmet, chestplate, leggings, boots material); None = emp
 SWORD = {1: "wooden", 2: "stone", 3: "iron", 4: "diamond", "unique": "golden", "elite": "netherite", "hero": "netherite"}
 HORSE_ARMOR = {1: "leather", 2: "leather", 3: "iron", 4: "diamond", "unique": "golden", "elite": "diamond", "hero": "golden"}
 
-# Invisible markers and internal units: the game does not show them, so the converter skips them on purpose.
-# (keyword, reason). place_objects, classify() and tools/coverage.py use this list.
-INVISIBLE = (("MAP_REVEAL", "map revealer"), ("INVISIBLE_OBJECT", "invisible object"), ("BLOCKER", "path blocker"),
-             ("HINT_OBJECT", "editor hint"), ("DUMMY_TARGET", "attack target"), ("TRICKLE", "resource trickle"),
-             ("RESOURCE_ENABLER", "resource trickle"), ("AURA_QUEST_INDICATOR", "quest marker"),
-             ("PLACEHOLDER", "placeholder"), ("DISABLED", "disabled unit"), ("OUTLW", "unused unit"),
-             ("RFARC", "unused unit"))
-
-FLYING = {   # flying birds -> mob; it floats FLY_HEIGHT blocks above the ground (NoGravity)
-    "MACAW": ("parrot", 0), "FLAMING_BIRD": ("parrot", 0),                     # red parrot
-    "FALCON": ("parrot", 4), "HAWK": ("parrot", 4), "VULTURE": ("parrot", 4),  # gray parrot
-    "CONDOR": ("parrot", 4), "SEAGULLS": ("parrot", 4),
-    "RAVEN": ("bat", None), "OWL": ("bat", None),
-    "BUTTERFLY1": ("bee", None), "BUTTERFLY2": ("bee", None), "BUTTERFLY3": ("bee", None),   # no butterfly mob:
-}                                                                       # the bee is the nearest small insect
 FLY_HEIGHT = 6
 MOUNT = "aoe2mc.mount"     # the tag of the vehicle and the crew of a unit: in the team, but not counted as a unit (#1045)
 FLY_LOW = {"minecraft:bee": 2}  # insects fly near the flowers
-JOKES = {   # joke and special units -> entity
-    "TREASURE_CHEST": lambda: vehicle("chest_minecart", []),
-    "TORCH_": lambda: mob("armor_stand", hands("torch"), Invisible=Byte(1), ShowArms=Byte(1)),
-    "PHOTONMAN": lambda: soldier("zombie", 3, "crossbow"),      # white space suit, laser gun
-    "SHARKATZOR": lambda: mob("guardian"),                     # a shark with laser eyes
-    "NESSIE": lambda: mob("elder_guardian"),
-}
-
 DATA = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
 
 
@@ -116,71 +79,40 @@ LINES = {r["name"]: (r["mob"], tuple(tuple(p[:1]) + (int(p[1][1:], 16),) if isin
                      r["main"], r["off"], *([tags(r)] if "tags" in r else [])) for r in rows("lines.jsonl")}
 TRIM = Compound({"material": String("minecraft:gold"), "pattern": String("minecraft:sentry")})
 
-MOUNTED_HEROES = ("RICHARD_THE_LIONHEART", "FREDERICK_BARBAROSSA", "SALADIN", "EL_CID", "CHARLEMAGNE", "GENGHIS_KHAN",
-                  "ATTILA", "BLEDA", "TAMERLANE", "SUBOTAI", "BELISARIUS", "ROLAND", "LANCELOT", "GAWAIN",
-                  "KING_ARTHUR", "SIEUR_", "CONSTABLE", "VYTAUTAS", "TSAR_KONSTANTIN", "JOHN_THE_FEARLESS",
-                  "WILLIAM_THE_CONQUEROR", "HENRY_THE_LION", "ALEXANDER_NEVSKI", "KOTYAN", "BABUR", "ULRICH",
-                  "ALEXANDER", "LU_BU", "GUAN_YU", "ZHAO_YUN", "TOKHTAMYSH", "KHAN")
-RELIGIOUS_HEROES = ("POPE", "ARCHBISHOP", "IMAM", "FRIAR", "PRIEST")
-RANGED_HEROES = ("ROBIN_HOOD", "ARCHER", "SHERIFF")
-SIEGE_HEROES = ("BAD_NEIGHBOR", "GODS_OWN_SLING", "WARWOLF", "TREBUCHET")
-# The mob in the minecart of a siege unit (owner decision on #1525, #1664): (name keys, mob, scale, extra tags). The
-# first row with a key in the name wins. The scale keeps a large mob in its cart, off the units next to it. The crew
-# keeps NoAI and Silent (mob()), so it does not walk, jump, shoot or attack by itself.
-SIEGE_CREW = (
-    (("SIEGE_RAM",), "iron_golem", 0.6, {}),                          # 1.2 × the battering ram
-    (("CAPPED_RAM",), "iron_golem", 0.55, {}),                        # 1.1 ×
-    (("BATTERING_RAM",), "iron_golem", 0.5, {}),
-    (("MANGONEL", "ONAGER"), "breeze", 0.8, {}),
-    (("SCORPION",), "piglin", 1.0, {"IsImmuneToZombification": Byte(1)}),   # else a zombified piglin in 15 s
-    (("TREBUCHET",) + SIEGE_HEROES, "warden", 0.6, {}),               # packed: × TREBUCHET_PACKED
-    (("BOMBARD_CANNON", "HOUFNICE"), "ghast", 0.3, {}),
-    (("SIEGE_TOWER",), "sniffer", 0.5, {}),
-    (("WAR_WAGON",), "horse", 0.7, {}),                               # owner: "War wagon a horse in the minecart"
-)
+# The names of data/units.jsonl (#2035), one line each; the keys of a line:
+# "tier": the upgrade step of a standard unit line (other units are "unique", "elite" or "hero").
+# "invisible": the reason to skip an invisible marker or internal unit (a keyword; place_objects, classify() and
+#   tools/coverage.py use it). "joke": a joke or special unit (a keyword) -> a maker of JOKE_MAKERS.
+# "flying": [mob, parrot variant] of a flying bird; it floats FLY_HEIGHT blocks above the ground (NoGravity). No
+#   butterfly mob: the bee is the nearest small insect. "bird": a bird that walks.
+# "hero": the kind of a hero keyword (mounted, religious, ranged, siege). "base": a hero that the keywords do not
+#   catch -> the base unit whose look it gets (with hero armor; SWORD and AXE: a foot hero with a netherite sword or
+#   axe). "plain": a base that keeps its normal look. "ruler": a king. "infantry": a keyword of foot units that the
+#   mounted keywords would catch. "drop": a word that pretty() leaves out.
+# "crew": [mob, scale] in the minecart of a siege unit (owner decision on #1525, #1664); the first line with a
+#   "crew" whose name is in the unit name wins. The scale keeps a large mob in its cart, off the units next to it.
+#   The crew keeps NoAI and Silent (mob()), so it does not walk, jump, shoot or attack by itself.
+UNITS = rows("units.jsonl")
+TIER = {r["name"]: r["tier"] for r in UNITS if "tier" in r}
+INVISIBLE = tuple((r["name"], r["invisible"]) for r in UNITS if "invisible" in r)
+FLYING = {r["name"]: tuple(r["flying"]) for r in UNITS if "flying" in r}
+BIRDS = {r["name"] for r in UNITS if r.get("bird")}
+HEROES = {k: tuple(r["name"] for r in UNITS if r.get("hero") == k) for k in ("mounted", "religious", "ranged", "siege")}
+HERO_BASE = {r["name"]: r["base"] for r in UNITS if "base" in r}
+PLAIN = {r["name"] for r in UNITS if r.get("plain")}
+RULERS = {r["name"] for r in UNITS if r.get("ruler")}
+INFANTRY = tuple(r["name"] for r in UNITS if r.get("infantry"))
+DROP = {r["name"] for r in UNITS if r.get("drop")}
+SIEGE_CREW = tuple(((r["name"],), *r["crew"], tags(r)) for r in UNITS if "crew" in r)
+JOKE_MAKERS = {
+    "chest_minecart": lambda: vehicle("chest_minecart", []),
+    "torch": lambda: mob("armor_stand", hands("torch"), Invisible=Byte(1), ShowArms=Byte(1)),
+    "space_suit": lambda: soldier("zombie", 3, "crossbow"),      # white space suit, laser gun
+    "guardian": lambda: mob("guardian"),                         # a shark with laser eyes
+    "elder_guardian": lambda: mob("elder_guardian"),
+}
+JOKES = {r["name"]: JOKE_MAKERS[r["joke"]] for r in UNITS if "joke" in r}
 TREBUCHET_PACKED = 0.6      # the size of the packed trebuchet crew, of the unpacked one (#1525)
-# Heroes that the keyword lists above do not catch -> the base unit whose look they get (with hero armor).
-# SWORD and AXE: a foot hero with a netherite sword or axe. From the hero names and the AoE2 campaigns.
-HERO_BASE = {n: base for base, names in (
-    ("PALADIN", "KHOSRAU THE_BLACK_PRINCE THEODORIC_THE_GOTH MORDRED VLAD_DRACULA MINAMOTO KING_BELA_IV "
-                "CHARLES_MARTEL PRITHVIRAJ DUKE_D_ALENCON LORD_DE_GRAVILLE GUY_JOSSELYNE SIR_JOHN_FASTOLF "
-                "REYNALD_DE_CHATILLON MASTER_OF_THE_TEMPLAR KUSHLUK KING_SANCHO KING_ALFONSO HENRY_V "
-                "MUSA_IBN_NUSAYR TARIQ_IBN_ZIYAD RICHARD_DE_CLARE TRISTAN HENRY_II YEKUNO_AMLAK SU_DINGFANG "
-                "MIKLOS_TOLDI ZAWISZA_THE_BLACK WANG_TONG IVAYLO CUMAN_CHIEF PRITHVI OSMAN EDWARD_LONGSHANKS "
-                "GILBERT_DE_CLARE PHILIP_THE_GOOD ROBERT_GUISCARD ROGER_BOSSO BOHEMOND DAFYDD_AP_GRUFFYDD "
-                "BERNARD_D_ARMAGNAC JACQUELINE_OF_HAINAUT JADWIGA JOGAILA KESTUTIS ALGIRDAS DMITRY_OF_MOSCOW "
-                "MIKHAIL_OF_TVER MIHIRA_BHOJA SHAH_ISMAIL SELIM_THE_GRIM THOROS TAMAR YURY IVANE ZAKARE STEPHAN "
-                "MLEH ARTAPHERNES DATIS DARIUS ISMAIL SHAH CAO_CAO LIU_BEI SUN_JIAN ZHANG_FEI SUN_CE SUN_QUAN "
-                "DONG_ZHUO YUAN_SHAO CAO_CAO_CAMPAIGN LIU_BEI_CAMPAIGN SUN_JIAN_CAMPAIGN PHILIP PARMENION CLEITUS "
-                "HEPHAISTION LAUTARO"),
-    ("SCOUT_CAVALRY", "SCYTHIAN_SCOUT"),
-    ("CONQUISTADOR", "FRANCISCO_DE_ORELLANA GONZALO_PIZARRO"),
-    ("CAVALRY_ARCHER", "QUTLUGH"),
-    ("BATTLE_ELEPHANT", "DAGNAJAN GIDAJAN JAYANEGARA SURYAVARMAN_I UDAYADITYAVARMAN_I JAYAVIRAVARMAN BAYINNAUNG "
-                        "TABINSHWEHTI AMOGHAVARSHA RAJENDRA_CHOLA IBRAHIM_LODI PORUS"),
-    ("SWORD", "AETHELFRITH SIEGFRIED KITABATAKE VASCO_DA_GAMA CUAUHTEMOC JOAN_THE_MAID "
-              "WILLIAM_WALLACE FRANCESCO_SFORZA JOAN_OF_ARC LA_HIRE TOPA_YUPANQUI CUSI_YUPANQUI ADMIRAL_YI_SUN_SHIN "
-              "NOBUNAGA SUNDJATA PRINCESS_YODIT YODIT ITZCOATL PACAL_II PACHACUTI HUAYNA_CAPAC SUMANGURU GAJAH_MADA "
-              "RADEN_WIJAYA SUNDA_ROYAL_FIGHTER LE_LOI LE_LAI LE_TRIEN LUU_NHAN_CHU BUI_BI DINH_LE IVAYLO_DISMOUNTED "
-              "LLYWELYN_AP_GRUFFYDD STOERTEBEKER JAN_ZIZKA GENERAL_ARAIYAN ZHOU_YU WHITE_TIGER_YAN LIU_BIAO "
-              "ALEXANDER_DISMOUNTED NEARCHOS GALVARINO PACANCHIQUE CUNHAMBEBE TOSTIG_GODWINSON SCYTHIAN_WILD_WOMAN"),
-    ("AXE", "LEIF_ERIKSON ERIK_THE_RED ALARIC_THE_GOTH ATAULF HARALD_HARDRADA HROLF_THE_GANGER NORSE_CHIEFTAIN "
-            "LITTLE_JOHN THRACIAN_CHIEFTAIN HARALD ULF_OSPAKSSON HALLDOR_SNORRASON FINN_ARNASON KALF_ARNASON"),
-    ("HOPLITE", "SOSSO_GUARD POLEMARCH POLEMARCH_2 POLEMARCH_3 POLEMARCH_4 POLEMARCH_3_WITH_EPHORATE "
-                "POLEMARCH_4_WITH_EPHORATE POLEMARCH_3_WITH_MORAI POLEMARCH_4_WITH_MORAI ARISTAGORAS DIONYSIUS "
-                "ARISTIDES MILTIADES THEMISTOCLES LEONIDAS BRASIDAS LYSANDER POLYCRITUS CLEON PERDICCAS"),
-    ("ARCHER", "THE_MIDDLEBROOK ARTEMISIA GUACOLDA ARARIBOIA EINAR_PAUNCH_SHAKER"),
-    ("CROSSBOWMAN", "GUGLIELMO_EMBRIACO"),
-    ("JANISSARY", "MUSTAFA_PASHA"),
-    ("BOMBARD_CANNON", "JEAN_DE_LORRAIN JEAN_BUREAU"),
-    ("MONK", "YU_JI ZHANG_JUE ZHUGE_LIANG"),
-    ("VILLAGER_MALE", "ENVOY CHAND_BARDAI"),
-    ("VILLAGER_FEMALE", "SANYOGITA YOUNG_JADWIGA"),
-    ("LONGSHIP", "DREKI"),
-    ("PETARD", "SABOTEUR"),
-    ("DIRE_WOLF", "HUNTING_WOLF ORNLU_THE_WOLF"),
-    ("HORSE", "BUCEPHALUS"),
-) for n in names.split()}
 
 
 # --------------------------------------------------------------------------------------------
@@ -266,8 +198,7 @@ def boat(wood, crew, chest=False):
 def pretty(name, hero=False):
     """ELITE_TEUTONIC_KNIGHT -> Elite Teutonic Knight."""
     parts = name.split("_")
-    drop = {"EMPTY", "FULL", "MALE", "FEMALE", "BARRACKS", "STABLE", "DONJON", "KREPOST", "ORIGINAL", "ANTIQUITY"}
-    parts = [p for p in parts if p not in drop and not (len(p) == 1 and p.isalpha())]
+    parts = [p for p in parts if p not in DROP and not (len(p) == 1 and p.isalpha())]
     if parts and parts[0] == "VILLAGER" and len(parts) > 1:
         parts = parts[1:]
     small = {"OF", "THE", "DE", "D", "AP", "VON", "IBN", "WITH", "IN", "A", "DA"}
@@ -341,7 +272,7 @@ def classify(n, hero=False):
         base = HERO_BASE[n]
         if base in ("SWORD", "AXE"):
             return soldier("zombie", "hero", sword("hero") if base == "SWORD" else "netherite_axe")
-        return classify(base, base not in ("DIRE_WOLF", "HORSE", "VILLAGER_MALE", "VILLAGER_FEMALE"))
+        return classify(base, base not in PLAIN)
     if n == "VMDL":                 # an old villager model
         n = "VILLAGER_MALE"
     t = tier_of(n, hero)
@@ -363,10 +294,12 @@ def classify(n, hero=False):
                    Xp=Int(1), Offers=no_trades())
     if n == "MISSIONARY":                                     # a mounted monk (#1939)
         return mounted("horse", mob("evoker"))
-    if has(n, "MONK", "MISSIONARY", "PRIEST", "MERCHANT") and "SHIP" not in n or hero and has(n, *RELIGIOUS_HEROES):
+    if has(n, "MONK", "MISSIONARY", "PRIEST", "MERCHANT") and "SHIP" not in n or hero and has(n, *HEROES["religious"]):
         return mob("evoker")
-    if n in ("KING", "QUEEN", "KHAN") or has(n, "EMPEROR"):
+    if n in RULERS or has(n, "EMPEROR"):
         return mob("zombie", {"head": item("golden_helmet", True)})
+    if n == "MULE_CART":                                      # a drop site that moves (#2209)
+        return mob("mule", Tame=Byte(1), ChestedHorse=Byte(1))
     if has(n, "TRADE_CART", "OX_CART", "OX_WAGON", "RELIC_CART") or n == "CART":
         return mob("donkey", Tame=Byte(1), ChestedHorse=Byte(1))
 
@@ -393,7 +326,9 @@ def classify(n, hero=False):
         return boat("oak", [crew])
 
     # Siege weapons: minecarts with a crew
-    if hero and has(n, *SIEGE_HEROES) or n.endswith("_RAM") or has(n, "MANGONEL", "ONAGER", "SCORPION", "TREBUCHET",
+    if "MOUNTED_TREBUCHET" in n:      # a camel unit that carries its trebuchet (#2191): the trebuchet crew rides a camel
+        return mounted("camel", siege_crew(n))
+    if hero and has(n, *HEROES["siege"]) or n.endswith("_RAM") or has(n, "MANGONEL", "ONAGER", "SCORPION", "TREBUCHET",
                                              "BOMBARD_CANNON", "SIEGE_TOWER", "ORGAN_GUN", "HOUFNICE",
                                              "ROCKET_CART", "WAR_WAGON", "HUSSITE_WAGON", "COBRA_CAR",
                                              "FLAMETHROWER", "CHARIOT", "RATHA", "CATAPULT"):
@@ -425,9 +360,8 @@ def classify(n, hero=False):
         rider = soldier("skeleton", t, "bow") if "ARCHER" in n else soldier("zombie", t, sword(t))
         return mounted("camel", rider)
 
-    infantry_exceptions = ("TEUTONIC_KNIGHT", "DISMOUNTED", "EAGLE_SCOUT", "CHAMPI_SCOUT", "FIRE_LANCER")   # FIRE_LANCER: infantry (#1953)
     # Mounted archers and javelin riders
-    if not has(n, *infantry_exceptions) and has(n, "CAVALRY_ARCHER", "HORSE_ARCHER", "MANGUDAI", "KIPCHAK",
+    if not has(n, *INFANTRY) and has(n, "CAVALRY_ARCHER", "HORSE_ARCHER", "MANGUDAI", "KIPCHAK",
                                                 "MOUNTED_CROSSBOWMAN", "CONQUISTADOR", "GENITOUR", "BOLAS_RIDER",
                                                 "ARAMBAI", "XIANBEI"):
         if "CONQUISTADOR" in n:
@@ -438,7 +372,7 @@ def classify(n, hero=False):
             rider = soldier("skeleton", t, "crossbow" if "CROSSBOW" in n else "bow")
         return mounted("skeleton_horse", rider)
     # Cavalry
-    if not has(n, *infantry_exceptions) and (hero and has(n, *MOUNTED_HEROES) or has(
+    if not has(n, *INFANTRY) and (hero and has(n, *HEROES["mounted"]) or has(
             n, "SCOUT_CAVALRY", "KNIGHT", "CAVALIER", "PALADIN", "HUSSAR", "HUSZAR", "CAVALRY", "BOYAR",
             "CATAPHRACT", "TARKAN", "KESHIK", "LEITIS", "KONNIK", "LANCER", "COUSTILLIER", "MONASPA", "SAVAR",
             "SHRIVAMSHA", "HIPPEUS", "MOUNTED", "RIDER", "HUNNIC_HORSE")):
@@ -446,7 +380,7 @@ def classify(n, hero=False):
         return mounted("horse", soldier("zombie", t, weapon), t, {"Variant": Int(0 if t != 4 else 2)})
 
     # Foot soldiers
-    if hero and has(n, *RANGED_HEROES):
+    if hero and has(n, *HEROES["ranged"]):
         return soldier("skeleton", t, "bow")
     if has(n, "SKIRMISHER", "JAVELIN", "GBETO", "CHAKRAM", "THROWING", "PELTAST", "SLINGER", "EKDROMOS"):
         return soldier("drowned", t, "trident")
@@ -540,7 +474,7 @@ def make_entity(o, players, pos, rng, desc=None):
 
 
 def is_bird(n):
-    return n in FLYING or n in ("PEACOCK", "FLAMINGO", "STORK", "RED_CROWN_CRANE")
+    return n in FLYING or n in BIRDS
 
 
 def is_boat(desc):

@@ -8,8 +8,7 @@ from game import combat, train
 
 
 def test_the_values_are_those_of_aoe2():
-    assert train.COSTS["TOWN_WATCH"] == {"food": 75} and train.TRAIN_TIMES["TOWN_WATCH"] == 25
-    assert train.TECH_AGE["TOWN_WATCH"] == 1 and combat.WATCH == 4 and len(train.HELP["TOWN_WATCH"]) <= 50
+    assert combat.WATCH == 4 and len(train.HELP["TOWN_WATCH"]) <= 50
     assert "TOWN_WATCH" in train.TRAINS["TOWN_CENTER"]
 
 

@@ -15,6 +15,9 @@ paused = "paused"               # this label on the status issue stops all runs
 max_runs = 40                   # the most runs at one time (tools/usage.py): 16 used only about 70 % of a 5-hour window at burn 0.009
 max_fire = 8                    # the most runs that the pacer starts in one 10-minute cycle (tools/usage.py)
 week_free = 0.60                # below this 7-day usage the runs fill each 5-hour window, no weekly pace (tools/usage.py)
+max_waiting_prs = 10            # flow brake: at this many agent PRs older than pr_minutes the pacer starts 1 repair run (tools/usage.py)
+max_ci_queue = 5                # flow brake: at this many queued CI runs the pacer starts no run
+pr_minutes = 30                 # an agent PR older than this waits for a fix, a conflict merge or CI, not for the quota
 weights = { haiku = 0.25 }       # a lane run in Opus runs: the start value until the Usage: lines measure it (#1727)
 reserved = ["haiku"]            # lanes whose tickets Opus runs never take; remove haiku when #1717 has its comparison (#1994)
 trigger = "trig_01QTrgkK5PZmqPwQ96rKp3QE"   # the scheduled task "aoe2mc autopilot": the pacer fires it (#1898)
@@ -22,7 +25,7 @@ trigger = "trig_01QTrgkK5PZmqPwQ96rKp3QE"   # the scheduled task "aoe2mc autopil
 [commands]
 install = "python3 -m pip install -r requirements-dev.txt"
 lint = "ruff check ."
-fast = "python3 -m pytest"
+fast = "python3 -m pytest -n auto"
 slow = "python3 -m pytest -m slow"
 server = "python3 -m pytest -m mc"
 

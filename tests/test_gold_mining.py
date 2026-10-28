@@ -16,7 +16,7 @@ def setup(food=100, wood=75, age=1):
     server = FakeServer({"v": {"Pos": (7.5, 64.0, 7.5)}})
     g = gather.Gather(server, grid([[64] * 16 for _ in range(16)], objects)).setup()
     g.stock.update(food=food, wood=wood)
-    g.techs.update({"FEUDAL_AGE"} if age else ())                   # a Feudal Age technology (TECH_AGE, #1046)
+    g.techs.update({"FEUDAL_AGE"} if age else ())                   # a Feudal Age technology (the key "age", #1046)
     return server, g
 
 

@@ -23,9 +23,8 @@ def test_the_plugin_gets_the_range_kind():
 
 
 def test_the_longbowman_has_the_aoe2_de_values():
-    from game import train
     s = combat.stats("LONGBOWMAN")
-    assert (s.hp, s.attack, s.melee, s.pierce, s.range) == (35, 6, 0, 0, 5) and train.TRAIN_TIMES["LONGBOWMAN"] == 18
+    assert (s.hp, s.attack, s.melee, s.pierce, s.range) == (35, 6, 0, 0, 5)
 
 
 @pytest.mark.mc

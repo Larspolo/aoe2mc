@@ -6,7 +6,9 @@ forest tiles as objects (FOREST_TREES) yet.
 
 Read: `#const`, `#define`, `if`/`elseif`/`else`/`endif`, `start_random`/`percent_chance`/`end_random`,
 <PLAYER_SETUP> (no effect here), <LAND_GENERATION> (`base_terrain`, `create_player_lands`, `create_land` with
-`terrain_type`, `land_percent`, `number_of_tiles`, `base_size`, `clumping_factor`, `land_position`) and
+`terrain_type`, `land_percent`, `number_of_tiles`, `base_size`, `clumping_factor`, `land_position` and the borders
+`left_border`, `right_border`, `top_border`, `bottom_border`: percent of the map size at the low x, high x, low y and
+high y side that the land does not take) and
 <TERRAIN_GENERATION> (`create_terrain` with `base_terrain`, `number_of_clumps`, `number_of_tiles`, `land_percent`,
 `spacing_to_other_terrain_types`, `set_avoid_player_start_areas`, `clumping_factor`). Other sections and attributes:
 a warning. All randomness comes from numpy.random.default_rng(seed).
@@ -16,17 +18,18 @@ import sys
 
 import numpy as np
 
-# The terrain constants of the RMS language -> AoE2 terrain IDs (AoE2ScenarioParser TerrainId values).
-TERRAINS = {"GRASS": 0, "WATER": 1, "BEACH": 2, "DIRT3": 3, "SHALLOW": 4, "LEAVES": 5, "DIRT": 6, "FARM": 7,
-            "DEAD_FARM": 8, "GRASS3": 9, "FOREST": 10, "DIRT2": 11, "GRASS2": 12, "PALM_DESERT": 13, "DESERT": 14,
-            "JUNGLE": 17, "BAMBOO": 18, "PINE_FOREST": 19, "OAK_FOREST": 20, "SNOW_FOREST": 21, "DEEP_WATER": 22,
-            "MED_WATER": 23, "ROAD": 24, "ROAD2": 25, "SNOW": 32, "ICE": 35, "ROCK": 40}
-# The tree of each forest terrain: the game puts one on each forest tile, a scenario keeps them as objects.
-FOREST_TREES = {10: "TREE_OAK_FOREST", 13: "TREE_PALM_FOREST", 17: "TREE_JUNGLE", 18: "TREE_BAMBOO_FOREST",
-                19: "TREE_PINE_FOREST", 20: "TREE_OAK_FOREST", 21: "TREE_SNOW_PINE", 48: "TREE_DRAGON",
-                49: "TREE_BAOBAB", 50: "TREE_ACACIA", 55: "TREE_MANGROVE", 56: "TREE_RAINFOREST"}
+from units import rows
+
+# The lines of data/rmap.jsonl (#2037): "terrain": the AoE2 terrain ID (AoE2ScenarioParser TerrainId value) of a
+# terrain constant of the RMS language. "forest": the forest terrains of a tree: the game puts one on each forest tile,
+# a scenario keeps them as objects. "start", "scatter", "fish", "shore_fish": see START, SCATTER, FISH and fish().
+RMAP = rows("rmap.jsonl")
+TERRAINS = {r["name"]: r["terrain"] for r in RMAP if "terrain" in r}
+FOREST_TREES = dict(sorted((t, r["name"]) for r in RMAP for t in r.get("forest", ())))
+SHORE_FISH = next(r["name"] for r in RMAP if r.get("shore_fish"))
 SIZES = {1: 120, 2: 120, 3: 144, 4: 144, 5: 168, 6: 168, 7: 200, 8: 200}    # AoE2 map size of a player count
 LABELS = ((120, "TINY_MAP"), (144, "SMALL_MAP"), (168, "MEDIUM_MAP"), (200, "LARGE_MAP"), (220, "HUGE_MAP"))
+BORDERS = ("left_border", "right_border", "top_border", "bottom_border")   # of create_land (low x, high x, low y, high y)
 RING = 0.35                     # the circle of the player lands: radius in map sizes
 AVOID = 13                      # set_avoid_player_start_areas: default tiles from a player origin
 STEPS = ((1, 0), (-1, 0), (0, 1), (0, -1))
@@ -134,12 +137,13 @@ def value(word, consts):
 def grow(owner, lands, free, rng):
     """Grow the lands at the same time, one tile each in turn, as AoE2 does: a land takes a free tile next to it. A
     higher clumping factor tries more tiles and takes the one with most tiles of the land around it (round lands).
-    lands: [{"id", "cells" (start tiles), "target" (tiles), "clump"}]; free: a bool array of the tiles to take."""
+    lands: [{"id", "cells" (start tiles), "target" (tiles), "clump", "box" (optional: (x0, x1, y0, y1), the tiles
+    that the land can take)}]; free: a bool array of the tiles to take."""
     n = owner.shape[0]
     for land in lands:
         land["front"], land["seen"], land["count"] = [], set(), 0
         for c in land["cells"]:
-            if free[c] and owner[c] < 0:
+            if free[c] and owner[c] < 0 and inside(land, c):
                 owner[c] = land["id"]
                 land["count"] += 1
         for c in zip(*np.nonzero(owner == land["id"])):
@@ -154,7 +158,7 @@ def grow(owner, lands, free, rng):
                 c = front[k]
                 front[k] = front[-1]
                 front.pop()
-                if owner[c] >= 0 or not free[c]:
+                if owner[c] >= 0 or not free[c] or not inside(land, c):
                     continue
                 owner[c] = land["id"]
                 land["count"] += 1
@@ -163,6 +167,12 @@ def grow(owner, lands, free, rng):
                 break
         if not busy:
             return
+
+
+def inside(land, c):
+    """True when tile c is in the borders of the land (its "box"), or the land has no borders."""
+    x0, x1, y0, y1 = land.get("box", (0, 1 << 30, 0, 1 << 30))
+    return x0 <= c[0] < x1 and y0 <= c[1] < y1
 
 
 def near(c, n):
@@ -232,13 +242,15 @@ def generate(text, seed, players=2, size=None, warn=None):
             base = value(attrs["base_size"][0], consts) if "base_size" in attrs else 3
             clump = value(attrs["clumping_factor"][0], consts) if "clumping_factor" in attrs else 8
             kind = value(attrs["terrain_type"][0], consts) if "terrain_type" in attrs else 0
+            edge = {a: value(attrs[a][0], consts) * n // 100 if a in attrs else 0 for a in BORDERS}
+            box = (edge["left_border"], n - edge["right_border"], edge["top_border"], n - edge["bottom_border"])
             if cmd == "create_player_lands":
                 total, turn = tiles(attrs, consts, n), rng.uniform(0, 2 * np.pi)
                 for p in range(1, players + 1):
                     a = turn + 2 * np.pi * (p - 1) / players
                     c = (int(round((n - 1) / 2 + RING * n * np.cos(a))), int(round((n - 1) / 2 + RING * n * np.sin(a))))
                     starts.append({"player": p, "x": c[0], "y": c[1], "base_size": base})
-                    lands.append({"id": len(lands), "cells": square(c, base, n), "clump": clump,
+                    lands.append({"id": len(lands), "cells": square(c, base, n), "clump": clump, "box": box,
                                   "target": max(total // players, (2 * base + 1) ** 2)})
                     kinds[len(lands) - 1] = kind
             else:
@@ -246,11 +258,11 @@ def generate(text, seed, players=2, size=None, warn=None):
                     c = tuple(min(n - 1, value(v, consts) * n // 100) for v in attrs["land_position"][:2])
                 else:
                     c = tuple(int(v) for v in rng.integers(0, n, 2))
-                lands.append({"id": len(lands), "cells": square(c, base, n), "clump": clump,
+                lands.append({"id": len(lands), "cells": square(c, base, n), "clump": clump, "box": box,
                               "target": tiles(attrs, consts, n, (2 * base + 1) ** 2)})
                 kinds[len(lands) - 1] = kind
             for a in set(attrs) - {"base_size", "clumping_factor", "terrain_type", "land_percent", "number_of_tiles",
-                                   "land_position"}:
+                                   "land_position", *BORDERS}:
                 warn(f"{cmd}: {a} is not read yet")
         else:
             warn(f"{cmd} is not read yet")
@@ -312,9 +324,7 @@ create_terrain GRASS3 { base_terrain GRASS number_of_clumps 10 land_percent 3 }
 """
 # The start objects of each player: (name, count, distance in tiles from the town center, owner: 0 = Gaia, 1 = the
 # player). A group of more than one object stands on next tiles.
-START = (("VILLAGER_MALE", 2, 4, 1), ("VILLAGER_FEMALE", 1, 4, 1), ("SCOUT_CAVALRY", 1, 6, 1), ("SHEEP", 4, 7, 1),
-         ("FORAGE_BUSH", 6, 9, 0), ("GOLD_MINE", 7, 11, 0), ("STONE_MINE", 5, 13, 0), ("WILD_BOAR", 1, 15, 0),
-         ("WILD_BOAR", 1, 16, 0), ("DEER", 3, 18, 0), ("GOLD_MINE", 4, 19, 0), ("STONE_MINE", 4, 20, 0))
+START = tuple((r["name"], *r["start"]) for r in RMAP if "start" in r)
 # Arena: each player in a circle of stone walls with a forest inside it (WALLS), open grass land between the circles.
 ARENA = """
 <LAND_GENERATION>
@@ -372,13 +382,15 @@ create_terrain FOREST { base_terrain GRASS2 number_of_clumps 6 number_of_tiles 1
   spacing_to_other_terrain_types 2 }
 create_terrain DIRT3 { base_terrain GRASS number_of_clumps 10 land_percent 3 }
 """
-# Nomad: a sea in the middle as Mediterranean, but no town center at the start: the villagers stand apart (NOMADS) and
-# the player builds the town center.
+# Nomad: one large land with a sea ring at the map edges (AoE2 wiki "Nomad (map)", #2336), and no town center at the
+# start: the villagers stand apart (NOMADS) and the player builds the town center.
 NOMAD = """
 <LAND_GENERATION>
-base_terrain GRASS
-create_player_lands { terrain_type GRASS2 land_percent 30 base_size 12 clumping_factor 15 }
-create_land { terrain_type WATER land_position 50 50 base_size 8 land_percent 20 clumping_factor 20 }
+base_terrain WATER
+create_player_lands { terrain_type GRASS2 land_percent 30 base_size 12 clumping_factor 15
+  left_border 6 right_border 6 top_border 6 bottom_border 6 }
+create_land { terrain_type GRASS land_position 50 50 base_size 12 land_percent 42 clumping_factor 20
+  left_border 6 right_border 6 top_border 6 bottom_border 6 }
 <TERRAIN_GENERATION>
 create_terrain FOREST { base_terrain GRASS number_of_clumps 8 land_percent 6 set_avoid_player_start_areas 16
   spacing_to_other_terrain_types 2 clumping_factor 15 }
@@ -417,14 +429,20 @@ ISLES = {"islands": 2}          # the water between two islands: tiles that each
 NOMADS = {"nomad": (6, 7)}      # no town center: each villager alone, at (tiles from the origin, tiles from each other)
 # The Gaia resources of Nomad over the whole map, as AoE2 Nomad (#1944, wiki infobox): (name, objects of a group,
 # groups per player). Pairs of sheep, single boars, 3-deer herds, 6 berry bushes, 6-tile gold and stone mines.
-SCATTER = (("SHEEP", 2, 2), ("FORAGE_BUSH", 6, 1), ("GOLD_MINE", 6, 2), ("STONE_MINE", 6, 2), ("WILD_BOAR", 1, 2),
-           ("DEER", 3, 1))
+SCATTER = tuple((r["name"], *r["scatter"]) for r in RMAP if "scatter" in r)
 AWAY = 12                       # tiles from each villager of Nomad to the SCATTER groups: the start is open land
 RINGS = {"gold_rush": (14, 5)}  # the forest ring around the gold: inner radius and width in tiles, gaps between players
-FISH = {"highland": (0, "FISH_SALMON", 4),    # the fish of a player: shore fish, the deep fish and its count (#1943)
-        "islands": (3, "FISH_DORADO", 6),
-        "mediterranean": (2, "FISH_TUNA", 4),
-        "nomad": (2, "FISH_TUNA", 4)}
+# The fish of a map kind: shore fish, the deep fish and its count (#1943).
+FISH = {r["fish"][0]: (r["fish"][1], r["name"], r["fish"][2]) for r in RMAP if "fish" in r}
+# The wolves of a map kind (#2019): (name, wolves per player near the gold of the middle, wolves per player on the whole
+# map). The wiki names wolves on Gold Rush and Highland but gives no counts: the counts are own values.
+WOLVES = {r["wolves"][0]: (r["name"], *r["wolves"][1:]) for r in RMAP if "wolves" in r}
+TAME = 25                       # tiles from each town center to a wolf: no wolf at the start of a player
+# The relics of each kind: 3 + 1 per player (AoE2 wiki: Arabia "five Relics" on 2-player maps, one more per player;
+# Black Forest "Default: 3, Per player: 1"; the others "standard"), #2018. The distances in tiles to each town center
+# (Nomad: each villager) and to each other relic are own values: the repository holds no text of the Microsoft
+# scripts (decision #961).
+RELICS = (3, 1, 20, 15)        # relics, more per player, tiles from a start, tiles from another relic
 WOODS = {"arabia": (10, 30, 3), # the wood line of each player (tiles from the town center, forest tiles) and its
          "gold_rush": (10, 30, 3)}  # single trees (stragglers, at 4 to 6 tiles), as in AoE2 (#1144)
 
@@ -551,7 +569,7 @@ def paths(d, w):
 def random_map(kind, seed, players=2):
     """The map description of an own generator (GENERATORS) and seed: the land of generate() (with the WALLS, PATHS,
     RIVERS, ISLES and COASTS of the kind), a town center at each player origin (not for NOMADS) and the START objects around
-    it, on free tiles (no forest, no water, not next to a wall), and the FISH of the kind."""
+    it, on free tiles (no forest, no water, not next to a wall), the FISH of the kind and the RELICS."""
     d = generate(GENERATORS[kind], seed, players)
     rng = np.random.default_rng([seed, 993])
     if kind in PATHS:
@@ -597,8 +615,15 @@ def random_map(kind, seed, players=2):
             apart += cells * name.startswith("VILLAGER")
     if kind in FISH:
         objects += fish(terrain, FISH[kind], len(d["lands"]), rng)
+    if kind in WOLVES:
+        objects += wolves(used, WOLVES[kind], GOLDS.get(kind, (0,))[0] + 4, rng, d["lands"])
     if kind in NOMADS:
         objects += scatter(used, len(d["lands"]), rng, [(o["x"], o["y"]) for o in objects if o["name"].startswith("VILLAGER")])
+    for o in objects:                                      # no relic next to a Nomad resource
+        used[max(0, int(o["x"]) - 1):int(o["x"]) + 2, max(0, int(o["y"]) - 1):int(o["y"]) + 2] = True
+    starts = [(o["x"], o["y"]) for o in objects if o["name"] == "TOWN_CENTER" or kind in NOMADS and
+              o["name"].startswith("VILLAGER")]
+    objects += relics(used, len(d["lands"]), np.random.default_rng([seed, 994]), starts)   # own rng: the rest stays
     d["terrain"] = terrain.tolist()
     d["objects"] = objects + trees(terrain)
     return d
@@ -610,7 +635,7 @@ def fish(terrain, spec, players, rng):
     shore, deep, count = spec
     water = terrain == TERRAINS["WATER"]
     taken, out = np.zeros(terrain.shape, bool), []
-    for name, k, where in (("SHORE_FISH", shore, water & dilate(terrain == TERRAINS["BEACH"], 1)),
+    for name, k, where in ((SHORE_FISH, shore, water & dilate(terrain == TERRAINS["BEACH"], 1)),
                            (deep, count, water & ~dilate(~water, 2))):
         x, y = np.nonzero(where)
         placed = 0
@@ -644,6 +669,41 @@ def scatter(used, players, rng, villagers):
             for t in cells:
                 used[max(0, t[0] - 1):t[0] + 2, max(0, t[1] - 1):t[1] + 2] = True
                 out.append({"name": name, "player": 0, "x": t[0] + 0.5, "y": t[1] + 0.5})
+    return out
+
+
+def wolves(used, spec, near, rng, lands):
+    """The WOLVES of spec: spec[1] per player on free tiles within near tiles of the map middle (the gold of Gold Rush),
+    spec[2] per player on free tiles of the whole map, each at least TAME tiles from each player origin. A wolf with no
+    free tile is missing."""
+    n, out = used.shape[0], []
+    x, y = np.mgrid[0:n, 0:n] + 0.5
+    free = ~used & np.all([np.hypot(x - st["x"], y - st["y"]) >= TAME for st in lands], axis=0)
+    for count, where in ((spec[1], np.hypot(x - n / 2, y - n / 2) <= near), (spec[2], True)):
+        for _ in range(count * len(lands)):
+            cx, cy = np.nonzero(free & where)
+            if not len(cx):
+                break
+            i = rng.integers(len(cx))
+            free[max(0, cx[i] - 1):cx[i] + 2, max(0, cy[i] - 1):cy[i] + 2] = False
+            used[cx[i], cy[i]] = True
+            out.append({"name": spec[0], "player": 0, "x": cx[i] + 0.5, "y": cy[i] + 0.5})
+    return out
+
+
+def relics(used, players, rng, tcs):
+    """The RELICS of a map (#2018) on random free tiles (`used` is False: no forest, water or shallows, not next to
+    another object), far from each town center or Nomad villager of tcs and from each other relic. A relic with no
+    place after 200 tries is missing."""
+    count, more, start, apart = RELICS
+    n, out = used.shape[0], []
+    for _ in range(count + more * players):
+        for _ in range(200):
+            c = (int(rng.integers(n)) + 0.5, int(rng.integers(n)) + 0.5)
+            if not used[int(c[0]), int(c[1])] and all(np.hypot(c[0] - x, c[1] - y) >= start for x, y in tcs) and \
+                    all(np.hypot(c[0] - o["x"], c[1] - o["y"]) >= apart for o in out):
+                out.append({"name": "RELIC", "player": 0, "x": c[0], "y": c[1]})
+                break
     return out
 
 

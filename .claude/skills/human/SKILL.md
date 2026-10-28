@@ -61,8 +61,9 @@ center). Write one step file (JSON, see the docstring of `game/play_guide.py`: s
 ASK, ANSWER and DONE lines; the answers are in `out/play.json`. Write each answer on its ticket (step 5).
 
 Pitfalls of the session of #1674 (avoid them):
-- Give each step the state that it needs with its setup commands (age, resources), or say the cheat codes in the
-  task: a Stone Wall and a Gate need the Feudal Age (`build.AGE`).
+- Give each step the state that it needs with its setup commands (age, resources), or with the key `cheats` (a list of
+  cheat codes, for example `["aegis", "robin hood"]`: the guide runs them for the owner, #2052; start `game/run.py`
+  with `--cheats`): a Stone Wall and a Gate need the Feudal Age (`build.AGE`).
 - A step that needs an attack on a building has no own units between the enemy and the building: the bot attacks the
   nearest unit (`bot.fight`). In `owner_loop` the villagers at the town center are the nearest.
 - `game/run.py --replay` without `game/watch.py` starts at once and ends before the owner joins: use `game/watch.py`.

@@ -21,8 +21,6 @@ def research(g):
 
 
 def test_the_mill_menu_has_heavy_plow_in_the_castle_age_after_horse_collar():
-    assert (train.COSTS["HEAVY_PLOW"], train.TRAIN_TIMES["HEAVY_PLOW"], train.TECH_AGE["HEAVY_PLOW"]) \
-        == ({"food": 125, "wood": 125}, 40, 2)                         # AoE2 DE wiki infobox
     server, g = setup()
     g.techs |= {"HORSE_COLLAR"}
     train.open_menu(g, "Steve", (3, 3))

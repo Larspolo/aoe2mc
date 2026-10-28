@@ -17,7 +17,7 @@ def add(monkeypatch):
     monkeypatch.setitem(train.ITEMS, NEW, (0, "horse_spawn_egg", "Test Unit"))
     monkeypatch.setitem(train.ITEMS, "ELITE_" + NEW, (0, "horse_spawn_egg", "Elite Test Unit"))
     monkeypatch.setitem(train.ITEMS, f"ELITE_{NEW}_UPGRADE", (5, "book", "Elite Test Unit"))
-    monkeypatch.setitem(train.TECH_AGE, f"ELITE_{NEW}_UPGRADE", 3)
+    monkeypatch.setitem(train.BY_KEY["age"], f"ELITE_{NEW}_UPGRADE", 3)
     monkeypatch.setitem(train.TECHS, f"ELITE_{NEW}_UPGRADE", lambda name, s: s)
     monkeypatch.setitem(train.UPGRADES, f"ELITE_{NEW}_UPGRADE", (NEW, "ELITE_" + NEW))
     monkeypatch.setattr(train.civs, "MISSING", train.civs.MISSING | train.own_civ_only())   # as at the import

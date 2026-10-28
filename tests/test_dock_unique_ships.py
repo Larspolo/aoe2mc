@@ -5,7 +5,7 @@ import pytest
 from test_dock_train import dock_map
 from test_train_menu import menus
 
-from game import build, civs, combat, fleet, train
+from game import civs, combat, fleet, train
 
 CASTLE = ("FEUDAL_AGE", "CASTLE_AGE")
 IMPERIAL = CASTLE + ("IMPERIAL_AGE",)
@@ -30,8 +30,7 @@ def test_each_ship_has_the_wiki_values(name):
     own, cost, time, hp, slot, up_cost, up_time, elite_hp = SHIPS[name]
     elite, up = f"ELITE_{name}", f"ELITE_{name}_UPGRADE"
     assert train.COSTS[name] == train.COSTS[elite] == cost and train.TRAIN_TIMES[name] == time
-    assert train.COSTS[up] == up_cost and train.TRAIN_TIMES[up] == up_time and train.TECH_AGE[up] == 3
-    assert build.AGE[name] == 2 and build.AGE[elite] == 3
+    assert train.COSTS[up] == up_cost and train.TRAIN_TIMES[up] == up_time
     assert combat.stats(name).hp == hp and combat.stats(elite).hp == elite_hp
     assert combat.SHIP in combat.stats(name).classes and combat.WAR in combat.stats(elite).classes
     assert train.ITEMS[name][0] == train.ITEMS[elite][0] == slot and train.ITEMS[up][0] == slot + 1
@@ -65,7 +64,7 @@ def test_the_elite_upgrade_turns_the_own_ships_into_the_elite_form(name):
     assert train.queue(g, "Steve", (15, 12), up)
     train.tick(g, train.TRAIN_TIMES[up])
     assert up in g.techs and g.soldiers["s"] == f"ELITE_{name}"
-    assert combat.stats_command("s", f"ELITE_{name}") in server.log
+    assert combat.stats_command("s", f"ELITE_{name}", train.stats(g, f"ELITE_{name}")) in server.log   # with the civ bonuses
     assert train.queue(g, "Steve", (15, 12), f"ELITE_{name}") and train.queue(g, "Steve", (15, 12), name) is None
 
 

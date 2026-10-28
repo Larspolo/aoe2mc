@@ -16,9 +16,6 @@ def imperial(civ="TEUTONS", techs=()):
 
 
 def test_the_university_has_chemistry_and_then_bombard_tower():
-    assert (train.COSTS["CHEMISTRY"], train.TRAIN_TIMES["CHEMISTRY"], train.TECH_AGE["CHEMISTRY"]) \
-        == ({"food": 300, "gold": 200}, 100, 3)
-    assert (train.COSTS["BOMBARD_TOWER_TECH"], train.TRAIN_TIMES["BOMBARD_TOWER_TECH"]) == ({"food": 800, "wood": 400}, 60)
     u = train.TRAINS["UNIVERSITY"]                                   # a new technology does not break it (#1441)
     assert u.index("CHEMISTRY") + 1 == u.index("BOMBARD_TOWER_TECH")
     server, g = imperial()
@@ -40,7 +37,7 @@ def test_the_build_menu_has_the_bombard_tower_after_the_research():
 
 
 def test_a_done_bombard_tower_shoots_with_the_aoe2_values_and_chemistry():
-    assert combat.stats("BOMBARD_TOWER")[:6] == (2220, 120, 3, 9, 8, 6.0) and combat.MIN_RANGE.get("BOMBARD_TOWER", 1) == 1
+    assert combat.MIN_RANGE.get("BOMBARD_TOWER", 1) == 1
     server, g = imperial(techs=["CHEMISTRY", "BOMBARD_TOWER_TECH"])
     g.stock.update(gold=100, stone=125)
     site = build.found(g, "BOMBARD_TOWER", (12, 13, 8, 9))

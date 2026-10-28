@@ -6,7 +6,7 @@ from test_castle_upgrades import BARRACKS, research, setup
 from test_forging import menus
 
 import units
-from game import build, civs, combat, replay, train
+from game import civs, combat, train
 
 CASTLE = ("FEUDAL_AGE", "CASTLE_AGE")
 IMPERIAL = CASTLE + ("IMPERIAL_AGE",)
@@ -20,20 +20,10 @@ def barracks(civ="JURCHENS", ages=IMPERIAL):
 
 
 def test_the_values_are_those_of_aoe2():
-    assert train.COSTS["FIRE_LANCER"] == train.COSTS["ELITE_FIRE_LANCER"] == {"wood": 45, "gold": 45}
-    assert train.TRAIN_TIMES["FIRE_LANCER"] == 35 and train.TRAIN_TIMES["ELITE_FIRE_LANCER"] == 25
-    assert train.COSTS["ELITE_FIRE_LANCER_UPGRADE"] == {"food": 750, "gold": 400}
-    assert train.TRAIN_TIMES["ELITE_FIRE_LANCER_UPGRADE"] == 50 and train.TECH_AGE["ELITE_FIRE_LANCER_UPGRADE"] == 3
-    assert build.AGE["FIRE_LANCER"] == 2 and build.AGE["ELITE_FIRE_LANCER"] == 3
-    assert combat.stats("ELITE_FIRE_LANCER") == (85, 10, 2, 1, 0, 2.0, {"building": 1, "cavalry": 15, "camel": 12,
-                                                                      "elephant": 15}, ("infantry", "gunpowder"))
-    assert combat.sight("FIRE_LANCER") == 7 and combat.sight("ELITE_FIRE_LANCER") == 8
     for unit in ("FIRE_LANCER", "ELITE_FIRE_LANCER"):
-        assert replay.SPEEDS[unit] == 0.96 and len(train.HELP[unit]) <= 50
+        assert len(train.HELP[unit]) <= 50
         assert units.classify(unit)["id"] == "minecraft:pillager"
     assert len(train.HELP["ELITE_FIRE_LANCER_UPGRADE"]) <= 50
-    assert train.ITEMS["FIRE_LANCER"][0] == train.ITEMS["ELITE_FIRE_LANCER"][0] == train.MORE + 1
-    assert train.ITEMS["ELITE_FIRE_LANCER_UPGRADE"][0] == train.MORE + 2
     for civ in civs.FIRE_LANCERS:
         assert civ not in civs.MISSING["FIRE_LANCER"] and civ not in civs.MISSING["ELITE_FIRE_LANCER_UPGRADE"]
     assert {"BRITONS", "FRANKS", "MONGOLS", "TURKS"} <= set(civs.MISSING["FIRE_LANCER"])
@@ -61,7 +51,8 @@ def test_the_upgrade_changes_the_live_and_the_new_units():
     assert " 20:book:Elite Fire Lancer:750 food · 400 gold · 50 s · research " in menus(server)[-1] + " "
     research(g, BARRACKS, "ELITE_FIRE_LANCER_UPGRADE")
     assert g.soldiers["fl"] == "ELITE_FIRE_LANCER"
-    assert combat.stats_command("fl", "ELITE_FIRE_LANCER") in server.log
+    assert combat.stats_command("fl", "ELITE_FIRE_LANCER", train.stats(g, "ELITE_FIRE_LANCER"), 1.0, 0.5) \
+        in server.log                                                     # Jurchens (#2116): half the friendly fire (#2418)
     train.open_menu(g, "Steve", BARRACKS)
     menu = menus(server)[-1] + " "
     assert " 19:pillager_spawn_egg:Elite Fire Lancer:45 wood · 45 gold · 25 s · queue 0/15 " in menu

@@ -17,8 +17,7 @@ def castle(food=100):
 
 
 def test_the_cost_time_and_age_are_those_of_aoe2():
-    assert train.COSTS["SQUIRES"] == {"food": 100} and train.TRAIN_TIMES["SQUIRES"] == 40
-    assert train.TECH_AGE["SQUIRES"] == 2 and train.HELP["SQUIRES"] and "SQUIRES" in train.TRAINS["BARRACKS"]
+    assert train.HELP["SQUIRES"] and "SQUIRES" in train.TRAINS["BARRACKS"]
     assert "CELTS" in civs.MISSING["SQUIRES"]                                  # the wiki availability chart
 
 

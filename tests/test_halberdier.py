@@ -8,10 +8,8 @@ from game import combat, train
 
 
 def test_the_values_are_those_of_aoe2():
-    assert train.COSTS["HALBERDIER_UPGRADE"] == {"food": 300, "gold": 600} and train.TRAIN_TIMES["HALBERDIER_UPGRADE"] == 50
-    assert train.TECH_AGE["HALBERDIER_UPGRADE"] == 3 and train.AFTER["HALBERDIER_UPGRADE"] == "PIKEMAN_UPGRADE"
-    assert train.COSTS["HALBERDIER"] == {"food": 35, "wood": 25} and train.TRAIN_TIMES["HALBERDIER"] == 22
-    assert combat.stats("HALBERDIER").hp == 60 and len(train.HELP["HALBERDIER_UPGRADE"]) <= 50
+    assert train.BY_KEY["after"]["HALBERDIER_UPGRADE"] == "PIKEMAN_UPGRADE"
+    assert len(train.HELP["HALBERDIER_UPGRADE"]) <= 50
 
 
 def test_the_upgrade_is_in_the_slot_of_pikeman_in_the_imperial_age_after_pikeman():

@@ -272,13 +272,7 @@ def read_rms(path, seed):
 # Object IDs of old scenarios that DE keeps only in its data file (the DE editor hides them, #576) -> the DE object of
 # the same look. Buildings of later ages take the base building. Not here: projectiles. The corner of a palisade gate
 # (795) is a palisade post, the battering ram (35) has a new ID in DE (#772).
-OLD_IDS = {248: "STONE_MINE", 262: "FORAGE_BUSH", 415: "STUMP", 737: "STUMP",
-           35: "BATTERING_RAM", 617: "TOWN_CENTER", 621: "TOWN_CENTER", 795: "PALISADE_WALL",
-           144: "RUBBLE_2_X_2", 146: "RUBBLE_3_X_3", 147: "RUBBLE_1_X_1", 817: "STATUE_CIVILIZATION",
-           178: "BROKEN_CART", 443: "BROKEN_CART", 735: "TREBUCHET_PACKED", 451: "DOLPHIN",
-           10: "ARCHERY_RANGE", 20: "BARRACKS", 498: "BARRACKS", 30: "MONASTERY", 32: "MONASTERY", 116: "MARKET",
-           137: "MARKET", 129: "MILL", 133: "DOCK", 807: "DOCK", 150: "SIEGE_WORKSHOP", 210: "UNIVERSITY",
-           464: "HOUSE", 465: "HOUSE", 563: "BLACKSMITH", 585: "MINING_CAMP", 586: "MINING_CAMP"}
+OLD_IDS = {r["id"]: r["name"] for r in units.rows("old_ids.jsonl")}
 FLAGX, SHALLOWS_OBJECT = 162, 447   # an invisible editor flag (units.INVISIBLE); shallows: the terrain of its tile
 
 
@@ -364,7 +358,7 @@ def map_description(d, path):
 def read_scenario(path):
     from AoE2ScenarioParser.scenarios.aoe2_de_scenario import AoE2DEScenario
     from AoE2ScenarioParser.datasets.terrains import TerrainId
-    from AoE2ScenarioParser.datasets.trigger_lists import ColorMood
+    from AoE2ScenarioParser.datasets.trigger_lists import ColorMood, VictoryCondition
 
     with contextlib.redirect_stdout(io.StringIO()):   # the parser prints a lot of status text
         scn = AoE2DEScenario.from_file(path)
@@ -395,6 +389,9 @@ def read_scenario(path):
         players[p.player_id] = {"color": color if p.player_id else "light_gray", "arch": arch,
                                 "civ": getattr(civ, "name", "?"),
                                 "view": view if view[0] is not None and min(view) >= 0 else None}
+        if p.player_id:                         # the tab "Players" of the editor: for a scenario game (#2539)
+            players[p.player_id] |= {"resources": {r: int(getattr(p, r) or 0) for r in ("food", "wood", "gold", "stone")},
+                                     "pop_limit": int(p.population_cap or 200), "computer": not p.human}
         neutral = [i for i, d in enumerate(p.diplomacy or [], 1) if d == 1 and i != p.player_id and i <= 8]
         if p.player_id and neutral:             # the stance neutral (1) of DiplomacyState: no automatic attack (#1645)
             players[p.player_id]["neutral"] = neutral
@@ -412,7 +409,7 @@ def read_scenario(path):
                                                    "area": [c.area_x1, c.area_y1, c.area_x2, c.area_y2],
                                                    "object": c.object_list, "group": c.object_group,
                                                    "class": c.object_type}
-                                                  if c.condition_type == IN_AREA else {}))
+                                                  if c.condition_type in COUNTED else {}))
                                           for c in t.conditions],
                               effects=[dict(type=e.effect_type, message=e.message or "", player=e.source_player,
                                             time=e.display_time, object=kinds.get(e.object_list_unit_id),
@@ -420,11 +417,19 @@ def read_scenario(path):
                                             area=[e.area_x1, e.area_y1, e.area_x2, e.area_y2],
                                             **({"mood": ColorMood(e.color_mood).name}     # "Change Color Mood" (#1876)
                                                if e.effect_type == CHANGE_COLOR_MOOD and
-                                               getattr(e, "color_mood", None) in set(ColorMood) else {}))
+                                               getattr(e, "color_mood", None) in set(ColorMood) else {}),
+                                            **({"quantity": e.quantity} if e.effect_type == DAMAGE_OBJECT else {}),
+                                            **({"target": e.target_player}                # "Change Ownership" (#2570)
+                                               if e.effect_type == CHANGE_OWNERSHIP else {}))
                                        for e in t.effects])
                          for t in scn.trigger_manager.triggers]
     mood = mm.map_color_mood                 # a ColorMood, or a string that the parser does not know (#1594)
     texts["mood"] = (getattr(mood, "name", None) or str(mood or "DEFAULT")).upper()
+    om = scn.option_manager                  # the tab "Global Victory" for the scenario mode (#2566, run.VICTORIES)
+    win = VictoryCondition(om.victory_condition).name.lower().replace("_", "-") \
+        if om.victory_condition in set(VictoryCondition) else "standard"
+    texts["global_victory"] = {"condition": win, **({"score": int(om.victory_score)} if win == "score" else {}),
+                              **({"years": int(om.victory_years)} if win == "time-limit" else {})}
 
     objects = []
     for player, player_units in enumerate(scn.unit_manager.units):
@@ -648,6 +653,8 @@ def read_timeline(path):
             to = a.payload["target_player_id"]
             e["to"] = int.from_bytes(to, "little") if isinstance(to, bytes) else int(to)
             e.update((r, int(round(a.payload.get(r) or 0))) for r in ("food", "wood", "gold", "stone"))
+        if kind == "flare" and "targets" in a.payload:             # one flag per player slot: the receivers (#2403)
+            e["to"] = [i for i, f in enumerate(a.payload["targets"]) if f]
         if kind == "special" and e.get("order") == "Garrison":     # the garrison command of AoE2 DE (#809)
             ids = e.get("objects", [])                              # mgz reads the IDs one byte early
             e["kind"], e["objects"] = "garrison", [i >> 8 for i in ids] if all(i & 255 == 0 for i in ids) else ids
@@ -712,14 +719,8 @@ def apply_timeline(objects, timeline, at):
     return [o for o in out if o.get("ref") is None or o["ref"] not in deleted], stats
 
 
-TRAIN = {"VILLAGER": (25, "TOWN_CENTER"), "MILITIA": (21, "BARRACKS"), "MAN_AT_ARMS": (21, "BARRACKS"),
-         "SPEARMAN": (22, "BARRACKS"), "PIKEMAN": (22, "BARRACKS"), "EAGLE": (35, "BARRACKS"),
-         "ARCHER": (35, "ARCHERY_RANGE"), "SKIRMISHER": (22, "ARCHERY_RANGE"), "CROSSBOWMAN": (27, "ARCHERY_RANGE"),
-         "CAVALRY_ARCHER": (34, "ARCHERY_RANGE"), "SCOUT_CAVALRY": (30, "STABLE"), "LIGHT_CAVALRY": (30, "STABLE"),
-         "CAMEL": (30, "STABLE"), "KNIGHT": (30, "STABLE"), "FISHING_SHIP": (40, "DOCK"), "GALLEY": (60, "DOCK"),
-         "FIRE_GALLEY": (36, "DOCK"), "TRANSPORT_SHIP": (36, "DOCK"), "TRADE_COG": (36, "DOCK"),
-         "BATTERING_RAM": (36, "SIEGE_WORKSHOP"), "MANGONEL": (46, "SIEGE_WORKSHOP"), "SCORPION": (30, "SIEGE_WORKSHOP"),
-         "MONK": (51, "MONASTERY"), "TRADE_CART": (50, "MARKET")}   # common units: seconds of training (DE), building
+# Common units: seconds of training (DE), building. The first name that starts the unit name wins.
+TRAIN = {r["name"]: (r["seconds"], r["building"]) for r in units.rows("train.jsonl")}
 RESEARCH_S = {"Loom": 25, "Town Watch": 25, "Town Patrol": 40, "Wheelbarrow": 75, "Hand Cart": 55,
               "Feudal Age": 130, "Castle Age": 160, "Imperial Age": 190}   # the town center researches: they delay units
 UNIT_USE = {"move", "order", "build", "wall", "patrol", "follow", "formation", "attack_move", "back_to_work", "stance",
@@ -1434,7 +1435,8 @@ def decor(E, cols, name, rect, rng):
     put = lambda dx, dy, dz, b: E.add([cx + dx], [y + dy], [cz + dz], b)
     pick = lambda opts: opts[int(rng.integers(len(opts)))]
     n = name
-    if n.startswith(("STATUE", "TROPAION", "STELAE", "HERO_SHRINE")):
+    kind = OBJECT.get(n, {}).get("decor")
+    if n.startswith(STATUES):
         E.box(cx - 1, cx + 1, y, y + 1, cz - 1, cz + 1, "polished_andesite")
         h = 5 if "COLUMN" in n else 3
         for dy in range(1, h):
@@ -1446,7 +1448,7 @@ def decor(E, cols, name, rect, rng):
                 put(dx, dy, dz, "quartz_pillar")
         E.box(cx - 1, cx + 2, y + 4, y + 5, cz - 1, cz + 2, "smooth_quartz_slab[type=bottom]")
         put(0, 1, 0, "chiseled_quartz_block")
-    elif "MARKET_STALL" in n or "GOODS" in n or n in ("MEDITERRANEAN_STALL", "MESOPOTAMIAN_STALL"):
+    elif "MARKET_STALL" in n or "GOODS" in n or kind == "stall":
         for dx, dz in ((-1, -1), (1, -1), (-1, 1), (1, 1)):
             put(dx, 1, dz, "oak_fence"); put(dx, 2, dz, "oak_fence")
         wool = pick(["red", "yellow", "blue", "green", "orange", "white"])
@@ -1532,19 +1534,19 @@ def decor(E, cols, name, rect, rng):
                     E.add([x], [yy], [z], "black_carpet", hard=False)
                 elif rng.random() < 0.8 and yy - 1 == cols.top[min(max(x, 0), cols.n - 1), min(max(z, 0), cols.n - 1)]:
                     E.add([x], [yy - 1], [z], "dirt_path")
-    elif n in ("HEAD", "IMPALED_CORPSE", "IMPALED_CORPSE_ANTIQUITY"):
+    elif kind == "head":
         h = 2 if n.startswith("IMPALED_CORPSE") else 0
         for dy in range(h):
             put(0, dy, 0, "spruce_fence")
         put(0, h, 0, "skeleton_skull[rotation=8]")
         if h:
             put(1, 0, 0, "bone_block[axis=x]")
-    elif n in ("TREASURE_CHEST", "LOOT"):
+    elif kind == "loot":
         put(0, 0, 0, "chest[facing=south]" if n == "TREASURE_CHEST" else "barrel[facing=up]")
         put(1, 0, 0, "gold_block" if n == "TREASURE_CHEST" else "raw_gold_block")
     elif n == "LEATHERWORKING_EQUIPMENT":
         put(0, 0, 0, "loom[facing=south]"); put(1, 0, 0, "spruce_fence"); put(1, 1, 0, "brown_carpet")
-    elif n in ("ARCHAIC_FENCE", "STAKE_BARRICADE"):
+    elif kind == "fence":
         for x in range(x0, x1):
             yy = cols.surface(x, cz)
             if n == "ARCHAIC_FENCE":
@@ -1570,7 +1572,7 @@ def decor(E, cols, name, rect, rng):
         put(0, 0, 0, "water[level=0]" if min(x1 - x0, z1 - z0) >= 3 else rim)     # small tiles: no rim, no water
         for dx, dz in ((-1, -1), (1, -1), (-1, 1), (1, 1)):
             put(dx, 1, dz, "quartz_pillar" if "ANTIQUITY" in n else "stone_brick_wall")
-    elif n in ("WATER_POTS", "AMPHORAE"):
+    elif kind == "pots":
         pot = "decorated_pot[facing=south,cracked=false]"
         for dx, dz in ((0, 0), (1, 0), (0, 1)):
             put(dx, 0, dz, pot)
@@ -1763,13 +1765,15 @@ def player_color(p, players=None):
 # Place all objects of the scenario.
 # --------------------------------------------------------------------------------------------
 MOUNTAINS = ("MOUNTAIN", "SNOW_MOUNTAIN")
-MONUMENTS = ("BUDDHA_STATUE", "INDIAN_STATUES", "OLD_STONE_HEAD", "NINE_BANDS", "PAGODA_", "TORII_GATE", "STUPA",
-             "TROWULAN_GATE", "REKHA_DEUL_TEMPLE", "SVAN_TOWER", "MEDITERRANEAN_COURTYARD_WALLS",
-             "MESOPOTAMIAN_PILLAR", "MESOPOTAMIAN_GARDEN", "MESOPOTAMIAN_TOMB", "BURNED_BUILDING", "CONSTRUCTION_CRANE", "SCAFFOLDING", "THEATRE",
-             "STONEHENGE")    # buildings.py designs
-PASSABLE_OBJECTS = ("FLOWER", "FERN", "RUG", "GRASS", "PLANT", "OYSTER", "FISH", "RELIC", "GRAVE", "BONFIRE",
-                    "PATH_", "BLACK_TILE", "ICE_NAVIGABLE", "DOLPHIN", "BOX_TURTLES", "KELP", "WATER_LILY",
-                    "FALLEN_LEAVES", "STUMP", "WOODEN_ROAD")
+# The other objects of AoE2 (#2036). "mob": a part of the name, the first line wins; "monument" (a buildings.py
+# design), "obstacle": the start of the name; "passable": a part of the name; "decor": the design in decor() (a
+# start of the name for "statue", else the full name); "map_color", "scatter", "no_blocks": the full name.
+OBJECTS = units.rows("objects.jsonl")
+OBJECT = {r["name"]: r for r in OBJECTS}
+MONUMENTS = tuple(r["name"] for r in OBJECTS if r.get("monument"))
+PASSABLE_OBJECTS = tuple(r["name"] for r in OBJECTS if r.get("passable"))
+OBSTACLES = tuple(r["name"] for r in OBJECTS if r.get("obstacle"))
+STATUES = tuple(r["name"] for r in OBJECTS if r.get("decor") == "statue")
 
 
 def object_footprint(o, T):
@@ -1897,7 +1901,7 @@ def place_objects(objects, players, cols, rng):
                 "dead_bush" if "DEAD" in name else "short_grass"
             E.add([bx], [y], [bz], plant, hard=False)
             stats["plants"] += 1
-        elif kind == "O" and (name.startswith("RUBBLE") or "SKELETON" in name or name in ("LUMBER", "FLOWER_BED")
+        elif kind == "O" and (name.startswith("RUBBLE") or "SKELETON" in name or OBJECT.get(name, {}).get("scatter")
                               or "CART" in name or name.startswith("TORCH") or name == "SIGN"):
             things = (["cobblestone", "gravel", "mossy_cobblestone"] if name.startswith("RUBBLE") else
                       ["bone_block[axis=x]", "bone_block[axis=z]"] if "SKELETON" in name else
@@ -1911,7 +1915,7 @@ def place_objects(objects, players, cols, rng):
             if name.startswith("TORCH") or name == "SIGN":
                 E.add([bx], [y + 1], [bz], "torch" if name.startswith("TORCH") else "oak_fence")
             stats["decorations"] += 1
-        elif kind == "O" and (name in ("CRATER", "SMOKE", "CRACKS") or name.startswith("WATERFALL")):
+        elif kind == "O" and (OBJECT.get(name, {}).get("no_blocks") or name.startswith("WATERFALL")):
             pass
         elif kind == "O" and "ROCK" in name:
             mound(E, cols, bx, bz, T * 0.4, 2, ["mossy_cobblestone", "cobblestone", "stone"], rng)
@@ -1949,10 +1953,8 @@ def place_objects(objects, players, cols, rng):
                 stats["skipped (unknown to the parser)"] += 1
             elif kind != "U" and not object_mob(name):
                 stats["skipped (other objects)"] += 1
-        if kind == "O" and (("TREE" in name and "STUMP" not in name) or name in ("GOLD_MINE", "STONE_MINE", "QUARRY")
-                            or "FORAGE" in name or "FRUIT_BUSH" in name or name.startswith(("CLIFF", *MOUNTAINS, "ROCK", "STATUE", "TROPAION",
-                            "STELAE", "THOLOS", "HERO_SHRINE", "WELL", "HAY_STACK", "MARKET_STALL", "FOUNTAIN",
-                            "MEDITERRANEAN_STALL", "MESOPOTAMIAN_STALL"))):
+        if kind == "O" and (("TREE" in name and "STUMP" not in name) or "FORAGE" in name or "FRUIT_BUSH" in name
+                            or name.startswith(("CLIFF", *MOUNTAINS, "ROCK", *OBSTACLES))):
             obstacle(E, cols, E.footprint)
         elif kind == "O" and E.footprint and not any(k in name for k in PASSABLE_OBJECTS):
             x0, x1, z0, z1 = E.footprint            # other objects with blocks: no units on top of them
@@ -1961,14 +1963,14 @@ def place_objects(objects, players, cols, rng):
     E.natural = True
     cliff_ridges(E, cols, cliffs, rng)
     E.natural = False
+    free_carpets(E, cols)
     return E, stats
 
 
 # --------------------------------------------------------------------------------------------
 # Units -> entities
 # --------------------------------------------------------------------------------------------
-FISH = [("SALMON", "salmon"), ("DORADO", "tropical_fish"), ("SNAPPER", "tropical_fish"), ("FISH", "cod"),
-        ("DOLPHIN", "dolphin"), ("BOX_TURTLES", "turtle"), ("HOWLER_MONKEY", "ocelot")]
+FISH = [(r["name"], r["mob"]) for r in OBJECTS if "mob" in r]
 OBJECT_MOBS = {"WHALE": "dolphin"}    # exact names: BEACHED_WHALE is a carcass, not a mob. No whale mob: the dolphin
 LAND_MOBS = ("turtle", "ocelot")      # is the nearest large sea animal
 
@@ -2000,6 +2002,37 @@ def ground_masks():
         carpet = [st.split(":")[1].split("[")[0].endswith("carpet") for st in B.states] + [False] * 1024
         GROUND_MASKS[n] = np.array(carpet), passable_states(B.states)
     return GROUND_MASKS[n]
+
+
+def free_carpets(E, cols):
+    """Take away each ground carpet with a solid block 3 over its ground in its column or a next one (#2390).
+    The step onto the carpet (1/16 block) lifts the head of a unit (1.95 blocks) into that block: the path search
+    takes the step, and the unit cannot move."""
+    if not E.parts:
+        return
+    n = cols.n
+    carpet, passable = ground_masks()
+    x, y, z, ids = (np.concatenate(p) for p in list(zip(*E.parts))[:4])
+    ok = (x >= 0) & (z >= 0) & (x < n) & (z < n) & ~passable[ids]
+    x, y, z = x[ok], y[ok], z[ok]
+    wtop = cols.wtop[:n, :n].astype(np.int32)
+    over = y > wtop[x, z]
+    low = np.full((n, n), 1 << 20, np.int32)                    # the lowest solid object block over the ground
+    np.minimum.at(low, (x[over], z[over]), y[over])
+    pad = np.pad(low, 1, constant_values=1 << 20)
+    bad = np.zeros((n, n), bool)
+    for dx in (-1, 0, 1):
+        for dz in (-1, 0, 1):
+            bad |= pad[1 + dx:1 + dx + n, 1 + dz:1 + dz + n] == wtop + 3
+    deco = cols.deco[:n, :n]
+    deco[bad & carpet[deco]] = AIR
+    for i, (px, py, pz, pids, hard) in enumerate(E.parts):
+        inside = (px >= 0) & (pz >= 0) & (px < n) & (pz < n)
+        drop = np.zeros(len(px), bool)
+        cx, cz = px[inside], pz[inside]
+        drop[inside] = carpet[pids[inside]] & bad[cx, cz] & (py[inside] == wtop[cx, cz] + 1)
+        if drop.any():
+            E.parts[i] = (px[~drop], py[~drop], pz[~drop], pids[~drop], hard[~drop])
 
 
 def seat_count(ship):
@@ -2539,19 +2572,25 @@ def write_region(path, chunks):
         f.write(header + body)
 
 
-def write_objects(path, size, T, H, players, objects, cols, ground, timeline=None, mood="DEFAULT", map_ground=None):
+def write_objects(path, size, T, H, players, objects, cols, ground, timeline=None, mood="DEFAULT", map_ground=None,
+                  victory=None, messages=None):
     """aoe2mc.json: the data that a game program needs (docs/research/gameplay.md). Tiles are in the turned grid
     (--orientation): block x = tile x × T, block z = tile y × T. Units have the UUID of their entity, buildings
     their footprint [x0, z0, x1, z1) in blocks. Objects of a recorded game have their object ID ("ref").
     Objects that the converter did not place are not in the list.
-    A building has the free cells of its ground floor and their y ("inside", buildings.INSIDE) for a garrison,
-    and the cells of its footprint that units walk through ("open": the town center, #865).
+    A building has the free cells of its ground floor (the hall of a town center, #2054) and their y ("inside",
+    buildings.INSIDE) for a garrison, and the cells of its footprint that units walk through ("open": the town
+    center, #865).
     "ground" has one string per block row z: for each x the y where a unit stands, or "-" for water.
     "timeline" (recorded games only): the events of read_timeline, with tiles in the turned grid
     and the "names" of the selected objects (name_timeline).
+    "players" of a scenario also have its "resources" (food, wood, gold, stone), "pop_limit" and "computer" (#2539).
     "mood": the map color mood of a DE scenario (ColorMood name, #1594), else "DEFAULT".
     "map_ground": the map bytes of map 0 without the objects (map_colors), one hex string per pixel row z: the live
-    minimap of the plugin paints them where no live object is (#1940)."""
+    minimap of the plugin paints them where no live object is (#1940).
+    "victory" (DE scenarios only): the victory setting of the scenario, {"condition": a name of run.VICTORIES or
+    "custom" (only its triggers end the game), "score" or "years" of that condition} (#2566).
+    "messages": the scenario texts of CHAPTERS that are not empty (chapter -> text): the book of the scenario mode (#2541)."""
     kinds = {"U": "unit", "B": "building", "O": "other"}
     objs = []
     for o in objects:
@@ -2576,12 +2615,16 @@ def write_objects(path, size, T, H, players, objects, cols, ground, timeline=Non
         objs.append(e)
     data = {"map_size": size, "tile_size": T, "level_height": H, "mood": mood,
             "players": {str(pid): {"civ": p["civ"], "color": p["color"], "arch": p["arch"]}
-                        | {k: p[k] for k in ("team", "neutral") if k in p} for pid, p in sorted(players.items())},
+                        | {k: p[k] for k in ("team", "neutral", "resources", "pop_limit", "computer") if k in p} for pid, p in sorted(players.items())},
             "objects": objs}
     n, wet = cols.n, cols.wtop > cols.top
     data["ground"] = [" ".join("-" if wet[x, z] else str(ground[x, z]) for x in range(n)) for z in range(n)]
     if timeline is not None:
         data["timeline"] = timeline
+    if victory is not None:
+        data["victory"] = victory
+    if messages and (texts := {k: v for k, v in messages.items() if k in CHAPTERS and (v or "").strip()}):
+        data["messages"] = texts
     if map_ground is not None:
         data["map_ground"] = [bytes(row).hex() for row in np.asarray(map_ground, np.uint8)]
     with open(path, "w") as f:
@@ -2590,15 +2633,7 @@ def write_objects(path, size, T, H, players, objects, cols, ground, timeline=Non
 
 # Work sounds at buildings (#220): name part -> (sound, predicate, particle). Only Minecraft sounds; the villager
 # work sounds exist in 26.3. The first matching rule wins.
-WORK_SOUNDS = [
-    ("BLACKSMITH", "block.anvil.use", "sometimes", "lava"), ("MARKET", "entity.villager.trade", "sometimes", None),
-    ("TOWN_CENTER", "block.bell.use", "rare", None), ("LUMBER_CAMP", "item.axe.strip", "sometimes", None),
-    ("MINING_CAMP", "block.stone.break", "sometimes", None), ("DOCK", "entity.villager.work_fisherman", "sometimes", None),
-    ("MONASTERY", "entity.villager.work_cleric", "sometimes", None), ("MILL", "entity.villager.work_farmer", "sometimes", None),
-    ("ARCHERY_RANGE", "entity.villager.work_fletcher", "sometimes", None),
-    ("UNIVERSITY", "entity.villager.work_librarian", "sometimes", None),
-    ("SIEGE_WORKSHOP", "entity.villager.work_mason", "sometimes", None),
-]
+WORK_SOUNDS = [(r["name"], r["sound"], r["when"], r["particle"]) for r in units.rows("work_sounds.jsonl")]
 CHANCE = {"sometimes": 0.25, "rare": 0.03}      # per pulse of 2 s
 
 # Ambience per terrain group (#219): vanilla biomes of `terrain_style` -> particle and sound near each player in such
@@ -2666,7 +2701,11 @@ def team_lines(objects, players):
 
 
 TIMER, SEND_CHAT, DISPLAY_INSTRUCTIONS, IN_AREA = 10, 3, 20, 5   # AoE2 condition and effect IDs (AoE2ScenarioParser)
-CREATE_OBJECT, REMOVE_OBJECT, CHANGE_COLOR_MOOD = 11, 15, 72
+OWN_OBJECTS, OWN_FEWER_OBJECTS = 3, 4                              # conditions on the units of a player (#2573)
+COUNTED = (IN_AREA, OWN_OBJECTS, OWN_FEWER_OBJECTS)                # conditions that count units: the tick function
+CREATE_OBJECT, KILL_OBJECT, REMOVE_OBJECT, CHANGE_OWNERSHIP, CHANGE_COLOR_MOOD = 11, 14, 15, 18, 72
+DAMAGE_OBJECT = 24                                                     # "Damage Object" (#2571)
+TELEPORT_OBJECT = 35
 
 
 def turn_area(area, size, k):
@@ -2694,7 +2733,8 @@ def area_selector(c, T):
 
 def object_lines(t, e, T, ground, players, stats):
     """The commands of "Create Object" and "Remove Object" (#656): a summon of the entity of units.make_entity at
-    the middle of the tile, or a kill of the units of the player and type in the area (area_selector).
+    the middle of the tile, or a kill of the units of the player and type in the area (area_selector). "Kill Object"
+    (#2568) is the same kill, also with no area (the whole map): Minecraft shows the death, as AoE2.
     Buildings and other objects are not supported yet: they count in stats."""
     kind, name = e.get("object") or (None, None)
     if e["type"] == CREATE_OBJECT and min(e.get("tile", [-1])) >= 0:
@@ -2714,22 +2754,81 @@ def object_lines(t, e, T, ground, players, stats):
             part.pop("UUID", None)
             parts += list(part.get("Passengers", []))
         return [f"summon {kind} {x + 0.5} {int(ground[x, z])} {z + 0.5} {nbt.snbt()}"]
-    if e["type"] == REMOVE_OBJECT and min(e.get("area", [-1])) >= 0:
-        at, top = area_selector(e, T), None
-        if e["player"] <= 0:                                           # Gaia units have no player tag
-            at = re.sub(r"tag=aoe2mc\.p-?\d+,?", "", at)
-        if name is not None:
-            nbt = units.make_entity(dict(name=name, player=0), {}, (0.0, 0.0, 0.0), np.random.default_rng(0)) \
-                if kind in ("U", "H") else None
-            if nbt is None:
-                stats["remove (not supported yet)"] += 1
-                return []
-            top = units.top_entity(nbt)
-            at = f"@e[type={top['id']},{at[3:]}" if at != "@e[]" else f"@e[type={top['id']}]"
-        stats["remove"] += 1
+    if e["type"] == KILL_OBJECT or e["type"] == REMOVE_OBJECT and min(e.get("area", [-1])) >= 0:
+        word = "kill" if e["type"] == KILL_OBJECT else "remove"
+        if name is None and e["player"] <= 0 and e["type"] == KILL_OBJECT:   # Gaia units have no tag: a kill
+            stats["kill (not supported yet)"] += 1                     # of all would kill the decor entities too
+            return []
+        if (found := effect_units(e, T)) is None:
+            stats[f"{word} (not supported yet)"] += 1
+            return []
+        at, top, nbt = found
+        stats[word] += 1
         ride = [f"execute as {at} on vehicle run kill @s"] if top is not None and top is not nbt else []
         return ride + [f"kill {at}"]                                       # a rider: its mount goes too
     return []
+
+
+def effect_units(e, T):
+    """(selector, top entity, entity) of the units of an effect: its player (Gaia units have no player tag), area
+    (area_selector) and unit type (the type of the top entity of units.make_entity). No type: (selector, None, None).
+    A type with no entity (a building): None."""
+    kind, name = e.get("object") or (None, None)
+    at = area_selector(e, T)
+    if e["player"] <= 0:                                           # never a player (#2568)
+        at = re.sub(r"tag=aoe2mc\.p-?\d+,?", "type=!minecraft:player,", at)
+    if name is None:
+        return at, None, None
+    nbt = units.make_entity(dict(name=name, player=0), {}, (0.0, 0.0, 0.0), np.random.default_rng(0)) \
+        if kind in ("U", "H") else None
+    if nbt is None:
+        return None
+    top = units.top_entity(nbt)
+    return f"@e[type={top['id']},{at[3:]}".replace(",type=!minecraft:player", ""), top, nbt
+
+
+def damage_lines(e, T, stats):
+    """The commands of "Damage Object" (#2571): a `damage` of each unit of the effect (effect_units) by its amount.
+    The amount is in AoE2 hit points: the game program gives each unit max_health = its AoE2 hit points
+    (combat.stats_command); a vanilla world keeps the health of the mob. A negative amount heals in AoE2: not yet."""
+    q = e.get("quantity") or 0
+    found = effect_units(e, T) if q > 0 else None
+    if found is None:
+        stats["damage (heal or building, not supported yet)" if q else "damage (no amount)"] += 1
+        return []
+    at = found[0]                                                      # Gaia: not the players (effect_units)
+    stats["damage"] += 1
+    return [f"execute as {at} run damage @s {q}"]                      # damage takes one entity
+def owner_lines(e, T, stats):
+    """The commands of "Change Ownership" (#2570): the units of the player in the area (area_selector) and their
+    mounts get the tag and the team of the target player. A temporary tag marks them first: the selector uses the old
+    player tag. Gaia has no player tag and no team: not supported yet."""
+    old, new = e["player"], e.get("target", -1)
+    if old <= 0 or new <= 0 or old == new:
+        stats["change ownership (not supported yet)"] += old != new
+        return []
+    stats["change ownership"] += 1
+    own = "@e[tag=aoe2mc.own]"
+    return [f"tag {area_selector(e, T)} add aoe2mc.own",
+            f"execute as {own} on vehicle run tag @s add aoe2mc.own",
+            f"tag {own} remove aoe2mc.p{old}", f"tag {own} add aoe2mc.p{new}",
+            f"team join p{new} {own}", f"tag {own} remove aoe2mc.own"]
+
+
+def teleport_lines(e, T, ground):
+    """The commands of "Teleport Object" (#2569): a tp of the units of the player in the area (area_selector) to the
+    middle of the target tile, on the ground. A rider is not in the selector of its horse (units.MOUNT): the first line
+    moves the mounts of the riders in the area, and the riders go with them. Then the riders are out of the area, so
+    the second line (a tp of a rider takes it off its horse) moves only the units on foot."""
+    if min(e.get("tile", [-1])) < 0 or min(e.get("area", [-1])) < 0:
+        return []
+    x, z = (int((v + 0.5) * T) for v in e["tile"])
+    if not (0 <= x < ground.shape[0] and 0 <= z < ground.shape[1]):
+        return []
+    at, to = area_selector(e, T), f"{x + 0.5} {int(ground[x, z])} {z + 0.5}"
+    if e["player"] <= 0:                                               # Gaia units have no player tag: not the players
+        at = re.sub(r"tag=aoe2mc\.p-?\d+", "type=!player", at)
+    return [f"execute as {at} on vehicle run tp @s {to}", f"tp {at} {to}"]
 
 
 def mood_lines(e):
@@ -2742,12 +2841,16 @@ def mood_lines(e):
 
 
 def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=True):
-    """(load lines, files) for the triggers that only have timer conditions (#648) or only "Objects in Area"
-    conditions (#649): one function per trigger. The load function schedules a timer trigger at the AoE2 time (all
+    """(load lines, files) for the triggers that only have timer conditions (#648) or only "Objects in Area",
+    "Own Objects" and "Own Fewer Objects" conditions (#649, #2573): one function per trigger. "Own Objects" counts the
+    units of the player on the whole map (Q or more), "Own Fewer Objects" Q or fewer; buildings are blocks with no
+    entity, so they do not count. The load function schedules a timer trigger at the AoE2 time (all
     timers must pass: the largest). The tick function runs an area trigger when units of its player are in all its
     areas; the score #N of aoe_trig marks a fired trigger, so it fires once. A looping area trigger fires again after
     the units leave an area. "Send Chat" is a tellraw, "Display Instructions" a subtitle for its display time;
-    "Create Object" and "Remove Object": object_lines (#656). "Change Color Mood": mood_lines (#1876), only with mood.
+    "Create Object" and "Remove Object": object_lines (#656). "Change Color Mood": mood_lines (#1876), only with mood. "Change Ownership": owner_lines (#2570).
+    "Damage Object": damage_lines (#2571).
+    "Teleport Object": teleport_lines (#2569).
     A disabled trigger does not run."""
     load, files, tick = [], {}, []
     stats = Counter() if stats is None else stats
@@ -2755,16 +2858,25 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
     for t in triggers:
         conds = t["conditions"]
         kinds = {(c["type"], c["inverted"]) for c in conds}
-        if not t["enabled"] or not conds or kinds not in ({(TIMER, False)}, {(IN_AREA, False)}) or \
+        if not t["enabled"] or not conds or not (kinds == {(TIMER, False)} or kinds <= {(k, False) for k in COUNTED}) or \
                 any(c.get("group", -1) >= 0 or c.get("class", -1) >= 0 for c in conds):   # unit classes: not yet
             continue
         lines = []
         for e in t["effects"]:
-            if e["type"] in (CREATE_OBJECT, REMOVE_OBJECT):
+            if e["type"] in (CREATE_OBJECT, KILL_OBJECT, REMOVE_OBJECT):
                 lines += object_lines(t, e, T, ground, players, stats)
+                continue
+            if e["type"] == CHANGE_OWNERSHIP:
+                lines += owner_lines(e, T, stats)
                 continue
             if e["type"] == CHANGE_COLOR_MOOD:
                 lines += mood_lines(e) if mood else []
+                continue
+            if e["type"] == DAMAGE_OBJECT:
+                lines += damage_lines(e, T, stats)
+                continue
+            if e["type"] == TELEPORT_OBJECT:
+                lines += teleport_lines(e, T, ground)
                 continue
             msg = re.sub(r"<[^<>]*>", "", e["message"]).replace("\r", "").strip()   # AoE2 color tags
             if not msg:
@@ -2778,11 +2890,17 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
         if not lines:
             continue
         fn, n = f"aoe2mc:trigger/{t['id']}", t["id"]
-        if conds[0]["type"] == IN_AREA:
+        if conds[0]["type"] in COUNTED:
             tests, unless = [], []
             for i, c in enumerate(conds):
-                sel, q = area_selector(c, T), max(c["quantity"], 1)
-                if q == 1:
+                whole = c["type"] != IN_AREA                           # Own (Fewer) Objects: the whole map
+                sel = area_selector(dict(c, area=[-1] * 4) if whole else c, T)
+                q = max(c["quantity"], 0 if c["type"] == OWN_FEWER_OBJECTS else 1)
+                if c["type"] == OWN_FEWER_OBJECTS:                     # count the units: q or fewer
+                    tick.append(f"execute store result score #{n}.{i} aoe_trig if entity {sel}")
+                    tests.append(f"if score #{n}.{i} aoe_trig matches ..{q}")
+                    unless.append(f"unless score #{n}.{i} aoe_trig matches ..{q}")
+                elif q == 1:
                     tests.append(f"if entity {sel}")
                     unless.append(f"unless entity {sel}")
                 else:                                                  # count the units: q or more
@@ -3022,7 +3140,7 @@ def map_colors(img):
 MAP_DYES = {"black": 29, "blue": 25, "brown": 26, "cyan": 23, "gray": 21, "green": 27, "light_blue": 17,
             "light_gray": 22, "lime": 19, "magenta": 16, "orange": 15, "pink": 20, "purple": 24, "red": 28,
             "white": 8, "yellow": 18}
-MAP_MINES = {"GOLD_MINE": 30, "STONE_MINE": 11}
+MAP_MINES = {r["name"]: r["map_color"] for r in OBJECTS if "map_color" in r}
 
 
 def map_objects(colors, s, c, objects, players=None, T=4):
@@ -3414,7 +3532,7 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
     shade *= np.where(depth > 0, np.clip(1.6 - 0.2 * depth, 1, 1.4), 1)     # shallow water is lighter, as on a map item
     img = Image.fromarray(np.clip(img * shade[..., None], 0, 255).astype(np.uint8))
     write_objects(os.path.join(out, "aoe2mc.json"), size, T, H, players, objects, cols, ground, timeline,
-                  texts.get("mood", "DEFAULT"), map_colors(np.asarray(img))[0])
+                  texts.get("mood", "DEFAULT"), map_colors(np.asarray(img))[0], texts.get("global_victory"), texts)
     triggers, tstats = texts.get("triggers", []), Counter()
     haze = FOG.get(texts.get("mood")) if mood == "on" and (fog or ambience == "full") else None
     n, amb = write_datapack(out, objects, ground, cols.biome_names, ambience, players, triggers, T, tstats, haze,

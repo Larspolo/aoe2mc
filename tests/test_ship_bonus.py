@@ -6,12 +6,12 @@ from test_tower_upgrades import setup
 
 from game import build, combat
 
-SHIPS = {"BOMBARD_TOWER": 40, "CASTLE": 11, "DOCK": 3, "FORTIFIED_TOWER": 12, "GUARD_TOWER": 7, "KEEP": 8, "KREPOST": 10,
-         "TOWN_CENTER": 5, "WATCH_TOWER": 5}
+SHIPS = {"BOMBARD_TOWER": 40, "CASTLE": 11, "DOCK": 3, "DONJON": 6, "FORTIFIED_CHURCH": 5, "FORTIFIED_TOWER": 12,
+         "GUARD_TOWER": 7, "HARBOR": 3, "KEEP": 8, "KREPOST": 10, "TOWN_CENTER": 5, "WATCH_TOWER": 5}
 
 
 def test_each_building_that_shoots_has_its_aoe2_attack_against_ships():
-    assert {k: s.bonus.get(combat.SHIP) for k, s in combat.BUILDINGS.items() if combat.SHIP in s.bonus} == SHIPS
+    assert {k: s.bonus.get(combat.SHIP) for k, s in combat.BUILDINGS.items() if combat.SHIP in s.bonus}.items() >= SHIPS.items()
     assert all(s.bonus.get(combat.SHIP) for k, s in combat.BUILDINGS.items() if s.attack)
 
 

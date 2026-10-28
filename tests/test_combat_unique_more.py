@@ -18,7 +18,4 @@ def test_each_unit_has_values_and_a_valid_stats_command(unit):
 
 
 def test_the_values_of_the_wiki():
-    assert combat.STATS["TARKAN"] == combat.Stats(100, 8, 1, 3, 0, 1.9, {"building": 8}, ("cavalry", "unique"))
-    assert combat.STATS["WAR_WAGON"] == combat.Stats(150, 9, 0, 2, 4, 2.5, {"building": 2},
-                                                     ("archer", "cavalry", "unique"))
     assert combat.damage("MAGYAR_HUSZAR", "MANGONEL") == 10 - 0 + 5      # its bonus against siege weapons

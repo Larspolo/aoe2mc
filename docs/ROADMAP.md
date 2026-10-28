@@ -20,9 +20,9 @@ can see which features have an epic: `gh api "repos/Larspolo/aoe2mc/issues?label
 - [x] `convert:triggers` Scenario triggers as datapack functions: messages, objectives, timers (epic #645)
 - [x] `convert:large` Large maps (480 × 480) in less time and memory, with a progress line (epic #689)
 - [x] `convert:minimap` A filled Minecraft map item of the whole AoE2 map at the spawn, as the AoE2 minimap (epic #837)
-- [ ] `convert:random-maps` Make a world from an AoE2 random map script (`.rms`: Arabia, Arena, Black Forest) and a seed, with no scenario file
-- [ ] `convert:random-maps-more` More random map scripts of the ranked pool and the classic ones (Nomad, Islands, Gold Rush, Highland, Mediterranean) with their player starts
-- [ ] `convert:mood` The map color mood and weather of a DE scenario (`map_color_mood`: morning, noon, evening, night, snow, fog) as the Minecraft time of day, weather and fog
+- [x] `convert:random-maps` Make a world from an AoE2 random map script (`.rms`: Arabia, Arena, Black Forest) and a seed, with no scenario file (epic #959)
+- [x] `convert:random-maps-more` More random map scripts of the ranked pool and the classic ones (Nomad, Islands, Gold Rush, Highland, Mediterranean) with their player starts (epic #1172)
+- [x] `convert:mood` The map color mood and weather of a DE scenario (`map_color_mood`: morning, noon, evening, night, snow, fog) as the Minecraft time of day, weather and fog (epic #1593)
 
 ## 2. Play AoE2 in Minecraft (`game/`)
 
@@ -37,23 +37,23 @@ can see which features have an epic: `gh api "repos/Larspolo/aoe2mc/issues?label
 - [x] `play:health` Health indication: hit points over each unit and building, a boss bar for the selected unit, damage effects (#657)
 - [x] `play:military-train` Train all units at their buildings (barracks, archery range, stable, castle) with a queue and a rally point (epic #704)
 - [ ] `play:tech` Technologies and upgrades (blacksmith, university, unit lines) with cost, time and effect on the Minecraft attributes
-- [ ] `play:ages` Age up from the Dark Age to the Imperial Age: cost, time, the buildings and units that each age unlocks
+- [x] `play:ages` Age up from the Dark Age to the Imperial Age: cost, time, the buildings and units that each age unlocks (epic #1079)
 - [ ] `play:civs` Civilizations: the bonuses, unique technologies and team bonus of each civilization change costs and attributes
 - [x] `play:feedback` Show what the player points at and the result of each action (epic #793)
-- [ ] `play:alerts` Alerts as in AoE2: a sound and a chat line with the place when own units or buildings are attacked, and a flare that a player puts on the map
+- [x] `play:alerts` Alerts as in AoE2: a sound and a chat line with the place when own units or buildings are attacked, and a flare that a player puts on the map (epic #1230)
 - [x] `play:control` Select and order many units: a selection box, groups, formations, an idle villager item (epic #742)
-- [ ] `play:stances` Unit stances (aggressive, defensive, stand ground, no attack): an idle unit attacks the enemies in its line of sight and comes back
+- [x] `play:stances` Unit stances (aggressive, defensive, stand ground, no attack): an idle unit attacks the enemies in its line of sight and comes back (epic #1103)
 - [x] `play:garrison` Garrison units in buildings (epic #810)
-- [ ] `play:arrows` The town center, towers and castles shoot arrows at enemies in range, more arrows with a garrison
+- [x] `play:arrows` The town center, towers and castles shoot arrows at enemies in range, more arrows with a garrison (epic #1110)
 - [ ] `play:win` Win and lose: destroy all buildings, a wonder, relics; a title for the end of the game
-- [ ] `play:monks` Monks heal and convert, relics in monasteries
-- [ ] `play:market` Market trade and trade carts
-- [ ] `play:two-players` Two human players against each other on one server
+- [x] `play:monks` Monks heal and convert, relics in monasteries (epic #1242)
+- [x] `play:market` Market trade and trade carts (epic #1250)
+- [x] `play:two-players` Two human players against each other on one server (epic #1306)
 - [x] `play:diplomacy` Teams and diplomacy: allied, neutral and enemy players, shared line of sight, tribute of resources (epic #1311)
-- [ ] `play:walls` Build walls and gates; a gate opens for own units and stays closed for enemies
+- [x] `play:walls` Build walls and gates; a gate opens for own units and stays closed for enemies (epic #1321)
 - [ ] `play:repair` Villagers repair damaged buildings and siege units for a part of the cost; a damaged building shows fire
 - [x] `play:siege` Siege units: rams against buildings, mangonels with area damage, trebuchets that pack and unpack (epic #1348)
-- [ ] `play:naval` Docks and ships: fishing ships and fish traps gather food, warships fight on water, transport ships carry units (Minecraft boats)
+- [x] `play:naval` Docks and ships: fishing ships and fish traps gather food, warships fight on water, transport ships carry units (Minecraft boats) (epic #1381)
 - [x] `play:cheats` The AoE2 cheat codes in the chat when cheats are on (epic #820)
 - [x] `play:fog` The explored area and the fog of war: a player sees only what the own units and buildings see (epic #1387)
 - [ ] `play:save` Save a game of the game program and load it again (units, resources, queues, ages)
@@ -72,6 +72,9 @@ can see which features have an epic: `gh api "repos/Larspolo/aoe2mc/issues?label
 - [ ] `play:formations` AoE2 formations for a selected group (line, box, staggered, flank): the units keep their places on the walk, and the slowest unit sets the speed
 - [ ] `play:town-bell` The town bell as in AoE2: a click at the town center sends the villagers into the nearest own buildings, a second click lets them out
 - [ ] `play:delete` Delete an own unit or building as the AoE2 Delete key: the unit dies, the building falls down
+- [ ] `play:auto-gather` Villagers go on to work as in AoE2: a villager that builds a lumber camp, mining camp or mill gathers the nearest resource of that kind next, and the builder of a farm farms it
+- [ ] `play:co-op` Co-op as in AoE2: two or more Minecraft players control one AoE2 player (one civilization, one stock and population), each with an own selection
+- [ ] `play:unit-sounds` The AoE2 sounds of the units and buildings: a voice line when the player selects a unit and gives an order, the sound of a selected building, the age-up fanfare
 
 ## 3. Replay a recorded game in Minecraft (`game/replay.py`, `aoe2mc.read_timeline`)
 
@@ -86,11 +89,13 @@ can see which features have an epic: `gh api "repos/Larspolo/aoe2mc/issues?label
 - [x] `replay:view` A spectator view: follow a player or a unit, an overview from above (epic #736)
 - [x] `replay:score` A score panel for each player: age, population, resources (estimated), military (epic #740)
 - [x] `replay:effects` Show events on the map: research and age-up at the building, attacks, a marker where units die (epic #842)
-- [ ] `replay:postgame` A summary at the end of the replay, as the AoE2 achievements screen: military, economy, technology, timeline
+- [x] `replay:postgame` A summary at the end of the replay, as the AoE2 achievements screen: military, economy, technology, timeline (epic #1064)
 - [x] `replay:team-games` Team games of up to 8 players: the score panel, the colors, the views and the summary work with all players (epic #1187)
-- [ ] `replay:minimap` A live minimap of the replay: a Minecraft map item that shows the units and buildings of all players in their colors and changes with the game
+- [x] `replay:minimap` A live minimap of the replay: a Minecraft map item that shows the units and buildings of all players in their colors and changes with the game (epic #1236)
 - [x] `replay:fog` The view of one player in the replay: only what the units and buildings of that player see, as the AoE2 "line of sight" option of the replay (epic #1299)
 - [ ] `replay:taunts` The taunts of the record (a chat line with a number) play their sound and show their text in the live replay
+- [ ] `replay:flares` The flares of the record (a player marks a place for the allies) show at their place in the live replay: a beacon light and a chat line in the player color
+- [ ] `replay:orders` The other orders of the record change the units of the live replay: stances, formations, patrol and the town bell
 
 ## 4. The agent system (`.claude/skills/`, `tools/`, `.github/workflows/`)
 
@@ -98,8 +103,8 @@ Owner (2026-10-26): "reach the final goals efficiently while keeping up the qual
 other projects with". The `roadmap` skill makes no epics for this goal: the `improve` skill and the owner do.
 
 - [ ] `system:improve` The system improves itself in its own loop, over the whole system, and only where it pays (epic #908)
-- [ ] `system:reuse` The system can be set up for another project (epic #909)
-- [ ] `system:structure` The code stays easy to change: game data in data files, checks in place of rules (epic #1909)
+- [x] `system:reuse` The system can be set up for another project (epic #909)
+- [x] `system:structure` The code stays easy to change: game data in data files, checks in place of rules (epic #1909)
 
 ## Principles
 

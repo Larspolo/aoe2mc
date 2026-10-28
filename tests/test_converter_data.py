@@ -1,5 +1,5 @@
 """The name tables of the converter are one JSON line each in data/*.jsonl (#1917): units.ANIMALS, units.LINES and
-buildings.FOOTPRINT."""
+buildings.FOOTPRINT; the object tables of aoe2mc.py, buildings.py and scx.py (#2036)."""
 import json
 import os
 
@@ -9,8 +9,17 @@ import buildings
 import units
 
 KEYS = {"animals.jsonl": ({"keys", "behavior", "mob"}, {"tags", "note"}),
+        "designs.jsonl": ({"name", "design"}, {"args", "wall"}),
+        "objects.jsonl": ({"name"}, {"decor", "map_color", "mob", "monument", "no_blocks", "obstacle", "passable", "scatter"}),
+        "old_ids.jsonl": ({"id", "name"}, set()),
+        "scx_civs.jsonl": ({"id", "name"}, set()),
+        "train.jsonl": ({"name", "seconds", "building"}, set()),
+        "work_sounds.jsonl": ({"name", "sound", "when", "particle"}, set()),
+        "rmap.jsonl": ({"name"}, {"fish", "forest", "scatter", "shore_fish", "start", "terrain", "wolves"}),
         "lines.jsonl": ({"name", "mob", "armor", "main", "off"}, {"tags"}),
-        "footprint.jsonl": ({"name", "size"}, set())}
+        "footprint.jsonl": ({"name", "size"}, set()),
+        "units.jsonl": ({"name"}, {"base", "bird", "crew", "drop", "flying", "hero", "infantry", "invisible", "joke",
+                                   "plain", "ruler", "tags", "tier"})}
 
 
 def test_each_line_has_its_keys():

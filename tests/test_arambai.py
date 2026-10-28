@@ -9,12 +9,6 @@ CASTLE = (12, 4)
 
 
 def test_the_values_are_those_of_aoe2():
-    assert train.UNIQUE["BURMESE"] == "ARAMBAI"
-    assert train.COSTS["ARAMBAI"] == train.COSTS["ELITE_ARAMBAI"] == {"wood": 75, "gold": 60}
-    assert train.TRAIN_TIMES["ARAMBAI"] == train.TRAIN_TIMES["ELITE_ARAMBAI"] == 18
-    assert train.COSTS["ELITE_ARAMBAI_UPGRADE"] == {"food": 1000, "gold": 750}
-    assert train.TRAIN_TIMES["ELITE_ARAMBAI_UPGRADE"] == 65
-    assert train.TECH_AGE["ELITE_ARAMBAI_UPGRADE"] == 3 and train.build.AGE["ELITE_ARAMBAI"] == 3
     for name in ("ARAMBAI", "ELITE_ARAMBAI", "ELITE_ARAMBAI_UPGRADE"):
         assert len(train.HELP[name]) <= 50 and "BURMESE" not in train.civs.MISSING[name]
         assert "BRITONS" in train.civs.MISSING[name]

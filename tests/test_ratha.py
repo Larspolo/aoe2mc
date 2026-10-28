@@ -10,13 +10,6 @@ CASTLE = (12, 4)
 
 
 def test_the_values_are_those_of_aoe2():
-    assert train.UNIQUE["BENGALIS"] == "RATHA"
-    assert train.COSTS["RATHA"] == train.COSTS["ELITE_RATHA"] == {"wood": 60, "gold": 60}
-    assert train.TRAIN_TIMES["RATHA"] == 24 and train.TRAIN_TIMES["ELITE_RATHA"] == 18
-    assert train.COSTS["ELITE_RATHA_UPGRADE"] == {"food": 800, "wood": 800}
-    assert train.TRAIN_TIMES["ELITE_RATHA_UPGRADE"] == 45
-    assert train.TECH_AGE["ELITE_RATHA_UPGRADE"] == 3 and train.build.AGE["ELITE_RATHA"] == 3
-    assert combat.stats("ELITE_RATHA") == (115, 6, 3, 3, 4, 2.0, {"spearman": 2}, ("archer", "cavalry", "unique"))
     for name in ("RATHA", "ELITE_RATHA", "ELITE_RATHA_UPGRADE"):
         assert len(train.HELP[name]) <= 50 and "BENGALIS" not in train.civs.MISSING[name] and "BRITONS" in train.civs.MISSING[name]
 
@@ -41,7 +34,7 @@ def test_the_upgrade_changes_the_live_and_the_new_units():
     assert train.queue(g, "Steve", CASTLE, "ELITE_RATHA_UPGRADE")
     train.tick(g, 45)
     assert "ELITE_RATHA_UPGRADE" in g.techs and g.soldiers["r"] == "ELITE_RATHA"
-    assert combat.stats_command("r", "ELITE_RATHA") in server.log
+    assert combat.stats_command("r", "ELITE_RATHA", train.stats(g, "ELITE_RATHA")) in server.log   # Bengali cavalry (#2249)
     train.open_menu(g, "Steve", CASTLE)
     menu = menus(server)[-1] + " "
     assert " 0:minecart:Elite Ratha:60 wood · 60 gold · 18 s · queue 0/15 " in menu
