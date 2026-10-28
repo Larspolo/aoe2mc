@@ -52,10 +52,13 @@ from units import TEAM_COLOR, VILLAGER_JOBS, animal, pretty  # noqa: E402
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import build  # noqa: E402
 import replay  # noqa: E402  (build imports it too)
+import battle_royale  # noqa: E402
 import bossbar  # noqa: E402
+import capture_relic  # noqa: E402
 import cheats  # noqa: E402
 import civs  # noqa: E402
 import conquest  # noqa: E402
+import defend_wonder  # noqa: E402
 import diplomacy  # noqa: E402
 import flare  # noqa: E402
 import fleet  # noqa: E402
@@ -77,6 +80,7 @@ import siege_tower  # noqa: E402
 import sudden_death  # noqa: E402
 import stance  # noqa: E402
 import table  # noqa: E402
+import time_limit  # noqa: E402
 import trade  # noqa: E402
 import transport  # noqa: E402
 import train  # noqa: E402
@@ -268,6 +272,19 @@ class Map:
                     self.woods[tile] = ("minecraft:bamboo_block", None) if kind == "bamboo" else \
                         ("minecraft:oak_log", None) if kind == "dead" else \
                         (f"minecraft:{WOODS.get(kind, 'oak')}_log", f"minecraft:{WOODS.get(kind, 'oak')}_leaves[persistent=true]")
+
+    def heights(self, cells):
+        """The ground heights around cells (at least one)."""
+        return [y for x, z in self.around(cells) if (y := self.y(x, z)) is not None] or [0]
+
+    def emptied(self, cells):
+        """The cells of an empty mine or bush are free ground again, at the lowest height around them (Gather.dig,
+        Gather.berries; savegame.load for the ones that were empty at the save, #2453)."""
+        y = min(self.heights(cells))
+        for x, z in cells:
+            self.ground[z][x] = y
+            self.mine_at.pop((x, z), None)
+        self.blocked -= set(cells)
 
     def building(self, name, rect, tile, own, open_cells=()):
         """Add a building with the block footprint rect = (x0, x1, z0, z1) and its center tile. A farm is ground
@@ -534,8 +551,10 @@ class Gather:
     reveal = "normal"                                                  # AoE2 "Reveal map"; "all": no fog (fog.py, #1389)
     speed = 1.0                                                        # times the Normal speed: shorter real steps (#2057)
     later = {}                                                         # the bonus of the first town center (civs.TOWN_CENTER)
+    nomad = False                                                      # a Nomad start: no town center yet (#2466)
     victory = "standard"                                               # AoE2 "Victory"; "conquest": no wonder, no relics (#2316)
                                                                        # "king-of-the-hill": hill.py (#2360)
+                                                                       # "time-limit", "score": time_limit.py (#2356)
     mode = "standard"                                                  # AoE2 game mode; "regicide": the King (#2347)
 
     def __init__(self, game, data, player=1, tick=0.25, carry=10, chop=None, log=None, clock=time.monotonic,
@@ -555,7 +574,7 @@ class Gather:
             nomad = "unit" in kinds and "building" not in kinds
             base = LEVELS[resources]
             tc = civs.TOWN_CENTER.get(civs.civ(self), {})              # Tupi: with the first town center (#2293)
-            self.later = dict(tc) if nomad else {}
+            self.later, self.nomad = dict(tc) if nomad else {}, nomad
             start = civs.start(self, {r: v + NOMAD.get(r, 0) * nomad + tc.get(r, 0) * (not nomad)
                                       for r, v in base.items()})       # #1269
         self.stock = {**dict.fromkeys(DROP_SITES, 0), **start}             # at the drop sites (#973)
@@ -700,13 +719,20 @@ class Gather:
                 else:
                     self.command(f"fill {x} {y} {z} {x} {y + 1} {z} minecraft:oak_leaves[persistent=true]")
 
-    def town_center(self):
+    def town_center(self, rect=None):
         """The first own town center is complete (build.rise): the bonus of a Nomad start comes now (civs.TOWN_CENTER,
-        Tupi +25 of each resource, #2293)."""
+        Tupi +25 of each resource, #2293), and the unit of the key "nomad_unit" (Huns: a tamed Hunnic Horse in front
+        of the town center rect, #2466)."""
         for r, n in sorted(self.later.items()):
             self.stock[r] += n
             self.command(f"scoreboard players add {r.capitalize()} {self.board} {n}")
         self.later = {}
+        if self.nomad and rect and (unit := civs.value("nomad_unit", civs.civ(self))) and (cells := self.map.front(rect)):
+            x, z = cells[0]
+            name = json.dumps({"text": pretty(unit), "color": self.color()})
+            self.command(f"summon minecraft:horse {x + 0.5} {self.map.y(x, z)} {z + 0.5} {{Tame:1b,PersistenceRequired:1b,"
+                         f"Tags:[\"aoe2mc.p{self.player}\"],CustomName:{name}}}")
+        self.nomad = False
 
     def idle(self):
         """Show the number of idle villagers in the sidebar, as the idle villager button of AoE2 (#744), only when it
@@ -861,7 +887,8 @@ class Gather:
         watch = combat.WATCH * len({t['name'] for t in ROWS if t.get('watch')} & set(getattr(self, "techs", ())))   # (#1454, #1579)
         lit = {n for n, _, _ in placed} - combat.WALLS.keys() - {t['name'] for t in ROWS if t.get('dark')}   # as in AoE2
         return replay.seen(mobs, [(self.player, n, fp) for n, fp, _ in placed], self.player, self.map.T,
-                           lambda n: combat.sight(n) + printing * (n in monk.MONKS) + watch * (n in lit))
+                           lambda n: combat.sight(n) + printing * (n in monk.MONKS) + watch * (n in lit)
+                           + civs.SIGHT.get(civs.civ(self), {}).get(n, 0))   # the Chinese town center (#2118)
 
     def task(self, v, name):
         """Give the villager the look of its AoE2 task (`LUMBERJACK` ...), with the table of the converter."""
@@ -1747,26 +1774,21 @@ class Gather:
         self.bushes[tile] = look
         cells = self.map.cells(tile)
         (x0, z0), (x1, z1) = min(cells), max(cells)
-        ys = [y for x, z in self.map.around(cells) if (y := self.map.y(x, z)) is not None] or [0]
+        ys = self.map.heights(cells)
         self.command(f"fill {x0} {min(ys) - 2} {z0} {x1} {max(ys) + 2} {z1} {look} replace minecraft:sweet_berry_bush")
         self.command(f"fill {x0} {min(ys) - 2} {z0} {x1} {max(ys) + 2} {z1} minecraft:barrier replace minecraft:oak_leaves")
         if food <= 0:                                  # as in AoE2, an empty bush frees its tile (#602)
             self.command(f"fill {x0} {min(ys) - 2} {z0} {x1} {max(ys) + 4} {z1} air replace minecraft:barrier")
-            for x, z in cells:
-                self.map.ground[z][x] = min(ys)
-            self.map.blocked -= cells
+            self.map.emptied(cells)
 
     def dig(self, tile, res):
         """An empty mine disappears: its heap and the barriers of its footprint. Its cells are free ground again."""
         spot = self.map.spot(tile)
-        ys = [y for x, z in self.map.around(spot) if (y := self.map.y(x, z)) is not None] or [0]
+        ys = self.map.heights(spot)
         (x0, z0), (x1, z1) = min(spot), max(spot)
         for b in MINE_BLOCKS[res] + ("barrier",):
             self.command(f"fill {x0} {min(ys)} {z0} {x1} {max(ys) + 4} {z1} air replace minecraft:{b}")
-        for x, z in spot:
-            self.map.ground[z][x] = min(ys)
-            self.map.mine_at.pop((x, z), None)
-        self.map.blocked -= spot
+        self.map.emptied(spot)
 
     def tend(self, v):
         """A farmer walks over its farm while it works, as in AoE2 (#591): one cell per food, row by row (the rows
@@ -1814,13 +1836,22 @@ class Gather:
                 regicide.tick(self)
             elif self.mode == "sudden-death":                          # a player without its town center loses (#2407)
                 sudden_death.tick(self)
+            elif self.mode == "battle-royale":                         # the Corruption takes the map (#2439)
+                battle_royale.tick(self, self.tick * NORMAL)
+            elif self.mode == "capture-the-relic":                     # the center relic in a monastery wins (#2440)
+                capture_relic.tick(self)
+            elif self.mode == "defend-the-wonder":                     # the attackers win when the Wonder falls (#2441)
+                defend_wonder.tick(self)
             fog.tick(self)                                             # after the bots: their units too (#1389)
             herd.tick(self)                                            # all players: the bots capture too (#1792)
-            if self.victory == "standard":                             # a wonder or all relics win too (#2316)
+            if self.victory == "standard" or self.mode in wonder.RACE:  # a wonder or all relics win too (#2316)
                 wonder.tick(self, self.tick * NORMAL)                  # game seconds, as train.tick
+            if self.victory == "standard" and self.mode not in wonder.RACE:   # Defend the Wonder: only it (#2441)
                 relic_victory.tick(self, self.tick * NORMAL)
             elif self.victory == "king-of-the-hill":                   # the monument in the center (#2360)
                 hill.tick(self, self.tick * NORMAL)
             score.tick(self)
+            if self.victory in ("time-limit", "score"):                # after the conquest: it wins before (#2356)
+                time_limit.tick(self, self.tick * NORMAL)
             treaty.tick(self, self.tick * NORMAL)
             time.sleep(max(0.0, self.tick / self.speed - (time.time() - t)))   # a step stays tick game seconds

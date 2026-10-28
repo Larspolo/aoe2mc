@@ -29,6 +29,7 @@
 {"name": "WONDER", "cost": {"wood": 1000, "gold": 1000, "stone": 1000}, "time": 3500, "icon": "weathered_cut_copper_stairs", "age": 3}
 {"name": "MULE_CART", "cost": {"food": 20, "wood": 80}, "time": 25, "icon": "spruce_trapdoor", "full_tech_tree": "own"}
 {"name": "CARAVANSERAI", "cost": {"wood": 175, "stone": 50}, "time": 60, "icon": "chiseled_sandstone", "age": 3, "civs": ["HINDUSTANIS", "PERSIANS"]}
+{"name": "SETTLEMENT", "cost": {"wood": 125}, "time": 40, "icon": "hay_block", "civs": ["INCAS", "MAPUCHE", "MUISCA", "TUPI"]}
 {"name": "ARBALESTER", "age": 3}
 {"name": "ARCHER", "age": 1}
 {"name": "ARMORED_ELEPHANT", "age": 2}
@@ -47,6 +48,7 @@
 {"name": "CAVALIER", "age": 3}
 {"name": "CAVALRY_ARCHER", "age": 2}
 {"name": "CHAMPION", "age": 3}
+{"name": "CONDOTTIERO", "age": 3}
 {"name": "CROSSBOWMAN", "age": 2}
 {"name": "DEMOLITION_RAFT", "age": 1}
 {"name": "DEMOLITION_SHIP", "age": 2}
@@ -141,3 +143,5 @@
 {"name": "SAVAR", "age": 3}
 {"name": "LEGIONARY", "age": 3}
 {"name": "JIAN_SWORDSMAN", "age": 2}
+{"name": "HOPLITE", "age": 2}
+{"name": "ELITE_HOPLITE", "age": 3}

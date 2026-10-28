@@ -112,9 +112,11 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *                                              defensive chases an enemy only CHASE blocks past its range (#1105)
  *   aoe stance <selector>                      the stance of the first unit (#1107), for checks
  *   aoe stats <selector> <hp> <attack> <melee armor> <pierce armor> <ranged 0|1|2> <classes|-> <class:bonus,...|->
- *             [reload ticks [taken]]           the AoE2 values of a unit (#514, game/combat.py stats_command); a melee
+ *             [reload ticks [taken [friendly]]]  the AoE2 values of a unit (#514, game/combat.py stats_command); a melee
  *                                              unit hits once per reload (#848, default 20: the vanilla cooldown);
- *                                              taken: the factor of the bonus damage that it takes (#2248, default 1)
+ *                                              taken: the factor of the bonus damage that it takes (#2248, default 1);
+ *                                              friendly: the factor of the blast damage of own and allied units on it
+ *                                              (Jurchen military units 0.5, #2418, default 1)
  *   aoe stop <selector>                        stop the walk and turn the AI off: the unit stands still (#437)
  *   aoe range <selector> <blocks> <ticks> [blast [min [pass [part]]]]
  *                                              a ranged unit shoots from this range, one shot per ticks (#515); a
@@ -169,6 +171,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *   aoe minimap on|off|pixel <x> <z>           the live units as dots in their team color on map 0, once per
  *                                              second (#1237, Minimap.java); pixel: the map pixel of a block
  *   aoe minimap building <x0> <z0> <x1> <z1> <team>|unbuild <x0> <z0>   a replay building as a square on map 0 (#1238)
+ *   aoe minimap flare <x> <z> <team> <ticks>   a blinking cross of a replay flare on map 0 for <ticks> (#2405)
  *   aoe minimap fog <tile> <n>|off, see|dim <y,x0,x1> ..., tile <x> <z>
  *                                              the fog of the view player on map 0 (#1567): black unexplored tiles,
  *                                              dark explored tiles out of sight; tile: the fog of a block
@@ -264,12 +267,13 @@ import net.kyori.adventure.text.format.NamedTextColor;
  */
 public final class AoePlugin extends JavaPlugin implements Listener {
     // ranged: the unit shoots; pierces: its hit takes the pierce armor (not so for a Throwing Axeman, #800);
-    // reload: the ticks between two melee hits (#848); taken: the factor of the bonus damage that the unit takes (#2248)
+    // reload: the ticks between two melee hits (#848); taken: the factor of the bonus damage that the unit takes (#2248);
+    // friendly: the factor of the friendly fire (the blast of an own or allied unit) that the unit takes (#2418)
     private record Stats(int attack, int melee, int pierce, boolean ranged, boolean pierces, Set<String> classes,
-                         Map<String, Integer> bonus, int reload, double taken) {
+                         Map<String, Integer> bonus, int reload, double taken, double friendly) {
         Stats(int attack, int melee, int pierce, boolean ranged, boolean pierces, Set<String> classes,
               Map<String, Integer> bonus, int reload) {
-            this(attack, melee, pierce, ranged, pierces, classes, bonus, reload, 1.0);
+            this(attack, melee, pierce, ranged, pierces, classes, bonus, reload, 1.0, 1.0);
         }
 
         int damage(Stats t) {                                 // the same rule as game/combat.py damage()
@@ -544,7 +548,8 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                         && !buildings.containsKey(le.getUniqueId()) && le != from
                         && !(le.getVehicle() instanceof LivingEntity v && stats.containsKey(v.getUniqueId()))
                         && le.getLocation().distanceSquared(at) <= r * r) {
-                    harm(le, stats.get(le.getUniqueId()), a, from);
+                    Stats t2 = stats.get(le.getUniqueId());
+                    harm(le, t2, a, from, friendlyFire(from, le) ? t2.friendly : 1.0);   // friendly fire (#2418)
                 }
             }
         }
@@ -576,7 +581,8 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                     && !buildings.containsKey(le.getUniqueId()) && le != from
                     && !(le.getVehicle() instanceof LivingEntity v && stats.containsKey(v.getUniqueId()))
                     && !(foes && sameTeam(from, le)) && le.getLocation().distanceSquared(at) <= r * r) {
-                harm(le, stats.get(le.getUniqueId()), c.stats, from, c.shots);
+                Stats t2 = stats.get(le.getUniqueId());           // all shots; less as friendly fire (#2418)
+                harm(le, t2, c.stats, from, c.shots * (friendlyFire(from, le) ? t2.friendly : 1.0));
             }
         }
         at.getWorld().spawnParticle(Particle.FLAME, at.clone().add(0, 0.5, 0), 20, r / 2, 0.3, r / 2, 0.02);
@@ -636,11 +642,14 @@ public final class AoePlugin extends JavaPlugin implements Listener {
 
     // The aim from `from` at the middle of t, raised by the fall of the flight time. With Ballistics the shooter aims
     // at the place where t will be when the arrow arrives: its position plus its step × the flight time (AoE2 DE wiki).
+    // A shooter with the tag aoe2mc.lead, or the crew of a ship with it, aims so without the technology (Spanish Cannon
+    // Galleons, game/train.py, #2430).
     private static Vector lead(Entity shooter, Location from, LivingEntity t) {
         Vector mid = t.getLocation().toVector().add(new Vector(0, t.getHeight() * 0.5, 0));
         Vector to = mid.clone().subtract(from.toVector());
         double ticks = to.length() / ARROW_SPEED;
-        if (BALLISTICS.contains(side(shooter))) {
+        if (BALLISTICS.contains(side(shooter)) || shooter.getScoreboardTags().contains("aoe2mc.lead")
+                || shooter.getVehicle() != null && shooter.getVehicle().getScoreboardTags().contains("aoe2mc.lead")) {
             Vector v = t.getVelocity().setY(0).multiply(t.isOnGround() ? 1 / GROUND_DRAG : 1);
             to = mid.add(v.multiply(ticks)).subtract(from.toVector());
             ticks = to.length() / ARROW_SPEED;
@@ -661,7 +670,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     // attack with no bonus (AoE2 DE: the extra projectile of an Armenian galley deals 1 attack).
     private static Stats volley(Stats a, int attack) {
         return attack <= 0 ? a : new Stats(attack, a.melee(), a.pierce(), a.ranged(), a.pierces(), a.classes(), Map.of(),
-                a.reload(), a.taken());
+                a.reload(), a.taken(), a.friendly());
     }
 
     // The values of the projectile p of a unit with the values a: those of its tag (an extra arrow), else a.
@@ -1707,15 +1716,23 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             var path = pf.getCurrentPath();
             if (path == null || path.getFinalPoint() == null
                     || path.getFinalPoint().distanceSquared(o.goal) > 1.5 * 1.5) {
+                double c = center(mob);
+                if (path != null && path.getFinalPoint() != null
+                        && path.getFinalPoint().clone().add(c, 0, c).distanceSquared(mob.getLocation()) <= 1.5 * 1.5) {
+                    // at the end of a part of the way: a new search from here. moveTo gives the old part again (a
+                    // not done path to the same target), so the order ended as "no path" 10 to 20 blocks before
+                    // a rally point that a new search reaches (de-64.3, #2303).
+                    pf.stopPathfinding();
+                }
                 boolean found = pf.moveTo(o.goal, o.speed);
                 Location end = pf.getCurrentPath() == null ? null : pf.getCurrentPath().getFinalPoint();
-                double c = center(mob);
                 // a part of a path that ends at the mob leads nowhere: a builder of a dock stood still with its order
                 // for a minute (#889). Drop such an order after 1 s.
                 boolean stays = found && end != null && end.clone().add(c, 0, c).distanceSquared(mob.getLocation()) <= 1.5 * 1.5;
                 if (found && !stays || (o.fails += stays ? 5 : 1) < 50) {
                     return false;
                 }
+                pf.stopPathfinding();                   // it stays here: the old part led it away (#2303)
                 if (mob instanceof Villager) {          // no path for 5 s: drop the order, and stop the brain (#811)
                     mob.setAI(false);
                 }
@@ -2183,6 +2200,12 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     private static final Map<String, String> ALLIES = new HashMap<>();
 
     /** True when the sides a and b (side()) are the same player or allies. No side: no ally of anyone. */
+    // A shot of an own or allied unit (#2418): the crew of a siege unit or a ship can have no team, its vehicle has it.
+    private static boolean friendlyFire(Entity from, Entity victim) {
+        String s = side(from) == null && from.getVehicle() != null ? side(from.getVehicle()) : side(from);
+        return allied(s, side(victim));
+    }
+
     static boolean allied(String a, String b) {
         return a != null && b != null && ALLIES.getOrDefault(a, a).equals(ALLIES.getOrDefault(b, b));
     }
@@ -2375,7 +2398,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             sender.sendMessage("Stance: " + n + " units");
             return true;
         }
-        if (args.length >= 9 && args.length <= 11 && args[0].equals("stats")) {
+        if (args.length >= 9 && args.length <= 12 && args[0].equals("stats")) {
             double hp;
             Stats st;
             try {
@@ -2383,7 +2406,8 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                 st = new Stats(Integer.parseInt(args[3]), Integer.parseInt(args[4]), Integer.parseInt(args[5]),
                         !args[6].equals("0"), args[6].equals("1"), args[7].equals("-") ? Set.of() : Set.of(args[7].split(",")),
                         bonus(args[8]), args.length >= 10 ? Integer.parseInt(args[9]) : 20,
-                        args.length == 11 ? Double.parseDouble(args[10]) : 1.0);   // the bonus damage taken (#2248)
+                        args.length >= 11 ? Double.parseDouble(args[10]) : 1.0,    // the bonus damage taken (#2248)
+                        args.length == 12 ? Double.parseDouble(args[11]) : 1.0);   // the friendly fire taken (#2418)
             } catch (RuntimeException e) {                 // a bad number or a bonus without ":"
                 sender.sendMessage("Bad value: " + e.getMessage());
                 return true;

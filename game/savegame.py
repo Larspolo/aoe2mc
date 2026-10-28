@@ -7,9 +7,11 @@ the train and research queues, the construction sites (also the done ones: the b
 points (#2257), and the orders of the units (#2258): the job, target and load of each villager (also the rally walk and
 the repair, #2380), the farmers, stances, control groups and garrisons. A villager keeps no path: after the load it walks
 again with Minecraft path finding (P2).
-The save also keeps the wonder and relic victory timers and the market prices (#2324), the game settings of the
-command line (`run.py` options, "settings"), the attack time and wave of the bot (#2325), and the relics and the monk
-orders (#2412: `monk.relics`, the conversions and the rest of the monks).
+The save also keeps the wonder and relic victory timers and the market prices (#2324), the time limit (#2356), the game
+settings of the command line (`run.py` options, "settings"), the attack time and wave of the bot (#2325), the relics and the monk
+orders (#2412: `monk.relics`, the conversions and the rest of the monks), the orders of the ships, the routes of the
+trade carts and the state of the trebuchets (#2413), the passed time of the treaty (#2409), and the units inside the
+transport ships and siege towers and the units on the way to them (#2411).
 """
 import json
 import os
@@ -19,13 +21,53 @@ import time
 FILE = "savegame.json"
 FIELDS = ("stock", "spare", "seconds", "repeats", "pop")              # dicts and numbers of Gather, as they are
 PACKED = ("queues", "trained", "sites", "rally")                       # with tuples (a building rect, a cell): pack()
-OPTIONAL = ("rates", "relic_timer", "wonder_shown", "wonders", "wonders_gone")   # only on a Gather that has them (#2324)
+OPTIONAL = ("limit_left", "rates", "relic_timer", "wonder_shown", "wonders", "wonders_gone")   # only on a Gather that has them (#2324)
 MONK = ("carrier_at", "converting", "faith", "fetching", "heal_time", "monk_at", "relic_gold", "relic_homes",
         "relic_time", "relics")                                        # game/monk.py: the relics and monk orders (#2412)
 ROUTES = ("trade", "trebs")                                            # trade.py, trebuchet.py: as OPTIONAL (#2413)
+LEFT = (                                                               # Gather: the resources left on the map (#2453)
+    "crops",
+    "dead",
+    "trunks",
+)
+MAP = (                                                                # gather.Map: the amounts left (#2453), pack()
+    "bushes",
+    "carcasses",
+    "farms",
+    "fish",
+    "herds",
+    "mines",
+    "rot",
+    "traps",
+    "trees",
+)
+RIDERS = ("berths", "boarding", "cargo", "loading", "towers", "unloads")   # transport.py, siege_tower.py (#2411)
+KEPT = (                                                               # the fields of Gather that only some have, pack():
+    *LEFT,                                                             # one tuple per line, in alphabetical order
+    *MONK,                                                             # (parallel tickets add one, #2453)
+    *OPTIONAL,
+    *RIDERS,
+    *ROUTES,
+)
 JOB = ("state", "load", "res", "job", "lap", "prey")                  # fields of a gather.Villager, as they are
 BOT = ("time", "charged", "attack")                                    # fields of a bot.Bot, as they are (#2325)
-SETTINGS = ("all_techs", "bot", "bot_attack", "cheats", "civ", "full_tech_tree", "people", "reveal", "teams", "victory")   # run.py options
+SETTINGS = (                                                           # run.py options (#2325, #2409): one per line,
+    "all_techs",                                                       # in alphabetical order (parallel tickets add)
+    "bot",
+    "bot_attack",
+    "cheats",
+    "civ",
+    "end_age",
+    "full_tech_tree",
+    "mode",
+    "people",
+    "pop_limit",
+    "reveal",
+    "teams",
+    "treaty",
+    "victory",
+    "victory_value",
+)
 SKIP = ("session.lock",)                                               # the lock of the running server
 
 
@@ -65,12 +107,15 @@ def dump(g):
     the player of the bot (#2325)."""
     d = {"players": {str(x.player): {**{f: getattr(x, f) for f in FIELDS}, "techs": sorted(x.techs),
                                      **{f: pack(getattr(x, f)) for f in PACKED}, **orders(x),
-                                     **{f: pack(vars(x)[f]) for f in OPTIONAL + MONK + ROUTES if f in vars(x)}}
+                                     **{f: pack(vars(x)[f]) for f in KEPT if f in vars(x)},
+                                     "map": {f: pack(getattr(x.map, f)) for f in MAP}}
                     for x in sides(g)}}
     for b in bots(g):
         d["players"][str(b.g.player)]["bot"] = {f: getattr(b, f) for f in BOT}
     if getattr(g.game, "settings", None):
         d["settings"] = dict(g.game.settings)
+    if getattr(g.game, "treaty", 0):                                   # treaty.start: the time goes on (#2409)
+        d["treaty_time"] = g.game.treaty_time
     return d
 
 
@@ -160,6 +205,18 @@ def give_orders(x, p):
     sail_again(x, p)
 
 
+def board_again(x):
+    """The units of the Gather x on the way to a transport ship or a siege tower walk to it again (#2411): the ship's
+    shore cell, the tower's feet. Minecraft path finding (P2), as transport.order and siege_tower.order."""
+    import ai
+    import train
+    walks = [(u, c[0] + 0.5, x.map.y(*c), c[1] + 0.5) for u, (_, c) in sorted(vars(x).get("loading", {}).items())]
+    walks += [(u, *p) for u, t in sorted(vars(x).get("boarding", {}).items()) if (p := x.pos(t))]
+    for u, *at in walks:
+        name = "VILLAGER" if u in x.villagers else x.soldiers.get(u, "")
+        ai.move(x, u, name, x.map.T, *at, ai.NORMAL * train.speed(x, name))
+
+
 def load(g, d):
     """Put the saved state d (dump) on the Gather of each player that it names, and show the resources again."""
     import gather
@@ -171,11 +228,18 @@ def load(g, d):
         for f in FIELDS:
             setattr(x, f, type(getattr(x, f))(p[f]))
         x.techs = set(p["techs"])
-        for f in PACKED + OPTIONAL + MONK + ROUTES:                             # the next tick shows the boss bars again
+        for f in PACKED + KEPT:                                        # the next tick shows the boss bars again
             if f in p:                                                 # a save before #2257 has no queues
                 setattr(x, f, unpack(p[f]))
+        for f, v in p.get("map", {}).items():                          # a save before #2453 has no map
+            setattr(x.map, f, unpack(v))
+        for tile in [t for ts in x.map.mines.values() for t, n in ts.items() if n <= 0]:
+            x.map.emptied(x.map.spot(tile))                            # empty at the save: as Gather.dig, berries
+        for tile in [t for t, n in x.map.bushes.items() if n <= 0]:
+            x.map.emptied(x.map.cells(tile))
         if "villagers" in p:                                           # a save from before #2258 has no orders
             give_orders(x, p)
+        board_again(x)
         for r in gather.RESOURCES:                                     # the sidebar of the resources (Gather.setup)
             x.command(f"scoreboard players set {r} {x.board} {x.stock[r.lower()]}")
         train.sidebar(x)
