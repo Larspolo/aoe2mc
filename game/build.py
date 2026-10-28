@@ -63,6 +63,7 @@ GATES = tuple(r["name"] for r in ROWS if r.get("gate"))          # on 4 own wall
 NEEDS = {r["name"]: r["needs"] for r in ROWS if "needs" in r}     # a unit or building after a technology (#1380)
 SHORE = ("DOCK",)                                                  # on water next to the land, as in AoE2 (#1382)
 WATER = ("FISH_TRAP",)                                             # on free water only, ships build it (#1438)
+FLAT = tuple(r["name"] for r in ROWS if r.get("flat"))                 # on one elevation level also for the Thracians (#2545)
 MOVES = {r["name"] for r in table.load("buildings.jsonl") if r.get("moves")}   # a mob when complete (cart, #2209)
 GHOST = 400                                                        # block displays of one ghost: a coarser shape above
 CRANE = 1.2                                                        # the build speed factor of Treadmill Crane (#1422)
@@ -173,7 +174,7 @@ def ghosts(g):
                 g.command(c)
             g.ghosts[p] = [name, None, spot, way]
         ok = gate_rect(g, cell) if name in GATES else shore(g, rect) if name in SHORE else water(g, rect) \
-            if name in WATER else free(g, rect)
+            if name in WATER else free(g, rect) and level(g, name, rect)
         color = "green" if ok else "red"                               # a gate: on a wall, a dock: at the shore
         if g.ghosts[p][1] != color:
             g.command(f"aoe ghost-color {p} {color}")
@@ -281,6 +282,18 @@ def free(g, rect):
     return all(g.map.free(x, z) and (x, z) not in g.map.farm_at for x in range(x0, x1) for z in range(z0, z1))
 
 
+def level(g, name, rect):
+    """True when building name may stand on the ground of the footprint rect (AoE2 wiki "Elevation"): a building of
+    3 × 3 tiles or more, not a farm, needs one elevation level under it (less height difference than one level). The
+    Thracians build the others on any elevation (civ key "any_elevation", #2545), but not the buildings of FLAT (key
+    "flat" of data/build.jsonl: the Town Center)."""
+    if footprint(name) < 3 or "FARM" in name or name not in FLAT and civs.value("any_elevation", civs.civ(g), 0):
+        return True
+    x0, x1, z0, z1 = rect
+    ys = [y for x in range(x0, x1) for z in range(z0, z1) if (y := g.map.y(x, z)) is not None]
+    return not ys or max(ys) - min(ys) < g.data.get("level_height", 3)
+
+
 def shore(g, rect):
     """True when the footprint rect is all free water and touches free land (a dock, #1382): not on land, not on the
     open sea. The builders stand on that land (Gather.build)."""
@@ -317,6 +330,9 @@ def place(g, player, name, eye, d):
         return None
     if name not in SHORE + WATER and not free(g, rect):
         say(g, player, f"No space for the {pretty(name).lower()} here.")
+        return None
+    if not level(g, name, rect):
+        say(g, player, f"The {pretty(name).lower()} must stand on flat ground.")
         return None
     cost = price(g, name)
     if any(g.stock[r] < v for r, v in cost.items()):
