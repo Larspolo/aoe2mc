@@ -578,7 +578,11 @@ class Replay:
         o = dict(kind="B", name=name, player=player, x=x - ox, y=y - oy, rotation=0.0, hero=False, garrisoned=False)
         walls, gates = buildings.plan_walls([o])
         gates[id(o)] = gates.get(id(o)) or along_z
-        buildings.place_building(E, cols, aoe2mc.B, o, players, walls, gates)
+        turn, buildings.TURN = buildings.TURN, self.data.get("turn", 0)     # the map turn of --orientation (#3035)
+        try:
+            buildings.place_building(E, cols, aoe2mc.B, o, players, walls, gates)
+        finally:
+            buildings.TURN = turn                                  # the tests share the process
         return cols, E, o
 
     def push_out(self, rect):

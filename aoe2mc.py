@@ -2653,7 +2653,8 @@ def write_objects(path, size, T, H, players, objects, cols, ground, timeline=Non
     minimap of the plugin paints them where no live object is (#1940).
     "victory" (DE scenarios only): the victory setting of the scenario, {"condition": a name of run.VICTORIES or
     "custom" (only its triggers end the game), "score" or "years" of that condition} (#2566).
-    "messages": the scenario texts of CHAPTERS that are not empty (chapter -> text): the book of the scenario mode (#2541)."""
+    "messages": the scenario texts of CHAPTERS that are not empty (chapter -> text): the book of the scenario mode (#2541).
+    "turn": the clockwise quarter turns of --orientation, if not 0 (#3035)."""
     kinds = {"U": "unit", "B": "building", "O": "other"}
     objs = []
     for o in objects:
@@ -2693,6 +2694,8 @@ def write_objects(path, size, T, H, players, objects, cols, ground, timeline=Non
             data[key] = list(items)
     if map_ground is not None:
         data["map_ground"] = [bytes(row).hex() for row in np.asarray(map_ground, np.uint8)]
+    if buildings.TURN:                                  # the game program turns its buildings with the map (#3035)
+        data["turn"] = buildings.TURN
     with open(path, "w") as f:
         json.dump(data, f, indent=1)
 
