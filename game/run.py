@@ -631,6 +631,15 @@ def given(ap, argv):
             x.default = d
 
 
+def ctrl_c():
+    """Ctrl-C (and the Stop of the window, gui.stop_game) stops the game with a KeyboardInterrupt. Python keeps a SIGINT
+    that the parent ignores (a background job, nohup): then the game did not stop, and gui.stop_game killed the server
+    after 30 s with no save (#2658)."""
+    signal.signal(signal.SIGINT, signal.default_int_handler)
+    if hasattr(signal, "SIGBREAK"):                  # Windows: the window (gui.stop_game) sends Ctrl-Break (#1775)
+        signal.signal(signal.SIGBREAK, signal.default_int_handler)
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0].strip(),
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -723,8 +732,7 @@ def main(argv=None):
             teams = team_choices(a.teams, json.load(f).get("players", {}))
     if a.load:                                       # the saved world replaces the world (the player files stay)
         restore(os.path.join(a.load, "world"), a.world)
-    if hasattr(signal, "SIGBREAK"):                  # Windows: the window (gui.stop_game) sends Ctrl-Break (#1775)
-        signal.signal(signal.SIGBREAK, signal.default_int_handler)
+    ctrl_c()
     game = Game(a.world, a.version, server=a.server)
     game.people = a.people                           # the join order counts from the first player (#1310)
     game.settings = {k: getattr(a, k) for k in savegame.SETTINGS}   # savegame.dump keeps them (#2325)

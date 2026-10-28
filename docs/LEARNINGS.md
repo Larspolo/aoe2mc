@@ -32,6 +32,7 @@ and `tests/test_learnings.py` fails above 80 lines (#1698).
 - Wait for a background command by the task ID of its own result: a typed file name from an earlier task waits the full 580 s for nothing (#2342, #2357).
 - `git stash` during an unfinished merge drops `MERGE_HEAD`: the next commit is no merge commit. To test main without your change, use `git worktree add` (#2281).
 - The fast suite stops at one percent and runs on: add `-o faulthandler_timeout=90` (pytest dumps the stack of a test that runs longer). #2484: `train.start()` looped for ever on a technology that never goes into `g.techs`.
+- A test that passes in the foreground and fails only in a background run: check the signals. A background job ignores SIGINT, and Python and its children keep that (`(trap '' INT; python3 -m pytest ...)` reproduces it, #2658).
 
 ## Code
 
