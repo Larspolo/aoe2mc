@@ -271,6 +271,9 @@ UPGRADES = {r["name"]: tuple(map(tuple, u)) if isinstance(u[0], list) else tuple
             for r in ROWS if (u := r.get("upgrade"))}             # new unit (#941), "upgrade" of data/train.jsonl (#1915)
 REQUIRES = {r["name"]: (r["requires"][0], *map(tuple, r["requires"][1:]))   # an age: n types of these buildings, or
             for r in ROWS if "requires" in r}                      # one of the third list alone
+# The AoE2 event sounds (#3502): a own site is complete, an own technology is complete, a monk converts a unit
+EVENT_SOUNDS = {"built": "minecraft:block.anvil.use", "convert": "minecraft:entity.evoker.prepare_wololo",
+                "research": "minecraft:block.note_block.bell"}
 AGES = ("Dark Age", "Feudal Age", "Castle Age", "Imperial Age")    # the age after each researched age (index: ages)
 # AoE2 DE setting "Starting age" (game/data/setup.jsonl): the researched ages and the skipped technologies (#2265)
 STARTS = {r["name"]: r for r in table.load("setup.jsonl") if "ages" in r}
@@ -976,6 +979,7 @@ def research(g, entry, start=False, rect=None):
     g.techs.add(entry["name"])
     if not start:
         record.aged(g, entry["name"])                                  # Record Game (#2649)
+        g.command(f"playsound {EVENT_SOUNDS['research']} master @a[team=p{g.player}] ~ ~ ~ 1 1")
     if gather.has_mode(g, "scenario"):                             # a trigger condition "Research Technology" (#2656)
         g.command(f"scoreboard players set #p{g.player}.{entry['name']} aoe_tech 1")
     if start:                                                      # free: not in the score (score.py, #2355)
