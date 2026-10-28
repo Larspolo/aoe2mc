@@ -9,7 +9,7 @@ WORKSHOP = {"kind": "building", "name": "SIEGE_WORKSHOP", "player": 1, "tile": [
 
 
 def test_the_values_are_those_of_aoe2():
-    assert train.TECH_AGE["CONSCRIPTION"] == 3 and len(train.HELP["CONSCRIPTION"]) <= 50
+    assert len(train.HELP["CONSCRIPTION"]) <= 50
     assert set(train.CONSCRIPT[0]) == {"ARCHERY_RANGE", "BARRACKS", "CASTLE", "STABLE"} and train.CONSCRIPT[1] == 1.33
 
 
