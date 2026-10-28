@@ -52,6 +52,28 @@ jobs:
         run: ruff check .
       - name: Fast tests
         run: pytest -n auto ${{ steps.select.outputs.tests }}   # all cores (#2415)
+      # Two green PRs can merge into a main whose plugin does not compile (#2418): compile it when the change (a PR
+      # against its base, a merge on main) touches game/plugin, as game/run.py builds it (#2437).
+      - name: Plugin changed
+        id: plugin
+        run: git diff --quiet HEAD^1 -- game/plugin || echo "changed=1" >> "$GITHUB_OUTPUT"
+      - uses: actions/setup-java@v4
+        if: steps.plugin.outputs.changed
+        with:
+          distribution: temurin
+          java-version: "25"
+      - uses: actions/cache@v4
+        if: steps.plugin.outputs.changed
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: plugin-${{ hashFiles('game/plugin/*.kts', 'game/plugin/gradle/wrapper/*') }}
+          restore-keys: plugin-
+      - name: Compile the Paper plugin
+        if: steps.plugin.outputs.changed
+        working-directory: game/plugin
+        run: ./gradlew --no-daemon -q jar
 
   # A CI run that GITHUB_TOKEN started (Unconflict) gives no workflow_run event, and GitHub drops the cron sweep of
   # Automerge: start the sweep after a green quick job, so that the PR merges (#734). A dispatch of GITHUB_TOKEN starts
