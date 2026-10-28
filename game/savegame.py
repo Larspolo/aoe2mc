@@ -30,7 +30,7 @@ OPTIONAL = ("limit_left", "policy", "rates", "relic_timer", "switches", "upgrade
             "wonders_gone")                                            # Gather that has them (#2324; the policy: #2515)
 MONK = ("carrier_at", "converting", "faith", "fetching", "heal_time", "monk_at", "relic_gold", "relic_homes",
         "relic_time", "relics")                                        # game/monk.py: the relics and monk orders (#2412)
-ORDERS = ("patrols",)                                                  # scenario.py: the patrols of the triggers (#2647)
+ORDERS = ("patrols", "trigger_costs")                                  # scenario.py: the patrols (#2647), costs (#2776) of the triggers
 ROUTES = ("trade", "trebs")                                            # trade.py, trebuchet.py: as OPTIONAL (#2413)
 CHEATS = (                                                             # game/cheats.py: the cheats that the player
     "aegis",                                                           # turned on (#2533)
