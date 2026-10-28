@@ -39,7 +39,6 @@
 {"name": "last", "text": "Resources last longer, {kind: factor}: a gathered unit takes 1 / factor.", "issue": 2112}
 {"name": "lead", "text": "The units whose shots lead a moving target as with Ballistics, without the technology (Spanish Cannon Galleons). train.lead_command, AoePlugin.lead.", "issue": 2430}
 {"name": "loot", "text": "The part of the cost of a destroyed enemy building that the player gets (Danes). game/spoils.py.", "issue": 2271}
-{"name": "missing", "text": "The technologies and units that the civilization does not have (the availability chart of each civilization): the menu does not show them (train.unlocked). The items that few civilizations have name them in the key \"civs\" of their line in train.jsonl or build.jsonl (civs.ONLY, #2235), not here.", "issue": 1373}
 {"name": "more", "text": "Technologies whose effect change is multiplied, {technology: factor} (Varangians: Bloodlines and Caravan +50 %). train.stats, train.speed.", "issue": 2173}
 {"name": "nomad_unit", "text": "The unit that the first town center of a Nomad start spawns in front of it (Huns: a tamed Hunnic Horse, a Minecraft horse with Tame). Gather.town_center summons it.", "issue": 2466}
 {"name": "not_shared", "text": "The shared items of an ally that the civilization does not get (Turks: no Elite Skirmisher).", "issue": 1619}

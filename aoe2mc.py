@@ -36,12 +36,14 @@ The world is saved with Minecraft data version 26.3. Newer Minecraft versions up
 import argparse
 import contextlib
 import functools
+import glob
 import hashlib
 import io
 import json
 import math
 import os
 import re
+import shutil
 import sys
 import textwrap
 import time
@@ -830,7 +832,7 @@ def name_timeline(objects, timeline, window=16, water=None):
                (used[i][1] in (role, None) or used[i][1] == "G" and (role == "B" or "SHIP" in name)) and
                used[i][0] >= t - 5000 and used[i][2] <= {name} and   # 5 s: the training times are estimates
                not (used[i][3] and "VILLAGER" not in name)]         # only villagers build and gather on land (#765)
-        if (train(name) or (0, ""))[1] == "DOCK":           # a ship does not go inland (#2629): a land unit
+        if units.is_boat(units.classify(name)):             # a ship does not go inland (#2629): a land unit
             inland |= {i for i in ids[:1] if used[i][4]}     # takes the ID (below)
             ids = [i for i in ids if not used[i][4]]
         i = ids[0] if ids else nxt if nxt not in used else None
@@ -838,7 +840,7 @@ def name_timeline(objects, timeline, window=16, water=None):
             names[i] = name             # a unit skips a GARRISON target: a later building can take it
             nxt = next((j for j in range(nxt, i) if used.get(j, (0, None))[1] == "G" and j not in names), i + 1)
     trained = [(end, e.get("player"), e.get("name", "")) for end, e, _ in training(timeline)
-               if (train(e.get("name", "")) or (0, "DOCK"))[1] != "DOCK"]
+               if not units.is_boat(units.classify(e.get("name", "")))]   # a ship is no land unit (#3031)
     for i, u in sorted(used.items()):
         if i not in names and len(u[2]) == 1:
             names[i] = next(iter(u[2]))
@@ -871,6 +873,19 @@ def turn_map(k, size, terrain, elevation, objects, players):
         if p.get("view"):
             p["view"] = turn_tile(*p["view"], size, k)
     return np.rot90(terrain, k).copy(), np.rot90(elevation, k).copy()
+
+
+def turn_timeline(timeline, size, k):
+    """Turn the tiles of the timeline events by k quarter turns. A wall tile is a tile index: its middle turns, as the
+    trigger tiles do (#3029). The other tiles are points."""
+    for e in timeline:
+        for key in ("tile", "end"):
+            if key not in e:
+                continue
+            if e["kind"] == "wall":
+                e[key] = [int(v) for v in turn_tile(e[key][0] + 0.5, e[key][1] + 0.5, size, k)]
+            else:
+                e[key] = [round(float(v), 3) for v in turn_tile(*e[key], size, k)]
 
 
 # --------------------------------------------------------------------------------------------
@@ -2022,7 +2037,7 @@ def object_mob(name):
 PASSABLE = ("short_grass", "tall_grass", "large_fern", "petals", "moss_carpet", "mushroom", "allium", "bluet",
             "tulip", "lily_of", "fern", "wheat", "poppy", "dandelion", "cornflower", "daisy", "water",
             "seagrass", "dead_bush", "sweet_berry", "rail", "carpet", "banner", "button", "lantern", "snow[", "kelp",
-            "lily_pad", "bush[", "shrub", "dry_grass")
+            "lily_pad", "bush[", "shrub", "dry_grass", "wildflowers", "leaf_litter")
 
 
 def passable_states(states):
@@ -2406,7 +2421,7 @@ def entity_chunk(cx, cz, ents, cols, vol, passable):
             if y > top + 1 and not wtop > top and (bx, bz) not in buildings.BRIDGE_CELLS:
                 for dx, dz in ((1, 0), (-1, 0), (0, 1), (0, -1)):   # a shrub or leaves in the block: stand next to it (#415)
                     nx, nz = bx + dx, bz + dz
-                    if nx >> 4 != cx or nz >> 4 != cz or cols.wtop[nx, nz] > cols.top[nx, nz]:
+                    if nx >> 4 != cx or nz >> 4 != cz or cols.wtop[nx, nz] > cols.top[nx, nz] or not cols.inside(nx, nz):
                         continue
                     nt, ncol = int(cols.top[nx, nz]), vol[:, nz & 15, nx & 15]
                     if passable[ncol[nt + 1 - MIN_Y]] and passable[ncol[nt + 2 - MIN_Y]]:
@@ -2846,6 +2861,7 @@ RESEARCHING_TECH = 17                                              # the conditi
 RESEARCH_TECHNOLOGY = 2                                            # "Research Technology" (#2577)
 SEND_CHAT = 3
 SET_BUILDING_GATHER_POINT = 54                                     # "Set Building Gather Point" (#2853)
+SET_OBJECT_COST = 80                                               # "Set Object Cost" (#2857)
 SET_PLAYER_VISIBILITY = 41                                         # "Set Player Visibility" (#2774)
 STOP_OBJECT = 29                                                   # "Stop Object" (#2754)
 STORE_KEY_VALUE = 82                                               # "Store Key Value" (#2887)
@@ -3006,9 +3022,12 @@ def turn_area(area, size, k):
 def area_selector(c, T):
     """The entity selector of the units of the player of an "Objects in Area" condition: the blocks of the tiles
     x1..x2, y1..y2 (z), all heights. An area of -1 is the whole map. A unit type filter is the tag aoe2mc.t<id>
-    of the units (#681); the "object" of an effect (a name, #656) is not a filter here. The horse of a unit has the player
-    tag too (units.MOUNT, #1045): it does not count."""
+    of the units (#681). The "object" of an effect is a (kind, name) pair: its type tag is the ID of the name (#2978).
+    The horse of a unit has the player tag too (units.MOUNT, #1045): it does not count."""
     obj = c.get("object")
+    if isinstance(obj, tuple):
+        kind, name = obj
+        obj = units.type_ids().get(name) if kind in ("U", "H") else None
     sel = [f"tag=aoe2mc.p{c['player']}", f"tag=!{units.MOUNT}"] + [f"tag=aoe2mc.t{obj}"] * (isinstance(obj, int) and obj >= 0)
     return f"@e[{','.join(sel)}{area_box(c['area'], T)}]"
 
@@ -3066,18 +3085,18 @@ def object_lines(e, c):
 
 def effect_units(e, T):
     """(selector, top entity, entity) of the units of an effect: its player (Gaia: the tag aoe2mc.p0, unit_selector,
-    #2916), area (area_selector) and unit type (the type of the top entity of units.make_entity). No type: (selector,
-    None, None). A type with no entity (a building): None."""
+    #2916), area (area_selector) and unit type (the tag aoe2mc.t<id>, #2978). No type: (selector, None, None).
+    A type with no entity (a building): None. The top entity tells a rider from its mount (kill, hp_runs)."""
     kind, name = e.get("object") or (None, None)
     at = unit_selector(e, T)
     if name is None:
         return at, None, None
-    nbt = units.make_entity(dict(name=name, player=0), {}, (0.0, 0.0, 0.0), np.random.default_rng(0)) \
+    nbt = units.make_entity(dict(name=name, player=0, hero=kind == "H"), {}, (0.0, 0.0, 0.0), np.random.default_rng(0)) \
         if kind in ("U", "H") else None
     if nbt is None:
         return None
     top = units.top_entity(nbt)
-    return f"@e[type={top['id']},{at[3:]}", top, nbt
+    return f"@e[{at[3:]}", top, nbt
 
 
 def hp_runs(found, c):
@@ -3755,6 +3774,18 @@ def cost_lines(e, c, what="change object cost"):
     return [f'data modify storage aoe2mc:costs list append value "{" ".join([str(e["player"]), name, *cost])}"']
 
 
+def set_cost_lines(e, c):
+    """The command of "Set Object Cost" (#2857): one resource of the cost of the unit or building type of the player.
+    A "+" marks the text as one resource: scenario.costs keeps the other resources of the cost."""
+    (r, q), = e.get("cost", [[-1, 0]])
+    _, name = e.get("object") or (None, None)
+    if r not in range(len(ATTRIBUTES)) or q < 0 or not name or name.isdigit() or e["player"] <= 0:
+        c.stats["set object cost (not supported)"] += 1
+        return []
+    c.stats["set object cost"] += 1
+    return [f'data modify storage aoe2mc:costs list append value "{e["player"]} {name} +{ATTRIBUTES[r].lower()}={q}"']
+
+
 def tech_time_lines(e, c):
     """The command of "Change Technology Research Time" (#2820): the new research time (seconds) of the technology of
     the player goes into the list of the data storage aoe2mc:times as one text "<player> <name> <seconds>". The
@@ -4217,6 +4248,10 @@ def _cost(e, kinds, techs):
             [e.resource_3, e.resource_3_quantity]]
 
 
+def _one_cost(e, kinds, techs):
+    return [[e.tribute_list, e.quantity]]                # the one resource of "Set Object Cost" (#2857)
+
+
 def _tech(e, kinds, techs):
     return techs.get(e.technology, str(e.technology))
 
@@ -4283,6 +4318,7 @@ EFFECT_KEYS = {
     PLAY_SOUND: {"sound": lambda e, kinds, techs: e.sound_name or ""},
     REPLACE_OBJECT: {"target": "target_player", "object2": _object2},
     RESEARCH_TECHNOLOGY: {"technology": _tech},
+    SET_OBJECT_COST: {"cost": _one_cost},                                  # (#2857)
     SET_PLAYER_VISIBILITY: {"target": "target_player", "visibility": "visibility_state"},
     STORE_KEY_VALUE: {"variable": "variable"},                         # (#2887)
     TRAIN_UNIT: {"quantity": "quantity"},   # (#2772)
@@ -4374,6 +4410,7 @@ EFFECTS = {
     RESEARCH_TECHNOLOGY: research_lines,
     SEND_CHAT: chat_lines,
     SET_BUILDING_GATHER_POINT: rally_lines,
+    SET_OBJECT_COST: set_cost_lines,
     SET_PLAYER_VISIBILITY: visibility_lines,
     STOP_OBJECT: stop_lines,
     STORE_KEY_VALUE: key_lines,
@@ -5558,6 +5595,20 @@ def convert(src, out, T=4, H=3, name=None, seed=1, preview=False, arch=None, pla
         units.ASSETS = False
 
 
+def clear_old_output(out):
+    """Remove the outputs of an earlier aoe2mc world in the folder, so that it gives the same world as a new folder
+    (#3030). A folder with no aoe2mc.json holds another world: it loses no file."""
+    if not os.path.exists(os.path.join(out, "aoe2mc.json")):
+        return
+    shutil.rmtree(os.path.join(out, "datapacks", "aoe2mc"), ignore_errors=True)
+    for f in [os.path.join(out, "resourcepacks", "resources.zip"), os.path.join(out, "preview.png")]:
+        if os.path.exists(f):
+            os.remove(f)
+    for d in ("region", "entities"):
+        for f in glob.glob(os.path.join(out, "dimensions", "minecraft", "overworld", d, "*.mca")):
+            os.remove(f)
+
+
 def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units, barriers, spawn, birds, orientation,
              verbose, garrison, border_design, ambience, at=None, mood="on", fog=False, resource_pack=False):
     buildings.BARRIERS = barriers
@@ -5592,10 +5643,7 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
         c["area"] = turn_area(c["area"], size, buildings.TURN)
     for e in (e for t in texts.get("triggers", ()) for e in t["effects"] if min(e.get("tile", [-1])) >= 0):
         e["tile"] = [int(v) for v in turn_tile(e["tile"][0] + 0.5, e["tile"][1] + 0.5, size, buildings.TURN)]
-    for e in timeline or ():
-        for k in ("tile", "end"):
-            if k in e:
-                e[k] = [round(float(v), 3) for v in turn_tile(*e[k], size, buildings.TURN)]
+    turn_timeline(timeline or (), size, buildings.TURN)
     tick("read")
     name = name or os.path.splitext(os.path.basename(src))[0]
     terrain, elevation = turn_map(buildings.TURN, size, terrain, elevation, objects, players)
@@ -5651,6 +5699,7 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
         print(f"  {k}: {stats[k]}")
     passable = passable_states(B.states)
 
+    clear_old_output(out)
     dim = os.path.join(out, "dimensions", "minecraft", "overworld")
     for d in ("region", "entities"):
         os.makedirs(os.path.join(dim, d), exist_ok=True)

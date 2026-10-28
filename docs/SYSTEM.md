@@ -25,10 +25,11 @@ controls, read `docs/STEERING.md`. This document links to them and does not copy
 | Workflow | When | What |
 |---|---|---|
 | `ci.yml` (CI) | Each PR, each push to `main`, each night | Quick checks (lint, fast tests) on each PR; a Markdown-only PR runs only the doc tests (`tools/ci_select.py`, #2089); a change of `game/plugin` also compiles the Paper plugin (#2437). The full suite each night on `main`. A red `main` opens a `P0` ticket. |
-| `automerge.yml` (Automerge) | After CI, every 5 minutes, by hand | Merges an agent PR with green CI. Skips `hold` and tickets with `needs-human` or `blocked`. Then starts CI on `main`, Coverage, Claims and Dashboard. |
+| `automerge.yml` (Automerge) | After CI, every 5 minutes, by hand | Merges an agent PR with green CI. Skips `hold` and tickets with `needs-human` or `blocked`. When GitHub calls the PR `dirty`, it merges `main` into it with our merge drivers and `tools/unconflict.py` (`land()`), checks `ruff`, pushes and merges at once, with no new CI run (#3199); only a real conflict gets `conflict`. Then starts CI on `main`, Coverage, Claims and Dashboard. |
 | `unconflict.yml` (Unconflict) | Every 20 minutes, after each merge | Merges `main` into a conflicted agent PR when git solves the conflict alone (`merge=union` files) or both sides only add lines (`tools/unconflict.py`, #1864; not the same `def` on both sides, and the merge passes `ruff check`, #2631), and starts CI. |
 | `claims.yml` (Claims) | A ticket closes, each day | Deletes the claim refs of closed tickets and old comment locks. The runs cannot delete refs (403). |
 | `dashboard.yml` (Dashboard) | Every 10 minutes (not on events: the API rate limit, #2168) | Writes the dashboard in the body of the status issue (`tools/dashboard.py`). |
+| `pacer.yml` (Pacer) | Every 10 minutes, by hand | Only while `pacer = "workflow"` in `[pacing]` of `agent.toml`: starts the runs that the quota target misses through the API trigger of each task (`tools/pacer.py`, #3193), in place of the pacer session. Secrets: `CLAUDE_CODE_OAUTH_TOKEN` (the quota read), `PACER_URL_<TASK>` and `PACER_TOKEN_<TASK>` for `MAIN`, `HAIKU`, `DEEP`. A task takes at most 30 API starts per hour, an account 100. |
 | `coverage.yml` (Coverage) | Each push to `main` | Writes `docs/coverage.md`, `MAX` of `tests/test_coverage.py` and a column of `docs/DESIGN.md`. PRs do not change these files, so they do not conflict there. |
 | `metrics.yml` (Metrics) | Each 15 minutes, by hand with `days` | Writes the status issue comments to the orphan branch `metrics` (`tools/metrics_log.py`, one file per day). `tools/health.py` reads them and only the newest comments from the API (#1983). |
 | `labels.yml` (Labels) | A change of `.github/labels.txt` | Creates the labels. |
@@ -100,7 +101,7 @@ bottleneck, and more runs only make more open PRs and more conflicts. `--fire` c
 cycle, at `max_ci_queue` (default 5) none. A run asks `usage.py --flow` in autopilot step 2: with the brake on it only
 repairs PRs and takes no new ticket.
 A PR with the label `conflict` and no new commit for 10 minutes is stalled: a run takes it over (`claim.py`, #1773).
-Automerge adds the label when the merge of a green PR fails, Unconflict when its merge of main finds a real conflict.
+Automerge adds the label when its own merge of main with the drivers finds a real conflict (#3199), Unconflict when its merge of main finds a real conflict.
 The target counts Opus runs. A run of a cheap lane counts its weight (#1727): a Haiku run sets `git config aoe2mc.lane haiku`,
 its claims end with ` lane haiku`, the `Usage:` lines count its runs (`· haiku N`), and `health.lane_weights` measures
 the weight from them (least squares, at least 10 intervals with Haiku runs; before that `weights` of `agent.toml`,
@@ -145,6 +146,8 @@ on `main` yet, and the branch of an owner session is not `agent/*` or `claude/*`
 5. **Pacer session.** Start one cloud session with the same repository and environment, and send it
    "Pacer cycle: follow .claude/skills/pacer/SKILL.md." It schedules its own next cycle every 10 minutes and needs
    the `fire_trigger` tool with the trigger ID of the task of step 4 (`trigger` in `[pacing]` of `agent.toml`, #1898).
+   Or the workflow pacer (#3193): an API trigger for each autopilot task, its URL and token as secrets of the
+   repository (`pacer.yml`), and `pacer = "workflow"` in `[pacing]` of `agent.toml`. Then no pacer session and no heartbeat.
 6. **Scheduled task "aoe2mc pacer heartbeat".** Hourly at :36. Its prompt: "Pacer heartbeat: follow
    .claude/skills/pacer/SKILL.md." It wakes the pacer session when its own loop stopped.
 7. **Scheduled task "aoe2mc autopilot haiku" (optional, #1715).** No schedule: the pacer fires it. Model
@@ -217,6 +220,7 @@ of `tools/bootstrap.py` (they copy this repository) and the tests that need a sp
 | `tools/bootstrap.py` | generic | None (sets up this system in a new repository, #906). |
 | `tools/claim.py` | generic | None (`agent.toml`). |
 | `tools/usage.py` | generic | None. |
+| `tools/pacer.py` | generic | None (the API triggers come from the secrets of `pacer.yml`, #3193). |
 | `tools/dashboard.py` | generic | None (`agent.toml`). |
 | `tools/feedback.py` | generic | None (`agent.toml`). |
 | `tools/health.py` | generic | None (`agent.toml`). |
@@ -272,6 +276,7 @@ of `tools/bootstrap.py` (they copy this repository) and the tests that need a sp
 | `tests/test_ship_pr.py` | generic | None (a test of `tools/ship_pr.py`). |
 | `tests/test_merge_jsonl.py` | generic | None (a test of `tools/merge_jsonl.py`). |
 | `tests/test_pacer.py` | generic | None (a test of `tools/usage.py`). |
+| `tests/test_pacer_script.py` | generic | None (a test of `tools/pacer.py`). |
 | `tests/test_usage.py` | generic | None (a test of `tools/usage.py`). |
 | `tests/test_usage_week.py` | generic | None (a test of `tools/usage.py`). |
 | `tests/test_generic_tools.py` | specific | The tools of aoe2mc that generic files may name (`OPTIONAL`, #1963). |
@@ -282,6 +287,7 @@ of `tools/bootstrap.py` (they copy this repository) and the tests that need a sp
 | `.github/workflows/claims.yml` | generic | None. |
 | `.github/workflows/close.yml` | generic | None. It closes the issues with the label `close` (#1740). |
 | `.github/workflows/dashboard.yml` | generic | None. |
+| `.github/workflows/pacer.yml` | generic | The secrets of the API triggers, one pair per lane (#3193). |
 | `.github/workflows/coverage.yml` | specific | The coverage of the AoE2 types. |
 | `.github/workflows/metrics.yml` | generic | None. |
 | `.github/workflows/labels.yml` | generic | None. |

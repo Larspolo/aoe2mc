@@ -7,7 +7,8 @@ A PR with a merge conflict: do the steps below, then continue at step 6.8. Remov
 The workflow `unconflict.yml` (after each merge and every 20 minutes) merges `origin/main` into a conflicted PR
 when git solves the conflict alone (`merge=union` files; `game/data/*.jsonl` by name, key and list item, #2064) or
 when both sides only add lines, for example two new entries at one place of a table (`tools/unconflict.py`, #1864),
-and starts CI (#280). So a conflict that stays is a real one: Unconflict gives it the label `conflict`.
+and starts CI (#280). Automerge does the same merge for a green PR that GitHub calls `dirty`, and merges it at once
+with no new CI run (#3199). So a conflict that stays is a real one: Automerge or Unconflict gives it the label `conflict`.
 
 **Merge main with one call** (each merge by hand took about 6 calls and a resolver script, 25 % of the cost of the
 runs on 2026-10-28): `python3 tools/merge_main.py --push N` (N = the ticket of the PR). It refreshes the merge driver,

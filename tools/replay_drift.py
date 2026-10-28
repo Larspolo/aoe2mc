@@ -16,7 +16,7 @@ that leg ("slack"), the order of the plugin and the target of the mob AI.
 The table has one row per unit kind: units, median and maximum distance (blocks, without height, less the slack), "stuck" (more than
 STUCK_BLOCKS from the replay position for more than STUCK_SECONDS of game time), "stray" (moved more than STRAY_BLOCKS
 between two samples with no plugin order, no mob target or fight since the last sample, the same replay position, and
-not nearer to it: #1169, the end of a walk or a jump to the position is no stray), "died" (the entity is gone, the replay still has the unit)
+not nearer to it: #1169, the end of a walk or a jump to the position is no stray), "died" (the entity is gone in all later samples, the replay still has the unit: a unit that comes back did not die)
 and "still" (#1139: seconds of game time between two samples with a plugin order in both, more than STUCK_BLOCKS from
 the replay position in both, and less than STILL_BLOCKS of move between them: a unit that the plugin holds in place.
 In #851 a plugin change held villagers for 120 s, and the other columns did not show it).
@@ -97,10 +97,9 @@ def analyze(samples):
         k = out.setdefault(kind(rows[0]["name"]), {"units": 0, "d": [], "stuck": 0, "stray": 0, "died": 0,
                                                      "still": 0.0})
         k["units"] += 1
-        far, stuck, stray, died, last, last_d, last_raw = None, False, False, False, None, 0.0, 0.0
+        far, stuck, stray, last, last_d, last_raw = None, False, False, None, 0.0, 0.0
         for s in rows:
             if s["x"] is None:
-                died |= last is not None                           # gone after it was seen
                 continue
             raw = ((s["x"] - s["rx"]) ** 2 + (s["z"] - s["rz"]) ** 2) ** 0.5
             d = max(0.0, raw - s.get("slack", 0))
@@ -115,6 +114,7 @@ def analyze(samples):
                     ((s["x"] - last["x"]) ** 2 + (s["z"] - last["z"]) ** 2) ** 0.5 < STILL_BLOCKS:
                 k["still"] += (s["t"] - last["t"]) / 1000              # held in place with an order
             last, last_d, last_raw = s, d, raw
+        died = last is not None and rows[-1]["x"] is None   # gone in all samples after its last position (#3047)
         k["stuck"] += stuck
         k["stray"] += stray
         k["died"] += died

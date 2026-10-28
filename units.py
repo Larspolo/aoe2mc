@@ -306,11 +306,20 @@ def boat(wood, crew, chest=False):
 def pretty(name, hero=False):
     """ELITE_TEUTONIC_KNIGHT -> Elite Teutonic Knight."""
     parts = name.split("_")
-    parts = [p for p in parts if p not in DROP and not (len(p) == 1 and p.isalpha())]
+    # A one-letter part is a variant letter (COW_A), but a hero keeps its numeral (HENRY_V) and particles (#3059)
+    parts = [p for p in parts if p not in DROP and not (len(p) == 1 and p.isalpha() and not hero)]
     if parts and parts[0] == "VILLAGER" and len(parts) > 1:
         parts = parts[1:]
     small = {"OF", "THE", "DE", "D", "AP", "VON", "IBN", "WITH", "IN", "A", "DA"}
     words = [p.lower() if p in small and i else p.capitalize() for i, p in enumerate(parts)]
+    if hero:  # "d" joins the next word: d'Alencon
+        joined = []
+        for w in words:
+            if joined and joined[-1] == "d":
+                joined[-1] = "d'" + w
+            else:
+                joined.append(w)
+        words = joined
     if name.endswith("_PACKED"):
         words = words[:-1] + ["(packed)"]
     return " ".join(words) or name
@@ -419,7 +428,7 @@ def describe(n, hero=False):
         return mob("villager", VillagerData=Compound({"profession": String("minecraft:" + job),
                                                        "type": String("minecraft:plains"), "level": Int(2)}),
                    Xp=Int(1), Offers=no_trades())
-    if n == "MISSIONARY":                                     # a mounted monk (#1939)
+    if n.startswith("MISSIONARY"):                            # a mounted monk, also with a relic (#1939, #3061)
         return mounted("horse", mob("evoker"))
     if has(n, "MONK", "MISSIONARY", "PRIEST", "MERCHANT") and "SHIP" not in n or hero and has(n, *HEROES["religious"]):
         return mob("evoker")

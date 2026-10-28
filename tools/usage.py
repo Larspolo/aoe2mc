@@ -44,6 +44,7 @@ WAIT = CONFIG.get("pacing", {}).get("max_waiting_prs", 10)   # flow brake: open 
 QUEUE = CONFIG.get("pacing", {}).get("max_ci_queue", 5)      # flow brake: queued CI runs (no runner yet)
 PR_MINUTES = CONFIG.get("pacing", {}).get("pr_minutes", 30)  # Automerge merges a green PR in a few minutes
 MAX_FIRE = CONFIG.get("pacing", {}).get("max_fire", 8)   # runs that the pacer starts per cycle: each run needs a few minutes to claim its ticket; the same as agent.toml (the pacer used an old 4, 2026-10-28)
+PACER = CONFIG.get("pacing", {}).get("pacer", "session")   # who starts the runs: the session (skill pacer) or pacer.yml
 REFILL = CONFIG.get("pacing", {}).get("refill_runs", 1)   # runs beyond the ready tickets: each refills one epic (#609, #650)
 CALL = ["claude", "-p", "Reply with OK.", "--model", "claude-haiku-5-5", "--output-format", "stream-json", "--verbose"]
 
@@ -238,6 +239,33 @@ def describe(usage, now, burn=BURN, burn7=None):
     return " · ".join(out + [week] * bool(week)) + f" · burn {burn:.3f} · max {HI} runs · target {target_runs(usage, now, burn, burn7=burn7)} runs"
 
 
+def fire(usage, now, burn=BURN, burn7=None):
+    """(K, {lane: runs}, line): the runs that the pacer starts now, and the line of its inputs (`--fire`,
+    `tools/pacer.py`). Reads GitHub and the claim refs."""
+    import dashboard
+    import health
+    open_all = dashboard.pages("issues?state=open")
+    paused = any({dashboard.STATUS, dashboard.PAUSED} <= set(dashboard.labels(i)) for i in open_all)
+    ready = len(dashboard.candidates(open_all, reserved=()))   # all lanes: lane_plan splits them
+    t = datetime.datetime.now(datetime.timezone.utc)
+    lanes = health.lane_claims(t)
+    claims = health.active_claims(t) if lanes is None else sum(lanes.values())
+    weights, source = health.lane_weights(health.status_comments())
+    eq = claims if lanes is None else health.opus_equivalent(claims, lanes, weights)   # in Opus runs (#1727)
+    target = target_runs(usage, now, burn, burn7=burn7)
+    refill = refill_runs(open_all, now)
+    lanes = [(n, len(dashboard.candidates(open_all, lane=n)), weights[n]) for n in weights]   # agent.toml order
+    k, runs = plan(target, eq, ready, lanes, paused, refill=refill,
+                   refill_lane="deep" if "deep" in dashboard.RESERVED else None)
+    cap, flow = read_flow(now)
+    if cap is not None:                                     # the flow is the bottleneck: Opus runs repair the PRs
+        k, runs = min(k, cap), dict.fromkeys(runs, 0)
+    line = (f"{describe(usage, now, burn, burn7)} · claims {claims} ({eq:.2f} Opus runs) · ready {ready} · refill {refill} · "
+            f"paused {paused} · {flow} · max_fire {MAX_FIRE} · weights "
+            + ", ".join(f"{n} {w:.2f} ({source[n]})" for n, w in weights.items()))
+    return k, runs, line
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--target", action="store_true", help="print only the number of runs")
@@ -261,30 +289,13 @@ def main(argv=None):
         return
     burn, burn7 = a.burn or measured_burn() or BURN, measured_burn7() or BURN7
     if a.fire:
-        import dashboard
-        import health
-        open_all = dashboard.pages("issues?state=open")
-        paused = any({dashboard.STATUS, dashboard.PAUSED} <= set(dashboard.labels(i)) for i in open_all)
-        ready = len(dashboard.candidates(open_all, reserved=()))   # all lanes: lane_plan splits them
-        t = datetime.datetime.now(datetime.timezone.utc)
-        lanes = health.lane_claims(t)
-        claims = health.active_claims(t) if lanes is None else sum(lanes.values())
-        weights, source = health.lane_weights(health.status_comments())
-        eq = claims if lanes is None else health.opus_equivalent(claims, lanes, weights)   # in Opus runs (#1727)
-        target = target_runs(usage, now, burn, burn7=burn7)
-        refill = refill_runs(open_all, now)
-        lanes = [(n, len(dashboard.candidates(open_all, lane=n)), weights[n]) for n in weights]   # agent.toml order
-        k, runs = plan(target, eq, ready, lanes, paused, refill=refill,
-                       refill_lane="deep" if "deep" in dashboard.RESERVED else None)
-        cap, flow = read_flow(now)
-        if cap is not None:                                     # the flow is the bottleneck: Opus runs repair the PRs
-            k, runs = min(k, cap), dict.fromkeys(runs, 0)
+        k, runs, line = fire(usage, now, burn, burn7)
+        if PACER == "workflow":                                 # pacer.yml starts the runs: the session must not (#3193)
+            k, runs, line = 0, dict.fromkeys(runs, 0), 'pacer = "workflow" in agent.toml: the session starts no run · ' + line
         print(k)
         for n, r in runs.items():
             print(f"{n} {r}")
-        print(f"{describe(usage, now, burn, burn7)} · claims {claims} ({eq:.2f} Opus runs) · ready {ready} · refill {refill} · "
-              f"paused {paused} · {flow} · max_fire {MAX_FIRE} · weights " + ", ".join(f"{n} {w:.2f} ({source[n]})" for n, w in weights.items()),
-              file=sys.stderr)
+        print(line, file=sys.stderr)
     elif a.target:
         print(target_runs(usage, now, burn, burn7=burn7))
     elif a.json:

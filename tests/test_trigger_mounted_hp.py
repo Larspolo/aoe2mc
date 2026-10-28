@@ -100,7 +100,7 @@ def test_damage_object_on_a_knight_hurts_its_horse_on_a_server(tmp_path):
         game.forceload()
         game.command("time set midnight")                                    # no zombie burns
         game.command('summon horse 10 70 14 {Tame:1b,Tags:["aoe2mc.hph"],Passengers:[{id:"minecraft:zombie",'
-                     'Tags:["aoe2mc.p1","aoe2mc.hpr"]}]}')
+                     'Tags:["aoe2mc.p1","aoe2mc.hpr","aoe2mc.t38"]}]}')
 
         def health(tag):
             return float(re.findall(r"([\d.]+)f", game.command(f"data get entity @e[tag={tag},limit=1] Health"))[0])

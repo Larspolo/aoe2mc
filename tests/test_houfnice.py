@@ -1,4 +1,4 @@
-"""Houfnice (#2143): the siege workshop of the Bohemians researches Houfnice in the Imperial Age (slot 8: 1100 food,
+"""Houfnice (#2143): the siege workshop of the Bohemians researches Houfnice in the Imperial Age (slot 22: 1100 food,
 800 gold, 140 s; AoE2 DE wiki "Unique upgrade"), and their bombard cannons become houfnices (wiki infobox "Houfnice":
 90 HP, 50 attack, +250 vs. buildings, +50 vs. heavy siege, 6 pierce armor, 0.7 blast). Other civilizations do not see it."""
 from test_forging import menus
@@ -36,14 +36,14 @@ def test_only_the_bohemians_see_the_upgrade():
 def test_the_upgrade_changes_the_live_and_the_new_bombard_cannons():
     server, g = workshop()
     train.open_menu(g, "Steve", WORKSHOP)
-    assert " 8:book:Houfnice:1100 food · 800 gold · 140 s · research " in menus(server)[-1] + " "
+    assert " 22:book:Houfnice:1100 food · 800 gold · 140 s · research " in menus(server)[-1] + " "
     research(g, WORKSHOP, "HOUFNICE_UPGRADE")
     assert g.soldiers["b"] == "HOUFNICE"
     assert combat.stats_command("b", "HOUFNICE", train.stats(g, "HOUFNICE")) in server.log
     train.open_menu(g, "Steve", WORKSHOP)
     menu = menus(server)[-1] + " "
     assert " 7:tnt_minecart:Houfnice:225 wood · 225 gold · 56 s · queue 0/15 " in menu
-    assert "Bombard Cannon" not in menu and "8:book" not in menu
+    assert "Bombard Cannon" not in menu and "22:book" not in menu
     assert train.queue(g, "Steve", WORKSHOP, "HOUFNICE")
 
 

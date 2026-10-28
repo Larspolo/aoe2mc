@@ -30,6 +30,7 @@ OPTIONAL = ("limit_left", "policy", "rates", "relic_timer", "switches", "upgrade
             "wonders_gone")                                            # Gather that has them (#2324; the policy: #2515)
 MONK = ("carrier_at", "converting", "faith", "fetching", "heal_time", "monk_at", "relic_gold", "relic_homes",
         "relic_time", "relics")                                        # game/monk.py: the relics and monk orders (#2412)
+NOMAD = ("later", "nomad")                                             # a Nomad start: the first town center bonus (#2986)
 ORDERS = ("patrols", "trigger_attributes", "trigger_costs",            # scenario.py: the patrols (#2647), attributes (#2763),
           "trigger_menus", "trigger_names",                            # costs (#2776), menu items (#2775), names (#2821)
           "trigger_places", "trigger_stacks", "trigger_times",         # the menu places (#2864), stacking (#2866), times (#2820),
@@ -101,6 +102,7 @@ KEPT = (                                                               # the fie
     *COUNTERS,
     *LEFT,                                                             # one tuple per line, in alphabetical order
     *MONK,                                                             # (parallel tickets add one, #2453)
+    *NOMAD,
     *OPTIONAL,
     *ORDERS,
     *RIDERS,
@@ -256,8 +258,8 @@ def dump(g):
         d["settings"] = dict(g.game.settings)
     if getattr(g.game, "treaty", 0):                                   # treaty.start: the time goes on (#2409)
         d["treaty_time"] = g.game.treaty_time
-    if g.data.get("unlock_teams"):                                     # the stances of the Diplomacy page (#2934)
-        d["stances"] = {n: {k: p[k] for k in ("team", "neutral") if k in p} for n, p in sorted(g.players.items())}
+    d["stances"] = {n: {k: p[k] for k in ("team", "neutral", "sees") if k in p}   # the Diplomacy page (#2934), the
+                    for n, p in sorted(g.players.items())}                       # triggers' stances and sight (#2989)
     return d
 
 
@@ -400,8 +402,7 @@ def load(g, d):
         if "villagers" in p:                                           # a save from before #2258 has no orders
             give_orders(x, p)
         board_again(x)
-        for r in gather.RESOURCES:                                     # the sidebar of the resources (Gather.setup)
-            x.command(f"scoreboard players set {r} {x.board} {x.stock[r.lower()]}")
+        x.show_stock()                                                 # the sidebar of the resources (Gather.setup)
         train.sidebar(x)
     for b in bots(g):                                                  # its attack time and wave go on (#2325)
         for f, v in d["players"].get(str(b.g.player), {}).get("bot", {}).items():
@@ -410,6 +411,7 @@ def load(g, d):
         p = g.players.setdefault(n, {})
         p.pop("team", None)
         p.pop("neutral", None)
+        p.pop("sees", None)
         p.update(row)
     if "stances" in d:
         g.command(gather.allies_command(g.players))
@@ -423,6 +425,8 @@ def settings(a, d, given=()):
     for k, v in d.get("settings", {}).items():
         if k in SETTINGS and k not in given:
             setattr(a, k, v)
+    if "teams" in given:                                             # the teams given here win over the stances
+        d.pop("stances", None)
     if "bot_attack" in given:
         for p in d["players"].values():
             p.get("bot", {}).pop("attack", None)

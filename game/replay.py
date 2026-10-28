@@ -249,11 +249,11 @@ def live(make, speed=1.0, start=0, restart=None, **kw):
     (it puts the world back to its start state), then a fresh replay from `start` jumps forward to T: the same state
     as a new replay with a jump to T. Speed and pause stay. Without restart a jump back changes nothing. Returns the
     stats of the last run."""
-    to, paused, stats = None, False, {}
+    to, paused, stats = start or None, False, {}              # the first run jumps to start: its state (#3025)
     while True:
         r = make()
         r.pov = stats.get("view", r.pov)                            # the view stays too (#1303)
-        stats = r.run(speed, start, to=to, paused=paused, rewind=restart is not None, **kw)
+        stats = r.run(speed, 0, to=to, paused=paused, rewind=restart is not None, **kw)   # events before start: the jump
         if stats.get("rewind") is None:
             return stats
         to, speed, paused = max(start, stats["rewind"]), stats["speed"], stats["paused"]
@@ -714,6 +714,9 @@ class Replay:
                 self.razed[e["player"]] = self.razed.get(e["player"], 0) + 1
                 if start:
                     self.starts.remove(start)
+                    import combat
+                    if self.ai and start[2] in combat.BUILDINGS:    # its target takes no more attacks or arrows (#3037)
+                        out += [f"kill {combat.target_uuid([rect[0], rect[2], rect[1], rect[3]])}"]
                 else:
                     del self.placed[new]
                     self.added -= 1
@@ -1249,8 +1252,8 @@ class Replay:
         Minecraft has no "explore" goal: own choice of the tile, the plugin walks (#2678)."""
         self.explore()                                              # the sight of the units now
         out = []
-        for i in e["objects"]:
-            if self.unit(i, None, e["player"]) is not None:
+        for i, name in zip(e["objects"], e.get("names") or [None] * len(e["objects"])):
+            if self.unit(i, name, e["player"]) is not None:             # a trained scout: its name gives its unit
                 self.scouts[i] = set()
                 out += self.scout_on(i, e["time"])
         return out

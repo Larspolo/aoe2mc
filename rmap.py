@@ -11,7 +11,8 @@ Read: `#const`, `#define`, `if`/`elseif`/`else`/`endif`, `start_random`/`percent
 high y side that the land does not take) and
 <TERRAIN_GENERATION> (`create_terrain` with `base_terrain`, `number_of_clumps`, `number_of_tiles`, `land_percent`,
 `spacing_to_other_terrain_types`, `set_avoid_player_start_areas`, `clumping_factor`). Other sections and attributes:
-a warning. All randomness comes from numpy.random.default_rng(seed).
+a warning. `#include_drs random_map.def` has no effect (the constants are in TERRAINS); another #include file: a
+warning. All randomness comes from numpy.random.default_rng(seed).
 """
 import re
 import sys
@@ -46,9 +47,10 @@ def tokens(text):
     return re.sub(r"([{}])", r" \1 ", text).split()
 
 
-def expand(words, rng, defined, consts):
+def expand(words, rng, defined, consts, includes):
     """The words of the active branches: if/elseif/else/endif on the defined labels, one percent_chance branch of
-    each start_random (a draw only for an active block), #define and #const go into defined and consts."""
+    each start_random (a draw only for an active block), #define and #const go into defined and consts. An #include
+    line is not a word: its (directive, file) goes into includes."""
     out, stack, i = [], [], 0
     def on():
         return all(f["on"] for f in stack)
@@ -82,6 +84,9 @@ def expand(words, rng, defined, consts):
             i += 1
         elif not on():
             i += 1
+        elif w.startswith("#include"):
+            includes.append((w, words[i + 1]))
+            i += 3 if w == "#include_drs" and i + 2 < len(words) and words[i + 2].isdigit() else 2
         elif w == "#define":
             defined.add(words[i + 1])
             i += 2
@@ -228,10 +233,14 @@ def generate(text, seed, players=2, size=None, warn=None):
     n = size or SIZES.get(players, 200)
     defined = {next((label for s, label in LABELS if n <= s), "GIGANTIC_MAP")}
     consts = dict(TERRAINS)
-    sections = commands(expand(tokens(text), rng, defined, consts))
+    includes = []
+    sections = commands(expand(tokens(text), rng, defined, consts, includes))
     for s in sections:
         if s not in SECTIONS:
             warn(f"<{s}> is not read yet")
+    for directive, file in includes:               # random_map.def gives the constants; XS scripts are not run
+        if file != "random_map.def":
+            warn(f"{directive} {file} is not read")
     terrain = np.zeros((n, n), np.int16)
     owner = np.full((n, n), -1, np.int32)
     lands, starts, kinds = [], [], {}

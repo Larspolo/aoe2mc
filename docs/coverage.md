@@ -1131,7 +1131,7 @@ Most common results: decorations (126), trees (53), flags (39).
 | INVISIBLE_OBJECT_C | skipped on purpose (invisible object) | no |
 | ELITE_CHAMPI_WARRIOR | husk | no |
 | INVISIBLE_OBJECT_D | skipped on purpose (invisible object) | no |
-| MISSIONARY_WITH_RELIC | evoker | no |
+| MISSIONARY_WITH_RELIC | horse (evoker) | no |
 | GUECHA_WARRIOR | husk | no |
 | INVISIBLE_OBJECT_E | skipped on purpose (invisible object) | no |
 | ELITE_GUECHA_WARRIOR | husk | no |
