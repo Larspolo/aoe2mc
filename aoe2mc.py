@@ -436,6 +436,8 @@ def read_scenario(path):
                                                   else {}),
                                                **({"quantity": c.quantity}                    # (#2769)
                                                   if c.condition_type == TECHNOLOGY_STATE else {}),
+                                               **({"player": c.source_player}                 # (#2710)
+                                                  if c.condition_type == PLAYER_DEFEATED else {}),
                                                **({"quantity": c.quantity, "unit": c.unit_object}   # (#2714)
                                                   if c.condition_type == UNITS_GARRISONED else {}))
                                           for c in in_order(t.conditions, t.condition_order)],
@@ -2833,6 +2835,7 @@ OR = 29
 OWN_FEWER_OBJECTS = 4                                              # conditions on the units of a player (#2573)
 OWN_OBJECTS = 3
 PATROL = 19                                                        # "Patrol" (#2647)
+PLAYER_DEFEATED = 13                                               # the condition "Player Defeated" (#2710)
 PLAY_SOUND = 4                                                     # "Play Sound" (#2644)
 REMOVE_OBJECT = 15
 REPLACE_OBJECT = 43                                                # "Replace Object" (#2703)
@@ -2852,11 +2855,12 @@ UNITS_GARRISONED = 18                                              # the conditi
 VARIABLE_VALUE = 22
 TIME_UNITS = {0: 5, 1: 60, 2: 1, 3: 1}  # TimeUnit (years, minutes, seconds, m:ss) -> game seconds; a year as game/wonder.py YEAR
 COUNTED = (IN_AREA, OWN_OBJECTS, OWN_FEWER_OBJECTS)                # conditions that count units: the tick function
-TICKED = COUNTED + (                                               # conditions of the tick function, one per line in
-    ACCUMULATE_ATTRIBUTE,                                          # alphabetical order: parallel tickets add lines (#2769)
+TICKED = COUNTED + (                                               # conditions of the tick function, one per line
+    ACCUMULATE_ATTRIBUTE,
     DIFFICULTY_LEVEL,
     DISPLAY_TIMER_TRIGGERED,
     OBJECT_HP,
+    PLAYER_DEFEATED,
     RESEARCHED,
     RESEARCHING_TECH,
     TECHNOLOGY_STATE,
@@ -3500,6 +3504,7 @@ SCORE_TESTS = {
     ACCUMULATE_ATTRIBUTE: resource_score,
     DIFFICULTY_LEVEL: lambda c: f"score #level aoe_difficulty matches {c.get('quantity', 0)}",
     DISPLAY_TIMER_TRIGGERED: lambda c: f"score #done{c.get('slot', 0)} aoe_timer matches 1..",   # set at 0 (#2702)
+    PLAYER_DEFEATED: lambda c: f"score #p{c['player']} aoe_lost matches 1..",   # conquest, regicide (#2710)
     RESEARCHED: lambda c: f"score #p{c['player']}.{c['technology']} aoe_tech matches 1..",
     RESEARCHING_TECH: lambda c: f"score #p{c['player']}.{c['technology']} aoe_techstate matches 2",
     TECHNOLOGY_STATE: lambda c: f"score #p{c['player']}.{c['technology']} aoe_techstate matches {c.get('quantity', 0)}",
@@ -3584,6 +3589,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
                     or c["type"] == ACCUMULATE_ATTRIBUTE and resource_score(c) is None
                     or c["type"] == OBJECT_HP and (c.get("ref", -1) < 0 or variable_range(c) is None)
                     or c["type"] == UNITS_GARRISONED and c.get("unit", -1) < 0
+                    or c["type"] == PLAYER_DEFEATED and c.get("player", -1) <= 0   # Gaia: no defeat (#2710)
                     for c in conds):                                   # unit classes: not yet
             continue
         ctx = Effect(t, T, ground, players, stats, mood, files, setup, switch, timed)
@@ -3672,7 +3678,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
     if names:
         load[:0] = ["scoreboard objectives add aoe_var dummy"] + \
             [f"scoreboard players add {v} aoe_var 0" for v in names]   # AoE2 variables start at 0
-    for word in ("aoe_difficulty", "aoe_gar", "aoe_tech", "aoe_techstate"):            # a score that only the game program sets
+    for word in ("aoe_difficulty", "aoe_gar", "aoe_lost", "aoe_tech", "aoe_techstate"):   # only the game program sets them
         if any(f" {word} " in x for x in tick):
             setup[f"scoreboard objectives add {word} dummy"] = None
     if switch:

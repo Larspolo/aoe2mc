@@ -41,7 +41,7 @@ MAP = {
     ("condition", "AND"): "the default between two conditions: all conditions of one group in one `execute if ... if ...` line (#2765)",
     ("condition", "OR"): "one `execute if ... run function` line per group in the tick function, with the same fire score `#N aoe_trig`: the trigger runs once (not yet with a timer or a chance, #2765)",
     ("condition", "CHANCE"): "`execute store result score ... run random value 1..100` once per second (alone, after the timers or with the ticked conditions: #2574)",
-    ("condition", "PLAYER_DEFEATED"): "`execute unless entity @e[team=pN]`",
+    ("condition", "PLAYER_DEFEATED"): "`if score #pN aoe_lost matches 1..` in the tick function: the scenario mode of the game program sets the score when it defeats player N (conquest, regicide, #2710)",
     ("condition", "ACCUMULATE_ATTRIBUTE"): "`execute if score Gold aoe_resN matches Q..`: the resource scores of the game program (#2655)",
     ("condition", "RESEARCH_TECHNOLOGY"): "`if score #pN.NAME aoe_tech matches 1..` in the tick function: the scenario mode of the game program sets the score of each researched technology (#2656)",
     ("condition", "RESEARCHING_TECH"): "`if score #pN.NAME aoe_techstate matches 2` in the tick function: the scenario mode of the game program sets the AoE2 TechnologyState of the technology (#2769)",
