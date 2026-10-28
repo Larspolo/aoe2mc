@@ -24,13 +24,15 @@ import flare  # noqa: E402
 import lobby  # noqa: E402
 import market  # noqa: E402
 import menu  # noqa: E402
+import savegame  # noqa: E402
 import table  # noqa: E402
 
 SLOT = 3                                                           # hotbar slot of the item (key 4): groups use 4-8
 ITEM = ('minecraft:carrot_on_a_stick[item_model="minecraft:writable_book",item_name="Game menu",'
         "custom_data={aoe_game_menu:1b}]")
 BUTTONS = {0: ("writable_book", "Diplomacy", "Send tribute to other players."),   # slot: the buttons of the Game menu
-           1: ("end_rod", "Flare", "Show the place that you look at to your team.")}   # (#1234)
+           1: ("end_rod", "Flare", "Show the place that you look at to your team."),   # (#1234)
+           3: ("writable_book", "Save", "Save the game. Load it with run.py --load.")}     # savegame.py (#2259)
 RESOURCES = {"food": "wheat", "wood": "oak_log", "gold": "gold_ingot", "stone": "cobblestone"}   # rows 1-4
 LOT = 100                                                          # the resource of one click
 SHIFT = 5                                                          # tributes of a shift click (500)
@@ -58,12 +60,16 @@ def open_menu(g, player):
 
 
 def button(g, player, slot):
-    """A click on the Game menu: the Diplomacy page, or a flare at the look of the player (the menu closes, #1234)."""
+    """A click on the Game menu: the Diplomacy page, a flare at the look of the player (the menu closes, #1234), or a
+    save of the game (#2259)."""
     if slot == 0:
         return show(g, player)
     if slot == 1:
         menu.close(g, player)
         return flare.from_look(g, player)
+    if slot == 3:
+        menu.close(g, player)
+        return savegame.save(g, player)
     if slot == lobby.SLOT and lobby.shown(g):
         return lobby.show(g, player)
 
