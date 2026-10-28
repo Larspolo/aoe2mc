@@ -118,6 +118,13 @@ def chat(who, text):
     return out
 
 
+def ending(who, messages, won):
+    """The chat lines of the end of the game for who: its "victory" text when won, else its "loss" text, without the
+    AoE2 color tags (#3298). No text, no line."""
+    text = re.sub(r"<[^<>]*>", "", messages.get("victory" if won else "loss") or "").strip()
+    return chat(who, text)
+
+
 def unread(who):
     """The selector of the people of who that have no book yet (TAG)."""
     return f"{who[:-1]},tag=!{TAG}]" if who.endswith("]") else f"{who}[tag=!{TAG}]"
