@@ -32,4 +32,4 @@ def test_the_workflow_uses_the_selection():
     with open(os.path.join(ROOT, ".github", "workflows", "ci.yml")) as f:
         text = f.read()
     assert "tools/ci_select.py HEAD^1" in text and "fetch-depth: 2" in text
-    assert "pytest ${{ steps.select.outputs.tests }}" in text
+    assert "pytest -n auto ${{ steps.select.outputs.tests }}" in text   # all cores (#2415)

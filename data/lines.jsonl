@@ -68,3 +68,4 @@
 {"name": "JARL", "mob": "mounted", "armor": ["iron", "chainmail", "chainmail", null], "main": "iron_axe", "off": "shield"}
 {"name": "JOMSVIKING", "mob": "zombie", "armor": ["iron", ["leather", "#1D1D21"], "chainmail", null], "main": "diamond_axe", "off": null}
 {"name": "HUSKARL_BARRACKS", "mob": "zombie", "armor": ["iron", "chainmail", ["leather", "#6B4A2B"], null], "main": "iron_axe", "off": "shield"}
+{"name": "HOPLITE", "mob": "zombie", "armor": ["golden", "golden", ["leather", "#8B1A1A"], "golden"], "main": "trident", "off": "shield"}

@@ -5,8 +5,8 @@ issue. BY_KEY[key][civ] (or value(key, civ, default)) holds the value of each ke
 file and the code that applies it (repair.py, build.py, train.py ...), no new line here. The tables in capitals below
 are the older names of some keys.
 Bonuses that the game program cannot use yet: oyster gatherers (Malians, Dravidians), the Slav monks and the ships.
-CHURCH_RATE is the Georgian bonus of the Fortified Church (#1930): build.rise and repair.rate multiply the work of the
-villagers in the 21-tile square around it (church_rate).
+The key "church_rate" is the Georgian bonus of the Fortified Church (#1930, #2377): build.rise, repair.rate and
+Gather.work_time multiply the work of the villagers in the 21-tile square around it (church_rate).
 """
 import math
 import os
@@ -95,12 +95,16 @@ ONLY = {r["name"]: set(r["civs"]) for f in ("train.jsonl", "build.jsonl") for r 
 MISSING = {t: tuple(sorted(r["name"] for r in ROWS if t in r["missing"] or r["name"] not in ONLY.get(t, (r["name"],))))
            for t in sorted({t for r in ROWS for t in r["missing"]} | set(ONLY))}
 GENERIC = frozenset(t for r in ROWS for t in r["missing"])   # the AoE2 setting "All Techs" gives them to all (#2298)
+# The AoE2 lobby setting "Full Tech Tree" (#2354) gives each civilization the GENERIC and the ONLY items; the key
+# "full_tech_tree" of a line of data/train.jsonl or data/build.jsonl makes an exception: "own" (only its civilizations
+# have it: a unique unit, a scout, a regional unit after AoE2 update 141935), "none" (no civilization: a unique
+# building, the Xolotl Warrior, a team bonus unit). AoE2 wiki "Full Tech Tree".
+FULL = {r["name"]: r["full_tech_tree"] for f in ("train.jsonl", "build.jsonl") for r in table.load(f)
+        if "full_tech_tree" in r}
 ELEPHANTS = tuple(r["name"] for r in ROWS if r["name"] not in MISSING["BATTLE_ELEPHANT"])   # the battle elephant (#1556)
 EAGLES = tuple(r["name"] for r in ROWS if r["name"] not in MISSING["EAGLE_SCOUT"])   # the eagle line (#1555)
 LANCERS = tuple(r["name"] for r in ROWS if r["name"] not in MISSING["STEPPE_LANCER"])   # the steppe lancers (#1557)
 FIRE_LANCERS = tuple(r["name"] for r in ROWS if r["name"] not in MISSING["FIRE_LANCER"])   # the fire lancer (#1953)
-CHURCH_RATE, CHURCH_NEAR = 1.1, 10.5                              # +10 % work in the 21-tile square around a Fortified
-                                                                  # Church (tiles from its center, #1930)
 # "aura" (#2378): the own complete buildings that make the gatherers of some resources work faster near them and take
 # these resources: {"buildings", "resources", "rate", "range": tiles from the footprint} (Thracian forts and towers).
 # gather.Map.drop_site adds them to the drop sites, Gather.aura_rate gives the rate.
@@ -146,6 +150,9 @@ EXTRA = {r["name"]: {k: tuple(v) for k, v in r["extra"].items()} for r in ROWS i
 DROP_EXTRA = {r["name"]: {k: tuple(v) for k, v in r["drop_extra"].items()} for r in ROWS if "drop_extra" in r}
 PER_MINUTE = {r["name"]: {k: tuple(v) for k, v in r["per_minute"].items()} for r in ROWS if "per_minute" in r}
 CARRY = {r["name"]: [tuple(b) for b in r["carry"]] for r in ROWS if "carry" in r}
+HOUSING = {r["name"]: r["housing"] for r in ROWS if "housing" in r}   # population of a building in place of train.HOUSING
+SIGHT = {r["name"]: r["sight"] for r in ROWS if "sight" in r}       # extra tiles of line of sight of a building (#2118)
+POP_CAP = {r["name"]: tuple(r["pop_cap"]) for r in ROWS if "pop_cap" in r}   # (age, extra population limit from it)
 # The age-up bonuses (#1926, AoE2 DE wiki): train.research applies AGE_GIFTS and AGE_VILLAGERS at the end of each age,
 # train.seconds divides the time of an age by AGE_RATE, and train.missing needs no buildings for AGE_NO_BUILDINGS (the
 # game program has no other building needs). The Muisca gold discount of the ages is in COSTS (civs.jsonl).
@@ -233,7 +240,7 @@ def units(g, name, s):
             s = s._replace(bonus={**s.bonus, v[6:]: s.bonus.get(v[6:], 0) + c})
         elif v == "bonus" and isinstance(c, float):                # a factor of each bonus (#2248)
             s = s._replace(bonus={k: math.floor(n * c + 0.5) for k, n in s.bonus.items()})
-        elif v not in ("speed", "taken") and not v.startswith("bonus:"):
+        elif v not in ("friendly", "speed", "taken") and not v.startswith("bonus:"):
             old = getattr(s, v)
             s = s._replace(**{v: round(old * c, 3 if v == "reload" else None) if isinstance(c, float) else old + c})
     return s
@@ -243,6 +250,13 @@ def taken(g, name):
     """The factor of the bonus damage that unit name of the player of g takes (UNITS, value "taken"), else 1 (#2248)."""
     import combat                                                  # combat imports gather, gather imports this module
     return math.prod(c for v, c in changes(g, name, combat.stats(name)) if v == "taken")
+
+
+def friendly(g, name):
+    """The factor of the friendly fire (the blast of an own or allied unit) that unit name of the player of g takes
+    (UNITS, value "friendly"), else 1 (Jurchen military units, #2418)."""
+    import combat                                                  # combat imports gather, gather imports this module
+    return math.prod(c for v, c in changes(g, name, combat.stats(name)) if v == "friendly")
 
 
 def has(what, name):
@@ -287,9 +301,13 @@ def speed(g, name):
 def missing(g, name):
     """True when the civilization of the player of g does not have unit or technology name (MISSING), also not as the
     shared unit of an allied player (SHARED, gather.allied). The AoE2 setting "All Techs" (aoe2mc.json "all_techs",
-    run.py --all-techs, #2298) gives each civilization the GENERIC items; the unique items stay with their civilization."""
+    run.py --all-techs, #2298) gives each civilization the GENERIC items; the unique items stay with their civilization.
+    The AoE2 setting "Full Tech Tree" (aoe2mc.json "full_tech_tree", run.py --full-tech-tree) also gives the ONLY items,
+    with the exceptions of FULL (#2354)."""
     import gather                                                  # gather imports this module
-    c = civ(g)
+    c = real(g)
+    if g.data.get("full_tech_tree") and (f := FULL.get(name)) != "own" and (f or name in GENERIC or name in ONLY):
+        return f == "none"
     if c not in MISSING.get(name, ()) or g.data.get("all_techs") and name in GENERIC:
         return False
     players = g.data.get("players", {})
@@ -298,7 +316,14 @@ def missing(g, name):
 
 
 def civ(g, player=None):
-    """The civilization of the player of g, or of another player (aoe2mc.json "players"), for example "CELTS", else None."""
+    """The civilization of the player of g, or of another player (aoe2mc.json "players"), for example "CELTS", else None.
+    The AoE2 setting "Full Tech Tree" (#2354) removes all civilization and team bonuses: then None, because each bonus
+    table takes its civilization from here. The tech tree and the unique units take it from real()."""
+    return None if g.data.get("full_tech_tree") else real(g, player)
+
+
+def real(g, player=None):
+    """The civilization of the player of g, or of another player, also with the setting "Full Tech Tree" (civ)."""
     return g.data.get("players", {}).get(str(g.player if player is None else player), {}).get("civ")
 
 
@@ -349,15 +374,17 @@ def built_units(g, name):
 
 
 def church_rate(g, pos):
-    """The factor of the work of a villager of the player of g at block position pos (x, z): CHURCH_RATE for a Georgian
-    in the 21-tile square around a complete own Fortified Church (AoE2 wiki "Georgians"; also to build and repair,
-    AoE2 wiki "Repairing"), else 1."""
-    if civ(g) != "GEORGIANS":
+    """The factor of the work of a villager of the player of g at block position pos (x, z): the factor of the key
+    "church_rate" in the square around a complete own building of it (a Georgian Fortified Church, AoE2 wiki
+    "Georgians": to gather, build and repair, AoE2 wiki "Repairing"), else 1. Two churches give it once."""
+    rate = value("church_rate", civ(g))
+    if not rate:
         return 1
     import train                                                   # train imports this module
-    near = CHURCH_NEAR * g.map.T
-    return CHURCH_RATE if any(max(abs(pos[0] - (x0 + x1) / 2), abs(pos[1] - (z0 + z1) / 2)) <= near
-                              for (x0, x1, z0, z1), n in train.homes(g).items() if n == "FORTIFIED_CHURCH") else 1
+    building, square, f = rate
+    near = square / 2 * g.map.T                                    # blocks from the center of the building
+    return f if any(max(abs(pos[0] - (x0 + x1) / 2), abs(pos[1] - (z0 + z1) / 2)) <= near
+                    for (x0, x1, z0, z1), n in train.homes(g).items() if n == building) else 1
 
 
 def repair_rate(g):
