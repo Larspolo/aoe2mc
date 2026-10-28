@@ -121,9 +121,11 @@ def queued(g, name, rect):
     """A unit, a research or an age in the queue of the building rect (train.queue)."""
     if getattr(g, "record", None) is None:
         return
+    import train                                                       # train imports this module
     at = [g.record.id(rect)]
-    if name in types():
-        event(g, "queue", type=types()[name], name=name, objects=at, amount=1)
+    unit = train.value("aoe2_name", name, name)                        # a unit with another AoE2 name (#3045)
+    if name not in train.TECHS and not name.endswith("_AGE") and unit in types():
+        event(g, "queue", type=types()[unit], name=name, objects=at, amount=1)
     else:
         event(g, "research", technology=name.replace("_", " ").title(), objects=at)
 
