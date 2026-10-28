@@ -797,6 +797,7 @@ def name_timeline(objects, timeline, window=16, water=None):
     returns {id: name}."""
     names = {o["ref"]: o["name"] for o in objects if o.get("ref") is not None}
     top = max(names, default=0)
+    names |= {i: e["name"] for e in timeline if e["kind"] == "summon" for i in e.get("objects", ())}   # a setup (#3028)
     used = {}             # new ID -> [time of its first use, "B", "U" or None, {building of its units}, a worker,
     #                       its first MOVE goes inland (None: no MOVE yet), the player of its first use]
     far = None if water is None else ~near(water, SHORE)       # the tiles that a ship cannot go to
@@ -832,6 +833,8 @@ def name_timeline(objects, timeline, window=16, water=None):
         while k < len(firsts) and firsts[k][0] < cmd:   # an ID in use before the command is older than the object
             below, k = max(below, firsts[k][1]), k + 1
         nxt = max(nxt, below + 1)
+        while nxt in names:                              # the ID of a summoned unit (#3028)
+            nxt += 1
         ids = [i for i in range(nxt, nxt + window) if i in used and i not in names and
                (used[i][1] in (role, None) or used[i][1] == "G" and (role == "B" or "SHIP" in name)) and
                used[i][0] >= t - 5000 and used[i][2] <= {name} and   # 5 s: the training times are estimates
@@ -5222,8 +5225,6 @@ def write_datapack(out, objects, ground, biome_names=(), ambience="basic", playe
     # each player gets the map of the world in the off-hand once, so the minimap is there without a search (#966)
     team_pulse = team_pulse + MAP_PULSE
     trigger_load, trigger_fns = trigger_files(triggers, T, ground, players, trigger_stats, mood)
-    if not lines and not groups and not team_load and not trigger_load and not fog:   # the server finds a new pack itself
-        return 0, 0
     files = {
         "pack.mcmeta": {"pack": {"description": "aoe2mc: work sounds and ambience", "pack_format": MC["pack_format"],
                                  "min_format": MC["pack_format"], "max_format": MC["pack_format"]}},

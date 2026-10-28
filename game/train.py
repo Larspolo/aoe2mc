@@ -1175,6 +1175,7 @@ def summon(g, name, pos, rotation=math.pi / 2, player=None):
     del nbt["Pos"]
     uuid = units.uuid_str(nbt["UUID"])
     g.command(f"summon {kind} {pos[0]} {pos[1]} {pos[2]} {units.summon_snbt(nbt)}")
+    record.summoned(g, uuid, name, pos, o["player"])                  # a unit of a setup (Record Game, #3028)
     if o["player"] > 0:
         import owners                                              # owners imports gather, gather imports this module
         owners.add(g, uuid, name, o["player"])                     # an enemy of the other sides (#2992)

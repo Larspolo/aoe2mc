@@ -196,6 +196,15 @@ def sail_to(g, v, state, cells):
     return path is not None
 
 
+def reroute(g):
+    """The ships with a catch sail to the next own dock when their dock fell (ruins.fall, #3009); with none they stop."""
+    for v in g.ships.values():
+        if v.state == "to_drop":
+            docks = set().union(*(g.map.around(c, water=True) for c in g.map.docks))
+            if not docks or not sail_to(g, v, "to_drop", docks):
+                v.state = "idle"
+
+
 def spots(g, tile):
     """The water cells where a ship fishes the fish on tile: on its tile and next to it; next to a fish trap."""
     cells = g.map.traps.get(tile) or g.map.cells(tile)

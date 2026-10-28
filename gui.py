@@ -98,6 +98,9 @@ def convert(args, write):
         try:
             aoe2mc.main(args)
         except SystemExit as e:                                     # argparse: a wrong option (the text is in out)
+            if isinstance(e.code, str):                             # a stop with a reason (#3052): the window shows it
+                print(e.code)
+                return e.code
             return None if e.code in (0, None) else "The converter stopped: see the output."
         except Exception as e:
             traceback.print_exc()
