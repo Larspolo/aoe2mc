@@ -442,36 +442,8 @@ def read_scenario(path):
                                             **({"mood": ColorMood(e.color_mood).name}     # "Change Color Mood" (#1876)
                                                if e.effect_type == CHANGE_COLOR_MOOD and
                                                getattr(e, "color_mood", None) in set(ColorMood) else {}),
-                                            **({"trigger": e.trigger_id}       # "(De)activate Trigger" (#2575)
-                                               if e.effect_type in (ACTIVATE_TRIGGER, DEACTIVATE_TRIGGER) else {}),
-                                            **({"quantity": e.quantity}
-                                               if e.effect_type in (DAMAGE_OBJECT, HEAL_OBJECT, CHANGE_OBJECT_SPEED)
-                                               else {}),
-                                            **({"stance": e.attack_stance}                # (#2705)
-                                               if e.effect_type == CHANGE_OBJECT_STANCE else {}),
-                                            **({"quantity": e.quantity, "variable": e.variable,   # (#2611)
-                                                "operation": e.operation}
-                                               if e.effect_type == CHANGE_VARIABLE else {}),
-                                            **({"target": e.target_player}                # "Change Ownership" (#2570)
-                                               if e.effect_type == CHANGE_OWNERSHIP else {}),
-                                            **({"color": e.player_color}                 # (#2712)
-                                               if e.effect_type == CHANGE_PLAYER_COLOR else {}),
-                                            **({"target": e.target_player,                # "Replace Object" (#2703)
-                                                "object2": kinds.get(e.object_list_unit_id_2)}
-                                               if e.effect_type == REPLACE_OBJECT else {}),
-                                            **({"target": e.target_player, "diplomacy": e.diplomacy}   # (#2645)
-                                               if e.effect_type == CHANGE_DIPLOMACY else {}),
-                                            **({"target": e.target_player, "quantity": e.quantity,   # (#2576)
-                                                "resource": e.tribute_list} if e.effect_type == TRIBUTE else {}),
-                                            **({"operation": e.operation, "quantity": e.quantity,
-                                                "resource": e.tribute_list} if e.effect_type == MODIFY_RESOURCE else {}),
-                                            **({"technology": techs.get(e.technology, str(e.technology))}   # #2577
-                                               if e.effect_type == RESEARCH_TECHNOLOGY else {}),
-                                            **({"unit": e.time_unit, "timer": e.timer}   # "Display Timer" (#2572)
-                                               if e.effect_type == DISPLAY_TIMER else {}),
-                                            **({"timer": e.timer} if e.effect_type == CLEAR_TIMER else {}),   # (#2696)
-                                            **({"sound": e.sound_name or ""}             # "Play Sound" (#2644)
-                                               if e.effect_type == PLAY_SOUND else {}))
+                                            **{k: v(e, kinds, techs) if callable(v) else getattr(e, v)   # #2792
+                                               for k, v in EFFECT_KEYS.get(e.effect_type, {}).items()})
                                        for e in t.effects])
                          for t in scn.trigger_manager.triggers]
     mood = mm.map_color_mood                 # a ColorMood, or a string that the parser does not know (#1594)
@@ -3360,6 +3332,31 @@ def instruction_lines(e, c):
         return []
     ticks = 20 * (e["time"] if e["time"] > 0 else 10)
     return [f"title @a times 10 {ticks} 20", f"title @a subtitle {text}", 'title @a title ""']
+
+
+# The keys of the effect dict of read_scenario beyond the common ones: key -> attribute of the scenario effect, or
+# (effect, kinds, techs) -> value. A new effect is one line here, in alphabetical order (#2792): parallel trigger
+# tickets conflicted in one expression of read_scenario.
+EFFECT_KEYS = {
+    ACTIVATE_TRIGGER: {"trigger": "trigger_id"},                                     # (#2575)
+    CHANGE_DIPLOMACY: {"target": "target_player", "diplomacy": "diplomacy"},         # (#2645)
+    CHANGE_OBJECT_SPEED: {"quantity": "quantity"},
+    CHANGE_OBJECT_STANCE: {"stance": "attack_stance"},                               # (#2705)
+    CHANGE_OWNERSHIP: {"target": "target_player"},                                   # (#2570)
+    CHANGE_PLAYER_COLOR: {"color": "player_color"},                                  # (#2712)
+    CHANGE_VARIABLE: {"quantity": "quantity", "variable": "variable", "operation": "operation"},   # (#2611)
+    CLEAR_TIMER: {"timer": "timer"},                                                 # (#2696)
+    DAMAGE_OBJECT: {"quantity": "quantity"},
+    DEACTIVATE_TRIGGER: {"trigger": "trigger_id"},                                   # (#2575)
+    DISPLAY_TIMER: {"unit": "time_unit", "timer": "timer"},                          # (#2572)
+    HEAL_OBJECT: {"quantity": "quantity"},
+    MODIFY_RESOURCE: {"operation": "operation", "quantity": "quantity", "resource": "tribute_list"},
+    PLAY_SOUND: {"sound": lambda e, kinds, techs: e.sound_name or ""},               # (#2644)
+    REPLACE_OBJECT: {"target": "target_player",                                      # (#2703)
+                     "object2": lambda e, kinds, techs: kinds.get(e.object_list_unit_id_2)},
+    RESEARCH_TECHNOLOGY: {"technology": lambda e, kinds, techs: techs.get(e.technology, str(e.technology))},   # #2577
+    TRIBUTE: {"target": "target_player", "quantity": "quantity", "resource": "tribute_list"},   # (#2576)
+}
 
 
 # The handler of each trigger effect: (effect, Effect context) -> commands. A new effect is one line here, in
