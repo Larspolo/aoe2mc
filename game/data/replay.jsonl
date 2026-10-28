@@ -32,6 +32,7 @@
 {"name": "FIRE_LANCER", "walk": 0.96}
 {"name": "FLEMISH_MILITIA", "walk": 0.94}
 {"name": "GENITOUR", "walk": 1.35}
+{"name": "GRENADIER", "walk": 0.96}
 {"name": "HALBERDIER", "walk": 1.0}
 {"name": "HEAVY_CAMEL_RIDER", "walk": 1.45}
 {"name": "HEAVY_CAVALRY_ARCHER", "walk": 1.4}
