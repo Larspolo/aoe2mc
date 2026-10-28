@@ -1082,6 +1082,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         gold(from, victim, a);
         if (before > 0 && victim.getHealth() <= 0) {
             kill(from, a, t);
+            unitKill(from, victim, a);
         }
         nameLine(victim);
         if (victim.getHealth() > 0 && from instanceof LivingEntity attacker && !attacker.isDead()) {   // a detonation
@@ -1120,6 +1121,27 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         Scoreboard sb = Bukkit.getScoreboardManager().getMainScoreboard();
         Objective o = sb.getObjective("aoe_mounted_kills");
         o = o != null ? o : sb.registerNewObjective("aoe_mounted_kills", Criteria.DUMMY, Component.text("Mounted kills"));
+        var score = o.getScore(side);
+        score.setScore(score.getScore() + 1);
+    }
+
+    // An infantry or cavalry unit that kills an enemy unit gives its side one point in aoe_unit_kills: the gold of the
+    // Athenian Military Policy (game/spoils.py, #2512). AoE2 wiki "Military Policy": no gold for a King (tag
+    // aoe2mc.king) or a trade unit (tag aoe2mc.trade, spoils.tag_command); no point for a Gaia animal (no side).
+    private static void unitKill(Entity from, Entity victim, Stats a) {
+        if (from == null) {
+            return;
+        }
+        String side = side(from) == null && from.getVehicle() != null ? side(from.getVehicle()) : side(from);   // a rider
+        String foe = side(victim) == null && victim.getVehicle() != null ? side(victim.getVehicle()) : side(victim);
+        if (side == null || foe == null || sameTeam(from, victim) || victim.getScoreboardTags().contains("aoe2mc.king")
+                || victim.getScoreboardTags().contains("aoe2mc.trade")
+                || a.classes().stream().noneMatch(c -> c.equals("infantry") || c.equals("cavalry"))) {
+            return;
+        }
+        Scoreboard sb = Bukkit.getScoreboardManager().getMainScoreboard();
+        Objective o = sb.getObjective("aoe_unit_kills");
+        o = o != null ? o : sb.registerNewObjective("aoe_unit_kills", Criteria.DUMMY, Component.text("Unit kills"));
         var score = o.getScore(side);
         score.setScore(score.getScore() + 1);
     }
@@ -1712,7 +1734,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                     mob.setAI(false);               // so it stands still until the next order
                 } else if (center(mob) >= 1) {      // steer() skips path points: Minecraft walks back to them (#1078)
                     mob.getPathfinder().stopPathfinding();
-                } else if (elsewhere(mob, o.goal)) {
+                } else if (elsewhere(mob, o.goal) || behind(mob, o.goal)) {
                     mob.getPathfinder().stopPathfinding();
                     mob.setVelocity(new Vector(0, mob.getVelocity().getY(), 0));   // a fast unit slid on (#1292)
                 }
@@ -1809,6 +1831,18 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         var path = mob.getPathfinder().getCurrentPath();
         Location end = path == null ? null : path.getFinalPoint();
         return end == null || end.getBlockX() != goal.getBlockX() || end.getBlockZ() != goal.getBlockZ();
+    }
+
+    // The next point of the path is not at the goal: steer() and glide() took the mob past points that Minecraft did
+    // not count (passed() looks only on the ground), and with no order it walks back to them. A spearman of de-64.3
+    // arrived and then walked 25 blocks back up the hill that it came down (#2303: 22 strays in 35 minutes).
+    private static boolean behind(Mob mob, Location goal) {
+        var path = mob.getPathfinder().getCurrentPath();
+        if (path == null || path.getNextPointIndex() >= path.getPoints().size()) {
+            return false;
+        }
+        double c = center(mob);
+        return path.getPoints().get(path.getNextPointIndex()).clone().add(c, 0, c).distanceSquared(goal) > 1.5 * 1.5;
     }
 
     // The mob is on the ground beyond the next point of its path. Down a slope it lands past the point after each
