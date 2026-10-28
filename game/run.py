@@ -18,8 +18,10 @@ Usage:
     python3 game/run.py WORLD --play --age castle      # the AoE2 setting "Starting age" (#2265)
     python3 game/run.py WORLD --play --end-age castle  # the AoE2 setting "Ending age" (#2346)
     python3 game/run.py WORLD --play --all-techs       # the AoE2 setting "All Techs" (#2298)
+    python3 game/run.py WORLD --play --full-tech-tree  # the AoE2 setting "Full Tech Tree" (#2354)
     python3 game/run.py WORLD --play --victory conquest  # the AoE2 setting "Victory": no wonder or relic win (#2316)
     python3 game/run.py WORLD --play --mode regicide   # the AoE2 game mode "Regicide": each player has a King (#2347)
+    python3 game/run.py WORLD --play --mode sudden-death   # the AoE2 game mode "Sudden Death": one town center (#2407)
     python3 game/run.py WORLD --play --civ 1=BRITONS --civ 2=FRANKS   # the civilization of each player (#2267)
     python3 game/run.py WORLD --play --teams 1,1,2,2   # the team of each player, - is no team (#2296)
     python3 game/run.py WORLD --play --load SAVE   # go on with a saved game: Ctrl-C of --play saves into saves/ (#2255)
@@ -332,7 +334,9 @@ SETTINGS = {
     "all_techs": False,               # "All Techs" (civs.missing, #2298)
     "civ": None,                      # {player: civilization} in place of the scenario's (civ_choices, #2267)
     "end_age": "imperial",            # "Ending age" (build.locked, #2346)
-    "mode": "standard",               # the game mode: "standard" or "regicide" (each player has a King, regicide.MODES, #2347)
+    "full_tech_tree": False,          # "Full Tech Tree": the full tech tree and no civilization bonuses (civs.civ, #2354)
+    "mode": "standard",               # the game mode: "standard", "regicide" (each player has a King, regicide.MODES, #2347)
+                                      # or "sudden-death" (one town center, sudden_death.py, #2407)
     "pop_limit": None,                # "Population limit" (train.LIMITS, #2266)
     "resources": "standard",          # "Starting resources" (gather.LEVELS, #2264)
     "teams": None,                    # {player: team or None} in place of the scenario's (team_choices, #2296)
@@ -370,6 +374,7 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
         data["players"][str(player)]["team"] = team
     data["all_techs"] = settings["all_techs"]                    # one data for all Gathers: the people and the bot (#2298)
     data["end_age"] = train.STARTS[settings["end_age"]]["ages"]  # the last age (build.locked, #2346)
+    data["full_tech_tree"] = settings["full_tech_tree"]          # (#2354)
     game.forceload()
     game.people = people
     g = make(1)
@@ -402,8 +407,10 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
             train.start(x, settings["age"])
     if settings["mode"] != "standard":                           # after the bots: their Kings go to their Gathers (#2347)
         import regicide
-        g.mode = settings["mode"]
-        regicide.setup(g, settings["mode"])
+        import sudden_death
+        for x in [g, *(s.g for s in g.bots)]:
+            x.mode = settings["mode"]                # build.locked of each player (#2407)
+        (sudden_death if settings["mode"] == "sudden-death" else regicide).setup(g, settings["mode"])
     import replay
     import treaty as treaties
     if replay.aoe2mc.game_time(settings["treaty"]):              # after the Gathers: they set the neutral stances
@@ -566,14 +573,17 @@ def main(argv=None):
                     "the Death Match resources)")
     ap.add_argument("--all-techs", action="store_true", help="--play: the AoE2 setting \"All Techs\": each civilization "
                     "has the generic units and technologies that its tech tree does not have (the bonuses stay)")
+    ap.add_argument("--full-tech-tree", action="store_true", help="--play: the AoE2 setting \"Full Tech Tree\": each "
+                    "civilization has the full tech tree and its unique units, but no civilization and team bonuses")
     ap.add_argument("--victory", choices=["standard", "conquest", "last-man-standing"], default="standard",
                     help="--play: the AoE2 setting \"Victory\" (default standard: conquest, a wonder or all relics; "
                     "conquest: only the conquest; last-man-standing: a conquest that only one player wins, #2358)")
     ap.add_argument("--pop-limit", type=pop_limit, default=200, metavar="N",
                     help="--play: the AoE2 setting \"Population limit\" of each player: 25 to 250 in steps of 25, 300, "
                     "400 or 500 (default 200)")
-    ap.add_argument("--mode", choices=["standard", "regicide"], default="standard", help="--play: the AoE2 game mode "
-                    "(default standard; regicide: each player has a King, a player whose King dies is defeated)")
+    ap.add_argument("--mode", choices=["standard", "regicide", "sudden-death"], default="standard",
+                    help="--play: the AoE2 game mode (default standard; regicide: each player has a King, a player "
+                    "whose King dies is defeated; sudden-death: one town center, a player who loses it is defeated)")
     ap.add_argument("--log", metavar="FILE", help="--play: write one JSON line per villager event (time, state, load)")
     ap.add_argument("--load", metavar="SAVE", help="--play: go on with a saved game (a folder of saves/: the end of "
                     "--play with Ctrl-C saves the world and the resources, technologies and ages there)")

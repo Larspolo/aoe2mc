@@ -9,3 +9,4 @@
 {"name": "imperial", "ages": 3}
 {"name": "post-imperial", "ages": 4, "skip": ["SPIES"], "note": "AoE2 wiki \"Post-Imperial Age\": all technologies, not Spies/Treason, Flemish Revolution, First Crusade (not in the game program)"}
 {"name": "regicide", "units": ["KING"], "note": "AoE2 wiki \"Regicide (game mode)\": each player starts with a King, a player whose Kings all died is defeated (#2347)"}
+{"name": "sudden-death", "units": [], "note": "AoE2 wiki \"Sudden Death\": each player can have only one town center, a player who loses it is defeated (#2407)"}
