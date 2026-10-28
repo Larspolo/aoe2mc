@@ -40,7 +40,7 @@ def test_a_unit_on_time_walks_at_its_walk_speed():
     game = Entity()
     speeds = walk(game)
     assert len(speeds) >= 4 and set(speeds) == {ai.speed_command("u1", "VILLAGER_MALE", 4, 4.0 * replay.PATH)}
-    assert game.sent.count("data get entity u1 Pos") == len(speeds) - 1   # not for the first leg
+    assert game.sent.count("data get entity u1 Pos") == len(speeds)   # not for the first leg; at the end (settle, #2633)
 
 
 def test_a_walk_right_after_a_walk_catches_up():
@@ -54,7 +54,8 @@ def test_a_walk_right_after_a_walk_catches_up():
     r = replay.Replay(game, d, ai=True)
     r.run(4.0, clock=lambda: now[0], sleep=lambda s: now.__setitem__(0, now[0] + s), log=None, finish=True)
     speeds = [c for c in game.sent if c.startswith("attribute u1 ")]
-    assert game.sent.count("data get entity u1 Pos") == 1          # the third walk starts long after the second
+    second = game.sent.index(speeds[1])
+    assert game.sent[:second].count("data get entity u1 Pos") == 1   # the first walk ends right before the second
     assert speeds[0] == speeds[2] == ai.speed_command("u1", "VILLAGER_MALE", 4, 4.0 * replay.PATH)
     assert speeds[1] == ai.speed_command("u1", "VILLAGER_MALE", 4, 4.0 * replay.CATCH_UP)   # 8 blocks of lag in 16 (#1291)
 
