@@ -5222,6 +5222,12 @@ def write_resourcepack(out):
     return sorted(files)
 
 
+def once(line):
+    """A load line of the start state of the triggers (#3074): not an objective, a forceload or the loaded check."""
+    return not line.startswith(("scoreboard objectives add", "forceload", "scoreboard players add")) and \
+        "#loaded" not in line and "aoe2mc:loaded" not in line
+
+
 def write_datapack(out, objects, ground, biome_names=(), ambience="basic", players=None, triggers=(), T=4,
                    trigger_stats=None, fog=None, mood=True):
     """datapacks/aoe2mc: a function every 2 s plays a work sound at each building with a player near it
@@ -5266,7 +5272,15 @@ def write_datapack(out, objects, ground, biome_names=(), ambience="basic", playe
         "pack.mcmeta": {"pack": {"description": "aoe2mc: work sounds and ambience", "pack_format": MC["pack_format"],
                                  "min_format": MC["pack_format"], "max_format": MC["pack_format"]}},
         "data/minecraft/tags/function/load.json": {"values": ["aoe2mc:load"]},
-        "data/aoe2mc/function/load.mcfunction": "\n".join(team_load + trigger_load + ["schedule function aoe2mc:pulse 40t replace"]) + "\n",
+        "data/aoe2mc/function/load.mcfunction": "\n".join(
+            [x for x in team_load if " color " not in x] + [x for x in trigger_load if not once(x)] +
+            ["scoreboard objectives add aoe_trig dummy",
+             "execute unless score #start aoe_trig matches 1 run function aoe2mc:start",
+             "schedule function aoe2mc:pulse 40t replace"]) + "\n",
+        # the start state runs at the first load only: the world keeps the scores and the waiting schedules (#3074)
+        "data/aoe2mc/function/start.mcfunction": "\n".join(
+            [x for x in team_load if " color " in x] + [x for x in trigger_load if once(x)] +
+            ["scoreboard players set #start aoe_trig 1"]) + "\n",
         "data/aoe2mc/function/pulse.mcfunction": "\n".join(lines + team_pulse + ["schedule function aoe2mc:pulse 40t replace"]) + "\n",
     }
     files.update(trigger_fns)

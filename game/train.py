@@ -276,6 +276,7 @@ AGES = ("Dark Age", "Feudal Age", "Castle Age", "Imperial Age")    # the age aft
 STARTS = {r["name"]: r for r in table.load("setup.jsonl") if "ages" in r}
 SWAPS = {r["name"]: r["swap"] for r in table.load("setup.jsonl") if "swap" in r}   # a game mode: {old: new} (#2388)
 AGAIN = {r["name"] for r in ROWS if r.get("again")}                # a technology that a player researches again (Treason)
+SPAM = 1.0                                                         # seconds: one more click on the same building in this time opens no new menu (#3267)
 QUEUE = 15                                                         # units in the queue of one building, as in AoE2
 HOUSING = {r["name"]: r["housing"] for r in BUILDING_ROWS if "housing" in r}   # population of a complete building
 AGE_COUNT = {r["name"]: r["age_count"] for r in BUILDING_ROWS if "age_count" in r}   # types of the age rule: the Settlement 2 (#2420)
@@ -513,10 +514,15 @@ def lore(g):
             menu.lore(g, material, ITEMS[name][2], HELP[name])
 
 
-def open_menu(g, player, cell):
-    """Open the menu of the own training building at the block cell (x, z) for player. Returns its footprint, or None."""
+def open_menu(g, player, cell, click=False):
+    """Open the menu of the own training building at the block cell (x, z) for player. Returns its footprint, or None.
+    click: a stick use of the player, which opens no new menu SPAM seconds after one on the same building (#3267)."""
     rect = home(g, cell)
+    opened = vars(g).setdefault("menu_opened", {})
+    if click and rect is not None and opened.get(player, (None, -SPAM))[0] == rect and g.clock() - opened[player][1] < SPAM:
+        return rect                                                    # a spam click: the uses that came before the menu showed (#3267)
     if rect is not None:
+        opened[player] = rect, g.clock()
         show(g, player, rect)
     return rect
 
