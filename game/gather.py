@@ -1499,7 +1499,8 @@ class Gather:
         pos = self.positions(army) if len(army) > 1 else {}            # 2 or more: the AoE2 line formation (#3414)
         if len(pos) > 1:
             out |= replay.formation_cells(self.map.free, [(u, p[0], p[2], rank(self.soldiers[u]), False)
-                                                          for u, p in pos.items()], (cell[0] + 0.5, cell[1] + 0.5), "Line", self.map.T)
+                                                          for u, p in pos.items()], (cell[0] + 0.5, cell[1] + 0.5), "Line", self.map.T,
+                                                          long=True)
         who = sorted(u for u in units - boats - out.keys() if u in self.villagers or u in self.soldiers or u in herd)
         r = math.isqrt(len(who)) + 2
         cells = sorted(((x, z) for x in range(cell[0] - r, cell[0] + r + 1) for z in range(cell[1] - r, cell[1] + r + 1)
