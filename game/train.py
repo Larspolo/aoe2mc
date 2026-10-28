@@ -661,9 +661,9 @@ def research(g, entry):
         if stats(g, name).range != combat.stats(name).range:          # Fletching (#724)
             g.command(combat.range_command(uuid, name, g.map.T, s=stats(g, name)))
     if entry["name"] in SPEEDS:                                    # the live units walk faster (Fervor)
-        import ai                                                  # ai imports gather, gather imports this module
-        for uuid, name in g.soldiers.items():
-            if faster(SPEEDS[entry["name"]][0], name):
+        import ai, fleet                                           # ai imports gather, gather imports this module
+        for uuid, name in g.soldiers.items():                      # a ship: fleet.tick reads speed() (#2136)
+            if faster(SPEEDS[entry["name"]][0], name) and name not in fleet.SPEEDS:
                 g.command(ai.speed_command(uuid, name, g.map.T, gather.NORMAL * speed(g, name)))
     if entry["name"] in REQUIRES:                                  # an age: all players see it, as in AoE2
         import ai                                                  # ai imports gather, gather imports this module

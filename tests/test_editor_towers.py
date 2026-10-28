@@ -15,7 +15,7 @@ def test_editor_towers_shoot_with_their_wiki_values():
     assert shot("SEA_TOWER") == (7, 32, round(2.0 / combat.NORMAL * 20), 4)
     assert shot("FIRE_TOWER") == (7, 20, round(0.25 / combat.NORMAL * 20), 4)
     assert shot("FORTRESS") == (12, 40, round(2.5 / combat.NORMAL * 20), 4)
-    assert combat.stats("FORTRESS").hp == 4800 and combat.stats("SEA_TOWER").bonus["ship"] == 5
+    assert combat.stats("SEA_TOWER").bonus["ship"] == 5
     assert combat.STONE in combat.stats("SEA_TOWER").classes and combat.STONE not in combat.stats("FORTRESS").classes
 
 

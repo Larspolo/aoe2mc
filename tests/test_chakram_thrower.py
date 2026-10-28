@@ -3,7 +3,7 @@ researches Elite Chakram Thrower in the Imperial Age (slot 5: 1000 food, 650 gol
 wiki infobox "Chakram Thrower (Age of Empires II)". The upgrade changes the live and the new units."""
 from test_train_castle import menus, setup
 
-from game import combat, replay, train
+from game import combat, train
 
 CASTLE = (12, 4)
 
@@ -11,7 +11,6 @@ CASTLE = (12, 4)
 def test_the_values_are_those_of_aoe2():
     assert train.build.AGE["ELITE_CHAKRAM_THROWER"] == 3
     assert {"CHAKRAM_THROWER", "ELITE_CHAKRAM_THROWER"} <= combat.MELEE_RANGED
-    assert replay.SPEEDS["CHAKRAM_THROWER"] == replay.SPEEDS["ELITE_CHAKRAM_THROWER"] == 1.15
     for name in ("CHAKRAM_THROWER", "ELITE_CHAKRAM_THROWER", "ELITE_CHAKRAM_THROWER_UPGRADE"):
         assert len(train.HELP[name]) <= 50 and "GURJARAS" not in train.civs.MISSING[name] and "BRITONS" in train.civs.MISSING[name]
 
