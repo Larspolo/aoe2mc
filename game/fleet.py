@@ -344,15 +344,17 @@ def rate(g, fish):
     oyster = fish in g.map.oysters
     return gather.SHIP_WORK["oyster" if oyster else "trap" if fish in g.map.traps else "shore" if fish in g.map.shore
                             else "deep"] * civs.work(g, "oyster") ** oyster * \
-        math.prod(f ** train.count(g, t) for t, (f, _) in gather.SHIP_TECHS.items()) * civs.ship_work(g)
+        math.prod(f ** train.count(g, t) for t, (f, _) in gather.SHIP_TECHS.items()) * civs.ship_work(g) * \
+        gather.civs.turbo(g)
 
 
 def carry(g):
     """Food of one trip of an own fishing ship: CARRY, the more food of the dock technologies (#1439) and of the
     civilization (the kind "ship" of civs.CARRY, not the villager bonus of all kinds)."""
     import train                                                      # train imports this module
-    return CARRY + sum(n for k, n in civs.CARRY.get(civs.civ(g), ()) if k == "ship") + \
+    n = CARRY + sum(n for k, n in civs.CARRY.get(civs.civ(g), ()) if k == "ship") + \
         sum(c * train.count(g, t) for t, (_, c) in gather.SHIP_TECHS.items())
+    return n if gather.civs.turbo(g) == 1 else round(n * gather.civs.turbo(g))   # Turbo Mode (#2359)
 
 
 def work(g, v, dt):

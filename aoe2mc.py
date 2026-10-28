@@ -389,6 +389,9 @@ def read_scenario(path):
         players[p.player_id] = {"color": color if p.player_id else "light_gray", "arch": arch,
                                 "civ": getattr(civ, "name", "?"),
                                 "view": view if view[0] is not None and min(view) >= 0 else None}
+        if p.player_id:                         # the tab "Players" of the editor: for a scenario game (#2539)
+            players[p.player_id] |= {"resources": {r: int(getattr(p, r) or 0) for r in ("food", "wood", "gold", "stone")},
+                                     "pop_limit": int(p.population_cap or 200), "computer": not p.human}
         neutral = [i for i, d in enumerate(p.diplomacy or [], 1) if d == 1 and i != p.player_id and i <= 8]
         if p.player_id and neutral:             # the stance neutral (1) of DiplomacyState: no automatic attack (#1645)
             players[p.player_id]["neutral"] = neutral
@@ -406,7 +409,7 @@ def read_scenario(path):
                                                    "area": [c.area_x1, c.area_y1, c.area_x2, c.area_y2],
                                                    "object": c.object_list, "group": c.object_group,
                                                    "class": c.object_type}
-                                                  if c.condition_type == IN_AREA else {}))
+                                                  if c.condition_type in COUNTED else {}))
                                           for c in t.conditions],
                               effects=[dict(type=e.effect_type, message=e.message or "", player=e.source_player,
                                             time=e.display_time, object=kinds.get(e.object_list_unit_id),
@@ -414,7 +417,9 @@ def read_scenario(path):
                                             area=[e.area_x1, e.area_y1, e.area_x2, e.area_y2],
                                             **({"mood": ColorMood(e.color_mood).name}     # "Change Color Mood" (#1876)
                                                if e.effect_type == CHANGE_COLOR_MOOD and
-                                               getattr(e, "color_mood", None) in set(ColorMood) else {}))
+                                               getattr(e, "color_mood", None) in set(ColorMood) else {}),
+                                            **({"target": e.target_player}                # "Change Ownership" (#2570)
+                                               if e.effect_type == CHANGE_OWNERSHIP else {}))
                                        for e in t.effects])
                          for t in scn.trigger_manager.triggers]
     mood = mm.map_color_mood                 # a ColorMood, or a string that the parser does not know (#1594)
@@ -2572,6 +2577,7 @@ def write_objects(path, size, T, H, players, objects, cols, ground, timeline=Non
     "ground" has one string per block row z: for each x the y where a unit stands, or "-" for water.
     "timeline" (recorded games only): the events of read_timeline, with tiles in the turned grid
     and the "names" of the selected objects (name_timeline).
+    "players" of a scenario also have its "resources" (food, wood, gold, stone), "pop_limit" and "computer" (#2539).
     "mood": the map color mood of a DE scenario (ColorMood name, #1594), else "DEFAULT".
     "map_ground": the map bytes of map 0 without the objects (map_colors), one hex string per pixel row z: the live
     minimap of the plugin paints them where no live object is (#1940)."""
@@ -2599,7 +2605,7 @@ def write_objects(path, size, T, H, players, objects, cols, ground, timeline=Non
         objs.append(e)
     data = {"map_size": size, "tile_size": T, "level_height": H, "mood": mood,
             "players": {str(pid): {"civ": p["civ"], "color": p["color"], "arch": p["arch"]}
-                        | {k: p[k] for k in ("team", "neutral") if k in p} for pid, p in sorted(players.items())},
+                        | {k: p[k] for k in ("team", "neutral", "resources", "pop_limit", "computer") if k in p} for pid, p in sorted(players.items())},
             "objects": objs}
     n, wet = cols.n, cols.wtop > cols.top
     data["ground"] = [" ".join("-" if wet[x, z] else str(ground[x, z]) for x in range(n)) for z in range(n)]
@@ -2681,7 +2687,9 @@ def team_lines(objects, players):
 
 
 TIMER, SEND_CHAT, DISPLAY_INSTRUCTIONS, IN_AREA = 10, 3, 20, 5   # AoE2 condition and effect IDs (AoE2ScenarioParser)
-CREATE_OBJECT, REMOVE_OBJECT, CHANGE_COLOR_MOOD = 11, 15, 72
+OWN_OBJECTS, OWN_FEWER_OBJECTS = 3, 4                              # conditions on the units of a player (#2573)
+COUNTED = (IN_AREA, OWN_OBJECTS, OWN_FEWER_OBJECTS)                # conditions that count units: the tick function
+CREATE_OBJECT, REMOVE_OBJECT, CHANGE_OWNERSHIP, CHANGE_COLOR_MOOD = 11, 15, 18, 72
 
 
 def turn_area(area, size, k):
@@ -2747,6 +2755,22 @@ def object_lines(t, e, T, ground, players, stats):
     return []
 
 
+def owner_lines(e, T, stats):
+    """The commands of "Change Ownership" (#2570): the units of the player in the area (area_selector) and their
+    mounts get the tag and the team of the target player. A temporary tag marks them first: the selector uses the old
+    player tag. Gaia has no player tag and no team: not supported yet."""
+    old, new = e["player"], e.get("target", -1)
+    if old <= 0 or new <= 0 or old == new:
+        stats["change ownership (not supported yet)"] += old != new
+        return []
+    stats["change ownership"] += 1
+    own = "@e[tag=aoe2mc.own]"
+    return [f"tag {area_selector(e, T)} add aoe2mc.own",
+            f"execute as {own} on vehicle run tag @s add aoe2mc.own",
+            f"tag {own} remove aoe2mc.p{old}", f"tag {own} add aoe2mc.p{new}",
+            f"team join p{new} {own}", f"tag {own} remove aoe2mc.own"]
+
+
 def mood_lines(e):
     """The commands of "Change Color Mood" (#1876): the time of day (MOODS) and the rain (RAIN) of the new mood, as
     at the conversion. The game rules advance_time and advance_weather are 0, so they stay. The fog (FOG) is a
@@ -2757,12 +2781,14 @@ def mood_lines(e):
 
 
 def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=True):
-    """(load lines, files) for the triggers that only have timer conditions (#648) or only "Objects in Area"
-    conditions (#649): one function per trigger. The load function schedules a timer trigger at the AoE2 time (all
+    """(load lines, files) for the triggers that only have timer conditions (#648) or only "Objects in Area",
+    "Own Objects" and "Own Fewer Objects" conditions (#649, #2573): one function per trigger. "Own Objects" counts the
+    units of the player on the whole map (Q or more), "Own Fewer Objects" Q or fewer; buildings are blocks with no
+    entity, so they do not count. The load function schedules a timer trigger at the AoE2 time (all
     timers must pass: the largest). The tick function runs an area trigger when units of its player are in all its
     areas; the score #N of aoe_trig marks a fired trigger, so it fires once. A looping area trigger fires again after
     the units leave an area. "Send Chat" is a tellraw, "Display Instructions" a subtitle for its display time;
-    "Create Object" and "Remove Object": object_lines (#656). "Change Color Mood": mood_lines (#1876), only with mood.
+    "Create Object" and "Remove Object": object_lines (#656). "Change Color Mood": mood_lines (#1876), only with mood. "Change Ownership": owner_lines (#2570).
     A disabled trigger does not run."""
     load, files, tick = [], {}, []
     stats = Counter() if stats is None else stats
@@ -2770,13 +2796,16 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
     for t in triggers:
         conds = t["conditions"]
         kinds = {(c["type"], c["inverted"]) for c in conds}
-        if not t["enabled"] or not conds or kinds not in ({(TIMER, False)}, {(IN_AREA, False)}) or \
+        if not t["enabled"] or not conds or not (kinds == {(TIMER, False)} or kinds <= {(k, False) for k in COUNTED}) or \
                 any(c.get("group", -1) >= 0 or c.get("class", -1) >= 0 for c in conds):   # unit classes: not yet
             continue
         lines = []
         for e in t["effects"]:
             if e["type"] in (CREATE_OBJECT, REMOVE_OBJECT):
                 lines += object_lines(t, e, T, ground, players, stats)
+                continue
+            if e["type"] == CHANGE_OWNERSHIP:
+                lines += owner_lines(e, T, stats)
                 continue
             if e["type"] == CHANGE_COLOR_MOOD:
                 lines += mood_lines(e) if mood else []
@@ -2793,11 +2822,17 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
         if not lines:
             continue
         fn, n = f"aoe2mc:trigger/{t['id']}", t["id"]
-        if conds[0]["type"] == IN_AREA:
+        if conds[0]["type"] in COUNTED:
             tests, unless = [], []
             for i, c in enumerate(conds):
-                sel, q = area_selector(c, T), max(c["quantity"], 1)
-                if q == 1:
+                whole = c["type"] != IN_AREA                           # Own (Fewer) Objects: the whole map
+                sel = area_selector(dict(c, area=[-1] * 4) if whole else c, T)
+                q = max(c["quantity"], 0 if c["type"] == OWN_FEWER_OBJECTS else 1)
+                if c["type"] == OWN_FEWER_OBJECTS:                     # count the units: q or fewer
+                    tick.append(f"execute store result score #{n}.{i} aoe_trig if entity {sel}")
+                    tests.append(f"if score #{n}.{i} aoe_trig matches ..{q}")
+                    unless.append(f"unless score #{n}.{i} aoe_trig matches ..{q}")
+                elif q == 1:
                     tests.append(f"if entity {sel}")
                     unless.append(f"unless entity {sel}")
                 else:                                                  # count the units: q or more
