@@ -1,5 +1,5 @@
 """#2542 (epic #2538): a scenario trigger with the effect "Declare Victory" ends a game of the scenario mode. The
-converter sets the score #p<N> of aoe_win, and scenario.tick reads it."""
+converter sets the score #p<N> of aoe_win, and scenario.victory reads it."""
 import os
 import sys
 import types
@@ -65,20 +65,20 @@ def titles(server):
 
 def test_the_score_1_of_player_1_gives_victory_and_ends_the_game():
     server, g, bot = game({1: 1})
-    scenario.tick(g)
+    scenario.victory(g)
     assert g.ended == "Victory" and bot.ended == "Defeat"
     assert 'title @a[team=p1] title {"text":"Victory","color":"gold"}' in titles(server)
 
 
 def test_a_victory_of_player_2_is_a_defeat_of_player_1():
     _, g, bot = game({2: 1})
-    scenario.tick(g)
+    scenario.victory(g)
     assert g.ended == "Defeat" and bot.ended == "Victory"
 
 
 def test_allies_win_together():
     _, g, bot = game({2: 1}, {1: 1, 2: 1})
-    scenario.tick(g)
+    scenario.victory(g)
     assert g.ended == bot.ended == "Victory"
 
 
@@ -86,6 +86,6 @@ def test_a_world_without_the_effect_never_ends_by_this_rule():
     server, g, bot = game({})
     for _ in range(3):
         g.win_at = 0.0
-        scenario.tick(g)
+        scenario.victory(g)
     assert not g.ended and not bot.ended and not titles(server)
     assert server.log.count("scoreboard players get #p1 aoe_win") == 3
