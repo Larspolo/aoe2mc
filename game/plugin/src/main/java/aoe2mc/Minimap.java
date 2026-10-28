@@ -57,10 +57,14 @@ import net.kyori.adventure.text.format.NamedTextColor;
  * without the start objects, aoe2mc.write_objects). The renderer paints it under the buildings and the dots, so a
  * start unit that walked away or died, and a razed start building, leave no pixel. The replay sends the start
  * buildings as "aoe minimap building". Without "map_ground" (an older world) the base image shows, as before.
+ * The flares of the replay (#2405): "aoe minimap flare X Z TEAM TICKS" draws a cross of FLARE pixels from the center in
+ * the map color of the team at block (X, Z) for TICKS server ticks, above the dots. It blinks: on in every second
+ * update. The answer names the pixel of the center, or "outside".
  */
 final class Minimap extends MapRenderer {
     static final int PERIOD = 20;                         // ticks between two updates of the dots (sendMap)
     static final int DOT = 2;                             // pixels of a dot side
+    static final int FLARE = 2;                           // pixels of an arm of the flare cross
     static final byte BLACK = 29 * 4 + 3;                 // an unexplored tile: map color COLOR_BLACK, darkest shade
     static final byte UNEXPLORED = 0, EXPLORED = 1, SEEN = 2;
     // the team color (units.TEAM_COLOR) -> the map color ID of the player color (aoe2mc.MAP_DYES); byte: ID × 4 + 2
@@ -71,6 +75,7 @@ final class Minimap extends MapRenderer {
     private long last = Long.MIN_VALUE;                   // the server tick of the last update
     private List<int[]> dots = new ArrayList<>();         // {px, pz} of the drawn dots and squares
     private final Map<List<Integer>, int[]> buildings = new LinkedHashMap<>();   // (x0, z0) -> {x0, z0, x1, z1, color}
+    private final List<long[]> flares = new ArrayList<>();                     // {x, z, color, end tick}
     private byte[] ground;                                // the bare ground: 128 × 128 map bytes, row z; null: none
     private byte[][] fog;                                 // [tile x][tile y] -> UNEXPLORED, EXPLORED, SEEN; null: no fog
     private int tile;                                     // blocks of a fog tile side
@@ -279,6 +284,15 @@ final class Minimap extends MapRenderer {
             sender.sendMessage("Minimap buildings: " + buildings.size());
             return true;
         }
+        if (args.length == 6 && args[1].equals("flare")) {
+            Team team = Bukkit.getScoreboardManager().getMainScoreboard().getTeam(args[4]);
+            int c = team != null && team.hasColor() && team.color() instanceof NamedTextColor n ? COLORS.getOrDefault(n, 8) : 8;
+            int x = Integer.parseInt(args[2]), z = Integer.parseInt(args[3]), s = v.getScale().getValue();
+            flares.add(new long[] {x, z, c * 4 + 2, Bukkit.getCurrentTick() + Long.parseLong(args[5])});
+            int px = pixel(x, v.getCenterX(), s), pz = pixel(z, v.getCenterZ(), s);
+            sender.sendMessage("Minimap flare: " + (px < 0 || pz < 0 ? "outside" : px + " " + pz));
+            return true;
+        }
         if (args.length == 4 && args[1].equals("unbuild")) {
             buildings.remove(List.of(Integer.parseInt(args[2]), Integer.parseInt(args[3])));
             sender.sendMessage("Minimap buildings: " + buildings.size());
@@ -416,6 +430,18 @@ final class Minimap extends MapRenderer {
                 for (int dz = 0; dz < DOT && pz + dz < 128; dz++) {
                     canvas.setPixel(px + dx, pz + dz, color);
                     dots.add(new int[] {px + dx, pz + dz});
+                }
+            }
+        }
+        flares.removeIf(fl -> fl[3] <= now);
+        for (long[] fl : flares) {                        // the flares last: above the dots, on in every second update
+            int px = pixel(fl[0], map.getCenterX(), s), pz = pixel(fl[1], map.getCenterZ(), s);
+            for (int k = -FLARE; k <= FLARE && px >= 0 && pz >= 0 && now / PERIOD % 2 == 0; k++) {
+                for (int[] q : new int[][] {{px + k, pz}, {px, pz + k}}) {
+                    if (q[0] >= 0 && q[0] < 128 && q[1] >= 0 && q[1] < 128) {
+                        canvas.setPixel(q[0], q[1], (byte) fl[2]);
+                        dots.add(q);
+                    }
                 }
             }
         }
