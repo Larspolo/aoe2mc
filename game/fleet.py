@@ -206,7 +206,10 @@ def fish(g, uuids, tile):
     """The own fishing ships uuids sail to the fish on tile and gather it (#1384). Returns the ships with a path."""
     out = set()
     for v in [v for u in sorted(uuids) if replay.fisher(g.soldiers.get(u, "")) and (v := ship(g, u))]:
-        v.res, v.tree = g.map.resource(tile), tile                    # an oyster: gold (#2465)
+        res = g.map.resource(tile)                                     # an oyster: gold (#2465)
+        if v.load and v.res != res:
+            v.load = 0                                                 # AoE2 drops a load of another resource
+        v.res, v.tree = res, tile
         if sail_to(g, v, "to_tree", spots(g, tile)):
             out.add(v.uuid)
     return out
