@@ -144,8 +144,12 @@ def order(g, player, cell):
 
 
 def drop(g, i, cell):
-    """Relic i lies on the block cell: a pot block, and the display on its monk goes."""
+    """Relic i lies on the block cell, or on the nearest free land cell when the cell is water (#3119): a pot block,
+    and the display on its monk goes."""
+    import capture_relic, transport                                # they import gather, gather imports this module
     r = relics(g)[i]
+    if not g.map.free(*cell):
+        cell = next(iter(transport.land(g, cell, 1, tiles=capture_relic.SEARCH)), cell)
     x, z = cell
     g.command(f"kill @e[type=item_display,tag=aoe_relic_{i}]")
     g.command(f"setblock {x} {g.map.y(x, z)} {z} {POT} keep")
