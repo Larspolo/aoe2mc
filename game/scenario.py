@@ -200,6 +200,7 @@ ORDER_KINDS = {
     "builds": r'"build (\d+) (\w+) (-?\d+) (-?\d+) (-?\d+) (-?\d+)"',   # "Build Object" (#2863): finish()
     "found": r'"(found|create) (\d+) (\w+) (\d+) (\d+)"',    # "Place Foundation" (#2825), "Create Object" (#2911): foundation()
     "gates": r'"(lock|unlock) (\d+)"',                         # "Lock Gate", "Unlock Gate" (#2762): gate()
+    "owners": r'"owner (aoe_order[\w.]+) (\d+) (-?\d+)"',   # "Change Ownership" (#2998): owner()
     "queued": r'"(train|research) (\d+) (\w+) ?(\d+)?"',      # "Train Unit", "Initiate Research" (#2772): queues()
     "rallies": r'"rally (\d+) (\w+) (\d+) (\d+) ?(\d+ \d+ \d+ \d+)?"',  # "Set Building Gather Point": rally()
     "tags": r'"(patrol|attack_move|range|stance|stop) (aoe_order[\w.]+) ?(-?\d+(?: -?\d+)*)?"',   # see orders()
@@ -229,6 +230,8 @@ def orders(g):
         gate(g, order, int(ref))
     for order, player, name, x, y in m["found"]:
         foundation(g, int(player), name, (int(x), int(y)), done=order == "create")
+    for tag, _, new in m["owners"]:
+        owner(g, tag, int(new))
     for player, name, *area in m["builds"]:
         finish(g, int(player), name, [int(v) for v in area])
     for player, which, x, y, area in m["rallies"]:
@@ -283,6 +286,15 @@ def ranges(g, tag, operation, quantity):
         new = [quantity, r + quantity, r - quantity, r * quantity, r / quantity if quantity else r][operation - 1]
         if cmd := combat.range_command(uuid, name, g.map.T, s=s._replace(range=max(0, new))):
             g.command(cmd)
+
+
+def owner(g, tag, new):
+    """A "Change Ownership" order (aoe2mc.owner_lines, #2998): the units with the tag belong to player new in the game
+    program (owners.give, #2993), and the tag goes. The units come from one `aoe where` (Paper only, as selection)."""
+    import owners                                                  # owners -> build -> gather -> this module
+    for uuid in g.where(None, f"@e[tag={tag}]"):
+        owners.give(g, uuid, new)
+    g.command(f"tag @e[tag={tag}] remove {tag}")
 
 
 def selection(g):

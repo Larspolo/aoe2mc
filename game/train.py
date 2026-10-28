@@ -62,6 +62,7 @@ It researches Shipwright in the Imperial Age (#1490, SHIPWRIGHT): the ships of t
 and train 54 % faster (tick()); the technologies of the dock do not change.
 """
 import functools
+import importlib
 import json
 import math
 import os
@@ -79,6 +80,7 @@ import garrison  # noqa: E402
 import menu  # noqa: E402
 import monk  # noqa: E402
 import record  # noqa: E402
+import ruins  # noqa: E402
 import table  # noqa: E402
 
 DATA = os.path.join(table.DIR, "train.jsonl")
@@ -274,7 +276,6 @@ AGES = ("Dark Age", "Feudal Age", "Castle Age", "Imperial Age")    # the age aft
 STARTS = {r["name"]: r for r in table.load("setup.jsonl") if "ages" in r}
 SWAPS = {r["name"]: r["swap"] for r in table.load("setup.jsonl") if "swap" in r}   # a game mode: {old: new} (#2388)
 AGAIN = {r["name"] for r in ROWS if r.get("again")}                # a technology that a player researches again (Treason)
-GLOW = {r["name"]: r["glow"] for r in ROWS if "glow" in r}         # the enemy Kings glow for so many seconds (#2388)
 QUEUE = 15                                                         # units in the queue of one building, as in AoE2
 HOUSING = {r["name"]: r["housing"] for r in BUILDING_ROWS if "housing" in r}   # population of a complete building
 AGE_COUNT = {r["name"]: r["age_count"] for r in BUILDING_ROWS if "age_count" in r}   # types of the age rule: the Settlement 2 (#2420)
@@ -395,9 +396,9 @@ def swapped(g, name):
 
 def homes(g):
     """{block footprint (x0, x1, z0, z1): building name} of the complete own buildings that train units (TRAINS):
-    the start ones and the built ones."""
+    the start ones and the built ones, not the fallen ones (ruins.py)."""
     out = {(x0, x1, z0, z1): o["name"] for o in g.data["objects"] if o["kind"] == "building" and o["name"] in TRAINS
-           and o["player"] == g.player for x0, z0, x1, z1 in [o["footprint"]]}
+           and o["player"] == g.player and not ruins.fallen(g, o) for x0, z0, x1, z1 in [o["footprint"]]}
     return out | {tuple(s["footprint"]): s["name"] for s in g.sites if s["name"] in TRAINS and s.get("done")}
 
 
@@ -762,8 +763,10 @@ def queued(g, name):
 
 
 def owned(g):
-    """The names of the complete own buildings of the player: the start ones and the built ones."""
-    return [o["name"] for o in g.data["objects"] if o["kind"] == "building" and o["player"] == g.player] + \
+    """The names of the complete own buildings of the player: the start ones and the built ones, not the fallen ones
+    (ruins.py)."""
+    return [o["name"] for o in g.data["objects"] if o["kind"] == "building" and o["player"] == g.player
+            and not ruins.fallen(g, o)] + \
         [s["name"] for s in g.sites if s.get("done") and s["player"] == g.player]
 
 
@@ -961,14 +964,9 @@ def research(g, entry, start=False, rect=None):
         names = {n for names, _ in civs.ARROWS.get(civs.civ(g), ()) for n in names}
         for rect in [r for r, o in garrison.holders(g).items() if o["name"] in names]:
             g.command(garrison.arrows_command(g, rect))
-    if entry["name"] == "BALLISTICS" and getattr(g, "paper", False):   # the plugin aims the arrows of the player (#1549)
-        g.command(f"aoe ballistics p{g.player} on")
-    if entry["name"] in GLOW:                                      # Treason: the enemy Kings glow (#2388)
-        import regicide                                            # regicide imports gather, gather imports this module
-        regicide.reveal(g, GLOW[entry["name"]])
-    if entry["name"] == "SPIES":                                   # the enemy units show for ever (#2193)
-        import fog                                                 # fog imports gather, gather imports this module
-        fog.reveal(g)
+    for hook in value("on_research", entry["name"], ()):          # the special effect in its own module (#3243):
+        module, function = hook.rsplit(".", 1)                     # import it late, it imports gather or this module
+        getattr(importlib.import_module(module), function)(g, entry)
     if entry["name"] in UPGRADES:                                  # the live units of the line get the new name
         for uuid, old, new in [(u, old, new) for old, new in lines(entry["name"], g) for u, n in g.soldiers.items()
                                if n == old]:
@@ -1193,7 +1191,7 @@ def summon(g, name, pos, rotation=math.pi / 2, player=None):
     for cmd in fire_commands(g, uuid, name):                       # a new fire ship after Siphons (#2165)
         g.command(cmd)
     # they take move orders as a soldier (#1243, #1253); a ship sails with fleet.py (#1383)
-    if gather.military(name) or name in ORDERS or name in build.MOVES or units.is_boat(units.classify(name)):
+    if gather.soldier(name):
         g.soldiers[uuid] = name
         return uuid
     g.villagers[uuid] = gather.Villager(uuid, pos)

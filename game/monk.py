@@ -177,7 +177,10 @@ def relic_tick(g, dt):
             drop(g, i, (math.floor(x), math.floor(z)))
     for i, r in enumerate(relics(g)):
         if r["home"] and r["home"] not in homes:                   # the monastery fell: the relics come out
-            drop(g, i, next(iter(g.map.front(r["home"])), (r["home"][0], r["home"][2])))
+            taken = {q["at"] for q in relics(g) if q["at"]}        # one relic on each cell, one pot each (#3010)
+            ring = sorted(g.map.front(r["home"]))
+            cells = ring + sorted(g.map.around(set(ring)))
+            drop(g, i, next((c for c in cells if c not in taken), (r["home"][0], r["home"][2])))
     for m, (kind, target) in list(g.fetching.items()):
         r = relics(g)[target] if kind == "relic" else None
         to = r["at"] if r else next(iter(g.map.front(target)), None)
@@ -298,10 +301,7 @@ def convert_order(g, monks, target):
 def take(g, uuid):
     """Give the enemy unit uuid to the player of g: its tag, team and name color, and those of its horse, boat or crew
     (units.MOUNT). Its old order stops, and then it takes orders as a unit of its new player."""
-    import gather                                                  # gather imports this module
-    name, new = g.enemies.pop(uuid), g.player
-    obj = next((o for o in g.data["objects"] if o.get("uuid") == uuid), {})
-    old, obj["player"] = owners.player(g, uuid), new
+    name, new, old = g.enemies[uuid], g.player, owners.player(g, uuid)
     for run in ("", f"execute as {uuid} on vehicle run ", f"execute as {uuid} on passengers run "):
         who = "@s" if run else uuid
         for cmd in (f"tag {who} remove aoe2mc.p{old}", f"tag {who} add aoe2mc.p{new}", f"team join p{new} {who}"):
@@ -309,12 +309,7 @@ def take(g, uuid):
     color = units.HEX.get(g.players.get(str(new), {}).get("color", ""), "#FFFFFF")
     g.command(f'data modify entity {uuid} CustomName.color set value "{color}"')
     g.command(f"aoe stop {uuid}")
-    if gather.military(name) or name in MONKS:
-        g.soldiers[uuid] = name
-    elif pos := g.pos(uuid):
-        g.villagers[uuid] = gather.Villager(uuid, pos)
-        g.units.append({"kind": "unit", "name": name, "player": new, "uuid": uuid,
-                        "tile": [math.floor(pos[0]) / g.map.T, math.floor(pos[2]) / g.map.T]})
+    owners.give(g, uuid, new)                                      # the lists of all sides (#2993)
     g.command(f"tellraw @a[team=p{g.player}] " + json.dumps({"text": f"A monk converts the {units.pretty(name)}.", "color": "gold"}))
 
 
@@ -338,7 +333,7 @@ def win(g, uuid):
     """Give the enemy building with the target uuid to the player of g (Redemption): its target entity joins the team
     of the player, and its entry of aoe2mc.json gets the player, so that it trains and takes a garrison for it."""
     import build, combat                                           # they import gather, gather imports this module
-    g.forts.pop(uuid)
+    owners.give_building(g, uuid, g.player)                        # the sides of the game, and the sites (#2994)
     g.sieged.discard(uuid)
     for o in g.data["objects"]:
         if o["kind"] == "building" and "footprint" in o and combat.target_uuid(o["footprint"]) == uuid:

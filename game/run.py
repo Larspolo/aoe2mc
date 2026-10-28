@@ -627,6 +627,9 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
     if not state and start_buildings.used(data):     # the Georgian mule cart (#2429), not twice after a load
         for x in [g, *(s.g for s in g.bots)]:
             start_buildings.place(x)
+    if state:                                                    # before the modes and the minimap: they see the save
+        import savegame                                          # (the Wonder, the defeated, the sites, #2981)
+        savegame.load(g, state)
     for mode in sorted(modes):                                   # after the age: the town of Empire Wars, the Wonder;
         line = MODES[mode]                                       # the Kings go to the Gathers of the bots (#2347)
         if "module" in line and not (state and line.get("loaded") == "skip"):   # a loaded game has its town, relic
@@ -653,9 +656,6 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
           "then right click a tree, a fruit bush or a mine. To build: /trigger aoe_build set N (the menu is in the chat),\n"
           "then right click the ground. Right click your town center to train a villager (50 food). Ctrl-C stops.", file=sys.stderr)
     game.g = g                                       # main saves its state on Ctrl-C (#2255)
-    if state:
-        import savegame
-        savegame.load(g, state)
     if speed != 1:                                   # Minecraft makes the mobs, paths and plugin faster (#2057)
         game.command(f"tick rate {TICKS * speed:g}")
         g.speed = speed

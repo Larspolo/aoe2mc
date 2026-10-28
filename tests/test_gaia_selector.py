@@ -58,7 +58,11 @@ def test_a_gaia_mount_has_the_gaia_tag_and_the_mount_tag():
 
 def test_a_gaia_source_gives_its_units_to_a_player():
     sel = aoe2mc.unit_selector(effect(), 4)
-    assert lines(player=0, target=1) == [f"tag {sel} add aoe2mc.own",
+    assert lines(player=0, target=1) == [f"tag {sel} add aoe_order5_0",
+                                        "execute as @e[tag=aoe_order5_0] on vehicle run tag @s add aoe_order5_0",
+                                        "execute as @e[tag=aoe_order5_0] on vehicle on passengers run tag @s remove aoe_order5_0",
+                                        'data modify storage aoe2mc:orders list append value "owner aoe_order5_0 0 1"',
+                                        f"tag {sel} add aoe2mc.own",
                                          "execute as @e[tag=aoe2mc.own] on vehicle run tag @s add aoe2mc.own",
                                          "tag @e[tag=aoe2mc.own] remove aoe2mc.p0", "tag @e[tag=aoe2mc.own] add aoe2mc.p1",
                                          "team join p1 @e[tag=aoe2mc.own]", "tag @e[tag=aoe2mc.own] remove aoe2mc.own"]
