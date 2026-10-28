@@ -59,3 +59,5 @@ new sub-issues, no `needs-human`. Still answer an owner comment on it (step 3).
    origin/main:tests/data/civ_bonuses.jsonl`), and also list the issues closed in the last 2 hours: #2340 copied
    #2309, which merged while the branch was 20 minutes old, and #2306 copied the closed #2249.
 4. Prefer tickets that depend on no open ticket and change other files than the claimed tickets (fewer conflicts).
+5. An epic takes at most 100 sub-issues (GitHub: 422 "Parent cannot have more than 100 sub-issues", #2538): a new
+   ticket of a full epic says "Part of #E" in its body only; name it in the refill comment on the epic.
