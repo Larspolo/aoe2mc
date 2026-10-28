@@ -78,6 +78,7 @@ def check_train(row):
 
 def check_civs(row):
     form(row, {"name": str, "missing": list}, {     # one key per line: parallel tickets add one
+        "arrows": list,
         "cost_per": list,
         "costs": list,
         "drop": dict,
@@ -93,6 +94,8 @@ def check_civs(row):
     for group, value, ages in row.get("units", ()):
         assert group in civs.GROUPS and value in (*combat.Stats._fields, "speed"), (n, group, value)
         assert len(ages) == 4 and all(isinstance(a, NUMBER) for a in ages), (n, group)
+    for what, ages in row.get("arrows", ()):                 # the factor of the base arrows of buildings (#2178)
+        assert set(what) <= NAMES["buildings.jsonl"] and len(ages) == 4 and all(isinstance(a, int) for a in ages), n
     for what, res, ages in row.get("costs", ()):
         names = NAMES["train.jsonl"] | set(build.COSTS)
         if isinstance(what, list):
@@ -143,9 +146,14 @@ def check_replay(row):                                     # a walk speed (a nam
     assert len(row) == 2 and row.get("age", 1) in (1, 2, 3) and row.get("walk", 1) > 0, row["name"]
 
 
+def check_taunts(row):                                     # a taunt: its number and AoE2 text (#2234)
+    form(row, {"name": str, "text": str})
+    assert row["name"].isdigit() and row["name"] == str(int(row["name"])) and row["text"], row["name"]
+
+
 CHECKS = {"build.jsonl": check_build, "buildings.jsonl": check_buildings, "cheats.jsonl": check_cheats,
           "civs.jsonl": check_civs, "gather.jsonl": check_gather, "monk.jsonl": check_monk,
-          "replay.jsonl": check_replay, "train.jsonl": check_train, "units.jsonl": check_units}
+          "replay.jsonl": check_replay, "taunts.jsonl": check_taunts, "train.jsonl": check_train, "units.jsonl": check_units}
 
 
 # The keys with two types by design: an "effect" is data, a list of data (#2155) or the name of a function of

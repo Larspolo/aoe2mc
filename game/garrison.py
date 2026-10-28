@@ -73,10 +73,10 @@ def start(g):
     return out
 
 
-def arrows(building, names):
-    """The arrows of one shot of the building with the units `names` inside: its BASE, and 1 more for each villager or
-    foot archer (an archer that is not cavalry, a camel or an elephant), as in AoE2. A bombard tower shoots one cannon
-    ball (#1375). A dock: 1 for each fishing ship, at most SIZES (AoE2 DE: up to 5 arrows, #1949). A fortified church:
+def arrows(building, names, factor=1):
+    """The arrows of one shot of the building with the units `names` inside: its BASE (times factor: civs.arrows, #2178),
+    and 1 more for each villager or foot archer (an archer that is not cavalry, a camel or an elephant), as in AoE2. A
+    bombard tower shoots one cannon ball (#1375). A dock: 1 for each fishing ship, at most SIZES (AoE2 DE: up to 5 arrows, #1949). A fortified church:
     1 for each villager, no soldier (AoE2 DE: villagers and relics, #1948). A building with no attack: none."""
     import combat                                                  # combat imports gather
     if building == "BOMBARD_TOWER":
@@ -88,16 +88,16 @@ def arrows(building, names):
     if building in combat.BUILDINGS and not combat.BUILDINGS[building].attack:   # a Khmer house does not shoot (#2117)
         return 0
     riders = {combat.CAV, combat.CAM, combat.ELE}
-    return BASE.get(building, 1) + sum(n.startswith("VILLAGER") or combat.ARC in (c := set(combat.stats(n).classes)) and not c & riders
+    return BASE.get(building, 1) * factor + sum(n.startswith("VILLAGER") or combat.ARC in (c := set(combat.stats(n).classes)) and not c & riders
                    for n in names)
 
 
 def arrows_command(g, rect):
     """The plugin command that gives the building rect the arrows of its garrison (#1113)."""
-    import combat
+    import civs, combat
     names = ["VILLAGER" if u in g.villagers else g.soldiers.get(u, "") for u in g.garrisons.get(rect, [])]
     building = holders(g).get(rect, {}).get("name")
-    return f"aoe arrows {combat.target_uuid([rect[0], rect[2], rect[1], rect[3]])} {arrows(building, names)}"
+    return f"aoe arrows {combat.target_uuid([rect[0], rect[2], rect[1], rect[3]])} {arrows(building, names, civs.arrows(g, building))}"
 
 
 def ungarrison(building):
