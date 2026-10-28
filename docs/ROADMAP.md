@@ -68,7 +68,7 @@ can see which features have an epic: `gh api "repos/Larspolo/aoe2mc/issues?label
 - [x] `play:postgame` The statistics at the end of a game of the game program, as the AoE2 achievements screen: military, economy, technology, the time of each age (the recap book, #2660, #2706)
 - [ ] `play:taunts` AoE2 taunts: a player types a taunt number (1-105) in the chat, and all players hear its sound and see its text
 - [ ] `play:wildlife` Wild predators as in AoE2: wolves, tigers and other predators of the map attack villagers and units near them
-- [ ] `play:farm-reseed` Farm reseeds as in AoE2: the mill queues farms, and an exhausted farm is built again by its farmer when the player has the wood
+- [x] `play:farm-reseed` Farm reseeds as in AoE2: the mill queues farms, and an exhausted farm is built again by its farmer when the player has the wood (#3283)
 - [x] `play:game-modes` The AoE2 game modes in the game setup: Regicide (a king per player), Death Match (large start resources), King of the Hill (hold the monument) and Empire Wars (a running start economy) (#2387, #2452, #2383, #2428)
 - [ ] `play:formations` AoE2 formations for a selected group (line, box, staggered, flank): the units keep their places on the walk, and the slowest unit sets the speed
 - [ ] `play:town-bell` The town bell as in AoE2: a click at the town center sends the villagers into the nearest own buildings, a second click lets them out

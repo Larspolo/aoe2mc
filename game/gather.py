@@ -1675,6 +1675,10 @@ class Gather:
                     self.second(v)
                     if v.tree in self.map.farms:
                         self.harvest(v.tree)
+                        if src[v.tree] <= 0 and getattr(self, "reseeds", 0) > 0:   # a queued reseed: new at once (#3283)
+                            self.reseeds -= 1
+                            src[v.tree] = self.map.farm_food
+                            self.harvest(v.tree)
                         self.tend(v)
                     elif v.tree in self.map.carcasses:
                         pass                                           # a carcass has no blocks
@@ -1974,13 +1978,17 @@ class Gather:
         """A farm shows its food: the wheat gets younger (age 7 when full), and an empty farm is dirt."""
         food = self.map.farms[tile]
         age = min(7, math.ceil(7 * food / self.map.farm_food))
-        if self.crops.get(tile, 7) == age:                             # the converter's farm: mostly age 7
+        before = self.crops.get(tile, 7)
+        if before == age:                                              # the converter's farm: mostly age 7
             return
         self.crops[tile] = age
         x0, x1, z0, z1 = self.map.feet[tile]
         ys = [y for x in range(x0, x1) for z in range(z0, z1) if (y := self.map.y(x, z)) is not None] or [0]
         box = f"{x0} {min(ys) - 1} {z0} {x1 - 1} {max(ys)} {z1 - 1}"
-        if food > 0:
+        if food > 0 and before == 0:                                   # a reseeded farm (#3283): farmland and wheat again
+            self.command(f"fill {box} minecraft:farmland replace minecraft:dirt")
+            self.command(f"fill {x0} {min(ys)} {z0} {x1 - 1} {max(ys)} {z1 - 1} minecraft:wheat[age={age}] replace air")
+        elif food > 0:
             self.command(f"fill {box} minecraft:wheat[age={age}] replace minecraft:wheat")
         else:
             self.command(f"fill {box} air replace minecraft:wheat")
@@ -2028,3 +2036,10 @@ class Gather:
             treaty.tick(self, self.tick * NORMAL)
             record.tick(self, self.tick * NORMAL)                      # the game time of Record Game (#2649)
             time.sleep(max(0.0, self.tick / self.speed - (time.monotonic() - t)))   # a step stays tick game seconds
+
+
+def reseed(g, entry):
+    """FARM_RESEED (the mill, #3283): one more queued reseed. An empty own farm takes it in Gather.run, as in AoE2."""
+    g.reseeds = getattr(g, "reseeds", 0) + 1
+    for player in g.people():
+        g.command(f"tellraw {player} " + json.dumps({"text": f"Reseeds queued: {g.reseeds}", "color": "gray"}))
