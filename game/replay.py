@@ -70,6 +70,8 @@ EFFECT = "aoe2mc.effect"    # entity tag of the texts above a building (#843)
 FOLLOWED = "aoe2mc.followed"  # the tag of the entity that the spectators of --follow look through (#1095)
 TRAIL = 3                   # tiles: a follower farther than this from its target walks to it again (#2551)
 TRAIL_MS = 1000             # ms of game time between two checks of the followers (#2551)
+FAR = 8                     # tiles: a target unit this far from the tile of the ORDER (its place in AoE2) is no attack
+                            # target: in de-64.3 a spearman chased a villager 200 blocks from it across the map (#2635)
 FOLLOW_MS = 15000           # ms of game time: the camera of --follow changes its unit at most this often (#738)
 EFFECT_MS = 10000           # ms of game time that the research text stays
 SCALE = 4                   # size of the research text: a spectator sees it from 40 blocks
@@ -846,11 +848,11 @@ class Replay:
         return self.units.get(i)
 
     def goals(self, e, water=False):
-        """The cells that the units of a MOVE or ORDER go to: next to the target object of an ORDER, else the
-        target tile (or next to it, when it is blocked). water: the water cells for a ship, next to the target
-        object, else the water cell nearest to the target tile within 3 tiles (#866)."""
+        """The cells that the units of a MOVE or ORDER go to: next to the target object of an ORDER (not a unit that
+        is far() from the tile), else the target tile (or next to it, when it is blocked). water: the water cells for a
+        ship, next to the target object, else the water cell nearest to the target tile within 3 tiles (#866)."""
         m, T, t = self.map, self.T, e.get("target")
-        if e["kind"] == "order" and t is not None and (t in self.units or t in self.refs):
+        if e["kind"] == "order" and t is not None and (t in self.units or t in self.refs) and not self.far(e):
             o = self.refs.get(t, {})
             if t in self.units:
                 cells = {self.units[t].cell}
@@ -878,11 +880,20 @@ class Replay:
         if e["kind"] != "order" or t is None:
             return None
         if t in self.units:
-            return self.units[t].uuid if self.units[t].player not in (0, p) else None
+            return self.units[t].uuid if self.units[t].player not in (0, p) and not self.far(e) else None
         o = self.refs.get(t, {})
         if o.get("kind") == "building" and "footprint" in o and o["name"] in combat.BUILDINGS and o["player"] not in (0, p):
             return combat.target_uuid(o["footprint"])
         return None
+
+    def far(self, e):
+        """True when the target unit of ORDER e stands more than FAR tiles from the tile of e in the replay: the
+        record has the target at the tile, so the units walk to the tile (#2635)."""
+        u, tile = self.units.get(e.get("target")), e.get("tile")
+        if u is None or tile is None:
+            return False
+        x, _, z = self.at(u, e["time"])
+        return math.hypot(x / self.T - tile[0], z / self.T - tile[1]) > FAR
 
     def target_mark(self, e):
         """The red order marker at the target of an attack ORDER, as the game program shows it (#796, #845): a unit
@@ -892,15 +903,22 @@ class Replay:
         x0, z0, x1, z1 = self.refs[t]["footprint"]
         return self.gather.marker(self.map, {(x0, z0), (x1 - 1, z1 - 1)}, "attack", "@a")
 
-    def attack(self, group, target):
+    def attack(self, group, target, e=None):
         """The military units of group attack entity target, with their AoE2 walk speed; they walk no more legs.
-        Returns the commands and the rest of the group."""
+        With the ORDER e that has a tile, their replay place goes to the tile on a leg at their walk speed: the mob
+        fights there, not at the place of the order (#2635). Returns the commands and the rest of the group."""
         import ai
         out, rest = [], []
         for i, v in group:
             if self.gather.military(v.name):
                 out += [ai.speed_command(v.uuid, v.name, self.T, self.speed), f"aoe attack {v.uuid} {target}"]
                 self.moving.pop(i, None)
+                if e and e.get("tile"):
+                    x, z = int(e["tile"][0] * self.T), int(e["tile"][1] * self.T)
+                    start = self.at(v, e["time"])
+                    v.pos, v.path = (x + 0.5, float(self.map.y(x, z)), z + 0.5), []
+                    speed = next((s for k, s in SPEEDS.items() if v.name.startswith(k)), 1.0) * self.T
+                    v.leg = (start, e["time"], e["time"] + 1000 * math.dist(start[::2], v.pos[::2]) / speed)
             else:
                 rest.append((i, v))
         return out, rest
@@ -1048,7 +1066,7 @@ class Replay:
         slots = self.formation([v for _, v in group], e["tile"]) if to_tile and group else {}
         out = []
         if self.ai:
-            out, group = self.attack(group, target) if (target := self.enemy(e)) else ([], group)
+            out, group = self.attack(group, target, e) if (target := self.enemy(e)) else ([], group)
             out += self.target_mark(e) if target else []            # the red order marker (#845)
             for i, v in group:
                 v.pos = self.at(v, e["time"])                       # it stops its leg where it is
