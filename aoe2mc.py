@@ -409,7 +409,8 @@ def read_scenario(path):
                 if kinds.get(u.unit_const, ("?",))[0] in ("U", "H")}         # tag aoe2mc.r<ref> (#2617), not blocks
     texts["triggers"] = [dict(id=t.trigger_id, name=t.name, enabled=bool(t.enabled), looping=bool(t.looping),
                               conditions=[dict(type=c.condition_type, timer=c.timer, inverted=bool(c.inverted),
-                                               **({"ref": c.unit_object, "unit": c.unit_object in entities}   # #2618
+                                               **({"ref": c.unit_object, "unit": c.unit_object in entities,   # #2618
+                                                   "player": c.source_player}
                                                   if c.condition_type in OBJECT_TESTS else {}),
                                                **({"quantity": c.quantity, "player": c.source_player,
                                                    "area": [c.area_x1, c.area_y1, c.area_x2, c.area_y2],
@@ -2817,6 +2818,7 @@ COUNTED = (IN_AREA, OWN_OBJECTS, OWN_FEWER_OBJECTS)                # conditions 
 TICKED = COUNTED + (ACCUMULATE_ATTRIBUTE, DIFFICULTY_LEVEL, RESEARCHED, VARIABLE_VALUE)  # conditions of the tick function
 ATTRIBUTES = ("Food", "Wood", "Stone", "Gold")     # attributes 0-3: the score holders of gather.RESOURCES (#2655)
 DESTROY_OBJECT = 6                                                     # the condition "Destroy Object" (#2618)
+CAPTURE_OBJECT = 7                                                     # the condition "Capture Object" (#2619)
 # The conditions on one object of the map (its tag aoe2mc.r<ref>, #2617): the test of the tick function when it holds,
 # when it does not hold (a looping trigger fires again after that), and the tick lines before the test. "Destroy
 # Object": a marker entity follows the unit; the unit is dead when the marker is loaded and the unit is not there. A
@@ -2825,7 +2827,10 @@ OBJECT_TESTS = {DESTROY_OBJECT: ("if entity @e[tag=aoe2mc.m{ref}] unless entity 
                                  "if entity @e[tag=aoe2mc.r{ref}]",
                                  ("execute as @e[tag=aoe2mc.r{ref}] at @s unless entity @e[tag=aoe2mc.m{ref}] run "
                                   "summon marker ~ ~ ~ {{Tags:[\"aoe2mc.m{ref}\"]}}",
-                                  "execute as @e[tag=aoe2mc.r{ref}] at @s run tp @e[tag=aoe2mc.m{ref}] ~ ~ ~"))}
+                                  "execute as @e[tag=aoe2mc.r{ref}] at @s run tp @e[tag=aoe2mc.m{ref}] ~ ~ ~")),
+                 # "Capture Object": the unit has the tag of the player of the condition (its owner, #2570)
+                 CAPTURE_OBJECT: ("if entity @e[tag=aoe2mc.r{ref},tag=aoe2mc.p{player}]",
+                                  "unless entity @e[tag=aoe2mc.r{ref},tag=aoe2mc.p{player}]", ())}
 TICKED += tuple(OBJECT_TESTS)
 STORES = ("food", "wood", "stone", "gold")      # the resource of a tribute_list (AoE2 attributes 0 to 3)
 OPERATIONS = {1: "set", 2: "add", 3: "remove"}  # set, add, subtract of Modify Resource (AoE2ScenarioParser Operation)
@@ -3398,9 +3403,9 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
                 continue
             if c["type"] in OBJECT_TESTS:                              # the tag of the object (#2618)
                 test, other, before = OBJECT_TESTS[c["type"]]
-                counts += [x.format(ref=c["ref"]) for x in before]
-                tests.append(test.format(ref=c["ref"]))
-                unless.append(other.format(ref=c["ref"]))
+                counts += [x.format(ref=c["ref"], player=c.get("player")) for x in before]
+                tests.append(test.format(ref=c["ref"], player=c.get("player")))
+                unless.append(other.format(ref=c["ref"], player=c.get("player")))
                 continue
             if c["type"] not in COUNTED:                               # a timer or the chance
                 continue
