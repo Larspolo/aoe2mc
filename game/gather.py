@@ -566,6 +566,7 @@ class Villager:
         self.res = "wood"                                              # the resource of the load
         self.site = None                                               # the construction site that it builds
         self.goal, self.moved, self.tries = None, 0.0, 0               # Paper: walk cell, time of the last step, orders
+        self.anchor, self.anchor_far = pos, math.inf                   # the place and the distance to the goal of the last progress (#3372)
         self.lap = 0                                                   # step of a farmer over its farm (#591)
         self.prey = None                                               # the UUID of the animal that it hunts (#1058)
 
@@ -1781,6 +1782,7 @@ class Gather:
             ai.move(self, v.uuid, "VILLAGER", self.map.T, x + 0.5, self.map.y(x, z), z + 0.5,
                     NORMAL * train.speed(self, "VILLAGER", v.uuid) * math.prod(PACE.get(t, 1) ** train.count(self, t) for t in self.techs))
         v.moved, v.tries = self.clock(), v.tries + 1
+        v.anchor, v.anchor_far = v.pos, math.inf
 
     def second(self, v):
         """One unit that v gathers earns the second resource of the civilization (civs.EXTRA, #2113): Poles and Puru
@@ -1818,8 +1820,11 @@ class Gather:
             return
         step, v.pos, now = math.dist(pos, v.pos), pos, self.clock()
         v.walked += step
-        v.moved = now if step >= 0.05 else v.moved
-        far, still = math.dist((pos[0], pos[2]), (v.goal[0] + 0.5, v.goal[1] + 0.5)), now - v.moved
+        far = math.dist((pos[0], pos[2]), (v.goal[0] + 0.5, v.goal[1] + 0.5))
+        # a crowd pushes a villager back and forth: only a move of 0.5 blocks or a nearer goal counts as progress (#3372)
+        if math.dist(pos, v.anchor) >= 0.5 or v.anchor_far - far >= 0.25:
+            v.anchor, v.anchor_far, v.moved = pos, far, now
+        still = now - v.moved
         if still >= 5 and far >= 2 and v.tries < 2:                    # a second order, as the plugin drops one
             self.move(v)
         elif far < 1.5 or still >= 1 and far < 2 or still >= 5:
