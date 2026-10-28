@@ -987,14 +987,16 @@ class Gather:
                 h.stock[res] += part
                 h.command(f"scoreboard players add {res.capitalize()} {h.board} {part}")
 
-    def deliver(self, res, n, forage=False):
+    def deliver(self, res, n, forage=False, kind=None):
         """Earn the load n of resource res at a drop site with the drop-off bonus of the civilization (civs.DROP: food,
-        forage for a load of a fruit bush, #2111). AoE2 keeps the fractions: the next load gets them."""
+        forage for a load of a fruit bush, #2111), and the second resource of gather kind (civs.DROP_EXTRA: "hunt",
+        "fish", "ship", #2308). AoE2 keeps the fractions: the next load gets them."""
         f = civs.drop(self, res) * (civs.drop(self, "forage") if forage else 1)
-        self.spare[res] = self.spare.get(res, 0) + n * f
-        if whole := int(self.spare[res] + 1e-9):
-            self.spare[res] -= whole
-            self.earn(res, whole)
+        for r, m in [(res, n * f)] + [(b[0], n * b[1]) for b in [civs.drop_extra(self, kind)] if b]:
+            self.spare[r] = self.spare.get(r, 0) + m
+            if whole := int(self.spare[r] + 1e-9):
+                self.spare[r] -= whole
+                self.earn(r, whole)
 
     def event(self, v, name):
         if self.log:
@@ -1413,7 +1415,8 @@ class Gather:
                 v.timer = 0.0
                 self.set(v, "chop" if self.source(v).get(v.tree, 0) > 0 else "idle")
             elif v.state == "to_drop":
-                self.deliver(v.res, v.load, v.res == "food" and v.tree in self.map.bushes)
+                self.deliver(v.res, v.load, v.res == "food" and v.tree in self.map.bushes,
+                             "hunt" if v.tree in self.map.carcasses else "fish" if v.tree in self.map.fish else None)
                 v.load = 0
                 self.event(v, "drop")
                 if v.tree in self.map.farms:
@@ -1434,6 +1437,8 @@ class Gather:
                 last = civs.last(self, "sheep" if v.tree in self.map.herds else kind)
                 take = 1 if last == 1 else 1 / last                    # 1: the amounts stay whole numbers
                 most = self.limit(v.res, "sheep" if v.tree in self.map.herds else kind)
+                if v.load < most and src.get(v.tree, 0) > 0:
+                    self.trickle(kind, self.tick)
                 while v.timer >= work and v.load < most and src.get(v.tree, 0) > 0:
                     v.timer -= work
                     v.load += 1
@@ -1512,6 +1517,16 @@ class Gather:
         if bonus := civs.extra(self, "forage" if v.tree in self.map.bushes else v.res):
             res, n = bonus
             self.seconds[res] = self.seconds.get(res, 0) + n
+            if whole := int(self.seconds[res] + 1e-9):
+                self.seconds[res] -= whole
+                self.earn(res, whole)
+
+    def trickle(self, kind, dt):
+        """dt real seconds of work at gather kind earn the resource of the civilization for each AoE2 minute
+        (civs.PER_MINUTE, #2308: Thracian hunters and shepherds 3 gold). The fractions add up as in second."""
+        if bonus := civs.per_minute(self, kind):
+            res, n = bonus
+            self.seconds[res] = self.seconds.get(res, 0) + n * dt * NORMAL / 60
             if whole := int(self.seconds[res] + 1e-9):
                 self.seconds[res] -= whole
                 self.earn(res, whole)

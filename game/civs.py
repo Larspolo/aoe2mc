@@ -174,6 +174,12 @@ RESEARCH_TIME = {r["name"]: [tuples(b) for b in r["research_time"]] for r in ROW
 # "extra": the second resource of a gather kind ("forage": a fruit bush), {kind: [resource, amount for each unit]}: Poles
 # and Puru stone miners, Portuguese foragers, Shu lumberjacks (#2113). Gather.second adds it at each gathered unit.
 EXTRA = {r["name"]: {k: tuple(v) for k, v in r["extra"].items()} for r in ROWS if "extra" in r}
+# "drop_extra": a second resource at the drop site, {kind: [resource, factor of the load]}: "hunt" (hunters and
+# shepherds), "fish" (fishermen), "ship" (fishing ships). Varangians: +10 % gold, +5 % for the ships (#2308).
+DROP_EXTRA = {r["name"]: {k: tuple(v) for k, v in r["drop_extra"].items()} for r in ROWS if "drop_extra" in r}
+# "per_minute": a resource for each AoE2 minute of work of a gather kind, {kind: [resource, amount]}: Thracian
+# hunters and shepherds 3 gold while they gather from animals (#2308).
+PER_MINUTE = {r["name"]: {k: tuple(v) for k, v in r["per_minute"].items()} for r in ROWS if "per_minute" in r}
 # "carry": the extra load of a villager, [[gather kind or null (all), extra]]: Aztec villagers +3, Goth hunters +15
 # (#2270). Gather.limit adds it.
 CARRY = {r["name"]: [tuple(b) for b in r["carry"]] for r in ROWS if "carry" in r}
@@ -433,6 +439,18 @@ def extra(g, kind):
     """The second resource of gather kind for the civilization of the player of g: (resource, amount for each unit)
     (EXTRA), else None."""
     return EXTRA.get(civ(g), {}).get(kind)
+
+
+def drop_extra(g, kind):
+    """The second resource of a load of gather kind at the drop site for the civilization of the player of g:
+    (resource, factor of the load) (DROP_EXTRA), else None."""
+    return DROP_EXTRA.get(civ(g), {}).get(kind)
+
+
+def per_minute(g, kind):
+    """The resource that the work of gather kind earns for the civilization of the player of g: (resource, amount for
+    each AoE2 minute) (PER_MINUTE), else None."""
+    return PER_MINUTE.get(civ(g), {}).get(kind)
 
 
 def carry(g, kind):

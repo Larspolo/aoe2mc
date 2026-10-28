@@ -373,7 +373,7 @@ def work(g, v, dt):
             if not docks or not sail_to(g, v, "to_drop", docks):
                 v.state = "idle"
     elif v.state == "to_drop":
-        g.deliver("food", v.load)                                      # the drop-off bonus (#2111)
+        g.deliver("food", v.load, kind="ship")                         # the drop-off bonus (#2111, #2308)
         v.load = 0
         g.event(v, "drop")
         v.tree = v.tree if m.fish.get(v.tree, 0) > 0 else nearest(g, v.tree)
