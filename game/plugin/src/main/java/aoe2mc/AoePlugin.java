@@ -1,3 +1,4 @@
+// Scratch line of #2437: the quick CI compiles a changed plugin. The PR removes it again.
 package aoe2mc;
 
 import java.net.URLDecoder;
