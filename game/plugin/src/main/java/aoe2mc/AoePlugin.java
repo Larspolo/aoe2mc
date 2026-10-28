@@ -35,6 +35,7 @@ import org.bukkit.entity.Camel;
 import org.bukkit.entity.Creeper;
 import org.bukkit.entity.Display;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.ItemDisplay;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Minecart;
 import org.bukkit.entity.Mob;
@@ -987,6 +988,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         Bukkit.getScheduler().runTaskTimer(this, ghost::tick, 1L, 1L);
         Bukkit.getScheduler().runTaskTimer(this, border::tick, 4L, 4L);
         Bukkit.getScheduler().runTaskTimer(this, this::siege, 1L, 1L);
+        Bukkit.getScheduler().runTaskTimer(this, this::carts, 1L, 1L);
         Bukkit.getScheduler().runTaskTimer(this, this::burn, 20L, 20L);
         Bukkit.getScheduler().runTaskTimer(this, this::watch, 20L, 20L);
         Bukkit.getScheduler().runTaskTimer(this, this::towers, 2L, 2L);
@@ -1686,6 +1688,21 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                 }
                 mob.swingMainHand();
                 mob.attack(t);
+            }
+        }
+    }
+
+    // The cart of a War Wagon (#2746) is an item display that rides its horse (units.cart). A passenger keeps its own
+    // rotation (Entity#positionRider moves it, but turns only a living passenger): the cart turns with the body of the
+    // horse here, so it stays behind the horse after a turn. No vanilla feature does it.
+    private void carts() {
+        for (UUID id : List.copyOf(stats.keySet())) {
+            if (Bukkit.getEntity(id) instanceof AbstractHorse h) {
+                for (Entity p : h.getPassengers()) {
+                    if (p instanceof ItemDisplay d && d.getYaw() != h.getBodyYaw()) {
+                        d.setRotation(h.getBodyYaw(), 0);
+                    }
+                }
             }
         }
     }
