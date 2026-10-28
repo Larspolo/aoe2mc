@@ -135,7 +135,7 @@ Judge the other tickets one by one: there is no quota of Haiku tickets.
   ticket, and about 1/25 while its prompt stays below 100k tokens (one Haiku ticket: $0.07, Opus: $1.70 to $2.10).
 When you are not sure, add it (owner, 2026-10-28): a Haiku run that finds the ticket unclear removes the label
 (`autopilot` skill, `queue.md`), and then an Opus run takes it. The Haiku try costs little next to an Opus ticket.
-A deep run (Opus at the default effort, about 4.5 times the tokens of a main run at low effort) takes the tickets with
+A deep run (Opus at high effort, 4.5 times or more the tokens of a main run at low effort) takes the tickets with
 `lane:deep` (owner, 2026-10-28). Add it when a wrong thought costs more than the lane: a bug whose cause the body does
 not name, a change across three or more modules or a new structure, a process, decision, epic or `size:L` ticket, and a
 ticket that failed before (red CI after 3 tries, a takeover, a reopened ticket). Aim at about 10 to 20 % of the tickets.

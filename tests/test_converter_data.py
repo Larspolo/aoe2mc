@@ -9,6 +9,8 @@ import buildings
 import units
 
 KEYS = {"animals.jsonl": ({"keys", "behavior", "mob"}, {"tags", "note"}),
+        "trigger_conditions.jsonl": ({"name", "text"}, set()),
+        "trigger_effects.jsonl": ({"name", "text"}, set()),
         "looks.jsonl": ({"name", "pattern", "accent"}, {"crest"}),
         "sounds.jsonl": ({"name", "sound"}, set()),
         "designs.jsonl": ({"name", "design"}, {"args", "wall"}),

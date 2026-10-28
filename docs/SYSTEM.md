@@ -151,7 +151,7 @@ on `main` yet, and the branch of an owner session is not `agent/*` or `claude/*`
    `lane:haiku` (`ticket` skill, "Model lanes"); Opus runs take them only when nothing else is ready.
    `tools/health.py` prints one line per lane (runs, PRs, minutes, tokens). `/operator` makes the task for you.
 8. **Scheduled task "aoe2mc autopilot deep" (owner, 2026-10-28).** No schedule: the pacer fires it. Model
-   `claude-opus-5-5` at the default effort (the main task runs at low effort), the prompt of step 4 with the argument
+   `claude-opus-5-5` at effort high (the owner's setting; the main task runs at low effort), the prompt of step 4 with the argument
    `max lane deep`. These runs take the tickets with `lane:deep` and do the epic check, the queue refill, the roadmap
    review and the process review (`autopilot/queue.md`, "Deep lane").
 
