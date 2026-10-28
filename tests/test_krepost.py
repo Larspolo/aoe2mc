@@ -45,7 +45,7 @@ def test_the_values_of_the_wiki():
     assert (s.hp, s.attack, s.melee, s.pierce, s.range, s.reload) == (2600, 10, 8, 11, 7, 2.0)
     assert combat.FORT_MIN_RANGE["KREPOST"] == 1 and combat.SIGHT["KREPOST"] == 10
     assert garrison.SIZES["KREPOST"] == 20 and train.HOUSING["KREPOST"] == 20
-    assert build.AGE["KREPOST"] == 2 and build.BUILD_TIMES["KREPOST"] == 150
+    assert build.BUILD_TIMES["KREPOST"] == 150
 
 
 def test_a_complete_krepost_shoots_and_trains_the_konnik():

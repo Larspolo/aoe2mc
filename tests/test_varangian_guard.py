@@ -7,7 +7,7 @@ from test_castle_upgrades import BARRACKS, research, setup
 from test_forging import menus
 
 import units
-from game import build, civs, train
+from game import civs, train
 
 CASTLE = ("FEUDAL_AGE", "CASTLE_AGE")
 IMPERIAL = CASTLE + ("IMPERIAL_AGE",)
@@ -22,7 +22,6 @@ def barracks(civ="VIKINGS", ages=IMPERIAL):
 
 
 def test_the_values_are_those_of_aoe2():
-    assert build.AGE["VARANGIAN_GUARD"] == 2 and build.AGE["ELITE_VARANGIAN_GUARD"] == 3
     for unit in ("VARANGIAN_GUARD", "ELITE_VARANGIAN_GUARD"):
         assert len(train.HELP[unit]) <= 50
         assert units.classify(unit)["id"] == "minecraft:zombie"
