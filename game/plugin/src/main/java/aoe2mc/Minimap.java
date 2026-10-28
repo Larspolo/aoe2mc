@@ -63,6 +63,8 @@ import net.kyori.adventure.text.format.NamedTextColor;
  * dim TEAM RUN ..." and "aoe minimap fog off TEAM" set the fog of the players on TEAM (p1, p2 ...): the renderer is
  * contextual, so each player sees the fog of the own team, and the fog without a team (the replay) when the team has
  * none. With a team fog, a building square shows only after a tile of it was in sight of the team (known), as in AoE2;
+ * "aoe minimap know TEAM X0,Z0 ..." adds buildings (their keys) to the known ones of the team: the buildings that the
+ * team saw before the save or before a second "polo" (#3079, game/fog.py know), so they show on the dark tiles;
  * the hidden units of a player (Player#canSee: `aoe hide` of the game program) have no dot for that player.
  * "aoe minimap tile X Z TEAM" gives the fog of the team and the pixel of the last render for a player of the team.
  * The flares of the replay (#2405): "aoe minimap flare X Z TEAM TICKS" draws a cross of FLARE pixels from the center in
@@ -307,6 +309,17 @@ final class Minimap extends MapRenderer {
                 }
             }
             sender.sendMessage("Minimap " + args[1] + ": " + n + " tiles");
+            return true;
+        }
+        if (args.length >= 3 && args[1].equals("know")) {
+            Set<List<Integer>> k = known.get(args[2]);    // no fog of the team: all buildings show anyway
+            int n = 0;
+            for (int i = 3; i < args.length && k != null; i++) {
+                String[] r = args[i].split(",");
+                k.add(List.of(Integer.parseInt(r[0]), Integer.parseInt(r[1])));
+                n++;
+            }
+            sender.sendMessage("Minimap know: " + n + " buildings");
             return true;
         }
         if ((args.length == 4 || args.length == 5) && args[1].equals("tile")) {
