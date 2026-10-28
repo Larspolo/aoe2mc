@@ -539,12 +539,13 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
 
     def make(player):
         who = "@a" if people == 1 else f"@a[team=p{player}]"
+        saved = ((state or {}).get("players", {}).get(str(player)) or {}).get("villagers")   # the living at the save (#3109)
         for _ in range(60):                          # entities load in other threads
             g = gather.Gather(game, data, player=player, log=log, cheats=cheats, resources=settings["resources"],
                               pop_limit=settings["pop_limit"])
             g.who = who
             g.setup()
-            if len(g.villagers) == len(g.units):
+            if all(o["uuid"] in g.villagers for o in g.units if saved is None or o["uuid"] in saved):
                 return g
             time.sleep(1)
         return g
