@@ -614,6 +614,8 @@ def repeatable(g, name):
     """True when the player can research technology name (again), and for each unit: a technology once, or REPEAT
     times with the cheat "going above and beyond" (#968; ages and unit upgrades stay once). The effects stack: stats()
     and the gather tables take count()."""
+    if name in civs.policies(g).get("effects", ()):                # a policy: each one but the active one (#2485)
+        return name != civs.policy(g)[0]
     return name not in g.techs or name in AGAIN or getattr(g, "beyond", False) and name not in REQUIRES and name not in UPGRADES \
         and name not in WALL_UPGRADES and count(g, name) < REPEAT
 
@@ -623,6 +625,9 @@ def price(g, name):
     free with the cheat "tech tech one two free" (#968). Shipwright: a ship costs 20 % less wood (#1490)."""
     if name in TECHS and getattr(g, "free_techs", False):
         return {}
+    if name in (p := civs.policies(g)).get("effects", ()):          # a switch of policy: the gold of the next one (#2485)
+        n = vars(g).get("switches", 0) + sum(e["name"] in p["effects"] for q in getattr(g, "queues", {}).values() for e in q)
+        return {k: v for k, v in {"gold": p["gold"][min(n, len(p["gold"]) - 1)]}.items() if v}   # the first one is free
     cost = civs.cost(g, name, per_enemy(g, name))
     if "wood" in cost and shipwright(g, name):
         cost["wood"] = int(cost["wood"] * SHIPWRIGHT[0] + 0.5)
@@ -743,6 +748,11 @@ def research(g, entry, start=False):
     """A technology is complete: keep it in g.techs and give the live villagers and military units the new values.
     start: a technology of the start age (start()): no text and no bonus of an age or technology."""
     import combat, gather                                          # gather imports this module
+    if entry["name"] in civs.policies(g).get("effects", ()):       # Athenians: the new policy, not a technology (#2485)
+        g.policy, g.switches = entry["name"], vars(g).get("switches", 0) + 1
+        g.command(f"tellraw {entry['player']} " + json.dumps({"text": f"{ITEMS[entry['name']][2]} is active.",
+                                                              "color": "green"}))
+        return
     if entry["name"] in g.techs:                                   # a repeat: "going above and beyond" (#968)
         g.repeats[entry["name"]] = g.repeats.get(entry["name"], 0) + 1
     before = set(g.techs)
