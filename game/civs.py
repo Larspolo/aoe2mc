@@ -150,6 +150,9 @@ EXTRA = {r["name"]: {k: tuple(v) for k, v in r["extra"].items()} for r in ROWS i
 DROP_EXTRA = {r["name"]: {k: tuple(v) for k, v in r["drop_extra"].items()} for r in ROWS if "drop_extra" in r}
 PER_MINUTE = {r["name"]: {k: tuple(v) for k, v in r["per_minute"].items()} for r in ROWS if "per_minute" in r}
 CARRY = {r["name"]: [tuple(b) for b in r["carry"]] for r in ROWS if "carry" in r}
+HOUSING = {r["name"]: r["housing"] for r in ROWS if "housing" in r}   # population of a building in place of train.HOUSING
+SIGHT = {r["name"]: r["sight"] for r in ROWS if "sight" in r}       # extra tiles of line of sight of a building (#2118)
+POP_CAP = {r["name"]: tuple(r["pop_cap"]) for r in ROWS if "pop_cap" in r}   # (age, extra population limit from it)
 # The age-up bonuses (#1926, AoE2 DE wiki): train.research applies AGE_GIFTS and AGE_VILLAGERS at the end of each age,
 # train.seconds divides the time of an age by AGE_RATE, and train.missing needs no buildings for AGE_NO_BUILDINGS (the
 # game program has no other building needs). The Muisca gold discount of the ages is in COSTS (civs.jsonl).

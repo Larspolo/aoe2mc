@@ -8,6 +8,10 @@ a player holds the monument and goes on for the new owner, but a capture by a pl
 sets a timer below RESET years back to RESET years.
 The boss bar aoe2mc:hill shows the countdown to all players (Minecraft feature, as relic_victory.py), and
 gather.Gather.run gives tick() the game seconds. At the end, cheats.over gives "Victory" to the owner and its allies.
+The owner gets TRICKLE of each resource per game second (48 per minute, AoE2 wiki "Monument", #2370), also a bot: its own
+Gather (fog.gathers) earns it, and the fractions wait for the next pass (spoils.gain). A map with no MONUMENT gets one in
+its center at the first tick, on the nearest free footprint (place: the "monument" design of the converter, owned by no
+player, with no target).
 """
 import json
 import math
@@ -24,6 +28,8 @@ YEARS = 550             # years of the timer (AoE2 wiki, "Monument")
 RESET = 100             # years: a capture by a player who is not allied sets a shorter timer back to this
 REACH = 6               # tiles from the center of the monument (5 × 5 tiles): the wiki gives no number for its area
 EVERY = 2.0             # game seconds between two checks of the unit positions
+TRICKLE = 0.8           # of each resource per game second to the owner (AoE2 wiki, "Monument")
+RESOURCES = ("food", "wood", "gold", "stone")
 
 
 def center(g):
@@ -31,6 +37,35 @@ def center(g):
     m = next((o["tile"] for o in g.data["objects"] if o["name"] == "MONUMENT"), None)
     n = g.data.get("map_size") or g.map.n / g.map.T
     return tuple(m) if m else (n / 2, n / 2)
+
+
+def place(g):
+    """Draw the monument in the center of a map with no MONUMENT in aoe2mc.json and block its footprint. Returns the
+    commands (none when the map has one)."""
+    if any(o["name"] == "MONUMENT" for o in g.data["objects"]):
+        return []
+    import build                                                   # build imports gather, gather imports this module
+    from replay import Replay
+    (cx, cz), T = center(g), g.map.T
+    cell = (int(cx * T), int(cz * T))                              # the nearest free footprint: not on a building
+    x0, x1, z0, z1 = build.area(g, "MONUMENT", cell) if build.free(g, build.area(g, "MONUMENT", cell)) \
+        else build.near(g, "MONUMENT", cell) or build.area(g, "MONUMENT", cell)
+    cmds = Replay(g, g.data, getattr(g.game, "version", build.VERSION_NAME)).building(   # as build.found
+        "MONUMENT", 0, (x0 + x1) / 2 / T, (z0 + z1) / 2 / T)
+    for c in cmds:
+        g.command(c)
+    g.map.blocked |= {(x, z) for x in range(x0, x1) for z in range(z0, z1)}
+    g.data["objects"].append({"kind": "building", "name": "MONUMENT", "player": 0,   # center() finds it; no footprint:
+                              "tile": [(x0 + x1) / 2 / T, (z0 + z1) / 2 / T]})     # no target (combat.BUILDINGS)
+    return cmds
+
+
+def trickle(g, n, dt):
+    """Give player n (its Gather of fog.gathers) TRICKLE of each resource per game second for dt game seconds."""
+    import fog                                                     # fog imports gather, gather imports this module
+    import spoils
+    for h in [h for h in fog.gathers(g) if h.player == n][:1]:
+        spoils.gain(h, dict.fromkeys(RESOURCES, TRICKLE * dt), 1)
 
 
 def units(g):
@@ -63,9 +98,12 @@ def tick(g, dt):
     """Count down the timer of the owner by dt game seconds, give the monument to a new owner, and end the game at 0."""
     if g.ended:
         return
+    if "hill" not in vars(g):
+        place(g)
     s = vars(g).setdefault("hill", {"owner": None, "left": YEARS * wonder.YEAR, "shown": None, "check": 0.0})
     if s["owner"] is not None:
         s["left"] -= dt
+        trickle(g, s["owner"], dt)
     s["check"] -= dt
     if s["check"] <= 0:
         s["check"] = EVERY

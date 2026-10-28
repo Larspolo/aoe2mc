@@ -20,6 +20,7 @@ def setup(*units, monument=True, teams=None):
     server = FakeServer({u: {"Pos": (x, 64.0, z)} for u, _, x, z in units})
     data = grid([[64] * 32 for _ in range(32)], objects)
     data["players"] = {str(p): {"team": t} for p, t in (teams or {}).items()}
+    data["level_height"] = 1                                           # hill.place draws a monument without one
     g = gather.Gather(server, data).setup()
     for uuid, player, *_ in units:
         if player == 1:
