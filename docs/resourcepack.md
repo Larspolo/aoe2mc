@@ -98,6 +98,30 @@ player loads it with the world. Without the option, the world is the same as bef
   the release link, when the world pack has that SHA-1; else (a world of another version, a run from the source) it
   uses the local `PackServer`.
 
+## Cost (#2747)
+
+Measured on 2026-10-28 on the `battle` scenario of `tools/scenarios.py` (about 60 units, 256 × 256 blocks), the same
+world without and with `--resource-pack`, Minecraft 26.3. The help of `--resource-pack` and the launcher check box
+(`gui.PACK_TEXT`) show these numbers: change them together (`tests/test_resourcepack_cost.py`).
+
+| Measure | Without the pack | With the pack | Difference |
+|---|---|---|---|
+| `resources.zip` size | 0 MB | 4.8 MB | +4.8 MB (`ZIP_STORED`: no compression, see "Pitfalls") |
+| Download from the local HTTP server of the game program | - | 0.01 s | at 10 Mbit/s about 4 s, once per world |
+| Server tick time, mean (`tools/tick_cost.py --world`) | 3.2 ms | 3.1 ms | none (noise): the same entities, the pack changes only the client |
+| Client frame time, median | 94.6 ms | 95.8 ms | +1 % |
+| Client frame time, P95 | 115.6 ms | 119.5 ms | +3 % |
+
+Method, to measure again:
+1. `python3 tools/pack_cost.py --seconds 20 --out DIR`: the size, the local download time and the client frame times.
+   It opens each world in the real client in single player, 12 blocks above the spawn, looks down at the units, and
+   runs the vanilla debug profiler (F3 + L). `DIR/without.png` and `DIR/with.png` show the view: check that the pack
+   is on. The client draws in software under Xvfb (5 to 10 frames per second): only the difference counts.
+2. `python3 tools/tick_cost.py --world DIR/without` and `--world DIR/with`: the line "with the pack" of each is the
+   server tick time of the world with its data pack.
+3. The world has the same entities with and without the pack (`world_reader`: 239 in both): the armor, the weapons
+   and the cart are item components and models, so the server does the same work.
+
 ## Pitfalls
 
 - 26.x reads the world pack from `<world>/resourcepacks/resources.zip` (`LevelResource.MAP_RESOURCE_FILE`), not from
