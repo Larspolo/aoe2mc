@@ -65,7 +65,7 @@ def test_the_elite_upgrade_turns_the_own_ships_into_the_elite_form(name):
     assert train.queue(g, "Steve", (15, 12), up)
     train.tick(g, train.TRAIN_TIMES[up])
     assert up in g.techs and g.soldiers["s"] == f"ELITE_{name}"
-    assert combat.stats_command("s", f"ELITE_{name}") in server.log
+    assert combat.stats_command("s", f"ELITE_{name}", train.stats(g, f"ELITE_{name}")) in server.log   # with the civ bonuses
     assert train.queue(g, "Steve", (15, 12), f"ELITE_{name}") and train.queue(g, "Steve", (15, 12), name) is None
 
 
