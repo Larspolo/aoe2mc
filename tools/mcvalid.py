@@ -49,6 +49,29 @@ def sound_error(sound, version=DEFAULT_VERSION):
     return None if name in data(version)["sounds"] else f"unknown sound '{name}'"
 
 
+def predicate_error(d):
+    """Return None if the predicate dict `d` has the 26.3 keys, else the problem (#3139): "type", not "condition";
+    an entity predicate has namespaced keys ("minecraft:vehicle"), and a vehicle or passenger is an entity predicate."""
+    if isinstance(d, list):
+        return next(filter(None, map(predicate_error, d)), None)
+    if "condition" in d:
+        return "key 'condition': 26.3 uses 'type'"
+    if "type" not in d:
+        return "no key 'type'"
+    terms = d.get("terms", []) + ([d["term"]] if "term" in d else [])
+    return next(filter(None, map(predicate_error, terms)), None) or (
+        entity_predicate_error(d["predicate"]) if d["type"].endswith("entity_properties") else None)
+
+
+def entity_predicate_error(p):
+    for key, value in p.items():
+        if ":" not in key:
+            return f"entity predicate key '{key}' has no namespace (26.3: 'minecraft:{key}')"
+        if key.split(":")[1] in ("vehicle", "passenger", "targeted_entity") and (err := entity_predicate_error(value)):
+            return err
+    return None
+
+
 def invalid_states(states, version=DEFAULT_VERSION):
     """{state: problem} for all invalid states in `states`."""
     out = {}
