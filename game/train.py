@@ -313,6 +313,18 @@ def fire_commands(g, uuid, name, techs=None):
     return out
 
 
+def type_tag_commands(uuid, old, new):
+    """The commands that move the type tag (aoe2mc.t<ID>) of a live unit from old to new, as AoE2 counts an upgraded unit
+    as the new type (#2977). The tag sits on the rider of a mounted unit, else on the unit (units.make_entity)."""
+    ids = units.type_ids()
+    if ids.get(old) is None or ids.get(new) is None:
+        return ()
+    rm, add = f"aoe2mc.t{ids[old]}", f"aoe2mc.t{ids[new]}"
+    return (f"tag {uuid} remove {rm}", f"execute as {uuid} on passengers run tag @s remove {rm}",
+            f"execute as {uuid} on passengers run tag @s add {add}",
+            f"execute as {uuid} unless entity @s[nbt={{Passengers:[{{}}]}}] run tag @s add {add}")
+
+
 def volley_command(g, uuid, name):
     """The plugin command of the extra projectile in each shot of own unit name (the key "volley" of data/civs.jsonl:
     the Armenian galley line and dromons, #2379), else None. Minecraft feature: one more Arrow entity; the plugin gives
@@ -948,8 +960,11 @@ def research(g, entry, start=False, rect=None):
         import fog                                                 # fog imports gather, gather imports this module
         fog.reveal(g)
     if entry["name"] in UPGRADES:                                  # the live units of the line get the new name
-        for uuid, new in [(u, new) for old, new in lines(entry["name"], g) for u, n in g.soldiers.items() if n == old]:
+        for uuid, old, new in [(u, old, new) for old, new in lines(entry["name"], g) for u, n in g.soldiers.items()
+                               if n == old]:
             g.soldiers[uuid] = new
+            for cmd in type_tag_commands(uuid, old, new):          # the triggers count the new type (#2977)
+                g.command(cmd)
             g.command(combat.stats_command(uuid, new, stats(g, new), civs.taken(g, new), civs.friendly(g, new)))
             if cmd := combat.range_command(uuid, new, g.map.T, s=stats(g, new)):   # the range and blast of an onager
                 g.command(cmd)
