@@ -28,6 +28,7 @@ def test_scenario_area_trigger_gives_a_tick_line(tmp_path):
         "execute if entity @e[tag=aoe2mc.p1,tag=!aoe2mc.mount,tag=aoe2mc.t38,x=12,y=-64,z=12,dx=15,dy=383,dz=15] unless score #1 aoe_trig matches 1 "
         "run function aoe2mc:trigger/1"]
     assert files["data/aoe2mc/function/trigger/1.mcfunction"].splitlines() == [
+        'data modify storage aoe2mc:orders list append value "create 1 MONASTERY 8 4"',   # #2911
         'tellraw @a {"text": "A monastery stands now next to the hill."}', "scoreboard players set #1 aoe_trig 1"]
 
 
