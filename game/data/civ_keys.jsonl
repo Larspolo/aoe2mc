@@ -1,3 +1,4 @@
+{"name": "accuracy", "text": "The extra AoE2 accuracy of the siege shots of a unit at units, {unit: part} (Huns: Trebuchet +0.35, from 15 % to 50 %). combat.accuracy_command adds it to the key \"accuracy\" of data/units.jsonl and sends aoe accuracy.", "issue": 2479}
 {"name": "age_gifts", "text": "The resources that the civilization gets at each new age, {resource: amount}. train.research gives them at the end of each age.", "issue": 1926}
 {"name": "also", "text": "Technologies with an effect on one more group of GROUPS too, {technology: group} (Bohemians: Fervor and Sanctity for the villagers). train.stats, train.speed.", "issue": 2173}
 {"name": "arrows", "text": "The factor of the base arrows of the buildings in each age (Dark, Feudal, Castle, Imperial).", "issue": 2178}
