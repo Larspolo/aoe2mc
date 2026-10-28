@@ -42,7 +42,7 @@ MAP = {
     ("condition", "OBJECT_SELECTED"): "not supported: Minecraft has no selection",
     ("effect", "SEND_CHAT"): "`tellraw @a[team=pN] {\"text\": ...}`",
     ("effect", "DISPLAY_INSTRUCTIONS"): "`title @a actionbar` (short text) or `title @a subtitle`",
-    ("effect", "CLEAR_INSTRUCTIONS"): "`title @a clear`",
+    ("effect", "CLEAR_INSTRUCTIONS"): "`title @a clear` (#2609)",
     ("effect", "CREATE_OBJECT"): "`summon` of the entity of `units.make_entity()` (units, timer triggers: #656); buildings: not supported yet",
     ("effect", "REMOVE_OBJECT"): "`kill @e[tag=aoe2mc.pN,type=..,x=..,y=..,z=..,dx=..,dy=..,dz=..]` (timer triggers: #656)",
     ("effect", "KILL_OBJECT"): "`kill @e[tag=aoe2mc.pN,type=..,x=..,y=..,z=..,dx=..,dy=..,dz=..]`, no area: the whole map (#2568)",
