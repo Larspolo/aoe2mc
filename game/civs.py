@@ -23,7 +23,7 @@ speed, per age. train.stats applies them before the technologies; the walk speed
 "bonus" with a float multiplies the bonus damage that the unit deals (Gurjara mounted units, Bohemian spearmen,
 #2248); the value "taken" is the factor of the bonus damage that the unit takes (Bengali elephants, Sicilian units:
 taken(), the plugin applies it at each hit); the value "bonus:CLASS" adds attack against a class (#2249). Bonuses of
-this kind that the game program cannot use yet: the elevation (Georgians, Tatars), the Lithuanian relics, the Aztec and Slav monks, and the ships.
+this kind that the game program cannot use yet: the elevation (Georgians, Tatars), the Lithuanian relics, the Slav monks, and the ships.
 REGEN holds the regeneration of the units (#2247): regen.tick gives them their hit points back.
 """
 import math
@@ -168,6 +168,10 @@ TRAIN_RATE = {r["name"]: [tuples(b) for b in r["train_rate"]] for r in ROWS if "
 HP = {r["name"]: r["hp"] for r in ROWS if "hp" in r}
 ARROWS = {r["name"]: tuples(r["arrows"]) for r in ROWS if "arrows" in r}   # factor of the base arrows in each age (#2178)
 GARRISON = {r["name"]: r["garrison"] for r in ROWS if "garrison" in r}   # units inside a building (garrison.size, #2117)
+HEAL_RANGE = {r["name"]: r["heal_range"] for r in ROWS if "heal_range" in r}   # factor of the monk heal range (#2269)
+# [group of GROUPS, building, hit points]: the units of the group get the hit points for each technology of the menu of
+# that building that the player has (the Aztec monks: +5 for each monastery technology, #2269).
+TECH_HP = {r["name"]: [tuples(b) for b in r["tech_hp"]] for r in ROWS if "tech_hp" in r}
 EARLIER = {r["name"]: set(r["earlier"]) for r in ROWS if "earlier" in r}   # one age earlier (build.locked, #2268)
 HP_AGE = {r["name"]: r["hp_age"] for r in ROWS if "hp_age" in r}   # the factor of all buildings in each age (Byzantines)
 # Technologies with another effect for the civilization (#2173, train.stats, train.speed): "also" gives the effect to
@@ -219,6 +223,10 @@ REVEAL = {r["name"]: [tuple(b) for b in r["reveal"]] for r in ROWS if "reveal" i
 # (Lithuanian knights and Leitis), "faith" the factor of the speed of the monks that regain faith (Muisca: 100 % faster).
 RELIC_ATTACK = {r["name"]: tuples(r["relic_attack"]) for r in ROWS if "relic_attack" in r}
 FAITH = {r["name"]: r["faith"] for r in ROWS if "faith" in r}
+# Herdable animals in a building make food (garrison.pasture, #2342): "herd_food" {building: [size, a, b]}, at most size
+# animals in each, a × ln(F / b + 1) food per AoE2 minute for F food of the animals in all of them (Gurjara mills: 10, 15,
+# 200, AoE2 DE wiki).
+HERD_FOOD = {r["name"]: {b: tuple(v) for b, v in r["herd_food"].items()} for r in ROWS if "herd_food" in r}
 
 
 def tagged(n, group):
