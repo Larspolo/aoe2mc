@@ -62,7 +62,7 @@ def check_train(row):
     form(row, {"name": str, "building": (str, type(None)), "slot": int, "item": str, "label": str, "cost": dict,
                "time": int, "help": str},
          {"age": int, "after": str, "civ": str, "civs": list, "faster": list, "upgrade": list, "note": str,
-          "resist": int, "tribute_fee": int})
+          "resist": int, "tribute_fee": int, "full_tech_tree": str})
     n = row["name"]
     only(row)
     assert row["building"] is None or row["building"] in NAMES["buildings.jsonl"], n
@@ -105,7 +105,7 @@ def check_civs(row):
     assert all(t in train.TECHS and isinstance(f, NUMBER) for t, f in row.get("more", {}).items()), n
     for group, value, ages in row.get("units", ()):
         classes = {f"bonus:{c}" for t in (*combat.STATS.values(), *combat.BUILDINGS.values()) for c in t.classes}
-        assert group in civs.GROUPS and value in (*combat.Stats._fields, "speed", "taken", *classes), (n, group, value)   # (#2249)
+        assert group in civs.GROUPS and value in (*combat.Stats._fields, "friendly", "speed", "taken", *classes), (n, group, value)   # (#2249)
         assert len(ages) == 4 and all(isinstance(a, NUMBER) for a in ages), (n, group)
     for what, ages in row.get("arrows", ()):                 # the factor of the base arrows of buildings (#2178)
         assert set(what) <= NAMES["buildings.jsonl"] and len(ages) == 4 and all(isinstance(a, int) for a in ages), n
@@ -136,7 +136,8 @@ def check_gather(row):
 
 def check_build(row):
     form(row, {"name": str}, {"cost": dict, "time": int, "icon": str, "age": int, "needs": str, "gate": bool,
-                              "wall": bool, "age_tech": int, "bot": int, "near": str, "civs": list})
+                              "wall": bool, "age_tech": int, "bot": int, "near": str, "civs": list,
+                              "full_tech_tree": str})
     n = row["name"]
     only(row)
     assert set(row.get("cost", {})) <= RES and all(isinstance(v, int) for v in row.get("cost", {}).values()), n
@@ -161,12 +162,14 @@ def check_replay(row):                                     # a walk speed (a nam
 
 
 def check_setup(row):                                      # a value of a setting of the game setup (#2264)
-    form(row, {"name": str}, {"resources": dict, "ages": int, "skip": list, "note": str, "units": list})
-    assert sum(k in row for k in ("resources", "ages", "units")) == 1, row["name"]   # a resource level, a start age
+    form(row, {"name": str}, {"resources": dict, "ages": int, "skip": list, "note": str, "units": list,
+                              "age": str, "buildings": dict, "villagers": dict})
+    assert sum(k in row for k in ("resources", "ages", "units", "buildings")) == 1, row["name"]   # a resource level, a start age
     assert set(row.get("units", ())) <= NAMES["units.jsonl"], row["name"]  # (#2265) or a game mode (#2347)
     assert set(row.get("resources", RES)) == {"food", "wood", "gold", "stone"}, row["name"]
     assert all(isinstance(v, int) and v >= 0 for v in row.get("resources", {}).values()), row["name"]
     assert row.get("ages", 0) in range(5) and set(row.get("skip", ())) <= NAMES["train.jsonl"], row["name"]
+    assert set(row.get("buildings", ())) <= NAMES["build.jsonl"] and set(row.get("villagers", ())) <= RES, row["name"]
 
 
 def check_taunts(row):                                     # a taunt: its number and AoE2 text (#2234)

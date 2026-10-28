@@ -19,6 +19,7 @@ def loop(monkeypatch, victory=None, steps=4):
         monkeypatch.setattr(m, "tick", lambda g, m=m: calls.append(m.__name__))
     monkeypatch.setattr(gather.wonder, "tick", lambda g, dt: calls.append("wonder"))
     monkeypatch.setattr(gather.relic_victory, "tick", lambda g, dt: calls.append("relic_victory"))
+    monkeypatch.setattr(gather.score, "tick", lambda g: None)      # not a win (#2355)
     monkeypatch.setattr(gather.time, "sleep", lambda s: None)
     g = object.__new__(gather.Gather)
     g.tick, g.bots, g.ended = 0.25, (), None
@@ -77,4 +78,4 @@ def test_the_victory_option_goes_to_play(tmp_path, monkeypatch, capsys):
     assert seen["victory"] == "standard"
     with pytest.raises(SystemExit):
         run.main(["--help"])
-    assert "{standard,conquest}" in capsys.readouterr().out
+    assert "{standard,conquest" in capsys.readouterr().out             # more values can follow (#2358)

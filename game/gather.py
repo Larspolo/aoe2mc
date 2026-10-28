@@ -63,6 +63,7 @@ import fog  # noqa: E402
 import garrison  # noqa: E402
 import goto  # noqa: E402
 import herd  # noqa: E402
+import hill  # noqa: E402
 import hints  # noqa: E402
 import market  # noqa: E402
 import menu  # noqa: E402
@@ -71,13 +72,16 @@ import regen  # noqa: E402
 import regicide  # noqa: E402
 import relic_victory  # noqa: E402
 import repair  # noqa: E402
+import score  # noqa: E402
 import siege_tower  # noqa: E402
+import sudden_death  # noqa: E402
 import stance  # noqa: E402
 import table  # noqa: E402
 import trade  # noqa: E402
 import transport  # noqa: E402
 import train  # noqa: E402
 import trebuchet  # noqa: E402
+import treaty  # noqa: E402
 import wonder  # noqa: E402
 
 RESOURCES = ("Wood", "Food", "Gold", "Stone")
@@ -230,7 +234,9 @@ class Map:
         self.fish, self.shore = {}, set()                              # tile -> food of a fish (#1283), shore fish
         self.fish_mobs, self.docks = {}, []                            # tile -> mob of a fish; own dock cells (#1384)
         self.traps = {}                                                # own fish trap tile -> its cells (#1438)
-        self.aura = civs.AURA.get(data.get("players", {}).get(str(player), {}).get("civ"), {})   # Thracians (#2378)
+        civ = None if data.get("full_tech_tree") else data.get("players", {}).get(str(player), {}).get("civ")   # #2354
+        self.trap_food = round(TRAP_FOOD * civs.value("trap_food", civ, 1))   # food of a new own fish trap (Malay, #2333)
+        self.aura = civs.AURA.get(civ, {})                             # Thracians (#2378)
         self.auras = []                                                # the cells of own aura buildings
         for o in data["objects"]:
             if o["kind"] == "building":
@@ -277,7 +283,7 @@ class Map:
             return
         self.blocked |= cells - {tuple(c) for c in open_cells}
         if own and "FISH_TRAP" in name and tile:                       # the food of the fishing ships (#1438)
-            self.fish[tile], self.traps[tile] = TRAP_FOOD, cells
+            self.fish[tile], self.traps[tile] = self.trap_food, cells
         if own:
             self.drop_site(name, cells)
         if own and "DOCK" in name:                                     # the drop site of the fishing ships (#1384)
@@ -529,6 +535,7 @@ class Gather:
     speed = 1.0                                                        # times the Normal speed: shorter real steps (#2057)
     later = {}                                                         # the bonus of the first town center (civs.TOWN_CENTER)
     victory = "standard"                                               # AoE2 "Victory"; "conquest": no wonder, no relics (#2316)
+                                                                       # "king-of-the-hill": hill.py (#2360)
     mode = "standard"                                                  # AoE2 game mode; "regicide": the King (#2347)
 
     def __init__(self, game, data, player=1, tick=0.25, carry=10, chop=None, log=None, clock=time.monotonic,
@@ -1162,6 +1169,8 @@ class Gather:
             train.rally(self, rect, cell, self.map.pick_tree(eye, d))
             return
         kind, u, _ = self.target(eye, d, self.positions(sorted(self.pickable()))) or (None, None, None)
+        if kind in ("enemy", "fort") and treaty.refuse(self, name):   # no attack before the end of the treaty (#2297)
+            return
         if kind == "enemy":
             monk.convert_order(self, self.monks(), u)                    # the monks convert it, the others attack (#1245)
             self.attack(u)
@@ -1419,6 +1428,7 @@ class Gather:
             self.sieged.discard(uuid)
             import spoils                                              # spoils imports this module
             spoils.loot(self, uuid)                                    # Danes (#2271)
+            score.razed(self, uuid)                                    # the military score (#2355)
             x0, y0, z0, x1, _, z1 = self.forts.pop(uuid)
             for o in build.sides(self):                                # the other sides attack it no more (#1819)
                 o.forts.pop(uuid, None)
@@ -1470,7 +1480,7 @@ class Gather:
                 src = self.source(v)
                 kind = "farm" if v.tree in self.map.farms else "hunt" if v.tree in self.map.carcasses else \
                     "fish" if v.tree in self.map.fish else v.res               # a fisherman: no forage rate (#2349)
-                work = self.work_time(kind, v.tree in self.map.herds) / self.aura_rate(v, kind)
+                work = self.work_time(kind, v.tree in self.map.herds, (v.pos[0], v.pos[2])) / self.aura_rate(v, kind)
                 last = civs.last(self, "sheep" if v.tree in self.map.herds else kind)
                 take = 1 if last == 1 else 1 / last                    # 1: the amounts stay whole numbers
                 most = self.limit(v.res, "sheep" if v.tree in self.map.herds else kind)
@@ -1515,6 +1525,7 @@ class Gather:
         fleet.tick(self, self.tick * NORMAL)
         monk.relic_tick(self, self.tick * NORMAL)
         trade.tick(self)
+        trade.heal(self, self.tick * NORMAL)
         bossbar.tick(self)
         for site in self.sites:
             builders = [v for v in [*self.villagers.values(), *self.ships.values()] if v.state == "build" and v.site is site]
@@ -1535,13 +1546,15 @@ class Gather:
                         self.set(v, "idle")
         self.idle()
 
-    def work_time(self, res, herd=False):
+    def work_time(self, res, herd=False, pos=None):
         """Real seconds per unit of resource res ("farm" for farms) with the technologies of the player (WORK_TECHS) and
         the work-rate bonus of its civilization (civs.WORK; herd: the carcass of a herdable animal, for shepherds).
-        civs.MORE multiplies the change of a technology (Armenians: the mule cart technologies 40 % more, #2309)."""
+        civs.MORE multiplies the change of a technology (Armenians: the mule cart technologies 40 % more, #2309). At the
+        block position pos (x, z) of the villager, a building near it can add its bonus (civs.church_rate, #2377)."""
         if self.aegis:
             return 0.0                                                 # a full load in one work step
         rate, more = civs.work(self, "sheep" if herd else res), civs.MORE.get(civs.civ(self), {})
+        rate *= civs.church_rate(self, pos) if pos else 1
         return self.chop.get(res, self.chop.get("food")) / rate / math.prod(
             (1 + (WORK_TECHS.get(t, {}).get(res, 1) - 1) * more.get(t, 1)) ** train.count(self, t) for t in self.techs)
 
@@ -1799,9 +1812,15 @@ class Gather:
             conquest.tick(self)                                        # not in step(): the bot steps its own Gather
             if self.mode == "regicide":                                # a player without its King loses (#2347)
                 regicide.tick(self)
+            elif self.mode == "sudden-death":                          # a player without its town center loses (#2407)
+                sudden_death.tick(self)
             fog.tick(self)                                             # after the bots: their units too (#1389)
             herd.tick(self)                                            # all players: the bots capture too (#1792)
             if self.victory == "standard":                             # a wonder or all relics win too (#2316)
                 wonder.tick(self, self.tick * NORMAL)                  # game seconds, as train.tick
                 relic_victory.tick(self, self.tick * NORMAL)
+            elif self.victory == "king-of-the-hill":                   # the monument in the center (#2360)
+                hill.tick(self, self.tick * NORMAL)
+            score.tick(self)
+            treaty.tick(self, self.tick * NORMAL)
             time.sleep(max(0.0, self.tick / self.speed - (time.time() - t)))   # a step stays tick game seconds
