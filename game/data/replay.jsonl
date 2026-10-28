@@ -66,3 +66,7 @@
 {"name": "IMPERIAL_AGE", "age": 3}
 {"name": "CASTLE", "society": true}
 {"name": "WONDER", "society": true}
+{"name": "CHAMPI_SCOUT", "walk": 1.0}
+{"name": "CHAMPI_RUNNER", "walk": 1.1}
+{"name": "CHAMPI_WARRIOR", "walk": 1.1}
+{"name": "ELITE_CHAMPI_WARRIOR", "walk": 1.1}
