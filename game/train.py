@@ -420,19 +420,22 @@ def added(g, building, name):
 
 
 def placed(g, building, name):
-    """slots() of name in the menu of the own building, or the slot of "Add Train Location" (#2865): the AoE2 button
-    (1-15, five per row; 0 is the first) in the row 0 or, for the rows 2 and 3, in the rows under the queue row (MORE),
-    the next free slot when an own item of the building has it (also one of a later age)."""
+    """slots() of name, at the slot of the AoE2 button that a scenario trigger gave it (g.trigger_places, #2864; "Add
+    Train Location" in building: added(), #2865, its button 0 is the first): the buttons 1 to 8 are the first row, 9 and
+    up the row under the queue (MORE). Button 0 or less keeps the slot."""
     slot, item, label = slots(building, name)
-    if (got := added(g, building, name)) is None:
-        return slot, item, label
-    b = (max(got[0], 1) - 1) % 15
-    slot = b % 5 + (MORE + 9 * (b // 5 - 1) if b >= 5 else 0)
-    taken = {slots(building, n)[0] for n in trains(g, building)       # the items of the civilization, of all ages
-             if added(g, building, n) is None and not (hasattr(g, "data") and civs.missing(g, n))}
-    while slot in taken or ROW <= slot < MORE:
-        slot += 1
-    return slot, item, label
+    got = added(g, building, name)
+    button = vars(g).get("trigger_places", {}).get(name, [None, 0])[1] or (max(got[0], 1) if got else 0)
+    return (button - 1 if button < ROW else MORE + button - ROW) if button > 0 else slot, item, label
+
+
+def covered(g, building, name):
+    """True when a scenario trigger moved or added another item onto the slot of name in the menu of building (#2864,
+    #2865): the moved or added item takes the slot."""
+    moved = vars(g).get("trigger_places", {})
+    new = getattr(g, "trigger_trains", {}).get(building, {})
+    return name not in moved and added(g, building, name) is None and placed(g, building, name)[0] in \
+        {placed(g, b, n)[0] for n, (b, _) in moved.items() if b == building} | {placed(g, building, n)[0] for n in new}
 
 
 def line_upgrades(line):
@@ -454,6 +457,8 @@ def trains(g, building):
     more = civs.TRAINS.get(civs.civ(g), {}).get(building, {})
     more = more.get("lines", ()) if more.get("after", "") in {"", *g.techs} else ()   # after a technology: Anarchy (#2685)
     out += [line[0] for line in more] + [t for line in more for t in line_upgrades(line)]   # Mapuche (#2432, #2487)
+    moved = vars(g).get("trigger_places", {})                      # "Change Train/Technology Location" (#2864)
+    out = [n for n in out if moved.get(n, [building])[0] == building] + [n for n, (b, _) in moved.items() if b == building]
     out += [n for n in getattr(g, "trigger_trains", {}).get(building, {}) if n in COSTS]   # Add Train Location (#2865)
     for _ in UPGRADES:                                             # a line of upgrades: mangonel, onager, siege onager
         out = [new.get(n, n) for n in out]                         # the castle: the elite unique unit (#1624)
@@ -496,7 +501,8 @@ def show(g, player, rect):
     items = [(slot, build.LOCKED if build.locked(g, name) else item, names.get(name, label),
               (" · ".join(f"{v} {r}" for r, v in price(g, name, building).items()) or "free") + f" · {round(seconds(g, name, building), 1):g} s · "
               + state(name))
-             for name in trains(g, building) if offered(g, rect, name) for slot, item, label in [placed(g, building, name)]]
+             for name in trains(g, building) if offered(g, rect, name) and not covered(g, building, name)
+             for slot, item, label in [placed(g, building, name)]]
     items += [RALLY] if units_of(building) else []
     items += [garrison.ungarrison(building)] if getattr(g, "garrisons", {}).get(rect) else []   # only with units inside (#808)
     if building == "MARKET":                                           # the buy and sell rows under the queue (#1286)
@@ -579,7 +585,7 @@ def order(g, player, rect, slot, shift=False):
         show(g, player, rect)
         return 0
     name = next((n for n in trains(g, homes(g)[rect])                # the shown item of the slot (one per line of upgrades)
-                 if placed(g, homes(g)[rect], n)[0] == slot and offered(g, rect, n)), None)
+                 if placed(g, homes(g)[rect], n)[0] == slot and offered(g, rect, n) and not covered(g, homes(g)[rect], n)), None)
     n = 0
     while name and n < (SHIFT if shift else 1) and queue(g, player, rect[::2], name):
         n += 1
@@ -1131,7 +1137,7 @@ def summon(g, name, pos, rotation=math.pi / 2, player=None):
     kind = str(nbt.pop("id"))
     del nbt["Pos"]
     uuid = units.uuid_str(nbt["UUID"])
-    g.command(f"summon {kind} {pos[0]} {pos[1]} {pos[2]} {nbt.snbt()}")
+    g.command(f"summon {kind} {pos[0]} {pos[1]} {pos[2]} {units.summon_snbt(nbt)}")
     import combat, gather                                          # both import gather, gather imports this module
     g.command(combat.stats_command(uuid, name, stats(g, name), civs.taken(g, name), civs.friendly(g, name)))
     import spoils                                                  # spoils imports this module

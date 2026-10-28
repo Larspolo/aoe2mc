@@ -63,7 +63,7 @@ def test_the_castle_menu_of_the_player_has_the_militia_with_its_time():
     assert g.trigger_trains == {"CASTLE": {"MILITIA": (5, 10)}}       # player 2: not this side
     train.open_menu(g, "Steve", (3, 11))
     assert ":Militia:" in menus(server)[-1] and "· 10 s ·" in menus(server)[-1].split(":Militia:")[1]
-    assert train.placed(g, "CASTLE", "MILITIA")[0] == 5                # AoE2 button 5: slot 4, Sappers has it
+    assert train.placed(g, "CASTLE", "MILITIA")[0] == 4                # AoE2 button 5: the fifth slot of the row 0
     train.open_menu(g, "Steve", (11, 11))
     assert ":Militia:" in menus(server)[-1]                             # the barracks keeps its item
     assert train.seconds(g, "MILITIA", "BARRACKS") == 21
@@ -77,17 +77,19 @@ def test_a_click_on_the_slot_queues_the_militia_at_the_castle():
     g.stock.update(food=100, gold=100)
     locations(g, '["1 MILITIA CASTLE 11 10"]')
     slot = train.placed(g, "CASTLE", "MILITIA")[0]
-    assert slot == train.MORE + 9                                      # the third row of AoE2: under the queue row
+    assert slot == train.MORE + 2                                      # the buttons from 9: under the queue row
     rect = train.home(g, (3, 11))
     assert train.order(g, "Steve", rect, slot) == 1 and g.queues[rect][0]["name"] == "MILITIA"
 
 
-def test_a_taken_slot_moves_the_item_to_the_next_free_slot():
-    _, g = castle()
+def test_the_added_unit_takes_the_slot_of_an_item_of_the_building():
+    server, g = castle()
     locations(g, '["1 MILITIA CASTLE 2 0"]')                           # slot 1: the trebuchet
-    own = {train.slots("CASTLE", n)[0] for n in train.trains(g, "CASTLE") if n != "MILITIA"}
-    assert train.placed(g, "CASTLE", "MILITIA")[0] not in own
+    assert train.placed(g, "CASTLE", "MILITIA")[0] == 1 == train.slots("CASTLE", "TREBUCHET")[0]
+    assert train.covered(g, "CASTLE", "TREBUCHET") and not train.covered(g, "CASTLE", "MILITIA")
     assert train.seconds(g, "MILITIA", "CASTLE") == 21                 # no time: the time of the unit
+    locations(g, '["1 MILITIA CASTLE 0 0"]')                           # button 0: the first slot
+    assert train.placed(g, "CASTLE", "MILITIA")[0] == 0
 
 
 def test_an_empty_storage_adds_no_location():
