@@ -49,7 +49,7 @@ def test_the_upgrade_changes_the_live_and_the_new_units():
     assert " 25:book:Heavy Hei Guang Cavalry:350 food · 250 gold · 70 s · research " in menus(server)[-1] + " "
     research(g, STABLE, "HEAVY_HEI_GUANG_CAVALRY_UPGRADE")
     assert g.soldiers["hg"] == "HEAVY_HEI_GUANG_CAVALRY"
-    assert combat.stats_command("hg", "HEAVY_HEI_GUANG_CAVALRY") in server.log
+    assert combat.stats_command("hg", "HEAVY_HEI_GUANG_CAVALRY", train.stats(g, "HEAVY_HEI_GUANG_CAVALRY")) in server.log   # Wei hp (#2246)
     train.open_menu(g, "Steve", STABLE)
     menu = menus(server)[-1] + " "
     assert " 24:horse_spawn_egg:Heavy Hei Guang Cavalry:65 food · 65 gold · 28 s · queue 0/15 " in menu
