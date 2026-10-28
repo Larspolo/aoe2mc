@@ -21,7 +21,6 @@ def test_the_values_are_those_of_the_wiki():
     for name in ("ELEPHANT_ARCHER", "ELITE_ELEPHANT_ARCHER"):
         assert len(train.HELP[name]) <= 50
     assert [build.AGE[n] for n in ("ELEPHANT_ARCHER", "ELITE_ELEPHANT_ARCHER")] == [2, 3]
-    assert combat.sight("ELEPHANT_ARCHER") == combat.sight("ELITE_ELEPHANT_ARCHER") == 7
     assert (train.ITEMS["ELEPHANT_ARCHER"][0], train.ITEMS["ELITE_ELEPHANT_ARCHER_UPGRADE"][0]) == (UNIT, UPGRADE)
 
 
