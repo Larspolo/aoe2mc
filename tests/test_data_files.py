@@ -63,11 +63,11 @@ def check_train(row):
     form(row, {"name": str, "building": (str, type(None)), "slot": int, "item": str, "label": str, "cost": dict,
                "time": int, "help": str},
          {"age": int, "after": str, "civ": str, "civs": list, "faster": list, "upgrade": list, "note": str,
-          "resist": int, "tribute_fee": int, "full_tech_tree": str})
+          "resist": int, "tribute_fee": int, "full_tech_tree": str, "doctrine": bool})
     n = row["name"]
     only(row)
     assert row["building"] is None or row["building"] in NAMES["buildings.jsonl"], n
-    assert 0 <= row["slot"] < 54 and row["time"] > 0 and row.get("age", 1) in (1, 2, 3), n
+    assert 0 <= row["slot"] < 54 and (row["time"] > 0 or row.get("doctrine")) and row.get("age", 1) in (1, 2, 3), n
     assert set(row["cost"]) <= RES and all(isinstance(v, int) and v >= 0 for v in row["cost"].values()), n
     assert 0 < len(row["help"]) <= 50 and row["label"] and row["item"] == row["item"].lower(), n   # the menu width
     assert row.get("after", n) in NAMES["train.jsonl"] and row.get("after") != n, n
