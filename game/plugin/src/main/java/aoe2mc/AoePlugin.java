@@ -509,7 +509,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         }
         t.getWorld().spawnParticle(Particle.EXPLOSION, at.clone().add(0, 0.5, 0), 1);
         t.getWorld().playSound(at, Sound.ENTITY_GENERIC_EXPLODE, 1.0f, 1.0f);
-        if (from instanceof Creeper c) {      // the demolition ship (#1440): one blast, then it dies, as a creeper. No
+        if (from instanceof Creeper c) {      // the demolition ship (#1440), the petard (#2192): one blast, then it dies. No
             c.setHealth(0);                   // vanilla explosion: it breaks no block, and the damage is the AoE2 one
         }
     }
@@ -1927,7 +1927,8 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         if (r != null && (mob instanceof RangedEntity || r.siege)) {
             for (var g : goals.getAllGoals(mob)) {
                 String k = g.getKey().getNamespacedKey().getKey();
-                if (SHOTS.contains(k) || r.siege && k.equals("melee_attack")) {   // the creeper of a demolition ship
+                // the creeper of a demolition ship and the petard (#2192): no vanilla explosion, the AoE2 blast hits
+                if (SHOTS.contains(k) || r.siege && (k.equals("melee_attack") || k.equals("swell"))) {
                     goals.removeGoal(mob, g.getKey());
                 }
             }

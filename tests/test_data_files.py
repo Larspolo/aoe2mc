@@ -38,7 +38,7 @@ def stats(row):
     assert set(combat.Stats._fields) == set(STATS)
     assert row["hp"] > 0 and row["attack"] >= 0 and row["range"] >= 0 and row["reload"] >= 0, row["name"]
     assert set(row["classes"]) <= CLASSES and len(set(row["classes"])) == len(row["classes"]), row["name"]
-    bonus = CLASSES | {combat.STANDARD, combat.STONE}      # the code adds these two classes to the buildings
+    bonus = CLASSES | {combat.STANDARD, combat.STONE, combat.WALL}   # the code adds these classes to the buildings
     assert set(row["bonus"]) <= bonus and all(isinstance(v, int) for v in row["bonus"].values()), row["name"]
 
 
@@ -78,9 +78,11 @@ def check_train(row):
 
 def check_civs(row):
     form(row, {"name": str, "missing": list}, {     # one key per line: parallel tickets add one
+        "arrows": list,
         "cost_per": list,
         "costs": list,
         "drop": dict,
+        "farm_upgrades": float,
         "twice": list,
         "unique": str,
         "units": list,
@@ -93,6 +95,8 @@ def check_civs(row):
     for group, value, ages in row.get("units", ()):
         assert group in civs.GROUPS and value in (*combat.Stats._fields, "speed"), (n, group, value)
         assert len(ages) == 4 and all(isinstance(a, NUMBER) for a in ages), (n, group)
+    for what, ages in row.get("arrows", ()):                 # the factor of the base arrows of buildings (#2178)
+        assert set(what) <= NAMES["buildings.jsonl"] and len(ages) == 4 and all(isinstance(a, int) for a in ages), n
     for what, res, ages in row.get("costs", ()):
         names = NAMES["train.jsonl"] | set(build.COSTS)
         if isinstance(what, list):
