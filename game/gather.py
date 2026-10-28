@@ -1444,11 +1444,13 @@ class Gather:
 
     def work_time(self, res, herd=False):
         """Real seconds per unit of resource res ("farm" for farms) with the technologies of the player (WORK_TECHS) and
-        the work-rate bonus of its civilization (civs.WORK; herd: the carcass of a herdable animal, for shepherds)."""
+        the work-rate bonus of its civilization (civs.WORK; herd: the carcass of a herdable animal, for shepherds).
+        civs.MORE multiplies the change of a technology (Armenians: the mule cart technologies 40 % more, #2309)."""
         if self.aegis:
             return 0.0                                                 # a full load in one work step
-        rate = civs.work(self, "sheep" if herd else res)
-        return self.chop.get(res, self.chop.get("food")) / rate / math.prod(WORK_TECHS.get(t, {}).get(res, 1) ** train.count(self, t) for t in self.techs)
+        rate, more = civs.work(self, "sheep" if herd else res), civs.MORE.get(civs.civ(self), {})
+        return self.chop.get(res, self.chop.get("food")) / rate / math.prod(
+            (1 + (WORK_TECHS.get(t, {}).get(res, 1) - 1) * more.get(t, 1)) ** train.count(self, t) for t in self.techs)
 
     def move(self, v):
         import ai                                                      # ai imports gather
