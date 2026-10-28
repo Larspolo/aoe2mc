@@ -2,7 +2,8 @@
 The scenario mode of the game program (#2540, epic #2538; run.py --mode scenario): each player starts with the start
 resources and the population limit of the scenario (tab "Players" of the AoE2 DE scenario editor), not with the lobby
 settings. The converter writes them into aoe2mc.json "players" ("resources", "pop_limit", #2539). A player without
-them (a random map, a recorded game, an old scenario) keeps the lobby values.
+them (a random map, a recorded game, an old scenario) keeps the lobby values. resources: the trigger effects "Tribute" and
+"Modify Resource" change the stocks (#2576).
 Each person also gets a written book with the scenario texts (aoe2mc.json "messages": objectives, hints,
 instructions ...), as the "Objectives" window of AoE2 DE, and the chat shows the instructions at the start (#2541).
 The trigger effect "Research Technology" (#2577) sets a score of the datapack; research() (in tick()) gives the
@@ -13,7 +14,12 @@ A scenario trigger with the effect "Declare Victory" ends the game (#2542): its 
 and its allies see "Victory", the others "Defeat" (cheats.over). Minecraft feature: a scoreboard, no own logic in the
 world.
 
+A trigger with the effect "Task Object" (#2646) tags the units in its area and writes the target block into the storage
+aoe2mc:tasks (aoe2mc.task_lines): tasks() walks the tagged units there with the path finding of the Paper plugin
+(aoe moveto, a selector), then removes the tags and the key. Vanilla has no walk-to command.
+
     scenario.victory(g)    # gather.Gather.run, in the scenario mode
+    scenario.tick(g)       # the book, the tasks
 """
 import json
 import os
@@ -62,14 +68,26 @@ def unread(who):
     return f"{who[:-1]},tag=!{TAG}]" if who.endswith("]") else f"{who}[tag=!{TAG}]"
 
 
+def tasks(g):
+    """Walk the units of each "Task Object" of the storage aoe2mc:tasks to its block (one RCON read for all tasks),
+    then remove its tag from the units and its key from the storage, so it walks them once."""
+    got = g.command("data get storage aoe2mc:tasks") or ""
+    for k, x, y, z in re.findall(r"\b(k\d+_\d+): \[(-?[\d.]+)d, (-?[\d.]+)d, (-?[\d.]+)d\]", got):
+        sel = f"@e[tag=aoe_task{k[1:]}]"
+        g.command(f"aoe moveto {sel} {x} {y} {z}")
+        g.command(f"tag {sel} remove aoe_task{k[1:]}")
+        g.command(f"data remove storage aoe2mc:tasks {k}")
+
+
 def tick(g):
     """Give each person who joined since the last check the book, and show the instructions in the chat: the people,
-    not the bots (bot.Bot), once each EVERY seconds. gather.Gather.run calls it in the scenario mode. Also the
-    technologies of the triggers (research, #2577)."""
+    not the bots (bot.Bot), once each EVERY seconds; then the tasks of the triggers (tasks). gather.Gather.run calls it
+    in the scenario mode. Also the technologies of the triggers (research, #2577)."""
     research(g)
     if g.clock() < vars(g).get("book_at", 0.0):
         return
     g.book_at = g.clock() + EVERY
+    tasks(g)
     messages = g.data.get("messages", {})
     text = re.sub(r"<[^<>]*>", "", messages.get("instructions", "")).strip()   # AoE2 color tags (book_pages)
     for who in sorted({x.who for x in [g, *(s.g for s in g.bots if not hasattr(s, "charged"))]}):
@@ -145,3 +163,22 @@ def victory(g):
         got = re.search(r" has (-?\d+) ", g.command(f"scoreboard players get #p{n} aoe_win") or "")
         if got and int(got[1]) > 0:
             return cheats.over(g, lambda m: gather.allied(g.players, n, m))   # allies win together
+
+
+def resources(g):
+    """The trigger effects "Tribute" and "Modify Resource" of the converted world (#2576, aoe2mc.resource_lines): read
+    the scores #p<N>.<resource> of aoe_set (a new value) and aoe_res (a change) with RCON once per EVERY seconds, put
+    them into the stock of the Gather of player N, and reset them. A stock does not go below 0."""
+    if g.clock() < vars(g).get("scenario_at", 0.0):
+        return
+    g.scenario_at = g.clock() + EVERY
+    for x in [g, *(s.g for s in g.bots)]:
+        for r in gather.RESOURCES:
+            changed, name = False, f"#p{x.player}.{r.lower()}"
+            for obj in ("aoe_set", "aoe_res"):
+                if m := re.search(r" has (-?\d+) ", g.command(f"scoreboard players get {name} {obj}") or ""):
+                    x.stock[r.lower()] = max(int(m[1]) + (x.stock[r.lower()] if obj == "aoe_res" else 0), 0)
+                    g.command(f"scoreboard players reset {name} {obj}")
+                    changed = True
+            if changed:
+                x.command(f"scoreboard players set {r} {x.board} {x.stock[r.lower()]}")

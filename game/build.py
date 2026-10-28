@@ -28,8 +28,8 @@ Fortified Wall (#1326, the key "walls" of train.jsonl): the new and the complete
 and its hit points (design(), upgrade()); a damaged one keeps its lost hit points, as in AoE2.
 Minimap (#2582, epic #2580): on Paper each building is a square in the player color on map 0 (`aoe minimap building`,
 Minimap.java) from its foundation on (found()), and its square goes when it falls (gather.Gather.fall: `aoe minimap
-unbuild`). run.play draws the buildings of the start (minimap()). Enemy buildings show too, also out of sight: the fog
-of the minimap is #2583.
+unbuild`). run.play draws the buildings of the start (minimap()). With the fog of war, the plugin shows an enemy
+building to a team only after a tile of it was in its sight (fog.minimap, #2583).
 """
 import json
 import math
@@ -46,6 +46,7 @@ import civs  # noqa: E402
 import herd  # noqa: E402
 import menu as chest  # noqa: E402  (menu() below is the chat text)
 import monk  # noqa: E402
+import record  # noqa: E402
 from replay import Replay  # noqa: E402
 import table  # noqa: E402
 
@@ -492,6 +493,8 @@ def found(g, name, rect, way=None, tiles=None, free=False):
     for r, v in () if free else price(g, name).items():
         g.stock[r] -= v
         g.command(f"scoreboard players remove {r.capitalize()} {g.board} {v}")
+    if not free:                                                       # a free one is the start town of a mode
+        record.built(g, name, rect)                                    # Record Game (#2649)
     x0, x1, z0, z1 = rect
     color = g.players.get(str(g.player), {}).get("color", "light_gray")
     ring = [(x, g.map.y(x, z) if g.map.y(x, z) is not None else int(fleet.level(g) if name in WATER else g.map.sea(x, z)), z)

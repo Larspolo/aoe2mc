@@ -11,6 +11,7 @@ Usage:
     python3 game/run.py WORLD --play --bot        # also a bot plays player 2: its villagers gather (game/bot.py)
     python3 game/run.py WORLD --play --bot --bot-attack 5:00   # its soldiers attack player 1 from 5:00 (default 10:00)
     python3 game/run.py WORLD --play --log F.jsonl  # also write a timed event log (tools/measure_gather.py reads it)
+    python3 game/run.py WORLD --play --record F.jsonl  # Record Game: --replay --replay-file F.jsonl plays it (#2649)
     python3 game/run.py WORLD --play --bot --treaty 20:00   # the AoE2 setting "Treaty length": no attack before 20:00 (#2297)
     python3 game/run.py WORLD --play --reveal all  # no fog of war: also the enemy units out of sight show (game/fog.py)
     python3 game/run.py WORLD --play --speed 2     # twice the AoE2 Normal speed: /tick rate 40 and shorter steps (#2057)
@@ -384,6 +385,7 @@ SETTINGS = {
     "handicap": None,                 # {player: percent} "Handicap" (civs.handicap, handicap_choices, #2474)
     "mode": "standard",               # the game mode (MODES: its line in game/data/setup.jsonl and its module, #2521)
     "pop_limit": None,                # "Population limit" (train.LIMITS, #2266)
+    "record": None,                   # "Record Game": the file of the timeline of the game (record.py, #2649)
     "regicide": False,                # "Regicide Mode" on top of the mode (ON_TOP, #2490)
     "resources": "standard",          # "Starting resources" (gather.LEVELS, #2264)
     "shared_exploration": "on",       # "Shared Exploration": "off" takes the sight of the allies away (fog.shares, #2602)
@@ -506,6 +508,9 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
         treaties.start(g, math.inf, (state or {}).get("treaty_time", 0.0))
     elif replay.aoe2mc.game_time(settings["treaty"]):            # after the Gathers: they set the neutral stances
         treaties.start(g, replay.aoe2mc.game_time(settings["treaty"]) / 1000, (state or {}).get("treaty_time", 0.0))   # #2409
+    if settings["record"]:                                       # the orders of the people and the bots (#2649)
+        import record
+        record.start([g, *(b.g for b in g.bots)], settings["record"])
     if game.kind == "paper":                         # the view square of each player on map 0 (#1762)
         import replay
         game.command("aoe minimap on")               # the dots of the units, as in the live replay (#2581)
@@ -562,13 +567,17 @@ def restore(saved, world):
     shutil.copytree(saved, world, dirs_exist_ok=True)
 
 
-def replay(game, world, speed=1.0, start="0:00", follow=None, guide=None, view=None):
+def replay(game, world, speed=1.0, start="0:00", follow=None, guide=None, view=None, replay_file=None):
     """guide: a poll(control) next to the hotbar input that gets `input` and the replay `r` (game/watch.py, #1123).
-    view: the replay starts with the view of player N (#1303: the units out of its sight are hidden)."""
+    view: the replay starts with the view of player N (#1303: the units out of its sight are hidden).
+    replay_file: the timeline of a game of --play --record on this world in place of the one of aoe2mc.json (#2649)."""
     import replay
     start = replay.aoe2mc.game_time(start)
     with open(os.path.join(world, "aoe2mc.json")) as f:
         data = json.load(f)
+    if replay_file:
+        import record
+        data = record.apply(data, replay_file)
     if "timeline" not in data:
         sys.exit("--replay needs a world of a recorded game (.aoe2record)")
     import replay_input
@@ -692,6 +701,10 @@ def main(argv=None):
                     "--mode: each player has a King, a player whose King dies is defeated")
     ap.add_argument("--sudden-death", action="store_true", help="--play: the AoE2 setting \"Sudden Death Mode\" on top "
                     "of --mode: one town center, a player who loses it is defeated")
+    ap.add_argument("--record", metavar="FILE", help="--play: the AoE2 setting \"Record Game\": write the orders of the "
+                    "game into FILE (one JSON line per timeline event); --replay --replay-file FILE plays them again")
+    ap.add_argument("--replay-file", metavar="FILE", help="--replay: play the timeline of a game of --play --record on "
+                    "this world in place of the one of aoe2mc.json")
     ap.add_argument("--log", metavar="FILE", help="--play: write one JSON line per villager event (time, state, load)")
     ap.add_argument("--load", metavar="SAVE", help="--play: go on with a saved game (a folder of saves/: the end of "
                     "--play with Ctrl-C saves the world and the resources, technologies and ages there)")
@@ -736,7 +749,7 @@ def main(argv=None):
             return
         commands = console(game)                     # type commands at any time (#1777)
         if a.replay:                                 # after the end the player can look around (#978)
-            replay(game, a.world, a.speed, a.start, a.follow, view=a.view or None)
+            replay(game, a.world, a.speed, a.start, a.follow, view=a.view or None, replay_file=a.replay_file)
             print("The replay ended. The server stays up: type commands, Ctrl-C stops it.", file=sys.stderr)
         if a.play:
             with open(a.log, "w") if a.log else contextlib.nullcontext() as log:
