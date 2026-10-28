@@ -335,7 +335,8 @@ def unlocked(g, name):
     civilization of the player does not have (civs.missing: also not as a team bonus of an ally, #1619)."""
     return TECH_AGE.get(name, 0) <= build.ages(g) and AFTER.get(name, "") in {""} | set(getattr(g, "techs", ())) \
         and not (hasattr(g, "data") and civs.missing(g, name)) \
-        and (name not in UPGRADES or bool(lines(name, g)))         # not of this civilization (#1373), no new unit (#1483)
+        and (name not in UPGRADES or name in REQUIRES or bool(lines(name, g)))   # not of this civilization (#1373), no
+                                                                   # new unit (#1483); an age also upgrades (#2130)
 
 
 def homes(g):
@@ -371,7 +372,7 @@ def trains(g, building):
     out += [n for n, c in CIV_TECHS.items() if c == civs.civ(g)] * (building == "CASTLE")   # the unique technologies (#2021)
     for _ in UPGRADES:                                             # a line of upgrades: mangonel, onager, siege onager
         out = [new.get(n, n) for n in out]                         # the castle: the elite unique unit (#1624)
-    return tuple(out)
+    return tuple(dict.fromkeys(out))                               # the camel scout becomes the camel rider (#2130)
 
 
 def home(g, cell):
