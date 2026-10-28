@@ -56,7 +56,7 @@ def test_a_unit_that_does_not_come_goes_there_with_tp():
     r, game = play(10 ** 6, end=90000)
     tp = "tp u1 {} {} {}".format(*r.units[7].pos)
     assert tp in game.sent and game.sent.index(tp) < next(k for k, c in enumerate(game.sent) if "oak_log" in c)
-    assert 50 < game.checks < 70                                        # one check each WAIT until LATE
+    assert game.checks < 30                                             # it stands: a new walk, then /tp (#2709)
 
 
 def test_a_new_move_ends_the_wait():
