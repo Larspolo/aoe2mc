@@ -12,7 +12,7 @@ controls, read `docs/STEERING.md`. This document links to them and does not copy
 | Scheduled tasks (owner's account) | "aoe2mc autopilot", "aoe2mc autopilot haiku" and "aoe2mc autopilot deep" have no schedule: the pacer starts them (since 2026-10-28 the workflow `pacer.yml` through their API triggers, #3194). With the pacer session: "aoe2mc pacer heartbeat" wakes it each hour at :36. |
 | Pacer | The workflow `pacer.yml` (`tools/pacer.py`, #3193): every 15 minutes it starts (at most `max_fire` = 2 runs) the runs that the quota target misses, through the API triggers of the scheduled tasks. Fallback (`pacer = "session"` in `agent.toml`): one long-lived cloud session (skill `pacer`). |
 | Runs | Cloud sessions of the autopilot task. Each run follows the skill `autopilot` with the argument `max`: tickets, one PR each. Many runs work at the same time. |
-| Skills (`.claude/skills/`) | The procedures: `autopilot` (the work cycle), `verify` (checks before a push), `ticket` (write and split tickets), `design` (design tickets), `improve` (process review), `roadmap` (epics from `docs/ROADMAP.md`), `pacer`, `operator` (checks and repairs the start of the runs, only in an owner session), `human` (guides the owner through the `needs-human` tickets on the owner's computer), `demo` (a demo game on the owner's computer: a ticket for each feedback in the chat, the cause of each crash, `game/demo_watch.py`). |
+| Skills (`.claude/skills/`) | The procedures: `autopilot` (the work cycle), `verify` (checks before a push), `ticket` (write and split tickets), `design` (design tickets), `improve` (process review), `roadmap` (epics from `docs/ROADMAP.md`), `pacer`, `human` (guides the owner through the `needs-human` tickets on the owner's computer), `demo` (a demo game on the owner's computer: a ticket for each feedback in the chat, the cause of each crash, `game/demo_watch.py`). |
 | Denied tools (`.claude/settings.json`) | The `deny` list removes the session tools that no skill uses (`Artifact`, `Workflow`, the `Suggest*` and `Search*` tools ...) from each session of the repository: their descriptions were about 19,000 of the 66,000 base tokens of each call (2026-10-28). A rule in a file that the SessionStart hook writes works only from the next session, so the list is in the repository. |
 | Rules (`CLAUDE.md`, `docs/LEARNINGS.md`) | Each session loads them. `CLAUDE.md` has the commands, the code map and the rules. `docs/LEARNINGS.md` has the lessons for all runs. |
 | Tools (`tools/`) | `claim.py` (locks), `usage.py` (quota and the number of runs), `dashboard.py` (the status issue and the pick order), `health.py` (numbers for the review), `tokens.py` (the token sinks of a run), `operator_check.py` (the checks of the `operator` skill), `owner_tasks.py` (the tickets of the `human` skill). |
@@ -162,15 +162,15 @@ on `main` yet.
 7. **Scheduled task "aoe2mc autopilot haiku" (optional, #1715).** No schedule: the pacer fires it. Model
    `claude-haiku-5-5`, the prompt of step 4 with the argument `max lane haiku`. These runs take only the tickets with
    `lane:haiku` (`ticket` skill, "Model lanes"); Opus runs take them only when nothing else is ready.
-   `tools/health.py` prints one line per lane (runs, PRs, minutes, tokens). `/operator` makes the task for you.
+   `tools/health.py` prints one line per lane (runs, PRs, minutes, tokens). `docs/OPERATOR.md`, section 3, makes the task.
 8. **Scheduled task "aoe2mc autopilot deep" (owner, 2026-10-28).** No schedule: the pacer fires it. Model
    `claude-opus-5-5` at effort high (the owner's setting; the main task runs at low effort), the prompt of step 4 with the argument
    `max lane deep`. These runs take the tickets with `lane:deep` and do the epic check, the queue refill, the roadmap
    review and the process review (`autopilot/queue.md`, "Deep lane").
-9. **Move to another Claude account (owner, 2026-10-28).** Start a session in the new account with the repository
-   and type `/operator move` (skill `operator`, section 5). It pauses the runs (label `paused`), makes the tasks of
-   steps 4, 7 and 8, writes the new IDs to `agent.toml`, and checks all parts at the end. It
-   asks you for the steps that only you can do:
+9. **Move to another Claude account (owner, 2026-10-28).** Follow `docs/OPERATOR.md`, section 4 (or start a session
+   in the new account with the repository and let it follow the section). The steps pause the runs (label `paused`),
+   make the tasks of steps 4, 7 and 8, write the new IDs to `agent.toml`, and check all parts at the end. The steps
+   that only you can do:
    - In the old account: disable the scheduled tasks of aoe2mc (their API tokens stop with them).
    - The secrets of step 5: a new `claude setup-token` of the new account and new API triggers of the new tasks.
    - In the new account: connect GitHub (the Claude GitHub app stays on the repository); make the cloud environment
@@ -178,7 +178,7 @@ on `main` yet.
      haiku: Haiku 5.5; deep: Opus 5.5, effort high). The tool cannot set these three values.
    The GitHub side (tickets, claims, labels, the status issue) does not change.
 
-To check or repair steps 4–8, start a session and type `/operator` (skill `operator`, #981). It checks the scheduled
+To check or repair steps 4–8, follow `docs/OPERATOR.md` (#981). It checks the scheduled
 tasks, the runs of `pacer.yml`, the quota, CI, the PRs and the labels, and repairs them after you agree. A long-lived owner session is not necessary.
 
 ## Generic and specific files
@@ -215,7 +215,7 @@ of `tools/bootstrap.py` (they copy this repository) and the tests that need a sp
 | `.claude/skills/design/SKILL.md` | specific | The design of buildings, units and animals. |
 | `.claude/skills/improve/SKILL.md` | generic | The project name. |
 | `.claude/skills/roadmap/SKILL.md` | specific | The three goals of aoe2mc. |
-| `.claude/skills/operator/SKILL.md` | generic | The task and session names (`aoe2mc autopilot`, `aoe2mc pacer`). |
+| `docs/OPERATOR.md` | generic | None (NAME is the name of `repo` in `agent.toml`). |
 | `.claude/skills/human/SKILL.md` | specific | The preparation of a play test (worlds, `game/run.py`, Minecraft 26.3). |
 | `.claude/skills/demo/SKILL.md` | specific | The demo game (`--random-map arabia`, `game/run.py`, `game/demo_watch.py`, the Minecraft client folders of macOS). |
 | `.claude/skills/pacer/SKILL.md` | generic | The trigger ID, the repository path and name (it runs before the clone, so it cannot read `agent.toml`). |

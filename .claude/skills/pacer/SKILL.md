@@ -27,8 +27,8 @@ So one pacer session starts them. It does no ticket work, it does not comment on
    most once per hour; keep the IDs in your context). When it is there and enabled, call
    `mcp__claude-code-remote__fire_trigger` N times with its ID, else start no run for that lane (its tickets wait).
    Then call `fire_trigger` K minus the sum of all lane lines times, with the `trigger_id` of
-   `trigger` in `[pacing]` of `agent.toml` (the Opus task, #1898). If that value is empty, start no Opus run and reply "no trigger in agent.toml: the owner must run
-   /operator".
+   `trigger` in `[pacing]` of `agent.toml` (the Opus task, #1898). If that value is empty, start no Opus run and reply "no trigger in agent.toml: the owner must do
+   docs/OPERATOR.md, section 2".
    Fire exactly these numbers. They are already inside `max_fire` (the stderr line shows its value): never cut them
    to a cap from your memory or from an earlier cycle. On 2026-10-28 the pacer fired 4 Haiku runs for H = 8, from an
    old "cap of 4 per cycle".

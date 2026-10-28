@@ -1,4 +1,4 @@
-"""tools/operator_check.py: the checks of the operator skill that need no session tools (#981)."""
+"""tools/operator_check.py: the checks of docs/OPERATOR.md that need no session tools (#981)."""
 import datetime
 
 import operator_check as oc
