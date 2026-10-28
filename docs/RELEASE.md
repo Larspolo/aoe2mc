@@ -100,10 +100,10 @@ Bug reserve: 0.3
 | `play:co-op` | C | 3 | | |
 | `play:unit-sounds` | C | 3 | | |
 | `play:campaign` | C | 3 | | |
-| `play-check-game` | B | 5 | An agent plays a full game against the bot with a script, from the Dark Age to a win or a loss (about 30 minutes): no server error, no stuck unit | |
-| `play-check-speed` | B | 2 | With 200 units of each player, the server keeps 20 ticks per second | |
-| `play-check-kit` | B | 2 | A play-test kit: how to start and join, the controls, how to report a bug | |
-| `play-check-person` | B | 1 | A person plays one test game | |
+| `play-check-game` | B | 5 | An agent plays a full game against the bot with a script, from the Dark Age to a win or a loss (about 30 minutes): no server error, no stuck unit | #3324 |
+| `play-check-speed` | B | 2 | With 200 units of each player, the server keeps 20 ticks per second | #3325 |
+| `play-check-kit` | B | 2 | A play-test kit: how to start and join, the controls, how to report a bug | #3326 |
+| `play-check-person` | B | 1 | A person plays one test game | #3327 |
 
 ## Replay a game
 
