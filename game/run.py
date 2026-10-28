@@ -19,6 +19,7 @@ Usage:
     python3 game/run.py WORLD --play --end-age castle  # the AoE2 setting "Ending age" (#2346)
     python3 game/run.py WORLD --play --all-techs       # the AoE2 setting "All Techs" (#2298)
     python3 game/run.py WORLD --play --victory conquest  # the AoE2 setting "Victory": no wonder or relic win (#2316)
+    python3 game/run.py WORLD --play --victory time-limit --victory-value 300   # the highest score at 300 years (#2356)
     python3 game/run.py WORLD --play --mode regicide   # the AoE2 game mode "Regicide": each player has a King (#2347)
     python3 game/run.py WORLD --play --civ 1=BRITONS --civ 2=FRANKS   # the civilization of each player (#2267)
     python3 game/run.py WORLD --play --teams 1,1,2,2   # the team of each player, - is no team (#2296)
@@ -327,7 +328,7 @@ def team_choices(value, players):
 
 def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attack="10:00", reveal="normal", people=1,
          speed=1.0, state=None, resources="standard", civ=None, teams=None,
-         all_techs=False, age="dark", victory="standard", pop_limit=None, end_age="imperial", mode="standard",
+         all_techs=False, age="dark", victory="standard", victory_value=None, pop_limit=None, end_age="imperial", mode="standard",
          treaty="0:00"):
     """state: the saved state of the players (savegame.dump) for a loaded game (#2255).
     resources: the AoE2 setting "Starting resources" of each player and bot (gather.LEVELS, #2264).
@@ -336,6 +337,7 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
     all_techs: the AoE2 setting "All Techs" for all players and bots (civs.missing, #2298).
     age: the AoE2 setting "Starting age" of each player and bot (train.STARTS, #2265).
     victory: the AoE2 setting "Victory": "standard" (conquest, a wonder or all relics) or "conquest" (#2316).
+    "time-limit" or "score" (time_limit.py, #2356): victory_value is the years or the score target.
     pop_limit: the AoE2 setting "Population limit" of each player and bot (train.LIMITS, #2266).
     end_age: the AoE2 setting "Ending age" of each player and bot (build.locked, #2346).
     mode: the AoE2 game mode: "standard" or "regicide" (each player has a King, regicide.MODES, #2347).
@@ -366,6 +368,7 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
     g = make(1)
     g.reveal = reveal                                # "all": no fog of war for the units (fog.py, #1389)
     g.victory = victory                              # Gather.run: the wonder and relic wins only in "standard"
+    g.victory_value = victory_value                  # the years of "time-limit", the points of "score" (#2356)
     if people > 1:                                   # one Gather for each person, in the join order (#1308, #1310)
         g.bots = [Side(make(n)) for n in range(2, people + 1)]
         for s in g.bots:                             # the same trees, bushes and mines, as with a bot
@@ -557,8 +560,12 @@ def main(argv=None):
                     "the Death Match resources)")
     ap.add_argument("--all-techs", action="store_true", help="--play: the AoE2 setting \"All Techs\": each civilization "
                     "has the generic units and technologies that its tech tree does not have (the bonuses stay)")
-    ap.add_argument("--victory", choices=["standard", "conquest"], default="standard", help="--play: the AoE2 setting "
-                    "\"Victory\" (default standard: conquest, a wonder or all relics; conquest: only the conquest)")
+    ap.add_argument("--victory", choices=["standard", "conquest", "time-limit", "score"], default="standard",
+                    help="--play: the AoE2 setting \"Victory\" (default standard: conquest, a wonder or all relics; "
+                    "conquest: only the conquest; time-limit: the highest score at the end of the time; score: the "
+                    "first player at the score target, #2356)")
+    ap.add_argument("--victory-value", type=int, metavar="N", help="--play: the years of --victory time-limit "
+                    "(default 500) or the points of --victory score (default 10000)")
     ap.add_argument("--pop-limit", type=pop_limit, default=200, metavar="N",
                     help="--play: the AoE2 setting \"Population limit\" of each player: 25 to 250 in steps of 25, 300, "
                     "400 or 500 (default 200)")
@@ -609,7 +616,7 @@ def main(argv=None):
             with open(a.log, "w") if a.log else contextlib.nullcontext() as log:
                 g = play(game, a.world, log, a.cheats, a.bot, bot_attack=a.bot_attack, reveal=a.reveal,
                          people=a.people, speed=a.speed, state=state, resources=a.resources, civ=civ,
-                         teams=teams, all_techs=a.all_techs, age=a.age, victory=a.victory, pop_limit=a.pop_limit,
+                         teams=teams, all_techs=a.all_techs, age=a.age, victory=a.victory, victory_value=a.victory_value, pop_limit=a.pop_limit,
                          end_age=a.end_age, mode=a.mode, treaty=a.treaty)
             if not getattr(g, "ended", None):
                 return

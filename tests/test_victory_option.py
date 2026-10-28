@@ -78,4 +78,4 @@ def test_the_victory_option_goes_to_play(tmp_path, monkeypatch, capsys):
     assert seen["victory"] == "standard"
     with pytest.raises(SystemExit):
         run.main(["--help"])
-    assert "{standard,conquest}" in capsys.readouterr().out
+    assert "{standard,conquest" in capsys.readouterr().out             # more values can follow (#2356)

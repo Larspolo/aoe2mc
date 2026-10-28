@@ -75,6 +75,7 @@ import score  # noqa: E402
 import siege_tower  # noqa: E402
 import stance  # noqa: E402
 import table  # noqa: E402
+import time_limit  # noqa: E402
 import trade  # noqa: E402
 import transport  # noqa: E402
 import train  # noqa: E402
@@ -533,6 +534,7 @@ class Gather:
     speed = 1.0                                                        # times the Normal speed: shorter real steps (#2057)
     later = {}                                                         # the bonus of the first town center (civs.TOWN_CENTER)
     victory = "standard"                                               # AoE2 "Victory"; "conquest": no wonder, no relics (#2316)
+                                                                       # "time-limit", "score": time_limit.py (#2356)
     mode = "standard"                                                  # AoE2 game mode; "regicide": the King (#2347)
 
     def __init__(self, game, data, player=1, tick=0.25, carry=10, chop=None, log=None, clock=time.monotonic,
@@ -1813,5 +1815,7 @@ class Gather:
                 wonder.tick(self, self.tick * NORMAL)                  # game seconds, as train.tick
                 relic_victory.tick(self, self.tick * NORMAL)
             score.tick(self)
+            if self.victory in ("time-limit", "score"):                # after the conquest: it wins before (#2356)
+                time_limit.tick(self, self.tick * NORMAL)
             treaty.tick(self, self.tick * NORMAL)
             time.sleep(max(0.0, self.tick / self.speed - (time.time() - t)))   # a step stays tick game seconds
