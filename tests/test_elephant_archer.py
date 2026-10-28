@@ -49,6 +49,7 @@ def test_a_trained_elephant_archer_is_a_ravager_with_an_archer_rider():
 def test_the_elite_upgrade_changes_the_live_and_the_new_units():
     server, g = player("GURJARAS", ages=("FEUDAL_AGE", "CASTLE_AGE", "IMPERIAL_AGE"))
     g.soldiers["e"] = "ELEPHANT_ARCHER"
+    g.game.entities.setdefault("e", {"Pos": (0.5, 64.0, 0.5)})          # alive at the census (#3122)
     rect = train.open_menu(g, "Steve", RANGE)
     assert f" {UPGRADE}:book:Elite Elephant Archer:900 food · 500 gold · 80 s · research" in menu(server)
     assert train.order(g, "Steve", rect, UPGRADE) == 1

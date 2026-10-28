@@ -19,6 +19,8 @@ def test_medium_warships_upgrades_the_live_hulk_and_the_dock_trains_the_war_hulk
     g.techs |= {"FEUDAL_AGE", "CASTLE_AGE"}
     g.stock["gold"] = 300
     g.soldiers |= {"h": "HULK"}
+    for u in g.soldiers:                                             # alive at the census (#3122)
+        g.game.entities.setdefault(u, {"Pos": (0.5, 64.0, 0.5)})
     train.open_menu(g, "Steve", (15, 12))
     assert f" {train.MORE + 2}:oak_boat:Hulk:" in menus(server)[-1]
     assert train.order(g, "Steve", DOCK, 3) == 1

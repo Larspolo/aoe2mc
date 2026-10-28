@@ -28,6 +28,7 @@ def test_the_castle_of_the_slavs_trains_the_boyar():
 def test_the_upgrade_changes_the_live_and_the_new_units():
     server, g = setup("SLAVS", food=2000, wood=0, gold=2000, ages=3)
     g.soldiers["by"] = "BOYAR"
+    g.game.entities.setdefault("by", {"Pos": (0.5, 64.0, 0.5)})          # alive at the census (#3122)
     train.open_menu(g, "Steve", CASTLE)
     assert " 5:book:Elite Boyar:1000 food · 600 gold · 60 s · research " in menus(server)[-1] + " "
     assert train.queue(g, "Steve", CASTLE, "ELITE_BOYAR_UPGRADE")

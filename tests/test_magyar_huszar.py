@@ -28,6 +28,7 @@ def test_the_castle_of_the_magyars_trains_the_magyar_huszar():
 def test_the_upgrade_changes_the_live_and_the_new_units():
     server, g = setup("MAGYARS", food=2000, wood=0, gold=2000, ages=3)
     g.soldiers["mh"] = "MAGYAR_HUSZAR"
+    g.game.entities.setdefault("mh", {"Pos": (0.5, 64.0, 0.5)})          # alive at the census (#3122)
     train.open_menu(g, "Steve", CASTLE)
     assert " 5:book:Elite Magyar Huszar:800 food · 600 gold · 60 s · research " in menus(server)[-1] + " "
     assert train.queue(g, "Steve", CASTLE, "ELITE_MAGYAR_HUSZAR_UPGRADE")

@@ -18,6 +18,7 @@ def barracks(civ="VIKINGS", ages=IMPERIAL):
     server, g = setup(ages=ages)
     g.data["players"] = {"1": {"civ": civ}}
     g.soldiers["vg"] = "VARANGIAN_GUARD"
+    g.game.entities.setdefault("vg", {"Pos": (0.5, 64.0, 0.5)})          # alive at the census (#3122)
     return server, g
 
 

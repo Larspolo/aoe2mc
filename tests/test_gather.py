@@ -8,6 +8,7 @@ import time
 
 import pytest
 
+import units
 from game import gather, run
 
 
@@ -54,6 +55,9 @@ class FakeServer:
                 return "No entity was found"
             v = self.entities[m[1]][m[2]]
             return f"{m[1]} has the following entity data: [{', '.join(f'{x}d' for x in v)}]"
+        if (m := re.match(r"summon \S+ (\S+) (\S+) (\S+) .*?UUID:\[I;(-?\d+),(-?\d+),(-?\d+),(-?\d+)\]", cmd)) \
+                and (u := units.uuid_str([int(a) for a in m.groups()[3:]])) not in self.entities:
+            self.entities[u] = {"Pos": tuple(map(float, m.groups()[:3]))}    # a summoned unit lives (#3122)
         if m := re.fullmatch(r"tp (\S+) (\S+) (\S+) (\S+) .*", cmd):
             self.entities[m[1]]["Pos"] = tuple(map(float, m.groups()[1:]))
         if m := re.fullmatch(r"execute if entity @a\[scores=\{(\w+)=1\.\.\}\]", cmd):

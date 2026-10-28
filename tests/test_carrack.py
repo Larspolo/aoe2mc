@@ -18,6 +18,8 @@ def test_heavy_warships_upgrades_the_live_war_hulk_and_the_dock_trains_the_carra
     server, g = imperial(techs=["MEDIUM_WARSHIPS"])
     g.data["players"]["1"]["civ"] = "FRANKS"
     g.soldiers |= {"h": "WAR_HULK"}
+    for u in g.soldiers:                                             # alive at the census (#3122)
+        g.game.entities.setdefault(u, {"Pos": (0.5, 64.0, 0.5)})
     train.open_menu(g, "Steve", (15, 12))
     assert f" {train.MORE + 2}:dark_oak_boat:War Hulk:" in menus(server)[-1]
     assert train.order(g, "Steve", DOCK, 3) == 1

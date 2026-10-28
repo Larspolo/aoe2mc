@@ -28,6 +28,7 @@ def test_the_castle_of_the_cumans_trains_the_kipchak():
 def test_the_upgrade_changes_the_live_and_the_new_units():
     server, g = setup("CUMANS", food=2000, wood=2000, gold=2000, ages=3)
     g.soldiers["kc"] = "KIPCHAK"
+    g.game.entities.setdefault("kc", {"Pos": (0.5, 64.0, 0.5)})          # alive at the census (#3122)
     train.open_menu(g, "Steve", CASTLE)
     assert " 5:book:Elite Kipchak:1100 food · 1000 wood · 65 s · research " in menus(server)[-1] + " "
     assert train.queue(g, "Steve", CASTLE, "ELITE_KIPCHAK_UPGRADE")

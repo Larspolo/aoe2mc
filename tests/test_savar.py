@@ -14,6 +14,7 @@ def cavaliers(civ):
     server, g = setup(ages=IMPERIAL)
     g.data["players"] = {"1": {"civ": civ}}
     g.soldiers["kn"] = "KNIGHT"
+    g.game.entities.setdefault("kn", {"Pos": (0.5, 64.0, 0.5)})          # alive at the census (#3122)
     research(g, STABLE, "CAVALIER_UPGRADE")
     train.open_menu(g, "Steve", STABLE)
     return server, g

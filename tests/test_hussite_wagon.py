@@ -28,6 +28,7 @@ def test_the_castle_of_the_bohemians_trains_the_hussite_wagon():
 def test_the_upgrade_changes_the_live_and_the_new_units():
     server, g = setup("BOHEMIANS", food=0, wood=2000, gold=2000, ages=3)
     g.soldiers["hw"] = "HUSSITE_WAGON"
+    g.game.entities.setdefault("hw", {"Pos": (0.5, 64.0, 0.5)})          # alive at the census (#3122)
     train.open_menu(g, "Steve", CASTLE)
     assert " 5:book:Elite Hussite Wagon:800 wood · 600 gold · 45 s · research " in menus(server)[-1] + " "
     assert train.queue(g, "Steve", CASTLE, "ELITE_HUSSITE_WAGON_UPGRADE")
