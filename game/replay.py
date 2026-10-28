@@ -395,6 +395,8 @@ class Replay:
     def commands(self, e):
         """The commands of one timeline event (an empty list for the events that change nothing visible)."""
         kind = e["kind"]
+        if kind == "news":                                      # a fight starts: the chat line and the horn (#2951)
+            return replay_input.fight_news(self.control["fights"][e["fight"]], e["fight"], self.control["players"])
         if kind in ("attack_move", "move", "order", "stop", "delete", "garrison", "follow", "guard", "autoscout"):
             for i in e.get("objects") or ():                    # another order ends the patrol (#2550), the scouting (#2678)
                 self.patrols.pop(i, None)
@@ -2357,15 +2359,16 @@ class Replay:
         `paused`: start in a pause. The replay ends at the time of its last event, as the record (#978); `finish`:
         play the walks and the trainings to their end (tests of one walk or one queue)."""
         last = math.inf if finish else max((e["time"] for e in self.data.get("timeline", [])), default=start)
-        events = sorted((e for e in self.data.get("timeline", []) + self.spawns() if start <= e["time"] <= last),
+        found = fights(self.data.get("timeline", []), owners(self.data.get("objects", []), self.data.get("timeline", [])))
+        news = [{"time": f["start"], "kind": "news", "fight": i} for i, f in enumerate(found)]    # the fight starts (#2951)
+        events = sorted((e for e in self.data.get("timeline", []) + self.spawns() + news if start <= e["time"] <= last),
                         key=lambda e: e["time"])                     # the record ends at `last`: no spawn after it
         g0, r0, lag, n, k = start, clock(), 0.0, 0, 0                 # game time g0 (ms) at real time r0
         self.speed, self.paused = speed, paused
         self.control = {"speed": speed, "paused": paused, "view": self.pov,     # the view: replay_input VIEW (#1303)
                         "players": {p: self.player(p) for p in sorted(int(q) for q in self.data["players"]) if p}} | \
             ({"jump": to} if to is not None else {})
-        self.control["fights"] = fights(self.data.get("timeline", []), owners(self.data.get("objects", []),
-                                                                             self.data.get("timeline", [])))
+        self.control["fights"] = found
         end, shown, counted = events[-1]["time"] if events else start, None, -math.inf
         send = self.send if bar else lambda cmds: None
         send([f'bossbar add {BAR} ""', f"bossbar set {BAR} color white",
