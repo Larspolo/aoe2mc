@@ -1367,9 +1367,9 @@ class Gather:
             return
         if garrison.order(self, name, fleet.pick(self, eye, d)):     # fishing ships go into a dock on the water (#1949)
             return
-        if train.open_menu(self, name, self.map.pick_ground(eye, d)):  # an own town center or barracks (#620, #654)
+        if train.open_menu(self, name, self.map.pick_ground(eye, d), True):  # an own town center or barracks (#620, #654)
             return
-        if train.open_menu(self, name, fleet.pick(self, eye, d)):     # a dock is on the water (#1383)
+        if train.open_menu(self, name, fleet.pick(self, eye, d), True):     # a dock is on the water (#1383)
             return
         if market.open_menu(self, name, self.map.pick_ground(eye, d)):  # an own market: buy and sell (#1252)
             return

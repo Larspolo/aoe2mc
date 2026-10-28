@@ -175,6 +175,7 @@ NOT_SAVED = (                                                          # the fie
     "kings",                                                           # regicide.setup makes it again
     "limit_at",                                                        # time_limit.py: the next check time
     "limit_shown",                                                     # time_limit.py: the shown text
+    "menu_opened",                                                     # train.open_menu: the time of the last open (spam clicks, #3267)
     "noui",                                                            # the cheat "noui": only the hints
     "owners_at",                                                       # scenario.owners: the next check time
     "owners_sent",                                                     # scenario.owners: a load sets the same score again
