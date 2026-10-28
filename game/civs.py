@@ -23,8 +23,7 @@ speed, per age. train.stats applies them before the technologies; the walk speed
 this kind that the game program cannot use yet: the bonus damage (Bengali elephants and Sicilian units take less,
 Gurjara mounted units and Bohemian spearmen deal more, Bengali cavalry and Japanese mounted archers against some
 classes, Goth infantry against buildings), the Georgian and Polish regeneration, the elevation (Georgians, Tatars),
-the Lithuanian relics, the Roman infantry armor technologies, the Incan villagers with the infantry technologies,
-the Aztec and Slav monks, and the ships.
+the Lithuanian relics, the Aztec and Slav monks, and the ships.
 """
 import math
 import os
@@ -74,9 +73,11 @@ GROUPS = {g: (lambda f, g: lambda n, s: g in TAGS.get(n, ()) or f(n, s))(RULES.g
 # age]; what is a group of GROUPS (units), "buildings", "buildings but farms", "technologies", "ages", "BUILDING
 # technologies" (the technologies of the menu of that building, #1925) or a list of names; a float multiplies the cost
 # (0.0: free), an int adds to it; AoE2 rounds half up (35 × 0.75 = 26). "twice": the technologies whose effect it gets
-# twice (train.stats, #1561). "age_gifts": the resources that it gets at each new age (#1926). "cost_per": the cost
-# bonuses for each complete own building (#2177): [group of GROUPS, the buildings, the share less for each, the most
-# share less] (Saxons: foot soldiers cost 5 % less per town center or castle, at most 20 %).
+# twice (train.stats, #1561). "age_gifts": the resources that it gets at each new age (#1926). "smith_units": [group of
+# GROUPS, blacksmith technologies, times in the Dark, Feudal, Castle and Imperial Age]: the units of the group get the
+# effect of each technology that many times, also when the test of the effect does not cover them (smith, #2174).
+# "cost_per": the cost bonuses for each complete own building (#2177): [group of GROUPS, the buildings, the share less
+# for each, the most share less] (Saxons: foot soldiers cost 5 % less per town center or castle, at most 20 %).
 ROWS = table.load("civs.jsonl")
 
 
@@ -90,6 +91,7 @@ UNITS = {r["name"]: [tuples(b) for b in r["units"]] for r in ROWS if "units" in 
 COSTS = {r["name"]: [tuples(b) for b in r["costs"]] for r in ROWS if "costs" in r}
 COST_PER = {r["name"]: [tuples(b) for b in r["cost_per"]] for r in ROWS if "cost_per" in r}
 TWICE = {r["name"]: tuples(r["twice"]) for r in ROWS if "twice" in r}
+SMITH_UNITS = {r["name"]: [tuples(b) for b in r["smith_units"]] for r in ROWS if "smith_units" in r}
 MISSING = {t: tuple(sorted(r["name"] for r in ROWS if t in r["missing"]))
            for t in sorted({t for r in ROWS for t in r["missing"]})}
 ELEPHANTS = tuple(r["name"] for r in ROWS if "BATTLE_ELEPHANT" not in r["missing"])   # the battle elephant (#1556)
@@ -120,6 +122,7 @@ ECONOMY = tuple(sorted(r["name"] for r in TECH_ROWS if r.get("economy")))   # th
 # "research_time": [technologies (a rule of has), factor of the research time] (#2172: Achaemenid stable technologies
 # 50 % faster, Jurchen siege and fortification technologies 100 % faster, the Gothic Loom at once).
 WORK = {r["name"]: r["work"] for r in ROWS if "work" in r}
+LAST = {r["name"]: r["last"] for r in ROWS if "last" in r}   # resources last longer: a gathered unit takes 1 / factor (#2112)
 START = {r["name"]: r["start"] for r in ROWS if "start" in r}
 DROP = {r["name"]: r["drop"] for r in ROWS if "drop" in r}
 SHARED = dict(sorted((n, r["name"]) for r in ROWS for n in r.get("shared", ())))
@@ -134,7 +137,10 @@ REPAIR_TEAM = {r["name"]: r["repair_team"] for r in ROWS if "repair_team" in r}
 WORK_RATE = {r["name"]: {b: tuple(v) for b, v in r["work_rate"].items()} for r in ROWS if "work_rate" in r}
 TRAIN_RATE = {r["name"]: [tuples(b) for b in r["train_rate"]] for r in ROWS if "train_rate" in r}
 HP = {r["name"]: r["hp"] for r in ROWS if "hp" in r}
+ARROWS = {r["name"]: tuples(r["arrows"]) for r in ROWS if "arrows" in r}   # factor of the base arrows in each age (#2178)
 GARRISON = {r["name"]: r["garrison"] for r in ROWS if "garrison" in r}   # units inside a building (garrison.size, #2117)
+FARM_UPGRADES = {r["name"]: r["farm_upgrades"] for r in ROWS if "farm_upgrades" in r}   # the factor of the food of the
+#                                                                   farm upgrades (Sicilians: +125 %, train.research, #2230)
 RESEARCH_TIME = {r["name"]: [tuples(b) for b in r["research_time"]] for r in ROWS if "research_time" in r}
 # "extra": the second resource of a gather kind ("forage": a fruit bush), {kind: [resource, amount for each unit]}: Poles
 # and Puru stone miners, Portuguese foragers, Shu lumberjacks (#2113). Gather.second adds it at each gathered unit.
@@ -146,6 +152,10 @@ AGE_GIFTS = {r["name"]: r["age_gifts"] for r in ROWS if "age_gifts" in r}   # re
 AGE_NO_BUILDINGS = ("KHMER",)                                      # no buildings are required to advance
 AGE_RATE = {"MALAY": 1.66}                                         # advancing in age is 66 % faster
 AGE_VILLAGERS = {"BENGALIS": 2}                                    # each own town center spawns 2 villagers
+# "tech_gifts": the resources for each technology but an age (Spanish), "economy_villagers": the free villagers for
+# each economic technology (Wei, #2175).
+TECH_GIFTS = {r["name"]: r["tech_gifts"] for r in ROWS if "tech_gifts" in r}
+ECONOMY_VILLAGERS = {r["name"]: r["economy_villagers"] for r in ROWS if "economy_villagers" in r}
 
 
 def tagged(n, group):
@@ -173,6 +183,15 @@ def changes(g, name, s):
     import build                                                   # build imports gather, gather imports this module
     age = build.ages(g)
     return [(v, c[age]) for k, v, c in UNITS.get(civ(g), []) if GROUPS[k](name, s)]
+
+
+def smith(g, name, s):
+    """{technology: n} of SMITH_UNITS for unit name (combat.Stats s) in the age of g: the Inca villagers get the
+    infantry technologies from the Castle Age, the Macedonian cavalry the infantry armor, the Roman infantry twice the
+    infantry armor (AoE2 DE wiki, #2174)."""
+    import build                                                   # build imports gather, gather imports this module
+    age = build.ages(g)
+    return {t: c[age] for k, techs, c in SMITH_UNITS.get(civ(g), []) if c[age] and GROUPS[k](name, s) for t in techs}
 
 
 def units(g, name, s):
@@ -246,6 +265,13 @@ def age_rate(g, name):
     age, else 1."""
     import build                                                   # build imports gather, gather imports this module
     return AGE_RATE.get(civ(g), 1) if name in build.AGE_TECHS else 1
+
+
+def arrows(g, building, player=None):
+    """The factor of the base arrows (garrison.BASE) of building name of the player of g (or of player) in the present
+    age of g: ARROWS (the Saxon towers and castles: twice from the Castle Age, #2178), else 1."""
+    import build                                                   # build imports gather, gather imports this module
+    return next((f[build.ages(g)] for names, f in ARROWS.get(civ(g, player), ()) if building in names), 1)
 
 
 def research_time(g, name):
@@ -327,6 +353,12 @@ def drop(g, kind):
 def work(g, kind):
     """The work-rate factor of the civilization of the player of g for gather kind (WORK), else 1."""
     return WORK.get(civ(g), {}).get(kind, 1)
+
+
+def last(g, kind):
+    """The factor of how long a resource of gather kind lasts for the civilization of the player of g (LAST), else 1:
+    as in AoE2, the villager gets the same amount per trip, but the source loses less (Mayans, Puru, Tatar herds)."""
+    return LAST.get(civ(g), {}).get(kind, 1)
 
 
 def extra(g, kind):
