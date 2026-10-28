@@ -26,13 +26,13 @@ def test_kill_object_of_a_rider_kills_its_mount_too():
     assert kill == "kill @e[type=minecraft:zombie,tag=aoe2mc.p1,tag=!aoe2mc.mount]"
 
 
-def test_kill_object_of_gaia_needs_a_unit_type_and_never_kills_a_player():
+def test_kill_object_of_gaia_kills_the_gaia_units_and_never_a_player():
     stats = Counter()
-    assert lines([effect(aoe2mc.KILL_OBJECT, player=0)], stats) == []   # Gaia units have no tag: not the decor
-    assert stats == Counter({"kill (not supported yet)": 1})
+    assert lines([effect(aoe2mc.KILL_OBJECT, player=0)], stats) == ["kill @e[tag=aoe2mc.p0,tag=!aoe2mc.mount]"]  # #2916
+    assert stats == Counter({"kill": 1})
     assert lines([effect(aoe2mc.KILL_OBJECT, "DEER", kind="U", player=0)])[-1].startswith("kill @e[type=minecraft:")
     remove, = lines([effect(aoe2mc.REMOVE_OBJECT, player=0, area=(1, 1, 2, 2))])
-    assert remove.startswith("kill @e[type=!minecraft:player,tag=!aoe2mc.mount,x=4,")
+    assert remove.startswith("kill @e[tag=aoe2mc.p0,tag=!aoe2mc.mount,x=4,")
 
 
 def test_remove_object_with_no_area_does_nothing_as_before():

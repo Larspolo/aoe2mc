@@ -3119,9 +3119,6 @@ def object_lines(e, c):
         return [f"summon {kind} {x + 0.5} {int(ground[x, z])} {z + 0.5} {nbt.snbt()}"]
     if e["type"] == KILL_OBJECT or e["type"] == REMOVE_OBJECT and min(e.get("area", [-1])) >= 0:
         word = "kill" if e["type"] == KILL_OBJECT else "remove"
-        if name is None and e["player"] <= 0 and e["type"] == KILL_OBJECT:   # Gaia units have no tag: a kill
-            stats["kill (not supported yet)"] += 1                     # of all would kill the decor entities too
-            return []
         if (found := effect_units(e, T)) is None:
             stats[f"{word} (not supported yet)"] += 1
             return []
@@ -3133,13 +3130,11 @@ def object_lines(e, c):
 
 
 def effect_units(e, T):
-    """(selector, top entity, entity) of the units of an effect: its player (Gaia units have no player tag), area
-    (area_selector) and unit type (the type of the top entity of units.make_entity). No type: (selector, None, None).
-    A type with no entity (a building): None."""
+    """(selector, top entity, entity) of the units of an effect: its player (Gaia: the tag aoe2mc.p0, unit_selector,
+    #2916), area (area_selector) and unit type (the type of the top entity of units.make_entity). No type: (selector,
+    None, None). A type with no entity (a building): None."""
     kind, name = e.get("object") or (None, None)
-    at = area_selector(e, T)
-    if e["player"] <= 0:                                           # never a player (#2568)
-        at = re.sub(r"tag=aoe2mc\.p-?\d+,?", "type=!minecraft:player,", at)
+    at = unit_selector(e, T)
     if name is None:
         return at, None, None
     nbt = units.make_entity(dict(name=name, player=0), {}, (0.0, 0.0, 0.0), np.random.default_rng(0)) \
@@ -3147,7 +3142,7 @@ def effect_units(e, T):
     if nbt is None:
         return None
     top = units.top_entity(nbt)
-    return f"@e[type={top['id']},{at[3:]}".replace(",type=!minecraft:player", ""), top, nbt
+    return f"@e[type={top['id']},{at[3:]}", top, nbt
 
 
 def damage_lines(e, c):
@@ -3160,7 +3155,7 @@ def damage_lines(e, c):
     if found is None:
         stats["damage (building, not supported yet)" if q else "damage (no amount)"] += 1
         return []
-    at = found[0]                                                      # Gaia: not the players (effect_units)
+    at = found[0]                                                      # Gaia: the tag aoe2mc.p0 (effect_units)
     stats["damage"] += 1
     if q < 0:
         return heal_commands(at, -q, c)
@@ -3398,15 +3393,15 @@ def player_name_lines(e, c):
 def owner_lines(e, c):
     """The commands of "Change Ownership" (#2570): the units of the player in the area (area_selector) and their
     mounts get the tag and the team of the target player. A temporary tag marks them first: the selector uses the old
-    player tag. Gaia (target 0, #2908) has no player tag and no team: they lose the tag and leave the team. A Gaia
-    source is not supported yet: unit_selector finds only the Gaia units with no tag."""
+    player tag. Gaia (target 0, #2908) has the tag aoe2mc.p0 and no team: they leave the team (#2916). A Gaia source
+    has the tag aoe2mc.p0 too."""
     old, new, T, stats = e["player"], e.get("target", -1), c.T, c.stats
-    if old <= 0 or new < 0 or old == new:
+    if old < 0 or new < 0 or old == new:
         stats["change ownership (not supported yet)"] += old != new
         return []
     stats["change ownership"] += 1
     own = "@e[tag=aoe2mc.own]"
-    to = [f"tag {own} add aoe2mc.p{new}", f"team join p{new} {own}"] if new else [f"team leave {own}"]
+    to = [f"tag {own} add aoe2mc.p{new}", f"team join p{new} {own}" if new else f"team leave {own}"]
     return [f"tag {area_selector(e, T)} add aoe2mc.own",
             f"execute as {own} on vehicle run tag @s add aoe2mc.own",
             f"tag {own} remove aoe2mc.p{old}", *to, f"tag {own} remove aoe2mc.own"]
@@ -3615,10 +3610,9 @@ def resource_score(c):
 
 
 def unit_selector(e, T):
-    """The area_selector of the units of the player of an effect. A Gaia unit has no tag (units.make_entity): the
-    entities with no tag and not the players."""
-    at = area_selector(e, T)
-    return re.sub(r"tag=aoe2mc\.p-?\d+", "tag=,type=!player", at) if e["player"] <= 0 else at
+    """The area_selector of the units of the player of an effect. A Gaia unit has the tag aoe2mc.p0 (units.make_entity,
+    "Change Ownership" to Gaia, #2916): also with a ref tag, a type tag or a type filter."""
+    return area_selector(e if e["player"] >= 0 else {**e, "player": 0}, T)
 
 
 def sound_lines(e, c):
