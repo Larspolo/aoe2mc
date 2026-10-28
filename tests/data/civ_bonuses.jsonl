@@ -75,7 +75,7 @@
 {"name": "FRANKS: Foragers work 15% faster.", "civ": "FRANKS", "bonus": "Foragers work 15% faster.", "in": "WORK"}
 {"name": "GEORGIANS: Start with a Mule Cart. Mule Carts replace Lumber Camps and Mining Camps.", "civ": "GEORGIANS", "bonus": "Start with a Mule Cart. Mule Carts replace Lumber Camps and Mining Camps.", "later": "play:gather"}
 {"name": "GEORGIANS: Fortified Churches replace Monasteries, and provide +10% work rate to Villagers in a 21-tile square.", "civ": "GEORGIANS", "bonus": "Fortified Churches replace Monasteries, and provide +10% work rate to Villagers in a 21-tile square.", "later": "play:monks"}
-{"name": "GEORGIANS: Units and buildings receive -20% damage (-40% instead of -25%) when fighting from higher elevation.", "civ": "GEORGIANS", "bonus": "Units and buildings receive -20% damage (-40% instead of -25%) when fighting from higher elevation.", "later": "play:fight"}
+{"name": "GEORGIANS: Units and buildings receive -20% damage (-40% instead of -25%) when fighting from higher elevation.", "civ": "GEORGIANS", "bonus": "Units and buildings receive -20% damage (-40% instead of -25%) when fighting from higher elevation.", "in": "ELEVATION"}
 {"name": "GEORGIANS: Mounted units regenerate 2/8/14 hit points per minute in the Feudal/Castle/Imperial Age.", "civ": "GEORGIANS", "bonus": "Mounted units regenerate 2/8/14 hit points per minute in the Feudal/Castle/Imperial Age.", "in": "REGEN"}
 {"name": "GOTHS: Infantry units are 15%/20%/25%/30% cheaper in the Dark/Feudal/Castle/Imperial Age.", "civ": "GOTHS", "bonus": "Infantry units are 15%/20%/25%/30% cheaper in the Dark/Feudal/Castle/Imperial Age.", "in": "COSTS"}
 {"name": "GOTHS: Infantry units have +1/+2/+3 attack bonus against Standard Buildings in the Feudal/Castle/Imperial Age.", "civ": "GOTHS", "bonus": "Infantry units have +1/+2/+3 attack bonus against Standard Buildings in the Feudal/Castle/Imperial Age.", "in": "UNITS"}
@@ -89,7 +89,7 @@
 {"name": "HINDUSTANIS: Villagers are 8/13/18/23% cheaper in the Dark/Feudal/Castle/Imperial Age.", "civ": "HINDUSTANIS", "bonus": "Villagers are 8/13/18/23% cheaper in the Dark/Feudal/Castle/Imperial Age.", "in": "COSTS"}
 {"name": "HINDUSTANIS: Camel Riders attack 20% faster.", "civ": "HINDUSTANIS", "bonus": "Camel Riders attack 20% faster.", "in": "UNITS"}
 {"name": "HINDUSTANIS: Gunpowder units have +1/+1 armor.", "civ": "HINDUSTANIS", "bonus": "Gunpowder units have +1/+1 armor.", "in": "UNITS"}
-{"name": "HINDUSTANIS: Can build Caravanserais in the Imperial Age.", "civ": "HINDUSTANIS", "bonus": "Can build Caravanserais in the Imperial Age.", "later": "play:market"}
+{"name": "HINDUSTANIS: Can build Caravanserais in the Imperial Age.", "civ": "HINDUSTANIS", "bonus": "Can build Caravanserais in the Imperial Age.", "in": "game/data/build.jsonl"}
 {"name": "HUNS: Start the game with wood -100, but with the population cap at the maximum.", "civ": "HUNS", "bonus": "Start the game with wood -100, but with the population cap at the maximum.", "in": "START"}
 {"name": "HUNS: On Nomadic maps, the first Town Center spawns a Hunnic Horse.", "civ": "HUNS", "bonus": "On Nomadic maps, the first Town Center spawns a Hunnic Horse.", "later": "play:setup"}
 {"name": "HUNS: Mounted archers are 10%/20% cheaper in the Castle/Imperial Age.", "civ": "HUNS", "bonus": "Mounted archers are 10%/20% cheaper in the Castle/Imperial Age.", "in": "COSTS"}
@@ -127,7 +127,7 @@
 {"name": "LITHUANIANS: Each Town Center (including starting one) provides food +100.", "civ": "LITHUANIANS", "bonus": "Each Town Center (including starting one) provides food +100.", "in": "START"}
 {"name": "LITHUANIANS: Spearman line and Skirmishers move 10% faster.", "civ": "LITHUANIANS", "bonus": "Spearman line and Skirmishers move 10% faster.", "in": "UNITS"}
 {"name": "LITHUANIANS: Each garrisoned Relic gives +1 attack to Knights and Leitis (maximum +4).", "civ": "LITHUANIANS", "bonus": "Each garrisoned Relic gives +1 attack to Knights and Leitis (maximum +4).", "in": "RELIC_ATTACK"}
-{"name": "MACEDONIANS: Take 10% less damage from enemies on higher elevation.", "civ": "MACEDONIANS", "bonus": "Take 10% less damage from enemies on higher elevation.", "later": "play:fight"}
+{"name": "MACEDONIANS: Take 10% less damage from enemies on higher elevation.", "civ": "MACEDONIANS", "bonus": "Take 10% less damage from enemies on higher elevation.", "in": "ELEVATION"}
 {"name": "MACEDONIANS: Recruitment Doctrines are available at the Barracks, Archery Range, and Stable.", "civ": "MACEDONIANS", "bonus": "Recruitment Doctrines are available at the Barracks, Archery Range, and Stable.", "later": "play:military-train"}
 {"name": "MACEDONIANS: Infantry armor upgrades also benefit cavalry.", "civ": "MACEDONIANS", "bonus": "Infantry armor upgrades also benefit cavalry.", "in": "SMITH_UNITS"}
 {"name": "MACEDONIANS: Siege weapons have +1 pierce armor and +30% anti-building damage.", "civ": "MACEDONIANS", "bonus": "Siege weapons have +1 pierce armor and +30% anti-building damage.", "in": "UNITS"}
@@ -162,7 +162,7 @@
 {"name": "PERSIANS: Start the game with food +50, wood +50.", "civ": "PERSIANS", "bonus": "Start the game with food +50, wood +50.", "in": "START"}
 {"name": "PERSIANS: Town Centers and Docks have double hit points and work 5%/10%/15%/20% faster in the Dark/Feudal/Castle/Imperial Age.", "civ": "PERSIANS", "bonus": "Town Centers and Docks have double hit points and work 5%/10%/15%/20% faster in the Dark/Feudal/Castle/Imperial Age.", "in": "WORK_RATE"}
 {"name": "PERSIANS: Parthian Tactics available in the Castle Age.", "civ": "PERSIANS", "bonus": "Parthian Tactics available in the Castle Age.", "in": "EARLIER"}
-{"name": "PERSIANS: Can build Caravanserais in the Imperial Age.", "civ": "PERSIANS", "bonus": "Can build Caravanserais in the Imperial Age.", "later": "play:market"}
+{"name": "PERSIANS: Can build Caravanserais in the Imperial Age.", "civ": "PERSIANS", "bonus": "Can build Caravanserais in the Imperial Age.", "in": "game/data/build.jsonl"}
 {"name": "POLES: Villagers regenerate 10/15/20 hit points per minute in the Feudal/Castle/Imperial Age.", "civ": "POLES", "bonus": "Villagers regenerate 10/15/20 hit points per minute in the Feudal/Castle/Imperial Age.", "in": "REGEN"}
 {"name": "POLES: Stone miners generate gold 33% in addition to stone.", "civ": "POLES", "bonus": "Stone miners generate gold 33% in addition to stone.", "in": "EXTRA"}
 {"name": "POLES: Bloodlines and Scout Cavalry-line upgrades cost food -50%.", "civ": "POLES", "bonus": "Bloodlines and Scout Cavalry-line upgrades cost food -50%.", "in": "COSTS"}
@@ -207,7 +207,7 @@
 {"name": "SPARTANS: Villagers and Fishing Ships drop off 10% more food.", "civ": "SPARTANS", "bonus": "Villagers and Fishing Ships drop off 10% more food.", "in": "DROP"}
 {"name": "SPARTANS: The Elite Hoplite upgrade is available in the Classical Age.", "civ": "SPARTANS", "bonus": "The Elite Hoplite upgrade is available in the Classical Age.", "later": "play:ages"}
 {"name": "TATARS: Herdable animals contain food +50%.", "civ": "TATARS", "bonus": "Herdable animals contain food +50%.", "in": "LAST"}
-{"name": "TATARS: Units deal +20% damage when attacking from higher elevations (+50% instead of +25%).", "civ": "TATARS", "bonus": "Units deal +20% damage when attacking from higher elevations (+50% instead of +25%).", "later": "play:fight"}
+{"name": "TATARS: Units deal +20% damage when attacking from higher elevations (+50% instead of +25%).", "civ": "TATARS", "bonus": "Units deal +20% damage when attacking from higher elevations (+50% instead of +25%).", "in": "ELEVATION"}
 {"name": "TATARS: Parthian Tactics and Thumb Ring are free.", "civ": "TATARS", "bonus": "Parthian Tactics and Thumb Ring are free.", "in": "COSTS"}
 {"name": "TATARS: Two Sheep spawn near newly-constructed Town Centers starting in the Castle Age.", "civ": "TATARS", "bonus": "Two Sheep spawn near newly-constructed Town Centers starting in the Castle Age.", "in": "BUILT_UNITS"}
 {"name": "TEUTONS: Monks have double healing range.", "civ": "TEUTONS", "bonus": "Monks have double healing range.", "in": "HEAL_RANGE"}
@@ -220,7 +220,7 @@
 {"name": "THRACIANS: (Elite/Imperial) Skirmishers regenerate 5 (10) hit points per minute.", "civ": "THRACIANS", "bonus": "(Elite/Imperial) Skirmishers regenerate 5 (10) hit points per minute.", "in": "REGEN"}
 {"name": "THRACIANS: Battle Drills is available in the Classical Age.", "civ": "THRACIANS", "bonus": "Battle Drills is available in the Classical Age.", "later": "play:ages"}
 {"name": "THRACIANS: All buildings except Town Centers can be built on any elevation.", "civ": "THRACIANS", "bonus": "All buildings except Town Centers can be built on any elevation.", "later": "play:build"}
-{"name": "THRACIANS: Forts and towers increase the work rate of nearby miners and lumberjacks in a square of aura range 8 by 15% and serve as resource drop sites for the respective resources.", "civ": "THRACIANS", "bonus": "Forts and towers increase the work rate of nearby miners and lumberjacks in a square of aura range 8 by 15% and serve as resource drop sites for the respective resources.", "later": "play:gather"}
+{"name": "THRACIANS: Forts and towers increase the work rate of nearby miners and lumberjacks in a square of aura range 8 by 15% and serve as resource drop sites for the respective resources.", "civ": "THRACIANS", "bonus": "Forts and towers increase the work rate of nearby miners and lumberjacks in a square of aura range 8 by 15% and serve as resource drop sites for the respective resources.", "in": "AURA"}
 {"name": "THRACIANS: Shepherds and hunters generate gold 3 per minute while gathering from animals (excluding Foxes).", "civ": "THRACIANS", "bonus": "Shepherds and hunters generate gold 3 per minute while gathering from animals (excluding Foxes).", "in": "PER_MINUTE"}
 {"name": "TUPI: Start with +25 of each resource once the first Town Center is built.", "civ": "TUPI", "bonus": "Start with +25 of each resource once the first Town Center is built.", "in": "TOWN_CENTER"}
 {"name": "TUPI: Villagers can garrison in Settlements (max 5).", "civ": "TUPI", "bonus": "Villagers can garrison in Settlements (max 5).", "later": "play:garrison"}
@@ -244,7 +244,7 @@
 {"name": "VIKINGS: Wheelbarrow and Hand Cart free.", "civ": "VIKINGS", "bonus": "Wheelbarrow and Hand Cart free.", "in": "COSTS"}
 {"name": "VIKINGS: Warships cost -10%/-15%/-20% in the Feudal/Castle/Imperial Age.", "civ": "VIKINGS", "bonus": "Warships cost -10%/-15%/-20% in the Feudal/Castle/Imperial Age.", "in": "COSTS"}
 {"name": "VIKINGS: Infantry have +20% hit points starting from the Feudal Age.", "civ": "VIKINGS", "bonus": "Infantry have +20% hit points starting from the Feudal Age.", "in": "UNITS"}
-{"name": "WEI: Receive one free Villager for each economic technology researched", "civ": "WEI", "bonus": "Receive one free Villager for each economic technology researched", "in": "ECONOMY_VILLAGERS"}
+{"name": "WEI: Receive one free Villager for each economic technology researched", "civ": "WEI", "bonus": "Receive one free Villager for each economic technology researched", "in": "economy_villagers"}
 {"name": "WEI: Hei Guang Cavalry +20%/30% hit points in Castle/Imperial Age", "civ": "WEI", "bonus": "Hei Guang Cavalry +20%/30% hit points in Castle/Imperial Age", "in": "UNITS"}
 {"name": "WEI: Xianbei Raider +20%/30% hit points in Castle/Imperial Age (the unit is not in the game program yet, #2160)", "civ": "WEI", "bonus": "Xianbei Raider +20%/30% hit points in Castle/Imperial Age (the unit is not in the game program yet, #2160)", "later": "play:military-train"}
 {"name": "WEI: Traction Trebuchets and Lou Chuans cost -25%", "civ": "WEI", "bonus": "Traction Trebuchets and Lou Chuans cost -25%", "in": "COSTS"}

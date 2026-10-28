@@ -1,4 +1,4 @@
-"""game/train.py: the rewards of a research (#2175, game/civs.py TECH_GIFTS and ECONOMY_VILLAGERS): the Spanish get
+"""game/train.py: the rewards of a research (#2175, game/civs.py TECH_GIFTS and the key "economy_villagers"): the Spanish get
 20 gold for each technology but an age, and the Wei get one free villager at a town center for each economic technology
 (AoE2 DE wiki, "Spanish" and "Wei")."""
 from test_age_bonuses import advance, game
