@@ -242,18 +242,19 @@ def reports(version):
             registries = json.load(f)
     blocks = {k.removeprefix("minecraft:"): v.get("properties", {}) for k, v in raw.items()}
     entities = sorted(k.removeprefix("minecraft:") for k in registries["minecraft:entity_type"]["entries"])
+    sounds = sorted(k.removeprefix("minecraft:") for k in registries["minecraft:sound_event"]["entries"])
     # Biomes are data, not a registry report: read their file names in the server jar inside the bundle
     with zipfile.ZipFile(jar) as z:
         inner = next(n for n in z.namelist() if n.startswith("META-INF/versions/") and n.endswith(".jar"))
         with zipfile.ZipFile(io.BytesIO(z.read(inner))) as zz:
             biomes = sorted(n.split("/")[-1][:-5] for n in zz.namelist()
                             if n.startswith("data/minecraft/worldgen/biome/") and n.endswith(".json"))
-    data = {"version": version, "source": {k: f"mojang/{version}" for k in ("blocks", "entities", "biomes")},
-            "blocks": blocks, "entities": entities, "biomes": biomes}
+    data = {"version": version, "source": {k: f"mojang/{version}" for k in ("blocks", "entities", "biomes", "sounds")},
+            "blocks": blocks, "entities": entities, "biomes": biomes, "sounds": sounds}
     path = os.path.join(ROOT, "tools", "mcdata", f"{version}.json")
     with open(path, "w") as f:
         json.dump(data, f, separators=(",", ":"), sort_keys=True)
-    print(f"Wrote {path}: {len(blocks)} blocks, {len(entities)} entities, {len(biomes)} biomes")
+    print(f"Wrote {path}: {len(blocks)} blocks, {len(entities)} entities, {len(biomes)} biomes, {len(sounds)} sounds")
 
 
 def main(argv=None):
