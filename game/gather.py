@@ -525,6 +525,14 @@ def military(name):
     return not name.startswith(CIVILIANS) and (animal(name) or ("military",))[0] == "military"
 
 
+def soldier(name):
+    """True for a unit that takes move orders as a soldier (g.soldiers), not the jobs of a villager: a military unit, a
+    monk, a trade cart, a ship, and the units with the key "orders" or "moves" (train.ORDERS, build.MOVES). One rule for
+    Gather.__init__, train.summon and owners.give (#2993): a converted trade cart was a villager."""
+    return military(name) or name in monk.MONKS or name.startswith(trade.CART) or replay.ship(name) \
+        or name in train.ORDERS or name in build.MOVES
+
+
 def walk(g, v):
     """Move unit v one cell on its path with /tp, facing the step (g.map, g.command: Gather or replay.Replay)."""
     x, z = v.path.pop(0)
@@ -652,8 +660,7 @@ class Gather:
                       and "VILLAGER" in o["name"]]
         self.villagers, self.selected = {}, set()
         self.soldiers = {o["uuid"]: o["name"] for o in data["objects"] if o["kind"] == "unit"
-                         and o["player"] == player and (military(o["name"]) or o["name"] in monk.MONKS or o["name"].startswith(trade.CART)
-                              or replay.ship(o["name"]))}
+                         and o["player"] == player and soldier(o["name"])}
         # military units, monks, trade carts and ships of the player: they take move orders (#1243, #1253, #1383)
         self.ships = {}                         # UUID of an own ship -> Villager with its water path (fleet.py, #1383)
         self.enemies = {o["uuid"]: o["name"] for o in data["objects"] if o["kind"] == "unit" and o["player"]
