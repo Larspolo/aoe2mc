@@ -34,6 +34,7 @@ import re
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import garrison  # noqa: E402
 import gather  # noqa: E402
 import rcon  # noqa: E402
 import replay  # noqa: E402
@@ -102,6 +103,7 @@ def tick(g):
     not the bots (bot.Bot), once each EVERY seconds; then the tasks of the triggers (tasks) and their orders (orders).
     gather.Gather.run calls it in the scenario mode. Also the technologies of the triggers (research, #2577)."""
     research(g)
+    garrisons(g)
     if g.clock() < vars(g).get("book_at", 0.0):
         return
     g.book_at = g.clock() + EVERY
@@ -127,8 +129,10 @@ def orders(g):
     replay.Replay.attack_move) and removes the tag. A patrol (g.patrols: [tag, [tile, middle of the area], leg]) walks
     to the tile and back, again and again: it turns when one of its units is NEAR its point, and ends when no unit has
     the tag. A new patrol with the same tag (a looping trigger) replaces the old one. A "Change Object Stance" order
-    (aoe2mc.stance_lines, #2705) sets the stance of the tagged units and removes the tag."""
-    new = re.findall(r'"(patrol|attack_move|stance) (aoe_order[\w.]+) (-?\d+(?: -?\d+)*)"',
+    (aoe2mc.stance_lines, #2705) sets the stance of the tagged units and removes the tag. A "Stop Object" order
+    (aoe2mc.stop_lines, #2754) stops the tagged units (`aoe stop`), ends their patrols as a new order of a person does
+    (gather.Gather.end_patrols, #2674) and removes the tag."""
+    new = re.findall(r'"(patrol|attack_move|stance|stop) (aoe_order[\w.]+) ?(-?\d+(?: -?\d+)*)?"',
                      g.command(f"data get storage {ORDERS} list") or "")
     if new:
         g.command(f"data remove storage {ORDERS} list")
@@ -138,6 +142,12 @@ def orders(g):
         if order == "stance":                                          # "Change Object Stance" (#2705)
             import combat                                              # combat -> gather -> scenario
             g.command(f"aoe stance {sel} {combat.STANCES[p[0]]}")
+            g.command(f"tag {sel} remove {tag}")
+            continue
+        if order == "stop":                                            # "Stop Object" (#2754)
+            for q in patrols:
+                g.command(f"tag {sel} remove {q[0]}")
+            g.command(f"aoe stop {sel}")
             g.command(f"tag {sel} remove {tag}")
             continue
         if order == "attack_move":
@@ -210,6 +220,19 @@ def research(g):
                   file=sys.stderr)
             continue
         train.research(sides[r["player"]], {"name": r["technology"], "player": "@a"}, start=True)
+
+
+def garrisons(g):
+    """The score #g<ref> of aoe_gar of each converted building of a player (the people and the bots) that takes a
+    garrison: the number of units inside (garrison.holders, g.garrisons), for the condition "Units Garrisoned" of the
+    triggers (aoe2mc.trigger_files, #2714). One command per change: a unit goes in, all come out, the building falls."""
+    sent = vars(g).setdefault("garrison_sent", {})
+    for x in [g, *(s.g for s in g.bots)]:
+        for rect, o in sorted(garrison.holders(x).items()) if "objects" in x.data else ():
+            n = len(x.garrisons.get(rect, ()))
+            if o.get("ref") is not None and sent.get(o["ref"], 0) != n:   # the objective starts with no score: 0
+                g.command(f"scoreboard players set #g{o['ref']} aoe_gar {n}")
+                sent[o["ref"]] = n
 
 
 def victory(g):
