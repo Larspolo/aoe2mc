@@ -59,8 +59,16 @@ def test_a_walk_right_after_a_walk_catches_up():
     assert speeds[1] == ai.speed_command("u1", "VILLAGER_MALE", 4, 4.0 * replay.CATCH_UP)   # 8 blocks of lag in 16 (#1291)
 
 
+class Slow(Entity):
+    """The entity of u1 walks 1 block per read from the start: far behind, but not stuck (Replay.unstick, #2304)."""
+    def command(self, cmd):
+        if cmd == "data get entity u1 Pos":
+            self.at = (self.at[0] + 1, self.at[1])
+        return super().command(cmd)
+
+
 def test_a_unit_behind_walks_the_next_leg_faster_up_to_the_cap():
-    speeds = walk(Entity(at=(10.5, 42.5)))                          # it stays at the start: far behind
+    speeds = walk(Slow(at=(10.5, 42.5)))                            # it stays near the start: far behind
     assert speeds[0] == ai.speed_command("u1", "VILLAGER_MALE", 4, 4.0 * replay.PATH)
     assert set(speeds[1:]) == {ai.speed_command("u1", "VILLAGER_MALE", 4, 4.0 * replay.CATCH_UP)}
 

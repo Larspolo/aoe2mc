@@ -267,6 +267,7 @@ STARTS = {r["name"]: r for r in table.load("setup.jsonl") if "ages" in r}
 QUEUE = 15                                                         # units in the queue of one building, as in AoE2
 HOUSING = {r["name"]: r["housing"] for r in BUILDING_ROWS if "housing" in r}   # population of a complete building
 LIMIT = 200                                                        # the AoE2 population limit
+LIMITS = (*range(25, 251, 25), 300, 400, 500)                      # the AoE2 setting "Population limit" (#2266)
 REPEAT = 256                                                       # researches of one technology: "going above and beyond"
 CENSUS = 2.0                                                       # AoE2 seconds between two counts of the live units
 MORE = 18                                                          # the first slot of the item row under the queue row
@@ -632,7 +633,8 @@ def age(g):
 
 def stats(g, name):
     """The combat values of AoE2 unit name with the bonuses of the civilization (civs.UNITS) and the technologies of
-    the player (combat.stats and TECHS), twice for civs.TWICE (#1561), n times for civs.SMITH_UNITS (#2174)."""
+    the player (combat.stats and TECHS), twice for civs.TWICE (#1561), n times for civs.SMITH_UNITS (#2174), and the
+    hit points of civs.TECH_HP (#2269)."""
     import combat                                                  # combat imports gather, gather imports this module
     s, twice = civs.units(g, name, combat.stats(name)), civs.TWICE.get(civs.civ(g), ())
     times, also, more = civs.smith(g, name, s), civs.ALSO.get(civs.civ(g), {}), civs.MORE.get(civs.civ(g), {})
@@ -642,6 +644,9 @@ def stats(g, name):
             e = EACH[t]                                            # villagers too (#2173)
         for _ in range(count(g, t) * (1 + (t in twice)) * times.get(t, 1)):   # "going above and beyond" stacks (#968)
             s = e(name, s)
+    for group, building, hp in civs.TECH_HP.get(civs.civ(g), ()):   # the Aztec monks (#2269)
+        if civs.GROUPS[group](name, s):
+            s = s._replace(hp=s.hp + hp * sum(t in g.techs for t in TRAINS[building] if t in TECHS))
     return s
 
 
@@ -767,7 +772,7 @@ def research(g, entry, start=False):
         g.command(f"scoreboard players add {r.capitalize()} {g.board} {v}")
     if entry["name"] in civs.ECONOMY:                              # Wei: free villagers at an own town center (#2175)
         rects = [r for r, n in homes(g).items() if n == "TOWN_CENTER"]
-        for _ in range(civs.ECONOMY_VILLAGERS.get(civs.civ(g), 0) * bool(rects)):
+        for _ in range(civs.value("economy_villagers", civs.civ(g), 0) * bool(rects)):
             if spawn(g, rects[0], "VILLAGER_MALE"):
                 g.pop += 1
     g.command(f"tellraw {entry['player']} " + json.dumps({"text": f"{ITEMS[entry['name']][2]} is researched.",
@@ -780,8 +785,9 @@ def limit(g):
 
 
 def max_pop(g):
-    """The highest population limit: LIMIT, 1000 with the cheat "my cpu can handle it" (#968)."""
-    return getattr(g, "pop_cap", None) or LIMIT
+    """The highest population limit: the setting of the game (Gather.pop_limit, run.py --pop-limit, #2266), else LIMIT;
+    1000 with the cheat "my cpu can handle it" (#968)."""
+    return getattr(g, "pop_cap", None) or getattr(g, "pop_limit", None) or LIMIT
 
 
 def census(g):
