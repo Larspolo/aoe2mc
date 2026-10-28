@@ -12,7 +12,6 @@ NOW = 1_800_000_000
 def fake(monkeypatch):
     """Fakes for the CLI usage, the GitHub calls and the claims; returns the list of the status comment reads."""
     reads = []
-    monkeypatch.setattr(usage, "PACER", "session")
     monkeypatch.setattr(usage, "read_usage", lambda: {"five_hour": (0.2, NOW + 3 * 3600, "allowed")})
     monkeypatch.setattr(dashboard, "pages", lambda path: [])
     monkeypatch.setattr(dashboard, "api", lambda path: {"total_count": 0})

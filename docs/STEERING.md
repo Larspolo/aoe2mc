@@ -102,8 +102,7 @@ A run of the scheduled task cannot start other runs (#566). So the workflow `pac
 `agent.toml` at a time) and starts them through the API trigger of each scheduled task (your secrets
 `PACER_URL_<TASK>` and `PACER_TOKEN_<TASK>`). One workflow run loops for 5.5 hours, then starts the next one: GitHub
 fires the cron of this repository only a few times per day. A red Pacer run shows a failed call (a wrong token: make
-a new API token and change the secret). The scheduled tasks have no schedule of their own. The old pacer session
-(skill `pacer`) is the fallback: `pacer = "session"` in `agent.toml`. To stop all runs: add `paused` to the status issue.
+a new API token and change the secret). The scheduled tasks have no schedule of their own. To stop all runs: add `paused` to the status issue.
 
 ## CI and the merge
 
