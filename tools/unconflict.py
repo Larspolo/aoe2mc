@@ -29,15 +29,31 @@ def merge(ours, theirs):
     return sorted(lines, key=lambda t: KEYED.match(t).group(1))
 
 
-def solve(text):
-    """The text with each add-add hunk solved, or (None, reason)."""
-    out, lines, i = [], text.splitlines(keepends=True), 0
+def hunk(ours, base, theirs):
+    """The solved lines of one hunk, or (None, reason)."""
+    if base is None:
+        return None, "no base section: set merge.conflictStyle diff3"
+    if base:
+        return None, "both sides change the same lines"
+    same = {m.group(1) for m in map(DEF.match, ours) if m} & {m.group(1) for m in map(DEF.match, theirs) if m}
+    if same:
+        return None, f"both sides define {', '.join(sorted(same))}"
+    both = merge(ours, theirs)
+    if both is None:
+        return None, "both sides add the same key"
+    return both, ""
+
+
+def solve_some(text):
+    """(text, left): each add-add hunk solved, each other hunk kept with its markers; left = [(line, reason)] of the
+    kept hunks (the line of their `<<<<<<<` in the new text, from 1). `tools/merge_main.py` solves what it can (#1864)."""
+    out, left, lines, i = [], [], text.splitlines(keepends=True), 0
     while i < len(lines):
         if not lines[i].startswith("<<<<<<< "):
             out.append(lines[i])
             i += 1
             continue
-        ours, base, theirs, part = [], None, [], "ours"
+        start, ours, base, theirs, part = i, [], None, [], "ours"
         i += 1
         while i < len(lines) and not lines[i].startswith(">>>>>>> "):
             t = lines[i]
@@ -49,18 +65,19 @@ def solve(text):
                 (ours if part == "ours" else base if part == "base" else theirs).append(t)
             i += 1
         i += 1
-        if base is None:
-            return None, "no base section: set merge.conflictStyle diff3"
-        if base:
-            return None, "both sides change the same lines"
-        same = {m.group(1) for m in map(DEF.match, ours) if m} & {m.group(1) for m in map(DEF.match, theirs) if m}
-        if same:
-            return None, f"both sides define {', '.join(sorted(same))}"
-        both = merge(ours, theirs)
+        both, why = hunk(ours, base, theirs)
         if both is None:
-            return None, "both sides add the same key"
-        out += both
-    return "".join(out), ""
+            left.append((len(out) + 1, why))
+            out += lines[start:i]
+        else:
+            out += both
+    return "".join(out), left
+
+
+def solve(text):
+    """The text with each add-add hunk solved, or (None, reason)."""
+    text, left = solve_some(text)
+    return (None, left[0][1]) if left else (text, "")
 
 
 def check(path, text):
