@@ -429,7 +429,9 @@ def read_scenario(path):
                                             **({"target": e.target_player}                # "Change Ownership" (#2570)
                                                if e.effect_type == CHANGE_OWNERSHIP else {}),
                                             **({"unit": e.time_unit, "timer": e.timer}   # "Display Timer" (#2572)
-                                               if e.effect_type == DISPLAY_TIMER else {}))
+                                               if e.effect_type == DISPLAY_TIMER else {}),
+                                            **({"sound": e.sound_name or ""}             # "Play Sound" (#2644)
+                                               if e.effect_type == PLAY_SOUND else {}))
                                        for e in t.effects])
                          for t in scn.trigger_manager.triggers]
     mood = mm.map_color_mood                 # a ColorMood, or a string that the parser does not know (#1594)
@@ -2722,8 +2724,11 @@ TELEPORT_OBJECT = 35
 CHANGE_VARIABLE, VARIABLE_VALUE = 56, 22                               # the scenario variables (#2611)
 TICKED = COUNTED + (VARIABLE_VALUE,)                               # conditions of the tick function
 FREEZE_OBJECT = 22                                                     # "Freeze Object" (#2608)
+CHANGE_OBJECT_NAME = 26                                                # "Change Object Name" (#2616)
 CHANGE_VIEW = 16                                                       # "Change View" (#2610)
 CLEAR_INSTRUCTIONS = 21                                                # "Clear Instructions" (#2609)
+PLAY_SOUND = 4                                                         # "Play Sound" (#2644)
+SOUNDS = [(r["name"], r["sound"]) for r in units.rows("sounds.jsonl")]  # AoE2 sound name part -> vanilla sound
 
 
 def turn_area(area, size, k):
@@ -2817,6 +2822,20 @@ def damage_lines(e, T, stats):
     at = found[0]                                                      # Gaia: not the players (effect_units)
     stats["damage"] += 1
     return [f"execute as {at} run damage @s {q}"]                      # damage takes one entity
+
+
+def name_lines(e, T, stats):
+    """The commands of "Change Object Name" (#2616): the new name (with no AoE2 color tags) on the CustomName text of
+    each unit of the effect (effect_units). The label of a unit is on its top entity (units.make_entity), and the
+    selector has no mounts: the rider gets the name. Only the text changes, so the player color stays."""
+    msg = re.sub(r"<[^<>]*>", "", e["message"]).replace("\r", "").strip()
+    found = effect_units(e, T) if msg else None
+    if found is None:
+        stats["change object name (not supported yet)" if msg else "change object name (no name)"] += 1
+        return []
+    stats["change object name"] += 1
+    return [f"execute as {found[0]} run data modify entity @s CustomName.text set value "   # one entity
+            f"{json.dumps(msg, ensure_ascii=False)}"]
 def owner_lines(e, T, stats):
     """The commands of "Change Ownership" (#2570): the units of the player in the area (area_selector) and their
     mounts get the tag and the team of the target player. A temporary tag marks them first: the selector uses the old
@@ -2872,6 +2891,17 @@ def unit_selector(e, T):
     entities with no tag and not the players."""
     at = area_selector(e, T)
     return re.sub(r"tag=aoe2mc\.p-?\d+", "tag=,type=!player", at) if e["player"] <= 0 else at
+
+
+def sound_lines(e, T, ground):
+    """The command of "Play Sound" (#2644): the vanilla sound of the first SOUNDS part in the AoE2 sound name, for all
+    players; at the target tile when the effect has one (heard up to 16 blocks), else at each player."""
+    name = e.get("sound", "").upper()
+    sound = next(s for part, s in SOUNDS if part in name)
+    x, z = (int((v + 0.5) * T) for v in e.get("tile", [-1, -1]))
+    if min(e.get("tile", [-1])) < 0 or not (0 <= x < ground.shape[0] and 0 <= z < ground.shape[1]):
+        return [f"execute as @a at @s run playsound minecraft:{sound} master @s"]
+    return [f"playsound minecraft:{sound} master @a {x + 0.5} {int(ground[x, z])} {z + 0.5}"]
 
 
 def freeze_lines(e, T):
@@ -2955,16 +2985,19 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
     "Change Variable": variable_lines; a "Variable Value" condition runs in the tick function as an area (#2611).
     "Declare Victory" sets the score #p<player> of aoe_win to 1: the scenario mode of the game program ends the game.
     "Freeze Object": freeze_lines (#2608).
+    "Change Object Name": name_lines (#2616).
     "Change View": view_lines (#2610).
     "Clear Instructions": title @a clear (#2609).
-    A "Chance" condition (alone, after the timers or with the ticked conditions, #2574): a roll function checks the
-    trigger once per second, as AoE2 does, with `random value 1..100`. A disabled trigger does not run."""
+    "Play Sound": sound_lines (#2644).
+    A disabled trigger does not run."""
     load, files, tick, win = [], {}, [], False
     stats = Counter() if stats is None else stats
     ground = np.zeros((0, 0), np.int16) if ground is None else ground
     for t in triggers:
         conds = t["conditions"]
         kinds = {(c["type"], c["inverted"]) for c in conds}
+        # "Chance" (alone, after the timers or with the ticked conditions, #2574): a roll function checks the trigger
+        # once per second, as AoE2 does, with `random value 1..100`
         chance = (TRIGGER_CHANCE, False) in kinds
         rest = kinds - {(TRIGGER_CHANCE, False)}
         if not t["enabled"] or not conds or not (rest == {(TIMER, False)} or rest <= {(k, False) for k in TICKED}) or \
@@ -3006,8 +3039,14 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
             if e["type"] == FREEZE_OBJECT:
                 lines += freeze_lines(e, T)
                 continue
+            if e["type"] == CHANGE_OBJECT_NAME:
+                lines += name_lines(e, T, stats)
+                continue
             if e["type"] == CHANGE_VIEW:
                 lines += view_lines(e, T, ground)
+                continue
+            if e["type"] == PLAY_SOUND:
+                lines += sound_lines(e, T, ground)
                 continue
             if e["type"] == CLEAR_INSTRUCTIONS:                            # no message
                 lines.append("title @a clear")

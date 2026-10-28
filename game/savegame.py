@@ -146,6 +146,8 @@ NOT_SAVED = (                                                          # the fie
     "fog",                                                             # fog.py: the next tick hides the units again
     "ghosts",                                                          # build.py: the shown building to place
     "goto_idle",                                                       # goto.py: the next idle unit to show
+    "haste_time",                                                      # train.haste: a tick timer
+    "hasted",                                                          # train.haste: a load sends the values again
     "home",                                                            # bot.py: the town center of a bot
     "hurried",                                                         # regen.military: again in its next pass
     "kings",                                                           # regicide.setup makes it again
