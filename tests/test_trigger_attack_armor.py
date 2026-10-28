@@ -39,9 +39,9 @@ def test_change_object_armor_subtracts_from_the_armor_of_the_units():
     assert stats == Counter({"change object armor": 1})
 
 
-def test_a_set_is_not_supported_yet():
+def test_a_multiply_is_not_supported_yet():                            # a set: tests/test_trigger_attack_set.py
     stats = Counter()
-    assert lines([effect(aoe2mc.CHANGE_OBJECT_ATTACK, 2, operation=1)], stats) == []
+    assert lines([effect(aoe2mc.CHANGE_OBJECT_ATTACK, 2, operation=4)], stats) == []
     assert stats == Counter({"change object attack or armor (not supported yet)": 1})
 
 

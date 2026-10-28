@@ -67,7 +67,7 @@ def test_the_villager_appears_after_25_aoe2_seconds_in_front_of_the_town_center(
     assert m and (float(m[1]), float(m[2]), float(m[3])) == (3.5, 64.0, 5.5)   # south of the middle
     assert len(g.villagers) == 2 and len(g.units) == 2 and len(g.queues[2, 5, 2, 5]) == 1
     new = next(v for u, v in g.villagers.items() if u != "v")
-    assert "UUID: [I;" in summon and any(c.startswith(f"aoe stats {new.uuid} ") for c in server.log)
+    assert "UUID:[I;" in summon and any(c.startswith(f"aoe stats {new.uuid} ") for c in server.log)
     server.entities[new.uuid] = {"Pos": new.pos}                       # alive: the census keeps it (#1039)
     for _ in range(steps):                                             # the second one takes the next cell
         g.step()

@@ -206,10 +206,14 @@ def properties(game_port, rcon_port, password, pack=None):
             "gamemode=creative\nforce-gamemode=true\n")
 
 
+SPECTATORS = ('team add spec "Spectators"', "team modify spec color gray")   # the team of the spectators (#2898)
+
+
 class Game:
     """A running server with an RCON connection. Use it in a `with` block, so that the server always stops.
     people: the people of a game (`--people`); sides: Minecraft name -> AoE2 player (#1310)."""
     people = 1
+    spectators = frozenset()                         # the Minecraft players without a side (#2898)
 
     def __init__(self, world, version=mc_check.DEFAULT_VERSION, timeout=300, server="paper"):
         self.world, self.version, self.timeout, self.kind = os.path.abspath(world), version, timeout, server
@@ -274,11 +278,17 @@ class Game:
     def side(self, name):
         """Put Minecraft player name on the team of its AoE2 player in a game of more people (decision #1308, option
         A): the join order. The first one gets player 1, the second player 2; a later one gets no side. A player who
-        joins again keeps its side. A later menu (option C) changes this table only."""
+        joins again keeps its side. A later menu (option C) changes this table only. A later one is a spectator (#2898):
+        the game mode spectator flies through blocks and uses no items, and the team spec is no team of a player, so
+        no Gather reads its clicks (Gather.who). With one person all Minecraft players play player 1 (who "@a")."""
         n = self.sides.get(name) or next((k for k in range(1, self.people + 1) if k not in self.sides.values()), 0)
         if self.people > 1 and n:
             self.sides[name] = n
             self.command(f"team join p{n} {name}")
+        elif self.people > 1:
+            for cmd in [*SPECTATORS * (not self.spectators), f"team join spec {name}", f"gamemode spectator {name}"]:
+                self.command(cmd)                    # a join again: force-gamemode made it creative
+            self.spectators = {*self.spectators, name}
 
     def choose(self, name, n):
         """The menu "Choose your player" (lobby.py, #1563): Minecraft player name plays AoE2 player n, when no other
@@ -287,6 +297,9 @@ class Game:
             return False
         self.sides[name] = n
         self.command(f"team join p{n} {name}")
+        if name in getattr(self, "spectators", ()):  # a spectator who takes a free side plays again (#2898)
+            self.spectators = self.spectators - {name}
+            self.command(f"gamemode creative {name}")
         return True
 
     def _op_loop(self):
