@@ -251,6 +251,8 @@ def test_player_teams(tiny_world):
     func = os.path.join(path, "datapacks", "aoe2mc", "data", "aoe2mc", "function")
     with open(os.path.join(func, "load.mcfunction")) as f:
         load = f.read().splitlines()
+    with open(os.path.join(func, "start.mcfunction")) as f:     # the colors: at the first load only (#3074)
+        load[:0] = f.read().splitlines()
     with open(os.path.join(func, "pulse.mcfunction")) as f:
         pulse = f.read().splitlines()
     with open(os.path.join(path, "aoe2mc.json")) as f:

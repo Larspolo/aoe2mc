@@ -49,7 +49,7 @@ def test_the_effect_is_read_and_converted(tmp_path):
     with contextlib.redirect_stdout(io.StringIO()):
         aoe2mc.convert(src, str(tmp_path / "W"))
     fn = os.path.join(tmp_path, "W", "datapacks", "aoe2mc", "data", "aoe2mc", "function")
-    with open(os.path.join(fn, "load.mcfunction")) as f:
+    with open(os.path.join(fn, "start.mcfunction")) as f:
         assert f"schedule function aoe2mc:trigger/{storm['id']} 400t replace" in f.read()
     with open(os.path.join(fn, "trigger", f"{storm['id']}.mcfunction")) as f:
         assert f.read() == "time set 6000\nweather rain\n"
