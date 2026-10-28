@@ -1375,7 +1375,8 @@ class Gather:
                 work = self.work_time(kind, v.tree in self.map.herds)
                 last = civs.last(self, "sheep" if v.tree in self.map.herds else kind)
                 take = 1 if last == 1 else 1 / last                    # 1: the amounts stay whole numbers
-                while v.timer >= work and v.load < self.limit(v.res) and src.get(v.tree, 0) > 0:
+                most = self.limit(v.res, "sheep" if v.tree in self.map.herds else kind)
+                while v.timer >= work and v.load < most and src.get(v.tree, 0) > 0:
                     v.timer -= work
                     v.load += 1
                     src[v.tree] -= take
@@ -1397,7 +1398,7 @@ class Gather:
                         self.fell(v.tree)
                     else:
                         self.trunk(v.tree)
-                if v.load >= self.limit(v.res) or src.get(v.tree, 0) <= 0:
+                if v.load >= most or src.get(v.tree, 0) <= 0:
                     meat = self.map.drops["meat"] if v.res == "food" and v.tree in self.map.carcasses else []
                     self.go(v, "to_drop", set().union(*map(self.map.around, self.map.drops[v.res] + meat)))
         train.tick(self, self.tick * NORMAL)
@@ -1456,11 +1457,11 @@ class Gather:
                 self.seconds[res] -= whole
                 self.earn(res, whole)
 
-    def limit(self, res=None):
+    def limit(self, res=None, kind=None):
         """The resources res that a villager carries, with the technologies of the player (CARRY, and FOOD_CARRY for
-        food)."""
+        food) and the bonus of its civilization for gather kind (civs.carry, #2270)."""
         more = CARRY | FOOD_CARRY if res == "food" else CARRY
-        return self.carry + sum(more.get(t, 0) * train.count(self, t) for t in self.techs)
+        return self.carry + sum(more.get(t, 0) * train.count(self, t) for t in self.techs) + civs.carry(self, kind or res)
 
     def follow(self, v):
         """Paper: read the position of a walking villager. It arrives 1.5 blocks from the center of its goal cell (there
