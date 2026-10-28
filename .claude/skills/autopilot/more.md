@@ -13,7 +13,8 @@ the merge) → `git push -u origin <branch>`. Exit 0 → `git fetch origin <bran
 main has the squashed old commits, so check that `git diff --stat origin/main` shows only your ticket (#523).
 The session branch can carry only one open PR: do the next ticket in a local commit, and push it only when the PR
 of the last ticket is merged or closed (`/pulls?head=OWNER:<branch>&state=open` is empty). Else a push replaces
-the open PR. After `checkout -B` the upstream is
+the open PR. While you wait for that merge, beat both claims (the PR's ticket and the local one) at least every 10
+minutes: a conflicted PR can wait 45 minutes, and #2713 was taken over as "stuck" with its tested commit still local. After `checkout -B` the upstream is
 `origin/main`, so a bare `git push` fails: check that the output shows `-> <branch>`, else the PR has old commits.
 Stop when the context is more than half full.
 

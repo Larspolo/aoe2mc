@@ -11,6 +11,11 @@ player loads it with the world. Without the option, the world is the same as bef
     assets/minecraft/textures/entity/zombie/husk.png
     assets/minecraft/textures/entity/zombie/zombie.png
     assets/minecraft/textures/entity/zombie_villager/zombie_villager.png
+    assets/minecraft/items/chest.json                (#2746)
+    assets/aoe2mc/models/item/war_wagon.json         (#2746)
+    assets/aoe2mc/equipment/<unit>.json
+    assets/aoe2mc/textures/entity/equipment/humanoid/<unit>.png, <unit>_overlay.png
+    assets/aoe2mc/textures/entity/equipment/humanoid_leggings/<unit>.png, <unit>_overlay.png
 ```
 
 - `pack.mcmeta`: `pack_format`, `min_format` and `max_format` are `VERSIONS[...]["resource_format"]` in `aoe2mc.py`
@@ -22,13 +27,35 @@ player loads it with the world. Without the option, the world is the same as bef
 - The zombie model uses only the top half (64 × 32): the left arm and leg mirror the right ones. The zombie villager
   has a 8 × 10 × 8 head, a nose box at (24, 0), and its clothes come from the overlays `zombie_villager/type/*.png`
   and `profession/*.png`, which the pack does not change.
+- The cart of the War Wagon (#2746) is a vanilla `chest` item with the `custom_model_data` string `aoe2mc:war_wagon`
+  (`units.cart`). `items/chest.json` selects the cart model for it and keeps the vanilla chest definition
+  (`VANILLA_CHEST`, from the 26.3 client jar) as the fallback. So the entity is the same with and without the pack.
+- A model box out of 0..16 pixels needs an explicit `uv` on each face: else the face reads its texture from the
+  neighbors in the atlas (`cart_model`).
 - The zip has the same bytes for each conversion: sorted names and a fixed time (a release holds the same bytes).
+
+## Unit armor (#2742)
+
+- Each unit of `data/looks.jsonl` (the infantry of `data/lines.jsonl` and the Spearman line) has one line: `"pattern"`
+  (`cloth`, `quilted`, `mail`, `scale`, `plate`), `"accent"` (belt, tabard stripe, helmet band) and `"crest"` (optional).
+- With the option, `units.ASSETS` is on, and `units.wear()` gives each armor piece of the unit the component
+  `minecraft:equippable` with its slot and `asset_id` `aoe2mc:<name>` (`ELITE_X` wears the asset of `X`). The game
+  program (`run.Game`) sets `units.ASSETS` when the world has `resourcepacks/resources.zip`.
+- The pack has `assets/aoe2mc/equipment/<name>.json` with the layers `humanoid` and `humanoid_leggings`: a dyeable
+  base (`color_when_undyed` white: a dyed leather piece takes the `dyed_color` of its item) and an overlay that is not
+  dyed. `aoe2mc.armor_textures()` draws the 64 × 32 textures (`ARMOR_BOXES`) from the material of each piece of the
+  unit and the pattern of its look.
 
 ## Client behavior (26.3, checked with `tools/mc_shot.py`)
 
 - Single player (`--quickPlaySingleplayer`) loads the pack with no prompt: the log shows
   `Reloading ResourceManager: vanilla, vanilla, server/00000000/<uuid>` after the world loads.
 - A pack that fails to load gives the prompt `multiplayer.texturePrompt.failure` (`WorldOpenFlows`).
+- Multiplayer (`game/run.py`, #2740): `run.PackServer` serves the zip over HTTP on 127.0.0.1 (a free port), and
+  `server.properties` gets `resource-pack`, `resource-pack-sha1`, `require-resource-pack=true` and
+  `resource-pack-prompt` (`run.PROMPT`). Before the join the client shows "This server requires the use of a custom
+  resource pack." with the prompt text and the buttons "Proceed" and "Disconnect". `mc_shot.Client` at 1280 × 720:
+  click (407, 488) for "Proceed"; the player is in `list` only after it.
 
 ## Pitfalls
 
