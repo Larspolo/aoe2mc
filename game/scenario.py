@@ -7,7 +7,8 @@ them (a random map, a recorded game, an old scenario) keeps the lobby values. re
 Each person also gets a written book with the scenario texts (aoe2mc.json "messages": objectives, hints,
 instructions ...), as the "Objectives" window of AoE2 DE, and the chat shows the instructions at the start (#2541).
 The trigger effect "Research Technology" (#2577) sets a score of the datapack; research() (in tick()) gives the
-technology.
+technology. The conditions "Object Visible" and "Object Not Visible" (#2756) test a score that visible() sets from the
+sight of the player (the fog of the game program).
 
 A scenario trigger with the effect "Declare Victory" ends the game (#2542): its datapack function sets the score
 #p<N> of aoe_win to 1 (aoe2mc.trigger_files), and victory() reads it with RCON once per conquest.EVERY seconds. Player N
@@ -34,6 +35,7 @@ import re
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import fog  # noqa: E402
 import gather  # noqa: E402
 import rcon  # noqa: E402
 import replay  # noqa: E402
@@ -107,6 +109,7 @@ def tick(g):
     g.book_at = g.clock() + EVERY
     tasks(g)
     orders(g)
+    visible(g)
     messages = g.data.get("messages", {})
     text = re.sub(r"<[^<>]*>", "", messages.get("instructions", "")).strip()   # AoE2 color tags (book_pages)
     for who in sorted({x.who for x in [g, *(s.g for s in g.bots if not hasattr(s, "charged"))]}):
@@ -189,6 +192,34 @@ def setup(g, mode="scenario"):
             x.command(f"scoreboard players set {r} {x.board} {x.stock[r.lower()]}")
         train.sidebar(x)
     return g
+
+
+def visible(g):
+    """The conditions "Object Visible" and "Object Not Visible" of the triggers (#2756): set the score #r<ref>.p<player>
+    of aoe_seen to 1 when a tile of the object is in the sight of the player (its own units and buildings, and those of
+    its allies with "Shared Exploration": fog.shares), else 0, also for a dead unit or a player not in the game.
+    aoe2mc.json "visible" lists the pairs (aoe2mc.visible_list). A converted world has no fog: the game program has it."""
+    pairs = g.data.get("visible", ())
+    if not pairs:
+        return
+    sides, T = fog.gathers(g), g.map.T
+    objs = {o["ref"]: o for o in g.data["objects"] if o.get("ref") is not None}
+    want = {u for h in sides for u in [*h.villagers, *h.soldiers]} | {o["uuid"] for o in objs.values() if "uuid" in o}
+    pos = g.where(want)
+    sight = {}
+    for ref, player in pairs:
+        if player not in sight:
+            me = next((h for h in sides if h.player == player), None)
+            sight[player] = set().union(*(h.seen_tiles(pos) for h in sides if fog.shares(me, h))) if me else set()
+        o = objs.get(ref, {})
+        if "footprint" in o:                                           # a building: [x0, z0, x1, z1) in blocks
+            x0, z0, x1, z1 = o["footprint"]
+            tiles = {(x, z) for x in range(x0 // T, (x1 - 1) // T + 1) for z in range(z0 // T, (z1 - 1) // T + 1)}
+        elif "uuid" in o:                                              # a unit: where it is now, nothing when dead
+            tiles = {(int(pos[o["uuid"]][0] // T), int(pos[o["uuid"]][2] // T))} if o["uuid"] in pos else set()
+        else:
+            tiles = {tuple(int(v) for v in o["tile"])} if "tile" in o else set()
+        g.command(f"scoreboard players set #r{ref}.p{player} aoe_seen {int(bool(tiles & sight[player]))}")
 
 
 def research(g):
