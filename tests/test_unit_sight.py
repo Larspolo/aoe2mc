@@ -68,6 +68,7 @@ WIKI = {"CATAPULT_GALLEON": 14, "DRAGON_SHIP": 6, "DROMON": 14, "LOU_CHUAN": 15,
          "TWO_HANDED_SWORDSMAN": 7, "URUMI_SWORDSMAN": 5,
          "VARANGIAN_GUARD": 5,
          "TEMPLE_GUARD": 5, "ELITE_TEMPLE_GUARD": 6,   # (#2157)
+         "HOPLITE": 4, "ELITE_HOPLITE": 4,   # the infobox has no LOS: the default of combat.sight (#2431)
          "VILLAGER": 4, "VMDL": 4, "WAR_ELEPHANT": 7, "WAR_GALLEY": 8,
          "WAR_HULK": 5, "WAR_PENGUIN": 6, "WAR_WAGON": 7, "WHITE_FEATHER_GUARD": 4, "WINGED_HUSSAR": 10,
          "WOAD_RAIDER": 5}
