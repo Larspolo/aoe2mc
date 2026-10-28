@@ -35,6 +35,8 @@ The world is saved with Minecraft data version 26.3. Newer Minecraft versions up
 """
 import argparse
 import contextlib
+import functools
+import hashlib
 import io
 import json
 import math
@@ -2834,7 +2836,9 @@ CHANGE_OWNERSHIP = 18
 CHANGE_PLAYER_COLOR = 89                                           # "Change Player Color" (#2712)
 CHANGE_PLAYER_NAME = 45                                            # "Change Player Name" (#2711)
 CHANGE_TECHNOLOGY_COST = 63                                        # "Change Technology Cost" (#2819)
+CHANGE_TECHNOLOGY_LOCATION = 47                                    # "Change Technology Location" (#2864)
 CHANGE_TECHNOLOGY_NAME = 65                                        # "Change Technology Name" (#2821)
+CHANGE_TRAIN_LOCATION = 46                                         # "Change Train Location" (#2864)
 CHANGE_VARIABLE = 56                                               # the scenario variables (#2611)
 CHANGE_VIEW = 16                                                   # "Change View" (#2610)
 CLEAR_INSTRUCTIONS = 21                                            # "Clear Instructions" (#2609)
@@ -2871,6 +2875,7 @@ MODIFY_ATTRIBUTE = 51                                              # "Modify Att
 MODIFY_ATTRIBUTE_FOR_CLASS = 104                                   # "Modify Attribute for Class" (#2859)
 MODIFY_RESOURCE = 52                                               # "Modify Resource" (#2576)
 MODIFY_RESOURCE_BY_VARIABLE = 53                                   # "Modify Resource by Variable" (#2768)
+MODIFY_VARIABLE_BY_ATTRIBUTE = 87                                  # "Modify Variable by Attribute" (#2858)
 MODIFY_VARIABLE_BY_RESOURCE = 86                                   # "Modify Variable by Resource" (#2823)
 MODIFY_VARIABLE_BY_VARIABLE = 100                                  # "Modify Variable by Variable" (#2713)
 OBJECT_HAS_ACTION = 28                                             # the condition "Object Has Action" (#2867)
@@ -2930,6 +2935,17 @@ TICKED = COUNTED + (                                               # conditions 
     TECHNOLOGY_STATE,
     TRIGGER_ACTIVE,
     UNITS_GARRISONED,
+    VARIABLE_VALUE,
+)
+VARIABLES = (                                                      # conditions and effects with a variable #vN of aoe_var:
+    CHANGE_VARIABLE,                                               # it starts at 0 (trigger_files), one per line
+    COMPARE_VARIABLES,
+    COUNT_UNITS_INTO_VARIABLE,
+    LOAD_KEY_VALUE,
+    MODIFY_VARIABLE_BY_ATTRIBUTE,
+    MODIFY_VARIABLE_BY_RESOURCE,
+    MODIFY_VARIABLE_BY_VARIABLE,
+    STORE_KEY_VALUE,
     VARIABLE_VALUE,
 )
 ATTRIBUTES = ("Food", "Wood", "Stone", "Gold")     # attributes 0-3: the score holders of gather.RESOURCES (#2655)
@@ -3247,6 +3263,20 @@ def name_lines(e, c):
     stats["change object name"] += 1
     return [f"execute as {found[0]} run data modify entity @s CustomName.text set value "   # one entity
             f"{json.dumps(msg, ensure_ascii=False)}"]
+
+
+def location_lines(e, c):
+    """The command of "Change Train Location" and "Change Technology Location" (#2864): the unit or technology of the
+    player, its new building and its AoE2 button go into the list of the data storage aoe2mc:places as one text
+    "<player> <name> <building> <button>". A converted world has no menus: the scenario mode of the game program
+    (game/scenario.py places) moves the item in the menus of the player."""
+    _, name = (e.get("object") or (None, None)) if e["type"] == CHANGE_TRAIN_LOCATION else (None, e.get("technology"))
+    _, building = e.get("object2") or (None, None)
+    if e["player"] <= 0 or not all(re.fullmatch(r"[A-Z0-9_]+", x or "") for x in (name, building)):
+        c.stats["change train or technology location (not supported)"] += 1
+        return []
+    c.stats["change train or technology location"] += 1
+    return [f'data modify storage aoe2mc:places list append value "{e["player"]} {name} {building} {e.get("button", -1)}"']
 
 
 def tech_name_lines(e, c):
@@ -3628,6 +3658,21 @@ def attribute_lines(e, c):
     return [f'data modify storage aoe2mc:attributes list append value "{e["player"]} {name} {field} {e["operation"]} {q:g}"']
 
 
+def variable_by_attribute_lines(e, c):
+    """The command of "Modify Variable by Attribute" (#2858): "<player> <name> <Stats field> <operation> <variable>"
+    goes into the list of the data storage aoe2mc:reads. A converted world has no combat values: the scenario mode of
+    the game program (game/scenario.py reads) empties the list and changes the score #v<variable> of aoe_var by the
+    value of the unit type of the player (train.stats). The attributes: STAT_ATTRIBUTES and CLASS_ATTRIBUTES."""
+    _, name = e.get("object") or (None, None)
+    a, v = e.get("attribute"), e.get("variable", -1)
+    field = STAT_ATTRIBUTES.get(a) or CLASS_ATTRIBUTES.get((a, e.get("class")))
+    if not name or e["player"] <= 0 or not field or e.get("operation") not in range(1, 6) or v < 0:
+        c.stats["modify variable by attribute (not supported)"] += 1
+        return []
+    c.stats["modify variable by attribute"] += 1
+    return [f'data modify storage aoe2mc:reads list append value "{e["player"]} {name} {field} {e["operation"]} {v}"']
+
+
 def menu_lines(e, c):
     """The command of "Enable/Disable Object" and "Enable/Disable Technology" (#2775): "<player> <name> on|off" goes
     into the list of the data storage aoe2mc:menus. A converted world has no menus: the scenario mode of the game
@@ -3932,12 +3977,18 @@ def visibility_lines(e, c):
 # (effect, kinds, techs) -> value. A new effect is one line here, in alphabetical order (#2792): parallel trigger
 # tickets conflicted in one expression of read_scenario. The older effects still have their entry there.
 EFFECT_KEYS = {
+    CHANGE_TECHNOLOGY_LOCATION: {"button": "button_location", "object2": lambda e, kinds, techs: kinds.get(   # #2864
+        e.object_list_unit_id_2), "technology": lambda e, kinds, techs: techs.get(e.technology, str(e.technology))},
+    CHANGE_TRAIN_LOCATION: {"button": "button_location",                                                       # #2864
+                            "object2": lambda e, kinds, techs: kinds.get(e.object_list_unit_id_2)},
     COUNT_UNITS_INTO_VARIABLE: {"variable2": "variable2"},   # (#2697)
     INITIATE_RESEARCH: {"selected": lambda e, kinds, techs: list(e.selected_object_ids or []),   # (#2772)
                         "technology": lambda e, kinds, techs: techs.get(e.technology, str(e.technology))},
     LOAD_KEY_VALUE: {"quantity": "quantity", "variable": "variable"},   # (#2887)
     MODIFY_ATTRIBUTE_FOR_CLASS: {"attribute": "object_attributes", "operation": "operation", "quantity": "quantity",
                                  "class": "armour_attack_class", "aa": "armour_attack_quantity", "group": "object_group2"},
+    MODIFY_VARIABLE_BY_ATTRIBUTE: {"attribute": "object_attributes", "class": "armour_attack_class",   # (#2858)
+                                   "operation": "operation", "variable": "variable"},
     STORE_KEY_VALUE: {"variable": "variable"},                         # (#2887)
     TRAIN_UNIT: {"quantity": "quantity", "selected": lambda e, kinds, techs: list(e.selected_object_ids or [])},   # (#2772)
 }
@@ -3964,7 +4015,9 @@ EFFECTS = {
     CHANGE_PLAYER_COLOR: color_lines,
     CHANGE_PLAYER_NAME: player_name_lines,
     CHANGE_TECHNOLOGY_COST: tech_cost_lines,
+    CHANGE_TECHNOLOGY_LOCATION: location_lines,
     CHANGE_TECHNOLOGY_NAME: tech_name_lines,
+    CHANGE_TRAIN_LOCATION: location_lines,
     CHANGE_VARIABLE: variable_lines,
     CHANGE_VIEW: view_lines,
     CLEAR_INSTRUCTIONS: clear_lines,
@@ -3997,6 +4050,7 @@ EFFECTS = {
     MODIFY_ATTRIBUTE_FOR_CLASS: attribute_lines,
     MODIFY_RESOURCE: resource_lines,
     MODIFY_RESOURCE_BY_VARIABLE: resource_by_variable_lines,
+    MODIFY_VARIABLE_BY_ATTRIBUTE: variable_by_attribute_lines,
     MODIFY_VARIABLE_BY_RESOURCE: variable_by_resource_lines,
     MODIFY_VARIABLE_BY_VARIABLE: variable_by_variable_lines,
     PATROL: order_lines,
@@ -4250,10 +4304,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
         load += [run] * t["enabled"]
     names = sorted({f"#v{x[k]}" for t in triggers for x in t["conditions"] + t["effects"]
                     for k in ("variable", "variable2")   # "Modify Variable by Variable" has two (#2713)
-                    if x["type"] in (VARIABLE_VALUE, CHANGE_VARIABLE, COMPARE_VARIABLES, COUNT_UNITS_INTO_VARIABLE,
-                                     MODIFY_VARIABLE_BY_RESOURCE, MODIFY_VARIABLE_BY_VARIABLE,
-                                     LOAD_KEY_VALUE, STORE_KEY_VALUE)   # (#2887)
-                    and x.get(k, -1) >= 0})
+                    if x["type"] in VARIABLES and x.get(k, -1) >= 0})
     if names:
         load[:0] = ["scoreboard objectives add aoe_var dummy"] + \
             [f"scoreboard players add {v} aoe_var 0" for v in names]   # AoE2 variables start at 0
@@ -4469,6 +4520,9 @@ def skin_texture(model, tone):
 # leather takes the color of its item, as vanilla leather does), the overlay has the accent and crest colors.
 ARMOR_BOXES = {"head": [(0, 0, 8, 8, 8)], "chest": [(16, 16, 8, 12, 4), (40, 16, 4, 12, 4)], "feet": [(0, 16, 4, 12, 4)],
                "legs": [(16, 16, 8, 12, 4), (0, 16, 4, 12, 4)]}
+# the horse armor (#2743, layer "horse_body", 64 x 64): the boxes (u, v, w, h, d) of the body, neck and head of the
+# horse model; the legs and the tail stay bare
+HORSE_BOXES = [(0, 32, 10, 10, 22), (0, 35, 4, 12, 7), (0, 13, 6, 5, 7)]
 METAL = {"chainmail": (150, 152, 158), "diamond": (96, 214, 206), "golden": (232, 192, 64), "iron": (206, 206, 212),
          "leather": (160, 101, 64), "netherite": (74, 66, 70), "dyed": (236, 236, 236)}
 
@@ -4482,26 +4536,31 @@ def armor_shade(pattern, x, y):
             "plate": 1.12 if x % 8 in (3, 4) else 0.8 if y % 6 == 5 else 1.0}[pattern]
 
 
-def armor_textures(name):
-    """The textures (base, overlay) of layer "humanoid" and "humanoid_leggings" of a unit with a look (#2742): each
-    box gets the material of its armor piece in the pattern of the look; a helmet leaves the face open but the brow
-    (a plate helmet with a crest closes it to an eye slit), boots cover the lower leg, leggings the waist and the legs."""
+def armor_textures(name, hero=False):
+    """The textures (base, overlay) of the layers "humanoid", "humanoid_leggings" and (a mount with horse armor)
+    "horse_body" of a unit with armor (#2742, #2743): its look (units.look) and the material of each piece."""
+    look, gear = units.look(name, hero), units.pieces(units.describe(name, hero))
+    mats = tuple((slot, "dyed" if "minecraft:dyed_color" in p.get("components", {}) else str(p["id"]).split(":")[1].split("_")[0])
+                 for slot, p in sorted(gear.items()))
+    return armor_images(look["pattern"], look["accent"], look.get("crest"), mats)
+
+
+@functools.lru_cache(maxsize=None)
+def armor_images(pattern, accent, crest, mats):
+    """The textures of armor_textures from the look and the materials ((slot, material), ...): each box gets the
+    material of its armor piece in the pattern of the look; a helmet leaves the face open but the brow (a plate helmet
+    with a crest closes it to an eye slit), boots cover the lower leg, leggings the waist and the legs. The horse armor
+    covers the head, neck and body of the horse, with a hem in the accent color (HORSE_BOXES, #2743)."""
     from PIL import Image
-    look = units.LOOKS[name]
-    desc = units.classify(name)
-    while "equipment" not in desc:                                  # a mounted unit: the rider
-        desc = desc["Passengers"][0]
-    gear, pattern = desc["equipment"], look["pattern"]
-    accent, crest = (tuple(int(c[i:i + 2], 16) for i in (1, 3, 5)) if c else None for c in (look["accent"], look.get("crest")))
+    gear = dict(mats)
+    accent, crest = (tuple(int(c[i:i + 2], 16) for i in (1, 3, 5)) if c else None for c in (accent, crest))
     out = {}
     for layer, slots in (("humanoid", ("head", "chest", "feet")), ("humanoid_leggings", ("legs",))):
         base, over = (Image.new("RGBA", (64, 32), (0, 0, 0, 0)) for _ in range(2))
         for slot in slots:
-            piece = gear.get(slot)
-            if piece is None:
+            if slot not in gear:
                 continue
-            mat = str(piece["id"]).split(":")[1].split("_")[0]
-            color = METAL["dyed" if "minecraft:dyed_color" in piece.get("components", {}) else mat]
+            color = METAL[gear[slot]]
             for u, v, w, h, d in ARMOR_BOXES[slot]:
                 for x in range(u, u + 2 * d + 2 * w):
                     for y in range(v, v + d + h):
@@ -4524,6 +4583,18 @@ def armor_textures(name):
                         if crest and slot == "head" and (not side and x - u - d in (3, 4) or side and mid and r < 3):
                             over.putpixel((x, y), crest + (255,))       # the crest from the brow over the top
         out[layer] = base, over
+    if "body" in gear:                                              # the horse armor (#2743)
+        base, over = (Image.new("RGBA", (64, 64), (0, 0, 0, 0)) for _ in range(2))
+        for i, (u, v, w, h, d) in enumerate(HORSE_BOXES):
+            for x in range(u, u + 2 * d + 2 * w):
+                for y in range(v, v + d + h):
+                    side = y >= v + d
+                    if not side and not (u + d <= x < u + d + 2 * w):
+                        continue
+                    base.putpixel((x, y), tuple(min(255, int(c * armor_shade(pattern, x, y))) for c in METAL[gear["body"]]) + (255,))
+                    if i == 0 and side and y >= v + d + h - 2:
+                        over.putpixel((x, y), accent + (255,))          # the hem of the body
+        out["horse_body"] = base, over
     return out
 
 
@@ -4588,8 +4659,8 @@ def write_resourcepack(out):
     """--resource-pack (#2738): resourcepacks/resources.zip in the world folder, which single player loads with the
     world (26.x: LevelResource.MAP_RESOURCE_FILE; a world of an older version had resources.zip at its top, and the
     client moves it there, ResourcePackLocationFileFix). The zombie, skeleton and drowned units get a human face, the
-    skeleton horses a brown coat (#2752), the War Wagon its cart (cart_model, #2746), and each unit of units.LOOKS its
-    own armor (#2742). Same bytes for each conversion: sorted names, a fixed time."""
+    skeleton horses a brown coat (#2752), the War Wagon its cart (cart_model, #2746), and each unit with armor its own
+    armor (#2742, units.dressed, #2743). Same bytes for each conversion: sorted names, a fixed time."""
     import io
     import zipfile
     files = {"pack.mcmeta": json.dumps({"pack": {
@@ -4604,15 +4675,21 @@ def write_resourcepack(out):
         buf = io.BytesIO()
         skin_texture(model, tone).save(buf, "PNG")
         files["assets/minecraft/textures/" + path] = buf.getvalue()
-    for name in units.LOOKS:                                        # the armor of each unit with a look (#2742)
-        n = name.lower()
-        layers = {}
-        for layer, images in armor_textures(name).items():
-            layers[layer] = [{"texture": f"aoe2mc:{n}", "dyeable": {"color_when_undyed": 0xFFFFFF}}, {"texture": f"aoe2mc:{n}_overlay"}]
-            for im, end in zip(images, ("", "_overlay")):
+    for name, hero in units.dressed().items():                      # the armor of each unit (#2742, #2743)
+        if units.asset(name) != name:                                  # ELITE_X wears the asset of X
+            continue
+        n, layers = name.lower(), {}
+        for layer, images in armor_textures(name, hero).items():
+            pngs = []
+            for im in images:
                 buf = io.BytesIO()
                 im.save(buf, "PNG")
-                files[f"assets/aoe2mc/textures/entity/equipment/{layer}/{n}{end}.png"] = buf.getvalue()
+                pngs.append(buf.getvalue())
+            # a unit with no line in data/looks.jsonl shares the textures of the same look and materials
+            tex = n if name in units.LOOKS else "look_" + hashlib.sha1(b"".join(pngs)).hexdigest()[:12]
+            layers[layer] = [{"texture": f"aoe2mc:{tex}", "dyeable": {"color_when_undyed": 0xFFFFFF}}, {"texture": f"aoe2mc:{tex}_overlay"}]
+            for png, end in zip(pngs, ("", "_overlay")):
+                files[f"assets/aoe2mc/textures/entity/equipment/{layer}/{tex}{end}.png"] = png
         files[f"assets/aoe2mc/equipment/{n}.json"] = json.dumps({"layers": layers}, indent=1).encode()
     for w in sorted({w for _, w in units.WEAPONS}):                 # the AoE2 weapons (#2744)
         buf = io.BytesIO()

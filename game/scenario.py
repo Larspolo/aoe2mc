@@ -57,8 +57,10 @@ ORDERS = "aoe2mc:orders"                                               # the dat
 ATTRIBUTES = "aoe2mc:attributes"                                       # the storage of "Modify Attribute" (#2763)
 MENUS = "aoe2mc:menus"                                                 # the storage of "Enable/Disable" (#2775)
 COSTS = "aoe2mc:costs"                                                 # the storage of "Change Object Cost" (#2776)
+PLACES = "aoe2mc:places"                                               # "Change Train/Technology Location" (#2864)
 UNSELECTABLE = "aoe2mc.unselectable"                                   # the tag of "Disable Object Selection" (aoe2mc)
 NAMES = "aoe2mc:names"                                                 # the storage of "Change Technology Name" (#2821)
+READS = "aoe2mc:reads"                                                 # "Modify Variable by Attribute" (#2858)
 NEAR = 3                                                               # blocks: a patrol turns back this near its point
 LEVELS = {r["name"]: r["aoe2"] for r in table.load("difficulty.jsonl")}  # "AI difficulty" -> AoE2 DifficultyLevel
 
@@ -128,8 +130,10 @@ def tick(g):
     menus(g)
     visible(g)
     attributes(g)
+    reads(g)
     costs(g)
     names(g)
+    places(g)
     messages = g.data.get("messages", {})
     text = re.sub(r"<[^<>]*>", "", messages.get("instructions", "")).strip()   # AoE2 color tags (book_pages)
     for who in sorted({x.who for x in [g, *(s.g for s in g.bots if not hasattr(s, "charged"))]}):
@@ -313,6 +317,19 @@ def costs(g):
                 {r: int(v) for r, v in (part.split("=") for part in cost.split())}
 
 
+def places(g):
+    """The new places of "Change Train Location" and "Change Technology Location" (aoe2mc.location_lines, #2864): read
+    and empty the list of the data storage PLACES, and keep each place (building, AoE2 button) in trigger_places of the
+    side of its player (the people and the bots): train.trains and train.placed use it. A later line wins."""
+    new = re.findall(r'"(\d+) (\w+) (\w+) (-?\d+)"', g.command(f"data get storage {PLACES} list") or "")
+    if new:
+        g.command(f"data remove storage {PLACES} list")
+    sides = {x.player: x for x in [g, *(s.g for s in g.bots)]}
+    for player, name, building, button in new:
+        if int(player) in sides and name in train.ITEMS:
+            vars(sides[int(player)]).setdefault("trigger_places", {})[name] = [building, int(button)]
+
+
 def names(g):
     """The new names of "Change Technology Name" (aoe2mc.tech_name_lines, #2821): read and empty the list of the data
     storage NAMES, and keep each name in trigger_names of the side of its player (the people and the bots): the menus
@@ -351,6 +368,22 @@ def attributes(g):
             x.command(combat.stats_command(uuid, n, s, civs.taken(x, n), civs.friendly(x, n)))
             if field == "range" and (cmd := combat.range_command(uuid, n, x.map.T, s=s)):
                 x.command(cmd)
+
+
+def reads(g):
+    """The requests of "Modify Variable by Attribute" (aoe2mc.variable_by_attribute_lines, #2858): read and empty the
+    list of the data storage READS, and change the score #v<N> of aoe_var by the value of the unit type of the player
+    (train.stats; AoE2 variables are whole numbers) with a scoreboard operation."""
+    import combat                                                      # combat -> gather -> scenario
+    new = re.findall(r'"(\d+) (\w+) (\w+) ([1-5]) (\d+)"', g.command(f"data get storage {READS} list") or "")
+    if new:
+        g.command(f"data remove storage {READS} list")
+    sides = {x.player: x for x in [g, *(s.g for s in g.bots)]}
+    for player, name, field, op, v in new:
+        if (x := sides.get(int(player))) is None or field not in combat.Stats._fields:
+            continue
+        g.command(f"scoreboard players set #read aoe_var {int(getattr(train.stats(x, name), field))}")
+        g.command(f"scoreboard players operation #v{v} aoe_var {('', '+', '-', '*', '/')[int(op) - 1]}= #read aoe_var")
 
 
 def menus(g):
