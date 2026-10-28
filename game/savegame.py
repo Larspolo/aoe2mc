@@ -30,7 +30,8 @@ OPTIONAL = ("limit_left", "policy", "rates", "relic_timer", "switches", "upgrade
             "wonders_gone")                                            # Gather that has them (#2324; the policy: #2515)
 MONK = ("carrier_at", "converting", "faith", "fetching", "heal_time", "monk_at", "relic_gold", "relic_homes",
         "relic_time", "relics")                                        # game/monk.py: the relics and monk orders (#2412)
-ORDERS = ("patrols", "trigger_costs")                                  # scenario.py: the patrols (#2647), costs (#2776) of the triggers
+ORDERS = ("patrols", "trigger_attributes", "trigger_costs")            # scenario.py: the patrols (#2647), attributes (#2763),
+                                                                       # costs (#2776) of the triggers
 ROUTES = ("trade", "trebs")                                            # trade.py, trebuchet.py: as OPTIONAL (#2413)
 CHEATS = (                                                             # game/cheats.py: the cheats that the player
     "aegis",                                                           # turned on (#2533)
@@ -176,6 +177,8 @@ NOT_SAVED = (                                                          # the fie
     "share",                                                           # bot.py: the techs of the human player
     "speed",                                                           # run.py: the --speed option
     "sudden_death_at",                                                 # sudden_death.py: the next check time
+    "tech_state_at",                                                   # scenario.py: the next check time
+    "tech_state_sent",                                                 # scenario.tech_states: a load sends them again
     "victory",                                                         # run.py: from the saved settings
     "victory_value",                                                   # run.py: from the saved settings
     "wall_start",                                                      # build.py: the first corner of a wall
