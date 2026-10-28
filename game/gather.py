@@ -1629,7 +1629,7 @@ class Gather:
             return 0.0                                                 # a full load in one work step
         rate, more = civs.work(self, "sheep" if herd else res), civs.MORE.get(civs.civ(self), {})
         rate *= civs.church_rate(self, pos) if pos else 1
-        return self.chop.get(res, self.chop.get("food")) / rate / math.prod(
+        return self.chop.get(res, self.chop.get("food")) / rate / civs.turbo(self) / math.prod(
             (1 + (WORK_TECHS.get(t, {}).get(res, 1) - 1) * more.get(t, 1)) ** train.count(self, t) for t in self.techs)
 
     def aura_rate(self, v, kind):
@@ -1675,7 +1675,8 @@ class Gather:
         """The resources res that a villager carries, with the technologies of the player (CARRY, and FOOD_CARRY for
         food) and the bonus of its civilization for gather kind (civs.carry, #2270)."""
         more = CARRY | FOOD_CARRY if res == "food" else CARRY
-        return self.carry + sum(more.get(t, 0) * train.count(self, t) for t in self.techs) + civs.carry(self, kind or res)
+        n = self.carry + sum(more.get(t, 0) * train.count(self, t) for t in self.techs) + civs.carry(self, kind or res)
+        return n if civs.turbo(self) == 1 else round(n * civs.turbo(self))   # Turbo Mode carries more (#2359)
 
     def follow(self, v):
         """Paper: read the position of a walking villager. It arrives 1.5 blocks from the center of its goal cell (there

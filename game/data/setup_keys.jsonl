@@ -16,9 +16,11 @@
 {"name": "sides", "type": "dict", "text": "The start resources of each side of a game mode (ally, attacker, defender).", "issue": 2441}
 {"name": "sites", "type": "dict", "text": "The start buildings of a game mode of buildings.jsonl that each player gets on a free site of the map.", "issue": 2459}
 {"name": "skip", "type": "list", "text": "The technologies of train.jsonl that a start age does not research.", "issue": 2265}
+{"name": "slow", "type": "list", "text": "The items of a speed setting that keep the AoE2 speed (units.jsonl, buildings.jsonl).", "issue": 2359}
 {"name": "start", "type": "dict", "text": "The start resources of a game mode for each resource level of --resources.", "issue": 2459}
 {"name": "swap", "type": "dict", "text": "The technologies of train.jsonl that a game mode puts in place of others (old: new).", "issue": 2459}
 {"name": "treaty", "type": "str", "text": "The treaty of a game mode: endless, no player can attack another.", "issue": 2406}
+{"name": "turbo", "type": "float", "kind": true, "text": "A speed setting: the factor of the work, gather, carry and build speed.", "issue": 2359}
 {"name": "units", "type": "list", "kind": true, "text": "A game mode with these start units of units.jsonl (an empty list: no change).", "issue": 2347}
 {"name": "villagers", "type": "dict", "text": "The start villagers of a game mode at each resource.", "issue": 2408}
 {"name": "wonder_years", "type": "int", "kind": true, "text": "A game mode with a wonder victory after this number of years (0: at once).", "issue": 2406}
