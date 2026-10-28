@@ -1,0 +1,44 @@
+name: Pacer
+
+# Starts the autopilot runs that the quota target misses (`tools/pacer.py`, #3193), in place of the pacer session:
+# a script keeps no old rule in memory (the session fired 4 runs for 8, #3147). Only while `pacer` in `[pacing]` of
+# agent.toml is "workflow" (#3194): the session pacer stops at the same key, so they never both start runs.
+on:
+  schedule:
+    - cron: "*/10 * * * *"   # the cycle of the pacer session
+  workflow_dispatch:
+
+permissions:
+  contents: read     # checkout and the claim refs (`health.lane_claims`)
+  issues: read       # the ready tickets and the status issue (`usage.fire`)
+  pull-requests: read   # the flow brake (`usage.read_flow`)
+  actions: read      # the queued CI runs (`usage.read_flow`)
+
+concurrency:
+  group: pacer
+  cancel-in-progress: false   # a cancelled run can stop between two starts: let it end
+
+jobs:
+  pacer:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Read the switch in agent.toml
+        id: mode
+        run: python3 -c "import tomllib; print('on=' + str(tomllib.load(open('agent.toml', 'rb'))['pacing'].get('pacer') == 'workflow').lower())" >> "$GITHUB_OUTPUT"
+      - name: Install the Claude Code CLI (the quota read, `usage.read_usage`)
+        if: steps.mode.outputs.on == 'true'
+        run: npm install -g @anthropic-ai/claude-code
+      - name: Start the runs
+        if: steps.mode.outputs.on == 'true'
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          PACER_URL_MAIN: ${{ secrets.PACER_URL_MAIN }}
+          PACER_TOKEN_MAIN: ${{ secrets.PACER_TOKEN_MAIN }}
+          PACER_URL_HAIKU: ${{ secrets.PACER_URL_HAIKU }}
+          PACER_TOKEN_HAIKU: ${{ secrets.PACER_TOKEN_HAIKU }}
+          PACER_URL_DEEP: ${{ secrets.PACER_URL_DEEP }}
+          PACER_TOKEN_DEEP: ${{ secrets.PACER_TOKEN_DEEP }}
+        run: python3 tools/pacer.py

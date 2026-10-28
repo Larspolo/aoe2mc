@@ -16,6 +16,8 @@ So one pacer session starts them. It does no ticket work, it does not comment on
    Then read this file again with the Read tool (`/home/user/aoe2mc/.claude/skills/pacer/SKILL.md`), each cycle, and
    act only on what it says now. Never act on a rule from your memory or from a summary of earlier cycles: on
    2026-10-27 the pacer fired only the Opus task, from an old copy of step 3 (#1824).
+   When `pacer` in `[pacing]` of `agent.toml` is "workflow", the workflow `pacer.yml` starts the runs (#3193): start
+   no run, schedule no next cycle, and reply "the workflow pacer runs: this session can be archived".
 2. Run `python3 tools/usage.py --fire` in the repository. Its first output line (stdout) is K, the number of runs to
    start now. The line on stderr shows the inputs: usage, target, claims, ready tickets, `paused`, the flow brake.
    The flow brake lowers K when the quota is not the bottleneck: many old agent PRs (K at most 1, a repair run) or a
