@@ -419,7 +419,9 @@ def read_scenario(path):
                                                if e.effect_type == CHANGE_COLOR_MOOD and
                                                getattr(e, "color_mood", None) in set(ColorMood) else {}),
                                             **({"trigger": e.trigger_id}       # "(De)activate Trigger" (#2575)
-                                               if e.effect_type in (ACTIVATE_TRIGGER, DEACTIVATE_TRIGGER) else {}))
+                                               if e.effect_type in (ACTIVATE_TRIGGER, DEACTIVATE_TRIGGER) else {}),
+                                            **({"target": e.target_player}                # "Change Ownership" (#2570)
+                                               if e.effect_type == CHANGE_OWNERSHIP else {}))
                                        for e in t.effects])
                          for t in scn.trigger_manager.triggers]
     mood = mm.map_color_mood                 # a ColorMood, or a string that the parser does not know (#1594)
@@ -2687,7 +2689,7 @@ def team_lines(objects, players):
 
 
 TIMER, SEND_CHAT, DISPLAY_INSTRUCTIONS, IN_AREA = 10, 3, 20, 5   # AoE2 condition and effect IDs (AoE2ScenarioParser)
-CREATE_OBJECT, REMOVE_OBJECT, CHANGE_COLOR_MOOD = 11, 15, 72
+CREATE_OBJECT, REMOVE_OBJECT, CHANGE_OWNERSHIP, CHANGE_COLOR_MOOD = 11, 15, 18, 72
 ACTIVATE_TRIGGER, DEACTIVATE_TRIGGER = 8, 9
 
 
@@ -2754,6 +2756,22 @@ def object_lines(t, e, T, ground, players, stats):
     return []
 
 
+def owner_lines(e, T, stats):
+    """The commands of "Change Ownership" (#2570): the units of the player in the area (area_selector) and their
+    mounts get the tag and the team of the target player. A temporary tag marks them first: the selector uses the old
+    player tag. Gaia has no player tag and no team: not supported yet."""
+    old, new = e["player"], e.get("target", -1)
+    if old <= 0 or new <= 0 or old == new:
+        stats["change ownership (not supported yet)"] += old != new
+        return []
+    stats["change ownership"] += 1
+    own = "@e[tag=aoe2mc.own]"
+    return [f"tag {area_selector(e, T)} add aoe2mc.own",
+            f"execute as {own} on vehicle run tag @s add aoe2mc.own",
+            f"tag {own} remove aoe2mc.p{old}", f"tag {own} add aoe2mc.p{new}",
+            f"team join p{new} {own}", f"tag {own} remove aoe2mc.own"]
+
+
 def mood_lines(e):
     """The commands of "Change Color Mood" (#1876): the time of day (MOODS) and the rain (RAIN) of the new mood, as
     at the conversion. The game rules advance_time and advance_weather are 0, so they stay. The fog (FOG) is a
@@ -2770,6 +2788,9 @@ def trigger_lines(t, live, timer, T, ground, players, stats, mood):
     for e in t["effects"]:
         if e["type"] in (CREATE_OBJECT, REMOVE_OBJECT):
             lines += object_lines(t, e, T, ground, players, stats)
+            continue
+        if e["type"] == CHANGE_OWNERSHIP:
+            lines += owner_lines(e, T, stats)
             continue
         if e["type"] == CHANGE_COLOR_MOOD:
             lines += mood_lines(e) if mood else []
@@ -2806,6 +2827,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
     areas; the score #N of aoe_trig marks a fired trigger, so it fires once. A looping area trigger fires again after
     the units leave an area. "Send Chat" is a tellraw, "Display Instructions" a subtitle for its display time;
     "Create Object" and "Remove Object": object_lines (#656). "Change Color Mood": mood_lines (#1876), only with mood.
+    "Change Ownership": owner_lines (#2570).
     A disabled trigger runs only after an "Activate Trigger" (#2575): the score #N of aoe_on is 1 while a trigger that
     such an effect names is on. Its timer counts from the activation; "Deactivate Trigger" clears it."""
     load, files, tick = [], {}, []
