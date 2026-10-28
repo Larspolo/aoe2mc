@@ -48,7 +48,7 @@ MAP = {
     ("effect", "KILL_OBJECT"): "`kill @e[team=pN,type=..,x=..,dx=..]`",
     ("effect", "DAMAGE_OBJECT"): "`execute as @e[tag=aoe2mc.pN,type=..,x=..,dx=..] run damage @s N` (N in AoE2 hit points; timer and area triggers: #2571); heal: not supported yet",
     ("effect", "TELEPORT_OBJECT"): "`tp @e[...] x y z`",
-    ("effect", "CHANGE_OWNERSHIP"): "`team join pN @e[...]`",
+    ("effect", "CHANGE_OWNERSHIP"): "`tag` `aoe2mc.pN` and `team join pN` of the units in the area and their mounts (timer and area triggers: #2570); Gaia: not supported yet",
     ("effect", "FREEZE_OBJECT"): "`data merge entity @e[...] {NoAI:1b}`",
     ("effect", "CHANGE_VIEW"): "`tp @a x y z` (the player is the camera)",
     ("effect", "PLAY_SOUND"): "`playsound` with the nearest vanilla sound",
