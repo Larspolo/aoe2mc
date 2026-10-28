@@ -608,7 +608,9 @@ def values(g, name, techs=None):
     import combat, train                                               # combat -> gather -> build: import it late
     techs = getattr(g, "techs", ()) if techs is None else techs
     name = line(g, name, techs)
-    s = civs.hp(civs.civ(g) if hasattr(g, "data") else None, name, combat.stats(name))   # before Masonry (#1895)
+    wall = name in combat.WALLS or name.endswith(("_WALL", "_GATE"))   # its age: combat.wall (upgrade, #1372)
+    s = civs.hp(civs.civ(g) if hasattr(g, "data") else None, name, combat.stats(name),
+                0 if wall else sum(t in techs for t in AGE_TECHS))    # before Masonry (#1895), of the age (#2116)
     for t in sorted(techs):
         s = train.TECHS[t](name, s)
     return s
@@ -649,7 +651,7 @@ def upgrade(g, site, old, redraw=True):
     import combat, repair                                              # combat -> gather -> build: import it late
     x0, x1, z0, z1 = site["footprint"]
     name, T = design(g, site["name"], site["player"]), g.map.T
-    new = combat.wall(name, ages(g))
+    new = combat.wall(name, ages(g), civs.civ(g, site["player"]))
     if new == old or (hp := repair.hp(g, (x0, x1, z0, z1))) is None or hp <= 0:
         return
     for c in Replay(g, g.data, getattr(g.game, "version", VERSION_NAME)).building(
@@ -713,7 +715,7 @@ def target(g, site):
     box = combat.building_box({"footprint": [x0, z0, x1, z1]}, g.map.ground)
     wall, name = site["name"] in combat.WALLS, line(g, design(g, site["name"], site["player"]))   # the hit points of the age
                                                                        # (#1322), a guard tower or keep (#1374)
-    s = combat.wall(name, ages(g)) if wall else values(g, name)                  # Chemistry (#1375), Masonry (#1398)
+    s = combat.wall(name, ages(g), civs.civ(g, site["player"])) if wall else values(g, name)   # Chemistry (#1375), Masonry (#1398)
     for c in combat.building(uuid, name, site["player"], box, g.map.T, s=s, low=minimum(g, name),
                              factor=civs.arrows(g, name, site["player"])) \
             + [f"tag {uuid} add {combat.WALL_TAG}"] * wall + [combat.label_command(uuid, name)]:
