@@ -83,6 +83,7 @@ SCORE = (                                                              # Gather:
 SPOILS = (                                                             # spoils.py: the plugin scores that gave gold
     "attack_ticks",                                                    # (the world keeps the scores, #2513)
     "kills",
+    "unit_kills",                                                      # the kills of enemy units for a policy (#2512)
 )
 TOGGLES = (                                                            # the choices of the player (#2537):
     "doctrines",                                                       # train.py: the doctrine of each building (#2483)
