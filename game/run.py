@@ -352,7 +352,8 @@ SETTINGS = {
     "resources": "standard",          # "Starting resources" (gather.LEVELS, #2264)
     "teams": None,                    # {player: team or None} in place of the scenario's (team_choices, #2296)
     "treaty": "0:00",                 # "Treaty length" (MM:SS): before it no player can attack another (treaty.py, #2297)
-    "victory": "standard",            # "Victory": "standard" (conquest, a wonder or all relics), "conquest" (#2316) or "king-of-the-hill" (hill.py, #2360)
+    "victory": "standard",            # "Victory": "standard" (conquest, a wonder or all relics), "conquest" (#2316),
+                                      # "king-of-the-hill" (hill.py, #2360) or "last-man-standing" (conquest.last_man, #2358)
 }
 
 
@@ -593,9 +594,10 @@ def main(argv=None):
                     "has the generic units and technologies that its tech tree does not have (the bonuses stay)")
     ap.add_argument("--full-tech-tree", action="store_true", help="--play: the AoE2 setting \"Full Tech Tree\": each "
                     "civilization has the full tech tree and its unique units, but no civilization and team bonuses")
-    ap.add_argument("--victory", choices=["standard", "conquest", "king-of-the-hill"], default="standard",
-                    help="--play: the AoE2 setting \"Victory\" (default standard: conquest, a wonder or all relics; "
-                    "conquest: only the conquest; king-of-the-hill: the monument in the center, #2360)")
+    ap.add_argument("--victory", choices=["standard", "conquest", "king-of-the-hill", "last-man-standing"],
+                    default="standard", help="--play: the AoE2 setting \"Victory\" (default standard: conquest, a wonder "
+                    "or all relics; conquest: only the conquest; king-of-the-hill: the monument in the center, #2360; "
+                    "last-man-standing: a conquest that only one player wins, #2358)")
     ap.add_argument("--pop-limit", type=pop_limit, default=200, metavar="N",
                     help="--play: the AoE2 setting \"Population limit\" of each player: 25 to 250 in steps of 25, 300, "
                     "400 or 500 (default 200)")
