@@ -421,7 +421,9 @@ def read_scenario(path):
                                                getattr(e, "color_mood", None) in set(ColorMood) else {}),
                                             **({"quantity": e.quantity} if e.effect_type == DAMAGE_OBJECT else {}),
                                             **({"target": e.target_player}                # "Change Ownership" (#2570)
-                                               if e.effect_type == CHANGE_OWNERSHIP else {}))
+                                               if e.effect_type == CHANGE_OWNERSHIP else {}),
+                                            **({"unit": e.time_unit, "timer": e.timer}   # "Display Timer" (#2572)
+                                               if e.effect_type == DISPLAY_TIMER else {}))
                                        for e in t.effects])
                          for t in scn.trigger_manager.triggers]
     mood = mm.map_color_mood                 # a ColorMood, or a string that the parser does not know (#1594)
@@ -2703,11 +2705,16 @@ def team_lines(objects, players):
 
 TIMER, SEND_CHAT, DISPLAY_INSTRUCTIONS, IN_AREA = 10, 3, 20, 5   # AoE2 condition and effect IDs (AoE2ScenarioParser)
 TRIGGER_CHANCE = 20                                               # the condition "Chance" (#2574)
+DISPLAY_TIMER = 37                                                     # "Display Timer" (#2572)
+TIME_UNITS = {0: 5, 1: 60, 2: 1, 3: 1}  # TimeUnit (years, minutes, seconds, m:ss) -> game seconds; a year as game/wonder.py YEAR
 OWN_OBJECTS, OWN_FEWER_OBJECTS = 3, 4                              # conditions on the units of a player (#2573)
 COUNTED = (IN_AREA, OWN_OBJECTS, OWN_FEWER_OBJECTS)                # conditions that count units: the tick function
-CREATE_OBJECT, REMOVE_OBJECT, CHANGE_OWNERSHIP, CHANGE_COLOR_MOOD = 11, 15, 18, 72
+CREATE_OBJECT, KILL_OBJECT, REMOVE_OBJECT, CHANGE_OWNERSHIP, CHANGE_COLOR_MOOD = 11, 14, 15, 18, 72
 DAMAGE_OBJECT = 24                                                     # "Damage Object" (#2571)
+DECLARE_VICTORY = 13                                                   # "Declare Victory" (#2542)
 TELEPORT_OBJECT = 35
+FREEZE_OBJECT = 22                                                     # "Freeze Object" (#2608)
+CLEAR_INSTRUCTIONS = 21                                                # "Clear Instructions" (#2609)
 
 
 def turn_area(area, size, k):
@@ -2735,7 +2742,8 @@ def area_selector(c, T):
 
 def object_lines(t, e, T, ground, players, stats):
     """The commands of "Create Object" and "Remove Object" (#656): a summon of the entity of units.make_entity at
-    the middle of the tile, or a kill of the units of the player and type in the area (area_selector).
+    the middle of the tile, or a kill of the units of the player and type in the area (area_selector). "Kill Object"
+    (#2568) is the same kill, also with no area (the whole map): Minecraft shows the death, as AoE2.
     Buildings and other objects are not supported yet: they count in stats."""
     kind, name = e.get("object") or (None, None)
     if e["type"] == CREATE_OBJECT and min(e.get("tile", [-1])) >= 0:
@@ -2755,12 +2763,16 @@ def object_lines(t, e, T, ground, players, stats):
             part.pop("UUID", None)
             parts += list(part.get("Passengers", []))
         return [f"summon {kind} {x + 0.5} {int(ground[x, z])} {z + 0.5} {nbt.snbt()}"]
-    if e["type"] == REMOVE_OBJECT and min(e.get("area", [-1])) >= 0:
+    if e["type"] == KILL_OBJECT or e["type"] == REMOVE_OBJECT and min(e.get("area", [-1])) >= 0:
+        word = "kill" if e["type"] == KILL_OBJECT else "remove"
+        if name is None and e["player"] <= 0 and e["type"] == KILL_OBJECT:   # Gaia units have no tag: a kill
+            stats["kill (not supported yet)"] += 1                     # of all would kill the decor entities too
+            return []
         if (found := effect_units(e, T)) is None:
-            stats["remove (not supported yet)"] += 1
+            stats[f"{word} (not supported yet)"] += 1
             return []
         at, top, nbt = found
-        stats["remove"] += 1
+        stats[word] += 1
         ride = [f"execute as {at} on vehicle run kill @s"] if top is not None and top is not nbt else []
         return ride + [f"kill {at}"]                                       # a rider: its mount goes too
     return []
@@ -2772,8 +2784,8 @@ def effect_units(e, T):
     A type with no entity (a building): None."""
     kind, name = e.get("object") or (None, None)
     at = area_selector(e, T)
-    if e["player"] <= 0:
-        at = re.sub(r"tag=aoe2mc\.p-?\d+,?", "", at)
+    if e["player"] <= 0:                                           # never a player (#2568)
+        at = re.sub(r"tag=aoe2mc\.p-?\d+,?", "type=!minecraft:player,", at)
     if name is None:
         return at, None, None
     nbt = units.make_entity(dict(name=name, player=0), {}, (0.0, 0.0, 0.0), np.random.default_rng(0)) \
@@ -2781,7 +2793,7 @@ def effect_units(e, T):
     if nbt is None:
         return None
     top = units.top_entity(nbt)
-    return (f"@e[type={top['id']},{at[3:]}" if at != "@e[]" else f"@e[type={top['id']}]"), top, nbt
+    return f"@e[type={top['id']},{at[3:]}".replace(",type=!minecraft:player", ""), top, nbt
 
 
 def damage_lines(e, T, stats):
@@ -2793,7 +2805,7 @@ def damage_lines(e, T, stats):
     if found is None:
         stats["damage (heal or building, not supported yet)" if q else "damage (no amount)"] += 1
         return []
-    at = found[0] if found[1] or e["player"] > 0 else f"@e[type=!minecraft:player,{found[0][3:]}"   # Gaia: not the players
+    at = found[0]                                                      # Gaia: not the players (effect_units)
     stats["damage"] += 1
     return [f"execute as {at} run damage @s {q}"]                      # damage takes one entity
 def owner_lines(e, T, stats):
@@ -2822,10 +2834,25 @@ def teleport_lines(e, T, ground):
     x, z = (int((v + 0.5) * T) for v in e["tile"])
     if not (0 <= x < ground.shape[0] and 0 <= z < ground.shape[1]):
         return []
-    at, to = area_selector(e, T), f"{x + 0.5} {int(ground[x, z])} {z + 0.5}"
-    if e["player"] <= 0:                                               # Gaia units have no player tag: not the players
-        at = re.sub(r"tag=aoe2mc\.p-?\d+", "type=!player", at)
+    at, to = unit_selector(e, T), f"{x + 0.5} {int(ground[x, z])} {z + 0.5}"
     return [f"execute as {at} on vehicle run tp @s {to}", f"tp {at} {to}"]
+
+
+def unit_selector(e, T):
+    """The area_selector of the units of the player of an effect. A Gaia unit has no tag (units.make_entity): the
+    entities with no tag and not the players."""
+    at = area_selector(e, T)
+    return re.sub(r"tag=aoe2mc\.p-?\d+", "tag=,type=!player", at) if e["player"] <= 0 else at
+
+
+def freeze_lines(e, T):
+    """The commands of "Freeze Object" (#2608): the units of the player in the area and the mounts of the riders get
+    NoAI, so they stay in their place (AoE2: they do not move until a new order)."""
+    if min(e.get("area", [-1])) < 0:
+        return []
+    at = unit_selector(e, T)
+    return [f"execute as {at} on vehicle run data merge entity @s {{NoAI:1b}}",
+            f"execute as {at} run data merge entity @s {{NoAI:1b}}"]
 
 
 def mood_lines(e):
@@ -2837,6 +2864,42 @@ def mood_lines(e):
     return [f"time set {MOODS[e['mood']]}", f"weather {'rain' if e['mood'] in RAIN else 'clear'}"]
 
 
+def timer_lines(t, e):
+    """(commands, files) of "Display Timer" (#2572): the boss bar aoe2mc:timer<slot> with the text of the effect, "%d"
+    is the time left in the unit of the effect (TIME_UNITS; m:ss for minutes and seconds). The function
+    aoe2mc:timer/<slot> runs each second (schedule): it lowers the score #t<slot> of aoe_timer, the bar and the
+    text, and removes the bar at 0. A new timer in the same slot replaces the old one, as in AoE2."""
+    unit, slot = e.get("unit", 2), e.get("timer", 0)
+    sec, bar, fn = max(int(e["time"] * TIME_UNITS.get(unit, 1)), 1), f"aoe2mc:timer{slot}", f"aoe2mc:timer/{slot}"
+    msg = re.sub(r"<[^<>]*>", "", e["message"]).replace("\r", "").strip() or "%d"   # AoE2 color tags
+    score = lambda n: {"score": {"name": f"#{n}{slot}", "objective": "aoe_timer"}}  # noqa: E731
+    per = TIME_UNITS.get(unit, 1) if unit in (0, 1) else 1
+    left = [score("m"), {"text": ":"}, score("z"), score("s")] if unit == 3 else [score("u" if per > 1 else "t")]
+    before, _, after = msg.partition("%d")
+    name = json.dumps([{"text": before}] + left * ("%d" in msg) + [{"text": after}], ensure_ascii=False)
+    show = [f"scoreboard players operation #u{slot} aoe_timer = #t{slot} aoe_timer",
+            f"scoreboard players add #u{slot} aoe_timer {per - 1}",           # the years or minutes left, rounded up
+            f"scoreboard players set #d{slot} aoe_timer {per}",
+            f"scoreboard players operation #u{slot} aoe_timer /= #d{slot} aoe_timer"] if per > 1 else []
+    if unit == 3:
+        show += [f"scoreboard players set #d{slot} aoe_timer 60",
+                 f"scoreboard players operation #m{slot} aoe_timer = #t{slot} aoe_timer",
+                 f"scoreboard players operation #m{slot} aoe_timer /= #d{slot} aoe_timer",
+                 f"scoreboard players operation #s{slot} aoe_timer = #t{slot} aoe_timer",
+                 f"scoreboard players operation #s{slot} aoe_timer %= #d{slot} aoe_timer",
+                 f"scoreboard players reset #z{slot} aoe_timer",                # a zero before 0-9 seconds
+                 f"execute if score #s{slot} aoe_timer matches ..9 run scoreboard players set #z{slot} aoe_timer 0"]
+    show += [f"execute store result bossbar {bar} value run scoreboard players get #t{slot} aoe_timer",
+             f"bossbar set {bar} name {name}"]
+    tick = [f"scoreboard players remove #t{slot} aoe_timer 1"] + show + \
+        [f"execute if score #t{slot} aoe_timer matches ..0 run bossbar remove {bar}",
+         f"execute if score #t{slot} aoe_timer matches 1.. run schedule function {fn} 1s replace"]
+    lines = ["scoreboard objectives add aoe_timer dummy", f"bossbar remove {bar}", f"bossbar add {bar} \"\"",
+             f"bossbar set {bar} max {sec}", f"bossbar set {bar} players @a",
+             f"scoreboard players set #t{slot} aoe_timer {sec}"] + show + [f"schedule function {fn} 1s replace"]
+    return lines, {f"data/aoe2mc/function/timer/{slot}.mcfunction": "\n".join(tick) + "\n"}
+
+
 def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=True):
     """(load lines, files) for the triggers that only have timer conditions (#648) or only "Objects in Area",
     "Own Objects" and "Own Fewer Objects" conditions (#649, #2573): one function per trigger. "Own Objects" counts the
@@ -2846,11 +2909,14 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
     areas; the score #N of aoe_trig marks a fired trigger, so it fires once. A looping area trigger fires again after
     the units leave an area. "Send Chat" is a tellraw, "Display Instructions" a subtitle for its display time;
     "Create Object" and "Remove Object": object_lines (#656). "Change Color Mood": mood_lines (#1876), only with mood. "Change Ownership": owner_lines (#2570).
-    "Damage Object": damage_lines (#2571).
+    "Damage Object": damage_lines (#2571). "Display Timer": timer_lines (#2572).
     "Teleport Object": teleport_lines (#2569).
+    "Declare Victory" sets the score #p<player> of aoe_win to 1: the scenario mode of the game program ends the game.
+    "Freeze Object": freeze_lines (#2608).
+    "Clear Instructions": title @a clear (#2609).
     A "Chance" condition (alone, after the timers or with the areas, #2574): a roll function checks the trigger once
     per second, as AoE2 does, with `random value 1..100`. A disabled trigger does not run."""
-    load, files, tick = [], {}, []
+    load, files, tick, win = [], {}, [], False
     stats = Counter() if stats is None else stats
     ground = np.zeros((0, 0), np.int16) if ground is None else ground
     for t in triggers:
@@ -2864,7 +2930,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
             continue
         lines = []
         for e in t["effects"]:
-            if e["type"] in (CREATE_OBJECT, REMOVE_OBJECT):
+            if e["type"] in (CREATE_OBJECT, KILL_OBJECT, REMOVE_OBJECT):
                 lines += object_lines(t, e, T, ground, players, stats)
                 continue
             if e["type"] == CHANGE_OWNERSHIP:
@@ -2876,8 +2942,24 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
             if e["type"] == DAMAGE_OBJECT:
                 lines += damage_lines(e, T, stats)
                 continue
+            if e["type"] == DECLARE_VICTORY:                           # the scenario mode reads the score (#2542)
+                lines.append(f"scoreboard players set #p{max(e['player'], 0)} aoe_win 1")
+                stats["declare victory"] += 1
+                win = True
+                continue
+            if e["type"] == DISPLAY_TIMER:
+                more, timer = timer_lines(t, e)
+                lines += more
+                files.update(timer)
+                continue
             if e["type"] == TELEPORT_OBJECT:
                 lines += teleport_lines(e, T, ground)
+                continue
+            if e["type"] == FREEZE_OBJECT:
+                lines += freeze_lines(e, T)
+                continue
+            if e["type"] == CLEAR_INSTRUCTIONS:                            # no message
+                lines.append("title @a clear")
                 continue
             msg = re.sub(r"<[^<>]*>", "", e["message"]).replace("\r", "").strip()   # AoE2 color tags
             if not msg:
@@ -2936,6 +3018,8 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
         run = f"schedule function {fn} {ticks}t replace"
         files[f"data/aoe2mc/function/trigger/{n}.mcfunction"] = "\n".join(lines + [run] * t["looping"]) + "\n"
         load.append(run)
+    if win:
+        load.insert(0, "scoreboard objectives add aoe_win dummy")
     if tick or any(k.endswith("_chance.mcfunction") for k in files):
         load.insert(0, "scoreboard objectives add aoe_trig dummy")
     if tick:
