@@ -50,8 +50,9 @@ def fallen(g, dead):
     """Give the part civs.FALLEN of the cost of the dead units ({uuid: AoE2 name}) of g; each unit only once."""
     part, seen = civs.FALLEN.get(civs.civ(g)), vars(g).setdefault("fallen", set())
     for u, name in sorted(dead.items()):
-        if part and u not in seen and returns(name):
-            gain(g, train.price(g, name), part)
+        cost = "VILLAGER_MALE" if name == "VILLAGER" else name       # the census names each villager VILLAGER (#2966)
+        if part and u not in seen and returns(name) and cost in train.COSTS:
+            gain(g, train.price(g, cost), part)
         seen.add(u)
 
 
