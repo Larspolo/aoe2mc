@@ -161,6 +161,31 @@ def pack_file(world):
     return path if os.path.isfile(path) else None
 
 
+RELEASE = os.path.join(HERE, "release.json")                        # the tag and pack SHA-1 of a bundle (#2741)
+RELEASE_URL = "https://github.com/Larspolo/aoe2mc/releases/download/{tag}/aoe2mc-resourcepack.zip"
+
+
+class ReleasePack:
+    """The resource pack of the GitHub release of the bundle (#2741): the players download it from there."""
+
+    def __init__(self, url, sha1):
+        self.url, self.sha1 = url, sha1
+
+    def stop(self):
+        pass
+
+
+def pack_source(path):
+    """The source of the world pack path for the players: the release link when the app bundle (sys.frozen) has
+    RELEASE (the workflow bundles.yml writes it on a tag) and the world pack has the SHA-1 of the release pack; else
+    the local PackServer (#2740). A world of another version has another pack: the client refuses a wrong SHA-1."""
+    sha1 = hashlib.sha1(open(path, "rb").read()).hexdigest()
+    release = json.load(open(RELEASE)) if getattr(sys, "frozen", False) and os.path.isfile(RELEASE) else {}
+    if release.get("tag") and release.get("sha1") == sha1:
+        return ReleasePack(RELEASE_URL.format(tag=release["tag"]), sha1)
+    return PackServer(path)
+
+
 class PackServer:
     """Serve only the resource pack of the world over HTTP on 127.0.0.1 (#2740): the Minecraft server does not host
     it, it sends only the URL and the SHA-1 to each player who joins."""
@@ -196,7 +221,7 @@ def properties(game_port, rcon_port, password, pack=None):
     """server.properties: only local players can join (127.0.0.1). They play in creative mode (#292).
     A missing white-list becomes "true" in 26.3: then no player can join (#285). Each player is an operator
     (op_joined): the output of RCON and console commands (the "fill" of a falling building) must not go to its chat (#1799).
-    pack: the PackServer of the world (#2740). The units have no vanilla look without it: the player must accept it."""
+    pack: the PackServer of the world (#2740) or its ReleasePack (#2741). The units have no vanilla look without it: the player must accept it."""
     extra = (f"resource-pack={pack.url}\nresource-pack-sha1={pack.sha1}\nrequire-resource-pack=true\n"
              f"resource-pack-prompt={json.dumps({'text': PROMPT})}\n") if pack else ""
     return extra + (f"online-mode=false\nserver-ip=127.0.0.1\nserver-port={game_port}\nwhite-list=false\n"
@@ -243,7 +268,7 @@ class Game:
             os.makedirs(os.path.join(self.folder, "plugins"), exist_ok=True)
             shutil.copy(p, os.path.join(self.folder, "plugins", "aoe2mc-plugin.jar"))
         path = pack_file(self.world)
-        self.pack = PackServer(path) if path else None
+        self.pack = pack_source(path) if path else None
         with open(os.path.join(self.folder, "server.properties"), "w") as f:
             f.write(properties(self.game_port, self.port, password, self.pack))
         if self.kind == "paper":
