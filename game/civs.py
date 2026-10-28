@@ -52,6 +52,7 @@ RULES = {
     "military units": lambda n, s: not civilian(n),
     "mounted": lambda n, s: mounted(s),
     "scout line, steppe lancers": lambda n, s: tagged(n, "scout line"),
+    "ships": lambda n, s: "ship" in s.classes or n.endswith(("_COG", "_SHIP")),   # also the trade cog and transport ship
     "siege": lambda n, s: "siege" in s.classes,
     "skirmishers, elephant archers": lambda n, s: tagged(n, "skirmishers"),
     "skirmishers, genitours, spearman and scout lines": lambda n, s: "spearman" in s.classes
