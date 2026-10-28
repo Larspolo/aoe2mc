@@ -2181,6 +2181,9 @@ class Replay:
             out.append("tp {} {} {} {}".format(v.uuid, *v.pos))
             if self.ai:                                             # ends the walk order of the plugin at once
                 out.append("aoe moveto {} {} {} {}".format(v.uuid, *v.pos))
+                if i not in self.working:                           # a long walk ends here: it gathers (#3022)
+                    self.start(i, v, to)
+                    self.rest(i, to)
             else:                                                   # at its resource: it gathers (#887)
                 self.start(i, v, to)
         for i in sorted(self.patrols.keys() | self.scouts.keys()):  # they walk on after the jump (#2734)
