@@ -24,7 +24,7 @@ MONK = ("carrier_at", "converting", "faith", "fetching", "heal_time", "monk_at",
 JOB = ("state", "load", "res", "job", "lap", "prey")                  # fields of a gather.Villager, as they are
 IDLE = ("to_rally", "to_repair", "repair")                             # orders that the save does not keep yet
 BOT = ("time", "charged", "attack")                                    # fields of a bot.Bot, as they are (#2325)
-SETTINGS = ("all_techs", "bot", "bot_attack", "cheats", "civ", "people", "reveal", "teams", "victory")   # run.py options
+SETTINGS = ("all_techs", "bot", "bot_attack", "cheats", "civ", "full_tech_tree", "people", "reveal", "teams", "victory")   # run.py options
 SKIP = ("session.lock",)                                               # the lock of the running server
 
 

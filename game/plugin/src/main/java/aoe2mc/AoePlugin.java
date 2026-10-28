@@ -1064,12 +1064,29 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         double before = victim.getHealth();
         double damage = Math.max(1, a.damage(t) * (from == null ? 1 : elevation(from, victim)));   // AoE2: after the armor
         victim.setHealth(Math.max(0, before - damage * part));     // 0 kills it
+        gold(from, victim, a);
         if (before > 0 && victim.getHealth() <= 0) {
             kill(from, a, t);
         }
         nameLine(victim);
         if (victim.getHealth() > 0 && from instanceof LivingEntity attacker && !attacker.isDead()) {   // a detonation
             attackBack(victim, attacker, t);
+        }
+    }
+
+    // A unit with the tag aoe2mc.gold.N (N gold per AoE2 minute while it attacks enemy units: the Varangian Guard,
+    // game/spoils.py, #2376) that hits an enemy unit adds N × its reload ticks to the score aoe_attack_gold of its side.
+    // A hit on a building gives no gold: it does not come here.
+    private static void gold(Entity from, Entity victim, Stats a) {
+        String side = from == null || sameTeam(from, victim) ? null : side(from);
+        for (String tag : side == null ? Set.<String>of() : from.getScoreboardTags()) {
+            if (tag.startsWith("aoe2mc.gold.")) {
+                Scoreboard sb = Bukkit.getScoreboardManager().getMainScoreboard();
+                Objective o = sb.getObjective("aoe_attack_gold");
+                o = o != null ? o : sb.registerNewObjective("aoe_attack_gold", Criteria.DUMMY, Component.text("Attack gold"));
+                var score = o.getScore(side);
+                score.setScore(score.getScore() + Integer.parseInt(tag.substring(12)) * a.reload());
+            }
         }
     }
 
