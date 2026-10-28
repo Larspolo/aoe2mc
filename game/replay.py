@@ -68,6 +68,8 @@ TEAM_STEP = 10000           # sidebar score of a team game: team key × TEAM_STE
 COUNTED = "aoe2mc.pop"      # entity tag of the units that the population counts (#787)
 EFFECT = "aoe2mc.effect"    # entity tag of the texts above a building (#843)
 FOLLOWED = "aoe2mc.followed"  # the tag of the entity that the spectators of --follow look through (#1095)
+TRAIL = 3                   # tiles: a follower farther than this from its target walks to it again (#2551)
+TRAIL_MS = 1000             # ms of game time between two checks of the followers (#2551)
 FOLLOW_MS = 15000           # ms of game time: the camera of --follow changes its unit at most this often (#738)
 EFFECT_MS = 10000           # ms of game time that the research text stays
 SCALE = 4                   # size of the research text: a spectator sees it from 40 blocks
@@ -231,6 +233,8 @@ class Replay:
         self.prey = {}                          # carcass tile -> UUID of its animal that is still alive (#1281)
         self.points = {}                        # object ID of a building -> its last GATHER POINT event (#1227)
         self.patrols = {}                       # object ID -> [patrol tiles, index of the tile it walks to, step] (#2550)
+        self.follows = {}                       # object ID -> [target ID, "follow" or "guard", goal, enemy UUID] (#2551)
+        self.trail = math.inf                   # game time (ms) of the next check of the followers (#2551)
         self.adopted, self.rallied = {}, 0      # temporary ID of a unit at a gather point -> its object ID (#1227)
         self.effects = {}                       # entity tag of a research text -> game time (ms) of its end (#843)
         self.flares = []                        # (x, y, z, game time (ms) of the end, RGB) of the live flares (#2402)
@@ -303,11 +307,16 @@ class Replay:
     def commands(self, e):
         """The commands of one timeline event (an empty list for the events that change nothing visible)."""
         kind = e["kind"]
-        if kind in ("move", "order", "stop", "delete", "garrison"):   # another order ends the patrol (#2550)
-            for i in e.get("objects") or ():
+        if kind in ("move", "order", "stop", "delete", "garrison", "follow", "guard"):   # another order ends the patrol
+            for i in e.get("objects") or ():                                             # (#2550)
                 self.patrols.pop(i, None)
+        if kind in aoe2mc.UNIT_USE - {"stance"} | {"delete", "stop"}:   # a new order ends a FOLLOW or GUARD (#2551)
+            for i in e.get("objects") or ():
+                self.follows.pop(i, None)
         if kind == "patrol" and e.get("objects") and e.get("tile"):
             return self.patrol(e)
+        if kind in ("follow", "guard") and e.get("objects") and e.get("target") is not None:
+            return self.escort(e)
         if kind in ("build", "wall") and "type" in e and "tile" in e:
             return self.build(e)
         if kind == "spawn":
@@ -893,6 +902,46 @@ class Replay:
                 rest.append((i, v))
         return out, rest
 
+    def escort(self, e):
+        """FOLLOW and GUARD (#2551): each unit of the selection walks after the target unit, and a guarding military
+        unit attacks an enemy next to the target (chase()). A target that is no unit of the replay changes nothing."""
+        if e["target"] not in self.units:
+            return []
+        self.grid()
+        for i, name in zip(e["objects"], e.get("names") or [None] * len(e["objects"])):
+            if i != e["target"] and self.unit(i, name, e["player"]) is not None:
+                self.follows[i] = [e["target"], e["kind"], None, None]
+        return self.chase(e["time"])
+
+    def chase(self, t):
+        """The commands of the followers at game time t (#2551): a unit farther than TRAIL tiles from its target walks
+        to the place of the target (the path finding of the plugin, move()) when it does not walk there already; a
+        guard on Paper attacks the nearest enemy within TRAIL tiles of its target (attack()). A dead follower or target
+        ends the follow."""
+        out, reach, self.trail = [], TRAIL * self.T, t + TRAIL_MS
+        for i, f in sorted(self.follows.items()):
+            v, w = self.units.get(i), self.units.get(f[0])
+            if v is None or w is None:
+                del self.follows[i]
+                continue
+            to = self.at(w, t)
+            if f[1] == "guard" and self.ai and self.gather.military(v.name):
+                foes = [(math.dist((p[0], p[2]), (to[0], to[2])), u.uuid) for u in self.units.values()
+                        if u.player not in (0, v.player) and math.dist(((p := self.at(u, t))[0], p[2]), (to[0], to[2])) <= reach]
+                if foes:
+                    enemy = min(foes)[1]
+                    if f[3] != enemy:
+                        f[3] = enemy
+                        out += self.attack([(i, v)], enemy)[0]
+                    continue
+                f[3] = None
+            at = self.at(v, t)
+            if math.dist((at[0], at[2]), (to[0], to[2])) > reach and (
+                    f[2] is None or i not in self.moving and f[2] != to or math.dist(f[2], to) > reach):
+                f[2] = to
+                out += self.move(dict(time=t, player=v.player, kind="move", objects=[i], tile=[to[0] / self.T, to[2] / self.T]))
+        return out
+
     def stance(self, e):
         """STANCE: the military units of the selection get the AoE2 stance of the record on Paper (#2548): the stance
         goals of the plugin (combat.stance_command, #1104). An unknown stance changes nothing."""
@@ -1176,7 +1225,7 @@ class Replay:
 
     def steps(self, t):
         """The commands of the steps (/tp), legs (plugin orders) and gather steps that are due at game time t (ms)."""
-        out = self.expire(t)
+        out = self.expire(t) + self.chase(t)
         for i, then in self.built(t):                               # the builders gather or stand idle (#1282)
             out += self.move(then) if then else self.look(self.units[i], "none")
         sink = types.SimpleNamespace(map=self.map, command=out.append)
@@ -1926,6 +1975,7 @@ class Replay:
         while k < len(events) or self.moving or self.builds:
             step = min([*self.moving.values(), *self.working.values(), *self.effects.values(),   # walk, gather, text
                         *[self.burst] * bool(self.flares),                                        # a flare column
+                        *[self.trail] * bool(self.follows),                                       # a follow (#2551)
                         *(due for due, _ in self.builds.values()),                                # a build ends
                         *(at for _, _, at in self.entering.values() if at is not None),            # go in
                         *[c for i in self.moving if self.ai and (c := getattr(self.units[i], "check", None))]],
