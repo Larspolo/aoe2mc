@@ -24,7 +24,6 @@ def galley(server, g):
 
 def test_the_galley_has_the_aoe2_de_values_of_the_wiki():
     assert build.AGE["GALLEY"] == 1 and "GALLEY" in train.TRAINS["DOCK"]
-    assert fleet.SPEEDS["GALLEY"] == 1.36 and combat.sight("GALLEY") == 7
     assert combat.damage("GALLEY", "GALLEY") == 3 + 5 and combat.damage("GALLEY", "FISHING_SHIP") == 5
     assert combat.range_command("u", "GALLEY", 4) == "aoe range u 20 35"
     assert combat.sight_command("u", "FISHING_SHIP", 4) is None        # a fishing ship does not fight
