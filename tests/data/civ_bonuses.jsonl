@@ -6,7 +6,7 @@
 {"name": "ARMENIANS: Fortified Churches replace Monasteries, and the first one constructed receives a free Relic.", "civ": "ARMENIANS", "bonus": "Fortified Churches replace Monasteries, and the first one constructed receives a free Relic.", "in": "free_relic"}
 {"name": "ARMENIANS: Long Swordsman and above, and Spearman line available one Age earlier.", "civ": "ARMENIANS", "bonus": "Long Swordsman and above, and Spearman line available one Age earlier.", "in": "EARLIER"}
 {"name": "ARMENIANS: The Galley line and Dromons* fire one additional projectile each, which deal 1 attack and advertised attack, respectively.", "civ": "ARMENIANS", "bonus": "The Galley line and Dromons* fire one additional projectile each, which deal 1 attack and advertised attack, respectively.", "in": "volley"}
-{"name": "ATHENIANS: Athenians can be changed between Economic, Naval, and Military at the Town Center.", "civ": "ATHENIANS", "bonus": "Athenians can be changed between Economic, Naval, and Military at the Town Center.", "later": "play:setup"}
+{"name": "ATHENIANS: Athenians can be changed between Economic, Naval, and Military at the Town Center.", "civ": "ATHENIANS", "bonus": "Athenians can be changed between Economic, Naval, and Military at the Town Center.", "in": "policies"}
 {"name": "ATHENIANS: Lumberjacks generate food 1 for every wood 14.7.", "civ": "ATHENIANS", "bonus": "Lumberjacks generate food 1 for every wood 14.7.", "in": "EXTRA"}
 {"name": "ATHENIANS: Hoplites move 15% faster.", "civ": "ATHENIANS", "bonus": "Hoplites move 15% faster.", "in": "UNITS"}
 {"name": "AZTECS: Start the game with an Eagle Scout.", "civ": "AZTECS", "bonus": "Start the game with an Eagle Scout.", "later": "play:setup"}
