@@ -27,6 +27,7 @@ import ai  # noqa: E402
 import build  # noqa: E402
 import combat  # noqa: E402
 import gather  # noqa: E402
+import herd  # noqa: E402
 import train  # noqa: E402
 
 SHARE = {"food": 0.4, "wood": 0.3, "gold": 0.2, "stone": 0.1}     # the villagers on each resource (a simple AoE2 bot)
@@ -184,7 +185,8 @@ class Bot:
         self.targets = {u: t for u, t in self.targets.items() if u in mine and t in live}
         if not mine.keys() - {u for u, t in self.targets.items() if t not in g.forts}:
             return                                                     # all soldiers fight units
-        units = {o["uuid"] for o in g.data["objects"] if o["kind"] == "unit" and o["player"] == self.foe and o.get("uuid")}
+        units = {o["uuid"] for o in g.data["objects"] if o["kind"] == "unit" and o["player"] == self.foe and o.get("uuid")
+                 and not herd.herdable(o["name"])}                     # AoE2: a sheep is captured, not attacked (#2049)
         if self.share:                                                 # also the units that player 1 trained
             units |= self.share.villagers.keys() | self.share.soldiers.keys()
         seen, T = g.seen_tiles(), g.map.T                              # the AoE2 AI sees only its sight (#2050)
