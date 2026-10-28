@@ -29,6 +29,7 @@ NO_ECONOMY = "not supported: a converted world has no resources, technologies or
 MAP = {
     ("condition", "TIMER"): "`schedule function ... <s>s` (one function per trigger)",
     ("condition", "OBJECTS_IN_AREA"): AREA,
+    ("condition", "BRING_OBJECT_TO_OBJECT"): "`execute at @e[tag=aoe2mc.rA,limit=1] if entity @e[tag=aoe2mc.rB,distance=..T]` in the tick function: within one tile (units, #2771); a building: not supported yet",
     ("condition", "BRING_OBJECT_TO_AREA"): "`execute if entity @e[tag=aoe2mc.rN,x=..,dx=..]` in the tick function (units, #2620); a building: not supported yet",
     ("condition", "OWN_OBJECTS"): "`execute store result score ... if entity @e[tag=aoe2mc.pN]`, then `if score ... matches N..` (units only, #2573)",
     ("condition", "OWN_FEWER_OBJECTS"): "`execute store result score ... if entity @e[tag=aoe2mc.pN]`, then `if score ... matches ..N` (units only, #2573)",
@@ -80,6 +81,7 @@ MAP = {
     ("effect", "PATROL"): "`tag` of the units in the area and an order in the storage `aoe2mc:orders`: the scenario mode of the game program walks them with `aoe moveto` (#2647); vanilla has no walk-to command",
     ("effect", "ATTACK_MOVE"): "`tag` of the units in the area and an order in the storage `aoe2mc:orders`: the scenario mode of the game program gives them the aggressive stance and `aoe moveto` (#2647); vanilla has no walk-to command",
     ("effect", "STOP_OBJECT"): "`tag` of the units in the area and the order `stop <tag>` in the storage `aoe2mc:orders`: the scenario mode of the game program stops them with `aoe stop` and ends their patrols (#2754); vanilla has no stop of a walk order",
+    ("effect", "UNLOAD"): "the order `unload <player> <ref>` of each selected building (or each building in the area) in the storage `aoe2mc:orders`: the scenario mode of the game program lets its garrison out and walks it to the tile with `aoe moveto` (#2773); a ship or ram holder: not supported yet",
     ("effect", "CHANGE_OBJECT_STANCE"): "`tag` of the units in the area and an order in the storage `aoe2mc:orders`: the scenario mode of the game program sets the stance with `aoe stance` (#2705); vanilla has no stance",
     ("effect", "TRIBUTE"): "`scoreboard players add`/`remove` on `#pN.<resource> aoe_res`; the game program puts it into the stock (`--mode scenario`: `scenario.resources`, #2576)",
     ("effect", "MODIFY_RESOURCE"): "`scoreboard players add`/`remove` on `#pN.<resource> aoe_res`, a set on `aoe_set`; the game program puts it into the stock (`--mode scenario`: `scenario.resources`, #2576)",

@@ -415,6 +415,8 @@ def read_scenario(path):
                                                **({"slot": c.timer_id} if c.condition_type == DISPLAY_TIMER_TRIGGERED else {}),
                                                **({"area": [c.area_x1, c.area_y1, c.area_x2, c.area_y2]}     # #2620
                                                   if c.condition_type == BRING_OBJECT_TO_AREA else {}),
+                                               **({"next": c.next_object, "next_unit": c.next_object in entities}
+                                                  if c.condition_type == BRING_OBJECT_TO_OBJECT else {}),   # #2771
                                                **({"quantity": c.quantity, "player": c.source_player,
                                                    "area": [c.area_x1, c.area_y1, c.area_x2, c.area_y2],
                                                    "object": c.object_list, "group": c.object_group,
@@ -479,6 +481,8 @@ def read_scenario(path):
                                             **({"object2": kinds.get(e.object_list_unit_id_2),   # (#2764)
                                                 "selected": list(e.selected_object_ids or [])}
                                                if e.effect_type == CREATE_GARRISONED_OBJECT else {}),
+                                            **({"selected": list(e.selected_object_ids or [])}   # (#2773)
+                                               if e.effect_type == UNLOAD else {}),
                                             **({"target": e.target_player, "diplomacy": e.diplomacy}   # (#2645)
                                                if e.effect_type == CHANGE_DIPLOMACY else {}),
                                             **({"target": e.target_player, "visibility": e.visibility_state}   # (#2774)
@@ -2870,6 +2874,7 @@ TIMER = 10
 TRIBUTE = 5                                                        # "Tribute" (#2576)
 TRIGGER_CHANCE = 20                                                # the condition "Chance" (#2574)
 UNITS_GARRISONED = 18                                              # the condition "Units Garrisoned" (#2714)
+UNLOAD = 17                                                        # "Unload" (#2773)
 VARIABLE_VALUE = 22
 TIME_UNITS = {0: 5, 1: 60, 2: 1, 3: 1}  # TimeUnit (years, minutes, seconds, m:ss) -> game seconds; a year as game/wonder.py YEAR
 COUNTED = (IN_AREA, OWN_OBJECTS, OWN_FEWER_OBJECTS)                # conditions that count units: the tick function
@@ -2888,6 +2893,7 @@ TICKED = COUNTED + (                                               # conditions 
 )
 ATTRIBUTES = ("Food", "Wood", "Stone", "Gold")     # attributes 0-3: the score holders of gather.RESOURCES (#2655)
 BRING_OBJECT_TO_AREA = 1                                               # the condition "Bring Object to Area" (#2620)
+BRING_OBJECT_TO_OBJECT = 2                                             # the condition "Bring Object to Object" (#2771)
 DESTROY_OBJECT = 6                                                     # the condition "Destroy Object" (#2618)
 CAPTURE_OBJECT = 7                                                     # the condition "Capture Object" (#2619)
 OBJECT_ATTACKED = 76                                                   # the condition "Object Attacked" (#2779)
@@ -2910,7 +2916,11 @@ OBJECT_TESTS = {DESTROY_OBJECT: ("if entity @e[tag=aoe2mc.m{ref}] unless entity 
                                    "unless entity @e[tag=aoe2mc.r{ref},nbt=!{{HurtTime:0s}}]", ()),
                  # "Bring Object to Area": the unit is in the box of the area ({box}: area_box, #2620)
                  BRING_OBJECT_TO_AREA: ("if entity @e[tag=aoe2mc.r{ref}{box}]",
-                                        "unless entity @e[tag=aoe2mc.r{ref}{box}]", ())}
+                                        "unless entity @e[tag=aoe2mc.r{ref}{box}]", ()),
+                 # "Bring Object to Object": the unit is next to the other unit, within one tile ({near} blocks, #2771)
+                 BRING_OBJECT_TO_OBJECT: ("at @e[tag=aoe2mc.r{ref},limit=1] if entity @e[tag=aoe2mc.r{next},distance=..{near}]",
+                                          "at @e[tag=aoe2mc.r{ref},limit=1] unless entity "
+                                          "@e[tag=aoe2mc.r{next},distance=..{near}]", ())}
 TICKED += tuple(OBJECT_TESTS)
 STORES = ("food", "wood", "stone", "gold")      # the resource of a tribute_list (AoE2 attributes 0 to 3)
 OPERATIONS = {1: "set", 2: "add", 3: "remove"}  # set, add, subtract of Modify Resource (AoE2ScenarioParser Operation)
@@ -3378,6 +3388,29 @@ def stop_lines(e, c):
     return tag_lines(e, c.T, tag) + [f'data modify storage aoe2mc:orders list append value "stop {tag}"']
 
 
+def unload_lines(e, c):
+    """The commands of "Unload" (#2773): each selected building of the player that takes a garrison (buildings.INSIDE),
+    or with no selection each such building with its center in the area, goes into the list of the storage
+    aoe2mc:orders as one text "unload <player> <ref>", with the block of the target tile on the ground "x y z" when
+    the effect has one. The scenario mode of the game program (game/scenario.py orders) lets the units of the holder
+    out and walks them there (aoe moveto). A ship or a ram holder: not supported yet (the game program has no garrison
+    of them from a trigger)."""
+    T, ground, a = c.T, c.ground, e.get("area", [-1])
+    refs = e.get("selected") or ([r for r, (_, _, (x, z)) in sorted(buildings.INSIDE.items())
+                                  if a[0] * T <= x < (a[2] + 1) * T and a[1] * T <= z < (a[3] + 1) * T]
+                                 if min(a, default=-1) >= 0 else [])
+    holders = [r for r in refs if r in buildings.INSIDE]
+    if not holders or e["player"] <= 0:
+        c.stats["unload (not supported yet)"] += 1
+        return []
+    c.stats["unload"] += 1
+    x, z = (int((v + 0.5) * T) for v in e.get("tile", [-1, -1]))
+    where = f" {x} {int(ground[x, z])} {z}" if min(e.get("tile", [-1])) >= 0 and ground is not None and \
+        0 <= x < ground.shape[0] and 0 <= z < ground.shape[1] else ""
+    p = e["player"]
+    return [f'data modify storage aoe2mc:orders list append value "unload {p} {r}{where}"' for r in holders]
+
+
 def view_lines(e, c):
     """The commands of "Change View" (#2610): in Minecraft the player is the camera, so a tp of the players of the
     team pN (team_lines) to the middle of the tile, on the ground. Player -1 or 0: all players."""
@@ -3569,6 +3602,7 @@ EFFECTS = {
     TASK_OBJECT: task_lines,
     TELEPORT_OBJECT: teleport_lines,
     TRIBUTE: resource_lines,
+    UNLOAD: unload_lines,
 }
 # The context of the effects of trigger t: a handler can add function files (files) and load lines (setup, the keys)
 Effect = namedtuple("Effect", "t T ground players stats mood files setup switch timed", defaults=((), {}))
@@ -3623,8 +3657,10 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
     Technology" condition too: the game program sets the score #p<player>.<technology> of aoe_tech (#2656), and an
     "Accumulate Attribute" condition of a resource: resource_score (#2655). A "Destroy Object" condition
     (OBJECT_TESTS) tests the tag aoe2mc.r<ref> of its unit and its marker (#2618), "Bring Object to Area" the tag in
-    the box of the area (#2620). "OR" splits the conditions into groups (or_groups, #2765): one tick line per group,
-    and the trigger fires when one group holds. The commands of each effect come from its handler in EFFECTS.
+    the box of the area (#2620), "Bring Object to Object" the other tag within one tile of it (#2771). An inverted
+    object condition swaps the two tests of OBJECT_TESTS. "OR" splits the conditions into groups (or_groups, #2765):
+    one tick line per group, and the trigger fires when one group holds. The commands of each effect come from its
+    handler in EFFECTS.
     A disabled trigger runs only after an "Activate Trigger" (#2575): the score #N of aoe_on is 1 while a trigger that
     such an effect names is on (switch_lines). live: the triggers that get a function; None: all that give commands
     (an effect may name only a function that exists). A "Chance" trigger cannot be activated yet."""
@@ -3654,6 +3690,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
         chance = (TRIGGER_CHANCE, False) in kinds
         rest = kinds - {(TRIGGER_CHANCE, False)}
         if any(c["type"] in OBJECT_TESTS and (c.get("ref", -1) is None or c.get("ref", -1) < 0 or not c.get("unit"))
+               or c["type"] == BRING_OBJECT_TO_OBJECT and (c.get("next") is None or c["next"] < 0 or not c.get("next_unit"))
                for c in conds):                                        # no object, or a building: blocks, no entity
             stats["object condition (not an entity, not supported yet)"] += t["enabled"]
             continue
@@ -3661,7 +3698,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
             stats["OR with a timer or a chance (not supported yet)"] += t["enabled"]
             continue
         if not (t["enabled"] or t["id"] in on and t["id"] not in chancy) or not conds or \
-                not (rest == {(TIMER, False)} or rest <= {(k, False) for k in TICKED}) or \
+                not (rest == {(TIMER, False)} or rest <= {(k, False) for k in TICKED} | {(k, True) for k in OBJECT_TESTS}) or \
                 chance and len([c for c in conds if c["type"] == TRIGGER_CHANCE]) > 1 or \
                 any(c.get("group", -1) >= 0 or c.get("class", -1) >= 0 for c in conds) or \
                 any(c["type"] == VARIABLE_VALUE and (c.get("variable", -1) < 0 or variable_range(c) is None)
@@ -3691,7 +3728,10 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
                 continue
             if c["type"] in OBJECT_TESTS:                              # the tag of the object (#2618)
                 test, other, before = OBJECT_TESTS[c["type"]]
-                at = dict(ref=c["ref"], player=c.get("player"), box=area_box(c.get("area", [-1] * 4), T))
+                at = dict(ref=c["ref"], player=c.get("player"), box=area_box(c.get("area", [-1] * 4), T), next=c.get("next"),
+                          near=T)
+                if c["inverted"]:                                      # the condition holds while the test fails
+                    test, other = other, test
                 counts += [x.format(**at) for x in before]
                 tests.append(test.format(**at))
                 unless.append(other.format(**at))
@@ -3809,6 +3849,45 @@ SKINS = {   # texture -> (model, skin color); the hair, clothes and face colors 
     "entity/zombie/zombie.png": ("zombie", (226, 176, 136)),
     "entity/zombie_villager/zombie_villager.png": ("villager", (214, 160, 120)),
 }
+# The cart of the War Wagon in the pack (#2746, the AoE2 model: a box wagon with plank walls, an iron rim, a plank roof
+# and two large wheels): boxes (from, to) in pixels of a block at scale 1, 16 = 1 block, the ground at y 0, the horse
+# at -z; vanilla block textures, the wheels have the rings of a log top on their sides. cart_model() scales them.
+CART_BOXES = [((-2, 6, -8), (18, 8, 24), "smooth_stone"),                     # the iron rim of the floor
+              ((-1, 8, -7), (17, 27, 23), "dark_oak_log"),                     # the walls of vertical planks
+              ((-1.5, 17, -7.5), (17.5, 18, 23.5), "iron_block"),              # the band
+              ((-1.5, 20, 3), (17.5, 24, 11), "black_concrete"),               # the windows
+              ((-3, 27, -9), (19, 29, 25), "smooth_stone"),                    # the iron rim of the roof
+              ((-2, 29, -8), (18, 30, 24), "oak_planks"),                      # the roof
+              ((-4, 0, 8), (-2, 16, 24), "dark_oak_planks", "spruce_log_top"),   # the wheels
+              ((18, 0, 8), (20, 16, 24), "dark_oak_planks", "spruce_log_top"),
+              ((3, 8, -16), (4, 9, -8), "stripped_oak_log"),                   # the shafts to the horse
+              ((12, 8, -16), (13, 9, -8), "stripped_oak_log")]
+VANILLA_CHEST = {"type": "minecraft:select", "property": "minecraft:local_time", "pattern": "MM-dd",   # items/chest.json
+                 "cases": [{"when": ["12-24", "12-25", "12-26"], "model": {
+                     "type": "minecraft:special", "base": "minecraft:item/chest",
+                     "model": {"type": "minecraft:chest", "texture": "minecraft:christmas"}}}],
+                 "fallback": {"type": "minecraft:special", "base": "minecraft:item/chest",
+                              "model": {"type": "minecraft:chest", "texture": "minecraft:normal"}}}
+
+
+def cart_model():
+    """The item model of the War Wagon cart (CART_BOXES): the cart display has the scale units.CART_SCALE for the
+    vanilla chest, so the boxes shrink by it around the middle (8, 8, 8) of the model. Each face has its uv: a face
+    out of 0..16 with no uv reads its texture from the neighbors in the atlas."""
+    names = sorted({t for b in CART_BOXES for t in b[2:]})
+    out = []
+    for lo, hi, side, *wheel in CART_BOXES:
+        at = [[round(8 + (v - 8) / k, 3) for v, k in zip(p, units.CART_SCALE)] for p in (lo, hi)]
+        size = [h - v for v, h in zip(lo, hi)]                       # the uv in the texture: at most one texture
+        faces = {f: {"uv": [0, 0, min(size[a], 16), min(size[b], 16)],
+                     "texture": f"#t{names.index(wheel[0] if wheel and f in ('east', 'west') else side)}"}
+                 for f, a, b in (("north", 0, 1), ("south", 0, 1), ("east", 2, 1), ("west", 2, 1), ("up", 0, 2),
+                                 ("down", 0, 2))}
+        out.append({"from": at[0], "to": at[1], "faces": faces})
+    textures = {f"t{k}": f"minecraft:block/{t}" for k, t in enumerate(names)} | {"particle": "minecraft:block/dark_oak_log"}
+    return {"textures": textures, "elements": out}
+
+
 HAIR, SHIRT, PANTS, SHOES, EYE, MOUTH = (74, 50, 30), (122, 92, 56), (72, 64, 110), (52, 40, 30), (50, 90, 160), (140, 60, 50)
 
 
@@ -3855,13 +3934,18 @@ def skin_texture(model, tone):
 def write_resourcepack(out):
     """--resource-pack (#2738): resourcepacks/resources.zip in the world folder, which single player loads with the
     world (26.x: LevelResource.MAP_RESOURCE_FILE; a world of an older version had resources.zip at its top, and the
-    client moves it there, ResourcePackLocationFileFix). The zombie units get a human face. Same bytes for each
-    conversion: sorted names, a fixed time."""
+    client moves it there, ResourcePackLocationFileFix). The zombie units get a human face, the War Wagon its cart
+    (cart_model, #2746). Same bytes for each conversion: sorted names, a fixed time."""
     import io
     import zipfile
     files = {"pack.mcmeta": json.dumps({"pack": {
         "description": "aoe2mc: units with a human face", "pack_format": MC["resource_format"],
         "min_format": MC["resource_format"], "max_format": MC["resource_format"]}}, indent=1).encode()}
+    files["assets/minecraft/items/chest.json"] = json.dumps({"model": {   # a chest with the cart data: the cart (#2746)
+        "type": "minecraft:select", "property": "minecraft:custom_model_data", "index": 0,
+        "cases": [{"when": "aoe2mc:war_wagon", "model": {"type": "minecraft:model", "model": "aoe2mc:item/war_wagon"}}],
+        "fallback": VANILLA_CHEST}}, indent=1).encode()
+    files["assets/aoe2mc/models/item/war_wagon.json"] = json.dumps(cart_model(), indent=1).encode()
     for path, (model, tone) in SKINS.items():
         buf = io.BytesIO()
         skin_texture(model, tone).save(buf, "PNG")
