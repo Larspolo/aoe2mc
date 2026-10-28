@@ -2260,16 +2260,19 @@ def free_spot(cols, bx, bz, r, water=False, taken=()):
     return int(xs[i] + x0), int(zs[i] + z0)
 
 
-def find_spawn(cols, objects, players, tile=None):
-    """Spawn block (x, y, z): the tile given (--spawn), else the start view of player 1, else in front of
-    (south of) the first town center of player 1, else the map center. Moved to the nearest free land column."""
+def find_spawn(cols, objects, players, tile=None, pid=1):
+    """Spawn block (x, y, z): the tile given (--spawn), else the start view of player pid, else in front of
+    (south of) the first town center of player pid, else the map center (player 1 only; None for the others).
+    Moved to the nearest free land column."""
     if tile is None:
-        tile = players.get(1, {}).get("view")
+        tile = players.get(pid, {}).get("view")
     if tile is None:
-        tc = next((o for o in objects if o["kind"] == "B" and o["player"] == 1 and "TOWN_CENTER" in o["name"]), None)
+        tc = next((o for o in objects if o["kind"] == "B" and o["player"] == pid and "TOWN_CENTER" in o["name"]), None)
         if tc:
             dx, dy = turn_tile(0, buildings.footprint(tc["name"]) / 2 + 0.5, 0, buildings.TURN)   # the front
             tile = (tc["x"] + dx, tc["y"] + dy)
+    if tile is None and pid != 1:
+        return None
     T, n = cols.T, cols.n
     bx, bz = (n // 2, n // 2) if tile is None else (int(min(max(tile[0] * T, 0), n - 1)),
                                                     int(min(max(tile[1] * T, 0), n - 1)))
@@ -2646,7 +2649,7 @@ def write_region(path, chunks):
 
 
 def write_objects(path, size, T, H, players, objects, cols, ground, timeline=None, mood="DEFAULT", map_ground=None,
-                  victory=None, messages=None, lists=None):
+                  victory=None, messages=None, lists=None, yaw=SPAWN_YAW):
     """aoe2mc.json: the data that a game program needs (docs/research/gameplay.md). Tiles are in the turned grid
     (--orientation): block x = tile x × T, block z = tile y × T. Units have the UUID of their entity, buildings
     their footprint [x0, z0, x1, z1) in blocks. Objects of a recorded game have their object ID ("ref").
@@ -2666,7 +2669,8 @@ def write_objects(path, size, T, H, players, objects, cols, ground, timeline=Non
     "victory" (DE scenarios only): the victory setting of the scenario, {"condition": a name of run.VICTORIES or
     "custom" (only its triggers end the game), "score" or "years" of that condition} (#2566).
     "messages": the scenario texts of CHAPTERS that are not empty (chapter -> text): the book of the scenario mode (#2541).
-    "turn": the clockwise quarter turns of --orientation, if not 0 (#3035)."""
+    "turn": the clockwise quarter turns of --orientation, if not 0 (#3035).
+    "start" of a player: the block (x, y, z) where its person starts (its start view, #3344); "yaw": the spawn yaw."""
     kinds = {"U": "unit", "B": "building", "O": "other"}
     objs = []
     for o in objects:
@@ -2691,8 +2695,8 @@ def write_objects(path, size, T, H, players, objects, cols, ground, timeline=Non
         objs.append(e)
     data = {"map_size": size, "tile_size": T, "level_height": H, "mood": mood,
             "players": {str(pid): {"civ": p["civ"], "color": p["color"], "arch": p["arch"]}
-                        | {k: p[k] for k in ("team", "neutral", "resources", "pop_limit", "computer", "age", "name", "lock_civ") if k in p} for pid, p in sorted(players.items())},
-            "objects": objs}
+                        | {k: p[k] for k in ("team", "neutral", "resources", "pop_limit", "computer", "age", "name", "lock_civ", "start") if k in p} for pid, p in sorted(players.items())},
+            "objects": objs, "yaw": float(yaw)}
     n, wet = cols.n, cols.wtop > cols.top
     data["ground"] = [" ".join("-" if wet[x, z] else str(ground[x, z]) for x in range(n)) for z in range(n)]
     if timeline is not None:
@@ -5779,6 +5783,10 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
     for k, v in sorted(stats.items()):
         print(f"  {k}: {v}")
     spawn = find_spawn(cols, objects, players, spawn)
+    for pid in sorted(players):                    # the start place of each player (#3344)
+        start = spawn if pid == 1 else find_spawn(cols, objects, players, None, pid) if pid else None
+        if start is not None:
+            players[pid]["start"] = [int(v) for v in start]
     book = place_book(cols, edits, spawn, texts, name)
     if book:
         print(f"  book with the scenario texts: lectern at {book}")
@@ -5854,7 +5862,7 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
     img = Image.fromarray(np.clip(img * shade[..., None], 0, 255).astype(np.uint8))
     write_objects(os.path.join(out, "aoe2mc.json"), size, T, H, players, objects, cols, ground, timeline,
                   texts.get("mood", "DEFAULT"), map_colors(np.asarray(img))[0], texts.get("global_victory"), texts,
-                  {k: f(texts.get("triggers", [])) for k, f in TRIGGER_LISTS.items()})
+                  {k: f(texts.get("triggers", [])) for k, f in TRIGGER_LISTS.items()}, yaw)
     triggers, tstats = texts.get("triggers", []), Counter()
     haze = FOG.get(texts.get("mood")) if mood == "on" and (fog or ambience == "full") else None
     n, amb = write_datapack(out, objects, ground, cols.biome_names, ambience, players, triggers, T, tstats, haze,
