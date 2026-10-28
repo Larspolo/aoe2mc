@@ -1502,6 +1502,7 @@ class Gather:
         monk.heal(self, self.tick * NORMAL)
         monk.convert(self, self.tick * NORMAL)
         garrison.heal(self, self.tick * NORMAL)
+        garrison.pasture(self, self.tick * NORMAL)
         regen.tick(self, self.tick * NORMAL)
         repair.tick(self, self.tick * NORMAL)
         trebuchet.tick(self, self.tick * NORMAL)
