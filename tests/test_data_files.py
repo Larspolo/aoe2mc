@@ -63,7 +63,7 @@ def check_train(row):
     form(row, {"name": str, "building": (str, type(None)), "slot": int, "item": str, "label": str, "cost": dict,
                "time": int, "help": str},
          {"age": int, "after": str, "civ": str, "civs": list, "faster": list, "upgrade": list, "note": str,
-          "resist": int, "tribute_fee": int, "full_tech_tree": str, "doctrine": bool})
+          "resist": int, "tribute_fee": int, "full_tech_tree": str, "doctrine": bool, "not_civs": list})
     n = row["name"]
     only(row)
     assert row["building"] is None or row["building"] in NAMES["buildings.jsonl"], n
@@ -80,9 +80,12 @@ def check_train(row):
 
 
 def only(row):
-    """The key "civs" (#2235): the civilizations that have the item, sorted, fewer than all."""
-    cs = row.get("civs", ["BRITONS"])
-    assert cs and cs == sorted(set(cs)) and set(cs) < NAMES["civs.jsonl"], row["name"]
+    """The key "civs" (#2235): the civilizations that have the item; "not_civs" (#3200): those that do not have it.
+    Sorted, fewer than all, and one form for each item."""
+    for k in ("civs", "not_civs"):
+        cs = row.get(k, ["BRITONS"])
+        assert cs and cs == sorted(set(cs)) and set(cs) < NAMES["civs.jsonl"], row["name"]
+    assert not {"civs", "not_civs"} <= set(row), row["name"]
 
 
 def check_civ_keys(row):                                   # a key of civs.jsonl: what it does, its issue (#2281)
@@ -91,13 +94,12 @@ def check_civ_keys(row):                                   # a key of civs.jsonl
 
 
 def check_civs(row):
-    form(row, {"name": str, "missing": list}, {"unique": str})
+    form(row, {"name": str}, {"unique": str})
     for k, v in row.items():                               # a rule, not a list of keys: parallel tickets add keys (#2239)
         assert isinstance(v, (dict, list, str, int, float)) and not isinstance(v, bool), (row["name"], k, v)
-    n, known = row["name"], NAMES["train.jsonl"] | NAMES["units.jsonl"] | NAMES["buildings.jsonl"]
+    n = row["name"]
     assert set(row.get("drop", {})) <= {"food", "forage"} and all(isinstance(v, NUMBER) for v in row.get("drop", {}).values()), n
-    assert set(row["missing"]) <= known and row["missing"] == sorted(set(row["missing"])), n
-    assert not set(row["missing"]) & set(civs.ONLY), n                    # one form for each item (#2235)
+    assert "missing" not in row, n              # the key "not_civs" of the item line (#3200): one line for a new item
     assert row.get("unique", "MILITIA") in NAMES["units.jsonl"], n
     assert set(row.get("twice", ())) <= NAMES["train.jsonl"], n
     assert len(row.get("hp_age", [1] * 4)) == 4 and all(isinstance(a, NUMBER) and a > 0 for a in row.get("hp_age", ())), n
@@ -142,7 +144,7 @@ def check_gather(row):
 def check_build(row):
     form(row, {"name": str}, {"cost": dict, "time": int, "icon": str, "age": int, "needs": str, "gate": bool,
                               "wall": bool, "age_tech": int, "bot": int, "near": str, "civs": list,
-                              "full_tech_tree": str, "military": bool})
+                              "full_tech_tree": str, "military": bool, "not_civs": list})
     n = row["name"]
     only(row)
     assert set(row.get("cost", {})) <= RES and all(isinstance(v, int) for v in row.get("cost", {}).values()), n

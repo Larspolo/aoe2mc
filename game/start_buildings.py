@@ -1,8 +1,8 @@
 """
 The start buildings of a civilization in the game program (#2429, epic #1088; AoE2 DE wiki "Georgians": "Start with a
 Mule Cart. Mule Carts replace Lumber Camps and Mining Camps."). The key "start_buildings" of the line of a civilization
-in game/data/civs.jsonl holds them ({building: count}); the camps that a civilization does not have are in its
-"missing" list. run.play puts the buildings complete and free next to the own town center at the start of a new game,
+in game/data/civs.jsonl holds them ({building: count}); the camps that a civilization does not have name it in
+their key "not_civs" (game/data/build.jsonl, #3200). run.play puts the buildings complete and free next to the own town center at the start of a new game,
 as empire_wars.town does (build.found, build.rise). A loaded game has them in the world already.
 """
 import math

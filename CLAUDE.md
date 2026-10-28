@@ -110,9 +110,10 @@ one in `game/data/buildings.jsonl` (`combat.BUILDINGS`); its line of sight is th
 The converter tables are lines in `data/*.jsonl` too (#1917): an animal in `animals.jsonl`, an infantry design in `lines.jsonl`, a footprint in `footprint.jsonl` (the first match wins: put a longer name before its part).
 An item that few civilizations have (a unique or regional unit, building or technology) gets the key `"civs"` (the
 civilizations that have it, sorted) on its own line of `game/data/train.jsonl` or `game/data/build.jsonl`
-(`civs.ONLY`, #2235): no change of `game/data/civs.jsonl`. An item that most civilizations have goes into the list
-`"missing"` of each line of `game/data/civs.jsonl` without it (`civs.MISSING` joins both, #1914; also `unique`,
-`costs`, `units`, `twice`), not into `civs.py`.
+(`civs.ONLY`, #2235). An item that most civilizations have gets the key `"not_civs"` (the civilizations without it,
+sorted) on its line (`civs.NOT`, #3200; `civs.MISSING` joins both). Neither changes `game/data/civs.jsonl`: a change
+of many civ lines made each parallel PR `dirty` on GitHub. The civ lines hold the bonuses (`unique`, `costs`, `units`,
+`twice`), not `civs.py`.
 A new key of `game/data/civs.jsonl` (a civilization bonus) is one line in `game/data/civ_keys.jsonl` (what it does, its
 issue) and `civs.value("key", civ, default)` in the module that applies it: no new table or comment in `game/civs.py` (#2281).
 A new key of `game/data/train.jsonl` is one line in `game/data/train_keys.jsonl` and `train.value("key", name, default)`

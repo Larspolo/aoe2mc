@@ -1,6 +1,6 @@
 """The AoE2 "All Techs" setting of the game program (#2298, epic #2263): `game/run.py --play --all-techs` gives each
-civilization the generic units and technologies that its tech tree does not have (the "missing" lists of
-game/data/civs.jsonl). AoE2 wiki "Full Tech Tree", section "All Techs": the whole tech tree, and the civilization and
+civilization the generic units and technologies that its tech tree does not have (the key "not_civs"
+of their lines in game/data/train.jsonl and build.jsonl, #3200). AoE2 wiki "Full Tech Tree", section "All Techs": the whole tech tree, and the civilization and
 team bonuses stay. The unique units and technologies stay with their civilization."""
 import pytest
 from test_castle_upgrades import STABLE, setup

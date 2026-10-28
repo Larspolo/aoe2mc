@@ -1,7 +1,7 @@
 {"name": "HOUSE", "cost": {"wood": 25}, "time": 25, "icon": "spruce_stairs"}
-{"name": "LUMBER_CAMP", "cost": {"wood": 100}, "time": 35, "icon": "oak_log", "bot": 1, "near": "wood", "full_tech_tree": "own"}
-{"name": "MINING_CAMP", "cost": {"wood": 100}, "time": 35, "icon": "raw_gold_block", "bot": 3, "near": "gold", "full_tech_tree": "own"}
-{"name": "MILL", "cost": {"wood": 100}, "time": 35, "icon": "white_wool", "bot": 2, "near": "food"}
+{"name": "LUMBER_CAMP", "cost": {"wood": 100}, "time": 35, "icon": "oak_log", "bot": 1, "near": "wood", "full_tech_tree": "own", "not_civs": ["ARMENIANS", "GEORGIANS", "INCAS", "MAPUCHE", "MUISCA", "TUPI"]}
+{"name": "MINING_CAMP", "cost": {"wood": 100}, "time": 35, "icon": "raw_gold_block", "bot": 3, "near": "gold", "full_tech_tree": "own", "not_civs": ["ARMENIANS", "GEORGIANS", "INCAS", "MAPUCHE", "MUISCA", "TUPI"]}
+{"name": "MILL", "cost": {"wood": 100}, "time": 35, "icon": "white_wool", "bot": 2, "near": "food", "not_civs": ["INCAS", "MAPUCHE", "MUISCA", "POLES", "TUPI"]}
 {"name": "FARM", "cost": {"wood": 60}, "time": 15, "icon": "wheat"}
 {"name": "BARRACKS", "cost": {"wood": 175}, "time": 50, "icon": "stone_brick_wall", "bot": 4, "military": true}
 {"name": "BLACKSMITH", "cost": {"wood": 150}, "time": 40, "icon": "anvil", "age": 1}
@@ -18,7 +18,7 @@
 {"name": "GATE", "cost": {"stone": 30}, "time": 70, "icon": "iron_bars", "gate": true, "age": 1}
 {"name": "KREPOST", "cost": {"stone": 350}, "time": 150, "icon": "red_sandstone", "age": 2, "civs": ["BULGARIANS"], "full_tech_tree": "none", "military": true}
 {"name": "MARKET", "cost": {"wood": 175}, "time": 60, "icon": "barrel", "age": 1}
-{"name": "MONASTERY", "cost": {"wood": 175}, "time": 40, "icon": "bell", "age": 2}
+{"name": "MONASTERY", "cost": {"wood": 175}, "time": 40, "icon": "bell", "age": 2, "not_civs": ["ARMENIANS", "GEORGIANS"]}
 {"name": "PALISADE_GATE", "cost": {"wood": 30}, "time": 30, "icon": "stripped_spruce_log", "gate": true}
 {"name": "PALISADE_WALL", "cost": {"wood": 3}, "time": 7, "icon": "spruce_fence", "wall": true}
 {"name": "SIEGE_WORKSHOP", "cost": {"wood": 200}, "time": 40, "icon": "grindstone", "age": 2, "military": true}
@@ -27,7 +27,7 @@
 {"name": "UNIVERSITY", "cost": {"wood": 200}, "time": 60, "icon": "bookshelf", "age": 2}
 {"name": "WATCH_TOWER", "cost": {"wood": 35, "stone": 125}, "time": 80, "icon": "cracked_stone_bricks", "age": 1}
 {"name": "WONDER", "cost": {"wood": 1000, "gold": 1000, "stone": 1000}, "time": 3500, "icon": "weathered_cut_copper_stairs", "age": 3}
-{"name": "MULE_CART", "cost": {"food": 20, "wood": 80}, "time": 25, "icon": "spruce_trapdoor", "full_tech_tree": "own"}
+{"name": "MULE_CART", "cost": {"food": 20, "wood": 80}, "time": 25, "icon": "spruce_trapdoor", "full_tech_tree": "own", "not_civs": ["ACHAEMENIDS", "ATHENIANS", "AZTECS", "BENGALIS", "BERBERS", "BOHEMIANS", "BRITONS", "BULGARIANS", "BURGUNDIANS", "BURMESE", "BYZANTINES", "CELTS", "CHINESE", "CUMANS", "DANES", "DRAVIDIANS", "ETHIOPIANS", "FRANKS", "GOTHS", "GURJARAS", "HINDUSTANIS", "HUNS", "INCAS", "ITALIANS", "JAPANESE", "JURCHENS", "KHITANS", "KHMER", "KOREANS", "LITHUANIANS", "MACEDONIANS", "MAGYARS", "MALAY", "MALIANS", "MAPUCHE", "MAYANS", "MONGOLS", "MUISCA", "PERSIANS", "POLES", "PORTUGUESE", "PURU", "ROMANS", "SARACENS", "SAXONS", "SHU", "SICILIANS", "SLAVS", "SPANISH", "SPARTANS", "TATARS", "TEUTONS", "THRACIANS", "TUPI", "TURKS", "VARANGIANS", "VIETNAMESE", "VIKINGS", "WEI", "WU"]}
 {"name": "CARAVANSERAI", "cost": {"wood": 175, "stone": 50}, "time": 60, "icon": "chiseled_sandstone", "age": 3, "civs": ["HINDUSTANIS", "PERSIANS"]}
 {"name": "SETTLEMENT", "cost": {"wood": 125}, "time": 40, "icon": "hay_block", "civs": ["INCAS", "MAPUCHE", "MUISCA", "TUPI"]}
 {"name": "ARBALESTER", "age": 3}

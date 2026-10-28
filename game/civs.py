@@ -92,11 +92,13 @@ COST_PER = {r["name"]: [tuples(b) for b in r["cost_per"]] for r in ROWS if "cost
 TWICE = {r["name"]: tuples(r["twice"]) for r in ROWS if "twice" in r}
 SMITH_UNITS = {r["name"]: [tuples(b) for b in r["smith_units"]] for r in ROWS if "smith_units" in r}
 # An item that few civilizations have names them in the key "civs" of its line in data/train.jsonl or data/build.jsonl
-# (#2235): a new unique or regional unit then changes only its own line, not each line of data/civs.jsonl.
+# (#2235), an item that most have names the others in the key "not_civs" (#3200): a new item then changes only its own
+# line, not the lines of data/civs.jsonl. Two tickets that changed those lines were dirty on GitHub after each merge.
 ONLY = {r["name"]: set(r["civs"]) for f in ("train.jsonl", "build.jsonl") for r in table.load(f) if "civs" in r}
-MISSING = {t: tuple(sorted(r["name"] for r in ROWS if t in r["missing"] or r["name"] not in ONLY.get(t, (r["name"],))))
-           for t in sorted({t for r in ROWS for t in r["missing"]} | set(ONLY))}
-GENERIC = frozenset(t for r in ROWS for t in r["missing"])   # the AoE2 setting "All Techs" gives them to all (#2298)
+NOT = {r["name"]: set(r["not_civs"]) for f in ("train.jsonl", "build.jsonl") for r in table.load(f) if "not_civs" in r}
+MISSING = {t: tuple(sorted(r["name"] for r in ROWS if r["name"] in NOT.get(t, ()) or r["name"] not in ONLY.get(t, (r["name"],))))
+           for t in sorted(set(NOT) | set(ONLY))}
+GENERIC = frozenset(NOT)   # the AoE2 setting "All Techs" gives them to all (#2298)
 # The AoE2 lobby setting "Full Tech Tree" (#2354) gives each civilization the GENERIC and the ONLY items; the key
 # "full_tech_tree" of a line of data/train.jsonl or data/build.jsonl makes an exception: "own" (only its civilizations
 # have it: a unique unit, a scout, a regional unit after AoE2 update 141935), "none" (no civilization: a unique
