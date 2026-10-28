@@ -2706,6 +2706,7 @@ COUNTED = (IN_AREA, OWN_OBJECTS, OWN_FEWER_OBJECTS)                # conditions 
 CREATE_OBJECT, KILL_OBJECT, REMOVE_OBJECT, CHANGE_OWNERSHIP, CHANGE_COLOR_MOOD = 11, 14, 15, 18, 72
 DAMAGE_OBJECT = 24                                                     # "Damage Object" (#2571)
 TELEPORT_OBJECT = 35
+CLEAR_INSTRUCTIONS = 21                                                # "Clear Instructions" (#2609)
 
 
 def turn_area(area, size, k):
@@ -2850,7 +2851,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
     the units leave an area. "Send Chat" is a tellraw, "Display Instructions" a subtitle for its display time;
     "Create Object" and "Remove Object": object_lines (#656). "Change Color Mood": mood_lines (#1876), only with mood. "Change Ownership": owner_lines (#2570).
     "Damage Object": damage_lines (#2571).
-    "Teleport Object": teleport_lines (#2569).
+    "Teleport Object": teleport_lines (#2569). "Clear Instructions": title @a clear (#2609).
     A disabled trigger does not run."""
     load, files, tick = [], {}, []
     stats = Counter() if stats is None else stats
@@ -2877,6 +2878,9 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
                 continue
             if e["type"] == TELEPORT_OBJECT:
                 lines += teleport_lines(e, T, ground)
+                continue
+            if e["type"] == CLEAR_INSTRUCTIONS:                            # no message
+                lines.append("title @a clear")
                 continue
             msg = re.sub(r"<[^<>]*>", "", e["message"]).replace("\r", "").strip()   # AoE2 color tags
             if not msg:
