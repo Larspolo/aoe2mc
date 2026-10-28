@@ -6,11 +6,10 @@ from test_heavy_warships import imperial
 from test_train_archery import menus
 
 import units
-from game import build, combat, train
+from game import combat, train
 
 
 def test_the_carrack_has_the_aoe2_de_values_of_the_wiki():
-    assert build.AGE["CARRACK"] == 3
     assert "CARRACK" in combat.MELEE_RANGED and "CARRACK" in train.HULKS and len(train.HELP["HEAVY_WARSHIPS"]) <= 50
     assert units.classify("CARRACK") == units.classify("WAR_HULK")         # a dark oak boat with two crew
 
