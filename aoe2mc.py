@@ -61,7 +61,7 @@ WATERLOGGABLE = {k for k, v in BLOCK_PROPS.items() if "waterlogged" in v}
 # Output format per Minecraft Java version (docs/minecraft-versions.md): only 26.3 (#427); a later 26.x version can
 # get its own entry. The code uses the 26.3 block and entity names (#428).
 VERSIONS = {
-    "26.3": dict(name="26.3", data_version=5023, pack_format=121),
+    "26.3": dict(name="26.3", data_version=5023, pack_format=121, resource_format=97),   # resource: version.json
 }
 VERSION_NAME = "26.3"        # the default output version
 DATA_VERSION = VERSIONS[VERSION_NAME]["data_version"]
@@ -426,6 +426,9 @@ def read_scenario(path):
                                                **({"quantity": c.quantity, "player": c.source_player,   # (#2655)
                                                    "attribute": c.attribute}
                                                   if c.condition_type == ACCUMULATE_ATTRIBUTE else {}),
+                                               **({"quantity": c.quantity, "ref": c.unit_object,   # (#2701)
+                                                   "comparison": c.comparison}
+                                                  if c.condition_type == OBJECT_HP else {}),
                                                **({"player": c.source_player,                 # (#2656)
                                                    "technology": techs.get(c.technology, str(c.technology))}
                                                   if c.condition_type == RESEARCHED else {}),
@@ -2794,6 +2797,7 @@ CHANGE_OBJECT_SPEED = 33                                           # "Change Obj
 CHANGE_OBJECT_STANCE = 36                                          # "Change Object Stance" (#2705)
 CHANGE_OWNERSHIP = 18
 CHANGE_PLAYER_COLOR = 89                                           # "Change Player Color" (#2712)
+CHANGE_PLAYER_NAME = 45                                            # "Change Player Name" (#2711)
 CHANGE_VARIABLE = 56                                               # the scenario variables (#2611)
 CHANGE_VIEW = 16                                                   # "Change View" (#2610)
 CLEAR_INSTRUCTIONS = 21                                            # "Clear Instructions" (#2609)
@@ -2810,6 +2814,7 @@ HEAL_OBJECT = 34                                                   # "Heal Objec
 IN_AREA = 5
 KILL_OBJECT = 14
 MODIFY_RESOURCE = 52                                               # "Modify Resource" (#2576)
+OBJECT_HP = 23                                                     # "Object HP", the hit points of one object (#2701)
 OWN_FEWER_OBJECTS = 4                                              # conditions on the units of a player (#2573)
 OWN_OBJECTS = 3
 PATROL = 19                                                        # "Patrol" (#2647)
@@ -2819,6 +2824,7 @@ REPLACE_OBJECT = 43                                                # "Replace Ob
 RESEARCHED = 9                                                     # the condition "Research Technology" (#2656)
 RESEARCH_TECHNOLOGY = 2                                            # "Research Technology" (#2577)
 SEND_CHAT = 3
+STOP_OBJECT = 29                                                   # "Stop Object" (#2754)
 TASK_OBJECT = 12                                                   # "Task Object" (#2646)
 TELEPORT_OBJECT = 35
 ACTIVATE_TRIGGER, DEACTIVATE_TRIGGER = 8, 9
@@ -2829,7 +2835,7 @@ UNITS_GARRISONED = 18                                              # the conditi
 VARIABLE_VALUE = 22
 TIME_UNITS = {0: 5, 1: 60, 2: 1, 3: 1}  # TimeUnit (years, minutes, seconds, m:ss) -> game seconds; a year as game/wonder.py YEAR
 COUNTED = (IN_AREA, OWN_OBJECTS, OWN_FEWER_OBJECTS)                # conditions that count units: the tick function
-TICKED = COUNTED + (ACCUMULATE_ATTRIBUTE, DIFFICULTY_LEVEL, RESEARCHED, UNITS_GARRISONED,
+TICKED = COUNTED + (ACCUMULATE_ATTRIBUTE, DIFFICULTY_LEVEL, OBJECT_HP, RESEARCHED, UNITS_GARRISONED,
                      VARIABLE_VALUE)  # conditions of the tick function
 ATTRIBUTES = ("Food", "Wood", "Stone", "Gold")     # attributes 0-3: the score holders of gather.RESOURCES (#2655)
 BRING_OBJECT_TO_AREA = 1                                               # the condition "Bring Object to Area" (#2620)
@@ -3034,6 +3040,16 @@ def name_lines(e, c):
     stats["change object name"] += 1
     return [f"execute as {found[0]} run data modify entity @s CustomName.text set value "   # one entity
             f"{json.dumps(msg, ensure_ascii=False)}"]
+
+
+def player_name_lines(e, c):
+    """The commands of "Change Player Name" (#2711): the new name (with no AoE2 color tags) is the display name of the
+    team p<player> (team_lines), in the sidebar and the tab list. Gaia or no name: no line."""
+    msg = re.sub(r"<[^<>]*>", "", e["message"]).replace("\r", "").strip()
+    if e["player"] <= 0 or not msg:
+        return []
+    c.stats["change player name"] += 1
+    return [f"team modify p{e['player']} displayName {json.dumps({'text': msg}, ensure_ascii=False)}"]
 
 
 def owner_lines(e, c):
@@ -3241,6 +3257,14 @@ def stance_lines(e, c):
     return tag_lines(e, c.T, tag) + [f'data modify storage aoe2mc:orders list append value "stance {tag} {e["stance"]}"']
 
 
+def stop_lines(e, c):
+    """The commands of "Stop Object" (#2754). Vanilla has no command that ends the walk order of a mob: as order_lines,
+    the units of the player in the area get the tag aoe_order<trigger>_<effect index>, and the order "stop <tag>" goes
+    into the storage aoe2mc:orders. game/scenario.py orders stops them (`aoe stop`) and ends their patrols."""
+    tag = f"aoe_order{c.t['id']}_{effect_index(e, c)}"
+    return tag_lines(e, c.T, tag) + [f'data modify storage aoe2mc:orders list append value "stop {tag}"']
+
+
 def view_lines(e, c):
     """The commands of "Change View" (#2610): in Minecraft the player is the camera, so a tp of the players of the
     team pN (team_lines) to the middle of the tile, on the ground. Player -1 or 0: all players."""
@@ -3386,6 +3410,7 @@ EFFECTS = {
     CHANGE_OBJECT_STANCE: stance_lines,
     CHANGE_OWNERSHIP: owner_lines,
     CHANGE_PLAYER_COLOR: color_lines,
+    CHANGE_PLAYER_NAME: player_name_lines,
     CHANGE_VARIABLE: variable_lines,
     CHANGE_VIEW: view_lines,
     CLEAR_INSTRUCTIONS: clear_lines,
@@ -3407,6 +3432,7 @@ EFFECTS = {
     REPLACE_OBJECT: replace_lines,
     RESEARCH_TECHNOLOGY: research_lines,
     SEND_CHAT: chat_lines,
+    STOP_OBJECT: stop_lines,
     TASK_OBJECT: task_lines,
     TELEPORT_OBJECT: teleport_lines,
     TRIBUTE: resource_lines,
@@ -3478,6 +3504,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
                 any(c["type"] == VARIABLE_VALUE and (c.get("variable", -1) < 0 or variable_range(c) is None)
                     or c["type"] == RESEARCHED and (c.get("player", -1) <= 0 or not c.get("technology"))
                     or c["type"] == ACCUMULATE_ATTRIBUTE and resource_score(c) is None
+                    or c["type"] == OBJECT_HP and (c.get("ref", -1) < 0 or variable_range(c) is None)
                     or c["type"] == UNITS_GARRISONED and c.get("unit", -1) < 0
                     for c in conds):                                   # unit classes: not yet
             continue
@@ -3503,6 +3530,13 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
                 tests.append(test.format(**at))
                 unless.append(other.format(**at))
                 continue
+            if c["type"] == OBJECT_HP:                                 # the Health of the object (tag aoe2mc.r<ref>): none when dead
+                tag = f"aoe2mc.r{c['ref']}"
+                counts += [f"scoreboard players reset #{n}.{i} aoe_trig",
+                           f"execute if entity @e[tag={tag},limit=1] store result score #{n}.{i} aoe_trig "
+                           f"run data get entity @e[tag={tag},limit=1] Health"]
+                tests.append(f"if score #{n}.{i} aoe_trig matches {variable_range(c)}")
+                unless.append(f"unless score #{n}.{i} aoe_trig matches {variable_range(c)}")
             if c["type"] not in COUNTED:                               # a timer or the chance
                 continue
             whole = c["type"] != IN_AREA                               # Own (Fewer) Objects: the whole map
@@ -3580,6 +3614,82 @@ def research_list(triggers):
 MAP_PULSE = ["execute as @a[tag=!aoe2mc_map] run item replace entity @s weapon.offhand with "
              "minecraft:filled_map[minecraft:map_id=0]",
              "tag @a[tag=!aoe2mc_map] add aoe2mc_map"]
+
+
+# The resource pack of --resource-pack (#2738): human textures for the zombie units. Boxes (u, v, w, h, d, part) of
+# the 64 x 64 entity models (a box puts its six faces at u, v); the left limbs mirror the right ones.
+SKIN_BOXES = {
+    "zombie": [(0, 0, 8, 8, 8, "head"), (16, 16, 8, 12, 4, "shirt"), (40, 16, 4, 12, 4, "arm"), (0, 16, 4, 12, 4, "leg")],
+    "villager": [(0, 0, 8, 10, 8, "head"), (24, 0, 2, 4, 2, "skin"), (16, 20, 8, 12, 6, "shirt"),
+                 (44, 22, 4, 12, 4, "arm"), (0, 22, 4, 12, 4, "leg")],
+}
+SKINS = {   # texture -> (model, skin color); the hair, clothes and face colors are the same for all
+    "entity/zombie/husk.png": ("zombie", (196, 140, 98)),
+    "entity/zombie/zombie.png": ("zombie", (226, 176, 136)),
+    "entity/zombie_villager/zombie_villager.png": ("villager", (214, 160, 120)),
+}
+HAIR, SHIRT, PANTS, SHOES, EYE, MOUTH = (74, 50, 30), (122, 92, 56), (72, 64, 110), (52, 40, 30), (50, 90, 160), (140, 60, 50)
+
+
+def skin_texture(model, tone):
+    """A 64 x 64 entity texture with a human skin tone and face (#2738): each box of the model gets the color of its
+    part on all six faces, the head gets hair, and the front of the head eyes, brows and a mouth."""
+    from PIL import Image, ImageDraw
+    im = Image.new("RGBA", (64, 64), (0, 0, 0, 0))
+    d = ImageDraw.Draw(im)
+    dark = tuple(int(c * 0.8) for c in tone)
+
+    def box(u, v, w, h, k, color, rows=None):                  # rows: only the top (>0) or bottom (<0) rows of the sides
+        if rows is None or rows > 0:                            # top and bottom; with rows only the top
+            d.rectangle([u + k, v, u + k + (1 if rows is None else 0) * w + w - 1, v + k - 1], fill=color)
+        y0, y1 = (v + k, v + k + h - 1) if rows is None else (v + k, v + k + rows - 1) if rows > 0 else (v + k + h + rows, v + k + h - 1)
+        d.rectangle([u, y0, u + 2 * k + 2 * w - 1, y1], fill=color)                # the four sides
+    for u, v, w, h, k, part in SKIN_BOXES[model]:
+        if part == "head":
+            box(u, v, w, h, k, tone)
+            box(u, v, w, h, k, HAIR, 2)
+            d.rectangle([u + 2 * k + w, v + k, u + 2 * k + 2 * w - 1, v + k + h - 3], fill=HAIR)   # the back of the head
+            e = v + k + h - 6                                       # the eye row: the face is 8 or 10 high
+            for x, w2 in ((u + k + 1, 1), (u + k + 5, -1)):
+                d.point([(x, e - 1), (x + w2, e - 1)], fill=HAIR)  # brows
+                d.point([(x, e)], fill=(240, 240, 240))
+                d.point([(x + w2, e)], fill=EYE)
+            if model == "zombie":
+                d.point([(u + k + 3, e + 1), (u + k + 4, e + 1)], fill=dark)   # nose (a villager has its own box)
+            d.line([(u + k + 2, e + 3), (u + k + 5, e + 3)], fill=MOUTH)
+        elif part == "skin":
+            box(u, v, w, h, k, tone)
+        elif part == "arm":
+            box(u, v, w, h, k, SHIRT)
+            box(u, v, w, h, k, tone, -3)                            # the hand
+            d.rectangle([u + k + w, v, u + k + 2 * w - 1, v + k - 1], fill=tone)
+        else:
+            box(u, v, w, h, k, PANTS if part == "leg" else SHIRT)
+            if part == "leg":
+                box(u, v, w, h, k, SHOES, -2)
+                d.rectangle([u + k + w, v, u + k + 2 * w - 1, v + k - 1], fill=SHOES)
+    return im
+
+
+def write_resourcepack(out):
+    """--resource-pack (#2738): resourcepacks/resources.zip in the world folder, which single player loads with the
+    world (26.x: LevelResource.MAP_RESOURCE_FILE; a world of an older version had resources.zip at its top, and the
+    client moves it there, ResourcePackLocationFileFix). The zombie units get a human face. Same bytes for each
+    conversion: sorted names, a fixed time."""
+    import io
+    import zipfile
+    files = {"pack.mcmeta": json.dumps({"pack": {
+        "description": "aoe2mc: units with a human face", "pack_format": MC["resource_format"],
+        "min_format": MC["resource_format"], "max_format": MC["resource_format"]}}, indent=1).encode()}
+    for path, (model, tone) in SKINS.items():
+        buf = io.BytesIO()
+        skin_texture(model, tone).save(buf, "PNG")
+        files["assets/minecraft/textures/" + path] = buf.getvalue()
+    os.makedirs(os.path.join(out, "resourcepacks"), exist_ok=True)
+    with zipfile.ZipFile(os.path.join(out, "resourcepacks", "resources.zip"), "w", zipfile.ZIP_DEFLATED) as z:
+        for name in sorted(files):
+            z.writestr(zipfile.ZipInfo(name, (1980, 1, 1, 0, 0, 0)), files[name], zipfile.ZIP_DEFLATED)
+    return sorted(files)
 
 
 def write_datapack(out, objects, ground, biome_names=(), ambience="basic", players=None, triggers=(), T=4,
@@ -4024,16 +4134,18 @@ class Progress:
 
 def convert(src, out, T=4, H=3, name=None, seed=1, preview=False, arch=None, player_arch=(), with_units=True,
             barriers=True, mc_version=VERSION_NAME, spawn=None, birds=True, orientation="ne", verbose=False,
-            garrison="inside", border_design="diorama", ambience="basic", at=None, mood="on", fog=False):
+            garrison="inside", border_design="diorama", ambience="basic", at=None, mood="on", fog=False,
+            resource_pack=False):
     """at: recorded games only, the time in ms (--at): convert the state at that time (apply_timeline).
     mood: "on" sets the time of day of the map color mood (MOODS), "off" keeps noon (#1595).
-    fog: the fog of a fog mood (FOG, #1626); ambience "full" gives it too."""
+    fog: the fog of a fog mood (FOG, #1626); ambience "full" gives it too.
+    resource_pack: resources.zip with human faces for the zombie units (#2738)."""
     global MC
     MC = VERSIONS[mc_version]
     PALETTE_CACHE.clear()   # the cached entries can have the block names of another version
     try:
         _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units, barriers, spawn, birds, orientation,
-                 verbose, garrison, border_design, ambience, at, mood, fog)
+                 verbose, garrison, border_design, ambience, at, mood, fog, resource_pack)
     finally:
         MC = VERSIONS[VERSION_NAME]
         PALETTE_CACHE.clear()
@@ -4041,7 +4153,7 @@ def convert(src, out, T=4, H=3, name=None, seed=1, preview=False, arch=None, pla
 
 
 def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units, barriers, spawn, birds, orientation,
-             verbose, garrison, border_design, ambience, at=None, mood="on", fog=False):
+             verbose, garrison, border_design, ambience, at=None, mood="on", fog=False, resource_pack=False):
     buildings.BARRIERS = barriers
     buildings.TURN, yaw = ORIENTATIONS[orientation]
     MOVED.clear()           # the counts of an earlier conversion in this process
@@ -4191,6 +4303,8 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
     haze = FOG.get(texts.get("mood")) if mood == "on" and (fog or ambience == "full") else None
     n, amb = write_datapack(out, objects, ground, cols.biome_names, ambience, players, triggers, T, tstats, haze,
                             mood == "on")
+    if resource_pack:
+        print(f"  resource pack (resourcepacks/resources.zip): {len(write_resourcepack(out)) - 1} textures")
     k = sum("/trigger/" in f for f in trigger_files(triggers, T, ground, players, mood=mood == "on")[1]) \
         if ambience != "off" else 0
     if k:
@@ -4422,6 +4536,9 @@ def main(argv=None):
     ap.add_argument("--fog", action="store_true",
                     help="fog for the fog moods of a DE scenario (Misty, Murky, Brumous); Minecraft then shows an "
                          "\"Experimental Settings\" warning when the world opens (--ambience full gives it too)")
+    ap.add_argument("--resource-pack", action="store_true",
+                    help="write resourcepacks/resources.zip into the world: single player loads it with the world, and the zombie "
+                         "units get a human face")
     ap.add_argument("--at", type=game_time, metavar="MM:SS",
                     help="recorded game: convert the state at this game time (buildings and trained units of the "
                          "commands until then; default: the start)")
@@ -4440,7 +4557,7 @@ def main(argv=None):
               player_arch=a.player_architecture, with_units=not a.no_units, barriers=not a.no_barriers,
               mc_version=a.mc_version, spawn=a.spawn, birds=not a.no_birds, orientation=a.orientation,
               verbose=a.verbose, garrison=a.garrison, border_design=a.border, ambience=a.ambience,
-              mood=a.mood, fog=a.fog)
+              mood=a.mood, fog=a.fog, resource_pack=a.resource_pack)
     try:
         if a.at is not None and not a.scenario.lower().endswith(RECORDS):
             ap.error("--at needs a recorded game (.aoe2record)")
