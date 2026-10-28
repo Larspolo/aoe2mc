@@ -61,7 +61,7 @@ WATERLOGGABLE = {k for k, v in BLOCK_PROPS.items() if "waterlogged" in v}
 # Output format per Minecraft Java version (docs/minecraft-versions.md): only 26.3 (#427); a later 26.x version can
 # get its own entry. The code uses the 26.3 block and entity names (#428).
 VERSIONS = {
-    "26.3": dict(name="26.3", data_version=5023, pack_format=121),
+    "26.3": dict(name="26.3", data_version=5023, pack_format=121, resource_format=97),   # resource: version.json
 }
 VERSION_NAME = "26.3"        # the default output version
 DATA_VERSION = VERSIONS[VERSION_NAME]["data_version"]
@@ -412,8 +412,11 @@ def read_scenario(path):
                                                **({"ref": c.unit_object, "unit": c.unit_object in entities,   # #2618
                                                    "player": c.source_player}
                                                   if c.condition_type in OBJECT_TESTS else {}),
+                                               **({"slot": c.timer_id} if c.condition_type == DISPLAY_TIMER_TRIGGERED else {}),
                                                **({"area": [c.area_x1, c.area_y1, c.area_x2, c.area_y2]}     # #2620
                                                   if c.condition_type == BRING_OBJECT_TO_AREA else {}),
+                                               **({"next": c.next_object, "next_unit": c.next_object in entities}
+                                                  if c.condition_type == BRING_OBJECT_TO_OBJECT else {}),   # #2771
                                                **({"quantity": c.quantity, "player": c.source_player,
                                                    "area": [c.area_x1, c.area_y1, c.area_x2, c.area_y2],
                                                    "object": c.object_list, "group": c.object_group,
@@ -423,18 +426,29 @@ def read_scenario(path):
                                                **({"quantity": c.quantity, "variable": c.variable,   # (#2611)
                                                    "comparison": c.comparison}
                                                   if c.condition_type == VARIABLE_VALUE else {}),
-                                                **({"variable": c.variable, "variable2": c.variable2,   # (#2698)
-                                                  "comparison": c.comparison}
-                                                    if c.condition_type == COMPARE_VARIABLES else {}),
+                                               **({"variable": c.variable, "variable2": c.variable2,   # (#2698)
+                                                   "comparison": c.comparison}
+                                                  if c.condition_type == COMPARE_VARIABLES else {}),
                                                **({"quantity": c.quantity, "player": c.source_player,   # (#2655)
                                                    "attribute": c.attribute}
                                                   if c.condition_type == ACCUMULATE_ATTRIBUTE else {}),
+                                               **({"quantity": c.quantity, "ref": c.unit_object,   # (#2701)
+                                                   "comparison": c.comparison}
+                                                  if c.condition_type == OBJECT_HP else {}),
                                                **({"player": c.source_player,                 # (#2656)
                                                    "technology": techs.get(c.technology, str(c.technology))}
-                                                  if c.condition_type == RESEARCHED else {}),
+                                                  if c.condition_type in (RESEARCHED, RESEARCHING_TECH, TECHNOLOGY_STATE)
+                                                  else {}),
+                                               **({"quantity": c.quantity}                    # (#2769)
+                                                  if c.condition_type == TECHNOLOGY_STATE else {}),
+                                               **({"player": c.source_player}                 # (#2710)
+                                                  if c.condition_type == PLAYER_DEFEATED else {}),
                                                **({"quantity": c.quantity, "unit": c.unit_object}   # (#2714)
-                                                  if c.condition_type == UNITS_GARRISONED else {}))
-                                          for c in t.conditions],
+                                                  if c.condition_type == UNITS_GARRISONED else {}),
+                                               **({"player": c.source_player, "target": c.target_player,   # (#2757)
+                                                   "diplomacy": c.quantity}            # the stance is the quantity
+                                                  if c.condition_type == DIPLOMACY_STATE else {}))
+                                          for c in in_order(t.conditions, t.condition_order)],
                               effects=[dict(type=e.effect_type, message=e.message or "", player=e.source_player,
                                             time=e.display_time, object=kinds.get(e.object_list_unit_id),
                                             tile=[e.location_x, e.location_y],
@@ -447,6 +461,14 @@ def read_scenario(path):
                                             **({"quantity": e.quantity}
                                                if e.effect_type in (DAMAGE_OBJECT, HEAL_OBJECT, CHANGE_OBJECT_SPEED)
                                                else {}),
+                                            **({"cost": [[e.resource_1, e.resource_1_quantity],   # (#2776)
+                                                         [e.resource_2, e.resource_2_quantity],
+                                                         [e.resource_3, e.resource_3_quantity]]}
+                                               if e.effect_type == CHANGE_OBJECT_COST else {}),
+                                            **({"attribute": e.object_attributes, "operation": e.operation,   # #2763
+                                                "quantity": e.quantity, "class": e.armour_attack_class,
+                                                "aa": e.armour_attack_quantity}
+                                               if e.effect_type == MODIFY_ATTRIBUTE else {}),
                                             **({"stance": e.attack_stance}                # (#2705)
                                                if e.effect_type == CHANGE_OBJECT_STANCE else {}),
                                             **({"quantity": e.quantity, "variable": e.variable,   # (#2611)
@@ -459,12 +481,22 @@ def read_scenario(path):
                                             **({"target": e.target_player,                # "Replace Object" (#2703)
                                                 "object2": kinds.get(e.object_list_unit_id_2)}
                                                if e.effect_type == REPLACE_OBJECT else {}),
+                                            **({"object2": kinds.get(e.object_list_unit_id_2),   # (#2764)
+                                                "selected": list(e.selected_object_ids or [])}
+                                               if e.effect_type == CREATE_GARRISONED_OBJECT else {}),
+                                            **({"selected": list(e.selected_object_ids or [])}   # (#2773)
+                                               if e.effect_type == UNLOAD else {}),
                                             **({"target": e.target_player, "diplomacy": e.diplomacy}   # (#2645)
                                                if e.effect_type == CHANGE_DIPLOMACY else {}),
+                                            **({"target": e.target_player, "visibility": e.visibility_state}   # (#2774)
+                                               if e.effect_type == SET_PLAYER_VISIBILITY else {}),
                                             **({"target": e.target_player, "quantity": e.quantity,   # (#2576)
                                                 "resource": e.tribute_list} if e.effect_type == TRIBUTE else {}),
                                             **({"operation": e.operation, "quantity": e.quantity,
                                                 "resource": e.tribute_list} if e.effect_type == MODIFY_RESOURCE else {}),
+                                            **({"operation": e.operation, "variable": e.variable,   # (#2768)
+                                                "resource": e.tribute_list}
+                                               if e.effect_type == MODIFY_RESOURCE_BY_VARIABLE else {}),
                                             **({"technology": techs.get(e.technology, str(e.technology))}   # #2577
                                                if e.effect_type == RESEARCH_TECHNOLOGY else {}),
                                             **({"unit": e.time_unit, "timer": e.timer}   # "Display Timer" (#2572)
@@ -2117,6 +2149,8 @@ def seat_count(ship):
     return 1 if "_chest_" in str(ship["id"]) else 2      # a chest boat has one seat
 CHAIN = 4                   # units per boat seat: each garrisoned unit rides the unit below it (#382)
 GARRISONED = "aoe2mc.garrisoned"    # entity tag of a unit inside its building (#807; the game program: #808)
+MADE_INSIDE = "aoe2mc.made_inside"  # entity tag of a unit that a trigger made inside a building: the game program adds
+                                    # it to the garrison of the building (#2764)
 GARRISON_CELLS = 20         # free cells of a building in aoe2mc.json: the largest AoE2 garrison (castle, #808)
 SUN = ("minecraft:zombie", "minecraft:zombie_villager", "minecraft:skeleton", "minecraft:stray", "minecraft:drowned")
 
@@ -2652,7 +2686,7 @@ def write_region(path, chunks):
 
 def write_objects(path, size, T, H, players, objects, cols, ground, timeline=None, mood="DEFAULT", map_ground=None,
                   victory=None, messages=None,
-                  research=()):
+                  research=(), tech_states=()):
     """aoe2mc.json: the data that a game program needs (docs/research/gameplay.md). Tiles are in the turned grid
     (--orientation): block x = tile x × T, block z = tile y × T. Units have the UUID of their entity, buildings
     their footprint [x0, z0, x1, z1) in blocks. Objects of a recorded game have their object ID ("ref").
@@ -2666,6 +2700,7 @@ def write_objects(path, size, T, H, players, objects, cols, ground, timeline=Non
     "players" of a scenario also have its "resources" (food, wood, gold, stone), "pop_limit" and "computer" (#2539).
     "mood": the map color mood of a DE scenario (ColorMood name, #1594), else "DEFAULT".
     "research": the "Research Technology" effects of the triggers (research_list, #2577), if any.
+    "tech_states": the [player, technology] pairs of the conditions on aoe_techstate (tech_state_list, #2769), if any.
     "map_ground": the map bytes of map 0 without the objects (map_colors), one hex string per pixel row z: the live
     minimap of the plugin paints them where no live object is (#1940).
     "victory" (DE scenarios only): the victory setting of the scenario, {"condition": a name of run.VICTORIES or
@@ -2707,6 +2742,8 @@ def write_objects(path, size, T, H, players, objects, cols, ground, timeline=Non
         data["messages"] = texts
     if research:
         data["research"] = list(research)
+    if tech_states:
+        data["tech_states"] = list(tech_states)
     if map_ground is not None:
         data["map_ground"] = [bytes(row).hex() for row in np.asarray(map_ground, np.uint8)]
     with open(path, "w") as f:
@@ -2784,55 +2821,87 @@ def team_lines(objects, players):
 
 # AoE2 condition and effect IDs (AoE2ScenarioParser), one per line in alphabetical order (#2613)
 ACCUMULATE_ATTRIBUTE = 8                                           # a resource of a player (#2655)
+AND = 57                                                           # the conditions "AND" and "OR" (#2765)
 ATTACK_MOVE = 30                                                   # "Attack Move" (#2647)
 CHANGE_COLOR_MOOD = 72
 CHANGE_DIPLOMACY = 1                                               # "Change Diplomacy" (#2645)
+CHANGE_OBJECT_COST = 40                                            # "Change Object Cost" (#2776)
 CHANGE_OBJECT_NAME = 26                                            # "Change Object Name" (#2616)
 CHANGE_OBJECT_SPEED = 33                                           # "Change Object Speed" (#2694)
 CHANGE_OBJECT_STANCE = 36                                          # "Change Object Stance" (#2705)
 CHANGE_OWNERSHIP = 18
 CHANGE_PLAYER_COLOR = 89                                           # "Change Player Color" (#2712)
+CHANGE_PLAYER_NAME = 45                                            # "Change Player Name" (#2711)
 CHANGE_VARIABLE = 56                                               # the scenario variables (#2611)
 CHANGE_VIEW = 16                                                   # "Change View" (#2610)
 CLEAR_INSTRUCTIONS = 21                                            # "Clear Instructions" (#2609)
 CLEAR_TIMER = 57                                                   # "Clear Timer" (#2696)
 COMPARE_VARIABLES = 78                                             # the condition "Compare Variables" (#2698)
+CREATE_GARRISONED_OBJECT = 49                                      # "Create Garrisoned Object" (#2764)
 CREATE_OBJECT = 11
 DAMAGE_OBJECT = 24                                                 # "Damage Object" (#2571)
 DECLARE_VICTORY = 13                                               # "Declare Victory" (#2542)
+DISABLE_UNIT_ATTACKABLE = 98                                       # "Disable Unit Attackable" (#2695)
 DIFFICULTY_LEVEL = 19                                              # the condition "Difficulty Level" (#2704)
+DIPLOMACY_STATE = 24                                               # the condition "Diplomacy State" (#2757)
 DISPLAY_INSTRUCTIONS = 20
 DISPLAY_TIMER = 37                                                 # "Display Timer" (#2572)
+ENABLE_UNIT_ATTACKABLE = 99                                       # "Enable Unit Attackable" (#2695)
+DISPLAY_TIMER_TRIGGERED = 55                                       # the condition of its score (#2702)
 FREEZE_OBJECT = 22                                                 # "Freeze Object" (#2608)
 HEAL_OBJECT = 34                                                   # "Heal Object" (#2692)
 IN_AREA = 5
 KILL_OBJECT = 14
+MODIFY_ATTRIBUTE = 51                                              # "Modify Attribute" (#2763)
 MODIFY_RESOURCE = 52                                               # "Modify Resource" (#2576)
+MODIFY_RESOURCE_BY_VARIABLE = 53                                   # "Modify Resource by Variable" (#2768)
+OBJECT_HP = 23                                                     # "Object HP", the hit points of one object (#2701)
+OR = 29
 OWN_FEWER_OBJECTS = 4                                              # conditions on the units of a player (#2573)
 OWN_OBJECTS = 3
 PATROL = 19                                                        # "Patrol" (#2647)
+PLAYER_DEFEATED = 13                                               # the condition "Player Defeated" (#2710)
 PLAY_SOUND = 4                                                     # "Play Sound" (#2644)
 REMOVE_OBJECT = 15
 REPLACE_OBJECT = 43                                                # "Replace Object" (#2703)
 RESEARCHED = 9                                                     # the condition "Research Technology" (#2656)
+RESEARCHING_TECH = 17                                              # the condition "Researching Technology" (#2769)
 RESEARCH_TECHNOLOGY = 2                                            # "Research Technology" (#2577)
 SEND_CHAT = 3
+SET_PLAYER_VISIBILITY = 41                                         # "Set Player Visibility" (#2774)
+STOP_OBJECT = 29                                                   # "Stop Object" (#2754)
 TASK_OBJECT = 12                                                   # "Task Object" (#2646)
+TECHNOLOGY_STATE = 21                                              # the condition "Technology State" (#2769)
 TELEPORT_OBJECT = 35
 ACTIVATE_TRIGGER, DEACTIVATE_TRIGGER = 8, 9
 TIMER = 10
 TRIBUTE = 5                                                        # "Tribute" (#2576)
 TRIGGER_CHANCE = 20                                                # the condition "Chance" (#2574)
 UNITS_GARRISONED = 18                                              # the condition "Units Garrisoned" (#2714)
+UNLOAD = 17                                                        # "Unload" (#2773)
 VARIABLE_VALUE = 22
 TIME_UNITS = {0: 5, 1: 60, 2: 1, 3: 1}  # TimeUnit (years, minutes, seconds, m:ss) -> game seconds; a year as game/wonder.py YEAR
 COUNTED = (IN_AREA, OWN_OBJECTS, OWN_FEWER_OBJECTS)                # conditions that count units: the tick function
-TICKED = COUNTED + (ACCUMULATE_ATTRIBUTE, COMPARE_VARIABLES, DIFFICULTY_LEVEL, RESEARCHED, UNITS_GARRISONED,
-                     VARIABLE_VALUE)  # conditions of the tick function
+TICKED = COUNTED + (                                               # conditions of the tick function, one per line
+    ACCUMULATE_ATTRIBUTE,
+    COMPARE_VARIABLES,
+    DIFFICULTY_LEVEL,
+    DIPLOMACY_STATE,
+    DISPLAY_TIMER_TRIGGERED,
+    OBJECT_HP,
+    PLAYER_DEFEATED,
+    RESEARCHED,
+    RESEARCHING_TECH,
+    TECHNOLOGY_STATE,
+    UNITS_GARRISONED,
+    VARIABLE_VALUE,
+)
 ATTRIBUTES = ("Food", "Wood", "Stone", "Gold")     # attributes 0-3: the score holders of gather.RESOURCES (#2655)
 BRING_OBJECT_TO_AREA = 1                                               # the condition "Bring Object to Area" (#2620)
+BRING_OBJECT_TO_OBJECT = 2                                             # the condition "Bring Object to Object" (#2771)
 DESTROY_OBJECT = 6                                                     # the condition "Destroy Object" (#2618)
 CAPTURE_OBJECT = 7                                                     # the condition "Capture Object" (#2619)
+OBJECT_ATTACKED = 76                                                   # the condition "Object Attacked" (#2779)
 # The conditions on one object of the map (its tag aoe2mc.r<ref>, #2617): the test of the tick function when it holds,
 # when it does not hold (a looping trigger fires again after that), and the tick lines before the test. "Destroy
 # Object": a marker entity follows the unit; the unit is dead when the marker is loaded and the unit is not there. A
@@ -2845,9 +2914,18 @@ OBJECT_TESTS = {DESTROY_OBJECT: ("if entity @e[tag=aoe2mc.m{ref}] unless entity 
                  # "Capture Object": the unit has the tag of the player of the condition (its owner, #2570)
                  CAPTURE_OBJECT: ("if entity @e[tag=aoe2mc.r{ref},tag=aoe2mc.p{player}]",
                                   "unless entity @e[tag=aoe2mc.r{ref},tag=aoe2mc.p{player}]", ()),
+                 # "Object Attacked": the unit took damage in the last 10 ticks (HurtTime, #2779). Vanilla has no
+                 # attacker of a hurt entity in a selector: each attacker counts (a "near unit of the player" test
+                 # misses the archers), the source player of the condition is not tested
+                 OBJECT_ATTACKED: ("if entity @e[tag=aoe2mc.r{ref},nbt=!{{HurtTime:0s}}]",
+                                   "unless entity @e[tag=aoe2mc.r{ref},nbt=!{{HurtTime:0s}}]", ()),
                  # "Bring Object to Area": the unit is in the box of the area ({box}: area_box, #2620)
                  BRING_OBJECT_TO_AREA: ("if entity @e[tag=aoe2mc.r{ref}{box}]",
-                                        "unless entity @e[tag=aoe2mc.r{ref}{box}]", ())}
+                                        "unless entity @e[tag=aoe2mc.r{ref}{box}]", ()),
+                 # "Bring Object to Object": the unit is next to the other unit, within one tile ({near} blocks, #2771)
+                 BRING_OBJECT_TO_OBJECT: ("at @e[tag=aoe2mc.r{ref},limit=1] if entity @e[tag=aoe2mc.r{next},distance=..{near}]",
+                                          "at @e[tag=aoe2mc.r{ref},limit=1] unless entity "
+                                          "@e[tag=aoe2mc.r{next},distance=..{near}]", ())}
 TICKED += tuple(OBJECT_TESTS)
 STORES = ("food", "wood", "stone", "gold")      # the resource of a tribute_list (AoE2 attributes 0 to 3)
 OPERATIONS = {1: "set", 2: "add", 3: "remove"}  # set, add, subtract of Modify Resource (AoE2ScenarioParser Operation)
@@ -2954,6 +3032,38 @@ def damage_lines(e, c):
     return [f"execute as {at} run damage @s {q}"]                      # damage takes one entity
 
 
+def garrisoned_lines(e, c):
+    """The commands of "Create Garrisoned Object" (#2764): a summon of the unit (object2, units.make_entity) in the
+    state of a garrisoned unit of the converter (plan_units, #807) on the inside cells of each selected building
+    (buildings.INSIDE). The tag MADE_INSIDE lets the game program add it to the garrison, so UNGARRISON lets it out.
+    A holder that is not a building with rooms (a ship, a ram) or no selected object: not supported yet."""
+    kind, name = e.get("object2") or (None, None)
+    holders = [r for r in e.get("selected", []) if r in buildings.INSIDE]
+    nbt = units.make_entity(dict(name=name, player=max(e["player"], 0), rotation=math.pi / 2), c.players or {},
+                            (0.0, 0.0, 0.0), np.random.default_rng(c.t["id"])) if kind in ("U", "H") else None
+    if nbt is None or not holders:
+        c.stats["create garrisoned (not supported yet)"] += 1
+        return []
+    c.stats["create garrisoned"] += 1
+    label = units.top_entity(nbt)
+    label["CustomNameVisible"] = Byte(0)
+    label["Tags"] = List[String](list(label.get("Tags", [])) + [String(GARRISONED), String(MADE_INSIDE)])
+    entity = str(nbt.pop("id"))
+    del nbt["Pos"]
+    parts = [nbt]                                                      # new UUIDs (object_lines), no damage inside
+    while parts:
+        part = parts.pop()
+        part.pop("UUID", None)
+        part["Invulnerable"], part["NoAI"] = Byte(1), Byte(1)
+        parts += list(part.get("Passengers", []))
+    lines = []
+    for ref in holders:                                                # one unit per building, as in AoE2
+        cells, y, center = buildings.INSIDE[ref]
+        x, z = cells[0] if len(cells) else center
+        lines.append(f"summon {entity} {x + 0.5} {int(y)} {z + 0.5} {nbt.snbt()}")
+    return lines
+
+
 def heal_lines(e, c):
     """The commands of "Heal Object" (#2692): each unit of the effect (effect_units) gets `quantity` AoE2 hit points
     back, not above its maximum. The scores aoe_hp (Health) and aoe_max (max_health) of the unit give the new Health:
@@ -3000,6 +3110,16 @@ def name_lines(e, c):
     stats["change object name"] += 1
     return [f"execute as {found[0]} run data modify entity @s CustomName.text set value "   # one entity
             f"{json.dumps(msg, ensure_ascii=False)}"]
+
+
+def player_name_lines(e, c):
+    """The commands of "Change Player Name" (#2711): the new name (with no AoE2 color tags) is the display name of the
+    team p<player> (team_lines), in the sidebar and the tab list. Gaia or no name: no line."""
+    msg = re.sub(r"<[^<>]*>", "", e["message"]).replace("\r", "").strip()
+    if e["player"] <= 0 or not msg:
+        return []
+    c.stats["change player name"] += 1
+    return [f"team modify p{e['player']} displayName {json.dumps({'text': msg}, ensure_ascii=False)}"]
 
 
 def owner_lines(e, c):
@@ -3063,6 +3183,18 @@ def resource_lines(e, c):
         return [f"scoreboard players set #p{e['player']}.{res} aoe_set {q}",
                 f"scoreboard players reset #p{e['player']}.{res} aoe_res"]
     return change(e["player"], q if op == "add" else -q) if op else []
+
+
+def resource_by_variable_lines(e, c):
+    """The commands of "Modify Resource by Variable" (#2768): the amount is the score #vN of aoe_var (the AoE2 variable
+    N). Add and Subtract change aoe_res, a Set goes to aoe_set, as in resource_lines. Multiply and Divide have no line."""
+    if not 0 <= e.get("resource", -1) < len(STORES) or e["player"] <= 0 or e.get("variable", -1) < 0:
+        return []
+    c.setup["scoreboard objectives add aoe_res dummy"] = c.setup["scoreboard objectives add aoe_set dummy"] = None
+    target, v = f"#p{e['player']}.{STORES[e['resource']]}", f"#v{e['variable']} aoe_var"
+    if (op := OPERATIONS.get(e["operation"])) == "set":
+        return [f"scoreboard players operation {target} aoe_set = {v}", f"scoreboard players reset {target} aoe_res"]
+    return [f"scoreboard players operation {target} aoe_res {'+' if op == 'add' else '-'}= {v}"] if op in ("add", "remove") else []
 
 
 def teleport_lines(e, c):
@@ -3172,6 +3304,16 @@ def sound_lines(e, c):
     return [f"playsound minecraft:{sound} master @a {x + 0.5} {int(ground[x, z])} {z + 0.5}"]
 
 
+def attackable_lines(e, c):
+    """The commands of "Disable Unit Attackable" and "Enable Unit Attackable" (#2695): the tag Invulnerable of the
+    units of the player in the area. Enable keeps the garrisoned units invulnerable (#807)."""
+    if min(e.get("area", [-1])) < 0:
+        return []
+    disable = e["type"] == DISABLE_UNIT_ATTACKABLE
+    guard = "" if disable else f" unless entity @s[tag={GARRISONED}]"
+    return [f"execute as {unit_selector(e, c.T)}{guard} run data merge entity @s {{Invulnerable:{int(disable)}b}}"]
+
+
 def freeze_lines(e, c):
     """The commands of "Freeze Object" (#2608): the units of the player in the area and the mounts of the riders get
     NoAI, so they stay in their place (AoE2: they do not move until a new order)."""
@@ -3191,6 +3333,42 @@ def research_lines(e, c):
     c.stats["research"] += 1
     i = effect_index(e, c)
     return [f"scoreboard players set #r{c.t['id']}.{i} aoe_tech 1"]   # the game program reads it
+
+
+def cost_lines(e, c):
+    """The command of "Change Object Cost" (#2776): the new cost of the unit or building type of the player (up to 3
+    resources of ATTRIBUTES; a quantity of 0 drops the resource) goes into the list of the data storage aoe2mc:costs as
+    one text "<player> <name> <resource>=<quantity> ...". A converted world has no costs: the scenario mode of the game
+    program (game/scenario.py costs) empties the list and uses the cost in the menus."""
+    cost = [f"{ATTRIBUTES[r].lower()}={q}" for r, q in e.get("cost", ()) if r in range(len(ATTRIBUTES)) and q > 0]
+    _, name = e.get("object") or (None, None)
+    if not name or e["player"] <= 0:
+        c.stats["change object cost (not supported)"] += 1
+        return []
+    c.stats["change object cost"] += 1
+    return [f'data modify storage aoe2mc:costs list append value "{" ".join([str(e["player"]), name, *cost])}"']
+
+
+# The ObjectAttribute IDs of "Modify Attribute" that the game program has in combat.Stats (#2763): attribute ->
+# the Stats field; armor (8) and attack (9) by their class (3 pierce, 4 melee), as in AoE2.
+STAT_ATTRIBUTES = {0: "hp", 10: "reload", 12: "range"}
+CLASS_ATTRIBUTES = {(8, 3): "pierce", (8, 4): "melee", (9, 3): "attack", (9, 4): "attack"}
+
+
+def attribute_lines(e, c):
+    """The command of "Modify Attribute" (#2763): the change "<player> <name> <Stats field> <operation> <quantity>"
+    goes into the list of the data storage aoe2mc:attributes. A converted world has no combat values: the scenario mode
+    of the game program (game/scenario.py attributes) empties the list and changes the values of the unit type of the
+    player (train.stats). An attribute outside STAT_ATTRIBUTES and CLASS_ATTRIBUTES: not supported in the stats."""
+    _, name = e.get("object") or (None, None)
+    a = e.get("attribute")
+    field = STAT_ATTRIBUTES.get(a) or CLASS_ATTRIBUTES.get((a, e.get("class")))
+    q = e.get("aa") if a in (8, 9) else e.get("quantity")
+    if not name or e["player"] <= 0 or not field or e.get("operation") not in range(1, 6) or q is None:
+        c.stats["modify attribute (not supported)"] += 1
+        return []
+    c.stats["modify attribute"] += 1
+    return [f'data modify storage aoe2mc:attributes list append value "{e["player"]} {name} {field} {e["operation"]} {q:g}"']
 
 
 def order_lines(e, c):
@@ -3219,6 +3397,37 @@ def stance_lines(e, c):
         return []
     tag = f"aoe_order{c.t['id']}_{effect_index(e, c)}"
     return tag_lines(e, c.T, tag) + [f'data modify storage aoe2mc:orders list append value "stance {tag} {e["stance"]}"']
+
+
+def stop_lines(e, c):
+    """The commands of "Stop Object" (#2754). Vanilla has no command that ends the walk order of a mob: as order_lines,
+    the units of the player in the area get the tag aoe_order<trigger>_<effect index>, and the order "stop <tag>" goes
+    into the storage aoe2mc:orders. game/scenario.py orders stops them (`aoe stop`) and ends their patrols."""
+    tag = f"aoe_order{c.t['id']}_{effect_index(e, c)}"
+    return tag_lines(e, c.T, tag) + [f'data modify storage aoe2mc:orders list append value "stop {tag}"']
+
+
+def unload_lines(e, c):
+    """The commands of "Unload" (#2773): each selected building of the player that takes a garrison (buildings.INSIDE),
+    or with no selection each such building with its center in the area, goes into the list of the storage
+    aoe2mc:orders as one text "unload <player> <ref>", with the block of the target tile on the ground "x y z" when
+    the effect has one. The scenario mode of the game program (game/scenario.py orders) lets the units of the holder
+    out and walks them there (aoe moveto). A ship or a ram holder: not supported yet (the game program has no garrison
+    of them from a trigger)."""
+    T, ground, a = c.T, c.ground, e.get("area", [-1])
+    refs = e.get("selected") or ([r for r, (_, _, (x, z)) in sorted(buildings.INSIDE.items())
+                                  if a[0] * T <= x < (a[2] + 1) * T and a[1] * T <= z < (a[3] + 1) * T]
+                                 if min(a, default=-1) >= 0 else [])
+    holders = [r for r in refs if r in buildings.INSIDE]
+    if not holders or e["player"] <= 0:
+        c.stats["unload (not supported yet)"] += 1
+        return []
+    c.stats["unload"] += 1
+    x, z = (int((v + 0.5) * T) for v in e.get("tile", [-1, -1]))
+    where = f" {x} {int(ground[x, z])} {z}" if min(e.get("tile", [-1])) >= 0 and ground is not None and \
+        0 <= x < ground.shape[0] and 0 <= z < ground.shape[1] else ""
+    p = e["player"]
+    return [f'data modify storage aoe2mc:orders list append value "unload {p} {r}{where}"' for r in holders]
 
 
 def view_lines(e, c):
@@ -3270,9 +3479,11 @@ def timer_lines(e, c):
     show += [f"execute store result bossbar {bar} value run scoreboard players get #t{slot} aoe_timer",
              f"bossbar set {bar} name {name}"]
     tick = [f"scoreboard players remove #t{slot} aoe_timer 1"] + show + \
-        [f"execute if score #t{slot} aoe_timer matches ..0 run bossbar remove {bar}",
+        [f"execute if score #t{slot} aoe_timer matches ..0 run scoreboard players set #done{slot} aoe_timer 1",
+         f"execute if score #t{slot} aoe_timer matches ..0 run bossbar remove {bar}",
          f"execute if score #t{slot} aoe_timer matches 1.. run schedule function {fn} 1s replace"]
-    lines = ["scoreboard objectives add aoe_timer dummy", f"bossbar remove {bar}", f"bossbar add {bar} \"\"",
+    lines = ["scoreboard objectives add aoe_timer dummy", f"scoreboard players reset #done{slot} aoe_timer",
+             f"bossbar remove {bar}", f"bossbar add {bar} \"\"",
              f"bossbar set {bar} max {sec}", f"bossbar set {bar} players @a",
              f"scoreboard players set #t{slot} aoe_timer {sec}"] + show + [f"schedule function {fn} 1s replace"]
     c.files[f"data/aoe2mc/function/timer/{slot}.mcfunction"] = "\n".join(tick) + "\n"
@@ -3354,6 +3565,18 @@ def instruction_lines(e, c):
     return [f"title @a times 10 {ticks} 20", f"title @a subtitle {text}", 'title @a title ""']
 
 
+def visibility_lines(e, c):
+    """The commands of "Set Player Visibility" (#2774): the score #p<player>.p<target> of aoe_vis is the state + 1
+    (VisibilityState: 0 visible, 1 explored, 2 invisible) and #any of aoe_vis is 1: the scenario mode of the game
+    program shows the units of the target to the player out of sight, or hides them again."""
+    a, b = e["player"], e.get("target", -1)
+    if e.get("visibility") not in (0, 1, 2) or a <= 0 or b <= 0 or a == b:
+        return []
+    c.setup["scoreboard objectives add aoe_vis dummy"] = None
+    c.stats["set player visibility"] += 1
+    return [f"scoreboard players set #p{a}.p{b} aoe_vis {e['visibility'] + 1}", "scoreboard players set #any aoe_vis 1"]
+
+
 # The handler of each trigger effect: (effect, Effect context) -> commands. A new effect is one line here, in
 # alphabetical order, and its handler function (#2613): no change of trigger_files.
 EFFECTS = {
@@ -3361,34 +3584,44 @@ EFFECTS = {
     ATTACK_MOVE: order_lines,
     CHANGE_COLOR_MOOD: mood_lines,
     CHANGE_DIPLOMACY: diplomacy_lines,
+    CHANGE_OBJECT_COST: cost_lines,
     CHANGE_OBJECT_NAME: name_lines,
     CHANGE_OBJECT_SPEED: speed_lines,
     CHANGE_OBJECT_STANCE: stance_lines,
     CHANGE_OWNERSHIP: owner_lines,
     CHANGE_PLAYER_COLOR: color_lines,
+    CHANGE_PLAYER_NAME: player_name_lines,
     CHANGE_VARIABLE: variable_lines,
     CHANGE_VIEW: view_lines,
     CLEAR_INSTRUCTIONS: clear_lines,
     CLEAR_TIMER: clear_timer_lines,
+    CREATE_GARRISONED_OBJECT: garrisoned_lines,
     CREATE_OBJECT: object_lines,
     DAMAGE_OBJECT: damage_lines,
     DEACTIVATE_TRIGGER: switch_lines,
     DECLARE_VICTORY: victory_lines,
+    DISABLE_UNIT_ATTACKABLE: attackable_lines,
     DISPLAY_INSTRUCTIONS: instruction_lines,
     DISPLAY_TIMER: timer_lines,
+    ENABLE_UNIT_ATTACKABLE: attackable_lines,
     FREEZE_OBJECT: freeze_lines,
     HEAL_OBJECT: heal_lines,
     KILL_OBJECT: object_lines,
+    MODIFY_ATTRIBUTE: attribute_lines,
     MODIFY_RESOURCE: resource_lines,
+    MODIFY_RESOURCE_BY_VARIABLE: resource_by_variable_lines,
     PATROL: order_lines,
     PLAY_SOUND: sound_lines,
     REMOVE_OBJECT: object_lines,
     REPLACE_OBJECT: replace_lines,
     RESEARCH_TECHNOLOGY: research_lines,
     SEND_CHAT: chat_lines,
+    SET_PLAYER_VISIBILITY: visibility_lines,
+    STOP_OBJECT: stop_lines,
     TASK_OBJECT: task_lines,
     TELEPORT_OBJECT: teleport_lines,
     TRIBUTE: resource_lines,
+    UNLOAD: unload_lines,
 }
 # The context of the effects of trigger t: a handler can add function files (files) and load lines (setup, the keys)
 Effect = namedtuple("Effect", "t T ground players stats mood files setup switch timed", defaults=((), {}))
@@ -3397,16 +3630,40 @@ Effect = namedtuple("Effect", "t T ground players stats mood files setup switch 
 # The test of each condition on a score (execute if <test>), one line per condition in alphabetical order (#2613):
 # "Difficulty Level" (#2704): the score #level of aoe_difficulty is the AoE2 value of the difficulty of the game
 # (scenario.setup); "Research Technology" (#2656): the game program sets #p<player>.<technology> of aoe_tech;
-# "Compare Variables" (#2698): two scores of aoe_var; "Variable Value" (#2611): the score #v<N> of aoe_var.
-# A world with no game program has no score: no fire.
+# "Researching Technology" and "Technology State" (#2769): the game program sets #p<player>.<technology> of
+# aoe_techstate to the AoE2 TechnologyState (2: researching); "Compare Variables" (#2698): two scores of aoe_var;
+# "Variable Value" (#2611): the score #v<N> of aoe_var. A world with no game program has no score: no fire.
 SCORE_TESTS = {
     ACCUMULATE_ATTRIBUTE: resource_score,
     COMPARE_VARIABLES: compare_test,
     DIFFICULTY_LEVEL: lambda c: f"score #level aoe_difficulty matches {c.get('quantity', 0)}",
+    DIPLOMACY_STATE: lambda c: f"score #p{c['player']}.p{c['target']} aoe_dipstate matches {c['diplomacy'] + 1}",
+    DISPLAY_TIMER_TRIGGERED: lambda c: f"score #done{c.get('slot', 0)} aoe_timer matches 1..",   # set at 0 (#2702)
+    PLAYER_DEFEATED: lambda c: f"score #p{c['player']} aoe_lost matches 1..",   # conquest, regicide (#2710)
     RESEARCHED: lambda c: f"score #p{c['player']}.{c['technology']} aoe_tech matches 1..",
+    RESEARCHING_TECH: lambda c: f"score #p{c['player']}.{c['technology']} aoe_techstate matches 2",
+    TECHNOLOGY_STATE: lambda c: f"score #p{c['player']}.{c['technology']} aoe_techstate matches {c.get('quantity', 0)}",
     UNITS_GARRISONED: lambda c: f"score #g{c['unit']} aoe_gar matches {max(c['quantity'], 1)}..",   # #2714
     VARIABLE_VALUE: lambda c: f"score #v{c['variable']} aoe_var matches {variable_range(c)}",
 }
+
+
+def in_order(items, order):
+    """The conditions of a trigger in their display order (AoE2ScenarioParser condition_order): "OR" splits the list
+    there (#2765). An order that is not a permutation of the items: the stored order."""
+    return [items[k] for k in order] if sorted(order) == list(range(len(items))) else list(items)
+
+
+def or_groups(conds):
+    """The conditions of a trigger in groups (#2765): "OR" splits the list, and the trigger fires when all conditions
+    of one group hold, as in AoE2 DE. "AND" is the default between two conditions. An empty group does not count."""
+    groups = [[]]
+    for c in conds:
+        if c["type"] == OR:
+            groups.append([])
+        elif c["type"] != AND:
+            groups[-1].append(c)
+    return [g for g in groups if g]
 
 
 def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=True, live=None):
@@ -3420,8 +3677,10 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
     Technology" condition too: the game program sets the score #p<player>.<technology> of aoe_tech (#2656), and an
     "Accumulate Attribute" condition of a resource: resource_score (#2655). A "Destroy Object" condition
     (OBJECT_TESTS) tests the tag aoe2mc.r<ref> of its unit and its marker (#2618), "Bring Object to Area" the tag in
-    the box of the area (#2620). The commands of each effect come
-    from its handler in EFFECTS.
+    the box of the area (#2620), "Bring Object to Object" the other tag within one tile of it (#2771). An inverted
+    object condition swaps the two tests of OBJECT_TESTS. "OR" splits the conditions into groups (or_groups, #2765):
+    one tick line per group, and the trigger fires when one group holds. The commands of each effect come from its
+    handler in EFFECTS.
     A disabled trigger runs only after an "Activate Trigger" (#2575): the score #N of aoe_on is 1 while a trigger that
     such an effect names is on (switch_lines). live: the triggers that get a function; None: all that give commands
     (an effect may name only a function that exists). A "Chance" trigger cannot be activated yet."""
@@ -3439,28 +3698,37 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
     on = {e.get("trigger") for t in triggers for e in t["effects"] if e["type"] == ACTIVATE_TRIGGER}
     switch = {e.get("trigger") for t in triggers for e in t["effects"]
               if e["type"] in (ACTIVATE_TRIGGER, DEACTIVATE_TRIGGER)} & live - chancy
-    timed = {t["id"]: max(20 * max(c["timer"] for c in t["conditions"]), 1) for t in triggers  # 1 tick at least
-             if t["conditions"] and all(c["type"] == TIMER for c in t["conditions"])}
+    timed = {t["id"]: max(20 * max(c["timer"] for c in cs), 1) for t in triggers  # 1 tick at least
+             if (cs := sum(or_groups(t["conditions"]), [])) and all(c["type"] == TIMER for c in cs)}
     for t in triggers:
-        conds = t["conditions"]
+        groups = or_groups(t["conditions"])
+        conds = sum(groups, [])
+        which = [k for k, g in enumerate(groups) for _ in g]           # the group of each condition
         kinds = {(c["type"], c["inverted"]) for c in conds}
         # "Chance" (alone, after the timers or with the ticked conditions, #2574): a roll function checks the trigger
         # once per second, as AoE2 does, with `random value 1..100`
         chance = (TRIGGER_CHANCE, False) in kinds
         rest = kinds - {(TRIGGER_CHANCE, False)}
         if any(c["type"] in OBJECT_TESTS and (c.get("ref", -1) is None or c.get("ref", -1) < 0 or not c.get("unit"))
+               or c["type"] == BRING_OBJECT_TO_OBJECT and (c.get("next") is None or c["next"] < 0 or not c.get("next_unit"))
                for c in conds):                                        # no object, or a building: blocks, no entity
             stats["object condition (not an entity, not supported yet)"] += t["enabled"]
             continue
+        if len(groups) > 1 and any(c["type"] in (TIMER, TRIGGER_CHANCE) for c in conds):
+            stats["OR with a timer or a chance (not supported yet)"] += t["enabled"]
+            continue
         if not (t["enabled"] or t["id"] in on and t["id"] not in chancy) or not conds or \
-                not (rest == {(TIMER, False)} or rest <= {(k, False) for k in TICKED} | {(COMPARE_VARIABLES, True)}) or \
+                not (rest == {(TIMER, False)} or rest <= {(k, False) for k in TICKED} | {(k, True) for k in OBJECT_TESTS} | {(COMPARE_VARIABLES, True)}) or \
                 chance and len([c for c in conds if c["type"] == TRIGGER_CHANCE]) > 1 or \
                 any(c.get("group", -1) >= 0 or c.get("class", -1) >= 0 for c in conds) or \
                 any(c["type"] == VARIABLE_VALUE and (c.get("variable", -1) < 0 or variable_range(c) is None)
-                    or c["type"] == RESEARCHED and (c.get("player", -1) <= 0 or not c.get("technology"))
+                    or c["type"] in (RESEARCHED, RESEARCHING_TECH, TECHNOLOGY_STATE)
+                    and (c.get("player", -1) <= 0 or not c.get("technology"))
                     or c["type"] == ACCUMULATE_ATTRIBUTE and resource_score(c) is None
                     or c["type"] == COMPARE_VARIABLES and compare_test(c) is None
+                    or c["type"] == OBJECT_HP and (c.get("ref", -1) < 0 or variable_range(c) is None)
                     or c["type"] == UNITS_GARRISONED and c.get("unit", -1) < 0
+                    or c["type"] == PLAYER_DEFEATED and c.get("player", -1) <= 0   # Gaia: no defeat (#2710)
                     for c in conds):                                   # unit classes: not yet
             continue
         ctx = Effect(t, T, ground, players, stats, mood, files, setup, switch, timed)
@@ -3471,8 +3739,9 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
         if n in switch:
             load += [f"scoreboard players set #{n} aoe_on 1"] * t["enabled"]
             lines += [f"scoreboard players set #{n} aoe_on 0"] * (not t["looping"])   # it fired: off until activated
-        tests, unless, counts = [], [], []
+        groups_tests, groups_unless, counts = [[] for _ in groups], [[] for _ in groups], []
         for i, c in enumerate(conds):
+            tests, unless = groups_tests[which[i]], groups_unless[which[i]]
             if c["type"] in SCORE_TESTS:                               # a score of the world or the game
                 test = SCORE_TESTS[c["type"]](c)
                 no = c["type"] == COMPARE_VARIABLES and compare_negated(c)   # "not equal" or "inverted": unless
@@ -3481,11 +3750,21 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
                 continue
             if c["type"] in OBJECT_TESTS:                              # the tag of the object (#2618)
                 test, other, before = OBJECT_TESTS[c["type"]]
-                at = dict(ref=c["ref"], player=c.get("player"), box=area_box(c.get("area", [-1] * 4), T))
+                at = dict(ref=c["ref"], player=c.get("player"), box=area_box(c.get("area", [-1] * 4), T), next=c.get("next"),
+                          near=T)
+                if c["inverted"]:                                      # the condition holds while the test fails
+                    test, other = other, test
                 counts += [x.format(**at) for x in before]
                 tests.append(test.format(**at))
                 unless.append(other.format(**at))
                 continue
+            if c["type"] == OBJECT_HP:                                 # the Health of the object (tag aoe2mc.r<ref>): none when dead
+                tag = f"aoe2mc.r{c['ref']}"
+                counts += [f"scoreboard players reset #{n}.{i} aoe_trig",
+                           f"execute if entity @e[tag={tag},limit=1] store result score #{n}.{i} aoe_trig "
+                           f"run data get entity @e[tag={tag},limit=1] Health"]
+                tests.append(f"if score #{n}.{i} aoe_trig matches {variable_range(c)}")
+                unless.append(f"unless score #{n}.{i} aoe_trig matches {variable_range(c)}")
             if c["type"] not in COUNTED:                               # a timer or the chance
                 continue
             whole = c["type"] != IN_AREA                               # Own (Fewer) Objects: the whole map
@@ -3502,9 +3781,15 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
                 counts.append(f"execute store result score #{n}.{i} aoe_trig if entity {sel}")
                 tests.append(f"if score #{n}.{i} aoe_trig matches {q}..")
                 unless.append(f"unless score #{n}.{i} aoe_trig matches {q}..")
-        ticked = bool(tests)
-        tests[:0] = [f"if score #{n} aoe_on matches 1"] * (ticked and n in switch)
+        ticked = any(groups_tests)
+        for tests in groups_tests:
+            tests[:0] = [f"if score #{n} aoe_on matches 1"] * (ticked and n in switch)
+        tests, unless = groups_tests[0], groups_unless[0]
         resets = [f"execute {u} run scoreboard players reset #{n} aoe_trig" for u in unless] * t["looping"]
+        if len(groups) > 1 and t["looping"]:                           # "OR": it fires again after no group holds
+            resets = [f"scoreboard players set #{n}.or aoe_trig 0"] + \
+                [f"execute {' '.join(g)} run scoreboard players set #{n}.or aoe_trig 1" for g in groups_tests] + \
+                [f"execute if score #{n}.or aoe_trig matches 0 run scoreboard players reset #{n} aoe_trig"]
         timers = [c["timer"] for c in conds if c["type"] == TIMER]
         ticks = max(20 * max(timers, default=0), 1)                   # a schedule needs at least 1 tick
         if chance:
@@ -3522,8 +3807,9 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
             load.append(f"schedule function {roll} {ticks if timers else 20}t replace")
             tick += counts + resets if resets else []
             continue
-        if ticked:
-            tick += counts + [f"execute {' '.join(tests)} unless score #{n} aoe_trig matches 1 run function {fn}"] + resets
+        if ticked:                                                     # one line per group: the score fires it once
+            tick += counts + [f"execute {' '.join(g)} unless score #{n} aoe_trig matches 1 run function {fn}"
+                              for g in groups_tests] + resets
             lines.append(f"scoreboard players set #{n} aoe_trig 1")
             files[f"data/aoe2mc/function/trigger/{n}.mcfunction"] = "\n".join(lines) + "\n"
             continue
@@ -3536,7 +3822,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
     if names:
         load[:0] = ["scoreboard objectives add aoe_var dummy"] + \
             [f"scoreboard players add {v} aoe_var 0" for v in names]   # AoE2 variables start at 0
-    for word in ("aoe_difficulty", "aoe_gar", "aoe_tech"):            # a score that only the game program sets
+    for word in ("aoe_difficulty", "aoe_gar", "aoe_lost", "aoe_tech", "aoe_techstate"):   # only the game program sets them
         if any(f" {word} " in x for x in tick):
             setup[f"scoreboard objectives add {word} dummy"] = None
     if switch:
@@ -3560,10 +3846,138 @@ def research_list(triggers):
             for t in triggers for i, e in enumerate(t["effects"]) if f"#r{t['id']}.{i} aoe_tech 1" in found]
 
 
+def tech_state_list(triggers):
+    """The [player, technology] pairs of the "Researching Technology" and "Technology State" conditions that the tick
+    function of trigger_files tests, for aoe2mc.json "tech_states" (#2769): the scenario mode of the game program sets
+    their score of aoe_techstate (game/scenario.py)."""
+    tick = trigger_files(triggers)[1].get("data/aoe2mc/function/tick.mcfunction", "")
+    return sorted({(int(n), t) for n, t in re.findall(r"#p(\d+)\.(\w+) aoe_techstate ", tick)})
+
+
 # The map of the world goes into the off-hand of each player once, through the tag aoe2mc_map (#966).
 MAP_PULSE = ["execute as @a[tag=!aoe2mc_map] run item replace entity @s weapon.offhand with "
              "minecraft:filled_map[minecraft:map_id=0]",
              "tag @a[tag=!aoe2mc_map] add aoe2mc_map"]
+
+
+# The resource pack of --resource-pack (#2738): human textures for the zombie units. Boxes (u, v, w, h, d, part) of
+# the 64 x 64 entity models (a box puts its six faces at u, v); the left limbs mirror the right ones.
+SKIN_BOXES = {
+    "zombie": [(0, 0, 8, 8, 8, "head"), (16, 16, 8, 12, 4, "shirt"), (40, 16, 4, 12, 4, "arm"), (0, 16, 4, 12, 4, "leg")],
+    "villager": [(0, 0, 8, 10, 8, "head"), (24, 0, 2, 4, 2, "skin"), (16, 20, 8, 12, 6, "shirt"),
+                 (44, 22, 4, 12, 4, "arm"), (0, 22, 4, 12, 4, "leg")],
+}
+SKINS = {   # texture -> (model, skin color); the hair, clothes and face colors are the same for all
+    "entity/zombie/husk.png": ("zombie", (196, 140, 98)),
+    "entity/zombie/zombie.png": ("zombie", (226, 176, 136)),
+    "entity/zombie_villager/zombie_villager.png": ("villager", (214, 160, 120)),
+}
+# The cart of the War Wagon in the pack (#2746, the AoE2 model: a box wagon with plank walls, an iron rim, a plank roof
+# and two large wheels): boxes (from, to) in pixels of a block at scale 1, 16 = 1 block, the ground at y 0, the horse
+# at -z; vanilla block textures, the wheels have the rings of a log top on their sides. cart_model() scales them.
+CART_BOXES = [((-2, 6, -8), (18, 8, 24), "smooth_stone"),                     # the iron rim of the floor
+              ((-1, 8, -7), (17, 27, 23), "dark_oak_log"),                     # the walls of vertical planks
+              ((-1.5, 17, -7.5), (17.5, 18, 23.5), "iron_block"),              # the band
+              ((-1.5, 20, 3), (17.5, 24, 11), "black_concrete"),               # the windows
+              ((-3, 27, -9), (19, 29, 25), "smooth_stone"),                    # the iron rim of the roof
+              ((-2, 29, -8), (18, 30, 24), "oak_planks"),                      # the roof
+              ((-4, 0, 8), (-2, 16, 24), "dark_oak_planks", "spruce_log_top"),   # the wheels
+              ((18, 0, 8), (20, 16, 24), "dark_oak_planks", "spruce_log_top"),
+              ((3, 8, -16), (4, 9, -8), "stripped_oak_log"),                   # the shafts to the horse
+              ((12, 8, -16), (13, 9, -8), "stripped_oak_log")]
+VANILLA_CHEST = {"type": "minecraft:select", "property": "minecraft:local_time", "pattern": "MM-dd",   # items/chest.json
+                 "cases": [{"when": ["12-24", "12-25", "12-26"], "model": {
+                     "type": "minecraft:special", "base": "minecraft:item/chest",
+                     "model": {"type": "minecraft:chest", "texture": "minecraft:christmas"}}}],
+                 "fallback": {"type": "minecraft:special", "base": "minecraft:item/chest",
+                              "model": {"type": "minecraft:chest", "texture": "minecraft:normal"}}}
+
+
+def cart_model():
+    """The item model of the War Wagon cart (CART_BOXES): the cart display has the scale units.CART_SCALE for the
+    vanilla chest, so the boxes shrink by it around the middle (8, 8, 8) of the model. Each face has its uv: a face
+    out of 0..16 with no uv reads its texture from the neighbors in the atlas."""
+    names = sorted({t for b in CART_BOXES for t in b[2:]})
+    out = []
+    for lo, hi, side, *wheel in CART_BOXES:
+        at = [[round(8 + (v - 8) / k, 3) for v, k in zip(p, units.CART_SCALE)] for p in (lo, hi)]
+        size = [h - v for v, h in zip(lo, hi)]                       # the uv in the texture: at most one texture
+        faces = {f: {"uv": [0, 0, min(size[a], 16), min(size[b], 16)],
+                     "texture": f"#t{names.index(wheel[0] if wheel and f in ('east', 'west') else side)}"}
+                 for f, a, b in (("north", 0, 1), ("south", 0, 1), ("east", 2, 1), ("west", 2, 1), ("up", 0, 2),
+                                 ("down", 0, 2))}
+        out.append({"from": at[0], "to": at[1], "faces": faces})
+    textures = {f"t{k}": f"minecraft:block/{t}" for k, t in enumerate(names)} | {"particle": "minecraft:block/dark_oak_log"}
+    return {"textures": textures, "elements": out}
+
+
+HAIR, SHIRT, PANTS, SHOES, EYE, MOUTH = (74, 50, 30), (122, 92, 56), (72, 64, 110), (52, 40, 30), (50, 90, 160), (140, 60, 50)
+
+
+def skin_texture(model, tone):
+    """A 64 x 64 entity texture with a human skin tone and face (#2738): each box of the model gets the color of its
+    part on all six faces, the head gets hair, and the front of the head eyes, brows and a mouth."""
+    from PIL import Image, ImageDraw
+    im = Image.new("RGBA", (64, 64), (0, 0, 0, 0))
+    d = ImageDraw.Draw(im)
+    dark = tuple(int(c * 0.8) for c in tone)
+
+    def box(u, v, w, h, k, color, rows=None):                  # rows: only the top (>0) or bottom (<0) rows of the sides
+        if rows is None or rows > 0:                            # top and bottom; with rows only the top
+            d.rectangle([u + k, v, u + k + (1 if rows is None else 0) * w + w - 1, v + k - 1], fill=color)
+        y0, y1 = (v + k, v + k + h - 1) if rows is None else (v + k, v + k + rows - 1) if rows > 0 else (v + k + h + rows, v + k + h - 1)
+        d.rectangle([u, y0, u + 2 * k + 2 * w - 1, y1], fill=color)                # the four sides
+    for u, v, w, h, k, part in SKIN_BOXES[model]:
+        if part == "head":
+            box(u, v, w, h, k, tone)
+            box(u, v, w, h, k, HAIR, 2)
+            d.rectangle([u + 2 * k + w, v + k, u + 2 * k + 2 * w - 1, v + k + h - 3], fill=HAIR)   # the back of the head
+            e = v + k + h - 6                                       # the eye row: the face is 8 or 10 high
+            for x, w2 in ((u + k + 1, 1), (u + k + 5, -1)):
+                d.point([(x, e - 1), (x + w2, e - 1)], fill=HAIR)  # brows
+                d.point([(x, e)], fill=(240, 240, 240))
+                d.point([(x + w2, e)], fill=EYE)
+            if model == "zombie":
+                d.point([(u + k + 3, e + 1), (u + k + 4, e + 1)], fill=dark)   # nose (a villager has its own box)
+            d.line([(u + k + 2, e + 3), (u + k + 5, e + 3)], fill=MOUTH)
+        elif part == "skin":
+            box(u, v, w, h, k, tone)
+        elif part == "arm":
+            box(u, v, w, h, k, SHIRT)
+            box(u, v, w, h, k, tone, -3)                            # the hand
+            d.rectangle([u + k + w, v, u + k + 2 * w - 1, v + k - 1], fill=tone)
+        else:
+            box(u, v, w, h, k, PANTS if part == "leg" else SHIRT)
+            if part == "leg":
+                box(u, v, w, h, k, SHOES, -2)
+                d.rectangle([u + k + w, v, u + k + 2 * w - 1, v + k - 1], fill=SHOES)
+    return im
+
+
+def write_resourcepack(out):
+    """--resource-pack (#2738): resourcepacks/resources.zip in the world folder, which single player loads with the
+    world (26.x: LevelResource.MAP_RESOURCE_FILE; a world of an older version had resources.zip at its top, and the
+    client moves it there, ResourcePackLocationFileFix). The zombie units get a human face, the War Wagon its cart
+    (cart_model, #2746). Same bytes for each conversion: sorted names, a fixed time."""
+    import io
+    import zipfile
+    files = {"pack.mcmeta": json.dumps({"pack": {
+        "description": "aoe2mc: units with a human face", "pack_format": MC["resource_format"],
+        "min_format": MC["resource_format"], "max_format": MC["resource_format"]}}, indent=1).encode()}
+    files["assets/minecraft/items/chest.json"] = json.dumps({"model": {   # a chest with the cart data: the cart (#2746)
+        "type": "minecraft:select", "property": "minecraft:custom_model_data", "index": 0,
+        "cases": [{"when": "aoe2mc:war_wagon", "model": {"type": "minecraft:model", "model": "aoe2mc:item/war_wagon"}}],
+        "fallback": VANILLA_CHEST}}, indent=1).encode()
+    files["assets/aoe2mc/models/item/war_wagon.json"] = json.dumps(cart_model(), indent=1).encode()
+    for path, (model, tone) in SKINS.items():
+        buf = io.BytesIO()
+        skin_texture(model, tone).save(buf, "PNG")
+        files["assets/minecraft/textures/" + path] = buf.getvalue()
+    os.makedirs(os.path.join(out, "resourcepacks"), exist_ok=True)
+    with zipfile.ZipFile(os.path.join(out, "resourcepacks", "resources.zip"), "w", zipfile.ZIP_DEFLATED) as z:
+        for name in sorted(files):
+            z.writestr(zipfile.ZipInfo(name, (1980, 1, 1, 0, 0, 0)), files[name], zipfile.ZIP_DEFLATED)
+    return sorted(files)
 
 
 def write_datapack(out, objects, ground, biome_names=(), ambience="basic", players=None, triggers=(), T=4,
@@ -4008,16 +4422,18 @@ class Progress:
 
 def convert(src, out, T=4, H=3, name=None, seed=1, preview=False, arch=None, player_arch=(), with_units=True,
             barriers=True, mc_version=VERSION_NAME, spawn=None, birds=True, orientation="ne", verbose=False,
-            garrison="inside", border_design="diorama", ambience="basic", at=None, mood="on", fog=False):
+            garrison="inside", border_design="diorama", ambience="basic", at=None, mood="on", fog=False,
+            resource_pack=False):
     """at: recorded games only, the time in ms (--at): convert the state at that time (apply_timeline).
     mood: "on" sets the time of day of the map color mood (MOODS), "off" keeps noon (#1595).
-    fog: the fog of a fog mood (FOG, #1626); ambience "full" gives it too."""
+    fog: the fog of a fog mood (FOG, #1626); ambience "full" gives it too.
+    resource_pack: resources.zip with human faces for the zombie units (#2738)."""
     global MC
     MC = VERSIONS[mc_version]
     PALETTE_CACHE.clear()   # the cached entries can have the block names of another version
     try:
         _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units, barriers, spawn, birds, orientation,
-                 verbose, garrison, border_design, ambience, at, mood, fog)
+                 verbose, garrison, border_design, ambience, at, mood, fog, resource_pack)
     finally:
         MC = VERSIONS[VERSION_NAME]
         PALETTE_CACHE.clear()
@@ -4025,7 +4441,7 @@ def convert(src, out, T=4, H=3, name=None, seed=1, preview=False, arch=None, pla
 
 
 def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units, barriers, spawn, birds, orientation,
-             verbose, garrison, border_design, ambience, at=None, mood="on", fog=False):
+             verbose, garrison, border_design, ambience, at=None, mood="on", fog=False, resource_pack=False):
     buildings.BARRIERS = barriers
     buildings.TURN, yaw = ORIENTATIONS[orientation]
     MOVED.clear()           # the counts of an earlier conversion in this process
@@ -4170,11 +4586,13 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
     img = Image.fromarray(np.clip(img * shade[..., None], 0, 255).astype(np.uint8))
     write_objects(os.path.join(out, "aoe2mc.json"), size, T, H, players, objects, cols, ground, timeline,
                   texts.get("mood", "DEFAULT"), map_colors(np.asarray(img))[0], texts.get("global_victory"), texts,
-                  research_list(texts.get("triggers", [])))
+                  research_list(texts.get("triggers", [])), tech_state_list(texts.get("triggers", [])))
     triggers, tstats = texts.get("triggers", []), Counter()
     haze = FOG.get(texts.get("mood")) if mood == "on" and (fog or ambience == "full") else None
     n, amb = write_datapack(out, objects, ground, cols.biome_names, ambience, players, triggers, T, tstats, haze,
                             mood == "on")
+    if resource_pack:
+        print(f"  resource pack (resourcepacks/resources.zip): {len(write_resourcepack(out)) - 1} textures")
     k = sum("/trigger/" in f for f in trigger_files(triggers, T, ground, players, mood=mood == "on")[1]) \
         if ambience != "off" else 0
     if k:
@@ -4406,6 +4824,9 @@ def main(argv=None):
     ap.add_argument("--fog", action="store_true",
                     help="fog for the fog moods of a DE scenario (Misty, Murky, Brumous); Minecraft then shows an "
                          "\"Experimental Settings\" warning when the world opens (--ambience full gives it too)")
+    ap.add_argument("--resource-pack", action="store_true",
+                    help="write resourcepacks/resources.zip into the world: single player loads it with the world, and the zombie "
+                         "units get a human face")
     ap.add_argument("--at", type=game_time, metavar="MM:SS",
                     help="recorded game: convert the state at this game time (buildings and trained units of the "
                          "commands until then; default: the start)")
@@ -4424,7 +4845,7 @@ def main(argv=None):
               player_arch=a.player_architecture, with_units=not a.no_units, barriers=not a.no_barriers,
               mc_version=a.mc_version, spawn=a.spawn, birds=not a.no_birds, orientation=a.orientation,
               verbose=a.verbose, garrison=a.garrison, border_design=a.border, ambience=a.ambience,
-              mood=a.mood, fog=a.fog)
+              mood=a.mood, fog=a.fog, resource_pack=a.resource_pack)
     try:
         if a.at is not None and not a.scenario.lower().endswith(RECORDS):
             ap.error("--at needs a recorded game (.aoe2record)")

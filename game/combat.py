@@ -95,6 +95,7 @@ FORT_MIN_RANGE = {r["name"]: r["min_range"] for r in BUILDING_ROWS if "min_range
 # Gold per AoE2 minute while the unit attacks enemy units, not buildings (AoE2 DE wiki: the Varangian Guard 35, #2376).
 # The key "attack_gold" of data/units.jsonl; game/spoils.py gives it.
 ATTACK_GOLD = {r["name"]: r["attack_gold"] for r in UNIT_ROWS if "attack_gold" in r}
+REGEN = {r["name"]: r["regen"] for r in UNIT_ROWS if "regen" in r}             # the key "regen": hit points per minute (#2688)
 PASS = {r["name"]: r["pass"] for r in UNIT_ROWS if "pass" in r}               # the key "pass" of data/units.jsonl
 # The part of the damage on the units behind the target, when it is not one half (wiki: "100% pass-through damage").
 PASS_PART = {r["name"]: r["pass_part"] for r in UNIT_ROWS if "pass_part" in r}
@@ -166,15 +167,15 @@ def range_command(uuid, name, T, rate=NORMAL, s=None):
     """The plugin command that lets a ranged unit shoot from its AoE2 range (tiles * T blocks), with one shot per
     reload time at `rate` game seconds per real second (default: Normal game speed, as the walk speed). None for a
     melee unit. s: the values with technologies (Fletching, #724), default those of AoE2 unit name. A siege unit (a
-    minecart) gets its blast radius in blocks last, 0 when its shot hits only the target (the Scorpion, #1062): the
-    plugin then lets the minecart shoot too (#1050). Then its minimum range in blocks (MIN_RANGE, #1350), when it has
+    minecart, or the horse of a War Wagon: units.wagon, #2746) gets its blast radius in blocks last, 0 when its shot hits
+    only the target (the Scorpion, #1062): the plugin then lets the minecart (or the horse) shoot too (#1050). Then its minimum range in blocks (MIN_RANGE, #1350), when it has
     one: it does not shoot at a target nearer than that. Then the blocks of PASS (#1401): its bolt hurts the enemy units on
     its line up to that far past its range, and the part of the damage (PASS_PART) when it is not one half. A unit that
     shoots as a mob and has a PASS (the chakram thrower, #1638) gets "-" for the blast. A melee siege unit (the ram line, range 0) gets the reach
     RAM_REACH: a carrier pig has no melee goal, so the range goal walks it to the target and hits (#1399). A demolition
     ship (#1440) gets the reach CONTACT: its blast goes off next to the target."""
     s = s or stats(name)
-    cart = (units.classify(name) or {}).get("id") == "minecraft:minecart"
+    cart = (units.classify(name) or {}).get("id") == "minecraft:minecart" or units.wagon(name)   # (#2746)
     blast = f" {BLAST.get(name, 0) * T}" if name in BLAST or cart else " -" if name in PASS else ""
     blast += f" {MIN_RANGE.get(name, 0) * T}" * bool(blast and (name in MIN_RANGE or name in PASS))
     blast += f" {PASS.get(name, 0) * T}" * bool(blast and name in PASS) + f" {PASS_PART.get(name)}" * (name in PASS_PART)
