@@ -405,8 +405,12 @@ def read_scenario(path):
                    for i, t in enumerate(scn.trigger_manager.triggers) if t.display_as_objective)
     texts["objectives"] = "\n".join(f"- {g}" for _, _, g in goals if g)
     techs = {t.ID: t.name for t in TechInfo}                    # the names of game/data/train.jsonl
+    entities = {u.reference_id for us in scn.unit_manager.units for u in us   # the objects that are entities with the
+                if kinds.get(u.unit_const, ("?",))[0] in ("U", "H")}         # tag aoe2mc.r<ref> (#2617), not blocks
     texts["triggers"] = [dict(id=t.trigger_id, name=t.name, enabled=bool(t.enabled), looping=bool(t.looping),
                               conditions=[dict(type=c.condition_type, timer=c.timer, inverted=bool(c.inverted),
+                                               **({"ref": c.unit_object, "unit": c.unit_object in entities}   # #2618
+                                                  if c.condition_type in OBJECT_TESTS else {}),
                                                **({"quantity": c.quantity, "player": c.source_player,
                                                    "area": [c.area_x1, c.area_y1, c.area_x2, c.area_y2],
                                                    "object": c.object_list, "group": c.object_group,
@@ -430,7 +434,8 @@ def read_scenario(path):
                                             **({"mood": ColorMood(e.color_mood).name}     # "Change Color Mood" (#1876)
                                                if e.effect_type == CHANGE_COLOR_MOOD and
                                                getattr(e, "color_mood", None) in set(ColorMood) else {}),
-                                            **({"quantity": e.quantity} if e.effect_type == DAMAGE_OBJECT else {}),
+                                            **({"quantity": e.quantity}
+                                               if e.effect_type in (DAMAGE_OBJECT, HEAL_OBJECT) else {}),
                                             **({"operation": e.operation, "quantity": e.quantity}   # (#2693)
                                                if e.effect_type == CHANGE_OBJECT_HP else {}),
                                             **({"stance": e.attack_stance}                # (#2705)
@@ -440,6 +445,8 @@ def read_scenario(path):
                                                if e.effect_type == CHANGE_VARIABLE else {}),
                                             **({"target": e.target_player}                # "Change Ownership" (#2570)
                                                if e.effect_type == CHANGE_OWNERSHIP else {}),
+                                            **({"color": e.player_color}                 # (#2712)
+                                               if e.effect_type == CHANGE_PLAYER_COLOR else {}),
                                             **({"target": e.target_player,                # "Replace Object" (#2703)
                                                 "object2": kinds.get(e.object_list_unit_id_2)}
                                                if e.effect_type == REPLACE_OBJECT else {}),
@@ -2775,6 +2782,7 @@ CHANGE_OBJECT_HP = 27                                              # "Change Obj
 CHANGE_OBJECT_NAME = 26                                            # "Change Object Name" (#2616)
 CHANGE_OBJECT_STANCE = 36                                          # "Change Object Stance" (#2705)
 CHANGE_OWNERSHIP = 18
+CHANGE_PLAYER_COLOR = 89                                           # "Change Player Color" (#2712)
 CHANGE_VARIABLE = 56                                               # the scenario variables (#2611)
 CHANGE_VIEW = 16                                                   # "Change View" (#2610)
 CLEAR_INSTRUCTIONS = 21                                            # "Clear Instructions" (#2609)
@@ -2786,6 +2794,7 @@ DIFFICULTY_LEVEL = 19                                              # the conditi
 DISPLAY_INSTRUCTIONS = 20
 DISPLAY_TIMER = 37                                                 # "Display Timer" (#2572)
 FREEZE_OBJECT = 22                                                 # "Freeze Object" (#2608)
+HEAL_OBJECT = 34                                                   # "Heal Object" (#2692)
 IN_AREA = 5
 KILL_OBJECT = 14
 MODIFY_RESOURCE = 52                                               # "Modify Resource" (#2576)
@@ -2808,6 +2817,17 @@ TIME_UNITS = {0: 5, 1: 60, 2: 1, 3: 1}  # TimeUnit (years, minutes, seconds, m:s
 COUNTED = (IN_AREA, OWN_OBJECTS, OWN_FEWER_OBJECTS)                # conditions that count units: the tick function
 TICKED = COUNTED + (ACCUMULATE_ATTRIBUTE, DIFFICULTY_LEVEL, RESEARCHED, VARIABLE_VALUE)  # conditions of the tick function
 ATTRIBUTES = ("Food", "Wood", "Stone", "Gold")     # attributes 0-3: the score holders of gather.RESOURCES (#2655)
+DESTROY_OBJECT = 6                                                     # the condition "Destroy Object" (#2618)
+# The conditions on one object of the map (its tag aoe2mc.r<ref>, #2617): the test of the tick function when it holds,
+# when it does not hold (a looping trigger fires again after that), and the tick lines before the test. "Destroy
+# Object": a marker entity follows the unit; the unit is dead when the marker is loaded and the unit is not there. A
+# unit in a chunk that is not loaded is no entity for a command, and its marker is not loaded too (#2618).
+OBJECT_TESTS = {DESTROY_OBJECT: ("if entity @e[tag=aoe2mc.m{ref}] unless entity @e[tag=aoe2mc.r{ref}]",
+                                 "if entity @e[tag=aoe2mc.r{ref}]",
+                                 ("execute as @e[tag=aoe2mc.r{ref}] at @s unless entity @e[tag=aoe2mc.m{ref}] run "
+                                  "summon marker ~ ~ ~ {{Tags:[\"aoe2mc.m{ref}\"]}}",
+                                  "execute as @e[tag=aoe2mc.r{ref}] at @s run tp @e[tag=aoe2mc.m{ref}] ~ ~ ~"))}
+TICKED += tuple(OBJECT_TESTS)
 STORES = ("food", "wood", "stone", "gold")      # the resource of a tribute_list (AoE2 attributes 0 to 3)
 OPERATIONS = {1: "set", 2: "add", 3: "remove"}  # set, add, subtract of Modify Resource (AoE2ScenarioParser Operation)
 HP_OPERATIONS = {1: "set", 2: "add", 3: "subtract", 4: "multiply", 5: "divide"}   # Change Object HP (#2693)
@@ -2940,6 +2960,25 @@ def hp_lines(e, c):
          "function aoe2mc:hp/apply with storage aoe2mc:hp"]) + "\n"
     c.files["data/aoe2mc/function/hp/apply.mcfunction"] = "$attribute @s minecraft:max_health base set $(value)\n"
     return [f"execute as {at} run function aoe2mc:{name}"]
+
+
+def heal_lines(e, c):
+    """The commands of "Heal Object" (#2692): each unit of the effect (effect_units) gets `quantity` AoE2 hit points
+    back, not above its maximum. The scores aoe_hp (Health) and aoe_max (max_health) of the unit give the new Health:
+    the score is the Health without its decimals. The game program gives max_health = its AoE2 hit points."""
+    q, stats = e.get("quantity") or 0, c.stats
+    found = effect_units(e, c.T) if q > 0 else None
+    if found is None:
+        stats["heal (building or no amount, not supported yet)" if q else "heal (no amount)"] += 1
+        return []
+    c.setup["scoreboard objectives add aoe_hp dummy"] = c.setup["scoreboard objectives add aoe_max dummy"] = None
+    stats["heal"] += 1
+    at = found[0]                                                      # Gaia: not the players (effect_units)
+    return [f"execute as {at} store result score @s aoe_hp run data get entity @s Health",
+            f"execute as {at} store result score @s aoe_max run attribute @s minecraft:max_health get",
+            f"execute as {at} run scoreboard players add @s aoe_hp {q}",
+            f"execute as {at} run scoreboard players operation @s aoe_hp < @s aoe_max",
+            f"execute as {at} store result entity @s Health float 1 run scoreboard players get @s aoe_hp"]
 
 
 def name_lines(e, c):
@@ -3244,6 +3283,16 @@ def diplomacy_lines(e, c):
     return [f"scoreboard players set #p{a}.p{b} aoe_dip {e['diplomacy'] + 1}", "scoreboard players set #any aoe_dip 1"]
 
 
+def color_lines(e, c):
+    """The command of "Change Player Color" (#2712): the team p<player> gets the chat color of the new player color
+    (PlayerColorId 1 to 8, units.TEAM_COLOR). It colors the names and the glow of the units; wool and banners stay."""
+    n, color = e["player"], e.get("color")
+    if n <= 0 or not isinstance(color, int) or not 1 <= color <= len(buildings.COLOR_NAMES):
+        return []
+    c.stats["change player color"] += 1
+    return [f"team modify p{n} color {units.TEAM_COLOR[buildings.COLOR_NAMES[color - 1]]}"]
+
+
 def victory_lines(e, c):
     """The command of "Declare Victory" (#2542): the score #p<player> of aoe_win is 1, and the scenario mode of the
     game program ends the game. The load function adds the objective (c.setup)."""
@@ -3280,6 +3329,7 @@ EFFECTS = {
     CHANGE_OBJECT_NAME: name_lines,
     CHANGE_OBJECT_STANCE: stance_lines,
     CHANGE_OWNERSHIP: owner_lines,
+    CHANGE_PLAYER_COLOR: color_lines,
     CHANGE_VARIABLE: variable_lines,
     CHANGE_VIEW: view_lines,
     CLEAR_INSTRUCTIONS: clear_lines,
@@ -3290,6 +3340,7 @@ EFFECTS = {
     DISPLAY_INSTRUCTIONS: instruction_lines,
     DISPLAY_TIMER: timer_lines,
     FREEZE_OBJECT: freeze_lines,
+    HEAL_OBJECT: heal_lines,
     KILL_OBJECT: object_lines,
     MODIFY_RESOURCE: resource_lines,
     PATROL: order_lines,
@@ -3327,8 +3378,9 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
     areas; the score #N of aoe_trig marks a fired trigger, so it fires once. A looping area trigger fires again after
     the units leave an area. A "Variable Value" condition runs in the tick function as an area (#2611), a "Research
     Technology" condition too: the game program sets the score #p<player>.<technology> of aoe_tech (#2656), and an
-    "Accumulate Attribute" condition of a resource: resource_score (#2655). The
-    commands of each effect come from its handler in EFFECTS.
+    "Accumulate Attribute" condition of a resource: resource_score (#2655). A "Destroy Object" condition
+    (OBJECT_TESTS) tests the tag aoe2mc.r<ref> of its unit and its marker (#2618). The commands of each effect come
+    from its handler in EFFECTS.
     A disabled trigger does not run."""
     load, files, tick, setup = [], {}, [], {}
     stats = Counter() if stats is None else stats
@@ -3340,6 +3392,10 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
         # once per second, as AoE2 does, with `random value 1..100`
         chance = (TRIGGER_CHANCE, False) in kinds
         rest = kinds - {(TRIGGER_CHANCE, False)}
+        if any(c["type"] in OBJECT_TESTS and (c.get("ref", -1) is None or c.get("ref", -1) < 0 or not c.get("unit"))
+               for c in conds):                                        # no object, or a building: blocks, no entity
+            stats["object condition (not an entity, not supported yet)"] += t["enabled"]
+            continue
         if not t["enabled"] or not conds or not (rest == {(TIMER, False)} or rest <= {(k, False) for k in TICKED}) or \
                 chance and len([c for c in conds if c["type"] == TRIGGER_CHANCE]) > 1 or \
                 any(c.get("group", -1) >= 0 or c.get("class", -1) >= 0 for c in conds) or \
@@ -3359,6 +3415,12 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
                 test = SCORE_TESTS[c["type"]](c)
                 tests.append(f"if {test}")
                 unless.append(f"unless {test}")
+                continue
+            if c["type"] in OBJECT_TESTS:                              # the tag of the object (#2618)
+                test, other, before = OBJECT_TESTS[c["type"]]
+                counts += [x.format(ref=c["ref"]) for x in before]
+                tests.append(test.format(ref=c["ref"]))
+                unless.append(other.format(ref=c["ref"]))
                 continue
             if c["type"] not in COUNTED:                               # a timer or the chance
                 continue
