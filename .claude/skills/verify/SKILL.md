@@ -8,10 +8,13 @@ description: Verify a change to aoe2mc before commit. Selects the check level (l
 Use the cheapest check that proves the change. Do all levels up to the one that the change needs.
 The Minecraft client runs only headless: it makes screenshots (level 5). Write the result of each check in the PR body.
 
-## Level 1 – always (about 5 min: 4,800 tests on 4 cores, 2026-10-28)
+## Level 1 – always (about 2 min: 4,800 tests on 4 cores, 2026-10-28)
 
     ruff check .
-    python3 -m pytest
+    python3 -m pytest -n auto
+
+`-n auto` runs the tests on all cores (`pytest-xdist`, #2415: 106 s, without it 287 s). Use it only for the full fast
+suite: a few test files start faster without it, and do not use it for `-m mc` (each test starts a server).
 
 Run the full fast suite once, before the first push of a PR. After that (a fix of a review or of CI, a merge of
 `origin/main`), run `ruff check .` and only the test files of the change and of the conflicted files

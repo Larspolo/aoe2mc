@@ -7,7 +7,8 @@ the train and research queues, the construction sites (also the done ones: the b
 points (#2257), and the orders of the units (#2258): the job, target and load of each villager, the farmers, stances,
 control groups and garrisons. A villager keeps no path: after the load it walks again with Minecraft path finding (P2).
 The save also keeps the wonder and relic victory timers and the market prices (#2324), the game settings of the
-command line (`run.py` options, "settings") and the attack time and wave of the bot (#2325).
+command line (`run.py` options, "settings"), the attack time and wave of the bot (#2325), and the relics and the monk
+orders (#2412: `monk.relics`, the conversions and the rest of the monks).
 """
 import json
 import os
@@ -18,10 +19,12 @@ FILE = "savegame.json"
 FIELDS = ("stock", "spare", "seconds", "repeats", "pop")              # dicts and numbers of Gather, as they are
 PACKED = ("queues", "trained", "sites", "rally")                       # with tuples (a building rect, a cell): pack()
 OPTIONAL = ("rates", "relic_timer", "wonder_shown", "wonders", "wonders_gone")   # only on a Gather that has them (#2324)
+MONK = ("carrier_at", "converting", "faith", "fetching", "heal_time", "monk_at", "relic_gold", "relic_homes",
+        "relic_time", "relics")                                        # game/monk.py: the relics and monk orders (#2412)
 JOB = ("state", "load", "res", "job", "lap", "prey")                  # fields of a gather.Villager, as they are
 IDLE = ("to_rally", "to_repair", "repair")                             # orders that the save does not keep yet
 BOT = ("time", "charged", "attack")                                    # fields of a bot.Bot, as they are (#2325)
-SETTINGS = ("all_techs", "bot", "bot_attack", "cheats", "civ", "people", "reveal", "teams", "victory")   # run.py options
+SETTINGS = ("all_techs", "bot", "bot_attack", "cheats", "civ", "full_tech_tree", "people", "reveal", "teams", "victory")   # run.py options
 SKIP = ("session.lock",)                                               # the lock of the running server
 
 
@@ -61,7 +64,8 @@ def dump(g):
     the player of the bot (#2325)."""
     d = {"players": {str(x.player): {**{f: getattr(x, f) for f in FIELDS}, "techs": sorted(x.techs),
                                      **{f: pack(getattr(x, f)) for f in PACKED}, **orders(x),
-                                     **{f: pack(vars(x)[f]) for f in OPTIONAL if f in vars(x)}} for x in sides(g)}}
+                                     **{f: pack(vars(x)[f]) for f in OPTIONAL + MONK if f in vars(x)}}
+                    for x in sides(g)}}
     for b in bots(g):
         d["players"][str(b.g.player)]["bot"] = {f: getattr(b, f) for f in BOT}
     if getattr(g.game, "settings", None):
@@ -121,7 +125,7 @@ def load(g, d):
         for f in FIELDS:
             setattr(x, f, type(getattr(x, f))(p[f]))
         x.techs = set(p["techs"])
-        for f in PACKED + OPTIONAL:                                    # the next tick shows the boss bars again
+        for f in PACKED + OPTIONAL + MONK:                             # the next tick shows the boss bars again
             if f in p:                                                 # a save before #2257 has no queues
                 setattr(x, f, unpack(p[f]))
         if "villagers" in p:                                           # a save from before #2258 has no orders
