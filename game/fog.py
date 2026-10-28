@@ -49,6 +49,19 @@ def units(g):
     return own, {u: n for u, n in foe.items() if u not in own}     # a converted unit is own (monk.py)
 
 
+def seen(g):
+    """The UUIDs of the units of the players that "Set Player Visibility" shows to the player of g (scenario.visibility,
+    #2774): update does not hide them out of sight."""
+    sees = set(g.players.get(str(g.player), {}).get("sees", []))
+    if not sees:
+        return set()
+    out = {o["uuid"] for o in g.data["objects"] if o["kind"] == "unit" and o["player"] in sees and o.get("uuid")}
+    for h in gathers(g):
+        if h.player in sees:
+            out |= set(h.villagers) | set(h.soldiers)
+    return out
+
+
 def targets(g):
     """The target UUIDs of the own and allied buildings and construction sites (combat.target_uuid): Gather.where
     answers the live ones in the same commands as the units, so a destroyed building costs no command (#1470)."""
@@ -69,7 +82,8 @@ def update(g, pos):
     state["started"] = True
     state["tiles"] = tiles                                             # the sight for the minimap (#2583)
     towers = set().union(*vars(g).get("towers", {}).values())
-    out = {u for u, p in pos.items() if u in foe and u not in towers
+    shown = seen(g)
+    out = {u for u, p in pos.items() if u in foe and u not in towers and u not in shown
            and (int(p[0] // g.map.T), int(p[2] // g.map.T)) not in tiles}
     hidden = state["hidden"]
     hide, show = sorted(out - hidden), sorted((hidden & pos.keys()) - out - towers)
