@@ -59,6 +59,7 @@ def test_a_militia_on_a_step_hits_harder_on_a_server(tiny_world, tmp_path):
     with run.Game(world) as game:
         game.command(f"forceload add {x0 - 2} {z0 - 2} {x0 + 12} {z0 + 12}")
         game.command("time set midnight")                 # a zombie in the sun burns: 1 damage on a (#2965)
+        game.command(f"fill {x0 - 1} {y + 4} {z0 - 1} {x0 + 10} {y + 4} {z0 + 10} stone_bricks")   # a roof: no sky light, no sun burn (#3212)
         game.command(f"fill {x0 - 1} {y - 1} {z0 - 1} {x0 + 10} {y - 1} {z0 + 10} stone_bricks")
         game.command(f"fill {x0 + 2} {y} {z0 + 2} {x0 + 2} {y} {z0 + 2} stone_bricks")   # a pillar for unit a
         game.command(f"fill {x0 + 3} {y + 2} {z0 + 1} {x0 + 6} {y + 2} {z0 + 3} glass")   # b cannot jump onto it
