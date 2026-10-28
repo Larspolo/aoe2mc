@@ -453,6 +453,9 @@ def load(g, d):
     if "stances" in d:
         g.command(gather.allies_command(g.players))
         g.command(gather.neutral_command(g.players))
+    for x in sides(g):                                                 # a razed building leaves the forts again (#2985)
+        for u in vars(x).get("razed", {}):
+            x.free(u)                                                  # the first call frees it for all sides
     gates_again(g)                                                     # the sites are back: their bars and plugin gates (#2762)
 
 
