@@ -4,7 +4,7 @@ Only the Britons, Danes, Franks, Saxons, Sicilians and Varangians have it, in pl
 from test_castle_upgrades import RANGE, setup
 from test_forging import menus
 
-from game import build, civs, train
+from game import civs, train
 
 IMPERIAL = ("FEUDAL_AGE", "CASTLE_AGE", "IMPERIAL_AGE")
 CIVS = {"BRITONS", "DANES", "FRANKS", "SAXONS", "SICILIANS", "VARANGIANS"}
@@ -20,7 +20,7 @@ def player(civ="FRANKS", ages=IMPERIAL):
 
 def test_the_values_are_those_of_the_wiki():
     assert len(train.HELP["CRANEQUINS"]) <= 50                         # the cost and time: ITEM in the menu (#2182)
-    assert train.TECH_AGE.get("CRANEQUINS", build.AGE.get("CRANEQUINS")) == 3
+    assert train.value("age", "CRANEQUINS", 0) == 3
 
 
 def test_only_six_civilizations_have_it_in_place_of_parthian_tactics():
