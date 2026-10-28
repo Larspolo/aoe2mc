@@ -5,8 +5,8 @@ check). The bot of player 2 has an own Gather that steps without run(), so only 
 A unit is an entity with the tag aoe2mc.p<n> of its player (units.make_entity, also trained units), not its horse,
 camel or boat (units.MOUNT). A building is the target entity of combat.building in the team p<n>: walls, gates and
 Gaia objects have no target (combat.BUILDINGS), so they do not keep a player alive (AoE2 wiki, "Conquest"). A
-construction site of the player counts as a building, as a foundation in AoE2, also when it is complete: a built
-building has no target entity yet, so nothing can destroy it.
+construction site of the player counts as a building, as a foundation in AoE2. A complete one of combat.BUILDINGS
+counts by its target entity (build.target), as a building of the map: when it falls, it counts no more (#3008).
 Only a player that had units or buildings once can lose: a player of the scenario with nothing (most test maps), or with
 its entities not loaded yet, is not in the game. A defeated rival loses its rest (cheats.destroy) and the chat says so.
 The human player sees "Defeat" when it has nothing left, "Victory" when no rival is left; the game then ends (g.ended).
@@ -29,7 +29,9 @@ EVERY = 3.0          # seconds between two checks
 
 def alive(g, n):
     """Player n has a unit, a building or a construction site that counts in the AoE2 conquest."""
-    return any(s["player"] == n for s in g.sites) or any(
+    import combat                                                   # combat imports gather, which imports this module
+    return any(s["player"] == n and not (s.get("done") and (s["name"] in combat.BUILDINGS or s["name"] in combat.WALLS)
+                                         and not s.get("lasting")) for s in g.sites) or any(
         "passed" in g.command(f"execute if entity {sel}")
         for sel in (f"@e[tag=aoe2mc.p{n},tag=!{MOUNT}]", f"@e[tag=aoe2mc.building,team=p{n},tag=!aoe2mc.wall]"))
 
