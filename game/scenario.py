@@ -232,6 +232,8 @@ def setup(g, mode="scenario"):
     level = (getattr(g.game, "settings", None) or {}).get("ai_difficulty", "standard")
     g.command("scoreboard objectives add aoe_difficulty dummy")        # the condition "Difficulty Level" (#2704)
     g.command(f"scoreboard players set #level aoe_difficulty {LEVELS[level]}")
+    g.command("scoreboard objectives add aoe_dipstate dummy")         # the condition "Diplomacy State" (#2757)
+    states(g)
     rows = {x: g.players.get(str(x.player), {}) for x in sides}
     if not any("resources" in p or "pop_limit" in p for p in rows.values()):
         print("The world has no scenario start values: the game starts with the lobby settings.", file=sys.stderr)
@@ -323,6 +325,7 @@ def victory(g):
 
 
 STANCES = {1: "ally", 2: "neutral", 4: "enemy"}                       # the score of aoe_dip: DiplomacyState + 1
+SCORES = {kind: score for score, kind in STANCES.items()}
 
 
 def stance(players, n, m, kind):
@@ -343,6 +346,16 @@ def stance(players, n, m, kind):
     row["team"] = other["team"]
 
 
+def states(g):
+    """Set the score #p<N>.p<M> of aoe_dipstate to the stance of player N to player M + 1 (STANCES): the condition
+    "Diplomacy State" of the converted world tests it (#2757)."""
+    ns = sorted(int(p) for p in g.players if int(p))
+    for n, m in ((n, m) for n in ns for m in ns if n != m):
+        kind = "ally" if gather.allied(g.players, n, m) else \
+            "neutral" if m in g.players[str(n)].get("neutral", ()) else "enemy"
+        g.command(f"scoreboard players set #p{n}.p{m} aoe_dipstate {SCORES[kind]}")
+
+
 def diplomacy(g):
     """Apply the stances that "Change Diplomacy" triggers set (the scores of aoe_dip), then reset the scores. During a
     treaty (treaty.holds) all players stay neutral: the end of the treaty sends the new stances."""
@@ -357,6 +370,7 @@ def diplomacy(g):
             if got and int(got[1]) in STANCES:
                 stance(g.players, n, m, STANCES[int(got[1])])
                 g.command(f"scoreboard players reset #p{n}.p{m} aoe_dip")
+    states(g)
     g.command(gather.allies_command(g.players))
     if not treaty.holds(g):
         g.command(gather.neutral_command(g.players))

@@ -439,7 +439,10 @@ def read_scenario(path):
                                                **({"player": c.source_player}                 # (#2710)
                                                   if c.condition_type == PLAYER_DEFEATED else {}),
                                                **({"quantity": c.quantity, "unit": c.unit_object}   # (#2714)
-                                                  if c.condition_type == UNITS_GARRISONED else {}))
+                                                  if c.condition_type == UNITS_GARRISONED else {}),
+                                               **({"player": c.source_player, "target": c.target_player,   # (#2757)
+                                                   "diplomacy": c.quantity}            # the stance is the quantity
+                                                  if c.condition_type == DIPLOMACY_STATE else {}))
                                           for c in in_order(t.conditions, t.condition_order)],
                               effects=[dict(type=e.effect_type, message=e.message or "", player=e.source_player,
                                             time=e.display_time, object=kinds.get(e.object_list_unit_id),
@@ -2832,6 +2835,7 @@ DAMAGE_OBJECT = 24                                                 # "Damage Obj
 DECLARE_VICTORY = 13                                               # "Declare Victory" (#2542)
 DISABLE_UNIT_ATTACKABLE = 98                                       # "Disable Unit Attackable" (#2695)
 DIFFICULTY_LEVEL = 19                                              # the condition "Difficulty Level" (#2704)
+DIPLOMACY_STATE = 24                                               # the condition "Diplomacy State" (#2757)
 DISPLAY_INSTRUCTIONS = 20
 DISPLAY_TIMER = 37                                                 # "Display Timer" (#2572)
 ENABLE_UNIT_ATTACKABLE = 99                                       # "Enable Unit Attackable" (#2695)
@@ -2872,6 +2876,7 @@ COUNTED = (IN_AREA, OWN_OBJECTS, OWN_FEWER_OBJECTS)                # conditions 
 TICKED = COUNTED + (                                               # conditions of the tick function, one per line
     ACCUMULATE_ATTRIBUTE,
     DIFFICULTY_LEVEL,
+    DIPLOMACY_STATE,
     DISPLAY_TIMER_TRIGGERED,
     OBJECT_HP,
     PLAYER_DEFEATED,
@@ -3578,6 +3583,7 @@ Effect = namedtuple("Effect", "t T ground players stats mood files setup switch 
 SCORE_TESTS = {
     ACCUMULATE_ATTRIBUTE: resource_score,
     DIFFICULTY_LEVEL: lambda c: f"score #level aoe_difficulty matches {c.get('quantity', 0)}",
+    DIPLOMACY_STATE: lambda c: f"score #p{c['player']}.p{c['target']} aoe_dipstate matches {c['diplomacy'] + 1}",
     DISPLAY_TIMER_TRIGGERED: lambda c: f"score #done{c.get('slot', 0)} aoe_timer matches 1..",   # set at 0 (#2702)
     PLAYER_DEFEATED: lambda c: f"score #p{c['player']} aoe_lost matches 1..",   # conquest, regicide (#2710)
     RESEARCHED: lambda c: f"score #p{c['player']}.{c['technology']} aoe_tech matches 1..",
