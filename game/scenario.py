@@ -205,6 +205,7 @@ ORDER_KINDS = {
     "rallies": r'"rally (\d+) (\w+) (\d+) (\d+) ?(\d+ \d+ \d+ \d+)?"',  # "Set Building Gather Point": rally()
     "tags": r'"(patrol|attack_move|range|stance|stop) (aoe_order[\w.]+) ?(-?\d+(?: -?\d+)*)?"',   # see orders()
     "unloads": r'"unload (\d+) (\d+) ?(-?\d+ -?\d+ -?\d+)?"',  # "Unload" (#2773): unload()
+    "values": r'"value (aoe_order[\w.]+) (\w+) ([1-5]) (-?[\d.]+)"',   # "Change Object HP" and others (#3083): values()
 }
 
 
@@ -269,6 +270,8 @@ def orders(g):
             g.command(f"aoe moveto @e[tag={tag}] {' '.join(map(str, points[q[2] % 2]))}")
         elif "passed" not in g.command(f"execute if entity @e[tag={tag}]"):
             patrols.remove(q)
+    for tag, field, op, q in m["values"]:
+        values(g, tag, field, int(op), float(q))
 
 
 def ranges(g, tag, operation, quantity):
@@ -279,13 +282,33 @@ def ranges(g, tag, operation, quantity):
     own = {u["uuid"]: u["name"] for u in g.units if "uuid" in u} | dict(g.soldiers)
     every = {o["uuid"]: o["name"] for o in g.data.get("objects", []) if o["kind"] == "unit" and "uuid" in o} | own
     for uuid, name in sorted(every.items()):
-        s = train.stats(g, name) if uuid in own else combat.stats(name)
+        s = train.stats(g, name, uuid) if uuid in own else combat.stats(name)
         if s.range <= 0 or "passed" not in g.command(f"execute as {uuid} if entity @s[tag={tag}]"):
             continue
         r = s.range
         new = [quantity, r + quantity, r - quantity, r * quantity, r / quantity if quantity else r][operation - 1]
         if cmd := combat.range_command(uuid, name, g.map.T, s=s._replace(range=max(0, new))):
             g.command(cmd)
+
+
+def values(g, tag, field, operation, quantity):
+    """A value order of "Change Object Attack", "Change Object Armor", "Change Object Speed", "Change Object HP" and
+    "Modify Object Attribute" (aoe2mc.value_lines, #3083): each unit with the tag (of the people and the bots) keeps the
+    change in unit_values of its side ({uuid: [[field, operation, quantity], ...]}): train.stats and train.speed
+    apply it after the changes of the unit type, so later technologies and orders keep it. The unit gets its new
+    `aoe stats` or walk speed at once, and the tag goes."""
+    import ai, civs, combat, trebuchet                             # combat -> gather -> scenario
+    for x in [g, *(s.g for s in g.bots)]:
+        for uuid, name in [(u["uuid"], u["name"]) for u in x.units if "uuid" in u] + sorted(x.soldiers.items()):
+            if "passed" not in g.command(f"execute as {uuid} if entity @s[tag={tag}]"):
+                continue
+            vars(x).setdefault("unit_values", {}).setdefault(uuid, []).append([field, operation, quantity])
+            if field == "speed":
+                x.command(ai.speed_command(uuid, name, x.map.T, gather.NORMAL * train.speed(x, name, uuid)))
+            else:
+                x.command(trebuchet.stats_command(x, uuid) if name == trebuchet.NAME else combat.stats_command(
+                    uuid, name, train.stats(x, name, uuid), civs.taken(x, name), civs.friendly(x, name)))
+    g.command(f"tag @e[tag={tag}] remove {tag}")
 
 
 def owner(g, tag, new):
@@ -510,7 +533,7 @@ def attributes(g):
         for uuid, n in [(u["uuid"], u["name"]) for u in x.units if "uuid" in u] + list(x.soldiers.items()):
             if not train.applies(name, n):                             # a type, or a class (#2859)
                 continue
-            s = train.stats(x, n)
+            s = train.stats(x, n, uuid)
             x.command(combat.stats_command(uuid, n, s, civs.taken(x, n), civs.friendly(x, n)))
             if field == "range" and (cmd := combat.range_command(uuid, n, x.map.T, s=s)):
                 x.command(cmd)

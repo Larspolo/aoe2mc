@@ -35,7 +35,8 @@ NOMAD = ("later", "nomad")                                             # a Nomad
 ORDERS = ("patrols", "trigger_attributes", "trigger_costs",            # scenario.py: the patrols (#2647), attributes (#2763),
           "trigger_menus", "trigger_names",                            # costs (#2776), menu items (#2775), names (#2821)
           "trigger_places", "trigger_stacks", "trigger_times",         # the menu places (#2864), stacking (#2866), times (#2820),
-          "trigger_trains", "trigger_civs")                            # train locations (#2865), civilization names (#2905)
+          "trigger_trains", "trigger_civs",                            # train locations (#2865), civilization names (#2905),
+          "unit_values")                                               # the values of single units (#3083)
 ROUTES = ("trade", "trebs")                                            # trade.py, trebuchet.py: as OPTIONAL (#2413)
 CHEATS = (                                                             # game/cheats.py: the cheats that the player
     "aegis",                                                           # turned on (#2533)
@@ -373,7 +374,7 @@ def board_again(x):
     walks += [(u, *p) for u, t in sorted(vars(x).get("boarding", {}).items()) if (p := x.pos(t))]
     for u, *at in walks:
         name = "VILLAGER" if u in x.villagers else x.soldiers.get(u, "")
-        ai.move(x, u, name, x.map.T, *at, ai.NORMAL * train.speed(x, name))
+        ai.move(x, u, name, x.map.T, *at, ai.NORMAL * train.speed(x, name, u))
 
 
 def gates_again(g):

@@ -108,7 +108,7 @@ def leg(g, uuid, cell):
     faster when the cell is in the aura of a Caravanserai (aura): the end cell of a leg gives the speed of the leg."""
     import ai, train                                               # both import gather, gather imports this module
     x, z = cell
-    ai.move(g, uuid, CART, g.map.T, x + 0.5, g.map.y(x, z), z + 0.5, ai.NORMAL * train.speed(g, CART) * aura(g, cell))
+    ai.move(g, uuid, CART, g.map.T, x + 0.5, g.map.y(x, z), z + 0.5, ai.NORMAL * train.speed(g, CART, uuid) * aura(g, cell))
 
 
 def order(g, player, cell):

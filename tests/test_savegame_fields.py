@@ -10,7 +10,7 @@ GAME = os.path.join(os.path.dirname(__file__), "..", "game")
 SETS = (r"\bg\.(\w+)\s*(?:[-+*|&]?=)(?!=)",                           # g.x = ..., g.x += ...
         r"\bg\.(\w+)\s*,[^=\n]*=(?!=)",                                # g.x, g.y = ...
         r"setattr\(g,\s*\"(\w+)\"",
-        r"vars\(g\)\.setdefault\(\"(\w+)\"",
+        r"vars\([gx]\)\.setdefault\(\"(\w+)\"",                     # x: a side of scenario.py (#3083)
         r"vars\(g\)\[\"(\w+)\"\]\s*=(?!=)")
 ORDERS = {"farmers", "garrisons", "groups", "ships", "stances", "techs", "villagers"}   # savegame.orders, "techs"
 GAPS = {                                                               # game state that the save loses: its ticket

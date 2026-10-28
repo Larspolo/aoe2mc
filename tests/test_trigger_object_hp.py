@@ -7,6 +7,7 @@ import numpy as np
 import pytest
 
 import aoe2mc
+from test_trigger_unit_values import unit_value
 from tools import scenarios
 
 SET, ADD, SUBTRACT, MULTIPLY, DIVIDE = 1, 2, 3, 4, 5
@@ -25,7 +26,8 @@ def build(effects, stats=None, T=4):
 
 
 def lines(effects, stats=None):
-    return build(effects, stats)[1].get("data/aoe2mc/function/trigger/7.mcfunction", "").splitlines()
+    return [x for x in build(effects, stats)[1].get("data/aoe2mc/function/trigger/7.mcfunction", "").splitlines()
+            if not unit_value(x)]
 
 
 def function(name, files):

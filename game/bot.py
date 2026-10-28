@@ -220,7 +220,8 @@ class Bot:
         for t, us in sorted(orders.items()):
             if t in g.forts:
                 g.sieged.add(t)                                        # Gather.fall frees its footprint
-            ai.attack(g.game, us, [g.soldiers[u] for u in us], g.map.T, t)
+            ai.attack(g.game, us, [g.soldiers[u] for u in us], g.map.T, t,
+                      [gather.NORMAL * train.speed(g, g.soldiers[u], u) for u in us])
 
     def reach(self, u, at, to):
         """True when soldier u at `at` can attack a target at `to`. AoE2: a land unit cannot walk to a ship on the water
