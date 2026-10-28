@@ -119,6 +119,7 @@ SETTINGS = (                                                           # run.py 
     "pop_limit",
     "regicide",
     "reveal",
+    "shared_exploration",
     "sudden_death",
     "teams",
     "treaty",

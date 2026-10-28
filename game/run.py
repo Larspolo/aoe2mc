@@ -20,6 +20,7 @@ Usage:
     python3 game/run.py WORLD --play --all-techs       # the AoE2 setting "All Techs" (#2298)
     python3 game/run.py WORLD --play --full-tech-tree  # the AoE2 setting "Full Tech Tree" (#2354)
     python3 game/run.py WORLD --play --turbo           # the AoE2 setting "Turbo Mode" (#2359)
+    python3 game/run.py WORLD --play --bot --teams 1,1 --shared-exploration off   # no sight of the ally (#2602)
     python3 game/run.py WORLD --play --victory conquest  # the AoE2 setting "Victory": no wonder or relic win (#2316)
     python3 game/run.py WORLD --play --victory time-limit --victory-value 300   # the highest score at 300 years (#2356)
     python3 game/run.py WORLD --play --victory king-of-the-hill   # hold the monument in the center (#2360)
@@ -385,6 +386,7 @@ SETTINGS = {
     "pop_limit": None,                # "Population limit" (train.LIMITS, #2266)
     "regicide": False,                # "Regicide Mode" on top of the mode (ON_TOP, #2490)
     "resources": "standard",          # "Starting resources" (gather.LEVELS, #2264)
+    "shared_exploration": "on",       # "Shared Exploration": "off" takes the sight of the allies away (fog.shares, #2602)
     "sudden_death": False,            # "Sudden Death Mode" on top of the mode (ON_TOP, #2490)
     "teams": None,                    # {player: team or None} in place of the scenario's (team_choices, #2296)
     "treaty": "0:00",                 # "Treaty length" (MM:SS): before it no player can attack another (treaty.py, #2297)
@@ -435,6 +437,7 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
     data["end_age"] = train.STARTS[settings["end_age"]]["ages"]  # the last age (build.locked, #2346)
     data["full_tech_tree"] = settings["full_tech_tree"]          # (#2354)
     data["turbo"] = settings["turbo"]                            # (#2359)
+    data["shared_exploration"] = settings["shared_exploration"] == "on"   # fog.shares (#2602)
     data["resources"] = settings["resources"]                    # the Regicide start resources of the level (#2388)
     if settings["resources"] in gather.RANDOM:                   # each Gather picks the same level (gather.level, #2489)
         print(f"Random starting resources: {gather.level(settings['resources'], data)}.", file=sys.stderr)
@@ -669,6 +672,9 @@ def main(argv=None):
     ap.add_argument("--pop-limit", type=pop_limit, default=200, metavar="N",
                     help="--play: the AoE2 setting \"Population limit\" of each player: 25 to 250 in steps of 25, 300, "
                     "400 or 500 (default 200)")
+    ap.add_argument("--shared-exploration", choices=["on", "off"], default="on", help="--play: the AoE2 setting "
+                    "\"Shared Exploration\" (default on: allies share their line of sight; off: each player sees only "
+                    "through the own units and buildings)")
     ap.add_argument("--turbo", action="store_true", help="--play: the AoE2 setting \"Turbo Mode\": buildings, "
                     "gatherers and builders work 2.5 times faster (not villagers, trade units, castles, towers, wonders)")
     ap.add_argument("--mode", choices=sorted(MODES), default="standard", help="--play: the AoE2 game mode (default "
