@@ -23,8 +23,9 @@ speed, per age. train.stats applies them before the technologies; the walk speed
 "bonus" with a float multiplies the bonus damage that the unit deals (Gurjara mounted units, Bohemian spearmen,
 #2248); the value "taken" is the factor of the bonus damage that the unit takes (Bengali elephants, Sicilian units:
 taken(), the plugin applies it at each hit); the value "bonus:CLASS" adds attack against a class (#2249). Bonuses of
-this kind that the game program cannot use yet: the elevation (Georgians, Tatars), the Lithuanian relics, the Slav monks, and the ships.
+this kind that the game program cannot use yet: the Lithuanian relics, the Slav monks, and the ships.
 REGEN holds the regeneration of the units (#2247): regen.tick gives them their hit points back.
+ELEVATION holds the elevation factors of the damage (#2307): combat.elevation and the plugin (aoe elevation).
 """
 import math
 import os
@@ -123,6 +124,10 @@ LANCERS = tuple(r["name"] for r in ROWS if r["name"] not in MISSING["STEPPE_LANC
 FIRE_LANCERS = tuple(r["name"] for r in ROWS if r["name"] not in MISSING["FIRE_LANCER"])   # the fire lancer (#1953)
 CHURCH_RATE, CHURCH_NEAR = 1.1, 10.5                              # +10 % work in the 21-tile square around a Fortified
                                                                   # Church (tiles from its center, #1930)
+# "aura" (#2378): the own complete buildings that make the gatherers of some resources work faster near them and take
+# these resources: {"buildings", "resources", "rate", "range": tiles from the footprint} (Thracian forts and towers).
+# gather.Map.drop_site adds them to the drop sites, Gather.aura_rate gives the rate.
+AURA = {r["name"]: r["aura"] for r in ROWS if "aura" in r}
 TECH_ROWS = table.load("train.jsonl")
 SMITH = tuple(sorted(r["name"] for r in TECH_ROWS if r.get("building") == "BLACKSMITH"))   # the blacksmith (#1452)
 ECONOMY = tuple(sorted(r["name"] for r in TECH_ROWS if r.get("economy")))   # the economic technologies but Coinage and
@@ -225,6 +230,19 @@ LOOT = {r["name"]: r["loot"] for r in ROWS if "loot" in r}
 # "reveal": the enemy buildings that the player sees under the fog of war (fog.revealed, #2311): [building, true: only
 # the ones of aoe2mc.json and only at the start of the game] (Mapuche castles, Vietnamese start town centers).
 REVEAL = {r["name"]: [tuple(b) for b in r["reveal"]] for r in ROWS if "reveal" in r}
+# The elevation factors of the damage (#2307, AoE2 wiki "Elevation"): "up" multiplies the hits of a unit or building of
+# the civilization from higher ground, "low" the hits that it takes from lower ground, "high" the hits that it takes
+# from higher ground. The key "elevation" of a line in civs.jsonl changes them (Tatars, Georgians, Macedonians).
+ELEVATION = {r["name"]: r["elevation"] for r in ROWS if "elevation" in r}
+ELEVATION_BASE = {"up": 1.25, "low": 0.75, "high": 1.0}
+
+
+def elevation(civ):
+    """The elevation factors (up, low, high) of civilization civ (ELEVATION_BASE and its key "elevation")."""
+    e = {**ELEVATION_BASE, **ELEVATION.get(civ, {})}
+    return e["up"], e["low"], e["high"]
+
+
 # The relic and monk bonuses (game/monk.py, #2314): "relic_attack" [units, attack per relic in an own monastery, most]
 # (Lithuanian knights and Leitis), "faith" the factor of the speed of the monks that regain faith (Muisca: 100 % faster).
 RELIC_ATTACK = {r["name"]: tuples(r["relic_attack"]) for r in ROWS if "relic_attack" in r}
