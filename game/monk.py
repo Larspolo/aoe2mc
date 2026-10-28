@@ -215,10 +215,11 @@ def rearm(g):
 
 
 def healable(name):
-    """True for an AoE2 unit that a monk heals: no siege unit (a minecart) and no ship (a boat)."""
+    """True for an AoE2 unit that a monk heals: no siege unit (a minecart), no ship (a boat) and no building that moves
+    (the mule cart, AoE2 DE wiki "Mule Cart": "a building which can move and not a unit", #2522)."""
     import combat                                                  # combat imports gather, gather imports this module
-    d = units.classify(name)
-    return combat.SIE not in combat.stats(name).classes and not units.is_boat(d) \
+    d, classes = units.classify(name), combat.stats(name).classes
+    return combat.SIE not in classes and "building" not in classes and not units.is_boat(d) \
         and (d or {}).get("id") != "minecraft:minecart"
 
 

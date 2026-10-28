@@ -422,6 +422,8 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
     data["all_techs"] = settings["all_techs"]                    # one data for all Gathers: the people and the bot (#2298)
     data["end_age"] = train.STARTS[settings["end_age"]]["ages"]  # the last age (build.locked, #2346)
     data["full_tech_tree"] = settings["full_tech_tree"]          # (#2354)
+    if settings["resources"] in gather.RANDOM:                   # each Gather picks the same level (gather.level, #2489)
+        print(f"Random starting resources: {gather.level(settings['resources'], data)}.", file=sys.stderr)
     game.forceload()
     game.people = people
     g = make(1)
@@ -628,9 +630,10 @@ def main(argv=None):
     ap.add_argument("--end-age", choices=["dark", "feudal", "castle", "imperial"], default="imperial",
                     help="--play: the AoE2 setting \"Ending age\": the last age that the players can reach (default "
                     "imperial)")
-    ap.add_argument("--resources", choices=["standard", "low", "medium", "high", "ultra"], default="standard",
-                    help="--play: the AoE2 setting \"Starting resources\" of each player (default standard; ultra: "
-                    "the Death Match resources)")
+    ap.add_argument("--resources", choices=["standard", "low", "medium", "high", "ultra", "infinite", "random"],
+                    default="standard", help="--play: the AoE2 setting \"Starting resources\" of each player (default "
+                    "standard; ultra: the Death Match resources; infinite: a cost does not lower the resources; "
+                    "random: one of the levels low to ultra, the same for all players)")
     ap.add_argument("--all-techs", action="store_true", help="--play: the AoE2 setting \"All Techs\": each civilization "
                     "has the generic units and technologies that its tech tree does not have (the bonuses stay)")
     ap.add_argument("--full-tech-tree", action="store_true", help="--play: the AoE2 setting \"Full Tech Tree\": each "

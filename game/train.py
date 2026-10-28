@@ -814,6 +814,10 @@ def research(g, entry, start=False):
             for _ in range(civs.AGE_VILLAGERS.get(civs.civ(g), 0)):
                 if spawn(g, rect, "VILLAGER_MALE"):
                     g.pop += 1
+        rects = [r for r, n in homes(g).items() if n == "TOWN_CENTER"]
+        unit = civs.value("age_units", civs.civ(g), {}).get(entry["name"])   # Spartans: a free Polemarch (#2480)
+        if unit and rects and spawn(g, rects[0], unit):
+            g.pop += 1
         g.command(f"title @a[team=p{g.player}] title " + json.dumps({"text": age(g), "color": "gold"}))  # the own team only
         g.command("tellraw @a " + json.dumps({"text": f"Player {g.player} advances to the {age(g)}.", "color": "gold"}))
         g.command("playsound minecraft:ui.toast.challenge_complete master @a ~ ~ ~ 1 1 1")
