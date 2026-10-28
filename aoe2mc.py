@@ -412,6 +412,7 @@ def read_scenario(path):
                                                **({"ref": c.unit_object, "unit": c.unit_object in entities,   # #2618
                                                    "player": c.source_player}
                                                   if c.condition_type in OBJECT_TESTS else {}),
+                                               **({"slot": c.timer_id} if c.condition_type == DISPLAY_TIMER_TRIGGERED else {}),
                                                **({"area": [c.area_x1, c.area_y1, c.area_x2, c.area_y2]}     # #2620
                                                   if c.condition_type == BRING_OBJECT_TO_AREA else {}),
                                                **({"quantity": c.quantity, "player": c.source_player,
@@ -2089,6 +2090,8 @@ def seat_count(ship):
     return 1 if "_chest_" in str(ship["id"]) else 2      # a chest boat has one seat
 CHAIN = 4                   # units per boat seat: each garrisoned unit rides the unit below it (#382)
 GARRISONED = "aoe2mc.garrisoned"    # entity tag of a unit inside its building (#807; the game program: #808)
+MADE_INSIDE = "aoe2mc.made_inside"  # entity tag of a unit that a trigger made inside a building: the game program adds
+                                    # it to the garrison of the building (#2764)
 GARRISON_CELLS = 20         # free cells of a building in aoe2mc.json: the largest AoE2 garrison (castle, #808)
 SUN = ("minecraft:zombie", "minecraft:zombie_villager", "minecraft:skeleton", "minecraft:stray", "minecraft:drowned")
 
@@ -2770,12 +2773,14 @@ CHANGE_VARIABLE = 56                                               # the scenari
 CHANGE_VIEW = 16                                                   # "Change View" (#2610)
 CLEAR_INSTRUCTIONS = 21                                            # "Clear Instructions" (#2609)
 CLEAR_TIMER = 57                                                   # "Clear Timer" (#2696)
+CREATE_GARRISONED_OBJECT = 49                                      # "Create Garrisoned Object" (#2764)
 CREATE_OBJECT = 11
 DAMAGE_OBJECT = 24                                                 # "Damage Object" (#2571)
 DECLARE_VICTORY = 13                                               # "Declare Victory" (#2542)
 DIFFICULTY_LEVEL = 19                                              # the condition "Difficulty Level" (#2704)
 DISPLAY_INSTRUCTIONS = 20
 DISPLAY_TIMER = 37                                                 # "Display Timer" (#2572)
+DISPLAY_TIMER_TRIGGERED = 55                                       # the condition of its score (#2702)
 FREEZE_OBJECT = 22                                                 # "Freeze Object" (#2608)
 HEAL_OBJECT = 34                                                   # "Heal Object" (#2692)
 IN_AREA = 5
@@ -2803,12 +2808,13 @@ UNITS_GARRISONED = 18                                              # the conditi
 VARIABLE_VALUE = 22
 TIME_UNITS = {0: 5, 1: 60, 2: 1, 3: 1}  # TimeUnit (years, minutes, seconds, m:ss) -> game seconds; a year as game/wonder.py YEAR
 COUNTED = (IN_AREA, OWN_OBJECTS, OWN_FEWER_OBJECTS)                # conditions that count units: the tick function
-TICKED = COUNTED + (ACCUMULATE_ATTRIBUTE, DIFFICULTY_LEVEL, OBJECT_HP, RESEARCHED, UNITS_GARRISONED,
-                     VARIABLE_VALUE)  # conditions of the tick function
+TICKED = COUNTED + (ACCUMULATE_ATTRIBUTE, DIFFICULTY_LEVEL, DISPLAY_TIMER_TRIGGERED, OBJECT_HP, RESEARCHED,
+                     UNITS_GARRISONED, VARIABLE_VALUE)  # conditions of the tick function
 ATTRIBUTES = ("Food", "Wood", "Stone", "Gold")     # attributes 0-3: the score holders of gather.RESOURCES (#2655)
 BRING_OBJECT_TO_AREA = 1                                               # the condition "Bring Object to Area" (#2620)
 DESTROY_OBJECT = 6                                                     # the condition "Destroy Object" (#2618)
 CAPTURE_OBJECT = 7                                                     # the condition "Capture Object" (#2619)
+OBJECT_ATTACKED = 76                                                   # the condition "Object Attacked" (#2779)
 # The conditions on one object of the map (its tag aoe2mc.r<ref>, #2617): the test of the tick function when it holds,
 # when it does not hold (a looping trigger fires again after that), and the tick lines before the test. "Destroy
 # Object": a marker entity follows the unit; the unit is dead when the marker is loaded and the unit is not there. A
@@ -2821,6 +2827,11 @@ OBJECT_TESTS = {DESTROY_OBJECT: ("if entity @e[tag=aoe2mc.m{ref}] unless entity 
                  # "Capture Object": the unit has the tag of the player of the condition (its owner, #2570)
                  CAPTURE_OBJECT: ("if entity @e[tag=aoe2mc.r{ref},tag=aoe2mc.p{player}]",
                                   "unless entity @e[tag=aoe2mc.r{ref},tag=aoe2mc.p{player}]", ()),
+                 # "Object Attacked": the unit took damage in the last 10 ticks (HurtTime, #2779). Vanilla has no
+                 # attacker of a hurt entity in a selector: each attacker counts (a "near unit of the player" test
+                 # misses the archers), the source player of the condition is not tested
+                 OBJECT_ATTACKED: ("if entity @e[tag=aoe2mc.r{ref},nbt=!{{HurtTime:0s}}]",
+                                   "unless entity @e[tag=aoe2mc.r{ref},nbt=!{{HurtTime:0s}}]", ()),
                  # "Bring Object to Area": the unit is in the box of the area ({box}: area_box, #2620)
                  BRING_OBJECT_TO_AREA: ("if entity @e[tag=aoe2mc.r{ref}{box}]",
                                         "unless entity @e[tag=aoe2mc.r{ref}{box}]", ())}
@@ -2928,6 +2939,38 @@ def damage_lines(e, c):
     at = found[0]                                                      # Gaia: not the players (effect_units)
     stats["damage"] += 1
     return [f"execute as {at} run damage @s {q}"]                      # damage takes one entity
+
+
+def garrisoned_lines(e, c):
+    """The commands of "Create Garrisoned Object" (#2764): a summon of the unit (object2, units.make_entity) in the
+    state of a garrisoned unit of the converter (plan_units, #807) on the inside cells of each selected building
+    (buildings.INSIDE). The tag MADE_INSIDE lets the game program add it to the garrison, so UNGARRISON lets it out.
+    A holder that is not a building with rooms (a ship, a ram) or no selected object: not supported yet."""
+    kind, name = e.get("object2") or (None, None)
+    holders = [r for r in e.get("selected", []) if r in buildings.INSIDE]
+    nbt = units.make_entity(dict(name=name, player=max(e["player"], 0), rotation=math.pi / 2), c.players or {},
+                            (0.0, 0.0, 0.0), np.random.default_rng(c.t["id"])) if kind in ("U", "H") else None
+    if nbt is None or not holders:
+        c.stats["create garrisoned (not supported yet)"] += 1
+        return []
+    c.stats["create garrisoned"] += 1
+    label = units.top_entity(nbt)
+    label["CustomNameVisible"] = Byte(0)
+    label["Tags"] = List[String](list(label.get("Tags", [])) + [String(GARRISONED), String(MADE_INSIDE)])
+    entity = str(nbt.pop("id"))
+    del nbt["Pos"]
+    parts = [nbt]                                                      # new UUIDs (object_lines), no damage inside
+    while parts:
+        part = parts.pop()
+        part.pop("UUID", None)
+        part["Invulnerable"], part["NoAI"] = Byte(1), Byte(1)
+        parts += list(part.get("Passengers", []))
+    lines = []
+    for ref in holders:                                                # one unit per building, as in AoE2
+        cells, y, center = buildings.INSIDE[ref]
+        x, z = cells[0] if len(cells) else center
+        lines.append(f"summon {entity} {x + 0.5} {int(y)} {z + 0.5} {nbt.snbt()}")
+    return lines
 
 
 def heal_lines(e, c):
@@ -3250,9 +3293,11 @@ def timer_lines(e, c):
     show += [f"execute store result bossbar {bar} value run scoreboard players get #t{slot} aoe_timer",
              f"bossbar set {bar} name {name}"]
     tick = [f"scoreboard players remove #t{slot} aoe_timer 1"] + show + \
-        [f"execute if score #t{slot} aoe_timer matches ..0 run bossbar remove {bar}",
+        [f"execute if score #t{slot} aoe_timer matches ..0 run scoreboard players set #done{slot} aoe_timer 1",
+         f"execute if score #t{slot} aoe_timer matches ..0 run bossbar remove {bar}",
          f"execute if score #t{slot} aoe_timer matches 1.. run schedule function {fn} 1s replace"]
-    lines = ["scoreboard objectives add aoe_timer dummy", f"bossbar remove {bar}", f"bossbar add {bar} \"\"",
+    lines = ["scoreboard objectives add aoe_timer dummy", f"scoreboard players reset #done{slot} aoe_timer",
+             f"bossbar remove {bar}", f"bossbar add {bar} \"\"",
              f"bossbar set {bar} max {sec}", f"bossbar set {bar} players @a",
              f"scoreboard players set #t{slot} aoe_timer {sec}"] + show + [f"schedule function {fn} 1s replace"]
     c.files[f"data/aoe2mc/function/timer/{slot}.mcfunction"] = "\n".join(tick) + "\n"
@@ -3346,6 +3391,8 @@ EFFECT_KEYS = {
     CHANGE_PLAYER_COLOR: {"color": "player_color"},                                  # (#2712)
     CHANGE_VARIABLE: {"quantity": "quantity", "variable": "variable", "operation": "operation"},   # (#2611)
     CLEAR_TIMER: {"timer": "timer"},                                                 # (#2696)
+    CREATE_GARRISONED_OBJECT: {"object2": lambda e, kinds, techs: kinds.get(e.object_list_unit_id_2),   # (#2764)
+                               "selected": lambda e, kinds, techs: list(e.selected_object_ids or [])},
     DAMAGE_OBJECT: {"quantity": "quantity"},
     DEACTIVATE_TRIGGER: {"trigger": "trigger_id"},                                   # (#2575)
     DISPLAY_TIMER: {"unit": "time_unit", "timer": "timer"},                          # (#2572)
@@ -3376,6 +3423,7 @@ EFFECTS = {
     CHANGE_VIEW: view_lines,
     CLEAR_INSTRUCTIONS: clear_lines,
     CLEAR_TIMER: clear_timer_lines,
+    CREATE_GARRISONED_OBJECT: garrisoned_lines,
     CREATE_OBJECT: object_lines,
     DAMAGE_OBJECT: damage_lines,
     DEACTIVATE_TRIGGER: switch_lines,
@@ -3408,6 +3456,7 @@ Effect = namedtuple("Effect", "t T ground players stats mood files setup switch 
 SCORE_TESTS = {
     ACCUMULATE_ATTRIBUTE: resource_score,
     DIFFICULTY_LEVEL: lambda c: f"score #level aoe_difficulty matches {c.get('quantity', 0)}",
+    DISPLAY_TIMER_TRIGGERED: lambda c: f"score #done{c.get('slot', 0)} aoe_timer matches 1..",   # set at 0 (#2702)
     RESEARCHED: lambda c: f"score #p{c['player']}.{c['technology']} aoe_tech matches 1..",
     UNITS_GARRISONED: lambda c: f"score #g{c['unit']} aoe_gar matches {max(c['quantity'], 1)}..",   # #2714
     VARIABLE_VALUE: lambda c: f"score #v{c['variable']} aoe_var matches {variable_range(c)}",
