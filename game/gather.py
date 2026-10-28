@@ -1953,9 +1953,9 @@ class Gather:
 
     def run(self, seconds=None, until=None):
         """Play in real time until seconds passed, until() is true or the game ended (a cheat, #819)."""
-        end = seconds and time.time() + seconds
-        while (not end or time.time() < end) and not (until and until()) and not self.ended:
-            t = time.time()
+        end = seconds and time.monotonic() + seconds
+        while (not end or time.monotonic() < end) and not (until and until()) and not self.ended:
+            t = time.monotonic()
             self.point()                                               # before clicks(): hints.tick shows its text
             for name in self.clicks():
                 self.click(name)
@@ -1992,4 +1992,4 @@ class Gather:
                 time_limit.tick(self, self.tick * NORMAL)
             treaty.tick(self, self.tick * NORMAL)
             record.tick(self, self.tick * NORMAL)                      # the game time of Record Game (#2649)
-            time.sleep(max(0.0, self.tick / self.speed - (time.time() - t)))   # a step stays tick game seconds
+            time.sleep(max(0.0, self.tick / self.speed - (time.monotonic() - t)))   # a step stays tick game seconds
