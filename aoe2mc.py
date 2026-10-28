@@ -428,6 +428,8 @@ def read_scenario(path):
                                                if e.effect_type == CHANGE_COLOR_MOOD and
                                                getattr(e, "color_mood", None) in set(ColorMood) else {}),
                                             **({"quantity": e.quantity} if e.effect_type == DAMAGE_OBJECT else {}),
+                                            **({"operation": e.operation, "quantity": e.quantity}   # (#2693)
+                                               if e.effect_type == CHANGE_OBJECT_HP else {}),
                                             **({"quantity": e.quantity, "variable": e.variable,   # (#2611)
                                                 "operation": e.operation}
                                                if e.effect_type == CHANGE_VARIABLE else {}),
@@ -2759,6 +2761,7 @@ def team_lines(objects, players):
 ATTACK_MOVE = 30                                                   # "Attack Move" (#2647)
 CHANGE_COLOR_MOOD = 72
 CHANGE_DIPLOMACY = 1                                               # "Change Diplomacy" (#2645)
+CHANGE_OBJECT_HP = 27                                              # "Change Object HP" (#2693)
 CHANGE_OBJECT_NAME = 26                                            # "Change Object Name" (#2616)
 CHANGE_OWNERSHIP = 18
 CHANGE_VARIABLE = 56                                               # the scenario variables (#2611)
@@ -2792,6 +2795,7 @@ COUNTED = (IN_AREA, OWN_OBJECTS, OWN_FEWER_OBJECTS)                # conditions 
 TICKED = COUNTED + (VARIABLE_VALUE, RESEARCHED)                   # conditions of the tick function
 STORES = ("food", "wood", "stone", "gold")      # the resource of a tribute_list (AoE2 attributes 0 to 3)
 OPERATIONS = {1: "set", 2: "add", 3: "remove"}  # set, add, subtract of Modify Resource (AoE2ScenarioParser Operation)
+HP_OPERATIONS = {1: "set", 2: "add", 3: "subtract", 4: "multiply", 5: "divide"}   # Change Object HP (#2693)
 STANCES = (0, 1, 3)                                # DiplomacyState: ally, neutral, enemy
 SOUNDS = [(r["name"], r["sound"]) for r in units.rows("sounds.jsonl")]  # AoE2 sound name part -> vanilla sound
 
@@ -2888,6 +2892,39 @@ def damage_lines(e, c):
     at = found[0]                                                      # Gaia: not the players (effect_units)
     stats["damage"] += 1
     return [f"execute as {at} run damage @s {q}"]                      # damage takes one entity
+
+
+def hp_lines(e, c):
+    """The commands of "Change Object HP" (#2693): the max_health of the units of the effect (effect_units) is the new
+    hit points. A set is one `attribute ... base set`. The other operations read the base of each unit into the score
+    #hp of aoe_hp, compute it there and set it with the macro hp/apply (the value is in the storage aoe2mc:hp). The
+    hit points stay in 1 to 1024 (the limit of the attribute). The function is named by the operation: the same
+    effect in two triggers writes the same file."""
+    op, q, stats = HP_OPERATIONS.get(e.get("operation")), e.get("quantity"), c.stats
+    found = effect_units(e, c.T) if op and q is not None and (op != "divide" or q) else None
+    if found is None:
+        stats["change object hp (not supported yet)"] += 1
+        return []
+    stats["change object hp"] += 1
+    at = found[0]
+    if op == "set":
+        return [f"execute as {at} run attribute @s minecraft:max_health base set {min(max(q, 1), 1024)}"]
+    c.setup["scoreboard objectives add aoe_hp dummy"] = None
+    if op in ("multiply", "divide"):
+        change = [f"scoreboard players set #k aoe_hp {q}",
+                  f"scoreboard players operation #hp aoe_hp {'*=' if op == 'multiply' else '/='} #k aoe_hp"]
+    else:
+        s = q if op == "add" else -q
+        change = [f"scoreboard players {'add' if s >= 0 else 'remove'} #hp aoe_hp {abs(s)}"]
+    name = f"hp/{op}_{q}"
+    c.files[f"data/aoe2mc/function/{name}.mcfunction"] = "\n".join(
+        ["execute store result score #hp aoe_hp run attribute @s minecraft:max_health base get"] + change +
+        ["execute if score #hp aoe_hp matches 1025.. run scoreboard players set #hp aoe_hp 1024",
+         "execute if score #hp aoe_hp matches ..0 run scoreboard players set #hp aoe_hp 1",
+         "execute store result storage aoe2mc:hp value int 1 run scoreboard players get #hp aoe_hp",
+         "function aoe2mc:hp/apply with storage aoe2mc:hp"]) + "\n"
+    c.files["data/aoe2mc/function/hp/apply.mcfunction"] = "$attribute @s minecraft:max_health base set $(value)\n"
+    return [f"execute as {at} run function aoe2mc:{name}"]
 
 
 def name_lines(e, c):
@@ -3168,6 +3205,7 @@ EFFECTS = {
     ATTACK_MOVE: order_lines,
     CHANGE_COLOR_MOOD: mood_lines,
     CHANGE_DIPLOMACY: diplomacy_lines,
+    CHANGE_OBJECT_HP: hp_lines,
     CHANGE_OBJECT_NAME: name_lines,
     CHANGE_OWNERSHIP: owner_lines,
     CHANGE_VARIABLE: variable_lines,
