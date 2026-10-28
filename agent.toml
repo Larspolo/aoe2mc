@@ -16,6 +16,7 @@ max_runs = 40                   # the most runs at one time (tools/usage.py): 16
 max_fire = 8                    # the most runs that the pacer starts in one 10-minute cycle (tools/usage.py)
 refill_runs = 3                # runs beyond the ready tickets: each refills one epic (tools/usage.py); 1 left 3 ready for 40 runs
 week_free = 0.60                # below this 7-day usage the runs fill each 5-hour window, no weekly pace (tools/usage.py)
+week_guard = false              # true: the 7-day usage limits the runs (week_free, #1695); false: only the 5-hour window counts (owner, 2026-10-28)
 max_waiting_prs = 10            # flow brake: at this many agent PRs older than pr_minutes the pacer starts 1 repair run (tools/usage.py)
 max_ci_queue = 5                # flow brake: at this many queued CI runs the pacer starts no run
 pr_minutes = 30                 # an agent PR older than this waits for a fix, a conflict merge or CI, not for the quota

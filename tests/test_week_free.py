@@ -18,8 +18,8 @@ def test_a_week_below_the_threshold_fills_the_window():
 
 def test_a_week_above_the_threshold_keeps_the_guard():
     u = five() | {"seven_day": (0.65, NOW + 100 * H, "allowed")}
-    assert usage.target_runs(u, NOW, burn7=0.0053, free7=0.6) == 0       # 0.35 / 100 h / 0.0053 < 1 run
-    assert usage.target_runs(five() | {"seven_day": (0.3, NOW + H, "rejected")}, NOW, free7=0.6) == 0
+    assert usage.target_runs(u, NOW, burn7=0.0053, free7=0.6, week=True) == 0   # 0.35 / 100 h / 0.0053 < 1 run
+    assert usage.target_runs(five() | {"seven_day": (0.3, NOW + H, "rejected")}, NOW, free7=0.6, week=True) == 0
 
 
 def test_the_threshold_is_in_agent_toml():
