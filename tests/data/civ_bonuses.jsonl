@@ -3,7 +3,7 @@
 {"name": "ACHAEMENIDS: Stable technologies research 50% faster (-33% time taken).", "civ": "ACHAEMENIDS", "bonus": "Stable technologies research 50% faster (-33% time taken).", "in": "RESEARCH_TIME"}
 {"name": "ARMENIANS: Mule Carts cost -25%. Mule Carts replace Lumber Camps and Mining Camps.", "civ": "ARMENIANS", "bonus": "Mule Carts cost -25%. Mule Carts replace Lumber Camps and Mining Camps.", "in": "COSTS"}
 {"name": "ARMENIANS: Mule Cart technologies are 40% more effective.", "civ": "ARMENIANS", "bonus": "Mule Cart technologies are 40% more effective.", "in": "MORE"}
-{"name": "ARMENIANS: Fortified Churches replace Monasteries, and the first one constructed receives a free Relic.", "civ": "ARMENIANS", "bonus": "Fortified Churches replace Monasteries, and the first one constructed receives a free Relic.", "later": "play:monks"}
+{"name": "ARMENIANS: Fortified Churches replace Monasteries, and the first one constructed receives a free Relic.", "civ": "ARMENIANS", "bonus": "Fortified Churches replace Monasteries, and the first one constructed receives a free Relic.", "in": "free_relic"}
 {"name": "ARMENIANS: Long Swordsman and above, and Spearman line available one Age earlier.", "civ": "ARMENIANS", "bonus": "Long Swordsman and above, and Spearman line available one Age earlier.", "in": "EARLIER"}
 {"name": "ARMENIANS: The Galley line and Dromons* fire one additional projectile each, which deal 1 attack and advertised attack, respectively.", "civ": "ARMENIANS", "bonus": "The Galley line and Dromons* fire one additional projectile each, which deal 1 attack and advertised attack, respectively.", "in": "volley"}
 {"name": "ATHENIANS: Athenians can be changed between Economic, Naval, and Military at the Town Center.", "civ": "ATHENIANS", "bonus": "Athenians can be changed between Economic, Naval, and Military at the Town Center.", "later": "play:setup"}
@@ -74,7 +74,7 @@
 {"name": "FRANKS: Mounted units have +20% hit points (starting in the Feudal Age).", "civ": "FRANKS", "bonus": "Mounted units have +20% hit points (starting in the Feudal Age).", "in": "UNITS"}
 {"name": "FRANKS: Foragers work 15% faster.", "civ": "FRANKS", "bonus": "Foragers work 15% faster.", "in": "WORK"}
 {"name": "GEORGIANS: Start with a Mule Cart. Mule Carts replace Lumber Camps and Mining Camps.", "civ": "GEORGIANS", "bonus": "Start with a Mule Cart. Mule Carts replace Lumber Camps and Mining Camps.", "later": "play:gather"}
-{"name": "GEORGIANS: Fortified Churches replace Monasteries, and provide +10% work rate to Villagers in a 21-tile square.", "civ": "GEORGIANS", "bonus": "Fortified Churches replace Monasteries, and provide +10% work rate to Villagers in a 21-tile square.", "later": "play:monks"}
+{"name": "GEORGIANS: Fortified Churches replace Monasteries, and provide +10% work rate to Villagers in a 21-tile square.", "civ": "GEORGIANS", "bonus": "Fortified Churches replace Monasteries, and provide +10% work rate to Villagers in a 21-tile square.", "in": "church_rate"}
 {"name": "GEORGIANS: Units and buildings receive -20% damage (-40% instead of -25%) when fighting from higher elevation.", "civ": "GEORGIANS", "bonus": "Units and buildings receive -20% damage (-40% instead of -25%) when fighting from higher elevation.", "in": "ELEVATION"}
 {"name": "GEORGIANS: Mounted units regenerate 2/8/14 hit points per minute in the Feudal/Castle/Imperial Age.", "civ": "GEORGIANS", "bonus": "Mounted units regenerate 2/8/14 hit points per minute in the Feudal/Castle/Imperial Age.", "in": "REGEN"}
 {"name": "GOTHS: Infantry units are 15%/20%/25%/30% cheaper in the Dark/Feudal/Castle/Imperial Age.", "civ": "GOTHS", "bonus": "Infantry units are 15%/20%/25%/30% cheaper in the Dark/Feudal/Castle/Imperial Age.", "in": "COSTS"}
@@ -235,7 +235,7 @@
 {"name": "VARANGIANS: Shepherds, fishermen, and hunters drop off an additional gold 10% in addition to food; Fishing Ships generate an additional gold 5%.", "civ": "VARANGIANS", "bonus": "Shepherds, fishermen, and hunters drop off an additional gold 10% in addition to food; Fishing Ships generate an additional gold 5%.", "in": "DROP_EXTRA"}
 {"name": "VARANGIANS: Bloodlines and Caravan give +50% effect.", "civ": "VARANGIANS", "bonus": "Bloodlines and Caravan give +50% effect.", "in": "MORE"}
 {"name": "VARANGIANS: Varangian Guards attack 25% faster.", "civ": "VARANGIANS", "bonus": "Varangian Guards attack 25% faster.", "in": "UNITS"}
-{"name": "VARANGIANS: Varangian Guards generate gold +50%.", "civ": "VARANGIANS", "bonus": "Varangian Guards generate gold +50%.", "later": "play:military-train"}
+{"name": "VARANGIANS: Varangian Guards generate gold +50%.", "civ": "VARANGIANS", "bonus": "Varangian Guards generate gold +50%.", "in": "attack_gold"}
 {"name": "VARANGIANS: Longships and Catapult Galleons attack 15% faster.", "civ": "VARANGIANS", "bonus": "Longships and Catapult Galleons attack 15% faster.", "in": "UNITS"}
 {"name": "VIETNAMESE: Foot archers and Skirmishers +20% hit points.", "civ": "VIETNAMESE", "bonus": "Foot archers and Skirmishers +20% hit points.", "in": "UNITS"}
 {"name": "VIETNAMESE: Reveal enemy initial Town Centers location at the start of the game.", "civ": "VIETNAMESE", "bonus": "Reveal enemy initial Town Centers location at the start of the game.", "in": "REVEAL"}
