@@ -57,6 +57,7 @@ ORDERS = "aoe2mc:orders"                                               # the dat
 ATTRIBUTES = "aoe2mc:attributes"                                       # the storage of "Modify Attribute" (#2763)
 MENUS = "aoe2mc:menus"                                                 # the storage of "Enable/Disable" (#2775)
 COSTS = "aoe2mc:costs"                                                 # the storage of "Change Object Cost" (#2776)
+PLACES = "aoe2mc:places"                                               # "Change Train/Technology Location" (#2864)
 UNSELECTABLE = "aoe2mc.unselectable"                                   # the tag of "Disable Object Selection" (aoe2mc)
 NAMES = "aoe2mc:names"                                                 # the storage of "Change Technology Name" (#2821)
 READS = "aoe2mc:reads"                                                 # "Modify Variable by Attribute" (#2858)
@@ -132,6 +133,7 @@ def tick(g):
     reads(g)
     costs(g)
     names(g)
+    places(g)
     messages = g.data.get("messages", {})
     text = re.sub(r"<[^<>]*>", "", messages.get("instructions", "")).strip()   # AoE2 color tags (book_pages)
     for who in sorted({x.who for x in [g, *(s.g for s in g.bots if not hasattr(s, "charged"))]}):
@@ -313,6 +315,19 @@ def costs(g):
         if int(player) in sides:
             vars(sides[int(player)]).setdefault("trigger_costs", {})[name] = \
                 {r: int(v) for r, v in (part.split("=") for part in cost.split())}
+
+
+def places(g):
+    """The new places of "Change Train Location" and "Change Technology Location" (aoe2mc.location_lines, #2864): read
+    and empty the list of the data storage PLACES, and keep each place (building, AoE2 button) in trigger_places of the
+    side of its player (the people and the bots): train.trains and train.placed use it. A later line wins."""
+    new = re.findall(r'"(\d+) (\w+) (\w+) (-?\d+)"', g.command(f"data get storage {PLACES} list") or "")
+    if new:
+        g.command(f"data remove storage {PLACES} list")
+    sides = {x.player: x for x in [g, *(s.g for s in g.bots)]}
+    for player, name, building, button in new:
+        if int(player) in sides and name in train.ITEMS:
+            vars(sides[int(player)]).setdefault("trigger_places", {})[name] = [building, int(button)]
 
 
 def names(g):
