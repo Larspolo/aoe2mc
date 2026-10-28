@@ -409,6 +409,32 @@ def slots(building, name):
     return slot + SHIFTS.get(building, {}).get(name, 0), item, label
 
 
+def added(g, building, name):
+    """(AoE2 button, seconds) of unit name in building from "Add Train Location" (scenario.locations, #2865), or None.
+    An upgraded unit keeps the entry of its line: the castle trains the man-at-arms in place of the militia."""
+    got = getattr(g, "trigger_trains", {}).get(building, {})
+    old = {new: old for t in UPGRADES for old, new in lines(t)}
+    while name not in got and name in old:
+        name = old[name]
+    return got.get(name)
+
+
+def placed(g, building, name):
+    """slots() of name in the menu of the own building, or the slot of "Add Train Location" (#2865): the AoE2 button
+    (1-15, five per row; 0 is the first) in the row 0 or, for the rows 2 and 3, in the rows under the queue row (MORE),
+    the next free slot when an own item of the building has it (also one of a later age)."""
+    slot, item, label = slots(building, name)
+    if (got := added(g, building, name)) is None:
+        return slot, item, label
+    b = (max(got[0], 1) - 1) % 15
+    slot = b % 5 + (MORE + 9 * (b // 5 - 1) if b >= 5 else 0)
+    taken = {slots(building, n)[0] for n in trains(g, building)       # the items of the civilization, of all ages
+             if added(g, building, n) is None and not (hasattr(g, "data") and civs.missing(g, n))}
+    while slot in taken or ROW <= slot < MORE:
+        slot += 1
+    return slot, item, label
+
+
 def line_upgrades(line):
     """The upgrade technologies (UPGRADES) of one unit line (a list of unit names), in the order of the line. The elite
     upgrade of a unique unit stays at the castle (the Goth barracks, #2685)."""
@@ -428,6 +454,7 @@ def trains(g, building):
     more = civs.TRAINS.get(civs.civ(g), {}).get(building, {})
     more = more.get("lines", ()) if more.get("after", "") in {"", *g.techs} else ()   # after a technology: Anarchy (#2685)
     out += [line[0] for line in more] + [t for line in more for t in line_upgrades(line)]   # Mapuche (#2432, #2487)
+    out += [n for n in getattr(g, "trigger_trains", {}).get(building, {}) if n in COSTS]   # Add Train Location (#2865)
     for _ in UPGRADES:                                             # a line of upgrades: mangonel, onager, siege onager
         out = [new.get(n, n) for n in out]                         # the castle: the elite unique unit (#1624)
     return tuple(dict.fromkeys(out))                               # the camel scout becomes the camel rider (#2130)
@@ -469,7 +496,7 @@ def show(g, player, rect):
     items = [(slot, build.LOCKED if build.locked(g, name) else item, names.get(name, label),
               (" · ".join(f"{v} {r}" for r, v in price(g, name, building).items()) or "free") + f" · {round(seconds(g, name, building), 1):g} s · "
               + state(name))
-             for name in trains(g, building) if offered(g, rect, name) for slot, item, label in [slots(building, name)]]
+             for name in trains(g, building) if offered(g, rect, name) for slot, item, label in [placed(g, building, name)]]
     items += [RALLY] if units_of(building) else []
     items += [garrison.ungarrison(building)] if getattr(g, "garrisons", {}).get(rect) else []   # only with units inside (#808)
     if building == "MARKET":                                           # the buy and sell rows under the queue (#1286)
@@ -552,7 +579,7 @@ def order(g, player, rect, slot, shift=False):
         show(g, player, rect)
         return 0
     name = next((n for n in trains(g, homes(g)[rect])                # the shown item of the slot (one per line of upgrades)
-                 if slots(homes(g)[rect], n)[0] == slot and offered(g, rect, n)), None)
+                 if placed(g, homes(g)[rect], n)[0] == slot and offered(g, rect, n)), None)
     n = 0
     while name and n < (SHIFT if shift else 1) and queue(g, player, rect[::2], name):
         n += 1
@@ -764,9 +791,10 @@ def seconds(g, name, building=None, k=None):
     (civs.train_rate: Aztec military units, Khitan skirmishers, #1927) and its age-up rate (civs.age_rate: the Malay, #1926),
     times its research time of the technology (civs.research_time: the Gothic Loom at once, #2172) and its time factor
     at building (civs.train_time: Mapuche Settlements, #2432), and of the Recruitment Doctrine k of a unit (doctrine(),
-    default the present one, #2483)."""
+    default the present one, #2483). The time of "Add Train Location" at building replaces TRAIN_TIMES (#2865)."""
     age, time = value("faster", name, (9, 0))
-    return (time if build.ages(g) >= age else TRAIN_TIMES[name]) / (civs.work_rate(g, building) if building else 1) \
+    own = (added(g, building, name) or (0, 0))[1] if building else 0   # Add Train Location (#2865)
+    return (own or (time if build.ages(g) >= age else TRAIN_TIMES[name])) / (civs.work_rate(g, building) if building else 1) \
         / civs.train_rate(g, name) / civs.age_rate(g, name) * civs.research_time(g, name) / civs.turbo(g, name) \
         * (civs.train_time(g, building, name) if building else 1) \
         * (doctrine(g, building, k)[2] if building and name not in TECHS else 1)

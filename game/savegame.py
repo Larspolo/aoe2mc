@@ -31,7 +31,8 @@ OPTIONAL = ("limit_left", "policy", "rates", "relic_timer", "switches", "upgrade
 MONK = ("carrier_at", "converting", "faith", "fetching", "heal_time", "monk_at", "relic_gold", "relic_homes",
         "relic_time", "relics")                                        # game/monk.py: the relics and monk orders (#2412)
 ORDERS = ("patrols", "trigger_attributes", "trigger_costs",            # scenario.py: the patrols (#2647), attributes (#2763),
-          "trigger_menus", "trigger_names")                            # costs (#2776), menu items (#2775), names (#2821)
+          "trigger_menus", "trigger_names", "trigger_trains")          # costs (#2776), menu items (#2775), names (#2821),
+                                                                       # train locations (#2865)
 ROUTES = ("trade", "trebs")                                            # trade.py, trebuchet.py: as OPTIONAL (#2413)
 CHEATS = (                                                             # game/cheats.py: the cheats that the player
     "aegis",                                                           # turned on (#2533)

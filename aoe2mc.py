@@ -2812,6 +2812,7 @@ def team_lines(objects, players):
 # AoE2 condition and effect IDs (AoE2ScenarioParser), one per line in alphabetical order (#2613)
 ACCUMULATE_ATTRIBUTE = 8                                           # a resource of a player (#2655)
 AND = 57                                                           # the conditions "AND" and "OR" (#2765)
+ADD_TRAIN_LOCATION = 102                                           # "Add Train Location" (#2865)
 ATTACK_MOVE = 30                                                   # "Attack Move" (#2647)
 CHANGE_COLOR_MOOD = 72
 CHANGE_DIPLOMACY = 1                                               # "Change Diplomacy" (#2645)
@@ -3238,6 +3239,21 @@ def tech_name_lines(e, c):
     c.stats["change technology name"] += 1
     text = f"{e['player']} {tech} {msg}".replace("\\", "\\\\").replace('"', '\\"')
     return [f'data modify storage aoe2mc:names list append value "{text}"']
+
+
+def train_location_lines(e, c):
+    """The command of "Add Train Location" (#2865): "<player> <unit> <building> <button> <seconds>" goes into the list of
+    the data storage aoe2mc:locations. A converted world has no menus: the scenario mode of the game program
+    (game/scenario.py locations) empties the list and adds the unit to the menu of the building of the player, at the
+    AoE2 button with the train time (no time: the time of the unit). The hotkey: not supported (no keys in a menu)."""
+    _, unit = e.get("object") or (None, None)
+    _, building = e.get("building") or (None, None)
+    if not unit or not building or unit.isdigit() or building.isdigit() or e["player"] <= 0:
+        c.stats["add train location (not supported)"] += 1
+        return []
+    c.stats["add train location"] += 1
+    return [f'data modify storage aoe2mc:locations list append value '
+            f'"{e["player"]} {unit} {building} {max(e.get("button") or 0, 0)} {max(e.get("seconds") or 0, 0)}"']
 
 
 def player_name_lines(e, c):
@@ -3790,6 +3806,8 @@ def visibility_lines(e, c):
 # (effect, kinds, techs) -> value. A new effect is one line here, in alphabetical order (#2792): parallel trigger
 # tickets conflicted in one expression of read_scenario. The older effects still have their entry there.
 EFFECT_KEYS = {
+    ADD_TRAIN_LOCATION: {"building": lambda e, kinds, techs: kinds.get(e.object_list_unit_id_2), "button": "button_location",
+                         "seconds": "train_time"},
 }
 
 
@@ -3797,6 +3815,7 @@ EFFECT_KEYS = {
 # alphabetical order, and its handler function (#2613): no change of trigger_files.
 EFFECTS = {
     ACTIVATE_TRIGGER: switch_lines,
+    ADD_TRAIN_LOCATION: train_location_lines,
     ATTACK_MOVE: order_lines,
     CHANGE_COLOR_MOOD: mood_lines,
     CHANGE_DIPLOMACY: diplomacy_lines,

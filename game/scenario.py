@@ -55,6 +55,7 @@ ATTRIBUTES = "aoe2mc:attributes"                                       # the sto
 MENUS = "aoe2mc:menus"                                                 # the storage of "Enable/Disable" (#2775)
 COSTS = "aoe2mc:costs"                                                 # the storage of "Change Object Cost" (#2776)
 NAMES = "aoe2mc:names"                                                 # the storage of "Change Technology Name" (#2821)
+LOCATIONS = "aoe2mc:locations"                                         # the storage of "Add Train Location" (#2865)
 NEAR = 3                                                               # blocks: a patrol turns back this near its point
 LEVELS = {r["name"]: r["aoe2"] for r in table.load("difficulty.jsonl")}  # "AI difficulty" -> AoE2 DifficultyLevel
 
@@ -124,6 +125,7 @@ def tick(g):
     attributes(g)
     costs(g)
     names(g)
+    locations(g)
     messages = g.data.get("messages", {})
     text = re.sub(r"<[^<>]*>", "", messages.get("instructions", "")).strip()   # AoE2 color tags (book_pages)
     for who in sorted({x.who for x in [g, *(s.g for s in g.bots if not hasattr(s, "charged"))]}):
@@ -270,6 +272,20 @@ def names(g):
         player, name, text = found[:3] if found[0] else found[3:]
         if int(player) in sides:
             vars(sides[int(player)]).setdefault("trigger_names", {})[name] = re.sub(r"\\(.)", r"\1", text)
+
+
+def locations(g):
+    """The new train locations of "Add Train Location" (aoe2mc.train_location_lines, #2865): read and empty the list of
+    the data storage LOCATIONS, and keep each one in trigger_trains {building: {unit: (button, seconds)}} of the side
+    of its player (the people and the bots): the menu of that building offers the unit (train.trains, train.placed).
+    The unit stays in its first building."""
+    new = re.findall(r'"(\d+) (\w+) (\w+) (\d+) (\d+)"', g.command(f"data get storage {LOCATIONS} list") or "")
+    if new:
+        g.command(f"data remove storage {LOCATIONS} list")
+    sides = {x.player: x for x in [g, *(s.g for s in g.bots)]}
+    for player, unit, building, button, time in new:
+        if int(player) in sides:
+            vars(sides[int(player)]).setdefault("trigger_trains", {}).setdefault(building, {})[unit] = int(button), int(time)
 
 
 def attributes(g):
