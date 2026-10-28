@@ -302,9 +302,10 @@ def fire_commands(g, uuid, name, techs=None):
 
 
 def volley_command(g, uuid, name):
-    """The plugin command of the extra projectile in each shot of own unit name (civs.VOLLEY: the Armenian galley line
-    and dromons, #2379), else None. Minecraft feature: one more Arrow entity; the plugin gives it its AoE2 damage."""
-    attack = civs.VOLLEY.get(civs.civ(g), {}).get(name)
+    """The plugin command of the extra projectile in each shot of own unit name (the key "volley" of data/civs.jsonl:
+    the Armenian galley line and dromons, #2379), else None. Minecraft feature: one more Arrow entity; the plugin gives
+    it its AoE2 damage."""
+    attack = civs.value("volley", civs.civ(g), {}).get(name)
     return None if attack is None else f"aoe volley {uuid} 1 {attack}"
 
 

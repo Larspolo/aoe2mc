@@ -1,6 +1,6 @@
 """The Armenian galleys and dromons fire one more projectile (#2379, AoE2 DE wiki "Armenians": "The Galley line and
-Dromons fire one additional projectile each, which deal 1 attack and advertised attack, respectively"): civs.VOLLEY,
-train.volley_command and `aoe volley` of the plugin. Fake server, and a fight on a server."""
+Dromons fire one additional projectile each, which deal 1 attack and advertised attack, respectively"): the key
+"volley", train.volley_command and `aoe volley` of the plugin. Fake server, and a fight on a server."""
 import re
 import shutil
 import time

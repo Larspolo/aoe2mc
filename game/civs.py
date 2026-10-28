@@ -133,9 +133,6 @@ WORK_RATE = {r["name"]: {b: tuple(v) for b, v in r["work_rate"].items()} for r i
 TRAIN_RATE = {r["name"]: [tuples(b) for b in r["train_rate"]] for r in ROWS if "train_rate" in r}
 HP = {r["name"]: r["hp"] for r in ROWS if "hp" in r}
 ARROWS = {r["name"]: tuples(r["arrows"]) for r in ROWS if "arrows" in r}   # factor of the base arrows in each age (#2178)
-# "volley": one more projectile in each shot of a unit, {unit: its attack, 0: the full attack of the unit}: the Armenian
-# galley line (attack 1) and dromons (#2379). train.volley_command gives it to the plugin (aoe volley).
-VOLLEY = {r["name"]: r["volley"] for r in ROWS if "volley" in r}
 GARRISON = {r["name"]: r["garrison"] for r in ROWS if "garrison" in r}   # units inside a building (garrison.size, #2117)
 HEAL_RANGE = {r["name"]: r["heal_range"] for r in ROWS if "heal_range" in r}   # factor of the monk heal range (#2269)
 TECH_HP = {r["name"]: [tuples(b) for b in r["tech_hp"]] for r in ROWS if "tech_hp" in r}
