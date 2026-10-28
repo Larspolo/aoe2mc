@@ -41,7 +41,7 @@ MAP = {
     ("condition", "COMPARE_VARIABLES"): "`execute if score #vA aoe_var <op> #vB aoe_var` in the tick function, once; `unless` for not equal and inverted (#2698)",
     ("condition", "VARIABLE_VALUE"): "`execute if score #vN aoe_var matches ..` in the tick function, once (#2611)",
     ("condition", "AND"): "the default between two conditions: all conditions of one group in one `execute if ... if ...` line (#2765)",
-    ("condition", "OR"): "one `execute if ... run function` line per group in the tick function, with the same fire score `#N aoe_trig`: the trigger runs once (not yet with a timer or a chance, #2765)",
+    ("condition", "OR"): "one `execute if ... run function` line per group in the tick function, with the same fire score `#N aoe_trig`: the trigger runs once (#2765); a timer of a group: a `schedule` sets `#N.t<group> aoe_trig`, the line of the group tests it (#2791); not yet with a chance or in a disabled trigger",
     ("condition", "CHANCE"): "`execute store result score ... run random value 1..100` once per second (alone, after the timers or with the ticked conditions: #2574)",
     ("condition", "PLAYER_DEFEATED"): "`if score #pN aoe_lost matches 1..` in the tick function: the scenario mode of the game program sets the score when it defeats player N (conquest, regicide, #2710)",
     ("condition", "ACCUMULATE_ATTRIBUTE"): "`execute if score Gold aoe_resN matches Q..`: the resource scores of the game program (#2655)",
@@ -86,6 +86,7 @@ MAP = {
     ("effect", "ACTIVATE_TRIGGER"): "`scoreboard players set #<trigger> aoe_on 1` and the `schedule` of its timer (timer and area triggers: #2575)",
     ("effect", "DEACTIVATE_TRIGGER"): "`scoreboard players set #<trigger> aoe_on 0` and `schedule clear` of its timer (#2575)",
     ("effect", "CHANGE_VARIABLE"): "`scoreboard players set`, `add`, `remove` or `operation` on `#vN aoe_var` (#2611)",
+    ("effect", "MODIFY_VARIABLE_BY_RESOURCE"): "`scoreboard players operation #vN aoe_var = Gold aoe_resP` (or `+=`, `-=`, `*=`, `/=`): the stock of the game program, `aoe_res` for player 1 (#2823)",
     ("effect", "MODIFY_VARIABLE_BY_VARIABLE"): "`scoreboard players operation #vA aoe_var = #vB aoe_var` (or `+=`, `-=`, `*=`, `/=`, #2713); a division by 0 leaves the score as it is (Minecraft; the AoE2 wiki has no page on it)",
     ("effect", "DECLARE_VICTORY"): "`scoreboard players set #pN aoe_win 1`: the scenario mode of the game program ends the game (#2542)",
     ("effect", "TASK_OBJECT"): "`tag @e[tag=aoe2mc.pN,x=..,dx=..] add aoe_taskK` and the tile in the storage `aoe2mc:tasks`: the scenario mode of the game program walks them there with `aoe moveto` (vanilla has no walk-to command, #2646)",
@@ -100,6 +101,7 @@ MAP = {
     ("effect", "MODIFY_RESOURCE"): "`scoreboard players add`/`remove` on `#pN.<resource> aoe_res`, a set on `aoe_set`; the game program puts it into the stock (`--mode scenario`: `scenario.resources`, #2576)",
     ("effect", "MODIFY_RESOURCE_BY_VARIABLE"): "`scoreboard players operation #pN.<resource> aoe_res += or -= #vM aoe_var`, a set is `operation = #vM aoe_var` on `aoe_set`; add, subtract and set only, multiply and divide are not supported (#2768)",
     ("effect", "CHANGE_OBJECT_COST"): "the cost in the storage `aoe2mc:costs`: the scenario mode of the game program uses it in the menus and when the player pays (#2776)",
+    ("effect", "CHANGE_TECHNOLOGY_COST"): "the cost of the technology in the storage `aoe2mc:costs`: the scenario mode of the game program uses it in the menus and when the player pays (#2819)",
     ("effect", "MODIFY_ATTRIBUTE"): "the change in the storage `aoe2mc:attributes`: the scenario mode of the game program changes the hit points, attack, melee and pierce armor, range or reload of the unit type of the player (`train.stats`, #2763); the other attributes are not supported",
     ("effect", "ENABLE_DISABLE_OBJECT"): "the item in the storage `aoe2mc:menus`: the scenario mode of the game program shows or hides it in the menus of the player (#2775)",
     ("effect", "ENABLE_DISABLE_TECHNOLOGY"): "the technology in the storage `aoe2mc:menus`: the scenario mode of the game program shows or hides it in the menus of the player (#2775)",
@@ -107,6 +109,7 @@ MAP = {
     ("effect", "CHANGE_COLOR_MOOD"): "`time set` and `weather` of the mood (`MOODS`, `RAIN`; timer and area triggers: #1876); the fog stays",
     ("effect", "CHANGE_PLAYER_COLOR"): "`team modify pN color`: the chat color of the new player color (`units.TEAM_COLOR`) on the names and the glow of the units; the wool of the sheep and the banners keep the old color (#2712)",
     ("effect", "CHANGE_DIPLOMACY"): "`scoreboard players set #pN.pM aoe_dip`: the scenario mode of the game program changes the stance (#2645)",
+    ("effect", "MIRROR_DIPLOMACY"): "`scoreboard players set #mN.pM aoe_dip`: the scenario mode of the game program gives player N the stances of player M toward each other player (#2822)",
     ("effect", "SET_PLAYER_VISIBILITY"): "`scoreboard players set #pN.pM aoe_vis`: the scenario mode of the game program shows the units of player M to player N out of sight, or hides them again (`fog.py`, #2774)",
 }
 
