@@ -11,8 +11,8 @@ IMPERIAL = ("FEUDAL_AGE", "CASTLE_AGE", "IMPERIAL_AGE")
 
 
 def test_the_values_are_those_of_aoe2():
-    assert train.AFTER["TWO_HANDED_SWORDSMAN_UPGRADE"] == "LONG_SWORDSMAN_UPGRADE"
-    assert train.AFTER["CHAMPION_UPGRADE"] == "TWO_HANDED_SWORDSMAN_UPGRADE"
+    assert train.BY_KEY["after"]["TWO_HANDED_SWORDSMAN_UPGRADE"] == "LONG_SWORDSMAN_UPGRADE"
+    assert train.BY_KEY["after"]["CHAMPION_UPGRADE"] == "TWO_HANDED_SWORDSMAN_UPGRADE"
     assert all(n in train.COSTS for n in ("TWO_HANDED_SWORDSMAN", "CHAMPION"))
     assert all(len(train.HELP[n]) <= 50 for n in ("TWO_HANDED_SWORDSMAN_UPGRADE", "CHAMPION_UPGRADE"))
 

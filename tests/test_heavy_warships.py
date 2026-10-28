@@ -22,10 +22,10 @@ def imperial(civ="BRITONS", techs=()):
 
 def test_the_values_are_those_of_aoe2_de():
     for t, (cost, time, age) in TECHS.items():
-        assert (train.COSTS[t], train.TRAIN_TIMES[t], train.TECH_AGE[t]) == (cost, time, age), t
+        assert (train.COSTS[t], train.TRAIN_TIMES[t], train.BY_KEY["age"][t]) == (cost, time, age), t
         assert len(train.HELP[t]) <= 50 and t in train.TRAINS["DOCK"]
-    assert train.AFTER["HEAVY_WARSHIPS"] == "MEDIUM_WARSHIPS"
-    assert train.AFTER["HEAVY_DEMOLITION_SHIP_UPGRADE"] == "DEMOLITION_SHIP_UPGRADE"
+    assert train.BY_KEY["after"]["HEAVY_WARSHIPS"] == "MEDIUM_WARSHIPS"
+    assert train.BY_KEY["after"]["HEAVY_DEMOLITION_SHIP_UPGRADE"] == "DEMOLITION_SHIP_UPGRADE"
     assert train.lines("HEAVY_WARSHIPS") == (("WAR_GALLEY", "GALLEON"), ("FIRE_SHIP", "DRAGON_SHIP"),
                                             ("FIRE_SHIP", "FAST_FIRE_SHIP"), ("WAR_HULK", "CARRACK"))
     assert [fleet.SPEEDS[n] for n in ("GALLEON", "FAST_FIRE_SHIP", "HEAVY_DEMOLITION_SHIP")] == [1.36, 1.56, 1.52]

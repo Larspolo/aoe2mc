@@ -9,7 +9,7 @@ CASTLE = (12, 4)
 
 
 def test_the_values_are_those_of_aoe2():
-    assert train.CIV_TECHS["FABRIC_SHIELDS"] == "INCAS"
+    assert train.BY_KEY["civ"]["FABRIC_SHIELDS"] == "INCAS"
     assert len(train.HELP["FABRIC_SHIELDS"]) <= 50 and "INCAS" not in train.civs.MISSING["FABRIC_SHIELDS"]
     assert "BRITONS" in train.civs.MISSING["FABRIC_SHIELDS"]
 
