@@ -1037,6 +1037,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         Bukkit.getScheduler().runTaskTimer(this, this::siege, 1L, 1L);
         Bukkit.getScheduler().runTaskTimer(this, this::carts, 1L, 1L);
         Bukkit.getScheduler().runTaskTimer(this, this::burn, 20L, 20L);
+        Bukkit.getScheduler().runTaskTimer(this, this::unhit, 1L, 1L);
         Bukkit.getScheduler().runTaskTimer(this, this::watch, 20L, 20L);
         Bukkit.getScheduler().runTaskTimer(this, this::towers, 2L, 2L);
         Bukkit.getScheduler().runTaskTimer(this, this::hold, 4L, 4L);
@@ -1119,6 +1120,35 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     }
 
     // The AoE2 damage of attacker values a on the victim with values t (#514), and the attack back.
+    // The scoreboard tag aoe2mc.hit for 10 ticks after an AoE2 hit, as HurtTime: setHealth does not set the hurt time,
+    // and the trigger condition "Object Attacked" tests it (predicate aoe2mc:attacked, #3085). The passengers too: the
+    // plugin hurts the mount of a rider, and the tag aoe2mc.r<ref> is on the rider.
+    private final Map<Entity, Integer> hits = new HashMap<>();
+
+    private void hitTag(Entity victim) {
+        for (Entity e : concat(victim, victim.getPassengers())) {
+            e.addScoreboardTag("aoe2mc.hit");
+            hits.put(e, Bukkit.getCurrentTick() + 10);
+        }
+    }
+
+    private static List<Entity> concat(Entity e, List<Entity> more) {
+        List<Entity> all = new ArrayList<>(more);
+        all.add(e);
+        return all;
+    }
+
+    private void unhit() {
+        int now = Bukkit.getCurrentTick();
+        hits.entrySet().removeIf(h -> {
+            if (h.getValue() > now && h.getKey().isValid()) {
+                return false;
+            }
+            h.getKey().removeScoreboardTag("aoe2mc.hit");
+            return true;
+        });
+    }
+
     private void harm(LivingEntity victim, Stats t, Stats a, Entity from) {
         harm(victim, t, a, from, 1.0);
     }
@@ -1129,6 +1159,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         fight(victim);
         fight(from);
         victim.playHurtAnimation(0);
+        hitTag(victim);
         double before = victim.getHealth();
         double damage = Math.max(1, a.damage(t) * (from == null ? 1 : elevation(from, victim)));   // AoE2: after the armor
         victim.setHealth(Math.max(0, before - damage * part));     // 0 kills it
