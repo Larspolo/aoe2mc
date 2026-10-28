@@ -1229,7 +1229,7 @@ class Gather:
             return
         if fleet.fish_order(self, name, eye, d):                     # the fishing ships fish (#1384)
             return
-        tile = self.map.pick_tree(eye, d)
+        tile = self.map.pick_tree(eye, d) or self.shore_fish(eye, d)
         if tile and self.selected:
             self.send(tile)
             self.mark(name, self.map.spot(tile))
@@ -1243,6 +1243,13 @@ class Gather:
         elif any(replay.ship(self.soldiers.get(u, "")) for u in self.selected) \
                 and (cell := fleet.pick(self, eye, d)) and self.map.wet(*cell):
             self.walk_to(name, cell)                                   # the ships sail on the water (#1383)
+
+    def shore_fish(self, eye, d):
+        """The tile of the shore fish under the water surface that the ray from eye in direction d hits (fleet.pick), or
+        None: villagers fish it from the land (#1283, #2349)."""
+        cell = fleet.pick(self, eye, d)
+        tile = cell and (cell[0] // self.map.T, cell[1] // self.map.T)
+        return tile if tile in self.map.shore and self.map.fish.get(tile, 0) > 0 else None
 
     def walk_to(self, name, cell, units=None):
         """The selected units walk to the free block cell (x, z), as the move order of AoE2 (#1368): each one to its own
@@ -1454,7 +1461,8 @@ class Gather:
             elif v.state == "chop":
                 v.timer += self.tick
                 src = self.source(v)
-                kind = "farm" if v.tree in self.map.farms else "hunt" if v.tree in self.map.carcasses else v.res
+                kind = "farm" if v.tree in self.map.farms else "hunt" if v.tree in self.map.carcasses else \
+                    "fish" if v.tree in self.map.fish else v.res               # a fisherman: no forage rate (#2349)
                 work = self.work_time(kind, v.tree in self.map.herds)
                 last = civs.last(self, "sheep" if v.tree in self.map.herds else kind)
                 take = 1 if last == 1 else 1 / last                    # 1: the amounts stay whole numbers
@@ -1474,6 +1482,9 @@ class Gather:
                         self.tend(v)
                     elif v.tree in self.map.carcasses:
                         pass                                           # a carcass has no blocks
+                    elif v.tree in self.map.fish:                      # a shore fish: its mob goes when empty (#2349)
+                        if src[v.tree] <= 0:
+                            fleet.remove(self, v.tree)
                     elif v.res == "food":
                         self.berries(v.tree)
                     elif v.res != "wood":
