@@ -23,10 +23,10 @@ class Recorder:
         self.f, self.time, self.ids, self.clock = open(path, "w"), 0.0, {}, None   # game seconds; UUID or footprint -> ID
         keys = [(start_key(o), o.get("ref")) for o in objects]
         self.ids = {k: ref for k, ref in keys if k and ref is not None}
-        self.top = max(self.ids.values(), default=0)
-        for k, ref in keys:                                            # a scenario has no IDs: the start objects take
-            if k and ref is None:                                      # the first ones, so they are older than the new
-                self.top += 1                                          # objects (aoe2mc.name_timeline)
+        self.top = max((o.get("ref") or 0 for o in objects), default=0)   # above the trees and mines too (#3001)
+        for k, ref in keys:                                            # a start object with no ref takes the next ID,
+            if k and ref is None:                                      # so it is older than the new objects
+                self.top += 1                                          # (aoe2mc.name_timeline)
                 self.ids[k] = self.top
         self.write({"refs": self.ids})
 
