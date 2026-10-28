@@ -180,44 +180,48 @@ def gate(g, order, ref):
     g.command(f"aoe gate {order} {(x0 + x1) // 2} {(z0 + z1) // 2}")
 
 
+# The orders of the triggers in the data storage ORDERS: {name: the pattern of one order}, one line per kind, in
+# alphabetical order. A new kind is one line here and its handler at the end of the handlers in orders() (two kinds in
+# one sentence of the docstring and in one `if` line conflicted in each trigger ticket, 2026-10-28).
+ORDER_KINDS = {
+    "builds": r'"build (\d+) (\w+) (-?\d+) (-?\d+) (-?\d+) (-?\d+)"',   # "Build Object" (#2863): finish()
+    "found": r'"(found|create) (\d+) (\w+) (\d+) (\d+)"',    # "Place Foundation" (#2825), "Create Object" (#2911): foundation()
+    "gates": r'"(lock|unlock) (\d+)"',                         # "Lock Gate", "Unlock Gate" (#2762): gate()
+    "queued": r'"(train|research) (\d+) (\w+) ?(\d+)?"',      # "Train Unit", "Initiate Research" (#2772): queues()
+    "rallies": r'"rally (\d+) (\w+) (\d+) (\d+) ?(\d+ \d+ \d+ \d+)?"',  # "Set Building Gather Point": rally()
+    "tags": r'"(patrol|attack_move|range|stance|stop) (aoe_order[\w.]+) ?(-?\d+(?: -?\d+)*)?"',   # see orders()
+    "unloads": r'"unload (\d+) (\d+) ?(-?\d+ -?\d+ -?\d+)?"',  # "Unload" (#2773): unload()
+}
+
+
 def orders(g):
-    """The "Patrol" and "Attack Move" orders of the triggers (aoe2mc.order_lines, #2647): read and empty the list of
-    the data storage ORDERS, and walk the tagged units with the Paper plugin (`aoe moveto`, Minecraft path finding).
-    An attack move gives them the aggressive stance (the plugin attacks the enemies on the way, as
+    """The orders of the triggers (aoe2mc.order_lines, #2647): read and empty the list of the data storage ORDERS, and
+    do each order (ORDER_KINDS). The tag orders walk the tagged units with the Paper plugin (`aoe moveto`, Minecraft
+    path finding). An attack move gives them the aggressive stance (the plugin attacks the enemies on the way, as
     replay.Replay.attack_move) and removes the tag. A patrol (g.patrols: [tag, [tile, middle of the area], leg]) walks
     to the tile and back, again and again: it turns when one of its units is NEAR its point, and ends when no unit has
     the tag. A new patrol with the same tag (a looping trigger) replaces the old one. A "Change Object Stance" order
     (aoe2mc.stance_lines, #2705) sets the stance of the tagged units and removes the tag. A "Stop Object" order
     (aoe2mc.stop_lines, #2754) stops the tagged units (`aoe stop`), ends their patrols as a new order of a person does
     (gather.Gather.end_patrols, #2674) and removes the tag. A "Change Object Range" order (aoe2mc.range_lines, #2767)
-    gives each tagged ranged unit its new range (ranges) and removes the tag. An "Unload" order (#2773): unload(). A
-    "Lock Gate" or "Unlock Gate" order (aoe2mc.gate_lines, #2762) locks or unlocks the gate of its reference: gate(). A
-    "Place Foundation" order (aoe2mc.foundation_lines, #2825): foundation(). "Train Unit" and "Initiate Research"
-    (aoe2mc.train_lines, #2772): queues(). A "Build Object" order (aoe2mc.build_lines, #2863): finish(). A "Create
-    Object" order of a building (aoe2mc.object_lines, #2911): foundation(), then the site is complete at once."""
+    gives each tagged ranged unit its new range (ranges) and removes the tag."""
     got = g.command(f"data get storage {ORDERS} list") or ""
-    new = re.findall(r'"(patrol|attack_move|range|stance|stop) (aoe_order[\w.]+) ?(-?\d+(?: -?\d+)*)?"', got)
-    unloads = re.findall(r'"unload (\d+) (\d+) ?(-?\d+ -?\d+ -?\d+)?"', got)
-    gates = re.findall(r'"(lock|unlock) (\d+)"', got)
-    found = re.findall(r'"(found|create) (\d+) (\w+) (\d+) (\d+)"', got)
-    queued = re.findall(r'"(train|research) (\d+) (\w+) ?(\d+)?"', got)
-    rallies = re.findall(r'"rally (\d+) (\w+) (\d+) (\d+) ?(\d+ \d+ \d+ \d+)?"', got)
-    builds = re.findall(r'"build (\d+) (\w+) (-?\d+) (-?\d+) (-?\d+) (-?\d+)"', got)
-    if new or unloads or gates or found or queued or builds or rallies:
+    m = {k: re.findall(p, got) for k, p in ORDER_KINDS.items()}
+    if any(m.values()):
         g.command(f"data remove storage {ORDERS} list")
-    queues(g, queued)
-    for player, ref, where in unloads:
+    queues(g, m["queued"])
+    for player, ref, where in m["unloads"]:
         unload(g, int(player), int(ref), where)
-    for order, ref in gates:
+    for order, ref in m["gates"]:
         gate(g, order, int(ref))
-    for order, player, name, x, y in found:
+    for order, player, name, x, y in m["found"]:
         foundation(g, int(player), name, (int(x), int(y)), done=order == "create")
-    for player, name, *area in builds:
+    for player, name, *area in m["builds"]:
         finish(g, int(player), name, [int(v) for v in area])
-    for player, which, x, y, area in rallies:
+    for player, which, x, y, area in m["rallies"]:
         rally(g, int(player), which, (int(x), int(y)), [int(v) for v in area.split()])
     patrols = vars(g).setdefault("patrols", [])
-    for order, tag, where in new:
+    for order, tag, where in m["tags"]:
         p, sel = [int(v) for v in where.split()], f"@e[tag={tag}]"
         if order == "stance":                                          # "Change Object Stance" (#2705)
             import combat                                              # combat -> gather -> scenario

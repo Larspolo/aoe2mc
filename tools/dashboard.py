@@ -150,6 +150,20 @@ def candidates(issues, busy=frozenset(), now=None, lane=None, reserved=RESERVED,
     return sorted(ready, key=rank)
 
 
+def claimed(lines, now, minutes=30):
+    """The tickets that a run holds now: a claim ref (top slot `N` or `N-k`, tools/claim.py) with a claim or beat in the
+    last `minutes` and no release. `--next` skips them: 4 claims of 4 runs failed on such tickets (2026-10-28).
+    lines: "<slot> <unix time> <subject>" (health.claim_refs)."""
+    top = {}
+    for line in lines:
+        slot, t, subject = (line.split(" ", 2) + ["", ""])[:3]
+        m = re.fullmatch(r"(\d+)(?:-(\d+))?", slot)
+        if m and t.isdigit() and (int(m[1]) not in top or int(m[2] or 1) > top[int(m[1])][0]):
+            top[int(m[1])] = (int(m[2] or 1), int(t), subject)
+    cut = now.timestamp() - minutes * 60
+    return {n for n, (_, t, s) in top.items() if t >= cut and not s.startswith("Release")}
+
+
 def tag(issue, prefix):
     return next((n for n in sorted(labels(issue)) if n.startswith(prefix)), None)
 
@@ -299,7 +313,9 @@ def main(argv=None):
     if a.next:
         prs = [i["number"] for i in open_all if "pull_request" in i]
         busy = work(open_all, {n: [f["filename"] for f in pages(f"pulls/{n}/files", 3)] for n in prs})
-        for i in candidates(open_all, busy, lane=a.lane):
+        import health                                       # health imports this module
+        held = claimed(health.claim_refs() or [], datetime.datetime.now(datetime.timezone.utc))
+        for i in (i for i in candidates(open_all, busy, lane=a.lane) if i["number"] not in held):
             ov = overlap(i, busy)
             print(f"#{i['number']} {i['title']} ({tag(i, 'P')}, {tag(i, 'size:')}, overlap {len(ov)}"
                   + (f": {' '.join(ov)}" if ov else "") + ")")

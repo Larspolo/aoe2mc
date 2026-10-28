@@ -133,7 +133,8 @@ alphabetical order), its handler `x_lines(e, c)` and the keys that it reads from
 in `aoe2mc.EFFECT_KEYS` (#2792), not a change of `trigger_files` (#2613) or `read_scenario`; a condition on a score
 is one line in `aoe2mc.SCORE_TESTS` (#2704), a condition of the tick function one line in `aoe2mc.TICKED` (#2769). The keys of a new
 condition are one line in `aoe2mc.CONDITION_KEYS`, a new aoe2mc.json list of the scenario mode one line in
-`aoe2mc.TRIGGER_LISTS` (both in alphabetical order, #2832).
+`aoe2mc.TRIGGER_LISTS` (both in alphabetical order, #2832). A new order of the scenario mode (`game/scenario.py`) is one line in
+`scenario.ORDER_KINDS` and its handler at the end of the handlers in `orders()`, not a change of its docstring.
 
 ## How to verify
 

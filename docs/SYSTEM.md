@@ -44,13 +44,13 @@ controls, read `docs/STEERING.md`. This document links to them and does not copy
 5. It picks a ticket in the order of `tools/dashboard.py --next` (`P0` to `P3`, the least overlap with other work,
    the lowest number) and claims it (`tools/claim.py N`). When the queue is short, it makes new tickets from the
    epics and the roadmap.
-6. It does the ticket on its session branch: a failing test first for a bug, the change, the checks of the skill
+6. It does the ticket on its session branch (a later ticket of the run: on `<session branch>-<k>`, `more.md`): a failing test first for a bug, the change, the checks of the skill
    `verify`, and the process improvements (autopilot step 9) in the same PR.
 7. It runs `tools/claim.py N --guard`, pushes and opens a PR with `Closes #N`. It does not wait for CI.
 8. CI runs the quick checks. Automerge merges the PR when they are green. The merge closes the ticket. Claims
    deletes the claim ref. Dashboard updates the status issue.
 9. The run reports on the status issue (a comment with a `Usage:` line and a `Metrics:` line per ticket) and takes
-   the next ticket. It stops when no ticket is ready, a usage limit stops it, or its context is half full.
+   the next ticket. It stops when no ticket is ready, a usage limit stops it, or its context is above 200k tokens.
 
 ## The locks
 
@@ -212,6 +212,7 @@ of `tools/bootstrap.py` (they copy this repository) and the tests that need a sp
 | `tools/operator_check.py` | generic | None (`agent.toml`). |
 | `tools/owner_tasks.py` | generic | None (`agent.toml`). |
 | `tools/unconflict.py` | generic | None (solves add-add conflicts for `unconflict.yml`, #1864). |
+| `tools/merge_main.py` | generic | None (merges `main` into a branch in one call: solve, commit, check, push). |
 | `tools/merge_jsonl.py` | generic | None (the merge driver `merge=jsonl`: JSON lines by "name", a line that both sides changed by key and list item, #2004, #2064). |
 | `tests/test_agent_config.py` | generic | None (a test of `tools/agent_config.py`). |
 | `tests/test_claim.py` | generic | None (a test of `tools/claim.py`). |
@@ -222,6 +223,7 @@ of `tools/bootstrap.py` (they copy this repository) and the tests that need a sp
 | `tests/test_claim_revived.py` | generic | None (a test of `tools/claim.py`). |
 | `tests/test_claim_takeover.py` | generic | None (a test of `tools/claim.py`). |
 | `tests/test_dashboard.py` | generic | None (a test of `tools/dashboard.py`). |
+| `tests/test_dashboard_claimed.py` | generic | None (a test of `tools/dashboard.py`). |
 | `tests/test_dashboard_decide.py` | generic | None (a test of `tools/dashboard.py`). |
 | `tests/test_dashboard_muted.py` | generic | None (a test of `tools/dashboard.py`). |
 | `tests/test_dashboard_overlap.py` | generic | None (a test of `tools/dashboard.py`). |
@@ -244,7 +246,9 @@ of `tools/bootstrap.py` (they copy this repository) and the tests that need a sp
 | `tests/test_report.py` | generic | None (a test of `tools/report.py`). |
 | `tests/test_tokens.py` | generic | None (a test of `tools/tokens.py`). |
 | `tests/test_tokens_verify.py` | generic | None (a test of `tools/tokens.py`). |
+| `tests/test_tokens_cost.py` | generic | None (a test of `tools/tokens.py`). |
 | `tests/test_unconflict.py` | generic | None (a test of `tools/unconflict.py`). |
+| `tests/test_merge_main.py` | generic | None (a test of `tools/merge_main.py`). |
 | `tests/test_merge_jsonl.py` | generic | None (a test of `tools/merge_jsonl.py`). |
 | `tests/test_pacer.py` | generic | None (a test of `tools/usage.py`). |
 | `tests/test_usage.py` | generic | None (a test of `tools/usage.py`). |
