@@ -36,7 +36,7 @@ MAP = {
     ("condition", "CAPTURE_OBJECT"): "`execute if entity @e[tag=ref-N,team=pN]`",
     ("condition", "VARIABLE_VALUE"): "`execute if score #vN aoe_var matches ..` in the tick function, once (#2611)",
     ("condition", "CHANCE"): "`execute store result score ... run random value 1..100` once per second (alone, after the timers or with the ticked conditions: #2574)",
-    ("condition", "PLAYER_DEFEATED"): "`execute unless entity @e[team=pN]`",
+    ("condition", "PLAYER_DEFEATED"): "`if score #pN aoe_lost matches 1..` in the tick function: the scenario mode of the game program sets the score when it defeats player N (conquest, regicide, #2710)",
     ("condition", "ACCUMULATE_ATTRIBUTE"): NO_ECONOMY,
     ("condition", "RESEARCH_TECHNOLOGY"): "`if score #pN.NAME aoe_tech matches 1..` in the tick function: the scenario mode of the game program sets the score of each researched technology (#2656)",
     ("condition", "OBJECT_SELECTED"): "not supported: Minecraft has no selection",
