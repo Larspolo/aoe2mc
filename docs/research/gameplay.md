@@ -251,6 +251,14 @@ The owner decides on the platform first (decision ticket). The other tickets dep
 - #137 Start a game program that controls the server through RCON.
 - #138 Let villagers gather wood on the player's command (the milestone).
 
+## Decisions of the owner (2026-10-28)
+
+- Bot difficulty (#2648, option A): the six AoE2 DE names (Easiest, Standard, Moderate, Hard, Hardest, Extreme), each
+  with its gather rate, first attack time and soldier count in a data file. AoE2 does not publish these values, so they
+  are a guess that the owner can tune (#2661).
+- Click on the minimap (#2585, option A): a map in an item frame (a "map table") near the own town center. A right
+  click with the selection wand on a pixel of the framed map sends the selection there (#2586).
+
 ## Pitfalls of the game program
 
 Moved from `docs/LEARNINGS.md` (improve run, 2026-10-26).
