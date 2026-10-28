@@ -5,7 +5,8 @@ Two ways to put one: the button "Flare" of the Game menu (diplomacy.BUTTONS) put
 looks at, and the vanilla scoreboard trigger `/trigger aoe_flare` (players without operator rights may use it) puts it
 at the place of the player.
 The `particle` command with a viewer selector shows the column only to the team (an area_effect_cloud shows it to
-all), so tick() sends it again while the flare lives. gather.Gather.clicks calls tick().
+all), so tick() sends it again while the flare lives. gather.Gather.clicks calls tick(). On Paper the flare is also a
+blinking cross on the minimap of the map item for the same teams (`aoe minimap flare ... VIEWERS`, #2676).
 """
 import json
 import re
@@ -20,14 +21,20 @@ def team(player):
     return f"@a[team={player}]"
 
 
-def teams(g):
-    """The viewer selectors of the team of the Gather g and of each allied team (the same `team` in aoe2mc.json, as
-    gather.allied, #1942): one per team, since one selector cannot name two teams."""
+def sides(g):
+    """The Minecraft team names (pN) of the player of the Gather g and of each allied player (the same `team` in
+    aoe2mc.json, as gather.allied, #1942)."""
     players = getattr(g, "players", {})
     own = (players.get(str(g.player)) or {}).get("team")
     allies = sorted(int(n) for n, p in players.items()
                     if own is not None and n not in ("0", str(g.player)) and (p or {}).get("team") == own)
-    return [team(f"p{n}") for n in [g.player] + allies]
+    return [f"p{n}" for n in [g.player] + allies]
+
+
+def teams(g):
+    """The viewer selectors of the team of the Gather g and of each allied team: one per team, since one selector
+    cannot name two teams."""
+    return [team(s) for s in sides(g)]
 
 
 def particles(x, y, z, team, rgb=None):
@@ -52,9 +59,11 @@ def setup(g):
 
 
 def put(g, player, x, y, z):
-    """Put a flare at block (x, y, z) for the team of the Gather g and its allies."""
+    """Put a flare at block (x, y, z) for the team of the Gather g and its allies. On Paper also a blinking cross on
+    the minimap of the map item, only for these teams (Minimap.java, #2676)."""
     g.flares = [f for f in getattr(g, "flares", []) if f[3] > g.clock()] + [(x, y, z, g.clock() + SECONDS)]
-    return [g.command(c) for t in teams(g) for c in commands(player, x, y, z, t)]
+    mark = [f"aoe minimap flare {x} {z} p{g.player} {SECONDS * 20} {','.join(sides(g))}"] * bool(getattr(g, "paper", False))
+    return [g.command(c) for t in teams(g) for c in commands(player, x, y, z, t)] + [g.command(c) for c in mark]
 
 
 def from_look(g, player):

@@ -133,6 +133,7 @@ SETTINGS = (                                                           # run.py 
 )
 NOT_SAVED = (                                                          # the fields that game/*.py sets on a Gather and the save
     # does not keep, one per line with its reason, in alphabetical order (tests/test_savegame_fields.py, #2535)
+    "age_times",                                                       # recap.py: game times of this session (Gather.t0)
     "bar",                                                             # bossbar.py: the shown unit
     "board",                                                           # bot.py: the scoreboard of a bot
     "book_at",                                                         # scenario.py: the next check time (the world keeps the tags)
@@ -147,7 +148,7 @@ NOT_SAVED = (                                                          # the fie
     "enemies",                                                         # the enemy units of aoe2mc.json: a dead one has no position
     "explore_at",                                                      # score.py: the next check time
     "flares",                                                          # flare.py: the flares of a replay
-    "fog",                                                             # fog.py: the next tick hides the units again
+    "fog",                                                             # fog.py: the next tick hides the units again; explored()
     "ghosts",                                                          # build.py: the shown building to place
     "goto_idle",                                                       # goto.py: the next idle unit to show
     "haste_time",                                                      # train.haste: a tick timer
@@ -220,7 +221,8 @@ def dump(g):
     d = {"players": {str(x.player): {**{f: getattr(x, f) for f in FIELDS}, "techs": sorted(x.techs),
                                      **{f: pack(getattr(x, f)) for f in PACKED}, **orders(x),
                                      **{f: pack(vars(x)[f]) for f in KEPT if f in vars(x)},
-                                     "map": {f: pack(getattr(x.map, f)) for f in MAP}}
+                                     "map": {f: pack(getattr(x.map, f)) for f in MAP},
+                                     **({"explored": runs} if (runs := explored(x)) else {})}
                     for x in sides(g)}}
     for b in bots(g):
         d["players"][str(b.g.player)]["bot"] = {f: getattr(b, f) for f in BOT}
@@ -229,6 +231,18 @@ def dump(g):
     if getattr(g.game, "treaty", 0):                                   # treaty.start: the time goes on (#2409)
         d["treaty_time"] = g.game.treaty_time
     return d
+
+
+def explored(x):
+    """The explored tiles of the minimap of the Gather x (fog.minimap, #2677) as sorted row runs [y, x0, x1] (both
+    ends in the run): a large map has many tiles."""
+    out = []
+    for tx, ty in sorted(vars(x).get("fog", {}).get("explored", ()), key=lambda t: (t[1], t[0])):
+        if out and out[-1][0] == ty and out[-1][2] == tx - 1:
+            out[-1][2] = tx
+        else:
+            out.append([ty, tx, tx])
+    return out
 
 
 def bots(g):
@@ -349,6 +363,10 @@ def load(g, d):
             x.map.emptied(x.map.spot(tile))                            # empty at the save: as Gather.dig, berries
         for tile in [t for t, n in x.map.bushes.items() if n <= 0]:
             x.map.emptied(x.map.cells(tile))
+        if "explored" in p:                                            # the minimap: the next fog.tick sends it all
+            fog = vars(x).setdefault("fog", {"hidden": set(), "at": None})
+            fog.pop("map", None)
+            fog["explored"] = {(tx, ty) for ty, x0, x1 in p["explored"] for tx in range(x0, x1 + 1)}
         if "villagers" in p:                                           # a save from before #2258 has no orders
             give_orders(x, p)
         board_again(x)

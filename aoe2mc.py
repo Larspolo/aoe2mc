@@ -416,6 +416,9 @@ def read_scenario(path):
                                                **({"quantity": c.quantity, "variable": c.variable,   # (#2611)
                                                    "comparison": c.comparison}
                                                   if c.condition_type == VARIABLE_VALUE else {}),
+                                               **({"quantity": c.quantity, "player": c.source_player,   # (#2655)
+                                                   "attribute": c.attribute}
+                                                  if c.condition_type == ACCUMULATE_ATTRIBUTE else {}),
                                                **({"player": c.source_player,                 # (#2656)
                                                    "technology": techs.get(c.technology, str(c.technology))}
                                                   if c.condition_type == RESEARCHED else {}))
@@ -450,6 +453,7 @@ def read_scenario(path):
                                                if e.effect_type == RESEARCH_TECHNOLOGY else {}),
                                             **({"unit": e.time_unit, "timer": e.timer}   # "Display Timer" (#2572)
                                                if e.effect_type == DISPLAY_TIMER else {}),
+                                            **({"timer": e.timer} if e.effect_type == CLEAR_TIMER else {}),   # (#2696)
                                             **({"sound": e.sound_name or ""}             # "Play Sound" (#2644)
                                                if e.effect_type == PLAY_SOUND else {}))
                                        for e in t.effects])
@@ -2763,6 +2767,7 @@ def team_lines(objects, players):
 
 
 # AoE2 condition and effect IDs (AoE2ScenarioParser), one per line in alphabetical order (#2613)
+ACCUMULATE_ATTRIBUTE = 8                                           # a resource of a player (#2655)
 ATTACK_MOVE = 30                                                   # "Attack Move" (#2647)
 CHANGE_COLOR_MOOD = 72
 CHANGE_DIPLOMACY = 1                                               # "Change Diplomacy" (#2645)
@@ -2773,6 +2778,7 @@ CHANGE_PLAYER_COLOR = 89                                           # "Change Pla
 CHANGE_VARIABLE = 56                                               # the scenario variables (#2611)
 CHANGE_VIEW = 16                                                   # "Change View" (#2610)
 CLEAR_INSTRUCTIONS = 21                                            # "Clear Instructions" (#2609)
+CLEAR_TIMER = 57                                                   # "Clear Timer" (#2696)
 CREATE_OBJECT = 11
 DAMAGE_OBJECT = 24                                                 # "Damage Object" (#2571)
 DECLARE_VICTORY = 13                                               # "Declare Victory" (#2542)
@@ -2800,7 +2806,8 @@ TRIGGER_CHANCE = 20                                                # the conditi
 VARIABLE_VALUE = 22
 TIME_UNITS = {0: 5, 1: 60, 2: 1, 3: 1}  # TimeUnit (years, minutes, seconds, m:ss) -> game seconds; a year as game/wonder.py YEAR
 COUNTED = (IN_AREA, OWN_OBJECTS, OWN_FEWER_OBJECTS)                # conditions that count units: the tick function
-TICKED = COUNTED + (DIFFICULTY_LEVEL, RESEARCHED, VARIABLE_VALUE)  # conditions of the tick function
+TICKED = COUNTED + (ACCUMULATE_ATTRIBUTE, DIFFICULTY_LEVEL, RESEARCHED, VARIABLE_VALUE)  # conditions of the tick function
+ATTRIBUTES = ("Food", "Wood", "Stone", "Gold")     # attributes 0-3: the score holders of gather.RESOURCES (#2655)
 STORES = ("food", "wood", "stone", "gold")      # the resource of a tribute_list (AoE2 attributes 0 to 3)
 OPERATIONS = {1: "set", 2: "add", 3: "remove"}  # set, add, subtract of Modify Resource (AoE2ScenarioParser Operation)
 STANCES = (0, 1, 3)                                # DiplomacyState: ally, neutral, enemy
@@ -3042,6 +3049,16 @@ def tag_lines(e, T, tag):
             f"execute as @e[tag={tag}] on vehicle on passengers run tag @s remove {tag}"]
 
 
+def resource_score(c):
+    """The score test of an "Accumulate Attribute" condition (#2655): the resource score of the game program (the
+    holder Food, Wood, Stone or Gold of `Gather.board`: aoe_res for player 1, aoe_res<N> for the others) at the quantity
+    or more; None for an attribute that is no resource. A world without the game program has no such score."""
+    a, p = c.get("attribute", -1), c.get("player", 0)
+    if not 0 <= a < len(ATTRIBUTES) or p <= 0:
+        return None
+    return f"score {ATTRIBUTES[a]} aoe_res{p if p > 1 else ''} matches {max(c.get('quantity') or 0, 0)}.."
+
+
 def unit_selector(e, T):
     """The area_selector of the units of the player of an effect. A Gaia unit has no tag (units.make_entity): the
     entities with no tag and not the players."""
@@ -3168,6 +3185,14 @@ def timer_lines(e, c):
     return lines
 
 
+def clear_timer_lines(e, c):
+    """The commands of "Clear Timer" (#2696): the boss bar and the count of the slot of "Display Timer" (timer_lines)
+    go away. A slot with no bar makes the bar command fail, which stops the rest of this trigger's function."""
+    slot = e.get("timer") or 0
+    c.stats["clear timer"] += 1
+    return [f"bossbar remove aoe2mc:timer{slot}", f"schedule clear aoe2mc:timer/{slot}"]
+
+
 def message_text(e):
     """The JSON text of the message of an effect with no AoE2 color tags, or None for no message."""
     msg = re.sub(r"<[^<>]*>", "", e["message"]).replace("\r", "").strip()
@@ -3234,6 +3259,7 @@ EFFECTS = {
     CHANGE_VARIABLE: variable_lines,
     CHANGE_VIEW: view_lines,
     CLEAR_INSTRUCTIONS: clear_lines,
+    CLEAR_TIMER: clear_timer_lines,
     CREATE_OBJECT: object_lines,
     DAMAGE_OBJECT: damage_lines,
     DECLARE_VICTORY: victory_lines,
@@ -3261,6 +3287,7 @@ Effect = namedtuple("Effect", "t T ground players stats mood files setup")
 # (scenario.setup); "Research Technology" (#2656): the game program sets #p<player>.<technology> of aoe_tech;
 # "Variable Value" (#2611): the score #v<N> of aoe_var. A world with no game program has no score: no fire.
 SCORE_TESTS = {
+    ACCUMULATE_ATTRIBUTE: resource_score,
     DIFFICULTY_LEVEL: lambda c: f"score #level aoe_difficulty matches {c.get('quantity', 0)}",
     RESEARCHED: lambda c: f"score #p{c['player']}.{c['technology']} aoe_tech matches 1..",
     VARIABLE_VALUE: lambda c: f"score #v{c['variable']} aoe_var matches {variable_range(c)}",
@@ -3275,7 +3302,8 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
     timers must pass: the largest). The tick function runs an area trigger when units of its player are in all its
     areas; the score #N of aoe_trig marks a fired trigger, so it fires once. A looping area trigger fires again after
     the units leave an area. A "Variable Value" condition runs in the tick function as an area (#2611), a "Research
-    Technology" condition too: the game program sets the score #p<player>.<technology> of aoe_tech (#2656). The
+    Technology" condition too: the game program sets the score #p<player>.<technology> of aoe_tech (#2656), and an
+    "Accumulate Attribute" condition of a resource: resource_score (#2655). The
     commands of each effect come from its handler in EFFECTS.
     A disabled trigger does not run."""
     load, files, tick, setup = [], {}, [], {}
@@ -3293,6 +3321,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
                 any(c.get("group", -1) >= 0 or c.get("class", -1) >= 0 for c in conds) or \
                 any(c["type"] == VARIABLE_VALUE and (c.get("variable", -1) < 0 or variable_range(c) is None)
                     or c["type"] == RESEARCHED and (c.get("player", -1) <= 0 or not c.get("technology"))
+                    or c["type"] == ACCUMULATE_ATTRIBUTE and resource_score(c) is None
                     for c in conds):                                   # unit classes: not yet
             continue
         ctx = Effect(t, T, ground, players, stats, mood, files, setup)

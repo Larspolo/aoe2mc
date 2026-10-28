@@ -67,7 +67,9 @@ import net.kyori.adventure.text.format.NamedTextColor;
  * "aoe minimap tile X Z TEAM" gives the fog of the team and the pixel of the last render for a player of the team.
  * The flares of the replay (#2405): "aoe minimap flare X Z TEAM TICKS" draws a cross of FLARE pixels from the center in
  * the map color of the team at block (X, Z) for TICKS server ticks, above the dots. It blinks: on in every second
- * update. The answer names the pixel of the center, or "outside".
+ * update. The answer names the pixel of the center, or "outside". The flares of the game program (#2676): "aoe minimap
+ * flare X Z TEAM TICKS VIEWERS" with VIEWERS = the teams that see it ("p1,p3": the team of the player and its allies);
+ * a player on another team does not see the cross. Without VIEWERS all players see it (the replay).
  */
 final class Minimap extends MapRenderer {
     static final int PERIOD = 20;                         // ticks between two updates of the dots (sendMap)
@@ -83,7 +85,8 @@ final class Minimap extends MapRenderer {
     private final Map<UUID, Long> last = new HashMap<>();  // player -> the server tick of its last render
     private final Map<UUID, List<int[]>> dots = new HashMap<>();   // player -> {px, pz} of the drawn dots and squares
     private final Map<List<Integer>, int[]> buildings = new LinkedHashMap<>();   // (x0, z0) -> {x0, z0, x1, z1, color}
-    private final List<long[]> flares = new ArrayList<>();                     // {x, z, color, end tick}
+    private final List<Flare> flares = new ArrayList<>();
+    private record Flare(int x, int z, int color, long end, Set<String> viewers) {}   // viewers empty: all players
     private byte[] ground;                                // the bare ground: 128 × 128 map bytes, row z; null: none
     private byte[][] fog;                                 // [tile x][tile y] -> UNEXPLORED, EXPLORED, SEEN; null: no fog
     private int tile;                                     // blocks of a fog tile side
@@ -326,11 +329,12 @@ final class Minimap extends MapRenderer {
             sender.sendMessage("Minimap buildings: " + buildings.size());
             return true;
         }
-        if (args.length == 6 && args[1].equals("flare")) {
+        if ((args.length == 6 || args.length == 7) && args[1].equals("flare")) {
             Team team = Bukkit.getScoreboardManager().getMainScoreboard().getTeam(args[4]);
             int c = team != null && team.hasColor() && team.color() instanceof NamedTextColor n ? COLORS.getOrDefault(n, 8) : 8;
             int x = Integer.parseInt(args[2]), z = Integer.parseInt(args[3]), s = v.getScale().getValue();
-            flares.add(new long[] {x, z, c * 4 + 2, Bukkit.getCurrentTick() + Long.parseLong(args[5])});
+            flares.add(new Flare(x, z, c * 4 + 2, Bukkit.getCurrentTick() + Long.parseLong(args[5]),
+                    args.length == 7 ? Set.of(args[6].split(",")) : Set.of()));
             int px = pixel(x, v.getCenterX(), s), pz = pixel(z, v.getCenterZ(), s);
             sender.sendMessage("Minimap flare: " + (px < 0 || pz < 0 ? "outside" : px + " " + pz));
             return true;
@@ -496,13 +500,16 @@ final class Minimap extends MapRenderer {
                 }
             }
         }
-        flares.removeIf(fl -> fl[3] <= now);
-        for (long[] fl : flares) {                        // the flares last: above the dots, on in every second update
-            int px = pixel(fl[0], map.getCenterX(), s), pz = pixel(fl[1], map.getCenterZ(), s);
+        flares.removeIf(fl -> fl.end() <= now);
+        for (Flare fl : flares) {                         // the flares last: above the dots, on in every second update
+            if (!fl.viewers().isEmpty() && (side == null || !fl.viewers().contains(side))) {
+                continue;                                 // a flare of another team (#2676)
+            }
+            int px = pixel(fl.x(), map.getCenterX(), s), pz = pixel(fl.z(), map.getCenterZ(), s);
             for (int k = -FLARE; k <= FLARE && px >= 0 && pz >= 0 && now / PERIOD % 2 == 0; k++) {
                 for (int[] q : new int[][] {{px + k, pz}, {px, pz + k}}) {
                     if (q[0] >= 0 && q[0] < 128 && q[1] >= 0 && q[1] < 128) {
-                        canvas.setPixel(q[0], q[1], (byte) fl[2]);
+                        canvas.setPixel(q[0], q[1], (byte) fl.color());
                         dots.add(q);
                     }
                 }
