@@ -233,6 +233,7 @@ class Replay:
         self.adopted, self.rallied = {}, 0      # temporary ID of a unit at a gather point -> its object ID (#1227)
         self.effects = {}                       # entity tag of a research text -> game time (ms) of its end (#843)
         self.flares = []                        # (x, y, z, game time (ms) of the end, RGB) of the live flares (#2402)
+        self.formations = {}                    # object ID -> the AoE2 formation of the record: Line, Box ... (#2553)
         self.burst = math.inf                   # game time (ms) of the next burst of the live flares (#2506)
         self.refs = {o["ref"]: o for o in data["objects"] if o.get("ref") is not None}
         self.rng = np.random.default_rng(1)
@@ -318,6 +319,11 @@ class Replay:
             return self.back(e)[0]
         if kind == "delete" and e.get("objects"):
             return self.delete(e)
+        if kind == "stance" and e.get("objects"):
+            return self.stance(e)
+        if kind == "formation" and e.get("objects"):                # the shape of the next walks of the group (#2553)
+            self.formations.update(dict.fromkeys(e["objects"], e.get("formation", "Line")))
+            return []
         if kind == "chat" and e.get("text"):
             name, color = self.player(e["player"]) if e.get("player") else ("Game", "white")
             return ["tellraw @a " + json.dumps([text(f"<{name}> ", color), text(taunt(e["text"]))])]
@@ -879,6 +885,17 @@ class Replay:
                 rest.append((i, v))
         return out, rest
 
+    def stance(self, e):
+        """STANCE: the military units of the selection get the AoE2 stance of the record on Paper (#2548): the stance
+        goals of the plugin (combat.stance_command, #1104). An unknown stance changes nothing."""
+        import combat                                                   # combat -> gather -> build -> replay
+        stance = str(e.get("stance", "")).lower().replace(" ", "_")
+        if not self.ai or stance not in combat.STANCES:
+            return []
+        self.grid()
+        group = [self.unit(i, name, e["player"]) for i, name in zip(e["objects"], e.get("names") or [None] * len(e["objects"]))]
+        return [combat.stance_command(v.uuid, stance) for v in group if v is not None and self.gather.military(v.name)]
+
     def move(self, e):
         """MOVE and ORDER: each selected unit gets a path to the target. Its steps come later (steps()). A group
         that goes to a tile stops in a formation there (formation()), a unit with no path to its cell goes to the
@@ -1060,27 +1077,45 @@ class Replay:
         """The end cell of each unit of a group that walks to a tile (#410): rows across the walk direction, the
         first row on the target and the others behind it, FORMATION blocks apart (AoE2 line formation). A slot
         snaps to the next free cell, one unit per cell. The units nearest to the target take the first row, and
-        in a row they keep their order from left to right, so that the paths do not cross."""
+        in a row they keep their order from left to right, so that the paths do not cross. The formation of the
+        record (#2553): Staggered doubles the gaps, Flank splits each row into two halves 4 slots apart, Box puts
+        the ranged and civilian units inside a square of the others."""
+        import combat                                                   # combat -> gather -> build -> replay
         m, n, S = self.map, len(group), FORMATION
+        ids = {v: i for i, v in self.units.items()}
+        kind = collections.Counter(self.formations.get(ids.get(v), "Line") for v in group).most_common(1)[0][0]
+        S *= 2 if kind == "Staggered" else 1
         tx, tz = tile[0] * self.T, tile[1] * self.T
         cx, cz = (sum(v.pos[k] for v in group) / n for k in (0, 2))
         d = math.hypot(tx - cx, tz - cz)
         dx, dz = ((tx - cx) / d, (tz - cz) / d) if d > 0.5 else (0.0, -1.0)    # walk direction (else north)
-        cols = min(n, max(1, round(math.sqrt(2 * n))))
+        cols = min(n, max(1, math.ceil(math.sqrt(n)) if kind == "Box" else round(math.sqrt(2 * n))))
         rows = -(-n // cols)
-        r = max(2 * self.T, math.ceil(max(cols, rows) * S))
+        r = max(2 * self.T, math.ceil(max(cols, rows) * S) + 4 * S * (kind == "Flank"))
         x0, z0 = int(tx), int(tz)
         todo = {(x, z) for x in range(x0 - r, x0 + r + 1) for z in range(z0 - r, z0 + r + 1) if m.free(x, z)}
         group = sorted(group, key=lambda v: (tx - v.pos[0]) * dx + (tz - v.pos[2]) * dz)
+        slots = []                                                      # (unit, row, offset across the walk)
+        if kind == "Box":
+            cells = [(q, j) for q in range(rows) for j in range(cols)][:n]
+            inner = [c for c in cells if 0 < c[0] < rows - 1 and 0 < c[1] < cols - 1]
+            outer = [c for c in cells if c not in inner]
+            weak = [v for v in group if combat.stats(v.name).range > 0 or not self.gather.military(v.name)]
+            order = weak + [v for v in group if v not in weak]
+            cells = inner[:len(weak)] + outer + inner[len(weak):]
+            slots = [(v, q, (j - (cols - 1) / 2) * S) for v, (q, j) in zip(order, cells)]
+        else:
+            for q in range(rows):
+                row = sorted(group[q * cols:q * cols + cols], key=lambda v: v.pos[0] * -dz + v.pos[2] * dx)
+                for j, v in enumerate(row):
+                    gap = (2 * S if j >= len(row) / 2 else -2 * S) if kind == "Flank" and len(row) > 1 else 0
+                    slots.append((v, q, (j - (len(row) - 1) / 2) * S + gap))
         out = {}
-        for q in range(rows):
-            row = sorted(group[q * cols:q * cols + cols], key=lambda v: v.pos[0] * -dz + v.pos[2] * dx)
-            for j, v in enumerate(row):
-                off = (j - (len(row) - 1) / 2) * S
-                px, pz = tx - dx * q * S - dz * off, tz - dz * q * S + dx * off
-                if todo:
-                    out[v] = c = min(todo, key=lambda c: ((c[0] - px) ** 2 + (c[1] - pz) ** 2, c))
-                    todo.discard(c)
+        for v, q, off in slots:
+            px, pz = tx - dx * q * S - dz * off, tz - dz * q * S + dx * off
+            if todo:
+                out[v] = c = min(todo, key=lambda c: ((c[0] - px) ** 2 + (c[1] - pz) ** 2, c))
+                todo.discard(c)
         return out
 
     def next_step(self, v, t):

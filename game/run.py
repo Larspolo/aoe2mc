@@ -27,6 +27,7 @@ Usage:
     python3 game/run.py WORLD --play --mode sudden-death   # the AoE2 game mode "Sudden Death": one town center (#2407)
     python3 game/run.py WORLD --play --mode battle-royale  # "Battle Royale": the Corruption takes the map (#2439)
     python3 game/run.py WORLD --play --mode capture-the-relic   # "Capture the Relic": the center relic wins (#2440)
+    python3 game/run.py WORLD --play --mode death-match   # the AoE2 game mode "Death Match": large resources (#2438)
     python3 game/run.py WORLD --play --mode defend-the-wonder   # "Defend the Wonder": player 1 has a Wonder (#2441)
     python3 game/run.py WORLD --play --mode wonder-race   # "Wonder Race": no attacks, the first wonder wins (#2406)
     python3 game/run.py WORLD --play --mode capture-the-relic --regicide   # a King on top of the mode (also
@@ -391,6 +392,15 @@ SETTINGS = {
 }
 
 
+def mode_defaults(settings):
+    """The start resources of the game mode in place of the default of SETTINGS (a --resources that the player gave
+    wins): the key "level" of its line in game/data/setup.jsonl. Death Match starts with "ultra" (#2438). The start age
+    of a mode ("age") applies in play() when --age is dark."""
+    if "level" in MODES[settings["mode"]] and settings["resources"] == SETTINGS["resources"]:
+        settings["resources"] = MODES[settings["mode"]]["level"]
+    return settings
+
+
 def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attack="10:00", reveal="normal", people=1,
          speed=1.0, state=None, **settings):
     """state: the saved state of the players (savegame.dump) for a loaded game (#2255).
@@ -398,7 +408,7 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
     import gather, train
     if unknown := sorted(set(settings) - set(SETTINGS)):
         raise TypeError(f"play() has no setting {', '.join(unknown)} (SETTINGS)")
-    settings = {**SETTINGS, **settings}
+    settings = mode_defaults({**SETTINGS, **settings})
 
     def make(player):
         who = "@a" if people == 1 else f"@a[team=p{player}]"
@@ -422,6 +432,7 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
     data["all_techs"] = settings["all_techs"]                    # one data for all Gathers: the people and the bot (#2298)
     data["end_age"] = train.STARTS[settings["end_age"]]["ages"]  # the last age (build.locked, #2346)
     data["full_tech_tree"] = settings["full_tech_tree"]          # (#2354)
+    data["resources"] = settings["resources"]                    # the Regicide start resources of the level (#2388)
     if settings["resources"] in gather.RANDOM:                   # each Gather picks the same level (gather.level, #2489)
         print(f"Random starting resources: {gather.level(settings['resources'], data)}.", file=sys.stderr)
     game.forceload()
@@ -462,6 +473,10 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
         import train
         for x in [g, *(s.g for s in g.bots)]:
             train.start(x, settings["age"])
+    import scout
+    if not state and scout.used(data):               # the scout of each civilization (#2391), not twice after a load
+        for x in [g, *(s.g for s in g.bots)]:
+            scout.swap(x)
     for x in [g, *(s.g for s in g.bots)]:
         x.modes = frozenset(modes)                               # gather.has_mode: build.locked, Gather.run (#2490)
         if MODES[settings["mode"]].get("bots") or x is g:
