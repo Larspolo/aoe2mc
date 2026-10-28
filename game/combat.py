@@ -55,6 +55,7 @@ BUILDINGS = {r["name"]: Stats(**{f: r[f] for f in Stats._fields if f != "classes
 # the conquest (conquest.alive). The walls of the map have no target.
 WALLS = {r["name"]: (tuple(r["hp_ages"]), r["melee"], r["pierce"]) for r in BUILDING_ROWS if "hp_ages" in r}
 WALL_TAG = "aoe2mc.wall"
+WALL = "wall"   # the AoE2 class "Walls and Gates" (wiki "Armor class"): the petard gets +900 against it (#2192)
 # The AoE2 class "Standard Buildings" (wiki "Armor class"): all buildings but the walls, the gates and the wonder. Arson
 # gives infantry a bonus against it (#1419).
 STANDARD = "standard"
@@ -225,7 +226,7 @@ def target_uuid(footprint):
 def wall(name, age):
     """The Stats of wall name (WALLS) in AoE2 age 0 (Dark) .. 3 (Imperial)."""
     hp, melee, pierce = WALLS[name]
-    return Stats(hp[age], 0, melee, pierce, 0, 0.0, {}, ("building",) + (STONE,) * (not name.startswith("PALISADE")))
+    return Stats(hp[age], 0, melee, pierce, 0, 0.0, {}, ("building", WALL) + (STONE,) * (not name.startswith("PALISADE")))
 
 
 def building(uuid, name, player, box, T=4, inside=(), s=None, low=None, factor=1):
