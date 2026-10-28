@@ -145,9 +145,16 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *                                              more items of the open menu with this title (one RCON command holds
  *                                              at most 1446 bytes, #1647)
  *   aoe menu-close <player>                    close the menu of the player
+ *   aoe charge <selector> <ticks> <attack> <shots> <blast> <class:bonus,...|->
+ *                                              Siphons (#2165): a fire ship that hits a ship also hits each enemy unit
+ *                                              within blast blocks of it with shots melee hits of attack, once per ticks
  *   aoe cheats <code>,<code>,...|-             the AoE2 cheat codes in the chat (#816, Cheats.java; URL-encoded)
  *   aoe deathmarks on|off                      a short mark where a replay unit dies (#846, Deaths.java)
  *   aoe destroy <selector>                     the buildings fall as at 0 hit points: "Destroy: <n> buildings" (#819)
+ *   aoe detonate <selector> <attack> <blast> <class:bonus,...|->
+ *                                              Incendiaries (#2165): the ship explodes when it sinks; each unit within
+ *                                              blast blocks takes a melee hit of attack, as in the blast of a
+ *                                              demolition ship also the own units
  *   aoe label <selector> [name]                show the name line again (after a selection change); a name sets
  *                                              the name of a building target (#661); a minecart: its crew (#1352)
  *   aoe lore <material> <name> <text>          the last lore line of each menu item with this material and name: the
@@ -315,6 +322,14 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     }
 
     private final Map<UUID, Range> ranges = new HashMap<>();
+    // A charge attack (Siphons) or the blast at death (Incendiaries) of a fire ship crew (#2165): shots melee hits of
+    // stats on each unit within blast blocks, at most once per ticks. Vanilla has no "on death" command or second attack.
+    private record Charge(int ticks, Stats stats, int shots, double blast) {
+    }
+
+    private final Map<UUID, Charge> charges = new HashMap<>();
+    private final Map<UUID, Integer> charged = new HashMap<>();      // the first tick of the next charge attack
+    private final Map<UUID, Charge> detonations = new HashMap<>();
     private final Map<UUID, Double> sights = new HashMap<>();       // the line of sight of a unit in blocks (#775)
     private final Map<UUID, String> modes = new HashMap<>();        // "only" or "first": it takes buildings (#1820)
     private static final Set<String> STANCES = Set.of("aggressive", "defensive", "stand_ground", "no_attack");
@@ -490,6 +505,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             LivingEntity v = t.getVehicle() instanceof LivingEntity h && stats.containsKey(h.getUniqueId()) ? h : t;
             if (v.isValid() && stats.containsKey(v.getUniqueId())) {
                 harm(v, stats.get(v.getUniqueId()), a, from);
+                charge(from, v);
             }
             if (range.pass > 0) {
                 pass(mob, v, range.blocks + range.pass, a, from, range.part);
@@ -512,6 +528,34 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         if (from instanceof Creeper c) {      // the demolition ship (#1440), the petard (#2192): one blast, then it dies. No
             c.setHealth(0);                   // vanilla explosion: it breaks no block, and the damage is the AoE2 one
         }
+    }
+
+    // Siphons (#2165, wiki "Siphons"): the hit of a fire ship on a ship sets off its charge attack when it is ready.
+    private void charge(Entity from, LivingEntity t) {
+        Charge c = charges.get(from.getUniqueId());
+        Stats s = stats.get(t.getUniqueId());
+        int now = Bukkit.getCurrentTick();
+        if (c == null || s == null || !s.classes().contains("ship") || now < charged.getOrDefault(from.getUniqueId(), 0)) {
+            return;
+        }
+        charged.put(from.getUniqueId(), now + c.ticks);
+        burst(from, t.getLocation(), c, true);
+    }
+
+    // The hits of a charge or a detonation on each unit with AoE2 values within its blast; foes: not the own or
+    // allied units. A mounted unit has the hit points of its horse (#732): only the horse counts.
+    private void burst(Entity from, Location at, Charge c, boolean foes) {
+        double r = c.blast;
+        for (Entity e : at.getWorld().getNearbyEntities(at, r, r, r)) {
+            if (e instanceof LivingEntity le && le.isValid() && stats.containsKey(le.getUniqueId())
+                    && !buildings.containsKey(le.getUniqueId()) && le != from
+                    && !(le.getVehicle() instanceof LivingEntity v && stats.containsKey(v.getUniqueId()))
+                    && !(foes && sameTeam(from, le)) && le.getLocation().distanceSquared(at) <= r * r) {
+                harm(le, stats.get(le.getUniqueId()), c.stats, from, c.shots);
+            }
+        }
+        at.getWorld().spawnParticle(Particle.FLAME, at.clone().add(0, 0.5, 0), 20, r / 2, 0.3, r / 2, 0.02);
+        at.getWorld().playSound(at, Sound.ENTITY_GENERIC_EXPLODE, 1.0f, 1.2f);
     }
 
     // AoE2 pass-through damage (#1401, wiki "Pass-through damage"): the bolt flies Range + 2 tiles in a straight line
@@ -975,7 +1019,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         victim.playHurtAnimation(0);
         victim.setHealth(Math.max(0, victim.getHealth() - a.damage(t) * part));     // 0 kills it
         nameLine(victim);
-        if (victim.getHealth() > 0 && from instanceof LivingEntity attacker) {
+        if (victim.getHealth() > 0 && from instanceof LivingEntity attacker && !attacker.isDead()) {   // a detonation
             attackBack(victim, attacker, t);
         }
     }
@@ -1161,6 +1205,10 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     @EventHandler
     public void onDeath(EntityDeathEvent ev) {               // the rider dies with its horse, else it stays (#732)
         stances.remove(ev.getEntity().getUniqueId());
+        Charge blast = detonations.remove(ev.getEntity().getUniqueId());
+        if (blast != null) {                                     // Incendiaries: the fire ship explodes (#2165)
+            burst(ev.getEntity(), ev.getEntity().getLocation(), blast, false);
+        }
         if (stats.containsKey(ev.getEntity().getUniqueId()) && ev.getEntity().getVehicle() instanceof Boat boat) {
             ev.getDrops().clear();                               // the crew of a ship at 0 hit points: the ship sinks (#1386)
             boat.getPassengers().stream().filter(p -> p != ev.getEntity() && !(p instanceof Player)).forEach(Entity::remove);
@@ -1507,6 +1555,28 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                 mob.attack(t);
             }
         }
+    }
+
+    // aoe charge and aoe detonate (#2165): the values go to the crew of a ship, which has the AoE2 values (#1386).
+    private boolean charges(CommandSender sender, String selector, Map<UUID, Charge> to, String ticks, String attack,
+                            String shots, String blast, String bonus) {
+        Charge c;
+        try {
+            c = new Charge(Integer.parseInt(ticks), new Stats(Integer.parseInt(attack), 0, 0, false, false, Set.of(),
+                    bonus(bonus), 20), Integer.parseInt(shots), Double.parseDouble(blast));
+        } catch (RuntimeException e) {                     // a bad number or a bonus without ":"
+            sender.sendMessage("Bad value: " + e.getMessage());
+            return true;
+        }
+        int n = 0;
+        for (Entity e : select(sender, selector)) {
+            if (sailors(e) instanceof LivingEntity le) {
+                to.put(le.getUniqueId(), c);
+                n++;
+            }
+        }
+        sender.sendMessage((to == charges ? "Charge: " : "Detonate: ") + n + " units");
+        return true;
     }
 
     private static Map<String, Integer> bonus(String text) {
@@ -2066,6 +2136,9 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             sender.sendMessage("Ballistics: " + BALLISTICS);
             return true;
         }
+        if (args.length == 7 && args[0].equals("charge")) {            // Siphons (#2165)
+            return charges(sender, args[1], charges, args[2], args[3], args[4], args[5], args[6]);
+        }
         if (args.length == 2 && args[0].equals("cheats")) {
             return cheats.command(sender, args);
         }
@@ -2083,6 +2156,9 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             }
             sender.sendMessage("Destroy: " + n + " buildings");
             return true;
+        }
+        if (args.length == 5 && args[0].equals("detonate")) {          // Incendiaries (#2165)
+            return charges(sender, args[1], detonations, "0", args[2], "1", args[3], args[4]);
         }
         if (args.length == 8 && args[0].equals("gate")) {              // the portcullis of a gate (#1325, #1656)
             return gates.command(sender, args);
