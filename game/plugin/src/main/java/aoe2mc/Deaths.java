@@ -5,12 +5,15 @@ import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Display;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.TextDisplay;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
 import org.bukkit.util.Transformation;
 import org.joml.AxisAngle4f;
@@ -43,16 +46,21 @@ final class Deaths implements Listener {
         return true;
     }
 
-    @EventHandler
+    // LOW: runs before AoePlugin.onDeath, which removes the boat or the minecart of the crew (#3019)
+    @EventHandler(priority = EventPriority.LOW)
     public void onDeath(EntityDeathEvent ev) {
         LivingEntity e = ev.getEntity();
-        if (!on || !e.getScoreboardTags().contains(TAG)) {
+        Entity vehicle = e.getVehicle();
+        boolean ship = vehicle != null && vehicle.getScoreboardTags().contains(TAG);   // the crew of a ship or siege unit
+        if (!on || !ship && !e.getScoreboardTags().contains(TAG)) {
             return;
         }
-        Team team = Bukkit.getScoreboardManager().getMainScoreboard().getEntityTeam(e);
+        Entity body = ship ? vehicle : e;
+        Scoreboard board = Bukkit.getScoreboardManager().getMainScoreboard();
+        Team team = board.getEntityTeam(e) != null ? board.getEntityTeam(e) : board.getEntityTeam(body);
         NamedTextColor color = team != null && team.hasColor() && team.color() instanceof NamedTextColor c ? c
                 : NamedTextColor.WHITE;
-        Location at = e.getLocation();
+        Location at = body.getLocation();
         e.getWorld().spawnParticle(Particle.SOUL, at.clone().add(0, 0.5, 0), 12, 0.3, 0.4, 0.3, 0.02);
         TextDisplay mark = e.getWorld().spawn(at.clone().add(0, 1.2, 0), TextDisplay.class, d -> {
             d.text(Component.text("☠", color));
