@@ -12,13 +12,13 @@
 {"name": "AZTECS: Start the game with an Eagle Scout.", "civ": "AZTECS", "bonus": "Start the game with an Eagle Scout.", "later": "play:setup"}
 {"name": "AZTECS: Villagers carry +3 extra resources.", "civ": "AZTECS", "bonus": "Villagers carry +3 extra resources.", "in": "CARRY"}
 {"name": "AZTECS: All military units are created 15% faster.", "civ": "AZTECS", "bonus": "All military units are created 15% faster.", "in": "TRAIN_RATE"}
-{"name": "AZTECS: Monks gain 5 HP for every researched Monastery technology.", "civ": "AZTECS", "bonus": "Monks gain 5 HP for every researched Monastery technology.", "later": "play:monks"}
+{"name": "AZTECS: Monks gain 5 HP for every researched Monastery technology.", "civ": "AZTECS", "bonus": "Monks gain 5 HP for every researched Monastery technology.", "in": "TECH_HP"}
 {"name": "AZTECS: Start with gold +50.", "civ": "AZTECS", "bonus": "Start with gold +50.", "in": "START"}
 {"name": "BENGALIS: Elephant units receive 25% less bonus damage and are more resistant to conversion.", "civ": "BENGALIS", "bonus": "Elephant units receive 25% less bonus damage and are more resistant to conversion.", "in": "UNITS"}
 {"name": "BENGALIS: All Town Centers spawn 2 Villagers when the next Age is reached.", "civ": "BENGALIS", "bonus": "All Town Centers spawn 2 Villagers when the next Age is reached.", "in": "AGE_VILLAGERS"}
 {"name": "BENGALIS: Cavalry units +2 attack vs Skirmishers.", "civ": "BENGALIS", "bonus": "Cavalry units +2 attack vs Skirmishers.", "in": "UNITS"}
 {"name": "BENGALIS: Ships regenerate 15 HP per minute.", "civ": "BENGALIS", "bonus": "Ships regenerate 15 HP per minute.", "in": "REGEN"}
-{"name": "BENGALIS: Monks +3/+3 armor.", "civ": "BENGALIS", "bonus": "Monks +3/+3 armor.", "later": "play:monks"}
+{"name": "BENGALIS: Monks +3/+3 armor.", "civ": "BENGALIS", "bonus": "Monks +3/+3 armor.", "in": "UNITS"}
 {"name": "BERBERS: Villagers move 5% faster in Dark Age, 10% faster starting in Feudal Age.", "civ": "BERBERS", "bonus": "Villagers move 5% faster in Dark Age, 10% faster starting in Feudal Age.", "in": "UNITS"}
 {"name": "BERBERS: Cavalry units are 15%/20% cheaper in the Castle/Imperial Age.", "civ": "BERBERS", "bonus": "Cavalry units are 15%/20% cheaper in the Castle/Imperial Age.", "in": "COSTS"}
 {"name": "BERBERS: Ships move 10% faster.", "civ": "BERBERS", "bonus": "Ships move 10% faster.", "in": "UNITS"}
@@ -39,7 +39,7 @@
 {"name": "BURMESE: Lumber Camp technologies are free.", "civ": "BURMESE", "bonus": "Lumber Camp technologies are free.", "in": "COSTS"}
 {"name": "BURMESE: Battle Elephants have +1/+1 armor.", "civ": "BURMESE", "bonus": "Battle Elephants have +1/+1 armor.", "in": "UNITS"}
 {"name": "BURMESE: Infantry units have +1/+2/+3 attack in the Feudal/Castle/Imperial Age.", "civ": "BURMESE", "bonus": "Infantry units have +1/+2/+3 attack in the Feudal/Castle/Imperial Age.", "in": "UNITS"}
-{"name": "BURMESE: Monastery technologies are 50% cheaper.", "civ": "BURMESE", "bonus": "Monastery technologies are 50% cheaper.", "later": "play:monks"}
+{"name": "BURMESE: Monastery technologies are 50% cheaper.", "civ": "BURMESE", "bonus": "Monastery technologies are 50% cheaper.", "in": "COSTS"}
 {"name": "BYZANTINES: Buildings, Walls/Gates, and Farms have +10%/+20%/+30%/+40% hit points in the Dark/Feudal/Castle/Imperial Age.", "civ": "BYZANTINES", "bonus": "Buildings, Walls/Gates, and Farms have +10%/+20%/+30%/+40% hit points in the Dark/Feudal/Castle/Imperial Age.", "in": "HP_AGE"}
 {"name": "BYZANTINES: Camel Rider, Skirmisher, and Spearman lines are 25% cheaper.", "civ": "BYZANTINES", "bonus": "Camel Rider, Skirmisher, and Spearman lines are 25% cheaper.", "in": "COSTS"}
 {"name": "BYZANTINES: Fire Ships and Dromons fire 25% faster.", "civ": "BYZANTINES", "bonus": "Fire Ships and Dromons fire 25% faster.", "in": "UNITS"}
@@ -210,7 +210,7 @@
 {"name": "TATARS: Units deal +20% damage when attacking from higher elevations (+50% instead of +25%).", "civ": "TATARS", "bonus": "Units deal +20% damage when attacking from higher elevations (+50% instead of +25%).", "in": "ELEVATION"}
 {"name": "TATARS: Parthian Tactics and Thumb Ring are free.", "civ": "TATARS", "bonus": "Parthian Tactics and Thumb Ring are free.", "in": "COSTS"}
 {"name": "TATARS: Two Sheep spawn near newly-constructed Town Centers starting in the Castle Age.", "civ": "TATARS", "bonus": "Two Sheep spawn near newly-constructed Town Centers starting in the Castle Age.", "in": "BUILT_UNITS"}
-{"name": "TEUTONS: Monks have double healing range.", "civ": "TEUTONS", "bonus": "Monks have double healing range.", "later": "play:monks"}
+{"name": "TEUTONS: Monks have double healing range.", "civ": "TEUTONS", "bonus": "Monks have double healing range.", "in": "HEAL_RANGE"}
 {"name": "TEUTONS: Towers garrison twice as many units.", "civ": "TEUTONS", "bonus": "Towers garrison twice as many units.", "in": "GARRISON"}
 {"name": "TEUTONS: Murder Holes and Herbal Medicine are free.", "civ": "TEUTONS", "bonus": "Murder Holes and Herbal Medicine are free.", "in": "COSTS"}
 {"name": "TEUTONS: Farms are 40% cheaper.", "civ": "TEUTONS", "bonus": "Farms are 40% cheaper.", "in": "COSTS"}
