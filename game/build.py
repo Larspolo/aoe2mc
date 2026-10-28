@@ -26,6 +26,10 @@ of the passage. On Paper the plugin raises them while an own or allied unit is n
 (aoe gate, Gates.java), as the AoE2 gate (the decision #1323).
 Fortified Wall (#1326, the key "walls" of train.jsonl): the new and the complete own stone walls and gates get the fortified design
 and its hit points (design(), upgrade()); a damaged one keeps its lost hit points, as in AoE2.
+Minimap (#2582, epic #2580): on Paper each building is a square in the player color on map 0 (`aoe minimap building`,
+Minimap.java) from its foundation on (found()), and its square goes when it falls (gather.Gather.fall: `aoe minimap
+unbuild`). run.play draws the buildings of the start (minimap()). Enemy buildings show too, also out of sight: the fog
+of the minimap is #2583.
 """
 import json
 import math
@@ -511,7 +515,25 @@ def found(g, name, rect, way=None, tiles=None, free=False):
     if tiles is not None and str(way).startswith("diag"):
         site["tiles"] = tiles
     g.sites.append(site)
+    if g.paper:                                                        # its square on the minimap (#2582)
+        g.command(minimap_square((x0, z0, x1, z1), g.player))
     return site
+
+
+def minimap_square(rect, player):
+    """The plugin command that draws the footprint rect (x0, z0, x1, z1; x1 and z1 not in it) of a building of player
+    on the minimap (Minimap.java, #1238)."""
+    return "aoe minimap building {} {} {} {} p{}".format(*rect, player)
+
+
+def minimap(g):
+    """The minimap commands of the buildings at the start of a game (#2582): the buildings of aoe2mc.json (not Gaia)
+    and the construction sites of each side (a loaded game)."""
+    rects = {tuple(o["footprint"]): o["player"] for o in g.data["objects"]
+             if o["kind"] == "building" and o["player"] > 0 and "footprint" in o}
+    for x in [g, *(b.g for b in g.bots)]:
+        rects.update({(f[0], f[2], f[1], f[3]): s["player"] for s in x.sites for f in [s["footprint"]]})
+    return [minimap_square(r, p) for r, p in sorted(rects.items())]
 
 
 def clear(g, cells):
