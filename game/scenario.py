@@ -166,13 +166,15 @@ def orders(g):
     (aoe2mc.stop_lines, #2754) stops the tagged units (`aoe stop`), ends their patrols as a new order of a person does
     (gather.Gather.end_patrols, #2674) and removes the tag. An "Unload" order (#2773): unload(). A "Lock Gate" or
     "Unlock Gate" order (aoe2mc.gate_lines, #2762) locks or unlocks the gate of its reference: gate(). A "Place
-    Foundation" order (aoe2mc.foundation_lines, #2825): foundation()."""
+    Foundation" order (aoe2mc.foundation_lines, #2825): foundation(). A "Set Building Gather Point" order
+    (aoe2mc.rally_lines, #2853): rally()."""
     got = g.command(f"data get storage {ORDERS} list") or ""
     new = re.findall(r'"(patrol|attack_move|stance|stop) (aoe_order[\w.]+) ?(-?\d+(?: -?\d+)*)?"', got)
     unloads = re.findall(r'"unload (\d+) (\d+) ?(-?\d+ -?\d+ -?\d+)?"', got)
     gates = re.findall(r'"(lock|unlock) (\d+)"', got)
     found = re.findall(r'"found (\d+) (\w+) (\d+) (\d+)"', got)
-    if new or unloads or gates or found:
+    rallies = re.findall(r'"rally (\d+) (\w+) (\d+) (\d+) ?(\d+ \d+ \d+ \d+)?"', got)
+    if new or unloads or gates or found or rallies:
         g.command(f"data remove storage {ORDERS} list")
     for player, ref, where in unloads:
         unload(g, int(player), int(ref), where)
@@ -180,6 +182,8 @@ def orders(g):
         gate(g, order, int(ref))
     for player, name, x, y in found:
         foundation(g, int(player), name, (int(x), int(y)))
+    for player, which, x, y, area in rallies:
+        rally(g, int(player), which, (int(x), int(y)), [int(v) for v in area.split()])
     patrols = vars(g).setdefault("patrols", [])
     for order, tag, where in new:
         p, sel = [int(v) for v in where.split()], f"@e[tag={tag}]"
@@ -227,6 +231,31 @@ def foundation(g, player, name, tile):
         rect = build.area(x, name, (tile[0] * T + T // 2, tile[1] * T + T // 2))
         if ok(x, rect) and build.level(x, name, rect):
             build.found(x, name, rect, free=True)
+
+
+def rally(g, player, which, tile, area):
+    """A "Set Building Gather Point" order (aoe2mc.rally_lines, #2853): the rally point of the building with the
+    reference which (a number), or of each building of the type which with its middle in the tile area, of the player
+    (a person or a bot) is the block of the tile, as the menu item "Rally point" sets it (train.rally): its new units
+    walk there (train.go). Only a building that trains units (train.units_of) has one. A bot gets no marker: AoE2 shows
+    the flag to its owner only."""
+    T = g.map.T
+    cell = tuple(int((v + 0.5) * T) for v in tile)
+    inside = lambda f: area and all(a * T <= (lo + hi) / 2 < (b + 1) * T for a, b, lo, hi in
+                                    ((area[0], area[2], f[0], f[2]), (area[1], area[3], f[1], f[3])))
+    for x in [g, *(s.g for s in g.bots)]:
+        if x.player != player or "objects" not in x.data:
+            continue
+        homes = train.homes(x)
+        for o in x.data["objects"]:
+            rect = tuple(o["footprint"][i] for i in (0, 2, 1, 3)) if o.get("footprint") else None
+            if rect not in homes or not train.units_of(homes[rect]) or \
+                    not (o.get("ref") == int(which) if which.isdigit() else o["name"] == which and inside(o["footprint"])):
+                continue
+            if x is g:
+                train.rally(x, rect, cell)
+            else:
+                x.rally[rect] = cell, None
 
 
 def unload(g, player, ref, where):
