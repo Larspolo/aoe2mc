@@ -128,7 +128,7 @@
 {"name": "LITHUANIANS: Spearman line and Skirmishers move 10% faster.", "civ": "LITHUANIANS", "bonus": "Spearman line and Skirmishers move 10% faster.", "in": "UNITS"}
 {"name": "LITHUANIANS: Each garrisoned Relic gives +1 attack to Knights and Leitis (maximum +4).", "civ": "LITHUANIANS", "bonus": "Each garrisoned Relic gives +1 attack to Knights and Leitis (maximum +4).", "in": "RELIC_ATTACK"}
 {"name": "MACEDONIANS: Take 10% less damage from enemies on higher elevation.", "civ": "MACEDONIANS", "bonus": "Take 10% less damage from enemies on higher elevation.", "in": "ELEVATION"}
-{"name": "MACEDONIANS: Recruitment Doctrines are available at the Barracks, Archery Range, and Stable.", "civ": "MACEDONIANS", "bonus": "Recruitment Doctrines are available at the Barracks, Archery Range, and Stable.", "later": "play:military-train"}
+{"name": "MACEDONIANS: Recruitment Doctrines are available at the Barracks, Archery Range, and Stable.", "civ": "MACEDONIANS", "bonus": "Recruitment Doctrines are available at the Barracks, Archery Range, and Stable.", "in": "doctrines"}
 {"name": "MACEDONIANS: Infantry armor upgrades also benefit cavalry.", "civ": "MACEDONIANS", "bonus": "Infantry armor upgrades also benefit cavalry.", "in": "SMITH_UNITS"}
 {"name": "MACEDONIANS: Siege weapons have +1 pierce armor and +30% anti-building damage.", "civ": "MACEDONIANS", "bonus": "Siege weapons have +1 pierce armor and +30% anti-building damage.", "in": "UNITS"}
 {"name": "MAGYARS: Forging, Iron Casting, and Blast Furnace are free.", "civ": "MAGYARS", "bonus": "Forging, Iron Casting, and Blast Furnace are free.", "in": "COSTS"}
@@ -203,7 +203,7 @@
 {"name": "SPANISH: Cannon Galleon projectiles can track moving targets and move faster.", "civ": "SPANISH", "bonus": "Cannon Galleon projectiles can track moving targets and move faster.", "in": "lead"}
 {"name": "SPANISH: Gunpowder units fire 18% faster.", "civ": "SPANISH", "bonus": "Gunpowder units fire 18% faster.", "in": "UNITS"}
 {"name": "SPANISH: Receive gold 20 for each technology researched.", "civ": "SPANISH", "bonus": "Receive gold 20 for each technology researched.", "in": "TECH_GIFTS"}
-{"name": "SPARTANS: A Polemarch is spawned for free in both the Civic Age and Classical Age.", "civ": "SPARTANS", "bonus": "A Polemarch is spawned for free in both the Civic Age and Classical Age.", "later": "play:ages"}
+{"name": "SPARTANS: A Polemarch is spawned for free in both the Civic Age and Classical Age.", "civ": "SPARTANS", "bonus": "A Polemarch is spawned for free in both the Civic Age and Classical Age.", "in": "age_units"}
 {"name": "SPARTANS: Villagers and Fishing Ships drop off 10% more food.", "civ": "SPARTANS", "bonus": "Villagers and Fishing Ships drop off 10% more food.", "in": "DROP"}
 {"name": "SPARTANS: The Elite Hoplite upgrade is available in the Classical Age.", "civ": "SPARTANS", "bonus": "The Elite Hoplite upgrade is available in the Classical Age.", "in": "EARLIER"}
 {"name": "TATARS: Herdable animals contain food +50%.", "civ": "TATARS", "bonus": "Herdable animals contain food +50%.", "in": "LAST"}

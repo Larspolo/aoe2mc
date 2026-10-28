@@ -8,7 +8,7 @@ from game import combat, train
 
 
 def test_the_values_are_those_of_aoe2():
-    assert train.AFTER["HALBERDIER_UPGRADE"] == "PIKEMAN_UPGRADE"
+    assert train.BY_KEY["after"]["HALBERDIER_UPGRADE"] == "PIKEMAN_UPGRADE"
     assert len(train.HELP["HALBERDIER_UPGRADE"]) <= 50
 
 

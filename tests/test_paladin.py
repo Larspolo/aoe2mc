@@ -18,7 +18,7 @@ def stable(civ="BYZANTINES", ages=IMPERIAL):   # no cavalry bonus
 
 
 def test_the_values_are_those_of_aoe2():
-    assert train.AFTER["PALADIN_UPGRADE"] == "CAVALIER_UPGRADE" and "CAVALIER_UPGRADE" not in train.AFTER
+    assert train.BY_KEY["after"]["PALADIN_UPGRADE"] == "CAVALIER_UPGRADE" and "CAVALIER_UPGRADE" not in train.BY_KEY["after"]
     for unit in ("CAVALIER", "PALADIN"):
         assert len(train.HELP[unit + "_UPGRADE"]) <= 50
     assert {"DANES", "SARACENS", "AZTECS"} <= set(civs.MISSING["CAVALIER_UPGRADE"])

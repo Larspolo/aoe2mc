@@ -1,3 +1,4 @@
+import io
 import os
 import sys
 
@@ -5,6 +6,21 @@ import pytest
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path[:0] = [ROOT, os.path.join(ROOT, "tools")]
+
+
+@pytest.fixture(autouse=True)
+def empty_stdin(monkeypatch):
+    """An empty stdin: the run.console thread of a test game ends at once. Else pytest prints a thread warning of about
+    10 lines for each such test, and they hide the result line at the end of the output (#2510)."""
+    monkeypatch.setattr(sys, "stdin", io.StringIO())
+
+
+def pytest_terminal_summary(terminalreporter, exitstatus, config):
+    """The result line also with -qq: addopts has -q, so `pytest -q` printed no "N passed" line, and runs ran the full
+    suite again to find the result (#1243, #2510)."""
+    if config.get_verbosity() < -1:
+        counts = {k: len(v) for k, v in terminalreporter.stats.items() if k and k != "warnings"}
+        terminalreporter.write_line(", ".join(f"{n} {k}" for k, n in sorted(counts.items())) + f" (exit {exitstatus})")
 
 
 def entity_ids(nbt_or_desc):

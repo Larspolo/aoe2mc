@@ -25,7 +25,7 @@ def speed(server, g):
 
 
 def test_the_town_center_menu_has_hand_cart_in_the_castle_age_after_wheelbarrow():
-    assert train.AFTER["HAND_CART"] == "WHEELBARROW"
+    assert train.BY_KEY["after"]["HAND_CART"] == "WHEELBARROW"
     server, g = setup()
     g.techs.add("WHEELBARROW")
     train.open_menu(g, "Steve", (3, 3))
