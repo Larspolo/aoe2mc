@@ -31,8 +31,8 @@ def test_the_units_of_player_1_in_the_area_go_to_player_2():
                        "team join p2 @e[tag=aoe2mc.own]", "tag @e[tag=aoe2mc.own] remove aoe2mc.own"]
 
 
-def test_gaia_and_the_same_player_write_no_command():
-    assert lines(player=0) == lines(target=0) == lines(target=1) == []
+def test_the_same_player_writes_no_command():
+    assert lines(target=1) == []   # Gaia: tests/test_trigger_ownership_gaia.py (#2908), tests/test_gaia_selector.py (#2916)
 
 
 def ownership_scenario(path):

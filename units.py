@@ -90,6 +90,8 @@ WEAPONS = [(r["name"], r["weapon"]) for r in rows("weapons.jsonl")]
 # equipment asset aoe2mc:<name> (its textures: aoe2mc.write_resourcepack); ELITE_X wears the asset of X.
 LOOKS = {r["name"]: r for r in rows("looks.jsonl")}
 ASSETS = False
+WORN = ("head", "chest", "legs", "feet")
+DEFAULT_LOOK = {"chainmail": "mail", "golden": "scale", "iron": "mail", "leather": "quilted"}   # material -> pattern (#2743)
 
 # The names of data/units.jsonl (#2035), one line each; the keys of a line:
 # "tier": the upgrade step of a standard unit line (other units are "unique", "elite" or "hero").
@@ -157,15 +159,60 @@ def armor_items(pieces):
     return out
 
 
+def asset(n):
+    """The equipment asset name of unit n: its own name; ELITE_X of a unit X with a look wears the asset of X (#2742)."""
+    return n[6:] if n not in LOOKS and n.startswith("ELITE_") and n[6:] in LOOKS else n
+
+
 def wear(n, gear):
     """The armor pieces of gear get the equipment asset of unit n when ASSETS is on and n has a look (#2742)."""
-    n = n[6:] if n not in LOOKS and n.startswith("ELITE_") else n
+    n = asset(n)
     if ASSETS and n in LOOKS:
-        for slot in ("head", "chest", "legs", "feet"):
+        for slot in WORN:
             if slot in gear:
                 gear[slot].setdefault("components", Compound({}))["minecraft:equippable"] = Compound({
                     "slot": String(slot), "asset_id": String("aoe2mc:" + n.lower())})
     return gear
+
+
+def stack(d):
+    """The mobs of description d: the mount, then its riders (Passengers)."""
+    yield d
+    for p in d.get("Passengers", []):
+        yield from stack(p)
+
+
+def worn(m):
+    """The armor of mob m that the pack can dress (#2743): {slot: item} of its armor pieces, and "body" for the horse
+    armor of a mount (equipment layer horse_body)."""
+    return {s: p for s, p in m.get("equipment", {}).items() if s in WORN or s == "body" and str(p["id"]).endswith("_horse_armor")}
+
+
+def pieces(d):
+    """The armor of all mobs of description d (worn())."""
+    return {s: p for m in stack(d) for s, p in worn(m).items()}
+
+
+@functools.lru_cache(maxsize=None)
+def dressed():
+    """{name: hero} of each unit with armor that has its own asset in the pack (#2743): the AoE2 units and heroes of
+    AoE2ScenarioParser and the names of data/units.jsonl."""
+    from AoE2ScenarioParser.datasets.heroes import HeroInfo
+    from AoE2ScenarioParser.datasets.units import UnitInfo
+    names = {e.name: False for e in UnitInfo} | {r["name"]: r["name"] in HERO_BASE for r in UNITS} | {
+        e.name: True for e in HeroInfo} | {n: False for n in (*LINES, *LOOKS)}
+    return {n: h for n, h in sorted(names.items()) if (d := describe(n, h)) and pieces(d)}
+
+
+def look(n, hero=False):
+    """The look of unit n (#2743): its line of LOOKS, else the line of its hero base, else a look from the material of
+    its chestplate (or helmet) with DEFAULT_LOOK."""
+    a = asset(n)
+    if a in LOOKS or HERO_BASE.get(n) in LOOKS:
+        return LOOKS[a if a in LOOKS else HERO_BASE[n]]
+    worn = pieces(describe(n, hero))
+    mat = str(worn.get("chest", worn.get("head", worn.get("body")))["id"]).split(":")[1].split("_")[0]
+    return {"name": n, "pattern": DEFAULT_LOOK.get(mat, "plate"), "accent": "#6B4A2B"}
 
 
 def hands(main=None, off=None):
@@ -326,7 +373,19 @@ def wagon(n):
 
 
 def classify(n, hero=False):
-    """Return the entity description for unit name n, or None to skip it."""
+    """Return the entity description for unit name n, or None to skip it. With ASSETS each armor piece (pieces()) has
+    the equipment asset of n (#2743)."""
+    d = describe(n, hero)
+    if d and ASSETS and n in dressed():
+        for m in stack(d):
+            for slot, p in worn(m).items():
+                p.setdefault("components", Compound({}))["minecraft:equippable"] = Compound({
+                    "slot": String(slot), "asset_id": String("aoe2mc:" + asset(n).lower())})
+    return d
+
+
+def describe(n, hero=False):
+    """The entity description for unit name n with vanilla armor, or None to skip it."""
     if invisible(n):
         return None
     if n in FLYING:
@@ -339,7 +398,7 @@ def classify(n, hero=False):
         base = HERO_BASE[n]
         if base in ("SWORD", "AXE"):
             return soldier("zombie", "hero", sword("hero") if base == "SWORD" else "netherite_axe")
-        return classify(base, base not in PLAIN)
+        return describe(base, base not in PLAIN)
     if n == "VMDL":                 # an old villager model
         n = "VILLAGER_MALE"
     t = tier_of(n, hero)
@@ -375,9 +434,9 @@ def classify(n, hero=False):
            "LOU_CHUAN", "LEMBOS", "MONOREME", "BIREME", "TRIREME", "LEVIATHAN", "HULK", "CARRACK", "RAFT", "COG"):
         crew = soldier("skeleton", "crew", "bow")
         if has(n, "FISHING", "WHALING"):
-            return boat("oak", [classify("VILLAGER_MALE_FISHERMAN")])
+            return boat("oak", [describe("VILLAGER_MALE_FISHERMAN")])
         if has(n, "TRANSPORT", "MERCHANT", "TRADE_COG"):
-            return boat("spruce" if "TRANSPORT" in n else "birch", [classify("VILLAGER_MALE")], chest=True)
+            return boat("spruce" if "TRANSPORT" in n else "birch", [describe("VILLAGER_MALE")], chest=True)
         if has(n, "FIRE", "INCENDIARY"):
             return boat("mangrove", [mob("blaze")])
         if has(n, "DEMOLITION"):
@@ -506,6 +565,21 @@ def to_nbt(desc, pos, yaw, rng):
     return Compound(tags)
 
 
+SUMMON_DROP = {"Motion": [0.0, 0.0, 0.0], "fall_distance": 0.0, "Fire": -1, "Air": 300, "OnGround": 1, "Invulnerable": 0,
+               "PortalCooldown": 0}   # the to_nbt tags that a summoned entity gets anyway (or soon: OnGround)
+
+
+def summon_snbt(nbt):
+    """The compact SNBT of entity nbt for a summon command, without the SUMMON_DROP tags of the world file: a mounted
+    unit with its equipment assets (#2743) stays below the RCON limit (rcon.MAX)."""
+    def strip(c):
+        out = Compound({k: v for k, v in c.items() if k not in SUMMON_DROP or v != SUMMON_DROP[k]})
+        if "Passengers" in out:
+            out["Passengers"] = List[Compound]([strip(p) for p in out["Passengers"]])
+        return out
+    return strip(nbt).snbt(compact=True)
+
+
 def uuid_str(ints):
     """UUID int array (4 × int32, most significant first) -> the text form that commands use."""
     h = "".join(f"{int(v) & 0xFFFFFFFF:08x}" for v in ints)
@@ -535,17 +609,16 @@ def make_entity(o, players, pos, rng, desc=None):
         label["Color"] = Byte(dye(o["player"], players))
     # the reference ID of a scenario unit, also of Gaia: the triggers find one object by it (#2617)
     ref = [String(f"aoe2mc.r{o.get('ref')}")] * (o.get("ref_tag", False) and o.get("ref") is not None)
-    if ref and not o["player"]:
-        label["Tags"] = List[String](ref)
-    if o["player"]:                # the datapack puts the tagged units in the player team (#358); area triggers (#681)
-        label["Tags"] = List[String]([String(f"aoe2mc.p{o['player']}")] +
-                                     [String(f"aoe2mc.t{o.get('id')}")] * ("id" in o) + ref)
-        stack = [nbt]              # the horse, boat or crew of the unit: the same team, but no unit of its own (#1045)
-        while stack:
-            e = stack.pop()
-            stack += list(e.get("Passengers", []))
-            if e is not label:
-                e["Tags"] = List[String]([String(f"aoe2mc.p{o['player']}"), String(MOUNT)])
+    # the player tag, also aoe2mc.p0 of Gaia (the Gaia triggers, #2916): the datapack puts the tagged units in the
+    # player team (#358, not p0); area triggers (#681)
+    label["Tags"] = List[String]([String(f"aoe2mc.p{o['player']}")] +
+                                 [String(f"aoe2mc.t{o.get('id')}")] * ("id" in o) + ref)
+    stack = [nbt]              # the horse, boat or crew of the unit: the same team, but no unit of its own (#1045)
+    while stack:
+        e = stack.pop()
+        stack += list(e.get("Passengers", []))
+        if e is not label:
+            e["Tags"] = List[String]([String(f"aoe2mc.p{o['player']}"), String(MOUNT)])
     if ASSETS:
         weapon_models(nbt, o["name"])
     return nbt

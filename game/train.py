@@ -409,6 +409,35 @@ def slots(building, name):
     return slot + SHIFTS.get(building, {}).get(name, 0), item, label
 
 
+def added(g, building, name):
+    """(AoE2 button, seconds) of unit name in building from "Add Train Location" (scenario.locations, #2865), or None.
+    An upgraded unit keeps the entry of its line: the castle trains the man-at-arms in place of the militia."""
+    got = getattr(g, "trigger_trains", {}).get(building, {})
+    old = {new: old for t in UPGRADES for old, new in lines(t)}
+    while name not in got and name in old:
+        name = old[name]
+    return got.get(name)
+
+
+def placed(g, building, name):
+    """slots() of name, at the slot of the AoE2 button that a scenario trigger gave it (g.trigger_places, #2864; "Add
+    Train Location" in building: added(), #2865, its button 0 is the first): the buttons 1 to 8 are the first row, 9 and
+    up the row under the queue (MORE). Button 0 or less keeps the slot."""
+    slot, item, label = slots(building, name)
+    got = added(g, building, name)
+    button = vars(g).get("trigger_places", {}).get(name, [None, 0])[1] or (max(got[0], 1) if got else 0)
+    return (button - 1 if button < ROW else MORE + button - ROW) if button > 0 else slot, item, label
+
+
+def covered(g, building, name):
+    """True when a scenario trigger moved or added another item onto the slot of name in the menu of building (#2864,
+    #2865): the moved or added item takes the slot."""
+    moved = vars(g).get("trigger_places", {})
+    new = getattr(g, "trigger_trains", {}).get(building, {})
+    return name not in moved and added(g, building, name) is None and placed(g, building, name)[0] in \
+        {placed(g, b, n)[0] for n, (b, _) in moved.items() if b == building} | {placed(g, building, n)[0] for n in new}
+
+
 def line_upgrades(line):
     """The upgrade technologies (UPGRADES) of one unit line (a list of unit names), in the order of the line. The elite
     upgrade of a unique unit stays at the castle (the Goth barracks, #2685)."""
@@ -428,6 +457,9 @@ def trains(g, building):
     more = civs.TRAINS.get(civs.civ(g), {}).get(building, {})
     more = more.get("lines", ()) if more.get("after", "") in {"", *g.techs} else ()   # after a technology: Anarchy (#2685)
     out += [line[0] for line in more] + [t for line in more for t in line_upgrades(line)]   # Mapuche (#2432, #2487)
+    moved = vars(g).get("trigger_places", {})                      # "Change Train/Technology Location" (#2864)
+    out = [n for n in out if moved.get(n, [building])[0] == building] + [n for n, (b, _) in moved.items() if b == building]
+    out += [n for n in getattr(g, "trigger_trains", {}).get(building, {}) if n in COSTS]   # Add Train Location (#2865)
     for _ in UPGRADES:                                             # a line of upgrades: mangonel, onager, siege onager
         out = [new.get(n, n) for n in out]                         # the castle: the elite unique unit (#1624)
     return tuple(dict.fromkeys(out))                               # the camel scout becomes the camel rider (#2130)
@@ -469,7 +501,8 @@ def show(g, player, rect):
     items = [(slot, build.LOCKED if build.locked(g, name) else item, names.get(name, label),
               (" · ".join(f"{v} {r}" for r, v in price(g, name, building).items()) or "free") + f" · {round(seconds(g, name, building), 1):g} s · "
               + state(name))
-             for name in trains(g, building) if offered(g, rect, name) for slot, item, label in [slots(building, name)]]
+             for name in trains(g, building) if offered(g, rect, name) and not covered(g, building, name)
+             for slot, item, label in [placed(g, building, name)]]
     items += [RALLY] if units_of(building) else []
     items += [garrison.ungarrison(building)] if getattr(g, "garrisons", {}).get(rect) else []   # only with units inside (#808)
     if building == "MARKET":                                           # the buy and sell rows under the queue (#1286)
@@ -552,7 +585,7 @@ def order(g, player, rect, slot, shift=False):
         show(g, player, rect)
         return 0
     name = next((n for n in trains(g, homes(g)[rect])                # the shown item of the slot (one per line of upgrades)
-                 if slots(homes(g)[rect], n)[0] == slot and offered(g, rect, n)), None)
+                 if placed(g, homes(g)[rect], n)[0] == slot and offered(g, rect, n) and not covered(g, homes(g)[rect], n)), None)
     n = 0
     while name and n < (SHIFT if shift else 1) and queue(g, player, rect[::2], name):
         n += 1
@@ -647,6 +680,8 @@ def repeatable(g, name):
     and the gather tables take count()."""
     if name in civs.policies(g).get("effects", ()):                # a policy: each one but the active one (#2485)
         return name != civs.policy(g)[0]
+    if count(g, name) < vars(g).get("trigger_stacks", {}).get(name, 0):   # "Enable Technology Stacking" (#2866)
+        return True
     return name not in g.techs or name in AGAIN or getattr(g, "beyond", False) and name not in REQUIRES and name not in UPGRADES \
         and value("walls", name) is None and count(g, name) < REPEAT
 
@@ -730,6 +765,27 @@ def age(g):
 
 OPERATIONS = {1: lambda v, q: q, 2: lambda v, q: v + q, 3: lambda v, q: v - q,   # the AoE2 Operation of a trigger:
               4: lambda v, q: v * q, 5: lambda v, q: v / q if q else v}   # set, add, subtract, multiply, divide
+# The AoE2 unit classes (ObjectClass) of "Modify Attribute for Class" (#2859) -> a test of the combat classes of a unit:
+# the camels are cavalry, a cavalry archer or a hand cannoneer is not in the class "archer"
+CLASSES = {
+    "archer": lambda c: "archer" in c and not {"cavalry", "gunpowder"} & c,
+    "cavalry": lambda c: bool({"cavalry", "camel"} & c) and "archer" not in c,
+    "cavalry_archer": lambda c: {"archer", "cavalry"} <= c,
+    "hand_cannoneer": lambda c: {"archer", "gunpowder"} <= c,
+    "infantry": lambda c: "infantry" in c,
+    "siege_weapon": lambda c: "siege" in c,
+    "spearman": lambda c: "spearman" in c,
+    "war_elephant": lambda c: "elephant" in c and "archer" not in c,
+    "warship": lambda c: "warship" in c,
+}
+
+
+def applies(unit, name):
+    """True when the unit of a "Modify Attribute" line is AoE2 unit name: its type, or its class "@<class>" (CLASSES,
+    #2859). A class with no test: no unit."""
+    import combat                                                  # combat imports gather, gather imports this module
+    test = CLASSES.get(unit[1:]) if unit.startswith("@") else None
+    return unit == name or test is not None and name in combat.STATS and test(set(combat.stats(name).classes))
 
 
 def stats(g, name):
@@ -751,7 +807,7 @@ def stats(g, name):
     if name.startswith("VILLAGER") and (f := civs.handicap(g.data, g.player)) != 1:   # the AoE2 "Handicap" (#2474)
         s = s._replace(hp=round(s.hp * f))
     for unit, field, op, q in vars(g).get("trigger_attributes", ()):   # "Modify Attribute" of a scenario (#2763)
-        if unit == name:
+        if applies(unit, name):
             v = max(0, OPERATIONS[op](getattr(s, field), q))
             s = s._replace(**{field: v if field in ("range", "reload") else int(v)})   # AoE2: whole hit points, armor
     return s
@@ -764,9 +820,12 @@ def seconds(g, name, building=None, k=None):
     (civs.train_rate: Aztec military units, Khitan skirmishers, #1927) and its age-up rate (civs.age_rate: the Malay, #1926),
     times its research time of the technology (civs.research_time: the Gothic Loom at once, #2172) and its time factor
     at building (civs.train_time: Mapuche Settlements, #2432), and of the Recruitment Doctrine k of a unit (doctrine(),
-    default the present one, #2483)."""
+    default the present one, #2483). The time of "Add Train Location" at building replaces TRAIN_TIMES (#2865)."""
     age, time = value("faster", name, (9, 0))
-    return (time if build.ages(g) >= age else TRAIN_TIMES[name]) / (civs.work_rate(g, building) if building else 1) \
+    base = vars(g).get("trigger_times", {}).get(name)                  # "Change Technology Research Time" (#2820)
+    own = (added(g, building, name) or (0, 0))[1] if building else 0   # Add Train Location (#2865)
+    return (own or (base if base is not None else time if build.ages(g) >= age else TRAIN_TIMES[name])) \
+        / (civs.work_rate(g, building) if building else 1) \
         / civs.train_rate(g, name) / civs.age_rate(g, name) * civs.research_time(g, name) / civs.turbo(g, name) \
         * (civs.train_time(g, building, name) if building else 1) \
         * (doctrine(g, building, k)[2] if building and name not in TECHS else 1)
@@ -1082,7 +1141,7 @@ def summon(g, name, pos, rotation=math.pi / 2, player=None):
     kind = str(nbt.pop("id"))
     del nbt["Pos"]
     uuid = units.uuid_str(nbt["UUID"])
-    g.command(f"summon {kind} {pos[0]} {pos[1]} {pos[2]} {nbt.snbt()}")
+    g.command(f"summon {kind} {pos[0]} {pos[1]} {pos[2]} {units.summon_snbt(nbt)}")
     import combat, gather                                          # both import gather, gather imports this module
     g.command(combat.stats_command(uuid, name, stats(g, name), civs.taken(g, name), civs.friendly(g, name)))
     import spoils                                                  # spoils imports this module

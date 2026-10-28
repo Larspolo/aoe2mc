@@ -31,7 +31,9 @@ OPTIONAL = ("limit_left", "policy", "rates", "relic_timer", "switches", "upgrade
 MONK = ("carrier_at", "converting", "faith", "fetching", "heal_time", "monk_at", "relic_gold", "relic_homes",
         "relic_time", "relics")                                        # game/monk.py: the relics and monk orders (#2412)
 ORDERS = ("patrols", "trigger_attributes", "trigger_costs",            # scenario.py: the patrols (#2647), attributes (#2763),
-          "trigger_menus", "trigger_names")                            # costs (#2776), menu items (#2775), names (#2821)
+          "trigger_menus", "trigger_names",                            # costs (#2776), menu items (#2775), names (#2821)
+          "trigger_places", "trigger_stacks", "trigger_times",         # the menu places (#2864), stacking (#2866), times (#2820),
+          "trigger_trains", "trigger_civs")                            # train locations (#2865), civilization names (#2905)
 ROUTES = ("trade", "trebs")                                            # trade.py, trebuchet.py: as OPTIONAL (#2413)
 CHEATS = (                                                             # game/cheats.py: the cheats that the player
     "aegis",                                                           # turned on (#2533)
@@ -130,11 +132,14 @@ SETTINGS = (                                                           # run.py 
     "sudden_death",
     "teams",
     "treaty",
+    "unlock_speed",
     "victory",
     "victory_value",
 )
 NOT_SAVED = (                                                          # the fields that game/*.py sets on a Gather and the save
     # does not keep, one per line with its reason, in alphabetical order (tests/test_savegame_fields.py, #2535)
+    "action_at",                                                       # scenario.py: the next check time
+    "action_sent",                                                     # scenario.actions: a load sends them again
     "age_times",                                                       # recap.py: game times of this session (Gather.t0)
     "bar",                                                             # bossbar.py: the shown unit
     "board",                                                           # bot.py: the scoreboard of a bot
@@ -149,6 +154,8 @@ NOT_SAVED = (                                                          # the fie
     "defender",                                                        # defend_wonder.setup makes it again
     "enemies",                                                         # the enemy units of aoe2mc.json: a dead one has no position
     "explore_at",                                                      # score.py: the next check time
+    "fallen_at",                                                       # scenario.fallen: the next check time
+    "fallen_sent",                                                     # scenario.fallen: a load sets the same score again
     "flares",                                                          # flare.py: the flares of a replay
     "fog",                                                             # fog.py: the next tick hides the units again; explored()
     "garrison_sent",                                                   # scenario.garrisons: a load sends them again
@@ -175,11 +182,17 @@ NOT_SAVED = (                                                          # the fie
     "score_at",                                                        # score.py: the next check time
     "shapes",                                                          # build.py: the shown building to place
     "share",                                                           # bot.py: the techs of the human player
+    "spectator_at",                                                    # spectator.py: the next check time
+    "spectator_sent",                                                  # spectator.tick: a load sends them again
     "speed",                                                           # run.py: the --speed option
     "sudden_death_at",                                                 # sudden_death.py: the next check time
     "tech_state_at",                                                   # scenario.py: the next check time
     "tech_state_sent",                                                 # scenario.tech_states: a load sends them again
+    "unlock_speed",                                                    # run.py: from the saved settings
+    "unselectable",                                                    # scenario.selection: the world keeps the tags, the next check reads them
     "victory",                                                         # run.py: from the saved settings
+    "victory_timer_at",                                                # scenario.py: the next check time
+    "victory_timer_sent",                                              # scenario.victory_timers: a load sends them again
     "victory_value",                                                   # run.py: from the saved settings
     "wall_start",                                                      # build.py: the first corner of a wall
     "who",                                                             # the player name on the server

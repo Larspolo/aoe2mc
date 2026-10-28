@@ -36,12 +36,7 @@ def test_a_unit_type_filters_the_entity_type():
 
 def test_a_gaia_effect_does_not_damage_the_players():
     line, = lines([effect(5, player=0)])
-    assert line.startswith("execute as @e[type=!minecraft:player,tag=!aoe2mc.mount,x=8,")
-
-
-def test_a_heal_is_not_supported_yet():
-    stats = Counter()
-    assert lines([effect(-10)], stats) == [] and stats == Counter({"damage (heal or building, not supported yet)": 1})
+    assert line.startswith("execute as @e[tag=aoe2mc.p0,tag=!aoe2mc.mount,x=8,")   # Gaia: p0 (#2916)
 
 
 def test_read_scenario_keeps_the_amount(tmp_path):

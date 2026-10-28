@@ -58,6 +58,19 @@ player loads it with the world. Without the option, the world is the same as bef
   dyed. `aoe2mc.armor_textures()` draws the 64 × 32 textures (`ARMOR_BOXES`) from the material of each piece of the
   unit and the pattern of its look.
 
+## Archers, riders and horses (#2743)
+
+- Each unit with armor has its own asset, not only the units of `data/looks.jsonl`: `units.dressed()` lists the AoE2
+  units and heroes (AoE2ScenarioParser `UnitInfo`, `HeroInfo`) and the names of `data/units.jsonl` whose description has
+  an armor piece. With `units.ASSETS`, `units.classify()` gives each piece of each mob of the unit (the rider of a
+  mount too, `units.pieces()`) the asset `aoe2mc:<name>`. `units.describe()` is the description with vanilla armor.
+- The horse armor of a mount (slot `body`) gets the same asset; the pack adds the layer `horse_body` (64 × 64,
+  `HORSE_BOXES`: the body, the neck and the head of the horse, with a hem in the accent color; the legs stay bare).
+- `data/looks.jsonl` has lines for the main archer, skirmisher, cavalry archer, cavalry and camel lines. Another unit
+  takes the look of its hero base (`HERO_BASE`) or a pattern from the material of its chestplate (`units.look()`,
+  `DEFAULT_LOOK`). A unit with no own line shares the textures of the same look and materials (`look_<hash>.png`), so
+  the pack stays small (about 300 kB for 543 units).
+
 ## Weapons (#2744)
 
 - With the option, `units.make_entity` gives each hand item of a unit (also of its rider and crew) the component
@@ -79,6 +92,11 @@ player loads it with the world. Without the option, the world is the same as bef
   `resource-pack-prompt` (`run.PROMPT`). Before the join the client shows "This server requires the use of a custom
   resource pack." with the prompt text and the buttons "Proceed" and "Disconnect". `mc_shot.Client` at 1280 × 720:
   click (407, 488) for "Proceed"; the player is in `list` only after it.
+- Release (#2741): `bundles.yml` builds the pack once (`packaging/release_pack.py`, the bytes of the world pack) as
+  `aoe2mc-resourcepack.zip`, and `installers.yml` attaches it to the release of a tag. On a tag each bundle gets
+  `release.json` (the tag and the SHA-1 of that pack). The game program of the bundle (`run.pack_source`) then sends
+  the release link, when the world pack has that SHA-1; else (a world of another version, a run from the source) it
+  uses the local `PackServer`.
 
 ## Pitfalls
 
@@ -87,3 +105,7 @@ player loads it with the world. Without the option, the world is the same as bef
   `ResourcePackLocationFileFix` moves it only when the client upgrades a world of an older version.
 - `mc_shot.py --at Y` is the player position: the eye is 1.62 blocks higher. For a face at eye level of a unit on a
   block at y, use `--at X y+0.1 Z`.
+- The same pack bytes on each system (#2741) need more than sorted names and a fixed time: the deflate of `zipfile`
+  and of Pillow's PNG writer depends on the zlib of each build (Linux, Windows and macOS gave 3 SHA-1s), and
+  `zipfile.ZipInfo` writes `create_system` 0 on Windows. Use `ZIP_STORED`, `stored_png()` and `create_system = 3`; the
+  `bundles.yml` step "The world pack of the frozen command line is the release pack" checks it on each system.
