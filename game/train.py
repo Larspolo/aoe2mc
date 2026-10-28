@@ -81,7 +81,7 @@ import monk  # noqa: E402
 import record  # noqa: E402
 import table  # noqa: E402
 
-DATA = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "train.jsonl")
+DATA = os.path.join(table.DIR, "train.jsonl")
 
 
 def load(path=DATA):
@@ -465,7 +465,8 @@ def show(g, player, rect):
         if name in TECHS:
             return missing(g, name) or ("researching" if queued(g, name) and name not in ONE_BUILDING else "research")
         return f"queue {n}/{QUEUE}"
-    items = [(slot, build.LOCKED if build.locked(g, name) else item, label,
+    names = vars(g).get("trigger_names", {})                          # "Change Technology Name" (#2821)
+    items = [(slot, build.LOCKED if build.locked(g, name) else item, names.get(name, label),
               (" · ".join(f"{v} {r}" for r, v in price(g, name, building).items()) or "free") + f" · {round(seconds(g, name, building), 1):g} s · "
               + state(name))
              for name in trains(g, building) if offered(g, rect, name) for slot, item, label in [slots(building, name)]]

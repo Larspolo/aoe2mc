@@ -216,7 +216,7 @@ class Game:
         self.server = self.rcon = None
         self.lock, self.seen = threading.Lock(), 0     # the op thread and the game send commands
         self.sides = {}
-        import units                                 # a world with the resource pack: units in their own armor (#2742)
+        import units                                 # a world with the resource pack: own armor and weapons (#2742, #2744)
         units.ASSETS = pack_file(self.world) is not None
 
     def start(self):
