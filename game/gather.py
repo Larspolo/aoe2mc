@@ -1252,7 +1252,8 @@ class Gather:
             import combat                                              # combat imports this module
             what = self.fort_names.get(u, "")
             owner = self.fort_players.get(u, 0)                        # Persians (#1895), Byzantines in the own age (#2116)
-            full = civs.hp(civs.civ(self, owner), what, combat.stats(what), build.ages(self) if owner == self.player else 0).hp
+            full = civs.hp(civs.civ(self, owner), what, combat.stats(what), build.ages(self) if owner == self.player else 0,
+                           civs.handicap(self.data, owner)).hp
             for c in siege_mark(u, what, full, name):
                 self.command(c)
             return

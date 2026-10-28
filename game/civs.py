@@ -326,6 +326,12 @@ def civ(g, player=None):
     return None if g.data.get("full_tech_tree") else real(g, player)
 
 
+def handicap(data, player):
+    """The factor of the AoE2 setting "Handicap" of player (aoe2mc.json "players" "handicap": 100 to 200 percent,
+    run.py --handicap, #2474), else 1. It is no civilization bonus: "Full Tech Tree" keeps it."""
+    return data.get("players", {}).get(str(player), {}).get("handicap", 100) / 100
+
+
 def real(g, player=None):
     """The civilization of the player of g, or of another player, also with the setting "Full Tech Tree" (civ)."""
     return g.data.get("players", {}).get(str(g.player if player is None else player), {}).get("civ")
@@ -361,7 +367,8 @@ def build_rate(g, name):
     """The factor of the build speed of the villagers of the player of g for a site of building name (BUILD,
     BUILD_WONDER, BUILD_OF), else 1."""
     c = civ(g)
-    return BUILD_OF.get(c, {}).get(name) or (BUILD_WONDER.get(c, BUILD.get(c, 1)) if name == "WONDER" else BUILD.get(c, 1))
+    return (BUILD_OF.get(c, {}).get(name) or (BUILD_WONDER.get(c, BUILD.get(c, 1)) if name == "WONDER" else BUILD.get(c, 1))) \
+        * handicap(g.data, g.player)                                # the villager work rate (#2474)
 
 
 def built_food(g, name):
@@ -410,17 +417,20 @@ def repair_cost(g):
                + [REPAIR_COST.get(civ(g), 1)])
 
 
-def hp(civ, building, s, age=0):
+def hp(civ, building, s, age=0, factor=1):
     """The combat.Stats s of building (a name) with the hit points bonus of civilization civ (HP, #1895) and of its
-    age (HP_AGE: 0 = Dark .. 3 = Imperial, #2116). AoE2 rounds the hit points to a whole number."""
-    f = HP.get(civ, {}).get(building, 1) * HP_AGE.get(civ, (1,) * 4)[min(age, 3)]
+    age (HP_AGE: 0 = Dark .. 3 = Imperial, #2116), and the factor of the owner's handicap (#2474). AoE2 rounds the hit
+    points to a whole number."""
+    f = HP.get(civ, {}).get(building, 1) * HP_AGE.get(civ, (1,) * 4)[min(age, 3)] * factor
     return s if f == 1 else s._replace(hp=round(s.hp * f))
 
 
 def work_rate(g, building):
-    """The factor of the train and research rate of building (a name) of the player of g in its age (WORK_RATE), else 1."""
+    """The factor of the train and research rate of building (a name) of the player of g in its age (WORK_RATE), else 1,
+    times the handicap of the player at a military building (build.MILITARY, #2474)."""
     import build                                                   # build imports gather, gather imports this module
-    return WORK_RATE.get(civ(g), {}).get(building, (1,) * 4)[min(build.ages(g), 3)]
+    return WORK_RATE.get(civ(g), {}).get(building, (1,) * 4)[min(build.ages(g), 3)] \
+        * (handicap(g.data, g.player) if building in build.MILITARY else 1)
 
 
 def ship_work(g):
@@ -448,9 +458,10 @@ def train_rate(g, name):
 
 
 def start(g, base):
-    """The start resources `base` with the start bonus of the civilization of the player of g (START)."""
-    bonus = START.get(civ(g), {})
-    return {r: max(0, v + bonus.get(r, 0)) for r, v in base.items()}
+    """The start resources `base` with the start bonus of the civilization of the player of g (START), times the
+    handicap of the player (#2474)."""
+    bonus, f = START.get(civ(g), {}), handicap(g.data, g.player)
+    return {r: max(0, round((v + bonus.get(r, 0)) * f)) for r, v in base.items()}
 
 
 def drop(g, kind):
@@ -459,8 +470,9 @@ def drop(g, kind):
 
 
 def work(g, kind):
-    """The work-rate factor of the civilization of the player of g for gather kind (WORK), else 1."""
-    return WORK.get(civ(g), {}).get(kind, 1)
+    """The work-rate factor of the civilization of the player of g for gather kind (WORK), else 1, times the handicap
+    of the player (#2474)."""
+    return WORK.get(civ(g), {}).get(kind, 1) * handicap(g.data, g.player)
 
 
 def decay(g):
