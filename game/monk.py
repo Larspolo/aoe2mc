@@ -330,7 +330,7 @@ def win(g, uuid):
     """Give the enemy building with the target uuid to the player of g (Redemption): its target entity joins the team
     of the player, and its entry of aoe2mc.json gets the player, so that it trains and takes a garrison for it."""
     import build, combat                                           # they import gather, gather imports this module
-    g.forts.pop(uuid)
+    owners.give_building(g, uuid, g.player)                        # the sides of the game, and the sites (#2994)
     g.sieged.discard(uuid)
     for o in g.data["objects"]:
         if o["kind"] == "building" and "footprint" in o and combat.target_uuid(o["footprint"]) == uuid:
