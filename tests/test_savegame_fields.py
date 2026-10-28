@@ -14,9 +14,6 @@ SETS = (r"\bg\.(\w+)\s*(?:[-+*|&]?=)(?!=)",                           # g.x = ..
         r"vars\(g\)\[\"(\w+)\"\]\s*=(?!=)")
 ORDERS = {"farmers", "garrisons", "groups", "ships", "stances", "techs", "villagers"}   # savegame.orders, "techs"
 GAPS = {                                                               # game state that the save loses: its ticket
-    "doctrines": 2537,
-    "reveal": 2537,
-    "sieged": 2537,
 }
 
 
