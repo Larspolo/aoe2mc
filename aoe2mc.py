@@ -2814,6 +2814,7 @@ MODIFY_ATTRIBUTE = 51                                              # "Modify Att
 MODIFY_ATTRIBUTE_BY_VARIABLE = 79                                  # "Modify Attribute by Variable" (#2856)
 MODIFY_ATTRIBUTE_FOR_CLASS = 104                                   # "Modify Attribute for Class" (#2859)
 MODIFY_OBJECT_ATTRIBUTE = 105                                      # "Modify Object Attribute" (#2860)
+MODIFY_OBJECT_ATTRIBUTE_BY_VARIABLE = 106                          # "Modify Object Attribute by Variable" (#2861)
 MODIFY_RESOURCE = 52                                               # "Modify Resource" (#2576)
 MODIFY_RESOURCE_BY_VARIABLE = 53                                   # "Modify Resource by Variable" (#2768)
 MODIFY_VARIABLE_BY_ATTRIBUTE = 87                                  # "Modify Variable by Attribute" (#2858)
@@ -3043,9 +3044,6 @@ def object_lines(e, c):
         return [f"summon {kind} {x + 0.5} {int(ground[x, z])} {z + 0.5} {nbt.snbt()}"]
     if e["type"] == KILL_OBJECT or e["type"] == REMOVE_OBJECT and min(e.get("area", [-1])) >= 0:
         word = "kill" if e["type"] == KILL_OBJECT else "remove"
-        if name is None and e["player"] <= 0 and e["type"] == KILL_OBJECT:   # Gaia units have no tag: a kill
-            stats["kill (not supported yet)"] += 1                     # of all would kill the decor entities too
-            return []
         if (found := effect_units(e, T)) is None:
             stats[f"{word} (not supported yet)"] += 1
             return []
@@ -3057,13 +3055,11 @@ def object_lines(e, c):
 
 
 def effect_units(e, T):
-    """(selector, top entity, entity) of the units of an effect: its player (Gaia units have no player tag), area
-    (area_selector) and unit type (the type of the top entity of units.make_entity). No type: (selector, None, None).
-    A type with no entity (a building): None."""
+    """(selector, top entity, entity) of the units of an effect: its player (Gaia: the tag aoe2mc.p0, unit_selector,
+    #2916), area (area_selector) and unit type (the type of the top entity of units.make_entity). No type: (selector,
+    None, None). A type with no entity (a building): None."""
     kind, name = e.get("object") or (None, None)
-    at = area_selector(e, T)
-    if e["player"] <= 0:                                           # never a player (#2568)
-        at = re.sub(r"tag=aoe2mc\.p-?\d+,?", "type=!minecraft:player,", at)
+    at = unit_selector(e, T)
     if name is None:
         return at, None, None
     nbt = units.make_entity(dict(name=name, player=0), {}, (0.0, 0.0, 0.0), np.random.default_rng(0)) \
@@ -3071,7 +3067,7 @@ def effect_units(e, T):
     if nbt is None:
         return None
     top = units.top_entity(nbt)
-    return f"@e[type={top['id']},{at[3:]}".replace(",type=!minecraft:player", ""), top, nbt
+    return f"@e[type={top['id']},{at[3:]}", top, nbt
 
 
 def damage_lines(e, c):
@@ -3084,7 +3080,7 @@ def damage_lines(e, c):
     if found is None:
         stats["damage (building, not supported yet)" if q else "damage (no amount)"] += 1
         return []
-    at = found[0]                                                      # Gaia: not the players (effect_units)
+    at = found[0]                                                      # Gaia: the tag aoe2mc.p0 (effect_units)
     stats["damage"] += 1
     if q < 0:
         return heal_commands(at, -q, c)
@@ -3097,7 +3093,8 @@ def attack_lines(e, c, armor=None, q=None):
     (the attack classes 3 pierce and 4 melee) or minecraft:armor. The game program sets these attributes from
     combat.STATS, so the points are AoE2 points. The modifier ID is the trigger and the effect: one modifier each.
     A set (#2909) removes the modifiers of all add and subtract effects of the same kind of the scenario (also of
-    "Modify Object Attribute"; a unit that does not have one ignores the command), then sets the base value.
+    "Modify Object Attribute" and its "by Variable", #2861; a unit that does not have one ignores the command), then
+    sets the base value.
     armor and q: the kind and the points of "Modify Object Attribute" (object_attribute_lines)."""
     q, stats = (e.get("quantity") if q is None else q) or 0, c.stats
     armor = e["type"] == CHANGE_OBJECT_ARMOR if armor is None else armor
@@ -3111,7 +3108,8 @@ def attack_lines(e, c, armor=None, q=None):
     if op == "set":
         kind = CHANGE_OBJECT_ARMOR if armor else CHANGE_OBJECT_ATTACK
         old = [f"aoe2mc:trig_{t['id']}_{i}" for t in c.triggers for i, f in enumerate(t["effects"])
-               if (f["type"] == kind or f["type"] == MODIFY_OBJECT_ATTRIBUTE and f.get("attribute") == 8 + (not armor))
+               if (f["type"] == kind or f["type"] in (MODIFY_OBJECT_ATTRIBUTE, MODIFY_OBJECT_ATTRIBUTE_BY_VARIABLE)
+                   and f.get("attribute") == 8 + (not armor))
                and OPERATIONS.get(f.get("operation")) in ("add", "remove")]
         return [f"execute as {at} run attribute @s {attr} modifier remove {m}" for m in old] + \
             [f"execute as {at} run attribute @s {attr} base set {max(q, 0)}"]
@@ -3132,6 +3130,45 @@ def object_attribute_lines(e, c):
         lines = []
     stats["modify object attribute" if lines else "modify object attribute (not supported)"] += 1
     return lines
+
+
+def object_attribute_by_variable_lines(e, c):
+    """The commands of "Modify Object Attribute by Variable" (#2861): the change of object_attribute_lines with the
+    score #v<N> of aoe_var as the value, when the trigger fires. Hit points: the operation of the score on the base of
+    each unit (hp_lines), then hp/apply. Armor and attack, add or subtract: the macro function object_attribute_by_variable
+    puts the score into the modifier (attack_lines). Another attribute, a set of armor or attack, or the speed (its
+    attribute is a square root, which a score cannot compute): no line."""
+    a, op, v, stats = e.get("attribute"), e.get("operation"), e.get("variable", -1), c.stats
+    hp = HP_OPERATIONS.get(op) if a == 0 else None
+    found = effect_units(e, c.T) if hp and v is not None and v >= 0 else None
+    mod = OPERATIONS.get(op) in ("add", "remove") and v is not None and v >= 0 and \
+        (a == 8 or a == 9 and e.get("armour_class") in (3, 4))
+    if not found and not mod:
+        stats["modify object attribute by variable (not supported)"] += 1
+        return []
+    stats["modify object attribute by variable"] += 1
+    c.setup["scoreboard objectives add aoe_var dummy"] = None            # an unset variable is 0, as in AoE2
+    if found:
+        c.setup["scoreboard objectives add aoe_hp dummy"] = None
+        name = f"hp/var_{hp}_{v}"
+        sign = {"set": "=", "add": "+=", "subtract": "-=", "multiply": "*=", "divide": "/="}[hp]
+        c.files[f"data/aoe2mc/function/{name}.mcfunction"] = "\n".join(
+            ["execute store result score #hp aoe_hp run attribute @s minecraft:max_health base get",
+             f"scoreboard players operation #hp aoe_hp {sign} #v{v} aoe_var",   # a division by 0 keeps the score
+             "execute if score #hp aoe_hp matches 1025.. run scoreboard players set #hp aoe_hp 1024",
+             "execute if score #hp aoe_hp matches ..0 run scoreboard players set #hp aoe_hp 1",
+             "execute store result storage aoe2mc:hp value int 1 run scoreboard players get #hp aoe_hp",
+             "function aoe2mc:hp/apply with storage aoe2mc:hp"]) + "\n"
+        c.files["data/aoe2mc/function/hp/apply.mcfunction"] = "$attribute @s minecraft:max_health base set $(value)\n"
+        return [f"execute as {found[0]} run function aoe2mc:{name}"]
+    s = "aoe2mc:object_attribute_by_variable"
+    c.files["data/aoe2mc/function/object_attribute_by_variable.mcfunction"] = \
+        "$attribute @s $(attribute) modifier add $(id) $(value) add_value\n"
+    return [f'data modify storage {s} attribute set value "minecraft:{"armor" if a == 8 else "attack_damage"}"',
+            f'data modify storage {s} id set value "aoe2mc:trig_{c.t["id"]}_{effect_index(e, c)}"',
+            f"execute store result storage {s} value int {1 if OPERATIONS[op] == 'add' else -1} run scoreboard players "
+            f"get #v{v} aoe_var",
+            f"execute as {unit_selector(e, c.T)} run function aoe2mc:object_attribute_by_variable with storage {s}"]
 
 
 def garrisoned_lines(e, c):
@@ -3322,15 +3359,15 @@ def player_name_lines(e, c):
 def owner_lines(e, c):
     """The commands of "Change Ownership" (#2570): the units of the player in the area (area_selector) and their
     mounts get the tag and the team of the target player. A temporary tag marks them first: the selector uses the old
-    player tag. Gaia (target 0, #2908) has no player tag and no team: they lose the tag and leave the team. A Gaia
-    source is not supported yet: unit_selector finds only the Gaia units with no tag."""
+    player tag. Gaia (target 0, #2908) has the tag aoe2mc.p0 and no team: they leave the team (#2916). A Gaia source
+    has the tag aoe2mc.p0 too."""
     old, new, T, stats = e["player"], e.get("target", -1), c.T, c.stats
-    if old <= 0 or new < 0 or old == new:
+    if old < 0 or new < 0 or old == new:
         stats["change ownership (not supported yet)"] += old != new
         return []
     stats["change ownership"] += 1
     own = "@e[tag=aoe2mc.own]"
-    to = [f"tag {own} add aoe2mc.p{new}", f"team join p{new} {own}"] if new else [f"team leave {own}"]
+    to = [f"tag {own} add aoe2mc.p{new}", f"team join p{new} {own}" if new else f"team leave {own}"]
     return [f"tag {area_selector(e, T)} add aoe2mc.own",
             f"execute as {own} on vehicle run tag @s add aoe2mc.own",
             f"tag {own} remove aoe2mc.p{old}", *to, f"tag {own} remove aoe2mc.own"]
@@ -3539,10 +3576,9 @@ def resource_score(c):
 
 
 def unit_selector(e, T):
-    """The area_selector of the units of the player of an effect. A Gaia unit has no tag (units.make_entity): the
-    entities with no tag and not the players."""
-    at = area_selector(e, T)
-    return re.sub(r"tag=aoe2mc\.p-?\d+", "tag=,type=!player", at) if e["player"] <= 0 else at
+    """The area_selector of the units of the player of an effect. A Gaia unit has the tag aoe2mc.p0 (units.make_entity,
+    "Change Ownership" to Gaia, #2916): also with a ref tag, a type tag or a type filter."""
+    return area_selector(e if e["player"] >= 0 else {**e, "player": 0}, T)
 
 
 def sound_lines(e, c):
@@ -4163,6 +4199,8 @@ EFFECT_KEYS = {
     MODIFY_ATTRIBUTE_FOR_CLASS: {"attribute": "object_attributes", "operation": "operation", "quantity": "quantity", "class": "armour_attack_class", "aa": "armour_attack_quantity", "group": "object_group2"},
     MODIFY_OBJECT_ATTRIBUTE: {"aa": "armour_attack_quantity", "armour_class": "armour_attack_class",   # (#2860)
                               "attribute": "object_attributes", "operation": "operation", "quantity": "quantity"},
+    MODIFY_OBJECT_ATTRIBUTE_BY_VARIABLE: {"armour_class": "armour_attack_class", "attribute": "object_attributes",  # #2861
+                                          "operation": "operation", "variable": "variable"},
     MODIFY_RESOURCE: {"operation": "operation", "quantity": "quantity", "resource": "tribute_list"},
     MODIFY_RESOURCE_BY_VARIABLE: {"operation": "operation", "variable": "variable", "resource": "tribute_list"},
     MODIFY_VARIABLE_BY_ATTRIBUTE: {"attribute": "object_attributes", "class": "armour_attack_class",   # (#2858)
@@ -4252,6 +4290,7 @@ EFFECTS = {
     MODIFY_ATTRIBUTE_BY_VARIABLE: attribute_by_variable_lines,
     MODIFY_ATTRIBUTE_FOR_CLASS: attribute_lines,
     MODIFY_OBJECT_ATTRIBUTE: object_attribute_lines,
+    MODIFY_OBJECT_ATTRIBUTE_BY_VARIABLE: object_attribute_by_variable_lines,
     MODIFY_RESOURCE: resource_lines,
     MODIFY_RESOURCE_BY_VARIABLE: resource_by_variable_lines,
     MODIFY_VARIABLE_BY_ATTRIBUTE: variable_by_attribute_lines,

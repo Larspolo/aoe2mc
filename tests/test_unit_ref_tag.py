@@ -18,12 +18,12 @@ def tags(o):
 
 def test_scenario_unit_gets_its_reference_tag():
     assert tags(dict(name="KNIGHT", player=1, id=38, ref=7, ref_tag=True)) == {"aoe2mc.p1", "aoe2mc.t38", "aoe2mc.r7"}
-    assert tags(dict(name="SHEEP", player=0, id=594, ref=7, ref_tag=True)) == {"aoe2mc.r7"}     # Gaia too
+    assert tags(dict(name="SHEEP", player=0, id=594, ref=7, ref_tag=True)) == {"aoe2mc.p0", "aoe2mc.t594", "aoe2mc.r7"}   # Gaia too
 
 
 def test_no_reference_or_a_record_gives_no_tag():
     assert tags(dict(name="KNIGHT", player=1, id=38, ref=None, ref_tag=True)) == {"aoe2mc.p1", "aoe2mc.t38"}
-    assert tags(dict(name="SHEEP", player=0, id=594)) == set()
+    assert tags(dict(name="SHEEP", player=0, id=594)) == {"aoe2mc.p0", "aoe2mc.t594"}
     assert tags(dict(name="KNIGHT", player=1, id=38, ref=7)) == {"aoe2mc.p1", "aoe2mc.t38"}   # a record object ID
 
 

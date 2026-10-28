@@ -32,12 +32,12 @@ def test_each_entity_of_a_mounted_unit_has_the_player_tag():
                 assert tags(e) == {"aoe2mc.p2", units.MOUNT}, name
 
 
-def test_a_gaia_unit_and_a_foot_unit_get_no_mount_tag():
+def test_a_foot_unit_gets_no_mount_tag_and_a_gaia_mount_has_the_gaia_tag():
     o = dict(name="MILITIA", player=1, id=74, rotation=0.0)
     nbt = units.make_entity(o, {}, (0.5, 0.0, 0.5), np.random.default_rng(1))
     assert tags(nbt) == {"aoe2mc.p1", "aoe2mc.t74"}
     horse = units.make_entity(dict(o, name="SCOUT_CAVALRY", player=0), {}, (0.5, 0.0, 0.5), np.random.default_rng(1))
-    assert all(not tags(e) for e in stack(horse))
+    assert sorted(map(sorted, map(tags, stack(horse)))) == [[units.MOUNT, "aoe2mc.p0"], ["aoe2mc.p0", "aoe2mc.t74"]]
 
 
 def test_an_area_trigger_skips_the_mounts():
