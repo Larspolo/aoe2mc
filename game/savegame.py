@@ -8,6 +8,7 @@ points (#2257), and the orders of the units (#2258): the job, target and load of
 control groups and garrisons. A villager keeps no path: after the load it walks again with Minecraft path finding (P2).
 The save also keeps the wonder and relic victory timers and the market prices (#2324), the game settings of the
 command line (`run.py` options, "settings") and the attack time and wave of the bot (#2325).
+The ships keep their orders as the villagers, the trade carts their routes and the trebuchets their state (#2413).
 """
 import json
 import os
@@ -18,6 +19,7 @@ FILE = "savegame.json"
 FIELDS = ("stock", "spare", "seconds", "repeats", "pop")              # dicts and numbers of Gather, as they are
 PACKED = ("queues", "trained", "sites", "rally")                       # with tuples (a building rect, a cell): pack()
 OPTIONAL = ("rates", "relic_timer", "wonder_shown", "wonders", "wonders_gone")   # only on a Gather that has them (#2324)
+ROUTES = ("trade", "trebs")                                            # trade.py, trebuchet.py: as OPTIONAL (#2413)
 JOB = ("state", "load", "res", "job", "lap", "prey")                  # fields of a gather.Villager, as they are
 IDLE = ("to_rally", "to_repair", "repair")                             # orders that the save does not keep yet
 BOT = ("time", "charged", "attack")                                    # fields of a bot.Bot, as they are (#2325)
@@ -61,7 +63,7 @@ def dump(g):
     the player of the bot (#2325)."""
     d = {"players": {str(x.player): {**{f: getattr(x, f) for f in FIELDS}, "techs": sorted(x.techs),
                                      **{f: pack(getattr(x, f)) for f in PACKED}, **orders(x),
-                                     **{f: pack(vars(x)[f]) for f in OPTIONAL if f in vars(x)}} for x in sides(g)}}
+                                     **{f: pack(vars(x)[f]) for f in OPTIONAL + ROUTES if f in vars(x)}} for x in sides(g)}}
     for b in bots(g):
         d["players"][str(b.g.player)]["bot"] = {f: getattr(b, f) for f in BOT}
     if getattr(g.game, "settings", None):
@@ -82,7 +84,38 @@ def orders(x):
             "farmers": sorted([list(t), u] for t, u in x.farmers.items()),
             "stances": dict(sorted(x.stances.items())),
             "groups": {str(n): sorted(us) for n, us in sorted(x.groups.items())},
-            "garrisons": sorted([list(r), list(us)] for r, us in x.garrisons.items())}
+            "garrisons": sorted([list(r), list(us)] for r, us in x.garrisons.items()),
+            "ships": {u: {**{f: getattr(v, f) for f in JOB}, "pos": list(v.pos), "tree": v.tree and list(v.tree),
+                          "site": v.site and list(v.site["footprint"]), "goal": v.path and list(v.path[-1]),
+                          **({"route": pack(v.route)} if hasattr(v, "route") else {})}
+                      for u, v in sorted(getattr(x, "ships", {}).items())}}
+
+
+def sail_again(x, p):
+    """Put the saved ship orders of p (orders) on the Gather x (#2413): a ship with a goal sails to it again on a new
+    water path (fleet.sail_to); a warship chases its prey and a fishing ship fishes on in fleet.tick. Then the trade
+    carts walk on with the leg of their route (trade.leg) and a walking trebuchet walks on to its target (Minecraft
+    path finding, P2)."""
+    import fleet
+    import gather
+    import trade
+    import trebuchet
+    for u, s in p.get("ships", {}).items():                           # a save from before #2413 has no ships
+        v = x.ships.setdefault(u, gather.Villager(u, tuple(s["pos"])))
+        for f in JOB:
+            setattr(v, f, s[f])
+        v.pos, v.tree, v.path = tuple(s["pos"]), s["tree"] and tuple(s["tree"]), []
+        v.site = next((t for t in x.sites if list(t["footprint"]) == s["site"]), None)
+        if "route" in s:
+            v.route = unpack(s["route"])
+        if s["goal"]:
+            fleet.sail_to(x, v, v.state, {tuple(s["goal"])})
+    for u, t in sorted(getattr(x, "trade", {}).items()):
+        if t.get("legs"):
+            trade.leg(x, u, t["legs"][0])
+    for u, (st, _, then) in sorted(vars(x).get("trebs", {}).items()):
+        if st == "walking":
+            trebuchet.walk(x, u, *then)
 
 
 def give_orders(x, p):
@@ -108,6 +141,7 @@ def give_orders(x, p):
             x.go(v, "to_drop", x.drop_goals(v))
         elif v.state == "to_prey":
             v.state = "hunt"                                           # the hunter follows its animal (Gather.strike)
+    sail_again(x, p)
 
 
 def load(g, d):
@@ -121,7 +155,7 @@ def load(g, d):
         for f in FIELDS:
             setattr(x, f, type(getattr(x, f))(p[f]))
         x.techs = set(p["techs"])
-        for f in PACKED + OPTIONAL:                                    # the next tick shows the boss bars again
+        for f in PACKED + OPTIONAL + ROUTES:                                    # the next tick shows the boss bars again
             if f in p:                                                 # a save before #2257 has no queues
                 setattr(x, f, unpack(p[f]))
         if "villagers" in p:                                           # a save from before #2258 has no orders
