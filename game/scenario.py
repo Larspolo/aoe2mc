@@ -197,8 +197,9 @@ def orders(g):
     gates = re.findall(r'"(lock|unlock) (\d+)"', got)
     found = re.findall(r'"(found|create) (\d+) (\w+) (\d+) (\d+)"', got)
     queued = re.findall(r'"(train|research) (\d+) (\w+) ?(\d+)?"', got)
+    rallies = re.findall(r'"rally (\d+) (\w+) (\d+) (\d+) ?(\d+ \d+ \d+ \d+)?"', got)
     builds = re.findall(r'"build (\d+) (\w+) (-?\d+) (-?\d+) (-?\d+) (-?\d+)"', got)
-    if new or unloads or gates or found or queued or builds:
+    if new or unloads or gates or found or queued or builds or rallies:
         g.command(f"data remove storage {ORDERS} list")
     queues(g, queued)
     for player, ref, where in unloads:
@@ -209,6 +210,8 @@ def orders(g):
         foundation(g, int(player), name, (int(x), int(y)), done=order == "create")
     for player, name, *area in builds:
         finish(g, int(player), name, [int(v) for v in area])
+    for player, which, x, y, area in rallies:
+        rally(g, int(player), which, (int(x), int(y)), [int(v) for v in area.split()])
     patrols = vars(g).setdefault("patrols", [])
     for order, tag, where in new:
         p, sel = [int(v) for v in where.split()], f"@e[tag={tag}]"
@@ -309,6 +312,31 @@ def finish(g, player, name, area):
             tx, ty = (x0 + x1) // 2 // T, (z0 + z1) // 2 // T
             if area[0] < 0 or area[0] <= tx <= area[2] and area[1] <= ty <= area[3]:
                 build.rise(x, site, float("inf"))
+
+
+def rally(g, player, which, tile, area):
+    """A "Set Building Gather Point" order (aoe2mc.rally_lines, #2853): the rally point of the building with the
+    reference which (a number), or of each building of the type which with its middle in the tile area, of the player
+    (a person or a bot) is the block of the tile, as the menu item "Rally point" sets it (train.rally): its new units
+    walk there (train.go). Only a building that trains units (train.units_of) has one. A bot gets no marker: AoE2 shows
+    the flag to its owner only."""
+    T = g.map.T
+    cell = tuple(int((v + 0.5) * T) for v in tile)
+    inside = lambda f: area and all(a * T <= (lo + hi) / 2 < (b + 1) * T for a, b, lo, hi in
+                                    ((area[0], area[2], f[0], f[2]), (area[1], area[3], f[1], f[3])))
+    for x in [g, *(s.g for s in g.bots)]:
+        if x.player != player or "objects" not in x.data:
+            continue
+        homes = train.homes(x)
+        for o in x.data["objects"]:
+            rect = tuple(o["footprint"][i] for i in (0, 2, 1, 3)) if o.get("footprint") else None
+            if rect not in homes or not train.units_of(homes[rect]) or \
+                    not (o.get("ref") == int(which) if which.isdigit() else o["name"] == which and inside(o["footprint"])):
+                continue
+            if x is g:
+                train.rally(x, rect, cell)
+            else:
+                x.rally[rect] = cell, None
 
 
 def unload(g, player, ref, where):

@@ -2908,6 +2908,7 @@ RESEARCHED = 9                                                     # the conditi
 RESEARCHING_TECH = 17                                              # the condition "Researching Technology" (#2769)
 RESEARCH_TECHNOLOGY = 2                                            # "Research Technology" (#2577)
 SEND_CHAT = 3
+SET_BUILDING_GATHER_POINT = 54                                     # "Set Building Gather Point" (#2853)
 SET_PLAYER_VISIBILITY = 41                                         # "Set Player Visibility" (#2774)
 STOP_OBJECT = 29                                                   # "Stop Object" (#2754)
 STORE_KEY_VALUE = 82                                               # "Store Key Value" (#2887)
@@ -3880,6 +3881,20 @@ def gate_lines(e, c):
             if ref >= 0]
 
 
+def rally_lines(e, c):
+    """The commands of "Set Building Gather Point" (#2853): the order "rally <player> <ref> <x> <y>" of each selected
+    building, or with no selection one order "rally <player> <name> <x> <y> <x1> <y1> <x2> <y2>" for the buildings of
+    the type in the area, goes into the storage aoe2mc:orders. game/scenario.py rally sets the rally point of each own
+    building of the player that trains units (train.rally): its new units walk to the tile. No tile or Gaia: no order."""
+    (x, y), p, a = e.get("tile", [-1, -1]), e["player"], e.get("area", [-1])
+    if p <= 0 or min(x, y) < 0:
+        return []
+    name, put = (e.get("object") or (None, None))[1], 'data modify storage aoe2mc:orders list append value "rally'
+    if any(ref >= 0 for ref in e.get("selected", ())):
+        return [f'{put} {p} {ref} {x} {y}"' for ref in e["selected"] if ref >= 0]
+    return [f'{put} {p} {name} {x} {y} {" ".join(map(str, a))}"'] if name and min(a, default=-1) >= 0 else []
+
+
 def unload_lines(e, c):
     """The commands of "Unload" (#2773): each selected building of the player that takes a garrison (buildings.INSIDE),
     or with no selection each such building with its center in the area, goes into the list of the storage
@@ -4119,6 +4134,7 @@ EFFECT_KEYS = {
                               "attribute": "object_attributes", "operation": "operation", "quantity": "quantity"},
     MODIFY_VARIABLE_BY_ATTRIBUTE: {"attribute": "object_attributes", "class": "armour_attack_class",   # (#2858)
                                    "operation": "operation", "variable": "variable"},
+    SET_BUILDING_GATHER_POINT: {"selected": lambda e, kinds, techs: list(e.selected_object_ids or [])},
     STORE_KEY_VALUE: {"variable": "variable"},                         # (#2887)
     TRAIN_UNIT: {"quantity": "quantity", "selected": lambda e, kinds, techs: list(e.selected_object_ids or [])},   # (#2772)
 }
@@ -4197,6 +4213,7 @@ EFFECTS = {
     REPLACE_OBJECT: replace_lines,
     RESEARCH_TECHNOLOGY: research_lines,
     SEND_CHAT: chat_lines,
+    SET_BUILDING_GATHER_POINT: rally_lines,
     SET_PLAYER_VISIBILITY: visibility_lines,
     STOP_OBJECT: stop_lines,
     STORE_KEY_VALUE: key_lines,
