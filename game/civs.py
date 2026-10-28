@@ -204,6 +204,10 @@ ECONOMY_VILLAGERS = {r["name"]: r["economy_villagers"] for r in ROWS if "economy
 FALLEN = {r["name"]: r["fallen"] for r in ROWS if "fallen" in r}
 KILL_GOLD = {r["name"]: r["kill_gold"] for r in ROWS if "kill_gold" in r}
 LOOT = {r["name"]: r["loot"] for r in ROWS if "loot" in r}
+# The relic and monk bonuses (game/monk.py, #2314): "relic_attack" [units, attack per relic in an own monastery, most]
+# (Lithuanian knights and Leitis), "faith" the factor of the speed of the monks that regain faith (Muisca: 100 % faster).
+RELIC_ATTACK = {r["name"]: tuples(r["relic_attack"]) for r in ROWS if "relic_attack" in r}
+FAITH = {r["name"]: r["faith"] for r in ROWS if "faith" in r}
 
 
 def tagged(n, group):
@@ -251,8 +255,11 @@ def regen(g, name, s):
 
 
 def units(g, name, s):
-    """The combat.Stats s of unit name with the bonuses of the civilization of the player of g (UNITS), the walk speed
-    aside (speed)."""
+    """The combat.Stats s of unit name with the bonuses of the civilization of the player of g (UNITS, RELIC_ATTACK), the
+    walk speed aside (speed)."""
+    names, each, most = RELIC_ATTACK.get(civ(g), ((), 0, 0))
+    if name in names:                                              # the relics in own monasteries (monk.relic_tick)
+        s = s._replace(attack=s.attack + min(each * sum(r["home"] is not None for r in getattr(g, "relics", ())), most))
     for v, c in changes(g, name, s):
         if v.startswith("bonus:") and c:                           # the attack against a class (#2249)
             s = s._replace(bonus={**s.bonus, v[6:]: s.bonus.get(v[6:], 0) + c})
