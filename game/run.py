@@ -323,25 +323,34 @@ def team_choices(value, players):
     return {p: None if t == "-" else int(t) for p, t in zip(seats, teams)}
 
 
+# The AoE2 lobby settings of play() for each player and bot (epic #2263), name: default. main() passes the option of
+# the same name. A new setting is one line here, in alphabetical order, not a change of the play() lines (#2373).
+SETTINGS = {
+    "age": "dark",                    # "Starting age" (train.STARTS, #2265)
+    "all_techs": False,               # "All Techs" (civs.missing, #2298)
+    "civ": None,                      # {player: civilization} in place of the scenario's (civ_choices, #2267)
+    "end_age": "imperial",            # "Ending age" (build.locked, #2346)
+    "pop_limit": None,                # "Population limit" (train.LIMITS, #2266)
+    "resources": "standard",          # "Starting resources" (gather.LEVELS, #2264)
+    "teams": None,                    # {player: team or None} in place of the scenario's (team_choices, #2296)
+    "victory": "standard",            # "Victory": "standard" (conquest, a wonder or all relics) or "conquest" (#2316)
+}
+
+
 def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attack="10:00", reveal="normal", people=1,
-         speed=1.0, state=None, resources="standard", civ=None, teams=None,
-         all_techs=False, age="dark", victory="standard", pop_limit=None, end_age="imperial"):
+         speed=1.0, state=None, **settings):
     """state: the saved state of the players (savegame.dump) for a loaded game (#2255).
-    resources: the AoE2 setting "Starting resources" of each player and bot (gather.LEVELS, #2264).
-    civ: {player: civilization} in place of the civilization of the scenario (civ_choices, #2267).
-    teams: {player: team or None} in place of the teams of the scenario (team_choices, #2296).
-    all_techs: the AoE2 setting "All Techs" for all players and bots (civs.missing, #2298).
-    age: the AoE2 setting "Starting age" of each player and bot (train.STARTS, #2265).
-    victory: the AoE2 setting "Victory": "standard" (conquest, a wonder or all relics) or "conquest" (#2316).
-    pop_limit: the AoE2 setting "Population limit" of each player and bot (train.LIMITS, #2266).
-    end_age: the AoE2 setting "Ending age" of each player and bot (build.locked, #2346)."""
+    settings: the AoE2 lobby settings (SETTINGS); a missing one has its default."""
     import gather, train
+    if unknown := sorted(set(settings) - set(SETTINGS)):
+        raise TypeError(f"play() has no setting {', '.join(unknown)} (SETTINGS)")
+    settings = {**SETTINGS, **settings}
 
     def make(player):
         who = "@a" if people == 1 else f"@a[team=p{player}]"
         for _ in range(60):                          # entities load in other threads
-            g = gather.Gather(game, data, player=player, log=log, cheats=cheats, resources=resources,
-                              pop_limit=pop_limit)
+            g = gather.Gather(game, data, player=player, log=log, cheats=cheats, resources=settings["resources"],
+                              pop_limit=settings["pop_limit"])
             g.who = who
             g.setup()
             if len(g.villagers) == len(g.units):
@@ -350,17 +359,17 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
         return g
     with open(os.path.join(world, "aoe2mc.json")) as f:
         data = json.load(f)
-    for player, name in (civ or {}).items():         # before the Gathers: all bonuses (civs.civ) follow it
+    for player, name in (settings["civ"] or {}).items():         # before the Gathers: all bonuses (civs.civ) follow it
         data.setdefault("players", {}).setdefault(str(player), {})["civ"] = name
-    for player, team in (teams or {}).items():       # gather.allied and the scoreboard teams follow it
+    for player, team in (settings["teams"] or {}).items():       # gather.allied and the scoreboard teams follow it
         data["players"][str(player)]["team"] = team
-    data["all_techs"] = all_techs                    # one data for all Gathers: the people and the bot (#2298)
-    data["end_age"] = train.STARTS[end_age]["ages"]  # the last age (build.locked, #2346)
+    data["all_techs"] = settings["all_techs"]                    # one data for all Gathers: the people and the bot (#2298)
+    data["end_age"] = train.STARTS[settings["end_age"]]["ages"]  # the last age (build.locked, #2346)
     game.forceload()
     game.people = people
     g = make(1)
     g.reveal = reveal                                # "all": no fog of war for the units (fog.py, #1389)
-    g.victory = victory                              # Gather.run: the wonder and relic wins only in "standard"
+    g.victory = settings["victory"]                              # Gather.run: the wonder and relic wins only in "standard"
     if people > 1:                                   # one Gather for each person, in the join order (#1308, #1310)
         g.bots = [Side(make(n)) for n in range(2, people + 1)]
         for s in g.bots:                             # the same trees, bushes and mines, as with a bot
@@ -376,15 +385,15 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
         player, foe = bot_seat(data["players"], people)
         g.bots = [*g.bots, bots.Bot(game, data, player=player, share=g, log=log, foe=foe,
                                     attack=replay.aoe2mc.game_time(bot_attack) / 1000,
-                                    resources=resources, pop_limit=pop_limit).setup()]
+                                    resources=settings["resources"], pop_limit=settings["pop_limit"]).setup()]
         print(f"A bot plays player {player}: {len(g.bots[-1].g.villagers)} villagers gather, its soldiers attack "
               f"player {foe} at {bot_attack}.", file=sys.stderr)
     import combat
     combat.setup(game, data)                         # AoE2 hit points and damage (#514)
-    if not state and age != "dark":                  # after the base values: the technologies change them
+    if not state and settings["age"] != "dark":                  # after the base values: the technologies change them
         import train
         for x in [g, *(s.g for s in g.bots)]:
-            train.start(x, age)
+            train.start(x, settings["age"])
     if game.kind == "paper":                         # the view square of each player on map 0 (#1762)
         import replay
         game.command(f"aoe minimap frame {replay.FRAME * data['tile_size']}")
@@ -576,9 +585,8 @@ def main(argv=None):
         if a.play:
             with open(a.log, "w") if a.log else contextlib.nullcontext() as log:
                 g = play(game, a.world, log, a.cheats, a.bot, bot_attack=a.bot_attack, reveal=a.reveal,
-                         people=a.people, speed=a.speed, state=state, resources=a.resources, civ=civ,
-                         teams=teams, all_techs=a.all_techs, age=a.age, victory=a.victory, pop_limit=a.pop_limit,
-                         end_age=a.end_age)
+                         people=a.people, speed=a.speed, state=state,
+                         **{k: getattr(a, k) for k in SETTINGS} | {"civ": civ, "teams": teams})
             if not getattr(g, "ended", None):
                 return
             print(f"The game ended ({g.ended}). The server stays up: type commands, Ctrl-C stops it.",
