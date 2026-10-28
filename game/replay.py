@@ -244,6 +244,7 @@ class Replay:
         self.stances, self.charging = {}, {}    # object ID -> stance of the record; its stance after an attack-move (#2552)
         self.patrols = {}                       # object ID -> [patrol tiles, index of the tile it walks to, step] (#2550)
         self.follows = {}                       # object ID -> [target ID, "follow" or "guard", goal, enemy UUID] (#2551)
+        self.scouts = {}                        # object ID on AUTOSCOUT -> the tiles that it walked to (#2678)
         self.trail = math.inf                   # game time (ms) of the next check of the followers (#2551)
         self.adopted, self.rallied = {}, 0      # temporary ID of a unit at a gather point -> its object ID (#1227)
         self.effects = {}                       # entity tag of a research text -> game time (ms) of its end (#843)
@@ -317,14 +318,18 @@ class Replay:
     def commands(self, e):
         """The commands of one timeline event (an empty list for the events that change nothing visible)."""
         kind = e["kind"]
-        if kind in ("attack_move", "move", "order", "stop", "delete", "garrison", "follow", "guard"):   # another order
-            for i in e.get("objects") or ():                                                            # ends the patrol (#2550)
+        if kind in ("attack_move", "move", "order", "stop", "delete", "garrison", "follow", "guard", "autoscout"):
+            for i in e.get("objects") or ():                    # another order ends the patrol (#2550), the scouting (#2678)
                 self.patrols.pop(i, None)
+                self.scouts.pop(i, None)
         if kind in aoe2mc.UNIT_USE - {"stance"} | {"delete", "stop"}:   # a new order ends a FOLLOW or GUARD (#2551)
             for i in e.get("objects") or ():
                 self.follows.pop(i, None)
+                self.scouts.pop(i, None)
         if kind == "patrol" and e.get("objects") and e.get("tile"):
             return self.patrol(e)
+        if kind == "autoscout" and e.get("objects"):
+            return self.autoscout(e)
         if kind in ("follow", "guard") and e.get("objects") and e.get("target") is not None:
             return self.escort(e)
         if kind in ("build", "wall") and "type" in e and "tile" in e:
@@ -1092,7 +1097,8 @@ class Replay:
                 path = path or []
                 cmds, due = self.order(v, path[LEG - 1:-1:LEG] + [end], e["time"])
                 out += cmds
-                if v.path or i in self.patrols and due > e["time"]:   # a patrol turns at the end (steps(), #2550)
+                if v.path or (i in self.patrols or i in self.scouts) and due > e["time"]:   # a patrol turns at the end
+                    # (steps(), #2550), a scout walks on (#2678)
                     self.moving[i] = due
                 else:
                     self.moving.pop(i, None)
@@ -1139,6 +1145,37 @@ class Replay:
         self.patrols[i] = [points, k + d, d]
         return self.move({"time": t, "player": self.units[i].player, "kind": "move", "objects": [i],
                           "tile": points[k + d]})
+
+    def autoscout(self, e):
+        """AUTOSCOUT (AoE2 DE): the units walk to the nearest tile that their player did not explore, then to the next
+        one, until another order or until the player explored all tiles. The record has no positions of the scout.
+        Minecraft has no "explore" goal: own choice of the tile, the plugin walks (#2678)."""
+        self.explore()                                              # the sight of the units now
+        out = []
+        for i in e["objects"]:
+            if self.unit(i, None, e["player"]) is not None:
+                self.scouts[i] = set()
+                out += self.scout_on(i, e["time"])
+        return out
+
+    def scout_on(self, i, t):
+        """The walk of scout i at game time t (ms) to the nearest tile that its player did not explore and that it did
+        not walk to before (a tile out of reach stays unexplored), or [] at the end of the scouting (#2678)."""
+        v, tried = self.units[i], self.scouts[i]
+        tried.add((int(v.pos[0] // self.T), int(v.pos[2] // self.T)))     # its own tile: no walk of length 0
+        n = self.data.get("map_size") or self.n // self.T                 # tiles of a map side
+        free = np.ones((n, n), bool)
+        old = [(x, y) for x, y in self.explored.get(v.player, set()) | tried if 0 <= x < n and 0 <= y < n]
+        if old:
+            free[tuple(np.array(old).T)] = False
+        if not free.any():
+            del self.scouts[i]
+            return []
+        xs, ys = np.nonzero(free)
+        k = np.argmin((xs + 0.5 - v.pos[0] / self.T) ** 2 + (ys + 0.5 - v.pos[2] / self.T) ** 2)
+        tried.add((int(xs[k]), int(ys[k])))
+        return self.move({"time": t, "player": v.player, "kind": "move", "objects": [i],
+                          "tile": [float(xs[k]) + 0.5, float(ys[k]) + 0.5]})
 
     def look(self, v, task):
         """The command that gives villager v the look of the AoE2 task (`LUMBERJACK` ..., "none": no work), when it
@@ -1318,6 +1355,7 @@ class Replay:
                 del self.moving[i]
                 self.start(i, v, at)
                 out += self.patrol_on(i, at) if i in self.patrols else []
+                out += self.scout_on(i, at) if i in self.scouts else []
             else:
                 self.moving[i] = due
         out += self.calm([i for i in self.charging if i not in self.moving and self.calm_at(i) <= t])   # (#2552)

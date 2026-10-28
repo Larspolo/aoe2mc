@@ -98,6 +98,7 @@ Bug reserve: 0.3
 | `play:auto-gather` | C | 2 | | |
 | `play:co-op` | C | 3 | | |
 | `play:unit-sounds` | C | 3 | | |
+| `play:campaign` | C | 3 | | |
 | `play-check-game` | B | 5 | An agent plays a full game against the bot with a script, from the Dark Age to a win or a loss (about 30 minutes): no server error, no stuck unit | |
 | `play-check-speed` | B | 2 | With 200 units of each player, the server keeps 20 ticks per second | |
 | `play-check-kit` | B | 2 | A play-test kit: how to start and join, the controls, how to report a bug | |
@@ -125,6 +126,8 @@ Bug reserve: 0.3
 | `replay:taunts` | C | | | |
 | `replay:flares` | C | 1 | | |
 | `replay:orders` | C | 3 | | |
+| `replay:production` | C | 2 | | |
+| `replay:highlights` | C | 2 | | |
 | `replay-check-full` | B | 5 | A complex record (a team game of about 40 minutes with castles and large fights) replays from start to end with no error | | #2277 |
 | `replay-check-follow` | B | 3 | The position tool (#813) shows no stray unit and less than 5 % stuck units on that record | | #2278 |
 | `replay-check-speed` | B | 2 | The server keeps at least 18 ticks per second at speed 1 through the whole record | | #2279 |

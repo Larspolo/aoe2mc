@@ -44,8 +44,11 @@ def fake(tmp_path, body):
 
 
 def test_stop_game_stops_like_ctrl_c(tmp_path):
-    cmd = fake(tmp_path, """\
+    cmd = fake(tmp_path, f"""\
         import sys, time
+        sys.path[:0] = [{str(ROOT / "game")!r}, {str(ROOT / "tools")!r}]
+        import run
+        run.ctrl_c()                               # like run.main: the parent can ignore SIGINT (a background run, #2658)
         try:                                       # the print too: SIGINT can come just after it (-n auto, #2415)
             print("ready", sys.argv[1:])
             time.sleep(60)

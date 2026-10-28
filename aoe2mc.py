@@ -412,7 +412,7 @@ def read_scenario(path):
                                                    "object": c.object_list, "group": c.object_group,
                                                    "class": c.object_type}
                                                   if c.condition_type in COUNTED else
-                                                  {"quantity": c.quantity} if c.condition_type == TRIGGER_CHANCE else {}),
+                                                  {"quantity": c.quantity} if c.condition_type in (TRIGGER_CHANCE, DIFFICULTY_LEVEL) else {}),
                                                **({"quantity": c.quantity, "variable": c.variable,   # (#2611)
                                                    "comparison": c.comparison}
                                                   if c.condition_type == VARIABLE_VALUE else {}),
@@ -433,6 +433,9 @@ def read_scenario(path):
                                                if e.effect_type == CHANGE_VARIABLE else {}),
                                             **({"target": e.target_player}                # "Change Ownership" (#2570)
                                                if e.effect_type == CHANGE_OWNERSHIP else {}),
+                                            **({"target": e.target_player,                # "Replace Object" (#2703)
+                                                "object2": kinds.get(e.object_list_unit_id_2)}
+                                               if e.effect_type == REPLACE_OBJECT else {}),
                                             **({"target": e.target_player, "diplomacy": e.diplomacy}   # (#2645)
                                                if e.effect_type == CHANGE_DIPLOMACY else {}),
                                             **({"target": e.target_player, "quantity": e.quantity,   # (#2576)
@@ -749,7 +752,7 @@ TRAIN = {r["name"]: (r["seconds"], r["building"]) for r in units.rows("train.jso
 RESEARCH_S = {"Loom": 25, "Town Watch": 25, "Town Patrol": 40, "Wheelbarrow": 75, "Hand Cart": 55,
               "Feudal Age": 130, "Castle Age": 160, "Imperial Age": 190}   # the town center researches: they delay units
 UNIT_USE = {"move", "order", "build", "wall", "patrol", "follow", "formation", "attack_move", "back_to_work", "stance",
-            "garrison"}
+            "garrison", "autoscout"}
 BUILDING_USE = {"queue", "research", "gather_point", "ungarrison", "sell", "buy"}
 WORK = re.compile(r"TREE|.*BUSH|.*_MINE|.*FARM")                     # an ORDER on these: a villager gathers
 
@@ -2767,6 +2770,7 @@ CLEAR_INSTRUCTIONS = 21                                            # "Clear Inst
 CREATE_OBJECT = 11
 DAMAGE_OBJECT = 24                                                 # "Damage Object" (#2571)
 DECLARE_VICTORY = 13                                               # "Declare Victory" (#2542)
+DIFFICULTY_LEVEL = 19                                              # the condition "Difficulty Level" (#2704)
 DISPLAY_INSTRUCTIONS = 20
 DISPLAY_TIMER = 37                                                 # "Display Timer" (#2572)
 FREEZE_OBJECT = 22                                                 # "Freeze Object" (#2608)
@@ -2778,6 +2782,7 @@ OWN_OBJECTS = 3
 PATROL = 19                                                        # "Patrol" (#2647)
 PLAY_SOUND = 4                                                     # "Play Sound" (#2644)
 REMOVE_OBJECT = 15
+REPLACE_OBJECT = 43                                                # "Replace Object" (#2703)
 RESEARCHED = 9                                                     # the condition "Research Technology" (#2656)
 RESEARCH_TECHNOLOGY = 2                                            # "Research Technology" (#2577)
 SEND_CHAT = 3
@@ -2789,7 +2794,7 @@ TRIGGER_CHANCE = 20                                                # the conditi
 VARIABLE_VALUE = 22
 TIME_UNITS = {0: 5, 1: 60, 2: 1, 3: 1}  # TimeUnit (years, minutes, seconds, m:ss) -> game seconds; a year as game/wonder.py YEAR
 COUNTED = (IN_AREA, OWN_OBJECTS, OWN_FEWER_OBJECTS)                # conditions that count units: the tick function
-TICKED = COUNTED + (VARIABLE_VALUE, RESEARCHED)                   # conditions of the tick function
+TICKED = COUNTED + (DIFFICULTY_LEVEL, RESEARCHED, VARIABLE_VALUE)  # conditions of the tick function
 STORES = ("food", "wood", "stone", "gold")      # the resource of a tribute_list (AoE2 attributes 0 to 3)
 OPERATIONS = {1: "set", 2: "add", 3: "remove"}  # set, add, subtract of Modify Resource (AoE2ScenarioParser Operation)
 STANCES = (0, 1, 3)                                # DiplomacyState: ally, neutral, enemy
@@ -2918,6 +2923,34 @@ def owner_lines(e, c):
             f"execute as {own} on vehicle run tag @s add aoe2mc.own",
             f"tag {own} remove aoe2mc.p{old}", f"tag {own} add aoe2mc.p{new}",
             f"team join p{new} {own}", f"tag {own} remove aoe2mc.own"]
+
+
+def replace_lines(e, c):
+    """The commands of "Replace Object" (#2703): a summon of the entity of the new type (units.make_entity, as "Create
+    Object") of the target player at each unit of the effect (effect_units), then a kill of the old units and their
+    mounts. Minecraft cannot change the type of a mob. A temporary tag marks the old units first: a new unit of the
+    same entity type and player must stay. A type with no entity (a building) is not supported yet."""
+    T, stats = c.T, c.stats
+    kind, name = e.get("object2") or (None, None)
+    found = effect_units(e, T) if e.get("object") else None
+    nbt = units.make_entity(dict(name=name, player=max(e.get("target", -1), 0), rotation=math.pi / 2), c.players or {},
+                            (0.0, 0.0, 0.0), np.random.default_rng(c.t["id"])) if kind in ("U", "H") else None
+    if found is None or nbt is None:
+        stats["replace (not supported yet)"] += 1
+        return []
+    stats["replace"] += 1
+    at, top, old = found
+    entity = str(nbt.pop("id"))
+    del nbt["Pos"]
+    parts = [nbt]                                                      # Minecraft gives new UUIDs (object_lines)
+    while parts:
+        part = parts.pop()
+        part.pop("UUID", None)
+        parts += list(part.get("Passengers", []))
+    mark = "@e[tag=aoe2mc.replace]"
+    ride = [f"execute as {mark} on vehicle run kill @s"] if top is not old else []   # a rider: its mount goes too
+    return [f"tag {at} add aoe2mc.replace", f"execute at {mark} run summon {entity} ~ ~ ~ {nbt.snbt()}"] + ride + \
+        [f"kill {mark}"]
 
 
 def resource_lines(e, c):
@@ -3184,6 +3217,7 @@ EFFECTS = {
     PATROL: order_lines,
     PLAY_SOUND: sound_lines,
     REMOVE_OBJECT: object_lines,
+    REPLACE_OBJECT: replace_lines,
     RESEARCH_TECHNOLOGY: research_lines,
     SEND_CHAT: chat_lines,
     TASK_OBJECT: task_lines,
@@ -3192,6 +3226,17 @@ EFFECTS = {
 }
 # The context of the effects of trigger t: a handler can add function files (files) and load lines (setup, the keys)
 Effect = namedtuple("Effect", "t T ground players stats mood files setup")
+
+
+# The test of each condition on a score (execute if <test>), one line per condition in alphabetical order (#2613):
+# "Difficulty Level" (#2704): the score #level of aoe_difficulty is the AoE2 value of the difficulty of the game
+# (scenario.setup); "Research Technology" (#2656): the game program sets #p<player>.<technology> of aoe_tech;
+# "Variable Value" (#2611): the score #v<N> of aoe_var. A world with no game program has no score: no fire.
+SCORE_TESTS = {
+    DIFFICULTY_LEVEL: lambda c: f"score #level aoe_difficulty matches {c.get('quantity', 0)}",
+    RESEARCHED: lambda c: f"score #p{c['player']}.{c['technology']} aoe_tech matches 1..",
+    VARIABLE_VALUE: lambda c: f"score #v{c['variable']} aoe_var matches {variable_range(c)}",
+}
 
 
 def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=True):
@@ -3229,9 +3274,8 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
         fn, n = f"aoe2mc:trigger/{t['id']}", t["id"]
         tests, unless, counts = [], [], []
         for i, c in enumerate(conds):
-            if c["type"] in (VARIABLE_VALUE, RESEARCHED):              # a score: of the variable (#2611), of a
-                test = f"score #v{c['variable']} aoe_var matches {variable_range(c)}" if c["type"] == VARIABLE_VALUE \
-                    else f"score #p{c['player']}.{c['technology']} aoe_tech matches 1.."   # technology of the game (#2656)
+            if c["type"] in SCORE_TESTS:                               # a score of the world or the game
+                test = SCORE_TESTS[c["type"]](c)
                 tests.append(f"if {test}")
                 unless.append(f"unless {test}")
                 continue
@@ -3283,8 +3327,9 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
     if names:
         load[:0] = ["scoreboard objectives add aoe_var dummy"] + \
             [f"scoreboard players add {v} aoe_var 0" for v in names]   # AoE2 variables start at 0
-    if any(" aoe_tech " in x for x in tick):                         # a "Research Technology" condition (#2656)
-        setup["scoreboard objectives add aoe_tech dummy"] = None
+    for word in ("aoe_difficulty", "aoe_tech"):                       # a score that only the game program sets
+        if any(f" {word} " in x for x in tick):
+            setup[f"scoreboard objectives add {word} dummy"] = None
     load[:0] = setup
     if tick or any(k.endswith("_chance.mcfunction") for k in files):
         load.insert(0, "scoreboard objectives add aoe_trig dummy")
