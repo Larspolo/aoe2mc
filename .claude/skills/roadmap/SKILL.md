@@ -38,6 +38,8 @@ When all features of a milestone (B, A or C) of a goal are done (`python3 tools/
 milestone), make each release check of the goal that has no ticket yet as a check ticket ("Check X in the game",
 `ticket` skill, level 4 of `verify`), at the priority of the goal's epics, and write its number in the `ticket`
 column of `docs/RELEASE.md`.
+The trigger: the section "Release checks (no ticket, make them in the refill)" of `python3 tools/cycle_start.py`
+(`release.due()`, #3342) lists these checks at each run start. A deep run makes their tickets in step 5 (`queue.md`).
 
 ## Review the feature list (the roadmap review)
 
