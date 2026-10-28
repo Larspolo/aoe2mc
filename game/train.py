@@ -732,6 +732,27 @@ def age(g):
 
 OPERATIONS = {1: lambda v, q: q, 2: lambda v, q: v + q, 3: lambda v, q: v - q,   # the AoE2 Operation of a trigger:
               4: lambda v, q: v * q, 5: lambda v, q: v / q if q else v}   # set, add, subtract, multiply, divide
+# The AoE2 unit classes (ObjectClass) of "Modify Attribute for Class" (#2859) -> a test of the combat classes of a unit:
+# the camels are cavalry, a cavalry archer or a hand cannoneer is not in the class "archer"
+CLASSES = {
+    "archer": lambda c: "archer" in c and not {"cavalry", "gunpowder"} & c,
+    "cavalry": lambda c: bool({"cavalry", "camel"} & c) and "archer" not in c,
+    "cavalry_archer": lambda c: {"archer", "cavalry"} <= c,
+    "hand_cannoneer": lambda c: {"archer", "gunpowder"} <= c,
+    "infantry": lambda c: "infantry" in c,
+    "siege_weapon": lambda c: "siege" in c,
+    "spearman": lambda c: "spearman" in c,
+    "war_elephant": lambda c: "elephant" in c and "archer" not in c,
+    "warship": lambda c: "warship" in c,
+}
+
+
+def applies(unit, name):
+    """True when the unit of a "Modify Attribute" line is AoE2 unit name: its type, or its class "@<class>" (CLASSES,
+    #2859). A class with no test: no unit."""
+    import combat                                                  # combat imports gather, gather imports this module
+    test = CLASSES.get(unit[1:]) if unit.startswith("@") else None
+    return unit == name or test is not None and name in combat.STATS and test(set(combat.stats(name).classes))
 
 
 def stats(g, name):
@@ -753,7 +774,7 @@ def stats(g, name):
     if name.startswith("VILLAGER") and (f := civs.handicap(g.data, g.player)) != 1:   # the AoE2 "Handicap" (#2474)
         s = s._replace(hp=round(s.hp * f))
     for unit, field, op, q in vars(g).get("trigger_attributes", ()):   # "Modify Attribute" of a scenario (#2763)
-        if unit == name:
+        if applies(unit, name):
             v = max(0, OPERATIONS[op](getattr(s, field), q))
             s = s._replace(**{field: v if field in ("range", "reload") else int(v)})   # AoE2: whole hit points, armor
     return s
