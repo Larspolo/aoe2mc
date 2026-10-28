@@ -376,6 +376,19 @@ def board_again(x):
         ai.move(x, u, name, x.map.T, *at, ai.NORMAL * train.speed(x, name))
 
 
+def gates_again(g):
+    """The portcullis of each complete gate of the Gathers of g (build.portcullis: the iron bars, and on Paper the
+    plugin gate): the plugin forgets its gates at a load (#2762). A gate that fell before the save gets none."""
+    import build
+    import combat
+    gone = {u for x in sides(g) for u in vars(x).get("razed", {})}
+    for x in sides(g):
+        for site in getattr(x, "sites", ()):                          # a test Gather may have none
+            x0, x1, z0, z1 = site["footprint"]
+            if site["name"] in build.GATES and site["progress"] >= 1 and combat.target_uuid([x0, z0, x1, z1]) not in gone:
+                build.portcullis(x, site)
+
+
 def relics(d, xs):
     """The one relic list of the game (monk.relics, #3116) in the saved state d, or None (a save before #2412). A save
     before #3116 has a list for each player: each relic takes the entry of the player whose monk or monastery holds it."""
@@ -436,6 +449,7 @@ def load(g, d):
     if "stances" in d:
         g.command(gather.allies_command(g.players))
         g.command(gather.neutral_command(g.players))
+    gates_again(g)                                                     # the sites are back: their bars and plugin gates (#2762)
 
 
 def settings(a, d, given=()):
