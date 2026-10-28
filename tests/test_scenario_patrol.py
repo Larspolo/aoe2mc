@@ -25,8 +25,8 @@ def test_the_trigger_function_tags_the_units_and_stores_the_orders():
     lines = files["data/aoe2mc/function/trigger/7.mcfunction"].splitlines()
     area = "x=8,y=-64,z=8,dx=11,dy=383,dz=11"
     at = f"@e[tag=aoe2mc.p1,tag=!aoe2mc.mount,{area}]"
-    assert lines[:4] == [f"tag {at} add aoe_order7_0", f"execute as {at} on vehicle run tag @s add aoe_order7_0",
-                         "execute as @e[tag=aoe_order7_0,tag=aoe2mc.mount] on passengers run tag @s remove aoe_order7_0",
+    assert lines[:4] == [f"tag {at} add aoe_order7_0", "execute as @e[tag=aoe_order7_0] on vehicle run tag @s add aoe_order7_0",
+                         "execute as @e[tag=aoe_order7_0] on vehicle on passengers run tag @s remove aoe_order7_0",
                          'data modify storage aoe2mc:orders list append value "patrol aoe_order7_0 42 70 26 14 70 14"']
     assert lines[4].endswith(" add aoe_order7_1")                       # a rider walks on its horse
     assert lines[7] == 'data modify storage aoe2mc:orders list append value "attack_move aoe_order7_1 42 70 26"'

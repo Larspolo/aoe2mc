@@ -52,3 +52,22 @@ def test_a_stop_for_an_unknown_object_changes_nothing():
     moving = dict(r.moving)
     assert r.commands(dict(time=1000, player=1, kind="stop", objects=[999])) == []
     assert r.moving == moving
+
+
+class Where(Fake):
+    """Fake RCON whose entities stand at AT (data get entity ... Pos)."""
+    AT = (50.3, 70.0, 41.7)
+
+    def command(self, cmd):
+        super().command(cmd)
+        return "u1 has the following entity data: [{}d, {}d, {}d]".format(*self.AT) if cmd.endswith(" Pos") else ""
+
+
+def test_a_stopped_unit_stands_where_its_entity_is():
+    d = data([], n=160)
+    d["objects"] += [VIL, HOUSE]
+    r = replay.Replay(Where(), d, ai=True)
+    r.commands(FAR)
+    r.commands(dict(time=1000, player=1, kind="stop", objects=[7]))
+    assert r.units[7].pos == (50.3, 70.0, 41.7) and r.units[7].cell == (50, 41)
+    assert r.at(r.units[7], 5000) == r.units[7].pos
