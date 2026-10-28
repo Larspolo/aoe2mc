@@ -419,7 +419,7 @@ def describe(n, hero=False):
         return mob("villager", VillagerData=Compound({"profession": String("minecraft:" + job),
                                                        "type": String("minecraft:plains"), "level": Int(2)}),
                    Xp=Int(1), Offers=no_trades())
-    if n == "MISSIONARY":                                     # a mounted monk (#1939)
+    if n.startswith("MISSIONARY"):                            # a mounted monk, also with a relic (#1939, #3061)
         return mounted("horse", mob("evoker"))
     if has(n, "MONK", "MISSIONARY", "PRIEST", "MERCHANT") and "SHIP" not in n or hero and has(n, *HEROES["religious"]):
         return mob("evoker")
