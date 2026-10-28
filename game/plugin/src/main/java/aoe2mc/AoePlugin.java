@@ -1190,8 +1190,10 @@ public final class AoePlugin extends JavaPlugin implements Listener {
 
     // The AoE2 default stance (#733): a military unit without an order and without a target attacks its attacker.
     // A mounted unit: the horse has the order, the rider the target (#710).
+    // The crew of a siege unit keeps NoAI: unit() would turn on its brain for good (a warden digs, #3016). watch()
+    // gives the idle siege unit its target with the siege rules (#1820).
     private void attackBack(LivingEntity victim, LivingEntity attacker, Stats t) {
-        if (victim instanceof Mob mob && idle(mob, t) && !sameTeam(mob, attacker)
+        if (victim instanceof Mob mob && !(mob.getVehicle() instanceof Minecart) && idle(mob, t) && !sameTeam(mob, attacker)
                 && !attacker.getScoreboardTags().contains(NO_TARGET)
                 && mob.getLocation().distanceSquared(attacker.getLocation()) <= Math.pow(stanceRange(mob), 2)) {
             engage(mob, attacker);
