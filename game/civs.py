@@ -148,6 +148,10 @@ AGE_GIFTS = {r["name"]: r["age_gifts"] for r in ROWS if "age_gifts" in r}   # re
 AGE_NO_BUILDINGS = ("KHMER",)                                      # no buildings are required to advance
 AGE_RATE = {"MALAY": 1.66}                                         # advancing in age is 66 % faster
 AGE_VILLAGERS = {"BENGALIS": 2}                                    # each own town center spawns 2 villagers
+# "tech_gifts": the resources for each technology but an age (Spanish), "economy_villagers": the free villagers for
+# each economic technology (Wei, #2175).
+TECH_GIFTS = {r["name"]: r["tech_gifts"] for r in ROWS if "tech_gifts" in r}
+ECONOMY_VILLAGERS = {r["name"]: r["economy_villagers"] for r in ROWS if "economy_villagers" in r}
 
 
 def tagged(n, group):
