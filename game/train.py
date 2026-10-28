@@ -892,10 +892,11 @@ def tick(g, work):
         rate = CONSCRIPT[1] if rect in fast and q[0]["name"] not in TECHS else 1   # units only, not technologies
         rate *= SHIPWRIGHT[1] if shipwright(g, q[0]["name"]) else 1          # the ships of a dock, not its technologies
         time = 0 if getattr(g, "aegis", False) else seconds(g, q[0]["name"], home.get(rect))   # cheats.aegis
-        q[0]["progress"] += work * rate / time if time else 1                # 0: the Gothic Loom at once (#2172)
+        q[0]["progress"] = min(1, q[0]["progress"] + (work * rate / time if time else 1))   # 0: the Gothic Loom at once (#2172)
         if q[0]["progress"] >= 1 and q[0]["name"] in TECHS:
             research(g, q.pop(0))
-        elif q[0]["progress"] >= 1 and (v := spawn(g, rect, q.pop(0)["name"])):
+        elif q[0]["progress"] >= 1 and (v := spawn(g, rect, q[0]["name"])):   # no room: it waits in the queue (#2470)
+            q.pop(0)
             out.append(v)
             g.pop += 1
     refresh(g)
