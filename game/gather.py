@@ -862,7 +862,8 @@ class Gather:
         watch = combat.WATCH * len({t['name'] for t in ROWS if t.get('watch')} & set(getattr(self, "techs", ())))   # (#1454, #1579)
         lit = {n for n, _, _ in placed} - combat.WALLS.keys() - {t['name'] for t in ROWS if t.get('dark')}   # as in AoE2
         return replay.seen(mobs, [(self.player, n, fp) for n, fp, _ in placed], self.player, self.map.T,
-                           lambda n: combat.sight(n) + printing * (n in monk.MONKS) + watch * (n in lit))
+                           lambda n: combat.sight(n) + printing * (n in monk.MONKS) + watch * (n in lit)
+                           + civs.SIGHT.get(civs.civ(self), {}).get(n, 0))   # the Chinese town center (#2118)
 
     def task(self, v, name):
         """Give the villager the look of its AoE2 task (`LUMBERJACK` ...), with the table of the converter."""
