@@ -190,8 +190,9 @@ class Guide:
                     say(self.game, f"Look: {stage['what']}. It plays in 3 seconds.")
                     self.t, self.state = real + 3, "count"
         elif self.state == "count" and real >= self.t:
-            control["paused"], control["speed"] = False, stage.get("speed", 1.0)   # the owner: "4x went by too quick"
-            self.t, self.state = real + LEAD + WATCH, "watch"
+            speed = stage.get("speed", 1.0)
+            control["paused"], control["speed"] = False, speed   # the owner: "4x went by too quick"
+            self.t, self.state = real + max(0, at - now) / 1000 / speed + WATCH, "watch"   # the question WATCH s after the moment
         elif self.state == "watch" and real >= self.t:
             control["paused"] = True
             self.ask(stage)
