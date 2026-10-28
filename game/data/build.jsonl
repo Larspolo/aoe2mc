@@ -141,3 +141,5 @@
 {"name": "SAVAR", "age": 3}
 {"name": "LEGIONARY", "age": 3}
 {"name": "JIAN_SWORDSMAN", "age": 2}
+{"name": "HOPLITE", "age": 2}
+{"name": "ELITE_HOPLITE", "age": 3}
