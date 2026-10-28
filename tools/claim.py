@@ -42,8 +42,9 @@ Parallel runs read the same `runs` counter of the status issue, so "every 5th ru
 (#898). So `--review` locks one review: `claim/review-<gap>pr-<last review>-<k>`, and only when `gap` PRs merged after
 the last review (`last_review` in the state comment of #1). A review with no change doubles the gap (50, 100, 200
 merged PRs), a change sets it back to 50 (`--reviewed`). `--roadmap` locks the roadmap review the same way, 100 merged
-PRs after `last_roadmap`. A gap counts merged PRs, not minutes: the speed of the project changes (#2039). The other
-times of this tool stay in seconds: a run that stopped merges nothing, so only the clock finds it.
+PRs after `last_roadmap` or its newest lock ref (#3352: a write of the body can be lost). A gap counts merged PRs, not
+minutes: the speed of the project changes (#2039). The other times of this tool stay in seconds: a run that stopped
+merges nothing, so only the clock finds it.
 
 Exit 2: git failed for another reason (network, permission). The workflow `claims.yml` deletes the refs
 of a closed ticket: the session proxy gives 403 for branch deletes.
@@ -275,6 +276,19 @@ def reviewed(body, changed, now=None):
     return with_state(body, {**state, "last_review": utc(now), "review_prs": gap})
 
 
+def last_lock(kind, remote="origin"):
+    """The ISO time of the newest lock `claim/<kind>-<gap>pr-<last>-<k>` (the commit time of its claim), or None. A ref
+    push is atomic, but a write of the status issue body can overwrite another one: a lost `last_roadmap` delayed the
+    roadmap review by 100 merged PRs (#3352). The newest lock has the largest (last, k); "none" is the oldest."""
+    out = git("ls-remote", remote, f"refs/heads/claim/{kind}-*").stdout
+    keys = [(m[1] != "none", m[1], int(m[2]), ref) for line in out.splitlines() for ref in [line.split("\t")[1]]
+            for m in [re.fullmatch(rf"refs/heads/claim/{kind}-\d+pr-([0-9TZ]+|none)-(\d+)", ref)] if m]
+    if not keys:
+        return None
+    git("fetch", "-q", remote, max(keys)[3])
+    return utc(int(git("log", "-1", "--format=%ct", "FETCH_HEAD").stdout))
+
+
 def claim_lock(kind, key, remote="origin"):
     """Push `claim/<kind>-<key>` once: True when this run was first."""
     msg = f"Claim {kind} {key} by {who()} ({uuid.uuid4().hex})"
@@ -455,6 +469,10 @@ def main(argv=None):
         state, kind = agent_state(body), "review" if a.review else "roadmap"
         last, gap = (state.get("last_review"), state.get("review_prs", REVIEW)) if a.review else \
             (state.get("last_roadmap"), ROADMAP)
+        # The roadmap counts from the later of the state and its newest lock (#3352). The process review keeps the state
+        # time: its lock comes before the review, and a review that no run finished must open again (pr_slot).
+        if a.roadmap and on_github(a.remote):
+            last = max(filter(None, (last, last_lock(kind, a.remote))), default=None)
         key = pr_slot(last, gap, merged_since(last, gap, a.remote))
         if key and claim_lock(kind, key, a.remote):
             if a.roadmap and on_github(a.remote):         # the roadmap skill has no end step: count from its start
