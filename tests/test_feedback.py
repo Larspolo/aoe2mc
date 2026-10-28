@@ -33,7 +33,7 @@ def test_fetch_reads_issue_and_review_comments_of_the_window(monkeypatch):
     old = comment(7, "old, edited later", when="2026-10-26T08:00:00Z")      # since= filters by updated_at
     seen = []
 
-    def pages(path):
+    def pages(path, limit=10):
         seen.append(path)
         return [comment(8, "new")] if path.startswith("issues/") else [old]
 

@@ -75,8 +75,9 @@ the roadmap review (100), `Start after: N PRs after #M` and the window of `tools
 stopped run or follows a real clock stays in minutes, because a stopped run merges nothing: the claim beat (20), a
 stale claim (30, or 10 with the label `conflict`), a "Started by" comment (30), the Automerge sweep (10), an old PR in
 `tools/operator_check.py` (30), the pacer (10), `unconflict.yml` (20) and the refill lock (one per hour). The quota
-windows (5 hours, 7 days) follow the subscription, the owner comments of `tools/feedback.py` (6 hours) get an answer
-in time, and a run longer than 90 minutes is about the context and the container of one run.
+windows (5 hours, 7 days) follow the subscription, the owner comments of `tools/feedback.py` (6 hours before the
+last run report, at most 23, #3060) get an answer in time, and a run longer than 90 minutes is about the context and
+the container of one run.
 
 ## The quota pacing
 
@@ -253,6 +254,7 @@ of `tools/bootstrap.py` (they copy this repository) and the tests that need a sp
 | `tests/test_dashboard_start.py` | generic | None (a test of `tools/dashboard.py`). |
 | `tests/test_dashboard_start_prs.py` | generic | None (a test of `tools/dashboard.py`). |
 | `tests/test_feedback.py` | generic | None (a test of `tools/feedback.py`). |
+| `tests/test_feedback_gap.py` | generic | None (a test of `tools/feedback.py`). |
 | `tests/test_health.py` | generic | None (a test of `tools/health.py`). |
 | `tests/test_health_compare.py` | generic | None (a test of `tools/health.py`). |
 | `tests/test_health_conflicts.py` | generic | None (a test of `tools/health.py`). |
