@@ -493,8 +493,7 @@ def found(g, name, rect, way=None, tiles=None, free=False):
     for r, v in () if free else price(g, name).items():
         g.stock[r] -= v
         g.command(f"scoreboard players remove {r.capitalize()} {g.board} {v}")
-    if not free:                                                       # a free one is the start town of a mode
-        record.built(g, name, rect)                                    # Record Game (#2649)
+    record.built(g, name, rect, free)                                  # Record Game (#2649), free: a setup (#3028)
     x0, x1, z0, z1 = rect
     color = g.players.get(str(g.player), {}).get("color", "light_gray")
     ring = [(x, g.map.y(x, z) if g.map.y(x, z) is not None else int(fleet.level(g) if name in WATER else g.map.sea(x, z)), z)
