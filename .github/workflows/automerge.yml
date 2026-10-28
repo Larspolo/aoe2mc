@@ -115,6 +115,12 @@ jobs:
               if new=$(land "$n" "$branch" "$sha") && squash "$n" "$new"; then
                 echo "#$n: merged main with our merge drivers, then merged at once (#3199)"
               else
+                # "Base branch was modified" and "Merge already in progress" come when two merges land in the same
+                # second: no label, the next sweep merges the PR or finds it merged (#3063).
+                if ! grep -qi "merge conflicts" <<<"$why" \
+                   && [ "$(gh api "repos/$R/pulls/$n" --jq .mergeable_state)" != dirty ]; then
+                  echo "#$n: the merge failed ($why) with no conflict: the next sweep tries again"; return
+                fi
                 gh api "repos/$R/issues/$n/labels" -f "labels[]=conflict" >/dev/null
                 printf 'CI is green, but the merge failed (%s). Merge `origin/main` into the branch and push (autopilot step 2).\n' \
                   "$why" > body.md
