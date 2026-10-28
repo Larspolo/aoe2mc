@@ -536,6 +536,7 @@ class Gather:
     reveal = "normal"                                                  # AoE2 "Reveal map"; "all": no fog (fog.py, #1389)
     speed = 1.0                                                        # times the Normal speed: shorter real steps (#2057)
     later = {}                                                         # the bonus of the first town center (civs.TOWN_CENTER)
+    nomad = False                                                      # a Nomad start: no town center yet (#2466)
     victory = "standard"                                               # AoE2 "Victory"; "conquest": no wonder, no relics (#2316)
                                                                        # "king-of-the-hill": hill.py (#2360)
     mode = "standard"                                                  # AoE2 game mode; "regicide": the King (#2347)
@@ -557,7 +558,7 @@ class Gather:
             nomad = "unit" in kinds and "building" not in kinds
             base = LEVELS[resources]
             tc = civs.TOWN_CENTER.get(civs.civ(self), {})              # Tupi: with the first town center (#2293)
-            self.later = dict(tc) if nomad else {}
+            self.later, self.nomad = dict(tc) if nomad else {}, nomad
             start = civs.start(self, {r: v + NOMAD.get(r, 0) * nomad + tc.get(r, 0) * (not nomad)
                                       for r, v in base.items()})       # #1269
         self.stock = {**dict.fromkeys(DROP_SITES, 0), **start}             # at the drop sites (#973)
@@ -702,13 +703,20 @@ class Gather:
                 else:
                     self.command(f"fill {x} {y} {z} {x} {y + 1} {z} minecraft:oak_leaves[persistent=true]")
 
-    def town_center(self):
+    def town_center(self, rect=None):
         """The first own town center is complete (build.rise): the bonus of a Nomad start comes now (civs.TOWN_CENTER,
-        Tupi +25 of each resource, #2293)."""
+        Tupi +25 of each resource, #2293), and the unit of the key "nomad_unit" (Huns: a tamed Hunnic Horse in front
+        of the town center rect, #2466)."""
         for r, n in sorted(self.later.items()):
             self.stock[r] += n
             self.command(f"scoreboard players add {r.capitalize()} {self.board} {n}")
         self.later = {}
+        if self.nomad and rect and (unit := civs.value("nomad_unit", civs.civ(self))) and (cells := self.map.front(rect)):
+            x, z = cells[0]
+            name = json.dumps({"text": pretty(unit), "color": self.color()})
+            self.command(f"summon minecraft:horse {x + 0.5} {self.map.y(x, z)} {z + 0.5} {{Tame:1b,PersistenceRequired:1b,"
+                         f"Tags:[\"aoe2mc.p{self.player}\"],CustomName:{name}}}")
+        self.nomad = False
 
     def idle(self):
         """Show the number of idle villagers in the sidebar, as the idle villager button of AoE2 (#744), only when it

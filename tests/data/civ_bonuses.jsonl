@@ -91,7 +91,7 @@
 {"name": "HINDUSTANIS: Gunpowder units have +1/+1 armor.", "civ": "HINDUSTANIS", "bonus": "Gunpowder units have +1/+1 armor.", "in": "UNITS"}
 {"name": "HINDUSTANIS: Can build Caravanserais in the Imperial Age.", "civ": "HINDUSTANIS", "bonus": "Can build Caravanserais in the Imperial Age.", "in": "game/data/build.jsonl"}
 {"name": "HUNS: Start the game with wood -100, but with the population cap at the maximum.", "civ": "HUNS", "bonus": "Start the game with wood -100, but with the population cap at the maximum.", "in": "START"}
-{"name": "HUNS: On Nomadic maps, the first Town Center spawns a Hunnic Horse.", "civ": "HUNS", "bonus": "On Nomadic maps, the first Town Center spawns a Hunnic Horse.", "later": "play:setup"}
+{"name": "HUNS: On Nomadic maps, the first Town Center spawns a Hunnic Horse.", "civ": "HUNS", "bonus": "On Nomadic maps, the first Town Center spawns a Hunnic Horse.", "in": "nomad_unit"}
 {"name": "HUNS: Mounted archers are 10%/20% cheaper in the Castle/Imperial Age.", "civ": "HUNS", "bonus": "Mounted archers are 10%/20% cheaper in the Castle/Imperial Age.", "in": "COSTS"}
 {"name": "HUNS: Trebuchets have +35% accuracy against units and small targets.", "civ": "HUNS", "bonus": "Trebuchets have +35% accuracy against units and small targets.", "later": "play:siege"}
 {"name": "INCAS: Military units cost food -15%/-20%/-25%/-30% in Dark/Feudal/Castle/Imperial Ages", "civ": "INCAS", "bonus": "Military units cost food -15%/-20%/-25%/-30% in Dark/Feudal/Castle/Imperial Ages", "in": "COSTS"}
