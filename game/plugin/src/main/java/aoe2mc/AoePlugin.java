@@ -636,11 +636,14 @@ public final class AoePlugin extends JavaPlugin implements Listener {
 
     // The aim from `from` at the middle of t, raised by the fall of the flight time. With Ballistics the shooter aims
     // at the place where t will be when the arrow arrives: its position plus its step × the flight time (AoE2 DE wiki).
+    // A shooter with the tag aoe2mc.lead, or the crew of a ship with it, aims so without the technology (Spanish Cannon
+    // Galleons, game/train.py, #2430).
     private static Vector lead(Entity shooter, Location from, LivingEntity t) {
         Vector mid = t.getLocation().toVector().add(new Vector(0, t.getHeight() * 0.5, 0));
         Vector to = mid.clone().subtract(from.toVector());
         double ticks = to.length() / ARROW_SPEED;
-        if (BALLISTICS.contains(side(shooter))) {
+        if (BALLISTICS.contains(side(shooter)) || shooter.getScoreboardTags().contains("aoe2mc.lead")
+                || shooter.getVehicle() != null && shooter.getVehicle().getScoreboardTags().contains("aoe2mc.lead")) {
             Vector v = t.getVelocity().setY(0).multiply(t.isOnGround() ? 1 / GROUND_DRAG : 1);
             to = mid.add(v.multiply(ticks)).subtract(from.toVector());
             ticks = to.length() / ARROW_SPEED;
