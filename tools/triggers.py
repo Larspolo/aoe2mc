@@ -33,7 +33,7 @@ MAP = {
     ("condition", "BRING_OBJECT_TO_AREA"): "`execute if entity @e[tag=aoe2mc.rN,x=..,dx=..]` in the tick function (units, #2620); a building: not supported yet",
     ("condition", "OWN_OBJECTS"): "`execute store result score ... if entity @e[tag=aoe2mc.pN]`, then `if score ... matches N..` (units only, #2573)",
     ("condition", "OWN_FEWER_OBJECTS"): "`execute store result score ... if entity @e[tag=aoe2mc.pN]`, then `if score ... matches ..N` (units only, #2573)",
-    ("condition", "DESTROY_OBJECT"): "`execute unless entity @e[tag=aoe2mc.rN]` in the tick function (units, #2618); a building: not supported yet",
+    ("condition", "DESTROY_OBJECT"): "`execute unless entity @e[tag=aoe2mc.rN]` in the tick function (units, #2618); a building: `if score #fN aoe_fallen matches 1..`, set by the scenario mode when it falls (#2910)",
     ("condition", "OBJECT_ATTACKED"): "`execute if entity @e[tag=aoe2mc.rN,nbt=!{HurtTime:0s}]` in the tick function: the unit took damage from any attacker in the last 10 ticks, vanilla has no attacker in a selector (units, #2779); a building: not supported yet",
     ("condition", "CAPTURE_OBJECT"): "`execute if entity @e[tag=aoe2mc.rN,tag=aoe2mc.pN]` in the tick function (units, #2619); a building: not supported yet",
     ("condition", "DISPLAY_TIMER_TRIGGERED"): "`execute if score #doneN aoe_timer matches 1..` in the tick function: the timer sets the score at 0 (#2702)",

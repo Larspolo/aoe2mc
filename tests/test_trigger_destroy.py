@@ -54,11 +54,10 @@ def test_a_looping_trigger_fires_again_only_after_the_unit_is_back():
     assert lines[-1] == "execute if entity @e[tag=aoe2mc.r7] run scoreboard players reset #3 aoe_trig"
 
 
-def test_a_building_or_no_object_gives_no_trigger():
+def test_no_object_gives_no_trigger():
     stats = Counter()
-    for c in (destroy(unit=False), destroy(ref=-1)):
-        assert tick([c], stats)[1] == {}
-    assert stats == Counter({"object condition (not an entity, not supported yet)": 2})
+    assert tick([destroy(ref=-1)], stats)[1] == {}
+    assert stats == Counter({"object condition (not an entity, not supported yet)": 1})
 
 
 def test_the_converter_reads_the_object_of_the_condition(tmp_path):
