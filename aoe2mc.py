@@ -2712,6 +2712,7 @@ DAMAGE_OBJECT = 24                                                     # "Damage
 TELEPORT_OBJECT = 35
 FREEZE_OBJECT = 22                                                     # "Freeze Object" (#2608)
 CHANGE_OBJECT_NAME = 26                                                # "Change Object Name" (#2616)
+CLEAR_INSTRUCTIONS = 21                                                # "Clear Instructions" (#2609)
 
 
 def turn_area(area, size, k):
@@ -2924,6 +2925,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
     "Teleport Object": teleport_lines (#2569).
     "Freeze Object": freeze_lines (#2608).
     "Change Object Name": name_lines (#2616).
+    "Clear Instructions": title @a clear (#2609).
     A disabled trigger does not run."""
     load, files, tick = [], {}, []
     stats = Counter() if stats is None else stats
@@ -2961,6 +2963,9 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
                 continue
             if e["type"] == CHANGE_OBJECT_NAME:
                 lines += name_lines(e, T, stats)
+                continue
+            if e["type"] == CLEAR_INSTRUCTIONS:                            # no message
+                lines.append("title @a clear")
                 continue
             msg = re.sub(r"<[^<>]*>", "", e["message"]).replace("\r", "").strip()   # AoE2 color tags
             if not msg:
