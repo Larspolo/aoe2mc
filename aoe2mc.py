@@ -2763,6 +2763,7 @@ AND = 57                                                           # the conditi
 ATTACK_MOVE = 30                                                   # "Attack Move" (#2647)
 CHANGE_COLOR_MOOD = 72
 CHANGE_DIPLOMACY = 1                                               # "Change Diplomacy" (#2645)
+CHANGE_OBJECT_COST = 40                                            # "Change Object Cost" (#2776)
 CHANGE_OBJECT_NAME = 26                                            # "Change Object Name" (#2616)
 CHANGE_OBJECT_SPEED = 33                                           # "Change Object Speed" (#2694)
 CHANGE_OBJECT_STANCE = 36                                          # "Change Object Stance" (#2705)
@@ -3208,6 +3209,20 @@ def research_lines(e, c):
     return [f"scoreboard players set #r{c.t['id']}.{i} aoe_tech 1"]   # the game program reads it
 
 
+def cost_lines(e, c):
+    """The command of "Change Object Cost" (#2776): the new cost of the unit or building type of the player (up to 3
+    resources of ATTRIBUTES; a quantity of 0 drops the resource) goes into the list of the data storage aoe2mc:costs as
+    one text "<player> <name> <resource>=<quantity> ...". A converted world has no costs: the scenario mode of the game
+    program (game/scenario.py costs) empties the list and uses the cost in the menus."""
+    cost = [f"{ATTRIBUTES[r].lower()}={q}" for r, q in e.get("cost", ()) if r in range(len(ATTRIBUTES)) and q > 0]
+    _, name = e.get("object") or (None, None)
+    if not name or e["player"] <= 0:
+        c.stats["change object cost (not supported)"] += 1
+        return []
+    c.stats["change object cost"] += 1
+    return [f'data modify storage aoe2mc:costs list append value "{" ".join([str(e["player"]), name, *cost])}"']
+
+
 def order_lines(e, c):
     """The commands of "Patrol" and "Attack Move" (#2647). Vanilla has no walk-to command: the units of the player in
     the area get the tag aoe_order<trigger>_<effect index> (tag_lines: a rider gives it to its horse), and the order
@@ -3385,6 +3400,9 @@ def instruction_lines(e, c):
 EFFECT_KEYS = {
     ACTIVATE_TRIGGER: {"trigger": "trigger_id"},                                     # (#2575)
     CHANGE_DIPLOMACY: {"target": "target_player", "diplomacy": "diplomacy"},         # (#2645)
+    CHANGE_OBJECT_COST: {"cost": lambda e, kinds, techs: [[e.resource_1, e.resource_1_quantity],   # (#2776)
+                                                        [e.resource_2, e.resource_2_quantity],
+                                                        [e.resource_3, e.resource_3_quantity]]},
     CHANGE_OBJECT_SPEED: {"quantity": "quantity"},
     CHANGE_OBJECT_STANCE: {"stance": "attack_stance"},                               # (#2705)
     CHANGE_OWNERSHIP: {"target": "target_player"},                                   # (#2570)
@@ -3413,6 +3431,7 @@ EFFECTS = {
     ATTACK_MOVE: order_lines,
     CHANGE_COLOR_MOOD: mood_lines,
     CHANGE_DIPLOMACY: diplomacy_lines,
+    CHANGE_OBJECT_COST: cost_lines,
     CHANGE_OBJECT_NAME: name_lines,
     CHANGE_OBJECT_SPEED: speed_lines,
     CHANGE_OBJECT_STANCE: stance_lines,
