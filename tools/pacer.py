@@ -59,7 +59,9 @@ def main(argv=None, env=os.environ):
     found, now = usage.read_usage(), datetime.datetime.now(datetime.timezone.utc).timestamp()
     if not found:
         sys.exit("no rate_limit_event in the CLI output: start no run")
-    k, runs, line = usage.fire(found, now, usage.measured_burn() or usage.BURN, usage.measured_burn7() or usage.BURN7)
+    status = usage.read_status()                       # one read for both fire calls (#3069)
+    burn, burn7 = usage.burns(status[0])
+    k, runs, line = usage.fire(found, now, burn, burn7, status=status)
     todo = calls(k, runs, env)
     skipped = sorted({t for t, n in [*runs.items(), ("main", k - sum(runs.values()))]
                       if n and not env.get(f"PACER_URL_{t.upper()}")})
@@ -80,8 +82,7 @@ def main(argv=None, env=os.environ):
                 failed.append(f"{task}: {e}")
     blocked = sum(1 for t, *_ in todo if t in limited and t != "main") - sum(started[t] for t in limited)
     if blocked > 0 and "main" not in limited:          # give the room of the blocked lane runs to the main task
-        k2, runs2, _ = usage.fire(found, now, usage.measured_burn() or usage.BURN, usage.measured_burn7() or usage.BURN7,
-                                  skip=limited)
+        k2, runs2, _ = usage.fire(found, now, burn, burn7, skip=limited, status=status)
         more = calls(min(blocked, k2 - sum(runs2.values())), {}, env)
         for task, url, token in more:
             try:

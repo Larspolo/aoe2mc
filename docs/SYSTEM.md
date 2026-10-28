@@ -285,6 +285,7 @@ of `tools/bootstrap.py` (they copy this repository) and the tests that need a sp
 | `tests/test_pacer.py` | generic | None (a test of `tools/usage.py`). |
 | `tests/test_pacer_script.py` | generic | None (a test of `tools/pacer.py`). |
 | `tests/test_usage.py` | generic | None (a test of `tools/usage.py`). |
+| `tests/test_usage_status_once.py` | generic | None (a test of `tools/usage.py`). |
 | `tests/test_usage_week.py` | generic | None (a test of `tools/usage.py`). |
 | `tests/test_generic_tools.py` | specific | The tools of aoe2mc that generic files may name (`OPTIONAL`, #1963). |
 | `tests/test_generic_words.py` | specific | The words of aoe2mc that the generic files must not contain (#1900). |
