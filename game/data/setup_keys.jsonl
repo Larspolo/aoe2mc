@@ -3,6 +3,7 @@
 {"name": "bots", "type": "bool", "text": "A game mode that the bots can play.", "issue": 2521}
 {"name": "buildings", "type": "dict", "kind": true, "text": "A game mode with a start town: the number of each building of build.jsonl.", "issue": 2408}
 {"name": "help", "type": "str", "text": "The help text of a game mode for --mode.", "issue": 2521}
+{"name": "heroes", "type": "list", "text": "The start heroes of a game mode for each player (not Gaia), of units.jsonl (battle_royale.heroes).", "issue": 2688}
 {"name": "infinite", "type": "bool", "text": "A resource level where a cost does not lower the stock.", "issue": 2489}
 {"name": "level", "type": "str", "kind": true, "text": "A game mode with the resource level of this name when --resources is standard.", "issue": 2438}
 {"name": "loaded", "type": "str", "text": "What a game mode does in a loaded game: skip or start.", "issue": 2521}
