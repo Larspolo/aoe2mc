@@ -25,7 +25,7 @@ def setup(ages=IMPERIAL, techs=("CROSSBOWMAN_UPGRADE",)):
 
 
 def test_the_values_are_those_of_aoe2():
-    assert train.AFTER["ARBALESTER_UPGRADE"] == "CROSSBOWMAN_UPGRADE"
+    assert train.BY_KEY["after"]["ARBALESTER_UPGRADE"] == "CROSSBOWMAN_UPGRADE"
     for old, new in (("CROSSBOWMAN", "ARBALESTER"), ("CAVALRY_ARCHER", "HEAVY_CAVALRY_ARCHER")):
         assert train.COSTS[new] == train.COSTS[old] and train.TRAIN_TIMES[new] == train.TRAIN_TIMES[old]
     assert all(len(train.HELP[n]) <= 50 for n in ("ARBALESTER_UPGRADE", "HEAVY_CAVALRY_ARCHER_UPGRADE"))

@@ -42,7 +42,7 @@ def research(g, name, time):
 
 
 def test_the_cost_time_age_and_order_are_those_of_aoe2():
-    assert (train.TECH_AGE["GUARD_TOWER"], train.TECH_AGE["KEEP"]) == (2, 3) and train.AFTER["KEEP"] == "GUARD_TOWER"
+    assert (train.BY_KEY["age"]["GUARD_TOWER"], train.BY_KEY["age"]["KEEP"]) == (2, 3) and train.BY_KEY["after"]["KEEP"] == "GUARD_TOWER"
     assert combat.stats("GUARD_TOWER") == combat.Stats(1500, 7, 2, 8, 8, 2.0, {"ship": 7}, ("building", "standard", "stone"))
     assert combat.stats("KEEP") == combat.Stats(2250, 8, 3, 9, 8, 2.0, {"ship": 8}, ("building", "standard", "stone"))
 

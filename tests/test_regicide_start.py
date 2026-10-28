@@ -21,14 +21,14 @@ REGICIDE = regicide.MODES["regicide"]
 def test_the_regicide_starting_resources(level, start):
     objects = [{"kind": "building", "name": "TOWN_CENTER", "player": 1, "footprint": [2, 2, 6, 6]}]
     g = gather.Gather(FakeServer({}), grid([[64] * 20 for _ in range(20)], objects), resources=level).setup()
-    regicide.start(g, REGICIDE, level)
+    regicide.start_stock(g, REGICIDE, level)
     assert tuple(g.stock[r] for r in ("food", "wood", "gold", "stone")) == start
     assert f"scoreboard players set Stone aoe_res {start[3]}" in g.game.log
 
 
 def test_ultra_keeps_its_resources():
     g = gather.Gather(FakeServer({}), grid([[64] * 20 for _ in range(20)]), resources="ultra").setup()
-    regicide.start(g, REGICIDE, "ultra")
+    regicide.start_stock(g, REGICIDE, "ultra")
     assert g.stock["gold"] == gather.LEVELS["ultra"]["gold"]
 
 
@@ -67,3 +67,13 @@ def test_treason_shows_the_enemy_kings_each_time():
     glow = [c for c in server.log if "minecraft:glowing" in c]
     assert glow.count("effect give @e[tag=aoe2mc.p2,tag=aoe2mc.king] minecraft:glowing 10 0 true") == 2
     assert not [c for c in glow if "aoe2mc.p1," in c]             # not the own King
+
+
+def test_setup_takes_the_level_of_the_game_and_a_loaded_game_keeps_its_stock(monkeypatch):
+    for start, food in ((True, 750), (False, gather.LEVELS["medium"]["food"])):
+        server, g, spy = game()
+        monkeypatch.setattr(train, "summon", spy)
+        g.data["resources"] = "medium"                            # run.play writes the --resources level (#2388)
+        g.stock.update(gather.LEVELS["medium"])
+        regicide.setup(g, start=start)
+        assert g.stock["food"] == food

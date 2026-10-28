@@ -52,7 +52,7 @@ def test_a_frankish_player_in_the_feudal_age_does_not():
 def test_a_technology_comes_one_age_earlier_only_for_its_civilization(civ, ages, name):
     def g(civ, ages):
         _, g = setup(civ, ages)
-        g.techs.update([train.AFTER[name]] if name in train.AFTER else [])   # Man-at-Arms before Long Swordsman
+        g.techs.update([train.BY_KEY["after"][name]] if name in train.BY_KEY["after"] else [])   # Man-at-Arms before Long Swordsman
         return g
     assert train.unlocked(g(civ, ages), name)
     assert not train.unlocked(g(civ, ages - 1), name)

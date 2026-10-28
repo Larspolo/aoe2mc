@@ -8,7 +8,7 @@ from game import diplomacy, train
 
 
 def test_the_costs_times_and_ages_are_those_of_aoe2():
-    assert train.AFTER["BANKING"] == "COINAGE"
+    assert train.BY_KEY["after"]["BANKING"] == "COINAGE"
     assert all(len(train.HELP[t]) <= 50 for t in ("COINAGE", "BANKING"))
 
 

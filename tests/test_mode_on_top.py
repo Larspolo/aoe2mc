@@ -35,7 +35,7 @@ def play(tmp_path, monkeypatch, state=None, **settings):
             seen.append((self.mode, sorted(self.modes)))
     monkeypatch.setattr(gather, "Gather", FakeGather)
     for m in (capture_relic, regicide, sudden_death):
-        monkeypatch.setattr(m, "setup", lambda g, mode, *resources: seen.append(f"setup {mode}"))   # regicide (#2388)
+        monkeypatch.setattr(m, "setup", lambda g, mode, **start: seen.append(f"setup {mode}"))   # regicide (#2388)
     monkeypatch.setattr(empire_wars, "setup", lambda g, mode: seen.append(f"setup {mode}"))
     monkeypatch.setattr(train, "start", lambda g, age: seen.append(f"age {age}"))
     monkeypatch.setattr(combat, "setup", lambda game, data: None)

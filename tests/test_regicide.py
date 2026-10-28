@@ -135,11 +135,11 @@ def test_play_sets_up_the_mode(mode, tmp_path, monkeypatch):
         def run(self, seconds):
             seen.append(getattr(self, "mode", "standard"))
     monkeypatch.setattr(gather, "Gather", FakeGather)
-    monkeypatch.setattr(regicide, "setup", lambda g, m, r: seen.append(f"setup {m} {r}"))
+    monkeypatch.setattr(regicide, "setup", lambda g, m, start: seen.append(f"setup {m} {start}"))
     import combat
     monkeypatch.setattr(combat, "setup", lambda game, data: None)
     run.play(FakeGame(), str(tmp_path), mode=mode)
-    assert seen == (["setup regicide standard", "regicide"] if mode == "regicide" else ["standard"])
+    assert seen == (["setup regicide True", "regicide"] if mode == "regicide" else ["standard"])
 
 
 def test_the_mode_option_goes_to_play(tmp_path, monkeypatch):

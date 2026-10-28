@@ -1,4 +1,4 @@
-"""game/build.py AGE and game/train.py TECH_AGE: the Castle and Imperial Age buildings, units and technologies are
+"""game/build.py AGE and the key "age" of game/data/train.jsonl: the Castle and Imperial Age buildings, units and technologies are
 locked until the age (#1082). The ages of the AoE2 DE wiki (0: Dark, 1: Feudal, 2: Castle, 3: Imperial)."""
 import pytest
 from test_train_castle import menus, setup
@@ -28,7 +28,7 @@ def test_the_age_of_each_building_and_unit_is_that_of_aoe2(name):
 
 @pytest.mark.parametrize("name", sorted(TECHS))
 def test_the_age_of_each_technology_is_that_of_aoe2(name):
-    assert train.TECH_AGE.get(name, 0) == TECHS[name]
+    assert train.BY_KEY["age"].get(name, 0) == TECHS[name]
 
 
 def test_each_unique_unit_needs_the_castle_age_and_its_elite_the_imperial_age():
@@ -44,7 +44,7 @@ def test_each_unit_and_technology_of_the_menus_has_an_age():
                                                          "TRANSPORT_SHIP"} \
         <= build.AGE.keys()
     policies = {n for r in civs.ROWS for n in r.get("policies", {}).get("effects", {})}   # the Dark Age (#2485)
-    assert {n for n in names if n in train.TECHS} - {"LOOM", "FEUDAL_AGE"} - policies <= train.TECH_AGE.keys() | build.AGE.keys()
+    assert {n for n in names if n in train.TECHS} - {"LOOM", "FEUDAL_AGE", *train.DOCTRINES} - policies <= train.BY_KEY["age"].keys() | build.AGE.keys()
 
 
 @pytest.mark.parametrize("ages, need", [(0, "Needs the Castle Age"), (1, "Needs the Castle Age"), (2, None)])

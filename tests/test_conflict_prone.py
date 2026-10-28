@@ -20,7 +20,7 @@ def test_no_test_pins_the_length_of_a_table():
 
 
 # A literal value of a train.jsonl line (#2182): tests/test_data_files.py checks the form, the wiki gives the value.
-COPY = re.compile(r"train\.(?:COSTS|TRAIN_TIMES|TECH_AGE)\[[^\]]*\] *== *[\d{]")
+COPY = re.compile(r"train\.(?:COSTS|TRAIN_TIMES|BY_KEY\[\"age\"\])\[[^\]]*\] *== *[\d{]")
 
 
 def test_no_test_copies_a_value_of_train_jsonl():

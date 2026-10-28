@@ -389,6 +389,9 @@ def read_scenario(path):
         players[p.player_id] = {"color": color if p.player_id else "light_gray", "arch": arch,
                                 "civ": getattr(civ, "name", "?"),
                                 "view": view if view[0] is not None and min(view) >= 0 else None}
+        if p.player_id:                         # the tab "Players" of the editor: for a scenario game (#2539)
+            players[p.player_id] |= {"resources": {r: int(getattr(p, r) or 0) for r in ("food", "wood", "gold", "stone")},
+                                     "pop_limit": int(p.population_cap or 200), "computer": not p.human}
         neutral = [i for i, d in enumerate(p.diplomacy or [], 1) if d == 1 and i != p.player_id and i <= 8]
         if p.player_id and neutral:             # the stance neutral (1) of DiplomacyState: no automatic attack (#1645)
             players[p.player_id]["neutral"] = neutral
@@ -2572,6 +2575,7 @@ def write_objects(path, size, T, H, players, objects, cols, ground, timeline=Non
     "ground" has one string per block row z: for each x the y where a unit stands, or "-" for water.
     "timeline" (recorded games only): the events of read_timeline, with tiles in the turned grid
     and the "names" of the selected objects (name_timeline).
+    "players" of a scenario also have its "resources" (food, wood, gold, stone), "pop_limit" and "computer" (#2539).
     "mood": the map color mood of a DE scenario (ColorMood name, #1594), else "DEFAULT".
     "map_ground": the map bytes of map 0 without the objects (map_colors), one hex string per pixel row z: the live
     minimap of the plugin paints them where no live object is (#1940)."""
@@ -2599,7 +2603,7 @@ def write_objects(path, size, T, H, players, objects, cols, ground, timeline=Non
         objs.append(e)
     data = {"map_size": size, "tile_size": T, "level_height": H, "mood": mood,
             "players": {str(pid): {"civ": p["civ"], "color": p["color"], "arch": p["arch"]}
-                        | {k: p[k] for k in ("team", "neutral") if k in p} for pid, p in sorted(players.items())},
+                        | {k: p[k] for k in ("team", "neutral", "resources", "pop_limit", "computer") if k in p} for pid, p in sorted(players.items())},
             "objects": objs}
     n, wet = cols.n, cols.wtop > cols.top
     data["ground"] = [" ".join("-" if wet[x, z] else str(ground[x, z]) for x in range(n)) for z in range(n)]

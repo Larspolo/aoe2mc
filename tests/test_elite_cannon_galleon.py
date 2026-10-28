@@ -23,7 +23,7 @@ def imperial(civ="SPANISH"):
 
 
 def test_the_values_are_those_of_aoe2():
-    assert train.AFTER["ELITE_CANNON_GALLEON_UPGRADE"] == "CHEMISTRY" and len(train.HELP["ELITE_CANNON_GALLEON_UPGRADE"]) <= 50
+    assert train.BY_KEY["after"]["ELITE_CANNON_GALLEON_UPGRADE"] == "CHEMISTRY" and len(train.HELP["ELITE_CANNON_GALLEON_UPGRADE"]) <= 50
     assert combat.BLAST["ELITE_CANNON_GALLEON"] == 0.3 and combat.MIN_RANGE["ELITE_CANNON_GALLEON"] == 3
     assert "ELITE_CANNON_GALLEON" in combat.MELEE_RANGED and train.ITEMS["ELITE_CANNON_GALLEON"][0] == train.ITEMS["CANNON_GALLEON"][0]
     assert set(civs.MISSING["ELITE_CANNON_GALLEON_UPGRADE"]) == set(buildings.CIV_TO_ARCH) - HAVE

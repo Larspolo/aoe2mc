@@ -20,7 +20,7 @@ def cavaliers(civ):
 
 
 def test_the_values_are_those_of_aoe2():
-    assert train.AFTER["SAVAR_UPGRADE"] == "CAVALIER_UPGRADE"
+    assert train.BY_KEY["after"]["SAVAR_UPGRADE"] == "CAVALIER_UPGRADE"
     assert len(train.HELP["SAVAR_UPGRADE"]) <= 50
     assert "PERSIANS" in civs.MISSING["PALADIN_UPGRADE"] and "PERSIANS" not in civs.MISSING["SAVAR_UPGRADE"]
     assert {"FRANKS", "BRITONS", "TEUTONS"} <= set(civs.MISSING["SAVAR_UPGRADE"])

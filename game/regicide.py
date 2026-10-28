@@ -31,15 +31,17 @@ def has_king(g, n):
     return "passed" in g.command(f"execute if entity @e[tag=aoe2mc.p{n},tag={KING}]")
 
 
-def setup(g, mode="regicide", resources=None):
+def setup(g, mode="regicide", start=True):
     """Give each player (not Gaia) its Kings: tag the ones of the scenario, else summon the start units of the mode in
-    front of its first town center, with the more units and buildings of the mode. resources: the level of the
-    starting resources (None: a loaded game keeps its stock). g.kings: the players that have a King, the players of the
-    mode."""
+    front of its first town center, with the more units and buildings of the mode, and the starting resources of the
+    mode for the level of aoe2mc.json "resources" (run.py; start False: a loaded game keeps its stock). g.kings: the
+    players that have a King, the players of the mode."""
+    import gather                                                      # gather imports this module
     import train                                                       # train imports gather, gather imports this module
+    level = start and "resources" in g.data and gather.level(g.data["resources"], g.data)
     gathers = {x.player: x for x in [g, *(s.g for s in g.bots)]}       # an own unit goes to the Gather of its player
     for x in gathers.values():
-        start(x, MODES[mode], resources)
+        start_stock(x, MODES[mode], level)
     g.kings = set()
     for n in sorted(int(p) for p in g.players if int(p)):
         for o in g.data["objects"]:
@@ -64,7 +66,7 @@ def setup(g, mode="regicide", resources=None):
     return g
 
 
-def start(x, line, level):
+def start_stock(x, line, level):
     """The starting resources of the mode (its key "start") in place of those of level for the Gather x: the
     civilization bonuses stay (#2388)."""
     import gather                                                      # gather imports this module

@@ -10,7 +10,7 @@ TC = (2, 5, 2, 5)
 
 
 def test_the_cost_time_age_and_order_are_those_of_aoe2():
-    assert train.AFTER["ARCHITECTURE"] == "MASONRY"
+    assert train.BY_KEY["after"]["ARCHITECTURE"] == "MASONRY"
     assert {"ARCHITECTURE", "ARROWSLITS"} <= set(train.TRAINS["UNIVERSITY"])
 
 

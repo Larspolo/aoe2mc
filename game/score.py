@@ -7,8 +7,9 @@ section Age of Empires II), for the victory settings "Score" and "Time Limit".
 - Economy: 10 % of the resources of the player and of its tributes (diplomacy.send), and 20 % of the cost of its live
   units and standing buildings, not the castles and wonders.
 - Technology: 20 % of the cost of the researched technologies and ages, not the free ones of the start age (AoE2: "do
-  not count"). The 10 points for each 1 % of the explored map are not in it: the game program does not keep the
-  explored tiles.
+  not count"), and 10 points for each 1 % of the explored map (#2396): explore() adds the tiles in the line of sight of
+  the own units and buildings (Gather.seen_tiles) to g.explored of each Gather (the people and the bots) each LOOK
+  seconds, with the positions of all units in one `aoe where` (Gather.where).
 - Society: 20 % of the cost of the castles and wonders that the player built (the key "society" of data/replay.jsonl).
 The costs are the AoE2 costs (train.COSTS, build.COSTS), without the civilization bonuses.
 Minecraft feature: a scoreboard. Each person sees one line for each player in its resource sidebar (g.board), with
@@ -16,7 +17,7 @@ the commands only when a score changes.
 
     score.fallen(g, dead)    # train.census: the own units that died since the last count
     score.razed(g, uuid)     # gather.Gather.fall: the target of the fallen building
-    score.tick(g)            # gather.Gather.run: once each EVERY seconds
+    score.tick(g)            # gather.Gather.run: the explored tiles each LOOK seconds, the score each EVERY seconds
 """
 import json
 
@@ -26,6 +27,7 @@ import table
 import train
 
 EVERY = 5.0          # seconds between two counts
+LOOK = 1.0           # seconds between two updates of the explored tiles (#2396)
 SOCIETY = {r["name"] for r in table.load("replay.jsonl") if r.get("society")}   # castles and wonders (#1086)
 PARTS = ("military", "economy", "technology", "society")
 
@@ -48,6 +50,23 @@ def fallen(g, dead):
 def razed(g, uuid):
     """Keep the enemy building with target uuid that fell after an attack order of g."""
     vars(g).setdefault("razed", {})[uuid] = g.fort_names.get(uuid, "")
+
+
+def explore(g):
+    """Add the tiles in sight of the own units and buildings of each Gather of the game of g to its set explored, at
+    most each LOOK seconds. A destroyed building of the map still sees, as in fog.update with alive None."""
+    if g.clock() < vars(g).get("explore_at", 0.0):
+        return
+    g.explore_at = g.clock() + LOOK
+    sides = fog.gathers(g)
+    pos = g.where({u for h in sides for u in (*h.villagers, *h.soldiers)})
+    for h in sides:
+        vars(h).setdefault("explored", set()).update(h.seen_tiles(pos))
+
+
+def tiles(g):
+    """The tiles of the map of g."""
+    return (g.data.get("map_size") or g.map.n // g.map.T) ** 2
 
 
 def buildings(g, gone):
@@ -79,7 +98,7 @@ def points(g):
             "military": 0.2 * kills,
             "economy": 0.1 * (sum(h.stock.values()) + sum(value(t) for t in vars(h).get("tributes", {}).values()))
             + 0.2 * (sum(worth(n) for n in units) + sum(worth(n) for n, _ in built if n not in SOCIETY)),
-            "technology": 0.2 * sum(worth(t) for t in techs),
+            "technology": 0.2 * sum(worth(t) for t in techs) + 10 * 100 * len(vars(h).get("explored", ())) / tiles(h),
             "society": 0.2 * sum(worth(n) for n, own in built if own and n in SOCIETY)}
     return out
 
@@ -97,7 +116,10 @@ def total(parts):
 
 def tick(g):
     """Count the score of each player each EVERY seconds and show the changed ones in the sidebar of each person."""
-    if g.ended or g.clock() < vars(g).get("score_at", 0.0):
+    if g.ended:
+        return
+    explore(g)
+    if g.clock() < vars(g).get("score_at", 0.0):
         return
     g.score_at = g.clock() + EVERY
     scores = {n: total(p) for n, p in points(g).items()}

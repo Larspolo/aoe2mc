@@ -21,7 +21,7 @@ def castle(*techs):
 @pytest.mark.parametrize("tech, before, label, cost, unit", LINES)
 def test_the_menu_shows_the_castle_armor_after_its_feudal_armor_in_its_slot(tech, before, label, cost, unit):
     slot = train.ITEMS[before][0]
-    assert train.ITEMS[tech][0] == slot and train.AFTER[tech] == before
+    assert train.ITEMS[tech][0] == slot and train.BY_KEY["after"][tech] == before
     server, g = castle()
     train.open_menu(g, "Steve", (11, 3))
     assert f":book:{label}:" not in menus(server)[-1] and train.queue(g, "Steve", (11, 3), tech) is None
