@@ -94,8 +94,7 @@ def take(g, gathers, o, new):
     import gather, units
     u, old = o["uuid"], o["player"]
     o["player"] = new
-    if old:
-        g.command(f"tag {u} remove aoe2mc.p{old}")
+    g.command(f"tag {u} remove aoe2mc.p{old}")      # Gaia: aoe2mc.p0 (units.make_entity, #2916)
     g.command(f"tag {u} add aoe2mc.p{new}")
     g.command(f"team join p{new} {u}")
     color = units.HEX.get(g.players.get(str(new), {}).get("color", ""), "#FFFFFF")

@@ -71,7 +71,7 @@ def test_a_gaia_sheep_goes_to_the_player_who_comes_near():
     g.now = 2.0
     herd.tick(g)
     assert sheep["player"] == 1
-    assert g.sent == ["tag " + SHEEP + " add aoe2mc.p1", f"team join p1 {SHEEP}",
+    assert g.sent == [f"tag {SHEEP} remove aoe2mc.p0", "tag " + SHEEP + " add aoe2mc.p1", f"team join p1 {SHEEP}",   # p0: #2916
                       f'data modify entity {SHEEP} CustomName.color set value "#2D2DF5"',
                       f"data modify entity {SHEEP} Color set value 11b"]   # blue wool
     assert SHEEP in g.prey and SHEEP not in b.prey and b.enemies[SHEEP] == "SHEEP"
