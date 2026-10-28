@@ -75,6 +75,7 @@ import regen  # noqa: E402
 import regicide  # noqa: E402
 import relic_victory  # noqa: E402
 import repair  # noqa: E402
+import scenario  # noqa: E402
 import score  # noqa: E402
 import siege_tower  # noqa: E402
 import sudden_death  # noqa: E402
@@ -1890,6 +1891,8 @@ class Gather:
                 capture_relic.tick(self)
             elif self.mode == "defend-the-wonder":                     # the attackers win when the Wonder falls (#2441)
                 defend_wonder.tick(self)
+            elif self.mode == "scenario":                              # the book of the scenario texts (#2541)
+                scenario.tick(self)
             fog.tick(self)                                             # after the bots: their units too (#1389)
             herd.tick(self)                                            # all players: the bots capture too (#1792)
             if self.victory == "standard" or self.mode in wonder.RACE:  # a wonder or all relics win too (#2316)

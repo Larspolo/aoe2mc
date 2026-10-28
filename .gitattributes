@@ -18,6 +18,8 @@ game/data/civs.jsonl merge=jsonl
 game/data/civ_keys.jsonl merge=jsonl
 # One JSON object per key of train.jsonl that train.value() reads (#2507).
 game/data/train_keys.jsonl merge=jsonl
+# One JSON object per key of setup.jsonl: its type, what it does, its issue (#2558).
+game/data/setup_keys.jsonl merge=jsonl
 # One JSON object per menu item; runs add a line at the end of a building block. train.load() stops on a name in two lines (#1702).
 game/data/train.jsonl merge=jsonl
 # One JSON object per unit (#1912); table.load() stops on a name in two lines.

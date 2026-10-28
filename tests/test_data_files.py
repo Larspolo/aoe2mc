@@ -166,15 +166,19 @@ def check_replay(row):                                     # a walk speed (a nam
     assert len(row) == 2 and row.get("age", 1) in (1, 2, 3) and row.get("walk", 1) > 0, row["name"]
 
 
+TYPES = {"bool": bool, "dict": dict, "float": float, "int": int, "list": list, "str": str}
+SETUP_KEYS = {r["name"]: r for r in table.load("setup_keys.jsonl")}   # one line per key of setup.jsonl (#2558)
+
+
+def check_setup_keys(row):                                 # a key of setup.jsonl: its type, what it does, its issue
+    form(row, {"name": str, "type": str, "text": str, "issue": int}, {"kind": bool})
+    assert row["type"] in TYPES and row["text"] and row["issue"] > 0, row["name"]
+
+
 def check_setup(row):                                      # a value of a setting of the game setup (#2264)
-    form(row, {"name": str}, {"resources": dict, "ages": int, "skip": list, "note": str, "units": list,
-                              "age": str, "buildings": dict, "villagers": dict, "level": str, "start": dict, "more": dict,
-                              "sites": dict, "swap": dict, "wonder_years": int, "sides": dict,
-                              "treaty": str,                                  # Wonder Race (#2406)
-                              "help": str, "module": str, "loaded": str, "bots": bool,   # a game mode (#2521)
-                              "side_buildings": dict, "ring": dict, "infinite": bool, "random": list,
-                              "turbo": float, "slow": list})
-    assert sum(k in row for k in ("resources", "ages", "units", "buildings", "level", "wonder_years", "random", "turbo")) == 1, row["name"]   # a resource level, a start age
+    assert set(row) - {"name"} <= set(SETUP_KEYS), ("give the key its line in game/data/setup_keys.jsonl", row["name"])
+    form(row, {"name": str}, {k: TYPES[r["type"]] for k, r in SETUP_KEYS.items()})
+    assert sum(k in row for k, r in SETUP_KEYS.items() if r.get("kind")) == 1, row["name"]   # a resource level, a start age
     assert all(set(v) == {"food", "wood", "gold", "stone"} for v in row.get("sides", {}).values()), row["name"]   # #2441
     assert set(row.get("random", ())) <= {r["name"] for r in table.load("setup.jsonl") if "resources" in r}, row["name"]   # #2489
     assert set(row.get("units", ())) <= NAMES["units.jsonl"], row["name"]  # (#2265) or a game mode (#2347)
@@ -209,6 +213,7 @@ CHECKS = {                                                 # one file per line: 
     "monk.jsonl": check_monk,
     "replay.jsonl": check_replay,
     "setup.jsonl": check_setup,
+    "setup_keys.jsonl": check_setup_keys,
     "taunts.jsonl": check_taunts,
     "train.jsonl": check_train,
     "train_keys.jsonl": check_civ_keys,                    # a key of train.jsonl that train.value reads (#2507)

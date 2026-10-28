@@ -83,6 +83,7 @@ SCORE = (                                                              # Gather:
 SPOILS = (                                                             # spoils.py: the plugin scores that gave gold
     "attack_ticks",                                                    # (the world keeps the scores, #2513)
     "kills",
+    "unit_kills",                                                      # the kills of enemy units for a policy (#2512)
 )
 TOGGLES = (                                                            # the choices of the player (#2537):
     "doctrines",                                                       # train.py: the doctrine of each building (#2483)
@@ -119,6 +120,7 @@ SETTINGS = (                                                           # run.py 
     "pop_limit",
     "regicide",
     "reveal",
+    "shared_exploration",
     "sudden_death",
     "teams",
     "treaty",
@@ -129,6 +131,7 @@ NOT_SAVED = (                                                          # the fie
     # does not keep, one per line with its reason, in alphabetical order (tests/test_savegame_fields.py, #2535)
     "bar",                                                             # bossbar.py: the shown unit
     "board",                                                           # bot.py: the scoreboard of a bot
+    "book_at",                                                         # scenario.py: the next check time (the world keeps the tags)
     "bots",                                                            # run.play makes the bots again
     "capture",                                                         # herd.py: a tick timer
     "census",                                                          # train.py: a tick timer
