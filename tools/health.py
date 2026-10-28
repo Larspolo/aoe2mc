@@ -422,10 +422,13 @@ def beating_claims(now, minutes=25, remote="origin"):
 
 def claim_refs(remote="origin"):
     """The lines `<key> <unix time of the last beat> <subject>` of the claim refs, or None when git cannot read them."""
-    git = lambda *a: subprocess.run(["git", *a], capture_output=True, text=True, cwd=ROOT)
-    if git("fetch", "-q", "--prune", remote, "+refs/heads/claim/*:refs/aoe2mc-claims/*").returncode:
+    git = lambda *a: subprocess.run(["git", *a], capture_output=True, text=True, cwd=ROOT, timeout=60)
+    try:  # a hung fetch (#3290) reads as a failed one
+        if git("fetch", "-q", "--prune", remote, "+refs/heads/claim/*:refs/aoe2mc-claims/*").returncode:
+            return None
+        out = git("for-each-ref", "refs/aoe2mc-claims", "--format=%(refname:lstrip=2) %(committerdate:unix) %(subject)")
+    except subprocess.TimeoutExpired:
         return None
-    out = git("for-each-ref", "refs/aoe2mc-claims", "--format=%(refname:lstrip=2) %(committerdate:unix) %(subject)")
     return out.stdout.splitlines() if out.returncode == 0 else None
 
 
