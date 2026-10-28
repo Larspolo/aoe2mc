@@ -50,7 +50,7 @@ MAP = {
     ("effect", "TELEPORT_OBJECT"): "`tp @e[tag=aoe2mc.pN,x=..,dx=..] x y z` and the mounts of the riders (#2569)",
     ("effect", "CHANGE_OWNERSHIP"): "`tag` `aoe2mc.pN` and `team join pN` of the units in the area and their mounts (timer and area triggers: #2570); Gaia: not supported yet",
     ("effect", "FREEZE_OBJECT"): "`data merge entity @e[...] {NoAI:1b}`",
-    ("effect", "CHANGE_VIEW"): "`tp @a x y z` (the player is the camera)",
+    ("effect", "CHANGE_VIEW"): "`tp @a[team=pN] x y z` to the tile, on the ground (the player is the camera, #2610)",
     ("effect", "PLAY_SOUND"): "`playsound` with the nearest vanilla sound",
     ("effect", "DISPLAY_TIMER"): "`bossbar` with the time left",
     ("effect", "ACTIVATE_TRIGGER"): "`scoreboard players set <trigger> aoe_trig 1`",

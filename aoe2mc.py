@@ -2706,6 +2706,7 @@ COUNTED = (IN_AREA, OWN_OBJECTS, OWN_FEWER_OBJECTS)                # conditions 
 CREATE_OBJECT, KILL_OBJECT, REMOVE_OBJECT, CHANGE_OWNERSHIP, CHANGE_COLOR_MOOD = 11, 14, 15, 18, 72
 DAMAGE_OBJECT = 24                                                     # "Damage Object" (#2571)
 TELEPORT_OBJECT = 35
+CHANGE_VIEW = 16                                                       # "Change View" (#2610)
 
 
 def turn_area(area, size, k):
@@ -2831,6 +2832,18 @@ def teleport_lines(e, T, ground):
     return [f"execute as {at} on vehicle run tp @s {to}", f"tp {at} {to}"]
 
 
+def view_lines(e, T, ground):
+    """The commands of "Change View" (#2610): in Minecraft the player is the camera, so a tp of the players of the
+    team pN (team_lines) to the middle of the tile, on the ground. Player -1 or 0: all players."""
+    if min(e.get("tile", [-1])) < 0:
+        return []
+    x, z = (int((v + 0.5) * T) for v in e["tile"])
+    if not (0 <= x < ground.shape[0] and 0 <= z < ground.shape[1]):
+        return []
+    who = f"@a[team=p{e['player']}]" if e["player"] > 0 else "@a"
+    return [f"tp {who} {x + 0.5} {int(ground[x, z])} {z + 0.5}"]
+
+
 def mood_lines(e):
     """The commands of "Change Color Mood" (#1876): the time of day (MOODS) and the rain (RAIN) of the new mood, as
     at the conversion. The game rules advance_time and advance_weather are 0, so they stay. The fog (FOG) is a
@@ -2851,6 +2864,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
     "Create Object" and "Remove Object": object_lines (#656). "Change Color Mood": mood_lines (#1876), only with mood. "Change Ownership": owner_lines (#2570).
     "Damage Object": damage_lines (#2571).
     "Teleport Object": teleport_lines (#2569).
+    "Change View": view_lines (#2610).
     A disabled trigger does not run."""
     load, files, tick = [], {}, []
     stats = Counter() if stats is None else stats
@@ -2877,6 +2891,9 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
                 continue
             if e["type"] == TELEPORT_OBJECT:
                 lines += teleport_lines(e, T, ground)
+                continue
+            if e["type"] == CHANGE_VIEW:
+                lines += view_lines(e, T, ground)
                 continue
             msg = re.sub(r"<[^<>]*>", "", e["message"]).replace("\r", "").strip()   # AoE2 color tags
             if not msg:
