@@ -471,7 +471,9 @@ def read_scenario(path):
                                             **({"cost": [[e.resource_1, e.resource_1_quantity],   # (#2776)
                                                          [e.resource_2, e.resource_2_quantity],
                                                          [e.resource_3, e.resource_3_quantity]]}
-                                               if e.effect_type == CHANGE_OBJECT_COST else {}),
+                                               if e.effect_type in (CHANGE_OBJECT_COST, CHANGE_TECHNOLOGY_COST) else {}),
+                                            **({"technology": techs.get(e.technology, str(e.technology))}   # #2819
+                                               if e.effect_type == CHANGE_TECHNOLOGY_COST else {}),
                                             **({"operation": e.operation, "quantity": e.quantity}   # (#2693)
                                                if e.effect_type == CHANGE_OBJECT_HP else {}),
                                             **({"attribute": e.object_attributes, "operation": e.operation,   # #2763
@@ -505,6 +507,8 @@ def read_scenario(path):
                                                if e.effect_type == UNLOAD else {}),
                                             **({"target": e.target_player, "diplomacy": e.diplomacy}   # (#2645)
                                                if e.effect_type == CHANGE_DIPLOMACY else {}),
+                                            **({"target": e.target_player}                # (#2822)
+                                               if e.effect_type == MIRROR_DIPLOMACY else {}),
                                             **({"target": e.target_player, "visibility": e.visibility_state}   # (#2774)
                                                if e.effect_type == SET_PLAYER_VISIBILITY else {}),
                                             **({"target": e.target_player, "quantity": e.quantity,   # (#2576)
@@ -517,6 +521,9 @@ def read_scenario(path):
                                             **({"operation": e.operation, "variable": e.variable,   # (#2768)
                                                 "resource": e.tribute_list}
                                                if e.effect_type == MODIFY_RESOURCE_BY_VARIABLE else {}),
+                                            **({"operation": e.operation, "variable": e.variable,   # (#2823)
+                                                "resource": e.tribute_list}
+                                               if e.effect_type == MODIFY_VARIABLE_BY_RESOURCE else {}),
                                             **({"technology": techs.get(e.technology, str(e.technology))}   # #2577
                                                if e.effect_type == RESEARCH_TECHNOLOGY else {}),
                                             **({"unit": e.time_unit, "timer": e.timer}   # "Display Timer" (#2572)
@@ -2865,6 +2872,7 @@ CHANGE_OBJECT_STANCE = 36                                          # "Change Obj
 CHANGE_OWNERSHIP = 18
 CHANGE_PLAYER_COLOR = 89                                           # "Change Player Color" (#2712)
 CHANGE_PLAYER_NAME = 45                                            # "Change Player Name" (#2711)
+CHANGE_TECHNOLOGY_COST = 63                                        # "Change Technology Cost" (#2819)
 CHANGE_VARIABLE = 56                                               # the scenario variables (#2611)
 CHANGE_VIEW = 16                                                   # "Change View" (#2610)
 CLEAR_INSTRUCTIONS = 21                                            # "Clear Instructions" (#2609)
@@ -2891,9 +2899,11 @@ INITIATE_RESEARCH = 76                                             # "Initiate R
 IN_AREA = 5
 KILL_OBJECT = 14
 LOCK_GATE = 7                                                      # "Lock Gate", "Unlock Gate" (#2762)
+MIRROR_DIPLOMACY = 109                                             # "Mirror Diplomacy" (#2822)
 MODIFY_ATTRIBUTE = 51                                              # "Modify Attribute" (#2763)
 MODIFY_RESOURCE = 52                                               # "Modify Resource" (#2576)
 MODIFY_RESOURCE_BY_VARIABLE = 53                                   # "Modify Resource by Variable" (#2768)
+MODIFY_VARIABLE_BY_RESOURCE = 86                                   # "Modify Variable by Resource" (#2823)
 MODIFY_VARIABLE_BY_VARIABLE = 100                                  # "Modify Variable by Variable" (#2713)
 OBJECT_HP = 23                                                     # "Object HP", the hit points of one object (#2701)
 OBJECT_NOT_VISIBLE = 16                                            # the conditions "Object (Not) Visible" (#2756)
@@ -3304,6 +3314,18 @@ def resource_by_variable_lines(e, c):
     return [f"scoreboard players operation {target} aoe_res {'+' if op == 'add' else '-'}= {v}"] if op in ("add", "remove") else []
 
 
+def variable_by_resource_lines(e, c):
+    """The command of "Modify Variable by Resource" (#2823): variable N (operation)= the stock of the resource, the
+    score of the game program (Gather.board, as resource_score: aoe_res for player 1, aoe_res<P> for the others)."""
+    r, p, v, op = e.get("resource", -1), e.get("player", 0), e.get("variable", -1), e.get("operation")
+    if not 0 <= r < len(ATTRIBUTES) or p <= 0 or v < 0 or op not in (1, 2, 3, 4, 5):
+        c.stats["modify variable by resource (not supported)"] += 1
+        return []
+    c.stats["modify variable by resource"] += 1
+    return [f"scoreboard players operation #v{v} aoe_var {('', '+', '-', '*', '/')[op - 1]}= "
+            f"{ATTRIBUTES[r]} aoe_res{p if p > 1 else ''}"]
+
+
 def teleport_lines(e, c):
     """The commands of "Teleport Object" (#2569): a tp of the units of the player in the area (area_selector) to the
     middle of the target tile, on the ground. A rider is not in the selector of its horse (units.MOUNT): the first line
@@ -3461,18 +3483,24 @@ def research_lines(e, c):
     return [f"scoreboard players set #r{c.t['id']}.{i} aoe_tech 1"]   # the game program reads it
 
 
-def cost_lines(e, c):
+def cost_lines(e, c, what="change object cost"):
     """The command of "Change Object Cost" (#2776): the new cost of the unit or building type of the player (up to 3
     resources of ATTRIBUTES; a quantity of 0 drops the resource) goes into the list of the data storage aoe2mc:costs as
     one text "<player> <name> <resource>=<quantity> ...". A converted world has no costs: the scenario mode of the game
     program (game/scenario.py costs) empties the list and uses the cost in the menus."""
     cost = [f"{ATTRIBUTES[r].lower()}={q}" for r, q in e.get("cost", ()) if r in range(len(ATTRIBUTES)) and q > 0]
     _, name = e.get("object") or (None, None)
-    if not name or e["player"] <= 0:
-        c.stats["change object cost (not supported)"] += 1
+    if not name or name.isdigit() or e["player"] <= 0:
+        c.stats[f"{what} (not supported)"] += 1
         return []
-    c.stats["change object cost"] += 1
+    c.stats[what] += 1
     return [f'data modify storage aoe2mc:costs list append value "{" ".join([str(e["player"]), name, *cost])}"']
+
+
+def tech_cost_lines(e, c):
+    """The command of "Change Technology Cost" (#2819): the text of cost_lines with the technology name of
+    game/data/train.jsonl (an ID with no name: not supported). civs.cost gives the price to the menu (train.price)."""
+    return cost_lines(dict(e, object=(None, e.get("technology"))), c, "change technology cost")
 
 
 # The ObjectAttribute IDs of "Modify Attribute" that the game program has in combat.Stats (#2763): attribute ->
@@ -3678,6 +3706,18 @@ def diplomacy_lines(e, c):
     return [f"scoreboard players set #p{a}.p{b} aoe_dip {e['diplomacy'] + 1}", "scoreboard players set #any aoe_dip 1"]
 
 
+def mirror_lines(e, c):
+    """The commands of "Mirror Diplomacy" (#2822): the source player (player) takes the stances of the target player
+    toward each other player. The score #m<player>.p<target> of aoe_dip is 1 and #any of aoe_dip is 1: the scenario
+    mode of the game program copies the stances (scenario.diplomacy)."""
+    a, b = e["player"], e.get("target", -1)
+    if a <= 0 or b <= 0 or a == b:
+        return []
+    c.setup["scoreboard objectives add aoe_dip dummy"] = None
+    c.stats["mirror diplomacy"] += 1
+    return [f"scoreboard players set #m{a}.p{b} aoe_dip 1", "scoreboard players set #any aoe_dip 1"]
+
+
 def color_lines(e, c):
     """The command of "Change Player Color" (#2712): the team p<player> gets the chat color of the new player color
     (PlayerColorId 1 to 8, units.TEAM_COLOR). It colors the names and the glow of the units; wool and banners stay."""
@@ -3767,6 +3807,7 @@ EFFECTS = {
     CHANGE_OWNERSHIP: owner_lines,
     CHANGE_PLAYER_COLOR: color_lines,
     CHANGE_PLAYER_NAME: player_name_lines,
+    CHANGE_TECHNOLOGY_COST: tech_cost_lines,
     CHANGE_VARIABLE: variable_lines,
     CHANGE_VIEW: view_lines,
     CLEAR_INSTRUCTIONS: clear_lines,
@@ -3789,9 +3830,11 @@ EFFECTS = {
     INITIATE_RESEARCH: train_lines,
     KILL_OBJECT: object_lines,
     LOCK_GATE: gate_lines,
+    MIRROR_DIPLOMACY: mirror_lines,
     MODIFY_ATTRIBUTE: attribute_lines,
     MODIFY_RESOURCE: resource_lines,
     MODIFY_RESOURCE_BY_VARIABLE: resource_by_variable_lines,
+    MODIFY_VARIABLE_BY_RESOURCE: variable_by_resource_lines,
     MODIFY_VARIABLE_BY_VARIABLE: variable_by_variable_lines,
     PATROL: order_lines,
     PLAY_SOUND: sound_lines,
@@ -4025,7 +4068,8 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
         load += [run] * t["enabled"]
     names = sorted({f"#v{x[k]}" for t in triggers for x in t["conditions"] + t["effects"]
                     for k in ("variable", "variable2")   # "Modify Variable by Variable" has two (#2713)
-                    if x["type"] in (VARIABLE_VALUE, CHANGE_VARIABLE, MODIFY_VARIABLE_BY_VARIABLE, COMPARE_VARIABLES) and x.get(k, -1) >= 0})
+                    if x["type"] in (VARIABLE_VALUE, CHANGE_VARIABLE, COMPARE_VARIABLES, MODIFY_VARIABLE_BY_RESOURCE,
+                                     MODIFY_VARIABLE_BY_VARIABLE) and x.get(k, -1) >= 0})
     if names:
         load[:0] = ["scoreboard objectives add aoe_var dummy"] + \
             [f"scoreboard players add {v} aoe_var 0" for v in names]   # AoE2 variables start at 0
