@@ -20,6 +20,10 @@ the second "polo") gets them with `aoe minimap know`, so their squares stay on t
 The team spec of the spectators (#2898) gets no hide and no minimap fog: Minimap.java draws the whole map for a player
 with no team fog (#2899). The game mode spectator shows no held item, so a spectator sees map 0 only in a follow view.
 
+The edge of the sight in the world (#3330): the plugin draws white dust on the ground along each side between a tile
+in sight and a tile out of sight of the same team fog (Sight.java), near each player of the team and only for that
+player, so the player sees where the enemy units hide and show. `aoe sightedge <players> off` turns it off.
+
     fog.tick(g)    # gather.Gather.run: once each EVERY seconds, on Paper only; run.Side.step for player 2 (#1631)
 """
 EVERY = 1.0             # real seconds between two updates (Replay.fog: one each second of the replay)

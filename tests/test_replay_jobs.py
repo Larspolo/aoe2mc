@@ -24,12 +24,12 @@ def test_an_order_on_a_resource_gives_one_profession(target, job, ai):
 def test_a_move_gives_no_profession():
     tl = [order(0, 20), dict(time=30000, player=1, kind="move", objects=[7], tile=[1.5, 1.5], names=["VILLAGER_MALE"])]
     r, sent = play(tl, TREE, 60000)
-    assert jobs(sent) == ["fletcher", "none"]
+    assert jobs(sent) == ["fletcher", "nitwit"]
 
 
 def test_the_end_of_the_wood_gives_no_profession():
     r, sent = play([order(0, 20)], TREE, 300000)
-    assert r.map.trees[(5, 10)] == 0 and jobs(sent) == ["fletcher", "none"]
+    assert r.map.trees[(5, 10)] == 0 and jobs(sent) == ["fletcher", "nitwit"]
 
 
 def test_a_builder_and_a_farmer():

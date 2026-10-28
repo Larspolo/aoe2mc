@@ -55,7 +55,7 @@ def test_the_scenario_has_the_militia_trigger(tmp_path):
     fn = os.path.join(tmp_path, "W", "datapacks", "aoe2mc", "data", "aoe2mc", "function")
     with open(os.path.join(fn, "trigger", "3.mcfunction")) as f:
         assert f.read().startswith("summon minecraft:zombie 66.5 ")         # the middle of tile (16, 16)
-    with open(os.path.join(fn, "load.mcfunction")) as f:
+    with open(os.path.join(fn, "start.mcfunction")) as f:
         assert "schedule function aoe2mc:trigger/3 200t replace" in f.read()
 
 

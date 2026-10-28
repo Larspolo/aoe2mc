@@ -15,6 +15,8 @@ def test_a_briton_war_hulk_stays_a_war_hulk_after_heavy_warships():
     server, g = imperial(techs=["MEDIUM_WARSHIPS"])
     g.data["players"]["1"]["civ"] = "BRITONS"
     g.soldiers |= {"h": "WAR_HULK"}
+    for u in g.soldiers:                                             # alive at the census (#3122)
+        g.game.entities.setdefault(u, {"Pos": (0.5, 64.0, 0.5)})
     assert train.order(g, "Steve", DOCK, 3) == 1
     train.tick(g, 65)
     assert "HEAVY_WARSHIPS" in g.techs and g.soldiers["h"] == "WAR_HULK"

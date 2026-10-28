@@ -154,10 +154,12 @@ def change(g, player, n):
     """A click on the stance of player n (#2934): the next stance, the alliance and neutral commands of the plugin (not
     during a treaty: all players stay neutral, as scenario.diplomacy), and a chat line to the players of team pN."""
     import gather
+    import owners
     import scenario
     import treaty
     kind = following(stance(g, n))
     scenario.stance(g.players, g.player, n, kind)
+    owners.update_enemies(g)                                           # the new enemies and allies (#2996)
     g.command(gather.allies_command(g.players))
     if not treaty.holds(g):
         g.command(gather.neutral_command(g.players))

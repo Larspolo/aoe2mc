@@ -204,3 +204,4 @@ Moved from `docs/LEARNINGS.md` (improve run, 2026-10-26).
   not `"vehicle"`, `"type"`. Else the server says "Failed to load datapacks" and never prints "Done", so a `-m mc`
   test waits 300 s for nothing (#2976). Read `logs/latest.log` of the server directory for the cause; copy the form
   from a vanilla file of mcmeta `26.3-data` (`data/minecraft/loot_table/entities/zombie.json` has a vehicle).
+- A predicate file in 26.3 uses `"type"` (not `"condition"`) and `minecraft:` keys in an entity predicate (`"minecraft:nbt"`, `"minecraft:vehicle"`): an old key stops the server load ("No key type", "Failed to load datapacks"), so `mc_check` or a `-m mc` test only times out after 300 s; read `logs/latest.log` of the newest `.cache/tmp*` folder (#3085).

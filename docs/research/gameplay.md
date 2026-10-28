@@ -259,6 +259,9 @@ The owner decides on the platform first (decision ticket). The other tickets dep
   are a guess that the owner can tune (#2661).
 - Click on the minimap (#2585, option A): a map in an item frame (a "map table") near the own town center. A right
   click with the selection wand on a pixel of the framed map sends the selection there (#2586).
+- Resources left (#3275, option B, #3284): a `text_display` above each partially drained tree, fruit bush, mine, farm
+  and carcass shows the whole amount left (`game/amounts.py`). A full resource shows nothing; a carcass shows from the
+  kill, because it rots at once.
 
 ## Pitfalls of the game program
 
@@ -514,3 +517,4 @@ Moved from `docs/LEARNINGS.md` (improve run, 2026-10-26).
 - `game/scenario.py` `orders()`: each trigger order PR added a sentence to its docstring and to its `if new or ...` line, and #2889 got 4 merge conflicts there in 30 minutes. Describe a new order in the docstring of its own function only (#2853).
 - A Minecraft attribute that a trigger sets on a unit (`max_health`, `movement_speed`, an `attack_damage` modifier) does not last in the game program: each `aoe stats` and each order sends the AoE2 values again, and the plugin reads no `attack_damage` or `armor`. Store a value order (`aoe2mc.value_lines`, `scenario.values`) and give the uuid to `train.stats(g, name, uuid)` and `train.speed(g, name, uuid)` (#3083). The converter tests of these handlers compare full line lists: leave the order lines out with `test_trigger_unit_values.unit_value`.
 - A fake-server test with `g.paper = True` does not walk the villagers: `Gather.go` sends `aoe moveto`, and only the plugin moves them. A test of a gather or drop trip sets `g.paper = False` after the Paper-only order (`garrison.order`, `siege_tower.order`), so that the villager walks its own path (#3007). A new order function calls `Gather.new_order(units)` before it sets its own state (#3007).
+- A particle mark that the player sees from the high view of the game program (30 to 50 blocks away) needs `Particle.DustOptions` scale 2 and `force` true in `Player#spawnParticle`: white dust of scale 1 every block did not show in the `mc_shot` image of the sight edge (#3330).

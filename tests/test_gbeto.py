@@ -28,6 +28,7 @@ def test_the_castle_of_the_malians_trains_the_gbeto():
 def test_the_upgrade_changes_the_live_and_the_new_units():
     server, g = setup("MALIANS", food=2000, wood=0, gold=2000, ages=3)
     g.soldiers["gb"] = "GBETO"
+    g.game.entities.setdefault("gb", {"Pos": (0.5, 64.0, 0.5)})          # alive at the census (#3122)
     train.open_menu(g, "Steve", CASTLE)
     assert " 5:book:Elite Gbeto:900 food · 600 gold · 45 s · research " in menus(server)[-1] + " "
     assert train.queue(g, "Steve", CASTLE, "ELITE_GBETO_UPGRADE")

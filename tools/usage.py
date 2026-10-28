@@ -164,10 +164,10 @@ def lane_plan(target, claims, ready, ready_haiku, weight, paused, hi=MAX_FIRE, r
 
 
 def waiting_prs(prs, now, minutes=PR_MINUTES):
-    """The open agent PRs (branch `claude/*` or `agent/*`) older than `minutes`, without `hold` (the owner holds
+    """The open agent PRs (branch `claude/*`, `agent/*` or `ccr-*`) older than `minutes`, without `hold` (the owner holds
     those): each waits for a fix, a conflict merge or CI, not for the quota."""
     old = now - minutes * 60
-    return [p for p in prs if p["head"]["ref"].startswith(("claude/", "agent/"))
+    return [p for p in prs if p["head"]["ref"].startswith(("claude/", "agent/", "ccr-"))
             and "hold" not in {x["name"] for x in p.get("labels", [])}
             and datetime.datetime.fromisoformat(p["created_at"].replace("Z", "+00:00")).timestamp() < old]
 

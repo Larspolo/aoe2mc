@@ -116,6 +116,9 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *                                              player that joins later (#1302: the enemy units out of sight in the
  *                                              view of one replay player). With team=T in the selector: only a
  *                                              player of team T that joins later, and no spectator (#2921)
+ *   aoe hide <players> team                    each player sees the units of the hides of its own team (or of all
+ *                                              players) as hidden and all other units of the hides (a person who
+ *                                              joins a team or changes it, #3070)
  *   aoe hide <players> view <uuid> ...         the same for these players only (the view of a spectator, #2901):
  *                                              the minimap and a player that joins later do not change
  *   aoe stance <selector> <aggressive|defensive|stand_ground|no_attack>
@@ -149,6 +152,8 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *   aoe sight <selector> <blocks>              an idle unit attacks an enemy in this line of sight (#775)
  *   aoe sight <selector> <blocks> only|first   ... and enemy buildings: only buildings, or buildings before units
  *                                              (#1820: the ram line and the trebuchet, the elephant and cannon galleon)
+ *   aoe sightedge <players> on|off             the edge of the line of sight of the player on the ground (#3330,
+ *                                              Sight.java; on by default); count <team|-> <x> <z> <r>: its sides
  *   aoe building <selector> <hp> <melee armor> <pierce armor> <x0> <y0> <z0> <x1> <y1> <z1>
  *                                              make the entity the target of a building (#517, combat.building)
  *   aoe building ... <attack> <range> <reload> <min>
@@ -316,6 +321,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     private final Viewer viewer = new Viewer(this);                 // the game mode switch of a replay viewer (#910)
     private final Follow camera = new Follow();                     // the follow camera of a replay (#738, #1660)
     private final Border border = new Border();
+    private final Sight sight = new Sight(minimap);                 // the edge of the line of sight (#3330)
 
     // b: x0 y0 z0 x1 y1 z1 of box; range: the blocks from the footprint that its arrows reach, 0: no attack (#1111)
     private record Building(Stats stats, String box, int max, int[] b, double range, double min) {}
@@ -1031,10 +1037,12 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         Bukkit.getScheduler().runTaskTimer(this, this::siege, 1L, 1L);
         Bukkit.getScheduler().runTaskTimer(this, this::carts, 1L, 1L);
         Bukkit.getScheduler().runTaskTimer(this, this::burn, 20L, 20L);
+        Bukkit.getScheduler().runTaskTimer(this, this::unhit, 1L, 1L);
         Bukkit.getScheduler().runTaskTimer(this, this::watch, 20L, 20L);
         Bukkit.getScheduler().runTaskTimer(this, this::towers, 2L, 2L);
         Bukkit.getScheduler().runTaskTimer(this, this::hold, 4L, 4L);
         Bukkit.getScheduler().runTaskTimer(this, gates::tick, Gates.PERIOD, Gates.PERIOD);
+        Bukkit.getScheduler().runTaskTimer(this, sight::tick, Sight.PERIOD, Sight.PERIOD);
         Bukkit.getPluginManager().registerEvents(this, this);
         Bukkit.getPluginManager().registerEvents(cheats, this);
         Bukkit.getPluginManager().registerEvents(deaths, this);
@@ -1112,6 +1120,35 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     }
 
     // The AoE2 damage of attacker values a on the victim with values t (#514), and the attack back.
+    // The scoreboard tag aoe2mc.hit for 10 ticks after an AoE2 hit, as HurtTime: setHealth does not set the hurt time,
+    // and the trigger condition "Object Attacked" tests it (predicate aoe2mc:attacked, #3085). The passengers too: the
+    // plugin hurts the mount of a rider, and the tag aoe2mc.r<ref> is on the rider.
+    private final Map<Entity, Integer> hits = new HashMap<>();
+
+    private void hitTag(Entity victim) {
+        for (Entity e : concat(victim, victim.getPassengers())) {
+            e.addScoreboardTag("aoe2mc.hit");
+            hits.put(e, Bukkit.getCurrentTick() + 10);
+        }
+    }
+
+    private static List<Entity> concat(Entity e, List<Entity> more) {
+        List<Entity> all = new ArrayList<>(more);
+        all.add(e);
+        return all;
+    }
+
+    private void unhit() {
+        int now = Bukkit.getCurrentTick();
+        hits.entrySet().removeIf(h -> {
+            if (h.getValue() > now && h.getKey().isValid()) {
+                return false;
+            }
+            h.getKey().removeScoreboardTag("aoe2mc.hit");
+            return true;
+        });
+    }
+
     private void harm(LivingEntity victim, Stats t, Stats a, Entity from) {
         harm(victim, t, a, from, 1.0);
     }
@@ -1122,6 +1159,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         fight(victim);
         fight(from);
         victim.playHurtAnimation(0);
+        hitTag(victim);
         double before = victim.getHealth();
         double damage = Math.max(1, a.damage(t) * (from == null ? 1 : elevation(from, victim)));   // AoE2: after the armor
         victim.setHealth(Math.max(0, before - damage * part));     // 0 kills it
@@ -2518,7 +2556,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                     rider(mob).setTarget(null);
                 }
                 if (gates.any()) {                                     // through an own gate (#1325, #1656)
-                    gates.raise(mob);
+                    gates.raise(mob, goal);
                 }
                 dry(mob, goal);
                 mob.getPathfinder().moveTo(goal, speed);
@@ -2671,6 +2709,9 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             sender.sendMessage("Sight: " + n + " units");
             return true;
         }
+        if (args.length >= 3 && args[0].equals("sightedge")) {          // the edge of the line of sight (#3330)
+            return sight.command(sender, args, args[1].equals("count") ? List.of() : players(sender, args[1]));
+        }
         if ((args.length == 11 || args.length == 12 || args.length >= 15 && args.length <= 17) && args[0].equals("building")) {
             int hp;
             double range = 0, min = 0;
@@ -2730,6 +2771,23 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             var who = players(sender, args[1]);
             String team = selectorTeam(args[1]);
             int n = 0;
+            if (hide && args[2].equals("team")) {                  // the hides of the own team only (#3070)
+                for (var u : hidden.keySet()) {
+                    Entity e = Bukkit.getEntity(u);
+                    if (e != null) {
+                        for (Player p : who) {
+                            if (hiddenFor(p, u)) {
+                                p.hideEntity(this, e);
+                            } else {
+                                p.showEntity(this, e);
+                            }
+                        }
+                        n++;
+                    }
+                }
+                sender.sendMessage("Hidden: " + n + " entities, " + who.size() + " players");
+                return true;
+            }
             if (!hide && args[2].equals("all")) {                  // a spectator sees through the fog of all teams (#2921)
                 for (var h : hidden.entrySet()) {
                     Entity e = Bukkit.getEntity(h.getKey());

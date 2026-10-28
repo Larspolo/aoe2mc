@@ -29,6 +29,7 @@ def test_the_castle_of_the_vietnamese_trains_the_rattan_archer():
 def test_the_upgrade_changes_the_live_and_the_new_units():
     server, g = setup("VIETNAMESE", food=2000, wood=2000, gold=2000, ages=3)
     g.soldiers["ct"] = "RATTAN_ARCHER"
+    g.game.entities.setdefault("ct", {"Pos": (0.5, 64.0, 0.5)})          # alive at the census (#3122)
     train.open_menu(g, "Steve", CASTLE)
     assert " 5:book:Elite Rattan Archer:800 food · 750 gold · 45 s · research " in menus(server)[-1] + " "
     assert train.queue(g, "Steve", CASTLE, "ELITE_RATTAN_ARCHER_UPGRADE")

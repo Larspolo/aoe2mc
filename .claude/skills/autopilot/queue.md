@@ -44,6 +44,10 @@ name each missing item. Close the epic with a comment only when all criteria are
 (name the evidence for each, then the label `close`: `owner.md`, "Close an issue", #1740). Else lock the epic first: `python3 tools/claim.py E --refill`
 (E = the epic; exit 1: another run makes its sub-issue, skip the epic, #505). Then make one sub-issue (same priority)
 for the criteria that an agent can do. A criterion that needs the owner stays on the epic. Then pick again (#176, #155 waited while P3 tickets ran).
+Release checks: when `cycle_start.py` prints the section "Release checks (no ticket, make them in the refill)", a deep
+run makes a check ticket for each listed check (`roadmap` skill, "Release checks"), also when the open epics have work
+left, and writes its number in the `ticket` column of `docs/RELEASE.md` (a PR). Lock it first:
+`python3 tools/claim.py 0 --refill` (exit 1: another run makes them, #3342).
 Refill the queue when fewer candidates are ready than the target number of runs, so that parallel runs always find
 work: N = the target and R = the ready tickets of `python3 tools/usage.py --fire` (its stderr line). Refill only when
 R < N, and make at most 2 × N − R tickets, so the queue stays at most twice the target (owner, #664: when fewer runs work
