@@ -630,7 +630,8 @@ def age(g):
 
 def stats(g, name):
     """The combat values of AoE2 unit name with the bonuses of the civilization (civs.UNITS) and the technologies of
-    the player (combat.stats and TECHS), twice for civs.TWICE (#1561), n times for civs.SMITH_UNITS (#2174)."""
+    the player (combat.stats and TECHS), twice for civs.TWICE (#1561), n times for civs.SMITH_UNITS (#2174), and the
+    hit points of civs.TECH_HP (#2269)."""
     import combat                                                  # combat imports gather, gather imports this module
     s, twice = civs.units(g, name, combat.stats(name)), civs.TWICE.get(civs.civ(g), ())
     times, also, more = civs.smith(g, name, s), civs.ALSO.get(civs.civ(g), {}), civs.MORE.get(civs.civ(g), {})
@@ -640,6 +641,9 @@ def stats(g, name):
             e = EACH[t]                                            # villagers too (#2173)
         for _ in range(count(g, t) * (1 + (t in twice)) * times.get(t, 1)):   # "going above and beyond" stacks (#968)
             s = e(name, s)
+    for group, building, hp in civs.TECH_HP.get(civs.civ(g), ()):   # the Aztec monks (#2269)
+        if civs.GROUPS[group](name, s):
+            s = s._replace(hp=s.hp + hp * sum(t in g.techs for t in TRAINS[building] if t in TECHS))
     return s
 
 
