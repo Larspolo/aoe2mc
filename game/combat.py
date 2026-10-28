@@ -84,6 +84,7 @@ RAM_REACH = 2.0       # blocks: a ram (a minecart with range 0) hits from next t
 CONTACT = 1.0         # tiles: the reach of a demolition ship (range 0, #1440): its raft is higher than a boat
 # Tiles: no shot at a unit nearer (AoE2 DE, wiki infobox "MinRange", #1350). The key "min_range" of data/units.jsonl.
 MIN_RANGE = {r["name"]: r["min_range"] for r in UNIT_ROWS if "min_range" in r}
+ACCURACY = {r["name"]: r["accuracy"] for r in UNIT_ROWS if "accuracy" in r}   # siege shots at units that hit (#2479)
 # The minimum range of the buildings that shoot, in tiles from the edge of the footprint (AoE2 DE, wiki infobox
 # "MinRange", #1546). The town center has none. Murder Holes removes it.
 # The key "min_range" of a line of data/buildings.jsonl (the dock shoots only with fishing ships inside, #1949).
@@ -181,6 +182,13 @@ def range_command(uuid, name, T, rate=NORMAL, s=None):
     return reach and (s.reload or name in BLAST) and f"aoe range {uuid} {reach} {max(1, round(s.reload / rate * 20))}{blast}" or None
 
 
+def accuracy_command(uuid, name, bonus=0.0):
+    """The plugin command of the AoE2 accuracy of a siege shot at a unit (the key "accuracy" of data/units.jsonl: the
+    Trebuchet 15 %, #2479) plus bonus (the civilization key "accuracy": Huns +35 %), or None when each shot hits."""
+    part = min(1.0, ACCURACY.get(name, 1.0) + bonus)
+    return f"aoe accuracy {uuid} {part:g}" if part < 1 else None
+
+
 def sight(name, s=None):
     """The AoE2 line of sight of unit name in tiles: an idle soldier attacks an enemy in it. Most units see 4 tiles,
     a ranged unit about 2 tiles more than its range."""
@@ -243,6 +251,10 @@ def setup(game, data):
     import spoils                                    # spoils imports this module
     for o in units:                                  # the hits of a Varangian Guard make gold (#2376)
         if cmd := spoils.tag_command(o["uuid"], o["name"]):
+            game.command(cmd)
+    for o in units:                                  # a trebuchet misses units (#2479), with the bonus of its civ
+        civ = None if data.get("full_tech_tree") else data.get("players", {}).get(str(o["player"]), {}).get("civ")
+        if cmd := accuracy_command(o["uuid"], o["name"], civs.value("accuracy", civ, {}).get(o["name"], 0.0)):
             game.command(cmd)
     for o in units:                                  # after the stats: the plugin needs them for the sight
         if cmd := sight_command(o["uuid"], o["name"], data.get("tile_size", 4)):
