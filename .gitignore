@@ -7,6 +7,7 @@ venv/
 # Converted worlds and scratch output
 *World/
 out/
+saves/
 tmp/
 preview.png
 # Minecraft server files that tools download (large), and the logs of a server or client run by hand

@@ -67,6 +67,7 @@ import hints  # noqa: E402
 import market  # noqa: E402
 import menu  # noqa: E402
 import monk  # noqa: E402
+import regen  # noqa: E402
 import relic_victory  # noqa: E402
 import repair  # noqa: E402
 import siege_tower  # noqa: E402
@@ -84,6 +85,8 @@ ROWS = table.load("gather.jsonl")
 DROP_SITES = {r.lower(): tuple(t["name"] for t in ROWS if r.lower() in t.get("drop", ())) for r in RESOURCES}
 MEAT_SITES = tuple(t["name"] for t in ROWS if "meat" in t.get("drop", ()))   # hunted food only (mule cart, #2194)
 START = replay.START                                               # the AoE2 standard start resources (#973)
+# AoE2 DE setting "Starting resources" (wiki "Random map", without the civilization bonus): run.py --resources (#2264)
+LEVELS = {r["name"]: r["resources"] for r in table.load("setup.jsonl")}
 NOMAD = {"wood": 275, "stone": 100}     # AoE2 Nomad (wiki "Nomad (map)"): no building at the start, the cost of a town center
 TREE_WOOD = 100                                                    # wood in one tree, as in AoE2
 # plants of the ground that are not in #minecraft:replaceable: the trunk on a slope removes them from its row (#1124)
@@ -508,7 +511,7 @@ class Gather:
     speed = 1.0                                                        # times the Normal speed: shorter real steps (#2057)
 
     def __init__(self, game, data, player=1, tick=0.25, carry=10, chop=None, log=None, clock=time.monotonic,
-                 cheats=False, start=None):
+                 cheats=False, start=None, resources="standard"):
         self.game, self.data, self.map, self.player = game, data, Map(data, player), player
         if player != 1:
             self.board = f"aoe_res{player}"                            # its own resources: its team sidebar (#1309)
@@ -521,7 +524,8 @@ class Gather:
         if start is None:                                              # units, no building: a Nomad start (#1212)
             kinds = {o["kind"] for o in data["objects"] if o.get("player") == player}
             nomad = "unit" in kinds and "building" not in kinds
-            start = civs.start(self, {r: v + NOMAD.get(r, 0) * nomad for r, v in START.items()})   # #1269
+            base = LEVELS[resources]
+            start = civs.start(self, {r: v + NOMAD.get(r, 0) * nomad for r, v in base.items()})   # #1269
         self.stock = {**dict.fromkeys(DROP_SITES, 0), **start}             # at the drop sites (#973)
         self.spare = {}                                                # the fractions of the drop-off bonus (#2111)
         self.units = [o for o in data["objects"] if o["kind"] == "unit" and o["player"] == player
@@ -1112,7 +1116,8 @@ class Gather:
             self.mark(name, {(x0, z0), (x1, z1)}, "attack")
             import combat                                              # combat imports this module
             what = self.fort_names.get(u, "")
-            full = civs.hp(civs.civ(self, self.fort_players.get(u, 0)), what, combat.stats(what)).hp   # Persians (#1895)
+            owner = self.fort_players.get(u, 0)                        # Persians (#1895), Byzantines in the own age (#2116)
+            full = civs.hp(civs.civ(self, owner), what, combat.stats(what), build.ages(self) if owner == self.player else 0).hp
             for c in siege_mark(u, what, full, name):
                 self.command(c)
             return
@@ -1404,6 +1409,7 @@ class Gather:
         monk.heal(self, self.tick * NORMAL)
         monk.convert(self, self.tick * NORMAL)
         garrison.heal(self, self.tick * NORMAL)
+        regen.tick(self, self.tick * NORMAL)
         repair.tick(self, self.tick * NORMAL)
         trebuchet.tick(self, self.tick * NORMAL)
         fleet.tick(self, self.tick * NORMAL)
@@ -1442,7 +1448,7 @@ class Gather:
         if v.goal:
             x, z = v.goal
             ai.move(self, v.uuid, "VILLAGER", self.map.T, x + 0.5, self.map.y(x, z), z + 0.5,
-                    NORMAL * civs.speed(self, "VILLAGER") * math.prod(PACE.get(t, 1) ** train.count(self, t) for t in self.techs))
+                    NORMAL * train.speed(self, "VILLAGER") * math.prod(PACE.get(t, 1) ** train.count(self, t) for t in self.techs))
         v.moved, v.tries = self.clock(), v.tries + 1
 
     def second(self, v):
