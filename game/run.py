@@ -11,6 +11,7 @@ Usage:
     python3 game/run.py WORLD --play --bot        # also a bot plays player 2: its villagers gather (game/bot.py)
     python3 game/run.py WORLD --play --bot --bot-attack 5:00   # its soldiers attack player 1 from 5:00 (default 10:00)
     python3 game/run.py WORLD --play --log F.jsonl  # also write a timed event log (tools/measure_gather.py reads it)
+    python3 game/run.py WORLD --play --bot --treaty 20:00   # the AoE2 setting "Treaty length": no attack before 20:00 (#2297)
     python3 game/run.py WORLD --play --reveal all  # no fog of war: also the enemy units out of sight show (game/fog.py)
     python3 game/run.py WORLD --play --speed 2     # twice the AoE2 Normal speed: /tick rate 40 and shorter steps (#2057)
     python3 game/run.py WORLD --play --resources high  # the AoE2 setting "Starting resources" (#2264)
@@ -335,6 +336,7 @@ SETTINGS = {
     "pop_limit": None,                # "Population limit" (train.LIMITS, #2266)
     "resources": "standard",          # "Starting resources" (gather.LEVELS, #2264)
     "teams": None,                    # {player: team or None} in place of the scenario's (team_choices, #2296)
+    "treaty": "0:00",                 # "Treaty length" (MM:SS): before it no player can attack another (treaty.py, #2297)
     "victory": "standard",            # "Victory": "standard" (conquest, a wonder or all relics) or "conquest" (#2316)
 }
 
@@ -385,11 +387,12 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
         import bot as bots
         import replay
         player, foe = bot_seat(data["players"], people)
+        attack = max(bot_attack, settings["treaty"], key=replay.aoe2mc.game_time)   # the bot waits for the treaty too
         g.bots = [*g.bots, bots.Bot(game, data, player=player, share=g, log=log, foe=foe,
-                                    attack=replay.aoe2mc.game_time(bot_attack) / 1000,
+                                    attack=replay.aoe2mc.game_time(attack) / 1000,
                                     resources=settings["resources"], pop_limit=settings["pop_limit"]).setup()]
         print(f"A bot plays player {player}: {len(g.bots[-1].g.villagers)} villagers gather, its soldiers attack "
-              f"player {foe} at {bot_attack}.", file=sys.stderr)
+              f"player {foe} at {attack}.", file=sys.stderr)
     import combat
     combat.setup(game, data)                         # AoE2 hit points and damage (#514)
     if not state and settings["age"] != "dark":                  # after the base values: the technologies change them
@@ -400,6 +403,10 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
         import regicide
         g.mode = settings["mode"]
         regicide.setup(g, settings["mode"])
+    import replay
+    import treaty as treaties
+    if replay.aoe2mc.game_time(settings["treaty"]):              # after the Gathers: they set the neutral stances
+        treaties.start(g, replay.aoe2mc.game_time(settings["treaty"]) / 1000)
     if game.kind == "paper":                         # the view square of each player on map 0 (#1762)
         import replay
         game.command(f"aoe minimap frame {replay.FRAME * data['tile_size']}")
@@ -543,6 +550,8 @@ def main(argv=None):
                     "order in which they join (#1310); with --bot the bot plays player N + 1")
     ap.add_argument("--bot-attack", default="10:00", metavar="MM:SS", help="--bot: its soldiers attack its foe "
                     "from this game time (default 10:00)")
+    ap.add_argument("--treaty", default="0:00", metavar="MM:SS", help="--play: the AoE2 setting \"Treaty length\": "
+                    "no player can attack another player before this game time (default 0:00: no treaty)")
     ap.add_argument("--reveal", choices=["normal", "all"], default="normal", help="--play: AoE2 \"Reveal map\" "
                     "(default normal: enemy units out of sight are hidden; all: all units show)")
     ap.add_argument("--age", choices=["dark", "feudal", "castle", "imperial", "post-imperial"], default="dark",
