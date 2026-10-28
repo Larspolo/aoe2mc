@@ -2871,6 +2871,7 @@ MODIFY_RESOURCE = 52                                               # "Modify Res
 MODIFY_RESOURCE_BY_VARIABLE = 53                                   # "Modify Resource by Variable" (#2768)
 MODIFY_VARIABLE_BY_RESOURCE = 86                                   # "Modify Variable by Resource" (#2823)
 MODIFY_VARIABLE_BY_VARIABLE = 100                                  # "Modify Variable by Variable" (#2713)
+OBJECT_HAS_ACTION = 28                                             # the condition "Object Has Action" (#2867)
 OBJECT_HP = 23                                                     # "Object HP", the hit points of one object (#2701)
 OBJECT_NOT_VISIBLE = 16                                            # the conditions "Object (Not) Visible" (#2756)
 OBJECT_VISIBLE = 15
@@ -2903,6 +2904,9 @@ UNITS_GARRISONED = 18                                              # the conditi
 UNLOAD = 17                                                        # "Unload" (#2773)
 UNLOCK_GATE = 6
 VARIABLE_VALUE = 22
+# The AoE2 UnitAIAction values of "Object Has Action" that the game program knows (game/scenario.py ACTIONS, #2867):
+# build, gather, hunt, move, enter (garrison), repair, idle. The others (attack, convert, heal ...): not supported yet.
+OBJECT_ACTIONS = (3, 10, 11, 14, 18, 19, 24)
 TIME_UNITS = {0: 5, 1: 60, 2: 1, 3: 1}  # TimeUnit (years, minutes, seconds, m:ss) -> game seconds; a year as game/wonder.py YEAR
 COUNTED = (IN_AREA, OWN_OBJECTS, OWN_FEWER_OBJECTS)                # conditions that count units: the tick function
 VISIBLE = (OBJECT_NOT_VISIBLE, OBJECT_VISIBLE, OBJECT_VISIBLE_MULTIPLAYER)  # the sight of a player: the game program
@@ -2912,6 +2916,7 @@ TICKED = COUNTED + (                                               # conditions 
     DIFFICULTY_LEVEL,
     DIPLOMACY_STATE,
     DISPLAY_TIMER_TRIGGERED,
+    OBJECT_HAS_ACTION,
     OBJECT_HP,
     OBJECT_NOT_VISIBLE,
     OBJECT_VISIBLE,
@@ -2957,6 +2962,7 @@ OBJECT_TESTS = {DESTROY_OBJECT: ("if entity @e[tag=aoe2mc.m{ref}] unless entity 
 TICKED += tuple(OBJECT_TESTS)
 INVERTED = tuple(OBJECT_TESTS) + (                                  # conditions with an inverted test in the tick
     COMPARE_VARIABLES,                                                 # function, one per line in alphabetical order
+    OBJECT_HAS_ACTION,
     TRIGGER_ACTIVE,                                                    # (parallel tickets add lines, #2791)
 )
 
@@ -2987,6 +2993,7 @@ CONDITION_KEYS = {
     DIPLOMACY_STATE: {"player": "source_player", "target": "target_player", "diplomacy": "quantity"},   # the stance (#2757)
     DISPLAY_TIMER_TRIGGERED: {"slot": "timer_id"},                                       # (#2702)
     IN_AREA: COUNT_KEYS,
+    OBJECT_HAS_ACTION: {"ref": "unit_object", "next": "next_object", "action": "unit_ai_action"},   # (#2867)
     OBJECT_HP: {"quantity": "quantity", "ref": "unit_object", "comparison": "comparison"},   # (#2701)
     OBJECT_NOT_VISIBLE: {"ref": "unit_object", "player": lambda c, entities, techs: 1},   # player 1 sees (#2756)
     OBJECT_VISIBLE: {"ref": "unit_object", "player": lambda c, entities, techs: 1},
@@ -3997,6 +4004,7 @@ SCORE_TESTS = {
     DIFFICULTY_LEVEL: lambda c: f"score #level aoe_difficulty matches {c.get('quantity', 0)}",
     DIPLOMACY_STATE: lambda c: f"score #p{c['player']}.p{c['target']} aoe_dipstate matches {c['diplomacy'] + 1}",
     DISPLAY_TIMER_TRIGGERED: lambda c: f"score #done{c.get('slot', 0)} aoe_timer matches 1..",   # set at 0 (#2702)
+    OBJECT_HAS_ACTION: lambda c: f"score #r{c['ref']} aoe_action matches {c['action']}",   # inverted: unless
     OBJECT_NOT_VISIBLE: lambda c: f"score #r{c['ref']}.p{c['player']} aoe_seen matches 0",
     OBJECT_VISIBLE: lambda c: f"score #r{c['ref']}.p{c['player']} aoe_seen matches 1",
     OBJECT_VISIBLE_MULTIPLAYER: lambda c: f"score #r{c['ref']}.p{c['player']} aoe_seen matches 1",
@@ -4100,6 +4108,8 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
                     or c["type"] == COMPARE_VARIABLES and compare_test(c) is None
                     or c["type"] == OBJECT_HP and (c.get("ref", -1) < 0 or variable_range(c) is None)
                     or c["type"] == UNITS_GARRISONED and c.get("unit", -1) < 0
+                    or c["type"] == OBJECT_HAS_ACTION and (c.get("ref", -1) < 0 or c.get("next", -1) >= 0
+                                                           or c.get("action") not in OBJECT_ACTIONS)
                     or c["type"] in VISIBLE and (c.get("ref") is None or c["ref"] < 0 or c.get("player", -1) <= 0)
                     or c["type"] == PLAYER_DEFEATED and c.get("player", -1) <= 0   # Gaia: no defeat (#2710)
                     or c["type"] == TRIGGER_ACTIVE and c.get("trigger") not in switch
@@ -4137,7 +4147,8 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
             tests, unless = groups_tests[which[i]], groups_unless[which[i]]
             if c["type"] in SCORE_TESTS:                               # a score of the world or the game
                 test = SCORE_TESTS[c["type"]](c)
-                no = c["type"] == COMPARE_VARIABLES and compare_negated(c)   # "not equal" or "inverted": unless
+                no = c["type"] == COMPARE_VARIABLES and compare_negated(c) or \
+                    c["type"] == OBJECT_HAS_ACTION and c["inverted"]   # "not equal" or "inverted": unless
                 tests.append(f"{'unless' if no else 'if'} {test}")
                 unless.append(f"{'if' if no else 'unless'} {test}")
                 continue
@@ -4216,7 +4227,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
     if names:
         load[:0] = ["scoreboard objectives add aoe_var dummy"] + \
             [f"scoreboard players add {v} aoe_var 0" for v in names]   # AoE2 variables start at 0
-    for word in ("aoe_difficulty", "aoe_gar", "aoe_lost", "aoe_seen", "aoe_tech", "aoe_techstate"):  # the game program
+    for word in ("aoe_action", "aoe_difficulty", "aoe_gar", "aoe_lost", "aoe_seen", "aoe_tech", "aoe_techstate"):  # the game program
         if any(f" {word} " in x for x in tick):
             setup[f"scoreboard objectives add {word} dummy"] = None
     if switch:
@@ -4228,6 +4239,13 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
         files["data/minecraft/tags/function/tick.json"] = {"values": ["aoe2mc:tick"]}
         files["data/aoe2mc/function/tick.mcfunction"] = "\n".join(tick) + "\n"
     return load, files
+
+
+def action_list(triggers):
+    """The refs of the units of the "Object Has Action" conditions that the tick function of trigger_files tests, for
+    aoe2mc.json "actions" (#2867): the scenario mode of the game program sets their score of aoe_action."""
+    tick = trigger_files(triggers)[1].get("data/aoe2mc/function/tick.mcfunction", "")
+    return sorted({int(r) for r in re.findall(r"#r(\d+) aoe_action ", tick)})
 
 
 def research_list(triggers):
@@ -4258,6 +4276,7 @@ def visible_list(triggers):
 # The lists of aoe2mc.json that the scenario mode of the game program reads: key -> function of the triggers. A new
 # list is one line here, in alphabetical order (#2832): no new keyword of write_objects.
 TRIGGER_LISTS = {
+    "actions": action_list,                                     # the units of aoe_action (#2867)
     "research": research_list,                                  # the "Research Technology" effects (#2577)
     "tech_states": tech_state_list,                             # the [player, technology] pairs of aoe_techstate (#2769)
     "visible": visible_list,                                    # the [ref, player] pairs of aoe_seen (#2756)
