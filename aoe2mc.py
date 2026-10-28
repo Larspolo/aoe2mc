@@ -2862,6 +2862,7 @@ KILL_OBJECT = 14
 LOCK_GATE = 7                                                      # "Lock Gate", "Unlock Gate" (#2762)
 MIRROR_DIPLOMACY = 109                                             # "Mirror Diplomacy" (#2822)
 MODIFY_ATTRIBUTE = 51                                              # "Modify Attribute" (#2763)
+MODIFY_ATTRIBUTE_FOR_CLASS = 104                                   # "Modify Attribute for Class" (#2859)
 MODIFY_RESOURCE = 52                                               # "Modify Resource" (#2576)
 MODIFY_RESOURCE_BY_VARIABLE = 53                                   # "Modify Resource by Variable" (#2768)
 MODIFY_VARIABLE_BY_RESOURCE = 86                                   # "Modify Variable by Resource" (#2823)
@@ -3569,8 +3570,12 @@ def attribute_lines(e, c):
     """The command of "Modify Attribute" (#2763): the change "<player> <name> <Stats field> <operation> <quantity>"
     goes into the list of the data storage aoe2mc:attributes. A converted world has no combat values: the scenario mode
     of the game program (game/scenario.py attributes) empties the list and changes the values of the unit type of the
-    player (train.stats). An attribute outside STAT_ATTRIBUTES and CLASS_ATTRIBUTES: not supported in the stats."""
+    player (train.stats). An attribute outside STAT_ATTRIBUTES and CLASS_ATTRIBUTES: not supported in the stats.
+    "Modify Attribute for Class" (#2859): one line for the class, the name "@<ObjectClass name>" (train.applies)."""
+    from AoE2ScenarioParser.datasets.trigger_lists import ObjectClass
     _, name = e.get("object") or (None, None)
+    if e["type"] == MODIFY_ATTRIBUTE_FOR_CLASS:                        # also the units that the player trains later
+        name = f"@{ObjectClass(e['group']).name.lower()}" if e.get("group") in set(ObjectClass) else None
     a = e.get("attribute")
     field = STAT_ATTRIBUTES.get(a) or CLASS_ATTRIBUTES.get((a, e.get("class")))
     q = e.get("aa") if a in (8, 9) else e.get("quantity")
@@ -3873,6 +3878,8 @@ EFFECT_KEYS = {
     COUNT_UNITS_INTO_VARIABLE: {"variable2": "variable2"},   # (#2697)
     INITIATE_RESEARCH: {"selected": lambda e, kinds, techs: list(e.selected_object_ids or []),   # (#2772)
                         "technology": lambda e, kinds, techs: techs.get(e.technology, str(e.technology))},
+    MODIFY_ATTRIBUTE_FOR_CLASS: {"attribute": "object_attributes", "operation": "operation", "quantity": "quantity",
+                                 "class": "armour_attack_class", "aa": "armour_attack_quantity", "group": "object_group2"},
     TRAIN_UNIT: {"quantity": "quantity", "selected": lambda e, kinds, techs: list(e.selected_object_ids or [])},   # (#2772)
 }
 
@@ -3923,6 +3930,7 @@ EFFECTS = {
     LOCK_GATE: gate_lines,
     MIRROR_DIPLOMACY: mirror_lines,
     MODIFY_ATTRIBUTE: attribute_lines,
+    MODIFY_ATTRIBUTE_FOR_CLASS: attribute_lines,
     MODIFY_RESOURCE: resource_lines,
     MODIFY_RESOURCE_BY_VARIABLE: resource_by_variable_lines,
     MODIFY_VARIABLE_BY_RESOURCE: variable_by_resource_lines,
