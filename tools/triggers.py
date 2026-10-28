@@ -35,6 +35,7 @@ MAP = {
     ("condition", "DESTROY_OBJECT"): "`execute unless entity @e[tag=ref-N]`",
     ("condition", "CAPTURE_OBJECT"): "`execute if entity @e[tag=ref-N,team=pN]`",
     ("condition", "VARIABLE_VALUE"): "`execute if score #vN aoe_var matches ..` in the tick function, once (#2611)",
+    ("condition", "COMPARE_VARIABLES"): "`execute if score #vA aoe_var <op> #vB aoe_var` in the tick function, once; `unless` for not equal and inverted (#2698)",
     ("condition", "CHANCE"): "`execute store result score ... run random value 1..100` once per second (alone, after the timers or with the ticked conditions: #2574)",
     ("condition", "PLAYER_DEFEATED"): "`execute unless entity @e[team=pN]`",
     ("condition", "ACCUMULATE_ATTRIBUTE"): "`execute if score Gold aoe_resN matches Q..`: the resource scores of the game program (#2655)",
