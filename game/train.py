@@ -856,7 +856,8 @@ def start(g, setting):
     s = STARTS[setting]
     for t in build.AGE_TECHS[:s["ages"]]:
         research(g, {"name": t}, start=True)
-    skip = (*build.AGE_TECHS, *s.get("skip", ()))
+    switches = (*DOCTRINES, *(n for r in civs.ROWS if "policies" in r for n in r["policies"].get("effects", ())))
+    skip = (*build.AGE_TECHS, *s.get("skip", ()), *switches)   # a switch changes the player, it is no technology (#2967)
     while todo := [t for t in TECHS if t not in g.techs and t not in skip and value("age", t, 0) < s["ages"]
                    and t not in ONE_BUILDING and unlocked(g, t)]:  # in passes: a technology after the one before it;
         for t in todo:                                             # no upgrade of one building (#2484)
