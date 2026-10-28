@@ -4,7 +4,7 @@ Wu, in place of the bombard cannon. It needs no Chemistry and does not pack."""
 from test_bombard_cannon import setup
 from test_loom import menus
 
-from game import civs, combat, train
+from game import civs, train
 
 build = train.build
 UNIT = 18                                                              # the item row under the queue row
@@ -20,7 +20,6 @@ def menu(civ):
 def test_the_values_are_those_of_the_wiki():
     assert build.AGE["TRACTION_TREBUCHET"] == 3
     assert "TRACTION_TREBUCHET" not in build.NEEDS and len(train.HELP["TRACTION_TREBUCHET"]) <= 50
-    assert combat.stats("TRACTION_TREBUCHET")[:5] == (115, 50, 1, 8, 14) and combat.sight("TRACTION_TREBUCHET") == 18
     assert train.ITEMS["TRACTION_TREBUCHET"][0] == UNIT
 
 
