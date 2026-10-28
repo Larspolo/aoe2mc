@@ -29,7 +29,7 @@ import dashboard  # noqa: E402
 from agent_config import CONFIG  # noqa: E402
 
 TOOLS = os.path.dirname(os.path.abspath(__file__))
-AGENT = ("claude/", "agent/")         # the branches of agent PRs (autopilot step 2)
+AGENT = ("claude/", "agent/", "ccr-") # the branches of agent PRs (autopilot step 2)
 WAITS = {"needs-human", "blocked"}     # a PR of such a ticket waits for the owner or another ticket
 STALE, CONFLICT = 30, 10               # minutes without a beat: a stopped run (tools/claim.py STALE, CONFLICT)
 SWEEP = 10                             # minutes: a green PR that is still open needs the Automerge sweep (#734)
