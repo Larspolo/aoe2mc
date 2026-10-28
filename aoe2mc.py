@@ -2776,6 +2776,7 @@ CHANGE_DIPLOMACY = 1                                               # "Change Dip
 CHANGE_OBJECT_NAME = 26                                            # "Change Object Name" (#2616)
 CHANGE_OBJECT_STANCE = 36                                          # "Change Object Stance" (#2705)
 CHANGE_OWNERSHIP = 18
+CHANGE_PLAYER_NAME = 45                                            # "Change Player Name" (#2711)
 CHANGE_VARIABLE = 56                                               # the scenario variables (#2611)
 CHANGE_VIEW = 16                                                   # "Change View" (#2610)
 CLEAR_INSTRUCTIONS = 21                                            # "Clear Instructions" (#2609)
@@ -2932,6 +2933,16 @@ def name_lines(e, c):
     stats["change object name"] += 1
     return [f"execute as {found[0]} run data modify entity @s CustomName.text set value "   # one entity
             f"{json.dumps(msg, ensure_ascii=False)}"]
+
+
+def player_name_lines(e, c):
+    """The commands of "Change Player Name" (#2711): the new name (with no AoE2 color tags) is the display name of the
+    team p<player> (team_lines), in the sidebar and the tab list. Gaia or no name: no line."""
+    msg = re.sub(r"<[^<>]*>", "", e["message"]).replace("\r", "").strip()
+    if e["player"] <= 0 or not msg:
+        return []
+    c.stats["change player name"] += 1
+    return [f"team modify p{e['player']} displayName {json.dumps({'text': msg}, ensure_ascii=False)}"]
 
 
 def owner_lines(e, c):
@@ -3257,6 +3268,7 @@ EFFECTS = {
     CHANGE_OBJECT_NAME: name_lines,
     CHANGE_OBJECT_STANCE: stance_lines,
     CHANGE_OWNERSHIP: owner_lines,
+    CHANGE_PLAYER_NAME: player_name_lines,
     CHANGE_VARIABLE: variable_lines,
     CHANGE_VIEW: view_lines,
     CLEAR_INSTRUCTIONS: clear_lines,
