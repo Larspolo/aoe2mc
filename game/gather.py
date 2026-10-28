@@ -73,6 +73,7 @@ import relic_victory  # noqa: E402
 import repair  # noqa: E402
 import score  # noqa: E402
 import siege_tower  # noqa: E402
+import sudden_death  # noqa: E402
 import stance  # noqa: E402
 import table  # noqa: E402
 import trade  # noqa: E402
@@ -232,9 +233,9 @@ class Map:
         self.fish, self.shore = {}, set()                              # tile -> food of a fish (#1283), shore fish
         self.fish_mobs, self.docks = {}, []                            # tile -> mob of a fish; own dock cells (#1384)
         self.traps = {}                                                # own fish trap tile -> its cells (#1438)
-        civ = data.get("players", {}).get(str(player), {}).get("civ")
+        civ = None if data.get("full_tech_tree") else data.get("players", {}).get(str(player), {}).get("civ")   # #2354
         self.trap_food = round(TRAP_FOOD * civs.value("trap_food", civ, 1))   # food of a new own fish trap (Malay, #2333)
-        self.aura = civs.AURA.get(data.get("players", {}).get(str(player), {}).get("civ"), {})   # Thracians (#2378)
+        self.aura = civs.AURA.get(civ, {})                             # Thracians (#2378)
         self.auras = []                                                # the cells of own aura buildings
         for o in data["objects"]:
             if o["kind"] == "building":
@@ -1477,7 +1478,7 @@ class Gather:
                 src = self.source(v)
                 kind = "farm" if v.tree in self.map.farms else "hunt" if v.tree in self.map.carcasses else \
                     "fish" if v.tree in self.map.fish else v.res               # a fisherman: no forage rate (#2349)
-                work = self.work_time(kind, v.tree in self.map.herds) / self.aura_rate(v, kind)
+                work = self.work_time(kind, v.tree in self.map.herds, (v.pos[0], v.pos[2])) / self.aura_rate(v, kind)
                 last = civs.last(self, "sheep" if v.tree in self.map.herds else kind)
                 take = 1 if last == 1 else 1 / last                    # 1: the amounts stay whole numbers
                 most = self.limit(v.res, "sheep" if v.tree in self.map.herds else kind)
@@ -1543,13 +1544,15 @@ class Gather:
                         self.set(v, "idle")
         self.idle()
 
-    def work_time(self, res, herd=False):
+    def work_time(self, res, herd=False, pos=None):
         """Real seconds per unit of resource res ("farm" for farms) with the technologies of the player (WORK_TECHS) and
         the work-rate bonus of its civilization (civs.WORK; herd: the carcass of a herdable animal, for shepherds).
-        civs.MORE multiplies the change of a technology (Armenians: the mule cart technologies 40 % more, #2309)."""
+        civs.MORE multiplies the change of a technology (Armenians: the mule cart technologies 40 % more, #2309). At the
+        block position pos (x, z) of the villager, a building near it can add its bonus (civs.church_rate, #2377)."""
         if self.aegis:
             return 0.0                                                 # a full load in one work step
         rate, more = civs.work(self, "sheep" if herd else res), civs.MORE.get(civs.civ(self), {})
+        rate *= civs.church_rate(self, pos) if pos else 1
         return self.chop.get(res, self.chop.get("food")) / rate / math.prod(
             (1 + (WORK_TECHS.get(t, {}).get(res, 1) - 1) * more.get(t, 1)) ** train.count(self, t) for t in self.techs)
 
@@ -1807,6 +1810,8 @@ class Gather:
             conquest.tick(self)                                        # not in step(): the bot steps its own Gather
             if self.mode == "regicide":                                # a player without its King loses (#2347)
                 regicide.tick(self)
+            elif self.mode == "sudden-death":                          # a player without its town center loses (#2407)
+                sudden_death.tick(self)
             fog.tick(self)                                             # after the bots: their units too (#1389)
             herd.tick(self)                                            # all players: the bots capture too (#1792)
             if self.victory == "standard":                             # a wonder or all relics win too (#2316)

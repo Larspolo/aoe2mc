@@ -3,11 +3,15 @@ Resources for kills and deaths in the game program (#2271, epic #1088), the civi
 - Tupi (civs.FALLEN): a fallen own unit, except ships and siege weapons, gives 15 % of its cost back.
 - Mapuche (civs.KILL_GOLD): each military unit that an own mounted unit kills gives 3 gold. Only the Paper plugin sees
   the killer: it counts these kills for each team in the score aoe_mounted_kills (AoePlugin.kill).
+- Varangian Guard (combat.ATTACK_GOLD, #2376): 35 gold for each AoE2 minute that it attacks enemy units, the
+  Varangians 50 % more (civs key "attack_gold"). Only the plugin sees a hit: each own unit with the tag aoe2mc.gold.N
+  adds N × its reload ticks to the score aoe_attack_gold of its team for each hit (AoePlugin.gold).
 - Danes (civs.LOOT): an enemy building that falls after an attack order gives 25 % of its cost, not a wall or a gate.
 AoE2 keeps the fractions of a part (g.spare, as the drop-off bonus): the next part gets them.
 
     spoils.fallen(g, dead)    # train.census: the own villagers and soldiers that died since the last count
     spoils.kills(g)           # train.census: the new kills of the plugin
+    spoils.attacks(g)         # train.census: the new hits of the units with combat.ATTACK_GOLD
     spoils.loot(g, uuid)      # gather.Gather.fall: the target of the fallen building
 """
 import re
@@ -19,6 +23,7 @@ import fleet
 import train
 
 OBJECTIVE = "aoe_mounted_kills"   # the score of AoePlugin.java: kills of military units by mounted units, per team
+GOLD = "aoe_attack_gold"          # the score of AoePlugin.java: gold per minute × reload ticks of the hits, per team
 
 
 def gain(g, cost, part):
@@ -55,6 +60,23 @@ def kills(g):
     if n > vars(g).get("kills", 0):
         g.earn("gold", gold * (n - vars(g).get("kills", 0)))
     g.kills = max(n, vars(g).get("kills", 0))
+
+
+def tag_command(uuid, name):
+    """The command that lets the plugin count the hits of unit name (combat.ATTACK_GOLD), else None."""
+    return f"tag {uuid} add aoe2mc.gold.{combat.ATTACK_GOLD[name]}" if name in combat.ATTACK_GOLD else None
+
+
+def attacks(g):
+    """Give the gold of the new hits of the own units with combat.ATTACK_GOLD in the score of the plugin: the score
+    holds gold per AoE2 minute × real ticks at Normal speed, times the civ key "attack_gold" (Varangians 1.5)."""
+    if not any(n in combat.ATTACK_GOLD for n in g.soldiers.values()):
+        return
+    m = re.search(r"has (\d+)", g.command(f"scoreboard players get p{g.player} {GOLD}") or "")
+    n, seen = int(m.group(1)) if m else 0, vars(g).get("attack_ticks", 0)
+    if n > seen:
+        gain(g, {"gold": (n - seen) / 20 * combat.NORMAL / 60}, civs.value("attack_gold", civs.civ(g), 1))
+    g.attack_ticks = max(n, seen)
 
 
 def loot(g, uuid):
