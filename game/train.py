@@ -103,6 +103,11 @@ TRAINS["FORTIFIED_CHURCH"] = TRAINS["MONASTERY"]                  # the monaster
 MENUS = {r["name"]: r["menus"] for r in BUILDING_ROWS if "menus" in r}
 TRAINS |= {b: sum((TRAINS[m] for m in ms), ()) for b, ms in MENUS.items()}
 SLOTS = {r["name"]: r["slot"] for r in ROWS}
+# An upgrade of one building (the key "one_building", #2484: the Achaemenid town centers): it changes only the building
+# that researches it, and that building takes only one of them (g.upgraded: footprint -> name). Its "aura": the
+# villagers within "range" tiles of that building work "rate" times as fast (Gather.aura_rate); the own military units
+# heal "heal" hit points per AoE2 minute and walk "speed" times as fast (regen.military, #2496).
+ONE_BUILDING = {r["name"]: r.get("aura") for r in ROWS if r.get("one_building")}
 SHIFTS = {b: {n: sum(1 + max(SLOTS[x] for x in TRAINS[p]) for p in ms[:i]) for i, m in enumerate(ms) for n in TRAINS[m]}
           for b, ms in MENUS.items()}
 # The unique unit of each civilization (AoE2 DE, "unique" in data/civs.jsonl, #1914), trained at its castle. A unit
@@ -452,12 +457,12 @@ def show(g, player, rect):
         if need := build.locked(g, name):                              # a unit of a later age: a gray item (#674)
             return need
         if name in TECHS:
-            return missing(g, name) or ("researching" if queued(g, name) else "research")
+            return missing(g, name) or ("researching" if queued(g, name) and name not in ONE_BUILDING else "research")
         return f"queue {n}/{QUEUE}"
     items = [(slot, build.LOCKED if build.locked(g, name) else item, label,
               (" · ".join(f"{v} {r}" for r, v in price(g, name, building).items()) or "free") + f" · {round(seconds(g, name, building), 1):g} s · "
               + state(name))
-             for name in trains(g, building) if repeatable(g, name) and unlocked(g, name) for slot, item, label in [slots(building, name)]]
+             for name in trains(g, building) if offered(g, rect, name) for slot, item, label in [slots(building, name)]]
     items += [RALLY] if units_of(building) else []
     items += [garrison.ungarrison(building)] if getattr(g, "garrisons", {}).get(rect) else []   # only with units inside (#808)
     if building == "MARKET":                                           # the buy and sell rows under the queue (#1286)
@@ -540,7 +545,7 @@ def order(g, player, rect, slot, shift=False):
         show(g, player, rect)
         return 0
     name = next((n for n in trains(g, homes(g)[rect])                # the shown item of the slot (one per line of upgrades)
-                 if slots(homes(g)[rect], n)[0] == slot and repeatable(g, n) and unlocked(g, n)), None)
+                 if slots(homes(g)[rect], n)[0] == slot and offered(g, rect, n)), None)
     n = 0
     while name and n < (SHIFT if shift else 1) and queue(g, player, rect[::2], name):
         n += 1
@@ -583,8 +588,10 @@ def queue(g, player, cell, name="VILLAGER_MALE"):
     rect = home(g, cell)
     if rect is None or name not in trains(g, homes(g)[rect]):
         return None
-    if name in TECHS and (not repeatable(g, name) or queued(g, name)) or not unlocked(g, name):   # a technology once
+    if name in ONE_BUILDING and not offered(g, rect, name):           # one upgrade per building (#2484)
         return None
+    if name in TECHS and name not in ONE_BUILDING and (not repeatable(g, name) or queued(g, name)) or not unlocked(g, name):
+        return None                                                    # a technology once
     if name in DOCTRINES:                                              # no queue: at once (#2483)
         switch(g, player, homes(g)[rect])
         return rect
@@ -615,6 +622,15 @@ def queue(g, player, cell, name="VILLAGER_MALE"):
 def count(g, t):
     """How often the player researched technology t: 0 or 1, more only with the cheat "going above and beyond" (#968)."""
     return (t in getattr(g, "techs", ())) + getattr(g, "repeats", {}).get(t, 0)
+
+
+def offered(g, rect, name):
+    """True when the building rect offers name: an upgrade of one building (ONE_BUILDING) only to a building that has
+    none and researches none (#2484), the other items as repeatable() and unlocked()."""
+    if name in ONE_BUILDING and (rect in getattr(g, "upgraded", {})
+                                 or any(e["name"] in ONE_BUILDING for e in g.queues.get(rect, ()))):
+        return False
+    return repeatable(g, name) and unlocked(g, name)
 
 
 def repeatable(g, name):
@@ -740,12 +756,13 @@ def seconds(g, name, building=None, k=None):
         * (doctrine(g, building, k)[2] if building and name not in TECHS else 1)
 
 
-def speed(g, name):
+def speed(g, name, uuid=None):
     """The factor of the walk speed of unit name: the bonus of the civilization (civs.speed) and the technologies of the
     player (the key "walk": Fervor, #1261; Squires for the class infantry, #1415; Husbandry for the mounted units, #1416), with
-    the changes of civs.ALSO and civs.MORE (Bohemian Fervor for the villagers, Varangian Caravan +50 %, #2173)."""
+    the changes of civs.ALSO and civs.MORE (Bohemian Fervor for the villagers, Varangian Caravan +50 %, #2173); unit uuid
+    near a Military Town Center walks faster (g.hurried, regen.military, #2496)."""
     also, more = civs.ALSO.get(civs.civ(g), {}), civs.MORE.get(civs.civ(g), {})
-    return civs.speed(g, name) * math.prod((1 + (f - 1) * more[t] if t in more else f) ** count(g, t)
+    return civs.speed(g, name) * vars(g).get("hurried", {}).get(uuid, 1) * math.prod((1 + (f - 1) * more[t] if t in more else f) ** count(g, t)
                                            for t, (unit, f) in BY_KEY["walk"].items() if faster(unit, name) or t in also and faster(also[t], name))
 
 
@@ -766,19 +783,56 @@ def start(g, setting):
         research(g, {"name": t}, start=True)
     skip = (*build.AGE_TECHS, *s.get("skip", ()))
     while todo := [t for t in TECHS if t not in g.techs and t not in skip and value("age", t, 0) < s["ages"]
-                   and unlocked(g, t)]:                            # in passes: a technology after the one before it
-        for t in todo:
+                   and t not in ONE_BUILDING and unlocked(g, t)]:  # in passes: a technology after the one before it;
+        for t in todo:                                             # no upgrade of one building (#2484)
             research(g, {"name": t}, start=True)
 
 
-def research(g, entry, start=False):
+HASTE_EVERY = 2.0                                                  # AoE2 seconds between two checks of haste()
+
+
+def haste(g, dt):
+    """The own military units within the "attack_aura" range (tiles from the footprint) of an upgraded own building
+    attack "rate" times as fast (the Defensive Town Center: +17.65 %, 8 tiles, #2497): a unit that comes in or goes out
+    gets its values again, with the reload / rate. g.hasted: {uuid: rate} of the fast units. A trebuchet keeps its
+    values (the values of its state: trebuchet.stats_command)."""
+    import combat, trebuchet                                       # both import this module: import them late
+    auras = [(r, a) for r, n in vars(g).get("upgraded", {}).items() if (a := value("attack_aura", n))]
+    hasted = vars(g).get("hasted", {})
+    g.haste_time = vars(g).get("haste_time", 0.0) + dt if auras or hasted else 0.0
+    if g.haste_time < HASTE_EVERY:
+        return
+    g.haste_time, own, T = 0.0, homes(g), g.map.T
+    fast = {u: rate for u, (x, _, z) in g.positions(sorted(u for u, n in g.soldiers.items() if n != trebuchet.NAME)).items()
+            if (rate := max([a["rate"] for r, a in auras if r in own
+                             and max(r[0] - x, x - r[1], r[2] - z, z - r[3]) <= a["range"] * T], default=1)) != 1}
+    for u in sorted(fast.keys() ^ hasted.keys() | {u for u in fast if fast[u] != hasted.get(u)}):
+        name = g.soldiers.get(u)
+        if name is None:
+            continue
+        s = stats(g, name)
+        s = s._replace(reload=s.reload / fast.get(u, 1))
+        g.command(combat.stats_command(u, name, s, civs.taken(g, name), civs.friendly(g, name)))
+        if cmd := combat.range_command(u, name, T, s=s):
+            g.command(cmd)
+    g.hasted = fast
+
+
+def research(g, entry, start=False, rect=None):
     """A technology is complete: keep it in g.techs and give the live villagers and military units the new values.
-    start: a technology of the start age (start()): no text and no bonus of an age or technology."""
+    start: a technology of the start age (start()): no text and no bonus of an age or technology. An upgrade of one
+    building (ONE_BUILDING) changes only the building rect that researched it (g.upgraded, #2484)."""
     import combat, gather                                          # gather imports this module
     if entry["name"] in civs.policies(g).get("effects", ()):       # Athenians: the new policy, not a technology (#2485)
         g.policy, g.switches = entry["name"], vars(g).get("switches", 0) + 1
         g.command(f"tellraw {entry['player']} " + json.dumps({"text": f"{ITEMS[entry['name']][2]} is active.",
                                                               "color": "green"}))
+        return
+    if entry["name"] in ONE_BUILDING:
+        vars(g).setdefault("upgraded", {})[rect] = entry["name"]
+        build.retower(g, g.techs, rect)                            # the values of this building only (#2497)
+        if value("arrows", entry["name"]):
+            g.command(garrison.arrows_command(g, rect))
         return
     if entry["name"] in g.techs:                                   # a repeat: "going above and beyond" (#968)
         g.repeats[entry["name"]] = g.repeats.get(entry["name"], 0) + 1
@@ -822,6 +876,8 @@ def research(g, entry, start=False):
                 g.command(cmd)
             g.command(combat.label_command(uuid, new))               # the name of a new unit (units.pretty)
     import trebuchet                                               # trebuchet imports this module: import it late
+    if vars(g).get("hasted"):                                      # the values below have no haste: haste() sends
+        g.hasted = {}                                              # them again (#2497)
     for uuid, name in [(u["uuid"], u["name"]) for u in g.units if "uuid" in u] + list(g.soldiers.items()):
         if stats(g, name) != combat.stats(name):
             g.command(trebuchet.stats_command(g, uuid) if name == trebuchet.NAME   # the armor of its state (#1409)
@@ -961,7 +1017,7 @@ def tick(g, work):
             seconds(g, q[0]["name"], home.get(rect), q[0].get("doctrine", 0))   # cheats.aegis; the doctrine of the queue (#2483)
         q[0]["progress"] = min(1, q[0]["progress"] + (work * rate / time if time else 1))   # 0: the Gothic Loom at once (#2172)
         if q[0]["progress"] >= 1 and q[0]["name"] in TECHS:
-            research(g, q.pop(0))
+            research(g, q.pop(0), rect=rect)
         elif q[0]["progress"] >= 1 and (v := spawn(g, rect, q[0]["name"])):   # no room: it waits in the queue (#2470)
             q.pop(0)
             out.append(v)

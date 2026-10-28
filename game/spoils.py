@@ -3,6 +3,9 @@ Resources for kills and deaths in the game program (#2271, epic #1088), the civi
 - Tupi (civs.FALLEN): a fallen own unit, except ships and siege weapons, gives 15 % of its cost back.
 - Mapuche (civs.KILL_GOLD): each military unit that an own mounted unit kills gives 3 gold. Only the Paper plugin sees
   the killer: it counts these kills for each team in the score aoe_mounted_kills (AoePlugin.kill).
+- Athenians, Military Policy (civs.policy, the effect key "kill_gold", #2512): each enemy unit that an own infantry or
+  cavalry unit kills gives 5 gold, not a King or a trade unit. The plugin counts these kills for each team in the score
+  aoe_unit_kills (AoePlugin.unitKill), also under another policy: only the kills while the policy is active pay.
 - Varangian Guard (combat.ATTACK_GOLD, #2376): 35 gold for each AoE2 minute that it attacks enemy units, the
   Varangians 50 % more (civs key "attack_gold"). Only the plugin sees a hit: each own unit with the tag aoe2mc.gold.N
   adds N × its reload ticks to the score aoe_attack_gold of its team for each hit (AoePlugin.gold).
@@ -23,6 +26,8 @@ import fleet
 import train
 
 OBJECTIVE = "aoe_mounted_kills"   # the score of AoePlugin.java: kills of military units by mounted units, per team
+UNIT_KILLS = "aoe_unit_kills"     # the score of AoePlugin.java: kills of enemy units by infantry and cavalry, per team
+TRADE = "aoe2mc.trade"            # the tag of a trade unit: its kill gives no policy gold (AoePlugin.unitKill)
 GOLD = "aoe_attack_gold"          # the score of AoePlugin.java: gold per minute × reload ticks of the hits, per team
 
 
@@ -51,7 +56,14 @@ def fallen(g, dead):
 
 
 def kills(g):
-    """Give civs.KILL_GOLD gold for each new kill of the team of g in the score of the plugin."""
+    """Give civs.KILL_GOLD gold for each new kill of the team of g in the score of the plugin, and the "kill_gold" of
+    the active policy for each new kill of an enemy unit (Athenians)."""
+    if any("kill_gold" in e for e in civs.policies(g).get("effects", {}).values()):
+        m = re.search(r"has (\d+)", g.command(f"scoreboard players get p{g.player} {UNIT_KILLS}") or "")
+        n, seen = int(m.group(1)) if m else 0, vars(g).get("unit_kills", 0)
+        if n > seen and (gold := civs.policy(g)[1].get("kill_gold")):
+            g.earn("gold", gold * (n - seen))
+        g.unit_kills = max(n, seen)                                    # the kills under another policy pay nothing
     gold = civs.KILL_GOLD.get(civs.civ(g))
     if not gold:
         return
@@ -63,7 +75,10 @@ def kills(g):
 
 
 def tag_command(uuid, name):
-    """The command that lets the plugin count the hits of unit name (combat.ATTACK_GOLD), else None."""
+    """The command that lets the plugin count the hits of unit name (combat.ATTACK_GOLD), or that tags a trade unit
+    (no policy gold for its kill, #2512), else None."""
+    if civs.tagged(name, "trade units"):
+        return f"tag {uuid} add {TRADE}"
     return f"tag {uuid} add aoe2mc.gold.{combat.ATTACK_GOLD[name]}" if name in combat.ATTACK_GOLD else None
 
 

@@ -6,7 +6,8 @@ line of the run start (the release bar only when the project has `release.py`), 
         --phases read=8,claim=1,code=18,verify=9,ci=0,conflict=5,report=4 [--ticket ...] [--post]
 
 Repeat the ticket options for each ticket of the run, in the same order. `--minutes` defaults to the sum of the
-phases. `--post` comments the report on the status issue (label `agent-status`), else it prints it.
+phases. `--post` comments the report on the status issue (label `agent-status`) and sets `last_run` and `runs` of its
+state comment, else it prints the comment.
 """
 import argparse
 import os
@@ -14,6 +15,7 @@ import subprocess
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from claim import agent_state, utc, with_state  # noqa: E402
 from dashboard import FOOTER, STATUS, api, pages  # noqa: E402
 from health import PHASES  # noqa: E402
 
@@ -68,6 +70,12 @@ def report(text, usage, lines, release=None, tokens=None):
     return "\n".join([text.strip(), "", *([release, ""] if release else []), usage.strip(), *lines, tokens]) + FOOTER
 
 
+def counted(body, now=None):
+    """The body of the status issue after one more run: `last_run` now, `runs` + 1, the other state keys stay."""
+    state = agent_state(body)
+    return with_state(body, {**state, "last_run": utc(now), "runs": state.get("runs", 0) + 1})
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--text", required=True, help="what the run did and what is next")
@@ -96,6 +104,8 @@ def main(argv=None):
         return 0
     status = next(i for i in pages(f"issues?state=open&labels={STATUS}") if "pull_request" not in i)
     print(api(f"issues/{status['number']}/comments", "POST", {"body": body})["html_url"])
+    fresh = api(f"issues/{status['number']}")["body"]          # other runs change the body too: read it just before
+    api(f"issues/{status['number']}", "PATCH", {"body": counted(fresh)})
     return 0
 
 

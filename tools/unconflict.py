@@ -6,6 +6,7 @@ Run it after a failed `git merge` with `merge.conflictStyle diff3` (the workflow
 each conflicted file when all its hunks have an empty base, checks the result (Python compiles, JSON lines parse) and
 `git add`s it. Exit 0: all conflicts are solved, commit the merge. Exit 1: a real conflict stays (it names it).
 A table of keyed one-line entries ("KEY": ...) stays in alphabetical order (CLAUDE.md, "Code style").
+A hunk in which both sides add a `def` or `class` of the same name stays a conflict: the second one hides the first (#2631).
 """
 import json
 import re
@@ -13,6 +14,7 @@ import subprocess
 import sys
 
 KEYED = re.compile(r'^\s+"([^"]+)":')     # one entry of a table keyed by a name
+DEF = re.compile(r'^\s*(?:async\s+def|def|class)\s+(\w+)')   # a function or a class (#2631)
 
 
 def merge(ours, theirs):
@@ -51,6 +53,9 @@ def solve(text):
             return None, "no base section: set merge.conflictStyle diff3"
         if base:
             return None, "both sides change the same lines"
+        same = {m.group(1) for m in map(DEF.match, ours) if m} & {m.group(1) for m in map(DEF.match, theirs) if m}
+        if same:
+            return None, f"both sides define {', '.join(sorted(same))}"
         both = merge(ours, theirs)
         if both is None:
             return None, "both sides add the same key"

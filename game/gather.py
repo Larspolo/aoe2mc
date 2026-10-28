@@ -75,6 +75,7 @@ import regen  # noqa: E402
 import regicide  # noqa: E402
 import relic_victory  # noqa: E402
 import repair  # noqa: E402
+import scenario  # noqa: E402
 import score  # noqa: E402
 import siege_tower  # noqa: E402
 import sudden_death  # noqa: E402
@@ -898,7 +899,7 @@ class Gather:
             trebuchet.unpack(self, u, target)
         fleet.attack(self, {u for u in self.selected if replay.ship(self.soldiers.get(u, ""))}, target)   # (#1386)
         for u in sorted(self.selected - monks - trebs):
-            self.command(ai.speed_command(u, self.soldiers[u], self.map.T, NORMAL * train.speed(self, self.soldiers[u])))
+            self.command(ai.speed_command(u, self.soldiers[u], self.map.T, NORMAL * train.speed(self, self.soldiers[u], u)))
         if not monks and not trebs:
             return self.command(f"aoe attack @e[tag={SELECT}] {target}")
         return [self.command(f"aoe attack {u} {target}") for u in sorted(self.selected - monks - trebs)]
@@ -1368,7 +1369,7 @@ class Gather:
                 self.go(v, "to_rally", {(x, z)})
             else:
                 unit = self.soldiers.get(u) or self.prey[u]            # an own herdable walks too (#1791)
-                ai.move(self, u, unit, self.map.T, x + 0.5, self.map.y(x, z), z + 0.5, NORMAL * train.speed(self, unit))
+                ai.move(self, u, unit, self.map.T, x + 0.5, self.map.y(x, z), z + 0.5, NORMAL * train.speed(self, unit, u))
         if out and name:
             self.mark(name, {cell})
         return out
@@ -1504,6 +1505,8 @@ class Gather:
             spoils.loot(self, uuid)                                    # Danes (#2271)
             score.razed(self, uuid)                                    # the military score (#2355)
             x0, y0, z0, x1, _, z1 = self.forts.pop(uuid)
+            if self.paper:                                             # its square leaves the minimap (#2582)
+                self.command(f"aoe minimap unbuild {x0} {z0}")
             for o in build.sides(self):                                # the other sides attack it no more (#1819)
                 o.forts.pop(uuid, None)
             for x in range(x0, x1 + 1):
@@ -1600,6 +1603,7 @@ class Gather:
         monk.relic_tick(self, self.tick * NORMAL)
         trade.tick(self)
         trade.heal(self, self.tick * NORMAL)
+        train.haste(self, self.tick * NORMAL)
         bossbar.tick(self)
         for site in self.sites:
             builders = [v for v in [*self.villagers.values(), *self.ships.values()] if v.state == "build" and v.site is site]
@@ -1634,14 +1638,19 @@ class Gather:
 
     def aura_rate(self, v, kind):
         """The factor of the work rate of v for resource kind: the "rate" of civs.AURA within its "range" (tiles from the
-        footprint) of an own complete aura building that is still a drop site of kind (AoE2 wiki "Thracians"), else 1."""
+        footprint) of an own complete aura building that is still a drop site of kind (AoE2 wiki "Thracians"), else 1;
+        times the best "aura" of an upgraded own building near v (train.ONE_BUILDING: Economic Town Center, #2484)."""
         a, m = self.map.aura, self.map
+        x, z = v.pos[0], v.pos[2]
+        best = max([1] + [aura.get("rate", 1) for rect, name in getattr(self, "upgraded", {}).items()
+                          if (aura := train.ONE_BUILDING.get(name)) and rect in train.homes(self)
+                          and max(rect[0] - x, x - rect[1], rect[2] - z, z - rect[3]) <= aura["range"] * m.T])
         if kind not in a.get("resources", ()):
-            return 1
-        x, z, near = v.pos[0], v.pos[2], a["range"] * m.T
-        return a["rate"] if any(max(min(c[0] for c in cs) - x, x - max(c[0] for c in cs) - 1,
-                                    min(c[1] for c in cs) - z, z - max(c[1] for c in cs) - 1) <= near
-                                for cs in m.auras if cs in m.drops[kind]) else 1
+            return best
+        near = a["range"] * m.T
+        return best * a["rate"] if any(max(min(c[0] for c in cs) - x, x - max(c[0] for c in cs) - 1,
+                                           min(c[1] for c in cs) - z, z - max(c[1] for c in cs) - 1) <= near
+                                       for cs in m.auras if cs in m.drops[kind]) else best
 
     def move(self, v):
         import ai                                                      # ai imports gather
@@ -1890,6 +1899,9 @@ class Gather:
                 capture_relic.tick(self)
             elif self.mode == "defend-the-wonder":                     # the attackers win when the Wonder falls (#2441)
                 defend_wonder.tick(self)
+            elif self.mode == "scenario":                              # the book (#2541), a trigger "Declare Victory" (#2542)
+                scenario.victory(self)
+                scenario.tick(self)
             fog.tick(self)                                             # after the bots: their units too (#1389)
             herd.tick(self)                                            # all players: the bots capture too (#1792)
             if self.victory == "standard" or self.mode in wonder.RACE:  # a wonder or all relics win too (#2316)
