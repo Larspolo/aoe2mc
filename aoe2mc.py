@@ -35,6 +35,8 @@ The world is saved with Minecraft data version 26.3. Newer Minecraft versions up
 """
 import argparse
 import contextlib
+import functools
+import hashlib
 import io
 import json
 import math
@@ -4481,6 +4483,9 @@ def skin_texture(model, tone):
 # leather takes the color of its item, as vanilla leather does), the overlay has the accent and crest colors.
 ARMOR_BOXES = {"head": [(0, 0, 8, 8, 8)], "chest": [(16, 16, 8, 12, 4), (40, 16, 4, 12, 4)], "feet": [(0, 16, 4, 12, 4)],
                "legs": [(16, 16, 8, 12, 4), (0, 16, 4, 12, 4)]}
+# the horse armor (#2743, layer "horse_body", 64 x 64): the boxes (u, v, w, h, d) of the body, neck and head of the
+# horse model; the legs and the tail stay bare
+HORSE_BOXES = [(0, 32, 10, 10, 22), (0, 35, 4, 12, 7), (0, 13, 6, 5, 7)]
 METAL = {"chainmail": (150, 152, 158), "diamond": (96, 214, 206), "golden": (232, 192, 64), "iron": (206, 206, 212),
          "leather": (160, 101, 64), "netherite": (74, 66, 70), "dyed": (236, 236, 236)}
 
@@ -4494,26 +4499,31 @@ def armor_shade(pattern, x, y):
             "plate": 1.12 if x % 8 in (3, 4) else 0.8 if y % 6 == 5 else 1.0}[pattern]
 
 
-def armor_textures(name):
-    """The textures (base, overlay) of layer "humanoid" and "humanoid_leggings" of a unit with a look (#2742): each
-    box gets the material of its armor piece in the pattern of the look; a helmet leaves the face open but the brow
-    (a plate helmet with a crest closes it to an eye slit), boots cover the lower leg, leggings the waist and the legs."""
+def armor_textures(name, hero=False):
+    """The textures (base, overlay) of the layers "humanoid", "humanoid_leggings" and (a mount with horse armor)
+    "horse_body" of a unit with armor (#2742, #2743): its look (units.look) and the material of each piece."""
+    look, gear = units.look(name, hero), units.pieces(units.describe(name, hero))
+    mats = tuple((slot, "dyed" if "minecraft:dyed_color" in p.get("components", {}) else str(p["id"]).split(":")[1].split("_")[0])
+                 for slot, p in sorted(gear.items()))
+    return armor_images(look["pattern"], look["accent"], look.get("crest"), mats)
+
+
+@functools.lru_cache(maxsize=None)
+def armor_images(pattern, accent, crest, mats):
+    """The textures of armor_textures from the look and the materials ((slot, material), ...): each box gets the
+    material of its armor piece in the pattern of the look; a helmet leaves the face open but the brow (a plate helmet
+    with a crest closes it to an eye slit), boots cover the lower leg, leggings the waist and the legs. The horse armor
+    covers the head, neck and body of the horse, with a hem in the accent color (HORSE_BOXES, #2743)."""
     from PIL import Image
-    look = units.LOOKS[name]
-    desc = units.classify(name)
-    while "equipment" not in desc:                                  # a mounted unit: the rider
-        desc = desc["Passengers"][0]
-    gear, pattern = desc["equipment"], look["pattern"]
-    accent, crest = (tuple(int(c[i:i + 2], 16) for i in (1, 3, 5)) if c else None for c in (look["accent"], look.get("crest")))
+    gear = dict(mats)
+    accent, crest = (tuple(int(c[i:i + 2], 16) for i in (1, 3, 5)) if c else None for c in (accent, crest))
     out = {}
     for layer, slots in (("humanoid", ("head", "chest", "feet")), ("humanoid_leggings", ("legs",))):
         base, over = (Image.new("RGBA", (64, 32), (0, 0, 0, 0)) for _ in range(2))
         for slot in slots:
-            piece = gear.get(slot)
-            if piece is None:
+            if slot not in gear:
                 continue
-            mat = str(piece["id"]).split(":")[1].split("_")[0]
-            color = METAL["dyed" if "minecraft:dyed_color" in piece.get("components", {}) else mat]
+            color = METAL[gear[slot]]
             for u, v, w, h, d in ARMOR_BOXES[slot]:
                 for x in range(u, u + 2 * d + 2 * w):
                     for y in range(v, v + d + h):
@@ -4536,6 +4546,18 @@ def armor_textures(name):
                         if crest and slot == "head" and (not side and x - u - d in (3, 4) or side and mid and r < 3):
                             over.putpixel((x, y), crest + (255,))       # the crest from the brow over the top
         out[layer] = base, over
+    if "body" in gear:                                              # the horse armor (#2743)
+        base, over = (Image.new("RGBA", (64, 64), (0, 0, 0, 0)) for _ in range(2))
+        for i, (u, v, w, h, d) in enumerate(HORSE_BOXES):
+            for x in range(u, u + 2 * d + 2 * w):
+                for y in range(v, v + d + h):
+                    side = y >= v + d
+                    if not side and not (u + d <= x < u + d + 2 * w):
+                        continue
+                    base.putpixel((x, y), tuple(min(255, int(c * armor_shade(pattern, x, y))) for c in METAL[gear["body"]]) + (255,))
+                    if i == 0 and side and y >= v + d + h - 2:
+                        over.putpixel((x, y), accent + (255,))          # the hem of the body
+        out["horse_body"] = base, over
     return out
 
 
@@ -4600,8 +4622,8 @@ def write_resourcepack(out):
     """--resource-pack (#2738): resourcepacks/resources.zip in the world folder, which single player loads with the
     world (26.x: LevelResource.MAP_RESOURCE_FILE; a world of an older version had resources.zip at its top, and the
     client moves it there, ResourcePackLocationFileFix). The zombie, skeleton and drowned units get a human face, the
-    skeleton horses a brown coat (#2752), the War Wagon its cart (cart_model, #2746), and each unit of units.LOOKS its
-    own armor (#2742). Same bytes for each conversion: sorted names, a fixed time."""
+    skeleton horses a brown coat (#2752), the War Wagon its cart (cart_model, #2746), and each unit with armor its own
+    armor (#2742, units.dressed, #2743). Same bytes for each conversion: sorted names, a fixed time."""
     import io
     import zipfile
     files = {"pack.mcmeta": json.dumps({"pack": {
@@ -4616,15 +4638,21 @@ def write_resourcepack(out):
         buf = io.BytesIO()
         skin_texture(model, tone).save(buf, "PNG")
         files["assets/minecraft/textures/" + path] = buf.getvalue()
-    for name in units.LOOKS:                                        # the armor of each unit with a look (#2742)
-        n = name.lower()
-        layers = {}
-        for layer, images in armor_textures(name).items():
-            layers[layer] = [{"texture": f"aoe2mc:{n}", "dyeable": {"color_when_undyed": 0xFFFFFF}}, {"texture": f"aoe2mc:{n}_overlay"}]
-            for im, end in zip(images, ("", "_overlay")):
+    for name, hero in units.dressed().items():                      # the armor of each unit (#2742, #2743)
+        if units.asset(name) != name:                                  # ELITE_X wears the asset of X
+            continue
+        n, layers = name.lower(), {}
+        for layer, images in armor_textures(name, hero).items():
+            pngs = []
+            for im in images:
                 buf = io.BytesIO()
                 im.save(buf, "PNG")
-                files[f"assets/aoe2mc/textures/entity/equipment/{layer}/{n}{end}.png"] = buf.getvalue()
+                pngs.append(buf.getvalue())
+            # a unit with no line in data/looks.jsonl shares the textures of the same look and materials
+            tex = n if name in units.LOOKS else "look_" + hashlib.sha1(b"".join(pngs)).hexdigest()[:12]
+            layers[layer] = [{"texture": f"aoe2mc:{tex}", "dyeable": {"color_when_undyed": 0xFFFFFF}}, {"texture": f"aoe2mc:{tex}_overlay"}]
+            for png, end in zip(pngs, ("", "_overlay")):
+                files[f"assets/aoe2mc/textures/entity/equipment/{layer}/{tex}{end}.png"] = png
         files[f"assets/aoe2mc/equipment/{n}.json"] = json.dumps({"layers": layers}, indent=1).encode()
     for w in sorted({w for _, w in units.WEAPONS}):                 # the AoE2 weapons (#2744)
         buf = io.BytesIO()

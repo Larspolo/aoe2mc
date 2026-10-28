@@ -15,6 +15,14 @@ def empty_stdin(monkeypatch):
     monkeypatch.setattr(sys, "stdin", io.StringIO())
 
 
+@pytest.fixture(autouse=True)
+def no_pack_assets(monkeypatch):
+    """units.ASSETS is off in each test and after it: run.Game on a world with the pack turns it on, and the
+    equipment assets of the next tests made their summon commands longer (#2743)."""
+    import units
+    monkeypatch.setattr(units, "ASSETS", False)
+
+
 def pytest_terminal_summary(terminalreporter, exitstatus, config):
     """The result line also with -qq: addopts has -q, so `pytest -q` printed no "N passed" line, and runs ran the full
     suite again to find the result (#1243, #2510)."""

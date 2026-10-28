@@ -1122,7 +1122,7 @@ def summon(g, name, pos, rotation=math.pi / 2, player=None):
     kind = str(nbt.pop("id"))
     del nbt["Pos"]
     uuid = units.uuid_str(nbt["UUID"])
-    g.command(f"summon {kind} {pos[0]} {pos[1]} {pos[2]} {nbt.snbt()}")
+    g.command(f"summon {kind} {pos[0]} {pos[1]} {pos[2]} {units.summon_snbt(nbt)}")
     import combat, gather                                          # both import gather, gather imports this module
     g.command(combat.stats_command(uuid, name, stats(g, name), civs.taken(g, name), civs.friendly(g, name)))
     import spoils                                                  # spoils imports this module

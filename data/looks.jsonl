@@ -72,3 +72,23 @@
 {"name": "SPEARMAN", "pattern": "quilted", "accent": "#8A6A44"}
 {"name": "PIKEMAN", "pattern": "mail", "accent": "#E8E0D0"}
 {"name": "HALBERDIER", "pattern": "mail", "accent": "#3B5E8E"}
+{"name": "ARCHER", "pattern": "quilted", "accent": "#6B4A2B"}
+{"name": "CROSSBOWMAN", "pattern": "mail", "accent": "#7A5A34"}
+{"name": "ARBALESTER", "pattern": "scale", "accent": "#3B5E8E"}
+{"name": "SKIRMISHER", "pattern": "quilted", "accent": "#5A6B3A"}
+{"name": "IMPERIAL_SKIRMISHER", "pattern": "mail", "accent": "#5A6B3A"}
+{"name": "CAVALRY_ARCHER", "pattern": "quilted", "accent": "#8A6A44"}
+{"name": "HEAVY_CAVALRY_ARCHER", "pattern": "scale", "accent": "#8A6A44"}
+{"name": "SCOUT_CAVALRY", "pattern": "quilted", "accent": "#8A2A2A"}
+{"name": "LIGHT_CAVALRY", "pattern": "mail", "accent": "#8A2A2A"}
+{"name": "HUSSAR", "pattern": "scale", "accent": "#B03030", "crest": "#E8E0D0"}
+{"name": "WINGED_HUSSAR", "pattern": "plate", "accent": "#B03030", "crest": "#E8E0D0"}
+{"name": "KNIGHT", "pattern": "mail", "accent": "#2E4A8A"}
+{"name": "CAVALIER", "pattern": "plate", "accent": "#2E4A8A"}
+{"name": "PALADIN", "pattern": "plate", "accent": "#C8A040", "crest": "#C8A040"}
+{"name": "CAMEL_RIDER", "pattern": "cloth", "accent": "#C8B080"}
+{"name": "HEAVY_CAMEL_RIDER", "pattern": "mail", "accent": "#C8B080"}
+{"name": "IMPERIAL_CAMEL_RIDER", "pattern": "scale", "accent": "#C8A040"}
+{"name": "CATAPHRACT", "pattern": "scale", "accent": "#6A2A8A", "crest": "#C8A040"}
+{"name": "LONGBOWMAN", "pattern": "cloth", "accent": "#3A6B3A"}
+{"name": "STEPPE_LANCER", "pattern": "scale", "accent": "#8A6A44"}

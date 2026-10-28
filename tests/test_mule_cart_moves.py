@@ -21,7 +21,7 @@ def test_a_complete_mule_cart_is_a_mule_with_a_chest():
     server, g, cells = done()
     site, u = cart(g)
     summon = next(c for c in server.log if c.startswith("summon minecraft:mule "))
-    assert "ChestedHorse: 1b" in summon and g.soldiers[u] == "MULE_CART" and u not in g.villagers
+    assert "ChestedHorse:1b" in summon and g.soldiers[u] == "MULE_CART" and u not in g.villagers
     assert units.classify("MULE_CART")["id"] == "minecraft:mule"
     x0, x1, z0, z1 = site["footprint"]
     assert f"fill {x0} 64 {z0} {x1 - 1} " in "\n".join(server.log)     # the blocks of the cart design go
