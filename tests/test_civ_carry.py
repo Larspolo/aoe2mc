@@ -40,7 +40,7 @@ def test_a_goth_hunter_stops_with_25_food_and_a_shepherd_with_10():
         assert v.state != "chop" and v.load == load, herd
 
 
-def test_the_hunt_lasts_as_long_as_for_other_civilizations():
-    """The second part of the Goth bonus ("hunt lasts 20% longer") is a gap of #1088."""
-    assert gathered("GOTHS", carcass=(100, False)) == gathered("FRANKS", carcass=(100, False)) == 100
+def test_other_civilizations_hunt_as_in_aoe2():
+    """The second part of the Goth bonus ("hunt lasts 20% longer"): tests/test_goth_hunt.py (#2375)."""
+    assert gathered("FRANKS", carcass=(100, False)) == 100
     assert civs.carry(setup("FRANKS"), "hunt") == 0
