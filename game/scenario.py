@@ -21,6 +21,9 @@ commands of the alliances and neutral stances (gather.allies_command, gather.neu
 The conditions "Researching Technology" and "Technology State" (#2769) test the score #p<N>.<technology> of
 aoe_techstate: tech_states() sets it to the AoE2 TechnologyState from the queues and g.techs of player N.
 
+The condition "Object Has Action" (#2867) tests the score #r<ref> of aoe_action: actions() sets it to the AoE2
+UnitAIAction of the order of the villager (ACTIONS).
+
 The condition "Difficulty Level" (#2704) tests the score #level of aoe_difficulty: setup() sets it to the AoE2 value
 ("aoe2" of game/data/difficulty.jsonl) of the setting "AI difficulty" (run.py --ai-difficulty).
 
@@ -114,6 +117,7 @@ def tick(g):
     research(g)
     garrisons(g)
     tech_states(g)
+    actions(g)
     if g.clock() < vars(g).get("book_at", 0.0):
         return
     g.book_at = g.clock() + EVERY
@@ -419,6 +423,43 @@ def tech_states(g):
         if n in sides and name in train.TECHS and sent.get((n, name)) != (v := tech_state(sides[n], name)):
             g.command(f"scoreboard players set #p{n}.{name} aoe_techstate {v}")
             sent[(n, name)] = v
+
+
+# The state of a villager (gather.Villager) -> the AoE2 UnitAIAction of "Object Has Action" (#2867), one per line in
+# alphabetical order. aoe2mc.OBJECT_ACTIONS lists the same values: the converter writes only these conditions.
+ACTIONS = {
+    "build": 3,                                                        # BUILD
+    "chop": 10,                                                        # GATHER: wood, food, gold, stone, a farm
+    "garrison": 18,                                                    # ENTER
+    "hunt": 14,                                                        # HUNT
+    "idle": 24,                                                        # IDLE
+    "repair": 19,                                                      # REPAIR
+    "to_drop": 10,                                                     # GATHER: the walk to the drop site
+    "to_prey": 14,                                                     # HUNT
+    "to_rally": 11,                                                    # MOVE
+    "to_repair": 19,                                                   # REPAIR
+    "to_site": 3,                                                      # BUILD
+    "to_tree": 10,                                                     # GATHER
+}
+
+
+def actions(g):
+    """Once per game second: the score #r<ref> of aoe_action of each unit of aoe2mc.json "actions" (the condition
+    "Object Has Action", #2867) is the AoE2 UnitAIAction of its villager state (ACTIONS); 0 for another unit, a dead
+    one or an unknown state. One command per change."""
+    if g.clock() < vars(g).get("action_at", 0.0):
+        return
+    g.action_at = g.clock() + 1.0
+    refs = g.data.get("actions", ())
+    if not refs:
+        return
+    uuids = {o["ref"]: o["uuid"] for o in g.data["objects"] if o.get("ref") in refs and "uuid" in o}
+    states = {u: v.state for x in [g, *(s.g for s in g.bots)] for u, v in x.villagers.items()}
+    sent = vars(g).setdefault("action_sent", {})
+    for ref in refs:
+        if sent.get(ref) != (v := ACTIONS.get(states.get(uuids.get(ref)), 0)):
+            g.command(f"scoreboard players set #r{ref} aoe_action {v}")
+            sent[ref] = v
 
 
 def tech_state(x, name):
