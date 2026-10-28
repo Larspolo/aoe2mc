@@ -459,6 +459,9 @@ def read_scenario(path):
                                             **({"quantity": e.quantity, "variable": e.variable,   # (#2611)
                                                 "operation": e.operation}
                                                if e.effect_type == CHANGE_VARIABLE else {}),
+                                            **({"variable": e.variable, "variable2": e.variable2,   # (#2713)
+                                                "operation": e.operation}
+                                               if e.effect_type == MODIFY_VARIABLE_BY_VARIABLE else {}),
                                             **({"target": e.target_player}                # "Change Ownership" (#2570)
                                                if e.effect_type == CHANGE_OWNERSHIP else {}),
                                             **({"color": e.player_color}                 # (#2712)
@@ -2824,6 +2827,7 @@ HEAL_OBJECT = 34                                                   # "Heal Objec
 IN_AREA = 5
 KILL_OBJECT = 14
 MODIFY_RESOURCE = 52                                               # "Modify Resource" (#2576)
+MODIFY_VARIABLE_BY_VARIABLE = 100                                  # "Modify Variable by Variable" (#2713)
 OBJECT_HP = 23                                                     # "Object HP", the hit points of one object (#2701)
 OR = 29
 OWN_FEWER_OBJECTS = 4                                              # conditions on the units of a player (#2573)
@@ -3169,6 +3173,17 @@ def variable_lines(e, c):
     return [f"scoreboard players set #c{q} aoe_var {q}", f"scoreboard players operation {v} {'*/'[op - 4]}= #c{q} aoe_var"]
 
 
+def variable_by_variable_lines(e, c):
+    """The command of "Modify Variable by Variable" (#2713): variable (operation)= variable2, both scores of aoe_var.
+    A division by 0 leaves the score as it is in Minecraft."""
+    a, b, op = e.get("variable", -1), e.get("variable2", -1), e.get("operation")
+    if a < 0 or b < 0 or op not in (1, 2, 3, 4, 5):
+        c.stats["modify variable by variable (not supported)"] += 1
+        return []
+    c.stats["modify variable by variable"] += 1
+    return [f"scoreboard players operation #v{a} aoe_var {('', '+', '-', '*', '/')[op - 1]}= #v{b} aoe_var"]
+
+
 def variable_range(c):
     """The `matches` range of the comparison of a "Variable Value" condition (#2611): Equal, Less, Larger,
     Less or Equal, Larger or Equal."""
@@ -3469,6 +3484,7 @@ EFFECTS = {
     HEAL_OBJECT: heal_lines,
     KILL_OBJECT: object_lines,
     MODIFY_RESOURCE: resource_lines,
+    MODIFY_VARIABLE_BY_VARIABLE: variable_by_variable_lines,
     PATROL: order_lines,
     PLAY_SOUND: sound_lines,
     REMOVE_OBJECT: object_lines,
@@ -3658,8 +3674,9 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
         run = f"schedule function {fn} {ticks}t replace"
         files[f"data/aoe2mc/function/trigger/{n}.mcfunction"] = "\n".join(lines + [run] * t["looping"]) + "\n"
         load += [run] * t["enabled"]
-    names = sorted({f"#v{x['variable']}" for t in triggers for x in t["conditions"] + t["effects"]
-                    if x["type"] in (VARIABLE_VALUE, CHANGE_VARIABLE) and x.get("variable", -1) >= 0})
+    names = sorted({f"#v{x[k]}" for t in triggers for x in t["conditions"] + t["effects"]
+                    for k in ("variable", "variable2")   # "Modify Variable by Variable" has two (#2713)
+                    if x["type"] in (VARIABLE_VALUE, CHANGE_VARIABLE, MODIFY_VARIABLE_BY_VARIABLE) and x.get(k, -1) >= 0})
     if names:
         load[:0] = ["scoreboard objectives add aoe_var dummy"] + \
             [f"scoreboard players add {v} aoe_var 0" for v in names]   # AoE2 variables start at 0
