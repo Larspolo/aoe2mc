@@ -133,6 +133,7 @@ SETTINGS = (                                                           # run.py 
     "teams",
     "treaty",
     "unlock_speed",
+    "unlock_teams",
     "victory",
     "victory_value",
 )
@@ -250,6 +251,8 @@ def dump(g):
         d["settings"] = dict(g.game.settings)
     if getattr(g.game, "treaty", 0):                                   # treaty.start: the time goes on (#2409)
         d["treaty_time"] = g.game.treaty_time
+    if g.data.get("unlock_teams"):                                     # the stances of the Diplomacy page (#2934)
+        d["stances"] = {n: {k: p[k] for k in ("team", "neutral") if k in p} for n, p in sorted(g.players.items())}
     return d
 
 
@@ -396,6 +399,14 @@ def load(g, d):
     for b in bots(g):                                                  # its attack time and wave go on (#2325)
         for f, v in d["players"].get(str(b.g.player), {}).get("bot", {}).items():
             setattr(b, f, v)
+    for n, row in d.get("stances", {}).items():                        # diplomacy.change (#2934)
+        p = g.players.setdefault(n, {})
+        p.pop("team", None)
+        p.pop("neutral", None)
+        p.update(row)
+    if "stances" in d:
+        g.command(gather.allies_command(g.players))
+        g.command(gather.neutral_command(g.players))
 
 
 def settings(a, d, given=()):
