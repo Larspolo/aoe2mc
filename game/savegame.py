@@ -42,6 +42,15 @@ MAP = (                                                                # gather.
     "traps",
     "trees",
 )
+VICTORY = (                                                            # the victory modes (#2476), pack()
+    "conquest_seen",
+    "corruption_at",
+    "corruption_time",
+    "defeated",
+    "hill",
+    "monument",
+    "towns",
+)
 SCORE = (                                                              # Gather: the counts of score.py (#2475)
     "fallen",                                                          # spoils.py: the units that gave their spoils
     "given",                                                           # train.py: the free units and technologies
@@ -57,6 +66,7 @@ KEPT = (                                                               # the fie
     *RIDERS,
     *ROUTES,
     *SCORE,
+    *VICTORY,
 )
 JOB = ("state", "load", "res", "job", "lap", "prey")                  # fields of a gather.Villager, as they are
 BOT = ("time", "charged", "attack")                                    # fields of a bot.Bot, as they are (#2325)

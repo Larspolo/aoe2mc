@@ -54,10 +54,18 @@ def place(g):
         "MONUMENT", 0, (x0 + x1) / 2 / T, (z0 + z1) / 2 / T)
     for c in cmds:
         g.command(c)
+    mark(g, (x0, x1, z0, z1))
+    return cmds
+
+
+def mark(g, rect):
+    """Block the footprint rect (x0, x1, z0, z1) of the drawn monument and put it in aoe2mc.json. g.monument keeps it:
+    a loaded game has the monument in its world, so tick() only marks it again (savegame.VICTORY, #2476)."""
+    (x0, x1, z0, z1), T = rect, g.map.T
+    g.monument = tuple(rect)
     g.map.blocked |= {(x, z) for x in range(x0, x1) for z in range(z0, z1)}
     g.data["objects"].append({"kind": "building", "name": "MONUMENT", "player": 0,   # center() finds it; no footprint:
                               "tile": [(x0 + x1) / 2 / T, (z0 + z1) / 2 / T]})     # no target (combat.BUILDINGS)
-    return cmds
 
 
 def trickle(g, n, dt):
@@ -100,6 +108,8 @@ def tick(g, dt):
         return
     if "hill" not in vars(g):
         place(g)
+    elif "monument" in vars(g) and not any(o["name"] == "MONUMENT" for o in g.data["objects"]):
+        mark(g, g.monument)                                        # a loaded game (#2476)
     s = vars(g).setdefault("hill", {"owner": None, "left": YEARS * wonder.YEAR, "shown": None, "check": 0.0})
     if s["owner"] is not None:
         s["left"] -= dt
