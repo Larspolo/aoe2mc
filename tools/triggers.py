@@ -107,6 +107,7 @@ MAP = {
     ("effect", "CHANGE_TECHNOLOGY_COST"): "the cost of the technology in the storage `aoe2mc:costs`: the scenario mode of the game program uses it in the menus and when the player pays (#2819)",
     ("effect", "CHANGE_TECHNOLOGY_NAME"): "`data modify storage aoe2mc:names list append value \"<player> <technology> <name>\"`: the scenario mode of the game program shows the name in the menus of the player (#2821); a name of the game files only (`string_id`): not supported",
     ("effect", "MODIFY_ATTRIBUTE"): "the change in the storage `aoe2mc:attributes`: the scenario mode of the game program changes the hit points, attack, melee and pierce armor, range or reload of the unit type of the player (`train.stats`, #2763); the other attributes are not supported",
+    ("effect", "MODIFY_ATTRIBUTE_BY_VARIABLE"): "the score `#vN aoe_var` goes with `execute store result storage` and a macro function into the line of the storage `aoe2mc:attributes`; the scenario mode of the game program changes the values as for Modify Attribute (#2856)",
     ("effect", "ENABLE_DISABLE_OBJECT"): "the item in the storage `aoe2mc:menus`: the scenario mode of the game program shows or hides it in the menus of the player (#2775)",
     ("effect", "ENABLE_DISABLE_TECHNOLOGY"): "the technology in the storage `aoe2mc:menus`: the scenario mode of the game program shows or hides it in the menus of the player (#2775)",
     ("effect", "RESEARCH_TECHNOLOGY"): "`scoreboard players set #rN.I aoe_tech 1`: the scenario mode of the game program gives the technology (#2577)",
