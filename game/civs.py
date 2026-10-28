@@ -64,6 +64,7 @@ RULES = {
     "spearmen, skirmishers": lambda n, s: "spearman" in s.classes or tagged(n, "skirmishers"),
     "units": lambda n, s: True,
     "villagers": lambda n, s: n.startswith("VILLAGER"),
+    "warships": lambda n, s: "ship" in s.classes and not tagged(n, "fishing ships"),   # not the transport and trade ships
 }
 TAGS = {r["name"]: tuple(r["groups"]) for r in table.load("units.jsonl") if "groups" in r}
 GROUPS = {g: (lambda f, g: lambda n, s: g in TAGS.get(n, ()) or f(n, s))(RULES.get(g, lambda n, s: False), g)
