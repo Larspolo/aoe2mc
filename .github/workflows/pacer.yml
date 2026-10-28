@@ -27,9 +27,15 @@ jobs:
       - name: Read the switch in agent.toml
         id: mode
         run: python3 -c "import tomllib; print('on=' + str(tomllib.load(open('agent.toml', 'rb'))['pacing'].get('pacer') == 'workflow').lower())" >> "$GITHUB_OUTPUT"
-      - name: Install the Claude Code CLI (the quota read, `usage.read_usage`)
+      - uses: actions/setup-python@v5  # pip for numpy: the system Python of the runner refuses it (#2631)
         if: steps.mode.outputs.on == 'true'
-        run: npm install -g @anthropic-ai/claude-code
+        with:
+          python-version: "3.12"
+      - name: Install the Claude Code CLI (the quota read, `usage.read_usage`) and numpy (`tools/health.py`)
+        if: steps.mode.outputs.on == 'true'
+        run: |
+          npm install -g @anthropic-ai/claude-code
+          python3 -m pip install -q numpy
       - name: Start the runs
         if: steps.mode.outputs.on == 'true'
         env:
