@@ -52,7 +52,7 @@ MAP = {
     ("effect", "FREEZE_OBJECT"): "`data merge entity @e[...] {NoAI:1b}`",
     ("effect", "CHANGE_VIEW"): "`tp @a x y z` (the player is the camera)",
     ("effect", "PLAY_SOUND"): "`playsound` with the nearest vanilla sound",
-    ("effect", "DISPLAY_TIMER"): "`bossbar` with the time left",
+    ("effect", "DISPLAY_TIMER"): "`bossbar` aoe2mc:timerN and a `schedule function` each second with the time left (timer and area triggers: #2572)",
     ("effect", "ACTIVATE_TRIGGER"): "`scoreboard players set <trigger> aoe_trig 1`",
     ("effect", "DEACTIVATE_TRIGGER"): "`scoreboard players set <trigger> aoe_trig 0`",
     ("effect", "CHANGE_VARIABLE"): "`scoreboard players set`, `add` or `remove` on `<variable> aoe_var`",
