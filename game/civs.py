@@ -74,7 +74,9 @@ GROUPS = {g: (lambda f, g: lambda n, s: g in TAGS.get(n, ()) or f(n, s))(RULES.g
 # age]; what is a group of GROUPS (units), "buildings", "buildings but farms", "technologies", "ages", "BUILDING
 # technologies" (the technologies of the menu of that building, #1925) or a list of names; a float multiplies the cost
 # (0.0: free), an int adds to it; AoE2 rounds half up (35 × 0.75 = 26). "twice": the technologies whose effect it gets
-# twice (train.stats, #1561). "age_gifts": the resources that it gets at each new age (#1926).
+# twice (train.stats, #1561). "age_gifts": the resources that it gets at each new age (#1926). "cost_per": the cost
+# bonuses for each complete own building (#2177): [group of GROUPS, the buildings, the share less for each, the most
+# share less] (Saxons: foot soldiers cost 5 % less per town center or castle, at most 20 %).
 ROWS = table.load("civs.jsonl")
 
 
@@ -86,6 +88,7 @@ def tuples(x):
 UNIQUE = {r["name"]: r["unique"] for r in ROWS if "unique" in r}
 UNITS = {r["name"]: [tuples(b) for b in r["units"]] for r in ROWS if "units" in r}
 COSTS = {r["name"]: [tuples(b) for b in r["costs"]] for r in ROWS if "costs" in r}
+COST_PER = {r["name"]: [tuples(b) for b in r["cost_per"]] for r in ROWS if "cost_per" in r}
 TWICE = {r["name"]: tuples(r["twice"]) for r in ROWS if "twice" in r}
 MISSING = {t: tuple(sorted(r["name"] for r in ROWS if t in r["missing"]))
            for t in sorted({t for r in ROWS for t in r["missing"]})}
@@ -114,6 +117,8 @@ ECONOMY = tuple(sorted(r["name"] for r in TECH_ROWS if r.get("economy")))   # th
 # "repair_cost": the team bonus of the repair cost of buildings (Georgians). "repair_team": the team bonus of the
 # repair rate (Saxons). "work_rate": the train and research rate of a building in each age (Persians). "train_rate":
 # [group of GROUPS, factor, also the upgrades] (#1927). "hp": the hit points factor of a building (Persians).
+# "research_time": [technologies (a rule of has), factor of the research time] (#2172: Achaemenid stable technologies
+# 50 % faster, Jurchen siege and fortification technologies 100 % faster, the Gothic Loom at once).
 WORK = {r["name"]: r["work"] for r in ROWS if "work" in r}
 START = {r["name"]: r["start"] for r in ROWS if "start" in r}
 DROP = {r["name"]: r["drop"] for r in ROWS if "drop" in r}
@@ -132,6 +137,7 @@ HP = {r["name"]: r["hp"] for r in ROWS if "hp" in r}
 GARRISON = {r["name"]: r["garrison"] for r in ROWS if "garrison" in r}   # units inside a building (garrison.size, #2117)
 FARM_UPGRADES = {r["name"]: r["farm_upgrades"] for r in ROWS if "farm_upgrades" in r}   # the factor of the food of the
 #                                                                   farm upgrades (Sicilians: +125 %, train.research, #2230)
+RESEARCH_TIME = {r["name"]: [tuples(b) for b in r["research_time"]] for r in ROWS if "research_time" in r}
 # "extra": the second resource of a gather kind ("forage": a fruit bush), {kind: [resource, amount for each unit]}: Poles
 # and Puru stone miners, Portuguese foragers, Shu lumberjacks (#2113). Gather.second adds it at each gathered unit.
 EXTRA = {r["name"]: {k: tuple(v) for k, v in r["extra"].items()} for r in ROWS if "extra" in r}
@@ -206,6 +212,11 @@ def cost(g, name, base, player=None):
             for k in [r] if r else list(out):
                 if k in out:
                     out[k] = max(0, int(out[k] * c[age] + 0.5) if isinstance(c[age], float) else out[k] + c[age])
+    if player is None or player == g.player:                       # the own complete buildings (#2177)
+        import train                                               # train imports this module
+        for what, names, each, most in COST_PER.get(civ(g, player), []):
+            if has(what, name) and (n := sum(b in names for b in train.owned(g))):
+                out = {k: int(v * (1 - min(each * n, most)) + 0.5) for k, v in out.items()}
     return {k: v for k, v in out.items() if v}
 
 
@@ -237,6 +248,12 @@ def age_rate(g, name):
     age, else 1."""
     import build                                                   # build imports gather, gather imports this module
     return AGE_RATE.get(civ(g), 1) if name in build.AGE_TECHS else 1
+
+
+def research_time(g, name):
+    """The factor of the research time of technology name for the civilization of the player of g (RESEARCH_TIME),
+    else 1."""
+    return math.prod(f for what, f in RESEARCH_TIME.get(civ(g), ()) if has(what, name))
 
 
 def build_rate(g, name):
