@@ -1372,11 +1372,20 @@ class Replay:
         for i, due in list(self.working.items()):
             v = self.units[i]
             if i in self.arriving and due <= t:                     # Paper: the real unit can be late (#766)
-                if due - self.arriving[i] < LATE and not self.arrived(v):
-                    self.working[i] = due + WAIT
-                    continue
+                late = due - self.arriving[i] >= LATE
+                if not late and (at := self.entity(v)) and math.dist(at, v.pos[::2]) > NEAR:
+                    if v.stand is None or math.dist(at, v.stand[:2]) >= 0.5:
+                        v.stand = (*at, due)
+                    stuck = due - v.stand[2] >= STILL                   # it stands: the plugin dropped its walk (#2709)
+                    if not stuck or not v.again:
+                        self.working[i] = due + WAIT
+                        if stuck:                                       # one new walk order, then /tp
+                            v.again, v.stand = True, None
+                            out.append("aoe moveto {} {} {} {}".format(v.uuid, *v.pos))
+                        continue
+                    late = True
                 out.append(f"aoe stop {v.uuid}")                     # ends its walk order: no brain turns it (#867)
-                if due - self.arriving[i] >= LATE:
+                if late:
                     out.append("tp {} {} {} {}".format(v.uuid, *v.pos))
                 del self.arriving[i]
             src = self.crew.source(v)
@@ -1656,14 +1665,7 @@ class Replay:
         if self.crew.source(v).get(v.tree, 0) > 0:
             self.working[i] = t + 1000 / self.rate(v)
             if self.ai and not ship(v.name):                        # a boat sails with /tp steps: it is there
-                self.arriving[i] = t
-
-    def arrived(self, v):
-        """True when the entity of unit v is at most NEAR blocks from its replay position, or its position is unknown.
-        The plugin walks a unit on its Minecraft path, which is slower than the AoE2 speed on slopes and around trees:
-        the replay takes it at the end of its walk at the AoE2 time, so the first gather step waits for it (#766)."""
-        m = re.findall(self.gather.NUMBER, self.game.command(f"data get entity {v.uuid} Pos").rsplit(":", 1)[-1])
-        return len(m) != 3 or math.dist((float(m[0]), float(m[2])), (v.pos[0], v.pos[2])) <= NEAR
+                self.arriving[i], v.again, v.stand = t, False, None
 
     def rate(self, v):
         """The AoE2 work rate of unit v at its resource (per game second): a farm, a hunt and a fish have their own
