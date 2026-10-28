@@ -158,5 +158,7 @@ def tick(g):
             if n:
                 g.earn("gold", n)
         t["to"] = t["market"] if t["to"] == t["home"] else t["home"]
-        if (legs := walk(g, u, t["to"], pos[u])) is not None:
+        if (legs := walk(g, u, t["to"], pos[u])) is None:          # no free door at the next market: the route ends
+            del g.trade[u]
+        else:
             t["cell"], t["legs"] = legs[-1], legs
