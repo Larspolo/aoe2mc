@@ -523,6 +523,7 @@ class Gather:
     reveal = "normal"                                                  # AoE2 "Reveal map"; "all": no fog (fog.py, #1389)
     speed = 1.0                                                        # times the Normal speed: shorter real steps (#2057)
     later = {}                                                         # the bonus of the first town center (civs.TOWN_CENTER)
+    victory = "standard"                                               # AoE2 "Victory"; "conquest": no wonder, no relics (#2316)
 
     def __init__(self, game, data, player=1, tick=0.25, carry=10, chop=None, log=None, clock=time.monotonic,
                  cheats=False, start=None, resources="standard"):
@@ -1768,6 +1769,7 @@ class Gather:
             conquest.tick(self)                                        # not in step(): the bot steps its own Gather
             fog.tick(self)                                             # after the bots: their units too (#1389)
             herd.tick(self)                                            # all players: the bots capture too (#1792)
-            wonder.tick(self, self.tick * NORMAL)                      # game seconds, as train.tick
-            relic_victory.tick(self, self.tick * NORMAL)
+            if self.victory == "standard":                             # a wonder or all relics win too (#2316)
+                wonder.tick(self, self.tick * NORMAL)                  # game seconds, as train.tick
+                relic_victory.tick(self, self.tick * NORMAL)
             time.sleep(max(0.0, self.tick / self.speed - (time.time() - t)))   # a step stays tick game seconds
