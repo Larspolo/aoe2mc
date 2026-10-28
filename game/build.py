@@ -770,6 +770,8 @@ def upgrade(g, site, old, redraw=True):
     if redraw and site["name"] in GATES:                               # the redraw cleared the portcullis
         portcullis(g, site)
     uuid = combat.target_uuid([x0, z0, x1, z1])
+    if redraw:                                                         # the damage stages keep the new blocks (#3071)
+        g.command(f"aoe unwear {uuid}")
     box = combat.building_box({"footprint": [x0, z0, x1, z1]}, g.map.ground)
     for c in [c for c in combat.building(uuid, name, site["player"], box, T, s=new) if c.startswith("aoe building ")] \
             + [f"scoreboard players set {uuid} aoe_hp {min(new.hp, hp + new.hp - old.hp)}", combat.label_command(uuid, name)]:
