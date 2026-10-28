@@ -109,6 +109,7 @@ def tick(g):
             continue
         seen.add(n)
         lost.add(n)
+        conquest.scored(g, n)                                          # a "Player Defeated" trigger (#2710)
         if n == g.player:
             return cheats.end("Defeat", "red")(g, None)
         cheats.destroy(g, n)

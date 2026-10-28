@@ -54,6 +54,7 @@ new sub-issues, no `needs-human`. Still answer an owner comment on it (step 3).
    feature list of `docs/ROADMAP.md` with the `roadmap` skill (the goals take turns). Priority: that of the epic, else `P3`. Never `P0` or `P1`, except for
    a `tooling` ticket that blocks other tickets. Look for duplicates first, and list the open issues again just
    before you make the tickets: parallel runs make the same follow-ups at the same time (#300, #301).
+   Run that list in its own tool call and read it before the create calls: a list and the creates in one call made 7 copies (#2778).
    Read the gap lists from main, not from your branch (`git fetch origin main`, `git show
    origin/main:tests/data/civ_bonuses.jsonl`), and also list the issues closed in the last 2 hours: #2340 copied
    #2309, which merged while the branch was 20 minutes old, and #2306 copied the closed #2249.
