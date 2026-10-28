@@ -334,6 +334,18 @@ class Map:
         if name in self.aura.get("buildings", ()):
             self.auras.append(cells)
 
+    def unbuild(self, rect, y):
+        """Undo Map.building for a fallen own building with block footprint rect = (x0, x1, z0, z1): its cells are ground
+        again at height y (the bottom of its box), and no drop site, dock or aura is left there (#3009)."""
+        cells = {(x, z) for x in range(rect[0], rect[1]) for z in range(rect[2], rect[3])}
+        for r in self.drops:
+            self.drops[r] = [d for d in self.drops[r] if d != cells]
+        self.docks = [d for d in self.docks if d != cells]
+        self.auras = [d for d in self.auras if d != cells]
+        self.blocked -= cells
+        for x, z in cells:
+            self.ground[z][x] = y
+
     def cells(self, tile):
         T = self.T
         return {(x, z) for x in range(tile[0] * T, tile[0] * T + T) for z in range(tile[1] * T, tile[1] * T + T)}

@@ -56,7 +56,7 @@ def tick(g):
 def fall(g, rect):
     """The own building with block footprint rect fell: a complete site leaves g.sites, a start building goes into
     g.ruins, its queue goes with its cost back, and the units inside come out."""
-    import garrison, train                                         # they import gather, which imports this module
+    import build, combat, fleet, garrison, train                   # they import gather, which imports this module
     sites = [s for s in g.sites if s.get("done") and s["player"] == g.player and tuple(s["footprint"]) == rect]
     if sites:
         g.sites = [s for s in g.sites if all(s is not t for t in sites)]
@@ -68,3 +68,11 @@ def fall(g, rect):
             g.command(f"scoreboard players add {r.capitalize()} {g.board} {v}")
     if g.garrisons.get(rect):
         garrison.out(g, rect)
+    x0, x1, z0, z1 = rect
+    y = combat.building_box({"footprint": [x0, z0, x1, z1]}, g.map.ground)[1]
+    for m in {id(h.map): h.map for h in [g, *build.sides(g)]}.values():   # the ground and the drop sites of each side
+        m.unbuild(rect, y)
+    for v in g.villagers.values():                                 # a load goes to another drop site, or the villager stops
+        if v.state == "to_drop":
+            g.go(v, "to_drop", g.drop_goals(v))
+    fleet.reroute(g)
