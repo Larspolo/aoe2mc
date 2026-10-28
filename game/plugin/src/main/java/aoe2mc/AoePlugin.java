@@ -1715,15 +1715,23 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             var path = pf.getCurrentPath();
             if (path == null || path.getFinalPoint() == null
                     || path.getFinalPoint().distanceSquared(o.goal) > 1.5 * 1.5) {
+                double c = center(mob);
+                if (path != null && path.getFinalPoint() != null
+                        && path.getFinalPoint().clone().add(c, 0, c).distanceSquared(mob.getLocation()) <= 1.5 * 1.5) {
+                    // at the end of a part of the way: a new search from here. moveTo gives the old part again (a
+                    // not done path to the same target), so the order ended as "no path" 10 to 20 blocks before
+                    // a rally point that a new search reaches (de-64.3, #2303).
+                    pf.stopPathfinding();
+                }
                 boolean found = pf.moveTo(o.goal, o.speed);
                 Location end = pf.getCurrentPath() == null ? null : pf.getCurrentPath().getFinalPoint();
-                double c = center(mob);
                 // a part of a path that ends at the mob leads nowhere: a builder of a dock stood still with its order
                 // for a minute (#889). Drop such an order after 1 s.
                 boolean stays = found && end != null && end.clone().add(c, 0, c).distanceSquared(mob.getLocation()) <= 1.5 * 1.5;
                 if (found && !stays || (o.fails += stays ? 5 : 1) < 50) {
                     return false;
                 }
+                pf.stopPathfinding();                   // it stays here: the old part led it away (#2303)
                 if (mob instanceof Villager) {          // no path for 5 s: drop the order, and stop the brain (#811)
                     mob.setAI(false);
                 }
