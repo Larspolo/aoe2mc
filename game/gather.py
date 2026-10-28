@@ -104,6 +104,7 @@ PACE = {t['name']: t['pace'] for t in ROWS if 'pace' in t}
 WORK_TECHS = {t['name']: t['work'] for t in ROWS if 'work' in t}   # work rate factors (#1577)
 # Food of a hunted animal, as in AoE2 DE (a "COW_..." name is a cow, #1058).
 HUNT_FOOD = {t['name']: t['hunt'] for t in ROWS if 'hunt' in t}
+DECAY = {t['name']: t['decay'] for t in ROWS if 'decay' in t}   # food per game second that a carcass loses (#2310)
 # Food of a fish, as in AoE2 DE (the AoE2 wiki, "Fishing", #1283). Villagers reach the shore fish from the land.
 FISH_FOOD = {t['name']: t['fish'] for t in ROWS if 'fish' in t}
 SHORE_FISH = {t['name'] for t in ROWS if t.get('shore')}
@@ -190,6 +191,12 @@ def hunt_food(name):
     return HUNT_FOOD.get("COW" if name.startswith("COW_") else name, 0)
 
 
+def predator(name):
+    """True for a predator (an "aggressive" animal of data/animals.jsonl: wolves, big cats, bears): villagers can kill it,
+    and it has no food (#2310)."""
+    return (animal(name) or ("",))[0] == "aggressive"
+
+
 def herdable(name):
     """True for a herdable animal (HERDS): an own one takes move orders (#1791)."""
     return ("COW" if name.startswith("COW_") else name) in HERDS
@@ -218,6 +225,7 @@ class Map:
         self.farm_food, self.own_farms = FARM_FOOD, set()              # food of a new farm (FARM_TECHS), own farm tiles
         self.carcasses = {}                                            # tile -> food of the carcasses of hunts (#1058)
         self.herds = set()                                             # carcass tiles of herdable animals (HERDS)
+        self.rot = {}                                                  # carcass tile -> food per game second (DECAY)
         self.fish, self.shore = {}, set()                              # tile -> food of a fish (#1283), shore fish
         self.fish_mobs, self.docks = {}, []                            # tile -> mob of a fish; own dock cells (#1384)
         self.traps = {}                                                # own fish trap tile -> its cells (#1438)
@@ -548,7 +556,8 @@ class Gather:
         self.enemies = {o["uuid"]: o["name"] for o in data["objects"] if o["kind"] == "unit" and o["player"]
                         and not allied(data.get("players", {}), player, o["player"])}   # no allies (#1312)
         self.prey = {o["uuid"]: o["name"] for o in data["objects"] if o["kind"] == "unit" and o.get("uuid")
-                     and o["player"] in (0, player) and hunt_food(o["name"])}   # animals to hunt (#1058)
+                     and o["player"] in (0, player) and (hunt_food(o["name"]) or predator(o["name"]))}
+        # animals to hunt (#1058), and the predators that villagers kill (#2310)
         self.flock = {o["uuid"] for o in data["objects"] if o["kind"] == "unit" and o.get("uuid")
                       and o["player"] == player and herdable(o["name"])}   # own herdables: select and move (#1791)
         self.seen, self.dead = {}, {}                                  # hunted animal -> last feet position, carcass tile
@@ -915,20 +924,32 @@ class Gather:
             if self.aegis or v.timer >= VILLAGER_HIT[1] / NORMAL:
                 v.timer = 0.0
                 self.command(f"rotate {v.uuid} facing entity {v.prey}")
-                self.command(f"damage {v.prey} {1000 if self.aegis else VILLAGER_HIT[0]} minecraft:mob_attack by {v.uuid}")
+                hit = VILLAGER_HIT[0] + civs.predator_hit(self) * predator(self.prey.get(v.prey, ""))
+                self.command(f"damage {v.prey} {1000 if self.aegis else hit} minecraft:mob_attack by {v.uuid}")
                 if not re.search(r" 0\.0f$", self.command(f"data get entity {v.prey} Health")):
                     return                                             # a dead mob stays 20 ticks: no more hits
             else:
                 return
         if v.prey in self.prey:                                        # dead: the first hunter that sees it makes the carcass
             x, _, z = self.seen.get(v.prey, v.pos)
-            tile = self.dead[v.prey] = int(x // self.map.T), int(z // self.map.T)
+            tile = int(x // self.map.T), int(z // self.map.T)
             name = self.prey.pop(v.prey)
-            self.map.carcasses[tile] = self.map.carcasses.get(tile, 0) + hunt_food(name)
-            if herdable(name):
-                self.map.herds.add(tile)
+            if hunt_food(name):                                        # a predator leaves no food (#2310)
+                self.dead[v.prey] = tile
+                self.map.carcasses[tile] = self.map.carcasses.get(tile, 0) + hunt_food(name)
+                self.map.rot[tile] = DECAY.get("COW" if name.startswith("COW_") else name, 0) * civs.decay(self)
+                if herdable(name):
+                    self.map.herds.add(tile)
         v.tree, v.prey, v.path = self.dead.get(v.prey), None, []
         self.set(v, "to_tree" if v.tree else "idle")                   # it stands at the carcass: the next step gathers
+
+    def decay(self, dt):
+        """The carcasses lose food at their AoE2 rate (Map.rot, AoE2 wiki "Hunt": "decay ... begins to subtract from the
+        total food amount as soon as the animal is killed", also while villagers gather it), dt game seconds (#2310)."""
+        for tile, rate in list(self.map.rot.items()):
+            food = self.map.carcasses[tile] = max(0, self.map.carcasses.get(tile, 0) - rate * dt)
+            if not food:
+                del self.map.rot[tile]
 
     def goals(self, tile):
         """The cells where a villager works a resource: on a farm, else next to it."""
@@ -987,14 +1008,16 @@ class Gather:
                 h.stock[res] += part
                 h.command(f"scoreboard players add {res.capitalize()} {h.board} {part}")
 
-    def deliver(self, res, n, forage=False):
+    def deliver(self, res, n, forage=False, kind=None):
         """Earn the load n of resource res at a drop site with the drop-off bonus of the civilization (civs.DROP: food,
-        forage for a load of a fruit bush, #2111). AoE2 keeps the fractions: the next load gets them."""
+        forage for a load of a fruit bush, #2111), and the second resource of gather kind (civs.DROP_EXTRA: "hunt",
+        "fish", "ship", #2308). AoE2 keeps the fractions: the next load gets them."""
         f = civs.drop(self, res) * (civs.drop(self, "forage") if forage else 1)
-        self.spare[res] = self.spare.get(res, 0) + n * f
-        if whole := int(self.spare[res] + 1e-9):
-            self.spare[res] -= whole
-            self.earn(res, whole)
+        for r, m in [(res, n * f)] + [(b[0], n * b[1]) for b in [civs.drop_extra(self, kind)] if b]:
+            self.spare[r] = self.spare.get(r, 0) + m
+            if whole := int(self.spare[r] + 1e-9):
+                self.spare[r] -= whole
+                self.earn(r, whole)
 
     def event(self, v, name):
         if self.log:
@@ -1294,7 +1317,7 @@ class Gather:
         """The action bar text of a pointed target (#989): its name and what a right click on it does now."""
         workers = self.selected & self.villagers.keys()
         if kind == "prey":
-            name, act = pretty(self.prey[key]), "hunt" if workers else None
+            name, act = pretty(self.prey[key]), ("attack" if predator(self.prey[key]) else "hunt") if workers else None
         elif kind in ("enemy", "unit"):
             name = ("Enemy " if kind == "enemy" else "") + pretty(self.enemies.get(key) or self.soldiers.get(key)
                                                                   or self.prey.get(key) or "VILLAGER")
@@ -1413,7 +1436,8 @@ class Gather:
                 v.timer = 0.0
                 self.set(v, "chop" if self.source(v).get(v.tree, 0) > 0 else "idle")
             elif v.state == "to_drop":
-                self.deliver(v.res, v.load, v.res == "food" and v.tree in self.map.bushes)
+                self.deliver(v.res, v.load, v.res == "food" and v.tree in self.map.bushes,
+                             "hunt" if v.tree in self.map.carcasses else "fish" if v.tree in self.map.fish else None)
                 v.load = 0
                 self.event(v, "drop")
                 if v.tree in self.map.farms:
@@ -1434,6 +1458,8 @@ class Gather:
                 last = civs.last(self, "sheep" if v.tree in self.map.herds else kind)
                 take = 1 if last == 1 else 1 / last                    # 1: the amounts stay whole numbers
                 most = self.limit(v.res, "sheep" if v.tree in self.map.herds else kind)
+                if v.load < most and src.get(v.tree, 0) > 0:
+                    self.trickle(kind, self.tick)
                 while v.timer >= work and v.load < most and src.get(v.tree, 0) > 0:
                     v.timer -= work
                     v.load += 1
@@ -1458,6 +1484,7 @@ class Gather:
                         self.trunk(v.tree)
                 if v.load >= most or src.get(v.tree, 0) <= 0:
                     self.go(v, "to_drop", self.drop_goals(v))
+        self.decay(self.tick * NORMAL)
         train.tick(self, self.tick * NORMAL)
         monk.heal(self, self.tick * NORMAL)
         monk.convert(self, self.tick * NORMAL)
@@ -1512,6 +1539,16 @@ class Gather:
         if bonus := civs.extra(self, "forage" if v.tree in self.map.bushes else v.res):
             res, n = bonus
             self.seconds[res] = self.seconds.get(res, 0) + n
+            if whole := int(self.seconds[res] + 1e-9):
+                self.seconds[res] -= whole
+                self.earn(res, whole)
+
+    def trickle(self, kind, dt):
+        """dt real seconds of work at gather kind earn the resource of the civilization for each AoE2 minute
+        (civs.PER_MINUTE, #2308: Thracian hunters and shepherds 3 gold). The fractions add up as in second."""
+        if bonus := civs.per_minute(self, kind):
+            res, n = bonus
+            self.seconds[res] = self.seconds.get(res, 0) + n * dt * NORMAL / 60
             if whole := int(self.seconds[res] + 1e-9):
                 self.seconds[res] -= whole
                 self.earn(res, whole)
