@@ -58,6 +58,19 @@ player loads it with the world. Without the option, the world is the same as bef
   dyed. `aoe2mc.armor_textures()` draws the 64 × 32 textures (`ARMOR_BOXES`) from the material of each piece of the
   unit and the pattern of its look.
 
+## Archers, riders and horses (#2743)
+
+- Each unit with armor has its own asset, not only the units of `data/looks.jsonl`: `units.dressed()` lists the AoE2
+  units and heroes (AoE2ScenarioParser `UnitInfo`, `HeroInfo`) and the names of `data/units.jsonl` whose description has
+  an armor piece. With `units.ASSETS`, `units.classify()` gives each piece of each mob of the unit (the rider of a
+  mount too, `units.pieces()`) the asset `aoe2mc:<name>`. `units.describe()` is the description with vanilla armor.
+- The horse armor of a mount (slot `body`) gets the same asset; the pack adds the layer `horse_body` (64 × 64,
+  `HORSE_BOXES`: the body, the neck and the head of the horse, with a hem in the accent color; the legs stay bare).
+- `data/looks.jsonl` has lines for the main archer, skirmisher, cavalry archer, cavalry and camel lines. Another unit
+  takes the look of its hero base (`HERO_BASE`) or a pattern from the material of its chestplate (`units.look()`,
+  `DEFAULT_LOOK`). A unit with no own line shares the textures of the same look and materials (`look_<hash>.png`), so
+  the pack stays small (about 300 kB for 543 units).
+
 ## Weapons (#2744)
 
 - With the option, `units.make_entity` gives each hand item of a unit (also of its rider and crew) the component
