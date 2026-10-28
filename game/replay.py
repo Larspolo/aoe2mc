@@ -1007,7 +1007,7 @@ class Replay:
     def stop(self, e):
         """STOP: the selected units stand where they are (#2549): no more legs, steps or gather steps. On Paper
         `aoe stop` ends the walk order and the attack of the plugin (the mob has no AI until its next order, as at the
-        end of a walk). An unknown ID changes nothing."""
+        end of a walk). The replay takes the unit where its entity stands (#2636). An unknown ID changes nothing."""
         self.grid()
         out = []
         for i, name in zip(e["objects"], e.get("names") or [None] * len(e["objects"])):
@@ -1016,6 +1016,9 @@ class Replay:
             for state in (self.moving, self.working, self.arriving, self.entering, self.builds):
                 state.pop(i, None)
             v.pos, v.path = self.at(v, e["time"]), []
+            at = self.entity(v) if self.ai else None               # Paper: the entity walks behind its leg (#2636)
+            if at is not None and (y := self.map.y(math.floor(at[0]), math.floor(at[1]))) is not None:
+                v.pos = (at[0], float(y), at[1])
             v.leg = (v.pos, e["time"], e["time"])                  # a new order starts here, not on the old leg
             out += self.look(v, "none") + [f"aoe stop {v.uuid}"] * self.ai
         return out

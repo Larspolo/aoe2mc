@@ -43,6 +43,7 @@ COUNTERS = (                                                           # the par
     "cart_heal",                                                       # trade.py
     "garrison_heal",                                                   # garrison.py
     "herd_food",
+    "military_time",                                                   # regen.py
     "regen_time",
     "repair_hp",                                                       # repair.py
     "repair_owed",
@@ -145,7 +146,10 @@ NOT_SAVED = (                                                          # the fie
     "fog",                                                             # fog.py: the next tick hides the units again
     "ghosts",                                                          # build.py: the shown building to place
     "goto_idle",                                                       # goto.py: the next idle unit to show
+    "haste_time",                                                      # train.haste: a tick timer
+    "hasted",                                                          # train.haste: a load sends the values again
     "home",                                                            # bot.py: the town center of a bot
+    "hurried",                                                         # regen.military: again in its next pass
     "kings",                                                           # regicide.setup makes it again
     "limit_at",                                                        # time_limit.py: the next check time
     "limit_shown",                                                     # time_limit.py: the shown text
@@ -155,7 +159,9 @@ NOT_SAVED = (                                                          # the fie
     "regicide_at",                                                     # regicide.py: the next check time
     "repair_at",                                                       # repair.py: the next check time
     "repairs",                                                         # orders(): the repair of each villager
+    "research_skip",                                                   # scenario.py: the unknown technologies, found again
     "rows",                                                            # build.py: the shown building to place
+    "scenario_at",                                                     # scenario.py: the next check time
     "score_at",                                                        # score.py: the next check time
     "shapes",                                                          # build.py: the shown building to place
     "share",                                                           # bot.py: the techs of the human player
