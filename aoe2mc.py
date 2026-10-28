@@ -2753,6 +2753,7 @@ def team_lines(objects, players):
 
 
 # AoE2 condition and effect IDs (AoE2ScenarioParser), one per line in alphabetical order (#2613)
+ATTACK_MOVE = 30                                                   # "Attack Move" (#2647)
 CHANGE_COLOR_MOOD = 72
 CHANGE_DIPLOMACY = 1                                               # "Change Diplomacy" (#2645)
 CHANGE_OBJECT_NAME = 26                                            # "Change Object Name" (#2616)
@@ -2771,6 +2772,7 @@ KILL_OBJECT = 14
 MODIFY_RESOURCE = 52                                               # "Modify Resource" (#2576)
 OWN_FEWER_OBJECTS = 4                                              # conditions on the units of a player (#2573)
 OWN_OBJECTS = 3
+PATROL = 19                                                        # "Patrol" (#2647)
 PLAY_SOUND = 4                                                     # "Play Sound" (#2644)
 REMOVE_OBJECT = 15
 RESEARCH_TECHNOLOGY = 2                                            # "Research Technology" (#2577)
@@ -2980,11 +2982,21 @@ def task_lines(e, c):
     x, z = (int((v + 0.5) * T) for v in e["tile"])
     if not (0 <= x < ground.shape[0] and 0 <= z < ground.shape[1]):
         return []
-    k = f"{c.t['id']}_{next(i for i, f in enumerate(c.t['effects']) if f is e)}"
-    return [f"tag {unit_selector(e, T)} add aoe_task{k}",
-            f"execute as @e[tag=aoe_task{k}] on vehicle run tag @s add aoe_task{k}",
-            f"execute as @e[tag=aoe_task{k}] on vehicle on passengers run tag @s remove aoe_task{k}",
-            f"data modify storage aoe2mc:tasks k{k} set value [{x + 0.5}d, {int(ground[x, z])}.0d, {z + 0.5}d]"]
+    k = f"{c.t['id']}_{effect_index(e, c)}"
+    return tag_lines(e, T, f"aoe_task{k}") + \
+        [f"data modify storage aoe2mc:tasks k{k} set value [{x + 0.5}d, {int(ground[x, z])}.0d, {z + 0.5}d]"]
+
+
+def effect_index(e, c):
+    """The index of effect e in its trigger c.t: a score or a tag of one effect (research_lines, task_lines)."""
+    return next(i for i, f in enumerate(c.t["effects"]) if f is e)
+
+
+def tag_lines(e, T, tag):
+    """The commands that give the units of the player of an effect in its area the tag (task_lines, order_lines). A
+    rider gives its tag to its horse (units.MOUNT): the plugin walks the horse."""
+    return [f"tag {unit_selector(e, T)} add {tag}", f"execute as @e[tag={tag}] on vehicle run tag @s add {tag}",
+            f"execute as @e[tag={tag}] on vehicle on passengers run tag @s remove {tag}"]
 
 
 def unit_selector(e, T):
@@ -3023,8 +3035,26 @@ def research_lines(e, c):
         return []
     c.setup["scoreboard objectives add aoe_tech dummy"] = None
     c.stats["research"] += 1
-    i = next(i for i, x in enumerate(c.t["effects"]) if x is e)
+    i = effect_index(e, c)
     return [f"scoreboard players set #r{c.t['id']}.{i} aoe_tech 1"]   # the game program reads it
+
+
+def order_lines(e, c):
+    """The commands of "Patrol" and "Attack Move" (#2647). Vanilla has no walk-to command: the units of the player in
+    the area get the tag aoe_order<trigger>_<effect index> (tag_lines: a rider gives it to its horse), and the order
+    goes into the list of the data storage aoe2mc:orders as one text "<order> <tag> x y z" (the block of the tile on
+    the ground; a patrol also the middle of the area, where it turns back). The scenario mode of the game program
+    (game/scenario.py orders) empties the list with RCON and walks the tagged units with the Paper plugin."""
+    T, ground = c.T, c.ground
+    if min(e.get("tile", [-1])) < 0 or min(e.get("area", [-1])) < 0:
+        return []
+    a = e["area"]
+    blocks = [(int((x + 0.5) * T), int((z + 0.5) * T)) for x, z in (e["tile"], ((a[0] + a[2]) / 2, (a[1] + a[3]) / 2))]
+    if not all(0 <= x < ground.shape[0] and 0 <= z < ground.shape[1] for x, z in blocks):
+        return []
+    tag, order = f"aoe_order{c.t['id']}_{effect_index(e, c)}", "patrol" if e["type"] == PATROL else "attack_move"
+    where = " ".join(f"{x} {int(ground[x, z])} {z}" for x, z in blocks[:1 + (e["type"] == PATROL)])
+    return tag_lines(e, T, tag) + [f'data modify storage aoe2mc:orders list append value "{order} {tag} {where}"']
 
 
 def view_lines(e, c):
@@ -3131,6 +3161,7 @@ def instruction_lines(e, c):
 # The handler of each trigger effect: (effect, Effect context) -> commands. A new effect is one line here, in
 # alphabetical order, and its handler function (#2613): no change of trigger_files.
 EFFECTS = {
+    ATTACK_MOVE: order_lines,
     CHANGE_COLOR_MOOD: mood_lines,
     CHANGE_DIPLOMACY: diplomacy_lines,
     CHANGE_OBJECT_NAME: name_lines,
@@ -3146,6 +3177,7 @@ EFFECTS = {
     FREEZE_OBJECT: freeze_lines,
     KILL_OBJECT: object_lines,
     MODIFY_RESOURCE: resource_lines,
+    PATROL: order_lines,
     PLAY_SOUND: sound_lines,
     REMOVE_OBJECT: object_lines,
     RESEARCH_TECHNOLOGY: research_lines,
