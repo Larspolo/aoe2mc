@@ -79,9 +79,9 @@ def buildings(g, gone):
                   and combat.target_uuid([s["footprint"][i] for i in (0, 2, 1, 3)]) not in gone]
 
 
-def points(g):
-    """The points of each part for each side of the game of g: {player: {part: points}}."""
-    sides = fog.gathers(g)
+def points(g, sides=None):
+    """The points of each part for each side of the game of g (or of the Gathers sides): {player: {part: points}}."""
+    sides = sides or fog.gathers(g)
     gone = {u for h in sides for u in vars(h).get("razed", {})}
     out = {}
     for h in sides:

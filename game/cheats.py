@@ -134,6 +134,7 @@ def ruin(g, n):
         h.sites = [s for s in h.sites if s["player"] != n]
         if h.player == n:
             h.queues.clear()
+    vars(g).setdefault("fallen_bots", []).extend(b.g for b in g.bots if b.g.player == n and getattr(b.g, "share", None))
     g.bots = [b for b in g.bots if b.g.player != n or not getattr(b.g, "share", None)]   # a person keeps its Side: over() titles it (#1936)
 
 
