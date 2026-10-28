@@ -29,7 +29,6 @@ jobs:
       github.event.workflow_run.conclusion == 'success' &&
       (github.event.workflow_run.event == 'pull_request' || github.event.workflow_run.event == 'workflow_dispatch') &&
       github.event.workflow_run.head_repository.full_name == github.repository)
-      # Each branch: the payload has no labels, so merge() checks the prefix or the label automerge (#3383).
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
