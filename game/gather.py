@@ -1477,7 +1477,7 @@ class Gather:
                 src = self.source(v)
                 kind = "farm" if v.tree in self.map.farms else "hunt" if v.tree in self.map.carcasses else \
                     "fish" if v.tree in self.map.fish else v.res               # a fisherman: no forage rate (#2349)
-                work = self.work_time(kind, v.tree in self.map.herds) / self.aura_rate(v, kind)
+                work = self.work_time(kind, v.tree in self.map.herds, (v.pos[0], v.pos[2])) / self.aura_rate(v, kind)
                 last = civs.last(self, "sheep" if v.tree in self.map.herds else kind)
                 take = 1 if last == 1 else 1 / last                    # 1: the amounts stay whole numbers
                 most = self.limit(v.res, "sheep" if v.tree in self.map.herds else kind)
@@ -1543,13 +1543,15 @@ class Gather:
                         self.set(v, "idle")
         self.idle()
 
-    def work_time(self, res, herd=False):
+    def work_time(self, res, herd=False, pos=None):
         """Real seconds per unit of resource res ("farm" for farms) with the technologies of the player (WORK_TECHS) and
         the work-rate bonus of its civilization (civs.WORK; herd: the carcass of a herdable animal, for shepherds).
-        civs.MORE multiplies the change of a technology (Armenians: the mule cart technologies 40 % more, #2309)."""
+        civs.MORE multiplies the change of a technology (Armenians: the mule cart technologies 40 % more, #2309). At the
+        block position pos (x, z) of the villager, a building near it can add its bonus (civs.church_rate, #2377)."""
         if self.aegis:
             return 0.0                                                 # a full load in one work step
         rate, more = civs.work(self, "sheep" if herd else res), civs.MORE.get(civs.civ(self), {})
+        rate *= civs.church_rate(self, pos) if pos else 1
         return self.chop.get(res, self.chop.get("food")) / rate / math.prod(
             (1 + (WORK_TECHS.get(t, {}).get(res, 1) - 1) * more.get(t, 1)) ** train.count(self, t) for t in self.techs)
 
