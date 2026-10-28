@@ -432,6 +432,8 @@ def read_scenario(path):
                                                **({"quantity": c.quantity, "ref": c.unit_object,   # (#2701)
                                                    "comparison": c.comparison}
                                                   if c.condition_type == OBJECT_HP else {}),
+                                               **({"trigger": c.trigger_id}                  # (#2699)
+                                                  if c.condition_type == TRIGGER_ACTIVE else {}),
                                                **({"player": c.source_player,                 # (#2656)
                                                    "technology": techs.get(c.technology, str(c.technology))}
                                                   if c.condition_type in (RESEARCHED, RESEARCHING_TECH, TECHNOLOGY_STATE)
@@ -442,6 +444,9 @@ def read_scenario(path):
                                                   if c.condition_type == PLAYER_DEFEATED else {}),
                                                **({"quantity": c.quantity, "unit": c.unit_object}   # (#2714)
                                                   if c.condition_type == UNITS_GARRISONED else {}),
+                                               **({"ref": c.unit_object, "player": c.source_player   # (#2756)
+                                                   if c.condition_type == OBJECT_VISIBLE_MULTIPLAYER else 1}
+                                                  if c.condition_type in VISIBLE else {}),
                                                **({"player": c.source_player, "target": c.target_player,   # (#2757)
                                                    "diplomacy": c.quantity}            # the stance is the quantity
                                                   if c.condition_type == DIPLOMACY_STATE else {}))
@@ -471,6 +476,9 @@ def read_scenario(path):
                                             **({"quantity": e.quantity, "variable": e.variable,   # (#2611)
                                                 "operation": e.operation}
                                                if e.effect_type == CHANGE_VARIABLE else {}),
+                                            **({"variable": e.variable, "variable2": e.variable2,   # (#2713)
+                                                "operation": e.operation}
+                                               if e.effect_type == MODIFY_VARIABLE_BY_VARIABLE else {}),
                                             **({"target": e.target_player}                # "Change Ownership" (#2570)
                                                if e.effect_type == CHANGE_OWNERSHIP else {}),
                                             **({"color": e.player_color}                 # (#2712)
@@ -491,6 +499,9 @@ def read_scenario(path):
                                                 "resource": e.tribute_list} if e.effect_type == TRIBUTE else {}),
                                             **({"operation": e.operation, "quantity": e.quantity,
                                                 "resource": e.tribute_list} if e.effect_type == MODIFY_RESOURCE else {}),
+                                            **({"operation": e.operation, "quantity": e.armour_attack_quantity,   # (#2755)
+                                                "armour_class": e.armour_attack_class}
+                                               if e.effect_type in (CHANGE_OBJECT_ARMOR, CHANGE_OBJECT_ATTACK) else {}),
                                             **({"operation": e.operation, "variable": e.variable,   # (#2768)
                                                 "resource": e.tribute_list}
                                                if e.effect_type == MODIFY_RESOURCE_BY_VARIABLE else {}),
@@ -815,6 +826,11 @@ def train(unit):
     return next((v for k, v in TRAIN.items() if unit.startswith(k)), None)
 
 
+def train_ms(unit):
+    """The training time of a unit name in ms: TRAIN, else 30 s."""
+    return (train(unit) or (30,))[0] * 1000
+
+
 def training(timeline):
     """The trainings of a recorded game: (end time ms, QUEUE event, building ID) for each unit, in the order of the
     QUEUE commands. A building trains one unit after the other; its research (RESEARCH_S) delays them. The record
@@ -824,7 +840,7 @@ def training(timeline):
         kind, t = e["kind"], e["time"]
         if kind in ("queue", "research") and e.get("objects"):
             name = e.get("name", "") if kind == "queue" else e.get("technology", "")
-            s = ((train(name) or (30,))[0] if kind == "queue" else RESEARCH_S.get(name, 0)) * 1000
+            s = train_ms(name) if kind == "queue" else RESEARCH_S.get(name, 0) * 1000
             for n in range(max(1, int(e.get("amount", 1))) if kind == "queue" else 1):
                 b = e["objects"][n % len(e["objects"])]
                 busy[b] = max(busy.get(b, 0), t) + s
@@ -2683,7 +2699,7 @@ def write_region(path, chunks):
 
 def write_objects(path, size, T, H, players, objects, cols, ground, timeline=None, mood="DEFAULT", map_ground=None,
                   victory=None, messages=None,
-                  research=(), tech_states=()):
+                  research=(), tech_states=(), visible=()):
     """aoe2mc.json: the data that a game program needs (docs/research/gameplay.md). Tiles are in the turned grid
     (--orientation): block x = tile x × T, block z = tile y × T. Units have the UUID of their entity, buildings
     their footprint [x0, z0, x1, z1) in blocks. Objects of a recorded game have their object ID ("ref").
@@ -2698,6 +2714,7 @@ def write_objects(path, size, T, H, players, objects, cols, ground, timeline=Non
     "mood": the map color mood of a DE scenario (ColorMood name, #1594), else "DEFAULT".
     "research": the "Research Technology" effects of the triggers (research_list, #2577), if any.
     "tech_states": the [player, technology] pairs of the conditions on aoe_techstate (tech_state_list, #2769), if any.
+    "visible": the [ref, player] pairs of the "Object (Not) Visible" conditions (visible_list, #2756), if any.
     "map_ground": the map bytes of map 0 without the objects (map_colors), one hex string per pixel row z: the live
     minimap of the plugin paints them where no live object is (#1940).
     "victory" (DE scenarios only): the victory setting of the scenario, {"condition": a name of run.VICTORIES or
@@ -2741,6 +2758,8 @@ def write_objects(path, size, T, H, players, objects, cols, ground, timeline=Non
         data["research"] = list(research)
     if tech_states:
         data["tech_states"] = list(tech_states)
+    if visible:
+        data["visible"] = [list(v) for v in visible]
     if map_ground is not None:
         data["map_ground"] = [bytes(row).hex() for row in np.asarray(map_ground, np.uint8)]
     with open(path, "w") as f:
@@ -2822,6 +2841,8 @@ AND = 57                                                           # the conditi
 ATTACK_MOVE = 30                                                   # "Attack Move" (#2647)
 CHANGE_COLOR_MOOD = 72
 CHANGE_DIPLOMACY = 1                                               # "Change Diplomacy" (#2645)
+CHANGE_OBJECT_ARMOR = 31                                           # "Change Object Armor" (#2755)
+CHANGE_OBJECT_ATTACK = 28                                          # "Change Object Attack" (#2755)
 CHANGE_OBJECT_COST = 40                                            # "Change Object Cost" (#2776)
 CHANGE_OBJECT_NAME = 26                                            # "Change Object Name" (#2616)
 CHANGE_OBJECT_SPEED = 33                                           # "Change Object Speed" (#2694)
@@ -2851,7 +2872,11 @@ KILL_OBJECT = 14
 MODIFY_ATTRIBUTE = 51                                              # "Modify Attribute" (#2763)
 MODIFY_RESOURCE = 52                                               # "Modify Resource" (#2576)
 MODIFY_RESOURCE_BY_VARIABLE = 53                                   # "Modify Resource by Variable" (#2768)
+MODIFY_VARIABLE_BY_VARIABLE = 100                                  # "Modify Variable by Variable" (#2713)
 OBJECT_HP = 23                                                     # "Object HP", the hit points of one object (#2701)
+OBJECT_NOT_VISIBLE = 16                                            # the conditions "Object (Not) Visible" (#2756)
+OBJECT_VISIBLE = 15
+OBJECT_VISIBLE_MULTIPLAYER = 27
 OR = 29
 OWN_FEWER_OBJECTS = 4                                              # conditions on the units of a player (#2573)
 OWN_OBJECTS = 3
@@ -2872,22 +2897,28 @@ TELEPORT_OBJECT = 35
 ACTIVATE_TRIGGER, DEACTIVATE_TRIGGER = 8, 9
 TIMER = 10
 TRIBUTE = 5                                                        # "Tribute" (#2576)
+TRIGGER_ACTIVE = 79                                                # the condition "Trigger Active" (#2699)
 TRIGGER_CHANCE = 20                                                # the condition "Chance" (#2574)
 UNITS_GARRISONED = 18                                              # the condition "Units Garrisoned" (#2714)
 UNLOAD = 17                                                        # "Unload" (#2773)
 VARIABLE_VALUE = 22
 TIME_UNITS = {0: 5, 1: 60, 2: 1, 3: 1}  # TimeUnit (years, minutes, seconds, m:ss) -> game seconds; a year as game/wonder.py YEAR
 COUNTED = (IN_AREA, OWN_OBJECTS, OWN_FEWER_OBJECTS)                # conditions that count units: the tick function
+VISIBLE = (OBJECT_NOT_VISIBLE, OBJECT_VISIBLE, OBJECT_VISIBLE_MULTIPLAYER)  # the sight of a player: the game program
 TICKED = COUNTED + (                                               # conditions of the tick function, one per line
     ACCUMULATE_ATTRIBUTE,
     DIFFICULTY_LEVEL,
     DIPLOMACY_STATE,
     DISPLAY_TIMER_TRIGGERED,
     OBJECT_HP,
+    OBJECT_NOT_VISIBLE,
+    OBJECT_VISIBLE,
+    OBJECT_VISIBLE_MULTIPLAYER,
     PLAYER_DEFEATED,
     RESEARCHED,
     RESEARCHING_TECH,
     TECHNOLOGY_STATE,
+    TRIGGER_ACTIVE,
     UNITS_GARRISONED,
     VARIABLE_VALUE,
 )
@@ -3025,6 +3056,24 @@ def damage_lines(e, c):
     at = found[0]                                                      # Gaia: not the players (effect_units)
     stats["damage"] += 1
     return [f"execute as {at} run damage @s {q}"]                      # damage takes one entity
+
+
+def attack_lines(e, c):
+    """The commands of "Change Object Attack" and "Change Object Armor" (#2755): the units of the player in the area and
+    the mounts of the riders get an attribute modifier of `quantity` AoE2 points, add or subtract: minecraft:attack_damage
+    (the attack classes 3 pierce and 4 melee) or minecraft:armor. The game program sets these attributes from
+    combat.STATS, so the points are AoE2 points. The modifier ID is the trigger and the effect: one modifier each."""
+    q, stats = e.get("quantity") or 0, c.stats
+    armor = e["type"] == CHANGE_OBJECT_ARMOR
+    op = OPERATIONS.get(e.get("operation"))
+    if op not in ("add", "remove") or not q or (not armor and e.get("armour_class") not in (3, 4)):
+        stats["change object attack or armor (not supported yet)"] += 1
+        return []
+    stats["change object armor" if armor else "change object attack"] += 1
+    at = unit_selector(e, c.T)
+    attr = "minecraft:armor" if armor else "minecraft:attack_damage"
+    value = q if op == "add" else -q
+    return [f"execute as {at} run attribute @s {attr} modifier add aoe2mc:trig_{c.t['id']}_{effect_index(e, c)} {value} add_value"]
 
 
 def garrisoned_lines(e, c):
@@ -3218,6 +3267,17 @@ def variable_lines(e, c):
     if op <= 3:
         return [f"scoreboard players {('set', 'add', 'remove')[op - 1]} {v} {q}"]
     return [f"scoreboard players set #c{q} aoe_var {q}", f"scoreboard players operation {v} {'*/'[op - 4]}= #c{q} aoe_var"]
+
+
+def variable_by_variable_lines(e, c):
+    """The command of "Modify Variable by Variable" (#2713): variable (operation)= variable2, both scores of aoe_var.
+    A division by 0 leaves the score as it is in Minecraft."""
+    a, b, op = e.get("variable", -1), e.get("variable2", -1), e.get("operation")
+    if a < 0 or b < 0 or op not in (1, 2, 3, 4, 5):
+        c.stats["modify variable by variable (not supported)"] += 1
+        return []
+    c.stats["modify variable by variable"] += 1
+    return [f"scoreboard players operation #v{a} aoe_var {('', '+', '-', '*', '/')[op - 1]}= #v{b} aoe_var"]
 
 
 def variable_range(c):
@@ -3565,6 +3625,8 @@ EFFECTS = {
     ATTACK_MOVE: order_lines,
     CHANGE_COLOR_MOOD: mood_lines,
     CHANGE_DIPLOMACY: diplomacy_lines,
+    CHANGE_OBJECT_ARMOR: attack_lines,
+    CHANGE_OBJECT_ATTACK: attack_lines,
     CHANGE_OBJECT_COST: cost_lines,
     CHANGE_OBJECT_NAME: name_lines,
     CHANGE_OBJECT_SPEED: speed_lines,
@@ -3591,6 +3653,7 @@ EFFECTS = {
     MODIFY_ATTRIBUTE: attribute_lines,
     MODIFY_RESOURCE: resource_lines,
     MODIFY_RESOURCE_BY_VARIABLE: resource_by_variable_lines,
+    MODIFY_VARIABLE_BY_VARIABLE: variable_by_variable_lines,
     PATROL: order_lines,
     PLAY_SOUND: sound_lines,
     REMOVE_OBJECT: object_lines,
@@ -3619,10 +3682,14 @@ SCORE_TESTS = {
     DIFFICULTY_LEVEL: lambda c: f"score #level aoe_difficulty matches {c.get('quantity', 0)}",
     DIPLOMACY_STATE: lambda c: f"score #p{c['player']}.p{c['target']} aoe_dipstate matches {c['diplomacy'] + 1}",
     DISPLAY_TIMER_TRIGGERED: lambda c: f"score #done{c.get('slot', 0)} aoe_timer matches 1..",   # set at 0 (#2702)
+    OBJECT_NOT_VISIBLE: lambda c: f"score #r{c['ref']}.p{c['player']} aoe_seen matches 0",
+    OBJECT_VISIBLE: lambda c: f"score #r{c['ref']}.p{c['player']} aoe_seen matches 1",
+    OBJECT_VISIBLE_MULTIPLAYER: lambda c: f"score #r{c['ref']}.p{c['player']} aoe_seen matches 1",
     PLAYER_DEFEATED: lambda c: f"score #p{c['player']} aoe_lost matches 1..",   # conquest, regicide (#2710)
     RESEARCHED: lambda c: f"score #p{c['player']}.{c['technology']} aoe_tech matches 1..",
     RESEARCHING_TECH: lambda c: f"score #p{c['player']}.{c['technology']} aoe_techstate matches 2",
     TECHNOLOGY_STATE: lambda c: f"score #p{c['player']}.{c['technology']} aoe_techstate matches {c.get('quantity', 0)}",
+    TRIGGER_ACTIVE: lambda c: f"score #{c['trigger']} aoe_on matches {int(not c['inverted'])}",   # #2699
     UNITS_GARRISONED: lambda c: f"score #g{c['unit']} aoe_gar matches {max(c['quantity'], 1)}..",   # #2714
     VARIABLE_VALUE: lambda c: f"score #v{c['variable']} aoe_var matches {variable_range(c)}",
 }
@@ -3655,7 +3722,8 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
     areas; the score #N of aoe_trig marks a fired trigger, so it fires once. A looping area trigger fires again after
     the units leave an area. A "Variable Value" condition runs in the tick function as an area (#2611), a "Research
     Technology" condition too: the game program sets the score #p<player>.<technology> of aoe_tech (#2656), and an
-    "Accumulate Attribute" condition of a resource: resource_score (#2655). A "Destroy Object" condition
+    "Accumulate Attribute" condition of a resource: resource_score (#2655), an "Object (Not) Visible" condition: the
+    game program sets the score #r<ref>.p<player> of aoe_seen (#2756). A "Destroy Object" condition
     (OBJECT_TESTS) tests the tag aoe2mc.r<ref> of its unit and its marker (#2618), "Bring Object to Area" the tag in
     the box of the area (#2620), "Bring Object to Object" the other tag within one tile of it (#2771). An inverted
     object condition swaps the two tests of OBJECT_TESTS. "OR" splits the conditions into groups (or_groups, #2765):
@@ -3676,8 +3744,11 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
     ground = np.zeros((0, 0), np.int16) if ground is None else ground
     chancy = {t["id"] for t in triggers if any(c["type"] == TRIGGER_CHANCE for c in t["conditions"])}
     on = {e.get("trigger") for t in triggers for e in t["effects"] if e["type"] == ACTIVATE_TRIGGER}
-    switch = {e.get("trigger") for t in triggers for e in t["effects"]
-              if e["type"] in (ACTIVATE_TRIGGER, DEACTIVATE_TRIGGER)} & live - chancy
+    active = [c for t in triggers for c in t["conditions"] if c["type"] == TRIGGER_ACTIVE]   # the state score (#2699)
+    switch = ({e.get("trigger") for t in triggers for e in t["effects"]
+               if e["type"] in (ACTIVATE_TRIGGER, DEACTIVATE_TRIGGER)} | {c.get("trigger") for c in active}) & live - chancy
+    off = {c.get("trigger") for c in active if c["inverted"]} & switch   # an inverted test needs the score at 0
+    load += [f"scoreboard players set #{t['id']} aoe_on 0" for t in triggers if t["id"] in off and not t["enabled"]]
     timed = {t["id"]: max(20 * min(max(c["timer"] for c in g) for g in gs), 1) for t in triggers   # 1 tick at least;
              if (gs := or_groups(t["conditions"])) and all(c["type"] == TIMER for g in gs for c in g)}   # OR: the first
     for t in triggers:
@@ -3701,7 +3772,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
             stats["OR with a chance, or with a timer in a disabled trigger (not supported yet)"] += t["enabled"]
             continue
         if not (t["enabled"] or t["id"] in on and t["id"] not in chancy) or not conds or \
-                not (rest == {(TIMER, False)} or rest <= {(k, False) for k in TICKED + (TIMER,) * clocked} | {(k, True) for k in OBJECT_TESTS}) or \
+                not (rest == {(TIMER, False)} or rest <= {(k, False) for k in TICKED + (TIMER,) * clocked} | {(k, True) for k in OBJECT_TESTS} | {(TRIGGER_ACTIVE, True)}) or \
                 chance and len([c for c in conds if c["type"] == TRIGGER_CHANCE]) > 1 or \
                 any(c.get("group", -1) >= 0 or c.get("class", -1) >= 0 for c in conds) or \
                 any(c["type"] == VARIABLE_VALUE and (c.get("variable", -1) < 0 or variable_range(c) is None)
@@ -3710,7 +3781,9 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
                     or c["type"] == ACCUMULATE_ATTRIBUTE and resource_score(c) is None
                     or c["type"] == OBJECT_HP and (c.get("ref", -1) < 0 or variable_range(c) is None)
                     or c["type"] == UNITS_GARRISONED and c.get("unit", -1) < 0
+                    or c["type"] in VISIBLE and (c.get("ref") is None or c["ref"] < 0 or c.get("player", -1) <= 0)
                     or c["type"] == PLAYER_DEFEATED and c.get("player", -1) <= 0   # Gaia: no defeat (#2710)
+                    or c["type"] == TRIGGER_ACTIVE and c.get("trigger") not in switch
                     for c in conds):                                   # unit classes: not yet
             continue
         ctx = Effect(t, T, ground, players, stats, mood, files, setup, switch, timed)
@@ -3806,12 +3879,13 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
         run = f"schedule function {fn} {ticks}t replace"
         files[f"data/aoe2mc/function/trigger/{n}.mcfunction"] = "\n".join(lines + [run] * t["looping"]) + "\n"
         load += [run] * t["enabled"]
-    names = sorted({f"#v{x['variable']}" for t in triggers for x in t["conditions"] + t["effects"]
-                    if x["type"] in (VARIABLE_VALUE, CHANGE_VARIABLE) and x.get("variable", -1) >= 0})
+    names = sorted({f"#v{x[k]}" for t in triggers for x in t["conditions"] + t["effects"]
+                    for k in ("variable", "variable2")   # "Modify Variable by Variable" has two (#2713)
+                    if x["type"] in (VARIABLE_VALUE, CHANGE_VARIABLE, MODIFY_VARIABLE_BY_VARIABLE) and x.get(k, -1) >= 0})
     if names:
         load[:0] = ["scoreboard objectives add aoe_var dummy"] + \
             [f"scoreboard players add {v} aoe_var 0" for v in names]   # AoE2 variables start at 0
-    for word in ("aoe_difficulty", "aoe_gar", "aoe_lost", "aoe_tech", "aoe_techstate"):   # only the game program sets them
+    for word in ("aoe_difficulty", "aoe_gar", "aoe_lost", "aoe_seen", "aoe_tech", "aoe_techstate"):  # the game program
         if any(f" {word} " in x for x in tick):
             setup[f"scoreboard objectives add {word} dummy"] = None
     if switch:
@@ -3843,6 +3917,13 @@ def tech_state_list(triggers):
     return sorted({(int(n), t) for n, t in re.findall(r"#p(\d+)\.(\w+) aoe_techstate ", tick)})
 
 
+def visible_list(triggers):
+    """The [ref, player] pairs of the "Object (Not) Visible" conditions that trigger_files writes, for aoe2mc.json
+    "visible" (#2756): the scenario mode of the game program sets the score #r<ref>.p<player> of aoe_seen."""
+    tick = trigger_files(triggers)[1].get("data/aoe2mc/function/tick.mcfunction", "")
+    return sorted({(int(r), int(p)) for r, p in re.findall(r"#r(\d+)\.p(\d+) aoe_seen", tick)})
+
+
 # The map of the world goes into the off-hand of each player once, through the tag aoe2mc_map (#966).
 MAP_PULSE = ["execute as @a[tag=!aoe2mc_map] run item replace entity @s weapon.offhand with "
              "minecraft:filled_map[minecraft:map_id=0]",
@@ -3861,6 +3942,45 @@ SKINS = {   # texture -> (model, skin color); the hair, clothes and face colors 
     "entity/zombie/zombie.png": ("zombie", (226, 176, 136)),
     "entity/zombie_villager/zombie_villager.png": ("villager", (214, 160, 120)),
 }
+# The cart of the War Wagon in the pack (#2746, the AoE2 model: a box wagon with plank walls, an iron rim, a plank roof
+# and two large wheels): boxes (from, to) in pixels of a block at scale 1, 16 = 1 block, the ground at y 0, the horse
+# at -z; vanilla block textures, the wheels have the rings of a log top on their sides. cart_model() scales them.
+CART_BOXES = [((-2, 6, -8), (18, 8, 24), "smooth_stone"),                     # the iron rim of the floor
+              ((-1, 8, -7), (17, 27, 23), "dark_oak_log"),                     # the walls of vertical planks
+              ((-1.5, 17, -7.5), (17.5, 18, 23.5), "iron_block"),              # the band
+              ((-1.5, 20, 3), (17.5, 24, 11), "black_concrete"),               # the windows
+              ((-3, 27, -9), (19, 29, 25), "smooth_stone"),                    # the iron rim of the roof
+              ((-2, 29, -8), (18, 30, 24), "oak_planks"),                      # the roof
+              ((-4, 0, 8), (-2, 16, 24), "dark_oak_planks", "spruce_log_top"),   # the wheels
+              ((18, 0, 8), (20, 16, 24), "dark_oak_planks", "spruce_log_top"),
+              ((3, 8, -16), (4, 9, -8), "stripped_oak_log"),                   # the shafts to the horse
+              ((12, 8, -16), (13, 9, -8), "stripped_oak_log")]
+VANILLA_CHEST = {"type": "minecraft:select", "property": "minecraft:local_time", "pattern": "MM-dd",   # items/chest.json
+                 "cases": [{"when": ["12-24", "12-25", "12-26"], "model": {
+                     "type": "minecraft:special", "base": "minecraft:item/chest",
+                     "model": {"type": "minecraft:chest", "texture": "minecraft:christmas"}}}],
+                 "fallback": {"type": "minecraft:special", "base": "minecraft:item/chest",
+                              "model": {"type": "minecraft:chest", "texture": "minecraft:normal"}}}
+
+
+def cart_model():
+    """The item model of the War Wagon cart (CART_BOXES): the cart display has the scale units.CART_SCALE for the
+    vanilla chest, so the boxes shrink by it around the middle (8, 8, 8) of the model. Each face has its uv: a face
+    out of 0..16 with no uv reads its texture from the neighbors in the atlas."""
+    names = sorted({t for b in CART_BOXES for t in b[2:]})
+    out = []
+    for lo, hi, side, *wheel in CART_BOXES:
+        at = [[round(8 + (v - 8) / k, 3) for v, k in zip(p, units.CART_SCALE)] for p in (lo, hi)]
+        size = [h - v for v, h in zip(lo, hi)]                       # the uv in the texture: at most one texture
+        faces = {f: {"uv": [0, 0, min(size[a], 16), min(size[b], 16)],
+                     "texture": f"#t{names.index(wheel[0] if wheel and f in ('east', 'west') else side)}"}
+                 for f, a, b in (("north", 0, 1), ("south", 0, 1), ("east", 2, 1), ("west", 2, 1), ("up", 0, 2),
+                                 ("down", 0, 2))}
+        out.append({"from": at[0], "to": at[1], "faces": faces})
+    textures = {f"t{k}": f"minecraft:block/{t}" for k, t in enumerate(names)} | {"particle": "minecraft:block/dark_oak_log"}
+    return {"textures": textures, "elements": out}
+
+
 HAIR, SHIRT, PANTS, SHOES, EYE, MOUTH = (74, 50, 30), (122, 92, 56), (72, 64, 110), (52, 40, 30), (50, 90, 160), (140, 60, 50)
 
 
@@ -3907,13 +4027,18 @@ def skin_texture(model, tone):
 def write_resourcepack(out):
     """--resource-pack (#2738): resourcepacks/resources.zip in the world folder, which single player loads with the
     world (26.x: LevelResource.MAP_RESOURCE_FILE; a world of an older version had resources.zip at its top, and the
-    client moves it there, ResourcePackLocationFileFix). The zombie units get a human face. Same bytes for each
-    conversion: sorted names, a fixed time."""
+    client moves it there, ResourcePackLocationFileFix). The zombie units get a human face, the War Wagon its cart
+    (cart_model, #2746). Same bytes for each conversion: sorted names, a fixed time."""
     import io
     import zipfile
     files = {"pack.mcmeta": json.dumps({"pack": {
         "description": "aoe2mc: units with a human face", "pack_format": MC["resource_format"],
         "min_format": MC["resource_format"], "max_format": MC["resource_format"]}}, indent=1).encode()}
+    files["assets/minecraft/items/chest.json"] = json.dumps({"model": {   # a chest with the cart data: the cart (#2746)
+        "type": "minecraft:select", "property": "minecraft:custom_model_data", "index": 0,
+        "cases": [{"when": "aoe2mc:war_wagon", "model": {"type": "minecraft:model", "model": "aoe2mc:item/war_wagon"}}],
+        "fallback": VANILLA_CHEST}}, indent=1).encode()
+    files["assets/aoe2mc/models/item/war_wagon.json"] = json.dumps(cart_model(), indent=1).encode()
     for path, (model, tone) in SKINS.items():
         buf = io.BytesIO()
         skin_texture(model, tone).save(buf, "PNG")
@@ -4531,7 +4656,8 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
     img = Image.fromarray(np.clip(img * shade[..., None], 0, 255).astype(np.uint8))
     write_objects(os.path.join(out, "aoe2mc.json"), size, T, H, players, objects, cols, ground, timeline,
                   texts.get("mood", "DEFAULT"), map_colors(np.asarray(img))[0], texts.get("global_victory"), texts,
-                  research_list(texts.get("triggers", [])), tech_state_list(texts.get("triggers", [])))
+                  research_list(texts.get("triggers", [])), tech_state_list(texts.get("triggers", [])),
+                  visible_list(texts.get("triggers", [])))
     triggers, tstats = texts.get("triggers", []), Counter()
     haze = FOG.get(texts.get("mood")) if mood == "on" and (fog or ambience == "full") else None
     n, amb = write_datapack(out, objects, ground, cols.biome_names, ambience, players, triggers, T, tstats, haze,
