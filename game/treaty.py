@@ -39,13 +39,14 @@ def truce_command(players):
     return "aoe neutral " + " ".join(f"p{n}:" + ",".join(f"p{m}" for m in ns if m != n) for n in ns)
 
 
-def start(g, seconds):
+def start(g, seconds, done=0.0):
     """Start a treaty of seconds (game time) for the Gather g and all Gathers that share its game. 0: no treaty,
-    math.inf: a treaty with no end (ENDLESS)."""
-    g.game.treaty, g.game.treaty_time = seconds, 0.0
-    if seconds > 0 and g.paper:
+    math.inf: a treaty with no end (ENDLESS). done: the game seconds of the treaty that passed before the save of a
+    loaded game (savegame "treaty_time", #2409); a treaty that ended before the save does not start again."""
+    g.game.treaty, g.game.treaty_time = seconds, done
+    if seconds > done and g.paper:
         g.command(truce_command({int(n) for n in g.data.get("players", {})} | {g.player}))
-    if seconds > 0:
+    if seconds > done:
         g.command("tellraw @a " + json.dumps({"text": f"Treaty: no player can attack another player "
                                                       f"{until(seconds)}.", "color": "yellow"}))
 

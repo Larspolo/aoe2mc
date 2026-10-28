@@ -112,7 +112,7 @@
 {"name": "JURCHENS: Siege Engineers available in the Castle Age.", "civ": "JURCHENS", "bonus": "Siege Engineers available in the Castle Age.", "in": "EARLIER"}
 {"name": "JURCHENS: Siege and fortification technologies cost wood -75%.", "civ": "JURCHENS", "bonus": "Siege and fortification technologies cost wood -75%.", "in": "COSTS"}
 {"name": "JURCHENS: Siege and fortification technologies are researched 100% faster.", "civ": "JURCHENS", "bonus": "Siege and fortification technologies are researched 100% faster.", "in": "RESEARCH_TIME"}
-{"name": "JURCHENS: Military units receive -50% friendly fire damage.", "civ": "JURCHENS", "bonus": "Military units receive -50% friendly fire damage.", "later": "play:fight"}
+{"name": "JURCHENS: Military units receive -50% friendly fire damage.", "civ": "JURCHENS", "bonus": "Military units receive -50% friendly fire damage.", "in": "UNITS"}
 {"name": "KHITANS: The effects of Forging and Iron Casting are doubled.", "civ": "KHITANS", "bonus": "The effects of Forging and Iron Casting are doubled.", "in": "TWICE"}
 {"name": "KHITANS: Skirmishers, Genitours, and the Spearman and Scout Cavalry lines are trained and upgraded 15% faster.", "civ": "KHITANS", "bonus": "Skirmishers, Genitours, and the Spearman and Scout Cavalry lines are trained and upgraded 15% faster.", "in": "TRAIN_RATE"}
 {"name": "KHITANS: Heavy Cavalry Archer upgrade available in the Castle Age and costs -50%", "civ": "KHITANS", "bonus": "Heavy Cavalry Archer upgrade available in the Castle Age and costs -50%", "in": ["COSTS", "EARLIER"]}

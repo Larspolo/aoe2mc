@@ -22,6 +22,7 @@ Usage:
     python3 game/run.py WORLD --play --victory conquest  # the AoE2 setting "Victory": no wonder or relic win (#2316)
     python3 game/run.py WORLD --play --victory king-of-the-hill   # hold the monument in the center (#2360)
     python3 game/run.py WORLD --play --mode regicide   # the AoE2 game mode "Regicide": each player has a King (#2347)
+    python3 game/run.py WORLD --play --mode empire-wars   # the AoE2 game mode "Empire Wars": a town at work (#2408)
     python3 game/run.py WORLD --play --mode sudden-death   # the AoE2 game mode "Sudden Death": one town center (#2407)
     python3 game/run.py WORLD --play --mode wonder-race   # "Wonder Race": no attacks, the first wonder wins (#2406)
     python3 game/run.py WORLD --play --civ 1=BRITONS --civ 2=FRANKS   # the civilization of each player (#2267)
@@ -330,6 +331,17 @@ def team_choices(value, players):
     return {p: None if t == "-" else int(t) for p, t in zip(seats, teams)}
 
 
+# The AoE2 game modes of --mode (epic #2263), name: help text. A new mode is one line here, in alphabetical order, not a
+# change of the --mode lines of main() (#2408).
+MODES = {
+    "empire-wars": "each player starts with a town and 27 villagers at work, in the Feudal Age when --age is dark",
+    "regicide": "each player has a King, a player whose King dies is defeated",
+    "standard": "the AoE2 rules",
+    "sudden-death": "one town center, a player who loses it is defeated",
+    "wonder-race": "no player can attack another, the first complete wonder wins",
+}
+
+
 # The AoE2 lobby settings of play() for each player and bot (epic #2263), name: default. main() passes the option of
 # the same name. A new setting is one line here, in alphabetical order, not a change of the play() lines (#2373).
 SETTINGS = {
@@ -338,14 +350,13 @@ SETTINGS = {
     "civ": None,                      # {player: civilization} in place of the scenario's (civ_choices, #2267)
     "end_age": "imperial",            # "Ending age" (build.locked, #2346)
     "full_tech_tree": False,          # "Full Tech Tree": the full tech tree and no civilization bonuses (civs.civ, #2354)
-    "mode": "standard",               # the game mode: "standard", "regicide" (each player has a King, regicide.MODES, #2347)
-                                      # or "sudden-death" (one town center, sudden_death.py, #2407)
-                                      # or "wonder-race" (no attacks, the first wonder wins, treaty.ENDLESS, #2406)
+    "mode": "standard",               # the game mode (MODES; regicide.py #2347, sudden_death.py #2407, empire_wars.py #2408, treaty.ENDLESS #2406)
     "pop_limit": None,                # "Population limit" (train.LIMITS, #2266)
     "resources": "standard",          # "Starting resources" (gather.LEVELS, #2264)
     "teams": None,                    # {player: team or None} in place of the scenario's (team_choices, #2296)
     "treaty": "0:00",                 # "Treaty length" (MM:SS): before it no player can attack another (treaty.py, #2297)
-    "victory": "standard",            # "Victory": "standard" (conquest, a wonder or all relics), "conquest" (#2316) or "king-of-the-hill" (hill.py, #2360)
+    "victory": "standard",            # "Victory": "standard" (conquest, a wonder or all relics), "conquest" (#2316),
+                                      # "king-of-the-hill" (hill.py, #2360) or "last-man-standing" (conquest.last_man, #2358)
 }
 
 
@@ -407,24 +418,33 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
               f"player {foe} {'never' if attack == 'never' else 'at ' + attack}.", file=sys.stderr)
     import combat
     combat.setup(game, data)                         # AoE2 hit points and damage (#514)
+    if settings["mode"] == "empire-wars" and settings["age"] == "dark":   # the start age of the mode (#2408)
+        import empire_wars
+        settings["age"] = empire_wars.MODES["empire-wars"]["age"]
     if not state and settings["age"] != "dark":                  # after the base values: the technologies change them
         import train
         for x in [g, *(s.g for s in g.bots)]:
             train.start(x, settings["age"])
-    import regicide
-    import sudden_death
-    for x in [g, *(s.g for s in g.bots)]:
-        x.mode = settings["mode"]                    # build.locked of each player (#2407)
-    if settings["mode"] == "sudden-death":
-        sudden_death.setup(g, settings["mode"])
-    elif settings["mode"] in regicide.MODES:                     # after the bots: their Kings go to their Gathers (#2347)
-        regicide.setup(g, settings["mode"])
+    if settings["mode"] == "empire-wars":                        # after the age: the start town and its villagers
+        import empire_wars
+        g.mode = settings["mode"]
+        if not state:                                            # a loaded game has its town in the saved world
+            empire_wars.setup(g, settings["mode"])
+    elif settings["mode"] != "standard":                         # after the bots: their Kings go to their Gathers (#2347)
+        import regicide
+        import sudden_death
+        for x in [g, *(s.g for s in g.bots)]:
+            x.mode = settings["mode"]                # build.locked of each player (#2407), wonder.RACE (#2406)
+        if settings["mode"] == "sudden-death":
+            sudden_death.setup(g, settings["mode"])
+        elif settings["mode"] in regicide.MODES:
+            regicide.setup(g, settings["mode"])
     import replay
     import treaty as treaties
     if settings["mode"] in treaties.ENDLESS:                     # Wonder Race: a treaty with no end (#2406)
-        treaties.start(g, math.inf)
+        treaties.start(g, math.inf, (state or {}).get("treaty_time", 0.0))
     elif replay.aoe2mc.game_time(settings["treaty"]):            # after the Gathers: they set the neutral stances
-        treaties.start(g, replay.aoe2mc.game_time(settings["treaty"]) / 1000)
+        treaties.start(g, replay.aoe2mc.game_time(settings["treaty"]) / 1000, (state or {}).get("treaty_time", 0.0))   # #2409
     if game.kind == "paper":                         # the view square of each player on map 0 (#1762)
         import replay
         game.command(f"aoe minimap frame {replay.FRAME * data['tile_size']}")
@@ -585,16 +605,15 @@ def main(argv=None):
                     "has the generic units and technologies that its tech tree does not have (the bonuses stay)")
     ap.add_argument("--full-tech-tree", action="store_true", help="--play: the AoE2 setting \"Full Tech Tree\": each "
                     "civilization has the full tech tree and its unique units, but no civilization and team bonuses")
-    ap.add_argument("--victory", choices=["standard", "conquest", "king-of-the-hill"], default="standard",
-                    help="--play: the AoE2 setting \"Victory\" (default standard: conquest, a wonder or all relics; "
-                    "conquest: only the conquest; king-of-the-hill: the monument in the center, #2360)")
+    ap.add_argument("--victory", choices=["standard", "conquest", "king-of-the-hill", "last-man-standing"],
+                    default="standard", help="--play: the AoE2 setting \"Victory\" (default standard: conquest, a wonder "
+                    "or all relics; conquest: only the conquest; king-of-the-hill: the monument in the center, #2360; "
+                    "last-man-standing: a conquest that only one player wins, #2358)")
     ap.add_argument("--pop-limit", type=pop_limit, default=200, metavar="N",
                     help="--play: the AoE2 setting \"Population limit\" of each player: 25 to 250 in steps of 25, 300, "
                     "400 or 500 (default 200)")
-    ap.add_argument("--mode", choices=["standard", "regicide", "sudden-death", "wonder-race"], default="standard",
-                    help="--play: the AoE2 game mode (default standard; regicide: each player has a King, a player "
-                    "whose King dies is defeated; sudden-death: one town center, a player who loses it is defeated; "
-                    "wonder-race: no player can attack another, the first complete wonder wins)")
+    ap.add_argument("--mode", choices=sorted(MODES), default="standard", help="--play: the AoE2 game mode (default "
+                    "standard; " + "; ".join(f"{k}: {v}" for k, v in sorted(MODES.items()) if k != "standard") + ")")
     ap.add_argument("--log", metavar="FILE", help="--play: write one JSON line per villager event (time, state, load)")
     ap.add_argument("--load", metavar="SAVE", help="--play: go on with a saved game (a folder of saves/: the end of "
                     "--play with Ctrl-C saves the world and the resources, technologies and ages there)")
