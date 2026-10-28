@@ -79,6 +79,12 @@ LINES = {r["name"]: (r["mob"], tuple(tuple(p[:1]) + (int(p[1][1:], 16),) if isin
                      r["main"], r["off"], *([tags(r)] if "tags" in r else [])) for r in rows("lines.jsonl")}
 TRIM = Compound({"material": String("minecraft:gold"), "pattern": String("minecraft:sentry")})
 
+# The own armor look of a unit in the resource pack (#2742): one line each in data/looks.jsonl ("pattern", "accent",
+# "crest"). With ASSETS (--resource-pack, or a game on a world with the pack) each armor piece of the unit has the
+# equipment asset aoe2mc:<name> (its textures: aoe2mc.write_resourcepack); ELITE_X wears the asset of X.
+LOOKS = {r["name"]: r for r in rows("looks.jsonl")}
+ASSETS = False
+
 # The names of data/units.jsonl (#2035), one line each; the keys of a line:
 # "tier": the upgrade step of a standard unit line (other units are "unique", "elite" or "hero").
 # "invisible": the reason to skip an invisible marker or internal unit (a keyword; place_objects, classify() and
@@ -143,6 +149,17 @@ def armor_items(pieces):
             if rgb is not None:
                 it.setdefault("components", Compound({}))["minecraft:dyed_color"] = Int(rgb)
     return out
+
+
+def wear(n, gear):
+    """The armor pieces of gear get the equipment asset of unit n when ASSETS is on and n has a look (#2742)."""
+    n = n[6:] if n not in LOOKS and n.startswith("ELITE_") else n
+    if ASSETS and n in LOOKS:
+        for slot in ("head", "chest", "legs", "feet"):
+            if slot in gear:
+                gear[slot].setdefault("components", Compound({}))["minecraft:equippable"] = Compound({
+                    "slot": String(slot), "asset_id": String("aoe2mc:" + n.lower())})
+    return gear
 
 
 def hands(main=None, off=None):
@@ -410,7 +427,7 @@ def classify(n, hero=False):
     if has(n, "SKIRMISHER", "JAVELIN", "GBETO", "CHAKRAM", "THROWING", "PELTAST", "SLINGER", "EKDROMOS"):
         return soldier("drowned", t, "trident")
     if has(n, "SPEAR", "PIKE", "HALBERD", "KAMAYUK", "HOPLITE", "PHALANGITE", "SPARABARA"):
-        return soldier("zombie", t, "trident")
+        return mob("zombie", wear(n, armor(t)) | hands("trident"))
     if has(n, "CANNONEER", "JANISSARY", "GRENADIER", "ARQUEBUS", "FIRE_LANCER"):
         return mob("pillager", hands("crossbow"))
     if has(n, "CROSSBOW", "ARBALEST", "CHU_KO_NU"):
@@ -430,7 +447,7 @@ def line_unit(n):
     if elite:
         worn = next(armor[k] for k in ("chest", "head", "legs", "feet") if k in armor)     # chestplate first
         worn.setdefault("components", Compound({}))["minecraft:trim"] = TRIM
-    man = mob("zombie" if kind == "mounted" else kind, armor | hands(main, off), **(tags[0] if tags else {}))
+    man = mob("zombie" if kind == "mounted" else kind, wear(n, armor) | hands(main, off), **(tags[0] if tags else {}))
     return mounted("horse", man, 3, {"Variant": Int(4)}) if kind == "mounted" else man
 
 
