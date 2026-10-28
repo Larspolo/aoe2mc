@@ -21,6 +21,9 @@ commands of the alliances and neutral stances (gather.allies_command, gather.neu
 The conditions "Researching Technology" and "Technology State" (#2769) test the score #p<N>.<technology> of
 aoe_techstate: tech_states() sets it to the AoE2 TechnologyState from the queues and g.techs of player N.
 
+The condition "Object Has Action" (#2867) tests the score #r<ref> of aoe_action: actions() sets it to the AoE2
+UnitAIAction of the order of the villager (ACTIONS).
+
 The condition "Difficulty Level" (#2704) tests the score #level of aoe_difficulty: setup() sets it to the AoE2 value
 ("aoe2" of game/data/difficulty.jsonl) of the setting "AI difficulty" (run.py --ai-difficulty).
 
@@ -55,7 +58,9 @@ ORDERS = "aoe2mc:orders"                                               # the dat
 ATTRIBUTES = "aoe2mc:attributes"                                       # the storage of "Modify Attribute" (#2763)
 MENUS = "aoe2mc:menus"                                                 # the storage of "Enable/Disable" (#2775)
 COSTS = "aoe2mc:costs"                                                 # the storage of "Change Object Cost" (#2776)
+UNSELECTABLE = "aoe2mc.unselectable"                                   # the tag of "Disable Object Selection" (aoe2mc)
 NAMES = "aoe2mc:names"                                                 # the storage of "Change Technology Name" (#2821)
+READS = "aoe2mc:reads"                                                 # "Modify Variable by Attribute" (#2858)
 NEAR = 3                                                               # blocks: a patrol turns back this near its point
 LEVELS = {r["name"]: r["aoe2"] for r in table.load("difficulty.jsonl")}  # "AI difficulty" -> AoE2 DifficultyLevel
 
@@ -115,15 +120,18 @@ def tick(g):
     research(g)
     garrisons(g)
     tech_states(g)
+    actions(g)
     trading(g)
     if g.clock() < vars(g).get("book_at", 0.0):
         return
     g.book_at = g.clock() + EVERY
     tasks(g)
     orders(g)
+    selection(g)
     menus(g)
     visible(g)
     attributes(g)
+    reads(g)
     costs(g)
     names(g)
     messages = g.data.get("messages", {})
@@ -217,6 +225,18 @@ def orders(g):
             g.command(f"aoe moveto @e[tag={tag}] {' '.join(map(str, points[q[2] % 2]))}")
         elif "passed" not in g.command(f"execute if entity @e[tag={tag}]"):
             patrols.remove(q)
+
+
+def selection(g):
+    """The units of "Disable Object Selection" (aoe2mc.selection_lines, #2854): read the UUIDs with the tag UNSELECTABLE
+    (one `aoe where` per check, not one command per click) into g.unselectable, which the clicks, the selection box and
+    the double click skip (gather.Gather.unpickable). A selected unit that gets the tag leaves the selection. Vanilla
+    has no `aoe where`: there all units stay selectable."""
+    if not getattr(g, "paper", False):
+        return
+    g.unselectable = set(g.where(None, f"@e[tag={UNSELECTABLE}]"))
+    if g.selected & g.unselectable:
+        g.choose(g.selected - g.unselectable)
 
 
 def foundation(g, player, name, tile):
@@ -335,6 +355,22 @@ def attributes(g):
             x.command(combat.stats_command(uuid, n, s, civs.taken(x, n), civs.friendly(x, n)))
             if field == "range" and (cmd := combat.range_command(uuid, n, x.map.T, s=s)):
                 x.command(cmd)
+
+
+def reads(g):
+    """The requests of "Modify Variable by Attribute" (aoe2mc.variable_by_attribute_lines, #2858): read and empty the
+    list of the data storage READS, and change the score #v<N> of aoe_var by the value of the unit type of the player
+    (train.stats; AoE2 variables are whole numbers) with a scoreboard operation."""
+    import combat                                                      # combat -> gather -> scenario
+    new = re.findall(r'"(\d+) (\w+) (\w+) ([1-5]) (\d+)"', g.command(f"data get storage {READS} list") or "")
+    if new:
+        g.command(f"data remove storage {READS} list")
+    sides = {x.player: x for x in [g, *(s.g for s in g.bots)]}
+    for player, name, field, op, v in new:
+        if (x := sides.get(int(player))) is None or field not in combat.Stats._fields:
+            continue
+        g.command(f"scoreboard players set #read aoe_var {int(getattr(train.stats(x, name), field))}")
+        g.command(f"scoreboard players operation #v{v} aoe_var {('', '+', '-', '*', '/')[int(op) - 1]}= #read aoe_var")
 
 
 def menus(g):
@@ -480,6 +516,43 @@ def tech_states(g):
         if n in sides and name in train.TECHS and sent.get((n, name)) != (v := tech_state(sides[n], name)):
             g.command(f"scoreboard players set #p{n}.{name} aoe_techstate {v}")
             sent[(n, name)] = v
+
+
+# The state of a villager (gather.Villager) -> the AoE2 UnitAIAction of "Object Has Action" (#2867), one per line in
+# alphabetical order. aoe2mc.OBJECT_ACTIONS lists the same values: the converter writes only these conditions.
+ACTIONS = {
+    "build": 3,                                                        # BUILD
+    "chop": 10,                                                        # GATHER: wood, food, gold, stone, a farm
+    "garrison": 18,                                                    # ENTER
+    "hunt": 14,                                                        # HUNT
+    "idle": 24,                                                        # IDLE
+    "repair": 19,                                                      # REPAIR
+    "to_drop": 10,                                                     # GATHER: the walk to the drop site
+    "to_prey": 14,                                                     # HUNT
+    "to_rally": 11,                                                    # MOVE
+    "to_repair": 19,                                                   # REPAIR
+    "to_site": 3,                                                      # BUILD
+    "to_tree": 10,                                                     # GATHER
+}
+
+
+def actions(g):
+    """Once per game second: the score #r<ref> of aoe_action of each unit of aoe2mc.json "actions" (the condition
+    "Object Has Action", #2867) is the AoE2 UnitAIAction of its villager state (ACTIONS); 0 for another unit, a dead
+    one or an unknown state. One command per change."""
+    if g.clock() < vars(g).get("action_at", 0.0):
+        return
+    g.action_at = g.clock() + 1.0
+    refs = g.data.get("actions", ())
+    if not refs:
+        return
+    uuids = {o["ref"]: o["uuid"] for o in g.data["objects"] if o.get("ref") in refs and "uuid" in o}
+    states = {u: v.state for x in [g, *(s.g for s in g.bots)] for u, v in x.villagers.items()}
+    sent = vars(g).setdefault("action_sent", {})
+    for ref in refs:
+        if sent.get(ref) != (v := ACTIONS.get(states.get(uuids.get(ref)), 0)):
+            g.command(f"scoreboard players set #r{ref} aoe_action {v}")
+            sent[ref] = v
 
 
 def tech_state(x, name):
