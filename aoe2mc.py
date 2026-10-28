@@ -419,6 +419,7 @@ def read_scenario(path):
                                             time=e.display_time, object=kinds.get(e.object_list_unit_id),
                                             tile=[e.location_x, e.location_y],
                                             area=[e.area_x1, e.area_y1, e.area_x2, e.area_y2],
+                                            selected=list(e.selected_object_ids or []),   # (#2975)
                                             **{k: v(e, kinds, techs) if callable(v) else getattr(e, v)   # #2792
                                                for k, v in EFFECT_KEYS.get(e.effect_type, {}).items()},
                                             **({"mood": ColorMood(e.color_mood).name}     # "Change Color Mood" (#1876)
@@ -2078,6 +2079,7 @@ NAME_HIDDEN = "aoe2mc.name_hidden"  # entity tag of a unit whose name tag a trig
 GARRISONED = "aoe2mc.garrisoned"    # entity tag of a unit inside its building (#807; the game program: #808)
 NO_TARGET = "aoe2mc.notarget"       # entity tag: no unit or tower chooses it as a target (AoePlugin calm, #2826)
 UNSELECTABLE = "aoe2mc.unselectable"   # entity tag: no click of a person selects it (game/scenario.py, #2854)
+SELECTED = "aoe2mc.sel"             # temporary entity tag: the selected objects and the area units of an effect (#2975)
 MADE_INSIDE = "aoe2mc.made_inside"  # entity tag of a unit that a trigger made inside a building: the game program adds
                                     # it to the garrison of the building (#2764)
 GARRISON_CELLS = 20         # free cells of a building in aoe2mc.json: the largest AoE2 garrison (castle, #808)
@@ -3046,15 +3048,15 @@ def object_lines(e, c):
             part.pop("UUID", None)
             parts += list(part.get("Passengers", []))
         return [f"summon {kind} {x + 0.5} {int(ground[x, z])} {z + 0.5} {nbt.snbt()}"]
-    if e["type"] == KILL_OBJECT or e["type"] == REMOVE_OBJECT and min(e.get("area", [-1])) >= 0:
+    if e["type"] == KILL_OBJECT or e["type"] == REMOVE_OBJECT and has_units(e):
         word = "kill" if e["type"] == KILL_OBJECT else "remove"
         if (found := effect_units(e, T)) is None:
             stats[f"{word} (not supported yet)"] += 1
             return []
         at, top, nbt = found
         stats[word] += 1
-        ride = [f"execute as {at} on vehicle run kill @s"] if top is not None and top is not nbt else []
-        return ride + [f"kill {at}"]                                       # a rider: its mount goes too
+        ride = [f"execute as {at} on vehicle run kill @s"] if top is None or top is not nbt else []
+        return ride + [f"kill {at}"]                                       # a rider: its mount goes too (#2975)
     return []
 
 
@@ -3270,7 +3272,7 @@ def speed_lines(e, c):
     (game/ai.py movement_speed, WALK; NORMAL of game/gather.py): sqrt(speed * T * NORMAL / WALK). Constants copied:
     the converter does not import the game program."""
     q, T, stats = e.get("quantity") or 0, c.T, c.stats
-    if q <= 0 or min(e.get("area", [-1])) < 0:
+    if q <= 0 or not has_units(e):
         stats["change object speed (not supported)"] += 1
         return []
     stats["change object speed"] += 1
@@ -3373,7 +3375,7 @@ def owner_lines(e, c):
     stats["change ownership"] += 1
     own = "@e[tag=aoe2mc.own]"
     to = [f"tag {own} add aoe2mc.p{new}", f"team join p{new} {own}" if new else f"team leave {own}"]
-    return [f"tag {area_selector(e, T)} add aoe2mc.own",
+    return [f"tag {unit_selector(e, T)} add aoe2mc.own",
             f"execute as {own} on vehicle run tag @s add aoe2mc.own",
             f"tag {own} remove aoe2mc.p{old}", *to, f"tag {own} remove aoe2mc.own"]
 
@@ -3468,7 +3470,7 @@ def teleport_lines(e, c):
     middle of the target tile, on the ground. A rider is not in the selector of its horse (units.MOUNT): the first line
     moves the mounts of the riders in the area, and the riders go with them. Then the riders are out of the area, so
     the second line (a tp of a rider takes it off its horse) moves only the units on foot."""
-    if min(e.get("tile", [-1])) < 0 or min(e.get("area", [-1])) < 0:
+    if min(e.get("tile", [-1])) < 0 or not has_units(e):
         return []
     T, ground = c.T, c.ground
     x, z = (int((v + 0.5) * T) for v in e["tile"])
@@ -3562,7 +3564,7 @@ def task_lines(e, c):
     and walks the tagged units there with the Paper plugin (aoe moveto). A rider gives its tag to its horse (units.MOUNT):
     the plugin walks the horse. No area or no tile: no line."""
     T, ground = c.T, c.ground
-    if min(e.get("tile", [-1])) < 0 or min(e.get("area", [-1])) < 0:
+    if min(e.get("tile", [-1])) < 0 or not has_units(e):
         return []
     x, z = (int((v + 0.5) * T) for v in e["tile"])
     if not (0 <= x < ground.shape[0] and 0 <= z < ground.shape[1]):
@@ -3596,8 +3598,42 @@ def resource_score(c):
 
 def unit_selector(e, T):
     """The area_selector of the units of the player of an effect. A Gaia unit has the tag aoe2mc.p0 (units.make_entity,
-    "Change Ownership" to Gaia, #2916): also with a ref tag, a type tag or a type filter."""
-    return area_selector(e if e["player"] >= 0 else {**e, "player": 0}, T)
+    "Change Ownership" to Gaia, #2916): also with a ref tag, a type tag or a type filter.
+    With selected objects (#2975): one selected unit and no area is its ref tag (of the player, as in AoE2); more units
+    or also an area: the temporary tag SELECTED, which selection_tags gives them before the lines of the effect."""
+    refs = picked(e)
+    if not refs:
+        return area_selector(e if e["player"] >= 0 else {**e, "player": 0}, T)
+    if len(refs) > 1 or min(e.get("area", [-1])) >= 0:
+        return f"@e[tag={SELECTED}]"
+    return ref_selector(e, refs[0])
+
+
+def picked(e):
+    """The refs of the selected objects of an effect (#2975); -1 is no object. A selected building has no entity: its
+    ref tag finds nothing."""
+    return [r for r in e.get("selected", ()) if r >= 0]
+
+
+def has_units(e):
+    """True when an effect has an area or selected objects: the handlers that need units to act on (#2975)."""
+    return min(e.get("area", [-1])) >= 0 or bool(picked(e))
+
+
+def selection_tags(e, lines, T):
+    """The lines of an effect with the temporary tag SELECTED (unit_selector): first the selected units of the player
+    and the units of the area get it, at the end all lose it. Minecraft has no "or" of tags in one selector."""
+    if not any(f"tag={SELECTED}" in line for line in lines):
+        return lines
+    area = [f"tag {area_selector(e if e['player'] >= 0 else {**e, 'player': 0}, T)} add {SELECTED}"]
+    return [f"tag {ref_selector(e, r)} add {SELECTED}" for r in picked(e)] + \
+        area * (min(e.get("area", [-1])) >= 0) + lines + [f"tag @e[tag={SELECTED}] remove {SELECTED}"]
+
+
+def ref_selector(e, ref):
+    """The selector of one selected object of an effect: its ref tag, with the player tag when the effect has a player."""
+    player = [f"tag=aoe2mc.p{e['player']}"] * (e["player"] >= 0)
+    return f"@e[{','.join(player + [f'tag=aoe2mc.r{ref}'])}]"
 
 
 def sound_lines(e, c):
@@ -3615,7 +3651,7 @@ def sound_lines(e, c):
 def attackable_lines(e, c):
     """The commands of "Disable Unit Attackable" and "Enable Unit Attackable" (#2695): the tag Invulnerable of the
     units of the player in the area. Enable keeps the garrisoned units invulnerable (#807)."""
-    if min(e.get("area", [-1])) < 0:
+    if not has_units(e):
         return []
     disable = e["type"] == DISABLE_UNIT_ATTACKABLE
     guard = "" if disable else f" unless entity @s[tag={GARRISONED}]"
@@ -3625,7 +3661,7 @@ def attackable_lines(e, c):
 def selection_lines(e, c):
     """The command of "Disable Object Selection" and "Enable Object Selection" (#2854): the tag UNSELECTABLE of the
     units of the player in the area. The game program selects no tagged unit (scenario.selection)."""
-    if min(e.get("area", [-1])) < 0:
+    if not has_units(e):
         return []
     return [f"tag {unit_selector(e, c.T)} {'add' if e['type'] == DISABLE_OBJECT_SELECTION else 'remove'} {UNSELECTABLE}"]
 
@@ -3638,8 +3674,7 @@ def object_visibility_lines(e, c):
     all players see the change, whatever the target player."""
     if e.get("visibility") not in (0, 1, 2):
         return []
-    sels = [f"@e[tag=aoe2mc.r{r}]" for r in e.get("selected", ())] + \
-        [unit_selector(e, c.T)] * (min(e.get("area", [-1])) >= 0)
+    sels = [unit_selector(e, c.T)] * has_units(e)
     c.stats["change object visibility"] += bool(sels)
     if e["visibility"] == 0:
         return [line for at in sels for line in (
@@ -3657,7 +3692,7 @@ def object_visibility_lines(e, c):
 def targeting_lines(e, c):
     """The command of "Disable Unit Targeting" and "Enable Unit Targeting" (#2826): the tag NO_TARGET of the units of
     the player in the area. The game program chooses no tagged unit as a target; an attack order still hits it (AoE2)."""
-    if min(e.get("area", [-1])) < 0:
+    if not has_units(e):
         return []
     return [f"tag {unit_selector(e, c.T)} {'add' if e['type'] == DISABLE_UNIT_TARGETING else 'remove'} {NO_TARGET}"]
 
@@ -3665,7 +3700,7 @@ def targeting_lines(e, c):
 def freeze_lines(e, c):
     """The commands of "Freeze Object" (#2608): the units of the player in the area and the mounts of the riders get
     NoAI, so they stay in their place (AoE2: they do not move until a new order)."""
-    if min(e.get("area", [-1])) < 0:
+    if not has_units(e):
         return []
     at = unit_selector(e, c.T)
     return [f"execute as {at} on vehicle run data merge entity @s {{NoAI:1b}}",
@@ -3827,14 +3862,15 @@ def order_lines(e, c):
     the ground; a patrol also the middle of the area, where it turns back). The scenario mode of the game program
     (game/scenario.py orders) empties the list with RCON and walks the tagged units with the Paper plugin."""
     T, ground = c.T, c.ground
-    if min(e.get("tile", [-1])) < 0 or min(e.get("area", [-1])) < 0:
+    patrol = e["type"] == PATROL                                       # its second point: the middle of the area
+    if min(e.get("tile", [-1])) < 0 or not has_units(e) or patrol and min(e.get("area", [-1])) < 0:
         return []
     a = e["area"]
-    blocks = [(int((x + 0.5) * T), int((z + 0.5) * T)) for x, z in (e["tile"], ((a[0] + a[2]) / 2, (a[1] + a[3]) / 2))]
+    blocks = [(int((x + 0.5) * T), int((z + 0.5) * T)) for x, z in [e["tile"]] + [((a[0] + a[2]) / 2, (a[1] + a[3]) / 2)] * patrol]
     if not all(0 <= x < ground.shape[0] and 0 <= z < ground.shape[1] for x, z in blocks):
         return []
     tag, order = f"aoe_order{c.t['id']}_{effect_index(e, c)}", "patrol" if e["type"] == PATROL else "attack_move"
-    where = " ".join(f"{x} {int(ground[x, z])} {z}" for x, z in blocks[:1 + (e["type"] == PATROL)])
+    where = " ".join(f"{x} {int(ground[x, z])} {z}" for x, z in blocks)
     return tag_lines(e, T, tag) + [f'data modify storage aoe2mc:orders list append value "{order} {tag} {where}"']
 
 
@@ -4166,10 +4202,6 @@ def _object2(e, kinds, techs):
     return kinds.get(e.object_list_unit_id_2)
 
 
-def _selected(e, kinds, techs):
-    return list(e.selected_object_ids or [])
-
-
 # The keys of the effect dict of read_scenario beyond the common ones: key -> attribute of the scenario effect, or
 # (effect, kinds, techs) -> value. A new effect is one line here, in alphabetical order (#2792): parallel trigger
 # tickets conflicted in one expression of read_scenario (#2873: all effects but "mood", which tests its value).
@@ -4185,7 +4217,7 @@ EFFECT_KEYS = {
     CHANGE_OBJECT_RANGE: {"operation": "operation", "quantity": "quantity"},   # (#2767)
     CHANGE_OBJECT_SPEED: {"quantity": "quantity"},
     CHANGE_OBJECT_STANCE: {"stance": "attack_stance"},
-    CHANGE_OBJECT_VISIBILITY: {"target": "target_player", "visibility": "visibility_state", "selected": _selected},
+    CHANGE_OBJECT_VISIBILITY: {"target": "target_player", "visibility": "visibility_state"},
     CHANGE_OWNERSHIP: {"target": "target_player"},
     CHANGE_PLAYER_COLOR: {"color": "player_color"},
     CHANGE_TECHNOLOGY_COST: {"cost": _cost, "technology": _tech},
@@ -4197,7 +4229,7 @@ EFFECT_KEYS = {
     CLEAR_TIMER: {"timer": "timer"},
     COUNT_UNITS_INTO_VARIABLE: {"variable2": "variable2"},   # (#2697)
     CREATE_DECISION: {"decision": "decision_id", "option1": "message_option1", "option2": "message_option2"},
-    CREATE_GARRISONED_OBJECT: {"object2": _object2, "selected": _selected},
+    CREATE_GARRISONED_OBJECT: {"object2": _object2},
     CREATE_OBJECT_ARMOR: {"class": "armour_attack_class", "aa": "armour_attack_quantity"},   # (#2855)
     CREATE_OBJECT_ATTACK: {"class": "armour_attack_class", "aa": "armour_attack_quantity"},  # (#2855)
     DAMAGE_OBJECT: {"quantity": "quantity"},
@@ -4208,9 +4240,8 @@ EFFECT_KEYS = {
     ENABLE_DISABLE_TECHNOLOGY: {"enabled": "enabled", "technology": _tech},
     ENABLE_TECHNOLOGY_STACKING: {"quantity": "quantity", "technology": _tech},   # (#2866)
     HEAL_OBJECT: {"quantity": "quantity"},
-    INITIATE_RESEARCH: {"selected": _selected, "technology": _tech},   # (#2772)
+    INITIATE_RESEARCH: {"technology": _tech},   # (#2772)
     LOAD_KEY_VALUE: {"quantity": "quantity", "variable": "variable"},   # (#2887)
-    LOCK_GATE: {"selected": _selected},
     MIRROR_DIPLOMACY: {"target": "target_player"},
     MODIFY_ATTRIBUTE: {"attribute": "object_attributes", "operation": "operation", "quantity": "quantity", "class": "armour_attack_class", "aa": "armour_attack_quantity"},
     MODIFY_ATTRIBUTE_BY_VARIABLE: {"attribute": "object_attributes", "class": "armour_attack_class",   # (#2856)
@@ -4229,13 +4260,10 @@ EFFECT_KEYS = {
     PLAY_SOUND: {"sound": lambda e, kinds, techs: e.sound_name or ""},
     REPLACE_OBJECT: {"target": "target_player", "object2": _object2},
     RESEARCH_TECHNOLOGY: {"technology": _tech},
-    SET_BUILDING_GATHER_POINT: {"selected": _selected},
     SET_PLAYER_VISIBILITY: {"target": "target_player", "visibility": "visibility_state"},
     STORE_KEY_VALUE: {"variable": "variable"},                         # (#2887)
-    TRAIN_UNIT: {"quantity": "quantity", "selected": _selected},   # (#2772)
+    TRAIN_UNIT: {"quantity": "quantity"},   # (#2772)
     TRIBUTE: {"target": "target_player", "quantity": "quantity", "resource": "tribute_list"},
-    UNLOAD: {"selected": _selected},
-    UNLOCK_GATE: {"selected": _selected},
 }
 
 
@@ -4472,7 +4500,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
                     for c in conds):                                   # unit classes: not yet
             continue
         ctx = Effect(t, T, ground, players, stats, mood, files, setup, switch, timed, clocks, triggers)
-        lines = [line for e in t["effects"] if e["type"] in EFFECTS for line in EFFECTS[e["type"]](e, ctx)]
+        lines = [line for e in t["effects"] if e["type"] in EFFECTS for line in selection_tags(e, EFFECTS[e["type"]](e, ctx), T)]
         if not lines:
             continue
         fn, n = f"aoe2mc:trigger/{t['id']}", t["id"]

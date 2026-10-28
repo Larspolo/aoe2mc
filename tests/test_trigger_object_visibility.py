@@ -49,7 +49,7 @@ def test_visible_shows_them_and_only_the_name_tags_that_the_trigger_hid():
 
 def test_selected_objects_are_found_by_their_reference_tag():
     out = lines([effect(2, area=(-1, -1, -1, -1), selected=[7])])
-    assert out[1] == "execute as @e[tag=aoe2mc.r7] run effect give @s minecraft:invisibility infinite 0 true"
+    assert out[1] == "execute as @e[tag=aoe2mc.p2,tag=aoe2mc.r7] run effect give @s minecraft:invisibility infinite 0 true"
     assert len(out) == 4 and all("aoe2mc.r7" in x for x in out)
 
 

@@ -11,7 +11,7 @@ import scenarios  # noqa: E402
 from AoE2ScenarioParser.datasets.effects import EffectId  # noqa: E402
 from AoE2ScenarioParser.datasets.techs import TechInfo  # noqa: E402
 
-COMMON = {"type", "message", "player", "time", "object", "tile", "area"}
+COMMON = {"type", "message", "player", "time", "object", "tile", "area", "selected"}
 
 
 def test_the_lines_of_effect_keys_are_in_alphabetical_order():
