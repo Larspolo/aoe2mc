@@ -85,6 +85,7 @@ NEXT = 5                    # tiles: an empty resource sends its villager to the
 NEAR = 2                    # blocks: a unit of the plugin this near to its replay position is at its resource (#766)
 WAIT = 1000                 # ms of game time between two position checks of a unit that is late on its path (#766)
 LATE = 60000                # ms of game time: a unit that is still not at its resource then goes there with /tp
+STILL = 4000                # ms of game time: a walking unit that stands this long on one place gets free (unstick)
 PATH_CELLS = 20000          # cells that one path search may look at: a unit with no path stays (no time lag)
 # The walk speed of common units, tiles per game second (AoE2 DE), the ages and the Society buildings: one line per
 # name in data/replay.jsonl (#2034). A walk speed name is the start of the unit names.
@@ -230,6 +231,7 @@ class Replay:
         self.points = {}                        # object ID of a building -> its last GATHER POINT event (#1227)
         self.adopted, self.rallied = {}, 0      # temporary ID of a unit at a gather point -> its object ID (#1227)
         self.effects = {}                       # entity tag of a research text -> game time (ms) of its end (#843)
+        self.flares = []                        # (x, y, z, game time (ms) of the end) of the live flares (#2402)
         self.refs = {o["ref"]: o for o in data["objects"] if o.get("ref") is not None}
         self.rng = np.random.default_rng(1)
         self.kinds, self.seen = aoe2mc.object_kinds(), set()
@@ -318,6 +320,8 @@ class Replay:
             name, color = self.player(e["player"]) if e.get("player") else ("Game", "white")
             return ["tellraw @a " + json.dumps([text(f"<{name}> ", color), text(taunt(e["text"]))])]
         name, color = self.player(e.get("player"))
+        if kind == "flare" and e.get("tile"):
+            return self.flare(e, name, color)
         if kind == "age" and e.get("age"):
             self.age(e)
             return ["title @a subtitle " + json.dumps(text(name, color)),
@@ -430,11 +434,26 @@ class Replay:
                 f"particle minecraft:enchant {x} {top + 1} {z} {(x1 - x0) / 4} 0.5 {(z1 - z0) / 4} 1 60"]
 
     def expire(self, t):
-        """The commands that remove the research texts whose time ended at game time t (ms)."""
+        """The commands that remove the research texts whose time ended at game time t (ms), and the particles of the
+        live flares (a particle burst lives less than a second, as flare.tick in the game program)."""
         done = [tag for tag, end in self.effects.items() if end <= t]
         for tag in done:
             del self.effects[tag]
-        return [f"kill @e[type=text_display,tag={tag}]" for tag in done]
+        import flare                                                # game/: on the path of the replay
+        self.flares = [f for f in self.flares if f[3] > t]
+        return [f"kill @e[type=text_display,tag={tag}]" for tag in done] + \
+            [flare.particles(x, y, z, "@a") for x, y, z, _ in self.flares]
+
+    def flare(self, e, name, color):
+        """A flare of the record (#2402): the bell, the light column of the game program (flare.py) at the block of
+        its tile for flare.SECONDS of game time, and a chat line in the player color."""
+        import flare
+        x, z = (min(self.n - 1, max(0, int(c * self.T))) for c in e["tile"])
+        y = self.ground[z][x] if self.ground[z][x] is not None else next(
+            (g for row in self.ground for g in row if g is not None), 64)    # water: the height of the land
+        self.flares.append((x, y, z, e["time"] + flare.SECONDS * 1000))
+        return [f"playsound {flare.SOUND} master @a {x} {y} {z} 1 1 1", flare.particles(x, y, z, "@a"),
+                "tellraw @a " + json.dumps([text(f"<{name}> ", color), text("Flare", "gold")])]
 
     @functools.lru_cache(maxsize=None)
     def height(self, name, player):
@@ -956,6 +975,7 @@ class Replay:
         leg of a long walk. It and a walk less than RECENT ms after the last leg read the entity to catch up (catch_up)."""
         import ai                                                   # ai -> replay: import it late
         x, z = legs[0]
+        chain, v.stand = behind, getattr(v, "stand", None) if behind else None   # a new walk: no old place
         behind = behind or (getattr(v, "leg", None) or (0, 0, -RECENT))[2] > t - RECENT
         start = x0, _, z0 = v.pos
         v.pos, v.path = (x + 0.5, float(self.map.y(x, z)), z + 0.5), legs[1:]
@@ -964,34 +984,57 @@ class Replay:
         due = t + 1000 * d / speed
         v.leg = (start, t, due)                                     # at() reads it
         v.check = t + CLOSE if due - t > 2 * CLOSE else None        # a long leg reads the entity again (recheck())
-        f = min(CATCH_UP, PATH * (self.catch_up(v, d, speed * CLOSE / 1000) if behind else 1.0))
-        return [ai.speed_command(v.uuid, v.name, self.T, self.speed * f),
-                "aoe moveto {} {} {} {}".format(v.uuid, *v.pos)], due
+        at = self.entity(v) if chain or behind and d >= 1 else None
+        free = self.unstick(v, start, t, at) if chain else []
+        f = min(CATCH_UP, PATH * (self.catch_up(v, d, speed * CLOSE / 1000, at) if behind and not free else 1.0))
+        return free + [ai.speed_command(v.uuid, v.name, self.T, self.speed * f),
+                       "aoe moveto {} {} {} {}".format(v.uuid, *v.pos)], due
 
     def recheck(self, v, t):
         """The walk speed command of unit v at game time t, CLOSE ms after the start of its long leg: its lag to the
         replay position on the leg (at()) closes in the next CLOSE ms (catch_up), and a unit with no lag walks at its
         speed again. A turn on a leg (an order back) costs the mob 1 to 3 s of game time that order() cannot see: a
-        villager of de-64.3 stayed 5 to 11 blocks behind for 30 s (#1293). One command per long leg."""
+        villager of de-64.3 stayed 5 to 11 blocks behind for 30 s (#1293). One command per long leg, and the /tp of a
+        unit that stands still (unstick)."""
         import ai                                                   # ai -> replay: import it late
         v.check = None
         speed = next((s for k, s in SPEEDS.items() if v.name.startswith(k)), 1.0) * self.T    # blocks per second
-        f = self.catch_up(v, math.dist(self.at(v, t)[::2], v.pos[::2]), speed * CLOSE / 1000)
-        return ai.speed_command(v.uuid, v.name, self.T, self.speed * min(CATCH_UP, PATH * f))
+        at = self.entity(v)
+        if free := self.unstick(v, v.leg[0], t, at):
+            return free + [ai.speed_command(v.uuid, v.name, self.T, self.speed * PATH)]
+        f = self.catch_up(v, math.dist(self.at(v, t)[::2], v.pos[::2]), speed * CLOSE / 1000, at)
+        return [ai.speed_command(v.uuid, v.name, self.T, self.speed * min(CATCH_UP, PATH * f))]
 
-    def catch_up(self, v, d, reach=None):
+    def entity(self, v):
+        """(x, z) of the entity of unit v, or None."""
+        m = re.findall(self.gather.NUMBER, self.game.command(f"data get entity {v.uuid} Pos").rsplit(":", 1)[-1])
+        return (float(m[0]), float(m[2])) if len(m) == 3 else None
+
+    def unstick(self, v, start, t, at):
+        """The /tp of walking unit v to start (the start of its leg: a free cell of its path) when its entity at stands
+        on the place of the last check of this walk, STILL ms ago or more, and more than NEAR blocks from start.
+        A Minecraft path can have a step that the mob cannot take: in de-64.3 two villagers stood for minutes at the
+        edge of a forest with an order, as the step onto a moss carpet (1/16 block) lifted their heads into the leaves 2
+        blocks over their column (#2304). Returns the commands."""
+        last, v.stand = getattr(v, "stand", None), at and (*at, t)
+        if at is None or last is None or t - last[2] < STILL or math.dist(at, last[:2]) >= 0.5 \
+                or math.dist(at, (start[0], start[2])) <= NEAR:
+            return []
+        v.stand = None
+        return ["tp {} {} {} {}".format(v.uuid, *start)]
+
+    def catch_up(self, v, d, reach=None, at=()):
         """The factor of the walk speed of unit v on a leg of d blocks to v.pos (1 to CATCH_UP): the lag of the entity
         (its distance to v.pos less d) is closed in the first `reach` blocks of the leg (default: all of it). The
         Minecraft path is longer than the straight leg (trees, steps on a slope), and each leg starts at the replay
         time, not at the arrival: without it, villagers of de-64.3 walked at 89 to 94 % of their AoE2 speed (#1168).
         With the whole leg, a lag of 10 blocks on a long leg stayed above 4 blocks for 30 s (#1291). One command per
-        leg that order() gives as behind."""
+        leg that order() gives as behind. at: the (x, z) of the entity (or None) that the caller read (entity())."""
         if d < 1:
             return 1.0
-        m = re.findall(self.gather.NUMBER, self.game.command(f"data get entity {v.uuid} Pos").rsplit(":", 1)[-1])
-        if len(m) != 3:
+        if (at := self.entity(v) if at == () else at) is None:
             return 1.0
-        lag = math.dist((float(m[0]), float(m[2])), (v.pos[0], v.pos[2])) - d
+        lag = math.dist(at, (v.pos[0], v.pos[2])) - d
         return min(CATCH_UP, max(1.0, 1 + lag / min(d, reach or d)))
 
     def at(self, v, t):
@@ -1050,7 +1093,7 @@ class Replay:
             w = ship(v.name)
             ok = self.map.wet if w else self.map.free
             if self.ai and not w and t < due and (getattr(v, "check", None) or due) <= t:
-                out.append(self.recheck(v, t))
+                out += self.recheck(v, t)
             if self.ai and not w and due <= t:
                 legs = [c for c in v.path if self.map.free(*c)]        # a new building on a leg end: skip it
                 cmds, at = self.order(v, legs, due, behind=True) if legs else ([], due)

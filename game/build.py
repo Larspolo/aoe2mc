@@ -184,7 +184,10 @@ def ages(g):
 
 
 def locked(g, name):
-    """The text "Needs the ... Age" when the player is not yet in the AoE2 age of building or unit name, else None."""
+    """The text "Needs the ... Age" when the player is not yet in the AoE2 age of building or unit name, else None.
+    An age after the AoE2 setting "Ending age" (aoe2mc.json "end_age", run.py --end-age, #2346) stays locked."""
+    if name in AGE_TECHS and AGE_TECHS.index(name) + 1 > getattr(g, "data", {}).get("end_age", len(AGE_TECHS)):
+        return f"The game ends in the {('Dark', 'Feudal', 'Castle', 'Imperial')[g.data['end_age']]} Age"   # #2346
     if g is not None and (age := AGE.get(name, 0) - civs.earlier(g, name)) > ages(g):
         return f"Needs the {('Dark', 'Feudal', 'Castle', 'Imperial')[age]} Age"
     if g is not None and name in NEEDS and NEEDS[name] not in getattr(g, "techs", ()):
