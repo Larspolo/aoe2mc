@@ -11,9 +11,14 @@ The start (#2686): the line "battle-royale" of game/data/setup.jsonl gives the P
 resources ("level") and no stone ("none"); setup() removes the town centers and the villagers of each player, as
 "Town Centers and Villagers are not part of the game mode" (AoE2 wiki). A loaded game does not call setup() (its
 "loaded" is "skip"): the world keeps its border, the save its Corruption time and its stock.
-The rest of the mode (the two heroes, the camps and Guardians to capture) is not here.
+The two heroes (#2688): heroes() gives each player (not Gaia) the units of the key "heroes" (Attila the Hun and Alaric
+the Goth, AoE2 wiki "BR Fall of Rome") next to its first town center, else next to its first unit. A hero of the
+scenario counts: no second one. A spawned hero gets the key "hero" in g.data["objects"] (a monk cannot convert it,
+monk.convertible) and regenerates (the key "regen" of data/units.jsonl, regen.heroes).
+The rest of the mode (the camps and Guardians to capture) is not here.
 """
 import json
+import math
 import os
 import sys
 
@@ -45,9 +50,10 @@ def strips(c, w):
 
 
 def setup(g, mode="battle-royale"):
-    """Remove the town centers and the villagers (start()), put the world border on the map square and say how long
-    the Corruption takes."""
+    """Remove the town centers and the villagers (start()), give the heroes (heroes()), put the world border on the map
+    square and say how long the Corruption takes."""
     start(g)
+    heroes(g)
     s = side(g)
     g.corruption_time, g.corruption_at = 0.0, 0.0
     for c in (f"worldborder center {s / 2:.1f} {s / 2:.1f}", "worldborder damage buffer 0", f"worldborder set {s:.1f}"):
@@ -81,6 +87,29 @@ def start(g):
         for r in MODE.get("none", ()):
             x.stock[r] = 0
             x.command(f"scoreboard players set {r.title()} {x.board} 0")   # the sidebar (Gather.setup)
+
+
+def heroes(g):
+    """Summon the units of the key "heroes" for each player (not Gaia) that has none of them yet, on the spawn cells of
+    its first town center (the footprint stays in g.data after start()), else next to its first unit (its "tile")."""
+    import train                                                       # train imports gather, gather imports the modes
+    if not (players := sorted(int(p) for p in getattr(g, "players", {}) if int(p))):
+        return
+    gathers = {x.player: x for x in [g, *(b.g for b in getattr(g, "bots", ()))]}   # an own unit to its own Gather
+    objs = g.data["objects"]
+    for n in players:
+        own = [o for o in objs if o["player"] == n]
+        has = {o["name"] for o in own if o["kind"] == "unit"}
+        tc = next((o["footprint"] for o in own if o["kind"] == "building" and o["name"] == "TOWN_CENTER"
+                   and "footprint" in o), None)
+        tile = next((o["tile"] for o in own if o["kind"] == "unit" and "tile" in o), None)
+        x, z = tile and (math.floor(tile[0] * g.map.T), math.floor(tile[1] * g.map.T)) or (0, 0)
+        rect = (tc[0], tc[2], tc[1], tc[3]) if tc else tile and (x, x + 1, z, z + 1)   # footprint (x0, z0, x1, z1)
+        cells = rect and g.map.front(rect, mounted=True)
+        for k, name in enumerate([h for h in MODE["heroes"] if h not in has] if cells else ()):
+            x, z = cells[k % len(cells)]
+            if uuid := train.summon(gathers.get(n, g), name, (x + 0.5, float(g.map.y(x, z)), z + 0.5), player=n):
+                objs.append(dict(kind="unit", name=name, player=n, uuid=uuid, hero=True, tile=[x / g.map.T, z / g.map.T]))
 
 
 def tick(g, dt):
