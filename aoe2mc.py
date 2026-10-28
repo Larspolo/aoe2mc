@@ -4422,13 +4422,13 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
                if e["type"] in (ACTIVATE_TRIGGER, DEACTIVATE_TRIGGER)} | {c.get("trigger") for c in active}) & live - chancy
     off = {c.get("trigger") for c in active if c["inverted"]} & switch   # an inverted test needs the score at 0
     load += [f"scoreboard players set #{t['id']} aoe_on 0" for t in triggers if t["id"] in off and not t["enabled"]]
-    timed = {t["id"]: max(20 * min(max(c["timer"] for c in g) for g in gs), 1) for t in triggers   # 1 tick at least;
-             if (gs := or_groups(t["conditions"])) and all(c["type"] == TIMER for g in gs for c in g)}   # OR: the first
+    timed = {t["id"]: max(20 * min((max(c["timer"] for c in g) for g in gs), default=0), 1) for t in triggers   # 1 tick at least;
+             if not (gs := or_groups(t["conditions"])) or all(c["type"] == TIMER for g in gs for c in g)}   # OR: the first
     clocks = {t["id"]: ts for t in triggers if t["id"] not in timed and len(gs := or_groups(t["conditions"])) > 1
               and (ts := [(k, max(20 * max(x), 1)) for k, g in enumerate(gs)
                           if (x := [c["timer"] for c in g if c["type"] == TIMER])])}   # the OR timers (#2815)
     for t in triggers:
-        groups = or_groups(t["conditions"])
+        groups = or_groups(t["conditions"]) or [[]]                    # no conditions: it fires when it is on (#2972)
         conds = sum(groups, [])
         which = [k for k, g in enumerate(groups) for _ in g]           # the group of each condition
         kinds = {(c["type"], c["inverted"]) for c in conds}
@@ -4447,7 +4447,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
         # group tests them
         rolled = len(groups) > 1 and chance
         clocked = len(groups) > 1 and (TIMER, False) in rest and (rest != {(TIMER, False)} or rolled)
-        if not (t["enabled"] or t["id"] in on and t["id"] not in chancy) or not conds or \
+        if not (t["enabled"] or t["id"] in on and t["id"] not in chancy) or \
                 not (rest == {(TIMER, False)} or rest <= {(k, False) for k in TICKED + (TIMER,) * clocked} | {(k, True) for k in INVERTED}) or \
                 chance and len([c for c in conds if c["type"] == TRIGGER_CHANCE]) > 1 or \
                 any(c.get("group", -1) >= 0 or c.get("class", -1) >= 0 for c in conds) or \
@@ -4580,7 +4580,8 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
             files[f"data/aoe2mc/function/trigger/{n}.mcfunction"] = "\n".join(lines) + "\n"
             continue
         run = f"schedule function {fn} {ticks}t replace"
-        files[f"data/aoe2mc/function/trigger/{n}.mcfunction"] = "\n".join(lines + [run] * t["looping"]) + "\n"
+        again = run if conds else f"schedule function {fn} 20t replace"   # no conditions: AoE2 checks once per second
+        files[f"data/aoe2mc/function/trigger/{n}.mcfunction"] = "\n".join(lines + [again] * t["looping"]) + "\n"
         load += [run] * t["enabled"]
     names = sorted({f"#v{x[k]}" for t in triggers for x in t["conditions"] + t["effects"]
                     for k in ("variable", "variable2")   # "Modify Variable by Variable" has two (#2713)
