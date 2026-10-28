@@ -453,11 +453,15 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
             game.side(name)
         print(f"{people} people: the first Minecraft player who joins plays player 1, the second player 2.",
               file=sys.stderr)
-    if bot:                                          # after the people, next to their Sides (#1794)
+    if settings["mode"] == "scenario":               # the computer players of the scenario, not --bot (#2543)
+        import scenario
+        seats = scenario.bot_seats(data["players"], people)
+    else:
+        seats = [bot_seat(data["players"], people)] if bot else []
+    for player, foe in seats:                        # after the people, next to their Sides (#1794)
         import bot as bots
         import replay
         import treaty as treaties
-        player, foe = bot_seat(data["players"], people)
         attack = max(bot_attack, settings["treaty"], key=replay.aoe2mc.game_time)   # the bot waits for the treaty too
         if settings["mode"] in treaties.ENDLESS:     # Wonder Race: the bot never attacks (#2406)
             attack = "never"
