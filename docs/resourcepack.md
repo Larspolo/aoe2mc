@@ -92,3 +92,7 @@ player loads it with the world. Without the option, the world is the same as bef
   `ResourcePackLocationFileFix` moves it only when the client upgrades a world of an older version.
 - `mc_shot.py --at Y` is the player position: the eye is 1.62 blocks higher. For a face at eye level of a unit on a
   block at y, use `--at X y+0.1 Z`.
+- The same pack bytes on each system (#2741) need more than sorted names and a fixed time: the deflate of `zipfile`
+  and of Pillow's PNG writer depends on the zlib of each build (Linux, Windows and macOS gave 3 SHA-1s), and
+  `zipfile.ZipInfo` writes `create_system` 0 on Windows. Use `ZIP_STORED`, `stored_png()` and `create_system = 3`; the
+  `bundles.yml` step "The world pack of the frozen command line is the release pack" checks it on each system.
