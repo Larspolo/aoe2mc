@@ -96,6 +96,12 @@ def reveal(g, seconds):
         g.command(f"effect give @e[tag=aoe2mc.p{n},tag={KING}] minecraft:glowing {real} 0 true")
 
 
+def treason(g, entry):
+    """The research of Treason (the key "on_research" of data/train.jsonl, #3243): the enemy Kings glow for the
+    seconds of its key "glow"."""
+    import train                                                       # train imports gather, gather this module
+    reveal(g, train.value("glow", entry["name"]))
+
 def tick(g):
     """Check the Kings each conquest.EVERY seconds: defeat each player whose Kings all died."""
     if g.ended or g.clock() < vars(g).get("regicide_at", 0.0):

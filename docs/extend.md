@@ -25,6 +25,8 @@ parallel tickets do not change the same lines. Most rules have a check: `tools/d
   issue) and `civs.value("key", civ, default)` in the module that applies it: no new table or comment in `game/civs.py` (#2281).
 - A new key of `game/data/train.jsonl` is one line in `game/data/train_keys.jsonl` and `train.value("key", name, default)`
   in the module that reads it, not a new table of `game/train.py` (#2507).
+- A special effect of a technology at its research is a function `(g, entry)` in its own module and the key
+  `"on_research"` (`"module.function"`) on its line, not an `if` block in `train.research()` (#3243).
 - A new key of `game/data/setup.jsonl` (a game mode, a lobby setting) is one line in `game/data/setup_keys.jsonl` (`"type"`,
   `"kind": true` for a key of the "one kind" rule, `"text"`, `"issue"`), not a change of `check_setup()` in `tests/test_data_files.py` (#2558).
 - A new data line needs no test of its values: `tests/test_data_files.py` checks the form of each line of `game/data/`
