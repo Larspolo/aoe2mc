@@ -5,6 +5,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
@@ -31,6 +33,7 @@ import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
  */
 final class Cheats implements Listener {
     private final JavaPlugin plugin;
+    private static final Pattern TAUNT = Pattern.compile("^\\s*0*([1-9]\\d{0,2})(\\s|$)");   // "11", "11 haha"
     private final Map<String, Integer> codes = new HashMap<>();
 
     Cheats(JavaPlugin plugin) {
@@ -60,11 +63,24 @@ final class Cheats implements Listener {
 
     @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
     public void onChat(AsyncChatEvent ev) {
-        Integer n = codes.get(norm(PlainTextComponentSerializer.plainText().serialize(ev.message())));
+        String text = PlainTextComponentSerializer.plainText().serialize(ev.message());
+        Integer n = codes.get(norm(text));
+        Player p = ev.getPlayer();
         if (n != null) {
             ev.setCancelled(true);
-            Player p = ev.getPlayer();
             Bukkit.getScheduler().runTask(plugin, () -> score().getScore(p.getName()).setScore(n));   // main thread
+            return;
+        }
+        Matcher m = TAUNT.matcher(text);
+        if (m.find()) {                       // a taunt (#3318): the chat stays, the program shows the text and plays the sound
+            int t = Integer.parseInt(m.group(1));
+            Bukkit.getScheduler().runTask(plugin, () -> {
+                Scoreboard sb = Bukkit.getScoreboardManager().getMainScoreboard();
+                Objective o = sb.getObjective("aoe_taunt");
+                if (o != null) {
+                    o.getScore(p.getName()).setScore(t);
+                }
+            });
         }
     }
 
