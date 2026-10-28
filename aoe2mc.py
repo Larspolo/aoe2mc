@@ -44,7 +44,7 @@ import sys
 import textwrap
 import time
 import zlib
-from collections import Counter
+from collections import Counter, namedtuple
 
 import numpy as np
 from nbtlib import File
@@ -2700,12 +2700,21 @@ def team_lines(objects, players):
     return load, pulse
 
 
-TIMER, SEND_CHAT, DISPLAY_INSTRUCTIONS, IN_AREA = 10, 3, 20, 5   # AoE2 condition and effect IDs (AoE2ScenarioParser)
-OWN_OBJECTS, OWN_FEWER_OBJECTS = 3, 4                              # conditions on the units of a player (#2573)
-COUNTED = (IN_AREA, OWN_OBJECTS, OWN_FEWER_OBJECTS)                # conditions that count units: the tick function
-CREATE_OBJECT, KILL_OBJECT, REMOVE_OBJECT, CHANGE_OWNERSHIP, CHANGE_COLOR_MOOD = 11, 14, 15, 18, 72
-DAMAGE_OBJECT = 24                                                     # "Damage Object" (#2571)
+# AoE2 condition and effect IDs (AoE2ScenarioParser), one per line in alphabetical order (#2613)
+CHANGE_COLOR_MOOD = 72
+CHANGE_OWNERSHIP = 18
+CREATE_OBJECT = 11
+DAMAGE_OBJECT = 24                                                 # "Damage Object" (#2571)
+DISPLAY_INSTRUCTIONS = 20
+IN_AREA = 5
+KILL_OBJECT = 14
+OWN_FEWER_OBJECTS = 4                                              # conditions on the units of a player (#2573)
+OWN_OBJECTS = 3
+REMOVE_OBJECT = 15
+SEND_CHAT = 3
 TELEPORT_OBJECT = 35
+TIMER = 10
+COUNTED = (IN_AREA, OWN_OBJECTS, OWN_FEWER_OBJECTS)                # conditions that count units: the tick function
 
 
 def turn_area(area, size, k):
@@ -2731,11 +2740,12 @@ def area_selector(c, T):
     return f"@e[{','.join(sel)}]"
 
 
-def object_lines(t, e, T, ground, players, stats):
+def object_lines(e, c):
     """The commands of "Create Object" and "Remove Object" (#656): a summon of the entity of units.make_entity at
     the middle of the tile, or a kill of the units of the player and type in the area (area_selector). "Kill Object"
     (#2568) is the same kill, also with no area (the whole map): Minecraft shows the death, as AoE2.
     Buildings and other objects are not supported yet: they count in stats."""
+    t, T, ground, players, stats = c.t, c.T, c.ground, c.players, c.stats
     kind, name = e.get("object") or (None, None)
     if e["type"] == CREATE_OBJECT and min(e.get("tile", [-1])) >= 0:
         x, z = (int((v + 0.5) * T) for v in e["tile"])
@@ -2787,23 +2797,25 @@ def effect_units(e, T):
     return f"@e[type={top['id']},{at[3:]}".replace(",type=!minecraft:player", ""), top, nbt
 
 
-def damage_lines(e, T, stats):
+def damage_lines(e, c):
     """The commands of "Damage Object" (#2571): a `damage` of each unit of the effect (effect_units) by its amount.
     The amount is in AoE2 hit points: the game program gives each unit max_health = its AoE2 hit points
     (combat.stats_command); a vanilla world keeps the health of the mob. A negative amount heals in AoE2: not yet."""
-    q = e.get("quantity") or 0
-    found = effect_units(e, T) if q > 0 else None
+    q, stats = e.get("quantity") or 0, c.stats
+    found = effect_units(e, c.T) if q > 0 else None
     if found is None:
         stats["damage (heal or building, not supported yet)" if q else "damage (no amount)"] += 1
         return []
     at = found[0]                                                      # Gaia: not the players (effect_units)
     stats["damage"] += 1
     return [f"execute as {at} run damage @s {q}"]                      # damage takes one entity
-def owner_lines(e, T, stats):
+
+
+def owner_lines(e, c):
     """The commands of "Change Ownership" (#2570): the units of the player in the area (area_selector) and their
     mounts get the tag and the team of the target player. A temporary tag marks them first: the selector uses the old
     player tag. Gaia has no player tag and no team: not supported yet."""
-    old, new = e["player"], e.get("target", -1)
+    old, new, T, stats = e["player"], e.get("target", -1), c.T, c.stats
     if old <= 0 or new <= 0 or old == new:
         stats["change ownership (not supported yet)"] += old != new
         return []
@@ -2815,13 +2827,14 @@ def owner_lines(e, T, stats):
             f"team join p{new} {own}", f"tag {own} remove aoe2mc.own"]
 
 
-def teleport_lines(e, T, ground):
+def teleport_lines(e, c):
     """The commands of "Teleport Object" (#2569): a tp of the units of the player in the area (area_selector) to the
     middle of the target tile, on the ground. A rider is not in the selector of its horse (units.MOUNT): the first line
     moves the mounts of the riders in the area, and the riders go with them. Then the riders are out of the area, so
     the second line (a tp of a rider takes it off its horse) moves only the units on foot."""
     if min(e.get("tile", [-1])) < 0 or min(e.get("area", [-1])) < 0:
         return []
+    T, ground = c.T, c.ground
     x, z = (int((v + 0.5) * T) for v in e["tile"])
     if not (0 <= x < ground.shape[0] and 0 <= z < ground.shape[1]):
         return []
@@ -2831,13 +2844,48 @@ def teleport_lines(e, T, ground):
     return [f"execute as {at} on vehicle run tp @s {to}", f"tp {at} {to}"]
 
 
-def mood_lines(e):
+def mood_lines(e, c):
     """The commands of "Change Color Mood" (#1876): the time of day (MOODS) and the rain (RAIN) of the new mood, as
-    at the conversion. The game rules advance_time and advance_weather are 0, so they stay. The fog (FOG) is a
-    timeline of the dimension type: a command cannot change it, so the fog of the map mood stays."""
-    if e.get("mood") not in MOODS:
+    at the conversion, only with c.mood. The game rules advance_time and advance_weather are 0, so they stay. The fog
+    (FOG) is a timeline of the dimension type: a command cannot change it, so the fog of the map mood stays."""
+    if not c.mood or e.get("mood") not in MOODS:
         return []
     return [f"time set {MOODS[e['mood']]}", f"weather {'rain' if e['mood'] in RAIN else 'clear'}"]
+
+
+def message_text(e):
+    """The JSON text of the message of an effect with no AoE2 color tags, or None for no message."""
+    msg = re.sub(r"<[^<>]*>", "", e["message"]).replace("\r", "").strip()
+    return json.dumps({"text": msg}, ensure_ascii=False) if msg else None
+
+
+def chat_lines(e, c):
+    """The command of "Send Chat": a tellraw to all players."""
+    return [f"tellraw @a {text}"] if (text := message_text(e)) else []
+
+
+def instruction_lines(e, c):
+    """The commands of "Display Instructions": a subtitle for the display time of the effect (AoE2 default: 10 s)."""
+    if not (text := message_text(e)):
+        return []
+    ticks = 20 * (e["time"] if e["time"] > 0 else 10)
+    return [f"title @a times 10 {ticks} 20", f"title @a subtitle {text}", 'title @a title ""']
+
+
+# The handler of each trigger effect: (effect, Effect context) -> commands. A new effect is one line here, in
+# alphabetical order, and its handler function (#2613): no change of trigger_files.
+EFFECTS = {
+    CHANGE_COLOR_MOOD: mood_lines,
+    CHANGE_OWNERSHIP: owner_lines,
+    CREATE_OBJECT: object_lines,
+    DAMAGE_OBJECT: damage_lines,
+    DISPLAY_INSTRUCTIONS: instruction_lines,
+    KILL_OBJECT: object_lines,
+    REMOVE_OBJECT: object_lines,
+    SEND_CHAT: chat_lines,
+    TELEPORT_OBJECT: teleport_lines,
+}
+Effect = namedtuple("Effect", "t T ground players stats mood")       # the context of the effects of trigger t
 
 
 def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=True):
@@ -2847,10 +2895,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
     entity, so they do not count. The load function schedules a timer trigger at the AoE2 time (all
     timers must pass: the largest). The tick function runs an area trigger when units of its player are in all its
     areas; the score #N of aoe_trig marks a fired trigger, so it fires once. A looping area trigger fires again after
-    the units leave an area. "Send Chat" is a tellraw, "Display Instructions" a subtitle for its display time;
-    "Create Object" and "Remove Object": object_lines (#656). "Change Color Mood": mood_lines (#1876), only with mood. "Change Ownership": owner_lines (#2570).
-    "Damage Object": damage_lines (#2571).
-    "Teleport Object": teleport_lines (#2569).
+    the units leave an area. The commands of each effect come from its handler in EFFECTS.
     A disabled trigger does not run."""
     load, files, tick = [], {}, []
     stats = Counter() if stats is None else stats
@@ -2861,32 +2906,8 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
         if not t["enabled"] or not conds or not (kinds == {(TIMER, False)} or kinds <= {(k, False) for k in COUNTED}) or \
                 any(c.get("group", -1) >= 0 or c.get("class", -1) >= 0 for c in conds):   # unit classes: not yet
             continue
-        lines = []
-        for e in t["effects"]:
-            if e["type"] in (CREATE_OBJECT, KILL_OBJECT, REMOVE_OBJECT):
-                lines += object_lines(t, e, T, ground, players, stats)
-                continue
-            if e["type"] == CHANGE_OWNERSHIP:
-                lines += owner_lines(e, T, stats)
-                continue
-            if e["type"] == CHANGE_COLOR_MOOD:
-                lines += mood_lines(e) if mood else []
-                continue
-            if e["type"] == DAMAGE_OBJECT:
-                lines += damage_lines(e, T, stats)
-                continue
-            if e["type"] == TELEPORT_OBJECT:
-                lines += teleport_lines(e, T, ground)
-                continue
-            msg = re.sub(r"<[^<>]*>", "", e["message"]).replace("\r", "").strip()   # AoE2 color tags
-            if not msg:
-                continue
-            text = json.dumps({"text": msg}, ensure_ascii=False)
-            if e["type"] == SEND_CHAT:
-                lines.append(f"tellraw @a {text}")
-            elif e["type"] == DISPLAY_INSTRUCTIONS:
-                ticks = 20 * (e["time"] if e["time"] > 0 else 10)          # AoE2 default: 10 s
-                lines += [f"title @a times 10 {ticks} 20", f"title @a subtitle {text}", 'title @a title ""']
+        ctx = Effect(t, T, ground, players, stats, mood)
+        lines = [line for e in t["effects"] if e["type"] in EFFECTS for line in EFFECTS[e["type"]](e, ctx)]
         if not lines:
             continue
         fn, n = f"aoe2mc:trigger/{t['id']}", t["id"]
