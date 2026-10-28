@@ -429,6 +429,10 @@ def read_scenario(path):
                                                if e.effect_type == CHANGE_VARIABLE else {}),
                                             **({"target": e.target_player}                # "Change Ownership" (#2570)
                                                if e.effect_type == CHANGE_OWNERSHIP else {}),
+                                            **({"target": e.target_player, "quantity": e.quantity,   # (#2576)
+                                                "resource": e.tribute_list} if e.effect_type == TRIBUTE else {}),
+                                            **({"operation": e.operation, "quantity": e.quantity,
+                                                "resource": e.tribute_list} if e.effect_type == MODIFY_RESOURCE else {}),
                                             **({"technology": techs.get(e.technology, str(e.technology))}   # #2577
                                                if e.effect_type == RESEARCH_TECHNOLOGY else {}),
                                             **({"unit": e.time_unit, "timer": e.timer}   # "Display Timer" (#2572)
@@ -2724,6 +2728,9 @@ TIME_UNITS = {0: 5, 1: 60, 2: 1, 3: 1}  # TimeUnit (years, minutes, seconds, m:s
 OWN_OBJECTS, OWN_FEWER_OBJECTS = 3, 4                              # conditions on the units of a player (#2573)
 COUNTED = (IN_AREA, OWN_OBJECTS, OWN_FEWER_OBJECTS)                # conditions that count units: the tick function
 CREATE_OBJECT, KILL_OBJECT, REMOVE_OBJECT, CHANGE_OWNERSHIP, CHANGE_COLOR_MOOD = 11, 14, 15, 18, 72
+TRIBUTE, MODIFY_RESOURCE = 5, 52
+STORES = ("food", "wood", "stone", "gold")      # the resource of a tribute_list (AoE2 attributes 0 to 3)
+OPERATIONS = {1: "set", 2: "add", 3: "remove"}  # set, add, subtract of Modify Resource (AoE2ScenarioParser Operation)
 DAMAGE_OBJECT = 24                                                     # "Damage Object" (#2571)
 DECLARE_VICTORY = 13                                                   # "Declare Victory" (#2542)
 TELEPORT_OBJECT = 35
@@ -2859,6 +2866,24 @@ def owner_lines(e, T, stats):
             f"team join p{new} {own}", f"tag {own} remove aoe2mc.own"]
 
 
+def resource_lines(e):
+    """The commands of "Tribute" and "Modify Resource" (#2576): a converted world has no stock, so they only change
+    the scores #p<N>.<resource> of aoe_res (the change) and aoe_set (a "set"). scenario.resources of the game program
+    reads them into the stock of player N and resets them. A tribute of a trigger has no tax (AoE2)."""
+    if not 0 <= e.get("resource", -1) < len(STORES) or e["player"] <= 0:
+        return []
+    res, q = STORES[e["resource"]], int(e["quantity"])
+
+    def change(n, q):
+        return [f"scoreboard players {'add' if q >= 0 else 'remove'} #p{n}.{res} aoe_res {abs(q)}"] * (n > 0)
+    if e["type"] == TRIBUTE:
+        return change(e["target"], q) + change(e["player"], -q)
+    if (op := OPERATIONS.get(e["operation"])) == "set":               # a set drops the earlier changes
+        return [f"scoreboard players set #p{e['player']}.{res} aoe_set {q}",
+                f"scoreboard players reset #p{e['player']}.{res} aoe_res"]
+    return change(e["player"], q if op == "add" else -q) if op else []
+
+
 def teleport_lines(e, T, ground):
     """The commands of "Teleport Object" (#2569): a tp of the units of the player in the area (area_selector) to the
     middle of the target tile, on the ground. A rider is not in the selector of its horse (units.MOUNT): the first line
@@ -2987,6 +3012,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
     areas; the score #N of aoe_trig marks a fired trigger, so it fires once. A looping area trigger fires again after
     the units leave an area. "Send Chat" is a tellraw, "Display Instructions" a subtitle for its display time;
     "Create Object" and "Remove Object": object_lines (#656). "Change Color Mood": mood_lines (#1876), only with mood. "Change Ownership": owner_lines (#2570).
+    "Tribute" and "Modify Resource": resource_lines (#2576), scores for the game program.
     "Damage Object": damage_lines (#2571). "Display Timer": timer_lines (#2572).
     "Teleport Object": teleport_lines (#2569).
     "Change Variable": variable_lines; a "Variable Value" condition runs in the tick function as an area (#2611).
@@ -2998,7 +3024,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
     "Clear Instructions": title @a clear (#2609).
     "Play Sound": sound_lines (#2644).
     A disabled trigger does not run."""
-    load, files, tick, win = [], {}, [], False
+    load, files, tick, win, money = [], {}, [], False, False
     stats = Counter() if stats is None else stats
     ground = np.zeros((0, 0), np.int16) if ground is None else ground
     for t in triggers:
@@ -3020,6 +3046,10 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
                 continue
             if e["type"] == CHANGE_OWNERSHIP:
                 lines += owner_lines(e, T, stats)
+                continue
+            if e["type"] in (TRIBUTE, MODIFY_RESOURCE):
+                res = resource_lines(e)
+                lines, money = lines + res, money or bool(res)
                 continue
             if e["type"] == CHANGE_COLOR_MOOD:
                 lines += mood_lines(e) if mood else []
@@ -3102,6 +3132,8 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
         run = f"schedule function {fn} {ticks}t replace"
         files[f"data/aoe2mc/function/trigger/{n}.mcfunction"] = "\n".join(lines + [run] * t["looping"]) + "\n"
         load.append(run)
+    if money:                                                          # resource_lines (#2576)
+        load[:0] = ["scoreboard objectives add aoe_res dummy", "scoreboard objectives add aoe_set dummy"]
     if any(" aoe_tech 1" in f for f in files.values()):
         load.insert(0, "scoreboard objectives add aoe_tech dummy")
     names = sorted({f"#v{x['variable']}" for t in triggers for x in t["conditions"] + t["effects"]
