@@ -5,7 +5,8 @@ ref exists, so the ref `claim/N` decides who owns ticket N. The claim commit has
 a second push of another claim commit is never a fast-forward. Later claims of the same ticket use
 `claim/N-2`, `claim/N-3` ...: the ref with the highest number owns the ticket.
 
-    python3 tools/claim.py N              # claim ticket N; exit 0: yours (it adds `in-progress` and "Started by"),
+    python3 tools/claim.py N              # claim ticket N; exit 0: yours (it adds `in-progress` and "Started by",
+                                          # and prints the ticket and its comments, #3459),
                                           # exit 1: it names the run that was first
     python3 tools/claim.py N --release    # give your claim back (needs-human, blocked, hand-off); it removes
                                           # `in-progress` (#3234)
@@ -352,6 +353,17 @@ def api(path):
         fail(f"GitHub API failed for {path}: {e}")
 
 
+def ticket_text(issue, comments):
+    """The title, body and comments of a won ticket (#3459): the run reads them next, so the claim prints them and saves
+    one API call. The "Started by" comments of the claims are left out."""
+    out = [f"#{issue.get('number', '')} {issue.get('title', '')}", (issue.get("body") or "").strip()]
+    for c in comments:
+        if not re.match(r"Started by `|Taken over by `", c.get("body") or ""):
+            out += [f"--- comment of {(c.get('user') or {}).get('login')} ({c.get('created_at')}):",
+                    (c.get("body") or "").strip()]
+    return "\n".join(out)
+
+
 def started_by_other(comments, me, now, limit=RECENT):
     """Branch of the last "Started by `X`." comment of another branch in the last `limit` seconds, else None."""
     for c in reversed(comments):
@@ -572,8 +584,9 @@ def main(argv=None):
     if isinstance(issue, dict) and issue.get("state") == "closed":   # the candidate list was older (#2339)
         print(f"#{a.number} is closed: pick the next candidate")
         return 1
+    comments = api(f"issues/{a.number}/comments?per_page=100") if on_github(a.remote) else []
     if not a.takeover and on_github(a.remote):
-        other = started_by_other(api(f"issues/{a.number}/comments?per_page=100"), who(), time.time())
+        other = started_by_other(comments, who(), time.time())
         if other:
             print(f"owned by another run: `{other}` was first (\"Started by\" less than 30 minutes ago). Pick the next"
                   " candidate, do not comment.")
@@ -589,6 +602,8 @@ def main(argv=None):
         print(f"claimed {ref}")
         if on_github(a.remote) and not a.takeover:
             start(a.number)
+        if isinstance(issue, dict):
+            print(ticket_text(issue, comments))
         return 0
     print(f"owned by another run: {first(a.number, a.remote)} was first. Pick the next candidate, do not comment.")
     return 1
