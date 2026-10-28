@@ -269,6 +269,7 @@ class Replay:
         self.pov, self.hidden = pov, set()      # the view of player N (#1302): UUIDs of the enemy units hidden from @a
         self.explored, self.fogged = {}, None   # player -> tiles it saw once; (view, seen, explored) on the minimap (#1567)
         self.drawn, self.known = {}, {}         # footprint -> player on the minimap; view -> the enemy ones it saw (#1678)
+        self.heights = {}                       # (building, player) -> height(), see height (#3048)
         self.T, self.n = data["tile_size"], len(data["ground"])
         self.ground = [[None if v == "-" else int(v) for v in row.split()] for row in data["ground"]]
         self.starts = [(o.get("ref"), o["player"], o["name"], (o["footprint"][0], o["footprint"][2], o["footprint"][1],
@@ -558,13 +559,15 @@ class Replay:
                 "tellraw @a " + json.dumps([text(f"<{name}> ", color), text("Flare", "gold")])] + \
             [f"aoe minimap flare {x} {z} p{e.get('player')} {ticks}"] * self.ai   # a blinking cross on the minimap (#2405)
 
-    @functools.lru_cache(maxsize=None)
     def height(self, name, player):
-        """Blocks of the design of building `name` above the ground of its footprint (its top block)."""
-        x = y = FLAT // 2
-        cols, E, o = self.draw(name, player, x, y)
-        ys = [by for xs, bys, zs, ids, _ in E.parts for by, i in zip(bys.tolist(), ids.tolist()) if i]
-        return max(ys) - cols.surface(*o["footprint"][:2]) if ys and "footprint" in o else TALL
+        """Blocks of the design of building `name` above the ground of its footprint (its top block).
+        Cached on this Replay only: a lru_cache would keep each old Replay alive after a jump back (#3048)."""
+        if (name, player) not in self.heights:
+            x = y = FLAT // 2
+            cols, E, o = self.draw(name, player, x, y)
+            ys = [by for xs, bys, zs, ids, _ in E.parts for by, i in zip(bys.tolist(), ids.tolist()) if i]
+            self.heights[name, player] = max(ys) - cols.surface(*o["footprint"][:2]) if ys and "footprint" in o else TALL
+        return self.heights[name, player]
 
     def draw(self, name, player, x, y, along_z=False):
         """(Columns, Edits, object) of one building at tile (x, y) of a flat map whose corner is tile
