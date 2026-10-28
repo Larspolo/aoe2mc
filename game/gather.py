@@ -54,6 +54,7 @@ import build  # noqa: E402
 import replay  # noqa: E402  (build imports it too)
 import battle_royale  # noqa: E402
 import bossbar  # noqa: E402
+import capture_relic  # noqa: E402
 import cheats  # noqa: E402
 import civs  # noqa: E402
 import conquest  # noqa: E402
@@ -104,7 +105,7 @@ BUSH_FOOD = 125                                                    # food in one
 # AoE2 DE work rates per game second (#393): lumberjack 0.39 (empires2_x2_p1.dat, #267), the others the published
 # DE gather rates. Normal game speed is 1.7 game seconds per real second (#413).
 AOE2_WORK, NORMAL = {"wood": 0.39, "food": 0.31, "farm": 0.33, "gold": 0.38, "stone": 0.36, "hunt": 0.41,
-                     "fish": 0.43}, 1.7                            # fish: a fisherman at a shore fish (#1283)
+                     "fish": 0.43, "oyster": 0.38}, 1.7            # fish: a fisherman at a shore fish (#1283)
 WORK_SECONDS = {r: 1 / (w * NORMAL) for r, w in AOE2_WORK.items()}    # real seconds per unit, as at Normal speed
 CARRY = {t['name']: t['carry'] for t in ROWS if 'carry' in t}
 FOOD_CARRY = {"HEAVY_PLOW": 1}                                     # more food only per trip, as in AoE2 (#1424)
@@ -116,7 +117,10 @@ DECAY = {t['name']: t['decay'] for t in ROWS if 'decay' in t}   # food per game 
 # Food of a fish, as in AoE2 DE (the AoE2 wiki, "Fishing", #1283). Villagers reach the shore fish from the land.
 FISH_FOOD = {t['name']: t['fish'] for t in ROWS if 'fish' in t}
 SHORE_FISH = {t['name'] for t in ROWS if t.get('shore')}
-SHIP_WORK = {"deep": 0.42, "shore": 0.24, "trap": 0.35}            # the work rate of a fishing ship (AoE2 DE wiki)
+# Oysters (AoE2 DE wiki "Oysters", #2465): gold in place of food, gathered as a fish; villagers 22.8 a minute (AOE2_WORK
+# "oyster"), fishing ships 24 (SHIP_WORK). The gather kind "oyster" has its own civilization bonuses (Puru, Dravidians).
+OYSTERS = {t['name'] for t in ROWS if t.get('res') == "gold"}
+SHIP_WORK = {"deep": 0.42, "shore": 0.24, "trap": 0.35, "oyster": 0.4}   # the work rate of a fishing ship (AoE2 DE wiki)
 TRAP_FOOD = 715                                                    # food in one fish trap, as in AoE2 DE (#1438)
 SHIP_TECHS = {t['name']: tuple(t['ship']) for t in ROWS if 'ship' in t}   # the work rate factor and the more food of a trip (#1439)
 HERDS = {t['name'] for t in ROWS if t.get('herd')}   # herdable animals: shepherds (civs.WORK)
@@ -235,6 +239,7 @@ class Map:
         self.herds = set()                                             # carcass tiles of herdable animals (HERDS)
         self.rot = {}                                                  # carcass tile -> food per game second (DECAY)
         self.fish, self.shore = {}, set()                              # tile -> food of a fish (#1283), shore fish
+        self.oysters = set()                                           # the fish tiles that hold gold (OYSTERS, #2465)
         self.fish_mobs, self.docks = {}, []                            # tile -> mob of a fish; own dock cells (#1384)
         self.traps = {}                                                # own fish trap tile -> its cells (#1438)
         civ = None if data.get("full_tech_tree") else data.get("players", {}).get(str(player), {}).get("civ")   # #2354
@@ -252,6 +257,8 @@ class Map:
                 self.fish_mobs[tile] = object_mob(o["name"])
                 if o["name"] in SHORE_FISH:                            # the tiles of the shore fish
                     self.shore.add(tile)
+                if o["name"] in OYSTERS:
+                    self.oysters.add(tile)
             elif o["kind"] == "other" and not any(k in o["name"] for k in PASSABLE_OBJECTS):
                 tile = int(o["tile"][0]), int(o["tile"][1])
                 if o["name"] in MINES:                                 # a mine at x.0 covers 2 tiles
@@ -271,6 +278,19 @@ class Map:
                     self.woods[tile] = ("minecraft:bamboo_block", None) if kind == "bamboo" else \
                         ("minecraft:oak_log", None) if kind == "dead" else \
                         (f"minecraft:{WOODS.get(kind, 'oak')}_log", f"minecraft:{WOODS.get(kind, 'oak')}_leaves[persistent=true]")
+
+    def heights(self, cells):
+        """The ground heights around cells (at least one)."""
+        return [y for x, z in self.around(cells) if (y := self.y(x, z)) is not None] or [0]
+
+    def emptied(self, cells):
+        """The cells of an empty mine or bush are free ground again, at the lowest height around them (Gather.dig,
+        Gather.berries; savegame.load for the ones that were empty at the save, #2453)."""
+        y = min(self.heights(cells))
+        for x, z in cells:
+            self.ground[z][x] = y
+            self.mine_at.pop((x, z), None)
+        self.blocked -= set(cells)
 
     def building(self, name, rect, tile, own, open_cells=()):
         """Add a building with the block footprint rect = (x0, x1, z0, z1) and its center tile. A farm is ground
@@ -312,7 +332,9 @@ class Map:
         return self.cells(tile)
 
     def resource(self, tile):
-        """The resource of the tile of a tree, bush, mine or fish."""
+        """The resource of the tile of a tree, bush, mine or fish (an oyster: gold)."""
+        if tile in self.oysters:
+            return "gold"
         return next((r for r, m in self.mines.items() if tile in m),
                     "food" if tile in self.bushes or tile in self.farms or tile in self.carcasses or tile in self.fish
                     else "wood")
@@ -453,8 +475,14 @@ def profession(uuid, job):
 def job_of(m, tile):
     """The AoE2 task (`LUMBERJACK` ..., units.VILLAGER_JOBS) of a villager at the resource on tile of gather.Map m."""
     res = m.resource(tile)
-    return "FARMER" if tile in m.farms else "HUNTER" if tile in m.carcasses else "FISHERMAN" if tile in m.fish else \
+    return "FARMER" if tile in m.farms else "HUNTER" if tile in m.carcasses else "OYSTER" if tile in m.oysters else \
+        "FISHERMAN" if tile in m.fish else \
         {"wood": "LUMBERJACK", "food": "FORAGER"}.get(res) or next(j for r, _, j in MINES.values() if r == res)
+
+
+def fish_kind(m, tile):
+    """The gather kind of a fish on tile of gather.Map m: "oyster" (gold, #2465), "fish", else None."""
+    return "oyster" if tile in m.oysters else "fish" if tile in m.fish else None
 
 
 def military(name):
@@ -537,6 +565,7 @@ class Gather:
     reveal = "normal"                                                  # AoE2 "Reveal map"; "all": no fog (fog.py, #1389)
     speed = 1.0                                                        # times the Normal speed: shorter real steps (#2057)
     later = {}                                                         # the bonus of the first town center (civs.TOWN_CENTER)
+    nomad = False                                                      # a Nomad start: no town center yet (#2466)
     victory = "standard"                                               # AoE2 "Victory"; "conquest": no wonder, no relics (#2316)
                                                                        # "king-of-the-hill": hill.py (#2360)
                                                                        # "time-limit", "score": time_limit.py (#2356)
@@ -559,7 +588,7 @@ class Gather:
             nomad = "unit" in kinds and "building" not in kinds
             base = LEVELS[resources]
             tc = civs.TOWN_CENTER.get(civs.civ(self), {})              # Tupi: with the first town center (#2293)
-            self.later = dict(tc) if nomad else {}
+            self.later, self.nomad = dict(tc) if nomad else {}, nomad
             start = civs.start(self, {r: v + NOMAD.get(r, 0) * nomad + tc.get(r, 0) * (not nomad)
                                       for r, v in base.items()})       # #1269
         self.stock = {**dict.fromkeys(DROP_SITES, 0), **start}             # at the drop sites (#973)
@@ -704,13 +733,20 @@ class Gather:
                 else:
                     self.command(f"fill {x} {y} {z} {x} {y + 1} {z} minecraft:oak_leaves[persistent=true]")
 
-    def town_center(self):
+    def town_center(self, rect=None):
         """The first own town center is complete (build.rise): the bonus of a Nomad start comes now (civs.TOWN_CENTER,
-        Tupi +25 of each resource, #2293)."""
+        Tupi +25 of each resource, #2293), and the unit of the key "nomad_unit" (Huns: a tamed Hunnic Horse in front
+        of the town center rect, #2466)."""
         for r, n in sorted(self.later.items()):
             self.stock[r] += n
             self.command(f"scoreboard players add {r.capitalize()} {self.board} {n}")
         self.later = {}
+        if self.nomad and rect and (unit := civs.value("nomad_unit", civs.civ(self))) and (cells := self.map.front(rect)):
+            x, z = cells[0]
+            name = json.dumps({"text": pretty(unit), "color": self.color()})
+            self.command(f"summon minecraft:horse {x + 0.5} {self.map.y(x, z)} {z + 0.5} {{Tame:1b,PersistenceRequired:1b,"
+                         f"Tags:[\"aoe2mc.p{self.player}\"],CustomName:{name}}}")
+        self.nomad = False
 
     def idle(self):
         """Show the number of idle villagers in the sidebar, as the idle villager button of AoE2 (#744), only when it
@@ -993,9 +1029,10 @@ class Gather:
         return self.map.bushes if v.res == "food" else self.map.trees if v.res == "wood" else self.map.mines[v.res]
 
     def nearest(self, v):
-        """The nearest bush or mine of the resource of v with something left, or None."""
-        T = self.map.T
-        full = [t for t, k in self.home(self.source(v)).items() if k > 0]
+        """The nearest bush or mine of the resource of v with something left, or None. A fish: a fish of the same kind
+        (an oyster after an oyster, #2465)."""
+        T, oyster = self.map.T, v.tree in self.map.oysters
+        full = [t for t, k in self.home(self.source(v)).items() if k > 0 and (t in self.map.oysters) == oyster]
         return min(full, key=lambda t: math.dist(v.cell, ((t[0] + 0.5) * T, (t[1] + 0.5) * T)), default=None)
 
     def home(self, sources):
@@ -1215,7 +1252,8 @@ class Gather:
             import combat                                              # combat imports this module
             what = self.fort_names.get(u, "")
             owner = self.fort_players.get(u, 0)                        # Persians (#1895), Byzantines in the own age (#2116)
-            full = civs.hp(civs.civ(self, owner), what, combat.stats(what), build.ages(self) if owner == self.player else 0).hp
+            full = civs.hp(civs.civ(self, owner), what, combat.stats(what), build.ages(self) if owner == self.player else 0,
+                           civs.handicap(self.data, owner)).hp
             for c in siege_mark(u, what, full, name):
                 self.command(c)
             return
@@ -1467,7 +1505,7 @@ class Gather:
                 self.set(v, "chop" if self.source(v).get(v.tree, 0) > 0 else "idle")
             elif v.state == "to_drop":
                 self.deliver(v.res, v.load, v.res == "food" and v.tree in self.map.bushes,
-                             "hunt" if v.tree in self.map.carcasses else "fish" if v.tree in self.map.fish else None)
+                             "hunt" if v.tree in self.map.carcasses else fish_kind(self.map, v.tree))
                 v.load = 0
                 self.event(v, "drop")
                 if v.tree in self.map.farms:
@@ -1484,7 +1522,7 @@ class Gather:
                 v.timer += self.tick
                 src = self.source(v)
                 kind = "farm" if v.tree in self.map.farms else "hunt" if v.tree in self.map.carcasses else \
-                    "fish" if v.tree in self.map.fish else v.res               # a fisherman: no forage rate (#2349)
+                    fish_kind(self.map, v.tree) or v.res                # a fisherman: no forage rate (#2349)
                 work = self.work_time(kind, v.tree in self.map.herds, (v.pos[0], v.pos[2])) / self.aura_rate(v, kind)
                 last = civs.last(self, "sheep" if v.tree in self.map.herds else kind)
                 take = 1 if last == 1 else 1 / last                    # 1: the amounts stay whole numbers
@@ -1752,26 +1790,21 @@ class Gather:
         self.bushes[tile] = look
         cells = self.map.cells(tile)
         (x0, z0), (x1, z1) = min(cells), max(cells)
-        ys = [y for x, z in self.map.around(cells) if (y := self.map.y(x, z)) is not None] or [0]
+        ys = self.map.heights(cells)
         self.command(f"fill {x0} {min(ys) - 2} {z0} {x1} {max(ys) + 2} {z1} {look} replace minecraft:sweet_berry_bush")
         self.command(f"fill {x0} {min(ys) - 2} {z0} {x1} {max(ys) + 2} {z1} minecraft:barrier replace minecraft:oak_leaves")
         if food <= 0:                                  # as in AoE2, an empty bush frees its tile (#602)
             self.command(f"fill {x0} {min(ys) - 2} {z0} {x1} {max(ys) + 4} {z1} air replace minecraft:barrier")
-            for x, z in cells:
-                self.map.ground[z][x] = min(ys)
-            self.map.blocked -= cells
+            self.map.emptied(cells)
 
     def dig(self, tile, res):
         """An empty mine disappears: its heap and the barriers of its footprint. Its cells are free ground again."""
         spot = self.map.spot(tile)
-        ys = [y for x, z in self.map.around(spot) if (y := self.map.y(x, z)) is not None] or [0]
+        ys = self.map.heights(spot)
         (x0, z0), (x1, z1) = min(spot), max(spot)
         for b in MINE_BLOCKS[res] + ("barrier",):
             self.command(f"fill {x0} {min(ys)} {z0} {x1} {max(ys) + 4} {z1} air replace minecraft:{b}")
-        for x, z in spot:
-            self.map.ground[z][x] = min(ys)
-            self.map.mine_at.pop((x, z), None)
-        self.map.blocked -= spot
+        self.map.emptied(spot)
 
     def tend(self, v):
         """A farmer walks over its farm while it works, as in AoE2 (#591): one cell per food, row by row (the rows
@@ -1821,6 +1854,8 @@ class Gather:
                 sudden_death.tick(self)
             elif self.mode == "battle-royale":                         # the Corruption takes the map (#2439)
                 battle_royale.tick(self, self.tick * NORMAL)
+            elif self.mode == "capture-the-relic":                     # the center relic in a monastery wins (#2440)
+                capture_relic.tick(self)
             elif self.mode == "defend-the-wonder":                     # the attackers win when the Wonder falls (#2441)
                 defend_wonder.tick(self)
             fog.tick(self)                                             # after the bots: their units too (#1389)

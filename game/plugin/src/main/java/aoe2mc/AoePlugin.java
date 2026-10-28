@@ -89,6 +89,9 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *   aoe neutral <team>:<team>,...|- ...        the neutral stances of the players (#1645): the units and buildings of
  *                                              the first team do not attack the units of the listed teams by
  *                                              themselves (an order does). Each call replaces all stances; "-": none
+ *   aoe accuracy <selector> <part>             the part of the siege shots (blast 0) of the unit that hit a unit target,
+ *                                              the others miss (AoE2 accuracy: the Trebuchet 15 %, Huns 50 %, #2479,
+ *                                              game/combat.py accuracy_command). Default 1: each shot hits
  *   aoe allies <team>,<team>,...|- ...         the alliances of the players (#1315): allied teams are one side for the
  *                                              arrows of buildings, the hit back and the attack alerts. Each call
  *                                              replaces all alliances; "-": no allies
@@ -171,6 +174,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *   aoe minimap on|off|pixel <x> <z>           the live units as dots in their team color on map 0, once per
  *                                              second (#1237, Minimap.java); pixel: the map pixel of a block
  *   aoe minimap building <x0> <z0> <x1> <z1> <team>|unbuild <x0> <z0>   a replay building as a square on map 0 (#1238)
+ *   aoe minimap flare <x> <z> <team> <ticks>   a blinking cross of a replay flare on map 0 for <ticks> (#2405)
  *   aoe minimap fog <tile> <n>|off, see|dim <y,x0,x1> ..., tile <x> <z>
  *                                              the fog of the view player on map 0 (#1567): black unexplored tiles,
  *                                              dark explored tiles out of sight; tile: the fog of a block
@@ -346,6 +350,8 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     }
 
     private final Map<UUID, Charge> charges = new HashMap<>();
+    // the part of the siege shots at a unit that hit (aoe accuracy, #2479): the Trebuchet 0.15; missing: 1
+    private final Map<UUID, Double> accuracy = new HashMap<>();
     // the extra arrows of each shot of a unit (aoe volley, #2379): {arrows, attack of each, 0: the attack of the unit}
     private final Map<UUID, int[]> volleys = new HashMap<>();
     private static final String VOLLEY = "aoe2mc.volley.";      // the tag of an extra arrow, with its attack
@@ -531,7 +537,8 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             alerts.hit(t, true, mob);
         } else if (r <= 0) {
             LivingEntity v = t.getVehicle() instanceof LivingEntity h && stats.containsKey(h.getUniqueId()) ? h : t;
-            if (v.isValid() && stats.containsKey(v.getUniqueId())) {
+            boolean hits = ThreadLocalRandom.current().nextDouble() < accuracy.getOrDefault(from.getUniqueId(), 1.0);
+            if (v.isValid() && stats.containsKey(v.getUniqueId()) && hits) {   // AoE2 accuracy (#2479): or a miss
                 harm(v, stats.get(v.getUniqueId()), a, from);
                 charge(from, v);
             }
@@ -1715,15 +1722,23 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             var path = pf.getCurrentPath();
             if (path == null || path.getFinalPoint() == null
                     || path.getFinalPoint().distanceSquared(o.goal) > 1.5 * 1.5) {
+                double c = center(mob);
+                if (path != null && path.getFinalPoint() != null
+                        && path.getFinalPoint().clone().add(c, 0, c).distanceSquared(mob.getLocation()) <= 1.5 * 1.5) {
+                    // at the end of a part of the way: a new search from here. moveTo gives the old part again (a
+                    // not done path to the same target), so the order ended as "no path" 10 to 20 blocks before
+                    // a rally point that a new search reaches (de-64.3, #2303).
+                    pf.stopPathfinding();
+                }
                 boolean found = pf.moveTo(o.goal, o.speed);
                 Location end = pf.getCurrentPath() == null ? null : pf.getCurrentPath().getFinalPoint();
-                double c = center(mob);
                 // a part of a path that ends at the mob leads nowhere: a builder of a dock stood still with its order
                 // for a minute (#889). Drop such an order after 1 s.
                 boolean stays = found && end != null && end.clone().add(c, 0, c).distanceSquared(mob.getLocation()) <= 1.5 * 1.5;
                 if (found && !stays || (o.fails += stays ? 5 : 1) < 50) {
                     return false;
                 }
+                pf.stopPathfinding();                   // it stays here: the old part led it away (#2303)
                 if (mob instanceof Villager) {          // no path for 5 s: drop the order, and stop the brain (#811)
                     mob.setAI(false);
                 }
@@ -2231,6 +2246,23 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         }
         if (args.length >= 2 && args[0].startsWith("ghost")) {          // the ghost of a building (#794)
             return ghost.command(sender, args, players(sender, args[1]));
+        }
+        if (args.length == 3 && args[0].equals("accuracy")) {          // a trebuchet misses units (#2479)
+            double part;
+            try {
+                part = Double.parseDouble(args[2]);
+            } catch (NumberFormatException e) {
+                sender.sendMessage("Bad number: " + e.getMessage());
+                return true;
+            }
+            int n = 0;
+            for (Entity e : select(sender, args[1])) {
+                Entity t = e instanceof Minecart && !e.getPassengers().isEmpty() ? e.getPassengers().get(0) : sailors(e);
+                accuracy.put(t.getUniqueId(), part);               // the crew of a siege unit has its stats (#836)
+                n++;
+            }
+            sender.sendMessage("Accuracy: " + n + " units");
+            return true;
         }
         if (args.length >= 2 && args[0].equals("allies")) {            // the alliances of the players (#1315)
             ALLIES.clear();
