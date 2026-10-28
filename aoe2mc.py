@@ -2811,6 +2811,8 @@ DIFFICULTY_LEVEL = 19                                              # the conditi
 DIPLOMACY_STATE = 24                                               # the condition "Diplomacy State" (#2757)
 DISPLAY_INSTRUCTIONS = 20
 DISPLAY_TIMER = 37                                                 # "Display Timer" (#2572)
+ENABLE_DISABLE_OBJECT = 38                                         # "Enable/Disable Object" (#2775)
+ENABLE_DISABLE_TECHNOLOGY = 39                                     # "Enable/Disable Technology" (#2775)
 ENABLE_UNIT_ATTACKABLE = 99                                       # "Enable Unit Attackable" (#2695)
 DISPLAY_TIMER_TRIGGERED = 55                                       # the condition of its score (#2702)
 FREEZE_OBJECT = 22                                                 # "Freeze Object" (#2608)
@@ -3360,6 +3362,18 @@ def attribute_lines(e, c):
     return [f'data modify storage aoe2mc:attributes list append value "{e["player"]} {name} {field} {e["operation"]} {q:g}"']
 
 
+def menu_lines(e, c):
+    """The command of "Enable/Disable Object" and "Enable/Disable Technology" (#2775): "<player> <name> on|off" goes
+    into the list of the data storage aoe2mc:menus. A converted world has no menus: the scenario mode of the game
+    program (game/scenario.py menus) empties the list and shows or hides the item in the menus of the player."""
+    _, name = (e.get("object") or (None, None)) if e["type"] == ENABLE_DISABLE_OBJECT else (None, e.get("technology"))
+    if not name or e["player"] <= 0 or e.get("enabled") not in (0, 1):
+        c.stats["enable/disable (not supported)"] += 1
+        return []
+    c.stats["enable/disable"] += 1
+    return [f'data modify storage aoe2mc:menus list append value "{e["player"]} {name} {"on" if e["enabled"] else "off"}"']
+
+
 def order_lines(e, c):
     """The commands of "Patrol" and "Attack Move" (#2647). Vanilla has no walk-to command: the units of the player in
     the area get the tag aoe_order<trigger>_<effect index> (tag_lines: a rider gives it to its horse), and the order
@@ -3588,6 +3602,8 @@ EFFECT_KEYS = {
     DAMAGE_OBJECT: {"quantity": "quantity"},
     DEACTIVATE_TRIGGER: {"trigger": "trigger_id"},                                   # (#2575)
     DISPLAY_TIMER: {"unit": "time_unit", "timer": "timer"},                          # (#2572)
+    ENABLE_DISABLE_OBJECT: {"enabled": "enabled", "technology": lambda e, kinds, techs: techs.get(e.technology, str(e.technology))},   # (#2775)
+    ENABLE_DISABLE_TECHNOLOGY: {"enabled": "enabled", "technology": lambda e, kinds, techs: techs.get(e.technology, str(e.technology))},   # (#2775)
     HEAL_OBJECT: {"quantity": "quantity"},
     MODIFY_ATTRIBUTE: {"attribute": "object_attributes", "operation": "operation", "quantity": "quantity",   # #2763
                        "class": "armour_attack_class", "aa": "armour_attack_quantity"},
@@ -3633,6 +3649,8 @@ EFFECTS = {
     DISABLE_UNIT_ATTACKABLE: attackable_lines,
     DISPLAY_INSTRUCTIONS: instruction_lines,
     DISPLAY_TIMER: timer_lines,
+    ENABLE_DISABLE_OBJECT: menu_lines,
+    ENABLE_DISABLE_TECHNOLOGY: menu_lines,
     ENABLE_UNIT_ATTACKABLE: attackable_lines,
     FREEZE_OBJECT: freeze_lines,
     HEAL_OBJECT: heal_lines,
