@@ -430,6 +430,8 @@ def read_scenario(path):
                                                if e.effect_type == CHANGE_VARIABLE else {}),
                                             **({"target": e.target_player}                # "Change Ownership" (#2570)
                                                if e.effect_type == CHANGE_OWNERSHIP else {}),
+                                            **({"target": e.target_player, "diplomacy": e.diplomacy}   # (#2645)
+                                               if e.effect_type == CHANGE_DIPLOMACY else {}),
                                             **({"target": e.target_player, "quantity": e.quantity,   # (#2576)
                                                 "resource": e.tribute_list} if e.effect_type == TRIBUTE else {}),
                                             **({"operation": e.operation, "quantity": e.quantity,
@@ -2761,6 +2763,8 @@ STORES = ("food", "wood", "stone", "gold")      # the resource of a tribute_list
 OPERATIONS = {1: "set", 2: "add", 3: "remove"}  # set, add, subtract of Modify Resource (AoE2ScenarioParser Operation)
 DAMAGE_OBJECT = 24                                                     # "Damage Object" (#2571)
 DECLARE_VICTORY = 13                                                   # "Declare Victory" (#2542)
+CHANGE_DIPLOMACY = 1                                                   # "Change Diplomacy" (#2645)
+STANCES = (0, 1, 3)                                                    # DiplomacyState: ally, neutral, enemy
 TASK_OBJECT = 12                                                       # "Task Object" (#2646)
 TELEPORT_OBJECT = 35
 CHANGE_VARIABLE, VARIABLE_VALUE = 56, 22                               # the scenario variables (#2611)
@@ -3064,6 +3068,8 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
     "Teleport Object": teleport_lines (#2569).
     "Change Variable": variable_lines; a "Variable Value" condition runs in the tick function as an area (#2611).
     "Declare Victory" sets the score #p<player> of aoe_win to 1: the scenario mode of the game program ends the game.
+    "Change Diplomacy" sets the score #p<player>.p<target> of aoe_dip to the stance + 1 and #any of aoe_dip to 1: the
+    scenario mode changes the stance (#2645).
     "Freeze Object": freeze_lines (#2608).
     "Change Object Name": name_lines (#2616).
     "Research Technology": a score in aoe_tech for the game program (research_list, #2577).
@@ -3072,7 +3078,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
     "Play Sound": sound_lines (#2644).
     "Task Object": task_lines (#2646).
     A disabled trigger does not run."""
-    load, files, tick, win, money = [], {}, [], False, False
+    load, files, tick, win, dip, money = [], {}, [], False, False, False
     stats = Counter() if stats is None else stats
     ground = np.zeros((0, 0), np.int16) if ground is None else ground
     for t in triggers:
@@ -3114,6 +3120,14 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
                 lines.append(f"scoreboard players set #p{max(e['player'], 0)} aoe_win 1")
                 stats["declare victory"] += 1
                 win = True
+                continue
+            if e["type"] == CHANGE_DIPLOMACY:                          # the scenario mode reads the score (#2645)
+                a, b = e["player"], e.get("target", -1)
+                if e.get("diplomacy") in STANCES and a > 0 and b > 0 and a != b:
+                    lines += [f"scoreboard players set #p{a}.p{b} aoe_dip {e['diplomacy'] + 1}",
+                              "scoreboard players set #any aoe_dip 1"]
+                    stats["change diplomacy"] += 1
+                    dip = True
                 continue
             if e["type"] == DISPLAY_TIMER:
                 more, timer = timer_lines(t, e)
@@ -3217,6 +3231,8 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
             [f"scoreboard players add {v} aoe_var 0" for v in names]   # AoE2 variables start at 0
     if win:
         load.insert(0, "scoreboard objectives add aoe_win dummy")
+    if dip:
+        load.insert(0, "scoreboard objectives add aoe_dip dummy")
     if tick or any(k.endswith("_chance.mcfunction") for k in files):
         load.insert(0, "scoreboard objectives add aoe_trig dummy")
     if tick:
