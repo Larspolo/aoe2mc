@@ -1377,10 +1377,19 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             boat.getPassengers().stream().filter(p -> p != ev.getEntity() && !(p instanceof Player)).forEach(Entity::remove);
             boat.remove();
         }
+        if (stats.containsKey(ev.getEntity().getUniqueId()) && ev.getEntity().getVehicle() instanceof Minecart cart) {
+            Mob carrier = carrier(cart, false);              // a dead siege unit leaves no minecart and no carrier (#3017)
+            cart.remove();
+            if (carrier != null) {
+                carrier.remove();
+            }
+        }
         if (stats.containsKey(ev.getEntity().getUniqueId())) {
             for (Entity p : ev.getEntity().getPassengers()) {
                 if (p instanceof LivingEntity r && stats.containsKey(r.getUniqueId())) {
                     r.setHealth(0);
+                } else if (!(p instanceof LivingEntity) && !(p instanceof Player)) {
+                    p.remove();                              // the cart of a War Wagon: no item display stays (#3017)
                 }
             }
         }
