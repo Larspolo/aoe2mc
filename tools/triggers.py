@@ -58,7 +58,7 @@ MAP = {
     ("effect", "DEACTIVATE_TRIGGER"): "`scoreboard players set <trigger> aoe_trig 0`",
     ("effect", "CHANGE_VARIABLE"): "`scoreboard players set`, `add`, `remove` or `operation` on `#vN aoe_var` (#2611)",
     ("effect", "DECLARE_VICTORY"): "`scoreboard players set #pN aoe_win 1`: the scenario mode of the game program ends the game (#2542)",
-    ("effect", "TASK_OBJECT"): "not supported: vanilla has no walk-to command (the game program: `aoe moveto`)",
+    ("effect", "TASK_OBJECT"): "`tag @e[tag=aoe2mc.pN,x=..,dx=..] add aoe_taskK` and the tile in the storage `aoe2mc:tasks`: the scenario mode of the game program walks them there with `aoe moveto` (vanilla has no walk-to command, #2646)",
     ("effect", "PATROL"): "not supported: vanilla has no walk-to command",
     ("effect", "ATTACK_MOVE"): "not supported: vanilla has no walk-to command",
     ("effect", "TRIBUTE"): "`scoreboard players add`/`remove` on `#pN.<resource> aoe_res`; the game program puts it into the stock (`--mode scenario`: `scenario.resources`, #2576)",
