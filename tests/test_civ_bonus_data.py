@@ -13,7 +13,7 @@ def test_the_unit_groups_are_groups_of_the_bonuses():
 
 
 def test_the_civilization_bonuses_have_known_names():
-    kinds = {"farm", "food", "gold", "hunt", "sheep", "stone", "wood"}
+    kinds = {"farm", "food", "gold", "hunt", "oyster", "sheep", "stone", "wood"}
     assert all(set(w) <= kinds and all(isinstance(f, float) for f in w.values()) for w in civs.WORK.values())
     assert all(set(b) <= set(gather.START) for b in civs.START.values())
     known = set(train.COSTS) | set(combat.STATS)
