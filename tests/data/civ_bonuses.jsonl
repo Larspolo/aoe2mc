@@ -136,7 +136,7 @@
 {"name": "MAGYARS: Villagers kill predators in one strike.", "civ": "MAGYARS", "bonus": "Villagers kill predators in one strike.", "in": "PREDATOR_HIT"}
 {"name": "MALAY: Advancing in Age is +66% faster.", "civ": "MALAY", "bonus": "Advancing in Age is +66% faster.", "in": "AGE_RATE"}
 {"name": "MALAY: Fish Traps are 33% cheaper.", "civ": "MALAY", "bonus": "Fish Traps are 33% cheaper.", "in": "COSTS"}
-{"name": "MALAY: Fish Traps provide food 3×.", "civ": "MALAY", "bonus": "Fish Traps provide food 3×.", "in": "TRAP_FOOD"}
+{"name": "MALAY: Fish Traps provide food 3×.", "civ": "MALAY", "bonus": "Fish Traps provide food 3×.", "in": "trap_food"}
 {"name": "MALAY: Battle Elephants are 25% cheaper in the Castle Age, 35% cheaper in the Imperial Age.", "civ": "MALAY", "bonus": "Battle Elephants are 25% cheaper in the Castle Age, 35% cheaper in the Imperial Age.", "in": "COSTS"}
 {"name": "MALAY: Infantry armor upgrades are free.", "civ": "MALAY", "bonus": "Infantry armor upgrades are free.", "in": "COSTS"}
 {"name": "MALIANS: Buildings cost wood -15% (except Farms and starting Town Center).", "civ": "MALIANS", "bonus": "Buildings cost wood -15% (except Farms and starting Town Center).", "in": "COSTS"}
