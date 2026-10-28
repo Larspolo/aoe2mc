@@ -2842,6 +2842,7 @@ CREATE_GARRISONED_OBJECT = 49                                      # "Create Gar
 CREATE_OBJECT = 11
 DAMAGE_OBJECT = 24                                                 # "Damage Object" (#2571)
 DECLARE_VICTORY = 13                                               # "Declare Victory" (#2542)
+DISABLE_TECHNOLOGY_STACKING = 68                                   # "Disable Technology Stacking" (#2866)
 DISABLE_UNIT_ATTACKABLE = 98                                       # "Disable Unit Attackable" (#2695)
 DISABLE_UNIT_TARGETING = 61                                        # "Disable Unit Targeting" (#2826)
 DIFFICULTY_LEVEL = 19                                              # the condition "Difficulty Level" (#2704)
@@ -2850,6 +2851,7 @@ DISPLAY_INSTRUCTIONS = 20
 DISPLAY_TIMER = 37                                                 # "Display Timer" (#2572)
 ENABLE_DISABLE_OBJECT = 38                                         # "Enable/Disable Object" (#2775)
 ENABLE_DISABLE_TECHNOLOGY = 39                                     # "Enable/Disable Technology" (#2775)
+ENABLE_TECHNOLOGY_STACKING = 67                                    # "Enable Technology Stacking" (#2866)
 ENABLE_UNIT_ATTACKABLE = 99                                       # "Enable Unit Attackable" (#2695)
 ENABLE_UNIT_TARGETING = 62                                         # "Enable Unit Targeting" (#2826)
 DISPLAY_TIMER_TRIGGERED = 55                                       # the condition of its score (#2702)
@@ -3580,6 +3582,18 @@ def menu_lines(e, c):
     return [f'data modify storage aoe2mc:menus list append value "{e["player"]} {name} {"on" if e["enabled"] else "off"}"']
 
 
+def stack_lines(e, c):
+    """The command of "Enable/Disable Technology Stacking" (#2866): "<player> <technology> stack <n>" goes into the list
+    of the data storage aoe2mc:menus (n: the researches of the technology; disable: 1). The scenario mode of the game
+    program (game/scenario.py menus) lets the player research it n times (train.repeatable)."""
+    n = e.get("quantity", 0) if e["type"] == ENABLE_TECHNOLOGY_STACKING else 1
+    if not e.get("technology") or e["player"] <= 0 or not isinstance(n, int) or n < 1:
+        c.stats["technology stacking (not supported)"] += 1
+        return []
+    c.stats["technology stacking"] += 1
+    return [f'data modify storage aoe2mc:menus list append value "{e["player"]} {e["technology"]} stack {n}"']
+
+
 def order_lines(e, c):
     """The commands of "Patrol" and "Attack Move" (#2647). Vanilla has no walk-to command: the units of the player in
     the area get the tag aoe_order<trigger>_<effect index> (tag_lines: a rider gives it to its horse), and the order
@@ -3857,6 +3871,9 @@ def visibility_lines(e, c):
 # (effect, kinds, techs) -> value. A new effect is one line here, in alphabetical order (#2792): parallel trigger
 # tickets conflicted in one expression of read_scenario. The older effects still have their entry there.
 EFFECT_KEYS = {
+    DISABLE_TECHNOLOGY_STACKING: {"technology": lambda e, kinds, techs: techs.get(e.technology, str(e.technology))},   # (#2866)
+    ENABLE_TECHNOLOGY_STACKING: {"quantity": "quantity",                                                            # (#2866)
+                                 "technology": lambda e, kinds, techs: techs.get(e.technology, str(e.technology))},
     INITIATE_RESEARCH: {"selected": lambda e, kinds, techs: list(e.selected_object_ids or []),   # (#2772)
                         "technology": lambda e, kinds, techs: techs.get(e.technology, str(e.technology))},
     TRAIN_UNIT: {"quantity": "quantity", "selected": lambda e, kinds, techs: list(e.selected_object_ids or [])},   # (#2772)
@@ -3893,12 +3910,14 @@ EFFECTS = {
     DAMAGE_OBJECT: damage_lines,
     DEACTIVATE_TRIGGER: switch_lines,
     DECLARE_VICTORY: victory_lines,
+    DISABLE_TECHNOLOGY_STACKING: stack_lines,
     DISABLE_UNIT_ATTACKABLE: attackable_lines,
     DISABLE_UNIT_TARGETING: targeting_lines,
     DISPLAY_INSTRUCTIONS: instruction_lines,
     DISPLAY_TIMER: timer_lines,
     ENABLE_DISABLE_OBJECT: menu_lines,
     ENABLE_DISABLE_TECHNOLOGY: menu_lines,
+    ENABLE_TECHNOLOGY_STACKING: stack_lines,
     ENABLE_UNIT_ATTACKABLE: attackable_lines,
     ENABLE_UNIT_TARGETING: targeting_lines,
     FREEZE_OBJECT: freeze_lines,
