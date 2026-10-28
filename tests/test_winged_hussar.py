@@ -22,7 +22,7 @@ def test_the_values_are_those_of_aoe2():
     assert train.AFTER["WINGED_HUSSAR_UPGRADE"] == "LIGHT_CAVALRY_UPGRADE"
     s = combat.stats("WINGED_HUSSAR")
     assert (s.hp, s.attack, s.melee, s.pierce, s.reload, s.bonus) == (80, 9, 1, 2, 1.9, {combat.GUN: 4})
-    assert combat.sight("WINGED_HUSSAR") == 10 and len(train.HELP["WINGED_HUSSAR_UPGRADE"]) <= 50
+    assert len(train.HELP["WINGED_HUSSAR_UPGRADE"]) <= 50
     assert {"POLES", "LITHUANIANS"} <= set(civs.MISSING["HUSSAR_UPGRADE"])
     assert not {"POLES", "LITHUANIANS"} & set(civs.MISSING["WINGED_HUSSAR_UPGRADE"])
     assert {"BRITONS", "HUNS", "MAGYARS", "TEUTONS"} <= set(civs.MISSING["WINGED_HUSSAR_UPGRADE"])

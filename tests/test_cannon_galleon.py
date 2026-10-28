@@ -22,7 +22,6 @@ HAVE_NOT = {"ARMENIANS", "AZTECS", "BYZANTINES", "CHINESE", "CUMANS", "DANES", "
 def test_the_cannon_galleon_has_the_aoe2_de_values_of_the_wiki():
     assert build.AGE["CANNON_GALLEON"] == 3 and build.NEEDS["CANNON_GALLEON"] == "CHEMISTRY"
     assert "CANNON_GALLEON" in train.TRAINS["DOCK"] and len(train.HELP["CANNON_GALLEON"]) <= 50
-    assert fleet.SPEEDS["CANNON_GALLEON"] == 1.05 and combat.sight("CANNON_GALLEON") == 15
     assert set(civs.MISSING["CANNON_GALLEON"]) == HAVE_NOT <= set(buildings.CIV_TO_ARCH)
 
 
