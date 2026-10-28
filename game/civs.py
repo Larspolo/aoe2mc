@@ -135,6 +135,7 @@ REPAIR_TEAM = {r["name"]: r["repair_team"] for r in ROWS if "repair_team" in r}
 WORK_RATE = {r["name"]: {b: tuple(v) for b, v in r["work_rate"].items()} for r in ROWS if "work_rate" in r}
 TRAIN_RATE = {r["name"]: [tuples(b) for b in r["train_rate"]] for r in ROWS if "train_rate" in r}
 HP = {r["name"]: r["hp"] for r in ROWS if "hp" in r}
+ARROWS = {r["name"]: tuples(r["arrows"]) for r in ROWS if "arrows" in r}   # factor of the base arrows in each age (#2178)
 GARRISON = {r["name"]: r["garrison"] for r in ROWS if "garrison" in r}   # units inside a building (garrison.size, #2117)
 RESEARCH_TIME = {r["name"]: [tuples(b) for b in r["research_time"]] for r in ROWS if "research_time" in r}
 # "extra": the second resource of a gather kind ("forage": a fruit bush), {kind: [resource, amount for each unit]}: Poles
@@ -247,6 +248,13 @@ def age_rate(g, name):
     age, else 1."""
     import build                                                   # build imports gather, gather imports this module
     return AGE_RATE.get(civ(g), 1) if name in build.AGE_TECHS else 1
+
+
+def arrows(g, building, player=None):
+    """The factor of the base arrows (garrison.BASE) of building name of the player of g (or of player) in the present
+    age of g: ARROWS (the Saxon towers and castles: twice from the Castle Age, #2178), else 1."""
+    import build                                                   # build imports gather, gather imports this module
+    return next((f[build.ages(g)] for names, f in ARROWS.get(civ(g, player), ()) if building in names), 1)
 
 
 def research_time(g, name):
