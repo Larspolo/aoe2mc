@@ -170,12 +170,15 @@ def check_setup(row):                                      # a value of a settin
     form(row, {"name": str}, {"resources": dict, "ages": int, "skip": list, "note": str, "units": list,
                               "age": str, "buildings": dict, "villagers": dict, "wonder_years": int, "sides": dict,
                               "treaty": str,                                  # Wonder Race (#2406)
+                              "help": str, "module": str, "loaded": str, "bots": bool,   # a game mode (#2521)
                               "side_buildings": dict, "ring": dict, "infinite": bool, "random": list})
     assert sum(k in row for k in ("resources", "ages", "units", "buildings", "wonder_years", "random")) == 1, row["name"]   # a resource level, a start age
     assert all(set(v) == {"food", "wood", "gold", "stone"} for v in row.get("sides", {}).values()), row["name"]   # #2441
     assert set(row.get("random", ())) <= {r["name"] for r in table.load("setup.jsonl") if "resources" in r}, row["name"]   # #2489
     assert set(row.get("units", ())) <= NAMES["units.jsonl"], row["name"]  # (#2265) or a game mode (#2347)
     assert row.get("treaty", "endless") == "endless", row["name"]   # Wonder Race: a treaty with no end (#2406)
+    assert row.get("loaded", "skip") in ("skip", "start") and ("help" in row or "module" not in row), row["name"]
+    assert os.path.exists(os.path.join(os.path.dirname(table.__file__), row["module"] + ".py")) if "module" in row else True, row["name"]
     assert set(row.get("resources", RES)) == {"food", "wood", "gold", "stone"}, row["name"]
     assert all(isinstance(v, int) and v >= 0 for v in row.get("resources", {}).values()), row["name"]
     assert row.get("ages", 0) in range(5) and set(row.get("skip", ())) <= NAMES["train.jsonl"], row["name"]
