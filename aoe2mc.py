@@ -492,6 +492,8 @@ def read_scenario(path):
                                             **({"object2": kinds.get(e.object_list_unit_id_2),   # (#2764)
                                                 "selected": list(e.selected_object_ids or [])}
                                                if e.effect_type == CREATE_GARRISONED_OBJECT else {}),
+                                            **({"selected": list(e.selected_object_ids or [])}   # (#2762)
+                                               if e.effect_type in (LOCK_GATE, UNLOCK_GATE) else {}),
                                             **({"selected": list(e.selected_object_ids or [])}   # (#2773)
                                                if e.effect_type == UNLOAD else {}),
                                             **({"target": e.target_player, "diplomacy": e.diplomacy}   # (#2645)
@@ -2874,6 +2876,7 @@ FREEZE_OBJECT = 22                                                 # "Freeze Obj
 HEAL_OBJECT = 34                                                   # "Heal Object" (#2692)
 IN_AREA = 5
 KILL_OBJECT = 14
+LOCK_GATE = 7                                                      # "Lock Gate", "Unlock Gate" (#2762)
 MODIFY_ATTRIBUTE = 51                                              # "Modify Attribute" (#2763)
 MODIFY_RESOURCE = 52                                               # "Modify Resource" (#2576)
 MODIFY_RESOURCE_BY_VARIABLE = 53                                   # "Modify Resource by Variable" (#2768)
@@ -2906,6 +2909,7 @@ TRIGGER_ACTIVE = 79                                                # the conditi
 TRIGGER_CHANCE = 20                                                # the condition "Chance" (#2574)
 UNITS_GARRISONED = 18                                              # the condition "Units Garrisoned" (#2714)
 UNLOAD = 17                                                        # "Unload" (#2773)
+UNLOCK_GATE = 6
 VARIABLE_VALUE = 22
 TIME_UNITS = {0: 5, 1: 60, 2: 1, 3: 1}  # TimeUnit (years, minutes, seconds, m:ss) -> game seconds; a year as game/wonder.py YEAR
 COUNTED = (IN_AREA, OWN_OBJECTS, OWN_FEWER_OBJECTS)                # conditions that count units: the tick function
@@ -3465,6 +3469,15 @@ def stop_lines(e, c):
     return tag_lines(e, c.T, tag) + [f'data modify storage aoe2mc:orders list append value "stop {tag}"']
 
 
+def gate_lines(e, c):
+    """The commands of "Lock Gate" and "Unlock Gate" (#2762): the order "lock <ref>" or "unlock <ref>" of each selected
+    gate goes into the storage aoe2mc:orders. game/scenario.py orders puts the portcullis on the gate and locks it with
+    the Paper plugin (`aoe gate lock`): vanilla has no gate that knows its player."""
+    order = "lock" if e["type"] == LOCK_GATE else "unlock"
+    return [f'data modify storage aoe2mc:orders list append value "{order} {ref}"' for ref in e.get("selected", ())
+            if ref >= 0]
+
+
 def unload_lines(e, c):
     """The commands of "Unload" (#2773): each selected building of the player that takes a garrison (buildings.INSIDE),
     or with no selection each such building with its center in the area, goes into the list of the storage
@@ -3669,6 +3682,7 @@ EFFECTS = {
     FREEZE_OBJECT: freeze_lines,
     HEAL_OBJECT: heal_lines,
     KILL_OBJECT: object_lines,
+    LOCK_GATE: gate_lines,
     MODIFY_ATTRIBUTE: attribute_lines,
     MODIFY_RESOURCE: resource_lines,
     MODIFY_RESOURCE_BY_VARIABLE: resource_by_variable_lines,
@@ -3685,6 +3699,7 @@ EFFECTS = {
     TELEPORT_OBJECT: teleport_lines,
     TRIBUTE: resource_lines,
     UNLOAD: unload_lines,
+    UNLOCK_GATE: gate_lines,
 }
 # The context of the effects of trigger t: a handler can add function files (files) and load lines (setup, the keys)
 Effect = namedtuple("Effect", "t T ground players stats mood files setup switch timed", defaults=((), {}))
