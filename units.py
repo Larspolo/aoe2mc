@@ -298,6 +298,8 @@ def classify(n, hero=False):
         return mob("evoker")
     if n in RULERS or has(n, "EMPEROR"):
         return mob("zombie", {"head": item("golden_helmet", True)})
+    if n == "MULE_CART":                                      # a drop site that moves (#2209)
+        return mob("mule", Tame=Byte(1), ChestedHorse=Byte(1))
     if has(n, "TRADE_CART", "OX_CART", "OX_WAGON", "RELIC_CART") or n == "CART":
         return mob("donkey", Tame=Byte(1), ChestedHorse=Byte(1))
 
