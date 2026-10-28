@@ -41,6 +41,15 @@ MAP = (                                                                # gather.
     "traps",
     "trees",
 )
+VICTORY = (                                                            # the victory modes (#2476), pack()
+    "conquest_seen",
+    "corruption_at",
+    "corruption_time",
+    "defeated",
+    "hill",
+    "monument",
+    "towns",
+)
 RIDERS = ("berths", "boarding", "cargo", "loading", "towers", "unloads")   # transport.py, siege_tower.py (#2411)
 KEPT = (                                                               # the fields of Gather that only some have, pack():
     *LEFT,                                                             # one tuple per line, in alphabetical order
@@ -48,6 +57,7 @@ KEPT = (                                                               # the fie
     *OPTIONAL,
     *RIDERS,
     *ROUTES,
+    *VICTORY,
 )
 JOB = ("state", "load", "res", "job", "lap", "prey")                  # fields of a gather.Villager, as they are
 BOT = ("time", "charged", "attack")                                    # fields of a bot.Bot, as they are (#2325)
