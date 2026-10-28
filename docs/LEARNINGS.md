@@ -77,3 +77,4 @@ and `tests/test_learnings.py` fails above 80 lines (#1698).
 - The `texts` dict of `read_scenario` holds the message chapters (`CHAPTERS`: `book_pages` reads `"victory"`, `"loss"` as text): a new key needs a name that is no chapter key (#2566 used `"global_victory"`).
 - Trigger effect IDs: the constants of `aoe2mc.py` (`HEAL_OBJECT = 34`) follow `EffectId` of AoE2ScenarioParser (`datasets/effects.py`), not the order of the AoE2 editor menu (#2692).
 - Since #3122 `train.census` removes each soldier with no position: a fake-server test that puts a unit into `g.soldiers` by hand must give it an entity (`g.game.entities.setdefault(u, {"Pos": (0.5, 64.0, 0.5)})`), else a `train.tick` removes it (KeyError). A live unit then counts in the population.
+- A `#` comment inside a folded `if:` of a workflow is read as expression text: the whole workflow fails to parse, 422 on dispatch (#3464). Put a comment above the key.
