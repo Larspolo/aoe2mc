@@ -2914,6 +2914,7 @@ OWN_FEWER_OBJECTS = 4                                              # conditions 
 OWN_OBJECTS = 3
 PATROL = 19                                                        # "Patrol" (#2647)
 PLAYER_DEFEATED = 13                                               # the condition "Player Defeated" (#2710)
+PLACE_FOUNDATION = 25                                              # "Place Foundation" (#2825)
 PLAY_SOUND = 4                                                     # "Play Sound" (#2644)
 REMOVE_OBJECT = 15
 REPLACE_OBJECT = 43                                                # "Replace Object" (#2703)
@@ -3573,6 +3574,17 @@ def stop_lines(e, c):
     return tag_lines(e, c.T, tag) + [f'data modify storage aoe2mc:orders list append value "stop {tag}"']
 
 
+def foundation_lines(e, c):
+    """The command of "Place Foundation" (#2825): the order "found <player> <building> <x> <y>" (its middle tile) goes
+    into the storage aoe2mc:orders. The scenario mode of the game program (game/scenario.py orders) puts the
+    construction site there when the place is free. Not a building, no tile or Gaia: no order."""
+    kind, name = e.get("object") or (None, None)
+    if kind != "B" or e["player"] <= 0 or min(e.get("tile", [-1])) < 0:
+        return []
+    (x, y), p = e["tile"], e["player"]
+    return [f'data modify storage aoe2mc:orders list append value "found {p} {name} {x} {y}"']
+
+
 def gate_lines(e, c):
     """The commands of "Lock Gate" and "Unlock Gate" (#2762): the order "lock <ref>" or "unlock <ref>" of each selected
     gate goes into the storage aoe2mc:orders. game/scenario.py orders puts the portcullis on the gate and locks it with
@@ -3837,6 +3849,7 @@ EFFECTS = {
     MODIFY_VARIABLE_BY_RESOURCE: variable_by_resource_lines,
     MODIFY_VARIABLE_BY_VARIABLE: variable_by_variable_lines,
     PATROL: order_lines,
+    PLACE_FOUNDATION: foundation_lines,
     PLAY_SOUND: sound_lines,
     REMOVE_OBJECT: object_lines,
     REPLACE_OBJECT: replace_lines,
