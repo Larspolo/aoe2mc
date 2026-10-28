@@ -76,6 +76,7 @@ def main(argv=None):
     ap.add_argument("--title", help="the PR title (a new PR)")
     ap.add_argument("--body", help="a file with the PR body (a new PR)")
     ap.add_argument("--tested", action="store_true", help="the checks of `verify` level 1 passed on this tree")
+    ap.add_argument("--hold", action="store_true", help="add the label `hold`: Automerge waits for the PR's own checks")
     a = ap.parse_args(argv)
     branch = git("branch", "--show-current").stdout.strip()
     if a.message:
@@ -105,6 +106,9 @@ def main(argv=None):
         print(f"opened PR #{pr['number']}: {pr.get('html_url', '')}")
     else:
         print(f"pushed to PR #{pr['number']}")
+    if a.hold:                                  # at once: the quick CI of the PR must not merge it first
+        dashboard.api(f"issues/{pr['number']}/labels", "POST", {"labels": ["hold"]})
+        print(f"label hold on PR #{pr['number']}")
     s = state(pr["number"])
     print(f"mergeable_state {s}" + (f": run `python3 tools/merge_main.py --push {a.number}`" if s == "dirty" else ""))
     return 0
