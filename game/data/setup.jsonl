@@ -9,3 +9,4 @@
 {"name": "imperial", "ages": 3}
 {"name": "post-imperial", "ages": 4, "skip": ["SPIES"], "note": "AoE2 wiki \"Post-Imperial Age\": all technologies, not Spies/Treason, Flemish Revolution, First Crusade (not in the game program)"}
 {"name": "regicide", "units": ["KING"], "note": "AoE2 wiki \"Regicide (game mode)\": each player starts with a King, a player whose Kings all died is defeated (#2347)"}
+{"name": "empire-wars", "age": "feudal", "buildings": {"BARRACKS": 1, "FARM": 5, "HOUSE": 6, "LUMBER_CAMP": 3, "MILL": 1, "MINING_CAMP": 1}, "villagers": {"food": 11, "gold": 4, "wood": 12}, "note": "AoE2 wiki \"Empire Wars\" (DE): Feudal Age, a mill, 3 lumber camps, a mining camp, 6 houses, 5 farms, a barracks and 27 villagers: 4 on gold, 12 on wood, 6 on food (2 on farms, 4 on berry bushes) and the rest idle at the sheep under the town center, here on food too; the Scout of the scenario stays (#2408)"}

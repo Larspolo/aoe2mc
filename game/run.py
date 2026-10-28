@@ -20,6 +20,7 @@ Usage:
     python3 game/run.py WORLD --play --all-techs       # the AoE2 setting "All Techs" (#2298)
     python3 game/run.py WORLD --play --victory conquest  # the AoE2 setting "Victory": no wonder or relic win (#2316)
     python3 game/run.py WORLD --play --mode regicide   # the AoE2 game mode "Regicide": each player has a King (#2347)
+    python3 game/run.py WORLD --play --mode empire-wars   # the AoE2 game mode "Empire Wars": a town at work (#2408)
     python3 game/run.py WORLD --play --civ 1=BRITONS --civ 2=FRANKS   # the civilization of each player (#2267)
     python3 game/run.py WORLD --play --teams 1,1,2,2   # the team of each player, - is no team (#2296)
     python3 game/run.py WORLD --play --load SAVE   # go on with a saved game: Ctrl-C of --play saves into saves/ (#2255)
@@ -338,7 +339,8 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
     victory: the AoE2 setting "Victory": "standard" (conquest, a wonder or all relics) or "conquest" (#2316).
     pop_limit: the AoE2 setting "Population limit" of each player and bot (train.LIMITS, #2266).
     end_age: the AoE2 setting "Ending age" of each player and bot (build.locked, #2346).
-    mode: the AoE2 game mode: "standard" or "regicide" (each player has a King, regicide.MODES, #2347).
+    mode: the AoE2 game mode: "standard", "regicide" (each player has a King, regicide.MODES, #2347) or
+    "empire-wars" (a Feudal Age town with villagers at work, empire_wars.MODES, #2408).
     treaty: the AoE2 setting "Treaty length" (MM:SS, #2297): before it no player can attack another (treaty.py)."""
     import gather, train
 
@@ -387,11 +389,19 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
               f"player {foe} at {attack}.", file=sys.stderr)
     import combat
     combat.setup(game, data)                         # AoE2 hit points and damage (#514)
+    if mode == "empire-wars" and age == "dark":      # the start age of the mode (empire_wars.py, #2408)
+        import empire_wars
+        age = empire_wars.MODES[mode]["age"]
     if not state and age != "dark":                  # after the base values: the technologies change them
         import train
         for x in [g, *(s.g for s in g.bots)]:
             train.start(x, age)
-    if mode != "standard":                           # after the bots: their Kings go to their Gathers (#2347)
+    if mode == "empire-wars":                        # after the age: the start town and its villagers (#2408)
+        import empire_wars
+        g.mode = mode
+        if not state:                                # a loaded game has its town in the saved world
+            empire_wars.setup(g, mode)
+    elif mode != "standard":                         # after the bots: their Kings go to their Gathers (#2347)
         import regicide
         g.mode = mode
         regicide.setup(g, mode)
@@ -562,8 +572,10 @@ def main(argv=None):
     ap.add_argument("--pop-limit", type=pop_limit, default=200, metavar="N",
                     help="--play: the AoE2 setting \"Population limit\" of each player: 25 to 250 in steps of 25, 300, "
                     "400 or 500 (default 200)")
-    ap.add_argument("--mode", choices=["standard", "regicide"], default="standard", help="--play: the AoE2 game mode "
-                    "(default standard; regicide: each player has a King, a player whose King dies is defeated)")
+    ap.add_argument("--mode", choices=["standard", "regicide", "empire-wars"], default="standard", help="--play: the "
+                    "AoE2 game mode (default standard; regicide: each player has a King, a player whose King dies is "
+                    "defeated; empire-wars: each player starts with a town and 27 villagers at work, in the Feudal Age "
+                    "when --age is dark)")
     ap.add_argument("--log", metavar="FILE", help="--play: write one JSON line per villager event (time, state, load)")
     ap.add_argument("--load", metavar="SAVE", help="--play: go on with a saved game (a folder of saves/: the end of "
                     "--play with Ctrl-C saves the world and the resources, technologies and ages there)")

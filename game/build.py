@@ -453,12 +453,12 @@ def near(g, name, cell, reach=12):
     return None
 
 
-def found(g, name, rect, way=None, tiles=None):
+def found(g, name, rect, way=None, tiles=None, free=False):
     """Pay for name and put its foundation (a wool ring in the player color) on the free footprint rect. Returns
     the construction site. way: the way of a gate (gate_spot); tiles: the tiles of a diagonal gate, the other tiles
-    of its footprint stay free (#1655)."""
+    of its footprint stay free (#1655). free: no cost (the start town of a game mode, empire_wars.py, #2408)."""
     import fleet                                                       # fleet -> gather -> build: import it late
-    for r, v in price(g, name).items():
+    for r, v in () if free else price(g, name).items():
         g.stock[r] -= v
         g.command(f"scoreboard players remove {r.capitalize()} {g.board} {v}")
     x0, x1, z0, z1 = rect
