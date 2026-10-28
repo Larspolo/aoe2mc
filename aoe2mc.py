@@ -2848,6 +2848,7 @@ RESEARCHING_TECH = 17                                              # the conditi
 RESEARCH_TECHNOLOGY = 2                                            # "Research Technology" (#2577)
 SEND_CHAT = 3
 SET_BUILDING_GATHER_POINT = 54                                     # "Set Building Gather Point" (#2853)
+SET_OBJECT_COST = 80                                               # "Set Object Cost" (#2857)
 SET_PLAYER_VISIBILITY = 41                                         # "Set Player Visibility" (#2774)
 STOP_OBJECT = 29                                                   # "Stop Object" (#2754)
 STORE_KEY_VALUE = 82                                               # "Store Key Value" (#2887)
@@ -3757,6 +3758,18 @@ def cost_lines(e, c, what="change object cost"):
     return [f'data modify storage aoe2mc:costs list append value "{" ".join([str(e["player"]), name, *cost])}"']
 
 
+def set_cost_lines(e, c):
+    """The command of "Set Object Cost" (#2857): one resource of the cost of the unit or building type of the player.
+    A "+" marks the text as one resource: scenario.costs keeps the other resources of the cost."""
+    (r, q), = e.get("cost", [[-1, 0]])
+    _, name = e.get("object") or (None, None)
+    if r not in range(len(ATTRIBUTES)) or q < 0 or not name or name.isdigit() or e["player"] <= 0:
+        c.stats["set object cost (not supported)"] += 1
+        return []
+    c.stats["set object cost"] += 1
+    return [f'data modify storage aoe2mc:costs list append value "{e["player"]} {name} +{ATTRIBUTES[r].lower()}={q}"']
+
+
 def tech_time_lines(e, c):
     """The command of "Change Technology Research Time" (#2820): the new research time (seconds) of the technology of
     the player goes into the list of the data storage aoe2mc:times as one text "<player> <name> <seconds>". The
@@ -4219,6 +4232,10 @@ def _cost(e, kinds, techs):
             [e.resource_3, e.resource_3_quantity]]
 
 
+def _one_cost(e, kinds, techs):
+    return [[e.tribute_list, e.quantity]]                # the one resource of "Set Object Cost" (#2857)
+
+
 def _tech(e, kinds, techs):
     return techs.get(e.technology, str(e.technology))
 
@@ -4285,6 +4302,7 @@ EFFECT_KEYS = {
     PLAY_SOUND: {"sound": lambda e, kinds, techs: e.sound_name or ""},
     REPLACE_OBJECT: {"target": "target_player", "object2": _object2},
     RESEARCH_TECHNOLOGY: {"technology": _tech},
+    SET_OBJECT_COST: {"cost": _one_cost},                                  # (#2857)
     SET_PLAYER_VISIBILITY: {"target": "target_player", "visibility": "visibility_state"},
     STORE_KEY_VALUE: {"variable": "variable"},                         # (#2887)
     TRAIN_UNIT: {"quantity": "quantity"},   # (#2772)
@@ -4376,6 +4394,7 @@ EFFECTS = {
     RESEARCH_TECHNOLOGY: research_lines,
     SEND_CHAT: chat_lines,
     SET_BUILDING_GATHER_POINT: rally_lines,
+    SET_OBJECT_COST: set_cost_lines,
     SET_PLAYER_VISIBILITY: visibility_lines,
     STOP_OBJECT: stop_lines,
     STORE_KEY_VALUE: key_lines,

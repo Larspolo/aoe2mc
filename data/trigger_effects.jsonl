@@ -89,6 +89,7 @@
 {"name": "SCRIPT_CALL", "text": "not supported: no XS scripts"}
 {"name": "SEND_CHAT", "text": "`tellraw @a[team=pN] {\"text\": ...}`"}
 {"name": "SET_BUILDING_GATHER_POINT", "text": "the order `rally <player> <ref> <x> <y>` of each selected building (or `rally <player> <name> <x> <y> <area>` for the buildings of the type in the area) in the storage `aoe2mc:orders`: the scenario mode of the game program sets the rally point (`train.rally`), and the new units walk to the tile (#2853)"}
+{"name": "SET_OBJECT_COST", "text": "the one resource of the cost in the storage `aoe2mc:costs` (a `+` in front of the resource): the scenario mode of the game program keeps the other resources of the cost (#2857)"}
 {"name": "SET_PLAYER_VISIBILITY", "text": "`scoreboard players set #pN.pM aoe_vis`: the scenario mode of the game program shows the units of player M to player N out of sight, or hides them again (`fog.py`, #2774)"}
 {"name": "STOP_OBJECT", "text": "`tag` of the units in the area and the order `stop <tag>` in the storage `aoe2mc:orders`: the scenario mode of the game program stops them with `aoe stop` and ends their patrols (#2754); vanilla has no stop of a walk order"}
 {"name": "STORE_KEY_VALUE", "text": "`execute store result storage aoe2mc:keys values.\"<key>\" int 1 run scoreboard players get #vN aoe_var` (#2887); AoE2 keeps the keys between the scenarios of a campaign, a converted world keeps them only in the world"}
