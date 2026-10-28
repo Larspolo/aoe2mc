@@ -4678,6 +4678,8 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
             continue
         run = f"schedule function {fn} {ticks}t replace"
         again = run if conds else f"schedule function {fn} 20t replace"   # no conditions: AoE2 checks once per second
+        if any(e["type"] == DEACTIVATE_TRIGGER and e.get("trigger") == n for e in t["effects"]):   # on itself (#3077)
+            again = f"execute if score #{n} aoe_on matches 1 run {again}"
         files[f"data/aoe2mc/function/trigger/{n}.mcfunction"] = "\n".join(lines + [again] * t["looping"]) + "\n"
         load += [run] * t["enabled"]
     names = sorted({f"#v{x[k]}" for t in triggers for x in t["conditions"] + t["effects"]
