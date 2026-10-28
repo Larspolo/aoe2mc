@@ -163,17 +163,21 @@ def orders(g):
     (aoe2mc.stance_lines, #2705) sets the stance of the tagged units and removes the tag. A "Stop Object" order
     (aoe2mc.stop_lines, #2754) stops the tagged units (`aoe stop`), ends their patrols as a new order of a person does
     (gather.Gather.end_patrols, #2674) and removes the tag. An "Unload" order (#2773): unload(). A "Lock Gate" or
-    "Unlock Gate" order (aoe2mc.gate_lines, #2762) locks or unlocks the gate of its reference: gate()."""
+    "Unlock Gate" order (aoe2mc.gate_lines, #2762) locks or unlocks the gate of its reference: gate(). A "Place
+    Foundation" order (aoe2mc.foundation_lines, #2825): foundation()."""
     got = g.command(f"data get storage {ORDERS} list") or ""
     new = re.findall(r'"(patrol|attack_move|stance|stop) (aoe_order[\w.]+) ?(-?\d+(?: -?\d+)*)?"', got)
     unloads = re.findall(r'"unload (\d+) (\d+) ?(-?\d+ -?\d+ -?\d+)?"', got)
     gates = re.findall(r'"(lock|unlock) (\d+)"', got)
-    if new or unloads or gates:
+    found = re.findall(r'"found (\d+) (\w+) (\d+) (\d+)"', got)
+    if new or unloads or gates or found:
         g.command(f"data remove storage {ORDERS} list")
     for player, ref, where in unloads:
         unload(g, int(player), int(ref), where)
     for order, ref in gates:
         gate(g, order, int(ref))
+    for player, name, x, y in found:
+        foundation(g, int(player), name, (int(x), int(y)))
     patrols = vars(g).setdefault("patrols", [])
     for order, tag, where in new:
         p, sel = [int(v) for v in where.split()], f"@e[tag={tag}]"
@@ -203,6 +207,24 @@ def orders(g):
             g.command(f"aoe moveto @e[tag={tag}] {' '.join(map(str, points[q[2] % 2]))}")
         elif "passed" not in g.command(f"execute if entity @e[tag={tag}]"):
             patrols.remove(q)
+
+
+def foundation(g, player, name, tile):
+    """A "Place Foundation" order (aoe2mc.foundation_lines, #2825): the construction site of building name of the
+    player (a person or a bot) with the tile in its middle, for free as in AoE2, when the place is free and flat as for
+    a click of the player (build.free, shore, water, level). Its villagers build it as any site. A wall, a gate, a
+    building that the game program cannot build or a blocked place: nothing."""
+    import build                                                       # build imports gather
+    if name not in build.MENU or name in build.WALLS + build.GATES:
+        return
+    ok = build.shore if name in build.SHORE else build.water if name in build.WATER else build.free
+    for x in [g, *(s.g for s in g.bots)]:
+        if x.player != player or "objects" not in x.data:
+            continue
+        T = x.map.T
+        rect = build.area(x, name, (tile[0] * T + T // 2, tile[1] * T + T // 2))
+        if ok(x, rect) and build.level(x, name, rect):
+            build.found(x, name, rect, free=True)
 
 
 def unload(g, player, ref, where):
@@ -431,6 +453,16 @@ def stance(players, n, m, kind):
     row["team"] = other["team"]
 
 
+def mirror(players, n, m):
+    """"Mirror Diplomacy" (#2822): player n takes the stance of player m toward each other player (m has no stance
+    toward itself). The allies of m come last, so that n stays in their team: an alliance is a team (stance), so n is
+    then an ally of m too. Else the stance between n and m stays."""
+    kinds = {k: "ally" if gather.allied(players, m, k) else "neutral" if k in players[str(m)].get("neutral", ()) else
+             "enemy" for k in sorted(int(p) for p in players if int(p)) if k not in (n, m)}
+    for k in sorted(kinds, key=lambda k: kinds[k] == "ally"):
+        stance(players, n, k, kinds[k])
+
+
 def states(g):
     """Set the score #p<N>.p<M> of aoe_dipstate to the stance of player N to player M + 1 (STANCES): the condition
     "Diplomacy State" of the converted world tests it (#2757)."""
@@ -455,6 +487,12 @@ def diplomacy(g):
             if got and int(got[1]) in STANCES:
                 stance(g.players, n, m, STANCES[int(got[1])])
                 g.command(f"scoreboard players reset #p{n}.p{m} aoe_dip")
+    for n in ns:                                                       # "Mirror Diplomacy" (#2822), after the changes
+        for m in ns:
+            got = n != m and re.search(r" has (-?\d+) ", g.command(f"scoreboard players get #m{n}.p{m} aoe_dip") or "")
+            if got and int(got[1]) > 0:
+                mirror(g.players, n, m)
+                g.command(f"scoreboard players reset #m{n}.p{m} aoe_dip")
     states(g)
     g.command(gather.allies_command(g.players))
     if not treaty.holds(g):
