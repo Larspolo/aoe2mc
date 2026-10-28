@@ -24,6 +24,10 @@ aoe_techstate: tech_states() sets it to the AoE2 TechnologyState from the queues
 The condition "Object Has Action" (#2867) tests the score #r<ref> of aoe_action: actions() sets it to the AoE2
 UnitAIAction of the order of the villager (ACTIONS).
 
+The condition "Victory Timer" (#2906) tests the score #p<N>.<type> of aoe_vic: victory_timers() sets it to the years
+that are left on the wonder (type 0), relic (1) or King of the Hill (2) timer of player N, and resets it when the timer
+stops. A player with two wonders: the lower timer, as its boss bar.
+
 The condition "Difficulty Level" (#2704) tests the score #level of aoe_difficulty: setup() sets it to the AoE2 value
 ("aoe2" of game/data/difficulty.jsonl) of the setting "AI difficulty" (run.py --ai-difficulty).
 
@@ -36,6 +40,7 @@ aoe2mc:tasks (aoe2mc.task_lines): tasks() walks the tagged units there with the 
     scenario.tick(g)       # the book, the tasks, the orders
 """
 import json
+import math
 import os
 import re
 import sys
@@ -57,9 +62,11 @@ ORDERS = "aoe2mc:orders"                                               # the dat
 ATTRIBUTES = "aoe2mc:attributes"                                       # the storage of "Modify Attribute" (#2763)
 MENUS = "aoe2mc:menus"                                                 # the storage of "Enable/Disable" (#2775)
 COSTS = "aoe2mc:costs"                                                 # the storage of "Change Object Cost" (#2776)
+TIMES = "aoe2mc:times"                                                 # "Change Technology Research Time" (#2820)
 PLACES = "aoe2mc:places"                                               # "Change Train/Technology Location" (#2864)
 UNSELECTABLE = "aoe2mc.unselectable"                                   # the tag of "Disable Object Selection" (aoe2mc)
 NAMES = "aoe2mc:names"                                                 # the storage of "Change Technology Name" (#2821)
+LOCATIONS = "aoe2mc:locations"                                         # the storage of "Add Train Location" (#2865)
 READS = "aoe2mc:reads"                                                 # "Modify Variable by Attribute" (#2858)
 NEAR = 3                                                               # blocks: a patrol turns back this near its point
 LEVELS = {r["name"]: r["aoe2"] for r in table.load("difficulty.jsonl")}  # "AI difficulty" -> AoE2 DifficultyLevel
@@ -121,6 +128,7 @@ def tick(g):
     garrisons(g)
     tech_states(g)
     actions(g)
+    victory_timers(g)
     if g.clock() < vars(g).get("book_at", 0.0):
         return
     g.book_at = g.clock() + EVERY
@@ -132,7 +140,9 @@ def tick(g):
     attributes(g)
     reads(g)
     costs(g)
+    times(g)
     names(g)
+    locations(g)
     places(g)
     messages = g.data.get("messages", {})
     text = re.sub(r"<[^<>]*>", "", messages.get("instructions", "")).strip()   # AoE2 color tags (book_pages)
@@ -339,6 +349,19 @@ def costs(g):
                 {r: int(v) for r, v in (part.split("=") for part in cost.split())}
 
 
+def times(g):
+    """The new research times of "Change Technology Research Time" (aoe2mc.tech_time_lines, #2820): read and empty the
+    list of the data storage TIMES, and keep each time (AoE2 seconds) in trigger_times of the side of its player (the
+    people and the bots): train.seconds uses it in place of the time of game/data/train.jsonl. A later line wins."""
+    new = re.findall(r'"(\d+) (\w+) (\d+)"', g.command(f"data get storage {TIMES} list") or "")
+    if new:
+        g.command(f"data remove storage {TIMES} list")
+    sides = {x.player: x for x in [g, *(s.g for s in g.bots)]}
+    for player, name, s in new:
+        if int(player) in sides:
+            vars(sides[int(player)]).setdefault("trigger_times", {})[name] = int(s)
+
+
 def places(g):
     """The new places of "Change Train Location" and "Change Technology Location" (aoe2mc.location_lines, #2864): read
     and empty the list of the data storage PLACES, and keep each place (building, AoE2 button) in trigger_places of the
@@ -366,6 +389,20 @@ def names(g):
         player, name, text = found[:3] if found[0] else found[3:]
         if int(player) in sides:
             vars(sides[int(player)]).setdefault("trigger_names", {})[name] = re.sub(r"\\(.)", r"\1", text)
+
+
+def locations(g):
+    """The new train locations of "Add Train Location" (aoe2mc.train_location_lines, #2865): read and empty the list of
+    the data storage LOCATIONS, and keep each one in trigger_trains {building: {unit: (button, seconds)}} of the side
+    of its player (the people and the bots): the menu of that building offers the unit (train.trains, train.placed).
+    The unit stays in its first building."""
+    new = re.findall(r'"(\d+) (\w+) (\w+) (\d+) (\d+)"', g.command(f"data get storage {LOCATIONS} list") or "")
+    if new:
+        g.command(f"data remove storage {LOCATIONS} list")
+    sides = {x.player: x for x in [g, *(s.g for s in g.bots)]}
+    for player, unit, building, button, time in new:
+        if int(player) in sides:
+            vars(sides[int(player)]).setdefault("trigger_trains", {}).setdefault(building, {})[unit] = int(button), int(time)
 
 
 def attributes(g):
@@ -444,6 +481,7 @@ def setup(g, mode="scenario"):
     g.command("scoreboard objectives add aoe_difficulty dummy")        # the condition "Difficulty Level" (#2704)
     g.command(f"scoreboard players set #level aoe_difficulty {LEVELS[level]}")
     g.command("scoreboard objectives add aoe_dipstate dummy")         # the condition "Diplomacy State" (#2757)
+    g.command("scoreboard objectives add aoe_vic dummy")              # the condition "Victory Timer" (#2906)
     states(g)
     rows = {x: g.players.get(str(x.player), {}) for x in sides}
     if not any("resources" in p or "pop_limit" in p for p in rows.values()):
@@ -570,6 +608,38 @@ def actions(g):
         if sent.get(ref) != (v := ACTIONS.get(states.get(uuids.get(ref)), 0)):
             g.command(f"scoreboard players set #r{ref} aoe_action {v}")
             sent[ref] = v
+
+
+def timers(g):
+    """The years that are left on each running victory timer: {(player, AoE2 VictoryTimerType): years}. Type 0 is the
+    lowest wonder timer of the player (wonder.tick), 1 the relic timer (relic_victory.tick), 2 King of the Hill
+    (hill.tick)."""
+    import wonder                                                      # wonder -> cheats -> gather: import it late
+    left = {}
+    for t in vars(g).get("wonders", {}).values():
+        left[(t["player"], 0)] = min(left.get((t["player"], 0), t["left"]), t["left"])
+    if t := vars(g).get("relic_timer"):
+        left[(t["player"], 1)] = t["left"]
+    if (s := vars(g).get("hill")) and s.get("owner") is not None:
+        left[(s["owner"], 2)] = s["left"]
+    return {k: max(math.ceil(v / wonder.YEAR), 0) for k, v in left.items()}
+
+
+def victory_timers(g):
+    """Once per game second: the score #p<N>.<type> of aoe_vic is the years left on that timer (timers), for the
+    condition "Victory Timer" of the triggers (#2906). A timer that stops resets its score: no test matches it. One
+    command per change."""
+    if g.clock() < vars(g).get("victory_timer_at", 0.0):
+        return
+    g.victory_timer_at = g.clock() + 1.0
+    sent, now = vars(g).setdefault("victory_timer_sent", {}), timers(g)
+    for (n, kind), y in sorted(now.items()):
+        if sent.get((n, kind)) != y:
+            g.command(f"scoreboard players set #p{n}.{kind} aoe_vic {y}")
+            sent[(n, kind)] = y
+    for n, kind in sorted(set(sent) - set(now)):
+        g.command(f"scoreboard players reset #p{n}.{kind} aoe_vic")
+        del sent[(n, kind)]
 
 
 def tech_state(x, name):
