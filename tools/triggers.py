@@ -29,7 +29,7 @@ NO_ECONOMY = "not supported: a converted world has no resources, technologies or
 MAP = {
     ("condition", "TIMER"): "`schedule function ... <s>s` (one function per trigger)",
     ("condition", "OBJECTS_IN_AREA"): AREA,
-    ("condition", "BRING_OBJECT_TO_AREA"): "`execute if entity @e[tag=ref-N,x=..,dx=..]` (tag of the object)",
+    ("condition", "BRING_OBJECT_TO_AREA"): "`execute if entity @e[tag=aoe2mc.rN,x=..,dx=..]` in the tick function (units, #2620); a building: not supported yet",
     ("condition", "OWN_OBJECTS"): "`execute store result score ... if entity @e[tag=aoe2mc.pN]`, then `if score ... matches N..` (units only, #2573)",
     ("condition", "OWN_FEWER_OBJECTS"): "`execute store result score ... if entity @e[tag=aoe2mc.pN]`, then `if score ... matches ..N` (units only, #2573)",
     ("condition", "DESTROY_OBJECT"): "`execute unless entity @e[tag=aoe2mc.rN]` in the tick function (units, #2618); a building: not supported yet",
@@ -40,6 +40,7 @@ MAP = {
     ("condition", "ACCUMULATE_ATTRIBUTE"): "`execute if score Gold aoe_resN matches Q..`: the resource scores of the game program (#2655)",
     ("condition", "RESEARCH_TECHNOLOGY"): "`if score #pN.NAME aoe_tech matches 1..` in the tick function: the scenario mode of the game program sets the score of each researched technology (#2656)",
     ("condition", "DIFFICULTY_LEVEL"): "`execute if score #level aoe_difficulty matches N` (the game program sets the score, #2704)",
+    ("condition", "UNITS_GARRISONED"): "`if score #gREF aoe_gar matches N..` in the tick function: the scenario mode of the game program sets the number of units inside each converted building (#2714); a transport ship: not supported yet",
     ("condition", "OBJECT_SELECTED"): "not supported: Minecraft has no selection",
     ("effect", "SEND_CHAT"): "`tellraw @a[team=pN] {\"text\": ...}`",
     ("effect", "DISPLAY_INSTRUCTIONS"): "`title @a actionbar` (short text) or `title @a subtitle`",

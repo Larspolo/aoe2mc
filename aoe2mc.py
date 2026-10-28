@@ -412,6 +412,8 @@ def read_scenario(path):
                                                **({"ref": c.unit_object, "unit": c.unit_object in entities,   # #2618
                                                    "player": c.source_player}
                                                   if c.condition_type in OBJECT_TESTS else {}),
+                                               **({"area": [c.area_x1, c.area_y1, c.area_x2, c.area_y2]}     # #2620
+                                                  if c.condition_type == BRING_OBJECT_TO_AREA else {}),
                                                **({"quantity": c.quantity, "player": c.source_player,
                                                    "area": [c.area_x1, c.area_y1, c.area_x2, c.area_y2],
                                                    "object": c.object_list, "group": c.object_group,
@@ -426,7 +428,9 @@ def read_scenario(path):
                                                   if c.condition_type == ACCUMULATE_ATTRIBUTE else {}),
                                                **({"player": c.source_player,                 # (#2656)
                                                    "technology": techs.get(c.technology, str(c.technology))}
-                                                  if c.condition_type == RESEARCHED else {}))
+                                                  if c.condition_type == RESEARCHED else {}),
+                                               **({"quantity": c.quantity, "unit": c.unit_object}   # (#2714)
+                                                  if c.condition_type == UNITS_GARRISONED else {}))
                                           for c in t.conditions],
                               effects=[dict(type=e.effect_type, message=e.message or "", player=e.source_player,
                                             time=e.display_time, object=kinds.get(e.object_list_unit_id),
@@ -2816,11 +2820,14 @@ ACTIVATE_TRIGGER, DEACTIVATE_TRIGGER = 8, 9
 TIMER = 10
 TRIBUTE = 5                                                        # "Tribute" (#2576)
 TRIGGER_CHANCE = 20                                                # the condition "Chance" (#2574)
+UNITS_GARRISONED = 18                                              # the condition "Units Garrisoned" (#2714)
 VARIABLE_VALUE = 22
 TIME_UNITS = {0: 5, 1: 60, 2: 1, 3: 1}  # TimeUnit (years, minutes, seconds, m:ss) -> game seconds; a year as game/wonder.py YEAR
 COUNTED = (IN_AREA, OWN_OBJECTS, OWN_FEWER_OBJECTS)                # conditions that count units: the tick function
-TICKED = COUNTED + (ACCUMULATE_ATTRIBUTE, DIFFICULTY_LEVEL, RESEARCHED, VARIABLE_VALUE)  # conditions of the tick function
+TICKED = COUNTED + (ACCUMULATE_ATTRIBUTE, DIFFICULTY_LEVEL, RESEARCHED, UNITS_GARRISONED,
+                     VARIABLE_VALUE)  # conditions of the tick function
 ATTRIBUTES = ("Food", "Wood", "Stone", "Gold")     # attributes 0-3: the score holders of gather.RESOURCES (#2655)
+BRING_OBJECT_TO_AREA = 1                                               # the condition "Bring Object to Area" (#2620)
 DESTROY_OBJECT = 6                                                     # the condition "Destroy Object" (#2618)
 CAPTURE_OBJECT = 7                                                     # the condition "Capture Object" (#2619)
 # The conditions on one object of the map (its tag aoe2mc.r<ref>, #2617): the test of the tick function when it holds,
@@ -2834,7 +2841,10 @@ OBJECT_TESTS = {DESTROY_OBJECT: ("if entity @e[tag=aoe2mc.m{ref}] unless entity 
                                   "execute as @e[tag=aoe2mc.r{ref}] at @s run tp @e[tag=aoe2mc.m{ref}] ~ ~ ~")),
                  # "Capture Object": the unit has the tag of the player of the condition (its owner, #2570)
                  CAPTURE_OBJECT: ("if entity @e[tag=aoe2mc.r{ref},tag=aoe2mc.p{player}]",
-                                  "unless entity @e[tag=aoe2mc.r{ref},tag=aoe2mc.p{player}]", ())}
+                                  "unless entity @e[tag=aoe2mc.r{ref},tag=aoe2mc.p{player}]", ()),
+                 # "Bring Object to Area": the unit is in the box of the area ({box}: area_box, #2620)
+                 BRING_OBJECT_TO_AREA: ("if entity @e[tag=aoe2mc.r{ref}{box}]",
+                                        "unless entity @e[tag=aoe2mc.r{ref}{box}]", ())}
 TICKED += tuple(OBJECT_TESTS)
 STORES = ("food", "wood", "stone", "gold")      # the resource of a tribute_list (AoE2 attributes 0 to 3)
 OPERATIONS = {1: "set", 2: "add", 3: "remove"}  # set, add, subtract of Modify Resource (AoE2ScenarioParser Operation)
@@ -2857,12 +2867,17 @@ def area_selector(c, T):
     tag too (units.MOUNT, #1045): it does not count."""
     obj = c.get("object")
     sel = [f"tag=aoe2mc.p{c['player']}", f"tag=!{units.MOUNT}"] + [f"tag=aoe2mc.t{obj}"] * (isinstance(obj, int) and obj >= 0)
-    if min(c["area"]) >= 0:
-        x1, y1, x2, y2 = c["area"]
-        x1, x2, y1, y2 = min(x1, x2), max(x1, x2), min(y1, y2), max(y1, y2)
-        sel.append(f"x={x1 * T},y={MIN_Y},z={y1 * T},dx={(x2 - x1 + 1) * T - 1},dy={HEIGHT - 1},"
-                   f"dz={(y2 - y1 + 1) * T - 1}")
-    return f"@e[{','.join(sel)}]"
+    return f"@e[{','.join(sel)}{area_box(c['area'], T)}]"
+
+
+def area_box(area, T):
+    """The selector part ",x=..,dz=.." of the blocks of the tiles x1..x2, y1..y2 (z) of an area, all heights; "" for an
+    area of -1 (the whole map)."""
+    if min(area) < 0:
+        return ""
+    x1, y1, x2, y2 = area
+    x1, x2, y1, y2 = min(x1, x2), max(x1, x2), min(y1, y2), max(y1, y2)
+    return f",x={x1 * T},y={MIN_Y},z={y1 * T},dx={(x2 - x1 + 1) * T - 1},dy={HEIGHT - 1},dz={(y2 - y1 + 1) * T - 1}"
 
 
 def object_lines(e, c):
@@ -3379,6 +3394,7 @@ SCORE_TESTS = {
     ACCUMULATE_ATTRIBUTE: resource_score,
     DIFFICULTY_LEVEL: lambda c: f"score #level aoe_difficulty matches {c.get('quantity', 0)}",
     RESEARCHED: lambda c: f"score #p{c['player']}.{c['technology']} aoe_tech matches 1..",
+    UNITS_GARRISONED: lambda c: f"score #g{c['unit']} aoe_gar matches {max(c['quantity'], 1)}..",   # #2714
     VARIABLE_VALUE: lambda c: f"score #v{c['variable']} aoe_var matches {variable_range(c)}",
 }
 
@@ -3393,7 +3409,8 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
     the units leave an area. A "Variable Value" condition runs in the tick function as an area (#2611), a "Research
     Technology" condition too: the game program sets the score #p<player>.<technology> of aoe_tech (#2656), and an
     "Accumulate Attribute" condition of a resource: resource_score (#2655). A "Destroy Object" condition
-    (OBJECT_TESTS) tests the tag aoe2mc.r<ref> of its unit and its marker (#2618). The commands of each effect come
+    (OBJECT_TESTS) tests the tag aoe2mc.r<ref> of its unit and its marker (#2618), "Bring Object to Area" the tag in
+    the box of the area (#2620). The commands of each effect come
     from its handler in EFFECTS.
     A disabled trigger runs only after an "Activate Trigger" (#2575): the score #N of aoe_on is 1 while a trigger that
     such an effect names is on (switch_lines). live: the triggers that get a function; None: all that give commands
@@ -3432,6 +3449,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
                 any(c["type"] == VARIABLE_VALUE and (c.get("variable", -1) < 0 or variable_range(c) is None)
                     or c["type"] == RESEARCHED and (c.get("player", -1) <= 0 or not c.get("technology"))
                     or c["type"] == ACCUMULATE_ATTRIBUTE and resource_score(c) is None
+                    or c["type"] == UNITS_GARRISONED and c.get("unit", -1) < 0
                     for c in conds):                                   # unit classes: not yet
             continue
         ctx = Effect(t, T, ground, players, stats, mood, files, setup, switch, timed)
@@ -3451,9 +3469,10 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
                 continue
             if c["type"] in OBJECT_TESTS:                              # the tag of the object (#2618)
                 test, other, before = OBJECT_TESTS[c["type"]]
-                counts += [x.format(ref=c["ref"], player=c.get("player")) for x in before]
-                tests.append(test.format(ref=c["ref"], player=c.get("player")))
-                unless.append(other.format(ref=c["ref"], player=c.get("player")))
+                at = dict(ref=c["ref"], player=c.get("player"), box=area_box(c.get("area", [-1] * 4), T))
+                counts += [x.format(**at) for x in before]
+                tests.append(test.format(**at))
+                unless.append(other.format(**at))
                 continue
             if c["type"] not in COUNTED:                               # a timer or the chance
                 continue
@@ -3504,7 +3523,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
     if names:
         load[:0] = ["scoreboard objectives add aoe_var dummy"] + \
             [f"scoreboard players add {v} aoe_var 0" for v in names]   # AoE2 variables start at 0
-    for word in ("aoe_difficulty", "aoe_tech"):                       # a score that only the game program sets
+    for word in ("aoe_difficulty", "aoe_gar", "aoe_tech"):            # a score that only the game program sets
         if any(f" {word} " in x for x in tick):
             setup[f"scoreboard objectives add {word} dummy"] = None
     if switch:

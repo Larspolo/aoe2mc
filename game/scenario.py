@@ -34,6 +34,7 @@ import re
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import garrison  # noqa: E402
 import gather  # noqa: E402
 import rcon  # noqa: E402
 import replay  # noqa: E402
@@ -102,6 +103,7 @@ def tick(g):
     not the bots (bot.Bot), once each EVERY seconds; then the tasks of the triggers (tasks) and their orders (orders).
     gather.Gather.run calls it in the scenario mode. Also the technologies of the triggers (research, #2577)."""
     research(g)
+    garrisons(g)
     if g.clock() < vars(g).get("book_at", 0.0):
         return
     g.book_at = g.clock() + EVERY
@@ -218,6 +220,19 @@ def research(g):
                   file=sys.stderr)
             continue
         train.research(sides[r["player"]], {"name": r["technology"], "player": "@a"}, start=True)
+
+
+def garrisons(g):
+    """The score #g<ref> of aoe_gar of each converted building of a player (the people and the bots) that takes a
+    garrison: the number of units inside (garrison.holders, g.garrisons), for the condition "Units Garrisoned" of the
+    triggers (aoe2mc.trigger_files, #2714). One command per change: a unit goes in, all come out, the building falls."""
+    sent = vars(g).setdefault("garrison_sent", {})
+    for x in [g, *(s.g for s in g.bots)]:
+        for rect, o in sorted(garrison.holders(x).items()) if "objects" in x.data else ():
+            n = len(x.garrisons.get(rect, ()))
+            if o.get("ref") is not None and sent.get(o["ref"], 0) != n:   # the objective starts with no score: 0
+                g.command(f"scoreboard players set #g{o['ref']} aoe_gar {n}")
+                sent[o["ref"]] = n
 
 
 def victory(g):
