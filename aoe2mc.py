@@ -396,7 +396,8 @@ def read_scenario(path):
                                 "view": view if view[0] is not None and min(view) >= 0 else None}
         if p.player_id:                         # the tab "Players" of the editor: for a scenario game (#2539)
             players[p.player_id] |= {"resources": {r: int(getattr(p, r) or 0) for r in ("food", "wood", "gold", "stone")},
-                                     "pop_limit": int(p.population_cap or 200), "computer": not p.human}
+                                     "pop_limit": int(p.population_cap or 200),
+                                     "computer": p.active and not p.human}     # no bot on a slot above the players (#3110)
         neutral = [i for i, d in enumerate(p.diplomacy or [], 1) if d == 1 and i != p.player_id and i <= 8]
         if p.player_id and neutral:             # the stance neutral (1) of DiplomacyState: no automatic attack (#1645)
             players[p.player_id]["neutral"] = neutral
