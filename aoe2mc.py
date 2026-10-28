@@ -423,83 +423,7 @@ def read_scenario(path):
                                                for k, v in EFFECT_KEYS.get(e.effect_type, {}).items()},
                                             **({"mood": ColorMood(e.color_mood).name}     # "Change Color Mood" (#1876)
                                                if e.effect_type == CHANGE_COLOR_MOOD and
-                                               getattr(e, "color_mood", None) in set(ColorMood) else {}),
-                                            **({"trigger": e.trigger_id}       # "(De)activate Trigger" (#2575)
-                                               if e.effect_type in (ACTIVATE_TRIGGER, DEACTIVATE_TRIGGER) else {}),
-                                            **({"quantity": e.quantity}
-                                               if e.effect_type in (DAMAGE_OBJECT, HEAL_OBJECT, CHANGE_OBJECT_SPEED)
-                                               else {}),
-                                            **({"cost": [[e.resource_1, e.resource_1_quantity],   # (#2776)
-                                                         [e.resource_2, e.resource_2_quantity],
-                                                         [e.resource_3, e.resource_3_quantity]]}
-                                               if e.effect_type in (CHANGE_OBJECT_COST, CHANGE_TECHNOLOGY_COST) else {}),
-                                            **({"technology": techs.get(e.technology, str(e.technology))}   # #2819
-                                               if e.effect_type == CHANGE_TECHNOLOGY_COST else {}),
-                                            **({"operation": e.operation, "quantity": e.quantity}   # (#2693)
-                                               if e.effect_type == CHANGE_OBJECT_HP else {}),
-                                            **({"attribute": e.object_attributes, "operation": e.operation,   # #2763
-                                                "quantity": e.quantity, "class": e.armour_attack_class,
-                                                "aa": e.armour_attack_quantity}
-                                               if e.effect_type == MODIFY_ATTRIBUTE else {}),
-                                            **({"enabled": e.enabled,                     # (#2775)
-                                                "technology": techs.get(e.technology, str(e.technology))}
-                                               if e.effect_type in (ENABLE_DISABLE_OBJECT, ENABLE_DISABLE_TECHNOLOGY) else {}),
-                                            **({"stance": e.attack_stance}                # (#2705)
-                                               if e.effect_type == CHANGE_OBJECT_STANCE else {}),
-                                            **({"quantity": e.quantity, "variable": e.variable,   # (#2611)
-                                                "operation": e.operation}
-                                               if e.effect_type == CHANGE_VARIABLE else {}),
-                                            **({"variable": e.variable, "variable2": e.variable2,   # (#2713)
-                                                "operation": e.operation}
-                                               if e.effect_type == MODIFY_VARIABLE_BY_VARIABLE else {}),
-                                            **({"target": e.target_player}                # "Change Ownership" (#2570)
-                                               if e.effect_type == CHANGE_OWNERSHIP else {}),
-                                            **({"color": e.player_color}                 # (#2712, #2824)
-                                               if e.effect_type in (CHANGE_OBJECT_PLAYER_COLOR, CHANGE_PLAYER_COLOR) else {}),
-                                            **({"target": e.target_player,                # "Replace Object" (#2703)
-                                                "object2": kinds.get(e.object_list_unit_id_2)}
-                                               if e.effect_type == REPLACE_OBJECT else {}),
-                                            **({"object2": kinds.get(e.object_list_unit_id_2),   # (#2764)
-                                                "selected": list(e.selected_object_ids or [])}
-                                               if e.effect_type == CREATE_GARRISONED_OBJECT else {}),
-                                            **({"selected": list(e.selected_object_ids or [])}   # (#2762)
-                                               if e.effect_type in (LOCK_GATE, UNLOCK_GATE) else {}),
-                                            **({"selected": list(e.selected_object_ids or [])}   # (#2773)
-                                               if e.effect_type == UNLOAD else {}),
-                                            **({"target": e.target_player, "diplomacy": e.diplomacy}   # (#2645)
-                                               if e.effect_type == CHANGE_DIPLOMACY else {}),
-                                            **({"target": e.target_player}                # (#2822)
-                                               if e.effect_type == MIRROR_DIPLOMACY else {}),
-                                            **({"target": e.target_player, "visibility": e.visibility_state}   # (#2774)
-                                               if e.effect_type == SET_PLAYER_VISIBILITY else {}),
-                                            **({"target": e.target_player, "visibility": e.visibility_state,   # #2862
-                                                "selected": list(e.selected_object_ids or [])}
-                                               if e.effect_type == CHANGE_OBJECT_VISIBILITY else {}),
-                                            **({"target": e.target_player, "quantity": e.quantity,   # (#2576)
-                                                "resource": e.tribute_list} if e.effect_type == TRIBUTE else {}),
-                                            **({"operation": e.operation, "quantity": e.quantity,
-                                                "resource": e.tribute_list} if e.effect_type == MODIFY_RESOURCE else {}),
-                                            **({"operation": e.operation, "quantity": e.quantity}   # (#2767)
-                                               if e.effect_type == CHANGE_OBJECT_RANGE else {}),
-                                            **({"operation": e.operation, "quantity": e.armour_attack_quantity,   # (#2755)
-                                                "armour_class": e.armour_attack_class}
-                                               if e.effect_type in (CHANGE_OBJECT_ARMOR, CHANGE_OBJECT_ATTACK) else {}),
-                                            **({"operation": e.operation, "variable": e.variable,   # (#2768)
-                                                "resource": e.tribute_list}
-                                               if e.effect_type == MODIFY_RESOURCE_BY_VARIABLE else {}),
-                                            **({"operation": e.operation, "variable": e.variable,   # (#2823)
-                                                "resource": e.tribute_list}
-                                               if e.effect_type == MODIFY_VARIABLE_BY_RESOURCE else {}),
-                                            **({"technology": techs.get(e.technology, str(e.technology))}   # #2577
-                                               if e.effect_type in (CHANGE_TECHNOLOGY_NAME, RESEARCH_TECHNOLOGY) else {}),
-                                            **({"technology": techs.get(e.technology, str(e.technology)),
-                                                "quantity": e.quantity}                     # (#2820)
-                                               if e.effect_type == CHANGE_TECHNOLOGY_RESEARCH_TIME else {}),
-                                            **({"unit": e.time_unit, "timer": e.timer}   # "Display Timer" (#2572)
-                                               if e.effect_type == DISPLAY_TIMER else {}),
-                                            **({"timer": e.timer} if e.effect_type == CLEAR_TIMER else {}),   # (#2696)
-                                            **({"sound": e.sound_name or ""}             # "Play Sound" (#2644)
-                                               if e.effect_type == PLAY_SOUND else {}))
+                                               getattr(e, "color_mood", None) in set(ColorMood) else {}))
                                        for e in t.effects])
                          for t in scn.trigger_manager.triggers]
     mood = mm.map_color_mood                 # a ColorMood, or a string that the parser does not know (#1594)
@@ -2860,6 +2784,7 @@ CREATE_OBJECT = 11
 CREATE_OBJECT_ARMOR = 78                                           # "Create Object Armor" (#2855)
 CREATE_OBJECT_ATTACK = 77                                          # "Create Object Attack" (#2855)
 DAMAGE_OBJECT = 24                                                 # "Damage Object" (#2571)
+DECISION_TRIGGERED = 75                                            # the condition "Decision Triggered" (#2888)
 DECLARE_VICTORY = 13                                               # "Declare Victory" (#2542)
 DELETE_KEY = 83                                                    # "Delete Key" (#2887)
 DISABLE_OBJECT_SELECTION = 70                                      # "Disable Object Selection" (#2854)
@@ -2889,6 +2814,7 @@ MODIFY_ATTRIBUTE = 51                                              # "Modify Att
 MODIFY_ATTRIBUTE_BY_VARIABLE = 79                                  # "Modify Attribute by Variable" (#2856)
 MODIFY_ATTRIBUTE_FOR_CLASS = 104                                   # "Modify Attribute for Class" (#2859)
 MODIFY_OBJECT_ATTRIBUTE = 105                                      # "Modify Object Attribute" (#2860)
+MODIFY_OBJECT_ATTRIBUTE_BY_VARIABLE = 106                          # "Modify Object Attribute by Variable" (#2861)
 MODIFY_RESOURCE = 52                                               # "Modify Resource" (#2576)
 MODIFY_RESOURCE_BY_VARIABLE = 53                                   # "Modify Resource by Variable" (#2768)
 MODIFY_VARIABLE_BY_ATTRIBUTE = 87                                  # "Modify Variable by Attribute" (#2858)
@@ -2939,6 +2865,7 @@ VISIBLE = (OBJECT_NOT_VISIBLE, OBJECT_VISIBLE, OBJECT_VISIBLE_MULTIPLAYER)  # th
 TICKED = COUNTED + (                                               # conditions of the tick function, one per line
     ACCUMULATE_ATTRIBUTE,
     COMPARE_VARIABLES,
+    DECISION_TRIGGERED,
     DIFFICULTY_LEVEL,
     DIPLOMACY_STATE,
     DISPLAY_TIMER_TRIGGERED,
@@ -3000,6 +2927,7 @@ OBJECT_TESTS = {DESTROY_OBJECT: ("if entity @e[tag=aoe2mc.m{ref}] unless entity 
 TICKED += tuple(OBJECT_TESTS)
 INVERTED = tuple(OBJECT_TESTS) + (                                  # conditions with an inverted test in the tick
     COMPARE_VARIABLES,                                                 # function, one per line in alphabetical order
+    DECISION_TRIGGERED,
     OBJECT_HAS_ACTION,
     TRIGGER_ACTIVE,                                                    # (parallel tickets add lines, #2791)
 )
@@ -3027,6 +2955,7 @@ CONDITION_KEYS = {
     BRING_OBJECT_TO_OBJECT: {"next": "next_object",                                      # (#2771)
                              "next_unit": lambda c, entities, techs: c.next_object in entities},
     COMPARE_VARIABLES: {"variable": "variable", "variable2": "variable2", "comparison": "comparison"},   # (#2698)
+    DECISION_TRIGGERED: {"decision": "decision_id", "option": "decision_option"},          # (#2888)
     DIFFICULTY_LEVEL: {"quantity": "quantity"},                                          # (#2704)
     DIPLOMACY_STATE: {"player": "source_player", "target": "target_player", "diplomacy": "quantity"},   # the stance (#2757)
     DISPLAY_TIMER_TRIGGERED: {"slot": "timer_id"},                                       # (#2702)
@@ -3115,9 +3044,6 @@ def object_lines(e, c):
         return [f"summon {kind} {x + 0.5} {int(ground[x, z])} {z + 0.5} {nbt.snbt()}"]
     if e["type"] == KILL_OBJECT or e["type"] == REMOVE_OBJECT and min(e.get("area", [-1])) >= 0:
         word = "kill" if e["type"] == KILL_OBJECT else "remove"
-        if name is None and e["player"] <= 0 and e["type"] == KILL_OBJECT:   # Gaia units have no tag: a kill
-            stats["kill (not supported yet)"] += 1                     # of all would kill the decor entities too
-            return []
         if (found := effect_units(e, T)) is None:
             stats[f"{word} (not supported yet)"] += 1
             return []
@@ -3129,13 +3055,11 @@ def object_lines(e, c):
 
 
 def effect_units(e, T):
-    """(selector, top entity, entity) of the units of an effect: its player (Gaia units have no player tag), area
-    (area_selector) and unit type (the type of the top entity of units.make_entity). No type: (selector, None, None).
-    A type with no entity (a building): None."""
+    """(selector, top entity, entity) of the units of an effect: its player (Gaia: the tag aoe2mc.p0, unit_selector,
+    #2916), area (area_selector) and unit type (the type of the top entity of units.make_entity). No type: (selector,
+    None, None). A type with no entity (a building): None."""
     kind, name = e.get("object") or (None, None)
-    at = area_selector(e, T)
-    if e["player"] <= 0:                                           # never a player (#2568)
-        at = re.sub(r"tag=aoe2mc\.p-?\d+,?", "type=!minecraft:player,", at)
+    at = unit_selector(e, T)
     if name is None:
         return at, None, None
     nbt = units.make_entity(dict(name=name, player=0), {}, (0.0, 0.0, 0.0), np.random.default_rng(0)) \
@@ -3143,7 +3067,7 @@ def effect_units(e, T):
     if nbt is None:
         return None
     top = units.top_entity(nbt)
-    return f"@e[type={top['id']},{at[3:]}".replace(",type=!minecraft:player", ""), top, nbt
+    return f"@e[type={top['id']},{at[3:]}", top, nbt
 
 
 def damage_lines(e, c):
@@ -3156,7 +3080,7 @@ def damage_lines(e, c):
     if found is None:
         stats["damage (building, not supported yet)" if q else "damage (no amount)"] += 1
         return []
-    at = found[0]                                                      # Gaia: not the players (effect_units)
+    at = found[0]                                                      # Gaia: the tag aoe2mc.p0 (effect_units)
     stats["damage"] += 1
     if q < 0:
         return heal_commands(at, -q, c)
@@ -3169,7 +3093,8 @@ def attack_lines(e, c, armor=None, q=None):
     (the attack classes 3 pierce and 4 melee) or minecraft:armor. The game program sets these attributes from
     combat.STATS, so the points are AoE2 points. The modifier ID is the trigger and the effect: one modifier each.
     A set (#2909) removes the modifiers of all add and subtract effects of the same kind of the scenario (also of
-    "Modify Object Attribute"; a unit that does not have one ignores the command), then sets the base value.
+    "Modify Object Attribute" and its "by Variable", #2861; a unit that does not have one ignores the command), then
+    sets the base value.
     armor and q: the kind and the points of "Modify Object Attribute" (object_attribute_lines)."""
     q, stats = (e.get("quantity") if q is None else q) or 0, c.stats
     armor = e["type"] == CHANGE_OBJECT_ARMOR if armor is None else armor
@@ -3183,7 +3108,8 @@ def attack_lines(e, c, armor=None, q=None):
     if op == "set":
         kind = CHANGE_OBJECT_ARMOR if armor else CHANGE_OBJECT_ATTACK
         old = [f"aoe2mc:trig_{t['id']}_{i}" for t in c.triggers for i, f in enumerate(t["effects"])
-               if (f["type"] == kind or f["type"] == MODIFY_OBJECT_ATTRIBUTE and f.get("attribute") == 8 + (not armor))
+               if (f["type"] == kind or f["type"] in (MODIFY_OBJECT_ATTRIBUTE, MODIFY_OBJECT_ATTRIBUTE_BY_VARIABLE)
+                   and f.get("attribute") == 8 + (not armor))
                and OPERATIONS.get(f.get("operation")) in ("add", "remove")]
         return [f"execute as {at} run attribute @s {attr} modifier remove {m}" for m in old] + \
             [f"execute as {at} run attribute @s {attr} base set {max(q, 0)}"]
@@ -3204,6 +3130,45 @@ def object_attribute_lines(e, c):
         lines = []
     stats["modify object attribute" if lines else "modify object attribute (not supported)"] += 1
     return lines
+
+
+def object_attribute_by_variable_lines(e, c):
+    """The commands of "Modify Object Attribute by Variable" (#2861): the change of object_attribute_lines with the
+    score #v<N> of aoe_var as the value, when the trigger fires. Hit points: the operation of the score on the base of
+    each unit (hp_lines), then hp/apply. Armor and attack, add or subtract: the macro function object_attribute_by_variable
+    puts the score into the modifier (attack_lines). Another attribute, a set of armor or attack, or the speed (its
+    attribute is a square root, which a score cannot compute): no line."""
+    a, op, v, stats = e.get("attribute"), e.get("operation"), e.get("variable", -1), c.stats
+    hp = HP_OPERATIONS.get(op) if a == 0 else None
+    found = effect_units(e, c.T) if hp and v is not None and v >= 0 else None
+    mod = OPERATIONS.get(op) in ("add", "remove") and v is not None and v >= 0 and \
+        (a == 8 or a == 9 and e.get("armour_class") in (3, 4))
+    if not found and not mod:
+        stats["modify object attribute by variable (not supported)"] += 1
+        return []
+    stats["modify object attribute by variable"] += 1
+    c.setup["scoreboard objectives add aoe_var dummy"] = None            # an unset variable is 0, as in AoE2
+    if found:
+        c.setup["scoreboard objectives add aoe_hp dummy"] = None
+        name = f"hp/var_{hp}_{v}"
+        sign = {"set": "=", "add": "+=", "subtract": "-=", "multiply": "*=", "divide": "/="}[hp]
+        c.files[f"data/aoe2mc/function/{name}.mcfunction"] = "\n".join(
+            ["execute store result score #hp aoe_hp run attribute @s minecraft:max_health base get",
+             f"scoreboard players operation #hp aoe_hp {sign} #v{v} aoe_var",   # a division by 0 keeps the score
+             "execute if score #hp aoe_hp matches 1025.. run scoreboard players set #hp aoe_hp 1024",
+             "execute if score #hp aoe_hp matches ..0 run scoreboard players set #hp aoe_hp 1",
+             "execute store result storage aoe2mc:hp value int 1 run scoreboard players get #hp aoe_hp",
+             "function aoe2mc:hp/apply with storage aoe2mc:hp"]) + "\n"
+        c.files["data/aoe2mc/function/hp/apply.mcfunction"] = "$attribute @s minecraft:max_health base set $(value)\n"
+        return [f"execute as {found[0]} run function aoe2mc:{name}"]
+    s = "aoe2mc:object_attribute_by_variable"
+    c.files["data/aoe2mc/function/object_attribute_by_variable.mcfunction"] = \
+        "$attribute @s $(attribute) modifier add $(id) $(value) add_value\n"
+    return [f'data modify storage {s} attribute set value "minecraft:{"armor" if a == 8 else "attack_damage"}"',
+            f'data modify storage {s} id set value "aoe2mc:trig_{c.t["id"]}_{effect_index(e, c)}"',
+            f"execute store result storage {s} value int {1 if OPERATIONS[op] == 'add' else -1} run scoreboard players "
+            f"get #v{v} aoe_var",
+            f"execute as {unit_selector(e, c.T)} run function aoe2mc:object_attribute_by_variable with storage {s}"]
 
 
 def garrisoned_lines(e, c):
@@ -3394,15 +3359,15 @@ def player_name_lines(e, c):
 def owner_lines(e, c):
     """The commands of "Change Ownership" (#2570): the units of the player in the area (area_selector) and their
     mounts get the tag and the team of the target player. A temporary tag marks them first: the selector uses the old
-    player tag. Gaia (target 0, #2908) has no player tag and no team: they lose the tag and leave the team. A Gaia
-    source is not supported yet: unit_selector finds only the Gaia units with no tag."""
+    player tag. Gaia (target 0, #2908) has the tag aoe2mc.p0 and no team: they leave the team (#2916). A Gaia source
+    has the tag aoe2mc.p0 too."""
     old, new, T, stats = e["player"], e.get("target", -1), c.T, c.stats
-    if old <= 0 or new < 0 or old == new:
+    if old < 0 or new < 0 or old == new:
         stats["change ownership (not supported yet)"] += old != new
         return []
     stats["change ownership"] += 1
     own = "@e[tag=aoe2mc.own]"
-    to = [f"tag {own} add aoe2mc.p{new}", f"team join p{new} {own}"] if new else [f"team leave {own}"]
+    to = [f"tag {own} add aoe2mc.p{new}", f"team join p{new} {own}" if new else f"team leave {own}"]
     return [f"tag {area_selector(e, T)} add aoe2mc.own",
             f"execute as {own} on vehicle run tag @s add aoe2mc.own",
             f"tag {own} remove aoe2mc.p{old}", *to, f"tag {own} remove aoe2mc.own"]
@@ -3457,11 +3422,24 @@ def resource_lines(e, c):
 
 def resource_by_variable_lines(e, c):
     """The commands of "Modify Resource by Variable" (#2768): the amount is the score #vN of aoe_var (the AoE2 variable
-    N). Add and Subtract change aoe_res, a Set goes to aoe_set, as in resource_lines. Multiply and Divide have no line."""
-    if not 0 <= e.get("resource", -1) < len(STORES) or e["player"] <= 0 or e.get("variable", -1) < 0:
+    N). Add and Subtract change aoe_res, a Set goes to aoe_set, as in resource_lines. Multiply and Divide (#2941) are a
+    set: the stock of the game program (the board score, as variable_by_resource_lines) with the change or the set of
+    earlier effects that the game program did not read yet, times (or divided by) the variable. A division by 0 keeps
+    the score (Minecraft)."""
+    p, v = e["player"], e.get("variable", -1)
+    if not 0 <= e.get("resource", -1) < len(STORES) or p <= 0 or v < 0:
         return []
     c.setup["scoreboard objectives add aoe_res dummy"] = c.setup["scoreboard objectives add aoe_set dummy"] = None
-    target, v = f"#p{e['player']}.{STORES[e['resource']]}", f"#v{e['variable']} aoe_var"
+    target, v = f"#p{p}.{STORES[e['resource']]}", f"#v{v} aoe_var"
+    if e["operation"] in (4, 5):
+        c.setup["scoreboard objectives add aoe_var dummy"] = None
+        board, r = f"{ATTRIBUTES[e['resource']]} aoe_res{p if p > 1 else ''}", "#res aoe_var"
+        new = f"execute if score {{}} matches -2147483648.. run scoreboard players operation {r} {{}} {{}}"
+        return [f"scoreboard players set {r} 0", new.format(board, "=", board),
+                new.format(f"{target} aoe_res", "+=", f"{target} aoe_res"),
+                new.format(f"{target} aoe_set", "=", f"{target} aoe_set"),
+                f"scoreboard players operation {r} {'*' if e['operation'] == 4 else '/'}= {v}",
+                f"scoreboard players operation {target} aoe_set = {r}", f"scoreboard players reset {target} aoe_res"]
     if (op := OPERATIONS.get(e["operation"])) == "set":
         return [f"scoreboard players operation {target} aoe_set = {v}", f"scoreboard players reset {target} aoe_res"]
     return [f"scoreboard players operation {target} aoe_res {'+' if op == 'add' else '-'}= {v}"] if op in ("add", "remove") else []
@@ -3611,10 +3589,9 @@ def resource_score(c):
 
 
 def unit_selector(e, T):
-    """The area_selector of the units of the player of an effect. A Gaia unit has no tag (units.make_entity): the
-    entities with no tag and not the players."""
-    at = area_selector(e, T)
-    return re.sub(r"tag=aoe2mc\.p-?\d+", "tag=,type=!player", at) if e["player"] <= 0 else at
+    """The area_selector of the units of the player of an effect. A Gaia unit has the tag aoe2mc.p0 (units.make_entity,
+    "Change Ownership" to Gaia, #2916): also with a ref tag, a type tag or a type filter."""
+    return area_selector(e if e["player"] >= 0 else {**e, "player": 0}, T)
 
 
 def sound_lines(e, c):
@@ -4170,37 +4147,89 @@ def visibility_lines(e, c):
     return [f"scoreboard players set #p{a}.p{b} aoe_vis {e['visibility'] + 1}", "scoreboard players set #any aoe_vis 1"]
 
 
+def _cost(e, kinds, techs):
+    return [[e.resource_1, e.resource_1_quantity], [e.resource_2, e.resource_2_quantity],
+            [e.resource_3, e.resource_3_quantity]]
+
+
+def _tech(e, kinds, techs):
+    return techs.get(e.technology, str(e.technology))
+
+
+def _object2(e, kinds, techs):
+    return kinds.get(e.object_list_unit_id_2)
+
+
+def _selected(e, kinds, techs):
+    return list(e.selected_object_ids or [])
+
+
 # The keys of the effect dict of read_scenario beyond the common ones: key -> attribute of the scenario effect, or
 # (effect, kinds, techs) -> value. A new effect is one line here, in alphabetical order (#2792): parallel trigger
-# tickets conflicted in one expression of read_scenario. The older effects still have their entry there.
+# tickets conflicted in one expression of read_scenario (#2873: all effects but "mood", which tests its value).
 EFFECT_KEYS = {
-    ADD_TRAIN_LOCATION: {"building": lambda e, kinds, techs: kinds.get(e.object_list_unit_id_2), "button": "button_location",
-                         "seconds": "train_time"},
-    CHANGE_TECHNOLOGY_LOCATION: {"button": "button_location", "object2": lambda e, kinds, techs: kinds.get(   # #2864
-        e.object_list_unit_id_2), "technology": lambda e, kinds, techs: techs.get(e.technology, str(e.technology))},
-    CHANGE_TRAIN_LOCATION: {"button": "button_location",                                                       # #2864
-                            "object2": lambda e, kinds, techs: kinds.get(e.object_list_unit_id_2)},
+    ACTIVATE_TRIGGER: {"trigger": "trigger_id"},
+    ADD_TRAIN_LOCATION: {"building": _object2, "button": "button_location", "seconds": "train_time"},
+    CHANGE_DIPLOMACY: {"target": "target_player", "diplomacy": "diplomacy"},
+    CHANGE_OBJECT_ARMOR: {"operation": "operation", "quantity": "armour_attack_quantity", "armour_class": "armour_attack_class"},
+    CHANGE_OBJECT_ATTACK: {"operation": "operation", "quantity": "armour_attack_quantity", "armour_class": "armour_attack_class"},
+    CHANGE_OBJECT_COST: {"cost": _cost},
+    CHANGE_OBJECT_HP: {"operation": "operation", "quantity": "quantity"},
+    CHANGE_OBJECT_PLAYER_COLOR: {"color": "player_color"},
+    CHANGE_OBJECT_RANGE: {"operation": "operation", "quantity": "quantity"},   # (#2767)
+    CHANGE_OBJECT_SPEED: {"quantity": "quantity"},
+    CHANGE_OBJECT_STANCE: {"stance": "attack_stance"},
+    CHANGE_OBJECT_VISIBILITY: {"target": "target_player", "visibility": "visibility_state", "selected": _selected},
+    CHANGE_OWNERSHIP: {"target": "target_player"},
+    CHANGE_PLAYER_COLOR: {"color": "player_color"},
+    CHANGE_TECHNOLOGY_COST: {"cost": _cost, "technology": _tech},
+    CHANGE_TECHNOLOGY_LOCATION: {"button": "button_location", "object2": _object2, "technology": _tech},   # #2864
+    CHANGE_TECHNOLOGY_NAME: {"technology": _tech},
+    CHANGE_TECHNOLOGY_RESEARCH_TIME: {"technology": _tech, "quantity": "quantity"},   # (#2820)
+    CHANGE_TRAIN_LOCATION: {"button": "button_location", "object2": _object2},   # #2864
+    CHANGE_VARIABLE: {"quantity": "quantity", "variable": "variable", "operation": "operation"},
+    CLEAR_TIMER: {"timer": "timer"},
     COUNT_UNITS_INTO_VARIABLE: {"variable2": "variable2"},   # (#2697)
     CREATE_DECISION: {"decision": "decision_id", "option1": "message_option1", "option2": "message_option2"},
+    CREATE_GARRISONED_OBJECT: {"object2": _object2, "selected": _selected},
     CREATE_OBJECT_ARMOR: {"class": "armour_attack_class", "aa": "armour_attack_quantity"},   # (#2855)
     CREATE_OBJECT_ATTACK: {"class": "armour_attack_class", "aa": "armour_attack_quantity"},  # (#2855)
-    DISABLE_TECHNOLOGY_STACKING: {"technology": lambda e, kinds, techs: techs.get(e.technology, str(e.technology))},   # (#2866)
-    ENABLE_TECHNOLOGY_STACKING: {"quantity": "quantity",                                                            # (#2866)
-                                 "technology": lambda e, kinds, techs: techs.get(e.technology, str(e.technology))},
-    INITIATE_RESEARCH: {"selected": lambda e, kinds, techs: list(e.selected_object_ids or []),   # (#2772)
-                        "technology": lambda e, kinds, techs: techs.get(e.technology, str(e.technology))},
+    DAMAGE_OBJECT: {"quantity": "quantity"},
+    DEACTIVATE_TRIGGER: {"trigger": "trigger_id"},
+    DISABLE_TECHNOLOGY_STACKING: {"technology": _tech},   # (#2866)
+    DISPLAY_TIMER: {"unit": "time_unit", "timer": "timer"},
+    ENABLE_DISABLE_OBJECT: {"enabled": "enabled", "technology": _tech},
+    ENABLE_DISABLE_TECHNOLOGY: {"enabled": "enabled", "technology": _tech},
+    ENABLE_TECHNOLOGY_STACKING: {"quantity": "quantity", "technology": _tech},   # (#2866)
+    HEAL_OBJECT: {"quantity": "quantity"},
+    INITIATE_RESEARCH: {"selected": _selected, "technology": _tech},   # (#2772)
     LOAD_KEY_VALUE: {"quantity": "quantity", "variable": "variable"},   # (#2887)
+    LOCK_GATE: {"selected": _selected},
+    MIRROR_DIPLOMACY: {"target": "target_player"},
+    MODIFY_ATTRIBUTE: {"attribute": "object_attributes", "operation": "operation", "quantity": "quantity", "class": "armour_attack_class", "aa": "armour_attack_quantity"},
     MODIFY_ATTRIBUTE_BY_VARIABLE: {"attribute": "object_attributes", "class": "armour_attack_class",   # (#2856)
                                    "operation": "operation", "variable": "variable"},
-    MODIFY_ATTRIBUTE_FOR_CLASS: {"attribute": "object_attributes", "operation": "operation", "quantity": "quantity",
-                                 "class": "armour_attack_class", "aa": "armour_attack_quantity", "group": "object_group2"},
+    MODIFY_ATTRIBUTE_FOR_CLASS: {"attribute": "object_attributes", "operation": "operation", "quantity": "quantity", "class": "armour_attack_class", "aa": "armour_attack_quantity", "group": "object_group2"},
     MODIFY_OBJECT_ATTRIBUTE: {"aa": "armour_attack_quantity", "armour_class": "armour_attack_class",   # (#2860)
                               "attribute": "object_attributes", "operation": "operation", "quantity": "quantity"},
+    MODIFY_OBJECT_ATTRIBUTE_BY_VARIABLE: {"armour_class": "armour_attack_class", "attribute": "object_attributes",  # #2861
+                                          "operation": "operation", "variable": "variable"},
+    MODIFY_RESOURCE: {"operation": "operation", "quantity": "quantity", "resource": "tribute_list"},
+    MODIFY_RESOURCE_BY_VARIABLE: {"operation": "operation", "variable": "variable", "resource": "tribute_list"},
     MODIFY_VARIABLE_BY_ATTRIBUTE: {"attribute": "object_attributes", "class": "armour_attack_class",   # (#2858)
                                    "operation": "operation", "variable": "variable"},
-    SET_BUILDING_GATHER_POINT: {"selected": lambda e, kinds, techs: list(e.selected_object_ids or [])},
+    MODIFY_VARIABLE_BY_RESOURCE: {"operation": "operation", "variable": "variable", "resource": "tribute_list"},
+    MODIFY_VARIABLE_BY_VARIABLE: {"variable": "variable", "variable2": "variable2", "operation": "operation"},
+    PLAY_SOUND: {"sound": lambda e, kinds, techs: e.sound_name or ""},
+    REPLACE_OBJECT: {"target": "target_player", "object2": _object2},
+    RESEARCH_TECHNOLOGY: {"technology": _tech},
+    SET_BUILDING_GATHER_POINT: {"selected": _selected},
+    SET_PLAYER_VISIBILITY: {"target": "target_player", "visibility": "visibility_state"},
     STORE_KEY_VALUE: {"variable": "variable"},                         # (#2887)
-    TRAIN_UNIT: {"quantity": "quantity", "selected": lambda e, kinds, techs: list(e.selected_object_ids or [])},   # (#2772)
+    TRAIN_UNIT: {"quantity": "quantity", "selected": _selected},   # (#2772)
+    TRIBUTE: {"target": "target_player", "quantity": "quantity", "resource": "tribute_list"},
+    UNLOAD: {"selected": _selected},
+    UNLOCK_GATE: {"selected": _selected},
 }
 
 
@@ -4274,6 +4303,7 @@ EFFECTS = {
     MODIFY_ATTRIBUTE_BY_VARIABLE: attribute_by_variable_lines,
     MODIFY_ATTRIBUTE_FOR_CLASS: attribute_lines,
     MODIFY_OBJECT_ATTRIBUTE: object_attribute_lines,
+    MODIFY_OBJECT_ATTRIBUTE_BY_VARIABLE: object_attribute_by_variable_lines,
     MODIFY_RESOURCE: resource_lines,
     MODIFY_RESOURCE_BY_VARIABLE: resource_by_variable_lines,
     MODIFY_VARIABLE_BY_ATTRIBUTE: variable_by_attribute_lines,
@@ -4312,6 +4342,7 @@ Effect = namedtuple("Effect", "t T ground players stats mood files setup switch 
 SCORE_TESTS = {
     ACCUMULATE_ATTRIBUTE: resource_score,
     COMPARE_VARIABLES: compare_test,
+    DECISION_TRIGGERED: lambda c: f"score #last aoe_decision matches {c['decision'] * 10 + c['option']}",   # #2888
     DIFFICULTY_LEVEL: lambda c: f"score #level aoe_difficulty matches {c.get('quantity', 0)}",
     DIPLOMACY_STATE: lambda c: f"score #p{c['player']}.p{c['target']} aoe_dipstate matches {c['diplomacy'] + 1}",
     DISPLAY_TIMER_TRIGGERED: lambda c: f"score #done{c.get('slot', 0)} aoe_timer matches 1..",   # set at 0 (#2702)
@@ -4401,9 +4432,9 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
         chance = (TRIGGER_CHANCE, False) in kinds
         rest = kinds - {(TRIGGER_CHANCE, False)}
         if any(c["type"] in OBJECT_TESTS and (c.get("ref", -1) is None or c.get("ref", -1) < 0
-                                              or not c.get("unit") and not fallen_building(c))
+                                              or not c.get("unit") and not fallen_building(c) and not owned_building(c))
                or c["type"] == BRING_OBJECT_TO_OBJECT and (c.get("next") is None or c["next"] < 0 or not c.get("next_unit"))
-               for c in conds):                    # no object, or a building: blocks, no entity (but #2910: its score)
+               for c in conds):            # no object, or a building: blocks, no entity (but #2910, #2940: its score)
             stats["object condition (not an entity, not supported yet)"] += t["enabled"]
             continue
         # "OR" with a timer and other conditions (#2791) or a chance (#2815): the timer of a group is a schedule that
@@ -4420,6 +4451,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
                     and (c.get("player", -1) <= 0 or not c.get("technology"))
                     or c["type"] == ACCUMULATE_ATTRIBUTE and resource_score(c) is None
                     or c["type"] == COMPARE_VARIABLES and compare_test(c) is None
+                    or c["type"] == DECISION_TRIGGERED and (c.get("decision", -1) < 0 or c.get("option") not in (1, 2))
                     or c["type"] == OBJECT_HP and (c.get("ref", -1) < 0 or variable_range(c) is None)
                     or c["type"] == UNITS_GARRISONED and c.get("unit", -1) < 0
                     or c["type"] == VICTORY_TIMER and (c.get("player", -1) <= 0 or c.get("timer_type") not in (0, 1, 2)
@@ -4465,10 +4497,14 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
                 tests.append(f"{'unless' if c['inverted'] else 'if'} score #f{c['ref']} aoe_fallen matches 1..")
                 unless.append(f"{'if' if c['inverted'] else 'unless'} score #f{c['ref']} aoe_fallen matches 1..")
                 continue
+            if owned_building(c):                                      # the owner of a building: its score (#2940)
+                tests.append(f"{'unless' if c['inverted'] else 'if'} score #o{c['ref']} aoe_owner matches {c['player']}")
+                unless.append(f"{'if' if c['inverted'] else 'unless'} score #o{c['ref']} aoe_owner matches {c['player']}")
+                continue
             if c["type"] in SCORE_TESTS:                               # a score of the world or the game
                 test = SCORE_TESTS[c["type"]](c)
                 no = c["type"] == COMPARE_VARIABLES and compare_negated(c) or \
-                    c["type"] == OBJECT_HAS_ACTION and c["inverted"]   # "not equal" or "inverted": unless
+                    c["type"] in (DECISION_TRIGGERED, OBJECT_HAS_ACTION) and c["inverted"]   # "not equal", "inverted": unless
                 tests.append(f"{'unless' if no else 'if'} {test}")
                 unless.append(f"{'if' if no else 'unless'} {test}")
                 continue
@@ -4552,6 +4588,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
             "aoe_fallen",
             "aoe_gar",
             "aoe_lost",
+            "aoe_owner",
             "aoe_seen",
             "aoe_tech",
             "aoe_techstate",
@@ -4561,6 +4598,8 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
             setup[f"scoreboard objectives add {word} dummy"] = None
     if "scoreboard objectives add aoe_decision trigger" in setup:     # the clicks of "Create Decision" (#2886)
         tick += DECISION_TICK
+    if any(" aoe_decision " in x for x in tick):                       # "Decision Triggered" (#2888)
+        setup["scoreboard objectives add aoe_decision trigger"] = None
     if switch:
         setup["scoreboard objectives add aoe_on dummy"] = None
     load[:0] = setup
@@ -4601,6 +4640,18 @@ def fallen_list(triggers):
     return sorted({int(r) for r in re.findall(r"#f(\d+) aoe_fallen ", tick)})
 
 
+def owned_building(c):
+    """The "Capture Object" condition of a building (#2940): the score #o<ref> of aoe_owner, not the tag of an entity."""
+    return c["type"] == CAPTURE_OBJECT and not c.get("unit") and c.get("player", -1) >= 0
+
+
+def owner_list(triggers):
+    """The refs of the "Capture Object" conditions of buildings that the tick function of trigger_files tests, for
+    aoe2mc.json "owners" (#2940): the scenario mode of the game program sets their score to the owner of the building."""
+    tick = trigger_files(triggers)[1].get("data/aoe2mc/function/tick.mcfunction", "")
+    return sorted({int(r) for r in re.findall(r"#o(\d+) aoe_owner ", tick)})
+
+
 def tech_state_list(triggers):
     """The [player, technology] pairs of the "Researching Technology" and "Technology State" conditions that the tick
     function of trigger_files tests, for aoe2mc.json "tech_states" (#2769): the scenario mode of the game program sets
@@ -4621,6 +4672,7 @@ def visible_list(triggers):
 TRIGGER_LISTS = {
     "actions": action_list,                                     # the units of aoe_action (#2867)
     "fallen": fallen_list,                                      # the buildings of aoe_fallen (#2910)
+    "owners": owner_list,                                       # the buildings of aoe_owner (#2940)
     "research": research_list,                                  # the "Research Technology" effects (#2577)
     "tech_states": tech_state_list,                             # the [player, technology] pairs of aoe_techstate (#2769)
     "visible": visible_list,                                    # the [ref, player] pairs of aoe_seen (#2756)
