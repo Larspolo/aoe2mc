@@ -2858,6 +2858,7 @@ CREATE_OBJECT_ARMOR = 78                                           # "Create Obj
 CREATE_OBJECT_ATTACK = 77                                          # "Create Object Attack" (#2855)
 DAMAGE_OBJECT = 24                                                 # "Damage Object" (#2571)
 DECLARE_VICTORY = 13                                               # "Declare Victory" (#2542)
+DELETE_KEY = 83                                                    # "Delete Key" (#2887)
 DISABLE_OBJECT_SELECTION = 70                                      # "Disable Object Selection" (#2854)
 DISABLE_UNIT_ATTACKABLE = 98                                       # "Disable Unit Attackable" (#2695)
 DISABLE_UNIT_TARGETING = 61                                        # "Disable Unit Targeting" (#2826)
@@ -2876,6 +2877,7 @@ HEAL_OBJECT = 34                                                   # "Heal Objec
 INITIATE_RESEARCH = 76                                             # "Initiate Research" (#2772)
 IN_AREA = 5
 KILL_OBJECT = 14
+LOAD_KEY_VALUE = 81                                                # "Load Key Value" (#2887)
 LOCK_GATE = 7                                                      # "Lock Gate", "Unlock Gate" (#2762)
 MIRROR_DIPLOMACY = 109                                             # "Mirror Diplomacy" (#2822)
 MODIFY_ATTRIBUTE = 51                                              # "Modify Attribute" (#2763)
@@ -2905,6 +2907,7 @@ RESEARCH_TECHNOLOGY = 2                                            # "Research T
 SEND_CHAT = 3
 SET_PLAYER_VISIBILITY = 41                                         # "Set Player Visibility" (#2774)
 STOP_OBJECT = 29                                                   # "Stop Object" (#2754)
+STORE_KEY_VALUE = 82                                               # "Store Key Value" (#2887)
 TASK_OBJECT = 12                                                   # "Task Object" (#2646)
 TECHNOLOGY_STATE = 21                                              # the condition "Technology State" (#2769)
 TELEPORT_OBJECT = 35
@@ -2941,6 +2944,17 @@ TICKED = COUNTED + (                                               # conditions 
     TECHNOLOGY_STATE,
     TRIGGER_ACTIVE,
     UNITS_GARRISONED,
+    VARIABLE_VALUE,
+)
+VARIABLES = (                                                      # conditions and effects with a variable #vN of aoe_var:
+    CHANGE_VARIABLE,                                               # it starts at 0 (trigger_files), one per line
+    COMPARE_VARIABLES,
+    COUNT_UNITS_INTO_VARIABLE,
+    LOAD_KEY_VALUE,
+    MODIFY_VARIABLE_BY_ATTRIBUTE,
+    MODIFY_VARIABLE_BY_RESOURCE,
+    MODIFY_VARIABLE_BY_VARIABLE,
+    STORE_KEY_VALUE,
     VARIABLE_VALUE,
 )
 ATTRIBUTES = ("Food", "Wood", "Stone", "Gold")     # attributes 0-3: the score holders of gather.RESOURCES (#2655)
@@ -3412,6 +3426,26 @@ def variable_lines(e, c):
     if op <= 3:
         return [f"scoreboard players {('set', 'add', 'remove')[op - 1]} {v} {q}"]
     return [f"scoreboard players set #c{q} aoe_var {q}", f"scoreboard players operation {v} {'*/'[op - 4]}= #c{q} aoe_var"]
+
+
+def key_lines(e, c):
+    """The commands of "Store Key Value", "Load Key Value" and "Delete Key" (#2887): the value of the variable #vN of
+    aoe_var under the text key (the message) in the data storage aoe2mc:keys. Load sets the variable to the quantity
+    first, then to the stored value when the key is there. In AoE2 the keys stay between the scenarios of a campaign;
+    a converted world keeps them only in the world. No key, or no variable for Store and Load: not supported."""
+    kind = {DELETE_KEY: "delete key", LOAD_KEY_VALUE: "load key value", STORE_KEY_VALUE: "store key value"}[e["type"]]
+    key, v = (e.get("message") or "").strip(), e.get("variable", -1)
+    if not key or v < 0 and e["type"] != DELETE_KEY:
+        c.stats[f"{kind} (not supported)"] += 1
+        return []
+    c.stats[kind] += 1
+    path = 'storage aoe2mc:keys values."{}"'.format(key.replace("\\", "\\\\").replace('"', '\\"'))
+    if e["type"] == DELETE_KEY:
+        return [f"data remove {path}"]
+    if e["type"] == STORE_KEY_VALUE:
+        return [f"execute store result {path} int 1 run scoreboard players get #v{v} aoe_var"]
+    return [f"scoreboard players set #v{v} aoe_var {e.get('quantity') or 0}",
+            f"execute if data {path} store result score #v{v} aoe_var run data get {path}"]
 
 
 def variable_by_variable_lines(e, c):
@@ -4002,10 +4036,12 @@ EFFECT_KEYS = {
     CREATE_OBJECT_ATTACK: {"class": "armour_attack_class", "aa": "armour_attack_quantity"},  # (#2855)
     INITIATE_RESEARCH: {"selected": lambda e, kinds, techs: list(e.selected_object_ids or []),   # (#2772)
                         "technology": lambda e, kinds, techs: techs.get(e.technology, str(e.technology))},
+    LOAD_KEY_VALUE: {"quantity": "quantity", "variable": "variable"},   # (#2887)
     MODIFY_ATTRIBUTE_FOR_CLASS: {"attribute": "object_attributes", "operation": "operation", "quantity": "quantity",
                                  "class": "armour_attack_class", "aa": "armour_attack_quantity", "group": "object_group2"},
     MODIFY_VARIABLE_BY_ATTRIBUTE: {"attribute": "object_attributes", "class": "armour_attack_class",   # (#2858)
                                    "operation": "operation", "variable": "variable"},
+    STORE_KEY_VALUE: {"variable": "variable"},                         # (#2887)
     TRAIN_UNIT: {"quantity": "quantity", "selected": lambda e, kinds, techs: list(e.selected_object_ids or [])},   # (#2772)
 }
 
@@ -4048,6 +4084,7 @@ EFFECTS = {
     DAMAGE_OBJECT: damage_lines,
     DEACTIVATE_TRIGGER: switch_lines,
     DECLARE_VICTORY: victory_lines,
+    DELETE_KEY: key_lines,
     DISABLE_OBJECT_SELECTION: selection_lines,
     DISABLE_UNIT_ATTACKABLE: attackable_lines,
     DISABLE_UNIT_TARGETING: targeting_lines,
@@ -4062,6 +4099,7 @@ EFFECTS = {
     HEAL_OBJECT: heal_lines,
     INITIATE_RESEARCH: train_lines,
     KILL_OBJECT: object_lines,
+    LOAD_KEY_VALUE: key_lines,
     LOCK_GATE: gate_lines,
     MIRROR_DIPLOMACY: mirror_lines,
     MODIFY_ATTRIBUTE: attribute_lines,
@@ -4080,6 +4118,7 @@ EFFECTS = {
     SEND_CHAT: chat_lines,
     SET_PLAYER_VISIBILITY: visibility_lines,
     STOP_OBJECT: stop_lines,
+    STORE_KEY_VALUE: key_lines,
     TASK_OBJECT: task_lines,
     TELEPORT_OBJECT: teleport_lines,
     TRAIN_UNIT: train_lines,
@@ -4321,9 +4360,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
         load += [run] * t["enabled"]
     names = sorted({f"#v{x[k]}" for t in triggers for x in t["conditions"] + t["effects"]
                     for k in ("variable", "variable2")   # "Modify Variable by Variable" has two (#2713)
-                    if x["type"] in (VARIABLE_VALUE, CHANGE_VARIABLE, COMPARE_VARIABLES, COUNT_UNITS_INTO_VARIABLE,
-                                     MODIFY_VARIABLE_BY_ATTRIBUTE,
-                                     MODIFY_VARIABLE_BY_RESOURCE, MODIFY_VARIABLE_BY_VARIABLE) and x.get(k, -1) >= 0})
+                    if x["type"] in VARIABLES and x.get(k, -1) >= 0})
     if names:
         load[:0] = ["scoreboard objectives add aoe_var dummy"] + \
             [f"scoreboard players add {v} aoe_var 0" for v in names]   # AoE2 variables start at 0
