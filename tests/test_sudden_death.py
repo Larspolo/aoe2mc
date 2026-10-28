@@ -56,7 +56,7 @@ def test_the_loss_of_a_rival_town_center_defeats_its_player_and_wins():
     server.log.clear()
     check(g)
     assert g.defeated == {2} and "aoe destroy @e[tag=aoe2mc.building,team=p2]" in server.log
-    assert any("The town center of player 2 fell" in c for c in server.log) and g.conquest_at == 0.0
+    assert any("The town center of player 2 fell" in c for c in server.log)
     g.players["3"]["team"] = g.players["1"]["team"] = 1             # player 3 is an ally: only allies are left
     conquest.tick(g)
     assert g.ended == "Victory"

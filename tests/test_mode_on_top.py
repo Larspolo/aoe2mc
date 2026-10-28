@@ -93,7 +93,7 @@ def test_the_king_and_the_relic_both_decide_the_game(monkeypatch):
     server, g = town_game()
     g.mode, g.modes = "capture-the-relic", frozenset({"capture-the-relic", "regicide"})
     over = []
-    monkeypatch.setattr(regicide.cheats, "over", lambda g, won: over.append("regicide"))
+    monkeypatch.setattr(regicide.conquest.cheats, "over", lambda g, won: over.append("regicide"))
     monkeypatch.setattr(regicide, "has_king", lambda g, n: n != 2)          # the King of player 2 died
     g.kings, g.regicide_at = {1, 2}, 0.0
     regicide.tick(g)
