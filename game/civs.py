@@ -111,6 +111,12 @@ ONLY = {r["name"]: set(r["civs"]) for f in ("train.jsonl", "build.jsonl") for r 
 MISSING = {t: tuple(sorted(r["name"] for r in ROWS if t in r["missing"] or r["name"] not in ONLY.get(t, (r["name"],))))
            for t in sorted({t for r in ROWS for t in r["missing"]} | set(ONLY))}
 GENERIC = frozenset(t for r in ROWS for t in r["missing"])   # the AoE2 setting "All Techs" gives them to all (#2298)
+# The AoE2 lobby setting "Full Tech Tree" (#2354) gives each civilization the GENERIC and the ONLY items; the key
+# "full_tech_tree" of a line of data/train.jsonl or data/build.jsonl makes an exception: "own" (only its civilizations
+# have it: a unique unit, a scout, a regional unit after AoE2 update 141935), "none" (no civilization: a unique
+# building, the Xolotl Warrior, a team bonus unit). AoE2 wiki "Full Tech Tree".
+FULL = {r["name"]: r["full_tech_tree"] for f in ("train.jsonl", "build.jsonl") for r in table.load(f)
+        if "full_tech_tree" in r}
 ELEPHANTS = tuple(r["name"] for r in ROWS if r["name"] not in MISSING["BATTLE_ELEPHANT"])   # the battle elephant (#1556)
 EAGLES = tuple(r["name"] for r in ROWS if r["name"] not in MISSING["EAGLE_SCOUT"])   # the eagle line (#1555)
 LANCERS = tuple(r["name"] for r in ROWS if r["name"] not in MISSING["STEPPE_LANCER"])   # the steppe lancers (#1557)
@@ -322,9 +328,13 @@ def speed(g, name):
 def missing(g, name):
     """True when the civilization of the player of g does not have unit or technology name (MISSING), also not as the
     shared unit of an allied player (SHARED, gather.allied). The AoE2 setting "All Techs" (aoe2mc.json "all_techs",
-    run.py --all-techs, #2298) gives each civilization the GENERIC items; the unique items stay with their civilization."""
+    run.py --all-techs, #2298) gives each civilization the GENERIC items; the unique items stay with their civilization.
+    The AoE2 setting "Full Tech Tree" (aoe2mc.json "full_tech_tree", run.py --full-tech-tree) also gives the ONLY items,
+    with the exceptions of FULL (#2354)."""
     import gather                                                  # gather imports this module
-    c = civ(g)
+    c = real(g)
+    if g.data.get("full_tech_tree") and (f := FULL.get(name)) != "own" and (f or name in GENERIC or name in ONLY):
+        return f == "none"
     if c not in MISSING.get(name, ()) or g.data.get("all_techs") and name in GENERIC:
         return False
     players = g.data.get("players", {})
@@ -333,7 +343,14 @@ def missing(g, name):
 
 
 def civ(g, player=None):
-    """The civilization of the player of g, or of another player (aoe2mc.json "players"), for example "CELTS", else None."""
+    """The civilization of the player of g, or of another player (aoe2mc.json "players"), for example "CELTS", else None.
+    The AoE2 setting "Full Tech Tree" (#2354) removes all civilization and team bonuses: then None, because each bonus
+    table takes its civilization from here. The tech tree and the unique units take it from real()."""
+    return None if g.data.get("full_tech_tree") else real(g, player)
+
+
+def real(g, player=None):
+    """The civilization of the player of g, or of another player, also with the setting "Full Tech Tree" (civ)."""
     return g.data.get("players", {}).get(str(g.player if player is None else player), {}).get("civ")
 
 
