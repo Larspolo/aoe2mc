@@ -541,6 +541,7 @@ class Gather:
         self.players, self.sites = data.get("players", {}), []         # construction sites (#417)
         self.farmers, self.crops = {}, {}                              # farm tile -> UUID of its farmer, wheat age
         self.trunks = {}                                               # tree tile -> logs of its trunk on the ground
+        self.seconds = {}                                              # resource -> fraction of civs.EXTRA (#2113)
         self.bushes = {}                                               # bush tile -> the block of its last look
         self.menus = {}                                                # player -> handler of its open menu (#619)
         self.stances = {}                                              # uuid -> stance other than aggressive (#1107)
@@ -1374,6 +1375,7 @@ class Gather:
                     v.load += 1
                     src[v.tree] -= 1
                     self.work(v)
+                    self.second(v)
                     if v.tree in self.map.farms:
                         self.harvest(v.tree)
                         self.tend(v)
@@ -1434,6 +1436,16 @@ class Gather:
             ai.move(self, v.uuid, "VILLAGER", self.map.T, x + 0.5, self.map.y(x, z), z + 0.5,
                     NORMAL * civs.speed(self, "VILLAGER") * math.prod(PACE.get(t, 1) ** train.count(self, t) for t in self.techs))
         v.moved, v.tries = self.clock(), v.tries + 1
+
+    def second(self, v):
+        """One unit that v gathers earns the second resource of the civilization (civs.EXTRA, #2113): Poles and Puru
+        stone miners, Portuguese foragers, Shu lumberjacks. The fractions add up, so small amounts earn the exact sum."""
+        if bonus := civs.extra(self, "forage" if v.tree in self.map.bushes else v.res):
+            res, n = bonus
+            self.seconds[res] = self.seconds.get(res, 0) + n
+            if whole := int(self.seconds[res] + 1e-9):
+                self.seconds[res] -= whole
+                self.earn(res, whole)
 
     def limit(self, res=None):
         """The resources res that a villager carries, with the technologies of the player (CARRY, and FOOD_CARRY for
