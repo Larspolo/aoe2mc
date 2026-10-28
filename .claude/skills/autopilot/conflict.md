@@ -49,3 +49,7 @@ Spend 5 minutes or less: the ticket stays the main work, and this check must not
 A push to your own PR branch fails with "fetch first": the workflow Unconflict merged `main` into it (#2120: three
 times in 30 minutes while main moved fast). `git fetch origin <branch> && git merge --no-edit origin/<branch>`, run
 only the tests of your files, and push at once: the new commits are main's code, and CI tests the merge.
+
+`mergeable_state` can read `dirty` for a short time after a merge into main, also when the PR merges clean (#2628):
+before a merge of main by hand, `git merge --no-edit origin/main` shows no conflict, so read the state again after
+20 s. Do not run the full suite after each merge of main when main moves fast: run the tests of your files and push.

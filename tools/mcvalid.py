@@ -1,5 +1,5 @@
 """
-Check block states, entity IDs and biomes against the Minecraft data in tools/mcdata/<version>.json.
+Check block states, entity IDs, biomes and sound events against the Minecraft data in tools/mcdata/<version>.json.
 
     import mcvalid
     mcvalid.block_error("minecraft:oak_fence[east=true]")    # None if valid, else a message
@@ -42,6 +42,11 @@ def entity_error(entity_id, version=DEFAULT_VERSION):
 def biome_error(biome, version=DEFAULT_VERSION):
     name = biome.split(":", 1)[1] if ":" in biome else biome
     return None if name in data(version)["biomes"] else f"unknown biome '{name}'"
+
+
+def sound_error(sound, version=DEFAULT_VERSION):
+    name = sound.split(":", 1)[1] if ":" in sound else sound
+    return None if name in data(version)["sounds"] else f"unknown sound '{name}'"
 
 
 def invalid_states(states, version=DEFAULT_VERSION):
