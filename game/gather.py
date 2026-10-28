@@ -87,7 +87,7 @@ DROP_SITES = {r.lower(): tuple(t["name"] for t in ROWS if r.lower() in t.get("dr
 MEAT_SITES = tuple(t["name"] for t in ROWS if "meat" in t.get("drop", ()))   # hunted food only (mule cart, #2194)
 START = replay.START                                               # the AoE2 standard start resources (#973)
 # AoE2 DE setting "Starting resources" (wiki "Random map", without the civilization bonus): run.py --resources (#2264)
-LEVELS = {r["name"]: r["resources"] for r in table.load("setup.jsonl")}
+LEVELS = {r["name"]: r["resources"] for r in table.load("setup.jsonl") if "resources" in r}
 NOMAD = {"wood": 275, "stone": 100}     # AoE2 Nomad (wiki "Nomad (map)"): no building at the start, the cost of a town center
 TREE_WOOD = 100                                                    # wood in one tree, as in AoE2
 # plants of the ground that are not in #minecraft:replaceable: the trunk on a slope removes them from its row (#1124)
@@ -988,14 +988,16 @@ class Gather:
                 h.stock[res] += part
                 h.command(f"scoreboard players add {res.capitalize()} {h.board} {part}")
 
-    def deliver(self, res, n, forage=False):
+    def deliver(self, res, n, forage=False, kind=None):
         """Earn the load n of resource res at a drop site with the drop-off bonus of the civilization (civs.DROP: food,
-        forage for a load of a fruit bush, #2111). AoE2 keeps the fractions: the next load gets them."""
+        forage for a load of a fruit bush, #2111), and the second resource of gather kind (civs.DROP_EXTRA: "hunt",
+        "fish", "ship", #2308). AoE2 keeps the fractions: the next load gets them."""
         f = civs.drop(self, res) * (civs.drop(self, "forage") if forage else 1)
-        self.spare[res] = self.spare.get(res, 0) + n * f
-        if whole := int(self.spare[res] + 1e-9):
-            self.spare[res] -= whole
-            self.earn(res, whole)
+        for r, m in [(res, n * f)] + [(b[0], n * b[1]) for b in [civs.drop_extra(self, kind)] if b]:
+            self.spare[r] = self.spare.get(r, 0) + m
+            if whole := int(self.spare[r] + 1e-9):
+                self.spare[r] -= whole
+                self.earn(r, whole)
 
     def event(self, v, name):
         if self.log:
@@ -1416,7 +1418,8 @@ class Gather:
                 v.timer = 0.0
                 self.set(v, "chop" if self.source(v).get(v.tree, 0) > 0 else "idle")
             elif v.state == "to_drop":
-                self.deliver(v.res, v.load, v.res == "food" and v.tree in self.map.bushes)
+                self.deliver(v.res, v.load, v.res == "food" and v.tree in self.map.bushes,
+                             "hunt" if v.tree in self.map.carcasses else "fish" if v.tree in self.map.fish else None)
                 v.load = 0
                 self.event(v, "drop")
                 if v.tree in self.map.farms:
@@ -1437,6 +1440,8 @@ class Gather:
                 last = civs.last(self, "sheep" if v.tree in self.map.herds else kind)
                 take = 1 if last == 1 else 1 / last                    # 1: the amounts stay whole numbers
                 most = self.limit(v.res, "sheep" if v.tree in self.map.herds else kind)
+                if v.load < most and src.get(v.tree, 0) > 0:
+                    self.trickle(kind, self.tick)
                 while v.timer >= work and v.load < most and src.get(v.tree, 0) > 0:
                     v.timer -= work
                     v.load += 1
@@ -1493,11 +1498,13 @@ class Gather:
 
     def work_time(self, res, herd=False):
         """Real seconds per unit of resource res ("farm" for farms) with the technologies of the player (WORK_TECHS) and
-        the work-rate bonus of its civilization (civs.WORK; herd: the carcass of a herdable animal, for shepherds)."""
+        the work-rate bonus of its civilization (civs.WORK; herd: the carcass of a herdable animal, for shepherds).
+        civs.MORE multiplies the change of a technology (Armenians: the mule cart technologies 40 % more, #2309)."""
         if self.aegis:
             return 0.0                                                 # a full load in one work step
-        rate = civs.work(self, "sheep" if herd else res)
-        return self.chop.get(res, self.chop.get("food")) / rate / math.prod(WORK_TECHS.get(t, {}).get(res, 1) ** train.count(self, t) for t in self.techs)
+        rate, more = civs.work(self, "sheep" if herd else res), civs.MORE.get(civs.civ(self), {})
+        return self.chop.get(res, self.chop.get("food")) / rate / math.prod(
+            (1 + (WORK_TECHS.get(t, {}).get(res, 1) - 1) * more.get(t, 1)) ** train.count(self, t) for t in self.techs)
 
     def move(self, v):
         import ai                                                      # ai imports gather
@@ -1513,6 +1520,16 @@ class Gather:
         if bonus := civs.extra(self, "forage" if v.tree in self.map.bushes else v.res):
             res, n = bonus
             self.seconds[res] = self.seconds.get(res, 0) + n
+            if whole := int(self.seconds[res] + 1e-9):
+                self.seconds[res] -= whole
+                self.earn(res, whole)
+
+    def trickle(self, kind, dt):
+        """dt real seconds of work at gather kind earn the resource of the civilization for each AoE2 minute
+        (civs.PER_MINUTE, #2308: Thracian hunters and shepherds 3 gold). The fractions add up as in second."""
+        if bonus := civs.per_minute(self, kind):
+            res, n = bonus
+            self.seconds[res] = self.seconds.get(res, 0) + n * dt * NORMAL / 60
             if whole := int(self.seconds[res] + 1e-9):
                 self.seconds[res] -= whole
                 self.earn(res, whole)

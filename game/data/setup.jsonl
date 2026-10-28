@@ -3,3 +3,8 @@
 {"name": "medium", "resources": {"food": 500, "wood": 500, "gold": 300, "stone": 400}}
 {"name": "high", "resources": {"food": 1000, "wood": 1000, "gold": 700, "stone": 800}}
 {"name": "ultra", "resources": {"food": 20000, "wood": 20000, "gold": 10000, "stone": 5000}}
+{"name": "dark", "ages": 0, "note": "AoE2 wiki \"Random map\", Starting Age: a start in an age researches the technologies of all earlier ages (#2265)"}
+{"name": "feudal", "ages": 1}
+{"name": "castle", "ages": 2}
+{"name": "imperial", "ages": 3}
+{"name": "post-imperial", "ages": 4, "skip": ["SPIES"], "note": "AoE2 wiki \"Post-Imperial Age\": all technologies, not Spies/Treason, Flemish Revolution, First Crusade (not in the game program)"}
