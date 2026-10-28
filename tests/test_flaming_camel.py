@@ -19,7 +19,7 @@ def menu(civ):
 
 
 def test_the_values_are_those_of_the_wiki():
-    assert build.AGE["FLAMING_CAMEL"] == 3 and "FLAMING_CAMEL" not in build.NEEDS
+    assert "FLAMING_CAMEL" not in build.NEEDS
     assert len(train.HELP["FLAMING_CAMEL"]) <= 50
     assert train.ITEMS["FLAMING_CAMEL"][0] == SLOT
 

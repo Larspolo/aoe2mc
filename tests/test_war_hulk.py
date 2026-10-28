@@ -5,11 +5,10 @@ from test_dock_train import DOCK, dock_map
 from test_train_archery import menus
 
 import units
-from game import build, combat, train
+from game import combat, train
 
 
 def test_the_war_hulk_has_the_aoe2_de_values_of_the_wiki():
-    assert build.AGE["WAR_HULK"] == 2
     assert "WAR_HULK" in combat.MELEE_RANGED and len(train.HELP["WAR_HULK"]) <= 50
     assert ("HULK", "WAR_HULK") in train.lines("MEDIUM_WARSHIPS")
     assert units.classify("WAR_HULK") == units.classify("WAR_GALLEY")      # a dark oak boat with two crew

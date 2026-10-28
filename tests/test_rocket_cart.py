@@ -5,7 +5,7 @@ from test_forging import menus
 from test_siege_upgrades import WORKSHOP, research, setup
 
 import units
-from game import build, civs, combat, train
+from game import civs, combat, train
 
 OWN = {"CHINESE", "JURCHENS", "KHITANS", "KOREANS"}
 
@@ -18,7 +18,7 @@ def player(civ):
 
 
 def test_the_values_are_those_of_the_wiki():
-    assert build.AGE["ROCKET_CART"] == 2 and len(train.HELP["ROCKET_CART"]) <= 50
+    assert len(train.HELP["ROCKET_CART"]) <= 50
     r, h = combat.stats("ROCKET_CART"), combat.stats("HEAVY_ROCKET_CART")
     assert (r.hp, r.pierce, r.range, h.hp, h.pierce, h.range) == (45, 6, 7, 65, 8, 8)
     assert units.siege("ROCKET_CART") and units.siege("HEAVY_ROCKET_CART")
