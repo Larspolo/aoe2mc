@@ -581,7 +581,7 @@ def rise(g, site, work):
         if "FARM" in site["name"] and site["player"] == g.player:
             folwark(g, site, (x0 // T + s // 2, z0 // T + s // 2))
         if site["name"] == "TOWN_CENTER" and site["player"] == g.player:
-            g.town_center()
+            g.town_center(tuple(site["footprint"]))
         target(g, site)
         if site["name"] in GATES:
             portcullis(g, site)
