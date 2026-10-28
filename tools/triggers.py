@@ -48,6 +48,7 @@ MAP = {
     ("condition", "RESEARCHING_TECH"): "`if score #pN.NAME aoe_techstate matches 2` in the tick function: the scenario mode of the game program sets the AoE2 TechnologyState of the technology (#2769)",
     ("condition", "TECHNOLOGY_STATE"): "`if score #pN.NAME aoe_techstate matches Q` in the tick function: the scenario mode of the game program sets the AoE2 TechnologyState of the technology (#2769)",
     ("condition", "DIFFICULTY_LEVEL"): "`execute if score #level aoe_difficulty matches N` (the game program sets the score, #2704)",
+    ("condition", "TRIGGER_ACTIVE"): "`execute if score #N aoe_on matches 1` (0 when inverted) in the tick function: the state of trigger N (#2699)",
     ("condition", "DIPLOMACY_STATE"): "`execute if score #pN.pM aoe_dipstate matches S` (the stance + 1: the scenario mode of the game program sets the score at the start and after each change, #2757)",
     ("condition", "OBJECT_NOT_VISIBLE"): "`execute if score #rN.p1 aoe_seen matches 0` in the tick function: the scenario mode of the game program sets the score from the sight of player 1 (#2756)",
     ("condition", "OBJECT_VISIBLE"): "`execute if score #rN.p1 aoe_seen matches 1` in the tick function: the scenario mode of the game program sets the score from the sight of player 1 (#2756)",

@@ -432,6 +432,8 @@ def read_scenario(path):
                                                **({"quantity": c.quantity, "ref": c.unit_object,   # (#2701)
                                                    "comparison": c.comparison}
                                                   if c.condition_type == OBJECT_HP else {}),
+                                               **({"trigger": c.trigger_id}                  # (#2699)
+                                                  if c.condition_type == TRIGGER_ACTIVE else {}),
                                                **({"player": c.source_player,                 # (#2656)
                                                    "technology": techs.get(c.technology, str(c.technology))}
                                                   if c.condition_type in (RESEARCHED, RESEARCHING_TECH, TECHNOLOGY_STATE)
@@ -2895,6 +2897,7 @@ TELEPORT_OBJECT = 35
 ACTIVATE_TRIGGER, DEACTIVATE_TRIGGER = 8, 9
 TIMER = 10
 TRIBUTE = 5                                                        # "Tribute" (#2576)
+TRIGGER_ACTIVE = 79                                                # the condition "Trigger Active" (#2699)
 TRIGGER_CHANCE = 20                                                # the condition "Chance" (#2574)
 UNITS_GARRISONED = 18                                              # the condition "Units Garrisoned" (#2714)
 UNLOAD = 17                                                        # "Unload" (#2773)
@@ -2915,6 +2918,7 @@ TICKED = COUNTED + (                                               # conditions 
     RESEARCHED,
     RESEARCHING_TECH,
     TECHNOLOGY_STATE,
+    TRIGGER_ACTIVE,
     UNITS_GARRISONED,
     VARIABLE_VALUE,
 )
@@ -3685,6 +3689,7 @@ SCORE_TESTS = {
     RESEARCHED: lambda c: f"score #p{c['player']}.{c['technology']} aoe_tech matches 1..",
     RESEARCHING_TECH: lambda c: f"score #p{c['player']}.{c['technology']} aoe_techstate matches 2",
     TECHNOLOGY_STATE: lambda c: f"score #p{c['player']}.{c['technology']} aoe_techstate matches {c.get('quantity', 0)}",
+    TRIGGER_ACTIVE: lambda c: f"score #{c['trigger']} aoe_on matches {int(not c['inverted'])}",   # #2699
     UNITS_GARRISONED: lambda c: f"score #g{c['unit']} aoe_gar matches {max(c['quantity'], 1)}..",   # #2714
     VARIABLE_VALUE: lambda c: f"score #v{c['variable']} aoe_var matches {variable_range(c)}",
 }
@@ -3739,8 +3744,11 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
     ground = np.zeros((0, 0), np.int16) if ground is None else ground
     chancy = {t["id"] for t in triggers if any(c["type"] == TRIGGER_CHANCE for c in t["conditions"])}
     on = {e.get("trigger") for t in triggers for e in t["effects"] if e["type"] == ACTIVATE_TRIGGER}
-    switch = {e.get("trigger") for t in triggers for e in t["effects"]
-              if e["type"] in (ACTIVATE_TRIGGER, DEACTIVATE_TRIGGER)} & live - chancy
+    active = [c for t in triggers for c in t["conditions"] if c["type"] == TRIGGER_ACTIVE]   # the state score (#2699)
+    switch = ({e.get("trigger") for t in triggers for e in t["effects"]
+               if e["type"] in (ACTIVATE_TRIGGER, DEACTIVATE_TRIGGER)} | {c.get("trigger") for c in active}) & live - chancy
+    off = {c.get("trigger") for c in active if c["inverted"]} & switch   # an inverted test needs the score at 0
+    load += [f"scoreboard players set #{t['id']} aoe_on 0" for t in triggers if t["id"] in off and not t["enabled"]]
     timed = {t["id"]: max(20 * max(c["timer"] for c in cs), 1) for t in triggers  # 1 tick at least
              if (cs := sum(or_groups(t["conditions"]), [])) and all(c["type"] == TIMER for c in cs)}
     for t in triggers:
@@ -3761,7 +3769,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
             stats["OR with a timer or a chance (not supported yet)"] += t["enabled"]
             continue
         if not (t["enabled"] or t["id"] in on and t["id"] not in chancy) or not conds or \
-                not (rest == {(TIMER, False)} or rest <= {(k, False) for k in TICKED} | {(k, True) for k in OBJECT_TESTS}) or \
+                not (rest == {(TIMER, False)} or rest <= {(k, False) for k in TICKED} | {(k, True) for k in OBJECT_TESTS} | {(TRIGGER_ACTIVE, True)}) or \
                 chance and len([c for c in conds if c["type"] == TRIGGER_CHANCE]) > 1 or \
                 any(c.get("group", -1) >= 0 or c.get("class", -1) >= 0 for c in conds) or \
                 any(c["type"] == VARIABLE_VALUE and (c.get("variable", -1) < 0 or variable_range(c) is None)
@@ -3772,6 +3780,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
                     or c["type"] == UNITS_GARRISONED and c.get("unit", -1) < 0
                     or c["type"] in VISIBLE and (c.get("ref") is None or c["ref"] < 0 or c.get("player", -1) <= 0)
                     or c["type"] == PLAYER_DEFEATED and c.get("player", -1) <= 0   # Gaia: no defeat (#2710)
+                    or c["type"] == TRIGGER_ACTIVE and c.get("trigger") not in switch
                     for c in conds):                                   # unit classes: not yet
             continue
         ctx = Effect(t, T, ground, players, stats, mood, files, setup, switch, timed)
