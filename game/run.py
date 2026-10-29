@@ -283,8 +283,11 @@ class Game:
     placed = frozenset()                             # the Minecraft players who went to the start of their side
     seats = ()                                       # --seats: the AoE2 player of each person in the join order (#3489)
 
-    def __init__(self, world, version=mc_check.DEFAULT_VERSION, timeout=300, server="paper"):
+    def __init__(self, world, version=mc_check.DEFAULT_VERSION, timeout=300, server="paper", wait=False):
+        """wait: freeze the ticks at once when the server is up (freeze, #3974): a client that starts before play()
+        (25 s) let the trigger timers of the first seconds run before the join."""
         self.world, self.version, self.timeout, self.kind = os.path.abspath(world), version, timeout, server
+        self.wait = wait
         self.server = self.rcon = None
         self.lock, self.seen = threading.Lock(), 0     # the op thread and the game send commands
         self.sides = {}
@@ -324,6 +327,8 @@ class Game:
         try:
             self.server.wait(r"\]: Done \(", self.timeout)
             self.rcon = Rcon("127.0.0.1", self.port, password)
+            if self.wait:
+                freeze(self)
         except BaseException:
             self.stop()
             raise
@@ -628,8 +633,7 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
     wait: freeze the ticks now, and start the game when the people joined (start_on_join, #3314).
     settings: the AoE2 lobby settings (SETTINGS); a missing one has its default."""
     if wait:                                         # the trigger timers start at the join, not at the load
-        game.command("tick freeze")
-        game.command("scoreboard players set #wait aoe_trig 1")   # the tick triggers too (aoe2mc.WAIT, #3892)
+        freeze(game)
     import gather, train
     if unknown := sorted(set(settings) - set(SETTINGS)):
         raise TypeError(f"play() has no setting {', '.join(unknown)} (SETTINGS)")
@@ -782,6 +786,12 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
     return g
 
 
+def freeze(game):
+    """Stop the `schedule` timers of the scenario triggers and the mobs until start_on_join."""
+    game.command("tick freeze")
+    game.command("scoreboard players set #wait aoe_trig 1")   # the tick triggers too (aoe2mc.WAIT, #3892)
+
+
 def start_on_join(game, sides, people, sleep=time.sleep):
     """As in AoE2 DE, the game starts when all people are there (#3314): play froze the ticks (the `schedule` timers
     of the scenario triggers, the mobs) at the start of play(). Unfreeze them after the join of the people, and start
@@ -792,6 +802,7 @@ def start_on_join(game, sides, people, sleep=time.sleep):
     import gather
     game.command("scoreboard players reset #wait aoe_trig")
     game.command("tick unfreeze")
+    game.wait = False                                # a restart (#979) does not freeze again
     show_titles(game)                                # nobody saw a title before the join (#3772)
     for h in sides:                                                    # a loaded game goes on at its saved game time (#3377)
         h.t0 = h.clock() - vars(game).get("loaded_seconds", 0.0) / (gather.NORMAL * getattr(h, "speed", 1.0))
@@ -1207,6 +1218,7 @@ def main(argv=None, scenario=None):
         restore(os.path.join(a.load, "world"), a.world)
     ctrl_c()
     game = Game(a.world, a.version, server=a.server)
+    game.wait = a.play and not a.replay              # freeze at the start, as play(wait=...) below (#3974)
     if a.seats:                                      # co-op (#3489): one person for each seat
         game.seats = seat_list(a.seats)
         a.people = len(game.seats)
