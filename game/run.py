@@ -871,19 +871,27 @@ def replay(game, world, speed=1.0, start="0:00", follow=None, guide=None, view=N
     return stats
 
 
+CONSOLE = {}                                         # the one stdin thread and the game that gets its lines (#3812)
+
+
 def console(game):
     """A thread that sends each line of stdin to the server and prints the answer, also while a replay or a game runs
-    (#1777: the command line of the window, gui.py). It ends at the end of stdin (EOF)."""
+    (#1777: the command line of the window, gui.py). It ends at the end of stdin (EOF). The next scenario of a
+    campaign keeps the thread and gets its lines: a second thread would take every other line (#3812)."""
+    CONSOLE["game"] = game
+    if (t := CONSOLE.get("thread")) and t.is_alive():
+        return t
+
     def read():
         for line in sys.stdin:
             if line.strip() == STOP_LINE:            # the Stop of the window on Windows (gui.stop_game, #3003)
                 interrupt()
             elif line := line.strip().lstrip("/"):
                 try:
-                    print(game.command(line), flush=True)
+                    print(CONSOLE["game"].command(line), flush=True)
                 except Exception as e:                # one failed command (too long, no server) keeps the line open
                     print(f"The command failed: {e}", file=sys.stderr, flush=True)
-    t = threading.Thread(target=read, daemon=True)
+    t = CONSOLE["thread"] = threading.Thread(target=read, daemon=True)
     t.start()
     return t
 
