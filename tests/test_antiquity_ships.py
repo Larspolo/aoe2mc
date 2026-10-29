@@ -19,7 +19,7 @@ server, g = setup(food=1000, age=0)
 for i, age in enumerate(["", "TOOL_AGE", "BRONZE_AGE", "IRON_AGE"]):
     g.techs.add(age) if age else None
     out["open"][i] = sorted(n for b in ("DOCK", "MARKET", "SIEGE_WORKSHOP", "TEMPLE") for n in train.TRAINS[b]
-                            if train.unlocked(g, n) and n not in train.UPGRADES)
+                            if train.unlocked(g, n) and n not in train.UPGRADES and n not in train.TECHS)
     out["times"][i] = [train.seconds(g, n, "DOCK") for n in ("SCOUT_SHIP", "WAR_GALLEY_UPGRADE")]
     if i == 2:                                                         # the Bronze Age: Scout Ship to War Galley
         g.soldiers["x"] = "SCOUT_SHIP"
