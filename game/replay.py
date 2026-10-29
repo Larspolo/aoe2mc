@@ -3088,6 +3088,7 @@ class Replay:
                         self.send(self.steps(to))                   # and no step before `to`: an older time on the
                         self.moving = {i: max(t, to) for i, t in self.moving.items()}     # bar and fast catch-up
                         self.working = {i: max(t, to) for i, t in self.working.items()}   # walks after it (#1125)
+                    self.flush()                                    # the slow send of the jump before r0 (#4272)
                     g0, r0 = to, clock()
                     shown = int(to) // 1000
                     send(self.clock_commands(to, end, self.speed) + self.score_commands(to))
