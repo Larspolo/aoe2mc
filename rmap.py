@@ -5,7 +5,7 @@ a map description of #960 (aoe2mc.read_json): the terrain and the elevation of e
 forest tiles as objects (FOREST_TREES) yet.
 
 Read: `#const`, `#define`, `if`/`elseif`/`else`/`endif`, `start_random`/`percent_chance`/`end_random`,
-<PLAYER_SETUP> (no effect here), <LAND_GENERATION> (`base_terrain`, `create_player_lands`, `create_land` with
+<PLAYER_SETUP> (`grouped_by_team` with --teams), <LAND_GENERATION> (`base_terrain`, `create_player_lands`, `create_land` with
 `terrain_type`, `base_layer` (a land layer on the terrain_type, #3967), `land_percent`, `number_of_tiles`, `base_size`, `clumping_factor`, `land_position` and the borders
 `left_border`, `right_border`, `top_border`, `bottom_border`: percent of the map size at the low x, high x, low y and
 high y side that the land does not take) and
@@ -379,9 +379,9 @@ def lower_to_water(terrain, elevation):
     return out
 
 
-def generate(text, seed, players=2, size=None, warn=None):
+def generate(text, seed, players=2, size=None, warn=None, teams=None):
     """The map description (aoe2mc.read_json) of the land part of script text, for players on a map of size tiles
-    (default: the AoE2 size of the player count). "lands": [{"player", "x", "y", "base_size"}] of the player lands."""
+    (default: the AoE2 size of the player count). teams: one team (or None) per player (#3946), see circle(). "lands": [{"player", "x", "y", "base_size"}] of the player lands."""
     warn = warn or (lambda m: print(f"rms: {m}", file=sys.stderr))
     rng = np.random.default_rng(seed)
     n = size or SIZES.get(players, 200)
@@ -412,8 +412,9 @@ def generate(text, seed, players=2, size=None, warn=None):
             box = (edge["left_border"], n - edge["right_border"], edge["top_border"], n - edge["bottom_border"])
             if cmd == "create_player_lands":
                 total, turn = tiles(attrs, consts, n), rng.uniform(0, 2 * np.pi)
+                order = circle(sections.get("PLAYER_SETUP", ()), players, teams, seed)
                 for p in range(1, players + 1):
-                    a = turn + 2 * np.pi * (p - 1) / players
+                    a = turn + 2 * np.pi * order.index(p) / players
                     c = (int(round((n - 1) / 2 + RING * n * np.cos(a))), int(round((n - 1) / 2 + RING * n * np.sin(a))))
                     starts.append({"player": p, "x": c[0], "y": c[1], "base_size": base, "land": len(lands)})
                     links.append((c, p, zone if zone is not None else -1 - len(lands)))
@@ -483,7 +484,26 @@ def generate(text, seed, players=2, size=None, warn=None):
     found += ridges
     return {"size": n, "terrain": terrain.tolist(), "elevation": elevation.tolist(), "layer": layer.tolist(),
             "objects": found,
-            "players": {str(p): {"color": p - 1} for p in range(1, players + 1)}, "lands": [{k: v for k, v in st.items() if k != "land"} for st in starts]}
+            "players": {str(p): {"color": p - 1} | ({"team": teams[p - 1]} if teams else {}) for p in range(1, players + 1)},
+            "lands": [{k: v for k, v in st.items() if k != "land"} for st in starts]}
+
+
+def circle(setup, players, teams, seed):
+    """The players in their order on the circle of create_player_lands (#3946). No teams: player order (the maps of
+    earlier versions). With teams: random_placement (the AoE2 default) shuffles them, grouped_by_team puts the members
+    of a team next to each other (the teams and the members of a team in a random order). A new generator, so that
+    the other random numbers of the map do not change."""
+    order = list(range(1, players + 1))
+    if not teams:
+        return order
+    rng = np.random.default_rng([seed, 996])
+    if any(cmd == "grouped_by_team" for cmd, _, _ in setup):
+        groups = {}
+        for p in order:                     # a player with no team is a team of its own
+            groups.setdefault(teams[p - 1] if teams[p - 1] is not None else -p, []).append(p)
+        keys = list(groups)
+        return [p for k in rng.permutation(len(keys)) for p in rng.permutation(groups[keys[k]]).tolist()]
+    return rng.permutation(order).tolist()
 
 
 def objects(cmds, consts, terrain, starts, rng, warn):
@@ -870,11 +890,11 @@ def fords(d, text, seed):
     d["elevation"] = lower_to_water(terrain, d["elevation"]).tolist()
 
 
-def random_map(kind, seed, players=2):
+def random_map(kind, seed, players=2, teams=None):
     """The map description of an own generator (GENERATORS) and seed: the land of generate() (with the WALLS,
     RIVERS, FORDS, ISLES and COASTS of the kind), a town center at each player origin (not for NOMADS) and the START objects around
     it, on free tiles (no forest, no water, not next to a wall), the FISH of the kind and the RELICS."""
-    d = generate(GENERATORS[kind], seed, players)
+    d = generate(GENERATORS[kind], seed, players, teams=teams)
     rng = np.random.default_rng([seed, 993])
     if kind in RIVERS:
         river(d, RIVERS[kind], rng)
