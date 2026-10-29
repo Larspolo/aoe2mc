@@ -157,6 +157,9 @@ NOT_SAVED = (                                                          # the fie
     "action_at",                                                       # scenario.py: the next check time
     "action_sent",                                                     # scenario.actions: a load sends them again
     "age_times",                                                       # recap.py: game times of this session (Gather.t0)
+    "attacked_at",                                                     # scenario.attacked: the next check time
+    "attacked_hp",                                                     # scenario.attacked: a load reads the hit points again
+    "attacked_sent",                                                   # scenario.attacked: a load sets the same score again
     "bar",                                                             # bossbar.py: the shown unit
     "book_at",                                                         # scenario.py: the next check time (the world keeps the tags)
     "bots",                                                            # run.play makes the bots again

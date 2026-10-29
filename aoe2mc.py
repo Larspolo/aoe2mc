@@ -2170,6 +2170,9 @@ UNSELECTABLE = "aoe2mc.unselectable"   # entity tag: no click of a person select
 SELECTED = "aoe2mc.sel"             # temporary entity tag: the selected objects and the area units of an effect (#2975)
 MADE_INSIDE = "aoe2mc.made_inside"  # entity tag of a unit that a trigger made inside a building: the game program adds
                                     # it to the garrison of the building (#2764)
+INTO = "aoe2mc.in"                  # entity tag aoe2mc.in<ref>: a unit that a trigger made inside the ship or ram ref (#3779)
+CARRIERS = {r["name"]: r["garrison"] for r in units.rows("carriers.jsonl")}   # units that a ship or ram holds (#3779)
+CARRIER_REFS = {}           # reference ID of a transport ship or ram of the scenario -> its name (trigger_files, #3779)
 GARRISON_CELLS = 20         # free cells of a building in aoe2mc.json: the largest AoE2 garrison (castle, #808)
 SUN = ("minecraft:zombie", "minecraft:zombie_villager", "minecraft:skeleton", "minecraft:stray", "minecraft:drowned")
 
@@ -3213,12 +3216,16 @@ def damage_lines(e, c):
     """The commands of "Damage Object" (#2571): a `damage` of each unit of the effect (effect_units) by its amount.
     The amount is in AoE2 hit points: the game program gives each unit max_health = its AoE2 hit points
     (combat.stats_command); a vanilla world keeps the health of the mob. A negative amount heals, as in AoE2: the
-    commands of "Heal Object" (heal_commands, #2907)."""
+    commands of "Heal Object" (heal_commands, #2907). A building type: the order "damage <player> <building> <x1> <y1>
+    <x2> <y2> <amount>" (-1: the whole map) for game/scenario.py damage (#3776)."""
     q, stats = e.get("quantity") or 0, c.stats
     found = effect_units(e, c.T) if q else None
-    if found is None:
-        stats["damage (building, not supported yet)" if q else "damage (no amount)"] += 1
-        return []
+    if found is None:                                                  # a building: an order (#3776)
+        stats["damage (building)" if q else "damage (no amount)"] += 1
+        a, name = e.get("area", [-1] * 4), e["object"][1]
+        x0, y0, x1, y1 = (min(a[0], a[2]), min(a[1], a[3]), max(a[0], a[2]), max(a[1], a[3])) if min(a) >= 0 else [-1] * 4
+        return [f'data modify storage aoe2mc:orders list append value "damage {e["player"]} {name} {x0} {y0} {x1} {y1} {q}"'] * \
+            bool(q and e["player"] >= 0)
     stats["damage"] += 1                                               # Gaia: the tag aoe2mc.p0 (effect_units)
     if q < 0:
         return heal_commands(found, -q, c)
@@ -3333,9 +3340,11 @@ def garrisoned_lines(e, c):
     """The commands of "Create Garrisoned Object" (#2764): a summon of the unit (object2, units.make_entity) in the
     state of a garrisoned unit of the converter (plan_units, #807) on the inside cells of each selected building
     (buildings.INSIDE). The tag MADE_INSIDE lets the game program add it to the garrison, so UNGARRISON lets it out.
-    A holder that is not a building with rooms (a ship, a ram) or no selected object: not supported yet."""
+    A transport ship or a ram (CARRIER_REFS, #3779): the unit appears at the holder (its tag aoe2mc.r<ref>) with the
+    tag aoe2mc.in<ref>, and the game program puts it on the holder (game/transport.py adopt). Another holder or no
+    selected object: not supported yet."""
     kind, name = e.get("object2") or (None, None)
-    holders = [r for r in e.get("selected", []) if r in buildings.INSIDE]
+    holders = [r for r in e.get("selected", []) if r in buildings.INSIDE or r in CARRIER_REFS]
     nbt = units.make_entity(dict(name=name, player=max(e["player"], 0), rotation=math.pi / 2, hero=kind == "H"),
                             c.players or {},
                             (0.0, 0.0, 0.0), np.random.default_rng(c.t["id"])) if kind in ("U", "H") else None
@@ -3356,6 +3365,13 @@ def garrisoned_lines(e, c):
         parts += list(part.get("Passengers", []))
     lines = []
     for ref in holders:                                                # one unit per building, as in AoE2
+        if ref not in buildings.INSIDE:
+            part = units.top_entity(nbt)
+            tags = part["Tags"]
+            part["Tags"] = List[String](list(tags) + [String(f"{INTO}{ref}")])
+            lines.append(f"execute at @e[tag=aoe2mc.r{ref},limit=1] run summon {entity} ~ ~ ~ {nbt.snbt()}")
+            part["Tags"] = tags
+            continue
         cells, y, center = buildings.INSIDE[ref]
         x, z = cells[0] if len(cells) else center
         lines.append(f"summon {entity} {x + 0.5} {int(y)} {z + 0.5} {nbt.snbt()}")
@@ -3543,9 +3559,17 @@ def replace_lines(e, c):
     """The commands of "Replace Object" (#2703): a summon of the entity of the new type (units.make_entity, as "Create
     Object") of the target player at each unit of the effect (effect_units), then a kill of the old units and their
     mounts. Minecraft cannot change the type of a mob. A temporary tag marks the old units first: a new unit of the
-    same entity type and player must stay. A type with no entity (a building) is not supported yet."""
+    same entity type and player must stay. A building by a building (#3778): the order "replace <player> <old> <new>
+    <x1> <y1> <x2> <y2>" (-1: the whole map) goes into the storage aoe2mc:orders, and game/scenario.py replace puts
+    the complete new building on the tile of each old one. Other types with no entity are not supported yet."""
     T, stats = c.T, c.stats
     kind, name = e.get("object2") or (None, None)
+    if kind == "B" and (e.get("object") or ("",))[0] == "B" and e["player"] > 0:
+        stats["replace"] += 1
+        a = e.get("area", [-1] * 4)
+        x0, y0, x1, y1 = (min(a[0], a[2]), min(a[1], a[3]), max(a[0], a[2]), max(a[1], a[3])) if min(a) >= 0 else [-1] * 4
+        return [f'data modify storage aoe2mc:orders list append value "replace {e["player"]} {e["object"][1]} {name} '
+                f'{x0} {y0} {x1} {y1}"']
     found = effect_units(e, T) if e.get("object") else None
     nbt = units.make_entity(dict(name=name, player=max(e.get("target", -1), 0), rotation=math.pi / 2, hero=kind == "H"),
                             c.players or {},
@@ -4145,13 +4169,13 @@ def unload_lines(e, c):
     or with no selection each such building with its center in the area, goes into the list of the storage
     aoe2mc:orders as one text "unload <player> <ref>", with the block of the target tile on the ground "x y z" when
     the effect has one. The scenario mode of the game program (game/scenario.py orders) lets the units of the holder
-    out and walks them there (aoe moveto). A ship or a ram holder: not supported yet (the game program has no garrison
-    of them from a trigger)."""
+    out and walks them there (aoe moveto). A selected transport ship or ram (CARRIER_REFS, #3779) too: the game program
+    lets its units out on the nearest land (transport.out)."""
     T, ground, a = c.T, c.ground, e.get("area", [-1])
     refs = e.get("selected") or ([r for r, (_, _, (x, z)) in sorted(buildings.INSIDE.items())
                                   if a[0] * T <= x < (a[2] + 1) * T and a[1] * T <= z < (a[3] + 1) * T]
                                  if min(a, default=-1) >= 0 else [])
-    holders = [r for r in refs if r in buildings.INSIDE]
+    holders = [r for r in refs if r in buildings.INSIDE or r in CARRIER_REFS]
     if not holders or e["player"] <= 0:
         c.stats["unload (not supported yet)"] += 1
         return []
@@ -4662,7 +4686,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
         rest = kinds - {(TRIGGER_CHANCE, False)}
         if any(c["type"] in OBJECT_TESTS and (c.get("ref", -1) is None or c.get("ref", -1) < 0
                                               or not c.get("unit") and not fallen_building(c) and not owned_building(c)
-                                              and not brought_building(c, T))
+                                              and not attacked_building(c) and not brought_building(c, T))
                or c["type"] == BRING_OBJECT_TO_OBJECT and (c.get("next") is None or c["next"] < 0
                                                            or not c.get("next_unit") and not brought_building(c, T))
                for c in conds):            # no object, or a building: blocks, no entity (but #2910, #2940: its score)
@@ -4728,6 +4752,10 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
             if fallen_building(c):                                     # a building that falls: its score (#2910)
                 tests.append(f"{'unless' if c['inverted'] else 'if'} score #f{c['ref']} aoe_fallen matches 1..")
                 unless.append(f"{'if' if c['inverted'] else 'unless'} score #f{c['ref']} aoe_fallen matches 1..")
+                continue
+            if attacked_building(c):                                   # a building that is hit: its score (#3775)
+                tests.append(f"{'unless' if c['inverted'] else 'if'} score #h{c['ref']} aoe_hit matches 1")
+                unless.append(f"{'if' if c['inverted'] else 'unless'} score #h{c['ref']} aoe_hit matches 1")
                 continue
             if owned_building(c):                                      # the owner of a building: its score (#2940)
                 tests.append(f"{'unless' if c['inverted'] else 'if'} score #o{c['ref']} aoe_owner matches {c['player']}")
@@ -4847,6 +4875,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
             "aoe_difficulty",
             "aoe_fallen",
             "aoe_gar",
+            "aoe_hit",
             "aoe_lost",
             "aoe_owner",
             "aoe_seen",
@@ -4934,6 +4963,18 @@ def fallen_list(triggers):
     return sorted({int(r) for r in re.findall(r"#f(\d+) aoe_fallen ", tick)})
 
 
+def attacked_building(c):
+    """The "Object Attacked" condition of a building (#3775): the score #h<ref> of aoe_hit, not the tag of an entity."""
+    return c["type"] == OBJECT_ATTACKED and not c.get("unit")
+
+
+def attacked_list(triggers):
+    """The refs of the "Object Attacked" conditions of buildings that the tick function of trigger_files tests, for
+    aoe2mc.json "attacked" (#3775): the scenario mode of the game program sets their score when the hit points fall."""
+    tick = trigger_files(triggers)[1].get("data/aoe2mc/function/tick.mcfunction", "")
+    return sorted({int(r) for r in re.findall(r"#h(\d+) aoe_hit ", tick)})
+
+
 def owned_building(c):
     """The "Capture Object" condition of a building (#2940): the score #o<ref> of aoe_owner, not the tag of an entity."""
     return c["type"] == CAPTURE_OBJECT and not c.get("unit") and c.get("player", -1) >= 0
@@ -4965,6 +5006,7 @@ def visible_list(triggers):
 # list is one line here, in alphabetical order (#2832): no new keyword of write_objects.
 TRIGGER_LISTS = {
     "actions": action_list,                                     # the units of aoe_action (#2867)
+    "attacked": attacked_list,                                  # the buildings of aoe_hit (#3775)
     "fallen": fallen_list,                                      # the buildings of aoe_fallen (#2910)
     "owners": owner_list,                                       # the buildings of aoe_owner (#2940)
     "research": research_list,                                  # the "Research Technology" effects (#2577)
@@ -5372,6 +5414,8 @@ def write_datapack(out, objects, ground, biome_names=(), ambience="basic", playe
     team_load, team_pulse = team_lines(objects, players or {})
     # each player gets the map of the world in the off-hand once, so the minimap is there without a search (#966)
     team_pulse = team_pulse + MAP_PULSE
+    CARRIER_REFS.clear()
+    CARRIER_REFS.update({o["ref"]: o["name"] for o in objects if o.get("name") in CARRIERS and o.get("ref") is not None})
     trigger_load, trigger_fns = trigger_files(triggers, T, ground, players, trigger_stats, mood)
     files = {
         "pack.mcmeta": {"pack": {"description": "aoe2mc: work sounds and ambience", "pack_format": MC["pack_format"],

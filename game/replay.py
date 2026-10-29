@@ -23,6 +23,7 @@ after an ORDER. The record names the unit only in its first command, so until th
 Replay(game, data).run(speed) plays it; commands(e) gives the commands of one event (the unit tests use it).
 With bar=True (game/run.py --replay) a boss bar shows the game time, the speed and the progress (#684).
 """
+import bisect
 import collections
 import functools
 import json
@@ -75,6 +76,7 @@ GRAPH = "aoe2mc.graph"      # entity tag of the graph text in the sky above the 
 GRAPH_BARS = "▁▂▃▄▅▆▇█"     # one bar per game minute, its height relative to the highest value of all players
 UPGRADE = "aoe2mc.upgrade"  # entity tag of the Blacksmith tiers in the sky below the graphs (#3786)
 GRAPH_MINUTES = 20          # the last minutes of each graph row: a long game keeps a short text
+ECO = "aoe2mc.eco"          # entity tag of the economy text above the graphs (#3756)
 FOLLOWED = "aoe2mc.followed"  # the tag of the entity that the spectators of --follow look through (#1095)
 TRAIL = 3                   # tiles: a follower farther than this from its target walks to it again (#2551)
 TRAIL_MS = 1000             # ms of game time between two checks of the followers (#2551)
@@ -420,12 +422,15 @@ class Replay:
         self.army, self.lost, self.razed = {}, {}, {}   # player -> military units trained, units lost, buildings lost (#1066)
         self.troops, self.fallen = {}, {}       # player -> {military unit name: live count, count lost} (#3695)
         self.censused = False                   # a census counted the live units (the base of the units lost)
+        self.idled, self.idle_at = {}, 0        # player -> idle villager time (s), game time (ms) of the last count (#3757)
         self.reached, self.researched = {}, {}  # player -> {age: game time (ms)}, researched technologies (#1067)
         self.learned = {}                       # player -> [(game time ms, technology name)] (#3785)
         self.vills, self.vhigh = {}, {}         # player -> live villagers (est.), the highest count (#1086)
         self.smith = None                       # the shown rows of the Blacksmith tiers (#3786)
         self.graph = {}                         # value index -> the shown rows of its graph (#3448)
+        self.eco_rows = None                    # the shown rows of the economy text (#3756)
         self.samples, self.minute = {}, -1      # player -> [(minute, pop, villagers, military, resources)], last minute (#3446)
+        self.apms, self.ended = None, 0         # player -> sorted times of its actions (#3763); game time of the end (ms)
         self.eyes = None                        # (x, y, z) of each player; None: not known, each gather step shows (#2761)
         self.queue = None                       # in run() on Paper: the commands that wait for flush() (#2761)
         import gather                                               # gather -> build -> replay: import it late
@@ -490,6 +495,27 @@ class Replay:
         """The samples of each player up to game time t (ms): (minute, population, villagers, military, resources)."""
         return {p: [s for s in ss if s[0] * 60000 <= t] for p, ss in self.samples.items()}
 
+    def actions(self, p):
+        """The sorted times (ms) of the commands of player p in the timeline (#3763): not the chat and not the ages
+        that the reader adds. A dict of lists, made at the first call: a long record has 50 000 events or more."""
+        if self.apms is None:
+            self.apms = {}
+            for e in self.data.get("timeline", []):
+                if e["kind"] not in ("chat", "age") and e.get("player") is not None:
+                    self.apms.setdefault(e["player"], []).append(e["time"])
+            for times in self.apms.values():
+                times.sort()
+        return self.apms.get(p, [])
+
+    def apm(self, p, t):
+        """The actions of player p in the last game minute up to game time t (ms, #3763): t - 60000 < time <= t."""
+        times = self.actions(p)
+        return bisect.bisect_right(times, t) - bisect.bisect_right(times, t - 60000)
+
+    def mean_apm(self, p, t):
+        """The average actions per minute of player p up to game time t (ms, #3763); 0 at t <= 0."""
+        return round(bisect.bisect_right(self.actions(p), t) / (t / 60000)) if t > 0 else 0
+
     def graphs(self, t):
         """The commands of the graphs at game time t (ms, #3448, decision #3447: B): in the sky above the overview one
         large text display per value (population, villagers, military, estimated resources), one row per player in
@@ -539,6 +565,26 @@ class Replay:
         y, c = int(self.view.split()[1]) + 12 - 4 * 4, f"{self.n / 2:.1f}"   # one step below the lowest graph
         return [f"summon text_display {c} {min(319, y)} {c} {{text:{line},billboard:\"center\","
                 f'shadow:1b,line_width:1000,Tags:["{UPGRADE}"]}}']
+
+    def ecoview(self):
+        """The commands of the economy text at the current time (#3756): in the sky above the graphs, one row per player
+        in its color with the villagers on each kind of work. One display for all players, sent only when its text
+        changed."""
+        if getattr(self, "view", None) is None:
+            self.overview()                                         # it sets the place of the overview
+        counts, y, c = self.eco(), min(319, int(self.view.split()[1]) + 32), f"{self.n / 2:.1f}"
+        rows = []
+        for p in self.ranked(counts):
+            who, color = self.label(p)
+            rows.append(text(f"{who}: " + " · ".join(f"{k} {n}" for k, n in counts[p].items()) + "\n", color))
+        if not rows or rows == self.eco_rows:
+            return []
+        line = json.dumps(rows, ensure_ascii=False, separators=(",", ":"))
+        out = (f"data merge entity @e[type=text_display,tag={ECO},limit=1] {{text:{line}}}" if self.eco_rows is not None
+               else f"summon text_display {c} {y} {c} {{text:{line},billboard:\"center\","
+                    f'shadow:1b,line_width:1000,Tags:["{ECO}"]}}')
+        self.eco_rows = rows
+        return [out]
 
     def resources(self, p):
         return self.stock.setdefault(p, dict(START))
@@ -2203,11 +2249,17 @@ class Replay:
             g = self.gathered.get(p, dict.fromkeys(START, 0))
             res = ", ".join(f"{r} {v}" for r, v in g.items())
             out.append("tellraw @a " + json.dumps([text(name, color), text(
-                f": villagers trained {self.villagers.get(p, 0)}, gathered {res}")]))
+                f": villagers trained {self.villagers.get(p, 0)}, gathered {res}, idle villager time "
+                f"{self.idle_text(p)}")]))
             out.append("tellraw @a " + json.dumps([text(name, color), text(              # military (#1066)
                 f": military units trained {self.army.get(p, 0)}, units lost {self.lost.get(p, 0)}, "
-                f"buildings lost {self.razed.get(p, 0)}{self.army_text(p)}")]))
+                f"buildings lost {self.razed.get(p, 0)}, APM {self.mean_apm(p, self.ended)}{self.army_text(p)}")]))
         return out + self.tech_commands() + self.society_commands()
+
+    def idle_text(self, p):
+        """The idle villager time of player p as M:SS (#3757)."""
+        m, s = divmod(round(self.idled.get(p, 0)), 60)
+        return f"{m}:{s:02d}"
 
     def army_text(self, p):
         """The army at the end and the losses by type of player p, most first, at most 6 types and "+N" (#3697)."""
@@ -2370,6 +2422,13 @@ class Replay:
                  else "wood" if "LUMBERJACK" in t else "gold" if "GOLD" in t else "stone" if "STONE" in t else "food")
             out.setdefault(v.player, dict.fromkeys(keys, 0))[k] += 1
         return out
+
+    def idle_time(self, t):
+        """Add the idle villager time up to game time t (ms) to each player (#3757): the idle villagers now times the
+        game time since the last count. A jump sets idle_at only: the skipped time adds nothing."""
+        for p, n in self.eco().items():
+            self.idled[p] = self.idled.get(p, 0) + (t - self.idle_at) / 1000 * n["idle"]
+        self.idle_at = t
 
     def troop(self, p, name):
         """One more live military unit of this type for player p (a start unit or a spawn, #3695)."""
@@ -2585,6 +2644,7 @@ class Replay:
             ({"jump": to} if to is not None else {})
         self.control["fights"] = found
         end, shown, counted = events[-1]["time"] if events else start, None, -math.inf
+        self.ended = end                                            # the average APM of the summary (#3763)
         send = self.send if bar else lambda cmds: None
         send([f'bossbar add {BAR} ""', f"bossbar set {BAR} color white",
                    f"bossbar set {BAR} max {max(1, int(end) // 1000)}"] +
@@ -2662,8 +2722,10 @@ class Replay:
                     send(self.clock_commands(to, end, self.speed) + self.score_commands())
                     self.send(self.panel(to))
                     self.sample(to)
+                    self.idle_at = to
                     self.send(self.graphs(to))
                     self.send(self.upgrade_view(to))
+                    self.send(self.ecoview())
                 continue
             lag = max(lag, clock() - r0 - (now - g0) / 1000 / self.speed)
             if int(now) // 1000 != shown:                              # at most once per game second
@@ -2675,8 +2737,10 @@ class Replay:
                 send(self.clock_commands(now, end, self.speed) + self.score_commands() + self.overview(join=True))
                 self.send(self.panel(now))
                 self.sample(now)
+                self.idle_time(now)
                 self.send(self.graphs(now))
                 self.send(self.upgrade_view(now))
+                self.send(self.ecoview())
                 self.send(self.fog())
             if e is None:                                           # behind its clock: all the steps up to the
                 late = g0 if self.paused else g0 + (clock() - r0) * 1000 * self.speed    # game time now in one
