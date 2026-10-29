@@ -203,6 +203,9 @@ The tests of the generic tools are generic too, so that a new project has them (
 of `tools/bootstrap.py` (they copy this repository) and the tests that need a specific tool (`tools/dashboard_data.py`,
 `tools/release.py`). `tests/test_generic_words.py` fails when a generic file names the domain of the project.
 `tests/test_generic_tools.py` fails when a generic file names a `tools/X.py` that is not a generic row (#1963).
+The framework stays in this repository: `tools/bootstrap.py` copies it into a new project, and an improvement
+in one project reaches another project only by a copy (owner decision A, #4197: a synced repository waits until a
+second project starts).
 
 | File | Kind | What is specific to aoe2mc |
 |---|---|---|
