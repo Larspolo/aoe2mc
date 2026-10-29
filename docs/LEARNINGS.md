@@ -56,3 +56,4 @@ and `tests/test_learnings.py` fails above 80 lines (#1698).
 - `docs/triggers.md` cannot be regenerated from a test scenario: `tools/triggers.py --doc` counts the files it gets, so a `triggers` scenario alone rewrites its file list and 136 rows (#3775). Edit its one row by hand, or regenerate it from the full file set of CI.
 - A count of the commands of a record by plain `mgz` misses the DE_QUEUE commands (ERROR, 2 in the first 5 minutes of `de-64.3`): patch the reader as `read_timeline` does (`de_queue`, `new_saves`, `own_selection`, #3842).
 - A list of AoE2 building names in code (`("LUMBER_CAMP", "MILL")`) fails `test_game_names_in_code.py`: take them from the data, for example the `building` of the rows with a `line` key (#3790).
+- A new `convert()` keyword must not be named `players`: `convert` unpacks its own `players` (the player dict), and ruff reports F821 at the call (#3945: `nplayers`).
