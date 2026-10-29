@@ -441,6 +441,7 @@ class Replay:
                        for r, o in self.refs.items() if o["kind"] == "other" and "RELIC" in o["name"] and "tile" in o}
         self.fetching = {}                      # object ID of a monk -> the relic ref that it walks to (#4009)
         self.homing = {}                        # object ID of a monk with a relic -> (monastery rect, player) (#4010)
+        self.relic_at, self.relic_gold = 0, {}  # game time (ms) of the last relic gold, player -> gold not yet whole (#4011)
         self.rng = np.random.default_rng(1)
         self.kinds, self.seen = aoe2mc.object_kinds(), set()
         self.sent, self.busy = 0, 0.0           # commands sent, seconds spent sending them
@@ -2340,6 +2341,18 @@ class Replay:
         """The relics in the monasteries of player p (#4010)."""
         return sum(r["home"] is not None and r.get("player") == p for r in self.relics.values())
 
+    def relic_income(self, t):
+        """Add the relic gold up to game time t (ms): monk.GOLD per game second and relic in an own monastery (AoE2 wiki).
+        The fraction stays for the next step, so the sum is exact (as monk.relic_tick). A relic that a monk carries
+        is in no monastery and gives nothing (#4011)."""
+        dt, self.relic_at = (t - self.relic_at) / 1000, t
+        for p in {r.get("player") for r in self.relics.values() if r["home"] is not None}:
+            gold = self.relic_gold.get(p, 0.0) + monk.GOLD * dt * self.relic_count(p)
+            self.relic_gold[p] = gold - int(gold)
+            if (n := int(gold)) > 0:
+                self.resources(p)["gold"] += n
+                self.gathered.setdefault(p, dict.fromkeys(START, 0))["gold"] += n     # the graphs count it (#1097)
+
     def rate(self, v):
         """The AoE2 work rate of unit v at its resource (per game second): a farm, a hunt and a fish have their own
         rates, and a fishing ship has its own rates (#1283)."""
@@ -3085,6 +3098,7 @@ class Replay:
                 self.send(self.panel(now))
                 self.sample(now)
                 self.idle_time(now)
+                self.relic_income(now)
                 self.send(self.graphs(now))
                 self.send(self.army_view(now))
                 self.send(self.build_order_view(now))
