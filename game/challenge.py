@@ -6,10 +6,12 @@ run.py --play --challenge NAME (#3900, decision #3760: own challenge maps) plays
 gets the civilization of the line, and tick() ends the game with the medal when the goal function of the key "check"
 ("module.function", (g, row) -> True when complete) says so; the key "setup" (the same form) places its start objects
 (#3908). A new challenge is one data line and one goal function.
+A challenge with the key "attacks" sends enemy waves of player 2 to the town center, and a lost town center ends it
+with no medal (#3907).
 A challenge with the key "enemy" gets a bot town of player 2 that does not attack (setup, #3905).
 A challenge opens after a medal in the challenge of its key "after" (#3904, AoE2 DE). The best medal of each one goes
 into MEDAL_FILE in the user folder (the medals belong to the player, not to one map); `--challenge list` prints them.
-Minecraft feature: a boss bar shows the goal and the next medal limit, a title shows the medal.
+Minecraft feature: a boss bar shows the next medal limit (the chat the goal), a title shows the medal.
 
     challenge.tick(g)   # gather.Gather.run, when g.challenge is set
 """
@@ -135,6 +137,34 @@ def lost(g):
     return len(vars(g).get("losses", {}))
 
 
+def town(g):
+    """The block footprint (x0, x1, z0, z1) of the first own town center that stands, or None."""
+    import train                                                    # train imports gather, gather imports this module
+    return next((r for r, n in sorted(train.homes(g).items()) if n == "TOWN_CENTER"), None)
+
+
+def defend(g, c):
+    """The goal of Defending Against A Rush: the Castle Age while a town center stands."""
+    import build                                                    # build imports gather, gather imports this module
+    return build.ages(g) >= 2 and town(g) is not None
+
+
+def attacks(g, c, now):
+    """Each wave of the key "attacks" whose time came: summon its units of player 2 at the map corner that is farthest
+    from the town center, and send them with `aoe attack` to the town center (Minecraft path finding, game/ai.py)."""
+    import ai, combat, train                                        # they import gather, gather imports this module
+    sent, tc = vars(g).get("challenge_attacks", 0), town(g)
+    while tc and sent < len(c["attacks"]) and now >= c["attacks"][sent]["at"]:
+        far = lambda a, b: 2 if (a + b) / 2 > g.map.n / 2 else g.map.n - 3   # noqa: E731
+        x, z = far(tc[0], tc[1]), far(tc[2], tc[3])
+        pos = (x + 0.5, float(g.map.y(x, z)), z + 0.5)
+        names = [n for n, k in sorted(c["attacks"][sent]["units"].items()) for _ in range(k)]
+        uuids = [train.summon(g, n, pos, player=2) for n in names]
+        ai.attack(g, [u for u in uuids if u], [n for n, u in zip(names, uuids) if u], g.map.T,
+                  combat.target_uuid([tc[0], tc[2], tc[1], tc[3]]))
+        sent = g.challenge_attacks = sent + 1
+
+
 def besiege(g, c):
     """The setup of Destroying a Castle (#3908): a complete castle of player 2 with its defenders (the key "defenders")
     next to the town center of player 2 (else the middle of the map), and the start army of player 1 (the key "army")
@@ -229,12 +259,12 @@ def show(g, c, now):
         name = f"{left[0].title()} medal in %d:%02d" % divmod(int(left[1]), 60) if left else "No medal"
     if vars(g).get("challenge_shown") is None:
         for cmd in (f'bossbar add {BAR} ""', f"bossbar set {BAR} color yellow", f"bossbar set {BAR} max {c['bronze']}",
-                    f"bossbar set {BAR} players @a"):
-            g.command(cmd)
+                    f"bossbar set {BAR} players @a", "tellraw @a " + json.dumps({"text": c["goal"], "color": "yellow"})):
+            g.command(cmd)                                      # the goal once in the chat: in the bar it hid the medal (#4092)
     elif g.challenge_shown == name:
         return
     g.challenge_shown = name
-    g.command(f"bossbar set {BAR} name " + json.dumps(f"{c['goal']}: {name}"))
+    g.command(f"bossbar set {BAR} name " + json.dumps(name))
     g.command(f"bossbar set {BAR} value {max(0, min(int(now), c['bronze']))}")
 
 
@@ -246,9 +276,11 @@ def tick(g):
     import cheats
     from recap import game_time
     c, now = CHALLENGES[g.challenge], game_time(g)
+    if "attacks" in c:                                              # the enemy attacks (#3907)
+        attacks(g, c, now)
     complete = done(g, c)
     m = medal(g.challenge, now if c["medal"] == "time" else lost(g))
-    if complete or (c["medal"] == "time" and m is None):
+    if complete or (c["medal"] == "time" and m is None) or ("attacks" in c and town(g) is None):
         close(g)
         g.command(f'title @a[team=p{g.player}] subtitle ' + json.dumps(
             {"text": f"{m.title()} medal" if complete and m else "No medal", "color": "yellow"}))

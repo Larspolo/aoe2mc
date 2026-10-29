@@ -57,6 +57,7 @@ CHEATS = (                                                             # game/ch
 COUNTERS = (                                                           # the parts that a tick did not use yet (#2514):
     "aura_time",                                                       # regen.py
     "cart_heal",                                                       # trade.py
+    "feitoria_part",                                                   # feitoria.py
     "garrison_heal",                                                   # garrison.py
     "herd_food",
     "hero_time",                                                       # regen.py: the heroes
@@ -84,6 +85,7 @@ MAP = (                                                                # gather.
 )
 VICTORY = (                                                            # the victory modes (#2476), pack()
     "challenge_army",                                                  # army.py: the army of a battle challenge (#3906)
+    "challenge_attacks",                                               # challenge.attacks: the waves that came (#3907)
     "challenge_foes",                                                  # army.py: the enemy units of a battle challenge (#3910)
     "challenge_wave",                                                  # army.py: the wave of the enemy (#3906)
     "challenge_foes",                                                  # army.py: the enemy units of a battle challenge (#3910)
