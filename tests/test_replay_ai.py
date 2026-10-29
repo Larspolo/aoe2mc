@@ -37,7 +37,7 @@ def test_a_move_is_one_plugin_order_with_the_walk_speed():
                     "data get entity u1 Pos"]                           # is it there (Replay.settle, #2633)
     assert not any(c.startswith("tp ") for c in sent) and not r.moving
     assert r.units[7].pos == (42.5, 70.0, 42.5)                          # the replay takes the unit at its goal
-    assert ai.walk_speed("VILLAGER_MALE", 4, 4.0) == 4 * 0.8 * 4         # 4 times the game speed
+    assert ai.walk_speed("VILLAGER_MALE", 4, 4.0) == 4 * ai.walk_speed("VILLAGER_MALE", 4, 1.0)   # 4 times the game speed
 
 
 def test_a_group_goes_to_the_cells_of_its_formation():

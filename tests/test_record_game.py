@@ -44,8 +44,9 @@ def test_each_recorded_event_has_the_timeline_keys(tmp_path):
     assert refs == {"8,24,8,24": 5, "u-militia": 7, "u-enemy": 8, "28,36,28,36": 9, "u-villager": 10}
     assert [e["kind"] for e in timeline] == ["build", "queue", "move", "order"]
     build, queue, move, order = timeline
-    assert build == {"time": 10000, "player": 1, "kind": "build", "type": 70, "name": "HOUSE", "tile": [8.0, 8.0]}
-    assert queue == {"time": 10000, "player": 1, "kind": "queue", "type": 83, "name": "VILLAGER_MALE", "objects": [5],
+    ids = record.types()                                               # the AoE2 type of each name
+    assert build == {"time": 10000, "player": 1, "kind": "build", "type": ids["HOUSE"], "name": "HOUSE", "tile": [8.0, 8.0]}
+    assert queue == {"time": 10000, "player": 1, "kind": "queue", "type": ids["VILLAGER_MALE"], "name": "VILLAGER_MALE", "objects": [5],
                      "amount": 1}
     assert move == {"time": 35000, "player": 1, "kind": "move", "objects": [7, 10], "tile": [10.125, 11.125]}
     assert order == {"time": 35000, "player": 1, "kind": "order", "objects": [7], "target": 8}
