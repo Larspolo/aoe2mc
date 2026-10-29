@@ -365,7 +365,7 @@ def describe(usage, now, burn=BURN, burn7=None):
     return " · ".join(out + [week] * bool(week)) + f" · burn {burn:.3f} · max {HI} runs · target {target_runs(usage, now, burn, burn7=burn7)} runs"
 
 
-def fire(usage, now, burn=BURN, burn7=None, skip=(), status=None, started=None, out=None):
+def fire(usage, now, burn=BURN, burn7=None, skip=(), status=None, started=None, out=None, account=None):
     """(K, {lane: runs}, line): the runs that the pacer starts now, and the line of its inputs (`--fire`,
     `tools/pacer.py`). Reads GitHub and the claim refs. `skip`: lanes that can start no run now (the hourly limit
     of their task): they count no ready tickets, so the main runs get the room. `status`: read_status() of the
@@ -381,7 +381,7 @@ def fire(usage, now, burn=BURN, burn7=None, skip=(), status=None, started=None, 
     ready = len(dashboard.candidates(open_all, reserved=()))   # all lanes: lane_plan splits them
     t = datetime.datetime.now(datetime.timezone.utc)
     refs = health.claim_refs()
-    lanes = None if refs is None else health.count_lanes(refs, t)
+    lanes = None if refs is None else health.count_lanes(refs, t, account=account)
     claims = health.active_claims(t) if lanes is None else sum(lanes.values())
     if out is not None:
         out.update(open=open_all, refs=refs, claims=claims, lanes=lanes)
@@ -444,7 +444,7 @@ def main(argv=None):
     status = read_status()
     burn, burn7 = burns(status[0], a.burn)
     if a.fire:
-        k, runs, line = fire(usage, now, burn, burn7, status=status)
+        k, runs, line = fire(usage, now, burn, burn7, status=status, account=agent_config.account())
         k, runs, line = 0, dict.fromkeys(runs, 0), "pacer.yml starts the runs: the session starts no run · " + line   # #3193, #3427
         print(k)
         for n, r in runs.items():

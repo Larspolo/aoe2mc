@@ -434,9 +434,15 @@ def count_beating(lines, now, minutes=25):
     return sum(count_lanes(lines, now, minutes).values())
 
 
-def count_lanes(lines, now, minutes=25):
+def claim_account(subject):
+    """The account of a claim or beat message (` account NAME`, `claim.account()`); none: the first account (#4238)."""
+    m = re.search(r" account (\S+)", subject)
+    return m[1] if m else first_account()
+
+
+def count_lanes(lines, now, minutes=25, account=None):
     """{lane: beating claims}: the lane is the ` lane NAME` at the end of the last claim or beat message, else
-    "opus" (#1727)."""
+    "opus" (#1727). With `account`, only the claims of that account (` account NAME`; none: the first account, #4238)."""
     top = {}
     for line in lines:
         slot, t, subject = (line.split(" ", 2) + [""])[:3]
@@ -448,7 +454,7 @@ def count_lanes(lines, now, minutes=25):
     cut = now.timestamp() - minutes * 60
     out = {}
     for _, t, s in top.values():
-        if t >= cut and not s.startswith("Release"):
+        if t >= cut and not s.startswith("Release") and (account is None or claim_account(s) == account):
             name = re.search(r" lane (\w+)$", s)
             out[name[1] if name else "opus"] = out.get(name[1] if name else "opus", 0) + 1
     return out
