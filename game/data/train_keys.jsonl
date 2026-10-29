@@ -1,5 +1,6 @@
 {"name": "after", "text": "The technology before this one in its menu slot: the menu shows it only after that research. train.unlocked.", "issue": 1423}
 {"name": "age", "text": "The age of a technology (0 Dark, 1 Feudal, 2 Castle, 3 Imperial; build.AGE for the units and buildings). The menu shows it from that age on.", "issue": 1046}
+{"name": "age_times", "text": "The train or research time in each age (Return of Rome docks: [Stone, Tool, Bronze, Iron]), in place of \"time\". train.seconds.", "issue": 3713}
 {"name": "aoe2_name", "text": "The AoE2 name of a unit with no name of the scenario parser (the record of Record Game writes its AoE2 type): TRADE_CART_EMPTY, WAR_CHARIOT_FOCUS_FIRE, RATHA_RANGED, ELITE_RATHA_RANGED. record.queued.", "issue": 3045}
 {"name": "arrows", "text": "An upgrade of one building (one_building): the arrows that the building shoots more, also with no garrison. garrison.arrows_command.", "issue": 2497}
 {"name": "attack_aura", "text": "An upgrade of one building (one_building): the own military units within \"range\" tiles of the building attack \"rate\" times as fast, {\"rate\", \"range\"}. train.haste.", "issue": 2497}
@@ -8,7 +9,7 @@
 {"name": "effect", "text": "The change of the AoE2 combat values of a technology (train.effect: a dict, or a list of changes in turn). train.TECHS and train.EACH compute it; civs.MORE changes it.", "issue": 2029}
 {"name": "faster", "text": "A unit that trains faster from an age: [age, its train time from that age] (the eagle scout and eagle warrior). train.seconds.", "issue": 2155}
 {"name": "glow", "text": "Treason: the enemy Kings glow for so many AoE2 seconds. regicide.treason.", "issue": 2388}
-{"name": "line", "text": "The short name of a Blacksmith line at its first technology; the line follows the \"after\" chain. replay.SMITH, the Blacksmith tiers of the live replay.", "issue": 3786}
+{"name": "line", "text": "The short name of a line at its first technology (Blacksmith, or an economy line: lumber, mining, mill, town center); the line follows the \"after\" chain. replay.SMITH and replay.ECO_LINES, the tiers of the live replay.", "issue": 3786}
 {"name": "on_research", "text": "The functions (\"module.function\") that run at the research of a technology, with (g, entry): its special effect in its own module, not an if block of train.research.", "issue": 3243}
 {"name": "start_age", "text": "The name of the age before the first age (the line of the first age only): Dark Age, Stone Age. build.AGE_NAMES.", "issue": 3666}
 {"name": "toggle", "text": "A switch of the player with no queue and no cost: the name of a flag of the Gather (off at the start). A click switches it, the item says on or off. train.queue, train.show.", "issue": 3422}
