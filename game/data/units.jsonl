@@ -228,6 +228,7 @@
 {"name": "ATTILA", "hp": 350, "attack": 13, "melee": 2, "pierce": 2, "range": 0, "reload": 2.0, "bonus": {"building": 3}, "classes": ["cavalry"], "sight": 5, "regen": 30, "note": "AoE2 wiki \"Attila the Hun\" infobox (#2688): regeneration 30 hit points per minute; not its +40 vs. wild boar (no boar class)"}
 {"name": "ALARIC_THE_GOTH", "hp": 350, "attack": 14, "melee": 1, "pierce": 6, "range": 0, "reload": 2.0, "bonus": {"archer": 3, "building": 2}, "classes": ["cavalry"], "sight": 5, "regen": 30, "note": "AoE2 wiki \"Alaric the Goth\" infobox (#2688): regeneration 30 hit points per minute"}
 {"name": "WOLF", "hp": 20, "attack": 2, "melee": 0, "pierce": 0, "range": 0, "reload": 1.0, "bonus": {}, "classes": [], "sight": 3, "note": "AoE2 DE wiki (Wolf page); no armor on the wiki: 0"}
+{"name": "GREY_WOLF", "hp": 20, "attack": 2, "melee": 0, "pierce": 0, "range": 0, "reload": 1.0, "bonus": {}, "classes": [], "sight": 3, "note": "the AoE2ScenarioParser name of the wolf (#3623): the values of WOLF"}
 {"name": "ARCTIC_WOLF", "hp": 25, "attack": 3, "melee": 0, "pierce": 0, "range": 0, "reload": 2.0, "bonus": {}, "classes": [], "sight": 12, "note": "AoE2 DE wiki (Arctic Wolf page); no armor on the wiki: 0"}
 {"name": "ARABIAN_WOLF", "hp": 25, "attack": 3, "melee": 0, "pierce": 0, "range": 0, "reload": 2.0, "bonus": {}, "classes": [], "sight": 12, "note": "AoE2 DE wiki (Arabian Wolf page); no armor on the wiki: 0"}
 {"name": "DIRE_WOLF", "hp": 40, "attack": 10, "melee": 0, "pierce": 0, "range": 0, "reload": 1.0, "bonus": {}, "classes": [], "sight": 5, "note": "AoE2 DE wiki (Dire Wolf page); attack 10 ignores armor on the wiki"}
@@ -235,6 +236,7 @@
 {"name": "SNOW_LEOPARD", "hp": 20, "attack": 3, "melee": 0, "pierce": 0, "range": 0, "reload": 2.0, "bonus": {}, "classes": [], "sight": 12, "note": "AoE2 DE wiki (Snow Leopard page) for hp and attack; reload and sight of TIGER (no value on the wiki)"}
 {"name": "TIGER", "hp": 20, "attack": 3, "melee": 0, "pierce": 0, "range": 0, "reload": 2.0, "bonus": {}, "classes": [], "sight": 12, "note": "AoE2 DE wiki (Tiger page, Rise of the Rajas infobox)"}
 {"name": "PANTHER", "hp": 20, "attack": 3, "melee": 0, "pierce": 0, "range": 0, "reload": 2.0, "bonus": {}, "classes": [], "sight": 12, "note": "no AoE2 DE wiki page: the values of TIGER, the nearest cat"}
+{"name": "BLACK_PANTHER", "hp": 20, "attack": 3, "melee": 0, "pierce": 0, "range": 0, "reload": 2.0, "bonus": {}, "classes": [], "sight": 12, "note": "the AoE2ScenarioParser name of the panther (#3623): the values of PANTHER"}
 {"name": "LION", "hp": 20, "attack": 2, "melee": 0, "pierce": 0, "range": 0, "reload": 1.0, "bonus": {}, "classes": [], "sight": 3, "note": "AoE2 DE wiki (Lion page); attack 2 ignores melee and pierce armor on the wiki"}
 {"name": "JAGUAR", "hp": 20, "attack": 3, "melee": 0, "pierce": 0, "range": 0, "reload": 2.0, "bonus": {}, "classes": [], "sight": 12, "note": "AoE2 DE wiki (Jaguar page) for hp; attack, reload and sight of LYNX (no value on the wiki)"}
 {"name": "LYNX", "hp": 25, "attack": 3, "melee": 0, "pierce": 0, "range": 0, "reload": 2.0, "bonus": {}, "classes": [], "sight": 12, "note": "AoE2 DE wiki (Lynx page)"}
@@ -244,5 +246,6 @@
 {"name": "CROCODILE", "hp": 20, "attack": 4, "melee": 0, "pierce": 0, "range": 0, "reload": 2.0, "bonus": {}, "classes": [], "sight": 5, "note": "AoE2 DE wiki (Crocodile page)"}
 {"name": "CAIMAN", "hp": 20, "attack": 3, "melee": 0, "pierce": 0, "range": 0, "reload": 2.0, "bonus": {}, "classes": [], "sight": 12, "note": "AoE2 DE wiki (Caiman page)"}
 {"name": "KOMODO", "hp": 20, "attack": 4, "melee": 0, "pierce": 0, "range": 0, "reload": 2.0, "bonus": {}, "classes": [], "sight": 5, "note": "no AoE2 DE wiki page: the values of CROCODILE, the nearest reptile"}
+{"name": "KOMODO_DRAGON", "hp": 20, "attack": 4, "melee": 0, "pierce": 0, "range": 0, "reload": 2.0, "bonus": {}, "classes": [], "sight": 5, "note": "the AoE2ScenarioParser name of the komodo (#3623): the values of KOMODO"}
 {"name": "IRON_BOAR", "hp": 350, "attack": 12, "melee": 3, "pierce": 3, "range": 0, "reload": 2.0, "bonus": {}, "classes": [], "sight": 4, "note": "AoE2 DE wiki (Iron Boar page)"}
 {"name": "SNAKE", "hp": 25, "attack": 3, "melee": 0, "pierce": 0, "range": 0, "reload": 2.0, "bonus": {}, "classes": [], "sight": 12, "note": "AoE2 DE wiki (Snake page) for hp and sight; attack and reload of CAIMAN (no value on the wiki)"}
