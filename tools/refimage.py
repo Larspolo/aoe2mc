@@ -5,12 +5,14 @@ Find and download reference images of the game from the AoE2 wiki (MediaWiki API
 Usage:
     python3 tools/refimage.py search "house aoe2DE"                 # list file names
     python3 tools/refimage.py get "House Castle DE AoE2DE.png" OUT.png
+    python3 tools/refimage.py box "Hoplite (Age of Empires)" Toolworking  # the infobox values: one JSON line per page
 
 The wiki HTML pages give a Cloudflare challenge (403); the API and the image server work.
 """
 import argparse
 import io
 import json
+import re
 import time
 import urllib.error
 import urllib.parse
@@ -47,6 +49,39 @@ def search(text, limit=30):
     return [h["title"].split(":", 1)[1] for h in hits]
 
 
+CLEAN = ((r"\[\[File:[^]]*\]\]\s*", ""), (r"\{\{\w*icons\|([^|}]*)[^}]*\}\}", r"\1"),   # box(): markup -> text
+         (r"\{\{tt\|([^|}]*)[^}]*\}\}", r"\1"), (r"<br\s*/?>", ", "), (r"\[\[(?:[^]|]*\|)?([^]]*)\]\]", r"\1"),
+         (r"'{2,}", ""))
+
+
+def box(text):
+    """The values of the first infobox ("{{Infobox ...", "{{Techbox") of a wikitext, as plain text: an icon or a link
+    gives its name, "{{tt|A|B}}" gives A, "{{resources|food = 60}}" gives "60 food", "<br />" gives ", " (#3665)."""
+    i = min((k for k in (text.find("{{Infobox"), text.find("{{Techbox")) if k >= 0), default=-1)
+    if i < 0:
+        return {}
+    depth, j = 0, i
+    while j < len(text) and (depth or j == i):                         # the end of the template: its own "}}"
+        two = text[j:j + 2]
+        depth += {"{{": 1, "}}": -1}.get(two, 0)
+        j += 2 if two in ("{{", "}}") else 1
+    out = {}
+    for m in re.finditer(r"^\|\s*(\w+)\s*=(.*)$", text[i:j - 2], re.M):
+        v = m.group(2)
+        for a, b in CLEAN:
+            v = re.sub(a, b, v)
+        v = re.sub(r"\{\{[Rr]esources\|([^}]*)\}\}", lambda r: ", ".join(
+            f"{x.split('=')[1].strip()} {x.split('=')[0].strip()}" for x in r.group(1).split("|") if "=" in x), v)
+        out[m.group(1)] = v.strip()
+    return out
+
+
+def page(name):
+    """The wikitext of the page name (redirects followed), or None when the page does not exist."""
+    p = dict(action="parse", page=name, prop="wikitext", redirects=1, format="json")
+    return json.loads(fetch(API + "?" + urllib.parse.urlencode(p))).get("parse", {}).get("wikitext", {}).get("*")
+
+
 def get(name, out):
     """Download one file of the wiki and save it as PNG. Return the image size."""
     name = name if name.startswith("File:") else "File:" + name
@@ -66,9 +101,15 @@ def main():
     g = sub.add_parser("get")
     g.add_argument("name")
     g.add_argument("out")
+    b = sub.add_parser("box", help="print the infobox values of each page as one JSON line")
+    b.add_argument("pages", nargs="+")
     a = ap.parse_args()
     if a.cmd == "search":
         print("\n".join(search(a.text)))
+    elif a.cmd == "box":
+        for name in a.pages:
+            text = page(name)
+            print(json.dumps({"page": name} | (box(text) if text else {"missing": True}), ensure_ascii=False))
     else:
         w, h = get(a.name, a.out)
         print(f"Wrote {a.out}: {w}x{h} pixels")

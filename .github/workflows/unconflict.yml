@@ -4,6 +4,8 @@ name: Unconflict
 # `merge=union` in .gitattributes, so a new line in docs/LEARNINGS.md or docs/DESIGN.md on both sides makes the PR
 # "dirty" and GitHub starts no CI. A push with GITHUB_TOKEN starts no workflow: this job starts CI on the branch,
 # and Automerge accepts that CI run.
+# A PR whose CI failed while main was red waited for a takeover only to merge main (#3685): when main is green again,
+# this job merges main into it too, and starts CI.
 # Two new lines at one place of a table (`TECHS` in game/train.py) are a conflict for git too: `tools/unconflict.py`
 # keeps both sides when no side changes a base line (#1864), and CI checks the result.
 on:
@@ -45,6 +47,13 @@ jobs:
           python3 -m pip install -q "$(grep '^ruff' requirements-dev.txt)"   # checks a "keep both sides" merge (#2631)
           git fetch -q origin main
           now=$(date +%s)
+          # The CI runs on main, newest first, and whether main is green now: its head passed `quick`, or the newest run.
+          main_runs=$(gh api "repos/$R/actions/workflows/ci.yml/runs?branch=main&status=completed&per_page=100" \
+                      --jq '[.workflow_runs[] | select(.event != "schedule" and (.conclusion == "success" or .conclusion == "failure"))
+                             | {c: .conclusion, t: .created_at}]' || true)
+          green=$(gh api "repos/$R/commits/$(git rev-parse origin/main)/check-runs?check_name=quick" \
+                  --jq '[.check_runs[].conclusion] | index("success") != null' || true)
+          [ "$green" = true ] || green=$(jq '.[0].c == "success"' <<<"$main_runs")
           for n in $(gh api "repos/$R/pulls?state=open&per_page=100" --jq ".[] | select(.head.repo.full_name == \"$R\")
                      | select(.head.ref | test(\"^(agent/|claude/|ccr-)\")) | select([.labels[].name] | index(\"hold\") | not)
                      | .number"); do
@@ -55,15 +64,22 @@ jobs:
               sleep 5
             done
             label=$(jq '[.labels[].name] | index("conflict") != null' <<<"$pr")
-            [ "$state" = dirty ] || [ "$label" = true ] || continue
             branch=$(jq -r .head.ref <<<"$pr"); sha=$(jq -r .head.sha <<<"$pr")
+            how='git solved the conflict alone (`merge=union`)'
+            if [ "$state" != dirty ] && [ "$label" != true ]; then
+              # Red only by a red main: its last CI run failed, and the newest main run before it failed too (#3685).
+              [ "$green" = true ] || continue
+              gh api "repos/$R/actions/workflows/ci.yml/runs?head_sha=$sha&per_page=1" --jq '.workflow_runs[0] // empty' \
+                | jq -e --argjson m "$main_runs" '. as $r | $r.conclusion == "failure"
+                        and ([$m[] | select(.t < $r.created_at)][0].c == "failure")' >/dev/null || continue
+              how='its CI failed while main was red, and main is green again (#3685)'
+            fi
             date=$(gh api "repos/$R/commits/$sha" --jq .commit.committer.date)
             if [ $((now - $(date -d "$date" +%s))) -lt 300 ]; then  # the run that pushed it can still merge it
               echo "#$n: the head is younger than 5 minutes"; continue
             fi
             git fetch -q origin "$branch"
             git checkout -q -B "$branch" "origin/$branch"
-            how='git solved the conflict alone (`merge=union`)'
             if ! git merge -q --no-edit origin/main; then
               if python3 "$RUNNER_TEMP/unconflict.py" && git commit -q --no-edit; then
                 how='both sides only added lines, `tools/unconflict.py` kept both (#1864)'
