@@ -138,6 +138,12 @@ def value(key, name, default=None):
     return BY_KEY[key].get(name, default)
 
 
+
+def sight_more(techs, name, s):
+    """The tiles of line of sight that the technologies techs add to unit name with combat values s: the key "sight"
+    of data/train.jsonl, {"if": [tests of test()], "add": n} (#3981)."""
+    return sum(e["add"] for t in techs if (e := BY_KEY["sight"].get(t)) and any(test(x, name, s) for x in e["if"]))
+
 build.AGE |= dict.fromkeys(UNIQUE.values(), 2) | dict.fromkeys(("ELITE_" + n for n in UNIQUE.values()), 3)   # (#1082)
 
 
@@ -1315,7 +1321,7 @@ def summon(g, name, pos, rotation=math.pi / 2, player=None):
         g.command(cmd)
     if cmd := combat.accuracy_command(uuid, name, civs.value("accuracy", civs.civ(g), {}).get(name, 0.0)):
         g.command(cmd)                                             # a Hun trebuchet hits units more often (#2479)
-    if cmd := combat.sight_command(uuid, name, g.map.T, s=stats(g, name)):   # it attacks enemies in sight (#775)
+    if cmd := combat.sight_command(uuid, name, g.map.T, s=stats(g, name), more=sight_more(g.techs, name, combat.stats(name))):   # it attacks enemies in sight (#775)
         g.command(cmd)
     import ai                                                      # ai imports gather, gather imports this module
     g.command(ai.speed_command(uuid, name, g.map.T, gather.NORMAL * speed(g, name)))   # also without an order (#849)

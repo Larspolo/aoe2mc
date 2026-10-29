@@ -458,6 +458,7 @@ class Replay:
         self.eco_rows = None                    # the shown rows of the economy text (#3756)
         self.samples, self.minute = {}, -1      # player -> [(minute, pop, villagers, military, resources)], last minute (#3446)
         self.apms, self.ended = None, 0         # player -> sorted times of its actions (#3763); game time of the end (ms)
+        self.orders = None                      # player -> [(time, label)] of its build order (#4047)
         self.eyes = None                        # (x, y, z) of each player; None: not known, each gather step shows (#2761)
         self.queue = None                       # in run() on Paper: the commands that wait for flush() (#2761)
         import gather                                               # gather -> build -> replay: import it late
@@ -546,6 +547,31 @@ class Replay:
     def mean_apm(self, p, t):
         """The average actions per minute of player p up to game time t (ms, #3763); 0 at t <= 0."""
         return round(bisect.bisect_right(self.actions(p), t) / (t / 60000)) if t > 0 else 0
+
+    def build_order(self, p, t):
+        """The build order of player p up to game time t (ms, #4047): the first building and the first unit of each
+        type (no villagers), the technologies and the ages, as (time, label) in time order. A dict of lists, made once."""
+        if self.orders is None:
+            self.orders, first = {}, set()
+            for e in sorted(self.data.get("timeline", []), key=lambda e: e["time"]):
+                q, kind = e.get("player"), e["kind"]
+                name = e.get("name") or self.kinds.get(e.get("type"), ("?", ""))[1]
+                if q is None:
+                    continue
+                if kind == "build" or (kind == "queue" and not name.startswith("VILLAGER")):
+                    if (q, name) in first:
+                        continue
+                    first.add((q, name))
+                    label = units.pretty(name)
+                elif kind == "research" and not e.get("technology", "").endswith(" Age"):
+                    label = e["technology"]
+                elif kind == "age" and e.get("age"):
+                    label = pretty(e["age"])
+                else:
+                    continue
+                self.orders.setdefault(q, []).append((e["time"], label))
+        steps = self.orders.get(p, [])
+        return steps[:bisect.bisect_right(steps, t, key=lambda s: s[0])]
 
     def graphs(self, t):
         """The commands of the graphs at game time t (ms, #3448, decision #3447: B): in the sky above the overview one
@@ -688,6 +714,17 @@ class Replay:
             total += -gold if buy else gold
         return r, (n * market.LOT if buy else -n * market.LOT), total
 
+    def tribute(self, e):
+        """A tribute of the record: the sender pays the amount and the fee (diplomacy.cost), the receiver gets the amount
+        (#3940). An old record has one resource and one amount."""
+        import diplomacy                                            # diplomacy -> build -> replay: import it late
+        p, to = e.get("player"), e["to"]
+        g = types.SimpleNamespace(techs=set(self.upgrades(p, e["time"])))
+        sums = {r: e.get(r, 0) for r in START} if any(e.get(r, 0) for r in START) else {e["resource"].lower(): e.get("amount", 0)}
+        for r, n in sums.items():
+            self.resources(p)[r] -= diplomacy.cost(g, n)
+            self.resources(to)[r] += n
+
     def trade_text(self, e, r, amount, gold, color):
         """The trade as a text above its market for EFFECT_MS, and particles (#3942). The trades of one market within
         TRADE_MS join in one text with the sums. No known market: no commands."""
@@ -781,6 +818,9 @@ class Replay:
                 self.research(e, color)
         if kind in ("buy", "sell") and e.get("resource"):       # the market trades change the estimate (#3939)
             return self.trade_text(e, *self.trade(e), color)
+        if kind == "tribute" and e.get("to"):                   # the tributes change the estimate (#3940)
+            self.tribute(e)
+            return []
         if kind == "resign":
             return ["title @a subtitle " + json.dumps(text("The game ends")),
                     "title @a title " + json.dumps(text(f"{name} resigns", color))]
@@ -2392,7 +2432,7 @@ class Replay:
             res = ", ".join(f"{r} {v}" for r, v in g.items())
             out.append("tellraw @a " + json.dumps([text(name, color), text(
                 f": villagers trained {self.villagers.get(p, 0)}, gathered {res}, idle villager time "
-                f"{self.idle_text(p)}")]))
+                f"{self.idle_text(p)}, idle TC time {self.tc_text(p)}")]))
             out.append("tellraw @a " + json.dumps([text(name, color), text(              # military (#1066)
                 f": military units trained {self.army.get(p, 0)}, units lost {self.lost.get(p, 0)}, "
                 f"buildings lost {self.razed.get(p, 0)}, APM {self.mean_apm(p, self.ended)}{self.army_text(p)}")]))
@@ -2401,6 +2441,11 @@ class Replay:
     def idle_text(self, p):
         """The idle villager time of player p as M:SS (#3757)."""
         m, s = divmod(round(self.idled.get(p, 0)), 60)
+        return f"{m}:{s:02d}"
+
+    def tc_text(self, p):
+        """The idle town center time of player p at the end of the replay as M:SS (#4052)."""
+        m, s = divmod(round(self.tc_idle(p, self.ended)), 60)
         return f"{m}:{s:02d}"
 
     def army_text(self, p):
@@ -2606,6 +2651,40 @@ class Replay:
         for p, n in self.eco().items():
             self.idled[p] = self.idled.get(p, 0) + (t - self.idle_at) / 1000 * n["idle"]
         self.idle_at = t
+
+    @functools.cached_property
+    def town_centers(self):
+        """({player: {town center ID: alive from (ms)}}, {building ID: sorted busy intervals (ms)}) for tc_idle (#4052).
+        A start object is alive from 0; a building is alive from its first QUEUE of a villager. The busy time of a
+        building is each training and each technology in research of it."""
+        alive, busy = {}, {}
+        for o in self.data["objects"]:
+            if o.get("name") == "TOWN_CENTER":
+                alive.setdefault(o["player"], {})[o["ref"]] = 0
+        for end, e, b in self.trainings:
+            if e["kind"] == "queue" and e.get("name", "").startswith("VILLAGER"):
+                tc = alive.setdefault(e["player"], {})
+                tc[b] = min(tc.get(b, e["time"]), e["time"])
+            d = aoe2mc.train_ms(e.get("name", "")) if e["kind"] == "queue" else RESEARCH_S[e["technology"]] * 1000
+            busy.setdefault(b, []).append((max(e["time"], end - d), end))
+        return alive, {b: sorted(spans) for b, spans in busy.items()}
+
+    def tc_idle(self, p, t):
+        """The idle seconds of the town centers of player p up to game time t (ms, #4052): the time each one is alive
+        up to t, minus the union of its busy intervals in that time."""
+        alive, busy = self.town_centers
+        out = 0
+        for b, start in alive.get(p, {}).items():
+            if start >= t:
+                continue
+            covered, last = 0, start
+            for s, e in busy.get(b, ()):
+                s, e = max(s, last), min(e, t)
+                if e > s:
+                    covered += e - s
+                    last = e
+            out += t - start - covered
+        return out / 1000
 
     def troop(self, p, name):
         """One more live military unit of this type for player p (a start unit or a spawn, #3695)."""

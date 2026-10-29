@@ -9,6 +9,7 @@ def town(team=None):
     server, me, b = armed(attack=600.0, sight=True)
     if team:
         b.g.data["players"] |= {"1": {"team": team}, "2": {"team": team, **b.g.data["players"]["2"]}}
+        b.g.enemies.pop("p1")                                          # an ally from the start (owners.add)
     me.bots = [b]                                                      # run.play: build.sides
     me.soldiers["e1"] = "MILITIA"                                      # trained by player 1 (owners.add)
     owners.add(me, "e1", "MILITIA", 1)
