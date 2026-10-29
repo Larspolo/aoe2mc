@@ -211,7 +211,9 @@ def check_taunts(row):                                     # a taunt: its number
 
 
 def check_sounds(row):                                     # a unit class: its select and order voice (#3499, #3500)
-    form(row, {"name": str, "select": str, "pitch": float}, {"order": str})   # a building has no order voice (#3632)
+    if row["name"].isupper():                              # a building: only the click sound (#3501)
+        return form(row, {"name": str, "select": str, "pitch": float})
+    form(row, {"name": str, "select": str, "order": str, "pitch": float})
 
 
 CHECKS = {                                                 # one file per line: parallel tickets add files (#2281)
