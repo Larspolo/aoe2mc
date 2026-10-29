@@ -2300,6 +2300,20 @@ class Replay:
                 kept[name] = n
         self.censused = True
 
+    def eco(self):
+        """The villagers of each player on each kind of work (#3755): food, wood, gold, stone, build or idle. A start
+        villager has no task yet: it counts as idle. Units are keyed by uuid: a gather point can hold the same unit."""
+        keys = ("food", "wood", "gold", "stone", "build", "idle")
+        out = {p: dict.fromkeys(keys, 0) for p in self.pop}
+        for v in {v.uuid: v for v in self.units.values()}.values():
+            if not v.name.startswith("VILLAGER"):
+                continue
+            t = v.task or "none"
+            k = ("idle" if t == "none" or v.job == units.IDLE_JOB else "build" if "BUILDER" in t or "REPAIRER" in t
+                 else "wood" if "LUMBERJACK" in t else "gold" if "GOLD" in t else "stone" if "STONE" in t else "food")
+            out.setdefault(v.player, dict.fromkeys(keys, 0))[k] += 1
+        return out
+
     def troop(self, p, name):
         """One more live military unit of this type for player p (a start unit or a spawn, #3695)."""
         kept = self.troops.setdefault(p, {})

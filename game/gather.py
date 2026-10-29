@@ -582,6 +582,7 @@ class Villager:
         self.uuid, self.pos = uuid, pos
         self.state, self.path, self.tree, self.load, self.timer = "idle", [], None, 0, 0.0
         self.job = None                                                # profession that the program set
+        self.task = None                                               # AoE2 task of the look (#3755): LUMBERJACK ...
         self.walked = 0.0                                              # blocks, for the log
         self.res = "wood"                                              # the resource of the load
         self.site = None                                               # the construction site that it builds
@@ -1093,7 +1094,8 @@ class Gather:
     def task(self, v, name):
         """Give the villager the look of its AoE2 task (`LUMBERJACK` ...), with the table of the converter."""
         job = dict(VILLAGER_JOBS).get(name, IDLE_JOB)
-        if v.job != job:                                               # a merge keeps the level and the type
+        v.task = name                                                  # also when the profession stays (FORAGER, FARMER)
+        if v.job != job:                                             # a merge keeps the level and the type
             v.job = job
             self.command(profession(v.uuid, job))
 
