@@ -30,6 +30,12 @@ def state(g, u):
     return vars(g).setdefault("trebs", {}).get(u, ["packed"])[0]
 
 
+def pack_time(g):
+    """The AoE2 seconds to pack or unpack: PACK times the factor of the technologies (Kataparuto: 0.25, #4275)."""
+    import train                                                   # train imports gather, gather imports this module
+    return PACK * math.prod(train.value("pack_time", t, 1) for t in g.techs)
+
+
 def stats(g, u):
     """The combat values of trebuchet u with the technologies of the player (train.stats) and the armor of its state:
     packed (also while it unpacks) the armor of combat.STATS, unpacked (also while it packs) UNPACKED and the class ram."""
@@ -105,7 +111,7 @@ def unpack(g, u, target):
     if state(g, u) != "unpacking":                                 # packed or packing: AoE2 cancels the pack at once
         g.command(f"aoe stop {u}")
         g.command(f"aoe speed {u} 0")
-    g.trebs[u] = ["unpacking", PACK if state(g, u) != "unpacking" else g.trebs[u][1], then]
+    g.trebs[u] = ["unpacking", pack_time(g) if state(g, u) != "unpacking" else g.trebs[u][1], then]
 
 
 def move(g, u, cmds):
@@ -119,7 +125,7 @@ def move(g, u, cmds):
     if state(g, u) != "packing":
         g.command(f"aoe stop {u}")
         g.command(range_command(g, u, 0))
-    g.trebs[u] = ["packing", PACK if state(g, u) != "packing" else g.trebs[u][1], cmds]
+    g.trebs[u] = ["packing", pack_time(g) if state(g, u) != "packing" else g.trebs[u][1], cmds]
 
 
 def tick(g, dt):
