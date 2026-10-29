@@ -4912,11 +4912,15 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
     if tick or any(k.endswith("_chance.mcfunction") for k in files):
         load.insert(0, "scoreboard objectives add aoe_trig dummy")
     if tick:
-        files["data/minecraft/tags/function/tick.json"] = {"values": ["aoe2mc:tick"]}
+        files["data/minecraft/tags/function/tick.json"] = {"values": ["aoe2mc:tick_wait"]}
+        files["data/aoe2mc/function/tick_wait.mcfunction"] = WAIT + "\n"
         files["data/aoe2mc/function/tick.mcfunction"] = "\n".join(tick) + "\n"
     return load, files
 
 
+# The game program sets #wait while it waits for the people (#3892): /tick freeze does not stop the tick function.
+# A world without the game program has no #wait, so its triggers run.
+WAIT = "execute unless score #wait aoe_trig matches 1 run function aoe2mc:tick"
 LOADED = "if score #loaded aoe_trig matches 1"                        # all chunks of the map are loaded (#3080)
 
 

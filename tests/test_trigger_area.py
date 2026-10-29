@@ -22,7 +22,7 @@ def test_scenario_area_trigger_gives_a_tick_line(tmp_path):
     assert (knight["quantity"], knight["player"], knight["area"]) == (1, 1, [3, 3, 6, 6])
     load, files = aoe2mc.trigger_files(texts["triggers"], T=4)
     assert load[0] == "scoreboard objectives add aoe_trig dummy"
-    assert files["data/minecraft/tags/function/tick.json"] == {"values": ["aoe2mc:tick"]}
+    assert files["data/minecraft/tags/function/tick.json"] == {"values": ["aoe2mc:tick_wait"]}
     # tiles 3..6 are the blocks 12..27: dx 15; all heights
     assert files[TICK].splitlines() == [
         "execute if entity @e[tag=aoe2mc.p1,tag=!aoe2mc.mount,tag=aoe2mc.t38,x=12,y=-64,z=12,dx=15,dy=383,dz=15] unless score #1 aoe_trig matches 1 "
