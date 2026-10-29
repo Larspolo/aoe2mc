@@ -70,11 +70,13 @@ def measured():
     return {m[1]: m[2] for m in re.finditer(r"^#(\d+|None): (\S+)$", tool("tokens.py", "--phases"), re.M)}
 
 
-def report(text, usage, lines, release=None, tokens=None):
-    """The comment: text, release bar (none when it is empty), `Usage:`, `Metrics:` and `Tokens:` lines, footer."""
+def report(text, usage, lines, release=None, tokens=None, calls=None):
+    """The comment: text, release bar (none when it is empty), `Usage:`, `Metrics:`, `Tokens:` and `Calls:` lines, footer."""
     release = tool("release.py") if release is None else release
     tokens = (tool("tokens.py").splitlines() or [""])[-1] if tokens is None else tokens
-    return "\n".join([text.strip(), "", *([release, ""] if release else []), usage.strip(), *lines, tokens]) + FOOTER
+    calls = tool("tokens.py", "--calls-line") if calls is None else calls
+    return "\n".join([text.strip(), "", *([release, ""] if release else []), usage.strip(), *lines, tokens,
+                      *([calls] if calls else [])]) + FOOTER
 
 
 def counted(body, now=None):
