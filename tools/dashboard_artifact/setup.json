@@ -31,7 +31,7 @@
   "part": "Quota target",
   "group": "Rules",
   "when": "Each pacer cycle",
-  "does": "90 % of the 5-hour window 2 hours before the reset, then 98 % at the reset; the 7-day window limits it too when week_guard in agent.toml is true (now false). The target counts Opus runs: a lane run counts its weight (agent.toml weights, measured by tools/health.py)",
+  "does": "90 % of the 5-hour window 2 hours before the reset, then 98 % at the reset; the 7-day window limits it too when week_guard in agent.toml is true (now true). The target counts Opus runs: a lane run counts its weight (agent.toml weights, measured by tools/health.py)",
   "where": "tools/usage.py"
  },
  {
