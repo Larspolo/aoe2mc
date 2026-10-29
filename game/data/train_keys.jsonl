@@ -38,6 +38,7 @@
 {"name": "building_taken", "text": "The factor of the bonus damage that a building of the player takes after the technology: {building: factor} (Citadels: a castle 0.75). build.taken.", "issue": 4281}
 {"name": "less", "text": "A technology that cuts the damage that its units take from attackers of some classes: [the units (as \"walk\"), {attacker class: n}]; the most of the classes of the attacker counts (Royal Heirs). train.hits.", "issue": 4331}
 {"name": "ignore_armor", "text": "A technology whose melee units ignore the armor of the target (a negative armor still counts): the units, as \"walk\" (Wootz Steel). train.hits.", "issue": 4331}
+{"name": "spawn", "text": "Free units at the research: {\"unit\", \"at\": building, \"count\" per building, \"most\" buildings}; the upgraded unit of its line (First Crusade). train.research.", "issue": 4365}
 {"name": "keep_housing", "text": "A technology whose own buildings of these names keep their population room when they fall after the research (Nomads: [\"HOUSE\"]). ruins.fall, train.limit.", "issue": 4280}
 {"name": "per_own", "text": "A technology that costs more for each own unit: [the kinds (a unit name starts with one), the cost per unit] (Flemish Revolution: villagers). train.per_enemy.", "issue": 4323}
 {"name": "rival_years", "text": "A technology that adds years to the relic and wonder victory timers of each enemy (Atheism: 100). wonder.later.", "issue": 4336}
