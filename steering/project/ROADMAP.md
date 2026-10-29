@@ -5,7 +5,7 @@ The `roadmap` skill makes the next epic from a missing feature when the queue ha
 run reviews this list (owner decisions, 2026-10-26: the agents make the epics themselves, at `P3`; the goals take
 turns). The owner changes the priority of an epic or adds a feature here at any time.
 
-Each feature has a key in backticks (`tools/release.py` and `docs/RELEASE.md` use it). An epic names its key in its body ("Roadmap: `play:health`"), so a run
+Each feature has a key in backticks (`tools/release.py` and `steering/project/RELEASE.md` use it). An epic names its key in its body ("Roadmap: `play:health`"), so a run
 can see which features have an epic: `gh api "repos/Larspolo/aoe2mc/issues?labels=epic&state=all&per_page=100"`.
 
 ## 1. Convert maps to Minecraft (`aoe2mc.py`, `buildings.py`, `units.py`)
@@ -26,8 +26,8 @@ can see which features have an epic: `gh api "repos/Larspolo/aoe2mc/issues?label
 - [x] `convert:start-view` The start view of each scenario player (`initial_camera_x`, `initial_camera_y` of the scenario): the Minecraft spawn at the view of player 1, and in the game program each side starts at the view of its player (epic #3344)
 - [x] `convert:terrain-layers` The terrain layers of a DE scenario (the "layer" brush of the DE editor: a second terrain painted over the base terrain of a tile, as a road or snow on grass): the ground blocks of the tile show the layer, the base terrain keeps the water and the shores (epic #3687)
 - [x] `convert:rms-elevation` The hills of a random map script (`<ELEVATION_GENERATION>`, `create_elevation`): the land of a random map has the elevation of the script, as the hills of Arabia, not a flat land at elevation 0 (epic #3821)
-- [ ] `convert:rms-cliffs` The cliffs of a random map script (`<CLIFF_GENERATION>`: `min_number_of_cliffs`, `max_number_of_cliffs`, `min_length_of_cliff`, `cliff_curliness` ...): cliff lines on the land, as on Highland and Arabia
-- [ ] `convert:rms-connections` The connections of a random map script (`<CONNECTION_GENERATION>`: `create_connect_all_players_land`, `create_connect_teams_lands`, `replace_terrain`): the shallows across a river and the roads between the players come from the script, not from own tables
+- [x] `convert:rms-cliffs` The cliffs of a random map script (`<CLIFF_GENERATION>`: `min_number_of_cliffs`, `max_number_of_cliffs`, `min_length_of_cliff`, `cliff_curliness` ...): cliff lines on the land, as on Highland and Arabia (epic #3845)
+- [x] `convert:rms-connections` The connections of a random map script (`<CONNECTION_GENERATION>`: `create_connect_all_players_land`, `create_connect_teams_lands`, `replace_terrain`): the shallows across a river and the roads between the players come from the script, not from own tables (epic #3867)
 - [ ] `convert:rms-objects` The objects of a random map script (`<OBJECTS_GENERATION>`, `create_object` with `number_of_objects`, `number_of_groups`, `set_place_for_every_player`, `min_distance_to_players`, `max_distance_to_players` ...): a script that the converter does not know places its own town centers, villagers, resources and animals
 - [ ] `convert:old-formats` Old scenarios of the other formats: The Age of Kings (`.scn`, format 1.18 to 1.20) and the HD Edition (`.aoe2scenario` of HD, format 1.22 and later) convert as the `.scx` scenarios of The Conquerors
 - [ ] `convert:rms-players` Random maps for 3 to 8 players in teams, as the AoE2 lobby: `--players` and `--teams`, the player lands of a team next to each other (`<PLAYER_SETUP>`: `random_placement`, `grouped_by_team`, `direct_placement` with `assign_to_player`)
@@ -96,6 +96,8 @@ can see which features have an epic: `gh api "repos/Larspolo/aoe2mc/issues?label
 - [ ] `play:bots` Several bots in one game, as the AoE2 lobby with a computer player in each free slot: each bot plays its own player and team, and attacks the enemy teams, not its allies
 - [ ] `play:attack-ground` The AoE2 order "Attack Ground": a selected Mangonel, Trebuchet or other siege unit shoots at a point of the ground again and again, and its blast hits all units there (epic #4077)
 - [ ] `play:unique-buildings` The unique buildings of each civilization that the game program lacks (the Feitoria, the Harbor, the Pasture ...): built from the build menu, and each one works as in AoE2 DE (epic #4080)
+- [ ] `play:unique-techs` The two unique technologies of each civilization at its castle (Castle Age and Imperial Age), each with its AoE2 DE effect: for example Yeomen of the Britons and Logistica of the Byzantines (epic #4096)
+- [ ] `play:unit-abilities` The special abilities of the units as in AoE2 DE: the trample damage of the elephants, the charge attack of the Coustillier and the Urumi Swordsman, the Leitis that ignores armor, the Shrivamsha Rider that dodges arrows, the Ratha that switches between melee and ranged
 
 ## 3. Replay a recorded game in Minecraft (`game/replay.py`, `aoe2mc.read_timeline`)
 
@@ -128,7 +130,8 @@ can see which features have an epic: `gh api "repos/Larspolo/aoe2mc/issues?label
 - [ ] `replay:market` The market trades and the tributes of the record change the estimated resources of each player in the live replay, at the AoE2 exchange rates and fees
 - [ ] `replay:relics` The relics of the live replay: a monk that the record sends to a relic carries it to a monastery, and the score panel shows the relics of each player, as the AoE2 relic count
 - [ ] `replay:build-order` The build order of each player from the record, as CaptureAge and AoE2 Insights show it: the first buildings, units, technologies and ages with their times, as a live line of each player and as a page of the summary book
-- [ ] `replay:idle-tc` The idle time of the town centers of each player (no villager or technology in training), as CaptureAge shows it: a live value in the score panel and a line in the summary
+- [x] `replay:idle-tc` The idle time of the town centers of each player (no villager or technology in training), as CaptureAge shows it: a live value in the score panel and a line in the summary (epic #4051)
+- [ ] `replay:spending` The resources that each player spent on villagers, military units, technologies and buildings, from the commands of the record and the costs of the game data: a live split in the score panel and a page of the summary book
 
 ## 4. The agent system (`.claude/skills/`, `tools/`, `.github/workflows/`)
 

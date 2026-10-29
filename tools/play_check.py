@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Play one full game of player 1 against the bot with a script (#3324): release check `play-check-game` of
-docs/RELEASE.md.
+steering/project/RELEASE.md.
 
 Usage:
     python3 aoe2mc.py --random-map arabia --seed 1 OUTWorld       # the resources of a real game (#3544)

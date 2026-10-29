@@ -28,7 +28,7 @@ def ins(r):
 # The tables of game/civs.py that the list names: no list of names here, so parallel tickets with a new table do not
 # conflict (#2239). A typo in an "in" value is no name of civs and no file: test_each_bonus_has_one_known_state fails.
 TABLES = sorted({t for rows in BONUSES.values() for r in rows for t in ins(r) if t.isupper() and hasattr(civs, t)})
-KEYS = set(re.findall(r"`(play:[a-z-]+)`", open(os.path.join(ROOT, "docs", "ROADMAP.md")).read()))
+KEYS = set(re.findall(r"`(play:[a-z-]+)`", open(os.path.join(ROOT, "steering", "project", "ROADMAP.md")).read()))
 
 
 def test_each_civilization_is_in_the_list():

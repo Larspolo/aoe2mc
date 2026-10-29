@@ -1,6 +1,6 @@
 # Release bar
 
-The owner decision of #878 (2026-10-26): a goal is at 100 % when all its features of `docs/ROADMAP.md` are done
+The owner decision of #878 (2026-10-26): a goal is at 100 % when all its features of `steering/project/ROADMAP.md` are done
 (milestone C), its release checks pass and its bug reserve is used. The milestones B (a smaller first test) and A
 (the core) are indications only: the priority labels alone decide the order of the work.
 `python3 tools/release.py` prints the progress of each goal and milestone.
@@ -9,7 +9,7 @@ Bug reserve: 0.3
 
 ## Rules
 
-1. A row names a feature of `docs/ROADMAP.md` by its key, or a release check by an id that ends in `-check-...`.
+1. A row names a feature of `steering/project/ROADMAP.md` by its key, or a release check by an id that ends in `-check-...`.
    A roadmap feature without a row is milestone C. Give each new roadmap feature a row (`roadmap` skill).
 2. The epics of a feature: an epic whose body has the line ``Roadmap: `key` ``, and the epics that its roadmap line
    names (`#N`).
@@ -119,6 +119,8 @@ Bug reserve: 0.3
 | `play:bots` | C | 4 | | |
 | `play:attack-ground` | C | 4 | | |
 | `play:unique-buildings` | C | 6 | | |
+| `play:unique-techs` | C | 105 | | |
+| `play:unit-abilities` | C | 6 | | |
 | `play-check-game` | B | 5 | An agent plays a full game against the bot with a script, from the Dark Age to a win or a loss (about 30 minutes): no server error, no stuck unit | #3324 |
 | `play-check-speed` | B | 2 | With 200 units of each player, the server keeps 20 ticks per second | #3325 |
 | `play-check-kit` | B | 2 | A play-test kit: how to start and join, the controls, how to report a bug | #3326 |
@@ -158,6 +160,7 @@ Bug reserve: 0.3
 | `replay:relics` | C | 7 | | |
 | `replay:build-order` | C | 3 | | |
 | `replay:idle-tc` | C | 2 | | |
+| `replay:spending` | C | 3 | | |
 | `replay-check-full` | B | 5 | A complex record (a team game of about 40 minutes with castles and large fights) replays from start to end with no error | #2277 |
 | `replay-check-follow` | B | 3 | The position tool (#813) shows no stray unit and less than 5 % stuck units on that record | #2278 |
 | `replay-check-speed` | B | 2 | The server keeps at least 18 ticks per second at speed 1 through the whole record | #2279 |
