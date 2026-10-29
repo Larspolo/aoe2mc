@@ -105,6 +105,8 @@ height where a unit stands, for each block column ("ground", "-" for water). A g
 Buildings make work sounds when you are near them (anvil at the blacksmith, bell at the town center, trade at the
 market and more): the world has a small datapack (`datapacks/aoe2mc`) with Minecraft sounds only.
 
+A play test from the start (install, world, join, controls, bug report): `docs/PLAYTEST.md`.
+
 First game: `python3 game/run.py MyMapWorld --play` starts a server on the world. Join it at the address that it prints
 and hold the carrot on a stick. Right click a villager of player 1 to select it, then right click a tree: the
 villager walks there, chops and carries the wood to the town center. Right click a fruit bush: the villager
