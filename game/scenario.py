@@ -406,7 +406,7 @@ def replace(g, player, old, new, area):
     """A "Replace Object" order of buildings (aoe2mc.replace_lines, #3778): each complete building of the player (a
     person or a bot) of type old with its middle tile in the area [x1, y1, x2, y2] (-1: the whole map) goes, and a
     complete building of type new stands with its middle on the same tile (foundation with done). The removal is free
-    (demolish.fall, then out of g.fell): the score and the recap count no lost building, as in AoE2."""
+    (demolish.fall, then out of g.buildings_lost): the score and the recap count no lost building, as in AoE2."""
     import demolish, ruins                                             # they import gather
     for x in [g, *(s.g for s in g.bots)]:
         if x.player != player or "objects" not in x.data:
@@ -417,9 +417,9 @@ def replace(g, player, old, new, area):
             tx, ty = (x0 + x1) // 2 // T, (z0 + z1) // 2 // T
             if demolish.name(x, rect) != old or not (area[0] < 0 or area[0] <= tx <= area[2] and area[1] <= ty <= area[3]):
                 continue
-            n = len(vars(x).get("fell", []))
+            n = len(vars(x).get("buildings_lost", []))
             demolish.fall(x, rect)
-            del x.fell[n:]                                             # no loss
+            del x.buildings_lost[n:]                                   # no loss
             foundation(g, player, new, (tx, ty), done=True)
 
 
