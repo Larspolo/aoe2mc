@@ -621,6 +621,7 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
     settings: the AoE2 lobby settings (SETTINGS); a missing one has its default."""
     if wait:                                         # the trigger timers start at the join, not at the load
         game.command("tick freeze")
+        game.command("scoreboard players set #wait aoe_trig 1")   # the tick triggers too (aoe2mc.WAIT, #3892)
     import gather, train
     if unknown := sorted(set(settings) - set(SETTINGS)):
         raise TypeError(f"play() has no setting {', '.join(unknown)} (SETTINGS)")
@@ -777,6 +778,7 @@ def start_on_join(game, sides, people, sleep=time.sleep):
     while len(game.joined) < people:
         sleep(0.5)
     import gather
+    game.command("scoreboard players reset #wait aoe_trig")
     game.command("tick unfreeze")
     show_titles(game)                                # nobody saw a title before the join (#3772)
     for h in sides:                                                    # a loaded game goes on at its saved game time (#3377)

@@ -486,9 +486,13 @@ class Replay:
         self.pay(e.get("player"), e["age"])
 
     def learn(self, e):
-        """Count a research of the timeline for the summary (#1067)."""
+        """Count a research of the timeline for the summary (#1067). A second event of the same technology (de-64.3
+        has one) counts nothing (#3923)."""
+        name = TECHS.get(e["technology"], e["technology"])
+        if name in self.upgrades(e.get("player"), math.inf):
+            return
         self.researched[e.get("player")] = self.researched.get(e.get("player"), 0) + 1
-        self.learned.setdefault(e.get("player"), []).append((e.get("time", 0), TECHS.get(e["technology"], e["technology"])))
+        self.learned.setdefault(e.get("player"), []).append((e.get("time", 0), name))
 
     def upgrades(self, p, t):
         """The technology names that player p researched up to game time t (ms), in time order (#3785)."""
@@ -2487,7 +2491,10 @@ class Replay:
             self.pop[p] = n
             m = re.search(r"Count: (\d+)", self.game.command(
                 f"execute if entity @e[tag={COUNTED},tag=aoe2mc.p{p},type=minecraft:villager]"))
-            self.villager(p, 0, int(m[1]) if m else 0)               # the record has no deaths (#1086)
+            n = int(m[1]) if m else 0
+            if m and self.censused and n < self.vills.get(p, 0):
+                self.bury(p)                                        # a villager died in a fight (#3885)
+            self.villager(p, 0, n)                                  # the record has no deaths (#1086)
         ids = units.type_ids()
         for p, kept in self.troops.items():
             for name, was in kept.items():
@@ -2500,6 +2507,19 @@ class Replay:
                     self.fallen.setdefault(p, {})[name] = self.fallen.get(p, {}).get(name, 0) + was - n
                 kept[name] = n
         self.censused = True
+
+    def workers(self, p):
+        """The villagers of player p in self.units, by uuid: a gather point can hold the same unit."""
+        return {v.uuid: v for v in self.units.values() if v.player == p and v.name.startswith("VILLAGER")}
+
+    def bury(self, p):
+        """Remove the villagers of player p that died in a fight from self.units (#3885): a fight has no timeline
+        event, and a dead villager in eco() counted as idle to the end of the game."""
+        dead = {u for u in self.workers(p) if "Test passed" not in (self.game.command(f"execute if entity {u}") or "")}
+        for i in [i for i, v in self.units.items() if v.uuid in dead]:
+            del self.units[i]
+            for state in (self.moving, self.working):
+                state.pop(i, None)
 
     def eco(self):
         """The villagers of each player on each kind of work (#3755): food, wood, gold, stone, build or idle. A start

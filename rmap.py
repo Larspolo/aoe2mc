@@ -272,7 +272,8 @@ def connections(terrain, lands, cmds, consts, rng, warn):
     """<CONNECTION_GENERATION>: a path between two land origins of each pair that the command names; lands are
     (origin, player or 0, zone). replace_terrain changes the terrain on a path, and terrain_size widens it on the
     tiles of a terrain (radius ± variance). terrain_cost 0: never on a path. create_connect_teams_lands makes no path:
-    generate() has no teams, so each player is a team of one."""
+    generate() has no teams, so each player is a team of one.
+    default_terrain_replacement: the terrain of the other path tiles. accumulate_connections has no source yet (#3870)."""
     n = len(terrain)
     pairs = {"create_connect_all_players_land": lambda a, b, z: a[1] and b[1],
              "create_connect_teams_lands": lambda a, b, z: False,
@@ -303,7 +304,9 @@ def connections(terrain, lands, cmds, consts, rng, warn):
         old = terrain.copy()
         for a, b in each("replace_terrain"):
             terrain[wide & (old == a)] = b
-        for a in set(attrs) - {"replace_terrain", "terrain_cost", "terrain_size"}:
+        for d, in each("default_terrain_replacement"):                # the path tiles of no replace_terrain (#3870)
+            terrain[wide & ~np.isin(old, [a for a, _ in each("replace_terrain")])] = d
+        for a in set(attrs) - {"default_terrain_replacement", "replace_terrain", "terrain_cost", "terrain_size"}:
             warn(f"{cmd}: {a} is not read yet")
 
 

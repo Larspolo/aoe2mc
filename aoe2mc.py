@@ -2,7 +2,8 @@
 """
 aoe2mc - Convert an Age of Empires II: DE scenario (.aoe2scenario) or the start state of a recorded game
 (.aoe2record) or an old scenario (.scx, format 1.21; .scn, 1.18 to 1.20) to a Minecraft Java world. A campaign (.aoe2campaign) gives one world per scenario; an old campaign
-(.cpx, .cpn) too; its scenarios that are not .scx 1.21 give the files and the steps to save them in the DE editor.
+(.cpx, .cpn) too; its scenarios of other formats (not .scn 1.18 to 1.20, .scx 1.21 or HD 1.22 to 1.26) give the files and the
+steps to save them in the DE editor.
 
 Usage:
     python aoe2mc.py MAP.aoe2scenario OUTPUT_WORLD_FOLDER [options]
@@ -262,8 +263,17 @@ def read_map(path, seed=1):
         return map_description(rmap.random_map(p[len(RANDOM_MAP):], seed), path)
     if p.endswith(".rms"):
         return read_rms(path, seed)
-    return (read_record if p.endswith(RECORDS) else read_scx if p.endswith((".scx", ".scn")) else
+    return (read_record if p.endswith(RECORDS) else read_scx if p.endswith((".scx", ".scn")) or old_format(path) else
             read_json if p.endswith(".json") else read_scenario)(path)
+
+
+def old_format(path):
+    """True for an .aoe2scenario of a format before DE (the HD Edition, #3862): read_scx reads it, not read_scenario."""
+    import scx
+    if not path.lower().endswith(".aoe2scenario"):
+        return False
+    with open(path, "rb") as f:
+        return f.read(4) in scx.FORMATS
 
 
 def read_rms(path, seed):
@@ -4688,7 +4698,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
     load += [f"scoreboard players set #{t['id']} aoe_on 0" for t in triggers if t["id"] in off and not t["enabled"]]
     timed = {t["id"]: max(20 * min((max(c["timer"] for c in g) for g in gs), default=0), 1) for t in triggers   # 1 tick at least;
              if not (gs := or_groups(t["conditions"])) or all(c["type"] == TIMER for g in gs for c in g)}   # OR: the first
-    clocks = {t["id"]: ts for t in triggers if t["id"] not in timed and len(gs := or_groups(t["conditions"])) > 1
+    clocks = {t["id"]: ts for t in triggers if t["id"] not in timed and (gs := or_groups(t["conditions"]))
               and (ts := [(k, max(20 * max(x), 1)) for k, g in enumerate(gs)
                           if (x := [c["timer"] for c in g if c["type"] == TIMER])])}   # the OR timers (#2815)
     for t in triggers:
@@ -4712,7 +4722,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
         # sets the score #N.t<group> of aoe_trig, its chance a roll of the score #N.c<group>; the tick line of the
         # group tests them
         rolled = len(groups) > 1 and chance
-        clocked = len(groups) > 1 and (TIMER, False) in rest and (rest != {(TIMER, False)} or rolled)
+        clocked = (TIMER, False) in rest and (rest != {(TIMER, False)} or rolled)   # also one "AND" group (#3891)
         if not (t["enabled"] or t["id"] in on and t["id"] not in chancy) or \
                 not (rest == {(TIMER, False)} or rest <= {(k, False) for k in TICKED + (TIMER,) * clocked} | {(k, True) for k in INVERTED}) or \
                 chance and len([c for c in conds if c["type"] == TRIGGER_CHANCE]) > 1 or \
@@ -4734,6 +4744,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
                     or c["type"] == PLAYER_DEFEATED and c.get("player", -1) <= 0   # Gaia: no defeat (#2710)
                     or c["type"] == TRIGGER_ACTIVE and c.get("trigger") not in switch
                     for c in conds):                                   # unit classes: not yet
+            stats["trigger conditions (not supported yet)"] += bool(t["enabled"] or t["id"] in on)   # (#3891)
             continue
         ctx = Effect(t, T, ground, players, stats, mood, files, setup, switch, timed, clocks, triggers)
         lines = [line for e in t["effects"] if e["type"] in EFFECTS for line in selection_tags(e, EFFECTS[e["type"]](e, ctx), T)]
@@ -4912,11 +4923,15 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
     if tick or any(k.endswith("_chance.mcfunction") for k in files):
         load.insert(0, "scoreboard objectives add aoe_trig dummy")
     if tick:
-        files["data/minecraft/tags/function/tick.json"] = {"values": ["aoe2mc:tick"]}
+        files["data/minecraft/tags/function/tick.json"] = {"values": ["aoe2mc:tick_wait"]}
+        files["data/aoe2mc/function/tick_wait.mcfunction"] = WAIT + "\n"
         files["data/aoe2mc/function/tick.mcfunction"] = "\n".join(tick) + "\n"
     return load, files
 
 
+# The game program sets #wait while it waits for the people (#3892): /tick freeze does not stop the tick function.
+# A world without the game program has no #wait, so its triggers run.
+WAIT = "execute unless score #wait aoe_trig matches 1 run function aoe2mc:tick"
 LOADED = "if score #loaded aoe_trig matches 1"                        # all chunks of the map are loaded (#3080)
 
 
@@ -6162,9 +6177,10 @@ Do these steps to convert them:
 
 def convert_campaign(src, out, only=None, name=None, **kw):
     """One world per scenario: out/<number> <scenario name>/. only: the number of one scenario (1 = first).
-    An old campaign (.cpx, .cpn): convert its .scx scenarios of format 1.21 (#347); write the other scenario files to
-    out/ and stop with the steps for the DE editor."""
+    An old campaign (.cpx, .cpn): convert its scenarios of a format in scx.FORMATS (.scn 1.18 to 1.20, .scx 1.21, HD,
+    #347, #3863); write the other scenario files to out/ and stop with the steps for the DE editor."""
     import tempfile
+    import scx
     version, title, entries = read_campaign(src)
     if only is not None and not 1 <= only <= len(entries):
         raise OptionError(f"--scenario {only}: the campaign {title!r} has {len(entries)} scenarios")
@@ -6175,9 +6191,10 @@ def convert_campaign(src, out, only=None, name=None, **kw):
         old, done = [], []
         for i, fn, data in chosen:
             stem = os.path.splitext(fn)[0]
-            if fn.lower().endswith((".scx", ".scn")):
+            if data[:4] in scx.FORMATS:                # the format, not the file name, chooses (#3863)
                 with tempfile.TemporaryDirectory() as tmp:
-                    path = os.path.join(tmp, fn)       # "Read <fn>" names the scenario (#578)
+                    ext = "" if fn.lower().endswith((".scx", ".scn", ".aoe2scenario")) else ".scx"   # read_scx reads it
+                    path = os.path.join(tmp, fn + ext)  # "Read <fn>" names the scenario (#578)
                     with open(path, "wb") as f:
                         f.write(data)
                     try:
@@ -6234,8 +6251,8 @@ def main(argv=None):
     ap.add_argument("scenario", nargs="?", help=".aoe2scenario file, .aoe2record, .mgz, .mgx or .mgl (the start state of a recorded game), .scx "
                     "(an old scenario, format 1.21), .json (a map description, README), .rms (the land of a random map "
                     "script, with --seed), or "
-                    ".aoe2campaign, .cpx or .cpn (one world per scenario; old scenarios that are not .scx 1.21: the "
-                    "steps for the DE editor)")
+                    ".aoe2campaign, .cpx or .cpn (one world per scenario; old scenarios of other formats than .scn 1.18 to "
+                    "1.20, .scx 1.21 and HD 1.22 to 1.26: the steps for the DE editor)")
     ap.add_argument("output", nargs="?", help="output world folder (put it in .minecraft/saves/); for a campaign the "
                     "folder of the worlds")
     ap.add_argument("--random-map", choices=("arabia", "arena", "black_forest", "gold_rush", "highland",

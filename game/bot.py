@@ -81,7 +81,8 @@ class Bot:
         self.g.chop = {k: s / level["gather"] for k, s in self.g.chop.items()}   # seconds per unit: work_time
         self.villagers, self.attack, self.foe, self.share = villagers, attack * level["attack"], foe, share
         self.group = level["soldiers"] if group is None else group
-        self.charged = False                                           # the wave attacks: new soldiers join it
+        self.charged = False                                           # a wave attacks
+        self.wave = set()                                              # its soldiers: new soldiers wait (#3953)
         self.time, self.looked, self.targets = 0.0, -LOOK, {}          # AoE2 seconds of the game, soldier -> target
         self.chase = {}                                                # soldier -> (target, gap, hit points, since)
         self.lost = {}                                                 # soldier -> {target it gave up: its position}
@@ -187,6 +188,7 @@ class Bot:
                     work[res] += 1
                     break
         self.move(share, work)
+        self.age_up()
         self.recruit()
         self.time += g.tick * gather.NORMAL
         if self.time >= self.attack and self.time >= self.looked + LOOK:   # each look costs RCON commands
@@ -271,13 +273,18 @@ class Bot:
 
     def fight(self):
         """Send each soldier without a live target to the nearest unit of the foe in reach and in the sight of the bot
-        (#2050), else to its nearest building. A wave starts with self.group soldiers; when all of it is dead, the next wave waits for a full group again (#1051)."""
+        (#2050), else to its nearest building. A wave starts with self.group soldiers; the soldiers that come later wait at home until they are a
+        full wave too, as the AoE2 computer player does (#1051, #3953)."""
         g = self.g
         mine = g.positions(sorted(u for u, n in g.soldiers.items() if combat.stats(n).attack))   # a dead soldier
                                                                        # is not in it, a transport ship has no attack
-        self.charged = len(mine) >= self.group or self.charged and bool(mine)
+        self.wave = getattr(self, "wave", set()) & mine.keys()           # the soldiers of the running wave
+        if len(mine.keys() - self.wave) >= self.group:                 # the new soldiers wait for a full wave (#3953)
+            self.wave |= mine.keys()
+        self.charged = bool(self.wave)
         if not self.charged or self.foe is None:                      # no enemy: no attack (#3107)
             return
+        mine = {u: p for u, p in mine.items() if u in self.wave}       # the others stay at their buildings
         inside = garrison.inside(self.share) if self.share else set()  # a unit in a building is no target (#3429)
         live = {t for t in set(self.targets.values()) if t not in inside and "passed" in g.command(f"execute if entity {t}")}
         self.targets = {u: t for u, t in self.targets.items() if u in mine and t in live}
@@ -385,6 +392,22 @@ class Bot:
                         and all(g.stock[r] >= v for r, v in train.price(g, n).items()) \
                         and train.queue(g, self.nobody, (rect[0], rect[2]), n):
                     more += n == "VILLAGER_MALE"
+
+    def age_up(self):
+        """Queue the next age (build.AGE_TECHS) at a town center when the bot has its villager number, each building
+        of its order that the present age allows, and the cost of the age, as an AoE2 bot (#3912). build.locked keeps
+        an age above end_age out."""
+        g = self.g
+        if build.ages(g) >= len(build.AGE_TECHS) or len(g.villagers) < self.villagers:
+            return
+        age, have = build.AGE_TECHS[build.ages(g)], train.owned(g)
+        if train.queued(g, age) or build.locked(g, age) or any(n not in have for n in self.order if not build.locked(g, n)):
+            return
+        for rect, name in sorted(train.homes(g).items()):
+            if name == "TOWN_CENTER" and age in train.trains(g, name) \
+                    and all(g.stock[r] >= v for r, v in train.price(g, age, name).items()):
+                train.queue(g, self.nobody, (rect[0], rect[2]), age)
+                return
 
     def build(self):
         """Start the next house, farm or building of ORDER when the bot can pay for it and no site of it is unfinished.
