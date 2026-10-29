@@ -1877,6 +1877,11 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         return m;
     }
 
+    /** A unit that walks with a brain, not with goals: without NoAI it strolls away (#438, #1968, #3541). */
+    private boolean brained(Mob mob) {
+        return mob instanceof Villager || mob instanceof Camel || mob.getScoreboardTags().contains(CARRIER);
+    }
+
     private void follow() {
         orders.entrySet().removeIf(e -> {
             Entity ent = Bukkit.getEntity(e.getKey());
@@ -1886,7 +1891,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             Order o = e.getValue();
             if (mob.getLocation().distanceSquared(o.goal) < 1.5 * 1.5) {
                 // a brain has no goals to drop: it strolls away (#438, #1968); a minecart pushes its carrier on (#836)
-                if (mob instanceof Villager || mob instanceof Camel || mob.getScoreboardTags().contains(CARRIER)) {
+                if (brained(mob)) {
                     mob.getPathfinder().stopPathfinding();   // without AI it keeps its path: Gates.through kept a gate open (#1928)
                     mob.setAI(false);               // so it stands still until the next order
                 } else if (center(mob) >= 1) {      // steer() skips path points: Minecraft walks back to them (#1078)
@@ -1918,7 +1923,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                     return false;
                 }
                 pf.stopPathfinding();                   // it stays here: the old part led it away (#2303)
-                if (mob instanceof Villager) {          // no path for 5 s: drop the order, and stop the brain (#811)
+                if (brained(mob)) {                     // no path for 5 s: drop the order, and stop the brain (#811, #3541)
                     mob.setAI(false);
                 }
                 getLogger().info("aoe2mc: no path " + mob.getUniqueId() + " " + o.goal.getX() + " " + o.goal.getY()
