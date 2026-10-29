@@ -362,12 +362,8 @@ class Game:
             self.command(f"team join p{n} {name}")
             for cmd in [f"aoe hide {name} team"] * (getattr(self, "kind", "paper") == "paper"):
                 self.command(cmd)            # the hides of the own team only: the plugin hid all on the join (#3070)
-            starts, yaw = getattr(self, "starts", {}), getattr(self, "yaw", 0.0)
-            if n in starts and name not in getattr(self, "placed", ()):   # the start view of its side (#3347); a
-                x, y, z = starts[n]                                         # join again keeps the place
-                self.command(f"tp {name} {x + 0.5} {y} {z + 0.5} {yaw} 0")
-                self.command(f"spawnpoint {name} {x} {y} {z} {yaw}")
-                self.placed = {*getattr(self, "placed", ()), name}
+            if name not in getattr(self, "placed", ()):   # a join again keeps the place (#3347)
+                self.start_view(name, n)
             self.command(f"tellraw {name} " + json.dumps({"text": CHAT_HINT, "color": "gray"}))   # the chat targets (#3555)
         elif self.people > 1:
             for cmd in [*SPECTATORS * (not self.spectators), f"team join spec {name}", f"gamemode spectator {name}",
@@ -381,6 +377,7 @@ class Game:
         Minecraft player has it. Returns False for a taken side."""
         if any(k == n for p, k in self.sides.items() if p != name):
             return False
+        old = self.sides.get(name)
         self.sides[name] = n
         self.command(f"team join p{n} {name}")
         for cmd in [f"aoe hide {name} team"] * (getattr(self, "kind", "paper") == "paper"):
@@ -388,7 +385,18 @@ class Game:
         if name in getattr(self, "spectators", ()):  # a spectator who takes a free side plays again (#2898)
             self.spectators = self.spectators - {name}
             self.command(f"gamemode creative {name}")
+        if old != n:                         # the start view of the new side (#3350)
+            self.start_view(name, n)
         return True
+
+    def start_view(self, name, n):
+        """Move Minecraft player name to the start block of AoE2 player n, and set its spawn point there (#3347)."""
+        starts, yaw = getattr(self, "starts", {}), getattr(self, "yaw", 0.0)
+        if n in starts:
+            x, y, z = starts[n]
+            self.command(f"tp {name} {x + 0.5} {y} {z + 0.5} {yaw} 0")
+            self.command(f"spawnpoint {name} {x} {y} {z} {yaw}")
+            self.placed = {*getattr(self, "placed", ()), name}
 
     def _op_loop(self):
         try:
