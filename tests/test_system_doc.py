@@ -1,15 +1,14 @@
-"""docs/SYSTEM.md: each file of the table "Generic and specific files" exists (#904)."""
+"""docs/SYSTEM.md: each file of the table "Generic and specific files" and of framework/files.txt exists (#904, #4192)."""
 import os
-import re
+import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.join(ROOT, "tools"))
+import bootstrap  # noqa: E402
 
 
 def table_paths():
-    with open(os.path.join(ROOT, "docs", "SYSTEM.md")) as f:
-        text = f.read()
-    part = text.split("## Generic and specific files", 1)[1]
-    return re.findall(r"^\| `([^`]+)` \| (?:generic|specific) \|", part, re.M)
+    return [p for p, _ in bootstrap.rows()]
 
 
 def test_the_table_has_the_system_files():
