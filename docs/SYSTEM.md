@@ -172,7 +172,9 @@ on `main` yet.
    app, edit the task, add an API trigger, generate a token, and add the secrets `PACER_URL_<TASK>` (the fire URL)
    and `PACER_TOKEN_<TASK>` (the token) with `<TASK>` = `MAIN`, `HAIKU`, `DEEP`. Keep `pacer = "workflow"` in
    `[pacing]` of `steering/system/system.toml`. Then start Actions → Pacer → Run workflow once: the run loops and starts the next
-   run itself. A new token makes the old one invalid: change the secret too.
+   run itself. A new token makes the old one invalid: change the secret too. Another Claude account NAME
+   (`docs/COLLABORATORS.md`): add `CLAUDE_CODE_OAUTH_TOKEN_<NAME>`, `PACER_URL_<NAME>_<TASK>` and
+   `PACER_TOKEN_<NAME>_<TASK>`; the pacer uses it from its next cycle (#4237).
 6. (Removed in #3427: the pacer session, skill `pacer`.)
 7. **Scheduled task "aoe2mc autopilot haiku" (optional, #1715).** No schedule: the pacer fires it. Model
    `claude-haiku-5-5`, the prompt `/scheduled max lane haiku`. These runs take only the tickets with
