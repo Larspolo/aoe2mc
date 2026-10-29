@@ -16,8 +16,8 @@ Each run does one work cycle (the `autopilot` skill):
    `Dashboard`): waiting for you, working on, next up, recently done. It updates on each label change and every
    hour. Runs only add the process changes.
 5. It improves its own process: it writes learnings, corrects its instructions and makes tooling tickets.
-   One run per review slot (a gap of merged PRs in `[review]` of `agent.toml`, shorter after you changed the system
-   yourself): the `improve` skill learns from your own changes, walks all its levers and makes each change that pays,
+   One run per review slot (a gap of merged PRs in `[review]` of `agent.toml`: it halves from 80 to 10 while reviews
+   make changes, doubles from 80 to 640 while they make none, and goes back to 80 when the result turns; shorter after you changed the system yourself): the `improve` skill learns from your own changes, walks all its levers and makes each change that pays,
    also large ones. The status issue lists each process change.
 
 The agent takes instructions only from comments and issues by `Larspolo`.

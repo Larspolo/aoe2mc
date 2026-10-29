@@ -79,18 +79,18 @@ The details are in the text at the top of `tools/claim.py`.
 | Ticket | `claim/N` (`claim/N-2` ... after a release) | `claim.py N`. The owner beats each 20 minutes (`--beat`). After 30 minutes without a beat the claim is stale: another run can take it over (`--takeover`). `--guard` before each push. |
 | Owner comment | `claim/comment-ID` | `claim.py ID --comment`: one run acts on one owner comment. |
 | Refill | `claim/refill-E-S` | `claim.py E --refill`: one run makes the sub-issues of epic E (E = 0: the whole queue, one per hour). |
-| Process review | `claim/review-<gap>pr-<last>-<k>` | `claim.py 0 --review`: one run runs the `improve` skill after `gap` merged PRs (`[review]` of `agent.toml`, no hours: owner, 2026-10-29). A review with no change doubles the gap (#2039). Owner work since the last review (a merge with no commit of a run: each run commit has the trailer `Agent-Run:` of the `commit-msg` hook that `claim.py` installs at each claim, adopt or lock) makes the gap `owner_gap`. |
+| Process review | `claim/review-<gap>pr-<last>-<k>` | `claim.py 0 --review`: one run runs the `improve` skill after a gap of merged PRs (`[review]` of `agent.toml`, no hours: owner, 2026-10-29). A review with a change halves a gap up to `gap` (down to `min_gap`) and resets a larger one to `gap`; a review with no change doubles a gap from `gap` up (up to `max_gap`) and resets a smaller one to `gap` (`claim.next_gap`). Owner work since the last review (a merge with no commit of a run: each run commit has the trailer `Agent-Run:` of the `commit-msg` hook that `claim.py` installs at each claim, adopt or lock) makes the gap `owner_gap`. |
 | Roadmap review | `claim/roadmap-100pr-<last>-<k>` | `claim.py 0 --roadmap`: one run reviews `docs/ROADMAP.md` after 100 merged PRs. |
 
 Other rules against conflicts: one ticket per PR, new tests in a new file, new table entries on their own line in
 alphabetical order, `merge=union` in `.gitattributes` for files where runs only add lines.
 
 Clock or count (#2039). A rule that waits for work counts merged PRs, because the speed of the project changes and a
-fixed time measures a different amount of work: the process review (`gap`, `max_gap` and `owner_gap` of `[review]` in `agent.toml`),
+fixed time measures a different amount of work: the process review (`[review]` in `agent.toml`: between `min_gap` and `max_gap`),
 the roadmap review (100), `Start after: N PRs after #M` and the window of `tools/health.py` (50). A rule that finds a
 stopped run or follows a real clock stays in minutes, because a stopped run merges nothing: the claim beat (20), a
 stale claim (30, or 10 with the label `conflict`), a "Started by" comment (30), the Automerge sweep (10), an old PR in
-`tools/operator_check.py` (30), the pacer (10), `unconflict.yml` (20) and the refill lock (one per hour). The quota
+`tools/operator_check.py` (30), the pacer (10), `unconflict.yml` (20) and the refill lock (one per hour; a due review does not wait for it). The quota
 windows (5 hours, 7 days) follow the subscription, the owner comments of `tools/feedback.py` (6 hours before the
 last run report, at most 23, #3060) get an answer in time, and a run longer than 90 minutes is about the context and
 the container of one run. A wait to measure a change never names a date (owner, 2026-10-29): `tools/health.py` lists the

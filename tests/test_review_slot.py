@@ -27,18 +27,27 @@ def test_a_review_waits_for_its_gap_of_merged_prs():
     assert claim.pr_slot("2026-10-26T09:00:00Z", 50, 50) != claim.pr_slot(last, 50, 50)   # the next review
 
 
-def test_no_change_doubles_the_gap_and_a_change_resets_it():
-    body = claim.reviewed(BODY, False, T)
+def test_the_gap_halves_while_reviews_change_and_doubles_while_they_do_not(monkeypatch):
+    for name, value in (("REVIEW", 80), ("REVIEW_MIN", 10), ("REVIEW_MAX", 640)):   # test values (owner, 2026-10-29)
+        monkeypatch.setattr(claim, name, value)
+    body = claim.reviewed(BODY, True, T)
     state = claim.agent_state(body)
-    gap = min(2 * claim.REVIEW, claim.REVIEW_MAX)
     assert state == {"last_run": "2026-10-26T07:00:00Z", "runs": 150, "last_review": "2026-10-26T07:33:20Z",
-                     "review_prs": gap}                                         # review_minutes goes
+                     "review_prs": 40}                                          # review_minutes goes
     assert body.startswith("Dashboard\n<!-- agent-state: ") and body.endswith("### Process changes\n")
-    for _ in range(4):                                                         # at most REVIEW_MAX (#1697, #3465)
-        body, gap = claim.reviewed(body, False, T), min(2 * gap, claim.REVIEW_MAX)
-        assert claim.agent_state(body)["review_prs"] == gap
-    assert gap == claim.REVIEW_MAX
-    assert claim.agent_state(claim.reviewed(body, True, T))["review_prs"] == claim.REVIEW
+    gaps = []
+    for changed in (True, True, True, False, False, False, False, False, True):
+        body = claim.reviewed(body, changed, T)
+        gaps.append(claim.agent_state(body)["review_prs"])
+    assert gaps == [20, 10, 10, 80, 160, 320, 640, 640, 80]                       # the turns reset to 80
+
+
+def test_a_gap_of_an_earlier_rule_counts_as_the_first_gap(monkeypatch):
+    for name, value in (("REVIEW", 80), ("REVIEW_MIN", 10), ("REVIEW_MAX", 640)):
+        monkeypatch.setattr(claim, name, value)
+    assert claim.review_gap({"review_prs": 200}) == claim.review_gap({}) == 80     # 200 and 800: the rules before
+    assert claim.review_gap({"review_prs": 10}) == 10 and claim.review_gap({"review_prs": 640}) == 640
+    assert claim.review_gap({"review_prs": 256}) == 80                              # the rule never gives 256
 
 
 def test_the_merged_prs_without_github_start_the_review():

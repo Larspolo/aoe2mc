@@ -15,7 +15,7 @@ paused = "paused"               # this label on the status issue stops all runs
 max_runs = 40                   # the most runs at one time (tools/usage.py): 16 used only about 70 % of a 5-hour window at burn 0.009
 max_fire = 8                    # the most runs that the pacer starts in one 10-minute cycle (tools/usage.py)
 refill_runs = 1                # runs beyond the ready tickets: each refills one epic (tools/usage.py); 3 started many deep runs with no PR (2026-10-29)
-refill_gap = 60                 # minutes after a refill lock (claim/refill-*) in which the pacer starts no refill run, unless ready < target / 2 (tools/usage.py)
+refill_gap = 60                 # minutes after a refill lock (claim/refill-*) in which the pacer starts no refill run, unless ready < target / 2 or a review is due (tools/usage.py)
 week_free = 0.60                # below this 7-day usage the runs fill each 5-hour window, no weekly pace (tools/usage.py)
 week_guard = true               # true: the 7-day usage limits the runs (week_free, #1695; owner, 2026-10-29); false: only the 5-hour window counts
 max_waiting_prs = 10            # flow brake: at this many agent PRs older than pr_minutes the pacer starts 1 repair run (tools/usage.py)
@@ -27,8 +27,9 @@ pacer = "workflow"              # pacer.yml starts the runs (tools/pacer.py, #31
 trigger = "trig_01QTrgkK5PZmqPwQ96rKp3QE"   # the scheduled task "aoe2mc autopilot": the pacer fires it (#1898)
 
 [review]                        # the process review (`improve` skill, tools/claim.py): merged PRs, never hours (owner, 2026-10-29)
-gap = 100                       # merged PRs after a review that made a change
-max_gap = 400                   # a review with no change doubles the gap, up to this
+gap = 80                        # merged PRs: the first gap, and the reset when the result of the reviews turns
+min_gap = 10                    # a review with a change halves a gap up to `gap`, down to this (owner, 2026-10-29)
+max_gap = 640                   # a review with no change doubles a gap from `gap` up, up to this
 owner_gap = 20                  # the gap when an owner session merged a PR since the last review: owner work is a miss
 
 [commands]
