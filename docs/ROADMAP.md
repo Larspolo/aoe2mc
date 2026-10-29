@@ -31,6 +31,7 @@ can see which features have an epic: `gh api "repos/Larspolo/aoe2mc/issues?label
 - [ ] `convert:rms-objects` The objects of a random map script (`<OBJECTS_GENERATION>`, `create_object` with `number_of_objects`, `number_of_groups`, `set_place_for_every_player`, `min_distance_to_players`, `max_distance_to_players` ...): a script that the converter does not know places its own town centers, villagers, resources and animals
 - [ ] `convert:old-formats` Old scenarios of the other formats: The Age of Kings (`.scn`, format 1.18 to 1.20) and the HD Edition (`.aoe2scenario` of HD, format 1.22 and later) convert as the `.scx` scenarios of The Conquerors
 - [ ] `convert:rms-players` Random maps for 3 to 8 players in teams, as the AoE2 lobby: `--players` and `--teams`, the player lands of a team next to each other (`<PLAYER_SETUP>`: `random_placement`, `grouped_by_team`, `direct_placement` with `assign_to_player`)
+- [ ] `convert:rms-standard` The standard random maps of AoE2 DE convert from their real script files (Acropolis, Baltic, Fortress, Hideout, Valley and the other maps of the DE map list): each script reads with no error, and its land, water, hills, cliffs, objects and player starts come from the script, not from own tables; a list names the state of each map
 
 ## 2. Play AoE2 in Minecraft (`game/`)
 
@@ -124,6 +125,8 @@ can see which features have an epic: `gh api "repos/Larspolo/aoe2mc/issues?label
 - [x] `replay:apm` The actions per minute of each player from the commands of the record, as CaptureAge shows them: a value in the score panel and a line in the summary (epic #3762)
 - [ ] `replay:market` The market trades and the tributes of the record change the estimated resources of each player in the live replay, at the AoE2 exchange rates and fees
 - [ ] `replay:relics` The relics of the live replay: a monk that the record sends to a relic carries it to a monastery, and the score panel shows the relics of each player, as the AoE2 relic count
+- [ ] `replay:build-order` The build order of each player from the record, as CaptureAge and AoE2 Insights show it: the first buildings, units, technologies and ages with their times, as a live line of each player and as a page of the summary book
+- [ ] `replay:idle-tc` The idle time of the town centers of each player (no villager or technology in training), as CaptureAge shows it: a live value in the score panel and a line in the summary
 
 ## 4. The agent system (`.claude/skills/`, `tools/`, `.github/workflows/`)
 
