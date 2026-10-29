@@ -19,6 +19,7 @@ epic|3e4b9e|Parent ticket with sub-issues
 agent-status|1d76db|The dashboard of the agent
 paused|b60205|On the status issue: the agent stops
 muted|d4c5f9|Muted by the owner: the agents skip it and the dashboard hides it
+after-release|d4c5f9|Held until the next release (tag v*): agents skip it, the After release workflow removes it
 hold|fbca04|On a PR: the Automerge workflow does not merge it
 automerge|0e8a16|On a PR: the Automerge workflow merges it when CI is green, on any branch
 conflict|b60205|On a PR: the Automerge workflow could not merge it

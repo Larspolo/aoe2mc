@@ -36,6 +36,7 @@ session task tools `mcp__ccd_session` ...) from each session of the repository: 
 | `coverage.yml` (Coverage) | Each push to `main` | Writes `docs/coverage.md`, `MAX` of `tests/test_coverage.py` and a column of `docs/DESIGN.md`. PRs do not change these files, so they do not conflict there. |
 | `metrics.yml` (Metrics) | The cron (`*/15`, a few times a day), by hand with `days` | Writes the status issue comments to the orphan branch `metrics` (`tools/metrics_log.py`, one file per day). `tools/health.py` reads them, the run reports of `runs/` (each run adds its own file, `metrics_log.post`) and only the newest comments from the API (#1983). The tip keeps the last 14 days (`metrics_log.prune`: each reader fetches the whole tip); the git history of the branch keeps all days. A store outside GitHub (Cloudflare D1, free up to 5 million rows read a day) was not better: it adds an account, a token in the runs and a way to fail for the pacer (2026-10-29). The pacer loop writes the branch in each cycle too (2026-10-29): this workflow is the fallback and the backfill. |
 | `labels.yml` (Labels) | A change of `.github/labels.txt` | Creates the labels. |
+| `after-release.yml` (After release) | A push of a tag `v*`, by hand | Removes the label `after-release` from each open issue: the owner holds a ticket with it until the next release, and `tools/dashboard.py` skips it until then (#4175). |
 
 ### Tools of the system
 
@@ -336,6 +337,7 @@ of `tools/bootstrap.py` (they copy this repository) and the tests that need a sp
 | `.github/workflows/coverage.yml` | specific | The coverage of the AoE2 types. |
 | `.github/workflows/metrics.yml` | generic | None. |
 | `.github/workflows/labels.yml` | generic | None. |
+| `.github/workflows/after-release.yml` | generic | None. It removes the label `after-release` at a release tag `v*` (#4175). |
 | `.github/workflows/bundles.yml` | specific | The app bundles of the converter (PyInstaller, `packaging/`, #1541) and their installers (#1542). |
 | `.github/workflows/installers.yml` | specific | On a tag `v*`: the installers of `bundles.yml` in the release of the tag (#1542). |
 | `.github/workflows/close.yml` | generic | The label `close`: closes the issues that the auto mode does not let a run close (#1740). |

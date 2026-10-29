@@ -185,7 +185,7 @@ def refill_need(ready, target, issues, due=lambda: [], reviews=lambda: [], free=
     work = {int(n) for i in issues if "pull_request" not in i for n in re.findall(r"Part of #(\d+)", i.get("body") or "")}
     subs = lambda i: (s := i.get("sub_issues_summary") or {}).get("total", 0) - s.get("completed", 0)   # open sub-issues
     epics = [i["number"] for i in issues if "epic" in dashboard.labels(i) and i["number"] not in work and not subs(i)
-             and not {dashboard.MUTED, dashboard.CLOSE, "needs-human"} & dashboard.labels(i)]
+             and not {dashboard.MUTED, dashboard.AFTER, dashboard.CLOSE, "needs-human"} & dashboard.labels(i)]
     if epics:
         return "epic check " + ", ".join(f"#{n}" for n in epics)
     if checks := due():
