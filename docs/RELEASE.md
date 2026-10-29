@@ -43,6 +43,11 @@ Bug reserve: 0.3
 | `convert:mood` | C | | | |
 | `convert:start-view` | C | | | |
 | `convert:terrain-layers` | C | 3 | | |
+| `convert:rms-elevation` | C | 3 | | |
+| `convert:rms-cliffs` | C | 3 | | |
+| `convert:rms-connections` | C | 3 | | |
+| `convert:rms-objects` | C | 5 | | |
+| `convert:old-formats` | C | 4 | | |
 | `convert-check-maps` | B | 5 | A test set of 20 real maps (the ranked map pool, 3 campaigns, 2 old .scx scenarios) converts with no error, no unit in a block and no load error on a server | #2274 |
 | `convert-check-look` | B | 3 | A person checks the screenshots of the test set; the fixes of what they find | #2275 |
 | `convert-check-speed` | B | 1 | A 480 × 480 map converts in less than 10 minutes and 8 GB | #2276 |

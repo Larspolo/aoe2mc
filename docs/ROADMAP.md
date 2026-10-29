@@ -24,7 +24,12 @@ can see which features have an epic: `gh api "repos/Larspolo/aoe2mc/issues?label
 - [x] `convert:random-maps-more` More random map scripts of the ranked pool and the classic ones (Nomad, Islands, Gold Rush, Highland, Mediterranean) with their player starts (epic #1172)
 - [x] `convert:mood` The map color mood and weather of a DE scenario (`map_color_mood`: morning, noon, evening, night, snow, fog) as the Minecraft time of day, weather and fog (epic #1593)
 - [x] `convert:start-view` The start view of each scenario player (`initial_camera_x`, `initial_camera_y` of the scenario): the Minecraft spawn at the view of player 1, and in the game program each side starts at the view of its player (epic #3344)
-- [ ] `convert:terrain-layers` The terrain layers of a DE scenario (the "layer" brush of the DE editor: a second terrain painted over the base terrain of a tile, as a road or snow on grass): the ground blocks of the tile show the layer, the base terrain keeps the water and the shores
+- [x] `convert:terrain-layers` The terrain layers of a DE scenario (the "layer" brush of the DE editor: a second terrain painted over the base terrain of a tile, as a road or snow on grass): the ground blocks of the tile show the layer, the base terrain keeps the water and the shores (epic #3687)
+- [ ] `convert:rms-elevation` The hills of a random map script (`<ELEVATION_GENERATION>`, `create_elevation`): the land of a random map has the elevation of the script, as the hills of Arabia, not a flat land at elevation 0
+- [ ] `convert:rms-cliffs` The cliffs of a random map script (`<CLIFF_GENERATION>`: `min_number_of_cliffs`, `max_number_of_cliffs`, `min_length_of_cliff`, `cliff_curliness` ...): cliff lines on the land, as on Highland and Arabia
+- [ ] `convert:rms-connections` The connections of a random map script (`<CONNECTION_GENERATION>`: `create_connect_all_players_land`, `create_connect_teams_lands`, `replace_terrain`): the shallows across a river and the roads between the players come from the script, not from own tables
+- [ ] `convert:rms-objects` The objects of a random map script (`<OBJECTS_GENERATION>`, `create_object` with `number_of_objects`, `number_of_groups`, `set_place_for_every_player`, `min_distance_to_players`, `max_distance_to_players` ...): a script that the converter does not know places its own town centers, villagers, resources and animals
+- [ ] `convert:old-formats` Old scenarios of the other formats: The Age of Kings (`.scn`, format 1.18 to 1.20) and the HD Edition (`.aoe2scenario` of HD, format 1.22 and later) convert as the `.scx` scenarios of The Conquerors
 
 ## 2. Play AoE2 in Minecraft (`game/`)
 
@@ -72,18 +77,18 @@ can see which features have an epic: `gh api "repos/Larspolo/aoe2mc/issues?label
 - [x] `play:farm-reseed` Farm reseeds as in AoE2: the mill queues farms, and an exhausted farm is built again by its farmer when the player has the wood (#3283)
 - [x] `play:game-modes` The AoE2 game modes in the game setup: Regicide (a king per player), Death Match (large start resources), King of the Hill (hold the monument) and Empire Wars (a running start economy) (#2387, #2452, #2383, #2428)
 - [x] `play:formations` AoE2 formations for a selected group (line, box, staggered, flank): the units keep their places on the walk, and the slowest unit sets the speed (epic #3412)
-- [ ] `play:town-bell` The town bell as in AoE2: a click at the town center sends the villagers into the nearest own buildings, a second click lets them out
+- [x] `play:town-bell` The town bell as in AoE2: a click at the town center sends the villagers into the nearest own buildings, a second click lets them out (epic #3413)
 - [x] `play:delete` Delete an own unit or building as the AoE2 Delete key: the unit dies, the building falls down (epic #3450)
 - [x] `play:auto-gather` Villagers go on to work as in AoE2: a villager that builds a lumber camp, mining camp or mill gathers the nearest resource of that kind next, and the builder of a farm farms it (#3271)
 - [x] `play:co-op` Co-op as in AoE2: two or more Minecraft players control one AoE2 player (one civilization, one stock and population), each with an own selection (epic #3485)
 - [x] `play:unit-sounds` The AoE2 sounds of the units and buildings: a voice line when the player selects a unit and gives an order, the sound of a selected building, the age-up fanfare (epic #3498)
 - [ ] `play:campaign` Play a campaign in the game program: its scenarios in order, the next scenario after a victory, the intro and history texts of each scenario
 - [ ] `play:waypoints` Queued orders as in AoE2 (a shift click): a selected group walks to several points in a row, and a villager builds several construction sites one after the other
-- [ ] `play:auto-queue` The AoE2 DE auto-queue: a building trains one unit again and again while the player has the resources and the population, until the player stops it
-- [ ] `play:tech-tree` The AoE2 tech tree screen: the units, buildings and technologies of the own civilization by age and building, and the ones that the civilization does not have
+- [x] `play:auto-queue` The AoE2 DE auto-queue: a building trains one unit again and again while the player has the resources and the population, until the player stops it (epic #3522)
+- [x] `play:tech-tree` The AoE2 tech tree screen: the units, buildings and technologies of the own civilization by age and building, and the ones that the civilization does not have (epic #3531)
 - [x] `play:team-chat` The AoE2 chat targets: a chat line to all players, to the allies only or to one player, in the player color (Minecraft `/teammsg` and `/msg`) (epic #3552)
 - [ ] `play:antiquity` Antiquity Mode of AoE2 DE (Return of Rome): its civilizations, ages (Stone, Tool, Bronze, Iron Age), units and technologies in the game program (owner decision B, #3583)
-- [ ] `play:auto-scout` The AoE2 DE order "Auto Scout": a scout explores the map by itself, walks to the tiles that the player did not see yet, and turns away from the enemies
+- [x] `play:auto-scout` The AoE2 DE order "Auto Scout": a scout explores the map by itself, walks to the tiles that the player did not see yet, and turns away from the enemies (epic #3701)
 - [ ] `play:art-of-war` The AoE2 DE "Art of War" challenges: short training games with one goal and a time limit (early economy, booming, defend against a rush, wall in, micro), a gold, silver or bronze medal by the time
 
 ## 3. Replay a recorded game in Minecraft (`game/replay.py`, `aoe2mc.read_timeline`)
@@ -106,10 +111,10 @@ can see which features have an epic: `gh api "repos/Larspolo/aoe2mc/issues?label
 - [x] `replay:taunts` The taunts of the record (a chat line with a number) play their sound and show their text in the live replay (epic #2232)
 - [x] `replay:flares` The flares of the record (a player marks a place for the allies) show at their place in the live replay: a beacon light and a chat line in the player color (epic #2401)
 - [x] `replay:orders` The other orders of the record change the units of the live replay: stances, formations, patrol and the town bell (epic #2547)
-- [ ] `replay:production` A production panel of each player in the live replay, as the AoE2 DE replay overlay: the units in training and the technologies in research, with their progress
+- [x] `replay:production` A production panel of each player in the live replay, as the AoE2 DE replay overlay: the units in training and the technologies in research, with their progress (epic #2807)
 - [x] `replay:highlights` A list of the large fights of the record (where and when many units die): a jump to the time and the place of each fight (epic #2947)
 - [x] `replay:auto-camera` An automatic camera of the live replay, as a caster view: the spectator view moves by itself to the place with the most fights or the most new buildings (epic #3365)
-- [ ] `replay:graphs` Live graphs of the replay, as the statistics of the AoE2 DE replay overlay: the military, the economy and the population of each player over the game time
+- [x] `replay:graphs` Live graphs of the replay, as the statistics of the AoE2 DE replay overlay: the military, the economy and the population of each player over the game time (epic #3445)
 - [ ] `replay:army` The army of each player in the live replay, as the caster tool CaptureAge shows it: the number of units of each type, the units in training and the units lost
 - [ ] `replay:eco` The villagers of each player on food, wood, gold and stone and the idle villagers in the live replay, as the eco panel of CaptureAge
 - [ ] `replay:upgrades` The researched upgrades of each player in the live replay (blacksmith, economy, unit lines), as the upgrade row of CaptureAge: an upgrade shows when its research ends
@@ -120,7 +125,7 @@ can see which features have an epic: `gh api "repos/Larspolo/aoe2mc/issues?label
 Owner (2026-10-26): "reach the final goals efficiently while keeping up the quality and leaving behind a system to do
 other projects with". The `roadmap` skill makes no epics for this goal: the `improve` skill and the owner do.
 
-- [ ] `system:improve` The system improves itself in its own loop, over the whole system, and only where it pays (epic #908)
+- [x] `system:improve` The system improves itself in its own loop, over the whole system, and only where it pays (epic #908)
 - [x] `system:reuse` The system can be set up for another project (epic #909)
 - [x] `system:structure` The code stays easy to change: game data in data files, checks in place of rules (epic #1909)
 
