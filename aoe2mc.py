@@ -3213,12 +3213,16 @@ def damage_lines(e, c):
     """The commands of "Damage Object" (#2571): a `damage` of each unit of the effect (effect_units) by its amount.
     The amount is in AoE2 hit points: the game program gives each unit max_health = its AoE2 hit points
     (combat.stats_command); a vanilla world keeps the health of the mob. A negative amount heals, as in AoE2: the
-    commands of "Heal Object" (heal_commands, #2907)."""
+    commands of "Heal Object" (heal_commands, #2907). A building type: the order "damage <player> <building> <x1> <y1>
+    <x2> <y2> <amount>" (-1: the whole map) for game/scenario.py damage (#3776)."""
     q, stats = e.get("quantity") or 0, c.stats
     found = effect_units(e, c.T) if q else None
-    if found is None:
-        stats["damage (building, not supported yet)" if q else "damage (no amount)"] += 1
-        return []
+    if found is None:                                                  # a building: an order (#3776)
+        stats["damage (building)" if q else "damage (no amount)"] += 1
+        a, name = e.get("area", [-1] * 4), e["object"][1]
+        x0, y0, x1, y1 = (min(a[0], a[2]), min(a[1], a[3]), max(a[0], a[2]), max(a[1], a[3])) if min(a) >= 0 else [-1] * 4
+        return [f'data modify storage aoe2mc:orders list append value "damage {e["player"]} {name} {x0} {y0} {x1} {y1} {q}"'] * \
+            bool(q and e["player"] >= 0)
     stats["damage"] += 1                                               # Gaia: the tag aoe2mc.p0 (effect_units)
     if q < 0:
         return heal_commands(found, -q, c)
