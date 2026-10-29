@@ -131,8 +131,11 @@ class Bot:
         if not far or any(k > 0 for k in kept.values()):
             return kept
         half = max(min(math.dist(p, q) for q in foe) for p in own) / 2
-        return {t: k for t, k in sources.items()
-                if min(math.dist(((t[0] + 0.5) * T, (t[1] + 0.5) * T), q) for q in foe) >= half}
+        beyond = {t: k for t, k in sources.items()
+                  if min(math.dist(((t[0] + 0.5) * T, (t[1] + 0.5) * T), q) for q in foe) >= half}
+        if any(k > 0 for k in beyond.values()):
+            return beyond
+        return {t: k for t, k in sources.items() if k > 0}             # no source left: the next one, near the foe too (#3545)
 
     def step(self):
         """One tick of the gather game of the player, then the orders."""
