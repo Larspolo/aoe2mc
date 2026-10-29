@@ -36,6 +36,7 @@ RMAP = rows("rmap.jsonl")
 TERRAINS = {r["name"]: r["terrain"] for r in RMAP if "terrain" in r}
 OBJECTS = {r["name"]: r["object"] for r in RMAP if "object" in r}     # the object constants of random_map.def: AoE2 IDs
 FOREST_TREES = dict(sorted((t, r["name"]) for r in RMAP for t in r.get("forest", ())))
+CLIFF_TYPES = {r["name"]: r["cliff_type"] for r in RMAP if "cliff_type" in r}   # cliff_type word: object name prefix
 SHORE_FISH = next(r["name"] for r in RMAP if r.get("shore_fish"))
 SIZES = {1: 120, 2: 120, 3: 144, 4: 144, 5: 168, 6: 168, 7: 200, 8: 200}    # AoE2 map size of a player count
 LABELS = ((120, "TINY_MAP"), (144, "SMALL_MAP"), (168, "MEDIUM_MAP"), (200, "LARGE_MAP"), (220, "HUGE_MAP"))
@@ -559,9 +560,14 @@ def cliffs(cmds, terrain, starts, consts, rng, warn):
     or forest within min_terrain_distance, no player start area (base_size), no other line within min_distance_cliffs."""
     if not cmds:
         return []
-    o = dict(CLIFF_DEFAULTS)
+    o, kind = dict(CLIFF_DEFAULTS), "CLIFF_DEFAULT"
     for cmd, args, _ in cmds:
-        if cmd in o and args:
+        if cmd == "cliff_type" and args:
+            if args[0] in CLIFF_TYPES:
+                kind = CLIFF_TYPES[args[0]]
+            else:
+                warn(f"cliff_type {args[0]} has no cliff object: default cliffs")
+        elif cmd in o and args:
             o[cmd] = value(args[0], consts)
         else:
             warn(f"{cmd} is not read yet")
@@ -591,7 +597,7 @@ def cliffs(cmds, terrain, starts, consts, rng, warn):
         mask = np.zeros((n, n), bool)
         mask[tuple(np.array(line).T)] = True
         free &= ~dilate(mask, CLIFF_STEP + o["min_distance_cliffs"])
-    return [{"name": f"CLIFF_DEFAULT_{int(rng.integers(1, 10))}", "player": 0, "x": x + 0.5, "y": y + 0.5, "line": k}
+    return [{"name": f"{kind}_{int(rng.integers(1, 10))}", "player": 0, "x": x + 0.5, "y": y + 0.5, "line": k}
             for k, line in enumerate(out) for x, y in line]
 
 
