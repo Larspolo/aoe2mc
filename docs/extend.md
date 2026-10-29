@@ -36,6 +36,8 @@ parallel tickets do not change the same lines. Most rules have a check: `tools/d
   `if` block in `onCommand` go in alphabetical order of the command name, not after the last one (#795 and #813 conflicted).
 - A new game setting of `game/run.py` (a lobby setting, epic #2263) is one line in `run.SETTINGS` and an option of the
   same name, not a new keyword of `play()` (#2373).
+- A new part of the saved game is one function `(x, p)` or `(g, d)` and one line in `SIDE_STEPS` or `GAME_STEPS` of
+  `game/savegame.py`, not a new block in `load()` (#3484).
 - A new game mode (`--mode`) is one line in `game/data/setup.jsonl` (keys `"help"`, `"module"`, `"age"`, `"loaded"`,
   `"bots"`: `run.MODES`) and its module with `setup(g, mode)`, not a change of `play()` (#2521).
 - A new trigger effect of the converter is one line in `aoe2mc.EFFECTS` (its ID constant on its own line, both in

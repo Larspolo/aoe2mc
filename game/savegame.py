@@ -451,50 +451,78 @@ def relics(d, xs):
             for i in range(max(len(rs) for _, rs in lists))]
 
 
-def load(g, d):
-    """Put the saved state d (dump) on the Gather of each player that it names, and show the resources again."""
+def fields_again(x, p):
+    """The fields of Gather (FIELDS, PACKED, KEPT) and the technologies: the next tick shows the boss bars again."""
+    for f in FIELDS:
+        setattr(x, f, type(getattr(x, f))(p[f]))
+    x.techs = set(p["techs"])
+    for f in PACKED + KEPT:
+        if f in p and f != "relics":                                   # a save before #2257 has no queues
+            setattr(x, f, unpack(p[f]))
+
+
+def sites_again(x, p):
+    """The buildings work again: farms, drops, forts (#2980). Before the saved amounts, which win."""
     import build
-    import gather
-    import owners
+    for site in x.sites:
+        build.settle(x, site, loaded=True)
+
+
+def map_again(x, p):
+    """The amounts left on the map (#2453), in place: the bot shares these (#2983). A save before #2453 has no map."""
+    for f, v in p.get("map", {}).items():
+        m = getattr(x.map, f)
+        m.clear()
+        m.update(unpack(v))
+    for tile in [t for ts in x.map.mines.values() for t, n in ts.items() if n <= 0]:
+        x.map.emptied(x.map.spot(tile))                                # empty at the save: as Gather.dig, berries
+    for tile in [t for t, n in x.map.bushes.items() if n <= 0]:
+        x.map.emptied(x.map.cells(tile))
+
+
+def explored_again(x, p):
+    """The minimap: the next fog.tick sends it all."""
+    if "explored" in p:
+        fog = vars(x).setdefault("fog", {"hidden": set(), "at": None})
+        fog.pop("map", None)
+        fog["explored"] = {(tx, ty) for ty, x0, x1 in p["explored"] for tx in range(x0, x1 + 1)}
+
+
+def known_again(x, p):
+    """The seen buildings: fog.know after the load (#3079)."""
+    if "known" in p:
+        vars(x).setdefault("fog", {"hidden": set(), "at": None}).update(known={tuple(k) for k in p["known"]})
+
+
+def orders_again(x, p):
+    """The orders of the units (a save from before #2258 has none), the riders, and the sidebars (Gather.setup)."""
     import train
-    for x in sides(g):
-        p = d["players"].get(str(x.player))
-        if p is None:
-            continue
-        for f in FIELDS:
-            setattr(x, f, type(getattr(x, f))(p[f]))
-        x.techs = set(p["techs"])
-        for f in PACKED + KEPT:                                        # the next tick shows the boss bars again
-            if f in p and f != "relics":                               # a save before #2257 has no queues
-                setattr(x, f, unpack(p[f]))
-        for site in x.sites:                                           # the buildings work again: farms, drops, forts (#2980)
-            build.settle(x, site, loaded=True)                         # before the saved amounts, which win
-        for f, v in p.get("map", {}).items():                          # a save before #2453 has no map
-            m = getattr(x.map, f)                                      # in place: the bot shares these (#2983)
-            m.clear()
-            m.update(unpack(v))
-        for tile in [t for ts in x.map.mines.values() for t, n in ts.items() if n <= 0]:
-            x.map.emptied(x.map.spot(tile))                            # empty at the save: as Gather.dig, berries
-        for tile in [t for t, n in x.map.bushes.items() if n <= 0]:
-            x.map.emptied(x.map.cells(tile))
-        if "explored" in p:                                            # the minimap: the next fog.tick sends it all
-            fog = vars(x).setdefault("fog", {"hidden": set(), "at": None})
-            fog.pop("map", None)
-            fog["explored"] = {(tx, ty) for ty, x0, x1 in p["explored"] for tx in range(x0, x1 + 1)}
-        if "known" in p:                                               # the seen buildings: fog.know after the load (#3079)
-            vars(x).setdefault("fog", {"hidden": set(), "at": None}).update(known={tuple(k) for k in p["known"]})
-        if "villagers" in p:                                           # a save from before #2258 has no orders
-            give_orders(x, p)
-        board_again(x)
-        x.show_stock()                                                 # the sidebar of the resources (Gather.setup)
-        train.sidebar(x)
-    if (rs := relics(d, sides(g))) is not None:                        # in place: the sides share the list (#3116)
+    if "villagers" in p:
+        give_orders(x, p)
+    board_again(x)
+    x.show_stock()
+    train.sidebar(x)
+
+
+def relics_again(g, d):
+    """The one relic list, in place: the sides share the list (#3116)."""
+    if (rs := relics(d, sides(g))) is not None:
         for x in sides(g):
             x.relics[:] = [dict(r) for r in rs]
-    for b in bots(g):                                                  # its attack time and wave go on (#2325)
+
+
+def bots_again(g, d):
+    """The attack time and wave of each bot go on (#2325)."""
+    for b in bots(g):
         for f, v in d["players"].get(str(b.g.player), {}).get("bot", {}).items():
             setattr(b, f, v)
-    for n, row in d.get("stances", {}).items():                        # diplomacy.change (#2934)
+
+
+def stances_again(g, d):
+    """The stances of diplomacy.change (#2934), and the saved enemies and allies (#2996)."""
+    import gather
+    import owners
+    for n, row in d.get("stances", {}).items():
         p = g.players.setdefault(n, {})
         p.pop("team", None)
         p.pop("neutral", None)
@@ -503,13 +531,54 @@ def load(g, d):
     if "stances" in d:
         g.command(gather.allies_command(g.players))
         g.command(gather.neutral_command(g.players))
-        owners.update_enemies(g)                                       # the saved enemies and allies (#2996)
-    if "owners" in d:                                                  # converted and captured units (#2999)
+        owners.update_enemies(g)
+
+
+def owners_step(g, d):
+    """The converted and captured units (#2999)."""
+    if "owners" in d:
         owners_again(g, d["owners"])
-    for x in sides(g):                                                 # a razed building leaves the forts again (#2985)
+
+
+def razed_again(g, d):
+    """A razed building leaves the forts again (#2985): the first call frees it for all sides."""
+    for x in sides(g):
         for u in vars(x).get("razed", {}):
-            x.free(u)                                                  # the first call frees it for all sides
-    gates_again(g)                                                     # the sites are back: their bars and plugin gates (#2762)
+            x.free(u)
+
+
+def gates_step(g, d):
+    """The sites are back: their bars and plugin gates (#2762)."""
+    gates_again(g)
+
+
+SIDE_STEPS = (                                                          # load(): for each side, in this order
+    fields_again,
+    sites_again,                                                        # before the saved amounts of map_again, which win
+    map_again,
+    explored_again,
+    known_again,
+    orders_again,                                                       # last: the sidebars show the loaded state
+)
+GAME_STEPS = (                                                          # load(): once for the game, after SIDE_STEPS
+    relics_again,
+    bots_again,
+    stances_again,
+    owners_step,
+    razed_again,
+    gates_step,                                                         # last: after the razed buildings
+)
+
+
+def load(g, d):
+    """Put the saved state d (dump) on the Gather of each player that it names, and show the resources again. A new
+    part of the saved game: one function and one line in SIDE_STEPS or GAME_STEPS."""
+    for x in sides(g):
+        if (p := d["players"].get(str(x.player))) is not None:
+            for step in SIDE_STEPS:
+                step(x, p)
+    for step in GAME_STEPS:
+        step(g, d)
 
 
 def settings(a, d, given=()):
