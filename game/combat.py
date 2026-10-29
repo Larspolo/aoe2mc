@@ -210,15 +210,15 @@ BUILDING_SIGHT = {r["name"]: r["building_sight"] for r in UNIT_ROWS if "building
 FIGHTERS = {r["name"] for r in UNIT_ROWS if r.get("fighter")}   # no armor class, but fights as a soldier (#1995)
 
 
-def sight_command(uuid, name, T, s=None):
+def sight_command(uuid, name, T, s=None, more=0):
     """The plugin command that lets an idle soldier attack the nearest enemy unit in its line of sight (tiles * T
     blocks, #775), and the enemy buildings for the units of BUILDING_SIGHT (#1820). None for a unit that does not
     fight (villager, monk, king): no armor class, except the FIGHTERS (Furious the Monkey Boy, #1995) and the predators
-    (#3397)."""
+    (#3397). more: tiles of sight of the technologies (train.sight_more, #3981)."""
     s = s or stats(name)
     mode = f" {BUILDING_SIGHT[name]}" if name in BUILDING_SIGHT else ""
     fights = s.classes or name in FIGHTERS or predator(name)            # a predator of Gaia fights too (#3397)
-    return f"aoe sight {uuid} {sight(name, s) * T}{mode}" if fights and s.attack else None
+    return f"aoe sight {uuid} {(sight(name, s) + more) * T}{mode}" if fights and s.attack else None
 
 
 STANCES = ("aggressive", "defensive", "stand_ground", "no_attack")
