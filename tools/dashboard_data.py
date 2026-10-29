@@ -2,8 +2,8 @@
 
     python3 tools/dashboard_data.py OUT_DIR
 
-Writes aoe2mc-merged-prs.json, aoe2mc-tickets.json, aoe2mc-epics.json, aoe2mc-roadmap.json, aoe2mc-release-bar.json
-and aoe2mc-usage.json, and copies aoe2mc-setup.json (written by hand: tools/dashboard_artifact/setup.json). The page
+Writes aoe2mc-merged-prs.json, aoe2mc-tickets.json, aoe2mc-epics.json, aoe2mc-roadmap.json, aoe2mc-release-bar.json,
+aoe2mc-usage.json and aoe2mc-tokens.json, and copies aoe2mc-setup.json (written by hand: tools/dashboard_artifact/setup.json). The page
 reads them as data files: `tools/dashboard_site.py` builds the GitHub Pages site with them (#982).
 """
 import datetime as dt
@@ -17,7 +17,7 @@ import health  # noqa: E402
 
 DATASETS = {"merges": "aoe2mc-merged-prs.json", "tickets": "aoe2mc-tickets.json", "epics": "aoe2mc-epics.json",
             "roadmap": "aoe2mc-roadmap.json", "release_bar": "aoe2mc-release-bar.json", "usage": "aoe2mc-usage.json",
-            "setup": "aoe2mc-setup.json"}
+            "tokens": "aoe2mc-tokens.json", "setup": "aoe2mc-setup.json"}
 ROWS = re.compile(r"\s*\.(filter|find|some|every|forEach|map|flatMap|sort)\(\s*\(?\s*(\w+)(?:\s*,\s*(\w+))?\s*\)?\s*=>")
 
 GOALS = {"1": "convert", "2": "play", "3": "replay", "4": "system"}
@@ -162,6 +162,25 @@ def usage(hours=168, comments=None):   # 7 days: the chart "Merges per point of 
     return rows
 
 
+TOKEN_LINE = re.compile(r"^Tokens: (\d+(?:\.\d+)?)M eq · calls (\d+) · .*?· peak (\d+)k(?: .*?sinks base (\d+)%)?", re.M)
+RESULT = re.compile(r"^Metrics: ticket #\d+ · [^·]* · (merged|pr #\d+)", re.M)
+
+
+def tokens(hours=168, comments=None):
+    """The cost of each run report with a `Tokens:` line (tools/tokens.py): its M eq, calls, peak context in k tokens,
+    the share 0..1 of the sink `base` (None when not in the top sinks) and its PRs (the `Metrics:` lines with the
+    result `merged` or `pr #N`). The chart "Usage per merged PR" divides the eq by the PRs (owner, 2026-10-29)."""
+    comments = health.status_comments(hours=hours) if comments is None else comments
+    rows = []
+    for c in comments:
+        body = c.get("body") or ""
+        m = TOKEN_LINE.search(body)
+        if m and c.get("created_at"):
+            rows.append(dict(at=c["created_at"], eq=float(m[1]), calls=int(m[2]), peak=int(m[3]),
+                             base=int(m[4]) / 100 if m[4] else None, prs=len(RESULT.findall(body))))
+    return sorted(rows, key=lambda r: r["at"])
+
+
 def close(text, i):
     """The index after the parenthesis that closes the one before index i."""
     depth = 1
@@ -231,6 +250,7 @@ def main(out_dir):
         "aoe2mc-roadmap.json": roadmap(open(os.path.join(root, "docs", "ROADMAP.md")).read()),
         "aoe2mc-release-bar.json": release_bar(open(os.path.join(root, "docs", "RELEASE.md")).read()),
         "aoe2mc-usage.json": usage(),
+        "aoe2mc-tokens.json": tokens(),
         "aoe2mc-setup.json": json.load(open(os.path.join(root, "tools", "dashboard_artifact", "setup.json"))),
     }
     for name, rows in files.items():
