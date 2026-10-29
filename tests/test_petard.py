@@ -1,11 +1,11 @@
 """The castle trains the petard in the Castle Age (#2192, AoE2 DE wiki "Petard (Age of Empires II)"): one blast next
-to its target with the AoE2 damage (+900 vs. walls and gates, +100 vs. castles), then it dies. Fake server; an mc
-test on Paper."""
-import re
+to its target with the AoE2 damage (a bonus vs. walls, gates and castles), then it dies. Fake server; an mc test on
+Paper."""
 import shutil
 import time
 
 import pytest
+from menu_line import item
 from test_building_damage import hp
 from test_siege_walk import summon
 from test_train_castle import menus, setup
@@ -14,32 +14,22 @@ from game import ai, combat, train
 
 
 def test_the_castle_trains_the_petard_from_the_castle_age():
-    assert train.ITEMS["PETARD"][0] == train.MORE + 1
     server, g = setup(food=500, gold=500, ages=1)                      # the Feudal Age
     assert "PETARD" in train.trains(g, "CASTLE") and "PETARD" in train.trains(g, "KREPOST")
     train.open_menu(g, "Steve", (12, 4))
-    assert re.search(r"\b19:gray_dye:Petard:[^:]* · Needs the Castle Age", menus(server)[-1])
+    petard = item(menus(server)[-1], "Petard")
+    assert petard.split(":")[1] == train.build.LOCKED and petard.endswith(" · Needs the Castle Age")
     assert train.queue(g, "Steve", (12, 4), "PETARD") is None
     server, g = setup(food=500, gold=500)                              # the Castle Age
     assert train.queue(g, "Steve", (12, 4), "PETARD")
     assert {r: 500 - g.stock[r] for r in train.COSTS["PETARD"]} == train.COSTS["PETARD"]
 
 
-def test_the_petard_gets_the_wiki_bonus_against_walls_and_castles():
-    s = combat.stats("PETARD")
-    for name, age, hit in (("STONE_WALL", 2, 25 - 8 + 500 + 900), ("GATE", 2, 25 - 6 + 500 + 900),
-                           ("PALISADE_WALL", 1, 25 - 2 + 500 + 900)):
-        w = combat.wall(name, age)
-        assert max(0, s.attack - w.melee) + sum(s.bonus.get(c, 0) for c in w.classes) == hit, name
-    assert combat.damage("PETARD", "CASTLE") == 25 - 8 + 500 + 100
-    assert combat.damage("PETARD", "HOUSE") == 25 + 500
-    assert combat.damage("PETARD", "MANGONEL") == 25 + 60
-    assert combat.damage("PETARD", "MILITIA") == 25
-
-
 def test_the_petard_blasts_next_to_its_target():
-    assert combat.BLAST["PETARD"] == 0.5                               # the wiki infobox: AOE 0.5
-    assert combat.range_command("u", "PETARD", 4).split()[3:] == ["4.0", str(round(2.0 / combat.NORMAL * 20)), "2.0"]
+    s = combat.stats("PETARD")
+    assert s.range == 0 and "PETARD" in combat.BLAST                   # no range: the reach of a contact blast
+    assert combat.range_command("u", "PETARD", 4).split()[3:] == \
+        [str(combat.CONTACT * 4), str(round(s.reload / combat.NORMAL * 20)), str(combat.BLAST["PETARD"] * 4)]
 
 
 @pytest.mark.mc
@@ -58,9 +48,11 @@ def test_a_petard_breaks_a_wall_with_one_blast_and_dies(tiny_world, tmp_path):
         for t in ("p1", "p2"):
             game.command(f"team add {t}")
         uuid = combat.target_uuid([16, 8, 20, 12])
-        for c in combat.building(uuid, "STONE_WALL", 2, box, s=combat.wall("STONE_WALL", 2)):
+        wall = combat.wall("STONE_WALL", 2)
+        full, hit = wall.hp, combat.damage("PETARD", "STONE_WALL", t=wall)
+        for c in combat.building(uuid, "STONE_WALL", 2, box, s=wall):
             game.command(c)
-        assert hp(game, uuid) == 1800
+        assert hp(game, uuid) == full
         assert "Summoned" in summon(game, "PETARD", 4.5, y, 9.5, "p")
         p = "@e[tag=p,limit=1]"
         game.command(f"team join p1 {p}")
@@ -69,9 +61,9 @@ def test_a_petard_breaks_a_wall_with_one_blast_and_dies(tiny_world, tmp_path):
         game.command(ai.speed_command(p, "PETARD", 4))
         assert game.command(f"aoe attack {p} {uuid}").strip() == "Attack: 1 units"
         end = time.time() + 30
-        while time.time() < end and hp(game, uuid) == 1800:
+        while time.time() < end and hp(game, uuid) == full:
             time.sleep(0.2)
         time.sleep(3)                                                  # no second blast
-        assert hp(game, uuid) == 1800 - (25 - 8 + 500 + 900)
+        assert hp(game, uuid) == full - hit
         assert "Test failed" in game.command(f"execute if entity {p}")    # it died in its blast
         assert "Test passed" in game.command(f"execute if block 10 {y - 1} 9 stone_bricks")   # no vanilla explosion

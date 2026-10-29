@@ -11,6 +11,7 @@ from test_gather import grid
 from game import fleet, gather, run, train
 
 DOCK = (14, 17, 11, 14)                                                # block footprint (x0, x1, z0, z1)
+SALMON = gather.FISH_FOOD["FISH_SALMON"]                               # the food of a salmon in the data
 
 
 def fish_map(food=None):
@@ -30,8 +31,8 @@ def fish_map(food=None):
     if food is not None:
         g.map.fish[20, 12] = food
     rect = train.open_menu(g, "Steve", (15, 12))
-    assert train.order(g, "Steve", rect, 0) == 1
-    uuid, = train.tick(g, 40)
+    assert train.order(g, "Steve", rect, train.slots("DOCK", "FISHING_SHIP")[0]) == 1
+    uuid, = train.tick(g, train.TRAIN_TIMES["FISHING_SHIP"])
     return server, g, uuid
 
 
@@ -46,29 +47,29 @@ def test_the_map_knows_the_own_docks_and_the_fish_mobs():
     assert g.map.fish_mobs == {(20, 12): "salmon", (21, 14): "salmon", (14, 3): "cod"}
 
 
-def test_a_ship_gathers_at_the_aoe2_rate_and_carries_15_food():
+def test_a_ship_gathers_at_the_aoe2_rate_and_carries_one_load():
     server, g, uuid = fish_map()
     v = g.ships[uuid]
     assert fleet.fish(g, {uuid}, (20, 12)) == {uuid}
     play(g, 10)                                                         # it sails there (about 4 tiles at 1.26 tiles/s)
     assert v.state == "chop" and v.cell in fleet.spots(g, (20, 12))
     load, food = v.load, g.map.fish[20, 12]
-    play(g, 10)                                                         # 0.42 food per game second (AoE2 DE wiki)
-    assert v.load - load in (4, 5) and food - g.map.fish[20, 12] == v.load - load
+    play(g, 10)
+    assert abs(v.load - load - 10 * fleet.rate(g, (20, 12))) <= 1 and food - g.map.fish[20, 12] == v.load - load
     assert any("entity.fishing_bobber.splash" in c for c in server.log)
     play(g, 30)
-    assert v.load <= fleet.CARRY == 15 and g.map.fish[20, 12] == 225 - 15 - v.load * (v.state == "chop")
+    assert v.load <= fleet.CARRY and g.map.fish[20, 12] == SALMON - fleet.CARRY - v.load * (v.state == "chop")
 
 
-def test_the_shore_fish_is_slower():
+def test_a_ship_gathers_the_shore_fish_at_its_rate():
     server, g, uuid = fish_map()
     v = g.ships[uuid]
     fleet.fish(g, {uuid}, (14, 3))
     play(g, 30)
     assert v.state == "chop"
     load = v.load
-    play(g, 25)                                                         # 0.24 food per game second: 6 in 25 s
-    assert v.load - load in (5, 6, 7)
+    play(g, 25)
+    assert abs(v.load - load - 25 * fleet.rate(g, (14, 3))) <= 1
 
 
 def test_a_full_ship_drops_the_food_at_the_dock_and_sails_back():
@@ -79,15 +80,15 @@ def test_a_full_ship_drops_the_food_at_the_dock_and_sails_back():
         fleet.tick(g, 0.25)
         if v.state == "to_drop":
             break
-    assert v.load == 15 and g.map.fish[20, 12] == 210
+    assert v.load == fleet.CARRY and g.map.fish[20, 12] == SALMON - fleet.CARRY
     goal = v.path[-1]
     assert any(goal in g.map.around(c, water=True) for c in g.map.docks)
     for _ in range(60):
         fleet.tick(g, 0.25)
         if v.state != "to_drop":
             break
-    assert g.stock["food"] == food + 15 and v.load == 0 and v.tree == (20, 12) and v.state == "to_tree"
-    assert f"scoreboard players add Food {g.board} 15" in server.log
+    assert g.stock["food"] == food + fleet.CARRY and v.load == 0 and v.tree == (20, 12) and v.state == "to_tree"
+    assert f"scoreboard players add Food {g.board} {fleet.CARRY}" in server.log
     play(g, 10)
     assert v.state == "chop"
 

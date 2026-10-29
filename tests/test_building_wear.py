@@ -69,7 +69,8 @@ def test_a_building_wears_in_six_stages_and_a_repair_puts_the_blocks_back(tiny_w
         full = blocks(game, box)
         assert full[10, y + 1, 10] == "chest" and full[9, y + 1, 9] == "barrier"
         stages = [full]
-        for hp in (450, 380, 300, 220, 150, 60):                       # 82 %, 69 %, 55 %, 40 %, 27 %, 11 % of 550
+        top = combat.BUILDINGS["HOUSE"].hp
+        for hp in (round(top * f) for f in (0.82, 0.69, 0.55, 0.40, 0.27, 0.11)):   # one in each stage
             game.command(f"scoreboard players set {uuid} aoe_hp {hp}")
             stages.append(settle(game, box, stages[-1]))
         gone = [sum(b[p] in ("air", "cobweb") and full[p] != "air" for p in b) for b in stages]
@@ -83,9 +84,9 @@ def test_a_building_wears_in_six_stages_and_a_repair_puts_the_blocks_back(tiny_w
             holes = {p[1] for p in changed(full, b) if b[p] in ("air", "cobweb")}
             assert min(holes) <= y + 2 and max(holes) == y + 5            # not from the top only, as a construction site
         assert "cobweb" in stages[-1].values() and "cobweb" not in stages[-2].values()
-        game.command(f"scoreboard players set {uuid} aoe_hp 300")      # a repair to 55 %: the blocks of stages 4-6
+        game.command(f"scoreboard players set {uuid} aoe_hp {round(top * 0.55)}")   # a repair to 55 %: stages 4-6 back
         assert settle(game, box, stages[-1]) == stages[3]
-        game.command(f"scoreboard players set {uuid} aoe_hp 550")      # full
+        game.command(f"scoreboard players set {uuid} aoe_hp {top}")    # full
         assert settle(game, box, stages[3]) == full
         errors = [ln for ln in game.server.log[start:] if re.search(r"Exception|/ERROR\]|Could not pass event", ln)
                   and "minecraftservices.com" not in ln]                   # no Mojang hosts here: not the plugin

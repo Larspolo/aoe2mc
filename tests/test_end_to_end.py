@@ -86,7 +86,7 @@ def test_objects_file(tiny_world):
     assert blds and all(len(o["footprint"]) == 4 for o in blds)
     tc, = [o for o in blds if o["name"] == "TOWN_CENTER"]
     x0, z0, x1, z1 = tc["footprint"]
-    assert x1 - x0 == z1 - z0 == 16 and x0 <= tc["tile"][0] * 4 <= x1
+    assert x1 - x0 == z1 - z0 == aoe2mc.buildings.footprint("TOWN_CENTER") * 4 and x0 <= tc["tile"][0] * 4 <= x1
     ground = [row.split() for row in data["ground"]]                # y where a unit stands, "-" for water (#138)
     assert len(ground) == len(ground[0]) == data["map_size"] * 4 and any("-" in row for row in ground)
     stand = [(int(float(e["Pos"][1])), ground[int(float(e["Pos"][2]))][int(float(e["Pos"][0]))])

@@ -6,11 +6,13 @@ import sys
 import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "game"))
+import aoe2mc  # noqa: E402
 import replay  # noqa: E402
 from test_replay import Fake, data  # noqa: E402
 
 TC = {"kind": "building", "name": "TOWN_CENTER", "player": 1, "ref": 5, "tile": [8.0, 8.0], "footprint": [26, 26, 38, 38]}
-# Town center 5: 1 villager (25 s), Loom (25 s), 2 villagers.
+V, L = aoe2mc.train_ms("VILLAGER_MALE"), replay.RESEARCH_S["Loom"] * 1000   # ms of the data
+# Town center 5: 1 villager, Loom, 2 villagers.
 TIMELINE = [{"time": 0, "player": 1, "kind": "queue", "type": 83, "objects": [5], "name": "VILLAGER_MALE"},
             {"time": 1000, "player": 1, "kind": "research", "objects": [5], "technology": "Loom"},
             {"time": 2000, "player": 1, "kind": "queue", "type": 83, "objects": [5], "name": "VILLAGER_MALE",
@@ -29,7 +31,7 @@ def test_the_first_unit_shows_with_its_queue_and_a_progress_bar():
     assert summon.startswith("summon text_display 32.0 ") and "aoe2mc.panel.5" in summon
     assert '"text": "Villager [..........]", "color": "blue"' in summon
     assert r.panel(900) == []                                        # no change: no command
-    (merge,) = r.panel(12500)
+    (merge,) = r.panel(V // 2)
     assert merge.startswith("data merge entity @e[type=text_display,tag=aoe2mc.panel.5,limit=1] ")
     assert "Villager \\u00d73 [|||||.....]" in merge
 
@@ -37,11 +39,11 @@ def test_the_first_unit_shows_with_its_queue_and_a_progress_bar():
 def test_the_panel_changes_at_the_end_of_an_item_and_goes_when_empty():
     r = make()
     r.panel(500)
-    (merge,) = r.panel(30000)
+    (merge,) = r.panel(V + L // 5)
     assert '"Loom [||........]"' in merge
-    assert "Villager \\u00d72 [|" in r.panel(62500)[0]
-    assert r.panel(100000) == ["kill @e[type=text_display,tag=aoe2mc.panel.5]"]
-    assert r.panel(110000) == []
+    assert "Villager \\u00d72 [|" in r.panel(V + L + V // 2)[0]
+    assert r.panel(3 * V + L) == ["kill @e[type=text_display,tag=aoe2mc.panel.5]"]
+    assert r.panel(3 * V + L + 10000) == []
 
 
 def test_the_run_kills_each_panel_at_the_end():
@@ -68,7 +70,7 @@ def test_the_panel_commands_run_on_a_server(tiny_world, tmp_path):
     with run.Game(world) as game:
         game.command("forceload add 0 0 63 63")
         sel = "@e[type=text_display,tag=aoe2mc.panel.5,limit=1]"
-        for t, shown in ((500, "Villager"), (12500, "Villager"), (30000, "Loom"), (100000, None)):
+        for t, shown in ((500, "Villager"), (V // 2, "Villager"), (V + L // 5, "Loom"), (3 * V + L, None)):
             for c in r.panel(t):
                 out = game.command(c)
                 assert not any(w in out for w in ("Unknown", "Incorrect", "Expected", "No entity")), (c, out)

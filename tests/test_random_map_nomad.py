@@ -11,7 +11,7 @@ T = rmap.TERRAINS
 
 @pytest.mark.parametrize("players", [2, 4])
 @pytest.mark.parametrize("seed", range(1, 11))
-def test_no_town_center_and_three_villagers_apart_and_a_sea(seed, players):
+def test_no_town_center_and_the_start_villagers_apart_and_a_sea(seed, players):
     d = rmap.random_map("nomad", seed, players)
     t = np.array(d["terrain"])
     n = t.shape[0]
@@ -19,7 +19,7 @@ def test_no_town_center_and_three_villagers_apart_and_a_sea(seed, players):
     assert t[n // 2, n // 2] != T["WATER"] and (t == T["WATER"]).mean() >= 0.15        # land in the middle (#2336)
     for p in range(1, players + 1):
         vils = [(o["x"], o["y"]) for o in d["objects"] if o["name"].startswith("VILLAGER") and o["player"] == p]
-        assert len(vils) == 3
+        assert len(vils) == sum(c for name, c, *_ in rmap.START if name.startswith("VILLAGER"))
         assert all(np.hypot(a[0] - b[0], a[1] - b[1]) >= 6 for a, b in combinations(vils, 2))
 
 

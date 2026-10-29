@@ -48,14 +48,11 @@ def test_a_macedonian_switches_the_doctrine_of_each_building_type(building):
     name = f"{building}_RECRUITMENT_DOCTRINE"
     stock = dict(g.stock)
     assert train.queue(g, 1, cell(building), name) and g.stock == stock and not g.queues.get(rect(building))   # free, at once
-    conscript, slow = values(g, building)
-    assert conscript == {r: int(v * (0.85 if r in ("food", "wood") else 1) + 0.5) for r, v in cost.items()}
-    assert slow == pytest.approx(time * 1.5)
-    train.queue(g, 1, cell(building), name)
-    mercenary, fast = values(g, building)
-    assert mercenary == {r: int(v * (1.1 if r in ("food", "wood") else 1) + 0.5) for r, v in cost.items()}
-    assert fast == pytest.approx(time * 0.5)
-    train.queue(g, 1, cell(building), name)
+    for k in (1, 2):                                                   # Conscript, then Mercenary: the factors of the data
+        _, f, t = train.doctrine(g, building, k)
+        assert values(g, building) == ({r: int(v * (f if r in ("food", "wood") else 1) + 0.5) for r, v in cost.items()},
+                                       pytest.approx(time * t))
+        train.queue(g, 1, cell(building), name)
     assert values(g, building) == (cost, time)                         # Balanced again
     others = [b for b in HOMES if b != building]
     assert all(values(g, b) == values(game()[1], b) for b in others)   # each building type has its own
@@ -65,12 +62,14 @@ def test_a_macedonian_switches_the_doctrine_of_each_building_type(building):
 def test_a_queued_unit_keeps_the_time_of_its_doctrine():
     server, g = game()
     train.queue(g, 1, cell("BARRACKS"), "BARRACKS_RECRUITMENT_DOCTRINE")   # Conscript
+    cost, time = values(g, "BARRACKS")
     assert train.queue(g, 1, cell("BARRACKS"), "MILITIA")
     paid = g.queues[rect("BARRACKS")][0]
-    assert paid["doctrine"] == 1 and paid["paid"] == {"food": 43, "gold": 20}
+    assert paid["doctrine"] == 1 and paid["paid"] == cost
     train.queue(g, 1, cell("BARRACKS"), "BARRACKS_RECRUITMENT_DOCTRINE")   # Mercenary: not for the queued one
-    train.tick(g, 21 * 1.5 - 1)
-    assert g.queues[rect("BARRACKS")][0]["progress"] < 1               # 31.5 s of Conscript, not 10.5 s
+    assert values(g, "BARRACKS")[1] < time
+    train.tick(g, time - 1)
+    assert g.queues[rect("BARRACKS")][0]["progress"] < 1               # the time of Conscript, not of Mercenary
 
 
 def test_another_civilization_has_no_doctrine():

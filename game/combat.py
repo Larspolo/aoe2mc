@@ -69,7 +69,7 @@ BUILDINGS = {k: s._replace(classes=s.classes + (STONE,)) if k.endswith("_TOWER")
 WATCH = 4    # tiles of line of sight that Town Watch adds to each own building but walls, gates, farms, fish traps (#1454)
 # Line of sight in tiles (AoE2 DE, wiki infobox "LOS"; the house: 1 from the edge of its 2 x 2 tiles, #1300) where it
 # is not max(4, range + 2) (sight()). A unit of more ages has its first value; the infantry values have the +2 of the
-# Feudal Age, as the infobox shows them (tests/test_unit_sight.py, #1878). The key "sight" of a line in the data files (#1913).
+# Feudal Age, as the infobox shows them (#1878). The key "sight" of a line in the data files (#1913).
 SIGHT = {r["name"]: r["sight"] for r in UNIT_ROWS + BUILDING_ROWS if "sight" in r}
 # Units that attack from a range with melee damage (AoE2): their hit takes the melee armor of the target (#800).
 # The key "melee_ranged" of a line of data/units.jsonl.

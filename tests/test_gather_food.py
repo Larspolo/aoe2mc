@@ -106,7 +106,7 @@ def test_villager_forages_on_a_server(tmp_path):
         while g.map.bushes[bush] > 0 or g.villagers[uuid].state != "idle":
             assert time.time() < end, "the bush is not empty after 180 s"
             g.step()
-        assert "has 125 " in game.command("scoreboard players get Food aoe_res")
+        assert f"has {gather.BUSH_FOOD} " in game.command("scoreboard players get Food aoe_res")
         T = g.map.T
         x, z = bush[0] * T, bush[1] * T                                # a berry bush of the ring (#590)
         y = min(g.map.y(*c) for c in g.map.around(g.map.cells(bush)))

@@ -1,5 +1,5 @@
-"""game/repair.py: selected villagers repair an own damaged siege unit, as in AoE2 DE (#1331): 25 % of the building
-rate (187.5 hit points per AoE2 minute, 93.75 for each other villager), for half the training cost."""
+"""game/repair.py: selected villagers repair an own damaged siege unit, as in AoE2 DE (#1331): a share of the building
+rate (repair.SIEGE), for half the training cost."""
 import re
 
 import pytest
@@ -51,18 +51,17 @@ def test_a_villager_repairs_a_damaged_ram_to_its_full_hit_points_and_pays_half_t
         g.step()
         steps += 1
     assert server.health["ram"] == RAM and g.villagers["v0"].state == "idle"
-    full = train.price(g, "BATTERING_RAM")                            # 160 wood, 75 gold: half for all hit points
+    full = train.price(g, "BATTERING_RAM")                            # half for all hit points
     assert 100 - g.stock["wood"] == int(full["wood"] / 2 * 35 / RAM) and 100 - g.stock["gold"] == int(full["gold"] / 2 * 35 / RAM)
 
 
 def test_the_siege_rate_of_one_and_of_two_villagers():
-    assert (repair.RATE * repair.SIEGE * 60, repair.MORE * repair.SIEGE * 60) == (187.5, 93.75)   # AoE2 wiki
     server, g = setup(hp=50.0, n=2)
     repair.unit_order(g, "Steve", "ram")
     for v in g.villagers.values():
         v.state = "repair"
     repair.tick(g, 8.0)
-    assert server.health["ram"] == 50 + (187.5 + 93.75) / 60 * 8
+    assert server.health["ram"] == pytest.approx(50 + (repair.RATE + repair.MORE) * repair.SIEGE * 8)
 
 
 def test_a_ram_that_moves_stops_the_repair():
@@ -93,8 +92,8 @@ def test_no_repair_of_a_full_ram_or_without_villagers_and_a_click_on_it():
 
 @pytest.mark.mc
 def test_siege_repair_on_a_server(tmp_path):
-    """A villager walks to its damaged battering ram (100 of 175 hit points: the Health of its crew) and repairs it on
-    a Paper server, and pays 80 wood and 37.5 gold × 75 / 175."""
+    """A villager walks to its damaged battering ram (75 hit points less than the full hit points: the Health of its
+    crew) and repairs it on a Paper server, and pays half the training cost × 75 / the full hit points."""
     from test_mc_check import mojang_reachable
     if not mojang_reachable():
         pytest.skip("Mojang is not reachable")
@@ -124,7 +123,7 @@ def test_siege_repair_on_a_server(tmp_path):
         g = gather.Gather(game, data, tick=0.25, start={"wood": 100, "gold": 100}).setup()
         ram, = [u for u, n in g.soldiers.items() if n == "BATTERING_RAM"]
         assert repair.unit_hp(g, ram) == (RAM, RAM)
-        game.command(repair.crew(ram) + "data modify entity @s Health set value 100.0f")
+        game.command(repair.crew(ram) + f"data modify entity @s Health set value {float(RAM - 75)}f")
         g.choose(set(g.villagers), min(g.villagers))
         assert repair.unit_order(g, "nobody", ram)
         end = time.time() + 120
@@ -132,4 +131,6 @@ def test_siege_repair_on_a_server(tmp_path):
             assert time.time() < end, ({u: (v.state, g.pos(u)) for u, v in g.villagers.items()}, repair.unit_hp(g, ram))
             g.step()
             time.sleep(g.tick)
-        assert (100 - g.stock["wood"], 100 - g.stock["gold"]) == (34, 16) and all(v.state == "idle" for v in g.villagers.values())
+        full = train.price(g, "BATTERING_RAM")
+        assert (100 - g.stock["wood"], 100 - g.stock["gold"]) == (int(full["wood"] / 2 * 75 / RAM), int(full["gold"] / 2 * 75 / RAM))
+        assert all(v.state == "idle" for v in g.villagers.values())

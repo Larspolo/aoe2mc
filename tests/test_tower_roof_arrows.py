@@ -42,4 +42,5 @@ def test_tower_and_castle_hit_a_near_enemy(tmp_path):
         time.sleep(6)
         hp = {t: float(game.command(f"data get entity {u} Health").rsplit(" ", 1)[-1].rstrip("f"))
               for t, u in enemies.items()}
-    assert hp[16] <= 1000 - 4 and hp[32] <= 1000 - 50, hp     # tower: 5 - 1 per arrow, castle: 5 arrows of 11 - 1
+    tower, castle = (combat.stats(n).attack - 1 for n in ("WATCH_TOWER", "CASTLE"))   # an arrow: attack - pierce armor 1
+    assert hp[16] <= 1000 - tower and hp[32] <= 1000 - castle, hp

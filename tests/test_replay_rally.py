@@ -35,12 +35,12 @@ def play(timeline, end, ai=False, to=None):
 def test_a_villager_of_a_town_center_with_a_gather_point_on_a_tree_chops_it(ai):
     r = play([point(), queue()], 120000, ai)
     v, = [v for i, v in r.units.items() if i < 0]
-    assert r.map.trees[(10, 4)] < 100 and -1 in r.working and v.tree == (10, 4)
+    assert r.map.trees[(10, 4)] < gather.TREE_WOOD and -1 in r.working and v.tree == (10, 4)
 
 
 @pytest.mark.parametrize("ai", [False, True])
 def test_a_jump_counts_the_wood_of_the_gather_point(ai):
-    end = 200000                                                       # the tree has 100 wood
+    end = 200000                                                       # the tree has TREE_WOOD wood
     r = play([point(), queue()], end + 1000, ai, to=end)
     wood = r.gathered.get(1, {}).get("wood", 0)
     rate = gather.AOE2_WORK["wood"]

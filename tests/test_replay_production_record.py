@@ -9,7 +9,7 @@ from test_replay import Fake, data  # noqa: E402
 
 REC = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "samples", "de-64.3.aoe2record")
 TOWN_CENTER = 1652          # player 2, at 92, 29: the first villager queue (0:00.9) and the Loom (6:34.6)
-UNIT_TIME = 13936           # ms: the first villager of the town center is half done (25 s from 936 ms)
+UNIT_TIME = 936 + aoe2mc.train_ms("VILLAGER_MALE") // 2   # ms: the first villager (from 936 ms) is half done
 RESEARCH_TIME = 470000      # ms: the Loom of the town center is in research (from 464077 ms, after the villagers)
 
 

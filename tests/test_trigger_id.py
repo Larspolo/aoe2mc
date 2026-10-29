@@ -20,8 +20,6 @@ def test_no_generic_file_has_a_trigger_id():
     assert found == []
 
 
-def test_agent_toml_has_the_trigger_and_a_new_project_an_empty_one():
-    with open(os.path.join(ROOT, "agent.toml"), "rb") as f:
-        assert ID.fullmatch(tomllib.load(f)["pacing"]["trigger"])
+def test_a_new_project_gets_an_empty_trigger():
     new = tomllib.loads(bootstrap.CONFIG_TOML.format(repo="me/demo", owner="me", branch="main"))
     assert new["pacing"]["trigger"] == ""

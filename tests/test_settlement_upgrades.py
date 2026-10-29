@@ -5,7 +5,7 @@ import pytest
 from test_folwark import complete, polish
 from test_settlement_bonuses import age
 
-from game import train
+from game import civs, train
 
 
 def test_the_upgrades_have_one_slot_per_line_after_the_units():
@@ -34,6 +34,6 @@ def test_a_mapuche_settlement_researches_pikeman_in_the_barracks_time():
 
 
 def test_other_civilizations_research_no_upgrades_at_a_settlement():
-    server, g = polish("INCAS")
+    server, g = polish(next(r["name"] for r in civs.ROWS if "SETTLEMENT" not in civs.TRAINS.get(r["name"], {})))
     age(g, 3)
     assert not {"PIKEMAN_UPGRADE", "ELITE_SKIRMISHER_UPGRADE"} & set(train.trains(g, "SETTLEMENT"))

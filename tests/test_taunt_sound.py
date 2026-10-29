@@ -5,21 +5,24 @@ from test_replay import Fake, data
 
 from game import replay
 
+SOUND = sorted(replay.TAUNT_SOUNDS, key=int)                           # the taunts of the data with a sound
+TEXT = [n for n in sorted(replay.TAUNTS, key=int) if n not in replay.TAUNT_SOUNDS]   # and with only a text
+
 
 def chat(text):
     return replay.Replay(Fake(), data([])).commands({"time": 0, "player": 2, "kind": "chat", "text": text})
 
 
 def test_a_taunt_with_a_sound_plays_it_after_the_text():
-    out = chat("1")
-    assert out[0].startswith("tellraw @a ") and "Yes." in out[0]
-    assert out[1:] == ["playsound minecraft:entity.villager.yes master @a ~ ~ ~ 1 1 1"]
-    assert chat("30 lol")[1:] == ["playsound minecraft:entity.evoker.prepare_wololo master @a ~ ~ ~ 1 1 1"]
+    n = SOUND[0]
+    out = chat(n)
+    assert out[0].startswith("tellraw @a ") and replay.TAUNTS[n].strip("()") in out[0]
+    assert out[1:] == [f"playsound minecraft:{replay.TAUNT_SOUNDS[n]} master @a ~ ~ ~ 1 1 1"]
+    assert chat(f"{SOUND[-1]} lol")[1:] == [f"playsound minecraft:{replay.TAUNT_SOUNDS[SOUND[-1]]} master @a ~ ~ ~ 1 1 1"]
 
 
 def test_a_taunt_with_no_sound_and_other_chat_give_only_the_text():
-    assert "sound" not in [r for r in replay.table.load("taunts.jsonl") if r["name"] == "14"][0]
-    for text in ("14", "hello", "106"):
+    for text in (TEXT[0], "hello", str(max(map(int, replay.TAUNTS)) + 1)):
         assert len(chat(text)) == 1 and chat(text)[0].startswith("tellraw @a ")
 
 

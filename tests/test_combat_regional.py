@@ -15,7 +15,7 @@ def test_each_regional_unit_has_values_and_a_valid_command():
         assert COMMAND.match(combat.stats_command("u", name)), name
 
 
-def test_gunpowder_bonus_hits_the_gunpowder_units():
-    assert combat.damage("CONDOTTIERO", "JANISSARY") == 10 - 1 + 10
-    assert combat.damage("WINGED_HUSSAR", "BOMBARD_CANNON") == 9 - 2 + 4
-    assert combat.damage("SLINGER", "MILITIA") == 4 - 1 + 4
+def test_the_bonus_hits_its_target_class():
+    for attacker, target in (("CONDOTTIERO", "JANISSARY"), ("WINGED_HUSSAR", "BOMBARD_CANNON"), ("SLINGER", "MILITIA")):
+        t = combat.stats(target)
+        assert combat.damage(attacker, target) > combat.damage(attacker, target, t=t._replace(classes=())), attacker

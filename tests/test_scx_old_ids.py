@@ -16,13 +16,6 @@ def scenario(tmp_path):
                  {1: (1, 1, (6.0, 6.0))}, objects=OLD)
 
 
-def test_old_ids_get_de_names(tmp_path):
-    objects = aoe2mc.read_scx(str(scenario(tmp_path)))[5]
-    assert sorted((o["id"], o["kind"], o["name"]) for o in objects) == [
-        (59, "O", "FORAGE_BUSH"), (87, "B", "ARCHERY_RANGE"), (102, "O", "STONE_MINE"), (162, "O", "INVISIBLE_OBJECT"),
-        (809, "O", "STUMP"), (809, "O", "STUMP")]                     # FLAGX (162): invisible, skipped (#772)
-
-
 def test_convert_places_the_old_objects(tmp_path):
     out = io.StringIO()
     with contextlib.redirect_stdout(out):

@@ -4,7 +4,7 @@ server of test_gather, the town map of test_empire_wars."""
 import pytest
 from test_empire_wars import town_map
 
-from game import build, civs, start_buildings
+from game import start_buildings
 
 
 def georgian(civ="GEORGIANS"):
@@ -39,12 +39,6 @@ def test_a_georgian_villager_drops_wood_and_gold_at_the_mule_cart():
             if g.stock[res] > before:
                 break
         assert g.stock[res] > before
-
-
-def test_the_georgian_build_menu_has_no_lumber_or_mining_camp():
-    g = georgian()
-    assert civs.missing(g, "LUMBER_CAMP") and civs.missing(g, "MINING_CAMP") and not civs.missing(g, "MULE_CART")
-    assert "MULE_CART" in build.MENU
 
 
 @pytest.mark.parametrize("civ", ["FRANKS", "ARMENIANS", None])

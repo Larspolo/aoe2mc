@@ -95,8 +95,9 @@ def test_a_click_on_the_animal_sends_the_villager_to_hunt():
 
 
 def test_food_of_the_animals():
-    assert [gather.hunt_food(n) for n in ("SHEEP", "DEER", "WILD_BOAR", "COW_B", "WOLF", "VILLAGER_MALE")] == \
-        [100, 140, 340, 150, 0, 0]
+    assert all(gather.hunt_food(n) == gather.HUNT_FOOD[n] > 0 for n in ("SHEEP", "DEER", "WILD_BOAR"))
+    assert gather.hunt_food("COW_B") == gather.HUNT_FOOD["COW"]         # each cow color has the food of a cow
+    assert gather.hunt_food("WOLF") == gather.hunt_food("VILLAGER_MALE") == 0
 
 
 def test_an_enemy_sheep_and_a_wolf_are_no_prey():
@@ -125,7 +126,7 @@ def test_a_villager_hunts_a_deer_and_aegis_kills_a_sheep_on_paper(tmp_path):
     with contextlib.redirect_stdout(io.StringIO()):
         aoe2mc.convert(str(tmp_path / "m.json"), str(tmp_path / "W"))
     data = json.load(open(tmp_path / "W" / "aoe2mc.json"))
-    data["players"]["1"]["civ"] = "JURCHENS"                          # no decay (#2310): the villager gets all 140 food
+    data["players"]["1"]["civ"] = "JURCHENS"                          # no decay (#2310): the villager gets all the food
     deer, sheep = (next(o["uuid"] for o in data["objects"] if o["name"] == n) for n in ("DEER", "SHEEP"))
     with run.Game(tmp_path / "W") as game:
         game.forceload()
@@ -142,7 +143,7 @@ def test_a_villager_hunts_a_deer_and_aegis_kills_a_sheep_on_paper(tmp_path):
             assert time.time() < end, f"the hunt did not end: {g.villagers[uuid].state} {g.map.carcasses}"
             g.step()
         assert "passed" not in game.command(f"execute if entity {deer}")
-        assert "has 140 " in game.command("scoreboard players get Food aoe_res")
+        assert f"has {gather.HUNT_FOOD['DEER']} " in game.command("scoreboard players get Food aoe_res")
         sent, command = [], game.command
         game.command = lambda c: sent.append(c) or command(c)
         g.aegis = True

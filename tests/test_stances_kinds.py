@@ -23,11 +23,6 @@ KINDS = {"zombie": "MILITIA", "skeleton": "ARCHER", "horse": "SCOUT_CAVALRY", "s
 NO_RETURN = {"PETARD": "it dies in its blast, as in AoE2"}   # defensive: no unit to come back
 
 
-def test_each_kind_is_the_converter_kind_of_its_unit():
-    assert all(str(units.classify(n)["id"]) == "minecraft:" + k for k, n in KINDS.items())
-    assert all(combat.stats(n).attack for n in KINDS.values())
-
-
 def summon(game, name, pos, tag):
     """The converter's entity of unit name (with its horse, crew or cart) at pos: tag on each part, tag + "r" on the
     root (the unit of the stats and the stance commands)."""

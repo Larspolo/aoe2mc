@@ -9,7 +9,6 @@ import numpy as np
 import aoe2mc
 from test_forging import menus, setup
 from test_scenario_patrol import trigger
-from tools import triggers
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "game"))
 import scenario  # noqa: E402
@@ -68,8 +67,3 @@ def test_disable_stacking_keeps_one_research():
     train.open_menu(g, "Steve", (11, 3))
     assert ":Forging:" not in menus(server)[-1]
 
-
-def test_the_map_rows_name_the_command_and_the_issue():
-    for kind in ("ENABLE_TECHNOLOGY_STACKING", "DISABLE_TECHNOLOGY_STACKING"):
-        row = triggers.MAP[("effect", kind)]
-        assert "aoe2mc:menus" in row and "#2866" in row

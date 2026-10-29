@@ -25,9 +25,6 @@ def test_a_taunt_with_text_after_the_number_is_that_taunt():
 
 
 def test_other_chat_lines_stay_as_they_are():
-    for text in ("hello", "gl hf", "106", "0", "11haha", "lol 11"):
+    after = str(max(map(int, replay.TAUNTS)) + 1)                    # a number after the last taunt
+    for text in ("hello", "gl hf", after, "0", "11haha", "lol 11"):
         assert chat(text) == text
-
-
-def test_the_list_has_the_105_taunts_of_aoe2():
-    assert all(str(n) in replay.TAUNTS for n in range(1, 106))

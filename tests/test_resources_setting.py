@@ -5,9 +5,6 @@ from test_gather import FakeServer, grid
 
 from game import gather, run
 
-WIKI = {"standard": (200, 200, 100, 200), "low": (200, 200, 100, 200), "medium": (500, 500, 300, 400),
-        "high": (1000, 1000, 700, 800), "ultra": (20000, 20000, 10000, 5000)}      # food, wood, gold, stone
-
 
 def stock(civ=None, **kw):
     data = grid([[64] * 8 for _ in range(8)], [])
@@ -16,13 +13,15 @@ def stock(civ=None, **kw):
     return gather.Gather(FakeServer({}), data, **kw).stock
 
 
-def test_each_level_gives_the_wiki_resources():
-    for level, (food, wood, gold, stone) in WIKI.items():
-        assert stock(resources=level) == {"food": food, "wood": wood, "gold": gold, "stone": stone}, level
+def test_each_level_gives_its_resources():
+    for level, want in gather.LEVELS.items():
+        assert dict(stock(resources=level)) == want, level
 
 
 def test_the_civilization_bonus_comes_on_top():
-    assert stock("CHINESE", resources="high") == {"food": 800, "wood": 950, "gold": 700, "stone": 800}
+    base, civ = stock(resources="high"), stock("CHINESE", resources="high")
+    assert civ != base                                                  # the same bonus at each level
+    assert {k: civ[k] - base[k] for k in base} == {k: stock("CHINESE")[k] - stock()[k] for k in base}
 
 
 def test_standard_is_the_start_of_today():

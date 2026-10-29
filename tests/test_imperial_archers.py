@@ -1,7 +1,7 @@
 """Arbalester and Heavy Cavalry Archer (#1500): the archery range researches both upgrades in the Imperial Age, the
-arbalester in the slot of Crossbowman after it, the heavy cavalry archer in slot 6 (the UpCost and UpTime of the AoE2 DE
-wiki infoboxes "Crossbowman" and "Cavalry Archer": 450 food, 350 gold, 50 s; 900 food, 500 gold, 50 s). Then the live
-units of the line are the new units, and the archery range trains them."""
+arbalester in the slot of Crossbowman after it (the UpCost and UpTime of the AoE2 DE wiki infoboxes "Crossbowman" and
+"Cavalry Archer"). Then the live units of the line are the new units, and the archery range trains them."""
+from menu_line import item
 from test_castle_upgrades import RANGE, research
 from test_forging import menus
 from test_gather import FakeServer, grid
@@ -24,22 +24,14 @@ def setup(ages=IMPERIAL, techs=("CROSSBOWMAN_UPGRADE",)):
     return server, g
 
 
-def test_the_values_are_those_of_aoe2():
-    assert train.BY_KEY["after"]["ARBALESTER_UPGRADE"] == "CROSSBOWMAN_UPGRADE"
-    for old, new in (("CROSSBOWMAN", "ARBALESTER"), ("CAVALRY_ARCHER", "HEAVY_CAVALRY_ARCHER")):
-        assert train.COSTS[new] == train.COSTS[old] and train.TRAIN_TIMES[new] == train.TRAIN_TIMES[old]
-    assert all(len(train.HELP[n]) <= 50 for n in ("ARBALESTER_UPGRADE", "HEAVY_CAVALRY_ARCHER_UPGRADE"))
-
-
 def test_the_upgrades_are_in_the_menu_in_the_imperial_age():
     server, g = setup(ages=IMPERIAL[:2])
     train.open_menu(g, "Steve", RANGE)
     assert ":Arbalester:" not in menus(server)[-1] and ":Heavy Cavalry Archer:" not in menus(server)[-1]
     g.techs.add("IMPERIAL_AGE")
     train.open_menu(g, "Steve", RANGE)
-    menu = menus(server)[-1] + " "
-    assert " 2:book:Arbalester:450 food · 350 gold · 50 s · research " in menu
-    assert " 6:book:Heavy Cavalry Archer:900 food · 500 gold · 50 s · research " in menu
+    menu = menus(server)[-1]
+    assert item(menu, "Arbalester").endswith(" · research") and item(menu, "Heavy Cavalry Archer").endswith(" · research")
     server, g = setup(techs=())
     train.open_menu(g, "Steve", RANGE)
     assert ":book:Arbalester:" not in menus(server)[-1]                # not before Crossbowman
@@ -55,8 +47,7 @@ def test_the_live_units_and_the_archery_range_get_the_new_units():
         assert combat.label_command(u, unit) in server.log
     train.open_menu(g, "Steve", RANGE)
     menu = menus(server)[-1]
-    assert "0:skeleton_spawn_egg:Arbalester:25 wood · 45 gold · 27 s · queue" in menu
-    assert "4:skeleton_horse_spawn_egg:Heavy Cavalry Archer:40 wood · 60 gold" in menu
+    assert item(menu, "Arbalester").endswith(" · queue 0/15") and item(menu, "Heavy Cavalry Archer").endswith(" · queue 0/15")
     assert ":Crossbowman:" not in menu and ":Cavalry Archer:" not in menu
     assert train.queue(g, "Steve", RANGE, "ARBALESTER") and train.queue(g, "Steve", RANGE, "HEAVY_CAVALRY_ARCHER")
     assert train.queue(g, "Steve", RANGE, "CROSSBOWMAN") is None

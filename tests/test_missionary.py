@@ -1,15 +1,16 @@
-"""Missionary (#1939): the monastery of the Spanish trains the missionary in the Castle Age (30 food, 100 gold, 51 s),
-with the values of the AoE2 DE wiki "Missionary": 30 hit points, line of sight 9, speed 1.1, conversion range 7. A mounted monk: it
-heals, converts and carries relics as a monk."""
+"""Missionary (#1939): the monastery of the Spanish trains the missionary in the Castle Age, with the values of the AoE2
+DE wiki "Missionary". A mounted monk: it heals, converts in its own range (monk.MONKS) and carries relics as a monk."""
 import pytest
+from menu_line import item
 from test_gather import FakeServer, grid
 from test_monk_heal import HealServer
 from test_train_castle import menus
 
-import units
-from game import ai, build, gather, monk, train
+import buildings
+from game import build, gather, monk, train
 
 MONASTERY = (12, 4)
+WITH = min(set(buildings.CIV_TO_ARCH) - set(train.civs.MISSING["MISSIONARY"]))   # the Spanish
 
 
 def setup(civ, food=30, gold=100):
@@ -24,23 +25,15 @@ def setup(civ, food=30, gold=100):
     return server, g
 
 
-def test_the_values_are_those_of_aoe2():
-    assert len(train.HELP["MISSIONARY"]) <= 50
-    assert monk.MONKS["MISSIONARY"] == 7
-    assert ai.walk_speed("MISSIONARY", 1, 1) == pytest.approx(1.1)
-    assert "SPANISH" not in train.civs.MISSING["MISSIONARY"] and "BRITONS" in train.civs.MISSING["MISSIONARY"]
-    e = units.classify("MISSIONARY")
-    assert str(e["id"]) == "minecraft:horse" and str(e["Passengers"][0]["id"]) == "minecraft:evoker"   # a rider
-
-
 def test_the_monastery_of_the_spanish_trains_the_missionary():
-    server, g = setup("SPANISH")
+    server, g = setup(WITH, food=1000, gold=1000)
     rect = train.open_menu(g, "Steve", MONASTERY)
-    assert " 21:horse_spawn_egg:Missionary:30 food · 100 gold · 51 s " in menus(server)[-1] + " "
-    assert train.order(g, "Steve", rect, 21) == 1 and g.queues[rect][0]["name"] == "MISSIONARY"
-    uuid, = train.tick(g, 51)
+    slot = train.SLOTS["MISSIONARY"]
+    assert item(menus(server)[-1], "Missionary").startswith(f"{slot}:")
+    assert train.order(g, "Steve", rect, slot) == 1 and g.queues[rect][0]["name"] == "MISSIONARY"
+    uuid, = train.tick(g, train.seconds(g, "MISSIONARY", "MONASTERY"))
     assert g.soldiers[uuid] == "MISSIONARY" and uuid not in g.villagers   # it does not gather
-    server, g = setup("BRITONS")
+    server, g = setup(min(train.civs.MISSING["MISSIONARY"]))
     train.open_menu(g, "Steve", MONASTERY)
     assert "Missionary" not in menus(server)[-1]
 
@@ -62,13 +55,14 @@ def test_the_missionary_heals():
     assert server.entities["a"]["Health"] == pytest.approx(10 + 4 * monk.RATE)
 
 
-def test_the_missionary_converts_in_7_tiles_not_9():
-    ents = {"m": {"Pos": (5.5, 64.0, 5.5)}, "foe": {"Pos": (13.5, 64.0, 5.5)}}
-    server, g = units_map(FakeServer, [("foe", "MILITIA", 2, 13.5)], ents)
+def test_the_missionary_converts_in_its_own_range():
+    x = 5.5 + monk.MONKS["MISSIONARY"] + 1                            # 1 tile out of its range
+    ents = {"m": {"Pos": (5.5, 64.0, 5.5)}, "foe": {"Pos": (x, 64.0, 5.5)}}
+    server, g = units_map(FakeServer, [("foe", "MILITIA", 2, x)], ents)
     assert monk.convert_order(g, {"m"}, "foe")
     monk.convert(g, 1.0)
-    assert "foe" in g.enemies and any(c.startswith("aoe moveto m ") for c in server.log)   # 8 tiles: it walks
-    server.entities["m"]["Pos"] = (7.0, 64.0, 5.5)                    # 6.5 tiles: it converts
+    assert "foe" in g.enemies and any(c.startswith("aoe moveto m ") for c in server.log)   # out of range: it walks
+    server.entities["m"]["Pos"] = (7.0, 64.0, 5.5)                    # 1.5 tiles nearer: in range, it converts
     for _ in range(80):
         monk.convert(g, 0.25)
     assert "foe" not in g.enemies and "foe" in g.soldiers

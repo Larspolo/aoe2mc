@@ -1,8 +1,11 @@
-"""game/train.py: the population limit is 5 per complete own town center and house, at most 200; at the limit the
+"""game/train.py: the population limit is the room (train.HOUSING) of the complete own town centers and
+houses, at most train.LIMIT; at the limit the
 queue waits, and the sidebar shows the population and the limit (#613)."""
 from test_gather import FakeServer, grid
 
 from game import gather, train
+
+TC, HOUSE = train.HOUSING["TOWN_CENTER"], train.HOUSING["HOUSE"]
 
 
 def setup(houses=0, food=1000):
@@ -29,21 +32,21 @@ def train_all(g, server, seconds):
     return out
 
 
-def test_the_limit_is_5_per_own_town_center_and_house_and_at_most_200():
+def test_the_limit_is_the_room_of_the_own_town_centers_and_houses_up_to_the_limit():
     server, g = setup(houses=2)
-    assert train.limit(g) == 15                                        # the house of player 2 gives nothing
+    assert train.limit(g) == TC + 2 * HOUSE                            # the house of player 2 gives nothing
     g.sites.append({"name": "HOUSE", "player": 1, "footprint": [0, 2, 20, 22], "progress": 0.5})
-    assert train.limit(g) == 15                                        # a construction site gives nothing
+    assert train.limit(g) == TC + 2 * HOUSE                            # a construction site gives nothing
     g.sites[0]["done"] = True
-    assert train.limit(g) == 20
-    _, g = setup(houses=45)
-    assert train.limit(g) == train.LIMIT == 200
+    assert train.limit(g) == TC + 3 * HOUSE
+    _, g = setup(houses=train.LIMIT // HOUSE + 1)
+    assert train.limit(g) == train.LIMIT
 
 
 def test_the_sidebar_shows_the_population_and_the_limit():
     server, g = setup()
     assert "scoreboard players set Population aoe_res 1" in server.log
-    assert "scoreboard players set Limit aoe_res 5" in server.log
+    assert f"scoreboard players set Limit aoe_res {TC}" in server.log
     train.queue(g, "Steve", (3, 3))
     train_all(g, server, train.TRAIN_TIMES["VILLAGER_MALE"])
     assert server.log[-1] == "scoreboard players set Population aoe_res 2"
@@ -53,16 +56,16 @@ def test_the_sidebar_shows_the_population_and_the_limit():
 
 
 def test_the_queue_waits_at_the_limit_until_a_house_is_complete():
-    server, g = setup()
-    for _ in range(6):
+    server, g = setup(food=1000 * train.COSTS["VILLAGER_MALE"]["food"])
+    for _ in range(TC + 1):
         train.queue(g, "Steve", (3, 3))
-    assert len(train_all(g, server, 6 * train.TRAIN_TIMES["VILLAGER_MALE"])) == 4      # 1 + 4 = the limit 5
-    assert g.pop == 5 and len(g.queues[2, 5, 2, 5]) == 2 and g.queues[2, 5, 2, 5][0]["progress"] == 0
-    said = [c for c in server.log if c.startswith("tellraw Steve") and "limit (5/5)" in c]
+    assert len(train_all(g, server, (TC + 1) * train.TRAIN_TIMES["VILLAGER_MALE"])) == TC - 1   # 1 + new = the limit
+    assert g.pop == TC and len(g.queues[2, 5, 2, 5]) == 2 and g.queues[2, 5, 2, 5][0]["progress"] == 0
+    said = [c for c in server.log if c.startswith("tellraw Steve") and f"limit ({TC}/{TC})" in c]
     assert len(said) == 1 and "build more houses" in said[0]          # once, not each tick
     g.sites.append({"name": "HOUSE", "player": 1, "footprint": [0, 2, 20, 22], "progress": 1.0, "done": True})
     new = train_all(g, server, 2 * train.TRAIN_TIMES["VILLAGER_MALE"])
-    assert len(new) == 2 and g.pop == 7 and "scoreboard players set Limit aoe_res 10" in server.log
+    assert len(new) == 2 and g.pop == TC + 2 and f"scoreboard players set Limit aoe_res {TC + HOUSE}" in server.log
 
 
 def test_two_town_centers_do_not_train_past_the_limit():
@@ -70,7 +73,8 @@ def test_two_town_centers_do_not_train_past_the_limit():
     g.data["objects"].append({"kind": "building", "name": "TOWN_CENTER", "player": 1, "tile": [15.5, 3.5],
                               "footprint": [14, 2, 17, 5]})
     train.census(g)
-    for cell in [(3, 3), (15, 3)] * 6:
+    g.stock["food"] = 1000 * train.COSTS["VILLAGER_MALE"]["food"]
+    for cell in [(3, 3), (15, 3)] * (TC + 1):
         train.queue(g, "Steve", cell)
-    train_all(g, server, 10 * train.TRAIN_TIMES["VILLAGER_MALE"])
-    assert g.pop == train.limit(g) == 10 and len(g.villagers) == 10
+    train_all(g, server, 2 * (TC + 1) * train.TRAIN_TIMES["VILLAGER_MALE"])
+    assert g.pop == train.limit(g) == 2 * TC and len(g.villagers) == 2 * TC

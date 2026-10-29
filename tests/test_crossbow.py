@@ -31,12 +31,13 @@ def test_arbalester_shoots_with_a_crossbow(tiny_world, tmp_path):
         game.command(combat.stats_command("@e[tag=a,limit=1]", "ARBALESTER"))
         game.command("aoe stats @e[tag=t,limit=1] 1000 0 0 0 0 infantry -")
         assert game.command("aoe attack @e[tag=a] @e[tag=t,limit=1]").strip() == "Attack: 1 units"
+        hits = 2 * combat.damage("ARBALESTER", "MILITIA", t=combat.Stats(1000, 0, 0, 0, 0, 0, {}, ("infantry",))) + 1
         start, end = 1000.0, time.time() + 40
-        while time.time() < end and (data(game, "t", "Health") or [start])[0] > start - 15:
+        while time.time() < end and (data(game, "t", "Health") or [start])[0] > start - hits:
             time.sleep(0.2)
         health = (data(game, "t", "Health") or [start])[0]
         hand = game.command("data get entity @e[tag=a,limit=1] equipment.mainhand.id")
         log = "\n".join(game.server.log)
     assert "Entity threw exception" not in log
-    assert health <= start - 15, health       # several arrows hit: the unit stayed and shot again
+    assert health <= start - hits, health     # several arrows hit: the unit stayed and shot again
     assert "minecraft:crossbow" in hand, hand

@@ -201,10 +201,11 @@ def test_chinese_garden_objects():
 def test_last_animals_get_a_mob():
     """Whales, howler monkeys and butterflies are mobs; a beached whale is not (#299)."""
     import units
-    assert [aoe2mc.object_mob(n) for n in ("WHALE", "HOWLER_MONKEY", "BEACHED_WHALE")] == ["dolphin", "ocelot", None]
+    mobs = [aoe2mc.object_mob(n) for n in ("WHALE", "HOWLER_MONKEY")]
+    assert all(mobs) and aoe2mc.object_mob("BEACHED_WHALE") is None
     for n in ("BUTTERFLY1", "BUTTERFLY2", "BUTTERFLY3"):
         assert units.classify(n)["id"] == "minecraft:bee" and units.classify(n)["NoGravity"] == 1, n
-    for kind in ("dolphin", "ocelot", "bee"):
+    for kind in (*mobs, "bee"):
         assert mcvalid.entity_error("minecraft:" + kind) is None, kind
     cols = aoe2mc.Columns(16, np.zeros((16, 16), np.int16), np.zeros((16, 16), np.float32),
                           {0: "GRASS_1"}, 4, 3, np.random.default_rng(1))

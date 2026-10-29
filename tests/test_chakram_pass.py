@@ -14,12 +14,16 @@ from test_siege_walk import summon
 def test_the_range_command_gives_the_pass_with_the_full_damage(name):
     words = combat.range_command("u", name, 4).split()
     assert words[3] == str(combat.stats(name).range * 4)
-    assert words[5:] == ["-", "0", "8", "1.0"]     # no blast (the mob throws), no minimum range, 2 tiles, all the damage
+    # no blast (the mob throws), the minimum range, the pass in blocks, the part of the damage
+    assert words[5:] == ["-", str(combat.MIN_RANGE.get(name, 0) * 4), str(combat.PASS[name] * 4),
+                         str(combat.PASS_PART[name])]
 
 
 def test_the_scorpion_keeps_half_the_damage():
-    assert combat.range_command("u", "SCORPION", 4).split()[5:] == ["0", "8", "8"]
-    assert "SCORPION" not in combat.PASS_PART
+    words = combat.range_command("u", "SCORPION", 4).split()
+    part = [str(combat.PASS_PART["SCORPION"])] if "SCORPION" in combat.PASS_PART else []   # none: one half
+    assert words[5:] == [str(combat.BLAST.get("SCORPION", 0) * 4), str(combat.MIN_RANGE.get("SCORPION", 0) * 4),
+                         str(combat.PASS["SCORPION"] * 4)] + part
 
 
 @pytest.mark.mc
@@ -56,6 +60,7 @@ def test_a_chakram_hurts_the_enemy_militia_on_its_line(tiny_world, tmp_path):
         game.command(f"aoe stop {c}")                                             # no second throw
         time.sleep(2)                                                             # the chakram reaches m1
         hp = {t[0]: (data(game, t[0], "Health") or [None])[0] for t in units}
-        assert hp["m1"] == 1000.0 - 3, hp                                         # 3 attack - 0 melee armor
-        assert hp["m2"] == hp["m3"] == 1000.0 - 3, hp                             # the full damage behind the target
+        d = combat.damage("CHAKRAM_THROWER", "MILITIA", t=combat.Stats(1000, 4, 0, 1, 0, 0, {}, ("infantry",)))
+        assert hp["m1"] == 1000.0 - d, hp                                         # the attack - 0 melee armor
+        assert hp["m2"] == hp["m3"] == 1000.0 - d, hp                             # the full damage behind the target
         assert hp["o"] == hp["f"] == hp["b"] == 1000.0, hp                         # no own unit, off the line, too far

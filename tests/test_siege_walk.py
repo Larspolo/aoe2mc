@@ -13,11 +13,6 @@ import units
 from game import ai, run
 
 
-def test_siege_units_are_minecarts():
-    assert all(units.siege(n) for n in ("BATTERING_RAM", "COBRA_CAR", "MANGONEL", "TREBUCHET"))
-    assert not any(units.siege(n) for n in ("MILITIA", "KNIGHT", "WAR_GALLEY", "PETARD", "VILLAGER_MALE", "WAR_WAGON"))
-
-
 def test_the_speed_of_a_siege_unit_goes_through_the_plugin():
     assert ai.speed_command("u", "BATTERING_RAM", 4) == f"aoe speed u {ai.movement_speed('BATTERING_RAM', 4)}"
     assert ai.speed_command("u", "MILITIA", 4).startswith("attribute u minecraft:movement_speed base set ")

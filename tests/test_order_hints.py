@@ -10,8 +10,6 @@ def test_each_pending_order_has_its_own_hint(monkeypatch):
     for order in ("attack_move", "follow", "guard", "patrol"):
         g.ordering = {"Steve": order}
         assert hints.state(g, "Steve") == (order, hints.TEXTS[order])
-    assert hints.TEXTS["follow"] == "Follow: right click an own or allied unit"
-    assert hints.TEXTS["attack_move"] == "Attack Move: right click the ground"
 
 
 def test_a_follow_of_a_unit_sends_the_order_marker_on_the_target(monkeypatch):

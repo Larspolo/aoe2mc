@@ -52,21 +52,24 @@ def labels(g, building):
     return [label for _, label in order(g, building)]
 
 
+ARCHER, SKIRMISHER, FLETCHING = (train.ITEMS[n][2] for n in ("ARCHER", "SKIRMISHER", "FLETCHING"))
+
+
 def test_a_disabled_unit_leaves_the_menu_and_comes_back():
     _, g = setup("BRITONS")
-    assert "Archer" in labels(g, "ARCHERY_RANGE")
+    assert ARCHER in labels(g, "ARCHERY_RANGE")
     log = menus(g, '["1 ARCHER off", "2 SKIRMISHER off"]')
     assert f"data remove storage {scenario.MENUS} list" in log
-    assert "Archer" not in labels(g, "ARCHERY_RANGE") and "Skirmisher" in labels(g, "ARCHERY_RANGE")
+    assert ARCHER not in labels(g, "ARCHERY_RANGE") and SKIRMISHER in labels(g, "ARCHERY_RANGE")
     menus(g, '["1 ARCHER on"]')
-    assert "Archer" in labels(g, "ARCHERY_RANGE")
+    assert ARCHER in labels(g, "ARCHERY_RANGE")
 
 
 def test_a_disabled_technology_is_not_in_the_menu():
     _, g = setup("BRITONS")
     assert train.unlocked(g, "FLETCHING")
     menus(g, '["1 FLETCHING off"]')
-    assert not train.unlocked(g, "FLETCHING") and "Fletching" not in labels(g, "BLACKSMITH")
+    assert not train.unlocked(g, "FLETCHING") and FLETCHING not in labels(g, "BLACKSMITH")
 
 
 def test_an_enabled_technology_needs_no_age():

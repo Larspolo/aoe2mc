@@ -1,11 +1,12 @@
-"""game/train.py: the barracks has the Man-at-Arms upgrade in the Feudal Age (a book, 100 food and 40 gold, 40 AoE2
-seconds). After the research the live militia of the player are men-at-arms (name and values), and the barracks trains
-men-at-arms instead of militia, as in AoE2 (#941)."""
+"""game/train.py: the barracks has the Man-at-Arms upgrade in the Feudal Age (a book). After the research the live
+militia of the player are men-at-arms (name and values), and the barracks trains men-at-arms instead of militia, as in
+AoE2 (#941)."""
 import contextlib
 import io
 import json
 
 import pytest
+from menu_line import item
 from test_forging import menus, setup
 
 from game import combat, gather, run, train
@@ -13,7 +14,7 @@ from game import combat, gather, run, train
 BARRACKS = (17, 3)
 
 
-def feudal(food=100, gold=40):
+def feudal(food=1000, gold=1000):
     server, g = setup(food=food)
     g.stock.update(gold=gold)
     g.techs.add("FEUDAL_AGE")
@@ -22,7 +23,7 @@ def feudal(food=100, gold=40):
 
 def research(g):
     rect = train.open_menu(g, "Steve", BARRACKS)
-    assert train.order(g, "Steve", rect, 2) == 1
+    assert train.order(g, "Steve", rect, train.SLOTS["MAN_AT_ARMS_UPGRADE"]) == 1
     train.tick(g, train.TRAIN_TIMES["MAN_AT_ARMS_UPGRADE"])
     return rect
 
@@ -38,7 +39,8 @@ def test_no_upgrade_in_the_dark_age():
 def test_the_barracks_menu_has_the_upgrade_in_the_feudal_age():
     server, g = feudal()
     train.open_menu(g, "Steve", BARRACKS)
-    assert " 2:book:Man-at-Arms:100 food · 40 gold · 40 s · research " in menus(server)[-1] + " "
+    assert item(menus(server)[-1], "Man-at-Arms").split(":")[1] == "book"
+    assert item(menus(server)[-1], "Man-at-Arms").endswith(" · research")
 
 
 def test_the_live_militia_becomes_a_man_at_arms():
@@ -52,11 +54,11 @@ def test_the_live_militia_becomes_a_man_at_arms():
 
 
 def test_the_barracks_trains_men_at_arms_after_the_upgrade():
-    server, g = feudal(food=160, gold=60)
+    server, g = feudal()
     rect = research(g)
     train.open_menu(g, "Steve", BARRACKS)
     menu = menus(server)[-1]
-    assert " 0:zombie_spawn_egg:Man-at-Arms:50 food · 20 gold · 21 s · queue " in menu
+    assert item(menu, "Man-at-Arms").endswith(" · queue 0/15")
     assert ":Militia:" not in menu and ":book:Man-at-Arms" not in menu                     # the upgrade only once
     assert train.queue(g, "Steve", BARRACKS, "MILITIA") is None
     assert train.queue(g, "Steve", BARRACKS, "MAN_AT_ARMS") == rect
@@ -89,13 +91,13 @@ def test_a_live_militia_gets_the_name_and_values_on_a_server(tmp_path):
         g = gather.Gather(game, data, tick=0.25, start={}).setup()
         uuid, = [u for u, n in g.soldiers.items() if n == "MILITIA"]
         g.techs.add("FEUDAL_AGE")
-        g.stock.update(food=100, gold=40)
+        g.stock.update(food=1000, gold=1000)
         rect, = train.homes(g)
         assert train.queue(g, "nobody", rect[::2], "MAN_AT_ARMS_UPGRADE")
         train.tick(g, train.TRAIN_TIMES["MAN_AT_ARMS_UPGRADE"])
         assert g.soldiers[uuid] == "MAN_AT_ARMS"
         hp = game.command(f"attribute {uuid} minecraft:max_health get")
-        assert hp.rstrip().endswith(" 45.0") or " 45" in hp, hp                 # AoE2: 45 hit points
+        assert f" {train.stats(g, 'MAN_AT_ARMS').hp}" in hp, hp                 # the AoE2 hit points
         game.command(f"aoe label {uuid}")
         name = game.command(f"data get entity {uuid} CustomName")
         assert "Man At Arms" in name and "Militia" not in name, name

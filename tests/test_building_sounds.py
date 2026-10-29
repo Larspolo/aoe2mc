@@ -42,5 +42,4 @@ def test_an_enemy_building_and_a_building_with_no_line_play_no_sound():
 def test_each_building_sound_is_a_building_and_a_valid_sound():
     buildings = {r["name"] for r in table.load("buildings.jsonl")}
     rows = [r for r in table.load("sounds.jsonl") if r["name"].isupper()]
-    assert {r["name"] for r in rows} >= {"TOWN_CENTER", "STABLE", "BLACKSMITH"}
     assert all(r["name"] in buildings and mcvalid.sound_error(r["select"]) is None for r in rows)

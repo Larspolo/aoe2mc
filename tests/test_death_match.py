@@ -1,5 +1,5 @@
 """#2438: `run.py --play --mode death-match` is the AoE2 DE game mode "Death Match" (wiki "Deathmatch"): each player and
-bot starts with 20000 food, 20000 wood, 10000 gold and 5000 stone, by default in the Post-Imperial Age."""
+bot starts with the resources of the "level" of the mode (game/data/setup.jsonl)."""
 from test_gather import FakeServer, grid
 
 from game import gather, run, table, train
@@ -9,27 +9,30 @@ def settings(**given):
     return run.mode_defaults({**run.SETTINGS, **given})
 
 
-def test_death_match_starts_with_the_ultra_resources_in_the_post_imperial_age():
+LEVEL = run.MODES["death-match"]["level"]
+
+
+def test_death_match_starts_with_the_resources_of_its_level():
     s = settings(mode="death-match")
-    assert s["resources"] == "ultra" and run.MODES["death-match"]["age"] == "post-imperial"
-    assert gather.LEVELS["ultra"] == {"food": 20000, "wood": 20000, "gold": 10000, "stone": 5000}
+    assert s["resources"] == LEVEL
     data = grid([[64] * 8 for _ in range(8)], [{"kind": "building", "name": "TOWN_CENTER", "player": p,
                                                 "footprint": [p * 2, 1, p * 2 + 1, 2]} for p in (1, 2)])
     for player in (1, 2):                                              # the player and the bot: the same Gather stock
         g = gather.Gather(FakeServer({}), data, player=player, resources=s["resources"])
-        assert {r: g.stock[r] for r in gather.LEVELS["ultra"]} == gather.LEVELS["ultra"]
+        assert {r: g.stock[r] for r in gather.LEVELS[LEVEL]} == gather.LEVELS[LEVEL]
 
 
 def test_a_given_setting_wins_over_the_mode():
     s = settings(mode="death-match", resources="high", age="castle")
     assert s["resources"] == "high" and s["age"] == "castle"
-    assert settings(mode="death-match", age="castle")["resources"] == "ultra"
+    assert settings(mode="death-match", age="castle")["resources"] == LEVEL
 
 
 def test_the_other_modes_keep_their_defaults():
     assert settings() == run.SETTINGS
-    assert settings(mode="regicide")["resources"] == "standard"
-    assert settings(mode="empire-wars")["resources"] == "standard"
+    for mode, r in run.MODES.items():
+        if "level" not in r:
+            assert settings(mode=mode)["resources"] == run.SETTINGS["resources"], mode
 
 
 def test_each_mode_default_is_a_setting_that_exists():

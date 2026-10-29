@@ -1,5 +1,5 @@
 """game/combat.py, game/garrison.py: the Harbor and the Fortified Church take hits and shoot arrows (#1948)."""
-from game import combat, garrison
+from game import combat, garrison, train
 
 
 class Game:
@@ -17,26 +17,16 @@ def line(name):
     return next(c for c in cmds if c.startswith("aoe building ")).split()
 
 
-def test_the_values_of_the_wiki():
-    h, c = combat.BUILDINGS["HARBOR"], combat.BUILDINGS["FORTIFIED_CHURCH"]
-    assert (h.hp, h.attack, h.melee, h.pierce, h.range, h.reload) == (2000, 3, 3, 10, 7, 3.0)
-    assert h.bonus == {"camel": 1, "ship": 3} and c.bonus == {"camel": 1, "ship": 5}
-    assert (c.hp, c.attack, c.melee, c.pierce, c.range) == (2400, 5, 4, 10, 4)
-    assert combat.FORT_MIN_RANGE["HARBOR"] == combat.FORT_MIN_RANGE["FORTIFIED_CHURCH"] == 1
-    assert garrison.SIZES["HARBOR"] == garrison.SIZES["FORTIFIED_CHURCH"] == 10
-    assert combat.STONE in h.classes and combat.STONE in c.classes             # wiki class "Stone Defense"
-
-
 def test_both_get_an_attack_with_range_reload_and_min_range():
-    h, c = line("HARBOR"), line("FORTIFIED_CHURCH")
-    assert h[12:16] == ["3", str(7 * 4), str(round(3.0 / combat.NORMAL * 20)), "4"]
-    assert c[12:16] == ["5", str(4 * 4), str(round(2.0 / combat.NORMAL * 20)), "4"]
-    assert h[-1] == "camel:1,ship:3" and c[-1] == "camel:1,ship:5"
+    for name in ("HARBOR", "FORTIFIED_CHURCH"):
+        s, cmd = combat.BUILDINGS[name], line(name)
+        assert cmd[12:16] == [str(s.attack), str(s.range * 4), str(round(s.reload / combat.NORMAL * 20)),
+                              str(combat.FORT_MIN_RANGE[name] * 4)]
+        assert cmd[-1] == ",".join(f"{c}:{n}" for c, n in sorted(s.bonus.items()))
 
 
 def test_the_arrows_of_the_garrison():
-    assert garrison.arrows("HARBOR", []) == 4
-    assert garrison.arrows("HARBOR", ["VILLAGER_MALE", "ARCHER"]) == 6
+    assert garrison.arrows("HARBOR", ["VILLAGER_MALE", "ARCHER"]) == garrison.arrows("HARBOR", []) + 2
     assert garrison.arrows("FORTIFIED_CHURCH", []) == 0
     assert garrison.arrows("FORTIFIED_CHURCH", ["VILLAGER_MALE"]) == 1
     assert garrison.arrows("FORTIFIED_CHURCH", ["VILLAGER_MALE", "VILLAGER_FEMALE", "ARCHER", "MONK"]) == 2
@@ -48,9 +38,11 @@ def test_a_harbor_of_the_map_is_a_target():
     game = Game()
     combat.setup(game, data)
     assert any(c.startswith("summon slime ") for c in game.sent)
-    assert f"aoe arrows {combat.target_uuid([0, 0, 12, 12])} 5" in game.sent
-    assert any(c.startswith("aoe building ") and " 2000 3 10 " in c for c in game.sent)
+    h = combat.BUILDINGS["HARBOR"]
+    assert f"aoe arrows {combat.target_uuid([0, 0, 12, 12])} {garrison.arrows('HARBOR', ['VILLAGER_MALE'])}" in game.sent
+    assert any(c.startswith("aoe building ") and f" {h.hp} {h.melee} {h.pierce} " in c for c in game.sent)
 
 
 def test_the_ungarrison_item_of_the_church_is_not_on_a_technology():
-    assert garrison.ungarrison("FORTIFIED_CHURCH")[0] == 26
+    slots = {train.ITEMS[n][0] for n in train.TRAINS.get("FORTIFIED_CHURCH", ())}
+    assert garrison.ungarrison("FORTIFIED_CHURCH")[0] not in slots

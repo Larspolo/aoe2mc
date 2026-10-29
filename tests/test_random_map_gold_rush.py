@@ -26,7 +26,8 @@ def test_gold_rush_has_gold_in_the_middle_and_forest_around_it(seed, players):
     for o in d["objects"]:                                            # no object on water or forest, but the trees
         if not o["name"].startswith("TREE"):
             assert t[int(o["x"]), int(o["y"])] not in (FOREST, rmap.TERRAINS["WATER"]), o
-    assert Counter(o["name"] for o in d["objects"])["VILLAGER_MALE"] == 2 * players
+    male = next(c for name, c, *_ in rmap.START if name == "VILLAGER_MALE")
+    assert Counter(o["name"] for o in d["objects"])["VILLAGER_MALE"] == male * players
 
 
 def test_gold_rush_lets_units_reach_the_gold():

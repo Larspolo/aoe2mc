@@ -59,7 +59,7 @@ def test_the_house_rises_from_the_bottom_up_in_the_build_time():
     server, g = rise_map()
     site, ticks, log = build_with(server, g, ["v0"])
     assert site["progress"] == 1 and g.villagers["v0"].site is None
-    assert ticks == pytest.approx(25 / gather.NORMAL / g.tick, abs=1)      # 25 s of AoE2 at Normal speed
+    assert ticks == pytest.approx(build.BUILD_TIMES["HOUSE"] / gather.NORMAL / g.tick, abs=1)   # AoE2 s at Normal speed
     sent, n = [c for c in log if c in site["commands"]], len(site["commands"])
     assert sent[:n] == site["commands"]                                # each command once, in order
     assert all(build.box(c)[0][:3] in site["ring"] for c in sent[n:])  # then the ring cells get their design block

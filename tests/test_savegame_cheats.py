@@ -6,7 +6,7 @@ from test_loom import setup
 
 from game import cheats, savegame, train
 
-CHEATS = {"aegis": True, "beyond": True, "free_techs": True, "pop_cap": 1000, "sharing": True}
+CHEATS = ("aegis", "beyond", "free_techs", "pop_cap", "sharing")       # the fields that the cheat codes set
 
 
 def dumped(g):
@@ -19,8 +19,9 @@ def test_a_loaded_game_has_each_cheat():
         cheats.CODES[code](g, "Steve")
     _, h = setup()
     savegame.load(h, dumped(g))
-    assert {k: getattr(h, k) for k in CHEATS} == CHEATS
-    assert train.max_pop(h) == 1000
+    assert {k: getattr(h, k) for k in CHEATS} == {k: getattr(g, k) for k in CHEATS}
+    assert all(getattr(h, k) for k in CHEATS)
+    assert train.max_pop(h) == train.max_pop(g) > train.max_pop(setup()[1])
 
 
 def test_a_game_with_no_cheat_saves_no_cheat_key():

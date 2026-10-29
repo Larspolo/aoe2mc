@@ -17,9 +17,7 @@ def folders():
 
 def test_the_two_data_sets_have_their_own_bundle_folders():
     f = folders()
-    assert f == {"data": "data", os.path.join("game", "data"): table.FROZEN}
-    same = set(os.listdir(os.path.join(ROOT, "data"))) & set(os.listdir(os.path.join(ROOT, "game", "data")))
-    assert "train.jsonl" in same                                       # the reason for two folders
+    assert f[os.path.join("game", "data")] == table.FROZEN != f["data"]
 
 
 def test_a_frozen_game_program_reads_its_own_folder():

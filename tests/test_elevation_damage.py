@@ -1,14 +1,22 @@
 """The AoE2 elevation rule of the damage (#2307): a hit from higher ground deals more, from lower ground less, and the
-elevation bonuses of the Tatars, Georgians and Macedonians (game/civs.jsonl, key "elevation")."""
+elevation bonuses of the civilizations (game/data/civs.jsonl, key "elevation"; the tests use own factors)."""
 import re
 import shutil
 import time
 
 import pytest
 
-from game import combat, run
+from game import civs, combat, run
 
 H = 3                                                    # blocks of one elevation level (--level-height)
+D = combat.damage("MILITIA", "MILITIA")                  # the normal damage
+UP, LOW = civs.ELEVATION_BASE["up"], civs.ELEVATION_BASE["low"]
+
+
+@pytest.fixture(autouse=True)
+def bonuses(monkeypatch):
+    """Own factors in place of the key "elevation" of game/data/civs.jsonl."""
+    monkeypatch.setattr(civs, "ELEVATION", {"TATARS": {"up": 1.5}, "GEORGIANS": {"low": 0.6}, "MACEDONIANS": {"high": 0.9}})
 
 
 def hit(dy, a=None, t=None, attacker="MILITIA", target="MILITIA"):
@@ -16,30 +24,30 @@ def hit(dy, a=None, t=None, attacker="MILITIA", target="MILITIA"):
 
 
 def test_a_higher_unit_deals_more_and_a_lower_one_less():
-    assert hit(0) == hit(2) == hit(-2) == 4              # the same level: the normal damage
-    assert hit(H) == hit(3 * H) == 5                     # +25 %, also from more levels higher
-    assert hit(-H) == 3                                  # -25 %
-    assert hit(-H, attacker="ARCHER", target="BATTERING_RAM") == 1   # at least 1
+    assert hit(0) == hit(2) == hit(-2) == D              # the same level: the normal damage
+    assert hit(H) == hit(3 * H) == pytest.approx(D * UP) and hit(H) > D   # also from more levels higher
+    assert hit(-H) == pytest.approx(D * LOW) and hit(-H) < D
+    assert hit(-H, attacker="ARCHER", target="BATTERING_RAM") >= 1   # at least 1
 
 
-def test_tatars_deal_50_percent_more_from_higher_ground():
-    assert hit(H, "TATARS") == 6 and hit(-H, "TATARS") == 3
-    assert hit(H, "BRITONS", "TATARS") == 5
+def test_the_up_factor_of_the_attacker():
+    assert hit(H, "TATARS") == pytest.approx(D * 1.5) and hit(-H, "TATARS") == pytest.approx(D * LOW)
+    assert hit(H, "BRITONS", "TATARS") == pytest.approx(D * UP)
 
 
-def test_georgians_take_40_percent_less_from_lower_ground():
-    assert hit(-H, "BRITONS", "GEORGIANS") == pytest.approx(2.4) and hit(H, "BRITONS", "GEORGIANS") == 5
-    assert hit(-H, "GEORGIANS", "BRITONS") == 3
+def test_the_low_factor_of_the_target():
+    assert hit(-H, "BRITONS", "GEORGIANS") == pytest.approx(D * 0.6) and hit(H, "BRITONS", "GEORGIANS") == pytest.approx(D * UP)
+    assert hit(-H, "GEORGIANS", "BRITONS") == pytest.approx(D * LOW)
 
 
-def test_macedonians_take_10_percent_less_from_higher_ground():
-    assert hit(H, "BRITONS", "MACEDONIANS") == pytest.approx(4.5) and hit(-H, "BRITONS", "MACEDONIANS") == 3
-    assert hit(H, "TATARS", "MACEDONIANS") == pytest.approx(5.4)
+def test_the_high_factor_of_the_target():
+    assert hit(H, "BRITONS", "MACEDONIANS") == pytest.approx(D * UP * 0.9) and hit(-H, "BRITONS", "MACEDONIANS") == pytest.approx(D * LOW)
+    assert hit(H, "TATARS", "MACEDONIANS") == pytest.approx(D * 1.5 * 0.9)
 
 
 def test_the_elevation_command_names_the_factors_of_each_player():
     data = {"level_height": 3, "players": {"2": {"civ": "TATARS"}, "1": {"civ": "BRITONS"}, "10": {"civ": "GEORGIANS"}}}
-    assert combat.elevation_command(data) == "aoe elevation 3 p1:1.25:0.75:1 p2:1.5:0.75:1 p10:1.25:0.6:1"
+    assert combat.elevation_command(data) == f"aoe elevation 3 p1:{UP:g}:{LOW:g}:1 p2:1.5:{LOW:g}:1 p10:{UP:g}:0.6:1"
     assert combat.elevation_command({"players": {}}) is None
 
 
@@ -76,7 +84,8 @@ def test_a_militia_on_a_step_hits_harder_on_a_server(tiny_world, tmp_path):
         while time.time() < end and len(first) < 2:
             for tag in "ab":
                 h = health(game, tag)
-                if h is not None and h < 40 and tag not in first:
+                if h is not None and h < combat.STATS["MILITIA"].hp and tag not in first:
                     first[tag] = h
             time.sleep(0.05)
-        assert first == {"a": 40 - 3, "b": 40 - 5}, first  # a from below: 4 * 0.75, b from above: 4 * 1.25
+        hp = combat.STATS["MILITIA"].hp                   # a from below: * 0.75, b from above: * 1.25
+        assert first == {"a": pytest.approx(hp - D * 0.75), "b": pytest.approx(hp - D * 1.25)}, first

@@ -1,6 +1,7 @@
-"""Resources for kills and deaths (#2271, AoE2 DE): a fallen Tupi unit gives 15 % of its cost back (not a ship or a
-siege weapon), a Mapuche mounted unit gets 3 gold for each military unit that it kills (the score of the plugin), and
-the Danes loot 25 % of the cost of an enemy building that falls (not a wall or a gate). Fake server of test_gather."""
+"""Resources for kills and deaths (#2271, AoE2 DE): a fallen Tupi unit gives a part of its cost back (civs.FALLEN; not a
+ship or a siege weapon), a Mapuche mounted unit gets gold for each military unit that it kills (civs.KILL_GOLD, the
+score of the plugin), and the Danes loot a part of the cost of an enemy building that falls (civs.LOOT; not a wall or a
+gate). Fake server of test_gather."""
 import shutil
 import time
 
@@ -9,7 +10,7 @@ from test_mounted_attack import KNIGHT, floor
 from test_ranged import data
 from test_train_population import setup
 
-from game import combat, run, spoils, train
+from game import build, civs, combat, run, spoils, train
 
 
 def game(civ):
@@ -19,7 +20,7 @@ def game(civ):
     return server, g
 
 
-def test_a_fallen_tupi_unit_gives_15_percent_of_its_cost_back():
+def test_a_fallen_tupi_unit_gives_a_part_of_its_cost_back():
     server, g = game("TUPI")
     for u, name in (("m", "MILITIA"), ("r", "BATTERING_RAM"), ("s", "GALLEY")):
         g.soldiers[u] = name
@@ -30,8 +31,8 @@ def test_a_fallen_tupi_unit_gives_15_percent_of_its_cost_back():
         del server.entities[u]                                         # killed: no position
     train.census(g)
     train.census(g)                                                    # a dead unit gives its part only once
-    cost = train.price(g, "MILITIA")
-    assert g.stock["food"] == int(cost["food"] * 0.15) and g.stock["gold"] == int(cost["gold"] * 0.15)
+    cost, part = train.price(g, "MILITIA"), civs.FALLEN["TUPI"]
+    assert g.stock["food"] == int(cost["food"] * part) and g.stock["gold"] == int(cost["gold"] * part)
     assert g.stock["wood"] == 0                                        # nothing for the ram and the galley
 
 
@@ -42,27 +43,28 @@ def test_a_fallen_unit_of_another_civilization_gives_nothing():
     assert set(g.stock.values()) == {0}
 
 
-def test_a_mapuche_side_gets_3_gold_for_each_new_kill_of_the_plugin():
+def test_a_mapuche_side_gets_gold_for_each_new_kill_of_the_plugin():
     server, g = game("MAPUCHE")
+    gold = civs.KILL_GOLD["MAPUCHE"]
     kills = {"n": 0}
     command = server.command
     server.command = lambda c: (f"p1 has {kills['n']} [{spoils.OBJECTIVE}]"
                                 if c == f"scoreboard players get p1 {spoils.OBJECTIVE}" else command(c))
     kills["n"] = 1                                                     # a knight kills a militia
     train.census(g)
-    assert g.stock["gold"] == 3
+    assert g.stock["gold"] == gold
     train.census(g)
-    assert g.stock["gold"] == 3                                        # no new kill
+    assert g.stock["gold"] == gold                                     # no new kill
     kills["n"] = 3
     train.census(g)
-    assert g.stock["gold"] == 9
+    assert g.stock["gold"] == 3 * gold
     server, g = game("BRITONS")
     train.census(g)
     assert f"scoreboard players get p1 {spoils.OBJECTIVE}" not in server.log  # no command for another civilization
 
 
-def test_the_danes_loot_25_percent_of_a_fallen_enemy_house_and_nothing_of_a_wall():
-    for civ, wood in (("DANES", 6), ("BRITONS", 0)):
+def test_the_danes_loot_a_part_of_a_fallen_enemy_house_and_nothing_of_a_wall():
+    for civ, wood in (("DANES", int(build.COSTS["HOUSE"]["wood"] * civs.LOOT["DANES"])), ("BRITONS", 0)):
         server, g = game(civ)
         house, wall = combat.target_uuid([19, 19, 21, 21]), "w"
         g.fort_names[wall], g.forts[wall] = "STONE_WALL", (0, 64, 0, 0, 104, 0)

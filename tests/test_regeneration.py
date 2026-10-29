@@ -1,10 +1,12 @@
 """game/regen.py: Polish villagers, Georgian mounted units, Wu infantry and Thracian elite skirmishers regenerate hit
-points, as in AoE2 DE (civs.REGEN, #2247)."""
+points at the rates of the data (civs.REGEN, #2247)."""
+import math
+
 import pytest
 from test_gather import grid
 from test_monk_heal import HealServer
 
-from game import gather, regen
+from game import civs, combat, gather, regen
 
 AGES = ((), ("FEUDAL_AGE",), ("FEUDAL_AGE", "CASTLE_AGE"), ("FEUDAL_AGE", "CASTLE_AGE", "IMPERIAL_AGE"))
 
@@ -30,36 +32,49 @@ def run(g, seconds):
         regen.tick(g, regen.EVERY)
 
 
-@pytest.mark.parametrize("age, gain", [(1, 10), (2, 15), (3, 20)])
-def test_a_polish_villager_regenerates_10_15_20_hit_points_per_minute_up_to_its_maximum(age, gain):
+def rate(g, name, foe=math.inf):
+    """The hit points per AoE2 minute of unit name in the data (civs.regen)."""
+    return civs.regen(g, name, combat.stats(name), foe)
+
+
+def after(g, name, hp, top, seconds=60, foe=math.inf):
+    """The health of unit name after seconds of regeneration."""
+    return pytest.approx(min(top, hp + rate(g, name, foe) * seconds / 60), abs=0.01)
+
+
+@pytest.mark.parametrize("age", [1, 2, 3])
+def test_a_polish_villager_regenerates_up_to_its_maximum(age):
     server, g = setup("POLES", age, ("v", "VILLAGER_MALE", 5.0, 25.0))
     assert "v" in g.villagers
     run(g, 60)
-    assert server.entities["v"]["Health"] == pytest.approx(5 + gain, abs=0.01)
-    run(g, 120)
+    assert server.entities["v"]["Health"] == after(g, "VILLAGER_MALE", 5.0, 25.0) != 5.0
+    run(g, 6000)
     assert server.entities["v"]["Health"] == 25.0
 
 
 def test_georgian_mounted_units_and_wu_infantry_regenerate_at_their_rates():
     server, g = setup("GEORGIANS", 2, ("k", "KNIGHT", 50.0, 100.0), ("m", "MAN_AT_ARMS", 20.0, 45.0))
     run(g, 60)
-    assert server.entities["k"]["Health"] == pytest.approx(58, abs=0.01) and server.entities["m"]["Health"] == 20.0
+    assert server.entities["k"]["Health"] == after(g, "KNIGHT", 50.0, 100.0) != 50.0
+    assert server.entities["m"]["Health"] == after(g, "MAN_AT_ARMS", 20.0, 45.0)
     server, g = setup("WU", 3, ("k", "KNIGHT", 50.0, 100.0), ("m", "MAN_AT_ARMS", 10.0, 45.0))
     run(g, 60)
-    assert server.entities["k"]["Health"] == 50.0 and server.entities["m"]["Health"] == pytest.approx(40, abs=0.01)
+    assert server.entities["k"]["Health"] == after(g, "KNIGHT", 50.0, 100.0)
+    assert server.entities["m"]["Health"] == after(g, "MAN_AT_ARMS", 10.0, 45.0) != 10.0
 
 
-def test_thracian_elite_skirmishers_regenerate_and_the_first_skirmisher_does_not():
-    server, g = setup("THRACIANS", 3, ("a", "SKIRMISHER", 10.0, 30.0), ("b", "ELITE_SKIRMISHER", 10.0, 35.0),
-                      ("c", "IMPERIAL_SKIRMISHER", 10.0, 35.0))
+def test_thracian_skirmishers_regenerate_at_their_rates():
+    units = ("a", "SKIRMISHER", 10.0, 30.0), ("b", "ELITE_SKIRMISHER", 10.0, 35.0), ("c", "IMPERIAL_SKIRMISHER", 10.0, 35.0)
+    server, g = setup("THRACIANS", 3, *units)
     run(g, 60)
-    assert [server.entities[u]["Health"] for u in "abc"] == pytest.approx([10, 15, 20], abs=0.01)
+    assert [server.entities[u]["Health"] for u, *_ in units] == [after(g, n, h, t) for _, n, h, t in units]
+    assert server.entities["c"]["Health"] != 10.0
 
 
-def test_no_regeneration_in_the_dark_age_and_for_other_civilizations():
+def test_the_dark_age_rate_and_no_regeneration_for_other_civilizations():
     server, g = setup("POLES", 0, ("v", "VILLAGER_MALE", 5.0, 25.0))
     run(g, 60)
-    assert server.entities["v"]["Health"] == 5.0
+    assert server.entities["v"]["Health"] == after(g, "VILLAGER_MALE", 5.0, 25.0)
     server, g = setup("FRANKS", 3, ("v", "VILLAGER_MALE", 5.0, 25.0), ("m", "MAN_AT_ARMS", 20.0, 45.0))
     run(g, 60)
     assert [e["Health"] for e in server.entities.values()] == [5.0, 20.0]
@@ -70,4 +85,5 @@ def test_the_step_calls_the_regeneration_in_aoe2_seconds():
     server, g = setup("WU", 3, ("m", "MAN_AT_ARMS", 20.0, 45.0))
     for _ in range(80):                                                # 20 real seconds at Normal speed
         g.step()
-    assert server.entities["m"]["Health"] == pytest.approx(20 + 0.5 * 20 * gather.NORMAL, abs=0.5 * regen.EVERY)
+    r = rate(g, "MAN_AT_ARMS") / 60                                    # hit points per AoE2 second
+    assert server.entities["m"]["Health"] == pytest.approx(min(45.0, 20 + r * 20 * gather.NORMAL), abs=r * regen.EVERY)

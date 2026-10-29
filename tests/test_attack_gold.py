@@ -1,5 +1,5 @@
-"""The gold of the Varangian Guard (#2376, AoE2 DE wiki): 35 gold for each AoE2 minute that it attacks enemy units, the
-Varangians 50 % more. The plugin counts gold per minute × reload ticks of each hit on an enemy unit in the score
+"""The gold of the Varangian Guard (#2376, AoE2 DE wiki): gold for each AoE2 minute that it attacks enemy units, the
+Varangians more. The plugin counts gold per minute × reload ticks of each hit on an enemy unit in the score
 aoe_attack_gold of the team (AoePlugin.gold). Fake server of test_gather."""
 import shutil
 import time
@@ -9,9 +9,10 @@ from test_kill_spoils import game
 from test_mounted_attack import floor
 from test_ranged import data
 
-from game import combat, run, spoils, train
+from game import civs, combat, run, spoils, train
 
-TICKS = 720 * 35          # 720 real ticks of hits at Normal speed (61.2 AoE2 seconds) of a unit with 35 gold per minute
+RATE = combat.ATTACK_GOLD["VARANGIAN_GUARD"]                        # gold per AoE2 minute
+TICKS = 720 * RATE        # 720 real ticks of hits at Normal speed (61.2 AoE2 seconds)
 
 
 def score(server, n):
@@ -20,11 +21,12 @@ def score(server, n):
                                 if c == f"scoreboard players get p1 {spoils.GOLD}" else command(c))
 
 
-@pytest.mark.parametrize("civ, gold", [("VIKINGS", 35), ("VARANGIANS", 53)])   # 35 × 61.2 / 60, 1.5 times as much
-def test_a_varangian_guard_makes_gold_while_it_attacks(civ, gold):
+@pytest.mark.parametrize("civ", ["VIKINGS", "VARANGIANS"])
+def test_a_varangian_guard_makes_gold_while_it_attacks(civ):
+    gold = int(RATE * 720 / 20 * combat.NORMAL / 60 * civs.value("attack_gold", civ, 1))   # RATE × 61.2 / 60, the civ factor
     server, g = game(civ)
     u = train.summon(g, "VARANGIAN_GUARD", (8.5, 64.0, 8.5))
-    assert f"tag {u} add aoe2mc.gold.35" in server.log                 # the plugin counts its hits
+    assert f"tag {u} add aoe2mc.gold.{RATE}" in server.log             # the plugin counts its hits
     n = {"n": 0}
     score(server, n)
     train.census(g)
@@ -66,5 +68,5 @@ def test_the_plugin_counts_the_hits_of_a_gold_unit_on_enemy_units(tiny_world, tm
             time.sleep(0.1)
         assert data(game, "m", "Health") is None, "the militia is alive"
         reload = int(combat.stats_command("u", "VARANGIAN_GUARD").split()[10])
-        hits = int(game.command(get).split("has ")[1].split()[0]) // (35 * reload)
+        hits = int(game.command(get).split("has ")[1].split()[0]) // (RATE * reload)
         assert hits >= 3, game.command(get)            # 40 hit points, 13 damage a hit: 4 hits

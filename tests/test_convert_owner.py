@@ -3,7 +3,7 @@ epic #2991): owners.give. One function (gather.soldier) decides "soldier or vill
 import pytest
 from test_gather import FakeServer, grid
 
-from game import bot, build, gather, hill, monk, run, train
+from game import bot, gather, hill, monk, run, train
 
 MAP = [[64] * 24 for _ in range(24)]
 POS = {"monk": (3.5, 64.0, 2.5), "vil": (12.5, 64.0, 12.5), "foe": (13.5, 64.0, 12.5)}
@@ -74,4 +74,3 @@ def test_a_converted_cart_or_ship_is_a_soldier(name):
 def test_one_function_decides_soldier_or_villager():
     assert all(map(gather.soldier, ["MILITIA", "MONK", "TRADE_CART_EMPTY", "TRADE_COG", "FISHING_SHIP", "MULE_CART"]))
     assert not any(map(gather.soldier, ["VILLAGER_MALE", "VILLAGER_FEMALE"]))
-    assert "MULE_CART" in build.MOVES

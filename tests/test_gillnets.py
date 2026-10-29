@@ -1,9 +1,9 @@
-"""game/train.py and game/fleet.py: the dock researches Fishing Lines in the Feudal Age (50 food, 100 wood, 20 s) and
-Gillnets after it in the Castle Age (150 food, 200 wood, 45 s), in one slot: each one makes the own fishing ships
-gather 10 % faster and carry 5 more food (#1439, AoE2 DE wiki infoboxes). Fake server, no Minecraft."""
+"""game/train.py and game/fleet.py: the dock researches Fishing Lines in the Feudal Age and Gillnets after it in the
+Castle Age, in one slot: each one makes the own fishing ships gather faster and carry more food (#1439, AoE2 DE wiki
+infoboxes). Fake server, no Minecraft."""
 from urllib.parse import unquote
 
-import pytest
+from menu_line import item
 from test_ship_gather import fish_map, play
 
 from game import fleet, gather, train
@@ -15,46 +15,43 @@ def menus(server):
     return [unquote(c) for c in server.log if c.startswith("aoe menu ")]
 
 
-def test_the_cost_time_age_and_slot_are_those_of_aoe2():
-    assert train.BY_KEY["after"]["GILLNETS"] == "FISHING_LINES" and train.ITEMS["GILLNETS"][0] == train.ITEMS["FISHING_LINES"][0]
-    assert {"FISHING_LINES", "GILLNETS"} <= set(train.TRAINS["DOCK"])
-
-
 def test_the_dock_menu_shows_fishing_lines_in_the_feudal_age_and_then_gillnets_in_the_castle_age():
     server, g, uuid = fish_map()
-    slot = train.ITEMS["FISHING_LINES"][0]
     train.open_menu(g, "Steve", DOCK)
     assert "Fishing Lines" not in menus(server)[-1]                    # the Dark Age
     g.techs.add("FEUDAL_AGE")
     train.open_menu(g, "Steve", DOCK)
-    assert f" {slot}:book:Fishing Lines:50 food · 100 wood · 20 s · research " in menus(server)[-1] + " "
+    assert item(menus(server)[-1], "Fishing Lines").endswith(" · research")
     g.techs.add("CASTLE_AGE")
     train.open_menu(g, "Steve", DOCK)
     assert "Gillnets" not in menus(server)[-1] and train.queue(g, "Steve", DOCK, "GILLNETS") is None
     g.techs.add("FISHING_LINES")
     train.open_menu(g, "Steve", DOCK)
-    assert f" {slot}:book:Gillnets:150 food · 200 wood · 45 s · research " in menus(server)[-1] + " "
+    assert item(menus(server)[-1], "Gillnets").endswith(" · research")
 
 
-def test_each_research_makes_the_ships_gather_10_percent_faster_and_carry_5_more():
+def test_each_research_makes_the_ships_gather_faster_and_carry_more():
     server, g, uuid = fish_map()
     g.techs |= {"FEUDAL_AGE", "CASTLE_AGE"}
-    g.stock.update(food=500, wood=500)
-    assert (fleet.rate(g, (20, 12)), fleet.carry(g)) == (gather.SHIP_WORK["deep"], 15)
-    for tech, n in (("FISHING_LINES", 1), ("GILLNETS", 2)):
+    g.stock.update(food=5000, wood=5000)
+    assert fleet.rate(g, (20, 12)) == gather.SHIP_WORK["deep"]
+    old = fleet.rate(g, (20, 12)), fleet.rate(g, (14, 3)), fleet.carry(g)
+    for tech in ("FISHING_LINES", "GILLNETS"):
         rect = train.open_menu(g, "Steve", DOCK)
         assert train.order(g, "Steve", rect, train.ITEMS[tech][0]) == 1
         train.tick(g, train.TRAIN_TIMES[tech])
         assert tech in g.techs
-        assert fleet.rate(g, (20, 12)) == pytest.approx(0.42 * 1.1 ** n)
-        assert fleet.rate(g, (14, 3)) == pytest.approx(0.24 * 1.1 ** n)   # the shore fish
-        assert fleet.carry(g) == 15 + 5 * n
+        new = fleet.rate(g, (20, 12)), fleet.rate(g, (14, 3)), fleet.carry(g)   # deep fish, shore fish, load
+        assert all(b > a for a, b in zip(old, new)), tech
+        old = new
     v = g.ships[uuid]
+    start = g.map.fish[20, 12]
     fleet.fish(g, {uuid}, (20, 12))
     play(g, 10)
     assert v.state == "chop"
     load = v.load
-    play(g, 20)                                                         # 0.42 × 1.21 = 0.51 food per game second
-    assert v.load - load in (9, 10, 11)
+    play(g, 20)                                                         # the food of 20 game seconds
+    assert abs(v.load - load - 20 * fleet.rate(g, (20, 12))) <= 1.5
     play(g, 30)
-    assert v.load <= 25 and g.map.fish[20, 12] == 225 - 25 - v.load * (v.state == "chop")
+    carry = fleet.carry(g)
+    assert v.load <= carry and g.map.fish[20, 12] == start - carry - v.load * (v.state == "chop")

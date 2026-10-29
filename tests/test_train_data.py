@@ -1,14 +1,12 @@
-"""The menu items of the game program are one JSON line each in game/data/train.jsonl, with `merge=jsonl` (#1702, #2004)."""
+"""The menu items of the game program are one JSON line each in game/data/train.jsonl, and tools/merge_jsonl.py merges
+two new lines (#1702, #2004)."""
 import json
-import os
-import subprocess
 
 import pytest
 
 import merge_jsonl
 from game import train
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 KEYS = {"name", "building", "slot", "item", "label", "cost", "time", "help"}
 
 
@@ -27,14 +25,8 @@ def test_two_lines_of_one_name_stop_the_load(tmp_path):
     line = open(train.DATA, encoding="utf-8").readline()
     p = tmp_path / "train.jsonl"
     p.write_text(line + line.replace('"time": 25', '"time": 30'), encoding="utf-8")
-    with pytest.raises(ValueError, match="VILLAGER_MALE"):
+    with pytest.raises(ValueError, match=json.loads(line)["name"]):
         train.load(str(p))
-
-
-def test_the_file_merges_by_name():
-    out = subprocess.run(["git", "check-attr", "merge", "game/data/train.jsonl"], cwd=ROOT, capture_output=True,
-                         text=True).stdout
-    assert out.strip().endswith("merge: jsonl")     # tools/merge_jsonl.py (#2004)
 
 
 def test_two_new_items_of_one_building_merge_without_a_conflict(tmp_path):

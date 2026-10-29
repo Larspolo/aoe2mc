@@ -4,7 +4,7 @@ from test_loom import setup as loom
 from test_train import setup as town
 from test_train_barracks import setup as barracks
 
-from game import train
+from game import gather, train
 
 
 def voices(server):
@@ -15,16 +15,19 @@ def test_a_town_center_that_completes_a_villager_plays_the_villager_voice_to_the
     server, g = town()
     g.player = 1                                                     # the own player number, as in a game
     train.queue(g, "Steve", (3, 3))
-    train.tick(g, train.TRAIN_TIMES["VILLAGER_MALE"])
-    assert voices(server) == ["playsound minecraft:entity.villager.yes voice @a[team=p1] 3.5 64 3.5 1 1.0"]
+    new, = train.tick(g, train.TRAIN_TIMES["VILLAGER_MALE"])
+    v = gather.VOICES[g.voice_class(new.uuid)]
+    assert voices(server) == [f"playsound minecraft:{v['select']} voice @a[team=p1] 3.5 64 3.5 1 {v['pitch']}"]
 
 
 def test_a_barracks_that_completes_a_militia_plays_the_infantry_voice_to_the_team():
     server, g = barracks()
     rect = train.open_menu(g, "Steve", (11, 3))
-    train.order(g, "Steve", rect, 0)
-    train.tick(g, train.TRAIN_TIMES["MILITIA"])
-    assert len(voices(server)) == 1 and voices(server)[0].startswith("playsound minecraft:item.armor.equip_iron voice @a[team=p1] ")
+    train.order(g, "Steve", rect, train.layout(g, rect)["MILITIA"][0])
+    new, = train.tick(g, train.TRAIN_TIMES["MILITIA"])
+    v = gather.VOICES[g.voice_class(new)]
+    assert len(voices(server)) == 1 and voices(server)[0].startswith(f"playsound minecraft:{v['select']} voice @a[team=p1] ")
+    assert g.voice_class(new) != "villager"
 
 
 def test_a_complete_technology_sends_no_unit_voice():

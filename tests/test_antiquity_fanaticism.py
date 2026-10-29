@@ -1,4 +1,4 @@
-"""Fanaticism of Antiquity Mode (#3987): after it, a priest rests half as long after a conversion. The rule modules read
+"""Fanaticism of Antiquity Mode (#3987): after it, a priest rests less long after a conversion. The rule modules read
 their data at import, so the check runs in one child process."""
 import json
 
@@ -16,10 +16,10 @@ print(json.dumps(out))
 '''
 
 
-def test_fanaticism_halves_the_rest_of_the_priests():
+def test_fanaticism_shortens_the_rest_of_the_priests():
     r = child(CODE)
     assert r.returncode == 0, r.stderr[-2000:]
     out = json.loads(r.stdout.splitlines()[-1])
     before, after = out[""], out["FANATICISM"]
     for k in ("m0", "m1", "m2"):
-        assert before[k] > 0 and abs(after[k] - before[k] / 2) < 1e-9, k
+        assert 0 < after[k] < before[k], k

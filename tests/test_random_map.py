@@ -15,9 +15,11 @@ def test_arabia_gives_grass_dirt_forests_and_the_start_objects_of_each_player():
     assert {rmap.TERRAINS["GRASS"], rmap.TERRAINS["DIRT"], rmap.TERRAINS["FOREST"]} <= kinds
     assert kinds <= {rmap.TERRAINS[k] for k in ("GRASS", "DIRT", "DIRT3", "GRASS3", "FOREST", "WATER")}
     n = Counter((o["name"], o.get("player", 0)) for o in d["objects"])
+    own = [(name, count) for name, count, _, player in rmap.START if player]   # the start objects of each player
+    villagers = sum(count for name, count in own if name.startswith("VILLAGER"))
     for p in (1, 2):
-        assert n["TOWN_CENTER", p] == 1 and n["SCOUT_CAVALRY", p] == 1 and n["SHEEP", p] == 4
-        assert n["VILLAGER_MALE", p] + n["VILLAGER_FEMALE", p] == 3
+        assert n["TOWN_CENTER", p] == 1 and all(n[name, p] == count for name, count in own if not name.startswith("VILLAGER"))
+        assert n["VILLAGER_MALE", p] + n["VILLAGER_FEMALE", p] == villagers
     assert n["GOLD_MINE", 0] and n["STONE_MINE", 0] and n["FORAGE_BUSH", 0] and n["DEER", 0] and n["WILD_BOAR", 0]
     for o in d["objects"]:                     # no start object on a forest or water tile
         if not o["name"].startswith("TREE"):

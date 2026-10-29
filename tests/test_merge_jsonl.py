@@ -113,7 +113,3 @@ def test_new_lines_of_theirs_stay_below_their_neighbour():
     lines, conflicts = merge_jsonl.merge(*(merge_jsonl.rows_of(x) for x in (BASE, ours, theirs)))
     assert lines == [BASE[0], theirs[1], BASE[1], BASE[2], ours[3]] and conflicts == 0
 
-
-def test_the_session_start_hook_registers_the_driver():
-    root = os.path.join(os.path.dirname(TOOL), "..")
-    assert "merge.jsonl.driver" in open(os.path.join(root, ".claude", "hooks", "session-start.sh")).read()

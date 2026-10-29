@@ -8,8 +8,7 @@ from game import gather
 
 
 def test_default_work_seconds_are_the_aoe2_rates_at_normal_speed():
-    assert gather.WORK_SECONDS["wood"] == pytest.approx(1 / (0.39 * 1.7))
-    assert set(gather.WORK_SECONDS) == {"wood", "food", "farm", "gold", "stone", "hunt", "fish", "oyster"}
+    assert all(gather.WORK_SECONDS[r] == pytest.approx(1 / (w * gather.NORMAL)) for r, w in gather.AOE2_WORK.items())
     assert measure_gather.AOE2_WORK == gather.AOE2_WORK and measure_gather.WORK_SECONDS == gather.WORK_SECONDS
     _, g = mine_map()
     assert gather.Gather(g.game, {"tile_size": 1, "ground": [], "objects": []}).chop == gather.WORK_SECONDS

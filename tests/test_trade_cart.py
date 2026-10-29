@@ -1,4 +1,4 @@
-"""game/trade.py: the market trains a trade cart (100 wood, 50 gold, 51 AoE2 seconds, AoE2 DE), and a trade cart walks
+"""game/trade.py: the market trains a trade cart (AoE2 DE), and a trade cart walks
 between two own markets and brings the gold of the AoE2 formula to its home market (#1253)."""
 import re
 
@@ -31,12 +31,14 @@ def moves(server, uuid):
     return [tuple(map(float, c.split()[3:])) for c in server.log if c.startswith(f"aoe moveto {uuid} ")]
 
 
-def test_the_market_menu_trains_a_trade_cart_with_the_aoe2_cost_and_time():
-    server, g = setup(wood=100, gold=60)
+def test_the_market_menu_trains_a_trade_cart_with_its_cost_and_time():
+    cost = train.COSTS["TRADE_CART"]
+    server, g = setup(wood=cost.get("wood", 0), gold=cost.get("gold", 0) + 10)
     rect = train.open_menu(g, "Steve", (3, 3))
-    assert rect == HOME and "0:donkey_spawn_egg:Trade Cart:100 wood · 50 gold · 51 s · queue 0/15" in menus(server)[-1]
-    assert train.order(g, "Steve", rect, 0) == 1 and (g.stock["wood"], g.stock["gold"]) == (0, 10)
-    assert train.tick(g, 50) == []
+    slot, _, label = train.layout(g, rect)["TRADE_CART"]
+    assert rect == HOME and f":{label}:" in menus(server)[-1]
+    assert train.order(g, "Steve", rect, slot) == 1 and (g.stock["wood"], g.stock["gold"]) == (0, 10)
+    assert train.tick(g, train.TRAIN_TIMES["TRADE_CART"] - 1) == []
     uuid, = train.tick(g, 1)
     summon, = [c for c in server.log if c.startswith("summon")]
     assert re.match(rf"summon {units.classify('TRADE_CART')['id']} ", summon)

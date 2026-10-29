@@ -1,8 +1,8 @@
-"""Redemption (#1264): the monastery researches it (475 gold, 50 s, Castle Age, AoE2 wiki "Redemption"), and then a
+"""Redemption (#1264): the monastery researches it (Castle Age, AoE2 wiki "Redemption"), and then a
 monk converts siege units and the enemy buildings that are not LASTING (AoE2 wiki "Conversion"): next to a building,
 from the 15th to the 25th interval."""
 from test_monk_convert import setup, until_converted
-from test_monk_techs import research
+from test_monk_techs import learn
 from test_monk_train import monastery
 
 from game import combat, garrison, gather, monk, train
@@ -13,9 +13,9 @@ HOUSE = {"kind": "building", "name": "BARRACKS", "player": 2, "footprint": [20, 
 def test_the_monastery_researches_redemption():
     assert train.HELP["REDEMPTION"]
     server, g = monastery()
-    rect = research(g, 3, 475)
+    rect = learn(g, "REDEMPTION")
     assert g.queues[rect][0]["name"] == "REDEMPTION"
-    train.tick(g, 50)
+    train.tick(g, train.seconds(g, "REDEMPTION", "MONASTERY"))
     assert "REDEMPTION" in g.techs
 
 

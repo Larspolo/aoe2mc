@@ -1,5 +1,5 @@
-"""game/monk.py: a monk picks up a relic, carries it into an own monastery, and each relic there gives 30 gold per
-AoE2 minute; a monk with a relic does not heal, and a killed monk drops it (#1246). Fake server."""
+"""game/monk.py: a monk picks up a relic, carries it into an own monastery, and each relic there gives gold
+(monk.GOLD); a monk with a relic does not heal, and a killed monk drops it (#1246). Fake server."""
 import pytest
 from test_monk_heal import HealServer
 from test_gather import grid
@@ -46,13 +46,13 @@ def test_the_monk_picks_up_the_relic_and_carries_it_into_the_monastery():
     assert "kill @e[type=item_display,tag=aoe_relic_0]" in server.log
 
 
-def test_a_relic_in_the_monastery_gives_30_gold_per_minute():
+def test_a_relic_in_the_monastery_gives_gold():
     server, g = setup()
     g.relics[0].update(at=None, home=(14, 18, 2, 6))
     gold = g.stock["gold"]
     for _ in range(60):
         monk.relic_tick(g, monk.EVERY)
-    assert g.stock["gold"] - gold == 30
+    assert g.stock["gold"] - gold == round(monk.GOLD * monk.EVERY * 60) > 0
     assert f"scoreboard players add Gold {g.board} 1" in server.log
 
 

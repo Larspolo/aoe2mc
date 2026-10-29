@@ -46,8 +46,7 @@ def test_a_bonus_class_has_no_line(tmp_path):
 def test_the_militia_of_the_player_does_3_more_melee_damage():
     _, g = setup("BRITONS")
     _, other = setup("BRITONS")
-    target = combat.stats("VILLAGER_MALE")
-    assert target.melee == 0
+    target = combat.stats("VILLAGER_MALE")._replace(melee=0)           # no melee armor: each point counts
     before = combat.damage("MILITIA", "VILLAGER_MALE", train.stats(g, "MILITIA"), target)
     apply(g, '["1 MILITIA attack 2 3"]')
     assert combat.damage("MILITIA", "VILLAGER_MALE", train.stats(g, "MILITIA"), target) == before + 3

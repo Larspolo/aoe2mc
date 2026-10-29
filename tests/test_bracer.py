@@ -1,22 +1,20 @@
-"""Bracer (#1503): the blacksmith researches it in the Imperial Age after Bodkin Arrow, in its slot (AoE2 DE wiki
-"Bracer": 300 food, 200 gold, 40 s). Archers and the buildings that shoot +1 attack and +1 range, the town center +1
-attack only, as Fletching and Bodkin Arrow. Not for the civilizations without it in the wiki availability chart."""
+"""Bracer (#1503): the blacksmith researches it in the Imperial Age after Bodkin Arrow, in its slot. Archers and the
+buildings that shoot get more attack and range, the town center more attack only, as Fletching and Bodkin Arrow."""
+from menu_line import item
 from test_forging import menus
 from test_forging import setup as smith
 from test_tower_fletching import CASTLE, TC, TOWER, values
 from test_tower_fletching import setup as towers
 
-from game import civs, combat, train
+from game import combat, train
 
 SMITH = (11, 3)                                                    # a block cell of the blacksmith
 
 
-def test_the_values_are_those_of_aoe2():
-    assert train.BY_KEY["after"]["BRACER"] == "BODKIN_ARROW"
-    assert "BRACER" in train.TRAINS["BLACKSMITH"] and "BRACER" in civs.SMITH
-    assert set(civs.MISSING["BRACER"]) == {"CELTS", "CUMANS", "FRANKS", "MALIANS", "MAPUCHE", "PERSIANS", "ROMANS",
-                                           "SLAVS", "TEUTONS"}
-    assert len(train.HELP["BRACER"]) <= 50
+def text(g, name, building=None):
+    """The cost and time text of the menu item of name, from the data (as train.show writes it)."""
+    return (" · ".join(f"{v} {r}" for r, v in train.price(g, name, building).items()) or "free") + \
+        f" · {round(train.seconds(g, name, building), 1):g} s · "
 
 
 def test_bracer_is_in_the_slot_of_bodkin_arrow_in_the_imperial_age():
@@ -27,30 +25,34 @@ def test_bracer_is_in_the_slot_of_bodkin_arrow_in_the_imperial_age():
     assert ":Bracer:" not in menus(server)[-1]                        # the Castle Age
     g.techs.add("IMPERIAL_AGE")
     train.open_menu(g, "Steve", SMITH)
-    assert " 2:book:Bracer:300 food · 200 gold · 40 s · research " in menus(server)[-1] + " "
+    assert item(menus(server)[-1], "Bracer").endswith(":Bracer:" + text(g, "BRACER") + "research")
     g.techs.discard("BODKIN_ARROW")
     train.open_menu(g, "Steve", SMITH)
     assert ":Bracer:" not in menus(server)[-1]                        # not before Bodkin Arrow
     g.techs.add("BODKIN_ARROW")
     assert train.queue(g, "Steve", SMITH, "BRACER")
-    train.tick(g, 40)
+    train.tick(g, train.TRAIN_TIMES["BRACER"])
     assert "BRACER" in g.techs
 
 
-def test_archers_get_one_attack_and_one_range():
+def test_archers_get_attack_and_range():
     server, g = smith()
     before = train.stats(g, "ARCHER")
     train.research(g, {"name": "BRACER", "player": "Steve"})
     after = train.stats(g, "ARCHER")
-    assert (after.attack, after.range) == (before.attack + 1, before.range + 1)
+    assert after.attack > before.attack and after.range > before.range
     assert combat.stats_command("a", "ARCHER", after) in server.log   # the live archer
     assert train.stats(g, "MILITIA") == combat.stats("MILITIA")
 
 
 def test_the_buildings_that_shoot_get_the_values_of_bracer():
     server, g = towers()
-    for t in ("FLETCHING", "BODKIN_ARROW", "BRACER"):
+    for t in ("FLETCHING", "BODKIN_ARROW"):
         train.research(g, {"name": t, "player": "Steve"})
-    assert values(server, TC) == (2400, 8, 6)                        # +1 attack, the same range
-    assert values(server, CASTLE) == (4800, 14, 11)
-    assert values(server, TOWER) == (1020, 8, 11)
+    before = {r: values(server, r) for r in (TC, CASTLE, TOWER)}
+    train.research(g, {"name": "BRACER", "player": "Steve"})
+    after = {r: values(server, r) for r in before}
+    (hp, attack, reach), (hp0, attack0, reach0) = after[TC], before[TC]
+    assert hp == hp0 and attack > attack0 and reach == reach0          # the town center: attack only
+    for r in (CASTLE, TOWER):
+        assert after[r][0] == before[r][0] and after[r][1] > before[r][1] and after[r][2] > before[r][2], r

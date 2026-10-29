@@ -1,33 +1,37 @@
-"""game/civs.py CARRY: Aztec villagers carry 3 more resources, Goth hunters 15 more food (AoE2 DE civilization
-bonuses, #2270)."""
+"""game/civs.py CARRY: Aztec villagers carry more resources, Goth hunters more food (AoE2 DE civilization bonuses,
+#2270)."""
 from test_civ_last import gathered
 from test_civ_work import setup
 
 from game import civs
 
 
-def test_an_aztec_villager_carries_13_wood_and_a_frankish_one_10():
-    assert setup("AZTECS").limit("wood") == 13 and setup("FRANKS").limit("wood") == 10
-    assert setup("AZTECS").limit("food", "farm") == 13 and setup("AZTECS").limit("gold") == 13
+def test_an_aztec_villager_carries_more_than_a_frankish_one():
+    aztec, frank = setup("AZTECS"), setup("FRANKS")
+    for kind in (("wood",), ("food", "farm"), ("gold",)):
+        assert aztec.limit(*kind) > frank.limit(*kind), kind
 
 
-def test_a_goth_hunter_carries_25_food_and_a_goth_farmer_10():
-    g = setup("GOTHS")
-    assert g.limit("food", "hunt") == 25 and g.limit("food", "farm") == 10 and g.limit("food", "sheep") == 10
-    assert g.limit("wood") == 10 and setup("FRANKS").limit("food", "hunt") == 10
+def test_a_goth_hunter_carries_more_food_and_a_goth_farmer_not():
+    g, frank = setup("GOTHS"), setup("FRANKS")
+    assert g.limit("food", "hunt") > frank.limit("food", "hunt")
+    for kind in (("food", "farm"), ("food", "sheep"), ("wood",)):
+        assert g.limit(*kind) == frank.limit(*kind), kind
 
 
 def test_the_bonus_adds_to_the_technologies():
     g, base = setup("AZTECS"), setup("FRANKS")
+    bonus = g.limit("wood") - base.limit("wood")
     g.techs.add("WHEELBARROW")
     base.techs.add("WHEELBARROW")
-    assert g.limit("wood") == base.limit("wood") + 3 > 13
+    assert g.limit("wood") == base.limit("wood") + bonus and base.limit("wood") > setup("FRANKS").limit("wood")
 
 
-def test_a_goth_hunter_stops_with_25_food_and_a_shepherd_with_10():
+def test_a_goth_hunter_and_a_shepherd_stop_at_their_limits():
     """The chop step of Gather.step stops at the limit of the gather kind: a deer for a hunter, a sheep for a shepherd."""
-    for herd, load in ((False, 25), (True, 10)):
+    for herd, kind in ((False, "hunt"), (True, "sheep")):
         g = setup("GOTHS")
+        load = g.limit("food", kind)
         v = g.villagers["v"]
         g.map.carcasses[(4, 4)] = 100
         if herd:

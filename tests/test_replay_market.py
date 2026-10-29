@@ -16,7 +16,9 @@ def trade(kind, amount, resource="Wood", player=1, t=1000):
 def test_a_buy_costs_gold_with_the_fee_and_raises_the_rate():
     r = replay.Replay(Fake(), data([]))
     r.commands(trade("buy", 100))
-    assert r.stock[1] == {"food": 200, "wood": 300, "gold": 100 - 130, "stone": 200}   # the fee of 30 %: 100 × 1.30
+    cost = (market.RATES["wood"] * (100 + market.FEE) + 50) // 100   # the gold of 100 wood with the fee
+    S = replay.START
+    assert r.stock[1] == dict(S, wood=S["wood"] + 100, gold=S["gold"] - cost)
     assert r.rates["wood"] == market.RATES["wood"] + market.STEP
 
 
@@ -27,8 +29,8 @@ def test_a_sell_of_500_food_is_five_trades_at_the_falling_rate():
     for _ in range(5):
         gold += (rate * (100 - market.FEE) + 50) // 100
         rate -= market.STEP
-    assert r.stock[1]["food"] == 200 - 500
-    assert r.stock[1]["gold"] == 100 + gold
+    assert r.stock[1]["food"] == replay.START["food"] - 500
+    assert r.stock[1]["gold"] == replay.START["gold"] + gold
     assert r.rates["food"] == market.RATES["food"] - 5 * market.STEP
 
 
@@ -36,4 +38,4 @@ def test_a_player_with_guilds_pays_the_guild_fee():
     r = replay.Replay(Fake(), data([]))
     r.learn(research(500, "GUILDS"))
     r.commands(trade("buy", 100, t=1000))
-    assert r.stock[1]["gold"] == 100 - (market.RATES["wood"] * (100 + market.FEES["GUILDS"]) + 50) // 100
+    assert r.stock[1]["gold"] == replay.START["gold"] - (market.RATES["wood"] * (100 + market.FEES["GUILDS"]) + 50) // 100

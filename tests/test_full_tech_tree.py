@@ -61,9 +61,10 @@ def test_the_civilization_bonuses_go():
     base = {"food": 200, "wood": 200, "gold": 100, "stone": 200}
     assert civs.start(game("CHINESE", full=False)[1], base) != base
     assert civs.start(game("CHINESE")[1], base) == base
-    assert train.stats(game("FRANKS", full=False)[1], "KNIGHT").hp == 120
+    base = combat.stats("KNIGHT").hp
+    assert train.stats(game("FRANKS", full=False)[1], "KNIGHT").hp > base           # the Frankish cavalry bonus
     franks, goths = train.stats(game("FRANKS")[1], "KNIGHT"), train.stats(game("GOTHS")[1], "KNIGHT")
-    assert franks.hp == goths.hp == 100
+    assert franks.hp == goths.hp == base
 
 
 def test_the_team_bonuses_go():

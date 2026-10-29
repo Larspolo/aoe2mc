@@ -14,9 +14,8 @@ from test_gather import FakeServer, grid  # noqa: E402
 TC = [4, 4, 8, 8]
 
 
-def test_the_mode_starts_in_the_post_imperial_age_with_high_resources():
-    assert run.mode_defaults(dict(run.SETTINGS, mode="battle-royale"))["resources"] == "high"
-    assert run.MODES["battle-royale"]["age"] == "post-imperial"          # play(): when --age is dark (as Death Match)
+def test_the_mode_starts_with_the_resources_of_its_level():
+    assert run.mode_defaults(dict(run.SETTINGS, mode="battle-royale"))["resources"] == run.MODES["battle-royale"]["level"]
     assert run.mode_defaults(dict(run.SETTINGS, mode="battle-royale", resources="low"))["resources"] == "low"
 
 
@@ -51,7 +50,3 @@ def test_the_town_centers_and_the_villagers_of_the_players_go():
     battle_royale.start(g)
     assert [c for c in g.log if c.startswith(("aoe destroy", "kill"))] == [f"aoe destroy {tc}", "kill v2"]
     assert freed == [tc] and g.sieged == set() and g.villagers == {} and g.enemies == {"s1": "X"}
-
-
-def test_a_loaded_game_keeps_its_town():
-    assert run.MODES["battle-royale"]["loaded"] == "skip"                 # play() does not call setup() (#2521)

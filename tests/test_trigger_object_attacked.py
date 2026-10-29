@@ -2,7 +2,6 @@
 tick function tests the HurtTime of the unit with the tag aoe2mc.r<ref> (#2617), 10 ticks after each hit."""
 
 import aoe2mc
-import triggers
 
 CHAT = dict(type=aoe2mc.SEND_CHAT, message="We are attacked.", player=1, time=0, object=None, tile=[-1, -1],
             area=[-1] * 4)
@@ -28,10 +27,8 @@ def test_a_building_tests_the_score_of_its_hits_not_the_tag():
         in files([attacked(unit=False)])["data/aoe2mc/function/tick.mcfunction"]
 
 
-def test_read_scenario_keeps_the_object_and_the_map_names_the_command():
+def test_read_scenario_keeps_the_object():
     assert aoe2mc.OBJECT_ATTACKED in aoe2mc.OBJECT_TESTS           # read_scenario adds ref, unit and player
-    assert "HurtTime" in triggers.MAP[("condition", "OBJECT_ATTACKED")]
-    assert "#2779" in triggers.MAP[("condition", "OBJECT_ATTACKED")]
 
 
 def test_the_predicate_accepts_the_hurt_time_or_the_hit_tag_of_the_plugin():      # #3085

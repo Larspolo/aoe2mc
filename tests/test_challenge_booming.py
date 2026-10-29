@@ -1,4 +1,4 @@
-"""run.py --play --challenge booming: 100 villagers and the Imperial Age complete the goal (#3903, epic #3759)."""
+"""run.py --play --challenge booming: the villagers of the goal and the Imperial Age complete it (#3903, epic #3759)."""
 import types
 
 import pytest
@@ -9,8 +9,10 @@ import build  # noqa: E402  (game/ is on sys.path after the import of game.chall
 import cheats  # noqa: E402
 import recap  # noqa: E402
 
+C = challenge.CHALLENGES["booming"]
 
-def fake(villagers=100, seconds=590.0):
+
+def fake(villagers=C["need"]["villagers"], seconds=C["gold"] - 10.0):
     """A Gather of player 1 with the goal of Booming: the villagers and the three ages, nothing else."""
     g = types.SimpleNamespace(player=1, ended=None, challenge="booming", sent=[], data={"objects": []},
                               stock={}, villagers={f"v{i}": None for i in range(villagers)},
@@ -27,13 +29,13 @@ def ends(monkeypatch):
     return out
 
 
-def test_100_villagers_and_the_imperial_age_end_the_game_with_the_gold_medal(ends):
+def test_the_villagers_and_the_imperial_age_end_the_game_with_the_gold_medal(ends):
     g = fake()
     challenge.tick(g)
     assert ends == [True] and any("Gold medal" in c and "subtitle" in c for c in g.sent)
 
 
-def test_99_villagers_do_not_complete_the_goal(ends):
-    g = fake(villagers=99)
+def test_one_villager_less_does_not_complete_the_goal(ends):
+    g = fake(villagers=C["need"]["villagers"] - 1)
     challenge.tick(g)
     assert ends == [] and g.ended is None

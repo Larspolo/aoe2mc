@@ -3,6 +3,7 @@ import os
 import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "game"))
+import market  # noqa: E402
 import replay  # noqa: E402
 from test_replay import Fake, data  # noqa: E402
 from test_replay_market import trade  # noqa: E402
@@ -23,7 +24,8 @@ def test_a_buy_shows_the_wood_and_the_gold_above_the_market():
     (summon,) = texts(cmds)
     x, y, z = map(float, summon.split()[2:5])
     assert (x, z) == (32.0, 32.0)
-    assert "+100 wood \\u2212130 gold" in summon
+    cost = (market.RATES["wood"] * (100 + market.FEE) + 50) // 100
+    assert f"+100 wood \\u2212{cost} gold" in summon
     assert any(c.startswith("particle ") for c in cmds)
 
 
@@ -34,7 +36,8 @@ def test_two_trades_in_one_second_give_one_text_with_the_sum():
     assert len(texts(first)) == 1 and not texts(second)
     (merge,) = second
     assert merge.startswith("data merge entity @e[type=text_display") and "+200 food" not in merge
-    assert "\\u2212200 food +160 gold" in merge
+    gold = sum(((market.RATES["food"] - k * market.STEP) * (100 - market.FEE) + 50) // 100 for k in (0, 1))
+    assert f"\\u2212200 food +{gold} gold" in merge
 
 
 def test_the_text_goes_after_its_time():

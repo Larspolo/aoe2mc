@@ -1,5 +1,5 @@
-"""game/combat.py, game/train.py: the castles of the 11 classic civilizations train their unique units with the AoE2 DE
-values (#712)."""
+"""game/combat.py, game/train.py: the castles of the 11 classic civilizations train their unique units with their values
+(#712)."""
 import re
 
 import pytest
@@ -8,9 +8,8 @@ from test_train_castle import menus, setup
 import units
 from game import combat, train
 
-CLASSIC = {"BYZANTINES": "CATAPHRACT", "CELTS": "WOAD_RAIDER", "CHINESE": "CHU_KO_NU", "FRANKS": "THROWING_AXEMAN",
-           "GOTHS": "HUSKARL", "JAPANESE": "SAMURAI", "MONGOLS": "MANGUDAI", "SARACENS": "MAMELUKE",
-           "TEUTONS": "TEUTONIC_KNIGHT", "TURKS": "JANISSARY", "VIKINGS": "BERSERK"}
+CLASSIC = ("BYZANTINES", "CELTS", "CHINESE", "FRANKS", "GOTHS", "JAPANESE", "MONGOLS", "SARACENS", "TEUTONS", "TURKS",
+           "VIKINGS")
 
 
 def test_each_unique_unit_with_a_cost_has_values_a_time_and_an_item():
@@ -18,12 +17,12 @@ def test_each_unique_unit_with_a_cost_has_values_a_time_and_an_item():
         if unit in train.COSTS:
             assert unit in combat.STATS and unit in train.TRAIN_TIMES and unit in train.ITEMS, unit
             assert "unique" in combat.STATS[unit].classes
-    assert all(train.UNIQUE[civ] == unit and unit in train.COSTS for civ, unit in CLASSIC.items())
+    assert all(train.UNIQUE[civ] in train.COSTS for civ in CLASSIC)
 
 
 @pytest.mark.parametrize("civ", sorted(CLASSIC))
 def test_the_castle_menu_shows_the_unique_unit_with_its_cost_and_time(civ):
-    unit = CLASSIC[civ]
+    unit = train.UNIQUE[civ]
     server, g = setup(civ, food=500, wood=500, gold=500)
     train.open_menu(g, "Steve", (12, 4))
     _, item, name = train.ITEMS[unit]
@@ -33,7 +32,7 @@ def test_the_castle_menu_shows_the_unique_unit_with_its_cost_and_time(civ):
 
 @pytest.mark.parametrize("civ", sorted(CLASSIC))
 def test_a_trained_unique_unit_has_the_converter_look_and_the_aoe2_values(civ):
-    unit = CLASSIC[civ]
+    unit = train.UNIQUE[civ]
     server, g = setup(civ, food=500, wood=500, gold=500)
     rect = train.open_menu(g, "Steve", (12, 4))
     assert train.order(g, "Steve", rect, 0) == 1
@@ -46,11 +45,19 @@ def test_a_trained_unique_unit_has_the_converter_look_and_the_aoe2_values(civ):
     assert (ranged in server.log) if combat.STATS[unit].range else ranged is None
 
 
+def without(target, cls):
+    """The values of target without the class cls."""
+    t = combat.stats(target)
+    return t._replace(classes=tuple(c for c in t.classes if c != cls))
+
+
 def test_the_samurai_gets_its_bonus_against_unique_units():
-    assert combat.damage("SAMURAI", "CATAPHRACT") == 10 - 2 + 10
-    assert combat.damage("SAMURAI", "MILITIA") == 10
-    assert combat.damage("CATAPHRACT", "HUSKARL") == 9 + 13
-    assert combat.damage("MAMELUKE", "KNIGHT") == 8 - 2 + 9         # a ranged unit hits the pierce armor here
+    assert combat.damage("SAMURAI", "CATAPHRACT") > combat.damage("SAMURAI", "CATAPHRACT", t=without("CATAPHRACT", "unique"))
+    assert combat.damage("CATAPHRACT", "HUSKARL") > combat.damage("CATAPHRACT", "HUSKARL", t=without("HUSKARL", "infantry"))
+    melee = "MAMELUKE" in combat.MELEE_RANGED or not combat.stats("MAMELUKE").range
+    other = {"pierce" if melee else "melee": 99}                     # the armor that the mameluke does not hit
+    assert combat.damage("MAMELUKE", "KNIGHT", t=combat.stats("KNIGHT")._replace(**other)) == \
+        combat.damage("MAMELUKE", "KNIGHT")
 
 
 @pytest.mark.mc
@@ -79,7 +86,7 @@ def test_the_classic_unique_units_exist_on_a_server(tmp_path):
         game.forceload()
         answers, command = [], game.command
         game.command = lambda c: answers.append((c, command(c))) or answers[-1][1]
-        for civ, name in sorted(CLASSIC.items()):
+        for civ, name in ((c, train.UNIQUE[c]) for c in CLASSIC):
             data["players"]["1"]["civ"] = civ
             g = gather.Gather(game, data, tick=0.25, start={}).setup()
             g.techs.update(train.build.AGE_TECHS[:2])                    # the Castle Age (#1082)

@@ -1,12 +1,10 @@
-"""The owner's dashboard shows the Haiku lane (#1715, #1727): its tickets, its runs and its flow on the Setup tab."""
-import json
+"""The owner's dashboard shows the Haiku lane (#1715, #1727): its tickets and its runs."""
 import os
 
 import dashboard_data as dd
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PAGE = open(os.path.join(ROOT, "tools", "dashboard_artifact", "index.html")).read()
-SETUP = json.load(open(os.path.join(ROOT, "tools", "dashboard_artifact", "setup.json")))
 
 
 def test_usage_rows_count_all_runs_and_the_haiku_runs(monkeypatch):
@@ -27,8 +25,3 @@ def test_the_page_reads_the_lane_columns():
     cols = dd.page_columns(PAGE)
     assert "haiku" in cols["tickets"] and "haiku" in cols["usage"]
 
-
-def test_the_setup_names_the_haiku_lane():
-    parts = {r["part"]: r for r in SETUP}
-    assert "aoe2mc autopilot haiku" in parts["Haiku runs"]["where"] and "lane:haiku" in parts["Model lanes"]["does"]
-    assert 'id="lanes-card"' in PAGE and "lane:haiku" in PAGE[PAGE.index('id="loop-card"'):PAGE.index('id="parts-card"')]

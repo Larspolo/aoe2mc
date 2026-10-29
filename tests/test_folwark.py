@@ -1,11 +1,10 @@
-"""game/build.py: a Polish player builds the Folwark in place of the mill (#1874, AoE2 DE wiki "Folwark (Age of Empires
-II)"): 100 wood, 40 s, the Dark Age, 1000 hit points, 5 population, a food drop site with the mill technologies. A new
-own farm with its whole footprint within 4 tiles of the Folwark gives 10 % of its food at once (18 food)."""
+"""game/build.py: a Polish player builds the Folwark in place of the mill (#1874): a food drop site with the mill
+technologies that gives population. A new own farm with its whole footprint within build.FOLWARK_REACH tiles of the
+Folwark gives build.FOLWARK_SHARE of its food at once."""
 from test_build_site import Server
 from test_gather import grid
-from test_krepost import shown
 
-from game import build, civs, combat, gather, train
+from game import build, gather, train
 
 DOWN = (0.0, 90.0)
 
@@ -28,45 +27,25 @@ def complete(g, name, x, z):
     return site
 
 
-def test_the_values_of_the_wiki():
-    assert build.BUILD_TIMES["FOLWARK"] == 40
-    assert "FOLWARK" not in build.AGE and train.HOUSING["FOLWARK"] == 5
-    s = combat.BUILDINGS["FOLWARK"]
-    assert (s.hp, s.attack, s.melee, s.pierce) == (1000, 0, 0, 7) and combat.SIGHT["FOLWARK"] == 6
-    assert train.TRAINS["FOLWARK"] == train.TRAINS["MILL"] and "HORSE_COLLAR" in train.TRAINS["FOLWARK"]
-    assert "POLES" in civs.MISSING["MILL"] and "POLES" not in civs.MISSING["FOLWARK"]
-    assert {"BRITONS", "FRANKS", "LITHUANIANS"} <= set(civs.MISSING["FOLWARK"])
-
-
-def test_only_a_polish_player_has_the_folwark_and_no_mill_in_the_menu():
-    server, g = polish("BRITONS")
-    build.open_menu(g, "Steve")
-    assert "Mill" in shown(server) and "Folwark" not in shown(server)
-    server, g = polish()
-    build.open_menu(g, "Steve")
-    assert "Folwark" in shown(server) and "Mill" not in shown(server)
-    folwark = next(it for it in build.items(g) if it[2] == "Folwark")
-    assert folwark[0] == build.MENU.index("FOLWARK") and folwark[3] == "100 wood\n40 s"
-
-
-def test_a_folwark_is_a_food_drop_site_and_gives_5_population():
+def test_a_folwark_is_a_food_drop_site_and_gives_population():
     server, g = polish()
     before = train.limit(g)
     site = complete(g, "FOLWARK", 20, 20)
     x0, x1, z0, z1 = site["footprint"]
     assert {(x, z) for x in range(x0, x1) for z in range(z0, z1)} in g.map.drops["food"]
-    assert train.limit(g) == before + 5
+    assert train.limit(g) == before + train.HOUSING["FOLWARK"]
 
 
-def test_a_new_farm_next_to_a_folwark_gives_18_food_at_once():
+def test_a_new_farm_next_to_a_folwark_gives_a_part_of_its_food_at_once():
     server, g = polish()
+    n = int(gather.FARM_FOOD * build.FOLWARK_SHARE + 0.5)
     complete(g, "FOLWARK", 20, 20)
     food = g.stock["food"]
     farm = complete(g, "FARM", 36, 20)                                 # beside the Folwark
     tile = (farm["footprint"][0] // 4 + 1, farm["footprint"][2] // 4 + 1)
-    assert g.stock["food"] == food + 18 and g.map.farms[tile] == gather.FARM_FOOD - 18
+    assert g.stock["food"] == food + n and g.map.farms[tile] == gather.FARM_FOOD - n
     far = complete(g, "FARM", 84, 84)                                  # more than 4 tiles away: no food
-    assert g.stock["food"] == food + 18 and g.map.farms[(far["footprint"][0] // 4 + 1, far["footprint"][2] // 4 + 1)] \
+    assert g.stock["food"] == food + n and g.map.farms[(far["footprint"][0] // 4 + 1, far["footprint"][2] // 4 + 1)] \
         == gather.FARM_FOOD
 
 

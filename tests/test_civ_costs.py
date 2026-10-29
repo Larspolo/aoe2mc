@@ -21,43 +21,37 @@ def setup(civ, feudal=True, **stock):
     return server, g
 
 
-def test_a_hindustani_villager_costs_less_in_each_age():
+def test_a_hindustani_villager_costs_less_than_a_goth_one():
     _, g = setup("HINDUSTANIS", food=100)
-    assert train.queue(g, "Steve", (3, 3)) and g.stock["food"] == 100 - 44        # 50 food, 13 % cheaper in the Feudal Age
+    pay = train.price(g, "VILLAGER_MALE")["food"]
+    assert pay < train.COSTS["VILLAGER_MALE"]["food"]
+    assert train.queue(g, "Steve", (3, 3)) and g.stock["food"] == 100 - pay
     _, g = setup("GOTHS", food=100)
-    assert train.queue(g, "Steve", (3, 3)) and g.stock["food"] == 50
+    assert train.queue(g, "Steve", (3, 3)) and g.stock["food"] == 100 - train.COSTS["VILLAGER_MALE"]["food"]
 
 
-def test_burgundian_bloodlines_costs_half_in_the_menu_and_in_the_payment():
-    server, g = setup("BURGUNDIANS", food=75, gold=50)
+def test_burgundian_bloodlines_costs_less_in_the_menu_and_in_the_payment():
+    server, g = setup("BURGUNDIANS", food=1000, gold=1000)
+    pay = train.price(g, "BLOODLINES")
+    assert sum(pay.values()) < sum(train.COSTS["BLOODLINES"].values())
     rect = train.open_menu(g, "Steve", (11, 3))
     menu = [unquote(c) for c in server.log if c.startswith("aoe menu ")][-1]
-    assert ":book:Bloodlines:75 food · 50 gold · " in menu
-    assert train.order(g, "Steve", rect, 1) == 1 and g.stock["food"] == 0 and g.stock["gold"] == 0
-    assert train.cancel(g, "Steve", rect, 0) == "BLOODLINES" and g.stock == g.stock | {"food": 75, "gold": 50}
+    assert ":book:Bloodlines:" + " · ".join(f"{v} {r}" for r, v in pay.items()) + " · " in menu
+    assert train.order(g, "Steve", rect, train.layout(g, rect)["BLOODLINES"][0]) == 1
+    assert (g.stock["food"], g.stock["gold"]) == (1000 - pay.get("food", 0), 1000 - pay.get("gold", 0))
+    assert train.cancel(g, "Steve", rect, 0) == "BLOODLINES" and (g.stock["food"], g.stock["gold"]) == (1000, 1000)
 
 
-def test_a_teutonic_farm_costs_40_percent_less():
-    _, g = setup("TEUTONS", wood=36)
+def test_a_teutonic_farm_costs_less():
+    _, g = setup("TEUTONS", wood=1000)
+    wood = build.price(g, "FARM")["wood"]
+    assert wood < build.COSTS["FARM"]["wood"]
     lore = next(lore for _, _, name, lore in build.items(g) if name == "Farm")
-    assert lore.startswith("36 wood\n")
+    assert lore.startswith(f"{wood} wood\n")
     site = build.found(g, "FARM", (14, 16, 14, 16))
-    assert site["name"] == "FARM" and g.stock["wood"] == 0
-    assert next(lore for _, _, name, lore in build.items() if name == "Farm").startswith("60 wood\n")   # no player
-
-
-def test_more_cost_bonuses():
-    def price(civ, name, *techs):
-        _, g = setup(civ, feudal=False)
-        g.techs.update(techs)
-        return (build.price if name in build.COSTS else train.price)(g, name)
-    assert price("BYZANTINES", "SPEARMAN") == {"food": 26, "wood": 19}               # the AoE2 rounding
-    assert price("BYZANTINES", "IMPERIAL_AGE", "FEUDAL_AGE", "CASTLE_AGE") == {"food": 667, "gold": 533}
-    assert price("CHINESE", "LOOM") == train.COSTS["LOOM"] and price("CHINESE", "LOOM", "FEUDAL_AGE") == {"gold": 48}
-    assert price("SPANISH", "FORGING") == {"food": 150} and price("VIKINGS", "WHEELBARROW") == {}
-    assert price("CUMANS", "STABLE") == {"wood": 100} and price("MALIANS", "FARM") == build.COSTS["FARM"]
-    assert price("BRITONS", "TOWN_CENTER", "FEUDAL_AGE", "CASTLE_AGE")["wood"] == 138             # 275 / 2, half up
-    assert price("PORTUGUESE", "MILITIA") == {"food": 50, "gold": 16}
+    assert site["name"] == "FARM" and g.stock["wood"] == 1000 - wood
+    assert next(lore for _, _, name, lore in build.items() if name == "Farm").startswith(
+        f"{build.COSTS['FARM']['wood']} wood\n")                     # no player
 
 
 def test_the_table_is_in_order_and_names_known_groups():

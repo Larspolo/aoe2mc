@@ -106,6 +106,8 @@ face you.").
 ## Rules
 
 - A test must fail before a bug fix and pass after it.
+- A test must not fail when a data file or a configuration file changes: no literal copy of their values, texts or
+  settings (owner, 2026-10-29, `docs/extend.md`).
 - Output must stay deterministic. Two conversions of the same scenario with the same seed give the same files.
 - `tests/test_golden.py` fails when the output of the tiny scenario changes. If the change is on purpose, write
   a new golden file (`AOE2MC_UPDATE_GOLDEN=1 python3 -m pytest tests/test_golden.py`), commit it and explain in

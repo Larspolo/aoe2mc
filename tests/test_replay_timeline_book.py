@@ -8,6 +8,7 @@ import sys
 import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "game"))
+import aoe2mc  # noqa: E402
 import replay  # noqa: E402
 from test_replay import Fake, data  # noqa: E402
 
@@ -21,8 +22,9 @@ TIMELINE = [{"time": 0, "player": 1, "kind": "queue", "type": 83, "objects": [5]
             {"time": 1_400_000, "player": 1, "kind": "build", "type": 82, "tile": [20.0, 8.0], "objects": [9]},
             {"time": 1_500_000, "player": 2, "kind": "resign"},
             {"time": 1_500_000, "player": 1, "kind": "chat", "text": "gg"}]
-PAGES = ["■ Player 1 (Britons)\n\n10:20 Feudal Age\n12:10 1st military: Scout Cavalry\n21:05 Castle Age\n21:40 Castle",
-         "■ Player 2 (Aztecs)\n\n02:01 1st military: Militia\n25:00 Resigns"]
+SCOUT, MILITIA = (replay.mmss(t + aoe2mc.train_ms(n)) for t, n in ((700_000, "SCOUT_CAVALRY"), (100_000, "MILITIA")))
+PAGES = [f"■ Player 1 (Britons)\n\n10:20 Feudal Age\n{SCOUT} 1st military: Scout Cavalry\n21:05 Castle Age\n21:40 Castle",
+         f"■ Player 2 (Aztecs)\n\n{MILITIA} 1st military: Militia\n25:00 Resigns"]   # at the end of the training
 
 
 def text(page):

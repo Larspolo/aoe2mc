@@ -1,29 +1,23 @@
-"""Theocracy (#1586): the monastery researches it in the Imperial Age (200 gold, 75 s, AoE2 wiki "Theocracy (Age of
+"""Theocracy (#1586): the monastery researches it in the Imperial Age (AoE2 wiki "Theocracy (Age of
 Empires II)"). Before it, all monks that convert one unit rest after the conversion; after it, only the one that
 converts it."""
 from test_gather import FakeServer, grid
 from test_monk_techs import MONASTERY, research
 from test_monk_train import monastery
 
-from game import civs, gather, monk, train
-
-
-def test_the_values_are_those_of_aoe2():
-    assert len(train.HELP["THEOCRACY"]) <= 50
-    assert {"CELTS", "HUNS", "MONGOLS", "VIKINGS"} <= set(civs.MISSING["THEOCRACY"])
-    assert "BRITONS" not in civs.MISSING["THEOCRACY"]
+from game import gather, monk, train
 
 
 def test_the_monastery_researches_it_only_in_the_imperial_age():
-    slot = train.ITEMS["THEOCRACY"][0]
+    slot, gold = train.ITEMS["THEOCRACY"][0], train.COSTS["THEOCRACY"]["gold"]
     server, g = monastery(age=2)
-    g.stock["gold"] = 200
+    g.stock["gold"] = gold
     rect = train.open_menu(g, "Steve", MONASTERY)
-    assert train.order(g, "Steve", rect, slot) == 0 and g.stock["gold"] == 200
+    assert train.order(g, "Steve", rect, slot) == 0 and g.stock["gold"] == gold
     server, g = monastery(age=3)
-    rect = research(g, slot, 200)
+    rect = research(g, slot, gold)
     assert g.queues[rect][0]["name"] == "THEOCRACY"
-    train.tick(g, 75)
+    train.tick(g, train.TRAIN_TIMES["THEOCRACY"])
     assert "THEOCRACY" in g.techs
 
 

@@ -19,17 +19,24 @@ def lines(effects, T=4):
     return files.get("data/aoe2mc/function/trigger/7.mcfunction", "").splitlines()
 
 
+def vanilla(name):
+    """The vanilla sound of the first SOUNDS part in the name (data/sounds.jsonl)."""
+    return next(s for part, s in aoe2mc.SOUNDS if part in name.upper())
+
+
 def test_the_sound_name_part_gives_the_vanilla_sound_at_each_player():
-    assert lines([effect()]) == ["execute as @a at @s run playsound minecraft:block.bell.use master @s"]
+    assert lines([effect()]) == [f"execute as @a at @s run playsound minecraft:{vanilla('Town Bell')} master @s"]
 
 
 def test_an_unknown_or_empty_sound_name_plays_the_default_sound():
+    default = aoe2mc.SOUNDS[-1][1]                                     # the row with the name ""
     for name in ("xyz", ""):
-        assert lines([effect(name)]) == ["execute as @a at @s run playsound minecraft:block.note_block.chime master @s"]
+        assert lines([effect(name)]) == [f"execute as @a at @s run playsound minecraft:{default} master @s"]
 
 
 def test_a_target_tile_plays_the_sound_there_on_the_ground():
-    assert lines([effect("battle_horn", tile=(3, 5))]) == ["playsound minecraft:event.raid.horn master @a 14.5 70 22.5"]
+    assert lines([effect("battle_horn", tile=(3, 5))]) == [
+        f"playsound minecraft:{vanilla('battle_horn')} master @a 14.5 70 22.5"]
 
 
 def test_the_default_line_is_last_and_each_sound_has_the_vanilla_form():

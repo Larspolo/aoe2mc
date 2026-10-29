@@ -1,4 +1,4 @@
-"""Heresy (#1582): the monastery researches it in the Castle Age (1000 gold, 60 s, AoE2 DE wiki "Heresy"). Then a unit
+"""Heresy (#1582): the monastery researches it in the Castle Age (AoE2 DE wiki "Heresy"). Then a unit
 of the player that an enemy monk converts dies, with its horse or rider, and the enemy gets no unit."""
 from types import SimpleNamespace
 
@@ -6,24 +6,20 @@ from test_monk_convert import setup, until_converted
 from test_monk_techs import MONASTERY, research
 from test_monk_train import monastery
 
-from game import civs, gather, monk, train
+from game import gather, monk, train
 
 
-def test_the_values_are_those_of_aoe2():
-    assert len(train.HELP["HERESY"]) <= 50
-    assert {"BRITONS", "GOTHS", "PERSIANS", "WU"} <= set(civs.MISSING["HERESY"])
-    assert not {"AZTECS", "FRANKS", "TEUTONS"} & set(civs.MISSING["HERESY"])
-
-
-def test_the_monastery_researches_it_in_slot_6_in_the_castle_age():
+def test_the_monastery_researches_it_in_the_castle_age():
+    slot = train.SLOTS["HERESY"]
     server, g = monastery(age=1)
-    g.stock["gold"] = 1000
+    gold = train.price(g, "HERESY")["gold"]
+    g.stock["gold"] = gold
     rect = train.open_menu(g, "Steve", MONASTERY)
-    assert train.order(g, "Steve", rect, 6) == 0 and g.stock["gold"] == 1000
+    assert train.order(g, "Steve", rect, slot) == 0 and g.stock["gold"] == gold
     server, g = monastery(age=2)
-    rect = research(g, 6, 1000)
+    rect = research(g, slot, gold)
     assert g.queues[rect][0]["name"] == "HERESY"
-    train.tick(g, 60)
+    train.tick(g, train.seconds(g, "HERESY", "MONASTERY"))
     assert "HERESY" in g.techs
 
 

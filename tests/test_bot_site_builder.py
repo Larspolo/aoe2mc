@@ -2,13 +2,15 @@
 test_gather, the map of test_bot_gather."""
 from test_bot_gather import bot_map
 
+from game import bot
+
 
 def builders(b, site):
     return [v for v in b.g.villagers.values() if v.site is site and v.state != "idle"]
 
 
 def house(b):
-    b.g.stock["wood"] = 30
+    b.g.stock["wood"] = bot.build.price(b.g, "HOUSE")["wood"] + 5
     b.g.pop = 3                                                        # town center: limit 5
     b.step()
     site = b.g.sites[0]

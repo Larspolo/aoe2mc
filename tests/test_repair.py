@@ -1,11 +1,11 @@
-"""game/repair.py: selected villagers repair an own damaged building, as in AoE2 DE (#1330): the first one 750 hit
-points per AoE2 minute, each other one 375 more, for half the build cost (a town center: 550 wood)."""
+"""game/repair.py: selected villagers repair an own damaged building, as in AoE2 DE (#1330): the first one at
+repair.RATE, each other one repair.MORE more, for half the build cost (a town center: double its wood)."""
 import re
 
 import pytest
 from test_gather import FakeServer, grid
 
-from game import combat, garrison, gather, repair
+from game import build, combat, garrison, gather, repair
 
 HOUSE, TC = (4, 6, 4, 6), (12, 16, 12, 16)                         # block footprints (x0, x1, z0, z1)
 
@@ -41,12 +41,11 @@ def setup(house=275, tc=2400, wood=100, n=1):
     return server, g
 
 
-def test_the_aoe2_rates_and_costs():
-    assert (repair.RATE * 60, repair.MORE * 60) == (750, 375)
+def test_the_repair_costs_half_the_build_cost():
     _, g = setup()
-    assert repair.cost(g, "HOUSE") == {"wood": 12.5}                 # half of 25 wood
-    assert repair.cost(g, "TOWN_CENTER") == {"wood": 550}            # double wood, no stone (AoE2 wiki)
-    assert repair.cost(g, "CASTLE") == {"stone": 325}
+    for name in ("HOUSE", "CASTLE"):
+        assert repair.cost(g, name) == {r: v / 2 for r, v in build.price(g, name).items()}
+    assert repair.cost(g, "TOWN_CENTER") == {"wood": build.price(g, "TOWN_CENTER")["wood"] * 2}   # no stone (AoE2 wiki)
 
 
 def test_a_villager_repairs_a_damaged_house_to_its_full_hit_points_and_pays_half_the_cost():
@@ -56,8 +55,9 @@ def test_a_villager_repairs_a_damaged_house_to_its_full_hit_points_and_pays_half
     while g.villagers["v0"].state != "idle" and steps < 1000:
         g.step()
         steps += 1
-    assert server.hp[repair.uuid(HOUSE)] == combat.stats("HOUSE").hp
-    assert 100 - g.stock["wood"] in (6, 7)                           # 12.5 wood × 275 / 550 hit points
+    full = combat.stats("HOUSE").hp
+    assert server.hp[repair.uuid(HOUSE)] == full
+    assert abs(100 - g.stock["wood"] - repair.cost(g, "HOUSE")["wood"] * (full - 275) / full) <= 1   # whole wood
     assert f"aoe label {repair.uuid(HOUSE)}" in server.log
 
 
@@ -97,8 +97,9 @@ def test_no_repair_order_off_an_own_building(cell):
 
 @pytest.mark.mc
 def test_repair_on_a_server(tmp_path):
-    """2 villagers walk to their damaged town center (2000 of 2400 hit points) and repair it on a Paper server: the
-    score aoe_hp of its target entity goes up to 2400, and the stock pays 550 × 400 / 2400 wood."""
+    """2 villagers walk to their damaged town center (400 hit points less than the full hit points) and repair it on a
+    Paper server: the score aoe_hp of its target entity goes up to the full hit points, and the stock pays the share
+    of the repair cost."""
     from test_mc_check import mojang_reachable
     if not mojang_reachable():
         pytest.skip("Mojang is not reachable")
@@ -129,13 +130,15 @@ def test_repair_on_a_server(tmp_path):
         combat.setup(game, data)
         g = gather.Gather(game, data, tick=0.25, start={"wood": 200}).setup()
         tc, = repair.buildings(g)
-        game.command(f"scoreboard players set {repair.uuid(tc)} aoe_hp 2000")
-        assert repair.hp(g, tc) == 2000
+        full = combat.stats("TOWN_CENTER").hp
+        game.command(f"scoreboard players set {repair.uuid(tc)} aoe_hp {full - 400}")
+        assert repair.hp(g, tc) == full - 400
         g.choose(set(g.villagers), min(g.villagers))
         assert repair.order(g, "nobody", (tc[0], tc[2])) == tc
         end = time.time() + 90
-        while repair.hp(g, tc) < 2400:
+        while repair.hp(g, tc) < full:
             assert time.time() < end, ({u: (v.state, g.pos(u)) for u, v in g.villagers.items()}, repair.hp(g, tc))
             g.step()
             time.sleep(g.tick)
-        assert 200 - g.stock["wood"] in (91, 92) and all(v.state == "idle" for v in g.villagers.values())
+        assert abs(200 - g.stock["wood"] - repair.cost(g, "TOWN_CENTER")["wood"] * 400 / full) <= 1
+        assert all(v.state == "idle" for v in g.villagers.values())

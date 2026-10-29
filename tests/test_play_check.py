@@ -2,7 +2,7 @@
 from test_bot_gather import bot_map
 
 import play_check
-from game import gather
+from game import gather, train
 
 
 def driver():
@@ -34,7 +34,7 @@ def test_the_driver_saves_for_the_feudal_age_and_researches_it():
     assert d.saving == "FEUDAL_AGE"
     d.recruit()
     assert not any(me.queues.values())                                 # no villager: the food goes to the age
-    me.stock["food"] = 500
+    me.stock["food"] = train.price(me, "FEUDAL_AGE")["food"]
     d.advance()
     assert [e["name"] for q in me.queues.values() for e in q] == ["FEUDAL_AGE"] and me.stock["food"] == 0
 

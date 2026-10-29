@@ -1,13 +1,14 @@
-"""game/train.py: the barracks researches Arson in the Feudal Age (75 food, 25 gold, 25 s, AoE2 DE wiki infobox):
-the infantry of the player gets +2 attack against the standard buildings, not against walls, gates and the wonder,
+"""game/train.py: the barracks researches Arson in the Feudal Age: the infantry of the
+player gets more attack against the standard buildings, not against walls, gates and the wonder,
 and other units do not change (#1419)."""
 import shutil
 import time
 
 import pytest
+from menu_line import item
 from test_forging import menus, setup
 
-from game import civs, combat, run, train
+from game import combat, run, train
 
 BARRACKS = (17, 3)
 
@@ -17,9 +18,10 @@ def hit(a, t):
     return max(1, max(0, a.attack - t.melee) + sum(a.bonus.get(c, 0) for c in t.classes))
 
 
-def test_the_cost_time_and_age_are_those_of_aoe2():
-    assert train.HELP["ARSON"] and "ARSON" in train.TRAINS["BARRACKS"]
-    assert civs.MISSING["ARSON"] == ("GOTHS", "MUISCA", "ROMANS")             # the wiki availability
+def text(g, name, building=None):
+    """The cost and time text of the menu item of name, from the data (as train.show writes it)."""
+    return (" · ".join(f"{v} {r}" for r, v in train.price(g, name, building).items()) or "free") + \
+        f" · {round(train.seconds(g, name, building), 1):g} s · "
 
 
 def test_the_barracks_menu_has_arson_in_the_feudal_age():
@@ -28,38 +30,39 @@ def test_the_barracks_menu_has_arson_in_the_feudal_age():
     assert "Arson" not in menus(server)[-1]
     server, g = setup()
     train.open_menu(g, "Steve", BARRACKS)
-    assert " 6:book:Arson:75 food · 25 gold · 25 s · research " in menus(server)[-1] + " "
+    assert item(menus(server)[-1], "Arson").endswith(":Arson:" + text(g, "ARSON") + "research")
 
 
-def test_the_standard_buildings_have_their_class_and_the_walls_not():
-    assert combat.STANDARD in combat.stats("HOUSE").classes and combat.STANDARD in combat.stats("CASTLE").classes
-    assert combat.STANDARD not in combat.stats("WONDER").classes
+def test_the_walls_have_no_standard_class_and_the_command_names_other_classes():
     assert combat.STANDARD not in combat.wall("STONE_WALL", 1).classes and combat.STANDARD not in combat.wall("GATE", 1).classes
     box, uuid = (8, 64, 8, 23, 104, 23), combat.target_uuid([8, 8, 24, 24])
-    house, = [c for c in combat.building(uuid, "HOUSE", 1, box) if c.startswith("aoe building")]
-    wall, = [c for c in combat.building(uuid, "STONE_WALL", 1, box, s=combat.wall("STONE_WALL", 1))
+    s = combat.Stats(550, 0, 0, 7, 0, 0.0, {}, ("building", combat.STANDARD))   # test values
+    house, = [c for c in combat.building(uuid, "HOUSE", 1, box, s=s) if c.startswith("aoe building")]
+    wall, = [c for c in combat.building(uuid, "STONE_WALL", 1, box, s=s._replace(hp=1080, melee=8, pierce=10,
+                                                                                 classes=("building", "wall", "stone")))
              if c.startswith("aoe building")]
     assert house == f"aoe building {uuid} 550 0 7 8 64 8 23 104 23"      # the default classes of the plugin
     assert wall == f"aoe building {uuid} 1080 8 10 8 64 8 23 104 23 building,wall,stone"
 
 
-def test_arson_gives_infantry_two_attack_against_standard_buildings():
-    server, g = setup(food=75)
-    g.stock["gold"] = 25
+def test_arson_gives_infantry_more_attack_against_standard_buildings():
+    server, g = setup(food=0)
+    cost = train.price(g, "ARSON")
+    g.stock.update(cost)
     rect = train.open_menu(g, "Steve", BARRACKS)
     slot = train.ITEMS["ARSON"][0]
-    assert train.order(g, "Steve", rect, slot) == 1 and g.stock["food"] == 0 and g.stock["gold"] == 0
+    assert train.order(g, "Steve", rect, slot) == 1 and not any(g.stock[r] for r in cost)
     server.log.clear()
-    train.tick(g, 25)
+    train.tick(g, train.TRAIN_TIMES["ARSON"])
     assert "ARSON" in g.techs and "Arson is researched." in " ".join(server.log)
     militia = train.stats(g, "MILITIA")
     house, wall = combat.stats("HOUSE"), combat.wall("STONE_WALL", 1)
-    assert hit(militia, house) == hit(combat.stats("MILITIA"), house) + 2
+    assert hit(militia, house) > hit(combat.stats("MILITIA"), house)
     assert hit(militia, wall) == hit(combat.stats("MILITIA"), wall)
     assert hit(militia, combat.stats("ARCHER")) == hit(combat.stats("MILITIA"), combat.stats("ARCHER"))
     for name in ("SCOUT_CAVALRY", "ARCHER", "VILLAGER_MALE", "BATTERING_RAM"):
         assert train.stats(g, name) == combat.stats(name), name
-    assert "aoe stats m 40 4 0 1 0 infantry standard:2 24" in server.log        # the live militia
+    assert combat.stats_command("m", "MILITIA", militia) in server.log         # the live militia
 
 
 @pytest.mark.mc
@@ -92,5 +95,5 @@ def test_an_arson_militia_hits_a_house_harder_than_a_wall_on_a_server(tiny_world
                 if n not in lost and hp(game, u) != start[n]:
                     lost[n] = start[n] - hp(game, u)
             time.sleep(0.05)
-        # one hit: 4 attack - 0 melee armor + 2 (Arson) on a house; max(0, 4 - 8) = 0, at least 1, on a stone wall
-        assert lost == {"HOUSE": 6, "STONE_WALL": 1}, lost
+        # one hit: the rule of hit() with the Arson bonus on a house, and at least 1 on a stone wall
+        assert lost == {"HOUSE": hit(militia, combat.stats("HOUSE")), "STONE_WALL": hit(militia, combat.wall("STONE_WALL", 1))}, lost

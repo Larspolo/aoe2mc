@@ -53,8 +53,8 @@ def test_mounted_units_attack(tiny_world, tmp_path):
         game.command(combat.stats_command("@e[tag=k,limit=1]", "KNIGHT"))
         game.command(combat.stats_command("@e[tag=v,limit=1]", "VILLAGER"))
         assert game.command("aoe attack @e[tag=k] @e[tag=v,limit=1]").strip() == "Attack: 1 units"
-        # AoE2: knight attack 10, villager 25 hit points and melee armor 0: 10 damage per hit, the third one kills
-        assert hits(game, "v", 25.0, 2, 30) == [15.0, 5.0]
+        hp, d = combat.stats("VILLAGER").hp, combat.damage("KNIGHT", "VILLAGER")   # the AoE2 damage of one hit
+        assert hits(game, "v", float(hp), 2, 30) == [hp - d, hp - 2 * d]
         end = time.time() + 10
         while time.time() < end and data(game, "v", "Health") is not None:
             time.sleep(0.1)
@@ -66,11 +66,12 @@ def test_mounted_units_attack(tiny_world, tmp_path):
         game.command("team join p2 @e[tag=t]")
         assert game.command(combat.range_command("@e[tag=c,limit=1]", "CAVALRY_ARCHER", 4)).strip() == "Range: 1 units"
         game.command(combat.stats_command("@e[tag=c,limit=1]", "CAVALRY_ARCHER"))
-        game.command("aoe stats @e[tag=t,limit=1] 1000 0 0 0 0 infantry -")    # many hit points, 6 per arrow
+        game.command("aoe stats @e[tag=t,limit=1] 1000 0 0 0 0 infantry -")    # many hit points, no armor
         assert game.command("aoe attack @e[tag=c] @e[tag=t,limit=1]").strip() == "Attack: 1 units"
         assert "aoe_range" in game.command("aoe goals @e[tag=cr,limit=1]")
         got = hits(game, "t", 1000.0, 3, 40)
         a, t = data(game, "c", "Pos"), data(game, "t", "Pos")
         d = math.hypot(a[0] - t[0], a[2] - t[2])
         assert 13 <= d <= 16.5, d             # the horse stopped at the range of 4 tiles (16 blocks)
-        assert len(got) == 3 and got[0] == 994.0, got
+        arrow = combat.damage("CAVALRY_ARCHER", "X", t=combat.Stats(1000, 0, 0, 0, 0, 0.0, classes=("infantry",)))
+        assert len(got) == 3 and got[0] == 1000.0 - arrow, got

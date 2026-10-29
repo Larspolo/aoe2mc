@@ -28,7 +28,7 @@ def test_a_trade_cart_walks_a_diagonal_at_its_aoe2_speed_both_ways(tmp_path):
     with open(tmp_path / "W" / "aoe2mc.json") as f:
         data = json.load(f)
     a, b = (30, 30), (110, 110)                                         # 113 blocks
-    need = 1.25 * 4 * gather.NORMAL                                    # AoE2: 1.25 tiles per second, 8.5 blocks
+    need = ai.walk_speed("TRADE_CART", 4)                              # blocks per second at Normal speed
     with run.Game(tmp_path / "W") as game:
         game.forceload()
         g = gather.Gather(game, data).setup()

@@ -7,6 +7,7 @@ import sys
 import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "game"))
+import gather  # noqa: E402
 import replay  # noqa: E402
 from test_replay import Fake, data  # noqa: E402
 from test_replay_gather import TREE, VIL, order  # noqa: E402
@@ -37,7 +38,7 @@ def summary(sent):
 def test_the_end_shows_the_villagers_and_the_gathered_resources():
     r, sent = play([queue(t=0), queue(t=1000, name="ARCHER", type=4), order(2000, 20),
                     dict(time=60_000, player=1, kind="chat", text="gg")])
-    wood = 100 - r.map.trees[(5, 10)]
+    wood = gather.TREE_WOOD - r.map.trees[(5, 10)]
     assert wood > 10 and r.villagers == {1: 1}
     assert summary(sent) == [f"Player 1 (Britons): villagers trained 1, gathered food 0, wood {wood}, gold 0, stone 0, idle villager time 0:02, idle TC time 0:00",
                              "Player 2 (Aztecs): villagers trained 0, gathered food 0, wood 0, gold 0, stone 0, idle villager time 0:00, idle TC time 0:00"]

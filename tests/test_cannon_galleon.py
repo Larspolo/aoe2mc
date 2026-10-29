@@ -1,37 +1,34 @@
 """game/train.py, game/fleet.py, game/combat.py: an own dock trains the cannon galleon in the Imperial Age after
 Chemistry (#1484), not for the civilizations without it. It sails into its long range of a building on the shore and
-hits it with the AoE2 damage. Values: the AoE2 wiki infobox "Cannon_Galleon" (MediaWiki API, 2026-10-27: Time 46,
-Wood 200, Gold 150, HP 120, MAttack 50, +200 vs. buildings, +25 vs. siege, Range 13, MinRange 3, Armor 0/5, ROF 10,
-Speed 1.05, LOS 15, AOE 0.25, TrainReq Chemistry) and its availability chart (0 and -1: no cannon galleon)."""
+hits it with the AoE2 damage."""
 import math
 import shutil
 import time
 
 import pytest
 from test_dock_train import DOCK, dock_map
+from test_castle_upgrades import entry
 from test_train_archery import menus
 
 import buildings
 from game import civs, combat, fleet, run, train
 
 build = train.build                                                    # the module that train uses
-HAVE_NOT = {"ARMENIANS", "AZTECS", "BYZANTINES", "CHINESE", "CUMANS", "DANES", "GOTHS", "HUNS", "INCAS", "JURCHENS",
-            "MAPUCHE", "MAYANS", "MUISCA", "ROMANS", "SAXONS", "SHU", "TUPI", "VARANGIANS", "VIKINGS", "WEI", "WU"}
 
 
-def test_the_cannon_galleon_has_the_aoe2_de_values_of_the_wiki():
-    assert build.NEEDS["CANNON_GALLEON"] == "CHEMISTRY"
-    assert "CANNON_GALLEON" in train.TRAINS["DOCK"] and len(train.HELP["CANNON_GALLEON"]) <= 50
-    assert set(civs.MISSING["CANNON_GALLEON"]) == HAVE_NOT <= set(buildings.CIV_TO_ARCH)
+def test_the_help_text_is_short_and_the_civilizations_without_it_are_known():
+    assert len(train.HELP["CANNON_GALLEON"]) <= 50
+    assert set(civs.MISSING["CANNON_GALLEON"]) <= set(buildings.CIV_TO_ARCH)
 
 
 def test_the_cannon_galleon_shoots_far_with_a_blast_and_a_minimum_range():
-    assert combat.damage("CANNON_GALLEON", "HOUSE") == 50 + 200 - combat.stats("HOUSE").melee   # melee damage
-    assert combat.damage("CANNON_GALLEON", "BOMBARD_CANNON") == 50 - 2 + 25
+    s, h = combat.stats("CANNON_GALLEON"), combat.stats("HOUSE")
+    assert combat.damage("CANNON_GALLEON", "HOUSE") == \
+        combat.damage("CANNON_GALLEON", "HOUSE", t=h._replace(pierce=h.pierce + 9))   # melee damage: no pierce armor
     shot = combat.range_command("u", "CANNON_GALLEON", 4).split()
-    assert shot[3] == "52" and shot[-2:] == ["1.0", "12"]                 # 13 tiles; blast 0.25, minimum range 3 tiles
-    assert fleet.reach(dock_map()[1], "CANNON_GALLEON") == 12               # tile size 1: 13 - 1 tiles
-    assert train.chemistry("CANNON_GALLEON", combat.stats("CANNON_GALLEON")).attack == 50   # a gunpowder unit
+    assert shot[3] == str(4 * s.range) and len(shot) == 7                 # the range in blocks, a blast, a minimum range
+    assert fleet.reach(dock_map()[1], "CANNON_GALLEON") == s.range - 1    # tile size 1: one tile less
+    assert train.chemistry("CANNON_GALLEON", s).attack == s.attack       # a gunpowder unit
 
 
 def test_the_dock_menu_has_the_cannon_galleon_after_chemistry():
@@ -39,19 +36,21 @@ def test_the_dock_menu_has_the_cannon_galleon_after_chemistry():
     g.techs, g.stock["gold"] = set(build.AGE_TECHS[:3]), 300
     slot = train.ITEMS["CANNON_GALLEON"][0]
     train.open_menu(g, "Steve", (15, 12))
-    assert f"{slot}:gray_dye:Cannon Galleon:200 wood · 150 gold · 46 s · Needs Chemistry" in menus(server)[-1]
+    assert entry(g, (15, 12), "CANNON_GALLEON") + "Needs Chemistry" in menus(server)[-1]
     assert train.order(g, "Steve", DOCK, slot) == 0
     g.techs.add("CHEMISTRY")
     train.open_menu(g, "Steve", (15, 12))
-    assert f"{slot}:dark_oak_boat:Cannon Galleon:200 wood · 150 gold · 46 s · queue 0/15" in menus(server)[-1]
-    assert train.order(g, "Steve", DOCK, slot) == 1 and (g.stock["wood"], g.stock["gold"]) == (200, 150)
-    assert train.tick(g, 45) == []
+    assert entry(g, (15, 12), "CANNON_GALLEON") + "queue 0/15" in menus(server)[-1]
+    cost, time = train.price(g, "CANNON_GALLEON"), train.seconds(g, "CANNON_GALLEON")
+    assert train.order(g, "Steve", DOCK, slot) == 1
+    assert (g.stock["wood"], g.stock["gold"]) == (400 - cost.get("wood", 0), 300 - cost.get("gold", 0))
+    assert train.tick(g, time - 1) == []
     ship, = train.tick(g, 1)
     assert g.soldiers[ship] == "CANNON_GALLEON" and ship in g.ships and g.map.wet(*g.ships[ship].cell)
-    assert f"aoe range {ship} 13 118 0.25 3" in server.log                 # tile size 1; 10 s at Normal speed
+    assert combat.range_command(ship, "CANNON_GALLEON", 1) in server.log  # tile size 1
 
 
-@pytest.mark.parametrize("civ", ["VIKINGS", "AZTECS", "CHINESE"])
+@pytest.mark.parametrize("civ", sorted(civs.MISSING["CANNON_GALLEON"])[:3])
 def test_a_civilization_without_it_does_not_see_it(civ):
     server, g = dock_map()
     g.data["players"] = {"1": {"civ": civ}}
@@ -65,13 +64,13 @@ def test_a_cannon_galleon_sails_into_its_range_of_a_building_on_the_shore():
     g.techs, g.stock["gold"] = set(build.AGE_TECHS[:3]) | {"CHEMISTRY"}, 300
     train.open_menu(g, "Steve", (15, 12))
     assert train.order(g, "Steve", DOCK, train.ITEMS["CANNON_GALLEON"][0]) == 1
-    ship, = train.tick(g, 46)
+    ship, = train.tick(g, train.seconds(g, "CANNON_GALLEON"))
     server.entities["house"] = {"Pos": (2.5, 64.0, 22.5)}                # a house on the land, far from the ship
     goal = fleet.attack(g, {ship}, "house")[ship]
     assert math.dist(goal, (2, 22)) <= fleet.reach(g, "CANNON_GALLEON") and g.map.wet(*goal)
     for _ in range(60):
         fleet.tick(g, 1.0)
-    assert not g.ships[ship].path and math.dist(g.ships[ship].cell, (2, 22)) <= 12
+    assert not g.ships[ship].path and math.dist(g.ships[ship].cell, (2, 22)) <= fleet.reach(g, "CANNON_GALLEON")
 
 
 @pytest.mark.mc
@@ -102,4 +101,4 @@ def test_a_cannon_galleon_hits_a_house_on_the_shore_on_a_server(tiny_world, tmp_
         end = time.time() + 20
         while time.time() < end and hp(game, house) == start:
             time.sleep(0.1)
-        assert start - hp(game, house) == 50 + 200 - combat.stats("HOUSE").melee      # one hit, the AoE2 damage
+        assert start - hp(game, house) == combat.damage("CANNON_GALLEON", "HOUSE")    # one hit, the AoE2 damage

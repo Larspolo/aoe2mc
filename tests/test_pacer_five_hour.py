@@ -7,10 +7,10 @@ AHEAD = {"five_hour": (0.3, NOW + 2 * H, "allowed"), "seven_day": (0.65, NOW + 1
 
 
 def test_off_counts_the_five_hour_window_only():
-    assert usage.target_runs(AHEAD, NOW, burn7=0.0053, week=False) == 11
-    assert usage.target_runs(AHEAD | {"seven_day": (1.0, NOW + 3 * 86400, "rejected")}, NOW, week=False) == 11
+    assert usage.target_runs(AHEAD, NOW, burn7=0.0053, week=False, hi=40, free7=0.6) == 11
+    assert usage.target_runs(AHEAD | {"seven_day": (1.0, NOW + 3 * 86400, "rejected")}, NOW, week=False, hi=40) == 11
     assert usage.target_runs({"five_hour": (0.3, NOW + 2 * H, "rejected")}, NOW, week=False) == 0
 
 
 def test_on_keeps_the_weekly_guard():
-    assert usage.target_runs(AHEAD, NOW, burn7=0.0053, week=True) == 0     # 0.35 / 100 h / 0.0053 < 1 run
+    assert usage.target_runs(AHEAD, NOW, burn7=0.0053, week=True, hi=40, free7=0.6) == 0   # 0.35 / 100 h / 0.0053 < 1 run

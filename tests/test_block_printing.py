@@ -1,27 +1,24 @@
-"""Block Printing (#1457): the monastery researches it in the Imperial Age (200 gold, 55 s, AoE2 wiki "Block
-Printing"), and then a monk converts from 3 tiles farther (9 + 3 tiles)."""
+"""Block Printing (#1457): the monastery researches it in the Imperial Age (AoE2 wiki "Block Printing"), and
+then a monk converts from 3 tiles farther (9 + 3 tiles)."""
 from test_monk_convert import setup
 from test_monk_techs import MONASTERY, research
 from test_monk_train import monastery
 
-from game import civs, monk, train
+from game import monk, train
 
-
-def test_the_values_are_those_of_aoe2():
-    assert len(train.HELP["BLOCK_PRINTING"]) <= 50
-    assert {"CELTS", "GOTHS", "MONGOLS"} <= set(civs.MISSING["BLOCK_PRINTING"])
-    assert "BRITONS" not in civs.MISSING["BLOCK_PRINTING"]
+SLOT = train.ITEMS["BLOCK_PRINTING"][0]
 
 
 def test_the_monastery_researches_it_only_in_the_imperial_age():
     server, g = monastery(age=2)
-    g.stock["gold"] = 200
+    gold = train.price(g, "BLOCK_PRINTING")["gold"]
+    g.stock["gold"] = gold
     rect = train.open_menu(g, "Steve", MONASTERY)
-    assert train.order(g, "Steve", rect, 4) == 0 and g.stock["gold"] == 200
+    assert train.order(g, "Steve", rect, SLOT) == 0 and g.stock["gold"] == gold
     server, g = monastery(age=3)
-    rect = research(g, 4, 200)
+    rect = research(g, SLOT, gold)
     assert g.queues[rect][0]["name"] == "BLOCK_PRINTING"
-    train.tick(g, 55)
+    train.tick(g, train.TRAIN_TIMES["BLOCK_PRINTING"])
     assert "BLOCK_PRINTING" in g.techs
 
 

@@ -53,8 +53,9 @@ def test_a_soldier_skips_a_tagged_enemy_and_attacks_it_on_an_order(tiny_world, t
             assert game.command(combat.stats_command(f"@e[tag={tag},limit=1]", name)).strip() == "Stats: 1 units"
         game.command(f"tag @e[tag=b] add {aoe2mc.NO_TARGET}")
         assert game.command(combat.sight_command("@e[tag=a,limit=1]", "CHAMPION", 4)).strip() == "Sight: 1 units"
+        hp = health(game, "b")
         time.sleep(5)
-        assert health(game, "b") == 40.0                                  # no automatic attack on a tagged unit
+        assert health(game, "b") == hp                                    # no automatic attack on a tagged unit
         game.command(f"tag @e[tag=b] remove {aoe2mc.NO_TARGET}")         # "Enable Unit Targeting"
         end = time.time() + 60
         while time.time() < end and health(game, "b") is not None:

@@ -12,13 +12,7 @@ from test_siege_walk import summon
 @pytest.mark.parametrize("name", ("SCORPION", "HEAVY_SCORPION"))
 def test_a_scorpion_range_command_gives_the_pass_in_blocks(name):
     words = combat.range_command("u", name, 4).split()
-    assert words[5:] == ["0", "8", "8"]          # blast 0, minimum range 2 tiles, pass 2 tiles (wiki "Pass-through damage")
-
-
-def test_only_the_scorpion_line_passes_through():
-    assert set(combat.PASS) == {"SCORPION", "HEAVY_SCORPION", "CHAKRAM_THROWER", "ELITE_CHAKRAM_THROWER"}   # (#1638)
-    assert len(combat.range_command("u", "TREBUCHET", 4).split()) == 7            # no pass
-    assert len(combat.range_command("u", "MANGONEL", 4).split()) == 7
+    assert words[5:] == ["0", str(combat.MIN_RANGE[name] * 4), str(combat.PASS[name] * 4)]   # blast 0, minimum range, pass
 
 
 @pytest.mark.mc
@@ -55,6 +49,8 @@ def test_a_scorpion_bolt_hurts_the_enemy_militia_on_its_line(tiny_world, tmp_pat
         game.command(f"aoe stop {s}")                                             # no second shot
         time.sleep(0.5)
         hp = {t[0]: (data(game, t[0], "Health") or [None])[0] for t in units}
-        assert hp["m1"] == 1000.0 - 11, hp                                        # 12 - 1 pierce armor
-        assert hp["m2"] == hp["m3"] == 1000.0 - 5.5, hp                           # half the damage behind the target
+        v = combat.stats("SCORPION")
+        hit = v.attack + v.bonus.get("infantry", 0) - 1                            # 1 pierce armor
+        assert hp["m1"] == 1000.0 - hit, hp
+        assert hp["m2"] == hp["m3"] == 1000.0 - hit / 2, hp                       # half the damage behind the target
         assert hp["o"] == hp["f"] == hp["b"] == 1000.0, hp                         # no own unit, off the line, too far

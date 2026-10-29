@@ -1,11 +1,12 @@
 """Imperial Skirmisher (#1611): the Vietnamese upgrade the elite skirmisher to the imperial skirmisher at the archery
-range in the Imperial Age, in the slot of Elite Skirmisher (300 wood, 300 gold, 50 s: the UUpCost and UUpTime of the AoE2
-DE wiki infobox "Elite Skirmisher (Age of Empires II)"). Then the live elite skirmishers are imperial skirmishers and the
-archery range trains the imperial skirmisher (25 food, 35 wood, 22 s). The other civilizations do not see it."""
+range in the Imperial Age, in the slot of Elite Skirmisher (the UUpCost and UUpTime of the AoE2 DE wiki infobox "Elite
+Skirmisher (Age of Empires II)"). Then the live elite skirmishers are imperial skirmishers and the archery range trains
+the imperial skirmisher. The other civilizations do not see it."""
+from menu_line import item
 from test_castle_upgrades import RANGE, research, setup
 from test_forging import menus
 
-from game import civs, combat, train
+from game import combat, train
 
 IMPERIAL = ("FEUDAL_AGE", "CASTLE_AGE", "IMPERIAL_AGE")
 
@@ -18,16 +19,9 @@ def imperial(civ):
     return server, g
 
 
-def test_the_values_are_those_of_aoe2():
-    assert train.BY_KEY["after"]["IMPERIAL_SKIRMISHER_UPGRADE"] == "ELITE_SKIRMISHER_UPGRADE"
-    assert len(train.HELP["IMPERIAL_SKIRMISHER_UPGRADE"]) <= 50
-    assert "VIETNAMESE" not in civs.MISSING["IMPERIAL_SKIRMISHER_UPGRADE"]
-    assert {"BRITONS", "CHINESE", "MAYANS"} <= set(civs.MISSING["IMPERIAL_SKIRMISHER_UPGRADE"])
-
-
 def test_the_vietnamese_see_it_after_elite_skirmisher():
     server, _ = imperial("VIETNAMESE")
-    assert " 3:book:Imperial Skirmisher:300 wood · 300 gold · 50 s · research " in " " + menus(server)[-1] + " "
+    assert item(menus(server)[-1], "Imperial Skirmisher").endswith(" · research")
 
 
 def test_other_civs_do_not_see_it():
@@ -44,12 +38,12 @@ def test_the_live_elite_skirmishers_become_imperial_skirmishers_and_the_range_tr
     assert g.soldiers["k"] == "ELITE_SKIRMISHER"
     research(g, RANGE, "IMPERIAL_SKIRMISHER_UPGRADE")
     assert g.soldiers["k"] == "IMPERIAL_SKIRMISHER"
-    hp = combat.stats("IMPERIAL_SKIRMISHER")._replace(hp=42)            # the Vietnamese bonus: skirmishers +20 % HP
-    assert combat.stats_command("k", "IMPERIAL_SKIRMISHER", hp) in server.log
+    hp = train.stats(g, "IMPERIAL_SKIRMISHER")                        # the Vietnamese bonus: skirmishers more HP
+    assert hp.hp > combat.stats("IMPERIAL_SKIRMISHER").hp and combat.stats_command("k", "IMPERIAL_SKIRMISHER", hp) in server.log
     assert combat.label_command("k", "IMPERIAL_SKIRMISHER") in server.log
     train.open_menu(g, "Steve", RANGE)
     menu = menus(server)[-1]
-    assert "1:drowned_spawn_egg:Imperial Skirmisher:25 food · 35 wood · 22 s · queue" in menu
+    assert item(menu, "Imperial Skirmisher").endswith(" · queue 0/15")
     assert ":Elite Skirmisher:" not in menu
     assert train.queue(g, "Steve", RANGE, "IMPERIAL_SKIRMISHER")
     assert train.queue(g, "Steve", RANGE, "ELITE_SKIRMISHER") is None

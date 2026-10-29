@@ -3,7 +3,6 @@ game/data/buildings.jsonl (one line per building) and the key "sight" in game/da
 import json
 import os
 import re
-import subprocess
 import sys
 
 sys.path[:0] = [os.path.join(os.path.dirname(__file__), "..", "game")]
@@ -23,22 +22,15 @@ def test_each_building_line_has_the_stats_fields_or_only_a_sight():
 
 
 def test_the_code_adds_the_classes_of_the_buildings():
-    assert combat.BUILDINGS["DOCK"].classes == ("building", combat.STANDARD)
-    assert combat.BUILDINGS["KEEP"].classes == ("building", combat.STANDARD, combat.STONE)
-    assert combat.BUILDINGS["WONDER"].classes == ("building",)
-    assert list(combat.BUILDINGS)[:2] == ["HOUSE", "BARRACKS"]
-    assert "OUTPOST" not in combat.BUILDINGS                          # a line with only a sight has no target
+    assert all((combat.STANDARD in s.classes) == (n != "WONDER") for n, s in combat.BUILDINGS.items())
+    assert all(combat.STONE in s.classes for n, s in combat.BUILDINGS.items() if n.endswith("_TOWER") or n == "KEEP")
+    only = {r["name"] for r in table.load("buildings.jsonl") if not set(r) & {*combat.Stats._fields, "hp_ages"}}
+    assert not only & set(combat.BUILDINGS)                          # a line with only a sight has no target
 
 
 def test_each_sight_belongs_to_a_line_of_a_unit_or_a_building():
     names = {r["name"] for r in table.load("units.jsonl") + table.load("buildings.jsonl")}
     assert set(combat.SIGHT) <= names
-
-
-def test_the_file_merges_by_name():
-    out = subprocess.run(["git", "check-attr", "merge", "game/data/buildings.jsonl"], cwd=ROOT, capture_output=True,
-                         text=True).stdout
-    assert out.strip().endswith("merge: jsonl")     # tools/merge_jsonl.py (#2004)
 
 
 def test_combat_py_has_no_literal_of_the_tables():

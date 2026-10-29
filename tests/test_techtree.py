@@ -4,7 +4,7 @@ from urllib.parse import unquote
 
 from test_gather import FakeServer, grid
 
-from game import diplomacy, gather, menu, techtree, train
+from game import build, civs, diplomacy, gather, menu, techtree, train
 
 
 def setup(civ=None):
@@ -40,22 +40,28 @@ def test_the_game_menu_button_shows_each_building():
         assert f" {i}:" in text and b.replace("_", " ").title() in text
 
 
-def test_the_barracks_shows_the_militia_in_the_dark_age_and_the_man_at_arms_in_the_feudal_age():
+def test_the_barracks_shows_each_item_in_the_row_of_its_age():
     slots = techtree.pages(train.TRAINS["BARRACKS"])[0]
-    assert slots[next(s for s, n in slots.items() if n == "MILITIA")] == "MILITIA"
-    assert next(s for s, n in slots.items() if n == "MILITIA") // 9 == 0
-    assert next(s for s, n in slots.items() if n == "MAN_AT_ARMS_UPGRADE") // 9 == 1
+    assert all(s // techtree.WIDTH in (techtree.age(n), techtree.MORE) for s, n in slots.items())
     text = barracks()
-    assert train.ITEMS["MILITIA"][2] in text and "45:arrow:Back" in text
+    assert train.ITEMS[slots[min(slots)]][2] in text and "45:arrow:Back" in text
+
+
+def missing():
+    """A civilization and a barracks item that it does not have."""
+    return next((c, n) for n in train.TRAINS["BARRACKS"] for c in sorted(civs.MISSING.get(n, ())) if c in techtree.CIVS)
 
 
 def test_an_item_that_the_civilization_does_not_have_is_gray():
-    assert "gray_stained_glass_pane:Squires:Not in the tech tree of Celts" in barracks("CELTS")
+    civ, name = missing()
+    text = f"gray_stained_glass_pane:{train.ITEMS[name][2]}:Not in the tech tree of {build.pretty(civ)}"
+    assert text in barracks(civ)
 
 
 def test_all_techs_gives_the_item():
-    text = barracks("CELTS", all_techs=True)
-    assert "Squires" in text and "gray_stained_glass_pane:Squires" not in text
+    civ, name = missing()
+    text = barracks(civ, all_techs=True)
+    assert train.ITEMS[name][2] in text and f"gray_stained_glass_pane:{train.ITEMS[name][2]}" not in text
 
 
 def test_no_item_is_left_out_and_a_full_page_goes_on():

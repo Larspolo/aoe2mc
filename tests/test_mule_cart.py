@@ -1,14 +1,17 @@
-"""game/build.py, game/gather.py: the mule cart of the Armenians and Georgians (#2194, AoE2 DE wiki "Mule Cart",
-MediaWiki API, 2026-10-27: 20 food, 80 wood, 25 s). It is the drop site of wood, gold, stone and hunted meat, in place
-of the lumber camp and the mining camp, and counts for the Feudal Age. Fake server, no Minecraft."""
+"""game/build.py, game/gather.py: the mule cart of the Armenians and Georgians (#2194, AoE2 DE wiki "Mule Cart"). It is
+the drop site of wood, gold, stone and hunted meat, in place of the lumber camp and the mining camp, and counts for the
+Feudal Age. Fake server, no Minecraft."""
 import re
 
 from test_build_done import DOWN
 from test_build_site import Server as SiteServer
 from test_gather import grid
 
+import buildings
 import units
 from game import build, civs, gather, train
+
+HAVE = sorted(set(buildings.CIV_TO_ARCH) - set(civs.MISSING["MULE_CART"]))   # the Armenians and Georgians
 
 
 class Server(SiteServer):
@@ -34,12 +37,17 @@ def setup(civ, objects=()):
     return server, g
 
 
-def done(objects=()):
-    """A Georgian villager builds a mule cart at blocks 4.. (the Armenian one costs 25 % less, #2309)."""
-    server, g = setup("GEORGIANS", objects)
+def left(g, res):
+    """The stock of res after the cost of the mule cart."""
+    return 500 - build.price(g, "MULE_CART").get(res, 0)
+
+
+def done(objects=(), civ=HAVE[-1]):
+    """A villager of civ (the Georgians) builds a mule cart at blocks 4.."""
+    server, g = setup(civ, objects)
     g.click("Steve")
     site, = g.sites
-    assert site["name"] == "MULE_CART" and g.stock == {**g.stock, "food": 500 - 20, "wood": 500 - 80}
+    assert site["name"] == "MULE_CART" and g.stock == {**g.stock, "food": left(g, "food"), "wood": left(g, "wood")}
     g.select("v0")
     g.click("Steve")
     for _ in range(3000):
@@ -64,7 +72,7 @@ def test_villagers_carry_wood_to_it():
         g.step()
         if v.state == "to_drop" and not v.path:
             assert v.cell in g.map.around(cells)
-    assert server.wood() >= 10 and g.stock["wood"] == 500 - 80 + server.wood()
+    assert server.wood() >= 10 and g.stock["wood"] == left(g, "wood") + server.wood()
 
 
 def test_a_hunter_carries_meat_to_it():
@@ -77,13 +85,13 @@ def test_a_hunter_carries_meat_to_it():
     for _ in range(400):
         g.step()
         seen.add(v.state)
-        if g.stock["food"] > 500 - 20:
+        if g.stock["food"] > left(g, "food"):
             break
-    assert "to_drop" in seen and g.stock["food"] == 500 - 20 + g.limit("food") and v.cell in g.map.around(cells)
+    assert "to_drop" in seen and g.stock["food"] == left(g, "food") + g.limit("food") and v.cell in g.map.around(cells)
 
 
 def test_the_franks_cannot_build_it():
-    server, g = setup("FRANKS")
+    server, g = setup(min(civs.MISSING["MULE_CART"]))
     assert build.chosen(g, "Steve") is None and civs.missing(g, "MULE_CART")
     g.click("Steve")
     assert not g.sites and g.stock["wood"] == 500
@@ -91,13 +99,12 @@ def test_the_franks_cannot_build_it():
 
 def test_armenians_and_georgians_have_no_lumber_or_mining_camp():
     have = set().union(*civs.MISSING.values()) - set(civs.MISSING["MULE_CART"])
-    assert have == {"ARMENIANS", "GEORGIANS"}
-    assert have <= set(civs.MISSING["LUMBER_CAMP"]) & set(civs.MISSING["MINING_CAMP"])
+    assert have and have <= set(civs.MISSING["LUMBER_CAMP"]) & set(civs.MISSING["MINING_CAMP"])
 
 
 def test_it_counts_for_the_feudal_age():
     barracks = {"kind": "building", "name": "BARRACKS", "player": 1, "tile": [10, 10], "footprint": [36, 36, 44, 44]}
-    server, g = setup("ARMENIANS", [barracks])
+    server, g = setup(HAVE[0], [barracks])
     assert train.missing(g, "FEUDAL_AGE").endswith("(1/2)")
-    server, g, cells = done([barracks])
+    server, g, cells = done([barracks], HAVE[0])
     assert train.missing(g, "FEUDAL_AGE") is None

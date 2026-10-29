@@ -10,21 +10,20 @@ from game import combat, run
 
 
 def test_melee_ranged_units_hit_the_melee_armor():
-    assert combat.damage("THROWING_AXEMAN", "KNIGHT") == 7 - 2
-    assert combat.damage("THROWING_AXEMAN", "SKIRMISHER") == 7               # melee 0, not pierce 3
-    assert combat.damage("MAMELUKE", "SKIRMISHER") == 8
-    assert combat.damage("ARCHER", "SKIRMISHER") == 1                        # an archer still hits the pierce armor
-    assert combat.damage("MILITIA", "SKIRMISHER") == 4
+    target = combat.Stats(100, 1, 0, 50, 0, 2.0)                       # melee armor 0, pierce armor 50, no class
+    assert combat.MELEE_RANGED
+    for name in sorted(combat.MELEE_RANGED):
+        assert combat.damage(name, "X", t=target) == max(1, combat.stats(name).attack), name   # not the pierce armor
+    ranged = combat.Stats(30, 6, 0, 0, 4, 2.0)
+    assert combat.damage("X", "Y", a=ranged, t=target) == 1            # a ranged unit still hits the pierce armor
+    assert combat.damage("X", "Y", a=ranged._replace(range=0), t=target) == 6
 
 
 def test_the_plugin_gets_the_range_kind():
-    kinds = {n: combat.stats_command("u", n).split()[7] for n in ("MILITIA", "ARCHER", "THROWING_AXEMAN", "MAMELUKE")}
-    assert kinds == {"MILITIA": "0", "ARCHER": "1", "THROWING_AXEMAN": "2", "MAMELUKE": "2"}
-
-
-def test_the_longbowman_has_the_aoe2_de_values():
-    s = combat.stats("LONGBOWMAN")
-    assert (s.hp, s.attack, s.melee, s.pierce, s.range) == (35, 6, 0, 0, 5)
+    melee_ranged = sorted(combat.MELEE_RANGED)[0]
+    s = combat.Stats(30, 6, 0, 0, 4, 2.0)
+    kinds = [combat.stats_command("u", n, v).split()[7] for n, v in (("X", s._replace(range=0)), ("X", s), (melee_ranged, s))]
+    assert kinds == ["0", "1", "2"]
 
 
 @pytest.mark.mc
@@ -57,4 +56,5 @@ def test_a_throwing_axeman_hits_the_melee_armor_on_paper(tiny_world, tmp_path):
                 drops.append(round(last - h, 1))
                 last = h
             time.sleep(0.05)
-        assert drops and set(drops) == {7.0}, drops                   # 7 - 0, not max(1, 7 - 6)
+        attack = combat.stats("THROWING_AXEMAN").attack
+        assert drops and set(drops) == {float(attack)}, drops          # attack - 0, not max(1, attack - 6)

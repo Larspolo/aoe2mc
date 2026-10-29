@@ -1,8 +1,10 @@
-"""The Thracian forts and towers (#2378): miners and lumberjacks near them work 15 % faster, and they take wood, gold
-and stone (game/data/civs.jsonl, key "aura"). A small aoe2mc.json dict, no server."""
-from game import gather
+"""The Thracian forts and towers (#2378): miners and lumberjacks near them work faster, and they take some resources
+(game/data/civs.jsonl, key "aura"). A small aoe2mc.json dict, no server."""
+from game import civs, gather
 
 T = 4
+AURA = civs.AURA["THRACIANS"]
+TOWER, RES = AURA["buildings"][0], AURA["resources"][0]
 
 
 def data(civ, *objects):
@@ -30,29 +32,30 @@ def miner(g, tx, tz, res="gold"):
     return v
 
 
-def test_a_thracian_miner_near_a_watch_tower_mines_faster_and_drops_there():
-    g = game("THRACIANS", building("WATCH_TOWER", 5, 5))
+def test_a_thracian_miner_near_a_tower_mines_faster_and_drops_there():
+    g = game("THRACIANS", building(TOWER, 5, 5))
     tower = {(x, z) for x in range(5 * T, 6 * T) for z in range(5 * T, 6 * T)}
-    v = miner(g, 10, 5)                                    # 5 tiles from the tower
-    assert g.aura_rate(v, "gold") == g.aura_rate(v, "stone") == g.aura_rate(v, "wood") == 1.15
-    assert g.aura_rate(v, "food") == g.aura_rate(v, "farm") == 1   # no farmers, foragers or hunters
-    assert g.map.around(tower) <= g.drop_goals(v)          # the tower takes the gold
-    assert all(tower in g.map.drops[r] for r in ("gold", "stone", "wood")) and tower not in g.map.drops["food"]
+    v = miner(g, 10, 5, RES)                               # 5 tiles from the tower
+    for r in ("food", "farm", "gold", "stone", "wood"):    # food: no farmers, foragers or hunters
+        assert g.aura_rate(v, r) == (AURA["rate"] if r in AURA["resources"] else 1), r
+    assert g.map.around(tower) <= g.drop_goals(v)          # the tower takes the resource
+    assert all((tower in g.map.drops[r]) == (r in AURA["resources"]) for r in ("food", "gold", "stone", "wood"))
 
 
-def test_the_aura_reaches_8_tiles_from_the_footprint():
-    g = game("THRACIANS", building("FORTRESS", 5, 5, 4))
-    assert g.aura_rate(miner(g, 16, 5), "gold") == 1.15    # in the 8th tile east of the fort
-    assert g.aura_rate(miner(g, 18, 5), "gold") == 1
+def test_the_aura_reaches_its_range_from_the_footprint():
+    g = game("THRACIANS", building(TOWER, 5, 5, 4))
+    edge = 9 + AURA["range"] - 1                           # the last tile in range east of the footprint
+    assert g.aura_rate(miner(g, edge, 5, RES), RES) == AURA["rate"]
+    assert g.aura_rate(miner(g, edge + 2, 5, RES), RES) == 1
 
 
-def test_a_frank_miner_near_a_watch_tower_gets_neither():
-    g = game("FRANKS", building("WATCH_TOWER", 5, 5))
+def test_a_frank_miner_near_a_tower_gets_neither():
+    g = game("FRANKS", building(TOWER, 5, 5))
     tower = {(x, z) for x in range(5 * T, 6 * T) for z in range(5 * T, 6 * T)}
-    v = miner(g, 10, 5)
-    assert g.aura_rate(v, "gold") == 1 and not g.map.around(tower) & g.drop_goals(v)
+    v = miner(g, 10, 5, RES)
+    assert g.aura_rate(v, RES) == 1 and not g.map.around(tower) & g.drop_goals(v)
 
 
 def test_an_enemy_tower_gives_no_aura():
-    g = game("THRACIANS", building("WATCH_TOWER", 5, 5, player=2))
-    assert g.aura_rate(miner(g, 6, 5), "gold") == 1
+    g = game("THRACIANS", building(TOWER, 5, 5, player=2))
+    assert g.aura_rate(miner(g, 6, 5, RES), RES) == 1

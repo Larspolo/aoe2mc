@@ -21,17 +21,13 @@ def test_all_relics_in_an_own_monastery_win_after_the_timer():
     g.relics[0].update(at=None, home=HOME)
     relic_victory.tick(g, 0)
     assert f"bossbar set {relic_victory.BAR} players @a" in server.log
-    assert f'bossbar set {relic_victory.BAR} name "Player 1: relics, 200 years left"' in server.log
+    assert f'bossbar set {relic_victory.BAR} name "Player 1: relics, {wonder.years(g.data.get("map_size"))} years left"' in server.log
     relic_victory.tick(g, total(g) - 3)
     assert not g.ended
     assert f'bossbar set {relic_victory.BAR} name "Player 1: relics, 1 year left"' in server.log
     relic_victory.tick(g, 3)
     assert g.ended == "Victory" and 'title @a[team=p1] title {"text":"Victory","color":"gold"}' in server.log
     assert f"bossbar remove {relic_victory.BAR}" in server.log
-
-
-def test_the_timer_uses_the_wonder_years_of_the_map_size():
-    assert wonder.years(240) == 400                                    # AoE2 wiki: the same table for relics
 
 
 def test_a_relic_outside_a_monastery_starts_no_timer():

@@ -19,7 +19,8 @@ def test_the_bot_keeps_two_villagers_in_the_queue_of_its_town_center():
     before = len(server.log)
     b.recruit()
     (q,) = b.g.queues.values()
-    assert [e["name"] for e in q] == ["VILLAGER_MALE"] * bot.QUEUED and b.g.stock["food"] == 1000 - 50 * bot.QUEUED
+    food = train.price(b.g, "VILLAGER_MALE")["food"]
+    assert [e["name"] for e in q] == ["VILLAGER_MALE"] * bot.QUEUED and b.g.stock["food"] == 1000 - food * bot.QUEUED
     assert not [c for c in server.log[before:] if "aoe_res" in c.split()]      # the resources of the bot, not of player 1
 
 
@@ -30,7 +31,7 @@ def test_the_bot_trains_villagers_up_to_its_number():
     for _ in range(2000):
         b.step()
     assert len(b.g.villagers) == 8 and not any(b.g.queues.values())   # 5 at the start, 3 trained
-    assert b.g.stock["food"] >= 1000 - 3 * 50
+    assert b.g.stock["food"] >= 1000 - 3 * train.price(b.g, "VILLAGER_MALE")["food"]
 
 
 def test_the_bot_trains_soldiers_at_its_barracks():

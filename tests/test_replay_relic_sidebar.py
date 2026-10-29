@@ -8,6 +8,9 @@ import replay  # noqa: E402
 from test_replay import Fake, data  # noqa: E402
 
 
+EST = " ".join(f"{r[0].upper()} {v}" for r, v in replay.START.items())   # the start resources of the sidebar
+
+
 def names(cmds, p=1):
     return [json.loads(c.split(" ", 6)[6])["text"] for c in cmds if f" display name P{p} " in c]
 
@@ -22,12 +25,12 @@ def game():
 
 def test_the_display_name_holds_the_relics_of_the_player():
     r = game()
-    assert names(r.score_commands(), 1) == ["Player 1 (Britons) · Dark · F 200 W 200 G 100 S 200 (est.) · Relics 2"]
+    assert names(r.score_commands(), 1) == [f"Player 1 (Britons) · Dark · {EST} (est.) · Relics 2"]
 
 
 def test_a_player_with_no_relic_has_no_relic_part():
     r = game()
-    assert names(r.score_commands(), 2) == ["Player 2 (Aztecs) · Dark · F 200 W 200 G 100 S 200 (est.)"]
+    assert names(r.score_commands(), 2) == [f"Player 2 (Aztecs) · Dark · {EST} (est.)"]
 
 
 def test_a_second_call_with_no_change_sends_no_name():

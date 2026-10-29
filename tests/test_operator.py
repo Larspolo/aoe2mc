@@ -15,12 +15,6 @@ def test_missing_labels():
     assert oc.missing_labels(["P0", "muted", "process"], [{"name": "P0"}, {"name": "bug"}]) == ["muted", "process"]
 
 
-def test_the_real_labels_file_has_the_flow_labels():
-    with open(oc.LABELS) as f:
-        names = oc.wanted_labels(f.read())
-    assert {"P0", "in-progress", "needs-human", "agent-status", "paused"} <= set(names)
-
-
 def test_old_prs_are_agent_prs_older_than_the_limit():
     def pr(n, ref, minutes):
         return {"number": n, "head": {"ref": ref}, "created_at": f"{NOW - datetime.timedelta(minutes=minutes):%FT%TZ}"}

@@ -27,25 +27,26 @@ def hit(attacker, a_civ, target, t_civ, age="DARK"):
     return combat.damage(attacker, target, train.stats(a, attacker), train.stats(t, target), civs.taken(t, target))
 
 
-def test_a_bohemian_pikeman_deals_25_percent_more_bonus_damage():
-    assert train.stats(player("BOHEMIANS"), "PIKEMAN").bonus["cavalry"] == 28        # 22 × 1.25 = 27.5
-    assert hit("PIKEMAN", "BOHEMIANS", "KNIGHT", "FRANKS") == 4 - 2 + 28
-    assert hit("PIKEMAN", "BRITONS", "KNIGHT", "FRANKS") == 4 - 2 + 22
+def test_a_bohemian_pikeman_deals_more_bonus_damage():
+    more, base = train.stats(player("BOHEMIANS"), "PIKEMAN").bonus["cavalry"], combat.stats("PIKEMAN").bonus["cavalry"]
+    assert more > base
+    assert hit("PIKEMAN", "BOHEMIANS", "KNIGHT", "FRANKS") - hit("PIKEMAN", "BRITONS", "KNIGHT", "FRANKS") == more - base
     assert train.stats(player("BOHEMIANS"), "MAN_AT_ARMS").bonus == combat.stats("MAN_AT_ARMS").bonus
 
 
 def test_gurjara_mounted_units_deal_more_bonus_damage_in_each_age():
-    for age, bonus in (("DARK", 9), ("FEUDAL", 11), ("CASTLE", 12), ("IMPERIAL", 13)):   # 9 × 1.2, 1.3, 1.4
-        assert train.stats(player("GURJARAS", age), "CAMEL_RIDER").bonus["cavalry"] >= bonus, age
-    assert hit("CAMEL_RIDER", "GURJARAS", "KNIGHT", "FRANKS", "CASTLE") == 6 - 2 + 12
-    assert hit("CAMEL_RIDER", "PERSIANS", "KNIGHT", "FRANKS", "CASTLE") == 6 - 2 + 9
-    assert train.stats(player("GURJARAS", "CASTLE"), "PIKEMAN").bonus["cavalry"] == 22   # infantry: no bonus
+    base = combat.stats("CAMEL_RIDER").bonus["cavalry"]
+    bonus = [train.stats(player("GURJARAS", age), "CAMEL_RIDER").bonus["cavalry"] for age in AGES]
+    assert all(base <= a <= b for a, b in zip(bonus, bonus[1:])) and bonus[-1] > base
+    castle = bonus[list(AGES).index("CASTLE")]
+    assert hit("CAMEL_RIDER", "GURJARAS", "KNIGHT", "FRANKS", "CASTLE") - \
+        hit("CAMEL_RIDER", "PERSIANS", "KNIGHT", "FRANKS", "CASTLE") == castle - base
+    assert train.stats(player("GURJARAS", "CASTLE"), "PIKEMAN").bonus == combat.stats("PIKEMAN").bonus   # infantry: no bonus
 
 
-def test_a_sicilian_knight_takes_40_percent_less_bonus_damage():
-    assert civs.taken(player("SICILIANS"), "KNIGHT") == 0.6
-    assert hit("PIKEMAN", "BRITONS", "KNIGHT", "SICILIANS") == 4 - 2 + 13               # 22 × 0.6 = 13.2
-    assert hit("PIKEMAN", "BRITONS", "KNIGHT", "FRANKS") == 4 - 2 + 22
+def test_a_sicilian_knight_takes_less_bonus_damage():
+    assert civs.taken(player("SICILIANS"), "KNIGHT") < 1
+    assert hit("PIKEMAN", "BRITONS", "KNIGHT", "SICILIANS") < hit("PIKEMAN", "BRITONS", "KNIGHT", "FRANKS")
 
 
 def test_a_sicilian_ram_villager_and_ship_take_the_full_bonus_damage():
@@ -54,12 +55,12 @@ def test_a_sicilian_ram_villager_and_ship_take_the_full_bonus_damage():
     assert hit("MANGONEL", "BRITONS", "BATTERING_RAM", "SICILIANS") == hit("MANGONEL", "BRITONS", "BATTERING_RAM", "FRANKS")
 
 
-def test_a_bengali_elephant_takes_25_percent_less_bonus_damage():
-    assert civs.taken(player("BENGALIS"), "BATTLE_ELEPHANT") == 0.75
-    assert civs.taken(player("BENGALIS"), "KNIGHT") == 1
+def test_a_bengali_elephant_takes_less_bonus_damage():
+    taken = civs.taken(player("BENGALIS"), "BATTLE_ELEPHANT")
+    assert taken < 1 and civs.taken(player("BENGALIS"), "KNIGHT") == 1
     bonus = combat.stats("PIKEMAN").bonus["elephant"]
     assert hit("PIKEMAN", "BRITONS", "BATTLE_ELEPHANT", "BENGALIS") \
-        == hit("PIKEMAN", "BRITONS", "BATTLE_ELEPHANT", "BRITONS") - bonus + int(bonus * 0.75 + 0.5)
+        == hit("PIKEMAN", "BRITONS", "BATTLE_ELEPHANT", "BRITONS") - bonus + int(bonus * taken + 0.5)
 
 
 def test_the_plugin_gets_the_factor_of_the_bonus_damage_taken():
@@ -88,10 +89,12 @@ def test_the_plugin_takes_less_bonus_damage_from_a_hit(tiny_world, tmp_path):
             command = combat.stats_command(f"@e[tag={tag},limit=1]", name, None, taken)
             assert game.command(command).strip() == "Stats: 1 units"
         game.command("effect give @e[tag=b] slowness infinite 255 true")
-        assert health(game, "b") == 100.0
+        full = combat.stats("KNIGHT").hp
+        one = combat.damage("PIKEMAN", "KNIGHT", combat.stats("PIKEMAN"), combat.stats("KNIGHT"), 0.6)   # per hit
+        assert health(game, "b") == full
         assert game.command("aoe attack @e[tag=a] @e[tag=b,limit=1]").strip() == "Attack: 1 units"
         end = time.time() + 30
-        while time.time() < end and health(game, "b") == 100.0:
+        while time.time() < end and health(game, "b") == full:
             time.sleep(0.1)
         time.sleep(0.2)
-        assert health(game, "b") in (100.0 - 15, 100.0 - 30), health(game, "b")   # 4 - 2 + 22 × 0.6 (13.2) per hit
+        assert health(game, "b") in (full - one, full - 2 * one), health(game, "b")

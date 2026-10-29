@@ -1,11 +1,11 @@
 """#2408: `run.py --play --mode empire-wars` is the AoE2 DE game mode "Empire Wars" (wiki "Empire Wars"): each player
-starts in the Feudal Age with a small town and 27 villagers at work. Fake server of test_gather."""
+starts with a small town and villagers at work (its line in game/data/setup.jsonl). Fake server of test_gather."""
 import collections
 import re
 
 from test_gather import FakeServer, grid
 
-from game import build, empire_wars, gather, regicide, train
+from game import build, empire_wars, gather, train
 
 MODE = empire_wars.MODES["empire-wars"]
 
@@ -34,40 +34,39 @@ def town_map():
     return gather.Gather(server, data, carry=10, chop=0.05, start={}).setup()
 
 
-def test_each_player_starts_with_the_town_of_the_wiki_for_free():
+def test_each_player_starts_with_the_town_of_the_mode_for_free():
     g = town_map()
-    stock = dict(g.stock)
+    stock, limit = dict(g.stock), train.limit(g)
     empire_wars.setup(g)
     assert collections.Counter(s["name"] for s in g.sites) == MODE["buildings"]
     assert all(s.get("done") for s in g.sites) and g.stock == stock   # complete and free
-    assert MODE["buildings"] == {"BARRACKS": 1, "FARM": 5, "HOUSE": 6, "LUMBER_CAMP": 3, "MILL": 1, "MINING_CAMP": 1}
-    assert train.limit(g) == 5 + 6 * 5                                 # the town center and the houses
+    assert train.limit(g) == limit + MODE["buildings"]["HOUSE"] * train.HOUSING["HOUSE"]   # the houses
     camp = next(s for s in g.sites if s["name"] == "MINING_CAMP")["footprint"]
     assert abs((camp[0] + camp[1]) / 2 - 12.5) + abs((camp[2] + camp[3]) / 2 - 24.5) < 8   # next to the gold
-    assert len(g.map.own_farms) == 5 and g.map.drops["wood"]
+    assert len(g.map.own_farms) == MODE["buildings"]["FARM"] and g.map.drops["wood"]
 
 
-def test_the_27_villagers_have_a_gather_job_at_the_start():
+def test_the_villagers_have_a_gather_job_at_the_start():
     g = town_map()
     empire_wars.setup(g)
-    assert len(g.villagers) == 27 and "p1" in g.villagers and g.pop == 27
+    n = sum(MODE["villagers"].values())
+    assert len(g.villagers) == n and "p1" in g.villagers and g.pop == n
     work = collections.Counter(v.res for v in g.villagers.values() if v.state != "idle")
-    assert work == {"food": 11, "gold": 4, "wood": 12} == MODE["villagers"]
-    assert len(g.farmers) == 5                                         # one farmer on each farm, the others on bushes
+    assert work == MODE["villagers"]
+    assert len(g.farmers) == MODE["buildings"]["FARM"]                 # one farmer on each farm, the others on bushes
 
 
-def test_the_mode_starts_in_the_feudal_age_and_the_other_modes_as_before():
-    assert train.STARTS[MODE["age"]]["ages"] == 1
-    assert "empire-wars" not in regicide.MODES and "empire-wars" not in gather.LEVELS   # no King, no resource level
+def test_a_house_of_a_standard_game_still_costs_wood():
     g = town_map()
     wood = g.stock["wood"]
-    site = build.found(g, "HOUSE", build.near(g, "HOUSE", (24, 24)))   # a house of a standard game still costs wood
-    assert g.stock["wood"] == wood - 25 and not site.get("done")
+    site = build.found(g, "HOUSE", build.near(g, "HOUSE", (24, 24)))
+    assert g.stock["wood"] == wood - build.COSTS["HOUSE"]["wood"] and not site.get("done")
 
 
 def test_a_villager_without_a_food_source_chops_wood():
     g = town_map()
-    g.map.bushes.clear()                                               # only the 5 farms: 6 food villagers too many
+    g.map.bushes.clear()                                               # only the farms: the other food villagers chop
     empire_wars.setup(g)
     work = collections.Counter(v.res for v in g.villagers.values() if v.state != "idle")
-    assert work == {"food": 5, "gold": 4, "wood": 18}
+    v, farms = MODE["villagers"], MODE["buildings"]["FARM"]
+    assert work == {"food": farms, "gold": v["gold"], "wood": v["wood"] + v["food"] - farms}

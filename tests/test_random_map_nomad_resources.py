@@ -43,4 +43,5 @@ def test_the_nomad_resources_are_scattered_in_their_groups(seed, players):
 
 def test_the_other_kinds_keep_the_start_resources():
     d = rmap.random_map("arabia", 3, 2)
-    assert len([o for o in d["objects"] if o["name"] == "SHEEP" and o["player"] == 1]) == 4
+    sheep = next(c for name, c, *_ in rmap.START if name == "SHEEP")
+    assert len([o for o in d["objects"] if o["name"] == "SHEEP" and o["player"] == 1]) == sheep

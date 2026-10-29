@@ -27,17 +27,8 @@ def test_the_names_are_items_of_the_menus():
     assert set(civs.NOT) <= known
     assert {n for b in civs.COSTS.values() for what, *_ in b if isinstance(what, tuple) for n in what} <= known
     assert {n for t in civs.TWICE.values() for n in t} <= known
-    assert train.UNIQUE == civs.UNIQUE and train.UNIQUE["BRITONS"] == "LONGBOWMAN"
+    assert train.UNIQUE == civs.UNIQUE
 
 
-def test_missing_is_by_item_as_before():
-    assert civs.MISSING["KREPOST"] and "BULGARIANS" not in civs.MISSING["KREPOST"]
-    assert set(civs.ELEPHANTS) == {"BENGALIS", "BURMESE", "DRAVIDIANS", "KHMER", "MALAY", "VIETNAMESE"}
+def test_missing_is_sorted():
     assert all(list(cs) == sorted(cs) for cs in civs.MISSING.values())
-
-
-def test_the_blacksmith_and_economy_bonuses_name_the_whole_lists():
-    """civs.SMITH and civs.ECONOMY name the technologies of the cost bonuses that cover a whole building group."""
-    whats = {c: [what for what, *_ in b] for c, b in civs.COSTS.items()}
-    assert all(civs.SMITH in whats[c] for c in ("BULGARIANS", "SPANISH"))
-    assert all(civs.ECONOMY in whats[c] for c in ("BURGUNDIANS", "VIETNAMESE"))

@@ -17,13 +17,6 @@ def scenario(tmp_path):
                  {1: (1, 1, (6.0, 6.0))}, objects=OLD)
 
 
-def test_old_ids_get_de_objects(tmp_path):
-    size, terrain, _, names, _, objects, _ = aoe2mc.read_scx(str(scenario(tmp_path)))
-    assert sorted((o["kind"], o["name"]) for o in objects) == [
-        ("B", "PALISADE_WALL"), ("B", "TOWN_CENTER"), ("B", "TOWN_CENTER"), ("O", "INVISIBLE_OBJECT"), ("U", "BATTERING_RAM")]
-    assert names[int(terrain[1, 14])] == "SHALLOWS" and names[int(terrain[2, 14])] != "SHALLOWS"   # 447: a terrain
-
-
 def test_convert_skips_only_the_invisible_flag(tmp_path):
     out = io.StringIO()
     with contextlib.redirect_stdout(out):

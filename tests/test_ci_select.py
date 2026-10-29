@@ -26,10 +26,3 @@ def test_a_markdown_change_runs_the_doc_tests():
 def test_imports():
     text = "import os, json\nfrom tools import claim, usage as u\nimport release\n"
     assert {"os", "json", "tools.claim", "tools.usage", "release"} <= ci_select.imports(text)
-
-
-def test_the_workflow_uses_the_selection():
-    with open(os.path.join(ROOT, ".github", "workflows", "ci.yml")) as f:
-        text = f.read()
-    assert "tools/ci_select.py HEAD^1" in text and "fetch-depth: 2" in text
-    assert "pytest -n auto ${{ steps.select.outputs.tests }}" in text   # all cores (#2415)

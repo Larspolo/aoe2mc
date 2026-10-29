@@ -16,4 +16,4 @@ def test_a_load_keeps_the_auto_queue_and_trains_again():
     hserver, h = setup(food=500, gold=500)
     savegame.load(h, json.loads(text))
     assert h.auto == g.auto == {RECT: "MILITIA"} and all(isinstance(k, tuple) for k in h.auto)
-    assert len(run(h, hserver, 30)) == 1
+    assert len(run(h, hserver, train.seconds(h, "MILITIA", "BARRACKS") + 1)) == 1

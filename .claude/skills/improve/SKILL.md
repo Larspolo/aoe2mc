@@ -133,7 +133,7 @@ patterns and their fixes:
 | Scheduling | Merge conflicts in generated files | A merge driver in `.gitattributes`, or generate the file in CI |
 | Scheduling | Merge conflicts in hand-written tables | Move all tables of that kind to `merge=union` data files, not only the table of the conflict |
 | Code | Domain data in the code (`Data in the code`) | A sub-issue of the data epic for each place |
-| Code | Tests that copy the values or the length of a data file | A form test of the data file (#1916, #2008) |
+| Code | Tests that copy the values, the length or the text of a data or configuration file | Remove them; a form test of the data file, or a behavior test with the expected value from the data (#1916, #2008, owner 2026-10-29) |
 | Code | A rule in `CLAUDE.md` that only prevents a mistake ("each entry on its own line") | A check or a structure that makes the rule unnecessary; then remove the rule |
 | Scheduling | Runs stop because no ticket is ready | Split epics earlier |
 | Data | The data cannot name the largest loss | Add the measurement first (above, "Is the data enough?") |

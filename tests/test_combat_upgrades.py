@@ -23,6 +23,6 @@ def test_the_upgrade_is_stronger_than_its_base_unit():
         assert combat.STATS[up].hp >= combat.STATS[base].hp and combat.STATS[up].attack >= combat.STATS[base].attack, up
 
 
-def test_a_hand_cannoneer_kills_infantry_fast():
-    """AoE2: 17 pierce + 10 against infantry, a Champion has 1 pierce armor: 26 per shot."""
-    assert combat.damage("HAND_CANNONEER", "CHAMPION") == 26
+def test_a_hand_cannoneer_has_a_bonus_against_infantry():
+    t = combat.stats("CHAMPION")
+    assert combat.damage("HAND_CANNONEER", "CHAMPION") > combat.damage("HAND_CANNONEER", "CHAMPION", t=t._replace(classes=()))
