@@ -68,7 +68,9 @@ def test_the_rule_set_cannot_change_after_a_rule_file_loaded():
 def test_the_rule_set_replaces_the_item_lists_and_adds_to_the_lookups():
     names = {r["name"] for r in table.load("train.jsonl", rules="antiquity")}
     assert {"TOOL_AGE", "BRONZE_AGE", "IRON_AGE", "VILLAGER_MALE"} <= names and "FEUDAL_AGE" not in names
-    assert table.load("units.jsonl", rules="antiquity") == table.load("units.jsonl")   # no own file: the AoE2 lines
+    old, new = ({r["name"]: r for r in table.load("units.jsonl", **k)} for k in ({}, {"rules": "antiquity"}))
+    assert set(old) < set(new) and "HOPLITE" in new and new["MILITIA"] == old["MILITIA"]   # adds, keeps the AoE2 lines
+    assert new["CENTURION"]["classes"] == ["infantry"] != old["CENTURION"]["classes"]      # a line of the same name (#3669)
 
 
 def test_without_antiquity_the_ages_stay():
