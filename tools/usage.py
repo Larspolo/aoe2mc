@@ -14,7 +14,8 @@ The flow brake (owner, 2026-10-27): the quota is not the only bottleneck. When C
 stops the merges, the agent PRs build up, and a night of new PRs gives many conflicts. So `--fire` counts the open
 agent PRs older than `pr_minutes` (they wait for something that is not the quota) and the queued CI runs. At
 `max_waiting_prs` it starts at most 1 run per cycle, and that run only repairs PRs (autopilot step 2). At
-`max_ci_queue` it starts no run: a run cannot make CI faster. The limits are in `[pacing]` of `agent.toml`.
+`max_ci_queue` it starts no run: a run cannot make CI faster. While the brake is on, the pacer keeps one open `tooling` issue that
+asks for a faster CI (`pacer.brake_ticket`, #4301). The limits are in `[pacing]` of `agent.toml`.
 
 BURN and BURN7 (the same for the 7-day window, #1695) are the defaults. When the run reports on the status issue
 have enough `Usage:` lines (at least 5 pairs in the last 24 hours), `tools/health.py` measures the burns from them
@@ -408,7 +409,7 @@ def fire(usage, now, burn=BURN, burn7=None, skip=(), status=None, started=None, 
     k, runs = plan(target, eq, max(0, ready - sum(wait.values())), lanes, paused, refill=refill, refill_lane=refill_lane)
     cap, flow = read_flow(now)
     if out is not None:
-        out["flow"] = cap
+        out["flow"], out["flow_reason"] = cap, flow
     if cap is not None:                                     # the flow is the bottleneck: Opus runs repair the PRs
         k, runs = min(k, cap), dict.fromkeys(runs, 0)
     line = (f"{describe(usage, now, burn, burn7)} · claims {claims} ({eq:.2f} Opus runs) · ready {ready} · "

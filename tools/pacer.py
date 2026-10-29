@@ -104,6 +104,25 @@ def red_main():
     return bool(runs) and runs[0].get("conclusion") in RED
 
 
+BRAKE_TITLE = "Make CI keep up with the runs: the flow brake is on"
+
+
+def brake_ticket(reason, api=None):
+    """Report the flow brake (owner, #4301): when no open issue has BRAKE_TITLE, open one (`P1`, `tooling`) that asks a
+    run to make CI faster. One issue at a time, so a long brake makes no copies. The number of the issue, or None."""
+    if api is None:
+        import dashboard
+        api = dashboard.api
+    if any(i.get("title") == BRAKE_TITLE for i in api("issues?state=open&labels=tooling&per_page=100")):
+        return None
+    body = (f"The pacer slowed down: {reason}.\n\n## Goal\nCI keeps up with the runs again, so the pacer starts runs"
+            " at the quota target.\n\n## Context\n- `tools/usage.py` (`flow_cap`, `read_flow`) is the flow brake;"
+            " `[pacing]` of `agent.toml` has its limits.\n- Read the times of the last `ci.yml` runs (queue time and"
+            " the time of each job) and find the largest cost.\n\n## Acceptance criteria\n- [ ] A change makes the"
+            " quick CI faster or makes fewer CI runs, and the PR names the times before and after.\n")
+    return api("issues", "POST", {"title": BRAKE_TITLE, "body": body, "labels": ["P1", "tooling", "size:M"]})["number"]
+
+
 class Briefs:
     """Takes, claims and writes the ticket of each run that the pacer starts (None: no brief for any run)."""
 
@@ -271,6 +290,12 @@ def main(argv=None, env=os.environ):
                 break
     if a.dry_run:
         started = {t: sum(1 for x, *_ in todo if x == t) for t in started}
+    if out.get("flow") is not None and not a.dry_run:   # the brake slows the runs: report it and ask for a faster CI
+        try:
+            if n := brake_ticket(out.get("flow_reason", "flow brake")):
+                print(f"flow brake: opened #{n}")
+        except Exception as e:                          # the report never stops the starts
+            print(f"no brake ticket: {e}", file=sys.stderr)
     at, gh = datetime.datetime.now(datetime.timezone.utc), github_limit(env)
     print(f"Pacer {at:%H:%MZ}: K={k}, "
           + ", ".join(f"{t} {n}" for t, n in runs.items())
