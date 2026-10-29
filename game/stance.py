@@ -4,7 +4,8 @@ unit opens a chest menu (menu.py), as a right click on a selected villager opens
 of the four AoE2 stances sends `aoe stance` (combat.stance_command, #1104) to each selected military unit, not to the
 villagers, and closes the menu. The fifth item selects all units of the type near the clicked unit: the second click
 did that before (#743). The sixth item stops the selected military units at once (#3353). The seventh item
-sends them on a patrol to the next clicked ground cell (#3355). The eighth item is the Attack Move (#3357).
+sends them on a patrol to the next clicked ground cell (#3355). The eighth item is the Attack Move (#3357), the ninth and
+tenth are Follow and Guard (follow.py, #3358).
 The boss bar of the selected unit shows a stance other than aggressive (bossbar.py).
 """
 import math
@@ -21,6 +22,8 @@ TYPE = len(ITEMS)                                                  # slot: selec
 STOP = TYPE + 1                                                    # slot: stop the selected military units (#3353)
 PATROL = STOP + 1                                                  # slot: patrol to a clicked point (#3355)
 ATTACK_MOVE = PATROL + 1                                           # slot: walk to a clicked point, attack on the way (#3357)
+FOLLOW = ATTACK_MOVE + 1                                           # slot: follow a clicked unit (#3358)
+GUARD = FOLLOW + 1                                                 # slot: guard a clicked unit or building (#3358)
 
 
 def stance(g, uuid):
@@ -33,7 +36,9 @@ def items(g, uuid):
         [(TYPE, "spyglass", "Select All of the Type", "The units of this type near it"),
          (STOP, "barrier", "Stop", "Stops the units at once"),
          (PATROL, "compass", "Patrol", "Walk between here and a point; attack the enemies on the way"),
-         (ATTACK_MOVE, "iron_axe", "Attack Move", "Walk to a point; attack each enemy on the way")]
+         (ATTACK_MOVE, "iron_axe", "Attack Move", "Walk to a point; attack each enemy on the way"),
+         (FOLLOW, "lead", "Follow", "Walk after an own unit and stay near it"),
+         (GUARD, "bell", "Guard", "Stay near an own unit or building; attack the enemies near it")]
 
 
 def open_menu(g, player, uuid):
@@ -49,6 +54,8 @@ def open_menu(g, player, uuid):
             vars(g).setdefault("ordering", {})[p] = "patrol"                                # the next right click picks the point
         elif slot == ATTACK_MOVE:
             vars(g).setdefault("ordering", {})[p] = "attack_move"
+        elif slot in (FOLLOW, GUARD):
+            vars(g).setdefault("ordering", {})[p] = "follow" if slot == FOLLOW else "guard"   # the next click picks the target
         else:
             return
         chest.close(g, p)
