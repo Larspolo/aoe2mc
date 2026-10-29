@@ -688,6 +688,8 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
     if settings["challenge"]:                                    # the civilization of the challenge (#3900)
         import challenge
         settings["civ"] = {**(settings["civ"] or {}), 1: challenge.CHALLENGES[settings["challenge"]]["civ"]}
+        if enemy := challenge.CHALLENGES[settings["challenge"]].get("enemy"):   # a bot town that does not attack (#3905)
+            settings["civ"][2], bot = enemy["civ"], bot or 1
     apply_civs(data, settings["civ"])                             # before the Gathers: all bonuses (civs.civ) follow it
     for player, pct in (settings["handicap"] or {}).items():     # before the Gathers: the start resources (#2474)
         data.setdefault("players", {}).setdefault(str(player), {})["handicap"] = pct
@@ -734,7 +736,8 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
         import replay
         import treaty as treaties
         attack = max(bot_attack, settings["treaty"], key=replay.aoe2mc.game_time)   # the bot waits for the treaty too
-        if settings["mode"] in treaties.ENDLESS or foe is None:   # Wonder Race (#2406), no enemy (#3107): no attack
+        if settings["mode"] in treaties.ENDLESS or foe is None or (   # Wonder Race (#2406), no enemy (#3107): no attack
+                settings["challenge"] and "enemy" in challenge.CHALLENGES[settings["challenge"]]):   # (#3905)
             attack = "never"
         g.bots = [*g.bots, bots.Bot(game, data, player=player, share=g, log=log, foe=foe,
                                     attack=math.inf if attack == "never" else replay.aoe2mc.game_time(attack) / 1000,
@@ -778,6 +781,8 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
         if "module" in line and not (state and line.get("loaded") == "skip"):   # a loaded game has its town, relic
             start = {"start": not state} if line.get("loaded") == "start" else {}   # Defend the Wonder (#2441)
             importlib.import_module(line["module"]).setup(g, mode, **start)
+    if settings["challenge"] and not state:                     # the enemy town of the challenge (#3905)
+        challenge.setup(g)
     import replay
     import treaty as treaties
     if settings["mode"] in treaties.ENDLESS:                     # Wonder Race: a treaty with no end (#2406)
