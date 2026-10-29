@@ -434,6 +434,8 @@ class Replay:
         self.ages, self.named = {}, {}          # player -> age ("Feudal"); the age in its sidebar name (#805)
         self.counted = []                       # UUIDs of the start units that the population counts
         self.stock = {}                         # player -> estimated resources: START + gather steps - costs (#932)
+        import market                           # market -> build -> replay: import it late
+        self.rates = dict(market.RATES)         # the exchange rates of the market, global for all players (#3939)
         self.gathered, self.villagers = {}, {}  # player -> resources of the gather steps, trained villagers (#1065)
         self.army, self.lost, self.razed = {}, {}, {}   # player -> military units trained, units lost, buildings lost (#1066)
         self.troops, self.fallen = {}, {}       # player -> {military unit name: live count, count lost} (#3695)
@@ -663,6 +665,18 @@ class Replay:
         for r, v in (train.COSTS.get(name) or build.COSTS.get(name) or {}).items():
             self.resources(p)[r] -= v
 
+    def trade(self, e):
+        """A buy or sell of the record at the own market: the gold and the resource change as in market.trade, and the
+        rate moves by STEP (#3939). The estimate may go below 0: the record is the truth, the estimate is a guess."""
+        import market                                               # market -> build -> replay: import it late
+        p, r, buy = e.get("player"), e["resource"].lower(), e["kind"] == "buy"
+        g = types.SimpleNamespace(rates=self.rates, techs=set(self.upgrades(p, e["time"])), data=self.data, player=p)
+        for _ in range(max(1, e.get("amount", market.LOT) // market.LOT)):
+            gold = market.price(g, r, buy)
+            self.resources(p)["gold"] += -gold if buy else gold
+            self.resources(p)[r] += market.LOT if buy else -market.LOT
+            self.rates[r] = min(max(self.rates[r] + (market.STEP if buy else -market.STEP), market.LIMITS[0]), market.LIMITS[1])
+
     def commands(self, e):
         """The commands of one timeline event (an empty list for the events that change nothing visible)."""
         kind = e["kind"]
@@ -731,6 +745,9 @@ class Replay:
             self.learn(e)
             return ["title @a actionbar " + json.dumps([text(name, color), text(f" researches {e['technology']}")])] + \
                 self.research(e, color)
+        if kind in ("buy", "sell") and e.get("resource"):       # the market trades change the estimate (#3939)
+            self.trade(e)
+            return []
         if kind == "resign":
             return ["title @a subtitle " + json.dumps(text("The game ends")),
                     "title @a title " + json.dumps(text(f"{name} resigns", color))]
