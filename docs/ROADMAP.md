@@ -81,6 +81,7 @@ can see which features have an epic: `gh api "repos/Larspolo/aoe2mc/issues?label
 - [ ] `play:auto-queue` The AoE2 DE auto-queue: a building trains one unit again and again while the player has the resources and the population, until the player stops it
 - [ ] `play:tech-tree` The AoE2 tech tree screen: the units, buildings and technologies of the own civilization by age and building, and the ones that the civilization does not have
 - [ ] `play:team-chat` The AoE2 chat targets: a chat line to all players, to the allies only or to one player, in the player color (Minecraft `/teammsg` and `/msg`)
+- [ ] `play:antiquity` Antiquity Mode of AoE2 DE (Return of Rome): its civilizations, ages (Stone, Tool, Bronze, Iron Age), units and technologies in the game program (owner decision B, #3583)
 
 ## 3. Replay a recorded game in Minecraft (`game/replay.py`, `aoe2mc.read_timeline`)
 
