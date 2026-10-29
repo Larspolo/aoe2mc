@@ -19,6 +19,7 @@ def test_a_chat_name_has_the_team_color(tiny_world, tmp_path):
     world = shutil.copytree(tiny_world[0], tmp_path / "W")
     with run.Game(world) as server, mc_shot.Client(server.game_port, server.version) as one:
         one.wait_join(lambda: "aoe2mc" in server.command("list").split(":", 1)[-1])
+        one.wait_loaded(server)                               # else the keys go to "Loading terrain" (#3889)
         for c in ("team add p1", "team modify p1 color blue", "team join p1 aoe2mc"):
             server.command(c)
         time.sleep(3)

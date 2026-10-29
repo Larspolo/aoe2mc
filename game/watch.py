@@ -27,7 +27,7 @@ sys.path[:0] = [os.path.dirname(os.path.abspath(__file__))]
 import replay  # noqa: E402
 import run  # noqa: E402
 
-CHAT = re.compile(r"INFO\]: (?:\[Not Secure\] )?<(\w{1,16})> (.*)$")
+CHAT = re.compile(r"INFO\]: (?:\[Not Secure\] )?<(?:\x1b\[[0-9;]*m)?(\w{1,16})(?:\x1b\[[0-9;]*m)?> (.*)$")   # the name in its team color (#3681, #3889)
 LEAD = 5                    # real seconds of play before the moment
 WATCH = 30                  # real seconds of play after the moment, then the question
 JUMP = 120                  # a wait longer than this (real seconds) jumps; a shorter one plays, so units gather as usual

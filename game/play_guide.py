@@ -35,7 +35,7 @@ import combat  # noqa: E402
 import mc_check  # noqa: E402
 from rcon import Rcon  # noqa: E402
 
-CHAT = re.compile(r"INFO\]: (?:\[Not Secure\] )?<(\w{1,16})> (.*)$")
+CHAT = re.compile(r"INFO\]: (?:\[Not Secure\] )?<(?:\x1b\[[0-9;]*m)?(\w{1,16})(?:\x1b\[[0-9;]*m)?> (.*)$")   # the name in its team color (#3681, #3889)
 MORE = 20                   # seconds after the first line of an answer in which more lines belong to it
 LOAD = 8                    # seconds after the first join: the chunks load
 DONE = ("ok", "yes")        # a one-word answer ends at once
