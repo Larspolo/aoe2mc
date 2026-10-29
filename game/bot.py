@@ -251,9 +251,18 @@ class Bot:
         eyes += [((x0 + x1 + 1) / 2, (z0 + z1 + 1) / 2, combat.sight(s["name"]) * T) for s in g.sites
                  if s.get("player", g.player) == g.player and s.get("done") for x0, x1, z0, z1 in [s["footprint"]]]
         eyes += [(v.pos[0], v.pos[2], combat.sight("VILLAGER_MALE") * T) for v in g.villagers.values() if v.pos]
+        ally = lambda p: p != g.player and gather.allied(g.players, g.player, p)   # noqa: E731
+        friends = [((x0 + x1 + 1) / 2, (z0 + z1 + 1) / 2, combat.sight(o["name"]) * T) for o in g.data["objects"]
+                   if o["kind"] == "building" and ally(o["player"]) and "footprint" in o
+                   for x0, z0, x1, z1 in [o["footprint"]]]
+        friends += [((x0 + x1 + 1) / 2, (z0 + z1 + 1) / 2, combat.sight(s["name"]) * T) for x in build.sides(g)
+                    for s in x.sites if ally(s.get("player", x.player)) and s.get("done")
+                    for x0, x1, z0, z1 in [s["footprint"]]]       # the towns of the allies (#4021)
         units = sorted(u for u, n in g.enemies.items() if not herd.herdable(n))   # no allies (gather.allied, owners.add)
-        near = {k: p for k, p in (g.positions(units) if eyes else {}).items()
-                if any(math.dist((x, z), (p[0], p[2])) <= r for x, z, r in eyes)}
+        seen = g.positions(units) if eyes or friends else {}
+        near = {}
+        for look in (eyes, friends):                                   # the own town first, then the allies
+            near = near or {k: p for k, p in seen.items() if any(math.dist((x, z), (p[0], p[2])) <= r for x, z, r in look)}
         if not near and not self.guards:                               # each position costs one RCON command
             return
         mine = g.positions(sorted(u for u, n in g.soldiers.items() if combat.stats(n).attack))
