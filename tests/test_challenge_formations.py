@@ -49,11 +49,10 @@ def test_the_challenge_places_both_armies_of_the_wiki_page(summons):
     for player, units in ((1, ROW["army"]), (2, ROW["enemy"])):
         got = sorted(n for n, p, _ in summons if p == player)
         assert got == sorted(n for n, k in units.items() for _ in range(k))
-    assert {"LONG_SWORDSMAN", "PIKEMAN", "ELITE_SKIRMISHER", "MANGONEL", "SCORPION"} == set(ROW["enemy"])
     assert len({pos for *_, pos in summons}) == len(summons)           # one unit per cell
 
 
-def test_all_enemy_units_dead_with_2_units_lost_end_the_game_with_the_silver_medal(summons, monkeypatch):
+def test_all_enemy_units_dead_with_the_silver_limit_of_units_lost_end_the_game_with_the_silver_medal(summons, monkeypatch):
     won = []
     monkeypatch.setattr(cheats, "over", lambda g, w: won.append(w(1)) or setattr(g, "ended", "x"))
     monkeypatch.setattr(challenge, "keep", lambda *a: None)
@@ -61,6 +60,6 @@ def test_all_enemy_units_dead_with_2_units_lost_end_the_game_with_the_silver_med
     challenge.tick(g)                                                  # places the armies
     assert won == [] and g.ended is None
     g.alive -= set(g.challenge_foes)
-    g.losses = {"a": "PIKEMAN", "b": "KNIGHT"}
+    g.losses = {f"l{i}": "PIKEMAN" for i in range(ROW["silver"])}
     challenge.tick(g)
     assert won == [True] and g.medal == "silver" and any("Silver medal" in c for c in g.sent)

@@ -114,12 +114,13 @@ def test_the_bar_follows_the_health_on_a_server(tmp_path):
         g = gather.Gather(game, data).setup()
         uuid, = g.soldiers
         g.select(uuid)
-        assert "40" in game.command("bossbar get aoe2mc:sel_p1 max")         # AoE2 militia: 40 hit points
-        assert "40" in game.command("bossbar get aoe2mc:sel_p1 value")
+        hp = combat.stats("MILITIA").hp                                   # the AoE2 hit points of a militia
+        assert str(hp) in game.command("bossbar get aoe2mc:sel_p1 max")
+        assert str(hp) in game.command("bossbar get aoe2mc:sel_p1 value")
         assert "is currently visible" in game.command("bossbar get aoe2mc:sel_p1 visible")
         game.command(f"damage {uuid} 15")
         g.step()
-        assert "25" in game.command("bossbar get aoe2mc:sel_p1 value")
+        assert str(hp - 15) in game.command("bossbar get aoe2mc:sel_p1 value")
         game.command(f"kill {uuid}")
         g.step()
         assert g.bar is None and "is currently hidden" in game.command("bossbar get aoe2mc:sel_p1 visible")

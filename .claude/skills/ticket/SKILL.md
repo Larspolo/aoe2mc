@@ -31,12 +31,17 @@ Body:
 
 Depends on: #<n>, #<m>        (only when another ticket must close first)
 Start after: <N> PRs after #<M>       (only when the ticket must wait for work, for example to measure a change: N merged PRs after PR #M)
-Start after: <YYYY-MM-DD HH:MM> UTC   (only when the ticket must wait for a real time; the speed of the project changes, #2039)
+Start after: <YYYY-MM-DD HH:MM> UTC   (only for a real date outside the project, for example a quota reset; never to measure a change, #2039)
 ```
+
+A ticket that measures a change counts merged PRs, never hours ("the 100 PRs before and after #M", not "24 hours
+after"): the speed of the project changes, and a paused project merges nothing (owner, 2026-10-29). `tools/health.py`
+lists the open tickets with a date in `Start after:` ("Time waits").
 
 A new line of a data file in `game/data/` needs no criterion "the values are those of the source" and no test of its values:
 `tests/test_data_files.py` checks the form of each line (#1916). Name a test of behavior: a fight, a menu, a bonus that
-the code computes.
+the code computes. Never write a criterion "a test checks that the data file (or a workflow, `agent.toml`, a skill)
+holds X": no test checks the content of a data or configuration file (owner, 2026-10-29, `docs/extend.md`).
 
 Labels: one priority (`P0`-`P3`), one kind (`bug`, `feature`, `tooling`, `design`, `docs`, `cleanup`),
 one size (`size:S`, `size:M`, `size:L`). Add `needs-human` when only the owner can do it.

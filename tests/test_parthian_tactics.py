@@ -1,11 +1,15 @@
 """game/train.py: the archery range researches Parthian Tactics (#1505, AoE2 DE wiki "Parthian Tactics"): Imperial
-Age, 200 food, 250 gold, 65 s, the mounted archers (also the Arambai, not the Genitour) get +1 melee armor, +2 pierce
-armor and +2 attack against the spearman line; not for the civilizations without it (civs.MISSING)."""
+Age, the mounted archers (also the Arambai, not the Genitour) get more melee and pierce armor and more attack against
+the spearman line; not for the civilizations without it (civs.MISSING)."""
 import test_castle_upgrades
+from menu_line import item
 from test_castle_upgrades import RANGE, setup
 from test_forging import menus
 
-from game import civs, train
+import buildings
+from game import train
+
+NO = set(train.civs.MISSING["PARTHIAN_TACTICS"])
 
 IMPERIAL = ("FEUDAL_AGE", "CASTLE_AGE", "IMPERIAL_AGE")
 
@@ -23,7 +27,7 @@ def test_the_archery_range_menu_has_parthian_tactics_in_the_imperial_age():
     assert "Parthian Tactics" not in menus(server)[-1] and train.queue(g, "Steve", RANGE, "PARTHIAN_TACTICS") is None
     server, g = player()
     train.open_menu(g, "Steve", RANGE)
-    assert f" {train.MORE}:book:Parthian Tactics:200 food · 250 gold · 65 s · research " in menus(server)[-1] + " "
+    assert item(menus(server)[-1], "Parthian Tactics").endswith(" · research")
 
 
 def test_the_mounted_archers_get_armor_and_attack_against_spearmen(monkeypatch):
@@ -33,15 +37,14 @@ def test_the_mounted_archers_get_armor_and_attack_against_spearmen(monkeypatch):
              "KNIGHT")
     old = {n: train.stats(g, n) for n in names}
     rect = train.open_menu(g, "Steve", RANGE)
-    assert train.order(g, "Steve", rect, train.MORE) == 1
-    train.tick(g, 65)
+    slot = int(item(menus(server)[-1], "Parthian Tactics").split(":")[0])
+    assert train.order(g, "Steve", rect, slot) == 1
+    train.tick(g, train.seconds(g, "PARTHIAN_TACTICS", "ARCHERY_RANGE"))
     assert "PARTHIAN_TACTICS" in g.techs
     for n in names[:5]:
-        o = old[n]
-        assert train.stats(g, n) == o._replace(melee=o.melee + 1, pierce=o.pierce + 2,
-                                               bonus={**o.bonus, "spearman": o.bonus.get("spearman", 0) + 2})
-    s = train.stats(g, "CAVALRY_ARCHER")
-    assert (s.melee, s.pierce, s.bonus["spearman"]) == (1, 2, 4)
+        o, s = old[n], train.stats(g, n)
+        assert s.melee > o.melee and s.pierce > o.pierce and s.bonus.get("spearman", 0) > o.bonus.get("spearman", 0), n
+        assert s._replace(melee=o.melee, pierce=o.pierce, bonus=o.bonus) == o, n
     for n in ("GENITOUR", "ARCHER", "KNIGHT"):
         assert train.stats(g, n) == old[n]
     stats = [c for c in server.log if c.startswith("aoe stats ")]
@@ -49,11 +52,9 @@ def test_the_mounted_archers_get_armor_and_attack_against_spearmen(monkeypatch):
 
 
 def test_not_for_the_civilizations_without_it():
-    assert {"BRITONS", "FRANKS", "BENGALIS"} <= set(civs.MISSING["PARTHIAN_TACTICS"])
-    assert not {"MONGOLS", "HUNS", "TURKS", "WEI"} & set(civs.MISSING["PARTHIAN_TACTICS"])
-    server, g = player("BRITONS")
+    server, g = player(min(NO))
     train.open_menu(g, "Steve", RANGE)
     assert "Parthian Tactics" not in menus(server)[-1] and train.queue(g, "Steve", RANGE, "PARTHIAN_TACTICS") is None
-    server, g = player("MONGOLS")
+    server, g = player(min(set(buildings.CIV_TO_ARCH) - NO))
     train.open_menu(g, "Steve", RANGE)
     assert ":book:Parthian Tactics:" in menus(server)[-1]

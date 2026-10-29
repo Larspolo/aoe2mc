@@ -1,6 +1,6 @@
-"""game/train.py: the university researches Architecture (300 food, 200 wood, 70 s, after Masonry) and Arrowslits
-(250 food, 250 wood, 25 s) in the Imperial Age (AoE2 DE wiki), #1504. Architecture: the buildings +10 % hit points and
-+1/+1 armor, as Masonry. Arrowslits: a watch tower +1, a guard tower +2 and a keep +3 attack."""
+"""game/train.py: the university researches Architecture (after Masonry) and Arrowslits in the Imperial Age, #1504.
+Architecture: the buildings get more hit points and armor, as Masonry. Arrowslits: the towers get more attack."""
+from menu_line import item
 from test_loom import menus
 from test_tower_upgrades import MAP, research, setup, uuid
 
@@ -9,9 +9,9 @@ from game import build, civs, combat, train
 TC = (2, 5, 2, 5)
 
 
-def test_the_cost_time_age_and_order_are_those_of_aoe2():
-    assert train.BY_KEY["after"]["ARCHITECTURE"] == "MASONRY"
-    assert {"ARCHITECTURE", "ARROWSLITS"} <= set(train.TRAINS["UNIVERSITY"])
+def text(g, name):
+    """The cost and time text of the university menu item of name, from the data (as train.show writes it)."""
+    return " · ".join(f"{v} {r}" for r, v in train.price(g, name).items()) + f" · {round(train.seconds(g, name), 1):g} s · "
 
 
 def test_the_university_menu_shows_both_in_the_imperial_age_and_architecture_after_masonry():
@@ -20,17 +20,15 @@ def test_the_university_menu_shows_both_in_the_imperial_age_and_architecture_aft
         train.open_menu(g, "Steve", (9, 9))
         assert (":book:Arrowslits:" in menus(server)[-1]) == shown
         assert ":book:Architecture:" not in menus(server)[-1]          # Masonry first
-    assert "19:book:Arrowslits:250 food · 250 wood · 25 s · research" in menus(server)[-1]
+    assert item(menus(server)[-1], "Arrowslits").endswith(":Arrowslits:" + text(g, "ARROWSLITS") + "research")
     g.techs.add("MASONRY")
     train.open_menu(g, "Steve", (9, 9))
-    assert "6:book:Architecture:300 food · 200 wood · 70 s · research" in menus(server)[-1]
+    assert item(menus(server)[-1], "Architecture").endswith(":Architecture:" + text(g, "ARCHITECTURE") + "research")
 
 
 def test_a_civilization_without_the_technology_does_not_see_it():
-    assert "MONGOLS" in civs.MISSING["ARCHITECTURE"] and "BRITONS" not in civs.MISSING["ARCHITECTURE"]
-    assert "GOTHS" in civs.MISSING["ARROWSLITS"] and "TEUTONS" not in civs.MISSING["ARROWSLITS"]
     server, g = setup(3)
-    g.data["players"]["1"]["civ"] = "GOTHS"
+    g.data["players"]["1"]["civ"] = civs.MISSING["ARROWSLITS"][0]
     train.open_menu(g, "Steve", (9, 9))
     assert ":book:Arrowslits:" not in menus(server)[-1]
 
@@ -38,26 +36,28 @@ def test_a_civilization_without_the_technology_does_not_see_it():
 def test_the_values_of_architecture_and_arrowslits():
     _, g = setup(3)
     g.techs |= {"MASONRY", "ARCHITECTURE"}
-    assert build.values(g, "HOUSE")[:4] == (666, 0, 2, 9)               # 550 × 1.1 × 1.1, +2/+2 armor
+    house, before = build.values(g, "HOUSE"), build.values(g, "HOUSE", g.techs - {"ARCHITECTURE"})
+    assert house.hp > before.hp and house.melee > before.melee and house.pierce > before.pierce
     assert build.values(g, "STONE_WALL") == combat.stats("STONE_WALL")  # no change for walls and gates
-    g.techs = set(build.AGE_TECHS[:3]) | {"ARROWSLITS"}
-    assert build.values(g, "WATCH_TOWER").attack == 5 + 1
-    g.techs.add("GUARD_TOWER")
-    assert build.values(g, "WATCH_TOWER").attack == 7 + 2
-    g.techs.add("KEEP")
-    assert build.values(g, "WATCH_TOWER").attack == 8 + 3
+    ages = set(build.AGE_TECHS[:3])
+    for towers in ((), ("GUARD_TOWER",), ("GUARD_TOWER", "KEEP")):
+        techs = ages | set(towers)
+        assert build.values(g, "WATCH_TOWER", techs | {"ARROWSLITS"}).attack > build.values(g, "WATCH_TOWER", techs).attack
+    g.techs = ages | {"ARROWSLITS", "GUARD_TOWER", "KEEP"}
     assert build.values(g, "TOWN_CENTER") == build.values(g, "TOWN_CENTER", set(build.AGE_TECHS[:3]))
 
 
 def test_the_research_changes_the_own_buildings():
     server, g = setup(3)
     g.techs.add("MASONRY")
-    server.hp[uuid(MAP)], server.hp[uuid(TC)] = 622, 2640             # the tower lost 500 hit points
-    research(g, "ARCHITECTURE", 70)
-    assert server.hp[uuid(MAP)] == 1234 - 500 and server.hp[uuid(TC)] == 2904
-    assert any(c.startswith(f"aoe building {uuid(MAP)} 1234 3 9 ") for c in server.log)
+    tower, tc = build.values(g, "WATCH_TOWER").hp, build.values(g, "TOWN_CENTER").hp
+    server.hp[uuid(MAP)], server.hp[uuid(TC)] = tower - 500, tc       # the tower lost 500 hit points
+    research(g, "ARCHITECTURE")
+    s = build.values(g, "WATCH_TOWER")
+    assert s.hp > tower and server.hp[uuid(MAP)] == s.hp - 500 and server.hp[uuid(TC)] == build.values(g, "TOWN_CENTER").hp > tc
+    assert any(c.startswith(f"aoe building {uuid(MAP)} {s.hp} ") for c in server.log)
     server.log.clear()
     g.stock.update(food=600, wood=600)
-    research(g, "ARROWSLITS", 25)
-    assert any(c.startswith(f"aoe building {uuid(MAP)} 1234 3 9 ") for c in server.log)
-    assert build.values(g, "WATCH_TOWER").attack == 5 + 1
+    research(g, "ARROWSLITS")
+    assert any(c.startswith(f"aoe building {uuid(MAP)} {s.hp} ") for c in server.log)
+    assert build.values(g, "WATCH_TOWER").attack > s.attack

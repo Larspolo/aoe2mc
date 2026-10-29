@@ -9,28 +9,12 @@ from test_ranged import data
 from test_siege_walk import summon
 
 
-def test_the_mangonel_line_has_the_blast_radius_of_the_wiki():
-    assert combat.BLAST.items() >= {"BOMBARD_CANNON": 0.5, "HEAVY_ROCKET_CART": 1.25, "HOUFNICE": 0.7,   # tiles, AoE2 DE
-                            "MANGONEL": 1.0, "ONAGER": 1.25, "ROCKET_CART": 1.0, "SIEGE_ONAGER": 1.5,   # ("AOE")
-                            "DEMOLITION_SHIP": 3, "FIRE_SHIP": 0,                                      # (#1440)
-                            "CANNON_GALLEON": 0.25,                                                    # (#1484)
-                            "DEMOLITION_RAFT": 2.5,                                                    # (#1481)
-                            "ELITE_CANNON_GALLEON": 0.3,                                               # (#1491)
-                            "FAST_FIRE_SHIP": 0, "HEAVY_DEMOLITION_SHIP": 3.25,                         # (#1483)
-                            "FIRE_GALLEY": 0,
-                            "CATAPULT_GALLEON": 0, "DRAGON_SHIP": 0, "DROMON": 0, "LOU_CHUAN": 0,   # (#1935)
-                            "ELITE_TURTLE_SHIP": 0.5, "TURTLE_SHIP": 0.5}.items()                       # (#1934)
-
-
 def test_the_range_command_gives_the_blast_in_blocks():
-    assert combat.range_command("u", "ONAGER", 4).split()[3:6] == ["32", str(round(6.0 / 1.7 * 20)), "5.0"]
-    assert combat.range_command("u", "SIEGE_ONAGER", 2).split()[5] == "3.0"          # then the minimum range (#1350)
+    s = combat.stats("ONAGER")
+    assert combat.range_command("u", "ONAGER", 4).split()[3:6] == [
+        str(s.range * 4), str(round(s.reload / combat.NORMAL * 20)), str(combat.BLAST["ONAGER"] * 4)]
+    assert combat.range_command("u", "SIEGE_ONAGER", 2).split()[5] == str(combat.BLAST["SIEGE_ONAGER"] * 2)   # then the minimum range (#1350)
     assert len(combat.range_command("u", "ARCHER", 4).split()) == 5           # no blast: one target
-
-
-def test_each_unit_in_the_blast_takes_the_damage_rule():
-    assert combat.damage("ONAGER", "MILITIA") == 55                           # melee armor 0
-    assert combat.damage("ONAGER", "BATTERING_RAM") == 55 + 3 + 12
 
 
 @pytest.mark.mc
@@ -63,5 +47,6 @@ def test_an_onager_shot_hits_two_militia_next_to_each_other(tiny_world, tmp_path
             time.sleep(0.2)
         time.sleep(0.5)
         hp = {t: (data(game, t, "Health") or [None])[0] for t in ("m1", "m2", "m3")}
-        assert hp["m1"] == hp["m2"] < 1000.0 and (1000.0 - hp["m1"]) % 55 == 0, hp     # 55 per shot on each one
+        d = combat.damage("ONAGER", "MILITIA", t=combat.Stats(1000, 4, 0, 1, 0, 0, {}, ("infantry",)))
+        assert hp["m1"] == hp["m2"] < 1000.0 and (1000.0 - hp["m1"]) % d == 0, hp      # d per shot on each one
         assert hp["m3"] == 1000.0, hp                                                 # outside the blast

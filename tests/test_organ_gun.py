@@ -1,44 +1,47 @@
-"""Organ Gun (#1890): the castle of the Portuguese trains the organ gun (80 wood, 70 gold, 28 s; 56 gold with the
-Portuguese bonus in the menu) and researches Elite Organ Gun in the Imperial Age (slot 5: 1200 food, 500 gold, 45 s),
-with the base values of the AoE2 DE wiki infobox "Organ Gun (Age of Empires II)". The upgrade changes the live and the
-new units."""
+"""Organ Gun (#1890): the castle of the Portuguese trains the organ gun (less gold with the Portuguese bonus in the menu)
+and researches Elite Organ Gun in the Imperial Age, with the base values of the AoE2 DE wiki infobox "Organ Gun (Age of
+Empires II)" (the data). The upgrade changes the live and the new units."""
+from menu_line import item
 from test_train_castle import menus, setup
 
+import buildings
 from game import combat, train
 
 CASTLE = (12, 4)
-
-
-def test_the_values_are_those_of_aoe2():
-    for name in ("ORGAN_GUN", "ELITE_ORGAN_GUN", "ELITE_ORGAN_GUN_UPGRADE"):
-        assert len(train.HELP[name]) <= 50 and "PORTUGUESE" not in train.civs.MISSING[name] and "BRITONS" in train.civs.MISSING[name]
+CIV = min(set(buildings.CIV_TO_ARCH) - set(train.civs.MISSING["ORGAN_GUN"]))   # the Portuguese
+UPGRADE = "ELITE_ORGAN_GUN_UPGRADE"
 
 
 def test_the_castle_of_the_portuguese_trains_the_organ_gun():
-    server, g = setup("PORTUGUESE", food=0, wood=80, gold=70)
+    server, g = setup(CIV, food=0, wood=1000, gold=1000)
     rect = train.open_menu(g, "Steve", CASTLE)
-    menu = menus(server)[-1] + " "
-    assert " 0:minecart:Organ Gun:80 wood · 56 gold · 28 s · queue 0/15 " in menu
+    menu = menus(server)[-1]
+    gold = train.price(g, "ORGAN_GUN")["gold"]                          # with the Portuguese bonus
+    unit = item(menu, "Organ Gun")
+    assert unit.startswith(f"{train.SLOTS['ORGAN_GUN']}:") and f" · {gold} gold · " in unit and unit.endswith("queue 0/15")
     assert "Elite Organ" not in menu                                    # the upgrade: the Imperial Age
-    assert train.order(g, "Steve", rect, 0) == 1 and g.queues[rect][0]["name"] == "ORGAN_GUN"
-    server, g = setup("BRITONS", ages=3)
+    assert train.order(g, "Steve", rect, train.SLOTS["ORGAN_GUN"]) == 1 and g.queues[rect][0]["name"] == "ORGAN_GUN"
+    server, g = setup(min(train.civs.MISSING["ORGAN_GUN"]), ages=3)
     train.open_menu(g, "Steve", CASTLE)
     assert "Organ" not in menus(server)[-1]
 
 
 def test_the_upgrade_changes_the_live_and_the_new_units():
-    server, g = setup("PORTUGUESE", food=2000, wood=200, gold=2000, ages=3)
+    assert CIV not in train.civs.MISSING[UPGRADE]
+    server, g = setup(CIV, food=5000, wood=1000, gold=5000, ages=3)
     g.soldiers["og"] = "ORGAN_GUN"
     g.game.entities.setdefault("og", {"Pos": (0.5, 64.0, 0.5)})          # alive at the census (#3122)
     train.open_menu(g, "Steve", CASTLE)
-    assert " 5:book:Elite Organ Gun:1200 food · 500 gold · 45 s · research " in menus(server)[-1] + " "
-    assert train.queue(g, "Steve", CASTLE, "ELITE_ORGAN_GUN_UPGRADE")
-    train.tick(g, 45)
-    assert "ELITE_ORGAN_GUN_UPGRADE" in g.techs and g.soldiers["og"] == "ELITE_ORGAN_GUN"
+    up = item(menus(server)[-1], "Elite Organ Gun")
+    assert up.startswith(f"{train.SLOTS[UPGRADE]}:") and up.endswith(" · research")
+    assert train.queue(g, "Steve", CASTLE, UPGRADE)
+    train.tick(g, train.seconds(g, UPGRADE, "CASTLE"))
+    assert UPGRADE in g.techs and g.soldiers["og"] == "ELITE_ORGAN_GUN"
     assert combat.stats_command("og", "ELITE_ORGAN_GUN") in server.log
     train.open_menu(g, "Steve", CASTLE)
-    menu = menus(server)[-1] + " "
-    assert " 0:minecart:Elite Organ Gun:80 wood · 56 gold · 21 s · queue 0/15 " in menu
-    assert ":Organ Gun:" not in menu and "5:book" not in menu
+    menu = menus(server)[-1]
+    unit = item(menu, "Elite Organ Gun")                                # one item: the unit, no upgrade
+    assert unit.startswith(f"{train.SLOTS['ORGAN_GUN']}:") and unit.endswith("queue 0/15")
+    assert ":Organ Gun:" not in menu
     assert train.queue(g, "Steve", CASTLE, "ELITE_ORGAN_GUN")
     assert train.queue(g, "Steve", CASTLE, "ORGAN_GUN") is None

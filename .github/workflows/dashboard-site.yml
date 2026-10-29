@@ -29,10 +29,22 @@ jobs:
         with:
           python-version: "3.12"
       - run: python3 -m pip install -q numpy
+      # The issues and PRs of the last build: the build reads only the changed ones (tools/dashboard_data.py, `cached`):
+      # all of them were about 60 API pages in each build (2026-10-29). The cache service counts no REST call.
+      - uses: actions/cache/restore@v4
+        with:
+          path: .dashboard-cache
+          key: dashboard-cache-${{ github.run_id }}
+          restore-keys: dashboard-cache-
       - name: Build the page and the data files
         env:
           GITHUB_TOKEN: ${{ github.token }}
+          DASHBOARD_CACHE: .dashboard-cache
         run: python3 tools/dashboard_site.py site
+      - uses: actions/cache/save@v4
+        with:
+          path: .dashboard-cache
+          key: dashboard-cache-${{ github.run_id }}
       - uses: actions/upload-pages-artifact@v3
         with:
           path: site

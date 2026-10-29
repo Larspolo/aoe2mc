@@ -11,38 +11,46 @@ from test_train_archery import menus
 
 from game import combat, fleet, gather, run, train
 
+SLOT = train.ITEMS["GALLEY"][0]
+
+
+def entry(g, name, state, icon=None):
+    """The menu item of name with its cost and time for the player of g."""
+    slot, item, label = train.ITEMS[name]
+    cost = " · ".join(f"{v} {k}" for k, v in train.COSTS[name].items())
+    return f"{slot}:{icon or item}:{label}:{cost} · {train.seconds(g, name):g} s · {state}"
+
 
 def galley(server, g):
     """A galley of player 1 from the dock, in the Feudal Age."""
     g.techs = {"FEUDAL_AGE"}
     g.stock["gold"] = 100
     rect = train.open_menu(g, "Steve", (15, 12))
-    assert train.order(g, "Steve", rect, 1) == 1
-    uuid, = train.tick(g, 36)
+    assert train.order(g, "Steve", rect, SLOT) == 1
+    uuid, = train.tick(g, train.seconds(g, "GALLEY"))
     return uuid
 
 
-def test_the_galley_has_the_aoe2_de_values_of_the_wiki():
-    assert "GALLEY" in train.TRAINS["DOCK"]
-    assert combat.damage("GALLEY", "GALLEY") == 3 + 5 and combat.damage("GALLEY", "FISHING_SHIP") == 5
-    assert combat.range_command("u", "GALLEY", 4) == "aoe range u 20 35"
-    assert combat.sight_command("u", "FISHING_SHIP", 4) is None        # a fishing ship does not fight
+def test_a_fishing_ship_does_not_fight():
+    assert combat.sight_command("u", "FISHING_SHIP", 4) is None
 
 
 def test_the_dock_menu_has_the_galley_in_the_feudal_age():
     server, g = dock_map()
     train.open_menu(g, "Steve", (15, 12))
-    assert "1:gray_dye:Galley:90 wood · 30 gold · 36 s · Needs the Feudal Age" in menus(server)[-1]
-    assert train.order(g, "Steve", DOCK, 1) == 0
+    assert entry(g, "GALLEY", "Needs the Feudal Age", "gray_dye") in menus(server)[-1]
+    assert train.order(g, "Steve", DOCK, SLOT) == 0
     g.techs = {"FEUDAL_AGE"}
     g.stock["gold"] = 100
     train.open_menu(g, "Steve", (15, 12))
-    assert "1:oak_boat:Galley:90 wood · 30 gold · 36 s · queue 0/15" in menus(server)[-1]
-    assert train.order(g, "Steve", DOCK, 1) == 1 and (g.stock["wood"], g.stock["gold"]) == (110, 70)
-    assert train.tick(g, 35) == []
+    assert entry(g, "GALLEY", "queue 0/15") in menus(server)[-1]
+    cost, t = train.COSTS["GALLEY"], train.seconds(g, "GALLEY")
+    assert train.order(g, "Steve", DOCK, SLOT) == 1
+    assert (g.stock["wood"], g.stock["gold"]) == (200 - cost.get("wood", 0), 100 - cost.get("gold", 0))
+    assert train.tick(g, t - 1) == []
     uuid, = train.tick(g, 1)
     assert g.soldiers[uuid] == "GALLEY" and uuid in g.ships and g.map.wet(*g.ships[uuid].cell)
-    assert f"aoe range {uuid} 5 35" in server.log                      # tile size 1: 5 blocks, 3 s at Normal speed
+    assert combat.range_command(uuid, "GALLEY", 1) in server.log         # tile size 1
 
 
 def test_a_galley_sails_into_its_range_of_an_enemy_ship_and_attacks_it():
@@ -91,8 +99,8 @@ def test_a_move_order_ends_the_attack_and_a_fishing_ship_does_not_attack():
     assert g.ships[uuid].prey == "enemy"
     fleet.order(g, {uuid}, (20, 20))
     assert g.ships[uuid].prey is None
-    assert train.order(g, "Steve", DOCK, 0) == 1
-    fisher, = train.tick(g, 40)
+    assert train.order(g, "Steve", DOCK, train.ITEMS["FISHING_SHIP"][0]) == 1
+    fisher, = train.tick(g, train.seconds(g, "FISHING_SHIP"))
     assert fleet.attack(g, {fisher}, "enemy") == {} and g.ships[fisher].prey is None
 
 

@@ -42,15 +42,16 @@ def test_a_fishing_ship_with_an_order_on_a_fish_gets_its_food(jump):
 
 def test_the_map_knows_the_fish_and_its_food():
     r = play([])
-    assert r.map.fish == {(12, 13): 225, (3, 10): 200} and r.map.shore == {(3, 10)}
+    assert r.map.fish == {(12, 13): gather.FISH_FOOD["FISH_SALMON"], (3, 10): gather.FISH_FOOD["SHORE_FISH"]}
+    assert r.map.shore == {(3, 10)}
     assert r.map.resource((12, 13)) == "food" and gather.job_of(r.map, (3, 10)) == "FISHERMAN"
 
 
 def test_the_rates_of_a_fisherman_and_a_fishing_ship():
     r = play([])
     rate = lambda name, tile: r.rate(types.SimpleNamespace(name=name, tree=tile))   # noqa: E731
-    assert rate("VILLAGER_MALE", (3, 10)) == gather.AOE2_WORK["fish"] == 0.43
-    assert rate("FISHING_SHIP", (3, 10)) == 0.24 and rate("FISHING_SHIP", (12, 13)) == 0.42
+    assert rate("VILLAGER_MALE", (3, 10)) == gather.AOE2_WORK["fish"]
+    assert rate("FISHING_SHIP", (3, 10)) == gather.SHIP_WORK["shore"] and rate("FISHING_SHIP", (12, 13)) == gather.SHIP_WORK["deep"]
 
 
 def test_a_move_gives_a_fishing_ship_no_work():

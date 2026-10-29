@@ -8,7 +8,7 @@ from game import gather, run, train
 
 
 def setup(people, pop_limit=None):
-    """A flat 24 × 24 map (tile size 1): a town center and 25 houses of player 1 (130 housing) and `people` villagers."""
+    """A flat 24 × 24 map (tile size 1): a town center and 25 houses of player 1 and `people` villagers."""
     objects = [{"kind": "building", "name": "TOWN_CENTER", "player": 1, "tile": [3.5, 3.5], "footprint": [2, 2, 5, 5]}]
     objects += [{"kind": "building", "name": "HOUSE", "player": 1, "tile": [1 + 2 * (i % 10), 10 + 2 * (i // 10)],
                  "footprint": [2 * (i % 10), 9 + 2 * (i // 10), 2 + 2 * (i % 10), 11 + 2 * (i // 10)]} for i in range(25)]
@@ -33,7 +33,8 @@ def test_below_the_limit_it_trains_and_the_default_is_200():
     train.queue(g, "Steve", (3, 3))
     assert len(train_all(g, server, train.TRAIN_TIMES["VILLAGER_MALE"] + 5)) == 1 and g.pop == 100
     _, g = setup(0)
-    assert train.max_pop(g) == train.LIMIT == 200 and train.limit(g) == 130
+    assert train.max_pop(g) == train.LIMIT == 200
+    assert train.limit(g) == train.HOUSING["TOWN_CENTER"] + 25 * train.HOUSING["HOUSE"]
 
 
 def test_the_cheat_raises_a_set_limit_to_1000():

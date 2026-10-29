@@ -10,8 +10,8 @@ from game import combat, run
 
 
 def test_the_stats_command_ends_with_the_reload_in_ticks():
-    assert combat.stats_command("c", "CHAMPION").split()[-1] == "24"            # 2.0 s / 1.7 = 1.18 s
-    assert combat.stats_command("p", "PIKEMAN").split()[-1] == "35"             # 3.0 s / 1.7 = 1.76 s
+    assert combat.stats_command("c", "X", combat.Stats(1, 1, 0, 0, 0, 2.0)).split()[-1] == "24"   # 2.0 s / 1.7 = 1.18 s
+    assert combat.stats_command("p", "X", combat.Stats(1, 1, 0, 0, 0, 3.0)).split()[-1] == "35"   # 3.0 s / 1.7 = 1.76 s
     assert combat.stats_command("x", "X", combat.Stats(1, 1, 0, 0, 0, 0.0)).split()[-1] == "20"   # no reload: vanilla
 
 
@@ -49,7 +49,10 @@ def test_melee_units_hit_once_per_reload(tiny_world, tmp_path):
             assert game.command(cmd).strip() == "Stats: 1 units"
         for a in ("c", "p"):
             assert game.command(f"aoe attack @e[tag={a}] @e[tag={a}t,limit=1]").strip() == "Attack: 1 units"
-        for a, step, per in (("c", 24 / 20, 13), ("p", 35 / 20, 4)):
+        target = combat.Stats(1000, 0, 0, 0, 0, 0.0, classes=("infantry",))
+        for a, name in (("c", "CHAMPION"), ("p", "PIKEMAN")):
+            step = int(combat.stats_command(a, name).split()[-1]) / 20
+            per = combat.damage(name, "X", t=target)
             seen, at = times(game, lambda: health(game, a + "t"), 6)
             assert len(at) == 6 and all(x - y == per for x, y in zip(seen, seen[1:])), seen
             gaps = [b - a for a, b in zip(at, at[1:])]

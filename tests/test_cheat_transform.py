@@ -37,11 +37,6 @@ def setup(name, cheats_on=True):
     return server, g
 
 
-def test_the_transformation_cheats_of_de():
-    assert TO == {"cameleon": "FLAMING_CAMEL", "flemish reformation": "MONK", "grab your pitchforks": "FLEMISH_MILITIA",
-                  "put on your capes": "ELITE_TEUTONIC_KNIGHT", "yes we khan": "GENGHIS_KHAN"}
-
-
 @pytest.mark.parametrize("code", sorted(TO))
 def test_a_transformation_turns_the_own_units_only(code):
     server, g = setup(FROM[code])
@@ -66,15 +61,16 @@ def test_the_new_unit_has_its_aoe2_values():
     server, g = setup("VILLAGER_MALE")
     cheats.apply(g, "Steve", "grab your pitchforks")
     stats = next(c for c in server.log if c.startswith("aoe stats "))
-    assert re.fullmatch(r"aoe stats \S+ 40 5 1 1 0 infantry,unique camel:4,cavalry:6,elephant:6,ship:4 \d+", stats)   # ship: #2155
+    uuid = stats.split()[2]
+    assert stats == combat.stats_command(uuid, TO["grab your pitchforks"])
 
 
 def test_a_unit_with_full_health_keeps_the_full_health():
-    server, g = setup("MAN_AT_ARMS")
+    server, g = setup(FROM["put on your capes"])
     server.entities["a"]["Health"] = 40.0
     cheats.apply(g, "Steve", "put on your capes")
     assert not any("Health set" in c for c in server.log)
-    assert "ELITE_TEUTONIC_KNIGHT" in g.soldiers.values() and "c" in g.soldiers
+    assert TO["put on your capes"] in g.soldiers.values() and "c" in g.soldiers
 
 
 def test_no_transformation_with_cheats_off():
@@ -113,7 +109,7 @@ def test_pitchforks_turn_a_villager_into_a_militia_that_walks_on_a_server(tmp_pa
         old, = g.villagers
         cheats.apply(g, "nobody", "grab your pitchforks")
         militia, = g.soldiers
-        assert g.soldiers[militia] == "FLEMISH_MILITIA" and not g.villagers
+        assert g.soldiers[militia] == TO["grab your pitchforks"] and not g.villagers
         end = time.time() + 5                                          # a killed mob stays for its death animation
         while g.pos(old):
             assert time.time() < end, "the villager is gone"
@@ -121,7 +117,7 @@ def test_pitchforks_turn_a_villager_into_a_militia_that_walks_on_a_server(tmp_pa
         start = g.pos(militia)
         assert start, "the Flemish Militia exists"
         goal = (40.5, g.map.y(40, 40), 40.5)
-        assert "Moved 1 units" in ai.move(game, militia, "FLEMISH_MILITIA", g.map.T, *goal)
+        assert "Moved 1 units" in ai.move(game, militia, TO["grab your pitchforks"], g.map.T, *goal)
         end = time.time() + 60
         while (p := g.pos(militia)) and (p[0] - goal[0]) ** 2 + (p[2] - goal[2]) ** 2 > 2 ** 2:
             assert time.time() < end, f"the Flemish Militia is at {p}, not at {goal} (from {start})"

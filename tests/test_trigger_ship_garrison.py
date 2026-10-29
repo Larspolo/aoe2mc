@@ -29,10 +29,6 @@ def test_the_converter_summons_the_unit_at_the_ship_and_orders_its_unload(monkey
     assert aoe2mc.unload_lines(e, c) == ['data modify storage aoe2mc:orders list append value "unload 1 8"']
 
 
-def test_the_carrier_names_have_the_aoe2_garrison():
-    assert aoe2mc.CARRIERS == {"BATTERING_RAM": 4, "CAPPED_RAM": 5, "SIEGE_RAM": 6, "TRANSPORT_SHIP": 20}
-
-
 class Server(FakeServer):
     """The unit a1 was made inside the holder `made` (its tags MADE_INSIDE and aoe2mc.in<ref>) until they go."""
     def __init__(self, entities, made):
@@ -82,7 +78,7 @@ def test_a_unit_made_in_the_ship_rides_it_and_unload_lets_it_out_on_land():
 def test_an_infantry_unit_made_in_the_ram_rides_it_and_comes_out():
     server, g = setup(8)
     garrison.adopt(g)
-    assert g.cargo == {"ram": ["a1"]} and transport.capacity(g, "ram") == 4
+    assert g.cargo == {"ram": ["a1"]} and transport.capacity(g, "ram") == aoe2mc.CARRIERS["BATTERING_RAM"]
     server.order = "unload 1 8 4 64 4"
     scenario.orders(g)
     assert "ram" not in g.cargo and "ride a1 dismount" in server.log

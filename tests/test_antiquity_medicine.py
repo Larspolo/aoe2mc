@@ -1,4 +1,4 @@
-"""Medicine of Antiquity Mode (#3984): after it, a monk heals 2 × RATE hit points per AoE2 second; without it, RATE. The
+"""Medicine of Antiquity Mode (#3984): after it, a monk heals more than RATE hit points per AoE2 second; without it, RATE. The
 rule modules read their data at import, so the Antiquity check runs in one child process."""
 import json
 
@@ -18,11 +18,11 @@ print(json.dumps({"hp": server.entities["a"]["Health"]}))
 '''
 
 
-def test_medicine_doubles_the_heal_rate_in_antiquity_mode():
+def test_medicine_increases_the_heal_rate_in_antiquity_mode():
     r = child(CODE)
     assert r.returncode == 0, r.stderr[-2000:]
     out = json.loads(r.stdout.splitlines()[-1])
-    assert out["hp"] == 10 + 4 * 2 * monk.RATE
+    assert out["hp"] > 10 + 4 * monk.RATE                              # more than without Medicine
 
 
 def test_medicine_is_no_change_outside_antiquity_mode():

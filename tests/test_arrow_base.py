@@ -1,6 +1,5 @@
-"""The AoE2 DE base number of arrows of a building (#1201): an empty town center shoots none ("PAttack 5, only when
-garrisoned by Villagers, archer units" on the AoE2 wiki), a castle 5, a tower 1. Each garrisoned villager or foot archer
-adds 1 (#1113)."""
+"""The AoE2 DE base number of arrows of a building (#1201): an empty town center shoots none ("only when garrisoned by
+Villagers, archer units" on the AoE2 wiki). Each garrisoned villager or foot archer adds 1 (#1113)."""
 import shutil
 import time
 
@@ -13,16 +12,16 @@ UUID = "00000000-0000-0000-0000-000000000001"
 BOX = (8, 64, 8, 23, 104, 23)
 
 
-def test_base_arrows():
-    assert garrison.arrows("TOWN_CENTER", []) == 0
-    assert garrison.arrows("TOWN_CENTER", ["VILLAGER_MALE"] * 3) == 3
-    assert garrison.arrows("CASTLE", []) == 5
-    assert garrison.arrows("WATCH_TOWER", ["ARCHER"]) == 2
+def test_each_villager_or_foot_archer_inside_adds_an_arrow():
+    for name in ("TOWN_CENTER", "CASTLE", "WATCH_TOWER"):
+        base = garrison.arrows(name, [])
+        assert garrison.arrows(name, ["VILLAGER_MALE"] * 3) == base + 3 and garrison.arrows(name, ["ARCHER"]) == base + 1
 
 
 def test_building_command_sends_the_arrows_of_the_units_inside():
-    assert f"aoe arrows {UUID} 0" in combat.building(UUID, "TOWN_CENTER", 1, BOX)
-    assert f"aoe arrows {UUID} 7" in combat.building(UUID, "CASTLE", 1, BOX, inside=["VILLAGER", "CROSSBOWMAN"])
+    assert f"aoe arrows {UUID} {garrison.arrows('TOWN_CENTER', [])}" in combat.building(UUID, "TOWN_CENTER", 1, BOX)
+    inside = ["VILLAGER", "CROSSBOWMAN"]
+    assert f"aoe arrows {UUID} {garrison.arrows('CASTLE', inside)}" in combat.building(UUID, "CASTLE", 1, BOX, inside=inside)
     assert not any(c.startswith("aoe arrows") for c in combat.building(UUID, "HOUSE", 1, BOX))   # no attack
 
 
@@ -43,7 +42,7 @@ def test_setup_counts_the_start_garrison():
     game = Game()
     combat.setup(game, data)
     assert [c for c in game.sent if c.startswith("aoe arrows")] == \
-        [f"aoe arrows {combat.target_uuid([0, 0, 16, 16])} 2"]
+        [f"aoe arrows {combat.target_uuid([0, 0, 16, 16])} {garrison.arrows('TOWN_CENTER', ['VILLAGER_MALE', 'ARCHER'])}"]
 
 
 @pytest.mark.mc
@@ -73,4 +72,4 @@ def test_empty_town_center_does_not_shoot(tiny_world, tmp_path):
             if health(game, "e") < 1000:
                 break
             time.sleep(0.1)
-        assert health(game, "e") == 996.0                                   # 1 arrow: attack 5 - pierce 1
+        assert health(game, "e") == 1000 - (combat.stats("TOWN_CENTER").attack - 1)   # 1 arrow: attack - pierce 1

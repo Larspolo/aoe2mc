@@ -2,6 +2,7 @@
 and "noui" (#968). Only with cheats on."""
 import pytest
 import test_double_bit_axe
+from test_castle_upgrades import entry
 from test_gather import FakeServer, grid
 
 from game import cheats, gather, hints, train
@@ -48,7 +49,8 @@ def test_tech_tech_one_two_free_makes_technologies_free():
     assert train.queue(g, "Steve", (3, 3), "DOUBLE_BIT_AXE") is None
     typed(server, g, "tech tech one two free")
     rect = train.open_menu(g, "Steve", (3, 3))
-    assert test_double_bit_axe.menus(server)[-1].endswith("0:book:Double-Bit Axe:free · 25 s · research")
+    assert test_double_bit_axe.menus(server)[-1].endswith(entry(g, (3, 3), "DOUBLE_BIT_AXE") + "research")
+    assert ":free · " in entry(g, (3, 3), "DOUBLE_BIT_AXE")
     assert train.queue(g, "Steve", (3, 3), "DOUBLE_BIT_AXE") == rect and (g.stock["food"], g.stock["wood"]) == (0, 0)
     assert train.cancel(g, "Steve", rect, 0) == "DOUBLE_BIT_AXE" and (g.stock["food"], g.stock["wood"]) == (0, 0)
     assert train.price(g, "VILLAGER_MALE") == train.COSTS["VILLAGER_MALE"]   # units still cost
@@ -58,13 +60,14 @@ def test_going_above_and_beyond_stacks_double_bit_axe():
     server, g = lumber(food=1000, wood=1000)
     before = g.work_time("wood")
     train.queue(g, "Steve", (3, 3), "DOUBLE_BIT_AXE")
-    train.tick(g, 25)
+    train.tick(g, train.TRAIN_TIMES["DOUBLE_BIT_AXE"])
     assert train.queue(g, "Steve", (3, 3), "DOUBLE_BIT_AXE") is None    # once without the cheat
+    once = g.work_time("wood")
     typed(server, g, "going above and beyond")
     assert train.queue(g, "Steve", (3, 3), "DOUBLE_BIT_AXE") is not None
-    train.tick(g, 25)
+    train.tick(g, train.TRAIN_TIMES["DOUBLE_BIT_AXE"])
     assert train.count(g, "DOUBLE_BIT_AXE") == 2 and g.repeats == {"DOUBLE_BIT_AXE": 1}
-    assert g.work_time("wood") == pytest.approx(before / 1.2 ** 2)
+    assert g.work_time("wood") == pytest.approx(once * once / before)   # the factor of one research, twice
     train.open_menu(g, "Steve", (3, 3))
     assert "Double-Bit Axe" in test_double_bit_axe.menus(server)[-1]
     g.repeats["DOUBLE_BIT_AXE"] = train.REPEAT - 1
@@ -73,10 +76,12 @@ def test_going_above_and_beyond_stacks_double_bit_axe():
 
 def test_beyond_stacks_combat_technologies():
     server, g = lumber()
-    g.techs, g.beyond = {"LOOM"}, True
+    g.techs, g.beyond = set(), True
+    base = train.stats(g, "VILLAGER_MALE")
+    g.techs = {"LOOM"}
     once = train.stats(g, "VILLAGER_MALE")
     g.repeats = {"LOOM": 2}
-    assert train.stats(g, "VILLAGER_MALE").hp == once.hp + 2 * 15
+    assert train.stats(g, "VILLAGER_MALE").hp == once.hp + 2 * (once.hp - base.hp)
 
 
 def test_noui_hides_the_interface_and_a_second_noui_shows_it():

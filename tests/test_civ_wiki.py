@@ -49,7 +49,6 @@ def test_each_bonus_has_one_known_state():
 
 def test_each_table_is_keyed_by_civilizations():
     known = {c for v in buildings.CIV_ARCH.values() for c in v.split()}
-    assert {"COSTS", "START", "WORK"} <= set(TABLES)
     for name in TABLES:
         table = getattr(civs, name)
         assert isinstance(table, (dict, tuple)) and set(table) <= known, name

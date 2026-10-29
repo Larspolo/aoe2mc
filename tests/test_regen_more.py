@@ -1,11 +1,11 @@
-"""game/regen.py: Bengali ships regenerate 15 hit points per minute, Puru cavalry 25 from the Classical Age with no
-enemy unit within 10 tiles, as in AoE2 DE (civs.REGEN, #2334)."""
+"""game/regen.py: Bengali ships and Puru cavalry regenerate at the rates of the data; the Puru cavalry only with no enemy
+unit near (civs.REGEN, #2334)."""
 import re
 
 import pytest
 from test_gather import grid
 from test_monk_heal import HealServer
-from test_regeneration import AGES, run
+from test_regeneration import AGES, after, run
 
 from game import gather
 
@@ -39,12 +39,12 @@ def setup(civ, age, *units):
     return server, g
 
 
-def test_a_bengali_ship_regenerates_15_hit_points_per_minute_up_to_its_maximum():
+def test_a_bengali_ship_regenerates_up_to_its_maximum():
     server, g = setup("BENGALIS", 0, ("s", "GALLEY", 1, 2.5, 50.0, 90.0))
     run(g, 60)
-    assert server.entities["s"]["Health"] == pytest.approx(65, abs=0.01)
+    assert server.entities["s"]["Health"] == after(g, "GALLEY", 50.0, 90.0) != 50.0
     assert any(c.startswith("execute as s on passengers run data modify entity @s Health") for c in server.log)
-    run(g, 240)
+    run(g, 6000)
     assert server.entities["s"]["Health"] == 90.0
 
 
@@ -54,17 +54,20 @@ def test_a_ship_of_another_civilization_does_not_regenerate():
     assert server.entities["s"]["Health"] == 50.0
 
 
-@pytest.mark.parametrize("age, gain", [(1, 0), (2, 25), (3, 25)])
-def test_puru_cavalry_regenerates_25_hit_points_per_minute_from_the_classical_age(age, gain):
+@pytest.mark.parametrize("age", [1, 2, 3])
+def test_puru_cavalry_regenerates_at_the_rate_of_its_age(age):
     server, g = setup("PURU", age, ("k", "KNIGHT", 1, 2.5, 50.0, 100.0), ("m", "MAN_AT_ARMS", 1, 3.5, 20.0, 45.0))
     run(g, 60)
-    assert server.entities["k"]["Health"] == pytest.approx(50 + gain, abs=0.01)
+    assert server.entities["k"]["Health"] == after(g, "KNIGHT", 50.0, 100.0)
     assert server.entities["m"]["Health"] == 20.0                     # not cavalry
 
 
-@pytest.mark.parametrize("x, gain", [(12.0, 0), (13.0, 25)])
-def test_puru_cavalry_does_not_regenerate_with_an_enemy_unit_within_10_tiles(x, gain):
-    server, g = setup("PURU", 3, ("k", "KNIGHT", 1, 2.5, 50.0, 100.0), ("e", "MILITIA", 2, x, 40.0, 40.0))
-    run(g, 60)
-    assert server.entities["k"]["Health"] == pytest.approx(50 + gain, abs=0.01)
-    assert server.entities["e"]["Health"] == 40.0
+def test_puru_cavalry_does_not_regenerate_with_an_enemy_unit_near():
+    health = {}
+    for x in (3.5, 31.5):                                              # an enemy unit 1 and 29 tiles away
+        server, g = setup("PURU", 3, ("k", "KNIGHT", 1, 2.5, 50.0, 100.0), ("e", "MILITIA", 2, x, 40.0, 40.0))
+        run(g, 60)
+        health[x] = server.entities["k"]["Health"]
+        assert health[x] == after(g, "KNIGHT", 50.0, 100.0, foe=x - 2.5)
+        assert server.entities["e"]["Health"] == 40.0
+    assert health[3.5] == 50.0 < health[31.5]

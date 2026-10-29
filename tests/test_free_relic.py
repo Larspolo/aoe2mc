@@ -19,7 +19,7 @@ def test_the_first_armenian_church_holds_a_relic_that_gives_gold():
     gold = g.stock["gold"]
     for _ in range(60):
         monk.relic_tick(g, monk.EVERY)
-    assert g.stock["gold"] - gold == 30                                 # 30 gold per AoE2 minute of one relic
+    assert g.stock["gold"] - gold == round(monk.GOLD * 60 * monk.EVERY)   # 60 ticks of the gold of one relic
 
 
 def test_the_second_church_holds_none():

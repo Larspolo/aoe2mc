@@ -1,16 +1,16 @@
-"""game/hill.py: the owner of the monument gets 48 of each resource per game minute (AoE2 wiki "Monument", #2370), and a
+"""game/hill.py: the owner of the monument gets hill.TRICKLE of each resource per game second (AoE2 wiki "Monument", #2370), and a
 King of the Hill map with no MONUMENT gets one in its center at the first tick. The map of test_king_of_the_hill."""
 from test_king_of_the_hill import run, setup
 
 from game import hill
 
 
-def test_the_owner_gets_48_of_each_resource_per_minute():
+def test_the_owner_gets_the_trickle_of_each_resource():
     server, g = setup(("a", 1, 18.5, 16.5), ("e", 2, 30.5, 30.5))
     hill.tick(g, 0.0)                                                  # the first check: player 1 takes the monument
     start = dict(g.stock)
     run(g, 60)
-    assert {r: g.stock[r] - start[r] for r in hill.RESOURCES} == dict.fromkeys(hill.RESOURCES, 48)
+    assert {r: g.stock[r] - start[r] for r in hill.RESOURCES} == dict.fromkeys(hill.RESOURCES, round(hill.TRICKLE * 60))
 
 
 def test_a_player_that_does_not_hold_the_monument_gets_nothing():

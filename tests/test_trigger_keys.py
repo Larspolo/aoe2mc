@@ -6,7 +6,7 @@ import io
 from collections import Counter
 
 import aoe2mc
-from tools import scenarios, triggers
+from tools import scenarios
 
 PATH = 'storage aoe2mc:keys values."gold left"'
 
@@ -61,8 +61,3 @@ def test_read_scenario_keeps_the_variable_the_key_and_the_default(tmp_path):
     assert (load["variable"], load["message"], load["quantity"]) == (1, "gold left", 5)
     assert (store["variable"], store["message"]) == (1, "gold left")
 
-
-def test_the_map_rows_name_the_commands_and_the_issue():
-    for name in ("STORE_KEY_VALUE", "LOAD_KEY_VALUE", "DELETE_KEY"):
-        row = triggers.MAP[("effect", name)]
-        assert "aoe2mc:keys" in row and "#2887" in row and "campaign" in row

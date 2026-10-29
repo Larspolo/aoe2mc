@@ -170,7 +170,6 @@ jobs:
           if [ "$merged" = 1 ]; then
             gh workflow run claims.yml --repo "$R" || true                  # the claim refs of closed tickets
             gh workflow run ci.yml --repo "$R" --ref main
-            gh workflow run dashboard.yml --repo "$R" || true
             gh workflow run coverage.yml --repo "$R" --ref main || true     # report and MAX on main (#233)
           fi
           # A push of GITHUB_TOKEN starts no `push` workflow, so labels.yml does not see the merge (#980). Start it only

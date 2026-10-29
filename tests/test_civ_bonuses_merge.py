@@ -11,11 +11,6 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 FILE = os.path.join("tests", "data", "civ_bonuses.jsonl")
 
 
-def test_the_file_merges_with_the_jsonl_driver():
-    rule = f"{FILE} merge=jsonl"
-    assert rule in open(os.path.join(ROOT, ".gitattributes")).read().splitlines()
-
-
 def test_two_closed_neighbour_bonuses_merge_without_a_conflict(tmp_path):
     rows = [json.loads(s) for s in open(os.path.join(ROOT, FILE))]
     i = next(i for i in range(len(rows) - 1) if rows[i]["civ"] == rows[i + 1]["civ"])

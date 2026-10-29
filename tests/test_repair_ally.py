@@ -5,14 +5,14 @@ import pytest
 from test_gather import grid
 from test_repair import HpServer
 
-from game import combat, gather, repair
+from game import build, combat, gather, repair
 
 CASTLE, ENEMY, GAIA = (12, 16, 12, 16), (4, 6, 12, 14), (16, 18, 4, 6)   # block footprints (x0, x1, z0, z1)
 
 
 def setup(stone=400):
     """A flat 24 × 24 map: player 1 (Britons) with a villager "v0"; a damaged castle of the ally 2 (Incas: buildings
-    cost 15 % less stone); a damaged house of the enemy 3 and of Gaia."""
+    cost less stone); a damaged house of the enemy 3 and of Gaia."""
     objects = [{"kind": "building", "name": "CASTLE", "player": 2, "tile": [14, 14], "footprint": [12, 12, 16, 16]},
                {"kind": "building", "name": "HOUSE", "player": 3, "tile": [5, 13], "footprint": [4, 12, 6, 14]},
                {"kind": "building", "name": "HOUSE", "player": 0, "tile": [17, 5], "footprint": [16, 4, 18, 6]},
@@ -30,14 +30,16 @@ def setup(stone=400):
 def test_a_villager_repairs_an_allied_castle_and_the_own_stock_pays_the_cost_of_the_ally():
     server, g = setup()
     assert repair.owners(g) == {CASTLE: ("CASTLE", 2)}
-    assert repair.cost(g, "CASTLE", 2) == {"stone": 276.5}          # half of 650 × 0.85 (Incas), not 325
+    ally = repair.cost(g, "CASTLE", 2)
+    assert ally == {r: v / 2 for r, v in build.price(g, "CASTLE", 2).items()} != repair.cost(g, "CASTLE")   # Incas
     assert repair.order(g, "Steve", (13, 13)) == CASTLE
     steps = 0
     while g.villagers["v0"].state != "idle" and steps < 3000:
         g.step()
         steps += 1
-    assert server.hp[repair.uuid(CASTLE)] == combat.stats("CASTLE").hp
-    assert 400 - g.stock["stone"] in (138, 139)                     # 276.5 stone × 2400 / 4800 hit points
+    full = combat.stats("CASTLE").hp
+    assert server.hp[repair.uuid(CASTLE)] == full
+    assert abs(400 - g.stock["stone"] - ally["stone"] * (full - 2400) / full) <= 1   # whole stone
 
 
 @pytest.mark.parametrize("cell", [(4, 12), (16, 4)])

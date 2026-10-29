@@ -32,18 +32,19 @@ def dock_map(wood=200):
 
 def trained(server, g):
     rect = train.open_menu(g, "Steve", (15, 12))
-    assert train.order(g, "Steve", rect, 0) == 1
-    uuid, = train.tick(g, 40)
+    assert train.order(g, "Steve", rect, train.ITEMS["FISHING_SHIP"][0]) == 1
+    uuid, = train.tick(g, train.TRAIN_TIMES["FISHING_SHIP"])
     return uuid
 
 
-def test_the_dock_menu_has_the_fishing_ship_with_the_aoe2_values():
+def test_the_dock_menu_has_the_fishing_ship_with_its_values():
     server, g = dock_map()
     eye, d = (12.5, 65.62, 12.5), gather.direction(-90, 40)           # look east and down at the dock
     assert g.map.pick_ground(eye, d) is None and train.open_menu(g, "Steve", fleet.pick(g, eye, d)) == DOCK
-    assert "0:oak_boat:Fishing Ship:75 wood · 40 s · queue 0/15" in menus(server)[-1]   # AoE2 DE wiki infobox
-    assert train.order(g, "Steve", DOCK, 0) == 1 and g.stock["wood"] == 125
-    assert train.tick(g, 39) == []
+    (slot, icon, label), cost, t = train.ITEMS["FISHING_SHIP"], train.COSTS["FISHING_SHIP"], train.TRAIN_TIMES["FISHING_SHIP"]
+    assert f"{slot}:{icon}:{label}:{cost['wood']} wood · {t} s · queue 0/15" in menus(server)[-1]
+    assert train.order(g, "Steve", DOCK, slot) == 1 and g.stock["wood"] == 200 - cost["wood"]
+    assert train.tick(g, t - 1) == []
 
 
 def test_a_trained_ship_floats_on_the_water_in_front_of_the_dock():

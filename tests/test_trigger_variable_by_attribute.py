@@ -14,6 +14,7 @@ from test_scenario_patrol import trigger
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "game"))
 import scenario  # noqa: E402
+from game import train  # noqa: E402
 
 HIT_POINTS, ARMOR, LINE_OF_SIGHT = 0, 8, 1
 SET, ADD, SUBTRACT = 1, 2, 3
@@ -57,10 +58,12 @@ def run(g, stored, scores):
     return scores
 
 
-@pytest.mark.parametrize("op, before, after", [(SET, 7, 40), (ADD, 2, 42), (SUBTRACT, 50, 10)])
+@pytest.mark.parametrize("op, before, after", [(SET, 7, lambda hp: hp), (ADD, 2, lambda hp: 2 + hp),
+                                              (SUBTRACT, 50, lambda hp: 50 - hp)])
 def test_the_variable_gets_the_militia_hit_points(op, before, after):
     _, g = setup("BRITONS")
-    assert run(g, f'["1 MILITIA hp {op} 4"]', {"#v4": before})["#v4"] == after
+    hp = train.stats(g, "MILITIA").hp
+    assert run(g, f'["1 MILITIA hp {op} 4"]', {"#v4": before})["#v4"] == after(hp)
 
 
 def test_a_request_of_another_player_does_not_change_the_variable():

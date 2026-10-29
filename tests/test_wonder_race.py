@@ -9,7 +9,7 @@ from test_bot_attack import armed, orders
 from test_treaty import clicked
 from test_wonder import SITE, targets, tick
 
-from game import combat, run, treaty, wonder
+from game import combat, run, treaty
 
 from test_cheat_end import game
 
@@ -56,7 +56,7 @@ def test_in_the_standard_mode_a_wonder_still_needs_its_timer():
     targets(server, {combat.target_uuid([4, 4, 9, 9])})
     g.sites.append(dict(SITE))
     tick(g, 0)
-    assert not g.ended and wonder.RACE["wonder-race"] == 0
+    assert not g.ended
 
 
 def test_play_starts_an_endless_treaty_and_the_bot_never_attacks(tmp_path, monkeypatch):

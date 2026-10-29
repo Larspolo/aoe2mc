@@ -35,16 +35,19 @@ def start(site=SITE):
 
 
 def test_the_timer_depends_on_the_map_size():
-    assert [wonder.years(s) for s in (48, 120, 168, 200, 220, 240, 480)] == [200, 200, 200, 300, 350, 400, 400]
+    years = [wonder.years(s) for s in (48, 120, 168, 200, 220, 240, 480)]
+    assert years == sorted(years) and wonder.years(None) == wonder.years(48)   # a larger map: more years
 
 
 def test_a_wonder_that_stands_for_the_timer_wins():
     server, g, uuid, _ = start()
     total = wonder.years(g.data.get("map_size")) * wonder.YEAR
     assert any(c.startswith("summon slime ") and "aoe2mc.building" in c for c in server.log)
-    assert f"aoe building {uuid} 4800 3 10" in " ".join(server.log)    # a target: units can destroy it
+    s = combat.stats("WONDER")
+    assert f"aoe building {uuid} {s.hp} {s.melee} {s.pierce}" in " ".join(server.log)   # a target: units can destroy it
     assert "bossbar set aoe2mc:wonder_p1 players @a" in server.log
-    assert 'bossbar set aoe2mc:wonder_p1 name "Player 1: wonder, 200 years left"' in server.log
+    years = wonder.years(g.data.get("map_size"))
+    assert f'bossbar set aoe2mc:wonder_p1 name "Player 1: wonder, {years} years left"' in server.log
     tick(g, total - 3)
     assert not g.ended
     assert 'bossbar set aoe2mc:wonder_p1 name "Player 1: wonder, 1 year left"' in server.log

@@ -88,7 +88,7 @@ def test_a_soldier_leaves_a_neutral_unit_alone_and_attacks_it_on_an_order(tiny_w
             assert game.command(combat.stats_command(f"@e[tag={tag},limit=1]", name)).strip() == "Stats: 1 units"
         assert game.command(combat.sight_command("@e[tag=a,limit=1]", "CHAMPION", 4)).strip() == "Sight: 1 units"
         time.sleep(5)
-        assert health(game, "b") == 40.0                                  # no automatic attack on a neutral
+        assert health(game, "b") == float(combat.stats("MILITIA").hp)     # no automatic attack on a neutral
         game.command("aoe attack @e[tag=a,limit=1] @e[tag=b,limit=1]")
         end = time.time() + 60
         while time.time() < end and health(game, "b") is not None:

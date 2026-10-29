@@ -10,9 +10,8 @@ from test_unit_ai import data
 
 
 def test_sight_command():
-    assert combat.sight_command("u", "MILITIA", 4) == "aoe sight u 16"      # 4 tiles
-    assert combat.sight_command("u", "ARCHER", 4) == "aoe sight u 24"       # range 4 + 2
-    assert combat.sight_command("u", "LIGHT_CAVALRY", 2) == "aoe sight u 16"
+    for name, T in (("MILITIA", 4), ("ARCHER", 4), ("LIGHT_CAVALRY", 2)):   # tiles of sight × T blocks
+        assert combat.sight_command("u", name, T) == f"aoe sight u {combat.sight(name) * T}", name
     assert combat.sight_command("u", "VILLAGER", 4) is None and combat.sight_command("u", "MONK", 4) is None
 
 
@@ -47,10 +46,11 @@ def test_idle_soldiers_attack_enemies_in_sight(tiny_world, tmp_path):
         while time.time() < end and health(game, "b") is not None:
             time.sleep(0.2)
         assert health(game, "b") is None                                  # a attacked b without an order
-        assert health(game, "d") == 40.0 and data(game, "c", "Pos")[0] < x0 + 4   # d is out of the sight of c
-        assert health(game, "w") == 25.0 and health(game, "v") == 25.0    # villagers do not start a fight
+        full = {n: combat.stats(n).hp for n in ("MILITIA", "VILLAGER", "MONK")}
+        assert health(game, "d") == full["MILITIA"] and data(game, "c", "Pos")[0] < x0 + 4   # d is out of the sight of c
+        assert health(game, "w") == health(game, "v") == full["VILLAGER"]   # villagers do not start a fight
         end = time.time() + 60
         while time.time() < end and abs((data(game, "m", "Pos") or [0])[0] - goal[0]) > 1:
             time.sleep(0.5)
         p = data(game, "m", "Pos")                                        # m walked on to its goal past n
-        assert health(game, "n") == 30.0 and p and abs(p[0] - goal[0]) < 2 and abs(p[2] - goal[2]) < 2, p
+        assert health(game, "n") == full["MONK"] and p and abs(p[0] - goal[0]) < 2 and abs(p[2] - goal[2]) < 2, p

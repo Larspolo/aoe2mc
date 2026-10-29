@@ -27,9 +27,11 @@ def test_rider_dies_with_its_horse(tiny_world, tmp_path):
         game.command("team join p2 @e[tag=k]")
         game.command(combat.stats_command("@e[tag=k,limit=1]", "KNIGHT"))
         game.command(combat.range_command("@e[tag=a,limit=1]", "ARCHER", 4))
-        game.command("aoe stats @e[tag=a,limit=1] 30 50 0 0 1 archer -")    # 50 - 2 pierce armor: 48 per arrow
+        game.command("aoe stats @e[tag=a,limit=1] 30 50 0 0 1 archer -")    # 50 - the pierce armor per arrow
         assert game.command("aoe attack @e[tag=a] @e[tag=kr,limit=1]").strip() == "Attack: 1 units"   # at the rider
-        assert hits(game, "k", 100.0, 2, 30) == [52.0, 4.0]          # the horse takes the hits on the rider
+        k = combat.stats("KNIGHT")
+        per = 50 - k.pierce
+        assert hits(game, "k", float(k.hp), 2, 30) == [k.hp - per, k.hp - 2 * per]   # the horse takes the hits on the rider
         assert data(game, "kr", "Health") == [20.0]                   # the rider keeps its own health
         end = time.time() + 15
         while time.time() < end and (data(game, "k", "Health") or data(game, "kr", "Health")):

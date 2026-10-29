@@ -1,10 +1,9 @@
-"""game/train.py: the town center menu has "Loom" (a book, 50 gold, 25 AoE2 seconds). A click queues it once; after
-the research the villagers have 15 more hit points and 1/2 more armor, and the item leaves the menu (#655)."""
+"""game/train.py: the town center menu has "Loom" (a book). A click queues it once; after the research the villagers
+have more hit points and armor, and the item leaves the menu (#655)."""
 from urllib.parse import unquote
 
 from test_gather import FakeServer, grid
 from menu_line import item
-from test_train_menu import LOOM
 
 from game import combat, gather, train
 
@@ -34,29 +33,32 @@ def menus(server):
 def test_the_town_center_menu_has_loom():
     server, g = setup()
     train.open_menu(g, "Steve", (3, 3))
-    assert len(menus(server)) == 1 and item(menus(server)[0], "Loom") == LOOM
+    assert len(menus(server)) == 1 and item(menus(server)[0], "Loom").split(":")[1] == "book"
+    assert item(menus(server)[0], "Loom").endswith(" · research")
 
 
 def test_a_click_queues_loom_once_and_takes_its_cost():
     server, g = setup(gold=500)
     rect = train.open_menu(g, "Steve", (3, 3))
-    assert train.order(g, "Steve", rect, 1, shift=True) == 1 and g.stock["gold"] == 450
-    assert train.order(g, "Steve", rect, 1) == 0 and g.stock["gold"] == 450
-    assert item(menus(server)[-1], "Loom") == LOOM + "ing"
+    gold, slot = 500 - train.price(g, "LOOM")["gold"], train.SLOTS["LOOM"]
+    assert train.order(g, "Steve", rect, slot, shift=True) == 1 and g.stock["gold"] == gold
+    assert train.order(g, "Steve", rect, slot) == 0 and g.stock["gold"] == gold
+    assert item(menus(server)[-1], "Loom").endswith(" · researching")
 
 
 def test_loom_needs_no_population_room_and_changes_the_villagers():
-    server, g = setup()
+    server, g = setup(gold=5000)
     rect = train.open_menu(g, "Steve", (3, 3))
     g.pop = 99                                                         # above the limit of one town center
-    train.order(g, "Steve", rect, 1)
-    train.tick(g, 24)
+    train.order(g, "Steve", rect, train.SLOTS["LOOM"])
+    train.tick(g, train.seconds(g, "LOOM", "TOWN_CENTER") - 1)
     assert not g.techs and not [c for c in server.log if c.startswith("aoe stats")]
     train.tick(g, 1)
     assert g.techs == {"LOOM"} and not any(g.queues.values())
-    s = train.stats(g, "VILLAGER_MALE")
-    assert (s.hp, s.melee, s.pierce) == (40, 1, 2) == (25 + 15, 0 + 1, 0 + 2) and train.stats(g, "MILITIA") == combat.stats("MILITIA")
-    assert [c for c in server.log if c.startswith("aoe stats")] == ["aoe stats v 40 3 1 2 0 - building:3,heavysiege:6,stone:6 24"]
+    s, old = train.stats(g, "VILLAGER_MALE"), combat.stats("VILLAGER_MALE")
+    assert s.hp > old.hp and s.melee > old.melee and s.pierce > old.pierce
+    assert train.stats(g, "MILITIA") == combat.stats("MILITIA")
+    assert [c for c in server.log if c.startswith("aoe stats")] == [combat.stats_command("v", "VILLAGER_MALE", s)]
     assert any("Loom is researched." in c for c in server.log if c.startswith("tellraw"))
     train.open_menu(g, "Steve", (3, 3))
     assert "Loom" not in menus(server)[-1]
@@ -64,8 +66,9 @@ def test_loom_needs_no_population_room_and_changes_the_villagers():
 
 
 def test_a_new_villager_has_the_loom_values():
-    server, g = setup(food=50)
+    server, g = setup(food=5000)
     g.techs.add("LOOM")
     train.queue(g, "Steve", (3, 3))
-    v, = train.tick(g, 25)
-    assert f"aoe stats {v.uuid} 40 3 1 2 0 - building:3,heavysiege:6,stone:6 24" in server.log
+    v, = train.tick(g, train.seconds(g, "VILLAGER_MALE", "TOWN_CENTER"))
+    assert combat.stats_command(v.uuid, "VILLAGER_MALE", train.stats(g, "VILLAGER_MALE")) in server.log
+    assert train.stats(g, "VILLAGER_MALE").hp > combat.stats("VILLAGER_MALE").hp

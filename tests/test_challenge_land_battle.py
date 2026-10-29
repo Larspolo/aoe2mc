@@ -46,18 +46,17 @@ def enemies(g):
     return sorted(n for n, p in g.summons if p == 2)
 
 
-def test_the_next_wave_comes_only_when_the_wave_before_it_is_dead_and_3_losses_give_silver(game):
+def test_the_next_wave_comes_only_when_the_wave_before_it_is_dead_and_the_silver_losses_give_silver(game):
     g, waves = game, ROW["waves"]
-    assert len(waves) == 6
     challenge.tick(g)
     assert enemies(g) == sorted(n for n, k in waves[0].items() for _ in range(k)) and len(g.attacks) == 1
     challenge.tick(g)
     assert len(g.attacks) == 1                                         # wave 1 lives: no wave 2
-    for i in range(1, 6):
+    for i in range(1, len(waves)):
         g.alive -= set(g.challenge_foes)
         challenge.tick(g)
         assert g.challenge_wave == i and g.attacks[-1][0] == tuple(g.challenge_foes) and g.won == []
-    g.losses = {"a": "ARCHER", "b": "SPEARMAN", "c": "SKIRMISHER"}
+    g.losses = {f"l{i}": "ARCHER" for i in range(ROW["silver"])}
     g.alive -= set(g.challenge_foes)
     challenge.tick(g)
     assert g.won == [True] and g.medal == "silver" and any("Silver medal" in c for c in g.sent)
@@ -66,8 +65,9 @@ def test_the_next_wave_comes_only_when_the_wave_before_it_is_dead_and_3_losses_g
 def test_the_boss_bar_of_a_lost_challenge_shows_the_units_lost_and_the_next_limit(game):
     g = game
     challenge.tick(g)
-    g.losses = {"a": "ARCHER", "b": "SPEARMAN"}
+    n = ROW["gold"] + 1                                                # one more than the gold limit
+    g.losses = {f"l{i}": "ARCHER" for i in range(n)}
     challenge.tick(g)
-    assert any("bossbar set" in c and "2 units lost, gold medal up to 0" not in c and "2 units lost, silver medal up to 5"
-               in c for c in g.sent)
-    assert any(c == "bossbar set aoe2mc:challenge value 2" for c in g.sent)
+    assert any("bossbar set" in c and f"{n} units lost, gold medal up to {ROW['gold']}" not in c and
+               f"{n} units lost, silver medal up to {ROW['silver']}" in c for c in g.sent)
+    assert any(c == f"bossbar set aoe2mc:challenge value {n}" for c in g.sent)

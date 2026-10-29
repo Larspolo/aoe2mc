@@ -1,4 +1,4 @@
-"""game/gather.py work_time: Georgian villagers in the 21-tile square around a complete own Fortified Church gather 10 %
+"""game/gather.py work_time: Georgian villagers in the 21-tile square around a complete own Fortified Church gather
 faster (AoE2 DE wiki "Georgians", #2377). Fake server, no Minecraft."""
 import pytest
 from test_civ_work import setup
@@ -14,9 +14,9 @@ def chop_time(civ, *churches, done=True):
     return g.work_time("wood", pos=(v.pos[0], v.pos[2])), g.work_time("wood")
 
 
-def test_a_georgian_lumberjack_near_an_own_church_chops_10_percent_faster():
+def test_a_georgian_lumberjack_near_an_own_church_chops_faster():
     near, plain = chop_time("GEORGIANS", NEAR)
-    assert near == pytest.approx(plain / 1.1)
+    assert near < plain
     assert chop_time("GEORGIANS", NEAR, FAR)[0] == chop_time("GEORGIANS", NEAR, (10, 13, 9, 12))[0] == near   # no stack
 
 
@@ -28,7 +28,7 @@ def test_a_far_church_a_construction_site_and_an_armenian_church_give_no_bonus()
 
 
 def test_the_chop_step_gathers_faster_near_the_church():
-    """Gather.step: the same time gives the Georgian villager near the church about 10 % more wood."""
+    """Gather.step: the same time gives the Georgian villager near the church about the rate of work_time more wood."""
     def chopped(*churches):
         g = setup("GEORGIANS")
         for rect in churches:
@@ -40,4 +40,5 @@ def test_the_chop_step_gathers_faster_near_the_church():
             g.step()
         return v.load
     plain, near = chopped(), chopped(NEAR)
-    assert plain > 20 and near == pytest.approx(plain * 1.1, abs=1)
+    rate = chop_time("GEORGIANS", NEAR)[1] / chop_time("GEORGIANS", NEAR)[0]
+    assert plain > 20 and near == pytest.approx(plain * rate, abs=1)

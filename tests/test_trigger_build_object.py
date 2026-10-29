@@ -38,7 +38,7 @@ def test_the_order_completes_the_site_at_once():
     server, g, _, site, room = build('{list: ["build 1 HOUSE 8 10 12 14"]}')
     assert site["done"] and site["progress"] == 1 and site["sent"] == len(site["commands"])   # all its blocks
     assert set(site["commands"]) <= set(server.log) and not any(c.endswith("_wool") for c in server.log)
-    assert train.limit(g) == room + 5                                  # its population space
+    assert train.limit(g) == room + train.HOUSING["HOUSE"]             # its population space
     assert not any(v.state == "build" for v in g.villagers.values())   # no villager work
 
 

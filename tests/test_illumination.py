@@ -1,34 +1,28 @@
-"""Illumination (#1583): the monastery researches it in the Imperial Age (120 gold, 65 s, AoE2 wiki "Illumination"),
-and then a monk rests 33 AoE2 seconds after a conversion, not 62 (87.5 % faster; the tech tree says 50 %)."""
+"""Illumination (#1583): the monastery researches it in the Imperial Age (AoE2 wiki "Illumination"), and then a monk
+rests monk.ILLUMINATED AoE2 seconds after a conversion, not monk.REST."""
 import pytest
 from test_monk_convert import setup, until_converted
 from test_monk_techs import MONASTERY, research
 from test_monk_train import monastery
 
-from game import civs, monk, train
-
-
-def test_the_values_are_those_of_aoe2():
-    assert len(train.HELP["ILLUMINATION"]) <= 50
-    assert train.ITEMS["ILLUMINATION"][0] == 7 and "ILLUMINATION" in train.TRAINS["MONASTERY"]
-    assert len(civs.MISSING["ILLUMINATION"]) == 14 and {"CELTS", "MAYANS", "VIKINGS"} <= set(civs.MISSING["ILLUMINATION"])
-    assert "BRITONS" not in civs.MISSING["ILLUMINATION"]                 # the wiki availability chart
-    assert monk.REST / monk.ILLUMINATED == pytest.approx(1.875, abs=0.01)
+from game import monk, train
 
 
 def test_the_monastery_researches_it_only_in_the_imperial_age():
+    slot = train.SLOTS["ILLUMINATION"]
     server, g = monastery(age=2)
-    g.stock["gold"] = 120
+    gold = train.price(g, "ILLUMINATION")["gold"]
+    g.stock["gold"] = gold
     rect = train.open_menu(g, "Steve", MONASTERY)
-    assert train.order(g, "Steve", rect, 7) == 0 and g.stock["gold"] == 120
+    assert train.order(g, "Steve", rect, slot) == 0 and g.stock["gold"] == gold
     server, g = monastery(age=3)
-    rect = research(g, 7, 120)
+    rect = research(g, slot, gold)
     assert g.queues[rect][0]["name"] == "ILLUMINATION"
-    train.tick(g, 65)
+    train.tick(g, train.seconds(g, "ILLUMINATION", "MONASTERY"))
     assert "ILLUMINATION" in g.techs
 
 
-def test_after_it_the_monk_rests_33_seconds_after_a_conversion():
+def test_after_it_the_monk_rests_a_shorter_time_after_a_conversion():
     server, g = setup(("a", "MILITIA", 2, 8.5), ("b", "MILITIA", 2, 9.5))
     g.techs.add("ILLUMINATION")
     monk.convert_order(g, {"monk"}, "a")

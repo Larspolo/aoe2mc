@@ -54,13 +54,13 @@ def test_regicide_on_top_of_capture_the_relic_sets_up_both(tmp_path, monkeypatch
 
 def test_sudden_death_and_empire_wars_on_top_of_regicide(tmp_path, monkeypatch):
     seen = play(tmp_path, monkeypatch, mode="regicide", sudden_death=True, empire_wars=True)
-    assert seen == ["age feudal", "setup empire-wars", "setup regicide", "setup sudden-death",
+    assert seen == [f"age {run.MODES['empire-wars']['age']}", "setup empire-wars", "setup regicide", "setup sudden-death",
                     ("regicide", ["empire-wars", "regicide", "sudden-death"])]
 
 
 def test_a_mode_alone_works_as_before(tmp_path, monkeypatch):
     assert play(tmp_path, monkeypatch, mode="regicide") == ["setup regicide", ("regicide", ["regicide"])]
-    assert play(tmp_path, monkeypatch, mode="empire-wars") == ["age feudal", "setup empire-wars",
+    assert play(tmp_path, monkeypatch, mode="empire-wars") == [f"age {run.MODES['empire-wars']['age']}", "setup empire-wars",
                                                                ("empire-wars", ["empire-wars"])]
     assert play(tmp_path, monkeypatch) == [("standard", [])]
 

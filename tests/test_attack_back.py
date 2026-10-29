@@ -35,13 +35,15 @@ def test_units_attack_back_without_an_order(tiny_world, tmp_path):
         assert game.command("aoe attack @e[tag=a] @e[tag=b,limit=1]").strip() == "Attack: 1 units"
         for a, t in (("c", "d"), ("e", "v")):                           # one hit, as from a unit
             game.command(f"damage @e[tag={t},limit=1] 1 minecraft:mob_attack by @e[tag={a},limit=1]")
-        assert health(game, "d") == 36.0 and health(game, "v") == 21.0   # the AoE2 damage of a militia
+        hp, dmg = combat.stats("MILITIA").hp, combat.damage                # the AoE2 damage of a militia
+        assert health(game, "d") == hp - dmg("MILITIA", "MILITIA")
+        assert health(game, "v") == combat.stats("VILLAGER").hp - dmg("MILITIA", "VILLAGER")
         end = time.time() + 60
         while time.time() < end and health(game, "b") is not None:
             time.sleep(0.2)
         assert health(game, "b") is None                                  # a killed b ...
-        assert health(game, "a") is not None and health(game, "a") < 40   # ... and b hit back before it died
+        assert health(game, "a") is not None and health(game, "a") < hp   # ... and b hit back before it died
         p = data(game, "d", "Pos")                                        # d walked on to its goal
         assert p and abs(p[0] - goal[0]) < 2 and abs(p[2] - goal[2]) < 2, p
-        assert health(game, "c") == 40.0
-        assert health(game, "e") == 40.0 and data(game, "v", "Pos")[0] < x0 + 5   # the villager did not attack back
+        assert health(game, "c") == hp
+        assert health(game, "e") == hp and data(game, "v", "Pos")[0] < x0 + 5   # the villager did not attack back

@@ -64,13 +64,14 @@ def test_the_archers_of_the_player_get_more_hit_points():
     assert train.stats(g, "SKIRMISHER") == train.stats(other, "SKIRMISHER")
 
 
-@pytest.mark.parametrize("op, q, hp", [(SET, 50, 50), (ADD, 10, 40), (SUBTRACT, 5, 25), (MULTIPLY, 2, 60),
-                                       (DIVIDE, 4, 7), (SUBTRACT, 99, 0)])
+@pytest.mark.parametrize("op, q, hp", [(SET, 50, lambda b: 50), (ADD, 10, lambda b: b + 10),
+                                       (SUBTRACT, 5, lambda b: b - 5), (MULTIPLY, 2, lambda b: b * 2),
+                                       (DIVIDE, 4, lambda b: b // 4), (SUBTRACT, 9999, lambda b: 0)])
 def test_each_operation_gives_the_aoe2_result(op, q, hp):
     _, g = setup("BRITONS")
-    assert train.stats(g, "ARCHER").hp == 30
+    base = train.stats(g, "ARCHER").hp
     apply(g, f'["1 ARCHER hp {op} {q}"]')
-    assert train.stats(g, "ARCHER").hp == hp
+    assert train.stats(g, "ARCHER").hp == hp(base)
 
 
 def test_a_range_change_sends_the_range_of_the_archers():

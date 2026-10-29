@@ -33,8 +33,10 @@ def test_a_war_wagon_is_a_horse_with_a_cart_display(name):
 
 
 def test_the_horse_shoots_with_the_values_of_the_war_wagon():
-    assert combat.range_command("u", "WAR_WAGON", 4).split()[3:] == ["16", "29", "0"]   # 4 tiles, 2.5 s, siege: blast 0
-    assert combat.range_command("u", "ELITE_WAR_WAGON", 4).split()[3] == "20"
+    s = combat.stats("WAR_WAGON")                                     # range in blocks, reload in ticks, siege: blast
+    assert combat.range_command("u", "WAR_WAGON", 4).split()[3:] == [
+        str(s.range * 4), str(max(1, round(s.reload / ai.NORMAL * 20))), str(combat.BLAST.get("WAR_WAGON", 0) * 4)]
+    assert combat.range_command("u", "ELITE_WAR_WAGON", 4).split()[3] == str(combat.stats("ELITE_WAR_WAGON").range * 4)
     assert ai.speed_command("u", "WAR_WAGON", 4).startswith("attribute u minecraft:movement_speed")   # no carrier
 
 

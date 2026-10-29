@@ -12,8 +12,8 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read     # checkout and the claim refs (`health.lane_claims`)
-  issues: read       # the ready tickets and the status issue (`usage.fire`)
+  contents: write    # checkout, the claim refs (`health.lane_claims`, the claims of the briefs) and the branch metrics
+  issues: write      # the ready tickets, the status issue (`usage.fire`), `in-progress` and "Started by" of the briefs
   pull-requests: read   # the flow brake (`usage.read_flow`)
   actions: write     # the queued CI runs (`usage.read_flow`) and the start of the next loop
 
@@ -34,9 +34,15 @@ jobs:
         run: |
           npm install -g @anthropic-ai/claude-code
           python3 -m pip install -q numpy
+      - name: Check out the branch metrics (the log of each cycle, `tools/metrics_log.py --push`)
+        run: git fetch -q --depth 1 origin metrics && git worktree add -q --detach "$RUNNER_TEMP/metrics" FETCH_HEAD || true
       - name: Start the runs every 10 minutes
         env:
           GITHUB_TOKEN: ${{ github.token }}
+          GIT_AUTHOR_NAME: github-actions[bot]          # the claim commits of the briefs (`claim.claim`)
+          GIT_AUTHOR_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
+          GIT_COMMITTER_NAME: github-actions[bot]
+          GIT_COMMITTER_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
           CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           PACER_URL_MAIN: ${{ secrets.PACER_URL_MAIN }}
           PACER_TOKEN_MAIN: ${{ secrets.PACER_TOKEN_MAIN }}
@@ -50,12 +56,16 @@ jobs:
             git fetch -q --depth 1 origin main && git reset -q --hard FETCH_HEAD   # the newest code and switch
             python3 -c "import tomllib, sys; sys.exit(tomllib.load(open('agent.toml', 'rb'))['pacing'].get('pacer') != 'workflow')" \
               || { echo "pacer is not \"workflow\" in agent.toml: stop the loop"; exit 0; }
-            if ! python3 tools/pacer.py; then          # a failed call (HTTP 401, 500): red now, not after 5.5 hours
+            if ! python3 tools/pacer.py --log "$RUNNER_TEMP/pacer.jsonl"; then   # a failed call (HTTP 401, 500): red now
               sleep 600                                # the next cycle waits as usual: no fast loop of red runs
               gh workflow run pacer.yml --repo "$GITHUB_REPOSITORY" --ref main
               exit 1
             fi
             gh workflow run dashboard-site.yml --repo "$GITHUB_REPOSITORY" --ref main || true   # the dashboard, fresh each cycle
+            # the status issue: 6 runs an hour, not one after each merge (35 an hour, 30 to 50 API calls each, 2026-10-29)
+            gh workflow run dashboard.yml --repo "$GITHUB_REPOSITORY" --ref main || true
+            # the status comments and the cycle records to the branch metrics: the cron of metrics.yml fires a few times a day
+            [ -d "$RUNNER_TEMP/metrics" ] && python3 tools/metrics_log.py "$RUNNER_TEMP/metrics" --pacer "$RUNNER_TEMP/pacer.jsonl" --push || true
             sleep 600
           done
           gh workflow run pacer.yml --repo "$GITHUB_REPOSITORY" --ref main   # the next loop

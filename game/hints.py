@@ -9,9 +9,10 @@ action bar keeps one writer.
 """
 import json
 
-ORDERS = ("attack_move", "follow", "guard", "patrol")               # the menu items that wait for a click
+ORDERS = ("attack_ground", "attack_move", "follow", "guard", "patrol")   # the menu items that wait for a click
 REPEAT = 1.5                                                       # seconds: before the action bar fades
 TEXTS = {                                                          # short: the action bar is one line
+    "attack_ground": "Attack Ground: right click the ground",
     "attack_move": "Attack Move: right click the ground",
     "building": "Place the {building}: right click the ground · Shift + right click: place more · Cancel: /trigger aoe_build set 0",
     "corner": "Selection box: right click the other corner",

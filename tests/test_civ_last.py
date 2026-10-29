@@ -1,5 +1,5 @@
-"""game/civs.py LAST: the resources of Mayan players last 15 % longer, Puru stone mines 30 % and Tatar herdables have 50 %
-more food (AoE2 DE civilization bonuses, #2112)."""
+"""game/civs.py LAST: the resources of Mayan players last longer, Puru stone mines too, and Tatar herdables have more food
+(AoE2 DE civilization bonuses, #2112). The factors come from civs.LAST."""
 import math
 
 from game import civs, gather
@@ -33,26 +33,35 @@ def gathered(civ, obj=None, carcass=None):
     return v.load
 
 
-def test_mayan_resources_last_15_percent_longer():
-    for obj, amount in (("TREE_OAK", gather.TREE_WOOD), ("FRUIT_BUSH", gather.BUSH_FOOD), ("GOLD_MINE", 800),
-                        ("STONE_MINE", 350)):
-        assert gathered("GOTHS", obj) == amount
-        assert gathered("MAYANS", obj) == math.ceil(amount * 1.15), obj
-    assert gathered("MAYANS", carcass=(100, False)) == 115                 # a deer
-    assert gathered("MAYANS", carcass=(100, True)) == 115                  # a sheep
+BASE = next(r["name"] for r in civs.ROWS if r["name"] not in civs.LAST)   # a civilization with no bonus
+KINDS = (("TREE_OAK", "wood"), ("FRUIT_BUSH", "food"), ("GOLD_MINE", "gold"), ("STONE_MINE", "stone"))
 
 
-def test_puru_stone_mines_last_30_percent_longer():
-    assert gathered("PURU", "STONE_MINE") == 455
-    assert gathered("PURU", "GOLD_MINE") == 800 and gathered("PURU", "TREE_OAK") == gather.TREE_WOOD
+def lasts(civ, amount, kind):
+    """The loads of an amount of kind for civ: one take is 1 / factor (Gather.step)."""
+    return math.ceil(amount * civs.LAST.get(civ, {}).get(kind, 1) - 1e-6)
 
 
-def test_tatar_herdables_have_50_percent_more_food():
-    assert gathered("TATARS", carcass=(100, True)) == 150
-    assert gathered("TATARS", carcass=(100, False)) == 100                 # a deer is not a herdable
-    assert gathered("GOTHS", carcass=(100, True)) == 100
+def test_mayan_resources_last_longer():
+    for obj, kind in KINDS:
+        amount = gathered(BASE, obj)
+        assert gathered("MAYANS", obj) == lasts("MAYANS", amount, kind), obj
+    assert gathered("MAYANS", carcass=(100, False)) == lasts("MAYANS", 100, "hunt")    # a deer
+    assert gathered("MAYANS", carcass=(100, True)) == lasts("MAYANS", 100, "sheep")    # a sheep
+
+
+def test_puru_stone_mines_last_longer():
+    for obj, kind in KINDS[::2] + KINDS[3:]:
+        assert gathered("PURU", obj) == lasts("PURU", gathered(BASE, obj), kind), obj
+
+
+def test_tatar_herdables_have_more_food():
+    assert gathered("TATARS", carcass=(100, True)) == lasts("TATARS", 100, "sheep")
+    assert gathered("TATARS", carcass=(100, False)) == lasts("TATARS", 100, "hunt")    # a deer is not a herdable
+    assert gathered(BASE, carcass=(100, True)) == 100
 
 
 def test_a_civilization_with_no_bonus_lasts_as_in_aoe2():
-    g = type("G", (), {"data": {"players": {"1": {"civ": "FRANKS"}}}, "player": 1})()
-    assert "FRANKS" not in civs.LAST and civs.last(g, "wood") == 1
+    g = type("G", (), {"data": {"players": {"1": {"civ": BASE}}}, "player": 1})()
+    assert civs.last(g, "wood") == 1
+    assert gathered(BASE, "TREE_OAK") == gather.TREE_WOOD and gathered(BASE, "FRUIT_BUSH") == gather.BUSH_FOOD

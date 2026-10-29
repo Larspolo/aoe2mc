@@ -10,19 +10,21 @@ import pytest
 from test_armenian_volley import summoned
 from test_dock_train import dock_map
 
-from game import combat, run, train
+from game import civs, combat, run, train
 
 
-def test_a_spanish_cannon_galleon_leads_its_target():
-    for name in ("CANNON_GALLEON", "ELITE_CANNON_GALLEON"):
+def test_a_unit_of_the_key_lead_leads_its_target():
+    names = civs.value("lead", "SPANISH", ())
+    assert names
+    for name in names:
         uuid, log = summoned("SPANISH", name)
         assert f"tag {uuid} add aoe2mc.lead" in log, name
 
 
-def test_another_ship_and_another_civilization_do_not_lead():
+def test_only_the_units_of_the_key_lead_lead():
     for civ, name in (("SPANISH", "GALLEON"), ("TURKS", "CANNON_GALLEON")):
         uuid, log = summoned(civ, name)
-        assert not any("aoe2mc.lead" in c for c in log), (civ, name)
+        assert any("aoe2mc.lead" in c for c in log) == (name in civs.value("lead", civ, ())), (civ, name)
 
 
 def test_the_elite_upgrade_keeps_the_lead():

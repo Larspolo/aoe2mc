@@ -35,7 +35,7 @@ def test_the_weight_comes_from_the_usage_lines():
     weights, source = health.lane_weights(lines(rows, weight=0.1))
     assert abs(weights["haiku"] - 0.1) < 0.02 and source["haiku"] == "measured"   # the line rounds to 0.1 %
     weights, source = health.lane_weights(lines([(4, 0), (2, 4)] * 3, weight=0.1))   # too few intervals
-    assert weights["haiku"] == 0.25 and source["haiku"] == "start"
+    assert weights["haiku"] == health.LANES["haiku"] and source["haiku"] == "start"
 
 
 def test_the_usage_line_counts_the_lanes():

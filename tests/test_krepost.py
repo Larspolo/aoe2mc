@@ -11,7 +11,7 @@ from test_build_menu import villager_map
 from test_build_site import Server
 from test_gather import grid
 
-from game import build, combat, garrison, gather, run, train
+from game import build, combat, gather, run, train
 
 DOWN = (0.0, 90.0)
 
@@ -36,16 +36,8 @@ def test_only_a_bulgarian_player_has_the_krepost_in_the_menu():
     build.open_menu(g, "Steve")
     assert "Krepost" in shown(server)
     krepost = next(it for it in build.items(g) if it[2] == "Krepost")
-    assert krepost[0] == build.MENU.index("KREPOST") and krepost[3] == "350 stone\n150 s\nNeeds the Castle Age"
+    assert krepost[0] == build.MENU.index("KREPOST") and krepost[3].endswith("\nNeeds the Castle Age")
     assert build.chosen(g, "Steve") == "KREPOST"
-
-
-def test_the_values_of_the_wiki():
-    s = combat.BUILDINGS["KREPOST"]
-    assert (s.hp, s.attack, s.melee, s.pierce, s.range, s.reload) == (2600, 10, 8, 11, 7, 2.0)
-    assert combat.FORT_MIN_RANGE["KREPOST"] == 1 and combat.SIGHT["KREPOST"] == 10
-    assert garrison.SIZES["KREPOST"] == 20 and train.HOUSING["KREPOST"] == 20
-    assert build.BUILD_TIMES["KREPOST"] == 150
 
 
 def test_a_complete_krepost_shoots_and_trains_the_konnik():
@@ -56,10 +48,10 @@ def test_a_complete_krepost_shoots_and_trains_the_konnik():
                     chosen=build.MENU.index("KREPOST") + 1)
     g = gather.Gather(server, data, carry=5, chop=0.25).setup()
     g.techs |= {"FEUDAL_AGE", "CASTLE_AGE"}
-    g.stock.update(stone=500)
+    g.stock.update(stone=5000)
     g.click("Steve")
     site, = g.sites
-    assert g.stock["stone"] == 150
+    assert g.stock["stone"] == 5000 - build.COSTS["KREPOST"]["stone"]
     g.select("v0")
     g.click("Steve")
     for _ in range(6000):
@@ -67,10 +59,10 @@ def test_a_complete_krepost_shoots_and_trains_the_konnik():
         if site["progress"] == 1:
             break
     assert site["progress"] == 1
-    shot = [c for c in server.log if c.startswith("aoe building ") and " 10 " in c]
+    shot = [c for c in server.log if c.startswith("aoe building ") and f" {combat.BUILDINGS['KREPOST'].attack} " in c]
     assert shot, [c for c in server.log if c.startswith("aoe building")]
     rect = next(r for r, n in train.homes(g).items() if n == "KREPOST")
-    assert train.trains(g, train.homes(g)[rect]) == ("KONNIK", "PETARD", "ELITE_KONNIK_UPGRADE")
+    assert "KONNIK" in train.trains(g, train.homes(g)[rect])
 
 
 @pytest.mark.mc
@@ -96,7 +88,7 @@ def test_a_krepost_from_the_menu_shoots_an_enemy_on_a_server(tmp_path):
         game.command("time set midnight")                              # zombies burn in the sun
         g = gather.Gather(game, data, tick=0.25, start={}).setup()
         g.techs |= {"FEUDAL_AGE", "CASTLE_AGE"}
-        g.stock.update(stone=350)
+        g.stock.update(stone=build.COSTS["KREPOST"]["stone"])
         x, z = 8 * 4, 8 * 4                                            # tile (8, 8): free ground
         site = build.place(g, "nobody", "KREPOST", (x + 0.5, g.map.y(x, z) + 10, z + 0.5), gather.direction(*DOWN))
         assert site and g.stock["stone"] == 0
@@ -115,4 +107,4 @@ def test_a_krepost_from_the_menu_shoots_an_enemy_on_a_server(tmp_path):
         while health(game, "e") == 1000.0:
             assert time.time() < end, "the Krepost did not shoot"
             time.sleep(0.2)
-        assert (1000 - health(game, "e")) % 9 == 0                     # 9 per arrow: attack 10 - pierce 1
+        assert (1000 - health(game, "e")) % (combat.BUILDINGS["KREPOST"].attack - 1) == 0   # per arrow: attack - pierce 1

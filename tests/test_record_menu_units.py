@@ -12,6 +12,11 @@ from test_record_game import world  # noqa: E402
 from test_replay import Fake, data  # noqa: E402
 
 
+def cart_type():
+    """The AoE2 type of the trade cart: the type of its AoE2 name (the key "aoe2_name" of data/train.jsonl)."""
+    return record.types()[train.value("aoe2_name", "TRADE_CART", "TRADE_CART")]
+
+
 def events(tmp_path, names):
     """The timeline of the queue of each name in the town center of world()."""
     g = types.SimpleNamespace(data=world(), player=1, map=types.SimpleNamespace(T=4))
@@ -25,7 +30,7 @@ def events(tmp_path, names):
 
 def test_a_trade_cart_is_a_queue_of_its_aoe2_type(tmp_path):
     e, = events(tmp_path, ["TRADE_CART"])
-    assert e["kind"] == "queue" and e["type"] == 128 and e["name"] == "TRADE_CART"
+    assert e["kind"] == "queue" and e["type"] == cart_type() and e["name"] == "TRADE_CART"
 
 
 def test_a_keep_is_a_research(tmp_path):
@@ -43,4 +48,4 @@ def test_each_unit_of_the_menu_is_a_queue_event(tmp_path):
 def test_a_queued_cart_is_trained_by_the_replay(tmp_path):
     e, = events(tmp_path, ["TRADE_CART"])
     spawn, = replay.Replay(Fake(), data([e])).spawns()
-    assert spawn["name"] == "TRADE_CART" and spawn["type"] == 128
+    assert spawn["name"] == "TRADE_CART" and spawn["type"] == cart_type()

@@ -1,5 +1,6 @@
 """game/repair.py: selected villagers on the shore repair an own damaged ship, as in AoE2 DE (#1661): the siege rate
-(187.5 hit points per AoE2 minute for the first villager), for half the training cost, from up to 2 tiles away."""
+(repair.SIEGE of the building rate), for half the training cost, from up to 2 tiles away."""
+import pytest
 from test_gather import grid
 from test_repair_siege import CrewServer
 
@@ -49,7 +50,7 @@ def test_the_ship_rate_is_the_siege_rate():
     repair.unit_order(g, "Steve", "ship")
     g.villagers["v0"].state = "repair"
     repair.tick(g, 8.0)
-    assert server.health["ship"] == 60 + 187.5 / 60 * 8
+    assert server.health["ship"] == pytest.approx(60 + repair.RATE * repair.SIEGE * 8)
 
 
 def test_a_ship_that_sails_away_stops_the_repair():

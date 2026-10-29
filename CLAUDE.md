@@ -24,19 +24,12 @@ The README already uses this style. Keep it.
 | 3D image | `python3 tools/render.py building CASTLE --arch western OUT.png` (`--cut 3`: the rooms inside; or `world OUTWorld X0 Z0 X1 Z1 OUT.png`) |
 | Check states | `tools/mcvalid.py` (`block_error`, `entity_error`, `biome_error`, `sound_error`) |
 | Coverage of AoE2 types | `python3 tools/coverage.py OUT.md` (designs, mappings, fallbacks). Do not commit `docs/coverage.md`: CI on main does it, and `tools/feature_table.py` for `docs/DESIGN.md` |
-| Unread random map commands | `python3 tools/rms_survey.py DIR` (Markdown: each `*.rms` of a folder with its warnings, and the warnings with their map counts) |
 | Agent system tools | `health.py`, `operator_check.py`, `feedback.py`, `tokens.py`, `usage.py`, `dashboard.py`, `release.py`: `docs/SYSTEM.md`, "Tools of the system" |
 | Server check | `python3 tools/mc_check.py OUTWorld` (headless Minecraft, load errors; `--keep DIR` keeps the saved world), `python3 -m pytest -m mc` |
 | Game program | `python3 game/run.py OUTWorld` (Paper server with RCON, `--server vanilla`: Mojang's; type commands; `--bench N`: commands per second; `--play`: gather resources, `--cheats`: the AoE2 cheat codes in the chat; `--replay [--speed N]`: replay a recorded game) |
-| Gather timing | `python3 tools/measure_gather.py` (server, no client: walk, chop and trip times next to AoE2; `--read F.jsonl` reads a `game/run.py --play --log` file) |
-| Replay drift | `python3 tools/replay_drift.py samples/de-64.3.aoe2record --speed 4 --until 10:00 --log F.jsonl` (Paper, no client: distance of each unit to its replay position, stuck, stray and dead units per kind; `--read F.jsonl`, #813) |
-| Server profile | `python3 tools/server_profile.py [--seconds 60]` (next to a running Paper server: the top methods of the server thread, own and inclusive, Java Flight Recorder; `replay_drift.py --profile MM:SS-MM:SS`, #3336) |
-| Conversion cost | `python3 tools/measure_convert.py IN.aoe2scenario` (seconds and peak memory of each phase; `docs/research/large-maps.md`) |
-| Unit count cost | `python3 tools/measure_units.py [--units 200,500,1000]` (Paper, no client: RCON commands per second and `/tick query` with many units that walk with `aoe moveto`, #943) |
-| Datapack cost | `python3 tools/tick_cost.py` (server, no client: `/tick query` with and without `datapacks/aoe2mc`; `--world W`, `--ambience full`) |
 | In-game screenshot | `python3 tools/mc_shot.py OUTWorld OUT.png [--at X Y Z --look YAW PITCH] [--more X,Y,Z,YAW,PITCH]` (real client, ~25 s per world; `mc_shot.Client`: a player on the Paper server that clicks menus; `--player`: adventure mode, a spectator sees invisible mobs) |
-| Minecraft data | `python3 tools/mc_check.py --reports VERSION` (exact, from Mojang) or `tools/fetch_mcdata.py VERSION` writes `tools/mcdata/VERSION.json` |
-| Block colors | `python3 tools/fetch_colors.py VERSION` writes `tools/mcdata/colors-VERSION.json` (for `render.py`) |
+
+More tools (measurements of time and cost, Minecraft data, random map scripts): `docs/COMMANDS.md`.
 
 Put scratch output (worlds, scenarios, images) in the scratchpad or in `out/` (ignored by git). Never commit worlds.
 
@@ -97,6 +90,9 @@ file, not in a literal of the code: the fast test of `tools/data_lint.py` fails 
 still in the code, add each entry on its own line, in alphabetical order, not at the end (#655, #670).
 **Before you add a new item, key, setting, mode, plugin command or trigger type, or a test of a data file, read
 `docs/extend.md`**: it names the one line that each one needs, so that parallel tickets do not conflict.
+**No test checks the content of a data file or a configuration file** (owner, 2026-10-29): a change of a value, a text
+or a setting there must not make a test fail. Test the form of the data and the behavior of the code, with the
+expected value computed from the data or with test data (a fixture, a temporary file).
 
 ## How to verify
 
@@ -138,7 +134,8 @@ hook, `.gitignore` and the claim and dashboard rules. The aim is more closed tic
   asserts less) could have prevented it. Act only when it is good practice anyway (`autopilot/conflict.md`).
 - Only the owner can change the environment settings (setup script, network, variables), the scheduled task and the
   GitHub settings. When one of them costs time, make a `needs-human` ticket with numbered steps and the exact text.
-- One run per review (`tools/claim.py 0 --review`, after 200 merged PRs and 4 hours, more after reviews with no change): the `improve` skill measures the runs, CI and the environment and makes one larger improvement.
+  A new host: add it to `scripts/allowed-domains.txt` and ask the owner to paste the file (`docs/ENVIRONMENT.md`, "Network").
+- One run per review (`tools/claim.py 0 --review`, a gap of merged PRs in `[review]` of `agent.toml`, shorter after owner work on the system): the `improve` skill learns from the owner's own changes, walks all levers and makes each change that pays.
 - Never weaken tests, CI or safety rules to save time. List each process change on the status issue.
 Keep this file short: put details in skills or docs.
 

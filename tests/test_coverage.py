@@ -21,8 +21,6 @@ def test_coverage_report(tmp_path):
     text = out.read_text()
     for title in ("## Buildings", "## Other objects", "## Units", "## Heroes"):
         assert title in text
-    assert "| KREPOST | krepost | no |" in text
-    assert "| KHOSRAU | horse (zombie) | no |" in text
     assert "default infantry |" not in text   # every unit and hero has its own look
     assert "| generic | yes |" not in text   # every building has its own design
     assert "| BLOCKER | skipped on purpose (path blocker) | no |" in text

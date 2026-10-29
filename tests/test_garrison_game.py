@@ -109,13 +109,14 @@ def test_a_fallen_building_lets_its_units_out():
     assert not g.garrisons.get(TC) and all(f"tag {u} remove aoe2mc.garrisoned" in server.log for u in ("v0", "v1"))
 
 
-def test_a_watch_tower_takes_5_units_and_the_sixth_stays_at_the_door():
-    server, g = setup(villagers=6)
-    g.choose({f"v{k}" for k in range(6)}, "v0")
+def test_a_full_watch_tower_leaves_the_last_unit_at_the_door():
+    n = garrison.SIZES["WATCH_TOWER"]
+    server, g = setup(villagers=n + 1)
+    g.choose({f"v{k}" for k in range(n + 1)}, "v0")
     assert garrison.order(g, "Steve", (10, 2)) == TOWER
     arrive(server, g, TOWER)
-    assert len(g.garrisons[TOWER]) == 5
-    out, = {f"v{k}" for k in range(6)} - set(g.garrisons[TOWER])
+    assert len(g.garrisons[TOWER]) == n
+    out, = {f"v{k}" for k in range(n + 1)} - set(g.garrisons[TOWER])
     assert f"tag {out} add aoe2mc.garrisoned" not in server.log and g.villagers[out].state == "idle"
     assert out in g.selected and not g.selected - {out}
 
@@ -220,8 +221,8 @@ def test_garrison_on_a_server(tmp_path):
         militia = sorted(g.soldiers)                                   # before the enemy fights
         g.choose(set(militia), militia[0])
         garrison.order(g, "nobody", (tower[0], tower[2]))
-        walk(tower, 5)
-        assert len(g.garrisons[tower]) == 5 and len(set(militia) - set(g.garrisons[tower])) == 1
+        walk(tower, garrison.SIZES["WATCH_TOWER"])
+        assert len(g.garrisons[tower]) == garrison.SIZES["WATCH_TOWER"] and len(set(militia) - set(g.garrisons[tower])) == 1
         g.choose(set(vils[1:]), vils[1])
         garrison.order(g, "nobody", (x, tc[2]))
         walk(tc, 2)

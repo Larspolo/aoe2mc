@@ -36,29 +36,31 @@ def loads(civ, res, n=10):
     return g, side
 
 
-@pytest.mark.parametrize("civ, res, second, amount", [
-    ("POLES", "stone", "gold", 33),                                    # stone miners: gold 33 % of the stone
-    ("PORTUGUESE", "food", "wood", 33),                                # foragers: wood 0.33 for each food
-    ("PURU", "stone", "food", 69),                                     # stone miners: food 0.69 for each stone
-    ("SHU", "wood", "food", 7),                                        # lumberjacks: food 0.7 for each 10 wood
-])
-def test_ten_loads_give_the_aoe2_amount_of_the_second_resource(civ, res, second, amount):
+BASE = next(r["name"] for r in civs.ROWS if r["name"] not in civs.EXTRA)   # a civilization with no second resource
+
+
+@pytest.mark.parametrize("civ, res, kind", [("POLES", "stone", "stone"), ("PORTUGUESE", "food", "forage"),
+                                            ("PURU", "stone", "stone"), ("SHU", "wood", "wood")])
+def test_ten_loads_give_the_amount_of_the_second_resource(civ, res, kind):
+    second, each = civs.EXTRA[civ][kind]
     g, side = loads(civ, res)
     assert g.stock[res] >= 100
-    assert g.stock[second] == side[second] == pytest.approx(amount * g.stock[res] / 100, abs=1)
-    _, base = loads("GOTHS", res)
+    assert g.stock[second] == side[second] == pytest.approx(each * g.stock[res], abs=1)
+    _, base = loads(BASE, res)
     assert base[second] == 0                                           # no bonus: only the gathered resource
 
 
 def test_the_fractions_add_up_to_the_exact_sum():
     g, _ = loads("SHU", "wood", n=3)
-    assert g.stock["food"] == int(0.07 * g.stock["wood"] + 1e-9)
-    assert g.seconds["food"] == pytest.approx(0.07 * g.stock["wood"] - g.stock["food"])
+    each = civs.EXTRA["SHU"]["wood"][1]
+    assert g.stock["food"] == int(each * g.stock["wood"] + 1e-9)
+    assert g.seconds["food"] == pytest.approx(each * g.stock["wood"] - g.stock["food"])
 
 
-def test_only_the_named_work_earns_the_second_resource():
-    _, side = loads("PORTUGUESE", "stone", n=2)                        # a Portuguese miner: no wood
-    assert side["wood"] == 0 and side["stone"] >= 20
-    _, side = loads("POLES", "wood", n=2)                              # a Polish lumberjack: no gold
-    assert side["gold"] == 0
-    assert civs.extra(game("PURU")[1], "gold") is None
+@pytest.mark.parametrize("civ", ["PORTUGUESE", "POLES"])
+def test_only_the_named_work_earns_the_second_resource(civ):
+    res = next(r for r in ("stone", "wood") if r not in civs.EXTRA[civ])   # a work with no second resource
+    _, side = loads(civ, res, n=2)
+    assert side[res] >= 20
+    assert all(side[second] == 0 for second, _ in civs.EXTRA[civ].values() if second != res)
+    assert civs.extra(game("PURU")[1], "no_such_work") is None

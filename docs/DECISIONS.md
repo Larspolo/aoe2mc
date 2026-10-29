@@ -54,3 +54,5 @@ the owner chose another option, `-`: no recommendation) · principle (`P<n>`, or
 - 2026-10-29 · #3447 · Live graphs of the replay: a text display "chart" in the sky, one row of bar characters per player (B); the owner checks the graphs in the game, a map item (A) can come later · taken · P2, P3, P4
 - 2026-10-29 · #3583 · Antiquity Mode (Return of Rome): epic #2263 excludes it now; a later roadmap feature `play:antiquity` adds the Return of Rome civilizations, ages, units and technologies (B) · taken · P4, P6, P1
 - 2026-10-29 · #3760 · Art of War challenges: own challenge maps of `tools/scenarios.py` with the start units, civilization, bot, goal and medal limits from `game/data/challenges.jsonl` (A), not the original DE scenario files · taken · P5, P4
+- 2026-10-29 · - · No test checks the content of a data file or a configuration file; remove such tests · - · P10
+- 2026-10-29 · - · The improve loop learns from the owner's own system changes (owner work makes the next review come soon), checks all levers in each review, makes bold changes (also redesigns, also with a pause for owner steps), and waits by merged PRs, never by hours · - · new (P11)

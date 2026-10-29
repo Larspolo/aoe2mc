@@ -1,6 +1,6 @@
-"""A Hun trebuchet hits units more often (#2479, epic #1088; AoE2 DE wiki "Trebuchet": accuracy 15 % against units,
-Huns +35 %: 50 %): the key "accuracy" of game/data/units.jsonl and of the Huns line of game/data/civs.jsonl,
-combat.accuracy_command and `aoe accuracy` of the plugin. Fake server, and a trebuchet on a server."""
+"""A Hun trebuchet hits units more often (#2479, epic #1088; AoE2 DE wiki "Trebuchet"): the key "accuracy" of
+game/data/units.jsonl and of the Huns line of game/data/civs.jsonl, combat.accuracy_command and `aoe accuracy` of the
+plugin. Fake server, and a trebuchet on a server."""
 import contextlib
 import io
 import json
@@ -12,11 +12,17 @@ from test_armenian_volley import summoned
 from game import combat, gather, run
 
 
-def test_a_hun_trebuchet_hits_units_with_50_percent_and_others_with_15():
+def accuracy(log, uuid):
+    """The accuracy of the `aoe accuracy` command of uuid in log."""
+    a, = [float(c.split()[-1]) for c in log if c.startswith(f"aoe accuracy {uuid} ")]
+    return a
+
+
+def test_a_hun_trebuchet_hits_units_more_often():
     uuid, log = summoned("HUNS", "TREBUCHET")
-    assert f"aoe accuracy {uuid} 0.5" in log
+    hun = accuracy(log, uuid)
     uuid, log = summoned("BRITONS", "TREBUCHET")
-    assert f"aoe accuracy {uuid} 0.15" in log
+    assert 0 < accuracy(log, uuid) < hun < 1
 
 
 def test_other_units_hit_each_time():
@@ -32,7 +38,7 @@ def test_a_trebuchet_of_the_map_gets_the_accuracy_of_its_civ():
                         {"kind": "unit", "name": "TREBUCHET", "player": 2, "uuid": "t2"}],
             "players": {"1": {"civ": "HUNS"}, "2": {"civ": "FRANKS"}}, "tile_size": 4}
     combat.setup(game, data)
-    assert "aoe accuracy t1 0.5" in sent and "aoe accuracy t2 0.15" in sent
+    assert accuracy(sent, "t1") > accuracy(sent, "t2") > 0              # the Huns hit more often
 
 
 @pytest.mark.mc

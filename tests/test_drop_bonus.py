@@ -1,9 +1,17 @@
-"""The food drop-off bonuses (#2111, AoE2 DE wiki): Danish villagers and fishing ships drop off food +5 %, Spartan ones
-10 % more, Mapuche foragers +25 % (a load of a fruit bush only). The fractions go to the next load, as in AoE2."""
+"""The food drop-off bonuses (#2111): the key "drop" of a civilization (civs.DROP) gives more food for each load at the
+drop site ("food"), or for a load of a fruit bush only ("forage"). The fractions go to the next load, as in AoE2. The
+tests use their own factors, not the values of game/data/civs.jsonl."""
+import pytest
 from test_drop_sites import Server, building, data
 from test_ship_gather import fish_map
 
-from game import fleet, gather
+from game import civs, fleet, gather
+
+
+@pytest.fixture(autouse=True)
+def factors(monkeypatch):
+    monkeypatch.setattr(civs, "DROP", {"DANES": {"food": 1.05}, "SPARTANS": {"food": 1.1}, "MAPUCHE": {"forage": 1.25}})
+    monkeypatch.setattr(civs, "DROP_EXTRA", {})
 
 
 def game(civ):
@@ -63,5 +71,6 @@ def test_a_danish_fishing_ship_drops_off_more_food():
         fleet.tick(g, 0.25)
         if v.state == "to_drop" and not v.path:
             break
+    load = v.load
     fleet.tick(g, 0.25)
-    assert g.stock["food"] == food + 15 and g.spare["food"] == 0.75   # 15 * 1.05 = 15.75
+    assert load and g.stock["food"] + g.spare["food"] == pytest.approx(food + load * 1.05)

@@ -47,6 +47,7 @@ QUEUE = CONFIG.get("pacing", {}).get("max_ci_queue", 5)      # flow brake: queue
 PR_MINUTES = CONFIG.get("pacing", {}).get("pr_minutes", 30)  # Automerge merges a green PR in a few minutes
 MAX_FIRE = CONFIG.get("pacing", {}).get("max_fire", 8)   # runs that the pacer starts per cycle: each run needs a few minutes to claim its ticket; the same as agent.toml (the pacer used an old 4, 2026-10-28)
 REFILL = CONFIG.get("pacing", {}).get("refill_runs", 1)   # runs beyond the ready tickets: each refills one epic (#609, #650)
+PENDING = 12                # minutes: a run that the pacer started and that has no claim yet counts as a claim
 REFILL_GAP = CONFIG.get("pacing", {}).get("refill_gap", 60)   # minutes after a refill lock with no refill run
 CALL = ["claude", "-p", "Reply with OK.", "--model", "claude-haiku-5-5", "--output-format", "stream-json", "--verbose"]
 
@@ -145,6 +146,32 @@ def refill_recent(lines, now, minutes=REFILL_GAP):
     each cost about $1 to $2. lines: `health.claim_refs()`; now: Unix seconds."""
     return any(k.startswith("refill-") and t.isdigit() and int(t) >= now - minutes * 60
                for k, t, *_ in (x.split(" ", 2) for x in lines or ()))
+
+
+def pending(started, lines, now, minutes=PENDING, refill_lane="deep"):
+    """{task: runs} that the pacer started in the last `minutes` (`started`: {task: runs}, `pacer.py --log`) and that
+    made no claim yet: the starts less the runs whose first claim in a claim ref is in that time (the run of a claim is
+    its branch without a `-k` of a later ticket; a run with an older claim is not new). The lane of a claim is its
+    ` lane NAME`; a refill, review or roadmap lock is the work of `refill_lane`. The claims counted only the runs that
+    had claimed: the next cycle started runs for the same tickets, and about 20 Haiku runs found no free ticket in
+    10 hours (2026-10-29). `lines`: `health.claim_refs()`."""
+    cut, old, new = now - minutes * 60, set(), {}
+    for line in lines or []:
+        _, t, subject = (line.split(" ", 2) + ["", ""])[:3]
+        by = re.search(r" by (\S+)", subject)
+        if not (t.isdigit() and by):
+            continue
+        run = re.sub(r"-\d+$", "", by[1])
+        if int(t) < cut:
+            old.add(run)
+        elif subject.startswith("Claim "):
+            lane = re.search(r" lane (\w+)$", subject)
+            new[run] = lane[1] if lane else "main" if subject.startswith("Claim #") or not refill_lane else refill_lane
+    made = {}
+    for run, lane in new.items():
+        if run not in old:
+            made[lane] = made.get(lane, 0) + 1
+    return {task: n - made.get(task, 0) for task, n in started.items() if n - made.get(task, 0) > 0}
 
 
 def refill_need(ready, target, issues, due=lambda: [], reviews=lambda: [], free=lambda: []):
@@ -334,11 +361,14 @@ def describe(usage, now, burn=BURN, burn7=None):
     return " · ".join(out + [week] * bool(week)) + f" · burn {burn:.3f} · max {HI} runs · target {target_runs(usage, now, burn, burn7=burn7)} runs"
 
 
-def fire(usage, now, burn=BURN, burn7=None, skip=(), status=None):
+def fire(usage, now, burn=BURN, burn7=None, skip=(), status=None, started=None, out=None):
     """(K, {lane: runs}, line): the runs that the pacer starts now, and the line of its inputs (`--fire`,
     `tools/pacer.py`). Reads GitHub and the claim refs. `skip`: lanes that can start no run now (the hourly limit
     of their task): they count no ready tickets, so the main runs get the room. `status`: read_status() of the
-    burns, else it reads the status comments."""
+    burns, else it reads the status comments. `started`: {task: runs} that the pacer started in the last PENDING
+    minutes; those with no claim yet (`pending`) count as claims and take a ready ticket of their lane each.
+    `out`: a dict that gets the reads that the pacer uses again (`open`: the open issues and PRs, `refs`: the claim
+    refs, `flow`: the cap of the flow brake, `claims`, `lanes`: the beating claims), so that it reads GitHub once."""
     comments, note = status or read_status()
     import dashboard
     import health
@@ -349,6 +379,8 @@ def fire(usage, now, burn=BURN, burn7=None, skip=(), status=None):
     refs = health.claim_refs()
     lanes = None if refs is None else health.count_lanes(refs, t)
     claims = health.active_claims(t) if lanes is None else sum(lanes.values())
+    if out is not None:
+        out.update(open=open_all, refs=refs, claims=claims, lanes=lanes)
     weights, source = health.lane_weights(comments)
     eq = claims if lanes is None else health.opus_equivalent(claims, lanes, weights)   # in Opus runs (#1727)
     target = target_runs(usage, now, burn, burn7=burn7)
@@ -357,14 +389,22 @@ def fire(usage, now, burn=BURN, burn7=None, skip=(), status=None):
     if need and refill_recent(refs, now) and ready >= target // 2:
         need = ""                                           # a refill runs now or ran; a near-empty queue refills at once
     refill = refill_runs(open_all, now) if need else 0   # #3547: no refill run with no refill work
+    refill_lane = "deep" if "deep" in dashboard.RESERVED else None
+    wait = pending(started or {}, refs, now, refill_lane=refill_lane)
+    eq += sum(n * weights.get(t, 1) for t, n in wait.items())
     lanes = [(n, 0 if n in skip else len(dashboard.candidates(open_all, lane=n)), weights[n]) for n in weights]   # agent.toml order
-    k, runs = plan(target, eq, ready, lanes, paused, refill=refill,
-                   refill_lane="deep" if "deep" in dashboard.RESERVED else None)
+    extra = wait.get(refill_lane or "main", 0) - next((c for n, c, _ in lanes if n == refill_lane), 0) if refill_lane else 0
+    refill = max(0, refill - max(0, extra))             # a pending run beyond the ready tickets of its lane refills
+    lanes = [(n, max(0, c - wait.get(n, 0)), w) for n, c, w in lanes]
+    k, runs = plan(target, eq, max(0, ready - sum(wait.values())), lanes, paused, refill=refill, refill_lane=refill_lane)
     cap, flow = read_flow(now)
+    if out is not None:
+        out["flow"] = cap
     if cap is not None:                                     # the flow is the bottleneck: Opus runs repair the PRs
         k, runs = min(k, cap), dict.fromkeys(runs, 0)
     line = (f"{describe(usage, now, burn, burn7)} · claims {claims} ({eq:.2f} Opus runs) · ready {ready} · "
-            f"refill {refill} ({need or f'ready {ready}, target {target}: no refill source or a refill lock < {REFILL_GAP} min'}) · "
+            + (f"pending {json.dumps(wait)} · " if wait else "")
+            + f"refill {refill} ({need or f'ready {ready}, target {target}: no refill source or a refill lock < {REFILL_GAP} min'}) · "
             f"paused {paused} · {flow} · max_fire {MAX_FIRE} · weights "
             + ", ".join(f"{n} {w:.2f} ({source[n]})" for n, w in weights.items()) + note)
     return k, runs, line

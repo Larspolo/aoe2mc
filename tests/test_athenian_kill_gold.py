@@ -1,4 +1,4 @@
-"""#2512: with the Athenian Military Policy each enemy unit that an own infantry or cavalry unit kills gives 5 gold (AoE2
+"""#2512: with the Athenian Military Policy each enemy unit that an own infantry or cavalry unit kills gives gold (AoE2
 wiki "Military Policy"), not a King or a trade unit. The plugin counts the kills in the score aoe_unit_kills.
 Fake server of test_gather."""
 import re
@@ -10,7 +10,7 @@ from test_kill_spoils import game
 from test_mounted_attack import floor
 from test_ranged import data
 
-from game import combat, run, spoils, train
+from game import civs, combat, run, spoils, train
 
 
 def scores(server, **n):
@@ -21,17 +21,18 @@ def scores(server, **n):
     return n
 
 
-def test_the_military_policy_gives_5_gold_for_each_new_kill():
+def test_the_military_policy_gives_gold_for_each_new_kill():
     server, g = game("ATHENIANS")
     g.policy = "MILITARY_POLICY"
+    gold = civs.policy(g)[1]["kill_gold"]
     n = scores(server, **{spoils.UNIT_KILLS: 1})
     train.census(g)
-    assert g.stock["gold"] == 5
+    assert g.stock["gold"] == gold
     train.census(g)
-    assert g.stock["gold"] == 5                                        # no new kill
+    assert g.stock["gold"] == gold                                     # no new kill
     n[spoils.UNIT_KILLS] = 3
     train.census(g)
-    assert g.stock["gold"] == 15
+    assert g.stock["gold"] == 3 * gold
 
 
 def test_the_kills_under_the_economic_policy_give_no_gold_also_after_a_switch():
@@ -45,14 +46,14 @@ def test_the_kills_under_the_economic_policy_give_no_gold_also_after_a_switch():
     assert g.stock["gold"] == 0                                        # the 2 old kills pay nothing
     n[spoils.UNIT_KILLS] = 3
     train.census(g)
-    assert g.stock["gold"] == 5
+    assert g.stock["gold"] == civs.policy(g)[1]["kill_gold"]
 
 
-def test_a_mapuche_kill_still_gives_3_gold_and_no_policy_gold():
+def test_a_mapuche_kill_still_gives_its_gold_and_no_policy_gold():
     server, g = game("MAPUCHE")
     scores(server, **{spoils.OBJECTIVE: 1, spoils.UNIT_KILLS: 1})
     train.census(g)
-    assert g.stock["gold"] == 3
+    assert g.stock["gold"] == civs.KILL_GOLD["MAPUCHE"]
     assert f"scoreboard players get p1 {spoils.UNIT_KILLS}" not in server.log   # no policies: no command
 
 

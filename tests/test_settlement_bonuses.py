@@ -1,17 +1,24 @@
-"""The Settlement bonuses of three civilizations (#2432, epic #1088, AoE2 DE wiki "Civilization bonuses"):
-- Mapuche: Settlements train the spearman and skirmisher lines in 2.15× / 1.61× / the same time as the barracks and the
-  archery range in the Feudal / Castle / Imperial Age (train.trains, train.slots, train.seconds).
-- Muisca: Settlements cost 33 % less and heal the allied human units within 3 tiles by 5/10/15/15 hit points per AoE2
-  minute in the Dark/Feudal/Castle/Imperial Age (regen.aura).
-- Tupi: up to 5 villagers garrison in a Settlement (garrison.size)."""
+"""The Settlement bonuses of three civilizations (#2432, epic #1088, AoE2 DE wiki "Civilization bonuses"). The tests
+take the factors and amounts from game/data/civs.jsonl:
+- Mapuche: Settlements train the spearman and skirmisher lines in a factor of the time of the barracks and the archery
+  range in each age (train.trains, train.slots, train.seconds).
+- Muisca: Settlements cost less and heal the allied human units near them by the hit points per AoE2 minute of the
+  age (regen.aura).
+- Tupi: villagers garrison in a Settlement (garrison.size)."""
 import pytest
 from test_folwark import complete, polish
 from test_gather import grid
 from test_monk_heal import HealServer
 
-from game import build, garrison, gather, regen, train
+from game import build, civs, garrison, gather, regen, train
 
 AGES = ("FEUDAL_AGE", "CASTLE_AGE", "IMPERIAL_AGE")
+LINES = {n for line in civs.TRAINS["MAPUCHE"]["SETTLEMENT"]["lines"] for n in line}   # the units of the Mapuche lines
+
+
+def other(table):
+    """A civilization with no Settlement entry in the civs table."""
+    return next(r["name"] for r in civs.ROWS if "SETTLEMENT" not in table.get(r["name"], {}))
 
 
 def age(g, n):
@@ -19,8 +26,9 @@ def age(g, n):
         train.research(g, {"name": t}, start=True)
 
 
-@pytest.mark.parametrize("ages, factor", [(1, 2.15), (2, 1.61), (3, 1.0)])
-def test_a_mapuche_settlement_trains_spearmen_and_skirmishers_slower(ages, factor):
+@pytest.mark.parametrize("ages", [1, 2, 3])
+def test_a_mapuche_settlement_trains_spearmen_and_skirmishers_in_the_factor_of_the_age(ages):
+    factor = civs.TRAINS["MAPUCHE"]["SETTLEMENT"]["time"][ages]
     server, g = polish("MAPUCHE")
     age(g, ages)
     for unit, building in (("SPEARMAN", "BARRACKS"), ("SKIRMISHER", "ARCHERY_RANGE")):
@@ -35,7 +43,8 @@ def test_the_two_lines_have_their_own_slots_after_the_technologies_and_a_village
     techs = {train.slots("SETTLEMENT", n)[0] for n in train.TRAINS["SETTLEMENT"]}
     spear, skirm = (train.slots("SETTLEMENT", n)[0] for n in ("SPEARMAN", "SKIRMISHER"))
     assert spear == max(techs) + 1 and skirm == spear + 1
-    assert train.slots("SETTLEMENT", "PIKEMAN")[0] == spear and train.slots("BARRACKS", "SPEARMAN")[0] == 1
+    assert train.slots("SETTLEMENT", "PIKEMAN")[0] == spear
+    assert train.slots("BARRACKS", "SPEARMAN") == train.ITEMS["SPEARMAN"]   # the barracks: no change
     g.stock.update(food=1000)
     site = complete(g, "SETTLEMENT", 20, 20)
     x0, _, z0, _ = site["footprint"]
@@ -43,14 +52,15 @@ def test_the_two_lines_have_their_own_slots_after_the_technologies_and_a_village
 
 
 def test_other_civilizations_train_no_units_at_a_settlement():
-    server, g = polish("INCAS")
+    server, g = polish(other(civs.TRAINS))
     age(g, 3)
-    assert not {"SPEARMAN", "SKIRMISHER", "PIKEMAN", "HALBERDIER"} & set(train.trains(g, "SETTLEMENT"))
+    assert not LINES & set(train.trains(g, "SETTLEMENT"))
 
 
-def test_a_muisca_settlement_costs_33_percent_less():
-    assert build.price(polish("MUISCA")[1], "SETTLEMENT") == {"wood": 84}     # wiki: 84 wood
-    assert build.price(polish("TUPI")[1], "SETTLEMENT") == {"wood": 125}
+def test_a_muisca_settlement_costs_less():
+    tupi = build.price(polish("TUPI")[1], "SETTLEMENT")
+    assert tupi == build.COSTS["SETTLEMENT"]
+    assert all(v < tupi[r] for r, v in build.price(polish("MUISCA")[1], "SETTLEMENT").items())
 
 
 def heal_map(civ):
@@ -68,8 +78,9 @@ def heal_map(civ):
     return server, g
 
 
-@pytest.mark.parametrize("ages, rate", [(0, 5), (1, 10), (2, 15), (3, 15)])
-def test_a_muisca_settlement_heals_allied_human_units_within_3_tiles(ages, rate):
+@pytest.mark.parametrize("ages", [0, 1, 2, 3])
+def test_a_muisca_settlement_heals_allied_human_units_within_3_tiles(ages):
+    rate = civs.HEAL_AURA["MUISCA"]["SETTLEMENT"]["rate"][ages]
     server, g = heal_map("MUISCA")
     age(g, ages)
     regen.tick(g, 60.0)                                                # one AoE2 minute
@@ -79,11 +90,11 @@ def test_a_muisca_settlement_heals_allied_human_units_within_3_tiles(ages, rate)
 
 
 def test_another_civilization_has_no_heal_aura():
-    server, g = heal_map("INCAS")
+    server, g = heal_map(other(civs.HEAL_AURA))
     regen.tick(g, 60.0)
     assert all(e["Health"] == 10.0 for e in server.entities.values())
 
 
-def test_a_tupi_settlement_takes_5_villagers():
-    assert garrison.size(polish("TUPI")[1], "SETTLEMENT") == 5
-    assert garrison.size(polish("MAPUCHE")[1], "SETTLEMENT") == 0
+def test_a_tupi_settlement_takes_villagers():
+    assert garrison.size(polish("TUPI")[1], "SETTLEMENT") == civs.GARRISON["TUPI"]["SETTLEMENT"]
+    assert garrison.size(polish(other(civs.GARRISON))[1], "SETTLEMENT") == garrison.SIZES.get("SETTLEMENT", 0)

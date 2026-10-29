@@ -1,5 +1,5 @@
-"""game/train.py: a right click on an own barracks opens its menu with "Militia"; a militia costs 50 food and 20 gold,
-appears after 21 AoE2 seconds and joins the military units of the player (#654)."""
+"""game/train.py: a right click on an own barracks opens its menu with "Militia"; a militia takes its cost,
+appears after its AoE2 train time and joins the military units of the player (#654)."""
 import contextlib
 import io
 import json
@@ -9,14 +9,11 @@ import pytest
 from menu_line import item, labels, order
 from test_forging import menus                                         # also the `aoe menu-add` parts (#1647)
 from test_gather import FakeServer, grid
-from test_train_menu import FEUDAL, RALLY, SPEAR
+from test_train_menu import check_items
 
 from game import combat, gather, run, train
 
-EAGLE = "7:gray_dye:Eagle Scout:20 food · 50 gold · 46 s · Needs the Feudal Age"   # a player without a civ (#1555)
-FIRE = "19:gray_dye:Fire Lancer:45 wood · 45 gold · 35 s · Needs the Castle Age"   # a player without a civ (#1953)
-VG = "21:gray_dye:Varangian Guard:65 food · 45 gold · 30 s · Needs the Castle Age"   # a player without a civ (#2011)
-TG = "23:gray_dye:Temple Guard:70 food · 45 gold · 28 s · Needs the Castle Age"   # a player without a civ (#2157)
+COST, TIME = train.COSTS["MILITIA"], train.TRAIN_TIMES["MILITIA"]
 
 
 def setup(food=50, gold=20, done=True):
@@ -43,9 +40,7 @@ def test_a_right_click_on_the_barracks_opens_its_menu():
     cmd, = menus(server)
     full = order(g, "BARRACKS")                                        # a long menu goes in parts, the last slot first
     assert cmd.startswith("aoe menu Steve Barracks ") and labels(cmd) in (full, sorted(full, key=lambda s: -s[0]))   # (menu.commands, #2483)
-    assert [item(cmd, label) for label in ("Militia", "Spearman", "Eagle Scout", "Fire Lancer", "Varangian Guard",
-                                           "Temple Guard", "Rally point")] \
-        == ["0:zombie_spawn_egg:Militia:50 food · 20 gold · 21 s · queue 0/15", SPEAR, EAGLE, FIRE, VG, TG, RALLY]
+    check_items(g, (10, 13, 2, 5), cmd)
     assert not any(g.queues.values())
 
 
@@ -54,7 +49,7 @@ def test_the_town_center_menu_does_not_change():
     train.open_menu(g, "Steve", (3, 3))
     cmd, = menus(server)
     assert cmd.startswith("aoe menu Steve Town Center ") and labels(cmd) == order(g, "TOWN_CENTER")
-    assert item(cmd, "Feudal Age") == FEUDAL.replace("0/2", "1/2")   # the barracks
+    assert item(cmd, train.ITEMS["FEUDAL_AGE"][2]).endswith(" (1/2)")   # the barracks counts for the Feudal Age
 
 
 def test_no_menu_at_a_barracks_that_is_not_complete():
@@ -62,28 +57,34 @@ def test_no_menu_at_a_barracks_that_is_not_complete():
     assert train.open_menu(g, "Steve", (11, 3)) is None and not menus(server)
 
 
+def slot(g, rect):
+    return train.layout(g, rect)["MILITIA"][0]
+
+
 def test_a_click_queues_one_militia_and_takes_its_cost():
-    server, g = setup()
+    server, g = setup(food=COST.get("food", 0), gold=COST.get("gold", 0))
     rect = train.open_menu(g, "Steve", (11, 3))
-    assert rect == (10, 13, 2, 5) and train.order(g, "Steve", rect, 0) == 1
+    assert rect == (10, 13, 2, 5) and train.order(g, "Steve", rect, slot(g, rect)) == 1
     assert g.stock["food"] == 0 and g.stock["gold"] == 0 and g.queues[rect][0]["name"] == "MILITIA"
-    assert "scoreboard players remove Gold aoe_res 20" in server.log
-    assert train.order(g, "Steve", rect, 0) == 0 and any("20 gold" in c for c in server.log if c.startswith("tellraw"))
+    assert all(f"scoreboard players remove {r.capitalize()} aoe_res {v}" in server.log for r, v in COST.items())
+    assert train.order(g, "Steve", rect, slot(g, rect)) == 0
+    assert any(f"{v} {r}" in c for c in server.log if c.startswith("tellraw") for r, v in COST.items())
     assert train.queue(g, "Steve", (11, 3)) is None                    # a barracks trains no villager
 
 
 def test_a_shift_click_queues_as_many_as_the_stock_allows():
-    server, g = setup(food=1000, gold=70)
+    gold = COST["gold"]
+    server, g = setup(food=1000 * COST.get("food", 1), gold=3 * gold + gold // 2)
     rect = train.open_menu(g, "Steve", (11, 3))
-    assert train.order(g, "Steve", rect, 0, shift=True) == 3 and g.stock["gold"] == 10
-    assert item(menus(server)[-1], "Militia").endswith(" queue 3/15")
+    assert train.order(g, "Steve", rect, slot(g, rect), shift=True) == 3 and g.stock["gold"] == gold // 2
+    assert item(menus(server)[-1], train.ITEMS["MILITIA"][2]).endswith(" queue 3/15")
 
 
-def test_the_militia_appears_after_21_seconds_and_joins_the_military_units():
-    server, g = setup()
+def test_the_militia_appears_after_its_train_time_and_joins_the_military_units():
+    server, g = setup(food=COST.get("food", 0), gold=COST.get("gold", 0))
     rect = train.open_menu(g, "Steve", (11, 3))
-    train.order(g, "Steve", rect, 0)
-    assert train.tick(g, 20) == [] and not [c for c in server.log if c.startswith("summon")]
+    train.order(g, "Steve", rect, slot(g, rect))
+    assert train.tick(g, TIME - 1) == [] and not [c for c in server.log if c.startswith("summon")]
     uuid, = train.tick(g, 1)
     summon, = [c for c in server.log if c.startswith("summon")]
     m = re.match(r"summon minecraft:zombie (\S+) (\S+) (\S+) ", summon)
@@ -115,7 +116,7 @@ def test_a_trained_militia_exists_on_a_server(tmp_path):
     with run.Game(tmp_path / "W") as game:
         game.forceload()
         g = gather.Gather(game, data, tick=0.25, start={}).setup()
-        g.stock.update(food=50, gold=20)
+        g.stock.update(COST)
         rect, = train.homes(g)
         assert train.queue(g, "nobody", rect[::2], "MILITIA")
         uuid, = train.tick(g, train.TRAIN_TIMES["MILITIA"])

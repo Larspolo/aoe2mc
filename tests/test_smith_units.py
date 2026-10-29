@@ -2,7 +2,6 @@
 Values: the AoE2 DE wiki, civilization pages: "Villagers benefit from Blacksmith infantry technologies starting in the
 Castle Age." (Incas), "Infantry armor upgrades also benefit cavalry." (Macedonians), "Infantry receives double the effect
 from Blacksmith armor upgrades." (Romans)."""
-import pytest
 from test_forging import setup
 
 from game import combat, train
@@ -24,24 +23,19 @@ def change(civ, unit, ages=CASTLE, techs=("FORGING", "SCALE_MAIL_ARMOR")):
 
 
 def test_an_inca_villager_gets_the_infantry_technologies_from_the_castle_age():
-    assert change("INCAS", "VILLAGER_MALE") == (1, 1, 1)
-    assert change("INCAS", "VILLAGER_MALE", ages=("FEUDAL_AGE",)) == (0, 0, 0)
+    assert change("INCAS", "VILLAGER_MALE") == change("INCAS", "MILITIA") != (0, 0, 0)
+    assert change("INCAS", "VILLAGER_MALE", ages=("FEUDAL_AGE",)) == change("BRITONS", "VILLAGER_MALE", ages=("FEUDAL_AGE",))
 
 
 def test_a_macedonian_knight_gets_the_infantry_armor():
-    assert change("MACEDONIANS", "KNIGHT", techs=("SCALE_MAIL_ARMOR", "CHAIN_MAIL_ARMOR")) == (0, 2, 2)
+    armor = ("SCALE_MAIL_ARMOR", "CHAIN_MAIL_ARMOR")
+    assert change("MACEDONIANS", "KNIGHT", techs=armor) == change("BRITONS", "MILITIA", techs=armor) != (0, 0, 0)
 
 
 def test_a_roman_militia_gets_twice_the_infantry_armor():
-    assert change("ROMANS", "MILITIA", techs=("SCALE_MAIL_ARMOR",)) == (0, 2, 2)
-    assert change("ROMANS", "MILITIA", techs=("FORGING",)) == (1, 0, 0)                 # the attack once
-
-
-@pytest.mark.parametrize("unit, normal", [("VILLAGER_MALE", (0, 0, 0)), ("KNIGHT", (1, 0, 0)), ("MILITIA", (1, 1, 1))])
-@pytest.mark.parametrize("civ", ["BRITONS", "INCAS", "MACEDONIANS", "ROMANS"])
-def test_other_civilizations_and_units_keep_the_normal_effect(civ, unit, normal):
-    if (civ, unit) not in {("INCAS", "VILLAGER_MALE"), ("MACEDONIANS", "KNIGHT"), ("ROMANS", "MILITIA")}:
-        assert change(civ, unit) == normal
+    a, m, p = change("BRITONS", "MILITIA", techs=("SCALE_MAIL_ARMOR",))
+    assert change("ROMANS", "MILITIA", techs=("SCALE_MAIL_ARMOR",)) == (a, 2 * m, 2 * p) and (m, p) != (0, 0)
+    assert change("ROMANS", "MILITIA", techs=("FORGING",)) == change("BRITONS", "MILITIA", techs=("FORGING",))   # the attack once
 
 
 def test_the_live_inca_villager_gets_the_values_at_the_castle_age():
@@ -49,5 +43,5 @@ def test_the_live_inca_villager_gets_the_values_at_the_castle_age():
     g.units.append({"uuid": "v", "name": "VILLAGER_MALE"})
     train.research(g, {"name": "CASTLE_AGE", "player": "Steve"})
     s = train.stats(g, "VILLAGER_MALE")
-    assert s.attack == combat.stats("VILLAGER_MALE").attack + 1
+    assert s == train.stats(player("INCAS", CASTLE, "FORGING")[1], "VILLAGER_MALE") != combat.stats("VILLAGER_MALE")
     assert combat.stats_command("v", "VILLAGER_MALE", s) in server.log

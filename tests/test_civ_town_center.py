@@ -1,5 +1,5 @@
-"""game/gather.py: the start bonuses of the town center (#2293, AoE2 DE wiki): Tupi get +25 of each resource with the
-first town center, Gurjaras start with 2 forage bushes of 175 food next to it. Fake server."""
+"""game/gather.py: the start bonuses of the town center (#2293, AoE2 DE wiki): Tupi get more of each resource with the
+first town center (civs.TOWN_CENTER), Gurjaras start with forage bushes next to it (the key "bushes"). Fake server."""
 import math
 
 from game import build, civs, gather
@@ -8,6 +8,7 @@ from test_gather import FakeServer, grid
 
 UNITS = [{"kind": "unit", "name": "VILLAGER_MALE", "player": 1, "uuid": "v0", "tile": [1.5, 1.5]}]
 TC = {"kind": "building", "name": "TOWN_CENTER", "player": 1, "tile": [8.0, 8.0], "footprint": [6, 6, 10, 10]}
+TUPI = civs.TOWN_CENTER.get("TUPI", {})
 
 
 def game(civ, objects):
@@ -18,9 +19,8 @@ def game(civ, objects):
     return server, gather.Gather(server, data)
 
 
-def test_tupi_start_with_25_more_of_each_resource_with_a_town_center():
-    assert game("TUPI", UNITS + [TC])[1].stock == {r: v + 25 for r, v in gather.START.items()}
-    assert civs.TOWN_CENTER["TUPI"] == dict.fromkeys(gather.START, 25)
+def test_tupi_start_with_more_of_each_resource_with_a_town_center():
+    assert game("TUPI", UNITS + [TC])[1].stock == {r: v + TUPI.get(r, 0) for r, v in gather.START.items()}
 
 
 def test_a_tupi_nomad_gets_the_bonus_when_its_first_town_center_is_complete():
@@ -29,10 +29,11 @@ def test_a_tupi_nomad_gets_the_bonus_when_its_first_town_center_is_complete():
     g.stock.update(wood=1000, stone=1000)
     site = build.found(g, "TOWN_CENTER", (6, 10, 6, 10))
     assert not build.rise(g, site, 1) and g.stock["food"] == first["food"]
-    assert build.rise(g, site, math.inf) and g.stock["food"] == first["food"] + 25 and g.stock["gold"] == first["gold"] + 25
-    assert "scoreboard players add Gold aoe_res 25" in server.log
+    assert build.rise(g, site, math.inf) and g.stock["food"] == first["food"] + TUPI["food"]
+    assert g.stock["gold"] == first["gold"] + TUPI["gold"]
+    assert f"scoreboard players add Gold aoe_res {TUPI['gold']}" in server.log
     build.rise(g, build.found(g, "TOWN_CENTER", (0, 4, 10, 14)), math.inf)   # only the first one
-    assert g.stock["gold"] == first["gold"] + 25
+    assert g.stock["gold"] == first["gold"] + TUPI["gold"]
 
 
 def test_other_civilizations_get_no_town_center_bonus():
@@ -43,10 +44,11 @@ def test_other_civilizations_get_no_town_center_bonus():
     assert g.stock["food"] == food
 
 
-def test_gurjaras_start_with_two_bushes_of_175_food_next_to_the_town_center():
+def test_gurjaras_start_with_their_bushes_next_to_the_town_center():
     server, g = game("GURJARAS", UNITS + [TC])
     g.setup()
-    assert sorted(g.map.bushes.items()) == [((7, 10), 175), ((8, 10), 175)]   # the south side, at the middle
+    n, food = civs.BY_KEY["bushes"]["GURJARAS"]
+    assert len(g.map.bushes) == n and set(g.map.bushes.values()) == {food} and (7, 10) in g.map.bushes   # the south side
     assert all(c in g.map.blocked for t in g.map.bushes for c in g.map.cells(t))
     assert "setblock 7 64 10 minecraft:sweet_berry_bush[age=3]" in server.log
     assert "setblock 7 63 10 minecraft:grass_block" in server.log

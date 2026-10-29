@@ -54,7 +54,7 @@ def test_the_monastery_gives_gold_and_the_rest_goes_on_after_the_load():
     gold = h.stock["gold"]
     for _ in range(60):
         monk.relic_tick(h, monk.EVERY)
-    assert h.stock["gold"] - gold == 30                                 # 30 gold per AoE2 minute of the one relic
+    assert h.stock["gold"] - gold == round(60 * monk.EVERY * monk.GOLD)  # monk.GOLD per AoE2 second of the one relic
     h.converting = {}
     monk.convert(h, 10)
     assert h.faith == {"rest": 30.0}

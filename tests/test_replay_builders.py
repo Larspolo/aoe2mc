@@ -12,6 +12,7 @@ from test_replay_control import Clock  # noqa: E402
 from test_replay_gather import TREE, VIL, order  # noqa: E402
 from test_replay_jump_team import CAMP, run  # noqa: E402
 
+import build  # noqa: E402
 import gather  # noqa: E402
 import replay  # noqa: E402
 
@@ -20,6 +21,7 @@ HOUSE = dict(time=60000, player=1, kind="build", type=70, name="HOUSE", tile=[10
              names=["VILLAGER_MALE"])
 END = 150000
 WOOD = gather.AOE2_WORK["wood"]
+CAMP_MS = build.BUILD_TIMES["LUMBER_CAMP"] * 1000                  # the AoE2 build time of one villager
 
 
 @pytest.mark.parametrize("ai", [False, True])
@@ -35,7 +37,7 @@ def test_a_house_builder_stops_chopping_and_walks_to_the_house(ai):
 def test_camp_builders_chop_only_after_the_build_time(n):
     camp = dict(CAMP, time=1000, objects=[7, 8][:n], names=["VILLAGER_MALE"] * n)
     r = run([camp], [TREE, VIL2], to=None)
-    work = 35000 * 3 / (n + 2)                                      # AoE2: t × 3 / (n + 2)
+    work = CAMP_MS * 3 / (n + 2)                                      # AoE2: t × 3 / (n + 2)
     assert all(r.units[i].tree == (5, 10) for i in camp["objects"])
     assert 0 < r.gathered[1]["wood"] <= n * WOOD * (300000 - 1000 - work) / 1000 + n
 
@@ -48,7 +50,7 @@ def test_the_build_ends_at_the_aoe2_build_time(n):
     r.grid()
     r.commands(dict(CAMP, objects=[7, 8][:n], names=["VILLAGER_MALE"] * n))
     for i in (7, 8)[:n]:                                            # the walk to the camp, then t × 3 / (n + 2)
-        assert r.builds[i][0] == pytest.approx(r.walk_end(r.units[i], 0) + 35000 * 3 / (n + 2))
+        assert r.builds[i][0] == pytest.approx(r.walk_end(r.units[i], 0) + CAMP_MS * 3 / (n + 2))
         assert r.builds[i][1]["resource"] == (5, 10) and r.units[i].tree is None
 
 

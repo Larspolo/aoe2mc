@@ -1,5 +1,4 @@
-"""The players of the game program start with the AoE2 standard resources (#973): 200 food, 200 wood, 100 gold,
-200 stone. The map and fake server of test_bot_gather (the check #964 found a bot that started at 0)."""
+"""The players of the game program start with the AoE2 standard resources (#973): gather.START. The map and fake server of test_bot_gather (the check #964 found a bot that started at 0)."""
 import test_bot_gather
 from test_gather import FakeServer, grid
 
@@ -20,11 +19,12 @@ def start_map(start=None):
 def test_a_new_gather_has_the_start_resources_and_the_sidebar_shows_them():
     server = FakeServer({})
     g = gather.Gather(server, grid([[64] * 8 for _ in range(8)], [])).setup()
-    assert g.stock == {"wood": 200, "food": 200, "gold": 100, "stone": 200} == gather.START
+    start = dict(gather.START)
+    assert g.stock == start
     for r in ("Wood", "Food", "Gold", "Stone"):
         assert f"scoreboard players set {r} aoe_res {gather.START[r.lower()]}" in server.log
     g.stock["wood"] -= 25                                              # a copy: START stays
-    assert gather.START["wood"] == 200 and gather.Gather(server, g.data, start={}).stock["wood"] == 0
+    assert gather.START == start and gather.Gather(server, g.data, start={}).stock["wood"] == 0
 
 
 def test_the_replay_uses_the_same_start():

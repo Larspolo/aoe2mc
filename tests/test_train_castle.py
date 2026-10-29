@@ -8,6 +8,7 @@ from urllib.parse import unquote
 
 import pytest
 from test_gather import FakeServer, grid
+from test_train_menu import entry
 
 from game import build, combat, gather, run, train
 
@@ -29,14 +30,19 @@ def menus(server):
     return [unquote(c) for c in server.log if c.startswith("aoe menu ")]
 
 
+def unique(civ):
+    """The unique unit of civ and the setup() stock of its cost."""
+    name = train.UNIQUE[civ]
+    return name, {r: train.COSTS[name].get(r, 0) for r in ("food", "wood", "gold")}
+
+
 def test_the_castle_menu_has_the_unique_unit_of_the_civilization():
-    server, g = setup()
-    assert train.open_menu(g, "Steve", (12, 4)) == (10, 14, 2, 6)
-    assert [m.split(" 1:")[0] for m in menus(server)] == [                # item 1: the trebuchet (#1351)
-        "aoe menu Steve Castle 0:skeleton_spawn_egg:Longbowman:35 wood · 40 gold · 18 s · queue 0/15"]
-    server, g = setup("PERSIANS")
-    train.open_menu(g, "Steve", (12, 4))
-    assert menus(server)[-1].startswith("aoe menu Steve Castle 0:ravager_spawn_egg:War Elephant:170 food · 85 gold")
+    for civ in ("BRITONS", "PERSIANS"):
+        name, cost = unique(civ)
+        server, g = setup(civ, **cost)
+        rect = train.open_menu(g, "Steve", (12, 4))
+        assert rect == (10, 14, 2, 6) and len(menus(server)) == 1
+        assert f" {entry(g, rect, name)}queue 0/15" in menus(server)[0], civ
 
 
 def test_a_unique_unit_without_combat_values_is_not_in_the_menu(monkeypatch):
@@ -47,32 +53,34 @@ def test_a_unique_unit_without_combat_values_is_not_in_the_menu(monkeypatch):
 
 
 def test_a_click_queues_the_unit_and_takes_its_cost():
-    server, g = setup()
+    name, cost = unique("BRITONS")
+    server, g = setup(**cost)
     rect = train.open_menu(g, "Steve", (12, 4))
-    assert train.order(g, "Steve", rect, 0) == 1 and g.queues[rect][0]["name"] == "LONGBOWMAN"
-    assert g.stock["wood"] == 0 and g.stock["gold"] == 0
-    assert train.order(g, "Steve", rect, 0) == 0                     # no wood and gold for a second one
+    slot = train.layout(g, rect)[name][0]
+    assert train.order(g, "Steve", rect, slot) == 1 and g.queues[rect][0]["name"] == name
+    assert g.stock["food"] == g.stock["wood"] == g.stock["gold"] == 0
+    assert train.order(g, "Steve", rect, slot) == 0                  # no resources for a second one
 
 
 def test_the_longbowman_appears_with_the_converter_look_and_the_aoe2_values():
-    server, g = setup()
+    server, g = setup(**unique("BRITONS")[1])
     rect = train.open_menu(g, "Steve", (12, 4))
-    train.order(g, "Steve", rect, 0)
-    assert train.tick(g, 17) == []
+    train.order(g, "Steve", rect, train.layout(g, rect)["LONGBOWMAN"][0])
+    assert train.tick(g, train.TRAIN_TIMES["LONGBOWMAN"] - 1) == []
     uuid, = train.tick(g, 1)
     summon, = [c for c in server.log if c.startswith("summon")]
     assert re.match(r"summon minecraft:skeleton \S+ 64.0 6.5 ", summon)
     assert g.soldiers == {uuid: "LONGBOWMAN"}
-    s = train.stats(g, "LONGBOWMAN")                                  # Britons in the Castle Age: +1 range (#1090)
-    assert s.range == combat.stats("LONGBOWMAN").range + 1 and combat.stats_command(uuid, "LONGBOWMAN", s) in server.log
+    s = train.stats(g, "LONGBOWMAN")                                  # Britons in the Castle Age: more range (#1090)
+    assert s.range > combat.stats("LONGBOWMAN").range and combat.stats_command(uuid, "LONGBOWMAN", s) in server.log
     assert combat.range_command(uuid, "LONGBOWMAN", 1, s=s) in server.log  # it shoots from its AoE2 range
 
 
 def test_the_war_elephant_is_a_ravager_with_its_rider():
-    server, g = setup("PERSIANS", food=170, gold=85)
+    server, g = setup("PERSIANS", **unique("PERSIANS")[1])
     rect = train.open_menu(g, "Steve", (12, 4))
-    train.order(g, "Steve", rect, 0)
-    uuid, = train.tick(g, 25)
+    train.order(g, "Steve", rect, train.layout(g, rect)["WAR_ELEPHANT"][0])
+    uuid, = train.tick(g, train.TRAIN_TIMES["WAR_ELEPHANT"])
     summon, = [c for c in server.log if c.startswith("summon")]
     assert summon.startswith("summon minecraft:ravager ") and "Passengers" in summon
     assert combat.stats_command(uuid, "WAR_ELEPHANT", combat.stats("WAR_ELEPHANT")) in server.log
@@ -100,7 +108,7 @@ def test_a_trained_war_elephant_and_longbowman_exist_on_a_server(tmp_path):
             data["players"]["1"]["civ"] = civ
             g = gather.Gather(game, data, tick=0.25, start={}).setup()
             g.techs.update(train.build.AGE_TECHS[:2])                    # the Castle Age (#1082)
-            g.stock.update(food=170, wood=35, gold=85)
+            g.stock.update(unique(civ)[1])
             rect, = [r for r, b in train.homes(g).items() if b == "CASTLE"]
             assert train.queue(g, "nobody", rect[::2], name)
             uuid, = train.tick(g, train.TRAIN_TIMES[name])

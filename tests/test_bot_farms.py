@@ -19,7 +19,7 @@ def no_bushes(b):
 def test_a_farm_when_the_food_runs_out():
     server, me, b = bot_map()
     b.g.pop = 1
-    b.g.stock["wood"] = 60
+    b.g.stock["wood"] = bot.build.price(b.g, "FARM")["wood"]
     b.step()
     assert farms(b) == []                                              # the fruit bush has food
     no_bushes(b)

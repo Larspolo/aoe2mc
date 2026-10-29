@@ -36,7 +36,8 @@ Spend 5 minutes or less: the ticket stays the main work, and this check must not
    - Game data in a code literal → a line in a `.jsonl` file with the merge driver `merge=jsonl` (`tools/merge_jsonl.py`).
    - Two new entries at one place that `tools/unconflict.py` did not solve → find why it did not, and teach it that case.
    - A test that asserts a value that changes often (a count, the length of a list, a full list, an exact text)
-     → test the behavior or the form of the data, not the value (#1916, #2008).
+     → test the behavior or the form of the data, not the value (#1916, #2008). No test checks the content of a data
+     or configuration file (owner, 2026-10-29).
    - Many tickets append to the end of one file or one list → one file or one line for each item, in sorted order.
    - Two tickets changed the same logic → no structure helps. Better ticket order or smaller tickets can (`queue.md`).
 2. Act only when the change is good practice also without this conflict, and fits the direction of the project

@@ -1,9 +1,9 @@
-"""The garrison bonuses of the civilizations (#2117, AoE2 DE wiki): Khmer villagers garrison in houses (5), Teuton
-towers take twice as many units and Teuton town centers 10 more."""
+"""The garrison bonuses of the civilizations (#2117, AoE2 DE wiki, civs.GARRISON): Khmer villagers garrison in houses,
+Teuton towers and town centers take more units."""
 from test_garrison_game import Server, arrive
 from test_gather import grid
 
-from game import combat, garrison, gather
+from game import civs, combat, garrison, gather
 
 HOUSE = (16, 18, 2, 4)
 
@@ -27,22 +27,24 @@ def setup(civ, villagers=6):
 
 def test_the_sizes_of_the_civilizations():
     _, g = setup("KHMER")
-    assert garrison.size(g, "HOUSE") == 5 and garrison.size(g, "WATCH_TOWER") == 5 and garrison.size(g, "TOWN_CENTER") == 15
+    assert garrison.size(g, "HOUSE") == civs.GARRISON["KHMER"]["HOUSE"] > 0
+    assert garrison.size(g, "TOWN_CENTER") == garrison.SIZES["TOWN_CENTER"]           # no bonus: the normal size
     _, g = setup("TEUTONS")
-    assert garrison.size(g, "HOUSE") == 0 and garrison.size(g, "TOWN_CENTER") == 25
-    assert all(garrison.size(g, t) == 2 * garrison.SIZES[t] for t in ("WATCH_TOWER", "GUARD_TOWER", "KEEP", "BOMBARD_TOWER"))
+    assert garrison.size(g, "HOUSE") == 0
+    assert all(garrison.size(g, t) == n > garrison.SIZES[t] for t, n in civs.GARRISON["TEUTONS"].items())
     _, g = setup("BRITONS")
-    assert garrison.size(g, "HOUSE") == 0 and garrison.size(g, "WATCH_TOWER") == 5
+    assert garrison.size(g, "HOUSE") == 0 and garrison.size(g, "WATCH_TOWER") == garrison.SIZES["WATCH_TOWER"]
 
 
-def test_a_khmer_house_takes_5_villagers_and_no_soldier():
-    server, g = setup("KHMER")
+def test_a_khmer_house_takes_its_size_of_villagers_and_no_soldier():
+    n = civs.GARRISON["KHMER"]["HOUSE"]
+    server, g = setup("KHMER", villagers=n + 1)
     assert HOUSE in garrison.holders(g)
-    g.choose({f"v{k}" for k in range(6)} | {"m"}, "v0")
+    g.choose({f"v{k}" for k in range(n + 1)} | {"m"}, "v0")
     assert garrison.order(g, "Steve", (16, 2)) == HOUSE
-    assert "m" not in g.entering and len(g.entering) == 6                # the man-at-arms does not go
+    assert "m" not in g.entering and len(g.entering) == n + 1            # the man-at-arms does not go
     arrive(server, g, HOUSE)
-    assert len(g.garrisons[HOUSE]) == 5                                  # the sixth villager stays at the door
+    assert len(g.garrisons[HOUSE]) == n                                  # the last villager stays at the door
     assert any(c.endswith(" 0") and c.startswith("aoe arrows") for c in server.log)   # a house does not shoot
     g.choose({"m"}, "m")
     assert garrison.order(g, "Steve", (16, 2)) is None                  # a soldier alone: no garrison order
@@ -55,10 +57,11 @@ def test_a_house_of_another_civilization_takes_no_garrison():
     assert garrison.order(g, "Steve", (16, 2)) is None
 
 
-def test_a_teuton_watch_tower_takes_10_units():
-    server, g = setup("TEUTONS", villagers=11)
+def test_a_teuton_watch_tower_takes_more_units():
+    n = civs.GARRISON["TEUTONS"]["WATCH_TOWER"]
+    server, g = setup("TEUTONS", villagers=n + 1)
     tower = (10, 12, 2, 4)
-    g.choose({f"v{k}" for k in range(11)}, "v0")
+    g.choose({f"v{k}" for k in range(n + 1)}, "v0")
     assert garrison.order(g, "Steve", (10, 2)) == tower
     arrive(server, g, tower)
-    assert len(g.garrisons[tower]) == 10
+    assert len(g.garrisons[tower]) == n > garrison.SIZES["WATCH_TOWER"]

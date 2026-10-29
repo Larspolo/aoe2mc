@@ -11,12 +11,16 @@ from test_damage import health
 def test_building_command_has_the_attack():
     uuid = "00000000-0000-0000-0000-000000000001"
     box = (8, 64, 8, 23, 104, 23)
+    s = combat.stats("TOWN_CENTER")
     tc, = [c for c in combat.building(uuid, "TOWN_CENTER", 1, box) if c.startswith("aoe building")]
-    assert tc == f"aoe building {uuid} 2400 3 5 8 64 8 23 104 23 5 24 24 0 building,standard ship:5"   # attack 5, 6 tiles, 2 s / 1.7 * 20 ticks
+    assert tc.startswith(f"aoe building {uuid} {s.hp} {s.melee} {s.pierce} 8 64 8 23 104 23 {s.attack} {s.range * 4} "
+                         f"{round(s.reload / combat.NORMAL * 20)} 0 ")    # range: tiles × 4; reload: ticks; no minimum
+    c = combat.stats("CASTLE")
     castle, = [c for c in combat.building(uuid, "CASTLE", 1, box, T=2) if c.startswith("aoe building")]
-    assert castle.endswith(" 11 16 24 2 building,castle,standard ship:11")   # min 1 tile × 2 (#1546)
+    assert f" {c.attack} {c.range * 2} {round(c.reload / combat.NORMAL * 20)} {combat.FORT_MIN_RANGE['CASTLE'] * 2} " in castle   # (#1546)
+    h = combat.stats("HOUSE")
     house, = [c for c in combat.building(uuid, "HOUSE", 1, box) if c.startswith("aoe building")]
-    assert house == f"aoe building {uuid} 550 0 7 8 64 8 23 104 23"           # no attack: no arrows
+    assert house == f"aoe building {uuid} {h.hp} {h.melee} {h.pierce} 8 64 8 23 104 23"   # no attack: no arrows
 
 
 @pytest.mark.mc
@@ -50,10 +54,12 @@ def test_town_center_shoots_the_enemy_in_range(tiny_world, tmp_path):
             hp.append(health(game, "e"))
             time.sleep(0.1)
         h0, t0 = health(game, "e"), time.time()
-        assert h0 < 1000 and (1000 - h0) % 4 == 0, hp                          # 4 per arrow: attack 5 - pierce 1
+        arrow = combat.stats("TOWN_CENTER").attack - 1                         # per arrow: attack - pierce 1
+        assert h0 < 1000 and (1000 - h0) % arrow == 0, hp
         time.sleep(6)
         h1, dt = health(game, "e"), time.time() - t0
-        shots = (h0 - h1) / 4
+        shots = (h0 - h1) / arrow
         assert shots == int(shots), (h0, h1)
         assert 0.6 * dt / 1.2 <= shots <= dt / 1.2 + 1.5, (h0, h1, dt)        # one arrow each 2 AoE2 s (1.2 s)
-        assert (health(game, "o"), health(game, "f")) == (40.0, 40.0)       # not the own unit, not out of range
+        full = combat.stats("MILITIA").hp
+        assert (health(game, "o"), health(game, "f")) == (full, full)       # not the own unit, not out of range

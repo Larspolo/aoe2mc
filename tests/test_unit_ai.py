@@ -9,13 +9,12 @@ from game import ai, run
 
 
 def test_movement_speed_follows_the_aoe2_speed():
-    # villager 0.8 tiles per game second, at tile size 4 and Normal speed: 0.8 * 4 * 1.7 = 5.44 blocks per second
-    assert ai.walk_speed("VILLAGER", 4) == pytest.approx(5.44)
-    assert ai.WALK * ai.movement_speed("VILLAGER", 4) ** 2 == pytest.approx(5.44, rel=1e-3)
-    order = ["BATTERING_RAM", "MANGONEL", "VILLAGER", "MILITIA", "SCOUT", "KNIGHT", "LIGHT_CAVALRY"]
-    assert [ai.movement_speed(n, 4) for n in order] == sorted(ai.movement_speed(n, 4) for n in order)
+    # tiles per game second * tile size 4 * Normal speed = blocks per second
+    tiles = next(s for k, s in ai.SPEEDS.items() if "VILLAGER".startswith(k))
+    assert ai.walk_speed("VILLAGER", 4) == pytest.approx(tiles * 4 * ai.NORMAL)
+    assert ai.WALK * ai.movement_speed("VILLAGER", 4) ** 2 == pytest.approx(ai.walk_speed("VILLAGER", 4), rel=1e-3)
     assert ai.movement_speed("VILLAGER", 2) < ai.movement_speed("VILLAGER", 4)       # smaller tiles: slower
-    assert ai.movement_speed("SOMETHING_ELSE", 4) == ai.movement_speed("SPEARMAN", 4)  # 1 tile per second
+    assert ai.walk_speed("SOMETHING_ELSE", 4) == pytest.approx(4 * ai.NORMAL)          # 1 tile per second
 
 
 def test_orders_set_the_speed_first():
@@ -32,7 +31,7 @@ def test_orders_set_the_speed_first():
     assert g.sent == [ai.speed_command("u-1", "KNIGHT", 4), "aoe moveto u-1 10.5 64 3.5",
                       ai.speed_command("u-2", "MILITIA", 4), ai.speed_command("u-3", "ARCHER", 4),
                       "aoe attack u-2 u-9", "aoe attack u-3 u-9"]
-    assert g.sent[0] == "attribute u-1 minecraft:movement_speed base set 0.4599"
+    assert g.sent[0] == f"attribute u-1 minecraft:movement_speed base set {ai.movement_speed('KNIGHT', 4)}"
 
 
 def data(game, tag, path):

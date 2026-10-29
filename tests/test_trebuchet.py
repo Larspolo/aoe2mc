@@ -8,20 +8,19 @@ import time
 
 import pytest
 from test_train_castle import menus, setup
+from test_train_menu import entry
 
 from game import ai, build, combat, gather, run, train, trebuchet
 
 
 def test_the_castle_trains_the_trebuchet_only_in_the_imperial_age():
-    assert (train.COSTS["TREBUCHET"], train.TRAIN_TIMES["TREBUCHET"], build.AGE["TREBUCHET"]) \
-        == ({"wood": 200, "gold": 200}, 50, 3)                         # AoE2 DE wiki infobox
-    assert (combat.stats("TREBUCHET").hp, combat.stats("TREBUCHET").range, combat.MIN_RANGE["TREBUCHET"]) == (150, 16, 4)
-    server, g = setup(wood=200, gold=200)                              # the Castle Age
+    cost = train.COSTS["TREBUCHET"]
+    server, g = setup(wood=cost.get("wood", 0), gold=cost.get("gold", 0))   # the Castle Age
     assert [n for n in train.trains(g, "CASTLE") if n != "YEOMEN"] == ["LONGBOWMAN", *train.TRAINS["CASTLE"]]  # Britons: #4103
-    train.open_menu(g, "Steve", (12, 4))
-    assert "1:gray_dye:Trebuchet:200 wood · 200 gold · 50 s · Needs the Imperial Age" in menus(server)[-1]
+    rect = train.open_menu(g, "Steve", (12, 4))
+    assert f" {entry(g, rect, 'TREBUCHET')}{build.locked(g, 'TREBUCHET')}" in menus(server)[-1]
     assert train.queue(g, "Steve", (12, 4), "TREBUCHET") is None
-    server, g = setup(wood=200, gold=200, ages=3)
+    server, g = setup(wood=cost.get("wood", 0), gold=cost.get("gold", 0), ages=3)
     assert train.queue(g, "Steve", (12, 4), "TREBUCHET") and (g.stock["wood"], g.stock["gold"]) == (0, 0)
 
 
@@ -29,7 +28,7 @@ def treb(server, g):
     """An own trebuchet "t" of g, as tick() finds it: packed, range 0."""
     g.soldiers["t"] = "TREBUCHET"
     trebuchet.tick(g, 0.0)
-    assert server.log[-1] == f"aoe range t 0 {round(10 / gather.NORMAL * 20)} 0 {4 * g.map.T}"
+    assert server.log[-1] == trebuchet.range_command(g, "t", 0)
     assert trebuchet.state(g, "t") == "packed"
 
 
@@ -106,12 +105,12 @@ def test_an_unpacked_trebuchet_hurts_a_building_at_12_tiles_and_does_not_move(tm
         g.step()                                                     # packed: range 0
         g.choose({t}, t)
         g.attack(fort)
-        hp = 1200
+        hp = full = combat.stats("BARRACKS").hp
         end = time.time() + 60
-        while hp == 1200:
+        while hp == full:
             assert time.time() < end, (trebuchet.state(g, t), g.pos(t))
             g.step()
             time.sleep(g.tick)
             out = game.command(f"scoreboard players get {fort} aoe_hp")
             hp = int(out.split(" has ")[1].split()[0]) if " has " in out else hp
-        assert hp < 1200 and math.dist(g.pos(t), start) < 0.5, (hp, g.pos(t), start)
+        assert hp < full and math.dist(g.pos(t), start) < 0.5, (hp, g.pos(t), start)

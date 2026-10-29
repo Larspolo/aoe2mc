@@ -2,18 +2,24 @@
 from game import challenge
 
 
+def limits(name):
+    c = challenge.CHALLENGES[name]
+    return c["gold"], c["silver"], c["bronze"]
+
+
 def test_medal_of_a_time_challenge():
-    assert [challenge.medal("early-economy", s) for s in (300, 480, 481, 600, 780, 781)] == \
+    g, s, b = limits("early-economy")
+    assert [challenge.medal("early-economy", t) for t in (g - 1, g, g + 1, s, b, b + 1)] == \
         ["gold", "gold", "silver", "silver", "bronze", None]
 
 
 def test_medal_of_a_battle_challenge_fewer_units_lost_is_better():
-    assert [challenge.medal("land-battle", n) for n in (0, 1, 5, 6, 10, 11)] == \
+    g, s, b = limits("land-battle")
+    assert [challenge.medal("land-battle", n) for n in (g, g + 1, s, s + 1, b, b + 1)] == \
         ["gold", "silver", "silver", "bronze", "bronze", None]
-    assert challenge.limits("land-battle") == "gold 0, silver 5, bronze 10 units lost"
+    assert challenge.limits("land-battle") == f"gold {g}, silver {s}, bronze {b} units lost"
 
 
-def test_nine_challenges_and_each_after_names_one_of_them():
-    assert len(challenge.CHALLENGES) == 9
+def test_each_after_names_a_challenge_and_one_is_open_at_the_start():
     assert all(c["after"] in challenge.CHALLENGES for c in challenge.CHALLENGES.values() if c["after"])
-    assert sum(c["after"] is None for c in challenge.CHALLENGES.values()) == 4          # 4 are open at the start
+    assert any(c["after"] is None for c in challenge.CHALLENGES.values())

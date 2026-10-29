@@ -1,10 +1,11 @@
-"""game/monk.py and game/civs.py: each relic in an own monastery gives +1 attack to the Lithuanian knights and Leitis,
-at most +4, and Muisca monks regain faith 100 % faster after a conversion (AoE2 DE wiki, #2314). Fake server."""
+"""game/monk.py and game/civs.py: each relic in an own monastery gives more attack to the Lithuanian knights and Leitis,
+up to a maximum, and Muisca monks regain faith faster after a conversion (the data of civs.RELIC_ATTACK and civs.FAITH,
+#2314). Fake server."""
 import pytest
 import test_monk_convert
 import test_relics
 
-from game import combat, monk, train
+from game import civs, combat, monk, train
 
 HOME = (14, 18, 2, 6)
 
@@ -20,8 +21,10 @@ def relic_world(civ, n):
     return server, g
 
 
-@pytest.mark.parametrize("n, more", [(1, 1), (3, 3), (6, 4)])
-def test_a_lithuanian_knight_has_1_attack_per_relic_at_most_4(n, more):
+@pytest.mark.parametrize("n", [1, 3, 6])
+def test_a_lithuanian_knight_has_more_attack_per_relic_up_to_a_maximum(n):
+    _, each, most = civs.RELIC_ATTACK["LITHUANIANS"]
+    more = min(each * n, most)
     server, g = relic_world("LITHUANIANS", n)
     assert train.stats(g, "KNIGHT").attack == combat.stats("KNIGHT").attack + more
     assert train.stats(g, "LEITIS").attack == combat.stats("LEITIS").attack + more
@@ -37,8 +40,9 @@ def test_no_relic_attack_for_another_civilization_or_without_a_relic():
     assert train.stats(g, "KNIGHT").attack == combat.stats("KNIGHT").attack
 
 
-@pytest.mark.parametrize("civ, rest", [("MUISCA", monk.REST / 2), ("AZTECS", monk.REST)])
-def test_a_muisca_monk_converts_again_in_half_the_time(civ, rest):
+@pytest.mark.parametrize("civ", ["MUISCA", "AZTECS"])
+def test_a_muisca_monk_converts_again_in_less_time(civ):
+    rest = monk.REST / civs.FAITH.get(civ, 1)
     server, g = test_monk_convert.setup(("a", "MILITIA", 2, 8.5), ("b", "MILITIA", 2, 9.5))
     g.data["players"] = {"1": {"civ": civ}}
     monk.convert_order(g, {"monk"}, "a")

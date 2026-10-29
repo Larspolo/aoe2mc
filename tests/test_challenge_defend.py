@@ -52,8 +52,8 @@ def test_the_first_wave_comes_at_its_time_and_attacks_the_town_center(game):
     assert len([c for c in g.sent if isinstance(c, tuple)]) == len(summoned) and g.challenge_attacks == 1
 
 
-def test_the_castle_age_at_470_seconds_with_a_town_center_gives_the_gold_medal(game):
-    g = fake(seconds=470.0, ages=2)
+def test_the_castle_age_in_the_gold_time_with_a_town_center_gives_the_gold_medal(game):
+    g = fake(seconds=challenge.CHALLENGES["defending-against-a-rush"]["gold"] - 10.0, ages=2)
     challenge.tick(g)
     assert game == [True] and any("Gold medal" in c and "subtitle" in c for c in g.sent if isinstance(c, str))
 

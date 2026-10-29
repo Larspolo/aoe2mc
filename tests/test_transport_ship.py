@@ -1,4 +1,4 @@
-"""game/transport.py: the dock trains the transport ship, up to 20 land units ride it and come out on the land
+"""game/transport.py: the dock trains the transport ship, up to transport.SIZE land units ride it and come out on the land
 nearest to the ship and walk to a clicked land cell (#1385, #1652). Fake server; an mc test on Paper."""
 import math
 import time
@@ -7,6 +7,7 @@ import pytest
 from test_dock_train import dock_map
 from test_gather import FakeServer, grid
 from test_train_archery import menus
+from test_train_menu import entry
 
 from game import combat, fleet, garrison, gather, run, train, transport
 
@@ -28,13 +29,15 @@ def setup():
 
 
 def test_the_dock_trains_the_transport_ship_with_the_aoe2_values():
-    assert transport.SIZE == 20
-    assert fleet.speed("TRANSPORT_SHIP", 4) == pytest.approx(1.45 * 4)
+    assert fleet.speed("TRANSPORT_SHIP", 4) == pytest.approx(fleet.SPEEDS["TRANSPORT_SHIP"] * 4)
     server, g = dock_map()
+    g.stock.update(food=1000, wood=1000, gold=1000)
     rect = train.open_menu(g, "Steve", (15, 12))
-    assert "2:spruce_chest_boat:Transport Ship:125 wood · 46 s · queue 0/15" in menus(server)[-1]
-    assert train.order(g, "Steve", rect, 2) == 1 and g.stock["wood"] == 75
-    uuid, = train.tick(g, 46)
+    assert f" {entry(g, rect, 'TRANSPORT_SHIP')}queue 0/15" in menus(server)[-1]
+    before = dict(g.stock)
+    assert train.order(g, "Steve", rect, train.layout(g, rect)["TRANSPORT_SHIP"][0]) == 1
+    assert all(g.stock[r] == before[r] - v for r, v in train.COSTS["TRANSPORT_SHIP"].items())
+    uuid, = train.tick(g, train.TRAIN_TIMES["TRANSPORT_SHIP"])
     assert g.soldiers[uuid] == "TRANSPORT_SHIP" and uuid in g.ships
 
 
@@ -57,12 +60,12 @@ def test_land_units_walk_to_the_shore_and_ride_the_ship():
 
 def test_a_full_ship_takes_no_more():
     server, g = setup()
-    g.cargo = {"ship": [f"x{k}" for k in range(19)]}
+    g.cargo = {"ship": [f"x{k}" for k in range(transport.SIZE - 1)]}
     transport.order(g, "Steve", "ship")
     for u in ("m", "s"):
         server.entities[u]["Pos"] = (14.0, 64.0, 5.5)                   # next to the ship
     transport.tick(g)
-    assert g.cargo["ship"][-1] == "m" and len(g.cargo["ship"]) == 20 and "s" not in garrison.inside(g)
+    assert g.cargo["ship"][-1] == "m" and len(g.cargo["ship"]) == transport.SIZE and "s" not in garrison.inside(g)
 
 
 def test_a_click_on_the_selected_ship_unloads_it_on_the_nearest_land():

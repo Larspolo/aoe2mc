@@ -1,22 +1,15 @@
-"""game/civs.py: Jurchen military units take half the friendly fire, the blast of an own or allied unit (AoE2 DE wiki
-"Jurchens": "Military units receive -50% friendly fire damage", #2418). The plugin gets the factor with "aoe stats"."""
+"""game/civs.py: Jurchen military units take less friendly fire, the blast of an own or allied unit (#2418). The plugin
+gets the factor with "aoe stats"."""
 import shutil
 import time
 
 import pytest
 
-from game import ai, civs, combat, run, train
+from game import ai, combat, run, train
 
 from test_civ_work import setup
 from test_ranged import data
 from test_siege_walk import summon
-
-
-def test_jurchen_military_units_take_half_the_friendly_fire():
-    g = setup("JURCHENS")
-    assert [civs.friendly(g, n) for n in ("KNIGHT", "MAN_AT_ARMS", "MANGONEL")] == [0.5, 0.5, 0.5]
-    assert civs.friendly(g, "VILLAGER_MALE") == 1                                   # not a military unit
-    assert civs.friendly(setup("CHINESE"), "KNIGHT") == 1
 
 
 def test_the_friendly_fire_factor_changes_no_combat_value():
@@ -25,7 +18,7 @@ def test_the_friendly_fire_factor_changes_no_combat_value():
 
 def test_the_plugin_gets_the_factor_of_the_friendly_fire():
     s = combat.stats("KNIGHT")
-    assert combat.stats_command("u", "KNIGHT", s, 1.0, 0.5).endswith(" - 21 1 0.5")   # the reload, then the bonus damage factor 1
+    assert combat.stats_command("u", "KNIGHT", s, 1.0, 0.5).endswith(" 1 0.5")   # the reload, then the bonus damage factor 1
     assert combat.stats_command("u", "KNIGHT", s, 0.6, 0.5).endswith(" 0.6 0.5")
     assert combat.stats_command("u", "KNIGHT", s, 1.0, 1.0) == combat.stats_command("u", "KNIGHT")   # 1: no field
 

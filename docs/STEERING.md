@@ -16,8 +16,9 @@ Each run does one work cycle (the `autopilot` skill):
    `Dashboard`): waiting for you, working on, next up, recently done. It updates on each label change and every
    hour. Runs only add the process changes.
 5. It improves its own process: it writes learnings, corrects its instructions and makes tooling tickets.
-   One run per review slot (45 minutes, longer when there is nothing large to improve), the `improve` skill measures the runs (minutes, CI rounds, time sinks) and makes one larger
-   improvement. The status issue lists each process change.
+   One run per review slot (a gap of merged PRs in `[review]` of `agent.toml`, shorter after you changed the system
+   yourself): the `improve` skill learns from your own changes, walks all its levers and makes each change that pays,
+   also large ones. The status issue lists each process change.
 
 The agent takes instructions only from comments and issues by `Larspolo`.
 
@@ -33,11 +34,11 @@ The agent takes instructions only from comments and issues by `Larspolo`.
 | Answer a question | Answer in the `needs-human` ticket. The agent removes the label. |
 | Answer the tickets that wait for you | Run `/human` in Claude Code on your computer, in a clone of the repository. It lists the `needs-human` tickets, prepares the world, the server or the options, guides you step by step and writes your answer on the ticket. Keep the session open: `/human` can wait for the next `needs-human` ticket and shows it when it opens (#1025). |
 | Do a task that the agent cannot do | The agent asks on the issue: label `needs-human` and a comment that mentions you. Do it, then comment. |
-| Stop the agent | Add label `paused` to the status issue. Remove it to continue. |
+| Stop the agent | Add label `paused` to the status issue. Remove it to continue. A process review can add it too, when the runs must wait for your steps: its comment names the ticket and the steps. |
 | Cancel a ticket | Close it as "not planned". |
 | Mute a ticket until later | Add the label `muted`. No agent works on it (also not on a muted epic), and "Waiting for you" hides it. Remove the label to bring it back. |
 | Reject a process change | Comment on the status issue. The agent reverts it and notes why. |
-| Ask for a process review | Comment "process review" on the status issue. |
+| Ask for a process review | Comment "process review" on the status issue. A PR of your own session that the runs did not make (no commit with `Agent-Run:`) also makes the next review come soon: the review learns the lever from it. |
 | Check or repair the start of the runs | Follow `docs/OPERATOR.md` (check, repair, a new project, a move to another account), or start a session at claude.ai/code and write "Follow docs/OPERATOR.md, section 1". A long-lived owner session is not necessary. |
 
 Order of work: `P0` → `P1` → `P2` → `P3`. With the same priority, the lowest issue number goes first.
@@ -72,9 +73,10 @@ The file `.github/labels.txt` defines the labels. The Labels workflow creates th
 
 ## Network for the tests
 
-Some tests of the project need hosts outside the package managers. `docs/ENVIRONMENT.md` (section "Network") lists
-them. Add them in the cloud environment menu in the session title bar → Edit → Network access → Allowed domains.
-Keep "Allow package managers" on. Steps: https://code.claude.com/docs/en/cloud-environments#network-access
+Some tests of the project need hosts outside the package managers. The file `scripts/allowed-domains.txt` lists
+them, one per line. Open the cloud environment menu in the session title bar → Edit → Network access → Allowed
+domains, delete the old list and paste the whole file. Keep "Allow package managers" on. When an agent adds a host to
+the file, it opens a `needs-human` ticket that asks you to paste it again (`docs/ENVIRONMENT.md`, "Network"). Steps: https://code.claude.com/docs/en/cloud-environments#network-access
 
 ## Setup script (faster start)
 

@@ -8,11 +8,13 @@ a second push of another claim commit is never a fast-forward. Later claims of t
     python3 tools/claim.py N              # claim ticket N; exit 0: yours (it adds `in-progress` and "Started by",
                                           # and prints the ticket and its comments, #3459),
                                           # exit 1: it names the run that was first
+    python3 tools/claim.py N --or M K     # the same, and when another run has N, try M, then K, in this one call
     python3 tools/claim.py N --release    # give your claim back (needs-human, blocked, hand-off); it removes
                                           # `in-progress` (#3234)
     python3 tools/claim.py N --takeover   # take the ticket from a dead run (stale or released claim, #502)
     python3 tools/claim.py N --show       # print the claim refs and the owner
     python3 tools/claim.py N --beat       # show that the own run is alive (at least every 20 minutes)
+    python3 tools/claim.py N --adopt NAME # take over the claim that the pacer made as NAME for this run (its brief)
     python3 tools/claim.py N --stale      # exit 0: the owner made no claim or beat for 30 minutes (stopped run),
                                           # 10 minutes when its PR has the label `conflict` (#1773)
     python3 tools/claim.py 0 --stuck      # list the `in-progress` tickets of stopped runs (no beat for 30 minutes)
@@ -22,9 +24,11 @@ a second push of another claim commit is never a fast-forward. Later claims of t
     python3 tools/claim.py ID --comment   # lock owner comment ID (autopilot step 3); exit 1: another run handles it
     python3 tools/claim.py E --refill     # lock the sub-issues of epic E (0: the whole queue refill, autopilot step 5)
     python3 tools/claim.py 0 --fixmain --state SHA   # lock the "Fix main" ticket of the break in commit SHA (step 2)
-    python3 tools/claim.py 0 --review     # lock the process review after 50 merged PRs (`improve` skill, #898, #2039)
+    python3 tools/claim.py 0 --review     # lock the process review after its gap of merged PRs (`improve` skill,
+                                          # `[review]` of agent.toml; it prints the owner work since the last review)
     python3 tools/claim.py 0 --reviewed change   # after the review: "change" or "none" sets the next gap
     python3 tools/claim.py 0 --roadmap    # lock the review of docs/ROADMAP.md after 100 merged PRs (`roadmap` skill)
+    python3 tools/claim.py 0 --prune      # delete the refs of closed tickets and old locks (`claims.yml` only)
 
 Two runs did one ticket (#288): one commented "Started by" and worked without the claim ref. So a claim also fails
 when another branch commented "Started by" in the last 30 minutes or has an active PR for the ticket (#491), and `--guard` stops a run before its push when it does not own the claim or another branch has a PR for the ticket. The GitHub checks run only for a GitHub remote.
@@ -53,11 +57,15 @@ source (#3741). A gap counts merged PRs, not minutes: the speed of the project c
 merges nothing, so only the clock finds it.
 
 Exit 2: git failed for another reason (network, permission). The workflow `claims.yml` deletes the refs
-of a closed ticket: the session proxy gives 403 for branch deletes.
+of a closed ticket: the session proxy gives 403 for branch deletes. `--prune` does it with git and one API call (the
+open issues): the workflow read each ref and each ticket by REST, about 60 calls a run and 44 runs an hour, and the
+token of the workflows ran out of its hourly limit (2026-10-29). It also deletes the locks older than `LOCK_DAYS`.
 """
 import argparse
 import datetime
+import functools
 import json
+import os
 import re
 import subprocess
 import sys
@@ -67,8 +75,10 @@ import uuid
 from agent_config import CONFIG
 
 EMPTY_TREE = "4b825dc642cb6eb9a060e54bf8d69288fbee4904"
-REVIEW, REVIEW_MAX = 200, 800   # merged PRs: the first and the longest gap of the process review (#898, #1697, #2039, #3465)
-REVIEW_HOURS = 4                # and at least these hours after the last review (#3465: 8 reviews in 24 hours)
+# The process review counts merged PRs, never hours (owner, 2026-10-29): `[review]` of agent.toml.
+REVIEW_CONFIG = CONFIG.get("review", {})
+REVIEW, REVIEW_MAX = REVIEW_CONFIG.get("gap", 100), REVIEW_CONFIG.get("max_gap", 400)   # after a change; after none
+OWNER_GAP = REVIEW_CONFIG.get("owner_gap", 20)   # the gap when an owner session merged a PR since the last review
 ROADMAP = 100               # merged PRs between two reviews of docs/ROADMAP.md (#2039)
 ROADMAP_EARLY = 30          # the same while the refill has no source: R < N, each roadmap feature has an epic (#3741)
 STATUS = CONFIG["status"]["issue"]   # the status issue: its state comment holds the last reviews
@@ -76,6 +86,10 @@ STATUS = CONFIG["status"]["issue"]   # the status issue: its state comment holds
 STALE = 30 * 60             # seconds without a claim or beat: the run stopped (usage limit, crash)
 RECENT = 30 * 60            # seconds: a "Started by" comment of another branch owns the ticket for this time (#288)
 CONFLICT = 10 * 60          # seconds: the stale time of a ticket whose PR has the label `conflict` (#1773)
+
+
+LOCK_DAYS = {"comment": 1, "fixmain": 1, "review": 1, "roadmap": 1, "refill": 7}   # days that `--prune` keeps a lock
+NS = "refs/aoe2mc-prune"    # the local copies of the claim refs of `--prune`
 
 
 def git(*args, check=True):
@@ -132,14 +146,16 @@ def first(number, remote="origin"):
     return f"{owner(line)} (its last {line.split(' ')[0].lower()} {(time.time() - changed(ref, remote)) / 60:.0f} min ago)"
 
 
-def start(number):
+def start(number, by=None, note=""):
     """Add `in-progress` and the comment "Started by `<branch>`." after a won claim. A run that commented by hand
-    without the claim worked on one ticket with another run (#288, #1749), so only the claim writes them."""
+    without the claim worked on one ticket with another run (#288, #1749), so only the claim writes them.
+    by: the name of the claim (the pacer claims for a run that has no branch yet); note: more text of the comment."""
     from dashboard import FOOTER, api as call
+    by = by or who()
     try:
         call(f"issues/{number}/labels", "POST", {"labels": ["in-progress"]})
-        call(f"issues/{number}/comments", "POST", {"body": f"Started by `{who()}`.{FOOTER}"})
-        print(f"added in-progress and \"Started by `{who()}`.\" to #{number}")
+        call(f"issues/{number}/comments", "POST", {"body": f"Started by `{by}`.{note}{FOOTER}"})
+        print(f"added in-progress and \"Started by `{by}`.\" to #{number}")
     except Exception as e:                              # the claim ref is the lock: the ticket is yours anyway
         print(f"the claim is yours, but the label or the comment failed ({e}): add them by hand")
 
@@ -193,10 +209,11 @@ def push(sha, ref, remote="origin"):
     fail(f"git push failed:\n{r.stdout}{r.stderr}")
 
 
-def claim(number, takeover=False, remote="origin", limit=STALE):
+def claim(number, takeover=False, remote="origin", limit=STALE, by=None, tag=None):
     """Push a new claim commit to the next free slot. The slot is free only when there is no claim yet or the
     last claim was released. A takeover also takes a stale claim, but never a live one: three runs took over
-    one hand-off in 15 seconds, and each pushed the next slot (#502)."""
+    one hand-off in 15 seconds, and each pushed the next slot (#502). by, tag: the name and the ` lane NAME` of the
+    claim, else the branch and the git config (the pacer claims for a run before it starts, `tools/pacer.py`)."""
     found = refs(number, remote)
     top = max(found, default=0)
     if top:
@@ -204,7 +221,7 @@ def claim(number, takeover=False, remote="origin", limit=STALE):
         if not line.startswith("Release") and not (takeover and stale(line, changed(slot(number, top), remote),
                                                                      time.time(), limit)):
             return None
-    msg = f"Claim #{number} by {who()} ({uuid.uuid4().hex}){lane()}"   # unique: two runs never push the same SHA
+    msg = f"Claim #{number} by {by or who()} ({uuid.uuid4().hex}){lane() if tag is None else tag}"   # unique: two runs never push the same SHA
     sha = git("commit-tree", EMPTY_TREE, "-m", msg).stdout.strip()
     ref = slot(number, top + 1)
     return ref if push(sha, ref, remote) else None
@@ -253,15 +270,23 @@ def agent_state(body):
     return json.loads(m[1]) if m else {}
 
 
-def pr_slot(last, gap, merged, hours=0, now=None):
+def pr_slot(last, gap, merged):
     """The lock key of a review that waits for `gap` merged PRs after the time `last` (ISO, or None: no review yet), or
     None when fewer PRs merged since then. merged: the PRs merged after `last`. The key holds `last` and the number of
-    full gaps: one run takes each review, and a review that a run did not finish opens again one gap later. hours: no
-    slot before these hours after `last` (the process review, #3465)."""
-    if merged < gap or last and hours and (now or time.time()) - datetime.datetime.fromisoformat(
-            last.replace("Z", "+00:00")).timestamp() < hours * 3600:
+    full gaps: one run takes each review, and a review that a run did not finish opens again one gap later."""
+    if merged < gap:
         return None
     return f"{gap}pr-{re.sub(r'[^0-9TZ]', '', last or '') or 'none'}-{merged // gap}"
+
+
+@functools.cache
+def merge_rows(last):
+    """[(time, PR, message)] of the PRs merged after the ISO time `last`, newest first (`dashboard.merges`)."""
+    from dashboard import merges
+    try:
+        return merges(since=datetime.datetime.fromisoformat(last.replace("Z", "+00:00")), messages=True)
+    except Exception as e:                              # exit 2 like a git error, not 1 ("another run does it")
+        fail(f"GitHub API failed for the merged PRs: {e}")
 
 
 def merged_since(last, gap, remote="origin"):
@@ -269,11 +294,16 @@ def merged_since(last, gap, remote="origin"):
     so the review starts."""
     if not last or not on_github(remote):
         return gap
-    from dashboard import merges
-    try:
-        return len(merges(since=datetime.datetime.fromisoformat(last.replace("Z", "+00:00"))))
-    except Exception as e:                              # exit 2 like a git error, not 1 ("another run does it")
-        fail(f"GitHub API failed for the merged PRs: {e}")
+    return len(merge_rows(last))
+
+
+def owner_since(last, remote="origin"):
+    """[(PR, title)] of the owner work merged after `last` (`dashboard.owner_work`): PRs that no run made. Each one is
+    a miss of the improve loop, so the process review comes after OWNER_GAP merged PRs, not after its full gap."""
+    if not last or not on_github(remote):
+        return []
+    from dashboard import owner_work
+    return owner_work(merge_rows(last))
 
 
 def utc(now=None):
@@ -325,7 +355,9 @@ def review_slot(kind, remote="origin", starved=None):
     merged = merged_since(last, gap, remote)
     if kind == "roadmap" and ROADMAP_EARLY <= merged < gap and (starved or refill_starved)():
         gap = ROADMAP_EARLY
-    return pr_slot(last, gap, merged, REVIEW_HOURS if kind == "review" else 0), gap
+    if kind == "review" and OWNER_GAP <= merged < gap and owner_since(last, remote):
+        gap = OWNER_GAP
+    return pr_slot(last, gap, merged), gap
 
 
 def refill_starved():
@@ -352,17 +384,20 @@ def claim_lock(kind, key, remote="origin"):
     return push(git("commit-tree", EMPTY_TREE, "-m", msg).stdout.strip(), f"claim/{kind}-{key}", remote)
 
 
-def release(number, remote="origin", word="Release"):
-    """Add a release (or beat) commit on top of the own claim (a fast-forward of the top ref)."""
+def release(number, remote="origin", word="Release", by=None, adopt=None):
+    """Add a release (or beat) commit on top of the own claim (a fast-forward of the top ref). by: the name of the
+    claim, else the branch. adopt: the claim of the pacer for this run: the commit names the branch from now on and
+    keeps the lane of the claim."""
     found = refs(number, remote)
     if not found:
         return None
     ref = slot(number, max(found))
     line = subject(ref, remote)
-    if line.split(" ")[3:4] != [who()]:                      # "Claim #N by <branch> (...)", "Beat #N by <branch>"
+    if line.split(" ")[3:4] not in ([by or who()], [adopt]):  # "Claim #N by <branch> (...)", "Beat #N by <branch>"
         sys.exit(f"{ref} belongs to another run: {owner(line)} took #{number} over ({line}). Stop the work on #{number}"
                  f" now: no push, no comment, no release; pick the next ticket.")
-    sha = git("commit-tree", EMPTY_TREE, "-p", "FETCH_HEAD", "-m", f"{word} #{number} by {who()}{lane()}").stdout.strip()
+    tag = re.search(r" lane \w+$", line)[0] if adopt and re.search(r" lane \w+$", line) else lane()
+    sha = git("commit-tree", EMPTY_TREE, "-p", "FETCH_HEAD", "-m", f"{word} #{number} by {by or who()}{tag}").stdout.strip()
     return ref if push(sha, ref, remote) else None
 
 
@@ -379,6 +414,49 @@ def revived(path=CONFIG["docs"]["learnings"], base=f"origin/{CONFIG['branch']}")
            if line.startswith("+") and not line.startswith("+++")}
     head = git("show", f"HEAD:{path}", check=False).stdout.splitlines()
     return [line for line in head if line.strip() and line not in old and line not in own]
+
+
+def prunable(tips, open_numbers, now, days=LOCK_DAYS):
+    """The claim refs to delete, from {name: Unix time of its tip} (name: the part after `claim/`): the slots of a
+    ticket that is not open, the refill locks of an epic that is not open, and the locks older than `days` of their
+    kind. E = 0 of `refill-0-S` is the whole refill, never an issue."""
+    out = []
+    for name, t in sorted(tips.items()):
+        m = re.fullmatch(r"(\d+)(?:-\d+)?", name)
+        if m:
+            if int(m[1]) not in open_numbers:
+                out.append(name)
+            continue
+        kind, _, rest = name.partition("-")
+        epic = rest.split("-")[0]
+        if kind == "refill" and epic.isdigit() and epic != "0" and int(epic) not in open_numbers:
+            out.append(name)
+        elif kind in days and now - t > days[kind] * 86400:
+            out.append(name)
+    return out
+
+
+def prune(remote="origin", now=None, open_numbers=None):
+    """Delete the `prunable` claim refs with git (a fetch of the refs for their times, a push that deletes them). The
+    open issues and PRs come from one API read; with no open issue (a failed or empty read) it deletes nothing: the
+    status issue is always open. Returns the deleted names."""
+    if open_numbers is None:
+        from dashboard import pages
+        found = pages("issues?state=open", limit=20)
+        if not found or len(found) >= 2000:            # never delete the claims of live tickets on a partial read
+            fail("prune: no open issue read: nothing deleted")
+        open_numbers = {i["number"] for i in found}
+    if git("fetch", "-q", "--depth", "1", "--prune", remote, f"+refs/heads/claim/*:{NS}/*", check=False).returncode:
+        fail("prune: git fetch of the claim refs failed")
+    lines = git("for-each-ref", NS, "--format=%(refname:lstrip=2) %(committerdate:unix)").stdout.split("\n")
+    times = {n: int(t) for n, t in (x.split(" ") for x in lines if x.strip())}
+    gone = prunable(times, open_numbers, now or time.time())
+    for i in range(0, len(gone), 100):                  # one push deletes many refs
+        part = [f"refs/heads/claim/{n}" for n in gone[i:i + 100]]
+        r = git("push", "-q", remote, "--delete", *part, check=False)
+        if r.returncode and "remote ref does not exist" not in r.stderr:
+            fail(f"prune: git push --delete failed: {r.stderr.strip()[:500]}")
+    return gone
 
 
 def on_github(remote="origin"):
@@ -513,17 +591,26 @@ def main(argv=None):
     g.add_argument("--stuck", action="store_true", help="list the in-progress tickets of stopped runs (number 0); "
                    "exit 1: none")
     g.add_argument("--guard", action="store_true", help="before a push: beat; exit 1 when another branch has a PR")
+    g.add_argument("--adopt", metavar="NAME", help="take over the claim that the pacer made as NAME (the brief of the run)")
     g.add_argument("--comment", action="store_true", help="lock the owner comment with this ID")
     g.add_argument("--refill", action="store_true", help="lock the new sub-issues of this epic (0: the whole refill)")
     g.add_argument("--fixmain", action="store_true", help="lock the Fix main ticket of the break in --state SHA (number 0)")
     g.add_argument("--review", action="store_true", help="lock the process review after its gap of merged PRs (number 0)")
     g.add_argument("--reviewed", choices=("change", "none"), help="after the review: set the next gap")
     g.add_argument("--roadmap", action="store_true", help="lock the roadmap review after 100 merged PRs (number 0)")
+    g.add_argument("--prune", action="store_true", help="delete the refs of closed tickets and old locks (number 0; "
+                   "claims.yml: runs cannot delete refs)")
     ap.add_argument("--state", help="--refill: the state part of the lock (default: closed sub-issues, or the hour); "
                     "--fixmain: the commit that broke main (default: the head of origin/main)")
     ap.add_argument("--pr-branch", metavar="BRANCH", help="--guard: the branch of a PR that this run took over")
+    ap.add_argument("--or", dest="more", type=int, nargs="+", default=[], metavar="N",
+                    help="a claim: when another run has the ticket, try these tickets in this order (one call)")
     ap.add_argument("--remote", default="origin")
     a = ap.parse_args(argv)
+    if a.prune:
+        gone = prune(a.remote)
+        print("\n".join(f"deleted claim/{n}" for n in gone) or "nothing to delete")
+        return 0
     if a.comment:
         if claim_comment(a.number, a.remote):
             print(f"claimed comment {a.number}")
@@ -549,7 +636,12 @@ def main(argv=None):
                 from dashboard import api as call
                 body = api(f"issues/{STATUS}")["body"]    # read again: other runs and the dashboard change it too
                 call(f"issues/{STATUS}", "PATCH", {"body": with_state(body, {**agent_state(body), "last_roadmap": utc()})})
+            mark_commits()                                # a deep run can do only the review: its PRs are run work
             print(f"claimed {kind} {key}")
+            if a.review and on_github(a.remote):          # the misses of step 0 of the `improve` skill
+                last = agent_state(api(f"issues/{STATUS}")["body"]).get("last_review")
+                print("\n".join(f"owner work #{n}: {title}" for n, title in owner_since(last, a.remote))
+                      or "owner work: none")
             return 0
         print(f"no {kind} now: fewer than {gap} PRs merged since the last one, or another run does it")
         return 1
@@ -563,6 +655,7 @@ def main(argv=None):
         state = a.state or refill_state(a.number, a.remote)
         key = f"{a.number}-{state}"
         if claim_refill(a.number, state, a.remote):
+            mark_commits()
             print(f"claimed refill {key}")
             return 0
         print(f"refill {key}: another run makes the tickets")
@@ -592,6 +685,8 @@ def main(argv=None):
         ref = release(a.number, a.remote, word="Beat")
         print(f"beat {ref}" if ref else "nothing to beat")
         return 0
+    if a.adopt:
+        return adopt(a.number, a.adopt, a.remote)
     if a.guard:
         ref = release(a.number, a.remote, word="Beat")      # exits with an error on the claim of another run
         if not ref:
@@ -614,32 +709,80 @@ def main(argv=None):
         if ref and on_github(a.remote):
             stop(a.number)
         return 0
-    issue = api(f"issues/{a.number}") if on_github(a.remote) else None
-    if isinstance(issue, dict) and issue.get("state") == "closed":   # the candidate list was older (#2339)
-        print(f"#{a.number} is closed: pick the next candidate")
+    for number in [a.number, *a.more]:              # --or: the next candidate in the same call (#3459: one call each)
+        code = claim_ticket(number, a.takeover, a.remote)
+        if code != 1:
+            return code
+    return 1
+
+
+def adopt(number, name, remote="origin"):
+    """The first beat of a run that the pacer started with a brief: the claim `name` of the pacer becomes the claim of
+    this branch, and the lane of the claim becomes the lane of the run (git config, as `cycle_start.py --lane`).
+    0: the ticket is yours; 1: the claim is not open with that name any more (a takeover after a late start)."""
+    found = refs(number, remote)
+    line = subject(slot(number, max(found)), remote) if found else ""
+    if line.startswith("Release") or line.split(" ")[3:4] not in ([name], [who()]):
+        print(f"#{number}: no open claim of {name} ({line or 'no claim'}): follow the skill without the brief")
         return 1
-    comments = api(f"issues/{a.number}/comments?per_page=100") if on_github(a.remote) else []
-    if not a.takeover and on_github(a.remote):
+    if m := re.search(r" lane (\w+)$", line):
+        git("config", "aoe2mc.lane", m[1])
+    ref = release(number, remote, word="Beat", adopt=name)
+    if ref:
+        mark_commits()
+    print(f"adopted {ref}: #{number} is yours" if ref else f"#{number}: the beat failed, follow the skill without the brief")
+    return 0 if ref else 1
+
+
+HOOK = """#!/bin/sh
+# Written by tools/claim.py: each commit of a run gets the trailer Agent-Run. A merge on main without it is the work of
+# an owner session, a miss of the improve loop (dashboard.owner_work, owner 2026-10-29).
+git interpret-trailers --in-place --if-exists doNothing --trailer "Agent-Run: {lane}" "$1"
+"""
+
+
+def mark_commits():
+    """Install the `commit-msg` hook of HOOK in this clone (also its worktrees) after a claim, an adopt or a lock: each
+    run makes one before it commits, an owner session does not. A hook of another tool stays."""
+    path = git("rev-parse", "--git-path", "hooks/commit-msg", check=False).stdout.strip()
+    if not path or os.path.exists(path) and "tools/claim.py" not in open(path, encoding="utf-8").read():
+        return
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "w", encoding="utf-8") as f:
+        f.write(HOOK.format(lane=git("config", "--get", "aoe2mc.lane", check=False).stdout.strip() or "main"))
+    os.chmod(path, 0o755)
+
+
+def claim_ticket(number, takeover=False, remote="origin"):
+    """Claim ticket `number` (a takeover with `takeover`): 0 and the ticket text when the claim is ours, 1 when another
+    run has it or the ticket is closed."""
+    issue = api(f"issues/{number}") if on_github(remote) else None
+    if isinstance(issue, dict) and issue.get("state") == "closed":   # the candidate list was older (#2339)
+        print(f"#{number} is closed: pick the next candidate")
+        return 1
+    comments = api(f"issues/{number}/comments?per_page=100") if on_github(remote) else []
+    if not takeover and on_github(remote):
         other = started_by_other(comments, who(), time.time())
         if other:
-            print(f"owned by another run: `{other}` was first (\"Started by\" less than 30 minutes ago). Pick the next"
-                  " candidate, do not comment.")
+            print(f"#{number} owned by another run: `{other}` was first (\"Started by\" less than 30 minutes ago). Pick"
+                  " the next candidate, do not comment.")
             return 1
         pulls = api("pulls?state=open&per_page=100")
-        pr = active_pr(pulls, a.number, who(), time.time())
+        pr = active_pr(pulls, number, who(), time.time())
         if pr:
-            print(f"owned by another run: its PR #{pr} closes #{a.number} and changed less than 30 minutes ago. Pick the"
-                  " next candidate, do not comment.")
+            print(f"#{number} owned by another run: its PR #{pr} closes #{number} and changed less than 30 minutes ago."
+                  " Pick the next candidate, do not comment.")
             return 1
-    ref = claim(a.number, a.takeover, a.remote, stale_limit(a.number, a.remote) if a.takeover else STALE)
+    ref = claim(number, takeover, remote, stale_limit(number, remote) if takeover else STALE)
     if ref:
+        mark_commits()
         print(f"claimed {ref}")
-        if on_github(a.remote) and not a.takeover:
-            start(a.number)
+        if on_github(remote) and not takeover:
+            start(number)
         if isinstance(issue, dict):
             print(ticket_text(issue, comments))
         return 0
-    print(f"owned by another run: {first(a.number, a.remote)} was first. Pick the next candidate, do not comment.")
+    print(f"#{number} owned by another run: {first(number, remote)} was first. Pick the next candidate, do not comment.")
     return 1
 
 

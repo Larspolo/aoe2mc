@@ -19,13 +19,10 @@ def test_each_ranged_siege_unit_gets_a_siege_range(name):
 
 
 def test_the_bombard_cannon_has_its_blast_and_a_ram_does_not_shoot():
-    assert combat.range_command("u", "BOMBARD_CANNON", 4).split()[5] == "2.0"   # then the minimum range (#1350)
-    assert combat.range_command("u", "BATTERING_RAM", 4).split()[3:] == ["2.0", "59", "0"]   # melee reach (#1399)
+    assert combat.range_command("u", "BOMBARD_CANNON", 4).split()[5] == str(combat.BLAST["BOMBARD_CANNON"] * 4)   # then the minimum range (#1350)
+    ram = round(combat.stats("BATTERING_RAM").reload / combat.NORMAL * 20)
+    assert combat.range_command("u", "BATTERING_RAM", 4).split()[3:] == [str(combat.RAM_REACH), str(max(1, ram)), "0"]   # melee reach (#1399)
     assert len(combat.range_command("u", "ARCHER", 4).split()) == 5           # not a minecart: no siege shot
-
-
-def test_a_scorpion_hit_on_a_militia_takes_the_damage_rule():
-    assert combat.damage("SCORPION", "MILITIA") == 12 - 1                      # pierce armor 1
 
 
 @pytest.mark.mc
@@ -57,5 +54,6 @@ def test_a_scorpion_shot_hurts_only_its_militia(tiny_world, tmp_path):
             time.sleep(0.2)
         time.sleep(0.5)
         hp = {t: (data(game, t, "Health") or [None])[0] for t in ("m1", "m2")}
-        assert hp["m1"] < 1000.0 and (1000.0 - hp["m1"]) % 11 == 0, hp          # 12 - 1 pierce armor per shot
+        d = combat.damage("SCORPION", "MILITIA", t=combat.Stats(1000, 4, 0, 1, 0, 0, {}, ("infantry",)))
+        assert hp["m1"] < 1000.0 and (1000.0 - hp["m1"]) % d == 0, hp           # the attack - 1 pierce armor per shot
         assert hp["m2"] == 1000.0, hp

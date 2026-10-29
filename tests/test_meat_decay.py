@@ -1,8 +1,10 @@
 """#2310: the food of a carcass decays at the AoE2 rate (not for the Jurchens), and Magyar villagers kill predators in
 one strike."""
+import math
+
 import pytest
 
-from game import gather
+from game import civs, gather
 
 from test_gather import grid
 from test_gather_hunt import Hunt
@@ -31,9 +33,10 @@ def kill(server, g):
     return [c for c in server.log if c.startswith("damage a ")]
 
 
-@pytest.mark.parametrize("animal, rate", [("DEER", 0.25), ("WILD_BOAR", 0.4), ("SHEEP", 0.25)])
-def test_a_carcass_with_no_hunter_loses_food_at_the_aoe2_rate(animal, rate):
+@pytest.mark.parametrize("animal", ["DEER", "WILD_BOAR", "SHEEP"])
+def test_a_carcass_with_no_hunter_loses_food_at_the_aoe2_rate(animal):
     server, g = game(animal, "BRITONS")
+    rate = gather.DECAY[animal] * civs.decay(g)
     kill(server, g)
     g.villagers["v"].state = "idle"                                  # nobody gathers it
     tile, = g.map.carcasses
@@ -52,7 +55,7 @@ def test_the_steps_decay_in_game_seconds():
     food = g.map.carcasses[tile]
     for _ in range(40):                                              # 10 real seconds
         g.step()
-    assert g.map.carcasses[tile] == pytest.approx(food - 10 * gather.NORMAL * 0.25)
+    assert g.map.carcasses[tile] == pytest.approx(food - 10 * gather.NORMAL * gather.DECAY["DEER"] * civs.decay(g))
 
 
 def test_a_jurchen_carcass_keeps_its_food():
@@ -60,23 +63,27 @@ def test_a_jurchen_carcass_keeps_its_food():
     kill(server, g)
     tile, = g.map.carcasses
     food = g.map.carcasses[tile]
-    g.decay(100.0)
-    assert g.map.carcasses[tile] == food == gather.HUNT_FOOD["DEER"]
+    g.decay(100.0)                                                   # the civilization factor of the decay
+    assert g.map.carcasses[tile] == pytest.approx(food - 100 * gather.DECAY["DEER"] * civs.decay(g))
+    assert food == gather.HUNT_FOOD["DEER"]
 
 
 def test_a_magyar_villager_kills_a_wolf_with_one_strike():
     server, g = game("WOLF", "MAGYARS", hp=8.0)                      # the vanilla health of a wolf
     assert "a" in g.prey and gather.predator("WOLF") and not gather.predator("DEER")
-    assert kill(server, g) == ["damage a 33 minecraft:mob_attack by v"]
+    hit = gather.VILLAGER_HIT[0] + civs.predator_hit(g)
+    assert hit > gather.VILLAGER_HIT[0]
+    assert kill(server, g) == [f"damage a {hit} minecraft:mob_attack by v"] * math.ceil(8 / hit)
     assert g.map.carcasses == {} and g.villagers["v"].state == "idle"   # a wolf has no food
 
 
 def test_another_villager_needs_more_strikes_for_a_wolf():
     server, g = game("WOLF", "BRITONS", hp=8.0)
-    assert kill(server, g) == ["damage a 3 minecraft:mob_attack by v"] * 3
+    hit = gather.VILLAGER_HIT[0]
+    assert kill(server, g) == [f"damage a {hit} minecraft:mob_attack by v"] * math.ceil(8 / hit)
     assert "a" not in server.entities
 
 
 def test_the_bonus_is_only_against_predators():
     server, g = game("DEER", "MAGYARS")
-    assert set(kill(server, g)) == {"damage a 3 minecraft:mob_attack by v"}
+    assert set(kill(server, g)) == {f"damage a {gather.VILLAGER_HIT[0]} minecraft:mob_attack by v"}

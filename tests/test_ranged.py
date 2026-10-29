@@ -10,9 +10,10 @@ from game import ai, combat, run
 
 
 def test_range_command():
-    # archer: range 4 tiles * 4 blocks, reload 2 game seconds = 1.18 s at Normal speed (1.7) = 24 ticks
-    assert combat.range_command("u-1", "ARCHER", 4) == "aoe range u-1 16 24"
-    assert combat.range_command("u-1", "ARCHER", 2, rate=1.0) == "aoe range u-1 8 40"
+    # archer: range tiles * 4 blocks, reload game seconds / Normal speed (1.7) in ticks
+    s = combat.stats("ARCHER")
+    assert combat.range_command("u-1", "ARCHER", 4) == f"aoe range u-1 {s.range * 4} {round(s.reload / combat.NORMAL * 20)}"
+    assert combat.range_command("u-1", "ARCHER", 2, rate=1.0) == f"aoe range u-1 {s.range * 2} {round(s.reload * 20)}"
     assert combat.range_command("u-2", "MILITIA", 4) is None and combat.range_command("u-3", "MONK", 4) is None
 
     class Game:
@@ -24,8 +25,9 @@ def test_range_command():
     data = {"tile_size": 3, "objects": [{"kind": "unit", "player": 1, "name": "ARCHER", "uuid": "a"},
                                         {"kind": "unit", "player": 2, "name": "MILITIA", "uuid": "m"}]}
     assert combat.setup(Game(), data) == 2
-    assert Game.sent == ["aoe range a 12 24", combat.stats_command("a", "ARCHER"), combat.stats_command("m", "MILITIA"),
-                         "aoe sight a 18", "aoe sight m 12",   # line of sight 6 and 4 tiles (#775)
+    assert Game.sent == [combat.range_command("a", "ARCHER", 3), combat.stats_command("a", "ARCHER"),
+                         combat.stats_command("m", "MILITIA"),
+                         combat.sight_command("a", "ARCHER", 3), combat.sight_command("m", "MILITIA", 3),   # (#775)
                          ai.speed_command("a", "ARCHER", 3), ai.speed_command("m", "MILITIA", 3)]
 
 
@@ -68,8 +70,10 @@ def test_archer_shoots_from_its_aoe2_range(tiny_world, tmp_path):
             time.sleep(0.05)
         a, t = data(game, "a", "Pos"), data(game, "t", "Pos")
         d = math.hypot(a[0] - t[0], a[2] - t[2])
-        assert 13 <= d <= 16.5, d             # it stopped at its range of 4 tiles (16 blocks), not next to the target
+        s = combat.stats("ARCHER")
+        reach, ticks = s.range * 4, round(s.reload / combat.NORMAL * 20)
+        assert reach - 3 <= d <= reach + 0.5, d     # it stopped at its range (tiles * 4 blocks), not next to the target
         assert len(hits) >= 5, hits
         gaps = sorted(b - a for a, b in zip(hits, hits[1:]))
-        assert gaps[0] == pytest.approx(24 / 20, abs=0.25), gaps          # one shot per 24 ticks, a miss skips a hit
-        assert gaps[len(gaps) // 2] < 2 * 24 / 20, gaps
+        assert gaps[0] == pytest.approx(ticks / 20, abs=0.25), gaps       # one shot per reload, a miss skips a hit
+        assert gaps[len(gaps) // 2] < 2 * ticks / 20, gaps

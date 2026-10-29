@@ -34,7 +34,3 @@ def test_the_fish_are_on_water_with_shore_fish_at_the_beach_and_deep_fish_far_fr
 def test_the_land_maps_have_no_fish(kind):
     assert not any("FISH" in o["name"] for o in rmap.random_map(kind, 1, 2)["objects"])
 
-
-def test_highland_has_salmon_in_the_river_and_the_seas_have_shore_fish():
-    assert rmap.FISH["highland"][:2] == (0, "FISH_SALMON")
-    assert all(rmap.FISH[k][0] > 0 for k in ("islands", "mediterranean", "nomad"))

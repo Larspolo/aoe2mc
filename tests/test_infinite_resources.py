@@ -1,7 +1,6 @@
 """#2489: the AoE2 DE starting resources "Infinite" and "Random" (wiki "Random map", section "Settings"):
 `run.py --resources infinite` (a cost does not lower the stock) and `--resources random` (one of the levels)."""
 from test_gather import FakeServer, grid
-from test_resources_setting import WIKI
 
 from game import gather, market, train
 
@@ -16,8 +15,8 @@ def game(resources, objects=TC, size=24):
 def test_a_cost_does_not_lower_the_infinite_resources():
     server, g = game("infinite")
     start = dict(g.stock)
-    assert start["food"] == WIKI["ultra"][0]                           # the start amounts of ultra
-    assert train.queue(g, "Steve", (3, 3)) == (2, 5, 2, 5)            # a villager: 50 food
+    assert start == gather.LEVELS["infinite"]                          # the start amounts of the level
+    assert train.queue(g, "Steve", (3, 3)) == (2, 5, 2, 5)            # a villager
     market.add(g, "gold", -100)                                        # a market buy or a tribute
     assert g.stock == start and g.queues[2, 5, 2, 5]
     assert not any(c.startswith("scoreboard players remove") for c in server.log)   # the sidebar stays
@@ -28,7 +27,9 @@ def test_a_cost_does_not_lower_the_infinite_resources():
 def test_the_other_levels_pay_as_before():
     server, g = game("ultra")
     train.queue(g, "Steve", (3, 3))
-    assert g.stock["food"] == WIKI["ultra"][0] - 50 and "scoreboard players remove Food aoe_res 50" in server.log
+    food = train.price(g, "VILLAGER_MALE")["food"]
+    assert g.stock["food"] == gather.LEVELS["ultra"]["food"] - food
+    assert f"scoreboard players remove Food aoe_res {food}" in server.log
     assert type(g.stock) is dict
 
 
@@ -37,7 +38,7 @@ def test_random_is_one_level_for_each_player_and_each_run():
     picked = gather.level("random", data)
     assert picked in {"low", "medium", "high", "ultra"} and picked == gather.level("random", data)
     stocks = [gather.Gather(FakeServer({}), data, player=p, resources="random").stock for p in (1, 2)]
-    assert stocks[0] == stocks[1] == dict(zip(("food", "wood", "gold", "stone"), WIKI[picked]))
+    assert stocks[0] == stocks[1] == gather.LEVELS[picked]
     assert gather.level("high", data) == "high"
 
 

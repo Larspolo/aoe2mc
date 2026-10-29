@@ -38,7 +38,8 @@ def mine(g, steps=20000, until=lambda: False):
 
 def test_mines_and_their_footprints():
     _, g = mine_map()
-    assert g.map.mines == {"gold": {(12, 12): 800, (17, 12): 800}, "stone": {(12, 18): 350}}
+    gold, stone = (gather.MINES[n][1] for n in ("GOLD_MINE", "STONE_MINE"))
+    assert g.map.mines == {"gold": {(12, 12): gold, (17, 12): gold}, "stone": {(12, 18): stone}}
     assert g.map.spot((12, 12)) == {(12, 12)}
     assert g.map.spot((17, 12)) == {(16, 11), (17, 11), (16, 12), (17, 12)}      # at x.0: 2 × 2 tiles
     assert not any(g.map.free(*c) for c in g.map.spot((17, 12)))
@@ -56,7 +57,8 @@ def test_a_click_on_a_mine_sends_a_miner_and_the_load_goes_to_the_camp():
     assert v.state == "to_tree" and v.res == "gold" and v.tree == (12, 12)
     assert 'data merge entity v {VillagerData:{profession:"minecraft:toolsmith"},Offers:{Recipes:[]}}' in server.log
     mine(g, until=lambda: g.stock["gold"] >= 30)
-    assert g.stock["gold"] == score(server, "Gold") == 30 and g.map.mines["gold"][(12, 12)] <= 770
+    assert g.stock["gold"] == score(server, "Gold") == 30
+    assert g.map.mines["gold"][(12, 12)] <= gather.MINES["GOLD_MINE"][1] - 30
     camp = set().union(*g.map.drops["gold"])
     assert len(g.map.drops["gold"]) == 2 and (12, 14) in camp
     cells = [(math.floor(float(c.split()[2])), math.floor(float(c.split()[4]))) for c in server.log if c.startswith("tp ")]
@@ -77,7 +79,7 @@ def test_an_empty_mine_goes_away_and_the_miner_goes_to_the_next_one():
     assert g.stock["gold"] == 20 and g.map.free(12, 12) and (12, 12) not in g.map.mine_at
     fills = [c for c in server.log if c.startswith("fill 12 64 12 12 68 12 air replace")]
     assert [c.split()[-1] for c in fills] == ["minecraft:" + b for b in gather.MINE_BLOCKS["gold"] + ("barrier",)]
-    assert g.map.mines["stone"][(12, 18)] == 350                       # not a mine of the other kind
+    assert g.map.mines["stone"][(12, 18)] == gather.MINES["STONE_MINE"][1]   # not a mine of the other kind
 
 
 def test_a_miner_stops_when_no_mine_of_the_kind_is_left():

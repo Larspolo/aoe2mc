@@ -69,7 +69,7 @@ BUILDINGS = {k: s._replace(classes=s.classes + (STONE,)) if k.endswith("_TOWER")
 WATCH = 4    # tiles of line of sight that Town Watch adds to each own building but walls, gates, farms, fish traps (#1454)
 # Line of sight in tiles (AoE2 DE, wiki infobox "LOS"; the house: 1 from the edge of its 2 x 2 tiles, #1300) where it
 # is not max(4, range + 2) (sight()). A unit of more ages has its first value; the infantry values have the +2 of the
-# Feudal Age, as the infobox shows them (tests/test_unit_sight.py, #1878). The key "sight" of a line in the data files (#1913).
+# Feudal Age, as the infobox shows them (#1878). The key "sight" of a line in the data files (#1913).
 SIGHT = {r["name"]: r["sight"] for r in UNIT_ROWS + BUILDING_ROWS if "sight" in r}
 # Units that attack from a range with melee damage (AoE2): their hit takes the melee armor of the target (#800).
 # The key "melee_ranged" of a line of data/units.jsonl.
@@ -80,6 +80,8 @@ MELEE_RANGED = {r["name"] for r in UNIT_ROWS if r.get("melee_ranged")}
 # the creeper crew of the demolition ship dies after its blast (AoePlugin.java), as a vanilla creeper.
 # The key "blast" of a line of data/units.jsonl.
 BLAST = {r["name"]: r["blast"] for r in UNIT_ROWS if "blast" in r}
+# The key "attack_ground": the units of the AoE2 order Attack Ground (#4079, docs/research/gameplay.md).
+GROUND = {r["name"] for r in UNIT_ROWS if r.get("attack_ground")}
 RAM_REACH = 2.0       # blocks: a ram (a minecart with range 0) hits from next to its target, on its carrier (#1399)
 CONTACT = 1.0         # tiles: the reach of a demolition ship (range 0, #1440): its raft is higher than a boat
 # Tiles: no shot at a unit nearer (AoE2 DE, wiki infobox "MinRange", #1350). The key "min_range" of data/units.jsonl.

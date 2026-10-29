@@ -1,18 +1,20 @@
-"""The Gurjara mills take up to 10 herdable animals, and the animals inside make 15 × ln(F / 200 + 1) food per AoE2
-minute for F food of all of them, with no end (AoE2 DE wiki "Gurjaras", "Mill (Age of Empires II)", #2342)."""
+"""The Gurjara mills take up to n herdable animals, and the animals inside make a × ln(F / b + 1) food per AoE2 minute
+for F food of all of them, with no end (AoE2 DE wiki "Gurjaras", "Mill (Age of Empires II)", #2342). n, a and b come
+from the data (civs.HERD_FOOD)."""
 import math
 
 import pytest
 from test_garrison_game import Server, arrive
 from test_gather import grid
 
-from game import combat, garrison, gather
+from game import civs, combat, garrison, gather
 
 MILL = (10, 12, 2, 4)
 TOWER = (16, 18, 2, 4)
+N, A, B = civs.HERD_FOOD["GURJARAS"]["MILL"]
 
 
-def setup(civ, sheep=12):
+def setup(civ, sheep=N + 2):
     """A flat 24 × 24 map: an own mill and watch tower, sheep, one cow and one villager south of them."""
     objects = [{"kind": "building", "name": "MILL", "player": 1, "tile": [11.0, 3.0], "footprint": [10, 2, 12, 4]},
                {"kind": "building", "name": "WATCH_TOWER", "player": 1, "tile": [17.0, 3.0], "footprint": [16, 2, 18, 4]},
@@ -37,30 +39,30 @@ def fill(server, g, units):
     g.herd_food = 0.0                                                    # the food of the step in arrive
 
 
-def test_a_gurjara_mill_takes_10_herdables_and_no_villager():
+def test_a_gurjara_mill_takes_n_herdables_and_no_villager():
     server, g = setup("GURJARAS")
-    fill(server, g, [f"s{k}" for k in range(12)])
-    assert len(g.garrisons[MILL]) == 10                                  # the others stay at the door
+    fill(server, g, [f"s{k}" for k in range(N + 2)])
+    assert len(g.garrisons[MILL]) == N                                   # the others stay at the door
     assert garrison.inside(g) <= g.flock
 
 
-@pytest.mark.parametrize("sheep", [1, 10])
+@pytest.mark.parametrize("sheep", [1, N])
 def test_the_herdables_in_a_mill_make_the_aoe2_food_per_minute(sheep):
     server, g = setup("GURJARAS")
     fill(server, g, [f"s{k}" for k in range(sheep)])
     food = g.stock["food"]
     for _ in range(60):
         garrison.pasture(g, 1.0)
-    assert g.stock["food"] - food == int(15 * math.log(100 * sheep / 200 + 1))   # 1 sheep 6, 10 sheep 26
+    assert g.stock["food"] - food == int(A * math.log(gather.hunt_food("SHEEP") * sheep / B + 1))
 
 
-def test_a_cow_counts_its_150_food():
+def test_a_cow_counts_its_food():
     server, g = setup("GURJARAS", sheep=0)
     fill(server, g, ["cow"])
     food = g.stock["food"]
     for _ in range(120):
         garrison.pasture(g, 1.0)
-    assert g.stock["food"] - food == int(2 * 15 * math.log(150 / 200 + 1))
+    assert g.stock["food"] - food == int(2 * A * math.log(gather.hunt_food("COW_A") / B + 1))
 
 
 def test_the_mill_of_another_civilization_and_a_tower_take_no_herdable():

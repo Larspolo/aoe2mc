@@ -59,9 +59,10 @@ def test_a_load_before_the_first_town_center_keeps_the_bonus_once():
     _, g = game("TUPI")
     server_h, h = game("TUPI")
     savegame.load(h, saved(g))
-    assert h.nomad is True and h.later == {"food": 25, "gold": 25, "stone": 25, "wood": 25}
+    assert h.nomad is True and h.later == g.later and h.later["gold"] > 0
+    gold = h.later["gold"]
     assert town_center(h, FIRST)
-    assert "scoreboard players add Gold aoe_res 25" in server_h.log
+    assert f"scoreboard players add Gold aoe_res {gold}" in server_h.log
     start = len(server_h.log)
     assert town_center(h, SECOND)
     assert bonus(server_h, start) == []

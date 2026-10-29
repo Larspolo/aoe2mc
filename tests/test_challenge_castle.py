@@ -47,14 +47,14 @@ def ends(monkeypatch):
 def test_the_setup_places_a_complete_castle_of_player_2_and_both_armies(placed):
     g = fake()
     challenge.setup(g)
-    assert placed["sites"] == [("CASTLE", 2, True)] and g.player == 1 and C["age"] == "castle"
+    assert placed["sites"] == [("CASTLE", 2, True)] and g.player == 1
     for player, key in ((2, "defenders"), (1, "army")):
         assert sorted(n for n, p in placed["units"] if p == player) == sorted(
             n for n, k in C[key].items() for _ in range(k))
 
 
-def test_the_castle_falls_at_400_seconds_the_game_ends_with_the_gold_medal(ends):
-    g = fake(seconds=400)
+def test_the_castle_falls_in_the_gold_time_the_game_ends_with_the_gold_medal(ends):
+    g = fake(seconds=C["gold"] - 20)
     g.siege_target, g.forts = "castle", {"castle": (0,) * 6}
     challenge.tick(g)
     assert ends == [] and not g.ended

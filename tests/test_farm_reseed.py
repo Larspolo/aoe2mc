@@ -4,18 +4,19 @@ from test_gather_farms import farm_map
 from game import gather, savegame, train
 
 
-def test_seed_farm_costs_60_wood_and_queues_one_reseed():
+def test_seed_farm_costs_its_wood_and_queues_one_reseed():
     assert "FARM_RESEED" in train.AGAIN
     server, g = farm_map()
-    g.stock.update(wood=100)
+    wood = 2 * train.COSTS["FARM_RESEED"]["wood"] - 1                  # enough for one reseed only
+    g.stock.update(wood=wood)
     rect = next(r for r, n in train.homes(g).items() if n == "MILL")
     assert train.queue(g, "Steve", rect[::2], "FARM_RESEED")
     for _ in range(5):
         train.tick(g, 1)
-    assert g.stock["wood"] == 100 - train.COSTS["FARM_RESEED"]["wood"] and g.reseeds == 1
+    assert g.stock["wood"] == wood - train.COSTS["FARM_RESEED"]["wood"] and g.reseeds == 1
     assert any("Reseeds queued: 1" in c for c in server.log)
     server.log.clear()
-    assert not train.queue(g, "Steve", rect[::2], "FARM_RESEED")        # 40 wood: not enough, it says why
+    assert not train.queue(g, "Steve", rect[::2], "FARM_RESEED")        # not enough wood: it says why
     assert any("Not enough resources" in c for c in server.log)
 
 

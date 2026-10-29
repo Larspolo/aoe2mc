@@ -23,10 +23,12 @@ def test_a_building_without_units_has_no_rally_point():
     assert train.units_of(g, "UNIVERSITY") == [] and train.units_of(g, "BLACKSMITH") == []
 
 
-def test_the_war_galley_costs_20_percent_less_wood_with_shipwright():
+def test_the_war_galley_costs_less_wood_with_shipwright():
     server, g = imperial()
-    g.techs |= {"SHIPWRIGHT", "MEDIUM_WARSHIPS"}
-    assert train.price(g, "WAR_GALLEY", "DOCK")["wood"] == 72
+    g.techs |= {"MEDIUM_WARSHIPS"}
+    wood = train.price(g, "WAR_GALLEY", "DOCK")["wood"]
+    g.techs |= {"SHIPWRIGHT"}
+    assert train.price(g, "WAR_GALLEY", "DOCK")["wood"] < wood
     assert train.shipwright(g, "WAR_GALLEY") and train.shipwright(g, "FIRE_SHIP")
     assert train.shipwright(g, "GALLEY") and not train.shipwright(g, "ARCHER")
 

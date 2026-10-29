@@ -115,9 +115,10 @@ def test_a_trebuchet_walks_to_a_building_20_tiles_away_and_hurts_it(tmp_path):
         g.choose({t}, t)
         g.attack(fort)
         assert trebuchet.state(g, t) == "walking"
-        hp, states = 1200, []
+        hp, states = combat.stats("BARRACKS").hp, []
+        full = hp
         end = time.time() + 120
-        while hp == 1200:
+        while hp == full:
             assert time.time() < end, (states, g.pos(t))
             g.step()
             states += [trebuchet.state(g, t)][:not states or states[-1] != trebuchet.state(g, t)]

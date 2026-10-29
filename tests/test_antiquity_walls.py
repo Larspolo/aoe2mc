@@ -31,7 +31,7 @@ def test_a_wall_or_tower_needs_its_granary_research():
     out = json.loads(r.stdout.splitlines()[-1])
     assert (out["wall"], out["gate"], out["tower"]) == ("Needs Small Wall", "Needs Small Wall", "Needs Watch Tower")
     assert out["wall_after"] is None and out["gate_after"] is None
-    assert len(out["granary"]) == 7
+    assert "SMALL_WALL_TECH" in out["granary"]
 
 
 def test_the_ballista_tower_research_needs_ballistics():

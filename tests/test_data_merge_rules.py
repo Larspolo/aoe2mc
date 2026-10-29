@@ -22,5 +22,4 @@ def test_each_data_file_has_a_merge_rule():
 
 
 def test_the_check_finds_a_file_with_no_rule():
-    assert rules(["game/data/new.jsonl", "game/data/civs.jsonl"]) == {"game/data/new.jsonl": "unspecified",
-                                                                      "game/data/civs.jsonl": "jsonl"}
+    assert rules(["game/data/new.jsonl"]) == {"game/data/new.jsonl": "unspecified"}

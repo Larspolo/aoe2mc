@@ -61,16 +61,18 @@ def start_after_prs(issue):
 
 
 MERGE = re.compile(r"\(#(\d+)\)$")    # the subject of a squash merge on the default branch: "Title (#N)"
+RUN_MARK = re.compile(r"^Agent-Run: *\S+", re.M)   # the trailer of each commit of a run (`claim.mark_commits`)
 
 
 def ts(text):
     return datetime.datetime.fromisoformat(text.replace("Z", "+00:00"))
 
 
-def merges(since=None, until=None, n=None, pages=10):
+def merges(since=None, until=None, n=None, pages=10, messages=False):
     """[(time, PR number)] of the PRs merged into the default branch, newest first (#2039): all after `since`, up to
     `until` (datetimes), at most `n`. The squash commits "Title (#N)" count; the generated commits of the workflows do
-    not. The pages start at `until` (#3072); with `n` they go on until n merges (no page limit)."""
+    not. The pages start at `until` (#3072); with `n` they go on until n merges (no page limit). messages: [(time, PR
+    number, commit message)]."""
     out, q = [], "".join(f"&{k}={v:%Y-%m-%dT%H:%M:%SZ}" for k, v in (("since", since), ("until", until)) if v)
     page = 0
     while n is not None or page < pages:
@@ -79,10 +81,19 @@ def merges(since=None, until=None, n=None, pages=10):
         for c in cs:
             m, t = MERGE.search(c["commit"]["message"].split("\n")[0]), ts(c["commit"]["committer"]["date"])
             if m and (until is None or t <= until):
-                out.append((t, int(m[1])))
+                out.append((t, int(m[1]), c["commit"]["message"]) if messages else (t, int(m[1])))
         if len(cs) < 100 or n is not None and len(out) >= n:
             break
     return out if n is None else out[:n]
+
+
+def owner_work(rows):
+    """[(PR number, title)] of the merges [(time, PR, message)] (newest first) that no run made: no commit with the
+    trailer `Agent-Run:`. An owner session did the work, so the improve loop missed it (owner, 2026-10-29). Only the
+    merges after the oldest marked one count: before it, the runs did not mark their commits yet."""
+    marked = [i for i, (_, _, text) in enumerate(rows) if RUN_MARK.search(text)]
+    return [(n, MERGE.sub("", text.split("\n")[0]).strip()) for _, n, text in rows[:marked[-1]]
+            if not RUN_MARK.search(text)] if marked else []
 
 
 @functools.cache

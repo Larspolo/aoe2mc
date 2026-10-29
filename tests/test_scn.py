@@ -65,7 +65,7 @@ def test_read_each_format(tmp_path, fmt):
     assert (s["format"], s["width"], s["height"]) == (fmt.decode(), 4, 3)
     assert (s["terrain"] == terrain).all() and (s["elevation"] == elevation).all()
     assert s["players"][1] == {"civ": scx.CIVS[4], "color": 1, "view": (2.5, 1.5)}
-    assert s["players"][2] == {"civ": "BRITONS", "color": 0, "view": None}
+    assert s["players"][2] == {"civ": scx.CIVS[1], "color": 0, "view": None}
     assert [(o["player"], o["type"], o["x"], o["y"]) for o in s["objects"]] == [(0, 399, 1.5, 0.5), (1, 83, 2.5, 1.5)]
 
 
@@ -74,6 +74,7 @@ def test_convert_a_scn(tmp_path):
     import io
 
     import aoe2mc
+    import buildings
     terrain = np.zeros((16, 16), np.int16)
     terrain[12:, :] = 22
     path = build(tmp_path / "old.scn", b"1.20", terrain, np.zeros((16, 16), np.float32), {1: (1, 1, (6.0, 6.0))},
@@ -82,5 +83,6 @@ def test_convert_a_scn(tmp_path):
     with contextlib.redirect_stdout(out):
         aoe2mc.convert(str(path), str(tmp_path / "W"))
     text = out.getvalue()
-    assert "player 1: britons, red, western buildings" in text and "units in a block (moved up): 0" in text
+    arch = buildings.CIV_TO_ARCH.get(scx.CIVS[1], "western")
+    assert f"player 1: {scx.CIVS[1].lower()}, red, {arch} buildings" in text and "units in a block (moved up): 0" in text
     assert (tmp_path / "W" / "level.dat").exists()

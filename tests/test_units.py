@@ -27,10 +27,11 @@ def test_classify_gives_valid_entities(name, hero):
 def test_make_entity_has_name_tag_on_the_rider():
     o = dict(name="KNIGHT", hero=False, player=1, rotation=0.0)
     nbt = units.make_entity(o, {1: {"color": "blue"}}, (1.5, 64.0, 2.5), np.random.default_rng(0))
-    assert str(nbt["id"]) == "minecraft:horse"
+    desc = units.classify("KNIGHT")
+    assert str(nbt["id"]) == str(desc["id"])
     rider = units.top_entity(nbt)
-    assert str(rider["id"]) == "minecraft:zombie"
-    assert "Knight" in str(rider["CustomName"])
+    assert rider is not nbt and str(rider["id"]) == str(desc["Passengers"][0]["id"])
+    assert units.pretty("KNIGHT") in str(rider["CustomName"])
 
 
 @pytest.mark.parametrize("name,expected", [
@@ -70,10 +71,9 @@ def test_animals_follow_the_owner_rule():
 
 
 def test_only_passive_animals_make_sounds():
-    for name in ("SHEEP", "COW_A", "LLAMA", "TURKEY"):
-        assert "Silent" not in units.classify(name), name
-    for name in ("WOLF", "WAR_DOG", "ELK", "MILITIA", "VILLAGER_MALE", "KNIGHT"):
-        assert units.classify(name)["Silent"] == 1, name
+    for name in ("SHEEP", "COW_A", "LLAMA", "TURKEY", "WOLF", "WAR_DOG", "ELK", "MILITIA", "VILLAGER_MALE", "KNIGHT"):
+        a = units.animal(name)
+        assert ("Silent" in units.classify(name)) == (not a or a[0] != "passive"), name
 
 
 def test_war_animals_are_not_animals():
@@ -106,12 +106,6 @@ def test_each_militia_upgrade_looks_stronger():
     order = [None, "leather", "chainmail", "iron", "golden", "diamond"]
     worn = [sum(order.index(p if not isinstance(p, tuple) else p[0]) for p in units.LINES[n][1]) for n in line]
     assert worn == sorted(worn) and len(set(worn)) == len(worn), worn
-
-
-@pytest.mark.parametrize("name,mob", [("THE_BLACK_PRINCE", "horse"), ("PORUS", "ravager"), ("LEONIDAS", "zombie"),
-                                      ("EINAR_PAUNCH_SHAKER", "skeleton"), ("HUNTING_WOLF", "wolf")])
-def test_hero_base_unit(name, mob):
-    assert units.classify(name, hero=True)["id"] == "minecraft:" + mob
 
 
 @pytest.mark.parametrize("name", ["ELITE_HUSKARL", "ELITE_URUMI_SWORDSMAN", "ELITE_KONA", "ELITE_JARL", "ELITE_SANNAHYA"])
@@ -149,7 +143,6 @@ def test_entity_nbt_of_26_3():
     knight = units.top_entity(units.make_entity(o, {1: {"color": "red"}}, (0, 0, 0), np.random.default_rng(1)))
     assert dict(knight["CustomName"]) == {"text": "Knight", "color": units.HEX["red"]}
     assert units.to_nbt(units.mounted("horse", None, 2), (0, 0, 0), 0.0, np.random.default_rng(1))["equipment"]
-    assert str(units.classify("FISHING_SHIP")["id"]) == "minecraft:oak_boat"
 
 
 def test_facing_map_knights_face_away_from_the_center(tmp_path):
@@ -169,11 +162,7 @@ def test_facing_map_knights_face_away_from_the_center(tmp_path):
 
 
 def test_birds_fly_or_walk_and_can_be_skipped():
-    """Flying birds float FLY_HEIGHT blocks above the ground, others are chickens; --no-birds skips them (#28)."""
-    assert units.classify("MACAW")["id"] == "minecraft:parrot" and units.classify("MACAW")["NoGravity"] == 1
-    assert units.classify("RAVEN")["id"] == "minecraft:bat"
-    assert units.classify("FLAMINGO")["id"] == "minecraft:chicken" and "NoGravity" not in units.classify("FLAMINGO")
-    assert units.classify("BUTTERFLY1")["id"] == "minecraft:bee" and "BatFlags" not in units.classify("BUTTERFLY3")
+    """Flying birds float FLY_HEIGHT blocks above the ground, others walk; --no-birds skips them (#28)."""
     cols = aoe2mc.Columns(16, np.zeros((16, 16), np.int16), np.zeros((16, 16), np.float32),
                           {0: "GRASS_1"}, 4, 3, np.random.default_rng(1))
     birds = [dict(kind="U", name=n, player=0, x=x, y=2.5, rotation=0.0, hero=False, garrisoned=False)
@@ -184,6 +173,7 @@ def test_birds_fly_or_walk_and_can_be_skipped():
     ents = [e for c in aoe2mc.plan_units(birds, {}, cols, np.random.default_rng(1), stats).values() for e in c]
     vol = np.zeros((aoe2mc.MAX_Y - aoe2mc.MIN_Y, 16, 16), np.int64)
     aoe2mc.entity_chunk(0, 0, ents, cols, vol, np.ones(1, bool))
-    y = {str(units.top_entity(n)["id"]): float(units.top_entity(n)["Pos"][1]) for n, *_ in ents}
+    y = sorted(float(units.top_entity(n)["Pos"][1]) for n, *_ in ents)
     ground = int(cols.top[10, 10]) + 1
-    assert y == {"minecraft:parrot": ground + units.FLY_HEIGHT, "minecraft:chicken": ground}
+    flies = [bool(units.classify(b["name"]).get("NoGravity")) for b in birds]   # the bird designs of the data
+    assert y == sorted(ground + units.FLY_HEIGHT * f for f in flies)

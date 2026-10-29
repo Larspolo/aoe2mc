@@ -15,36 +15,42 @@ def setup(civ):
     return gather.Gather(FakeServer({"v": {"Pos": (7.5, 64.0, 7.5)}}), data).setup()
 
 
-def test_celts_chop_wood_15_percent_faster():
-    base, g = setup("GOTHS"), setup("CELTS")
-    assert civs.civ(g) == "CELTS" and g.work_time("wood") == pytest.approx(base.work_time("wood") / 1.15)
-    assert all(g.work_time(r) == base.work_time(r) for r in ("food", "farm", "gold", "stone", "hunt"))
+BASE = "GOTHS"                                                         # a civilization with no work bonus (#1089)
 
 
-def test_franks_forage_15_percent_faster():
-    base, g = setup("GOTHS"), setup("FRANKS")
-    assert g.work_time("food") == pytest.approx(base.work_time("food") / 1.15)
-    assert g.work_time("farm") == base.work_time("farm") and g.work_time("wood") == base.work_time("wood")
+def rate(civ, kind):
+    return civs.WORK.get(civ, {}).get(kind, 1)
+
+
+@pytest.mark.parametrize("civ", ["CELTS", "FRANKS"])
+def test_celts_chop_and_franks_forage_at_their_rate(civ):
+    base, g = setup(BASE), setup(civ)
+    assert civs.civ(g) == civ
+    for r in ("food", "farm", "gold", "stone", "wood"):
+        assert g.work_time(r) == pytest.approx(base.work_time(r) / rate(civ, r)), r
+    assert g.work_time("hunt") == pytest.approx(base.work_time("hunt") / rate(civ, "hunt"))
 
 
 def test_a_civilization_with_no_bonus_works_at_the_aoe2_rate():
-    g = setup("GOTHS")
-    assert civs.civ(g) == "GOTHS" and "GOTHS" not in civs.WORK
-    assert all(g.work_time(r) == pytest.approx(gather.WORK_SECONDS[r]) for r in gather.WORK_SECONDS)
+    g = setup(BASE)
+    assert civs.civ(g) == BASE
+    assert all(g.work_time(r) == pytest.approx(gather.WORK_SECONDS[r] / rate(BASE, r)) for r in gather.WORK_SECONDS)
 
 
 def test_britons_shepherds_and_mongol_hunters():
-    base, britons, mongols = setup("GOTHS"), setup("BRITONS"), setup("MONGOLS")
-    assert britons.work_time("hunt", herd=True) == pytest.approx(base.work_time("hunt") / 1.25)
-    assert britons.work_time("hunt") == base.work_time("hunt")         # a deer: no shepherd bonus
-    assert mongols.work_time("hunt") == pytest.approx(base.work_time("hunt") / 1.4)
-    assert mongols.work_time("hunt", herd=True) == base.work_time("hunt")
+    base, britons, mongols = setup(BASE), setup("BRITONS"), setup("MONGOLS")
+    hunt = base.work_time("hunt") * rate(BASE, "hunt")                   # the time with no bonus
+    assert britons.work_time("hunt", herd=True) == pytest.approx(hunt / rate("BRITONS", "sheep"))
+    assert britons.work_time("hunt") == pytest.approx(hunt / rate("BRITONS", "hunt"))   # a deer: no shepherd bonus
+    assert mongols.work_time("hunt") == pytest.approx(hunt / rate("MONGOLS", "hunt"))
+    assert mongols.work_time("hunt", herd=True) == pytest.approx(hunt / rate("MONGOLS", "sheep"))
 
 
 def test_the_bonus_multiplies_with_the_technologies():
-    base, g = setup("CELTS"), setup("CELTS")
+    base, g, other, tech = setup("CELTS"), setup("CELTS"), setup(BASE), setup(BASE)
     g.techs.add("DOUBLE_BIT_AXE")
-    assert g.work_time("wood") == pytest.approx(base.work_time("wood") / 1.2)
+    tech.techs.add("DOUBLE_BIT_AXE")
+    assert g.work_time("wood") / base.work_time("wood") == pytest.approx(tech.work_time("wood") / other.work_time("wood"))
 
 
 def test_a_sheep_carcass_is_a_herd_and_a_deer_carcass_not():

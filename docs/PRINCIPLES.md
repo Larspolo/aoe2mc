@@ -63,7 +63,8 @@ end" (#371), 100 % = ready for outside play tests (#878).
 ## P7. Use the whole quota, and improve only from data
 
 Use each usage window to its limit (#587). Change the process only where data shows a loss, and measure the effect
-(#900, #1629). A hunch (for example "tokens are the bottleneck") is a thing to test, not a fact (#1629).
+(#900, #1629). A hunch (for example "tokens are the bottleneck") is a thing to test, not a fact (#1629). A lever of the
+`improve` skill whose signal is above its threshold is data enough (P11).
 Expensive tools (the real Minecraft client) only when they are really needed (#176).
 
 ## P8. Few buttons, and each action is also a command
@@ -86,6 +87,20 @@ agent must remember. The owner should not have to ask for the wider fix.
   then made the epic for all game data (#1909): by content, not by size, and a lint, not a question for each run.
 - A label and a workflow close the tickets, not the owner (#1740). The merge workflow solves `.jsonl` conflicts (#1864).
 - Avoid structures that conflict: a test of the length of a data file conflicts and tests nothing real (#2008).
+- Data and configuration files exist so that a change there needs no change of code or tests: no test checks their
+  content, only their form and the behavior of the code (owner, 2026-10-29).
+
+## P11. The system improves itself boldly, and counts work, not time
+
+The owner must never have to suggest an improvement of the system (owner, 2026-10-29). When the owner changes the system
+by hand, the improve loop missed a lever: the next review comes soon, names the lever, and fixes all its places.
+- The review checks all levers each time: context per call, work that a tool or workflow can do, the cheapest model
+  that does the job well, API calls, conflicts by design, data in data files, merge drivers, clocks that measure work,
+  owner chores, measurement gaps. These are the changes that the owner made by hand on 2026-10-28 and 2026-10-29.
+- Make each change that pays, also a redesign, also one that needs owner steps. Pause the project when the runs
+  must wait for those steps.
+- A wait to measure a change counts merged PRs ("wait 50 PRs"), never hours: the speed changes, and a pause merges
+  nothing (#2039). Only a real clock stays in time (a quota window, a stopped run).
 
 ## Tensions
 
@@ -94,3 +109,5 @@ agent must remember. The owner should not have to ask for the wider fix.
 - P5 against quality: the owner does not check each item. A check closes on the agent's evidence, and the owner checks a sample later (#1708).
 - P4 and P7 against P10: a pilot is "fine for now" and can wait for its numbers, but the epic for all places starts at
   once, with the pilot as its first sub-issue (#1909).
+- P7 against P11: P7 measures before and after each change; P11 does not wait for a measured loss when a known lever
+  is above its threshold. The measurement then shows if the change paid.

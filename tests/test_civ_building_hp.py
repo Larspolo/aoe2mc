@@ -11,15 +11,19 @@ def game(civ):
     return g
 
 
-def test_persian_town_centers_and_docks_have_double_hit_points():
+def tc_hp(civ, techs=()):
+    return build.values(game(civ), "TOWN_CENTER", set(techs)).hp
+
+
+def test_persian_town_centers_and_docks_have_more_hit_points():
     g = game("PERSIANS")
-    assert build.values(g, "TOWN_CENTER").hp == 4800 and build.values(g, "DOCK").hp == 3600
+    assert tc_hp("PERSIANS") > tc_hp("BRITONS") == combat.stats("TOWN_CENTER").hp
+    assert build.values(g, "DOCK").hp > combat.stats("DOCK").hp
     assert build.values(g, "BARRACKS").hp == combat.stats("BARRACKS").hp
-    assert build.values(game("BRITONS"), "TOWN_CENTER").hp == 2400
 
 
 def test_masonry_multiplies_after_the_bonus():
-    assert build.values(game("PERSIANS"), "TOWN_CENTER", {"MASONRY"}).hp == round(4800 * 1.1)
+    assert tc_hp("PERSIANS", {"MASONRY"}) == round(tc_hp("PERSIANS") * tc_hp("BRITONS", {"MASONRY"}) / tc_hp("BRITONS"))
 
 
 class Game:
@@ -38,7 +42,7 @@ def test_the_town_center_of_the_map_of_a_persian_player_has_double_hit_points():
     game = Game()
     combat.setup(game, data)
     hp = {c.split()[2]: int(c.split()[3]) for c in game.sent if c.startswith("aoe building ")}
-    assert hp == {combat.target_uuid([0, 0, 16, 16]): 4800, combat.target_uuid([32, 0, 48, 16]): 2400}
+    assert hp == {combat.target_uuid([0, 0, 16, 16]): tc_hp("PERSIANS"), combat.target_uuid([32, 0, 48, 16]): tc_hp("BRITONS")}
 
 
 def test_the_attack_mark_shows_the_full_hit_points_of_a_persian_town_center():
@@ -48,4 +52,4 @@ def test_the_attack_mark_shows_the_full_hit_points_of_a_persian_town_center():
     g.look, g.target = lambda name: ((0, 70, 0), (1, 0, 0)), lambda *a: ("fort", "t", None)   # the ray hits it
     g.game.log.clear()
     g.click("Steve")
-    assert any('"/4800)"' in c for c in g.game.log if "actionbar" in c)
+    assert any(f'"/{tc_hp("PERSIANS")})"' in c for c in g.game.log if "actionbar" in c)

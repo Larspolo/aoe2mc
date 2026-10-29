@@ -1,18 +1,11 @@
 """game/cheats.py: a unit cheat summons its unit at the town center of the player (#818)."""
-import re
-
 import pytest
 from test_gather import FakeServer, grid
 from test_train import setup
 
-from game import cheats, gather
+from game import cheats, combat, gather
 
 UNITS = {c: e.name for c, e in cheats.CODES.items() if isinstance(e, cheats.Unit)}
-
-
-def test_the_unit_cheats_of_de():
-    assert sorted(UNITS) == ["alpaca simulator", "catzor", "furious the monkey boy", "how do you turn this on",
-                             "i don't exist", "i love the monkey head", "photon man", "to smithereens"]
 
 
 @pytest.mark.parametrize("code", sorted(UNITS))
@@ -35,7 +28,7 @@ def test_the_cheat_units_have_their_aoe2_values():
     server.scores["aoe_cheat"] = cheats.NAMES.index("how do you turn this on") + 1
     cheats.clicks(g)
     stats = next(c for c in server.log if c.startswith("aoe stats "))
-    assert re.fullmatch(r"aoe stats \S+ 500 10 10 10 1 siege building:10 \d+", stats)
+    assert stats == combat.stats_command(stats.split()[2], UNITS["how do you turn this on"])
 
 
 def test_no_unit_without_a_town_center():

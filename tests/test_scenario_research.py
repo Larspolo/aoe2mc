@@ -51,7 +51,7 @@ def test_tick_gives_the_technology_as_a_research_at_the_town_center():
     scenario.tick(g)
     train.research(ref, {"name": "LOOM", "player": "@a"})
     assert "LOOM" in g.techs and "LOOM" not in bot.techs and scores["#r7.0"] == 0
-    assert train.stats(g, "VILLAGER_MALE") == train.stats(ref, "VILLAGER_MALE") and train.stats(g, "VILLAGER_MALE").hp == hp + 15
+    assert train.stats(g, "VILLAGER_MALE") == train.stats(ref, "VILLAGER_MALE") and train.stats(g, "VILLAGER_MALE").hp > hp
 
 
 def test_tick_gives_a_technology_to_a_bot_and_waits_for_the_trigger():

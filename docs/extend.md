@@ -7,7 +7,13 @@ parallel tickets do not change the same lines. Most rules have a check: `tools/d
 `tools/merge_jsonl.py`.
 
 - Never test the number of entries of a data table (`len(combat.SIGHT) == 154`): each new line changes it, and parallel
-  tickets conflict there. Test the values (owner, #2008; `tests/test_conflict_prone.py`).
+  tickets conflict there (owner, #2008; `tests/test_conflict_prone.py`).
+- Never test the content of a data file or a configuration file (owner, 2026-10-29): no literal value, text, list,
+  menu order, key or setting of `data/`, `game/data/`, `tools/mcdata/`, a workflow, `agent.toml`, `pyproject.toml`,
+  `.claude/` or the setup script. A change of the data or the configuration must not make a test fail. Test the form
+  (types, keys, names that exist, sorted order), and test the behavior with the expected value from the data
+  (`combat.damage(a, b) == stats.attack - armor`), with a relation (more with the bonus than without), or with test
+  data (a fixture, a temporary file, a monkeypatched table).
 - A new menu item of a building (cost, time, slot, help, age) is one new line in `game/data/train.jsonl`, at the end of
   its building block (a technology also gets its key `"effect"`: the change of the combat values, `train.effect()`, #2029): the merge driver `tools/merge_jsonl.py` (`merge=jsonl`, #2004) merges the lines by name (a line that both sides changed: by key and list item, #2064), and `train.load()` stops on a name in two lines (#1702).
 - A menu test checks only its own item (`item()` of `tests/menu_line.py`), never the whole menu line: one `order()` test per

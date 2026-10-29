@@ -1,10 +1,11 @@
 """game/train.py: the stable trains the knight and the archery range the cavalry archer from the Castle Age, with the
-AoE2 DE cost and time of the wiki; before it the item is gray (#1397)."""
+AoE2 DE cost and time of the data; before it the item is gray (#1397)."""
 import re
 from urllib.parse import unquote
 
 import pytest
 from test_gather import FakeServer, grid
+from test_train_menu import entry
 
 from game import build, combat, gather, train
 
@@ -24,23 +25,22 @@ def menu(server):
     return [unquote(c) for c in server.log if c.startswith("aoe menu ")][-1]
 
 
-@pytest.mark.parametrize("building, name, label, cost", [
-    ("STABLE", "KNIGHT", "Knight", "60 food · 75 gold · 30 s"),
-    ("ARCHERY_RANGE", "CAVALRY_ARCHER", "Cavalry Archer", "40 wood · 60 gold · 37 s"),
-])
-def test_the_castle_age_menu_has_the_unit_with_its_cost(building, name, label, cost):
+UNITS = [("STABLE", "KNIGHT"), ("ARCHERY_RANGE", "CAVALRY_ARCHER")]
+
+
+@pytest.mark.parametrize("building, name", UNITS)
+def test_the_castle_age_menu_has_the_unit_with_its_cost(building, name):
     server, g = setup(building)
-    train.open_menu(g, "Steve", (11, 3))
-    assert f"{train.ITEMS[name][0]}:{train.ITEMS[name][1]}:{label}:{cost} · queue 0/15 " in menu(server)
-    assert train.ITEMS[name][1] in ("horse_spawn_egg", "skeleton_horse_spawn_egg")
+    rect = train.open_menu(g, "Steve", (11, 3))
+    assert f" {entry(g, rect, name)}queue 0/15 " in menu(server) + " "
 
 
-@pytest.mark.parametrize("building, label, slot", [("STABLE", "Knight", 3), ("ARCHERY_RANGE", "Cavalry Archer", 4)])
-def test_the_unit_is_gray_before_the_castle_age(building, label, slot):
+@pytest.mark.parametrize("building, name", UNITS)
+def test_the_unit_is_gray_before_the_castle_age(building, name):
     server, g = setup(building, ages=("FEUDAL_AGE",))
-    train.open_menu(g, "Steve", (11, 3))
-    assert re.search(f"{slot}:gray_dye:{label}:[^ ]* .* Needs the Castle Age", menu(server))
-    rect = train.home(g, (11, 3))
+    rect = train.open_menu(g, "Steve", (11, 3))
+    slot, _, label = train.layout(g, rect)[name]
+    assert f" {slot}:{build.LOCKED}:{label}:" in menu(server) and build.locked(g, name) in menu(server)
     assert train.order(g, "Steve", rect, slot) == 0 and g.stock == {"food": 1000, "wood": 1000, "gold": 1000, "stone": 0}
 
 
@@ -59,7 +59,7 @@ def test_a_trained_unit_is_a_rider_with_its_aoe2_values(building, name, mount, r
     assert summon.startswith(f"summon minecraft:{mount} ") and f"Passengers:[{{id:\"minecraft:{rider}\"" in flat
     assert g.soldiers == {uuid: name}
     s = combat.STATS[name]
-    assert "cavalry" in s.classes and (s.hp, s.range > 0) == {"KNIGHT": (100, False), "CAVALRY_ARCHER": (50, True)}[name]
+    assert "cavalry" in s.classes and combat.stats_command(uuid, name, train.stats(g, name)) in server.log
 
 
 def clashes(names, civ, building=None):
@@ -77,6 +77,3 @@ def test_each_menu_slot_of_a_building_has_one_item():
         for building, names in train.TRAINS.items():
             assert clashes(names, civ, building) == [], (building, civ)
 
-
-def test_the_units_are_of_the_castle_age():
-    assert build.AGE["KNIGHT"] == build.AGE["CAVALRY_ARCHER"]

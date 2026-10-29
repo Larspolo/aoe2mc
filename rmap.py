@@ -493,7 +493,7 @@ def generate(text, seed, players=2, size=None, warn=None, teams=None):
     elevation = lower_to_water(terrain, elevation)
     ridges = cliffs(sections.get("CLIFF_GENERATION", ()), terrain, starts, consts, rng, warn)   # draws before objects()
     found = []                                     # one line per object part, so that parallel parts do not conflict
-    found += objects(sections.get("OBJECTS_GENERATION", ()), consts, terrain, starts, rng, warn, owner, layer)
+    found += objects(sections.get("OBJECTS_GENERATION", ()), consts, terrain, starts, rng, warn, owner, ridges, layer)
     found += trees(terrain)
     found += ridges
     return {"size": n, "terrain": terrain.tolist(), "elevation": elevation.tolist(), "layer": layer.tolist(),
@@ -533,7 +533,7 @@ def circle(setup, players, teams, seed):
     return rng.permutation(order).tolist()
 
 
-def objects(cmds, consts, terrain, starts, rng, warn, owner=None, layer=None):
+def objects(cmds, consts, terrain, starts, rng, warn, owner=None, ridges=(), layer=None):
     """The objects of the create_object commands of <OBJECTS_GENERATION> (#3855): number_of_objects (default 1) on
     random free tiles, set_place_for_every_player: that many for each player (its own, or Gaia with
     set_gaia_object_only), min_distance_to_players and max_distance_to_players: tiles from the origin of the player
@@ -544,13 +544,19 @@ def objects(cmds, consts, terrain, starts, rng, warn, owner=None, layer=None):
     default 1), place_on_forest_zone (the tiles next to a forest), actor_area with actor_area_radius (default 1) marks
     the tiles around each object for a later avoid_actor_area, second_object: one more object on each tile (#3858).
     actor_area_to_place_in A: only in the actor area A; avoid_all_actor_areas: out of every actor area (#4134).
+    avoid_cliff_zone N (tiles from a cliff, default 1) and the cliff tiles themselves (#4131, `ridges`: the cliffs).
     layer_to_place_on T: only the tiles of the land layer T (layer: the land layer of each tile, #4132).
-    Never on water (only a fish or a ship), a forest or another object; an object with no free tile is missing."""
+    Never on water (only a fish or a ship), a forest, a cliff or another object; an object with no free tile is missing."""
     import aoe2mc
     kinds = aoe2mc.object_kinds(old=False)
     n, out = terrain.shape[0], []
     wet = np.isin(terrain, [TERRAINS["WATER"], TERRAINS["SHALLOW"], TERRAINS["DEEP_WATER"]])
     used = np.isin(terrain, list(FOREST_TREES))
+    cliff = np.zeros((n, n), bool)                     # the cliff pieces and their neighbours (#4131)
+    for r in ridges:
+        cliff[int(r["x"]), int(r["y"])] = True
+    cliff = dilate(cliff, 1)
+    used |= cliff
     placed = np.zeros((n, n), bool)                    # the tiles of the objects (min_distance_group_placement)
     x, y = np.mgrid[0:n, 0:n]
     areas = {}                                         # actor_area ID -> the tiles of its objects (#3858)
@@ -587,6 +593,8 @@ def objects(cmds, consts, terrain, starts, rng, warn, owner=None, layer=None):
         forest = np.isin(terrain, list(FOREST_TREES))
         if "avoid_forest_zone" in attrs:
             ground = ground & ~dilate(forest, value(attrs["avoid_forest_zone"][0], consts) if attrs["avoid_forest_zone"] else 1)
+        if "avoid_cliff_zone" in attrs:
+            ground = ground & ~dilate(cliff, value(attrs["avoid_cliff_zone"][0], consts) if attrs["avoid_cliff_zone"] else 1)
         if "place_on_forest_zone" in attrs:
             ground = ground & dilate(forest, 1) & ~forest
         if "avoid_actor_area" in attrs:
@@ -645,7 +653,8 @@ def objects(cmds, consts, terrain, starts, rng, warn, owner=None, layer=None):
                                "terrain_to_place_on", "min_distance_group_placement", "max_distance_to_other_zones",
                                "set_scaling_to_map_size", "set_scaling_to_player_number", "avoid_forest_zone",
                                "place_on_forest_zone", "actor_area", "actor_area_radius", "avoid_actor_area",
-                               "second_object", "actor_area_to_place_in", "avoid_all_actor_areas", "layer_to_place_on"}:
+                               "second_object", "actor_area_to_place_in", "avoid_all_actor_areas", "avoid_cliff_zone",
+                               "layer_to_place_on"}:
             warn(f"create_object: {a} is not read yet")
     return out
 

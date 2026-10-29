@@ -55,17 +55,16 @@ def test_a_villager_repairs_a_damaged_mule_cart_at_the_building_rate():
     assert server.health["cart"] == 100 + 750 / 60 * 8                 # not the siege rate (25 %)
 
 
-def test_the_full_repair_costs_7_5_food_and_30_wood():
-    # AoE2 wiki "Mule Cart": "Mule Carts of both civilizations cost 7.5 food, 30 wood to repair from 1 hit point to
-    # maximum hit points": half the Armenian cost (15 food, 60 wood), and the Georgian team bonus on 20 food, 80 wood
+def test_the_full_repair_takes_the_repair_cost():
     for civ in ("ARMENIANS", "GEORGIANS"):
         server, g = setup(hp=1.0, civ=civ)
-        assert repair.cost(g, "MULE_CART") == {"food": 7.5, "wood": 30}, civ
+        cost = repair.cost(g, "MULE_CART")
         assert repair.unit_order(g, "Steve", "cart")
         repair_all(g)
         assert server.health["cart"] == FULL and g.villagers["v0"].state == "idle", civ
         share = (FULL - 1) / FULL
-        assert (100 - g.stock["food"], 100 - g.stock["wood"]) == (int(7.5 * share), int(30 * share)), civ
+        assert (100 - g.stock["food"], 100 - g.stock["wood"]) == \
+            (int(cost.get("food", 0) * share), int(cost.get("wood", 0) * share)), civ
 
 
 def test_a_click_on_a_mule_cart_with_its_full_hit_points_is_no_repair_order():

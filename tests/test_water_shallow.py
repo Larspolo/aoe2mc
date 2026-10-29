@@ -19,5 +19,5 @@ def test_water_shallow_is_deeper_than_the_shallows():
 
 
 def test_the_yellow_water_is_like_the_normal_water():
-    for name, depth in (("WATER_YELLOW_SHALLOW", 2), ("SHALLOWS_YELLOW", 1), ("SHALLOWS", 1), ("WATER_SHALLOW", 2)):
-        assert aoe2mc.terrain_style(name)["depth"] == depth, name
+    for yellow, normal in (("WATER_YELLOW_SHALLOW", "WATER_SHALLOW"), ("SHALLOWS_YELLOW", "SHALLOWS")):
+        assert aoe2mc.terrain_style(yellow)["depth"] == aoe2mc.terrain_style(normal)["depth"], yellow

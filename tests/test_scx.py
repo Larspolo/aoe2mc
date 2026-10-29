@@ -59,8 +59,8 @@ def test_read_map_and_players(tmp_path):
     s = scx.read(path)
     assert (s["format"], s["width"], s["height"]) == ("1.21", 4, 3)
     assert (s["terrain"] == terrain).all() and (s["elevation"] == elevation).all()
-    assert s["players"][1] == {"civ": "AZTECS", "color": 1, "view": (2.5, 1.5)}
-    assert s["players"][2] == {"civ": "BRITONS", "color": 0, "view": None}
+    assert s["players"][1] == {"civ": scx.CIVS[15], "color": 1, "view": (2.5, 1.5)}
+    assert s["players"][2] == {"civ": scx.CIVS[1], "color": 0, "view": None}
     assert set(s["players"]) == {0, 1, 2}
 
 
@@ -76,6 +76,7 @@ def test_convert_an_old_scenario(tmp_path):
     import io
 
     import aoe2mc
+    import buildings
     import world_reader
     terrain = np.zeros((16, 16), np.int16)
     terrain[12:, :] = 22                                                     # deep water in the east
@@ -87,7 +88,8 @@ def test_convert_an_old_scenario(tmp_path):
     with contextlib.redirect_stdout(out):
         aoe2mc.main([str(path), str(tmp_path / "W")])
     text = out.getvalue()
-    assert "player 1: britons, red, western buildings" in text and "units in a block (moved up): 0" in text
+    arch = buildings.CIV_TO_ARCH.get(scx.CIVS[1], "western")
+    assert f"player 1: {scx.CIVS[1].lower()}, red, {arch} buildings" in text and "units in a block (moved up): 0" in text
     w = world_reader.World(str(tmp_path / "W"))
     states = {n for c in w.chunks().values() for s in c["sections"] for n in w.section_states(s)[0]}
     assert {"minecraft:grass_block", "minecraft:water", "minecraft:bell"} <= {n.split("[")[0] for n in states}

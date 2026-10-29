@@ -2,10 +2,6 @@
 map of test_bot_gather."""
 from test_bot_research import queued, ready
 
-from game import bot
-
-build = bot.build
-
 
 def smith(soldiers, age=2):
     """A bot of the given age with a Blacksmith, much of each resource and the given soldiers."""
@@ -31,7 +27,3 @@ def test_no_blacksmith_technology_without_soldiers():
     b = smith([])
     b.research()
     assert queued(b, "BLACKSMITH") == []
-
-
-def test_the_blacksmith_is_in_the_bot_order_after_the_barracks():
-    assert bot.ORDER.index("BLACKSMITH") > bot.ORDER.index("BARRACKS")

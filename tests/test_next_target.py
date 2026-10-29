@@ -11,14 +11,13 @@ from test_siege_walk import summon
 from test_unit_ai import data
 
 
-def test_siege_units_take_buildings_in_sight():
-    assert combat.sight_command("u", "BATTERING_RAM", 4) == f"aoe sight u {combat.sight('BATTERING_RAM') * 4} only"
-    assert combat.sight_command("u", "TREBUCHET", 4).endswith(" only")
-    for name in ("ARMORED_ELEPHANT", "SIEGE_ELEPHANT", "CANNON_GALLEON", "ELITE_CANNON_GALLEON"):
-        assert combat.sight_command("u", name, 4).endswith(" first"), name
-    assert combat.sight_command("u", "MILITIA", 4) == "aoe sight u 16"          # units only, as before (#775)
-    assert combat.sight_command("u", "SIEGE_TOWER", 4) is None                  # no attack
+def test_the_units_of_building_sight_take_buildings_in_sight():
     assert set(combat.BUILDING_SIGHT) <= set(combat.STATS)
+    for name, mode in combat.BUILDING_SIGHT.items():
+        assert mode in ("only", "first"), name
+        assert combat.sight_command("u", name, 4) == f"aoe sight u {combat.sight(name) * 4} {mode}", name
+    assert combat.sight_command("u", "MILITIA", 4) == f"aoe sight u {combat.sight('MILITIA') * 4}"   # units only (#775)
+    assert combat.sight_command("u", "SIEGE_TOWER", 4) is None                  # no attack
 
 
 @pytest.mark.mc

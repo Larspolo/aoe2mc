@@ -116,7 +116,7 @@ def test_paper_gives_no_wand_and_vanilla_keeps_it():
 
 def test_the_hint_names_the_hold_on_paper():
     _, g, _ = paper()
-    assert hints.state(g) == ("none", hints.TEXTS["none"]) and "Hold right click: selection box" in hints.TEXTS["none"]
+    assert hints.state(g) == ("none", hints.TEXTS["none"])
     _, g = setup()
     assert hints.state(g) == ("none", hints.TEXTS["none-wand"])
 

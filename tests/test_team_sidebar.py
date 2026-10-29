@@ -32,14 +32,15 @@ def test_each_player_shows_its_own_objective_in_the_sidebar_of_its_team_color():
 
 def test_the_stock_of_each_player_changes_only_its_own_objective():
     server, one, two_ = two()
+    food = train.COSTS["VILLAGER_MALE"]["food"]
     before = len(server.log)
     assert train.queue(two_, "Steve", (11, 11), "VILLAGER_MALE")
     new = server.log[before:]
-    assert "scoreboard players remove Food aoe_res2 50" in new and not [c for c in new if " aoe_res " in c + " "]
+    assert f"scoreboard players remove Food aoe_res2 {food}" in new and not [c for c in new if " aoe_res " in c + " "]
     before = len(server.log)
     assert train.queue(one, "Steve", (3, 3), "VILLAGER_MALE")
     new = server.log[before:]
-    assert "scoreboard players remove Food aoe_res 50" in new and not [c for c in new if "aoe_res2" in c]
+    assert f"scoreboard players remove Food aoe_res {food}" in new and not [c for c in new if "aoe_res2" in c]
 
 
 def test_noui_hides_and_shows_the_team_sidebar_too():

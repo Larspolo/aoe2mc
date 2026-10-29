@@ -1,5 +1,5 @@
-"""The civilization bonuses of the repair (#1730, AoE2 wiki "Repairing"): Roman repairers work 5 % faster, and the
-Georgian team bonus makes the repairs of the buildings of the Georgians and their allies 25 % cheaper."""
+"""The civilization bonuses of the repair (#1730, AoE2 wiki "Repairing"): Roman repairers work faster (civs.REPAIR), and
+the Georgian team bonus makes the repairs of the buildings of the Georgians and their allies cheaper (civs.REPAIR_COST)."""
 import pytest
 import test_repair
 import test_repair_ship
@@ -32,23 +32,23 @@ def tick(setup, key, civ):
 @pytest.mark.parametrize("setup, key", [(lambda: test_repair.setup(house=100), "house"),
                                         (lambda: test_repair_siege.setup(hp=50.0), "ram"),
                                         (lambda: test_repair_ship.setup(hp=30.0), "ship")])
-def test_roman_repairers_work_5_percent_faster(setup, key):
+def test_roman_repairers_work_faster(setup, key):
     plain, roman = tick(setup, key, "BRITONS"), tick(setup, key, "ROMANS")
-    assert roman == pytest.approx(plain * 1.05, abs=1)                 # whole hit points of a building
+    assert roman == pytest.approx(plain * civs.REPAIR["ROMANS"], abs=1) and civs.REPAIR["ROMANS"] > 1                 # whole hit points of a building
 
 
-def test_the_georgian_team_bonus_makes_the_repair_25_percent_cheaper():
+def test_the_georgian_team_bonus_makes_the_repair_cheaper():
     _, g = test_repair.setup()
-    base = repair.cost(g, "HOUSE")
-    assert base == {"wood": 12.5}
+    base, tc = repair.cost(g, "HOUSE"), repair.cost(g, "TOWN_CENTER")
+    k = civs.REPAIR_COST["GEORGIANS"]
     players(g, (1, "GEORGIANS", None), (2, "BRITONS", None))
-    assert repair.cost(g, "HOUSE") == {"wood": 12.5 * 0.75} and repair.cost(g, "TOWN_CENTER") == {"wood": 550 * 0.75}
+    assert repair.cost(g, "HOUSE") == {"wood": base["wood"] * k} and repair.cost(g, "TOWN_CENTER") == {"wood": tc["wood"] * k}
     players(g, (1, "BRITONS", 1), (2, "GEORGIANS", 1))                  # an ally of the Georgians
-    assert repair.cost(g, "HOUSE") == {"wood": 12.5 * 0.75}
+    assert repair.cost(g, "HOUSE") == {"wood": base["wood"] * k}
     players(g, (1, "BRITONS", 1), (2, "GEORGIANS", 2))                  # an enemy: no bonus
     assert repair.cost(g, "HOUSE") == base
     players(g, (1, "GEORGIANS", 1), (2, "GEORGIANS", 1))                # the bonuses do not add up
-    assert civs.repair_cost(g) == 0.75
+    assert civs.repair_cost(g) == k
 
 
 def test_a_georgian_pays_the_normal_cost_for_the_repair_of_a_ram():

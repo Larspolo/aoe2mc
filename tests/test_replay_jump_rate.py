@@ -32,7 +32,7 @@ def test_a_long_jump_gathers_more_than_one_tree():
 
 def test_a_long_jump_gathers_more_than_one_mine():
     stock, got = jump(MINE)
-    assert got["stone"] == int(gather.AOE2_WORK["stone"] * MINUTES / 1000) > 350
+    assert got["stone"] == int(gather.AOE2_WORK["stone"] * MINUTES / 1000) > gather.MINES["STONE_MINE"][1]
     assert stock["stone"] == replay.START["stone"] + got["stone"]
 
 

@@ -21,10 +21,14 @@ def lines(mood, on=True):
     return files.get("data/aoe2mc/function/trigger/4.mcfunction", "").splitlines()
 
 
+def expect(mood):
+    """The commands of a mood from the tables of the converter: its time (MOODS) and its rain (RAIN)."""
+    return [f"time set {aoe2mc.MOODS[mood]}", "weather rain" if mood in aoe2mc.RAIN else "weather clear"]
+
+
 def test_night_and_swamp_set_the_time_and_the_weather():
-    assert lines("NIGHT") == ["time set 18000", "weather clear"]
-    assert lines("SWAMP") == ["time set 6000", "weather rain"]
-    assert lines("EVENING") == ["time set 12500", "weather clear"]
+    for mood in ("NIGHT", "SWAMP", "EVENING"):
+        assert lines(mood) == expect(mood), mood
 
 
 def test_mood_off_and_unknown_moods_write_no_command():
@@ -52,4 +56,4 @@ def test_the_effect_is_read_and_converted(tmp_path):
     with open(os.path.join(fn, "start.mcfunction")) as f:
         assert f"schedule function aoe2mc:trigger/{storm['id']} 400t replace" in f.read()
     with open(os.path.join(fn, "trigger", f"{storm['id']}.mcfunction")) as f:
-        assert f.read() == "time set 6000\nweather rain\n"
+        assert f.read().splitlines() == expect("SWAMP")

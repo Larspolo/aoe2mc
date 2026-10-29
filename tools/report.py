@@ -1,15 +1,18 @@
 """The run report of autopilot step 8 with one command (#1701): the text, the release bar (`release.py`), the `Usage:`
-line of the run start (the release bar only when the project has `release.py`), one `Metrics:` line per ticket and the `Tokens:` line (`tokens.py`). `tools/health.py` parses it.
+line of the run start (the release bar only when the project has `release.py`), one `Metrics:` line per ticket, the `Tokens:`, `Calls:` and `Run:` lines (`tokens.py`). `tools/health.py` parses it.
 
     python3 tools/report.py --usage "$(cat USAGE)" --text "What I did. Next: ..." \\
         --ticket 1701 --size S --result "pr #1770" --setup 2 --checks 1 --checks-min 4 --sinks none \\
         --phases read=8,claim=1,code=18,verify=9,ci=0,conflict=5,report=4 [--ticket ...] [--post]
 
 Repeat the ticket options for each ticket of the run, in the same order. `--minutes` defaults to the sum of the
-phases. Without `--phases` a ticket gets the phases that `tokens.py --phases` measures in the transcript. `--post` comments the report on the status issue (label `agent-status`) and sets `last_run` and `runs` of its
-state comment, else it prints the comment.
+phases. Without `--phases` a ticket gets the phases that `tokens.py --phases` measures in the transcript. `--post` adds the report to the
+branch `metrics` (`runs/`, `metrics_log.post`, 2026-10-29: no comment on the status issue; a comment only when no push
+goes through) and sets `last_run` and `runs` of the state comment of the status issue (label `agent-status`), else it
+prints the report.
 """
 import argparse
+import json
 import os
 import re
 import subprocess
@@ -19,6 +22,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from claim import agent_state, utc, with_state  # noqa: E402
 from dashboard import FOOTER, STATUS, api, pages  # noqa: E402
 from health import PHASES  # noqa: E402
+import metrics_log  # noqa: E402
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 
@@ -70,13 +74,31 @@ def measured():
     return {m[1]: m[2] for m in re.finditer(r"^#(\d+|None): (\S+)$", tool("tokens.py", "--phases"), re.M)}
 
 
-def report(text, usage, lines, release=None, tokens=None, calls=None):
-    """The comment: text, release bar (none when it is empty), `Usage:`, `Metrics:`, `Tokens:` and `Calls:` lines, footer."""
+def report(text, usage, lines, release=None, tokens=None, calls=None, run=None, lane=None):
+    """The comment: text, release bar (none when it is empty), `Usage:`, `Metrics:`, `Tokens:`, `Calls:` and `Run:`
+    lines, footer. The `Run:` line ends with the lane of the run (`opus` when the run set none, as in `health.lanes`)."""
     release = tool("release.py") if release is None else release
     tokens = (tool("tokens.py").splitlines() or [""])[-1] if tokens is None else tokens
     calls = tool("tokens.py", "--calls-line") if calls is None else calls
+    run = tool("tokens.py", "--run-line") if run is None else run
+    lane = git_lane() if lane is None else lane
     return "\n".join([text.strip(), "", *([release, ""] if release else []), usage.strip(), *lines, tokens,
-                      *([calls] if calls else [])]) + FOOTER
+                      *([calls] if calls else []), *([f"{run} · lane {lane or 'opus'}"] if run else [])]) + FOOTER
+
+
+def numbers():
+    """All numbers of this session (`tokens.py --json`), or {} when the tool has no transcript."""
+    try:
+        return json.loads(tool("tokens.py", "--json") or "{}")
+    except ValueError:
+        return {}
+
+
+def fields(text, usage, tickets, lane, numbers):
+    """The named fields of the run record (`metrics_log.run_record`): the text, the `Usage:` line, one dict per ticket
+    (the values of its `Metrics:` line), the lane and all numbers of `tokens.py --json`."""
+    return {"session": numbers.get("session"), "branch": numbers.get("branch"), "lane": lane or "opus",
+            "text": text.strip(), "usage": usage.strip(), "tickets": tickets, "tokens": numbers}
 
 
 def counted(body, now=None):
@@ -102,19 +124,29 @@ def main(argv=None):
     def at(values, i, default):
         return values[i] if i < len(values) else default
 
-    lane = git_lane()
+    lane, nums = git_lane(), numbers()
     got = measured() if len(a.phases) < n else {}
+    setup = round(nums.get("setup") or 0)               # measured: the runs need no `date` call (2026-10-29)
     own = lambda t: got.get(str(t)) or (got.get("None", "") if n == 1 else "")    # measured, not guessed (2026-10-28)
-    lines = [metrics(t, a.size[i], a.result[i], at(a.minutes, i, None), at(a.setup, i, 0), at(a.checks, i, 0),
-                     at(a.checks_min, i, 0), at(a.sinks, i, "none"), at(a.phases, i, own(t)), at(a.lane, i, lane))
-             for i, t in enumerate(a.ticket)]
+    tickets = [dict(ticket=t, size=a.size[i], result=a.result[i], minutes=at(a.minutes, i, None), setup=at(a.setup, i, setup if i == 0 else 0),
+                    checks=at(a.checks, i, 0), checks_min=at(a.checks_min, i, 0), sinks=at(a.sinks, i, "none"),
+                    phases=at(a.phases, i, own(t)), lane=at(a.lane, i, lane)) for i, t in enumerate(a.ticket)]
+    lines = [metrics(d["ticket"], d["size"], d["result"], d["minutes"], d["setup"], d["checks"], d["checks_min"],
+                     d["sinks"], d["phases"], d["lane"]) for d in tickets]
     usage = a.usage or (tool("usage.py", "--sample").splitlines() or [""])[-1]
     body = report(a.text, usage, lines)
     if not a.post:
         print(body)
         return 0
+    for d in tickets:
+        d["phases"] = phases(d["phases"])
+        d["minutes"] = sum(d["phases"].values()) if d["minutes"] is None else d["minutes"]
+    path = metrics_log.post(metrics_log.run_record(body, fields(a.text, usage, tickets, lane, nums)))
     status = next(i for i in pages(f"issues?state=open&labels={STATUS}") if "pull_request" not in i)
-    print(api(f"issues/{status['number']}/comments", "POST", {"body": body})["html_url"])
+    if path:
+        print(f"{path} on the branch {metrics_log.BRANCH}")
+    else:                                                       # no push went through: the old way, no report lost
+        print(api(f"issues/{status['number']}/comments", "POST", {"body": body})["html_url"])
     fresh = api(f"issues/{status['number']}")["body"]          # other runs change the body too: read it just before
     api(f"issues/{status['number']}", "PATCH", {"body": counted(fresh)})
     return 0

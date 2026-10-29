@@ -27,7 +27,7 @@ def sneaking(server):
 def test_two_sneak_clicks_and_one_click_give_three_sites_built_in_click_order():
     server, g = line_map()
     sneaking(server)
-    g.stock["wood"] = 75
+    g.stock["wood"] = 3 * build.price(g, "HOUSE")["wood"]
     click(server, g, 9, True)
     assert len(g.sites) == 1 and server.chosen                         # the choice stays
     click(server, g, 21, True)
@@ -49,7 +49,7 @@ def test_two_sneak_clicks_and_one_click_give_three_sites_built_in_click_order():
 def test_a_sneak_click_with_too_few_resources_says_so_and_keeps_the_choice():
     server, g = line_map()
     sneaking(server)
-    g.stock["wood"] = 30
+    g.stock["wood"] = build.price(g, "HOUSE")["wood"] + 5
     click(server, g, 9, True)
     click(server, g, 21, True)
     assert len(g.sites) == 1 and g.stock["wood"] == 5 and server.chosen

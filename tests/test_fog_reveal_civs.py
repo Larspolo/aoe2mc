@@ -1,10 +1,14 @@
-"""The enemy buildings that two civilizations see under the fog of war (civs.REVEAL, fog.revealed, #2311): the Mapuche
-see the enemy castles at any distance, the Vietnamese the enemy start town centers at the start of the game."""
+"""The enemy buildings that a civilization sees under the fog of war (civs.REVEAL, fog.revealed, #2311): here the
+Mapuche see the enemy castles at any distance, the Vietnamese the enemy start town centers at the start of the game
+(own values of the test, in place of the key "reveal" of game/data/civs.jsonl)."""
 import os
 import sys
 import types
 
+import pytest
+
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "game"))
+import civs  # noqa: E402
 import fog  # noqa: E402
 import gather  # noqa: E402
 
@@ -12,6 +16,11 @@ T = 4
 OWN, FOE = "00000000-0000-0000-0000-0000000000a1", "00000000-0000-0000-0000-0000000000b1"
 CASTLE = {"kind": "building", "name": "CASTLE", "player": 2, "footprint": [100 * T, 100 * T, 104 * T, 104 * T]}
 TC = {"kind": "building", "name": "TOWN_CENTER", "player": 2, "footprint": [80 * T, 20 * T, 84 * T, 24 * T]}
+
+
+@pytest.fixture(autouse=True)
+def reveal(monkeypatch):
+    monkeypatch.setattr(civs, "REVEAL", {"MAPUCHE": [("CASTLE", False)], "VIETNAMESE": [("TOWN_CENTER", True)]})
 
 
 def bare(civ, objects=(CASTLE, TC)):

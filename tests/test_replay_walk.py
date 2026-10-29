@@ -45,7 +45,7 @@ def test_a_move_walks_on_a_free_path_at_the_walk_speed():
     assert not set(cells) & house and all(r.map.free(*c) for c in cells)
     steps = [math.dist(a, b) for a, b in zip([(10, 42)] + cells, cells)]
     assert all(s <= 1.5 for s in steps)
-    assert end == pytest.approx(1 + sum(steps) / (0.8 * 4), abs=0.2)   # 0.8 tiles per second
+    assert end == pytest.approx(1 + sum(steps) / (replay.SPEEDS["VILLAGER"] * 4), abs=0.2)   # tiles per second
     assert r.units[7].pos[0] == 42.5 and not r.moving
 
 

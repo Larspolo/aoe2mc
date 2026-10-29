@@ -24,15 +24,17 @@ def test_each_unit_and_technology_has_a_short_help_line():
     assert all(0 < len(h) <= 50 for h in train.HELP.values())
 
 
-def test_lore_sends_the_help_of_padded_archer_armor_for_its_book_and_its_gray_item():
+def test_lore_sends_the_help_of_each_item_for_its_item_and_its_gray_item():
     g = Log()
     train.lore(g)
     sent = [unquote(c) for c in g.log]
     assert len(sent) == 2 * len(train.HELP) and all(c.startswith("aoe lore ") for c in g.log)
-    for material in ("book", build.LOCKED):
-        assert f"aoe lore {material} Padded Archer Armor Archers +1 melee armor, +1 pierce armor." in sent
-    assert sent.index("aoe lore gray_dye Man-at-Arms Upgrades militia to man-at-arms.") > \
-        sent.index("aoe lore gray_dye Man-at-Arms Infantry. Strong vs. eagles, buildings.")
+    line = {(name, m): f"aoe lore {m} {train.ITEMS[name][2]} {train.HELP[name]}"
+            for name in train.HELP for m in (train.ITEMS[name][1], build.LOCKED)}
+    assert set(line.values()) <= set(sent)
+    for name in train.HELP:                                            # the gray item of an upgrade comes last
+        if name.endswith("_UPGRADE") and name[:-8] in train.HELP:
+            assert sent.index(line[name, build.LOCKED]) > sent.index(line[name[:-8], build.LOCKED]), name
 
 
 @pytest.mark.parametrize("kind", [None, "paper"])
