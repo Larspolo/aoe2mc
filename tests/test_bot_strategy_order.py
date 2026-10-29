@@ -3,7 +3,6 @@ technology, then the upgrade of its unit line, then a wave of soldiers. Fake ser
 test_bot_gather."""
 import re
 
-import pytest
 from test_bot_attack import orders, steps
 from test_bot_gather import bot_map
 
@@ -47,7 +46,6 @@ def queued(b):
     return [e["name"] for q in b.g.queues.values() for e in q]
 
 
-@pytest.mark.xfail(strict=True, reason="#4206: a Blacksmith technology takes the resources of the economy technology")
 def test_the_bot_researches_its_strategy_in_order():
     server, me, b = strategy()
     for name in ["DOUBLE_BIT_AXE", "FORGING", "MAN_AT_ARMS_UPGRADE"]:
