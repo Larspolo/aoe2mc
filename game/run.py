@@ -909,19 +909,59 @@ def ctrl_c():
 
 
 def campaign(folder, number=None):
-    """The folder of a converted campaign (campaign.json, #3505) -> (world folder, name, "Scenario N: <name>") of
-    scenario N, default the first converted one (#3506). A wrong or not converted N stops with the open ones."""
+    """The folder of a converted campaign (campaign.json, #3505) -> (world folder, name, "Scenario N: <name>", N) of
+    scenario N, default the first open one of progress.json (#3507), else the first converted one (#3506). A wrong or
+    not converted N stops with the open ones."""
     with open(os.path.join(folder, "campaign.json"), encoding="utf-8") as f:
         index = json.load(f)
     open_ = [s for s in index["scenarios"] if s.get("converted", True)]
+    if number is None:                               # the lowest scenario that is not won: its earlier ones are won
+        won = set(progress(folder))
+        number = next((s["number"] for s in sorted(open_, key=lambda s: s["number"]) if s["number"] not in won), None)
     pick = next((s for s in open_ if number is None or s["number"] == number), None)
     if pick is None:
         sys.exit(f"--scenario {number}: no converted scenario {number} in {index['name']}. Open scenarios: "
                  + ", ".join(f"{s['number']} ({s['name']})" for s in open_))
-    return os.path.join(folder, pick["world"]), index["name"], f"Scenario {pick['number']}: {pick['name']}"
+    return os.path.join(folder, pick["world"]), index["name"], f"Scenario {pick['number']}: {pick['name']}", pick["number"]
 
 
-def main(argv=None):
+def progress(folder):
+    """The numbers of the won scenarios of a campaign folder (progress.json, #3507)."""
+    try:
+        with open(os.path.join(folder, "progress.json"), encoding="utf-8") as f:
+            return json.load(f).get("won", [])
+    except FileNotFoundError:
+        return []
+
+
+def advance(folder, number, won):
+    """The end of scenario number of a campaign (#3507): a victory goes into progress.json and gives the next
+    converted scenario, a loss gives the same one again. None: the last scenario is won."""
+    if not won:
+        return number
+    done = sorted(set(progress(folder)) | {number})
+    with open(os.path.join(folder, "progress.json"), "w", encoding="utf-8") as f:
+        json.dump({"won": done}, f)
+    with open(os.path.join(folder, "campaign.json"), encoding="utf-8") as f:
+        later = [s["number"] for s in json.load(f)["scenarios"] if s.get("converted", True) and s["number"] > number]
+    return min(later, default=None)
+
+
+def fresh(folder, world):
+    """Each start of a campaign scenario plays the converted world, not the one of an earlier game: the first start
+    keeps a copy in <folder>/.start, a later start puts it back (#3507)."""
+    keep = os.path.join(folder, ".start", os.path.basename(world))
+    if os.path.isdir(keep):
+        restore(keep, world)
+    else:
+        shutil.copytree(world, keep, ignore=shutil.ignore_patterns(*KEEP))
+
+
+PAUSE = 5                                            # seconds to read the end title before the server stops
+
+
+def main(argv=None, scenario=None):
+    """scenario: the next scenario of a campaign, after the end of one (#3507)."""
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0].strip(),
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("world")
@@ -1026,10 +1066,15 @@ def main(argv=None):
     import train
     if min(train.STARTS[a.age]["ages"], 3) > train.STARTS[a.end_age]["ages"]:   # post-imperial is the Imperial Age
         sys.exit(f"--age {a.age} is after --end-age {a.end_age}: the game must start in or before its last age")
-    titles = None
+    if scenario is not None:                         # the next scenario of the campaign starts fresh
+        a.scenario, a.load, state = scenario, None, None
+    titles, folder, after = None, None, None
     if not os.path.isfile(os.path.join(a.world, "level.dat")) and os.path.isfile(os.path.join(a.world, "campaign.json")):
-        a.world, *titles = campaign(a.world, a.scenario)
+        folder = a.world
+        a.world, *titles, number = campaign(folder, a.scenario)
         a.mode = "scenario"
+        if not a.load:
+            fresh(folder, a.world)
     if not os.path.isfile(os.path.join(a.world, "level.dat")):
         sys.exit(f"no level.dat in {a.world}")
     teams = None
@@ -1066,9 +1111,16 @@ def main(argv=None):
                          **{k: getattr(a, k) for k in SETTINGS} | {"civ": civ, "teams": teams, "handicap": handicap})
             if not getattr(g, "ended", None):
                 return
-            print(f"The game ended ({g.ended}). The server stays up: type commands, Ctrl-C stops it.",
-                  file=sys.stderr)                   # the player can look around, as after a replay (#2051)
-        while commands.is_alive():                   # the end of stdin stops the server; a short join keeps Ctrl-C
+            if folder:                               # a campaign goes on with the next or the same scenario (#3507)
+                after = advance(folder, number, g.ended == "Victory")
+                game.command("title @a title " + json.dumps("Campaign complete") if after is None else
+                             "say " + json.dumps(f"Scenario {after} starts. Join again.")[1:-1])
+                time.sleep(PAUSE)
+                game.g = None                        # no save of an ended scenario
+            else:
+                print(f"The game ended ({g.ended}). The server stays up: type commands, Ctrl-C stops it.",
+                      file=sys.stderr)               # the player can look around, as after a replay (#2051)
+        while not (folder and a.play) and commands.is_alive():                   # the end of stdin stops the server; a short join keeps Ctrl-C
             commands.join(0.5)
     except (KeyboardInterrupt, EOFError):
         pass
@@ -1079,6 +1131,8 @@ def main(argv=None):
         if state:
             print(f"Saved the game: python3 game/run.py {a.world} --play --load "
                   f"{savegame.write(savegame.folder(a.world), a.world, state)}", file=sys.stderr)
+    if after is not None:
+        return main(argv, scenario=after)
 
 
 if __name__ == "__main__":
