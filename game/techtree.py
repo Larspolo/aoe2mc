@@ -138,7 +138,7 @@ def item(g, building, name):
     _, material, label = train.ITEMS.get(name, (0, "barrier", build.pretty(name)))
     if civs.missing(g, name):
         return GRAY, label, f"Not in the tech tree of {build.pretty(civs.real(g) or 'your civilization')}"
-    return material, label, "\n".join([cost] + [train.HELP[name]] * bool(train.HELP.get(name)))
+    return material, label, cost                                    # the plugin adds the help line (train.lore, #3729)
 
 
 def page(g, player, building, number=0, civ=None):
