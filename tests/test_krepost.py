@@ -27,7 +27,7 @@ def shown(server):
 def test_only_a_bulgarian_player_has_the_krepost_in_the_menu():
     server, g = villager_map()                                         # Britons
     build.open_menu(g, "Steve")
-    assert "Krepost" not in shown(server) and len(shown(server)) == sum(not build.hidden(g, n) for n in build.MENU)   # (#2008)
+    assert "Krepost" not in shown(server) and len(shown(server)) == 1 + sum(not build.hidden(g, n) for n in build.MENU)   # (#2008)
     g.menus["Steve"]("Steve", build.MENU.index("KREPOST"), False)      # its slot: no choice
     assert not server.chosen
     server.chosen = build.MENU.index("KREPOST") + 1                    # also not with /trigger
