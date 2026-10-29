@@ -752,7 +752,8 @@ def research(g):
 def garrisons(g):
     """The score #g<ref> of aoe_gar of each converted building of a player (the people and the bots) that takes a
     garrison: the number of units inside (garrison.holders, g.garrisons), for the condition "Units Garrisoned" of the
-    triggers (aoe2mc.trigger_files, #2714). One command per change: a unit goes in, all come out, the building falls."""
+    triggers (aoe2mc.trigger_files, #2714). One command per change: a unit goes in, all come out, the building falls.
+    The own transport ships and rams count their cargo the same way (transport.carriers, #3780)."""
     sent = vars(g).setdefault("garrison_sent", {})
     for x in [g, *(s.g for s in g.bots)]:
         for rect, o in sorted(garrison.holders(x).items()) if "objects" in x.data else ():
@@ -760,6 +761,11 @@ def garrisons(g):
             if o.get("ref") is not None and sent.get(o["ref"], 0) != n:   # the objective starts with no score: 0
                 g.command(f"scoreboard players set #g{o['ref']} aoe_gar {n}")
                 sent[o["ref"]] = n
+    for ref, ship in sorted(transport.carriers(g).items()):
+        n = len(vars(g).get("cargo", {}).get(ship, ()))
+        if sent.get(ref, 0) != n:
+            g.command(f"scoreboard players set #g{ref} aoe_gar {n}")
+            sent[ref] = n
 
 
 def fallen(g):
