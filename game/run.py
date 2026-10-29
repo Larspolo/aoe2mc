@@ -278,6 +278,7 @@ class Game:
     people: the people of a game (`--people`); sides: Minecraft name -> AoE2 player (#1310)."""
     people = 1
     spectators = frozenset()                         # the Minecraft players without a side (#2898)
+    joined = frozenset()                             # the Minecraft players who joined (start_on_join, #3314)
 
     def __init__(self, world, version=mc_check.DEFAULT_VERSION, timeout=300, server="paper"):
         self.world, self.version, self.timeout, self.kind = os.path.abspath(world), version, timeout, server
@@ -344,6 +345,7 @@ class Game:
         for line in new:
             if m := JOINED.search(line):
                 self.command(f"op {m.group(1)}")
+                self.joined = {*self.joined, m.group(1)}
                 self.side(m.group(1))
 
     def side(self, name):
@@ -576,9 +578,12 @@ def scenario_modes(settings, data):
 
 
 def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attack="10:00", reveal="normal", people=1,
-         speed=1.0, state=None, **settings):
+         speed=1.0, state=None, wait=False, **settings):
     """state: the saved state of the players (savegame.dump) for a loaded game (#2255).
+    wait: freeze the ticks now, and start the game when the people joined (start_on_join, #3314).
     settings: the AoE2 lobby settings (SETTINGS); a missing one has its default."""
+    if wait:                                         # the trigger timers start at the join, not at the load
+        game.command("tick freeze")
     import gather, train
     if unknown := sorted(set(settings) - set(SETTINGS)):
         raise TypeError(f"play() has no setting {', '.join(unknown)} (SETTINGS)")
@@ -714,10 +719,25 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
         g.speed = speed
         for h in savegame.sides(g)[1:]:              # the bots keep the game time of player 1 (#3513)
             h.speed = speed
+    if wait:
+        import savegame
+        start_on_join(game, savegame.sides(g), people)
     g.run(seconds)
     if g.ended:
         unveil(g)
     return g
+
+
+def start_on_join(game, sides, people, sleep=time.sleep):
+    """As in AoE2 DE, the game starts when all people are there (#3314): play froze the ticks (the `schedule` timers
+    of the scenario triggers, the mobs) at the start of play(). Unfreeze them after the join of the people, and start
+    the game clock of each side (Gather.t0) then, so that the triggers, the treaty and the bots agree."""
+    print(f"The game starts when {people} {'person' if people == 1 else 'people'} joined.", file=sys.stderr)
+    while len(game.joined) < people:
+        sleep(0.5)
+    game.command("tick unfreeze")
+    for h in sides:
+        h.t0 = h.clock()
 
 
 def unveil(g):
@@ -969,7 +989,7 @@ def main(argv=None):
         if a.play:
             with open(a.log, "w") if a.log else contextlib.nullcontext() as log:
                 g = play(game, a.world, log, a.cheats, a.bot, bot_attack=a.bot_attack, reveal=a.reveal,
-                         people=a.people, speed=a.speed, state=state,
+                         people=a.people, speed=a.speed, state=state, wait=not a.replay,
                          **{k: getattr(a, k) for k in SETTINGS} | {"civ": civ, "teams": teams, "handicap": handicap})
             if not getattr(g, "ended", None):
                 return
