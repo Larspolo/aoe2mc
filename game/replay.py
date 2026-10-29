@@ -121,6 +121,7 @@ PATH_FAR = 200              # cells per block of straight way that the search of
 ROWS = table.load("replay.jsonl")
 RESEARCH_S = aoe2mc.RESEARCH_S | {r["label"]: r["time"] for r in table.load("train.jsonl")      # the book items: each
                                   if r.get("item") == "book" and "time" in r}                       # research (#3738)
+TECHS = {r["label"]: r["name"] for r in table.load("train.jsonl") if r.get("item") == "book"}   # text -> name (#3785)
 SPEEDS = {r["name"]: r["walk"] for r in ROWS if "walk" in r}
 AGES = tuple(r["name"] for r in sorted((r for r in ROWS if "age" in r), key=lambda r: r["age"]))   # (#1067)
 SOCIETY = tuple(r["name"] for r in ROWS if r.get("society"))      # the buildings of the Society tab (#1086)
@@ -404,6 +405,7 @@ class Replay:
         self.troops, self.fallen = {}, {}       # player -> {military unit name: live count, count lost} (#3695)
         self.censused = False                   # a census counted the live units (the base of the units lost)
         self.reached, self.researched = {}, {}  # player -> {age: game time (ms)}, researched technologies (#1067)
+        self.learned = {}                       # player -> [(game time ms, technology name)] (#3785)
         self.vills, self.vhigh = {}, {}         # player -> live villagers (est.), the highest count (#1086)
         self.graph = {}                         # value index -> the shown rows of its graph (#3448)
         self.samples, self.minute = {}, -1      # player -> [(minute, pop, villagers, military, resources)], last minute (#3446)
@@ -448,6 +450,11 @@ class Replay:
     def learn(self, e):
         """Count a research of the timeline for the summary (#1067)."""
         self.researched[e.get("player")] = self.researched.get(e.get("player"), 0) + 1
+        self.learned.setdefault(e.get("player"), []).append((e.get("time", 0), TECHS.get(e["technology"], e["technology"])))
+
+    def upgrades(self, p, t):
+        """The technology names that player p researched up to game time t (ms), in time order (#3785)."""
+        return [name for time, name in self.learned.get(p, ()) if time <= t]
 
     def villager(self, p, n, live=None):
         """n more live villagers of player p, or the `live` count of the census: keep the highest count (#1086)."""

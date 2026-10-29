@@ -777,8 +777,16 @@ def start_on_join(game, sides, people, sleep=time.sleep):
         sleep(0.5)
     import gather
     game.command("tick unfreeze")
+    show_titles(game)                                # nobody saw a title before the join (#3772)
     for h in sides:                                                    # a loaded game goes on at its saved game time (#3377)
         h.t0 = h.clock() - vars(game).get("loaded_seconds", 0.0) / (gather.NORMAL * getattr(h, "speed", 1.0))
+
+
+def show_titles(game):
+    """The campaign name as title and "Scenario N: name" as subtitle to all players online (#3506)."""
+    if titles := vars(game).get("titles"):
+        game.command(f"title @a subtitle {json.dumps(titles[1])}")
+        game.command(f"title @a title {json.dumps(titles[0])}")
 
 
 def unveil(g):
@@ -1173,9 +1181,9 @@ def main(argv=None, scenario=None):
             print(f"{bench(game, a.bench):.0f} commands per second through RCON")
             return
         commands = console(game)                     # type commands at any time (#1777)
-        if titles:                                   # the campaign and the scenario name (#3506)
-            game.command(f"title @a subtitle {json.dumps(titles[1])}")
-            game.command(f"title @a title {json.dumps(titles[0])}")
+        game.titles = titles or ()                   # the campaign and the scenario name (#3506)
+        if not (a.play and not a.replay):            # else start_on_join sends them after the join (#3772)
+            show_titles(game)
         if a.replay:                                 # after the end the player can look around (#978)
             replay(game, a.world, a.speed, a.start, a.follow, view=a.view or None, replay_file=a.replay_file,
                    camera=a.camera == "auto")
