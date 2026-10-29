@@ -1197,6 +1197,7 @@ class Replay:
                     self.added -= 1
                 out += [f"aoe minimap unbuild {rect[0]} {rect[2]}"] * (self.pov is None and self.drawn.pop(rect, 0) != 0)
                 out += self.fall(rect)
+                out += self.unshelter(rect)
             elif (v := self.unit(i, name, e["player"])) is not None:
                 del self.units[i]
                 self.refs.pop(i, None)
@@ -1210,6 +1211,7 @@ class Replay:
                 self.pop[e["player"]] = max(0, self.pop.get(e["player"], 0) - 1)
                 self.lost[v.player] = self.lost.get(v.player, 0) + (not e.get("free"))   # a scout swap (#3028)
                 out.append(f"kill {v.uuid}")
+                out += self.carried(i, v, e["time"])
         return out
 
     def fall(self, rect):
@@ -2340,6 +2342,31 @@ class Replay:
         self.relics[ref].update(monk=None, home=rect, player=p, home_t=t)
         return [f"kill @e[type=item_display,tag=aoe_relic_{ref}]"]
 
+    def drop(self, ref, cell):
+        """The commands of relic ref that drops on the block cell (monk.lay: a pot block, #4013)."""
+        cell, cmds = monk.lay(self, ref, cell)
+        self.relics[ref].update(at=cell, monk=None, home=None)
+        self.relics[ref].pop("player", None)
+        return cmds
+
+    def carried(self, i, v, t):
+        """The commands of dead monk i: its relic drops at its replay position at game time t (AoE2, #4013)."""
+        self.fetching.pop(i, None)
+        self.homing.pop(i, None)
+        x, _, z = self.at(v, t)
+        return [c for ref, r in self.relics.items() if r["monk"] == i for c in self.drop(ref, (math.floor(x), math.floor(z)))]
+
+    def unshelter(self, rect):
+        """The commands of the relics in the fallen monastery rect: one pot on each free cell at its door (#4013)."""
+        out = []
+        for ref, r in self.relics.items():
+            if r["home"] == rect:
+                taken = {q["at"] for q in self.relics.values() if q["at"]}
+                ring = sorted(self.map.front(rect))
+                out += self.drop(ref, next((c for c in ring + sorted(self.map.around(set(ring))) if c not in taken),
+                                           (rect[0], rect[2])))
+        return out
+
     def relic_count(self, p):
         """The relics in the monasteries of player p (#4010)."""
         return sum(r["home"] is not None and r.get("player") == p for r in self.relics.values())
@@ -2699,7 +2726,7 @@ class Replay:
                         f"scoreboard players display numberformat P{p} {POP} fixed {json.dumps(text(str(self.pop[p])))}"]
         return out
 
-    def census(self):
+    def census(self, t=math.inf):
         """With the fights of the plugin (ai) a unit dies without a timeline event (#787): count the live units of
         each player with the entity selector of their tags (a dead entity does not match). The chunks are loaded
         (run.py --replay: forceload)."""
@@ -2728,6 +2755,9 @@ class Replay:
                     self.fallen.setdefault(p, {})[name] = self.fallen.get(p, {}).get(name, 0) + was - n
                 kept[name] = n
         self.censused = True
+        for i in {r["monk"] for r in self.relics.values()} - {None}:     # a monk with a relic died in a fight (#4013)
+            if (v := self.units.get(i)) and "Test passed" not in (self.game.command(f"execute if entity {v.uuid}") or ""):
+                self.send(self.carried(i, v, t))
 
     def workers(self, p):
         """The villagers of player p in self.units, by uuid: a gather point can hold the same unit."""
@@ -3026,7 +3056,7 @@ class Replay:
              self.overview())
         if to is None:                                              # not again after a jump back (#2949)
             send(replay_input.fight_lines(self.control["fights"], self.control["players"]))
-        census = self.census if bar and self.ai else lambda: None
+        census = self.census if bar and self.ai else lambda t=0: None
         watching = self.control["camera"]                           # the camera state of the last poll (#3369)
         look = self.look_around if bar and self.ai else lambda: None          # as census: a server of run.py --replay
         while k < len(events) or self.moving or self.builds or self.charging or self.idle:
@@ -3104,7 +3134,7 @@ class Replay:
             if int(now) // 1000 != shown:                              # at most once per game second
                 shown = int(now) // 1000
                 if clock() - counted >= CENSUS:
-                    census()
+                    census(now)
                     look()
                     counted = clock()
                 send(self.clock_commands(now, end, self.speed) + self.score_commands(now) + self.overview(join=True))
@@ -3131,7 +3161,7 @@ class Replay:
                     m, s = divmod(e["time"] // 1000, 60)
                     log(f"{m:02d}:{s:02d} {e['kind']} {e.get('name') or e.get('age') or ''} "
                         f"player {e.get('player')}: {len(cmds)} commands")
-        census()
+        census(end)
         self.send(self.expire(math.inf) + self.panel(math.inf))
         send(self.clock_commands(end, end, speed, done=True) + self.score_commands() + self.end_commands(end) +
              self.summary_commands() + self.timeline_commands(end) +
