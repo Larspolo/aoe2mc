@@ -55,5 +55,5 @@ def test_repo_base(tmp_path):
     (tmp_path / "CLAUDE.md").write_text("x" * 40 + "\n@docs/L.md\n")
     (tmp_path / "docs").mkdir()
     (tmp_path / "docs" / "L.md").write_text("y" * 400)
-    assert tokens.repo_base(tmp_path) == (52 + 400) / 4
+    assert tokens.repo_base(tmp_path) == (52 + 400) / tokens.DOC_CHARS
     assert tokens.repo_base(tmp_path / "docs") == 0

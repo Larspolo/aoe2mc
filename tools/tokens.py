@@ -38,6 +38,7 @@ from datetime import datetime
 
 W_IN, W_5M, W_1H, W_READ, W_OUT = 1.0, 1.25, 2.0, 0.1, 5.0
 CHARS = 4                    # characters per token (an estimate: the transcript has no token count of a result)
+DOC_CHARS = 2.5              # characters per token of the memory files (measured with /context, 2026-10-29, #3833)
 IMAGE = 1600                 # tokens of an image in a tool result (an estimate)
 # API list prices in $ per million tokens (input, output, cache read; a cache write is the input price × W_5M or W_1H),
 # 2026-10. A second row is the price of a prompt above LONG tokens.
@@ -366,7 +367,7 @@ def repo_base(root="."):
             n += len(open(os.path.join(root, inc)).read())
         except OSError:
             pass
-    return n / CHARS
+    return n / DOC_CHARS
 
 
 def load(path):
