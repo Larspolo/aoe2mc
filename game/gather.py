@@ -1559,7 +1559,8 @@ class Gather:
             x0, x1, z0, z1 = site["footprint"]
             self.mark(name, {(x0, z0), (x1 - 1, z1 - 1)})
         elif self.selected and (cell := self.map.pick_ground(eye, d)) and self.map.free(*cell):
-            self.walk_to(name, cell)                                   # the move order of AoE2 (#1368)
+            if not add_waypoint(self, name, cell):                     # a sneak click adds a waypoint (#3515)
+                self.walk_to(name, cell)                               # the move order of AoE2 (#1368)
             self.order_voice()
         elif any(replay.ship(self.soldiers.get(u, "")) for u in self.selected) \
                 and (cell := fleet.pick(self, eye, d)) and self.map.wet(*cell):
@@ -1581,6 +1582,8 @@ class Gather:
                 del table[u]
         for t in [t for t, f in self.farmers.items() if f in units]:
             del self.farmers[t]
+        for u in units & vars(self).get("waypoints", {}).keys():      # a new order ends the waypoints (#3515)
+            del self.waypoints[u]
 
     def end_patrols(self, units):
         """A new order ends the trigger patrols of the units, as in AoE2 DE (#2674): their patrol tags of
@@ -2233,6 +2236,7 @@ class Gather:
                 scenario.resources(self)                               # "Tribute", "Modify Resource" (#2576)
             else:
                 scenario.patrol(self)                                  # the patrols of the players (#3355)
+            waypoint(self)                                             # the next waypoint of a move (#3515)
             stance.arrive(self)                                        # the attack moves: the old stance at the point (#3357)
             follow.tick(self)                                          # the Follow and Guard orders (#3358)
             fog.tick(self)                                             # after the bots: their units too (#1389)
@@ -2251,6 +2255,54 @@ class Gather:
             treaty.tick(self, self.tick * NORMAL)
             record.tick(self, self.tick * NORMAL)                      # the game time of Record Game (#2649)
             time.sleep(max(0.0, self.tick / self.speed - (time.monotonic() - t)))   # a step stays tick game seconds
+
+
+def add_waypoint(g, name, cell):
+    """A sneak right click on the ground adds a waypoint, as the Shift click of AoE2 (#3515). The selected units with
+    no queue walk to cell at once (the first point) and start a queue; the units with a queue get cell at the end of
+    it. g.waypoints: {uuid: [cell, ...]} (the points after the present target), g.waypoint_at: {uuid: target cell}.
+    Returns False without sneak: the click is a normal move order, and walk_to ends the queue (new_order)."""
+    if "passed" not in g.command(f"execute as {name} if predicate {SNEAK}"):
+        return False
+    ways = vars(g).setdefault("waypoints", {})
+    if queued := g.selected & ways.keys():
+        for u in queued:
+            ways[u].append(cell)
+        g.mark(name, {cell})
+    if new := g.selected - ways.keys():
+        out = g.walk_to(name, cell, None if not queued else new)
+        ways.update({u: [] for u in out})
+        g.waypoint_at = vars(g).get("waypoint_at", {}) | out
+    return True
+
+
+def waypoint(g):
+    """The units of a queue walk to its next point when one of them is scenario.NEAR blocks from its present target
+    (#3515). The group of a queue (the units with the same points) walks one leg at a time, in its formation (walk_to,
+    #3414). A dead unit leaves its queue; an empty list ends it."""
+    ways = vars(g).get("waypoints")
+    if not ways:
+        return
+    pos = g.positions(sorted(ways))
+    for u in [u for u in ways if u not in pos]:
+        del ways[u]
+    at = g.waypoint_at
+    groups = collections.defaultdict(set)
+    for u, rest in ways.items():
+        groups[tuple(rest)].add(u)
+    for rest, units in sorted(groups.items(), key=lambda kv: sorted(kv[1])):
+        if not any(u in at and math.dist((pos[u][0], pos[u][2]), (at[u][0] + 0.5, at[u][1] + 0.5)) <= scenario.NEAR
+                   for u in units):
+            continue
+        if not rest:                                                   # the last point: the queue ends
+            for u in units:
+                del ways[u]
+            continue
+        for u in units:                                                # walk_to ends the queue (new_order): keep the rest
+            del ways[u]
+        out = g.walk_to(None, rest[0], units)
+        ways.update({u: list(rest[1:]) for u in units})
+        at.update(out)
 
 
 def reseed(g, entry):
