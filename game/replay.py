@@ -2443,9 +2443,9 @@ class Replay:
         m, s = divmod(round(self.idled.get(p, 0)), 60)
         return f"{m}:{s:02d}"
 
-    def tc_text(self, p):
-        """The idle town center time of player p at the end of the replay as M:SS (#4052)."""
-        m, s = divmod(round(self.tc_idle(p, self.ended)), 60)
+    def tc_text(self, p, t=None):
+        """The idle town center time of player p at game time t (default: the end of the replay) as M:SS (#4052)."""
+        m, s = divmod(round(self.tc_idle(p, self.ended if t is None else t)), 60)
         return f"{m}:{s:02d}"
 
     def army_text(self, p):
@@ -2565,8 +2565,8 @@ class Replay:
     def score_commands(self, t=None):
         """The sidebar commands for the population of each player that changed since the last call (#741). The score
         holder is "P<n>" (a holder name has no space); its display name is the player name in the player color, the
-        age of the player (#805), its estimated resources (#932) and its actions of the last minute at game time t
-        (#3764; no APM part without t). In a team game the score is a team key plus the population, so the sidebar
+        age of the player (#805), its estimated resources (#932) and its actions of the last minute and its idle town center time at game time t
+        (#3764, #4053; no APM and TC part without t). In a team game the score is a team key plus the population, so the sidebar
         shows each team together, and a fixed number format shows the population (#1189)."""
         out, top = [], max((self.team(p) or 0 for p in self.pop), default=0)
         if self.shown is None:
@@ -2575,7 +2575,7 @@ class Replay:
         for p in sorted(self.pop):
             name, color = self.label(p)
             res = " ".join(f"{r[0].upper()} {max(0, v)}" for r, v in self.resources(p).items())
-            apm = "" if t is None else f" · APM {self.apm(p, t)}"
+            apm = "" if t is None else f" · APM {self.apm(p, t)} · TC idle {self.tc_text(p, t)}"
             if self.named.get(p) != (line := f"{name} · {self.ages.get(p, 'Dark')} · {res} (est.){apm}"):
                 out.append(f"scoreboard players display name P{p} {POP} {json.dumps(text(line, color))}")
                 self.named[p] = line
