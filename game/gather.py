@@ -35,6 +35,7 @@ The program sees a click in two statistics: the use of the stick, and "talked to
 villager is an interaction with the entity, not a use of the item). Then it reads the position and the view of
 the player, and finds the villager or the tree on that ray with the data of aoe2mc.json.
 """
+import collections
 import heapq
 import json
 import math
@@ -1550,9 +1551,11 @@ class Gather:
         herd = self.herd()
         army = sorted(u for u in units - boats - herd if u in self.soldiers)
         pos = self.positions(army) if len(army) > 1 else {}            # 2 or more: the AoE2 line formation (#3414)
-        if len(pos) > 1:
-            out |= replay.formation_cells(self.map.free, [(u, p[0], p[2], rank(self.soldiers[u]), False)
-                                                          for u, p in pos.items()], (cell[0] + 0.5, cell[1] + 0.5), "Line", self.map.T,
+        if len(pos) > 1:                                               # the most common formation of the group (#3416)
+            kind = collections.Counter(stance.formation(self, u) for u in pos).most_common(1)[0][0]
+            weak = (lambda u: rank(self.soldiers[u]) >= 2) if kind == "Box" else (lambda u: False)
+            out |= replay.formation_cells(self.map.free, [(u, p[0], p[2], rank(self.soldiers[u]), weak(u))
+                                                          for u, p in pos.items()], (cell[0] + 0.5, cell[1] + 0.5), kind, self.map.T,
                                                           long=True)
         # a group in formation walks at the speed of its slowest unit (#3415): tiles per AoE2 second
         pace = min(ai.walk_speed(self.soldiers[u], 1) * train.speed(self, self.soldiers[u], u) for u in pos) if len(pos) > 1 else None

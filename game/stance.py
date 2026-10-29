@@ -24,21 +24,31 @@ PATROL = STOP + 1                                                  # slot: patro
 ATTACK_MOVE = PATROL + 1                                           # slot: walk to a clicked point, attack on the way (#3357)
 FOLLOW = ATTACK_MOVE + 1                                           # slot: follow a clicked unit (#3358)
 GUARD = FOLLOW + 1                                                 # slot: guard a clicked unit or building (#3358)
+FORMATION = 18                                                     # third row: the four formations of AoE2 (#3416)
+FORMATIONS = (("Line", "rail", "Units in rows across the walk"),
+              ("Box", "oak_fence", "Melee units around the ranged and weak units"),
+              ("Staggered", "chain", "Rows with double gaps, against area damage"),
+              ("Flank", "arrow", "Two groups side by side with a gap"))
 
 
 def stance(g, uuid):
     return getattr(g, "stances", {}).get(uuid, "aggressive")
 
 
+def formation(g, uuid):
+    return getattr(g, "formations", {}).get(uuid, "Line")
+
+
 def items(g, uuid):
-    now = stance(g, uuid)
+    now, form = stance(g, uuid), formation(g, uuid)
     return [(i, item, name, text + "\nNow" * (s == now)) for i, (s, item, name, text) in enumerate(ITEMS)] + \
         [(TYPE, "spyglass", "Select All of the Type", "The units of this type near it"),
          (STOP, "barrier", "Stop", "Stops the units at once"),
          (PATROL, "compass", "Patrol", "Walk between here and a point; attack the enemies on the way"),
          (ATTACK_MOVE, "iron_axe", "Attack Move", "Walk to a point; attack each enemy on the way"),
          (FOLLOW, "lead", "Follow", "Walk after an own unit and stay near it"),
-         (GUARD, "bell", "Guard", "Stay near an own unit or building; attack the enemies near it")]
+         (GUARD, "bell", "Guard", "Stay near an own unit or building; attack the enemies near it")] + \
+        [(FORMATION + i, item, k, text + "\nNow" * (k == form)) for i, (k, item, text) in enumerate(FORMATIONS)]
 
 
 def open_menu(g, player, uuid):
@@ -56,6 +66,8 @@ def open_menu(g, player, uuid):
             vars(g).setdefault("ordering", {})[p] = "attack_move"
         elif slot in (FOLLOW, GUARD):
             vars(g).setdefault("ordering", {})[p] = "follow" if slot == FOLLOW else "guard"   # the next click picks the target
+        elif FORMATION <= slot < FORMATION + len(FORMATIONS):
+            form(g, p, FORMATIONS[slot - FORMATION][0])
         else:
             return
         chest.close(g, p)
@@ -71,6 +83,16 @@ def put(g, s):
             g.stances.pop(u, None) if s == "aggressive" else g.stances.update({u: s})
     if getattr(g, "bar", None) in g.selected:
         bossbar.show(g, g.bar)
+
+
+def form(g, player, kind):
+    """Give each selected military unit the formation kind of its next walks (Gather.walk_to); Line is no entry."""
+    import json
+    f = vars(g).setdefault("formations", {})
+    for u in sorted(g.selected):
+        if u in g.soldiers:
+            f.pop(u, None) if kind == "Line" else f.update({u: kind})
+    g.command(f"title {player} actionbar " + json.dumps({"text": f"Formation: {kind}"}))
 
 
 def stop(g):

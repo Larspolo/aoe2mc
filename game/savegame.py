@@ -38,7 +38,8 @@ ORDERS = ("patrols", "trigger_attributes", "trigger_costs",            # scenari
           "trigger_trains", "trigger_civs",                            # train locations (#2865), civilization names (#2905),
           "unit_values",                                               # the values of single units (#3083)
           "attack_moves",                                              # stance.py: the attack moves and the old stances (#3357)
-          "follows")                                                   # follow.py: the Follow and Guard orders (#3358)
+          "follows",                                                   # follow.py: the Follow and Guard orders (#3358)
+          "formations")                                                # stance.py: the formations of the units (#3416)
 ROUTES = ("trade", "trebs")                                            # trade.py, trebuchet.py: as OPTIONAL (#2413)
 CHEATS = (                                                             # game/cheats.py: the cheats that the player
     "aegis",                                                           # turned on (#2533)
