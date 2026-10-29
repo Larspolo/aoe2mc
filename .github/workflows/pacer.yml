@@ -43,13 +43,11 @@ jobs:
           GIT_AUTHOR_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
           GIT_COMMITTER_NAME: github-actions[bot]
           GIT_COMMITTER_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
+          # The quota read of the first account (`usage.read_usage`). All secrets: `tools/pacer.py accounts()` finds each
+          # account in them (`PACER_URL_<TASK>`, and `CLAUDE_CODE_OAUTH_TOKEN_<NAME>`, `PACER_URL_<NAME>_<TASK>`
+          # of another account, #4237): a new account needs only its secrets.
           CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          PACER_URL_MAIN: ${{ secrets.PACER_URL_MAIN }}
-          PACER_TOKEN_MAIN: ${{ secrets.PACER_TOKEN_MAIN }}
-          PACER_URL_HAIKU: ${{ secrets.PACER_URL_HAIKU }}
-          PACER_TOKEN_HAIKU: ${{ secrets.PACER_TOKEN_HAIKU }}
-          PACER_URL_DEEP: ${{ secrets.PACER_URL_DEEP }}
-          PACER_TOKEN_DEEP: ${{ secrets.PACER_TOKEN_DEEP }}
+          ALL_SECRETS: ${{ toJSON(secrets) }}
         run: |
           end=$((SECONDS + 330 * 60))
           while [ $SECONDS -lt $end ]; do

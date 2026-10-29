@@ -11,6 +11,11 @@ while the key `pacer` in `[pacing]` of `steering/system/system.toml` is "workflo
 Each scheduled task has an API trigger (a URL and a token, made in the Claude app). The environment gives them:
 `PACER_URL_MAIN` and `PACER_TOKEN_MAIN` for the main task, `PACER_URL_<LANE>` and `PACER_TOKEN_<LANE>` for each lane of
 `weights` in `[pacing]` of `steering/system/system.toml`. A lane without a URL gets no runs: its tickets wait.
+Several Claude accounts (#4237, `accounts`): another account NAME has `CLAUDE_CODE_OAUTH_TOKEN_<NAME>`,
+`PACER_URL_<NAME>_<TASK>` and `PACER_TOKEN_<NAME>_<TASK>` in `ALL_SECRETS` (all secrets of pacer.yml). Each account
+gets its own quota read, target and claims (`account_targets`); the global limits of `usage.fire` cap the sum of the
+missing runs, and `assign` gives each run to the account with the most missing runs. With one account the plan is the
+same as before.
 Exit 1 when a call fails: the workflow run goes red. HTTP 429 is no failure: a task takes at most 30 starts per hour,
 an account 100 API starts per hour (the docs of the scheduled tasks, "Usage and limits"); the next cycle starts the
 runs that the target still misses. No retry: each call that succeeds starts a run, so a retry can start two. When a
@@ -30,6 +35,7 @@ call fails, the pacer releases the claim of its run.
 import argparse
 import datetime
 import json
+import math
 import os
 import re
 import sys
@@ -50,6 +56,69 @@ def calls(k, runs, env):
         url, token = env.get(f"PACER_URL_{task.upper()}"), env.get(f"PACER_TOKEN_{task.upper()}")
         out += [(task, url, token)] * (n if url and token else 0)
     return out
+
+
+TOKEN = "CLAUDE_CODE_OAUTH_TOKEN"   # the secret of the quota read of an account (`usage.read_usage`)
+
+
+def accounts(env, config=None):
+    """[(name, env)]: the Claude accounts of the secrets (#4237, docs/COLLABORATORS.md part 3). `ALL_SECRETS` (the JSON
+    of all secrets, pacer.yml) adds to `env`. The first account (the first table of `[accounts]`) has the present names
+    (`CLAUDE_CODE_OAUTH_TOKEN`, `PACER_URL_<TASK>`, `PACER_TOKEN_<TASK>`). Another account NAME has
+    `CLAUDE_CODE_OAUTH_TOKEN_<NAME>`, `PACER_URL_<NAME>_<TASK>` and `PACER_TOKEN_<NAME>_<TASK>`: its env gets them under the
+    present names, so that each account reads the same way. A new account needs only its secrets."""
+    import agent_config
+    env = {**env, **json.loads(env.get("ALL_SECRETS") or "{}")}
+    out = [(agent_config.first_account(config), env)]
+    for name in sorted(k[len(TOKEN) + 1:] for k in env if k.startswith(f"{TOKEN}_") and env[k]):
+        own = {TOKEN: env[f"{TOKEN}_{name}"]}
+        for kind in ("PACER_URL_", "PACER_TOKEN_"):
+            own |= {kind + k[len(f"{kind}{name}_"):]: v for k, v in env.items() if k.startswith(f"{kind}{name}_")}
+        out.append((name.lower(), own))
+    return out
+
+
+def has_url(env, task):
+    """True when `env` (of one account) has the URL and the token of the API trigger of `task`."""
+    return bool(env.get(f"PACER_URL_{task.upper()}") and env.get(f"PACER_TOKEN_{task.upper()}"))
+
+
+def assign(k, runs, missing, weights, has=lambda account, task: True):
+    """[(task, account)]: the K runs of the plan (the lane runs first, then the main runs), one at a time to the account
+    with the most missing runs left (the first one of `missing` on a tie) that has the task (`has`). A run takes its
+    weight in Opus runs from the account. A task that no account has gets no run."""
+    left, out = dict(missing), []
+    for task in [t for t, n in [*runs.items(), ("main", k - sum(runs.values()))] for _ in range(max(n, 0))]:
+        if fit := [a for a in left if has(a, task)]:
+            a = max(fit, key=lambda a: left[a])
+            out.append((task, a))
+            left[a] -= weights.get(task, 1.0)
+    return out
+
+
+def missing_runs(targets, claims):
+    """{account: missing Opus runs}: its target minus its claims, at least 0. An account with no target (a failed quota
+    read) is not in it: it gets no run."""
+    return {a: max(0.0, t - claims.get(a, 0.0)) for a, t in targets.items() if t is not None}
+
+
+def account_targets(reads, comments, now, names, config=None):
+    """(target, {account: missing}, weights): the target for `usage.fire` and the missing runs of each account (#4237).
+    Each account with a quota read gets its own target (`usage.target_runs` with its usage, its burns and the `reserve`
+    of its table in `[accounts]`) and its own claims (the ` account NAME` of the claim refs). The target of `fire` is
+    the claims of all runs plus the sum of the missing runs, so the global limits of `fire` (`max_runs`, `max_fire`,
+    the flow brake, the ready tickets) cap that sum."""
+    import health
+    t = datetime.datetime.fromtimestamp(now, datetime.timezone.utc)
+    refs, weights = health.claim_refs() or [], health.lane_weights(comments)[0]
+    eq = lambda lanes: health.opus_equivalent(sum(lanes.values()), lanes, weights)
+    tables, targets = (usage.CONFIG if config is None else config).get("accounts", {}), {}
+    for name in [n for n in names if n in reads]:
+        burn, burn7 = usage.burns(comments, account=name)
+        r = (tables.get(name) or {}).get("reserve", 0)
+        targets[name] = usage.target_runs(reads[name], now, burn, end=usage.END - r, mid=usage.MID - r, burn7=burn7)
+    missing = missing_runs(targets, {n: eq(health.count_lanes(refs, t, account=n)) for n in names})
+    return eq(health.count_lanes(refs, t)) + sum(missing.values()), missing, weights
 
 
 HEAD = "aoe2mc pacer brief"     # the first line of a brief: the `scheduled` skill looks for it
@@ -91,12 +160,13 @@ def queues(open_all, refs, now, tasks):
                 if i["number"] not in held] for t in sorted(set(tasks))}
 
 
-def brief(issue, comments, name, task, sample, limit=TEXT_MAX, context=CONTEXT):
-    """The fire payload of a run: the lines that the run acts on, then the ticket and its code places as data."""
+def brief(issue, comments, name, task, sample, limit=TEXT_MAX, context=CONTEXT, account=None):
+    """The fire payload of a run: the lines that the run acts on, then the ticket and its code places as data.
+    account: the Claude account of the run (several accounts, #4237), else no `account:` line."""
     import claim
     import ticket_context
     head = "\n".join([HEAD, f"ticket: {issue['number']}", f"claim: {name}", f"lane: {task}", f"usage: {sample}",
-                      f"context: {context}"])
+                      f"context: {context}"] + [f"account: {account}"] * bool(account))
     text = claim.ticket_text(issue, comments)
     places = ticket_context.context(issue.get("body"))
     out = f"{head}\n\n--- ticket (data) ---\n{text}\n\n--- code places (tools/ticket_context.py) ---\n{places}"
@@ -118,7 +188,7 @@ def red_main():
 class Briefs:
     """Takes, claims and writes the ticket of each run that the pacer starts (None: no brief for any run)."""
 
-    def __init__(self, todo, out, now, found, dry=False, hour=None):
+    def __init__(self, todo, out, now, found, dry=False, hour=None, reads=None):
         self.todo, self.given, self.dry, self.hour = None, [], dry, hour or {}
         if "open" not in out or out.get("flow") is not None or not todo or red_main():
             return
@@ -128,9 +198,11 @@ class Briefs:
             print(f"no briefs: {e}", file=sys.stderr)
             return
         self.taken, self.sample = set(), usage.sample_line(found, now, out.get("claims") or 0, None, out.get("lanes"))
+        self.samples = {a: usage.sample_line(u, now, out.get("claims") or 0, None, out.get("lanes"), account=a)
+                        for a, u in (reads or {}).items()}   # the `Usage:` line of each account (#4237)
 
-    def take(self, task):
-        """(number, name, text) of the next free ticket of `task`, claimed for its run, or None."""
+    def take(self, task, account=None):
+        """(number, name, text) of the next free ticket of `task`, claimed for its run (of `account`), or None."""
         import claim
         import dashboard
         for issue in (self.todo or {}).get(task, []):
@@ -142,10 +214,11 @@ class Briefs:
             if self.dry:
                 return n, name, ""
             try:
-                if not claim.claim(n, by=name, tag="" if task == "main" else f" lane {task}"):
+                tag = (f" account {account}" if account else "") + ("" if task == "main" else f" lane {task}")
+                if not claim.claim(n, by=name, tag=tag):
                     continue                            # a run claimed it after the read
-                return n, name, brief(issue, dashboard.pages(f"issues/{n}/comments", 1), name, task, self.sample,
-                                         context=context_limit(task, self.hour))
+                return n, name, brief(issue, dashboard.pages(f"issues/{n}/comments", 1), name, task,
+                                         self.samples.get(account, self.sample), context=context_limit(task, self.hour), account=account)
             except (Exception, SystemExit):             # git or GitHub failed (claim.fail exits): the runs claim
                 self.todo = None                        # themselves; a claim that stays goes stale in 30 minutes
                 self.drop(n, name)
@@ -161,12 +234,13 @@ class Briefs:
         except (Exception, SystemExit):
             pass
 
-    def start(self, task, url, token):
-        """Start one run of `task`, with a brief when a ticket is free. Raises like `send`; then the claim goes back."""
+    def start(self, task, url, token, account=None):
+        """Start one run of `task` (of `account`), with a brief when a ticket is free. Raises like `send`; then the
+        claim goes back."""
         import claim
-        got = self.take(task)
+        got = self.take(task, account)
         if self.dry:
-            print(f"POST {url} ({task})" + (f" #{got[0]}" if got else ""))
+            print(f"POST {url} ({task}{f', account {account}' if account else ''})" + (f" #{got[0]}" if got else ""))
             return
         try:
             answer = send(url, token, got[2] if got else None)
@@ -239,49 +313,79 @@ def main(argv=None, env=os.environ):
     ap.add_argument("--dry-run", action="store_true", help="print the calls, send nothing")
     ap.add_argument("--log", metavar="FILE", help="add the record of this cycle to FILE (one JSON line)")
     a = ap.parse_args(argv)
-    found, now = usage.read_usage(), datetime.datetime.now(datetime.timezone.utc).timestamp()
-    if not found:
+    now, accts = datetime.datetime.now(datetime.timezone.utc).timestamp(), accounts(env)
+    reads, unread = {}, []
+    for i, (name, e) in enumerate(accts):              # one tiny CLI call per account (#4237)
+        try:
+            u = usage.read_usage() if i == 0 else usage.read_usage(token=e[TOKEN])
+        except Exception:                               # a timeout of one account: the others go on
+            u = None
+        if u:
+            reads[name] = u
+        else:
+            unread.append(f"no quota read: account {name}")
+    if not reads:
         sys.exit("no rate_limit_event in the CLI output: start no run")
+    found = next(iter(reads.values()))                 # the quota of the line of `fire`: the first account that read
     status = usage.read_status()                       # one read for both fire calls (#3069)
     burn, burn7 = usage.burns(status[0])
     started = recent_starts(a.log, now) if a.log else {}   # the runs of the last cycles that have no claim yet
-    out = {}
-    k, runs, line = usage.fire(found, now, burn, burn7, status=status, started=started, out=out)
-    todo = calls(k, runs, env)
+    out, envs, many = {}, dict(accts), len(accts) > 1
+    target, missing, weights = (account_targets(reads, status[0], now, list(envs)) if many
+                                else (None, {accts[0][0]: math.inf}, {}))
+    k, runs, line = usage.fire(found, now, burn, burn7, status=status, started=started, out=out, target=target)
+    if many:
+        line += " · accounts " + ", ".join(f"{n} missing {missing[n]:.1f}" if n in missing else f"{n} no read"
+                                           for n in envs)
+    has = lambda acct, task: has_url(envs[acct], task)
+    todo = [(task, envs[acct][f"PACER_URL_{task.upper()}"], envs[acct][f"PACER_TOKEN_{task.upper()}"], acct)
+            for task, acct in assign(k, runs, missing, weights, has)]
     hour = recent_starts(a.log, now, 60) if a.log else {}   # the starts of the last hour: the `context:` line
-    briefs = Briefs(todo, out, now, found, a.dry_run, hour)
+    briefs = Briefs(todo, out, now, found, a.dry_run, hour, reads if many else None)
     skipped = sorted({t for t, n in [*runs.items(), ("main", k - sum(runs.values()))]
-                      if n and not env.get(f"PACER_URL_{t.upper()}")})
-    failed, limited, started = [], set(), dict.fromkeys([*runs, "main"], 0)
-    for task, url, token in todo:
+                      if n and not any(has(acct, t) for acct in missing)})
+    failed, limited, count = [], set(), {}             # limited: (account, task) at the hourly limit
+    started = dict.fromkeys([*runs, "main"], 0)
+
+    def go(task, url, token, acct):
+        briefs.start(task, url, token, acct if many else None)
+        started[task] += 1
+        count[acct, task] = count.get((acct, task), 0) + 1
+
+    for task, url, token, acct in todo:
         if a.dry_run:
-            briefs.start(task, url, token)
-        elif task not in limited:
+            briefs.start(task, url, token, acct if many else None)
+        elif (acct, task) not in limited:
             try:
-                briefs.start(task, url, token)
-                started[task] += 1
+                go(task, url, token, acct)
             except urllib.error.HTTPError as e:
                 if e.code == 429:                       # the hourly limit: do not call this task again now
-                    limited.add(task)
+                    limited.add((acct, task))
                 else:
                     failed.append(f"{task}: HTTP {e.code}")
             except Exception as e:                      # URLError, timeout
                 failed.append(f"{task}: {e}")
-    blocked = sum(1 for t, *_ in todo if t in limited and t != "main") - sum(started[t] for t in limited)
-    if blocked > 0 and "main" not in limited:          # give the room of the blocked lane runs to the main task
-        k2, runs2, _ = usage.fire(found, now, burn, burn7, skip=limited, status=status, started=started)
-        more = calls(min(blocked, k2 - sum(runs2.values())), {}, env)
-        for task, url, token in more:
-            try:
-                briefs.start(task, url, token)
-                started[task] += 1
-            except urllib.error.HTTPError as e:
-                if e.code != 429:
-                    failed.append(f"{task}: HTTP {e.code}")
-                break
-            except Exception as e:
-                failed.append(f"{task}: {e}")
-                break
+    # The room of the blocked lane runs goes to the main task of the same account, up to the main runs of a new plan
+    # without the limited lanes.
+    blocked = {acct: n for acct in envs if (acct, "main") not in limited and (n := sum(
+        1 for t, *_, x in todo if x == acct and t != "main" and (acct, t) in limited) - sum(
+        c for (x, t), c in count.items() if x == acct and (x, t) in limited)) > 0}
+    if blocked:
+        skip = {t for _, t in limited}
+        k2, runs2, _ = usage.fire(found, now, burn, burn7, skip=skip, status=status, started=started, target=target)
+        room = k2 - sum(runs2.values())
+        for acct, n in blocked.items():
+            for task, url, token in calls(min(n, room), {}, envs[acct]):
+                try:
+                    go(task, url, token, acct)
+                    room -= 1
+                except urllib.error.HTTPError as e:
+                    if e.code != 429:
+                        failed.append(f"{task}: HTTP {e.code}")
+                    break
+                except Exception as e:
+                    failed.append(f"{task}: {e}")
+                    break
     if a.dry_run:
         started = {t: sum(1 for x, *_ in todo if x == t) for t in started}
     at, gh = datetime.datetime.now(datetime.timezone.utc), github_limit(env)
@@ -289,16 +393,21 @@ def main(argv=None, env=os.environ):
           + ", ".join(f"{t} {n}" for t, n in runs.items())
           + f". {'Would start' if a.dry_run else 'Started'} " + json.dumps(started)
           + (f", no URL for {', '.join(skipped)}" if skipped else "")
-          + (f", hourly limit: {', '.join(sorted(limited))}" if limited else "")
+          + (f", hourly limit: {', '.join(sorted({t for _, t in limited}))}" if limited else "")
+          + (f", {'; '.join(unread)}" if unread else "")
           + (f", failed: {'; '.join(failed)}" if failed else "")
           + (f", briefs {' '.join(f'#{n}' for n in briefs.given)}" if briefs.given else "") + f". {line}"
           + (f" · GitHub API {gh['used']}/{gh['limit']} (reset {gh['reset']})" if gh else ""))
     if a.log and not a.dry_run:
-        problems = [f"no URL: {t}" for t in skipped] + [f"hourly limit: {t}" for t in sorted(limited)] + failed
+        problems = ([f"no URL: {t}" for t in skipped] + unread
+                    + [f"hourly limit: {t}" + (f" (account {x})" if many else "") for x, t in sorted(limited, key=str)]
+                    + failed)
         try:                                            # the log never stops the starts
             with open(a.log, "a") as f:
                 f.write(json.dumps({**record(at, found, burn, burn7, k, runs, started, line, problems, gh),
-                                    "briefs": briefs.given}) + "\n")
+                                    "briefs": briefs.given}
+                                   | ({"accounts": {x: sum(c for (y, _), c in count.items() if y == x) for x in envs}}
+                                      if many else {})) + "\n")
         except OSError as e:
             print(f"no pacer log: {e}", file=sys.stderr)
     sys.exit(int(bool(failed)))
