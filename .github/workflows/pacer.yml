@@ -2,7 +2,7 @@ name: Pacer
 
 # Starts the autopilot runs that the quota target misses (`tools/pacer.py`, #3193):
 # a script keeps no old rule in memory (the old pacer session fired 4 runs for 8, #3147). Only while `pacer` in
-# `[pacing]` of agent.toml is "workflow" (#3194): another value stops the loop.
+# `[pacing]` of steering/system/system.toml is "workflow" (#3194): another value stops the loop.
 # One run loops for about 5.5 hours (a cycle every 10 minutes), then starts the next run itself: GitHub fires the
 # cron schedules of this repository only a few times per day (dashboard.yml "*/10" ran at 08:43 and 15:31 on
 # 2026-10-28). The schedule only restarts a loop that died. A workflow_dispatch by GITHUB_TOKEN starts a new run.
@@ -52,8 +52,9 @@ jobs:
           end=$((SECONDS + 330 * 60))
           while [ $SECONDS -lt $end ]; do
             git fetch -q --depth 1 origin main && git reset -q --hard FETCH_HEAD   # the newest code and switch
-            python3 -c "import tomllib, sys; sys.exit(tomllib.load(open('agent.toml', 'rb'))['pacing'].get('pacer') != 'workflow')" \
-              || { echo "pacer is not \"workflow\" in agent.toml: stop the loop"; exit 0; }
+            # agent_config joins agent.toml and steering/system/system.toml: a move of [pacing] does not stop the loop (#4266)
+            python3 -c "import sys; sys.path.insert(0, 'tools'); import agent_config as a; sys.exit(a.CONFIG.get('pacing', {}).get('pacer') != 'workflow')" \
+              || { echo "pacer is not \"workflow\" in [pacing] (steering/system/system.toml): stop the loop"; exit 0; }
             if ! python3 tools/pacer.py --log "$RUNNER_TEMP/pacer.jsonl"; then   # a failed call (HTTP 401, 500): red now
               sleep 600                                # the next cycle waits as usual: no fast loop of red runs
               gh workflow run pacer.yml --repo "$GITHUB_REPOSITORY" --ref main
