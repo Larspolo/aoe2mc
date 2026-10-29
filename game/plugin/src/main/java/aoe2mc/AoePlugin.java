@@ -313,6 +313,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     private final Map<UUID, Stats> stats = new HashMap<>();
     private final Ghost ghost = new Ghost(this);
     private final Cheats cheats = new Cheats(this);
+    private final SpecChat specChat = new SpecChat();               // the chat of the spectators (#3554)
     private final Deaths deaths = new Deaths(this);
     private final Alerts alerts = new Alerts(this, AoePlugin::side);   // "under attack" for the team of the target (#1231)
     private final Minimap minimap = new Minimap(this, this::hiddenFor);   // no dot for a hidden unit (#1567)
@@ -1046,6 +1047,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         Bukkit.getScheduler().runTaskTimer(this, sight::tick, Sight.PERIOD, Sight.PERIOD);
         Bukkit.getPluginManager().registerEvents(this, this);
         Bukkit.getPluginManager().registerEvents(cheats, this);
+        Bukkit.getPluginManager().registerEvents(specChat, this);
         Bukkit.getPluginManager().registerEvents(deaths, this);
         Bukkit.getPluginManager().registerEvents(mapTable, this);
         Bukkit.getPluginManager().registerEvents(viewer, this);
