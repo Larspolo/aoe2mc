@@ -2411,7 +2411,7 @@ class Replay:
         """One chat line per player with the values of the AoE2 Society tab (#1086): castles and wonders built (each
         foundation once, as build()), tribute sent and received (all resources), and the highest villager count
         (est.: the start and the trained villagers, the census of the plugin counts the losses)."""
-        built, sent, got, seen = {}, {}, {}, set()
+        built, sent, got, seen, traded = {}, {}, {}, set(), {}
         for e in self.data.get("timeline", []):
             p = e.get("player")
             name = e.get("name") or self.kinds.get(e.get("type"), ("?", ""))[1]
@@ -2421,13 +2421,16 @@ class Replay:
             elif e["kind"] == "tribute" and e.get("to"):
                 n = sum(e.get(r, 0) for r in START) or int(e.get("amount", 0))   # old records: one resource
                 sent[p], got[e["to"]] = sent.get(p, 0) + n, got.get(e["to"], 0) + n
+            elif e["kind"] in ("buy", "sell") and e.get("resource"):    # the market trades (#3941)
+                traded[p, e["kind"]] = traded.get((p, e["kind"]), 0) + e.get("amount", 0)
         out = []
         for p in self.ranked(self.pop.keys() | self.vhigh.keys() | sent.keys() | got.keys() | {q for q, _ in built}
-                             - {None}):
+                             | {q for q, _ in traded} - {None}):
             name, color = self.label(p)
             counts = "".join(f"{n.lower()}s {built.get((p, n), 0)}, " for n in SOCIETY)   # castles N, wonders N
+            market = f"bought {traded.get((p, 'buy'), 0)}, sold {traded.get((p, 'sell'), 0)}, "
             out.append("tellraw @a " + json.dumps([text(name, color), text(
-                f": {counts}tribute sent {sent.get(p, 0)}, received {got.get(p, 0)}, villager high "
+                f": {counts}{market}tribute sent {sent.get(p, 0)}, received {got.get(p, 0)}, villager high "
                 f"{self.vhigh.get(p, 0)} (est.)")]))
         return out
 
