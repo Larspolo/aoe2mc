@@ -494,7 +494,9 @@ def objects(cmds, consts, terrain, starts, rng, warn, owner=None):
     land. number_of_groups, group_variance, group_placement_radius, set_tight_grouping: groups of objects (#3856).
     terrain_to_place_on, min_distance_group_placement (tiles from the other objects), max_distance_to_other_zones
     (tiles from the lands of the other players), set_scaling_to_map_size (a 100 × 100 map is the base) and
-    set_scaling_to_player_number scale the groups, else the objects (#3857).
+    set_scaling_to_player_number scale the groups, else the objects (#3857). avoid_forest_zone (tiles from a forest,
+    default 1), place_on_forest_zone (the tiles next to a forest), actor_area with actor_area_radius (default 1) marks
+    the tiles around each object for a later avoid_actor_area, second_object: one more object on each tile (#3858).
     Never on water (only a fish or a ship), a forest or another object; an object with no free tile is missing."""
     import aoe2mc
     kinds = aoe2mc.object_kinds(old=False)
@@ -503,6 +505,7 @@ def objects(cmds, consts, terrain, starts, rng, warn, owner=None):
     used = np.isin(terrain, list(FOREST_TREES))
     placed = np.zeros((n, n), bool)                    # the tiles of the objects (min_distance_group_placement)
     x, y = np.mgrid[0:n, 0:n]
+    areas = {}                                         # actor_area ID -> the tiles of its objects (#3858)
     for cmd, args, attrs in cmds:
         if cmd != "create_object":
             warn(f"{cmd} is not read yet")
@@ -530,6 +533,16 @@ def objects(cmds, consts, terrain, starts, rng, warn, owner=None):
         ground = (terrain == value(attrs["terrain_to_place_on"][0], consts)) if "terrain_to_place_on" in attrs else wet == water
         gap = value(attrs["min_distance_group_placement"][0], consts) if "min_distance_group_placement" in attrs else 0
         zones = value(attrs["max_distance_to_other_zones"][0], consts) if "max_distance_to_other_zones" in attrs else 0
+        forest = np.isin(terrain, list(FOREST_TREES))
+        if "avoid_forest_zone" in attrs:
+            ground = ground & ~dilate(forest, value(attrs["avoid_forest_zone"][0], consts) if attrs["avoid_forest_zone"] else 1)
+        if "place_on_forest_zone" in attrs:
+            ground = ground & dilate(forest, 1) & ~forest
+        if "avoid_actor_area" in attrs:
+            ground = ground & ~areas.get(value(attrs["avoid_actor_area"][0], consts), np.zeros((n, n), bool))
+        actor = value(attrs["actor_area"][0], consts) if "actor_area" in attrs else None
+        reach = value(attrs["actor_area_radius"][0], consts) if "actor_area_radius" in attrs else 1
+        second = kinds.get(value(attrs["second_object"][0], consts), (None, None))[1] if "second_object" in attrs else None
         for st, player in owners:
             if zones and st and owner is not None:
                 place = ground & ~dilate((owner >= 0) & (owner != st["land"]), zones)
@@ -565,11 +578,18 @@ def objects(cmds, consts, terrain, starts, rng, warn, owner=None):
                     if name == "VILLAGER_MALE" and rng.integers(2):    # AoE2 DE: a male or a female villager
                         name = "VILLAGER_FEMALE"
                     out.append({"name": name, "player": player, "x": tx + 0.5 * (kind != "B"), "y": ty + 0.5 * (kind != "B")})
+                    if second:
+                        out.append({"name": second, "player": player, "x": tx + 0.5, "y": ty + 0.5})
+                    if actor is not None:
+                        area = areas.setdefault(actor, np.zeros((n, n), bool))
+                        area[max(0, tx - reach):tx + reach + 1, max(0, ty - reach):ty + reach + 1] = True
         for a in set(attrs) - {"number_of_objects", "set_place_for_every_player", "set_gaia_object_only",
                                "min_distance_to_players", "max_distance_to_players", "number_of_groups",
                                "group_variance", "group_placement_radius", "set_tight_grouping", "set_loose_grouping",
                                "terrain_to_place_on", "min_distance_group_placement", "max_distance_to_other_zones",
-                               "set_scaling_to_map_size", "set_scaling_to_player_number"}:
+                               "set_scaling_to_map_size", "set_scaling_to_player_number", "avoid_forest_zone",
+                               "place_on_forest_zone", "actor_area", "actor_area_radius", "avoid_actor_area",
+                               "second_object"}:
             warn(f"create_object: {a} is not read yet")
     return out
 
