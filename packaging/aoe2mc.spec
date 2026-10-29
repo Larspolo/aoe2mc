@@ -20,7 +20,9 @@ GAME = os.path.join(ROOT, "game")
 JAR = os.path.join(GAME, "plugin", "aoe2mc-plugin.jar")
 # all data files of game/data (table.load: train, units, buildings; #1913), in their own folder: data/ has files of the
 # same names (table.FROZEN, #2839)
-GAME_DATAS = DATAS + [(os.path.join(GAME, "data", "*.jsonl"), "game_data")] + [(JAR, "plugin")] * os.path.exists(JAR)
+GAME_DATAS = (DATAS + [(os.path.join(GAME, "data", "*.jsonl"), "game_data")]
+              + [(os.path.join(GAME, "data", "antiquity", "*.jsonl"), os.path.join("game_data", "antiquity"))]   # #3666
+              + [(JAR, "plugin")] * os.path.exists(JAR))
 # the tag and the SHA-1 of the resource pack of the release (the workflow writes it on a tag, run.RELEASE, #2741)
 RELEASE = os.path.join(ROOT, "packaging", "release.json")
 GAME_DATAS += [(RELEASE, ".")] * os.path.exists(RELEASE)
@@ -28,7 +30,8 @@ GAME_DATAS += [(RELEASE, ".")] * os.path.exists(RELEASE)
 
 def analysis(script, datas=DATAS):
     return Analysis([os.path.join(ROOT, script)], pathex=[ROOT, GAME, os.path.join(ROOT, "tools")], datas=datas,
-                    hiddenimports=HIDDEN, excludes=["pytest"], noarchive=False)
+                    hiddenimports=HIDDEN, excludes=["pytest"], noarchive=False,
+                    module_collection_mode={"mgz": "pyz+py"})   # aoe2mc.new_saves reads the source of mgz (#3721)
 
 
 gui, cli, game = analysis("gui.py"), analysis("aoe2mc.py"), analysis(os.path.join("game", "run.py"), GAME_DATAS)

@@ -22,7 +22,7 @@ def test_scenario_area_trigger_gives_a_tick_line(tmp_path):
     assert (knight["quantity"], knight["player"], knight["area"]) == (1, 1, [3, 3, 6, 6])
     load, files = aoe2mc.trigger_files(texts["triggers"], T=4)
     assert load[0] == "scoreboard objectives add aoe_trig dummy"
-    assert files["data/minecraft/tags/function/tick.json"] == {"values": ["aoe2mc:tick"]}
+    assert files["data/minecraft/tags/function/tick.json"] == {"values": ["aoe2mc:tick_wait"]}
     # tiles 3..6 are the blocks 12..27: dx 15; all heights
     assert files[TICK].splitlines() == [
         "execute if entity @e[tag=aoe2mc.p1,tag=!aoe2mc.mount,tag=aoe2mc.t38,x=12,y=-64,z=12,dx=15,dy=383,dz=15] unless score #1 aoe_trig matches 1 "
@@ -55,11 +55,9 @@ def test_quantity_and_whole_map():
 def test_mixed_inverted_or_silent_triggers_give_no_tick():
     triggers = [area(5, [(1, 1, [0, 0, 1, 1])], effects=((11, ""),)),              # no chat effect
                 area(6, [(1, 1, [0, 0, 1, 1])], enabled=False)]
-    mixed = area(7, [(1, 1, [0, 0, 1, 1])])
-    mixed["conditions"].append(dict(type=aoe2mc.TIMER, timer=5, inverted=False))
     inverted = area(8, [(1, 1, [0, 0, 1, 1])])
     inverted["conditions"][0]["inverted"] = True
-    assert aoe2mc.trigger_files(triggers + [mixed, inverted]) == ([], {})
+    assert aoe2mc.trigger_files(triggers + [inverted]) == ([], {})   # a timer AND an area: #3891
 
 
 def test_area_turns_with_the_map():

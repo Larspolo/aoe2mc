@@ -212,6 +212,39 @@ as a large text display "chart" in the sky above the overview view: one row per 
 character (▁▂▃▄▅▆▇█) per game minute. It is vanilla (P2, P3). The owner checks the graphs in the game; a map item
 with a real line graph (Paper `MapRenderer`) can replace it later (P4).
 
+## Save version 68.9 (#3686, 2026-10-29)
+
+mgz 1.8.51 and its GitHub HEAD read DE records up to save version 66.6. A ranked 1v1 game of 2026-10-27 (save 68.9,
+from `api.ageofempires.com`, not committed: no license) has two changes in the DE header (`mgz.fast.header.parse_de`),
+found by a comparison of the bytes with `samples/de-64.3.aoe2record`:
+
+| Place | 64.3 and 66.6 | 68.9 |
+|---|---|---|
+| End of each player, after the 4 bytes of 64.3 | next player | one more DE string (`60 0a 00 00`: empty in the test record) |
+| After the DE string before the 8 bytes and the timestamp | 8 bytes, timestamp | two more DE strings (empty), then 8 bytes, timestamp |
+
+The other parts (metadata, map, players, scenario, lobby, the actions) read as for 66.6. `aoe2mc.new_saves()` adds the
+three reads to the source of `parse_de` (for save > 66.6). With it `read_record` and `read_timeline` read the test
+record: map Arabia (120 tiles), 2 players with names and civilizations, 1325 timeline events.
+
+Patch for upstream mgz (`mgz/fast/header.py`, `parse_de`; a ticket of the owner, as an upstream issue is public):
+
+```diff
+         if save >= 64.3:
+             data.read(4)
++        if save > 66.6:
++            de_string(data)
+ 
+         players.append(dict(
+@@
+     if not skip:
+         de_string(data)
++        if save > 66.6:
++            de_string(data)
++            de_string(data)
+         data.read(8)
+```
+
 ## Pitfalls
 
 Moved from `docs/LEARNINGS.md` (improve run, 2026-10-26).
@@ -246,3 +279,6 @@ Moved from `docs/LEARNINGS.md` (improve run, 2026-10-26).
 - `Replay` already has the method `entity(v)` (the live position of a unit, about 10 callers): a new method with that name replaces it with no error until a test calls it ("takes 2 positional arguments but 4 were given", #3028). `grep -n "    def NAME" game/replay.py` before you add a method. A setup of `run.play` (a scout swap, the start buildings, the town of a mode) writes "summon", "delete" and "build" events with `"free": true` at 0:00 (`record.summoned`, `record.removed`, #3028): only while `Recorder.setup` is true, until `record.play()`.
 - A live replay that falls behind its clock with a server tick (`/tick query`) above 50 ms is slow in the server, not in RCON: profile the server thread with the JDK (`jcmd PID JFR.start settings=profile`, later `jcmd PID JFR.dump name=1 filename=F.jfr`, `jfr print --events jdk.ExecutionSample F.jfr`, the frames of "Server thread"). #2761: 65 % was the vanilla villager brain (`YieldJobSite.canReachPos`, the path searches of villagers with no profession near a job site), fixed with nitwits (`units.IDLE_JOB`).
 - A drift cause in the path searches of the live replay: replay the whole converted record offline first (`Replay(Fake(), data, ai=True).run(speed=1000, clock=..., sleep=...)`, 25 to 80 s, no server) with `gather.Map.path` wrapped: count the failed searches (blocked start, at the limit, fast) and the search seconds per game minute, before and after the change. In #2881 it found the cause (a new order searched from a cell in a lake) in minutes, and a regression (153 searches of 0.2 s in one game minute by `chase()`) that a drift run shows only as stuck units.
+- A unit of a live replay that fights another entity than its order target: first check that the replay sent `aoe attack` at all (`far()` turns an ORDER into a walk to its tile, and the sight then takes the nearest enemy). To see each target change, log `setTarget` of `AoePlugin.java` with the caller line (`new Throwable().getStackTrace()`), run `tools/replay_drift.py --server-log` and match the UUIDs of the `--log` file (#3636). A record has no tag `aoe2mc.r<ref>`.
+- `Replay.census()` runs only with `Replay(..., ai=True)` and `run(..., bar=True)` (as `run.py --replay`): a test of the losses (`fallen`, `lost`) with a fake census needs both, else it never asks the fake (#3843). In `de-64.3` the first archers of player 2 come after 15:00.
+- A count of the commands of a record by plain `mgz` misses the DE_QUEUE commands (ERROR, 2 in the first 5 minutes of `de-64.3`): patch the reader as `read_timeline` does (`de_queue`, `new_saves`, `own_selection`, #3842).

@@ -21,7 +21,7 @@ names `lane deep`, run `git config aoe2mc.lane deep` first (the claims and the r
 `python3 tools/cycle_start.py --lane deep`. A deep run does the epic check and the queue refill of step 5, the roadmap
 review and the process review: while `reserved` in `[pacing]` of `agent.toml` names `deep`, `claim.py` gives those
 locks (`--review`, `--roadmap`, `--refill`) only to deep runs, and the other runs skip them. Stop when no `lane:deep`
-ticket is ready and the refill is done: the main runs take the other tickets for less.
+ticket is ready and the refill is done, or at 120k context (`more.md`): the main runs take the other tickets for less.
 
 ## Large tickets (step 4)
 
@@ -71,7 +71,8 @@ new sub-issues, no `needs-human`. Still answer an owner comment on it (step 3).
    still open and that an agent can do. A criterion that needs the owner stays on the epic.
 3. Make up to 20 new tickets (within the cap) for the remaining goals of the open epics, and for the fallbacks in
    `docs/coverage.md`. When the open epics have no goal left that an agent can do, make the next epic from the
-   feature list of `docs/ROADMAP.md` with the `roadmap` skill (the goals take turns). Priority: that of the epic, else `P3`. Never `P0` or `P1`, except for
+   feature list of `docs/ROADMAP.md` with the `roadmap` skill (the goals take turns). Each feature has an epic: run
+   `python3 tools/claim.py 0 --roadmap` (due after 30 merged PRs then, #3741); exit 0: do the roadmap review now. Priority: that of the epic, else `P3`. Never `P0` or `P1`, except for
    a `tooling` ticket that blocks other tickets. Look for duplicates first, and list the open issues again just
    before you make the tickets: parallel runs make the same follow-ups at the same time (#300, #301).
    Run that list in its own tool call and read it before the create calls: a list and the creates in one call made 7 copies (#2778).

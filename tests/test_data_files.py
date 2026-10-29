@@ -15,7 +15,7 @@ def rows(name):
     return table.load(name)
 
 
-NAMES = {f: {r["name"] for r in rows(f)} for f in sorted(os.listdir(table.DIR))}
+NAMES = {f: {r["name"] for r in rows(f)} for f in sorted(os.listdir(table.DIR)) if f.endswith(".jsonl")}   # not antiquity/
 CLASSES = {c for f in ("units.jsonl", "buildings.jsonl") for r in rows(f) for c in r.get("classes", ())}
 NUMBER = (int, float)
 
@@ -130,11 +130,12 @@ def check_civs(row):
 def check_gather(row):
     form(row, {"name": str}, {"drop": list, "work": dict, "fish": int, "shore": bool, "hunt": int, "herd": bool,
                               "farm": int, "dark": bool, "ship": list, "civilian": bool, "mine": list, "carry": int,
-                              "pace": float, "watch": bool, "decay": float, "res": str})
+                              "pace": float, "decay": float, "res": str})
     n = row["name"]
     assert len(row) > 1 and set(row.get("drop", ())) <= RES | {"meat"} and set(row.get("work", {})) <= RES, n
     assert all(isinstance(v, NUMBER) for v in row.get("work", {}).values()), n
     assert row.get("res", "food") in RES and ("res" not in row or "fish" in row), n   # an oyster: gold (#2465)
+    assert type(row.get("watch", True)) in (bool, int), n         # true: Town Watch sight; a number: tiles (#3915)
     if "mine" in row:                                      # [the resource, its amount, the villager name of the miner]
         res, amount, miner = row["mine"]
         assert res in RES and isinstance(amount, int) and miner.isupper(), n
@@ -205,6 +206,24 @@ def check_difficulty(row):                                 # a level of "AI diff
     assert row["gather"] > 0 and row["attack"] > 0 and row["soldiers"] >= 1, row["name"]
 
 
+CHALLENGE_KEYS = {                                         # the optional keys of a challenge: one per line (#3907)
+    "after": (str, type(None)),
+    "attacks": list,
+    "check": str,
+    "enemy": dict,
+    "kills": int,
+    "need": dict,
+}
+
+
+def check_challenges(row):                                 # an Art of War challenge: its medal limits (#3761)
+    form(row, {"name": str, "civ": str, "goal": str, "medal": str, "gold": int, "silver": int, "bronze": int,
+               "note": str}, CHALLENGE_KEYS)
+    assert row["civ"] in NAMES["civs.jsonl"] and row["medal"] in ("time", "lost"), row["name"]
+    assert 0 <= row["gold"] < row["silver"] < row["bronze"] and row["note"].startswith("AoE2 wiki"), row["name"]
+    assert row["after"] is None or row["after"] in NAMES["challenges.jsonl"], row["name"]
+
+
 def check_taunts(row):                                     # a taunt: its number and AoE2 text (#2234)
     form(row, {"name": str, "text": str}, {"sound": str})                  # sound: a vanilla match (#2662)
     assert row["name"].isdigit() and row["name"] == str(int(row["name"])) and row["text"], row["name"]
@@ -219,6 +238,7 @@ def check_sounds(row):                                     # a unit class: its s
 CHECKS = {                                                 # one file per line: parallel tickets add files (#2281)
     "build.jsonl": check_build,
     "buildings.jsonl": check_buildings,
+    "challenges.jsonl": check_challenges,
     "cheats.jsonl": check_cheats,
     "civ_keys.jsonl": check_civ_keys,
     "civs.jsonl": check_civs,

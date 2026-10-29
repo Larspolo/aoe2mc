@@ -27,20 +27,25 @@ PACKED = ("queues", "trained", "sites", "rally",                       # with tu
           "sieged",                                                    # the targets of attack orders: Gather.fall (#2537)
           "ruins",                                                     # the fallen start buildings: ruins.py (#3008)
           "soldiers", "units")                                         # the units of the game, trained or upgraded (#2532)
-OPTIONAL = ("auto_reseed",                                             # the mill switch (#3422)
+OPTIONAL = ("auto", "auto_by",                                         # the auto-queue of each building (#3524)
+            "auto_reseed",                                             # the mill switch (#3422)
+            "bell_work",                                               # the work before the town bell (#3420)
+            "challenge_enemy",                                         # the enemy fleet of Naval Battle (#3909)
             "limit_left", "policy", "rates", "relic_timer", "reseeds", "switches", "upgraded", "wonder_shown", "wonders",   # only on a
             "wonders_gone")                                            # Gather that has them (#2324; the policy: #2515)
 MONK = ("carrier_at", "converting", "faith", "fetching", "heal_time", "monk_at", "relic_gold", "relic_homes",
         "relic_time", "relics")                                        # game/monk.py: the relics and monk orders (#2412)
 NOMAD = ("later", "nomad")                                             # a Nomad start: the first town center bonus (#2986)
-ORDERS = ("patrols", "trigger_attributes", "trigger_costs",            # scenario.py: the patrols (#2647), attributes (#2763),
+ORDERS = ("kept", "patrols", "trigger_attributes", "trigger_costs",            # scenario.py: the patrols (#2647), attributes (#2763),
           "trigger_menus", "trigger_names",                            # costs (#2776), menu items (#2775), names (#2821)
           "trigger_places", "trigger_stacks", "trigger_times",         # the menu places (#2864), stacking (#2866), times (#2820),
           "trigger_trains", "trigger_civs",                            # train locations (#2865), civilization names (#2905),
           "unit_values",                                               # the values of single units (#3083)
           "attack_moves",                                              # stance.py: the attack moves and the old stances (#3357)
           "follows",                                                   # follow.py: the Follow and Guard orders (#3358)
-          "formations")                                                # stance.py: the formations of the units (#3416)
+          "formations",                                                # stance.py: the formations of the units (#3416)
+          "scouting",                                                  # autoscout.py: the Auto Scout order (#3702)
+          "waypoint_at", "waypoints")                                  # gather.add_waypoint: the queued points of the units (#3518)
 ROUTES = ("trade", "trebs")                                            # trade.py, trebuchet.py: as OPTIONAL (#2413)
 CHEATS = (                                                             # game/cheats.py: the cheats that the player
     "aegis",                                                           # turned on (#2533)
@@ -52,6 +57,7 @@ CHEATS = (                                                             # game/ch
 COUNTERS = (                                                           # the parts that a tick did not use yet (#2514):
     "aura_time",                                                       # regen.py
     "cart_heal",                                                       # trade.py
+    "feitoria_part",                                                   # feitoria.py
     "garrison_heal",                                                   # garrison.py
     "herd_food",
     "hero_time",                                                       # regen.py: the heroes
@@ -78,16 +84,23 @@ MAP = (                                                                # gather.
     "trees",
 )
 VICTORY = (                                                            # the victory modes (#2476), pack()
+    "challenge_army",                                                  # army.py: the army of a battle challenge (#3906)
+    "challenge_attacks",                                               # challenge.attacks: the waves that came (#3907)
+    "challenge_foes",                                                  # army.py: the enemy units of a battle challenge (#3910)
+    "challenge_wave",                                                  # army.py: the wave of the enemy (#3906)
+    "challenge_foes",                                                  # army.py: the enemy units of a battle challenge (#3910)
     "conquest_seen",
     "corruption_at",
     "corruption_time",
     "defeated",
     "hill",
     "monument",
+    "siege_target",                                                    # challenge.besiege: the target of the enemy castle (#3908)
     "towns",
 )
 SCORE = (                                                              # Gather: the counts of score.py (#2475)
     "fallen",                                                          # spoils.py: the units that gave their spoils
+    "fell",                                                            # ruins.py: the own buildings that fell, lost in the recap (#3736)
     "given",                                                           # train.py: the free units and technologies
     "losses",
     "razed",
@@ -118,13 +131,15 @@ KEPT = (                                                               # the fie
     *TOGGLES,
     *VICTORY,
 )
-JOB = ("state", "load", "res", "job", "lap", "prey")                  # fields of a gather.Villager, as they are
-BOT = ("time", "charged", "attack")                                    # fields of a bot.Bot, as they are (#2325)
+JOB = ("state", "load", "res", "job", "lap", "prey", "task")                # fields of a gather.Villager, as they are
+BOT = ("time", "charged", "attack", "foe", "difficulty")               # fields of a bot.Bot, as they are (#2325, #4022)
 SETTINGS = (                                                           # run.py options (#2325, #2409): one per line,
     "ai_difficulty",                                                   # in alphabetical order (parallel tickets add)
     "all_techs",
+    "antiquity",
     "bot",
     "bot_attack",
+    "challenge",
     "cheats",
     "civ",
     "empire_wars",
@@ -152,11 +167,17 @@ NOT_SAVED = (                                                          # the fie
     "action_at",                                                       # scenario.py: the next check time
     "action_sent",                                                     # scenario.actions: a load sends them again
     "age_times",                                                       # recap.py: game times of this session (Gather.t0)
+    "attacked_at",                                                     # scenario.attacked: the next check time
+    "attacked_hp",                                                     # scenario.attacked: a load reads the hit points again
+    "attacked_sent",                                                   # scenario.attacked: a load sets the same score again
     "bar",                                                             # bossbar.py: the shown unit
     "book_at",                                                         # scenario.py: the next check time (the world keeps the tags)
     "bots",                                                            # run.play makes the bots again
     "capture",                                                         # herd.py: a tick timer
     "census",                                                          # train.py: a tick timer
+    "challenge",                                                       # run.py: from the saved settings (#3900)
+    "challenge_asked",                                                 # challenge.py: the time of the last check
+    "challenge_shown",                                                 # challenge.py: the shown text
     "chop",                                                            # bot.py: the setup value of the AI difficulty
     "conquest_at",                                                     # conquest.py: the next check time
     "data",                                                            # aoe2mc.json of the world
@@ -182,6 +203,7 @@ NOT_SAVED = (                                                          # the fie
     "left_shown",                                                      # amounts.py: the shown numbers, a load shows them again
     "limit_at",                                                        # time_limit.py: the next check time
     "limit_shown",                                                     # time_limit.py: the shown text
+    "medal",                                                           # challenge.py: the medal at the end of the game
     "menu_opened",                                                     # train.open_menu: the time of the last open (spam clicks, #3267)
     "noui",                                                            # the cheat "noui": only the hints
     "ordering",                                                        # stance.py: a pending Patrol click, made again in the menu (#3355)
@@ -192,6 +214,7 @@ NOT_SAVED = (                                                          # the fie
     "peers",                                                           # run.py: the players of the game
     "person",                                                          # gather.py: the name of the click that it handles now (#3486)
     "player",                                                          # run.py: the player number
+    "players",                                                         # gather.py: the players of aoe2mc.json, read again at a load
     "record",                                                          # record.py: run.play opens the file of --record again
     "regicide_at",                                                     # regicide.py: the next check time
     "repair_at",                                                       # repair.py: the place of a unit at its repair order, resume() sets it again
@@ -527,9 +550,13 @@ def relics_again(g, d):
 
 
 def bots_again(g, d):
-    """The attack time and wave of each bot go on (#2325)."""
+    """The attack time and wave, the foe and the difficulty of each bot go on (#2325, #4022)."""
+    import bot as ai
     for b in bots(g):
         for f, v in d["players"].get(str(b.g.player), {}).get("bot", {}).items():
+            if f == "difficulty" and v != b.difficulty:                # the work rate of the saved level (bot.Bot)
+                r = ai.LEVELS[b.difficulty]["gather"] / ai.LEVELS[v]["gather"]
+                b.g.chop = {k: s * r for k, s in b.g.chop.items()}
             setattr(b, f, v)
 
 

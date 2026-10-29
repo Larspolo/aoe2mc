@@ -18,19 +18,14 @@ The README already uses this style. Keep it.
 | Lint | `ruff check .` |
 | Fast tests (~2 min; after a merge only the changed test files, `verify`) | `python3 -m pytest -n auto` (all cores, #2415; use `python3 -m`: a `pytest` on the PATH can be another Python) |
 | Slow tests (~2 min) | `python3 -m pytest -m slow` |
-| Test scenario | `python3 tools/scenarios.py tiny OUT.aoe2scenario` (or `gallery`, `stress`, `buildings`, `units`, `village`, `facing`, `walls`, `river` (raised river with dock, bridge, boats), `river_town`, `four_civs`, `battle`, `triggers` (timer, area, create and remove triggers; count with `tools/triggers.py FILE...`), `large` (480 × 480 tiles, #690), `owner_loop` (the play-test map of the `human` skill, #1674), `moods` (the village with `--mood NIGHT`, a map color mood, #1598)) |
+| Test scenario | `python3 tools/scenarios.py tiny OUT.aoe2scenario` (or `gallery`, `stress`, `buildings`, `units`, `village`, `facing`, `walls`, `river` (raised river with dock, bridge, boats), `river_town`, `four_civs`, `battle`, `triggers` (timer, area, create and remove triggers; count with `tools/triggers.py FILE...`), `large` (480 × 480 tiles, #690), `owner_loop` (the play-test map of the `human` skill, #1674), `layers` (terrain layers: road, dirt, snow, grass on water, #3690), `moods` (the village with `--mood NIGHT`, a map color mood, #1598)) |
 | Convert | `python3 aoe2mc.py IN.aoe2scenario OUTWorld --preview` |
 | Look at a world | `python3 tools/world_reader.py OUTWorld [X Y Z]` (`--section x\|z C A0 A1 Y0 Y1`: a vertical section as text) |
 | 3D image | `python3 tools/render.py building CASTLE --arch western OUT.png` (`--cut 3`: the rooms inside; or `world OUTWorld X0 Z0 X1 Z1 OUT.png`) |
 | Check states | `tools/mcvalid.py` (`block_error`, `entity_error`, `biome_error`, `sound_error`) |
 | Coverage of AoE2 types | `python3 tools/coverage.py OUT.md` (designs, mappings, fallbacks). Do not commit `docs/coverage.md`: CI on main does it, and `tools/feature_table.py` for `docs/DESIGN.md` |
-| System numbers | `python3 tools/health.py [--hours N]` (CI, setup, takeovers, conflicts, files in git; `improve` skill) |
-| Start of the runs | `python3 tools/operator_check.py` (quota, ready tickets, CI, old PRs, labels, owner comments; the scheduled tasks and the pacer: `docs/OPERATOR.md`, #981) |
-| Owner feedback | `python3 tools/feedback.py` (the owner comments of the last 6 hours without a lock `claim/comment-ID`, autopilot step 3, #971) |
-| Tokens of a run | `python3 tools/tokens.py [--top N]` (the tokens of this session and the largest sinks: files, commands; the `Tokens:` line of the run report; `--verify`: the minutes of each check command) |
-| Quota and pacing | `python3 tools/usage.py` (5-hour and 7-day usage, resets; `--target`: the number of runs (90 % of the 5-hour window 2 hours before the reset, then 98 %); `--sample`: the `Usage:` line of the run report; `--fire`: the runs that the pacer starts now; `tools/pacer.py` starts them, `pacer.yml`, #3193) |
-| Dashboard of #1 | `python3 tools/dashboard.py --dry-run` (`--next`: ticket candidates in pick order) |
-| Release bar | `python3 tools/release.py` (percent of each goal for the milestones C = 100 %, A and B: `docs/RELEASE.md`, #878) |
+| Unread random map commands | `python3 tools/rms_survey.py DIR` (Markdown: each `*.rms` of a folder with its warnings, and the warnings with their map counts) |
+| Agent system tools | `health.py`, `operator_check.py`, `feedback.py`, `tokens.py`, `usage.py`, `dashboard.py`, `release.py`: `docs/SYSTEM.md`, "Tools of the system" |
 | Server check | `python3 tools/mc_check.py OUTWorld` (headless Minecraft, load errors; `--keep DIR` keeps the saved world), `python3 -m pytest -m mc` |
 | Game program | `python3 game/run.py OUTWorld` (Paper server with RCON, `--server vanilla`: Mojang's; type commands; `--bench N`: commands per second; `--play`: gather resources, `--cheats`: the AoE2 cheat codes in the chat; `--replay [--speed N]`: replay a recorded game) |
 | Gather timing | `python3 tools/measure_gather.py` (server, no client: walk, chop and trip times next to AoE2; `--read F.jsonl` reads a `game/run.py --play --log` file) |

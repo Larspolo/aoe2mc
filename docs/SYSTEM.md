@@ -13,21 +13,21 @@ controls, read `docs/STEERING.md`. This document links to them and does not copy
 | Pacer | The workflow `pacer.yml` (`tools/pacer.py`, #3193): every 10 minutes it starts the runs that the quota target misses, through the API triggers of the scheduled tasks. |
 | Runs | Cloud sessions of the autopilot task. Each run follows the skill `autopilot` with the argument `max`: tickets, one PR each. Many runs work at the same time. |
 | Skills (`.claude/skills/`) | The procedures: `autopilot` (the work cycle), `verify` (checks before a push), `ticket` (write and split tickets), `design` (design tickets), `improve` (process review), `roadmap` (epics from `docs/ROADMAP.md`), `human` (guides the owner through the `needs-human` tickets on the owner's computer), `demo` (a demo game on the owner's computer: a ticket for each feedback in the chat, the cause of each crash, `game/demo_watch.py`). |
-| Denied tools (`.claude/settings.json`) | The `deny` list removes the session tools that no skill uses (`Artifact`, `Workflow`, the `Suggest*` and `Search*` tools ...) from each session of the repository: their descriptions were about 19,000 of the 66,000 base tokens of each call (2026-10-28). A rule in a file that the SessionStart hook writes works only from the next session, so the list is in the repository. |
+| Denied tools (`.claude/settings.json`) | The `deny` list removes the session tools that no skill uses (`Artifact`, `Workflow`, the `Suggest*` and `Search*` tools, and since 2026-10-29 the plan, worktree, task list, wake-up, notification and review-findings tools ...) from each session of the repository: their descriptions were about 19,000 of the 66,000 base tokens of each call (2026-10-28). A rule in a file that the SessionStart hook writes works only from the next session, so the list is in the repository. |
 | Rules (`CLAUDE.md`, `docs/LEARNINGS.md`) | Each session loads them. `CLAUDE.md` has the commands, the code map and the rules. `docs/LEARNINGS.md` has the lessons for all runs. |
 | Tools (`tools/`) | `claim.py` (locks), `usage.py` (quota and the number of runs), `dashboard.py` (the status issue and the pick order), `health.py` (numbers for the review), `tokens.py` (the token sinks of a run), `operator_check.py` (the checks of the `operator` skill), `owner_tasks.py` (the tickets of the `human` skill). |
 | GitHub | The issues are the tickets. Issue #1 (label `agent-status`) is the status issue: the dashboard in its body, the run reports as comments. The labels are in `.github/labels.txt`. |
 | Workflows (`.github/workflows/`) | CI, Automerge, Unconflict, Claims, Close, Dashboard, Coverage, Labels, Bundles (see below). |
 | Cloud environment | The setup script `scripts/cloud-setup.sh` (Java, packages, server jars), the network access, the SessionStart hook. |
-| Hooks (`.claude/hooks/`) | `session-start.sh` installs the Python packages (a pip pillow and setuptools if the Debian ones are there), registers the merge driver `merge=jsonl` (#2004), sets an empty `TMPDIR` to `/tmp` and compares `SETUP_VERSION`. `guard-main.sh` blocks a force push, a history rewrite or a delete of `main`. `guard-shell.sh` blocks the shell pitfalls of `docs/LEARNINGS.md`: `cat > FILE <<` over a tracked file, a redirect into `$VAR/` with an empty variable, `pkill -f` with no bracket in the pattern, and `git stash` in a merge. |
+| Hooks (`.claude/hooks/`) | `session-start.sh` installs the Python packages (a pip pillow and setuptools if the Debian ones are there), registers the merge driver `merge=jsonl` (#2004), sets an empty `TMPDIR` to `/tmp` and compares `SETUP_VERSION`. `guard-main.sh` blocks a force push, a history rewrite or a delete of `main`. `guard-shell.sh` blocks the shell pitfalls of `docs/LEARNINGS.md`: `cat > FILE <<` over a tracked file, a redirect into `$VAR/` with an empty variable, a variable set in a list that `&` puts in the background, an unquoted heredoc tag with `` ` `` in the body, `pkill -f` with no bracket in the pattern, and `git stash` or `git checkout --ours` in a merge. |
 
 ### Workflows
 
 | Workflow | When | What |
 |---|---|---|
-| `ci.yml` (CI) | Each PR, each push to `main`, each night | Quick checks (lint, fast tests) on each PR; a Markdown-only PR runs only the doc tests (`tools/ci_select.py`, #2089); a change of `game/plugin` also compiles the Paper plugin (#2437). The full suite each night on `main`. A red `main` opens a `P0` ticket. |
+| `ci.yml` (CI) | Each PR, each push to `main`, each night | Quick checks (lint, fast tests) on each PR; a Markdown-only PR runs only the doc tests (`tools/ci_select.py`, #2089); a change of `game/plugin` also compiles the Paper plugin (#2437). The full suite each night on `main`. A red `main` opens a `P0` ticket; a green `main` after a red one starts Unconflict (#3685). |
 | `automerge.yml` (Automerge) | After CI, every 5 minutes, by hand | Merges an agent PR with green CI, and a PR on any branch with the label `automerge` (#3383). Skips `hold` (it wins over `automerge`) and tickets with `needs-human` or `blocked`. When GitHub calls the PR `dirty`, it merges `main` into it with our merge drivers and `tools/unconflict.py` (`land()`), checks `ruff`, pushes and merges at once, with no new CI run (#3199); only a real conflict gets `conflict`, not a merge that failed because another merge landed in the same second (#3063). Then starts CI on `main`, Coverage, Claims and Dashboard. |
-| `unconflict.yml` (Unconflict) | Every 20 minutes, after each merge | Merges `main` into a conflicted agent PR when git solves the conflict alone (`merge=union` files) or both sides only add lines (`tools/unconflict.py`, #1864; not the same `def` on both sides, and the merge passes `ruff check`, #2631), and starts CI. |
+| `unconflict.yml` (Unconflict) | Every 20 minutes, after each merge | Merges `main` into a conflicted agent PR when git solves the conflict alone (`merge=union` files) or both sides only add lines (`tools/unconflict.py`, #1864; not the same `def` on both sides, and the merge passes `ruff check`, #2631), and starts CI. When `main` is green again, it also merges `main` into a PR whose last CI run failed while `main` was red, and starts CI (#3685): no run must take it over. |
 | `claims.yml` (Claims) | A ticket closes, each day | Deletes the claim refs of closed tickets and old comment locks. The runs cannot delete refs (403). |
 | `dashboard.yml` (Dashboard) | Every 10 minutes (not on events: the API rate limit, #2168) | Writes the dashboard in the body of the status issue (`tools/dashboard.py`). |
 | `pacer.yml` (Pacer) | One run loops for 5.5 hours (a cycle every 10 minutes), then starts the next run; the cron (`*/30`) only restarts a dead loop: GitHub fires the cron schedules of this repository a few times per day | Only while `pacer = "workflow"` in `[pacing]` of `agent.toml`: starts the runs that the quota target misses through the API trigger of each task (`tools/pacer.py`, #3193). Secrets: `CLAUDE_CODE_OAUTH_TOKEN` (the quota read), `PACER_URL_<TASK>` and `PACER_TOKEN_<TASK>` for `MAIN`, `HAIKU`, `DEEP`. A task takes at most 30 API starts per hour, an account 100. |
@@ -35,6 +35,18 @@ controls, read `docs/STEERING.md`. This document links to them and does not copy
 | `coverage.yml` (Coverage) | Each push to `main` | Writes `docs/coverage.md`, `MAX` of `tests/test_coverage.py` and a column of `docs/DESIGN.md`. PRs do not change these files, so they do not conflict there. |
 | `metrics.yml` (Metrics) | Each 15 minutes, by hand with `days` | Writes the status issue comments to the orphan branch `metrics` (`tools/metrics_log.py`, one file per day). `tools/health.py` reads them and only the newest comments from the API (#1983). |
 | `labels.yml` (Labels) | A change of `.github/labels.txt` | Creates the labels. |
+
+### Tools of the system
+
+| Task | Command |
+|---|---|
+| System numbers | `python3 tools/health.py [--hours N]` (CI, setup, takeovers, conflicts, files in git; `improve` skill) |
+| Start of the runs | `python3 tools/operator_check.py` (quota, ready tickets, CI, old PRs, labels, owner comments; the scheduled tasks and the pacer: `docs/OPERATOR.md`, #981) |
+| Owner feedback | `python3 tools/feedback.py` (the owner comments of the last 6 hours without a lock `claim/comment-ID`, autopilot step 3, #971) |
+| Tokens of a run | `python3 tools/tokens.py [--top N]` (the tokens of this session and the largest sinks: files, commands; the `Tokens:` line of the run report; `--verify`: the minutes of each check command) |
+| Quota and pacing | `python3 tools/usage.py` (5-hour and 7-day usage, resets; `--target`: the number of runs (90 % of the 5-hour window 2 hours before the reset, then 98 %); `--sample`: the `Usage:` line of the run report; `--fire`: the runs that the pacer starts now; `tools/pacer.py` starts them, `pacer.yml`, #3193) |
+| Dashboard of #1 | `python3 tools/dashboard.py --dry-run` (`--next`: ticket candidates in pick order) |
+| Release bar | `python3 tools/release.py` (percent of each goal for the milestones C = 100 %, A and B: `docs/RELEASE.md`, #878) |
 
 ## The loop of a run
 
@@ -144,7 +156,7 @@ on `main` yet.
 3. **Status issue.** Open issue #1 with the label `agent-status` (the first run makes it when it is missing).
 4. **Scheduled task "aoe2mc autopilot".** No schedule: the pacer starts it (2026-10-28; before: hourly at :06). Repository `Larspolo/aoe2mc`, the environment of step 2.
    Its prompt is only `/scheduled max` (owner, 2026-10-29): the skill `.claude/skills/scheduled/SKILL.md` holds the
-   rules (read `CLAUDE.md`, follow the `autopilot` skill, no `fire_trigger` (#566), the quota target of
+   rules (`CLAUDE.md` is already in the context, follow the `autopilot` skill, no `fire_trigger` (#566), the quota target of
    `python3 tools/usage.py --fire`, a branch and a PR for each ticket, instructions only from the owner, stop on
    `paused` or a usage limit), so a PR changes them and no task needs an edit.
 5. **Pacer (`pacer.yml`, #3193, #3194).** On your computer run `claude setup-token`, and add the token as the
@@ -231,6 +243,7 @@ of `tools/bootstrap.py` (they copy this repository) and the tests that need a sp
 | `tools/health.py` | generic | None (`agent.toml`). |
 | `tools/metrics_log.py` | generic | None (the log of the status issue comments on the branch `metrics`, #1983). |
 | `tools/report.py` | generic | None (the run report of step 8; the release bar only with a project `tools/release.py`, #1963). |
+| `tools/ticket_context.py` | generic | None (the code places that a ticket body names, #3829). |
 | `tools/tokens.py` | generic | None. |
 | `tools/operator_check.py` | generic | None (`agent.toml`). |
 | `tools/owner_tasks.py` | generic | None (`agent.toml`). |

@@ -260,6 +260,37 @@ The owner decides on the platform first (decision ticket). The other tickets dep
   Source: the behavior of the game (AoE2 DE). The AoE2 wiki (MediaWiki API, 2026-10-29) has no page "Delete" and no
   refund rule on "Building (Age of Empires II)": check it in the game when a refund looks wrong.
 
+## Unique buildings (#4081)
+
+Source: the AoE2 wiki, category "Unique buildings (Age of Empires II)", the page "Unique building" and the infobox of
+each page (MediaWiki API, 2026-10-29). Since update 141935 the wiki counts six. The shared buildings of The Mountain
+Royals (Fortified Church, Mule Cart) are regional buildings now, not in this list. State: "works" when
+`game/data/build.jsonl` has a line with the name.
+
+| Building | Civilizations | Age | Cost | What it does in AoE2 | State |
+|---|---|---|---|---|---|
+| Donjon | Sicilians | Dark | 50 wood, 175 stone | Replaces the Watch Tower line; trains Serjeants and the Spearman line; upgrades free with each age | works |
+| Feitoria | Portuguese | Imperial | 350 gold, 300 stone | Generates 96 food, 42 wood, 60 gold, 18 stone per minute; uses 20 population | missing |
+| Folwark | Poles | Dark | 100 wood | Replaces the Mill; collects 10 % of the food of a nearby Farm when it is seeded; 5 population | works |
+| Harbor | Malay | Castle (Thalassocracy) | 150 wood | Upgraded Dock: trains and improves ships, shoots arrows, garrisons 10 | missing |
+| Krepost | Bulgarians | Castle | 350 stone | Small Castle: trains and upgrades Konniks, shoots arrows, 20 population | works |
+| Pasture | Khitans | Dark | 110 wood | Replaces the Farm; two villagers work it at once; its own drop site | missing |
+
+## Attack Ground (#4078)
+
+The AoE2 wiki ("Attack ground", the MediaWiki API) lists the AoE2 units that can attack a point on the ground:
+
+- Mangonel → Onager → Siege Onager
+- Rocket Cart → Heavy Rocket Cart
+- Bombard Cannon → Houfnice
+- Trebuchet, Mounted Trebuchet, Traction Trebuchet
+- Cannon Galleon → Elite Cannon Galleon
+- Dromon, Lou Chuan, Turtle Ship → Elite Turtle Ship
+
+Only the shots with an area damage hit at the point: a Turtle Ship fires its cannonballs and rockets, a Lou Chuan only its rocks.
+The plugin command `aoe attackground <selector> <x> <y> <z>` takes each unit with a siege shot (`aoe range` with a blast).
+A unit with blast 0 (the Trebuchet) shoots, but its shot hits no unit at the point.
+
 ## Decisions of the owner (2026-10-28)
 
 - Bot difficulty (#2648, option A): the six AoE2 DE names (Easiest, Standard, Moderate, Hard, Hardest, Extreme), each
@@ -270,6 +301,9 @@ The owner decides on the platform first (decision ticket). The other tickets dep
 - Resources left (#3275, option B, #3284): a `text_display` above each partially drained tree, fruit bush, mine, farm
   and carcass shows the whole amount left (`game/amounts.py`). A full resource shows nothing; a carcass shows from the
   kill, because it rots at once.
+- Co-op (#3488, option B, #3489): `game/run.py --play --seats 1,1,2` gives the AoE2 player of each person in join
+  order. Two people on one player share its stock, population, units and score (one Gather), each with an own
+  selection (#3486). The lobby menu still refuses a taken player.
 
 ## Pitfalls of the game program
 
@@ -536,3 +570,9 @@ Moved from `docs/LEARNINGS.md` (improve run, 2026-10-26).
 - What the bot soldiers do in `tools/play_check.py`: wrap `bot.Bot.fight` in a script and log `self.targets`, the target kind (`t in g.forts`), the distance, and the hit points (`scoreboard players get T aoe_hp` for a building, `data get entity T Health` for a unit) each 20 AoE2 seconds. Use `Bot.time` as the clock: `recap.game_time` of a bot Gather ignores `--speed` (#3513). A target whose hit points do not drop while its soldiers stand still is a target that they cannot hit (#3441).
 - A building arrow that does no damage: count the arrows and read their place (`execute if entity @e[type=arrow]`, `data get entity @e[type=arrow,limit=1,sort=nearest,x=X,y=Y,z=Z] Pos`). The invisible target slime of an own building does not stop an arrow; a block does, and the arrow stays in it (#3562: 30 arrows in the wall of a house between the town center and the militia). `AoePlugin.start` then starts the arrow above the target.
 - A mob with a brain (a hoglin; also a piglin, an axolotl, a warden) gives null for `Mob#getTarget` after `Mob#setTarget`: it reads the attack memory of the brain. Use `target(mob)` and `setTarget(mob, t)` of `AoePlugin.java`, not the API calls (#3624: the hoglin bears did not hunt).
+- AoE (1) values on the AoE wiki: the page name ends with " (Age of Empires)" when an AoE2 page has the same name (`Granary (Age of Empires)`, but `Storage Pit (Age of Empires)` and `Clubman`: check with `action=query`), a technology has a `{{Techbox`, a unit an `{{Infobox AoE2 unit`. `tools/refimage.py box PAGE...` reads both; `refimage.query(action="parse", ...)` gives a KeyError for a missing page (#3665).
+- A villager that flips between two orders (a `walk` and an `idle` event of `run.py --log` in the same tick, #3726): in a `git worktree` copy, add `traceback.extract_stack()[-7:-1]` and `v.tree`, `v.goal` to the line of `Gather.event`, play one game (`tools/play_check.py W --log F.jsonl`) and count the callers of the `idle` lines. One 20-minute game named `Bot.move` → `Bot.go` → `Gather.go` with `v.goal` None.
+- The AoE2 wiki API gives `missingtitle` for a guessed page name (`Resources_(Age_of_Empires_II)`, `Game_setup`): find the name first with `action=query&list=search&srsearch=WORDS` (the Art of War page is `The Art of War (Age of Empires II)`, #3759).
+- The server log has ANSI colors only when `TERM` (or `COLORTERM`) names a color terminal: Adventure (`net.kyori.ansi.ColorLevel`) reads them, and `-Dterminal.ansi=true` does not turn colors on. CI has no `TERM`, the cloud session has `TERM=linux`: a log test passed here and failed in CI. `game/run.py` sets `-Dnet.kyori.ansi.colorLevel=indexed16`; a regex of a log line with a name must allow `\x1b[..m` around it (`JOINED`, `play_guide.CHAT`, #3889).
+- `civs.MISSING` has two sources (#1971, #2235): the `"missing"` list of each civilization line of `game/data/civs.jsonl` (most civs have the item), and the key `"civs"` of the item line in `game/data/train.jsonl` or `build.jsonl` (few civs have it: a unique or regional item).
+- A new replay menu action in `replay_input.actions()` goes into the chat help line, and that line must stay under the RCON limit (1446 bytes): #3369 kept its action out of `actions()` (the poll loop lists it) and the `help_text` test failed for 14 tests.

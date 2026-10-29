@@ -1,4 +1,5 @@
-"""Reader of old AoE2 scenarios (.scx, format 1.21 of The Conquerors), without the DE editor (#311).
+"""Reader of old AoE2 scenarios (.scn of The Age of Kings: formats 1.18 to 1.20, #3860; .scx: format 1.21 of The
+Conquerors; .scx and .aoe2scenario of the HD Edition: formats 1.22 to 1.26, #3862), without the DE editor (#311).
 
 A port of the reader of genie-scx (genie-rs, GPL-3.0; crates/genie-scx/src/format.rs, map.rs, player.rs) for the
 fields that aoe2mc needs. Layout: docs/campaign-formats.md, "The old scenario format".
@@ -14,7 +15,9 @@ import numpy as np
 
 import units
 
-FORMATS = {b"1.21"}             # format versions that this reader knows (genie-scx: player data version 1.14)
+FORMATS = {b"1.18", b"1.19", b"1.20", b"1.21",        # format versions that this reader knows (the object frame from 1.15,
+           b"1.22", b"1.23", b"1.24", b"1.25", b"1.26"}  # "garrisoned in" from 1.13: one object layout); 1.22 to 1.26:
+                                                        # the HD Edition (.aoe2scenario too, #3862)
 CIVS = [r["name"] for r in units.rows("scx_civs.jsonl")]   # the index is the civilization ID, the DE IDs too
 
 
@@ -99,6 +102,52 @@ def tribe_scen(s):
     return {p: props[p - 1][2] for p in range(1, 17) if props[p - 1][0]}
 
 
+# The bytes of a tile of each map version (genie-scx map.rs, #3861): terrain, elevation, zone; from version 1 also
+# the mask type and the layered terrain (u16 each). Version 2 adds a "no waves" byte before the size.
+MAP_TILE = {0: 3, 1: 7, 2: 7}
+
+
+def read_map(s, path):
+    """The terrain and elevation ([x, y]) of the map part: format 1.21, or a versioned map (marker 0xDEADF00D, HD)."""
+    w, tile = s.u32(), 3
+    if w == 0xDEADF00D:
+        version = s.u32()
+        if version not in MAP_TILE:
+            raise ScxError(f"{path}: map version {version} is not supported (this reader knows "
+                           f"{', '.join(map(str, MAP_TILE))})")
+        s.skip(1 if version >= 2 else 0)        # "no waves"
+        w, tile = s.u32(), MAP_TILE[version]
+    h = s.u32()
+    if not (0 < w <= 500 and 0 < h <= 500):
+        raise ScxError(f"{path}: map size {w} x {h} is not possible: the file has another layout")
+    tiles = np.frombuffer(s.take(w * h * tile), np.uint8).reshape(h, w, tile)    # rows of y, then x
+    terrain = tiles[:, :, 0].T.astype(np.int16)                                  # [x, y], as read_scenario
+    return terrain, tiles[:, :, 1].view(np.int8).T.astype(np.float32)
+
+
+def body_start(data):
+    """The offset of the compressed part. HD files can write a header length of 0 (#3847): then the header ends
+    after its last field, as in genie-scx (header.rs, read_from), so read the fields one by one."""
+    u = lambda p: struct.unpack_from("<I", data, p)[0]
+    if u(4):
+        return 8 + u(4)
+    p = 8
+    version = u(p)
+    p += 4
+    if version >= 2:                         # the time stamp
+        p += 4
+    p += 4 + u(p)                            # the description: a length-prefixed string
+    p += 8                                   # any SP victory, active player count
+    if version > 2:                          # DLC options: a data set (after a version, unless 0 or 1), dependencies
+        p += 4
+        if struct.unpack_from("<i", data, p - 4)[0] not in (0, 1):
+            p += 4
+        p += 4 + 4 * u(p)
+    if version >= 5:                         # the author name and the number of triggers
+        p += 4 + u(p) + 4
+    return p
+
+
 def read(path):
     with open(path, "rb") as f:
         data = f.read()
@@ -106,26 +155,17 @@ def read(path):
     if fmt not in FORMATS:
         raise ScxError(f"{path}: scenario format {fmt.decode('latin-1')!r} is not supported "
                        f"(this reader knows {', '.join(sorted(f.decode() for f in FORMATS))})")
-    header = struct.unpack_from("<I", data, 4)[0]
     try:
-        s = Stream(zlib.decompress(data[8 + header:], -15))
+        s = Stream(zlib.decompress(data[body_start(data):], -15))
     except zlib.error as e:
         raise ScxError(f"{path}: the compressed part does not decompress ({e})") from None
     s.i32()                                 # next object ID
     civs = tribe_scen(s)
-    w = s.u32()
-    if w == 0xDEADF00D:
-        raise ScxError(f"{path}: a versioned map (HD or DE) in format {fmt.decode()}")
-    h = s.u32()
-    if not (0 < w <= 500 and 0 < h <= 500):
-        raise ScxError(f"{path}: map size {w} x {h} is not possible: the file has another layout")
-    tiles = np.frombuffer(s.take(w * h * 3), np.uint8).reshape(h, w, 3)     # rows of y, then x
-    terrain = tiles[:, :, 0].T.astype(np.int16)                              # [x, y], as read_scenario
-    elevation = tiles[:, :, 1].view(np.int8).T.astype(np.float32)
+    terrain, elevation = read_map(s, path)
 
     # The colors and start views are in the scenario player data after the objects (format < 1.36)
     n = s.u32()
-    s.skip((n - 1) * 7 * 4)                 # world player data: resources and population
+    s.skip((n - 1) * (6 if fmt < b"1.20" else 7) * 4)   # world player data: resources, population from 1.20 (genie-scx)
     objects = []
     for p in range(n):                      # objects: x, y, z, ID, type, state, angle, frame, garrisoned in
         for _ in range(s.u32()):
@@ -151,5 +191,5 @@ def read(path):
         if civ is not None:
             players[p] = {"civ": CIVS[civ] if 0 <= civ < len(CIVS) else f"CIV_{civ}", "color": color,
                           "view": view if min(view) >= 0 else None}
-    return {"format": fmt.decode(), "width": w, "height": h, "terrain": terrain, "elevation": elevation,
+    return {"format": fmt.decode(), "width": terrain.shape[0], "height": terrain.shape[1], "terrain": terrain, "elevation": elevation,
             "players": players, "objects": objects}

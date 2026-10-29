@@ -34,7 +34,12 @@ def play(timeline, jump=None):
             done.append(game.now)
     replay.Replay(game, d).run(clock=lambda: game.now, sleep=game.sleep, log=None, bar=True, poll=poll)
     names = [json.loads(c.split(" ", 6)[6])["text"] for c in game.sent if c.startswith("scoreboard players display name")]
-    return [n.split(" · F ")[0] for n in names]   # without the resources (#932)
+    last, out = {}, []                              # without the resources (#932) and the APM (#3764), per player
+    for n in (n.split(" · F ")[0] for n in names):
+        if last.get(n.split(" (")[0]) != n:
+            out.append(n)
+        last[n.split(" (")[0]] = n
+    return out
 
 
 def test_the_sidebar_starts_in_the_dark_age_and_an_age_up_changes_the_line():

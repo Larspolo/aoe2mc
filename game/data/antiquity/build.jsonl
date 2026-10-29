@@ -1,0 +1,28 @@
+{"name": "ACADEMY", "cost": {"wood": 150}, "time": 60, "icon": "polished_andesite", "age": 2, "military": true, "unlocked_by": "STABLE", "not_civs": ["PERSIANS"]}
+{"name": "ARCHERY_RANGE", "cost": {"wood": 150}, "time": 40, "icon": "target", "age": 1, "military": true, "unlocked_by": "BARRACKS", "bot": 5}
+{"name": "BALLISTA_TOWER", "cost": {"stone": 150}, "time": 65, "icon": "polished_basalt", "age": 3, "needs": "BALLISTA_TOWER_TECH", "not_civs": ["LAC_VIET", "PERSIANS", "SHANG"]}
+{"name": "BARRACKS", "cost": {"wood": 125}, "time": 30, "icon": "stone_brick_wall", "military": true, "bot": 3}
+{"name": "BRONZE_AGE", "age": 1, "age_tech": 2}
+{"name": "DOCK", "cost": {"wood": 100}, "time": 50, "icon": "dark_oak_planks"}
+{"name": "FARM", "cost": {"wood": 75}, "time": 24, "icon": "wheat", "age": 1, "unlocked_by": "MARKET"}
+{"name": "FORTIFIED_GATE", "cost": {"stone": 30}, "time": 35, "icon": "iron_bars", "gate": true, "age": 3, "needs": "FORTIFIED_WALL_TECH"}
+{"name": "FORTIFIED_WALL", "cost": {"stone": 5}, "time": 7, "icon": "mossy_stone_brick_wall", "wall": true, "age": 3, "needs": "FORTIFIED_WALL_TECH", "not_civs": ["CARTHAGINIANS", "MACEDONIANS", "MINOANS", "YAMATO"]}
+{"name": "GOVERNMENT_CENTER", "cost": {"wood": 175}, "time": 60, "icon": "lectern", "age": 2, "unlocked_by": "MARKET"}
+{"name": "GRANARY", "cost": {"wood": 120}, "time": 30, "icon": "hay_block", "bot": 1, "near": "food"}
+{"name": "GUARD_TOWER", "cost": {"stone": 150}, "time": 65, "icon": "chiseled_stone_bricks", "age": 3, "needs": "GUARD_TOWER_TECH", "not_civs": ["MINOANS", "ROMANS", "YAMATO"]}
+{"name": "HOUSE", "cost": {"wood": 30}, "time": 20, "icon": "spruce_stairs"}
+{"name": "IRON_AGE", "age": 2, "age_tech": 3}
+{"name": "MARKET", "cost": {"wood": 150}, "time": 40, "icon": "barrel", "age": 1, "unlocked_by": "GRANARY", "bot": 4}
+{"name": "MEDIUM_GATE", "cost": {"stone": 30}, "time": 35, "icon": "iron_bars", "gate": true, "age": 2, "needs": "MEDIUM_WALL_TECH"}
+{"name": "MEDIUM_WALL", "cost": {"stone": 5}, "time": 7, "icon": "stone_brick_wall", "wall": true, "age": 2, "needs": "MEDIUM_WALL_TECH"}
+{"name": "SENTRY_TOWER", "cost": {"stone": 150}, "time": 65, "icon": "stone_bricks", "age": 2, "needs": "SENTRY_TOWER_TECH"}
+{"name": "SIEGE_WORKSHOP", "cost": {"wood": 200}, "time": 60, "icon": "grindstone", "age": 2, "military": true, "unlocked_by": "ARCHERY_RANGE"}
+{"name": "SMALL_GATE", "cost": {"stone": 30}, "time": 35, "icon": "iron_bars", "gate": true, "age": 1, "needs": "SMALL_WALL_TECH"}
+{"name": "SMALL_WALL", "cost": {"stone": 5}, "time": 7, "icon": "cobblestone_wall", "wall": true, "age": 1, "needs": "SMALL_WALL_TECH"}
+{"name": "STABLE", "cost": {"wood": 150}, "time": 40, "icon": "saddle", "age": 1, "military": true, "unlocked_by": "BARRACKS", "bot": 6}
+{"name": "STORAGE_PIT", "cost": {"wood": 120}, "time": 30, "icon": "chest", "bot": 2, "near": "wood"}
+{"name": "TEMPLE", "cost": {"wood": 200}, "time": 60, "icon": "enchanting_table", "age": 2, "unlocked_by": "MARKET", "not_civs": ["MACEDONIANS"]}
+{"name": "TOOL_AGE", "age_tech": 1}
+{"name": "TOWN_CENTER", "cost": {"wood": 200}, "time": 60, "icon": "cobblestone", "flat": true}
+{"name": "WATCH_TOWER", "cost": {"stone": 150}, "time": 65, "icon": "cracked_stone_bricks", "age": 1, "needs": "WATCH_TOWER_TECH"}
+{"name": "WONDER", "cost": {"wood": 1000, "gold": 1000, "stone": 1000}, "time": 3500, "icon": "weathered_cut_copper_stairs", "age": 3}

@@ -64,15 +64,20 @@ SNEAK = '{type:"minecraft:entity_properties",entity:"this",predicate:{flags:{is_
 ICONS = {r["name"]: r["icon"] for r in ROWS if "icon" in r}           # a block of the design
 AGE_TECHS = tuple(r["name"] for r in sorted((r for r in ROWS if "age_tech" in r), key=lambda r: r["age_tech"]))
 AGE = {r["name"]: r["age"] for r in ROWS if "age" in r}           # (0: Dark)
+# The age names (#3666): the start age ("start_age" of the first age line of train.jsonl), then the label of each age
+AGE_NAMES = (lambda t: (t[AGE_TECHS[0]]["start_age"], *(t[a]["label"] for a in AGE_TECHS)))(
+    {r["name"]: r for r in table.load("train.jsonl")})
 WALLS = tuple(r["name"] for r in ROWS if r.get("wall"))          # a line of 1-tile sites with two clicks (#1322)
 GATES = tuple(r["name"] for r in ROWS if r.get("gate"))          # on 4 own wall tiles in a line (#1324)
 NEEDS = {r["name"]: r["needs"] for r in ROWS if "needs" in r}     # a unit or building after a technology (#1380)
+UNLOCKED_BY = {r["name"]: r["unlocked_by"] for r in ROWS if "unlocked_by" in r}   # after an own building (Antiquity, #3668)
 SHORE = ("DOCK",)                                                  # on water next to the land, as in AoE2 (#1382)
 WATER = ("FISH_TRAP",)                                             # on free water only, ships build it (#1438)
 FLAT = tuple(r["name"] for r in ROWS if r.get("flat"))                 # on one elevation level also for the Thracians (#2545)
 MOVES = {r["name"] for r in table.load("buildings.jsonl") if r.get("moves")}   # a mob when complete (cart, #2209)
 GHOST = 400                                                        # block displays of one ghost: a coarser shape above
 CRANE = 1.2                                                        # the build speed factor of Treadmill Crane (#1422)
+BUILD_RATE = {r["name"]: r["build_rate"] for r in table.load("train.jsonl") if "build_rate" in r}   # Antiquity Architecture (#3917)
 NOT_UNITS = ("block_display", "interaction", "item_display", "marker", "text_display")   # ghosts, name lines
 LOCKED = "gray_dye"                                                # the item of a locked building or unit
 
@@ -196,11 +201,15 @@ def locked(g, name):
     """The text "Needs the ... Age" when the player is not yet in the AoE2 age of building or unit name, else None.
     An age after the AoE2 setting "Ending age" (aoe2mc.json "end_age", run.py --end-age, #2346) stays locked."""
     if name in AGE_TECHS and AGE_TECHS.index(name) + 1 > getattr(g, "data", {}).get("end_age", len(AGE_TECHS)):
-        return f"The game ends in the {('Dark', 'Feudal', 'Castle', 'Imperial')[g.data['end_age']]} Age"   # #2346
+        return f"The game ends in the {AGE_NAMES[g.data['end_age']]}"   # #2346
     if g is not None and (age := AGE.get(name, 0) - civs.earlier(g, name)) > ages(g):
-        return f"Needs the {('Dark', 'Feudal', 'Castle', 'Imperial')[age]} Age"
+        return f"Needs the {AGE_NAMES[age]}"
     if g is not None and name in NEEDS and NEEDS[name] not in getattr(g, "techs", ()):
         return "Needs " + pretty(NEEDS[name].removesuffix("_TECH"))
+    if name in UNLOCKED_BY and hasattr(g, "sites") and hasattr(g, "data"):
+        import train                                                   # train imports this module
+        if UNLOCKED_BY[name] not in train.owned(g):
+            return "Needs a " + pretty(UNLOCKED_BY[name])
     from gather import has_mode                                        # gather imports this module
     if name == "TOWN_CENTER" and has_mode(g, "sudden-death") and town_center(g):
         return "Sudden Death: only one town center"                    # (#2407)
@@ -256,22 +265,28 @@ def items(g=None):
 
 
 DELETE = 35                                                            # slot: kill the selected own units (#3451)
+SHELTER = 44                                     # slot: the selected villagers seek shelter (#3440), last of the next free row
 
 
 def open_menu(g, player):
     """Show the build menu. A click sets the trigger score, as /trigger aoe_build set N does, and closes the menu.
     A building that the civilization does not have is not in it (hidden); the other items keep their slots.
-    The last slot deletes the selected own units (stance.delete, #3451)."""
+    Slot DELETE deletes the selected own units (stance.delete, #3451), slot SHELTER sends them into a building (#3440)."""
     def choose(p, slot, shift):                                        # shift: one building all the same
         if slot == DELETE:
             import stance                                              # stance imports gather, gather imports this module
             stance.delete(g)
             chest.close(g, p)
+        elif slot == SHELTER:
+            import garrison                                            # garrison imports gather, gather imports this module
+            garrison.bell(g, p, set(g.selected))
+            chest.close(g, p)
         elif slot < len(MENU) and not locked(g, MENU[slot]) and not hidden(g, MENU[slot]):
             g.command(f"scoreboard players set {p} {OBJECTIVE} {slot + 1}")
             chest.close(g, p)
     return chest.show(g, player, "Build", [it for it in items(g) if not hidden(g, MENU[it[0]])]
-                      + [(DELETE, "tnt", "Delete", "Kills the selected units")], choose)
+                      + [(DELETE, "tnt", "Delete", "Kills the selected units"),
+                         (SHELTER, "oak_door", "Seek Shelter", "The selected villagers go into the nearest building")], choose)
 
 
 def chosen(g, player):
@@ -630,7 +645,8 @@ def rise(g, site, work):
         x0, x1, z0, z1 = site["footprint"]                                 # the builders stand at its edge
         work *= CRANE ** ("TREADMILL_CRANE" in getattr(g, "techs", ())) * civs.build_rate(g, site["name"]) \
             * civs.church_rate(g, ((x0 + x1) / 2, (z0 + z1) / 2)) \
-            * civs.turbo(g, site["name"])                              # Georgian Fortified Church (#1930), Turbo (#2359)
+            * civs.turbo(g, site["name"]) \
+            * math.prod(BUILD_RATE[t] for t in getattr(g, "techs", ()) if t in BUILD_RATE)   # Georgian Fortified Church (#1930), Turbo (#2359)
     site["progress"] = min(1.0, site["progress"] + work / BUILD_TIMES[site["name"]])
     cmds, ring = site["commands"], site.get("ring", {})
     k = len(cmds) if site["progress"] >= 1 else math.floor(site["progress"] * len(cmds))

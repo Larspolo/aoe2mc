@@ -25,7 +25,7 @@ import math
 import civs
 import replay
 import units as unit_types
-from aoe2mc import GARRISONED
+from aoe2mc import CARRIERS, GARRISONED, INTO, MADE_INSIDE
 from garrison import INSIDE, OUTSIDE
 
 NAME = "TRANSPORT_SHIP"
@@ -120,11 +120,33 @@ def size(g):
     return SIZE + civs.value("transport", civs.civ(g), 0)
 
 
+def capacity(g, ship):
+    """The units that the own transport ship or ram ship takes: size() for a ship, CARRIERS for a ram (#3779)."""
+    name = g.soldiers.get(ship)
+    return CARRIERS[name] if name in CARRIERS and name != NAME else size(g)
+
+
+def carriers(g):
+    """{reference ID: UUID} of the own transport ships and rams of aoe2mc.json that live (#3779)."""
+    return {o["ref"]: o["uuid"] for o in g.data.get("objects", ()) if o["kind"] == "unit" and o.get("ref") is not None
+            and o.get("uuid") in g.soldiers and o["name"] in CARRIERS}
+
+
+def adopt(g, made):
+    """The units made (UUIDs) that a trigger made inside an own transport ship or ram ("Create Garrisoned Object",
+    the tag aoe2mc.in<ref>, #3779) go into it (go_in), so that out lets them out. The tags go: each unit joins once."""
+    for ref, ship in sorted(carriers(g).items()):
+        for u in sorted(set(g.where(None, f"@e[tag={INTO}{ref},tag={MADE_INSIDE}]")) & set(made)):
+            g.command(f"tag {u} remove {MADE_INSIDE}")
+            g.command(f"tag {u} remove {INTO}{ref}")
+            go_in(g, u, ship)
+
+
 def go_in(g, u, ship):
     """Unit u rides the transport ship: on its crew, or on the top unit inside. A full ship: it stays on the shore."""
     units = vars(g).setdefault("cargo", {}).setdefault(ship, [])
     g.command(f"aoe stop {u}")
-    if len(units) >= size(g):
+    if len(units) >= capacity(g, ship):
         if (v := g.villagers.get(u)) is not None:
             v.state = "idle"
         return

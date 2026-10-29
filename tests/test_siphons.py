@@ -66,7 +66,7 @@ def test_the_charge_and_the_detonation_hurt_the_ships_on_a_server(tiny_world, tm
         game.command("team add red")
         ids = {}
         for name, tag, x, z in (("FIRE_GALLEY", "f", 6.5, 5.5), ("GALLEY", "gg", 12.5, 5.5),       # the charge
-                                ("FISHING_SHIP", "nnn", 12.5, 7.0),                                  # 1.5 blocks away
+                                ("FISHING_SHIP", "nnn", 14.0, 5.5),   # 1.5 blocks away, not in the line of the galley shots (#3890)
                                 ("FIRE_GALLEY", "pppp", 30.5, 5.5), ("GALLEY", "qqqqq", 36.5, 5.5),  # no charge
                                 ("FIRE_GALLEY", "dddddd", 6.5, 16.5), ("GALLEY", "hhhhhhh", 10.5, 16.5)):   # detonation
             assert "Summoned" in summon(game, name, x, y + 0.5, z, tag), name
@@ -88,4 +88,4 @@ def test_the_charge_and_the_detonation_hurt_the_ships_on_a_server(tiny_world, tm
         time.sleep(1)
         assert "Test failed" in game.command(f"execute if entity {ids['dddddd']}")         # it sank
         assert health(game, ids["hhhhhhh"]) == 110 - 15                 # melee 10, +5 vs. warships
-        assert health(game, ids["nnn"]) == 50 - 7                       # 9.5 blocks away: out of the blast of 6
+        assert health(game, ids["nnn"]) == 50 - 7                       # 13 blocks away: out of the blast of 6

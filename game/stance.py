@@ -5,13 +5,16 @@ of the four AoE2 stances sends `aoe stance` (combat.stance_command, #1104) to ea
 villagers, and closes the menu. The fifth item selects all units of the type near the clicked unit: the second click
 did that before (#743). The sixth item stops the selected military units at once (#3353). The seventh item
 sends them on a patrol to the next clicked ground cell (#3355). The eighth item is the Attack Move (#3357), the ninth and
-tenth are Follow and Guard (follow.py, #3358). The eleventh item deletes the selected own units (#3451).
+tenth are Follow and Guard (follow.py, #3358). The eleventh item deletes the selected own units (#3451). The twelfth
+item, for a scout only, gives the selected scouts the Auto Scout order (autoscout.py, #3703).
 The boss bar of the selected unit shows a stance other than aggressive (bossbar.py).
 """
 import math
 
+import autoscout
 import bossbar
 import menu as chest
+import scout
 
 # The stances of combat.STANCES with their item and the AoE2 text.
 ITEMS = (("aggressive", "iron_sword", "Aggressive", "Attacks enemies in sight and chases them"),
@@ -25,10 +28,12 @@ ATTACK_MOVE = PATROL + 1                                           # slot: walk 
 FOLLOW = ATTACK_MOVE + 1                                           # slot: follow a clicked unit (#3358)
 GUARD = FOLLOW + 1                                                 # slot: guard a clicked unit or building (#3358)
 DELETE = GUARD + 1                                                 # slot: kill the selected own units (#3451)
+AUTO_SCOUT = DELETE + 1                                            # slot: explore the map by itself, scouts only (#3703)
+SCOUT_NAMES = {scout.CAVALRY, *scout.SCOUTS.values()}              # the unit names that get the item
 FORMATION = 18                                                     # third row: the four formations of AoE2 (#3416)
 FORMATIONS = (("Line", "rail", "Units in rows across the walk"),
               ("Box", "oak_fence", "Melee units around the ranged and weak units"),
-              ("Staggered", "chain", "Rows with double gaps, against area damage"),
+              ("Staggered", "iron_chain", "Rows with double gaps, against area damage"),
               ("Flank", "arrow", "Two groups side by side with a gap"))
 
 
@@ -50,6 +55,7 @@ def items(g, uuid):
          (FOLLOW, "lead", "Follow", "Walk after an own unit and stay near it"),
          (GUARD, "bell", "Guard", "Stay near an own unit or building; attack the enemies near it"),
          (DELETE, "tnt", "Delete", "Kills the selected units")] + \
+        ([(AUTO_SCOUT, "filled_map", "Auto Scout", "Explores the map by itself")] if getattr(g, "soldiers", {}).get(uuid) in SCOUT_NAMES else []) + \
         [(FORMATION + i, item, k, text + "\nNow" * (k == form)) for i, (k, item, text) in enumerate(FORMATIONS)]
 
 
@@ -70,6 +76,8 @@ def open_menu(g, player, uuid):
             vars(g).setdefault("ordering", {})[p] = "follow" if slot == FOLLOW else "guard"   # the next click picks the target
         elif slot == DELETE:
             delete(g)
+        elif slot == AUTO_SCOUT:
+            auto_scout(g, p)
         elif FORMATION <= slot < FORMATION + len(FORMATIONS):
             form(g, p, FORMATIONS[slot - FORMATION][0])
         else:
@@ -112,10 +120,17 @@ def delete(g):
     """Kill each selected own unit at once, with its horse, camel or boat, as the AoE2 Delete key (#3451): no resources
     come back. The census then finds them dead as after a fight (score, population, selection: train.census)."""
     import train                                                   # train imports gather, gather imports this module
-    for u in [u for u in sorted(g.selected) if u in g.villagers or u in g.soldiers]:
-        g.command(f"execute as {u} on vehicle run kill @s")
-        g.command(f"kill {u}")
+    for u in [u for u in sorted(g.selected) if u in g.villagers or u in g.soldiers]:   # not KEEP: "Disable Object Deletion" (#3777)
+        g.command(f"execute as {u} if entity @s[tag=!aoe2mc.keep] on vehicle run kill @s")
+        g.command(f"execute as {u} if entity @s[tag=!aoe2mc.keep] run kill @s")
     train.census(g)
+
+
+def auto_scout(g, player):
+    """Give the selected scouts the Auto Scout order (autoscout.start); the other selected units keep their order."""
+    import json
+    autoscout.start(g, [u for u in sorted(g.selected) if g.soldiers.get(u) in SCOUT_NAMES])
+    g.command(f"title {player} actionbar " + json.dumps({"text": "Auto Scout"}))
 
 
 def patrol(g, player, cell):

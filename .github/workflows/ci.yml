@@ -91,6 +91,24 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: gh workflow run automerge.yml --ref main -R "$GITHUB_REPOSITORY"
 
+  # The PRs whose CI failed while main was red wait for Unconflict (#3685): start it at once when main is green again.
+  recover:
+    needs: quick
+    if: github.ref == 'refs/heads/main' && github.event_name != 'schedule'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      actions: write         # gh workflow run
+    steps:
+      - name: Start Unconflict after a red main
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          last=$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/ci.yml/runs?branch=main&status=completed&per_page=20" \
+                 --jq '[.workflow_runs[] | select(.event != "schedule" and (.conclusion == "success" or .conclusion == "failure"))][0].conclusion')
+          echo "the run on main before this one: $last"
+          [ "$last" != failure ] || gh workflow run unconflict.yml --ref main -R "$GITHUB_REPOSITORY"
+
   # The full suite: two parallel jobs, so that a red slow test does not stop the Minecraft tests.
   slow:
     if: github.event_name == 'schedule' || inputs.full == true

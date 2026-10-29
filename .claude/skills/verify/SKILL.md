@@ -73,6 +73,12 @@ in the game (light, textures, connected fences and panes), what the player sees 
 - A player on the Paper server of the game program (#627): `mc_shot.Client(game.game_port, game.version)` joins the
   client as "aoe2mc" (`wait_join()`), `shot(PATH)`, `click(*client.slot(i, rows))` clicks a chest menu, `key(NAME)`
   (xdotool), `pick(g, UUID or rect)` aims and right clicks a unit or building (#2963). Example: `tests/test_menu_client.py`. Join takes about 40 s after the server start.
+- Use the shared start of a check script (#3831), do not write your own versions: `Client(..., world=WORLD)` deletes
+  the saved files of the player (a dead player starts alive), `place(game, X, Y, Z)` puts the player on a 3 × 3
+  platform and waits 15 s for the chunks, `Client.health(game, UUID or tag)` reads the `Health` of a mob.
+  Example: `tests/test_mc_shot_start.py`.
+- Before the first `key()` or `xdo()` of a client, call `client.wait_loaded(game)`: `wait_join()` returns when the server
+  lists the player, but the client shows "Loading terrain" for about 7 s more and drops the keys (#3889).
 - Direction of a mob: look at it from the side, 8–10 blocks away, pitch 10. A top view does not show the head.
 - Look at each image with the Read tool and describe it in the PR body. Comment the result on the ticket.
 

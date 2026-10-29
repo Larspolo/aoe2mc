@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """
 aoe2mc - Convert an Age of Empires II: DE scenario (.aoe2scenario) or the start state of a recorded game
-(.aoe2record) or an old scenario (.scx, format 1.21) to a Minecraft Java world. A campaign (.aoe2campaign) gives one world per scenario; an old campaign
-(.cpx, .cpn) too; its scenarios that are not .scx 1.21 give the files and the steps to save them in the DE editor.
+(.aoe2record) or an old scenario (.scx, format 1.21; .scn, 1.18 to 1.20) to a Minecraft Java world. A campaign (.aoe2campaign) gives one world per scenario; an old campaign
+(.cpx, .cpn) too; its scenarios of other formats (not .scn 1.18 to 1.20, .scx 1.21 or HD 1.22 to 1.26) give the files and the
+steps to save them in the DE editor.
 
 Usage:
     python aoe2mc.py MAP.aoe2scenario OUTPUT_WORLD_FOLDER [options]
@@ -13,6 +14,8 @@ Options:
     --name TEXT        World name in the Minecraft menu (default: file name)
     --seed N           Seed for the random details (tree heights, flowers), of a random map script (.rms) and
                        of --random-map (default 1)
+    --players N        Number of players of a random map script (.rms) and of --random-map (1 to 8, default 2)
+    --teams T,T,...    With --players: the team of each player (1 to 4 or -); grouped_by_team of a script puts a team together
     --random-map KIND  Make the map with an own generator (arabia, arena, black_forest, gold_rush, highland,
                        islands, mediterranean, nomad), no input file:
                        aoe2mc.py --random-map arabia OUT
@@ -253,26 +256,35 @@ RECORDS = (".aoe2record", ".mgz", ".mgx", ".mgl")      # recorded games: DE, HD;
 RANDOM_MAP = "random-map:"          # the source name of --random-map KIND (#993): read_map makes the map of the seed
 
 
-def read_map(path, seed=1):
+def read_map(path, seed=1, players=2, teams=None):
     """read_record for recorded games (RECORDS), read_scx for old .scx scenarios, read_json for a map in JSON,
     read_rms for a random map script (the land of seed), rmap.random_map for RANDOM_MAP + kind, else read_scenario."""
     p = path.lower()
     if p.startswith(RANDOM_MAP):
         import rmap
-        return map_description(rmap.random_map(p[len(RANDOM_MAP):], seed), path)
+        return map_description(rmap.random_map(p[len(RANDOM_MAP):], seed, players, teams), path)
     if p.endswith(".rms"):
-        return read_rms(path, seed)
-    return (read_record if p.endswith(RECORDS) else read_scx if p.endswith(".scx") else
+        return read_rms(path, seed, players, teams)
+    return (read_record if p.endswith(RECORDS) else read_scx if p.endswith((".scx", ".scn")) or old_format(path) else
             read_json if p.endswith(".json") else read_scenario)(path)
 
 
-def read_rms(path, seed):
+def old_format(path):
+    """True for an .aoe2scenario of a format before DE (the HD Edition, #3862): read_scx reads it, not read_scenario."""
+    import scx
+    if not path.lower().endswith(".aoe2scenario"):
+        return False
+    with open(path, "rb") as f:
+        return f.read(4) in scx.FORMATS
+
+
+def read_rms(path, seed, players=2, teams=None):
     """The land of a random map script (#963): rmap.generate makes a map description of the seed (read_json)."""
     import rmap
     with open(path, encoding="utf-8", errors="replace") as f:
         text = f.read()
     try:
-        return map_description(rmap.generate(text, seed), path)
+        return map_description(rmap.generate(text, seed, players, teams=teams), path)
     except rmap.RmsError as e:
         raise OptionError(f"{path}: {e}") from None
 
@@ -285,8 +297,9 @@ FLAGX, SHALLOWS_OBJECT = 162, 447   # an invisible editor flag (units.INVISIBLE)
 
 
 def read_scx(path):
-    """An old scenario (.scx format 1.21, #312), as read_scenario returns it. The old terrain and object IDs are the
-    DE IDs. A map that is not square gets the edge tiles repeated to a square. Old scenarios give no texts here."""
+    """An old scenario (.scx format 1.21, #312; .scn formats 1.18 to 1.20, #3860), as read_scenario returns it.
+    The old terrain and object IDs are the DE IDs. A map that is not square gets the edge tiles repeated to a square.
+    Old scenarios give no texts here."""
     import scx
     from AoE2ScenarioParser.datasets.terrains import TerrainId
     try:
@@ -320,7 +333,7 @@ def read_scx(path):
 
 def read_json(path):
     """A map description in JSON (#960), as read_scenario returns it: {"size": N, "terrain": N × N terrain IDs,
-    "elevation": N × N levels (default 0), "objects": [{"name", "player", "x", "y", "rotation"} ...],
+    "elevation": N × N levels (default 0), "layer": N × N land layer IDs (default -1 = none, #3689), "objects": [{"name", "player", "x", "y", "rotation"} ...],
     "players": {"1": {"civ": "BRITONS", "color": 0} ...}}. The IDs and names are those of AoE2ScenarioParser
     (TerrainId, object_kinds). The color is an index of buildings.COLOR_NAMES (default: the player number - 1)."""
     with open(path) as f:
@@ -335,13 +348,15 @@ def map_description(d, path):
         raise OptionError(f"{path}: \"size\" must be a positive integer")
     terrain_names = {t.value: t.name for t in TerrainId}
     arrays = {}
-    for key, default in (("terrain", None), ("elevation", 0)):
+    for key, default in (("terrain", None), ("elevation", 0), ("layer", -1)):
         a = np.array(d.get(key, default if default is None else [[default] * size] * size))
         if a.shape != (size, size):
             raise OptionError(f"{path}: \"{key}\" must be {size} lists of {size} numbers, not shape {a.shape}")
         arrays[key] = a
     if (bad := sorted(set(arrays["terrain"].ravel().tolist()) - set(terrain_names))):
         raise OptionError(f"{path}: unknown terrain IDs {bad[:10]} (see AoE2ScenarioParser TerrainId)")
+    if (bad := sorted(set(arrays["layer"].ravel().tolist()) - set(terrain_names) - {-1})):
+        raise OptionError(f"{path}: unknown layer IDs {bad[:10]} (-1 = no layer, see AoE2ScenarioParser TerrainId)")
     kinds = object_kinds(old=False)
     ids = {name: (i, prefix) for i, (prefix, name) in kinds.items()}
     objects = []
@@ -357,10 +372,23 @@ def map_description(d, path):
         pid, civ, color = int(pid), p.get("civ", "?").upper(), p.get("color", int(pid) - 1)
         players[pid] = {"color": buildings.COLOR_NAMES[color] if pid and 0 <= color < 8 else "light_gray",
                         "arch": buildings.CIV_TO_ARCH.get(civ, "western"), "civ": civ, "view": None}
+        if "team" in p:                                         # --teams of a random map (#3946)
+            players[pid]["team"] = p["team"]
     for pid in {o["player"] for o in objects} - set(players):          # an object of a player without an entry
         players[pid] = {"color": buildings.COLOR_NAMES[(pid - 1) % 8], "arch": "western", "civ": "?", "view": None}
-    return (size, arrays["terrain"].astype(np.int16), arrays["elevation"].astype(np.float32), terrain_names,
+    terrain = apply_layers(arrays["terrain"].astype(np.int16), arrays["layer"], terrain_names)
+    return (size, terrain, arrays["elevation"].astype(np.float32), terrain_names,
             {k: "" for k in CHAPTERS}, objects, players)
+
+
+def apply_layers(terrain, layer, terrain_names):
+    """Give each tile its land layer (a road painted in the DE editor, #3688): a land layer on a land base gives the
+    tile the layer ID, water on either side keeps the base. layer -1 = no layer. Returns the terrain array."""
+    land = {i: terrain_style(n)["depth"] == 0 for i, n in terrain_names.items()}
+    for x, y in zip(*np.nonzero(layer >= 0)):
+        if land.get(int(terrain[x, y])) and land.get(int(layer[x, y])):
+            terrain[x, y] = layer[x, y]
+    return terrain
 
 
 def read_scenario(path):
@@ -376,11 +404,13 @@ def read_scenario(path):
     size = mm.map_size
     terrain = np.zeros((size, size), np.int16)
     elevation = np.zeros((size, size), np.float32)
+    layer = np.full((size, size), -1, np.int16)
+    terrain_names = {t.value: t.name for t in TerrainId}
     for t in mm.terrain:
         terrain[t.x, t.y] = t.terrain_id
         elevation[t.x, t.y] = t.elevation
-
-    terrain_names = {t.value: t.name for t in TerrainId}
+        layer[t.x, t.y] = t.layer
+    terrain = apply_layers(terrain, layer, terrain_names)
 
     kinds = object_kinds()
     other = {r["tech"]: r["name"] for r in units.rows("tech_names.jsonl")}   # the names of game/data/train.jsonl
@@ -449,6 +479,11 @@ def read_scenario(path):
                                                getattr(e, "color_mood", None) in set(ColorMood) else {}))
                                        for e in (in_order(t.effects, t.effect_order) if shown else t.effects)])
                          for t in triggers]
+    tiles = {u.reference_id: [int(u.x), int(u.y)] for us in scn.unit_manager.units for u in us}
+    for c in (c for t in texts["triggers"] for c in t["conditions"]):   # the tile of a building: no entity (#3782)
+        if c["type"] in (BRING_OBJECT_TO_AREA, BRING_OBJECT_TO_OBJECT):
+            c["tile"] = None if c.get("unit") else tiles.get(c.get("ref"))
+            c["next_tile"] = None if c.get("next_unit", True) else tiles.get(c.get("next"))
     mood = mm.map_color_mood                 # a ColorMood, or a string that the parser does not know (#1594)
     texts["mood"] = (getattr(mood, "name", None) or str(mood or "DEFAULT")).upper()
     om = scn.option_manager                  # the tab "Global Victory" for the scenario mode (#2566, run.VICTORIES)
@@ -483,6 +518,7 @@ def read_record(path):
     except ImportError:
         raise SystemExit("A .aoe2record file needs the mgz package: python3 -m pip install mgz") from None
     from AoE2ScenarioParser.datasets.terrains import TerrainId
+    new_saves()
     try:
         with open(path, "rb") as f:
             match = parse_match(f)
@@ -637,6 +673,29 @@ def own_selection():
         Inputs.add_action = add
 
 
+def new_saves():
+    """mgz 1.8.51 reads DE records up to save version 66.6. Save 68.9 (#3686) has one more DE string at the end of
+    each player of the DE header and two more after the string before the timestamp: add these reads to
+    mgz.fast.header.parse_de. A patch of its source, not a copy of the parser; once, as the fix belongs in mgz."""
+    import inspect
+    import textwrap
+    from mgz.fast import header
+    if getattr(header.parse_de, "new_saves", False):
+        return
+    src = textwrap.dedent(inspect.getsource(header.parse_de))
+    for old, new in (("            data.read(4)\n\n        players.append(",
+                      "            data.read(4)\n        if save > 66.6:\n            de_string(data)\n\n"
+                      "        players.append("),
+                     ("    if not skip:\n        de_string(data)\n",
+                      "    if not skip:\n        de_string(data)\n        if save > 66.6:\n"
+                      "            de_string(data)\n            de_string(data)\n")):
+        if src.count(old) != 1:                                     # another mgz version: leave it as it is
+            return
+        src = src.replace(old, new)
+    exec(compile(src, header.__file__, "exec"), header.__dict__)
+    header.parse_de.new_saves = True
+
+
 TIMELINE_KEYS = {"building_id": "type", "unit_id": "type", "technology_id": "technology_id", "object_ids": "objects",
                  "target_id": "target", "amount": "amount", "resource": "resource", "stance": "stance",
                  "formation": "formation", "order": "order", "command": "command",
@@ -654,6 +713,7 @@ def read_timeline(path):
     from mgz.model import parse_match
     names, parse = object_kinds(), fast.parse_action
     fast.parse_action = de_queue(parse)
+    new_saves()
     try:
         with open(path, "rb") as f, own_selection():
             match = parse_match(f)
@@ -772,17 +832,19 @@ def train_ms(unit):
     return (train(unit) or (30,))[0] * 1000
 
 
-def training(timeline, research=False):
+def training(timeline, research=False, research_s=None):
     """The trainings of a recorded game: (end time ms, QUEUE event, building ID) for each unit, in the order of the
     QUEUE commands. A building trains one unit after the other; its research (RESEARCH_S) delays them. The record
     does not show a cancelled queue or the population limit. research: also (end, RESEARCH event, building ID) for
-    each technology with a RESEARCH_S value (#2810)."""
+    each technology with a RESEARCH_S value (#2810). research_s: the seconds of each technology in place of RESEARCH_S
+    (the game program has all of them, #3738)."""
     busy, out = {}, []                   # building -> free at
+    research_s = RESEARCH_S if research_s is None else research_s
     for e in timeline:
         kind, t = e["kind"], e["time"]
         if kind in ("queue", "research") and e.get("objects"):
             name = e.get("name", "") if kind == "queue" else e.get("technology", "")
-            s = train_ms(name) if kind == "queue" else RESEARCH_S.get(name, 0) * 1000
+            s = train_ms(name) if kind == "queue" else research_s.get(name, 0) * 1000
             for n in range(max(1, int(e.get("amount", 1))) if kind == "queue" else 1):
                 b = e["objects"][n % len(e["objects"])]
                 busy[b] = max(busy.get(b, 0), t) + s
@@ -1798,13 +1860,17 @@ def chinese_garden(E, n, rect, y, put):
 
 
 def cliff_ridges(E, cols, rects, rng):
-    """All cliffs together form continuous rock ridges: high in the middle, sloped at the open sides."""
+    """All cliffs together form continuous rock ridges: high in the middle, sloped at the open sides.
+    rects: (footprint, name); a name of a "rocks" line of objects.jsonl (CLIFF_DESERT, CLIFF_SNOW) has its own rocks (#4115)."""
     if not rects:
         return
     n, T = cols.n, cols.T
     mask = np.zeros((n, n), bool)
-    for x0, x1, z0, z1 in rects:
+    kind = np.zeros((n, n), np.uint8)                  # 0: the default rocks, i + 1: the rocks of CLIFF_ROCKS[i]
+    for (x0, x1, z0, z1), name in rects:
         mask[max(0, x0):max(0, min(n, x1)), max(0, z0):max(0, min(n, z1))] = True
+        kind[max(0, x0):max(0, min(n, x1)), max(0, z0):max(0, min(n, z1))] = next(
+            (i + 1 for i, r in enumerate(CLIFF_ROCKS) if name.startswith(r["name"])), 0)
     dist = np.zeros((n, n), np.int16)
     cur = mask.copy()
     for k in range(1, T + 2):                          # distance to the edge of the ridge
@@ -1818,9 +1884,10 @@ def cliff_ridges(E, cols, rects, rng):
     base = cols.wtop[xs, zs].astype(np.int32) + 1
     X, Z = np.repeat(xs, hs), np.repeat(zs, hs)
     Y = np.repeat(base, hs) + (np.arange(hs.sum()) - np.repeat(np.cumsum(hs) - hs, hs))
-    rocks = np.array([B(b) for b in ("stone", "stone", "andesite", "andesite", "tuff", "cobblestone", "stone", "mossy_cobblestone")], np.uint16)
-    E.add(X, Y, Z, rocks[rng.integers(len(rocks), size=len(X))])
-    snowy = cols.top_id[xs, zs] == B("snow_block")         # snow on top of ridges in snow areas
+    rocks = np.array([[B(b) for b in ("stone", "stone", "andesite", "andesite", "tuff", "cobblestone", "stone", "mossy_cobblestone")],
+                      *([B(b) for b in r["rocks"]] for r in CLIFF_ROCKS)], np.uint16)
+    E.add(X, Y, Z, rocks[kind[X, Z], rng.integers(rocks.shape[1], size=len(X))])
+    snowy = (cols.top_id[xs, zs] == B("snow_block")) | (kind[xs, zs] == 1 + SNOW_CLIFF)   # snow on top in snow areas
     if snowy.any():
         E.add(xs[snowy], (base + hs)[snowy], zs[snowy], "snow[layers=2]")
 
@@ -1855,6 +1922,8 @@ MONUMENTS = tuple(r["name"] for r in OBJECTS if r.get("monument"))
 PASSABLE_OBJECTS = tuple(r["name"] for r in OBJECTS if r.get("passable"))
 OBSTACLES = tuple(r["name"] for r in OBJECTS if r.get("obstacle"))
 STATUES = tuple(r["name"] for r in OBJECTS if r.get("decor") == "statue")
+CLIFF_ROCKS = [r for r in OBJECTS if "rocks" in r]         # cliff types with their own rocks (#4115)
+SNOW_CLIFF = next(i for i, r in enumerate(CLIFF_ROCKS) if "snow_block" in r["rocks"])   # it gets snow on top
 
 
 def object_footprint(o, T):
@@ -1961,7 +2030,7 @@ def place_objects(objects, players, cols, rng):
             buildings.place_building(E, cols, B, dict(o, kind="B", name="MILL_GRANARY"), players | {o["player"]: dict(players.get(o["player"], {"color": "light_gray", "arch": "western"}), arch="middle_eastern")}, set(), {})
             stats["buildings"] += 1
         elif kind == "O" and name.startswith("CLIFF"):
-            cliffs.append(E.footprint)
+            cliffs.append((E.footprint, name))
             stats["cliffs"] += 1
         elif kind == "O" and "PYRAMID" in name:
             buildings.place_building(E, cols, B, dict(o, kind="B", x=int(o["x"]) + 0.5, y=int(o["y"]) + 0.5),
@@ -2119,10 +2188,14 @@ CHAIN = 4                   # units per boat seat: each garrisoned unit rides th
 NAME_HIDDEN = "aoe2mc.name_hidden"  # entity tag of a unit whose name tag a trigger hid with the unit (#2862)
 GARRISONED = "aoe2mc.garrisoned"    # entity tag of a unit inside its building (#807; the game program: #808)
 NO_TARGET = "aoe2mc.notarget"       # entity tag: no unit or tower chooses it as a target (AoePlugin calm, #2826)
+KEEP = "aoe2mc.keep"   # entity tag: the Delete key of a person does not kill it (game/stance.py delete, #3777)
 UNSELECTABLE = "aoe2mc.unselectable"   # entity tag: no click of a person selects it (game/scenario.py, #2854)
 SELECTED = "aoe2mc.sel"             # temporary entity tag: the selected objects and the area units of an effect (#2975)
 MADE_INSIDE = "aoe2mc.made_inside"  # entity tag of a unit that a trigger made inside a building: the game program adds
                                     # it to the garrison of the building (#2764)
+INTO = "aoe2mc.in"                  # entity tag aoe2mc.in<ref>: a unit that a trigger made inside the ship or ram ref (#3779)
+CARRIERS = {r["name"]: r["garrison"] for r in units.rows("carriers.jsonl")}   # units that a ship or ram holds (#3779)
+CARRIER_REFS = {}           # reference ID of a transport ship or ram of the scenario -> its name (trigger_files, #3779)
 GARRISON_CELLS = 20         # free cells of a building in aoe2mc.json: the largest AoE2 garrison (castle, #808)
 SUN = ("minecraft:zombie", "minecraft:zombie_villager", "minecraft:skeleton", "minecraft:stray", "minecraft:drowned")
 
@@ -2843,6 +2916,7 @@ DAMAGE_OBJECT = 24                                                 # "Damage Obj
 DECISION_TRIGGERED = 75                                            # the condition "Decision Triggered" (#2888)
 DECLARE_VICTORY = 13                                               # "Declare Victory" (#2542)
 DELETE_KEY = 83                                                    # "Delete Key" (#2887)
+DISABLE_OBJECT_DELETION = 74                                       # "Disable Object Deletion" (#3777)
 DISABLE_OBJECT_SELECTION = 70                                      # "Disable Object Selection" (#2854)
 DISABLE_TECHNOLOGY_STACKING = 68                                   # "Disable Technology Stacking" (#2866)
 DISABLE_UNIT_ATTACKABLE = 98                                       # "Disable Unit Attackable" (#2695)
@@ -2853,6 +2927,7 @@ DISPLAY_INSTRUCTIONS = 20
 DISPLAY_TIMER = 37                                                 # "Display Timer" (#2572)
 ENABLE_DISABLE_OBJECT = 38                                         # "Enable/Disable Object" (#2775)
 ENABLE_DISABLE_TECHNOLOGY = 39                                     # "Enable/Disable Technology" (#2775)
+ENABLE_OBJECT_DELETION = 73                                        # "Enable Object Deletion" (#3777)
 ENABLE_OBJECT_SELECTION = 71                                       # "Enable Object Selection" (#2854)
 ENABLE_TECHNOLOGY_STACKING = 67                                    # "Enable Technology Stacking" (#2866)
 ENABLE_UNIT_ATTACKABLE = 99                                       # "Enable Unit Attackable" (#2695)
@@ -2990,6 +3065,7 @@ INVERTED = tuple(OBJECT_TESTS) + (                                  # conditions
     DECISION_TRIGGERED,
     OBJECT_HAS_ACTION,
     TRIGGER_ACTIVE,                                                    # (parallel tickets add lines, #2791)
+    VICTORY_TIMER,                                                     # the timer holds while it is not in the range (#3781)
 )
 
 
@@ -3166,16 +3242,22 @@ def damage_lines(e, c):
     """The commands of "Damage Object" (#2571): a `damage` of each unit of the effect (effect_units) by its amount.
     The amount is in AoE2 hit points: the game program gives each unit max_health = its AoE2 hit points
     (combat.stats_command); a vanilla world keeps the health of the mob. A negative amount heals, as in AoE2: the
-    commands of "Heal Object" (heal_commands, #2907)."""
+    commands of "Heal Object" (heal_commands, #2907). A building type: the order "damage <player> <building> <x1> <y1>
+    <x2> <y2> <amount>" (-1: the whole map) for game/scenario.py damage (#3776)."""
     q, stats = e.get("quantity") or 0, c.stats
     found = effect_units(e, c.T) if q else None
-    if found is None:
-        stats["damage (building, not supported yet)" if q else "damage (no amount)"] += 1
-        return []
+    if found is None:                                                  # a building: an order (#3776)
+        stats["damage (building)" if q else "damage (no amount)"] += 1
+        a, name = e.get("area", [-1] * 4), e["object"][1]
+        x0, y0, x1, y1 = (min(a[0], a[2]), min(a[1], a[3]), max(a[0], a[2]), max(a[1], a[3])) if min(a) >= 0 else [-1] * 4
+        return [f'data modify storage aoe2mc:orders list append value "damage {e["player"]} {name} {x0} {y0} {x1} {y1} {q}"'] * \
+            bool(q and e["player"] >= 0)
     stats["damage"] += 1                                               # Gaia: the tag aoe2mc.p0 (effect_units)
+    hurt = [f'data modify storage aoe2mc:orders list append value "hurt {r} {q}"' for r in picked(e)] * bool(q)
+    stats["damage (selected building)"] += len(hurt)                   # a selected building has no entity (#4073)
     if q < 0:
-        return heal_commands(found, -q, c)
-    return [f"{run} damage @s {q}" for run in hp_runs(found, c)]       # damage takes one entity
+        return heal_commands(found, -q, c) + hurt
+    return [f"{run} damage @s {q}" for run in hp_runs(found, c)] + hurt  # damage takes one entity
 
 
 def attack_lines(e, c, armor=None, q=None):
@@ -3286,9 +3368,11 @@ def garrisoned_lines(e, c):
     """The commands of "Create Garrisoned Object" (#2764): a summon of the unit (object2, units.make_entity) in the
     state of a garrisoned unit of the converter (plan_units, #807) on the inside cells of each selected building
     (buildings.INSIDE). The tag MADE_INSIDE lets the game program add it to the garrison, so UNGARRISON lets it out.
-    A holder that is not a building with rooms (a ship, a ram) or no selected object: not supported yet."""
+    A transport ship or a ram (CARRIER_REFS, #3779): the unit appears at the holder (its tag aoe2mc.r<ref>) with the
+    tag aoe2mc.in<ref>, and the game program puts it on the holder (game/transport.py adopt). Another holder or no
+    selected object: not supported yet."""
     kind, name = e.get("object2") or (None, None)
-    holders = [r for r in e.get("selected", []) if r in buildings.INSIDE]
+    holders = [r for r in e.get("selected", []) if r in buildings.INSIDE or r in CARRIER_REFS]
     nbt = units.make_entity(dict(name=name, player=max(e["player"], 0), rotation=math.pi / 2, hero=kind == "H"),
                             c.players or {},
                             (0.0, 0.0, 0.0), np.random.default_rng(c.t["id"])) if kind in ("U", "H") else None
@@ -3309,6 +3393,13 @@ def garrisoned_lines(e, c):
         parts += list(part.get("Passengers", []))
     lines = []
     for ref in holders:                                                # one unit per building, as in AoE2
+        if ref not in buildings.INSIDE:
+            part = units.top_entity(nbt)
+            tags = part["Tags"]
+            part["Tags"] = List[String](list(tags) + [String(f"{INTO}{ref}")])
+            lines.append(f"execute at @e[tag=aoe2mc.r{ref},limit=1] run summon {entity} ~ ~ ~ {nbt.snbt()}")
+            part["Tags"] = tags
+            continue
         cells, y, center = buildings.INSIDE[ref]
         x, z = cells[0] if len(cells) else center
         lines.append(f"summon {entity} {x + 0.5} {int(y)} {z + 0.5} {nbt.snbt()}")
@@ -3496,9 +3587,17 @@ def replace_lines(e, c):
     """The commands of "Replace Object" (#2703): a summon of the entity of the new type (units.make_entity, as "Create
     Object") of the target player at each unit of the effect (effect_units), then a kill of the old units and their
     mounts. Minecraft cannot change the type of a mob. A temporary tag marks the old units first: a new unit of the
-    same entity type and player must stay. A type with no entity (a building) is not supported yet."""
+    same entity type and player must stay. A building by a building (#3778): the order "replace <player> <old> <new>
+    <x1> <y1> <x2> <y2>" (-1: the whole map) goes into the storage aoe2mc:orders, and game/scenario.py replace puts
+    the complete new building on the tile of each old one. Other types with no entity are not supported yet."""
     T, stats = c.T, c.stats
     kind, name = e.get("object2") or (None, None)
+    if kind == "B" and (e.get("object") or ("",))[0] == "B" and e["player"] > 0:
+        stats["replace"] += 1
+        a = e.get("area", [-1] * 4)
+        x0, y0, x1, y1 = (min(a[0], a[2]), min(a[1], a[3]), max(a[0], a[2]), max(a[1], a[3])) if min(a) >= 0 else [-1] * 4
+        return [f'data modify storage aoe2mc:orders list append value "replace {e["player"]} {e["object"][1]} {name} '
+                f'{x0} {y0} {x1} {y1}"']
     found = effect_units(e, T) if e.get("object") else None
     nbt = units.make_entity(dict(name=name, player=max(e.get("target", -1), 0), rotation=math.pi / 2, hero=kind == "H"),
                             c.players or {},
@@ -3776,6 +3875,15 @@ def selection_lines(e, c):
     if not has_units(e):
         return []
     return [f"tag {unit_selector(e, c.T)} {'add' if e['type'] == DISABLE_OBJECT_SELECTION else 'remove'} {UNSELECTABLE}"]
+
+
+def deletion_lines(e, c):
+    """The commands of "Disable Object Deletion" and "Enable Object Deletion" (#3777): the tag KEEP of the units of the
+    player in the area (the Delete key of the game program skips them, stance.delete), and the order "keep <ref> 1|0"
+    of each selected object: a selected building has no entity, game/scenario.py orders keeps its ref in g.kept."""
+    on = e["type"] == DISABLE_OBJECT_DELETION
+    keep = [f'data modify storage aoe2mc:orders list append value "keep {r} {int(on)}"' for r in picked(e)]
+    return [f"tag {unit_selector(e, c.T)} {'add' if on else 'remove'} {KEEP}"] * has_units(e) + keep
 
 
 def object_visibility_lines(e, c):
@@ -4098,13 +4206,13 @@ def unload_lines(e, c):
     or with no selection each such building with its center in the area, goes into the list of the storage
     aoe2mc:orders as one text "unload <player> <ref>", with the block of the target tile on the ground "x y z" when
     the effect has one. The scenario mode of the game program (game/scenario.py orders) lets the units of the holder
-    out and walks them there (aoe moveto). A ship or a ram holder: not supported yet (the game program has no garrison
-    of them from a trigger)."""
+    out and walks them there (aoe moveto). A selected transport ship or ram (CARRIER_REFS, #3779) too: the game program
+    lets its units out on the nearest land (transport.out)."""
     T, ground, a = c.T, c.ground, e.get("area", [-1])
     refs = e.get("selected") or ([r for r, (_, _, (x, z)) in sorted(buildings.INSIDE.items())
                                   if a[0] * T <= x < (a[2] + 1) * T and a[1] * T <= z < (a[3] + 1) * T]
                                  if min(a, default=-1) >= 0 else [])
-    holders = [r for r in refs if r in buildings.INSIDE]
+    holders = [r for r in refs if r in buildings.INSIDE or r in CARRIER_REFS]
     if not holders or e["player"] <= 0:
         c.stats["unload (not supported yet)"] += 1
         return []
@@ -4458,6 +4566,7 @@ EFFECTS = {
     DEACTIVATE_TRIGGER: switch_lines,
     DECLARE_VICTORY: victory_lines,
     DELETE_KEY: key_lines,
+    DISABLE_OBJECT_DELETION: deletion_lines,
     DISABLE_OBJECT_SELECTION: selection_lines,
     DISABLE_TECHNOLOGY_STACKING: stack_lines,
     DISABLE_UNIT_ATTACKABLE: attackable_lines,
@@ -4466,6 +4575,7 @@ EFFECTS = {
     DISPLAY_TIMER: timer_lines,
     ENABLE_DISABLE_OBJECT: menu_lines,
     ENABLE_DISABLE_TECHNOLOGY: menu_lines,
+    ENABLE_OBJECT_DELETION: deletion_lines,
     ENABLE_OBJECT_SELECTION: selection_lines,
     ENABLE_TECHNOLOGY_STACKING: stack_lines,
     ENABLE_UNIT_ATTACKABLE: attackable_lines,
@@ -4601,7 +4711,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
     load += [f"scoreboard players set #{t['id']} aoe_on 0" for t in triggers if t["id"] in off and not t["enabled"]]
     timed = {t["id"]: max(20 * min((max(c["timer"] for c in g) for g in gs), default=0), 1) for t in triggers   # 1 tick at least;
              if not (gs := or_groups(t["conditions"])) or all(c["type"] == TIMER for g in gs for c in g)}   # OR: the first
-    clocks = {t["id"]: ts for t in triggers if t["id"] not in timed and len(gs := or_groups(t["conditions"])) > 1
+    clocks = {t["id"]: ts for t in triggers if t["id"] not in timed and (gs := or_groups(t["conditions"]))
               and (ts := [(k, max(20 * max(x), 1)) for k, g in enumerate(gs)
                           if (x := [c["timer"] for c in g if c["type"] == TIMER])])}   # the OR timers (#2815)
     for t in triggers:
@@ -4614,8 +4724,10 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
         chance = (TRIGGER_CHANCE, False) in kinds
         rest = kinds - {(TRIGGER_CHANCE, False)}
         if any(c["type"] in OBJECT_TESTS and (c.get("ref", -1) is None or c.get("ref", -1) < 0
-                                              or not c.get("unit") and not fallen_building(c) and not owned_building(c))
-               or c["type"] == BRING_OBJECT_TO_OBJECT and (c.get("next") is None or c["next"] < 0 or not c.get("next_unit"))
+                                              or not c.get("unit") and not fallen_building(c) and not owned_building(c)
+                                              and not attacked_building(c) and not brought_building(c, T))
+               or c["type"] == BRING_OBJECT_TO_OBJECT and (c.get("next") is None or c["next"] < 0
+                                                           or not c.get("next_unit") and not brought_building(c, T))
                for c in conds):            # no object, or a building: blocks, no entity (but #2910, #2940: its score)
             stats["object condition (not an entity, not supported yet)"] += t["enabled"]
             continue
@@ -4623,7 +4735,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
         # sets the score #N.t<group> of aoe_trig, its chance a roll of the score #N.c<group>; the tick line of the
         # group tests them
         rolled = len(groups) > 1 and chance
-        clocked = len(groups) > 1 and (TIMER, False) in rest and (rest != {(TIMER, False)} or rolled)
+        clocked = (TIMER, False) in rest and (rest != {(TIMER, False)} or rolled)   # also one "AND" group (#3891)
         if not (t["enabled"] or t["id"] in on and t["id"] not in chancy) or \
                 not (rest == {(TIMER, False)} or rest <= {(k, False) for k in TICKED + (TIMER,) * clocked} | {(k, True) for k in INVERTED}) or \
                 chance and len([c for c in conds if c["type"] == TRIGGER_CHANCE]) > 1 or \
@@ -4645,6 +4757,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
                     or c["type"] == PLAYER_DEFEATED and c.get("player", -1) <= 0   # Gaia: no defeat (#2710)
                     or c["type"] == TRIGGER_ACTIVE and c.get("trigger") not in switch
                     for c in conds):                                   # unit classes: not yet
+            stats["trigger conditions (not supported yet)"] += bool(t["enabled"] or t["id"] in on)   # (#3891)
             continue
         ctx = Effect(t, T, ground, players, stats, mood, files, setup, switch, timed, clocks, triggers)
         lines = [line for e in t["effects"] if e["type"] in EFFECTS for line in selection_tags(e, EFFECTS[e["type"]](e, ctx), T)]
@@ -4680,14 +4793,22 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
                 tests.append(f"{'unless' if c['inverted'] else 'if'} score #f{c['ref']} aoe_fallen matches 1..")
                 unless.append(f"{'if' if c['inverted'] else 'unless'} score #f{c['ref']} aoe_fallen matches 1..")
                 continue
+            if attacked_building(c):                                   # a building that is hit: its score (#3775)
+                tests.append(f"{'unless' if c['inverted'] else 'if'} score #h{c['ref']} aoe_hit matches 1")
+                unless.append(f"{'if' if c['inverted'] else 'unless'} score #h{c['ref']} aoe_hit matches 1")
+                continue
             if owned_building(c):                                      # the owner of a building: its score (#2940)
                 tests.append(f"{'unless' if c['inverted'] else 'if'} score #o{c['ref']} aoe_owner matches {c['player']}")
                 unless.append(f"{'if' if c['inverted'] else 'unless'} score #o{c['ref']} aoe_owner matches {c['player']}")
                 continue
+            if test := brought_building(c, T):                         # a building: its tile and its score (#3782)
+                tests.append(test[c["inverted"]])
+                unless.append(test[not c["inverted"]])
+                continue
             if c["type"] in SCORE_TESTS:                               # a score of the world or the game
                 test = SCORE_TESTS[c["type"]](c)
                 no = c["type"] == COMPARE_VARIABLES and compare_negated(c) or \
-                    c["type"] in (DECISION_TRIGGERED, OBJECT_HAS_ACTION) and c["inverted"]   # "not equal", "inverted": unless
+                    c["type"] in (DECISION_TRIGGERED, OBJECT_HAS_ACTION, VICTORY_TIMER) and c["inverted"]   # "not equal", "inverted": unless
                 tests.append(f"{'unless' if no else 'if'} {test}")
                 unless.append(f"{'if' if no else 'unless'} {test}")
                 continue
@@ -4794,6 +4915,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
             "aoe_difficulty",
             "aoe_fallen",
             "aoe_gar",
+            "aoe_hit",
             "aoe_lost",
             "aoe_owner",
             "aoe_seen",
@@ -4814,11 +4936,15 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
     if tick or any(k.endswith("_chance.mcfunction") for k in files):
         load.insert(0, "scoreboard objectives add aoe_trig dummy")
     if tick:
-        files["data/minecraft/tags/function/tick.json"] = {"values": ["aoe2mc:tick"]}
+        files["data/minecraft/tags/function/tick.json"] = {"values": ["aoe2mc:tick_wait"]}
+        files["data/aoe2mc/function/tick_wait.mcfunction"] = WAIT + "\n"
         files["data/aoe2mc/function/tick.mcfunction"] = "\n".join(tick) + "\n"
     return load, files
 
 
+# The game program sets #wait while it waits for the people (#3892): /tick freeze does not stop the tick function.
+# A world without the game program has no #wait, so its triggers run.
+WAIT = "execute unless score #wait aoe_trig matches 1 run function aoe2mc:tick"
 LOADED = "if score #loaded aoe_trig matches 1"                        # all chunks of the map are loaded (#3080)
 
 
@@ -4850,11 +4976,47 @@ def fallen_building(c):
     return c["type"] == DESTROY_OBJECT and not c.get("unit")
 
 
+def brought_building(c, T):
+    """The tests (holds, does not hold) of "Bring Object to Area" or "Bring Object to Object" with a building (#3782),
+    or None. A building does not move: in the area, the test is "it stands" (its score #f<ref> of aoe_fallen, #2910),
+    else a score that is never set. Next to an object: the other unit in the box of the tiles around its tile."""
+    stands = "unless score #f{0} aoe_fallen matches 1.."
+    if c["type"] == BRING_OBJECT_TO_AREA and not c.get("unit") and c.get("tile") and min(c.get("area", [-1])) >= 0:
+        (x, y), (x1, y1, x2, y2) = c["tile"], c["area"]
+        if min(x1, x2) <= x <= max(x1, x2) and min(y1, y2) <= y <= max(y1, y2):
+            return stands.format(c["ref"]), f"if score #f{c['ref']} aoe_fallen matches 1.."
+        return "if score #never aoe_trig matches 1", "unless score #never aoe_trig matches 1"
+    if c["type"] != BRING_OBJECT_TO_OBJECT or c.get("next") is None or c["next"] < 0 or c.get("ref", -1) < 0:
+        return None
+    if c.get("unit") and not c.get("next_unit") and c.get("next_tile"):
+        building, tile, other = c["next"], c["next_tile"], c["ref"]
+    elif not c.get("unit") and c.get("next_unit") and c.get("tile"):
+        building, tile, other = c["ref"], c["tile"], c["next"]
+    else:
+        return None
+    at = f"positioned {(tile[0] - 1) * T} {MIN_Y} {(tile[1] - 1) * T}"
+    box = f"@e[tag=aoe2mc.r{other},dx={3 * T - 1},dy={HEIGHT - 1},dz={3 * T - 1}]"
+    # does not hold: the unit is not near (a fallen building with the unit near does not reset a looping trigger)
+    return f"{stands.format(building)} {at} if entity {box}", f"{at} unless entity {box}"
+
+
 def fallen_list(triggers):
     """The refs of the "Destroy Object" conditions of buildings that the tick function of trigger_files tests, for
     aoe2mc.json "fallen" (#2910): the scenario mode of the game program sets their score when the building falls."""
     tick = trigger_files(triggers)[1].get("data/aoe2mc/function/tick.mcfunction", "")
     return sorted({int(r) for r in re.findall(r"#f(\d+) aoe_fallen ", tick)})
+
+
+def attacked_building(c):
+    """The "Object Attacked" condition of a building (#3775): the score #h<ref> of aoe_hit, not the tag of an entity."""
+    return c["type"] == OBJECT_ATTACKED and not c.get("unit")
+
+
+def attacked_list(triggers):
+    """The refs of the "Object Attacked" conditions of buildings that the tick function of trigger_files tests, for
+    aoe2mc.json "attacked" (#3775): the scenario mode of the game program sets their score when the hit points fall."""
+    tick = trigger_files(triggers)[1].get("data/aoe2mc/function/tick.mcfunction", "")
+    return sorted({int(r) for r in re.findall(r"#h(\d+) aoe_hit ", tick)})
 
 
 def owned_building(c):
@@ -4888,6 +5050,7 @@ def visible_list(triggers):
 # list is one line here, in alphabetical order (#2832): no new keyword of write_objects.
 TRIGGER_LISTS = {
     "actions": action_list,                                     # the units of aoe_action (#2867)
+    "attacked": attacked_list,                                  # the buildings of aoe_hit (#3775)
     "fallen": fallen_list,                                      # the buildings of aoe_fallen (#2910)
     "owners": owner_list,                                       # the buildings of aoe_owner (#2940)
     "research": research_list,                                  # the "Research Technology" effects (#2577)
@@ -5295,6 +5458,8 @@ def write_datapack(out, objects, ground, biome_names=(), ambience="basic", playe
     team_load, team_pulse = team_lines(objects, players or {})
     # each player gets the map of the world in the off-hand once, so the minimap is there without a search (#966)
     team_pulse = team_pulse + MAP_PULSE
+    CARRIER_REFS.clear()
+    CARRIER_REFS.update({o["ref"]: o["name"] for o in objects if o.get("name") in CARRIERS and o.get("ref") is not None})
     trigger_load, trigger_fns = trigger_files(triggers, T, ground, players, trigger_stats, mood)
     files = {
         "pack.mcmeta": {"pack": {"description": "aoe2mc: work sounds and ambience", "pack_format": MC["pack_format"],
@@ -5705,8 +5870,8 @@ class Progress:
 def convert(src, out, T=4, H=3, name=None, seed=1, preview=False, arch=None, player_arch=(), with_units=True,
             barriers=True, mc_version=VERSION_NAME, spawn=None, birds=True, orientation="ne", verbose=False,
             garrison="inside", border_design="diorama", ambience="basic", at=None, mood="on", fog=False,
-            resource_pack=False):
-    """at: recorded games only, the time in ms (--at): convert the state at that time (apply_timeline).
+            resource_pack=False, nplayers=2, teams=None):
+    """nplayers: the players of a random map script or --random-map (#3944), teams: their teams (#3946). at: recorded games only, the time in ms (--at): convert the state at that time (apply_timeline).
     mood: "on" sets the time of day of the map color mood (MOODS), "off" keeps noon (#1595).
     fog: the fog of a fog mood (FOG, #1626); ambience "full" gives it too.
     resource_pack: resources.zip with human faces for the zombie units (#2738) and own armor (units.ASSETS, #2742)."""
@@ -5716,7 +5881,7 @@ def convert(src, out, T=4, H=3, name=None, seed=1, preview=False, arch=None, pla
     PALETTE_CACHE.clear()   # the cached entries can have the block names of another version
     try:
         _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units, barriers, spawn, birds, orientation,
-                 verbose, garrison, border_design, ambience, at, mood, fog, resource_pack)
+                 verbose, garrison, border_design, ambience, at, mood, fog, resource_pack, nplayers, teams)
     finally:
         MC = VERSIONS[VERSION_NAME]
         PALETTE_CACHE.clear()
@@ -5739,7 +5904,8 @@ def clear_old_output(out):
 
 
 def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units, barriers, spawn, birds, orientation,
-             verbose, garrison, border_design, ambience, at=None, mood="on", fog=False, resource_pack=False):
+             verbose, garrison, border_design, ambience, at=None, mood="on", fog=False, resource_pack=False,
+             nplayers=2, teams=None):
     buildings.BARRIERS = barriers
     buildings.TURN, yaw = ORIENTATIONS[orientation]
     MOVED.clear()           # the counts of an earlier conversion in this process
@@ -5756,7 +5922,7 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
         times[phase] = times.get(phase, 0.0) + now - clock[0]
         clock[0] = now
 
-    size, terrain, elevation, tnames, texts, objects, players = read_map(src, seed)
+    size, terrain, elevation, tnames, texts, objects, players = read_map(src, seed, nplayers, teams)
     record = src.lower().endswith(RECORDS)
     timeline = read_timeline(src) if record else None
     if timeline is not None:
@@ -6025,9 +6191,10 @@ Do these steps to convert them:
 
 def convert_campaign(src, out, only=None, name=None, **kw):
     """One world per scenario: out/<number> <scenario name>/. only: the number of one scenario (1 = first).
-    An old campaign (.cpx, .cpn): convert its .scx scenarios of format 1.21 (#347); write the other scenario files to
-    out/ and stop with the steps for the DE editor."""
+    An old campaign (.cpx, .cpn): convert its scenarios of a format in scx.FORMATS (.scn 1.18 to 1.20, .scx 1.21, HD,
+    #347, #3863); write the other scenario files to out/ and stop with the steps for the DE editor."""
     import tempfile
+    import scx
     version, title, entries = read_campaign(src)
     if only is not None and not 1 <= only <= len(entries):
         raise OptionError(f"--scenario {only}: the campaign {title!r} has {len(entries)} scenarios")
@@ -6038,9 +6205,10 @@ def convert_campaign(src, out, only=None, name=None, **kw):
         old, done = [], []
         for i, fn, data in chosen:
             stem = os.path.splitext(fn)[0]
-            if fn.lower().endswith(".scx"):
+            if data[:4] in scx.FORMATS:                # the format, not the file name, chooses (#3863)
                 with tempfile.TemporaryDirectory() as tmp:
-                    path = os.path.join(tmp, fn)       # "Read <fn>" names the scenario (#578)
+                    ext = "" if fn.lower().endswith((".scx", ".scn", ".aoe2scenario")) else ".scx"   # read_scx reads it
+                    path = os.path.join(tmp, fn + ext)  # "Read <fn>" names the scenario (#578)
                     with open(path, "wb") as f:
                         f.write(data)
                     try:
@@ -6097,8 +6265,8 @@ def main(argv=None):
     ap.add_argument("scenario", nargs="?", help=".aoe2scenario file, .aoe2record, .mgz, .mgx or .mgl (the start state of a recorded game), .scx "
                     "(an old scenario, format 1.21), .json (a map description, README), .rms (the land of a random map "
                     "script, with --seed), or "
-                    ".aoe2campaign, .cpx or .cpn (one world per scenario; old scenarios that are not .scx 1.21: the "
-                    "steps for the DE editor)")
+                    ".aoe2campaign, .cpx or .cpn (one world per scenario; old scenarios of other formats than .scn 1.18 to "
+                    "1.20, .scx 1.21 and HD 1.22 to 1.26: the steps for the DE editor)")
     ap.add_argument("output", nargs="?", help="output world folder (put it in .minecraft/saves/); for a campaign the "
                     "folder of the worlds")
     ap.add_argument("--random-map", choices=("arabia", "arena", "black_forest", "gold_rush", "highland",
@@ -6113,6 +6281,11 @@ def main(argv=None):
     ap.add_argument("--level-height", type=int_range(1, 16), default=3, help="blocks per elevation level (default 3)")
     ap.add_argument("--name", help="world name in the Minecraft menu")
     ap.add_argument("--seed", type=int_range(0, 2**63 - 1), default=1, help="seed for random details and random maps (default 1)")
+    ap.add_argument("--players", type=int_range(1, 8), metavar="N",
+                    help="players of a random map script (.rms) or of --random-map, 1 to 8 (default 2)")
+    ap.add_argument("--teams", metavar="T,T,...",
+                    help="with --players: the team of each player, 1 to 4 or - (no team), for example 1,2,1,2; a "
+                         "script with grouped_by_team puts the lands of a team next to each other")
     ap.add_argument("--preview", action="store_true", help="also write preview.png")
     ap.add_argument("--architecture", choices=sorted(buildings.ARCH),
                     help="use one architecture set for all players (default: from each player's civilization)")
@@ -6163,7 +6336,15 @@ def main(argv=None):
         a.name = a.name or f"{a.random_map.title()} {a.seed}"
     if a.output is None:
         ap.error("give the input file and the output world folder")
-    kw = dict(T=a.tile_size, H=a.level_height, seed=a.seed, preview=a.preview, arch=a.architecture,
+    if a.players is not None and not (a.scenario.lower().endswith(".rms") or a.scenario.lower().startswith(RANDOM_MAP)):
+        ap.error("--players needs a random map script or --random-map")
+    teams = None
+    if a.teams is not None:
+        teams = a.teams.split(",")
+        if a.players is None or len(teams) != a.players or any(t not in ("1", "2", "3", "4", "-") for t in teams):
+            ap.error("--teams needs --players N and N teams, each 1 to 4 or - (no team), for example --players 4 --teams 1,2,1,2")
+        teams = [None if t == "-" else int(t) for t in teams]
+    kw = dict(T=a.tile_size, H=a.level_height, seed=a.seed, preview=a.preview, arch=a.architecture, nplayers=a.players or 2, teams=teams,
               player_arch=a.player_architecture, with_units=not a.no_units, barriers=not a.no_barriers,
               mc_version=a.mc_version, spawn=a.spawn, birds=not a.no_birds, orientation=a.orientation,
               verbose=a.verbose, garrison=a.garrison, border_design=a.border, ambience=a.ambience,

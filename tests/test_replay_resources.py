@@ -11,9 +11,10 @@ from test_replay_score import play as play_score  # noqa: E402
 from test_replay_spawn import queue  # noqa: E402
 
 
-def lines(sent, p):
-    return [json.loads(c.split(" ", 6)[6])["text"] for c in sent
-            if c.startswith(f"scoreboard players display name P{p} ")]
+def lines(sent, p):    # without the APM part (#3764), each line once
+    texts = [json.loads(c.split(" ", 6)[6])["text"].split(" · APM")[0] for c in sent
+             if c.startswith(f"scoreboard players display name P{p} ")]
+    return [t for i, t in enumerate(texts) if i == 0 or t != texts[i - 1]]
 
 
 def test_a_gather_step_raises_the_resource_of_its_player():

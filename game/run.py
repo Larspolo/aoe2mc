@@ -281,9 +281,13 @@ class Game:
     joined = frozenset()                             # the Minecraft players who joined (start_on_join, #3314)
     starts, yaw = {}, 0.0                            # AoE2 player -> its start block, the spawn yaw (aoe2mc.json, #3347)
     placed = frozenset()                             # the Minecraft players who went to the start of their side
+    seats = ()                                       # --seats: the AoE2 player of each person in the join order (#3489)
 
-    def __init__(self, world, version=mc_check.DEFAULT_VERSION, timeout=300, server="paper"):
+    def __init__(self, world, version=mc_check.DEFAULT_VERSION, timeout=300, server="paper", wait=False):
+        """wait: freeze the ticks at once when the server is up (freeze, #3974): a client that starts before play()
+        (25 s) let the trigger timers of the first seconds run before the join."""
         self.world, self.version, self.timeout, self.kind = os.path.abspath(world), version, timeout, server
+        self.wait = wait
         self.server = self.rcon = None
         self.lock, self.seen = threading.Lock(), 0     # the op thread and the game send commands
         self.sides = {}
@@ -294,7 +298,8 @@ class Game:
         java, jvm, plugins = mc_check.java_for(self.version), [], []
         if self.kind == "paper":                     # Paper patches the Mojang jar once, into the cache
             jar, plugins = paper_jar(self.version), [plugin_jar(self.version)]
-            jvm = [f"-DbundlerRepoDir={os.path.dirname(jar)}"]
+            # the colors of the log (a chat name, #3681) also with no TERM, as on CI: Adventure reads TERM (#3889)
+            jvm = [f"-DbundlerRepoDir={os.path.dirname(jar)}", "-Dnet.kyori.ansi.colorLevel=indexed16"]
         else:
             jar = mc_check.server_jar(self.version)
         # Paper writes usercache.json into the folder of the world folder: remove it after the game
@@ -322,6 +327,8 @@ class Game:
         try:
             self.server.wait(r"\]: Done \(", self.timeout)
             self.rcon = Rcon("127.0.0.1", self.port, password)
+            if self.wait:
+                freeze(self)
         except BaseException:
             self.stop()
             raise
@@ -356,7 +363,10 @@ class Game:
         joins again keeps its side. A later menu (option C) changes this table only. A later one is a spectator (#2898):
         the game mode spectator flies through blocks and uses no items, and the team spec is no team of a player, so
         no Gather reads its clicks (Gather.who). With one person all Minecraft players play player 1 (who "@a")."""
-        n = self.sides.get(name) or next((k for k in range(1, self.people + 1) if k not in self.sides.values()), 0)
+        seats = getattr(self, "seats", ())          # co-op (#3489): two people can have the same player
+        free = (seats[len(self.sides):] or [0])[0] if seats else \
+            next((k for k in range(1, self.people + 1) if k not in self.sides.values()), 0)
+        n = self.sides.get(name) or free
         if self.people > 1 and n:
             self.sides[name] = n
             self.command(f"team join p{n} {name}")
@@ -463,15 +473,48 @@ class Side:
         fog.tick(self.g)                             # the fog of war of its team (#1631)
 
 
-def bot_seat(players, people):
-    """(player, foe) of the bot (#1794): it plays the player after the people, and attacks the first person who is
-    not its ally (aoe2mc.json teams, gather.allied), else the first other player that is not its ally, else None: no
-    enemy, no attack (#3107)."""
+def bot_foe(players, player):
+    """The foe of a bot of player (#1794, #3107): the first person who is not its ally (aoe2mc.json teams,
+    gather.allied), else the first other player that is not its ally, else None: no enemy, no attack."""
     import gather
-    player = people + 1
     others = sorted(int(p) for p in players if int(p) > 0)
-    return player, next((p for p in [*range(1, player), *others] if p != player
-                         and not gather.allied(players, player, p)), None)
+    return next((p for p in [*range(1, player), *others] if p != player and not gather.allied(players, player, p)), None)
+
+
+def bot_seats(players, people, n):
+    """[(player, foe)] of the n bots (#4017): they play the player slots after the people, in order, each with its
+    bot_foe. n "all": each free slot of the map."""
+    others = sorted(int(p) for p in players if int(p) > 0)
+    free = [p for p in others if p > people]
+    if n == "all":
+        n = len(free)
+    if n > len(free):
+        sys.exit(f"--bots {n}: the map has {len(others)} player slots, {people} for the people: {len(free)} are free")
+    return [(player, bot_foe(players, player)) for player in free[:n]]
+
+
+def bot_seat(players, people):
+    """(player, foe) of the bot (#1794): it plays the player after the people."""
+    player = people + 1
+    return player, bot_foe(players, player)
+
+
+def difficulty_list(text):
+    """The value of --ai-difficulty: one level, or a comma list with one level for each bot in seat order (#4020)."""
+    names = [r["name"] for r in table.load("difficulty.jsonl")]
+    bad = [part for part in text.split(",") if part not in names]
+    if bad:
+        raise argparse.ArgumentTypeError(f"{bad[0]} is no level: use {', '.join(names)} (or a comma list of them)")
+    return text
+
+
+def bots_count(text):
+    """The value of --bots: a number of bots or "all" (#4017)."""
+    if text == "all":
+        return text
+    if not text.isdigit() or int(text) < 1:
+        raise argparse.ArgumentTypeError(f"{text} is no number of bots: use 1 or more, or all")
+    return int(text)
 
 
 def pop_limit(text):
@@ -481,6 +524,12 @@ def pop_limit(text):
         raise argparse.ArgumentTypeError(f"{text} is no AoE2 population limit: use one of "
                                          + ", ".join(map(str, train.LIMITS)))
     return int(text)
+
+
+def challenge_names():
+    """The names of the Art of War challenges (challenge.CHALLENGES, #3900)."""
+    import challenge
+    return challenge.CHALLENGES
 
 
 def civ_choices(values):
@@ -529,6 +578,16 @@ def team_choices(value, players):
     return {p: None if t == "-" else int(t) for p, t in zip(seats, teams)}
 
 
+def seat_list(value):
+    """The AoE2 player of each person in the join order of --seats ("1,1,2", decision #3488): two people on one
+    player play it together (co-op, #3489). The players must be 1 to N with no gap. A wrong value stops with a message."""
+    seats = [int(t) for t in value.split(",") if t.strip().isdigit()]
+    if len(seats) != len(value.split(",")) or not seats or set(seats) != set(range(1, max(seats) + 1)):
+        sys.exit(f"--seats {value}: write the AoE2 player of each person in join order, players 1 to N with no gap, "
+                 "for example --seats 1,1,2")
+    return seats
+
+
 # The AoE2 game modes of --mode (epic #2263): the lines of game/data/setup.jsonl with a "help" (the --mode help text).
 # Keys: "module" (its setup(g, mode) after the bots), "age" (the start age when --age is dark), "loaded" ("skip": no
 # setup in a loaded game, "start": setup(..., start=False)), "bots" (the Gathers of the bots get the mode too). A new mode
@@ -553,6 +612,8 @@ SETTINGS = {
     "age": "dark",                    # "Starting age" (train.STARTS, #2265)
     "ai_difficulty": "standard",      # "AI difficulty" of the bots (bot.LEVELS, game/data/difficulty.jsonl, #2661)
     "all_techs": False,               # "All Techs" (civs.missing, #2298)
+    "antiquity": False,               # Antiquity Mode: the Return of Rome rule set (table.use, game/data/antiquity, #3666)
+    "challenge": None,                # an Art of War challenge (challenge.CHALLENGES, #3900)
     "civ": None,                      # {player: civilization} in place of the scenario's (civ_choices, #2267)
     "empire_wars": False,             # "Empire Wars Mode" on top of the mode (ON_TOP, #2490)
     "end_age": "imperial",            # "Ending age" (build.locked, #2346)
@@ -605,11 +666,13 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
     wait: freeze the ticks now, and start the game when the people joined (start_on_join, #3314).
     settings: the AoE2 lobby settings (SETTINGS); a missing one has its default."""
     if wait:                                         # the trigger timers start at the join, not at the load
-        game.command("tick freeze")
+        freeze(game)
     import gather, train
     if unknown := sorted(set(settings) - set(SETTINGS)):
         raise TypeError(f"play() has no setting {', '.join(unknown)} (SETTINGS)")
     settings = mode_defaults({**SETTINGS, **settings})
+
+    players = max(getattr(game, "seats", ()), default=people)   # --seats: fewer players than people (#3489)
 
     def make(player):
         who = "@a" if people == 1 else f"@a[team=p{player}]"
@@ -626,6 +689,13 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
     with open(os.path.join(world, "aoe2mc.json")) as f:
         data = json.load(f)
     scenario_modes(settings, data)
+    if settings["challenge"]:                                    # the civilization of the challenge (#3900)
+        import challenge
+        settings["civ"] = {**(settings["civ"] or {}), 1: challenge.CHALLENGES[settings["challenge"]]["civ"]}
+        if settings["age"] == "dark":                            # the start age of the challenge (#3908)
+            settings["age"] = challenge.CHALLENGES[settings["challenge"]].get("age", "dark")
+        if enemy := challenge.CHALLENGES[settings["challenge"]].get("enemy"):   # a bot town that does not attack (#3905)
+            settings["civ"][2], bot = enemy["civ"], bot or 1
     apply_civs(data, settings["civ"])                             # before the Gathers: all bonuses (civs.civ) follow it
     for player, pct in (settings["handicap"] or {}).items():     # before the Gathers: the start resources (#2474)
         data.setdefault("players", {}).setdefault(str(player), {})["handicap"] = pct
@@ -646,9 +716,10 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
     g.reveal = reveal                                # "all": no fog of war for the units (fog.py, #1389)
     g.victory = settings["victory"]                              # Gather.run: the wonder and relic wins only in "standard"
     g.victory_value = settings["victory_value"]                  # time_limit.tick (#2356)
+    g.challenge = settings["challenge"]                          # challenge.tick (#3900)
     g.unlock_speed = settings["unlock_speed"]                    # the Game menu of player 1 (diplomacy.faster, #2933)
     if people > 1:                                   # one Gather for each person, in the join order (#1308, #1310)
-        g.bots = [Side(make(n)) for n in range(2, people + 1)]
+        g.bots = [Side(make(n)) for n in range(2, players + 1)]
         for s in g.bots:                             # the same trees, bushes and mines, as with a bot
             s.g.map.trees, s.g.map.bushes, s.g.map.mines = g.map.trees, g.map.bushes, g.map.mines
             s.g.relics = g.relics                    # one list: each relic exists once (#3116)
@@ -657,27 +728,30 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
         game.starts, game.yaw = start_places(data)   # the start views and the spawn yaw (#3347)
         for name in list(game.sides):                # players who joined before the teams were there
             game.side(name)
-        print(f"{people} people: the first Minecraft player who joins plays player 1, the second player 2.",
-              file=sys.stderr)
+        first = [*getattr(game, "seats", ()), 1, 2][:2] if getattr(game, "seats", ()) else [1, 2]
+        print(f"{people} people: the first Minecraft player who joins plays player {first[0]}, the second player "
+              f"{first[1]}.", file=sys.stderr)
     if settings["mode"] == "scenario":               # the computer players of the scenario, not --bot (#2543)
         import scenario
-        seats = scenario.bot_seats(data["players"], people)
+        seats = scenario.bot_seats(data["players"], players)
     else:
-        seats = [bot_seat(data["players"], people)] if bot else []
-    for player, foe in seats:                        # after the people, next to their Sides (#1794)
+        seats = bot_seats(data["players"], players, bot) if bot else []
+    for k, (player, foe) in enumerate(seats):        # after the people, next to their Sides (#1794)
         import bot as bots
+        level = bots.level_of(settings["ai_difficulty"], k)   # one level for each bot in seat order (#4020)
         import replay
         import treaty as treaties
         attack = max(bot_attack, settings["treaty"], key=replay.aoe2mc.game_time)   # the bot waits for the treaty too
-        if settings["mode"] in treaties.ENDLESS or foe is None:   # Wonder Race (#2406), no enemy (#3107): no attack
+        if settings["mode"] in treaties.ENDLESS or foe is None or (   # Wonder Race (#2406), no enemy (#3107): no attack
+                settings["challenge"] and "enemy" in challenge.CHALLENGES[settings["challenge"]]):   # (#3905)
             attack = "never"
         g.bots = [*g.bots, bots.Bot(game, data, player=player, share=g, log=log, foe=foe,
                                     attack=math.inf if attack == "never" else replay.aoe2mc.game_time(attack) / 1000,
                                     resources=settings["resources"], pop_limit=settings["pop_limit"],
-                                    difficulty=settings["ai_difficulty"]).setup()]
+                                    difficulty=level).setup()]
         at = math.inf if attack == "never" else \
-            replay.aoe2mc.game_time(attack) / 1000 * bots.LEVELS[settings["ai_difficulty"]]["attack"]
-        print(f"A bot ({settings['ai_difficulty']}) plays player {player}: {len(g.bots[-1].g.villagers)} villagers "
+            replay.aoe2mc.game_time(attack) / 1000 * bots.LEVELS[level]["attack"]
+        print(f"A bot ({level}) plays player {player}: {len(g.bots[-1].g.villagers)} villagers "
               f"gather, its soldiers attack {'no player (no enemy)' if foe is None else f'player {foe}'} "
               f"{'never' if at == math.inf else 'at %d:%02d' % divmod(round(at), 60)}.", file=sys.stderr)
     import combat
@@ -713,6 +787,8 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
         if "module" in line and not (state and line.get("loaded") == "skip"):   # a loaded game has its town, relic
             start = {"start": not state} if line.get("loaded") == "start" else {}   # Defend the Wonder (#2441)
             importlib.import_module(line["module"]).setup(g, mode, **start)
+    if settings["challenge"] and not state:                     # the enemy town or units of the challenge (#3905, #3909)
+        challenge.setup(g)
     import replay
     import treaty as treaties
     if settings["mode"] in treaties.ENDLESS:                     # Wonder Race: a treaty with no end (#2406)
@@ -751,6 +827,12 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
     return g
 
 
+def freeze(game):
+    """Stop the `schedule` timers of the scenario triggers and the mobs until start_on_join."""
+    game.command("tick freeze")
+    game.command("scoreboard players set #wait aoe_trig 1")   # the tick triggers too (aoe2mc.WAIT, #3892)
+
+
 def start_on_join(game, sides, people, sleep=time.sleep):
     """As in AoE2 DE, the game starts when all people are there (#3314): play froze the ticks (the `schedule` timers
     of the scenario triggers, the mobs) at the start of play(). Unfreeze them after the join of the people, and start
@@ -759,9 +841,19 @@ def start_on_join(game, sides, people, sleep=time.sleep):
     while len(game.joined) < people:
         sleep(0.5)
     import gather
+    game.command("scoreboard players reset #wait aoe_trig")
     game.command("tick unfreeze")
+    game.wait = False                                # a restart (#979) does not freeze again
+    show_titles(game)                                # nobody saw a title before the join (#3772)
     for h in sides:                                                    # a loaded game goes on at its saved game time (#3377)
         h.t0 = h.clock() - vars(game).get("loaded_seconds", 0.0) / (gather.NORMAL * getattr(h, "speed", 1.0))
+
+
+def show_titles(game):
+    """The campaign name as title and "Scenario N: name" as subtitle to all players online (#3506)."""
+    if titles := vars(game).get("titles"):
+        game.command(f"title @a subtitle {json.dumps(titles[1])}")
+        game.command(f"title @a title {json.dumps(titles[0])}")
 
 
 def unveil(g):
@@ -845,19 +937,27 @@ def replay(game, world, speed=1.0, start="0:00", follow=None, guide=None, view=N
     return stats
 
 
+CONSOLE = {}                                         # the one stdin thread and the game that gets its lines (#3812)
+
+
 def console(game):
     """A thread that sends each line of stdin to the server and prints the answer, also while a replay or a game runs
-    (#1777: the command line of the window, gui.py). It ends at the end of stdin (EOF)."""
+    (#1777: the command line of the window, gui.py). It ends at the end of stdin (EOF). The next scenario of a
+    campaign keeps the thread and gets its lines: a second thread would take every other line (#3812)."""
+    CONSOLE["game"] = game
+    if (t := CONSOLE.get("thread")) and t.is_alive():
+        return t
+
     def read():
         for line in sys.stdin:
             if line.strip() == STOP_LINE:            # the Stop of the window on Windows (gui.stop_game, #3003)
                 interrupt()
             elif line := line.strip().lstrip("/"):
                 try:
-                    print(game.command(line), flush=True)
+                    print(CONSOLE["game"].command(line), flush=True)
                 except Exception as e:                # one failed command (too long, no server) keeps the line open
                     print(f"The command failed: {e}", file=sys.stderr, flush=True)
-    t = threading.Thread(target=read, daemon=True)
+    t = CONSOLE["thread"] = threading.Thread(target=read, daemon=True)
     t.start()
     return t
 
@@ -891,10 +991,139 @@ def ctrl_c():
         signal.signal(signal.SIGBREAK, signal.default_int_handler)
 
 
-def main(argv=None):
+def campaign(folder, number=None):
+    """The folder of a converted campaign (campaign.json, #3505) -> (world folder, name, "Scenario N: <name>", N) of
+    scenario N, default the first open one of progress.json (#3507), else the first converted one (#3506). A wrong or
+    not converted N stops with the open ones."""
+    with open(os.path.join(folder, "campaign.json"), encoding="utf-8") as f:
+        index = json.load(f)
+    open_ = [s for s in index["scenarios"] if s.get("converted", True)]
+    if number is None:                               # the lowest scenario that is not won: its earlier ones are won
+        won = set(progress(folder))
+        number = next((s["number"] for s in sorted(open_, key=lambda s: s["number"]) if s["number"] not in won), None)
+    pick = next((s for s in open_ if number is None or s["number"] == number), None)
+    if pick is None:
+        sys.exit(f"--scenario {number}: no converted scenario {number} in {index['name']}. Open scenarios: "
+                 + ", ".join(f"{s['number']} ({s['name']})" for s in open_))
+    return os.path.join(folder, pick["world"]), index["name"], f"Scenario {pick['number']}: {pick['name']}", pick["number"]
+
+
+def progress(folder):
+    """The numbers of the won scenarios of a campaign folder (progress.json, #3507)."""
+    return progress_file(folder).get("won", [])
+
+
+def progress_file(folder):
+    """The content of progress.json of a campaign folder: "won", "difficulty" (#3507, #3520)."""
+    try:
+        with open(os.path.join(folder, "progress.json"), encoding="utf-8") as f:
+            return json.load(f)
+    except FileNotFoundError:
+        return {}
+
+
+def campaign_difficulty(folder, chosen):
+    """AoE2 DE: one difficulty for the whole campaign (#3520). The first start writes the chosen one into
+    progress.json, a later start keeps the value of the file."""
+    kept = progress_file(folder).get("difficulty")
+    if kept is None:
+        write_progress(folder, difficulty=chosen)
+        return chosen
+    if kept != chosen:
+        print(f"The campaign difficulty is {kept}.", file=sys.stderr)
+    return kept
+
+
+def campaign_keys(folder):
+    """The key values of the played scenarios of a campaign folder (progress.json "keys", #3508)."""
+    try:
+        with open(os.path.join(folder, "progress.json"), encoding="utf-8") as f:
+            return json.load(f).get("keys", {})
+    except FileNotFoundError:
+        return {}
+
+
+def advance(folder, number, won):
+    """The end of scenario number of a campaign (#3507): a victory goes into progress.json and gives the next
+    converted scenario, a loss gives the same one again. None: the last scenario is won."""
+    if not won:
+        return number
+    done = sorted(set(progress(folder)) | {number})
+    write_progress(folder, won=done)
+    with open(os.path.join(folder, "campaign.json"), encoding="utf-8") as f:
+        later = [s["number"] for s in json.load(f)["scenarios"] if s.get("converted", True) and s["number"] > number]
+    return min(later, default=None)
+
+
+def write_progress(folder, **values):
+    """Set the keys of progress.json of a campaign folder; the other keys stay."""
+    path = os.path.join(folder, "progress.json")
+    try:
+        with open(path, encoding="utf-8") as f:
+            data = json.load(f)
+    except FileNotFoundError:
+        data = {}
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(data | values, f)
+
+
+STORAGE = os.path.join("data", "aoe2mc", "command_storage.dat")   # the data storages aoe2mc:* of a 26.3 world (#3508, #3771)
+
+
+def world_keys(world):
+    """The key values of the trigger effect "Store Key Value" (aoe2mc.key_lines: storage aoe2mc:keys) of a world."""
+    from nbtlib import load
+    try:
+        values = load(os.path.join(world, STORAGE))["data"]["contents"]["keys"]["values"]
+    except (FileNotFoundError, KeyError):
+        return {}
+    return {k: int(v) for k, v in values.items()}
+
+
+def put_keys(world, values):
+    """Add the key values to the storage aoe2mc:keys of a world: a given key wins, a key of the world only stays.
+    The other storages stay."""
+    if not values:
+        return
+    from nbtlib import File, load
+    from nbtlib.tag import Compound, Int
+    path = os.path.join(world, STORAGE)
+    try:
+        root = load(path)
+    except FileNotFoundError:
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        import aoe2mc
+        root = File({"DataVersion": Int(aoe2mc.DATA_VERSION), "data": Compound({"contents": Compound()})}, gzipped=True)
+    keys = root["data"]["contents"].setdefault("keys", Compound())
+    keys["values"] = Compound(dict(keys.get("values", {})) | {k: Int(v) for k, v in values.items()})
+    root.save(path, gzipped=True)
+
+
+def carry_keys(old, new):
+    """The key values of the world old go into the world new, as AoE2 DE keeps them in a campaign (#3508)."""
+    put_keys(new, world_keys(old))
+
+
+def fresh(folder, world):
+    """Each start of a campaign scenario plays the converted world, not the one of an earlier game: the first start
+    keeps a copy in <folder>/.start, a later start puts it back (#3507)."""
+    keep = os.path.join(folder, ".start", os.path.basename(world))
+    if os.path.isdir(keep):
+        restore(keep, world)
+    else:
+        shutil.copytree(world, keep, ignore=shutil.ignore_patterns(*KEEP))
+
+
+PAUSE = 5                                            # seconds to read the end title before the server stops
+
+
+def main(argv=None, scenario=None):
+    """scenario: the next scenario of a campaign, after the end of one (#3507)."""
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0].strip(),
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("world")
+    ap.add_argument("--scenario", type=int, metavar="N", help="a campaign folder (campaign.json): play its scenario N "
+                    "(default: the first one) in the scenario mode")
     ap.add_argument("--version", default=mc_check.DEFAULT_VERSION, help="Minecraft version of the world")
     ap.add_argument("--server", choices=["paper", "vanilla"], default="paper", help="server program (default: Paper)")
     ap.add_argument("--bench", type=int, metavar="N", help="send N commands, print the commands per second, stop")
@@ -908,13 +1137,17 @@ def main(argv=None):
     ap.add_argument("--view", type=int, default=0, metavar="N", help="--replay: start with the view of player N: the "
                     "units out of its sight are hidden (default 0: all players)")
     ap.add_argument("--cheats", action="store_true", help="--play: the AoE2 cheat codes in the chat (off as in AoE2)")
-    ap.add_argument("--bot", action="store_true", help="--play: a bot plays the player after the people (player 2 "
+    ap.add_argument("--bot", dest="bot", action="store_const", const=1, default=0,
+                    help="--play: a bot plays the player after the people (player 2 "
                     "with one person, player 3 with --people 2) and attacks them (game/bot.py)")
+    ap.add_argument("--bots", dest="bot", type=bots_count, default=0, metavar="N|all", help="--play: N bots play the player slots after the "
+                    "people, as N computer players of the AoE2 lobby; all: each free slot (#4017). --bot is --bots 1")
     ap.add_argument("--people", type=int, default=1, metavar="N", help="--play: N people play players 1 to N, in the "
                     "order in which they join (#1310); with --bot the bot plays player N + 1")
     levels = [r["name"] for r in table.load("difficulty.jsonl")]           # in the order of the AoE2 lobby
-    ap.add_argument("--ai-difficulty", choices=levels, default="standard", help="--bot: the AoE2 setting \"AI "
-                    f"difficulty\" ({', '.join(levels)}; default standard): the gather rate of the bot, the time of "
+    ap.add_argument("--ai-difficulty", type=difficulty_list, default="standard", metavar="LEVEL[,LEVEL...]",
+                    help=f"--bot: the AoE2 setting \"AI difficulty\" ({', '.join(levels)}; default standard; a comma "
+                    "list gives each bot its own level in seat order, #4020): the gather rate of the bot, the time of "
                     "its first attack (times --bot-attack) and the soldiers of its first wave")
     ap.add_argument("--bot-attack", default="10:00", metavar="MM:SS", help="--bot: its soldiers attack its foe "
                     "from this game time (default 10:00)")
@@ -926,6 +1159,8 @@ def main(argv=None):
     ap.add_argument("--age", choices=["dark", "feudal", "castle", "imperial", "post-imperial"], default="dark",
                     help="--play: the AoE2 setting \"Starting age\" of each player, with the technologies of the "
                     "earlier ages (default dark; post-imperial: all technologies)")
+    ap.add_argument("--antiquity", action="store_true", help="--play: Antiquity Mode, the rules of Return of Rome: "
+                    "the Stone, Tool, Bronze and Iron Age (game/data/antiquity; only with --mode standard)")
     ap.add_argument("--end-age", choices=["dark", "feudal", "castle", "imperial"], default="imperial",
                     help="--play: the AoE2 setting \"Ending age\": the last age that the players can reach (default "
                     "imperial)")
@@ -940,6 +1175,9 @@ def main(argv=None):
     ap.add_argument("--victory", choices=sorted(VICTORIES), default="standard", help="--play: the AoE2 setting "
                     "\"Victory\" (default standard; " + "; ".join(f"{k}: {v}" for k, v in sorted(VICTORIES.items())
                                                        if k != "standard") + ")")
+    ap.add_argument("--challenge", choices=sorted(challenge_names()) + ["list"], metavar="NAME", help="--play: an "
+                    "AoE2 \"Art of War\" challenge with its civilization, goal and medals; it opens after a medal in "
+                    "the one before it (list: each one, its state and best medal): " + ", ".join(sorted(challenge_names())))
     ap.add_argument("--victory-value", type=int, metavar="N", help="--play: the years of --victory time-limit "
                     "(default 500) or the points of --victory score (default 10000)")
     ap.add_argument("--pop-limit", type=pop_limit, default=200, metavar="N",
@@ -976,21 +1214,45 @@ def main(argv=None):
                     "player N, 100 to 200 percent in steps of 5 (for example 1=150, repeat it for more players): more "
                     "start resources, villager work rate and hit points, building hit points and military building "
                     "work rate (default 100)")
+    ap.add_argument("--seats", metavar="N,N,...", help="--play: the AoE2 player of each person in the order in which "
+                    "they join, for example 1,1,2: the first two people play player 1 together (co-op), the third "
+                    "player 2 (replaces --people)")
     ap.add_argument("--teams", metavar="T,T,...", help="--play: the team of each player in player order, 1 to 4 or - "
                     "(no team), for example 1,1,2,2: allies do not fight and share their team bonuses (default: the "
                     "teams of the scenario)")
     a = ap.parse_args(argv)
+    if a.challenge:                                  # the unlock order and the best medals (#3904)
+        import challenge
+        if a.challenge == "list":
+            print("\n".join(challenge.listing()))
+            sys.exit(0)
+        if not challenge.opened(a.challenge):
+            ap.error(f"--challenge {a.challenge} is closed: win a medal in {challenge.CHALLENGES[a.challenge]['after']} first")
     if a.camera and a.follow is not None:
         ap.error("--camera auto and --follow N both move the spectators: give only one of them")
     import savegame
     state = savegame.read(a.load) if a.load else None
     if state:                                        # the settings of the save, but the options given here win (#2325)
         savegame.settings(a, state, given(ap, argv))
+    if a.antiquity and (a.replay or a.mode != "standard"):
+        sys.exit("--antiquity plays only --mode standard, and not --replay (the records are AoE2 games)")
+    table.use("antiquity" if a.antiquity else "aoe2")   # before the first rule module loads (civ_choices, #3666)
     civ = civ_choices(a.civ)
     handicap = handicap_choices(a.handicap)
     import train
     if min(train.STARTS[a.age]["ages"], 3) > train.STARTS[a.end_age]["ages"]:   # post-imperial is the Imperial Age
         sys.exit(f"--age {a.age} is after --end-age {a.end_age}: the game must start in or before its last age")
+    if scenario is not None:                         # the next scenario of the campaign starts fresh
+        a.scenario, a.load, state = scenario, None, None
+    titles, folder, after = None, None, None
+    if not os.path.isfile(os.path.join(a.world, "level.dat")) and os.path.isfile(os.path.join(a.world, "campaign.json")):
+        folder = a.world
+        a.world, *titles, number = campaign(folder, a.scenario)
+        a.mode = "scenario"
+        a.ai_difficulty = campaign_difficulty(folder, a.ai_difficulty)
+        if not a.load:
+            fresh(folder, a.world)
+            put_keys(a.world, campaign_keys(folder))     # the keys of the scenarios before it (#3508)
     if not os.path.isfile(os.path.join(a.world, "level.dat")):
         sys.exit(f"no level.dat in {a.world}")
     teams = None
@@ -1001,6 +1263,10 @@ def main(argv=None):
         restore(os.path.join(a.load, "world"), a.world)
     ctrl_c()
     game = Game(a.world, a.version, server=a.server)
+    game.wait = a.play and not a.replay              # freeze at the start, as play(wait=...) below (#3974)
+    if a.seats:                                      # co-op (#3489): one person for each seat
+        game.seats = seat_list(a.seats)
+        a.people = len(game.seats)
     game.people = a.people                           # the join order counts from the first player (#1310)
     game.settings = {k: getattr(a, k) for k in savegame.SETTINGS}   # savegame.dump keeps them (#2325)
     try:
@@ -1010,6 +1276,9 @@ def main(argv=None):
             print(f"{bench(game, a.bench):.0f} commands per second through RCON")
             return
         commands = console(game)                     # type commands at any time (#1777)
+        game.titles = titles or ()                   # the campaign and the scenario name (#3506)
+        if not (a.play and not a.replay):            # else start_on_join sends them after the join (#3772)
+            show_titles(game)
         if a.replay:                                 # after the end the player can look around (#978)
             replay(game, a.world, a.speed, a.start, a.follow, view=a.view or None, replay_file=a.replay_file,
                    camera=a.camera == "auto")
@@ -1021,9 +1290,19 @@ def main(argv=None):
                          **{k: getattr(a, k) for k in SETTINGS} | {"civ": civ, "teams": teams, "handicap": handicap})
             if not getattr(g, "ended", None):
                 return
-            print(f"The game ended ({g.ended}). The server stays up: type commands, Ctrl-C stops it.",
-                  file=sys.stderr)                   # the player can look around, as after a replay (#2051)
-        while commands.is_alive():                   # the end of stdin stops the server; a short join keeps Ctrl-C
+            if folder:                               # a campaign goes on with the next or the same scenario (#3507)
+                game.command("save-all flush")      # the server writes the storage of the keys now (#3771)
+                if keys := campaign_keys(folder) | world_keys(a.world):   # the keys go into the next scenario (#3508)
+                    write_progress(folder, keys=keys)
+                after = advance(folder, number, g.ended == "Victory")
+                game.command("title @a title " + json.dumps("Campaign complete") if after is None else
+                             "say " + json.dumps(f"Scenario {after} starts. Join again.")[1:-1])
+                time.sleep(PAUSE)
+                game.g = None                        # no save of an ended scenario
+            else:
+                print(f"The game ended ({g.ended}). The server stays up: type commands, Ctrl-C stops it.",
+                      file=sys.stderr)               # the player can look around, as after a replay (#2051)
+        while not (folder and a.play) and commands.is_alive():                   # the end of stdin stops the server; a short join keeps Ctrl-C
             commands.join(0.5)
     except (KeyboardInterrupt, EOFError):
         pass
@@ -1034,6 +1313,8 @@ def main(argv=None):
         if state:
             print(f"Saved the game: python3 game/run.py {a.world} --play --load "
                   f"{savegame.write(savegame.folder(a.world), a.world, state)}", file=sys.stderr)
+    if after is not None:
+        return main(argv, scenario=after)
 
 
 if __name__ == "__main__":

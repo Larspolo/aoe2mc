@@ -13,7 +13,14 @@ def words(seg):
         return shlex.split(seg)
     except ValueError:
         return seg.split()
+def in_merge():
+    merge = git("rev-parse", "--git-path", "MERGE_HEAD")
+    return bool(merge) and os.path.exists(os.path.join(cwd, merge))
 def why():
+    for m in re.finditer(r"(?<!<)<<-?\s*(\w+)[^\n]*\n(.*?)\n\s*\1\b", raw, flags=re.S):     # an unquoted tag
+        if "`" in m.group(2):
+            return (f"<<{m.group(1)} runs each `name` of the heredoc body as a command (#345). Quote the tag: "
+                    f"<<\x27{m.group(1)}\x27.")
     cmd = re.sub(r"(<<-?\s*([\x27\x22]?)(\w+)\2[^\n]*)\n.*?\n\s*\3\b", r"\1", raw, flags=re.S)  # heredoc bodies are text
     for m in re.finditer(r"\bcat\s*>\s*([^\s|;&<>()]+)\s*<<", cmd):           # ">|" is the way around
         f = m.group(1).strip("\x27\x22")
@@ -26,6 +33,14 @@ def why():
         if v != "TMPDIR" and not os.environ.get(v) and v not in assigned:
             return (f"${v} is empty here, so the redirect writes to /... (#2032, #865). Write the full path, "
                     "or set the variable on its own line (not in an & list).")
+    parts = re.split(r"(?<![&>|<])&(?![&>])", cmd)                       # the lists that a single & puts in the background
+    for i, part in enumerate(parts[:-1]):
+        bg = re.split(r"[;\n]", part)[-1]                                     # & takes only the list after the last ;
+        for v in set(re.findall(r"(?:^|[\s(])(?:export\s+)?(\w+)=", bg)):
+            later = "&".join(parts[i + 1:])
+            if re.search(r"\$\{?" + v + r"\b", later) and not re.search(r"(?:^|[\s;(])" + v + "=", later):
+                return (f"{v}= is set in a list that & puts in a background subshell, so the commands after the & "
+                        f"see the old ${v} (#865). Set {v} on its own line first.")
     for seg in re.split(r"&&|\|\||[;\n]", cmd):
         w = words(seg)
         for tool in ("pkill", "pgrep"):
@@ -38,10 +53,12 @@ def why():
                                 f"(#1213). Write a bracket in the pattern, for example \"[{pat[:1]}]{pat[1:]}\".")
         if re.match(r"\s*\(?\s*git\s+(?:-C\s+\S+\s+)?stash\b", seg):
             sub = (w[w.index("stash") + 1:] or ["push"])[0]
-            merge = git("rev-parse", "--git-path", "MERGE_HEAD")
-            if sub not in ("list", "show") and merge and os.path.exists(os.path.join(cwd, merge)):
+            if sub not in ("list", "show") and in_merge():
                 return ("git stash in an unfinished merge drops MERGE_HEAD: the next commit is no merge commit "
                         "(#2281). Finish or abort the merge first, or test main in a git worktree.")
+        if re.match(r"\s*\(?\s*git\s+(?:-C\s+\S+\s+)?(?:checkout|restore)\b", seg) and "--ours" in w and in_merge():
+            return ("git checkout --ours FILE takes your whole file and drops the hunks of main that merged with no "
+                    "conflict (#2627). Resolve only the marker hunks, then read git diff origin/main --stat.")
     return None
 msg = why()
 if msg:

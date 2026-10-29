@@ -77,6 +77,8 @@ TOUCH = 1.5     # blocks between a monk and a building, ram or trebuchet that it
 NEXT = tuple(r["name"] for r in RULES if r.get("next"))   # the siege units that a monk converts only next to them
 # More warm intervals and a later sure one: +1 s and +4 s (AoE2 DE wiki), 5 s in all (#1584, "resist" of data/train.jsonl)
 RESIST = {r["name"]: r["resist"] for r in table.load("train.jsonl") if "resist" in r}
+# A technology that converts more: "buildings" (Monotheism, antiquity mode, #3986), "monks" (the priests, as Atonement)
+CONVERTS = {r["name"]: r["converts"] for r in table.load("train.jsonl") if "converts" in r}
 FORT = (14, 0.13, 25)   # a building: warm intervals, chance (38 % / resistance 3) and the sure interval (AoE2 wiki)
 # Parts of the names of the buildings that no monk converts, also with Redemption
 LASTING = tuple(r["name"] for r in RULES if r.get("lasting"))
@@ -267,6 +269,8 @@ def heal(g, dt):
     last, g.monk_at = g.monk_at, {m: pos[m] for m in monks if m in pos}
     import civs                                                    # civs imports gather, gather imports this module
     reach = RANGE * civs.HEAL_RANGE.get(civs.civ(g), 1) * g.map.T   # the Teutons: twice (#2269)
+    import train                                                   # train imports this module's callers (#3984)
+    rate = RATE * math.prod(train.value("heal_rate", t, 1) for t in g.techs)   # Medicine of Antiquity Mode: 2
     hurt, taken = {}, set()
     for m in monks:
         if m in inside or m in g.converting or m not in pos or m not in last or math.dist(pos[m], last[m]) > STILL:
@@ -278,25 +282,31 @@ def heal(g, dt):
             if u not in hurt:
                 hurt[u] = health(g, u)
             if hurt[u] and hurt[u][0] < hurt[u][1]:
-                hp = min(hurt[u][1], hurt[u][0] + RATE * dt)
+                hp = min(hurt[u][1], hurt[u][0] + rate * dt)
                 g.command(f"data modify entity {u} Health set value {round(hp, 2)}f")
                 g.command(f"execute at {u} anchored eyes run particle minecraft:heart ^ ^ ^ 0.3 0.3 0.3 0 2")   # #1634
                 taken.add(u)
                 break
 
 
+def converts(g, what):
+    """True when a researched technology converts `what` (CONVERTS, key "converts" of data/train.jsonl)."""
+    return any(what in CONVERTS.get(t, ()) for t in g.techs)
+
+
 def convertible(g, uuid):
-    """True for an enemy unit that a monk converts: no monk (the religious units are evokers; with Atonement: also
-    them), king, hero or siege (with Redemption: siege, and an enemy building that is not LASTING)."""
+    """True for an enemy unit that a monk converts: no monk (the religious units are evokers; with Atonement or
+    Monotheism: also them), king, hero or siege (with Redemption: siege, and an enemy building that is not LASTING;
+    Monotheism: the building too)."""
     redeemed = "REDEMPTION" in g.techs
     if uuid in g.forts:
-        return redeemed and not any(n in g.fort_names.get(uuid, "") for n in LASTING)
+        return (redeemed or converts(g, "buildings")) and not any(n in g.fort_names.get(uuid, "") for n in LASTING)
     name = g.enemies.get(uuid)
     if name is None or name in IMMUNE or units.siege(name) and not redeemed or "EMPEROR" in name:
         return False
     hero = any(o.get("hero") for o in g.data["objects"] if o.get("uuid") == uuid)
     religious = name in MONKS or str((units.classify(name, hero) or {}).get("id")) == "minecraft:evoker"
-    return not hero and (not religious or "ATONEMENT" in g.techs)
+    return not hero and (not religious or "ATONEMENT" in g.techs or converts(g, "monks"))
 
 
 def convert_order(g, monks, target):
@@ -369,14 +379,16 @@ def resist(g, uuid):
 
 def near(g, m, target, pos):
     """True when monk m is in its conversion range of the target: next to a building, ram or trebuchet (TOUCH),
-    else the range of MONKS (and PRINTING more after Block Printing)."""
+    else the range of MONKS (and PRINTING more after Block Printing, and the key "reach" of the techs)."""
     if target in g.forts:
         x0, _, z0, x1, _, z1 = g.forts[target]
         x, _, z = pos[m]
         return math.hypot(max(x0 - x, 0, x - x1 - 1), max(z0 - z, 0, z - z1 - 1)) <= TOUCH
     if any(n in g.enemies[target] for n in NEXT):
         return math.dist(pos[m], pos[target]) <= TOUCH + 1         # to its middle: about 1 block from its side
+    import train                                                   # train imports gather, gather imports this module
     reach = MONKS.get(g.soldiers.get(m), CONVERT) + PRINTING * ("BLOCK_PRINTING" in g.techs)
+    reach += sum(train.value("reach", t, 0) for t in g.techs)     # Afterlife of Antiquity Mode (#3988)
     return math.dist(pos[m], pos[target]) <= reach * g.map.T
 
 
@@ -423,7 +435,7 @@ def convert(g, dt):
             g.command(f"aoe stop {m}")                             # in range: it stands and chants
         if m in g.faith:
             continue                                               # it rests: no faith for a conversion yet
-        job[1] += dt
+        job[1] += dt * math.prod(train.value("convert_rate", t, 1) for t in g.techs)   # Astrology of Antiquity Mode: 1.3
         while job[1] >= INTERVAL and m in g.converting:
             job[1] -= INTERVAL
             job[2] += 1
@@ -436,5 +448,7 @@ def convert(g, dt):
                 (win if fort else die if heresy(g, owner) else take)(g, target)
                 for k in group:
                     del g.converting[k]
+                import train                                       # train imports this module (#3502)
+                rest_factor = math.prod(train.value("rest", t, 1) for t in g.techs)   # Fanaticism: 0.5 (#3987)
                 for k in rest:                                     # the group in range (Theocracy: one)
-                    g.faith[k] = (ILLUMINATED if "ILLUMINATION" in g.techs else REST) / faith(g)
+                    g.faith[k] = (ILLUMINATED if "ILLUMINATION" in g.techs else REST) * rest_factor / faith(g)

@@ -25,6 +25,8 @@ first attack, "soldiers" in the first wave. AoE2 does not publish what each leve
 
 Defense (#3399): a predator in the sight of a bot villager gets the hunt order of the DEFENDERS nearest villagers, as
 the AoE2 AI does. After the kill they go back to their last resource and source.
+Town defense (#3954): an enemy unit in the sight of a bot building or villager gets the attack order of the bot soldiers
+that are not in a wave, also before the attack time, as the AoE2 AI does. When it dies or leaves, they walk back.
 """
 import math
 import os
@@ -33,11 +35,14 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import ai  # noqa: E402
+import autoscout  # noqa: E402
 import build  # noqa: E402
 import combat  # noqa: E402
+import conquest  # noqa: E402
 import garrison  # noqa: E402
 import gather  # noqa: E402
 import herd  # noqa: E402
+import scout  # noqa: E402
 import table  # noqa: E402
 import train  # noqa: E402
 
@@ -55,6 +60,13 @@ RETRY = 60.0                                                       # AoE2 second
 STALL = 30.0                                                       # AoE2 seconds with no step nearer and no damage
 DEFENDERS = 3                                                      # villagers that attack one predator
 LEVELS = {r["name"]: r for r in table.load("difficulty.jsonl")}    # "AI difficulty", in the order of the AoE2 lobby
+
+
+def level_of(setting, k):
+    """The level of bot k (0 first) of a setting: one name, or a comma list with one name for each bot in seat
+    order; the last name serves the bots after the list (#4020)."""
+    names = setting.split(",")
+    return names[min(k, len(names) - 1)]
 
 
 def box_gap(box, p):
@@ -79,7 +91,9 @@ class Bot:
         self.g.chop = {k: s / level["gather"] for k, s in self.g.chop.items()}   # seconds per unit: work_time
         self.villagers, self.attack, self.foe, self.share = villagers, attack * level["attack"], foe, share
         self.group = level["soldiers"] if group is None else group
-        self.charged = False                                           # the wave attacks: new soldiers join it
+        self.difficulty = difficulty                                   # the save keeps it (#4022)
+        self.charged = False                                           # a wave attacks
+        self.wave = set()                                              # its soldiers: new soldiers wait (#3953)
         self.time, self.looked, self.targets = 0.0, -LOOK, {}          # AoE2 seconds of the game, soldier -> target
         self.chase = {}                                                # soldier -> (target, gap, hit points, since)
         self.lost = {}                                                 # soldier -> {target it gave up: its position}
@@ -95,7 +109,9 @@ class Bot:
         self.g.home = self.home                                        # the next bush or mine of Gather.nearest too
         self.guarded = -LOOK                                           # AoE2 seconds of the last look for predators
         self.defense = {}                                              # villager -> (predator, last res, last tree)
+        self.guards = {}                                               # soldier -> (enemy in the town, its place before)
         self.g.work_on = False                                         # the bot gives the tasks after a build or a tree (#3271)
+        self.scouted = False                                           # the start scouts get Auto Scout once (#3704)
 
     def setup(self):
         """Find the villagers of the player (the entities must be loaded) and make the objective of the resources."""
@@ -153,7 +169,12 @@ class Bot:
     def orders(self):
         """Orders for the idle villagers, the sites, the queues and the soldiers."""
         g = self.g
+        if not self.scouted:                                           # the AoE2 AI scouts the map at the start (#3704)
+            self.scouted = True
+            scouts = {scout.CAVALRY, *scout.SCOUTS.values()}
+            autoscout.start(g, [u for u, n in g.soldiers.items() if n in scouts])
         self.defend()
+        self.guard()
         self.build()
         share = self.shares()
         work = {r: 0 for r in SHARE}
@@ -180,7 +201,9 @@ class Bot:
                     work[res] += 1
                     break
         self.move(share, work)
+        self.age_up()
         self.recruit()
+        self.research()
         self.time += g.tick * gather.NORMAL
         if self.time >= self.attack and self.time >= self.looked + LOOK:   # each look costs RCON commands
             self.looked = self.time
@@ -214,16 +237,64 @@ class Bot:
                 self.defense[u] = (prey, v.res, v.tree)
             g.hunt(prey, who)
 
+    def guard(self):
+        """Send the soldiers that are not in a wave against the enemy units in the sight of a bot building or villager
+        (#3954): the AoE2 AI defends its town also before its attack. A soldier whose enemy died or left walks back to
+        its place. Runs with defend(): one look each LOOK seconds."""
+        g, T = self.g, self.g.map.T
+        if self.time != self.guarded:                                  # defend() looked in this tick
+            return
+        if self.charged:                                               # a wave fights in fight(): its targets win
+            self.guards = {}
+            return
+        eyes = [((x0 + x1 + 1) / 2, (z0 + z1 + 1) / 2, combat.sight(o["name"]) * T) for o in g.data["objects"]
+                if o["kind"] == "building" and o["player"] == g.player and "footprint" in o
+                for x0, z0, x1, z1 in [o["footprint"]]]
+        eyes += [((x0 + x1 + 1) / 2, (z0 + z1 + 1) / 2, combat.sight(s["name"]) * T) for s in g.sites
+                 if s.get("player", g.player) == g.player and s.get("done") for x0, x1, z0, z1 in [s["footprint"]]]
+        eyes += [(v.pos[0], v.pos[2], combat.sight("VILLAGER_MALE") * T) for v in g.villagers.values() if v.pos]
+        ally = lambda p: p != g.player and gather.allied(g.players, g.player, p)   # noqa: E731
+        friends = [((x0 + x1 + 1) / 2, (z0 + z1 + 1) / 2, combat.sight(o["name"]) * T) for o in g.data["objects"]
+                   if o["kind"] == "building" and ally(o["player"]) and "footprint" in o
+                   for x0, z0, x1, z1 in [o["footprint"]]]
+        friends += [((x0 + x1 + 1) / 2, (z0 + z1 + 1) / 2, combat.sight(s["name"]) * T) for x in build.sides(g)
+                    for s in x.sites if ally(s.get("player", x.player)) and s.get("done")
+                    for x0, x1, z0, z1 in [s["footprint"]]]       # the towns of the allies (#4021)
+        units = sorted(u for u, n in g.enemies.items() if not herd.herdable(n))   # no allies (gather.allied, owners.add)
+        seen = g.positions(units) if eyes or friends else {}
+        near = {}
+        for look in (eyes, friends):                                   # the own town first, then the allies
+            near = near or {k: p for k, p in seen.items() if any(math.dist((x, z), (p[0], p[2])) <= r for x, z, r in look)}
+        if not near and not self.guards:                               # each position costs one RCON command
+            return
+        mine = g.positions(sorted(u for u, n in g.soldiers.items() if combat.stats(n).attack))
+        for u, (t, back) in sorted(self.guards.items()):
+            if t not in near or u not in mine:
+                del self.guards[u]
+                if u in mine:
+                    ai.move(g.game, u, g.soldiers[u], T, *back)
+        if not near:
+            return
+        orders = {}
+        for u in sorted(mine.keys() - self.guards.keys()):
+            t = min(near, key=lambda k: (math.dist(near[k], mine[u]), k))
+            self.guards[u] = (t, mine[u])
+            orders.setdefault(t, []).append(u)
+        for t, us in sorted(orders.items()):
+            ai.attack(g.game, us, [g.soldiers[u] for u in us], T, t,
+                      [gather.NORMAL * train.speed(g, g.soldiers[u], u) for u in us])
+
     def go(self, v, res):
-        """Send villager v to the nearest source of res that has some left. False when there is none."""
-        g = self.g
+        """Send villager v to the nearest source of res that has some left and a free cell next to it. False when there
+        is none. An inner tree of a forest has no free cell (Gather.goals): the villager stopped at once, and each tick
+        took the next inner tree, while move() gave it another order between (#3726: 67 s at the same place)."""
+        g, T = self.g, self.g.map.T
         full = [t for t, k in self.sources(res).items() if k > 0 and self.time - self.failed.get(t, -RETRY) >= RETRY]
-        if full:
-            T = g.map.T
-            tile = min(full, key=lambda t: (math.dist(v.cell, ((t[0] + 0.5) * T, (t[1] + 0.5) * T)), t))
+        near = sorted(full, key=lambda t: (math.dist(v.cell, ((t[0] + 0.5) * T, (t[1] + 0.5) * T)), t))
+        if (tile := next((t for t in near if g.goals(t)), None)) is not None:
             g.send(tile, {v.uuid})
             self.sent[v.uuid] = tile
-        return bool(full)
+        return tile is not None
 
     def army(self):
         """The military unit that the first own training building (not a town center) trains, or None."""
@@ -263,13 +334,19 @@ class Bot:
 
     def fight(self):
         """Send each soldier without a live target to the nearest unit of the foe in reach and in the sight of the bot
-        (#2050), else to its nearest building. A wave starts with self.group soldiers; when all of it is dead, the next wave waits for a full group again (#1051)."""
+        (#2050), else to its nearest building. A wave starts with self.group soldiers; the soldiers that come later wait at home until they are a
+        full wave too, as the AoE2 computer player does (#1051, #3953)."""
         g = self.g
         mine = g.positions(sorted(u for u, n in g.soldiers.items() if combat.stats(n).attack))   # a dead soldier
                                                                        # is not in it, a transport ship has no attack
-        self.charged = len(mine) >= self.group or self.charged and bool(mine)
+        self.wave = getattr(self, "wave", set()) & mine.keys()           # the soldiers of the running wave
+        if len(mine.keys() - self.wave) >= self.group:                 # the new soldiers wait for a full wave (#3953)
+            self.wave |= mine.keys()
+        self.charged = bool(self.wave)
+        self.retarget()
         if not self.charged or self.foe is None:                      # no enemy: no attack (#3107)
             return
+        mine = {u: p for u, p in mine.items() if u in self.wave}       # the others stay at their buildings
         inside = garrison.inside(self.share) if self.share else set()  # a unit in a building is no target (#3429)
         live = {t for t in set(self.targets.values()) if t not in inside and "passed" in g.command(f"execute if entity {t}")}
         self.targets = {u: t for u, t in self.targets.items() if u in mine and t in live}
@@ -307,6 +384,20 @@ class Bot:
                 g.sieged.add(t)                                        # Gather.fall frees its footprint
             ai.attack(g.game, us, [g.soldiers[u] for u in us], g.map.T, t,
                       [gather.NORMAL * train.speed(g, g.soldiers[u], u) for u in us])
+
+    def retarget(self):
+        """When self.foe is out of the game (conquest.left), take the enemy still in the game (not an ally,
+        gather.allied) whose town center is nearest to the own one, as the AoE2 AI (#4019); None with no enemy."""
+        if self.share is None or self.foe is None or self.foe in (left := conquest.left(self.share)):
+            return
+        g, me = self.g, self.center()
+
+        def far(p):
+            tc = next((o["footprint"] for o in g.data["objects"] if o["kind"] == "building" and o["player"] == p
+                       and o["name"] == "TOWN_CENTER"), None)
+            return math.inf if tc is None or me is None else math.dist(me, ((tc[0] + tc[2]) / 2, (tc[1] + tc[3]) / 2))
+        self.foe = min((p for p in sorted(left) if not gather.allied(g.players, g.player, p)), key=far, default=None)
+        self.sides = (None, {})                                        # a new foe: decide each tile again
 
     def stalled(self, mine):
         """Drop the target of each soldier that came no block nearer to it and did no damage to it for STALL AoE2
@@ -370,13 +461,59 @@ class Bot:
         g = self.g
         for rect, name in sorted(train.homes(g).items(), key=lambda kv: (kv[1] != "TOWN_CENTER", kv[0])):
             more = len(g.villagers) + sum(e["name"] == "VILLAGER_MALE" for q in g.queues.values() for e in q)
-            units = ["VILLAGER_MALE"] if name == "TOWN_CENTER" else \
-                [n for n in train.trains(g, name) if gather.military(n) and n not in train.TECHS and not build.locked(g, n)]
+            units = ["VILLAGER_MALE"] if name == "TOWN_CENTER" else self.soldiers(name)
             for n in units[:1]:
                 while len(g.queues.get(rect, [])) < QUEUED and (n != "VILLAGER_MALE" or more < self.villagers) \
                         and all(g.stock[r] >= v for r, v in train.price(g, n).items()) \
                         and train.queue(g, self.nobody, (rect[0], rect[2]), n):
                     more += n == "VILLAGER_MALE"
+
+    def soldiers(self, name):
+        """The military units that building name trains now (recruit trains the first one)."""
+        g = self.g
+        return [n for n in train.trains(g, name) if gather.military(n) and n not in train.TECHS and not build.locked(g, n)]
+
+    def research(self):
+        """Research the economy technologies of the age at each building that offers them (the AoE2 AI does, #3949),
+        the upgrade of the unit that the building trains (#3952: Militia to Man-at-Arms), so that recruit then
+        trains the new unit, and the Blacksmith technologies that change a live or queued soldier of the bot (#3951).
+        The villagers of self.villagers come first. One technology in each queue."""
+        g = self.g
+        if len(g.villagers) + sum(e["name"] == "VILLAGER_MALE" for q in g.queues.values() for e in q) < self.villagers:
+            return
+        army = {n for n in [*g.soldiers.values(), *(e["name"] for q in g.queues.values() for e in q)]
+                if n not in train.TECHS and gather.military(n)}
+
+        def smith(n):                                                  # the technology changes a soldier of the bot
+            return train.BUILDING_OF.get(n) == "BLACKSMITH" and any(
+                train.TECHS[n](u, combat.stats(u)) != combat.stats(u) for u in sorted(army))
+        for rect, name in sorted(train.homes(g).items(), key=lambda kv: kv[0]):
+            if any(e["name"] in train.TECHS for e in g.queues.get(rect, [])):
+                continue
+            line = set(self.soldiers(name)[:1])
+            for n in sorted(train.trains(g, name), key=lambda n: not train.value("economy", n)):
+                if n in train.TECHS and (train.value("economy", n) or smith(n)
+                                         or n in train.UPGRADES and line & {old for old, _ in train.lines(n, g)}) \
+                        and not build.locked(g, n) \
+                        and all(g.stock[r] >= v for r, v in train.price(g, n).items()) \
+                        and train.queue(g, self.nobody, (rect[0], rect[2]), n):
+                    break
+
+    def age_up(self):
+        """Queue the next age (build.AGE_TECHS) at a town center when the bot has its villager number, each building
+        of its order that the present age allows, and the cost of the age, as an AoE2 bot (#3912). build.locked keeps
+        an age above end_age out."""
+        g = self.g
+        if build.ages(g) >= len(build.AGE_TECHS) or len(g.villagers) < self.villagers:
+            return
+        age, have = build.AGE_TECHS[build.ages(g)], train.owned(g)
+        if train.queued(g, age) or build.locked(g, age) or any(n not in have for n in self.order if not build.locked(g, n)):
+            return
+        for rect, name in sorted(train.homes(g).items()):
+            if name == "TOWN_CENTER" and age in train.trains(g, name) \
+                    and all(g.stock[r] >= v for r, v in train.price(g, age, name).items()):
+                train.queue(g, self.nobody, (rect[0], rect[2]), age)
+                return
 
     def build(self):
         """Start the next house, farm or building of ORDER when the bot can pay for it and no site of it is unfinished.

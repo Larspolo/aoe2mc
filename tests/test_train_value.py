@@ -18,7 +18,8 @@ def test_each_key_that_the_code_reads_with_value_has_its_description():
     used = set(re.findall(r"""train\.value\(["'](\w+)["']""", CODE) + re.findall(r"""[^.\w]value\(["'](\w+)["']""", own))
     used |= set(re.findall(r"""BY_KEY\[["'](\w+)["']\]""", own))
     assert used and sorted(used - set(train.KEYS)) == [], "give each key its line in game/data/train_keys.jsonl"
-    assert set(train.KEYS) <= {k for r in table.load("train.jsonl") for k in r}   # each line names a key of train.jsonl
+    keys = {k for rules in ("aoe2", "antiquity") for r in table.load("train.jsonl", rules=rules) for k in r}
+    assert set(train.KEYS) <= keys                     # each line names a key of train.jsonl (of a rule set: age_times, #3713)
 
 
 def test_value_reads_a_key_and_gives_the_default_for_an_item_without_it():

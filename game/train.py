@@ -88,9 +88,9 @@ DATA = os.path.join(table.DIR, "train.jsonl")
 SOUNDS = {r["name"]: r for r in table.load("sounds.jsonl")}       # building name -> the sound of a click on it (#3501)
 
 
-def load(path=DATA):
-    """The items of the menus: one JSON object per line (#1702, `table.load`)."""
-    return table.load(path)
+def load(path=None):
+    """The items of the menus: one JSON object per line (#1702, `table.load`); default: the file of the rule set."""
+    return table.load(path or "train.jsonl")
 
 
 ROWS = load()                                                      # one line per item: data/train.jsonl (#1702)
@@ -100,12 +100,12 @@ TRAIN_TIMES = {r["name"]: r["time"] for r in ROWS}                 # AoE2 second
 TRAINS = {b: tuple(r["name"] for r in ROWS if r["building"] == b)    # the units and technologies of each
           for b in dict.fromkeys(r["building"] for r in ROWS if r["building"])}   # building, in file order
 TRAINS["DONJON"] = ("SPEARMAN",)                                  # trains() adds the Serjeant (#1873)
-TRAINS["FOLWARK"] = TRAINS["MILL"]                                 # the mill of the Poles (#1874)
+TRAINS["FOLWARK"] = TRAINS.get("MILL", ())                               # the mill of the Poles (#1874)
 TRAINS["KREPOST"] = ("PETARD",)                                     # trains() adds the Konnik (#1872); wiki: the petard (#2192)
-TRAINS["FORTIFIED_CHURCH"] = TRAINS["MONASTERY"]                  # the monastery of the Armenians, Georgians (#1930)
+TRAINS["FORTIFIED_CHURCH"] = TRAINS.get("MONASTERY", ())                  # the monastery of the Armenians, Georgians (#1930)
 # A building with the menus of other buildings: the key "menus" of data/buildings.jsonl (the mule cart: the lumber and
 # mining camp, #2208). The items of each later menu move right of the slots of the earlier ones (SHIFTS, slots()).
-MENUS = {r["name"]: r["menus"] for r in BUILDING_ROWS if "menus" in r}
+MENUS = {r["name"]: r["menus"] for r in BUILDING_ROWS if set(r.get("menus", ["?"])) <= set(TRAINS)}   # of the rules
 TRAINS |= {b: sum((TRAINS[m] for m in ms), ()) for b, ms in MENUS.items()}
 SLOTS = {r["name"]: r["slot"] for r in ROWS}
 # An upgrade of one building (the key "one_building", #2484: the Achaemenid town centers): it changes only the building
@@ -122,6 +122,13 @@ UNIQUE = civs.UNIQUE
 # it does, its issue, #2507), as civs.value (#2281). A new key then needs no new table here.
 KEYS = {r["name"]: f"{r['text']} (#{r['issue']})" for r in table.load("train_keys.jsonl")}
 BY_KEY = {k: {r["name"]: r[k] for r in ROWS if k in r} for k in sorted(KEYS)}
+BUILDING_OF = {r["name"]: r["building"] for r in ROWS}
+
+
+def weight(g, name):
+    """The population of one unit: the product of the factors of the researched technologies with the key "population"
+    for its building (Logistics of Antiquity Mode: 1/2 for the Barracks, #3918), else 1."""
+    return math.prod(f for t, (b, f) in BY_KEY["population"].items() if t in g.techs and BUILDING_OF.get(name) == b)
 
 
 def value(key, name, default=None):
@@ -130,6 +137,12 @@ def value(key, name, default=None):
     assert key in KEYS, key
     return BY_KEY[key].get(name, default)
 
+
+
+def sight_more(techs, name, s):
+    """The tiles of line of sight that the technologies techs add to unit name with combat values s: the key "sight"
+    of data/train.jsonl, {"if": [tests of test()], "add": n} (#3981)."""
+    return sum(e["add"] for t in techs if (e := BY_KEY["sight"].get(t)) and any(test(x, name, s) for x in e["if"]))
 
 build.AGE |= dict.fromkeys(UNIQUE.values(), 2) | dict.fromkeys(("ELITE_" + n for n in UNIQUE.values()), 3)   # (#1082)
 
@@ -250,7 +263,8 @@ def effect(e, more=1):
             return s
         part = (lambda n: n) if more == 1 else (lambda n: round(n * more))
         new = {k: getattr(s, k) + part(n) for k, n in e.get("add", {}).items()}
-        new |= {k: round(getattr(s, k) * (f if more == 1 else 1 + (f - 1) * more)) for k, f in e.get("times", {}).items()}
+        new |= {k: (round if isinstance(getattr(s, k), int) else float)(getattr(s, k) * (f if more == 1 else 1 + (f - 1) * more))
+                for k, f in e.get("times", {}).items()}     # a reload of 2.0 × 0.75 stays 1.5 (Stirrups, #4098)
         if "bonus" in e:
             new["bonus"] = {**s.bonus, **{k: s.bonus.get(k, 0) + part(n) for k, n in e["bonus"].items()}}
         return s._replace(**new)
@@ -263,7 +277,7 @@ EACH = {r["name"]: effect({k: v for k, v in r["effect"].items() if k != "if"})  
         for r in ROWS if isinstance(r.get("effect"), dict)}       # (civs.SMITH_UNITS, #2174)
 SHIPWRIGHT = (0.8, 1.54)                                           # Shipwright: ships cost 80 % wood, train 54 % faster
 CONSCRIPT = (tuple(r["name"] for r in BUILDING_ROWS if r.get("conscription")),   # Conscription: these buildings
-             next(r["factor"] for r in ROWS if r["name"] == "CONSCRIPTION"))      # train faster (#1455)
+             next((r["factor"] for r in ROWS if r["name"] == "CONSCRIPTION"), 1))   # train faster (#1455)
 ARROWSLITS = {r["name"]: r["arrowslits"] for r in BUILDING_ROWS if "arrowslits" in r}   # the attack of each tower (#1504)
 HEATED = {r["name"]: r["heated_shot"] for r in BUILDING_ROWS if "heated_shot" in r}   # Heated Shot: attack against
 #                                           ships (AoE2 DE wiki "Attack increase against ships", #1548)
@@ -276,7 +290,7 @@ REQUIRES = {r["name"]: (r["requires"][0], *map(tuple, r["requires"][1:]))   # an
 # The AoE2 event sounds (#3502): a own site is complete, an own technology is complete, a monk converts a unit
 EVENT_SOUNDS = {"built": "minecraft:block.anvil.use", "convert": "minecraft:entity.evoker.prepare_wololo",
                 "research": "minecraft:block.note_block.bell"}
-AGES = ("Dark Age", "Feudal Age", "Castle Age", "Imperial Age")    # the age after each researched age (index: ages)
+AGES = build.AGE_NAMES                                             # the age after each researched age (index: ages)
 # AoE2 DE setting "Starting age" (game/data/setup.jsonl): the researched ages and the skipped technologies (#2265)
 STARTS = {r["name"]: r for r in table.load("setup.jsonl") if "ages" in r}
 SWAPS = {r["name"]: r["swap"] for r in table.load("setup.jsonl") if "swap" in r}   # a game mode: {old: new} (#2388)
@@ -544,6 +558,16 @@ def click_sound(g, player, rect):
                   f"playsound minecraft:{v['select']} voice @s ~ ~ ~ 1 {v['pitch']}")
 
 
+def trained_voice(g, rect, unit):
+    """Play the select voice of the class of the unit that the building rect completed, to the team of the own player
+    (AoE2 DE, #3563). unit: a Villager, a UUID or a ship. A class with no line plays none; a setup or a cheat spawns
+    with no sound."""
+    import gather                                                  # gather imports this module
+    if (v := gather.VOICES.get(g.voice_class(getattr(unit, "uuid", unit)))) and not getattr(g, "noui", False):
+        x, z = (rect[0] + rect[1]) / 2, (rect[2] + rect[3]) / 2
+        g.command(f"playsound minecraft:{v['select']} voice @a[team=p{g.player}] {x:.1f} {g.map.y(int(x), int(z))} {z:.1f} 1 {v['pitch']}")
+
+
 def show(g, player, rect):
     """Show (or refresh) the menu of the building rect: one item per unit, with its cost, time and queue. The second
     row shows the queue (#706): one item per group of the same unit (groups(), item count: the units), the first one
@@ -556,7 +580,7 @@ def show(g, player, rect):
             return "on" if vars(g).get(flag) else "off"
         if name in TECHS:
             return missing(g, name) or ("researching" if queued(g, name) and name not in ONE_BUILDING else "research")
-        return f"queue {n}/{QUEUE}"
+        return f"queue {n}/{QUEUE}" + (" · Auto-queue: on" if vars(g).get("auto", {}).get(rect) == name else "")
     names = vars(g).get("trigger_names", {})                          # "Change Technology Name" (#2821)
     items = [(slot, build.LOCKED if build.locked(g, name) else item, names.get(name, label),
               (" · ".join(f"{v} {r}" for r, v in price(g, name, building).items()) or "free") + f" · {round(seconds(g, name, building), 1):g} s · "
@@ -564,7 +588,7 @@ def show(g, player, rect):
              for name, (slot, item, label) in layout(g, rect).items()]
     items += [RALLY] if units_of(g, building) else []
     items += [garrison.ungarrison(building)] if getattr(g, "garrisons", {}).get(rect) else []   # only with units inside (#808)
-    items += [garrison.BELL] if building == "TOWN_CENTER" else []    # the town bell (#3419)
+    items += [garrison.bell_item(g)] if building == "TOWN_CENTER" else []    # the town bell (#3419)
     items += [demolish.ITEM] if demolish.shown(g, rect) else []        # the building falls (#3452)
     if building == "MARKET":                                           # the buy and sell rows under the queue (#1286)
         import market                                                  # only for a market
@@ -572,13 +596,44 @@ def show(g, player, rect):
     q = g.queues.get(rect, [])                                         # the queue row first: the plugin sets the
     items = [(ROW + i, ITEMS[name][1], ITEMS[name][2] + (f" {int(100 * q[0]['progress'])} %" if start == 0 else ""),
               "Click: cancel 1", k) for i, (name, start, k) in enumerate(groups(q)[:ROW])] + items   # items by slot
-    def click(p, slot, shift):
-        if building == "MARKET" and slot >= market.ROW:
+    def click(p, slot, shift, right=False):
+        if right:                                                      # a right click: the auto-queue (#3524)
+            auto(g, p, rect, slot)
+        elif building == "MARKET" and slot >= market.ROW:
             market.order(g, p, slot - market.ROW, shift, lambda: show(g, p, rect))
         else:
             order(g, p, rect, slot, shift)
     click.rect, click.key = rect, shown(g, rect)                       # refresh() compares the key (#1335)
     menu.show(g, player, build.pretty(building), items, click)
+
+
+def auto(g, player, rect, slot):
+    """A right click on the unit item in slot sets the auto-queue of the building rect to that unit, as in AoE2 DE
+    (#3524): tick() queues it again each time the queue is empty. A second right click stops it. One unit per building;
+    a technology or another item has none. Returns the unit name, or None."""
+    name = next((n for n, (s, *_) in layout(g, rect).items() if s == slot and n not in TECHS), None)
+    if name is None:
+        return None
+    on, by = vars(g).setdefault("auto", {}), vars(g).setdefault("auto_by", {})
+    if on.get(rect) == name:
+        del on[rect]
+    else:
+        on[rect], by[rect] = name, player
+    build.say(g, player, f"Auto-queue {build.pretty(name)}: {'on' if on.get(rect) else 'off'}.")
+    show(g, player, rect)
+    return name if on.get(rect) else None
+
+
+def requeue(g):
+    """Queue the auto-queue unit of each building with an empty queue (#3524). With too few resources it waits with
+    no message, as in AoE2 DE. A building that fell or changed owner (not in homes()) loses its entry."""
+    on, home = vars(g).get("auto", {}), homes(g)
+    for rect, name in list(on.items()):
+        if rect not in home:
+            del on[rect]
+        elif not g.queues.get(rect) and not build.locked(g, name) and not missing(g, name) \
+                and all(g.stock[r] >= v for r, v in price(g, name, home[rect]).items()):
+            queue(g, g.auto_by.get(rect, "@a"), rect[::2], name)
 
 
 def shown(g, rect):
@@ -621,6 +676,8 @@ def cancel(g, player, rect, group):
     if not 0 <= group < len(gs):
         return None
     name, start, k = gs[group]
+    if vars(g).get("auto", {}).get(rect) == name:                      # a cancel also ends its auto-queue (#3524)
+        del g.auto[rect]
     for r, v in q.pop(start + k - 1).get("paid", COSTS[name]).items():   # a free technology gives back nothing
         g.stock[r] += v
         g.command(f"scoreboard players add {r.capitalize()} {g.board} {v}")
@@ -643,7 +700,7 @@ def order(g, player, rect, slot, shift=False):
         show(g, player, rect)
         return 0
     if slot == garrison.BELL[0] and homes(g)[rect] == "TOWN_CENTER":   # the town bell (#3419)
-        garrison.bell(g, player)
+        garrison.all_back(g, player) if vars(g).get("bell_work") else garrison.bell(g, player)   # (#3420)
         menu.close(g, player)
         return 0
     if slot == demolish.ITEM[0] and demolish.delete(g, player, rect):   # the building falls (#3452)
@@ -803,7 +860,7 @@ def per_enemy(g, name):
     return {r: min(v * n, most.get(r, v * n)) for r, v in COSTS[name].items()}
 
 
-SHIPS = {n for n in TRAINS["DOCK"] if n not in TECHS}                 # the ships of the dock (#1490) ...
+SHIPS = {n for n in TRAINS.get("DOCK", ()) if n not in TECHS}                 # the ships of the dock (#1490) ...
 for _ in UPGRADES:                                                    # ... and the ships that its upgrades make (#3100)
     SHIPS |= {new for t in UPGRADES for old, new in lines(t) if old in SHIPS}
 
@@ -900,13 +957,15 @@ def stats(g, name, uuid=None):
 
 def seconds(g, name, building=None, k=None):
     """The train time of unit or technology name: TRAIN_TIMES, or the time of its key "faster" from its age (the eagle scout trains
-    in 46 s in the Feudal Age and in 35 s from the Castle Age, AoE2 DE wiki), divided by the work rate of the
-    civilization at building (civs.work_rate: Persian town centers and docks, #1894), its rate of the unit group
+    in 46 s in the Feudal Age and in 35 s from the Castle Age, AoE2 DE wiki) or of its key "age_times" in the age of the player (#3713),
+    divided by the work rate of the civilization at building (civs.work_rate: Persian town centers and docks, #1894), its rate of the unit group
     (civs.train_rate: Aztec military units, Khitan skirmishers, #1927) and its age-up rate (civs.age_rate: the Malay, #1926),
     times its research time of the technology (civs.research_time: the Gothic Loom at once, #2172) and its time factor
     at building (civs.train_time: Mapuche Settlements, #2432), and of the Recruitment Doctrine k of a unit (doctrine(),
     default the present one, #2483). The time of "Add Train Location" at building replaces TRAIN_TIMES (#2865)."""
     age, time = value("faster", name, (9, 0))
+    if each := value("age_times", name):                               # a Return of Rome dock trains faster in each age (#3713)
+        age, time = 0, each[min(build.ages(g), len(each) - 1)]
     base = vars(g).get("trigger_times", {}).get(name)                  # "Change Technology Research Time" (#2820)
     own = (added(g, building, name) or (0, 0))[1] if building else 0   # Add Train Location (#2865)
     return (own or (base if base is not None else time if build.ages(g) >= age else TRAIN_TIMES[name])) \
@@ -918,13 +977,16 @@ def seconds(g, name, building=None, k=None):
 
 def speed(g, name, uuid=None):
     """The factor of the walk speed of unit name: the bonus of the civilization (civs.speed) and the technologies of the
-    player (the key "walk": Fervor, #1261; Squires for the class infantry, #1415; Husbandry for the mounted units, #1416), with
-    the changes of civs.ALSO and civs.MORE (Bohemian Fervor for the villagers, Varangian Caravan +50 %, #2173); unit uuid
+    player (the key "walk": Fervor, #1261; Squires for the class infantry, #1415; Husbandry for the mounted units, #1416) and the
+    added tiles per second (the key "walk_add": Aristocracy, #3921), with the changes of civs.ALSO and civs.MORE (Bohemian Fervor for the villagers, Varangian Caravan +50 %, #2173); unit uuid
     near a Military Town Center walks faster (g.hurried, regen.military, #2496). The speed changes of the triggers on
     unit uuid (unit_values, scenario.values, #3083) change its tiles per second (a set: that speed)."""
     also, more = civs.ALSO.get(civs.civ(g), {}), civs.MORE.get(civs.civ(g), {})
     f = civs.speed(g, name) * math.prod((1 + (f - 1) * more[t] if t in more else f) ** count(g, t)
                                         for t, (unit, f) in BY_KEY["walk"].items() if faster(unit, name) or t in also and faster(also[t], name))
+    if add := sum(v * count(g, t) for t, (unit, v) in BY_KEY["walk_add"].items() if faster(unit, name)):
+        import ai                                                  # ai imports gather, gather imports this module
+        f += add / ai.walk_speed(name, 1, 1)                       # tiles per second on the base speed (Aristocracy, #3921)
     if changes := [(op, q) for field, op, q in vars(g).get("unit_values", {}).get(uuid, ()) if field == "speed"]:
         import ai                                                  # ai imports gather, gather imports this module
         base = ai.walk_speed(name, 1, 1)                           # tiles per AoE2 second
@@ -1110,7 +1172,11 @@ def limit(g):
     """The population limit: 5 per complete own town center and house, 20 per castle (civs.HOUSING: other values of
     a civilization, #2118), at most max_pop()."""
     own = civs.HOUSING.get(civs.civ(g), {})
-    return min(max_pop(g), sum(own.get(n, HOUSING.get(n, 0)) for n in owned(g)))
+    factor = {}                                                        # Urbanization: the houses give double (#3919)
+    for t in getattr(g, "techs", ()):
+        for n, f in value("housing_factor", t, {}).items():
+            factor[n] = factor.get(n, 1) * f
+    return min(max_pop(g), sum(own.get(n, HOUSING.get(n, 0)) * factor.get(n, 1) for n in owned(g)))
 
 
 def max_pop(g):
@@ -1141,7 +1207,7 @@ def census(g):
     for u in [u for u in g.soldiers if u not in live]:                # the ticks of ships and towers wait for it (#3122)
         del g.soldiers[u]
         g.drop(u)                                                      # from the selection of each person (#3486)
-    g.pop, g.census = sum(g.soldiers.get(u) not in build.MOVES for u in live), 0.0   # a mule cart is a building
+    g.pop, g.census = sum(weight(g, g.soldiers.get(u)) for u in live if g.soldiers.get(u) not in build.MOVES), 0.0   # a mule cart is a building
     sidebar(g)
 
 
@@ -1151,7 +1217,7 @@ LABELS = {"Limit": "Pop. limit"}                                  # the shown na
 def sidebar(g):
     """Show the population and the limit as two lines of the sidebar (g.board) and the age in its title, only when
     they changed."""
-    for name, n in (("Population", g.pop), ("Limit", limit(g))):
+    for name, n in (("Population", math.ceil(g.pop)), ("Limit", limit(g))):   # a half unit counts as one (#3918)
         if g.shown.get(name) != n:
             first, g.shown[name] = name not in g.shown, n
             g.command(f"scoreboard players set {name} {g.board} {n}")
@@ -1173,9 +1239,11 @@ def tick(g, work):
         if g.marks[tag] <= 0:
             del g.marks[tag]
             g.command(f"kill @e[tag={tag}]")
+    requeue(g)
     cap, out, home = limit(g), [], homes(g)
     fast = {r for r, n in home.items() if n in CONSCRIPT[0]} if "CONSCRIPTION" in g.techs else set()   # (#1455)
-    room = cap - g.pop - sum(1 for q in g.queues.values() if q and q[0]["progress"] > 0 and q[0]["name"] not in TECHS)
+    room = cap - g.pop - sum(weight(g, q[0]["name"]) for q in g.queues.values()
+                             if q and q[0]["progress"] > 0 and q[0]["name"] not in TECHS)
     for rect, q in g.queues.items():
         if not q:
             continue
@@ -1183,10 +1251,10 @@ def tick(g, work):
             if room <= 0:
                 if not q[0].get("waits"):                              # as the "need more houses" message of AoE2
                     q[0]["waits"] = True
-                    build.say(g, q[0]["player"], f"The population is at the limit ({g.pop}/{cap}): "
+                    build.say(g, q[0]["player"], f"The population is at the limit ({math.ceil(g.pop)}/{cap}): "
                               + ("build more houses." if cap < max_pop(g) else "no more units."))
                 continue
-            room -= 1
+            room -= weight(g, q[0]["name"])
             q[0]["waits"] = False
         rate = CONSCRIPT[1] if rect in fast and q[0]["name"] not in TECHS else 1   # units only, not technologies
         rate *= SHIPWRIGHT[1] if shipwright(g, q[0]["name"]) else 1          # the ships of a dock, not its technologies
@@ -1196,10 +1264,10 @@ def tick(g, work):
         if q[0]["progress"] >= 1 and q[0]["name"] in TECHS:
             research(g, q.pop(0), rect=rect)
         elif q[0]["progress"] >= 1 and (v := spawn(g, rect, q[0]["name"])):   # no room: it waits in the queue (#2470)
-            q.pop(0)
+            g.pop += weight(g, q.pop(0)["name"])
             out.append(v)
             record.trained(g, v)                                       # its object ID (#2649)
-            g.pop += 1
+            trained_voice(g, rect, v)
     refresh(g)
     sidebar(g)
     return out
@@ -1254,7 +1322,7 @@ def summon(g, name, pos, rotation=math.pi / 2, player=None):
         g.command(cmd)
     if cmd := combat.accuracy_command(uuid, name, civs.value("accuracy", civs.civ(g), {}).get(name, 0.0)):
         g.command(cmd)                                             # a Hun trebuchet hits units more often (#2479)
-    if cmd := combat.sight_command(uuid, name, g.map.T, s=stats(g, name)):   # it attacks enemies in sight (#775)
+    if cmd := combat.sight_command(uuid, name, g.map.T, s=stats(g, name), more=sight_more(g.techs, name, combat.stats(name))):   # it attacks enemies in sight (#775)
         g.command(cmd)
     import ai                                                      # ai imports gather, gather imports this module
     g.command(ai.speed_command(uuid, name, g.map.T, gather.NORMAL * speed(g, name)))   # also without an order (#849)

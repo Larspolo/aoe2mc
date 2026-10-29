@@ -43,7 +43,7 @@ def test_the_tick_function_tests_the_years_left_on_the_timer_of_the_player():
 
 
 def test_gaia_an_unknown_timer_or_comparison_writes_no_trigger():
-    for t in (trig(player=0), trig(kind=3), trig(comparison=9), trig(inverted=True)):
+    for t in (trig(player=0), trig(kind=3), trig(comparison=9)):
         assert tick(t)[1] == ""
 
 

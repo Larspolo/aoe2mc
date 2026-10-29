@@ -2,8 +2,8 @@
 {"name": "AI_SIGNAL", "text": "not supported: the bots of the game program run no AI script"}
 {"name": "AI_SIGNAL_MULTIPLAYER", "text": "not supported: the bots of the game program run no AI script"}
 {"name": "AND", "text": "the default between two conditions: all conditions of one group in one `execute if ... if ...` line (#2765)"}
-{"name": "BRING_OBJECT_TO_AREA", "text": "`execute if entity @e[tag=aoe2mc.rN,x=..,dx=..]` in the tick function (units, #2620); a building: not supported yet"}
-{"name": "BRING_OBJECT_TO_OBJECT", "text": "`execute at @e[tag=aoe2mc.rA,limit=1] if entity @e[tag=aoe2mc.rB,distance=..T]` in the tick function: within one tile (units, #2771); a building: not supported yet"}
+{"name": "BRING_OBJECT_TO_AREA", "text": "`execute if entity @e[tag=aoe2mc.rN,x=..,dx=..]` in the tick function (units, #2620); a building: `unless score #fN aoe_fallen matches 1..` when its tile is in the area, else never (#3782)"}
+{"name": "BRING_OBJECT_TO_OBJECT", "text": "`execute at @e[tag=aoe2mc.rA,limit=1] if entity @e[tag=aoe2mc.rB,distance=..T]` in the tick function: within one tile (units, #2771); a building: `positioned` at the corner of the tiles around its tile and the other unit in that box (#3782)"}
 {"name": "BUILDING_IS_TRADING", "text": "`if score #rN aoe_trade matches 1` (0 when inverted) in the tick function: the scenario mode of the game program sets the score while a trade cart has the market on its route (#2868); a dock: not supported (no trade cogs)"}
 {"name": "CAPTURE_OBJECT", "text": "`execute if entity @e[tag=aoe2mc.rN,tag=aoe2mc.pN]` in the tick function (units, #2619); a building: `if score #oN aoe_owner matches N`, set by the scenario mode to its owner (#2940)"}
 {"name": "CHANCE", "text": "`execute store result score ... run random value 1..100` once per second (alone, after the timers or with the ticked conditions: #2574)"}
@@ -16,7 +16,7 @@
 {"name": "HERO_POWER_CAST", "text": "not supported: Chronicles only, the game program has no hero powers"}
 {"name": "LOCAL_TECH_RESEARCHED", "text": "not supported: Chronicles only, the game program has no local technologies"}
 {"name": "OBJECTS_IN_AREA", "text": "`execute if entity @e[team=pN,x=..,z=..,dx=..,dz=..]`"}
-{"name": "OBJECT_ATTACKED", "text": "`execute if entity @e[tag=aoe2mc.rN,predicate=aoe2mc:attacked]` in the tick function: the unit took damage from any attacker in the last 10 ticks (HurtTime, or the tag aoe2mc.hit of an AoE2 hit of the game program, #3085), vanilla has no attacker in a selector (units, #2779); a building: not supported yet"}
+{"name": "OBJECT_ATTACKED", "text": "`execute if entity @e[tag=aoe2mc.rN,predicate=aoe2mc:attacked]` in the tick function: the unit took damage from any attacker in the last 10 ticks (HurtTime, or the tag aoe2mc.hit of an AoE2 hit of the game program, #3085), vanilla has no attacker in a selector (units, #2779); a building: `if score #hN aoe_hit matches 1`, set by the scenario mode when its hit points fall (#3775)"}
 {"name": "OBJECT_HAS_ACTION", "text": "`execute if score #rN aoe_action matches A` (`unless` when inverted) in the tick function: the scenario mode of the game program sets the AoE2 UnitAIAction of the villager state (`scenario.ACTIONS`: build, gather, hunt, move, enter, repair, idle, #2867); another action, a target object or no unit object: not supported yet"}
 {"name": "OBJECT_HAS_TARGET", "text": "not supported: Minecraft has no readable target of a mob"}
 {"name": "OBJECT_HP", "text": "`execute store result score ... run data get entity @e[tag=aoe2mc.rN,limit=1] Health` in the tick function, then `if score ... matches` (#2701)"}
@@ -35,6 +35,6 @@
 {"name": "TECHNOLOGY_STATE", "text": "`if score #pN.NAME aoe_techstate matches Q` in the tick function: the scenario mode of the game program sets the AoE2 TechnologyState of the technology (#2769)"}
 {"name": "TIMER", "text": "`schedule function ... <s>s` (one function per trigger)"}
 {"name": "TRIGGER_ACTIVE", "text": "`execute if score #N aoe_on matches 1` (0 when inverted) in the tick function: the state of trigger N (#2699)"}
-{"name": "UNITS_GARRISONED", "text": "`if score #gREF aoe_gar matches N..` in the tick function: the scenario mode of the game program sets the number of units inside each converted building (#2714); a transport ship: not supported yet"}
+{"name": "UNITS_GARRISONED", "text": "`if score #gREF aoe_gar matches N..` in the tick function: the scenario mode of the game program sets the number of units inside each converted building (#2714) and each own transport ship or ram (#3780)"}
 {"name": "VARIABLE_VALUE", "text": "`execute if score #vN aoe_var matches ..` in the tick function, once (#2611)"}
-{"name": "VICTORY_TIMER", "text": "`execute if score #pN.T aoe_vic matches ..` in the tick function: the scenario mode of the game program sets the years left on the wonder (T 0), relic (1) or King of the Hill (2) timer of player N and resets the score when the timer stops (#2906); inverted: not supported yet"}
+{"name": "VICTORY_TIMER", "text": "`execute if score #pN.T aoe_vic matches ..` in the tick function: the scenario mode of the game program sets the years left on the wonder (T 0), relic (1) or King of the Hill (2) timer of player N and resets the score when the timer stops (#2906); inverted (#3781): `unless` of that test"}

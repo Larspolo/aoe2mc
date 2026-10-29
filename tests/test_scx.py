@@ -98,7 +98,7 @@ def test_convert_an_old_scenario(tmp_path):
 
 def test_convert_an_unknown_format_gives_a_clear_error(tmp_path, capsys):
     import aoe2mc
-    path = build(tmp_path / "new.scx", np.zeros((2, 2), np.int16), np.zeros((2, 2)), {}, fmt=b"1.18")
+    path = build(tmp_path / "new.scx", np.zeros((2, 2), np.int16), np.zeros((2, 2)), {}, fmt=b"1.11")
     with pytest.raises(SystemExit):
         aoe2mc.main([str(path), str(tmp_path / "W")])
-    assert "'1.18' is not supported" in capsys.readouterr().err
+    assert "'1.11' is not supported" in capsys.readouterr().err

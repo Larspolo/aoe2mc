@@ -56,6 +56,7 @@ import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.EntityRegainHealthEvent;
 import org.bukkit.event.entity.EntityTargetEvent;
 import org.bukkit.event.entity.EntityTransformEvent;
+import org.bukkit.event.entity.SlimeSplitEvent;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
@@ -82,6 +83,8 @@ import com.destroystokyo.paper.entity.ai.Goal;
 import com.destroystokyo.paper.entity.ai.GoalKey;
 import com.destroystokyo.paper.entity.ai.GoalType;
 
+import io.papermc.paper.event.player.PlayerClientLoadedWorldEvent;
+
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 
@@ -102,6 +105,8 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *                                              0, #1201) and 1 for each garrisoned villager or foot archer (#1113,
  *                                              game/garrison.py); 0: it does not shoot. Default 1
  *   aoe attack <selector> <target selector>    Mob#setTarget: the mob attacks with its own AI
+ *   aoe attackground <selector> <x> <y> <z>    AoE2 "Attack Ground" (#4078): a siege unit with a blast walks into its
+ *                                              range of the point and shoots there with its reload until a new order
  *   aoe ballistics <team> on|off               Ballistics of the player (#1549): its archers and buildings aim where a
  *                                              moving target will be
  *   aoe batch <command> ...                    run the commands in this order, each URL-encoded ("+" is a space): one
@@ -117,8 +122,10 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *   aoe hide <players> <uuid> ...              Player#hideEntity: the players do not see these entities, also a
  *                                              player that joins later (#1302: the enemy units out of sight in the
  *                                              view of one replay player). With team=T in the selector: only a
- *                                              player of team T that joins later, and no spectator (#2921)
- *   aoe hide <players> team                    each player sees the units of the hides of its own team (or of all
+ *                                              player of team T that joins later, and no spectator (#2921).
+ *                                              The riders of an entity (a ship crew, a war elephant rider) go
+ *                                              with it, also on the minimap (#3674)
+ *   aoe hide <players> team                   each player sees the units of the hides of its own team (or of all
  *                                              players) as hidden and all other units of the hides (a person who
  *                                              joins a team or changes it, #3070)
  *   aoe hide <players> view <uuid> ...         the same for these players only (the view of a spectator, #2901):
@@ -316,7 +323,9 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     private final Map<UUID, Stats> stats = new HashMap<>();
     private final Ghost ghost = new Ghost(this);
     private final Cheats cheats = new Cheats(this);
+    private final ChatName chatName = new ChatName();               // the player color of a chat name (#3681)
     private final SpecChat specChat = new SpecChat();               // the chat of the spectators (#3554)
+    private final TeamChat teamChat = new TeamChat();               // the team chat to the allies (#3553)
     private final Deaths deaths = new Deaths(this);
     private final Alerts alerts = new Alerts(this, AoePlugin::side);   // "under attack" for the team of the target (#1231)
     private final Minimap minimap = new Minimap(this, this::hiddenFor);   // no dot for a hidden unit (#1567)
@@ -332,6 +341,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     private record Building(Stats stats, String box, int max, int[] b, double range, double min) {}
 
     private final Map<UUID, Building> buildings = new HashMap<>();
+    private static final String BUILDING = "aoe2mc.building";   // the tag of a target slime (combat.building)
     private final Map<UUID, Integer> arrows = new HashMap<>();       // the arrows of a shot of a building (#1113)
     private final Map<UUID, Wear> wear = new HashMap<>();             // the damage stage of a building and its blocks (#1522)
     // aoe hide: also for a player that joins later. The teams that do not see the unit, ALL: each player (#2921)
@@ -394,6 +404,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     private final Map<UUID, String> stances = new HashMap<>();      // no entry: aggressive (#1104)
     private final Set<UUID> held = new HashSet<>();                 // stand ground units with a target of their own
     private final Map<UUID, Location> posts = new HashMap<>();      // defensive units in a fight: their place (#1105)
+    private final Map<UUID, Location> grounds = new HashMap<>();    // the point of an attack ground order (#4078)
     // defensive: the blocks past its range that a unit chases. The AoE2 wiki ("Unit stance": "will follow for a certain
     // number of tiles before returning to their original position") gives no number: 3 tiles of 4 blocks (#1105).
     private static final double CHASE = 12.0;
@@ -427,7 +438,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         @Override
         public boolean shouldActivate() {
             LivingEntity t = target(mob);
-            return t != null && t.isValid() && !t.isDead();
+            return t != null && t.isValid() && !t.isDead() || range.siege && grounds.containsKey(mob.getUniqueId());
         }
 
         @Override
@@ -437,6 +448,11 @@ public final class AoePlugin extends JavaPlugin implements Listener {
 
         @Override
         public void tick() {
+            Location g = grounds.get(mob.getUniqueId());
+            if (g != null && range.siege) {
+                ground(g);
+                return;
+            }
             LivingEntity t = target(mob);
             // a building: the range to its nearest side, and no sight of the eye of its target in the walls (#608)
             boolean wall = buildings.containsKey(t.getUniqueId());
@@ -486,6 +502,25 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                     }                                                      // and can miss (#1713, onHit)
                     pass(mob, v, range.blocks + range.pass, a, mob, range.part);
                 }
+            }
+        }
+
+        // Attack Ground (#4078): as a shot at a unit, but the target is a fixed point and the blast falls there.
+        private void ground(Location g) {
+            double d2 = mob.getLocation().distanceSquared(g);
+            boolean near = d2 <= range.blocks * range.blocks && d2 >= range.min * range.min;
+            if (near || d2 < range.min * range.min || held.contains(mob.getUniqueId())) {
+                mob.getPathfinder().stopPathfinding();
+            } else if (!mob.getPathfinder().hasPath() || ++ticks % 10 == 0) {
+                reach(mob, g);
+                mob.getPathfinder().moveTo(g);
+            }
+            mob.lookAt(g);
+            int now = Bukkit.getCurrentTick();
+            Entity from = crew(mob);
+            if (now >= next && near && stats.get(from.getUniqueId()) instanceof Stats a) {
+                next = now + range.ticks;
+                blastAt(from, a, g, range.blast);
             }
         }
 
@@ -580,19 +615,24 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             t.getWorld().spawnParticle(Particle.CRIT, at.clone().add(0, 1, 0), 8);
             t.getWorld().playSound(at, Sound.ENTITY_ARROW_HIT, 1.0f, 1.0f);
             return;
-        } else {
-            for (Entity e : t.getWorld().getNearbyEntities(at, r, r, r)) {
-                if (e instanceof LivingEntity le && le.isValid() && stats.containsKey(le.getUniqueId())
-                        && !buildings.containsKey(le.getUniqueId()) && le != from
-                        && !(le.getVehicle() instanceof LivingEntity v && stats.containsKey(v.getUniqueId()))
-                        && le.getLocation().distanceSquared(at) <= r * r) {
-                    Stats t2 = stats.get(le.getUniqueId());
-                    harm(le, t2, a, from, friendlyFire(from, le) ? t2.friendly : 1.0);   // friendly fire (#2418)
-                }
+        }
+        blastAt(from, a, at, b != null ? 0 : r);
+    }
+
+    // The blast of a shot at the point at (#1050): each unit with AoE2 values within r blocks takes the AoE2 damage of
+    // the shooter, also its own units (r 0: none). A shot at a unit and an attack ground (#4078) share it.
+    private void blastAt(Entity from, Stats a, Location at, double r) {
+        for (Entity e : r > 0 ? at.getWorld().getNearbyEntities(at, r, r, r) : List.<Entity>of()) {
+            if (e instanceof LivingEntity le && le.isValid() && stats.containsKey(le.getUniqueId())
+                    && !buildings.containsKey(le.getUniqueId()) && le != from
+                    && !(le.getVehicle() instanceof LivingEntity v && stats.containsKey(v.getUniqueId()))
+                    && le.getLocation().distanceSquared(at) <= r * r) {
+                Stats t2 = stats.get(le.getUniqueId());
+                harm(le, t2, a, from, friendlyFire(from, le) ? t2.friendly : 1.0);   // friendly fire (#2418)
             }
         }
-        t.getWorld().spawnParticle(Particle.EXPLOSION, at.clone().add(0, 0.5, 0), 1);
-        t.getWorld().playSound(at, Sound.ENTITY_GENERIC_EXPLODE, 1.0f, 1.0f);
+        at.getWorld().spawnParticle(Particle.EXPLOSION, at.clone().add(0, 0.5, 0), 1);
+        at.getWorld().playSound(at, Sound.ENTITY_GENERIC_EXPLODE, 1.0f, 1.0f);
         if (from instanceof Creeper c) {      // the demolition ship (#1440), the petard (#2192): one blast, then it dies. No
             c.setHealth(0);                   // vanilla explosion: it breaks no block, and the damage is the AoE2 one
         }
@@ -997,13 +1037,39 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     }
 
     @EventHandler
+    public void onLoaded(PlayerClientLoadedWorldEvent ev) {             // the client left "Loading terrain" (#3889)
+        getLogger().info(ev.getPlayer().getName() + " loaded the world");   // mc_shot.Client.wait_loaded: keys go to the game
+    }
+
+    @EventHandler
     public void onJoin(PlayerJoinEvent ev) {                           // the view of one replay player (#1302)
         for (UUID u : hidden.keySet()) {
             Entity e = Bukkit.getEntity(u);
             if (e != null && hiddenFor(ev.getPlayer(), u)) {
-                ev.getPlayer().hideEntity(this, e);
+                see(ev.getPlayer(), e, false);
             }
         }
+    }
+
+    /** Hide or show e and its riders (Passengers) for p: the UUID of a unit is its root entity (the boat of a ship,
+     * the mount of a war elephant), and Player#hideEntity does not hide the riders (#3674). */
+    private void see(Player p, Entity e, boolean show) {
+        if (show) {
+            p.showEntity(this, e);
+        } else {
+            p.hideEntity(this, e);
+        }
+        for (Entity r : e.getPassengers()) {
+            see(p, r, show);
+        }
+    }
+
+    /** True when the unit of entity e is hidden for p: the hide names the root vehicle of a rider (#3674). */
+    boolean hiddenFor(Player p, Entity e) {
+        while (e.getVehicle() != null && !hidden.containsKey(e.getUniqueId())) {
+            e = e.getVehicle();
+        }
+        return hiddenFor(p, e.getUniqueId());
     }
 
     /** A hide of the team of the player, or of all players (a player with no team yet: each hide, the replay). */
@@ -1074,7 +1140,9 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         Bukkit.getScheduler().runTaskTimer(this, sight::tick, Sight.PERIOD, Sight.PERIOD);
         Bukkit.getPluginManager().registerEvents(this, this);
         Bukkit.getPluginManager().registerEvents(cheats, this);
+        Bukkit.getPluginManager().registerEvents(chatName, this);
         Bukkit.getPluginManager().registerEvents(specChat, this);
+        Bukkit.getPluginManager().registerEvents(teamChat, this);
         Bukkit.getPluginManager().registerEvents(deaths, this);
         Bukkit.getPluginManager().registerEvents(mapTable, this);
         Bukkit.getPluginManager().registerEvents(viewer, this);
@@ -1525,13 +1593,21 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     @EventHandler(ignoreCancelled = true)
     public void onHurt(EntityDamageEvent ev) {               // suffocation in its walls, fire, fall ...
         Entity e = ev.getEntity();
-        if (!(ev instanceof EntityDamageByEntityEvent) && buildings.containsKey(e.getUniqueId())) {
+        if (!(ev instanceof EntityDamageByEntityEvent) && (buildings.containsKey(e.getUniqueId())
+                || e.getScoreboardTags().contains(BUILDING))) {       // also a target with no entry yet (#3723)
             ev.setCancelled(true);
         } else if (ev.getCause() == EntityDamageEvent.DamageCause.DROWNING && e.getVehicle() instanceof Boat
                 && stats.containsKey(e.getUniqueId())) {
             ev.setCancelled(true);                            // the blaze crew of a fire ship in the rain (#1440)
         } else if (names.containsKey(e.getUniqueId())) {      // the new health is set after the event
             Bukkit.getScheduler().runTask(this, () -> nameLine(e));
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onSplit(SlimeSplitEvent ev) {                 // the small slimes of a dead target have its name but no
+        if (ev.getEntity().getScoreboardTags().contains(BUILDING)) {   // entry: they suffocate in its walls (#3723)
+            ev.setCancelled(true);
         }
     }
 
@@ -2636,6 +2712,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                     continue;
                 }
                 Location goal = new Location(mob.getWorld(), x, y, z);
+                grounds.remove(mob.getUniqueId());                     // a new order ends an attack ground (#4078)
                 reach(mob, goal);
                 setTarget(mob, null);
                 if (rider(mob) != null) {
@@ -2863,9 +2940,9 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                     if (e != null) {
                         for (Player p : who) {
                             if (hiddenFor(p, u)) {
-                                p.hideEntity(this, e);
+                                see(p, e, false);
                             } else {
-                                p.showEntity(this, e);
+                                see(p, e, true);
                             }
                         }
                         n++;
@@ -2878,7 +2955,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                 for (var h : hidden.entrySet()) {
                     Entity e = Bukkit.getEntity(h.getKey());
                     if (e != null && !h.getValue().contains(ALL)) {
-                        who.forEach(p -> p.showEntity(this, e));
+                        who.forEach(p -> see(p, e, true));
                         n++;
                     }
                 }
@@ -2905,9 +2982,9 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                 }
                 for (Player p : who) {
                     if (hide) {
-                        p.hideEntity(this, e);
+                        see(p, e, false);
                     } else {
-                        p.showEntity(this, e);
+                        see(p, e, true);
                     }
                 }
                 n++;
@@ -2940,6 +3017,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             for (Entity e : select(sender, args[1])) {
                 if (walker(e) instanceof Mob mob) {
                     orders.remove(mob.getUniqueId());
+                    grounds.remove(mob.getUniqueId());
                     posts.remove(mob.getUniqueId());
                     mob.getPathfinder().stopPathfinding();
                     mob.setAI(false);
@@ -3075,6 +3153,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                 }
                 if (mob != null && mob != target && !sameTeam(mob, target)) {
                     orders.remove(mob.getUniqueId());
+                    grounds.remove(mob.getUniqueId());
                     posts.remove(mob.getUniqueId());            // an order: a defensive unit chases to the end
                     Mob r = rider(mob);
                     if (r != null) {                             // the horse has no attack goal: the rider leads
@@ -3089,6 +3168,34 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                 }
             }
             sender.sendMessage("Attack: " + n + " units");
+            return true;
+        }
+        if (args.length == 5 && args[0].equals("attackground")) {       // Attack Ground (#4078)
+            Location at;
+            try {
+                at = new Location(null, Double.parseDouble(args[2]), Double.parseDouble(args[3]), Double.parseDouble(args[4]));
+            } catch (NumberFormatException e) {
+                sender.sendMessage("Bad number: " + e.getMessage());
+                return true;
+            }
+            int n = 0;
+            for (Entity e : select(sender, args[1])) {
+                Mob mob = unit(e);
+                Range r = mob == null ? null : ranges.get(mob.getUniqueId());
+                if (r == null && mob != null && mob.getScoreboardTags().contains(CARRIER) && !mob.getPassengers().isEmpty()) {
+                    r = ranges.get(mob.getPassengers().get(0).getUniqueId());   // a carrier: the range of its siege unit
+                }
+                if (r != null && r.siege) {                     // the Mangonel line, and the other siege shots
+                    orders.remove(mob.getUniqueId());
+                    posts.remove(mob.getUniqueId());
+                    setTarget(mob, null);
+                    at.setWorld(mob.getWorld());
+                    grounds.put(mob.getUniqueId(), at.clone());
+                    held.remove(mob.getUniqueId());             // an order: the unit walks, also with stand ground
+                    n++;
+                }
+            }
+            sender.sendMessage("Attack ground: " + n + " units");
             return true;
         }
         return false;

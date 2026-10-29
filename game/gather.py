@@ -54,16 +54,19 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import build  # noqa: E402
 import replay  # noqa: E402  (build imports it too)
 import amounts  # noqa: E402
+import autoscout  # noqa: E402
 import battle_royale  # noqa: E402
 import bossbar  # noqa: E402
 import capture_relic  # noqa: E402
 import cheats  # noqa: E402
 import civs  # noqa: E402
+import challenge  # noqa: E402
 import conquest  # noqa: E402
 import defend_wonder  # noqa: E402
 import demolish  # noqa: E402
 import diplomacy  # noqa: E402
 import flare  # noqa: E402
+import feitoria  # noqa: E402
 import fleet  # noqa: E402
 import follow  # noqa: E402
 import fog  # noqa: E402
@@ -89,6 +92,7 @@ import siege_tower  # noqa: E402
 import sudden_death  # noqa: E402
 import stance  # noqa: E402
 import table  # noqa: E402
+import techtree  # noqa: E402
 import time_limit  # noqa: E402
 import trade  # noqa: E402
 import transport  # noqa: E402
@@ -118,6 +122,7 @@ BUSH_FOOD = 125                                                    # food in one
 AOE2_WORK, NORMAL = {"wood": 0.39, "food": 0.31, "farm": 0.33, "gold": 0.38, "stone": 0.36, "hunt": 0.41,
                      "fish": 0.43, "oyster": 0.38}, 1.7            # fish: a fisherman at a shore fish (#1283)
 WORK_SECONDS = {r: 1 / (w * NORMAL) for r, w in AOE2_WORK.items()}    # real seconds per unit, as at Normal speed
+WATCH_ROWS = {t['name']: t['watch'] for t in ROWS if t.get('watch')}   # true: combat.WATCH tiles, a number: that many
 CARRY = {t['name']: t['carry'] for t in ROWS if 'carry' in t}
 FOOD_CARRY = {"HEAVY_PLOW": 1}                                     # more food only per trip, as in AoE2 (#1424)
 PACE = {t['name']: t['pace'] for t in ROWS if 'pace' in t}
@@ -179,6 +184,17 @@ WORK_LOOK = {"wood": ("minecraft:oak_log", "minecraft:block.wood.hit"),
 EVENTS = {"idle": "idle", "to_tree": "walk", "chop": "chop", "to_drop": "carry",    # state -> event in the log
           "to_site": "walk", "build": "build", "to_rally": "walk", "to_prey": "walk", "hunt": "hunt",
           "to_repair": "walk", "repair": "build"}
+
+
+def breach(g, fort):
+    """True when the villagers of g may attack the enemy building fort: a wall, a gate or a tower, after a technology
+    with the key "breach" (Siegecraft of Antiquity Mode, #3916)."""
+    import combat                                                      # combat imports this module
+    name = g.fort_names.get(fort, "")
+    if not any(train.value("breach", t) for t in getattr(g, "techs", ())):
+        return False
+    s = combat.wall(name, 0) if name in combat.WALLS else combat.stats(name)
+    return bool({combat.WALL, combat.STONE} & set(s.classes)) or name.endswith("_TOWER")
 
 
 def only(who, *filters):
@@ -266,7 +282,7 @@ class Map:
         self.aura = civs.AURA.get(civ, {})                             # Thracians (#2378)
         self.auras = []                                                # the cells of own aura buildings
         for o in data["objects"]:
-            if o["kind"] == "building":
+            if o["kind"] == "building" and "footprint" in o:           # not the drawn monument (hill.mark, #3692)
                 x0, z0, x1, z1 = o["footprint"]
                 self.building(o["name"], (x0, x1, z0, z1), (int(o["tile"][0]), int(o["tile"][1])) if "tile" in o
                               else None, o["player"] == player, o.get("open", ()))
@@ -580,6 +596,7 @@ class Villager:
         self.uuid, self.pos = uuid, pos
         self.state, self.path, self.tree, self.load, self.timer = "idle", [], None, 0, 0.0
         self.job = None                                                # profession that the program set
+        self.task = None                                               # AoE2 task of the look (#3755): LUMBERJACK ...
         self.walked = 0.0                                              # blocks, for the log
         self.res = "wood"                                              # the resource of the load
         self.site = None                                               # the construction site that it builds
@@ -658,6 +675,7 @@ class Gather:
     speed = 1.0                                                        # times the Normal speed: shorter real steps (#2057)
     later = {}                                                         # the bonus of the first town center (civs.TOWN_CENTER)
     nomad = False                                                      # a Nomad start: no town center yet (#2466)
+    challenge = None                                                   # an Art of War challenge (challenge.py, #3900)
     victory = "standard"                                               # AoE2 "Victory"; "conquest": no wonder, no relics (#2316)
                                                                        # "king-of-the-hill": hill.py (#2360)
                                                                        # "time-limit", "score": time_limit.py (#2356)
@@ -794,6 +812,7 @@ class Gather:
         build.setup(self)
         menu.setup(self)
         flare.setup(self)
+        techtree.setup(self)
         if self.paper:
             self.command(f'scoreboard objectives add {LEFT} dummy "Left click"')    # set by the plugin (#1788)
             train.lore(self)                                           # the help lines of the menus (#1160)
@@ -1036,23 +1055,24 @@ class Gather:
             return None
         return (pos[0], pos[1] + 1.62, pos[2]), direction(*map(float, rot))
 
-    def attack(self, target):
-        """Send the selected military units to attack the unit target, with their AoE2 walk speed (ai.py). A monk does
-        not attack: it converts (monk.convert_order, #1245) or stays."""
+    def attack(self, target, units=None):
+        """Send the selected military units (or units: a queue of #3516) to attack the unit target, with their AoE2
+        walk speed (ai.py). A monk does not attack: it converts (monk.convert_order, #1245) or stays."""
         import ai                                                      # ai imports this module
-        monks = self.monks()
+        sel = self.selected if units is None else set(units)
+        monks = {u for u in sel if self.soldiers.get(u) in monk.MONKS}
         converts = {m for m in monks if self.converting.get(m, [None])[0] == target}   # the order of the same click
-        self.new_order(self.selected - converts)
-        trebs = {u for u in self.selected if self.soldiers.get(u) == trebuchet.NAME}
+        self.new_order(sel - converts)
+        trebs = {u for u in sel if self.soldiers.get(u) == trebuchet.NAME}
         for u in sorted(trebs):                                        # it unpacks first (#1351)
             trebuchet.unpack(self, u, target)
-        fleet.attack(self, {u for u in self.selected if replay.ship(self.soldiers.get(u, ""))}, target)   # (#1386)
-        for u in sorted(self.selected - monks - trebs):
+        fleet.attack(self, {u for u in sel if replay.ship(self.soldiers.get(u, ""))}, target)   # (#1386)
+        for u in sorted(sel - monks - trebs):
             self.command(ai.speed_command(u, self.soldiers[u], self.map.T, NORMAL * train.speed(self, self.soldiers[u], u)))
-        record.ordered(self, "order", self.selected, target=target)    # Record Game (#2649)
-        if not monks and not trebs:
+        record.ordered(self, "order", sel, target=target)              # Record Game (#2649)
+        if not monks and not trebs and units is None:
             return self.command(f"aoe attack @e[tag={SELECT}] {target}")
-        return [self.command(f"aoe attack {u} {target}") for u in sorted(self.selected - monks - trebs)]
+        return [self.command(f"aoe attack {u} {target}") for u in sorted(sel - monks - trebs)]
 
     def monks(self):
         """The selected monks."""
@@ -1079,17 +1099,20 @@ class Gather:
             placed = [(n, fp, k) for n, fp, k in placed
                       if n not in hp or k < 1 or combat.target_uuid([fp[i] for i in (0, 2, 1, 3)]) in alive]
         import combat                                                  # combat imports this module
-        printing = monk.PRINTING * ("BLOCK_PRINTING" in getattr(self, "techs", ()))   # the monks see more (#1475)
-        watch = combat.WATCH * len({t['name'] for t in ROWS if t.get('watch')} & set(getattr(self, "techs", ())))   # (#1454, #1579)
+        techs = set(getattr(self, "techs", ()))
+        printing = monk.PRINTING * ("BLOCK_PRINTING" in techs) + sum(train.value("reach", t, 0) for t in techs)   # the monks see more (#1475, #3988)
+        watch = sum(combat.WATCH if w is True else w for n, w in WATCH_ROWS.items() if n in techs)   # (#1454, #1579; a number: tiles, #3915)
         lit = {n for n, _, _ in placed} - combat.WALLS.keys() - {t['name'] for t in ROWS if t.get('dark')}   # as in AoE2
         return replay.seen(mobs, [(self.player, n, fp) for n, fp, _ in placed], self.player, self.map.T,
                            lambda n: combat.sight(n) + printing * (n in monk.MONKS) + watch * (n in lit)
-                           + civs.SIGHT.get(civs.civ(self), {}).get(n, 0))   # the Chinese town center (#2118)
+                           + civs.SIGHT.get(civs.civ(self), {}).get(n, 0)   # the Chinese town center (#2118)
+                           + train.sight_more(techs, n, combat.stats(n)))   # Engineering (#3981)
 
     def task(self, v, name):
         """Give the villager the look of its AoE2 task (`LUMBERJACK` ...), with the table of the converter."""
         job = dict(VILLAGER_JOBS).get(name, IDLE_JOB)
-        if v.job != job:                                               # a merge keeps the level and the type
+        v.task = name                                                  # also when the profession stays (FORAGER, FARMER)
+        if v.job != job:                                             # a merge keeps the level and the type
             v.job = job
             self.command(profession(v.uuid, job))
 
@@ -1135,6 +1158,16 @@ class Gather:
 
     def hunt(self, prey, who=None):
         """Send the selected villagers (or the villagers who) to hunt the animal prey, with the hunter look (#1058)."""
+        if prey in self.forts:                                         # a wall or tower: next to it (breach, #3916)
+            who = (self.selected if who is None else who) & self.villagers.keys()
+            self.new_order(who)
+            x0, _, z0, x1, _, z1 = self.forts[prey]
+            cells = self.map.around({(x, z) for x in range(x0, x1 + 1) for z in range(z0, z1 + 1)})
+            for u in sorted(who):
+                v = self.villagers[u]
+                v.tree, v.site, v.prey = None, None, prey
+                self.go(v, "to_prey", cells or {(x0, z0)})
+            return
         if not (pos := self.pos(prey)):
             return
         self.seen[prey] = pos
@@ -1153,6 +1186,8 @@ class Gather:
         """A hunter hits its animal once per AoE2 villager reload (VILLAGER_HIT), with aegis at once and to death
         (#817). The `damage` source is the villager, so a boar hits back. A dead animal leaves its carcass on the tile
         of its last place, and its hunters gather it: the work of a bush."""
+        if v.prey in self.forts:                                      # a wall or tower (breach, #3916)
+            return self.batter(v)
         if v.prey not in self.dead and (pos := self.pos(v.prey)):
             self.seen[v.prey] = pos
             if math.dist((pos[0], pos[2]), (v.pos[0], v.pos[2])) > 3:   # it ran away: follow it
@@ -1181,6 +1216,19 @@ class Gather:
                     self.map.herds.add(tile)
         v.tree, v.prey, v.path = self.dead.get(v.prey), None, []
         self.set(v, "to_tree" if v.tree else "idle")                   # it stands at the carcass: the next step gathers
+
+    def batter(self, v):
+        """A villager hits the enemy wall or tower v.prey once per AoE2 villager reload (#3916). The `damage` source is
+        the villager: the plugin gives the AoE2 damage of the villager (AoePlugin.onHit). A fallen building leaves
+        self.forts (fall): the villager stops."""
+        x0, _, z0, x1, _, z1 = self.forts[v.prey]
+        if max(x0 - v.pos[0], v.pos[0] - x1 - 1, z0 - v.pos[2], v.pos[2] - z1 - 1) > 2:   # not next to it: walk again
+            return self.hunt(v.prey, {v.uuid})
+        v.timer += self.tick
+        if self.aegis or v.timer >= VILLAGER_HIT[1] / NORMAL:
+            v.timer = 0.0
+            self.command(f"rotate {v.uuid} facing entity {v.prey}")
+            self.command(f"damage {v.prey} {1000 if self.aegis else VILLAGER_HIT[0]} minecraft:mob_attack by {v.uuid}")
 
     def decay(self, dt):
         """The carcasses lose food at their AoE2 rate (Map.rot, AoE2 wiki "Hunt": "decay ... begins to subtract from the
@@ -1227,11 +1275,12 @@ class Gather:
         return self.map.bushes if v.res == "food" else self.map.trees if v.res == "wood" else self.map.mines[v.res]
 
     def nearest(self, v):
-        """The nearest bush or mine of the resource of v with something left, or None. A fish: a fish of the same kind
-        (an oyster after an oyster, #2465)."""
+        """The nearest bush or mine of the resource of v with something left and a free cell next to it, or None. A fish:
+        a fish of the same kind (an oyster after an oyster, #2465). An inner tree has no free cell (#3791)."""
         T, oyster = self.map.T, v.tree in self.map.oysters
         full = [t for t, k in self.home(self.source(v)).items() if k > 0 and (t in self.map.oysters) == oyster]
-        return min(full, key=lambda t: math.dist(v.cell, ((t[0] + 0.5) * T, (t[1] + 0.5) * T)), default=None)
+        near = sorted(full, key=lambda t: math.dist(v.cell, ((t[0] + 0.5) * T, (t[1] + 0.5) * T)))
+        return next((t for t in near if self.goals(t)), None)
 
     def next_task(self, site, who):
         """AoE2: the builders of a complete own site work on (#3271). A farm: one builder farms it. A camp (a drop site of
@@ -1249,7 +1298,8 @@ class Gather:
         T, mid = self.map.T, ((x0 + x1) / 2, (z0 + z1) / 2)
         full = [t for r in res for t, k in self.home(self.map.bushes if r == "food" else self.map.trees if r == "wood"
                                                      else self.map.mines.get(r, {})).items() if k > 0]
-        if tile := min(full, key=lambda t: (math.dist(mid, ((t[0] + 0.5) * T, (t[1] + 0.5) * T)), t), default=None):
+        near = sorted(full, key=lambda t: (math.dist(mid, ((t[0] + 0.5) * T, (t[1] + 0.5) * T)), t))
+        if tile := next((t for t in near if self.goals(t)), None):      # a free cell next to it (#3791)
             self.send(tile, who)
 
     def home(self, sources):
@@ -1304,6 +1354,7 @@ class Gather:
         """Players who clicked since the last call. Clicks in a chest menu go to the handler of the menu (#619)."""
         build.tick(self)
         flare.tick(self)
+        techtree.tick(self)
         hints.tick(self)
         map_table.tick(self)
         menu.clicks(self)
@@ -1466,9 +1517,14 @@ class Gather:
             return
         if kind in ("enemy", "fort") and treaty.refuse(self, name):   # no attack before the end of the treaty (#2297)
             return
+        if kind in ("enemy", "fort") and add_attack(self, name, u):   # a sneak click queues the target (#3516)
+            self.order_voice()
+            self.command(glow(u)) if kind == "enemy" else self.mark(name, set(cells), "attack")
+            return
         if kind == "enemy":
             monk.convert_order(self, self.monks(), u)                    # the monks convert it, the others attack (#1245)
             self.attack(u)
+            queue_attack(self, u)
             self.order_voice()
             self.command(glow(u))                                     # the order marker of an attack (#796)
             return
@@ -1498,10 +1554,18 @@ class Gather:
         if kind == "unit":
             self.select(u)
             return
+        if kind == "fort" and self.selected and self.selected <= self.villagers.keys():   # Siegecraft (#3916)
+            self.sieged.add(u)
+            self.hunt(u)
+            self.order_voice()
+            x0, _, z0, x1, _, z1 = self.forts[u]
+            self.mark(name, {(x0, z0), (x1, z1)}, "attack")
+            return
         if kind == "fort":
             monk.convert_order(self, self.monks(), u)                 # with Redemption (#1264)
             self.sieged.add(u)
             self.attack(u)
+            queue_attack(self, u)
             self.order_voice()
             x0, _, z0, x1, _, z1 = self.forts[u]
             self.mark(name, {(x0, z0), (x1, z1)}, "attack")
@@ -1561,7 +1625,8 @@ class Gather:
             x0, x1, z0, z1 = site["footprint"]
             self.mark(name, {(x0, z0), (x1 - 1, z1 - 1)})
         elif self.selected and (cell := self.map.pick_ground(eye, d)) and self.map.free(*cell):
-            self.walk_to(name, cell)                                   # the move order of AoE2 (#1368)
+            if not add_waypoint(self, name, cell):                     # a sneak click adds a waypoint (#3515)
+                queue_move(self, self.walk_to(name, cell))             # the move order of AoE2 (#1368)
             self.order_voice()
         elif any(replay.ship(self.soldiers.get(u, "")) for u in self.selected) \
                 and (cell := fleet.pick(self, eye, d)) and self.map.wet(*cell):
@@ -1579,12 +1644,15 @@ class Gather:
         self.end_patrols(units)
         stance.end_attack_moves(self, units)
         follow.end(self, units)
+        autoscout.end(self, units)                                     # the Auto Scout order (#3702)
         for key in ("entering", "boarding", "loading", "converting", "fetching", "trade"):
             table = vars(self).get(key, {})
             for u in units & table.keys():
                 del table[u]
         for t in [t for t, f in self.farmers.items() if f in units]:
             del self.farmers[t]
+        for u in units & vars(self).get("waypoints", {}).keys():      # a new order ends the waypoints (#3515)
+            del self.waypoints[u]
 
     def end_patrols(self, units):
         """A new order ends the trigger patrols of the units, as in AoE2 DE (#2674): their patrol tags of
@@ -1672,7 +1740,8 @@ class Gather:
             kind = "enemy" if u in self.enemies else "prey" if u in self.prey and (hunters or u not in self.flock) \
                 else "unit"
             return kind, u, {(math.floor(at[u][0]), math.floor(at[u][2]))}
-        if self.selected and self.selected <= set(self.soldiers) and (fort := self.pick_fort(eye, d)):
+        if self.selected and (self.selected <= set(self.soldiers) or self.selected <= self.villagers.keys()) \
+                and (fort := self.pick_fort(eye, d)) and (self.selected <= set(self.soldiers) or breach(self, fort)):
             x0, _, z0, x1, _, z1 = self.forts[fort]
             return "fort", fort, {(x0, z0), (x1, z1)}
         cell = self.map.pick_ground(eye, d)
@@ -1898,6 +1967,7 @@ class Gather:
         trebuchet.tick(self, self.tick * NORMAL)
         fleet.tick(self, self.tick * NORMAL)
         monk.relic_tick(self, self.tick * NORMAL)
+        feitoria.tick(self, self.tick * NORMAL)
         trade.tick(self)
         trade.heal(self, self.tick * NORMAL)
         train.haste(self, self.tick * NORMAL)
@@ -2237,8 +2307,10 @@ class Gather:
                 scenario.resources(self)                               # "Tribute", "Modify Resource" (#2576)
             else:
                 scenario.patrol(self)                                  # the patrols of the players (#3355)
+            waypoint(self)                                             # the next waypoint of a move (#3515)
             stance.arrive(self)                                        # the attack moves: the old stance at the point (#3357)
             follow.tick(self)                                          # the Follow and Guard orders (#3358)
+            autoscout.tick(self)                                       # the Auto Scout order (#3702)
             fog.tick(self)                                             # after the bots: their units too (#1389)
             herd.tick(self)                                            # all players: the bots capture too (#1792)
             if self.victory == "standard" or self.mode in wonder.RACE:  # a wonder or all relics win too (#2316)
@@ -2252,9 +2324,111 @@ class Gather:
             spectator.tick(self)                                       # the sidebar of the spectators (#2900)
             if self.victory in ("time-limit", "score"):                # after the conquest: it wins before (#2356)
                 time_limit.tick(self, self.tick * NORMAL)
+            if self.challenge:                                         # an Art of War challenge: its goal (#3900)
+                challenge.tick(self)
             treaty.tick(self, self.tick * NORMAL)
             record.tick(self, self.tick * NORMAL)                      # the game time of Record Game (#2649)
             time.sleep(max(0.0, self.tick / self.speed - (time.monotonic() - t)))   # a step stays tick game seconds
+
+
+def add_waypoint(g, name, cell):
+    """A sneak right click on the ground adds a waypoint, as the Shift click of AoE2 (#3515). The selected units with
+    no queue walk to cell at once (the first point) and start a queue; the units with a queue get cell at the end of
+    it. g.waypoints: {uuid: [cell, ...]} (the points after the present target), g.waypoint_at: {uuid: target cell}.
+    Returns False without sneak: the click is a normal move order, and walk_to ends the queue (new_order)."""
+    if "passed" not in g.command(f"execute as {name} if predicate {SNEAK}"):
+        return False
+    ways = vars(g).setdefault("waypoints", {})
+    if queued := g.selected & ways.keys():
+        for u in queued:
+            ways[u].append(cell)
+        g.mark(name, {cell})
+    if new := g.selected - ways.keys():
+        out = g.walk_to(name, cell, None if not queued else new)
+        ways.update({u: [] for u in out})
+        g.waypoint_at = vars(g).get("waypoint_at", {}) | out
+    return True
+
+
+def add_attack(g, name, target):
+    """A sneak right click on an enemy unit or building adds an attack target, as the Shift click of AoE2 (#3516). It
+    goes into the queue of the waypoints (add_waypoint) as {"attack": target}, in the click order. The selected units
+    with no queue attack it at once. Returns False without sneak: the click is a normal attack order."""
+    if "passed" not in g.command(f"execute as {name} if predicate {SNEAK}"):
+        return False
+    ways = vars(g).setdefault("waypoints", {})
+    queued = g.selected & ways.keys()
+    for u in queued:
+        ways[u].append({"attack": target})
+    if new := g.selected - queued:
+        start_attack(g, new, target, None if not queued else new)
+        ways.update({u: [] for u in new})
+    return True
+
+
+def queue_move(g, out):
+    """A normal move order starts an empty queue: a later sneak click adds a point after it (#3805). out: walk_to."""
+    vars(g).setdefault("waypoints", {}).update({u: [] for u in out})
+    g.waypoint_at = vars(g).get("waypoint_at", {}) | out
+
+
+def queue_attack(g, target):
+    """A normal attack order starts an empty queue: a later sneak click adds to it (#3516)."""
+    units = g.selected & g.soldiers.keys()
+    vars(g).setdefault("waypoints", {}).update({u: [] for u in units})
+    g.waypoint_at = vars(g).get("waypoint_at", {}) | {u: {"attack": target} for u in units}
+
+
+def start_attack(g, units, target, only=None):
+    """units attack target; only: the units of a queue (not the whole selection, Gather.attack). waypoint_at holds
+    the target until it is dead."""
+    if target in g.forts:
+        g.sieged.add(target)
+    g.attack(target, only)
+    if only is None:
+        queue_attack(g, target)
+    g.waypoint_at |= {u: {"attack": target} for u in units}
+
+
+def dead(g, target):
+    """A queued attack target is dead: its building fell (not in g.forts) or its unit is not loaded."""
+    return target not in g.forts and not g.pos(target)
+
+
+def waypoint(g):
+    """The units of a queue walk to its next point when one of them is scenario.NEAR blocks from its present target
+    (#3515), or attack its next target when the present target is dead (#3516: a dead queued target is skipped). The
+    group of a queue (the units with the same points) walks one leg at a time, in its formation (walk_to, #3414). A
+    dead unit leaves its queue; an empty list ends it."""
+    ways = vars(g).get("waypoints")
+    if not ways:
+        return
+    pos = g.positions(sorted(ways))
+    for u in [u for u in ways if u not in pos]:
+        del ways[u]
+    at = g.waypoint_at
+    groups = collections.defaultdict(set)
+    for u, rest in ways.items():
+        groups[tuple(map(repr, rest))].add(u)
+    for _, units in sorted(groups.items(), key=lambda kv: sorted(kv[1])):
+        rest = ways[min(units)]
+        if not any(u in at and (dead(g, at[u]["attack"]) if isinstance(at[u], dict) else
+                                math.dist((pos[u][0], pos[u][2]), (at[u][0] + 0.5, at[u][1] + 0.5)) <= scenario.NEAR)
+                   for u in units):
+            continue
+        while rest and isinstance(rest[0], dict) and dead(g, rest[0]["attack"]):
+            rest = rest[1:]                                            # a dead target of the queue is skipped
+        if not rest:                                                   # the last point: the queue ends
+            for u in units:
+                del ways[u]
+            continue
+        for u in units:                                                # walk_to ends the queue (new_order): keep the rest
+            del ways[u]
+        if isinstance(rest[0], dict):
+            start_attack(g, units, rest[0]["attack"], units)
+        else:
+            at.update(g.walk_to(None, rest[0], units))
+        ways.update({u: list(rest[1:]) for u in units})
 
 
 def reseed(g, entry):

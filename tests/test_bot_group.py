@@ -13,7 +13,7 @@ def test_no_attack_before_the_group_is_full():
     assert sorted(orders(server)) == [["m0", "p1"], ["m1", "p1"], ["m2", "p1"]]
 
 
-def test_a_new_soldier_joins_the_wave_and_a_dead_wave_waits_again():
+def test_a_new_soldier_waits_for_its_wave_and_a_dead_wave_waits_again():
     server, me, b = armed(n=2, attack=0.0)
     steps(b, 4)
     assert len(orders(server)) == 2
@@ -22,7 +22,7 @@ def test_a_new_soldier_joins_the_wave_and_a_dead_wave_waits_again():
     b.g.soldiers["m2"] = "MILITIA"
     start = len(server.log)
     steps(b, 4)
-    assert orders(server, start) == [["m2", "p1"]]
+    assert orders(server, start) == []                                 # it waits for a full wave (#3953)
     del server.entities["m0"], server.entities["m2"]                   # the wave is dead
     steps(b, 4)
     assert not b.charged

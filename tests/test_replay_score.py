@@ -40,8 +40,9 @@ def test_the_sidebar_starts_with_the_start_units_and_a_spawn_adds_one():
     assert sets(sent) == ["P1 aoe_pop 1", "P2 aoe_pop 1", "P1 aoe_pop 2"]    # the sheep does not count
     names = [c for c in sent if " display name " in c]
     assert names[0].startswith("scoreboard players display name P1 aoe_pop ")
-    assert json.loads(names[0].split(" ", 6)[6]) == {"text": "Player 1 (Britons) · Dark · F 200 W 200 G 100 S 200 (est.)", "color": "blue"}
-    assert len(names) == 3                       # once per player, again for the cost of the villager (#932)
+    assert json.loads(names[0].split(" ", 6)[6]) == {"text": "Player 1 (Britons) · Dark · F 200 W 200 G 100 S 200 (est.) · APM 1 · TC idle 0:00", "color": "blue"}
+    texts = {json.loads(c.split(" ", 6)[6])["text"].split(" · APM")[0] for c in names}
+    assert len(texts) == 3                       # once per player, again for the cost of the villager (#932)
     assert r.pop == {1: 2, 2: 1}
 
 

@@ -57,9 +57,13 @@ def open_menu(g, player, cell):
 
 
 def delete(g, player, rect):
-    """Delete the own building or site rect (the item Delete of its menu) and close the menu. Returns True."""
+    """Delete the own building or site rect (the item Delete of its menu) and close the menu. Returns True, or False for a building that a trigger keeps (g.kept, #3777)."""
     import menu
     rect = tuple(rect)
+    x0, x1, z0, z1 = rect
+    if any(o.get("ref") in vars(g).get("kept", ()) and list(o.get("footprint", ())) == [x0, z0, x1, z1]
+           for o in g.data["objects"]):                                # "Disable Object Deletion" (#3777)
+        return False
     if (s := site(g, rect)) is not None:
         unfound(g, s)
     elif shown(g, rect):

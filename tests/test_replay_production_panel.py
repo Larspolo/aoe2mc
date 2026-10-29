@@ -27,11 +27,11 @@ def test_the_first_unit_shows_with_its_queue_and_a_progress_bar():
     r = make()
     (summon,) = r.panel(500)
     assert summon.startswith("summon text_display 32.0 ") and "aoe2mc.panel.5" in summon
-    assert '"text": "Villager Male [..........]", "color": "blue"' in summon
+    assert '"text": "Villager [..........]", "color": "blue"' in summon
     assert r.panel(900) == []                                        # no change: no command
     (merge,) = r.panel(12500)
     assert merge.startswith("data merge entity @e[type=text_display,tag=aoe2mc.panel.5,limit=1] ")
-    assert "Villager Male \\u00d73 [|||||.....]" in merge
+    assert "Villager \\u00d73 [|||||.....]" in merge
 
 
 def test_the_panel_changes_at_the_end_of_an_item_and_goes_when_empty():
@@ -39,7 +39,7 @@ def test_the_panel_changes_at_the_end_of_an_item_and_goes_when_empty():
     r.panel(500)
     (merge,) = r.panel(30000)
     assert '"Loom [||........]"' in merge
-    assert "Villager Male \\u00d72 [|" in r.panel(62500)[0]
+    assert "Villager \\u00d72 [|" in r.panel(62500)[0]
     assert r.panel(100000) == ["kill @e[type=text_display,tag=aoe2mc.panel.5]"]
     assert r.panel(110000) == []
 

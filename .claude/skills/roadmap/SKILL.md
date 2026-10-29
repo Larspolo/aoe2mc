@@ -13,7 +13,7 @@ Owner decisions (2026-10-26): the agents make the epics themselves, a new epic s
 Do this in the refill of autopilot step 5 (you hold its lock, `python3 tools/claim.py 0 --refill`), when the open
 epics have no goal left that an agent can do.
 
-1. List the epics: `gh api "repos/OWNER/NAME/issues?labels=epic&state=all&per_page=100"` (`repo` in `agent.toml`). A feature has an
+1. List the epics: `gh api "repos/OWNER/NAME/issues?labels=epic&state=all&per_page=100"` (`repo` in `agent.toml`), and the same with `&page=2` (more than 100 epics since 2026-10-29; `--paginate` stops after page 1, `autopilot/github.md`). A feature has an
    epic when an epic body names its key ("Roadmap: `<key>`") or the roadmap line names an epic number. A `muted` epic
    counts too: do not make a second epic for its feature, and do not give it sub-issues. A plain ticket that names the
    key (an owner request, `play:farm-reseed` in #3283) does not count: grep the open and the closed issues of the last day
@@ -29,7 +29,7 @@ epics have no goal left that an agent can do.
    the labels `epic`, `feature`, `size:L`, `P3`.
    When the feature has two or more good ways with no single best one (the interface, a game rule), make a decision
    ticket first (`ticket` skill, "Decision tickets") and let the sub-issues that need it depend on it.
-5. Make its first 3–5 sub-issues (`size:S` or `size:M`, `P3`, `sub_issue_write`). The first one is small and useful
+5. Make its first 3–5 sub-issues (`size:S` or `size:M`, `P3`, `gh api .../sub_issues`: `ticket` skill). The first one is small and useful
    alone. Name the files and functions that each one changes.
 6. Do not change `docs/ROADMAP.md` for a new epic: the key in the epic body is enough (no merge conflicts).
 
@@ -46,12 +46,14 @@ The trigger: the section "Release checks (no ticket, make them in the refill)" o
 
 ## Review the feature list (the roadmap review)
 
-When `python3 tools/claim.py 0 --roadmap` exits 0 (one run after each 100 merged PRs, #898, #2039), after step 8 of the autopilot skill:
+When `python3 tools/claim.py 0 --roadmap` exits 0 (one run after each 100 merged PRs, #898, #2039; after 30 while the refill has
+no source: R < N, each feature has an epic, no fallback, `claim.ROADMAP_EARLY`, #3741), after step 8 of the autopilot skill:
 
 1. Mark a feature done (`[x]`, with the epic number) when its epic is closed.
 2. Compare each goal with AoE2 DE and with the code: what does a player see or do in AoE2 that the converter, the
    game program or the replay cannot do yet? Add at most 5 missing features, each with a new key and one line.
 3. Keep the order: the features that the next features need come first.
 4. Give each new feature a row in `docs/RELEASE.md` (milestone C, unless the owner says otherwise), and correct the
-   estimates there: a feature whose epic has more sub-issues than its estimate needs no estimate.
+   estimates there. Do not remove an estimate: `release.py` takes the larger of the estimate and the sub-issues of
+   the epic, and with no estimate the median of the closed epics, more than a small epic has (#3678: 20 tickets).
 5. Put the change into the PR of your ticket. The owner can change the list at any time.

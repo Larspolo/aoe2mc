@@ -23,6 +23,7 @@ after an ORDER. The record names the unit only in its first command, so until th
 Replay(game, data).run(speed) plays it; commands(e) gives the commands of one event (the unit tests use it).
 With bar=True (game/run.py --replay) a boss bar shows the game time, the speed and the progress (#684).
 """
+import bisect
 import collections
 import functools
 import json
@@ -40,6 +41,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 import aoe2mc  # noqa: E402
 import buildings  # noqa: E402
+import monk  # noqa: E402
 import table  # noqa: E402
 import replay_input  # noqa: E402
 import units  # noqa: E402
@@ -69,8 +71,19 @@ BURST = 500                 # ms of game time between two bursts of a flare colu
 TEAM_STEP = 10000           # sidebar score of a team game: team key × TEAM_STEP + population, the panel sorts by it (#1189)
 COUNTED = "aoe2mc.pop"      # entity tag of the units that the population counts (#787)
 EFFECT = "aoe2mc.effect"    # entity tag of the texts above a building (#843)
+TRADE_MS = 2000              # the trades of one market within this time join in one text (#3942)
 PANEL = "aoe2mc.panel"      # entity tag of the production texts above a building (#2811, decision #2808: C)
 PANEL_BAR = 10              # characters of the text progress bar of a production item
+GRAPH = "aoe2mc.graph"      # entity tag of the graph text in the sky above the overview (#3448, decision #3447: B)
+GRAPH_BARS = "▁▂▃▄▅▆▇█"     # one bar per game minute, its height relative to the highest value of all players
+UPGRADE = "aoe2mc.upgrade"  # entity tag of the Blacksmith tiers in the sky below the graphs (#3786)
+UPGRADE_ECO = "aoe2mc.upgrade_eco"  # entity tag of the economy tiers, one display below the Blacksmith one (#3790)
+UPGRADE_UNI = "aoe2mc.upgrade_uni"  # entity tag of the University researches, one display more below (#3790)
+UNI_SHOWN = 8                        # the University labels of a player at most, then "+N": the RCON limit (#3790)
+GRAPH_MINUTES = 20          # the last minutes of each graph row: a long game keeps a short text
+ARMY = "aoe2mc.army"        # entity tag of the army text of each player in the sky, below the graphs (#3696)
+ORDER = "aoe2mc.order"      # entity tag of the build order text of each player in the sky, below the army texts (#4049)
+ECO = "aoe2mc.eco"          # entity tag of the economy text above the graphs (#3756)
 FOLLOWED = "aoe2mc.followed"  # the tag of the entity that the spectators of --follow look through (#1095)
 TRAIL = 3                   # tiles: a follower farther than this from its target walks to it again (#2551)
 TRAIL_MS = 1000             # ms of game time between two checks of the followers (#2551)
@@ -107,6 +120,7 @@ SEEN = 32                   # blocks: the server sends a particle only to the pl
 WAIT = 1000                 # ms of game time between two position checks of a unit that is late on its path (#766)
 LATE = 60000                # ms of game time: a unit that is still not at its resource then goes there with /tp
 STILL = 4000                # ms of game time: a walking unit that stands this long on one place gets free (unstick)
+NEAR_RESOURCE = 2.5         # tiles: an ORDER on an unknown target takes the resource this near to its click (#3976)
 HOME = 4                    # blocks: a unit farther than this from the end of its walk walks to it again (settle, #2633)
 HOME_MS = 20000             # ms of game time after the end of a walk: then settle() uses /tp (replay_drift: stuck at 30 s)
 PATH_CELLS = 20000          # cells that one path search may look at: a unit with no path stays (no time lag)
@@ -115,6 +129,30 @@ PATH_FAR = 200              # cells per block of straight way that the search of
 # The walk speed of common units, tiles per game second (AoE2 DE), the ages and the Society buildings: one line per
 # name in data/replay.jsonl (#2034). A walk speed name is the start of the unit names.
 ROWS = table.load("replay.jsonl")
+RESEARCH_S = aoe2mc.RESEARCH_S | {r["label"]: r["time"] for r in table.load("train.jsonl")      # the book items: each
+                                  if r.get("item") == "book" and "time" in r}                       # research (#3738)
+TECHS = {r["label"]: r["name"] for r in table.load("train.jsonl") if r.get("item") == "book"}   # text -> name (#3785)
+TECH_ROW = {r["name"]: r for r in table.load("train.jsonl")}   # name -> row: label and building of a research (#3789)
+ECONOMY = tuple(r["name"] for r in ROWS if r.get("economy"))   # the buildings of the economy researches (#3789)
+
+
+def lines(rows, building):
+    """The lines of one building: (the "line" name of the first technology, its technologies along the "after" chain)."""
+    nxt = {r["after"]: r["name"] for r in rows if r.get("building") == building and "after" in r}
+    out = []
+    for r in rows:
+        if "line" in r and r.get("building") == building:
+            chain = [r["name"]]
+            while chain[-1] in nxt:
+                chain.append(nxt[chain[-1]])
+            out.append((r["line"], chain))
+    return out
+
+
+TRAIN = table.load("train.jsonl")
+SMITH = lines(TRAIN, "BLACKSMITH")                  # (#3786)
+ECO_LINES = [x for b in dict.fromkeys(r["building"] for r in TRAIN if "line" in r and r["building"] != "BLACKSMITH")
+             for x in lines(TRAIN, b)]                              # the economy lines of the buildings (#3790)
 SPEEDS = {r["name"]: r["walk"] for r in ROWS if "walk" in r}
 AGES = tuple(r["name"] for r in sorted((r for r in ROWS if "age" in r), key=lambda r: r["age"]))   # (#1067)
 SOCIETY = tuple(r["name"] for r in ROWS if r.get("society"))      # the buildings of the Society tab (#1086)
@@ -133,6 +171,13 @@ def start_job(name):
 
 def text(s, color=None):
     return {"text": s, "color": color} if color else {"text": s}
+
+
+def counts_text(counts):
+    """The counts by type, most first, at most 6 types and "+N" for the rest: "12 Knight, 8 Archer" (#3697, #3696)."""
+    items = sorted(((n, c) for n, c in counts.items() if c), key=lambda x: (-x[1], x[0]))
+    words = [f"{c} {pretty(n)}" for n, c in items[:6]] + ([f"+{len(items) - 6}"] if len(items) > 6 else [])
+    return ", ".join(words)
 
 
 def taunt(chat):
@@ -307,18 +352,24 @@ def formation_cells(free, group, target, kind="Line", T=4, long=False):
     if long and kind == "Line" and d > FAR_TILES * T:
         cols = 1 if n == 2 else min(n, 2)
     rows = -(-n // cols)
+    few = sum(bool(u[4]) for u in group) if kind == "Box" else 0     # Box: grow until the weak units fit inside
+    while few and (rows - 2) * (cols - 2) < few and rows + cols <= n - few:
+        rows, cols = (rows + 1, cols) if rows < cols else (rows, cols + 1)   # (#3640)
     r = max(2 * T, math.ceil(max(cols, rows) * S) + 4 * S * (kind == "Flank"))
     x0, z0 = int(tx), int(tz)
     todo = {(x, z) for x in range(x0 - r, x0 + r + 1) for z in range(z0 - r, z0 + r + 1) if free(x, z)}
     group = sorted(group, key=lambda u: (u[3], (tx - u[1]) * dx + (tz - u[2]) * dz))
     slots = []                                                      # (key, row, offset across the walk)
     if kind == "Box":
-        cells = [(q, j) for q in range(rows) for j in range(cols)][:n]
+        cells = [(q, j) for q in range(rows) for j in range(cols)]
         inner = [c for c in cells if 0 < c[0] < rows - 1 and 0 < c[1] < cols - 1]
-        outer = [c for c in cells if c not in inner]
+        ring = sorted((c for c in cells if c not in inner),                  # around the square, in angle order
+                      key=lambda c: math.atan2(c[0] - (rows - 1) / 2, c[1] - (cols - 1) / 2))
         weak = [u for u in group if u[4]]
         order = weak + [u for u in group if not u[4]]
-        cells = inner[:len(weak)] + outer + inner[len(weak):]
+        k = min(len(ring), n - min(len(weak), len(inner)))           # the units on the ring, spread over it (#3640)
+        outer = [ring[i * len(ring) // k] for i in range(k)] if k else []
+        cells = inner[:len(weak)] + outer + [c for c in ring if c not in outer] + inner[len(weak):]
         slots = [(u[0], q, (j - (cols - 1) / 2) * S) for u, (q, j) in zip(order, cells)]
     else:
         for q in range(rows):
@@ -333,6 +384,11 @@ def formation_cells(free, group, target, kind="Line", T=4, long=False):
             out[key] = c = min(todo, key=lambda c: ((c[0] - px) ** 2 + (c[1] - pz) ** 2, c))
             todo.discard(c)
     return out
+
+
+def trade_line(sums):
+    """The text of the trades of one market: "+100 wood −130 gold" (#3942)."""
+    return " ".join(f"{'+' if v >= 0 else '−'}{abs(v)} {r}" for r, v in sums.items() if v)
 
 
 class Replay:
@@ -374,12 +430,17 @@ class Replay:
         self.scouts = {}                        # object ID on AUTOSCOUT -> the tiles that it walked to (#2678)
         self.trail = math.inf                   # game time (ms) of the next check of the followers (#2551)
         self.adopted, self.rallied = {}, 0      # temporary ID of a unit at a gather point -> its object ID (#1227)
+        self.trade_texts = {}                   # market object ID -> the last trade text: time, tag, sums (#3942)
         self.effects = {}                       # entity tag of a research text -> game time (ms) of its end (#843)
         self.panels = {}                        # building ID -> its shown production text (#2811)
         self.flares = []                        # (x, y, z, game time (ms) of the end, RGB) of the live flares (#2402)
         self.formations = {}                    # object ID -> the AoE2 formation of the record: Line, Box ... (#2553)
         self.burst = math.inf                   # game time (ms) of the next burst of the live flares (#2506)
         self.refs = {o["ref"]: o for o in data["objects"] if o.get("ref") is not None}
+        self.relics = {r: {"at": (int(o["tile"][0] * self.T), int(o["tile"][1] * self.T)), "monk": None, "home": None}
+                       for r, o in self.refs.items() if o["kind"] == "other" and "RELIC" in o["name"] and "tile" in o}
+        self.fetching = {}                      # object ID of a monk -> the relic ref that it walks to (#4009)
+        self.homing = {}                        # object ID of a monk with a relic -> (monastery rect, player) (#4010)
         self.rng = np.random.default_rng(1)
         self.kinds, self.seen = aoe2mc.object_kinds(), set()
         self.sent, self.busy = 0, 0.0           # commands sent, seconds spent sending them
@@ -387,17 +448,32 @@ class Replay:
         self.ages, self.named = {}, {}          # player -> age ("Feudal"); the age in its sidebar name (#805)
         self.counted = []                       # UUIDs of the start units that the population counts
         self.stock = {}                         # player -> estimated resources: START + gather steps - costs (#932)
+        import market                           # market -> build -> replay: import it late
+        self.rates = dict(market.RATES)         # the exchange rates of the market, global for all players (#3939)
         self.gathered, self.villagers = {}, {}  # player -> resources of the gather steps, trained villagers (#1065)
         self.army, self.lost, self.razed = {}, {}, {}   # player -> military units trained, units lost, buildings lost (#1066)
+        self.troops, self.fallen = {}, {}       # player -> {military unit name: live count, count lost} (#3695)
         self.censused = False                   # a census counted the live units (the base of the units lost)
+        self.idled, self.idle_at = {}, 0        # player -> idle villager time (s), game time (ms) of the last count (#3757)
         self.reached, self.researched = {}, {}  # player -> {age: game time (ms)}, researched technologies (#1067)
+        self.learned = {}                       # player -> [(game time ms, technology name)] (#3785)
         self.vills, self.vhigh = {}, {}         # player -> live villagers (est.), the highest count (#1086)
+        self.smith = {}                         # tag -> the shown rows of an upgrade display (#3786, #3790)
+        self.graph = {}                         # value index -> the shown rows of its graph (#3448)
+        self.army_shown = {}                    # player -> the shown army text (#3696)
+        self.order_shown = {}                   # player -> the shown build order text (#4049)
+        self.eco_rows = None                    # the shown rows of the economy text (#3756)
         self.samples, self.minute = {}, -1      # player -> [(minute, pop, villagers, military, resources)], last minute (#3446)
+        self.apms, self.ended = None, 0         # player -> sorted times of its actions (#3763); game time of the end (ms)
+        self.orders = None                      # player -> [(time, label)] of its build order (#4047)
         self.eyes = None                        # (x, y, z) of each player; None: not known, each gather step shows (#2761)
         self.queue = None                       # in run() on Paper: the commands that wait for flush() (#2761)
+        import gather                                               # gather -> build -> replay: import it late
         for o in data["objects"]:
             if o["kind"] == "unit" and o.get("player") and not units.animal(o["name"]):
                 self.pop[o["player"]] = self.pop.get(o["player"], 0) + 1
+                if gather.military(o["name"]):
+                    self.troop(o["player"], o["name"])
                 self.counted += [o["uuid"]] * ("uuid" in o)
             if o["kind"] == "unit" and o.get("player") and o["name"].startswith("VILLAGER"):
                 self.villager(o["player"], 1)
@@ -428,8 +504,17 @@ class Replay:
         self.pay(e.get("player"), e["age"])
 
     def learn(self, e):
-        """Count a research of the timeline for the summary (#1067)."""
+        """Count a research of the timeline for the summary (#1067). A second event of the same technology (de-64.3
+        has one) counts nothing (#3923)."""
+        name = TECHS.get(e["technology"], e["technology"])
+        if name in self.upgrades(e.get("player"), math.inf):
+            return
         self.researched[e.get("player")] = self.researched.get(e.get("player"), 0) + 1
+        self.learned.setdefault(e.get("player"), []).append((e.get("time", 0), name))
+
+    def upgrades(self, p, t):
+        """The technology names that player p researched up to game time t (ms), in time order (#3785)."""
+        return [name for time, name in self.learned.get(p, ()) if time <= t]
 
     def villager(self, p, n, live=None):
         """n more live villagers of player p, or the `live` count of the census: keep the highest count (#1086)."""
@@ -449,6 +534,187 @@ class Replay:
         """The samples of each player up to game time t (ms): (minute, population, villagers, military, resources)."""
         return {p: [s for s in ss if s[0] * 60000 <= t] for p, ss in self.samples.items()}
 
+    def actions(self, p):
+        """The sorted times (ms) of the commands of player p in the timeline (#3763): not the chat and not the ages
+        that the reader adds. A dict of lists, made at the first call: a long record has 50 000 events or more."""
+        if self.apms is None:
+            self.apms = {}
+            for e in self.data.get("timeline", []):
+                if e["kind"] not in ("chat", "age") and e.get("player") is not None:
+                    self.apms.setdefault(e["player"], []).append(e["time"])
+            for times in self.apms.values():
+                times.sort()
+        return self.apms.get(p, [])
+
+    def apm(self, p, t):
+        """The actions of player p in the last game minute up to game time t (ms, #3763): t - 60000 < time <= t."""
+        times = self.actions(p)
+        return bisect.bisect_right(times, t) - bisect.bisect_right(times, t - 60000)
+
+    def mean_apm(self, p, t):
+        """The average actions per minute of player p up to game time t (ms, #3763); 0 at t <= 0."""
+        return round(bisect.bisect_right(self.actions(p), t) / (t / 60000)) if t > 0 else 0
+
+    def build_order(self, p, t):
+        """The build order of player p up to game time t (ms, #4047): the first building and the first unit of each
+        type (no villagers), the technologies and the ages, as (time, label) in time order. A dict of lists, made once."""
+        if self.orders is None:
+            self.orders, first = {}, set()
+            for e in sorted(self.data.get("timeline", []), key=lambda e: e["time"]):
+                q, kind = e.get("player"), e["kind"]
+                name = e.get("name") or self.kinds.get(e.get("type"), ("?", ""))[1]
+                if q is None:
+                    continue
+                if kind == "build" or (kind == "queue" and not name.startswith("VILLAGER")):
+                    if (q, name) in first:
+                        continue
+                    first.add((q, name))
+                    label = units.pretty(name)
+                elif kind == "research" and not e.get("technology", "").endswith(" Age"):
+                    label = e["technology"]
+                elif kind == "age" and e.get("age"):
+                    label = pretty(e["age"])
+                else:
+                    continue
+                self.orders.setdefault(q, []).append((e["time"], label))
+        steps = self.orders.get(p, [])
+        return steps[:bisect.bisect_right(steps, t, key=lambda s: s[0])]
+
+    def graphs(self, t):
+        """The commands of the graphs at game time t (ms, #3448, decision #3447: B): in the sky above the overview one
+        large text display per value (population, villagers, military, estimated resources), one row per player in
+        its color, one bar per game minute. One display per value keeps each command below the RCON limit with 8
+        players. Only the displays whose text changed: the samples change once per minute."""
+        stats = {p: ss[-GRAPH_MINUTES:] for p, ss in self.stats(t).items() if ss}
+        if not stats:
+            return []
+        if getattr(self, "view", None) is None:
+            self.overview()                                         # it sets the place of the overview
+        y, c, out = int(self.view.split()[1]) + 12, f"{self.n / 2:.1f}", []
+        for i, name in enumerate(("Population", "Villagers", "Military", "Resources (estimated)"), 1):
+            top = max(s[i] for ss in stats.values() for s in ss) or 1
+            rows = [text(name + "\n")]
+            for p in self.ranked(stats):
+                who, color = self.label(p)
+                bars = "".join(GRAPH_BARS[round(s[i] / top * (len(GRAPH_BARS) - 1))] for s in stats[p])
+                rows.append(text(f"{who} {bars} {stats[p][-1][i]}\n", color))
+            if rows == self.graph.get(i):
+                continue
+            line, tag = json.dumps(rows, ensure_ascii=False, separators=(",", ":")), f"{GRAPH}.{i}"
+            out.append(f"data merge entity @e[type=text_display,tag={tag},limit=1] {{text:{line}}}" if i in self.graph
+                       else f"summon text_display {c} {min(319, y + 4 * (4 - i))} {c} {{text:{line},billboard:\"center\","
+                            f'shadow:1b,line_width:1000,Tags:["{GRAPH}","{tag}"]}}')
+            self.graph[i] = rows
+        return out
+
+    def army_view(self, t):
+        """The commands of the army texts at game time t (ms, #3696): in the sky below the graphs and the Blacksmith
+        tiers (#3818: the Blacksmith display is one step below the lowest graph), one text display per player in its
+        color: the live military units by type, the units in training and the units lost. Only the texts that changed
+        since the last call."""
+        if getattr(self, "view", None) is None:
+            self.overview()                                         # it sets the place of the overview
+        y, c, out = int(self.view.split()[1]) + 12, f"{self.n / 2:.1f}", []
+        training = collections.defaultdict(collections.Counter)
+        import gather                                               # gather -> build -> replay: import it late
+        for end, e, _ in self.trainings:                            # military only, as the troops (#3818)
+            if e["kind"] == "queue" and e["time"] <= t < end and gather.military(e["name"]):
+                training[e["player"]][e["name"]] += 1
+        for k, p in enumerate(self.ranked([int(q) for q in self.data["players"] if q != "0"])):
+            who, color = self.label(p)
+            line = f"{who}: {counts_text(self.troops.get(p, {})) or '-'}"
+            if training.get(p):
+                line += f" · training {counts_text(training[p])}"
+            if lost := sum(self.fallen.get(p, {}).values()):
+                line += f" · lost {lost}"
+            if self.army_shown.get(p) == line:
+                continue
+            tag, value = f"{ARMY}.{p}", json.dumps(text(line, color), ensure_ascii=False, separators=(",", ":"))
+            out.append(f"data merge entity @e[type=text_display,tag={tag},limit=1] {{text:{value}}}" if p in self.army_shown
+                       else f"summon text_display {c} {y - 4 * (k + 2)} {c} {{text:{value},billboard:\"center\","
+                            f'shadow:1b,line_width:1000,Tags:["{ARMY}","{tag}"]}}')
+            self.army_shown[p] = line
+        return out
+
+    def build_order_view(self, t):
+        """The commands of the build order texts at game time t (ms, #4049): one text display per player in its color,
+        below the army texts, with the last 4 steps of its build order. Only the texts that changed since the last call."""
+        if getattr(self, "view", None) is None:
+            self.overview()                                         # it sets the place of the overview
+        y, c, out = int(self.view.split()[1]) + 12, f"{self.n / 2:.1f}", []
+        players = self.ranked([int(q) for q in self.data["players"] if q != "0"])
+        for k, p in enumerate(players):
+            who, color = self.label(p)
+            line = f"{who}: " + (" · ".join(f"{mmss(s)} {label}" for s, label in self.build_order(p, t)[-4:]) or "-")
+            if self.order_shown.get(p) == line:
+                continue
+            tag, value = f"{ORDER}.{p}", json.dumps(text(line, color), ensure_ascii=False, separators=(",", ":"))
+            out.append(f"data merge entity @e[type=text_display,tag={tag},limit=1] {{text:{value}}}" if p in self.order_shown
+                       else f"summon text_display {c} {max(0, y - 4 * (len(players) + k + 2))} {c} {{text:{value},"
+                            f'billboard:"center",shadow:1b,line_width:1000,Tags:["{ORDER}","{tag}"]}}')
+            self.order_shown[p] = line
+        return out
+
+    def upgrade_view(self, t):
+        """The commands of the upgrade displays at game time t (ms): the Blacksmith tiers (#3786), the economy tiers
+        (#3790) and the University researches (#3790). One text display per row group in the sky below the graphs, one
+        row per player in its color, for example "Melee 2/3 · Archer 1/3". Only when the text changed, and only after
+        the first research of the group. One display per group keeps each command below the RCON limit."""
+        players = self.ranked(int(q) for q in self.data["players"] if q != "0")
+        done = {p: self.upgrades(p, t) for p in players}
+        tiers = lambda lines: {p: [sum(n in done[p] for n in chain) for _, chain in lines] for p in players}
+        groups = [(UPGRADE, "Blacksmith", SMITH, tiers(SMITH)), (UPGRADE_ECO, "Economy", ECO_LINES, tiers(ECO_LINES))]
+        uni = {p: [TECH_ROW[n]["label"] for n in done[p] if TECH_ROW.get(n, {}).get("building") == "UNIVERSITY"]
+               for p in players}
+        out, y0 = [], None
+        for k, (tag, title, lines_, count) in enumerate(groups + [(UPGRADE_UNI, "University", None, uni)]):
+            if lines_ is None:
+                texts = {p: ", ".join(count[p][:UNI_SHOWN] + ([f"+{len(count[p]) - UNI_SHOWN}"] if len(count[p]) > UNI_SHOWN
+                                                              else [])) for p in players}
+                progress = any(count.values())
+            else:
+                texts = {p: " · ".join(f"{line} {k2}/{len(chain)}" for (line, chain), k2 in zip(lines_, count[p]))
+                         for p in players}
+                progress = any(map(any, count.values()))
+            if self.smith.get(tag) is None and not progress:
+                continue
+            rows = [text(title + "\n")] + [text(f"{self.label(p)[0]}: " + texts[p] + "\n", self.label(p)[1]) for p in players]
+            if rows == self.smith.get(tag):
+                continue
+            line, shown = json.dumps(rows, ensure_ascii=False, separators=(",", ":")), self.smith.get(tag)
+            self.smith[tag] = rows
+            if shown is not None:
+                out.append(f"data merge entity @e[type=text_display,tag={tag},limit=1] {{text:{line}}}")
+                continue
+            if y0 is None:
+                if getattr(self, "view", None) is None:
+                    self.overview()                                 # it sets the place of the overview
+                y0 = int(self.view.split()[1]) + 12 - 4 * 4         # one step below the lowest graph
+            c, y = f"{self.n / 2:.1f}", y0 - 4 * (len(players) + 1) * k    # each group one display below the one above
+            out.append(f"summon text_display {c} {max(0, min(319, y))} {c} {{text:{line},billboard:\"center\","
+                       f'shadow:1b,line_width:1000,Tags:["{tag}"]}}')
+        return out
+
+    def ecoview(self):
+        """The commands of the economy text at the current time (#3756): in the sky above the graphs, one row per player
+        in its color with the villagers on each kind of work. One display for all players, sent only when its text
+        changed."""
+        if getattr(self, "view", None) is None:
+            self.overview()                                         # it sets the place of the overview
+        counts, y, c = self.eco(), min(319, int(self.view.split()[1]) + 32), f"{self.n / 2:.1f}"
+        rows = []
+        for p in self.ranked(counts):
+            who, color = self.label(p)
+            rows.append(text(f"{who}: " + " · ".join(f"{k} {n}" for k, n in counts[p].items()) + "\n", color))
+        if not rows or rows == self.eco_rows:
+            return []
+        line = json.dumps(rows, ensure_ascii=False, separators=(",", ":"))
+        out = (f"data merge entity @e[type=text_display,tag={ECO},limit=1] {{text:{line}}}" if self.eco_rows is not None
+               else f"summon text_display {c} {y} {c} {{text:{line},billboard:\"center\","
+                    f'shadow:1b,line_width:1000,Tags:["{ECO}"]}}')
+        self.eco_rows = rows
+        return [out]
+
     def resources(self, p):
         return self.stock.setdefault(p, dict(START))
 
@@ -458,6 +724,55 @@ class Replay:
         import train
         for r, v in (train.COSTS.get(name) or build.COSTS.get(name) or {}).items():
             self.resources(p)[r] -= v
+
+    def trade(self, e):
+        """A buy or sell of the record at the own market: the gold and the resource change as in market.trade, and the
+        rate moves by STEP (#3939). The estimate may go below 0: the record is the truth, the estimate is a guess."""
+        import market                                               # market -> build -> replay: import it late
+        p, r, buy = e.get("player"), e["resource"].lower(), e["kind"] == "buy"
+        g = types.SimpleNamespace(rates=self.rates, techs=set(self.upgrades(p, e["time"])), data=self.data, player=p)
+        n, total = max(1, e.get("amount", market.LOT) // market.LOT), 0
+        for _ in range(n):
+            gold = market.price(g, r, buy)
+            self.resources(p)["gold"] += -gold if buy else gold
+            self.resources(p)[r] += market.LOT if buy else -market.LOT
+            self.rates[r] = min(max(self.rates[r] + (market.STEP if buy else -market.STEP), market.LIMITS[0]), market.LIMITS[1])
+            total += -gold if buy else gold
+        return r, (n * market.LOT if buy else -n * market.LOT), total
+
+    def tribute(self, e):
+        """A tribute of the record: the sender pays the amount and the fee (diplomacy.cost), the receiver gets the amount
+        (#3940). An old record has one resource and one amount."""
+        import diplomacy                                            # diplomacy -> build -> replay: import it late
+        p, to = e.get("player"), e["to"]
+        g = types.SimpleNamespace(techs=set(self.upgrades(p, e["time"])))
+        sums = {r: e.get(r, 0) for r in START} if any(e.get(r, 0) for r in START) else {e["resource"].lower(): e.get("amount", 0)}
+        for r, n in sums.items():
+            self.resources(p)[r] -= diplomacy.cost(g, n)
+            self.resources(to)[r] += n
+
+    def trade_text(self, e, r, amount, gold, color):
+        """The trade as a text above its market for EFFECT_MS, and particles (#3942). The trades of one market within
+        TRADE_MS join in one text with the sums. No known market: no commands."""
+        i = (e.get("objects") or [None])[0]
+        last = self.trade_texts.get(i)
+        if last and e["time"] - last["time"] <= TRADE_MS and last["tag"] in self.effects:
+            last["sums"][r] = last["sums"].get(r, 0) + amount
+            last["sums"]["gold"] = last["sums"].get("gold", 0) + gold
+            last["time"], self.effects[last["tag"]] = e["time"], e["time"] + EFFECT_MS
+            return [f"data merge entity @e[type=text_display,tag={last['tag']},limit=1] "
+                    f"{{text:{json.dumps(text(trade_line(last['sums']), color))}}}"]
+        spot = self.roof(i, (e.get("names") or [None])[0], e.get("player"))
+        if not spot:
+            return []
+        x, top, z, (x0, x1, z0, z1) = spot
+        tag = f"{EFFECT}.{len(self.effects)}.{e['time']}"
+        self.effects[tag] = e["time"] + EFFECT_MS
+        self.trade_texts[i] = {"time": e["time"], "tag": tag, "sums": {r: amount, "gold": gold}}
+        return [f"summon text_display {x} {top + 3} {z} {{text:{json.dumps(text(trade_line(self.trade_texts[i]['sums']), color))},"
+                f'billboard:"center",shadow:1b,transformation:{{left_rotation:[0f,0f,0f,1f],right_rotation:[0f,0f,0f,1f],'
+                f'translation:[0f,0f,0f],scale:[{SCALE}f,{SCALE}f,{SCALE}f]}},Tags:["{EFFECT}","{tag}"]}}',
+                f"particle minecraft:happy_villager {x} {top + 1} {z} {(x1 - x0) / 4} 0.5 {(z1 - z0) / 4} 1 20"]
 
     def commands(self, e):
         """The commands of one timeline event (an empty list for the events that change nothing visible)."""
@@ -470,9 +785,13 @@ class Replay:
             for i in e.get("objects") or ():                    # another order ends the patrol (#2550), the scouting (#2678)
                 self.patrols.pop(i, None)
                 self.scouts.pop(i, None)
+                self.fetching.pop(i, None)                  # and the walk to a relic (#4009)
+                self.homing.pop(i, None)                    # and the walk to a monastery (#4010)
         if kind in aoe2mc.UNIT_USE - {"stance"} | {"delete", "stop"}:   # a new order ends a FOLLOW or GUARD (#2551)
             for i in e.get("objects") or ():
                 self.follows.pop(i, None)
+                if getattr(v := self.units.get(i), "hunt", None) is not None:   # the new order starts at the chase (#3540)
+                    v.pos, v.leg, v.hunt = self.at(v, e["time"]), None, None
                 self.idle.pop(i, None)                                # a new order: settle() does not check it
                 self.scouts.pop(i, None)
         if kind == "patrol" and e.get("objects") and e.get("tile"):
@@ -497,7 +816,7 @@ class Replay:
         if kind == "garrison" and e.get("objects"):
             return self.move(dict(e, kind="order", garrison=True))
         if kind == "ungarrison" and e.get("objects"):
-            return [c for r in self.holders(e) for c in self.release(r)]
+            return self.ungarrison(e)
         if kind == "back_to_work" and e.get("objects"):
             return self.back(e)[0]
         if kind == "delete" and e.get("objects"):
@@ -525,6 +844,11 @@ class Replay:
             self.learn(e)
             return ["title @a actionbar " + json.dumps([text(name, color), text(f" researches {e['technology']}")])] + \
                 self.research(e, color)
+        if kind in ("buy", "sell") and e.get("resource"):       # the market trades change the estimate (#3939)
+            return self.trade_text(e, *self.trade(e), color)
+        if kind == "tribute" and e.get("to"):                   # the tributes change the estimate (#3940)
+            self.tribute(e)
+            return []
         if kind == "resign":
             return ["title @a subtitle " + json.dumps(text("The game ends")),
                     "title @a title " + json.dumps(text(f"{name} resigns", color))]
@@ -643,7 +967,7 @@ class Replay:
             if e["time"] <= t < end:
                 n = e.get("name") if e["kind"] == "queue" else e.get("technology")
                 if n:
-                    s = end - (aoe2mc.train_ms(n) if e["kind"] == "queue" else aoe2mc.RESEARCH_S[n] * 1000)
+                    s = end - aoe2mc.train_ms(n) if e["kind"] == "queue" else max(e["time"], end - RESEARCH_S[n] * 1000)
                     now.setdefault(b, []).append((end, s, n, e))
         out, shown = [], self.panels
         for b, items in sorted(now.items()):
@@ -652,7 +976,8 @@ class Replay:
                 continue
             count = sum(item[2] == n for item in items) if e["kind"] == "queue" else 1
             done = round(PANEL_BAR * (t - s) / max(1, end - s))
-            line = f"{pretty(n) if e['kind'] == 'queue' else n}{f' ×{count}' * (count > 1)} " \
+            label = n if e["kind"] != "queue" else "Villager" if n.startswith("VILLAGER_") else pretty(n)  # AoE2 (#3740)
+            line = f"{label}{f' ×{count}' * (count > 1)} " \
                    f"[{'|' * done}{'.' * (PANEL_BAR - done)}]"
             if shown.get(b) == line:
                 continue
@@ -933,9 +1258,13 @@ class Replay:
 
     @functools.cached_property
     def trainings(self):
-        """aoe2mc.training of the timeline: (end ms, QUEUE event, building ID) for each unit."""
+        """aoe2mc.training of the timeline: (end ms, QUEUE event, building ID) for each unit. An age-up ends at the
+        "age" event of its player and age (#3739): the queue guess can be later, the record time is exact."""
         self.unknown_research
-        return aoe2mc.training(self.data.get("timeline", ()), research=True)
+        timeline = self.data.get("timeline", ())
+        ages = {(e.get("player"), pretty(e["age"])): e["time"] for e in timeline if e["kind"] == "age" and e.get("age")}
+        return [(ages.get((e.get("player"), e.get("technology")), end) if e["kind"] == "research" else end, e, b)
+                for end, e, b in aoe2mc.training(timeline, research=True, research_s=RESEARCH_S)]
 
     def production(self, t):
         """{player: [(name, count, start, end), ...]}: the units in training or in the queue of their building at game
@@ -946,7 +1275,7 @@ class Replay:
             if e["kind"] == "research" and e["time"] <= t < end:
                 n = e["technology"]
                 tech.setdefault(e["player"], []).append(
-                    (n, end - aoe2mc.RESEARCH_S[n] * 1000, end, "age" if n.endswith(" Age") else "research"))
+                    (n, max(e["time"], end - RESEARCH_S[n] * 1000), end, "age" if n.endswith(" Age") else "research"))
             elif e["time"] <= t < end and e.get("name"):
                 out.setdefault(e["player"], {}).setdefault(e["name"], []).append(end)
         return {p: sorted([(n, len(ends), min(ends) - aoe2mc.train_ms(n), min(ends))
@@ -957,7 +1286,7 @@ class Replay:
     def unknown_research(self):
         """The technologies of the timeline with no RESEARCH_S value: no production item, one log line (#2810)."""
         names = sorted({e.get("technology", "") for e in self.data.get("timeline", ())
-                        if e["kind"] == "research" and e.get("technology", "") not in aoe2mc.RESEARCH_S})
+                        if e["kind"] == "research" and e.get("technology", "") not in RESEARCH_S})
         if names:
             print(f"research with no time (not in the production): {', '.join(names)}", file=sys.stderr)
         return names
@@ -966,7 +1295,8 @@ class Replay:
         """A "spawn" event for each unit that a QUEUE command trains, at the end of its training."""
         return [{"time": end, "player": e["player"], "kind": "spawn", "type": e["type"], "name": e["name"],
                  "building": b, "where": (e.get("names") or [None] * len(e["objects"]))[e["objects"].index(b)]}
-                for end, e, b in aoe2mc.training(self.data.get("timeline", ())) if "type" in e and e.get("name")]
+                for end, e, b in aoe2mc.training(self.data.get("timeline", ()), research_s=RESEARCH_S)
+                if "type" in e and e.get("name")]
 
     def fireworks(self, player):
         """Three firework rockets in the player color above the first town center of the player, and one sound for
@@ -1019,6 +1349,7 @@ class Replay:
         import gather                                               # gather -> build -> replay: import it late
         if gather.military(e["name"]):
             self.army[e["player"]] = self.army.get(e["player"], 0) + 1
+            self.troop(e["player"], e["name"])
         rect = self.home(e) if prefix in ("U", "H") else None
         if rect is None:
             return []
@@ -1172,13 +1503,16 @@ class Replay:
         return None
 
     def far(self, e):
-        """True when the target unit of ORDER e stands more than FAR tiles from the tile of e in the replay: the
-        record has the target at the tile, so the units walk to the tile (#2635)."""
+        """True when the target unit of ORDER e stands more than FAR tiles from the tile of e and from each unit of e
+        in the replay: the record has the target at the tile, so the units walk to the tile (#2635). A unit near the
+        target attacks it: the replay place of a target is often more than FAR tiles off its tile (#3636)."""
         u, tile = self.units.get(e.get("target")), e.get("tile")
         if u is None or tile is None:
             return False
         x, _, z = self.at(u, e["time"])
-        return math.hypot(x / self.T - tile[0], z / self.T - tile[1]) > FAR
+        places = [(p[0] / self.T, p[2] / self.T) for i in e.get("objects") or () if (v := self.units.get(i))
+                  for p in [self.at(v, e["time"])]]
+        return all(math.hypot(x / self.T - a, z / self.T - b) > FAR for a, b in [tile, *places])
 
     def target_mark(self, e):
         """The red order marker at the target of an attack ORDER, as the game program shows it (#796, #845): a unit
@@ -1205,6 +1539,8 @@ class Replay:
                     v.pos, v.path = (x + 0.5, float(v.pos[1] if y is None else y), z + 0.5), []
                     speed = next((s for k, s in SPEEDS.items() if v.name.startswith(k)), 1.0) * self.T
                     v.leg = (start, e["time"], e["time"] + 1000 * math.dist(start[::2], v.pos[::2]) / speed)
+                if e and e.get("target") in self.units and e["target"] != i:
+                    v.hunt = e["target"]                                # at() follows the target after the leg (#3540)
             else:
                 rest.append((i, v))
         return out, rest
@@ -1320,9 +1656,16 @@ class Replay:
         out0 = [c for i in e["objects"] if i in inside for c in self.leave(i, inside[i])]   # says it is out (#1229)
         group = [(i, v) for i, name in zip(e["objects"], e.get("names") or [None] * len(e["objects"]))
                  if (v := self.unit(i, name, e["player"])) is not None]
+        if e["kind"] == "order" and (relic := e.get("target")) in self.relics:   # only a monk carries a relic (#4009)
+            self.fetching.update({i: relic for i, v in group if v.name in monk.MONKS})
+        if (church := self.monastery(e)) is not None:              # a monk with a relic puts it in (#4010)
+            carry = {r["monk"] for r in self.relics.values()}
+            self.homing.update({i: (church, e["player"]) for i, v in group if i in carry})
         tile = self.resource(e)
         if tile in self.map.farms or tile in self.map.carcasses:    # a farmer stands on the farm, a hunter at the carcass
             goals = self.crew.goals(tile)
+        elif tile and e.get("target") not in self.refs and e.get("target") not in self.units:   # a cut tree (#3976)
+            goals = self.map.around(self.map.cells(tile)) or goals
         home = self.holder(e)
         if home and e.get("target") not in self.refs:              # a building of the replay: next to it (#876)
             x0, x1, z0, z1 = home[0]
@@ -1336,7 +1679,7 @@ class Replay:
                 self.work[i] = v.tree
             fish = fisher(v.name) and tile in self.map.fish         # a fishing ship only fishes (#1283)
             v.tree = tile if v.name.startswith("VILLAGER") or fish else None    # a sheep of the selection does not gather
-            if home and not (not e.get("garrison") and v.load and v.name.startswith("VILLAGER")
+            if home and i not in self.homing and not (not e.get("garrison") and v.load and v.name.startswith("VILLAGER")
                              and home[1]["name"] in self.gather.DROP_SITES.get(v.res, ())):   # it drops its load
                 self.entering[i] = [*home, None]
         boats = [(i, v) for i, v in group if ship(v.name)]          # ships sail on the water (#866)
@@ -1537,11 +1880,14 @@ class Replay:
         lag = math.dist(at, (v.pos[0], v.pos[2])) - d
         return min(CATCH_UP, max(1.0, 1 + lag / min(d, reach or d)))
 
-    def at(self, v, t):
+    def at(self, v, t, hunt=True):
         """The replay position of unit v at game time t (ms): on the line of its leg while it walks, else v.pos.
         A new order starts there, not at the end of the leg: a scout gets a new order every 2 to 5 s, and its
-        replay position jumped up to 250 blocks ahead of it (#851)."""
+        replay position jumped up to 250 blocks ahead of it (#851). After its leg, an attacker of a unit of the record
+        is at the replay position of its target until the next order (hunt False: of a target that hunts too, #3540)."""
         start, t0, t1 = getattr(v, "leg", None) or (v.pos, 0, 0)
+        if t >= t1 and (w := self.units.get(getattr(v, "hunt", None))) is not None and w is not v:
+            return self.at(w, t, False) if hunt else w.pos              # an attacker chases its target (#3540)
         if not t0 <= t < t1:
             return v.pos
         f = (t - t0) / (t1 - t0)
@@ -1854,6 +2200,19 @@ class Replay:
             out += garrison.leave(v.uuid, x, y, z) + [f"aoe label {v.uuid}"] * self.ai
         return out + self.arrows(rect)
 
+    def ungarrison(self, e):
+        """UNGARRISON: the units come out of each building, and walk to its last GATHER POINT and work there, as in
+        AoE2 (#3826: a boar lure in the town center left the villagers idle). Returns the commands."""
+        out = []
+        for b, name in zip(e["objects"], e.get("names") or [None] * len(e["objects"])):
+            for r in self.holders(dict(e, objects=[b], names=[name])):
+                ids, p = list(self.garrisons.get(r, [])), self.points.get(b)
+                out += self.release(r)
+                if ids and p is not None:
+                    out += self.move(dict(p, time=e["time"], kind="order" if p.get("target") is not None else "move",
+                                          objects=ids, names=[self.units[i].name for i in ids]))
+        return out
+
     def leave(self, i, rect):
         """Unit i comes out of the building rect alone, on the first free cell next to it (release()). Returns the
         commands."""
@@ -1875,7 +2234,8 @@ class Replay:
             return e["resource"]
         o = self.refs.get(t) if e["kind"] == "order" else None
         if e["kind"] == "order" and t is not None and o is None and t not in self.units and "tile" in e:
-            return m.farm_at.get((int(e["tile"][0] * self.T), int(e["tile"][1] * self.T)))
+            farm = m.farm_at.get((int(e["tile"][0] * self.T), int(e["tile"][1] * self.T)))
+            return farm or self.near_resource(*e["tile"])
         if not o or "tile" not in o:
             return None
         if o["kind"] == "unit" and (food := self.gather.hunt_food(o["name"])) and "tile" in e:
@@ -1895,6 +2255,15 @@ class Replay:
         return tile if tile in m.trees or tile in m.bushes or tile in m.fish or any(tile in s for s in m.mines.values()) \
             else None
 
+    def near_resource(self, x, y):
+        """The tree, bush, mine or fish tile nearest to the order tile (x, y), at most NEAR_RESOURCE tiles away, else
+        None. AoE2 gives a tree a new object ID when a villager cuts it, and the record has no IDs of new objects, so
+        a later ORDER on it names an unknown target; the click on the high tree picture is up to 2 tiles off (#3976)."""
+        m, c = self.map, (x, y)
+        tiles = [t for s in (m.trees, m.bushes, m.fish, *m.mines.values()) for t in s
+                 if abs(t[0] + 0.5 - x) <= NEAR_RESOURCE and abs(t[1] + 0.5 - y) <= NEAR_RESOURCE]
+        return min(tiles, key=lambda t: (math.dist((t[0] + 0.5, t[1] + 0.5), c), t), default=None)
+
     def free_tile(self, x, y):
         """The tile nearest to (x, y) with no tree, bush, mine, fish or farm: a carcass on it would give the wrong
         resource (gather.Map.resource, #1281)."""
@@ -1912,6 +2281,10 @@ class Replay:
         """A unit with a resource that ends its walk next to it gathers from game time t on, at the AoE2 work rate
         of the resource (gather.AOE2_WORK, per game second). The record has no drop-off: it does not carry.
         A farmer works on its farm (gather.Gather.goals). A unit that goes into a building arrives (enter())."""
+        if i in self.fetching:
+            self.send(self.pickup(i, v))
+        if i in self.homing:
+            self.send(self.deliver(i))
         if i in self.entering:
             x0, x1, z0, z1 = self.entering[i][0]
             if v.cell in self.map.around({(x, z) for x in range(x0, x1) for z in range(z0, z1)}):
@@ -1925,6 +2298,47 @@ class Replay:
             self.working[i] = t + 1000 / self.rate(v)
             if self.ai and not ship(v.name):                        # a boat sails with /tp steps: it is there
                 self.arriving[i], v.again, v.stand = t, False, None
+
+    def pickup(self, i, v):
+        """The commands of monk i that ends its walk to its relic: the pot block goes and a pot rides the monk, as
+        monk.relic_tick. Nothing when the relic is not on the ground or a monk carries one (#4009)."""
+        ref = self.fetching.pop(i)
+        r = self.relics[ref]
+        if r["at"] is None or any(q["monk"] == i for q in self.relics.values()):
+            return []
+        x, z = r["at"]
+        y = self.map.y(x, z)
+        r.update(at=None, monk=i)
+        return [f"fill {x} {y - 1} {z} {x} {y + 1} {z} air replace {monk.POT}",
+                f"execute at {v.uuid} run summon item_display ~ ~ ~ {{Tags:[\"aoe_relic_{ref}\"],"
+                f"item:{{id:\"{monk.POT}\",count:1}},transformation:{{left_rotation:[0f,0f,0f,1f],"
+                f"right_rotation:[0f,0f,0f,1f],translation:[0f,0.4f,0f],scale:[0.5f,0.5f,0.5f]}}}}",
+                f"ride @e[type=item_display,tag=aoe_relic_{ref},limit=1] mount {v.uuid}"]
+
+    def monastery(self, e):
+        """The footprint of the own start monastery (or a building that stands for it, combat.STANDS_FOR) that an ORDER
+        or a GARRISON targets, or None."""
+        import combat
+        o = self.refs.get(e.get("target"))
+        if not o or o["kind"] != "building" or o["player"] != e["player"]:
+            return None
+        if combat.STANDS_FOR.get(o["name"], o["name"]) != "MONASTERY":
+            return None
+        return next((s[3] for s in self.starts if s[0] == o["ref"]), None)
+
+    def deliver(self, i):
+        """The commands of monk i that ends its walk to its monastery with a relic: the relic goes into the building
+        (its pot goes), the monk stays outside, as monk.relic_tick (kind "home", #4010)."""
+        rect, p = self.homing.pop(i)
+        ref = next((r for r, q in self.relics.items() if q["monk"] == i), None)
+        if ref is None:
+            return []
+        self.relics[ref].update(monk=None, home=rect, player=p)
+        return [f"kill @e[type=item_display,tag=aoe_relic_{ref}]"]
+
+    def relic_count(self, p):
+        """The relics in the monasteries of player p (#4010)."""
+        return sum(r["home"] is not None and r.get("player") == p for r in self.relics.values())
 
     def rate(self, v):
         """The AoE2 work rate of unit v at its resource (per game second): a farm, a hunt and a fish have their own
@@ -2095,11 +2509,27 @@ class Replay:
             g = self.gathered.get(p, dict.fromkeys(START, 0))
             res = ", ".join(f"{r} {v}" for r, v in g.items())
             out.append("tellraw @a " + json.dumps([text(name, color), text(
-                f": villagers trained {self.villagers.get(p, 0)}, gathered {res}")]))
+                f": villagers trained {self.villagers.get(p, 0)}, gathered {res}, idle villager time "
+                f"{self.idle_text(p)}, idle TC time {self.tc_text(p)}")]))
             out.append("tellraw @a " + json.dumps([text(name, color), text(              # military (#1066)
                 f": military units trained {self.army.get(p, 0)}, units lost {self.lost.get(p, 0)}, "
-                f"buildings lost {self.razed.get(p, 0)}")]))
+                f"buildings lost {self.razed.get(p, 0)}, APM {self.mean_apm(p, self.ended)}{self.army_text(p)}")]))
         return out + self.tech_commands() + self.society_commands()
+
+    def idle_text(self, p):
+        """The idle villager time of player p as M:SS (#3757)."""
+        m, s = divmod(round(self.idled.get(p, 0)), 60)
+        return f"{m}:{s:02d}"
+
+    def tc_text(self, p, t=None):
+        """The idle town center time of player p at game time t (default: the end of the replay) as M:SS (#4052)."""
+        m, s = divmod(round(self.tc_idle(p, self.ended if t is None else t)), 60)
+        return f"{m}:{s:02d}"
+
+    def army_text(self, p):
+        """The army at the end and the losses by type of player p, most first, at most 6 types and "+N" (#3697)."""
+        army, lost = counts_text(self.troops.get(p, {})), counts_text(self.fallen.get(p, {}))
+        return "".join(f", {k} {v}" for k, v in (("army at the end:", army), ("lost:", lost)) if v)
 
     def tech_commands(self):
         """One chat line per player with the game time of each age-up (MM:SS, "-": not reached) and the number of
@@ -2112,13 +2542,31 @@ class Replay:
                              for a in AGES)
             out.append("tellraw @a " + json.dumps([text(name, color), text(
                 f": {ages}, technologies {self.researched.get(p, 0)}")]))
+            if upgrades := self.upgrade_line(p):                          # the upgrades, one line more (#3789)
+                out.append("tellraw @a " + json.dumps([text(name, color), text(f": {upgrades}")]))
         return out
+
+    def upgrade_line(self, p):
+        """The Blacksmith researches of player p with their game time (12 at most, then "+N"), and the number of economy
+        and University researches (#3789). None when p has none of them."""
+        forge, eco, uni = [], 0, 0
+        for t, n in self.learned.get(p, ()):
+            row = TECH_ROW.get(n, {})
+            if row.get("building") == "BLACKSMITH":
+                m, s = divmod(int(t) // 1000, 60)
+                forge.append(f"{row['label']} {m}:{s:02d}")
+            eco += row.get("building") in ECONOMY
+            uni += row.get("building") == "UNIVERSITY"
+        if not (forge or eco or uni):
+            return None
+        names = ", ".join(forge[:12] + ([f"+{len(forge) - 12}"] if len(forge) > 12 else []))
+        return " · ".join(([names] if forge else []) + [f"economy {eco}", f"University {uni}"])
 
     def society_commands(self):
         """One chat line per player with the values of the AoE2 Society tab (#1086): castles and wonders built (each
         foundation once, as build()), tribute sent and received (all resources), and the highest villager count
         (est.: the start and the trained villagers, the census of the plugin counts the losses)."""
-        built, sent, got, seen = {}, {}, {}, set()
+        built, sent, got, seen, traded = {}, {}, {}, set(), {}
         for e in self.data.get("timeline", []):
             p = e.get("player")
             name = e.get("name") or self.kinds.get(e.get("type"), ("?", ""))[1]
@@ -2128,22 +2576,23 @@ class Replay:
             elif e["kind"] == "tribute" and e.get("to"):
                 n = sum(e.get(r, 0) for r in START) or int(e.get("amount", 0))   # old records: one resource
                 sent[p], got[e["to"]] = sent.get(p, 0) + n, got.get(e["to"], 0) + n
+            elif e["kind"] in ("buy", "sell") and e.get("resource"):    # the market trades (#3941)
+                traded[p, e["kind"]] = traded.get((p, e["kind"]), 0) + e.get("amount", 0)
         out = []
         for p in self.ranked(self.pop.keys() | self.vhigh.keys() | sent.keys() | got.keys() | {q for q, _ in built}
-                             - {None}):
+                             | {q for q, _ in traded} - {None}):
             name, color = self.label(p)
             counts = "".join(f"{n.lower()}s {built.get((p, n), 0)}, " for n in SOCIETY)   # castles N, wonders N
+            market = f"bought {traded.get((p, 'buy'), 0)}, sold {traded.get((p, 'sell'), 0)}, "
             out.append("tellraw @a " + json.dumps([text(name, color), text(
-                f": {counts}tribute sent {sent.get(p, 0)}, received {got.get(p, 0)}, villager high "
+                f": {counts}{market}tribute sent {sent.get(p, 0)}, received {got.get(p, 0)}, villager high "
                 f"{self.vhigh.get(p, 0)} (est.)")]))
         return out
 
     def timeline_commands(self, end):
         """A written book "Timeline" for each viewer at the end of the replay (#1068): per player its age-ups, its
         first military unit, its first castle and its resign, in time order, from the whole timeline (also the time
-        of a jump) up to `end` (ms). Each player starts a page with a heading in its player color and its team (#1643); a
-        long list goes on to the next page. One RCON
-        command holds at most RCON_MAX bytes: the last lines go first."""
+        of a jump) up to `end` (ms), see `book_command`."""
         import gather                                               # gather -> build -> replay: import it late
         lines, army, castle = {}, set(), set()
         for e in sorted(self.data.get("timeline", []) + self.spawns(), key=lambda e: e["time"]):
@@ -2162,6 +2611,12 @@ class Replay:
                 line = "Resigns"
             if line:
                 lines.setdefault(p, []).append(f"{mmss(e['time'])} {line}")
+        return self.book_command("Timeline", lines)
+
+    def book_command(self, title, lines):
+        """A written book `title` with a page per player (lines: player -> text lines, #1068). Each player starts a page
+        with a heading in its player color and its team (#1643); a long list goes on to the next page. One RCON
+        command holds at most RCON_MAX bytes: the last lines go first (#4048)."""
         if not lines:
             return []
         while True:
@@ -2181,7 +2636,7 @@ class Replay:
                     rows, page = rows - n, page + "\n" + line
                 pages.append({"text": "", "extra": [head, {"text": "\n" + page.rstrip("\n")}]} if head
                              else {"text": page.strip("\n")})       # only the heading has a color, the lines are black
-            book = {"title": "Timeline", "author": "aoe2mc", "pages": pages}
+            book = {"title": title, "author": "aoe2mc", "pages": pages}
             cmd = "give @a minecraft:written_book[minecraft:written_book_content=" + \
                 json.dumps(book, ensure_ascii=False, separators=(",", ":")) + "]"
             if len(cmd.encode()) <= RCON_MAX:
@@ -2189,11 +2644,19 @@ class Replay:
             longest = max(lines, key=lambda p: len(lines[p]))
             lines[longest].pop()
 
-    def score_commands(self):
+    def build_order_commands(self, end):
+        """A written book "Build order" for each viewer at the end of the replay (#4048, item 2 of #4046): the build
+        order of each player up to `end` (ms), see `build_order`. A player without steps gets no page."""
+        players = sorted({e["player"] for e in self.data.get("timeline", []) if e.get("player") is not None})
+        lines = {p: [f"{mmss(t)} {label}" for t, label in self.build_order(p, end)] for p in players}
+        return self.book_command("Build order", {p: v for p, v in lines.items() if v})
+
+    def score_commands(self, t=None):
         """The sidebar commands for the population of each player that changed since the last call (#741). The score
         holder is "P<n>" (a holder name has no space); its display name is the player name in the player color, the
-        age of the player (#805) and its estimated resources (#932). In a team game the score is a team key plus the
-        population, so the sidebar shows each team together, and a fixed number format shows the population (#1189)."""
+        age of the player (#805), its estimated resources (#932) and its actions of the last minute and its idle town center time at game time t
+        (#3764, #4053; no APM and TC part without t). In a team game the score is a team key plus the population, so the sidebar
+        shows each team together, and a fixed number format shows the population (#1189)."""
         out, top = [], max((self.team(p) or 0 for p in self.pop), default=0)
         if self.shown is None:
             self.shown, out = {}, [f'scoreboard objectives add {POP} dummy "Population"',
@@ -2201,7 +2664,8 @@ class Replay:
         for p in sorted(self.pop):
             name, color = self.label(p)
             res = " ".join(f"{r[0].upper()} {max(0, v)}" for r, v in self.resources(p).items())
-            if self.named.get(p) != (line := f"{name} · {self.ages.get(p, 'Dark')} · {res} (est.)"):
+            apm = "" if t is None else f" · APM {self.apm(p, t)} · TC idle {self.tc_text(p, t)}"
+            if self.named.get(p) != (line := f"{name} · {self.ages.get(p, 'Dark')} · {res} (est.){apm}"):
                 out.append(f"scoreboard players display name P{p} {POP} {json.dumps(text(line, color))}")
                 self.named[p] = line
             if self.shown.get(p) != self.pop[p]:
@@ -2226,8 +2690,95 @@ class Replay:
             self.pop[p] = n
             m = re.search(r"Count: (\d+)", self.game.command(
                 f"execute if entity @e[tag={COUNTED},tag=aoe2mc.p{p},type=minecraft:villager]"))
-            self.villager(p, 0, int(m[1]) if m else 0)               # the record has no deaths (#1086)
+            n = int(m[1]) if m else 0
+            if m and self.censused and n < self.vills.get(p, 0):
+                self.bury(p)                                        # a villager died in a fight (#3885)
+            self.villager(p, 0, n)                                  # the record has no deaths (#1086)
+        ids = units.type_ids()
+        for p, kept in self.troops.items():
+            for name, was in kept.items():
+                if not was or name not in ids:                      # its last unit died: no command until a spawn
+                    continue
+                m = re.search(r"Count: (\d+)", self.game.command(
+                    f"execute if entity @e[tag={COUNTED},tag=aoe2mc.p{p},tag=aoe2mc.t{ids[name]}]"))
+                n = int(m[1]) if m else 0
+                if self.censused and n < was:
+                    self.fallen.setdefault(p, {})[name] = self.fallen.get(p, {}).get(name, 0) + was - n
+                kept[name] = n
         self.censused = True
+
+    def workers(self, p):
+        """The villagers of player p in self.units, by uuid: a gather point can hold the same unit."""
+        return {v.uuid: v for v in self.units.values() if v.player == p and v.name.startswith("VILLAGER")}
+
+    def bury(self, p):
+        """Remove the villagers of player p that died in a fight from self.units (#3885): a fight has no timeline
+        event, and a dead villager in eco() counted as idle to the end of the game."""
+        dead = {u for u in self.workers(p) if "Test passed" not in (self.game.command(f"execute if entity {u}") or "")}
+        for i in [i for i, v in self.units.items() if v.uuid in dead]:
+            del self.units[i]
+            for state in (self.moving, self.working):
+                state.pop(i, None)
+
+    def eco(self):
+        """The villagers of each player on each kind of work (#3755): food, wood, gold, stone, build or idle. A start
+        villager has no task yet: it counts as idle. Units are keyed by uuid: a gather point can hold the same unit."""
+        keys = ("food", "wood", "gold", "stone", "build", "idle")
+        out = {p: dict.fromkeys(keys, 0) for p in self.pop}
+        for v in {v.uuid: v for v in self.units.values()}.values():
+            if not v.name.startswith("VILLAGER"):
+                continue
+            t = v.task or "none"
+            k = ("idle" if t == "none" or v.job == units.IDLE_JOB else "build" if "BUILDER" in t or "REPAIRER" in t
+                 else "wood" if "LUMBERJACK" in t else "gold" if "GOLD" in t else "stone" if "STONE" in t else "food")
+            out.setdefault(v.player, dict.fromkeys(keys, 0))[k] += 1
+        return out
+
+    def idle_time(self, t):
+        """Add the idle villager time up to game time t (ms) to each player (#3757): the idle villagers now times the
+        game time since the last count. A jump sets idle_at only: the skipped time adds nothing."""
+        for p, n in self.eco().items():
+            self.idled[p] = self.idled.get(p, 0) + (t - self.idle_at) / 1000 * n["idle"]
+        self.idle_at = t
+
+    @functools.cached_property
+    def town_centers(self):
+        """({player: {town center ID: alive from (ms)}}, {building ID: sorted busy intervals (ms)}) for tc_idle (#4052).
+        A start object is alive from 0; a building is alive from its first QUEUE of a villager. The busy time of a
+        building is each training and each technology in research of it."""
+        alive, busy = {}, {}
+        for o in self.data["objects"]:
+            if o.get("name") == "TOWN_CENTER":
+                alive.setdefault(o["player"], {})[o["ref"]] = 0
+        for end, e, b in self.trainings:
+            if e["kind"] == "queue" and e.get("name", "").startswith("VILLAGER"):
+                tc = alive.setdefault(e["player"], {})
+                tc[b] = min(tc.get(b, e["time"]), e["time"])
+            d = aoe2mc.train_ms(e.get("name", "")) if e["kind"] == "queue" else RESEARCH_S[e["technology"]] * 1000
+            busy.setdefault(b, []).append((max(e["time"], end - d), end))
+        return alive, {b: sorted(spans) for b, spans in busy.items()}
+
+    def tc_idle(self, p, t):
+        """The idle seconds of the town centers of player p up to game time t (ms, #4052): the time each one is alive
+        up to t, minus the union of its busy intervals in that time."""
+        alive, busy = self.town_centers
+        out = 0
+        for b, start in alive.get(p, {}).items():
+            if start >= t:
+                continue
+            covered, last = 0, start
+            for s, e in busy.get(b, ()):
+                s, e = max(s, last), min(e, t)
+                if e > s:
+                    covered += e - s
+                    last = e
+            out += t - start - covered
+        return out / 1000
+
+    def troop(self, p, name):
+        """One more live military unit of this type for player p (a start unit or a spawn, #3695)."""
+        kept = self.troops.setdefault(p, {})
+        kept[name] = kept.get(name, 0) + 1
 
     def flush(self):
         """Send the commands of the queue in one batch (run.Game.batch): before each wait of run() and each read of
@@ -2438,6 +2989,7 @@ class Replay:
             ({"jump": to} if to is not None else {})
         self.control["fights"] = found
         end, shown, counted = events[-1]["time"] if events else start, None, -math.inf
+        self.ended = end                                            # the average APM of the summary (#3763)
         send = self.send if bar else lambda cmds: None
         send([f'bossbar add {BAR} ""', f"bossbar set {BAR} color white",
                    f"bossbar set {BAR} max {max(1, int(end) // 1000)}"] +
@@ -2512,9 +3064,15 @@ class Replay:
                         self.working = {i: max(t, to) for i, t in self.working.items()}   # walks after it (#1125)
                     g0, r0 = to, clock()
                     shown = int(to) // 1000
-                    send(self.clock_commands(to, end, self.speed) + self.score_commands())
+                    send(self.clock_commands(to, end, self.speed) + self.score_commands(to))
                     self.send(self.panel(to))
                     self.sample(to)
+                    self.idle_at = to
+                    self.send(self.graphs(to))
+                    self.send(self.army_view(to))
+                    self.send(self.build_order_view(to))
+                    self.send(self.upgrade_view(to))
+                    self.send(self.ecoview())
                 continue
             lag = max(lag, clock() - r0 - (now - g0) / 1000 / self.speed)
             if int(now) // 1000 != shown:                              # at most once per game second
@@ -2523,9 +3081,15 @@ class Replay:
                     census()
                     look()
                     counted = clock()
-                send(self.clock_commands(now, end, self.speed) + self.score_commands() + self.overview(join=True))
+                send(self.clock_commands(now, end, self.speed) + self.score_commands(now) + self.overview(join=True))
                 self.send(self.panel(now))
                 self.sample(now)
+                self.idle_time(now)
+                self.send(self.graphs(now))
+                self.send(self.army_view(now))
+                self.send(self.build_order_view(now))
+                self.send(self.upgrade_view(now))
+                self.send(self.ecoview())
                 self.send(self.fog())
             if e is None:                                           # behind its clock: all the steps up to the
                 late = g0 if self.paused else g0 + (clock() - r0) * 1000 * self.speed    # game time now in one
@@ -2543,7 +3107,8 @@ class Replay:
         census()
         self.send(self.expire(math.inf) + self.panel(math.inf))
         send(self.clock_commands(end, end, speed, done=True) + self.score_commands() + self.end_commands(end) +
-             self.summary_commands() + self.timeline_commands(end))
+             self.summary_commands() + self.timeline_commands(end) +
+             self.build_order_commands(end))
         span = (events[-1]["time"] - start) / 1000 / speed if events else 0                 # at the start speed
         return {"events": n, "commands": self.sent, "busy": round(self.busy, 2), "lag": round(lag, 2),
                 "rate": round(self.sent / self.busy) if self.busy else 0, "need": round(self.sent / span) if span else 0}

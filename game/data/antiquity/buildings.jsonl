@@ -1,0 +1,5 @@
+{"name": "ACADEMY", "hp": 350, "attack": 0, "melee": 0, "pierce": 0, "range": 0, "reload": 0.0, "bonus": {}, "classes": ["building"], "sight": 5, "conscription": true}
+{"name": "GOVERNMENT_CENTER", "hp": 350, "attack": 0, "melee": 0, "pierce": 0, "range": 0, "reload": 0.0, "bonus": {}, "classes": ["building"], "sight": 5}
+{"name": "GRANARY", "hp": 350, "attack": 0, "melee": 0, "pierce": 0, "range": 0, "reload": 0.0, "bonus": {}, "classes": ["building"], "sight": 4}
+{"name": "STORAGE_PIT", "hp": 350, "attack": 0, "melee": 0, "pierce": 0, "range": 0, "reload": 0.0, "bonus": {}, "classes": ["building"], "sight": 4}
+{"name": "TEMPLE", "hp": 350, "attack": 0, "melee": 0, "pierce": 0, "range": 0, "reload": 0.0, "bonus": {}, "classes": ["building"], "sight": 5}

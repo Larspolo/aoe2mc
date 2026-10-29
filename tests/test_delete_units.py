@@ -8,9 +8,12 @@ from test_gather import FakeServer, grid
 
 
 class KillServer(FakeServer):
-    """A fake server on which `kill UUID` removes the entity: a dead unit has no position."""
+    """A fake server on which the kill of a unit removes the entity: a dead unit has no position. keep: the units with
+    the tag aoe2mc.keep ("Disable Object Deletion", #3777)."""
+    keep = ()
+
     def command(self, cmd):
-        if m := re.fullmatch(r"kill (\S+)", cmd):
+        if (m := re.fullmatch(r"execute as (\S+) if entity @s\[tag=!aoe2mc.keep\] run kill @s", cmd)) and m[1] not in self.keep:
             self.entities.pop(m[1], None)
         return super().command(cmd)
 
@@ -38,7 +41,7 @@ def test_delete_kills_the_own_units_only():
     stance.open_menu(g, "Steve", "m-1")
     server.log.clear()
     g.menus["Steve"]("Steve", stance.DELETE, False)
-    assert "kill m-1" in server.log and "kill v-1" in server.log
+    assert all(f"execute as {u} if entity @s[tag=!aoe2mc.keep] run kill @s" in server.log for u in ("m-1", "v-1"))
     assert not any("e-1" in c for c in server.log)                       # no command to a unit of another player
     assert "aoe menu-close Steve" in server.log
 

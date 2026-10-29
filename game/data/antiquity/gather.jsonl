@@ -1,0 +1,15 @@
+{"name": "GRANARY", "drop": ["food"]}
+{"name": "STORAGE_PIT", "drop": ["wood", "gold", "stone", "meat"]}
+{"name": "ARTISANSHIP", "carry": 2, "work": {"wood": 1.2}}
+{"name": "CITY_WATCH", "watch": 3}
+{"name": "COINAGE", "work": {"gold": 1.25}}
+{"name": "CRAFTSMANSHIP", "carry": 2, "work": {"wood": 1.2}}
+{"name": "DOMESTICATION", "farm": 75}
+{"name": "GOLD_MINING", "carry": 3, "work": {"gold": 1.3}}
+{"name": "IRRIGATION", "farm": 125}
+{"name": "PLOW", "farm": 100}
+{"name": "SIEGECRAFT", "carry": 3, "work": {"stone": 1.3}}
+{"name": "STONE_MINING", "carry": 3, "work": {"stone": 1.3}}
+{"name": "WHEEL", "pace": 1.6}
+{"name": "WOODWORKING", "carry": 2, "work": {"wood": 1.2}}
+{"name": "ZEALOTRY", "carry": -8}

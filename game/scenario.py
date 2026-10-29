@@ -54,6 +54,7 @@ import replay  # noqa: E402
 import trade  # noqa: E402
 import train  # noqa: E402
 import table  # noqa: E402
+import transport  # noqa: E402
 import treaty  # noqa: E402
 
 SLOT = "inventory.26"                                                  # the last slot of the inventory: not the hotbar
@@ -148,6 +149,7 @@ def tick(g):
     research(g)
     garrisons(g)
     fallen(g)
+    attacked(g)
     owners(g)
     tech_states(g)
     actions(g)
@@ -205,10 +207,14 @@ def gate(g, order, ref):
 # one sentence of the docstring and in one `if` line conflicted in each trigger ticket, 2026-10-28).
 ORDER_KINDS = {
     "builds": r'"build (\d+) (\w+) (-?\d+) (-?\d+) (-?\d+) (-?\d+)"',   # "Build Object" (#2863): finish()
+    "damages": r'"damage (\d+) (\w+) (-?\d+) (-?\d+) (-?\d+) (-?\d+) (-?\d+)"',   # "Damage Object" (#3776): damage()
     "found": r'"(found|create) (\d+) (\w+) (\d+) (\d+)"',    # "Place Foundation" (#2825), "Create Object" (#2911): foundation()
     "gates": r'"(lock|unlock) (\d+)"',                         # "Lock Gate", "Unlock Gate" (#2762): gate()
+    "hurts": r'"hurt (\d+) (-?\d+)"',                          # "Damage Object" of a selected building (#4073): hurt()
     "owners": r'"owner (aoe_order[\w.]+) (\d+) (-?\d+)"',   # "Change Ownership" (#2998): owner()
+    "keeps": r'"keep (\d+) ([01])"',                         # "Disable/Enable Object Deletion" (#3777): g.kept
     "queued": r'"(train|research) (\d+) (\w+) ?(\d+)?"',      # "Train Unit", "Initiate Research" (#2772): queues()
+    "replaces": r'"replace (\d+) (\w+) (\w+) (-?\d+) (-?\d+) (-?\d+) (-?\d+)"',   # "Replace Object" (#3778): replace()
     "rallies": r'"rally (\d+) (\w+) (\d+) (\d+) ?(\d+ \d+ \d+ \d+)?"',  # "Set Building Gather Point": rally()
     "tags": r'"(patrol|attack_move|range|stance|stop) (aoe_order[\w.]+) ?(-?\d+(?: -?\d+)*)?"',   # see orders()
     "unloads": r'"unload (\d+) (\d+) ?(-?\d+ -?\d+ -?\d+)?"',  # "Unload" (#2773): unload()
@@ -234,6 +240,8 @@ def orders(g):
     queues(g, m["queued"])
     for player, ref, where in m["unloads"]:
         unload(g, int(player), int(ref), where)
+    for ref, on in m["keeps"]:
+        (vars(g).setdefault("kept", set()).add if on == "1" else vars(g).setdefault("kept", set()).discard)(int(ref))
     for order, ref in m["gates"]:
         gate(g, order, int(ref))
     for order, player, name, x, y in m["found"]:
@@ -242,6 +250,10 @@ def orders(g):
         owner(g, tag, int(new))
     for player, name, *area in m["builds"]:
         finish(g, int(player), name, [int(v) for v in area])
+    for player, old, new, *area in m["replaces"]:
+        replace(g, int(player), old, new, [int(v) for v in area])
+    for player, name, *area, q in m["damages"]:
+        damage(g, int(player), name, [int(v) for v in area], int(q))
     for player, which, x, y, area in m["rallies"]:
         rally(g, int(player), which, (int(x), int(y)), [int(v) for v in area.split()])
     patrols = vars(g).setdefault("patrols", [])
@@ -272,6 +284,8 @@ def orders(g):
     patrol(g)
     for tag, field, op, q in m["values"]:
         values(g, tag, field, int(op), float(q))
+    for ref, q in m["hurts"]:
+        hurt(g, int(ref), int(q))
 
 
 def patrol(g):
@@ -388,6 +402,70 @@ def finish(g, player, name, area):
                 build.rise(x, site, float("inf"))
 
 
+def replace(g, player, old, new, area):
+    """A "Replace Object" order of buildings (aoe2mc.replace_lines, #3778): each complete building of the player (a
+    person or a bot) of type old with its middle tile in the area [x1, y1, x2, y2] (-1: the whole map) goes, and a
+    complete building of type new stands with its middle on the same tile (foundation with done). The removal is free
+    (demolish.fall, then out of g.fell): the score and the recap count no lost building, as in AoE2."""
+    import demolish, ruins                                             # they import gather
+    for x in [g, *(s.g for s in g.bots)]:
+        if x.player != player or "objects" not in x.data:
+            continue
+        T = x.map.T
+        for rect in list(ruins.own(x).values()):
+            x0, x1, z0, z1 = rect
+            tx, ty = (x0 + x1) // 2 // T, (z0 + z1) // 2 // T
+            if demolish.name(x, rect) != old or not (area[0] < 0 or area[0] <= tx <= area[2] and area[1] <= ty <= area[3]):
+                continue
+            n = len(vars(x).get("fell", []))
+            demolish.fall(x, rect)
+            del x.fell[n:]                                             # no loss
+            foundation(g, player, new, (tx, ty), done=True)
+
+
+def damage(g, player, name, area, q):
+    """A "Damage Object" order of a building type (aoe2mc.damage_lines, #3776): each building name of the player with
+    its middle tile in the area [x1, y1, x2, y2] (-1: the whole map) loses q hit points (the score aoe_hp of its target
+    entity, repair.hp), a negative q heals it up to its full hit points (repair.full). At 0 it falls as the plugin
+    razes it (`aoe destroy`: the fall of combat.building), so the score, the recap and "Destroy Object" see it."""
+    import build                                                       # build imports gather
+    T = g.map.T
+    rects = {(x0, x1, z0, z1) for o in g.data.get("objects", ()) if o["kind"] == "building" and "footprint" in o
+             and o["name"] == name and o["player"] == player for x0, z0, x1, z1 in [o["footprint"]]}
+    rects |= {tuple(s["footprint"]) for x in build.sides(g) for s in x.sites
+              if s.get("done") and s["name"] == name and s["player"] == player}
+    for rect in sorted(rects):
+        tx, ty = (rect[0] + rect[1]) // 2 // T, (rect[2] + rect[3]) // 2 // T
+        if area[0] >= 0 and not (area[0] <= tx <= area[2] and area[1] <= ty <= area[3]):
+            continue
+        hit(g, rect, name, player, q)
+
+
+def hurt(g, ref, q):
+    """A "Damage Object" order of a selected building (aoe2mc.damage_lines, #4073): the building with the reference ref
+    loses q hit points, as damage() does for a building type. No building with that ref (a unit, or it fell): nothing."""
+    o = next((o for o in g.data.get("objects", ()) if o["kind"] == "building" and o.get("ref") == ref and
+              "footprint" in o), None)
+    if o is not None:
+        x0, z0, x1, z1 = o["footprint"]
+        hit(g, (x0, x1, z0, z1), o["name"], o["player"], q)
+
+
+def hit(g, rect, name, player, q):
+    """Change the hit points of one building rectangle by q (damage() and hurt(), #3776, #4073): its score aoe_hp, and at
+    0 it falls (`aoe destroy`). A building that fell, or has no target entity, keeps its hit points."""
+    import repair
+    if (now := repair.hp(g, rect)) is None:                            # fallen, or no target entity
+        return
+    uuid, new = repair.uuid(rect), now - q if q > 0 else min(now - q, max(now, repair.full(g, name, player, rect)))
+    if new <= 0:
+        g.command(f"aoe destroy {uuid}")
+        vars(g).setdefault("sieged", set()).add(uuid)                  # Gather.fall frees the footprint
+        return
+    g.command(f"scoreboard players set {uuid} aoe_hp {new}")
+    g.command(f"aoe label {uuid}")
+
+
 def rally(g, player, which, tile, area):
     """A "Set Building Gather Point" order (aoe2mc.rally_lines, #2853): the rally point of the building with the
     reference which (a number), or of each building of the type which with its middle in the tile area, of the player
@@ -416,12 +494,14 @@ def rally(g, player, which, tile, area):
 def unload(g, player, ref, where):
     """An "Unload" order (aoe2mc.unload_lines, #2773): the units inside the building ref of the player (a person or a
     bot: garrison.holders) come out (garrison.out), and `aoe moveto` walks them to the block "x y z" when the order has
-    one. A building that fell or that is not of the player: nothing."""
+    one. An own transport ship or ram lets its units out on the nearest land (transport.out, #3779). A building that
+    fell or that is not of the player: nothing."""
     for x in [g, *(s.g for s in g.bots)]:
         if x.player != player or "objects" not in x.data:
             continue
         rect = next((r for r, o in garrison.holders(x).items() if o.get("ref") == ref), None)
-        for u in garrison.out(x, rect) if rect is not None else []:
+        ship = transport.carriers(x).get(ref)                          # a transport ship or a ram (#3779)
+        for u in garrison.out(x, rect) if rect is not None else transport.out(x, ship) if ship else []:
             if where:
                 x.command(f"aoe moveto {u} {where}")
 
@@ -618,7 +698,7 @@ def setup(g, mode="scenario", start=True):
         for x in sides:
             x.pop_limit = g.players.get(str(x.player), {}).get("pop_limit", x.pop_limit)
         return g
-    level = (getattr(g.game, "settings", None) or {}).get("ai_difficulty", "standard")
+    level = (getattr(g.game, "settings", None) or {}).get("ai_difficulty", "standard").split(",")[0]   # the first bot (#4020)
     g.command("scoreboard objectives add aoe_difficulty dummy")        # the condition "Difficulty Level" (#2704)
     g.command(f"scoreboard players set #level aoe_difficulty {LEVELS[level]}")
     g.command("scoreboard objectives add aoe_dipstate dummy")         # the condition "Diplomacy State" (#2757)
@@ -692,7 +772,8 @@ def research(g):
 def garrisons(g):
     """The score #g<ref> of aoe_gar of each converted building of a player (the people and the bots) that takes a
     garrison: the number of units inside (garrison.holders, g.garrisons), for the condition "Units Garrisoned" of the
-    triggers (aoe2mc.trigger_files, #2714). One command per change: a unit goes in, all come out, the building falls."""
+    triggers (aoe2mc.trigger_files, #2714). One command per change: a unit goes in, all come out, the building falls.
+    The own transport ships and rams count their cargo the same way (transport.carriers, #3780)."""
     sent = vars(g).setdefault("garrison_sent", {})
     for x in [g, *(s.g for s in g.bots)]:
         for rect, o in sorted(garrison.holders(x).items()) if "objects" in x.data else ():
@@ -700,6 +781,11 @@ def garrisons(g):
             if o.get("ref") is not None and sent.get(o["ref"], 0) != n:   # the objective starts with no score: 0
                 g.command(f"scoreboard players set #g{o['ref']} aoe_gar {n}")
                 sent[o["ref"]] = n
+    for ref, ship in sorted(transport.carriers(g).items()):
+        n = len(vars(g).get("cargo", {}).get(ship, ()))
+        if sent.get(ref, 0) != n:
+            g.command(f"scoreboard players set #g{ref} aoe_gar {n}")
+            sent[ref] = n
 
 
 def fallen(g):
@@ -718,6 +804,29 @@ def fallen(g):
         if "passed" not in g.command(f"execute if entity {combat.target_uuid(o['footprint'])}"):
             g.command(f"scoreboard players set #f{ref} aoe_fallen 1")
             sent.add(ref)
+
+
+def attacked(g):
+    """Once per game second: the score #h<ref> of aoe_hit of a converted building of the triggers (aoe2mc.json
+    "attacked", #3775) is 1 when its hit points are lower than at the last read, else 0, for the condition "Object
+    Attacked". One command per change, so the score is 1 for one second only after each hit."""
+    import repair                                                  # repair imports gather
+    if not g.data.get("attacked") or g.clock() < vars(g).get("attacked_at", 0.0):
+        return
+    g.attacked_at = g.clock() + 1.0
+    last, sent = vars(g).setdefault("attacked_hp", {}), vars(g).setdefault("attacked_sent", {})
+    objects = {o["ref"]: o for o in g.data.get("objects", ()) if o.get("ref") is not None and "footprint" in o}
+    for ref in g.data["attacked"]:
+        if (o := objects.get(ref)) is None:
+            continue
+        x0, z0, x1, z1 = o["footprint"]
+        if (hp := repair.hp(g, (x0, x1, z0, z1))) is None:             # no target entity: a ruin, no score
+            continue
+        n = int(hp < last.get(ref, hp))
+        last[ref] = hp
+        if sent.get(ref, 0) != n:
+            g.command(f"scoreboard players set #h{ref} aoe_hit {n}")
+            sent[ref] = n
 
 
 def owners(g):

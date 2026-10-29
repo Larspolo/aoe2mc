@@ -11,7 +11,7 @@ UNSUPPORTED = [("condition", n) for n in ("AI_SIGNAL", "AI_SIGNAL_MULTIPLAYER", 
                                        "CHANGE_OBJECT_CAPTION", "CHANGE_OBJECT_CIVILIZATION_NAME",
                                        "CHANGE_OBJECT_DESCRIPTION", "CHANGE_OBJECT_ICON", "CHANGE_OBJECT_PLAYER_NAME",
                                        "CHANGE_TECHNOLOGY_DESCRIPTION", "CHANGE_TECHNOLOGY_HOTKEY",
-                                       "CHANGE_TECHNOLOGY_ICON", "DISABLE_OBJECT_DELETION", "ENABLE_OBJECT_DELETION",
+                                       "CHANGE_TECHNOLOGY_ICON",
                                        "RESEARCH_LOCAL_TECHNOLOGY", "SCRIPT_CALL", "USE_ADVANCED_BUTTONS")]
 
 
