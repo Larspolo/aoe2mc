@@ -126,6 +126,7 @@ BOT = ("time", "charged", "attack")                                    # fields 
 SETTINGS = (                                                           # run.py options (#2325, #2409): one per line,
     "ai_difficulty",                                                   # in alphabetical order (parallel tickets add)
     "all_techs",
+    "antiquity",
     "bot",
     "bot_attack",
     "cheats",

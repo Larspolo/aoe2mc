@@ -18,7 +18,8 @@ def unread(keys, code=CODE):
     return sorted(k for k in keys if k not in combat.Stats._fields and not re.search(rf"""["']{re.escape(k)}["']""", code))
 
 
-@pytest.mark.parametrize("name", sorted(os.listdir(table.DIR)))
+@pytest.mark.parametrize("name", sorted(f for f in os.listdir(table.DIR) if f.endswith(".jsonl"))
+                         + sorted(f"antiquity/{f}" for f in os.listdir(os.path.join(table.DIR, "antiquity"))))   # #3666
 def test_each_key_of_a_data_file_is_read_by_the_code(name):
     keys = {k for r in table.load(name) for k in r}
     assert unread(keys) == [], name

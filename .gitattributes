@@ -28,6 +28,8 @@ game/data/units.jsonl merge=jsonl
 game/data/sounds.jsonl merge=jsonl
 # One JSON object per building, or only a line of sight (#1913); table.load() stops on a name in two lines.
 game/data/buildings.jsonl merge=jsonl
+# The files of the rule set of Antiquity Mode (#3666): the same format.
+game/data/antiquity/*.jsonl merge=jsonl
 # One JSON object per building of the menu, or only the age or technology of a name (#2028); table.load() stops on a name in two lines.
 game/data/build.jsonl merge=jsonl
 # One JSON object per resource, drop site, gather technology or animal (#2033); table.load() stops on a name in two lines.

@@ -88,9 +88,9 @@ DATA = os.path.join(table.DIR, "train.jsonl")
 SOUNDS = {r["name"]: r for r in table.load("sounds.jsonl")}       # building name -> the sound of a click on it (#3501)
 
 
-def load(path=DATA):
-    """The items of the menus: one JSON object per line (#1702, `table.load`)."""
-    return table.load(path)
+def load(path=None):
+    """The items of the menus: one JSON object per line (#1702, `table.load`); default: the file of the rule set."""
+    return table.load(path or "train.jsonl")
 
 
 ROWS = load()                                                      # one line per item: data/train.jsonl (#1702)
@@ -100,12 +100,12 @@ TRAIN_TIMES = {r["name"]: r["time"] for r in ROWS}                 # AoE2 second
 TRAINS = {b: tuple(r["name"] for r in ROWS if r["building"] == b)    # the units and technologies of each
           for b in dict.fromkeys(r["building"] for r in ROWS if r["building"])}   # building, in file order
 TRAINS["DONJON"] = ("SPEARMAN",)                                  # trains() adds the Serjeant (#1873)
-TRAINS["FOLWARK"] = TRAINS["MILL"]                                 # the mill of the Poles (#1874)
+TRAINS["FOLWARK"] = TRAINS.get("MILL", ())                               # the mill of the Poles (#1874)
 TRAINS["KREPOST"] = ("PETARD",)                                     # trains() adds the Konnik (#1872); wiki: the petard (#2192)
-TRAINS["FORTIFIED_CHURCH"] = TRAINS["MONASTERY"]                  # the monastery of the Armenians, Georgians (#1930)
+TRAINS["FORTIFIED_CHURCH"] = TRAINS.get("MONASTERY", ())                  # the monastery of the Armenians, Georgians (#1930)
 # A building with the menus of other buildings: the key "menus" of data/buildings.jsonl (the mule cart: the lumber and
 # mining camp, #2208). The items of each later menu move right of the slots of the earlier ones (SHIFTS, slots()).
-MENUS = {r["name"]: r["menus"] for r in BUILDING_ROWS if "menus" in r}
+MENUS = {r["name"]: r["menus"] for r in BUILDING_ROWS if set(r.get("menus", ["?"])) <= set(TRAINS)}   # of the rules
 TRAINS |= {b: sum((TRAINS[m] for m in ms), ()) for b, ms in MENUS.items()}
 SLOTS = {r["name"]: r["slot"] for r in ROWS}
 # An upgrade of one building (the key "one_building", #2484: the Achaemenid town centers): it changes only the building
@@ -263,7 +263,7 @@ EACH = {r["name"]: effect({k: v for k, v in r["effect"].items() if k != "if"})  
         for r in ROWS if isinstance(r.get("effect"), dict)}       # (civs.SMITH_UNITS, #2174)
 SHIPWRIGHT = (0.8, 1.54)                                           # Shipwright: ships cost 80 % wood, train 54 % faster
 CONSCRIPT = (tuple(r["name"] for r in BUILDING_ROWS if r.get("conscription")),   # Conscription: these buildings
-             next(r["factor"] for r in ROWS if r["name"] == "CONSCRIPTION"))      # train faster (#1455)
+             next((r["factor"] for r in ROWS if r["name"] == "CONSCRIPTION"), 1))   # train faster (#1455)
 ARROWSLITS = {r["name"]: r["arrowslits"] for r in BUILDING_ROWS if "arrowslits" in r}   # the attack of each tower (#1504)
 HEATED = {r["name"]: r["heated_shot"] for r in BUILDING_ROWS if "heated_shot" in r}   # Heated Shot: attack against
 #                                           ships (AoE2 DE wiki "Attack increase against ships", #1548)
@@ -276,7 +276,7 @@ REQUIRES = {r["name"]: (r["requires"][0], *map(tuple, r["requires"][1:]))   # an
 # The AoE2 event sounds (#3502): a own site is complete, an own technology is complete, a monk converts a unit
 EVENT_SOUNDS = {"built": "minecraft:block.anvil.use", "convert": "minecraft:entity.evoker.prepare_wololo",
                 "research": "minecraft:block.note_block.bell"}
-AGES = ("Dark Age", "Feudal Age", "Castle Age", "Imperial Age")    # the age after each researched age (index: ages)
+AGES = build.AGE_NAMES                                             # the age after each researched age (index: ages)
 # AoE2 DE setting "Starting age" (game/data/setup.jsonl): the researched ages and the skipped technologies (#2265)
 STARTS = {r["name"]: r for r in table.load("setup.jsonl") if "ages" in r}
 SWAPS = {r["name"]: r["swap"] for r in table.load("setup.jsonl") if "swap" in r}   # a game mode: {old: new} (#2388)
@@ -846,7 +846,7 @@ def per_enemy(g, name):
     return {r: min(v * n, most.get(r, v * n)) for r, v in COSTS[name].items()}
 
 
-SHIPS = {n for n in TRAINS["DOCK"] if n not in TECHS}                 # the ships of the dock (#1490) ...
+SHIPS = {n for n in TRAINS.get("DOCK", ()) if n not in TECHS}                 # the ships of the dock (#1490) ...
 for _ in UPGRADES:                                                    # ... and the ships that its upgrades make (#3100)
     SHIPS |= {new for t in UPGRADES for old, new in lines(t) if old in SHIPS}
 

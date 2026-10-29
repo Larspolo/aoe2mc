@@ -15,7 +15,7 @@ def rows(name):
     return table.load(name)
 
 
-NAMES = {f: {r["name"] for r in rows(f)} for f in sorted(os.listdir(table.DIR))}
+NAMES = {f: {r["name"] for r in rows(f)} for f in sorted(os.listdir(table.DIR)) if f.endswith(".jsonl")}   # not antiquity/
 CLASSES = {c for f in ("units.jsonl", "buildings.jsonl") for r in rows(f) for c in r.get("classes", ())}
 NUMBER = (int, float)
 
