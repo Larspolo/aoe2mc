@@ -21,8 +21,8 @@ def test_each_person_goes_to_the_start_of_its_side():
     g, sent = make_game(2)
     g.side("Alex")
     g.side("Steve")
-    assert moves(sent) == ["tp Alex 10.5 64 20.5 45.0 0", "spawnpoint Alex 10 64 20 45.0",
-                           "tp Steve 90.5 66 80.5 45.0 0", "spawnpoint Steve 90 66 80 45.0"]
+    assert moves(sent) == ["tp Alex 10.5 64 20.5 45.0 0", "spawnpoint Alex 10 64 20 45.0 0",
+                           "tp Steve 90.5 66 80.5 45.0 0", "spawnpoint Steve 90 66 80 45.0 0"]
 
 
 def test_a_join_again_keeps_the_place():
