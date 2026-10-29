@@ -1,9 +1,11 @@
 """The code of technology effects, with test data: a factor of a float field, the test "foot_archers" and the key
-"regen" (#4098, #4150, #4255). These replace tests of single data lines (owner, 2026-10-29, #4242)."""
+"regen" and the key "pack_time" (#4098, #4150, #4255, #4275). These replace tests of single data lines (owner,
+2026-10-29, #4242)."""
 from test_train_castle import setup
 
-import train as plain_train                       # civs.regen imports train by its plain name (not game.train)
-from game import civs, combat, train
+import pytest
+import train as plain_train          # civs.regen and trebuchet.pack_time import train by its plain name (not game.train)
+from game import civs, combat, train, trebuchet
 
 
 def test_a_factor_keeps_a_float_field_a_float_and_rounds_an_int_field():
@@ -25,3 +27,17 @@ def test_a_researched_technology_adds_its_regeneration_to_its_group(monkeypatch)
     g.techs.add("TEST_TECH")
     assert civs.regen(g, "KNIGHT", combat.stats("KNIGHT")) == knight + 7
     assert civs.regen(g, "MILITIA", combat.stats("MILITIA")) == militia      # not in the group
+
+
+def test_a_researched_technology_changes_the_pack_time_of_trebuchets(monkeypatch):
+    tech = next(t for t in train.TECHS if t not in plain_train.BY_KEY["pack_time"])   # train.stats needs a real name
+    monkeypatch.setitem(plain_train.BY_KEY["pack_time"], tech, 0.5)
+    server, g = setup("BRITONS", ages=3)
+    assert trebuchet.pack_time(g) == pytest.approx(trebuchet.PACK)
+    g.techs.add(tech)
+    assert trebuchet.pack_time(g) == pytest.approx(trebuchet.PACK * 0.5)
+    g.soldiers["t"] = "TREBUCHET"
+    trebuchet.tick(g, 0.0)
+    g.choose({"t"}, "t")
+    g.attack("fort")                                                  # no position: in range (#1400)
+    assert trebuchet.state(g, "t") == "unpacking" and g.trebs["t"][1] == pytest.approx(trebuchet.PACK * 0.5)
