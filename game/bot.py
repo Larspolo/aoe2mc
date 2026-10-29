@@ -91,6 +91,7 @@ class Bot:
         self.g.chop = {k: s / level["gather"] for k, s in self.g.chop.items()}   # seconds per unit: work_time
         self.villagers, self.attack, self.foe, self.share = villagers, attack * level["attack"], foe, share
         self.group = level["soldiers"] if group is None else group
+        self.difficulty = difficulty                                   # the save keeps it (#4022)
         self.charged = False                                           # a wave attacks
         self.wave = set()                                              # its soldiers: new soldiers wait (#3953)
         self.time, self.looked, self.targets = 0.0, -LOOK, {}          # AoE2 seconds of the game, soldier -> target

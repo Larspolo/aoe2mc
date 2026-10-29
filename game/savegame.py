@@ -126,7 +126,7 @@ KEPT = (                                                               # the fie
     *VICTORY,
 )
 JOB = ("state", "load", "res", "job", "lap", "prey", "task")                # fields of a gather.Villager, as they are
-BOT = ("time", "charged", "attack")                                    # fields of a bot.Bot, as they are (#2325)
+BOT = ("time", "charged", "attack", "foe", "difficulty")               # fields of a bot.Bot, as they are (#2325, #4022)
 SETTINGS = (                                                           # run.py options (#2325, #2409): one per line,
     "ai_difficulty",                                                   # in alphabetical order (parallel tickets add)
     "all_techs",
@@ -543,9 +543,13 @@ def relics_again(g, d):
 
 
 def bots_again(g, d):
-    """The attack time and wave of each bot go on (#2325)."""
+    """The attack time and wave, the foe and the difficulty of each bot go on (#2325, #4022)."""
+    import bot as ai
     for b in bots(g):
         for f, v in d["players"].get(str(b.g.player), {}).get("bot", {}).items():
+            if f == "difficulty" and v != b.difficulty:                # the work rate of the saved level (bot.Bot)
+                r = ai.LEVELS[b.difficulty]["gather"] / ai.LEVELS[v]["gather"]
+                b.g.chop = {k: s * r for k, s in b.g.chop.items()}
             setattr(b, f, v)
 
 
