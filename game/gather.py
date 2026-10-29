@@ -63,6 +63,7 @@ import defend_wonder  # noqa: E402
 import diplomacy  # noqa: E402
 import flare  # noqa: E402
 import fleet  # noqa: E402
+import follow  # noqa: E402
 import fog  # noqa: E402
 import garrison  # noqa: E402
 import goto  # noqa: E402
@@ -1399,6 +1400,12 @@ class Gather:
             stance.attack_move(self, name, cell)                       # the Attack Move menu item (#3357)
             return
         kind, u, _ = self.target(eye, d, self.positions(sorted(self.pickable()))) or (None, None, None)
+        if order in ("follow", "guard"):                               # the Follow and Guard menu items (#3358)
+            if kind == "unit" or kind == "building" and order == "guard":
+                follow.start(self, name, order, u)
+            else:
+                follow.refuse(self, name, order)
+            return
         if kind in ("enemy", "fort") and treaty.refuse(self, name):   # no attack before the end of the treaty (#2297)
             return
         if kind == "enemy":
@@ -1502,6 +1509,7 @@ class Gather:
         repair.drop(self, units)
         self.end_patrols(units)
         stance.end_attack_moves(self, units)
+        follow.end(self, units)
         for key in ("entering", "boarding", "loading", "converting", "fetching", "trade"):
             table = vars(self).get(key, {})
             for u in units & table.keys():
@@ -2136,6 +2144,7 @@ class Gather:
             else:
                 scenario.patrol(self)                                  # the patrols of the players (#3355)
             stance.arrive(self)                                        # the attack moves: the old stance at the point (#3357)
+            follow.tick(self)                                          # the Follow and Guard orders (#3358)
             fog.tick(self)                                             # after the bots: their units too (#1389)
             herd.tick(self)                                            # all players: the bots capture too (#1792)
             if self.victory == "standard" or self.mode in wonder.RACE:  # a wonder or all relics win too (#2316)
