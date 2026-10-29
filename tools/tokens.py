@@ -339,17 +339,20 @@ def ticket_eq(rows):
 
 
 def run_data(records):
-    """The data of the Run: line of one chain: session, branch, start, wall minutes, models, efforts, thinking tokens,
-    CLI version, the eq of each phase and the eq of each ticket that a claim won."""
+    """The data of the Run: line of one chain: session, branch, start, wall minutes, setup (the minutes from the start
+    to the first won claim, the `setup` of the report), models, efforts, thinking tokens, CLI version, the eq of each
+    phase and the eq of each ticket that a claim won."""
     rows = steps(records)
     first = lambda key: next((r[key] for r in records if r.get(key)), None)
     times = [t for t in map(when, records) if t is not None]
     by_phase = dict.fromkeys(PHASES, 0.0)
     for r in rows:
         by_phase[r["phase"]] += r["eq"]
+    won = next((r["at"] for r in rows if r["ticket"] is not None and r["at"] is not None), None)
     return {"session": first("sessionId"), "branch": first("gitBranch"),
             "start": datetime.fromtimestamp(min(times), timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ") if times else None,
             "wall": round((max(times) - min(times)) / 60, 1) if times else 0,
+            "setup": round((won - min(times)) / 60, 1) if times and won is not None else None,
             "models": dict(Counter((r["model"] or "").removeprefix("claude-") for r in rows if r["model"]).most_common()),
             "effort": dict(Counter(r["effort"] for r in rows if r["effort"]).most_common()),
             "think": sum(r["think"] for r in rows), "cli": first("version"), "phases_eq": by_phase,

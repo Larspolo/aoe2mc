@@ -9,7 +9,8 @@ whole context again. This tool reads all of it and prints one short section per 
     python3 tools/cycle_start.py --last N       # a later ticket of the run: within a priority, the tickets of the
                                                 # same epic or files as ticket N first
 
-Sections: `Status` (exit 3 when the status issue has `paused`: stop), `Usage` (keep the line for the report of step 8),
+Sections: `Status` (exit 3 when the status issue has `paused`: stop; the time and the values of `agent.toml` that the
+skill needs: repo, owner, branch), `Usage` (keep the line for the report of step 8),
 `Stuck` (`claim.py 0 --stuck`), `Flow brake` (`usage.py --flow`), `PRs` (the open agent PRs that need work: red CI,
 a conflict, a closed ticket, or green and not merged after 10 minutes), `Main CI` (the last run and the last night run),
 `Feedback` (`feedback.py`), `Triage` (open issues without a priority label), `Candidates` (the pick order of
@@ -194,17 +195,27 @@ def due_checks():
         return []
 
 
+def status_line(number, state, now, lane=None):
+    """The line of section `Status`: the state of the runs, the time and the values of `agent.toml` that the skill
+    needs. Runs read the time with `date` and the values with `cat agent.toml` in more calls (2026-10-29)."""
+    return (f"#{number} · last run {state.get('last_run', '-')} · runs {state.get('runs', '-')} · "
+            f"now {now:%Y-%m-%dT%H:%M:%SZ} · repo {CONFIG['repo']} · owner {CONFIG['owner']} · branch {CONFIG['branch']}"
+            + (f" · lane {lane} (git config aoe2mc.lane)" if lane else ""))
+
+
 def section(title, lines):
     print(f"{title}: " + ("none" if not lines else lines[0] if len(lines) == 1 else "\n  " + "\n  ".join(lines)))
 
 
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
-    ap.add_argument("--lane", help="the pick list of this lane (haiku, #1715)")
+    ap.add_argument("--lane", help="the pick list of this lane (haiku, #1715); sets `git config aoe2mc.lane`")
     ap.add_argument("--last", type=int, help="the last ticket of this run: related tickets first")
     a = ap.parse_args(argv)
     now = datetime.datetime.now(datetime.timezone.utc)
     me = subprocess.run(["git", "branch", "--show-current"], capture_output=True, text=True).stdout.strip()
+    if a.lane:                  # the claims and the report name the lane (#1727); one call less for each lane run
+        subprocess.run(["git", "config", "aoe2mc.lane", a.lane], capture_output=True)
     open_all = dashboard.pages("issues?state=open")                  # issues and PRs
     issues = {i["number"]: i for i in open_all if "pull_request" not in i}
     status = next((i for i in issues.values() if dashboard.STATUS in dashboard.labels(i)), None)
@@ -216,7 +227,7 @@ def main(argv=None):
             return 3
         m = re.search(r"<!-- agent-state: (\{.*?\}) -->", status.get("body") or "")
         state = json.loads(m[1]) if m else {}
-        section("Status", [f"#{status['number']} · last run {state.get('last_run', '-')} · runs {state.get('runs', '-')}"])
+        section("Status", [status_line(status["number"], state, now, a.lane)])
     code, text = tool("usage.py", "--sample")
     section("Usage (keep it for step 8)", [text.splitlines()[-1] if code == 0 and text else f"- ({text[-200:]})"])
     code, text = tool("claim.py", "0", "--stuck")

@@ -5,8 +5,8 @@ description: Do one automatic work cycle on aoe2mc. Read the owner's feedback, t
 
 # Autopilot: one work cycle
 
-The project values are in `agent.toml` at the root (#905): `repo` (`OWNER/NAME` below), `owner` (the GitHub login of
-the owner), `branch` (the default branch, `main` below), the status issue and its label, the commands.
+The project values are in `agent.toml` (#905; section `Status` of `cycle_start.py` prints them): `repo` (`OWNER/NAME`
+below), `owner` (the GitHub login of the owner), `branch` (the default branch, `main` below), the status issue.
 Follow each step in sequence. Do not skip the report (step 8).
 
 The rare cases are in files next to this one (#1700). Read a file only when its case occurs:
@@ -41,7 +41,7 @@ no release) and pick the next one. Takeovers, stalled PRs, hand-offs: `overlap.m
 Steps 1 to 5 read GitHub in one call: `python3 tools/cycle_start.py` (`--lane L` in lane L). Run it at the
 start and before each later ticket, act on its sections, and call the API only for what it does not show.
 1. Exit 3 (label `paused`): stop now, do not comment. No status issue: make it (`report.md`).
-2. Note the start time (`date -u +%FT%TZ`) and keep a short list of time sinks during the run
+2. Keep a short list of time sinks during the run (`report.py` measures the times)
    (for example "read buildings.py in full", "CI red: missing file", "permission denied for X").
    Step 8 reports them. Keep the `Usage:` line of the first `cycle_start.py` for step 8.
 
