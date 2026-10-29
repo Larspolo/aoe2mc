@@ -184,7 +184,7 @@ def range_command(uuid, name, T, rate=NORMAL, s=None):
     ship (#1440) gets the reach CONTACT: its blast goes off next to the target."""
     s = s or stats(name)
     cart = (units.classify(name) or {}).get("id") == "minecraft:minecart" or units.wagon(name)   # (#2746)
-    blast = f" {round(s.blast * T, 6)}" if name in BLAST or cart else " -" if name in PASS else ""   # s.blast: BLAST, technologies
+    blast = f" {round(s.blast * T, 6)}" if name in BLAST or cart or name in GROUND else " -" if name in PASS else ""   # s.blast: BLAST, technologies; GROUND: aoe attackground needs it (#4207)
     blast += f" {MIN_RANGE.get(name, 0) * T}" * bool(blast and (name in MIN_RANGE or name in PASS))
     blast += f" {PASS.get(name, 0) * T}" * bool(blast and name in PASS) + f" {PASS_PART.get(name)}" * (name in PASS_PART)
     reach = s.range * T or RAM_REACH * bool(cart and s.attack) or CONTACT * T * bool(name in BLAST and s.attack)
