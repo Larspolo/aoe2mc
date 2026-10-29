@@ -41,8 +41,14 @@ BORDERS = ("left_border", "right_border", "top_border", "bottom_border")   # of 
 RING = 0.35                     # the circle of the player lands: radius in map sizes
 AVOID = 13                      # set_avoid_player_start_areas: default tiles from a player origin
 STEPS = ((1, 0), (-1, 0), (0, 1), (0, -1))
-SECTIONS = ("PLAYER_SETUP", "LAND_GENERATION", "TERRAIN_GENERATION", "CONNECTION_GENERATION", "ELEVATION_GENERATION",
-            "CLIFF_GENERATION")
+SECTIONS = (                    # the sections that generate reads, one per line in the AoE2 DE order (#4014)
+    "PLAYER_SETUP",
+    "LAND_GENERATION",
+    "ELEVATION_GENERATION",
+    "CLIFF_GENERATION",
+    "TERRAIN_GENERATION",
+    "CONNECTION_GENERATION",
+)
 # <CLIFF_GENERATION> defaults of the AoE2 DE random map scripting guide (#3850). A length counts cliff pieces.
 CLIFF_DEFAULTS = {"min_number_of_cliffs": 3, "max_number_of_cliffs": 8, "min_length_of_cliff": 5,
                   "max_length_of_cliff": 9, "cliff_curliness": 36, "min_distance_cliffs": 2, "min_terrain_distance": 2}
@@ -459,7 +465,9 @@ def generate(text, seed, players=2, size=None, warn=None):
             warn(f"create_terrain: {a} is not read yet")
     connections(terrain, links, sections.get("CONNECTION_GENERATION", ()), consts, rng, warn)
     elevation = lower_to_water(terrain, elevation)
-    objects = trees(terrain) + cliffs(sections.get("CLIFF_GENERATION", ()), terrain, starts, consts, rng, warn)
+    objects = []                                   # one line per object part, so that parallel parts do not conflict
+    objects += trees(terrain)
+    objects += cliffs(sections.get("CLIFF_GENERATION", ()), terrain, starts, consts, rng, warn)
     return {"size": n, "terrain": terrain.tolist(), "elevation": elevation.tolist(), "objects": objects,
             "players": {str(p): {"color": p - 1} for p in range(1, players + 1)}, "lands": [{k: v for k, v in st.items() if k != "land"} for st in starts]}
 

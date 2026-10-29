@@ -49,3 +49,5 @@ parallel tickets do not change the same lines. Most rules have a check: `tools/d
   `aoe2mc.TRIGGER_LISTS` (both in alphabetical order, #2832). A new order of the scenario mode (`game/scenario.py`) is one line in
   `scenario.ORDER_KINDS` and its handler at the end of the handlers in `orders()`, not a change of its docstring. The
   datapack text of a trigger type (`tools/triggers.py` `MAP`) is its line in `data/trigger_conditions.jsonl` or `data/trigger_effects.jsonl`.
+- A new section command of a random map script (`rmap.generate`) is one name line in `rmap.SECTIONS` (AoE2 DE order) and,
+  when it makes objects, one `objects += part(...)` line before the `return` of `generate()`, not a change of the `return` line (#4014).
