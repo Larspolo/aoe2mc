@@ -116,7 +116,7 @@ def test_villager_farms_on_a_server(tmp_path):
         g.send(farm)
         assert 'profession: "minecraft:farmer"' in game.command(f"data get entity {uuid} VillagerData")
         end = time.time() + 90
-        while g.map.farms[farm] > 0 or g.villagers[uuid].state != "idle":
+        while g.map.farms.get(farm, 0) > 0 or g.villagers[uuid].state != "idle":
             assert time.time() < end, "the farm is not empty after 90 s"
             g.step()
         assert "has 30 " in game.command("scoreboard players get Food aoe_res")
