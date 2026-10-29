@@ -18,7 +18,7 @@ def fake(monkeypatch):
     monkeypatch.setattr(health, "lane_claims", lambda now: {})
     monkeypatch.setattr(health, "claim_refs", lambda remote="origin": [])
     monkeypatch.setattr(health, "active_claims", lambda now: 0)
-    monkeypatch.setattr(usage, "due_reviews", lambda: [])   # claim.review_slot reads the status issue and the lock refs
+    monkeypatch.setattr(usage, "due_reviews", lambda **_: [])   # claim.review_slot reads the status issue and the lock refs
     monkeypatch.setattr(health, "status_comments", lambda *a, **kw: reads.append(1) or [])
     return reads
 
