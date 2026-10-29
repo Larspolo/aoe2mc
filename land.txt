@@ -1,0 +1,19 @@
+<PLAYER_SETUP>
+random_placement
+<LAND_GENERATION>
+base_terrain GRASS
+create_player_lands {
+  terrain_type DIRT
+  land_percent 100
+  base_size 12
+}
+<OBJECTS_GENERATION>
+create_object TOWN_CENTER { set_place_for_every_player group_placement_radius 18 max_distance_to_players 0 }
+create_object VILLAGER { set_place_for_every_player min_distance_to_players 6 max_distance_to_players 6 }
+create_object SCOUT { number_of_objects 1 set_place_for_every_player min_distance_to_players 7 max_distance_to_players 9 }
+create_object GOLD { number_of_objects 7 group_placement_radius 3 set_tight_grouping set_gaia_object_only set_place_for_every_player min_distance_to_players 12 max_distance_to_players 16 }
+create_object STONE { number_of_objects 5 group_placement_radius 2 set_tight_grouping set_gaia_object_only set_place_for_every_player min_distance_to_players 14 max_distance_to_players 18 }
+create_object FORAGE { number_of_objects 6 group_placement_radius 3 set_tight_grouping set_gaia_object_only set_place_for_every_player min_distance_to_players 9 max_distance_to_players 11 }
+create_object SHEEP { number_of_objects 4 set_loose_grouping set_place_for_every_player min_distance_to_players 7 max_distance_to_players 8 }
+create_object DEER { number_of_objects 3 group_variance 1 set_loose_grouping set_gaia_object_only set_place_for_every_player min_distance_to_players 14 max_distance_to_players 30 }
+create_object BOAR { number_of_objects 1 set_loose_grouping set_gaia_object_only set_place_for_every_player min_distance_to_players 16 max_distance_to_players 22 }
