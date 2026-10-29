@@ -1000,11 +1000,14 @@ def speed(g, name, uuid=None):
 
 
 def faster(unit, name):
-    """True when the "walk" entry unit (a unit name, a class of combat.STATS in lower case or a group of civs.GROUPS)
-    covers unit name."""
+    """True when the "walk" entry unit (a unit name, a class of combat.STATS in lower case, a group of civs.GROUPS, a
+    building: the units it trains (Drill, #4254), or a list of these (Herbalism, #4254)) covers unit name."""
+    if isinstance(unit, list):
+        return any(faster(u, name) for u in unit)
     import combat                                                  # combat imports gather, gather imports this module
     s = combat.stats(name)
-    return unit == name or unit in civs.GROUPS and civs.GROUPS[unit](name, s) or unit.islower() and unit in s.classes
+    return unit == name or unit in civs.GROUPS and civs.GROUPS[unit](name, s) or unit.islower() and unit in s.classes \
+        or BUILDING_OF.get(name) == unit
 
 
 def start(g, setting):

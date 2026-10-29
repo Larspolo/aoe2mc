@@ -211,6 +211,9 @@ The live replay shows the graphs of each player (population, villagers, military
 as a large text display "chart" in the sky above the overview view: one row per player in its color, one bar
 character (▁▂▃▄▅▆▇█) per game minute. It is vanilla (P2, P3). The owner checks the graphs in the game; a map item
 with a real line graph (Paper `MapRenderer`) can replace it later (P4).
+Owner decision of #3924 (2026-10-29): no text in the sky at the center. The graphs, the army and build order, the
+upgrades and the economy are written books in the hotbar slots 3 to 6 (`replay.STAT_BOOKS`). The book font has only
+the bar characters ░▒▓▄█, so a bar is a shade (░▒▓█).
 
 ## Save version 68.9 (#3686, 2026-10-29)
 
