@@ -141,7 +141,7 @@ def refill_runs(issues, now, minutes=60, refill=REFILL):
 
 def refill_recent(lines, now, minutes=REFILL_GAP):
     """True when a refill lock (`claim/refill-*`) is younger than `minutes`: a deep run refills now or did it a short
-    time ago. 16 of 30 deep runs made no PR (2026-10-29): most found the refill lock taken or nothing to refill, and
+    time ago. The pacer then starts no refill run, unless fewer tickets are ready than half the target. 16 of 30 deep runs made no PR (2026-10-29): most found the refill lock taken or nothing to refill, and
     each cost about $1 to $2. lines: `health.claim_refs()`; now: Unix seconds."""
     return any(k.startswith("refill-") and t.isdigit() and int(t) >= now - minutes * 60
                for k, t, *_ in (x.split(" ", 2) for x in lines or ()))
@@ -352,8 +352,8 @@ def fire(usage, now, burn=BURN, burn7=None, skip=(), status=None):
     eq = claims if lanes is None else health.opus_equivalent(claims, lanes, weights)   # in Opus runs (#1727)
     target = target_runs(usage, now, burn, burn7=burn7)
     need = refill_need(ready, target, open_all, release_due, due_reviews, free_sources)
-    if need and refill_recent(refs, now):
-        need = ""                                           # one refill run per REFILL_GAP minutes is enough
+    if need and refill_recent(refs, now) and ready >= target // 2:
+        need = ""                                           # a refill runs now or ran; a near-empty queue refills at once
     refill = refill_runs(open_all, now) if need else 0   # #3547: no refill run with no refill work
     lanes = [(n, 0 if n in skip else len(dashboard.candidates(open_all, lane=n)), weights[n]) for n in weights]   # agent.toml order
     k, runs = plan(target, eq, ready, lanes, paused, refill=refill,

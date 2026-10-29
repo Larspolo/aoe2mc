@@ -47,7 +47,16 @@ def test_an_epic_check_starts_a_refill_run(fake):
     assert "refill 1 (epic check #7)" in line
 
 
-def test_a_young_refill_lock_stops_the_refill_run(fake):
+def test_a_young_refill_lock_stops_the_refill_run(fake, monkeypatch):
     fake.append(ref("refill-0-202610290010", 20))
-    k, runs, line = fire()
+    monkeypatch.setattr(usage, "target_runs", lambda *a, **kw: 1)
+    k, runs, line = fire()                                     # 0 ready >= 1 // 2
     assert "refill 0 (" in line and "refill lock" in line
+
+
+def test_a_near_empty_queue_refills_also_after_a_young_lock(fake, monkeypatch):
+    fake.append(ref("refill-0-202610290010", 20))
+    monkeypatch.setattr(usage, "target_runs", lambda *a, **kw: 40)
+    monkeypatch.setattr(usage, "free_sources", lambda: ["2 roadmap features with no epic"])
+    k, runs, line = fire()                                     # 0 ready < 40 / 2
+    assert "refill 1 (" in line
