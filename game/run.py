@@ -927,11 +927,35 @@ def campaign(folder, number=None):
 
 def progress(folder):
     """The numbers of the won scenarios of a campaign folder (progress.json, #3507)."""
+    return progress_file(folder).get("won", [])
+
+
+def progress_file(folder):
+    """The content of progress.json of a campaign folder: "won", "difficulty" (#3507, #3520)."""
     try:
         with open(os.path.join(folder, "progress.json"), encoding="utf-8") as f:
-            return json.load(f).get("won", [])
+            return json.load(f)
     except FileNotFoundError:
-        return []
+        return {}
+
+
+def write_progress(folder, **keys):
+    """Change keys of progress.json and keep the others."""
+    data = progress_file(folder) | keys
+    with open(os.path.join(folder, "progress.json"), "w", encoding="utf-8") as f:
+        json.dump(data, f)
+
+
+def campaign_difficulty(folder, chosen):
+    """AoE2 DE: one difficulty for the whole campaign (#3520). The first start writes the chosen one into
+    progress.json, a later start keeps the value of the file."""
+    kept = progress_file(folder).get("difficulty")
+    if kept is None:
+        write_progress(folder, difficulty=chosen)
+        return chosen
+    if kept != chosen:
+        print(f"The campaign difficulty is {kept}.", file=sys.stderr)
+    return kept
 
 
 def advance(folder, number, won):
@@ -939,9 +963,7 @@ def advance(folder, number, won):
     converted scenario, a loss gives the same one again. None: the last scenario is won."""
     if not won:
         return number
-    done = sorted(set(progress(folder)) | {number})
-    with open(os.path.join(folder, "progress.json"), "w", encoding="utf-8") as f:
-        json.dump({"won": done}, f)
+    write_progress(folder, won=sorted(set(progress(folder)) | {number}))
     with open(os.path.join(folder, "campaign.json"), encoding="utf-8") as f:
         later = [s["number"] for s in json.load(f)["scenarios"] if s.get("converted", True) and s["number"] > number]
     return min(later, default=None)
@@ -1073,6 +1095,7 @@ def main(argv=None, scenario=None):
         folder = a.world
         a.world, *titles, number = campaign(folder, a.scenario)
         a.mode = "scenario"
+        a.ai_difficulty = campaign_difficulty(folder, a.ai_difficulty)
         if not a.load:
             fresh(folder, a.world)
     if not os.path.isfile(os.path.join(a.world, "level.dat")):
