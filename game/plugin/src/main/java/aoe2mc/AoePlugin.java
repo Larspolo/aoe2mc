@@ -743,7 +743,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                     double dx = Math.max(0, Math.max(b[0] - p.getX(), p.getX() - b[3] - 1));
                     double dz = Math.max(0, Math.max(b[2] - p.getZ(), p.getZ() - b[5] - 1));
                     if (dx * dx + dz * dz <= bestD && dx * dx + dz * dz >= f.min * f.min   // minimum range (#1546)
-                            && (!under(b, p) || side(le, 0) != null)) {   // no shot: the next (#1328)
+                            && start(fort, b, le, 0) != null) {   // no shot: the next (#1328, #3562)
                         best = le;
                         bestD = dx * dx + dz * dz;
                     }
@@ -764,13 +764,20 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     // shot (a tall tower, a near target) starts higher: the straight line to the target leaves the 3 x 3 columns above
     // their highest block, else the arrow hits the own roof (#1219).
     private static void volley(LivingEntity fort, int[] b, LivingEntity t, int k) {
+        Location from = start(fort, b, t, k);
+        if (from != null) {
+            aim(fort, from, t);
+        }
+    }
+
+    // The start of arrow k of a shot of the building with the blocks b at t (volley), or null: no free line to t.
+    // AoE2 arrows fly over the buildings between (#3562): a Minecraft arrow stops in the first block on its way, and
+    // its arc is too flat to clear the wall of a house next to the target. With a block on the line the arrow starts
+    // above the target and falls on it, as at the end of the AoE2 arc.
+    private static Location start(LivingEntity fort, int[] b, LivingEntity t, int k) {
         var p = t.getLocation();
         if (under(b, p)) {
-            Location side = side(t, k);                                // under the building: the roof is above it
-            if (side != null) {
-                aim(fort, side, t);
-            }
-            return;
+            return side(t, k);                                       // under the building: the roof is above it
         }
         Location from = new Location(fort.getWorld(), Math.max(b[0] + 0.5, Math.min(b[3] + 0.5, p.getX())), 0,
                 Math.max(b[2] + 0.5, Math.min(b[5] + 0.5, p.getZ())));
@@ -781,14 +788,29 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                         HeightMap.MOTION_BLOCKING));
             }
         }
-        from.add(k == 0 ? 0 : 0.6 * Math.cos(k * 2.4), 0, k == 0 ? 0 : 0.6 * Math.sin(k * 2.4));
+        double ring = k == 0 ? 0 : 0.6;
+        from.add(ring * Math.cos(k * 2.4), 0, ring * Math.sin(k * 2.4));
         double ty = p.getY() + t.getHeight() * 0.5, h = Math.hypot(p.getX() - from.getX(), p.getZ() - from.getZ());
         double y = top + 1.5;
         if (h > 3) {                                                   // the line at 1.5 blocks: at least top + 1
             y = Math.max(y, (top + 1 - ty * 1.5 / h) / (1 - 1.5 / h));
         }
         from.setY(y + 0.2 * (k % 3));
-        aim(fort, from, t);
+        if (free(from, t)) {
+            return from;
+        }
+        Location over = p.clone().add(ring * 0.5 * Math.cos(k * 2.4), t.getHeight() + OVER + 0.2 * (k % 3),
+                ring * 0.5 * Math.sin(k * 2.4));
+        return free(over, t) ? over : null;
+    }
+
+    private static final double OVER = 3;          // blocks above the head: the start of an arrow over a building
+
+    // No block between from and the middle of t: the arrow from there hits t (its arc is above that line).
+    private static boolean free(Location from, LivingEntity t) {
+        Vector to = t.getLocation().add(0, t.getHeight() * 0.5, 0).toVector().subtract(from.toVector());
+        return from.getBlock().isPassable() && (to.lengthSquared() < 1e-6
+                || t.getWorld().rayTraceBlocks(from, to, to.length(), FluidCollisionMode.NEVER, true) == null);
     }
 
     private static boolean under(int[] b, Location p) {
