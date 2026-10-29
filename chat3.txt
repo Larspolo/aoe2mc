@@ -1,0 +1,13 @@
+[13:28:52] [Render thread/INFO]: [System] [CHAT] aoe2mc joined the game
+[13:28:55] [Render thread/INFO]: [System] [CHAT] Item 3: the house cannot be deleted.
+[13:28:56] [Render thread/INFO]: [System] [CHAT] Item 7: no victory timer of player 1 runs.
+[13:28:57] [Render thread/INFO]: [System] [CHAT] Item 2: the house takes 300 damage.
+[13:28:58] [Render thread/INFO]: [System] [CHAT] Item 8: the house is in the area.
+[13:28:59] [Render thread/INFO]: [System] [CHAT] Item 1: the house is attacked.
+[13:29:00] [Render thread/INFO]: [System] [CHAT] Item 4: the house at (8, 21) is a blacksmith now.
+[13:29:02] [Render thread/INFO]: [System] [CHAT] Item 5: a militia is in the transport ship.
+[13:29:06] [Render thread/INFO]: [System] [CHAT] Item 8: the knight is at the house.
+[13:29:07] [Render thread/INFO]: [System] [CHAT] Item 2: the house heals 200.
+[13:29:17] [Render thread/INFO]: [System] [CHAT] Item 5: the ship unloads.
+[13:29:17] [Render thread/INFO]: [System] [CHAT] Item 6: the transport ship holds a unit.
+[13:29:32] [Render thread/INFO]: [System] [CHAT] Item 3: the house can be deleted again.

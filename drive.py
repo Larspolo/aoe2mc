@@ -29,7 +29,7 @@ class Probe:
             if now >= t and t not in s.done:
                 s.done.add(t); s.client.place(s.game, *pos, yaw=look[0], pitch=look[1], wait=4); p = f"{S}/shot{t}.png"
                 s.client.key('t'); time.sleep(1); s.client.shot(p); s.client.key('Escape'); shots.append(p)
-with run.Game(W) as game, mc_shot.Client(game.game_port, game.version) as client:
+with run.Game(W, wait=True) as game, mc_shot.Client(game.game_port, game.version) as client:
     orig = gather.Gather.run
     def hooked(g, seconds=None, until=None):
 
