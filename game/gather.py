@@ -1233,11 +1233,12 @@ class Gather:
         return self.map.bushes if v.res == "food" else self.map.trees if v.res == "wood" else self.map.mines[v.res]
 
     def nearest(self, v):
-        """The nearest bush or mine of the resource of v with something left, or None. A fish: a fish of the same kind
-        (an oyster after an oyster, #2465)."""
+        """The nearest bush or mine of the resource of v with something left and a free cell next to it, or None. A fish:
+        a fish of the same kind (an oyster after an oyster, #2465). An inner tree has no free cell (#3791)."""
         T, oyster = self.map.T, v.tree in self.map.oysters
         full = [t for t, k in self.home(self.source(v)).items() if k > 0 and (t in self.map.oysters) == oyster]
-        return min(full, key=lambda t: math.dist(v.cell, ((t[0] + 0.5) * T, (t[1] + 0.5) * T)), default=None)
+        near = sorted(full, key=lambda t: math.dist(v.cell, ((t[0] + 0.5) * T, (t[1] + 0.5) * T)))
+        return next((t for t in near if self.goals(t)), None)
 
     def next_task(self, site, who):
         """AoE2: the builders of a complete own site work on (#3271). A farm: one builder farms it. A camp (a drop site of
@@ -1255,7 +1256,8 @@ class Gather:
         T, mid = self.map.T, ((x0 + x1) / 2, (z0 + z1) / 2)
         full = [t for r in res for t, k in self.home(self.map.bushes if r == "food" else self.map.trees if r == "wood"
                                                      else self.map.mines.get(r, {})).items() if k > 0]
-        if tile := min(full, key=lambda t: (math.dist(mid, ((t[0] + 0.5) * T, (t[1] + 0.5) * T)), t), default=None):
+        near = sorted(full, key=lambda t: (math.dist(mid, ((t[0] + 0.5) * T, (t[1] + 0.5) * T)), t))
+        if tile := next((t for t in near if self.goals(t)), None):      # a free cell next to it (#3791)
             self.send(tile, who)
 
     def home(self, sources):
