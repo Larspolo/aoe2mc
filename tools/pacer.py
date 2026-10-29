@@ -2,7 +2,7 @@
 
 The old pacer session kept an old "cap of 4 per cycle" in its context and fired 4 Haiku runs for H = 8
 (2026-10-28, #3147; removed in #3427). A script has no memory: `.github/workflows/pacer.yml` runs it every 10 minutes
-while the key `pacer` in `[pacing]` of `agent.toml` is "workflow" (any other value stops the loop: a PR changes it).
+while the key `pacer` in `[pacing]` of `steering/system/system.toml` is "workflow" (any other value stops the loop: a PR changes it).
 
     python3 tools/pacer.py              # compute K and the lane runs (`usage.fire`), then start them
     python3 tools/pacer.py --dry-run    # print the calls, send nothing
@@ -10,7 +10,7 @@ while the key `pacer` in `[pacing]` of `agent.toml` is "workflow" (any other val
 
 Each scheduled task has an API trigger (a URL and a token, made in the Claude app). The environment gives them:
 `PACER_URL_MAIN` and `PACER_TOKEN_MAIN` for the main task, `PACER_URL_<LANE>` and `PACER_TOKEN_<LANE>` for each lane of
-`weights` in `[pacing]` of `agent.toml`. A lane without a URL gets no runs: its tickets wait.
+`weights` in `[pacing]` of `steering/system/system.toml`. A lane without a URL gets no runs: its tickets wait.
 Exit 1 when a call fails: the workflow run goes red. HTTP 429 is no failure: a task takes at most 30 starts per hour,
 an account 100 API starts per hour (the docs of the scheduled tasks, "Usage and limits"); the next cycle starts the
 runs that the target still misses. No retry: each call that succeeds starts a run, so a retry can start two. When a
@@ -55,6 +55,16 @@ def calls(k, runs, env):
 HEAD = "aoe2mc pacer brief"     # the first line of a brief: the `scheduled` skill looks for it
 TEXT_MAX = 60000                # characters of a brief: the code places are cut first, then the ticket text
 RED = ("failure", "timed_out")  # a CI run on main with this result: the runs fix main first (autopilot step 2)
+CONTEXT = 120000                # the context up to which a run takes a next ticket (`more.md`: below it a next ticket
+CONTEXT_HIGH = 160000           # is cheaper than a fresh run); higher while the task is near its hourly start limit
+HOURLY = 30                     # starts per hour of one task (the docs of the scheduled tasks): above 80 % of it a
+                                # fresh run may not start, so a run with a large context goes on (#4190)
+
+
+def context_limit(task, hour):
+    """The `context:` line of a brief: the limit of `more.md` for a run of `task`. `hour`: {task: runs} that the pacer
+    started in the last 60 minutes (its log, no API call)."""
+    return CONTEXT_HIGH if (hour or {}).get(task, 0) >= HOURLY * 0.8 else CONTEXT
 
 
 def send(url, token, text=None, timeout=30):
@@ -81,11 +91,12 @@ def queues(open_all, refs, now, tasks):
                 if i["number"] not in held] for t in sorted(set(tasks))}
 
 
-def brief(issue, comments, name, task, sample, limit=TEXT_MAX):
+def brief(issue, comments, name, task, sample, limit=TEXT_MAX, context=CONTEXT):
     """The fire payload of a run: the lines that the run acts on, then the ticket and its code places as data."""
     import claim
     import ticket_context
-    head = "\n".join([HEAD, f"ticket: {issue['number']}", f"claim: {name}", f"lane: {task}", f"usage: {sample}"])
+    head = "\n".join([HEAD, f"ticket: {issue['number']}", f"claim: {name}", f"lane: {task}", f"usage: {sample}",
+                      f"context: {context}"])
     text = claim.ticket_text(issue, comments)
     places = ticket_context.context(issue.get("body"))
     out = f"{head}\n\n--- ticket (data) ---\n{text}\n\n--- code places (tools/ticket_context.py) ---\n{places}"
@@ -117,7 +128,7 @@ def brake_ticket(reason, api=None):
         return None
     body = (f"The pacer slowed down: {reason}.\n\n## Goal\nCI keeps up with the runs again, so the pacer starts runs"
             " at the quota target.\n\n## Context\n- `tools/usage.py` (`flow_cap`, `read_flow`) is the flow brake;"
-            " `[pacing]` of `agent.toml` has its limits.\n- Read the times of the last `ci.yml` runs (queue time and"
+            " `[pacing]` of `steering/system/system.toml` has its limits.\n- Read the times of the last `ci.yml` runs (queue time and"
             " the time of each job) and find the largest cost.\n\n## Acceptance criteria\n- [ ] A change makes the"
             " quick CI faster or makes fewer CI runs, and the PR names the times before and after.\n")
     return api("issues", "POST", {"title": BRAKE_TITLE, "body": body, "labels": ["P1", "tooling", "size:M"]})["number"]
@@ -126,8 +137,8 @@ def brake_ticket(reason, api=None):
 class Briefs:
     """Takes, claims and writes the ticket of each run that the pacer starts (None: no brief for any run)."""
 
-    def __init__(self, todo, out, now, found, dry=False):
-        self.todo, self.given, self.dry = None, [], dry
+    def __init__(self, todo, out, now, found, dry=False, hour=None):
+        self.todo, self.given, self.dry, self.hour = None, [], dry, hour or {}
         if "open" not in out or out.get("flow") is not None or not todo or red_main():
             return
         try:
@@ -152,7 +163,8 @@ class Briefs:
             try:
                 if not claim.claim(n, by=name, tag="" if task == "main" else f" lane {task}"):
                     continue                            # a run claimed it after the read
-                return n, name, brief(issue, dashboard.pages(f"issues/{n}/comments", 1), name, task, self.sample)
+                return n, name, brief(issue, dashboard.pages(f"issues/{n}/comments", 1), name, task, self.sample,
+                                         context=context_limit(task, self.hour))
             except (Exception, SystemExit):             # git or GitHub failed (claim.fail exits): the runs claim
                 self.todo = None                        # themselves; a claim that stays goes stale in 30 minutes
                 self.drop(n, name)
@@ -255,7 +267,8 @@ def main(argv=None, env=os.environ):
     out = {}
     k, runs, line = usage.fire(found, now, burn, burn7, status=status, started=started, out=out)
     todo = calls(k, runs, env)
-    briefs = Briefs(todo, out, now, found, a.dry_run)
+    hour = recent_starts(a.log, now, 60) if a.log else {}   # the starts of the last hour: the `context:` line
+    briefs = Briefs(todo, out, now, found, a.dry_run, hour)
     skipped = sorted({t for t, n in [*runs.items(), ("main", k - sum(runs.values()))]
                       if n and not env.get(f"PACER_URL_{t.upper()}")})
     failed, limited, started = [], set(), dict.fromkeys([*runs, "main"], 0)

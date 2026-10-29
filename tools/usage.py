@@ -15,7 +15,7 @@ stops the merges, the agent PRs build up, and a night of new PRs gives many conf
 agent PRs older than `pr_minutes` (they wait for something that is not the quota) and the queued CI runs. At
 `max_waiting_prs` it starts at most 1 run per cycle, and that run only repairs PRs (autopilot step 2). At
 `max_ci_queue` it starts no run: a run cannot make CI faster. While the brake is on, the pacer keeps one open `tooling` issue that
-asks for a faster CI (`pacer.brake_ticket`, #4301). The limits are in `[pacing]` of `agent.toml`.
+asks for a faster CI (`pacer.brake_ticket`, #4301). The limits are in `[pacing]` of `steering/system/system.toml`.
 
 BURN and BURN7 (the same for the 7-day window, #1695) are the defaults. When the run reports on the status issue
 have enough `Usage:` lines (at least 5 pairs in the last 24 hours), `tools/health.py` measures the burns from them

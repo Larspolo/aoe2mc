@@ -39,6 +39,14 @@ parallel tickets do not change the same lines. Most rules have a check: `tools/d
 - A new data line needs no test of its values: `tests/test_data_files.py` checks the form of each line of `game/data/`
   (keys, types, names that exist, #1916), and `tests/test_data_keys.py` checks that the code reads each key (#2188): a new key needs no test line. Test the behavior that the code computes
   from it (a fight, a menu, a bonus).
+- A change of data files only (new lines or new values, no change of code) adds no test and changes no test (owner,
+  2026-10-29, #4242). A test that names the new line and its values (`setup("BURMESE")`, `+ 4`, `"KNIGHT"`) checks the
+  content of the data, also when it goes through a menu or a fight: it fails when the data changes. The code that reads
+  the keys has its tests already. A test belongs only to a change of code, and it uses test data (a monkeypatched
+  table, a fixture) or the expected value from the data. When a key or a combination of keys has no test of its code,
+  that is a code ticket: one test of the code with test data, not one test per data line (the old
+  `tests/test_techs_*.py` broke this rule and are deleted; `tests/test_tech_effect_code.py`). `tools/ship_pr.py` stops
+  such a change (exit 2).
 - A new command of the Paper plugin: its line in the command list at the top of `AoePlugin.java` and its
   `if` block in `onCommand` go in alphabetical order of the command name, not after the last one (#795 and #813 conflicted).
 - A new game setting of `game/run.py` (a lobby setting, epic #2263) is one line in `run.SETTINGS` and an option of the
