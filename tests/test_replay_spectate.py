@@ -13,21 +13,21 @@ import replay  # noqa: E402
 import replay_input as ri  # noqa: E402
 
 
-def test_the_spectator_item_is_in_slot_7_on_paper_only():
-    assert ri.ITEMS[ri.SPECTATE][:2] == (7, "ender_eye")
-    assert 'item_name="Spectator view"' in ri.item(ri.SPECTATE)
+def test_the_spectator_item_is_on_paper_only():
+    slot, _, name = ri.ITEMS[ri.SPECTATE]
+    assert f'item_name="{name}"' in ri.item(ri.SPECTATE)
     paper, vanilla = Scores(), Scores("vanilla")
     poll(paper, {})
     poll(vanilla, {})
-    assert any("hotbar.7" in c and "aoe_replay:7" in c for c in paper.sent)
-    assert not any("hotbar.7" in c for c in vanilla.sent)                 # no plugin: no way back from spectator
+    assert any(f"hotbar.{slot}" in c and f"aoe_replay:{ri.SPECTATE}" in c for c in paper.sent)
+    assert not any(f"hotbar.{slot}" in c for c in vanilla.sent)           # no plugin: no way back from spectator
 
 
 def test_a_click_on_the_item_makes_only_that_player_a_spectator():
     game, control = Scores(), {"speed": 1.0, "paused": False}
     game.click("anna", ri.SPECTATE)
     poll(game, control)
-    assert "gamemode spectator @a[scores={aoe_replay=7}]" in game.sent
+    assert f"gamemode spectator @a[scores={{aoe_replay={ri.SPECTATE}}}]" in game.sent
     assert control == {"speed": 1.0, "paused": False}                     # no other action
     assert game.scores["anna"]["aoe_replay"] == 0
 

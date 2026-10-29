@@ -38,7 +38,7 @@ def test_a_queue_of_two_gives_two_units_one_after_the_other():
     def sleep(s):
         now[0] += s
     replay.Replay(game, d).run(clock=lambda: now[0], sleep=sleep, log=None, finish=True)
-    assert now[0] == pytest.approx(51)                                # 1 s + 2 × 25 s of training
+    assert now[0] == pytest.approx(1 + 2 * aoe2mc.train_ms("VILLAGER_MALE") / 1000)   # 1 s + 2 trainings
     (k1, x1, y1, z1), (k2, x2, y2, z2) = summons(game.sent)
     assert k1 == k2 == "minecraft:villager" and y1 == y2 == 70
     assert z1 == z2 == 24.5 and (x1, z1) != (x2, z2) and 8 <= x1 < 24     # in front of the town center (south side)
@@ -49,7 +49,8 @@ def test_a_queue_of_two_gives_two_units_one_after_the_other():
 def test_research_delays_the_next_unit():
     tl = [queue(t=0), dict(time=1000, player=1, kind="research", objects=[5], technology="Loom"), queue(t=2000)]
     ends = [e["time"] for e in replay.Replay(Fake(), data(tl)).spawns()]
-    assert ends == [25000, 75000]                                     # 25 s, Loom 25 s, 25 s
+    v, loom = aoe2mc.train_ms("VILLAGER_MALE"), replay.RESEARCH_S["Loom"] * 1000
+    assert ends == [v, 2 * v + loom]                                  # a villager, Loom, a villager
 
 
 def test_a_new_building_trains_at_its_place():
@@ -62,7 +63,7 @@ def test_a_new_building_trains_at_its_place():
     e, = r.spawns()
     (_, rx0, rx1, rz0, rz1), = [(p, *rect) for p, n, rect in r.placed]
     (kind, x, _, z), = summons(r.commands(e))
-    assert e["time"] == 26000 and rx0 <= x < rx1 and z == rz1 + 0.5
+    assert e["time"] == 5000 + aoe2mc.train_ms("MILITIA") and rx0 <= x < rx1 and z == rz1 + 0.5
 
 
 def test_no_unit_without_a_building_or_space():

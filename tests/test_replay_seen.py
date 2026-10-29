@@ -51,7 +51,7 @@ def test_a_gather_step_shows_only_near_a_player(eyes, shown):
     r, sent = play(Server(eyes))
     assert r.eyes == eyes
     assert bool(looks(sent)) == shown
-    assert r.resources(1)["food"] == play(Fake())[0].resources(1)["food"] > 200    # the same food without the look
+    assert r.resources(1)["food"] == play(Fake())[0].resources(1)["food"] > replay.START["food"]   # the same food without the look
 
 
 def test_no_player_list_shows_each_step():

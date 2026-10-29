@@ -1,6 +1,7 @@
 """Live replay: a villager whose target tree has no path chops the nearest tree that it can reach, as in AoE2 (#869)."""
 import pytest
 
+import gather
 from test_replay_gather import TREE, hits, order, play
 
 
@@ -15,8 +16,8 @@ def forest():
 def test_an_order_on_an_enclosed_tree_chops_the_nearest_reachable_tree(ai):
     r, sent = play([order(0, 20)], forest(), 60000, ai)
     assert r.map.path(r.units[7].cell, r.map.around(r.map.cells((6, 10))), 20000) is None   # the tree is enclosed
-    assert r.map.trees[(6, 10)] == 100
+    assert r.map.trees[(6, 10)] == gather.TREE_WOOD
     assert 7 in r.working and r.units[7].tree == (5, 10)               # the nearest tree of the ring, west side
     assert r.units[7].cell in r.map.around(r.map.cells((5, 10)))
-    assert r.map.trees[(5, 10)] < 100 and hits(sent, "oak_log")
+    assert r.map.trees[(5, 10)] < gather.TREE_WOOD and hits(sent, "oak_log")
 

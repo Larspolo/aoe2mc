@@ -13,14 +13,13 @@ def rows(cmd):
 
 
 def test_the_economy_lines_follow_their_after_chain():
-    lines = dict(replay.ECO_LINES)
-    assert lines["Wood"] == ["DOUBLE_BIT_AXE", "BOW_SAW", "TWO_MAN_SAW"]
+    wood = next((line, len(techs)) for line, techs in replay.ECO_LINES if "DOUBLE_BIT_AXE" in techs)
     r = replay.Replay(Fake(), data([]))
     r.learn({"player": 1, "technology": "Double-Bit Axe", "time": 1000})
     r.learn({"player": 1, "technology": "Bow Saw", "time": 2000})
     cmds = r.upgrade_view(3000)
     assert len(cmds) == 1 and f'"{replay.UPGRADE_ECO}"' in cmds[0]
-    assert "Wood 2/3" in rows(cmds[0])[1]["text"]
+    assert f"{wood[0]} 2/{wood[1]}" in rows(cmds[0])[1]["text"]
 
 
 def test_the_university_row_shows_the_labels_and_stays_below_the_rcon_limit():

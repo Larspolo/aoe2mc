@@ -7,6 +7,8 @@ from test_gather import FakeServer, grid
 
 from game import diplomacy, gather, menu, savegame
 
+SLOT = next(k for k, b in diplomacy.BUTTONS.items() if b[1] == "Save")   # the slot of the Save button
+
 
 def setup(tmp_path):
     world = tmp_path / "World"
@@ -23,13 +25,13 @@ def setup(tmp_path):
 def test_the_game_menu_has_the_save_button(tmp_path):
     server, g = setup(tmp_path)
     diplomacy.open_menu(g, "Steve")
-    assert "3:writable_book:Save:" in server.log[-1]
+    assert f"{SLOT}:{diplomacy.BUTTONS[SLOT][0]}:Save:" in server.log[-1]
 
 
 def test_a_click_on_save_writes_the_world_and_the_state_and_the_game_goes_on(tmp_path):
     server, g = setup(tmp_path)
     diplomacy.open_menu(g, "Steve")
-    server.scores[menu.OBJECTIVE] = 4                                  # a click on slot 3
+    server.scores[menu.OBJECTIVE] = SLOT + 1                           # a click on the slot
     g.clicks()
     saves = os.listdir(tmp_path / "saves")
     assert len(saves) == 1 and saves[0].startswith("World-")
