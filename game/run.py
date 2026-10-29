@@ -100,8 +100,24 @@ def plugin_jar(version):
         h.update(os.path.relpath(f, PLUGIN).encode() + b"\0" + open(f, "rb").read())
     path = os.path.join(os.path.dirname(mc_check.CACHE), "plugin", f"aoe2mc-{h.hexdigest()[:16]}.jar")
     if not os.path.exists(path):
-        build_plugin(version, path)
+        with build_lock(path):
+            if not os.path.exists(path):       # another process built it while we waited for the lock (#3570)
+                build_plugin(version, path)
     return path
+
+
+@contextlib.contextmanager
+def build_lock(path):
+    """A file lock around the build: parallel workers (pytest -n) then build the jar once, not in each process."""
+    try:
+        import fcntl
+    except ImportError:                        # no fcntl on Windows: no lock
+        yield
+        return
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path + ".lock", "w") as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        yield
 
 
 def java_home(java):
