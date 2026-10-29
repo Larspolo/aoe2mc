@@ -40,3 +40,4 @@
 {"name": "rival_years", "text": "A technology that adds years to the relic and wonder victory timers of each enemy (Atheism: 100). wonder.later.", "issue": 4336}
 {"name": "rival_relic_gold", "text": "The factor of the relic gold of each enemy after the technology (Atheism: 0.5). monk.relic_tick.", "issue": 4336}
 {"name": "work", "text": "A technology that makes one building work faster: [the building, the factor of its train and research rate] (Perfusion: [\"BARRACKS\", 2]). A unit group can join the form later. train.work, train.seconds.", "issue": 4226}
+{"name": "trickle", "text": "A technology that adds income for each working unit of a kind: [who (\"farm\", \"wood\" or \"military\"), {resource: per AoE2 second}] (Tuntian). feitoria.tick.", "issue": 4279}
