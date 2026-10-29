@@ -8,6 +8,7 @@ a second push of another claim commit is never a fast-forward. Later claims of t
     python3 tools/claim.py N              # claim ticket N; exit 0: yours (it adds `in-progress` and "Started by",
                                           # and prints the ticket and its comments, #3459),
                                           # exit 1: it names the run that was first
+    python3 tools/claim.py N --or M K     # the same, and when another run has N, try M, then K, in this one call
     python3 tools/claim.py N --release    # give your claim back (needs-human, blocked, hand-off); it removes
                                           # `in-progress` (#3234)
     python3 tools/claim.py N --takeover   # take the ticket from a dead run (stale or released claim, #502)
@@ -522,6 +523,8 @@ def main(argv=None):
     ap.add_argument("--state", help="--refill: the state part of the lock (default: closed sub-issues, or the hour); "
                     "--fixmain: the commit that broke main (default: the head of origin/main)")
     ap.add_argument("--pr-branch", metavar="BRANCH", help="--guard: the branch of a PR that this run took over")
+    ap.add_argument("--or", dest="more", type=int, nargs="+", default=[], metavar="N",
+                    help="a claim: when another run has the ticket, try these tickets in this order (one call)")
     ap.add_argument("--remote", default="origin")
     a = ap.parse_args(argv)
     if a.comment:
@@ -614,32 +617,42 @@ def main(argv=None):
         if ref and on_github(a.remote):
             stop(a.number)
         return 0
-    issue = api(f"issues/{a.number}") if on_github(a.remote) else None
+    for number in [a.number, *a.more]:              # --or: the next candidate in the same call (#3459: one call each)
+        code = claim_ticket(number, a.takeover, a.remote)
+        if code != 1:
+            return code
+    return 1
+
+
+def claim_ticket(number, takeover=False, remote="origin"):
+    """Claim ticket `number` (a takeover with `takeover`): 0 and the ticket text when the claim is ours, 1 when another
+    run has it or the ticket is closed."""
+    issue = api(f"issues/{number}") if on_github(remote) else None
     if isinstance(issue, dict) and issue.get("state") == "closed":   # the candidate list was older (#2339)
-        print(f"#{a.number} is closed: pick the next candidate")
+        print(f"#{number} is closed: pick the next candidate")
         return 1
-    comments = api(f"issues/{a.number}/comments?per_page=100") if on_github(a.remote) else []
-    if not a.takeover and on_github(a.remote):
+    comments = api(f"issues/{number}/comments?per_page=100") if on_github(remote) else []
+    if not takeover and on_github(remote):
         other = started_by_other(comments, who(), time.time())
         if other:
-            print(f"owned by another run: `{other}` was first (\"Started by\" less than 30 minutes ago). Pick the next"
-                  " candidate, do not comment.")
+            print(f"#{number} owned by another run: `{other}` was first (\"Started by\" less than 30 minutes ago). Pick"
+                  " the next candidate, do not comment.")
             return 1
         pulls = api("pulls?state=open&per_page=100")
-        pr = active_pr(pulls, a.number, who(), time.time())
+        pr = active_pr(pulls, number, who(), time.time())
         if pr:
-            print(f"owned by another run: its PR #{pr} closes #{a.number} and changed less than 30 minutes ago. Pick the"
-                  " next candidate, do not comment.")
+            print(f"#{number} owned by another run: its PR #{pr} closes #{number} and changed less than 30 minutes ago."
+                  " Pick the next candidate, do not comment.")
             return 1
-    ref = claim(a.number, a.takeover, a.remote, stale_limit(a.number, a.remote) if a.takeover else STALE)
+    ref = claim(number, takeover, remote, stale_limit(number, remote) if takeover else STALE)
     if ref:
         print(f"claimed {ref}")
-        if on_github(a.remote) and not a.takeover:
-            start(a.number)
+        if on_github(remote) and not takeover:
+            start(number)
         if isinstance(issue, dict):
             print(ticket_text(issue, comments))
         return 0
-    print(f"owned by another run: {first(a.number, a.remote)} was first. Pick the next candidate, do not comment.")
+    print(f"#{number} owned by another run: {first(number, remote)} was first. Pick the next candidate, do not comment.")
     return 1
 
 

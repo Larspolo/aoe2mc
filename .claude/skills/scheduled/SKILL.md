@@ -8,8 +8,8 @@ description: The start of a scheduled, unattended autopilot run. The prompt of e
 This is a scheduled, unattended run. Other runs can work at the same time. The project values (`repo`, `owner`,
 `branch`, the status issue) are in `agent.toml` at the root.
 
-1. `CLAUDE.md` and `docs/LEARNINGS.md` are already in your context: do not read them again. Then follow the skill `autopilot` (`.claude/skills/autopilot/SKILL.md`) with the argument of this
-   skill: do tickets, one PR each, until no ticket is ready, a usage limit stops you, or your context is 120k tokens
+1. `CLAUDE.md` and `docs/LEARNINGS.md` are already in your context: do not read them again. Then follow the skill `autopilot` (`.claude/skills/autopilot/SKILL.md`; read it once: with the Skill tool or
+   the file, not both) with the argument of this skill: do tickets, one PR each, until no ticket is ready, a usage limit stops you, or your context is 120k tokens
    or more. Report each ticket (`report.py --post`).
 2. You cannot start other runs: a run of a scheduled task has no `fire_trigger` tool. Do not search for it. The
    workflow `pacer.yml` starts new runs (`tools/pacer.py`).

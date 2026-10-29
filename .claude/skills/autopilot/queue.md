@@ -6,8 +6,8 @@ when fewer tickets are ready than the target number of runs (the refill), and in
 ## Haiku lane (step 5)
 
 When the argument names `lane haiku` (the scheduled task "aoe2mc autopilot haiku"), run
-`git config aoe2mc.lane haiku` first (the claims then tell the pacer that this run is cheap, #1727), pick only with
-`python3 tools/cycle_start.py --lane haiku` (section `Candidates`), skip the epic check, the queue refill, the roadmap review and the
+`python3 tools/cycle_start.py --lane haiku` first: it sets `git config aoe2mc.lane haiku` (the claims then tell the
+pacer that this run is cheap, #1727). Pick only from its section `Candidates`, skip the epic check, the queue refill, the roadmap review and the
 process review, and stop when no `lane:haiku` ticket is ready. Do one ticket per run: stop after its report,
 also with the argument `max` (a Haiku call costs 5 times more above 100k prompt tokens, and the Haiku runs
 reached 91k to 200k; the pacer starts a fresh run with a 65k context for the next ticket, 2026-10-28). A ticket that is not as clear as its label says: release
@@ -17,8 +17,8 @@ the claim, remove `lane:haiku`, comment why in one line, and take the next one. 
 
 The main runs work at low effort (owner, 2026-10-28). The scheduled task "aoe2mc autopilot deep" runs at high
 effort for the work where the thinking matters more than the typing (`ticket` skill, "Model lanes"). When the argument
-names `lane deep`, run `git config aoe2mc.lane deep` first (the claims and the report then name the lane). Pick with
-`python3 tools/cycle_start.py --lane deep`. A deep run does the epic check and the queue refill of step 5, the roadmap
+names `lane deep`, run `python3 tools/cycle_start.py --lane deep` first: it sets `git config aoe2mc.lane deep` (the
+claims and the report then name the lane). Pick from its section `Candidates`. A deep run does the epic check and the queue refill of step 5, the roadmap
 review and the process review: while `reserved` in `[pacing]` of `agent.toml` names `deep`, `claim.py` gives those
 locks (`--review`, `--roadmap`, `--refill`) only to deep runs, and the other runs skip them. Stop when no `lane:deep`
 ticket is ready and the refill is done, or at 120k context (`more.md`): the main runs take the other tickets for less.

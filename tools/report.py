@@ -86,14 +86,17 @@ def report(text, usage, lines, release=None, tokens=None, calls=None, run=None, 
                       *([calls] if calls else []), *([f"{run} · lane {lane or 'opus'}"] if run else [])]) + FOOTER
 
 
-def fields(text, usage, tickets, lane, numbers=None):
+def numbers():
+    """All numbers of this session (`tokens.py --json`), or {} when the tool has no transcript."""
+    try:
+        return json.loads(tool("tokens.py", "--json") or "{}")
+    except ValueError:
+        return {}
+
+
+def fields(text, usage, tickets, lane, numbers):
     """The named fields of the run record (`metrics_log.run_record`): the text, the `Usage:` line, one dict per ticket
     (the values of its `Metrics:` line), the lane and all numbers of `tokens.py --json`."""
-    if numbers is None:
-        try:
-            numbers = json.loads(tool("tokens.py", "--json") or "{}")
-        except ValueError:
-            numbers = {}
     return {"session": numbers.get("session"), "branch": numbers.get("branch"), "lane": lane or "opus",
             "text": text.strip(), "usage": usage.strip(), "tickets": tickets, "tokens": numbers}
 
@@ -121,10 +124,11 @@ def main(argv=None):
     def at(values, i, default):
         return values[i] if i < len(values) else default
 
-    lane = git_lane()
+    lane, nums = git_lane(), numbers()
     got = measured() if len(a.phases) < n else {}
+    setup = round(nums.get("setup") or 0)               # measured: the runs need no `date` call (2026-10-29)
     own = lambda t: got.get(str(t)) or (got.get("None", "") if n == 1 else "")    # measured, not guessed (2026-10-28)
-    tickets = [dict(ticket=t, size=a.size[i], result=a.result[i], minutes=at(a.minutes, i, None), setup=at(a.setup, i, 0),
+    tickets = [dict(ticket=t, size=a.size[i], result=a.result[i], minutes=at(a.minutes, i, None), setup=at(a.setup, i, setup if i == 0 else 0),
                     checks=at(a.checks, i, 0), checks_min=at(a.checks_min, i, 0), sinks=at(a.sinks, i, "none"),
                     phases=at(a.phases, i, own(t)), lane=at(a.lane, i, lane)) for i, t in enumerate(a.ticket)]
     lines = [metrics(d["ticket"], d["size"], d["result"], d["minutes"], d["setup"], d["checks"], d["checks_min"],
@@ -137,7 +141,7 @@ def main(argv=None):
     for d in tickets:
         d["phases"] = phases(d["phases"])
         d["minutes"] = sum(d["phases"].values()) if d["minutes"] is None else d["minutes"]
-    path = metrics_log.post(metrics_log.run_record(body, fields(a.text, usage, tickets, lane)))
+    path = metrics_log.post(metrics_log.run_record(body, fields(a.text, usage, tickets, lane, nums)))
     status = next(i for i in pages(f"issues?state=open&labels={STATUS}") if "pull_request" not in i)
     if path:
         print(f"{path} on the branch {metrics_log.BRANCH}")
