@@ -25,7 +25,7 @@ can see which features have an epic: `gh api "repos/Larspolo/aoe2mc/issues?label
 - [x] `convert:mood` The map color mood and weather of a DE scenario (`map_color_mood`: morning, noon, evening, night, snow, fog) as the Minecraft time of day, weather and fog (epic #1593)
 - [x] `convert:start-view` The start view of each scenario player (`initial_camera_x`, `initial_camera_y` of the scenario): the Minecraft spawn at the view of player 1, and in the game program each side starts at the view of its player (epic #3344)
 - [x] `convert:terrain-layers` The terrain layers of a DE scenario (the "layer" brush of the DE editor: a second terrain painted over the base terrain of a tile, as a road or snow on grass): the ground blocks of the tile show the layer, the base terrain keeps the water and the shores (epic #3687)
-- [ ] `convert:rms-elevation` The hills of a random map script (`<ELEVATION_GENERATION>`, `create_elevation`): the land of a random map has the elevation of the script, as the hills of Arabia, not a flat land at elevation 0
+- [x] `convert:rms-elevation` The hills of a random map script (`<ELEVATION_GENERATION>`, `create_elevation`): the land of a random map has the elevation of the script, as the hills of Arabia, not a flat land at elevation 0 (epic #3821)
 - [ ] `convert:rms-cliffs` The cliffs of a random map script (`<CLIFF_GENERATION>`: `min_number_of_cliffs`, `max_number_of_cliffs`, `min_length_of_cliff`, `cliff_curliness` ...): cliff lines on the land, as on Highland and Arabia
 - [ ] `convert:rms-connections` The connections of a random map script (`<CONNECTION_GENERATION>`: `create_connect_all_players_land`, `create_connect_teams_lands`, `replace_terrain`): the shallows across a river and the roads between the players come from the script, not from own tables
 - [ ] `convert:rms-objects` The objects of a random map script (`<OBJECTS_GENERATION>`, `create_object` with `number_of_objects`, `number_of_groups`, `set_place_for_every_player`, `min_distance_to_players`, `max_distance_to_players` ...): a script that the converter does not know places its own town centers, villagers, resources and animals
@@ -94,6 +94,8 @@ can see which features have an epic: `gh api "repos/Larspolo/aoe2mc/issues?label
 - [ ] `play:art-of-war` The AoE2 DE "Art of War" challenges: short training games with one goal and a time limit (early economy, booming, defend against a rush, wall in, micro), a gold, silver or bronze medal by the time
 - [ ] `play:bot-strategy` The bot plays a whole game as the AoE2 computer player: it ages up, researches the economy and Blacksmith technologies, upgrades its unit lines, attacks in waves and defends its town
 - [ ] `play:bots` Several bots in one game, as the AoE2 lobby with a computer player in each free slot: each bot plays its own player and team, and attacks the enemy teams, not its allies
+- [ ] `play:attack-ground` The AoE2 order "Attack Ground": a selected Mangonel, Trebuchet or other siege unit shoots at a point of the ground again and again, and its blast hits all units there (epic #4077)
+- [ ] `play:unique-buildings` The unique buildings of each civilization that the game program lacks (the Feitoria, the Harbor, the Pasture ...): built from the build menu, and each one works as in AoE2 DE (epic #4080)
 
 ## 3. Replay a recorded game in Minecraft (`game/replay.py`, `aoe2mc.read_timeline`)
 
