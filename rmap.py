@@ -534,7 +534,8 @@ def objects(cmds, consts, terrain, starts, rng, warn, owner=None):
         if base is None:
             warn(f"create_object: unknown object {args[0]}")
             continue
-        count = value(attrs["number_of_objects"][0], consts) if "number_of_objects" in attrs else 1
+        count = value(attrs["number_of_objects"][0], consts) if "number_of_objects" in attrs else 1 + 2 * (base == "VILLAGER_MALE")
+                                                       # VILLAGER with no amount: the 3 start villagers of AoE2 DE (#4120)
         lo = value(attrs["min_distance_to_players"][0], consts) if "min_distance_to_players" in attrs else 0
         hi = value(attrs["max_distance_to_players"][0], consts) if "max_distance_to_players" in attrs else 2 * n
         water = any(w in base for w in ("FISH", "SHIP", "BOAT"))
