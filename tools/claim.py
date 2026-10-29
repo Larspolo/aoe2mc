@@ -65,6 +65,7 @@ import argparse
 import datetime
 import functools
 import json
+import os
 import re
 import subprocess
 import sys
@@ -635,6 +636,7 @@ def main(argv=None):
                 from dashboard import api as call
                 body = api(f"issues/{STATUS}")["body"]    # read again: other runs and the dashboard change it too
                 call(f"issues/{STATUS}", "PATCH", {"body": with_state(body, {**agent_state(body), "last_roadmap": utc()})})
+            mark_commits()                                # a deep run can do only the review: its PRs are run work
             print(f"claimed {kind} {key}")
             if a.review and on_github(a.remote):          # the misses of step 0 of the `improve` skill
                 last = agent_state(api(f"issues/{STATUS}")["body"]).get("last_review")
@@ -653,6 +655,7 @@ def main(argv=None):
         state = a.state or refill_state(a.number, a.remote)
         key = f"{a.number}-{state}"
         if claim_refill(a.number, state, a.remote):
+            mark_commits()
             print(f"claimed refill {key}")
             return 0
         print(f"refill {key}: another run makes the tickets")
@@ -725,8 +728,29 @@ def adopt(number, name, remote="origin"):
     if m := re.search(r" lane (\w+)$", line):
         git("config", "aoe2mc.lane", m[1])
     ref = release(number, remote, word="Beat", adopt=name)
+    if ref:
+        mark_commits()
     print(f"adopted {ref}: #{number} is yours" if ref else f"#{number}: the beat failed, follow the skill without the brief")
     return 0 if ref else 1
+
+
+HOOK = """#!/bin/sh
+# Written by tools/claim.py: each commit of a run gets the trailer Agent-Run. A merge on main without it is the work of
+# an owner session, a miss of the improve loop (dashboard.owner_work, owner 2026-10-29).
+git interpret-trailers --in-place --if-exists doNothing --trailer "Agent-Run: {lane}" "$1"
+"""
+
+
+def mark_commits():
+    """Install the `commit-msg` hook of HOOK in this clone (also its worktrees) after a claim, an adopt or a lock: each
+    run makes one before it commits, an owner session does not. A hook of another tool stays."""
+    path = git("rev-parse", "--git-path", "hooks/commit-msg", check=False).stdout.strip()
+    if not path or os.path.exists(path) and "tools/claim.py" not in open(path, encoding="utf-8").read():
+        return
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "w", encoding="utf-8") as f:
+        f.write(HOOK.format(lane=git("config", "--get", "aoe2mc.lane", check=False).stdout.strip() or "main"))
+    os.chmod(path, 0o755)
 
 
 def claim_ticket(number, takeover=False, remote="origin"):
@@ -751,6 +775,7 @@ def claim_ticket(number, takeover=False, remote="origin"):
             return 1
     ref = claim(number, takeover, remote, stale_limit(number, remote) if takeover else STALE)
     if ref:
+        mark_commits()
         print(f"claimed {ref}")
         if on_github(remote) and not takeover:
             start(number)

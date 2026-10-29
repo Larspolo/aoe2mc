@@ -1,11 +1,10 @@
 """The work of owner sessions is a miss of the improve loop (owner, 2026-10-29): each commit of a run has the trailer
-`Agent-Run:` (`cycle_start.mark_commits`), a merge without it is owner work (`dashboard.owner_work`), owner work makes
+`Agent-Run:` (`claim.mark_commits`), a merge without it is owner work (`dashboard.owner_work`), owner work makes
 the process review due after OWNER_GAP merged PRs (`claim.review_slot`), and `tools/health.py` lists it."""
 import datetime
 import subprocess
 
 import claim
-import cycle_start
 import dashboard
 import health
 
@@ -47,15 +46,16 @@ def test_a_run_marks_its_commits_and_keeps_a_foreign_hook(tmp_path, monkeypatch)
     git(tmp_path, "init", "-q")
     git(tmp_path, "config", "user.email", "a@b.c")
     git(tmp_path, "config", "user.name", "A")
+    git(tmp_path, "config", "aoe2mc.lane", "haiku")
     monkeypatch.chdir(tmp_path)
-    cycle_start.mark_commits("haiku")
-    cycle_start.mark_commits("haiku")                                           # again: still one trailer
+    claim.mark_commits()
+    claim.mark_commits()                                                        # again: still one trailer
     git(tmp_path, "commit", "-q", "--allow-empty", "-m", "Do it\n\nClaude-Session: https://claude.ai/code/x")
     message = git(tmp_path, "log", "-1", "--format=%B")
     assert message.count("Agent-Run: haiku") == 1 and dashboard.RUN_MARK.search(message)
     hook = tmp_path / ".git" / "hooks" / "commit-msg"
     hook.write_text("#!/bin/sh\nexit 0\n")                                     # a hook of another tool
-    cycle_start.mark_commits(None)
+    claim.mark_commits()
     assert hook.read_text() == "#!/bin/sh\nexit 0\n"
 
 

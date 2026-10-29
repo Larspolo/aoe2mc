@@ -61,7 +61,7 @@ def start_after_prs(issue):
 
 
 MERGE = re.compile(r"\(#(\d+)\)$")    # the subject of a squash merge on the default branch: "Title (#N)"
-RUN_MARK = re.compile(r"^Agent-Run: *\S+", re.M)   # the trailer of each commit of a run (`cycle_start.py` hook)
+RUN_MARK = re.compile(r"^Agent-Run: *\S+", re.M)   # the trailer of each commit of a run (`claim.mark_commits`)
 
 
 def ts(text):

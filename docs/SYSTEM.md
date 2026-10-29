@@ -78,7 +78,7 @@ The details are in the text at the top of `tools/claim.py`.
 | Ticket | `claim/N` (`claim/N-2` ... after a release) | `claim.py N`. The owner beats each 20 minutes (`--beat`). After 30 minutes without a beat the claim is stale: another run can take it over (`--takeover`). `--guard` before each push. |
 | Owner comment | `claim/comment-ID` | `claim.py ID --comment`: one run acts on one owner comment. |
 | Refill | `claim/refill-E-S` | `claim.py E --refill`: one run makes the sub-issues of epic E (E = 0: the whole queue, one per hour). |
-| Process review | `claim/review-<gap>pr-<last>-<k>` | `claim.py 0 --review`: one run runs the `improve` skill after `gap` merged PRs (`[review]` of `agent.toml`, no hours: owner, 2026-10-29). A review with no change doubles the gap (#2039). Owner work since the last review (a merge with no commit of a run: each run commit has the trailer `Agent-Run:` of the `commit-msg` hook of `cycle_start.py`) makes the gap `owner_gap`. |
+| Process review | `claim/review-<gap>pr-<last>-<k>` | `claim.py 0 --review`: one run runs the `improve` skill after `gap` merged PRs (`[review]` of `agent.toml`, no hours: owner, 2026-10-29). A review with no change doubles the gap (#2039). Owner work since the last review (a merge with no commit of a run: each run commit has the trailer `Agent-Run:` of the `commit-msg` hook that `claim.py` installs at each claim, adopt or lock) makes the gap `owner_gap`. |
 | Roadmap review | `claim/roadmap-100pr-<last>-<k>` | `claim.py 0 --roadmap`: one run reviews `docs/ROADMAP.md` after 100 merged PRs. |
 
 Other rules against conflicts: one ticket per PR, new tests in a new file, new table entries on their own line in
@@ -294,7 +294,7 @@ of `tools/bootstrap.py` (they copy this repository) and the tests that need a sp
 | `tests/test_health_reviews.py` | generic | None (a test of `tools/health.py`). |
 | `tests/test_health_takeovers.py` | generic | None (a test of `tools/health.py`). |
 | `tests/test_health_misses.py` | generic | None (a test of `tools/health.py`). |
-| `tests/test_owner_work.py` | generic | None (a test of `tools/dashboard.py`, `tools/claim.py`, `tools/cycle_start.py` and `tools/health.py`: the owner work, owner 2026-10-29). |
+| `tests/test_owner_work.py` | generic | None (a test of `tools/dashboard.py`, `tools/claim.py` and `tools/health.py`: the owner work, owner 2026-10-29). |
 | `tests/test_review_gap.py` | generic | None (a test of `tools/claim.py`). |
 | `tests/test_health_until_pages.py` | generic | None (a test of `tools/health.py`, #3072). |
 | `tests/test_operator.py` | generic | None (a test of `tools/operator_check.py`). |

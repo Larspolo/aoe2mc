@@ -24,7 +24,7 @@ its signal above the threshold is enough data. A hunch outside the levers is a t
 ## 0. Learn from the owner's work (misses)
 
 `claim.py 0 --review` prints `owner work #N: <title>`: the PRs merged since the last review with no commit of a run
-(each run commit has the trailer `Agent-Run:`, `tools/cycle_start.py`). `tools/health.py` prints the same as
+(each run commit has the trailer `Agent-Run:`: `tools/claim.py` installs a `commit-msg` hook at each claim). `tools/health.py` prints the same as
 "Owner work", and "Misses": the issues that the owner opened to change the system (labels `process`, `tooling`,
 `cleanup`). An owner comment on a process ticket that asks for a wider fix is a miss too (#1702).
 
@@ -74,7 +74,7 @@ A lever with no number is a measurement gap: lever 10.
 | # | Lever | Signal | Threshold | Fix, strongest first | Owner PRs |
 |---|---|---|---|---|---|
 | 1 | Context per call | `Tokens:` `base` and its `repo` part, `peak`; size of `CLAUDE.md`, `docs/LEARNINGS.md`, the skills | base above 30 % of eq, or repo part above 10k tokens | Deny unused tools (`.claude/settings.json`); move rows and lines to the topic doc that needs them; a learning line → a check (`guard-shell.sh`, a test); split a skill so that a step reads its own file; a subagent for a wide search | #3425, #3483, #3648, #3734, #3828, #4173 |
-| 2 | Agent work that a tool or workflow can do | `Calls:` top commands; the same 3 or more calls in many runs; phases `read`, `claim`, `report` | a call sequence in 20 % of runs, or a phase above 15 % of the minutes | One-call tool (like `cycle_start.py`, `ship_pr.py`); a workflow (like Pacer, Automerge, Unconflict, Close, Claims); a hook; data written by a tool, not by the agent | #3201, #3211, #3311, #3614, #4172 |
+| 2 | Agent work that a tool or workflow can do | `Calls:` top commands; the same 3 or more calls in many runs; phases `read`, `claim`, `report` | a call sequence in 20 % of runs, or a phase above 15 % of the minutes | One-call tool (like `cycle_start.py`, `ship_pr.py`); a workflow (like Pacer, Automerge, Unconflict, Close, Claims); a hook; data written by a tool, not by the agent | #3201, #3211, #3311, #3614, #4172, #4184 |
 | 3 | The cheapest model that does the job well | `Lane` lines (runs, PRs, cost); rework and red CI per lane; the kinds of `size:S` tickets that Opus runs do | a kind of ticket that a cheaper lane does at the same quality; a lane with rework above 10 % | Lane rules of the `ticket` skill ("Model lanes"); `reserved` and `weights` in `agent.toml`; a subagent with a cheap `model` for lists and searches in a run; a new lane (a new scheduled task: owner step) | #2690, #3147, #3392, #3609 |
 | 4 | API calls | `Calls:` count of `gh api` and `mcp`; the REST budget in the pacer log; 403 and 429 in workflow logs | above 10 calls per ticket, or a workflow above half of its budget | Git in place of the API (refs, `merge-tree`, the branch `metrics`); one list call in place of one call per item; a cache; only the needed fields | #4171, #4172, #4178, #4180 |
 | 5 | Merge conflicts by design | Conflicts per 100 merged PRs; the files and the tables of the conflict hunks | 3 conflicts per 100 PRs in one file or table | One file per item (`tests/test_<topic>.py`, one data line per item); a registry that finds its items (a glob), not a list; a generated file only on `main`; no test of the content of a data file | #2008, #3203, #3462, #4177 |
