@@ -27,7 +27,8 @@ def barracks(civ=None, all_techs=False):
     g.data["all_techs"] = all_techs
     diplomacy.open_menu(g, "Steve")
     click(server, g, diplomacy.TECH_TREE_SLOT)
-    return click(server, g, techtree.BUILDINGS.index("BARRACKS"))
+    text = click(server, g, techtree.BUILDINGS.index("BARRACKS"))
+    return text + click(server, g, techtree.NEXT) * (f"{techtree.NEXT}:paper" in text)   # the technologies (#3533)
 
 
 def test_the_game_menu_button_shows_each_building():

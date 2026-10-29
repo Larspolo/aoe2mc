@@ -1,7 +1,7 @@
 """
 The tech tree of the own civilization (#3532, part of #3531), as the AoE2 DE tech tree: the button "Tech tree" of the
 Game menu (diplomacy.py) opens a page with one item for each building that trains or researches. A click on a
-building shows its units and technologies by age: row 0 the Dark Age, row 1 the Feudal Age, row 2 the Castle Age,
+building shows its units and technologies by age, one column for each unit line (#3533): row 0 the Dark Age, row 1 the Feudal Age, row 2 the Castle Age,
 row 3 the Imperial Age (the key "age" of data/train.jsonl). An item that the civilization does not have is a gray pane.
 The tree only shows: a click on an item of a building page trains nothing.
 """
@@ -30,18 +30,52 @@ def open_menu(g, player):
     menu.show(g, player, "Tech tree", items, lambda p, slot, shift: slot < len(BUILDINGS) and page(g, p, BUILDINGS[slot]))
 
 
-def pages(names):
-    """The slots of names by page: [{slot: name}]. Each age has its row; the items that do not fit go into row MORE,
-    then onto the next page in the same layout, so that no item is left out."""
-    rows = [[n for n in names if (train.value("age", n) or build.AGE.get(n, 0)) == a] for a in range(AGES)]
+def age(name):
+    return train.value("age", name) or build.AGE.get(name, 0)
+
+
+def root(name, names):
+    """The first item of the unit line of name (#3533): an upgrade follows "after", else the upgrade or the unit that
+    gives its old unit (the key "upgrade": [old unit, new unit])."""
+    if train.value("after", name) in names:
+        return root(train.value("after", name), names)
+    for old, _ in train.lines(name) if name in train.UPGRADES else ():
+        if old in names:
+            return root(old, names)
+        before = next((n for n in names if n in train.UPGRADES and old in (new for _, new in train.lines(n))), None)
+        if before:
+            return root(before, names)
+    return name
+
+
+def columns(names):
+    """The columns of names: one for each unit line (a unit and its upgrades, as the AoE2 DE tree), then one for each
+    technology. Two items of one line in one age (Two-Handed Swordsman, Legionary) take two columns."""
+    cols = {}
+    for n in names:
+        cols.setdefault(root(n, names), []).append(n)
     out = []
-    while any(rows):
-        slots = {a * WIDTH + i: n for a, row in enumerate(rows) for i, n in enumerate(row[:WIDTH])}
-        rest = [n for row in rows for n in row[WIDTH:]]
+    for col in cols.values():
+        while col:
+            first = {age(n): n for n in reversed(col)}
+            out.append(sorted(first.values(), key=col.index))
+            col = [n for n in col if n not in first.values()]
+    return sorted(out, key=lambda c: len(c) == 1 and c[0] not in train.UPGRADES
+                  and train.ITEMS.get(c[0], (0, "book"))[1] == "book")
+
+
+def pages(names):
+    """The slots of names by page: [{slot: name}]. Each unit line has its column, each age its row; the items of the
+    columns that do not fit go into row MORE, then onto the next page in the same layout, so that no item is left out."""
+    cols = columns(names)
+    out = []
+    while cols:
+        slots = {age(n) * WIDTH + i: n for i, col in enumerate(cols[:WIDTH]) for n in col}
+        rest = [n for col in cols[WIDTH:] for n in col]
         slots |= {MORE * WIDTH + i: n for i, n in enumerate(rest[:WIDTH])}
         out.append(slots)
         rest = rest[WIDTH:]
-        rows = [[n for n in row[WIDTH:] if n in rest] for row in rows]
+        cols = [c for c in ([n for n in col if n in rest] for col in cols[WIDTH:]) if c]
     return out or [{}]
 
 
