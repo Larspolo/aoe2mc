@@ -30,6 +30,7 @@ PACKED = ("queues", "trained", "sites", "rally",                       # with tu
 OPTIONAL = ("auto", "auto_by",                                         # the auto-queue of each building (#3524)
             "auto_reseed",                                             # the mill switch (#3422)
             "bell_work",                                               # the work before the town bell (#3420)
+            "challenge_enemy",                                         # the enemy fleet of Naval Battle (#3909)
             "limit_left", "policy", "rates", "relic_timer", "reseeds", "switches", "upgraded", "wonder_shown", "wonders",   # only on a
             "wonders_gone")                                            # Gather that has them (#2324; the policy: #2515)
 MONK = ("carrier_at", "converting", "faith", "fetching", "heal_time", "monk_at", "relic_gold", "relic_homes",
@@ -56,6 +57,7 @@ CHEATS = (                                                             # game/ch
 COUNTERS = (                                                           # the parts that a tick did not use yet (#2514):
     "aura_time",                                                       # regen.py
     "cart_heal",                                                       # trade.py
+    "feitoria_part",                                                   # feitoria.py
     "garrison_heal",                                                   # garrison.py
     "herd_food",
     "hero_time",                                                       # regen.py: the heroes
@@ -83,6 +85,7 @@ MAP = (                                                                # gather.
 )
 VICTORY = (                                                            # the victory modes (#2476), pack()
     "challenge_army",                                                  # army.py: the army of a battle challenge (#3906)
+    "challenge_attacks",                                               # challenge.attacks: the waves that came (#3907)
     "challenge_foes",                                                  # army.py: the enemy units of a battle challenge (#3910)
     "challenge_wave",                                                  # army.py: the wave of the enemy (#3906)
     "challenge_foes",                                                  # army.py: the enemy units of a battle challenge (#3910)
@@ -96,8 +99,8 @@ VICTORY = (                                                            # the vic
     "towns",
 )
 SCORE = (                                                              # Gather: the counts of score.py (#2475)
-    "fallen",                                                          # spoils.py: the units that gave their spoils
-    "fell",                                                            # ruins.py: the own buildings that fell, lost in the recap (#3736)
+    "buildings_lost",                                                  # ruins.py: the own buildings that fell, lost in the recap (#3736);
+    "fallen",                                                          # not "fell": that hides Gather.fell (#4147)
     "given",                                                           # train.py: the free units and technologies
     "losses",
     "razed",
@@ -173,6 +176,7 @@ NOT_SAVED = (                                                          # the fie
     "capture",                                                         # herd.py: a tick timer
     "census",                                                          # train.py: a tick timer
     "challenge",                                                       # run.py: from the saved settings (#3900)
+    "challenge_asked",                                                 # challenge.py: the time of the last check
     "challenge_shown",                                                 # challenge.py: the shown text
     "chop",                                                            # bot.py: the setup value of the AI difficulty
     "conquest_at",                                                     # conquest.py: the next check time
@@ -492,6 +496,8 @@ def fields_again(x, p):
     for f in PACKED + KEPT:
         if f in p and f != "relics":                                   # a save before #2257 has no queues
             setattr(x, f, unpack(p[f]))
+    if "fell" in p:                                                    # a save before #4147
+        x.buildings_lost = unpack(p["fell"])
 
 
 def sites_again(x, p):

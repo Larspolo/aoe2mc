@@ -276,6 +276,21 @@ Royals (Fortified Church, Mule Cart) are regional buildings now, not in this lis
 | Krepost | Bulgarians | Castle | 350 stone | Small Castle: trains and upgrades Konniks, shoots arrows, 20 population | works |
 | Pasture | Khitans | Dark | 110 wood | Replaces the Farm; two villagers work it at once; its own drop site | missing |
 
+## Attack Ground (#4078)
+
+The AoE2 wiki ("Attack ground", the MediaWiki API) lists the AoE2 units that can attack a point on the ground:
+
+- Mangonel → Onager → Siege Onager
+- Rocket Cart → Heavy Rocket Cart
+- Bombard Cannon → Houfnice
+- Trebuchet, Mounted Trebuchet, Traction Trebuchet
+- Cannon Galleon → Elite Cannon Galleon
+- Dromon, Lou Chuan, Turtle Ship → Elite Turtle Ship
+
+Only the shots with an area damage hit at the point: a Turtle Ship fires its cannonballs and rockets, a Lou Chuan only its rocks.
+The plugin command `aoe attackground <selector> <x> <y> <z>` takes each unit with a siege shot (`aoe range` with a blast).
+A unit with blast 0 (the Trebuchet) shoots, but its shot hits no unit at the point.
+
 ## Decisions of the owner (2026-10-28)
 
 - Bot difficulty (#2648, option A): the six AoE2 DE names (Easiest, Standard, Moderate, Hard, Hardest, Extreme), each
@@ -559,3 +574,5 @@ Moved from `docs/LEARNINGS.md` (improve run, 2026-10-26).
 - A villager that flips between two orders (a `walk` and an `idle` event of `run.py --log` in the same tick, #3726): in a `git worktree` copy, add `traceback.extract_stack()[-7:-1]` and `v.tree`, `v.goal` to the line of `Gather.event`, play one game (`tools/play_check.py W --log F.jsonl`) and count the callers of the `idle` lines. One 20-minute game named `Bot.move` → `Bot.go` → `Gather.go` with `v.goal` None.
 - The AoE2 wiki API gives `missingtitle` for a guessed page name (`Resources_(Age_of_Empires_II)`, `Game_setup`): find the name first with `action=query&list=search&srsearch=WORDS` (the Art of War page is `The Art of War (Age of Empires II)`, #3759).
 - The server log has ANSI colors only when `TERM` (or `COLORTERM`) names a color terminal: Adventure (`net.kyori.ansi.ColorLevel`) reads them, and `-Dterminal.ansi=true` does not turn colors on. CI has no `TERM`, the cloud session has `TERM=linux`: a log test passed here and failed in CI. `game/run.py` sets `-Dnet.kyori.ansi.colorLevel=indexed16`; a regex of a log line with a name must allow `\x1b[..m` around it (`JOINED`, `play_guide.CHAT`, #3889).
+- `civs.MISSING` has two sources (#1971, #2235): the `"missing"` list of each civilization line of `game/data/civs.jsonl` (most civs have the item), and the key `"civs"` of the item line in `game/data/train.jsonl` or `build.jsonl` (few civs have it: a unique or regional item).
+- A new replay menu action in `replay_input.actions()` goes into the chat help line, and that line must stay under the RCON limit (1446 bytes): #3369 kept its action out of `actions()` (the poll loop lists it) and the `help_text` test failed for 14 tests.

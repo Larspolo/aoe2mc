@@ -48,8 +48,9 @@ def test_the_end_of_the_replay_gives_the_book_also_after_a_jump():
         now[0] += s
     replay.Replay(game, data(TIMELINE)).run(speed=8, clock=lambda: now[0], sleep=sleep, log=None, bar=True,
                                              to=1_450_000)
-    assert book([c for c in game.sent if c.startswith(PREFIX)])["pages"] == PAGES
-    assert game.sent.index(next(c for c in game.sent if c.startswith(PREFIX))) > \
+    timeline = PREFIX + '{"title":"Timeline"'                    # the book "Build order" comes too (#4048)
+    assert book([c for c in game.sent if c.startswith(timeline)])["pages"] == PAGES
+    assert game.sent.index(next(c for c in game.sent if c.startswith(timeline))) > \
         game.sent.index(next(c for c in game.sent if "Replay ended" in c))
 
 

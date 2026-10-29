@@ -6,7 +6,7 @@ forest tiles as objects (FOREST_TREES) yet.
 
 Read: `#const`, `#define`, `if`/`elseif`/`else`/`endif`, `start_random`/`percent_chance`/`end_random`,
 <PLAYER_SETUP> (`grouped_by_team` with --teams), <LAND_GENERATION> (`base_terrain`, `create_player_lands`, `create_land` with
-`terrain_type`, `base_layer` (a land layer on the terrain_type, #3967), `land_percent`, `number_of_tiles`, `base_size`, `clumping_factor`, `land_position` and the borders
+`terrain_type`, `base_layer` (a land layer on the terrain_type, #3967), `land_percent`, `number_of_tiles`, `base_size`, `clumping_factor`, `land_position`, `assign_to_player` and `assign_to_team` (direct_placement, #3947) and the borders
 `left_border`, `right_border`, `top_border`, `bottom_border`: percent of the map size at the low x, high x, low y and
 high y side that the land does not take) and
 <TERRAIN_GENERATION> (`create_terrain` with `base_terrain`, `number_of_clumps`, `number_of_tiles`, `land_percent`,
@@ -415,6 +415,8 @@ def generate(text, seed, players=2, size=None, warn=None, teams=None):
                 total, turn = tiles(attrs, consts, n), rng.uniform(0, 2 * np.pi)
                 order = circle(sections.get("PLAYER_SETUP", ()), players, teams, seed)
                 for p in range(1, players + 1):
+                    if any(st["player"] == p for st in starts):     # a land with assign_to_player has it (#3947)
+                        continue
                     a = turn + 2 * np.pi * order.index(p) / players
                     c = (int(round((n - 1) / 2 + RING * n * np.cos(a))), int(round((n - 1) / 2 + RING * n * np.sin(a))))
                     starts.append({"player": p, "x": c[0], "y": c[1], "base_size": base, "land": len(lands)})
@@ -428,16 +430,27 @@ def generate(text, seed, players=2, size=None, warn=None, teams=None):
                     c = tuple(min(n - 1, value(v, consts) * n // 100) for v in attrs["land_position"][:2])
                 else:
                     c = tuple(int(v) for v in rng.integers(0, n, 2))
-                links.append((c, 0, zone if zone is not None else -1 - len(lands)))
+                p = owner_of(attrs, consts, starts, players, teams)
+                if p:                                       # direct_placement: the land of player p (#3947)
+                    starts.append({"player": p, "x": c[0], "y": c[1], "base_size": base, "land": len(lands)})
+                links.append((c, p, zone if zone is not None else -1 - len(lands)))
                 lands.append({"id": len(lands), "cells": square(c, base, n), "clump": clump, "box": box,
                               "target": tiles(attrs, consts, n, (2 * base + 1) ** 2)})
                 kinds[len(lands) - 1] = kind
                 layers[len(lands) - 1] = top
             for a in set(attrs) - {"base_layer", "base_size", "clumping_factor", "terrain_type", "land_percent", "number_of_tiles",
-                                   "land_position", "zone", *BORDERS}:
+                                   "land_position", "zone", "assign_to_player", "assign_to_team", *BORDERS}:
                 warn(f"{cmd}: {a} is not read yet")
         else:
             warn(f"{cmd} is not read yet")
+    if starts and len(starts) < players:            # direct_placement with too few lands: the rest on the circle
+        for p in sorted(set(range(1, players + 1)) - {st["player"] for st in starts}):
+            warn(f"player {p} has no land: a land on the circle")
+            a = 2 * np.pi * (p - 1) / players
+            c = (int(round((n - 1) / 2 + RING * n * np.cos(a))), int(round((n - 1) / 2 + RING * n * np.sin(a))))
+            starts.append({"player": p, "x": c[0], "y": c[1], "base_size": 3, "land": len(lands)})
+            links.append((c, p, -1 - len(lands)))
+            lands.append({"id": len(lands), "cells": square(c, 3, n), "clump": 8, "box": (0, n, 0, n), "target": 49})
     grow(owner, lands, np.ones((n, n), bool), rng)
     for lid, kind in kinds.items():
         terrain[owner == lid] = kind
@@ -480,13 +493,26 @@ def generate(text, seed, players=2, size=None, warn=None, teams=None):
     elevation = lower_to_water(terrain, elevation)
     ridges = cliffs(sections.get("CLIFF_GENERATION", ()), terrain, starts, consts, rng, warn)   # draws before objects()
     found = []                                     # one line per object part, so that parallel parts do not conflict
-    found += objects(sections.get("OBJECTS_GENERATION", ()), consts, terrain, starts, rng, warn, owner)
+    found += objects(sections.get("OBJECTS_GENERATION", ()), consts, terrain, starts, rng, warn, owner, layer)
     found += trees(terrain)
     found += ridges
     return {"size": n, "terrain": terrain.tolist(), "elevation": elevation.tolist(), "layer": layer.tolist(),
             "objects": found,
             "players": {str(p): {"color": p - 1} | ({"team": teams[p - 1]} if teams else {}) for p in range(1, players + 1)},
             "lands": [{k: v for k, v in st.items() if k != "land"} for st in starts]}
+
+
+def owner_of(attrs, consts, starts, players, teams):
+    """The player of a create_land (#3947): assign_to_player N, or for assign_to_team T the next player of team T
+    (teams, #3946) with no land yet. 0: no player."""
+    taken = {st["player"] for st in starts}
+    if "assign_to_player" in attrs:
+        p = value(attrs["assign_to_player"][0], consts)
+        return p if 1 <= p <= players and p not in taken else 0
+    if "assign_to_team" in attrs and teams:
+        t = value(attrs["assign_to_team"][0], consts)
+        return next((p for p in range(1, players + 1) if teams[p - 1] == t and p not in taken), 0)
+    return 0
 
 
 def circle(setup, players, teams, seed):
@@ -507,7 +533,7 @@ def circle(setup, players, teams, seed):
     return rng.permutation(order).tolist()
 
 
-def objects(cmds, consts, terrain, starts, rng, warn, owner=None):
+def objects(cmds, consts, terrain, starts, rng, warn, owner=None, layer=None):
     """The objects of the create_object commands of <OBJECTS_GENERATION> (#3855): number_of_objects (default 1) on
     random free tiles, set_place_for_every_player: that many for each player (its own, or Gaia with
     set_gaia_object_only), min_distance_to_players and max_distance_to_players: tiles from the origin of the player
@@ -517,6 +543,7 @@ def objects(cmds, consts, terrain, starts, rng, warn, owner=None):
     set_scaling_to_player_number scale the groups, else the objects (#3857). avoid_forest_zone (tiles from a forest,
     default 1), place_on_forest_zone (the tiles next to a forest), actor_area with actor_area_radius (default 1) marks
     the tiles around each object for a later avoid_actor_area, second_object: one more object on each tile (#3858).
+    layer_to_place_on T: only the tiles of the land layer T (layer: the land layer of each tile, #4132).
     Never on water (only a fish or a ship), a forest or another object; an object with no free tile is missing."""
     import aoe2mc
     kinds = aoe2mc.object_kinds(old=False)
@@ -534,7 +561,8 @@ def objects(cmds, consts, terrain, starts, rng, warn, owner=None):
         if base is None:
             warn(f"create_object: unknown object {args[0]}")
             continue
-        count = value(attrs["number_of_objects"][0], consts) if "number_of_objects" in attrs else 1
+        count = value(attrs["number_of_objects"][0], consts) if "number_of_objects" in attrs else 1 + 2 * (base == "VILLAGER_MALE")
+                                                       # VILLAGER with no amount: the 3 start villagers of AoE2 DE (#4120)
         lo = value(attrs["min_distance_to_players"][0], consts) if "min_distance_to_players" in attrs else 0
         hi = value(attrs["max_distance_to_players"][0], consts) if "max_distance_to_players" in attrs else 2 * n
         water = any(w in base for w in ("FISH", "SHIP", "BOAT"))
@@ -551,6 +579,8 @@ def objects(cmds, consts, terrain, starts, rng, warn, owner=None):
         elif k != 1:
             groups = max(1, round(groups * k))
         ground = (terrain == value(attrs["terrain_to_place_on"][0], consts)) if "terrain_to_place_on" in attrs else wet == water
+        if "layer_to_place_on" in attrs and layer is not None:
+            ground = ground & (layer == value(attrs["layer_to_place_on"][0], consts))
         gap = value(attrs["min_distance_group_placement"][0], consts) if "min_distance_group_placement" in attrs else 0
         zones = value(attrs["max_distance_to_other_zones"][0], consts) if "max_distance_to_other_zones" in attrs else 0
         forest = np.isin(terrain, list(FOREST_TREES))
@@ -609,7 +639,7 @@ def objects(cmds, consts, terrain, starts, rng, warn, owner=None):
                                "terrain_to_place_on", "min_distance_group_placement", "max_distance_to_other_zones",
                                "set_scaling_to_map_size", "set_scaling_to_player_number", "avoid_forest_zone",
                                "place_on_forest_zone", "actor_area", "actor_area_radius", "avoid_actor_area",
-                               "second_object"}:
+                               "second_object", "layer_to_place_on"}:
             warn(f"create_object: {a} is not read yet")
     return out
 
