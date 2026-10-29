@@ -2181,7 +2181,7 @@ class Replay:
                 f": villagers trained {self.villagers.get(p, 0)}, gathered {res}")]))
             out.append("tellraw @a " + json.dumps([text(name, color), text(              # military (#1066)
                 f": military units trained {self.army.get(p, 0)}, units lost {self.lost.get(p, 0)}, "
-                f"buildings lost {self.razed.get(p, 0)}{self.army_text(p)}, APM {self.mean_apm(p, self.ended)}")]))
+                f"buildings lost {self.razed.get(p, 0)}, APM {self.mean_apm(p, self.ended)}{self.army_text(p)}")]))
         return out + self.tech_commands() + self.society_commands()
 
     def army_text(self, p):
