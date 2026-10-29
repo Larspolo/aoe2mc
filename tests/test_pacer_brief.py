@@ -81,7 +81,7 @@ def test_a_released_claim_is_not_adopted(clones, monkeypatch):
 def briefs(monkeypatch, tickets, out=None):
     monkeypatch.setattr(pacer, "red_main", lambda: False)
     monkeypatch.setattr(pacer, "queues", lambda open_all, refs, now, tasks: {t: list(tickets) for t in tasks})
-    monkeypatch.setattr(pacer, "brief", lambda issue, comments, name, task, sample: f"{pacer.HEAD}\nticket: {issue['number']}\nclaim: {name}")
+    monkeypatch.setattr(pacer, "brief", lambda issue, comments, name, task, sample, **kw: f"{pacer.HEAD}\nticket: {issue['number']}\nclaim: {name}")
     monkeypatch.setattr(claim, "start", lambda n, by=None, note="": None)
     import dashboard
     monkeypatch.setattr(dashboard, "pages", lambda path, limit=10: [])
