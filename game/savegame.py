@@ -99,8 +99,8 @@ VICTORY = (                                                            # the vic
     "towns",
 )
 SCORE = (                                                              # Gather: the counts of score.py (#2475)
-    "fallen",                                                          # spoils.py: the units that gave their spoils
-    "fell",                                                            # ruins.py: the own buildings that fell, lost in the recap (#3736)
+    "buildings_lost",                                                  # ruins.py: the own buildings that fell, lost in the recap (#3736);
+    "fallen",                                                          # not "fell": that hides Gather.fell (#4147)
     "given",                                                           # train.py: the free units and technologies
     "losses",
     "razed",
@@ -496,6 +496,8 @@ def fields_again(x, p):
     for f in PACKED + KEPT:
         if f in p and f != "relics":                                   # a save before #2257 has no queues
             setattr(x, f, unpack(p[f]))
+    if "fell" in p:                                                    # a save before #4147
+        x.buildings_lost = unpack(p["fell"])
 
 
 def sites_again(x, p):
