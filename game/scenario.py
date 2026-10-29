@@ -678,7 +678,7 @@ def setup(g, mode="scenario", start=True):
         for x in sides:
             x.pop_limit = g.players.get(str(x.player), {}).get("pop_limit", x.pop_limit)
         return g
-    level = (getattr(g.game, "settings", None) or {}).get("ai_difficulty", "standard")
+    level = (getattr(g.game, "settings", None) or {}).get("ai_difficulty", "standard").split(",")[0]   # the first bot (#4020)
     g.command("scoreboard objectives add aoe_difficulty dummy")        # the condition "Difficulty Level" (#2704)
     g.command(f"scoreboard players set #level aoe_difficulty {LEVELS[level]}")
     g.command("scoreboard objectives add aoe_dipstate dummy")         # the condition "Diplomacy State" (#2757)
