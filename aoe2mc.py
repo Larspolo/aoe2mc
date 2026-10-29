@@ -383,6 +383,8 @@ def read_scenario(path):
     terrain_names = {t.value: t.name for t in TerrainId}
 
     kinds = object_kinds()
+    other = {r["tech"]: r["name"] for r in units.rows("tech_names.jsonl")}   # the names of game/data/train.jsonl
+    techs = {t.ID: other.get(t.name, t.name) for t in TechInfo}
 
     players = {}
     for p in scn.player_manager.players:
@@ -407,6 +409,10 @@ def read_scenario(path):
                 players[p.player_id]["name"] = name
             if p.lock_civ:                          # "Lock Civilizations": the player keeps its civilization (#3295)
                 players[p.player_id]["lock_civ"] = True
+            off = sorted({techs.get(i, f"TECH_{i}") for i in p.disabled_techs or ()} |   # the tab "Options" (#3299)
+                         {kinds.get(i, ("?", f"UNKNOWN_{i}"))[1] for i in [*(p.disabled_buildings or ()), *(p.disabled_units or ())]})
+            if off:
+                players[p.player_id]["disabled"] = off
             if p.starting_age.name != "DARK_AGE":   # the starting age: "castle" (setup.jsonl), none in the Dark Age (#3296)
                 players[p.player_id]["age"] = p.starting_age.name[:-4].lower().replace("_", "-")
         neutral = [i for i, d in enumerate(p.diplomacy or [], 1) if d == 1 and i != p.player_id and i <= 8]
@@ -420,8 +426,6 @@ def read_scenario(path):
     goals = sorted((t.description_order, i, (t.description or t.name or "").strip())   # the objectives that the game lists
                    for i, t in enumerate(scn.trigger_manager.triggers) if t.display_as_objective)
     texts["objectives"] = "\n".join(f"- {g}" for _, _, g in goals if g)
-    other = {r["tech"]: r["name"] for r in units.rows("tech_names.jsonl")}   # the names of game/data/train.jsonl
-    techs = {t.ID: other.get(t.name, t.name) for t in TechInfo}
     entities = {u.reference_id for us in scn.unit_manager.units for u in us   # the objects that are entities with the
                 if kinds.get(u.unit_const, ("?",))[0] in ("U", "H")}         # tag aoe2mc.r<ref> (#2617), not blocks
     shown = scn.option_manager.legacy_execution_order is False   # AoE2 DE runs in the display order (#3087)
@@ -2668,7 +2672,8 @@ def write_objects(path, size, T, H, players, objects, cols, ground, timeline=Non
     "timeline" (recorded games only): the events of read_timeline, with tiles in the turned grid
     and the "names" of the selected objects (name_timeline).
     "players" of a scenario also have its "resources" (food, wood, gold, stone), "pop_limit" and "computer" (#2539),
-    its starting "age" (setup.jsonl name, none in the Dark Age, #3296), its "name" and "lock_civ" (#3295).
+    its starting "age" (setup.jsonl name, none in the Dark Age, #3296), its "name" and "lock_civ" (#3295), and the sorted
+    names of the technologies, buildings and units that the scenario "disabled" for it (#3299).
     "mood": the map color mood of a DE scenario (ColorMood name, #1594), else "DEFAULT".
     lists: the lists of the scenario mode (key -> list, TRIGGER_LISTS), each one if it is not empty.
     "map_ground": the map bytes of map 0 without the objects (map_colors), one hex string per pixel row z: the live
@@ -2702,7 +2707,7 @@ def write_objects(path, size, T, H, players, objects, cols, ground, timeline=Non
         objs.append(e)
     data = {"map_size": size, "tile_size": T, "level_height": H, "mood": mood,
             "players": {str(pid): {"civ": p["civ"], "color": p["color"], "arch": p["arch"]}
-                        | {k: p[k] for k in ("team", "neutral", "resources", "pop_limit", "computer", "age", "name", "lock_civ", "start") if k in p} for pid, p in sorted(players.items())},
+                        | {k: p[k] for k in ("team", "neutral", "resources", "pop_limit", "computer", "age", "name", "lock_civ", "start", "disabled") if k in p} for pid, p in sorted(players.items())},
             "objects": objs, "yaw": float(yaw)}
     n, wet = cols.n, cols.wtop > cols.top
     data["ground"] = [" ".join("-" if wet[x, z] else str(ground[x, z]) for x in range(n)) for z in range(n)]
