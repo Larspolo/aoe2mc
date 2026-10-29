@@ -1064,14 +1064,15 @@ def faster(unit, name):
 def hits(g, name):
     """The keywords of combat.damage and combat.stats_command for unit name of the player of g (#4331): less, {attacker
     class: n} of the key "less" of its technologies whose units cover it (Royal Heirs), and ignore, True when a
-    technology with the key "ignore_armor" covers this melee unit (Wootz Steel). faster() tests the units of both."""
+    technology with the key "ignore_armor" covers this melee unit (Wootz Steel), or the unit has the key "ignore_armor"
+    in data/units.jsonl (Leitis, #4394). faster() tests the units of both."""
     import combat                                                  # combat imports gather, gather imports this module
     less = {}
     for t, (unit, cut) in BY_KEY["less"].items():
         if t in getattr(g, "techs", ()) and faster(unit, name):
             less = {c: less.get(c, 0) + cut.get(c, 0) for c in less | cut}
-    ignore = combat.stats(name).range <= 0 and any(faster(u, name) for t, u in BY_KEY["ignore_armor"].items()
-                                                    if t in getattr(g, "techs", ()))
+    ignore = name in combat.IGNORE or combat.stats(name).range <= 0 and any(
+        faster(u, name) for t, u in BY_KEY["ignore_armor"].items() if t in getattr(g, "techs", ()))
     return {"less": less, "ignore": ignore}
 
 

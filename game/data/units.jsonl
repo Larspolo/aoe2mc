@@ -62,7 +62,7 @@
 {"name": "KESHIK", "hp": 120, "attack": 9, "melee": 1, "pierce": 2, "range": 0, "reload": 1.9, "bonus": {}, "classes": ["cavalry", "unique"], "sight": 5}
 {"name": "KIPCHAK", "hp": 40, "attack": 4, "melee": 0, "pierce": 0, "range": 4, "reload": 2.2, "bonus": {"spearman": 1}, "classes": ["archer", "cavalry", "unique"]}
 {"name": "KONNIK", "hp": 100, "attack": 12, "melee": 2, "pierce": 2, "range": 0, "reload": 2.4, "bonus": {}, "classes": ["cavalry", "unique"], "sight": 5}
-{"name": "LEITIS", "hp": 100, "attack": 13, "melee": 1, "pierce": 1, "range": 0, "reload": 1.9, "bonus": {}, "classes": ["cavalry", "unique"], "sight": 5}
+{"name": "LEITIS", "hp": 100, "attack": 13, "melee": 1, "pierce": 1, "range": 0, "reload": 1.9, "bonus": {}, "classes": ["cavalry", "unique"], "sight": 5, "ignore_armor": true}
 {"name": "MAGYAR_HUSZAR", "hp": 80, "attack": 10, "melee": 0, "pierce": 2, "range": 0, "reload": 1.8, "bonus": {"siege": 5}, "classes": ["cavalry", "unique"], "sight": 5}
 {"name": "MAMELUKE", "hp": 80, "attack": 8, "melee": 0, "pierce": 0, "range": 3, "reload": 2.0, "bonus": {"cavalry": 9}, "classes": ["camel", "unique"], "melee_ranged": true}
 {"name": "MANGUDAI", "hp": 60, "attack": 6, "melee": 0, "pierce": 0, "range": 4, "reload": 2.1, "bonus": {"siege": 3, "spearman": 1}, "classes": ["archer", "cavalry", "unique"]}
@@ -111,7 +111,7 @@
 {"name": "ELITE_KESHIK", "hp": 145, "attack": 11, "melee": 1, "pierce": 3, "range": 0, "reload": 1.9, "bonus": {}, "classes": ["cavalry", "unique"], "sight": 5}
 {"name": "ELITE_KIPCHAK", "hp": 45, "attack": 5, "melee": 0, "pierce": 0, "range": 4, "reload": 2.2, "bonus": {"spearman": 1}, "classes": ["archer", "cavalry", "unique"]}
 {"name": "ELITE_KONNIK", "hp": 120, "attack": 14, "melee": 2, "pierce": 2, "range": 0, "reload": 2.4, "bonus": {}, "classes": ["cavalry", "unique"], "sight": 5}
-{"name": "ELITE_LEITIS", "hp": 130, "attack": 16, "melee": 2, "pierce": 1, "range": 0, "reload": 1.9, "bonus": {}, "classes": ["cavalry", "unique"], "sight": 5}
+{"name": "ELITE_LEITIS", "hp": 130, "attack": 16, "melee": 2, "pierce": 1, "range": 0, "reload": 1.9, "bonus": {}, "classes": ["cavalry", "unique"], "sight": 5, "ignore_armor": true}
 {"name": "ELITE_LONGBOWMAN", "hp": 40, "attack": 7, "melee": 0, "pierce": 1, "range": 6, "reload": 2.0, "bonus": {"spearman": 2}, "classes": ["archer", "unique"]}
 {"name": "ELITE_MAGYAR_HUSZAR", "hp": 90, "attack": 11, "melee": 0, "pierce": 2, "range": 0, "reload": 1.8, "bonus": {"siege": 8}, "classes": ["cavalry", "unique"], "sight": 6}
 {"name": "ELITE_MAMELUKE", "hp": 90, "attack": 10, "melee": 1, "pierce": 0, "range": 3, "reload": 2.0, "bonus": {"cavalry": 12}, "classes": ["camel", "unique"], "melee_ranged": true}
