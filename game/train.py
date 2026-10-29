@@ -404,6 +404,11 @@ def foot_archers(name, s):
     return civs.foot_archer(s)
 
 
+def infantry_but_spears(name, s):
+    """True for the infantry except the Spearman line (forms("SPEARMAN")): Fereters (Armenians, #4273)."""
+    return "infantry" in s.classes and name not in forms("SPEARMAN")
+
+
 def unlocked(g, name):
     """True when the player has the age of technology name (the key "age"). As in AoE2, the menu shows a technology only
     from its age, but a building or unit of a later age as a gray item (build.locked), and never one that the
