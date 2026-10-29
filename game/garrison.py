@@ -52,6 +52,7 @@ BASE = {r["name"]: r["arrows"] for r in ROWS if "arrows" in r}   # arrows of an 
 FISHER = "FISHING_SHIP"     # the only unit that goes into a dock (#1949)
 DOOR = 2.5                  # blocks from the door cell: there a unit goes in
 UNGARRISON = (7, "oak_door", "Ungarrison", "Click: all units come out")   # a slot of the first row, before RALLY
+BELL = (24, "bell", "Ring Town Bell", "Click: all villagers seek shelter")   # town center: first free slot after the policies (#3419)
 SPARE = 26                  # the last slot of the third row: UNGARRISON of a building with an item in slot 7 (the
                             # demolition raft of the dock #1949, Illumination of the fortified church #1948)
 INSIDE = "{Invulnerable:1b,NoAI:1b,CustomNameVisible:0b}"         # the NBT of a garrisoned unit (#807)
@@ -148,6 +149,35 @@ def order(g, player, cell):
         g.entering[u] = rect
     g.mark(player, {to})
     return rect
+
+
+def bell(g, player):
+    """Ring the town bell (#3419, AoE2 DE wiki "Town Bell"): each own villager and mule cart walks into the nearest own
+    building of holders() with room left within the line of sight of a town center, the same walk as order(); one with no such building
+    keeps working. Not a dock or a building of BY: they take only ships or animals. Returns the sent units."""
+    import ai, combat, train                                       # ai and train import gather, gather imports this module
+    homes = {r: o for r, o in holders(g).items() if o["name"] != "DOCK" and o["name"] not in BY and door(g, r) is not None}
+    room = {r: size(g, o["name"]) - len(g.garrisons.get(r, [])) - sum(e == r for e in g.entering.values()) for r, o in homes.items()}
+    units = sorted(set(g.villagers) | {u for u, n in g.soldiers.items() if n == "MULE_CART"})
+    pos, sent, far = g.positions(units), {}, combat.sight("TOWN_CENTER") * g.map.T
+    for u in [u for u in units if u in pos and u not in g.entering and not any(u in us for us in g.garrisons.values())]:
+        near = sorted((math.dist((pos[u][0], pos[u][2]), (d[0] + 0.5, d[1] + 0.5)), r) for r in homes if room[r] > 0 for d in [door(g, r)])
+        if near and near[0][0] <= far:
+            room[rect := near[0][1]] -= 1
+            sent[u] = rect
+    if sent:
+        g.new_order(list(sent))
+    for u, rect in sent.items():
+        if (v := g.villagers.get(u)) is not None:                  # the villager stops its work
+            v.state, v.path, v.goal, v.site = "garrison", [], None, None
+        x, z = door(g, rect)
+        name = unit_name(g, u)
+        ai.move(g, u, name, g.map.T, x + 0.5, g.map.y(x, z), z + 0.5, ai.NORMAL * train.speed(g, name, u))
+        g.entering[u] = rect
+    text = f"The town bell rings: {len(sent)} villagers seek shelter" if units else "You have no villagers."
+    g.command(f"playsound minecraft:block.bell.use master {player}")
+    g.command(f"tellraw {player} " + json.dumps({"text": text, "color": "gray"}))
+    return sent
 
 
 def open_menu(g, player, cell):

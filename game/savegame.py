@@ -352,7 +352,8 @@ def orders(x):
                               "repair": pack(repairs.get(u))} for u, v in sorted(x.villagers.items())},
             "farmers": sorted([list(t), u] for t, u in x.farmers.items()),
             "stances": dict(sorted(x.stances.items())),
-            "groups": {str(n): sorted(us) for n, us in sorted(x.groups.items())},
+            "groups": {name: {str(n): sorted(us) for n, us in sorted(gs.items())}   # each person (#3490)
+                       for name, gs in sorted(vars(x).get("person_groups", {}).items())},
             "garrisons": sorted([list(r), list(us)] for r, us in x.garrisons.items()),
             "ships": {u: {**{f: getattr(v, f) for f in JOB}, "pos": list(v.pos), "tree": v.tree and list(v.tree),
                           "site": v.site and list(v.site["footprint"]), "goal": v.path and list(v.path[-1]),
@@ -399,7 +400,11 @@ def give_orders(x, p):
     import gather
     import repair
     x.farmers = {tuple(t): u for t, u in p["farmers"]}
-    x.stances, x.groups = dict(p["stances"]), {int(n): set(us) for n, us in p["groups"].items()}
+    x.stances = dict(p["stances"])
+    gs = p["groups"]
+    if any(isinstance(v, list) for v in gs.values()):                  # a save of one group set for all (before #3490)
+        gs = {"": gs}
+    x.person_groups = {name: {int(n): set(us) for n, us in g.items()} for name, g in gs.items()}
     x.garrisons = {tuple(r): list(us) for r, us in p["garrisons"]}
     for u, s in p["villagers"].items():
         v = x.villagers.setdefault(u, gather.Villager(u, tuple(s["pos"])))

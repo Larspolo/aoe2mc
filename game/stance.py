@@ -5,7 +5,7 @@ of the four AoE2 stances sends `aoe stance` (combat.stance_command, #1104) to ea
 villagers, and closes the menu. The fifth item selects all units of the type near the clicked unit: the second click
 did that before (#743). The sixth item stops the selected military units at once (#3353). The seventh item
 sends them on a patrol to the next clicked ground cell (#3355). The eighth item is the Attack Move (#3357), the ninth and
-tenth are Follow and Guard (follow.py, #3358).
+tenth are Follow and Guard (follow.py, #3358). The eleventh item deletes the selected own units (#3451).
 The boss bar of the selected unit shows a stance other than aggressive (bossbar.py).
 """
 import math
@@ -24,6 +24,7 @@ PATROL = STOP + 1                                                  # slot: patro
 ATTACK_MOVE = PATROL + 1                                           # slot: walk to a clicked point, attack on the way (#3357)
 FOLLOW = ATTACK_MOVE + 1                                           # slot: follow a clicked unit (#3358)
 GUARD = FOLLOW + 1                                                 # slot: guard a clicked unit or building (#3358)
+DELETE = GUARD + 1                                                 # slot: kill the selected own units (#3451)
 FORMATION = 18                                                     # third row: the four formations of AoE2 (#3416)
 FORMATIONS = (("Line", "rail", "Units in rows across the walk"),
               ("Box", "oak_fence", "Melee units around the ranged and weak units"),
@@ -47,7 +48,8 @@ def items(g, uuid):
          (PATROL, "compass", "Patrol", "Walk between here and a point; attack the enemies on the way"),
          (ATTACK_MOVE, "iron_axe", "Attack Move", "Walk to a point; attack each enemy on the way"),
          (FOLLOW, "lead", "Follow", "Walk after an own unit and stay near it"),
-         (GUARD, "bell", "Guard", "Stay near an own unit or building; attack the enemies near it")] + \
+         (GUARD, "bell", "Guard", "Stay near an own unit or building; attack the enemies near it"),
+         (DELETE, "tnt", "Delete", "Kills the selected units")] + \
         [(FORMATION + i, item, k, text + "\nNow" * (k == form)) for i, (k, item, text) in enumerate(FORMATIONS)]
 
 
@@ -66,6 +68,8 @@ def open_menu(g, player, uuid):
             vars(g).setdefault("ordering", {})[p] = "attack_move"
         elif slot in (FOLLOW, GUARD):
             vars(g).setdefault("ordering", {})[p] = "follow" if slot == FOLLOW else "guard"   # the next click picks the target
+        elif slot == DELETE:
+            delete(g)
         elif FORMATION <= slot < FORMATION + len(FORMATIONS):
             form(g, p, FORMATIONS[slot - FORMATION][0])
         else:
@@ -102,6 +106,16 @@ def stop(g):
     for u in units:
         g.command(f"aoe stop {u}")
     g.new_order(units)
+
+
+def delete(g):
+    """Kill each selected own unit at once, with its horse, camel or boat, as the AoE2 Delete key (#3451): no resources
+    come back. The census then finds them dead as after a fight (score, population, selection: train.census)."""
+    import train                                                   # train imports gather, gather imports this module
+    for u in [u for u in sorted(g.selected) if u in g.villagers or u in g.soldiers]:
+        g.command(f"execute as {u} on vehicle run kill @s")
+        g.command(f"kill {u}")
+    train.census(g)
 
 
 def patrol(g, player, cell):

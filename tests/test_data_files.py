@@ -210,6 +210,12 @@ def check_taunts(row):                                     # a taunt: its number
     assert row["name"].isdigit() and row["name"] == str(int(row["name"])) and row["text"], row["name"]
 
 
+def check_sounds(row):                                     # a unit class: its select and order voice (#3499, #3500)
+    if row["name"].isupper():                              # a building: only the click sound (#3501)
+        return form(row, {"name": str, "select": str, "pitch": float})
+    form(row, {"name": str, "select": str, "order": str, "pitch": float})
+
+
 CHECKS = {                                                 # one file per line: parallel tickets add files (#2281)
     "build.jsonl": check_build,
     "buildings.jsonl": check_buildings,
@@ -222,6 +228,7 @@ CHECKS = {                                                 # one file per line: 
     "replay.jsonl": check_replay,
     "setup.jsonl": check_setup,
     "setup_keys.jsonl": check_setup_keys,
+    "sounds.jsonl": check_sounds,
     "taunts.jsonl": check_taunts,
     "train.jsonl": check_train,
     "train_keys.jsonl": check_civ_keys,                    # a key of train.jsonl that train.value reads (#2507)

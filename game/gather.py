@@ -145,6 +145,7 @@ CLOSED = 2000                # cells: a search this long checks if its goals are
 NUMBER = r"(-?[\d.]+(?:E-?\d+)?)[df]"
 CIVILIANS = tuple(t['name'] for t in ROWS if t.get('civilian'))
 SELECT = "aoe2mc.selected"                                         # entity tag of the selected units
+VOICES = {r["name"]: r for r in table.load("sounds.jsonl")}   # unit class -> its select voice (#3499)
 TYPE_REACH = 16                                                    # blocks: a second click selects its type this near (#743)
 WAND = "warped_fungus_on_a_stick"     # the selection wand: a second item with its own "used" statistic (#778)
 LEFT = "aoe_left"                     # score of a left click with the command stick (Paper plugin, #1788)
@@ -880,6 +881,19 @@ class Gather:
             sel[self.person] = sel.pop("", set()) if self.person else set()
         return sel
 
+    @property
+    def groups(self):
+        """The control groups {n: units} of Gather.person (#3490): each person of one AoE2 player has own groups, as in
+        AoE2 co-op. As with selected, the first named person takes the groups of the person "" over."""
+        own = vars(self).setdefault("person_groups", {})
+        if self.person not in own:
+            own[self.person] = own.pop("", {}) if self.person else {}
+        return own[self.person]
+
+    @groups.setter
+    def groups(self, groups):
+        vars(self).setdefault("person_groups", {})[self.person] = groups
+
     def others(self):
         """The units that another person of this Gather has selected: they keep their glow and their tag."""
         return set().union(*(s for n, s in vars(self).get("selections", {}).items() if n != self.person))
@@ -889,7 +903,34 @@ class Gather:
         for s in vars(self).get("selections", {}).values():
             s.discard(uuid)
 
-    def select(self, uuid):
+    def voice_class(self, uuid):
+        """The class of unit uuid in game/data/sounds.jsonl, or None (#3499)."""
+        import combat                                                  # combat imports this module
+        if uuid in getattr(self, "ships", {}):
+            return "ship"
+        if uuid in getattr(self, "villagers", {}):
+            return "villager"
+        name = getattr(self, "soldiers", {}).get(uuid)
+        if name is None:
+            return None
+        cs = set(combat.STATS[name].classes) if name in combat.STATS else set()
+        return "monk" if name == "MONK" else next((v for v, k in (
+            ("ship", {"ship", "warship", "fireship"}), ("siege", {"siege", "ram", "heavysiege"}),
+            ("cavalry", {"cavalry", "camel", "elephant"}), ("archer", {"archer", "skirmisher"})) if cs & k), "infantry")
+
+    def voice(self, uuid, key="select"):
+        """Play the select (or order, #3500) voice of unit uuid to the person who clicked, one line per click as in
+        AoE2 DE (#3499)."""
+        if (v := VOICES.get(self.voice_class(uuid))) and not self.noui:
+            self.command(f"playsound minecraft:{v[key]} voice {self.person or self.who} ~ ~ ~ 1 {v['pitch']}")
+
+    def order_voice(self):
+        """Play the order voice of the first selected unit once, for an order of the person (a click, #3500). The
+        orders of a bot or of the game program (rally point, next_task, a trigger) do not come here."""
+        if self.selected:
+            self.voice(min(self.selected), "order")
+
+    def select(self, uuid, voice=True):
         """Select one villager (glowing), as a click in AoE2 does. A click on a military unit adds it to selected
         military units, as a shift click in AoE2 does."""
         keep = {uuid} | (self.selected if uuid in self.soldiers and self.selected <= set(self.soldiers) else set())
@@ -901,6 +942,8 @@ class Gather:
         for u in sorted(self.selected ^ keep | {uuid}):                 # the name line shows the selection (#661)
             self.command(f"aoe label {u}")
         self.selected = keep
+        if voice:
+            self.voice(uuid)
         bossbar.show(self, uuid)                                        # the boss bar of the selection (#659)
 
     def select_type(self, uuid):
@@ -916,7 +959,7 @@ class Gather:
             self.command(f"aoe label {u}")
         self.selected &= near
         for u in sorted(near - self.selected - {uuid}) + [uuid]:      # the clicked unit last: its boss bar
-            self.select(u)
+            self.select(u, voice=u == uuid)
 
     def choose(self, uuids, last=None):
         """Make uuids the selection: the other units leave it, the new ones glow. The boss bar shows unit last."""
@@ -928,7 +971,9 @@ class Gather:
             self.command(f"tag {u} add {SELECT}")
         for u in sorted(self.selected ^ uuids):                        # the name line shows the selection (#661)
             self.command(f"aoe label {u}")
-        self.selected = set(uuids)
+        new, self.selected = uuids - self.selected, set(uuids)
+        if new and last is not None:                                   # a pick, not a unit that left (#3499)
+            self.voice(last)
         bossbar.show(self, last)
 
     def box(self, name, cell):
@@ -1266,9 +1311,11 @@ class Gather:
         self.command(f"execute as {self.who} unless items entity @s container.* minecraft:carrot_on_a_stick[!custom_data] "
                      "run give @s minecraft:carrot_on_a_stick")       # not a group item
         if self.calls % GROUP_GIVE == 0:
-            for n, (slot, _) in GROUPS.items():
-                self.command(f"execute as {self.who} unless items entity @s hotbar.{slot} *[custom_data={{aoe_group:{n}}}] "
-                             f"run item replace entity @s hotbar.{slot} with {group_item(n, len(self.groups.get(n, ())))}")
+            for name in filter(None, self.people()):                   # the groups of each person (#3490)
+                self.person = name
+                for n, (slot, _) in GROUPS.items():
+                    self.command(f"execute as {name} unless items entity @s hotbar.{slot} *[custom_data={{aoe_group:{n}}}] "
+                                 f"run item replace entity @s hotbar.{slot} with {group_item(n, len(self.groups.get(n, ())))}")
             diplomacy.give(self)                                       # the Game menu item (#1588)
             goto.give(self)                                            # the "Go to" compass (#1830)
         self.calls += 1
@@ -1375,8 +1422,8 @@ class Gather:
             self.choose(out, min(out, default=None))
             text = f"Group {n}: {len(out)} units"
         self.command(f"title {name} actionbar " + json.dumps({"text": text}))
-        # the item names the units of the group now (#1812): the players of this Gather share the groups
-        self.command(f"item replace entity {self.who} hotbar.{GROUPS[n][0]} with {group_item(n, len(self.groups[n]))}")
+        # the item names the units of the group now (#1812), only in the hotbar of this person (#3490)
+        self.command(f"item replace entity {name} hotbar.{GROUPS[n][0]} with {group_item(n, len(self.groups[n]))}")
 
     def click(self, name):
         self.person = name                                             # its own selection (#3486)
@@ -1404,10 +1451,15 @@ class Gather:
         if order == "attack_move" and (cell := self.map.pick_ground(eye, d)):
             stance.attack_move(self, name, cell)                       # the Attack Move menu item (#3357)
             return
-        kind, u, _ = self.target(eye, d, self.positions(sorted(self.pickable()))) or (None, None, None)
+        kind, u, cells = self.target(eye, d, self.positions(sorted(self.pickable()))) or (None, None, None)
         if order in ("follow", "guard"):                               # the Follow and Guard menu items (#3358)
             if kind == "unit" or kind == "building" and order == "guard":
                 follow.start(self, name, order, u)
+                if kind == "unit":
+                    self.command(glow(u))                              # the order marker, as an attack (#796)
+                else:
+                    for c in marker(self.map, cells or {(sum(u[:2]) // 2, sum(u[2:]) // 2)}, "go", name):
+                        self.command(c)
             else:
                 follow.refuse(self, name, order)
             return
@@ -1416,10 +1468,12 @@ class Gather:
         if kind == "enemy":
             monk.convert_order(self, self.monks(), u)                    # the monks convert it, the others attack (#1245)
             self.attack(u)
+            self.order_voice()
             self.command(glow(u))                                     # the order marker of an attack (#796)
             return
         if kind == "prey":
             self.hunt(u)
+            self.order_voice()
             self.command(glow(u))
             return
         import combat                                                  # combat imports this module
@@ -1447,6 +1501,7 @@ class Gather:
             monk.convert_order(self, self.monks(), u)                 # with Redemption (#1264)
             self.sieged.add(u)
             self.attack(u)
+            self.order_voice()
             x0, _, z0, x1, _, z1 = self.forts[u]
             self.mark(name, {(x0, z0), (x1, z1)}, "attack")
             import combat                                              # combat imports this module
@@ -1463,6 +1518,7 @@ class Gather:
                 fleet.build_site(self, self.selected, site)            # the selected fishing ships build it (#1438)
             elif site and self.selected & self.villagers.keys() and not self.row_busy(site):
                 self.build(site)                                       # the selected villagers build it at once, as in AoE2 (#1654)
+                self.order_voice()
             if site:
                 repair.build_order(self, site, self.selected)          # the selected Serjeants build a Donjon (#2129)
             return
@@ -1494,17 +1550,21 @@ class Gather:
         tile = self.map.pick_tree(eye, d) or self.shore_fish(eye, d)
         if tile and self.selected:
             self.send(tile)
+            self.order_voice()
             self.mark(name, self.map.spot(tile))
         elif self.selected and (site := build.pick(self, eye, d)):
             self.build(site)
+            self.order_voice()
             repair.build_order(self, site, self.selected)              # Serjeants build a Donjon (#2129)
             x0, x1, z0, z1 = site["footprint"]
             self.mark(name, {(x0, z0), (x1 - 1, z1 - 1)})
         elif self.selected and (cell := self.map.pick_ground(eye, d)) and self.map.free(*cell):
             self.walk_to(name, cell)                                   # the move order of AoE2 (#1368)
+            self.order_voice()
         elif any(replay.ship(self.soldiers.get(u, "")) for u in self.selected) \
                 and (cell := fleet.pick(self, eye, d)) and self.map.wet(*cell):
             self.walk_to(name, cell)                                   # the ships sail on the water (#1383)
+            self.order_voice()
 
     def new_order(self, units):
         """A new order ends each old order of the units, as in AoE2 (#3007): the repair of a Serjeant (#2128), the

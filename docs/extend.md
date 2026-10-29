@@ -14,6 +14,7 @@ parallel tickets do not change the same lines. Most rules have a check: `tools/d
   building checks the full menu from the data (#2099).
 - The combat values of a new unit are one new line in `game/data/units.jsonl` (`combat.STATS`, #1912), of a new building
   one in `game/data/buildings.jsonl` (`combat.BUILDINGS`); its line of sight is the key `"sight"` there (#1913; epic #1909 moves more tables).
+- The select voice of a unit class is one line in `game/data/sounds.jsonl` (`gather.VOICES`, the vanilla sound events "select" and "order" (#3500) and the pitch; `Gather.voice_class` maps a unit to its class, #3499).
 - The converter tables are lines in `data/*.jsonl` too (#1917): an animal in `animals.jsonl`, an infantry design in `lines.jsonl`, a footprint in `footprint.jsonl` (the first match wins: put a longer name before its part).
 - An item that few civilizations have (a unique or regional unit, building or technology) gets the key `"civs"` (the
   civilizations that have it, sorted) on its own line of `game/data/train.jsonl` or `game/data/build.jsonl`

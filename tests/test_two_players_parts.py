@@ -55,7 +55,7 @@ def test_a_control_group_of_player_2_goes_only_to_its_team_and_its_gather():
     server.log.clear()
     run_clicks(g1, g2)                                                 # Alex: shift + click on the item of group 2
     assert g2.groups == {2: {"b"}} and not g1.groups
-    assert f"item replace entity {P2} hotbar.5 with {gather.group_item(2, 1)}" in server.log
+    assert f"item replace entity Alex hotbar.5 with {gather.group_item(2, 1)}" in server.log   # its person (#3490)
     assert any(c.startswith("title Alex actionbar") and "Group 2: 1 units saved" in c for c in server.log)
     assert not any(P1 in c or "Steve" in c for c in server.log if "aoe_group" in c or "actionbar" in c)
     g2.choose(set())
@@ -67,7 +67,7 @@ def test_a_control_group_of_player_2_goes_only_to_its_team_and_its_gather():
     g2.calls = 0
     g2.clicks()                                                        # the group items of the hotbar
     give = [c for c in server.log if "aoe_group" in c and "item replace" in c]
-    assert len(give) == len(gather.GROUPS) and all(c.startswith(f"execute as {P2} ") for c in give)
+    assert len(give) == len(gather.GROUPS) and all(c.startswith("execute as Alex ") for c in give)   # its person (#3490)
     assert "Group 2: 1 unit" in next(c for c in give if "hotbar.5" in c)
 
 

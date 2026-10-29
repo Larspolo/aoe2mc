@@ -88,7 +88,9 @@ def test_each_gather_gives_its_items_and_menu_only_to_its_team():
     server.log.clear()
     g2.clicks()
     gives = [c for c in server.log if c.startswith(("execute as", "scoreboard players enable"))]
-    assert gives and all("@a[team=p2]" in c for c in gives)
+    groups = [c for c in gives if "aoe_group" in c]                   # the group items go to each person (#3490)
+    assert gives and all("@a[team=p2]" in c for c in gives if c not in groups)
+    assert groups and all(c.split()[2] in g2.people() for c in groups)
     assert not any("team join p2 @a" in c or "team join p1" in c for c in server.log)
 
 
