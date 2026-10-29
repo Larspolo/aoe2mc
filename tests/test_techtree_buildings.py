@@ -14,7 +14,7 @@ def buildings_page(civ=None):
 
 def row_of(name):
     """The row (age) of a building on the first page, for all civilizations."""
-    slots = techtree.pages([n for n in build.ICONS])[0]
+    slots = techtree.rows([n for n in build.ICONS])[0]
     return next(s // 9 for s, n in slots.items() if n == name)
 
 

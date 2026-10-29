@@ -28,7 +28,7 @@ DELETE = GUARD + 1                                                 # slot: kill 
 FORMATION = 18                                                     # third row: the four formations of AoE2 (#3416)
 FORMATIONS = (("Line", "rail", "Units in rows across the walk"),
               ("Box", "oak_fence", "Melee units around the ranged and weak units"),
-              ("Staggered", "chain", "Rows with double gaps, against area damage"),
+              ("Staggered", "iron_chain", "Rows with double gaps, against area damage"),
               ("Flank", "arrow", "Two groups side by side with a gap"))
 
 
