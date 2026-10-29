@@ -753,9 +753,10 @@ def start_on_join(game, sides, people, sleep=time.sleep):
     print(f"The game starts when {people} {'person' if people == 1 else 'people'} joined.", file=sys.stderr)
     while len(game.joined) < people:
         sleep(0.5)
+    import gather
     game.command("tick unfreeze")
-    for h in sides:
-        h.t0 = h.clock()
+    for h in sides:                                                    # a loaded game goes on at its saved game time (#3377)
+        h.t0 = h.clock() - vars(game).get("loaded_seconds", 0.0) / (gather.NORMAL * getattr(h, "speed", 1.0))
 
 
 def unveil(g):
