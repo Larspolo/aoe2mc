@@ -142,6 +142,7 @@ SHIP_TECHS = {t['name']: tuple(t['ship']) for t in ROWS if 'ship' in t}   # the 
 HERDS = {t['name'] for t in ROWS if t.get('herd')}   # herdable animals: shepherds (civs.WORK)
 VILLAGER_HIT = 3, 2.0                                              # AoE2 villager attack and reload (game seconds)
 FARM_FOOD = 175                                                    # food in one farm, as in AoE2 DE (no upgrades)
+PASTURE = next((r for r in table.load("build.jsonl") if r["name"] == "PASTURE"), {"food": 0})   # Khitans (#4118); antiquity: none
 FARM_TECHS = {t['name']: t['farm'] for t in ROWS if 'farm' in t}
 MINES = {t['name']: tuple(t['mine']) for t in ROWS if 'mine' in t}   # as in AoE2
 MINE_BLOCKS = {"gold": ("gold_ore", "raw_gold_block", "stone"),                # the blocks of the converter's heap
@@ -270,6 +271,7 @@ class Map:
         self.mine_at = {}                                              # block cell -> tile of its mine
         self.farms, self.farm_at = {}, {}                              # farm tile -> food; block cell -> farm tile
         self.farm_food, self.own_farms = FARM_FOOD, set()              # food of a new farm (FARM_TECHS), own farm tiles
+        self.pastures = set()                                          # farm tiles that are pastures (#4118)
         self.carcasses = {}                                            # tile -> food of the carcasses of hunts (#1058)
         self.herds = set()                                             # carcass tiles of herdable animals (HERDS)
         self.rot = {}                                                  # carcass tile -> food per game second (DECAY)
@@ -333,6 +335,10 @@ class Map:
         open_cells: the cells that units walk through (under a town center, #865)."""
         x0, x1, z0, z1 = rect
         cells = {(x, z) for x in range(x0, x1) for z in range(z0, z1)}
+        if name == "PASTURE":                                          # a farm in a fenced building: the herders stand
+            self.farms[tile], self.feet[tile] = PASTURE["food"], rect   # next to it, and its yurt takes their food
+            self.pastures.add(tile)
+            self.farm_at.update(dict.fromkeys(cells, tile))
         if "FARM" in name:                                             # no barriers: the farmer stands on it
             self.farms[tile], self.feet[tile] = self.farm_food, rect
             if own:
@@ -725,6 +731,7 @@ class Gather:
         self.seen, self.dead = {}, {}                                  # hunted animal -> last feet position, carcass tile
         self.players, self.sites = data.get("players", {}), []         # construction sites (#417)
         self.farmers, self.crops = {}, {}                              # farm tile -> UUID of its farmer, wheat age
+        self.herders = {}                                              # pasture tile -> UUID of its second herder (#4118)
         self.trunks = {}                                               # tree tile -> logs of its trunk on the ground
         self.seconds = {}                                              # resource -> fraction of civs.EXTRA (#2113)
         self.bushes = {}                                               # bush tile -> the block of its last look
@@ -1127,12 +1134,12 @@ class Gather:
             to = tile
             if tile in self.map.farms:
                 v.tree = None
-                free = [t for t, k in self.map.farms.items() if k > 0 and t not in self.farmers]
+                free = [t for t, k in self.map.farms.items() if k > 0 and not self.tended(t)]
                 to = tile if tile in free else min(free, key=lambda t: math.dist(t, tile), default=None)
                 if to is None:
                     self.set(v, "idle")
                     continue
-                self.farmers[to] = u
+                (self.herders if to in self.farmers else self.farmers)[to] = u   # a pasture: a second one (#4118)
             self.task(v, job)
             if v.load and v.res != res:
                 v.load = 0                                             # AoE2 drops a load of another resource
@@ -1256,11 +1263,18 @@ class Gather:
     def goals(self, tile):
         """The cells where a villager works a resource: on a farm, else next to it."""
         spot = self.map.spot(tile)
-        return {c for c in spot if self.map.free(*c)} if tile in self.map.farms else self.map.around(spot)
+        return {c for c in spot if self.map.free(*c)} if tile in self.map.farms and tile not in self.map.pastures \
+            else self.map.around(spot)
+
+    def tended(self, tile):
+        """True when the farm on tile has all its farmers: one, a pasture two (#4118)."""
+        return tile in self.farmers and (tile not in self.map.pastures or tile in self.herders)
 
     def drop_goals(self, v):
         """The cells next to the drop sites of the load of a villager (a carcass: also the mule cart, #2194)."""
         build.moved_carts(self)                                        # a mule cart can be at a new place (#2209)
+        if v.tree in self.map.pastures:                                # a herder drops at the yurt of its pasture (#4118)
+            return self.map.around({c for c, t in self.map.farm_at.items() if t == v.tree})
         meat = self.map.drops["meat"] if v.res == "food" and v.tree in self.map.carcasses else []
         return set().union(*map(self.map.around, self.map.drops[v.res] + meat))
 
@@ -1289,7 +1303,7 @@ class Gather:
             return
         x0, x1, z0, z1 = site["footprint"]
         if "FARM" in site["name"]:
-            if (tile := self.map.farm_at.get((x0, z0))) and tile not in self.farmers:
+            if (tile := self.map.farm_at.get((x0, z0))) and not self.tended(tile):
                 self.send(tile, {min(who)})
             return
         res = [r for r, names in DROP_SITES.items() if site["name"] in names]
@@ -1654,6 +1668,8 @@ class Gather:
                 del table[u]
         for t in [t for t, f in self.farmers.items() if f in units]:
             del self.farmers[t]
+        for t in [t for t, f in self.herders.items() if f in units]:
+            del self.herders[t]
         for u in units & vars(self).get("waypoints", {}).keys():      # a new order ends the waypoints (#3515)
             del self.waypoints[u]
 
@@ -1900,6 +1916,7 @@ class Gather:
                 if v.tree in self.map.farms:
                     if self.map.farms[v.tree] <= 0:                    # an empty farm: the farmer stops
                         self.farmers.pop(v.tree, None)
+                        self.herders.pop(v.tree, None)
                         v.tree = None
                 elif (v.res != "wood" or self.work_on) and self.source(v).get(v.tree, 0) <= 0:
                     v.tree = self.nearest(v)                           # as in AoE2: the next tree, bush or mine, or stop (#3271)
@@ -1926,7 +1943,10 @@ class Gather:
                         src[v.tree] = 0
                     self.work(v)
                     self.second(v)
-                    if v.tree in self.map.farms:
+                    if v.tree in self.map.pastures:                    # no wheat and no reseed (#4118)
+                        if src[v.tree] <= 0:
+                            self.clear_farm(v.tree)
+                    elif v.tree in self.map.farms:
                         self.harvest(v.tree)
                         if src[v.tree] <= 0 and getattr(self, "reseeds", 0) > 0:   # a queued reseed: new at once (#3283)
                             self.reseeds -= 1
@@ -2275,6 +2295,8 @@ class Gather:
         self.map.own_farms.discard(tile)
         self.crops.pop(tile, None)
         self.farmers.pop(tile, None)
+        self.herders.pop(tile, None)
+        self.map.pastures.discard(tile)
         for c in [c for c, t in self.map.farm_at.items() if t == tile]:
             del self.map.farm_at[c]
         self.sites[:] = [s for s in self.sites if not ("FARM" in s["name"] and rect and tuple(s["footprint"]) == tuple(rect))]

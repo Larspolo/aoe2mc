@@ -93,6 +93,7 @@ still in the code, add each entry on its own line, in alphabetical order, not at
 **No test checks the content of a data file or a configuration file** (owner, 2026-10-29): a change of a value, a text
 or a setting there must not make a test fail. Test the form of the data and the behavior of the code, with the
 expected value computed from the data or with test data (a fixture, a temporary file).
+A change of data files only adds no test, also when the ticket asks for one (#4242; `tools/ship_pr.py` stops it).
 
 ## How to verify
 

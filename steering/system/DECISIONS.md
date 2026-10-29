@@ -19,6 +19,7 @@ the owner chose another option, `-`: no recommendation) · principle (`P<n>`, or
 - 2026-10-27 · #1702 · Generalise: put the large tables into line-based data files, not only `train.TRAINS` · other · new (P10)
 - 2026-10-27 · #1909 · All game data in data files, by content, not by size; a lint, not a question for each run; measure in merged PRs, not hours · changed · P10
 - 2026-10-29 · - · No test checks the content of a data file or a configuration file; remove such tests · - · P10
+- 2026-10-29 · #4242 · A change of data files only adds no test, also a menu or bonus test of the new line; a check of `tools/ship_pr.py` stops it · - · P10
 - 2026-10-29 · - · The improve loop learns from the owner's own system changes (owner work makes the next review come soon), checks all levers in each review, makes bold changes (also redesigns, also with a pause for owner steps), and waits by merged PRs, never by hours · - · new (P11)
 - 2026-10-29 · - · The gap between process reviews follows their results: while reviews make changes it halves from 80 merged PRs down to 10, while they make none it doubles from 80 up to 640, and each turn of the result resets it to 80 · - · P11
 - 2026-10-29 · #4197 · The agent framework stays in aoe2mc, and `tools/bootstrap.py` copies it into a new project (A); a synced repository (B) waits until there are more projects · other · P4
