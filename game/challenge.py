@@ -5,6 +5,8 @@ than 6 units lost" is a silver limit of 5).
 run.py --play --challenge NAME (#3900, decision #3760: own challenge maps) plays one on a converted world: player 1
 gets the civilization of the line, and tick() ends the game with the medal when the goal function of the key "check"
 ("module.function", (g, row) -> True when complete) says so. A new challenge is one data line and one goal function.
+A challenge opens after a medal in the challenge of its key "after" (#3904, AoE2 DE). The best medal of each one goes
+into MEDAL_FILE in the user folder (the medals belong to the player, not to one map); `--challenge list` prints them.
 Minecraft feature: a boss bar shows the goal and the next medal limit, a title shows the medal.
 
     challenge.tick(g)   # gather.Gather.run, when g.challenge is set
@@ -19,6 +21,7 @@ import table  # noqa: E402
 
 CHALLENGES = {r["name"]: r for r in table.load("challenges.jsonl")}
 MEDALS = ("gold", "silver", "bronze")
+MEDAL_FILE = os.path.join(os.path.expanduser("~"), ".aoe2mc", "medals.json")   # {challenge: best medal} (#3904)
 UNITS = {"lost": "units lost", "time": "game seconds"}             # the value of each kind of challenge
 
 
@@ -32,6 +35,38 @@ def limits(name):
     """The medal limits of challenge `name` as text, for example "gold 480, silver 600, bronze 780 game seconds"."""
     c = CHALLENGES[name]
     return ", ".join(f"{m} {c[m]}" for m in MEDALS) + f" {UNITS[c['medal']]}"
+
+
+def medals(path=None):
+    """{challenge: best medal} of the medal file."""
+    try:
+        with open(path or MEDAL_FILE, encoding="utf-8") as f:
+            return json.load(f)
+    except FileNotFoundError:
+        return {}
+
+
+def keep(name, m, path=None):
+    """Write medal m of challenge `name` into the medal file when it is better than the medal there."""
+    path, best = path or MEDAL_FILE, medals(path)
+    if m is None or (name in best and MEDALS.index(best[name]) <= MEDALS.index(m)):
+        return
+    os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(best | {name: m}, f)
+
+
+def opened(name, path=None):
+    """True when challenge `name` is open: no key "after", or a medal in that challenge."""
+    after = CHALLENGES[name].get("after")
+    return after is None or after in medals(path)
+
+
+def listing(path=None):
+    """One line for each challenge in the order of the data file: its name, open or closed, its best medal."""
+    best = medals(path)
+    return [f"{n}: {'open' if opened(n, path) else 'closed'}, " + (f"{best[n]} medal" if n in best else "no medal")
+            for n in CHALLENGES]
 
 
 BAR = "aoe2mc:challenge"
@@ -89,5 +124,6 @@ def tick(g):
         g.command(f'title @a[team=p{g.player}] subtitle ' + json.dumps(
             {"text": f"{m.title()} medal" if complete and m else "No medal", "color": "yellow"}))
         g.medal = m if complete else None
+        keep(g.challenge, g.medal)
         return cheats.over(g, lambda p: p == g.player and complete and m is not None)
     show(g, c, now)
