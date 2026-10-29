@@ -4,8 +4,8 @@ This plan lets more than one person work on the project at the same time, each w
 adds each account to the pacer automatically, and it checks the quota of each account separately. It assumes that
 all collaborators are fair. The parts of the system are in `docs/SYSTEM.md`; this document names only what changes.
 
-Status: a plan. Epic #4232 does it. Decision #4229 (who steers) is open; the other parts have one clearly best
-form, named below with the reason.
+Status: a plan. Epic #4232 does it. Decision #4229 (who steers): A, all collaborators steer, `owner` is the tie-breaker
+(owner, 2026-10-29). The other parts have one clearly best form, named below with the reason.
 
 ## What assumes one person today
 
@@ -38,8 +38,7 @@ reserve = 0.2                    # optional: leave 20 % of each window for the c
 ```
 
 `reserve` (default 0) lowers the aim of `usage.target_runs` for that account only (P7: use the whole quota is the
-default; a collaborator who also works by hand keeps a part). Who steers is decision #4229; the plan for its
-recommendation A: a list `owners` (default: `owner`) that `tools/feedback.py` and `tools/health.py` read, and
+default; a collaborator who also works by hand keeps a part). Who steers: decision #4229 chose A (2026-10-29): a list `owners` (default: `owner`) that `tools/feedback.py` and `tools/health.py` read, and
 Automerge holds each PR that changes `owners` or `[accounts]` until an owner approves it.
 
 ### 2. Each run knows its account
