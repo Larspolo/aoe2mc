@@ -6,7 +6,7 @@ Usage:
     python tools/scenarios.py tiny OUT.aoe2scenario
     python tools/scenarios.py gallery OUT.aoe2scenario [--kinds BOU]
     python tools/scenarios.py moods OUT.aoe2scenario [--mood NIGHT]
-    python tools/scenarios.py stress|buildings|units|village|facing|walls|river|river_town|four_civs|battle|large|owner_loop OUT.aoe2scenario
+    python tools/scenarios.py stress|buildings|units|village|facing|walls|river|river_town|four_civs|battle|large|layers|owner_loop OUT.aoe2scenario
 
 tiny:      24x24 tiles with land, shallow and deep water, a hill, buildings, units, a tree, a mine and fish.
 gallery:   every object type of the parser in a grid (B = buildings, O = other objects, U = units).
@@ -14,6 +14,7 @@ stress:    units against every side of buildings, trees, mines, cliffs and a mou
 buildings: every building type for 8 civilizations with different architecture sets (players 1-8).
 units:     every land unit on land and every ship on water.
 village:   a small map with terrain types, water, a hill, a town and animals.
+layers:    a 32x32 map with terrain layers: a road cross, a dirt path, a snow patch, grass on deep water (#3690).
 moods:     the village with a map color mood (--mood: DEFAULT, NIGHT, EVENING, SWAMP, MISTY ...), for a check of the
            moods in the game (#1598).
 river:     a river at elevation 2 between land at elevation 2, with a dock, a bridge, a ship and fish (#165).
@@ -585,9 +586,31 @@ def owner_loop(path):
     return save(scn, path, "owner_loop.aoe2scenario")
 
 
+def layers(path):
+    """The terrain layers (#3690): a road cross, a dirt path and a snow patch as layers on grass, and grass as a layer on
+    a strip of deep water (a land layer on water: the water stays)."""
+    scn = new_scenario(32)
+    for t in scn.map_manager.terrain:
+        if t.x >= 27:
+            t.terrain_id = TerrainId.WATER_DEEP
+            t.layer = TerrainId.GRASS_1
+        elif t.x in (15, 16) or t.y in (15, 16):
+            t.layer = TerrainId.ROAD
+        elif t.y == t.x + 4 and t.x < 11:
+            t.layer = TerrainId.DIRT_1
+        elif 20 <= t.x < 26 and 3 <= t.y < 9:
+            t.layer = TerrainId.SNOW
+    um = scn.unit_manager
+    um.add_unit(PlayerId.ONE, BuildingInfo.TOWN_CENTER.ID, x=22, y=22)
+    for x in (19.5, 20.5, 21.5):
+        um.add_unit(PlayerId.ONE, UnitInfo.VILLAGER_MALE.ID, x=x, y=25.5)
+    return save(scn, path, "layers.aoe2scenario")
+
+
 MAKERS = {"tiny": tiny, "stress": stress, "buildings": buildings_map, "units": units_map, "village": village, "facing": facing,
           "walls": walls, "river": river, "river_town": river_town, "four_civs": four_civs, "battle": battle,
           "triggers": triggers, "large": large,
+          "layers": layers,
           "moods": moods,
           "owner_loop": owner_loop}
 
