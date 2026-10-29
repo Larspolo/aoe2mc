@@ -222,15 +222,16 @@ class Bot:
             g.hunt(prey, who)
 
     def go(self, v, res):
-        """Send villager v to the nearest source of res that has some left. False when there is none."""
-        g = self.g
+        """Send villager v to the nearest source of res that has some left and a free cell next to it. False when there
+        is none. An inner tree of a forest has no free cell (Gather.goals): the villager stopped at once, and each tick
+        took the next inner tree, while move() gave it another order between (#3726: 67 s at the same place)."""
+        g, T = self.g, self.g.map.T
         full = [t for t, k in self.sources(res).items() if k > 0 and self.time - self.failed.get(t, -RETRY) >= RETRY]
-        if full:
-            T = g.map.T
-            tile = min(full, key=lambda t: (math.dist(v.cell, ((t[0] + 0.5) * T, (t[1] + 0.5) * T)), t))
+        near = sorted(full, key=lambda t: (math.dist(v.cell, ((t[0] + 0.5) * T, (t[1] + 0.5) * T)), t))
+        if (tile := next((t for t in near if g.goals(t)), None)) is not None:
             g.send(tile, {v.uuid})
             self.sent[v.uuid] = tile
-        return bool(full)
+        return tile is not None
 
     def army(self):
         """The military unit that the first own training building (not a town center) trains, or None."""

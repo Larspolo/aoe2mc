@@ -20,8 +20,8 @@ def test_the_army_and_the_losses_name_each_type_most_first():
     r.troops = {1: {"KNIGHT": 8, "CROSSBOWMAN": 12, "ARCHER": 0}, 2: {"ARCHER": 0}}
     r.fallen = {1: {"ARCHER": 2, "KNIGHT": 5}}
     texts = military_lines(r)
-    assert texts[0].endswith("buildings lost 0, army at the end: 12 Crossbowman, 8 Knight, lost: 5 Knight, 2 Archer")
-    assert texts[1] == "Player 2 (Aztecs): military units trained 1, units lost 0, buildings lost 0"
+    assert texts[0].endswith("buildings lost 0, APM 0, army at the end: 12 Crossbowman, 8 Knight, lost: 5 Knight, 2 Archer")
+    assert texts[1] == "Player 2 (Aztecs): military units trained 1, units lost 0, buildings lost 0, APM 0"
 
 
 def test_more_than_six_types_show_the_rest_as_a_count():

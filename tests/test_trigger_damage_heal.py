@@ -26,7 +26,8 @@ def test_a_positive_damage_still_damages():
     assert damage.lines([damage.effect(20)])[0].endswith(" run damage @s 20")
 
 
-def test_a_negative_damage_of_a_building_is_not_supported_yet():
+def test_a_negative_damage_of_a_building_is_an_order_of_the_game_program():   # #3776
     stats = Counter()
     e = damage.effect(-10) | {"object": ("B", "CASTLE")}
-    assert damage.lines([e], stats) == [] and stats == Counter({"damage (building, not supported yet)": 1})
+    assert damage.lines([e], stats) == ['data modify storage aoe2mc:orders list append value "damage 1 CASTLE 2 3 4 5 -10"']
+    assert stats == Counter({"damage (building)": 1})
