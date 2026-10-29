@@ -266,7 +266,7 @@ def effect(e, more=1):
     def change(name, s):
         if "if" in e and not any(test(t, name, s) for t in e["if"]):
             return s
-        part = (lambda n: n) if more == 1 else (lambda n: round(n * more))
+        part = (lambda n: n) if more == 1 else (lambda n: n * more if isinstance(n, float) else round(n * more))   # a blast radius stays a part of a tile (#4283)
         new = {k: getattr(s, k) + part(n) for k, n in e.get("add", {}).items()}
         new |= {k: (round if isinstance(getattr(s, k), int) else float)(getattr(s, k) * (f if more == 1 else 1 + (f - 1) * more))
                 for k, f in e.get("times", {}).items()}     # a reload of 2.0 × 0.75 stays 1.5 (Stirrups, #4098)
@@ -1141,7 +1141,8 @@ def research(g, entry, start=False, rect=None):
                       else combat.stats_command(uuid, name, stats(g, name, uuid), civs.taken(g, name), civs.friendly(g, name)))
         if name == trebuchet.NAME and trebuchet.state(g, uuid) != "unpacked":
             continue                                               # packed: range 0, the unpack sends the range (#1414)
-        if stats(g, name).range != combat.stats(name).range:          # Fletching (#724)
+        new, base = stats(g, name), combat.stats(name)              # the range (Fletching, #724) or the blast (Warwolf, #4283)
+        if (new.range, new.blast) != (base.range, base.blast):
             g.command(combat.range_command(uuid, name, g.map.T, s=stats(g, name, uuid)))
     for cmd in [c for uuid, name in g.soldiers.items() for c in fire_commands(g, uuid, name, {entry["name"]})]:
         g.command(cmd)                                             # the live fire ships: Siphons, Incendiaries (#2165)

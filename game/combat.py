@@ -28,7 +28,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import units  # noqa: E402
 from units import pretty  # noqa: E402
 
-Stats = namedtuple("Stats", "hp attack melee pierce range reload bonus classes", defaults=({}, ()))
+Stats = namedtuple("Stats", "hp attack melee pierce range reload bonus classes blast", defaults=({}, (), 0))
 
 INF, ARC, CAV, CAM, ELE, SIE, SPE = "infantry", "archer", "cavalry", "camel", "elephant", "siege", "spearman"
 HSI = "heavysiege"                                    # the Hussite Wagon and Ballista Elephant lines (wiki "Armor class", #1402)
@@ -39,8 +39,8 @@ SHIP, WAR = "ship", "warship"                         # the ships; "warship": th
 FIRE = "fireship"                                     # the AoE2 class "Fire Ships" (the hulk bonus, #1489)
 # The values of each unit: one line per unit in data/units.jsonl (#1912). "note" is the source of a value.
 UNIT_ROWS = table.load("units.jsonl")
-STATS = {r["name"]: Stats(**{f: r[f] for f in Stats._fields if f != "classes"}, classes=tuple(r["classes"]))
-         for r in UNIT_ROWS}
+STATS = {r["name"]: Stats(**{f: r[f] for f in Stats._fields[:-2]}, classes=tuple(r["classes"]), blast=r.get("blast", 0))
+         for r in UNIT_ROWS}                                    # blast: the radius that technologies change (#4283)
 REPAIRS = {r["name"]: r["repairs"] for r in UNIT_ROWS if "repairs" in r}   # a soldier that repairs a building (#2128)
 # Buildings: hit points, melee and pierce armor (Dark Age base), one line per building in data/buildings.jsonl (#1913).
 # The high pierce armor makes arrows weak, as in AoE2. The towers have the AoE2 DE values of the wiki: a watch tower of
@@ -48,7 +48,7 @@ REPAIRS = {r["name"]: r["repairs"] for r in UNIT_ROWS if "repairs" in r}   # a s
 # infobox (#1564; the dock: the Castle Age). A line with only a "sight" has no target.
 BUILDING_ROWS = table.load("buildings.jsonl")
 STANDS_FOR = {r["name"]: r["as"] for r in BUILDING_ROWS if "as" in r}   # a regional building: the one it replaces (#1874, #1930)
-BUILDINGS = {r["name"]: Stats(**{f: r[f] for f in Stats._fields if f != "classes"}, classes=tuple(r["classes"]))
+BUILDINGS = {r["name"]: Stats(**{f: r[f] for f in Stats._fields[:-2]}, classes=tuple(r["classes"]))
              for r in BUILDING_ROWS if "hp" in r}
 # The walls that a player builds in the game program (#1322, AoE2 DE wiki infobox): the hit points in the Dark, Feudal,
 # Castle and Imperial Age, the melee and the pierce armor. Their targets have WALL_TAG: a wall keeps no player alive in
@@ -184,7 +184,7 @@ def range_command(uuid, name, T, rate=NORMAL, s=None):
     ship (#1440) gets the reach CONTACT: its blast goes off next to the target."""
     s = s or stats(name)
     cart = (units.classify(name) or {}).get("id") == "minecraft:minecart" or units.wagon(name)   # (#2746)
-    blast = f" {BLAST.get(name, 0) * T}" if name in BLAST or cart else " -" if name in PASS else ""
+    blast = f" {round(s.blast * T, 6)}" if name in BLAST or cart else " -" if name in PASS else ""   # s.blast: BLAST, technologies
     blast += f" {MIN_RANGE.get(name, 0) * T}" * bool(blast and (name in MIN_RANGE or name in PASS))
     blast += f" {PASS.get(name, 0) * T}" * bool(blast and name in PASS) + f" {PASS_PART.get(name)}" * (name in PASS_PART)
     reach = s.range * T or RAM_REACH * bool(cart and s.attack) or CONTACT * T * bool(name in BLAST and s.attack)
