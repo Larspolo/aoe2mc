@@ -16,6 +16,9 @@ plugin) to a random free cell near its home. Minecraft measures the ticks itself
 no own profiler. The commands per second are the moveto commands divided by the time to send them.
 With `--reveal normal` (#1389) half of the units are own soldiers of player 1 and half enemies of player 2, and
 fog.tick of a Gather hides the enemies out of their sight each second; the column "fog ms" is its mean time.
+With `--fight` (#3325) the units of player 1 (even) and player 2 (odd) attack each other: every --period seconds unit i
+gets `aoe attack` (`ai.attack`, the Minecraft attack goal) on its neighbour i ^ 1, and the tool summons each dead unit
+again at its home, so that the count stays. The column "orders that reached a unit" then counts the attack orders.
 """
 import argparse
 import os
@@ -77,7 +80,14 @@ def report(rows):
                               f"{r['moved']:.0%}" + (f" | {r['fog']:.1f}" if fog else "") for r in rows])
 
 
-def measure(world, counts, seconds=30, period=5.0, version=None, log=print, reveal="all"):
+def summon(game, m, i, x, z):
+    """Summon unit i of the measurement at free cell (x, z), without AI until its first order."""
+    _, ints = unit_uuid(i)
+    game.command(f"summon minecraft:husk {x + 0.5} {m.y(x, z)} {z + 0.5} {{UUID:[I;{','.join(map(str, ints))}],"
+                 f"Tags:[\"{TAG}\"],NoAI:1b,PersistenceRequired:1b,Silent:1b}}")
+
+
+def measure(world, counts, seconds=30, period=5.0, version=None, log=print, reveal="all", fight=False):
     """One row per count of units: {"units", "rate", "mean", "p99", "moved"} (moved: the share of the orders that
     reached their unit), with reveal "normal" also "fog" (ms of one fog.tick). The units of a count stay for the
     next one."""
@@ -97,20 +107,29 @@ def measure(world, counts, seconds=30, period=5.0, version=None, log=print, reve
         game.forceload()
         time.sleep(10)                                             # chunks and entities load in other threads
         g, fogs = (gather.Gather(game, data) if reveal == "normal" else None), []
+        if fight:
+            for p in (1, 2):                                       # no unit attacks its own side (sameTeam)
+                game.command(f"team add p{p}")
         for count in counts:
             for i in range(len(units), count):
-                s, ints = unit_uuid(i)
-                x, z = spots[i]
-                game.command(f"summon minecraft:husk {x + 0.5} {m.y(x, z)} {z + 0.5} {{UUID:[I;{','.join(map(str, ints))}],"
-                             f"Tags:[\"{TAG}\"],NoAI:1b,PersistenceRequired:1b,Silent:1b}}")
+                s, x, z = unit_uuid(i)[0], *spots[i]
+                summon(game, m, i, x, z)
                 units.append((s, x, z))
-                if g:                                              # even: own soldiers, odd: enemies (fog.py)
+                if g or fight:                                     # even: own soldiers, odd: enemies (fog.py)
                     game.command(f"team join p{1 + i % 2} {s}")
+                if g:
                     (g.soldiers if i % 2 == 0 else g.enemies)[s] = NAME
-            sent, moved, busy, samples, t_end = 0, 0, 0.0, [], time.monotonic() + seconds
+            sent, moved, dead, busy, samples, t_end = 0, 0, 0, 0.0, [], time.monotonic() + seconds
             while time.monotonic() < t_end:
                 t0 = time.monotonic()
-                for s, x, z in units:
+                for i, (s, x, z) in enumerate(units if fight else []):
+                    if "passed" not in game.command(f"execute if entity {s}"):
+                        summon(game, m, i, x, z)                   # a dead unit comes back: the count stays
+                        dead += 1
+                        game.command(f"team join p{1 + i % 2} {s}")
+                    foe = units[i ^ 1][0] if i ^ 1 < len(units) else units[i - 1][0]
+                    moved += "Attack: 1 " in ai.attack(game, [s], [NAME], T, foe)[0]
+                for s, x, z in [] if fight else units:
                     for _ in range(8):                             # a free cell near the home
                         tx, tz = x + int(rng.integers(-RADIUS, RADIUS + 1)), z + int(rng.integers(-RADIUS, RADIUS + 1))
                         if m.free(tx, tz):
@@ -118,7 +137,7 @@ def measure(world, counts, seconds=30, period=5.0, version=None, log=print, reve
                     else:
                         tx, tz = x, z
                     moved += "Moved 1 " in ai.move(game, s, NAME, T, tx + 0.5, m.y(tx, tz), tz + 0.5)
-                sent += 2 * len(units)                             # ai.move: the speed and the moveto
+                sent += (3 if fight else 2) * len(units)           # the speed and the order (and the alive test)
                 busy += time.monotonic() - t0
                 while g and period - (time.monotonic() - t0) > 1.0:
                     t1 = time.monotonic()
@@ -130,10 +149,10 @@ def measure(world, counts, seconds=30, period=5.0, version=None, log=print, reve
                 samples.append(parse(game.command("tick query")))
             row = {"units": count, "rate": sent / busy if busy else 0.0,
                    "mean": statistics.median(s[0] for s in samples), "p99": max(s[1] for s in samples),
-                   "moved": moved / (sent / 2) if sent else 0.0} | ({"fog": 1000 * statistics.mean(fogs)} if fogs else {})
+                   "moved": moved / (sent / (3 if fight else 2)) if sent else 0.0} | ({"fog": 1000 * statistics.mean(fogs)} if fogs else {})
             if log:
                 log(f"{count} units: {row['rate']:.0f} commands/s, mean {row['mean']:.2f} ms, P99 {row['p99']:.2f} ms, "
-                    f"orders that reached a unit {row['moved']:.0%}")
+                    f"orders that reached a unit {row['moved']:.0%}" + (f", dead units {dead}" if fight else ""))
             rows.append(row)
     return rows
 
@@ -148,13 +167,15 @@ def main(argv=None):
     ap.add_argument("--version", help="Minecraft version of the server (default: mc_check.DEFAULT_VERSION)")
     ap.add_argument("--reveal", choices=["normal", "all"], default="all", help="normal: also the fog of war of the "
                     "units each second (game/fog.py, #1389); default all: no fog, as game/run.py --reveal all")
+    ap.add_argument("--fight", action="store_true", help="the units of player 1 and 2 attack each other instead of "
+                    "walking (aoe attack, #3325); dead units come back")
     a = ap.parse_args(argv)
     counts = sorted(int(c) for c in a.units.split(","))
     import mc_check
     import tick_cost
     with tempfile.TemporaryDirectory(dir=mc_check.workdir()) as tmp:
         world = shutil.copytree(a.world, os.path.join(tmp, "World")) if a.world else tick_cost.convert(a.scenario, tmp)
-        rows = measure(world, counts, a.seconds, a.period, a.version, reveal=a.reveal)
+        rows = measure(world, counts, a.seconds, a.period, a.version, reveal=a.reveal, fight=a.fight)
     print(report(rows))
     return 0
 
