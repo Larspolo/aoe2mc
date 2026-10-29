@@ -566,7 +566,7 @@ def show(g, player, rect):
             return "on" if vars(g).get(flag) else "off"
         if name in TECHS:
             return missing(g, name) or ("researching" if queued(g, name) and name not in ONE_BUILDING else "research")
-        return f"queue {n}/{QUEUE}"
+        return f"queue {n}/{QUEUE}" + (" · Auto-queue: on" if vars(g).get("auto", {}).get(rect) == name else "")
     names = vars(g).get("trigger_names", {})                          # "Change Technology Name" (#2821)
     items = [(slot, build.LOCKED if build.locked(g, name) else item, names.get(name, label),
               (" · ".join(f"{v} {r}" for r, v in price(g, name, building).items()) or "free") + f" · {round(seconds(g, name, building), 1):g} s · "
@@ -582,13 +582,44 @@ def show(g, player, rect):
     q = g.queues.get(rect, [])                                         # the queue row first: the plugin sets the
     items = [(ROW + i, ITEMS[name][1], ITEMS[name][2] + (f" {int(100 * q[0]['progress'])} %" if start == 0 else ""),
               "Click: cancel 1", k) for i, (name, start, k) in enumerate(groups(q)[:ROW])] + items   # items by slot
-    def click(p, slot, shift):
-        if building == "MARKET" and slot >= market.ROW:
+    def click(p, slot, shift, right=False):
+        if right:                                                      # a right click: the auto-queue (#3524)
+            auto(g, p, rect, slot)
+        elif building == "MARKET" and slot >= market.ROW:
             market.order(g, p, slot - market.ROW, shift, lambda: show(g, p, rect))
         else:
             order(g, p, rect, slot, shift)
     click.rect, click.key = rect, shown(g, rect)                       # refresh() compares the key (#1335)
     menu.show(g, player, build.pretty(building), items, click)
+
+
+def auto(g, player, rect, slot):
+    """A right click on the unit item in slot sets the auto-queue of the building rect to that unit, as in AoE2 DE
+    (#3524): tick() queues it again each time the queue is empty. A second right click stops it. One unit per building;
+    a technology or another item has none. Returns the unit name, or None."""
+    name = next((n for n, (s, *_) in layout(g, rect).items() if s == slot and n not in TECHS), None)
+    if name is None:
+        return None
+    on, by = vars(g).setdefault("auto", {}), vars(g).setdefault("auto_by", {})
+    if on.get(rect) == name:
+        del on[rect]
+    else:
+        on[rect], by[rect] = name, player
+    build.say(g, player, f"Auto-queue {build.pretty(name)}: {'on' if on.get(rect) else 'off'}.")
+    show(g, player, rect)
+    return name if on.get(rect) else None
+
+
+def requeue(g):
+    """Queue the auto-queue unit of each building with an empty queue (#3524). With too few resources it waits with
+    no message, as in AoE2 DE. A building that fell or changed owner (not in homes()) loses its entry."""
+    on, home = vars(g).get("auto", {}), homes(g)
+    for rect, name in list(on.items()):
+        if rect not in home:
+            del on[rect]
+        elif not g.queues.get(rect) and not build.locked(g, name) and not missing(g, name) \
+                and all(g.stock[r] >= v for r, v in price(g, name, home[rect]).items()):
+            queue(g, g.auto_by.get(rect, "@a"), rect[::2], name)
 
 
 def shown(g, rect):
@@ -631,6 +662,8 @@ def cancel(g, player, rect, group):
     if not 0 <= group < len(gs):
         return None
     name, start, k = gs[group]
+    if vars(g).get("auto", {}).get(rect) == name:                      # a cancel also ends its auto-queue (#3524)
+        del g.auto[rect]
     for r, v in q.pop(start + k - 1).get("paid", COSTS[name]).items():   # a free technology gives back nothing
         g.stock[r] += v
         g.command(f"scoreboard players add {r.capitalize()} {g.board} {v}")
@@ -1183,6 +1216,7 @@ def tick(g, work):
         if g.marks[tag] <= 0:
             del g.marks[tag]
             g.command(f"kill @e[tag={tag}]")
+    requeue(g)
     cap, out, home = limit(g), [], homes(g)
     fast = {r for r, n in home.items() if n in CONSCRIPT[0]} if "CONSCRIPTION" in g.techs else set()   # (#1455)
     room = cap - g.pop - sum(1 for q in g.queues.values() if q and q[0]["progress"] > 0 and q[0]["name"] not in TECHS)

@@ -27,7 +27,8 @@ PACKED = ("queues", "trained", "sites", "rally",                       # with tu
           "sieged",                                                    # the targets of attack orders: Gather.fall (#2537)
           "ruins",                                                     # the fallen start buildings: ruins.py (#3008)
           "soldiers", "units")                                         # the units of the game, trained or upgraded (#2532)
-OPTIONAL = ("auto_reseed",                                             # the mill switch (#3422)
+OPTIONAL = ("auto", "auto_by",                                         # the auto-queue of each building (#3524)
+            "auto_reseed",                                             # the mill switch (#3422)
             "bell_work",                                               # the work before the town bell (#3420)
             "limit_left", "policy", "rates", "relic_timer", "reseeds", "switches", "upgraded", "wonder_shown", "wonders",   # only on a
             "wonders_gone")                                            # Gather that has them (#2324; the policy: #2515)
@@ -42,6 +43,7 @@ ORDERS = ("patrols", "trigger_attributes", "trigger_costs",            # scenari
           "attack_moves",                                              # stance.py: the attack moves and the old stances (#3357)
           "follows",                                                   # follow.py: the Follow and Guard orders (#3358)
           "formations",                                                # stance.py: the formations of the units (#3416)
+          "scouting",                                                  # autoscout.py: the Auto Scout order (#3702)
           "waypoint_at", "waypoints")                                  # gather.add_waypoint: the queued points of the units (#3518)
 ROUTES = ("trade", "trebs")                                            # trade.py, trebuchet.py: as OPTIONAL (#2413)
 CHEATS = (                                                             # game/cheats.py: the cheats that the player

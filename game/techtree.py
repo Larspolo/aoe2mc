@@ -23,6 +23,7 @@ AGES = 4                                                           # rows 0-3: D
 WIDTH = 9                                                          # items of one row
 MORE = 4                                                           # the row of the items that do not fit in their age row
 BACK = (45, "arrow", "Back", "The page of buildings")
+ALL = 45                                                           # slot of the page of buildings: all buildings (#3534)
 NEXT = 53
 GRAY = "gray_stained_glass_pane"
 CIVS = [r["name"] for r in civs.ROWS]                              # the order of data/civs.jsonl
@@ -71,8 +72,11 @@ def open_menu(g, player, civ=None):
     civ = civ or civs.real(g)
     items = [(i, build.ICONS.get(b, "chest"), build.pretty(b), "Click: its units and technologies")
              for i, b in enumerate(BUILDINGS)] + bonus_items(civ) + civ_items(civ)
+    items.append((ALL, "bricks", "Buildings", "All buildings of your civilization by age"))
 
     def click(p, slot, shift):
+        if slot == ALL:
+            return buildings(g, p)
         if (c := other(civ, slot)):
             return open_menu(g, p, c)
         return slot < len(BUILDINGS) and page(g, p, BUILDINGS[slot], civ=civ)
@@ -155,6 +159,40 @@ def page(g, player, building, number=0, civ=None):
         if slot == NEXT and number + 1 < len(all_pages):
             return page(g, p, building, number + 1, civ)
     menu.show(g, player, f"Tech tree: {build.pretty(building)}", items, click)
+
+
+def building_item(g, name):
+    """The menu item of one building: gray when the civilization does not have it (civs.missing), else its cost and time."""
+    if civs.missing(g, name):
+        return GRAY, build.pretty(name), f"Not in the tech tree of {build.pretty(civs.real(g) or 'your civilization')}"
+    cost = " · ".join(f"{v} {r}" for r, v in build.COSTS.get(name, {}).items()) or "free"
+    return build.ICONS[name], build.pretty(name), f"{cost}\n{build.BUILD_TIMES.get(name, 0)} s"
+
+
+def rows(names):
+    """The slots of names by page: [{slot: name}], one row per age; the items after WIDTH in a row go onto the next
+    page (pages() makes a column per unit line, but buildings have no lines)."""
+    by_age = [[n for n in names if age(n) == a] for a in range(AGES)]
+    count = max(1, *(-(-len(r) // WIDTH) for r in by_age))
+    return [{a * WIDTH + i: n for a, r in enumerate(by_age) for i, n in enumerate(r[k * WIDTH:(k + 1) * WIDTH])}
+            for k in range(count)]
+
+
+def buildings(g, player, number=0):
+    """The buildings with an icon in build.jsonl by age. A building of other civilizations only (civs.ONLY) is left
+    out; slot 45 goes back to the page of buildings, slot 53 to the next page (as page())."""
+    names = [n for n in build.ICONS if n not in civs.ONLY or civs.real(g) in civs.ONLY[n]]
+    all_pages = rows(names)
+    number = min(number, len(all_pages) - 1)
+    items = [(s, *building_item(g, n)) for s, n in all_pages[number].items()] + [BACK]
+    items += [(NEXT, "paper", "Next page", f"Page {number + 2} of {len(all_pages)}")] * (number + 1 < len(all_pages))
+
+    def click(p, slot, shift):
+        if slot == BACK[0]:
+            return open_menu(g, p)
+        if slot == NEXT and number + 1 < len(all_pages):
+            return buildings(g, p, number + 1)
+    menu.show(g, player, "Tech tree: Buildings", items, click)
 
 
 def setup(g):
