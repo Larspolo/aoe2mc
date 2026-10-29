@@ -327,27 +327,50 @@ def ticket_eq(rows):
     return out
 
 
+def run_data(records):
+    """The data of the Run: line of one chain: session, branch, start, wall minutes, models, efforts, thinking tokens,
+    CLI version, the eq of each phase and the eq of each ticket that a claim won."""
+    rows = steps(records)
+    first = lambda key: next((r[key] for r in records if r.get(key)), None)
+    times = [t for t in map(when, records) if t is not None]
+    by_phase = dict.fromkeys(PHASES, 0.0)
+    for r in rows:
+        by_phase[r["phase"]] += r["eq"]
+    return {"session": first("sessionId"), "branch": first("gitBranch"),
+            "start": datetime.fromtimestamp(min(times), timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ") if times else None,
+            "wall": round((max(times) - min(times)) / 60, 1) if times else 0,
+            "models": dict(Counter((r["model"] or "").removeprefix("claude-") for r in rows if r["model"]).most_common()),
+            "effort": dict(Counter(r["effort"] for r in rows if r["effort"]).most_common()),
+            "think": sum(r["think"] for r in rows), "cli": first("version"), "phases_eq": by_phase,
+            "tickets_eq": {n: x for n, x in ticket_eq(rows).items() if n is not None}}
+
+
 def run_line(records):
     """The Run: line of the run report (2026-10-29): `Run: <session> · branch B · start T · wall M min · model X ·
     effort E · think T · eq <phase> X, ... · tickets #N X, ...`. The session ID joins the reports of one run, the
     branch its claims and PRs. One chain: the main transcript."""
-    rows = steps(records)
-    first = lambda key: next((r[key] for r in records if r.get(key)), None)
-    times = [t for t in map(when, records) if t is not None]
+    d = run_data(records)
     m = lambda x: f"{x / 1e6:.2f}M"
-    common = lambda c: ", ".join(f"{k} {n}" for k, n in c.most_common()) or "-"
-    by_phase = defaultdict(float)
-    for r in rows:
-        by_phase[r["phase"]] += r["eq"]
-    tickets = {n: x for n, x in ticket_eq(rows).items() if n is not None}
-    start = datetime.fromtimestamp(min(times), timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ") if times else "-"
-    return (f"Run: {first('sessionId') or '-'} · branch {first('gitBranch') or '-'} · start {start} · "
-            f"wall {(max(times) - min(times)) / 60 if times else 0:.0f} min · "
-            f"model {common(Counter((r['model'] or '').removeprefix('claude-') for r in rows if r['model']))} · "
-            f"effort {common(Counter(r['effort'] for r in rows if r['effort']))} · "
-            f"think {m(sum(r['think'] for r in rows))} · cli {first('version') or '-'} · eq "
-            + ", ".join(f"{p} {m(by_phase[p])}" for p in PHASES)
-            + ("" if not tickets else " · tickets " + ", ".join(f"#{n} {m(x)}" for n, x in tickets.items())))
+    common = lambda c: ", ".join(f"{k} {n}" for k, n in c.items()) or "-"
+    return (f"Run: {d['session'] or '-'} · branch {d['branch'] or '-'} · start {d['start'] or '-'} · "
+            f"wall {d['wall']:.0f} min · model {common(d['models'])} · effort {common(d['effort'])} · "
+            f"think {m(d['think'])} · cli {d['cli'] or '-'} · eq "
+            + ", ".join(f"{p} {m(x)}" for p, x in d["phases_eq"].items())
+            + ("" if not d["tickets_eq"] else " · tickets " + ", ".join(f"#{n} {m(x)}" for n, x in d["tickets_eq"].items())))
+
+
+def data(t, records, repo=None, checks=None, force=None, k=10):
+    """All numbers of the run as one dict (`--json`): the fields of the Tokens: line, the top `k` sink groups (share of
+    the eq), the calls of each phase and the most frequent calls, and run_data(). The run record of `report.py` holds it."""
+    g = defaultdict(float)
+    for s, x in t["sinks"].items():
+        g[kind(s)] += x
+    ph, lab, _ = calls(records)
+    out = {key: round(t.get(key, 0), 4) for key in ("eq", "write", "read", "out", "peak", "base", "usd", "in")}
+    return {**out, "calls": t["calls"], "repo": None if repo is None else round(repo),
+            "sinks": {s: round(x / t["eq"], 4) for s, x in sorted(g.items(), key=lambda kv: -kv[1])[:k]} if t["eq"] else {},
+            "verify": {s: [round(m, 1), n] for s, (m, n) in (checks or {}).items()}, "force": force,
+            "calls_phase": dict(ph.most_common()), "calls_top": dict(lab.most_common(k)), **run_data(records)}
 
 
 def size(content):
@@ -480,6 +503,7 @@ def main(argv=None):
     ap.add_argument("--calls-line", action="store_true", help="print the Calls: line of the run (#3970)")
     ap.add_argument("--run-line", action="store_true", help="print the Run: line of the run (session, start, model, "
                     "eq per phase and ticket)")
+    ap.add_argument("--json", action="store_true", help="print all numbers of the run as one JSON object (report.py)")
     a = ap.parse_args(argv)
     path = a.file or newest()
     if not path:
@@ -510,7 +534,11 @@ def main(argv=None):
         for n, p in phases(chains[0]).items():
             print(f"#{n}: " + ",".join(f"{k}={m:.0f}" for k, m in p.items()))
         return 0
-    print(line(t, repo=repo_base(), checks=dict(v), force=sum(refused_pushes(c) for c in chains)))
+    force = sum(refused_pushes(c) for c in chains)
+    if a.json:
+        print(json.dumps(data(t, chains[0], repo_base(), dict(v), force)))
+        return 0
+    print(line(t, repo=repo_base(), checks=dict(v), force=force))
     if a.verify:
         for s, (m, n) in sorted(v.items(), key=lambda kv: -kv[1][0]):
             print(f"  {m:6.1f} min  {n:3d}x  {s}")

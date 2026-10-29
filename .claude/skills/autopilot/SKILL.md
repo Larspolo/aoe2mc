@@ -1,6 +1,6 @@
 ---
 name: autopilot
-description: Do one automatic work cycle on aoe2mc. Read the owner's feedback, triage new issues, do the top ticket, ship it as a merged PR, report on the status issue and improve the process. Use when a scheduled run starts, or when the owner says "work", "next ticket" or "/autopilot". Argument - the number of tickets to do (default 1).
+description: Do one automatic work cycle on aoe2mc. Read the owner's feedback, triage new issues, do the top ticket, ship it as a merged PR, report the run and improve the process. Use when a scheduled run starts, or when the owner says "work", "next ticket" or "/autopilot". Argument - the number of tickets to do (default 1).
 ---
 
 # Autopilot: one work cycle
@@ -148,9 +148,9 @@ ticket: `owner.md`.
 The merge closes the ticket (`Closes #N`), and the Automerge workflow removes `in-progress`. If the owner must check
 something in the game, make a small check ticket without `needs-human` first (#580; the rules of a check: `owner.md`).
 
-## 8. Report on the status issue
+## 8. Report the run
 
-Read `report.md` and do it: the state comment, `### Process changes`, one comment with the metrics lines.
+Read `report.md` and do it: `### Process changes`, one report with the metrics lines (`report.py --post`).
 Then run `python3 tools/claim.py 0 --review` and `python3 tools/claim.py 0 --roadmap` (`process.md`).
 
 ## 9. Improve the process (before the commit in step 6)

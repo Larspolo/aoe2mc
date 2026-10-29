@@ -6,10 +6,13 @@ line of the run start (the release bar only when the project has `release.py`), 
         --phases read=8,claim=1,code=18,verify=9,ci=0,conflict=5,report=4 [--ticket ...] [--post]
 
 Repeat the ticket options for each ticket of the run, in the same order. `--minutes` defaults to the sum of the
-phases. Without `--phases` a ticket gets the phases that `tokens.py --phases` measures in the transcript. `--post` comments the report on the status issue (label `agent-status`) and sets `last_run` and `runs` of its
-state comment, else it prints the comment.
+phases. Without `--phases` a ticket gets the phases that `tokens.py --phases` measures in the transcript. `--post` adds the report to the
+branch `metrics` (`runs/`, `metrics_log.post`, 2026-10-29: no comment on the status issue; a comment only when no push
+goes through) and sets `last_run` and `runs` of the state comment of the status issue (label `agent-status`), else it
+prints the report.
 """
 import argparse
+import json
 import os
 import re
 import subprocess
@@ -19,6 +22,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from claim import agent_state, utc, with_state  # noqa: E402
 from dashboard import FOOTER, STATUS, api, pages  # noqa: E402
 from health import PHASES  # noqa: E402
+import metrics_log  # noqa: E402
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 
@@ -82,6 +86,18 @@ def report(text, usage, lines, release=None, tokens=None, calls=None, run=None, 
                       *([calls] if calls else []), *([f"{run} · lane {lane or 'opus'}"] if run else [])]) + FOOTER
 
 
+def fields(text, usage, tickets, lane, numbers=None):
+    """The named fields of the run record (`metrics_log.run_record`): the text, the `Usage:` line, one dict per ticket
+    (the values of its `Metrics:` line), the lane and all numbers of `tokens.py --json`."""
+    if numbers is None:
+        try:
+            numbers = json.loads(tool("tokens.py", "--json") or "{}")
+        except ValueError:
+            numbers = {}
+    return {"session": numbers.get("session"), "branch": numbers.get("branch"), "lane": lane or "opus",
+            "text": text.strip(), "usage": usage.strip(), "tickets": tickets, "tokens": numbers}
+
+
 def counted(body, now=None):
     """The body of the status issue after one more run: `last_run` now, `runs` + 1, the other state keys stay."""
     state = agent_state(body)
@@ -108,16 +124,25 @@ def main(argv=None):
     lane = git_lane()
     got = measured() if len(a.phases) < n else {}
     own = lambda t: got.get(str(t)) or (got.get("None", "") if n == 1 else "")    # measured, not guessed (2026-10-28)
-    lines = [metrics(t, a.size[i], a.result[i], at(a.minutes, i, None), at(a.setup, i, 0), at(a.checks, i, 0),
-                     at(a.checks_min, i, 0), at(a.sinks, i, "none"), at(a.phases, i, own(t)), at(a.lane, i, lane))
-             for i, t in enumerate(a.ticket)]
+    tickets = [dict(ticket=t, size=a.size[i], result=a.result[i], minutes=at(a.minutes, i, None), setup=at(a.setup, i, 0),
+                    checks=at(a.checks, i, 0), checks_min=at(a.checks_min, i, 0), sinks=at(a.sinks, i, "none"),
+                    phases=at(a.phases, i, own(t)), lane=at(a.lane, i, lane)) for i, t in enumerate(a.ticket)]
+    lines = [metrics(d["ticket"], d["size"], d["result"], d["minutes"], d["setup"], d["checks"], d["checks_min"],
+                     d["sinks"], d["phases"], d["lane"]) for d in tickets]
     usage = a.usage or (tool("usage.py", "--sample").splitlines() or [""])[-1]
     body = report(a.text, usage, lines)
     if not a.post:
         print(body)
         return 0
+    for d in tickets:
+        d["phases"] = phases(d["phases"])
+        d["minutes"] = sum(d["phases"].values()) if d["minutes"] is None else d["minutes"]
+    path = metrics_log.post(metrics_log.run_record(body, fields(a.text, usage, tickets, lane)))
     status = next(i for i in pages(f"issues?state=open&labels={STATUS}") if "pull_request" not in i)
-    print(api(f"issues/{status['number']}/comments", "POST", {"body": body})["html_url"])
+    if path:
+        print(f"{path} on the branch {metrics_log.BRANCH}")
+    else:                                                       # no push went through: the old way, no report lost
+        print(api(f"issues/{status['number']}/comments", "POST", {"body": body})["html_url"])
     fresh = api(f"issues/{status['number']}")["body"]          # other runs change the body too: read it just before
     api(f"issues/{status['number']}", "PATCH", {"body": counted(fresh)})
     return 0
