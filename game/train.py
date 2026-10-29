@@ -139,7 +139,20 @@ def weight(g, name):
 def work(g, building):
     """The factor of the work rate of building (a name) from the researched technologies with the key "work":
     [the building, the factor] (Perfusion: the Barracks 2, #4226), else 1."""
-    return math.prod(f for t, (b, f) in BY_KEY["work"].items() if t in g.techs and b == building)
+    return math.prod(f for t, (b, f) in BY_KEY["work"].items() if researched(g, t) and b == building)
+
+
+def researched(g, tech):
+    """True when the player of g researched tech, or an ally did and tech has the key "team" (Kasbah, Butalmapu,
+    #4329). The allies are the Gathers of the game (fog.gathers; a bot reaches them by its share)."""
+    if tech in vars(g).get("techs", ()):
+        return True
+    if not BY_KEY["team"].get(tech):
+        return False
+    import gather                                                  # gather imports this module
+    root = vars(g).get("share") or g
+    return any(tech in vars(h).get("techs", ()) and gather.allied(g.players, g.player, h.player)
+               for h in [root, *(b.g for b in getattr(root, "bots", ())), *getattr(root, "peers", ())])
 
 
 def group_rate(g, name):
