@@ -17,7 +17,7 @@ def test_the_castle_trains_the_trebuchet_only_in_the_imperial_age():
         == ({"wood": 200, "gold": 200}, 50, 3)                         # AoE2 DE wiki infobox
     assert (combat.stats("TREBUCHET").hp, combat.stats("TREBUCHET").range, combat.MIN_RANGE["TREBUCHET"]) == (150, 16, 4)
     server, g = setup(wood=200, gold=200)                              # the Castle Age
-    assert train.trains(g, "CASTLE") == ("LONGBOWMAN", *train.TRAINS["CASTLE"])
+    assert [n for n in train.trains(g, "CASTLE") if n != "YEOMEN"] == ["LONGBOWMAN", *train.TRAINS["CASTLE"]]  # Britons: #4103
     train.open_menu(g, "Steve", (12, 4))
     assert "1:gray_dye:Trebuchet:200 wood · 200 gold · 50 s · Needs the Imperial Age" in menus(server)[-1]
     assert train.queue(g, "Steve", (12, 4), "TREBUCHET") is None
