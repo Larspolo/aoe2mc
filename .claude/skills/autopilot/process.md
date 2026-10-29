@@ -10,6 +10,8 @@ dashboard counts them.
   `docs/LEARNINGS.md`, "Environment and libraries"); only a line for all runs goes to the end of its section in
   `docs/LEARNINGS.md`: each run loads that file (run 135 moved 16 topic lines out). Do not change other lines
   there, also not to stay below 80 lines: the `improve` skill does that.
+- Did a shell command or a code pattern cost you time that a check can find? → add a rule to
+  `.claude/hooks/guard-shell.sh` (with a case in `tests/test_guard_shell.py`) or a fast test, not a line of text.
 - Was an instruction in `CLAUDE.md` or a skill wrong or missing? → correct it.
 - Did you do the same kind of task for the second time? → write a skill for it in `.claude/skills/`.
 - Would a test or tool have found a problem earlier? → make a `tooling` ticket (`P1` if it blocks other tickets).
