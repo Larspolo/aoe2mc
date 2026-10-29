@@ -6,7 +6,7 @@ run.py --play --challenge NAME (#3900, decision #3760: own challenge maps) plays
 gets the civilization of the line, and tick() ends the game with the medal when the goal function of the key "check"
 ("module.function", (g, row) -> True when complete) says so; the key "setup" (the same form) places its start objects
 (#3908). A new challenge is one data line and one goal function.
-A challenge with the key "waves" sends enemy waves of player 2 to the town center, and a lost town center ends it
+A challenge with the key "attacks" sends enemy waves of player 2 to the town center, and a lost town center ends it
 with no medal (#3907).
 A challenge with the key "enemy" gets a bot town of player 2 that does not attack (setup, #3905).
 A challenge opens after a medal in the challenge of its key "after" (#3904, AoE2 DE). The best medal of each one goes
@@ -106,20 +106,20 @@ def defend(g, c):
     return build.ages(g) >= 2 and town(g) is not None
 
 
-def waves(g, c, now):
-    """Each wave of the key "waves" whose time came: summon its units of player 2 at the map corner that is farthest
+def attacks(g, c, now):
+    """Each wave of the key "attacks" whose time came: summon its units of player 2 at the map corner that is farthest
     from the town center, and send them with `aoe attack` to the town center (Minecraft path finding, game/ai.py)."""
     import ai, combat, train                                        # they import gather, gather imports this module
-    sent, tc = vars(g).get("challenge_waves", 0), town(g)
-    while tc and sent < len(c["waves"]) and now >= c["waves"][sent]["at"]:
+    sent, tc = vars(g).get("challenge_attacks", 0), town(g)
+    while tc and sent < len(c["attacks"]) and now >= c["attacks"][sent]["at"]:
         far = lambda a, b: 2 if (a + b) / 2 > g.map.n / 2 else g.map.n - 3   # noqa: E731
         x, z = far(tc[0], tc[1]), far(tc[2], tc[3])
         pos = (x + 0.5, float(g.map.y(x, z)), z + 0.5)
-        names = [n for n, k in sorted(c["waves"][sent]["units"].items()) for _ in range(k)]
+        names = [n for n, k in sorted(c["attacks"][sent]["units"].items()) for _ in range(k)]
         uuids = [train.summon(g, n, pos, player=2) for n in names]
         ai.attack(g, [u for u in uuids if u], [n for n, u in zip(names, uuids) if u], g.map.T,
                   combat.target_uuid([tc[0], tc[2], tc[1], tc[3]]))
-        sent = g.challenge_waves = sent + 1
+        sent = g.challenge_attacks = sent + 1
 
 
 def besiege(g, c):
@@ -233,11 +233,11 @@ def tick(g):
     import cheats
     from recap import game_time
     c, now = CHALLENGES[g.challenge], game_time(g)
-    if "waves" in c:                                                # the enemy attacks (#3907)
-        waves(g, c, now)
+    if "attacks" in c:                                              # the enemy attacks (#3907)
+        attacks(g, c, now)
     complete = done(g, c)
     m = medal(g.challenge, now if c["medal"] == "time" else len(vars(g).get("losses", {})))   # "lost": score.fallen
-    if complete or (c["medal"] == "time" and m is None) or ("waves" in c and town(g) is None):
+    if complete or (c["medal"] == "time" and m is None) or ("attacks" in c and town(g) is None):
         close(g)
         g.command(f'title @a[team=p{g.player}] subtitle ' + json.dumps(
             {"text": f"{m.title()} medal" if complete and m else "No medal", "color": "yellow"}))

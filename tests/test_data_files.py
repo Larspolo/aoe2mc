@@ -208,11 +208,11 @@ def check_difficulty(row):                                 # a level of "AI diff
 
 CHALLENGE_KEYS = {                                         # the optional keys of a challenge: one per line (#3907)
     "after": (str, type(None)),
+    "attacks": list,
     "check": str,
     "enemy": dict,
     "kills": int,
     "need": dict,
-    "waves": list,
 }
 
 

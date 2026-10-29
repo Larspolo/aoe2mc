@@ -36,7 +36,7 @@ def game(monkeypatch):
 
 
 def test_the_first_wave_comes_at_its_time_and_attacks_the_town_center(game):
-    first = challenge.CHALLENGES["defending-against-a-rush"]["waves"][0]
+    first = challenge.CHALLENGES["defending-against-a-rush"]["attacks"][0]
     g = fake(seconds=first["at"] - 1)
     challenge.tick(g)
     assert not [c for c in g.sent if isinstance(c, tuple)]
@@ -49,7 +49,7 @@ def test_the_first_wave_comes_at_its_time_and_attacks_the_town_center(game):
     assert [c for c in g.sent if isinstance(c, str) and c.startswith("aoe attack")] == \
         [f"aoe attack {n.lower()} {target}" for n, _, _ in summoned]
     challenge.tick(g)                                                  # a wave comes once
-    assert len([c for c in g.sent if isinstance(c, tuple)]) == len(summoned) and g.challenge_waves == 1
+    assert len([c for c in g.sent if isinstance(c, tuple)]) == len(summoned) and g.challenge_attacks == 1
 
 
 def test_the_castle_age_at_470_seconds_with_a_town_center_gives_the_gold_medal(game):

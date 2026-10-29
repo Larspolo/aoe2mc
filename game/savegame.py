@@ -82,8 +82,8 @@ MAP = (                                                                # gather.
     "trees",
 )
 VICTORY = (                                                            # the victory modes (#2476), pack()
-    "challenge_waves",                                                 # challenge.waves: the waves that came (#3907)
     "challenge_army",                                                  # army.py: the army of a battle challenge (#3906)
+    "challenge_attacks",                                               # challenge.attacks: the waves that came (#3907)
     "challenge_foes",                                                  # army.py: the enemy units of a battle challenge (#3910)
     "challenge_wave",                                                  # army.py: the wave of the enemy (#3906)
     "challenge_foes",                                                  # army.py: the enemy units of a battle challenge (#3910)
