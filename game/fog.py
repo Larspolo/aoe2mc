@@ -158,6 +158,15 @@ def spies(g, entry):
     """The research of Spies (the key "on_research" of data/train.jsonl, #3243): the enemy units show for ever (#2193)."""
     reveal(g)
 
+
+def explore(g, entry):
+    """The research of Circumnavigation (the key "on_research", #4327): all tiles of the minimap become explored, as the
+    setting "Explored"; the enemy units out of sight stay hidden. minimap() sends the new dim tiles at the next tick."""
+    n = g.data.get("map_size") or len(getattr(g.map, "ground", ())) // g.map.T
+    vars(g).setdefault("fog", {"hidden": set(), "at": None}).setdefault("explored", set()).update(
+        (x, y) for x in range(n) for y in range(n))
+
+
 def tick(g):
     """Update the fog each EVERY seconds: hide the enemy units that left the sight, show the ones that came in."""
     if not g.paper or g.reveal == "all" or "SPIES" in getattr(g, "techs", ()):   # Spies: the player sees what the
