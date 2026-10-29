@@ -406,6 +406,7 @@ def generate(text, seed, players=2, size=None, warn=None, teams=None):
     owner = np.full((n, n), -1, np.int32)
     layer = np.full((n, n), -1, np.int16)            # the land layer of each tile (aoe2mc.read_json "layer", -1 = none)
     lands, starts, kinds, links, layers = [], [], {}, [], {}
+    ids = {}                                         # the land_id of a create_land -> its land index (#4133)
     for cmd, args, attrs in sections.get("LAND_GENERATION", ()):
         if cmd == "base_terrain":
             terrain[:] = value(args[0], consts)
@@ -444,8 +445,10 @@ def generate(text, seed, players=2, size=None, warn=None, teams=None):
                               "target": tiles(attrs, consts, n, (2 * base + 1) ** 2)})
                 kinds[len(lands) - 1] = kind
                 layers[len(lands) - 1] = top
+                if "land_id" in attrs:                  # only create_land: the guide gives player lands no ID
+                    ids[value(attrs["land_id"][0], consts)] = len(lands) - 1
             for a in set(attrs) - {"base_layer", "base_size", "clumping_factor", "terrain_type", "land_percent", "number_of_tiles",
-                                   "land_position", "zone", "assign_to_player", "assign_to_team", *BORDERS}:
+                                   "land_id", "land_position", "zone", "assign_to_player", "assign_to_team", *BORDERS}:
                 warn(f"{cmd}: {a} is not read yet")
         else:
             warn(f"{cmd} is not read yet")
@@ -499,7 +502,8 @@ def generate(text, seed, players=2, size=None, warn=None, teams=None):
     elevation = lower_to_water(terrain, elevation)
     ridges = cliffs(sections.get("CLIFF_GENERATION", ()), terrain, starts, consts, rng, warn)   # draws before objects()
     found = []                                     # one line per object part, so that parallel parts do not conflict
-    found += objects(sections.get("OBJECTS_GENERATION", ()), consts, terrain, starts, rng, warn, owner, ridges, layer)
+    found += objects(sections.get("OBJECTS_GENERATION", ()), consts, terrain, starts, rng, warn, owner, ridges, layer,
+                     land_ids=ids)
     found += trees(terrain)
     found += ridges
     return {"size": n, "terrain": terrain.tolist(), "elevation": elevation.tolist(), "layer": layer.tolist(),
@@ -547,6 +551,7 @@ CREATE_OBJECT = (               # the attributes of create_object that objects()
     "avoid_all_actor_areas",        # out of each actor area (#4134)
     "avoid_cliff_zone",             # tiles from a cliff, default 1; never on the cliff tiles (#4131, `ridges`: the cliffs)
     "avoid_forest_zone",            # tiles from a forest, default 1 (#3858)
+    "avoid_other_land_zones",       # tiles from each other land: other than the player land or the specific land (#4133)
     "find_closest",                 # the free tile nearest to the origin of the land, first in scan order (#4135)
     "find_closest_to_map_center",   # the free tile nearest to the map middle (#4135)
     "find_closest_to_map_edge",     # the free tile nearest to a map edge (#4135)
@@ -560,6 +565,7 @@ CREATE_OBJECT = (               # the attributes of create_object that objects()
     "number_of_groups",             # groups of number_of_objects (± group_variance) objects (#3856)
     "number_of_objects",            # default 1; 3 for a VILLAGER: the start villagers of AoE2 DE (#3855, #4120)
     "place_on_forest_zone",         # only the tiles next to a forest (#3858)
+    "place_on_specific_land_id",    # only the tiles of the create_land with this land_id (#4133)
     "second_object",                # one more object on each tile (#3858)
     "set_circular_placement",       # a circle band of min and max_distance_to_players, default a square (#4136)
     "set_gaia_object_only",         # Gaia owns the objects of set_place_for_every_player (#3855)
@@ -572,7 +578,7 @@ CREATE_OBJECT = (               # the attributes of create_object that objects()
 )
 
 
-def objects(cmds, consts, terrain, starts, rng, warn, owner=None, ridges=(), layer=None):
+def objects(cmds, consts, terrain, starts, rng, warn, owner=None, ridges=(), layer=None, land_ids=None):
     """The objects of the create_object commands of <OBJECTS_GENERATION> (#3855), with the attributes of
     `CREATE_OBJECT`: number_of_objects on random free tiles, in groups with number_of_groups (#3856).
     Never on water (only a fish or a ship), a forest, a cliff or another object; an object with no free tile is missing."""
@@ -635,6 +641,14 @@ def objects(cmds, consts, terrain, starts, rng, warn, owner=None, ridges=(), lay
             ground = ground & ~dilate(forest, value(attrs["avoid_forest_zone"][0], consts) if attrs["avoid_forest_zone"] else 1)
         if "place_on_forest_zone" in attrs:
             ground = ground & dilate(forest, 1) & ~forest
+        land = None                                    # the land of place_on_specific_land_id (#4133)
+        if "place_on_specific_land_id" in attrs:
+            land = (land_ids or {}).get(value(attrs["place_on_specific_land_id"][0], consts))
+            if land is None or owner is None:
+                warn(f"create_object {args[0]}: unknown land_id {attrs['place_on_specific_land_id'][0]}")
+                continue
+            ground = ground & (owner == land)
+        other = value(attrs["avoid_other_land_zones"][0], consts) if "avoid_other_land_zones" in attrs else 0
         actor = value(attrs["actor_area"][0], consts) if "actor_area" in attrs else None
         reach = value(attrs["actor_area_radius"][0], consts) if "actor_area_radius" in attrs else 1
         second = kinds.get(value(attrs["second_object"][0], consts), (None, None))[1] if "second_object" in attrs else None
@@ -643,6 +657,9 @@ def objects(cmds, consts, terrain, starts, rng, warn, owner=None, ridges=(), lay
                 place = ground & ~dilate((owner >= 0) & (owner != st["land"]), zones)
             else:
                 place = ground
+            own = land if land is not None else st["land"] if st else None
+            if other and owner is not None:
+                place = place & ~dilate((owner >= 0) & (owner != (-1 if own is None else own)), other)
             dist = (np.hypot(x - st["x"], y - st["y"]) if circle else np.maximum(abs(x - st["x"]), abs(y - st["y"]))) if st else np.full((n, n), float(lo))
             # without number_of_groups each object is a group of 1; with it, number_of_objects (± group_variance) is
             # the size of each group (AoE2 DE scripting guide; loose grouping and radius 3 are the defaults)
