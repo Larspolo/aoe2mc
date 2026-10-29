@@ -480,7 +480,8 @@ def objects(cmds, consts, terrain, starts, rng, warn):
     """The objects of the create_object commands of <OBJECTS_GENERATION> (#3855): number_of_objects (default 1) on
     random free tiles, set_place_for_every_player: that many for each player (its own, or Gaia with
     set_gaia_object_only), min_distance_to_players and max_distance_to_players: tiles from the origin of the player
-    land. Never on water (only a fish or a ship), a forest or another object; an object with no free tile is missing."""
+    land. number_of_groups, group_variance, group_placement_radius, set_tight_grouping: groups of objects (#3856).
+    Never on water (only a fish or a ship), a forest or another object; an object with no free tile is missing."""
     import aoe2mc
     kinds = aoe2mc.object_kinds(old=False)
     n, out = terrain.shape[0], []
@@ -501,22 +502,43 @@ def objects(cmds, consts, terrain, starts, rng, warn):
         water = any(w in base for w in ("FISH", "SHIP", "BOAT"))
         owners = ([(st, 0 if "set_gaia_object_only" in attrs else st["player"]) for st in starts]
                   if "set_place_for_every_player" in attrs else [(None, 0)])
+        groups = value(attrs["number_of_groups"][0], consts) if "number_of_groups" in attrs else None
+        vary = value(attrs["group_variance"][0], consts) if "group_variance" in attrs else 0
+        radius = value(attrs["group_placement_radius"][0], consts) if "group_placement_radius" in attrs else 3
+        tight = "set_tight_grouping" in attrs
         for st, player in owners:
             dist = np.hypot(x - st["x"], y - st["y"]) if st else np.full((n, n), float(lo))
-            for _ in range(count):
-                name = base
+            # without number_of_groups each object is a group of 1; with it, number_of_objects (± group_variance) is
+            # the size of each group (AoE2 DE scripting guide; loose grouping and radius 3 are the defaults)
+            sizes = [1] * count if groups is None else [max(1, count + int(rng.integers(-vary, vary + 1))) for _ in range(groups)]
+            for size in sizes:
                 spots = np.argwhere((dist >= lo) & (dist <= hi) & ~used & (wet == water))
                 if not len(spots):
                     warn(f"create_object {args[0]}: no free tile")
                     break
-                tx, ty = (int(v) for v in spots[rng.integers(len(spots))])
-                r = 3 if kind == "B" else 1                      # a building: its tile is the corner of its middle
-                used[max(0, tx - r):tx + r, max(0, ty - r):ty + r] = True
-                if name == "VILLAGER_MALE" and rng.integers(2):    # AoE2 DE: a male or a female villager
-                    name = "VILLAGER_FEMALE"
-                out.append({"name": name, "player": player, "x": tx + 0.5 * (kind != "B"), "y": ty + 0.5 * (kind != "B")})
+                mid = tuple(int(v) for v in spots[rng.integers(len(spots))])
+                free = ~used & (wet == water)
+                if tight:
+                    cells = [mid]               # each next object on a free tile next to an object of the group
+                    while len(cells) < size:
+                        edge = sorted({t for c in cells for t in square(c, 1, n) if free[t] and t not in cells})
+                        if not edge:
+                            break
+                        cells.append(edge[rng.integers(len(edge))])
+                else:
+                    near = np.argwhere(free & (np.hypot(x - mid[0], y - mid[1]) <= radius))
+                    near = [tuple(int(v) for v in t) for t in near if tuple(t) != mid]
+                    cells = [mid] + [near[i] for i in rng.permutation(len(near))[:size - 1]]
+                for tx, ty in cells:
+                    name = base
+                    r = 3 if kind == "B" else 1                      # a building: its tile is the corner of its middle
+                    used[max(0, tx - r):tx + r, max(0, ty - r):ty + r] = True
+                    if name == "VILLAGER_MALE" and rng.integers(2):    # AoE2 DE: a male or a female villager
+                        name = "VILLAGER_FEMALE"
+                    out.append({"name": name, "player": player, "x": tx + 0.5 * (kind != "B"), "y": ty + 0.5 * (kind != "B")})
         for a in set(attrs) - {"number_of_objects", "set_place_for_every_player", "set_gaia_object_only",
-                               "min_distance_to_players", "max_distance_to_players"}:
+                               "min_distance_to_players", "max_distance_to_players", "number_of_groups",
+                               "group_variance", "group_placement_radius", "set_tight_grouping", "set_loose_grouping"}:
             warn(f"create_object: {a} is not read yet")
     return out
 
