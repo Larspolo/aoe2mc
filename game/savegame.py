@@ -41,6 +41,7 @@ ORDERS = ("patrols", "trigger_attributes", "trigger_costs",            # scenari
           "unit_values",                                               # the values of single units (#3083)
           "attack_moves",                                              # stance.py: the attack moves and the old stances (#3357)
           "follows",                                                   # follow.py: the Follow and Guard orders (#3358)
+          "scouting",                                                  # autoscout.py: the Auto Scout order (#3702)
           "formations")                                                # stance.py: the formations of the units (#3416)
 ROUTES = ("trade", "trebs")                                            # trade.py, trebuchet.py: as OPTIONAL (#2413)
 CHEATS = (                                                             # game/cheats.py: the cheats that the player

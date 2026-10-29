@@ -54,6 +54,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import build  # noqa: E402
 import replay  # noqa: E402  (build imports it too)
 import amounts  # noqa: E402
+import autoscout  # noqa: E402
 import battle_royale  # noqa: E402
 import bossbar  # noqa: E402
 import capture_relic  # noqa: E402
@@ -1583,6 +1584,7 @@ class Gather:
         self.end_patrols(units)
         stance.end_attack_moves(self, units)
         follow.end(self, units)
+        autoscout.end(self, units)                                     # the Auto Scout order (#3702)
         for key in ("entering", "boarding", "loading", "converting", "fetching", "trade"):
             table = vars(self).get(key, {})
             for u in units & table.keys():
@@ -2246,6 +2248,7 @@ class Gather:
             waypoint(self)                                             # the next waypoint of a move (#3515)
             stance.arrive(self)                                        # the attack moves: the old stance at the point (#3357)
             follow.tick(self)                                          # the Follow and Guard orders (#3358)
+            autoscout.tick(self)                                       # the Auto Scout order (#3702)
             fog.tick(self)                                             # after the bots: their units too (#1389)
             herd.tick(self)                                            # all players: the bots capture too (#1792)
             if self.victory == "standard" or self.mode in wonder.RACE:  # a wonder or all relics win too (#2316)
