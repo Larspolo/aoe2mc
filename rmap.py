@@ -543,6 +543,7 @@ def objects(cmds, consts, terrain, starts, rng, warn, owner=None, ridges=(), lay
     set_scaling_to_player_number scale the groups, else the objects (#3857). avoid_forest_zone (tiles from a forest,
     default 1), place_on_forest_zone (the tiles next to a forest), actor_area with actor_area_radius (default 1) marks
     the tiles around each object for a later avoid_actor_area, second_object: one more object on each tile (#3858).
+    actor_area_to_place_in A: only in the actor area A; avoid_all_actor_areas: out of every actor area (#4134).
     avoid_cliff_zone N (tiles from a cliff, default 1) and the cliff tiles themselves (#4131, `ridges`: the cliffs).
     layer_to_place_on T: only the tiles of the land layer T (layer: the land layer of each tile, #4132).
     Never on water (only a fish or a ship), a forest, a cliff or another object; an object with no free tile is missing."""
@@ -598,6 +599,11 @@ def objects(cmds, consts, terrain, starts, rng, warn, owner=None, ridges=(), lay
             ground = ground & dilate(forest, 1) & ~forest
         if "avoid_actor_area" in attrs:
             ground = ground & ~areas.get(value(attrs["avoid_actor_area"][0], consts), np.zeros((n, n), bool))
+        if "actor_area_to_place_in" in attrs:
+            ground = ground & areas.get(value(attrs["actor_area_to_place_in"][0], consts), np.zeros((n, n), bool))
+        if "avoid_all_actor_areas" in attrs:
+            for area in areas.values():
+                ground = ground & ~area
         actor = value(attrs["actor_area"][0], consts) if "actor_area" in attrs else None
         reach = value(attrs["actor_area_radius"][0], consts) if "actor_area_radius" in attrs else 1
         second = kinds.get(value(attrs["second_object"][0], consts), (None, None))[1] if "second_object" in attrs else None
@@ -647,7 +653,8 @@ def objects(cmds, consts, terrain, starts, rng, warn, owner=None, ridges=(), lay
                                "terrain_to_place_on", "min_distance_group_placement", "max_distance_to_other_zones",
                                "set_scaling_to_map_size", "set_scaling_to_player_number", "avoid_forest_zone",
                                "place_on_forest_zone", "actor_area", "actor_area_radius", "avoid_actor_area",
-                               "second_object", "avoid_cliff_zone", "layer_to_place_on"}:
+                               "second_object", "actor_area_to_place_in", "avoid_all_actor_areas", "avoid_cliff_zone",
+                               "layer_to_place_on"}:
             warn(f"create_object: {a} is not read yet")
     return out
 
