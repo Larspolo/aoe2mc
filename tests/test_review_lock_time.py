@@ -20,6 +20,7 @@ def github(monkeypatch):
     monkeypatch.setattr(claim, "api", lambda path: {"body": BODY})
     monkeypatch.setattr(claim, "last_lock", lambda kind, remote="origin": seen.get("lock"))
     monkeypatch.setattr(claim, "merged_since", lambda last, gap, remote="origin": seen["since"].append(last) or seen["merged"])
+    monkeypatch.setattr(claim, "owner_since", lambda last, remote="origin": [])   # no owner work: the full gap
     monkeypatch.setattr(claim, "claim_lock", lambda kind, key, remote="origin": seen["keys"].append(key) and False)
     monkeypatch.setattr(claim, "refill_starved", lambda: False)           # no quota call (#3741: tests/test_roadmap_early.py)
     return seen
@@ -42,9 +43,9 @@ def test_the_state_time_without_a_newer_lock(github):
 
 
 def test_the_process_review_keeps_the_state_time(github):
-    github.update(lock=LOCK, merged=200)
+    github.update(lock=LOCK, merged=claim.REVIEW)
     claim.main(["0", "--review"])
-    assert github["since"] == [STATE] and github["keys"] == ["200pr-20261028T064732Z-1"]
+    assert github["since"] == [STATE] and github["keys"] == [f"{claim.REVIEW}pr-20261028T064732Z-1"]
 
 
 def test_the_newest_lock_ref_gives_its_claim_time(clones, monkeypatch):  # noqa: F811

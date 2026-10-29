@@ -40,6 +40,11 @@ weights = {{ haiku = 0.25 }}     # a lane run in Opus runs (start value)
 pacer = "workflow"              # pacer.yml starts the runs (tools/pacer.py); another value stops its loop
 trigger = ""                    # the ID of the scheduled task "NAME autopilot": docs/OPERATOR.md, section 3
 
+[review]                        # the process review (`improve` skill): merged PRs, never hours
+gap = 100                       # merged PRs after a review that made a change
+max_gap = 400                   # a review with no change doubles the gap, up to this
+owner_gap = 20                  # the gap when an owner session merged a PR since the last review
+
 [commands]                      # change these to the commands of the project
 install = "python3 -m pip install -r requirements-dev.txt"
 lint = "ruff check ."
