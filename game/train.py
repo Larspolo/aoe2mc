@@ -142,6 +142,12 @@ def work(g, building):
     return math.prod(f for t, (b, f) in BY_KEY["work"].items() if t in g.techs and b == building)
 
 
+def group_rate(g, name):
+    """The factor of the train rate of unit name from the researched technologies with the key "train_group": [the
+    units, as "walk" (faster()), the factor] (Steppe Husbandry: the scout line 2, #4260), else 1."""
+    return math.prod(f for t, (u, f) in BY_KEY["train_group"].items() if t in g.techs and faster(u, name))
+
+
 def value(key, name, default=None):
     """The value of key of data/train.jsonl for item name (BY_KEY), else default. A key needs its line in
     train_keys.jsonl."""
@@ -991,7 +997,7 @@ def seconds(g, name, building=None, k=None):
     own = (added(g, building, name) or (0, 0))[1] if building else 0   # Add Train Location (#2865)
     return (own or (base if base is not None else time if build.ages(g) >= age else TRAIN_TIMES[name])) \
         / (civs.work_rate(g, building) * work(g, building) if building else 1) \
-        / civs.train_rate(g, name) / civs.age_rate(g, name) * civs.research_time(g, name) / civs.turbo(g, name) \
+        / civs.train_rate(g, name) / (group_rate(g, name) if name not in TECHS else 1) / civs.age_rate(g, name) * civs.research_time(g, name) / civs.turbo(g, name) \
         * (civs.train_time(g, building, name) if building else 1) \
         * (doctrine(g, building, k)[2] if building and name not in TECHS else 1)
 

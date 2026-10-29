@@ -37,3 +37,4 @@
 {"name": "less", "text": "A technology that cuts the damage that its units take from attackers of some classes: [the units (as \"walk\"), {attacker class: n}]; the most of the classes of the attacker counts (Royal Heirs). train.hits.", "issue": 4331}
 {"name": "ignore_armor", "text": "A technology whose melee units ignore the armor of the target (a negative armor still counts): the units, as \"walk\" (Wootz Steel). train.hits.", "issue": 4331}
 {"name": "work", "text": "A technology that makes one building work faster: [the building, the factor of its train and research rate] (Perfusion: [\"BARRACKS\", 2]). A unit group can join the form later. train.work, train.seconds.", "issue": 4226}
+{"name": "train_group", "text": "A technology that makes a unit group train faster: [the units, as \"walk\", the factor of the train rate] (Steppe Husbandry: the scout line 2). train.group_rate, train.seconds.", "issue": 4260}
