@@ -48,6 +48,7 @@ NEAR = {r["name"]: r["near"] for r in build.ROWS if "near" in r}
 HOUSE_GAP = 2                                                      # a new house at this many units below the limit
 ATTACK = 600.0                                                     # AoE2 seconds: the first attack at 10:00
 LOOK = 2.0                                                         # AoE2 seconds between two looks for targets
+RETRY = 60.0                                                       # AoE2 seconds: try a source with no path again
 STALL = 30.0                                                       # AoE2 seconds with no step nearer and no damage
 LEVELS = {r["name"]: r for r in table.load("difficulty.jsonl")}    # "AI difficulty", in the order of the AoE2 lobby
 
@@ -84,7 +85,8 @@ class Bot:
         if share and own is None:
             self.g.map.trees, self.g.map.bushes, self.g.map.mines = share.map.trees, share.map.bushes, share.map.mines
             self.g.relics = share.relics                                # one list: each relic exists once (#3116)
-        self.failed = set()                                            # sources that a villager could not reach
+        self.failed = {}                                               # sources that a villager could not reach -> time
+        self.sent = {}                                                 # villager -> the tile that go() sent it to
         self.sides = (None, {})                                        # (own and foe places, {tile: at home}) (#1810)
         self.g.home = self.home                                        # the next bush or mine of Gather.nearest too
         self.g.work_on = False                                         # the bot gives the tasks after a build or a tree (#3271)
@@ -150,12 +152,18 @@ class Bot:
         work = {r: 0 for r in SHARE}
         idle = []
         for v in g.villagers.values():
+            sent = self.sent.pop(v.uuid, None) if v.state not in ("idle", "to_tree") else self.sent.get(v.uuid)
             if v.state != "idle":
                 work[v.res] += 1
             elif v.tree is not None and self.sources(v.res).get(v.tree, 0) > 0:
-                self.failed.add(v.tree)                                # idle next to a full source: no path
-                v.tree = None
-                idle.append(v)
+                if sent == v.tree:                                     # sent there, idle before it gathered: no path
+                    self.failed[v.tree] = self.time
+                    v.tree = None
+                    idle.append(v)
+                else:                                                  # came out of a building: back to work (#3543)
+                    g.send(v.tree, {v.uuid})
+                    self.sent[v.uuid] = v.tree
+                    work[v.res] += 1
             else:
                 idle.append(v)
         n = len(g.villagers)
@@ -174,10 +182,12 @@ class Bot:
     def go(self, v, res):
         """Send villager v to the nearest source of res that has some left. False when there is none."""
         g = self.g
-        full = [t for t, k in self.sources(res).items() if k > 0 and t not in self.failed]
+        full = [t for t, k in self.sources(res).items() if k > 0 and self.time - self.failed.get(t, -RETRY) >= RETRY]
         if full:
             T = g.map.T
-            g.send(min(full, key=lambda t: (math.dist(v.cell, ((t[0] + 0.5) * T, (t[1] + 0.5) * T)), t)), {v.uuid})
+            tile = min(full, key=lambda t: (math.dist(v.cell, ((t[0] + 0.5) * T, (t[1] + 0.5) * T)), t))
+            g.send(tile, {v.uuid})
+            self.sent[v.uuid] = tile
         return bool(full)
 
     def army(self):
