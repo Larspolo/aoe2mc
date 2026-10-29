@@ -918,10 +918,17 @@ class Gather:
             ("ship", {"ship", "warship", "fireship"}), ("siege", {"siege", "ram", "heavysiege"}),
             ("cavalry", {"cavalry", "camel", "elephant"}), ("archer", {"archer", "skirmisher"})) if cs & k), "infantry")
 
-    def voice(self, uuid):
-        """Play the select voice of unit uuid to the person who clicked, one line per click as in AoE2 DE (#3499)."""
+    def voice(self, uuid, key="select"):
+        """Play the select (or order, #3500) voice of unit uuid to the person who clicked, one line per click as in
+        AoE2 DE (#3499)."""
         if (v := VOICES.get(self.voice_class(uuid))) and not self.noui:
-            self.command(f"playsound minecraft:{v['select']} voice {self.person or self.who} ~ ~ ~ 1 {v['pitch']}")
+            self.command(f"playsound minecraft:{v[key]} voice {self.person or self.who} ~ ~ ~ 1 {v['pitch']}")
+
+    def order_voice(self):
+        """Play the order voice of the first selected unit once, for an order of the person (a click, #3500). The
+        orders of a bot or of the game program (rally point, next_task, a trigger) do not come here."""
+        if self.selected:
+            self.voice(min(self.selected), "order")
 
     def select(self, uuid, voice=True):
         """Select one villager (glowing), as a click in AoE2 does. A click on a military unit adds it to selected
@@ -1456,10 +1463,12 @@ class Gather:
         if kind == "enemy":
             monk.convert_order(self, self.monks(), u)                    # the monks convert it, the others attack (#1245)
             self.attack(u)
+            self.order_voice()
             self.command(glow(u))                                     # the order marker of an attack (#796)
             return
         if kind == "prey":
             self.hunt(u)
+            self.order_voice()
             self.command(glow(u))
             return
         import combat                                                  # combat imports this module
@@ -1487,6 +1496,7 @@ class Gather:
             monk.convert_order(self, self.monks(), u)                 # with Redemption (#1264)
             self.sieged.add(u)
             self.attack(u)
+            self.order_voice()
             x0, _, z0, x1, _, z1 = self.forts[u]
             self.mark(name, {(x0, z0), (x1, z1)}, "attack")
             import combat                                              # combat imports this module
@@ -1503,6 +1513,7 @@ class Gather:
                 fleet.build_site(self, self.selected, site)            # the selected fishing ships build it (#1438)
             elif site and self.selected & self.villagers.keys() and not self.row_busy(site):
                 self.build(site)                                       # the selected villagers build it at once, as in AoE2 (#1654)
+                self.order_voice()
             if site:
                 repair.build_order(self, site, self.selected)          # the selected Serjeants build a Donjon (#2129)
             return
@@ -1534,17 +1545,21 @@ class Gather:
         tile = self.map.pick_tree(eye, d) or self.shore_fish(eye, d)
         if tile and self.selected:
             self.send(tile)
+            self.order_voice()
             self.mark(name, self.map.spot(tile))
         elif self.selected and (site := build.pick(self, eye, d)):
             self.build(site)
+            self.order_voice()
             repair.build_order(self, site, self.selected)              # Serjeants build a Donjon (#2129)
             x0, x1, z0, z1 = site["footprint"]
             self.mark(name, {(x0, z0), (x1 - 1, z1 - 1)})
         elif self.selected and (cell := self.map.pick_ground(eye, d)) and self.map.free(*cell):
             self.walk_to(name, cell)                                   # the move order of AoE2 (#1368)
+            self.order_voice()
         elif any(replay.ship(self.soldiers.get(u, "")) for u in self.selected) \
                 and (cell := fleet.pick(self, eye, d)) and self.map.wet(*cell):
             self.walk_to(name, cell)                                   # the ships sail on the water (#1383)
+            self.order_voice()
 
     def new_order(self, units):
         """A new order ends each old order of the units, as in AoE2 (#3007): the repair of a Serjeant (#2128), the
