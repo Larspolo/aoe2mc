@@ -679,6 +679,8 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
     if settings["challenge"]:                                    # the civilization of the challenge (#3900)
         import challenge
         settings["civ"] = {**(settings["civ"] or {}), 1: challenge.CHALLENGES[settings["challenge"]]["civ"]}
+        if settings["age"] == "dark":                            # the start age of the challenge (#3908)
+            settings["age"] = challenge.CHALLENGES[settings["challenge"]].get("age", "dark")
     apply_civs(data, settings["civ"])                             # before the Gathers: all bonuses (civs.civ) follow it
     for player, pct in (settings["handicap"] or {}).items():     # before the Gathers: the start resources (#2474)
         data.setdefault("players", {}).setdefault(str(player), {})["handicap"] = pct
@@ -768,6 +770,9 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
         if "module" in line and not (state and line.get("loaded") == "skip"):   # a loaded game has its town, relic
             start = {"start": not state} if line.get("loaded") == "start" else {}   # Defend the Wonder (#2441)
             importlib.import_module(line["module"]).setup(g, mode, **start)
+    if settings["challenge"] and not state:                      # the castle and the armies of a challenge (#3908)
+        import challenge
+        challenge.setup(g, challenge.CHALLENGES[settings["challenge"]])
     import replay
     import treaty as treaties
     if settings["mode"] in treaties.ENDLESS:                     # Wonder Race: a treaty with no end (#2406)
