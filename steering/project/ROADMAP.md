@@ -5,7 +5,7 @@ The `roadmap` skill makes the next epic from a missing feature when the queue ha
 run reviews this list (owner decisions, 2026-10-26: the agents make the epics themselves, at `P3`; the goals take
 turns). The owner changes the priority of an epic or adds a feature here at any time.
 
-Each feature has a key in backticks (`tools/release.py` and `docs/RELEASE.md` use it). An epic names its key in its body ("Roadmap: `play:health`"), so a run
+Each feature has a key in backticks (`tools/release.py` and `steering/project/RELEASE.md` use it). An epic names its key in its body ("Roadmap: `play:health`"), so a run
 can see which features have an epic: `gh api "repos/Larspolo/aoe2mc/issues?labels=epic&state=all&per_page=100"`.
 
 ## 1. Convert maps to Minecraft (`aoe2mc.py`, `buildings.py`, `units.py`)

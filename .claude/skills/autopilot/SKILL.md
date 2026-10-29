@@ -53,13 +53,14 @@ report of step 8, and the `Usage:` line (of the brief, else of the first `cycle_
 3. For a bug, write a failing test first. Then change the code. Keep the diff small and in the existing style.
    Put new tests in a new file `tests/test_<topic>.py`: parallel tickets that append to the end of one test file
    conflict (66 merge conflicts in 6 hours on 2026-10-25).
-4. Verify with the `verify` skill (by the change; the full suite once, before the push, #3460).
+4. Verify with the `verify` skill (by the change; never the full fast suite: the quick CI runs it, owner #4187).
 5. Improve the process (step 9, `process.md`) now, so that the changes go into the same PR.
 6. Stage only the files of the ticket: read `git status --short` first (no `logs/`, worlds or images; not
    `docs/coverage.md` or a `MAX` change in `tests/test_coverage.py`: `coverage.yml` does it on main).
 7. Ship in one call: `python3 tools/ship_pr.py N --message MSG.txt --title "<ticket title>" --body BODY.md`
-   (MSG.txt: subject in STE imperative, what and why, `Closes #<number>`; BODY.md: what changed, how you verified).
-   It runs ruff and the tests (`--tested`: you ran them on this tree), commits, runs the guard (hard rule before each
+   (MSG.txt: subject in STE imperative, what and why, `Closes #<number>`; BODY.md: what changed, how you verified,
+   and all that a later run needs to fix a red CI with no other context, #4187).
+   It runs ruff and the test files of the change (`--tested`: you ran them on this tree), commits, runs the guard (hard rule before each
    push: it fails when the claim is not yours or another branch has a PR that closes #N, #288), pushes and opens the
    PR. A PR that changes `packaging/` or a workflow with its own PR checks: add `--hold` (the label `hold` at once).
    Exit 3: do not push: `claim.py N --release` (when the claim is yours; it removes `in-progress`), comment the reason
