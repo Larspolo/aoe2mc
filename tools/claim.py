@@ -77,8 +77,8 @@ from agent_config import CONFIG
 EMPTY_TREE = "4b825dc642cb6eb9a060e54bf8d69288fbee4904"
 # The process review counts merged PRs, never hours (owner, 2026-10-29): `[review]` of agent.toml.
 REVIEW_CONFIG = CONFIG.get("review", {})
-REVIEW = REVIEW_CONFIG.get("gap", 80)            # the first gap, and the reset after a run of changes ends
-REVIEW_MIN, REVIEW_MAX = REVIEW_CONFIG.get("min_gap", 10), REVIEW_CONFIG.get("max_gap", 512)   # halve, double between
+REVIEW = REVIEW_CONFIG.get("gap", 80)            # the first gap, and the reset when the result of the reviews turns
+REVIEW_MIN, REVIEW_MAX = REVIEW_CONFIG.get("min_gap", 10), REVIEW_CONFIG.get("max_gap", 640)   # halve, double between
 OWNER_GAP = REVIEW_CONFIG.get("owner_gap", 20)   # the gap when an owner session merged a PR since the last review
 ROADMAP = 100               # merged PRs between two reviews of docs/ROADMAP.md (#2039)
 ROADMAP_EARLY = 30          # the same while the refill has no source: R < N, each roadmap feature has an epic (#3741)
@@ -320,10 +320,13 @@ def with_state(body, state):
 
 
 def next_gap(gap, changed):
-    """The gap after a review (owner, 2026-10-29): a change halves it (at least REVIEW_MIN merged PRs), so a review
-    that finds work comes sooner. No change after a gap below REVIEW resets it to REVIEW; from REVIEW up, no change
-    doubles it (at most REVIEW_MAX). With 80, 10 and 512: 80, 40, 20, 10, 10 ... while each review changes something."""
-    return max(REVIEW_MIN, gap // 2) if changed else REVIEW if gap < REVIEW else min(2 * gap, REVIEW_MAX)
+    """The gap after a review (owner, 2026-10-29). A change resets a gap above REVIEW to REVIEW and halves the others
+    (at least REVIEW_MIN merged PRs), so a review that finds work comes sooner. No change resets a gap below REVIEW to
+    REVIEW and doubles the others (at most REVIEW_MAX). With 80, 10 and 640: a change each time gives 80, 40, 20, 10,
+    10 ...; no change each time gives 80, 160, 320, 640, 640 ..."""
+    if changed:
+        return REVIEW if gap > REVIEW else max(REVIEW_MIN, gap // 2)
+    return REVIEW if gap < REVIEW else min(2 * gap, REVIEW_MAX)
 
 
 def review_gap(state):

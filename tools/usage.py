@@ -26,6 +26,7 @@ The pure functions take plain values, so the tests need no network.
 """
 import argparse
 import datetime
+import functools
 import json
 import math
 import os
@@ -384,11 +385,16 @@ def fire(usage, now, burn=BURN, burn7=None, skip=(), status=None, started=None, 
     weights, source = health.lane_weights(comments)
     eq = claims if lanes is None else health.opus_equivalent(claims, lanes, weights)   # in Opus runs (#1727)
     target = target_runs(usage, now, burn, burn7=burn7)
-    need = refill_need(ready, target, open_all, release_due, free=free_sources,   # it asks the reviews after the checks
-                       reviews=lambda: due_reviews(starved=lambda: target is not None and ready < target and not free_sources()))
+    reviews = functools.cache(lambda: due_reviews(starved=lambda: target is not None and ready < target
+                                                  and not free_sources()))
+    need = refill_need(ready, target, open_all, release_due, free=free_sources, reviews=reviews)   # reviews after checks
+    only_review = False
     if need and refill_recent(refs, now) and ready >= target // 2:
-        need = ""                                           # a refill runs now or ran; a near-empty queue refills at once
-    refill = refill_runs(open_all, now) if need else 0   # #3547: no refill run with no refill work
+        # A refill runs now or ran; a near-empty queue refills at once. A due review skips the gap (owner, 2026-10-29):
+        # its lock lets one run take it, and `pending` counts the started run until it claims.
+        kinds = reviews()
+        need, only_review = (" and ".join(kinds) + " due", True) if kinds else ("", False)
+    refill = (1 if only_review else refill_runs(open_all, now)) if need else 0   # #3547: no refill run with no work
     refill_lane = "deep" if "deep" in dashboard.RESERVED else None
     wait = pending(started or {}, refs, now, refill_lane=refill_lane)
     eq += sum(n * weights.get(t, 1) for t, n in wait.items())

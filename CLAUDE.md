@@ -135,7 +135,7 @@ hook, `.gitignore` and the claim and dashboard rules. The aim is more closed tic
 - Only the owner can change the environment settings (setup script, network, variables), the scheduled task and the
   GitHub settings. When one of them costs time, make a `needs-human` ticket with numbered steps and the exact text.
   A new host: add it to `scripts/allowed-domains.txt` and ask the owner to paste the file (`docs/ENVIRONMENT.md`, "Network").
-- One run per review (`tools/claim.py 0 --review`, a gap of merged PRs in `[review]` of `agent.toml`: half after a review with a change, shorter after owner work): the `improve` skill learns from the owner's own changes, walks all levers and makes each change that pays.
+- One run per review (`tools/claim.py 0 --review`, a gap of merged PRs in `[review]` of `agent.toml`: smaller while reviews make changes, larger while they make none, shorter after owner work): the `improve` skill learns from the owner's own changes, walks all levers and makes each change that pays.
 - Never weaken tests, CI or safety rules to save time. List each process change on the status issue.
 Keep this file short: put details in skills or docs.
 

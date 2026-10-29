@@ -27,8 +27,8 @@ def test_a_review_waits_for_its_gap_of_merged_prs():
     assert claim.pr_slot("2026-10-26T09:00:00Z", 50, 50) != claim.pr_slot(last, 50, 50)   # the next review
 
 
-def test_a_change_halves_the_gap_and_no_change_resets_or_doubles_it(monkeypatch):
-    for name, value in (("REVIEW", 80), ("REVIEW_MIN", 10), ("REVIEW_MAX", 512)):   # test values (owner, 2026-10-29)
+def test_the_gap_halves_while_reviews_change_and_doubles_while_they_do_not(monkeypatch):
+    for name, value in (("REVIEW", 80), ("REVIEW_MIN", 10), ("REVIEW_MAX", 640)):   # test values (owner, 2026-10-29)
         monkeypatch.setattr(claim, name, value)
     body = claim.reviewed(BODY, True, T)
     state = claim.agent_state(body)
@@ -39,14 +39,15 @@ def test_a_change_halves_the_gap_and_no_change_resets_or_doubles_it(monkeypatch)
     for changed in (True, True, True, False, False, False, False, False, True):
         body = claim.reviewed(body, changed, T)
         gaps.append(claim.agent_state(body)["review_prs"])
-    assert gaps == [20, 10, 10, 80, 160, 320, 512, 512, 256]
+    assert gaps == [20, 10, 10, 80, 160, 320, 640, 640, 80]                       # the turns reset to 80
 
 
 def test_a_gap_of_an_earlier_rule_counts_as_the_first_gap(monkeypatch):
-    for name, value in (("REVIEW", 80), ("REVIEW_MIN", 10), ("REVIEW_MAX", 512)):
+    for name, value in (("REVIEW", 80), ("REVIEW_MIN", 10), ("REVIEW_MAX", 640)):
         monkeypatch.setattr(claim, name, value)
     assert claim.review_gap({"review_prs": 200}) == claim.review_gap({}) == 80     # 200 and 800: the rules before
-    assert claim.review_gap({"review_prs": 10}) == 10 and claim.review_gap({"review_prs": 256}) == 256
+    assert claim.review_gap({"review_prs": 10}) == 10 and claim.review_gap({"review_prs": 640}) == 640
+    assert claim.review_gap({"review_prs": 256}) == 80                              # the rule never gives 256
 
 
 def test_the_merged_prs_without_github_start_the_review():

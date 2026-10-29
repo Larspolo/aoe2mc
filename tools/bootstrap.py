@@ -41,9 +41,9 @@ pacer = "workflow"              # pacer.yml starts the runs (tools/pacer.py); an
 trigger = ""                    # the ID of the scheduled task "NAME autopilot": docs/OPERATOR.md, section 3
 
 [review]                        # the process review (`improve` skill): merged PRs, never hours
-gap = 80                        # merged PRs: the first gap, and the reset when a review below it finds no change
-min_gap = 10                    # a review with a change halves the gap, down to this
-max_gap = 512                   # a review with no change from `gap` up doubles the gap, up to this
+gap = 80                        # merged PRs: the first gap, and the reset when the result of the reviews turns
+min_gap = 10                    # a review with a change halves a gap up to `gap`, down to this
+max_gap = 640                   # a review with no change doubles a gap from `gap` up, up to this
 owner_gap = 20                  # the gap when an owner session merged a PR since the last review
 
 [commands]                      # change these to the commands of the project
