@@ -558,6 +558,7 @@ CREATE_OBJECT = (               # the attributes of create_object that objects()
     "number_of_objects",            # default 1; 3 for a VILLAGER: the start villagers of AoE2 DE (#3855, #4120)
     "place_on_forest_zone",         # only the tiles next to a forest (#3858)
     "second_object",                # one more object on each tile (#3858)
+    "set_circular_placement",       # a circle band of min and max_distance_to_players, default a square (#4136)
     "set_gaia_object_only",         # Gaia owns the objects of set_place_for_every_player (#3855)
     "set_loose_grouping",           # the default grouping (#3856)
     "set_place_for_every_player",   # number_of_objects for each player (#3855)
@@ -604,6 +605,7 @@ def objects(cmds, consts, terrain, starts, rng, warn, owner=None, ridges=(), lay
         vary = value(attrs["group_variance"][0], consts) if "group_variance" in attrs else 0
         radius = value(attrs["group_placement_radius"][0], consts) if "group_placement_radius" in attrs else 3
         tight = "set_tight_grouping" in attrs
+        circle = "set_circular_placement" in attrs
         k = (n * n / 10000 if "set_scaling_to_map_size" in attrs else 1) * (
             len(starts) if "set_scaling_to_player_number" in attrs else 1)
         if k != 1 and groups is None:
@@ -638,7 +640,7 @@ def objects(cmds, consts, terrain, starts, rng, warn, owner=None, ridges=(), lay
                 place = ground & ~dilate((owner >= 0) & (owner != st["land"]), zones)
             else:
                 place = ground
-            dist = np.hypot(x - st["x"], y - st["y"]) if st else np.full((n, n), float(lo))
+            dist = (np.hypot(x - st["x"], y - st["y"]) if circle else np.maximum(abs(x - st["x"]), abs(y - st["y"]))) if st else np.full((n, n), float(lo))
             # without number_of_groups each object is a group of 1; with it, number_of_objects (± group_variance) is
             # the size of each group (AoE2 DE scripting guide; loose grouping and radius 3 are the defaults)
             sizes = [1] * count if groups is None else [max(1, count + int(rng.integers(-vary, vary + 1))) for _ in range(groups)]
