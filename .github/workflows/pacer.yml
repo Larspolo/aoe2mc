@@ -12,7 +12,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read     # checkout and the claim refs (`health.lane_claims`)
+  contents: write    # checkout, the claim refs (`health.lane_claims`) and the push of the branch metrics
   issues: read       # the ready tickets and the status issue (`usage.fire`)
   pull-requests: read   # the flow brake (`usage.read_flow`)
   actions: write     # the queued CI runs (`usage.read_flow`) and the start of the next loop
@@ -34,6 +34,8 @@ jobs:
         run: |
           npm install -g @anthropic-ai/claude-code
           python3 -m pip install -q numpy
+      - name: Check out the branch metrics (the log of each cycle, `tools/metrics_log.py --push`)
+        run: git fetch -q --depth 1 origin metrics && git worktree add -q --detach "$RUNNER_TEMP/metrics" FETCH_HEAD || true
       - name: Start the runs every 10 minutes
         env:
           GITHUB_TOKEN: ${{ github.token }}
@@ -50,12 +52,14 @@ jobs:
             git fetch -q --depth 1 origin main && git reset -q --hard FETCH_HEAD   # the newest code and switch
             python3 -c "import tomllib, sys; sys.exit(tomllib.load(open('agent.toml', 'rb'))['pacing'].get('pacer') != 'workflow')" \
               || { echo "pacer is not \"workflow\" in agent.toml: stop the loop"; exit 0; }
-            if ! python3 tools/pacer.py; then          # a failed call (HTTP 401, 500): red now, not after 5.5 hours
+            if ! python3 tools/pacer.py --log "$RUNNER_TEMP/pacer.jsonl"; then   # a failed call (HTTP 401, 500): red now
               sleep 600                                # the next cycle waits as usual: no fast loop of red runs
               gh workflow run pacer.yml --repo "$GITHUB_REPOSITORY" --ref main
               exit 1
             fi
             gh workflow run dashboard-site.yml --repo "$GITHUB_REPOSITORY" --ref main || true   # the dashboard, fresh each cycle
+            # the status comments and the cycle records to the branch metrics: the cron of metrics.yml fires a few times a day
+            [ -d "$RUNNER_TEMP/metrics" ] && python3 tools/metrics_log.py "$RUNNER_TEMP/metrics" --pacer "$RUNNER_TEMP/pacer.jsonl" --push || true
             sleep 600
           done
           gh workflow run pacer.yml --repo "$GITHUB_REPOSITORY" --ref main   # the next loop
