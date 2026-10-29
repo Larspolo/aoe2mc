@@ -281,6 +281,7 @@ def live(make, speed=1.0, start=0, restart=None, **kw):
     while True:
         r = make()
         r.pov = stats.get("view", r.pov)                            # the view stays too (#1303)
+        r.camera = stats.get("camera", r.camera)                    # and the automatic camera (#3368)
         stats = r.run(speed, 0, to=to, paused=paused, rewind=restart is not None, **kw)   # events before start: the jump
         if stats.get("rewind") is None:
             return stats
@@ -2403,7 +2404,7 @@ class Replay:
         poll(control) may change `self.control` ("speed", "paused") while the replay runs: run calls it before
         each event and each POLL seconds while it waits (#685). "jump" (game time, ms) skips forward to that time
         (`jump`, #687); a time before the game time now changes nothing, except with `rewind`: then run stops and
-        the stats have "rewind" (the time), "speed" and "paused" (#979: the replay keeps no earlier states, `live`
+        the stats have "rewind" (the time), "speed", "paused", "view" and "camera" (#979: the replay keeps no earlier states, `live`
         starts a fresh replay). "time" is the game time now (ms) for poll. `to`: jump to this time at the start;
         `paused`: start in a pause. The replay ends at the time of its last event, as the record (#978); `finish`:
         play the walks and the trainings to their end (tests of one walk or one queue)."""
@@ -2475,13 +2476,16 @@ class Replay:
                 if rewind and to < (g0 if self.paused else g0 + (clock() - r0) * 1000 * self.speed):
                     say = text("The server restarts for the jump back: join it again.", "yellow")
                     send(self.clock_commands(to, end, self.speed, jump=True) + [f"tellraw @a {json.dumps(say)}"])
-                    return {"rewind": to, "speed": self.speed, "paused": self.paused, "view": self.pov, "events": n,
+                    return {"rewind": to, "speed": self.speed, "paused": self.paused, "view": self.pov,
+                            "camera": self.camera, "events": n,
                             "commands": self.sent, "busy": round(self.busy, 2), "lag": round(lag, 2)}
                 if to > (at := g0 if self.paused else g0 + (clock() - r0) * 1000 * self.speed):
                     skip = [x for x in events[k:] if x["time"] <= to]
                     k += len(skip)
                     send(self.clock_commands(to, end, self.speed, jump=True))    # the player sees why it waits
                     self.send(self.jump(skip, to, at))
+                    if shots and (held := [s for s in shots if s["time"] <= to]):    # the camera goes at once to the
+                        self.send(self.shot_view(held[-1]["tile"]))                    # shot of the new time (#3368)
                     if self.moving or self.working:                 # the gather steps of the skipped time at once,
                         self.send(self.steps(to))                   # and no step before `to`: an older time on the
                         self.moving = {i: max(t, to) for i, t in self.moving.items()}     # bar and fast catch-up
