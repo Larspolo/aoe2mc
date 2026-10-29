@@ -30,7 +30,8 @@ GAME_DATAS += [(RELEASE, ".")] * os.path.exists(RELEASE)
 
 def analysis(script, datas=DATAS):
     return Analysis([os.path.join(ROOT, script)], pathex=[ROOT, GAME, os.path.join(ROOT, "tools")], datas=datas,
-                    hiddenimports=HIDDEN, excludes=["pytest"], noarchive=False)
+                    hiddenimports=HIDDEN, excludes=["pytest"], noarchive=False,
+                    module_collection_mode={"mgz": "pyz+py"})   # aoe2mc.new_saves reads the source of mgz (#3721)
 
 
 gui, cli, game = analysis("gui.py"), analysis("aoe2mc.py"), analysis(os.path.join("game", "run.py"), GAME_DATAS)
