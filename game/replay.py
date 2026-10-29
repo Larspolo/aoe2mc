@@ -2833,6 +2833,10 @@ class Replay:
                 self.age(e)
             elif e["kind"] == "research" and e.get("technology"):     # no text, but the summary counts it
                 self.learn(e)
+            elif e["kind"] in ("buy", "sell") and e.get("resource"):  # the estimate and the rates, no text (#4162)
+                self.trade(e)
+            elif e["kind"] == "tribute" and e.get("to"):
+                self.tribute(e)
         built(to)
         out += self.enter(to) + self.expire(to)
         for tile in list(self.prey):                                # the hunters were there in the skipped time
