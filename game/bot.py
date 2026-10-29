@@ -194,6 +194,7 @@ class Bot:
         self.move(share, work)
         self.age_up()
         self.recruit()
+        self.research()
         self.time += g.tick * gather.NORMAL
         if self.time >= self.attack and self.time >= self.looked + LOOK:   # each look costs RCON commands
             self.looked = self.time
@@ -434,6 +435,21 @@ class Bot:
                         and all(g.stock[r] >= v for r, v in train.price(g, n).items()) \
                         and train.queue(g, self.nobody, (rect[0], rect[2]), n):
                     more += n == "VILLAGER_MALE"
+
+    def research(self):
+        """Research the economy technologies of the age at each building that offers them (the AoE2 AI does, #3949).
+        The villagers of self.villagers come first. One technology in each queue."""
+        g = self.g
+        if len(g.villagers) + sum(e["name"] == "VILLAGER_MALE" for q in g.queues.values() for e in q) < self.villagers:
+            return
+        for rect, name in sorted(train.homes(g).items(), key=lambda kv: kv[0]):
+            if any(e["name"] in train.TECHS for e in g.queues.get(rect, [])):
+                continue
+            for n in train.trains(g, name):
+                if train.value("economy", n) and n in train.TECHS and not build.locked(g, n) \
+                        and all(g.stock[r] >= v for r, v in train.price(g, n).items()) \
+                        and train.queue(g, self.nobody, (rect[0], rect[2]), n):
+                    break
 
     def age_up(self):
         """Queue the next age (build.AGE_TECHS) at a town center when the bot has its villager number, each building
