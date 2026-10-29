@@ -1,5 +1,6 @@
 """The data of each run and each pacer cycle (2026-10-29): the `Run:` line of the run report (`tokens.py --run-line`),
 the cycle records of `pacer.py --log` and their log on the branch `metrics` (`metrics_log.py --pacer --push`)."""
+import datetime
 import json
 import subprocess
 
@@ -68,7 +69,6 @@ LINE = ("five_hour 16% (resets Thu 02:50 UTC, 0.0 h, allowed) · max 40 runs · 
 
 
 def test_the_pacer_record_holds_the_quota_the_plan_the_starts_and_the_numbers_of_the_line():
-    import datetime
     now = datetime.datetime(2026, 10, 29, 3, 3, tzinfo=datetime.timezone.utc)
     rec = pacer.record(now, {"five_hour": (0.16, 1761706200, "allowed")}, 0.01, None, 2, {"haiku": 1}, {"haiku": 1, "main": 1},
                        LINE, ["hourly limit: deep"])
@@ -129,10 +129,24 @@ def test_push_adds_again_when_another_writer_pushed_first(tmp_path, monkeypatch)
     monkeypatch.setattr(metrics_log, "api", lambda path: [{"number": 1}] if path.startswith("issues?") else comments)
     src = tmp_path / "pacer.jsonl"
     src.write_text(json.dumps(cycle("2026-10-29T10:05:00Z")) + "\n")
-    assert metrics_log.push(a, days=1) == 0                          # writer A: the comment
-    assert metrics_log.push(b, pacer=src, days=1) == 0               # writer B: rejected once, then on top of A
+    now = datetime.datetime(2026, 10, 29, 11, tzinfo=datetime.timezone.utc)
+    assert metrics_log.push(a, days=1, now=now) == 0                 # writer A: the comment
+    assert metrics_log.push(b, pacer=src, days=1, now=now) == 0      # writer B: on the tip of A
     files = git(remote, "ls-tree", "-r", "--name-only", "metrics").split()
     assert {"status/2026-10-29.jsonl", "pacer/2026-10-29.jsonl"} <= set(files)
     assert len(git(remote, "log", "--format=%H", "metrics").split()) == 3
-    assert metrics_log.push(b, pacer=src, days=None) == 0            # nothing new: no commit
+    assert metrics_log.push(b, pacer=src, now=now) == 0              # nothing new: no commit
     assert len(git(remote, "log", "--format=%H", "metrics").split()) == 3
+
+
+def test_prune_keeps_the_last_days_on_the_tip(tmp_path):
+    for path in ("status/2026-10-01.jsonl", "status/2026-10-20.jsonl", "pacer/2026-10-01.jsonl",
+                 "runs/2026-10-01/120000-1.json", "runs/2026-10-29/120000-2.json"):
+        (tmp_path / path).parent.mkdir(parents=True, exist_ok=True)
+        (tmp_path / path).write_text("{}")
+    now = datetime.datetime(2026, 10, 29, 11, tzinfo=datetime.timezone.utc)
+    gone = metrics_log.prune(tmp_path, now)
+    assert sorted(p.split(str(tmp_path) + "/")[1] for p in gone) == ["pacer/2026-10-01.jsonl", "runs/2026-10-01",
+                                                                     "status/2026-10-01.jsonl"]
+    assert (tmp_path / "status/2026-10-20.jsonl").exists() and (tmp_path / "runs/2026-10-29/120000-2.json").exists()
+    assert metrics_log.prune(tmp_path, now) == [] and metrics_log.prune(tmp_path / "none", now) == []

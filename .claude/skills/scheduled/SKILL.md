@@ -10,7 +10,7 @@ This is a scheduled, unattended run. Other runs can work at the same time. The p
 
 1. `CLAUDE.md` and `docs/LEARNINGS.md` are already in your context: do not read them again. Then follow the skill `autopilot` (`.claude/skills/autopilot/SKILL.md`) with the argument of this
    skill: do tickets, one PR each, until no ticket is ready, a usage limit stops you, or your context is 120k tokens
-   or more. Report on the status issue.
+   or more. Report each ticket (`report.py --post`).
 2. You cannot start other runs: a run of a scheduled task has no `fire_trigger` tool. Do not search for it. The
    workflow `pacer.yml` starts new runs (`tools/pacer.py`).
 3. Do not run more runs than the quota target: run `python3 tools/usage.py --fire`. Its stderr line shows "target N"

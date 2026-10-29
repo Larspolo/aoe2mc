@@ -2,6 +2,10 @@
 per day of `created_at`, one JSON line per comment (`id`, `created_at`, `updated_at`, `issue_url`, `body`).
 `tools/health.py` reads the files and only the newest comments from the API, not hundreds of API pages.
 The folder `pacer/` holds one JSON line per cycle of the pacer (`pacer.py --log`, `pacer/YYYY-MM-DD.jsonl` by `at`).
+The folder `runs/` holds the run reports (2026-10-29): `report.py --post` adds one file `runs/YYYY-MM-DD/<time>-<session>.json`
+per report with `post()`, not a comment on the status issue (about 550 comments a day, each one a notification of the
+owner). A record has the keys of a comment (`id`, `created_at`, `updated_at`, `body`) and `"run": true`, so `load()`
+gives the readers of the comments (`health.status_comments`) both, and the fields of the run as named keys.
 
     python3 tools/metrics_log.py DIR [--days N]     # DIR: a checkout of the branch `metrics` (metrics.yml)
     python3 tools/metrics_log.py DIR --pacer F --push   # also the pacer records of F; commit and push (pacer.yml)
@@ -18,11 +22,15 @@ import json
 import os
 import subprocess
 import sys
+import tempfile
+import zlib
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from dashboard import STATUS, api  # noqa: E402
 
 BRANCH = "metrics"
+RUNS = "runs"
+KEEP = 14                   # days on the tip of the branch: each reader fetches the whole tip (about 2 MB a day)
 KEYS = ("id", "created_at", "updated_at", "issue_url", "body")
 UTC = datetime.timezone.utc
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -63,8 +71,73 @@ def read_dir(root):
 
 
 def newest(comments):
-    """The newest `updated_at` of the comments, or None."""
-    return max((c["updated_at"] for c in comments), default=None)
+    """The newest `updated_at` of the comments (not of the run records: the API reads from it), or None."""
+    return max((c["updated_at"] for c in comments if not c.get("run")), default=None)
+
+
+def run_record(body, fields, now=None):
+    """A run report as a record of `runs/`: the keys of a comment and the named fields of the run. The `id` is an
+    integer like a comment ID (the readers sort by it): the time in milliseconds, and 3 digits of the session."""
+    now = now or datetime.datetime.now(UTC)
+    at = iso(now)
+    key = zlib.crc32(str(fields.get("session") or fields.get("branch") or "").encode()) % 1000
+    return {"id": int(now.timestamp() * 1e3) * 1000 + key, "created_at": at, "updated_at": at, "body": body,
+            "run": True, **fields}
+
+
+def run_path(rec):
+    return f"{RUNS}/{rec['created_at'][:10]}/{rec['created_at'][11:19].replace(':', '')}-{rec['id'] % 10**9:09d}.json"
+
+
+def post(rec, remote="origin", tries=5, root=None):
+    """Add the record `rec` as its own file to the branch `metrics` of `remote`, with no checkout: a commit on the
+    newest tip, and again on the new tip when another run pushed first (a new file: no conflict). An absent branch
+    starts. Returns the path in the branch, or None when no push went through."""
+    root, path = root or ROOT, run_path(rec)
+    ref = f"refs/remotes/{remote}/{BRANCH}"
+    sh = lambda *a, env=None, data=None: subprocess.run(["git", "-C", root, *a], capture_output=True, text=True,
+                                                         timeout=60, input=data, env=env)
+    try:
+        blob = sh("hash-object", "-w", "--stdin", data=json.dumps(rec, ensure_ascii=False) + "\n").stdout.strip()
+        for _ in range(tries):
+            tip = sh("fetch", "-q", "--depth", "1", remote, f"+refs/heads/{BRANCH}:{ref}").returncode == 0
+            with tempfile.TemporaryDirectory() as d:
+                env = {**os.environ, "GIT_INDEX_FILE": os.path.join(d, "index")}
+                if tip:
+                    sh("read-tree", ref, env=env)
+                sh("update-index", "--add", "--cacheinfo", f"100644,{blob},{path}", env=env)
+                tree = sh("write-tree", env=env).stdout.strip()
+            commit = sh("commit-tree", tree, *(["-p", ref] if tip else []), "-m", f"Add the run report {path}").stdout.strip()
+            if commit and sh("push", "-q", remote, f"{commit}:refs/heads/{BRANCH}").returncode == 0:
+                return path
+    except (subprocess.TimeoutExpired, OSError):
+        pass
+    return None
+
+
+def read_runs(ref, days, root=None):
+    """The run records of the day folders `days` (YYYY-MM-DD) in the tree of `ref`, with two git calls."""
+    root = root or ROOT
+    names = subprocess.run(["git", "-C", root, "ls-tree", "-r", "--name-only", ref, "--", *[f"{RUNS}/{d}/" for d in days]],
+                           capture_output=True, text=True, timeout=60).stdout.split()
+    if not names:
+        return []
+    out = subprocess.run(["git", "-C", root, "cat-file", "--batch"], capture_output=True, timeout=60,
+                         input="".join(f"{ref}:{n}\n" for n in names).encode()).stdout
+    recs, i = [], 0
+    while i < len(out):                     # b"<sha> blob <size>\n<content>\n" per name, b"<name> missing\n" else
+        end = out.index(b"\n", i)
+        head = out[i:end].split()
+        if len(head) != 3 or not head[2].isdigit():
+            i = end + 1
+            continue
+        size = int(head[2])
+        try:
+            recs.append(json.loads(out[end + 1:end + 1 + size]))
+        except ValueError:
+            pass
+        i = end + 1 + size + 1
+    return recs
 
 
 def add(root, comments):
@@ -128,13 +201,31 @@ def add_pacer(root, path):
     return changed
 
 
-def push(root, pacer=None, days=None, tries=3, remote="origin"):
-    """Add the new status comments and the pacer records of the file `pacer` to the checkout `root` of the branch
-    `metrics`, commit and push. When another writer pushed first, take its branch and add again (`update` reads from
-    the newest stored comment, `add_pacer` by `at`: nothing comes twice). Returns 0, or 1 when no push went through."""
+def prune(root, now=None, keep=KEEP):
+    """Remove the day files and day folders older than `keep` days from the checkout `root` (`status/`, `pacer/`,
+    `runs/`): the readers need at most 7 days, and the git history of the branch keeps them. Returns the removed paths."""
+    import shutil
+    cut = f"{(now or datetime.datetime.now(UTC)) - datetime.timedelta(days=keep):%Y-%m-%d}"
+    gone = []
+    for folder in ("status", "pacer", RUNS):
+        for name in sorted(os.listdir(os.path.join(root, folder))) if os.path.isdir(os.path.join(root, folder)) else []:
+            if name[:10] < cut and name[:4].isdigit():
+                path = os.path.join(root, folder, name)
+                shutil.rmtree(path) if os.path.isdir(path) else os.remove(path)
+                gone.append(path)
+    return gone
+
+
+def push(root, pacer=None, days=None, tries=5, remote="origin", now=None):
+    """Take the newest tip of the branch `metrics` into the checkout `root`, add the new status comments and the pacer
+    records of the file `pacer`, remove the days before `KEEP` (`prune`), commit and push. The runs push their reports
+    too (`post`): when one pushed first, take the tip again and add again (`update` reads from the newest stored
+    comment, `add_pacer` by `at`: nothing comes twice). Returns 0, or 1 when no push went through."""
     sh = lambda *a: subprocess.run(["git", "-C", str(root), *a], capture_output=True, text=True, timeout=60)
     for _ in range(tries):
-        changed = update(root, days) + (add_pacer(root, pacer) if pacer else [])
+        if sh("fetch", "-q", "--depth", "1", remote, BRANCH).returncode == 0:   # no branch yet: start it
+            sh("reset", "-q", "--hard", "FETCH_HEAD")
+        changed = update(root, days, now) + (add_pacer(root, pacer) if pacer else []) + prune(root, now)
         if not changed:
             print("no change")
             return 0
@@ -144,8 +235,6 @@ def push(root, pacer=None, days=None, tries=3, remote="origin"):
         if sh("push", "-q", remote, f"HEAD:refs/heads/{BRANCH}").returncode == 0:
             print(f"pushed {len(changed)} files")
             return 0
-        if sh("fetch", "-q", "--depth", "1", remote, BRANCH).returncode or sh("reset", "-q", "--hard", "FETCH_HEAD").returncode:
-            break
     print("no push", file=sys.stderr)
     return 1
 
@@ -159,15 +248,18 @@ def git(*args):
 
 
 def load(since, remote="origin"):
-    """The stored comments created since `since`, from `remote`/metrics, or None when git cannot read the branch."""
+    """The stored comments and run records created since `since`, from `remote`/metrics, or None when git cannot read
+    the branch."""
     try:  # a hung git call (#3290) reads as a failed one; only the tip: the pacer adds a commit each cycle
         if git("fetch", "-q", "--depth", "1", remote, f"+refs/heads/{BRANCH}:refs/remotes/{remote}/{BRANCH}").returncode:
             return None
-        out, d = [], since.date()
+        out, d, days = [], since.date(), []
         while d <= datetime.datetime.now(UTC).date():
             r = git("show", f"{remote}/{BRANCH}:status/{d:%Y-%m-%d}.jsonl")
             out += [json.loads(line) for line in r.stdout.splitlines() if line.strip()] if r.returncode == 0 else []
+            days.append(f"{d:%Y-%m-%d}")
             d += datetime.timedelta(days=1)
+        out += read_runs(f"{remote}/{BRANCH}", days)
     except subprocess.TimeoutExpired:
         return None
     return [c for c in out if c["created_at"] >= iso(since)]

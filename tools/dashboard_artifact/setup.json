@@ -3,7 +3,7 @@
   "part": "Autopilot runs",
   "group": "Runs",
   "when": "Hourly at :06, and each time the pacer starts one",
-  "does": "One unattended cloud session on Opus at effort low: reads your feedback, triages new issues, does tickets (one PR each) and reports on the status issue; never takes a lane:haiku or lane:deep ticket",
+  "does": "One unattended cloud session on Opus at effort low: reads your feedback, triages new issues, does tickets (one PR each) and reports each run on the branch metrics; never takes a lane:haiku or lane:deep ticket",
   "where": "Scheduled task “aoe2mc autopilot”, .claude/skills/autopilot"
  },
  {
