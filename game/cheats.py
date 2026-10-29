@@ -224,6 +224,12 @@ def transform(g, t):
     g.choose(g.selected - gone)
 
 
+def flemish(g, entry):
+    """The research of Flemish Revolution (the key "on_research" of data/train.jsonl, #4323): the own villagers become
+    Flemish Militia, as the cheat of that transformation (CODES)."""
+    transform(g, next(t for t in CODES.values() if isinstance(t, Transform) and t.to == "FLEMISH_MILITIA"))
+
+
 def others(g):
     return sorted({o["player"] for o in g.data["objects"] if o["player"] not in (0, g.player)})
 

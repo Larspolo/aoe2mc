@@ -38,3 +38,7 @@
 {"name": "ignore_armor", "text": "A technology whose melee units ignore the armor of the target (a negative armor still counts): the units, as \"walk\" (Wootz Steel). train.hits.", "issue": 4331}
 {"name": "combat_regen", "text": "A technology whose units regenerate a share of their max hit points per AoE2 minute while an enemy unit is within some tiles (in combat): [the group of civs.GROUPS, the share, the tiles] (Ordo Cavalry). civs.regen.", "issue": 4334}
 {"name": "building_regen", "text": "A technology whose own complete buildings of a list regain hit points: {\"buildings\": [names], \"rate\": hit points per AoE2 minute} (Fortified Bastions). regen.buildings.", "issue": 4334}
+{"name": "per_own", "text": "A technology that costs more for each own unit: [the kinds (a unit name starts with one), the cost per unit] (Flemish Revolution: villagers). train.per_enemy.", "issue": 4323}
+{"name": "rival_years", "text": "A technology that adds years to the relic and wonder victory timers of each enemy (Atheism: 100). wonder.later.", "issue": 4336}
+{"name": "rival_relic_gold", "text": "The factor of the relic gold of each enemy after the technology (Atheism: 0.5). monk.relic_tick.", "issue": 4336}
+{"name": "work", "text": "A technology that makes one building work faster: [the building, the factor of its train and research rate] (Perfusion: [\"BARRACKS\", 2]). A unit group can join the form later. train.work, train.seconds.", "issue": 4226}
