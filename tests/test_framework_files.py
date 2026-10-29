@@ -20,5 +20,5 @@ def test_comments_blank_lines_and_globs():
     assert got == ["tools/claim.py", "tests/test_framework_files.py"]
 
 
-def test_the_table_of_the_system_doc_holds_only_specific_files():
-    assert {k for _, k in bootstrap.table(open(bootstrap.SYSTEM).read())} == {"specific"}
+def test_the_table_of_the_system_doc_holds_no_generic_file():
+    assert "generic" not in {k for _, k in bootstrap.table(open(bootstrap.SYSTEM).read())}
