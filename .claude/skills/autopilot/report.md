@@ -21,7 +21,7 @@ other runs change it too):
 
 Then add one short report: what you did and what is next. `--post` adds it to the branch `metrics` (`runs/`), not as
 a comment on the status issue (2026-10-29; only when no push goes through, it comments). Write it with one command (#1701): `python3 tools/report.py --usage "<the Usage: line of step 1.2>" --text "<what you
-did, what is next>" --ticket N --size S --result "pr #M" --setup 0 --checks K --checks-min C --sinks "<list or none>"
+did, what is next>" --ticket N --size S --result "pr #M" --checks K --checks-min C --sinks "<list or none>"
 --post` (repeat the ticket options for each ticket,
 in the same order). It adds the release bar, the `Tokens:` line and the footer in the format below. Without `--post`
 it only prints the report. A question for the owner goes on its
@@ -34,7 +34,8 @@ Example: `Metrics: ticket #876 · size:S · merged · 45 min · setup 0 min · c
 phases read 8 · claim 1 · code 18 · verify 9 · ci 0 · conflict 5 · report 4` (one line).
 
 Result: `pr #n` when you pushed PR #n and Automerge merges it later (the usual case: you report before the merge);
-`none` only when the run stopped without a PR. `tools/health.py` counts the `pr #n` lines by the present PR state (#902).
+`closed` when you finished the ticket with no PR (a check ticket with the label `close`, 2026-10-29: 80 of 345 tickets
+said `none`, most of them such checks); `none` only when the run stopped without a PR and the ticket stays open. `tools/health.py` counts the `pr #n` lines by the present PR state (#902).
 `tools/report.py` puts the output of `python3 tools/release.py` (the release bar of each goal, #879) above the
 `Usage:` line, when the project has that tool (#1963).
 Below the metrics lines, put the output of `python3 tools/tokens.py` (one `Tokens:` line for the run: the tokens of
@@ -43,7 +44,8 @@ this session and its largest sinks; run it just before the comment). `report.py`
 `improve` skill uses them as one source to find the bottleneck.
 Put the `Usage:` line of step 1.2 above the metrics lines, unchanged: `tools/health.py` measures the quota use of one
 run per hour from pairs of these lines, and `tools/usage.py --target` uses that value (#462).
-`setup`: minutes from the start time (step 4) to the claim of the first ticket (0 for later tickets).
+`setup`: minutes from the start of the run to the claim of the first ticket (0 for later tickets). `report.py`
+measures it in the transcript: do not give `--setup`.
 `checks <k>`: rounds of the `verify` skill before the push; `checks <c> min`: their minutes in total.
 `phases` (#899): whole minutes of the ticket in each phase. `report.py` measures them in the transcript
 (`tokens.py --phases`): do not give `--phases` (the guesses of the runs were 2 to 6 times too large, 2026-10-28). `read` (feedback, triage, the ticket and the code), `claim` (pick and claim), `code` (change and tests),
