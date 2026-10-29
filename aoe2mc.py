@@ -262,8 +262,17 @@ def read_map(path, seed=1):
         return map_description(rmap.random_map(p[len(RANDOM_MAP):], seed), path)
     if p.endswith(".rms"):
         return read_rms(path, seed)
-    return (read_record if p.endswith(RECORDS) else read_scx if p.endswith((".scx", ".scn")) else
+    return (read_record if p.endswith(RECORDS) else read_scx if p.endswith((".scx", ".scn")) or old_format(path) else
             read_json if p.endswith(".json") else read_scenario)(path)
+
+
+def old_format(path):
+    """True for an .aoe2scenario of a format before DE (the HD Edition, #3862): read_scx reads it, not read_scenario."""
+    import scx
+    if not path.lower().endswith(".aoe2scenario"):
+        return False
+    with open(path, "rb") as f:
+        return f.read(4) in scx.FORMATS
 
 
 def read_rms(path, seed):
