@@ -482,6 +482,17 @@ def next_tile(g, site):
     return min(rest, key=lambda s: math.dist(s["footprint"][::2], site["footprint"][::2]), default=None)
 
 
+def queue(g, player, site):
+    """A sneak right click on the site with selected builders at work on another site: the site goes into the row of
+    that site, so that the builders build it next, as the shift queue of AoE2 (#3517). True when queued."""
+    now = next((v.site for u, v in sorted(g.villagers.items()) if u in g.selected and v.site is not None
+                and v.site is not site and v.site["progress"] < 1 and v.state in ("to_site", "build")), None)
+    if now is None or "passed" not in g.command(f"execute as {player} if predicate {SNEAK}"):
+        return False
+    site["row"] = now.setdefault("row", f"{player} {id(now)}")
+    return True
+
+
 def near(g, name, cell, reach=12):
     """A free footprint of name whose middle tile is next to the block cell (a source or the town center), with one
     free block around it for the paths, or None. The nearest tile first, the same order each time."""

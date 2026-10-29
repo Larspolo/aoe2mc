@@ -1553,7 +1553,8 @@ class Gather:
             self.order_voice()
             self.mark(name, self.map.spot(tile))
         elif self.selected and (site := build.pick(self, eye, d)):
-            self.build(site)
+            if not build.queue(self, name, site):                      # a sneak click queues the site (#3517)
+                self.build(site)
             self.order_voice()
             repair.build_order(self, site, self.selected)              # Serjeants build a Donjon (#2129)
             x0, x1, z0, z1 = site["footprint"]
