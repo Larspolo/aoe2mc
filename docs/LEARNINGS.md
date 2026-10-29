@@ -64,3 +64,4 @@ and `tests/test_learnings.py` fails above 80 lines (#1698).
 - The `texts` dict of `read_scenario` holds the message chapters (`CHAPTERS`: `book_pages` reads `"victory"`, `"loss"` as text): a new key needs a name that is no chapter key (#2566 used `"global_victory"`).
 - Trigger effect IDs: the constants of `aoe2mc.py` (`HEAL_OBJECT = 34`) follow `EffectId` of AoE2ScenarioParser (`datasets/effects.py`), not the order of the AoE2 editor menu (#2692).
 - A `#` comment inside a folded `if:` of a workflow is read as expression text: the whole workflow fails to parse, 422 on dispatch (#3464). Put a comment above the key.
+- `tests/test_bootstrap_checks.py` runs the tests of a bootstrap copy that has only the generic tools: a generic tool (`usage.py`) must import a project tool (`release.py`) inside its `try`, else the fast suite fails only there (#3560).

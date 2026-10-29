@@ -58,7 +58,8 @@ up to 10 sub-issues (within the cap) for its open goals, then pick again. The pa
 than the ready tickets for this (`agent.toml`): many runs close tickets faster than one refill makes them (#650;
 2026-10-28: 3 ready tickets for 40 target runs). It starts them only while an open ticket is less than 60 minutes old
 (`usage.refill_runs`), else 1: an empty refill run costs quota. It starts none when R >= N and no epic or release check
-waits (`usage.refill_need`, #3547).
+waits (`usage.refill_need`, #3547), and none when R < N and the refill has no source: no such check, no roadmap
+feature with no epic and no fallback (#3560). A due process or roadmap review starts one too (deep locks).
 Give each new ticket its lane (`ticket` skill, "Model lanes").
 Also lock each epic E with `python3 tools/claim.py E --refill` before you make its tickets (exit 1: skip that epic, #505).
 A `muted` ticket or epic (the owner mutes it until later, 2026-10-26) is out of all these steps: no split, no check, no

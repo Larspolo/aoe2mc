@@ -20,7 +20,7 @@ def test_no_refill_runs_when_the_queue_holds_the_target_and_no_epic_waits():
 
 
 def test_refill_runs_when_the_queue_is_below_the_target():
-    assert usage.refill_need(3, 40, []) == "ready 3 < target 40"
+    assert usage.refill_need(3, 40, [], free=lambda: ["1 fallbacks"]) == "ready 3 < target 40: 1 fallbacks"
 
 
 def test_refill_runs_for_an_epic_check_or_a_release_check():
