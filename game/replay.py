@@ -2181,8 +2181,17 @@ class Replay:
                 f": villagers trained {self.villagers.get(p, 0)}, gathered {res}")]))
             out.append("tellraw @a " + json.dumps([text(name, color), text(              # military (#1066)
                 f": military units trained {self.army.get(p, 0)}, units lost {self.lost.get(p, 0)}, "
-                f"buildings lost {self.razed.get(p, 0)}, APM {self.mean_apm(p, self.ended)}")]))
+                f"buildings lost {self.razed.get(p, 0)}{self.army_text(p)}, APM {self.mean_apm(p, self.ended)}")]))
         return out + self.tech_commands() + self.society_commands()
+
+    def army_text(self, p):
+        """The army at the end and the losses by type of player p, most first, at most 6 types and "+N" (#3697)."""
+        def top(counts):
+            items = sorted(((n, c) for n, c in counts.items() if c), key=lambda x: (-x[1], x[0]))
+            words = [f"{c} {pretty(n)}" for n, c in items[:6]] + ([f"+{len(items) - 6}"] if len(items) > 6 else [])
+            return ", ".join(words)
+        army, lost = top(self.troops.get(p, {})), top(self.fallen.get(p, {}))
+        return "".join(f", {k} {v}" for k, v in (("army at the end:", army), ("lost:", lost)) if v)
 
     def tech_commands(self):
         """One chat line per player with the game time of each age-up (MM:SS, "-": not reached) and the number of
@@ -2322,6 +2331,20 @@ class Replay:
                     self.fallen.setdefault(p, {})[name] = self.fallen.get(p, {}).get(name, 0) + was - n
                 kept[name] = n
         self.censused = True
+
+    def eco(self):
+        """The villagers of each player on each kind of work (#3755): food, wood, gold, stone, build or idle. A start
+        villager has no task yet: it counts as idle. Units are keyed by uuid: a gather point can hold the same unit."""
+        keys = ("food", "wood", "gold", "stone", "build", "idle")
+        out = {p: dict.fromkeys(keys, 0) for p in self.pop}
+        for v in {v.uuid: v for v in self.units.values()}.values():
+            if not v.name.startswith("VILLAGER"):
+                continue
+            t = v.task or "none"
+            k = ("idle" if t == "none" or v.job == units.IDLE_JOB else "build" if "BUILDER" in t or "REPAIRER" in t
+                 else "wood" if "LUMBERJACK" in t else "gold" if "GOLD" in t else "stone" if "STONE" in t else "food")
+            out.setdefault(v.player, dict.fromkeys(keys, 0))[k] += 1
+        return out
 
     def troop(self, p, name):
         """One more live military unit of this type for player p (a start unit or a spawn, #3695)."""

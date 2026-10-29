@@ -32,6 +32,8 @@ game/data/buildings.jsonl merge=jsonl
 game/data/build.jsonl merge=jsonl
 # One JSON object per resource, drop site, gather technology or animal (#2033); table.load() stops on a name in two lines.
 game/data/gather.jsonl merge=jsonl
+# One JSON object per Art of War challenge: its civilization, goal and medal limits (#3761).
+game/data/challenges.jsonl merge=jsonl
 # One JSON object per cheat code with a unit, per monk rule name and per replay name (#2034); table.load() stops on a name in two lines.
 game/data/cheats.jsonl merge=jsonl
 game/data/monk.jsonl merge=jsonl

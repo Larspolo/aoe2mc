@@ -26,8 +26,8 @@ def test_the_end_shows_the_military_of_each_player():
     r, sent = play(tl)
     assert (r.army, r.lost, r.razed) == ({1: 2}, {1: 1, 2: 1}, {1: 1})
     lines = military(sent)
-    assert "Player 1 (Britons): military units trained 2, units lost 1, buildings lost 1, APM 2" in lines
-    assert "Player 2 (Aztecs): military units trained 0, units lost 1, buildings lost 0, APM 0" in lines
+    assert "Player 1 (Britons): military units trained 2, units lost 1, buildings lost 1, army at the end: 2 Archer, APM 2" in lines
+    assert "Player 2 (Aztecs): military units trained 0, units lost 1, buildings lost 0, army at the end: 1 Knight, APM 0" in lines
 
 
 def test_a_census_counts_the_units_that_died_in_a_fight():
