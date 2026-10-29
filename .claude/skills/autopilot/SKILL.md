@@ -91,7 +91,8 @@ Candidates: open issues without `needs-human`, `blocked`, `epic`, `agent-status`
 "Depends on: #n" issues are all closed, whose "Start after:" time or count of merged PRs is past (#496, #2039). Order: `P0`, `P1`, `P2`, `P3`, then the
 least overlap with the work in progress (files and functions that open PRs change or claimed tickets name, #487),
 then the lowest issue number.
-Section `Candidates` shows them in this order, without held tickets (`dashboard.py --next`: all of them).
+Section `Candidates` shows them in this order, without held tickets (`dashboard.py --next`: all of them),
+the top group turned by the run (#3832).
 A main run never takes a ticket of a `reserved` lane (`lane:haiku`, `lane:deep`, #1994).
 **Lane runs** (the argument names `lane haiku` or `lane deep`): read `queue.md`, section of the lane, before the pick.
 Before the pick (only deep runs while `reserved` names `deep`), check the open epics with no open sub-issue (at most 3 per run), and refill the queue when R < N
