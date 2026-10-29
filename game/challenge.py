@@ -4,7 +4,8 @@ value that still gets the medal: game seconds of a "time" challenge, units lost 
 than 6 units lost" is a silver limit of 5).
 run.py --play --challenge NAME (#3900, decision #3760: own challenge maps) plays one on a converted world: player 1
 gets the civilization of the line, and tick() ends the game with the medal when the goal function of the key "check"
-("module.function", (g, row) -> True when complete) says so. A new challenge is one data line and one goal function.
+("module.function", (g, row) -> True when complete) says so; the key "setup" (the same form) places its start objects
+(#3908). A new challenge is one data line and one goal function.
 A challenge with the key "waves" sends enemy waves of player 2 to the town center, and a lost town center ends it
 with no medal (#3907).
 A challenge with the key "enemy" gets a bot town of player 2 that does not attack (setup, #3905).
@@ -121,6 +122,38 @@ def waves(g, c, now):
         sent = g.challenge_waves = sent + 1
 
 
+def besiege(g, c):
+    """The setup of Destroying a Castle (#3908): a complete castle of player 2 with its defenders (the key "defenders")
+    next to the town center of player 2 (else the middle of the map), and the start army of player 1 (the key "army")
+    in front of its town center. g.siege_target: the target entity of the castle."""
+    import build, combat, train                                     # they import gather, gather imports this module
+    tc = next((o["footprint"] for o in g.data["objects"] if o["kind"] == "building" and o["player"] == 2
+               and o["name"] == "TOWN_CENTER" and "footprint" in o), None)
+    middle = ((tc[0] + tc[2]) // 2, (tc[1] + tc[3]) // 2) if tc else (g.map.n // 2, g.map.n // 2)
+    if (rect := build.near(g, "CASTLE", middle, reach=24)) is None:
+        return
+    own, g.player = g.player, 2                                     # the site, its color and design of player 2
+    try:
+        site = build.found(g, "CASTLE", rect, free=True)
+    finally:
+        g.player = own
+    build.rise(g, site, float("inf"))                               # complete at once: an enemy fort of player 1
+    x0, x1, z0, z1 = rect
+    g.siege_target = combat.target_uuid([x0, z0, x1, z1])
+    home = next((r for r, n in sorted(train.homes(g).items()) if n == "TOWN_CENTER"), None)
+    for player, front, key in ((2, rect, "defenders"), (g.player, home, "army")):
+        cells = g.map.front(front) if front else []
+        names = [n for n, k in sorted(c[key].items()) for _ in range(k)]
+        for k, name in enumerate(names if cells else ()):
+            x, z = cells[k % len(cells)]
+            train.summon(g, name, (x + 0.5, float(g.map.y(x, z)), z + 0.5), player=player)
+
+
+def siege(g, c):
+    """The goal of Destroying a Castle: the castle of besiege() fell (Gather.free removes its target from g.forts)."""
+    return "siege_target" in vars(g) and g.siege_target not in g.forts
+
+
 def enemies(g):
     """The Gather of the enemy of the challenge (player 2, a bot), or None."""
     return next((s.g for s in getattr(g, "bots", ()) if s.g.player == 2), None)
@@ -135,9 +168,13 @@ def rush(g, c):
 
 def setup(g):
     """The enemy town of challenge g.challenge (its key "enemy"), for free and complete at once: a town center when
-    player 2 has none, the buildings near it and its villagers. The bot of player 2 sends them to work."""
+    player 2 has none, the buildings near it and its villagers;
+    first the function of its key "setup" (#3908). The bot of player 2 sends them to work."""
     import build, train                                             # they import gather, gather imports this module
     c, h = CHALLENGES[g.challenge], enemies(g)
+    if "setup" in c:                                                # its start objects (besiege, #3908)
+        module, _, function = c["setup"].rpartition(".")
+        getattr(importlib.import_module(module), function)(g, c)
     if "enemy" not in c or h is None:
         return None
     e = c["enemy"]
@@ -170,9 +207,13 @@ def close(g):
 
 
 def show(g, c, now):
-    """The boss bar: the goal and the next medal limit ("Gold medal in 6:12"); commands only when the text changes."""
+    """The boss bar: the goal and the next medal limit ("Gold medal in 6:12"; a "lost" challenge, #3906: "2 units lost,
+    silver medal up to 5", now is the units lost); commands only when the text changes."""
     left = next(((m, c[m] - now) for m in MEDALS if now <= c[m]), None)
-    name = f"{left[0].title()} medal in %d:%02d" % divmod(int(left[1]), 60) if left else "No medal"
+    if c["medal"] == "lost":
+        name = f"{int(now)} units lost, " + (f"{left[0]} medal up to {c[left[0]]}" if left else "no medal")
+    else:
+        name = f"{left[0].title()} medal in %d:%02d" % divmod(int(left[1]), 60) if left else "No medal"
     if vars(g).get("challenge_shown") is None:
         for cmd in (f'bossbar add {BAR} ""', f"bossbar set {BAR} color yellow", f"bossbar set {BAR} max {c['bronze']}",
                     f"bossbar set {BAR} players @a"):
@@ -195,7 +236,7 @@ def tick(g):
     if "waves" in c:                                                # the enemy attacks (#3907)
         waves(g, c, now)
     complete = done(g, c)
-    m = medal(g.challenge, now) if c["medal"] == "time" else None
+    m = medal(g.challenge, now if c["medal"] == "time" else len(vars(g).get("losses", {})))   # "lost": score.fallen
     if complete or (c["medal"] == "time" and m is None) or ("waves" in c and town(g) is None):
         close(g)
         g.command(f'title @a[team=p{g.player}] subtitle ' + json.dumps(
@@ -203,4 +244,4 @@ def tick(g):
         g.medal = m if complete else None
         keep(g.challenge, g.medal)
         return cheats.over(g, lambda p: p == g.player and complete and m is not None)
-    show(g, c, now)
+    show(g, c, now if c["medal"] == "time" else len(vars(g).get("losses", {})))

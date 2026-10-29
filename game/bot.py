@@ -38,6 +38,7 @@ import ai  # noqa: E402
 import autoscout  # noqa: E402
 import build  # noqa: E402
 import combat  # noqa: E402
+import conquest  # noqa: E402
 import garrison  # noqa: E402
 import gather  # noqa: E402
 import herd  # noqa: E402
@@ -251,9 +252,18 @@ class Bot:
         eyes += [((x0 + x1 + 1) / 2, (z0 + z1 + 1) / 2, combat.sight(s["name"]) * T) for s in g.sites
                  if s.get("player", g.player) == g.player and s.get("done") for x0, x1, z0, z1 in [s["footprint"]]]
         eyes += [(v.pos[0], v.pos[2], combat.sight("VILLAGER_MALE") * T) for v in g.villagers.values() if v.pos]
+        ally = lambda p: p != g.player and gather.allied(g.players, g.player, p)   # noqa: E731
+        friends = [((x0 + x1 + 1) / 2, (z0 + z1 + 1) / 2, combat.sight(o["name"]) * T) for o in g.data["objects"]
+                   if o["kind"] == "building" and ally(o["player"]) and "footprint" in o
+                   for x0, z0, x1, z1 in [o["footprint"]]]
+        friends += [((x0 + x1 + 1) / 2, (z0 + z1 + 1) / 2, combat.sight(s["name"]) * T) for x in build.sides(g)
+                    for s in x.sites if ally(s.get("player", x.player)) and s.get("done")
+                    for x0, x1, z0, z1 in [s["footprint"]]]       # the towns of the allies (#4021)
         units = sorted(u for u, n in g.enemies.items() if not herd.herdable(n))   # no allies (gather.allied, owners.add)
-        near = {k: p for k, p in (g.positions(units) if eyes else {}).items()
-                if any(math.dist((x, z), (p[0], p[2])) <= r for x, z, r in eyes)}
+        seen = g.positions(units) if eyes or friends else {}
+        near = {}
+        for look in (eyes, friends):                                   # the own town first, then the allies
+            near = near or {k: p for k, p in seen.items() if any(math.dist((x, z), (p[0], p[2])) <= r for x, z, r in look)}
         if not near and not self.guards:                               # each position costs one RCON command
             return
         mine = g.positions(sorted(u for u, n in g.soldiers.items() if combat.stats(n).attack))
@@ -332,6 +342,7 @@ class Bot:
         if len(mine.keys() - self.wave) >= self.group:                 # the new soldiers wait for a full wave (#3953)
             self.wave |= mine.keys()
         self.charged = bool(self.wave)
+        self.retarget()
         if not self.charged or self.foe is None:                      # no enemy: no attack (#3107)
             return
         mine = {u: p for u, p in mine.items() if u in self.wave}       # the others stay at their buildings
@@ -372,6 +383,20 @@ class Bot:
                 g.sieged.add(t)                                        # Gather.fall frees its footprint
             ai.attack(g.game, us, [g.soldiers[u] for u in us], g.map.T, t,
                       [gather.NORMAL * train.speed(g, g.soldiers[u], u) for u in us])
+
+    def retarget(self):
+        """When self.foe is out of the game (conquest.left), take the enemy still in the game (not an ally,
+        gather.allied) whose town center is nearest to the own one, as the AoE2 AI (#4019); None with no enemy."""
+        if self.share is None or self.foe is None or self.foe in (left := conquest.left(self.share)):
+            return
+        g, me = self.g, self.center()
+
+        def far(p):
+            tc = next((o["footprint"] for o in g.data["objects"] if o["kind"] == "building" and o["player"] == p
+                       and o["name"] == "TOWN_CENTER"), None)
+            return math.inf if tc is None or me is None else math.dist(me, ((tc[0] + tc[2]) / 2, (tc[1] + tc[3]) / 2))
+        self.foe = min((p for p in sorted(left) if not gather.allied(g.players, g.player, p)), key=far, default=None)
+        self.sides = (None, {})                                        # a new foe: decide each tile again
 
     def stalled(self, mine):
         """Drop the target of each soldier that came no block nearer to it and did no damage to it for STALL AoE2
@@ -449,18 +474,26 @@ class Bot:
 
     def research(self):
         """Research the economy technologies of the age at each building that offers them (the AoE2 AI does, #3949),
-        and the upgrade of the unit that the building trains (#3952: Militia to Man-at-Arms), so that recruit then
-        trains the new unit. The villagers of self.villagers come first. One technology in each queue."""
+        the upgrade of the unit that the building trains (#3952: Militia to Man-at-Arms), so that recruit then
+        trains the new unit, and the Blacksmith technologies that change a live or queued soldier of the bot (#3951).
+        The villagers of self.villagers come first. One technology in each queue."""
         g = self.g
         if len(g.villagers) + sum(e["name"] == "VILLAGER_MALE" for q in g.queues.values() for e in q) < self.villagers:
             return
+        army = {n for n in [*g.soldiers.values(), *(e["name"] for q in g.queues.values() for e in q)]
+                if n not in train.TECHS and gather.military(n)}
+
+        def smith(n):                                                  # the technology changes a soldier of the bot
+            return train.BUILDING_OF.get(n) == "BLACKSMITH" and any(
+                train.TECHS[n](u, combat.stats(u)) != combat.stats(u) for u in sorted(army))
         for rect, name in sorted(train.homes(g).items(), key=lambda kv: kv[0]):
             if any(e["name"] in train.TECHS for e in g.queues.get(rect, [])):
                 continue
             line = set(self.soldiers(name)[:1])
-            for n in train.trains(g, name):
-                if (train.value("economy", n) or n in train.UPGRADES and line & {old for old, _ in train.lines(n, g)}) \
-                        and n in train.TECHS and not build.locked(g, n) \
+            for n in sorted(train.trains(g, name), key=lambda n: not train.value("economy", n)):
+                if n in train.TECHS and (train.value("economy", n) or smith(n)
+                                         or n in train.UPGRADES and line & {old for old, _ in train.lines(n, g)}) \
+                        and not build.locked(g, n) \
                         and all(g.stock[r] >= v for r, v in train.price(g, n).items()) \
                         and train.queue(g, self.nobody, (rect[0], rect[2]), n):
                     break

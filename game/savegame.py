@@ -83,12 +83,17 @@ MAP = (                                                                # gather.
 )
 VICTORY = (                                                            # the victory modes (#2476), pack()
     "challenge_waves",                                                 # challenge.waves: the waves that came (#3907)
+    "challenge_army",                                                  # army.py: the army of a battle challenge (#3906)
+    "challenge_foes",                                                  # army.py: the enemy units of a battle challenge (#3910)
+    "challenge_wave",                                                  # army.py: the wave of the enemy (#3906)
+    "challenge_foes",                                                  # army.py: the enemy units of a battle challenge (#3910)
     "conquest_seen",
     "corruption_at",
     "corruption_time",
     "defeated",
     "hill",
     "monument",
+    "siege_target",                                                    # challenge.besiege: the target of the enemy castle (#3908)
     "towns",
 )
 SCORE = (                                                              # Gather: the counts of score.py (#2475)
@@ -206,6 +211,7 @@ NOT_SAVED = (                                                          # the fie
     "peers",                                                           # run.py: the players of the game
     "person",                                                          # gather.py: the name of the click that it handles now (#3486)
     "player",                                                          # run.py: the player number
+    "players",                                                         # gather.py: the players of aoe2mc.json, read again at a load
     "record",                                                          # record.py: run.play opens the file of --record again
     "regicide_at",                                                     # regicide.py: the next check time
     "repair_at",                                                       # repair.py: the place of a unit at its repair order, resume() sets it again

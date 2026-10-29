@@ -42,12 +42,13 @@ def test_the_build_order_when_the_bot_has_the_resources():
     b.step()
     assert sites(b) == []                                              # no wood
     b.g.aegis = True                                                   # instant building at the site
+    b.g.techs.update(bot.build.AGE_TECHS[:1])                          # the Feudal Age: the Blacksmith (#3951)
     for _ in range(3000):
         b.g.stock["wood"] = max(b.g.stock["wood"], 175)                # enough for each building
         b.step()
         if set(bot.ORDER) <= set(bot.train.owned(b.g)):
             break
-    built = [n for n in sites(b) if n != "HOUSE"]                      # the census of 5 villagers asks for a house
+    built = [n for n in sites(b) if n not in ("FARM", "HOUSE")]       # the census of 5 villagers asks for a house
     assert built == list(bot.ORDER)
     b.g.stock["wood"] = 1000
     for _ in range(50):

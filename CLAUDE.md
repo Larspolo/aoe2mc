@@ -24,6 +24,7 @@ The README already uses this style. Keep it.
 | 3D image | `python3 tools/render.py building CASTLE --arch western OUT.png` (`--cut 3`: the rooms inside; or `world OUTWorld X0 Z0 X1 Z1 OUT.png`) |
 | Check states | `tools/mcvalid.py` (`block_error`, `entity_error`, `biome_error`, `sound_error`) |
 | Coverage of AoE2 types | `python3 tools/coverage.py OUT.md` (designs, mappings, fallbacks). Do not commit `docs/coverage.md`: CI on main does it, and `tools/feature_table.py` for `docs/DESIGN.md` |
+| Unread random map commands | `python3 tools/rms_survey.py DIR` (Markdown: each `*.rms` of a folder with its warnings, and the warnings with their map counts) |
 | System numbers | `python3 tools/health.py [--hours N]` (CI, setup, takeovers, conflicts, files in git; `improve` skill) |
 | Start of the runs | `python3 tools/operator_check.py` (quota, ready tickets, CI, old PRs, labels, owner comments; the scheduled tasks and the pacer: `docs/OPERATOR.md`, #981) |
 | Owner feedback | `python3 tools/feedback.py` (the owner comments of the last 6 hours without a lock `claim/comment-ID`, autopilot step 3, #971) |

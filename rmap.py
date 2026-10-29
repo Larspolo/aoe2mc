@@ -36,6 +36,7 @@ RMAP = rows("rmap.jsonl")
 TERRAINS = {r["name"]: r["terrain"] for r in RMAP if "terrain" in r}
 OBJECTS = {r["name"]: r["object"] for r in RMAP if "object" in r}     # the object constants of random_map.def: AoE2 IDs
 FOREST_TREES = dict(sorted((t, r["name"]) for r in RMAP for t in r.get("forest", ())))
+CLIFF_TYPES = {r["name"]: r["cliff_type"] for r in RMAP if "cliff_type" in r}   # cliff_type word: object name prefix
 SHORE_FISH = next(r["name"] for r in RMAP if r.get("shore_fish"))
 SIZES = {1: 120, 2: 120, 3: 144, 4: 144, 5: 168, 6: 168, 7: 200, 8: 200}    # AoE2 map size of a player count
 LABELS = ((120, "TINY_MAP"), (144, "SMALL_MAP"), (168, "MEDIUM_MAP"), (200, "LARGE_MAP"), (220, "HUGE_MAP"))
@@ -478,7 +479,7 @@ def generate(text, seed, players=2, size=None, warn=None):
     elevation = lower_to_water(terrain, elevation)
     ridges = cliffs(sections.get("CLIFF_GENERATION", ()), terrain, starts, consts, rng, warn)   # draws before objects()
     found = []                                     # one line per object part, so that parallel parts do not conflict
-    found += objects(sections.get("OBJECTS_GENERATION", ()), consts, terrain, starts, rng, warn)
+    found += objects(sections.get("OBJECTS_GENERATION", ()), consts, terrain, starts, rng, warn, owner)
     found += trees(terrain)
     found += ridges
     return {"size": n, "terrain": terrain.tolist(), "elevation": elevation.tolist(), "layer": layer.tolist(),
@@ -486,17 +487,21 @@ def generate(text, seed, players=2, size=None, warn=None):
             "players": {str(p): {"color": p - 1} for p in range(1, players + 1)}, "lands": [{k: v for k, v in st.items() if k != "land"} for st in starts]}
 
 
-def objects(cmds, consts, terrain, starts, rng, warn):
+def objects(cmds, consts, terrain, starts, rng, warn, owner=None):
     """The objects of the create_object commands of <OBJECTS_GENERATION> (#3855): number_of_objects (default 1) on
     random free tiles, set_place_for_every_player: that many for each player (its own, or Gaia with
     set_gaia_object_only), min_distance_to_players and max_distance_to_players: tiles from the origin of the player
     land. number_of_groups, group_variance, group_placement_radius, set_tight_grouping: groups of objects (#3856).
+    terrain_to_place_on, min_distance_group_placement (tiles from the other objects), max_distance_to_other_zones
+    (tiles from the lands of the other players), set_scaling_to_map_size (a 100 × 100 map is the base) and
+    set_scaling_to_player_number scale the groups, else the objects (#3857).
     Never on water (only a fish or a ship), a forest or another object; an object with no free tile is missing."""
     import aoe2mc
     kinds = aoe2mc.object_kinds(old=False)
     n, out = terrain.shape[0], []
     wet = np.isin(terrain, [TERRAINS["WATER"], TERRAINS["SHALLOW"], TERRAINS["DEEP_WATER"]])
     used = np.isin(terrain, list(FOREST_TREES))
+    placed = np.zeros((n, n), bool)                    # the tiles of the objects (min_distance_group_placement)
     x, y = np.mgrid[0:n, 0:n]
     for cmd, args, attrs in cmds:
         if cmd != "create_object":
@@ -516,18 +521,31 @@ def objects(cmds, consts, terrain, starts, rng, warn):
         vary = value(attrs["group_variance"][0], consts) if "group_variance" in attrs else 0
         radius = value(attrs["group_placement_radius"][0], consts) if "group_placement_radius" in attrs else 3
         tight = "set_tight_grouping" in attrs
+        k = (n * n / 10000 if "set_scaling_to_map_size" in attrs else 1) * (
+            len(starts) if "set_scaling_to_player_number" in attrs else 1)
+        if k != 1 and groups is None:
+            count = max(1, round(count * k))
+        elif k != 1:
+            groups = max(1, round(groups * k))
+        ground = (terrain == value(attrs["terrain_to_place_on"][0], consts)) if "terrain_to_place_on" in attrs else wet == water
+        gap = value(attrs["min_distance_group_placement"][0], consts) if "min_distance_group_placement" in attrs else 0
+        zones = value(attrs["max_distance_to_other_zones"][0], consts) if "max_distance_to_other_zones" in attrs else 0
         for st, player in owners:
+            if zones and st and owner is not None:
+                place = ground & ~dilate((owner >= 0) & (owner != st["land"]), zones)
+            else:
+                place = ground
             dist = np.hypot(x - st["x"], y - st["y"]) if st else np.full((n, n), float(lo))
             # without number_of_groups each object is a group of 1; with it, number_of_objects (± group_variance) is
             # the size of each group (AoE2 DE scripting guide; loose grouping and radius 3 are the defaults)
             sizes = [1] * count if groups is None else [max(1, count + int(rng.integers(-vary, vary + 1))) for _ in range(groups)]
             for size in sizes:
-                spots = np.argwhere((dist >= lo) & (dist <= hi) & ~used & (wet == water))
+                free = ~used & place & ~dilate(placed, gap)
+                spots = np.argwhere((dist >= lo) & (dist <= hi) & free)
                 if not len(spots):
                     warn(f"create_object {args[0]}: no free tile")
                     break
                 mid = tuple(int(v) for v in spots[rng.integers(len(spots))])
-                free = ~used & (wet == water)
                 if tight:
                     cells = [mid]               # each next object on a free tile next to an object of the group
                     while len(cells) < size:
@@ -543,12 +561,15 @@ def objects(cmds, consts, terrain, starts, rng, warn):
                     name = base
                     r = 3 if kind == "B" else 1                      # a building: its tile is the corner of its middle
                     used[max(0, tx - r):tx + r, max(0, ty - r):ty + r] = True
+                    placed[max(0, tx - r):tx + r, max(0, ty - r):ty + r] = True
                     if name == "VILLAGER_MALE" and rng.integers(2):    # AoE2 DE: a male or a female villager
                         name = "VILLAGER_FEMALE"
                     out.append({"name": name, "player": player, "x": tx + 0.5 * (kind != "B"), "y": ty + 0.5 * (kind != "B")})
         for a in set(attrs) - {"number_of_objects", "set_place_for_every_player", "set_gaia_object_only",
                                "min_distance_to_players", "max_distance_to_players", "number_of_groups",
-                               "group_variance", "group_placement_radius", "set_tight_grouping", "set_loose_grouping"}:
+                               "group_variance", "group_placement_radius", "set_tight_grouping", "set_loose_grouping",
+                               "terrain_to_place_on", "min_distance_group_placement", "max_distance_to_other_zones",
+                               "set_scaling_to_map_size", "set_scaling_to_player_number"}:
             warn(f"create_object: {a} is not read yet")
     return out
 
@@ -559,9 +580,14 @@ def cliffs(cmds, terrain, starts, consts, rng, warn):
     or forest within min_terrain_distance, no player start area (base_size), no other line within min_distance_cliffs."""
     if not cmds:
         return []
-    o = dict(CLIFF_DEFAULTS)
+    o, kind = dict(CLIFF_DEFAULTS), "CLIFF_DEFAULT"
     for cmd, args, _ in cmds:
-        if cmd in o and args:
+        if cmd == "cliff_type" and args:
+            if args[0] in CLIFF_TYPES:
+                kind = CLIFF_TYPES[args[0]]
+            else:
+                warn(f"cliff_type {args[0]} has no cliff object: default cliffs")
+        elif cmd in o and args:
             o[cmd] = value(args[0], consts)
         else:
             warn(f"{cmd} is not read yet")
@@ -591,7 +617,7 @@ def cliffs(cmds, terrain, starts, consts, rng, warn):
         mask = np.zeros((n, n), bool)
         mask[tuple(np.array(line).T)] = True
         free &= ~dilate(mask, CLIFF_STEP + o["min_distance_cliffs"])
-    return [{"name": f"CLIFF_DEFAULT_{int(rng.integers(1, 10))}", "player": 0, "x": x + 0.5, "y": y + 0.5, "line": k}
+    return [{"name": f"{kind}_{int(rng.integers(1, 10))}", "player": 0, "x": x + 0.5, "y": y + 0.5, "line": k}
             for k, line in enumerate(out) for x, y in line]
 
 
@@ -632,7 +658,7 @@ create_player_lands { terrain_type GRASS2 land_percent 25 base_size 14 clumping_
 <TERRAIN_GENERATION>
 create_terrain DIRT3 { base_terrain GRASS number_of_clumps 10 land_percent 3 }
 """
-# Black Forest: forest on most of the map, open player lands, an open middle and open paths (PATHS) between them.
+# Black Forest: forest on most of the map, open player lands, an open middle and open paths (a connection) between them.
 BLACK_FOREST = """
 <LAND_GENERATION>
 base_terrain FOREST
@@ -642,6 +668,8 @@ create_land { terrain_type GRASS land_position 50 50 base_size 5 number_of_tiles
 create_terrain DIRT3 { base_terrain GRASS number_of_clumps 8 land_percent 2 }
 create_terrain FOREST { base_terrain GRASS number_of_clumps 6 number_of_tiles 10 set_avoid_player_start_areas 15
   spacing_to_other_terrain_types 2 }
+<CONNECTION_GENERATION>
+create_connect_all_lands { replace_terrain FOREST GRASS terrain_size FOREST 1 0 }
 """
 # Gold Rush: open land, a dirt land with many gold mines in the middle (GOLDS) and a forest ring around it.
 GOLD_RUSH = """
@@ -654,7 +682,7 @@ create_terrain DIRT3 { base_terrain GRASS number_of_clumps 10 land_percent 3 }
 create_terrain FOREST { base_terrain GRASS number_of_clumps 8 number_of_tiles 25 set_avoid_player_start_areas 16
   spacing_to_other_terrain_types 2 }
 """
-# Highland: grass land with forests, a river across the map between the players (RIVERS) with shallow fords, and
+# Highland: grass land with forests, a river across the map between the players (RIVERS) with shallow fords (FORDS), and
 # "a cliffed, highly forested land" (AoE2 wiki "Highland", #3853). The wiki pages of the other maps name no cliffs.
 HIGHLAND = """
 <LAND_GENERATION>
@@ -724,9 +752,11 @@ GENERATORS = {"arabia": ARABIA,
               "nomad": NOMAD}
 WALLS = {"arena": 23}           # the radius in tiles of the stone wall circle around each player (outside START)
 BAND = 6                        # the forest inside the wall: tiles of width, on the half away from the map middle
-PATHS = {"black_forest": 1}     # the half width in tiles of the open path from each player to the middle
 GOLDS = {"gold_rush": (10, 6, 5)}  # the gold of the middle: radius in tiles, clumps of gold mines, mines in a clump
-RIVERS = {"highland": (3, 3, 5)}  # the river: half width in tiles, the least and the most fords
+RIVERS = {"highland": 3}        # the river: half width in tiles
+# The fords: a <CONNECTION_GENERATION> after river() (generate() runs before the river, so its connections see no water)
+FORDS = {"highland": "create_connect_all_players_land { replace_terrain WATER SHALLOW terrain_size WATER 2 0 "
+                     "terrain_cost WATER 7 terrain_cost FOREST 0 }"}
 COASTS = {"islands": 1,         # the beach: tiles of width on the land next to the water
           "mediterranean": 1,
           "nomad": 1}
@@ -807,9 +837,8 @@ def goldfield(d, gold, ring, rng):
 
 def river(d, spec, rng):
     """A river of half width spec[0] across the whole map through the middle, on the line that is farthest from the
-    player origins (for 2 players: between them), with a meander. spec[1] to spec[2] fords of SHALLOW, 3 tiles wide,
-    at even places along it; no forest next to a ford, so units walk across."""
-    w, least, most = spec
+    player origins (for 2 players: between them), with a meander. fords() makes the fords."""
+    w = spec
     n, terrain = d["size"], np.array(d["terrain"])
     x, y = np.mgrid[0:n, 0:n] + 0.5 - n / 2
     a = max(np.linspace(0, np.pi, 36, endpoint=False),                  # the normal of the river line
@@ -817,12 +846,7 @@ def river(d, spec, rng):
     along = -x * np.sin(a) + y * np.cos(a)
     side = x * np.cos(a) + y * np.sin(a) - 3 * np.sin(along * 4 * np.pi / n + rng.uniform(0, 2 * np.pi))
     water = np.abs(side) <= w
-    k = rng.integers(least, most + 1)
-    fords = np.linspace(-0.6, 0.6, k) * n / 2 + rng.uniform(-3, 3, k)
-    ford = water & (np.abs(along[..., None] - fords).min(-1) <= 1.5)
     terrain[water] = TERRAINS["WATER"]
-    terrain[ford] = TERRAINS["SHALLOW"]
-    terrain[dilate(ford, 3) & np.isin(terrain, list(FOREST_TREES))] = TERRAINS["GRASS"]
     d["terrain"] = terrain.tolist()
     d["elevation"] = lower_to_water(terrain, d["elevation"]).tolist()
 
@@ -860,28 +884,28 @@ def coast(d, w):
     d["terrain"] = terrain.tolist()
 
 
-def paths(d, w):
-    """Open grass paths of half width w from each player origin to the middle of the map."""
-    n, terrain = d["size"], np.array(d["terrain"])
-    way = np.zeros((n, n), bool)
-    for st in d["lands"]:
-        for t in np.linspace(0, 1, 2 * n):
-            way[int(st["x"] + t * ((n - 1) / 2 - st["x"])), int(st["y"] + t * ((n - 1) / 2 - st["y"]))] = True
-    way = dilate(way, w) & np.isin(terrain, list(FOREST_TREES))
-    terrain[way] = TERRAINS["GRASS"]
+def fords(d, text, seed):
+    """The connections of text on the map d after river(), between the player lands: the fords across the river."""
+    terrain, consts = np.array(d["terrain"]), TERRAINS | OBJECTS
+    lands = [((st["x"], st["y"]), st["player"], -1 - k) for k, st in enumerate(d["lands"])]
+    connections(terrain, lands, commands(expand(tokens("<CONNECTION_GENERATION>\n" + text), np.random.default_rng(seed),
+                                                set(), consts, []))["CONNECTION_GENERATION"],
+                consts, np.random.default_rng([seed, 995]), lambda m: print(f"rms: {m}", file=sys.stderr))
+    terrain[dilate(terrain == TERRAINS["SHALLOW"], 3) & np.isin(terrain, list(FOREST_TREES))] = TERRAINS["GRASS"]
     d["terrain"] = terrain.tolist()
+    d["elevation"] = lower_to_water(terrain, d["elevation"]).tolist()
 
 
 def random_map(kind, seed, players=2):
-    """The map description of an own generator (GENERATORS) and seed: the land of generate() (with the WALLS, PATHS,
-    RIVERS, ISLES and COASTS of the kind), a town center at each player origin (not for NOMADS) and the START objects around
+    """The map description of an own generator (GENERATORS) and seed: the land of generate() (with the WALLS,
+    RIVERS, FORDS, ISLES and COASTS of the kind), a town center at each player origin (not for NOMADS) and the START objects around
     it, on free tiles (no forest, no water, not next to a wall), the FISH of the kind and the RELICS."""
     d = generate(GENERATORS[kind], seed, players)
     rng = np.random.default_rng([seed, 993])
-    if kind in PATHS:
-        paths(d, PATHS[kind])
     if kind in RIVERS:
         river(d, RIVERS[kind], rng)
+    if kind in FORDS:
+        fords(d, FORDS[kind], seed)
     if kind in ISLES:
         isles(d, ISLES[kind])
     if kind in COASTS:
