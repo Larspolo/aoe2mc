@@ -555,15 +555,17 @@ class Replay:
         return out
 
     def army_view(self, t):
-        """The commands of the army texts at game time t (ms, #3696): in the sky below the graphs, one text display per
-        player in its color: the live military units by type, the units in training and the units lost. Only the
-        texts that changed since the last call."""
+        """The commands of the army texts at game time t (ms, #3696): in the sky below the graphs and the Blacksmith
+        tiers (#3818: the Blacksmith display is one step below the lowest graph), one text display per player in its
+        color: the live military units by type, the units in training and the units lost. Only the texts that changed
+        since the last call."""
         if getattr(self, "view", None) is None:
             self.overview()                                         # it sets the place of the overview
         y, c, out = int(self.view.split()[1]) + 12, f"{self.n / 2:.1f}", []
         training = collections.defaultdict(collections.Counter)
-        for end, e, _ in self.trainings:
-            if e["kind"] == "queue" and e["time"] <= t < end:
+        import gather                                               # gather -> build -> replay: import it late
+        for end, e, _ in self.trainings:                            # military only, as the troops (#3818)
+            if e["kind"] == "queue" and e["time"] <= t < end and gather.military(e["name"]):
                 training[e["player"]][e["name"]] += 1
         for k, p in enumerate(self.ranked([int(q) for q in self.data["players"] if q != "0"])):
             who, color = self.label(p)
@@ -576,7 +578,7 @@ class Replay:
                 continue
             tag, value = f"{ARMY}.{p}", json.dumps(text(line, color), ensure_ascii=False, separators=(",", ":"))
             out.append(f"data merge entity @e[type=text_display,tag={tag},limit=1] {{text:{value}}}" if p in self.army_shown
-                       else f"summon text_display {c} {y - 4 * (k + 1)} {c} {{text:{value},billboard:\"center\","
+                       else f"summon text_display {c} {y - 4 * (k + 2)} {c} {{text:{value},billboard:\"center\","
                             f'shadow:1b,line_width:1000,Tags:["{ARMY}","{tag}"]}}')
             self.army_shown[p] = line
         return out
