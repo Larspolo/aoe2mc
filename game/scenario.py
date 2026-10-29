@@ -269,6 +269,18 @@ def orders(g):
             continue
         patrols[:] = [q for q in patrols if q[0] != tag] + [[tag, [p[:3], p[3:6]], 0]]
         g.command(f"aoe moveto {sel} {p[0]} {p[1]} {p[2]}")
+    patrol(g)
+    for tag, field, op, q in m["values"]:
+        values(g, tag, field, int(op), float(q))
+
+
+def patrol(g):
+    """Walk each patrol of g.patrols ([tag, [point A, point B], leg]) to its point and back, again and again: it turns
+    when one of its units is NEAR its point, and ends when no unit has the tag. The triggers (orders) and the Patrol
+    item of the stance menu (stance.patrol, #3355) make them; Gather.run calls it in each game."""
+    patrols = vars(g).get("patrols")
+    if not patrols:
+        return
     for q in list(patrols):
         tag, points, leg = q
         x, y, z = points[leg % 2]
@@ -277,8 +289,6 @@ def orders(g):
             g.command(f"aoe moveto @e[tag={tag}] {' '.join(map(str, points[q[2] % 2]))}")
         elif "passed" not in g.command(f"execute if entity @e[tag={tag}]"):
             patrols.remove(q)
-    for tag, field, op, q in m["values"]:
-        values(g, tag, field, int(op), float(q))
 
 
 def ranges(g, tag, operation, quantity):

@@ -180,6 +180,7 @@ NOT_SAVED = (                                                          # the fie
     "limit_shown",                                                     # time_limit.py: the shown text
     "menu_opened",                                                     # train.open_menu: the time of the last open (spam clicks, #3267)
     "noui",                                                            # the cheat "noui": only the hints
+    "ordering",                                                        # stance.py: a pending Patrol click, made again in the menu (#3355)
     "owners_at",                                                       # scenario.owners: the next check time
     "owners_sent",                                                     # scenario.owners: a load sets the same score again
     "peers",                                                           # run.py: the players of the game
