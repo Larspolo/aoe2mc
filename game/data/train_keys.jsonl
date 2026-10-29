@@ -15,6 +15,7 @@
 {"name": "faster", "text": "A unit that trains faster from an age: [age, its train time from that age] (the eagle scout and eagle warrior). train.seconds.", "issue": 2155}
 {"name": "glow", "text": "Treason: the enemy Kings glow for so many AoE2 seconds. regicide.treason.", "issue": 2388}
 {"name": "housing_factor", "text": "A technology that multiplies the population room of a building (Urbanization: {\"HOUSE\": 2}). train.limit.", "issue": 3919}
+{"name": "lead", "text": "A technology that makes the shots of the units of its test lead a moving target, as with Ballistics (Arquebus: gunpowder units). train.lead_command, AoePlugin.lead.", "issue": 4364}
 {"name": "line", "text": "The short name of a line at its first technology (Blacksmith, or an economy line: lumber, mining, mill, town center); the line follows the \"after\" chain. replay.SMITH and replay.ECO_LINES, the tiers of the live replay.", "issue": 3786}
 {"name": "on_research", "text": "The functions (\"module.function\") that run at the research of a technology, with (g, entry): its special effect in its own module, not an if block of train.research.", "issue": 3243}
 {"name": "rest", "text": "A technology that changes the rest of a priest after a conversion: the factor of the AoE2 seconds of the rest (Fanaticism: 0.5). monk.convert.", "issue": 3987}
