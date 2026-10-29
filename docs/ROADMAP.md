@@ -23,7 +23,8 @@ can see which features have an epic: `gh api "repos/Larspolo/aoe2mc/issues?label
 - [x] `convert:random-maps` Make a world from an AoE2 random map script (`.rms`: Arabia, Arena, Black Forest) and a seed, with no scenario file (epic #959)
 - [x] `convert:random-maps-more` More random map scripts of the ranked pool and the classic ones (Nomad, Islands, Gold Rush, Highland, Mediterranean) with their player starts (epic #1172)
 - [x] `convert:mood` The map color mood and weather of a DE scenario (`map_color_mood`: morning, noon, evening, night, snow, fog) as the Minecraft time of day, weather and fog (epic #1593)
-- [ ] `convert:start-view` The start view of each scenario player (`initial_camera_x`, `initial_camera_y` of the scenario): the Minecraft spawn at the view of player 1, and in the game program each side starts at the view of its player
+- [x] `convert:start-view` The start view of each scenario player (`initial_camera_x`, `initial_camera_y` of the scenario): the Minecraft spawn at the view of player 1, and in the game program each side starts at the view of its player (epic #3344)
+- [ ] `convert:terrain-layers` The terrain layers of a DE scenario (the "layer" brush of the DE editor: a second terrain painted over the base terrain of a tile, as a road or snow on grass): the ground blocks of the tile show the layer, the base terrain keeps the water and the shores
 
 ## 2. Play AoE2 in Minecraft (`game/`)
 
@@ -60,11 +61,11 @@ can see which features have an epic: `gh api "repos/Larspolo/aoe2mc/issues?label
 - [x] `play:save` Save a game of the game program and load it again (units, resources, queues, ages) (epic #2253)
 - [x] `play:hunt` Hunt and herd: villagers kill deer, lure and kill boars, and herd sheep that the first player who sees them owns (#1058, `game/herd.py`, #2310)
 - [ ] `play:setup` Set up a game before it starts: the starting age, starting resources, population limit, the civilizations and the number of bots
-- [ ] `play:scenario` Play a converted scenario in the game program: its objectives, triggers and victory conditions work, the scenario AI players are bots
+- [x] `play:scenario` Play a converted scenario in the game program: its objectives, triggers and victory conditions work, the scenario AI players are bots (epic #2538)
 - [x] `play:minimap` A minimap as in AoE2: a held Minecraft map item that shows the own and the seen enemy units and buildings as markers in the player colors, and a click on it sends the selection there (epic #2580)
-- [ ] `play:spectate` Spectators on the server of a game: they fly and see all players, without a side, as the AoE2 spectator mode
-- [ ] `play:unit-commands` The other AoE2 orders: patrol between points, guard a unit or building, follow a unit, attack-move (attack each enemy on the way)
-- [ ] `play:speed` Pause and game speed of the game program, as the AoE2 pause key and the speed setting: the units, queues and gathering stop and go on
+- [x] `play:spectate` Spectators on the server of a game: they fly and see all players, without a side, as the AoE2 spectator mode (epic #2897)
+- [x] `play:unit-commands` The other AoE2 orders: patrol between points, guard a unit or building, follow a unit, attack-move (attack each enemy on the way) (epic #3353)
+- [x] `play:speed` Pause and game speed of the game program, as the AoE2 pause key and the speed setting: the units, queues and gathering stop and go on (epic #3373)
 - [x] `play:postgame` The statistics at the end of a game of the game program, as the AoE2 achievements screen: military, economy, technology, the time of each age (the recap book, #2660, #2706)
 - [x] `play:taunts` AoE2 taunts: a player types a taunt number (1-105) in the chat, and all players hear its sound and see its text (#3318)
 - [ ] `play:wildlife` Wild predators as in AoE2: wolves, tigers and other predators of the map attack villagers and units near them
@@ -82,6 +83,7 @@ can see which features have an epic: `gh api "repos/Larspolo/aoe2mc/issues?label
 - [ ] `play:tech-tree` The AoE2 tech tree screen: the units, buildings and technologies of the own civilization by age and building, and the ones that the civilization does not have
 - [ ] `play:team-chat` The AoE2 chat targets: a chat line to all players, to the allies only or to one player, in the player color (Minecraft `/teammsg` and `/msg`)
 - [ ] `play:antiquity` Antiquity Mode of AoE2 DE (Return of Rome): its civilizations, ages (Stone, Tool, Bronze, Iron Age), units and technologies in the game program (owner decision B, #3583)
+- [ ] `play:auto-scout` The AoE2 DE order "Auto Scout": a scout explores the map by itself, walks to the tiles that the player did not see yet, and turns away from the enemies
 
 ## 3. Replay a recorded game in Minecraft (`game/replay.py`, `aoe2mc.read_timeline`)
 
@@ -104,9 +106,10 @@ can see which features have an epic: `gh api "repos/Larspolo/aoe2mc/issues?label
 - [x] `replay:flares` The flares of the record (a player marks a place for the allies) show at their place in the live replay: a beacon light and a chat line in the player color (epic #2401)
 - [x] `replay:orders` The other orders of the record change the units of the live replay: stances, formations, patrol and the town bell (epic #2547)
 - [ ] `replay:production` A production panel of each player in the live replay, as the AoE2 DE replay overlay: the units in training and the technologies in research, with their progress
-- [ ] `replay:highlights` A list of the large fights of the record (where and when many units die): a jump to the time and the place of each fight
-- [ ] `replay:auto-camera` An automatic camera of the live replay, as a caster view: the spectator view moves by itself to the place with the most fights or the most new buildings
+- [x] `replay:highlights` A list of the large fights of the record (where and when many units die): a jump to the time and the place of each fight (epic #2947)
+- [x] `replay:auto-camera` An automatic camera of the live replay, as a caster view: the spectator view moves by itself to the place with the most fights or the most new buildings (epic #3365)
 - [ ] `replay:graphs` Live graphs of the replay, as the statistics of the AoE2 DE replay overlay: the military, the economy and the population of each player over the game time
+- [ ] `replay:army` The army of each player in the live replay, as the caster tool CaptureAge shows it: the number of units of each type, the units in training and the units lost
 
 ## 4. The agent system (`.claude/skills/`, `tools/`, `.github/workflows/`)
 
