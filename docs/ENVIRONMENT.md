@@ -4,14 +4,17 @@ The project part of the cloud environment of aoe2mc. `docs/STEERING.md` (generic
 
 ## Network
 
-The agent starts a headless Minecraft server for tests. For this, the environment allows these hosts
-(done in #12):
+`scripts/allowed-domains.txt` is the list of the "Allowed domains" of the cloud environment: one host per line,
+no comments, so that the owner can paste the whole file. The Mojang hosts are for the headless Minecraft server of the
+tests (#12), the Paper and Gradle hosts for the game program and its plugin.
 
-    piston-meta.mojang.com
-    piston-data.mojang.com
-    libraries.minecraft.net
+When a ticket needs a new host:
+1. Add the host to `scripts/allowed-domains.txt` in the PR of the ticket (one line, no other change).
+2. Make a `needs-human` ticket (P1, size:S, `## For the owner`, Kind: setting) that asks the owner to paste the whole
+   file again (the steps of `docs/STEERING.md`, section "Network for the tests"), if no open ticket asks it already.
+3. Until the owner pasted it, the host is blocked: continue with other work.
 
-The owner allowed more hosts on 2026-10-29. Test from the container on that day:
+Test from the container on 2026-10-29, when the owner allowed the first hosts after the Mojang hosts:
 
 | Host | Result |
 |---|---|

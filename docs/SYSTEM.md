@@ -152,7 +152,8 @@ on `main` yet.
    access (Settings → Actions → General → Workflow permissions), so that Automerge can merge. To let Automerge merge
    a PR of your own branch, add the label `automerge` to it (#3383).
 2. **Cloud environment.** At claude.ai/code, make one environment for all runs. Network access: keep "Allow package
-   managers" on and add the hosts of `docs/ENVIRONMENT.md` ("Network"). Setup script: paste
+   managers" on and paste the whole file `scripts/allowed-domains.txt` into "Allowed domains". Paste it again when an
+   agent asks (it adds a host to the file and opens a `needs-human` ticket, `docs/ENVIRONMENT.md`, "Network"). Setup script: paste
    `scripts/cloud-setup.sh`. Paste it again when an agent asks (the SessionStart hook compares `SETUP_VERSION`).
    One environment can serve two projects (#1964): paste one setup script that installs the needs of both (each
    script lists them in `SETUP_NEEDS`). The hook of the project with no version file in `/etc` checks only its
@@ -235,6 +236,7 @@ of `tools/bootstrap.py` (they copy this repository) and the tests that need a sp
 | `.claude/hooks/guard-main.sh` | generic | None. |
 | `.claude/hooks/guard-shell.sh` | generic | None. |
 | `scripts/cloud-setup.sh` | specific | Java, the Minecraft server jars, the Vulkan and X tools of the client. |
+| `scripts/allowed-domains.txt` | specific | The "Allowed domains" of the cloud environment: the hosts of the tests and the research tools. |
 | `scripts/autopilot.sh` | generic | None (runs on the owner's computer). |
 | `tools/agent_config.py` | generic | None (reads `agent.toml`). |
 | `tools/bootstrap.py` | generic | None (sets up this system in a new repository, #906). |
