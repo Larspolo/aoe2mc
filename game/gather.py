@@ -66,6 +66,7 @@ import defend_wonder  # noqa: E402
 import demolish  # noqa: E402
 import diplomacy  # noqa: E402
 import flare  # noqa: E402
+import feitoria  # noqa: E402
 import fleet  # noqa: E402
 import follow  # noqa: E402
 import fog  # noqa: E402
@@ -1966,6 +1967,7 @@ class Gather:
         trebuchet.tick(self, self.tick * NORMAL)
         fleet.tick(self, self.tick * NORMAL)
         monk.relic_tick(self, self.tick * NORMAL)
+        feitoria.tick(self, self.tick * NORMAL)
         trade.tick(self)
         trade.heal(self, self.tick * NORMAL)
         train.haste(self, self.tick * NORMAL)

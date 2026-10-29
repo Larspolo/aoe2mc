@@ -17,6 +17,7 @@
 {"name": "FORTIFIED_CHURCH", "cost": {"wood": 200}, "time": 50, "icon": "candle", "age": 2, "civs": ["ARMENIANS", "GEORGIANS"], "full_tech_tree": "none"}
 {"name": "GATE", "cost": {"stone": 30}, "time": 70, "icon": "iron_bars", "gate": true, "age": 1}
 {"name": "KREPOST", "cost": {"stone": 350}, "time": 150, "icon": "red_sandstone", "age": 2, "civs": ["BULGARIANS"], "full_tech_tree": "none", "military": true}
+{"name": "FEITORIA", "cost": {"gold": 350, "stone": 300}, "time": 120, "icon": "cartography_table", "age": 3, "civs": ["PORTUGUESE"], "full_tech_tree": "none"}
 {"name": "MARKET", "cost": {"wood": 175}, "time": 60, "icon": "barrel", "age": 1}
 {"name": "MONASTERY", "cost": {"wood": 175}, "time": 40, "icon": "bell", "age": 2, "not_civs": ["ARMENIANS", "GEORGIANS"]}
 {"name": "PALISADE_GATE", "cost": {"wood": 30}, "time": 30, "icon": "stripped_spruce_log", "gate": true}

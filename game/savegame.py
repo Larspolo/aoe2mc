@@ -56,6 +56,7 @@ CHEATS = (                                                             # game/ch
 COUNTERS = (                                                           # the parts that a tick did not use yet (#2514):
     "aura_time",                                                       # regen.py
     "cart_heal",                                                       # trade.py
+    "feitoria_part",                                                   # feitoria.py
     "garrison_heal",                                                   # garrison.py
     "herd_food",
     "hero_time",                                                       # regen.py: the heroes
