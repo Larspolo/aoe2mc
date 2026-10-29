@@ -29,10 +29,16 @@ def name(g, n):
     return f"Player {n}" + (f" ({civ})" if civ else "")              # a scenario trigger renames it (#2905)
 
 
+def count(g):
+    """The number of AoE2 players of the people: --seats can give one player to two people (#3489)."""
+    game = g.game
+    return max(getattr(game, "seats", ()), default=game.people)
+
+
 def items(g, player):
     """Slot n - 1: the wool of the color of player n, its name and who has it."""
     out = []
-    for n in range(1, g.game.people + 1):
+    for n in range(1, count(g) + 1):
         color = g.players.get(str(n), {}).get("color") or player_color(n)
         who = sorted(p for p, k in g.game.sides.items() if k == n)
         lore = "You" if player in who else f"Taken by {who[0]}" if who else "Free"
@@ -46,7 +52,7 @@ def show(g, player):
 
 def choose(g, player, n):
     """Give Minecraft player `player` the AoE2 player n when no other one has it. Returns True on a change."""
-    if not 1 <= n <= g.game.people or g.game.sides.get(player) == n:
+    if not 1 <= n <= count(g) or g.game.sides.get(player) == n:
         return False
     if not g.game.choose(player, n):
         build.say(g, player, f"{name(g, n)} is taken.")

@@ -281,6 +281,7 @@ class Game:
     joined = frozenset()                             # the Minecraft players who joined (start_on_join, #3314)
     starts, yaw = {}, 0.0                            # AoE2 player -> its start block, the spawn yaw (aoe2mc.json, #3347)
     placed = frozenset()                             # the Minecraft players who went to the start of their side
+    seats = ()                                       # --seats: the AoE2 player of each person in the join order (#3489)
 
     def __init__(self, world, version=mc_check.DEFAULT_VERSION, timeout=300, server="paper"):
         self.world, self.version, self.timeout, self.kind = os.path.abspath(world), version, timeout, server
@@ -356,7 +357,10 @@ class Game:
         joins again keeps its side. A later menu (option C) changes this table only. A later one is a spectator (#2898):
         the game mode spectator flies through blocks and uses no items, and the team spec is no team of a player, so
         no Gather reads its clicks (Gather.who). With one person all Minecraft players play player 1 (who "@a")."""
-        n = self.sides.get(name) or next((k for k in range(1, self.people + 1) if k not in self.sides.values()), 0)
+        seats = getattr(self, "seats", ())          # co-op (#3489): two people can have the same player
+        free = (seats[len(self.sides):] or [0])[0] if seats else \
+            next((k for k in range(1, self.people + 1) if k not in self.sides.values()), 0)
+        n = self.sides.get(name) or free
         if self.people > 1 and n:
             self.sides[name] = n
             self.command(f"team join p{n} {name}")
@@ -529,6 +533,16 @@ def team_choices(value, players):
     return {p: None if t == "-" else int(t) for p, t in zip(seats, teams)}
 
 
+def seat_list(value):
+    """The AoE2 player of each person in the join order of --seats ("1,1,2", decision #3488): two people on one
+    player play it together (co-op, #3489). The players must be 1 to N with no gap. A wrong value stops with a message."""
+    seats = [int(t) for t in value.split(",") if t.strip().isdigit()]
+    if len(seats) != len(value.split(",")) or not seats or set(seats) != set(range(1, max(seats) + 1)):
+        sys.exit(f"--seats {value}: write the AoE2 player of each person in join order, players 1 to N with no gap, "
+                 "for example --seats 1,1,2")
+    return seats
+
+
 # The AoE2 game modes of --mode (epic #2263): the lines of game/data/setup.jsonl with a "help" (the --mode help text).
 # Keys: "module" (its setup(g, mode) after the bots), "age" (the start age when --age is dark), "loaded" ("skip": no
 # setup in a loaded game, "start": setup(..., start=False)), "bots" (the Gathers of the bots get the mode too). A new mode
@@ -611,6 +625,8 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
         raise TypeError(f"play() has no setting {', '.join(unknown)} (SETTINGS)")
     settings = mode_defaults({**SETTINGS, **settings})
 
+    players = max(getattr(game, "seats", ()), default=people)   # --seats: fewer players than people (#3489)
+
     def make(player):
         who = "@a" if people == 1 else f"@a[team=p{player}]"
         saved = ((state or {}).get("players", {}).get(str(player)) or {}).get("villagers")   # the living at the save (#3109)
@@ -648,7 +664,7 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
     g.victory_value = settings["victory_value"]                  # time_limit.tick (#2356)
     g.unlock_speed = settings["unlock_speed"]                    # the Game menu of player 1 (diplomacy.faster, #2933)
     if people > 1:                                   # one Gather for each person, in the join order (#1308, #1310)
-        g.bots = [Side(make(n)) for n in range(2, people + 1)]
+        g.bots = [Side(make(n)) for n in range(2, players + 1)]
         for s in g.bots:                             # the same trees, bushes and mines, as with a bot
             s.g.map.trees, s.g.map.bushes, s.g.map.mines = g.map.trees, g.map.bushes, g.map.mines
             s.g.relics = g.relics                    # one list: each relic exists once (#3116)
@@ -657,13 +673,14 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
         game.starts, game.yaw = start_places(data)   # the start views and the spawn yaw (#3347)
         for name in list(game.sides):                # players who joined before the teams were there
             game.side(name)
-        print(f"{people} people: the first Minecraft player who joins plays player 1, the second player 2.",
-              file=sys.stderr)
+        first = [*getattr(game, "seats", ()), 1, 2][:2] if getattr(game, "seats", ()) else [1, 2]
+        print(f"{people} people: the first Minecraft player who joins plays player {first[0]}, the second player "
+              f"{first[1]}.", file=sys.stderr)
     if settings["mode"] == "scenario":               # the computer players of the scenario, not --bot (#2543)
         import scenario
-        seats = scenario.bot_seats(data["players"], people)
+        seats = scenario.bot_seats(data["players"], players)
     else:
-        seats = [bot_seat(data["players"], people)] if bot else []
+        seats = [bot_seat(data["players"], players)] if bot else []
     for player, foe in seats:                        # after the people, next to their Sides (#1794)
         import bot as bots
         import replay
@@ -991,6 +1008,9 @@ def main(argv=None):
                     "player N, 100 to 200 percent in steps of 5 (for example 1=150, repeat it for more players): more "
                     "start resources, villager work rate and hit points, building hit points and military building "
                     "work rate (default 100)")
+    ap.add_argument("--seats", metavar="N,N,...", help="--play: the AoE2 player of each person in the order in which "
+                    "they join, for example 1,1,2: the first two people play player 1 together (co-op), the third "
+                    "player 2 (replaces --people)")
     ap.add_argument("--teams", metavar="T,T,...", help="--play: the team of each player in player order, 1 to 4 or - "
                     "(no team), for example 1,1,2,2: allies do not fight and share their team bonuses (default: the "
                     "teams of the scenario)")
@@ -1020,6 +1040,9 @@ def main(argv=None):
         restore(os.path.join(a.load, "world"), a.world)
     ctrl_c()
     game = Game(a.world, a.version, server=a.server)
+    if a.seats:                                      # co-op (#3489): one person for each seat
+        game.seats = seat_list(a.seats)
+        a.people = len(game.seats)
     game.people = a.people                           # the join order counts from the first player (#1310)
     game.settings = {k: getattr(a, k) for k in savegame.SETTINGS}   # savegame.dump keeps them (#2325)
     try:
