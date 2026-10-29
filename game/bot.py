@@ -477,6 +477,7 @@ class Bot:
         """Research the economy technologies of the age at each building that offers them (the AoE2 AI does, #3949),
         the upgrade of the unit that the building trains (#3952: Militia to Man-at-Arms), so that recruit then
         trains the new unit, and the Blacksmith technologies that change a live or queued soldier of the bot (#3951).
+        The economy technologies of all buildings come before the others (#4206).
         The villagers of self.villagers come first. One technology in each queue."""
         g = self.g
         if len(g.villagers) + sum(e["name"] == "VILLAGER_MALE" for q in g.queues.values() for e in q) < self.villagers:
@@ -488,17 +489,19 @@ class Bot:
         def smith(n):                                                  # the technology changes a soldier of the bot
             return train.BUILDING_OF.get(n) == "BLACKSMITH" and any(
                 train.TECHS[n](u, combat.stats(u)) != combat.stats(u) for u in sorted(army))
+        wants = []                                                     # (rect, technology) in building order
         for rect, name in sorted(train.homes(g).items(), key=lambda kv: kv[0]):
             if any(e["name"] in train.TECHS for e in g.queues.get(rect, [])):
                 continue
             line = set(self.soldiers(name)[:1])
-            for n in sorted(train.trains(g, name), key=lambda n: not train.value("economy", n)):
-                if n in train.TECHS and (train.value("economy", n) or smith(n)
-                                         or n in train.UPGRADES and line & {old for old, _ in train.lines(n, g)}) \
-                        and not build.locked(g, n) \
-                        and all(g.stock[r] >= v + keep.get(r, 0) for r, v in train.price(g, n).items()) \
-                        and train.queue(g, self.nobody, (rect[0], rect[2]), n):
-                    break
+            wants += [(rect, n) for n in train.trains(g, name) if n in train.TECHS and (
+                train.value("economy", n) or smith(n) or n in train.UPGRADES and line & {old for old, _ in train.lines(n, g)})]
+        busy = set()                                                   # the economy of all buildings first (#4206)
+        for rect, n in sorted(wants, key=lambda w: not train.value("economy", w[1])):
+            if rect not in busy and not build.locked(g, n) \
+                    and all(g.stock[r] >= v + keep.get(r, 0) for r, v in train.price(g, n).items()) \
+                    and train.queue(g, self.nobody, (rect[0], rect[2]), n):
+                busy.add(rect)
 
     def next_age(self):
         """(age, missing): the next age (build.AGE_TECHS) when the bot has its villager number and the age is not

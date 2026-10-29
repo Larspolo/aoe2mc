@@ -16,7 +16,7 @@ def test_a_code_change_runs_all_tests():
 
 def test_a_markdown_change_runs_the_doc_tests():
     tests = ci_select.select(["docs/LEARNINGS.md", ".claude/skills/autopilot/SKILL.md"])
-    # Direct readers of a Markdown file, and a test that reads one through a tool (release.py: docs/RELEASE.md).
+    # Direct readers of a Markdown file, and a test that reads one through a tool (release.py: steering/project/RELEASE.md).
     for t in ("test_learnings.py", "test_system_doc.py", "test_autopilot_skill.py", "test_generic_words.py",
               "test_feature_table.py", "test_coverage.py", "test_release.py", "test_ci_select.py"):
         assert f"tests/{t}" in tests

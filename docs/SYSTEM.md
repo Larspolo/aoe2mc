@@ -12,7 +12,7 @@ controls, read `docs/STEERING.md`. This document links to them and does not copy
 | Scheduled tasks (owner's account) | "aoe2mc autopilot", "aoe2mc autopilot haiku" and "aoe2mc autopilot deep" have no schedule: the pacer starts them (since 2026-10-28 the workflow `pacer.yml` through their API triggers, #3194). |
 | Pacer | The workflow `pacer.yml` (`tools/pacer.py`, #3193): every 10 minutes it starts the runs that the quota target misses, through the API triggers of the scheduled tasks. |
 | Runs | Cloud sessions of the autopilot task. Each run follows the skill `autopilot` with the argument `max`: tickets, one PR each. Many runs work at the same time. |
-| Skills (`.claude/skills/`) | The procedures: `autopilot` (the work cycle), `verify` (checks before a push), `ticket` (write and split tickets), `design` (design tickets), `improve` (process review), `roadmap` (epics from `docs/ROADMAP.md`), `human` (guides the owner through the `needs-human` tickets on the owner's computer), `demo` (a demo game on the owner's computer: a ticket for each feedback in the chat, the cause of each crash, `game/demo_watch.py`). |
+| Skills (`.claude/skills/`) | The procedures: `autopilot` (the work cycle), `verify` (checks before a push), `ticket` (write and split tickets), `design` (design tickets), `improve` (process review), `roadmap` (epics from `steering/project/ROADMAP.md`), `human` (guides the owner through the `needs-human` tickets on the owner's computer), `demo` (a demo game on the owner's computer: a ticket for each feedback in the chat, the cause of each crash, `game/demo_watch.py`). |
 | Denied tools (`.claude/settings.json`) | The `deny` list removes the session tools that no skill uses (`Artifact`, `Workflow`, the `Suggest*` and `Search*` tools, and since 2026-10-29 the plan, worktree, task list, wake-up, notification and review-findings tools and the
 session task tools `mcp__ccd_session` ...) from each session of the repository: their descriptions were about 19,000 of the 66,000 base tokens of each call (2026-10-28). A rule in a file that the SessionStart hook writes works only from the next session, so the list is in the repository. |
 | Rules (`CLAUDE.md`, `docs/LEARNINGS.md`) | Each session loads them. `CLAUDE.md` has the commands, the code map and the rules. `docs/LEARNINGS.md` has the lessons for all runs. |
@@ -48,7 +48,7 @@ session task tools `mcp__ccd_session` ...) from each session of the repository: 
 | Tokens of a run | `python3 tools/tokens.py [--top N]` (the tokens of this session and the largest sinks: files, commands; the `Tokens:` line of the run report; `--verify`: the minutes of each check command) |
 | Quota and pacing | `python3 tools/usage.py` (5-hour and 7-day usage, resets; `--target`: the number of runs (90 % of the 5-hour window 2 hours before the reset, then 98 %); `--sample`: the `Usage:` line of the run report; `--fire`: the runs that the pacer starts now; `tools/pacer.py` starts them, `pacer.yml`, #3193) |
 | Dashboard of #1 | `python3 tools/dashboard.py --dry-run` (`--next`: ticket candidates in pick order) |
-| Release bar | `python3 tools/release.py` (percent of each goal for the milestones C = 100 %, A and B: `docs/RELEASE.md`, #878) |
+| Release bar | `python3 tools/release.py` (percent of each goal for the milestones C = 100 %, A and B: `steering/project/RELEASE.md`, #878) |
 
 ## The loop of a run
 
@@ -80,7 +80,7 @@ The details are in the text at the top of `tools/claim.py`.
 | Owner comment | `claim/comment-ID` | `claim.py ID --comment`: one run acts on one owner comment. |
 | Refill | `claim/refill-E-S` | `claim.py E --refill`: one run makes the sub-issues of epic E (E = 0: the whole queue, one per hour). |
 | Process review | `claim/review-<gap>pr-<last>-<k>` | `claim.py 0 --review`: one run runs the `improve` skill after a gap of merged PRs (`[review]` of `agent.toml`, no hours: owner, 2026-10-29). A review with a change halves a gap up to `gap` (down to `min_gap`) and resets a larger one to `gap`; a review with no change doubles a gap from `gap` up (up to `max_gap`) and resets a smaller one to `gap` (`claim.next_gap`). Owner work since the last review (a merge with no commit of a run: each run commit has the trailer `Agent-Run:` of the `commit-msg` hook that `claim.py` installs at each claim, adopt or lock) makes the gap `owner_gap`. |
-| Roadmap review | `claim/roadmap-100pr-<last>-<k>` | `claim.py 0 --roadmap`: one run reviews `docs/ROADMAP.md` after 100 merged PRs. |
+| Roadmap review | `claim/roadmap-100pr-<last>-<k>` | `claim.py 0 --roadmap`: one run reviews `steering/project/ROADMAP.md` after 100 merged PRs. |
 
 Other rules against conflicts: one ticket per PR, new tests in a new file, new table entries on their own line in
 alphabetical order, `merge=union` in `.gitattributes` for files where runs only add lines.
@@ -116,6 +116,7 @@ HTTP 429 its runs go to the main task. `tools/health.py` measures the quota use 
 `Usage:` lines of the run reports, and `usage.py` uses that value. After a plan upgrade the same work is a smaller share of the larger quota: when the burn of
 the last 2 hours is less than half of the 24-hour burn, only the last 2 hours count (`health.ratio`, 5-hour and 7-day
 burn, #1706). The most runs at one time is `max_runs` in `[pacing]` of `agent.toml` (default 16): raise it when the 5-hour window does not reach its limit (40 since 2026-10-27: at a burn of 0.009 per run-hour, 16 runs used only about 70 %).
+Several Claude accounts at the same time (several collaborators): the plan `docs/COLLABORATORS.md` (#4185, epic #4232).
 The flow brake (owner, 2026-10-27): when CI, merge conflicts or anything else stops the merges, the quota is not the
 bottleneck, and more runs only make more open PRs and more conflicts. `--fire` counts the open agent PRs older than
 `pr_minutes` without `hold` and the queued CI runs. At `max_waiting_prs` (default 10) it starts at most 1 run per
@@ -209,15 +210,19 @@ The framework stays in this repository: `tools/bootstrap.py` copies it into a ne
 in one project reaches another project only by a copy (owner decision A, #4197: a synced repository waits until a
 second project starts).
 
-| File | Kind | What is specific to aoe2mc |
+| File | Kind (`steering`: the owner steers with it) | What is specific to aoe2mc |
 |---|---|---|
 | `agent.toml` | specific | All the project values that the generic files use. `tools/agent_config.py` reads it. |
 | `CLAUDE.md` | specific | The commands, the code map, the rules of the domain. It imports `framework/CLAUDE.md` with `@framework/CLAUDE.md`. |
 | `docs/ENVIRONMENT.md` | specific | The hosts of the tests and the tools of the setup script (Mojang, Java, Minecraft, #1900). |
 | `docs/LEARNINGS.md` | specific | The lessons of this project. The first section (environment and GitHub) is mostly generic. |
-| `docs/ROADMAP.md` | specific | The three goals and their features. |
-| `docs/PRINCIPLES.md` | specific | The direction of the project: the owner's preferences, made general from the decisions. |
-| `docs/DECISIONS.md` | specific | The log of the owner's decisions (one line each), the evidence of the principles. |
+| `steering/README.md` | steering | The list of the steering files: who writes each, and its kind. |
+| `steering/project/ROADMAP.md` | steering | The three goals and their features. |
+| `steering/project/RELEASE.md` | steering | The release bar: the milestones of each goal. |
+| `steering/project/PRINCIPLES.md` | steering | The direction of the project: the owner's preferences for aoe2mc, made general from the decisions. |
+| `steering/project/DECISIONS.md` | steering | The log of the owner's project decisions (one line each), the evidence of the project principles. |
+| `steering/system/PRINCIPLES.md` | steering | The owner's preferences for the agent system, made general from the decisions. |
+| `steering/system/DECISIONS.md` | steering | The log of the owner's system decisions (one line each), the evidence of the system principles. |
 | `.claude/skills/verify/SKILL.md` | specific | The check levels (preview image, world reader, Minecraft server, screenshots). |
 | `.claude/skills/design/SKILL.md` | specific | The design of buildings, units and animals. |
 | `.claude/skills/roadmap/SKILL.md` | specific | The three goals of aoe2mc. |

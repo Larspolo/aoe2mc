@@ -78,9 +78,9 @@ def test_lines():
 
 def test_each_roadmap_feature_has_a_row_of_its_goal():
     root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    with open(os.path.join(root, "docs", "ROADMAP.md")) as f:
+    with open(os.path.join(root, "steering", "project", "ROADMAP.md")) as f:
         features = release.roadmap(f.read())
-    with open(os.path.join(root, "docs", "RELEASE.md")) as f:
+    with open(os.path.join(root, "steering", "project", "RELEASE.md")) as f:
         _, rows = release.release(f.read())
     keys = {r[1]: r[0] for r in rows if ":" in r[1]}
     assert keys == {k: g for k, (g, _, _) in features.items()}

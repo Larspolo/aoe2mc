@@ -1,4 +1,4 @@
-"""Goal 4 of docs/ROADMAP.md is the agent system (#900): it has its rows, and the release total counts only the game goals."""
+"""Goal 4 of steering/project/ROADMAP.md is the agent system (#900): it has its rows, and the release total counts only the game goals."""
 import os
 import sys
 
@@ -9,7 +9,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 def test_goal_4_is_the_agent_system():
-    with open(os.path.join(ROOT, "docs", "ROADMAP.md")) as f:
+    with open(os.path.join(ROOT, "steering", "project", "ROADMAP.md")) as f:
         features = release.roadmap(f.read())
     keys = {k for k, v in features.items() if v[0] == 4}
     assert keys and all(k.startswith("system:") for k in keys)

@@ -21,7 +21,7 @@ from agent_config import CONFIG, ROOT  # noqa: E402
 
 SYSTEM = os.path.join(ROOT, CONFIG["docs"]["system"])
 FILES = os.path.join(ROOT, "framework", "files.txt")
-ROW = re.compile(r"^\| `([^`]+)` \| (generic|specific) \|", re.M)
+ROW = re.compile(r"^\| `([^`]+)` \| (generic|specific|steering) \|", re.M)
 
 CONFIG_TOML = """# Project values of the agent system (#905). The tools in tools/ read this file (tools/agent_config.py).
 
@@ -59,7 +59,7 @@ server = ""
 system = "docs/SYSTEM.md"
 steering = "docs/STEERING.md"
 learnings = "docs/LEARNINGS.md"
-roadmap = "docs/ROADMAP.md"
+roadmap = "steering/project/ROADMAP.md"
 """
 
 CI = """name: CI
@@ -158,7 +158,7 @@ STUBS = {   # specific files that the generic files need, as a short start for t
     "docs/ENVIRONMENT.md": "# Environment\n\nThe project part of the cloud environment of {name} (`docs/STEERING.md`).\n\n"
                            "## Network\n\nTODO: the hosts that the tests need outside the package managers.\n\n"
                            "## Setup script\n\nTODO: the tools that `scripts/cloud-setup.sh` installs.\n",
-    "docs/ROADMAP.md": "# Roadmap\n\nThe goals of {name} and their features: done (`[x]`) or missing (`[ ]`). "
+    "steering/project/ROADMAP.md": "# Roadmap\n\nThe goals of {name} and their features: done (`[x]`) or missing (`[ ]`). "
                        "The `roadmap` skill makes the next epic from a missing feature.\n\n## 1. TODO\n\n"
                        "- [ ] `goal:feature` TODO\n",
 }
@@ -234,7 +234,7 @@ def bootstrap(target, repo, branch="main"):
         if path.endswith(".sh"):
             os.chmod(dst, 0o755)
         written.append(path)
-    todo = [p for p, k in files if k == "specific" and p not in STUBS]
+    todo = [p for p, k in files if k != "generic" and p not in STUBS]
     return copied, written, todo
 
 

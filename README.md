@@ -354,7 +354,7 @@ larger building is skipped (for example a wonder that is hidden under the Great 
 Read these files first:
 - [`CLAUDE.md`](CLAUDE.md): commands, code map and the rules of the domain.
 - [`docs/STEERING.md`](docs/STEERING.md): how the owner steers the work with GitHub issues.
-- [`docs/ROADMAP.md`](docs/ROADMAP.md): the plan.
+- [`steering/project/ROADMAP.md`](steering/project/ROADMAP.md): the plan.
 - [`docs/DESIGN.md`](docs/DESIGN.md): the rules for building, object and unit designs.
 - [`docs/SYSTEM.md`](docs/SYSTEM.md): the agent system that does the work, and the setup steps of the owner
   ("Setup steps of the owner"; a move to another Claude account: `docs/OPERATOR.md`, section 4).

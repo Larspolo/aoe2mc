@@ -1,5 +1,5 @@
-"""Progress of each goal toward its release bar (#878, #879): the rules and items of docs/RELEASE.md, the features of
-docs/ROADMAP.md and the epics on GitHub.
+"""Progress of each goal toward its release bar (#878, #879): the rules and items of steering/project/RELEASE.md, the features of
+steering/project/ROADMAP.md and the epics on GitHub.
 
     python3 tools/release.py     # one line for each goal: percent of C, A and B, the tickets left, the due checks
 
@@ -18,7 +18,7 @@ INCLUDES = {"B": "B", "A": "BA", "C": "BAC"}         # the feature milestones th
 
 
 def roadmap(text):
-    """{key: (goal number, checked, {epic numbers that the line names})} of the feature lines of docs/ROADMAP.md."""
+    """{key: (goal number, checked, {epic numbers that the line names})} of the feature lines of steering/project/ROADMAP.md."""
     out, goal = {}, 0
     for line in text.splitlines():
         if line.startswith("## ") and line[3:4].isdigit():
@@ -29,7 +29,7 @@ def roadmap(text):
 
 
 def release(text):
-    """(bug reserve share, [(goal number, id, milestone, estimate or None, ticket or None)]) of docs/RELEASE.md."""
+    """(bug reserve share, [(goal number, id, milestone, estimate or None, ticket or None)]) of steering/project/RELEASE.md."""
     share, rows, goal, n = float(re.search(r"Bug reserve: ([\d.]+)", text)[1]), [], 0, 0
     for line in text.splitlines():
         if line.startswith("## "):
@@ -112,9 +112,9 @@ def total(result, m="C"):
 def load():
     """(features, share, rows, epics) of the files on disk and the epics on GitHub."""
     from dashboard import pages
-    with open(os.path.join(ROOT, "docs", "ROADMAP.md")) as f:
+    with open(os.path.join(ROOT, "steering", "project", "ROADMAP.md")) as f:
         features = roadmap(f.read())
-    with open(os.path.join(ROOT, "docs", "RELEASE.md")) as f:
+    with open(os.path.join(ROOT, "steering", "project", "RELEASE.md")) as f:
         share, rows = release(f.read())
     return features, share, rows, pages("issues?labels=epic&state=all")
 
