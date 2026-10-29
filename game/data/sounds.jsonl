@@ -5,3 +5,9 @@
 {"name": "ship", "select": "entity.boat.paddle_water", "pitch": 1.0}
 {"name": "siege", "select": "block.wooden_door.close", "pitch": 0.6}
 {"name": "villager", "select": "entity.villager.yes", "pitch": 1.0}
+{"name": "BLACKSMITH", "select": "block.anvil.use", "pitch": 1.0}
+{"name": "DOCK", "select": "entity.villager.work_fisherman", "pitch": 1.0}
+{"name": "MONASTERY", "select": "block.note_block.chime", "pitch": 1.0}
+{"name": "SIEGE_WORKSHOP", "select": "block.smithing_table.use", "pitch": 1.0}
+{"name": "STABLE", "select": "entity.horse.ambient", "pitch": 1.0}
+{"name": "TOWN_CENTER", "select": "block.bell.use", "pitch": 1.0}
