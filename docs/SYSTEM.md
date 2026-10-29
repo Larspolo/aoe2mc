@@ -231,6 +231,7 @@ of `tools/bootstrap.py` (they copy this repository) and the tests that need a sp
 | `tools/health.py` | generic | None (`agent.toml`). |
 | `tools/metrics_log.py` | generic | None (the log of the status issue comments on the branch `metrics`, #1983). |
 | `tools/report.py` | generic | None (the run report of step 8; the release bar only with a project `tools/release.py`, #1963). |
+| `tools/ticket_context.py` | generic | None (the code places that a ticket body names, #3829). |
 | `tools/tokens.py` | generic | None. |
 | `tools/operator_check.py` | generic | None (`agent.toml`). |
 | `tools/owner_tasks.py` | generic | None (`agent.toml`). |
