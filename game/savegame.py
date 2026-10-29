@@ -131,6 +131,7 @@ SETTINGS = (                                                           # run.py 
     "antiquity",
     "bot",
     "bot_attack",
+    "challenge",
     "cheats",
     "civ",
     "empire_wars",
@@ -166,6 +167,8 @@ NOT_SAVED = (                                                          # the fie
     "bots",                                                            # run.play makes the bots again
     "capture",                                                         # herd.py: a tick timer
     "census",                                                          # train.py: a tick timer
+    "challenge",                                                       # run.py: from the saved settings (#3900)
+    "challenge_shown",                                                 # challenge.py: the shown text
     "chop",                                                            # bot.py: the setup value of the AI difficulty
     "conquest_at",                                                     # conquest.py: the next check time
     "data",                                                            # aoe2mc.json of the world
@@ -191,6 +194,7 @@ NOT_SAVED = (                                                          # the fie
     "left_shown",                                                      # amounts.py: the shown numbers, a load shows them again
     "limit_at",                                                        # time_limit.py: the next check time
     "limit_shown",                                                     # time_limit.py: the shown text
+    "medal",                                                           # challenge.py: the medal at the end of the game
     "menu_opened",                                                     # train.open_menu: the time of the last open (spam clicks, #3267)
     "noui",                                                            # the cheat "noui": only the hints
     "ordering",                                                        # stance.py: a pending Patrol click, made again in the menu (#3355)

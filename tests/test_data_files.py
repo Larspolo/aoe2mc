@@ -208,7 +208,7 @@ def check_difficulty(row):                                 # a level of "AI diff
 
 def check_challenges(row):                                 # an Art of War challenge: its medal limits (#3761)
     form(row, {"name": str, "civ": str, "goal": str, "medal": str, "gold": int, "silver": int, "bronze": int,
-               "note": str}, {"after": (str, type(None))})
+               "note": str}, {"after": (str, type(None)), "check": str, "need": dict})
     assert row["civ"] in NAMES["civs.jsonl"] and row["medal"] in ("time", "lost"), row["name"]
     assert 0 <= row["gold"] < row["silver"] < row["bronze"] and row["note"].startswith("AoE2 wiki"), row["name"]
     assert row["after"] is None or row["after"] in NAMES["challenges.jsonl"], row["name"]

@@ -40,9 +40,12 @@ def gathers(g):
 
 
 def shares(g, h):
-    """True when Gather h sees for the player of g: the same player, or an ally with "Shared Exploration" on (#2602)."""
-    import gather                                                  # gather imports fog
-    return h.player == g.player or g.data.get("shared_exploration", True) and gather.allied(g.players, g.player, h.player)
+    """True when Gather h sees for the player of g: the same player, or an ally with "Shared Exploration" on (#2602).
+    A rule set with a technology of the key "shares" (Antiquity Mode: Writing, #3920) shares only after h researched it."""
+    import gather, train                                           # gather imports fog
+    need = train.BY_KEY["shares"]
+    return h.player == g.player or (g.data.get("shared_exploration", True) and gather.allied(g.players, g.player, h.player)
+                                    and (not need or bool(need.keys() & getattr(h, "techs", set()))))
 
 
 def units(g):
