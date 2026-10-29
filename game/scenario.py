@@ -211,6 +211,7 @@ ORDER_KINDS = {
     "found": r'"(found|create) (\d+) (\w+) (\d+) (\d+)"',    # "Place Foundation" (#2825), "Create Object" (#2911): foundation()
     "gates": r'"(lock|unlock) (\d+)"',                         # "Lock Gate", "Unlock Gate" (#2762): gate()
     "owners": r'"owner (aoe_order[\w.]+) (\d+) (-?\d+)"',   # "Change Ownership" (#2998): owner()
+    "keeps": r'"keep (\d+) ([01])"',                         # "Disable/Enable Object Deletion" (#3777): g.kept
     "queued": r'"(train|research) (\d+) (\w+) ?(\d+)?"',      # "Train Unit", "Initiate Research" (#2772): queues()
     "replaces": r'"replace (\d+) (\w+) (\w+) (-?\d+) (-?\d+) (-?\d+) (-?\d+)"',   # "Replace Object" (#3778): replace()
     "rallies": r'"rally (\d+) (\w+) (\d+) (\d+) ?(\d+ \d+ \d+ \d+)?"',  # "Set Building Gather Point": rally()
@@ -238,6 +239,8 @@ def orders(g):
     queues(g, m["queued"])
     for player, ref, where in m["unloads"]:
         unload(g, int(player), int(ref), where)
+    for ref, on in m["keeps"]:
+        (vars(g).setdefault("kept", set()).add if on == "1" else vars(g).setdefault("kept", set()).discard)(int(ref))
     for order, ref in m["gates"]:
         gate(g, order, int(ref))
     for order, player, name, x, y in m["found"]:

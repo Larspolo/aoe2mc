@@ -61,7 +61,7 @@ def test_sneak_clicks_queue_points_and_the_units_walk_them_in_order():
 def test_a_normal_click_ends_the_queue():
     server, g = queue()
     click(server, g, (4, 8), False)
-    assert g.waypoints == {}
+    assert g.waypoints == {"m0": [], "m1": []}                            # no old points: a new empty queue (#3805)
     arrive(server, g)
     server.log.clear()
     gather.waypoint(g)
