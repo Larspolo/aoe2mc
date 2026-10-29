@@ -6,7 +6,7 @@ forest tiles as objects (FOREST_TREES) yet.
 
 Read: `#const`, `#define`, `if`/`elseif`/`else`/`endif`, `start_random`/`percent_chance`/`end_random`,
 <PLAYER_SETUP> (`grouped_by_team` with --teams), <LAND_GENERATION> (`base_terrain`, `create_player_lands`, `create_land` with
-`terrain_type`, `base_layer` (a land layer on the terrain_type, #3967), `land_percent`, `number_of_tiles`, `base_size`, `clumping_factor`, `land_position` and the borders
+`terrain_type`, `base_layer` (a land layer on the terrain_type, #3967), `land_percent`, `number_of_tiles`, `base_size`, `clumping_factor`, `land_position`, `assign_to_player` and `assign_to_team` (direct_placement, #3947) and the borders
 `left_border`, `right_border`, `top_border`, `bottom_border`: percent of the map size at the low x, high x, low y and
 high y side that the land does not take) and
 <TERRAIN_GENERATION> (`create_terrain` with `base_terrain`, `number_of_clumps`, `number_of_tiles`, `land_percent`,
@@ -415,6 +415,8 @@ def generate(text, seed, players=2, size=None, warn=None, teams=None):
                 total, turn = tiles(attrs, consts, n), rng.uniform(0, 2 * np.pi)
                 order = circle(sections.get("PLAYER_SETUP", ()), players, teams, seed)
                 for p in range(1, players + 1):
+                    if any(st["player"] == p for st in starts):     # a land with assign_to_player has it (#3947)
+                        continue
                     a = turn + 2 * np.pi * order.index(p) / players
                     c = (int(round((n - 1) / 2 + RING * n * np.cos(a))), int(round((n - 1) / 2 + RING * n * np.sin(a))))
                     starts.append({"player": p, "x": c[0], "y": c[1], "base_size": base, "land": len(lands)})
@@ -428,16 +430,27 @@ def generate(text, seed, players=2, size=None, warn=None, teams=None):
                     c = tuple(min(n - 1, value(v, consts) * n // 100) for v in attrs["land_position"][:2])
                 else:
                     c = tuple(int(v) for v in rng.integers(0, n, 2))
-                links.append((c, 0, zone if zone is not None else -1 - len(lands)))
+                p = owner_of(attrs, consts, starts, players, teams)
+                if p:                                       # direct_placement: the land of player p (#3947)
+                    starts.append({"player": p, "x": c[0], "y": c[1], "base_size": base, "land": len(lands)})
+                links.append((c, p, zone if zone is not None else -1 - len(lands)))
                 lands.append({"id": len(lands), "cells": square(c, base, n), "clump": clump, "box": box,
                               "target": tiles(attrs, consts, n, (2 * base + 1) ** 2)})
                 kinds[len(lands) - 1] = kind
                 layers[len(lands) - 1] = top
             for a in set(attrs) - {"base_layer", "base_size", "clumping_factor", "terrain_type", "land_percent", "number_of_tiles",
-                                   "land_position", "zone", *BORDERS}:
+                                   "land_position", "zone", "assign_to_player", "assign_to_team", *BORDERS}:
                 warn(f"{cmd}: {a} is not read yet")
         else:
             warn(f"{cmd} is not read yet")
+    if starts and len(starts) < players:            # direct_placement with too few lands: the rest on the circle
+        for p in sorted(set(range(1, players + 1)) - {st["player"] for st in starts}):
+            warn(f"player {p} has no land: a land on the circle")
+            a = 2 * np.pi * (p - 1) / players
+            c = (int(round((n - 1) / 2 + RING * n * np.cos(a))), int(round((n - 1) / 2 + RING * n * np.sin(a))))
+            starts.append({"player": p, "x": c[0], "y": c[1], "base_size": 3, "land": len(lands)})
+            links.append((c, p, -1 - len(lands)))
+            lands.append({"id": len(lands), "cells": square(c, 3, n), "clump": 8, "box": (0, n, 0, n), "target": 49})
     grow(owner, lands, np.ones((n, n), bool), rng)
     for lid, kind in kinds.items():
         terrain[owner == lid] = kind
@@ -487,6 +500,19 @@ def generate(text, seed, players=2, size=None, warn=None, teams=None):
             "objects": found,
             "players": {str(p): {"color": p - 1} | ({"team": teams[p - 1]} if teams else {}) for p in range(1, players + 1)},
             "lands": [{k: v for k, v in st.items() if k != "land"} for st in starts]}
+
+
+def owner_of(attrs, consts, starts, players, teams):
+    """The player of a create_land (#3947): assign_to_player N, or for assign_to_team T the next player of team T
+    (teams, #3946) with no land yet. 0: no player."""
+    taken = {st["player"] for st in starts}
+    if "assign_to_player" in attrs:
+        p = value(attrs["assign_to_player"][0], consts)
+        return p if 1 <= p <= players and p not in taken else 0
+    if "assign_to_team" in attrs and teams:
+        t = value(attrs["assign_to_team"][0], consts)
+        return next((p for p in range(1, players + 1) if teams[p - 1] == t and p not in taken), 0)
+    return 0
 
 
 def circle(setup, players, teams, seed):
