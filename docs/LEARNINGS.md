@@ -28,6 +28,7 @@ and `tests/test_learnings.py` fails above 80 lines (#1698).
 - The clone of a session can hold an `origin/main` of days ago: `git fetch origin main` before `git checkout -B <branch> origin/main`, also for a check ticket. #2278 measured a replay on a main of 2 days ago (`git log -1 --format=%ci`) and found a false regression.
 - Blocked too: `docs.racket-lang.org` and `plt.cs.northwestern.edu` (the docs of the AoE2 random map script DSL, DNS fails). For a random map script fact, a `WebSearch` summary of them works (#3966).
 - A `git checkout -b agent/N-...` after `claim.py N` makes the next beat name another run: `claim.py N --beat` then says "took #N over" (#4134). Work on the session branch, or move the changes with `git stash -u`, `checkout -B <session branch> origin/main`, `stash pop`.
+- The Blacksmith pages (`aok.heavengames.com`) work, but `getfile.php?id=N&dd=1&s=TOKEN` (TOKEN from `get_file(...)` of `showfile.php`) redirects to `files.heavengames.com`: blocked until the owner pastes `scripts/allowed-domains.txt` (#4189).
 
 ## Code
 
