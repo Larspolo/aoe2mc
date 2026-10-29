@@ -52,16 +52,21 @@ def why():
                         return (f"{tool} -f \"{pat}\" also matches the shell that runs this command, and kills it "
                                 f"(#1213). Write a bracket in the pattern, for example \"[{pat[:1]}]{pat[1:]}\".")
         at = next((i for i, x in enumerate(w) if x == "pytest" and (i == 0 or w[i - 1] == "-m")), None)
-        if at is not None and "xargs" not in w[:at] and not os.environ.get("AOE2MC_FULL_SUITE"):
-            args = []
+        safe = "xargs" in w[:at or 0] and {"-r", "--no-run-if-empty"} & set(w[:at or 0])     # no run with no file
+        if at is not None and not safe and not os.environ.get("AOE2MC_FULL_SUITE"):
+            args, sub = [], 0
             for x in w[at + 1:]:
-                if x in ("|", "&") or re.match(r"\d?>", x):
+                if not sub and (x in ("|", "&") or re.match(r"\d?>", x)):
                     break
-                args.append(x)
-            some = any(re.search(r"\.py|::|/.|\$", x) and x.rstrip("/") != "tests" for x in args)   # $F: names
+                sub += x.count("$(")
+                if not sub:
+                    args.append(x)                                     # the words of a $(...) are no file names
+                sub = max(0, sub - x.count(")"))
+            some = any(re.search(r"\.py|::|/.", x) and "$" not in x and x.rstrip("/") != "tests" for x in args)  # $F: empty?
             if not some and not {"-m", "-k", "--lf", "--last-failed", "--co", "--collect-only", "-h", "--help"} & set(args):
                 return ("python3 -m pytest with no test file runs the full fast suite: never do it, the quick CI runs it "
-                        "on each push (owner, #4187). Name the test files of the change: python3 -m pytest tests/test_a.py.")
+                        "on each push (owner, #4187). Name the test files of the change: python3 -m pytest tests/test_a.py. A $VAR or "
+                        "$(...) can be empty (#4244): grep -l X tests/*.py | xargs -r python3 -m pytest -q.")
         if re.match(r"\s*\(?\s*git\s+(?:-C\s+\S+\s+)?stash\b", seg):
             sub = (w[w.index("stash") + 1:] or ["push"])[0]
             if sub not in ("list", "show") and in_merge():

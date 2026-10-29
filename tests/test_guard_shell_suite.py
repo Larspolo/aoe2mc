@@ -11,6 +11,9 @@ from test_guard_shell import run
     "cd /x && timeout 580 python3 -m pytest -q > out.txt",
     "python3 -m pytest tests/",
     "pytest -x",
+    "F=$(grep -l X tests/*.py); python3 -m pytest -q $F",
+    "python3 -m pytest -q $(grep -l extend.md tests/test_*.py) 2>&1 | tail -1",
+    "grep -l X tests/*.py | xargs python3 -m pytest -q",
 ])
 def test_blocks_the_full_suite(command):
     assert run(command) == 2, command
@@ -22,8 +25,8 @@ def test_blocks_the_full_suite(command):
     "python3 -m pytest -m slow",
     "python3 -m pytest -k ship_pr",
     "grep -l pytest tests/*.py",
-    "F=$(grep -l X tests/*.py); python3 -m pytest -q $F",
-    "grep -l X tests/*.py | xargs python3 -m pytest -q",
+    "grep -l X tests/*.py | xargs -r python3 -m pytest -q",
+    "xargs --no-run-if-empty python3 -m pytest -q < files.txt",
     "python3 tools/report.py --text 'ran python3 -m pytest'",
 ])
 def test_allows_test_files_and_markers(command):
