@@ -4,6 +4,7 @@ import subprocess
 import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.join(ROOT, "tools"))     # the bootstrap copy has no conftest: its tool tests need it
 
 FAKE = """repo = "someone/other"
 owner = "someone"
