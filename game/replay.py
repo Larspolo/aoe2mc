@@ -691,7 +691,7 @@ class Replay:
             last["time"], self.effects[last["tag"]] = e["time"], e["time"] + EFFECT_MS
             return [f"data merge entity @e[type=text_display,tag={last['tag']},limit=1] "
                     f"{{text:{json.dumps(text(trade_line(last['sums']), color))}}}"]
-        spot = self.roof(i, (e.get("names") or [None])[0], e.get("player"))
+        spot = self.roof(i, (e.get("names") or [None])[0] or "MARKET", e.get("player"))   # no name of a market of the game (#4322)
         if not spot:
             return []
         x, top, z, (x0, x1, z0, z1) = spot
