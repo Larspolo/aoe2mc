@@ -12,6 +12,7 @@ def fake(monkeypatch, seen):
         return [], [], [], [], [], [], []
     monkeypatch.setattr(health, "fetch", fetch)
     monkeypatch.setattr(health, "git_files", lambda: [])
+    monkeypatch.setattr(health, "owner_and_waits", lambda since, until=None: ([], []))
     monkeypatch.setattr(health, "claim_refs", lambda: None)
     monkeypatch.setattr("feedback.fetch", lambda: [])
 

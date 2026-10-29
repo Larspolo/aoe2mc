@@ -23,7 +23,8 @@ a second push of another claim commit is never a fast-forward. Later claims of t
     python3 tools/claim.py ID --comment   # lock owner comment ID (autopilot step 3); exit 1: another run handles it
     python3 tools/claim.py E --refill     # lock the sub-issues of epic E (0: the whole queue refill, autopilot step 5)
     python3 tools/claim.py 0 --fixmain --state SHA   # lock the "Fix main" ticket of the break in commit SHA (step 2)
-    python3 tools/claim.py 0 --review     # lock the process review after 50 merged PRs (`improve` skill, #898, #2039)
+    python3 tools/claim.py 0 --review     # lock the process review after its gap of merged PRs (`improve` skill,
+                                          # `[review]` of agent.toml; it prints the owner work since the last review)
     python3 tools/claim.py 0 --reviewed change   # after the review: "change" or "none" sets the next gap
     python3 tools/claim.py 0 --roadmap    # lock the review of docs/ROADMAP.md after 100 merged PRs (`roadmap` skill)
     python3 tools/claim.py 0 --prune      # delete the refs of closed tickets and old locks (`claims.yml` only)
@@ -61,6 +62,7 @@ token of the workflows ran out of its hourly limit (2026-10-29). It also deletes
 """
 import argparse
 import datetime
+import functools
 import json
 import re
 import subprocess
@@ -71,8 +73,10 @@ import uuid
 from agent_config import CONFIG
 
 EMPTY_TREE = "4b825dc642cb6eb9a060e54bf8d69288fbee4904"
-REVIEW, REVIEW_MAX = 200, 800   # merged PRs: the first and the longest gap of the process review (#898, #1697, #2039, #3465)
-REVIEW_HOURS = 4                # and at least these hours after the last review (#3465: 8 reviews in 24 hours)
+# The process review counts merged PRs, never hours (owner, 2026-10-29): `[review]` of agent.toml.
+REVIEW_CONFIG = CONFIG.get("review", {})
+REVIEW, REVIEW_MAX = REVIEW_CONFIG.get("gap", 100), REVIEW_CONFIG.get("max_gap", 400)   # after a change; after none
+OWNER_GAP = REVIEW_CONFIG.get("owner_gap", 20)   # the gap when an owner session merged a PR since the last review
 ROADMAP = 100               # merged PRs between two reviews of docs/ROADMAP.md (#2039)
 ROADMAP_EARLY = 30          # the same while the refill has no source: R < N, each roadmap feature has an epic (#3741)
 STATUS = CONFIG["status"]["issue"]   # the status issue: its state comment holds the last reviews
@@ -261,15 +265,23 @@ def agent_state(body):
     return json.loads(m[1]) if m else {}
 
 
-def pr_slot(last, gap, merged, hours=0, now=None):
+def pr_slot(last, gap, merged):
     """The lock key of a review that waits for `gap` merged PRs after the time `last` (ISO, or None: no review yet), or
     None when fewer PRs merged since then. merged: the PRs merged after `last`. The key holds `last` and the number of
-    full gaps: one run takes each review, and a review that a run did not finish opens again one gap later. hours: no
-    slot before these hours after `last` (the process review, #3465)."""
-    if merged < gap or last and hours and (now or time.time()) - datetime.datetime.fromisoformat(
-            last.replace("Z", "+00:00")).timestamp() < hours * 3600:
+    full gaps: one run takes each review, and a review that a run did not finish opens again one gap later."""
+    if merged < gap:
         return None
     return f"{gap}pr-{re.sub(r'[^0-9TZ]', '', last or '') or 'none'}-{merged // gap}"
+
+
+@functools.cache
+def merge_rows(last):
+    """[(time, PR, message)] of the PRs merged after the ISO time `last`, newest first (`dashboard.merges`)."""
+    from dashboard import merges
+    try:
+        return merges(since=datetime.datetime.fromisoformat(last.replace("Z", "+00:00")), messages=True)
+    except Exception as e:                              # exit 2 like a git error, not 1 ("another run does it")
+        fail(f"GitHub API failed for the merged PRs: {e}")
 
 
 def merged_since(last, gap, remote="origin"):
@@ -277,11 +289,16 @@ def merged_since(last, gap, remote="origin"):
     so the review starts."""
     if not last or not on_github(remote):
         return gap
-    from dashboard import merges
-    try:
-        return len(merges(since=datetime.datetime.fromisoformat(last.replace("Z", "+00:00"))))
-    except Exception as e:                              # exit 2 like a git error, not 1 ("another run does it")
-        fail(f"GitHub API failed for the merged PRs: {e}")
+    return len(merge_rows(last))
+
+
+def owner_since(last, remote="origin"):
+    """[(PR, title)] of the owner work merged after `last` (`dashboard.owner_work`): PRs that no run made. Each one is
+    a miss of the improve loop, so the process review comes after OWNER_GAP merged PRs, not after its full gap."""
+    if not last or not on_github(remote):
+        return []
+    from dashboard import owner_work
+    return owner_work(merge_rows(last))
 
 
 def utc(now=None):
@@ -333,7 +350,9 @@ def review_slot(kind, remote="origin", starved=None):
     merged = merged_since(last, gap, remote)
     if kind == "roadmap" and ROADMAP_EARLY <= merged < gap and (starved or refill_starved)():
         gap = ROADMAP_EARLY
-    return pr_slot(last, gap, merged, REVIEW_HOURS if kind == "review" else 0), gap
+    if kind == "review" and OWNER_GAP <= merged < gap and owner_since(last, remote):
+        gap = OWNER_GAP
+    return pr_slot(last, gap, merged), gap
 
 
 def refill_starved():
@@ -609,6 +628,10 @@ def main(argv=None):
                 body = api(f"issues/{STATUS}")["body"]    # read again: other runs and the dashboard change it too
                 call(f"issues/{STATUS}", "PATCH", {"body": with_state(body, {**agent_state(body), "last_roadmap": utc()})})
             print(f"claimed {kind} {key}")
+            if a.review and on_github(a.remote):          # the misses of step 0 of the `improve` skill
+                last = agent_state(api(f"issues/{STATUS}")["body"]).get("last_review")
+                print("\n".join(f"owner work #{n}: {title}" for n, title in owner_since(last, a.remote))
+                      or "owner work: none")
             return 0
         print(f"no {kind} now: fewer than {gap} PRs merged since the last one, or another run does it")
         return 1

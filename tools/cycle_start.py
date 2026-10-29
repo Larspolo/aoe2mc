@@ -16,7 +16,8 @@ a conflict, a closed ticket, or green and not merged after 10 minutes), `Main CI
 `Feedback` (`feedback.py`), `Triage` (open issues without a priority label), `Candidates` (the pick order of
 `dashboard.py --next`, without the tickets that a run holds; the first 8 of the top priority group turned by the
 branch name, so that parallel runs try other first picks, #3832; and the `claim.py N --or M ...` command of the first 5) and `Release checks` (only when a check can start and has
-no ticket, `release.due()`). The skill says what to do with each line.
+no ticket, `release.due()`). The skill says what to do with each line. It also installs the `commit-msg` hook that
+marks each commit of the run (`Agent-Run: <lane>`, `mark_commits`).
 """
 import argparse
 import datetime
@@ -203,6 +204,26 @@ def status_line(number, state, now, lane=None):
             + (f" · lane {lane} (git config aoe2mc.lane)" if lane else ""))
 
 
+HOOK = """#!/bin/sh
+# Written by tools/cycle_start.py: each commit of a run gets the trailer Agent-Run. A merge on main without it is the
+# work of an owner session, a miss of the improve loop (dashboard.owner_work, owner 2026-10-29).
+git interpret-trailers --in-place --if-exists doNothing --trailer "Agent-Run: {lane}" "$1"
+"""
+
+
+def mark_commits(lane):
+    """Install the `commit-msg` hook of HOOK in this clone (also its worktrees). Only a run calls this tool, so an
+    owner session makes no marked commits. A hook of another tool stays."""
+    path = subprocess.run(["git", "rev-parse", "--git-path", "hooks/commit-msg"], capture_output=True,
+                          text=True).stdout.strip()
+    if not path or os.path.exists(path) and "cycle_start.py" not in open(path, encoding="utf-8").read():
+        return
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "w", encoding="utf-8") as f:
+        f.write(HOOK.format(lane=lane or "main"))
+    os.chmod(path, 0o755)
+
+
 def section(title, lines):
     print(f"{title}: " + ("none" if not lines else lines[0] if len(lines) == 1 else "\n  " + "\n  ".join(lines)))
 
@@ -216,6 +237,7 @@ def main(argv=None):
     me = subprocess.run(["git", "branch", "--show-current"], capture_output=True, text=True).stdout.strip()
     if a.lane:                  # the claims and the report name the lane (#1727); one call less for each lane run
         subprocess.run(["git", "config", "aoe2mc.lane", a.lane], capture_output=True)
+    mark_commits(a.lane)
     open_all = dashboard.pages("issues?state=open")                  # issues and PRs
     issues = {i["number"]: i for i in open_all if "pull_request" not in i}
     status = next((i for i in issues.values() if dashboard.STATUS in dashboard.labels(i)), None)

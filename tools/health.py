@@ -25,7 +25,7 @@ import numpy
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from agent_config import CONFIG  # noqa: E402
-from dashboard import api, closes, merges  # noqa: E402
+from dashboard import api, closes, merges, owner_work, start_after  # noqa: E402
 from feedback import by_owner  # noqa: E402
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -382,6 +382,13 @@ def misses(issues, since):
                   and MISS_LABELS & {lb["name"] for lb in i.get("labels", [])})
 
 
+def time_waits(issues):
+    """The open tickets whose "Start after:" line waits for a date, not for a count of merged PRs: a wait to measure a
+    change must count work, because the speed of the project changes and a pause merges nothing (owner, 2026-10-29)."""
+    return sorted(i["number"] for i in issues if "pull_request" not in i and i.get("state", "open") == "open"
+                  and start_after(i))
+
+
 def data_rows(path=None):
     """The (place, count) lines of the list of domain data that is still in the code (`[lint] data` of agent.toml,
     #1909; "#" starts a comment), or None when the project has no such list."""
@@ -594,7 +601,7 @@ def takeover_lines(rows):
 
 
 def report(since, runs, jobs, status_comments, comments, prs, files, files_of=None, issues=(), issue_events=(),
-           unanswered=None, reviews=None, data_rows=None):
+           unanswered=None, reviews=None, data_rows=None, owner=None, waits=None):
     out = [f"Health since {since:%Y-%m-%d %H:%M} UTC", "", "CI runs (count, median min, max min, failures):"]
     for name, (k, m, mx, fail) in ci_runs(runs, since).items():
         out.append(f"  {name}: {k}, {fmt(m)}, {fmt(mx)}, {fail}")
@@ -651,6 +658,12 @@ def report(since, runs, jobs, status_comments, comments, prs, files, files_of=No
     m = misses(issues, since)
     out.append(f"Misses (owner tickets for the system, improve step 0): {len(m)}"
                + (f" ({', '.join(f'#{n}' for n in m)})" if m else ""))
+    if owner is not None:                       # the work of owner sessions: misses too (owner, 2026-10-29)
+        out.append(f"Owner work (merged PRs with no run commit, improve step 0): {len(owner)}"
+                   + (f" ({'; '.join(f'#{n} {t}' for n, t in owner)})" if owner else ""))
+    if waits is not None:
+        out.append(f"Time waits (open tickets with a date in Start after:): {len(waits)}"
+                   + (f" ({', '.join(f'#{n}' for n in waits)})" if waits else ""))
     if data_rows is not None:                   # the list only gets shorter (#1909)
         out.append(f"Data in the code ([lint] data of agent.toml): {sum(n for _, n in data_rows)} literals "
                    f"in {len(data_rows)} places")
@@ -693,6 +706,11 @@ def fetch(since, until=None):
     issues = api_pages(f"issues?state=all&since={iso}")
     events = api_pages("issues/events?", limit=event_pages(since), stop=lambda e: e["created_at"] < iso)
     return runs, jobs, reports, recent, prs, issues, events
+
+
+def owner_and_waits(since, until=None):
+    """The owner work merged in the period (`dashboard.owner_work`) and the time waits of the open tickets."""
+    return owner_work(merges(since=since, until=until, messages=True)), time_waits(api_pages("issues?state=open"))
 
 
 def clip(until, runs, status_comments, comments, prs, issues, events):
@@ -749,7 +767,8 @@ def period(until, hours, past, only_takeovers=False):
     refs = claim_refs()
     merged = sorted(t for p in prs if p.get("merged_at") and (t := ts(p["merged_at"])) >= since)
     text = report(since, runs, jobs, status_comments, comments, prs, git_files(), files_of, issues, events,
-                  unanswered(), None if refs is None else review_delays(refs, merged, since), data_rows())
+                  unanswered(), None if refs is None else review_delays(refs, merged, since), data_rows(),
+                  *owner_and_waits(since, until if past else None))
     return text.replace(" UTC", f" UTC until {until:%Y-%m-%d %H:%M} UTC", 1) if past else text
 
 

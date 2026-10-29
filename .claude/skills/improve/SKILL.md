@@ -1,213 +1,155 @@
 ---
 name: improve
-description: Review how efficiently the agent works on aoe2mc and make one concrete improvement to the whole system (CLAUDE.md, skills, tools, tests, CI workflows, the cloud setup script, settings). Use when `python3 tools/claim.py 0 --review` gives the review slot to the run (autopilot step 9), after a run that failed or took more than 90 minutes, or when the owner asks for a process review.
+description: Review the whole agent system of aoe2mc and make the changes that pay (CLAUDE.md, skills, tools, tests, CI workflows, the cloud setup script, settings), also large redesigns and changes that need owner steps. Use when `python3 tools/claim.py 0 --review` gives the review slot to the run (autopilot step 9: after a gap of merged PRs, or soon after owner work on the system), after a run that failed or took more than 90 minutes, or when the owner asks for a process review.
 ---
 
 # Improve the process
 
-The aim: more closed tickets for the same usage, with the same quality. Look at the whole system, not only
-the skills: the agent process, CI, the cloud environment, the repository and the scheduling of the runs.
-Make at most one improvement per review, only where it pays, and stop changing things when the system is efficient
-(owner, #900: "only where it makes sense ... in the broadest sense"). The main number is the release progress per
-quota (`tools/health.py`, #899): the game goals 1 to 3 of `docs/ROADMAP.md`. Goal 4 of that file is this system.
+The aim: more closed tickets for the same quota, with the same quality, and **no owner work on the system**
+(owner, 2026-10-29: "I would have wanted the improve skill to come up with these things too"). The owner must never
+have to suggest an improvement. Each change that the owner makes by hand shows a lever that this loop did not see.
 
-**The limit is the usage limit** (owner, 2026-10-27). The 7-day and the 5-hour window of the subscription limit the
-number of runs, not the run minutes. So the main cost of a loss is quota, and minutes come second. Which part of
-the system uses the quota best or worst is not known: find the bottleneck from data, do not assume it. The owner
-thinks that tokens per run can be one (`tools/tokens.py`, the `Tokens:` lines), but that is a hunch to test, not a
-fact. When the data cannot name the bottleneck, the first ticket expands the data (step 2). Each bottleneck and each
-data gap gets its own ticket on the board (step 3), so that the owner sees the work on it.
+**Be bold** (owner, 2026-10-29). Make each change that pays, not only one per review: also a redesign of a part, also a
+change that needs owner steps, also a pause of the project until the owner did them (step 4). "No change" is correct
+only when each lever of step 3 is below its threshold, and the report gives the numbers.
 
-## 0. Check the last change
+**Count work, not time** (owner, 2026-10-29). A wait to measure a change counts merged PRs ("wait 50 PRs", not "wait
+24 hours"): the speed of the project changes, and a paused project merges nothing. Only a real clock stays in time: a
+quota window, a stale claim of a stopped run, a nightly job (`docs/SYSTEM.md`, "Clock or count").
 
-Read the newest line of "Process changes" on the status issue that has `before:` numbers: a line of a review or of a
-ticket run (autopilot step 8, #1738); skip `before: -` (a pitfall line). Compute the same numbers now (step 1).
-Did they get better?
-- Yes, or too early to say (less than 10 Metrics lines since the change) → keep it. Say so in the report.
-- No → undo it or try another way to fix the same loss. This is the change of this review. Say so in the report.
+**The limit is the usage limit** (owner, 2026-10-27). The 7-day and the 5-hour windows limit the runs. So the main cost
+of a loss is quota; minutes come second. Find the bottleneck from data, do not assume it. A known lever of step 3 with
+its signal above the threshold is enough data. A hunch outside the levers is a thing to measure first.
 
-**Misses** (#1909). The line `Misses` of `tools/health.py` lists the issues that the owner opened to change the system
-(labels `process`, `tooling`, `cleanup`). Each one is a change that this loop did not find. An owner comment on a
-process ticket that asks for a wider fix is a miss too (#1702: "Should we generalise this further?"). For each miss
-without a line `miss #N` in "Process changes": find the signal that would have found it (a number of
-`tools/health.py`, a check in CI, an area of step 2), and add that signal. A miss comes before the largest loss of
-step 2: it is the change of this review. Report it as `- <date>: miss #N: <the new signal> (PR #n)`.
+## 0. Learn from the owner's work (misses)
 
-## 1. Collect the data
+`claim.py 0 --review` prints `owner work #N: <title>`: the PRs merged since the last review with no commit of a run
+(each run commit has the trailer `Agent-Run:`, `tools/cycle_start.py`). `tools/health.py` prints the same as
+"Owner work", and "Misses": the issues that the owner opened to change the system (labels `process`, `tooling`,
+`cleanup`). An owner comment on a process ticket that asks for a wider fix is a miss too (#1702).
 
-Run `python3 tools/health.py --prs 50 --compare` first (about 2 minutes, #1697): it prints the last 50 merged PRs and,
-under each line that differs, the 50 PRs before (`  before: ...`). A window of merged PRs keeps its size when the speed
-of the project changes; a window of hours does not (50 PRs were 1.7 hours on 2026-10-27, #1909). A change of more than
-20 % between the two periods (the quota per merged PR, the tokens per run, the phase minutes, the takeovers) is a
-finding. Use `--hours 24` for the slow numbers (night runs, reopened tickets). It prints the CI runs per workflow,
-the slowest CI steps, the setup minutes, takeovers, releases, merge conflicts (and their files), the minutes of each
-phase, the quota per merged PR, the release points per 1 % of 7-day quota (the main number: progress to the goals per
-quota), the tokens per run and per merged PR and the largest token sinks (from the `Tokens:` lines), weak spots (rework, bugs of check tickets, red night runs), claim-to-merge minutes and files that do not belong in git. Collect by hand only what it does not print.
+For each item:
+1. Read what the owner changed: `git log origin/main -1 --grep "(#N)$" --format=%B --stat`.
+2. A feature or a steering choice of the owner (a game rule, a dashboard chart that the owner wanted): no miss. Write
+   `feature` in the report and go on.
+3. A change of the system: name its lever (step 3). Find the signal that would have found it, and add it when it is
+   missing (a line of `tools/health.py`, a field of the `Tokens:` or `Calls:` line). Then find the other places of the
+   same lever and fix them too ("Fix all places", step 4). The owner fixed one place; this loop fixes the class.
+4. Report it as `- <date>: miss #N (<lever>): <the new signal> · <the general change> (PR #n)`.
 
-- Tokens: `python3 tools/tokens.py --top 15` on this run (the sinks one by one: which file, which command). The
-  `Tokens:` lines of `tools/health.py` give only the groups. The token counts are estimates (API price ratios, about
-  4 characters per token): compare them with the rise of the `Usage:` lines before you trust them.
-- Verify: `tools/health.py` "Verify commands" sums the `verify` fields of the `Tokens:` lines (the minutes and the count
-  of `pytest`, `pytest -m mc`, `ruff`, `mc_shot.py`, the wait loops ...; `python3 tools/tokens.py --verify` for one run, #1704).
-- Agent: the last 20 run comments by the agent on the status issue (label `agent-status`). Each has a line
-  `Metrics: ticket #n · size · result · minutes · setup m min · checks k · checks c min · time sinks: ...`.
-  Also the tickets and PRs closed in that period, and rework (tickets that the owner reopened, or that came
-  from owner feedback on merged work).
-- CI: the last 50 runs of each workflow (`/actions/runs?per_page=50`: `conclusion`, `run_started_at`,
-  `updated_at`) and the step times of slow runs (`/actions/runs/ID/jobs`). Read the log of a failed job
-  (`mcp__github__get_job_logs`) when the cause is not in the code: install, download, cache, network, runner.
-- Environment: the `setup` minutes and the time sinks with "install", "download", "blocked" or "denied".
-  The SessionStart hook prints a line when the setup script of the environment is older than `scripts/cloud-setup.sh`.
-- Repository: `git ls-files` for files that do not belong in git (logs, worlds, images over 1 MB, caches).
-- Scheduling: "Taken over", "Released" and claim comments, stalled PRs, merge conflicts per PR, and the time
-  from the claim to the merge.
-- `docs/LEARNINGS.md` and the "Process changes" list on the status issue (what was tried before).
-- Decisions: the share of `taken` in the lines of `docs/DECISIONS.md` that have a recommendation (2026-10-27: 9 of 19,
-  47 %), and the lines with `new` or an exception. When the share of the last 10 is lower than the one before, or 3 lines
-  have `new`, the principles do not predict the owner: update `docs/PRINCIPLES.md` (a new principle or a sharper rule,
-  with the decisions as evidence) in this review, and list the change on the status issue.
+Misses come first: they are the changes of this review, before the largest loss of step 3.
 
-## 2. Find the largest loss
+## 1. Check the earlier changes
 
-Go through the seven areas. For each one, note its largest loss in quota (share of the 5-hour and 7-day usage), else in
-minutes of run time (or tickets) per day:
+Read the lines of "Process changes" on the status issue that have `before:` numbers. For each change with at least 50
+merged PRs after its merge (count them: `python3 tools/health.py --prs 50 --until <merge time>` gives the "before"):
+compute the same numbers now. Better → keep it. Not better → undo it, or fix the same loss in another way: that is a
+change of this review. Fewer than 50 merged PRs → too early: keep it and say so.
 
-1. **How runs start:** the scheduled task prompt, the pacer (`tools/usage.py`, `tools/pacer.py`, `pacer.yml`), the quota
-   target, idle runs (no ticket ready, stopped at once), runs that hit the usage limit.
-2. **The loop:** the steps of `.claude/skills/autopilot` and the phase minutes of the `Metrics:` lines
-   (`read`, `claim`, `code`, `verify`, `ci`, `conflict`, `report`); steps that cost time and change nothing.
-3. **Quota:** the quota per merged ticket, the release progress per quota, the quota of work that gives no merge
-   (idle runs, closed PRs, rework), the quota of the sessions that are not runs, the
-   token sinks (`Tokens:` lines). The phase shares in minutes come second.
-4. **Quality:** rework (owner corrections, reopened tickets, follow-ups of merged work), bugs found by check tickets,
-   red night CI runs.
-5. **Weak spots:** merge conflicts (and the `Conflict:` sentences of the run reports: causes that come again need a structure, `autopilot/conflict.md`), takeovers (`tools/health.py --takeovers`: the cause of each, #1703), refused commands, slow tests, tools missing in the environment.
-6. **Reuse:** what is aoe2mc-specific in the skills, tools and workflows, and how hard it is to set it up for
-   another project (epic #909).
-7. **Code structure** (#1909): how easy the code is to change. The line `Data in the code` of `tools/health.py`
-   (the list `[lint] data` of `agent.toml`: it must go down, and each place in it needs an open sub-issue of the data
-   epic), the tables and functions in the conflict hunks (not only the files), tests that copy the values or the
-   length of a data file (#2008), the largest files and functions, and the rules in `CLAUDE.md` that only prevent a
-   mistake. The good practices: one place for each fact, domain data in data files, tests that check behavior, no
-   dead code.
+## 2. Collect the data
 
-**Is the data enough?** The bottleneck is clear only when one loss is larger than the others by numbers of the same
-kind (quota, or minutes), measured over at least 10 runs. When it is not clear (no number for an area, two losses of
-the same size, a number that does not match the `Usage:` rise, or a cause that you only guess), the bottleneck of
-this review is the data gap: the change adds the measurement that answers it (a field of the `Metrics:` or `Tokens:`
-line, a number in `tools/health.py`, a finer label in `tools/tokens.py`). Write the question that the new data must
-answer, for example "Which part of the 7-day quota goes to runs that merge nothing?".
+Run `python3 tools/health.py --prs 100 --compare` (about 2 minutes): the last 100 merged PRs, and under each line that
+differs, the 100 PRs before (`  before: ...`). A change of more than 20 % between the two periods is a finding. It
+prints CI, setup, takeovers, conflicts and their files, phases, quota per merged PR, release points per 1 % of 7-day
+quota (the main number: progress to the goals 1 to 3 of `docs/ROADMAP.md` per quota), tokens and their sinks, lanes,
+weak spots, misses, owner work, time waits, data in the code, review slots and files that do not belong in git.
+`--hours N` only for a real clock (the night runs).
 
-The threshold: change something only when the largest loss is above about 5 % of the quota or of the run minutes of
-the period, or one ticket per day, or a quality problem that a person would see. Else make no change ("no change" in step 5).
-A loss that comes back counts with its full cost: its minutes and quota, the takeovers that it causes, and the rule
-lines that it added to `CLAUDE.md` and `docs/LEARNINGS.md` (each run loads them in each turn). The table conflicts were
-4 % of the minutes in 24 hours, below the threshold, but the same 24 hours had 14 takeovers, and `CLAUDE.md` had 4 rules
-against them (#1702, #1909).
+Also, only when a lever needs it:
+- Tokens of one run: `python3 tools/tokens.py --top 15`; the `Calls:` lines of the run reports (the most frequent
+  commands of each run).
+- Run reports and pacer cycles: the branch `metrics` (`git fetch origin metrics`; `status/`, `runs/`, `pacer/`).
+- CI: the last 50 runs of each workflow and the steps of slow runs; the log of a failed job (`mcp__github__get_job_logs`).
+- Environment: the `setup` minutes, and time sinks with "install", "download", "blocked" or "denied".
+- `docs/LEARNINGS.md` and the "Process changes" list (what was tried before).
+- Decisions: the share of `taken` in the last 10 lines of `docs/DECISIONS.md` with a recommendation. Lower than the 10
+  before, or 3 lines with `new` → update `docs/PRINCIPLES.md` in this review.
 
-Compute the numbers of all areas: tickets per run, median minutes for `size:S` and `size:M` tickets
-(last 5 runs against the 5 runs before), setup minutes, verify rounds per PR, CI rounds per PR, the minutes from the PR
-to the merge (CI and Automerge), CI failures that are not in the code, rework, takeovers and conflicts.
-The repository is public: Actions minutes are free, but at most 20 jobs run at the same time.
-Then find the one pattern that costs the most. Typical
-patterns and their fixes:
+## 3. Walk all levers
 
-| Area | Pattern | Fix |
-|---|---|---|
-| Agent | Much reading to find code | Better code map in `CLAUDE.md`, or a short `docs/architecture.md` |
-| Agent | The same manual check again and again | A tool in `tools/` or a test fixture |
-| Agent | The same kind of ticket again (for example a new building design) | A dedicated skill in `.claude/skills/` |
-| Agent | Unclear tickets, many questions | A better form in the `ticket` skill, ask earlier |
-| Agent | Rework after owner feedback | A rule from the feedback in `CLAUDE.md` |
-| Agent | Runs longer than 90 minutes | Stricter size rules, split earlier |
-| CI | The night run (full suite) red after green PRs | A check in the `verify` skill that finds it before the push, or fix the flaky test |
-| CI | PRs wait for CI in the queue (20 jobs at the same time) | Fewer event runs (`concurrency`), or split a slow job |
-| CI | A slow step (install, download) | `actions/cache` with the correct path and key, or a smaller install |
-| CI | A cache that is never restored ("Cache not found") | Correct the cache path or key |
-| CI | Slow tests | Faster fixtures, or move a test to the slow suite |
-| Environment | Runs install or download the same thing | Add it to `scripts/cloud-setup.sh` |
-| Environment | `setup` more than 3 minutes | Move work from the SessionStart hook to the setup script |
-| Environment | A blocked host, a missing variable | `needs-human` ticket with the exact host or name |
-| Repository | Files in git that do not belong there | `.gitignore`, and a test that fails on such files |
-| Scheduling | Dead claims, stalled PRs | Better claim or takeover rules (`tools/claim.py`, autopilot) |
-| Scheduling | Merge conflicts in generated files | A merge driver in `.gitattributes`, or generate the file in CI |
-| Scheduling | Merge conflicts in hand-written tables | Move all tables of that kind to `merge=union` data files, not only the table of the conflict |
-| Code | Domain data in the code (`Data in the code`) | A sub-issue of the data epic for each place |
-| Code | Tests that copy the values, the length or the text of a data or configuration file | Remove them; a form test of the data file, or a behavior test with the expected value from the data (#1916, #2008, owner 2026-10-29) |
-| Code | A rule in `CLAUDE.md` that only prevents a mistake ("each entry on its own line") | A check or a structure that makes the rule unnecessary; then remove the rule |
-| Scheduling | Runs stop because no ticket is ready | Split epics earlier |
-| Data | The data cannot name the largest loss | Add the measurement first (above, "Is the data enough?") |
-| Tokens | Sink `base` large (each call reads it again) | The `repo` part: shorter `CLAUDE.md` and `LEARNINGS.md`, topic lines to the docs that load only when needed. The rest (system prompt, tool definitions of the connectors): a `needs-human` ticket to turn off connectors that runs do not use |
-| Tokens | Sink `Read` or `Bash cat`/`sed` of large files | Better code map, `Grep` and line ranges, a smaller file |
-| Tokens | Sink `Bash pytest` or another long command output | `-q`, `\| tail -N`, a tool option for a short summary |
-| Tokens | Sink `mcp ...` or `Bash gh` (JSON of the GitHub API) | `minimal_output`, `--jq` with the needed fields, a tool in `tools/` |
-| Tokens | High `peak` context, many calls per ticket | Fewer tickets per run (a result is read again by each later call), subagents for searches |
-| Tokens | Sink `output` large | Shorter reports and PR text, less thinking on routine steps |
-| Local | Permission denials in local runs | Add the safe command to `.claude/settings.json` |
+The levers are the kinds of change that the owner made by hand (PRs of owner sessions, 2026-10-28 and 2026-10-29) and
+that this loop must find itself. Check each lever in each review: read its signal, compare it with its threshold.
+A lever with no number is a measurement gap: lever 10.
 
-## 3. Make the improvement
+| # | Lever | Signal | Threshold | Fix, strongest first | Owner PRs |
+|---|---|---|---|---|---|
+| 1 | Context per call | `Tokens:` `base` and its `repo` part, `peak`; size of `CLAUDE.md`, `docs/LEARNINGS.md`, the skills | base above 30 % of eq, or repo part above 10k tokens | Deny unused tools (`.claude/settings.json`); move rows and lines to the topic doc that needs them; a learning line → a check (`guard-shell.sh`, a test); split a skill so that a step reads its own file; a subagent for a wide search | #3425, #3483, #3648, #3734, #3828, #4173 |
+| 2 | Agent work that a tool or workflow can do | `Calls:` top commands; the same 3 or more calls in many runs; phases `read`, `claim`, `report` | a call sequence in 20 % of runs, or a phase above 15 % of the minutes | One-call tool (like `cycle_start.py`, `ship_pr.py`); a workflow (like Pacer, Automerge, Unconflict, Close, Claims); a hook; data written by a tool, not by the agent | #3201, #3211, #3311, #3614, #4172 |
+| 3 | The cheapest model that does the job well | `Lane` lines (runs, PRs, cost); rework and red CI per lane; the kinds of `size:S` tickets that Opus runs do | a kind of ticket that a cheaper lane does at the same quality; a lane with rework above 10 % | Lane rules of the `ticket` skill ("Model lanes"); `reserved` and `weights` in `agent.toml`; a subagent with a cheap `model` for lists and searches in a run; a new lane (a new scheduled task: owner step) | #2690, #3147, #3392, #3609 |
+| 4 | API calls | `Calls:` count of `gh api` and `mcp`; the REST budget in the pacer log; 403 and 429 in workflow logs | above 10 calls per ticket, or a workflow above half of its budget | Git in place of the API (refs, `merge-tree`, the branch `metrics`); one list call in place of one call per item; a cache; only the needed fields | #4171, #4172, #4178, #4180 |
+| 5 | Merge conflicts by design | Conflicts per 100 merged PRs; the files and the tables of the conflict hunks | 3 conflicts per 100 PRs in one file or table | One file per item (`tests/test_<topic>.py`, one data line per item); a registry that finds its items (a glob), not a list; a generated file only on `main`; no test of the content of a data file | #2008, #3203, #3462, #4177 |
+| 6 | Data in the code | `Data in the code` | a new place, or the count does not go down | A sub-issue of the data epic per place; `.jsonl` with `merge=jsonl` | #1909, #2100 |
+| 7 | Conflicts that a merge driver can solve | Conflicts that a run solved by hand where both sides only added; `solved by Unconflict` | a file with 2 such conflicts | `merge=union` or `merge=jsonl` in `.gitattributes`; a rule of `tools/unconflict.py`; `land()` of Automerge | #2004, #3199, #3202 |
+| 8 | Clocks that measure work | `Time waits`; constants in minutes or hours in the tools that wait for work | any | `Start after: N PRs after #M`; a gap of merged PRs (`[review]` of `agent.toml`) | #2039, #3865 |
+| 9 | Owner chores | `needs-human` tickets about the environment; owner PRs that paste, test hosts, set secrets | any step that the owner did twice | One file to paste; a check that names exactly what is missing; a workflow or an API that does the step | #1964, #3614, #4181 |
+| 10 | Measurement gaps | A lever of this table with no number | any | Add the number to `tools/health.py`, `tools/tokens.py` or the pacer log first | #3819, #3970, #4171 |
+| 11 | Quality | Rework, reopened tickets, bugs of check tickets, red night runs | rework above 5 % of the merged PRs | A check in the `verify` skill or CI; a rule from owner feedback; a fix of the flaky test | - |
+| 12 | Waste of runs | Runs that merge nothing, idle starts, lost claims, takeovers | above 5 % of the runs | Rules of the pacer (`tools/usage.py`) and of the claims (`tools/claim.py`) | #3147, #4173 |
 
-One change per review, for the largest loss above the threshold. Write down the numbers that the change must make
-better ("before" numbers) before you change something.
+The threshold also counts a loss that comes back with its full cost: its quota, the takeovers that it causes, and
+the rule lines that it added to `CLAUDE.md` and `docs/LEARNINGS.md` (each run loads them in each turn).
 
-**Choose the strongest fix** (#1909). A fix has three levels:
-1. A rule: text in `CLAUDE.md`, `docs/LEARNINGS.md` or a skill. Each agent must remember it, and each run loads it.
-2. A check that fails: a test, a CI step, a lint.
-3. A structure that prevents the fault: a data file, a merge driver, a generator.
+When the owner changes a part that no lever covers, add a row: a lever that the table does not name stays missed.
 
-Use the highest level that is in proportion to the loss. When a loss comes back in the 50 merged PRs after its fix, the
-next fix goes one level up. A level-1 rule that stays is debt: make a ticket for its level-2 or level-3 fix.
+## 4. Make the changes
 
-**Fix all places** (#1909). Before you make the ticket, find all other places with the same pattern (Grep, `ast`,
-a lint). Make one epic for all of them (`ticket` skill), with the place of this loss as the first
-sub-issue: the pilot. The other sub-issues can wait for the numbers of the pilot ("Start after: N PRs after #M"), but the epic and
-its full scope exist at once, so the owner sees the whole plan. #1702 moved one table to a data file and waited
-24 hours; the owner then made the epic #1909 for all tables.
+Each miss of step 0, each change of step 1 that did not help, and each lever above its threshold gets a change.
+Write the "before" numbers first.
 
-**Each bottleneck is a ticket on the board** (owner, 2026-10-27). For the bottleneck of step 2, look for an open
-ticket with the title `Process: <bottleneck>` (a data gap: `Process: measure <what>`). None → make one (`ticket`
-skill, labels `process`, `tooling`, `P1`): the evidence (the numbers and their period), the before-numbers, the
-hypothesis (what causes the loss, or the question that the new data must answer), and one small step. Then do that
-step in this review when it is small. Work iteratively: one step per review, measure it in step 0 of the next review
-(at least 10 runs), and then close the ticket (the loss is below the threshold, or the data answered the question),
-or add the next step to it. A data ticket that names a bottleneck ends with a new ticket for that bottleneck.
-First list the open `tooling` and process tickets (`/issues?state=open&labels=tooling`, and titles that start with
-"Process:"). When one already names the pattern, do not make a second change: claim that ticket (`tools/claim.py N`)
-and do it as this improvement, or, when another run owns it, choose the next pattern. PR #917 of a review and the
-ticket #903 made the same change of the autopilot skill at the same time: one PR conflicted and was wasted.
+**Choose the strongest fix** (#1909, P10). Three levels: 1. a rule (text that each agent must remember and each run
+loads), 2. a check that fails (a test, a CI step, a lint), 3. a structure that prevents the fault (a data file, a merge
+driver, a generator, a workflow, a tool). Use the highest level that is in proportion. When a loss comes back after
+its fix, the next fix goes one level up. A level-1 rule that stays is debt: make a ticket for its level-2 or level-3 fix.
 
-- Small (text in a skill, `CLAUDE.md`, `LEARNINGS.md`, a setting, a workflow step, the setup script): do it now,
-  in one PR with the title "Process: <what>" and the label `process`. Verify level 1. Merge it like a ticket.
-- Large (a new tool, a test framework change): make a `tooling` ticket with priority `P1`.
-- Owner only (environment settings, the scheduled task, GitHub settings): make the change in the repository
-  first (for example `scripts/cloud-setup.sh`), then a `needs-human` ticket with numbered steps and the exact
-  text to paste. One ticket per change. Look for an open one first.
+**Fix all places** (#1909). Find all places with the same pattern (Grep, `ast`, a lint) and fix the class, not the
+case. Make one epic for a large set (`ticket` skill), with all places as sub-issues, so the owner sees the whole plan.
 
-## 4. Clean up
+**Each lever is a ticket on the board** (owner, 2026-10-27). First list the open process tickets
+(`/issues?state=open&labels=process`). When one names the lever, claim it (`tools/claim.py N`) and do it, or, when
+another run owns it, go to the next lever. Else make `Process: <lever>` (`ticket` skill, labels `process`, `tooling`,
+`P1`, `lane:deep` when it needs judgement): the evidence, the before-numbers, the cause or the question for new data.
 
-- `docs/LEARNINGS.md` below 80 lines (only this skill merges and removes lines there; ticket runs only add), `CLAUDE.md` below 150 lines. Remove lines that are no longer true.
+**Size:**
+- Small (a skill text, a setting, a workflow step, a tool option, a new check): do it in this review, one PR per
+  change, title `Process: <what>`, label `process`. Up to 3 PRs per review; the rest as tickets.
+- Large (a new tool, a redesign of a part, a change of many files): an epic or a `P1` ticket in this review. Do its
+  first step now when it fits, and let the measurement wait: `Start after: 50 PRs after #<PR of the first step>`.
+- Owner steps (environment settings, secrets, scheduled tasks, GitHub settings): make all parts in the repository first
+  (for example `scripts/cloud-setup.sh`, `scripts/allowed-domains.txt`), then one `needs-human` ticket with numbered
+  steps and the exact text to paste. Look for an open one first.
+
+**Pause when the owner must act first** (owner, 2026-10-29). When the runs waste quota or make work that must be done
+again until the owner did the steps (a broken setup, a missing secret that the runs need, a redesign that conflicts
+with all work in progress), add the label `paused` to the status issue and comment there: the ticket, the steps, and
+"remove the label `paused` when you are done". Do not pause for a step that the runs can wait for.
+
+## 5. Clean up
+
+- `docs/LEARNINGS.md` below 80 lines (only this skill merges and removes lines there; ticket runs only add),
+  `CLAUDE.md` below 150 lines. Remove lines that are no longer true.
 - Turn a learning line into a check when you can (a rule of `.claude/hooks/guard-shell.sh`, a fast test, a clear
   assert message, a setting of the start hook), then remove the line.
 - Read the skills for instructions that contradict each other. Correct them.
 
-## 5. Report
+## 6. Report and the next review
 
-Add the change to "Process changes" on the status issue with its before-numbers:
-`- <date>: <change> (PR #n) — before: <numbers>` (for example "conflict 12 % of the run minutes, 14 conflicts / 6 h").
-Comment 3–5 lines: the result of step 0 and the misses, the numbers of the seven areas, the largest loss, what you changed (or
-"no change: largest loss X, below the threshold"), and what you expect. The owner can reject the change in a comment. Then revert it
-and add the reason to `docs/LEARNINGS.md`.
+Add each change to "Process changes" on the status issue: `- <date>: <change> (PR #n) — before: <numbers>`, and each
+miss as in step 0. Comment 3–6 lines: the misses and what they taught, the result of step 1, one line with the number of
+each lever (`1 base 41 % · 2 claim 12 % · ...`), what you changed, and what you expect. The owner can reject a change
+in a comment: then revert it and add the reason to `docs/LEARNINGS.md`.
 
-Then set the next review: `python3 tools/claim.py 0 --reviewed change` after a change (the next review comes after 200
-merged PRs and 4 hours), or `--reviewed none` when no loss was large enough for a change (the gap doubles, at most 800
-merged PRs, #898, #1697, #2039, #3465).
+Then set the next review: `python3 tools/claim.py 0 --reviewed change` after a change, or `--reviewed none` when no
+lever was above its threshold. The gaps are in `[review]` of `agent.toml`: `gap` merged PRs after a change, double
+after `none` (at most `max_gap`), and `owner_gap` when the owner merged a PR since the last review. More owner work
+means more reviews; none for a long time means fewer.
 
 ## Guardrails
 
-- Never weaken or remove tests, CI checks, lint rules or verify levels to save time.
+- Never weaken or remove tests, CI checks, lint rules or verify levels to save quota.
 - Never remove the rule that only the owner (`owner` in `agent.toml`) gives instructions, or the `deny` list in
   `.claude/settings.json`, or the hook `.claude/hooks/guard-main.sh` (it stops the command before it runs; the
   ruleset `Protect main` of the owner only refuses the push). Never allow destructive commands (force-push, delete, `gh api`).
-- Never change the priorities that the owner set.
-- Explain the reason for each change. If an earlier change did not help (the numbers did not improve),
-  revert it.
+- Never change the priorities that the owner set. A decision with two or more good options goes to the owner as a
+  decision ticket (`ticket` skill); a change with one clear best option needs no question.
+- A pause is only for owner steps, never to save quota; its comment says how to end it.
+- Explain the reason for each change. If an earlier change did not help (the numbers did not improve), revert it.

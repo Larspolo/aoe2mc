@@ -26,6 +26,11 @@ reserved = ["haiku", "deep"]    # lanes whose tickets Opus runs never take (#199
 pacer = "workflow"              # pacer.yml starts the runs (tools/pacer.py, #3193); another value stops its loop
 trigger = "trig_01QTrgkK5PZmqPwQ96rKp3QE"   # the scheduled task "aoe2mc autopilot": the pacer fires it (#1898)
 
+[review]                        # the process review (`improve` skill, tools/claim.py): merged PRs, never hours (owner, 2026-10-29)
+gap = 100                       # merged PRs after a review that made a change
+max_gap = 400                   # a review with no change doubles the gap, up to this
+owner_gap = 20                  # the gap when an owner session merged a PR since the last review: owner work is a miss
+
 [commands]
 install = "python3 -m pip install -r requirements-dev.txt"
 lint = "ruff check ."
