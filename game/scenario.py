@@ -601,6 +601,8 @@ def setup(g, mode="scenario", start=True):
     win = g.data.get("victory")
     for x in sides if win else ():
         x.victory = win["condition"]
+        if x.victory == "secondary-game-mode":                         # the modes decide the end (#3297): AoE2 DE
+            x.victory = "king-of-the-hill" if "king-of-the-hill" in win.get("modes", ()) else "conquest"
         x.victory_value = win.get("years", win.get("score", getattr(x, "victory_value", None)))
     if not start:
         for x in sides:

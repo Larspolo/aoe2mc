@@ -367,7 +367,7 @@ def read_scenario(path):
     from AoE2ScenarioParser.scenarios.aoe2_de_scenario import AoE2DEScenario
     from AoE2ScenarioParser.datasets.terrains import TerrainId
     from AoE2ScenarioParser.datasets.techs import TechInfo
-    from AoE2ScenarioParser.datasets.trigger_lists import ColorMood, VictoryCondition
+    from AoE2ScenarioParser.datasets.trigger_lists import ColorMood, SecondaryGameMode, VictoryCondition
 
     with contextlib.redirect_stdout(io.StringIO()):   # the parser prints a lot of status text
         scn = AoE2DEScenario.from_file(path)
@@ -452,6 +452,9 @@ def read_scenario(path):
         if om.victory_condition in set(VictoryCondition) else "standard"
     texts["global_victory"] = {"condition": win, **({"score": int(om.victory_score)} if win == "score" else {}),
                               **({"years": int(om.victory_years)} if win == "time-limit" else {})}
+    flags = int(getattr(om, "secondary_game_modes", 0) or 0)          # Empire Wars, Sudden Death ... (#3297)
+    if modes := sorted(m.name.lower().replace("_", "-") for m in SecondaryGameMode if m and flags & m):
+        texts["global_victory"]["modes"] = modes
 
     objects = []
     for player, player_units in enumerate(scn.unit_manager.units):

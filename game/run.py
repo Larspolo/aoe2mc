@@ -550,6 +550,15 @@ def mode_defaults(settings):
     return settings
 
 
+def scenario_modes(settings, data):
+    """Turn on the secondary game modes of the scenario (aoe2mc.json "victory" "modes", #3297) in the scenario mode, as
+    the lobby options of ON_TOP do. A lobby option of the person stays on. King of the Hill is a victory (scenario.setup)."""
+    if settings["mode"] == "scenario":
+        for m in set((data.get("victory") or {}).get("modes", ())) & set(ON_TOP):
+            settings[m.replace("-", "_")] = True
+    return settings
+
+
 def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attack="10:00", reveal="normal", people=1,
          speed=1.0, state=None, **settings):
     """state: the saved state of the players (savegame.dump) for a loaded game (#2255).
@@ -573,6 +582,7 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
         return g
     with open(os.path.join(world, "aoe2mc.json")) as f:
         data = json.load(f)
+    scenario_modes(settings, data)
     apply_civs(data, settings["civ"])                             # before the Gathers: all bonuses (civs.civ) follow it
     for player, pct in (settings["handicap"] or {}).items():     # before the Gathers: the start resources (#2474)
         data.setdefault("players", {}).setdefault(str(player), {})["handicap"] = pct
