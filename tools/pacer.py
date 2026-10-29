@@ -7,6 +7,7 @@ while the key `pacer` in `[pacing]` of `steering/system/system.toml` is "workflo
     python3 tools/pacer.py              # compute K and the lane runs (`usage.fire`), then start them
     python3 tools/pacer.py --dry-run    # print the calls, send nothing
     python3 tools/pacer.py --log F      # also add the record of the cycle to F, one JSON line (`record`)
+    python3 tools/pacer.py --switch     # exit 0 while the loop runs, 3 to stop it, 1 when the key is missing (`switch`)
 
 Each scheduled task has an API trigger (a URL and a token, made in the Claude app). The environment gives them:
 `PACER_URL_MAIN` and `PACER_TOKEN_MAIN` for the main task, `PACER_URL_<LANE>` and `PACER_TOKEN_<LANE>` for each lane of
@@ -327,11 +328,23 @@ def recent_starts(path, now, minutes=usage.PENDING):
     return out
 
 
+def switch(config=None):
+    """True while `pacer` in `[pacing]` is "workflow", False for another value. A missing key raises KeyError: the
+    inline check of pacer.yml read a moved `[pacing]` as "stop", and no run started for 30 minutes (#4349)."""
+    return (usage.CONFIG if config is None else config)["pacing"]["pacer"] == "workflow"
+
+
 def main(argv=None, env=os.environ):
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--dry-run", action="store_true", help="print the calls, send nothing")
     ap.add_argument("--log", metavar="FILE", help="add the record of this cycle to FILE (one JSON line)")
+    ap.add_argument("--switch", action="store_true", help="exit 0 while the loop runs, 3 to stop it")
     a = ap.parse_args(argv)
+    if a.switch:
+        try:
+            sys.exit(0 if switch() else 3)
+        except KeyError as e:                           # a config error is red, not a quiet stop
+            sys.exit(f"no key {e} in [pacing] (agent_config: agent.toml, steering/system/system.toml)")
     now, accts = datetime.datetime.now(datetime.timezone.utc).timestamp(), accounts(env)
     reads, unread = {}, []
     for i, (name, e) in enumerate(accts):              # one tiny CLI call per account (#4237)
