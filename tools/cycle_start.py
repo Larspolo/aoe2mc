@@ -13,7 +13,8 @@ Sections: `Status` (exit 3 when the status issue has `paused`: stop), `Usage` (k
 `Stuck` (`claim.py 0 --stuck`), `Flow brake` (`usage.py --flow`), `PRs` (the open agent PRs that need work: red CI,
 a conflict, a closed ticket, or green and not merged after 10 minutes), `Main CI` (the last run and the last night run),
 `Feedback` (`feedback.py`), `Triage` (open issues without a priority label), `Candidates` (the pick order of
-`dashboard.py --next`, without the tickets that a run holds) and `Release checks` (only when a check can start and has
+`dashboard.py --next`, without the tickets that a run holds; the first 8 of the top priority group turned by the
+branch name, so that parallel runs try other first picks, #3832) and `Release checks` (only when a check can start and has
 no ticket, `release.due()`). The skill says what to do with each line.
 """
 import argparse
@@ -23,6 +24,7 @@ import os
 import re
 import subprocess
 import sys
+import zlib
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import dashboard  # noqa: E402
@@ -35,6 +37,7 @@ STALE, CONFLICT = 30, 10               # minutes without a beat: a stopped run (
 SWEEP = 10                             # minutes: a green PR that is still open needs the Automerge sweep (#734)
 CLOSE = re.compile(r"(?i)\b(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?)\s+#(\d+)")
 SHOW = 5                               # candidates to print
+SPREAD = 8                             # the most runs that the pacer starts in one cycle (agent.toml max_fire)
 
 
 def tool(*args):
@@ -91,13 +94,31 @@ def related(issue, last):
     return bool(epics(issue) & epics(last) or dashboard.names(issue.get("body")) & dashboard.names(last.get("body")))
 
 
+def group(i, lane=None):
+    """The (lane, priority) group of a candidate: the first part of the rank of `dashboard.candidates`."""
+    prio = next((k for k, p in enumerate(dashboard.PRIORITY) if p in dashboard.labels(i)), len(dashboard.PRIORITY))
+    return lane is None and any(n.startswith(dashboard.LANE) for n in dashboard.labels(i)), prio
+
+
 def prefer(picks, last, lane=None):
     """The pick order with the tickets related to `last` first within each priority (and lane group). The sort is
     stable: the order of `dashboard.candidates` stays inside each group."""
-    def group(i):
-        prio = next((k for k, p in enumerate(dashboard.PRIORITY) if p in dashboard.labels(i)), len(dashboard.PRIORITY))
-        return lane is None and any(n.startswith(dashboard.LANE) for n in dashboard.labels(i)), prio
-    return sorted(picks, key=lambda i: (group(i), not related(i, last)))
+    return sorted(picks, key=lambda i: (group(i, lane), not related(i, last)))
+
+
+def spread(items, me):
+    """The first SPREAD items turned by a stable number of the run `me` (#3832): the runs that the pacer starts in
+    one cycle get the same list, and all tried the same first item ("4 claims lost to other runs", #3579). The same
+    run gets the same order each time; the items after the first SPREAD keep their place."""
+    n = min(len(items), SPREAD)
+    k = zlib.crc32(me.encode()) % n if n else 0
+    return items[k:n] + items[:k] + items[n:]
+
+
+def spread_top(picks, me, lane=None):
+    """The candidates with only the top (lane, priority) group spread: a P1 ticket stays before all P2 tickets."""
+    n = next((j for j, i in enumerate(picks) if group(i, lane) != group(picks[0], lane)), len(picks))
+    return spread(picks[:n], me) + picks[n:]
 
 
 def main_ci():
@@ -206,6 +227,8 @@ def main(argv=None):
         w = pr_work(p, issues, checks, held.get(int(m[1])) if m else None, now, me)
         if w:
             work.append(f"PR #{p['number']} (`{p['head']['ref']}`" + (f", #{m[1]}" if m else "") + f"): {w}")
+    take = [w for w in work if "take it over" in w]                 # two runs try other stuck PRs first (#3832)
+    work = [w for w in work if w not in take] + spread(take, me)
     section(f"PRs ({len(work)} of {len(prs)} open agent PRs need work)", work)
     section("Main CI", [ci_line(main_ci(), issues)])
     code, text = tool("feedback.py")
@@ -216,6 +239,7 @@ def main(argv=None):
     busy = dashboard.work(open_all, {n: [f["filename"] for f in dashboard.pages(f"pulls/{n}/files", 3)] for n in pr_numbers})
     hold = {n for n, (m, s) in held.items() if m < STALE and not s.startswith("Release")}
     picks = [i for i in dashboard.candidates(open_all, busy, lane=a.lane) if i["number"] not in hold]
+    picks = spread_top(picks, me, a.lane)                            # parallel runs: other first picks (#3832)
     last = dashboard.api(f"issues/{a.last}") if a.last else None
     if last:
         picks = prefer(picks, last, a.lane)

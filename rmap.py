@@ -10,12 +10,15 @@ Read: `#const`, `#define`, `if`/`elseif`/`else`/`endif`, `start_random`/`percent
 `left_border`, `right_border`, `top_border`, `bottom_border`: percent of the map size at the low x, high x, low y and
 high y side that the land does not take) and
 <TERRAIN_GENERATION> (`create_terrain` with `base_terrain`, `number_of_clumps`, `number_of_tiles`, `land_percent`,
-`spacing_to_other_terrain_types`, `set_avoid_player_start_areas`, `clumping_factor`) and <ELEVATION_GENERATION>
+`spacing_to_other_terrain_types`, `set_avoid_player_start_areas`, `clumping_factor`), <CONNECTION_GENERATION>
+(`create_connect_all_players_land` with `replace_terrain`, `terrain_cost`, `terrain_size`: paths between the player
+lands, #3868) and <ELEVATION_GENERATION>
 (`create_elevation HEIGHT` with `base_terrain`, `number_of_clumps`, `number_of_tiles`, `spacing`: hills level by level,
-never on water or shallows, #3822) and <OBJECTS_GENERATION> (`create_object`: objects(), #3855). Other sections and attributes:
+never on water or shallows, #3822), <OBJECTS_GENERATION> (`create_object`: objects(), #3855). Other sections and attributes:
 a warning. `#include_drs random_map.def` has no effect (the constants are in TERRAINS); another #include file: a
 warning. All randomness comes from numpy.random.default_rng(seed).
 """
+import heapq
 import re
 import sys
 
@@ -37,7 +40,8 @@ BORDERS = ("left_border", "right_border", "top_border", "bottom_border")   # of 
 RING = 0.35                     # the circle of the player lands: radius in map sizes
 AVOID = 13                      # set_avoid_player_start_areas: default tiles from a player origin
 STEPS = ((1, 0), (-1, 0), (0, 1), (0, -1))
-SECTIONS = ("PLAYER_SETUP", "LAND_GENERATION", "TERRAIN_GENERATION", "ELEVATION_GENERATION", "OBJECTS_GENERATION")
+SECTIONS = ("PLAYER_SETUP", "LAND_GENERATION", "TERRAIN_GENERATION", "CONNECTION_GENERATION", "ELEVATION_GENERATION",
+            "OBJECTS_GENERATION")
 
 
 class RmsError(ValueError):
@@ -104,6 +108,14 @@ def expand(words, rng, defined, consts, includes):
     return out
 
 
+class Attrs(dict):
+    """The attributes of a command: the arguments of the last one of each name; .many: of each one (replace_terrain
+    can come more than once in a block)."""
+    def __init__(self):
+        super().__init__()
+        self.many = {}
+
+
 def commands(words):
     """{section: [(command, [args], {attribute: [args]})]}. A command or an attribute is a lower case word; its
     arguments are the next words that are numbers or upper case constants."""
@@ -121,12 +133,13 @@ def commands(words):
             i += 1
             continue
         a, i = args(i + 1)
-        attrs = {}
+        attrs = Attrs()
         if i < len(words) and words[i] == "{":
             i += 1
             while i < len(words) and words[i] != "}":
                 name = words[i]
                 attrs[name], i = args(i + 1)
+                attrs.many.setdefault(name, []).append(attrs[name])
             i += 1
         if section is None:
             raise RmsError(f"{w!r} before the first <SECTION>")
@@ -233,6 +246,58 @@ def dilate(mask, r):
     return out
 
 
+def route(weight, a, b):
+    """The cheapest 4-step path from tile a to tile b (Dijkstra): a tile costs its weight, weight 0 is never on it."""
+    n = len(weight)
+    best, back, heap = {a: weight[a]}, {}, [(weight[a], a)]
+    while heap:
+        d, c = heapq.heappop(heap)
+        if c == b:
+            break
+        if d > best[c]:
+            continue
+        for s in ((c[0] + 1, c[1]), (c[0] - 1, c[1]), (c[0], c[1] + 1), (c[0], c[1] - 1)):
+            if 0 <= s[0] < n and 0 <= s[1] < n and weight[s] > 0 and d + weight[s] < best.get(s, np.inf):
+                best[s], back[s] = d + weight[s], c
+                heapq.heappush(heap, (best[s], s))
+    path = np.zeros((n, n), bool)
+    while b in back or b == a:
+        path[b] = True
+        if b == a:
+            break
+        b = back[b]
+    return path
+
+
+def connections(terrain, origins, cmds, consts, rng, warn):
+    """<CONNECTION_GENERATION>: a path between each two player origins; replace_terrain changes the terrain on it,
+    and terrain_size widens it on the tiles of a terrain (radius ± variance). terrain_cost 0: never on a path."""
+    n = len(terrain)
+    for cmd, args, attrs in cmds:
+        if cmd != "create_connect_all_players_land":
+            warn(f"{cmd} is not read yet")
+            continue
+        each = lambda a: [[value(v, consts) for v in x] for x in attrs.many.get(a, ())]
+        weight = np.ones((n, n), np.int64)
+        for k, c in each("terrain_cost"):
+            weight[terrain == k] = c
+        path = np.zeros((n, n), bool)
+        for i, a in enumerate(origins):
+            for b in origins[i + 1:]:
+                path |= route(weight, tuple(a), tuple(b))
+        wide = path.copy()
+        for k, r, *v in each("terrain_size"):
+            v = v[0] if v else 0
+            for c in np.argwhere(path & (terrain == k)):
+                for t in square(tuple(c), max(0, r + int(rng.integers(-v, v + 1))), n):
+                    wide[t] = True
+        old = terrain.copy()
+        for a, b in each("replace_terrain"):
+            terrain[wide & (old == a)] = b
+        for a in set(attrs) - {"replace_terrain", "terrain_cost", "terrain_size"}:
+            warn(f"{cmd}: {a} is not read yet")
+
+
 def trees(terrain):
     """One tree object on each forest tile."""
     return [{"name": FOREST_TREES[int(terrain[x, y])], "x": x + 0.5, "y": y + 0.5}
@@ -324,6 +389,7 @@ def generate(text, seed, players=2, size=None, warn=None):
                                "spacing_to_other_terrain_types", "set_avoid_player_start_areas",
                                "set_scale_by_groups", "set_scale_by_size"}:
             warn(f"create_terrain: {a} is not read yet")
+    connections(terrain, [(st["x"], st["y"]) for st in starts], sections.get("CONNECTION_GENERATION", ()), consts, rng, warn)
     elevation = np.zeros((n, n), np.int16)
     for cmd, args, attrs in sections.get("ELEVATION_GENERATION", ()):
         if cmd != "create_elevation":
@@ -420,6 +486,8 @@ create_terrain WATER { base_terrain DIRT number_of_clumps 2 number_of_tiles 50 s
   spacing_to_other_terrain_types 3 clumping_factor 20 }
 create_terrain DIRT3 { base_terrain DIRT number_of_clumps 12 land_percent 4 }
 create_terrain GRASS3 { base_terrain GRASS number_of_clumps 10 land_percent 3 }
+<ELEVATION_GENERATION>
+create_elevation 2 { base_terrain DIRT number_of_clumps 14 number_of_tiles 600 spacing 2 }
 """
 # The start objects of each player: (name, count, distance in tiles from the town center, owner: 0 = Gaia, 1 = the
 # player). A group of more than one object stands on next tiles.
@@ -466,6 +534,8 @@ create_terrain FOREST { base_terrain GRASS number_of_clumps 10 number_of_tiles 1
   spacing_to_other_terrain_types 2 }
 create_terrain DIRT3 { base_terrain GRASS number_of_clumps 10 land_percent 3 }
 create_terrain GRASS3 { base_terrain GRASS2 number_of_clumps 8 land_percent 3 }
+<ELEVATION_GENERATION>
+create_elevation 3 { base_terrain GRASS number_of_clumps 10 number_of_tiles 700 spacing 2 }
 """
 # Mediterranean: a sea in the middle of the map, the player lands on the land ring around it, a beach at the coast
 # (COASTS).
@@ -618,6 +688,11 @@ def river(d, spec, rng):
     terrain[ford] = TERRAINS["SHALLOW"]
     terrain[dilate(ford, 3) & np.isin(terrain, list(FOREST_TREES))] = TERRAINS["GRASS"]
     d["terrain"] = terrain.tolist()
+    elevation = np.array(d["elevation"])               # all water at level 0 (#164), a bank of level 1 at most
+    wet = water | ford
+    elevation[dilate(wet, 1) & ~wet] = np.minimum(elevation[dilate(wet, 1) & ~wet], 1)
+    elevation[wet] = 0
+    d["elevation"] = elevation.tolist()
 
 
 def isles(d, gap):

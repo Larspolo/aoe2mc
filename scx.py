@@ -1,4 +1,5 @@
-"""Reader of old AoE2 scenarios (.scx, format 1.21 of The Conquerors), without the DE editor (#311).
+"""Reader of old AoE2 scenarios (.scn of The Age of Kings: formats 1.18 to 1.20, #3860; .scx: format 1.21 of The
+Conquerors), without the DE editor (#311).
 
 A port of the reader of genie-scx (genie-rs, GPL-3.0; crates/genie-scx/src/format.rs, map.rs, player.rs) for the
 fields that aoe2mc needs. Layout: docs/campaign-formats.md, "The old scenario format".
@@ -14,7 +15,8 @@ import numpy as np
 
 import units
 
-FORMATS = {b"1.21"}             # format versions that this reader knows (genie-scx: player data version 1.14)
+FORMATS = {b"1.18", b"1.19", b"1.20", b"1.21"}   # format versions that this reader knows (the object frame from 1.15,
+                                               # "garrisoned in" from 1.13: one object layout)
 CIVS = [r["name"] for r in units.rows("scx_civs.jsonl")]   # the index is the civilization ID, the DE IDs too
 
 
@@ -99,6 +101,29 @@ def tribe_scen(s):
     return {p: props[p - 1][2] for p in range(1, 17) if props[p - 1][0]}
 
 
+# The bytes of a tile of each map version (genie-scx map.rs, #3861): terrain, elevation, zone; from version 1 also
+# the mask type and the layered terrain (u16 each). Version 2 adds a "no waves" byte before the size.
+MAP_TILE = {0: 3, 1: 7, 2: 7}
+
+
+def read_map(s, path):
+    """The terrain and elevation ([x, y]) of the map part: format 1.21, or a versioned map (marker 0xDEADF00D, HD)."""
+    w, tile = s.u32(), 3
+    if w == 0xDEADF00D:
+        version = s.u32()
+        if version not in MAP_TILE:
+            raise ScxError(f"{path}: map version {version} is not supported (this reader knows "
+                           f"{', '.join(map(str, MAP_TILE))})")
+        s.skip(1 if version >= 2 else 0)        # "no waves"
+        w, tile = s.u32(), MAP_TILE[version]
+    h = s.u32()
+    if not (0 < w <= 500 and 0 < h <= 500):
+        raise ScxError(f"{path}: map size {w} x {h} is not possible: the file has another layout")
+    tiles = np.frombuffer(s.take(w * h * tile), np.uint8).reshape(h, w, tile)    # rows of y, then x
+    terrain = tiles[:, :, 0].T.astype(np.int16)                                  # [x, y], as read_scenario
+    return terrain, tiles[:, :, 1].view(np.int8).T.astype(np.float32)
+
+
 def read(path):
     with open(path, "rb") as f:
         data = f.read()
@@ -113,15 +138,7 @@ def read(path):
         raise ScxError(f"{path}: the compressed part does not decompress ({e})") from None
     s.i32()                                 # next object ID
     civs = tribe_scen(s)
-    w = s.u32()
-    if w == 0xDEADF00D:
-        raise ScxError(f"{path}: a versioned map (HD or DE) in format {fmt.decode()}")
-    h = s.u32()
-    if not (0 < w <= 500 and 0 < h <= 500):
-        raise ScxError(f"{path}: map size {w} x {h} is not possible: the file has another layout")
-    tiles = np.frombuffer(s.take(w * h * 3), np.uint8).reshape(h, w, 3)     # rows of y, then x
-    terrain = tiles[:, :, 0].T.astype(np.int16)                              # [x, y], as read_scenario
-    elevation = tiles[:, :, 1].view(np.int8).T.astype(np.float32)
+    terrain, elevation = read_map(s, path)
 
     # The colors and start views are in the scenario player data after the objects (format < 1.36)
     n = s.u32()
@@ -151,5 +168,5 @@ def read(path):
         if civ is not None:
             players[p] = {"civ": CIVS[civ] if 0 <= civ < len(CIVS) else f"CIV_{civ}", "color": color,
                           "view": view if min(view) >= 0 else None}
-    return {"format": fmt.decode(), "width": w, "height": h, "terrain": terrain, "elevation": elevation,
+    return {"format": fmt.decode(), "width": terrain.shape[0], "height": terrain.shape[1], "terrain": terrain, "elevation": elevation,
             "players": players, "objects": objects}

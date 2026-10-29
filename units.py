@@ -479,6 +479,8 @@ def describe(n, hero=False):
             crew = siege_crew(n)
         elif n.endswith("_RAM") or "SIEGE_TOWER" in n:
             crew = soldier("zombie", "crew")
+        elif n in ("CHARIOT", "SCYTHE_CHARIOT"):                     # the melee chariots of Antiquity Mode (#3669)
+            crew = soldier("zombie", "crew", "iron_sword")
         elif has(n, "SCORPION", "HUSSITE", "CHARIOT", "RATHA"):
             crew = soldier("skeleton", "crew", "crossbow" if "SCORPION" in n else "bow")
         elif has(n, "BOMBARD", "ORGAN", "HOUFNICE", "ROCKET", "COBRA"):
@@ -515,7 +517,7 @@ def describe(n, hero=False):
             rider = soldier("skeleton", t, "crossbow" if "CROSSBOW" in n else "bow")
         return mounted("skeleton_horse", rider)
     # Cavalry
-    if not has(n, *INFANTRY) and (hero and has(n, *HEROES["mounted"]) or has(
+    if not has(n, *INFANTRY) and (hero and has(n, *HEROES["mounted"]) or n == "SCOUT" or has(
             n, "SCOUT_CAVALRY", "KNIGHT", "CAVALIER", "PALADIN", "HUSSAR", "HUSZAR", "CAVALRY", "BOYAR",
             "CATAPHRACT", "TARKAN", "KESHIK", "LEITIS", "KONNIK", "LANCER", "COUSTILLIER", "MONASPA", "SAVAR",
             "SHRIVAMSHA", "HIPPEUS", "MOUNTED", "RIDER", "HUNNIC_HORSE")):
