@@ -14,7 +14,7 @@ ID = re.compile(r"trig_[0-9A-Za-z]{8,}")
 
 
 def test_no_generic_file_has_a_trigger_id():
-    rows = bootstrap.table(open(bootstrap.SYSTEM).read())
+    rows = bootstrap.rows()
     found = [p for p, kind in rows if kind == "generic" and os.path.isfile(os.path.join(ROOT, p))
              and ID.search(open(os.path.join(ROOT, p), errors="replace").read())]
     assert found == []

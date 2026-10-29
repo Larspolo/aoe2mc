@@ -199,10 +199,12 @@ tasks, the runs of `pacer.yml`, the quota, CI, the PRs and the labels, and repai
 
 "Generic" files work for another project with no change, or with a change of `agent.toml` only (#905: the repository,
 the owner login, the default branch, the status issue, the commands, the doc paths). "Specific" files hold rules of aoe2mc.
-The tests of the generic tools are generic too, so that a new project has them (#1900). Not in the table: the tests
+`framework/files.txt` lists the generic files, one path per line (#4192): add a new generic file there. The table below
+lists only the specific files: a new project writes them itself.
+The tests of the generic tools are generic too, so that a new project has them (#1900). Not in the list: the tests
 of `tools/bootstrap.py` (they copy this repository) and the tests that need a specific tool (`tools/dashboard_data.py`,
 `tools/release.py`). `tests/test_generic_words.py` fails when a generic file names the domain of the project.
-`tests/test_generic_tools.py` fails when a generic file names a `tools/X.py` that is not a generic row (#1963).
+`tests/test_generic_tools.py` fails when a generic file names a `tools/X.py` that is not in `framework/files.txt` (#1963).
 The framework stays in this repository: `tools/bootstrap.py` copies it into a new project, and an improvement
 in one project reaches another project only by a copy (owner decision A, #4197: a synced repository waits until a
 second project starts).
@@ -211,141 +213,26 @@ second project starts).
 |---|---|---|
 | `agent.toml` | specific | All the project values that the generic files use. `tools/agent_config.py` reads it. |
 | `CLAUDE.md` | specific | The commands, the code map, the rules of the domain. It imports `framework/CLAUDE.md` with `@framework/CLAUDE.md`. |
-| `framework/CLAUDE.md` | generic | The rules of how to work and of the process: the sections "How to work" and "Improve the process" (#4193). |
-| `docs/STEERING.md` | generic | The owner login. |
 | `docs/ENVIRONMENT.md` | specific | The hosts of the tests and the tools of the setup script (Mojang, Java, Minecraft, #1900). |
 | `docs/LEARNINGS.md` | specific | The lessons of this project. The first section (environment and GitHub) is mostly generic. |
 | `docs/ROADMAP.md` | specific | The three goals and their features. |
 | `docs/PRINCIPLES.md` | specific | The direction of the project: the owner's preferences, made general from the decisions. |
 | `docs/DECISIONS.md` | specific | The log of the owner's decisions (one line each), the evidence of the principles. |
-| `docs/SYSTEM.md` | generic | This document. |
-| `.claude/skills/autopilot/SKILL.md` | generic | The issue numbers of the lessons. |
-| `.claude/skills/autopilot/conflict.md` | generic | The issue numbers of the lessons (merge conflicts, #1700). |
-| `.claude/skills/autopilot/github.md` | generic | The `gh api` paths and the labels. |
-| `.claude/skills/autopilot/more.md` | generic | The issue numbers of the lessons (more tickets in one run). |
-| `.claude/skills/autopilot/overlap.md` | generic | The issue numbers of the lessons (claims, takeovers). |
-| `.claude/skills/autopilot/owner.md` | generic | The issue numbers of the lessons (ask the owner, check tickets). |
-| `.claude/skills/autopilot/process.md` | generic | The issue numbers of the lessons (step 9). |
-| `.claude/skills/autopilot/queue.md` | generic | The issue numbers of the lessons (epics, refill, haiku lane). |
-| `.claude/skills/autopilot/report.md` | generic | The issue numbers of the lessons (step 8, metrics line). |
-| `.claude/skills/autopilot/start.md` | generic | The issue numbers of the lessons (steps 1 to 5, the runs with no brief of the pacer). |
-| `.claude/skills/scheduled/SKILL.md` | generic | The rules of a scheduled run: the prompt of each task is `/scheduled ARGUMENT`. |
 | `.claude/skills/verify/SKILL.md` | specific | The check levels (preview image, world reader, Minecraft server, screenshots). |
-| `.claude/skills/ticket/SKILL.md` | generic | The examples. |
 | `.claude/skills/design/SKILL.md` | specific | The design of buildings, units and animals. |
-| `.claude/skills/improve/SKILL.md` | generic | The project name. |
 | `.claude/skills/roadmap/SKILL.md` | specific | The three goals of aoe2mc. |
-| `docs/OPERATOR.md` | generic | None (NAME is the name of `repo` in `agent.toml`). |
 | `.claude/skills/human/SKILL.md` | specific | The preparation of a play test (worlds, `game/run.py`, Minecraft 26.3). |
 | `.claude/skills/demo/SKILL.md` | specific | The demo game (`--random-map arabia`, `game/run.py`, `game/demo_watch.py`, the Minecraft client folders of macOS). |
-| `.claude/settings.json` | generic | The permission rules name the repository (they cannot read `agent.toml`). |
-| `.claude/hooks/session-start.sh` | generic | The Python packages and the setup version file name. |
-| `.claude/hooks/guard-main.sh` | generic | None. |
-| `.claude/hooks/guard-shell.sh` | generic | None. |
 | `scripts/cloud-setup.sh` | specific | Java, the Minecraft server jars, the Vulkan and X tools of the client. |
 | `scripts/allowed-domains.txt` | specific | The "Allowed domains" of the cloud environment: the hosts of the tests and the research tools. |
-| `scripts/autopilot.sh` | generic | None (runs on the owner's computer). |
-| `tools/agent_config.py` | generic | None (reads `agent.toml`). |
-| `tools/bootstrap.py` | generic | None (sets up this system in a new repository, #906). |
-| `tools/claim.py` | generic | None (`agent.toml`). |
-| `tools/usage.py` | generic | None. |
 | `tools/dashboard_site.py` | specific | The owner's dashboard page and its runtime (GitHub Pages). |
-| `tools/pacer.py` | generic | None (the API triggers come from the secrets of `pacer.yml`, #3193). |
-| `tools/dashboard.py` | generic | None (`agent.toml`). |
-| `tools/feedback.py` | generic | None (`agent.toml`). |
-| `tools/health.py` | generic | None (`agent.toml`). |
-| `tools/metrics_log.py` | generic | None (the log of the status issue comments on the branch `metrics`, #1983). |
-| `tools/report.py` | generic | None (the run report of step 8; the release bar only with a project `tools/release.py`, #1963). |
-| `tools/ticket_context.py` | generic | None (the code places that a ticket body names, #3829). |
-| `tools/tokens.py` | generic | None. |
-| `tools/operator_check.py` | generic | None (`agent.toml`). |
-| `tools/owner_tasks.py` | generic | None (`agent.toml`). |
-| `tools/unconflict.py` | generic | None (solves add-add conflicts for `unconflict.yml`, #1864). |
-| `tools/unconflict_pick.py` | generic | None (the PRs of `unconflict.yml`, with git and few API calls). |
-| `tools/merge_main.py` | generic | None (merges `main` into a branch in one call: solve, commit, check, push). |
-| `tools/cycle_start.py` | generic | None (steps 1 to 5 of the autopilot skill in one call). |
-| `tools/ship_pr.py` | generic | None (checks, commit, guard, push and PR of a ticket in one call). |
-| `tools/merge_jsonl.py` | generic | None (the merge driver `merge=jsonl`: JSON lines by "name", a line that both sides changed by key and list item, #2004, #2064). |
-| `tests/test_agent_config.py` | generic | None (a test of `tools/agent_config.py`). |
-| `tests/test_claim.py` | generic | None (a test of `tools/claim.py`). |
-| `tests/test_claim_active_pr.py` | generic | None (a test of `tools/claim.py`). |
-| `tests/test_claim_code_span.py` | generic | None (a test of `tools/claim.py`). |
-| `tests/test_claim_conflict.py` | generic | None (a test of `tools/claim.py`). |
-| `tests/test_claim_exit.py` | generic | None (a test of `tools/claim.py`). |
-| `tests/test_claim_first.py` | generic | None (a test of `tools/claim.py`). |
-| `tests/test_claim_refill.py` | generic | None (a test of `tools/claim.py`). |
-| `tests/test_claim_release_label.py` | generic | None (a test of `tools/claim.py`). |
-| `tests/test_refill_all_closed.py` | generic | None (a test of `tools/claim.py`). |
-| `tests/test_claim_revived.py` | generic | None (a test of `tools/claim.py`). |
-| `tests/test_claim_takeover.py` | generic | None (a test of `tools/claim.py`). |
-| `tests/test_dashboard.py` | generic | None (a test of `tools/dashboard.py`). |
-| `tests/test_deep_lane.py` | generic | None (a test of `tools/usage.py`, `tools/claim.py` and `tools/dashboard.py`). |
-| `tests/test_dashboard_claimed.py` | generic | None (a test of `tools/dashboard.py`). |
-| `tests/test_dashboard_decide.py` | generic | None (a test of `tools/dashboard.py`). |
-| `tests/test_dashboard_fresh.py` | generic | None (a test of `tools/dashboard.py`). |
-| `tests/test_dashboard_muted.py` | generic | None (a test of `tools/dashboard.py`). |
-| `tests/test_dashboard_overlap.py` | generic | None (a test of `tools/dashboard.py`). |
-| `tests/test_dashboard_process.py` | generic | None (a test of `tools/dashboard.py`). |
-| `tests/test_dashboard_start.py` | generic | None (a test of `tools/dashboard.py`). |
-| `tests/test_dashboard_start_bad.py` | generic | None (a test of `tools/dashboard.py`). |
-| `tests/test_dashboard_start_prs.py` | generic | None (a test of `tools/dashboard.py`). |
-| `tests/test_feedback.py` | generic | None (a test of `tools/feedback.py`). |
-| `tests/test_feedback_gap.py` | generic | None (a test of `tools/feedback.py`). |
-| `tests/test_feedback_quote.py` | generic | None (a test of `tools/feedback.py`). |
-| `tests/test_health.py` | generic | None (a test of `tools/health.py`). |
-| `tests/test_health_compare.py` | generic | None (a test of `tools/health.py`). |
-| `tests/test_health_conflicts.py` | generic | None (a test of `tools/health.py`). |
-| `tests/test_health_pr.py` | generic | None (a test of `tools/health.py`). |
-| `tests/test_health_reviews.py` | generic | None (a test of `tools/health.py`). |
-| `tests/test_health_takeovers.py` | generic | None (a test of `tools/health.py`). |
-| `tests/test_health_misses.py` | generic | None (a test of `tools/health.py`). |
-| `tests/test_owner_work.py` | generic | None (a test of `tools/dashboard.py`, `tools/claim.py` and `tools/health.py`: the owner work, owner 2026-10-29). |
-| `tests/test_review_gap.py` | generic | None (a test of `tools/claim.py`). |
-| `tests/test_health_until_pages.py` | generic | None (a test of `tools/health.py`, #3072). |
-| `tests/test_operator.py` | generic | None (a test of `tools/operator_check.py`). |
-| `tests/test_owner_tasks.py` | generic | None (a test of `tools/owner_tasks.py`). |
-| `tests/test_owner_tasks_close.py` | generic | None (a test of `tools/owner_tasks.py`). |
-| `tests/test_owner_tasks_project.py` | generic | None (a test of `tools/owner_tasks.py`). |
-| `tests/test_owner_tasks_wait.py` | generic | None (a test of `tools/owner_tasks.py`). |
-| `tests/test_report.py` | generic | None (a test of `tools/report.py`). |
-| `tests/test_tokens.py` | generic | None (a test of `tools/tokens.py`). |
-| `tests/test_tokens_verify.py` | generic | None (a test of `tools/tokens.py`). |
-| `tests/test_tokens_cost.py` | generic | None (a test of `tools/tokens.py`). |
-| `tests/test_tokens_phases.py` | generic | None (a test of `tools/tokens.py`). |
-| `tests/test_run_data.py` | generic | None (a test of `tools/tokens.py`, `tools/pacer.py` and `tools/metrics_log.py`). |
-| `tests/test_unconflict.py` | generic | None (a test of `tools/unconflict.py`). |
-| `tests/test_automerge_failure.py` | generic | None (a test of `.github/workflows/automerge.yml`). |
-| `tests/test_unconflict_no_markers.py` | generic | None (a test of `tools/unconflict.py`, #3062). |
-| `tests/test_unconflict_pick.py` | generic | None (a test of `tools/unconflict_pick.py`). |
-| `tests/test_merge_main.py` | generic | None (a test of `tools/merge_main.py`). |
-| `tests/test_cycle_start.py` | generic | None (a test of `tools/cycle_start.py`). |
-| `tests/test_ship_pr.py` | generic | None (a test of `tools/ship_pr.py`). |
-| `tests/test_merge_jsonl.py` | generic | None (a test of `tools/merge_jsonl.py`). |
-| `tests/test_merge_jsonl_order.py` | generic | None (a test of `tools/merge_jsonl.py`: the line order of a move, #3065). |
-| `tests/test_pacer.py` | generic | None (a test of `tools/usage.py`). |
 | `tests/test_dashboard_site.py` | specific | None (a test of `tools/dashboard_site.py`). |
-| `tests/test_pacer_script.py` | generic | None (a test of `tools/pacer.py`). |
-| `tests/test_usage.py` | generic | None (a test of `tools/usage.py`). |
-| `tests/test_usage_status_once.py` | generic | None (a test of `tools/usage.py`). |
-| `tests/test_usage_week.py` | generic | None (a test of `tools/usage.py`). |
 | `tests/test_generic_tools.py` | specific | The tools of aoe2mc that generic files may name (`OPTIONAL`, #1963). |
 | `tests/test_generic_words.py` | specific | The words of aoe2mc that the generic files must not contain (#1900). |
 | `.github/workflows/ci.yml` | specific | The Python, Java and Minecraft steps, the test markers. The red-`main` ticket is generic. |
-| `.github/workflows/automerge.yml` | generic | The branch prefixes `claude/*`, `agent/*` and `ccr-*` (#3382). |
-| `.github/workflows/unconflict.yml` | generic | None. |
-| `.github/workflows/claims.yml` | generic | None. |
-| `.github/workflows/close.yml` | generic | None. It closes the issues with the label `close` (#1740). |
-| `.github/workflows/dashboard.yml` | generic | None. |
 | `.github/workflows/dashboard-site.yml` | specific | The owner's dashboard page on GitHub Pages (`tools/dashboard_site.py`, `tools/dashboard_artifact/`). |
-| `.github/workflows/pacer.yml` | generic | The secrets of the API triggers, one pair per lane (#3193). |
 | `.github/workflows/coverage.yml` | specific | The coverage of the AoE2 types. |
-| `.github/workflows/metrics.yml` | generic | None. |
-| `.github/workflows/labels.yml` | generic | None. |
-| `.github/workflows/after-release.yml` | generic | None. It removes the label `after-release` at a release tag `v*` (#4175). |
 | `.github/workflows/bundles.yml` | specific | The app bundles of the converter (PyInstaller, `packaging/`, #1541) and their installers (#1542). |
 | `.github/workflows/installers.yml` | specific | On a tag `v*`: the installers of `bundles.yml` in the release of the tag (#1542). |
-| `.github/workflows/close.yml` | generic | The label `close`: closes the issues that the auto mode does not let a run close (#1740). |
 | `.github/workflows/worlds.yml` | specific | The worlds of `examples/` and `samples/` as zips in a release (#207). |
-| `.github/labels.txt` | generic | None. |
-| `.github/ISSUE_TEMPLATE/ticket.yml` | generic | None. |
 | `.gitattributes` | specific | The list of `merge=union` files, and `merge=jsonl` for `game/data/*.jsonl` and `tests/data/civ_bonuses.jsonl` (`tools/merge_jsonl.py`, #2004, #2100). |
