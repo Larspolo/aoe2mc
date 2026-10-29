@@ -205,6 +205,14 @@ def check_difficulty(row):                                 # a level of "AI diff
     assert row["gather"] > 0 and row["attack"] > 0 and row["soldiers"] >= 1, row["name"]
 
 
+def check_challenges(row):                                 # an Art of War challenge: its medal limits (#3761)
+    form(row, {"name": str, "civ": str, "goal": str, "medal": str, "gold": int, "silver": int, "bronze": int,
+               "note": str}, {"after": (str, type(None))})
+    assert row["civ"] in NAMES["civs.jsonl"] and row["medal"] in ("time", "lost"), row["name"]
+    assert 0 <= row["gold"] < row["silver"] < row["bronze"] and row["note"].startswith("AoE2 wiki"), row["name"]
+    assert row["after"] is None or row["after"] in NAMES["challenges.jsonl"], row["name"]
+
+
 def check_taunts(row):                                     # a taunt: its number and AoE2 text (#2234)
     form(row, {"name": str, "text": str}, {"sound": str})                  # sound: a vanilla match (#2662)
     assert row["name"].isdigit() and row["name"] == str(int(row["name"])) and row["text"], row["name"]
@@ -219,6 +227,7 @@ def check_sounds(row):                                     # a unit class: its s
 CHECKS = {                                                 # one file per line: parallel tickets add files (#2281)
     "build.jsonl": check_build,
     "buildings.jsonl": check_buildings,
+    "challenges.jsonl": check_challenges,
     "cheats.jsonl": check_cheats,
     "civ_keys.jsonl": check_civ_keys,
     "civs.jsonl": check_civs,
