@@ -113,9 +113,13 @@ def expand(words, rng, defined, consts, includes):
         elif w == "#define":
             defined.add(words[i + 1])
             i += 2
-        elif w == "#const":
-            consts[words[i + 1]] = int(words[i + 2])
-            i += 3
+        elif w == "#const":                             # a #const with no value defines nothing (#4309)
+            v = words[i + 2] if i + 2 < len(words) else ""
+            if re.fullmatch(r"-?\d+", v) or v in consts:
+                consts[words[i + 1]] = value(v, consts)
+                i += 3
+            else:
+                i += 2
         else:
             out.append(w)
             i += 1
@@ -190,7 +194,8 @@ def grow(owner, lands, free, rng):
         for land in lands:
             front = land["front"]
             while front and land["count"] < land["target"]:
-                tries = [int(rng.integers(len(front))) for _ in range(1 + land["clump"] // 5)]
+                tries = [int(rng.integers(len(front))) for _ in range(max(1, 1 + land["clump"] // 5))]
+                                                       # a negative clumping_factor: one try, not none (#4309)
                 k = max(tries, key=lambda k: sum(owner[c] == land["id"] for c in near(front[k], n)))
                 c = front[k]
                 front[k] = front[-1]
