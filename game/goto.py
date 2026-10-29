@@ -63,6 +63,7 @@ def items(g):
 
 
 def open_menu(g, player):
+    g.person = player                                                  # the groups of this person (#3490)
     menu.show(g, player, TITLE, items(g), lambda p, slot, shift: button(g, p, slot))
 
 
@@ -75,6 +76,7 @@ def view(g, player, x, z):
 def button(g, player, slot):
     """A click on the menu: go to the place of the item. Returns the (x, z) of the place, or None (a gray item)."""
     tcs = centers(g)
+    g.person = player                                                  # the groups of this person (#3490)
     if slot < len(tcs):
         at = tcs[slot]
     elif (n := slot - GROUP_ROW + 1) in g.groups and g.groups[n]:

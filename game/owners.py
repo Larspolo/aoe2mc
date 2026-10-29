@@ -68,8 +68,9 @@ def give(g, uuid, new):
             o.units[:] = [u for u in o.units if u.get("uuid") != uuid]
             for t in [t for t, f in o.farmers.items() if f == uuid]:
                 del o.farmers[t]
-            for group in o.groups.values():
-                group.discard(uuid)
+            for groups in vars(o).get("person_groups", {}).values():   # the groups of each person (#3490)
+                for group in groups.values():
+                    group.discard(uuid)
             if uuid in o.others() | o.selected:                         # the old owner cannot give it orders now
                 o.drop(uuid)
                 o.command(f"data merge entity {uuid} {{Glowing:0b}}")
