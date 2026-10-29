@@ -163,7 +163,7 @@ def tick(g):
     from recap import game_time
     c, now = CHALLENGES[g.challenge], game_time(g)
     complete = done(g, c)
-    m = medal(g.challenge, now) if c["medal"] == "time" else None
+    m = medal(g.challenge, now if c["medal"] == "time" else len(vars(g).get("losses", {})))   # "lost": score.fallen
     if complete or (c["medal"] == "time" and m is None):
         close(g)
         g.command(f'title @a[team=p{g.player}] subtitle ' + json.dumps(
