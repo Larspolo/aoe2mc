@@ -1860,13 +1860,17 @@ def chinese_garden(E, n, rect, y, put):
 
 
 def cliff_ridges(E, cols, rects, rng):
-    """All cliffs together form continuous rock ridges: high in the middle, sloped at the open sides."""
+    """All cliffs together form continuous rock ridges: high in the middle, sloped at the open sides.
+    rects: (footprint, name); a name of a "rocks" line of objects.jsonl (CLIFF_DESERT, CLIFF_SNOW) has its own rocks (#4115)."""
     if not rects:
         return
     n, T = cols.n, cols.T
     mask = np.zeros((n, n), bool)
-    for x0, x1, z0, z1 in rects:
+    kind = np.zeros((n, n), np.uint8)                  # 0: the default rocks, i + 1: the rocks of CLIFF_ROCKS[i]
+    for (x0, x1, z0, z1), name in rects:
         mask[max(0, x0):max(0, min(n, x1)), max(0, z0):max(0, min(n, z1))] = True
+        kind[max(0, x0):max(0, min(n, x1)), max(0, z0):max(0, min(n, z1))] = next(
+            (i + 1 for i, r in enumerate(CLIFF_ROCKS) if name.startswith(r["name"])), 0)
     dist = np.zeros((n, n), np.int16)
     cur = mask.copy()
     for k in range(1, T + 2):                          # distance to the edge of the ridge
@@ -1880,9 +1884,10 @@ def cliff_ridges(E, cols, rects, rng):
     base = cols.wtop[xs, zs].astype(np.int32) + 1
     X, Z = np.repeat(xs, hs), np.repeat(zs, hs)
     Y = np.repeat(base, hs) + (np.arange(hs.sum()) - np.repeat(np.cumsum(hs) - hs, hs))
-    rocks = np.array([B(b) for b in ("stone", "stone", "andesite", "andesite", "tuff", "cobblestone", "stone", "mossy_cobblestone")], np.uint16)
-    E.add(X, Y, Z, rocks[rng.integers(len(rocks), size=len(X))])
-    snowy = cols.top_id[xs, zs] == B("snow_block")         # snow on top of ridges in snow areas
+    rocks = np.array([[B(b) for b in ("stone", "stone", "andesite", "andesite", "tuff", "cobblestone", "stone", "mossy_cobblestone")],
+                      *([B(b) for b in r["rocks"]] for r in CLIFF_ROCKS)], np.uint16)
+    E.add(X, Y, Z, rocks[kind[X, Z], rng.integers(rocks.shape[1], size=len(X))])
+    snowy = (cols.top_id[xs, zs] == B("snow_block")) | (kind[xs, zs] == 1 + SNOW_CLIFF)   # snow on top in snow areas
     if snowy.any():
         E.add(xs[snowy], (base + hs)[snowy], zs[snowy], "snow[layers=2]")
 
@@ -1917,6 +1922,8 @@ MONUMENTS = tuple(r["name"] for r in OBJECTS if r.get("monument"))
 PASSABLE_OBJECTS = tuple(r["name"] for r in OBJECTS if r.get("passable"))
 OBSTACLES = tuple(r["name"] for r in OBJECTS if r.get("obstacle"))
 STATUES = tuple(r["name"] for r in OBJECTS if r.get("decor") == "statue")
+CLIFF_ROCKS = [r for r in OBJECTS if "rocks" in r]         # cliff types with their own rocks (#4115)
+SNOW_CLIFF = next(i for i, r in enumerate(CLIFF_ROCKS) if "snow_block" in r["rocks"])   # it gets snow on top
 
 
 def object_footprint(o, T):
@@ -2023,7 +2030,7 @@ def place_objects(objects, players, cols, rng):
             buildings.place_building(E, cols, B, dict(o, kind="B", name="MILL_GRANARY"), players | {o["player"]: dict(players.get(o["player"], {"color": "light_gray", "arch": "western"}), arch="middle_eastern")}, set(), {})
             stats["buildings"] += 1
         elif kind == "O" and name.startswith("CLIFF"):
-            cliffs.append(E.footprint)
+            cliffs.append((E.footprint, name))
             stats["cliffs"] += 1
         elif kind == "O" and "PYRAMID" in name:
             buildings.place_building(E, cols, B, dict(o, kind="B", x=int(o["x"]) + 0.5, y=int(o["y"]) + 0.5),
