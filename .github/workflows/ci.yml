@@ -181,4 +181,10 @@ jobs:
           n=$(gh api "repos/$GITHUB_REPOSITORY/issues?state=open&labels=P0&per_page=50" --jq ".[] | select(.title == \"$title\") | .number" | head -1)
           printf 'CI on main failed: %s\nRead the failed step (`mcp__github__get_job_logs`), run it locally, fix it.\n' "$URL" > body.md
           if [ -n "$n" ]; then gh api "repos/$GITHUB_REPOSITORY/issues/$n/comments" -F body=@body.md >/dev/null
-          else gh api "repos/$GITHUB_REPOSITORY/issues" -f title="$title" -F body=@body.md -f "labels[]=P0" -f "labels[]=bug" -f "labels[]=size:S" >/dev/null; fi
+          else
+            # A late red run of an older commit opens no ticket when a newer commit on main is green (#4284).
+            # A failed read gives no "ahead": the ticket opens as before.
+            green=$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/ci.yml/runs?branch=main&status=success&per_page=1" --jq '.workflow_runs[0].head_sha' || true)
+            if [ -n "$green" ] && [ "$(gh api "repos/$GITHUB_REPOSITORY/compare/$GITHUB_SHA...$green" --jq .status || true)" = ahead ]; then
+              echo "main is green at $green: no new ticket"; exit 0; fi
+            gh api "repos/$GITHUB_REPOSITORY/issues" -f title="$title" -F body=@body.md -f "labels[]=P0" -f "labels[]=bug" -f "labels[]=size:S" >/dev/null; fi
