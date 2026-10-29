@@ -35,7 +35,8 @@ def build(path, fmt, terrain, elevation, players, objects=()):
     w, h = terrain.shape
     d += struct.pack("<II", w, h)
     d += np.stack([terrain.T, elevation.T.astype(np.int8).view(np.uint8), np.zeros((h, w))], -1).astype(np.uint8).tobytes()
-    d += struct.pack("<I", 9) + struct.pack("<7f", 200, 200, 100, 200, 100, 0, 75) * 8
+    world = (200, 200, 100, 200, 100, 0) + ((75,) if fmt >= b"1.20" else ())  # population from 1.20, as CAMELOT.SCN (#3964)
+    d += struct.pack("<I", 9) + struct.pack(f"<{len(world)}f", *world) * 8
     for p in range(9):
         objs = [o for o in objects if o[0] == p]
         d += struct.pack("<I", len(objs))
