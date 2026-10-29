@@ -550,8 +550,10 @@ CREATE_OBJECT = (               # the attributes of create_object that objects()
     "find_closest",                 # the free tile nearest to the origin of the land, first in scan order (#4135)
     "find_closest_to_map_center",   # the free tile nearest to the map middle (#4135)
     "find_closest_to_map_edge",     # the free tile nearest to a map edge (#4135)
+    "force_placement",              # with no free tile left, a used tile of the band (#4137)
     "group_placement_radius",       # tiles of a loose group from its first object, default 3 (#3856)
     "group_variance",               # ± objects in each group (#3856)
+    "ignore_terrain_restrictions",  # also a land object on water, a fish on land (#4137)
     "layer_to_place_on",            # only the tiles of this land layer (#4132, `layer`: the land layer of each tile)
     "max_distance_to_other_zones",  # tiles from the lands of the other players (#3857)
     "max_distance_to_players",      # tiles from the origin of the player land (#3855)
@@ -560,6 +562,7 @@ CREATE_OBJECT = (               # the attributes of create_object that objects()
     "number_of_groups",             # groups of number_of_objects (± group_variance) objects (#3856)
     "number_of_objects",            # default 1; 3 for a VILLAGER: the start villagers of AoE2 DE (#3855, #4120)
     "place_on_forest_zone",         # only the tiles next to a forest (#3858)
+    "require_path",                 # only the tiles with a land path to the origin of the player land (#4137)
     "second_object",                # one more object on each tile (#3858)
     "set_circular_placement",       # a circle band of min and max_distance_to_players, default a square (#4136)
     "set_gaia_object_only",         # Gaia owns the objects of set_place_for_every_player (#3855)
@@ -572,10 +575,29 @@ CREATE_OBJECT = (               # the attributes of create_object that objects()
 )
 
 
+def path(land, origin):
+    """The tiles of land with a path (4 neighbours) to origin: a flood fill (#4137)."""
+    out = np.zeros_like(land)
+    if not land[origin]:
+        return out
+    out[origin] = True
+    while True:
+        grow = out.copy()
+        grow[1:] |= out[:-1]
+        grow[:-1] |= out[1:]
+        grow[:, 1:] |= out[:, :-1]
+        grow[:, :-1] |= out[:, 1:]
+        grow &= land
+        if (grow == out).all():
+            return out
+        out = grow
+
+
 def objects(cmds, consts, terrain, starts, rng, warn, owner=None, ridges=(), layer=None):
     """The objects of the create_object commands of <OBJECTS_GENERATION> (#3855), with the attributes of
     `CREATE_OBJECT`: number_of_objects on random free tiles, in groups with number_of_groups (#3856).
-    Never on water (only a fish or a ship), a forest, a cliff or another object; an object with no free tile is missing."""
+    Never on water (only a fish or a ship), a forest, a cliff or another object; an object with no free tile is missing.
+    require_path, force_placement and ignore_terrain_restrictions as in `CREATE_OBJECT` (#4137)."""
     import aoe2mc
     kinds = aoe2mc.object_kinds(old=False)
     n, out = terrain.shape[0], []
@@ -615,7 +637,7 @@ def objects(cmds, consts, terrain, starts, rng, warn, owner=None, ridges=(), lay
             count = max(1, round(count * k))
         elif k != 1:
             groups = max(1, round(groups * k))
-        ground = (terrain == value(attrs["terrain_to_place_on"][0], consts)) if "terrain_to_place_on" in attrs else wet == water
+        ground = (terrain == value(attrs["terrain_to_place_on"][0], consts)) if "terrain_to_place_on" in attrs else (wet == water) | ("ignore_terrain_restrictions" in attrs)
         if "layer_to_place_on" in attrs and layer is not None:
             ground = ground & (layer == value(attrs["layer_to_place_on"][0], consts))
         gap = value(attrs["min_distance_group_placement"][0], consts) if "min_distance_group_placement" in attrs else 0
@@ -643,6 +665,8 @@ def objects(cmds, consts, terrain, starts, rng, warn, owner=None, ridges=(), lay
                 place = ground & ~dilate((owner >= 0) & (owner != st["land"]), zones)
             else:
                 place = ground
+            if "require_path" in attrs and st:          # a land path: no water, forest or cliff (#4137)
+                place = place & path(~wet & ~forest & ~cliff, (int(st["x"]), int(st["y"])))
             dist = (np.hypot(x - st["x"], y - st["y"]) if circle else np.maximum(abs(x - st["x"]), abs(y - st["y"]))) if st else np.full((n, n), float(lo))
             # without number_of_groups each object is a group of 1; with it, number_of_objects (± group_variance) is
             # the size of each group (AoE2 DE scripting guide; loose grouping and radius 3 are the defaults)
@@ -653,6 +677,9 @@ def objects(cmds, consts, terrain, starts, rng, warn, owner=None, ridges=(), lay
             for size in sizes:
                 free = ~used & place & ~dilate(placed, gap)
                 spots = np.argwhere((dist >= lo) & (dist <= hi) & free)
+                if not len(spots) and "force_placement" in attrs:   # objects on the same tile (#4137)
+                    free = place.copy()
+                    spots = np.argwhere((dist >= lo) & (dist <= hi) & free)
                 if not len(spots):
                     warn(f"create_object {args[0]}: no free tile")
                     break
