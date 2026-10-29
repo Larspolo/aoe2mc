@@ -153,7 +153,7 @@ class Attrs(dict):
 def commands(words):
     """{section: [(command, [args], {attribute: [args]})]}. A command or an attribute is a lower case word; its
     arguments are the next words that are numbers or upper case constants."""
-    out, section, i = {}, None, 0
+    out, section, i = {}, None, 0          # a command before the first section goes to "HEADER" (#4308)
     def args(i):
         a = []
         while i < len(words) and not re.fullmatch(r"[a-z_][a-z0-9_]*|[{}]|<\w+>", words[i]):
@@ -176,7 +176,7 @@ def commands(words):
                 attrs.many.setdefault(name, []).append(attrs[name])
             i += 1
         if section is None:
-            raise RmsError(f"{w!r} before the first <SECTION>")
+            section = out.setdefault("HEADER", [])
         section.append((w, a, attrs))
     return out
 
@@ -483,6 +483,11 @@ def generate(text, seed, players=2, size=None, warn=None, teams=None, folder=Non
     consts = TERRAINS | OBJECTS
     includes = []
     sections = commands(expand(tokens(text), rng, defined, consts, includes, folder))
+    for cmd, a, _ in sections.pop("HEADER", []):
+        if cmd == "override_map_size" and a and not size:   # AoE2 DE: the script sets the map size
+            n = int(value(a[0], consts))
+        elif cmd != "override_map_size":
+            warn(f"{cmd} is not read yet")
     for s in sections:
         if s not in SECTIONS:
             warn(f"<{s}> is not read yet")
