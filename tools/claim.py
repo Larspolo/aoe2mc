@@ -14,6 +14,7 @@ a second push of another claim commit is never a fast-forward. Later claims of t
     python3 tools/claim.py N --takeover   # take the ticket from a dead run (stale or released claim, #502)
     python3 tools/claim.py N --show       # print the claim refs and the owner
     python3 tools/claim.py N --beat       # show that the own run is alive (at least every 20 minutes)
+    python3 tools/claim.py N --adopt NAME # take over the claim that the pacer made as NAME for this run (its brief)
     python3 tools/claim.py N --stale      # exit 0: the owner made no claim or beat for 30 minutes (stopped run),
                                           # 10 minutes when its PR has the label `conflict` (#1773)
     python3 tools/claim.py 0 --stuck      # list the `in-progress` tickets of stopped runs (no beat for 30 minutes)
@@ -144,14 +145,16 @@ def first(number, remote="origin"):
     return f"{owner(line)} (its last {line.split(' ')[0].lower()} {(time.time() - changed(ref, remote)) / 60:.0f} min ago)"
 
 
-def start(number):
+def start(number, by=None, note=""):
     """Add `in-progress` and the comment "Started by `<branch>`." after a won claim. A run that commented by hand
-    without the claim worked on one ticket with another run (#288, #1749), so only the claim writes them."""
+    without the claim worked on one ticket with another run (#288, #1749), so only the claim writes them.
+    by: the name of the claim (the pacer claims for a run that has no branch yet); note: more text of the comment."""
     from dashboard import FOOTER, api as call
+    by = by or who()
     try:
         call(f"issues/{number}/labels", "POST", {"labels": ["in-progress"]})
-        call(f"issues/{number}/comments", "POST", {"body": f"Started by `{who()}`.{FOOTER}"})
-        print(f"added in-progress and \"Started by `{who()}`.\" to #{number}")
+        call(f"issues/{number}/comments", "POST", {"body": f"Started by `{by}`.{note}{FOOTER}"})
+        print(f"added in-progress and \"Started by `{by}`.\" to #{number}")
     except Exception as e:                              # the claim ref is the lock: the ticket is yours anyway
         print(f"the claim is yours, but the label or the comment failed ({e}): add them by hand")
 
@@ -205,10 +208,11 @@ def push(sha, ref, remote="origin"):
     fail(f"git push failed:\n{r.stdout}{r.stderr}")
 
 
-def claim(number, takeover=False, remote="origin", limit=STALE):
+def claim(number, takeover=False, remote="origin", limit=STALE, by=None, tag=None):
     """Push a new claim commit to the next free slot. The slot is free only when there is no claim yet or the
     last claim was released. A takeover also takes a stale claim, but never a live one: three runs took over
-    one hand-off in 15 seconds, and each pushed the next slot (#502)."""
+    one hand-off in 15 seconds, and each pushed the next slot (#502). by, tag: the name and the ` lane NAME` of the
+    claim, else the branch and the git config (the pacer claims for a run before it starts, `tools/pacer.py`)."""
     found = refs(number, remote)
     top = max(found, default=0)
     if top:
@@ -216,7 +220,7 @@ def claim(number, takeover=False, remote="origin", limit=STALE):
         if not line.startswith("Release") and not (takeover and stale(line, changed(slot(number, top), remote),
                                                                      time.time(), limit)):
             return None
-    msg = f"Claim #{number} by {who()} ({uuid.uuid4().hex}){lane()}"   # unique: two runs never push the same SHA
+    msg = f"Claim #{number} by {by or who()} ({uuid.uuid4().hex}){lane() if tag is None else tag}"   # unique: two runs never push the same SHA
     sha = git("commit-tree", EMPTY_TREE, "-m", msg).stdout.strip()
     ref = slot(number, top + 1)
     return ref if push(sha, ref, remote) else None
@@ -379,17 +383,20 @@ def claim_lock(kind, key, remote="origin"):
     return push(git("commit-tree", EMPTY_TREE, "-m", msg).stdout.strip(), f"claim/{kind}-{key}", remote)
 
 
-def release(number, remote="origin", word="Release"):
-    """Add a release (or beat) commit on top of the own claim (a fast-forward of the top ref)."""
+def release(number, remote="origin", word="Release", by=None, adopt=None):
+    """Add a release (or beat) commit on top of the own claim (a fast-forward of the top ref). by: the name of the
+    claim, else the branch. adopt: the claim of the pacer for this run: the commit names the branch from now on and
+    keeps the lane of the claim."""
     found = refs(number, remote)
     if not found:
         return None
     ref = slot(number, max(found))
     line = subject(ref, remote)
-    if line.split(" ")[3:4] != [who()]:                      # "Claim #N by <branch> (...)", "Beat #N by <branch>"
+    if line.split(" ")[3:4] not in ([by or who()], [adopt]):  # "Claim #N by <branch> (...)", "Beat #N by <branch>"
         sys.exit(f"{ref} belongs to another run: {owner(line)} took #{number} over ({line}). Stop the work on #{number}"
                  f" now: no push, no comment, no release; pick the next ticket.")
-    sha = git("commit-tree", EMPTY_TREE, "-p", "FETCH_HEAD", "-m", f"{word} #{number} by {who()}{lane()}").stdout.strip()
+    tag = re.search(r" lane \w+$", line)[0] if adopt and re.search(r" lane \w+$", line) else lane()
+    sha = git("commit-tree", EMPTY_TREE, "-p", "FETCH_HEAD", "-m", f"{word} #{number} by {by or who()}{tag}").stdout.strip()
     return ref if push(sha, ref, remote) else None
 
 
@@ -583,6 +590,7 @@ def main(argv=None):
     g.add_argument("--stuck", action="store_true", help="list the in-progress tickets of stopped runs (number 0); "
                    "exit 1: none")
     g.add_argument("--guard", action="store_true", help="before a push: beat; exit 1 when another branch has a PR")
+    g.add_argument("--adopt", metavar="NAME", help="take over the claim that the pacer made as NAME (the brief of the run)")
     g.add_argument("--comment", action="store_true", help="lock the owner comment with this ID")
     g.add_argument("--refill", action="store_true", help="lock the new sub-issues of this epic (0: the whole refill)")
     g.add_argument("--fixmain", action="store_true", help="lock the Fix main ticket of the break in --state SHA (number 0)")
@@ -674,6 +682,8 @@ def main(argv=None):
         ref = release(a.number, a.remote, word="Beat")
         print(f"beat {ref}" if ref else "nothing to beat")
         return 0
+    if a.adopt:
+        return adopt(a.number, a.adopt, a.remote)
     if a.guard:
         ref = release(a.number, a.remote, word="Beat")      # exits with an error on the claim of another run
         if not ref:
@@ -701,6 +711,22 @@ def main(argv=None):
         if code != 1:
             return code
     return 1
+
+
+def adopt(number, name, remote="origin"):
+    """The first beat of a run that the pacer started with a brief: the claim `name` of the pacer becomes the claim of
+    this branch, and the lane of the claim becomes the lane of the run (git config, as `cycle_start.py --lane`).
+    0: the ticket is yours; 1: the claim is not open with that name any more (a takeover after a late start)."""
+    found = refs(number, remote)
+    line = subject(slot(number, max(found)), remote) if found else ""
+    if line.startswith("Release") or line.split(" ")[3:4] not in ([name], [who()]):
+        print(f"#{number}: no open claim of {name} ({line or 'no claim'}): follow the skill without the brief")
+        return 1
+    if m := re.search(r" lane (\w+)$", line):
+        git("config", "aoe2mc.lane", m[1])
+    ref = release(number, remote, word="Beat", adopt=name)
+    print(f"adopted {ref}: #{number} is yours" if ref else f"#{number}: the beat failed, follow the skill without the brief")
+    return 0 if ref else 1
 
 
 def claim_ticket(number, takeover=False, remote="origin"):

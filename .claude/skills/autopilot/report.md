@@ -20,7 +20,7 @@ other runs change it too):
   (`docs/LEARNINGS.md`, a doc line) gets `— before: -`.
 
 Then add one short report: what you did and what is next. `--post` adds it to the branch `metrics` (`runs/`), not as
-a comment on the status issue (2026-10-29; only when no push goes through, it comments). Write it with one command (#1701): `python3 tools/report.py --usage "<the Usage: line of step 1.2>" --text "<what you
+a comment on the status issue (2026-10-29; only when no push goes through, it comments). Write it with one command (#1701): `python3 tools/report.py --usage "<the Usage: line of step 1.2 or of the brief>" --text "<what you
 did, what is next>" --ticket N --size S --result "pr #M" --checks K --checks-min C --sinks "<list or none>"
 --post` (repeat the ticket options for each ticket,
 in the same order). It adds the release bar, the `Tokens:` line and the footer in the format below. Without `--post`
@@ -42,7 +42,7 @@ Below the metrics lines, put the output of `python3 tools/tokens.py` (one `Token
 this session and its largest sinks; run it just before the comment). `report.py` adds it, the `Calls:` line and the `Run:` line
 (the session, the start, the model, the eq of each phase and ticket, the lane). `tools/health.py` adds these lines, and the
 `improve` skill uses them as one source to find the bottleneck.
-Put the `Usage:` line of step 1.2 above the metrics lines, unchanged: `tools/health.py` measures the quota use of one
+Put the `Usage:` line of step 1.2 (or of the brief of the pacer) above the metrics lines, unchanged: `tools/health.py` measures the quota use of one
 run per hour from pairs of these lines, and `tools/usage.py --target` uses that value (#462).
 `setup`: minutes from the start of the run to the claim of the first ticket (0 for later tickets). `report.py`
 measures it in the transcript: do not give `--setup`.

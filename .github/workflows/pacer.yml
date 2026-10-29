@@ -12,8 +12,8 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write    # checkout, the claim refs (`health.lane_claims`) and the push of the branch metrics
-  issues: read       # the ready tickets and the status issue (`usage.fire`)
+  contents: write    # checkout, the claim refs (`health.lane_claims`, the claims of the briefs) and the branch metrics
+  issues: write      # the ready tickets, the status issue (`usage.fire`), `in-progress` and "Started by" of the briefs
   pull-requests: read   # the flow brake (`usage.read_flow`)
   actions: write     # the queued CI runs (`usage.read_flow`) and the start of the next loop
 
@@ -39,6 +39,10 @@ jobs:
       - name: Start the runs every 10 minutes
         env:
           GITHUB_TOKEN: ${{ github.token }}
+          GIT_AUTHOR_NAME: github-actions[bot]          # the claim commits of the briefs (`claim.claim`)
+          GIT_AUTHOR_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
+          GIT_COMMITTER_NAME: github-actions[bot]
+          GIT_COMMITTER_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
           CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           PACER_URL_MAIN: ${{ secrets.PACER_URL_MAIN }}
           PACER_TOKEN_MAIN: ${{ secrets.PACER_TOKEN_MAIN }}
