@@ -124,7 +124,7 @@ RESEARCH_S = aoe2mc.RESEARCH_S | {r["label"]: r["time"] for r in table.load("tra
                                   if r.get("item") == "book" and "time" in r}                       # research (#3738)
 TECHS = {r["label"]: r["name"] for r in table.load("train.jsonl") if r.get("item") == "book"}   # text -> name (#3785)
 TECH_ROW = {r["name"]: r for r in table.load("train.jsonl")}   # name -> row: label and building of a research (#3789)
-ECONOMY = ("MILL", "LUMBER_CAMP", "MINING_CAMP")               # the buildings of the economy researches (#3789)
+ECONOMY = tuple(r["name"] for r in ROWS if r.get("economy"))   # the buildings of the economy researches (#3789)
 SPEEDS = {r["name"]: r["walk"] for r in ROWS if "walk" in r}
 AGES = tuple(r["name"] for r in sorted((r for r in ROWS if "age" in r), key=lambda r: r["age"]))   # (#1067)
 SOCIETY = tuple(r["name"] for r in ROWS if r.get("society"))      # the buildings of the Society tab (#1086)
