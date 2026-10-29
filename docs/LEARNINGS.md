@@ -26,6 +26,7 @@ and `tests/test_learnings.py` fails above 80 lines (#1698).
 - Wait for a background command by the task ID of its own result: a typed file name from an earlier task waits the full 580 s for nothing (#2342, #2357).
 - The refill lock `claim.py 0 --refill` does not lock an epic: run `claim.py E --refill` for each epic E before you make its sub-issues, and list its open sub-issues again just before. A parallel run made 4 of the same trigger tickets in the same minute (#2612 copied #2609, #2621 copied #2611).
 - The clone of a session can hold an `origin/main` of days ago: `git fetch origin main` before `git checkout -B <branch> origin/main`, also for a check ticket. #2278 measured a replay on a main of 2 days ago (`git log -1 --format=%ci`) and found a false regression.
+- Blocked too: `docs.racket-lang.org` and `plt.cs.northwestern.edu` (the docs of the AoE2 random map script DSL, DNS fails). For a random map script fact, a `WebSearch` summary of them works (#3966).
 
 ## Code
 
