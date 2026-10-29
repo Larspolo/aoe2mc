@@ -300,7 +300,7 @@ def wall(name, age, civ=None, factor=1):
     return civs.hp(civ, name, Stats(hp[age], 0, melee, pierce, 0, 0.0, {}, ("building", WALL) + (STONE,) * (not name.startswith("PALISADE"))), age, factor)
 
 
-def building(uuid, name, player, box, T=4, inside=(), s=None, low=None, factor=1):
+def building(uuid, name, player, box, T=4, inside=(), s=None, low=None, factor=1, more=0, taken=1):
     """The commands that make building `name` of `player` a target of attacks (#517): an invisible slime without AI
     that fills the footprint takes the attacks (a mob attacks only a living entity: AoePlugin.java), and the plugin
     keeps the AoE2 hit points. box: the blocks (x0, y0, z0, x1, y1, z1), both ends included, y0 the ground.
@@ -310,25 +310,29 @@ def building(uuid, name, player, box, T=4, inside=(), s=None, low=None, factor=1
     minimum range in blocks (FORT_MIN_RANGE, 0 for the town center): no shot at a unit nearer (#1546). low: the
     minimum range in tiles (default FORT_MIN_RANGE; 0 after Murder Holes: build.minimum, #1547).
     s: the Stats (default: stats(name); a wall of the game program: wall(), #1322). factor: of the base arrows
-    (civs.arrows, #2178).
+    (civs.arrows, #2178). more: the arrows of the technologies (train.more_arrows, #4258). taken: the factor of the
+    bonus damage that the building takes (build.taken: Citadels, #4281), only for a building that shoots; a factor
+    other than 1 writes the classes and the bonus ("-": none) before it.
     At 0 hit points the plugin fills the box with air. The invisibility effect hides the slime: the tag Invisible is
     only for armor stands, the server drops it on a slime (#636)."""
     x0, y0, z0, x1, y1, z1 = box
     s, size = s or stats(name), math.ceil((max(x1 - x0, z1 - z0) + 1) / SLIME)
     low = FORT_MIN_RANGE.get(name, 0) if low is None else low
     bonus = ",".join(f"{c}:{n}" for c, n in sorted(s.bonus.items())) * bool(s.attack and s.range)
+    taken = taken if s.attack and s.range else 1                       # only after the attack values of the plugin
     n = uuids.UUID(uuid).int
     ints = ",".join(str((n >> k & 0xFFFFFFFF) - ((n >> k & 0x80000000) << 1)) for k in (96, 64, 32, 0))
     return [f"summon slime {(x0 + x1 + 1) / 2} {y0} {(z0 + z1 + 1) / 2} {{Size:{size - 1},NoAI:1b,Silent:1b,"
             f"NoGravity:1b,PersistenceRequired:1b,{INVISIBLE},Tags:[\"aoe2mc.building\"],UUID:[I;{ints}]}}",
             f"team join p{player} {uuid}"] + \
-        [f"aoe arrows {uuid} {garrison.arrows(name, inside, factor)}"] * bool(s.attack and s.range) + \
+        [f"aoe arrows {uuid} {garrison.arrows(name, inside, factor, more)}"] * bool(s.attack and s.range) + \
         [f"aoe building {uuid} {s.hp} {s.melee} {s.pierce} {' '.join(map(str, box))}"   # after the arrows: no shot of 1
          + (f" {s.attack} {s.range * T} {round(s.reload / NORMAL * 20)} {low * T}"   # (#1546)
             if s.attack and s.range else "")
-         + (f" {','.join(s.classes)}" if s.classes != ("building", STANDARD) or bonus else "")   # a wall, a gate, the
-                                                                            # wonder (#1419), a tower (STONE, #1590)
-         + (f" {bonus}" if bonus else "")]                                  # the arrow bonus (Heated Shot, #1548)
+         + (f" {','.join(s.classes)}" if s.classes != ("building", STANDARD) or bonus or taken != 1 else "")   # a wall, a
+                                                                            # gate, the wonder (#1419), a tower (STONE, #1590)
+         + (f" {bonus or '-'}" if bonus or taken != 1 else "")              # the arrow bonus (Heated Shot, #1548)
+         + (f" {taken:g}" if taken != 1 else "")]                           # Citadels (#4281)
 
 
 def building_box(o, ground):

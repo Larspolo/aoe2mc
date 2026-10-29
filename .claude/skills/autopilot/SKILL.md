@@ -53,6 +53,8 @@ report of step 8, and the `Usage:` line (of the brief, else of the first `cycle_
 3. For a bug, write a failing test first. Then change the code. Keep the diff small and in the existing style.
    Put new tests in a new file `tests/test_<topic>.py`: parallel tickets that append to the end of one test file
    conflict (66 merge conflicts in 6 hours on 2026-10-25).
+   A ticket that changes only data files gets no new test, also when its body asks for one (owner, 2026-10-29, #4242):
+   skip that part and say why in the PR (`docs/extend.md`). `ship_pr.py` stops such a change.
 4. Verify with the `verify` skill (by the change; never the full fast suite: the quick CI runs it, owner #4187).
 5. Improve the process (step 9, `process.md`) now, so that the changes go into the same PR.
 6. Stage only the files of the ticket: read `git status --short` first (no `logs/`, worlds or images; not

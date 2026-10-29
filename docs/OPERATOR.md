@@ -9,7 +9,7 @@ The runs start from these parts (`docs/SYSTEM.md`, "Setup steps of the owner", s
 | Part | Expected |
 |---|---|
 | Scheduled task "NAME autopilot" | No schedule (the pacer starts it), enabled, the repository of `agent.toml`, the prompt `/scheduled max`, Opus 5.5 at effort low, an API trigger. |
-| Scheduled task "NAME autopilot <lane>" for each lane of `weights` in `[pacing]` of `agent.toml` | No schedule, a new session on each fire, enabled, the prompt `/scheduled max lane <lane>`, an API trigger. haiku: Haiku 5.5. deep: Opus 5.5 at effort high. |
+| Scheduled task "NAME autopilot <lane>" for each lane of `weights` in `[pacing]` of `steering/system/system.toml` | No schedule, a new session on each fire, enabled, the prompt `/scheduled max lane <lane>`, an API trigger. haiku: Haiku 5.5. deep: Opus 5.5 at effort high. |
 | Workflow `pacer.yml` (`pacer = "workflow"` in `agent.toml`, #3193) | One run `in_progress` (the loop), the last completed runs green, the secrets `CLAUDE_CODE_OAUTH_TOKEN`, `PACER_URL_<TASK>` and `PACER_TOKEN_<TASK>` for `MAIN`, `HAIKU`, `DEEP`. |
 
 ## 1. Check
@@ -18,7 +18,7 @@ The runs start from these parts (`docs/SYSTEM.md`, "Setup steps of the owner", s
    tickets, CI on main and the night CI, agent PRs open more than 30 minutes, the labels and the owner comments
    without an answer. Each line is `OK` or `PROBLEM`. Exit 1: at least one problem.
 2. Scheduled tasks (claude.ai/code → Scheduled tasks; `.claude/settings.json` denies the session tools `mcp__claude-code-remote`): each task
-   of the table exists, is enabled, has no schedule and has an API trigger. `trigger` in `[pacing]` of `agent.toml`
+   of the table exists, is enabled, has no schedule and has an API trigger. `trigger` in `[pacing]` of `steering/system/system.toml`
    is the ID of "NAME autopilot".
 3. Pacer: GitHub → Actions → Pacer. One run is `in_progress`. A red run with "failed: <task>: HTTP 401" is a wrong
    or old token of that task.
@@ -51,7 +51,7 @@ To stop a lane, disable its task: the pacer then starts all runs on the main tas
    prompt `/scheduled max lane <lane>`, the model and the effort of the table.
 4. Make an API trigger for each task, and the secrets of `docs/SYSTEM.md` step 5 (`claude setup-token` for
    `CLAUDE_CODE_OAUTH_TOKEN`, the fire URL and the token of each task).
-5. A PR with the ID of "NAME autopilot" in `trigger` and `pacer = "workflow"` in `[pacing]` of `agent.toml`.
+5. A PR with the ID of "NAME autopilot" in `trigger` and `pacer = "workflow"` in `[pacing]` of `steering/system/system.toml`.
 6. After the merge: GitHub → Actions → Pacer → Run workflow. Then do section 1.
 
 ## 4. Move to another Claude account

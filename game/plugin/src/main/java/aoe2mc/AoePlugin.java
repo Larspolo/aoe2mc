@@ -172,6 +172,8 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *                                              wonder are no standard building, #1419)
  *   aoe building ... <attack> <range> <reload> <min> <classes> <bonus>
  *                                              the arrow bonus class:n,... (Heated Shot against ships, #1548)
+ *   aoe building ... <classes> <bonus> <taken>  the factor of the bonus damage that it takes (Citadels, #4281;
+ *                                              bonus "-": none)
  *   aoe menu <player> <title> <slot>:<material>:<name>:<lore>[:<count>] ...
  *                                              open a chest menu (#619, game/menu.py; the texts are URL-encoded)
  *   aoe menu-add <player> <title> <slot>:<material>:<name>:<lore>[:<count>] ...
@@ -2875,7 +2877,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         if (args.length >= 3 && args[0].equals("sightedge")) {          // the edge of the line of sight (#3330)
             return sight.command(sender, args, args[1].equals("count") ? List.of() : players(sender, args[1]));
         }
-        if ((args.length == 11 || args.length == 12 || args.length >= 15 && args.length <= 17) && args[0].equals("building")) {
+        if ((args.length == 11 || args.length == 12 || args.length >= 15 && args.length <= 18) && args[0].equals("building")) {
             int hp;
             double range = 0, min = 0;
             Stats st;
@@ -2888,8 +2890,9 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                         ? Set.of(args[args.length == 12 ? 11 : 15].split(",")) : Set.of("building", "standard");
                 st = new Stats(shoots ? Integer.parseInt(args[11]) : 0, Integer.parseInt(args[3]),
                         Integer.parseInt(args[4]), shoots, true, classes,
-                        args.length == 17 ? bonus(args[16]) : Map.of(),   // the arrow bonus: Heated Shot (#1548)
-                        shoots ? Integer.parseInt(args[13]) : 0);
+                        args.length >= 17 && !args[16].equals("-") ? bonus(args[16]) : Map.of(),   // Heated Shot (#1548)
+                        shoots ? Integer.parseInt(args[13]) : 0,
+                        args.length == 18 ? Double.parseDouble(args[17]) : 1.0, 1.0);   // the bonus damage taken (#4281)
                 range = shoots ? Double.parseDouble(args[12]) : 0;
                 min = shoots ? Double.parseDouble(args[14]) : 0;
                 var c = new ArrayList<String>();
