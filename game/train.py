@@ -80,6 +80,7 @@ import demolish  # noqa: E402
 import garrison  # noqa: E402
 import menu  # noqa: E402
 import monk  # noqa: E402
+import near  # noqa: E402
 import record  # noqa: E402
 import ruins  # noqa: E402
 import table  # noqa: E402
@@ -986,7 +987,8 @@ def applies(unit, name):
 def stats(g, name, uuid=None):
     """The combat values of AoE2 unit name with the bonuses of the civilization (civs.UNITS) and the technologies of
     the player (combat.stats and TECHS), twice for civs.TWICE (#1561), n times for civs.SMITH_UNITS (#2174), and the
-    hit points of civs.TECH_HP (#2269). With uuid: also the trigger changes of that unit (unit_values, #3083)."""
+    hit points of civs.TECH_HP (#2269). With uuid: also the trigger changes of that unit (unit_values, #3083) and the
+    steps of the own units near it (g.near, near.py, #4333)."""
     import combat                                                  # combat imports gather, gather imports this module
     s, twice = civs.units(g, name, combat.stats(name)), civs.TWICE.get(civs.civ(g), ())
     times, also, more = civs.smith(g, name, s), civs.ALSO.get(civs.civ(g), {}), civs.MORE.get(civs.civ(g), {})
@@ -999,6 +1001,8 @@ def stats(g, name, uuid=None):
     for group, building, hp in civs.TECH_HP.get(civs.civ(g), ()):   # the Aztec monks (#2269)
         if civs.GROUPS[group](name, s):
             s = s._replace(hp=s.hp + hp * sum(t in g.techs for t in TRAINS[building] if t in TECHS))
+    for t, k in sorted(vars(g).get("near", {}).get(uuid, {}).items()):   # the own units near it (near.py, #4333)
+        s = near.change(BY_KEY["near"][t], k, s)
     if name.startswith("VILLAGER") and (f := civs.handicap(g.data, g.player)) != 1:   # the AoE2 "Handicap" (#2474)
         s = s._replace(hp=round(s.hp * f))
     for unit, field, op, q in vars(g).get("trigger_attributes", ()):   # "Modify Attribute" of a scenario (#2763)
