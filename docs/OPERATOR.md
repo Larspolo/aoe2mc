@@ -67,3 +67,27 @@ Do the steps in sequence. The GitHub side (tickets, claims, labels, the status i
 6. A PR with the new ID of "NAME autopilot" in `trigger` of `[pacing]` in `agent.toml`.
 7. After the merge: start the workflows "Pacer" and "Dashboard site" once.
 8. Remove the label `paused`. Then do section 1.
+
+## 5. Add a collaborator
+
+A collaborator runs the agent with an own Claude account next to the owner's (plan: `docs/COLLABORATORS.md`, #4232).
+NAME is the account name in lower case (for example `bob`), and NAME_UP the same name in upper case (`BOB`).
+
+1. The owner: GitHub → the repository → Settings → Collaborators → "Add people": the GitHub login of the
+   collaborator, role "Write".
+2. The collaborator: in the Claude app, connect GitHub. The Claude GitHub app is already on the repository.
+3. The collaborator: make the cloud environment of `docs/SYSTEM.md` step 2 ("Allow package managers" on, the whole
+   file `scripts/allowed-domains.txt` as the allowed domains, the whole file `scripts/cloud-setup.sh` as the setup
+   script), with the environment variable `AGENT_ACCOUNT=NAME`.
+4. The collaborator: make the scheduled tasks "aoe2mc autopilot", "aoe2mc autopilot haiku" and "aoe2mc autopilot
+   deep" and an API trigger for each: section 3, steps 2–4.
+5. The collaborator: run `claude setup-token` and give the token, the three fire URLs and the three trigger tokens to
+   the owner on a private channel.
+6. The owner: GitHub → Settings → Secrets and variables → Actions → "New repository secret", one for each value:
+   `CLAUDE_CODE_OAUTH_TOKEN_NAME_UP`, `PACER_URL_NAME_UP_MAIN`, `PACER_TOKEN_NAME_UP_MAIN`, `PACER_URL_NAME_UP_HAIKU`,
+   `PACER_TOKEN_NAME_UP_HAIKU`, `PACER_URL_NAME_UP_DEEP`, `PACER_TOKEN_NAME_UP_DEEP`.
+7. A PR adds to `agent.toml` the table `[accounts.NAME]` with `login = "<GitHub login>"` (optional: `reserve = 0.2`,
+   `docs/COLLABORATORS.md`, part 1). Automerge holds it until an owner approves it.
+8. After the merge: `python3 tools/operator_check.py` with the secrets in the environment (`ALL_SECRETS` as in
+   `pacer.yml`). It prints one line `account NAME` for each account: its quota and the tasks the pacer can fire.
+   `PROBLEM account NAME`: the quota read failed (a wrong token). `fires no task`: the secrets of step 6 are missing. Then do section 1.

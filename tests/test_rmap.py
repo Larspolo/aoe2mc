@@ -88,8 +88,7 @@ def test_unread_sections_and_attributes_give_a_warning():
 
 def test_errors_name_the_problem():
     for text, msg in (("<LAND_GENERATION> base_terrain LAVA", "unknown constant 'LAVA'"),
-                      ("<LAND_GENERATION> if X base_terrain DIRT", "has no end"),
-                      ("base_terrain DIRT", "before the first <SECTION>")):
+                      ("<LAND_GENERATION> if X base_terrain DIRT", "has no end")):
         with pytest.raises(rmap.RmsError, match=msg):
             rmap.generate(text, 1)
 

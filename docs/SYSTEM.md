@@ -110,7 +110,7 @@ usage there is no weekly guard: the runs fill each 5-hour window (owner, 2026-10
 target less the runs with a claim beat in the last 25 minutes, and less the runs that the pacer started in the last 12 minutes and
 that have no claim yet (`usage.pending`, from the `--log` of `pacer.py`; each takes a ready ticket of its lane, 2026-10-29). A run cannot start other runs (no `fire_trigger`, #566),
 so the pacer starts them (at most `max_fire` of `agent.toml` per cycle, and at most the ready tickets plus `refill_runs`: those runs refill the queue). The pacer is the workflow `pacer.yml` (#3193, #3194): each cycle fetches `main` and runs
-`tools/pacer.py`, so a change of the pacing rules works at the next cycle. The pacer also does steps 1 to 5 of the autopilot for each run that it starts (owner, 2026-10-29): it takes the next candidate of the lane of the run, claims it as `pacer-r<hex>`, adds `in-progress` and "Started by" with the session link, and sends a brief (the ticket, its comments, the code places of `ticket_context.py`, the `Usage:` line) in the `text` of the call. The run adopts the claim with `claim.py N --adopt NAME` and starts at step 6 (`scheduled` skill, step 0). A refill run (no candidate left), and all runs while the flow brake is on or the last CI run on main is red, get no brief. A failed call releases its claim. It starts each run with one call of the
+`tools/pacer.py`, so a change of the pacing rules works at the next cycle. The pacer also does steps 1 to 5 of the autopilot for each run that it starts (owner, 2026-10-29): it takes the next candidate of the lane of the run, claims it as `pacer-r<hex>`, adds `in-progress` and "Started by" with the session link, and sends a brief (the ticket, its comments, the code places of `ticket_context.py`, the `Usage:` line) in the `text` of the call. The run adopts the claim with `claim.py N --adopt NAME` and starts at step 6 (`scheduled` skill, step 0). A stuck ticket (its run stopped, `claim.py 0 --stuck`) comes first: the pacer takes it over for one run (`claim.py N --takeover` with the run name, the comment "Taken over by") and adds a `takeover:` line with the branch of its PR, so that the runs do not race for it (#4356). A refill run (no candidate left), and all runs while the flow brake is on or the last CI run on main is red, get no brief. A failed call releases its claim. It starts each run with one call of the
 API trigger of its task; a task takes at most 30 API starts per hour (an account 100), and when a lane task answers
 HTTP 429 its runs go to the main task. `tools/health.py` measures the quota use of one run from the
 `Usage:` lines of the run reports, and `usage.py` uses that value. After a plan upgrade the same work is a smaller share of the larger quota: when the burn of
@@ -145,7 +145,7 @@ itself and lists each change on the status issue.
 ## Setup steps of the owner
 
 Only the owner can do these steps. An agent that needs a change makes a `needs-human` ticket with numbered steps.
-For a new project, `python3 tools/bootstrap.py DIR --repo OWNER/NAME` copies the generic files, writes `agent.toml` and
+For a new project, follow `framework/docs/NEW_PROJECT.md` (the template, then these steps). `python3 tools/bootstrap.py DIR --repo OWNER/NAME` copies the generic files, writes `agent.toml` and
 the starts of the specific files, and prints these steps for the new repository (`--github`: also the labels and the
 status issue). Merge the first PR of the bootstrap by hand: Automerge cannot merge it, because the workflows are not
 on `main` yet.

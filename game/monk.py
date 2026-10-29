@@ -227,7 +227,9 @@ def relic_tick(g, dt):
     if (n := sum(r["home"] is not None and own(g, r) for r in relics(g))) != getattr(g, "relic_homes", 0):
         g.relic_homes = n
         rearm(g)
-    g.relic_gold += GOLD * dt * sum(r["home"] in homes for r in relics(g))
+    import wonder                                                  # wonder imports cheats, which imports this module
+    g.relic_gold += GOLD * dt * sum(r["home"] in homes for r in relics(g)) * \
+        math.prod(wonder.rivals(g, g.player, "rival_relic_gold"))  # Atheism of an enemy: half (#4336)
     if (n := int(g.relic_gold)) > 0:
         g.relic_gold -= n
         g.earn("gold", n)
@@ -239,7 +241,7 @@ def rearm(g):
     names = civs.RELIC_ATTACK.get(civs.civ(g), ((),))[0]
     for uuid, name in [(u["uuid"], u["name"]) for u in g.units if "uuid" in u] + list(g.soldiers.items()):
         if name in names:
-            g.command(combat.stats_command(uuid, name, train.stats(g, name, uuid)))
+            g.command(combat.stats_command(uuid, name, train.stats(g, name, uuid), **train.hits(g, name)))
 
 
 def healable(name):

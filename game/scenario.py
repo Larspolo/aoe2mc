@@ -338,7 +338,7 @@ def values(g, tag, field, operation, quantity):
                 x.command(ai.speed_command(uuid, name, x.map.T, gather.NORMAL * train.speed(x, name, uuid)))
             else:
                 x.command(trebuchet.stats_command(x, uuid) if name == trebuchet.NAME else combat.stats_command(
-                    uuid, name, train.stats(x, name, uuid), civs.taken(x, name), civs.friendly(x, name)))
+                    uuid, name, train.stats(x, name, uuid), civs.taken(x, name), civs.friendly(x, name), **train.hits(x, name)))
     g.command(f"tag @e[tag={tag}] remove {tag}")
 
 
@@ -632,7 +632,7 @@ def attributes(g):
             if not train.applies(name, n):                             # a type, or a class (#2859)
                 continue
             s = train.stats(x, n, uuid)
-            x.command(combat.stats_command(uuid, n, s, civs.taken(x, n), civs.friendly(x, n)))
+            x.command(combat.stats_command(uuid, n, s, civs.taken(x, n), civs.friendly(x, n), **train.hits(x, n)))
             if field == "range" and (cmd := combat.range_command(uuid, n, x.map.T, s=s)):
                 x.command(cmd)
 

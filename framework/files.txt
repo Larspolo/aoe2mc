@@ -4,6 +4,7 @@
 
 # The rules and the docs of the process
 framework/CLAUDE.md
+framework/docs/NEW_PROJECT.md
 docs/STEERING.md
 docs/SYSTEM.md
 docs/OPERATOR.md
