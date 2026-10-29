@@ -63,6 +63,6 @@ def test_the_buildings_train_the_units_of_each_age_and_upgrade_a_line():
 def test_each_unit_has_values_and_each_upgrade_a_known_unit():
     values = {r["name"] for r in table.load("units.jsonl", rules="antiquity")}
     rows = table.load("train.jsonl", rules="antiquity")
-    units = {r["name"] for r in rows if r.get("item", "").endswith("_spawn_egg") and r["name"] != "VILLAGER_MALE"}
-    assert len(units) == 26 and units <= values
+    units = {r["name"] for r in rows if r.get("item") not in (None, "bell", "book") and r["name"] != "VILLAGER_MALE"}
+    assert len(units) == 45 and units <= values
     assert all(set(r["upgrade"]) <= units for r in rows if "upgrade" in r)
