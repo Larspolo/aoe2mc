@@ -756,6 +756,9 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
     if not state and scout.used(data):               # the scout of each civilization (#2391), not twice after a load
         for x in [g, *(s.g for s in g.bots)]:
             scout.swap(x)
+    if not state and g.challenge:                    # the units of the challenge (its "setup", #3909), not twice after a load
+        import challenge
+        challenge.start(g)
     import start_buildings
     if not state and start_buildings.used(data):     # the Georgian mule cart (#2429), not twice after a load
         for x in [g, *(s.g for s in g.bots)]:
