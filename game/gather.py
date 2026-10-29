@@ -183,6 +183,17 @@ EVENTS = {"idle": "idle", "to_tree": "walk", "chop": "chop", "to_drop": "carry",
           "to_repair": "walk", "repair": "build"}
 
 
+def breach(g, fort):
+    """True when the villagers of g may attack the enemy building fort: a wall, a gate or a tower, after a technology
+    with the key "breach" (Siegecraft of Antiquity Mode, #3916)."""
+    import combat                                                      # combat imports this module
+    name = g.fort_names.get(fort, "")
+    if not any(train.value("breach", t) for t in getattr(g, "techs", ())):
+        return False
+    s = combat.wall(name, 0) if name in combat.WALLS else combat.stats(name)
+    return bool({combat.WALL, combat.STONE} & set(s.classes)) or name.endswith("_TOWER")
+
+
 def only(who, *filters):
     """The selector who ("@a" or "@a[team=p2]") with more filters: only("@a[team=p2]", "name=!Alex")."""
     return who[:-1] + "," + ",".join(filters) + "]" if who.endswith("]") else who + "[" + ",".join(filters) + "]"
@@ -1141,6 +1152,16 @@ class Gather:
 
     def hunt(self, prey, who=None):
         """Send the selected villagers (or the villagers who) to hunt the animal prey, with the hunter look (#1058)."""
+        if prey in self.forts:                                         # a wall or tower: next to it (breach, #3916)
+            who = (self.selected if who is None else who) & self.villagers.keys()
+            self.new_order(who)
+            x0, _, z0, x1, _, z1 = self.forts[prey]
+            cells = self.map.around({(x, z) for x in range(x0, x1 + 1) for z in range(z0, z1 + 1)})
+            for u in sorted(who):
+                v = self.villagers[u]
+                v.tree, v.site, v.prey = None, None, prey
+                self.go(v, "to_prey", cells or {(x0, z0)})
+            return
         if not (pos := self.pos(prey)):
             return
         self.seen[prey] = pos
@@ -1159,6 +1180,8 @@ class Gather:
         """A hunter hits its animal once per AoE2 villager reload (VILLAGER_HIT), with aegis at once and to death
         (#817). The `damage` source is the villager, so a boar hits back. A dead animal leaves its carcass on the tile
         of its last place, and its hunters gather it: the work of a bush."""
+        if v.prey in self.forts:                                      # a wall or tower (breach, #3916)
+            return self.batter(v)
         if v.prey not in self.dead and (pos := self.pos(v.prey)):
             self.seen[v.prey] = pos
             if math.dist((pos[0], pos[2]), (v.pos[0], v.pos[2])) > 3:   # it ran away: follow it
@@ -1187,6 +1210,19 @@ class Gather:
                     self.map.herds.add(tile)
         v.tree, v.prey, v.path = self.dead.get(v.prey), None, []
         self.set(v, "to_tree" if v.tree else "idle")                   # it stands at the carcass: the next step gathers
+
+    def batter(self, v):
+        """A villager hits the enemy wall or tower v.prey once per AoE2 villager reload (#3916). The `damage` source is
+        the villager: the plugin gives the AoE2 damage of the villager (AoePlugin.onHit). A fallen building leaves
+        self.forts (fall): the villager stops."""
+        x0, _, z0, x1, _, z1 = self.forts[v.prey]
+        if max(x0 - v.pos[0], v.pos[0] - x1 - 1, z0 - v.pos[2], v.pos[2] - z1 - 1) > 2:   # not next to it: walk again
+            return self.hunt(v.prey, {v.uuid})
+        v.timer += self.tick
+        if self.aegis or v.timer >= VILLAGER_HIT[1] / NORMAL:
+            v.timer = 0.0
+            self.command(f"rotate {v.uuid} facing entity {v.prey}")
+            self.command(f"damage {v.prey} {1000 if self.aegis else VILLAGER_HIT[0]} minecraft:mob_attack by {v.uuid}")
 
     def decay(self, dt):
         """The carcasses lose food at their AoE2 rate (Map.rot, AoE2 wiki "Hunt": "decay ... begins to subtract from the
@@ -1512,6 +1548,13 @@ class Gather:
         if kind == "unit":
             self.select(u)
             return
+        if kind == "fort" and self.selected and self.selected <= self.villagers.keys():   # Siegecraft (#3916)
+            self.sieged.add(u)
+            self.hunt(u)
+            self.order_voice()
+            x0, _, z0, x1, _, z1 = self.forts[u]
+            self.mark(name, {(x0, z0), (x1, z1)}, "attack")
+            return
         if kind == "fort":
             monk.convert_order(self, self.monks(), u)                 # with Redemption (#1264)
             self.sieged.add(u)
@@ -1691,7 +1734,8 @@ class Gather:
             kind = "enemy" if u in self.enemies else "prey" if u in self.prey and (hunters or u not in self.flock) \
                 else "unit"
             return kind, u, {(math.floor(at[u][0]), math.floor(at[u][2]))}
-        if self.selected and self.selected <= set(self.soldiers) and (fort := self.pick_fort(eye, d)):
+        if self.selected and (self.selected <= set(self.soldiers) or self.selected <= self.villagers.keys()) \
+                and (fort := self.pick_fort(eye, d)) and (self.selected <= set(self.soldiers) or breach(self, fort)):
             x0, _, z0, x1, _, z1 = self.forts[fort]
             return "fort", fort, {(x0, z0), (x1, z1)}
         cell = self.map.pick_ground(eye, d)
