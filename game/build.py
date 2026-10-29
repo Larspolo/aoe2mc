@@ -256,22 +256,28 @@ def items(g=None):
 
 
 DELETE = 35                                                            # slot: kill the selected own units (#3451)
+SHELTER = 44                                     # slot: the selected villagers seek shelter (#3440), last of the next free row
 
 
 def open_menu(g, player):
     """Show the build menu. A click sets the trigger score, as /trigger aoe_build set N does, and closes the menu.
     A building that the civilization does not have is not in it (hidden); the other items keep their slots.
-    The last slot deletes the selected own units (stance.delete, #3451)."""
+    Slot DELETE deletes the selected own units (stance.delete, #3451), slot SHELTER sends them into a building (#3440)."""
     def choose(p, slot, shift):                                        # shift: one building all the same
         if slot == DELETE:
             import stance                                              # stance imports gather, gather imports this module
             stance.delete(g)
             chest.close(g, p)
+        elif slot == SHELTER:
+            import garrison                                            # garrison imports gather, gather imports this module
+            garrison.bell(g, p, set(g.selected))
+            chest.close(g, p)
         elif slot < len(MENU) and not locked(g, MENU[slot]) and not hidden(g, MENU[slot]):
             g.command(f"scoreboard players set {p} {OBJECTIVE} {slot + 1}")
             chest.close(g, p)
     return chest.show(g, player, "Build", [it for it in items(g) if not hidden(g, MENU[it[0]])]
-                      + [(DELETE, "tnt", "Delete", "Kills the selected units")], choose)
+                      + [(DELETE, "tnt", "Delete", "Kills the selected units"),
+                         (SHELTER, "oak_door", "Seek Shelter", "The selected villagers go into the nearest building")], choose)
 
 
 def chosen(g, player):
