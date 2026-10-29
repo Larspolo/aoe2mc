@@ -253,6 +253,7 @@ def batches(cmds, limit=rcon.MAX):
 
 
 SPECTATORS = ('team add spec "Spectators"', "team modify spec color gray")   # the team of the spectators (#2898)
+CHAT_HINT = "Chat: a normal line goes to all, /tm TEXT to your allies, /msg NAME TEXT to one person."   # #3555
 
 
 class Game:
@@ -340,6 +341,7 @@ class Game:
             self.command(f"team join p{n} {name}")
             for cmd in [f"aoe hide {name} team"] * (getattr(self, "kind", "paper") == "paper"):
                 self.command(cmd)            # the hides of the own team only: the plugin hid all on the join (#3070)
+            self.command(f"tellraw {name} " + json.dumps({"text": CHAT_HINT, "color": "gray"}))   # the chat targets (#3555)
         elif self.people > 1:
             for cmd in [*SPECTATORS * (not self.spectators), f"team join spec {name}", f"gamemode spectator {name}",
                         *[f"aoe show {name} all"] * (getattr(self, "kind", "paper") == "paper")]:
@@ -676,6 +678,8 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
           f"{len(g.villagers)} villagers of player 1. Hold the carrot on a stick: right click a villager to select it,\n"
           "then right click a tree, a fruit bush or a mine. To build: /trigger aoe_build set N (the menu is in the chat),\n"
           "then right click the ground. Right click your town center to train a villager (50 food). Ctrl-C stops.", file=sys.stderr)
+    if people > 1:                                   # this console only: a person gets it in the chat on the join (#3555)
+        print(CHAT_HINT, file=sys.stderr)
     game.g = g                                       # main saves its state on Ctrl-C (#2255)
     if speed != 1:                                   # Minecraft makes the mobs, paths and plugin faster (#2057)
         import savegame

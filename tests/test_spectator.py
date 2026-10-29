@@ -15,6 +15,7 @@ def test_a_player_after_the_sides_is_a_spectator():
     for name in ("Alex", "Steve", "Bob", "Eve"):
         g.side(name)
     assert g.sides == {"Alex": 1, "Steve": 2} and g.spectators == {"Bob", "Eve"}
+    sent = [c for c in sent if not c.startswith("tellraw")]   # the chat hint (#3555) is no join command
     assert sent == ["team join p1 Alex", "aoe hide Alex team", "team join p2 Steve", "aoe hide Steve team", *run.SPECTATORS, "team join spec Bob",
                     "gamemode spectator Bob", "aoe show Bob all", "team join spec Eve", "gamemode spectator Eve",
                     "aoe show Eve all"]

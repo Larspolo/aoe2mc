@@ -99,6 +99,7 @@ def test_the_join_order_gives_the_sides():
     for name in ("Alex", "Steve", "Bob", "Alex"):                     # Alex joins again after Bob
         game.side(name)
     assert game.sides == {"Alex": 1, "Steve": 2}
+    sent = [c for c in sent if not c.startswith("tellraw")]   # the chat hint (#3555) is no join command
     assert sent == ["team join p1 Alex", "aoe hide Alex team", "team join p2 Steve", "aoe hide Steve team", *run.SPECTATORS, "team join spec Bob",
                     "gamemode spectator Bob", "aoe show Bob all", "team join p1 Alex", "aoe hide Alex team"]    # Bob watches (#2898, #2921)
 
