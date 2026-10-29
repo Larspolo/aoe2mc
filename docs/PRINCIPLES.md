@@ -101,6 +101,8 @@ by hand, the improve loop missed a lever: the next review comes soon, names the 
   must wait for those steps.
 - A wait to measure a change counts merged PRs ("wait 50 PRs"), never hours: the speed changes, and a pause merges
   nothing (#2039). Only a real clock stays in time (a quota window, a stopped run).
+- The gap between reviews follows their results: a review that finds a change halves it (down to 10 PRs), a review
+  that finds nothing resets it (80 PRs) or doubles it (up to 512 PRs, owner, 2026-10-29).
 
 ## Tensions
 

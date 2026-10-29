@@ -139,9 +139,12 @@ each lever (`1 base 41 % · 2 claim 12 % · ...`), what you changed, and what yo
 in a comment: then revert it and add the reason to `docs/LEARNINGS.md`.
 
 Then set the next review: `python3 tools/claim.py 0 --reviewed change` after a change, or `--reviewed none` when no
-lever was above its threshold. The gaps are in `[review]` of `agent.toml`: `gap` merged PRs after a change, double
-after `none` (at most `max_gap`), and `owner_gap` when the owner merged a PR since the last review. More owner work
-means more reviews; none for a long time means fewer.
+lever was above its threshold. The gap of merged PRs moves (`claim.next_gap`, the values in `[review]` of
+`agent.toml`, owner 2026-10-29): `change` halves it, down to `min_gap`; `none` below `gap` resets it to `gap`, and `none`
+from `gap` up doubles it, up to `max_gap`. Owner work since the last review makes it `owner_gap`. So reviews that find
+work come more often, and reviews that find nothing come less often. Say `change` when the review opened a PR or a
+ticket for a miss or for a lever above its threshold; else `none`. A small gap costs one deep run per gap: the
+thresholds of step 3 are the brake.
 
 ## Guardrails
 

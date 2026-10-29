@@ -77,7 +77,8 @@ from agent_config import CONFIG
 EMPTY_TREE = "4b825dc642cb6eb9a060e54bf8d69288fbee4904"
 # The process review counts merged PRs, never hours (owner, 2026-10-29): `[review]` of agent.toml.
 REVIEW_CONFIG = CONFIG.get("review", {})
-REVIEW, REVIEW_MAX = REVIEW_CONFIG.get("gap", 100), REVIEW_CONFIG.get("max_gap", 400)   # after a change; after none
+REVIEW = REVIEW_CONFIG.get("gap", 80)            # the first gap, and the reset after a run of changes ends
+REVIEW_MIN, REVIEW_MAX = REVIEW_CONFIG.get("min_gap", 10), REVIEW_CONFIG.get("max_gap", 512)   # halve, double between
 OWNER_GAP = REVIEW_CONFIG.get("owner_gap", 20)   # the gap when an owner session merged a PR since the last review
 ROADMAP = 100               # merged PRs between two reviews of docs/ROADMAP.md (#2039)
 ROADMAP_EARLY = 30          # the same while the refill has no source: R < N, each roadmap feature has an epic (#3741)
@@ -270,13 +271,14 @@ def agent_state(body):
     return json.loads(m[1]) if m else {}
 
 
-def pr_slot(last, gap, merged):
+def pr_slot(last, gap, merged, again=None):
     """The lock key of a review that waits for `gap` merged PRs after the time `last` (ISO, or None: no review yet), or
-    None when fewer PRs merged since then. merged: the PRs merged after `last`. The key holds `last` and the number of
-    full gaps: one run takes each review, and a review that a run did not finish opens again one gap later."""
+    None when fewer PRs merged since then. merged: the PRs merged after `last`. The key holds `last` and a count: one
+    run takes each review, and a review that a run did not finish opens again `again` merged PRs later (default `gap`).
+    The process review gives at least REVIEW: at a gap of 10, a second review would start while the first one runs."""
     if merged < gap:
         return None
-    return f"{gap}pr-{re.sub(r'[^0-9TZ]', '', last or '') or 'none'}-{merged // gap}"
+    return f"{gap}pr-{re.sub(r'[^0-9TZ]', '', last or '') or 'none'}-{1 + (merged - gap) // (again or gap)}"
 
 
 @functools.cache
@@ -317,13 +319,29 @@ def with_state(body, state):
     return body.replace(old[0], new) if old else new + "\n" + (body or "")
 
 
+def next_gap(gap, changed):
+    """The gap after a review (owner, 2026-10-29): a change halves it (at least REVIEW_MIN merged PRs), so a review
+    that finds work comes sooner. No change after a gap below REVIEW resets it to REVIEW; from REVIEW up, no change
+    doubles it (at most REVIEW_MAX). With 80, 10 and 512: 80, 40, 20, 10, 10 ... while each review changes something."""
+    return max(REVIEW_MIN, gap // 2) if changed else REVIEW if gap < REVIEW else min(2 * gap, REVIEW_MAX)
+
+
+def review_gap(state):
+    """The gap of merged PRs before the next process review: `review_prs` of the state comment. A gap that next_gap
+    cannot reach from REVIEW (the state of an earlier rule, for example 200) counts as REVIEW."""
+    seen, todo = set(), [REVIEW]
+    while todo:
+        if (gap := todo.pop()) not in seen:
+            seen.add(gap)
+            todo += [next_gap(gap, True), next_gap(gap, False)]
+    return state["review_prs"] if state.get("review_prs") in seen else REVIEW
+
+
 def reviewed(body, changed, now=None):
-    """The body of the status issue after a review: a change sets the gap back to REVIEW merged PRs, no change doubles
-    it (at most REVIEW_MAX). The other keys of the state comment stay; `review_minutes` (the time slot before #2039)
-    goes."""
+    """The body of the status issue after a review: `review_prs` is the next gap (next_gap). The other keys of the
+    state comment stay; `review_minutes` (the time slot before #2039) goes."""
     state = {k: v for k, v in agent_state(body).items() if k != "review_minutes"}
-    gap = REVIEW if changed else min(2 * state.get("review_prs", REVIEW), REVIEW_MAX)
-    return with_state(body, {**state, "last_review": utc(now), "review_prs": gap})
+    return with_state(body, {**state, "last_review": utc(now), "review_prs": next_gap(review_gap(state), changed)})
 
 
 def last_lock(kind, remote="origin"):
@@ -346,7 +364,7 @@ def review_slot(kind, remote="origin", starved=None):
     ROADMAP_EARLY, so that the queue does not run empty for 100 merged PRs (#3741). It is read only in that window."""
     body = api(f"issues/{STATUS}")["body"] if on_github(remote) else ""
     state = agent_state(body)
-    last, gap = (state.get("last_review"), max(state.get("review_prs", REVIEW), REVIEW)) if kind == "review" else \
+    last, gap = (state.get("last_review"), review_gap(state)) if kind == "review" else \
         (state.get("last_roadmap"), ROADMAP)
     # The roadmap counts from the later of the state and its newest lock (#3352). The process review keeps the state
     # time: its lock comes before the review, and a review that no run finished must open again (pr_slot).
@@ -357,7 +375,7 @@ def review_slot(kind, remote="origin", starved=None):
         gap = ROADMAP_EARLY
     if kind == "review" and OWNER_GAP <= merged < gap and owner_since(last, remote):
         gap = OWNER_GAP
-    return pr_slot(last, gap, merged), gap
+    return pr_slot(last, gap, merged, max(gap, REVIEW) if kind == "review" else None), gap
 
 
 def refill_starved():

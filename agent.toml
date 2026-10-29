@@ -27,8 +27,9 @@ pacer = "workflow"              # pacer.yml starts the runs (tools/pacer.py, #31
 trigger = "trig_01QTrgkK5PZmqPwQ96rKp3QE"   # the scheduled task "aoe2mc autopilot": the pacer fires it (#1898)
 
 [review]                        # the process review (`improve` skill, tools/claim.py): merged PRs, never hours (owner, 2026-10-29)
-gap = 100                       # merged PRs after a review that made a change
-max_gap = 400                   # a review with no change doubles the gap, up to this
+gap = 80                        # merged PRs: the first gap, and the reset when a review below it finds no change
+min_gap = 10                    # a review with a change halves the gap, down to this (owner, 2026-10-29)
+max_gap = 512                   # a review with no change from `gap` up doubles the gap, up to this
 owner_gap = 20                  # the gap when an owner session merged a PR since the last review: owner work is a miss
 
 [commands]
