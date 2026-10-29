@@ -24,6 +24,8 @@ game/data/setup_keys.jsonl merge=jsonl
 game/data/train.jsonl merge=jsonl
 # One JSON object per unit (#1912); table.load() stops on a name in two lines.
 game/data/units.jsonl merge=jsonl
+# One JSON object per unit class: its select voice (#3499).
+game/data/sounds.jsonl merge=jsonl
 # One JSON object per building, or only a line of sight (#1913); table.load() stops on a name in two lines.
 game/data/buildings.jsonl merge=jsonl
 # One JSON object per building of the menu, or only the age or technology of a name (#2028); table.load() stops on a name in two lines.
