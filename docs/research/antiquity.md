@@ -316,18 +316,4 @@ the units, the technologies and the bots, then the check ticket (item 9).
   the lobby setting (search "Starting resources") and keeps the AoE2 values until then.
 - The look of the new buildings (Granary, Storage Pit, Government Center, Academy, Temple): `buildings.select()`
   gives a design by name; a building without a design gets `generic`. A new design is a `design` ticket.
-- The technology effects that do not work yet (#3714). Each one has its line, cost and time in
-  `game/data/antiquity/train.jsonl`, and a "note":
-  - The Granary researches of the walls and towers (end of 1.5): the walls and towers open by age only. Follow-up: #3887.
-  - City Watch: buildings get +4 line of sight (the AoE2 value `combat.WATCH`), not +3. Follow-up: #3887.
-  - Siegecraft: villagers do not attack walls and towers. Follow-up: #3887.
-  - Architecture: no +20 % building HP, no faster build. Follow-up: #3887.
-  - Logistics: barracks units take full population. Follow-up: #3887.
-  - Writing: no shared exploration with allies. Follow-up: #3887.
-  - Alchemy: the Fire Galley +6 (no ships yet). Follow-up: #3887.
-  - Aristocracy: academy units do not walk faster (the key "walk" is a factor, not +0.225). Follow-up: #3887.
-  - Ballistics: missiles do not hit moving targets (the AoE2 line uses `aoe ballistics`). Follow-up: #3887.
-  - Engineering: no siege units and ships yet. Follow-up: #3887.
-  - The Temple technologies (Polytheism, Mysticism, Astrology, Medicine, Monotheism, Afterlife, Fanaticism,
-    Theocracy): no priests yet. Follow-up: #3887.
-  - Zealotry: the -8 carry is a negative value of `gather.CARRY`; no test checks it yet. Follow-up: #3887.
+- The technology effects (#3714): all work since epic #3887; the table of its sub-issues is on the epic.
