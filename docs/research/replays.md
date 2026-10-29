@@ -212,6 +212,39 @@ as a large text display "chart" in the sky above the overview view: one row per 
 character (▁▂▃▄▅▆▇█) per game minute. It is vanilla (P2, P3). The owner checks the graphs in the game; a map item
 with a real line graph (Paper `MapRenderer`) can replace it later (P4).
 
+## Save version 68.9 (#3686, 2026-10-29)
+
+mgz 1.8.51 and its GitHub HEAD read DE records up to save version 66.6. A ranked 1v1 game of 2026-10-27 (save 68.9,
+from `api.ageofempires.com`, not committed: no license) has two changes in the DE header (`mgz.fast.header.parse_de`),
+found by a comparison of the bytes with `samples/de-64.3.aoe2record`:
+
+| Place | 64.3 and 66.6 | 68.9 |
+|---|---|---|
+| End of each player, after the 4 bytes of 64.3 | next player | one more DE string (`60 0a 00 00`: empty in the test record) |
+| After the DE string before the 8 bytes and the timestamp | 8 bytes, timestamp | two more DE strings (empty), then 8 bytes, timestamp |
+
+The other parts (metadata, map, players, scenario, lobby, the actions) read as for 66.6. `aoe2mc.new_saves()` adds the
+three reads to the source of `parse_de` (for save > 66.6). With it `read_record` and `read_timeline` read the test
+record: map Arabia (120 tiles), 2 players with names and civilizations, 1325 timeline events.
+
+Patch for upstream mgz (`mgz/fast/header.py`, `parse_de`; a ticket of the owner, as an upstream issue is public):
+
+```diff
+         if save >= 64.3:
+             data.read(4)
++        if save > 66.6:
++            de_string(data)
+ 
+         players.append(dict(
+@@
+     if not skip:
+         de_string(data)
++        if save > 66.6:
++            de_string(data)
++            de_string(data)
+         data.read(8)
+```
+
 ## Pitfalls
 
 Moved from `docs/LEARNINGS.md` (improve run, 2026-10-26).

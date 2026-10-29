@@ -486,6 +486,7 @@ def read_record(path):
     except ImportError:
         raise SystemExit("A .aoe2record file needs the mgz package: python3 -m pip install mgz") from None
     from AoE2ScenarioParser.datasets.terrains import TerrainId
+    new_saves()
     try:
         with open(path, "rb") as f:
             match = parse_match(f)
@@ -640,6 +641,29 @@ def own_selection():
         Inputs.add_action = add
 
 
+def new_saves():
+    """mgz 1.8.51 reads DE records up to save version 66.6. Save 68.9 (#3686) has one more DE string at the end of
+    each player of the DE header and two more after the string before the timestamp: add these reads to
+    mgz.fast.header.parse_de. A patch of its source, not a copy of the parser; once, as the fix belongs in mgz."""
+    import inspect
+    import textwrap
+    from mgz.fast import header
+    if getattr(header.parse_de, "new_saves", False):
+        return
+    src = textwrap.dedent(inspect.getsource(header.parse_de))
+    for old, new in (("            data.read(4)\n\n        players.append(",
+                      "            data.read(4)\n        if save > 66.6:\n            de_string(data)\n\n"
+                      "        players.append("),
+                     ("    if not skip:\n        de_string(data)\n",
+                      "    if not skip:\n        de_string(data)\n        if save > 66.6:\n"
+                      "            de_string(data)\n            de_string(data)\n")):
+        if src.count(old) != 1:                                     # another mgz version: leave it as it is
+            return
+        src = src.replace(old, new)
+    exec(compile(src, header.__file__, "exec"), header.__dict__)
+    header.parse_de.new_saves = True
+
+
 TIMELINE_KEYS = {"building_id": "type", "unit_id": "type", "technology_id": "technology_id", "object_ids": "objects",
                  "target_id": "target", "amount": "amount", "resource": "resource", "stance": "stance",
                  "formation": "formation", "order": "order", "command": "command",
@@ -657,6 +681,7 @@ def read_timeline(path):
     from mgz.model import parse_match
     names, parse = object_kinds(), fast.parse_action
     fast.parse_action = de_queue(parse)
+    new_saves()
     try:
         with open(path, "rb") as f, own_selection():
             match = parse_match(f)
