@@ -16,7 +16,7 @@ from game import ai, build, combat, gather, run, train, trebuchet
 def test_the_castle_trains_the_trebuchet_only_in_the_imperial_age():
     cost = train.COSTS["TREBUCHET"]
     server, g = setup(wood=cost.get("wood", 0), gold=cost.get("gold", 0))   # the Castle Age
-    assert [n for n in train.trains(g, "CASTLE") if n != "YEOMEN"] == ["LONGBOWMAN", *train.TRAINS["CASTLE"]]  # Britons: #4103
+    assert [n for n in train.trains(g, "CASTLE") if not train.value("civ", n)] == ["LONGBOWMAN", *train.TRAINS["CASTLE"]]  # Britons: no unique technologies (#4103, #4283)
     rect = train.open_menu(g, "Steve", (12, 4))
     assert f" {entry(g, rect, 'TREBUCHET')}{build.locked(g, 'TREBUCHET')}" in menus(server)[-1]
     assert train.queue(g, "Steve", (12, 4), "TREBUCHET") is None

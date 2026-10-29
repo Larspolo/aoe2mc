@@ -33,3 +33,5 @@
 {"name": "pack_time", "text": "A factor of the AoE2 seconds to pack or unpack a trebuchet (Kataparuto: 0.25). trebuchet.pack_time.", "issue": 4275}
 {"name": "regen", "text": "A technology that regenerates hit points of a group of units: [a group of civs.GROUPS, the hit points per AoE2 minute]. civs.regen.", "issue": 4255}
 {"name": "building_taken", "text": "The factor of the bonus damage that a building of the player takes after the technology: {building: factor} (Citadels: a castle 0.75). build.taken.", "issue": 4281}
+{"name": "less", "text": "A technology that cuts the damage that its units take from attackers of some classes: [the units (as \"walk\"), {attacker class: n}]; the most of the classes of the attacker counts (Royal Heirs). train.hits.", "issue": 4331}
+{"name": "ignore_armor", "text": "A technology whose melee units ignore the armor of the target (a negative armor still counts): the units, as \"walk\" (Wootz Steel). train.hits.", "issue": 4331}

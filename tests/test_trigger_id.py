@@ -21,5 +21,5 @@ def test_no_generic_file_has_a_trigger_id():
 
 
 def test_a_new_project_gets_an_empty_trigger():
-    new = tomllib.loads(bootstrap.SYSTEM_TOML.format(repo="me/demo", owner="me", branch="main"))
+    new = tomllib.loads(bootstrap.STUBS["steering/system/system.toml"])
     assert new["pacing"]["trigger"] == ""

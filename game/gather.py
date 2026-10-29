@@ -1090,7 +1090,7 @@ class Gather:
         return {u: p for u in uuids if (p := self.pos(u))}
 
     def seen_tiles(self, pos=None, alive=None):
-        """The tiles (x, y) in the AoE2 line of sight of the own units, buildings and construction sites (#1388, the
+        """The tiles (x, y) in the AoE2 line of sight of the own units and complete buildings (#1388, the
         fog of war: epic #1387), with replay.seen. pos: {uuid: feet position} of the own units, else from the server.
         alive: the UUIDs of the live entities (Gather.where); an own building whose target is not in it is destroyed
         and sees nothing (#1470). None: all buildings stand."""
@@ -1099,7 +1099,8 @@ class Gather:
         mobs = [types.SimpleNamespace(name=names[u], player=self.player, pos=p) for u, p in pos.items() if u in names]
         placed = [(o["name"], tuple(o["footprint"][i] for i in (0, 2, 1, 3)), 1.0) for o in self.data["objects"]
                   if o["kind"] == "building" and o["player"] == self.player and "footprint" in o]
-        placed += [(s["name"], s["footprint"], s["progress"]) for s in self.sites]   # also a foundation, as in AoE2
+        placed += [(s["name"], s["footprint"], s["progress"]) for s in self.sites
+                   if s["progress"] >= 1]                              # a foundation sees nothing until complete (#4176)
         if alive is not None:                                          # only a complete building of BUILDINGS or
             import combat                                              # WALLS has a target (combat.setup, build.target)
             hp = combat.BUILDINGS.keys() | combat.WALLS.keys()

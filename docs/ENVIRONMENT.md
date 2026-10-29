@@ -14,6 +14,10 @@ When a ticket needs a new host:
    file again (the steps of `docs/STEERING.md`, section "Network for the tests"), if no open ticket asks it already.
 3. Until the owner pasted it, the host is blocked: continue with other work.
 
+A `needs-human` ticket that only one account can do (a setup script or a host of its cloud environment) also
+mentions the GitHub login of that account: `agent_config.login(account)` gives it (`account()` is the run's account,
+the owner when the account has no table in `agent.toml`, #4243).
+
 Tests from the container on 2026-10-29: the first when the owner allowed the first hosts after the Mojang hosts, the
 second after the paste of the whole file (#4182, the proxy let all 22 hosts through):
 

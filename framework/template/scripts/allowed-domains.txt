@@ -1,0 +1,3 @@
+# The hosts that the cloud environment allows beyond the package managers (docs/ENVIRONMENT.md, "Network").
+# Fill: one host per line. The owner pastes this file into the network settings of the environment.
+github.com
