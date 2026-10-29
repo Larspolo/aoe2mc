@@ -59,10 +59,10 @@ def test_a_farm_gets_empty_in_steps_and_turns_to_dirt():
     g.send((10, 10))
     for _ in range(20000):
         g.step()
-        if g.villagers["v"].state == "idle":
+        if (10, 10) not in g.map.farms and g.villagers["v"].tree != (10, 10):   # an empty farm with no reseed (#3423)
             break
     v = g.villagers["v"]
-    assert g.map.farms[(10, 10)] == 0 and v.state == "idle" and v.tree is None and not g.farmers
+    assert (10, 10) not in g.map.farms and v.tree != (10, 10) and (10, 10) not in g.farmers
     assert food(server) == g.stock["food"] == gather.FARM_FOOD and g.map.farms[(16, 10)] == gather.FARM_FOOD
     fills = [c for c in server.log if c.startswith("fill 9 63 9 11 64 11 ")]
     assert [c.split(" ", 7)[7] for c in fills] == [f"minecraft:wheat[age={a}] replace minecraft:wheat"

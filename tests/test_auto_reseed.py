@@ -52,7 +52,7 @@ def test_with_too_little_wood_or_the_switch_off_the_farmer_stops():
         _, g = farm_map()
         g.auto_reseed, g.stock["wood"] = on, w
         v = farm(g, lambda g: False)
-        assert g.map.farms[(10, 10)] == 0 and v.tree is None and g.stock["wood"] == w
+        assert (10, 10) not in g.map.farms and v.tree != (10, 10) and g.stock["wood"] == w   # the farm is gone (#3423)
 
 
 def test_a_queued_reseed_goes_before_the_wood():
