@@ -83,6 +83,8 @@ import com.destroystokyo.paper.entity.ai.Goal;
 import com.destroystokyo.paper.entity.ai.GoalKey;
 import com.destroystokyo.paper.entity.ai.GoalType;
 
+import io.papermc.paper.event.player.PlayerClientLoadedWorldEvent;
+
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 
@@ -1000,6 +1002,11 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         }
         sender.sendMessage("Menu: " + n + " players");
         return true;
+    }
+
+    @EventHandler
+    public void onLoaded(PlayerClientLoadedWorldEvent ev) {             // the client left "Loading terrain" (#3889)
+        getLogger().info(ev.getPlayer().getName() + " loaded the world");   // mc_shot.Client.wait_loaded: keys go to the game
     }
 
     @EventHandler
