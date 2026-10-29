@@ -1,4 +1,4 @@
-"""The rows of the real docs/RELEASE.md: each row has the cells of its header, and release.release() reads the
+"""The rows of the real steering/project/RELEASE.md: each row has the cells of its header, and release.release() reads the
 ticket of each check row (#3053: six check rows had their ticket in a sixth cell, and all read "ticket None")."""
 import os
 import re
@@ -8,7 +8,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, "tools"))
 import release  # noqa: E402
 
-TEXT = open(os.path.join(ROOT, "docs", "RELEASE.md"), encoding="utf-8").read()
+TEXT = open(os.path.join(ROOT, "steering", "project", "RELEASE.md"), encoding="utf-8").read()
 
 
 def cells(line):

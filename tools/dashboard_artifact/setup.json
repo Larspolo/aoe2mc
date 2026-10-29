@@ -60,7 +60,7 @@
   "group": "Rules",
   "when": "When the epics have no work left; a review once per 2 hours (a lock)",
   "does": "Turns the missing features of the three goals into new epics",
-  "where": "docs/ROADMAP.md, .claude/skills/roadmap, tools/claim.py 0 --roadmap (deep runs only)"
+  "where": "steering/project/ROADMAP.md, .claude/skills/roadmap, tools/claim.py 0 --roadmap (deep runs only)"
  },
  {
   "part": "Process review",
@@ -74,7 +74,7 @@
   "group": "Rules",
   "when": "Each run report, and the roadmap review",
   "does": "What 100 % means for each goal: the features with milestones B, A and C, the release checks and a 30 % bug reserve",
-  "where": "docs/RELEASE.md, tools/release.py"
+  "where": "steering/project/RELEASE.md, tools/release.py"
  },
  {
   "part": "Project config",

@@ -111,11 +111,11 @@ the order of features), the owner decides on GitHub. Do not choose, and do not a
 - Title: "Decide: <the question>". Labels: `needs-human`, the kind of the work (`feature`, `design`, ...), `size:S`,
   the priority of the work that waits for it.
 - Body: the question, the options as a table (what the player sees, plus, minus, cost), your recommendation and why,
-  and "Reply with the option name (A, B, ...) or your own idea." Compare each option with `docs/PRINCIPLES.md` first, and
+  and "Reply with the option name (A, B, ...) or your own idea." Compare each option with `steering/project/PRINCIPLES.md` and `steering/system/PRINCIPLES.md` first, and
   name the principle that the recommendation follows ("follows P3"). When two principles give different options, say so.
 - The tickets that need the answer get "Depends on: #<decision>", so no run starts them before the owner answers.
 - When the owner answers: write the decision into the document of the topic (for example `docs/research/gameplay.md`),
-  add its line to the end of `docs/DECISIONS.md` (`taken`, `changed` or `other`, and the principle), remove `needs-human`
+  add its line to the end of `steering/project/DECISIONS.md` and `steering/system/DECISIONS.md` (`taken`, `changed` or `other`, and the principle), remove `needs-human`
   and close the decision ticket. When the answer follows no principle, or goes against one, say it in the comment that
   records the decision: "This does not follow P<n> (<rule>). I will add it as an exception; reply if P<n> must change."
   Do not add `needs-human` for this: the owner replies only when the principle must change.

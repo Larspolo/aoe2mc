@@ -33,6 +33,6 @@ of merged PRs in `[review]` of `agent.toml`, shorter after owner work on the sys
 Run it also when this run failed, or when a ticket took more than 90 minutes. The `improve` skill reviews the whole
 system, learns from the misses (owner work and owner tickets for the system), walks all its levers, and makes each
 change whose lever is above its threshold. The questions above stay the small check of each ticket. Then run `python3 tools/claim.py 0 --roadmap`: exit 0 means that this run
-reviews the feature list of `docs/ROADMAP.md` (the `roadmap` skill, one review per 100 merged PRs).
+reviews the feature list of `steering/project/ROADMAP.md` (the `roadmap` skill, one review per 100 merged PRs).
 Do not change a priority that the owner set. Propose it.
 

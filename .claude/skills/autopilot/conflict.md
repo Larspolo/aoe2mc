@@ -41,7 +41,7 @@ Spend 5 minutes or less: the ticket stays the main work, and this check must not
    - Many tickets append to the end of one file or one list → one file or one line for each item, in sorted order.
    - Two tickets changed the same logic → no structure helps. Better ticket order or smaller tickets can (`queue.md`).
 2. Act only when the change is good practice also without this conflict, and fits the direction of the project
-   (`docs/PRINCIPLES.md`). Do not add a rule or a structure for one rare conflict.
+   (`steering/project/PRINCIPLES.md` and `steering/system/PRINCIPLES.md`). Do not add a rule or a structure for one rare conflict.
    - The same cause has an open ticket → add the PR number in one comment there, if it is not there yet.
    - A small fix (one line of `.gitattributes`, a test that asserts too much in the files of your ticket) → do it in
      the next push of this PR, or in your next ticket of the same files.
