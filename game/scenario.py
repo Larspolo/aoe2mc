@@ -210,6 +210,7 @@ ORDER_KINDS = {
     "damages": r'"damage (\d+) (\w+) (-?\d+) (-?\d+) (-?\d+) (-?\d+) (-?\d+)"',   # "Damage Object" (#3776): damage()
     "found": r'"(found|create) (\d+) (\w+) (\d+) (\d+)"',    # "Place Foundation" (#2825), "Create Object" (#2911): foundation()
     "gates": r'"(lock|unlock) (\d+)"',                         # "Lock Gate", "Unlock Gate" (#2762): gate()
+    "hurts": r'"hurt (\d+) (-?\d+)"',                          # "Damage Object" of a selected building (#4073): hurt()
     "owners": r'"owner (aoe_order[\w.]+) (\d+) (-?\d+)"',   # "Change Ownership" (#2998): owner()
     "keeps": r'"keep (\d+) ([01])"',                         # "Disable/Enable Object Deletion" (#3777): g.kept
     "queued": r'"(train|research) (\d+) (\w+) ?(\d+)?"',      # "Train Unit", "Initiate Research" (#2772): queues()
@@ -283,6 +284,8 @@ def orders(g):
     patrol(g)
     for tag, field, op, q in m["values"]:
         values(g, tag, field, int(op), float(q))
+    for ref, q in m["hurts"]:
+        hurt(g, int(ref), int(q))
 
 
 def patrol(g):
@@ -425,7 +428,7 @@ def damage(g, player, name, area, q):
     its middle tile in the area [x1, y1, x2, y2] (-1: the whole map) loses q hit points (the score aoe_hp of its target
     entity, repair.hp), a negative q heals it up to its full hit points (repair.full). At 0 it falls as the plugin
     razes it (`aoe destroy`: the fall of combat.building), so the score, the recap and "Destroy Object" see it."""
-    import build, repair                                               # build imports gather
+    import build                                                       # build imports gather
     T = g.map.T
     rects = {(x0, x1, z0, z1) for o in g.data.get("objects", ()) if o["kind"] == "building" and "footprint" in o
              and o["name"] == name and o["player"] == player for x0, z0, x1, z1 in [o["footprint"]]}
@@ -435,15 +438,32 @@ def damage(g, player, name, area, q):
         tx, ty = (rect[0] + rect[1]) // 2 // T, (rect[2] + rect[3]) // 2 // T
         if area[0] >= 0 and not (area[0] <= tx <= area[2] and area[1] <= ty <= area[3]):
             continue
-        if (now := repair.hp(g, rect)) is None:                        # fallen, or no target entity
-            continue
-        uuid, new = repair.uuid(rect), now - q if q > 0 else min(now - q, max(now, repair.full(g, name, player, rect)))
-        if new <= 0:
-            g.command(f"aoe destroy {uuid}")
-            vars(g).setdefault("sieged", set()).add(uuid)              # Gather.fall frees the footprint
-            continue
-        g.command(f"scoreboard players set {uuid} aoe_hp {new}")
-        g.command(f"aoe label {uuid}")
+        hit(g, rect, name, player, q)
+
+
+def hurt(g, ref, q):
+    """A "Damage Object" order of a selected building (aoe2mc.damage_lines, #4073): the building with the reference ref
+    loses q hit points, as damage() does for a building type. No building with that ref (a unit, or it fell): nothing."""
+    o = next((o for o in g.data.get("objects", ()) if o["kind"] == "building" and o.get("ref") == ref and
+              "footprint" in o), None)
+    if o is not None:
+        x0, z0, x1, z1 = o["footprint"]
+        hit(g, (x0, x1, z0, z1), o["name"], o["player"], q)
+
+
+def hit(g, rect, name, player, q):
+    """Change the hit points of one building rectangle by q (damage() and hurt(), #3776, #4073): its score aoe_hp, and at
+    0 it falls (`aoe destroy`). A building that fell, or has no target entity, keeps its hit points."""
+    import repair
+    if (now := repair.hp(g, rect)) is None:                            # fallen, or no target entity
+        return
+    uuid, new = repair.uuid(rect), now - q if q > 0 else min(now - q, max(now, repair.full(g, name, player, rect)))
+    if new <= 0:
+        g.command(f"aoe destroy {uuid}")
+        vars(g).setdefault("sieged", set()).add(uuid)                  # Gather.fall frees the footprint
+        return
+    g.command(f"scoreboard players set {uuid} aoe_hp {new}")
+    g.command(f"aoe label {uuid}")
 
 
 def rally(g, player, which, tile, area):

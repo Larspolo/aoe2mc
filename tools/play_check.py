@@ -179,6 +179,7 @@ class Watch:
         self.g, self.sides, self.due, self.shown = g, sides, 0.0, 0.0
         self.last = {}                                                 # uuid -> (order, position, game time since)
         self.stuck = {}                                                # uuid -> {player, unit, order, at, seconds}
+        self.waves, self.charged = {}, {}                              # player -> waves sent; player -> a wave runs (#3955)
 
     def step(self):
         now = recap.game_time(self.g)
@@ -187,6 +188,9 @@ class Watch:
         self.due = now + STEP
         for side in self.sides:
             self.sample(side, now)
+            on, p = bool(getattr(side, "charged", False)), side.g.player
+            self.waves[p] = self.waves.get(p, 0) + (on and not self.charged.get(p))
+            self.charged[p] = on
         if now >= self.shown + 60:                                     # the state each game minute
             self.shown = now
             print(f"{recap.mmss(now)} " + "; ".join(
@@ -248,7 +252,9 @@ def result(g, driver, watch, log):
     players = {}
     for x in (g, driver.share):
         players[x.player] = {"age": train.age(x), "ages": {a: recap.mmss(t) for a, t in sorted(vars(x).get("age_times", {}).items())},
-                             "villagers": len(x.villagers), "soldiers": len(x.soldiers), "stock": dict(x.stock)}
+                             "villagers": len(x.villagers), "soldiers": len(x.soldiers), "stock": dict(x.stock),
+                             "techs": sorted(set(vars(x).get("techs", ())) - set(AGES) - {"IMPERIAL_AGE"}),
+                             "waves": watch.waves.get(x.player, 0)}
     for side in watch.sides:                                           # the buildings of its foe that stand
         players[side.foe]["buildings"] = len(side.forts())
     bells = [f"{recap.mmss(a)}-{recap.mmss(recap.game_time(g) if b is None else b)}" for a, b in driver.bells]
@@ -256,7 +262,8 @@ def result(g, driver, watch, log):
             "stuck": sorted(watch.stuck.values(), key=lambda s: (s["player"], s["since"])), "errors": errors(log)}
 
 
-def play(world, speed=2.0, minutes=40.0, bot_attack="10:00", log=None, server_log=None, version=None, ai_difficulty="standard"):
+def play(world, speed=2.0, minutes=40.0, bot_attack="10:00", log=None, server_log=None, version=None,
+         difficulty="standard"):
     """Play the game on a copy of world; returns result()."""
     import mc_check
     import run
@@ -277,7 +284,7 @@ def play(world, speed=2.0, minutes=40.0, bot_attack="10:00", log=None, server_lo
         with run.Game(copy, version or mc_check.DEFAULT_VERSION) as game:
             try:
                 with mock.patch.object(gather.Gather, "run", hooked):
-                    run.play(game, copy, log, bot=True, bot_attack=bot_attack, speed=speed, ai_difficulty=ai_difficulty)
+                    run.play(game, copy, log, bot=True, bot_attack=bot_attack, speed=speed, ai_difficulty=difficulty)
             finally:
                 path = os.path.join(game.folder, "logs", "latest.log")
                 if server_log and os.path.isfile(path):
@@ -292,7 +299,8 @@ def report(r):
     for p, s in sorted(r["players"].items()):
         ages = ", ".join(f"{a} {t}" for a, t in s["ages"].items()) or "none"
         lines.append(f"Player {p}: {s['age']} (ages: {ages}), {s['villagers']} villagers, {s['soldiers']} soldiers, "
-                     f"{s.get('buildings', '?')} buildings, stock {s['stock']}.")
+                     f"{s.get('buildings', '?')} buildings, stock {s['stock']}, {s['waves']} waves, "
+                     f"{len(s['techs'])} technologies ({', '.join(s['techs']) or 'none'}).")
     lines.append(f"Town bell of player 1 (game time): {', '.join(r.get('bells', [])) or 'none'}.")
     lines.append(f"Stuck units: {len(r['stuck'])}.")
     lines += [f"  player {s['player']} {s['unit']} {s['order']} at {s['at']} since {s['since']} ({s['seconds']} s)"
@@ -309,11 +317,11 @@ def main(argv=None):
     ap.add_argument("--speed", type=float, default=2.0, help="times the Normal game speed (default 2)")
     ap.add_argument("--minutes", type=float, default=40.0, help="stop at this game time in minutes (default 40)")
     ap.add_argument("--bot-attack", default="10:00", metavar="MM:SS", help="the first attack of the bot (default 10:00)")
+    ap.add_argument("--ai-difficulty", default="standard", metavar="LEVEL", help="the level of the bot (run.py --ai-difficulty)")
     ap.add_argument("--log", metavar="FILE", help="the event log of the game (run.py --log)")
     ap.add_argument("--server-log", metavar="FILE", help="copy the server log to this file")
     ap.add_argument("--json", metavar="FILE", help="write the result as JSON")
     ap.add_argument("--version", help="Minecraft version of the server")
-    ap.add_argument("--ai-difficulty", default="standard", help="the AI difficulty of the bot (game/data/difficulty.jsonl)")
     a = ap.parse_args(argv)
     if not os.path.isfile(os.path.join(a.world, "level.dat")):
         sys.exit(f"no level.dat in {a.world}")

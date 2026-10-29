@@ -82,6 +82,7 @@ UPGRADE_UNI = "aoe2mc.upgrade_uni"  # entity tag of the University researches, o
 UNI_SHOWN = 8                        # the University labels of a player at most, then "+N": the RCON limit (#3790)
 GRAPH_MINUTES = 20          # the last minutes of each graph row: a long game keeps a short text
 ARMY = "aoe2mc.army"        # entity tag of the army text of each player in the sky, below the graphs (#3696)
+ORDER = "aoe2mc.order"      # entity tag of the build order text of each player in the sky, below the army texts (#4049)
 ECO = "aoe2mc.eco"          # entity tag of the economy text above the graphs (#3756)
 FOLLOWED = "aoe2mc.followed"  # the tag of the entity that the spectators of --follow look through (#1095)
 TRAIL = 3                   # tiles: a follower farther than this from its target walks to it again (#2551)
@@ -439,6 +440,7 @@ class Replay:
         self.relics = {r: {"at": (int(o["tile"][0] * self.T), int(o["tile"][1] * self.T)), "monk": None, "home": None}
                        for r, o in self.refs.items() if o["kind"] == "other" and "RELIC" in o["name"] and "tile" in o}
         self.fetching = {}                      # object ID of a monk -> the relic ref that it walks to (#4009)
+        self.homing = {}                        # object ID of a monk with a relic -> (monastery rect, player) (#4010)
         self.rng = np.random.default_rng(1)
         self.kinds, self.seen = aoe2mc.object_kinds(), set()
         self.sent, self.busy = 0, 0.0           # commands sent, seconds spent sending them
@@ -459,6 +461,7 @@ class Replay:
         self.smith = {}                         # tag -> the shown rows of an upgrade display (#3786, #3790)
         self.graph = {}                         # value index -> the shown rows of its graph (#3448)
         self.army_shown = {}                    # player -> the shown army text (#3696)
+        self.order_shown = {}                   # player -> the shown build order text (#4049)
         self.eco_rows = None                    # the shown rows of the economy text (#3756)
         self.samples, self.minute = {}, -1      # player -> [(minute, pop, villagers, military, resources)], last minute (#3446)
         self.apms, self.ended = None, 0         # player -> sorted times of its actions (#3763); game time of the end (ms)
@@ -633,6 +636,25 @@ class Replay:
             self.army_shown[p] = line
         return out
 
+    def build_order_view(self, t):
+        """The commands of the build order texts at game time t (ms, #4049): one text display per player in its color,
+        below the army texts, with the last 4 steps of its build order. Only the texts that changed since the last call."""
+        if getattr(self, "view", None) is None:
+            self.overview()                                         # it sets the place of the overview
+        y, c, out = int(self.view.split()[1]) + 12, f"{self.n / 2:.1f}", []
+        players = self.ranked([int(q) for q in self.data["players"] if q != "0"])
+        for k, p in enumerate(players):
+            who, color = self.label(p)
+            line = f"{who}: " + (" · ".join(f"{mmss(s)} {label}" for s, label in self.build_order(p, t)[-4:]) or "-")
+            if self.order_shown.get(p) == line:
+                continue
+            tag, value = f"{ORDER}.{p}", json.dumps(text(line, color), ensure_ascii=False, separators=(",", ":"))
+            out.append(f"data merge entity @e[type=text_display,tag={tag},limit=1] {{text:{value}}}" if p in self.order_shown
+                       else f"summon text_display {c} {max(0, y - 4 * (len(players) + k + 2))} {c} {{text:{value},"
+                            f'billboard:"center",shadow:1b,line_width:1000,Tags:["{ORDER}","{tag}"]}}')
+            self.order_shown[p] = line
+        return out
+
     def upgrade_view(self, t):
         """The commands of the upgrade displays at game time t (ms): the Blacksmith tiers (#3786), the economy tiers
         (#3790) and the University researches (#3790). One text display per row group in the sky below the graphs, one
@@ -764,6 +786,7 @@ class Replay:
                 self.patrols.pop(i, None)
                 self.scouts.pop(i, None)
                 self.fetching.pop(i, None)                  # and the walk to a relic (#4009)
+                self.homing.pop(i, None)                    # and the walk to a monastery (#4010)
         if kind in aoe2mc.UNIT_USE - {"stance"} | {"delete", "stop"}:   # a new order ends a FOLLOW or GUARD (#2551)
             for i in e.get("objects") or ():
                 self.follows.pop(i, None)
@@ -1635,6 +1658,9 @@ class Replay:
                  if (v := self.unit(i, name, e["player"])) is not None]
         if e["kind"] == "order" and (relic := e.get("target")) in self.relics:   # only a monk carries a relic (#4009)
             self.fetching.update({i: relic for i, v in group if v.name in monk.MONKS})
+        if (church := self.monastery(e)) is not None:              # a monk with a relic puts it in (#4010)
+            carry = {r["monk"] for r in self.relics.values()}
+            self.homing.update({i: (church, e["player"]) for i, v in group if i in carry})
         tile = self.resource(e)
         if tile in self.map.farms or tile in self.map.carcasses:    # a farmer stands on the farm, a hunter at the carcass
             goals = self.crew.goals(tile)
@@ -1653,7 +1679,7 @@ class Replay:
                 self.work[i] = v.tree
             fish = fisher(v.name) and tile in self.map.fish         # a fishing ship only fishes (#1283)
             v.tree = tile if v.name.startswith("VILLAGER") or fish else None    # a sheep of the selection does not gather
-            if home and not (not e.get("garrison") and v.load and v.name.startswith("VILLAGER")
+            if home and i not in self.homing and not (not e.get("garrison") and v.load and v.name.startswith("VILLAGER")
                              and home[1]["name"] in self.gather.DROP_SITES.get(v.res, ())):   # it drops its load
                 self.entering[i] = [*home, None]
         boats = [(i, v) for i, v in group if ship(v.name)]          # ships sail on the water (#866)
@@ -2257,6 +2283,8 @@ class Replay:
         A farmer works on its farm (gather.Gather.goals). A unit that goes into a building arrives (enter())."""
         if i in self.fetching:
             self.send(self.pickup(i, v))
+        if i in self.homing:
+            self.send(self.deliver(i, t))
         if i in self.entering:
             x0, x1, z0, z1 = self.entering[i][0]
             if v.cell in self.map.around({(x, z) for x in range(x0, x1) for z in range(z0, z1)}):
@@ -2286,6 +2314,31 @@ class Replay:
                 f"item:{{id:\"{monk.POT}\",count:1}},transformation:{{left_rotation:[0f,0f,0f,1f],"
                 f"right_rotation:[0f,0f,0f,1f],translation:[0f,0.4f,0f],scale:[0.5f,0.5f,0.5f]}}}}",
                 f"ride @e[type=item_display,tag=aoe_relic_{ref},limit=1] mount {v.uuid}"]
+
+    def monastery(self, e):
+        """The footprint of the own start monastery (or a building that stands for it, combat.STANDS_FOR) that an ORDER
+        or a GARRISON targets, or None."""
+        import combat
+        o = self.refs.get(e.get("target"))
+        if not o or o["kind"] != "building" or o["player"] != e["player"]:
+            return None
+        if combat.STANDS_FOR.get(o["name"], o["name"]) != "MONASTERY":
+            return None
+        return next((s[3] for s in self.starts if s[0] == o["ref"]), None)
+
+    def deliver(self, i, t):
+        """The commands of monk i that ends its walk to its monastery with a relic at game time t: the relic goes into
+        the building (its pot goes), the monk stays outside, as monk.relic_tick (kind "home", #4010)."""
+        rect, p = self.homing.pop(i)
+        ref = next((r for r, q in self.relics.items() if q["monk"] == i), None)
+        if ref is None:
+            return []
+        self.relics[ref].update(monk=None, home=rect, player=p, home_t=t)
+        return [f"kill @e[type=item_display,tag=aoe_relic_{ref}]"]
+
+    def relic_count(self, p):
+        """The relics in the monasteries of player p (#4010)."""
+        return sum(r["home"] is not None and r.get("player") == p for r in self.relics.values())
 
     def rate(self, v):
         """The AoE2 work rate of unit v at its resource (per game second): a farm, a hunt and a fish have their own
@@ -2468,9 +2521,9 @@ class Replay:
         m, s = divmod(round(self.idled.get(p, 0)), 60)
         return f"{m}:{s:02d}"
 
-    def tc_text(self, p):
-        """The idle town center time of player p at the end of the replay as M:SS (#4052)."""
-        m, s = divmod(round(self.tc_idle(p, self.ended)), 60)
+    def tc_text(self, p, t=None):
+        """The idle town center time of player p at game time t (default: the end of the replay) as M:SS (#4052)."""
+        m, s = divmod(round(self.tc_idle(p, self.ended if t is None else t)), 60)
         return f"{m}:{s:02d}"
 
     def army_text(self, p):
@@ -2530,6 +2583,7 @@ class Replay:
                              | {q for q, _ in traded} - {None}):
             name, color = self.label(p)
             counts = "".join(f"{n.lower()}s {built.get((p, n), 0)}, " for n in SOCIETY)   # castles N, wonders N
+            counts += f"relics {self.relic_count(p)}, "                                    # the relics in monasteries (#4010)
             market = f"bought {traded.get((p, 'buy'), 0)}, sold {traded.get((p, 'sell'), 0)}, "
             out.append("tellraw @a " + json.dumps([text(name, color), text(
                 f": {counts}{market}tribute sent {sent.get(p, 0)}, received {got.get(p, 0)}, villager high "
@@ -2538,13 +2592,13 @@ class Replay:
 
     def timeline_commands(self, end):
         """A written book "Timeline" for each viewer at the end of the replay (#1068): per player its age-ups, its
-        first military unit, its first castle and its resign, in time order, from the whole timeline (also the time
-        of a jump) up to `end` (ms). Each player starts a page with a heading in its player color and its team (#1643); a
-        long list goes on to the next page. One RCON
-        command holds at most RCON_MAX bytes: the last lines go first."""
+        first military unit, its first castle, its resign and the arrival of each relic in a monastery, in time order,
+        from the whole timeline (also the time of a jump) up to `end` (ms), see `book_command`."""
         import gather                                               # gather -> build -> replay: import it late
         lines, army, castle = {}, set(), set()
-        for e in sorted(self.data.get("timeline", []) + self.spawns(), key=lambda e: e["time"]):
+        arrivals = [{"time": r["home_t"], "player": r["player"], "kind": "relic"} for r in self.relics.values()
+                    if r["home"] is not None]                       # a relic in a monastery (#4010)
+        for e in sorted(self.data.get("timeline", []) + self.spawns() + arrivals, key=lambda e: e["time"]):
             p, line = e.get("player"), None
             if e["time"] > end or p is None:
                 continue
@@ -2558,8 +2612,16 @@ class Replay:
                 line = "Castle"
             elif e["kind"] == "resign":
                 line = "Resigns"
+            elif e["kind"] == "relic":
+                line = "Relic"
             if line:
                 lines.setdefault(p, []).append(f"{mmss(e['time'])} {line}")
+        return self.book_command("Timeline", lines)
+
+    def book_command(self, title, lines):
+        """A written book `title` with a page per player (lines: player -> text lines, #1068). Each player starts a page
+        with a heading in its player color and its team (#1643); a long list goes on to the next page. One RCON
+        command holds at most RCON_MAX bytes: the last lines go first (#4048)."""
         if not lines:
             return []
         while True:
@@ -2579,7 +2641,7 @@ class Replay:
                     rows, page = rows - n, page + "\n" + line
                 pages.append({"text": "", "extra": [head, {"text": "\n" + page.rstrip("\n")}]} if head
                              else {"text": page.strip("\n")})       # only the heading has a color, the lines are black
-            book = {"title": "Timeline", "author": "aoe2mc", "pages": pages}
+            book = {"title": title, "author": "aoe2mc", "pages": pages}
             cmd = "give @a minecraft:written_book[minecraft:written_book_content=" + \
                 json.dumps(book, ensure_ascii=False, separators=(",", ":")) + "]"
             if len(cmd.encode()) <= RCON_MAX:
@@ -2587,11 +2649,18 @@ class Replay:
             longest = max(lines, key=lambda p: len(lines[p]))
             lines[longest].pop()
 
+    def build_order_commands(self, end):
+        """A written book "Build order" for each viewer at the end of the replay (#4048, item 2 of #4046): the build
+        order of each player up to `end` (ms), see `build_order`. A player without steps gets no page."""
+        players = sorted({e["player"] for e in self.data.get("timeline", []) if e.get("player") is not None})
+        lines = {p: [f"{mmss(t)} {label}" for t, label in self.build_order(p, end)] for p in players}
+        return self.book_command("Build order", {p: v for p, v in lines.items() if v})
+
     def score_commands(self, t=None):
         """The sidebar commands for the population of each player that changed since the last call (#741). The score
         holder is "P<n>" (a holder name has no space); its display name is the player name in the player color, the
-        age of the player (#805), its estimated resources (#932) and its actions of the last minute at game time t
-        (#3764; no APM part without t). In a team game the score is a team key plus the population, so the sidebar
+        age of the player (#805), its estimated resources (#932) and its actions of the last minute and its idle town center time at game time t
+        (#3764, #4053; no APM and TC part without t). In a team game the score is a team key plus the population, so the sidebar
         shows each team together, and a fixed number format shows the population (#1189)."""
         out, top = [], max((self.team(p) or 0 for p in self.pop), default=0)
         if self.shown is None:
@@ -2600,7 +2669,7 @@ class Replay:
         for p in sorted(self.pop):
             name, color = self.label(p)
             res = " ".join(f"{r[0].upper()} {max(0, v)}" for r, v in self.resources(p).items())
-            apm = "" if t is None else f" · APM {self.apm(p, t)}"
+            apm = "" if t is None else f" · APM {self.apm(p, t)} · TC idle {self.tc_text(p, t)}"
             if self.named.get(p) != (line := f"{name} · {self.ages.get(p, 'Dark')} · {res} (est.){apm}"):
                 out.append(f"scoreboard players display name P{p} {POP} {json.dumps(text(line, color))}")
                 self.named[p] = line
@@ -3006,6 +3075,7 @@ class Replay:
                     self.idle_at = to
                     self.send(self.graphs(to))
                     self.send(self.army_view(to))
+                    self.send(self.build_order_view(to))
                     self.send(self.upgrade_view(to))
                     self.send(self.ecoview())
                 continue
@@ -3022,6 +3092,7 @@ class Replay:
                 self.idle_time(now)
                 self.send(self.graphs(now))
                 self.send(self.army_view(now))
+                self.send(self.build_order_view(now))
                 self.send(self.upgrade_view(now))
                 self.send(self.ecoview())
                 self.send(self.fog())
@@ -3041,7 +3112,8 @@ class Replay:
         census()
         self.send(self.expire(math.inf) + self.panel(math.inf))
         send(self.clock_commands(end, end, speed, done=True) + self.score_commands() + self.end_commands(end) +
-             self.summary_commands() + self.timeline_commands(end))
+             self.summary_commands() + self.timeline_commands(end) +
+             self.build_order_commands(end))
         span = (events[-1]["time"] - start) / 1000 / speed if events else 0                 # at the start speed
         return {"events": n, "commands": self.sent, "busy": round(self.busy, 2), "lag": round(lag, 2),
                 "rate": round(self.sent / self.busy) if self.busy else 0, "need": round(self.sent / span) if span else 0}

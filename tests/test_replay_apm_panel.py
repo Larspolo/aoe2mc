@@ -23,7 +23,7 @@ def names(cmds):
 def test_the_display_name_ends_with_the_actions_of_the_last_minute():
     r = game(act(10_000), act(50_000), act(70_000))
     r.pop, r.ages = {1: 1}, {1: "Dark"}
-    assert names(r.score_commands(60_000)) == ["Player 1 (Britons) · Dark · F 200 W 200 G 100 S 200 (est.) · APM 2"]
+    assert names(r.score_commands(60_000)) == ["Player 1 (Britons) · Dark · F 200 W 200 G 100 S 200 (est.) · APM 2 · TC idle 0:00"]
 
 
 def test_a_second_call_at_the_same_time_sends_no_name():
