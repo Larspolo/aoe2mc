@@ -57,14 +57,21 @@ def beats(lines, now):
     return {n: ((now.timestamp() - t) / 60, s) for n, (_, t, s) in top.items()}
 
 
-def pr_work(pr, open_issues, checks, beat, now, me=""):
+def pr_ticket(pr, held):
+    """The ticket of an agent PR: the first closing line of its body, else the claim whose last beat names the PR branch
+    (#4122: a run edited the body of PR #4061 and lost its "Closes #3909", so its live run looked stopped)."""
+    if m := CLOSE.search(pr.get("body") or ""):
+        return int(m[1])
+    return next((n for n, (_, s) in held.items() if s.split(" ")[3:4] == [pr["head"]["ref"]]), None)
+
+
+def pr_work(pr, open_issues, checks, beat, now, me="", ticket=None):
     """The work that an open agent PR needs, or None. pr: an entry of /pulls; checks: [(name, status, conclusion)] of
-    its head commit; beat: (minutes, subject) of its ticket claim, or None; me: the current branch. The PRs of this run
+    its head commit; beat: (minutes, subject) of its ticket claim, or None; me: the current branch; ticket: `pr_ticket`. The PRs of this run
     (`<session branch>` and `<session branch>-<k>`, autopilot `more.md`) are yours."""
     if not pr["head"]["ref"].startswith(AGENT) or "hold" in dashboard.labels(pr):
         return None
-    m = CLOSE.search(pr.get("body") or "")
-    ticket = int(m[1]) if m else None
+    ticket = ticket or pr_ticket(pr, {})
     issue = open_issues.get(ticket)
     if ticket and issue is None:
         return "its ticket is closed: close the PR when the ticket is \"not planned\""
@@ -223,10 +230,10 @@ def main(argv=None):
     for p in prs:
         checks = [(c["name"], c["status"], c["conclusion"]) for c in
                   dashboard.api(f"commits/{p['head']['sha']}/check-runs").get("check_runs", [])]
-        m = CLOSE.search(p.get("body") or "")
-        w = pr_work(p, issues, checks, held.get(int(m[1])) if m else None, now, me)
+        t = pr_ticket(p, held)
+        w = pr_work(p, issues, checks, held.get(t), now, me, t)
         if w:
-            work.append(f"PR #{p['number']} (`{p['head']['ref']}`" + (f", #{m[1]}" if m else "") + f"): {w}")
+            work.append(f"PR #{p['number']} (`{p['head']['ref']}`" + (f", #{t}" if t else "") + f"): {w}")
     take = [w for w in work if "take it over" in w]                 # two runs try other stuck PRs first (#3832)
     work = [w for w in work if w not in take] + spread(take, me)
     section(f"PRs ({len(work)} of {len(prs)} open agent PRs need work)", work)

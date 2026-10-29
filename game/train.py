@@ -263,7 +263,8 @@ def effect(e, more=1):
             return s
         part = (lambda n: n) if more == 1 else (lambda n: round(n * more))
         new = {k: getattr(s, k) + part(n) for k, n in e.get("add", {}).items()}
-        new |= {k: round(getattr(s, k) * (f if more == 1 else 1 + (f - 1) * more)) for k, f in e.get("times", {}).items()}
+        new |= {k: (round if isinstance(getattr(s, k), int) else float)(getattr(s, k) * (f if more == 1 else 1 + (f - 1) * more))
+                for k, f in e.get("times", {}).items()}     # a reload of 2.0 × 0.75 stays 1.5 (Stirrups, #4098)
         if "bonus" in e:
             new["bonus"] = {**s.bonus, **{k: s.bonus.get(k, 0) + part(n) for k, n in e["bonus"].items()}}
         return s._replace(**new)

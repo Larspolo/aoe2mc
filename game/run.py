@@ -787,7 +787,7 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
         if "module" in line and not (state and line.get("loaded") == "skip"):   # a loaded game has its town, relic
             start = {"start": not state} if line.get("loaded") == "start" else {}   # Defend the Wonder (#2441)
             importlib.import_module(line["module"]).setup(g, mode, **start)
-    if settings["challenge"] and not state:                     # the enemy town of the challenge (#3905)
+    if settings["challenge"] and not state:                     # the enemy town or units of the challenge (#3905, #3909)
         challenge.setup(g)
     import replay
     import treaty as treaties

@@ -94,6 +94,49 @@ def castle(g, c):
         and build.ages(g) >= need["ages"]
 
 
+GAP = 3                                                            # blocks between two ships of a fleet
+ASK = 2.0                                                          # game seconds between two checks of the enemy fleet
+
+
+def fleets(g, c):
+    """The setup of Naval Battle (#3909): the fleet of the player (the key "fleet" of its line, {AoE2 name: count}) on
+    the west water and the enemy warships (the key "enemy_fleet", player 2; the wiki gives no count) on the east water, one
+    ship on each open water cell of a GAP grid (its 8 neighbours are water too), none on land. The AoE2 map: the player
+    starts in the north-west and sails east to the enemy blockades."""
+    import train                                                       # train imports gather, gather imports this module
+    m = g.map
+    cells = sorted((x, z) for z in range(0, m.n, GAP) for x in range(0, m.n, GAP)
+                   if all(m.wet(x + dx, z + dz) for dx in (-1, 0, 1) for dz in (-1, 0, 1)))
+    own = [n for n, k in sorted(c["fleet"].items()) for _ in range(k)]
+    enemy = [n for n, k in sorted(c["enemy_fleet"].items()) for _ in range(k)]
+    if len(cells) < len(own) + len(enemy):
+        print(f"{c['name']}: {len(cells)} open water cells for {len(own) + len(enemy)} ships: fewer ships",
+              file=sys.stderr)
+    half = len(cells) // 2
+    g.challenge_enemy = []
+    for names, spots, player in ((own, cells[:half], g.player), (enemy, cells[half:][::-1], 2)):
+        for name, (x, z) in zip(names, spots):
+            uuid = train.summon(g, name, (x + 0.5, m.sea(x, z), z + 0.5), player=player)
+            if uuid and player != g.player:
+                g.challenge_enemy.append(uuid)
+
+
+def sunk(g, c):
+    """The goal of Naval Battle: no enemy warship of the setup is alive (a dead unit has no position). The server is
+    asked at most once in ASK game seconds."""
+    from recap import game_time
+    now = game_time(g)
+    if now - vars(g).get("challenge_asked", -ASK) < ASK:
+        return False
+    g.challenge_asked = now
+    return not g.positions(g.challenge_enemy)
+
+
+def lost(g):
+    """The own units that died in the game (score.fallen keeps them in g.losses)."""
+    return len(vars(g).get("losses", {}))
+
+
 def town(g):
     """The block footprint (x0, x1, z0, z1) of the first own town center that stands, or None."""
     import train                                                    # train imports gather, gather imports this module
@@ -226,8 +269,8 @@ def show(g, c, now):
 
 
 def tick(g):
-    """End the game of challenge g.challenge with its medal when the goal is complete, or with no medal after the
-    bronze limit of a time challenge; else show the boss bar."""
+    """End the game of challenge g.challenge with its medal (by the game time, or by the units lost) when the goal is
+    complete, or with no medal after the bronze limit of a time challenge; else show the boss bar."""
     if g.ended:
         return
     import cheats
@@ -236,7 +279,7 @@ def tick(g):
     if "attacks" in c:                                              # the enemy attacks (#3907)
         attacks(g, c, now)
     complete = done(g, c)
-    m = medal(g.challenge, now if c["medal"] == "time" else len(vars(g).get("losses", {})))   # "lost": score.fallen
+    m = medal(g.challenge, now if c["medal"] == "time" else lost(g))
     if complete or (c["medal"] == "time" and m is None) or ("attacks" in c and town(g) is None):
         close(g)
         g.command(f'title @a[team=p{g.player}] subtitle ' + json.dumps(
@@ -244,4 +287,4 @@ def tick(g):
         g.medal = m if complete else None
         keep(g.challenge, g.medal)
         return cheats.over(g, lambda p: p == g.player and complete and m is not None)
-    show(g, c, now if c["medal"] == "time" else len(vars(g).get("losses", {})))
+    show(g, c, now if c["medal"] == "time" else lost(g))

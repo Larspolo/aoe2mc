@@ -105,6 +105,8 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *                                              0, #1201) and 1 for each garrisoned villager or foot archer (#1113,
  *                                              game/garrison.py); 0: it does not shoot. Default 1
  *   aoe attack <selector> <target selector>    Mob#setTarget: the mob attacks with its own AI
+ *   aoe attackground <selector> <x> <y> <z>    AoE2 "Attack Ground" (#4078): a siege unit with a blast walks into its
+ *                                              range of the point and shoots there with its reload until a new order
  *   aoe ballistics <team> on|off               Ballistics of the player (#1549): its archers and buildings aim where a
  *                                              moving target will be
  *   aoe batch <command> ...                    run the commands in this order, each URL-encoded ("+" is a space): one
@@ -402,6 +404,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     private final Map<UUID, String> stances = new HashMap<>();      // no entry: aggressive (#1104)
     private final Set<UUID> held = new HashSet<>();                 // stand ground units with a target of their own
     private final Map<UUID, Location> posts = new HashMap<>();      // defensive units in a fight: their place (#1105)
+    private final Map<UUID, Location> grounds = new HashMap<>();    // the point of an attack ground order (#4078)
     // defensive: the blocks past its range that a unit chases. The AoE2 wiki ("Unit stance": "will follow for a certain
     // number of tiles before returning to their original position") gives no number: 3 tiles of 4 blocks (#1105).
     private static final double CHASE = 12.0;
@@ -435,7 +438,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         @Override
         public boolean shouldActivate() {
             LivingEntity t = target(mob);
-            return t != null && t.isValid() && !t.isDead();
+            return t != null && t.isValid() && !t.isDead() || range.siege && grounds.containsKey(mob.getUniqueId());
         }
 
         @Override
@@ -445,6 +448,11 @@ public final class AoePlugin extends JavaPlugin implements Listener {
 
         @Override
         public void tick() {
+            Location g = grounds.get(mob.getUniqueId());
+            if (g != null && range.siege) {
+                ground(g);
+                return;
+            }
             LivingEntity t = target(mob);
             // a building: the range to its nearest side, and no sight of the eye of its target in the walls (#608)
             boolean wall = buildings.containsKey(t.getUniqueId());
@@ -494,6 +502,25 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                     }                                                      // and can miss (#1713, onHit)
                     pass(mob, v, range.blocks + range.pass, a, mob, range.part);
                 }
+            }
+        }
+
+        // Attack Ground (#4078): as a shot at a unit, but the target is a fixed point and the blast falls there.
+        private void ground(Location g) {
+            double d2 = mob.getLocation().distanceSquared(g);
+            boolean near = d2 <= range.blocks * range.blocks && d2 >= range.min * range.min;
+            if (near || d2 < range.min * range.min || held.contains(mob.getUniqueId())) {
+                mob.getPathfinder().stopPathfinding();
+            } else if (!mob.getPathfinder().hasPath() || ++ticks % 10 == 0) {
+                reach(mob, g);
+                mob.getPathfinder().moveTo(g);
+            }
+            mob.lookAt(g);
+            int now = Bukkit.getCurrentTick();
+            Entity from = crew(mob);
+            if (now >= next && near && stats.get(from.getUniqueId()) instanceof Stats a) {
+                next = now + range.ticks;
+                blastAt(from, a, g, range.blast);
             }
         }
 
@@ -588,19 +615,24 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             t.getWorld().spawnParticle(Particle.CRIT, at.clone().add(0, 1, 0), 8);
             t.getWorld().playSound(at, Sound.ENTITY_ARROW_HIT, 1.0f, 1.0f);
             return;
-        } else {
-            for (Entity e : t.getWorld().getNearbyEntities(at, r, r, r)) {
-                if (e instanceof LivingEntity le && le.isValid() && stats.containsKey(le.getUniqueId())
-                        && !buildings.containsKey(le.getUniqueId()) && le != from
-                        && !(le.getVehicle() instanceof LivingEntity v && stats.containsKey(v.getUniqueId()))
-                        && le.getLocation().distanceSquared(at) <= r * r) {
-                    Stats t2 = stats.get(le.getUniqueId());
-                    harm(le, t2, a, from, friendlyFire(from, le) ? t2.friendly : 1.0);   // friendly fire (#2418)
-                }
+        }
+        blastAt(from, a, at, b != null ? 0 : r);
+    }
+
+    // The blast of a shot at the point at (#1050): each unit with AoE2 values within r blocks takes the AoE2 damage of
+    // the shooter, also its own units (r 0: none). A shot at a unit and an attack ground (#4078) share it.
+    private void blastAt(Entity from, Stats a, Location at, double r) {
+        for (Entity e : r > 0 ? at.getWorld().getNearbyEntities(at, r, r, r) : List.<Entity>of()) {
+            if (e instanceof LivingEntity le && le.isValid() && stats.containsKey(le.getUniqueId())
+                    && !buildings.containsKey(le.getUniqueId()) && le != from
+                    && !(le.getVehicle() instanceof LivingEntity v && stats.containsKey(v.getUniqueId()))
+                    && le.getLocation().distanceSquared(at) <= r * r) {
+                Stats t2 = stats.get(le.getUniqueId());
+                harm(le, t2, a, from, friendlyFire(from, le) ? t2.friendly : 1.0);   // friendly fire (#2418)
             }
         }
-        t.getWorld().spawnParticle(Particle.EXPLOSION, at.clone().add(0, 0.5, 0), 1);
-        t.getWorld().playSound(at, Sound.ENTITY_GENERIC_EXPLODE, 1.0f, 1.0f);
+        at.getWorld().spawnParticle(Particle.EXPLOSION, at.clone().add(0, 0.5, 0), 1);
+        at.getWorld().playSound(at, Sound.ENTITY_GENERIC_EXPLODE, 1.0f, 1.0f);
         if (from instanceof Creeper c) {      // the demolition ship (#1440), the petard (#2192): one blast, then it dies. No
             c.setHealth(0);                   // vanilla explosion: it breaks no block, and the damage is the AoE2 one
         }
@@ -2680,6 +2712,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                     continue;
                 }
                 Location goal = new Location(mob.getWorld(), x, y, z);
+                grounds.remove(mob.getUniqueId());                     // a new order ends an attack ground (#4078)
                 reach(mob, goal);
                 setTarget(mob, null);
                 if (rider(mob) != null) {
@@ -2984,6 +3017,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             for (Entity e : select(sender, args[1])) {
                 if (walker(e) instanceof Mob mob) {
                     orders.remove(mob.getUniqueId());
+                    grounds.remove(mob.getUniqueId());
                     posts.remove(mob.getUniqueId());
                     mob.getPathfinder().stopPathfinding();
                     mob.setAI(false);
@@ -3119,6 +3153,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                 }
                 if (mob != null && mob != target && !sameTeam(mob, target)) {
                     orders.remove(mob.getUniqueId());
+                    grounds.remove(mob.getUniqueId());
                     posts.remove(mob.getUniqueId());            // an order: a defensive unit chases to the end
                     Mob r = rider(mob);
                     if (r != null) {                             // the horse has no attack goal: the rider leads
@@ -3133,6 +3168,34 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                 }
             }
             sender.sendMessage("Attack: " + n + " units");
+            return true;
+        }
+        if (args.length == 5 && args[0].equals("attackground")) {       // Attack Ground (#4078)
+            Location at;
+            try {
+                at = new Location(null, Double.parseDouble(args[2]), Double.parseDouble(args[3]), Double.parseDouble(args[4]));
+            } catch (NumberFormatException e) {
+                sender.sendMessage("Bad number: " + e.getMessage());
+                return true;
+            }
+            int n = 0;
+            for (Entity e : select(sender, args[1])) {
+                Mob mob = unit(e);
+                Range r = mob == null ? null : ranges.get(mob.getUniqueId());
+                if (r == null && mob != null && mob.getScoreboardTags().contains(CARRIER) && !mob.getPassengers().isEmpty()) {
+                    r = ranges.get(mob.getPassengers().get(0).getUniqueId());   // a carrier: the range of its siege unit
+                }
+                if (r != null && r.siege) {                     // the Mangonel line, and the other siege shots
+                    orders.remove(mob.getUniqueId());
+                    posts.remove(mob.getUniqueId());
+                    setTarget(mob, null);
+                    at.setWorld(mob.getWorld());
+                    grounds.put(mob.getUniqueId(), at.clone());
+                    held.remove(mob.getUniqueId());             // an order: the unit walks, also with stand ground
+                    n++;
+                }
+            }
+            sender.sendMessage("Attack ground: " + n + " units");
             return true;
         }
         return false;
