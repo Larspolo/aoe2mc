@@ -252,6 +252,14 @@ The owner decides on the platform first (decision ticket). The other tickets dep
 - #137 Start a game program that controls the server through RCON.
 - #138 Let villagers gather wood on the player's command (the milestone).
 
+## Delete (#3452)
+
+- AoE2 DE: the Delete button (bottom right of the command panel) makes an own building fall at once, as at 0 hit
+  points: the units inside come out, the queue gives its cost back. `game/demolish.py` puts it in the last menu slot.
+- A foundation that no villager started to build gives back its full cost; a started one gives back nothing.
+  Source: the behavior of the game (AoE2 DE). The AoE2 wiki (MediaWiki API, 2026-10-29) has no page "Delete" and no
+  refund rule on "Building (Age of Empires II)": check it in the game when a refund looks wrong.
+
 ## Decisions of the owner (2026-10-28)
 
 - Bot difficulty (#2648, option A): the six AoE2 DE names (Easiest, Standard, Moderate, Hard, Hardest, Extreme), each
