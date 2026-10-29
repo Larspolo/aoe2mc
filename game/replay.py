@@ -123,6 +123,8 @@ ROWS = table.load("replay.jsonl")
 RESEARCH_S = aoe2mc.RESEARCH_S | {r["label"]: r["time"] for r in table.load("train.jsonl")      # the book items: each
                                   if r.get("item") == "book" and "time" in r}                       # research (#3738)
 TECHS = {r["label"]: r["name"] for r in table.load("train.jsonl") if r.get("item") == "book"}   # text -> name (#3785)
+TECH_ROW = {r["name"]: r for r in table.load("train.jsonl")}   # name -> row: label and building of a research (#3789)
+ECONOMY = ("MILL", "LUMBER_CAMP", "MINING_CAMP")               # the buildings of the economy researches (#3789)
 SPEEDS = {r["name"]: r["walk"] for r in ROWS if "walk" in r}
 AGES = tuple(r["name"] for r in sorted((r for r in ROWS if "age" in r), key=lambda r: r["age"]))   # (#1067)
 SOCIETY = tuple(r["name"] for r in ROWS if r.get("society"))      # the buildings of the Society tab (#1086)
@@ -2240,7 +2242,25 @@ class Replay:
                              for a in AGES)
             out.append("tellraw @a " + json.dumps([text(name, color), text(
                 f": {ages}, technologies {self.researched.get(p, 0)}")]))
+            if upgrades := self.upgrade_line(p):                          # the upgrades, one line more (#3789)
+                out.append("tellraw @a " + json.dumps([text(name, color), text(f": {upgrades}")]))
         return out
+
+    def upgrade_line(self, p):
+        """The Blacksmith researches of player p with their game time (12 at most, then "+N"), and the number of economy
+        and University researches (#3789). None when p has none of them."""
+        forge, eco, uni = [], 0, 0
+        for t, n in self.learned.get(p, ()):
+            row = TECH_ROW.get(n, {})
+            if row.get("building") == "BLACKSMITH":
+                m, s = divmod(int(t) // 1000, 60)
+                forge.append(f"{row['label']} {m}:{s:02d}")
+            eco += row.get("building") in ECONOMY
+            uni += row.get("building") == "UNIVERSITY"
+        if not (forge or eco or uni):
+            return None
+        names = ", ".join(forge[:12] + ([f"+{len(forge) - 12}"] if len(forge) > 12 else []))
+        return " · ".join(([names] if forge else []) + [f"economy {eco}", f"University {uni}"])
 
     def society_commands(self):
         """One chat line per player with the values of the AoE2 Society tab (#1086): castles and wonders built (each
