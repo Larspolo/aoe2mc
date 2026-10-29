@@ -90,7 +90,8 @@ def test_run_plays_in_time_and_counts():
     stats = replay.Replay(game, data(timeline)).run(speed=4, clock=lambda: now[0], sleep=sleep, log=None)
     assert waits == [2.0, 1.0]                                                 # 8 s and 12 s of game time at speed 4
     assert stats["events"] == 3 and stats["commands"] == len(game.sent) and stats["lag"] == 0
-    assert game.sent[0].startswith("tellraw") and game.sent[-1].startswith("title @a title")
+    assert any(c.startswith("tellraw") for c in game.sent) and game.sent[-1].startswith("title @a title")  # the army
+    # texts (#3696) are summoned before the first chat line
     later = replay.Replay(Fake(), data(timeline)).run(speed=4, start=10000, clock=lambda: now[0], sleep=sleep,
                                                        log=None)
     assert later["events"] == 1

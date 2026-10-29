@@ -23,7 +23,7 @@ def play(timeline, objects=(VIL, HOUSE), speed=4.0, n=64):
         now[0] += s
     r = replay.Replay(game, d, ai=True)
     stats = r.run(speed, clock=lambda: now[0], sleep=sleep, log=None, finish=True)
-    return r, [c for c in game.sent if replay.GRAPH not in c], stats     # the graphs of each minute: #3448
+    return r, [c for c in game.sent if replay.GRAPH not in c and replay.ARMY not in c], stats  # graphs (#3448), army (#3696)
 
 
 def orders(sent):
