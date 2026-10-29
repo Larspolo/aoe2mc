@@ -11,19 +11,21 @@
 {"name": "costs", "text": "A technology that changes the cost of a group of items: a list of [a rule what of civs.has, a resource or null for all, the factor], as the rules of civs.COSTS. civs.cost.", "issue": 4225}
 {"name": "doctrine", "text": "A switch of the Recruitment Doctrines of its building (Macedonians): no queue and no cost, the next doctrine of the civ key \"doctrines\". train.DOCTRINES, train.switch.", "issue": 2483}
 {"name": "economy", "text": "true: an economic technology that the AI bot researches when its age and building offer it (Loom, Double-Bit Axe, Wheelbarrow). game/bot.py research.", "issue": 3950}
-{"name": "effect", "text": "The change of the AoE2 combat values of a technology (train.effect: a dict, or a list of changes in turn). train.TECHS and train.EACH compute it; civs.MORE changes it.", "issue": 2029}
+{"name": "effect", "text": "The change of the AoE2 combat values of a technology (train.effect: a dict, or a list of changes in turn; \"bonus_times\" multiplies a bonus). train.TECHS and train.EACH compute it; civs.MORE changes it.", "issue": 2029}
 {"name": "faster", "text": "A unit that trains faster from an age: [age, its train time from that age] (the eagle scout and eagle warrior). train.seconds.", "issue": 2155}
 {"name": "glow", "text": "Treason: the enemy Kings glow for so many AoE2 seconds. regicide.treason.", "issue": 2388}
 {"name": "housing_factor", "text": "A technology that multiplies the population room of a building (Urbanization: {\"HOUSE\": 2}). train.limit.", "issue": 3919}
+{"name": "lead", "text": "A technology that makes the shots of the units of its test lead a moving target, as with Ballistics (Arquebus: gunpowder units). train.lead_command, AoePlugin.lead.", "issue": 4364}
 {"name": "line", "text": "The short name of a line at its first technology (Blacksmith, or an economy line: lumber, mining, mill, town center); the line follows the \"after\" chain. replay.SMITH and replay.ECO_LINES, the tiers of the live replay.", "issue": 3786}
 {"name": "on_research", "text": "The functions (\"module.function\") that run at the research of a technology, with (g, entry): its special effect in its own module, not an if block of train.research.", "issue": 3243}
 {"name": "rest", "text": "A technology that changes the rest of a priest after a conversion: the factor of the AoE2 seconds of the rest (Fanaticism: 0.5). monk.convert.", "issue": 3987}
 {"name": "shares", "text": "A technology that shares the sight of the player with its allies (Antiquity Mode: Writing): before its research the allies do not see for the player, also with \"Shared Exploration\" on. fog.shares.", "issue": 3920}
-{"name": "population", "text": "A technology that changes the population of the units of one building: [the building, the factor]. train.weight.", "issue": 3918}
+{"name": "population", "text": "A technology that changes the population of its units: [the units (as \"walk\": a building, a group, a class, a name or a list), the factor]. train.weight.", "issue": 3918}
 {"name": "reach", "text": "A technology that adds conversion range and line of sight in tiles to the monks (Afterlife of Antiquity Mode: priests +3). monk.near, gather.seen.", "issue": 3988}
 {"name": "start_age", "text": "The name of the age before the first age (the line of the first age only): Dark Age, Stone Age. build.AGE_NAMES.", "issue": 3666}
+{"name": "team", "text": "true: the allies of the player get the technology too, with its keys \"work\" and \"costs\" (Kasbah, Butalmapu). train.researched.", "issue": 4329}
 {"name": "toggle", "text": "A switch of the player with no queue and no cost: the name of a flag of the Gather (off at the start). A click switches it, the item says on or off. train.queue, train.show.", "issue": 3422}
-{"name": "towers", "text": "Guard Tower and Keep: {tower: the tower of its values}, in the research order (file order). build.line.", "issue": 1374}
+{"name": "towers", "text": "Guard Tower, Keep, Thalassocracy: {building: the building of its values}, in the research order (file order). build.line.", "issue": 1374}
 {"name": "walk", "text": "A technology that makes units walk faster: [the unit, a class of combat.STATS in lower case, a group of civs.GROUPS, a building (the units it trains, Drill #4254) or a list of these (Herbalism #4254), the walk speed factor]. train.speed.", "issue": 1415}
 {"name": "walk_add", "text": "A technology that adds walk speed in tiles per second: [the unit, a class of combat.STATS in lower case or a group of civs.GROUPS, the added speed]. train.speed.", "issue": 3921}
 {"name": "walls", "text": "A wall technology (Fortified Wall): {wall: the new wall}. The new and the complete own walls get the new design (build.design).", "issue": 1326}
@@ -36,5 +38,11 @@
 {"name": "building_taken", "text": "The factor of the bonus damage that a building of the player takes after the technology: {building: factor} (Citadels: a castle 0.75). build.taken.", "issue": 4281}
 {"name": "less", "text": "A technology that cuts the damage that its units take from attackers of some classes: [the units (as \"walk\"), {attacker class: n}]; the most of the classes of the attacker counts (Royal Heirs). train.hits.", "issue": 4331}
 {"name": "ignore_armor", "text": "A technology whose melee units ignore the armor of the target (a negative armor still counts): the units, as \"walk\" (Wootz Steel). train.hits.", "issue": 4331}
+{"name": "keep_housing", "text": "A technology whose own buildings of these names keep their population room when they fall after the research (Nomads: [\"HOUSE\"]). ruins.fall, train.limit.", "issue": 4280}
+{"name": "per_own", "text": "A technology that costs more for each own unit: [the kinds (a unit name starts with one), the cost per unit] (Flemish Revolution: villagers). train.per_enemy.", "issue": 4323}
+{"name": "rival_years", "text": "A technology that adds years to the relic and wonder victory timers of each enemy (Atheism: 100). wonder.later.", "issue": 4336}
+{"name": "rival_relic_gold", "text": "The factor of the relic gold of each enemy after the technology (Atheism: 0.5). monk.relic_tick.", "issue": 4336}
 {"name": "work", "text": "A technology that makes one building work faster: [the building, the factor of its train and research rate] (Perfusion: [\"BARRACKS\", 2]). A unit group can join the form later. train.work, train.seconds.", "issue": 4226}
 {"name": "throw", "text": "A charged ranged attack of a melee unit after the technology: {\"if\": [tests], \"reload\": AoE2 s to charge one axe, \"gap\": s between two throws, \"range\": tiles, \"shots\": the most charged axes} (Gothikon). train.fire_commands, aoe throw.", "issue": 4368}
+{"name": "trickle", "text": "A technology that adds income for each working unit of a kind: [who (\"farm\", \"wood\" or \"military\"), {resource: per AoE2 second}] (Tuntian). feitoria.tick.", "issue": 4279}
+{"name": "train_group", "text": "A technology that makes a unit group train faster: [the units, as \"walk\", the factor of the train rate] (Steppe Husbandry: the scout line 2). train.group_rate, train.seconds.", "issue": 4260}
