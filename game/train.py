@@ -963,13 +963,16 @@ def seconds(g, name, building=None, k=None):
 
 def speed(g, name, uuid=None):
     """The factor of the walk speed of unit name: the bonus of the civilization (civs.speed) and the technologies of the
-    player (the key "walk": Fervor, #1261; Squires for the class infantry, #1415; Husbandry for the mounted units, #1416), with
-    the changes of civs.ALSO and civs.MORE (Bohemian Fervor for the villagers, Varangian Caravan +50 %, #2173); unit uuid
+    player (the key "walk": Fervor, #1261; Squires for the class infantry, #1415; Husbandry for the mounted units, #1416) and the
+    added tiles per second (the key "walk_add": Aristocracy, #3921), with the changes of civs.ALSO and civs.MORE (Bohemian Fervor for the villagers, Varangian Caravan +50 %, #2173); unit uuid
     near a Military Town Center walks faster (g.hurried, regen.military, #2496). The speed changes of the triggers on
     unit uuid (unit_values, scenario.values, #3083) change its tiles per second (a set: that speed)."""
     also, more = civs.ALSO.get(civs.civ(g), {}), civs.MORE.get(civs.civ(g), {})
     f = civs.speed(g, name) * math.prod((1 + (f - 1) * more[t] if t in more else f) ** count(g, t)
                                         for t, (unit, f) in BY_KEY["walk"].items() if faster(unit, name) or t in also and faster(also[t], name))
+    if add := sum(v * count(g, t) for t, (unit, v) in BY_KEY["walk_add"].items() if faster(unit, name)):
+        import ai                                                  # ai imports gather, gather imports this module
+        f += add / ai.walk_speed(name, 1, 1)                       # tiles per second on the base speed (Aristocracy, #3921)
     if changes := [(op, q) for field, op, q in vars(g).get("unit_values", {}).get(uuid, ()) if field == "speed"]:
         import ai                                                  # ai imports gather, gather imports this module
         base = ai.walk_speed(name, 1, 1)                           # tiles per AoE2 second
