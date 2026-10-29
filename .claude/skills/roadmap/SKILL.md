@@ -53,5 +53,6 @@ When `python3 tools/claim.py 0 --roadmap` exits 0 (one run after each 100 merged
    game program or the replay cannot do yet? Add at most 5 missing features, each with a new key and one line.
 3. Keep the order: the features that the next features need come first.
 4. Give each new feature a row in `docs/RELEASE.md` (milestone C, unless the owner says otherwise), and correct the
-   estimates there: a feature whose epic has more sub-issues than its estimate needs no estimate.
+   estimates there. Do not remove an estimate: `release.py` takes the larger of the estimate and the sub-issues of
+   the epic, and with no estimate the median of the closed epics, more than a small epic has (#3678: 20 tickets).
 5. Put the change into the PR of your ticket. The owner can change the list at any time.

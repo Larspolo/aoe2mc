@@ -5,6 +5,7 @@ merge, an own resolver script each time, and the full fast suite after each merg
 
     python3 tools/merge_main.py             # merge origin/main, solve the add-add hunks, commit, ruff and the tests
     python3 tools/merge_main.py --push N    # the same, then `claim.py N --guard` and the push of the branch
+    python3 tools/merge_main.py --push N --pr-branch B   # a takeover from the session branch: guard and push to B
     python3 tools/merge_main.py --no-test   # no ruff and no tests (a merge before the code of the ticket)
 
 Steps: copy main's merge driver of `game/data/*.jsonl` into the git directory (#2096), `git fetch origin main`,
@@ -117,14 +118,16 @@ def check(conflicted, base):
     return r.returncode == 0
 
 
-def push(number):
-    """`claim.py N --guard`, then the push of the branch (once more after a merge of the remote branch). True: pushed."""
+def push(number, pr_branch=None):
+    """`claim.py N --guard`, then the push of the branch (once more after a merge of the remote branch). True: pushed.
+    pr_branch: the branch of a PR that the run took over from its session branch (`overlap.md`, #3678)."""
     tool = os.path.join(os.path.dirname(os.path.abspath(__file__)), "claim.py")
-    g = subprocess.run([sys.executable, tool, str(number), "--guard"], capture_output=True, text=True)
+    g = subprocess.run([sys.executable, tool, str(number), "--guard", *(["--pr-branch", pr_branch] if pr_branch else [])],
+                       capture_output=True, text=True)
     if g.returncode:
         print(f"guard failed, no push: {(g.stdout + g.stderr).strip()}")
         return False
-    branch = git("branch", "--show-current").stdout.strip()
+    branch = pr_branch or git("branch", "--show-current").stdout.strip()
     for _ in range(2):
         r = git("push", "origin", f"HEAD:refs/heads/{branch}")
         if r.returncode == 0:
@@ -143,6 +146,7 @@ def push(number):
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--push", type=int, metavar="N", help="after the merge and the checks: guard ticket N and push")
+    ap.add_argument("--pr-branch", metavar="B", help="with --push: push to branch B, the PR that the run took over (#3678)")
     ap.add_argument("--no-test", action="store_true", help="no ruff and no tests")
     a = ap.parse_args(argv)
     gd = git("rev-parse", "--git-common-dir", check=True).stdout.strip()
@@ -182,7 +186,7 @@ def main(argv=None):
         print("merge committed")
     if merged and not a.no_test and not check(conflicted, "origin/main"):
         return 2
-    if a.push is not None and not push(a.push):
+    if a.push is not None and not push(a.push, a.pr_branch):
         return 3
     return 0
 
