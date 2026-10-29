@@ -82,6 +82,7 @@ MAP = (                                                                # gather.
     "trees",
 )
 VICTORY = (                                                            # the victory modes (#2476), pack()
+    "challenge_waves",                                                 # challenge.waves: the waves that came (#3907)
     "conquest_seen",
     "corruption_at",
     "corruption_time",
