@@ -277,6 +277,8 @@ def dump(g):
     d["stances"] = {n: {k: p[k] for k in ("team", "neutral", "sees") if k in p}   # the Diplomacy page (#2934), the
                     for n, p in sorted(g.players.items())}                       # triggers' stances and sight (#2989)
     d["owners"] = owner_record(g)
+    import recap                                                       # recap imports train, which imports savegame
+    d["game_time"] = round(recap.game_time(g), 3)                      # the game seconds: a pause keeps them (#3377)
     return d
 
 
@@ -578,6 +580,8 @@ GAME_STEPS = (                                                          # load()
 def load(g, d):
     """Put the saved state d (dump) on the Gather of each player that it names, and show the resources again. A new
     part of the saved game: one function and one line in SIDE_STEPS or GAME_STEPS."""
+    if getattr(g, "game", None) is not None:                           # start_on_join starts the clocks at this time (#3377)
+        g.game.loaded_seconds = d.get("game_time", 0.0)
     for x in sides(g):
         if (p := d["players"].get(str(x.player))) is not None:
             for step in SIDE_STEPS:

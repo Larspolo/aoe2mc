@@ -27,9 +27,12 @@ STATE = ("players", "soldiers", "techs", "t0", "trained", "villagers")   # the f
 
 
 def game_time(g):
-    """The game seconds since the start of the session (gather.NORMAL game seconds per real second at speed 1)."""
+    """The game seconds since the start of the session (gather.NORMAL game seconds per real second at speed 1).
+    A pause (pause.py) stops the game time: it stays at the time of the pause (#3377)."""
     from gather import NORMAL                                          # gather imports train, train this module
-    return (g.clock() - g.t0) * NORMAL * getattr(g, "speed", 1.0)
+    main = getattr(getattr(g, "game", None), "g", None) or g           # the Gather of player 1 holds the pause
+    now = main.paused_at if getattr(main, "paused", False) else g.clock()
+    return (now - g.t0) * NORMAL * getattr(g, "speed", 1.0)
 
 
 def mmss(seconds):
