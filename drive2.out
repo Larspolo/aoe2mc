@@ -1,0 +1,57 @@
+house HOUSE [12, 60, 20, 68]
+Picked up JAVA_TOOL_OPTIONS: -Djavax.net.ssl.trustStore=/etc/ssl/certs/java/cacerts -Djavax.net.ssl.trustStoreType=JKS -Dhttps.proxyHost=127.0.0.1 -Dhttps.proxyPort=34279 -Dhttp.nonProxyHosts=localhost|127.0.0.1|::1|127.*|0.*|::|169.254.*|api.anthropic.com|api-staging.anthropic.com|api-pr-preview.anthropic.com|mcp-proxy.anthropic.com|mcp-proxy-staging.anthropic.com|registry.npmjs.org|jsr.io|npm.jsr.io|pypi.org|files.pythonhosted.org|index.crates.io|proxy.golang.org|host.docker.internal|10.*|172.16.*|172.17.*|172.18.*|172.19.*|172.20.*|172.21.*|172.22.*|172.23.*|172.24.*|172.25.*|172.26.*|172.27.*|172.28.*|172.29.*|172.30.*|172.31.*|192.168.*|100.64.0.0/10|*.svc.cluster.local|*.svc.cluster.local -Djdk.http.auth.tunneling.disabledSchemes= -Djdk.http.auth.proxying.disabledSchemes=
+Note: /home/user/aoe2mc/game/plugin/src/main/java/aoe2mc/AoePlugin.java uses or overrides a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+Join the server localhost:42331 (Minecraft 26.3, multiplayer, direct connection).
+1 villagers of player 1. Hold the carrot on a stick: right click a villager to select it,
+then right click a tree, a fruit bush or a mine. To build: /trigger aoe_build set N (the menu is in the chat),
+then right click the ground. Right click your town center to train a villager (50 food). Ctrl-C stops.
+The game starts when 1 person joined.
+1 [9, 10] []
+4 [9, 10] [1]
+5 [2, 9, 10] [1]
+6 [2, 9, 10] [1]
+7 [2, 9, 10] [1]
+9 [2, 9, 10] [1]
+10 [2, 9, 10] [1]
+11 [2, 9, 10] [1]
+12 [2, 9, 10] [1]
+23 [2, 9, 10] [1]
+Teleported Knight to 21.500000, 66.000000, 63.500000
+42 [2, 9, 10, 11] []
+52 [2, 9, 10, 11] []
+54 [2, 9, 10, 11] []
+55 [2, 9, 10, 11] []
+56 [2, 9, 10, 11] []
+57 [2, 9, 10, 11] []
+59 [2, 9, 10, 11] []
+60 [2, 9, 10, 11] []
+61 [2, 9, 10, 11] []
+62 [2, 9, 10, 11] []
+64 [2, 9, 10, 11] []
+65 [2, 9, 10, 11] []
+66 [2, 9, 10, 11] []
+68 [2, 9, 10, 11] []
+69 [2, 9, 10, 11] []
+70 [2, 9, 10, 11] []
+71 [2, 9, 10, 11] []
+73 [2, 9, 10, 11] []
+74 [2, 9, 10, 11] []
+75 [2, 9, 10, 11] []
+76 [2, 9, 10, 11] []
+78 [2, 9, 10, 11] []
+79 [2, 9, 10, 11] []
+80 [2, 9, 10, 11] []
+82 [2, 9, 10, 11] []
+83 [2, 9, 10, 11] []
+84 [2, 9, 10, 11] []
+85 [2, 9, 10, 11] []
+87 [2, 9, 10, 11] []
+88 [2, 9, 10, 11] []
+89 [2, 9, 10, 11] []
+91 [2, 9, 10, 11] []
+92 [2, 9, 10, 11] []
+93 [2, 9, 10, 11] []
+94 [2, 9, 10, 11] []
+96 [2, 9, 10, 11] []
+rc=0

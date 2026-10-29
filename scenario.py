@@ -40,10 +40,10 @@ def build(path):
     t = tm.add_trigger("5 unload"); t.new_condition.timer(timer=25)
     t.new_effect.unload(source_player=1, location_x=16, location_y=16, selected_object_ids=[ship.reference_id])
     chat(t, "Item 5: the ship unloads.")
-    t = tm.add_trigger("7 victory");
+    t = tm.add_trigger("7 victory"); t.new_condition.timer(timer=4)
     t.new_condition.victory_timer(quantity=20, source_player=1, inverted=1, comparison=0, victory_timer_type=0)
     chat(t, "Item 7: no victory timer of player 1 runs.")
-    t = tm.add_trigger("8 bring");
+    t = tm.add_trigger("8 bring"); t.new_condition.timer(timer=6)
     t.new_condition.bring_object_to_area(unit_object=house.reference_id, area_x1=3, area_y1=15, area_x2=5, area_y2=17)
     chat(t, "Item 8: the house is in the area.")
     t = tm.add_trigger("8 bring object");
