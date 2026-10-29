@@ -39,8 +39,11 @@ after"): the speed of the project changes, and a paused project merges nothing (
 lists the open tickets with a date in `Start after:` ("Time waits").
 
 A new line of a data file in `game/data/` needs no criterion "the values are those of the source" and no test of its values:
-`tests/test_data_files.py` checks the form of each line (#1916). Name a test of behavior: a fight, a menu, a bonus that
-the code computes. Never write a criterion "a test checks that the data file (or a workflow, `agent.toml`, a skill)
+`tests/test_data_files.py` checks the form of each line (#1916). A ticket that changes only data files names no new
+test and no test file: its criterion is that the existing tests pass (owner, 2026-10-29, #4242; `docs/extend.md`).
+A test of a menu or a bonus with the names and values of the new line is a test of the data content too. Name a test
+of behavior only for a change of code, with test data or the expected value from the data. Never copy the test of an
+older ticket of the same epic when that ticket changed only data. Never write a criterion "a test checks that the data file (or a workflow, `agent.toml`, a skill)
 holds X": no test checks the content of a data or configuration file (owner, 2026-10-29, `docs/extend.md`).
 
 Labels: one priority (`P0`-`P3`), one kind (`bug`, `feature`, `tooling`, `design`, `docs`, `cleanup`),
@@ -141,7 +144,7 @@ does not say?
   label (`autopilot` skill, `queue.md`). Not sure between main and deep: main.
 - Write tickets for Haiku (owner, 2026-10-29: 40 % of the closed tickets had `lane:haiku`, but 2 of 25 ready ones).
   When you make a ticket, decide the place and the result while that code is in your context: write the file, the
-  function or data line, the exact result and the test to copy into the body, then give `lane:haiku` (a render, a
+  function or data line, the exact result and (for a change of code only) the test to copy into the body, then give `lane:haiku` (a render, a
   screenshot or a real game still needs main). Spend at most one `grep` per ticket on it; when it does not find the
   place, give no Haiku label. In the queue refill, also give `lane:haiku` to the ready tickets with no lane whose
   body already meets the Haiku row (read the bodies only, not the code).
