@@ -71,6 +71,9 @@ COUNTED = "aoe2mc.pop"      # entity tag of the units that the population counts
 EFFECT = "aoe2mc.effect"    # entity tag of the texts above a building (#843)
 PANEL = "aoe2mc.panel"      # entity tag of the production texts above a building (#2811, decision #2808: C)
 PANEL_BAR = 10              # characters of the text progress bar of a production item
+GRAPH = "aoe2mc.graph"      # entity tag of the graph text in the sky above the overview (#3448, decision #3447: B)
+GRAPH_BARS = "▁▂▃▄▅▆▇█"     # one bar per game minute, its height relative to the highest value of all players
+GRAPH_MINUTES = 20          # the last minutes of each graph row: a long game keeps a short text
 FOLLOWED = "aoe2mc.followed"  # the tag of the entity that the spectators of --follow look through (#1095)
 TRAIL = 3                   # tiles: a follower farther than this from its target walks to it again (#2551)
 TRAIL_MS = 1000             # ms of game time between two checks of the followers (#2551)
@@ -307,18 +310,24 @@ def formation_cells(free, group, target, kind="Line", T=4, long=False):
     if long and kind == "Line" and d > FAR_TILES * T:
         cols = 1 if n == 2 else min(n, 2)
     rows = -(-n // cols)
+    few = sum(bool(u[4]) for u in group) if kind == "Box" else 0     # Box: grow until the weak units fit inside
+    while few and (rows - 2) * (cols - 2) < few and rows + cols <= n - few:
+        rows, cols = (rows + 1, cols) if rows < cols else (rows, cols + 1)   # (#3640)
     r = max(2 * T, math.ceil(max(cols, rows) * S) + 4 * S * (kind == "Flank"))
     x0, z0 = int(tx), int(tz)
     todo = {(x, z) for x in range(x0 - r, x0 + r + 1) for z in range(z0 - r, z0 + r + 1) if free(x, z)}
     group = sorted(group, key=lambda u: (u[3], (tx - u[1]) * dx + (tz - u[2]) * dz))
     slots = []                                                      # (key, row, offset across the walk)
     if kind == "Box":
-        cells = [(q, j) for q in range(rows) for j in range(cols)][:n]
+        cells = [(q, j) for q in range(rows) for j in range(cols)]
         inner = [c for c in cells if 0 < c[0] < rows - 1 and 0 < c[1] < cols - 1]
-        outer = [c for c in cells if c not in inner]
+        ring = sorted((c for c in cells if c not in inner),                  # around the square, in angle order
+                      key=lambda c: math.atan2(c[0] - (rows - 1) / 2, c[1] - (cols - 1) / 2))
         weak = [u for u in group if u[4]]
         order = weak + [u for u in group if not u[4]]
-        cells = inner[:len(weak)] + outer + inner[len(weak):]
+        k = min(len(ring), n - min(len(weak), len(inner)))           # the units on the ring, spread over it (#3640)
+        outer = [ring[i * len(ring) // k] for i in range(k)] if k else []
+        cells = inner[:len(weak)] + outer + [c for c in ring if c not in outer] + inner[len(weak):]
         slots = [(u[0], q, (j - (cols - 1) / 2) * S) for u, (q, j) in zip(order, cells)]
     else:
         for q in range(rows):
@@ -392,6 +401,7 @@ class Replay:
         self.censused = False                   # a census counted the live units (the base of the units lost)
         self.reached, self.researched = {}, {}  # player -> {age: game time (ms)}, researched technologies (#1067)
         self.vills, self.vhigh = {}, {}         # player -> live villagers (est.), the highest count (#1086)
+        self.graph = {}                         # value index -> the shown rows of its graph (#3448)
         self.samples, self.minute = {}, -1      # player -> [(minute, pop, villagers, military, resources)], last minute (#3446)
         self.eyes = None                        # (x, y, z) of each player; None: not known, each gather step shows (#2761)
         self.queue = None                       # in run() on Paper: the commands that wait for flush() (#2761)
@@ -449,6 +459,33 @@ class Replay:
         """The samples of each player up to game time t (ms): (minute, population, villagers, military, resources)."""
         return {p: [s for s in ss if s[0] * 60000 <= t] for p, ss in self.samples.items()}
 
+    def graphs(self, t):
+        """The commands of the graphs at game time t (ms, #3448, decision #3447: B): in the sky above the overview one
+        large text display per value (population, villagers, military, estimated resources), one row per player in
+        its color, one bar per game minute. One display per value keeps each command below the RCON limit with 8
+        players. Only the displays whose text changed: the samples change once per minute."""
+        stats = {p: ss[-GRAPH_MINUTES:] for p, ss in self.stats(t).items() if ss}
+        if not stats:
+            return []
+        if getattr(self, "view", None) is None:
+            self.overview()                                         # it sets the place of the overview
+        y, c, out = int(self.view.split()[1]) + 12, f"{self.n / 2:.1f}", []
+        for i, name in enumerate(("Population", "Villagers", "Military", "Resources (estimated)"), 1):
+            top = max(s[i] for ss in stats.values() for s in ss) or 1
+            rows = [text(name + "\n")]
+            for p in self.ranked(stats):
+                who, color = self.label(p)
+                bars = "".join(GRAPH_BARS[round(s[i] / top * (len(GRAPH_BARS) - 1))] for s in stats[p])
+                rows.append(text(f"{who} {bars} {stats[p][-1][i]}\n", color))
+            if rows == self.graph.get(i):
+                continue
+            line, tag = json.dumps(rows, ensure_ascii=False, separators=(",", ":")), f"{GRAPH}.{i}"
+            out.append(f"data merge entity @e[type=text_display,tag={tag},limit=1] {{text:{line}}}" if i in self.graph
+                       else f"summon text_display {c} {min(319, y + 4 * (4 - i))} {c} {{text:{line},billboard:\"center\","
+                            f'shadow:1b,line_width:1000,Tags:["{GRAPH}","{tag}"]}}')
+            self.graph[i] = rows
+        return out
+
     def resources(self, p):
         return self.stock.setdefault(p, dict(START))
 
@@ -473,6 +510,8 @@ class Replay:
         if kind in aoe2mc.UNIT_USE - {"stance"} | {"delete", "stop"}:   # a new order ends a FOLLOW or GUARD (#2551)
             for i in e.get("objects") or ():
                 self.follows.pop(i, None)
+                if getattr(v := self.units.get(i), "hunt", None) is not None:   # the new order starts at the chase (#3540)
+                    v.pos, v.leg, v.hunt = self.at(v, e["time"]), None, None
                 self.idle.pop(i, None)                                # a new order: settle() does not check it
                 self.scouts.pop(i, None)
         if kind == "patrol" and e.get("objects") and e.get("tile"):
@@ -1205,6 +1244,8 @@ class Replay:
                     v.pos, v.path = (x + 0.5, float(v.pos[1] if y is None else y), z + 0.5), []
                     speed = next((s for k, s in SPEEDS.items() if v.name.startswith(k)), 1.0) * self.T
                     v.leg = (start, e["time"], e["time"] + 1000 * math.dist(start[::2], v.pos[::2]) / speed)
+                if e and e.get("target") in self.units and e["target"] != i:
+                    v.hunt = e["target"]                                # at() follows the target after the leg (#3540)
             else:
                 rest.append((i, v))
         return out, rest
@@ -1537,11 +1578,14 @@ class Replay:
         lag = math.dist(at, (v.pos[0], v.pos[2])) - d
         return min(CATCH_UP, max(1.0, 1 + lag / min(d, reach or d)))
 
-    def at(self, v, t):
+    def at(self, v, t, hunt=True):
         """The replay position of unit v at game time t (ms): on the line of its leg while it walks, else v.pos.
         A new order starts there, not at the end of the leg: a scout gets a new order every 2 to 5 s, and its
-        replay position jumped up to 250 blocks ahead of it (#851)."""
+        replay position jumped up to 250 blocks ahead of it (#851). After its leg, an attacker of a unit of the record
+        is at the replay position of its target until the next order (hunt False: of a target that hunts too, #3540)."""
         start, t0, t1 = getattr(v, "leg", None) or (v.pos, 0, 0)
+        if t >= t1 and (w := self.units.get(getattr(v, "hunt", None))) is not None and w is not v:
+            return self.at(w, t, False) if hunt else w.pos              # an attacker chases its target (#3540)
         if not t0 <= t < t1:
             return v.pos
         f = (t - t0) / (t1 - t0)
@@ -2515,6 +2559,7 @@ class Replay:
                     send(self.clock_commands(to, end, self.speed) + self.score_commands())
                     self.send(self.panel(to))
                     self.sample(to)
+                    self.send(self.graphs(to))
                 continue
             lag = max(lag, clock() - r0 - (now - g0) / 1000 / self.speed)
             if int(now) // 1000 != shown:                              # at most once per game second
@@ -2526,6 +2571,7 @@ class Replay:
                 send(self.clock_commands(now, end, self.speed) + self.score_commands() + self.overview(join=True))
                 self.send(self.panel(now))
                 self.sample(now)
+                self.send(self.graphs(now))
                 self.send(self.fog())
             if e is None:                                           # behind its clock: all the steps up to the
                 late = g0 if self.paused else g0 + (clock() - r0) * 1000 * self.speed    # game time now in one

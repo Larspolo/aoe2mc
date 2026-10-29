@@ -81,7 +81,7 @@ def pr_work(pr, open_issues, checks, beat, now, me=""):
     owner = (beat[1].split(" ")[3:4] or ["?"])[0] if beat else None
     if live:
         return f"{what}; its run `{owner}` beat {beat[0]:.0f} min ago: leave it"
-    return f"{what}; no live claim: take it over (`overlap.md`), then `merge_main.py --push {ticket}` or fix at step 6.8"
+    return f"{what}; no live claim: take it over (`overlap.md`), then `merge_main.py --push {ticket} --pr-branch {pr['head']['ref']}` or fix at step 6.8"
 
 
 def related(issue, last):

@@ -29,6 +29,7 @@ PACKED = ("queues", "trained", "sites", "rally",                       # with tu
           "soldiers", "units")                                         # the units of the game, trained or upgraded (#2532)
 OPTIONAL = ("auto", "auto_by",                                         # the auto-queue of each building (#3524)
             "auto_reseed",                                             # the mill switch (#3422)
+            "bell_work",                                               # the work before the town bell (#3420)
             "limit_left", "policy", "rates", "relic_timer", "reseeds", "switches", "upgraded", "wonder_shown", "wonders",   # only on a
             "wonders_gone")                                            # Gather that has them (#2324; the policy: #2515)
 MONK = ("carrier_at", "converting", "faith", "fetching", "heal_time", "monk_at", "relic_gold", "relic_homes",
@@ -221,6 +222,8 @@ NOT_SAVED = (                                                          # the fie
     "victory_timer_sent",                                              # scenario.victory_timers: a load sends them again
     "victory_value",                                                   # run.py: from the saved settings
     "wall_start",                                                      # build.py: the first corner of a wall
+    "waypoint_at",                                                     # gather.add_waypoint: a load ends the move (#3515)
+    "waypoints",                                                       # gather.add_waypoint: a load ends the move (#3515)
     "who",                                                             # the player name on the server
     "win_at",                                                          # scenario.py: the next check time
     "wonder",                                                          # defend_wonder.setup makes it again
