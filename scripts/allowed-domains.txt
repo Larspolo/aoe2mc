@@ -19,4 +19,5 @@ data.aoe2companion.com
 www.aoe2insights.com
 aok.heavengames.com
 aoe2.heavengames.com
+files.heavengames.com
 steamcommunity.com

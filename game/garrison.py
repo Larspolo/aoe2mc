@@ -86,11 +86,12 @@ def start(g):
     return out
 
 
-def arrows(building, names, factor=1):
+def arrows(building, names, factor=1, more=0):
     """The arrows of one shot of the building with the units `names` inside: its BASE (times factor: civs.arrows, #2178),
     and 1 more for each villager or foot archer (an archer that is not cavalry, a camel or an elephant), as in AoE2. A
     bombard tower shoots one cannon ball (#1375). A dock: 1 for each fishing ship, at most SIZES (AoE2 DE: up to 5 arrows, #1949). A fortified church:
-    1 for each villager, no soldier (AoE2 DE: villagers and relics, #1948). A building with no attack: none."""
+    1 for each villager, no soldier (AoE2 DE: villagers and relics, #1948). more: the arrows of the technologies (#4258).
+    A building with no attack: none."""
     import civs, combat                                            # combat imports gather
     if building == "BOMBARD_TOWER":
         return 1
@@ -100,7 +101,7 @@ def arrows(building, names, factor=1):
         return sum(n.startswith("VILLAGER") for n in names)
     if building in combat.BUILDINGS and not combat.BUILDINGS[building].attack:   # a Khmer house does not shoot (#2117)
         return 0
-    return BASE.get(building, 1) * factor + sum(n.startswith("VILLAGER") or combat.ARC in (s := combat.stats(n)).classes and not civs.mounted(s)
+    return BASE.get(building, 1) * factor + more + sum(n.startswith("VILLAGER") or combat.ARC in (s := combat.stats(n)).classes and not civs.mounted(s)
                    for n in names)
 
 
@@ -111,7 +112,7 @@ def arrows_command(g, rect):
     import train                                                   # train imports this module
     building = holders(g).get(rect, {}).get("name")
     more = train.value("arrows", vars(g).get("upgraded", {}).get(rect), 0)   # the Defensive Town Center (#2497)
-    return f"aoe arrows {combat.target_uuid([rect[0], rect[2], rect[1], rect[3]])} {arrows(building, names, civs.arrows(g, building)) + more}"
+    return f"aoe arrows {combat.target_uuid([rect[0], rect[2], rect[1], rect[3]])} {arrows(building, names, civs.arrows(g, building), train.more_arrows(g, building)) + more}"
 
 
 def ungarrison(building):

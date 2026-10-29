@@ -146,7 +146,7 @@ does not say?
   place, give no Haiku label. In the queue refill, also give `lane:haiku` to the ready tickets with no lane whose
   body already meets the Haiku row (read the bodies only, not the code).
 - Deep is for about 10 to 20 % of the tickets. Never both lane labels. Decision tickets and epics get no lane label.
-- While `reserved` in `[pacing]` of `agent.toml` names a lane, the main runs never take its tickets (#1994).
+- While `reserved` in `[pacing]` of `steering/system/system.toml` names a lane, the main runs never take its tickets (#1994).
 
 ## Rules
 
