@@ -14,7 +14,7 @@ The flow brake (owner, 2026-10-27): the quota is not the only bottleneck. When C
 stops the merges, the agent PRs build up, and a night of new PRs gives many conflicts. So `--fire` counts the open
 agent PRs older than `pr_minutes` (they wait for something that is not the quota) and the queued CI runs. At
 `max_waiting_prs` it starts at most 1 run per cycle, and that run only repairs PRs (autopilot step 2). At
-`max_ci_queue` it starts no run: a run cannot make CI faster. The limits are in `[pacing]` of `agent.toml`.
+`max_ci_queue` it starts no run: a run cannot make CI faster. The limits are in `[pacing]` of `steering/system/system.toml`.
 
 BURN and BURN7 (the same for the 7-day window, #1695) are the defaults. When the run reports on the status issue
 have enough `Usage:` lines (at least 5 pairs in the last 24 hours), `tools/health.py` measures the burns from them

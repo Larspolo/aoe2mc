@@ -25,7 +25,7 @@ a second push of another claim commit is never a fast-forward. Later claims of t
     python3 tools/claim.py E --refill     # lock the sub-issues of epic E (0: the whole queue refill, autopilot step 5)
     python3 tools/claim.py 0 --fixmain --state SHA   # lock the "Fix main" ticket of the break in commit SHA (step 2)
     python3 tools/claim.py 0 --review     # lock the process review after its gap of merged PRs (`improve` skill,
-                                          # `[review]` of agent.toml; it prints the owner work since the last review)
+                                          # `[review]` of `steering/system/system.toml`; it prints the owner work since the last review)
     python3 tools/claim.py 0 --reviewed change   # after the review: "change" or "none" sets the next gap
     python3 tools/claim.py 0 --roadmap    # lock the review of steering/project/ROADMAP.md after 100 merged PRs (`roadmap` skill)
     python3 tools/claim.py 0 --prune      # delete the refs of closed tickets and old locks (`claims.yml` only)
@@ -75,7 +75,7 @@ import uuid
 from agent_config import CONFIG
 
 EMPTY_TREE = "4b825dc642cb6eb9a060e54bf8d69288fbee4904"
-# The process review counts merged PRs, never hours (owner, 2026-10-29): `[review]` of agent.toml.
+# The process review counts merged PRs, never hours (owner, 2026-10-29): `[review]` of `steering/system/system.toml`.
 REVIEW_CONFIG = CONFIG.get("review", {})
 REVIEW = REVIEW_CONFIG.get("gap", 80)            # the first gap, and the reset when the result of the reviews turns
 REVIEW_MIN, REVIEW_MAX = REVIEW_CONFIG.get("min_gap", 10), REVIEW_CONFIG.get("max_gap", 640)   # halve, double between
@@ -190,7 +190,7 @@ def lane():
 
 def deep_lane():
     """True when this run may do the process review, the roadmap review and the queue refill: always, but only the
-    runs of the deep lane while `reserved` in `[pacing]` of agent.toml names `deep` (owner, 2026-10-28): the main runs
+    runs of the deep lane while `reserved` in `[pacing]` of `steering/system/system.toml` names `deep` (owner, 2026-10-28): the main runs
     work at low effort, and these steps steer many later tickets."""
     return "deep" not in CONFIG.get("pacing", {}).get("reserved", ()) or lane() == " lane deep"
 

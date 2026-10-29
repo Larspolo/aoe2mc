@@ -21,16 +21,7 @@ from agent_config import CONFIG, ROOT  # noqa: E402
 SYSTEM = os.path.join(ROOT, CONFIG["docs"]["system"])
 ROW = re.compile(r"^\| `([^`]+)` \| (generic|specific|steering) \|", re.M)
 
-CONFIG_TOML = """# Project values of the agent system (#905). The tools in tools/ read this file (tools/agent_config.py).
-
-repo = "{repo}"
-owner = "{owner}"
-branch = "{branch}"
-
-[status]
-issue = 1
-label = "agent-status"
-paused = "paused"
+SYSTEM_TOML = """# The owner's settings of the agent system (tools/agent_config.py joins them with agent.toml).
 
 [pacing]
 max_runs = 16                   # the most runs at one time (tools/usage.py)
@@ -45,6 +36,18 @@ gap = 80                        # merged PRs: the first gap, and the reset when 
 min_gap = 10                    # a review with a change halves a gap up to `gap`, down to this
 max_gap = 640                   # a review with no change doubles a gap from `gap` up, up to this
 owner_gap = 20                  # the gap when an owner session merged a PR since the last review
+"""
+
+CONFIG_TOML = """# Project values of the agent system (#905). The tools in tools/ read this file (tools/agent_config.py).
+
+repo = "{repo}"
+owner = "{owner}"
+branch = "{branch}"
+
+[status]
+issue = 1
+label = "agent-status"
+paused = "paused"
 
 [commands]                      # change these to the commands of the project
 install = "python3 -m pip install -r requirements-dev.txt"
@@ -138,6 +141,7 @@ def label_result(call, r):
 
 STUBS = {   # specific files that the generic files need, as a short start for the new project
     "agent.toml": CONFIG_TOML,
+    "steering/system/system.toml": SYSTEM_TOML,
     ".github/workflows/ci.yml": CI,
     ".claude/skills/verify/SKILL.md": VERIFY,
     "pyproject.toml": PYPROJECT,
@@ -216,7 +220,7 @@ def bootstrap(target, repo, branch="main"):
         dst = os.path.join(target, path)
         os.makedirs(os.path.dirname(dst) or target, exist_ok=True)
         with open(dst, "w") as f:
-            f.write(rename(text.format(**values), repo, name, owner) if path != "agent.toml" else text.format(**values))
+            f.write(rename(text.format(**values), repo, name, owner) if not path.endswith(".toml") else text.format(**values))
         if path.endswith(".sh"):
             os.chmod(dst, 0o755)
         written.append(path)
