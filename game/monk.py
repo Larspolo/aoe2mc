@@ -438,5 +438,7 @@ def convert(g, dt):
                 (win if fort else die if heresy(g, owner) else take)(g, target)
                 for k in group:
                     del g.converting[k]
+                import train                                       # train imports this module (#3502)
+                rest_factor = math.prod(train.value("rest", t, 1) for t in g.techs)   # Fanaticism: 0.5 (#3987)
                 for k in rest:                                     # the group in range (Theocracy: one)
-                    g.faith[k] = (ILLUMINATED if "ILLUMINATION" in g.techs else REST) / faith(g)
+                    g.faith[k] = (ILLUMINATED if "ILLUMINATION" in g.techs else REST) * rest_factor / faith(g)
