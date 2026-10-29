@@ -17,13 +17,16 @@ and clicks the game as a player (shot(), click(), key(): xdotool on the X screen
 """
 import argparse
 import glob
+import hashlib
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
 import tempfile
 import time
+import uuid
 import zipfile
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -187,6 +190,17 @@ def shoot(world, out, views=None, version=None, size=(1280, 720), settle=8.0, ti
     return outs
 
 
+def forget(world, name):
+    """Delete the saved files of the player name in the world (playerdata, advancements, stats; #3831): each start is a
+    living player with full health (#3418: a dead player was saved and later runs started dead). An offline server
+    names the player by the UUID of "OfflinePlayer:<name>", as Java's UUID.nameUUIDFromBytes."""
+    uid = str(uuid.UUID(bytes=hashlib.md5(f"OfflinePlayer:{name}".encode()).digest(), version=3))
+    for root, _, files in os.walk(world):
+        for f in files:
+            if f.startswith(uid):
+                os.remove(os.path.join(root, f))
+
+
 class Client:
     """The client as player "aoe2mc" on the server at 127.0.0.1:port (online-mode=false), in Xvfb. A context manager:
     the client is in the world when wait_join() returns (or the test sees the player in "list").
@@ -194,12 +208,14 @@ class Client:
 
     SCALE = 3                       # GUI scale: slot() needs a fixed one
 
-    def __init__(self, port, version, size=(1280, 720), name="aoe2mc", chat=False):
+    def __init__(self, port, version, size=(1280, 720), name="aoe2mc", chat=False, world=None):
         for tool in ("Xvfb", "import", "xdotool"):
             if not shutil.which(tool):
                 sys.exit(f"{tool} is not installed (apt-get install xvfb imagemagick xdotool)")
         self.port, self.version, self.size, self.name, self.chat = port, version, size, name, chat
         self.client = self.xvfb = self.log = None
+        if world:
+            forget(world, name)
 
     def __enter__(self):
         cp, vj = client_files(self.version)
@@ -270,6 +286,20 @@ class Client:
 
     def key(self, name):
         self.xdo("key", name)
+
+    def place(self, game, x, y, z, yaw=0, pitch=20, wait=15.0):
+        """Teleport the player onto a 3 x 3 stone platform under (x, y, z) and wait until the client has loaded the
+        chunks (#3831): after a long tp the first image was only sky (#3370), and a player fell off (#3400)."""
+        game.command(f"fill {x - 1} {y - 1} {z - 1} {x + 1} {y - 1} {z + 1} minecraft:stone")
+        game.command(f"tp {self.name} {x + 0.5} {y} {z + 0.5} {yaw} {pitch}")
+        time.sleep(wait)
+
+    @staticmethod
+    def health(game, target):
+        """The Health of a mob by its UUID, selector or tag (#3831), or None when no such mob is there."""
+        sel = target if "-" in target or target.startswith("@") else f"@e[tag={target},limit=1]"
+        m = re.search(r"has the following entity data: ([-0-9.]+)f?", game.command(f"data get entity {sel} Health"))
+        return float(m.group(1)) if m else None
 
     def pick(self, g, want, dists=(3, 5, 7), wait=2.0):
         """Aim at want (a unit UUID, or the footprint rect of an own building) of the Gather g and right click it
