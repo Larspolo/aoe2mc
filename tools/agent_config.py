@@ -41,4 +41,10 @@ def first_account(config=None):
     return next(iter((CONFIG if config is None else config).get("accounts", {})), None)
 
 
+def login(account, config=None):
+    """The GitHub login of a Claude account (`login` of its table in `[accounts]`), else the owner (#4243)."""
+    config = CONFIG if config is None else config
+    return config.get("accounts", {}).get(account, {}).get("login", config["owner"])
+
+
 CONFIG = load()
