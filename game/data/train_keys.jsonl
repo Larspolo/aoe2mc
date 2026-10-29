@@ -1,5 +1,6 @@
 {"name": "after", "text": "The technology before this one in its menu slot: the menu shows it only after that research. train.unlocked.", "issue": 1423}
 {"name": "age", "text": "The age of a technology (0 Dark, 1 Feudal, 2 Castle, 3 Imperial; build.AGE for the units and buildings). The menu shows it from that age on.", "issue": 1046}
+{"name": "age_times", "text": "The train or research time in each age (Return of Rome docks: [Stone, Tool, Bronze, Iron]), in place of \"time\". train.seconds.", "issue": 3713}
 {"name": "aoe2_name", "text": "The AoE2 name of a unit with no name of the scenario parser (the record of Record Game writes its AoE2 type): TRADE_CART_EMPTY, WAR_CHARIOT_FOCUS_FIRE, RATHA_RANGED, ELITE_RATHA_RANGED. record.queued.", "issue": 3045}
 {"name": "arrows", "text": "An upgrade of one building (one_building): the arrows that the building shoots more, also with no garrison. garrison.arrows_command.", "issue": 2497}
 {"name": "attack_aura", "text": "An upgrade of one building (one_building): the own military units within \"range\" tiles of the building attack \"rate\" times as fast, {\"rate\", \"range\"}. train.haste.", "issue": 2497}

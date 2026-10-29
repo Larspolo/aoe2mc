@@ -308,10 +308,11 @@ class Client:
         if isinstance(want, str):
             if not (feet := g.pos(want)):
                 return None
-            mid = (feet[0], feet[1] + 1.0, feet[2])                    # the body of the unit, not its feet
+            mid, ground = (feet[0], feet[1] + 1.0, feet[2]), feet[1]   # the body of the unit, not its feet
         else:
-            mid = ((want[0] + want[1]) / 2, g.pos(self.name)[1] + 1.62, (want[2] + want[3]) / 2)
-        for stand, face in aims(mid, dists):
+            ground = g.pos(self.name)[1]
+            mid = ((want[0] + want[1]) / 2, ground + 1.62, (want[2] + want[3]) / 2)
+        for stand, face in aims(mid, dists, ground):
             g.command(f"tp {self.name} {stand[0]:.2f} {stand[1]:.2f} {stand[2]:.2f} facing "
                       f"{face[0]:.2f} {face[1]:.2f} {face[2]:.2f}")
             time.sleep(0.5)
@@ -322,12 +323,13 @@ class Client:
         return None
 
 
-def aims(mid, dists=(3, 5, 7)):
+def aims(mid, dists=(3, 5, 7), feet=None):
     """(stand feet, facing point) for each distance and 8 directions around mid, the point that the eye ray must
-    hit. tp ... facing aims the ray of the feet, so the facing point is 1.62 below mid (#1666)."""
+    hit. tp ... facing aims the ray of the feet, so the facing point is 1.62 below mid (#1666). feet: the ground
+    level of the stand; feet in a block lose the sneak pose (#3884). Default: the eye at the height of mid."""
     x, y, z = mid
-    face = (x, y - 1.62, z)
-    return [((x + d * dx, y - 1.62, z + d * dz), face) for d in dists
+    face, sy = (x, y - 1.62, z), y - 1.62 if feet is None else feet
+    return [((x + d * dx, sy, z + d * dz), face) for d in dists
             for dx, dz in ((0, 1), (1, 1), (1, 0), (1, -1), (0, -1), (-1, -1), (-1, 0), (-1, 1))]
 
 

@@ -55,11 +55,9 @@ def test_quantity_and_whole_map():
 def test_mixed_inverted_or_silent_triggers_give_no_tick():
     triggers = [area(5, [(1, 1, [0, 0, 1, 1])], effects=((11, ""),)),              # no chat effect
                 area(6, [(1, 1, [0, 0, 1, 1])], enabled=False)]
-    mixed = area(7, [(1, 1, [0, 0, 1, 1])])
-    mixed["conditions"].append(dict(type=aoe2mc.TIMER, timer=5, inverted=False))
     inverted = area(8, [(1, 1, [0, 0, 1, 1])])
     inverted["conditions"][0]["inverted"] = True
-    assert aoe2mc.trigger_files(triggers + [mixed, inverted]) == ([], {})
+    assert aoe2mc.trigger_files(triggers + [inverted]) == ([], {})   # a timer AND an area: #3891
 
 
 def test_area_turns_with_the_map():

@@ -446,17 +446,18 @@ def describe(n, hero=False):
 
     # Ships: boats with a crew that shows the ship type
     if has(n, "SHIP", "GALLEY", "GALLEON", "CARAVEL", "LONGSHIP", "LONGBOAT", "JUNK", "CANOE", "DROMON", "THIRISADAI",
-           "LOU_CHUAN", "LEMBOS", "MONOREME", "BIREME", "TRIREME", "LEVIATHAN", "HULK", "CARRACK", "RAFT", "COG"):
+           "LOU_CHUAN", "LEMBOS", "MONOREME", "BIREME", "TRIREME", "LEVIATHAN", "HULK", "CARRACK", "RAFT", "COG") \
+            or n in ("FISHING_BOAT", "HEAVY_TRANSPORT", "JUGGERNAUT", "LIGHT_TRANSPORT", "TRADE_BOAT"):   # Return of Rome (#3713)
         crew = soldier("skeleton", "crew", "bow")
         if has(n, "FISHING", "WHALING"):
             return boat("oak", [describe("VILLAGER_MALE_FISHERMAN")])
-        if has(n, "TRANSPORT", "MERCHANT", "TRADE_COG"):
+        if has(n, "TRANSPORT", "MERCHANT", "TRADE_COG", "TRADE_BOAT"):
             return boat("spruce" if "TRANSPORT" in n else "birch", [describe("VILLAGER_MALE")], chest=True)
         if has(n, "FIRE", "INCENDIARY"):
             return boat("mangrove", [mob("blaze")])
         if has(n, "DEMOLITION"):
             return boat("bamboo", [mob("creeper")])
-        if has(n, "CANNON", "TURTLE", "CATAPULT", "ONAGER", "LEVIATHAN"):
+        if has(n, "CANNON", "TURTLE", "CATAPULT", "ONAGER", "LEVIATHAN", "JUGGERNAUT"):
             return boat("dark_oak", [mob("pillager", hands("crossbow")), crew])
         if has(n, "LONGSHIP", "LONGBOAT", "DRAGON_SHIP"):   # LONGBOAT: the DE name (#1257)
             return boat("spruce", [soldier("zombie", "crew", "iron_axe"), crew])
@@ -474,15 +475,16 @@ def describe(n, hero=False):
     if hero and has(n, *HEROES["siege"]) or n.endswith("_RAM") or has(n, "MANGONEL", "ONAGER", "SCORPION", "TREBUCHET",
                                              "BOMBARD_CANNON", "SIEGE_TOWER", "ORGAN_GUN", "HOUFNICE",
                                              "ROCKET_CART", "HUSSITE_WAGON", "COBRA_CAR",
-                                             "FLAMETHROWER", "CHARIOT", "RATHA", "CATAPULT"):
+                                             "FLAMETHROWER", "CHARIOT", "RATHA", "CATAPULT") \
+            or n in ("BALLISTA", "HELEPOLIS", "STONE_THROWER"):                       # Return of Rome (#3713)
         if siege_crew(n):
             crew = siege_crew(n)
         elif n.endswith("_RAM") or "SIEGE_TOWER" in n:
             crew = soldier("zombie", "crew")
         elif n in ("CHARIOT", "SCYTHE_CHARIOT"):                     # the melee chariots of Antiquity Mode (#3669)
             crew = soldier("zombie", "crew", "iron_sword")
-        elif has(n, "SCORPION", "HUSSITE", "CHARIOT", "RATHA"):
-            crew = soldier("skeleton", "crew", "crossbow" if "SCORPION" in n else "bow")
+        elif has(n, "SCORPION", "HUSSITE", "CHARIOT", "RATHA") or n in ("BALLISTA", "HELEPOLIS"):
+            crew = soldier("skeleton", "crew", "bow" if has(n, "HUSSITE", "CHARIOT", "RATHA") else "crossbow")
         elif has(n, "BOMBARD", "ORGAN", "HOUFNICE", "ROCKET", "COBRA"):
             crew = mob("pillager", hands("crossbow"))
         elif "FLAMETHROWER" in n:
