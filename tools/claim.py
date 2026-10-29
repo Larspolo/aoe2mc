@@ -713,6 +713,10 @@ def main(argv=None):
         if not ref:
             print(f"no claim of #{a.number}: stop")
             return 1
+        issue = api(f"issues/{a.number}") if on_github(a.remote) else None
+        if isinstance(issue, dict) and issue.get("state") == "closed":      # closed during the run (#4249)
+            print(f"#{a.number} is closed: stop, release and pick no new work on it")
+            return 1
         back = revived(base=f"{a.remote}/main")
         if back:
             print(f"docs/LEARNINGS.md keeps {len(back)} lines that main removed (union merge, #563): remove them")
@@ -741,6 +745,10 @@ def adopt(number, name, remote="origin"):
     """The first beat of a run that the pacer started with a brief: the claim `name` of the pacer becomes the claim of
     this branch, and the lane of the claim becomes the lane of the run (git config, as `cycle_start.py --lane`).
     0: the ticket is yours; 1: the claim is not open with that name any more (a takeover after a late start)."""
+    issue = api(f"issues/{number}") if on_github(remote) else None
+    if isinstance(issue, dict) and issue.get("state") == "closed":      # closed after the pacer's claim (#4249)
+        print(f"#{number} is closed: follow the skill without the brief")
+        return 1
     found = refs(number, remote)
     line = subject(slot(number, max(found)), remote) if found else ""
     if line.startswith("Release") or line.split(" ")[3:4] not in ([name], [who()]):
