@@ -20,6 +20,8 @@ def test_a_spectator_chat_line_does_not_reach_the_players(tiny_world, tmp_path):
             mc_shot.Client(server.game_port, server.version, name="Bob") as spec:
         player.wait_join(lambda: "aoe2mc" in server.command("list").split(":", 1)[-1])
         spec.wait_join(lambda: "Bob" in server.command("list").split(":", 1)[-1])
+        player.wait_loaded(server)                    # else the keys go to "Loading terrain" (#3889)
+        spec.wait_loaded(server)
         for c in (*run.SPECTATORS, "team add p1", "team join p1 aoe2mc", "team join spec Bob"):
             server.command(c)
         time.sleep(5)

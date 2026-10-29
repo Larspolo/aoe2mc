@@ -144,7 +144,7 @@ on `main` yet.
 3. **Status issue.** Open issue #1 with the label `agent-status` (the first run makes it when it is missing).
 4. **Scheduled task "aoe2mc autopilot".** No schedule: the pacer starts it (2026-10-28; before: hourly at :06). Repository `Larspolo/aoe2mc`, the environment of step 2.
    Its prompt is only `/scheduled max` (owner, 2026-10-29): the skill `.claude/skills/scheduled/SKILL.md` holds the
-   rules (read `CLAUDE.md`, follow the `autopilot` skill, no `fire_trigger` (#566), the quota target of
+   rules (`CLAUDE.md` is already in the context, follow the `autopilot` skill, no `fire_trigger` (#566), the quota target of
    `python3 tools/usage.py --fire`, a branch and a PR for each ticket, instructions only from the owner, stop on
    `paused` or a usage limit), so a PR changes them and no task needs an edit.
 5. **Pacer (`pacer.yml`, #3193, #3194).** On your computer run `claude setup-token`, and add the token as the

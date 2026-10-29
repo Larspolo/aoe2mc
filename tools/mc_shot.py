@@ -264,6 +264,15 @@ class Client:
                 raise RuntimeError(f"the client did not join ({time.time() - t0:.0f} s): {self.text()[-2000:]}")
             time.sleep(1)
 
+    def wait_loaded(self, game, timeout=120):
+        """Wait until the client of this player left "Loading terrain" (the plugin logs the Paper event
+        PlayerClientLoadedWorldEvent): before it, the keys of xdo() go to the loading screen, and a chat line is lost (#3889)."""
+        t0, line = time.time(), f"] {self.name} loaded the world"
+        while not any(line in x for x in game.server.log):
+            if self.client.poll() is not None or time.time() - t0 > timeout:
+                raise RuntimeError(f"the client did not load the world ({time.time() - t0:.0f} s): {self.text()[-2000:]}")
+            time.sleep(0.5)
+
     def shot(self, path):
         subprocess.run(["import", "-window", "root", path], env=self.env, check=True)
         return path

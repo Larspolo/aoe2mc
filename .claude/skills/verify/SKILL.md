@@ -77,6 +77,8 @@ in the game (light, textures, connected fences and panes), what the player sees 
   the saved files of the player (a dead player starts alive), `place(game, X, Y, Z)` puts the player on a 3 × 3
   platform and waits 15 s for the chunks, `Client.health(game, UUID or tag)` reads the `Health` of a mob.
   Example: `tests/test_mc_shot_start.py`.
+- Before the first `key()` or `xdo()` of a client, call `client.wait_loaded(game)`: `wait_join()` returns when the server
+  lists the player, but the client shows "Loading terrain" for about 7 s more and drops the keys (#3889).
 - Direction of a mob: look at it from the side, 8–10 blocks away, pitch 10. A top view does not show the head.
 - Look at each image with the Read tool and describe it in the PR body. Comment the result on the ticket.
 

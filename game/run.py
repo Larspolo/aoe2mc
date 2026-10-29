@@ -295,7 +295,8 @@ class Game:
         java, jvm, plugins = mc_check.java_for(self.version), [], []
         if self.kind == "paper":                     # Paper patches the Mojang jar once, into the cache
             jar, plugins = paper_jar(self.version), [plugin_jar(self.version)]
-            jvm = [f"-DbundlerRepoDir={os.path.dirname(jar)}"]
+            # the colors of the log (a chat name, #3681) also with no TERM, as on CI: Adventure reads TERM (#3889)
+            jvm = [f"-DbundlerRepoDir={os.path.dirname(jar)}", "-Dnet.kyori.ansi.colorLevel=indexed16"]
         else:
             jar = mc_check.server_jar(self.version)
         # Paper writes usercache.json into the folder of the world folder: remove it after the game
