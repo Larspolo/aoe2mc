@@ -18,10 +18,12 @@ lands, #3868; `create_connect_all_lands`, `create_connect_to_nonplayer_land`, `c
 never on water or shallows, #3822), <CLIFF_GENERATION> (cliff lines of CLIFF_DEFAULT objects, cliffs(), #3850) and
 <OBJECTS_GENERATION> (`create_object`: objects(), #3855). The sections run in the AoE2 DE order: lands, elevation,
 terrains, connections (#3966); then all water goes to level 0. Other sections and attributes: a warning.
-`#include_drs random_map.def` has no effect (the constants are in TERRAINS); another #include file: a warning. All
+`#include_drs FILE` reads FILE from the folder of the script (#4304); without the file: `random_map.def` has no effect
+(the constants are in TERRAINS), another #include file gives a warning. All
 randomness comes from numpy.random.default_rng(seed).
 """
 import heapq
+import os
 import re
 import sys
 
@@ -70,10 +72,11 @@ def tokens(text):
     return re.sub(r"([{}])", r" \1 ", text).split()
 
 
-def expand(words, rng, defined, consts, includes):
+def expand(words, rng, defined, consts, includes, folder=None, depth=0):
     """The words of the active branches: if/elseif/else/endif on the defined labels, one percent_chance branch of
     each start_random (a draw only for an active block), #define and #const go into defined and consts. An #include
-    line is not a word: its (directive, file) goes into includes."""
+    line is not a word: the words of an #include_drs file in folder take its place (#4304), else its (directive,
+    file) goes into includes."""
     out, stack, i = [], [], 0
     def on():
         return all(f["on"] for f in stack)
@@ -108,7 +111,14 @@ def expand(words, rng, defined, consts, includes):
         elif not on():
             i += 1
         elif w.startswith("#include"):
-            includes.append((w, words[i + 1]))
+            path = folder and os.path.join(folder, *words[i + 1].replace("\\", "/").split("/"))
+            if w == "#include_drs" and path and os.path.isfile(path):
+                if depth >= 8:
+                    raise RmsError(f"#include_drs {words[i + 1]}: more than 8 levels (a loop?)")
+                with open(path, encoding="utf-8", errors="replace") as f:
+                    out += expand(tokens(f.read()), rng, defined, consts, includes, folder, depth + 1)
+            else:
+                includes.append((w, words[i + 1]))
             i += 3 if w == "#include_drs" and i + 2 < len(words) and words[i + 2].isdigit() else 2
         elif w == "#define":
             defined.add(words[i + 1])
@@ -386,16 +396,16 @@ def lower_to_water(terrain, elevation):
     return out
 
 
-def generate(text, seed, players=2, size=None, warn=None, teams=None):
+def generate(text, seed, players=2, size=None, warn=None, teams=None, folder=None):
     """The map description (aoe2mc.read_json) of the land part of script text, for players on a map of size tiles
-    (default: the AoE2 size of the player count). teams: one team (or None) per player (#3946), see circle(). "lands": [{"player", "x", "y", "base_size"}] of the player lands."""
+    (default: the AoE2 size of the player count). folder: the folder of the script, for its #include_drs files. teams: one team (or None) per player (#3946), see circle(). "lands": [{"player", "x", "y", "base_size"}] of the player lands."""
     warn = warn or (lambda m: print(f"rms: {m}", file=sys.stderr))
     rng = np.random.default_rng(seed)
     n = size or SIZES.get(players, 200)
     defined = {next((label for s, label in LABELS if n <= s), "GIGANTIC_MAP")}
     consts = TERRAINS | OBJECTS
     includes = []
-    sections = commands(expand(tokens(text), rng, defined, consts, includes))
+    sections = commands(expand(tokens(text), rng, defined, consts, includes, folder))
     for s in sections:
         if s not in SECTIONS:
             warn(f"<{s}> is not read yet")
