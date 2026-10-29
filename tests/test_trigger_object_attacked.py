@@ -1,6 +1,5 @@
 """A trigger with the condition "Object Attacked" fires in the converted world when its unit takes damage (#2779): the
 tick function tests the HurtTime of the unit with the tag aoe2mc.r<ref> (#2617), 10 ticks after each hit."""
-from collections import Counter
 
 import aoe2mc
 import triggers
@@ -24,10 +23,9 @@ def test_the_tick_function_tests_the_hurt_time_of_the_unit():
         "run function aoe2mc:trigger/3"]
 
 
-def test_a_building_is_not_supported_yet():
-    stats = Counter()
-    assert "data/aoe2mc/function/tick.mcfunction" not in files([attacked(unit=False)], stats)
-    assert stats["object condition (not an entity, not supported yet)"] == 1
+def test_a_building_tests_the_score_of_its_hits_not_the_tag():
+    assert "execute if score #h5 aoe_hit matches 1 unless score #3 aoe_trig matches 1 run function aoe2mc:trigger/3" \
+        in files([attacked(unit=False)])["data/aoe2mc/function/tick.mcfunction"]
 
 
 def test_read_scenario_keeps_the_object_and_the_map_names_the_command():
