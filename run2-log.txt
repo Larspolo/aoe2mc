@@ -1,0 +1,34 @@
+soldiers {'bab200ee-2bab-6b42-c964-2cc9b2d43915': 'MILITIA', '3760e5f2-a81f-a5fc-8c1b-f3acffb4e49c': 'MILITIA', '5abb3202-2808-0f5a-cae5-9286a1967acd': 'MILITIA'} villagers ['412313b0-ec7c-02e8-aeb1-3177bd3fe5bf', '699e40ad-432e-f658-0e49-abd5ff0530a8']
+own {'bab200ee-2bab-6b42-c964-2cc9b2d43915': 'MILITIA', '3760e5f2-a81f-a5fc-8c1b-f3acffb4e49c': 'MILITIA', '5abb3202-2808-0f5a-cae5-9286a1967acd': 'MILITIA'} enemies {'f2e1de94-785d-438f-f32d-9e0ecd968050': 'MILITIA', 'f27355a4-d451-fb7f-6c9f-64c1994cfac8': 'MILITIA'} villagers ['412313b0-ec7c-02e8-aeb1-3177bd3fe5bf', '699e40ad-432e-f658-0e49-abd5ff0530a8']
+camera w0_start (60.5, 92.0, 80.5)
+after click (40, 96) False {'3760e5': (55, 53), '5abb32': (57, 52), 'bab200': (51, 53)}
+after click (96, 96) True {'3760e5': (50, 70), '5abb32': (50, 68), 'bab200': (48, 71)}
+after click (96, 40) True {'3760e5': (45, 87), '5abb32': (45, 85), 'bab200': (43, 87)}
+queue {'3760e5f2-a81f-a5fc-8c1b-f3acffb4e49c': [(96, 98), (96, 42)], 'bab200ee-2bab-6b42-c964-2cc9b2d43915': [(96, 98), (96, 42)], '5abb3202-2808-0f5a-cae5-9286a1967acd': [(96, 98), (96, 42)]}
+1 s at point 1 {'3760e5': (43, 92), '5abb32': (43, 91), 'bab200': (42, 93)}
+camera w1_point1 (43.5, 92.0, 112.5)
+10 s at point 2 {'3760e5': (95, 98), '5abb32': (95, 97), 'bab200': (93, 97)}
+camera w2_point2 (94.5, 92.0, 117.5)
+20 s at point 3 {'3760e5': (97, 44), '5abb32': (98, 43), 'bab200': (97, 42)}
+camera w3_point3 (97.5, 92.0, 63.5)
+waypoint order [1, 2, 3] queue left {}
+after click (44, 64) False {'412313': (29, 53), '699e40': (32, 52)}
+after click (68, 64) True {'412313': (38, 59), '699e40': (38, 58)}
+sites [True, True] queue {}
+camera b0_start (56.5, 92.0, 84.5)
+camera b0b_at_A (38.5, 92.0, 79.5)
+site A done 10 s
+camera b1_A_done (56.5, 92.0, 84.5)
+site B done 26 s
+camera b2_B_done (56.5, 92.0, 84.5)
+build order {'A': 10, 'B': 26} A 1.0 B 1.0
+sneak Test passed
+after pick f2e1de {'3760e5': [], '5abb32': [], 'bab200': []} {'3760e5': {'attack': 'f2e1de'}, 'bab200': {'attack': 'f2e1de'}, '5abb32': {'attack': 'f2e1de'}}
+sneak Test passed
+after pick f27355 {'3760e5': [{'attack': 'f27355a4-d451-fb7f-6c9f-64c1994cfac8'}], '5abb32': [{'attack': 'f27355a4-d451-fb7f-6c9f-64c1994cfac8'}], 'bab200': [{'attack': 'f27355a4-d451-fb7f-6c9f-64c1994cfac8'}]} {'3760e5': {'attack': 'f2e1de'}, 'bab200': {'attack': 'f2e1de'}, '5abb32': {'attack': 'f2e1de'}}
+picked [(98.0, 64.0, 85.0), (98.0, 64.0, 97.0)] queue {'3760e5f2-a81f-a5fc-8c1b-f3acffb4e49c': [{'attack': 'f27355a4-d451-fb7f-6c9f-64c1994cfac8'}], '5abb3202-2808-0f5a-cae5-9286a1967acd': [{'attack': 'f27355a4-d451-fb7f-6c9f-64c1994cfac8'}], 'bab200ee-2bab-6b42-c964-2cc9b2d43915': [{'attack': 'f27355a4-d451-fb7f-6c9f-64c1994cfac8'}]}
+camera a0_start (98.5, 92.0, 102.5)
+dead f2e1de 5 s
+camera a1_first_dead (98.5, 92.0, 103.5)
+dead f27355 10 s
+attack order [1, 2] {'f2e1de94-785d-438f-f32d-9e0ecd968050': 5, 'f27355a4-d451-fb7f-6c9f-64c1994cfac8': 10}
