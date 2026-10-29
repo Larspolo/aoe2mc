@@ -41,6 +41,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 import aoe2mc  # noqa: E402
 import buildings  # noqa: E402
+import monk  # noqa: E402
 import table  # noqa: E402
 import replay_input  # noqa: E402
 import units  # noqa: E402
@@ -435,6 +436,9 @@ class Replay:
         self.formations = {}                    # object ID -> the AoE2 formation of the record: Line, Box ... (#2553)
         self.burst = math.inf                   # game time (ms) of the next burst of the live flares (#2506)
         self.refs = {o["ref"]: o for o in data["objects"] if o.get("ref") is not None}
+        self.relics = {r: {"at": (int(o["tile"][0] * self.T), int(o["tile"][1] * self.T)), "monk": None, "home": None}
+                       for r, o in self.refs.items() if o["kind"] == "other" and "RELIC" in o["name"] and "tile" in o}
+        self.fetching = {}                      # object ID of a monk -> the relic ref that it walks to (#4009)
         self.rng = np.random.default_rng(1)
         self.kinds, self.seen = aoe2mc.object_kinds(), set()
         self.sent, self.busy = 0, 0.0           # commands sent, seconds spent sending them
@@ -759,6 +763,7 @@ class Replay:
             for i in e.get("objects") or ():                    # another order ends the patrol (#2550), the scouting (#2678)
                 self.patrols.pop(i, None)
                 self.scouts.pop(i, None)
+                self.fetching.pop(i, None)                  # and the walk to a relic (#4009)
         if kind in aoe2mc.UNIT_USE - {"stance"} | {"delete", "stop"}:   # a new order ends a FOLLOW or GUARD (#2551)
             for i in e.get("objects") or ():
                 self.follows.pop(i, None)
@@ -1628,6 +1633,8 @@ class Replay:
         out0 = [c for i in e["objects"] if i in inside for c in self.leave(i, inside[i])]   # says it is out (#1229)
         group = [(i, v) for i, name in zip(e["objects"], e.get("names") or [None] * len(e["objects"]))
                  if (v := self.unit(i, name, e["player"])) is not None]
+        if e["kind"] == "order" and (relic := e.get("target")) in self.relics:   # only a monk carries a relic (#4009)
+            self.fetching.update({i: relic for i, v in group if v.name in monk.MONKS})
         tile = self.resource(e)
         if tile in self.map.farms or tile in self.map.carcasses:    # a farmer stands on the farm, a hunter at the carcass
             goals = self.crew.goals(tile)
@@ -2248,6 +2255,8 @@ class Replay:
         """A unit with a resource that ends its walk next to it gathers from game time t on, at the AoE2 work rate
         of the resource (gather.AOE2_WORK, per game second). The record has no drop-off: it does not carry.
         A farmer works on its farm (gather.Gather.goals). A unit that goes into a building arrives (enter())."""
+        if i in self.fetching:
+            self.send(self.pickup(i, v))
         if i in self.entering:
             x0, x1, z0, z1 = self.entering[i][0]
             if v.cell in self.map.around({(x, z) for x in range(x0, x1) for z in range(z0, z1)}):
@@ -2261,6 +2270,22 @@ class Replay:
             self.working[i] = t + 1000 / self.rate(v)
             if self.ai and not ship(v.name):                        # a boat sails with /tp steps: it is there
                 self.arriving[i], v.again, v.stand = t, False, None
+
+    def pickup(self, i, v):
+        """The commands of monk i that ends its walk to its relic: the pot block goes and a pot rides the monk, as
+        monk.relic_tick. Nothing when the relic is not on the ground or a monk carries one (#4009)."""
+        ref = self.fetching.pop(i)
+        r = self.relics[ref]
+        if r["at"] is None or any(q["monk"] == i for q in self.relics.values()):
+            return []
+        x, z = r["at"]
+        y = self.map.y(x, z)
+        r.update(at=None, monk=i)
+        return [f"fill {x} {y - 1} {z} {x} {y + 1} {z} air replace {monk.POT}",
+                f"execute at {v.uuid} run summon item_display ~ ~ ~ {{Tags:[\"aoe_relic_{ref}\"],"
+                f"item:{{id:\"{monk.POT}\",count:1}},transformation:{{left_rotation:[0f,0f,0f,1f],"
+                f"right_rotation:[0f,0f,0f,1f],translation:[0f,0.4f,0f],scale:[0.5f,0.5f,0.5f]}}}}",
+                f"ride @e[type=item_display,tag=aoe_relic_{ref},limit=1] mount {v.uuid}"]
 
     def rate(self, v):
         """The AoE2 work rate of unit v at its resource (per game second): a farm, a hunt and a fish have their own
@@ -2432,7 +2457,7 @@ class Replay:
             res = ", ".join(f"{r} {v}" for r, v in g.items())
             out.append("tellraw @a " + json.dumps([text(name, color), text(
                 f": villagers trained {self.villagers.get(p, 0)}, gathered {res}, idle villager time "
-                f"{self.idle_text(p)}")]))
+                f"{self.idle_text(p)}, idle TC time {self.tc_text(p)}")]))
             out.append("tellraw @a " + json.dumps([text(name, color), text(              # military (#1066)
                 f": military units trained {self.army.get(p, 0)}, units lost {self.lost.get(p, 0)}, "
                 f"buildings lost {self.razed.get(p, 0)}, APM {self.mean_apm(p, self.ended)}{self.army_text(p)}")]))
@@ -2441,6 +2466,11 @@ class Replay:
     def idle_text(self, p):
         """The idle villager time of player p as M:SS (#3757)."""
         m, s = divmod(round(self.idled.get(p, 0)), 60)
+        return f"{m}:{s:02d}"
+
+    def tc_text(self, p, t=None):
+        """The idle town center time of player p at game time t (default: the end of the replay) as M:SS (#4052)."""
+        m, s = divmod(round(self.tc_idle(p, self.ended if t is None else t)), 60)
         return f"{m}:{s:02d}"
 
     def army_text(self, p):
@@ -2560,8 +2590,8 @@ class Replay:
     def score_commands(self, t=None):
         """The sidebar commands for the population of each player that changed since the last call (#741). The score
         holder is "P<n>" (a holder name has no space); its display name is the player name in the player color, the
-        age of the player (#805), its estimated resources (#932) and its actions of the last minute at game time t
-        (#3764; no APM part without t). In a team game the score is a team key plus the population, so the sidebar
+        age of the player (#805), its estimated resources (#932) and its actions of the last minute and its idle town center time at game time t
+        (#3764, #4053; no APM and TC part without t). In a team game the score is a team key plus the population, so the sidebar
         shows each team together, and a fixed number format shows the population (#1189)."""
         out, top = [], max((self.team(p) or 0 for p in self.pop), default=0)
         if self.shown is None:
@@ -2570,7 +2600,7 @@ class Replay:
         for p in sorted(self.pop):
             name, color = self.label(p)
             res = " ".join(f"{r[0].upper()} {max(0, v)}" for r, v in self.resources(p).items())
-            apm = "" if t is None else f" · APM {self.apm(p, t)}"
+            apm = "" if t is None else f" · APM {self.apm(p, t)} · TC idle {self.tc_text(p, t)}"
             if self.named.get(p) != (line := f"{name} · {self.ages.get(p, 'Dark')} · {res} (est.){apm}"):
                 out.append(f"scoreboard players display name P{p} {POP} {json.dumps(text(line, color))}")
                 self.named[p] = line
@@ -2646,6 +2676,40 @@ class Replay:
         for p, n in self.eco().items():
             self.idled[p] = self.idled.get(p, 0) + (t - self.idle_at) / 1000 * n["idle"]
         self.idle_at = t
+
+    @functools.cached_property
+    def town_centers(self):
+        """({player: {town center ID: alive from (ms)}}, {building ID: sorted busy intervals (ms)}) for tc_idle (#4052).
+        A start object is alive from 0; a building is alive from its first QUEUE of a villager. The busy time of a
+        building is each training and each technology in research of it."""
+        alive, busy = {}, {}
+        for o in self.data["objects"]:
+            if o.get("name") == "TOWN_CENTER":
+                alive.setdefault(o["player"], {})[o["ref"]] = 0
+        for end, e, b in self.trainings:
+            if e["kind"] == "queue" and e.get("name", "").startswith("VILLAGER"):
+                tc = alive.setdefault(e["player"], {})
+                tc[b] = min(tc.get(b, e["time"]), e["time"])
+            d = aoe2mc.train_ms(e.get("name", "")) if e["kind"] == "queue" else RESEARCH_S[e["technology"]] * 1000
+            busy.setdefault(b, []).append((max(e["time"], end - d), end))
+        return alive, {b: sorted(spans) for b, spans in busy.items()}
+
+    def tc_idle(self, p, t):
+        """The idle seconds of the town centers of player p up to game time t (ms, #4052): the time each one is alive
+        up to t, minus the union of its busy intervals in that time."""
+        alive, busy = self.town_centers
+        out = 0
+        for b, start in alive.get(p, {}).items():
+            if start >= t:
+                continue
+            covered, last = 0, start
+            for s, e in busy.get(b, ()):
+                s, e = max(s, last), min(e, t)
+                if e > s:
+                    covered += e - s
+                    last = e
+            out += t - start - covered
+        return out / 1000
 
     def troop(self, p, name):
         """One more live military unit of this type for player p (a start unit or a spawn, #3695)."""

@@ -68,4 +68,4 @@ def test_5_ships_lost_give_the_silver_medal(ends):
 def test_a_live_enemy_warship_does_not_end_the_game(ends):
     g = fake(alive={"e2"})
     challenge.tick(g)
-    assert ends == [] and any("Gold medal: 4 of 4 units lost" in c for c in g.sent)
+    assert ends == [] and any("4 units lost, gold medal up to 4" in c for c in g.sent)

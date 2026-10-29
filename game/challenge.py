@@ -220,14 +220,12 @@ def close(g):
 
 
 def show(g, c, now):
-    """The boss bar: the goal and the next medal limit ("Gold medal in 6:12", "Gold medal: 2 of 4 units lost");
-    commands only when the text changes."""
+    """The boss bar: the goal and the next medal limit ("Gold medal in 6:12"; a "lost" challenge, #3906: "2 units lost,
+    silver medal up to 5", now is the units lost); commands only when the text changes."""
+    left = next(((m, c[m] - now) for m in MEDALS if now <= c[m]), None)
     if c["medal"] == "lost":
-        now = lost(g)
-        left = next((m for m in MEDALS if now <= c[m]), None)
-        name = f"{left.title()} medal: {now} of {c[left]} units lost" if left else "No medal"
+        name = f"{int(now)} units lost, " + (f"{left[0]} medal up to {c[left[0]]}" if left else "no medal")
     else:
-        left = next(((m, c[m] - now) for m in MEDALS if now <= c[m]), None)
         name = f"{left[0].title()} medal in %d:%02d" % divmod(int(left[1]), 60) if left else "No medal"
     if vars(g).get("challenge_shown") is None:
         for cmd in (f'bossbar add {BAR} ""', f"bossbar set {BAR} color yellow", f"bossbar set {BAR} max {c['bronze']}",
@@ -257,4 +255,4 @@ def tick(g):
         g.medal = m if complete else None
         keep(g.challenge, g.medal)
         return cheats.over(g, lambda p: p == g.player and complete and m is not None)
-    show(g, c, now)
+    show(g, c, now if c["medal"] == "time" else lost(g))

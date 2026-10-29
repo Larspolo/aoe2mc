@@ -73,3 +73,6 @@
 {"name": "TURKEY", "object": 833}
 {"name": "VILLAGER", "object": 83}
 {"name": "WOLF", "object": 126}
+{"name": "CLIFF_DEFAULT", "cliff_type": "CLIFF_DEFAULT"}
+{"name": "CLIFF_DESERT", "cliff_type": "CLIFF_DESERT"}
+{"name": "CLIFF_SNOW", "cliff_type": "CLIFF_SNOW"}
