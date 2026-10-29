@@ -80,6 +80,8 @@ MELEE_RANGED = {r["name"] for r in UNIT_ROWS if r.get("melee_ranged")}
 # the creeper crew of the demolition ship dies after its blast (AoePlugin.java), as a vanilla creeper.
 # The key "blast" of a line of data/units.jsonl.
 BLAST = {r["name"]: r["blast"] for r in UNIT_ROWS if "blast" in r}
+# The key "attack_ground": the units of the AoE2 order Attack Ground (#4079, docs/research/gameplay.md).
+GROUND = {r["name"] for r in UNIT_ROWS if r.get("attack_ground")}
 RAM_REACH = 2.0       # blocks: a ram (a minecart with range 0) hits from next to its target, on its carrier (#1399)
 CONTACT = 1.0         # tiles: the reach of a demolition ship (range 0, #1440): its raft is higher than a boat
 # Tiles: no shot at a unit nearer (AoE2 DE, wiki infobox "MinRange", #1350). The key "min_range" of data/units.jsonl.
