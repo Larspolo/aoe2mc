@@ -290,17 +290,19 @@ def cost(g, name, base, player=None):
     """The cost `base` ({resource: amount}) of name with the cost bonuses of the civilization of the player of g, or of
     another player (an ally: repair.cost, #1361). A cost of a scenario trigger (g.trigger_costs, #2776) wins."""
     import build                                                   # build imports gather, gather imports this module
+    import train                                                   # train imports this module
     out, age = dict(base), build.ages(g)
     own = player is None or player == g.player
+    techs = [(tuples(w), r, [c] * 4) for t, rules in train.BY_KEY["costs"].items() if own and t in vars(g).get("techs", ())
+             for w, r, c in rules]                                 # the key "costs" of a technology (#4225)
     if own and name in vars(g).get("trigger_costs", {}):            # "Change Object Cost" of a scenario (#2776)
         return dict(g.trigger_costs[name])
-    for what, r, c in [*COSTS.get(civ(g, player), []), *policy(g)[1].get("costs", ()) * own]:   # (#2485)
+    for what, r, c in [*COSTS.get(civ(g, player), []), *policy(g)[1].get("costs", ()) * own, *techs]:   # (#2485)
         if has(what, name):
             for k in [r] if r else list(out):
                 if k in out:
                     out[k] = max(0, int(out[k] * c[age] + 0.5) if isinstance(c[age], float) else out[k] + c[age])
     if own:                                                        # the own complete buildings (#2177)
-        import train                                               # train imports this module
         for what, names, each, most in COST_PER.get(civ(g, player), []):
             if has(what, name) and (n := sum(b in names for b in train.owned(g))):
                 out = {k: int(v * (1 - min(each * n, most)) + 0.5) for k, v in out.items()}

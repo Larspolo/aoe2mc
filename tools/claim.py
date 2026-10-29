@@ -148,16 +148,17 @@ def first(number, remote="origin"):
     return f"{owner(line)} (its last {line.split(' ')[0].lower()} {(time.time() - changed(ref, remote)) / 60:.0f} min ago)"
 
 
-def start(number, by=None, note=""):
+def start(number, by=None, note="", word="Started by"):
     """Add `in-progress` and the comment "Started by `<branch>`." after a won claim. A run that commented by hand
     without the claim worked on one ticket with another run (#288, #1749), so only the claim writes them.
-    by: the name of the claim (the pacer claims for a run that has no branch yet); note: more text of the comment."""
+    by: the name of the claim (the pacer claims for a run that has no branch yet); note: more text of the comment;
+    word: "Taken over by" after a takeover of the pacer (#4356)."""
     from dashboard import FOOTER, api as call
     by = by or who()
     try:
         call(f"issues/{number}/labels", "POST", {"labels": ["in-progress"]})
-        call(f"issues/{number}/comments", "POST", {"body": f"Started by `{by}`.{note}{FOOTER}"})
-        print(f"added in-progress and \"Started by `{by}`.\" to #{number}")
+        call(f"issues/{number}/comments", "POST", {"body": f"{word} `{by}`.{note}{FOOTER}"})
+        print(f"added in-progress and \"{word} `{by}`.\" to #{number}")
     except Exception as e:                              # the claim ref is the lock: the ticket is yours anyway
         print(f"the claim is yours, but the label or the comment failed ({e}): add them by hand")
 
