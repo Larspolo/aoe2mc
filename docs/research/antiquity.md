@@ -186,32 +186,27 @@ The Granary researches the walls and towers of each age (page "Granary (Age of E
 Tower (Tool Age), Medium Wall and Sentry Tower (Bronze Age), Fortified Wall, Guard Tower and Ballista Tower (Iron
 Age, the Ballista Tower after Ballistics). Their costs are on the page of each wall and tower.
 
-### 1.6 The civilization bonuses that are not done yet (#3667)
+### 1.6 The civilization bonuses that are not done yet (#3667, #3827)
 
-`game/data/antiquity/civs.jsonl` has the 17 civilizations with the bonus texts of the wiki. These bonuses work: the
-start resources (Carthaginians, Palmyrans, Shang), the gather rates and loads (Babylonians, Egyptians, Lac Viet,
-Minoans, Palmyrans, Persians, Phoenicians), the villager values (Assyrians, Palmyrans, Shang, Sumerians), the archer
-values (Assyrians, Hittites), the Greek town centers, the Lac Viet military train rate and the Yamato mounted cost.
-#3827 does the others; they need the buildings of #3668 or the units of #3669:
+`game/data/antiquity/civs.jsonl` has the 17 civilizations with the bonus texts of the wiki. #3827 added the bonuses of
+the units and buildings: costs, hit points, armor, range, fire rate, walk speed, free technologies, the Babylonian
+priest faith, the Phoenician dock sight and the Yamato fishing boats. A `units` rule can name a list of units, because
+the Antiquity units have no AoE2 groups (`civs.changes`). The missing units and technologies of the wiki pages (section
+"Characteristics") are the key `"not_civs"` of the items in `game/data/antiquity/train.jsonl` and `build.jsonl`
+(`civs.MISSING`). The Phoenician dock has +25 % hit points: +150 of the 600 of the Return of Rome dock.
 
-- Assyrians: siege upgrades -50 %.
-- Babylonians: market technologies -30 %, walls and towers +60 % hit points, priests, chariots.
-- Carthaginians: Academy units and elephants +25 % hit points, Fire Galleys, transport ships, free Nobility.
-- Choson: the swordsmen hit points, Storage Pit technologies, tower range, priests.
-- Egyptians: farms -20 %, chariots +33 % hit points, priest range.
-- Greeks: Academy units, ships, free Polytheism and Astrology.
-- Hittites: the catapult hit points, the warship range, the Wheel.
-- Lac Viet: the armor of the Archery Range units and Ballistae.
-- Macedonians: line of sight, Academy armor, Siege Workshop costs, conversion.
-- Minoans: ship costs, the Improved Bowman range.
-- Palmyrans: camel speed, tribute, trade.
-- Persians: elephant speed, the Scout Ship rate, wall costs.
-- Phoenicians: elephant costs, the Catapult Trireme rate, docks.
-- Romans: building and tower costs, the swordsman rate, Ballista range.
-- Shang: wall hit points, the cavalry rate.
-- Sumerians: the catapult rate, farm food, camels.
-- Yamato: fishing boats, ship hit points, Stable and Archery Range upgrades.
-- All: the team bonuses (only their text), and the key `"missing"` (the missing units and technologies).
+These bonuses do not work yet. Each needs a feature that the game program does not have:
+
+- Carthaginians, Greeks: the ships move faster (transport ships +25 %, ships +20 %). The ships have fixed speeds
+  (`fleet.SPEEDS`) and no civilization factor.
+- Choson: towers +2 range. No key changes the range of a building.
+- Egyptians: priests +2/+3 range. The conversion range of `game/monk.py` has no civilization factor.
+- Macedonians: +2 line of sight of the units, and conversion resistance. `combat.Stats` has no line of sight, and no
+  key changes the conversion time.
+- Palmyrans: camel speed works; tributes without tax and +20 % trade gold do not. No key changes them.
+- Sumerians: farms +125 food. No key changes the food of a new farm.
+- All: the team bonuses (only their text). The game program has team bonuses only for the repair rate and cost
+  (`repair_team`, `repair_cost`) and shared units, not a general rule for the keys of an ally.
 
 ## 2. The data structure of a second rule set
 
@@ -328,7 +323,6 @@ the units, the technologies and the bots, then the check ticket (item 9).
   - Siegecraft: villagers do not attack walls and towers. Follow-up: #3887.
   - Architecture: no +20 % building HP, no faster build. Follow-up: #3887.
   - Logistics: barracks units take full population. Follow-up: #3887.
-  - Urbanization: houses do not give double population. Follow-up: #3887.
   - Writing: no shared exploration with allies. Follow-up: #3887.
   - Alchemy: the Fire Galley +6 (no ships yet). Follow-up: #3887.
   - Aristocracy: academy units do not walk faster (the key "walk" is a factor, not +0.225). Follow-up: #3887.

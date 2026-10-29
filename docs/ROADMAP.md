@@ -30,6 +30,7 @@ can see which features have an epic: `gh api "repos/Larspolo/aoe2mc/issues?label
 - [ ] `convert:rms-connections` The connections of a random map script (`<CONNECTION_GENERATION>`: `create_connect_all_players_land`, `create_connect_teams_lands`, `replace_terrain`): the shallows across a river and the roads between the players come from the script, not from own tables
 - [ ] `convert:rms-objects` The objects of a random map script (`<OBJECTS_GENERATION>`, `create_object` with `number_of_objects`, `number_of_groups`, `set_place_for_every_player`, `min_distance_to_players`, `max_distance_to_players` ...): a script that the converter does not know places its own town centers, villagers, resources and animals
 - [ ] `convert:old-formats` Old scenarios of the other formats: The Age of Kings (`.scn`, format 1.18 to 1.20) and the HD Edition (`.aoe2scenario` of HD, format 1.22 and later) convert as the `.scx` scenarios of The Conquerors
+- [ ] `convert:rms-players` Random maps for 3 to 8 players in teams, as the AoE2 lobby: `--players` and `--teams`, the player lands of a team next to each other (`<PLAYER_SETUP>`: `random_placement`, `grouped_by_team`, `direct_placement` with `assign_to_player`)
 
 ## 2. Play AoE2 in Minecraft (`game/`)
 
@@ -82,14 +83,16 @@ can see which features have an epic: `gh api "repos/Larspolo/aoe2mc/issues?label
 - [x] `play:auto-gather` Villagers go on to work as in AoE2: a villager that builds a lumber camp, mining camp or mill gathers the nearest resource of that kind next, and the builder of a farm farms it (#3271)
 - [x] `play:co-op` Co-op as in AoE2: two or more Minecraft players control one AoE2 player (one civilization, one stock and population), each with an own selection (epic #3485)
 - [x] `play:unit-sounds` The AoE2 sounds of the units and buildings: a voice line when the player selects a unit and gives an order, the sound of a selected building, the age-up fanfare (epic #3498)
-- [ ] `play:campaign` Play a campaign in the game program: its scenarios in order, the next scenario after a victory, the intro and history texts of each scenario
-- [ ] `play:waypoints` Queued orders as in AoE2 (a shift click): a selected group walks to several points in a row, and a villager builds several construction sites one after the other
+- [x] `play:campaign` Play a campaign in the game program: its scenarios in order, the next scenario after a victory, the intro and history texts of each scenario (epic #3504)
+- [x] `play:waypoints` Queued orders as in AoE2 (a shift click): a selected group walks to several points in a row, and a villager builds several construction sites one after the other (epic #3514)
 - [x] `play:auto-queue` The AoE2 DE auto-queue: a building trains one unit again and again while the player has the resources and the population, until the player stops it (epic #3522)
 - [x] `play:tech-tree` The AoE2 tech tree screen: the units, buildings and technologies of the own civilization by age and building, and the ones that the civilization does not have (epic #3531)
 - [x] `play:team-chat` The AoE2 chat targets: a chat line to all players, to the allies only or to one player, in the player color (Minecraft `/teammsg` and `/msg`) (epic #3552)
 - [ ] `play:antiquity` Antiquity Mode of AoE2 DE (Return of Rome): its civilizations, ages (Stone, Tool, Bronze, Iron Age), units and technologies in the game program (owner decision B, #3583)
 - [x] `play:auto-scout` The AoE2 DE order "Auto Scout": a scout explores the map by itself, walks to the tiles that the player did not see yet, and turns away from the enemies (epic #3701)
 - [ ] `play:art-of-war` The AoE2 DE "Art of War" challenges: short training games with one goal and a time limit (early economy, booming, defend against a rush, wall in, micro), a gold, silver or bronze medal by the time
+- [ ] `play:bot-strategy` The bot plays a whole game as the AoE2 computer player: it ages up, researches the economy and Blacksmith technologies, upgrades its unit lines, attacks in waves and defends its town
+- [ ] `play:bots` Several bots in one game, as the AoE2 lobby with a computer player in each free slot: each bot plays its own player and team, and attacks the enemy teams, not its allies
 
 ## 3. Replay a recorded game in Minecraft (`game/replay.py`, `aoe2mc.read_timeline`)
 
@@ -115,10 +118,12 @@ can see which features have an epic: `gh api "repos/Larspolo/aoe2mc/issues?label
 - [x] `replay:highlights` A list of the large fights of the record (where and when many units die): a jump to the time and the place of each fight (epic #2947)
 - [x] `replay:auto-camera` An automatic camera of the live replay, as a caster view: the spectator view moves by itself to the place with the most fights or the most new buildings (epic #3365)
 - [x] `replay:graphs` Live graphs of the replay, as the statistics of the AoE2 DE replay overlay: the military, the economy and the population of each player over the game time (epic #3445)
-- [ ] `replay:army` The army of each player in the live replay, as the caster tool CaptureAge shows it: the number of units of each type, the units in training and the units lost
+- [x] `replay:army` The army of each player in the live replay, as the caster tool CaptureAge shows it: the number of units of each type, the units in training and the units lost (epic #3693)
 - [ ] `replay:eco` The villagers of each player on food, wood, gold and stone and the idle villagers in the live replay, as the eco panel of CaptureAge
 - [ ] `replay:upgrades` The researched upgrades of each player in the live replay (blacksmith, economy, unit lines), as the upgrade row of CaptureAge: an upgrade shows when its research ends
-- [ ] `replay:apm` The actions per minute of each player from the commands of the record, as CaptureAge shows them: a value in the score panel and a line in the summary
+- [x] `replay:apm` The actions per minute of each player from the commands of the record, as CaptureAge shows them: a value in the score panel and a line in the summary (epic #3762)
+- [ ] `replay:market` The market trades and the tributes of the record change the estimated resources of each player in the live replay, at the AoE2 exchange rates and fees
+- [ ] `replay:relics` The relics of the live replay: a monk that the record sends to a relic carries it to a monastery, and the score panel shows the relics of each player, as the AoE2 relic count
 
 ## 4. The agent system (`.claude/skills/`, `tools/`, `.github/workflows/`)
 

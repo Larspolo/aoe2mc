@@ -487,6 +487,12 @@ def pop_limit(text):
     return int(text)
 
 
+def challenge_names():
+    """The names of the Art of War challenges (challenge.CHALLENGES, #3900)."""
+    import challenge
+    return challenge.CHALLENGES
+
+
 def civ_choices(values):
     """{player: civilization} of the --civ values ("1=BRITONS", #2267). An unknown name stops with the list of names."""
     import civs
@@ -568,6 +574,7 @@ SETTINGS = {
     "ai_difficulty": "standard",      # "AI difficulty" of the bots (bot.LEVELS, game/data/difficulty.jsonl, #2661)
     "all_techs": False,               # "All Techs" (civs.missing, #2298)
     "antiquity": False,               # Antiquity Mode: the Return of Rome rule set (table.use, game/data/antiquity, #3666)
+    "challenge": None,                # an Art of War challenge (challenge.CHALLENGES, #3900)
     "civ": None,                      # {player: civilization} in place of the scenario's (civ_choices, #2267)
     "empire_wars": False,             # "Empire Wars Mode" on top of the mode (ON_TOP, #2490)
     "end_age": "imperial",            # "Ending age" (build.locked, #2346)
@@ -621,6 +628,7 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
     settings: the AoE2 lobby settings (SETTINGS); a missing one has its default."""
     if wait:                                         # the trigger timers start at the join, not at the load
         game.command("tick freeze")
+        game.command("scoreboard players set #wait aoe_trig 1")   # the tick triggers too (aoe2mc.WAIT, #3892)
     import gather, train
     if unknown := sorted(set(settings) - set(SETTINGS)):
         raise TypeError(f"play() has no setting {', '.join(unknown)} (SETTINGS)")
@@ -643,6 +651,9 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
     with open(os.path.join(world, "aoe2mc.json")) as f:
         data = json.load(f)
     scenario_modes(settings, data)
+    if settings["challenge"]:                                    # the civilization of the challenge (#3900)
+        import challenge
+        settings["civ"] = {**(settings["civ"] or {}), 1: challenge.CHALLENGES[settings["challenge"]]["civ"]}
     apply_civs(data, settings["civ"])                             # before the Gathers: all bonuses (civs.civ) follow it
     for player, pct in (settings["handicap"] or {}).items():     # before the Gathers: the start resources (#2474)
         data.setdefault("players", {}).setdefault(str(player), {})["handicap"] = pct
@@ -663,6 +674,7 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
     g.reveal = reveal                                # "all": no fog of war for the units (fog.py, #1389)
     g.victory = settings["victory"]                              # Gather.run: the wonder and relic wins only in "standard"
     g.victory_value = settings["victory_value"]                  # time_limit.tick (#2356)
+    g.challenge = settings["challenge"]                          # challenge.tick (#3900)
     g.unlock_speed = settings["unlock_speed"]                    # the Game menu of player 1 (diplomacy.faster, #2933)
     if people > 1:                                   # one Gather for each person, in the join order (#1308, #1310)
         g.bots = [Side(make(n)) for n in range(2, players + 1)]
@@ -777,6 +789,7 @@ def start_on_join(game, sides, people, sleep=time.sleep):
     while len(game.joined) < people:
         sleep(0.5)
     import gather
+    game.command("scoreboard players reset #wait aoe_trig")
     game.command("tick unfreeze")
     show_titles(game)                                # nobody saw a title before the join (#3772)
     for h in sides:                                                    # a loaded game goes on at its saved game time (#3377)
@@ -1105,6 +1118,8 @@ def main(argv=None, scenario=None):
     ap.add_argument("--victory", choices=sorted(VICTORIES), default="standard", help="--play: the AoE2 setting "
                     "\"Victory\" (default standard; " + "; ".join(f"{k}: {v}" for k, v in sorted(VICTORIES.items())
                                                        if k != "standard") + ")")
+    ap.add_argument("--challenge", choices=sorted(challenge_names()), metavar="NAME", help="--play: an AoE2 \"Art "
+                    "of War\" challenge with its civilization, goal and medals: " + ", ".join(sorted(challenge_names())))
     ap.add_argument("--victory-value", type=int, metavar="N", help="--play: the years of --victory time-limit "
                     "(default 500) or the points of --victory score (default 10000)")
     ap.add_argument("--pop-limit", type=pop_limit, default=200, metavar="N",

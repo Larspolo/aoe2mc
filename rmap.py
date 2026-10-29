@@ -12,7 +12,8 @@ high y side that the land does not take) and
 <TERRAIN_GENERATION> (`create_terrain` with `base_terrain`, `number_of_clumps`, `number_of_tiles`, `land_percent`,
 `spacing_to_other_terrain_types`, `set_avoid_player_start_areas`, `clumping_factor`), <CONNECTION_GENERATION>
 (`create_connect_all_players_land` with `replace_terrain`, `terrain_cost`, `terrain_size`: paths between the player
-lands, #3868) and <ELEVATION_GENERATION>
+lands, #3868; `create_connect_all_lands`, `create_connect_to_nonplayer_land`, `create_connect_same_land_zones`,
+`create_connect_land_zones` and the `zone` of a land, #3869) and <ELEVATION_GENERATION>
 (`create_elevation HEIGHT` with `base_terrain`, `number_of_clumps`, `number_of_tiles`, `spacing`: hills level by level,
 never on water or shallows, #3822) and <CLIFF_GENERATION> (cliff lines of CLIFF_DEFAULT objects, cliffs(), #3850).
 Other sections and attributes:
@@ -274,23 +275,33 @@ def route(weight, a, b):
     return path
 
 
-def connections(terrain, origins, cmds, consts, rng, warn):
-    """<CONNECTION_GENERATION>: a path between each two player origins; replace_terrain changes the terrain on it,
-    and terrain_size widens it on the tiles of a terrain (radius ± variance). terrain_cost 0: never on a path.
+def connections(terrain, lands, cmds, consts, rng, warn):
+    """<CONNECTION_GENERATION>: a path between two land origins of each pair that the command names; lands are
+    (origin, player or 0, zone). replace_terrain changes the terrain on a path, and terrain_size widens it on the
+    tiles of a terrain (radius ± variance). terrain_cost 0: never on a path. create_connect_teams_lands makes no path:
+    generate() has no teams, so each player is a team of one.
     default_terrain_replacement: the terrain of the other path tiles. accumulate_connections has no source yet (#3870)."""
     n = len(terrain)
+    pairs = {"create_connect_all_players_land": lambda a, b, z: a[1] and b[1],
+             "create_connect_teams_lands": lambda a, b, z: False,
+             "create_connect_all_lands": lambda a, b, z: True,
+             "create_connect_to_nonplayer_land": lambda a, b, z: bool(a[1]) != bool(b[1]),
+             "create_connect_same_land_zones": lambda a, b, z: a[2] == b[2],
+             "create_connect_land_zones": lambda a, b, z: a[2] in z and b[2] in z}
     for cmd, args, attrs in cmds:
-        if cmd != "create_connect_all_players_land":
+        if cmd not in pairs:
             warn(f"{cmd} is not read yet")
             continue
+        zones = {value(v, consts) for v in args}
         each = lambda a: [[value(v, consts) for v in x] for x in attrs.many.get(a, ())]
         weight = np.ones((n, n), np.int64)
         for k, c in each("terrain_cost"):
             weight[terrain == k] = c
         path = np.zeros((n, n), bool)
-        for i, a in enumerate(origins):
-            for b in origins[i + 1:]:
-                path |= route(weight, tuple(a), tuple(b))
+        for i, a in enumerate(lands):
+            for b in lands[i + 1:]:
+                if pairs[cmd](a, b, zones):
+                    path |= route(weight, tuple(a[0]), tuple(b[0]))
         wide = path.copy()
         for k, r, *v in each("terrain_size"):
             v = v[0] if v else 0
@@ -330,7 +341,7 @@ def generate(text, seed, players=2, size=None, warn=None):
             warn(f"{directive} {file} is not read")
     terrain = np.zeros((n, n), np.int16)
     owner = np.full((n, n), -1, np.int32)
-    lands, starts, kinds = [], [], {}
+    lands, starts, kinds, links = [], [], {}, []
     for cmd, args, attrs in sections.get("LAND_GENERATION", ()):
         if cmd == "base_terrain":
             terrain[:] = value(args[0], consts)
@@ -338,6 +349,7 @@ def generate(text, seed, players=2, size=None, warn=None):
             base = value(attrs["base_size"][0], consts) if "base_size" in attrs else 3
             clump = value(attrs["clumping_factor"][0], consts) if "clumping_factor" in attrs else 8
             kind = value(attrs["terrain_type"][0], consts) if "terrain_type" in attrs else 0
+            zone = value(attrs["zone"][0], consts) if "zone" in attrs else None      # None: a zone of its own
             edge = {a: value(attrs[a][0], consts) * n // 100 if a in attrs else 0 for a in BORDERS}
             box = (edge["left_border"], n - edge["right_border"], edge["top_border"], n - edge["bottom_border"])
             if cmd == "create_player_lands":
@@ -346,6 +358,7 @@ def generate(text, seed, players=2, size=None, warn=None):
                     a = turn + 2 * np.pi * (p - 1) / players
                     c = (int(round((n - 1) / 2 + RING * n * np.cos(a))), int(round((n - 1) / 2 + RING * n * np.sin(a))))
                     starts.append({"player": p, "x": c[0], "y": c[1], "base_size": base, "land": len(lands)})
+                    links.append((c, p, zone if zone is not None else -1 - len(lands)))
                     lands.append({"id": len(lands), "cells": square(c, base, n), "clump": clump, "box": box,
                                   "target": max(total // players, (2 * base + 1) ** 2)})
                     kinds[len(lands) - 1] = kind
@@ -354,11 +367,12 @@ def generate(text, seed, players=2, size=None, warn=None):
                     c = tuple(min(n - 1, value(v, consts) * n // 100) for v in attrs["land_position"][:2])
                 else:
                     c = tuple(int(v) for v in rng.integers(0, n, 2))
+                links.append((c, 0, zone if zone is not None else -1 - len(lands)))
                 lands.append({"id": len(lands), "cells": square(c, base, n), "clump": clump, "box": box,
                               "target": tiles(attrs, consts, n, (2 * base + 1) ** 2)})
                 kinds[len(lands) - 1] = kind
             for a in set(attrs) - {"base_size", "clumping_factor", "terrain_type", "land_percent", "number_of_tiles",
-                                   "land_position", *BORDERS}:
+                                   "land_position", "zone", *BORDERS}:
                 warn(f"{cmd}: {a} is not read yet")
         else:
             warn(f"{cmd} is not read yet")
@@ -397,7 +411,7 @@ def generate(text, seed, players=2, size=None, warn=None):
                                "spacing_to_other_terrain_types", "set_avoid_player_start_areas",
                                "set_scale_by_groups", "set_scale_by_size"}:
             warn(f"create_terrain: {a} is not read yet")
-    connections(terrain, [(st["x"], st["y"]) for st in starts], sections.get("CONNECTION_GENERATION", ()), consts, rng, warn)
+    connections(terrain, links, sections.get("CONNECTION_GENERATION", ()), consts, rng, warn)
     elevation = np.zeros((n, n), np.int16)
     for cmd, args, attrs in sections.get("ELEVATION_GENERATION", ()):
         if cmd != "create_elevation":
