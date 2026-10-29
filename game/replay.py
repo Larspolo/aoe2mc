@@ -80,6 +80,8 @@ FIGHT_UNITS = 10            # attacking units of a large fight (#2948)
 CAMERA_MS = 10000           # ms of game time: a shot of the camera plan is held at least this long (#3366)
 CAMERA_TILES = 10           # tiles: the new buildings of a build shot lie this near to each other (#3366)
 CAMERA_BUILDS = 5           # new buildings in CAMERA_MS near each other that make a build shot (#3366)
+CAMERA_UP = 24              # blocks: the camera of --camera auto is this high above the ground of a shot (#3367)
+CAMERA_BACK = 24            # blocks: and this far south of it, looking north and down at it (#3367)
 FAR = 8                     # tiles: a target unit this far from the tile of the ORDER (its place in AoE2) is no attack
                             # target: in de-64.3 a spearman chased a villager 200 blocks from it across the map (#2635)
 FOLLOW_MS = 15000           # ms of game time: the camera of --follow changes its unit at most this often (#738)
@@ -335,7 +337,8 @@ def formation_cells(free, group, target, kind="Line", T=4, long=False):
 class Replay:
     """The timeline of aoe2mc.json `data` on a server (game.command sends one command)."""
 
-    def __init__(self, game, data, version=aoe2mc.VERSION_NAME, ai=False, follow=None, pov=None):
+    def __init__(self, game, data, version=aoe2mc.VERSION_NAME, ai=False, follow=None, pov=None, camera=False):
+        self.camera = camera                    # --camera auto: the spectators move to each shot of camera_plan (#3367)
         self.game, self.data, self.ai, self.speed, self.paused = game, data, ai, 1.0, False  # ai: plugin walks
         self.follow, self.followed = follow, (None, -math.inf)  # the spectators follow player N: (UUID, game time)
         self.pov, self.hidden = pov, set()      # the view of player N (#1302): UUIDs of the enemy units hidden from @a
@@ -444,6 +447,8 @@ class Replay:
     def commands(self, e):
         """The commands of one timeline event (an empty list for the events that change nothing visible)."""
         kind = e["kind"]
+        if kind == "shot":                                      # --camera auto (#3367)
+            return self.shot_view(e["tile"])
         if kind == "news":                                      # a fight starts: the chat line and the horn (#2951)
             return replay_input.fight_news(self.control["fights"][e["fight"]], e["fight"], self.control["players"])
         if kind in ("attack_move", "move", "order", "stop", "delete", "garrison", "follow", "guard", "autoscout"):
@@ -2018,6 +2023,16 @@ class Replay:
             (g for row in self.ground for g in row if g is not None), 64)
         return replay_input.place_commands(tile, self.T, y)
 
+    def shot_view(self, tile):
+        """The spectators above a shot of the camera plan (#3367): CAMERA_UP blocks above the ground of the tile and
+        CAMERA_BACK blocks south of it, looking north (yaw 180) and down at the tile."""
+        x, z = (min(self.n - 1, max(0, int(c * self.T))) for c in tile)
+        y = self.ground[z][x] if self.ground[z][x] is not None else next(
+            (g for row in self.ground for g in row if g is not None), 64)
+        bx, bz = (round(c * self.T + self.T / 2, 1) for c in tile)
+        pitch = round(math.degrees(math.atan2(CAMERA_UP, CAMERA_BACK)), 1)
+        return [f"execute as @a[gamemode=spectator] run tp @s {bx} {min(319, y + CAMERA_UP)} {bz + CAMERA_BACK} 180 {pitch}"]
+
     def overview(self, join=False):
         """The view of a player at the start of the replay (#737, owner decision #782): adventure mode, a text about
         the spectator view, and a place high above the map that looks down at its center (VIEW_PITCH) in the
@@ -2395,7 +2410,10 @@ class Replay:
         last = math.inf if finish else max((e["time"] for e in self.data.get("timeline", [])), default=start)
         found = fights(self.data.get("timeline", []), owners(self.data.get("objects", []), self.data.get("timeline", [])))
         news = [{"time": f["start"], "kind": "news", "fight": i} for i, f in enumerate(found)]    # the fight starts (#2951)
-        events = sorted((e for e in self.data.get("timeline", []) + self.spawns() + news if start <= e["time"] <= last),
+        owner = owners(self.data.get("objects", []), self.data.get("timeline", []))
+        shots = [{"time": c["time"], "kind": "shot", "tile": c["tile"]}
+                 for c in camera_plan(self.data.get("timeline", []), owner)] if self.camera else []
+        events = sorted((e for e in self.data.get("timeline", []) + self.spawns() + news + shots if start <= e["time"] <= last),
                         key=lambda e: e["time"])                     # the record ends at `last`: no spawn after it
         g0, r0, lag, n, k = start, clock(), 0.0, 0, 0                 # game time g0 (ms) at real time r0
         self.speed, self.paused = speed, paused
