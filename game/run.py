@@ -283,8 +283,11 @@ class Game:
     placed = frozenset()                             # the Minecraft players who went to the start of their side
     seats = ()                                       # --seats: the AoE2 player of each person in the join order (#3489)
 
-    def __init__(self, world, version=mc_check.DEFAULT_VERSION, timeout=300, server="paper"):
+    def __init__(self, world, version=mc_check.DEFAULT_VERSION, timeout=300, server="paper", wait=False):
+        """wait: freeze the ticks at once when the server is up (freeze, #3974): a client that starts before play()
+        (25 s) let the trigger timers of the first seconds run before the join."""
         self.world, self.version, self.timeout, self.kind = os.path.abspath(world), version, timeout, server
+        self.wait = wait
         self.server = self.rcon = None
         self.lock, self.seen = threading.Lock(), 0     # the op thread and the game send commands
         self.sides = {}
@@ -324,6 +327,8 @@ class Game:
         try:
             self.server.wait(r"\]: Done \(", self.timeout)
             self.rcon = Rcon("127.0.0.1", self.port, password)
+            if self.wait:
+                freeze(self)
         except BaseException:
             self.stop()
             raise
@@ -494,6 +499,15 @@ def bot_seat(players, people):
     return player, bot_foe(players, player)
 
 
+def difficulty_list(text):
+    """The value of --ai-difficulty: one level, or a comma list with one level for each bot in seat order (#4020)."""
+    names = [r["name"] for r in table.load("difficulty.jsonl")]
+    bad = [part for part in text.split(",") if part not in names]
+    if bad:
+        raise argparse.ArgumentTypeError(f"{bad[0]} is no level: use {', '.join(names)} (or a comma list of them)")
+    return text
+
+
 def bots_count(text):
     """The value of --bots: a number of bots or "all" (#4017)."""
     if text == "all":
@@ -652,8 +666,7 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
     wait: freeze the ticks now, and start the game when the people joined (start_on_join, #3314).
     settings: the AoE2 lobby settings (SETTINGS); a missing one has its default."""
     if wait:                                         # the trigger timers start at the join, not at the load
-        game.command("tick freeze")
-        game.command("scoreboard players set #wait aoe_trig 1")   # the tick triggers too (aoe2mc.WAIT, #3892)
+        freeze(game)
     import gather, train
     if unknown := sorted(set(settings) - set(SETTINGS)):
         raise TypeError(f"play() has no setting {', '.join(unknown)} (SETTINGS)")
@@ -679,6 +692,8 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
     if settings["challenge"]:                                    # the civilization of the challenge (#3900)
         import challenge
         settings["civ"] = {**(settings["civ"] or {}), 1: challenge.CHALLENGES[settings["challenge"]]["civ"]}
+        if enemy := challenge.CHALLENGES[settings["challenge"]].get("enemy"):   # a bot town that does not attack (#3905)
+            settings["civ"][2], bot = enemy["civ"], bot or 1
     apply_civs(data, settings["civ"])                             # before the Gathers: all bonuses (civs.civ) follow it
     for player, pct in (settings["handicap"] or {}).items():     # before the Gathers: the start resources (#2474)
         data.setdefault("players", {}).setdefault(str(player), {})["handicap"] = pct
@@ -719,20 +734,22 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
         seats = scenario.bot_seats(data["players"], players)
     else:
         seats = bot_seats(data["players"], players, bot) if bot else []
-    for player, foe in seats:                        # after the people, next to their Sides (#1794)
+    for k, (player, foe) in enumerate(seats):        # after the people, next to their Sides (#1794)
         import bot as bots
+        level = bots.level_of(settings["ai_difficulty"], k)   # one level for each bot in seat order (#4020)
         import replay
         import treaty as treaties
         attack = max(bot_attack, settings["treaty"], key=replay.aoe2mc.game_time)   # the bot waits for the treaty too
-        if settings["mode"] in treaties.ENDLESS or foe is None:   # Wonder Race (#2406), no enemy (#3107): no attack
+        if settings["mode"] in treaties.ENDLESS or foe is None or (   # Wonder Race (#2406), no enemy (#3107): no attack
+                settings["challenge"] and "enemy" in challenge.CHALLENGES[settings["challenge"]]):   # (#3905)
             attack = "never"
         g.bots = [*g.bots, bots.Bot(game, data, player=player, share=g, log=log, foe=foe,
                                     attack=math.inf if attack == "never" else replay.aoe2mc.game_time(attack) / 1000,
                                     resources=settings["resources"], pop_limit=settings["pop_limit"],
-                                    difficulty=settings["ai_difficulty"]).setup()]
+                                    difficulty=level).setup()]
         at = math.inf if attack == "never" else \
-            replay.aoe2mc.game_time(attack) / 1000 * bots.LEVELS[settings["ai_difficulty"]]["attack"]
-        print(f"A bot ({settings['ai_difficulty']}) plays player {player}: {len(g.bots[-1].g.villagers)} villagers "
+            replay.aoe2mc.game_time(attack) / 1000 * bots.LEVELS[level]["attack"]
+        print(f"A bot ({level}) plays player {player}: {len(g.bots[-1].g.villagers)} villagers "
               f"gather, its soldiers attack {'no player (no enemy)' if foe is None else f'player {foe}'} "
               f"{'never' if at == math.inf else 'at %d:%02d' % divmod(round(at), 60)}.", file=sys.stderr)
     import combat
@@ -768,6 +785,8 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
         if "module" in line and not (state and line.get("loaded") == "skip"):   # a loaded game has its town, relic
             start = {"start": not state} if line.get("loaded") == "start" else {}   # Defend the Wonder (#2441)
             importlib.import_module(line["module"]).setup(g, mode, **start)
+    if settings["challenge"] and not state:                     # the enemy town of the challenge (#3905)
+        challenge.setup(g)
     import replay
     import treaty as treaties
     if settings["mode"] in treaties.ENDLESS:                     # Wonder Race: a treaty with no end (#2406)
@@ -806,6 +825,12 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
     return g
 
 
+def freeze(game):
+    """Stop the `schedule` timers of the scenario triggers and the mobs until start_on_join."""
+    game.command("tick freeze")
+    game.command("scoreboard players set #wait aoe_trig 1")   # the tick triggers too (aoe2mc.WAIT, #3892)
+
+
 def start_on_join(game, sides, people, sleep=time.sleep):
     """As in AoE2 DE, the game starts when all people are there (#3314): play froze the ticks (the `schedule` timers
     of the scenario triggers, the mobs) at the start of play(). Unfreeze them after the join of the people, and start
@@ -816,6 +841,7 @@ def start_on_join(game, sides, people, sleep=time.sleep):
     import gather
     game.command("scoreboard players reset #wait aoe_trig")
     game.command("tick unfreeze")
+    game.wait = False                                # a restart (#979) does not freeze again
     show_titles(game)                                # nobody saw a title before the join (#3772)
     for h in sides:                                                    # a loaded game goes on at its saved game time (#3377)
         h.t0 = h.clock() - vars(game).get("loaded_seconds", 0.0) / (gather.NORMAL * getattr(h, "speed", 1.0))
@@ -1117,8 +1143,9 @@ def main(argv=None, scenario=None):
     ap.add_argument("--people", type=int, default=1, metavar="N", help="--play: N people play players 1 to N, in the "
                     "order in which they join (#1310); with --bot the bot plays player N + 1")
     levels = [r["name"] for r in table.load("difficulty.jsonl")]           # in the order of the AoE2 lobby
-    ap.add_argument("--ai-difficulty", choices=levels, default="standard", help="--bot: the AoE2 setting \"AI "
-                    f"difficulty\" ({', '.join(levels)}; default standard): the gather rate of the bot, the time of "
+    ap.add_argument("--ai-difficulty", type=difficulty_list, default="standard", metavar="LEVEL[,LEVEL...]",
+                    help=f"--bot: the AoE2 setting \"AI difficulty\" ({', '.join(levels)}; default standard; a comma "
+                    "list gives each bot its own level in seat order, #4020): the gather rate of the bot, the time of "
                     "its first attack (times --bot-attack) and the soldiers of its first wave")
     ap.add_argument("--bot-attack", default="10:00", metavar="MM:SS", help="--bot: its soldiers attack its foe "
                     "from this game time (default 10:00)")
@@ -1234,6 +1261,7 @@ def main(argv=None, scenario=None):
         restore(os.path.join(a.load, "world"), a.world)
     ctrl_c()
     game = Game(a.world, a.version, server=a.server)
+    game.wait = a.play and not a.replay              # freeze at the start, as play(wait=...) below (#3974)
     if a.seats:                                      # co-op (#3489): one person for each seat
         game.seats = seat_list(a.seats)
         a.people = len(game.seats)
