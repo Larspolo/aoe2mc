@@ -122,7 +122,7 @@ def bootstrap(target, repo, branch="main"):
         dst = os.path.join(target, path)
         os.makedirs(os.path.dirname(dst) or target, exist_ok=True)
         with open(dst, "w") as f:
-            f.write(rename(fill(text, values), repo, name, owner) if path != "agent.toml" else fill(text, values))
+            f.write(rename(fill(text, values), repo, name, owner) if not path.endswith(".toml") else fill(text, values))
         if path.endswith(".sh"):
             os.chmod(dst, 0o755)
         written.append(path)

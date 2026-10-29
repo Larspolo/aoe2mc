@@ -15,7 +15,7 @@ This is a scheduled, unattended run. Other runs can work at the same time. The p
    `python3 tools/claim.py N --adopt CLAIM` (one call; it beats and sets the lane). Exit 0: the ticket is yours. Do not
    run `cycle_start.py`, `usage.py --fire`, a claim or `ticket_context.py`, and do not read the ticket again: start
    the autopilot skill at step 6 with the brief as the ticket text and the code places. Keep the `usage:` line of the
-   brief for the report (step 8). After its report, continue as usual (`more.md`: `cycle_start.py` before a later
+   brief for the report (step 8), and its `context:` line: that number replaces the 120k limit of `more.md` (#4190). After its report, continue as usual (`more.md`: `cycle_start.py` before a later
    ticket). Exit 1: follow this skill with no brief. No brief: follow this skill as usual.
 1. `CLAUDE.md` and `docs/LEARNINGS.md` are already in your context: do not read them again. Then follow the skill `autopilot` (`.claude/skills/autopilot/SKILL.md`; read it once: with the Skill tool or
    the file, not both) with the argument of this skill: do tickets, one PR each, until no ticket is ready, a usage limit stops you, or your context is 120k tokens
