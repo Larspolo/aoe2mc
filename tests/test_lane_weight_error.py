@@ -21,4 +21,5 @@ def test_noisy_samples_give_a_large_error_and_the_start_weight():
         out.append(f"{head} · usage {max(pct, 0):.1f}% · {tail}")
     weights, source, errors, _ = health.lane_fit([{"body": "\n".join(out)}])
     assert errors["haiku"] > 0.1 and source["haiku"].startswith("noisy, fit ")
-    assert weights["haiku"] == 0.25 and health.lane_weights([{"body": "\n".join(out)}])[0]["haiku"] == 0.25
+    start = health.LANES["haiku"]                                  # the start weight of agent.toml
+    assert weights["haiku"] == start and health.lane_weights([{"body": "\n".join(out)}])[0]["haiku"] == start

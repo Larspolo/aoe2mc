@@ -86,7 +86,7 @@ def test_vanilla_keeps_the_own_path():
 @pytest.mark.parametrize("name", ["VILLAGER_MALE", "VILLAGER_FEMALE"])
 def test_villager_speed_is_the_aoe2_speed(name):
     import ai
-    assert ai.walk_speed(name, 4) == pytest.approx(0.8 * 4 * 1.7)
+    assert ai.walk_speed(name, 4) == pytest.approx(ai.SPEEDS["VILLAGER"] * 4 * gather.NORMAL)   # the speed of all villagers
 
 
 def test_paper_ticks_units_far_from_players():

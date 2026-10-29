@@ -1,6 +1,5 @@
-"""game/train.py stats and game/civs.py TWICE: for the Khitans, Forging and Iron Casting give +2 attack each, not +1
-(#1561). Values: the AoE2 wiki, page "Khitans" (MediaWiki API, 2026-10-27): "The effects of Forging and Iron Casting
-are doubled."; the "Hulk" infobox: Forging +1 (+2 for Khitans), Iron Casting +1 (+2 for Khitans)."""
+"""game/train.py stats and game/civs.py TWICE: for the Khitans, Forging and Iron Casting give twice the attack (#1561).
+The AoE2 wiki, page "Khitans" (MediaWiki API, 2026-10-27): "The effects of Forging and Iron Casting are doubled."."""
 import pytest
 from test_forging import setup
 
@@ -14,27 +13,34 @@ def player(civ, *techs):
     return server, g
 
 
+def more(civ, unit, *techs):
+    """The attack that the technologies give to unit of a player of civ; the other values must stay."""
+    base, s = train.stats(player(civ)[1], unit), train.stats(player(civ, *techs)[1], unit)
+    assert s == base._replace(attack=s.attack), (civ, unit, techs)
+    return s.attack - base.attack
+
+
 @pytest.mark.parametrize("unit", ["MILITIA", "SCOUT_CAVALRY", "HULK"])
-@pytest.mark.parametrize("civ, per", [("KHITANS", 2), ("BRITONS", 1)])
-def test_each_research_gives_the_melee_units_and_the_hulks_their_attack(unit, civ, per):
-    base = player(civ)[1]
-    for techs, n in (((), 0), (("FORGING",), 1), (("FORGING", "IRON_CASTING"), 2)):
-        g = player(civ, *techs)[1]
-        assert train.stats(g, unit) == train.stats(base, unit)._replace(attack=train.stats(base, unit).attack + n * per)
+def test_each_research_gives_the_khitan_melee_units_and_hulks_twice_the_attack(unit):
+    for techs in ((), ("FORGING",), ("FORGING", "IRON_CASTING")):
+        assert more("KHITANS", unit, *techs) == 2 * more("BRITONS", unit, *techs), techs
+    assert more("BRITONS", unit, "FORGING") > 0
 
 
 def test_other_technologies_and_units_stay():
     _, base = player("KHITANS")
     _, g = player("KHITANS", "FORGING", "IRON_CASTING", "FLETCHING")
-    assert train.stats(g, "ARCHER").attack == train.stats(base, "ARCHER").attack + 1          # Fletching once
+    _, briton = player("BRITONS", "FORGING", "IRON_CASTING", "FLETCHING")
+    assert train.stats(g, "ARCHER").attack - train.stats(base, "ARCHER").attack == \
+        train.stats(briton, "ARCHER").attack - train.stats(player("BRITONS")[1], "ARCHER").attack > 0   # Fletching once
     for unit in ("VILLAGER_MALE", "MONK"):
         assert train.stats(g, unit) == train.stats(base, unit)
 
 
-def test_the_live_militia_gets_plus_2():
+def test_the_live_militia_gets_the_double_attack():
     server, g = player("KHITANS")
     g.soldiers["m"] = "MILITIA"
     train.research(g, {"name": "FORGING", "player": "Steve"})
     s = train.stats(g, "MILITIA")
-    assert s.attack == combat.stats("MILITIA").attack + 2
+    assert s.attack == combat.stats("MILITIA").attack + more("KHITANS", "MILITIA", "FORGING")
     assert combat.stats_command("m", "MILITIA", s) in server.log

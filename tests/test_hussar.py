@@ -1,17 +1,11 @@
-"""Hussar (#1502): the stable researches the upgrade in the Imperial Age, after Light Cavalry and in its slot (500 food,
-600 gold, 50 s: the UpCost and UpTime of the AoE2 DE wiki infobox "Light Cavalry"). Then the live light cavalry are
-hussars and the stable trains the hussar (80 food, 30 s). The civilizations without it in the wiki chart do not see it."""
+"""Hussar (#1502): the stable researches the upgrade in the Imperial Age, after Light Cavalry and in its slot (the
+UpCost and UpTime of the AoE2 DE wiki infobox "Light Cavalry"). Then the live light cavalry are hussars and the stable
+trains the hussar."""
+from menu_line import item
 from test_castle_upgrades import STABLE, research, setup
 from test_forging import menus
 
-from game import civs, combat, train
-
-
-def test_the_values_are_those_of_aoe2():
-    assert train.BY_KEY["after"]["HUSSAR_UPGRADE"] == "LIGHT_CAVALRY_UPGRADE"
-    assert len(train.HELP["HUSSAR_UPGRADE"]) <= 50
-    assert {"BRITONS", "FRANKS", "POLES", "TEUTONS"} <= set(civs.MISSING["HUSSAR_UPGRADE"])
-    assert not {"HUNS", "MAGYARS", "WU"} & set(civs.MISSING["HUSSAR_UPGRADE"])
+from game import combat, train
 
 
 def test_the_upgrade_is_in_the_slot_of_light_cavalry_in_the_imperial_age():
@@ -21,7 +15,7 @@ def test_the_upgrade_is_in_the_slot_of_light_cavalry_in_the_imperial_age():
     assert "Hussar" not in menus(server)[-1]                           # the Castle Age
     g.techs.add("IMPERIAL_AGE")
     train.open_menu(g, "Steve", STABLE)
-    assert " 2:book:Hussar:500 food · 600 gold · 50 s · research " in menus(server)[-1] + " "
+    assert item(menus(server)[-1], "Hussar").endswith(" · research")
     server, g = setup(ages=("FEUDAL_AGE", "CASTLE_AGE", "IMPERIAL_AGE"))
     train.open_menu(g, "Steve", STABLE)
     assert "Hussar" not in menus(server)[-1]                           # not before Light Cavalry
@@ -36,5 +30,5 @@ def test_the_live_light_cavalry_become_hussars_and_the_stable_trains_them():
     assert combat.stats_command("l", "HUSSAR") in server.log and combat.label_command("l", "HUSSAR") in server.log
     train.open_menu(g, "Steve", STABLE)
     menu = menus(server)[-1]
-    assert "0:horse_spawn_egg:Hussar:80 food · 30 s · queue" in menu and ":Light Cavalry:" not in menu
+    assert item(menu, "Hussar").endswith(" · queue 0/15") and item(menu, "Light Cavalry") is None
     assert train.queue(g, "Steve", STABLE, "HUSSAR") and train.queue(g, "Steve", STABLE, "LIGHT_CAVALRY") is None

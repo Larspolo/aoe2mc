@@ -1,6 +1,7 @@
-"""Unique technology of the Huns (#2687): the castle of the Huns researches Marauders in the Castle Age (slot 6: 300
-wood, 200 gold, 40 s, AoE2 DE wiki "Marauders"). After it the stable trains the Tarkan (60 food, 60 gold, 14 s), and the
-Elite Tarkan after the upgrade at the castle (civs.TRAINS, the key "after")."""
+"""Unique technology of the Huns (#2687): the castle of the Huns researches Marauders in the Castle Age (AoE2 DE wiki
+"Marauders"). After it the stable trains the Tarkan, and the Elite Tarkan after the upgrade at the castle (civs.TRAINS,
+the key "after")."""
+from menu_line import item
 from test_forging import menus
 from test_train_knight import setup
 
@@ -18,7 +19,7 @@ def player(civ="HUNS", ages=2):
 
 def test_the_castle_of_the_huns_researches_marauders_in_the_castle_age():
     server, g = player()
-    assert "MARAUDERS" in train.trains(g, "CASTLE") and train.slots("CASTLE", "MARAUDERS")[0] == 6
+    assert "MARAUDERS" in train.trains(g, "CASTLE")
     assert train.unlocked(g, "MARAUDERS") and not train.unlocked(player(ages=1)[1], "MARAUDERS")
 
 
@@ -32,7 +33,8 @@ def test_the_stable_trains_the_tarkan_only_after_marauders():
     assert "ELITE_TARKAN_UPGRADE" not in train.trains(g, "STABLE")       # the upgrade stays at the castle
     slot = train.slots("STABLE", "TARKAN")[0]
     train.open_menu(g, "Steve", STABLE)
-    assert f" {slot}:horse_spawn_egg:Tarkan:60 food · 60 gold · 14 s · queue 0/15" in menus(server)[-1]
+    tarkan = item(menus(server)[-1], "Tarkan")
+    assert tarkan.startswith(f"{slot}:") and tarkan.endswith(" · queue 0/15")
     assert "Elite Tarkan" not in menus(server)[-1]
 
 

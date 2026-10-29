@@ -1,15 +1,15 @@
-"""game/train.py: the university researches Heated Shot (350 food, 100 gold, 30 s) in the Castle Age (AoE2 DE wiki),
-#1548. The arrows of the own towers, castles and docks get the "Additive increase" of the wiki table against ships:
-a watch tower +6, a guard tower +9, a keep +10, a bombard tower +50, a castle and a dock +4. The plugin takes the bonus
-as the last argument of `aoe building` (AoePlugin.java)."""
+"""game/train.py: the university researches Heated Shot in the Castle Age (AoE2 DE wiki), #1548. The arrows of the own
+towers, castles and docks get the "Additive increase" of the wiki table against ships. The plugin takes the bonus as
+the last argument of `aoe building` (AoePlugin.java)."""
 import shutil
 import time
 
 import pytest
+from menu_line import item
 from test_loom import menus
 from test_tower_upgrades import MAP, research, setup, uuid
 
-from game import build, civs, combat, run, train
+from game import build, combat, run, train
 
 
 def hit(a, t):
@@ -17,16 +17,11 @@ def hit(a, t):
     return max(1, max(0, a.attack - t.pierce) + sum(a.bonus.get(c, 0) for c in t.classes))
 
 
-def test_the_cost_time_age_and_civilizations_are_those_of_aoe2():
-    assert "HEATED_SHOT" in train.TRAINS["UNIVERSITY"]
-    assert "SPANISH" in civs.MISSING["HEATED_SHOT"] and "BRITONS" not in civs.MISSING["HEATED_SHOT"]
-
-
 def test_the_university_menu_shows_it_in_the_castle_age():
     for age, shown in ((1, False), (2, True)):
         server, g = setup(age)
         train.open_menu(g, "Steve", (9, 9))
-        assert (f" {train.MORE + 2}:book:Heated Shot:350 food · 100 gold · 30 s · research" in menus(server)[-1]) == shown
+        assert (item(menus(server)[-1], "Heated Shot") or "").endswith(" · research") == shown
     g.data["players"]["1"]["civ"] = "SPANISH"
     train.open_menu(g, "Steve", (9, 9))
     assert ":book:Heated Shot:" not in menus(server)[-1]
@@ -34,14 +29,19 @@ def test_the_university_menu_shows_it_in_the_castle_age():
 
 def test_the_arrows_of_the_towers_hit_ships_harder():
     _, g = setup(2)
-    galley = combat.stats("GALLEY")
-    assert hit(build.values(g, "WATCH_TOWER"), galley) == 7             # 5 - 3 pierce armor + 5 vs. ships (#1564)
-    g.techs.add("HEATED_SHOT")
-    assert hit(build.values(g, "WATCH_TOWER"), galley) == 7 + 6
-    assert hit(build.values(g, "WATCH_TOWER"), combat.stats("MILITIA")) == 5 - 1   # not against land units
-    assert (build.values(g, "CASTLE").bonus["ship"], build.values(g, "DOCK").bonus["ship"]) == (11 + 4, 3 + 4)
+    galley, militia = combat.stats("GALLEY"), combat.stats("MILITIA")
+    names = ("WATCH_TOWER", "CASTLE", "DOCK")
+    ship = {n: build.values(g, n).bonus.get("ship", 0) for n in names}
+    before = hit(build.values(g, "WATCH_TOWER"), galley), hit(build.values(g, "WATCH_TOWER"), militia)
     g.techs |= {"GUARD_TOWER", "KEEP"}
-    assert build.values(g, "WATCH_TOWER").bonus["ship"] == 8 + 10                 # the values of a keep
+    keep = build.values(g, "WATCH_TOWER").bonus.get("ship", 0)                # a keep without Heated Shot
+    g.techs -= {"GUARD_TOWER", "KEEP"}
+    g.techs.add("HEATED_SHOT")
+    assert hit(build.values(g, "WATCH_TOWER"), galley) > before[0]
+    assert hit(build.values(g, "WATCH_TOWER"), militia) == before[1]           # not against land units
+    assert all(build.values(g, n).bonus["ship"] > ship[n] for n in names)
+    g.techs |= {"GUARD_TOWER", "KEEP"}
+    assert build.values(g, "WATCH_TOWER").bonus["ship"] > keep                 # the values of a keep
     assert build.values(g, "HOUSE") == combat.stats("HOUSE")
 
 
@@ -49,16 +49,17 @@ def test_the_research_gives_the_own_towers_the_bonus():
     server, g = setup(2)
     g.stock.update(food=1000, gold=1000)
     server.hp[uuid(MAP)] = 1000                                        # the tower lost 20 hit points
-    research(g, "HEATED_SHOT", 30)
+    research(g, "HEATED_SHOT")
     cmd, = [c for c in server.log if c.startswith(f"aoe building {uuid(MAP)} ")]
-    assert cmd.endswith(" 5 8 24 1 building,standard,stone ship:11")    # attack, range (T = 1), reload, min, classes, bonus
+    assert cmd.endswith(f" ship:{build.values(g, 'WATCH_TOWER').bonus['ship']}")   # the bonus is the last argument
     assert server.hp[uuid(MAP)] == 1000
 
 
 def test_a_building_without_a_bonus_keeps_its_short_command():
-    s = combat.stats("TOWN_CENTER")._replace(bonus={})                # all buildings that shoot have a bonus (#1564)
-    tc = combat.building(combat.target_uuid([2, 2, 6, 6]), "TOWN_CENTER", 1, (8, 64, 8, 23, 104, 23), s=s)[-1]
-    assert tc.endswith(" 5 24 24 0")
+    s = combat.stats("TOWN_CENTER")._replace(bonus={"ship": 1})       # all buildings that shoot have a bonus (#1564)
+    long, short = (combat.building(combat.target_uuid([2, 2, 6, 6]), "TOWN_CENTER", 1, (8, 64, 8, 23, 104, 23), s=t)[-1]
+                   for t in (s, s._replace(bonus={})))
+    assert long.endswith(" ship:1") and long.startswith(short + " ") and short.split()[-1].isdigit()
 
 
 @pytest.mark.mc

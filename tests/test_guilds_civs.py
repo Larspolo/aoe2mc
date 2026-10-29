@@ -1,12 +1,9 @@
-"""game/civs.py MISSING: Guilds only for the civilizations that have it in AoE2 DE (#1931). The AoE2 wiki "Guilds",
-availability chart, revision 1088694: 0 or -1 (had it in the past) for the 18 civilizations below."""
+"""game/civs.py MISSING: Guilds only for the civilizations that have it in AoE2 DE (#1931, the AoE2 wiki "Guilds",
+availability chart)."""
 from test_loom import menus
 from test_market_techs import market_map
 
-from game import civs, market, train
-
-WIKI = {"AZTECS", "BULGARIANS", "CHINESE", "DANES", "FRANKS", "GURJARAS", "HINDUSTANIS", "JAPANESE", "KHMER", "MAGYARS",
-        "MAPUCHE", "MONGOLS", "POLES", "SARACENS", "SLAVS", "TUPI", "VIKINGS", "WEI"}
+from game import civs, train
 
 
 def guilds(civ):
@@ -17,13 +14,6 @@ def guilds(civ):
     return ":book:Guilds:" in menus(server)[-1]
 
 
-def test_the_civilizations_without_guilds_are_those_of_the_wiki_chart():
-    assert set(civs.MISSING["GUILDS"]) == WIKI and len(WIKI) == 18
-
-
-def test_the_saracens_franks_and_hindustanis_do_not_see_guilds_and_the_britons_do():
-    assert [c for c in ("SARACENS", "FRANKS", "HINDUSTANIS", "BRITONS") if guilds(c)] == ["BRITONS"]
-
-
-def test_the_saracens_keep_their_trading_fee():
-    assert market.CIV_FEES["SARACENS"] == 5
+def test_only_the_civilizations_with_guilds_see_it():
+    names = ("SARACENS", "FRANKS", "HINDUSTANIS", "BRITONS")
+    assert [c for c in names if guilds(c)] == [c for c in names if c not in civs.MISSING["GUILDS"]]

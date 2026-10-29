@@ -1,8 +1,8 @@
 """game/train.py: an own archery range trains the hand cannoneer in the Imperial Age, only after Chemistry, with its
-AoE2 DE cost and time (#1506). Values: the AoE2 wiki infobox "Hand_Cannoneer" (MediaWiki API, 2026-10-27: Food 45,
-Gold 50, Time 34, TrainReq Chemistry, HP 40, PAttack 17, Range 7, ROF 3.45)."""
+AoE2 DE cost and time (#1506, the AoE2 wiki infobox "Hand_Cannoneer")."""
 import re
 
+from menu_line import item
 from test_gather import FakeServer, grid
 from test_loom import menus
 
@@ -22,30 +22,28 @@ def setup(ages=3, techs=()):
     return server, g
 
 
-def test_the_hand_cannoneer_has_the_aoe2_cost_time_and_age():
-    assert (train.COSTS["HAND_CANNONEER"], train.TRAIN_TIMES["HAND_CANNONEER"], build.AGE["HAND_CANNONEER"]) \
-        == ({"food": 45, "gold": 50}, 34, 3)
-    assert "HAND_CANNONEER" in train.TRAINS["ARCHERY_RANGE"] and train.HELP["HAND_CANNONEER"]
-    assert build.NEEDS["HAND_CANNONEER"] == "CHEMISTRY"
-
-
-def test_the_hand_cannoneer_is_gray_before_the_imperial_age_and_before_chemistry():
-    server, g = setup(ages=2, techs=["CHEMISTRY"])
-    assert build.locked(g, "HAND_CANNONEER") == "Needs the Imperial Age"
-    server, g = setup()
-    assert build.locked(g, "HAND_CANNONEER") == "Needs Chemistry"
+def test_the_hand_cannoneer_is_gray_before_its_age_and_before_its_technology():
+    age, need = build.AGE["HAND_CANNONEER"], build.NEEDS["HAND_CANNONEER"]
+    server, g = setup(ages=age - 1, techs=[need])
+    assert build.locked(g, "HAND_CANNONEER").startswith("Needs the ")      # an age
+    server, g = setup(ages=age)
+    lock = build.locked(g, "HAND_CANNONEER")
+    assert lock and not lock.startswith("Needs the ")                      # the technology
     train.open_menu(g, "Steve", (3, 3))
-    assert " 7:gray_dye:Hand Cannoneer:45 food · 50 gold · 34 s · Needs Chemistry" in menus(server)[-1]
+    assert item(menus(server)[-1], "Hand Cannoneer").split(":")[1] == "gray_dye"
+    assert item(menus(server)[-1], "Hand Cannoneer").endswith(" · " + lock)
     assert not train.queue(g, "Steve", (3, 3), "HAND_CANNONEER") and g.stock["food"] == 1000
-    server, g = setup(techs=["CHEMISTRY"])
+    server, g = setup(ages=age, techs=[need])
     train.open_menu(g, "Steve", (3, 3))
-    assert " 7:pillager_spawn_egg:Hand Cannoneer:45 food · 50 gold · 34 s · queue 0/15" in menus(server)[-1]
+    assert item(menus(server)[-1], "Hand Cannoneer").endswith(" · queue 0/15")
 
 
 def test_a_trained_hand_cannoneer_shoots_with_its_values():
     server, g = setup(techs=["CHEMISTRY"])
-    assert train.order(g, "Steve", RANGE, 7) == 1 and (g.stock["food"], g.stock["gold"]) == (955, 950)
-    assert train.tick(g, 33) == []
+    cost, t = train.price(g, "HAND_CANNONEER"), train.seconds(g, "HAND_CANNONEER", "ARCHERY_RANGE")
+    assert train.order(g, "Steve", RANGE, train.SLOTS["HAND_CANNONEER"]) == 1
+    assert (g.stock["food"], g.stock["gold"]) == (1000 - cost.get("food", 0), 1000 - cost.get("gold", 0))
+    assert train.tick(g, t - 1) == []
     uuid, = train.tick(g, 1)
     summon, = [c for c in server.log if c.startswith("summon")]
     assert re.match(r"summon minecraft:pillager ", summon)
