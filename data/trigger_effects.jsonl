@@ -48,7 +48,7 @@
 {"name": "DEACTIVATE_TRIGGER", "text": "`scoreboard players set #<trigger> aoe_on 0` and `schedule clear` of its timer (#2575)"}
 {"name": "DECLARE_VICTORY", "text": "`scoreboard players set #pN aoe_win 1`: the scenario mode of the game program ends the game (#2542)"}
 {"name": "DELETE_KEY", "text": "`data remove storage aoe2mc:keys values.\"<key>\"` (#2887); the keys stay only in the world, not between the scenarios of a campaign"}
-{"name": "DISABLE_OBJECT_DELETION", "text": "not supported: the game program has no delete order"}
+{"name": "DISABLE_OBJECT_DELETION", "text": "`tag ... add aoe2mc.keep` of the units (the Delete key skips them) and the order `keep <ref> 1` of each selected building (#3777)"}
 {"name": "DISABLE_OBJECT_SELECTION", "text": "`tag @e[..] add aoe2mc.unselectable` of the units of the player in the area: no click, selection box or double click of the game program selects them (#2854)"}
 {"name": "DISABLE_TECHNOLOGY_STACKING", "text": "`data modify storage aoe2mc:menus list append value \"<player> <technology> stack 1\"`: the scenario mode of the game program lets the player research it once again (#2866)"}
 {"name": "DISABLE_UNIT_ATTACKABLE", "text": "`data merge entity @s {Invulnerable:1b}` of the units of the player in the area (#2695)"}
@@ -57,7 +57,7 @@
 {"name": "DISPLAY_TIMER", "text": "`bossbar` aoe2mc:timerN and a `schedule function` each second with the time left (timer and area triggers: #2572)"}
 {"name": "ENABLE_DISABLE_OBJECT", "text": "the item in the storage `aoe2mc:menus`: the scenario mode of the game program shows or hides it in the menus of the player (#2775)"}
 {"name": "ENABLE_DISABLE_TECHNOLOGY", "text": "the technology in the storage `aoe2mc:menus`: the scenario mode of the game program shows or hides it in the menus of the player (#2775)"}
-{"name": "ENABLE_OBJECT_DELETION", "text": "not supported: the game program has no delete order"}
+{"name": "ENABLE_OBJECT_DELETION", "text": "`tag ... remove aoe2mc.keep` of the units and the order `keep <ref> 0` of each selected building (#3777)"}
 {"name": "ENABLE_OBJECT_SELECTION", "text": "`tag @e[..] remove aoe2mc.unselectable` of the units of the player in the area (#2854)"}
 {"name": "ENABLE_TECHNOLOGY_STACKING", "text": "`data modify storage aoe2mc:menus list append value \"<player> <technology> stack <n>\"`: the scenario mode of the game program lets the player research it n times, the effects stack (#2866)"}
 {"name": "ENABLE_UNIT_ATTACKABLE", "text": "`data merge entity @s {Invulnerable:0b}` of the units in the area, not the garrisoned ones (#2695)"}
