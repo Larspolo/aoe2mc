@@ -14,6 +14,13 @@ def load(path=None):
 
 
 
+def owners(config=None):
+    """The GitHub logins that steer the agents (decision #4229): `owners`, default [`owner`]. `owner` is the
+    tie-breaker of opposite asks."""
+    config = CONFIG if config is None else config
+    return list(config.get("owners") or [config["owner"]])
+
+
 def account():
     """The Claude account of this run (#4236): `git config aoe2mc.account` (the SessionStart hook copies the variable
     AGENT_ACCOUNT of the cloud environment), else None: then the lines get no account word."""
