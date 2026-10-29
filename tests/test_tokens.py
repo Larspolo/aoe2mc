@@ -55,5 +55,14 @@ def test_repo_base(tmp_path):
     (tmp_path / "CLAUDE.md").write_text("x" * 40 + "\n@docs/L.md\n")
     (tmp_path / "docs").mkdir()
     (tmp_path / "docs" / "L.md").write_text("y" * 400)
-    assert tokens.repo_base(tmp_path) == (52 + 400) / 4
+    assert tokens.repo_base(tmp_path) == (52 + 400) / tokens.DOC_CHARS
     assert tokens.repo_base(tmp_path / "docs") == 0
+
+
+def test_calls_line_counts_the_phases_and_the_top_labels():
+    chain = [call("a", tool=("1", "Bash", {"command": "python3 -m pytest -q"})),
+             call("b", tool=("2", "Bash", {"command": "python3 -m pytest -q"})),
+             call("c", tool=("3", "Read", {"file_path": "x.py"}))]
+    line = tokens.calls_line(chain, k=1)
+    assert line.startswith("Calls: ") and " · top 2x " in line
+    assert line.count("Calls:") == 1

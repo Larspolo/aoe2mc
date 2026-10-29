@@ -21,6 +21,7 @@ def test_team_chat_reaches_the_allies(tiny_world, tmp_path):
             mc_shot.Client(server.game_port, server.version, name="Cy") as enemy:
         for client, name in ((one, "aoe2mc"), (ally, "Bob"), (enemy, "Cy")):
             client.wait_join(lambda n=name: n in server.command("list").split(":", 1)[-1])
+            client.wait_loaded(server)                # else the keys go to "Loading terrain" (#3889)
         for c in ("team add p1", "team add p2", "team add p3", "team join p1 aoe2mc", "team join p2 Bob",
                   "team join p3 Cy", "aoe allies p1,p2"):
             server.command(c)

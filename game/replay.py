@@ -117,6 +117,7 @@ SEEN = 32                   # blocks: the server sends a particle only to the pl
 WAIT = 1000                 # ms of game time between two position checks of a unit that is late on its path (#766)
 LATE = 60000                # ms of game time: a unit that is still not at its resource then goes there with /tp
 STILL = 4000                # ms of game time: a walking unit that stands this long on one place gets free (unstick)
+NEAR_RESOURCE = 2.5         # tiles: an ORDER on an unknown target takes the resource this near to its click (#3976)
 HOME = 4                    # blocks: a unit farther than this from the end of its walk walks to it again (settle, #2633)
 HOME_MS = 20000             # ms of game time after the end of a walk: then settle() uses /tp (replay_drift: stuck at 30 s)
 PATH_CELLS = 20000          # cells that one path search may look at: a unit with no path stays (no time lag)
@@ -434,6 +435,8 @@ class Replay:
         self.ages, self.named = {}, {}          # player -> age ("Feudal"); the age in its sidebar name (#805)
         self.counted = []                       # UUIDs of the start units that the population counts
         self.stock = {}                         # player -> estimated resources: START + gather steps - costs (#932)
+        import market                           # market -> build -> replay: import it late
+        self.rates = dict(market.RATES)         # the exchange rates of the market, global for all players (#3939)
         self.gathered, self.villagers = {}, {}  # player -> resources of the gather steps, trained villagers (#1065)
         self.army, self.lost, self.razed = {}, {}, {}   # player -> military units trained, units lost, buildings lost (#1066)
         self.troops, self.fallen = {}, {}       # player -> {military unit name: live count, count lost} (#3695)
@@ -663,6 +666,18 @@ class Replay:
         for r, v in (train.COSTS.get(name) or build.COSTS.get(name) or {}).items():
             self.resources(p)[r] -= v
 
+    def trade(self, e):
+        """A buy or sell of the record at the own market: the gold and the resource change as in market.trade, and the
+        rate moves by STEP (#3939). The estimate may go below 0: the record is the truth, the estimate is a guess."""
+        import market                                               # market -> build -> replay: import it late
+        p, r, buy = e.get("player"), e["resource"].lower(), e["kind"] == "buy"
+        g = types.SimpleNamespace(rates=self.rates, techs=set(self.upgrades(p, e["time"])), data=self.data, player=p)
+        for _ in range(max(1, e.get("amount", market.LOT) // market.LOT)):
+            gold = market.price(g, r, buy)
+            self.resources(p)["gold"] += -gold if buy else gold
+            self.resources(p)[r] += market.LOT if buy else -market.LOT
+            self.rates[r] = min(max(self.rates[r] + (market.STEP if buy else -market.STEP), market.LIMITS[0]), market.LIMITS[1])
+
     def commands(self, e):
         """The commands of one timeline event (an empty list for the events that change nothing visible)."""
         kind = e["kind"]
@@ -731,6 +746,9 @@ class Replay:
             self.learn(e)
             return ["title @a actionbar " + json.dumps([text(name, color), text(f" researches {e['technology']}")])] + \
                 self.research(e, color)
+        if kind in ("buy", "sell") and e.get("resource"):       # the market trades change the estimate (#3939)
+            self.trade(e)
+            return []
         if kind == "resign":
             return ["title @a subtitle " + json.dumps(text("The game ends")),
                     "title @a title " + json.dumps(text(f"{name} resigns", color))]
@@ -1541,6 +1559,8 @@ class Replay:
         tile = self.resource(e)
         if tile in self.map.farms or tile in self.map.carcasses:    # a farmer stands on the farm, a hunter at the carcass
             goals = self.crew.goals(tile)
+        elif tile and e.get("target") not in self.refs and e.get("target") not in self.units:   # a cut tree (#3976)
+            goals = self.map.around(self.map.cells(tile)) or goals
         home = self.holder(e)
         if home and e.get("target") not in self.refs:              # a building of the replay: next to it (#876)
             x0, x1, z0, z1 = home[0]
@@ -2109,7 +2129,8 @@ class Replay:
             return e["resource"]
         o = self.refs.get(t) if e["kind"] == "order" else None
         if e["kind"] == "order" and t is not None and o is None and t not in self.units and "tile" in e:
-            return m.farm_at.get((int(e["tile"][0] * self.T), int(e["tile"][1] * self.T)))
+            farm = m.farm_at.get((int(e["tile"][0] * self.T), int(e["tile"][1] * self.T)))
+            return farm or self.near_resource(*e["tile"])
         if not o or "tile" not in o:
             return None
         if o["kind"] == "unit" and (food := self.gather.hunt_food(o["name"])) and "tile" in e:
@@ -2128,6 +2149,15 @@ class Replay:
             return None
         return tile if tile in m.trees or tile in m.bushes or tile in m.fish or any(tile in s for s in m.mines.values()) \
             else None
+
+    def near_resource(self, x, y):
+        """The tree, bush, mine or fish tile nearest to the order tile (x, y), at most NEAR_RESOURCE tiles away, else
+        None. AoE2 gives a tree a new object ID when a villager cuts it, and the record has no IDs of new objects, so
+        a later ORDER on it names an unknown target; the click on the high tree picture is up to 2 tiles off (#3976)."""
+        m, c = self.map, (x, y)
+        tiles = [t for s in (m.trees, m.bushes, m.fish, *m.mines.values()) for t in s
+                 if abs(t[0] + 0.5 - x) <= NEAR_RESOURCE and abs(t[1] + 0.5 - y) <= NEAR_RESOURCE]
+        return min(tiles, key=lambda t: (math.dist((t[0] + 0.5, t[1] + 0.5), c), t), default=None)
 
     def free_tile(self, x, y):
         """The tile nearest to (x, y) with no tree, bush, mine, fish or farm: a carcass on it would give the wrong

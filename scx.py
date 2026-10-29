@@ -143,7 +143,7 @@ def read(path):
 
     # The colors and start views are in the scenario player data after the objects (format < 1.36)
     n = s.u32()
-    s.skip((n - 1) * 7 * 4)                 # world player data: resources and population
+    s.skip((n - 1) * (6 if fmt < b"1.20" else 7) * 4)   # world player data: resources, population from 1.20 (genie-scx)
     objects = []
     for p in range(n):                      # objects: x, y, z, ID, type, state, angle, frame, garrisoned in
         for _ in range(s.u32()):
