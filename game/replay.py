@@ -448,8 +448,8 @@ class Replay:
     def commands(self, e):
         """The commands of one timeline event (an empty list for the events that change nothing visible)."""
         kind = e["kind"]
-        if kind == "shot":                                      # --camera auto (#3367)
-            return self.shot_view(e["tile"])
+        if kind == "shot":                                      # --camera auto (#3367), the menu switch (#3369)
+            return self.shot_view(e["tile"]) if self.control.get("camera") == "auto" else []
         if kind == "news":                                      # a fight starts: the chat line and the horn (#2951)
             return replay_input.fight_news(self.control["fights"][e["fight"]], e["fight"], self.control["players"])
         if kind in ("attack_move", "move", "order", "stop", "delete", "garrison", "follow", "guard", "autoscout"):
@@ -2412,13 +2412,14 @@ class Replay:
         found = fights(self.data.get("timeline", []), owners(self.data.get("objects", []), self.data.get("timeline", [])))
         news = [{"time": f["start"], "kind": "news", "fight": i} for i, f in enumerate(found)]    # the fight starts (#2951)
         owner = owners(self.data.get("objects", []), self.data.get("timeline", []))
-        shots = [{"time": c["time"], "kind": "shot", "tile": c["tile"]}
-                 for c in camera_plan(self.data.get("timeline", []), owner)] if self.camera else []
+        shots = [{"time": c["time"], "kind": "shot", "tile": c["tile"]}      # the camera can switch on later (#3369)
+                 for c in camera_plan(self.data.get("timeline", []), owner)]
         events = sorted((e for e in self.data.get("timeline", []) + self.spawns() + news + shots if start <= e["time"] <= last),
                         key=lambda e: e["time"])                     # the record ends at `last`: no spawn after it
         g0, r0, lag, n, k = start, clock(), 0.0, 0, 0                 # game time g0 (ms) at real time r0
         self.speed, self.paused = speed, paused
         self.control = {"speed": speed, "paused": paused, "view": self.pov,     # the view: replay_input VIEW (#1303)
+                        "camera": "auto" if self.camera else None,           # replay_input CAMERA (#3369)
                         "players": {p: self.player(p) for p in sorted(int(q) for q in self.data["players"]) if p}} | \
             ({"jump": to} if to is not None else {})
         self.control["fights"] = found
@@ -2434,6 +2435,7 @@ class Replay:
         if to is None:                                              # not again after a jump back (#2949)
             send(replay_input.fight_lines(self.control["fights"], self.control["players"]))
         census = self.census if bar and self.ai else lambda: None
+        watching = self.control["camera"]                           # the camera state of the last poll (#3369)
         look = self.look_around if bar and self.ai else lambda: None          # as census: a server of run.py --replay
         while k < len(events) or self.moving or self.builds or self.charging or self.idle:
             step = min([*self.moving.values(), *self.working.values(), *self.effects.values(),   # walk, gather, text
@@ -2463,6 +2465,10 @@ class Replay:
                     if (place := self.control.pop("place", None)) is not None:      # a fight jump (#2950)
                         self.follow = None                          # the follow view ends
                         self.send(self.place_view(place))
+                    if self.control.get("camera") != watching:      # the camera menu (#3369): the shot of now at once
+                        watching = self.control.get("camera")
+                        if watching == "auto" and (now_shots := [s for s in shots if s["time"] <= self.control["time"]]):
+                            self.send(self.shot_view(now_shots[-1]["tile"]))
                 if (to := self.control.pop("jump", None)) is not None:
                     break
                 wait = POLL if self.paused else (now - g0) / 1000 / self.speed - (clock() - r0)
