@@ -131,9 +131,10 @@ def more_arrows(g, building):
 
 
 def weight(g, name):
-    """The population of one unit: the product of the factors of the researched technologies with the key "population"
-    for its building (Logistics of Antiquity Mode: 1/2 for the Barracks, #3918), else 1."""
-    return math.prod(f for t, (b, f) in BY_KEY["population"].items() if t in g.techs and BUILDING_OF.get(name) == b)
+    """The population of one unit (None: a villager): the product of the factors of the researched technologies with the
+    key "population" whose units (as faster: a building, a group, a class, a name or a list) cover it (Logistics of
+    Antiquity Mode: 1/2 for the Barracks, #3918; Mahayana, Aznauri Cavalry, #4256), else 1."""
+    return math.prod(f for t, (b, f) in BY_KEY["population"].items() if t in g.techs and faster(b, name or "VILLAGER"))
 
 
 def work(g, building):
