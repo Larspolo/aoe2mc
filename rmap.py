@@ -123,10 +123,14 @@ def expand(words, rng, defined, consts, includes, folder=None, depth=0):
         elif w == "#define":
             defined.add(words[i + 1])
             i += 2
-        elif w == "#const":
-            text, j = group(words, i + 2)
-            consts[words[i + 1]] = calc(text, consts, rng)
-            i = j
+        elif w == "#const":                             # a #const with no value defines nothing (#4309)
+            v = words[i + 2] if i + 2 < len(words) else ""
+            if v.startswith(("(", "rnd(", "-")) or re.fullmatch(r"\d+\.?\d*|\.\d+", v) or v in consts:
+                text, j = group(words, i + 2)
+                consts[words[i + 1]] = calc(text, consts, rng)
+                i = j
+            else:
+                i += 2
         elif w.startswith(("(", "rnd(")):
             text, i = group(words, i)
             out.append(str(calc(text, consts, rng)))     # one rnd() draw where it is written (#4306)
@@ -272,7 +276,8 @@ def grow(owner, lands, free, rng):
         for land in lands:
             front = land["front"]
             while front and land["count"] < land["target"]:
-                tries = [int(rng.integers(len(front))) for _ in range(1 + land["clump"] // 5)]
+                tries = [int(rng.integers(len(front))) for _ in range(max(1, 1 + land["clump"] // 5))]
+                                                       # a negative clumping_factor: one try, not none (#4309)
                 k = max(tries, key=lambda k: sum(owner[c] == land["id"] for c in near(front[k], n)))
                 c = front[k]
                 front[k] = front[-1]
