@@ -72,6 +72,7 @@ import sys
 import time
 import uuid
 
+import agent_config
 from agent_config import CONFIG
 
 EMPTY_TREE = "4b825dc642cb6eb9a060e54bf8d69288fbee4904"
@@ -188,6 +189,13 @@ def lane():
     return f" lane {name}" if name else ""
 
 
+def account():
+    """" account NAME" when the run has an account (`agent_config.account()`, #4236), else "". It comes before the lane:
+    the readers of the lane take ` lane NAME` at the end of a claim."""
+    name = agent_config.account()
+    return f" account {name}" if name else ""
+
+
 def deep_lane():
     """True when this run may do the process review, the roadmap review and the queue refill: always, but only the
     runs of the deep lane while `reserved` in `[pacing]` of agent.toml names `deep` (owner, 2026-10-28): the main runs
@@ -222,7 +230,7 @@ def claim(number, takeover=False, remote="origin", limit=STALE, by=None, tag=Non
         if not line.startswith("Release") and not (takeover and stale(line, changed(slot(number, top), remote),
                                                                      time.time(), limit)):
             return None
-    msg = f"Claim #{number} by {by or who()} ({uuid.uuid4().hex}){lane() if tag is None else tag}"   # unique: two runs never push the same SHA
+    msg = f"Claim #{number} by {by or who()} ({uuid.uuid4().hex}){account() + lane() if tag is None else tag}"   # unique: two runs never push the same SHA
     sha = git("commit-tree", EMPTY_TREE, "-m", msg).stdout.strip()
     ref = slot(number, top + 1)
     return ref if push(sha, ref, remote) else None
@@ -417,7 +425,7 @@ def release(number, remote="origin", word="Release", by=None, adopt=None):
     if line.split(" ")[3:4] not in ([by or who()], [adopt]):  # "Claim #N by <branch> (...)", "Beat #N by <branch>"
         sys.exit(f"{ref} belongs to another run: {owner(line)} took #{number} over ({line}). Stop the work on #{number}"
                  f" now: no push, no comment, no release; pick the next ticket.")
-    tag = re.search(r" lane \w+$", line)[0] if adopt and re.search(r" lane \w+$", line) else lane()
+    tag = account() + (re.search(r" lane \w+$", line)[0] if adopt and re.search(r" lane \w+$", line) else lane())
     sha = git("commit-tree", EMPTY_TREE, "-p", "FETCH_HEAD", "-m", f"{word} #{number} by {by or who()}{tag}").stdout.strip()
     return ref if push(sha, ref, remote) else None
 

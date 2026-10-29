@@ -34,6 +34,7 @@ import re
 import subprocess
 import sys
 
+import agent_config
 from agent_config import CONFIG
 
 BURN = 0.03         # share of the 5-hour quota that one run uses per hour (16 runs used about 50 % per hour, 2026-10-25)
@@ -332,16 +333,18 @@ def burns(comments, burn=None):
     return burn or measured_burn(comments) or BURN, measured_burn7(comments) or BURN7
 
 
-def sample_line(usage, now, claims, release=None, lanes=None):
+def sample_line(usage, now, claims, release=None, lanes=None, account=None):
     """The `Usage:` line of a run report, which `tools/health.py` reads: also the 7-day usage and the release percent
-    of all goals (tools/release.py), for the release progress per quota (#899)."""
+    of all goals (tools/release.py), for the release progress per quota (#899), and the account of the quota
+    (`· account NAME` at the end, #4236; none: the first account)."""
     iso = lambda t: f"{datetime.datetime.fromtimestamp(t, datetime.timezone.utc):%Y-%m-%dT%H:%M:%SZ}"
     used, reset, _ = usage["five_hour"]
     line = f"Usage: {iso(now)} · usage {used * 100:.1f}% · resets {iso(reset)} · runs {claims}"
     if "seven_day" in usage:
         line += f" · week {usage['seven_day'][0] * 100:.1f}%" + ("" if release is None else f" · release {release:.1f}%")
         line += f" · week resets {iso(usage['seven_day'][1])}"                  # for the dashboard (#1696)
-    return line + "".join(f" · {k} {n}" for k, n in sorted((lanes or {}).items()) if k != "opus" and n)   # (#1727)
+    line += "".join(f" · {k} {n}" for k, n in sorted((lanes or {}).items()) if k != "opus" and n)   # (#1727)
+    return line + (f" · account {account}" if account else "")
 
 
 def release_percent():
@@ -435,7 +438,8 @@ def main(argv=None):
     if a.sample:
         import health
         t = datetime.datetime.now(datetime.timezone.utc)
-        print(sample_line(usage, now, health.active_claims(t), release_percent(), health.lane_claims(t)))
+        print(sample_line(usage, now, health.active_claims(t), release_percent(), health.lane_claims(t),
+                          agent_config.account()))     # the quota of this run's own account (#4236)
         return
     status = read_status()
     burn, burn7 = burns(status[0], a.burn)
