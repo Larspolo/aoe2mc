@@ -11,7 +11,7 @@ from game import diplomacy, lobby, run
 class LobbyServer(two.TwoServer):
     """TwoServer with the sides of run.Game: the team of a Minecraft player is its side."""
     people = 2
-    choose, side = run.Game.choose, run.Game.side
+    choose, side, start_view = run.Game.choose, run.Game.side, run.Game.start_view
 
     def __init__(self, entities):
         super().__init__(entities)
