@@ -19,7 +19,7 @@ import uuid as uuids
 from collections import namedtuple
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from gather import NORMAL  # noqa: E402
+from gather import NORMAL, predator  # noqa: E402
 import civs  # noqa: E402
 import garrison  # noqa: E402
 import table  # noqa: E402
@@ -213,10 +213,12 @@ FIGHTERS = {r["name"] for r in UNIT_ROWS if r.get("fighter")}   # no armor class
 def sight_command(uuid, name, T, s=None):
     """The plugin command that lets an idle soldier attack the nearest enemy unit in its line of sight (tiles * T
     blocks, #775), and the enemy buildings for the units of BUILDING_SIGHT (#1820). None for a unit that does not
-    fight (villager, monk, king): no armor class, except the FIGHTERS (Furious the Monkey Boy, #1995)."""
+    fight (villager, monk, king): no armor class, except the FIGHTERS (Furious the Monkey Boy, #1995) and the predators
+    (#3397)."""
     s = s or stats(name)
     mode = f" {BUILDING_SIGHT[name]}" if name in BUILDING_SIGHT else ""
-    return f"aoe sight {uuid} {sight(name, s) * T}{mode}" if (s.classes or name in FIGHTERS) and s.attack else None
+    fights = s.classes or name in FIGHTERS or predator(name)            # a predator of Gaia fights too (#3397)
+    return f"aoe sight {uuid} {sight(name, s) * T}{mode}" if fights and s.attack else None
 
 
 STANCES = ("aggressive", "defensive", "stand_ground", "no_attack")
@@ -252,6 +254,10 @@ def setup(game, data):
                     + [label_command(uuid, o["name"])]:
                 game.command(c)
     units = [o for o in data["objects"] if o["kind"] == "unit" and o["player"] and o.get("uuid")]
+    for o in data["objects"]:                        # the predators of Gaia wake up and attack, as in AoE2 (#3397)
+        if o["kind"] == "unit" and not o["player"] and o.get("uuid") and predator(o["name"]):
+            game.command(stats_command(o["uuid"], o["name"]))
+            game.command(sight_command(o["uuid"], o["name"], data.get("tile_size", 4)))
     for o in units:                                  # the plugin answers "Range: 0 units" for a mob that cannot shoot
         if cmd := range_command(o["uuid"], o["name"], data.get("tile_size", 4)):
             game.command(cmd)
