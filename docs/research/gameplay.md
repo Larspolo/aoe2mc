@@ -260,6 +260,22 @@ The owner decides on the platform first (decision ticket). The other tickets dep
   Source: the behavior of the game (AoE2 DE). The AoE2 wiki (MediaWiki API, 2026-10-29) has no page "Delete" and no
   refund rule on "Building (Age of Empires II)": check it in the game when a refund looks wrong.
 
+## Unique buildings (#4081)
+
+Source: the AoE2 wiki, category "Unique buildings (Age of Empires II)", the page "Unique building" and the infobox of
+each page (MediaWiki API, 2026-10-29). Since update 141935 the wiki counts six. The shared buildings of The Mountain
+Royals (Fortified Church, Mule Cart) are regional buildings now, not in this list. State: "works" when
+`game/data/build.jsonl` has a line with the name.
+
+| Building | Civilizations | Age | Cost | What it does in AoE2 | State |
+|---|---|---|---|---|---|
+| Donjon | Sicilians | Dark | 50 wood, 175 stone | Replaces the Watch Tower line; trains Serjeants and the Spearman line; upgrades free with each age | works |
+| Feitoria | Portuguese | Imperial | 350 gold, 300 stone | Generates 96 food, 42 wood, 60 gold, 18 stone per minute; uses 20 population | missing |
+| Folwark | Poles | Dark | 100 wood | Replaces the Mill; collects 10 % of the food of a nearby Farm when it is seeded; 5 population | works |
+| Harbor | Malay | Castle (Thalassocracy) | 150 wood | Upgraded Dock: trains and improves ships, shoots arrows, garrisons 10 | missing |
+| Krepost | Bulgarians | Castle | 350 stone | Small Castle: trains and upgrades Konniks, shoots arrows, 20 population | works |
+| Pasture | Khitans | Dark | 110 wood | Replaces the Farm; two villagers work it at once; its own drop site | missing |
+
 ## Decisions of the owner (2026-10-28)
 
 - Bot difficulty (#2648, option A): the six AoE2 DE names (Easiest, Standard, Moderate, Hard, Hardest, Extreme), each
