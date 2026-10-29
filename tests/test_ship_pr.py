@@ -57,7 +57,7 @@ def test_a_first_push_opens_the_pr_with_its_ticket(tmp_path, monkeypatch, capsys
 def test_failed_checks_stop_before_the_push(tmp_path, monkeypatch):
     monkeypatch.chdir(repo(tmp_path))
     fake_github(monkeypatch, open_prs=[{"number": 9}])
-    monkeypatch.setattr(ship, "checks", lambda full: False)
+    monkeypatch.setattr(ship, "checks", lambda: False)
     monkeypatch.setattr(ship, "push", lambda n: (_ for _ in ()).throw(AssertionError("pushed")))
     assert ship.main(["5"]) == 2
 
