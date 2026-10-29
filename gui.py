@@ -38,6 +38,8 @@ NO_WINDOW = getattr(subprocess, "CREATE_NO_WINDOW", 0)            # Windows: no 
 PLAY_VALUES = (("server", "--server"), ("people", "--people"), ("reveal", "--reveal"))
 PLAY_FLAGS = (("play", "--play"), ("bot", "--bot"), ("cheats", "--cheats"))
 BOT_VALUES = (("bot_attack", "--bot-attack"),)                     # only with --bot (#1870)
+# The java binary of a JRE in the cache, in each layout: the same as mc_check.CACHED (#3054)
+CACHED = (("*", "bin", "java"), ("*", "Contents", "Home", "bin", "java"), ("*", "bin", "java.exe"))
 JAVA = {"26.3": 25}                                    # Java of each Minecraft version (mc_check reads the version JSON)
 JDK_INSTALL = {"Linux": "sudo apt-get install openjdk-{n}-jdk-headless", "Darwin": "brew install openjdk@{n}",
                "Windows": "Install the JDK {n} from https://adoptium.net/temurin/releases/?version={n}"}
@@ -115,7 +117,7 @@ def javas():
     """The java binaries that mc_check.find_java looks at, in its order (apt installs into /usr/lib/jvm)."""
     cache = os.path.join(os.environ.get("XDG_CACHE_HOME") or os.path.expanduser("~/.cache"), "aoe2mc", "mc")
     return [j for j in [shutil.which("java")] + sorted(glob.glob("/usr/lib/jvm/*/bin/java"))
-            + sorted(glob.glob(os.path.join(cache, "jdk-*", "*", "bin", "java"))) if j]
+            + [j for p in CACHED for j in sorted(glob.glob(os.path.join(cache, "jdk-*", *p)))] if j]
 
 
 def needs_jdk(server):

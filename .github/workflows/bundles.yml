@@ -72,6 +72,15 @@ jobs:
         run: |
           if [ "$RUNNER_OS" = Windows ]; then ./gradlew.bat --no-daemon -q jar; else ./gradlew --no-daemon -q jar; fi
           cp build/libs/aoe2mc-plugin.jar aoe2mc-plugin.jar     # packaging/aoe2mc.spec puts it into the bundle
+      - name: Download the Temurin JRE of the system into an empty cache (#3054)
+        if: runner.os != 'Linux'
+        env:
+          XDG_CACHE_HOME: ${{ runner.temp }}/jre-cache
+        run: |
+          java=$(python -c "import sys; sys.path.insert(0, 'tools'); import mc_check; print(mc_check.download_jre(25))")
+          echo "$java"
+          "$java" -version 2>&1 | tee jre.out
+          grep -q 'version "25' jre.out
       - name: Draw the icon
         run: python packaging/icon.py
       - name: Release file of a tag (the game program sends the release link of the resource pack, #2741)
