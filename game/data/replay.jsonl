@@ -79,3 +79,6 @@
 {"name": "ELITE_CHAMPI_WARRIOR", "walk": 1.1}
 {"name": "HOPLITE", "walk": 0.9}
 {"name": "ELITE_HOPLITE", "walk": 0.9}
+{"name": "LUMBER_CAMP", "economy": true}
+{"name": "MILL", "economy": true}
+{"name": "MINING_CAMP", "economy": true}
