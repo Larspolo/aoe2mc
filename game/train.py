@@ -542,6 +542,16 @@ def click_sound(g, player, rect):
                   f"playsound minecraft:{v['select']} voice @s ~ ~ ~ 1 {v['pitch']}")
 
 
+def trained_voice(g, rect, unit):
+    """Play the select voice of the class of the unit that the building rect completed, to the team of the own player
+    (AoE2 DE, #3563). unit: a Villager, a UUID or a ship. A class with no line plays none; a setup or a cheat spawns
+    with no sound."""
+    import gather                                                  # gather imports this module
+    if (v := gather.VOICES.get(g.voice_class(getattr(unit, "uuid", unit)))) and not getattr(g, "noui", False):
+        x, z = (rect[0] + rect[1]) / 2, (rect[2] + rect[3]) / 2
+        g.command(f"playsound minecraft:{v['select']} voice @a[team=p{g.player}] {x:.1f} {g.map.y(int(x), int(z))} {z:.1f} 1 {v['pitch']}")
+
+
 def show(g, player, rect):
     """Show (or refresh) the menu of the building rect: one item per unit, with its cost, time and queue. The second
     row shows the queue (#706): one item per group of the same unit (groups(), item count: the units), the first one
@@ -1194,6 +1204,7 @@ def tick(g, work):
             q.pop(0)
             out.append(v)
             record.trained(g, v)                                       # its object ID (#2649)
+            trained_voice(g, rect, v)
             g.pop += 1
     refresh(g)
     sidebar(g)
