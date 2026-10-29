@@ -276,6 +276,21 @@ Royals (Fortified Church, Mule Cart) are regional buildings now, not in this lis
 | Krepost | Bulgarians | Castle | 350 stone | Small Castle: trains and upgrades Konniks, shoots arrows, 20 population | works |
 | Pasture | Khitans | Dark | 110 wood | Replaces the Farm; two villagers work it at once; its own drop site | missing |
 
+## Attack Ground (#4078)
+
+The AoE2 wiki ("Attack ground", the MediaWiki API) lists the AoE2 units that can attack a point on the ground:
+
+- Mangonel → Onager → Siege Onager
+- Rocket Cart → Heavy Rocket Cart
+- Bombard Cannon → Houfnice
+- Trebuchet, Mounted Trebuchet, Traction Trebuchet
+- Cannon Galleon → Elite Cannon Galleon
+- Dromon, Lou Chuan, Turtle Ship → Elite Turtle Ship
+
+Only the shots with an area damage hit at the point: a Turtle Ship fires its cannonballs and rockets, a Lou Chuan only its rocks.
+The plugin command `aoe attackground <selector> <x> <y> <z>` takes each unit with a siege shot (`aoe range` with a blast).
+A unit with blast 0 (the Trebuchet) shoots, but its shot hits no unit at the point.
+
 ## Decisions of the owner (2026-10-28)
 
 - Bot difficulty (#2648, option A): the six AoE2 DE names (Easiest, Standard, Moderate, Hard, Hardest, Extreme), each
