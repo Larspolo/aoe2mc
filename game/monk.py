@@ -269,6 +269,8 @@ def heal(g, dt):
     last, g.monk_at = g.monk_at, {m: pos[m] for m in monks if m in pos}
     import civs                                                    # civs imports gather, gather imports this module
     reach = RANGE * civs.HEAL_RANGE.get(civs.civ(g), 1) * g.map.T   # the Teutons: twice (#2269)
+    import train                                                   # train imports this module's callers (#3984)
+    rate = RATE * math.prod(train.value("heal_rate", t, 1) for t in g.techs)   # Medicine of Antiquity Mode: 2
     hurt, taken = {}, set()
     for m in monks:
         if m in inside or m in g.converting or m not in pos or m not in last or math.dist(pos[m], last[m]) > STILL:
@@ -280,7 +282,7 @@ def heal(g, dt):
             if u not in hurt:
                 hurt[u] = health(g, u)
             if hurt[u] and hurt[u][0] < hurt[u][1]:
-                hp = min(hurt[u][1], hurt[u][0] + RATE * dt)
+                hp = min(hurt[u][1], hurt[u][0] + rate * dt)
                 g.command(f"data modify entity {u} Health set value {round(hp, 2)}f")
                 g.command(f"execute at {u} anchored eyes run particle minecraft:heart ^ ^ ^ 0.3 0.3 0.3 0 2")   # #1634
                 taken.add(u)
@@ -377,14 +379,16 @@ def resist(g, uuid):
 
 def near(g, m, target, pos):
     """True when monk m is in its conversion range of the target: next to a building, ram or trebuchet (TOUCH),
-    else the range of MONKS (and PRINTING more after Block Printing)."""
+    else the range of MONKS (and PRINTING more after Block Printing, and the key "reach" of the techs)."""
     if target in g.forts:
         x0, _, z0, x1, _, z1 = g.forts[target]
         x, _, z = pos[m]
         return math.hypot(max(x0 - x, 0, x - x1 - 1), max(z0 - z, 0, z - z1 - 1)) <= TOUCH
     if any(n in g.enemies[target] for n in NEXT):
         return math.dist(pos[m], pos[target]) <= TOUCH + 1         # to its middle: about 1 block from its side
+    import train                                                   # train imports gather, gather imports this module
     reach = MONKS.get(g.soldiers.get(m), CONVERT) + PRINTING * ("BLOCK_PRINTING" in g.techs)
+    reach += sum(train.value("reach", t, 0) for t in g.techs)     # Afterlife of Antiquity Mode (#3988)
     return math.dist(pos[m], pos[target]) <= reach * g.map.T
 
 
@@ -444,5 +448,7 @@ def convert(g, dt):
                 (win if fort else die if heresy(g, owner) else take)(g, target)
                 for k in group:
                     del g.converting[k]
+                import train                                       # train imports this module (#3502)
+                rest_factor = math.prod(train.value("rest", t, 1) for t in g.techs)   # Fanaticism: 0.5 (#3987)
                 for k in rest:                                     # the group in range (Theocracy: one)
-                    g.faith[k] = (ILLUMINATED if "ILLUMINATION" in g.techs else REST) / faith(g)
+                    g.faith[k] = (ILLUMINATED if "ILLUMINATION" in g.techs else REST) * rest_factor / faith(g)
