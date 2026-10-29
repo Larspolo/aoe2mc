@@ -359,11 +359,18 @@ def volley_command(g, uuid, name):
     return None if attack is None else f"aoe volley {uuid} 1 {attack}"
 
 
-def lead_command(g, uuid, name):
+def lead_command(g, uuid, name, techs=None):
     """The command that lets the shots of own unit name lead a moving target, as with Ballistics (the key "lead" of
-    data/civs.jsonl: Spanish Cannon Galleons, #2430), else None. Minecraft feature: a scoreboard tag that the plugin
-    reads (AoePlugin.lead)."""
-    return f"tag {uuid} add aoe2mc.lead" if name in civs.value("lead", civs.civ(g), ()) else None
+    data/civs.jsonl: Spanish Cannon Galleons, #2430; the key "lead" of data/train.jsonl of the technologies techs,
+    default g.techs: Arquebus, #4364), else None. Minecraft feature: a scoreboard tag that the plugin reads (AoePlugin.lead)."""
+    import combat                                                  # combat imports this module's data: import it late
+    if name in civs.value("lead", civs.civ(g), ()):
+        return f"tag {uuid} add aoe2mc.lead"
+    s = combat.stats(name)
+    if any(test(t, name, s) for tech in (g.techs if techs is None else techs) if (e := BY_KEY["lead"].get(tech))
+           for t in e["if"]):
+        return f"tag {uuid} add aoe2mc.lead"
+    return None
 
 
 ORDERS = {r["name"] for r in UNIT_ROWS if r.get("orders")}         # not military, but they take move orders (summon)
@@ -1162,6 +1169,9 @@ def research(g, entry, start=False, rect=None):
             g.command(combat.range_command(uuid, name, g.map.T, s=stats(g, name, uuid)))
     for cmd in [c for uuid, name in g.soldiers.items() for c in fire_commands(g, uuid, name, {entry["name"]})]:
         g.command(cmd)                                             # the live fire ships: Siphons, Incendiaries (#2165)
+    for uuid, name in g.soldiers.items():                          # the live gunpowder units aim ahead (Arquebus, #4364)
+        if cmd := lead_command(g, uuid, name, {entry["name"]}):
+            g.command(cmd)
     if entry["name"] in BY_KEY["walk"]:                            # the live units walk faster (Fervor)
         import ai, fleet                                           # ai imports gather, gather imports this module
         for uuid, name in g.soldiers.items():                      # a ship: fleet.tick reads speed() (#2136)
