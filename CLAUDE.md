@@ -16,7 +16,7 @@ The README already uses this style. Keep it.
 |---|---|
 | Install | `python3 -m pip install -r requirements-dev.txt` (a `pip` on the PATH can be another Python) |
 | Lint | `ruff check .` |
-| Fast tests (~2 min; after a merge only the changed test files, `verify`) | `python3 -m pytest -n auto` (all cores, #2415; use `python3 -m`: a `pytest` on the PATH can be another Python) |
+| Tests of a change (never the full fast suite: the quick CI runs it, #4187; `verify`) | `python3 -m pytest tests/test_a.py ...` (use `python3 -m`: a `pytest` on the PATH can be another Python; `-n auto` for many files, #2415) |
 | Slow tests (~2 min) | `python3 -m pytest -m slow` |
 | Test scenario | `python3 tools/scenarios.py tiny OUT.aoe2scenario` (or `gallery`, `stress`, `buildings`, `units`, `village`, `facing`, `walls`, `river` (raised river with dock, bridge, boats), `river_town`, `four_civs`, `battle`, `triggers` (timer, area, create and remove triggers; count with `tools/triggers.py FILE...`), `large` (480 × 480 tiles, #690), `owner_loop` (the play-test map of the `human` skill, #1674), `layers` (terrain layers: road, dirt, snow, grass on water, #3690), `moods` (the village with `--mood NIGHT`, a map color mood, #1598)) |
 | Convert | `python3 aoe2mc.py IN.aoe2scenario OUTWorld --preview` |

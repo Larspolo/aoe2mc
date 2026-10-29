@@ -7,8 +7,8 @@ The first push of a ticket took 2 to 6 tool calls in each run on 2026-10-28, and
     python3 tools/ship_pr.py N --message MSG.txt                                  # a later push to the open PR
 
 Steps: `git commit -F MSG.txt` of the staged files (without `--message`: the commits that are there), `ruff check .`,
-the tests (the full fast suite before the first push of a PR, `verify` level 1; later only the test files of the
-branch; `--tested`: you ran them on this tree), `claim.py N --guard` and the push (`merge_main.push`), the PR (a new
+the tests (the test files of the branch and the test files that import its changed modules, never the full
+suite: the quick CI runs it, owner #4187; `--tested`: you ran them on this tree), `claim.py N --guard` and the push (`merge_main.push`), the PR (a new
 one with `Closes #N` in its body; or the open PR of the branch), and `mergeable_state` (`dirty`: run
 `python3 tools/merge_main.py --push N`). Exit 0: shipped. Exit 2: ruff or a test fails (nothing pushed). Exit 3: the
 guard or the push fails (do not push by hand). Exit 4: no commit to ship, or the PR call fails.
@@ -33,22 +33,20 @@ def git(*args):
     return subprocess.run(["git", *args], capture_output=True, text=True)
 
 
-def checks(full):
-    """ruff, then the full fast suite or the test files of the branch. True when all pass."""
+def checks():
+    """ruff, then the test files of the branch and of its changed modules (more than `MAX_TESTS`: only the branch's).
+    Never the full fast suite: the quick CI runs it on each push (owner, #4187). True when all pass."""
     r = subprocess.run(["ruff", "check", "."], capture_output=True, text=True)
     if r.returncode:
         print(r.stdout[-3000:])
         return False
-    if full:
-        run = []
-    else:
-        changed = git("diff", "--name-only", f"origin/{CONFIG['branch']}...HEAD").stdout.split()
-        tests = {f: open(f, encoding="utf-8").read() for f in glob.glob("tests/test_*.py")}
-        run = merge_main.test_files([], changed, tests)[0]
-        if not run:
-            print("no test file of the branch: the quick CI runs the fast suite")
-            return True
-    par = ["-n", "auto"] if full or len(run) > 8 else []           # a few files start faster without xdist (verify)
+    changed = git("diff", "--name-only", f"origin/{CONFIG['branch']}...HEAD").stdout.split()
+    tests = {f: open(f, encoding="utf-8").read() for f in glob.glob("tests/test_*.py")}
+    run = merge_main.test_files(changed, changed, tests)[0]
+    if not run:
+        print("no test file of the branch: the quick CI runs the fast suite")
+        return True
+    par = ["-n", "auto"] if len(run) > 8 else []           # a few files start faster without xdist (verify)
     r = subprocess.run([sys.executable, "-m", "pytest", "-q", *par, *run], capture_output=True, text=True)
     print("\n".join((r.stdout + r.stderr).strip().splitlines()[-15:]))
     return r.returncode == 0
@@ -94,7 +92,7 @@ def main(argv=None):
         return 4
     owner = CONFIG["repo"].split("/")[0]
     pr = next(iter(dashboard.api(f"pulls?head={owner}:{branch}&state=open")), None)
-    if not a.tested and not checks(full=pr is None):
+    if not a.tested and not checks():
         return 2
     if not push(a.number):
         return 3
