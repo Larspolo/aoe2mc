@@ -2158,8 +2158,17 @@ class Replay:
                 f": villagers trained {self.villagers.get(p, 0)}, gathered {res}")]))
             out.append("tellraw @a " + json.dumps([text(name, color), text(              # military (#1066)
                 f": military units trained {self.army.get(p, 0)}, units lost {self.lost.get(p, 0)}, "
-                f"buildings lost {self.razed.get(p, 0)}")]))
+                f"buildings lost {self.razed.get(p, 0)}{self.army_text(p)}")]))
         return out + self.tech_commands() + self.society_commands()
+
+    def army_text(self, p):
+        """The army at the end and the losses by type of player p, most first, at most 6 types and "+N" (#3697)."""
+        def top(counts):
+            items = sorted(((n, c) for n, c in counts.items() if c), key=lambda x: (-x[1], x[0]))
+            words = [f"{c} {pretty(n)}" for n, c in items[:6]] + ([f"+{len(items) - 6}"] if len(items) > 6 else [])
+            return ", ".join(words)
+        army, lost = top(self.troops.get(p, {})), top(self.fallen.get(p, {}))
+        return "".join(f", {k} {v}" for k, v in (("army at the end:", army), ("lost:", lost)) if v)
 
     def tech_commands(self):
         """One chat line per player with the game time of each age-up (MM:SS, "-": not reached) and the number of
