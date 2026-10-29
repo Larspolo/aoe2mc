@@ -2123,6 +2123,9 @@ class Gather:
             self.point()                                               # before clicks(): hints.tick shows its text
             for name in self.clicks():
                 self.click(name)
+            if getattr(self, "paused", False):                         # pause.toggle: only the clicks continue (#3374)
+                time.sleep(max(0.0, self.tick / self.speed - (time.monotonic() - t)))
+                continue
             self.step()
             for b in self.bots:
                 b.step()

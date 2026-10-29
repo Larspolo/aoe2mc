@@ -185,6 +185,8 @@ NOT_SAVED = (                                                          # the fie
     "ordering",                                                        # stance.py: a pending Patrol click, made again in the menu (#3355)
     "owners_at",                                                       # scenario.owners: the next check time
     "owners_sent",                                                     # scenario.owners: a load sets the same score again
+    "paused",                                                          # pause.py: a loaded game runs
+    "paused_at",                                                       # pause.py: the real time of the pause
     "peers",                                                           # run.py: the players of the game
     "person",                                                          # gather.py: the name of the click that it handles now (#3486)
     "player",                                                          # run.py: the player number
