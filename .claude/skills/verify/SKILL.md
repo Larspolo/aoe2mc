@@ -8,21 +8,19 @@ description: Verify a change to aoe2mc before commit. Selects the check level (l
 Use the cheapest check that proves the change. Do all levels up to the one that the change needs.
 The Minecraft client runs only headless: it makes screenshots (level 5). Write the result of each check in the PR body.
 
-## Level 1 – always (about 2 min: 4,800 tests on 4 cores, 2026-10-28)
+## Level 1 – always (a few seconds to a minute)
 
     ruff check .
-    python3 -m pytest -n auto
+    python3 -m pytest tests/test_a.py tests/test_b.py
 
-`-n auto` runs the tests on all cores (`pytest-xdist`, #2415: 106 s, without it 287 s). Use it only for the full fast
-suite: a few test files start faster without it, and do not use it for `-m mc` (each test starts a server).
-
-Run the full suite once, before the push: after the last edit, not after each edit (#3460: 1697 full runs, about 2.5
-per run, in 24 hours). Between edits, run `ruff check .` and only the changed test files and the test files of the
-changed code (`grep -l MODULE tests/*.py`). Run the full suite again only when a code change follows it.
-Never push red: the one full run before the push stays. After that (a fix of a review or of CI, a merge of
-`origin/main`), run `ruff check .` and only the test files of the change and of the conflicted files
-(`python3 -m pytest tests/test_a.py tests/test_b.py`), then push: the quick CI runs the full fast suite on each push,
-and Automerge waits for it. 255 full runs in 69 runs took 891 minutes, and main moved during each one (#1732).
+Never run the full fast suite (`python3 -m pytest` with no test file, owner #4187): the quick CI runs it on each push,
+and Automerge waits for it. Run `ruff check .`, the test files of the change, and the test files of the changed code
+(`grep -l MODULE tests/*.py`; `tools/ship_pr.py` runs this set by itself). Add other test files when you think that
+the change can break them. Use `-n auto` (`pytest-xdist`, #2415) only for more than about 8 files: a few files start
+faster without it, and do not use it for `-m mc` (each test starts a server). Before #4187, the full runs took 44 %
+of the run minutes (408 of 920 minutes in 100 merged PRs).
+A red CI after the push: read the failed tests of the job (`mcp__github__get_job_logs`), run those files, fix, push.
+The PR body names what a later run needs to continue (the changed places, the tests that you ran, what is left).
 
 ## Level 2 – the change affects blocks or entities (about 60 s)
 

@@ -1,4 +1,4 @@
-"""default_terrain_replacement and accumulate_connections of <CONNECTION_GENERATION> (#3870)."""
+"""default_terrain_replacement of <CONNECTION_GENERATION> (#3870)."""
 import numpy as np
 
 import rmap
@@ -13,8 +13,3 @@ def test_the_default_replacement_gives_road_on_land_and_a_replace_terrain_line_w
     assert (t == R).any() and (plain[t == R] == G).all()             # road only where the land was
     assert ((t == S) == (plain == S)).all()                            # the water tiles of the path stay shallows
 
-
-def test_accumulate_connections_warns():
-    seen = []
-    rmap.generate(FORDS % "accumulate_connections\n", 3, size=80, warn=seen.append)
-    assert any("accumulate_connections is not read yet" in m for m in seen)

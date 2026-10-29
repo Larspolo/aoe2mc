@@ -108,7 +108,7 @@ the kind:
   session after the owner agrees to each step that writes outside the clone.
 - **close**: show the evidence of the agent's last comment. When the owner agrees, close the issue as completed
   (`gh issue close N --reason completed`, or the GitHub MCP tools) and make the follow-up change that the comment names
-  (for example a line of `docs/ROADMAP.md`) on a branch with a PR.
+  (for example a line of `steering/project/ROADMAP.md`) on a branch with a PR.
 - **question**: show the question and write down the owner's answer.
 
 ## 4. Guide

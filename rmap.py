@@ -290,8 +290,11 @@ def connections(terrain, lands, cmds, consts, rng, warn):
     (origin, player or 0, zone). replace_terrain changes the terrain on a path, and terrain_size widens it on the
     tiles of a terrain (radius ± variance). terrain_cost 0: never on a path. create_connect_teams_lands makes no path:
     generate() has no teams, so each player is a team of one.
-    default_terrain_replacement: the terrain of the other path tiles. accumulate_connections has no source yet (#3870)."""
+    default_terrain_replacement: the terrain of the other path tiles. Without accumulate_connections (DE), a connection
+    reads the terrain of the start of the section, not the terrain that the earlier connections made (#4174)."""
     n = len(terrain)
+    start = terrain.copy()
+    acc = any(cmd == "accumulate_connections" for cmd, *_ in cmds)
     pairs = {"create_connect_all_players_land": lambda a, b, z: a[1] and b[1],
              "create_connect_teams_lands": lambda a, b, z: False,
              "create_connect_all_lands": lambda a, b, z: True,
@@ -299,14 +302,17 @@ def connections(terrain, lands, cmds, consts, rng, warn):
              "create_connect_same_land_zones": lambda a, b, z: a[2] == b[2],
              "create_connect_land_zones": lambda a, b, z: a[2] in z and b[2] in z}
     for cmd, args, attrs in cmds:
+        if cmd == "accumulate_connections":
+            continue
         if cmd not in pairs:
             warn(f"{cmd} is not read yet")
             continue
+        base = terrain if acc else start
         zones = {value(v, consts) for v in args}
         each = lambda a: [[value(v, consts) for v in x] for x in attrs.many.get(a, ())]
         weight = np.ones((n, n), np.int64)
         for k, c in each("terrain_cost"):
-            weight[terrain == k] = c
+            weight[base == k] = c
         path = np.zeros((n, n), bool)
         for i, a in enumerate(lands):
             for b in lands[i + 1:]:
@@ -315,10 +321,10 @@ def connections(terrain, lands, cmds, consts, rng, warn):
         wide = path.copy()
         for k, r, *v in each("terrain_size"):
             v = v[0] if v else 0
-            for c in np.argwhere(path & (terrain == k)):
+            for c in np.argwhere(path & (base == k)):
                 for t in square(tuple(c), max(0, r + int(rng.integers(-v, v + 1))), n):
                     wide[t] = True
-        old = terrain.copy()
+        old = base.copy()
         for a, b in each("replace_terrain"):
             terrain[wide & (old == a)] = b
         for d, in each("default_terrain_replacement"):                # the path tiles of no replace_terrain (#3870)
@@ -533,19 +539,38 @@ def circle(setup, players, teams, seed):
     return rng.permutation(order).tolist()
 
 
+CREATE_OBJECT = (               # the attributes of create_object that objects() reads: one per line, in alphabetical order (#4224)
+    "actor_area",                   # mark the tiles around each object for a later avoid_actor_area (#3858)
+    "actor_area_radius",            # the radius of actor_area, default 1 (#3858)
+    "actor_area_to_place_in",       # only in this actor area (#4134)
+    "avoid_actor_area",             # out of this actor area (#3858)
+    "avoid_all_actor_areas",        # out of each actor area (#4134)
+    "avoid_cliff_zone",             # tiles from a cliff, default 1; never on the cliff tiles (#4131, `ridges`: the cliffs)
+    "avoid_forest_zone",            # tiles from a forest, default 1 (#3858)
+    "group_placement_radius",       # tiles of a loose group from its first object, default 3 (#3856)
+    "group_variance",               # ± objects in each group (#3856)
+    "layer_to_place_on",            # only the tiles of this land layer (#4132, `layer`: the land layer of each tile)
+    "max_distance_to_other_zones",  # tiles from the lands of the other players (#3857)
+    "max_distance_to_players",      # tiles from the origin of the player land (#3855)
+    "min_distance_group_placement", # tiles from the other objects (#3857)
+    "min_distance_to_players",      # tiles from the origin of the player land (#3855)
+    "number_of_groups",             # groups of number_of_objects (± group_variance) objects (#3856)
+    "number_of_objects",            # default 1; 3 for a VILLAGER: the start villagers of AoE2 DE (#3855, #4120)
+    "place_on_forest_zone",         # only the tiles next to a forest (#3858)
+    "second_object",                # one more object on each tile (#3858)
+    "set_gaia_object_only",         # Gaia owns the objects of set_place_for_every_player (#3855)
+    "set_loose_grouping",           # the default grouping (#3856)
+    "set_place_for_every_player",   # number_of_objects for each player (#3855)
+    "set_scaling_to_map_size",      # scale the groups, else the objects: a 100 × 100 map is the base (#3857)
+    "set_scaling_to_player_number", # scale the groups, else the objects, by the player count (#3857)
+    "set_tight_grouping",           # each next object on a free tile next to an object of the group (#3856)
+    "terrain_to_place_on",          # only on this terrain (#3857)
+)
+
+
 def objects(cmds, consts, terrain, starts, rng, warn, owner=None, ridges=(), layer=None):
-    """The objects of the create_object commands of <OBJECTS_GENERATION> (#3855): number_of_objects (default 1) on
-    random free tiles, set_place_for_every_player: that many for each player (its own, or Gaia with
-    set_gaia_object_only), min_distance_to_players and max_distance_to_players: tiles from the origin of the player
-    land. number_of_groups, group_variance, group_placement_radius, set_tight_grouping: groups of objects (#3856).
-    terrain_to_place_on, min_distance_group_placement (tiles from the other objects), max_distance_to_other_zones
-    (tiles from the lands of the other players), set_scaling_to_map_size (a 100 × 100 map is the base) and
-    set_scaling_to_player_number scale the groups, else the objects (#3857). avoid_forest_zone (tiles from a forest,
-    default 1), place_on_forest_zone (the tiles next to a forest), actor_area with actor_area_radius (default 1) marks
-    the tiles around each object for a later avoid_actor_area, second_object: one more object on each tile (#3858).
-    actor_area_to_place_in A: only in the actor area A; avoid_all_actor_areas: out of every actor area (#4134).
-    avoid_cliff_zone N (tiles from a cliff, default 1) and the cliff tiles themselves (#4131, `ridges`: the cliffs).
-    layer_to_place_on T: only the tiles of the land layer T (layer: the land layer of each tile, #4132).
+    """The objects of the create_object commands of <OBJECTS_GENERATION> (#3855), with the attributes of
+    `CREATE_OBJECT`: number_of_objects on random free tiles, in groups with number_of_groups (#3856).
     Never on water (only a fish or a ship), a forest, a cliff or another object; an object with no free tile is missing."""
     import aoe2mc
     kinds = aoe2mc.object_kinds(old=False)
@@ -591,19 +616,20 @@ def objects(cmds, consts, terrain, starts, rng, warn, owner=None, ridges=(), lay
         gap = value(attrs["min_distance_group_placement"][0], consts) if "min_distance_group_placement" in attrs else 0
         zones = value(attrs["max_distance_to_other_zones"][0], consts) if "max_distance_to_other_zones" in attrs else 0
         forest = np.isin(terrain, list(FOREST_TREES))
-        if "avoid_forest_zone" in attrs:
-            ground = ground & ~dilate(forest, value(attrs["avoid_forest_zone"][0], consts) if attrs["avoid_forest_zone"] else 1)
-        if "avoid_cliff_zone" in attrs:
-            ground = ground & ~dilate(cliff, value(attrs["avoid_cliff_zone"][0], consts) if attrs["avoid_cliff_zone"] else 1)
-        if "place_on_forest_zone" in attrs:
-            ground = ground & dilate(forest, 1) & ~forest
-        if "avoid_actor_area" in attrs:
-            ground = ground & ~areas.get(value(attrs["avoid_actor_area"][0], consts), np.zeros((n, n), bool))
+        # the filters of the ground: one each, in alphabetical order (#4224)
         if "actor_area_to_place_in" in attrs:
             ground = ground & areas.get(value(attrs["actor_area_to_place_in"][0], consts), np.zeros((n, n), bool))
+        if "avoid_actor_area" in attrs:
+            ground = ground & ~areas.get(value(attrs["avoid_actor_area"][0], consts), np.zeros((n, n), bool))
         if "avoid_all_actor_areas" in attrs:
             for area in areas.values():
                 ground = ground & ~area
+        if "avoid_cliff_zone" in attrs:
+            ground = ground & ~dilate(cliff, value(attrs["avoid_cliff_zone"][0], consts) if attrs["avoid_cliff_zone"] else 1)
+        if "avoid_forest_zone" in attrs:
+            ground = ground & ~dilate(forest, value(attrs["avoid_forest_zone"][0], consts) if attrs["avoid_forest_zone"] else 1)
+        if "place_on_forest_zone" in attrs:
+            ground = ground & dilate(forest, 1) & ~forest
         actor = value(attrs["actor_area"][0], consts) if "actor_area" in attrs else None
         reach = value(attrs["actor_area_radius"][0], consts) if "actor_area_radius" in attrs else 1
         second = kinds.get(value(attrs["second_object"][0], consts), (None, None))[1] if "second_object" in attrs else None
@@ -647,14 +673,7 @@ def objects(cmds, consts, terrain, starts, rng, warn, owner=None, ridges=(), lay
                     if actor is not None:
                         area = areas.setdefault(actor, np.zeros((n, n), bool))
                         area[max(0, tx - reach):tx + reach + 1, max(0, ty - reach):ty + reach + 1] = True
-        for a in set(attrs) - {"number_of_objects", "set_place_for_every_player", "set_gaia_object_only",
-                               "min_distance_to_players", "max_distance_to_players", "number_of_groups",
-                               "group_variance", "group_placement_radius", "set_tight_grouping", "set_loose_grouping",
-                               "terrain_to_place_on", "min_distance_group_placement", "max_distance_to_other_zones",
-                               "set_scaling_to_map_size", "set_scaling_to_player_number", "avoid_forest_zone",
-                               "place_on_forest_zone", "actor_area", "actor_area_radius", "avoid_actor_area",
-                               "second_object", "actor_area_to_place_in", "avoid_all_actor_areas", "avoid_cliff_zone",
-                               "layer_to_place_on"}:
+        for a in sorted(set(attrs) - set(CREATE_OBJECT)):
             warn(f"create_object: {a} is not read yet")
     return out
 

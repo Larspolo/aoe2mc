@@ -46,7 +46,7 @@ name each missing item. Close the epic with a comment only when all criteria are
 for the criteria that an agent can do. A criterion that needs the owner stays on the epic. Then pick again (#176, #155 waited while P3 tickets ran).
 Release checks: when `cycle_start.py` prints the section "Release checks (no ticket, make them in the refill)", a deep
 run makes a check ticket for each listed check (`roadmap` skill, "Release checks"), also when the open epics have work
-left, and writes its number in the `ticket` column of `docs/RELEASE.md` (a PR). Lock it first:
+left, and writes its number in the `ticket` column of `steering/project/RELEASE.md` (a PR). Lock it first:
 `python3 tools/claim.py 0 --refill` (exit 1: another run makes them, #3342).
 Refill the queue when fewer candidates are ready than the target number of runs, so that parallel runs always find
 work: N = the target and R = the ready tickets of `python3 tools/usage.py --fire` (its stderr line). Refill only when
@@ -72,7 +72,7 @@ new sub-issues, no `needs-human`. Still answer an owner comment on it (step 3).
    still open and that an agent can do. A criterion that needs the owner stays on the epic.
 3. Make up to 20 new tickets (within the cap) for the remaining goals of the open epics, and for the fallbacks in
    `docs/coverage.md`. When the open epics have no goal left that an agent can do, make the next epic from the
-   feature list of `docs/ROADMAP.md` with the `roadmap` skill (the goals take turns). Each feature has an epic: run
+   feature list of `steering/project/ROADMAP.md` with the `roadmap` skill (the goals take turns). Each feature has an epic: run
    `python3 tools/claim.py 0 --roadmap` (due after 30 merged PRs then, #3741); exit 0: do the roadmap review now. Priority: that of the epic, else `P3`. Never `P0` or `P1`, except for
    a `tooling` ticket that blocks other tickets. Look for duplicates first, and list the open issues again just
    before you make the tickets: parallel runs make the same follow-ups at the same time (#300, #301).
