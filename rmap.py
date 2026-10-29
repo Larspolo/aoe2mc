@@ -290,8 +290,11 @@ def connections(terrain, lands, cmds, consts, rng, warn):
     (origin, player or 0, zone). replace_terrain changes the terrain on a path, and terrain_size widens it on the
     tiles of a terrain (radius ± variance). terrain_cost 0: never on a path. create_connect_teams_lands makes no path:
     generate() has no teams, so each player is a team of one.
-    default_terrain_replacement: the terrain of the other path tiles. accumulate_connections has no source yet (#3870)."""
+    default_terrain_replacement: the terrain of the other path tiles. Without accumulate_connections (DE), a connection
+    reads the terrain of the start of the section, not the terrain that the earlier connections made (#4174)."""
     n = len(terrain)
+    start = terrain.copy()
+    acc = any(cmd == "accumulate_connections" for cmd, *_ in cmds)
     pairs = {"create_connect_all_players_land": lambda a, b, z: a[1] and b[1],
              "create_connect_teams_lands": lambda a, b, z: False,
              "create_connect_all_lands": lambda a, b, z: True,
@@ -299,14 +302,17 @@ def connections(terrain, lands, cmds, consts, rng, warn):
              "create_connect_same_land_zones": lambda a, b, z: a[2] == b[2],
              "create_connect_land_zones": lambda a, b, z: a[2] in z and b[2] in z}
     for cmd, args, attrs in cmds:
+        if cmd == "accumulate_connections":
+            continue
         if cmd not in pairs:
             warn(f"{cmd} is not read yet")
             continue
+        base = terrain if acc else start
         zones = {value(v, consts) for v in args}
         each = lambda a: [[value(v, consts) for v in x] for x in attrs.many.get(a, ())]
         weight = np.ones((n, n), np.int64)
         for k, c in each("terrain_cost"):
-            weight[terrain == k] = c
+            weight[base == k] = c
         path = np.zeros((n, n), bool)
         for i, a in enumerate(lands):
             for b in lands[i + 1:]:
@@ -315,10 +321,10 @@ def connections(terrain, lands, cmds, consts, rng, warn):
         wide = path.copy()
         for k, r, *v in each("terrain_size"):
             v = v[0] if v else 0
-            for c in np.argwhere(path & (terrain == k)):
+            for c in np.argwhere(path & (base == k)):
                 for t in square(tuple(c), max(0, r + int(rng.integers(-v, v + 1))), n):
                     wide[t] = True
-        old = terrain.copy()
+        old = base.copy()
         for a, b in each("replace_terrain"):
             terrain[wide & (old == a)] = b
         for d, in each("default_terrain_replacement"):                # the path tiles of no replace_terrain (#3870)
