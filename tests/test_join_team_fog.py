@@ -14,10 +14,10 @@ def test_side_and_choose_send_the_team_fog_on_paper_only():
     g.people, g.sides, g.kind, sent = 2, {}, "vanilla", []
     g.command = sent.append
     g.side("Alex")
-    assert sent == ["team join p1 Alex"]                                         # vanilla has no plugin
+    assert sent[:1] == ["team join p1 Alex"]                                    # vanilla has no plugin
     g.kind = "paper"
     g.side("Steve")
-    assert sent[-2:] == ["team join p2 Steve", "aoe hide Steve team"]
+    assert sent[-3:-1] == ["team join p2 Steve", "aoe hide Steve team"]         # then the chat hint (#3555)
     assert g.choose("Alex", 2) is False
     g.sides.pop("Steve")
     assert g.choose("Alex", 2)
