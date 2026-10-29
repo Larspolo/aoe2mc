@@ -99,6 +99,12 @@ jobs:
               echo "#$n: no agent branch and no label automerge"; return
             fi
             ticket=$(jq -r .body <<<"$pr" | grep -oiE '(close[sd]?|fix(e[sd])?|resolve[sd]?) #[0-9]+' | head -1 | grep -oE '[0-9]+$' || true)
+            if [ -z "$ticket" ]; then   # an edited body lost its closing line: take it from the commits (#4122)
+              ticket=$(gh api "repos/$R/pulls/$n/commits" --jq '.[].commit.message' | grep -oiE '(close[sd]?|fix(e[sd])?|resolve[sd]?) #[0-9]+' | head -1 | grep -oE '[0-9]+$' || true)
+              if [ -n "$ticket" ]; then
+                jq -n --arg b "$(jq -r '.body // ""' <<<"$pr")"$'\n\n'"Closes #$ticket" '{body: $b}' | gh api "repos/$R/pulls/$n" -X PATCH --input - >/dev/null
+              fi
+            fi
             if [ -n "$ticket" ]; then
               t=$(gh api "repos/$R/issues/$ticket")
               if jq -e '.labels[] | select(.name == "needs-human" or .name == "blocked")' <<<"$t" >/dev/null; then
