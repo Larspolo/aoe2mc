@@ -12,6 +12,12 @@ if [ -n "${CLAUDE_ENV_FILE:-}" ] && [ -z "${TMPDIR:-}" ]; then
   echo "export TMPDIR=/tmp" >> "$CLAUDE_ENV_FILE"
 fi
 
+# The Claude account of the run (#4236, docs/COLLABORATORS.md): the variable AGENT_ACCOUNT of the cloud environment
+# of each collaborator. tools/claim.py, tools/report.py and tools/usage.py write it into their lines.
+if [ -n "${AGENT_ACCOUNT:-}" ]; then
+  ( cd "${CLAUDE_PROJECT_DIR:-.}" && git config aoe2mc.account "$AGENT_ACCOUNT" ) || true
+fi
+
 if [ "${CLAUDE_CODE_REMOTE:-}" != "true" ]; then
   exit 0
 fi

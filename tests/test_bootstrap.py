@@ -14,7 +14,7 @@ def files(d):
 
 
 def test_table_names_real_files():
-    rows = bootstrap.table(open(bootstrap.SYSTEM).read())
+    rows = bootstrap.rows()
     assert len(rows) > 20 and ("tools/claim.py", "generic") in rows and ("CLAUDE.md", "specific") in rows
     assert [p for p, _ in rows if not os.path.exists(os.path.join(ROOT, p))] == []
 
@@ -23,7 +23,7 @@ def test_bootstrap_writes_generic_files_and_config(tmp_path, capsys):
     bootstrap.main([str(tmp_path), "--repo", "me/demo"])
     out = capsys.readouterr().out
     got = files(tmp_path)
-    rows = dict(bootstrap.table(open(bootstrap.SYSTEM).read()))
+    rows = dict(bootstrap.rows())
     assert {p for p, k in rows.items() if k == "generic"} <= set(got)
     assert set(got) - {p for p, k in rows.items() if k == "generic"} == set(bootstrap.STUBS)
     # no file of the converter, the game program, their docs and tests

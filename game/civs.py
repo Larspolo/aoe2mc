@@ -229,11 +229,13 @@ def smith(g, name, s):
 def regen(g, name, s, foe=math.inf):
     """The hit points per AoE2 minute that unit name (combat.Stats s) of the player of g regenerates in its age (REGEN),
     else 0. Two rules of one civilization add up. foe: the tiles from the unit to the nearest enemy unit; a rule with a
-    radius counts only when foe is more than it."""
+    radius counts only when foe is more than it. The technologies of the player add their rate (the key "regen")."""
     import build                                                   # build imports gather, gather imports this module
+    import train                                                   # train imports civs
     age = build.ages(g)
-    return sum(c[age] for k, c, *near in REGEN.get(civ(g), []) if foe > (near or [-1])[0]
-               and (name in k if isinstance(k, tuple) else GROUPS[k](name, s)))
+    tech = sum(hp for t, (k, hp) in train.BY_KEY["regen"].items() if t in g.techs and GROUPS[k](name, s))
+    return tech + sum(c[age] for k, c, *near in REGEN.get(civ(g), []) if foe > (near or [-1])[0]
+                      and (name in k if isinstance(k, tuple) else GROUPS[k](name, s)))
 
 
 def units(g, name, s):
