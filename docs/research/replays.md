@@ -43,7 +43,8 @@ the converter needs (`match.map.tiles`, `match.gaia`, `match.players[i].objects`
 `match.inputs`, `match.uptimes`, `match.chat`).
 
 Tested here: `pip install mgz` in a venv works with Python 3.11. No record was parsed: the hosts that serve
-records (`aoe.ms`, `data.aoe2companion.com`, `www.aoe2insights.com`) are blocked in the cloud container, and
+records (`aoe.ms`, `data.aoe2companion.com`, `www.aoe2insights.com`) were blocked in the cloud container. Update (2026-10-29): `aoe.ms` works now (`docs/ENVIRONMENT.md`), but `mgz`
+1.8.51 cannot read a record of 2026-10-28 (`RuntimeError: could not parse` in `mgz/fast/header.py`), and
 the `mgz` package has no sample records. Update (#134): `samples/de-64.3.aoe2record` is a DE test record of the
 `mgz` repository (MIT, GitHub raw). `mgz.model.parse_match` reads it.
 

@@ -35,6 +35,7 @@ import org.bukkit.entity.Camel;
 import org.bukkit.entity.Creeper;
 import org.bukkit.entity.Display;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.Hoglin;
 import org.bukkit.entity.ItemDisplay;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Minecart;
@@ -55,6 +56,7 @@ import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.EntityRegainHealthEvent;
 import org.bukkit.event.entity.EntityTargetEvent;
 import org.bukkit.event.entity.EntityTransformEvent;
+import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
@@ -282,7 +284,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
  * in the walls, so the goal takes the hit points for each shot, and an arrow that hits the slime does nothing.
  * Vanilla has no clickable item menu: "aoe menu" opens an inventory with the items (#619). A click on an item is
  * cancelled (the player takes nothing) and sets the score aoe_menu of the player to slot + 1 (a shift click: -(slot + 1),
- * #620); the menu stays open, so the player can click again. "aoe menu" on an open menu of the same title and size only changes the items.
+ * #620; a right click: slot + 1 + MENU_RIGHT, #3523); the menu stays open, so the player can click again. "aoe menu" on an open menu of the same title and size only changes the items.
  * The name line of a unit or building (#661, owner decision #658): the custom name of the mob holds the name and 5 hearts
  * ("Militia ❤❤❤❤❤", red: full, gray: empty, each heart 20 % of the hit points). It is visible only for a hurt unit or a
  * selected one (tag aoe2mc.selected, game/gather.py), as the bars in AoE2. Each hit and "aoe stats" update it.
@@ -340,6 +342,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     private final Map<UUID, TextDisplay> labels = new HashMap<>();   // the name line over the roof of a building (#1811)
     static final String LABEL = "aoe2mc.label";                       // the tag of that text display
     private static final int HEARTS = 5;
+    private static final int MENU_RIGHT = 1000;                        // a right click: slot + 1 + MENU_RIGHT (game/menu.py RIGHT, #3523)
     private static final int WHERE_PAGE = 40;                          // aoe where: about 3000 bytes per answer
     private final Map<UUID, Integer> lastHit = new HashMap<>();      // tick of the last melee hit of a unit
     private final Set<UUID> fought = new HashSet<>();                 // a target or a hit since the last aoe where (#1169)
@@ -424,7 +427,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
 
         @Override
         public boolean shouldActivate() {
-            LivingEntity t = mob.getTarget();
+            LivingEntity t = target(mob);
             return t != null && t.isValid() && !t.isDead();
         }
 
@@ -435,7 +438,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
 
         @Override
         public void tick() {
-            LivingEntity t = mob.getTarget();
+            LivingEntity t = target(mob);
             // a building: the range to its nearest side, and no sight of the eye of its target in the walls (#608)
             boolean wall = buildings.containsKey(t.getUniqueId());
             double d2 = wall ? gap(mob, t) : mob.getLocation().distanceSquared(t.getLocation());
@@ -510,7 +513,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
 
         @Override
         public boolean shouldActivate() {
-            LivingEntity t = mob.getTarget();
+            LivingEntity t = target(mob);
             return t != null && t.isValid() && !t.isDead();
         }
 
@@ -521,7 +524,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
 
         @Override
         public void tick() {
-            LivingEntity t = mob.getTarget();
+            LivingEntity t = target(mob);
             if (held.contains(mob.getUniqueId())                    // stand ground: no walk (#1104)
                     || mob.getBoundingBox().expand(REACH, 0, REACH).overlaps(t.getBoundingBox())) {
                 mob.getPathfinder().stopPathfinding();
@@ -1042,7 +1045,8 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         int slot = ev.getRawSlot();
         if (slot >= 0 && slot < ev.getView().getTopInventory().getSize() && ev.getCurrentItem() != null
                 && !ev.getCurrentItem().isEmpty()) {
-            menuScore().getScore(ev.getWhoClicked().getName()).setScore(ev.isShiftClick() ? -(slot + 1) : slot + 1);
+            menuScore().getScore(ev.getWhoClicked().getName()).setScore(ev.isShiftClick() ? -(slot + 1)
+                    : ev.getClick() == ClickType.RIGHT ? slot + 1 + MENU_RIGHT : slot + 1);
         }
     }
 
@@ -1278,7 +1282,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         Mob fighter = rider(mob) != null ? rider(mob) : mob;
         return t != null && (!t.classes().isEmpty() || sights.containsKey(mob.getUniqueId())) && t.attack() > 0
                 && !orders.containsKey(mob.getUniqueId())
-                && (fighter.getTarget() == null || !fighter.getTarget().isValid()) && !stance(mob).equals("no_attack");
+                && (target(fighter) == null || !target(fighter).isValid()) && !stance(mob).equals("no_attack");
     }
 
     // The stance of a unit, of its rider or of its horse: the selector can name each one (#1104).
@@ -1315,7 +1319,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             unit(mob).getPathfinder().stopPathfinding();
         }
         reach(fighter, enemy.getLocation());
-        unit(fighter).setTarget(enemy);
+        setTarget(unit(fighter), enemy);
         fight(mob);                                    // Mob#setTarget of a plugin fires no EntityTargetEvent (#1334)
         if (stance(mob).equals("stand_ground")) {
             held.add(fighter.getUniqueId());
@@ -1331,12 +1335,12 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                 return true;
             }
             Mob mob = f.getVehicle() instanceof Mob h ? h : f;
-            LivingEntity t = f.getTarget();
+            LivingEntity t = target(f);
             if (t != null && t.isValid() && !t.isDead()
                     && f.getLocation().distanceSquared(t.getLocation()) <= Math.pow(stanceRange(mob), 2)) {
                 return false;
             }
-            f.setTarget(null);
+            setTarget(f, null);
             f.getPathfinder().stopPathfinding();
             return true;
         });
@@ -1346,7 +1350,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             }
             Mob f = rider(mob) != null ? rider(mob) : mob;
             Range r = ranges.get(f.getUniqueId());
-            LivingEntity t = f.getTarget();
+            LivingEntity t = target(f);
             double far = Math.pow((r != null ? r.blocks() : MELEE) + CHASE, 2);
             double gone = Math.pow(Math.max(r != null ? r.blocks() : MELEE, sights.getOrDefault(en.getKey(), 0.0))
                     + CHASE, 2);                       // the target left its sight + CHASE: back too (#1968)
@@ -1354,7 +1358,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                     && t.getLocation().distanceSquared(en.getValue()) <= gone) {
                 return false;
             }
-            f.setTarget(null);
+            setTarget(f, null);
             f.getPathfinder().stopPathfinding();
             reach(mob, en.getValue());
             mob.getPathfinder().moveTo(en.getValue(), 1.0);
@@ -1380,10 +1384,10 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                 }
                 return false;
             }
-            if (e instanceof Mob m && (rider(m) != null ? rider(m) : m).getTarget() instanceof LivingEntity t
+            if (e instanceof Mob m && target(rider(m) != null ? rider(m) : m) instanceof LivingEntity t
                     && t.isInvulnerable() && stats.containsKey(t.getUniqueId())) {   // it went into a building (#1285)
                 Mob f = rider(m) != null ? rider(m) : m;
-                f.setTarget(null);
+                setTarget(f, null);
                 f.getPathfinder().stopPathfinding();
             }
             Entity crew = e instanceof Minecart && !e.getPassengers().isEmpty() ? e.getPassengers().get(0) : e;
@@ -1816,9 +1820,11 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     private void siege() {
         int now = Bukkit.getCurrentTick();
         lastHit.values().removeIf(t -> now - t > 400);
+        BRAIN_TARGETS.keySet().removeIf(id -> Bukkit.getEntity(id) == null);
         for (UUID id : List.copyOf(stats.keySet())) {
-            if (Bukkit.getEntity(id) instanceof Mob mob && !stats.get(id).ranged && mob.getTarget() instanceof LivingEntity t
+            if (Bukkit.getEntity(id) instanceof Mob mob && !stats.get(id).ranged && target(mob) instanceof LivingEntity t
                     && t.isValid() && (buildings.containsKey(t.getUniqueId()) || stats.containsKey(t.getUniqueId()))
+                    && !chase(mob, t, now)
                     && ready(mob, stats.get(id)) && mob.getBoundingBox().expand(REACH, 0, REACH).overlaps(t.getBoundingBox())) {
                 if (mob.getAttribute(Attribute.ATTACK_DAMAGE) == null) {
                     // Mob#attack throws on a kind without it (a chicken, a camel), and the throw stopped this loop for
@@ -1829,6 +1835,39 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                 mob.attack(t);
             }
         }
+    }
+
+    // A hoglin (a bear, #3624) has a brain: Mob#getTarget reads its attack memory, which the API cannot set, so it
+    // gives null after Mob#setTarget. The plugin keeps the target of a hoglin here; the other mobs use their own.
+    private static final Map<UUID, UUID> BRAIN_TARGETS = new HashMap<>();
+
+    private static LivingEntity target(Mob mob) {
+        if (!(mob instanceof Hoglin)) {
+            return mob.getTarget();
+        }
+        UUID id = BRAIN_TARGETS.get(mob.getUniqueId());
+        return id != null && Bukkit.getEntity(id) instanceof LivingEntity t ? t : null;
+    }
+
+    private static void setTarget(Mob mob, LivingEntity t) {
+        mob.setTarget(t);
+        if (t == null) {
+            BRAIN_TARGETS.remove(mob.getUniqueId());
+        } else if (mob instanceof Hoglin) {
+            BRAIN_TARGETS.put(mob.getUniqueId(), t.getUniqueId());
+        }
+    }
+
+    // A hoglin does not walk to that target with its brain either: out of reach, it walks there with the Minecraft
+    // path finding, a new path each 10 ticks. True while it walks.
+    private boolean chase(Mob mob, LivingEntity t, int now) {
+        if (!(mob instanceof Hoglin) || mob.getBoundingBox().expand(REACH, 0, REACH).overlaps(t.getBoundingBox())) {
+            return false;
+        }
+        if (now % 10 == 0 || !mob.getPathfinder().hasPath()) {
+            mob.getPathfinder().moveTo(t);
+        }
+        return true;
     }
 
     // The cart of a War Wagon (#2746) is an item display that rides its horse (units.cart). A passenger keeps its own
@@ -1879,6 +1918,11 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         return m;
     }
 
+    /** A unit that walks with a brain, not with goals: without NoAI it strolls away (#438, #1968, #3541). */
+    private boolean brained(Mob mob) {
+        return mob instanceof Villager || mob instanceof Camel || mob.getScoreboardTags().contains(CARRIER);
+    }
+
     private void follow() {
         orders.entrySet().removeIf(e -> {
             Entity ent = Bukkit.getEntity(e.getKey());
@@ -1888,7 +1932,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             Order o = e.getValue();
             if (mob.getLocation().distanceSquared(o.goal) < 1.5 * 1.5) {
                 // a brain has no goals to drop: it strolls away (#438, #1968); a minecart pushes its carrier on (#836)
-                if (mob instanceof Villager || mob instanceof Camel || mob.getScoreboardTags().contains(CARRIER)) {
+                if (brained(mob)) {
                     mob.getPathfinder().stopPathfinding();   // without AI it keeps its path: Gates.through kept a gate open (#1928)
                     mob.setAI(false);               // so it stands still until the next order
                 } else if (center(mob) >= 1) {      // steer() skips path points: Minecraft walks back to them (#1078)
@@ -1920,7 +1964,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                     return false;
                 }
                 pf.stopPathfinding();                   // it stays here: the old part led it away (#2303)
-                if (mob instanceof Villager) {          // no path for 5 s: drop the order, and stop the brain (#811)
+                if (brained(mob)) {                     // no path for 5 s: drop the order, and stop the brain (#811, #3541)
                     mob.setAI(false);
                 }
                 getLogger().info("aoe2mc: no path " + mob.getUniqueId() + " " + o.goal.getX() + " " + o.goal.getY()
@@ -2595,9 +2639,9 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                 }
                 Location goal = new Location(mob.getWorld(), x, y, z);
                 reach(mob, goal);
-                mob.setTarget(null);
+                setTarget(mob, null);
                 if (rider(mob) != null) {
-                    rider(mob).setTarget(null);
+                    setTarget(rider(mob), null);
                 }
                 if (gates.any()) {                                     // through an own gate (#1325, #1656)
                     gates.raise(mob, goal);
@@ -2902,7 +2946,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                     mob.getPathfinder().stopPathfinding();
                     mob.setAI(false);
                     if (rider(mob) != null) {
-                        rider(mob).setTarget(null);
+                        setTarget(rider(mob), null);
                     }
                     n++;
                 }
@@ -2988,7 +3032,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                 Mob f = e instanceof Mob mob ? (rider(mob) != null ? rider(mob) : mob) : null;   // a rider has the target (#1334)
                 parts.add(String.format(java.util.Locale.ROOT, "%s %.2f %.2f %.2f %d %d", e.getUniqueId(), l.getX(),
                         l.getY(), l.getZ(), orders.containsKey(e.getUniqueId()) ? 1 : 0,
-                        fought.remove(e.getUniqueId()) | (f != null && f.getTarget() != null) ? 1 : 0));
+                        fought.remove(e.getUniqueId()) | (f != null && target(f) != null) ? 1 : 0));
             }
             sender.sendMessage("Where " + found.size() + ": " + String.join(", ", parts));
             return true;
@@ -3036,12 +3080,12 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                     posts.remove(mob.getUniqueId());            // an order: a defensive unit chases to the end
                     Mob r = rider(mob);
                     if (r != null) {                             // the horse has no attack goal: the rider leads
-                        mob.setTarget(null);
+                        setTarget(mob, null);
                         mob.getPathfinder().stopPathfinding();
                         mob = unit(r);
                     }
                     reach(mob, target.getLocation());
-                    mob.setTarget(target);
+                    setTarget(mob, target);
                     held.remove(mob.getUniqueId());             // an order: the unit walks, also with stand ground
                     n++;
                 }

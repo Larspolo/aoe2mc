@@ -30,13 +30,14 @@ def labels(command):
 def order(g, building):
     """The (slot, label) of each item of the menu of building of the player of g, from the data: the units and
     technologies of train.TRAINS that the player can order now (train.trains, repeatable, unlocked), in that order, and
-    the rally point of a building that trains units. An item on a used slot takes the first free slot from train.MORE
+    the rally point of a building that trains units, the town bell of a town center (#3419). An item on a used slot takes the first free slot from train.MORE
     (train.layout, #3098)."""
     rally = [train.RALLY[::2]] * bool(train.units_of(g, building))
+    bell = [train.garrison.BELL[::2]] * (building == "TOWN_CENTER")
     out = [train.slots(building, n)[::2] for n in train.trains(g, building) if train.repeatable(g, n) and train.unlocked(g, n)]
-    used = {s for s, _ in rally} | {s for i, (s, _) in enumerate(out) if s not in {t for t, _ in out[:i]}}
+    used = {s for s, _ in rally + bell} | {s for i, (s, _) in enumerate(out) if s not in {t for t, _ in out[:i]}}
     for i, (s, label) in enumerate(out):
         if s in {t for t, _ in out[:i]} or s in {t for t, _ in rally}:
             out[i] = (s := next(k for k in range(train.MORE, 54) if k not in used)), label
             used.add(s)
-    return out + rally
+    return out + rally + bell

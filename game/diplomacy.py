@@ -30,6 +30,7 @@ import menu  # noqa: E402
 import pause  # noqa: E402
 import savegame  # noqa: E402
 import table  # noqa: E402
+import techtree  # noqa: E402
 
 SLOT = 3                                                           # hotbar slot of the item (key 4): groups use 4-8
 ITEM = ('minecraft:carrot_on_a_stick[item_model="minecraft:writable_book",item_name="Game menu",'
@@ -37,8 +38,10 @@ ITEM = ('minecraft:carrot_on_a_stick[item_model="minecraft:writable_book",item_n
 BUTTONS = {0: ("writable_book", "Diplomacy", "Send tribute to other players."),   # slot: the buttons of the Game menu
            1: ("end_rod", "Flare", "Show the place that you look at to your team."),   # (#1234)
            3: ("writable_book", "Save", "Save the game. Load it with run.py --load."),     # savegame.py (#2259)
-           5: ("clock", "Pause", "Pause the game for all players.")}   # pause.py (#3374): "Continue" while paused
+           5: ("clock", "Pause", "Pause the game for all players."),   # pause.py (#3374): "Continue" while paused
+           6: ("oak_sapling", "Tech tree", "The units and technologies of your civilization.")}   # techtree.py (#3532)
 PAUSE_SLOT = 5
+TECH_TREE_SLOT = 6
 SPEED_SLOT = 4                                                     # the button "Game speed" with --unlock-speed (#2933)
 SPEEDS = (1.0, 1.5, 2.0)                                           # times the Normal speed, as run.py --speed
 RESOURCES = {"food": "wheat", "wood": "oak_log", "gold": "gold_ingot", "stone": "cobblestone"}   # rows 1-4
@@ -91,6 +94,8 @@ def button(g, player, slot):
     if slot == PAUSE_SLOT:
         menu.close(g, player)
         return pause.toggle(g, player)
+    if slot == TECH_TREE_SLOT:
+        return techtree.open_menu(g, player)
 
 
 def main(g):

@@ -80,7 +80,7 @@ def test_the_menu_item_lets_the_units_out_next_to_the_door():
     garrison.order(g, "Steve", (3, 3))
     arrive(server, g, TC)
     train.open_menu(g, "Steve", (3, 3))
-    assert menus(server)[-1].endswith(" 7:oak_door:Ungarrison:Click: all units come out")
+    assert " 7:oak_door:Ungarrison:Click: all units come out" in menus(server)[-1]
     server.scores["aoe_menu"] = 8                                      # slot 7
     g.clicks()
     assert not g.garrisons.get(TC) and " 7:oak_door" not in menus(server)[-1]
