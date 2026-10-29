@@ -11,7 +11,7 @@
 {"name": "costs", "text": "A technology that changes the cost of a group of items: a list of [a rule what of civs.has, a resource or null for all, the factor], as the rules of civs.COSTS. civs.cost.", "issue": 4225}
 {"name": "doctrine", "text": "A switch of the Recruitment Doctrines of its building (Macedonians): no queue and no cost, the next doctrine of the civ key \"doctrines\". train.DOCTRINES, train.switch.", "issue": 2483}
 {"name": "economy", "text": "true: an economic technology that the AI bot researches when its age and building offer it (Loom, Double-Bit Axe, Wheelbarrow). game/bot.py research.", "issue": 3950}
-{"name": "effect", "text": "The change of the AoE2 combat values of a technology (train.effect: a dict, or a list of changes in turn). train.TECHS and train.EACH compute it; civs.MORE changes it.", "issue": 2029}
+{"name": "effect", "text": "The change of the AoE2 combat values of a technology (train.effect: a dict, or a list of changes in turn; \"bonus_times\" multiplies a bonus). train.TECHS and train.EACH compute it; civs.MORE changes it.", "issue": 2029}
 {"name": "faster", "text": "A unit that trains faster from an age: [age, its train time from that age] (the eagle scout and eagle warrior). train.seconds.", "issue": 2155}
 {"name": "glow", "text": "Treason: the enemy Kings glow for so many AoE2 seconds. regicide.treason.", "issue": 2388}
 {"name": "housing_factor", "text": "A technology that multiplies the population room of a building (Urbanization: {\"HOUSE\": 2}). train.limit.", "issue": 3919}

@@ -15,7 +15,7 @@ parallel tickets do not change the same lines. Most rules have a check: `tools/d
   (`combat.damage(a, b) == stats.attack - armor`), with a relation (more with the bonus than without), or with test
   data (a fixture, a temporary file, a monkeypatched table).
 - A new menu item of a building (cost, time, slot, help, age) is one new line in `game/data/train.jsonl`, at the end of
-  its building block (a technology also gets its key `"effect"`: the change of the combat values, `train.effect()`, #2029): the merge driver `tools/merge_jsonl.py` (`merge=jsonl`, #2004) merges the lines by name (a line that both sides changed: by key and list item, #2064), and `train.load()` stops on a name in two lines (#1702).
+  its building block (a technology also gets its key `"effect"`: the change of the combat values, `train.effect()`, #2029; a new key of an effect also goes into the set of known keys of `tests/test_tech_effects.py`, #4259): the merge driver `tools/merge_jsonl.py` (`merge=jsonl`, #2004) merges the lines by name (a line that both sides changed: by key and list item, #2064), and `train.load()` stops on a name in two lines (#1702).
 - A menu test checks only its own item (`item()` of `tests/menu_line.py`), never the whole menu line: one `order()` test per
   building checks the full menu from the data (#2099).
 - The combat values of a new unit are one new line in `game/data/units.jsonl` (`combat.STATS`, #1912), of a new building
