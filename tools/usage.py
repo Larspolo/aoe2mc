@@ -28,6 +28,7 @@ import argparse
 import datetime
 import json
 import math
+import os
 import re
 import subprocess
 import sys
@@ -137,32 +138,68 @@ def refill_runs(issues, now, minutes=60, refill=REFILL):
     return refill if new else min(refill, 1)
 
 
-def refill_need(ready, target, issues, due=lambda: []):
-    """The reason of the refill runs, or "" when they have no work (#3547): the `autopilot` skill refills only when
-    R < N (`queue.md`), so with R >= N a refill run finds work only in an open epic with no open sub-issue and no open
-    "Part of #E" ticket (the epic check), or in a release check with no ticket. 5 deep runs in one hour found none
-    (2026-10-29). issues: the open issues and PRs; due: the release checks with no ticket (read only when needed)."""
+def refill_need(ready, target, issues, due=lambda: [], reviews=lambda: [], free=lambda: []):
+    """The reason of the refill runs, or "" when they have no work (#3547): an open epic with no open sub-issue and no
+    open "Part of #E" ticket (the epic check), a release check with no ticket, a due process or roadmap review (deep
+    locks: with no deep run they never run, #3560), and only while R < N (`queue.md`) the other refill sources. 5 deep
+    runs in one hour found none with R >= N (2026-10-29), and one with R < N found no source (#3560). issues: the open
+    issues and PRs; due, reviews, free: the release checks with no ticket, the due reviews and the other sources
+    (free_sources), read only when needed."""
     import dashboard
-    if ready < target:
-        return f"ready {ready} < target {target}"
     work = {int(n) for i in issues if "pull_request" not in i for n in re.findall(r"Part of #(\d+)", i.get("body") or "")}
     subs = lambda i: (s := i.get("sub_issues_summary") or {}).get("total", 0) - s.get("completed", 0)   # open sub-issues
     epics = [i["number"] for i in issues if "epic" in dashboard.labels(i) and i["number"] not in work and not subs(i)
              and not {dashboard.MUTED, dashboard.CLOSE, "needs-human"} & dashboard.labels(i)]
     if epics:
         return "epic check " + ", ".join(f"#{n}" for n in epics)
-    return f"{len(checks)} release checks" if (checks := due()) else ""
+    if checks := due():
+        return f"{len(checks)} release checks"
+    if kinds := reviews():
+        return " and ".join(kinds) + " due"
+    return f"ready {ready} < target {target}: " + ", ".join(sources) if ready < target and (sources := free()) else ""
 
 
 def release_due():
     """The release checks with no ticket (`release.due`), or [] when the read fails: the pacer must still start runs."""
-    import release
     try:
+        import release                                      # not in a bootstrap copy (`tools/bootstrap.py`)
         features, _, rows, epics = release.load()
         return release.due(features, rows, epics)
     except Exception as e:                                  # a GitHub or file error
         print(f"release checks: {e}", file=sys.stderr)
         return []
+
+
+def due_reviews(remote="origin"):
+    """The due reviews whose lock no run holds yet (`claim.review_slot`, #3560). A read error counts as due."""
+    import claim
+    out = []
+    for kind, name in (("review", "process review"), ("roadmap", "roadmap review")):
+        try:
+            key, _ = claim.review_slot(kind, remote)
+            taken = key and claim.git("ls-remote", remote, f"refs/heads/claim/{kind}-{key}").stdout.strip()
+        except (Exception, SystemExit) as e:                # claim.fail exits 2 on a GitHub error
+            print(f"{name}: {e}", file=sys.stderr)
+            key, taken = True, False
+        out += [name] * bool(key and not taken)
+    return out
+
+
+def free_sources(root=None):
+    """The refill sources of R < N besides the checks and reviews (#3560): the `[ ]` features of the goals 1 to 3 with
+    no epic (the `roadmap` skill) and the fallbacks of docs/coverage.md. A read error counts as a source."""
+    try:
+        import release
+        features, _, _, epics = release.load()
+        keys, numbers = {release.epic_key(e.get("body")) for e in epics}, {e["number"] for e in epics}
+        free = [k for k, (goal, done, named) in features.items() if goal < 4 and not done and k not in keys
+                and not named & numbers]
+        with open(os.path.join(root or release.ROOT, "docs", "coverage.md")) as f:   # the totals: | Group | types | own | infantry | fallback |
+            fallbacks = sum(int(m[1]) for m in re.finditer(r"^\| [A-Z][a-z ]+ \| \d+ \| \d+ \| \d+ \| (\d+) \|$", f.read(), re.M))
+    except Exception as e:                                  # a GitHub or file error
+        print(f"refill sources: {e}", file=sys.stderr)
+        return ["read error"]
+    return [f"{len(free)} roadmap features with no epic"] * bool(free) + [f"{fallbacks} fallbacks"] * bool(fallbacks)
 
 
 def plan(target, claims, ready, lanes, paused, hi=MAX_FIRE, refill=REFILL, refill_lane=None):
@@ -304,7 +341,7 @@ def fire(usage, now, burn=BURN, burn7=None, skip=(), status=None):
     weights, source = health.lane_weights(comments)
     eq = claims if lanes is None else health.opus_equivalent(claims, lanes, weights)   # in Opus runs (#1727)
     target = target_runs(usage, now, burn, burn7=burn7)
-    need = refill_need(ready, target, open_all, release_due)
+    need = refill_need(ready, target, open_all, release_due, due_reviews, free_sources)
     refill = refill_runs(open_all, now) if need else 0   # #3547: no refill run with no refill work
     lanes = [(n, 0 if n in skip else len(dashboard.candidates(open_all, lane=n)), weights[n]) for n in weights]   # agent.toml order
     k, runs = plan(target, eq, ready, lanes, paused, refill=refill,
@@ -313,7 +350,7 @@ def fire(usage, now, burn=BURN, burn7=None, skip=(), status=None):
     if cap is not None:                                     # the flow is the bottleneck: Opus runs repair the PRs
         k, runs = min(k, cap), dict.fromkeys(runs, 0)
     line = (f"{describe(usage, now, burn, burn7)} · claims {claims} ({eq:.2f} Opus runs) · ready {ready} · "
-            f"refill {refill} ({need or f'ready {ready} >= target {target}, no epic or release check'}) · "
+            f"refill {refill} ({need or f'ready {ready}, target {target}: no refill source'}) · "
             f"paused {paused} · {flow} · max_fire {MAX_FIRE} · weights "
             + ", ".join(f"{n} {w:.2f} ({source[n]})" for n, w in weights.items()) + note)
     return k, runs, line

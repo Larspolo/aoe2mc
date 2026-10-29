@@ -308,6 +308,20 @@ def last_lock(kind, remote="origin"):
     return utc(int(git("log", "-1", "--format=%ct", "FETCH_HEAD").stdout))
 
 
+def review_slot(kind, remote="origin"):
+    """(lock key, gap) of the process review (`review`) or the roadmap review (`roadmap`); the key is None when the review
+    is not due. For `--review`, `--roadmap` and `usage.due_reviews` (a due review is work of a deep run, #3560)."""
+    body = api(f"issues/{STATUS}")["body"] if on_github(remote) else ""
+    state = agent_state(body)
+    last, gap = (state.get("last_review"), max(state.get("review_prs", REVIEW), REVIEW)) if kind == "review" else \
+        (state.get("last_roadmap"), ROADMAP)
+    # The roadmap counts from the later of the state and its newest lock (#3352). The process review keeps the state
+    # time: its lock comes before the review, and a review that no run finished must open again (pr_slot).
+    if kind == "roadmap" and on_github(remote):
+        last = max(filter(None, (last, last_lock(kind, remote))), default=None)
+    return pr_slot(last, gap, merged_since(last, gap, remote), REVIEW_HOURS if kind == "review" else 0), gap
+
+
 def claim_lock(kind, key, remote="origin"):
     """Push `claim/<kind>-<key>` once: True when this run was first."""
     msg = f"Claim {kind} {key} by {who()} ({uuid.uuid4().hex})"
@@ -504,15 +518,8 @@ def main(argv=None):
               " (`reserved` in agent.toml names `deep`): skip it")
         return 1
     if a.review or a.roadmap:
-        body = api(f"issues/{STATUS}")["body"] if on_github(a.remote) else ""
-        state, kind = agent_state(body), "review" if a.review else "roadmap"
-        last, gap = (state.get("last_review"), max(state.get("review_prs", REVIEW), REVIEW)) if a.review else \
-            (state.get("last_roadmap"), ROADMAP)
-        # The roadmap counts from the later of the state and its newest lock (#3352). The process review keeps the state
-        # time: its lock comes before the review, and a review that no run finished must open again (pr_slot).
-        if a.roadmap and on_github(a.remote):
-            last = max(filter(None, (last, last_lock(kind, a.remote))), default=None)
-        key = pr_slot(last, gap, merged_since(last, gap, a.remote), REVIEW_HOURS if a.review else 0)
+        kind = "review" if a.review else "roadmap"
+        key, gap = review_slot(kind, a.remote)
         if key and claim_lock(kind, key, a.remote):
             if a.roadmap and on_github(a.remote):         # the roadmap skill has no end step: count from its start
                 from dashboard import api as call
