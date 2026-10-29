@@ -18,6 +18,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -100,11 +101,11 @@ final class Minimap extends MapRenderer {
     private MapView view;
     private BukkitTask task;
     private final JavaPlugin plugin;
-    private final BiPredicate<Player, UUID> hidden;       // aoe hide: no dot for these units of the team of the player
+    private final BiPredicate<Player, Entity> hidden;     // aoe hide: no dot for these units (and their riders, #3674)
 
     private final Frame frame = new Frame();
 
-    Minimap(JavaPlugin plugin, BiPredicate<Player, UUID> hidden) {
+    Minimap(JavaPlugin plugin, BiPredicate<Player, Entity> hidden) {
         super(true);                                      // an own image for each player: the fog of its team (#2583)
         this.plugin = plugin;
         this.hidden = hidden;
@@ -505,7 +506,7 @@ final class Minimap extends MapRenderer {
             }
         }
         for (LivingEntity e : world.getLivingEntities()) {
-            if (e instanceof Player || hidden.test(player, e.getUniqueId()) || !player.canSee(e)   // hidden for this player
+            if (e instanceof Player || hidden.test(player, e) || !player.canSee(e)   // hidden for this player
                     || e.getScoreboardTags().contains("aoe2mc.building")) {   // the target slime of a building: the
                 continue;                                     // building has its square, a dot shows it in the fog (#1800)
             }
