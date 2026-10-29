@@ -14,6 +14,7 @@ the document is correct:
 | `docs/OPERATOR.md` | Check, repair, a new project, a move to another Claude account. |
 | `docs/STEERING.md` | How the owner steers the agents through GitHub Issues. |
 | `docs/ENVIRONMENT.md` | The network hosts and the setup script of the cloud environment. |
+| `scripts/allowed-domains.txt` | The allowed domains of the cloud environment: paste the whole file. |
 | `CLAUDE.md` | The commands, the code map and the rules of the code. |
 
 ## 1. Work on the code by hand
@@ -93,18 +94,10 @@ removes all other unused tools (section 5).
 Use one cloud environment (now `Default`) for all scheduled tasks. Open it at claude.ai/code: the environment menu in
 the session title bar → Edit.
 
-1. **Network access**: keep "Allow package managers" on. Add the hosts of `docs/ENVIRONMENT.md`, section
-   "Network", to "Allowed domains". The minimum for the server tests:
-
-   ```text
-   piston-meta.mojang.com
-   piston-data.mojang.com
-   libraries.minecraft.net
-   ```
-
-   The research tools also use `minecraft.wiki`, `minecraft.net`, `www.minecraft.net`, `aoe.ms`,
-   and `api.ageofempires.com`. The setup script
-   also downloads the Paper server jar from `fill.papermc.io`.
+1. **Network access**: keep "Allow package managers" on. In "Allowed domains", delete the old list and paste the
+   whole file [`scripts/allowed-domains.txt`](scripts/allowed-domains.txt). It has one host per line.
+   When an agent needs a new host, it adds the host to the file in its PR and opens a `needs-human` ticket that asks
+   you to paste the file again (`docs/ENVIRONMENT.md`, section "Network").
 2. **Setup script**: paste the full content of `scripts/cloud-setup.sh`. Click **Save**. The cloud keeps the result
    as a snapshot for about 7 days.
 3. When `SETUP_VERSION` in `scripts/cloud-setup.sh` changes, the SessionStart hook sees it, and a run opens a

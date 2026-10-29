@@ -72,9 +72,10 @@ The file `.github/labels.txt` defines the labels. The Labels workflow creates th
 
 ## Network for the tests
 
-Some tests of the project need hosts outside the package managers. `docs/ENVIRONMENT.md` (section "Network") lists
-them. Add them in the cloud environment menu in the session title bar → Edit → Network access → Allowed domains.
-Keep "Allow package managers" on. Steps: https://code.claude.com/docs/en/cloud-environments#network-access
+Some tests of the project need hosts outside the package managers. The file `scripts/allowed-domains.txt` lists
+them, one per line. Open the cloud environment menu in the session title bar → Edit → Network access → Allowed
+domains, delete the old list and paste the whole file. Keep "Allow package managers" on. When an agent adds a host to
+the file, it opens a `needs-human` ticket that asks you to paste it again (`docs/ENVIRONMENT.md`, "Network"). Steps: https://code.claude.com/docs/en/cloud-environments#network-access
 
 ## Setup script (faster start)
 

@@ -61,8 +61,8 @@ Do the steps in sequence. The GitHub side (tickets, claims, labels, the status i
 1. Add the label `paused` to the status issue. All runs stop at it, so the two accounts never run at the same time.
 2. In the OLD account: disable each scheduled task whose name starts with "NAME " (their API tokens stop with them).
 3. In the NEW account: connect GitHub. The Claude GitHub app stays on the repository.
-4. In the NEW account: make the cloud environment of `docs/SYSTEM.md` step 2 ("Allow package managers" on, the hosts
-   of `docs/ENVIRONMENT.md`, "Network", and the whole file `scripts/cloud-setup.sh` as the setup script).
+4. In the NEW account: make the cloud environment of `docs/SYSTEM.md` step 2 ("Allow package managers" on, the whole
+   file `scripts/allowed-domains.txt` as the allowed domains, and the whole file `scripts/cloud-setup.sh` as the setup script).
 5. Make the scheduled tasks and the API triggers in the new account: section 3, steps 2–4.
 6. A PR with the new ID of "NAME autopilot" in `trigger` of `[pacing]` in `agent.toml`.
 7. After the merge: start the workflows "Pacer" and "Dashboard site" once.
