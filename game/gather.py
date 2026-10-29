@@ -267,7 +267,7 @@ class Map:
         self.aura = civs.AURA.get(civ, {})                             # Thracians (#2378)
         self.auras = []                                                # the cells of own aura buildings
         for o in data["objects"]:
-            if o["kind"] == "building":
+            if o["kind"] == "building" and "footprint" in o:           # not the drawn monument (hill.mark, #3692)
                 x0, z0, x1, z1 = o["footprint"]
                 self.building(o["name"], (x0, x1, z0, z1), (int(o["tile"][0]), int(o["tile"][1])) if "tile" in o
                               else None, o["player"] == player, o.get("open", ()))
