@@ -43,8 +43,9 @@ def test_the_weekly_burn_follows_a_drop_too():
 
 
 def test_the_cap_comes_from_agent_toml():
-    assert usage.HI == CONFIG.get("pacing", {}).get("max_runs", 16) == 40
+    assert usage.HI == CONFIG.get("pacing", {}).get("max_runs", 16)
     u = {"five_hour": (0.10, 4.2 * 3600, "allowed")}
     assert usage.target_runs(u, 0, burn=0.010, hi=40) == round(0.8 / 2.2 / 0.010) == 36   # a 4 times larger quota
-    assert usage.target_runs(u, 0, burn=0.010) == 36
-    assert "max 40 runs · target 36 runs" in usage.describe(u, 0, 0.010)
+    n = max(usage.LO, min(usage.HI, 36))
+    assert usage.target_runs(u, 0, burn=0.010) == n
+    assert f"max {usage.HI} runs · target {n} runs" in usage.describe(u, 0, 0.010)

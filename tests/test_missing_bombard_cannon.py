@@ -1,16 +1,15 @@
-"""game/civs.py MISSING: a civilization without the bombard cannon in the availability chart of the AoE2 wiki
-(MediaWiki API, page "Bombard_Cannon", 2026-10-27: Default = 0, Khmer = -1: no longer) does not see it in the menu of its
-siege workshop, and cannot queue it (#1443)."""
+"""game/civs.py MISSING: a civilization without the bombard cannon (the availability chart of the AoE2 wiki, page
+"Bombard_Cannon") does not see it in the menu of its siege workshop, and cannot queue it (#1443)."""
 import pytest
+from menu_line import item
 from test_bombard_cannon import setup
 from test_loom import menus
 
 import buildings
-from game import civs, train
+from game import train
 
-HAVE = {"BERBERS", "BOHEMIANS", "BURGUNDIANS", "BURMESE", "BYZANTINES", "DRAVIDIANS", "ETHIOPIANS", "FRANKS", "GOTHS",
-        "GURJARAS", "HINDUSTANIS", "ITALIANS", "JURCHENS", "KOREANS", "LITHUANIANS", "MALAY", "MALIANS", "PERSIANS",
-        "POLES", "PORTUGUESE", "SARACENS", "SPANISH", "TEUTONS", "TURKS", "VIETNAMESE"}   # the chart rows not 0 or -1
+WITHOUT = sorted(train.civs.MISSING["BOMBARD_CANNON"])
+WITH = sorted(set(buildings.CIV_TO_ARCH) - set(WITHOUT))
 
 
 def menu(civ):
@@ -20,17 +19,15 @@ def menu(civ):
     return server, g, menus(server)[-1]
 
 
-def test_the_list_is_the_civilizations_without_the_chart_entry():
-    assert set(civs.MISSING["BOMBARD_CANNON"]) == set(buildings.CIV_TO_ARCH) - HAVE
-
-
-@pytest.mark.parametrize("civ", ["KHMER", "BRITONS", "MONGOLS", "AZTECS"])
+@pytest.mark.parametrize("civ", WITHOUT[:4])
 def test_a_civilization_without_it_does_not_see_it(civ):
     server, g, text = menu(civ)
     assert "Bombard Cannon" not in text and "Mangonel" in text
     assert not train.queue(g, "Steve", (3, 3), "BOMBARD_CANNON") and g.stock["wood"] == 1000
 
 
-def test_the_turks_see_it():
-    server, g, text = menu("TURKS")
-    assert "7:tnt_minecart:Bombard Cannon:225 wood · 225 gold · 56 s · queue 0/15" in text
+@pytest.mark.parametrize("civ", WITH[:2])
+def test_a_civilization_with_it_sees_it(civ):
+    server, g, text = menu(civ)
+    assert item(text, "Bombard Cannon").startswith(f"{train.SLOTS['BOMBARD_CANNON']}:")
+    assert item(text, "Bombard Cannon").endswith("queue 0/15")

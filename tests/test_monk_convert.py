@@ -49,7 +49,7 @@ def test_a_monk_out_of_range_walks_to_the_target():
     monk.convert_order(g, {"monk"}, "foe")
     monk.convert(g, 5.0)
     assert "aoe moveto monk 20.5 64.0 5.5" in server.log and "foe" in g.enemies
-    server.entities["monk"]["Pos"] = (12.0, 64.0, 5.5)                 # in 9 blocks now: it stops and converts
+    server.entities["monk"]["Pos"] = (21.0 - monk.MONKS["MONK"], 64.0, 5.5)   # in its range now: it stops and converts
     assert until_converted(g, "foe") <= 9 * monk.INTERVAL
     assert "aoe stop monk" in server.log
 

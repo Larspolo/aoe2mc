@@ -62,7 +62,8 @@ def test_black_forest_is_mostly_forest_with_open_player_lands_and_paths():
                 todo.append(c)
     assert tcs[1] in seen and (n // 2, n // 2) in seen
     n_ = Counter(o["name"] for o in d["objects"])
-    assert n_["GOLD_MINE"] and n_["STONE_MINE"] and n_["SHEEP"] == 8 and n_["TREE_OAK_FOREST"] == (t == FOREST).sum()
+    sheep = next(c for name, c, *_ in rmap.START if name == "SHEEP")
+    assert n_["GOLD_MINE"] and n_["STONE_MINE"] and n_["SHEEP"] == 2 * sheep and n_["TREE_OAK_FOREST"] == (t == FOREST).sum()
 
 
 @pytest.mark.parametrize("kind", ["arena", "black_forest"])

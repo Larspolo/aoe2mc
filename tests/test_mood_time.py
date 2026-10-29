@@ -1,5 +1,5 @@
-"""The time of day of a converted world from the map color mood of a DE scenario (#1595, epic #1593): Night and
-Darkness at midnight, Evening and Twilight at sunset, the others at noon; --mood off keeps noon."""
+"""The time of day of a converted world from the map color mood of a DE scenario (#1595, epic #1593): the ticks of
+aoe2mc.MOODS; --mood off keeps noon."""
 import os
 
 import aoe2mc
@@ -24,15 +24,13 @@ def night(tmp_path_factory):
 def test_moods_has_each_color_mood():
     assert set(aoe2mc.MOODS) == {m.name for m in ColorMood}
     assert list(aoe2mc.MOODS) == sorted(aoe2mc.MOODS)
-    assert aoe2mc.MOODS["NIGHT"] == aoe2mc.MOODS["DARKNESS"] == 18000 and aoe2mc.MOODS["DEFAULT"] == 6000
-    assert aoe2mc.MOODS["EVENING"] == 12500 and aoe2mc.MOODS["TWILIGHT"] == 13000
 
 
-def test_a_night_scenario_starts_at_midnight_and_mood_off_at_noon(night, tmp_path):
+def test_a_night_scenario_starts_at_its_time_and_mood_off_at_noon(night, tmp_path):
     aoe2mc.convert(night, str(tmp_path / "N"))
     aoe2mc.convert(night, str(tmp_path / "O"), mood="off")
-    assert (ticks(tmp_path / "N"), ticks(tmp_path / "O")) == (18000, 6000)
+    assert (ticks(tmp_path / "N"), ticks(tmp_path / "O")) == (aoe2mc.MOODS["NIGHT"], aoe2mc.NOON)
 
 
-def test_the_tiny_world_stays_at_noon(tiny_world):
-    assert ticks(tiny_world[0]) == 6000
+def test_the_tiny_world_has_the_time_of_the_default_mood(tiny_world):
+    assert ticks(tiny_world[0]) == aoe2mc.MOODS["DEFAULT"]

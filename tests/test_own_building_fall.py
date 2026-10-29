@@ -13,6 +13,7 @@ from test_train_population import setup as town
 from game import combat, conquest, fleet, gather, ruins, savegame, trade, train
 
 TC, HOUSE = (2, 5, 2, 5), (9, 11, 14, 16)                          # block footprints (x0, x1, z0, z1) of town()
+ROOM = train.HOUSING["TOWN_CENTER"], train.HOUSING["HOUSE"]          # the population room of each
 
 
 def uuid(rect):
@@ -57,15 +58,16 @@ def fallen_town(houses=1):
 
 def test_a_fallen_town_center_opens_no_menu_and_trains_nothing():
     server, g, live = fallen_town()
+    cost = train.price(g, "VILLAGER_MALE")["food"]
     for _ in range(2):
         train.queue(g, "Steve", (3, 3))
-    assert len(g.queues[TC]) == 2 and g.stock["food"] == 900
+    assert len(g.queues[TC]) == 2 and g.stock["food"] == 1000 - 2 * cost
     check(g)
     del live[uuid(TC)]                                                 # the plugin removed the target: 0 hit points
     check(g)
     assert TC not in train.homes(g) and train.open_menu(g, "Steve", (3, 3)) is None
     assert not g.queues.get(TC) and g.stock["food"] == 1000            # the cost of the queue comes back
-    assert "scoreboard players add Food aoe_res 50" in server.log
+    assert f"scoreboard players add Food aoe_res {cost}" in server.log
     for _ in range(200):
         g.step()
     assert train.tick(g, 60) == [] and not [c for c in server.log if c.startswith("summon")]
@@ -89,10 +91,10 @@ def test_a_fallen_house_takes_its_room_and_a_fallen_mill_its_age_count():
                           {"kind": "building", "name": "MILL", "player": 1, "footprint": [14, 8, 16, 10]}]
     live |= {uuid((14, 17, 2, 5)): 1, uuid((14, 16, 8, 10)): 1}
     check(g)
-    assert train.limit(g) == 10 and train.missing(g, "FEUDAL_AGE") is None
+    assert train.limit(g) == sum(ROOM) and train.missing(g, "FEUDAL_AGE") is None
     del live[uuid(HOUSE)], live[uuid((14, 16, 8, 10))]
     check(g)
-    assert train.limit(g) == 5 and train.owned(g) == ["TOWN_CENTER", "BARRACKS"]
+    assert train.limit(g) == ROOM[0] and train.owned(g) == ["TOWN_CENTER", "BARRACKS"]
     assert train.missing(g, "FEUDAL_AGE").endswith("(1/2)")
 
 
@@ -129,7 +131,7 @@ def test_a_trade_cog_with_a_fallen_dock_stops_at_its_next_stop_with_no_gold():
     server, g = docks_map()
     far = (14, 17, 32, 35)
     train.order(g, "Steve", train.open_menu(g, "Steve", (15, 3)), train.MORE)
-    cog, = train.tick(g, 36)
+    cog, = train.tick(g, train.seconds(g, "TRADE_COG", "DOCK"))
     g.selected = {cog}
     assert fleet.trade_order(g, "Steve", (15, 33)) == far
     ruins.fall(g, far)                                                 # the check found its target gone
@@ -161,7 +163,7 @@ def test_a_building_with_no_target_never_falls():
     stand(server, [])                                                   # no target was ever there
     for _ in range(3):
         check(g)
-    assert TC in train.homes(g) and train.limit(g) == 10 and not g.ruins
+    assert TC in train.homes(g) and train.limit(g) == sum(ROOM) and not g.ruins
 
 
 def test_a_new_building_on_the_footprint_of_a_fallen_one_works_as_a_home():
@@ -226,7 +228,7 @@ def test_a_destroyed_house_leaves_the_own_buildings_on_a_server(tmp_path):
         g = gather.Gather(game, data, tick=0.25).setup()
         assert g.paper
         check(g)
-        assert sorted(train.owned(g)) == ["HOUSE", "TOWN_CENTER"] and train.limit(g) == 10
+        assert sorted(train.owned(g)) == ["HOUSE", "TOWN_CENTER"] and train.limit(g) == sum(ROOM)
         game.command(f"aoe destroy {combat.target_uuid(house['footprint'])}")
         check(g)
-        assert train.owned(g) == ["TOWN_CENTER"] and train.limit(g) == 5 and g.ruins == {(x0, x1, z0, z1)}
+        assert train.owned(g) == ["TOWN_CENTER"] and train.limit(g) == ROOM[0] and g.ruins == {(x0, x1, z0, z1)}

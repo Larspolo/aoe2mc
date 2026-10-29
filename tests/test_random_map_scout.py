@@ -1,4 +1,5 @@
-"""--random-map nomad: 3 villagers and no Scout Cavalry, as AoE2 Nomad; the other kinds keep the scout (#1216)."""
+"""--random-map nomad: the start villagers and no Scout Cavalry, as AoE2 Nomad; the other kinds keep the scout of the
+start objects (rmap.START, #1216)."""
 import pytest
 
 import rmap
@@ -16,5 +17,6 @@ def test_nomad_has_no_scout(seed, players):
 
 
 @pytest.mark.parametrize("kind", sorted(set(rmap.GENERATORS) - set(rmap.NOMADS)))
-def test_the_other_kinds_keep_one_scout_for_each_player(kind):
-    assert sorted(scouts(kind, 7, 2)) == [1, 2]
+def test_the_other_kinds_keep_the_scouts_of_each_player(kind):
+    count = next(c for name, c, *_ in rmap.START if name == "SCOUT_CAVALRY")
+    assert sorted(scouts(kind, 7, 2)) == [p for p in (1, 2) for _ in range(count)]

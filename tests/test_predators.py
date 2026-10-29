@@ -60,6 +60,6 @@ def test_a_wolf_kills_a_lone_villager_and_spares_wolves_and_people(tiny_world, t
         combat.setup(game, data)
         assert wait(lambda: health(game, "vilr") is None, 60), health(game, "vilr")   # the villager died
         time.sleep(10)
-        assert health(game, "w2r") == health(game, "w3r") == 20.0             # the wolves do not fight
+        assert health(game, "w2r") == health(game, "w3r") == float(combat.stats("WOLF").hp)   # the wolves do not fight
         out = game.command("data get entity aoe2mc Health")
         assert "20.0f" in out, out                                             # the person takes no damage

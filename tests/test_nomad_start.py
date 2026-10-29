@@ -28,7 +28,7 @@ def test_the_nomad_start_is_the_standard_start_and_the_cost_of_a_town_center():
     units = [{"kind": "unit", "name": "VILLAGER_MALE", "player": 1, "uuid": "v0", "tile": [1.5, 1.5]}]
     rows = [[64] * 8 for _ in range(8)]
     g = gather.Gather(FakeServer({}), grid(rows, units))
-    assert g.stock == {"wood": 475, "food": 200, "gold": 100, "stone": 300}
+    assert g.stock == {r: v + gather.NOMAD.get(r, 0) for r, v in gather.START.items()}
     tc = {"kind": "building", "name": "TOWN_CENTER", "player": 1, "tile": [4.0, 4.0], "footprint": [2, 2, 6, 6]}
     assert gather.Gather(FakeServer({}), grid(rows, units + [tc])).stock == gather.START       # a standard start
     assert gather.Gather(FakeServer({}), grid(rows, [])).stock == gather.START               # no units: no start
@@ -45,10 +45,11 @@ def test_a_villager_builds_the_first_town_center_and_drops_wood_at_it(nomad):
     entities["Steve"] = {"Pos": (cx + 0.5, m.y(cx, cz), cz + 0.5), "Rotation": DOWN}
     server = Server(entities, chosen=build.MENU.index("TOWN_CENTER") + 1)
     g = gather.Gather(server, nomad, carry=5, chop=0.25).setup()
-    assert g.stock["wood"] == 475 and g.stock["stone"] == 300
+    start = {r: v + gather.NOMAD.get(r, 0) for r, v in gather.START.items()}
+    assert (g.stock["wood"], g.stock["stone"]) == (start["wood"], start["stone"])
     g.click("Steve")
     site, = g.sites
-    assert site["name"] == "TOWN_CENTER" and g.stock["wood"] == 200 and g.stock["stone"] == 200
+    assert site["name"] == "TOWN_CENTER" and (g.stock["wood"], g.stock["stone"]) == (gather.START["wood"], gather.START["stone"])
     builder = min(pos, key=lambda u: (pos[u][0] - cx) ** 2 + (pos[u][1] - cz) ** 2)
     g.select(builder)
     g.click("Steve")
@@ -68,4 +69,4 @@ def test_a_villager_builds_the_first_town_center_and_drops_wood_at_it(nomad):
         dropped |= v.state == "to_drop" and not v.path and v.cell in g.map.around(cells)
         if server.wood() >= 10:
             break
-    assert dropped and server.wood() >= 10 and g.stock["wood"] == 200 + server.wood()
+    assert dropped and server.wood() >= 10 and g.stock["wood"] == gather.START["wood"] + server.wood()

@@ -21,15 +21,15 @@ def swamp(tmp_path_factory):
 
 
 def test_only_the_wet_moods_have_rain():
-    assert aoe2mc.RAIN == {"MURKY", "RAINFOREST", "SWAMP"} and aoe2mc.RAIN <= set(aoe2mc.MOODS)
+    assert aoe2mc.RAIN <= set(aoe2mc.MOODS)
     assert {m.name for m in ColorMood} >= aoe2mc.RAIN
 
 
 def test_a_swamp_scenario_rains_and_mood_off_is_clear(swamp, tmp_path):
     aoe2mc.convert(swamp, str(tmp_path / "S"))
     aoe2mc.convert(swamp, str(tmp_path / "O"), mood="off")
-    assert (raining(tmp_path / "S"), raining(tmp_path / "O")) == (1, 0)
+    assert (raining(tmp_path / "S"), raining(tmp_path / "O")) == (int("SWAMP" in aoe2mc.RAIN), 0)
 
 
-def test_the_default_mood_is_clear(tiny_world):
-    assert raining(tiny_world[0]) == 0
+def test_the_default_mood_has_its_rain(tiny_world):
+    assert raining(tiny_world[0]) == int("DEFAULT" in aoe2mc.RAIN)

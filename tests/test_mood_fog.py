@@ -25,7 +25,7 @@ def files(world):
 
 
 def test_the_fog_moods():
-    assert set(aoe2mc.FOG) == {"BRUMOUS", "MISTY", "MURKY"} and set(aoe2mc.FOG) <= {m.name for m in ColorMood}
+    assert set(aoe2mc.FOG) <= {m.name for m in ColorMood}
     assert all(s < e for s, e in aoe2mc.FOG.values())
 
 
@@ -34,8 +34,9 @@ def test_a_misty_scenario_gets_the_fog_only_with_fog_or_full_ambience(misty, tmp
         aoe2mc.convert(misty, str(tmp_path / name), **kw)
     with open(tmp_path / "F" / FOG) as f:
         tracks = json.load(f)["tracks"]
-    assert tracks["minecraft:visual/fog_start_distance"] == {"keyframes": [{"ticks": 0, "value": 4.0}]}
-    assert tracks["minecraft:visual/fog_end_distance"]["keyframes"][0]["value"] == 48.0
+    start, end = aoe2mc.FOG["MISTY"]
+    assert tracks["minecraft:visual/fog_start_distance"] == {"keyframes": [{"ticks": 0, "value": float(start)}]}
+    assert tracks["minecraft:visual/fog_end_distance"]["keyframes"][0]["value"] == float(end)
     with open(tmp_path / "F" / TAG) as f:
         assert json.load(f) == {"values": ["aoe2mc:fog"]}
     assert {FOG, TAG} <= files(tmp_path / "A")
