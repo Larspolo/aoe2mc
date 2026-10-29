@@ -104,7 +104,9 @@ The layout (genie-scx `SCXFormat::read_from`):
    6. Triggers (format ≥ `1.14`) and AI files. The converter does not need them.
 
 `scx.py` (#311) reads format `1.21` and the `.scn` formats `1.18`, `1.19`, `1.20` of The Age of Kings (#3860; the same
-object layout; data version 1.14 to 1.27): `scx.read(path)` gives the map size, terrain and
+object layout; data version 1.14 to 1.27) and the formats `1.22` to `1.26` of the HD Edition (#3862; also as
+`.aoe2scenario`: `aoe2mc.read_map` reads the first 4 bytes, and a format of `scx.FORMATS` goes to `read_scx`). The first
+DE format is `1.32` (data version 1.28 and later: DE fields); AoE2ScenarioParser reads `1.36` and later: `scx.read(path)` gives the map size, terrain and
 elevation (`[x, y]`, as `read_scenario`) and the players (civilization, color, start view). It skips the header with its
 size field, skips `TribeScen` field by field, reads the map, skips the world data and the objects, and reads the
 scenario player data (the color is there). It also reads the objects (#312): `aoe2mc.read_scx` gives the
