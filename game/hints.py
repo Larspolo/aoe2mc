@@ -9,11 +9,15 @@ action bar keeps one writer.
 """
 import json
 
+ORDERS = ("attack_move", "follow", "guard", "patrol")               # the menu items that wait for a click
 REPEAT = 1.5                                                       # seconds: before the action bar fades
 TEXTS = {                                                          # short: the action bar is one line
+    "attack_move": "Attack Move: right click the ground",
     "building": "Place the {building}: right click the ground · Shift + right click: place more · Cancel: /trigger aoe_build set 0",
     "corner": "Selection box: right click the other corner",
     "drag": "Selection box: hold right click, look at the other corner, release · Release here: cancel",
+    "follow": "Follow: right click an own or allied unit",
+    "guard": "Guard: right click an own or allied unit or building",
     "military": "{n} military unit{s} · Right click: attack an enemy, stance menu · Empty box: deselect",
     "patrol": "Patrol: right click the ground",
     "none": "Right click: select a unit · Hold right click: selection box",
@@ -29,8 +33,8 @@ def state(g, player=None):
         return "drag", TEXTS["drag"]
     if player in g.corners:
         return "corner", TEXTS["corner"]
-    if getattr(g, "ordering", {}).get(player) == "patrol":         # the Patrol menu item (#3355)
-        return "patrol", TEXTS["patrol"]
+    if (order := getattr(g, "ordering", {}).get(player)) in ORDERS:   # the pending menu item (#3355, #3357, #3358)
+        return order, TEXTS[order]
     if building := getattr(g, "ghosts", {}).get(player, [None])[0]:
         return "building", TEXTS["building"].format(building=pretty(building))
     if player is not None:                                         # the own selection of player (#3486)

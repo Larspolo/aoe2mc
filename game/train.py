@@ -464,6 +464,7 @@ def layout(g, rect):
     names = [n for n in trains(g, building) if offered(g, rect, n) and not covered(g, building, n)]
     used = {RALLY[0]} if units_of(g, building) else set()          # the items of show() after the trained ones
     used |= {garrison.ungarrison(building)[0]} if getattr(g, "garrisons", {}).get(rect) else set()
+    used |= {garrison.BELL[0]} if building == "TOWN_CENTER" else set()
     out = {}
     for name in names:
         slot, item, label = placed(g, building, name)
@@ -561,6 +562,7 @@ def show(g, player, rect):
              for name, (slot, item, label) in layout(g, rect).items()]
     items += [RALLY] if units_of(g, building) else []
     items += [garrison.ungarrison(building)] if getattr(g, "garrisons", {}).get(rect) else []   # only with units inside (#808)
+    items += [garrison.BELL] if building == "TOWN_CENTER" else []    # the town bell (#3419)
     if building == "MARKET":                                           # the buy and sell rows under the queue (#1286)
         import market                                                  # only for a market
         items += [(market.ROW + slot, *item) for slot, *item in market.items(g)]
@@ -636,6 +638,10 @@ def order(g, player, rect, slot, shift=False):
     if slot == garrison.ungarrison(homes(g)[rect])[0] and getattr(g, "garrisons", {}).get(rect):   # all units come out (#808)
         garrison.out(g, rect)
         show(g, player, rect)
+        return 0
+    if slot == garrison.BELL[0] and homes(g)[rect] == "TOWN_CENTER":   # the town bell (#3419)
+        garrison.bell(g, player)
+        menu.close(g, player)
         return 0
     if ROW <= slot < MORE:                                         # the queue row; MORE: more items (#1485)
         cancel(g, player, rect, slot - ROW)
