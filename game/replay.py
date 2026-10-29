@@ -74,6 +74,7 @@ PANEL = "aoe2mc.panel"      # entity tag of the production texts above a buildin
 PANEL_BAR = 10              # characters of the text progress bar of a production item
 GRAPH = "aoe2mc.graph"      # entity tag of the graph text in the sky above the overview (#3448, decision #3447: B)
 GRAPH_BARS = "▁▂▃▄▅▆▇█"     # one bar per game minute, its height relative to the highest value of all players
+UPGRADE = "aoe2mc.upgrade"  # entity tag of the Blacksmith tiers in the sky below the graphs (#3786)
 GRAPH_MINUTES = 20          # the last minutes of each graph row: a long game keeps a short text
 ECO = "aoe2mc.eco"          # entity tag of the economy text above the graphs (#3756)
 FOLLOWED = "aoe2mc.followed"  # the tag of the entity that the spectators of --follow look through (#1095)
@@ -123,6 +124,22 @@ ROWS = table.load("replay.jsonl")
 RESEARCH_S = aoe2mc.RESEARCH_S | {r["label"]: r["time"] for r in table.load("train.jsonl")      # the book items: each
                                   if r.get("item") == "book" and "time" in r}                       # research (#3738)
 TECHS = {r["label"]: r["name"] for r in table.load("train.jsonl") if r.get("item") == "book"}   # text -> name (#3785)
+
+
+def smith_lines(rows):
+    """The Blacksmith lines: (the "line" name of the first technology, its technologies along the "after" chain)."""
+    nxt = {r["after"]: r["name"] for r in rows if r.get("building") == "BLACKSMITH" and "after" in r}
+    out = []
+    for r in rows:
+        if "line" in r:
+            chain = [r["name"]]
+            while chain[-1] in nxt:
+                chain.append(nxt[chain[-1]])
+            out.append((r["line"], chain))
+    return out
+
+
+SMITH = smith_lines(table.load("train.jsonl"))     # (#3786)
 SPEEDS = {r["name"]: r["walk"] for r in ROWS if "walk" in r}
 AGES = tuple(r["name"] for r in sorted((r for r in ROWS if "age" in r), key=lambda r: r["age"]))   # (#1067)
 SOCIETY = tuple(r["name"] for r in ROWS if r.get("society"))      # the buildings of the Society tab (#1086)
@@ -409,6 +426,7 @@ class Replay:
         self.reached, self.researched = {}, {}  # player -> {age: game time (ms)}, researched technologies (#1067)
         self.learned = {}                       # player -> [(game time ms, technology name)] (#3785)
         self.vills, self.vhigh = {}, {}         # player -> live villagers (est.), the highest count (#1086)
+        self.smith = None                       # the shown rows of the Blacksmith tiers (#3786)
         self.graph = {}                         # value index -> the shown rows of its graph (#3448)
         self.eco_rows = None                    # the shown rows of the economy text (#3756)
         self.samples, self.minute = {}, -1      # player -> [(minute, pop, villagers, military, resources)], last minute (#3446)
@@ -524,6 +542,29 @@ class Replay:
                             f'shadow:1b,line_width:1000,Tags:["{GRAPH}","{tag}"]}}')
             self.graph[i] = rows
         return out
+
+    def upgrade_view(self, t):
+        """The command of the Blacksmith tiers at game time t (ms, #3786): one text display in the sky below the
+        graphs, one row per player in its color, for example "Melee 2/3 · Archer 1/3". Only when the text changed,
+        and only after the first Blacksmith research of the game."""
+        players = self.ranked(int(q) for q in self.data["players"] if q != "0")
+        done = {p: set(self.upgrades(p, t)) for p in players}
+        tiers = {p: [sum(n in done[p] for n in chain) for _, chain in SMITH] for p in players}
+        if self.smith is None and not any(map(any, tiers.values())):
+            return []
+        rows = [text("Blacksmith\n")] + [text(f"{self.label(p)[0]}: " + " · ".join(
+            f"{line} {k}/{len(chain)}" for (line, chain), k in zip(SMITH, tiers[p])) + "\n", self.label(p)[1])
+            for p in players]
+        if rows == self.smith:
+            return []
+        line, shown, self.smith = json.dumps(rows, ensure_ascii=False, separators=(",", ":")), self.smith, rows
+        if shown is not None:
+            return [f"data merge entity @e[type=text_display,tag={UPGRADE},limit=1] {{text:{line}}}"]
+        if getattr(self, "view", None) is None:
+            self.overview()                                         # it sets the place of the overview
+        y, c = int(self.view.split()[1]) + 12 - 4 * 4, f"{self.n / 2:.1f}"   # one step below the lowest graph
+        return [f"summon text_display {c} {min(319, y)} {c} {{text:{line},billboard:\"center\","
+                f'shadow:1b,line_width:1000,Tags:["{UPGRADE}"]}}']
 
     def ecoview(self):
         """The commands of the economy text at the current time (#3756): in the sky above the graphs, one row per player
@@ -2683,6 +2724,7 @@ class Replay:
                     self.sample(to)
                     self.idle_at = to
                     self.send(self.graphs(to))
+                    self.send(self.upgrade_view(to))
                     self.send(self.ecoview())
                 continue
             lag = max(lag, clock() - r0 - (now - g0) / 1000 / self.speed)
@@ -2697,6 +2739,7 @@ class Replay:
                 self.sample(now)
                 self.idle_time(now)
                 self.send(self.graphs(now))
+                self.send(self.upgrade_view(now))
                 self.send(self.ecoview())
                 self.send(self.fog())
             if e is None:                                           # behind its clock: all the steps up to the
