@@ -3243,9 +3243,11 @@ def damage_lines(e, c):
         return [f'data modify storage aoe2mc:orders list append value "damage {e["player"]} {name} {x0} {y0} {x1} {y1} {q}"'] * \
             bool(q and e["player"] >= 0)
     stats["damage"] += 1                                               # Gaia: the tag aoe2mc.p0 (effect_units)
+    hurt = [f'data modify storage aoe2mc:orders list append value "hurt {r} {q}"' for r in picked(e)] * bool(q)
+    stats["damage (selected building)"] += len(hurt)                   # a selected building has no entity (#4073)
     if q < 0:
-        return heal_commands(found, -q, c)
-    return [f"{run} damage @s {q}" for run in hp_runs(found, c)]       # damage takes one entity
+        return heal_commands(found, -q, c) + hurt
+    return [f"{run} damage @s {q}" for run in hp_runs(found, c)] + hurt  # damage takes one entity
 
 
 def attack_lines(e, c, armor=None, q=None):
