@@ -4,7 +4,7 @@ of the own AoE2 install, the repository has no game script. generate() reads the
 a map description of #960 (aoe2mc.read_json): the terrain and the elevation of each tile, and only the trees of the
 forest tiles as objects (FOREST_TREES) yet.
 
-Read: `#const`, `#define`, `if`/`elseif`/`else`/`endif`, `start_random`/`percent_chance`/`end_random`,
+Read: `#const` (also `rnd(A,B)`, fractions and `(MATH)`, #4306), `#define`, `if`/`elseif`/`else`/`endif`, `start_random`/`percent_chance`/`end_random`,
 <PLAYER_SETUP> (`grouped_by_team` with --teams), <LAND_GENERATION> (`base_terrain`, `create_player_lands`, `create_land` with
 `terrain_type`, `base_layer` (a land layer on the terrain_type, #3967), `land_percent`, `number_of_tiles`, `base_size`, `clumping_factor`, `land_position`, `assign_to_player` and `assign_to_team` (direct_placement, #3947) and the borders
 `left_border`, `right_border`, `top_border`, `bottom_border`: percent of the map size at the low x, high x, low y and
@@ -124,8 +124,12 @@ def expand(words, rng, defined, consts, includes, folder=None, depth=0):
             defined.add(words[i + 1])
             i += 2
         elif w == "#const":
-            consts[words[i + 1]] = int(words[i + 2])
-            i += 3
+            text, j = group(words, i + 2)
+            consts[words[i + 1]] = calc(text, consts, rng)
+            i = j
+        elif w.startswith(("(", "rnd(")):
+            text, i = group(words, i)
+            out.append(str(calc(text, consts, rng)))     # one rnd() draw where it is written (#4306)
         else:
             out.append(w)
             i += 1
@@ -173,12 +177,80 @@ def commands(words):
     return out
 
 
+def group(words, i):
+    """The text of the math group or rnd() that starts at words[i] (tokens() splits it at the spaces) and the index
+    after it."""
+    text = words[i]
+    while text.count("(") > text.count(")") and i + 1 < len(words):
+        i += 1
+        text += " " + words[i]
+    return text, i + 1
+
+
+def calc(text, consts, rng):
+    """The number of a math word of AoE2 DE (#4306): a number (also 0.72), a constant, rnd(A,B) (a whole number from
+    A to B), or (EXPRESSION) with + - * / and the usual order. A whole result stays an int."""
+    parts = re.findall(r"rnd\(\s*-?\d+\s*,\s*-?\d+\s*\)|\d+\.?\d*|\.\d+|[A-Za-z_]\w*|[-+*/()]|\S", text)
+    pos = 0
+    def fail():
+        raise RmsError(f"bad math {text!r}")
+    def atom():
+        nonlocal pos
+        p = parts[pos] if pos < len(parts) else fail()
+        pos += 1
+        if p == "(":
+            x = add()
+            if pos >= len(parts) or parts[pos] != ")":
+                fail()
+            pos += 1
+            return x
+        if p == "-":
+            return -atom()
+        if m := re.fullmatch(r"rnd\(\s*(-?\d+)\s*,\s*(-?\d+)\s*\)", p):
+            return int(rng.integers(int(m[1]), int(m[2]) + 1))
+        if re.fullmatch(r"\d+\.?\d*|\.\d+", p):
+            return float(p) if "." in p else int(p)
+        if re.fullmatch(r"[A-Za-z_]\w*", p):
+            if p not in consts:
+                raise RmsError(f"unknown constant {p!r}")
+            return consts[p]
+        fail()
+    def mul():
+        nonlocal pos
+        x = atom()
+        while pos < len(parts) and parts[pos] in "*/":
+            op = parts[pos]
+            pos += 1
+            y = atom()
+            if op == "/" and y == 0:
+                fail()
+            x = x * y if op == "*" else x / y
+        return x
+    def add():
+        nonlocal pos
+        x = mul()
+        while pos < len(parts) and parts[pos] in "+-":
+            op = parts[pos]
+            pos += 1
+            x = x + mul() if op == "+" else x - mul()
+        return x
+    x = add()
+    if pos != len(parts):
+        fail()
+    return int(x) if x == int(x) else x
+
+
 def value(word, consts):
+    """A whole number: a number word, or a constant; a fraction rounds half away from zero (#4306)."""
     if re.fullmatch(r"-?\d+", word):
         return int(word)
-    if word not in consts:
+    if re.fullmatch(r"-?\d*\.\d+", word):
+        x = float(word)
+    elif word not in consts:
         raise RmsError(f"unknown constant {word!r}")
-    return consts[word]
+    else:
+        x = consts[word]
+    return int(x + (0.5 if x >= 0 else -0.5)) if isinstance(x, float) else x
 
 
 def grow(owner, lands, free, rng):
