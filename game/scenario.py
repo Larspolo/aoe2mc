@@ -148,6 +148,7 @@ def tick(g):
     research(g)
     garrisons(g)
     fallen(g)
+    attacked(g)
     owners(g)
     tech_states(g)
     actions(g)
@@ -718,6 +719,29 @@ def fallen(g):
         if "passed" not in g.command(f"execute if entity {combat.target_uuid(o['footprint'])}"):
             g.command(f"scoreboard players set #f{ref} aoe_fallen 1")
             sent.add(ref)
+
+
+def attacked(g):
+    """Once per game second: the score #h<ref> of aoe_hit of a converted building of the triggers (aoe2mc.json
+    "attacked", #3775) is 1 when its hit points are lower than at the last read, else 0, for the condition "Object
+    Attacked". One command per change, so the score is 1 for one second only after each hit."""
+    import repair                                                  # repair imports gather
+    if not g.data.get("attacked") or g.clock() < vars(g).get("attacked_at", 0.0):
+        return
+    g.attacked_at = g.clock() + 1.0
+    last, sent = vars(g).setdefault("attacked_hp", {}), vars(g).setdefault("attacked_sent", {})
+    objects = {o["ref"]: o for o in g.data.get("objects", ()) if o.get("ref") is not None and "footprint" in o}
+    for ref in g.data["attacked"]:
+        if (o := objects.get(ref)) is None:
+            continue
+        x0, z0, x1, z1 = o["footprint"]
+        if (hp := repair.hp(g, (x0, x1, z0, z1))) is None:             # no target entity: a ruin, no score
+            continue
+        n = int(hp < last.get(ref, hp))
+        last[ref] = hp
+        if sent.get(ref, 0) != n:
+            g.command(f"scoreboard players set #h{ref} aoe_hit {n}")
+            sent[ref] = n
 
 
 def owners(g):
