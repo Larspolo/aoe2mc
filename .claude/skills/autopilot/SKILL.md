@@ -91,8 +91,7 @@ Candidates: open issues without `needs-human`, `blocked`, `epic`, `agent-status`
 "Depends on: #n" issues are all closed, whose "Start after:" time or count of merged PRs is past (#496, #2039). Order: `P0`, `P1`, `P2`, `P3`, then the
 least overlap with the work in progress (files and functions that open PRs change or claimed tickets name, #487),
 then the lowest issue number.
-Section `Candidates` shows them in this order, without held tickets (`dashboard.py --next`: all of them),
-the top group turned by the run (#3832).
+Section `Candidates` shows them in this order, without held tickets (`dashboard.py --next`: all of them).
 A main run never takes a ticket of a `reserved` lane (`lane:haiku`, `lane:deep`, #1994).
 **Lane runs** (the argument names `lane haiku` or `lane deep`): read `queue.md`, section of the lane, before the pick.
 Before the pick (only deep runs while `reserved` names `deep`), check the open epics with no open sub-issue (at most 3 per run), and refill the queue when R < N
@@ -114,7 +113,7 @@ The workflow `claims.yml` deletes the refs when the ticket closes.
 1. Branch: use the branch that the session instructions name. Else `git fetch origin main` and
    `git checkout -b agent/<number>-<short-slug> origin/main`.
 2. Beat (`python3 tools/claim.py N --beat`) at least every 20 minutes until you open the PR.
-   Read the ticket and its comments (the claim prints them, #3459) first: the owner's comments win. Read only the code that the ticket needs (see the code map in `CLAUDE.md`). Use Grep, not full-file reads.
+   Read the ticket and its comments (the claim prints them, #3459) first: the owner's comments win. Then `python3 tools/ticket_context.py N` once: the code places of the body (#3829). Read only the code that the ticket needs (code map: `CLAUDE.md`). Use Grep.
 3. For a bug, write a failing test first. Then change the code. Keep the diff small and in the existing style.
    Put new tests in a new file `tests/test_<topic>.py`: parallel tickets that append to the end of one test file
    conflict (66 merge conflicts in 6 hours on 2026-10-25).
@@ -161,6 +160,6 @@ Answer the questions of `process.md`. Do the action for each "yes". Spend little
 ## More tickets
 
 If the argument asks for more than 1 ticket, go back to step 2 after step 8: read `more.md` first (branch reset,
-push). Never force-push. Start a next ticket only when the context is below 120k tokens (`more.md`).
+push). Never force-push. Start a next work item only when the context is below 120k tokens (`more.md`).
 Argument `max`: continue until no ticket is ready, a usage limit stops you, or the context is 120k or more.
 Do not start other runs (no `fire_trigger`, #566): the pacer (`pacer.yml`, #3193) starts them.
