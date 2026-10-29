@@ -187,6 +187,7 @@ class Bot:
                     work[res] += 1
                     break
         self.move(share, work)
+        self.age_up()
         self.recruit()
         self.time += g.tick * gather.NORMAL
         if self.time >= self.attack and self.time >= self.looked + LOOK:   # each look costs RCON commands
@@ -385,6 +386,22 @@ class Bot:
                         and all(g.stock[r] >= v for r, v in train.price(g, n).items()) \
                         and train.queue(g, self.nobody, (rect[0], rect[2]), n):
                     more += n == "VILLAGER_MALE"
+
+    def age_up(self):
+        """Queue the next age (build.AGE_TECHS) at a town center when the bot has its villager number, each building
+        of its order that the present age allows, and the cost of the age, as an AoE2 bot (#3912). build.locked keeps
+        an age above end_age out."""
+        g = self.g
+        if build.ages(g) >= len(build.AGE_TECHS) or len(g.villagers) < self.villagers:
+            return
+        age, have = build.AGE_TECHS[build.ages(g)], train.owned(g)
+        if train.queued(g, age) or build.locked(g, age) or any(n not in have for n in self.order if not build.locked(g, n)):
+            return
+        for rect, name in sorted(train.homes(g).items()):
+            if name == "TOWN_CENTER" and age in train.trains(g, name) \
+                    and all(g.stock[r] >= v for r, v in train.price(g, age, name).items()):
+                train.queue(g, self.nobody, (rect[0], rect[2]), age)
+                return
 
     def build(self):
         """Start the next house, farm or building of ORDER when the bot can pay for it and no site of it is unfinished.
