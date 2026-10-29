@@ -19,7 +19,7 @@ FN = "data/aoe2mc/function/trigger/0.mcfunction"
 STORED = "Storage aoe2mc:orders has the following contents: "
 
 
-def test_scenario_effect_stores_the_unload_of_the_castle(tmp_path):
+def test_scenario_effect_stores_the_unload_of_the_castle(tmp_path, monkeypatch):
     with contextlib.redirect_stdout(io.StringIO()):
         scn = AoE2DEScenario.from_file(scenarios.tiny(str(tmp_path / "tiny.aoe2scenario")))
     castle = scn.unit_manager.add_unit(scenarios.PlayerId.ONE, BuildingInfo.CASTLE.ID, x=8, y=8)
@@ -29,25 +29,20 @@ def test_scenario_effect_stores_the_unload_of_the_castle(tmp_path):
     path = scenarios.save(scn, str(tmp_path / "a.aoe2scenario"))
     trig, = aoe2mc.read_scenario(path)[4]["triggers"]
     assert trig["effects"][0]["selected"] == [castle.reference_id]
-    buildings.INSIDE[castle.reference_id] = ([(33, 34)], 70, (34, 34))
+    monkeypatch.setattr(buildings, "INSIDE", {castle.reference_id: ([(33, 34)], 70, (34, 34))})
     stats = Counter()
-    try:
-        _, files = aoe2mc.trigger_files([trig], 4, np.full((64, 64), 70, np.int16), stats=stats)
-    finally:
-        del buildings.INSIDE[castle.reference_id]
+    _, files = aoe2mc.trigger_files([trig], 4, np.full((64, 64), 70, np.int16), stats=stats)
     assert f'data modify storage aoe2mc:orders list append value "unload 1 {castle.reference_id} 14 70 10"' \
         in files[FN].splitlines()
     assert stats["unload"] == 1
 
 
-def test_with_no_selection_it_unloads_the_buildings_in_the_area():
+def test_with_no_selection_it_unloads_the_buildings_in_the_area(monkeypatch):
     e = dict(type=aoe2mc.UNLOAD, player=2, tile=[-1, -1], area=[8, 8, 9, 9], selected=[])
     c = aoe2mc.Effect(dict(id=0, effects=[e]), 4, None, {}, Counter(), True, {}, [])
-    buildings.INSIDE.update({987001: ([], 70, (34, 34)), 987002: ([], 70, (50, 34))})
-    try:
-        assert aoe2mc.unload_lines(e, c) == ['data modify storage aoe2mc:orders list append value "unload 2 987001"']
-    finally:
-        del buildings.INSIDE[987001], buildings.INSIDE[987002]
+    # a patch, not update(): an earlier test can leave a holder in the area
+    monkeypatch.setattr(buildings, "INSIDE", {987001: ([], 70, (34, 34)), 987002: ([], 70, (50, 34))})
+    assert aoe2mc.unload_lines(e, c) == ['data modify storage aoe2mc:orders list append value "unload 2 987001"']
 
 
 def test_a_holder_that_is_no_building_is_not_supported():
