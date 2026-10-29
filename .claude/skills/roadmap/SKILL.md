@@ -50,6 +50,8 @@ When `python3 tools/claim.py 0 --roadmap` exits 0 (one run after each 100 merged
 no source: R < N, each feature has an epic, no fallback, `claim.ROADMAP_EARLY`, #3741), after step 8 of the autopilot skill:
 
 1. Mark a feature done (`[x]`, with the epic number) when its epic is closed.
+   Add a line for each epic key ("Roadmap: `<key>`") that the list does not have: `tools/release.py` counts only
+   the keys of the list (#4268: `play:unique-techs` of #4096 with 34 sub-issues was not counted).
 2. Compare each goal with AoE2 DE and with the code: what does a player see or do in AoE2 that the converter, the
    game program or the replay cannot do yet? Add at most 5 missing features, each with a new key and one line.
 3. Keep the order: the features that the next features need come first.

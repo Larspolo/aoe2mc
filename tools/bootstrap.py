@@ -2,13 +2,14 @@
 
     python3 tools/bootstrap.py TARGET_DIR --repo OWNER/NAME [--branch main] [--github]
 
-Copies the generic files of the table "Generic and specific files" in `docs/SYSTEM.md` (one list for the document and
-the tool), with the repository, the owner login and the project name of the new project in place of aoe2mc. Writes
+Copies the generic files of `framework/files.txt` (#4192; the specific files: the table "Generic and specific files"
+in `docs/SYSTEM.md`), with the repository, the owner login and the project name of the new project in place of aoe2mc. Writes
 `agent.toml` with the new values and placeholder commands, and short starts of the specific files that the generic
 files need (`STUBS`). Prints the setup steps of the owner (`docs/SYSTEM.md`) and the specific files that stay to do.
 `--github` also makes the labels of `.github/labels.txt` and the status issue with `gh api` (REST).
 """
 import argparse
+import glob
 import os
 import re
 import shutil
@@ -19,6 +20,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from agent_config import CONFIG, ROOT  # noqa: E402
 
 SYSTEM = os.path.join(ROOT, CONFIG["docs"]["system"])
+FILES = os.path.join(ROOT, "framework", "files.txt")
 ROW = re.compile(r"^\| `([^`]+)` \| (generic|specific|steering) \|", re.M)
 
 CONFIG_TOML = """# Project values of the agent system (#905). The tools in tools/ read this file (tools/agent_config.py).
@@ -167,6 +169,19 @@ def table(text):
     return ROW.findall(text.split("## Generic and specific files", 1)[1])
 
 
+def generic(text):
+    """The generic files of framework/files.txt: one path or glob per line, # starts a comment line."""
+    lines = [line.strip() for line in text.splitlines() if line.strip() and not line.lstrip().startswith("#")]
+    return [p for line in lines for p in (sorted(os.path.relpath(f, ROOT) for f in glob.glob(os.path.join(ROOT, line)))
+                                          if "*" in line else [line])]
+
+
+def rows():
+    """(path, kind) of each file of the system: the generic files of framework/files.txt, then the specific rows of
+    the table "Generic and specific files" of docs/SYSTEM.md."""
+    return [(p, "generic") for p in generic(open(FILES).read())] + table(open(SYSTEM).read())
+
+
 def section(text, title):
     """The section "## title" of a Markdown text, up to the next "## " heading."""
     m = re.search(rf"^## {re.escape(title)}\n.*?(?=^## |\Z)", text, re.M | re.S)
@@ -193,12 +208,11 @@ def bootstrap(target, repo, branch="main"):
     """Write the files into target. Returns (copied, written, todo): the generic files, the stubs, the specific files
     that the owner or a first run must write."""
     owner, name = repo.split("/")
-    system = open(SYSTEM).read()
-    rows = table(system)
+    files = rows()
     values = {"repo": repo, "owner": owner, "name": name, "branch": branch, **CONFIG["commands"],
               "generic": "@framework/CLAUDE.md"}      # the generic rules: the copy of framework/CLAUDE.md (#4193)
     copied, written = [], []
-    for path, kind in rows:
+    for path, kind in files:
         if kind != "generic":
             continue
         src, dst = os.path.join(ROOT, path), os.path.join(target, path)
@@ -220,7 +234,7 @@ def bootstrap(target, repo, branch="main"):
         if path.endswith(".sh"):
             os.chmod(dst, 0o755)
         written.append(path)
-    todo = [p for p, k in rows if k != "generic" and p not in STUBS]
+    todo = [p for p, k in files if k != "generic" and p not in STUBS]
     return copied, written, todo
 
 
