@@ -40,3 +40,4 @@
 {"name": "rival_years", "text": "A technology that adds years to the relic and wonder victory timers of each enemy (Atheism: 100). wonder.later.", "issue": 4336}
 {"name": "rival_relic_gold", "text": "The factor of the relic gold of each enemy after the technology (Atheism: 0.5). monk.relic_tick.", "issue": 4336}
 {"name": "work", "text": "A technology that makes one building work faster: [the building, the factor of its train and research rate] (Perfusion: [\"BARRACKS\", 2]). A unit group can join the form later. train.work, train.seconds.", "issue": 4226}
+{"name": "train_group", "text": "A technology that makes a unit group train faster: [the units, as \"walk\", the factor of the train rate] (Steppe Husbandry: the scout line 2). train.group_rate, train.seconds.", "issue": 4260}
