@@ -208,6 +208,17 @@ def tiles(attrs, consts, n, default=0):
     return default
 
 
+def scaled(attrs, consts, n, clumps, total):
+    """number_of_clumps and the tile count, scaled from a 100 × 100 map to n × n tiles: set_scale_by_groups scales the
+    clumps, set_scale_by_size the tiles (as in AoE2 DE)."""
+    k = n * n / 10000
+    if "set_scale_by_groups" in attrs:
+        clumps = max(1, round(clumps * k))
+    if "set_scale_by_size" in attrs:
+        total = round(total * k)
+    return clumps, total
+
+
 def dilate(mask, r):
     """The tiles within r (a square) of a True tile."""
     rows = mask.copy()
@@ -260,7 +271,7 @@ def generate(text, seed, players=2, size=None, warn=None):
                 for p in range(1, players + 1):
                     a = turn + 2 * np.pi * (p - 1) / players
                     c = (int(round((n - 1) / 2 + RING * n * np.cos(a))), int(round((n - 1) / 2 + RING * n * np.sin(a))))
-                    starts.append({"player": p, "x": c[0], "y": c[1], "base_size": base})
+                    starts.append({"player": p, "x": c[0], "y": c[1], "base_size": base, "land": len(lands)})
                     lands.append({"id": len(lands), "cells": square(c, base, n), "clump": clump, "box": box,
                                   "target": max(total // players, (2 * base + 1) ** 2)})
                     kinds[len(lands) - 1] = kind
@@ -296,8 +307,9 @@ def generate(text, seed, players=2, size=None, warn=None):
             r = max(st["base_size"], far)
             for c in square((st["x"], st["y"]), r, n):
                 free[c] = False
-        clumps = value(attrs["number_of_clumps"][0], consts) if "number_of_clumps" in attrs else 1
-        each = tiles(attrs, consts, n, 1) // max(clumps, 1)
+        clumps, total = scaled(attrs, consts, n, value(attrs["number_of_clumps"][0], consts)
+                               if "number_of_clumps" in attrs else 1, tiles(attrs, consts, n, 1))
+        each = total // max(clumps, 1)
         clump = value(attrs["clumping_factor"][0], consts) if "clumping_factor" in attrs else 8
         spots = np.argwhere(free)
         if not len(spots):
@@ -308,7 +320,8 @@ def generate(text, seed, players=2, size=None, warn=None):
         grow(mark, group, free, rng)
         terrain[mark >= 0] = kind
         for a in set(attrs) - {"base_terrain", "number_of_clumps", "number_of_tiles", "land_percent", "clumping_factor",
-                               "spacing_to_other_terrain_types", "set_avoid_player_start_areas"}:
+                               "spacing_to_other_terrain_types", "set_avoid_player_start_areas",
+                               "set_scale_by_groups", "set_scale_by_size"}:
             warn(f"create_terrain: {a} is not read yet")
     elevation = np.zeros((n, n), np.int16)
     for cmd, args, attrs in sections.get("ELEVATION_GENERATION", ()):
@@ -318,22 +331,28 @@ def generate(text, seed, players=2, size=None, warn=None):
         top = value(args[0], consts) if args else 1
         on = value(attrs["base_terrain"][0], consts) if "base_terrain" in attrs else 0
         free = (terrain == on) & ~np.isin(terrain, [TERRAINS["WATER"], TERRAINS["SHALLOW"]]) & (elevation == 0)
-        clumps = value(attrs["number_of_clumps"][0], consts) if "number_of_clumps" in attrs else 1
-        each = tiles(attrs, consts, n, 1) // max(clumps, 1)
+        clumps, total = scaled(attrs, consts, n, value(attrs["number_of_clumps"][0], consts)
+                               if "number_of_clumps" in attrs else 1, tiles(attrs, consts, n, 1))
         spacing = value(attrs["spacing"][0], consts) if "spacing" in attrs else 1
-        spots = np.argwhere(free)
-        if len(spots) and top > 0:
-            mark = np.full((n, n), -1, np.int32)
-            grow(mark, [{"id": k, "cells": [tuple(int(v) for v in spots[rng.integers(len(spots))])], "target": each,
-                         "clump": 8} for k in range(clumps)], free, rng)
-            hill = mark >= 0
-            for k in range(top):                 # level k + 1 inside level k, spacing tiles from its edge
-                elevation[hill] = k + 1
-                hill &= ~dilate(~hill, max(spacing, 1))
-        for a in set(attrs) - {"base_terrain", "number_of_clumps", "number_of_tiles", "spacing"}:
+        # enable_balanced_elevation: each player land gets the same share of the hills (the fair hills of AoE2 DE)
+        areas = ([free & (owner == st["land"]) for st in starts] if "enable_balanced_elevation" in attrs and starts
+                 else [free])
+        hill = np.zeros((n, n), bool)
+        for area in areas:
+            spots, k = np.argwhere(area), -(-clumps // len(areas))
+            if len(spots) and top > 0:
+                mark = np.full((n, n), -1, np.int32)
+                grow(mark, [{"id": j, "cells": [tuple(int(v) for v in spots[rng.integers(len(spots))])],
+                             "target": total // len(areas) // k, "clump": 8} for j in range(k)], area, rng)
+                hill |= mark >= 0
+        for k in range(top):                     # level k + 1 inside level k, spacing tiles from its edge
+            elevation[hill] = k + 1
+            hill &= ~dilate(~hill, max(spacing, 1))
+        for a in set(attrs) - {"base_terrain", "number_of_clumps", "number_of_tiles", "spacing", "set_scale_by_groups",
+                               "set_scale_by_size", "enable_balanced_elevation"}:
             warn(f"create_elevation: {a} is not read yet")
     return {"size": n, "terrain": terrain.tolist(), "elevation": elevation.tolist(), "objects": trees(terrain),
-            "players": {str(p): {"color": p - 1} for p in range(1, players + 1)}, "lands": starts}
+            "players": {str(p): {"color": p - 1} for p in range(1, players + 1)}, "lands": [{k: v for k, v in st.items() if k != "land"} for st in starts]}
 
 
 # Own generators (#993, decision B of #961): the land of a map type in the script language of generate(). The text is
