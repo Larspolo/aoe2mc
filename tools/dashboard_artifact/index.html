@@ -229,7 +229,7 @@
       <p class="ax-lede">100 % is the full roadmap of each goal, with the release checks and a reserve for bug hunting
         (your decision in <a class="ax-link" href="https://github.com/Larspolo/aoe2mc/issues/878" target="_blank" rel="noopener">issue 878</a>, option C).
         Two milestones show the earlier test points: B, a smaller first test, and A, the core game.
-        The items and rules come from docs/RELEASE.md, the same as <code>tools/release.py</code>.</p>
+        The items and rules come from steering/project/RELEASE.md, the same as <code>tools/release.py</code>.</p>
       <p class="ax-note">Progress = closed tickets ÷ (closed tickets + tickets left). A feature has at least its estimate left; without an estimate, the median size of the closed epics.
         The reserve is a share of the feature tickets left. A milestone counts its own features, all release checks and its own reserve.</p>
     </div>
@@ -710,7 +710,7 @@ dash.calc('open_epics', {
 dash.calc('progress', {
   inputs: ['roadmap', 'epics'],
   title: 'Progress per feature',
-  description: 'Each feature of the roadmap with its epics (an epic whose body names the key, and the epics that the roadmap line names): In progress when one of its epics is open; Done when the roadmap checks it or all its epics are closed; else To do. The rules of docs/RELEASE.md.',
+  description: 'Each feature of the roadmap with its epics (an epic whose body names the key, and the epics that the roadmap line names): In progress when one of its epics is open; Done when the roadmap checks it or all its epics are closed; else To do. The rules of steering/project/RELEASE.md.',
   fn: (roadmap, epics) => {
     const goals = ['convert', 'play', 'replay', 'system'];
     const yes = (v) => v === true || v === 'true';
@@ -749,7 +749,7 @@ dash.calc('goal_counts', {
 dash.calc('release', {
   inputs: ['release_bar', 'roadmap', 'epics', 'tickets'],
   title: 'Release items',
-  description: 'Each item of docs/RELEASE.md (issue 878: 100 % is the full roadmap, C; milestones A and B) with its closed tickets, the tickets left and its progress (closed ÷ all; a done item with no tickets is 1), by the rules of that file and tools/release.py. A roadmap feature without a row is milestone C. A feature: the closed sub-issues of its epics; left: the open ones, at least its estimate (default: the median size of the closed epics); done without an epic counts as that median. A release check: its estimate, done when its ticket is closed. The bug reserve: its share of the feature tickets left in the goal.',
+  description: 'Each item of steering/project/RELEASE.md (issue 878: 100 % is the full roadmap, C; milestones A and B) with its closed tickets, the tickets left and its progress (closed ÷ all; a done item with no tickets is 1), by the rules of that file and tools/release.py. A roadmap feature without a row is milestone C. A feature: the closed sub-issues of its epics; left: the open ones, at least its estimate (default: the median size of the closed epics); done without an epic counts as that median. A release check: its estimate, done when its ticket is closed. The bug reserve: its share of the feature tickets left in the goal.',
   fn: (release_bar, roadmap, epics, tickets) => {
     const yes = (v) => v === true || v === 'true';
     const num = (v) => Number(v) || 0;

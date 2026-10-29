@@ -27,7 +27,7 @@ a second push of another claim commit is never a fast-forward. Later claims of t
     python3 tools/claim.py 0 --review     # lock the process review after its gap of merged PRs (`improve` skill,
                                           # `[review]` of agent.toml; it prints the owner work since the last review)
     python3 tools/claim.py 0 --reviewed change   # after the review: "change" or "none" sets the next gap
-    python3 tools/claim.py 0 --roadmap    # lock the review of docs/ROADMAP.md after 100 merged PRs (`roadmap` skill)
+    python3 tools/claim.py 0 --roadmap    # lock the review of steering/project/ROADMAP.md after 100 merged PRs (`roadmap` skill)
     python3 tools/claim.py 0 --prune      # delete the refs of closed tickets and old locks (`claims.yml` only)
 
 Two runs did one ticket (#288): one commented "Started by" and worked without the claim ref. So a claim also fails
@@ -80,7 +80,7 @@ REVIEW_CONFIG = CONFIG.get("review", {})
 REVIEW = REVIEW_CONFIG.get("gap", 80)            # the first gap, and the reset when the result of the reviews turns
 REVIEW_MIN, REVIEW_MAX = REVIEW_CONFIG.get("min_gap", 10), REVIEW_CONFIG.get("max_gap", 640)   # halve, double between
 OWNER_GAP = REVIEW_CONFIG.get("owner_gap", 20)   # the gap when an owner session merged a PR since the last review
-ROADMAP = 100               # merged PRs between two reviews of docs/ROADMAP.md (#2039)
+ROADMAP = 100               # merged PRs between two reviews of steering/project/ROADMAP.md (#2039)
 ROADMAP_EARLY = 30          # the same while the refill has no source: R < N, each roadmap feature has an epic (#3741)
 STATUS = CONFIG["status"]["issue"]   # the status issue: its state comment holds the last reviews
 # The times below find a run that stopped: a stopped run merges nothing, so they stay on the clock (#2039).
