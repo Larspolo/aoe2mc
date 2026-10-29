@@ -256,7 +256,7 @@ def result(g, driver, watch, log):
             "stuck": sorted(watch.stuck.values(), key=lambda s: (s["player"], s["since"])), "errors": errors(log)}
 
 
-def play(world, speed=2.0, minutes=40.0, bot_attack="10:00", log=None, server_log=None, version=None):
+def play(world, speed=2.0, minutes=40.0, bot_attack="10:00", log=None, server_log=None, version=None, ai_difficulty="standard"):
     """Play the game on a copy of world; returns result()."""
     import mc_check
     import run
@@ -277,7 +277,7 @@ def play(world, speed=2.0, minutes=40.0, bot_attack="10:00", log=None, server_lo
         with run.Game(copy, version or mc_check.DEFAULT_VERSION) as game:
             try:
                 with mock.patch.object(gather.Gather, "run", hooked):
-                    run.play(game, copy, log, bot=True, bot_attack=bot_attack, speed=speed)
+                    run.play(game, copy, log, bot=True, bot_attack=bot_attack, speed=speed, ai_difficulty=ai_difficulty)
             finally:
                 path = os.path.join(game.folder, "logs", "latest.log")
                 if server_log and os.path.isfile(path):
@@ -313,12 +313,13 @@ def main(argv=None):
     ap.add_argument("--server-log", metavar="FILE", help="copy the server log to this file")
     ap.add_argument("--json", metavar="FILE", help="write the result as JSON")
     ap.add_argument("--version", help="Minecraft version of the server")
+    ap.add_argument("--ai-difficulty", default="standard", help="the AI difficulty of the bot (game/data/difficulty.jsonl)")
     a = ap.parse_args(argv)
     if not os.path.isfile(os.path.join(a.world, "level.dat")):
         sys.exit(f"no level.dat in {a.world}")
     log = open(a.log, "w") if a.log else None
     try:
-        r = play(a.world, a.speed, a.minutes, a.bot_attack, log, a.server_log, a.version)
+        r = play(a.world, a.speed, a.minutes, a.bot_attack, log, a.server_log, a.version, a.ai_difficulty)
     finally:
         if log:
             log.close()
