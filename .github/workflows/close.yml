@@ -38,6 +38,15 @@ jobs:
             done
             gh api "repos/$R/issues/$i/comments" -f body="Closed by the Close workflow (label \`close\`, #1740)." > /dev/null
             gh api "repos/$R/issues/$i" -X PATCH -f state=closed -f state_reason=completed > /dev/null
+            # The copy PRs of this ticket: main has its fix, so close them too (#4342). Same first-closing-line rule as automerge.yml (#984).
+            for p in $(gh api --paginate "repos/$R/pulls?state=open&per_page=100" | jq -r --arg i "$i" '.[]
+                       | select(.head.ref | test("^(claude/|agent/|ccr-)"))
+                       | select((first((.body // "") | match("(close[sd]?|fix(e[sd])?|resolve[sd]?) #([0-9]+)"; "i").captures[-1].string) // "") == $i)
+                       | .number'); do
+              gh api "repos/$R/issues/$p/comments" -f body="Closed by the Close workflow: its ticket #$i closed with no merge of this PR." > /dev/null
+              gh api "repos/$R/pulls/$p" -X PATCH -f state=closed > /dev/null
+              echo "closed PR #$p"
+            done
             echo "closed #$i"; n=$((n + 1))
           done
           # A close by GITHUB_TOKEN starts no workflow: delete the claim refs now.
