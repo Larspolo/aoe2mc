@@ -1804,6 +1804,8 @@ class Gather:
                             src[v.tree] = self.map.farm_food
                             self.harvest(v.tree)
                         self.tend(v)
+                        if src[v.tree] <= 0:                           # no reseed: the place is free to build (#3423)
+                            self.clear_farm(v.tree)
                     elif v.tree in self.map.carcasses:
                         if src[v.tree] <= 0:                           # a carcass has no blocks, only its body
                             self.unbody(v.tree)
@@ -2128,6 +2130,17 @@ class Gather:
         else:
             self.command(f"fill {box} air replace minecraft:wheat")
             self.command(f"fill {box} minecraft:dirt replace minecraft:farmland")
+
+    def clear_farm(self, tile):
+        """An empty farm with no reseed is ground again (#3423): no farm, no site, so a new building can stand there."""
+        rect = self.map.feet.pop(tile, None)
+        self.map.farms.pop(tile, None)
+        self.map.own_farms.discard(tile)
+        self.crops.pop(tile, None)
+        self.farmers.pop(tile, None)
+        for c in [c for c, t in self.map.farm_at.items() if t == tile]:
+            del self.map.farm_at[c]
+        self.sites[:] = [s for s in self.sites if not ("FARM" in s["name"] and rect and tuple(s["footprint"]) == tuple(rect))]
 
     def run(self, seconds=None, until=None):
         """Play in real time until seconds passed, until() is true or the game ended (a cheat, #819)."""

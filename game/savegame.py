@@ -487,6 +487,7 @@ def map_again(x, p):
         x.map.emptied(x.map.spot(tile))                                # empty at the save: as Gather.dig, berries
     for tile in [t for t, n in x.map.bushes.items() if n <= 0]:
         x.map.emptied(x.map.cells(tile))
+    x.map.farm_at = {c: t for c, t in x.map.farm_at.items() if t in x.map.farms}   # a farm gone at the save (#3423)
 
 
 def explored_again(x, p):

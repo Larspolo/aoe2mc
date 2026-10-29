@@ -34,15 +34,15 @@ def test_an_empty_farm_takes_a_queued_reseed_and_the_farmer_continues():
     assert any(c.startswith("fill 9 63 9 11 64 11 minecraft:farmland replace minecraft:dirt") for c in server.log)
 
 
-def test_an_empty_farm_without_a_reseed_stops_its_farmer():
+def test_an_empty_farm_without_a_reseed_is_gone_and_its_farmer_moves_on():
     _, g = farm_map()
     g.select("v")
     g.send((10, 10))
     for _ in range(20000):
         g.step()
-        if g.villagers["v"].state == "idle":
+        if (10, 10) not in g.map.farms and g.villagers["v"].tree != (10, 10):   # #3423: the farm leaves the map
             break
-    assert g.map.farms[(10, 10)] == 0 and g.villagers["v"].tree is None
+    assert (10, 10) not in g.map.farms and g.villagers["v"].tree != (10, 10)
 
 
 def test_the_queue_is_saved():
