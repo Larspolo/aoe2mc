@@ -51,3 +51,4 @@ the owner chose another option, `-`: no recommendation) · principle (`P<n>`, or
 - 2026-10-28 · #2808 · Production panel of the live replay: a text display with a progress bar above each producing building (C), no boss bar per player · other · P9, P1
 - 2026-10-28 · #3103 · Player 1 defeated in a game of more than two: as AoE2, the others play on, and a team wins together (A) · taken · P1, P10
 - 2026-10-28 · #3275 · Resources left: a text display above each partially drained resource (B) · taken · P9
+- 2026-10-29 · #3447 · Live graphs of the replay: a text display "chart" in the sky, one row of bar characters per player (B); the owner checks the graphs in the game, a map item (A) can come later · taken · P2, P3, P4
