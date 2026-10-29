@@ -22,7 +22,7 @@ def test_a_choice_of_player_2_moves_the_person_to_its_start():
     g.side("Alex")                                    # player 1
     sent.clear()
     assert g.choose("Alex", 2)
-    assert moves(sent) == ["tp Alex 90.5 66 80.5 45.0 0", "spawnpoint Alex 90 66 80 45.0"]
+    assert moves(sent) == ["tp Alex 90.5 66 80.5 45.0 0", "spawnpoint Alex 90 66 80 45.0 0"]
 
 
 def test_a_choice_of_the_own_side_sends_no_move():

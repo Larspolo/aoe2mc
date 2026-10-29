@@ -395,7 +395,7 @@ class Game:
         if n in starts:
             x, y, z = starts[n]
             self.command(f"tp {name} {x + 0.5} {y} {z + 0.5} {yaw} 0")
-            self.command(f"spawnpoint {name} {x} {y} {z} {yaw}")
+            self.command(f"spawnpoint {name} {x} {y} {z} {yaw} 0")   # the angle is yaw and pitch (#3596)
             self.placed = {*getattr(self, "placed", ()), name}
 
     def _op_loop(self):
