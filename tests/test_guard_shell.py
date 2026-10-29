@@ -24,6 +24,9 @@ def run(command, cwd=ROOT):
     "pgrep -f 'java -Xmx2G' | xargs kill",
     "gh api repos/a/b/issues/1/comments -F body=@- <<EOF\nRun `ruff check .` first.\nEOF",
     "S=/tmp/s && mkdir -p $S & python3 x.py > $S/out.txt",
+    "gh api repos/a/b/issues -f title=x -f body=@t.md",
+    'gh api repos/a/b/issues -f "body=@t.md"',
+    "gh api repos/a/b/issues --raw-field body=@t.md",
 ])
 def test_blocks(command):
     assert run(command) == 2, command
@@ -49,6 +52,7 @@ def test_blocks(command):
     "S=/tmp/s; python3 a.py > $S/a 2>&1 & python3 b.py > $S/b",
     "python3 a.py 2>&1 & S=/tmp/s; echo $S",
     "git checkout --ours docs/coverage.md",
+    "gh api repos/a/b/issues -f title=x -F body=@t.md",
 ])
 def test_allows(command):
     assert run(command) == 0, command
