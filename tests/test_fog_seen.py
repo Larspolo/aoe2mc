@@ -25,7 +25,7 @@ def circle(x, y, r):
 def test_each_own_unit_building_and_site_adds_its_circle():
     tc = {"kind": "building", "name": "TOWN_CENTER", "player": 1, "footprint": [40 * T, 40 * T, 44 * T, 44 * T]}
     castle = {"kind": "building", "name": "CASTLE", "player": 2, "footprint": [90 * T, 90 * T, 94 * T, 94 * T]}
-    site = {"name": "HOUSE", "player": 1, "footprint": (10 * T, 12 * T, 70 * T, 72 * T), "progress": 0.0}
+    site = {"name": "HOUSE", "player": 1, "footprint": (10 * T, 12 * T, 70 * T, 72 * T), "progress": 1.0}
     g = bare([tc, castle], [site])
     pos = {"v": (20.5 * T, 70.0, 20.5 * T), "m": (60.5 * T, 70.0, 20.5 * T), "a": (100.5 * T, 70.0, 20.5 * T),
            "e": (20.5 * T, 70.0, 60.5 * T)}                          # e: an enemy unit, not own
@@ -34,7 +34,7 @@ def test_each_own_unit_building_and_site_adds_its_circle():
     assert circle(60, 20, combat.sight("MILITIA")) <= s
     assert (100 + combat.sight("ARCHER"), 20) in s and (101 + combat.sight("ARCHER"), 20) not in s
     assert (42, 42 - combat.sight("TOWN_CENTER")) in s and (42, 41 + combat.sight("TOWN_CENTER") + 2) not in s
-    assert {(11, 70 + combat.sight("HOUSE")), (10, 72)} <= s and (11, 73) not in s   # a house foundation sees too
+    assert {(11, 70 + combat.sight("HOUSE")), (10, 72)} <= s and (11, 73) not in s   # a complete house site sees too
     assert not {(x, y) for x, y in s if y > 50 and x < 30} - circle(11, 71, combat.sight("HOUSE") + 1)   # not e
     assert not {(x, y) for x, y in s if x > 80 and y > 60}             # not the castle of player 2
 
