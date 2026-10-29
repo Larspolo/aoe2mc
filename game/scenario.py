@@ -621,6 +621,8 @@ def setup(g, mode="scenario", start=True):
     for x, p in rows.items():
         if "age" in p:                                                 # the starting age of the editor (#3296)
             train.start(x, p["age"])                                   # before the stock: no age cost (train.start)
+        for name in p.get("disabled", ()):                             # the tab "Options" of the editor (#3299)
+            vars(x).setdefault("trigger_menus", {})[name] = False      # an "Enable Object" trigger turns it on again
         x.stock.update(p.get("resources", {}))
         x.pop_limit = p.get("pop_limit", x.pop_limit)
         x.show_stock()                                                 # the sidebar of the resources (Gather.setup)
