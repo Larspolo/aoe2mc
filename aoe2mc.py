@@ -3043,6 +3043,7 @@ INVERTED = tuple(OBJECT_TESTS) + (                                  # conditions
     DECISION_TRIGGERED,
     OBJECT_HAS_ACTION,
     TRIGGER_ACTIVE,                                                    # (parallel tickets add lines, #2791)
+    VICTORY_TIMER,                                                     # the timer holds while it is not in the range (#3781)
 )
 
 
@@ -4782,7 +4783,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
             if c["type"] in SCORE_TESTS:                               # a score of the world or the game
                 test = SCORE_TESTS[c["type"]](c)
                 no = c["type"] == COMPARE_VARIABLES and compare_negated(c) or \
-                    c["type"] in (DECISION_TRIGGERED, OBJECT_HAS_ACTION) and c["inverted"]   # "not equal", "inverted": unless
+                    c["type"] in (DECISION_TRIGGERED, OBJECT_HAS_ACTION, VICTORY_TIMER) and c["inverted"]   # "not equal", "inverted": unless
                 tests.append(f"{'unless' if no else 'if'} {test}")
                 unless.append(f"{'if' if no else 'unless'} {test}")
                 continue

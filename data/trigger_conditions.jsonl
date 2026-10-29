@@ -37,4 +37,4 @@
 {"name": "TRIGGER_ACTIVE", "text": "`execute if score #N aoe_on matches 1` (0 when inverted) in the tick function: the state of trigger N (#2699)"}
 {"name": "UNITS_GARRISONED", "text": "`if score #gREF aoe_gar matches N..` in the tick function: the scenario mode of the game program sets the number of units inside each converted building (#2714) and each own transport ship or ram (#3780)"}
 {"name": "VARIABLE_VALUE", "text": "`execute if score #vN aoe_var matches ..` in the tick function, once (#2611)"}
-{"name": "VICTORY_TIMER", "text": "`execute if score #pN.T aoe_vic matches ..` in the tick function: the scenario mode of the game program sets the years left on the wonder (T 0), relic (1) or King of the Hill (2) timer of player N and resets the score when the timer stops (#2906); inverted: not supported yet"}
+{"name": "VICTORY_TIMER", "text": "`execute if score #pN.T aoe_vic matches ..` in the tick function: the scenario mode of the game program sets the years left on the wonder (T 0), relic (1) or King of the Hill (2) timer of player N and resets the score when the timer stops (#2906); inverted (#3781): `unless` of that test"}
