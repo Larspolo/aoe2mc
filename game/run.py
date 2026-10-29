@@ -593,6 +593,12 @@ def scenario_modes(settings, data):
     return settings
 
 
+def start_places(data):
+    """The start block of each AoE2 player and the spawn yaw of aoe2mc.json (#3347): (starts, yaw)."""
+    starts = {int(k): tuple(p["start"]) for k, p in data["players"].items() if "start" in p}
+    return starts, data.get("yaw", 0.0)
+
+
 def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attack="10:00", reveal="normal", people=1,
          speed=1.0, state=None, wait=False, **settings):
     """state: the saved state of the players (savegame.dump) for a loaded game (#2255).
@@ -648,8 +654,7 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
             s.g.relics = g.relics                    # one list: each relic exists once (#3116)
             s.g.reveal, s.g.peers = reveal, [g, *(o.g for o in g.bots)]   # its fog sees all units (#1631)
             s.g.unlock_speed = settings["unlock_speed"]          # each person has the Game menu (#2933)
-        game.starts = {int(k): tuple(p["start"]) for k, p in data["players"].items() if "start" in p}   # #3347
-        game.yaw = data.get("yaw", 0.0)
+        game.starts, game.yaw = start_places(data)   # the start views and the spawn yaw (#3347)
         for name in list(game.sides):                # players who joined before the teams were there
             game.side(name)
         print(f"{people} people: the first Minecraft player who joins plays player 1, the second player 2.",
