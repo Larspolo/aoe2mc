@@ -22,7 +22,7 @@ def found(path, text):
 
 def test_no_generic_file_names_the_domain():
     bad = []
-    for path, kind in bootstrap.table(open(bootstrap.SYSTEM).read()):
+    for path, kind in bootstrap.rows():
         if kind == "generic":
             try:
                 bad += found(path, open(os.path.join(ROOT, path)).read())

@@ -1676,8 +1676,8 @@ class Replay:
             self.builds.pop(i, None)
             self.arriving.pop(i, None)
             self.entering.pop(i, None)
-            if e.get("garrison"):                                   # BACK TO WORK sends it there again
-                self.work[i] = v.tree
+            if e.get("garrison") and (v.tree is not None or i not in self.work):   # BACK TO WORK sends it there
+                self.work[i] = v.tree                               # again; a second bell keeps the work (#4063)
             fish = fisher(v.name) and tile in self.map.fish         # a fishing ship only fishes (#1283)
             v.tree = tile if v.name.startswith("VILLAGER") or fish else None    # a sheep of the selection does not gather
             if home and i not in self.homing and not (not e.get("garrison") and v.load and v.name.startswith("VILLAGER")
@@ -2182,6 +2182,9 @@ class Replay:
         for r in self.holders(e):
             units = list(self.garrisons.get(r, []))
             out += self.release(r)
+            for i in [i for i, (rect, *_) in self.entering.items() if rect == r]:   # on the way in: back too (#4063)
+                del self.entering[i]
+                units.append(i)
             for i in units:
                 if (tile := self.work.pop(i, None)) is not None:
                     work.setdefault(tile, []).append(i)
