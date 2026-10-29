@@ -2,8 +2,11 @@ name: Claims
 
 # Deletes the claim refs (claim/N, claim/N-2 ...) of a closed ticket (tools/claim.py, #211).
 # The runs cannot do it: the session proxy gives 403 for branch deletes.
-# It also deletes the comment locks (claim/comment-ID, #320) and the review locks (claim/review-*,
-# claim/roadmap-*, #898) and the "Fix main" locks (claim/fixmain-SHA, #3480) that are older than one day.
+# It also deletes the comment locks (claim/comment-ID, #320), the review locks (claim/review-*, claim/roadmap-*, #898)
+# and the "Fix main" locks (claim/fixmain-SHA, #3480) older than one day, and the refill locks of closed epics or
+# older than 7 days (`claim.LOCK_DAYS`). `claim.py 0 --prune` lists, dates and deletes the refs with git and reads the
+# open issues with one API call: the old script read each ref and each ticket by REST, about 60 calls a run at 44
+# runs an hour, and the token of all workflows ran out of its hourly limit (2026-10-29).
 on:
   issues:
     types: [closed]
@@ -13,6 +16,7 @@ on:
 
 permissions:
   contents: write    # delete refs
+  issues: read       # the open issues and PRs (one API read): the claims of open tickets stay
 
 concurrency:
   group: claims              # one run at a time: parallel runs delete the same refs (#560)
@@ -23,30 +27,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: Delete the claim refs of closed tickets
+      - uses: actions/checkout@v4   # git with the token: the fetch and the delete of the claim refs
+      - name: Delete the claim refs of closed tickets and old locks
         env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          for ref in $(gh api --paginate "repos/$GITHUB_REPOSITORY/git/matching-refs/heads/claim/" --jq '.[].ref'); do
-            n=$(sed -E 's#^refs/heads/claim/([0-9]+)(-[0-9]+)?$#\1#' <<<"$ref")
-            [[ "$n" =~ ^[0-9]+$ ]] || continue
-            [ "$(gh api "repos/$GITHUB_REPOSITORY/issues/$n" --jq .state)" = closed ] || continue
-            echo "delete $ref"
-            gh api "repos/$GITHUB_REPOSITORY/git/$ref" -X DELETE 2> err.txt ||   # git/refs/heads/claim/N
-              { grep -q "Reference does not exist" err.txt && echo "  already deleted"; } || { cat err.txt; exit 1; }
-          done
-      - name: Delete the comment and review locks older than one day
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          old=$(date -u -d '1 day ago' +%FT%TZ)
-          for kind in comment review roadmap fixmain; do gh api --paginate \
-            "repos/$GITHUB_REPOSITORY/git/matching-refs/heads/claim/$kind-" --jq '.[] | "\(.ref) \(.object.sha)"'
-          done | while read -r ref sha; do
-            when=$(gh api "repos/$GITHUB_REPOSITORY/git/commits/$sha" --jq .committer.date)
-            if [[ "$when" < "$old" ]]; then
-              echo "delete $ref ($when)"
-              gh api "repos/$GITHUB_REPOSITORY/git/$ref" -X DELETE 2> err.txt ||
-                { grep -q "Reference does not exist" err.txt && echo "  already deleted"; } || { cat err.txt; exit 1; }
-            fi
-          done
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python3 tools/claim.py 0 --prune

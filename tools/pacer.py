@@ -54,11 +54,29 @@ NUMBERS = {"target": r"target (\d+) runs", "claims": r"claims (\d+) ", "claims_o
            "ready": r"ready (\d+) ", "refill": r"refill (\d+) "}
 
 
-def record(at, found, burn, burn7, k, runs, started, line, problems=()):
-    """The JSON record of one cycle (`--log`, 2026-10-29): the quota, the burns, the planned and the started runs and
-    the inputs of `usage.fire`. Only the Actions log had them (no tool reads it, and it expires): with the starts and
-    the `Run:` lines of the reports, a run that ends with no report shows."""
+def github_limit(env=os.environ, timeout=20):
+    """{limit, used, remaining, reset} of the REST calls of the token of the workflows (`/rate_limit` counts no call),
+    or None. All workflows of the repository share this hourly limit, and it ran out at 14:22 on 2026-10-29
+    ("API rate limit exceeded for installation"): the records show the use per hour and the real limit."""
+    if not env.get("GITHUB_TOKEN"):
+        return None
+    req = urllib.request.Request("https://api.github.com/rate_limit", headers={
+        "Authorization": f"Bearer {env['GITHUB_TOKEN']}", "Accept": "application/vnd.github+json"})
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as r:
+            core = json.load(r)["resources"]["core"]
+    except Exception:                                   # no limit in the record: the starts go on
+        return None
+    return {k: core.get(k) for k in ("limit", "used", "remaining", "reset")}
+
+
+def record(at, found, burn, burn7, k, runs, started, line, problems=(), github=None):
+    """The JSON record of one cycle (`--log`, 2026-10-29): the quota, the burns, the planned and the started runs, the
+    inputs of `usage.fire` and the REST budget of the workflow token (`github_limit`). Only the Actions log had them
+    (no tool reads it, and it expires): with the starts and the `Run:` lines of the reports, a run that ends with no
+    report shows."""
     rec = {"at": f"{at:%Y-%m-%dT%H:%M:%SZ}", "k": k, "plan": runs, "started": started, "burn": burn, "burn7": burn7,
+           "github": github,
            **{w: list(found[w]) for w in ("five_hour", "seven_day") if w in found}}
     for key, rx in NUMBERS.items():
         m = re.search(rx, line)
@@ -133,18 +151,19 @@ def main(argv=None, env=os.environ):
                 break
     if a.dry_run:
         started = {t: sum(1 for x, *_ in todo if x == t) for t in started}
-    at = datetime.datetime.now(datetime.timezone.utc)
+    at, gh = datetime.datetime.now(datetime.timezone.utc), github_limit(env)
     print(f"Pacer {at:%H:%MZ}: K={k}, "
           + ", ".join(f"{t} {n}" for t, n in runs.items())
           + f". {'Would start' if a.dry_run else 'Started'} " + json.dumps(started)
           + (f", no URL for {', '.join(skipped)}" if skipped else "")
           + (f", hourly limit: {', '.join(sorted(limited))}" if limited else "")
-          + (f", failed: {'; '.join(failed)}" if failed else "") + f". {line}")
+          + (f", failed: {'; '.join(failed)}" if failed else "") + f". {line}"
+          + (f" · GitHub API {gh['used']}/{gh['limit']} (reset {gh['reset']})" if gh else ""))
     if a.log and not a.dry_run:
         problems = [f"no URL: {t}" for t in skipped] + [f"hourly limit: {t}" for t in sorted(limited)] + failed
         try:                                            # the log never stops the starts
             with open(a.log, "a") as f:
-                f.write(json.dumps(record(at, found, burn, burn7, k, runs, started, line, problems)) + "\n")
+                f.write(json.dumps(record(at, found, burn, burn7, k, runs, started, line, problems, gh)) + "\n")
         except OSError as e:
             print(f"no pacer log: {e}", file=sys.stderr)
     sys.exit(int(bool(failed)))

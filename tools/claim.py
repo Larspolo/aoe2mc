@@ -26,6 +26,7 @@ a second push of another claim commit is never a fast-forward. Later claims of t
     python3 tools/claim.py 0 --review     # lock the process review after 50 merged PRs (`improve` skill, #898, #2039)
     python3 tools/claim.py 0 --reviewed change   # after the review: "change" or "none" sets the next gap
     python3 tools/claim.py 0 --roadmap    # lock the review of docs/ROADMAP.md after 100 merged PRs (`roadmap` skill)
+    python3 tools/claim.py 0 --prune      # delete the refs of closed tickets and old locks (`claims.yml` only)
 
 Two runs did one ticket (#288): one commented "Started by" and worked without the claim ref. So a claim also fails
 when another branch commented "Started by" in the last 30 minutes or has an active PR for the ticket (#491), and `--guard` stops a run before its push when it does not own the claim or another branch has a PR for the ticket. The GitHub checks run only for a GitHub remote.
@@ -54,7 +55,9 @@ source (#3741). A gap counts merged PRs, not minutes: the speed of the project c
 merges nothing, so only the clock finds it.
 
 Exit 2: git failed for another reason (network, permission). The workflow `claims.yml` deletes the refs
-of a closed ticket: the session proxy gives 403 for branch deletes.
+of a closed ticket: the session proxy gives 403 for branch deletes. `--prune` does it with git and one API call (the
+open issues): the workflow read each ref and each ticket by REST, about 60 calls a run and 44 runs an hour, and the
+token of the workflows ran out of its hourly limit (2026-10-29). It also deletes the locks older than `LOCK_DAYS`.
 """
 import argparse
 import datetime
@@ -77,6 +80,10 @@ STATUS = CONFIG["status"]["issue"]   # the status issue: its state comment holds
 STALE = 30 * 60             # seconds without a claim or beat: the run stopped (usage limit, crash)
 RECENT = 30 * 60            # seconds: a "Started by" comment of another branch owns the ticket for this time (#288)
 CONFLICT = 10 * 60          # seconds: the stale time of a ticket whose PR has the label `conflict` (#1773)
+
+
+LOCK_DAYS = {"comment": 1, "fixmain": 1, "review": 1, "roadmap": 1, "refill": 7}   # days that `--prune` keeps a lock
+NS = "refs/aoe2mc-prune"    # the local copies of the claim refs of `--prune`
 
 
 def git(*args, check=True):
@@ -382,6 +389,49 @@ def revived(path=CONFIG["docs"]["learnings"], base=f"origin/{CONFIG['branch']}")
     return [line for line in head if line.strip() and line not in old and line not in own]
 
 
+def prunable(tips, open_numbers, now, days=LOCK_DAYS):
+    """The claim refs to delete, from {name: Unix time of its tip} (name: the part after `claim/`): the slots of a
+    ticket that is not open, the refill locks of an epic that is not open, and the locks older than `days` of their
+    kind. E = 0 of `refill-0-S` is the whole refill, never an issue."""
+    out = []
+    for name, t in sorted(tips.items()):
+        m = re.fullmatch(r"(\d+)(?:-\d+)?", name)
+        if m:
+            if int(m[1]) not in open_numbers:
+                out.append(name)
+            continue
+        kind, _, rest = name.partition("-")
+        epic = rest.split("-")[0]
+        if kind == "refill" and epic.isdigit() and epic != "0" and int(epic) not in open_numbers:
+            out.append(name)
+        elif kind in days and now - t > days[kind] * 86400:
+            out.append(name)
+    return out
+
+
+def prune(remote="origin", now=None, open_numbers=None):
+    """Delete the `prunable` claim refs with git (a fetch of the refs for their times, a push that deletes them). The
+    open issues and PRs come from one API read; with no open issue (a failed or empty read) it deletes nothing: the
+    status issue is always open. Returns the deleted names."""
+    if open_numbers is None:
+        from dashboard import pages
+        found = pages("issues?state=open", limit=20)
+        if not found or len(found) >= 2000:            # never delete the claims of live tickets on a partial read
+            fail("prune: no open issue read: nothing deleted")
+        open_numbers = {i["number"] for i in found}
+    if git("fetch", "-q", "--depth", "1", "--prune", remote, f"+refs/heads/claim/*:{NS}/*", check=False).returncode:
+        fail("prune: git fetch of the claim refs failed")
+    lines = git("for-each-ref", NS, "--format=%(refname:lstrip=2) %(committerdate:unix)").stdout.split("\n")
+    times = {n: int(t) for n, t in (x.split(" ") for x in lines if x.strip())}
+    gone = prunable(times, open_numbers, now or time.time())
+    for i in range(0, len(gone), 100):                  # one push deletes many refs
+        part = [f"refs/heads/claim/{n}" for n in gone[i:i + 100]]
+        r = git("push", "-q", remote, "--delete", *part, check=False)
+        if r.returncode and "remote ref does not exist" not in r.stderr:
+            fail(f"prune: git push --delete failed: {r.stderr.strip()[:500]}")
+    return gone
+
+
 def on_github(remote="origin"):
     """The comment and PR checks need the GitHub API: the tests use a local bare remote."""
     return "github.com" in git("remote", "get-url", remote, check=False).stdout
@@ -520,6 +570,8 @@ def main(argv=None):
     g.add_argument("--review", action="store_true", help="lock the process review after its gap of merged PRs (number 0)")
     g.add_argument("--reviewed", choices=("change", "none"), help="after the review: set the next gap")
     g.add_argument("--roadmap", action="store_true", help="lock the roadmap review after 100 merged PRs (number 0)")
+    g.add_argument("--prune", action="store_true", help="delete the refs of closed tickets and old locks (number 0; "
+                   "claims.yml: runs cannot delete refs)")
     ap.add_argument("--state", help="--refill: the state part of the lock (default: closed sub-issues, or the hour); "
                     "--fixmain: the commit that broke main (default: the head of origin/main)")
     ap.add_argument("--pr-branch", metavar="BRANCH", help="--guard: the branch of a PR that this run took over")
@@ -527,6 +579,10 @@ def main(argv=None):
                     help="a claim: when another run has the ticket, try these tickets in this order (one call)")
     ap.add_argument("--remote", default="origin")
     a = ap.parse_args(argv)
+    if a.prune:
+        gone = prune(a.remote)
+        print("\n".join(f"deleted claim/{n}" for n in gone) or "nothing to delete")
+        return 0
     if a.comment:
         if claim_comment(a.number, a.remote):
             print(f"claimed comment {a.number}")
