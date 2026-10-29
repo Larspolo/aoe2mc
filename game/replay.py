@@ -2654,7 +2654,7 @@ class Replay:
     def score_commands(self, t=None):
         """The sidebar commands for the population of each player that changed since the last call (#741). The score
         holder is "P<n>" (a holder name has no space); its display name is the player name in the player color, the
-        age of the player (#805), its estimated resources (#932) and its actions of the last minute and its idle town center time at game time t
+        age of the player (#805), its estimated resources (#932), its relics in the monasteries (#4011) and its actions of the last minute and its idle town center time at game time t
         (#3764, #4053; no APM and TC part without t). In a team game the score is a team key plus the population, so the sidebar
         shows each team together, and a fixed number format shows the population (#1189)."""
         out, top = [], max((self.team(p) or 0 for p in self.pop), default=0)
@@ -2665,7 +2665,8 @@ class Replay:
             name, color = self.label(p)
             res = " ".join(f"{r[0].upper()} {max(0, v)}" for r, v in self.resources(p).items())
             apm = "" if t is None else f" · APM {self.apm(p, t)} · TC idle {self.tc_text(p, t)}"
-            if self.named.get(p) != (line := f"{name} · {self.ages.get(p, 'Dark')} · {res} (est.){apm}"):
+            relics = "" if not (n := self.relic_count(p)) else f" · Relics {n}"
+            if self.named.get(p) != (line := f"{name} · {self.ages.get(p, 'Dark')} · {res} (est.){relics}{apm}"):
                 out.append(f"scoreboard players display name P{p} {POP} {json.dumps(text(line, color))}")
                 self.named[p] = line
             if self.shown.get(p) != self.pop[p]:
