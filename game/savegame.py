@@ -82,6 +82,7 @@ MAP = (                                                                # gather.
     "trees",
 )
 VICTORY = (                                                            # the victory modes (#2476), pack()
+    "challenge_foes",                                                  # army.py: the enemy units of a battle challenge (#3910)
     "conquest_seen",
     "corruption_at",
     "corruption_time",
@@ -206,6 +207,7 @@ NOT_SAVED = (                                                          # the fie
     "peers",                                                           # run.py: the players of the game
     "person",                                                          # gather.py: the name of the click that it handles now (#3486)
     "player",                                                          # run.py: the player number
+    "players",                                                         # gather.py: the players of aoe2mc.json, read again at a load
     "record",                                                          # record.py: run.play opens the file of --record again
     "regicide_at",                                                     # regicide.py: the next check time
     "repair_at",                                                       # repair.py: the place of a unit at its repair order, resume() sets it again

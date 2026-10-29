@@ -46,7 +46,7 @@ def ends(monkeypatch):
 
 def test_the_setup_places_a_complete_castle_of_player_2_and_both_armies(placed):
     g = fake()
-    challenge.setup(g, C)
+    challenge.setup(g)
     assert placed["sites"] == [("CASTLE", 2, True)] and g.player == 1 and C["age"] == "castle"
     for player, key in ((2, "defenders"), (1, "army")):
         assert sorted(n for n, p in placed["units"] if p == player) == sorted(
