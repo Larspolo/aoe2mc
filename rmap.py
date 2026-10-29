@@ -16,9 +16,10 @@ lands, #3868; `create_connect_all_lands`, `create_connect_to_nonplayer_land`, `c
 `create_connect_land_zones` and the `zone` of a land, #3869) and <ELEVATION_GENERATION>
 (`create_elevation HEIGHT` with `base_terrain`, `number_of_clumps`, `number_of_tiles`, `spacing`: hills level by level,
 never on water or shallows, #3822), <CLIFF_GENERATION> (cliff lines of CLIFF_DEFAULT objects, cliffs(), #3850) and
-<OBJECTS_GENERATION> (`create_object`: objects(), #3855). Other sections and attributes:
-a warning. `#include_drs random_map.def` has no effect (the constants are in TERRAINS); another #include file: a
-warning. All randomness comes from numpy.random.default_rng(seed).
+<OBJECTS_GENERATION> (`create_object`: objects(), #3855). The sections run in the AoE2 DE order: lands, elevation,
+terrains, connections (#3966); then all water goes to level 0. Other sections and attributes: a warning.
+`#include_drs random_map.def` has no effect (the constants are in TERRAINS); another #include file: a warning. All
+randomness comes from numpy.random.default_rng(seed).
 """
 import heapq
 import re
@@ -324,6 +325,51 @@ def trees(terrain):
             for x, y in np.argwhere(np.isin(terrain, list(FOREST_TREES)))]
 
 
+def elevate(section, terrain, owner, starts, consts, rng, warn):
+    """<ELEVATION_GENERATION>: the level of each tile. It runs on the land terrain, before <TERRAIN_GENERATION>, as in
+    AoE2 DE: the base_terrain of create_elevation is a land terrain, and the forests and lakes come on the hills later."""
+    n = len(terrain)
+    elevation = np.zeros((n, n), np.int16)
+    for cmd, args, attrs in section:
+        if cmd != "create_elevation":
+            warn(f"{cmd} is not read yet")
+            continue
+        top = value(args[0], consts) if args else 1
+        on = value(attrs["base_terrain"][0], consts) if "base_terrain" in attrs else 0
+        free = (terrain == on) & ~np.isin(terrain, [TERRAINS["WATER"], TERRAINS["SHALLOW"]]) & (elevation == 0)
+        clumps, total = scaled(attrs, consts, n, value(attrs["number_of_clumps"][0], consts)
+                               if "number_of_clumps" in attrs else 1, tiles(attrs, consts, n, 1))
+        spacing = value(attrs["spacing"][0], consts) if "spacing" in attrs else 1
+        # enable_balanced_elevation: each player land gets the same share of the hills (the fair hills of AoE2 DE)
+        areas = ([free & (owner == st["land"]) for st in starts] if "enable_balanced_elevation" in attrs and starts
+                 else [free])
+        hill = np.zeros((n, n), bool)
+        for area in areas:
+            spots, k = np.argwhere(area), -(-clumps // len(areas))
+            if len(spots) and top > 0:
+                mark = np.full((n, n), -1, np.int32)
+                grow(mark, [{"id": j, "cells": [tuple(int(v) for v in spots[rng.integers(len(spots))])],
+                             "target": total // len(areas) // k, "clump": 8} for j in range(k)], area, rng)
+                hill |= mark >= 0
+        for k in range(top):                     # level k + 1 inside level k, spacing tiles from its edge
+            elevation[hill] = k + 1
+            hill &= ~dilate(~hill, max(spacing, 1))
+        for a in set(attrs) - {"base_terrain", "number_of_clumps", "number_of_tiles", "spacing", "set_scale_by_groups",
+                               "set_scale_by_size", "enable_balanced_elevation"}:
+            warn(f"create_elevation: {a} is not read yet")
+    return elevation
+
+
+def lower_to_water(terrain, elevation):
+    """All water at level 0 (#164) and the land at most d levels high d tiles from it: a hill steps down to a lake of
+    <TERRAIN_GENERATION> or a river one level per tile, with no wall of blocks."""
+    wet, out, near = np.isin(terrain, [TERRAINS["WATER"], TERRAINS["SHALLOW"]]), np.array(elevation), None
+    for d in range(int(out.max(initial=0))):
+        near = wet if near is None else dilate(near, 1)
+        out[near & (out > d)] = d
+    return out
+
+
 def generate(text, seed, players=2, size=None, warn=None):
     """The map description (aoe2mc.read_json) of the land part of script text, for players on a map of size tiles
     (default: the AoE2 size of the player count). "lands": [{"player", "x", "y", "base_size"}] of the player lands."""
@@ -380,6 +426,7 @@ def generate(text, seed, players=2, size=None, warn=None):
     grow(owner, lands, np.ones((n, n), bool), rng)
     for lid, kind in kinds.items():
         terrain[owner == lid] = kind
+    elevation = elevate(sections.get("ELEVATION_GENERATION", ()), terrain, owner, starts, consts, rng, warn)
     for cmd, args, attrs in sections.get("TERRAIN_GENERATION", ()):
         if cmd != "create_terrain":
             warn(f"{cmd} is not read yet")
@@ -413,34 +460,7 @@ def generate(text, seed, players=2, size=None, warn=None):
                                "set_scale_by_groups", "set_scale_by_size"}:
             warn(f"create_terrain: {a} is not read yet")
     connections(terrain, links, sections.get("CONNECTION_GENERATION", ()), consts, rng, warn)
-    elevation = np.zeros((n, n), np.int16)
-    for cmd, args, attrs in sections.get("ELEVATION_GENERATION", ()):
-        if cmd != "create_elevation":
-            warn(f"{cmd} is not read yet")
-            continue
-        top = value(args[0], consts) if args else 1
-        on = value(attrs["base_terrain"][0], consts) if "base_terrain" in attrs else 0
-        free = (terrain == on) & ~np.isin(terrain, [TERRAINS["WATER"], TERRAINS["SHALLOW"]]) & (elevation == 0)
-        clumps, total = scaled(attrs, consts, n, value(attrs["number_of_clumps"][0], consts)
-                               if "number_of_clumps" in attrs else 1, tiles(attrs, consts, n, 1))
-        spacing = value(attrs["spacing"][0], consts) if "spacing" in attrs else 1
-        # enable_balanced_elevation: each player land gets the same share of the hills (the fair hills of AoE2 DE)
-        areas = ([free & (owner == st["land"]) for st in starts] if "enable_balanced_elevation" in attrs and starts
-                 else [free])
-        hill = np.zeros((n, n), bool)
-        for area in areas:
-            spots, k = np.argwhere(area), -(-clumps // len(areas))
-            if len(spots) and top > 0:
-                mark = np.full((n, n), -1, np.int32)
-                grow(mark, [{"id": j, "cells": [tuple(int(v) for v in spots[rng.integers(len(spots))])],
-                             "target": total // len(areas) // k, "clump": 8} for j in range(k)], area, rng)
-                hill |= mark >= 0
-        for k in range(top):                     # level k + 1 inside level k, spacing tiles from its edge
-            elevation[hill] = k + 1
-            hill &= ~dilate(~hill, max(spacing, 1))
-        for a in set(attrs) - {"base_terrain", "number_of_clumps", "number_of_tiles", "spacing", "set_scale_by_groups",
-                               "set_scale_by_size", "enable_balanced_elevation"}:
-            warn(f"create_elevation: {a} is not read yet")
+    elevation = lower_to_water(terrain, elevation)
     ridges = cliffs(sections.get("CLIFF_GENERATION", ()), terrain, starts, consts, rng, warn)
     placed = objects(sections.get("OBJECTS_GENERATION", ()), consts, terrain, starts, rng, warn)
     return {"size": n, "terrain": terrain.tolist(), "elevation": elevation.tolist(),
@@ -755,11 +775,7 @@ def river(d, spec, rng):
     terrain[ford] = TERRAINS["SHALLOW"]
     terrain[dilate(ford, 3) & np.isin(terrain, list(FOREST_TREES))] = TERRAINS["GRASS"]
     d["terrain"] = terrain.tolist()
-    elevation = np.array(d["elevation"])               # all water at level 0 (#164), a bank of level 1 at most
-    wet = water | ford
-    elevation[dilate(wet, 1) & ~wet] = np.minimum(elevation[dilate(wet, 1) & ~wet], 1)
-    elevation[wet] = 0
-    d["elevation"] = elevation.tolist()
+    d["elevation"] = lower_to_water(terrain, d["elevation"]).tolist()
 
 
 def isles(d, gap):
