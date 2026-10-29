@@ -1444,10 +1444,15 @@ class Gather:
         if order == "attack_move" and (cell := self.map.pick_ground(eye, d)):
             stance.attack_move(self, name, cell)                       # the Attack Move menu item (#3357)
             return
-        kind, u, _ = self.target(eye, d, self.positions(sorted(self.pickable()))) or (None, None, None)
+        kind, u, cells = self.target(eye, d, self.positions(sorted(self.pickable()))) or (None, None, None)
         if order in ("follow", "guard"):                               # the Follow and Guard menu items (#3358)
             if kind == "unit" or kind == "building" and order == "guard":
                 follow.start(self, name, order, u)
+                if kind == "unit":
+                    self.command(glow(u))                              # the order marker, as an attack (#796)
+                else:
+                    for c in marker(self.map, cells or {(sum(u[:2]) // 2, sum(u[2:]) // 2)}, "go", name):
+                        self.command(c)
             else:
                 follow.refuse(self, name, order)
             return
