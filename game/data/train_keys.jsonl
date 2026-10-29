@@ -5,13 +5,16 @@
 {"name": "arrows", "text": "An upgrade of one building (one_building): the arrows that the building shoots more, also with no garrison. garrison.arrows_command.", "issue": 2497}
 {"name": "attack_aura", "text": "An upgrade of one building (one_building): the own military units within \"range\" tiles of the building attack \"rate\" times as fast, {\"rate\", \"range\"}. train.haste.", "issue": 2497}
 {"name": "build_rate", "text": "A technology that makes the builders of the player work faster: the factor of the work per second (Antiquity Architecture). build.rise.", "issue": 3917}
+{"name": "breach", "text": "true: after this technology the villagers attack enemy walls, gates and towers (Siegecraft of Antiquity Mode). gather.breach.", "issue": 3916}
 {"name": "civ", "text": "The civilization of a unique technology: only its castle researches it (civs.MISSING of the others).", "issue": 2021}
 {"name": "doctrine", "text": "A switch of the Recruitment Doctrines of its building (Macedonians): no queue and no cost, the next doctrine of the civ key \"doctrines\". train.DOCTRINES, train.switch.", "issue": 2483}
 {"name": "effect", "text": "The change of the AoE2 combat values of a technology (train.effect: a dict, or a list of changes in turn). train.TECHS and train.EACH compute it; civs.MORE changes it.", "issue": 2029}
 {"name": "faster", "text": "A unit that trains faster from an age: [age, its train time from that age] (the eagle scout and eagle warrior). train.seconds.", "issue": 2155}
 {"name": "glow", "text": "Treason: the enemy Kings glow for so many AoE2 seconds. regicide.treason.", "issue": 2388}
+{"name": "housing_factor", "text": "A technology that multiplies the population room of a building (Urbanization: {\"HOUSE\": 2}). train.limit.", "issue": 3919}
 {"name": "line", "text": "The short name of a line at its first technology (Blacksmith, or an economy line: lumber, mining, mill, town center); the line follows the \"after\" chain. replay.SMITH and replay.ECO_LINES, the tiers of the live replay.", "issue": 3786}
 {"name": "on_research", "text": "The functions (\"module.function\") that run at the research of a technology, with (g, entry): its special effect in its own module, not an if block of train.research.", "issue": 3243}
+{"name": "population", "text": "A technology that changes the population of the units of one building: [the building, the factor]. train.weight.", "issue": 3918}
 {"name": "start_age", "text": "The name of the age before the first age (the line of the first age only): Dark Age, Stone Age. build.AGE_NAMES.", "issue": 3666}
 {"name": "toggle", "text": "A switch of the player with no queue and no cost: the name of a flag of the Gather (off at the start). A click switches it, the item says on or off. train.queue, train.show.", "issue": 3422}
 {"name": "towers", "text": "Guard Tower and Keep: {tower: the tower of its values}, in the research order (file order). build.line.", "issue": 1374}
