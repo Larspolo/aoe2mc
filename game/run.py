@@ -279,6 +279,8 @@ class Game:
     people = 1
     spectators = frozenset()                         # the Minecraft players without a side (#2898)
     joined = frozenset()                             # the Minecraft players who joined (start_on_join, #3314)
+    starts, yaw = {}, 0.0                            # AoE2 player -> its start block, the spawn yaw (aoe2mc.json, #3347)
+    placed = frozenset()                             # the Minecraft players who went to the start of their side
 
     def __init__(self, world, version=mc_check.DEFAULT_VERSION, timeout=300, server="paper"):
         self.world, self.version, self.timeout, self.kind = os.path.abspath(world), version, timeout, server
@@ -360,6 +362,12 @@ class Game:
             self.command(f"team join p{n} {name}")
             for cmd in [f"aoe hide {name} team"] * (getattr(self, "kind", "paper") == "paper"):
                 self.command(cmd)            # the hides of the own team only: the plugin hid all on the join (#3070)
+            starts, yaw = getattr(self, "starts", {}), getattr(self, "yaw", 0.0)
+            if n in starts and name not in getattr(self, "placed", ()):   # the start view of its side (#3347); a
+                x, y, z = starts[n]                                         # join again keeps the place
+                self.command(f"tp {name} {x + 0.5} {y} {z + 0.5} {yaw} 0")
+                self.command(f"spawnpoint {name} {x} {y} {z} {yaw}")
+                self.placed = {*getattr(self, "placed", ()), name}
             self.command(f"tellraw {name} " + json.dumps({"text": CHAT_HINT, "color": "gray"}))   # the chat targets (#3555)
         elif self.people > 1:
             for cmd in [*SPECTATORS * (not self.spectators), f"team join spec {name}", f"gamemode spectator {name}",
@@ -632,6 +640,8 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
             s.g.relics = g.relics                    # one list: each relic exists once (#3116)
             s.g.reveal, s.g.peers = reveal, [g, *(o.g for o in g.bots)]   # its fog sees all units (#1631)
             s.g.unlock_speed = settings["unlock_speed"]          # each person has the Game menu (#2933)
+        game.starts = {int(k): tuple(p["start"]) for k, p in data["players"].items() if "start" in p}   # #3347
+        game.yaw = data.get("yaw", 0.0)
         for name in list(game.sides):                # players who joined before the teams were there
             game.side(name)
         print(f"{people} people: the first Minecraft player who joins plays player 1, the second player 2.",
