@@ -943,13 +943,15 @@ def stats(g, name, uuid=None):
 
 def seconds(g, name, building=None, k=None):
     """The train time of unit or technology name: TRAIN_TIMES, or the time of its key "faster" from its age (the eagle scout trains
-    in 46 s in the Feudal Age and in 35 s from the Castle Age, AoE2 DE wiki), divided by the work rate of the
-    civilization at building (civs.work_rate: Persian town centers and docks, #1894), its rate of the unit group
+    in 46 s in the Feudal Age and in 35 s from the Castle Age, AoE2 DE wiki) or of its key "age_times" in the age of the player (#3713),
+    divided by the work rate of the civilization at building (civs.work_rate: Persian town centers and docks, #1894), its rate of the unit group
     (civs.train_rate: Aztec military units, Khitan skirmishers, #1927) and its age-up rate (civs.age_rate: the Malay, #1926),
     times its research time of the technology (civs.research_time: the Gothic Loom at once, #2172) and its time factor
     at building (civs.train_time: Mapuche Settlements, #2432), and of the Recruitment Doctrine k of a unit (doctrine(),
     default the present one, #2483). The time of "Add Train Location" at building replaces TRAIN_TIMES (#2865)."""
     age, time = value("faster", name, (9, 0))
+    if each := value("age_times", name):                               # a Return of Rome dock trains faster in each age (#3713)
+        age, time = 0, each[min(build.ages(g), len(each) - 1)]
     base = vars(g).get("trigger_times", {}).get(name)                  # "Change Technology Research Time" (#2820)
     own = (added(g, building, name) or (0, 0))[1] if building else 0   # Add Train Location (#2865)
     return (own or (base if base is not None else time if build.ages(g) >= age else TRAIN_TIMES[name])) \

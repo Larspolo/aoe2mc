@@ -41,8 +41,7 @@ def test_timer_chat_gives_a_function_and_a_schedule(tmp_path):
 
 
 def test_disabled_and_other_conditions_give_no_function():
-    triggers = [trig(0, [(aoe2mc.TIMER, 5)], [(aoe2mc.SEND_CHAT, "a", -1)], enabled=False),
-                trig(1, [(aoe2mc.TIMER, 5), (5, -1)], [(aoe2mc.SEND_CHAT, "b", -1)])]   # no conditions: #2972
+    triggers = [trig(0, [(aoe2mc.TIMER, 5)], [(aoe2mc.SEND_CHAT, "a", -1)], enabled=False)]   # a timer AND more: #3891
     assert aoe2mc.trigger_files(triggers) == ([], {})
 
 

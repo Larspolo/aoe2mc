@@ -262,8 +262,17 @@ def read_map(path, seed=1):
         return map_description(rmap.random_map(p[len(RANDOM_MAP):], seed), path)
     if p.endswith(".rms"):
         return read_rms(path, seed)
-    return (read_record if p.endswith(RECORDS) else read_scx if p.endswith((".scx", ".scn")) else
+    return (read_record if p.endswith(RECORDS) else read_scx if p.endswith((".scx", ".scn")) or old_format(path) else
             read_json if p.endswith(".json") else read_scenario)(path)
+
+
+def old_format(path):
+    """True for an .aoe2scenario of a format before DE (the HD Edition, #3862): read_scx reads it, not read_scenario."""
+    import scx
+    if not path.lower().endswith(".aoe2scenario"):
+        return False
+    with open(path, "rb") as f:
+        return f.read(4) in scx.FORMATS
 
 
 def read_rms(path, seed):
@@ -4688,7 +4697,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
     load += [f"scoreboard players set #{t['id']} aoe_on 0" for t in triggers if t["id"] in off and not t["enabled"]]
     timed = {t["id"]: max(20 * min((max(c["timer"] for c in g) for g in gs), default=0), 1) for t in triggers   # 1 tick at least;
              if not (gs := or_groups(t["conditions"])) or all(c["type"] == TIMER for g in gs for c in g)}   # OR: the first
-    clocks = {t["id"]: ts for t in triggers if t["id"] not in timed and len(gs := or_groups(t["conditions"])) > 1
+    clocks = {t["id"]: ts for t in triggers if t["id"] not in timed and (gs := or_groups(t["conditions"]))
               and (ts := [(k, max(20 * max(x), 1)) for k, g in enumerate(gs)
                           if (x := [c["timer"] for c in g if c["type"] == TIMER])])}   # the OR timers (#2815)
     for t in triggers:
@@ -4712,7 +4721,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
         # sets the score #N.t<group> of aoe_trig, its chance a roll of the score #N.c<group>; the tick line of the
         # group tests them
         rolled = len(groups) > 1 and chance
-        clocked = len(groups) > 1 and (TIMER, False) in rest and (rest != {(TIMER, False)} or rolled)
+        clocked = (TIMER, False) in rest and (rest != {(TIMER, False)} or rolled)   # also one "AND" group (#3891)
         if not (t["enabled"] or t["id"] in on and t["id"] not in chancy) or \
                 not (rest == {(TIMER, False)} or rest <= {(k, False) for k in TICKED + (TIMER,) * clocked} | {(k, True) for k in INVERTED}) or \
                 chance and len([c for c in conds if c["type"] == TRIGGER_CHANCE]) > 1 or \
@@ -4734,6 +4743,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
                     or c["type"] == PLAYER_DEFEATED and c.get("player", -1) <= 0   # Gaia: no defeat (#2710)
                     or c["type"] == TRIGGER_ACTIVE and c.get("trigger") not in switch
                     for c in conds):                                   # unit classes: not yet
+            stats["trigger conditions (not supported yet)"] += bool(t["enabled"] or t["id"] in on)   # (#3891)
             continue
         ctx = Effect(t, T, ground, players, stats, mood, files, setup, switch, timed, clocks, triggers)
         lines = [line for e in t["effects"] if e["type"] in EFFECTS for line in selection_tags(e, EFFECTS[e["type"]](e, ctx), T)]
