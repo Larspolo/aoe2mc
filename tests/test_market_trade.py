@@ -8,14 +8,14 @@ import pytest
 
 from menu_line import item
 from test_train import setup
+from test_train_menu import entry
 
 from game import market
 
 START = ("aoe menu Steve Market 0:oak_log:Buy 100 wood:130 gold 1:wheat:Buy 100 food:150 gold "
          "2:cobblestone:Buy 100 stone:169 gold 9:oak_log:Sell 100 wood:70 gold 10:wheat:Sell 100 food:81 gold "
          "11:cobblestone:Sell 100 stone:91 gold")
-TRAIN = ("0:gray_dye:Trade Cart:100 wood · 50 gold · 51 s · Needs the Feudal Age",
-         "8:white_banner:Rally point:Click, then right click the ground", "18:oak_log:Buy 100 wood:130 gold",
+TRAIN = ("8:white_banner:Rally point:Click, then right click the ground", "18:oak_log:Buy 100 wood:130 gold",
          "19:wheat:Buy 100 food:150 gold", "20:cobblestone:Buy 100 stone:169 gold", "27:oak_log:Sell 100 wood:70 gold",
          "28:wheat:Sell 100 food:81 gold", "29:cobblestone:Sell 100 stone:91 gold")   # with the trade cart (#1253, #1286)
 
@@ -38,9 +38,11 @@ def test_a_right_click_on_the_own_market_shows_the_buy_and_sell_prices():
         g.click(name)
     cmd, = menus(server)
     assert cmd.startswith("aoe menu Steve Market ") and all(item(cmd, s.split(":")[2]) == s for s in TRAIN) and "Steve" in g.menus
+    cart = entry(g, (2, 5, 2, 5), "TRADE_CART") + "Needs the Feudal Age"   # the cost and time of the data
+    assert item(cmd, "Trade Cart") == cart
     g.stock.update(gold=1000, wood=0)
     g.menus["Steve"]("Steve", 18, False)                               # buy wood in the menu of the building
-    assert g.stock["wood"] == 100 and item(menus(server)[-1], "Trade Cart") == TRAIN[0]
+    assert g.stock["wood"] == 100 and item(menus(server)[-1], "Trade Cart") == cart
     assert market.open_menu(g, "Steve", (3, 3)) and menus(server)[-1].startswith(START[:40])
 
 

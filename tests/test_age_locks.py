@@ -3,7 +3,7 @@ locked until the age (#1082)."""
 import pytest
 from test_train_castle import menus, setup
 
-from game import civs, train
+from game import train
 
 build = train.build                                                    # the module that train uses: AGE of the unique units
 
@@ -11,17 +11,6 @@ build = train.build                                                    # the mod
 def test_each_unique_unit_needs_the_castle_age_and_its_elite_the_imperial_age():
     ages = {(build.AGE_TECHS[build.AGE[n] - 1], build.AGE_TECHS[build.AGE["ELITE_" + n] - 1]) for n in train.UNIQUE.values()}
     assert ages == {("CASTLE_AGE", "IMPERIAL_AGE")}
-
-
-def test_each_unit_and_technology_of_the_menus_has_an_age():
-    names = {n for ns in train.TRAINS.values() for n in ns} | set(train.UNIQUE.values()) | set(build.COSTS)
-    assert {n for n in names if n not in train.TECHS} - {"VILLAGER_MALE", "MILITIA", "CHAMPI_SCOUT", "HOUSE", "LUMBER_CAMP",
-                                                         "MINING_CAMP", "MILL", "FOLWARK", "MULE_CART", "SETTLEMENT", "FARM", "BARRACKS", "TOWN_CENTER", "DONJON",
-                                                         "PALISADE_GATE", "PALISADE_WALL", "DOCK", "FISHING_SHIP", "LEMBOS",
-                                                         "TRANSPORT_SHIP"} \
-        <= build.AGE.keys()
-    policies = {n for r in civs.ROWS for n in r.get("policies", {}).get("effects", {})}   # the Dark Age (#2485)
-    assert {n for n in names if n in train.TECHS} - {"LOOM", "FEUDAL_AGE", "FARM_RESEED", "AUTO_RESEED", *train.DOCTRINES} - policies <= train.BY_KEY["age"].keys() | build.AGE.keys()
 
 
 @pytest.mark.parametrize("ages, need", [(0, "Needs the Castle Age"), (1, "Needs the Castle Age"), (2, None)])

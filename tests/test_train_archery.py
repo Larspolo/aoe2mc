@@ -14,15 +14,6 @@ from test_train_menu import check_items
 
 from game import build, combat, gather, run, train
 
-# test_age_lock.py imports these items.
-CAVA = "4:gray_dye:Cavalry Archer:40 wood · 60 gold · 37 s · Needs the Castle Age"   # gray before the Castle Age (#1397)
-HAND = "7:gray_dye:Hand Cannoneer:45 food · 50 gold · 34 s · Needs the Imperial Age"   # (#1506)
-GENI = "19:gray_dye:Genitour:40 food · 35 wood · 25 s · Needs the Castle Age"   # no civ: also the Berber unit (#1610)
-ELEA = "21:gray_dye:Elephant Archer:70 food · 80 gold · 32 s · Needs the Castle Age"   # no civ: also (#1952)
-MOCB = "23:gray_dye:Mounted Crossbowman:40 wood · 65 gold · 40 s · Needs the Castle Age"   # no civ: also (#2012)
-SLIN = "25:gray_dye:Slinger:50 food · 25 wood · 25 s · Needs the Castle Age"   # no civ: also (#2010)
-BOLA = "26:gray_dye:Bolas Rider:50 wood · 55 gold · 34 s · Needs the Castle Age"   # no civ: also (#2135)
-
 
 def setup(wood=25, gold=45, done=True):
     """A flat 24 × 24 map (tile size 1): a town center of player 1 at blocks x 2-4, z 2-4, an archery range at x 10-12,

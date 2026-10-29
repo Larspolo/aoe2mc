@@ -8,12 +8,7 @@ from test_train import setup
 from game import train
 
 FOOD = train.COSTS["VILLAGER_MALE"]["food"]
-# Other test files import LOOM, IMPERIAL, CASTLE and SKIRM.
-LOOM = "1:book:Loom:50 gold · 25 s · research"
-IMPERIAL = "5:gray_dye:Imperial Age:1000 food · 800 gold · 190 s · Needs the Castle Age"   # gray before it (#1081)
-CASTLE = "4:gray_dye:Castle Age:800 food · 200 gold · 160 s · Needs the Feudal Age"   # the next ages: gray (#1080)
 RALLY = "8:white_banner:Rally point:Click, then right click the ground"   # the last item (#707)
-SKIRM = "1:drowned_spawn_egg:Skirmisher:25 food · 35 wood · 22 s · queue 0/15"   # in the archery range menu (#730)
 
 
 def menus(server):

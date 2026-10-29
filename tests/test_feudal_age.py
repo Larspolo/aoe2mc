@@ -2,7 +2,7 @@
 after the research the sidebar title shows the age, all players see it, and the item leaves the menu (#672)."""
 from menu_line import item
 from test_loom import menus, setup
-from test_train_menu import CASTLE
+from test_castle_upgrades import entry as text
 
 from game import train
 
@@ -30,7 +30,7 @@ def test_without_two_dark_age_buildings_the_item_says_what_is_missing_and_a_clic
     rect = train.open_menu(g, "Steve", (3, 3))
     feudal = item(menus(server)[-1], "Feudal Age")
     assert feudal.startswith(entry(g, AGE, "needs 2 of ")) and feudal.endswith(" (1/2)")
-    assert item(menus(server)[-1], "Castle Age") == CASTLE
+    assert item(menus(server)[-1], "Castle Age") == text(g, (3, 3), "CASTLE_AGE") + "Needs the Feudal Age"
     assert train.order(g, "Steve", rect, SLOT) == 0 and g.stock["food"] == 1000 and not g.queues.get(rect)
     assert any("Feudal Age needs 2 of" in c for c in server.log)
 

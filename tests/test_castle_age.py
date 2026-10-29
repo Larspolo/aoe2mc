@@ -5,7 +5,6 @@ from test_castle_upgrades import entry
 from test_feudal_age import add
 from menu_line import item
 from test_loom import menus, setup
-from test_train_menu import CASTLE, IMPERIAL
 
 from game import train
 
@@ -16,7 +15,7 @@ def test_in_the_dark_age_the_item_is_gray_and_a_click_does_nothing():
     server, g = setup(food=1000, gold=1000)
     add(g, "ARCHERY_RANGE", "STABLE")
     rect = train.open_menu(g, "Steve", (3, 3))
-    assert item(menus(server)[-1], "Castle Age") == CASTLE
+    assert item(menus(server)[-1], "Castle Age") == entry(g, (3, 3), "CASTLE_AGE") + "Needs the Feudal Age"
     assert train.order(g, "Steve", rect, SLOT) == 0 and (g.stock["food"], g.stock["gold"]) == (1000, 1000)
     assert not g.queues.get(rect) and any("Castle Age: Needs the Feudal Age." in c for c in server.log)
 
@@ -28,7 +27,7 @@ def test_in_the_feudal_age_the_item_says_what_is_missing_and_a_click_does_nothin
     rect = train.open_menu(g, "Steve", (3, 3))
     text = item(menus(server)[-1], "Castle Age")
     assert text.startswith(entry(g, (3, 3), "CASTLE_AGE") + "needs ") and text.endswith(" (1/2)")
-    assert item(menus(server)[-1], "Imperial Age") == IMPERIAL
+    assert item(menus(server)[-1], "Imperial Age") == entry(g, (3, 3), "IMPERIAL_AGE") + "Needs the Castle Age"
     assert train.order(g, "Steve", rect, SLOT) == 0 and g.stock["food"] == 1000 and not g.queues.get(rect)
     assert any("Castle Age needs 2 of" in c for c in server.log)
 
