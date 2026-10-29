@@ -9,7 +9,7 @@ gets the civilization of the line, and tick() ends the game with the medal when 
 A challenge with the key "enemy" gets a bot town of player 2 that does not attack (setup, #3905).
 A challenge opens after a medal in the challenge of its key "after" (#3904, AoE2 DE). The best medal of each one goes
 into MEDAL_FILE in the user folder (the medals belong to the player, not to one map); `--challenge list` prints them.
-Minecraft feature: a boss bar shows the goal and the next medal limit, a title shows the medal.
+Minecraft feature: a boss bar shows the next medal limit (the chat the goal), a title shows the medal.
 
     challenge.tick(g)   # gather.Gather.run, when g.challenge is set
 """
@@ -186,12 +186,12 @@ def show(g, c, now):
         name = f"{left[0].title()} medal in %d:%02d" % divmod(int(left[1]), 60) if left else "No medal"
     if vars(g).get("challenge_shown") is None:
         for cmd in (f'bossbar add {BAR} ""', f"bossbar set {BAR} color yellow", f"bossbar set {BAR} max {c['bronze']}",
-                    f"bossbar set {BAR} players @a"):
-            g.command(cmd)
+                    f"bossbar set {BAR} players @a", "tellraw @a " + json.dumps({"text": c["goal"], "color": "yellow"})):
+            g.command(cmd)                                      # the goal once in the chat: in the bar it hid the medal (#4092)
     elif g.challenge_shown == name:
         return
     g.challenge_shown = name
-    g.command(f"bossbar set {BAR} name " + json.dumps(f"{c['goal']}: {name}"))
+    g.command(f"bossbar set {BAR} name " + json.dumps(name))
     g.command(f"bossbar set {BAR} value {max(0, min(int(now), c['bronze']))}")
 
 
