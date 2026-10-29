@@ -4,6 +4,7 @@ from pathlib import Path
 
 import operator_check
 import test_cycle_start as t
+import unconflict_pick
 import usage
 
 import cycle_start
@@ -12,12 +13,13 @@ ROOT = Path(__file__).resolve().parent.parent
 
 
 def test_the_workflows_name_the_same_prefixes():
-    for name in ("automerge", "unconflict", "ci"):
+    for name in ("automerge", "ci"):
         text = (ROOT / ".github/workflows" / f"{name}.yml").read_text()
         found = set(re.findall(r"startsWith\([^,]+, '([^']+)'\)", text))
         for group in re.findall(r'test\(\\?"\^\(([^)]*)\)', text):  # automerge.yml: unescaped in AGENT (#3383)
             found |= set(group.split("|"))
         assert found == set(cycle_start.AGENT), name
+    assert unconflict_pick.AGENT is cycle_start.AGENT       # unconflict.yml picks its PRs with this tool (2026-10-29)
 
 
 def test_the_tools_name_the_same_prefixes():
