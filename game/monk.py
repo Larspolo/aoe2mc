@@ -427,7 +427,7 @@ def convert(g, dt):
             g.command(f"aoe stop {m}")                             # in range: it stands and chants
         if m in g.faith:
             continue                                               # it rests: no faith for a conversion yet
-        job[1] += dt
+        job[1] += dt * math.prod(train.value("convert_rate", t, 1) for t in g.techs)   # Astrology of Antiquity Mode: 1.3
         while job[1] >= INTERVAL and m in g.converting:
             job[1] -= INTERVAL
             job[2] += 1

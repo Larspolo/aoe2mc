@@ -26,3 +26,4 @@
 {"name": "walk_add", "text": "A technology that adds walk speed in tiles per second: [the unit, a class of combat.STATS in lower case or a group of civs.GROUPS, the added speed]. train.speed.", "issue": 3921}
 {"name": "walls", "text": "A wall technology (Fortified Wall): {wall: the new wall}. The new and the complete own walls get the new design (build.design).", "issue": 1326}
 {"name": "heal_rate", "text": "A factor of the hit points that a monk heals per second (Medicine of Antiquity Mode: 2). monk.heal.", "issue": 3984}
+{"name": "convert_rate", "text": "A factor of the conversion speed of a monk (Astrology of Antiquity Mode: 1.3). monk.convert.", "issue": 3985}
