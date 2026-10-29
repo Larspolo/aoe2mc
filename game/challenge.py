@@ -82,6 +82,14 @@ def economy(g, c):
         and build.ages(g) >= need.get("ages", 0)
 
 
+def castle(g, c):
+    """The goal of Fast Castle Age (the key "need" of its line): the villagers, the houses and the ages."""
+    import build, train                                             # they import gather, gather imports this module
+    need = c["need"]
+    return len(g.villagers) >= need["villagers"] and train.owned(g).count("HOUSE") >= need["houses"] \
+        and build.ages(g) >= need["ages"]
+
+
 def done(g, c):
     """True when the goal of challenge row c is complete (its "check" function)."""
     module, _, function = c["check"].rpartition(".")

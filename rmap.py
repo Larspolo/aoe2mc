@@ -6,7 +6,7 @@ forest tiles as objects (FOREST_TREES) yet.
 
 Read: `#const`, `#define`, `if`/`elseif`/`else`/`endif`, `start_random`/`percent_chance`/`end_random`,
 <PLAYER_SETUP> (no effect here), <LAND_GENERATION> (`base_terrain`, `create_player_lands`, `create_land` with
-`terrain_type`, `land_percent`, `number_of_tiles`, `base_size`, `clumping_factor`, `land_position` and the borders
+`terrain_type`, `base_layer` (a land layer on the terrain_type, #3967), `land_percent`, `number_of_tiles`, `base_size`, `clumping_factor`, `land_position` and the borders
 `left_border`, `right_border`, `top_border`, `bottom_border`: percent of the map size at the low x, high x, low y and
 high y side that the land does not take) and
 <TERRAIN_GENERATION> (`create_terrain` with `base_terrain`, `number_of_clumps`, `number_of_tiles`, `land_percent`,
@@ -14,7 +14,7 @@ high y side that the land does not take) and
 (`create_connect_all_players_land` with `replace_terrain`, `terrain_cost`, `terrain_size`: paths between the player
 lands, #3868; `create_connect_all_lands`, `create_connect_to_nonplayer_land`, `create_connect_same_land_zones`,
 `create_connect_land_zones` and the `zone` of a land, #3869) and <ELEVATION_GENERATION>
-(`create_elevation HEIGHT` with `base_terrain`, `number_of_clumps`, `number_of_tiles`, `spacing`: hills level by level,
+(`create_elevation HEIGHT` with `base_terrain`, `base_layer`, `number_of_clumps`, `number_of_tiles`, `spacing`: hills level by level,
 never on water or shallows, #3822), <CLIFF_GENERATION> (cliff lines of CLIFF_DEFAULT objects, cliffs(), #3850) and
 <OBJECTS_GENERATION> (`create_object`: objects(), #3855). The sections run in the AoE2 DE order: lands, elevation,
 terrains, connections (#3966); then all water goes to level 0. Other sections and attributes: a warning.
@@ -332,9 +332,10 @@ def trees(terrain):
             for x, y in np.argwhere(np.isin(terrain, list(FOREST_TREES)))]
 
 
-def elevate(section, terrain, owner, starts, consts, rng, warn):
+def elevate(section, terrain, layer, owner, starts, consts, rng, warn):
     """<ELEVATION_GENERATION>: the level of each tile. It runs on the land terrain, before <TERRAIN_GENERATION>, as in
-    AoE2 DE: the base_terrain of create_elevation is a land terrain, and the forests and lakes come on the hills later."""
+    AoE2 DE: the base_terrain of create_elevation is a land terrain, and the forests and lakes come on the hills later.
+    base_layer selects the tiles of a land layer (the base_layer of create_land, #3967) in place of base_terrain."""
     n = len(terrain)
     elevation = np.zeros((n, n), np.int16)
     for cmd, args, attrs in section:
@@ -343,7 +344,8 @@ def elevate(section, terrain, owner, starts, consts, rng, warn):
             continue
         top = value(args[0], consts) if args else 1
         on = value(attrs["base_terrain"][0], consts) if "base_terrain" in attrs else 0
-        free = (terrain == on) & ~np.isin(terrain, [TERRAINS["WATER"], TERRAINS["SHALLOW"]]) & (elevation == 0)
+        under = (layer == value(attrs["base_layer"][0], consts)) if "base_layer" in attrs else terrain == on
+        free = under & ~np.isin(terrain, [TERRAINS["WATER"], TERRAINS["SHALLOW"]]) & (elevation == 0)
         clumps, total = scaled(attrs, consts, n, value(attrs["number_of_clumps"][0], consts)
                                if "number_of_clumps" in attrs else 1, tiles(attrs, consts, n, 1))
         spacing = value(attrs["spacing"][0], consts) if "spacing" in attrs else 1
@@ -361,7 +363,7 @@ def elevate(section, terrain, owner, starts, consts, rng, warn):
         for k in range(top):                     # level k + 1 inside level k, spacing tiles from its edge
             elevation[hill] = k + 1
             hill &= ~dilate(~hill, max(spacing, 1))
-        for a in set(attrs) - {"base_terrain", "number_of_clumps", "number_of_tiles", "spacing", "set_scale_by_groups",
+        for a in set(attrs) - {"base_terrain", "base_layer", "number_of_clumps", "number_of_tiles", "spacing", "set_scale_by_groups",
                                "set_scale_by_size", "enable_balanced_elevation"}:
             warn(f"create_elevation: {a} is not read yet")
     return elevation
@@ -395,7 +397,8 @@ def generate(text, seed, players=2, size=None, warn=None):
             warn(f"{directive} {file} is not read")
     terrain = np.zeros((n, n), np.int16)
     owner = np.full((n, n), -1, np.int32)
-    lands, starts, kinds, links = [], [], {}, []
+    layer = np.full((n, n), -1, np.int16)            # the land layer of each tile (aoe2mc.read_json "layer", -1 = none)
+    lands, starts, kinds, links, layers = [], [], {}, [], {}
     for cmd, args, attrs in sections.get("LAND_GENERATION", ()):
         if cmd == "base_terrain":
             terrain[:] = value(args[0], consts)
@@ -404,6 +407,7 @@ def generate(text, seed, players=2, size=None, warn=None):
             clump = value(attrs["clumping_factor"][0], consts) if "clumping_factor" in attrs else 8
             kind = value(attrs["terrain_type"][0], consts) if "terrain_type" in attrs else 0
             zone = value(attrs["zone"][0], consts) if "zone" in attrs else None      # None: a zone of its own
+            top = value(attrs["base_layer"][0], consts) if "base_layer" in attrs else None   # a layer on the land
             edge = {a: value(attrs[a][0], consts) * n // 100 if a in attrs else 0 for a in BORDERS}
             box = (edge["left_border"], n - edge["right_border"], edge["top_border"], n - edge["bottom_border"])
             if cmd == "create_player_lands":
@@ -416,6 +420,7 @@ def generate(text, seed, players=2, size=None, warn=None):
                     lands.append({"id": len(lands), "cells": square(c, base, n), "clump": clump, "box": box,
                                   "target": max(total // players, (2 * base + 1) ** 2)})
                     kinds[len(lands) - 1] = kind
+                    layers[len(lands) - 1] = top
             else:
                 if "land_position" in attrs:
                     c = tuple(min(n - 1, value(v, consts) * n // 100) for v in attrs["land_position"][:2])
@@ -425,7 +430,8 @@ def generate(text, seed, players=2, size=None, warn=None):
                 lands.append({"id": len(lands), "cells": square(c, base, n), "clump": clump, "box": box,
                               "target": tiles(attrs, consts, n, (2 * base + 1) ** 2)})
                 kinds[len(lands) - 1] = kind
-            for a in set(attrs) - {"base_size", "clumping_factor", "terrain_type", "land_percent", "number_of_tiles",
+                layers[len(lands) - 1] = top
+            for a in set(attrs) - {"base_layer", "base_size", "clumping_factor", "terrain_type", "land_percent", "number_of_tiles",
                                    "land_position", "zone", *BORDERS}:
                 warn(f"{cmd}: {a} is not read yet")
         else:
@@ -433,7 +439,9 @@ def generate(text, seed, players=2, size=None, warn=None):
     grow(owner, lands, np.ones((n, n), bool), rng)
     for lid, kind in kinds.items():
         terrain[owner == lid] = kind
-    elevation = elevate(sections.get("ELEVATION_GENERATION", ()), terrain, owner, starts, consts, rng, warn)
+        if layers[lid] is not None:
+            layer[owner == lid] = layers[lid]
+    elevation = elevate(sections.get("ELEVATION_GENERATION", ()), terrain, layer, owner, starts, consts, rng, warn)
     for cmd, args, attrs in sections.get("TERRAIN_GENERATION", ()):
         if cmd != "create_terrain":
             warn(f"{cmd} is not read yet")
@@ -473,7 +481,8 @@ def generate(text, seed, players=2, size=None, warn=None):
     found += objects(sections.get("OBJECTS_GENERATION", ()), consts, terrain, starts, rng, warn)
     found += trees(terrain)
     found += ridges
-    return {"size": n, "terrain": terrain.tolist(), "elevation": elevation.tolist(), "objects": found,
+    return {"size": n, "terrain": terrain.tolist(), "elevation": elevation.tolist(), "layer": layer.tolist(),
+            "objects": found,
             "players": {str(p): {"color": p - 1} for p in range(1, players + 1)}, "lands": [{k: v for k, v in st.items() if k != "land"} for st in starts]}
 
 

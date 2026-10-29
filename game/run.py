@@ -468,15 +468,39 @@ class Side:
         fog.tick(self.g)                             # the fog of war of its team (#1631)
 
 
-def bot_seat(players, people):
-    """(player, foe) of the bot (#1794): it plays the player after the people, and attacks the first person who is
-    not its ally (aoe2mc.json teams, gather.allied), else the first other player that is not its ally, else None: no
-    enemy, no attack (#3107)."""
+def bot_foe(players, player):
+    """The foe of a bot of player (#1794, #3107): the first person who is not its ally (aoe2mc.json teams,
+    gather.allied), else the first other player that is not its ally, else None: no enemy, no attack."""
     import gather
-    player = people + 1
     others = sorted(int(p) for p in players if int(p) > 0)
-    return player, next((p for p in [*range(1, player), *others] if p != player
-                         and not gather.allied(players, player, p)), None)
+    return next((p for p in [*range(1, player), *others] if p != player and not gather.allied(players, player, p)), None)
+
+
+def bot_seats(players, people, n):
+    """[(player, foe)] of the n bots (#4017): they play the player slots after the people, in order, each with its
+    bot_foe. n "all": each free slot of the map."""
+    others = sorted(int(p) for p in players if int(p) > 0)
+    free = [p for p in others if p > people]
+    if n == "all":
+        n = len(free)
+    if n > len(free):
+        sys.exit(f"--bots {n}: the map has {len(others)} player slots, {people} for the people: {len(free)} are free")
+    return [(player, bot_foe(players, player)) for player in free[:n]]
+
+
+def bot_seat(players, people):
+    """(player, foe) of the bot (#1794): it plays the player after the people."""
+    player = people + 1
+    return player, bot_foe(players, player)
+
+
+def bots_count(text):
+    """The value of --bots: a number of bots or "all" (#4017)."""
+    if text == "all":
+        return text
+    if not text.isdigit() or int(text) < 1:
+        raise argparse.ArgumentTypeError(f"{text} is no number of bots: use 1 or more, or all")
+    return int(text)
 
 
 def pop_limit(text):
@@ -694,7 +718,7 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
         import scenario
         seats = scenario.bot_seats(data["players"], players)
     else:
-        seats = [bot_seat(data["players"], players)] if bot else []
+        seats = bot_seats(data["players"], players, bot) if bot else []
     for player, foe in seats:                        # after the people, next to their Sides (#1794)
         import bot as bots
         import replay
@@ -1085,8 +1109,11 @@ def main(argv=None, scenario=None):
     ap.add_argument("--view", type=int, default=0, metavar="N", help="--replay: start with the view of player N: the "
                     "units out of its sight are hidden (default 0: all players)")
     ap.add_argument("--cheats", action="store_true", help="--play: the AoE2 cheat codes in the chat (off as in AoE2)")
-    ap.add_argument("--bot", action="store_true", help="--play: a bot plays the player after the people (player 2 "
+    ap.add_argument("--bot", dest="bot", action="store_const", const=1, default=0,
+                    help="--play: a bot plays the player after the people (player 2 "
                     "with one person, player 3 with --people 2) and attacks them (game/bot.py)")
+    ap.add_argument("--bots", dest="bot", type=bots_count, default=0, metavar="N|all", help="--play: N bots play the player slots after the "
+                    "people, as N computer players of the AoE2 lobby; all: each free slot (#4017). --bot is --bots 1")
     ap.add_argument("--people", type=int, default=1, metavar="N", help="--play: N people play players 1 to N, in the "
                     "order in which they join (#1310); with --bot the bot plays player N + 1")
     levels = [r["name"] for r in table.load("difficulty.jsonl")]           # in the order of the AoE2 lobby
