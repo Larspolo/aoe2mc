@@ -203,6 +203,12 @@ def status_line(number, state, now, lane=None):
             + (f" · lane {lane} (git config aoe2mc.lane)" if lane else ""))
 
 
+def claim_lines(picks):
+    """The one claim call for the candidates (--or); none with no candidate (an IndexError before)."""
+    return [f"Claim: python3 tools/claim.py {picks[0]['number']}"
+            + (" --or " + " ".join(str(i["number"]) for i in picks[1:SHOW]) if len(picks) > 1 else "")] if picks else []
+
+
 def section(title, lines):
     print(f"{title}: " + ("none" if not lines else lines[0] if len(lines) == 1 else "\n  " + "\n  ".join(lines)))
 
@@ -264,8 +270,7 @@ def main(argv=None):
     section(f"Candidates ({len(picks)} ready, pick order)", [
         f"#{i['number']} {i['title']} ({dashboard.tag(i, 'P')}, {dashboard.tag(i, 'size:')}, overlap "
         f"{len(dashboard.overlap(i, busy))}{', related' if last and related(i, last) else ''})" for i in picks[:SHOW]]
-        + [f"Claim: python3 tools/claim.py {picks[0]['number']}"            # one call for the candidates (--or)
-           + (" --or " + " ".join(str(i["number"]) for i in picks[1:SHOW]) if len(picks) > 1 else "")] * bool(picks))
+        + claim_lines(picks))
     if checks := due_checks():
         section("Release checks (no ticket, make them in the refill)", checks)
     return 0
