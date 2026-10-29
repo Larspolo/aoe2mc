@@ -21,8 +21,8 @@ TIMELINE = [{"time": 1000, "player": 1, "kind": "queue", "type": 83, "objects": 
             {"time": 1_301_000, "player": 1, "kind": "build", "type": 82, "name": "CASTLE", "tile": [8.0, 8.0]},
             {"time": 1_400_000, "player": 1, "kind": "build", "type": 82, "name": "CASTLE", "tile": [20.0, 8.0]},
             {"time": 1_500_000, "player": 2, "kind": "chat", "text": "gg"}]
-WANT = ["Player 1 (Britons): castles 2, wonders 0, bought 0, sold 0, tribute sent 100, received 0, villager high 5 (est.)",
-        "Player 2 (Aztecs): castles 0, wonders 0, bought 0, sold 0, tribute sent 0, received 100, villager high 0 (est.)"]
+WANT = ["Player 1 (Britons): castles 2, wonders 0, relics 0, bought 0, sold 0, tribute sent 100, received 0, villager high 5 (est.)",
+        "Player 2 (Aztecs): castles 0, wonders 0, relics 0, bought 0, sold 0, tribute sent 0, received 100, villager high 0 (est.)"]
 
 
 def lines(sent):
