@@ -50,5 +50,5 @@ def test_each_technology_of_the_game_program_has_a_trigger_name():
     names = {t.name for t in TechInfo} | {row["name"] for row in rows("tech_names.jsonl")}
     missing = set(train.TECHS) - names
     assert missing <= {"ARCHERY_RANGE_RECRUITMENT_DOCTRINE", "BARRACKS_RECRUITMENT_DOCTRINE",
-                       "STABLE_RECRUITMENT_DOCTRINE", "TREASON", "FARM_RESEED"}, missing
+                       "STABLE_RECRUITMENT_DOCTRINE", "TREASON", "FARM_RESEED", "AUTO_RESEED"}, missing
 

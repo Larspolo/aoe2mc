@@ -1793,6 +1793,13 @@ class Gather:
                             self.reseeds -= 1
                             src[v.tree] = self.map.farm_food
                             self.harvest(v.tree)
+                        elif src[v.tree] <= 0 and getattr(self, "auto_reseed", False) \
+                                and (cost := build.price(self, "FARM")) and all(self.stock[r] >= n for r, n in cost.items()):
+                            for r, n in cost.items():                  # auto reseed: the farm cost now (#3422)
+                                self.stock[r] -= n
+                                self.command(f"scoreboard players remove {r.capitalize()} {self.board} {n}")
+                            src[v.tree] = self.map.farm_food
+                            self.harvest(v.tree)
                         self.tend(v)
                     elif v.tree in self.map.carcasses:
                         if src[v.tree] <= 0:                           # a carcass has no blocks, only its body

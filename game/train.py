@@ -538,6 +538,8 @@ def show(g, player, rect):
     def state(name):
         if need := build.locked(g, name):                              # a unit of a later age: a gray item (#674)
             return need
+        if flag := value("toggle", name):                              # a switch (#3422)
+            return "on" if vars(g).get(flag) else "off"
         if name in TECHS:
             return missing(g, name) or ("researching" if queued(g, name) and name not in ONE_BUILDING else "research")
         return f"queue {n}/{QUEUE}"
@@ -675,6 +677,10 @@ def queue(g, player, cell, name="VILLAGER_MALE"):
         return None
     if name in TECHS and name not in ONE_BUILDING and (not repeatable(g, name) or queued(g, name)) or not unlocked(g, name):
         return None                                                    # a technology once
+    if flag := value("toggle", name):                                  # a switch: no queue and no cost (#3422)
+        vars(g)[flag] = not vars(g).get(flag, False)
+        build.say(g, player, f"{ITEMS[name][2]}: {'on' if vars(g)[flag] else 'off'}.")
+        return rect
     if name in DOCTRINES:                                              # no queue: at once (#2483)
         switch(g, player, homes(g)[rect])
         return rect
