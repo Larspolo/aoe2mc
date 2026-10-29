@@ -6,9 +6,11 @@ villagers, and closes the menu. The fifth item selects all units of the type nea
 did that before (#743). The sixth item stops the selected military units at once (#3353). The seventh item
 sends them on a patrol to the next clicked ground cell (#3355). The eighth item is the Attack Move (#3357), the ninth and
 tenth are Follow and Guard (follow.py, #3358). The eleventh item deletes the selected own units (#3451). The twelfth
-item, for a scout only, gives the selected scouts the Auto Scout order (autoscout.py, #3703).
+item, for a scout only, gives the selected scouts the Auto Scout order (autoscout.py, #3703). The thirteenth item lets
+the selected siege units shoot at the next clicked ground cell (Attack Ground, #4079).
 The boss bar of the selected unit shows a stance other than aggressive (bossbar.py).
 """
+import json
 import math
 
 import autoscout
@@ -29,6 +31,7 @@ FOLLOW = ATTACK_MOVE + 1                                           # slot: follo
 GUARD = FOLLOW + 1                                                 # slot: guard a clicked unit or building (#3358)
 DELETE = GUARD + 1                                                 # slot: kill the selected own units (#3451)
 AUTO_SCOUT = DELETE + 1                                            # slot: explore the map by itself, scouts only (#3703)
+ATTACK_GROUND = AUTO_SCOUT + 1                                     # slot: siege units shoot at a clicked point (#4079)
 SCOUT_NAMES = {scout.CAVALRY, *scout.SCOUTS.values()}              # the unit names that get the item
 FORMATION = 18                                                     # third row: the four formations of AoE2 (#3416)
 FORMATIONS = (("Line", "rail", "Units in rows across the walk"),
@@ -56,6 +59,7 @@ def items(g, uuid):
          (GUARD, "bell", "Guard", "Stay near an own unit or building; attack the enemies near it"),
          (DELETE, "tnt", "Delete", "Kills the selected units")] + \
         ([(AUTO_SCOUT, "filled_map", "Auto Scout", "Explores the map by itself")] if getattr(g, "soldiers", {}).get(uuid) in SCOUT_NAMES else []) + \
+        [(ATTACK_GROUND, "fire_charge", "Attack Ground", "Siege units shoot at a point on the ground")] + \
         [(FORMATION + i, item, k, text + "\nNow" * (k == form)) for i, (k, item, text) in enumerate(FORMATIONS)]
 
 
@@ -78,6 +82,11 @@ def open_menu(g, player, uuid):
             delete(g)
         elif slot == AUTO_SCOUT:
             auto_scout(g, p)
+        elif slot == ATTACK_GROUND:
+            if siege(g):
+                vars(g).setdefault("ordering", {})[p] = "attack_ground"                     # the next right click picks the point
+            else:
+                g.command(f"title {p} actionbar " + json.dumps({"text": "No unit can attack the ground"}))
         elif FORMATION <= slot < FORMATION + len(FORMATIONS):
             form(g, p, FORMATIONS[slot - FORMATION][0])
         else:
@@ -170,6 +179,25 @@ def attack_move(g, player, cell):
     for u, c in cells.items():
         moves[u] = [c, g.stances.pop(u, "aggressive")]
         g.command(f"aoe stance {u} aggressive")
+    for c in gather.marker(g.map, {tuple(cell)}, "go", player):
+        g.command(c)
+
+
+def siege(g):
+    """The selected units that can attack the ground (combat.GROUND, the AoE2 list of #4078)."""
+    import combat                                                  # combat imports gather, gather imports this module
+    return [u for u in sorted(g.selected) if g.soldiers.get(u) in combat.GROUND]
+
+
+def attack_ground(g, player, cell):
+    """The selected siege units shoot at the clicked ground cell (x, z) until a new order, as the AoE2 Attack Ground
+    (#4079): `aoe attackground` of the plugin (#4078). The other selected units ignore the order."""
+    import gather                                                  # gather imports this module
+    if not (units := siege(g)):
+        return
+    g.new_order(units)
+    for u in units:
+        g.command(f"aoe attackground {u} {cell[0]} {g.map.y(*cell)} {cell[1]}")
     for c in gather.marker(g.map, {tuple(cell)}, "go", player):
         g.command(c)
 

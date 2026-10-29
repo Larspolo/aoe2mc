@@ -1503,6 +1503,9 @@ class Gather:
         if order == "attack_move" and (cell := self.map.pick_ground(eye, d)):
             stance.attack_move(self, name, cell)                       # the Attack Move menu item (#3357)
             return
+        if order == "attack_ground" and (cell := self.map.pick_ground(eye, d)):
+            stance.attack_ground(self, name, cell)                     # the Attack Ground menu item (#4079)
+            return
         kind, u, cells = self.target(eye, d, self.positions(sorted(self.pickable()))) or (None, None, None)
         if order in ("follow", "guard"):                               # the Follow and Guard menu items (#3358)
             if kind == "unit" or kind == "building" and order == "guard":
