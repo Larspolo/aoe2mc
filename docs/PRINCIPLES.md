@@ -86,6 +86,8 @@ agent must remember. The owner should not have to ask for the wider fix.
   then made the epic for all game data (#1909): by content, not by size, and a lint, not a question for each run.
 - A label and a workflow close the tickets, not the owner (#1740). The merge workflow solves `.jsonl` conflicts (#1864).
 - Avoid structures that conflict: a test of the length of a data file conflicts and tests nothing real (#2008).
+- Data and configuration files exist so that a change there needs no change of code or tests: no test checks their
+  content, only their form and the behavior of the code (owner, 2026-10-29).
 
 ## Tensions
 

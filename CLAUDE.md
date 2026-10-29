@@ -97,6 +97,9 @@ file, not in a literal of the code: the fast test of `tools/data_lint.py` fails 
 still in the code, add each entry on its own line, in alphabetical order, not at the end (#655, #670).
 **Before you add a new item, key, setting, mode, plugin command or trigger type, or a test of a data file, read
 `docs/extend.md`**: it names the one line that each one needs, so that parallel tickets do not conflict.
+**No test checks the content of a data file or a configuration file** (owner, 2026-10-29): a change of a value, a text
+or a setting there must not make a test fail. Test the form of the data and the behavior of the code, with the
+expected value computed from the data or with test data (a fixture, a temporary file).
 
 ## How to verify
 

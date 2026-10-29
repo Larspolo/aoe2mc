@@ -1,5 +1,6 @@
 """No test pins the number of entries of a data table (owner, #2008): each ticket that adds a line changes that number,
-so two parallel tickets conflict on the same test line, and the count tests nothing real. Test the values instead."""
+so two parallel tickets conflict on the same test line, and the count tests nothing real. No test copies a value of a
+data file either (owner, 2026-10-29): test the form of the data and the behavior of the code."""
 import os
 import re
 
