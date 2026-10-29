@@ -2284,7 +2284,7 @@ class Replay:
         if i in self.fetching:
             self.send(self.pickup(i, v))
         if i in self.homing:
-            self.send(self.deliver(i))
+            self.send(self.deliver(i, t))
         if i in self.entering:
             x0, x1, z0, z1 = self.entering[i][0]
             if v.cell in self.map.around({(x, z) for x in range(x0, x1) for z in range(z0, z1)}):
@@ -2326,14 +2326,14 @@ class Replay:
             return None
         return next((s[3] for s in self.starts if s[0] == o["ref"]), None)
 
-    def deliver(self, i):
-        """The commands of monk i that ends its walk to its monastery with a relic: the relic goes into the building
-        (its pot goes), the monk stays outside, as monk.relic_tick (kind "home", #4010)."""
+    def deliver(self, i, t):
+        """The commands of monk i that ends its walk to its monastery with a relic at game time t: the relic goes into
+        the building (its pot goes), the monk stays outside, as monk.relic_tick (kind "home", #4010)."""
         rect, p = self.homing.pop(i)
         ref = next((r for r, q in self.relics.items() if q["monk"] == i), None)
         if ref is None:
             return []
-        self.relics[ref].update(monk=None, home=rect, player=p)
+        self.relics[ref].update(monk=None, home=rect, player=p, home_t=t)
         return [f"kill @e[type=item_display,tag=aoe_relic_{ref}]"]
 
     def relic_count(self, p):
@@ -2583,6 +2583,7 @@ class Replay:
                              | {q for q, _ in traded} - {None}):
             name, color = self.label(p)
             counts = "".join(f"{n.lower()}s {built.get((p, n), 0)}, " for n in SOCIETY)   # castles N, wonders N
+            counts += f"relics {self.relic_count(p)}, "                                    # the relics in monasteries (#4010)
             market = f"bought {traded.get((p, 'buy'), 0)}, sold {traded.get((p, 'sell'), 0)}, "
             out.append("tellraw @a " + json.dumps([text(name, color), text(
                 f": {counts}{market}tribute sent {sent.get(p, 0)}, received {got.get(p, 0)}, villager high "
@@ -2591,11 +2592,13 @@ class Replay:
 
     def timeline_commands(self, end):
         """A written book "Timeline" for each viewer at the end of the replay (#1068): per player its age-ups, its
-        first military unit, its first castle and its resign, in time order, from the whole timeline (also the time
-        of a jump) up to `end` (ms), see `book_command`."""
+        first military unit, its first castle, its resign and the arrival of each relic in a monastery, in time order,
+        from the whole timeline (also the time of a jump) up to `end` (ms), see `book_command`."""
         import gather                                               # gather -> build -> replay: import it late
         lines, army, castle = {}, set(), set()
-        for e in sorted(self.data.get("timeline", []) + self.spawns(), key=lambda e: e["time"]):
+        arrivals = [{"time": r["home_t"], "player": r["player"], "kind": "relic"} for r in self.relics.values()
+                    if r["home"] is not None]                       # a relic in a monastery (#4010)
+        for e in sorted(self.data.get("timeline", []) + self.spawns() + arrivals, key=lambda e: e["time"]):
             p, line = e.get("player"), None
             if e["time"] > end or p is None:
                 continue
@@ -2609,6 +2612,8 @@ class Replay:
                 line = "Castle"
             elif e["kind"] == "resign":
                 line = "Resigns"
+            elif e["kind"] == "relic":
+                line = "Relic"
             if line:
                 lines.setdefault(p, []).append(f"{mmss(e['time'])} {line}")
         return self.book_command("Timeline", lines)
