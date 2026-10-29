@@ -1,5 +1,8 @@
 package aoe2mc;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Particle;
@@ -7,6 +10,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Display;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Player;
 import org.bukkit.entity.TextDisplay;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -27,6 +31,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
  * tag aoe2mc.pop (replay.COUNTED) that dies gives soul particles and a text display "☠" in its team color at its place,
  * for SECONDS. So a spectator sees where the fights are. Vanilla has no "on death" command: the plugin listens to the
  * death event. The game program does not turn the marks on. The display is not persistent: a restart removes it.
+ * A player who does not see the unit (the fog of Replay.fog: Player#hideEntity) gets no particles and no mark (#3084).
  */
 final class Deaths implements Listener {
     static final String TAG = "aoe2mc.pop";
@@ -61,7 +66,14 @@ final class Deaths implements Listener {
         NamedTextColor color = team != null && team.hasColor() && team.color() instanceof NamedTextColor c ? c
                 : NamedTextColor.WHITE;
         Location at = body.getLocation();
-        e.getWorld().spawnParticle(Particle.SOUL, at.clone().add(0, 0.5, 0), 12, 0.3, 0.4, 0.3, 0.02);
+        List<Player> blind = new ArrayList<>();
+        for (Player p : e.getWorld().getPlayers()) {
+            if (p.canSee(body)) {
+                p.spawnParticle(Particle.SOUL, at.clone().add(0, 0.5, 0), 12, 0.3, 0.4, 0.3, 0.02);
+            } else {
+                blind.add(p);
+            }
+        }
         TextDisplay mark = e.getWorld().spawn(at.clone().add(0, 1.2, 0), TextDisplay.class, d -> {
             d.text(Component.text("☠", color));
             d.setBillboard(Display.Billboard.CENTER);
@@ -69,6 +81,7 @@ final class Deaths implements Listener {
                     new AxisAngle4f()));
             d.setPersistent(false);
             d.addScoreboardTag(MARK);
+            blind.forEach(p -> p.hideEntity(plugin, d));      // before the spawn packet: the fog hides the unit
         });
         Bukkit.getScheduler().runTaskLater(plugin, mark::remove, SECONDS * 20L);
     }
