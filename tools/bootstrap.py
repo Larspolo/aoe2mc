@@ -121,7 +121,7 @@ Both must pass before the commit. Add the next levels of the project here (slow 
 PROMPT = """You work on the GitHub repository {repo} (default branch: {branch}). This is a scheduled, unattended run. Other runs can work at the same time.
 
 1. If the repository is not in your working directory, attach it with the add_repo tool (owner {owner}, repo {name}, access push), clone it as the tool says, and register it. Then pull the latest {branch}.
-2. Read CLAUDE.md. Then follow the skill in .claude/skills/autopilot/SKILL.md with the argument max: do tickets, one PR each, until no ticket is ready, a usage limit stops you, or your context is above 200k tokens. Report on the status issue (label agent-status).
+2. Read CLAUDE.md. Then follow the skill in .claude/skills/autopilot/SKILL.md with the argument max: do tickets, one PR each, until no ticket is ready, a usage limit stops you, or your context is 120k tokens or more. Report on the status issue (label agent-status).
 3. You cannot start other runs: a run of this scheduled task has no fire_trigger tool. Do not search for it. The workflow pacer.yml starts new runs every 10 minutes (tools/pacer.py).
 4. Do not run more runs than the quota target: run `python3 tools/usage.py --fire`. Its stderr line shows "target N" and "claims M". If the tool fails, N = 8 and M = the open tickets with the label in-progress that changed in the last 30 minutes. a) At your start (after step 1 of the skill): if N is 0, stop. If M is N or more, only finish stalled PRs of other runs (skill step 2), then stop without a new ticket. b) After each PR that you open: run it again; if M is more than N, stop instead of taking a new ticket.
 

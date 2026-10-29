@@ -132,6 +132,12 @@ does not say?
 - The kind label does not choose the lane: a clear `process` ticket can be Haiku or main.
 - Not sure between Haiku and main: Haiku (owner, 2026-10-28). A Haiku run that finds the ticket unclear removes the
   label (`autopilot` skill, `queue.md`). Not sure between main and deep: main.
+- Write tickets for Haiku (owner, 2026-10-29: 40 % of the closed tickets had `lane:haiku`, but 2 of 25 ready ones).
+  When you make a ticket, decide the place and the result while that code is in your context: write the file, the
+  function or data line, the exact result and the test to copy into the body, then give `lane:haiku` (a render, a
+  screenshot or a real game still needs main). Spend at most one `grep` per ticket on it; when it does not find the
+  place, give no Haiku label. In the queue refill, also give `lane:haiku` to the ready tickets with no lane whose
+  body already meets the Haiku row (read the bodies only, not the code).
 - Deep is for about 10 to 20 % of the tickets. Never both lane labels. Decision tickets and epics get no lane label.
 - While `reserved` in `[pacing]` of `agent.toml` names a lane, the main runs never take its tickets (#1994).
 

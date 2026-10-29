@@ -47,6 +47,7 @@ QUEUE = CONFIG.get("pacing", {}).get("max_ci_queue", 5)      # flow brake: queue
 PR_MINUTES = CONFIG.get("pacing", {}).get("pr_minutes", 30)  # Automerge merges a green PR in a few minutes
 MAX_FIRE = CONFIG.get("pacing", {}).get("max_fire", 2)   # runs that the pacer starts per 15-minute cycle; the same as agent.toml (owner, 2026-10-28: about 2 tickets per 15 minutes)
 REFILL = CONFIG.get("pacing", {}).get("refill_runs", 1)   # runs beyond the ready tickets: each refills one epic (#609, #650)
+REFILL_GAP = CONFIG.get("pacing", {}).get("refill_gap", 60)   # minutes after a refill lock with no refill run
 CALL = ["claude", "-p", "Reply with OK.", "--model", "claude-haiku-5-5", "--output-format", "stream-json", "--verbose"]
 
 
@@ -136,6 +137,14 @@ def refill_runs(issues, now, minutes=60, refill=REFILL):
     new = any("pull_request" not in i and now - datetime.datetime.fromisoformat(
         i["created_at"].replace("Z", "+00:00")).timestamp() < minutes * 60 for i in issues)
     return refill if new else min(refill, 1)
+
+
+def refill_recent(lines, now, minutes=REFILL_GAP):
+    """True when a refill lock (`claim/refill-*`) is younger than `minutes`: a deep run refills now or did it a short
+    time ago. The pacer then starts no refill run, unless fewer tickets are ready than half the target. 16 of 30 deep runs made no PR (2026-10-29): most found the refill lock taken or nothing to refill, and
+    each cost about $1 to $2. lines: `health.claim_refs()`; now: Unix seconds."""
+    return any(k.startswith("refill-") and t.isdigit() and int(t) >= now - minutes * 60
+               for k, t, *_ in (x.split(" ", 2) for x in lines or ()))
 
 
 def refill_need(ready, target, issues, due=lambda: [], reviews=lambda: [], free=lambda: []):
@@ -336,12 +345,15 @@ def fire(usage, now, burn=BURN, burn7=None, skip=(), status=None):
     paused = any({dashboard.STATUS, dashboard.PAUSED} <= set(dashboard.labels(i)) for i in open_all)
     ready = len(dashboard.candidates(open_all, reserved=()))   # all lanes: lane_plan splits them
     t = datetime.datetime.now(datetime.timezone.utc)
-    lanes = health.lane_claims(t)
+    refs = health.claim_refs()
+    lanes = None if refs is None else health.count_lanes(refs, t)
     claims = health.active_claims(t) if lanes is None else sum(lanes.values())
     weights, source = health.lane_weights(comments)
     eq = claims if lanes is None else health.opus_equivalent(claims, lanes, weights)   # in Opus runs (#1727)
     target = target_runs(usage, now, burn, burn7=burn7)
     need = refill_need(ready, target, open_all, release_due, due_reviews, free_sources)
+    if need and refill_recent(refs, now) and ready >= target // 2:
+        need = ""                                           # a refill runs now or ran; a near-empty queue refills at once
     refill = refill_runs(open_all, now) if need else 0   # #3547: no refill run with no refill work
     lanes = [(n, 0 if n in skip else len(dashboard.candidates(open_all, lane=n)), weights[n]) for n in weights]   # agent.toml order
     k, runs = plan(target, eq, ready, lanes, paused, refill=refill,
@@ -350,7 +362,7 @@ def fire(usage, now, burn=BURN, burn7=None, skip=(), status=None):
     if cap is not None:                                     # the flow is the bottleneck: Opus runs repair the PRs
         k, runs = min(k, cap), dict.fromkeys(runs, 0)
     line = (f"{describe(usage, now, burn, burn7)} · claims {claims} ({eq:.2f} Opus runs) · ready {ready} · "
-            f"refill {refill} ({need or f'ready {ready}, target {target}: no refill source'}) · "
+            f"refill {refill} ({need or f'ready {ready}, target {target}: no refill source or a refill lock < {REFILL_GAP} min'}) · "
             f"paused {paused} · {flow} · max_fire {MAX_FIRE} · weights "
             + ", ".join(f"{n} {w:.2f} ({source[n]})" for n, w in weights.items()) + note)
     return k, runs, line

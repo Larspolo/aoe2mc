@@ -17,7 +17,7 @@ The runs start from these parts (`docs/SYSTEM.md`, "Setup steps of the owner", s
 1. Run `python3 tools/operator_check.py` in the repository. It checks the quota and the target, `paused`, the ready
    tickets, CI on main and the night CI, agent PRs open more than 30 minutes, the labels and the owner comments
    without an answer. Each line is `OK` or `PROBLEM`. Exit 1: at least one problem.
-2. Scheduled tasks (claude.ai/code → Scheduled tasks, or `list_triggers` and `get_trigger` in a session): each task
+2. Scheduled tasks (claude.ai/code → Scheduled tasks; `.claude/settings.json` denies the session tools `mcp__claude-code-remote`): each task
    of the table exists, is enabled, has no schedule and has an API trigger. `trigger` in `[pacing]` of `agent.toml`
    is the ID of "NAME autopilot".
 3. Pacer: GitHub → Actions → Pacer. One run is `in_progress`. A red run with "failed: <task>: HTTP 401" is a wrong
@@ -31,9 +31,9 @@ The runs start from these parts (`docs/SYSTEM.md`, "Setup steps of the owner", s
 |---|---|
 | No `pacer.yml` run `in_progress` | GitHub → Actions → Pacer → Run workflow (or `gh api repos/OWNER/NAME/actions/workflows/pacer.yml/dispatches -X POST -f ref=main`). |
 | A red `pacer.yml` run with "HTTP 401" | Make a new API token of that task (the task → edit → API trigger) and change the secret `PACER_TOKEN_<TASK>`. |
-| A scheduled task is off | Enable it in the app (or `update_trigger` with `enabled` true). |
+| A scheduled task is off | Enable it in the app. |
 | A scheduled task is missing | Make it as section 3, steps 2 and 3. |
-| A prompt differs from `docs/SYSTEM.md` step 4 | Edit the task in the app (or `update_trigger` with the text of step 4). |
+| A prompt differs from `docs/SYSTEM.md` step 4 | Edit the task in the app (the text of step 4). |
 | `trigger` in `agent.toml` is not the ID of "NAME autopilot" | A PR that changes `trigger` in `[pacing]` (Automerge merges it). |
 | A label is missing | Run the Labels workflow, or make the label from `.github/labels.txt`. |
 | No run in 2 hours, target above 0 | Start "NAME autopilot" once by hand, then check the pacer (1.3). |
