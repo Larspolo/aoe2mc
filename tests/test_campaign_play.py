@@ -20,7 +20,7 @@ def folder(tmp_path, monkeypatch):
     seen = {"commands": []}
     monkeypatch.setattr(run, "Game", lambda *a, **k: types.SimpleNamespace(
         start=lambda: None, stop=lambda: None, port=0, command=seen["commands"].append))
-    monkeypatch.setattr(run, "play", lambda game, world, *a, **k: seen.update(k, world=world)
+    monkeypatch.setattr(run, "play", lambda game, world, *a, **k: seen.update(k, world=world, titles=game.titles)
                         or types.SimpleNamespace(ended=None))
     monkeypatch.setattr(run, "console", lambda game: None)
     return tmp_path, seen
@@ -30,7 +30,7 @@ def test_the_first_scenario_starts_in_the_scenario_mode(folder):
     tmp_path, seen = folder
     run.main([str(tmp_path), "--play"])
     assert seen["world"] == str(tmp_path / "1 S1") and seen["mode"] == "scenario"
-    assert 'title @a title "Camp"' in seen["commands"] and 'title @a subtitle "Scenario 1: S1"' in seen["commands"]
+    assert seen["titles"] == ["Camp", "Scenario 1: S1"] and seen["commands"] == []   # start_on_join sends them (#3772)
 
 
 def test_the_scenario_option_picks_the_world(folder):
