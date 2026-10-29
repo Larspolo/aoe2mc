@@ -77,7 +77,7 @@ def test_a_cheat_of_the_person_of_player_2_changes_only_player_2():
     server.scores[("Alex", "aoe_cheat")] = cheats.NAMES.index("lumberjack") + 1
     assert cheats.clicks(g1) == [] and ("Alex", "aoe_cheat") in server.scores   # player 1 does not read or reset it
     assert cheats.clicks(g2) == [("Alex", "lumberjack")] and not server.scores
-    assert g2.stock["wood"] == wood + 10000 and g1.stock["wood"] == wood
+    assert g2.stock["wood"] == wood + cheats.CODES["lumberjack"]["wood"] and g1.stock["wood"] == wood
     assert any(c.startswith("scoreboard players") and "Wood aoe_res2" in c for c in server.log)
     assert not any(re.search(r"\baoe_res\b", c) for c in server.log)  # not the sidebar of player 1
     server.scores[("Steve", "aoe_cheat")] = cheats.NAMES.index("polo") + 1
@@ -131,19 +131,19 @@ def test_player_2_trains_ages_and_researches_without_a_change_for_player_1():
     assert train.queue(g2, "Alex", (19, 3)) == (18, 21, 2, 5)          # the own town center
     assert train.queue(g2, "Alex", (3, 3)) is None                     # not the town center of player 1
     assert train.queue(g2, "Alex", (19, 3), "LOOM") == (18, 21, 2, 5)
-    assert g2.stock["food"] == 2000 - 50 and g1.stock["food"] == 2000
-    for _ in range(round((train.TRAIN_TIMES["VILLAGER_MALE"] + 30) / 0.5) + 1):
+    assert g2.stock["food"] == 2000 - train.price(g2, "VILLAGER_MALE")["food"] and g1.stock["food"] == 2000
+    for _ in range(round((train.TRAIN_TIMES["VILLAGER_MALE"] + train.seconds(g2, "LOOM") + 5) / 0.5) + 1):
         for v in train.tick(g2, 0.5):
             server.entities[v.uuid] = {"Pos": v.pos}
     assert g2.pop == 2 and g1.pop == 1 and "LOOM" in g2.techs and not g1.techs
     assert "scoreboard players set Population aoe_res2 2" in server.log
     assert not any(re.search(r"\baoe_res\b", c) for c in server.log)
-    assert 'tellraw Alex {"text": "Loom is researched.", "color": "green"}' in server.log
+    assert f'tellraw Alex {{"text": "{train.ITEMS["LOOM"][2]} is researched.", "color": "green"}}' in server.log
     g2.data["objects"] += [{"kind": "building", "name": n, "player": 2, "tile": [12.5, 2.5 + 3 * i],
                             "footprint": [11, 1 + 3 * i, 14, 4 + 3 * i]} for i, n in enumerate(("BARRACKS", "MILL"))]
     server.log.clear()
     assert train.queue(g2, "Alex", (19, 3), "FEUDAL_AGE") == (18, 21, 2, 5)
-    train.tick(g2, 130)
+    train.tick(g2, train.seconds(g2, "FEUDAL_AGE"))
     assert train.age(g2) == "Feudal Age" and train.age(g1) == "Dark Age"
     assert 'title @a[team=p2] title {"text": "Feudal Age", "color": "gold"}' in server.log
     assert 'scoreboard objectives modify aoe_res2 displayname "Resources (Feudal Age)"' in server.log

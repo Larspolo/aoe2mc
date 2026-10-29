@@ -64,6 +64,9 @@ def tree_world(top):
     return world, gather.Gather(world, m, start={})
 
 
+FULL = gather.TREE_WOOD - 1                                            # the wood of a tree after the first chop
+
+
 def chop(g, wood):
     g.map.trees[(5, 6)] = wood
     g.trunk((5, 6)) if wood else g.fell((5, 6))
@@ -78,12 +81,12 @@ def row(world, top):
 def test_the_trunk_of_a_tree_on_a_slope_lies_on_the_ground_of_its_footprint():
     top = lambda x: 40 + x                                          # noqa: E731, a slope of 1 block per block
     world, g = tree_world(top)
-    chop(g, 99)
+    chop(g, FULL)
     assert row(world, top) == (["minecraft:oak_log"] * 4, [])          # each log on the ground of its column
     assert world.blocks[(20, top(20) + 1, 25)] == "minecraft:oak_log[axis=x]"
     assert world.get(20, top(20) + 2, 25) == "minecraft:oak_leaves"     # the crown on the tip
     assert world.get(22, top(22), 26) == "minecraft:spruce_log" and world.get(22, top(22) + 1, 26) == "minecraft:air"
-    chop(g, 50)
+    chop(g, gather.TREE_WOOD // 2)
     assert row(world, top) == (["minecraft:barrier"] * 2 + ["minecraft:oak_log"] * 2, [])
     assert world.get(22, top(22) + 2, 25) == "minecraft:oak_leaves" and world.get(20, top(20) + 2, 25) != "minecraft:oak_leaves"
     chop(g, 0)
@@ -95,7 +98,7 @@ def test_the_trunk_of_a_tree_on_a_slope_lies_on_the_ground_of_its_footprint():
 def test_the_trunk_of_a_tree_on_flat_ground_is_as_before():
     top = lambda x: 63                                              # noqa: E731
     world, g = tree_world(top)
-    chop(g, 99)
+    chop(g, FULL)
     assert row(world, top) == (["minecraft:oak_log", "minecraft:red_mushroom"] + ["minecraft:oak_log"] * 2, [])   # as before
     assert not [c for c in world.log if c.startswith("execute")]      # no probe: the same commands as before
     assert world.get(22, 63, 26) == "minecraft:spruce_log"

@@ -33,7 +33,8 @@ def test_the_castle_of_the_own_civ_trains_it_and_its_elite_upgrade(monkeypatch):
     assert train.order(g, "Steve", rect, 5) == 1 and g.queues[rect][0]["name"] == f"ELITE_{NEW}_UPGRADE"
     server, g = setup("GURJARAS", food=2000, wood=0, gold=2000, ages=3)
     train.open_menu(g, "Steve", CASTLE)
-    assert "Test Unit" not in menus(server)[-1] and " 5:book:Elite Chakram Thrower:" in menus(server)[-1] + " "
+    slot, item, label = train.ITEMS[f"ELITE_{train.UNIQUE['GURJARAS']}_UPGRADE"]   # the own elite upgrade
+    assert "Test Unit" not in menus(server)[-1] and f" {slot}:{item}:{label}:" in menus(server)[-1] + " "
 
 
 def test_no_civ_sees_two_items_in_a_slot(monkeypatch):

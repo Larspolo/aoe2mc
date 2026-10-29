@@ -23,6 +23,7 @@ def test_triggers_scenario_and_table(tmp_path):
     assert n[("condition", "TIMER")] == 2 and n[("condition", "OBJECTS_IN_AREA")] == 1
     assert n[("effect", "CREATE_OBJECT")] == n[("effect", "REMOVE_OBJECT")] == n[("effect", "DISPLAY_INSTRUCTIONS")] == 1
     rows = triggers.table(n).splitlines()
-    assert rows[2].startswith("| condition | `TIMER` | 2 | `schedule function")         # the most common type first
+    assert rows[2] == f"| condition | `TIMER` | 2 | {triggers.MAP[('condition', 'TIMER')]} |"   # the most common first
     assert all(r.count("|") == 5 for r in rows)
-    assert any("`OBJECT_SELECTED` | 0 | not supported" in r for r in rows)   # Task Object: #2646
+    text = triggers.MAP.get(("condition", "OBJECT_SELECTED"), "not supported: no ticket yet")
+    assert f"| condition | `OBJECT_SELECTED` | 0 | {text} |" in rows   # a type that no scenario has

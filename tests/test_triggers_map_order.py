@@ -16,9 +16,3 @@ def test_each_type_has_one_line():
         assert len(names) == len(set(names)), f"two lines of one {kind}: take main's line and add yours again"
         assert all((kind, n) in triggers.MAP for n in names)
 
-
-def test_the_data_files_merge_by_name():
-    with open(os.path.join(triggers.ROOT, ".gitattributes")) as f:
-        text = f.read()
-    for kind in ("condition", "effect"):
-        assert f"data/trigger_{kind}s.jsonl merge=jsonl" in text

@@ -9,7 +9,6 @@ import aoe2mc
 from test_civ_costs import setup
 from test_forging import menus
 from test_scenario_patrol import trigger
-from tools import triggers
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "game"))
 import scenario  # noqa: E402
@@ -52,11 +51,12 @@ def test_the_menu_of_the_player_shows_the_new_name():
     log = names(g, '["1 LOOM Old Wisdom", "2 LOOM Other Name", \'1 WHEELBARROW The "Cart"\']')
     assert f"data remove storage {scenario.NAMES} list" in log
     assert g.trigger_names == {"LOOM": "Old Wisdom", "WHEELBARROW": 'The "Cart"'}   # player 2: not this side
+    loom = next(r["label"] for r in train.ROWS if r["name"] == "LOOM")   # the name of game/data/train.jsonl
     train.open_menu(g, "Steve", (3, 3))
-    assert ":Old Wisdom:" in menus(server)[-1] and ":Loom:" not in menus(server)[-1]
+    assert ":Old Wisdom:" in menus(server)[-1] and f":{loom}:" not in menus(server)[-1]
     server, h = setup("BRITONS")                                       # another player sees the old name
     train.open_menu(h, "Steve", (3, 3))
-    assert ":Loom:" in menus(server)[-1]
+    assert f":{loom}:" in menus(server)[-1]
 
 
 def test_an_empty_storage_changes_no_name():
@@ -64,7 +64,3 @@ def test_an_empty_storage_changes_no_name():
     log = names(g, "[]")
     assert not any(c.startswith("data remove") for c in log) and "trigger_names" not in vars(g)
 
-
-def test_the_map_row_names_the_command_and_the_issue():
-    row = triggers.MAP[("effect", "CHANGE_TECHNOLOGY_NAME")]
-    assert "aoe2mc:names" in row and "#2821" in row

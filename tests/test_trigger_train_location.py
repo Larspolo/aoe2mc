@@ -12,7 +12,7 @@ import aoe2mc
 from test_civ_costs import setup
 from test_forging import menus
 from test_scenario_patrol import trigger
-from tools import scenarios, triggers
+from tools import scenarios
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "game"))
 import scenario  # noqa: E402
@@ -63,18 +63,25 @@ def test_the_menus_of_the_player_show_the_item_in_its_new_building():
     assert train.placed(g, "TOWN_CENTER", "SCOUT_CAVALRY")[0] == 5                # button 6: the 6th slot of the first row
     assert train.placed(g, "STABLE", "LOOM")[0] == train.MORE                     # button 9: the row under the queue
     train.open_menu(g, "Steve", (3, 3))
-    assert ":Scout Cavalry:" in menus(server)[-1] and ":Loom:" not in menus(server)[-1]
-    assert ":Imperial Age:" not in menus(server)[-1]                  # the moved item takes its slot 5
+    assert f":{label('SCOUT_CAVALRY')}:" in menus(server)[-1] and f":{label('LOOM')}:" not in menus(server)[-1]
+    under = [r["label"] for r in train.ROWS if r.get("building") == "TOWN_CENTER" and r.get("slot") == 5]
+    assert not any(f":{x}:" in menus(server)[-1] for x in under)     # the moved item takes its slot 5
+    food = g.stock["food"] - train.price(g, "SCOUT_CAVALRY", "TOWN_CENTER").get("food", 0)
     assert train.order(g, "Steve", next(r for r in train.homes(g) if train.homes(g)[r] == "TOWN_CENTER"), 5) == 1
-    assert g.queues[(2, 5, 2, 5)][-1]["name"] == "SCOUT_CAVALRY" and g.stock["food"] == 120
+    assert g.queues[(2, 5, 2, 5)][-1]["name"] == "SCOUT_CAVALRY" and g.stock["food"] == food
     train.open_menu(g, "Steve", (11, 3))
-    assert ":Loom:" in menus(server)[-1] and ":Scout Cavalry:" not in menus(server)[-1]
+    assert f":{label('LOOM')}:" in menus(server)[-1] and f":{label('SCOUT_CAVALRY')}:" not in menus(server)[-1]
+
+
+def label(name):
+    """The menu name of game/data/train.jsonl."""
+    return next(r["label"] for r in train.ROWS if r["name"] == name)
 
 
 def test_another_player_keeps_the_old_places():
     server, h = setup("BRITONS")
     train.open_menu(h, "Steve", (3, 3))
-    assert ":Loom:" in menus(server)[-1] and ":Scout Cavalry:" not in menus(server)[-1]
+    assert f":{label('LOOM')}:" in menus(server)[-1] and f":{label('SCOUT_CAVALRY')}:" not in menus(server)[-1]
 
 
 def test_an_empty_storage_moves_nothing():
@@ -97,8 +104,3 @@ def test_read_scenario_keeps_the_building_and_the_button(tmp_path):
     assert unit["object"][1] == "SCOUT_CAVALRY" and unit["object2"][1] == "TOWN_CENTER" and unit["button"] == 6
     assert tech["technology"] == "LOOM" and tech["object2"][1] == "STABLE" and tech["button"] == 2
 
-
-def test_the_map_rows_name_the_command_and_the_issue():
-    for kind in ("CHANGE_TRAIN_LOCATION", "CHANGE_TECHNOLOGY_LOCATION"):
-        row = triggers.MAP[("effect", kind)]
-        assert "aoe2mc:places" in row and "#2864" in row

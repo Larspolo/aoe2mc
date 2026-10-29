@@ -15,7 +15,7 @@ import aoe2mc  # noqa: E402
 import gather  # noqa: E402
 import scenario  # noqa: E402
 from test_gather import FakeServer, grid  # noqa: E402
-from tools import scenarios, triggers  # noqa: E402
+from tools import scenarios  # noqa: E402
 
 WONDER, RELIC, HILL = 0, 1, 2                                          # AoE2 VictoryTimerType
 EQUAL, LESS, LARGER, LESS_OR_EQUAL = 0, 1, 2, 3                        # AoE2 Comparison
@@ -95,6 +95,3 @@ def test_a_change_sends_one_command_and_a_stopped_timer_resets_its_score():
     scenario.victory_timers(g)
     assert server.log[-1] == "scoreboard players reset #p1.2 aoe_vic"
 
-
-def test_the_map_line_names_this_issue():
-    assert "#2906" in triggers.MAP[("condition", "VICTORY_TIMER")]

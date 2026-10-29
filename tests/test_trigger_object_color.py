@@ -7,8 +7,10 @@ import os
 from AoE2ScenarioParser.scenarios.aoe2_de_scenario import AoE2DEScenario
 
 import aoe2mc
+import units
 from tools import scenarios
 
+RED = units.HEX["red"]                                                       # PlayerColorId 2
 AREA = f"x=4,y={aoe2mc.MIN_Y},z=8,dx=7,dy={aoe2mc.HEIGHT - 1},dz=7"         # tiles 1..2, 2..3 at T = 4
 
 
@@ -26,8 +28,8 @@ def lines(**k):
 
 def test_the_names_of_the_units_in_the_area_get_red():
     assert lines() == [f"execute as @e[tag=aoe2mc.p1,tag=!aoe2mc.mount,{AREA}] run data modify entity @s "
-                       f"CustomName.color set value \"#E0281E\""]          # PlayerColorId 2: red, units.HEX
-    assert lines(player=3, color=6)[0].endswith("CustomName.color set value \"#A000F0\"")   # 6: purple
+                       f"CustomName.color set value \"{RED}\""]
+    assert lines(player=3, color=6)[0].endswith(f"CustomName.color set value \"{units.HEX['purple']}\"")
 
 
 def test_a_color_outside_1_to_8_writes_no_command():
@@ -47,4 +49,4 @@ def test_the_effect_is_read_and_converted(tmp_path):
         aoe2mc.convert(src, str(tmp_path / "W"))
     fn = os.path.join(tmp_path, "W", "datapacks", "aoe2mc", "data", "aoe2mc", "function")
     with open(os.path.join(fn, "trigger", f"{red['id']}.mcfunction")) as f:
-        assert f"{AREA}] run data modify entity @s CustomName.color set value \"#E0281E\"" in f.read()
+        assert f"{AREA}] run data modify entity @s CustomName.color set value \"{RED}\"" in f.read()
