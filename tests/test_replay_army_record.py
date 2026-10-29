@@ -11,7 +11,7 @@ import aoe2mc  # noqa: E402
 import gather  # noqa: E402
 import replay  # noqa: E402
 from test_replay import data  # noqa: E402
-from test_replay_army_view import shown  # noqa: E402
+from test_replay_stat_books import page  # noqa: E402
 from test_replay_control import Clock  # noqa: E402
 
 REC = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "samples", "de-64.3.aoe2record")
@@ -47,14 +47,15 @@ def play_to(minutes):
     r.run(clock=lambda: game.now, sleep=game.sleep, log=None, bar=True)
     trained = collections.Counter((e["player"], e["name"]) for done, e, _ in r.trainings
                                   if e["kind"] == "queue" and done <= end and gather.military(e["name"]))
-    r.army_shown = {}                                   # a new view: one summon per player
-    rows = {int(re.search(r"aoe2mc\.army\.(\d+)", c)[1]): shown(c)["text"] for c in r.army_view(end)}
+    r.books = {}                                        # a new view: the whole book
+    cmds = r.army_view(end)
+    rows = {p: (lines := page(cmds, k))[:lines.index("")] for k, p in enumerate((1, 2))}   # the army lines
     return r, trained, rows
 
 
 def counts(row):
-    """The military types and counts of an army row: "Player 1 (Britons): 3 Scout Cavalry · lost 1"."""
-    army = row.split(": ", 1)[1].split(" · ")[0]
+    """The military types and counts of the army lines of a page: ["Army: 3 Scout Cavalry", "Lost: 1"]."""
+    army = row[0].split(": ", 1)[1]
     return {} if army == "-" else {w.split(" ", 1)[1]: int(w.split(" ", 1)[0]) for w in army.split(", ")}
 
 
@@ -66,8 +67,8 @@ def test_the_army_rows_of_two_players_at_15_and_20_minutes_follow_the_record_and
             want = {replay.pretty(n): c - r.fallen.get(p, {}).get(n, 0) for (q, n), c in trained.items() if q == p}
             assert want and counts(rows[p]) == {n: c for n, c in want.items() if c}
         if minutes == 15:
-            assert r.fallen == {} and "lost" not in rows[2]
+            assert r.fallen == {} and not [x for x in rows[2] if x.startswith("Lost")]
             assert "Scout Cavalry" in counts(rows[1]) and "Eagle Scout" in counts(rows[2])
         else:
-            assert r.fallen == {2: {"ARCHER": 1}} and rows[2].endswith(" · lost 1")
+            assert r.fallen == {2: {"ARCHER": 1}} and "Lost: 1" in rows[2]
             assert counts(rows[2])["Archer"] == trained[2, "ARCHER"] - 1 >= 1
