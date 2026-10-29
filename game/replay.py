@@ -2514,9 +2514,7 @@ class Replay:
     def timeline_commands(self, end):
         """A written book "Timeline" for each viewer at the end of the replay (#1068): per player its age-ups, its
         first military unit, its first castle and its resign, in time order, from the whole timeline (also the time
-        of a jump) up to `end` (ms). Each player starts a page with a heading in its player color and its team (#1643); a
-        long list goes on to the next page. One RCON
-        command holds at most RCON_MAX bytes: the last lines go first."""
+        of a jump) up to `end` (ms), see `book_command`."""
         import gather                                               # gather -> build -> replay: import it late
         lines, army, castle = {}, set(), set()
         for e in sorted(self.data.get("timeline", []) + self.spawns(), key=lambda e: e["time"]):
@@ -2535,6 +2533,12 @@ class Replay:
                 line = "Resigns"
             if line:
                 lines.setdefault(p, []).append(f"{mmss(e['time'])} {line}")
+        return self.book_command("Timeline", lines)
+
+    def book_command(self, title, lines):
+        """A written book `title` with a page per player (lines: player -> text lines, #1068). Each player starts a page
+        with a heading in its player color and its team (#1643); a long list goes on to the next page. One RCON
+        command holds at most RCON_MAX bytes: the last lines go first (#4048)."""
         if not lines:
             return []
         while True:
@@ -2554,13 +2558,20 @@ class Replay:
                     rows, page = rows - n, page + "\n" + line
                 pages.append({"text": "", "extra": [head, {"text": "\n" + page.rstrip("\n")}]} if head
                              else {"text": page.strip("\n")})       # only the heading has a color, the lines are black
-            book = {"title": "Timeline", "author": "aoe2mc", "pages": pages}
+            book = {"title": title, "author": "aoe2mc", "pages": pages}
             cmd = "give @a minecraft:written_book[minecraft:written_book_content=" + \
                 json.dumps(book, ensure_ascii=False, separators=(",", ":")) + "]"
             if len(cmd.encode()) <= RCON_MAX:
                 return [cmd]
             longest = max(lines, key=lambda p: len(lines[p]))
             lines[longest].pop()
+
+    def build_order_commands(self, end):
+        """A written book "Build order" for each viewer at the end of the replay (#4048, item 2 of #4046): the build
+        order of each player up to `end` (ms), see `build_order`. A player without steps gets no page."""
+        players = sorted({e["player"] for e in self.data.get("timeline", []) if e.get("player") is not None})
+        lines = {p: [f"{mmss(t)} {label}" for t, label in self.build_order(p, end)] for p in players}
+        return self.book_command("Build order", {p: v for p, v in lines.items() if v})
 
     def score_commands(self, t=None):
         """The sidebar commands for the population of each player that changed since the last call (#741). The score
@@ -3016,7 +3027,8 @@ class Replay:
         census()
         self.send(self.expire(math.inf) + self.panel(math.inf))
         send(self.clock_commands(end, end, speed, done=True) + self.score_commands() + self.end_commands(end) +
-             self.summary_commands() + self.timeline_commands(end))
+             self.summary_commands() + self.timeline_commands(end) +
+             self.build_order_commands(end))
         span = (events[-1]["time"] - start) / 1000 / speed if events else 0                 # at the start speed
         return {"events": n, "commands": self.sent, "busy": round(self.busy, 2), "lag": round(lag, 2),
                 "rate": round(self.sent / self.busy) if self.busy else 0, "need": round(self.sent / span) if span else 0}
