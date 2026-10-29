@@ -376,11 +376,14 @@ def read_scenario(path):
     size = mm.map_size
     terrain = np.zeros((size, size), np.int16)
     elevation = np.zeros((size, size), np.float32)
+    terrain_names = {t.value: t.name for t in TerrainId}
+    land = {i: terrain_style(n)["depth"] == 0 for i, n in terrain_names.items()}
     for t in mm.terrain:
         terrain[t.x, t.y] = t.terrain_id
         elevation[t.x, t.y] = t.elevation
-
-    terrain_names = {t.value: t.name for t in TerrainId}
+        # a land layer (a road painted in the DE editor) gives the look of the tile; water keeps its base (#3688)
+        if t.layer >= 0 and land.get(t.terrain_id) and land.get(t.layer):
+            terrain[t.x, t.y] = t.layer
 
     kinds = object_kinds()
     other = {r["tech"]: r["name"] for r in units.rows("tech_names.jsonl")}   # the names of game/data/train.jsonl
