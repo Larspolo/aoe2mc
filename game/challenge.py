@@ -7,6 +7,7 @@ gets the civilization of the line, and tick() ends the game with the medal when 
 ("module.function", (g, row) -> True when complete) says so. A new challenge is one data line and one goal function.
 A challenge with the key "waves" sends enemy waves of player 2 to the town center, and a lost town center ends it
 with no medal (#3907).
+A challenge with the key "enemy" gets a bot town of player 2 that does not attack (setup, #3905).
 A challenge opens after a medal in the challenge of its key "after" (#3904, AoE2 DE). The best medal of each one goes
 into MEDAL_FILE in the user folder (the medals belong to the player, not to one map); `--challenge list` prints them.
 Minecraft feature: a boss bar shows the goal and the next medal limit, a title shows the medal.
@@ -118,6 +119,42 @@ def waves(g, c, now):
         ai.attack(g, [u for u in uuids if u], [n for n, u in zip(names, uuids) if u], g.map.T,
                   combat.target_uuid([tc[0], tc[2], tc[1], tc[3]]))
         sent = g.challenge_waves = sent + 1
+
+
+def enemies(g):
+    """The Gather of the enemy of the challenge (player 2, a bot), or None."""
+    return next((s.g for s in getattr(g, "bots", ()) if s.g.player == 2), None)
+
+
+def rush(g, c):
+    """The goal of Rushing the Enemy: c["kills"] villagers of the enemy died (its losses, as recap.py counts them;
+    the census names a villager VILLAGER)."""
+    h = enemies(g)
+    return h is not None and sum(n.startswith("VILLAGER") for n in vars(h).get("losses", {}).values()) >= c["kills"]
+
+
+def setup(g):
+    """The enemy town of challenge g.challenge (its key "enemy"), for free and complete at once: a town center when
+    player 2 has none, the buildings near it and its villagers. The bot of player 2 sends them to work."""
+    import build, train                                             # they import gather, gather imports this module
+    c, h = CHALLENGES[g.challenge], enemies(g)
+    if "enemy" not in c or h is None:
+        return None
+    e = c["enemy"]
+    tc = next((r for r, n in sorted(train.homes(h).items()) if n == "TOWN_CENTER"), None)
+    if tc is None and h.villagers and (rect := build.near(h, "TOWN_CENTER", next(iter(h.villagers.values())).cell)):
+        build.rise(h, site := build.found(h, "TOWN_CENTER", rect, free=True), float("inf"))
+        tc = site["footprint"]
+    if tc is None:
+        return None
+    middle = ((tc[0] + tc[1]) // 2, (tc[2] + tc[3]) // 2)
+    for name, count in sorted(e["buildings"].items()):
+        for _ in range(count):
+            if rect := build.near(h, name, middle):
+                build.rise(h, build.found(h, name, rect, free=True), float("inf"))
+    while len(h.villagers) < e["villagers"] and train.spawn(h, tc, "VILLAGER_MALE"):
+        h.pop += 1
+    return h
 
 
 def done(g, c):
