@@ -1,4 +1,5 @@
-"""Reader of old AoE2 scenarios (.scx, format 1.21 of The Conquerors), without the DE editor (#311).
+"""Reader of old AoE2 scenarios (.scn of The Age of Kings: formats 1.18 to 1.20, #3860; .scx: format 1.21 of The
+Conquerors; .scx and .aoe2scenario of the HD Edition: formats 1.22 to 1.26, #3862), without the DE editor (#311).
 
 A port of the reader of genie-scx (genie-rs, GPL-3.0; crates/genie-scx/src/format.rs, map.rs, player.rs) for the
 fields that aoe2mc needs. Layout: docs/campaign-formats.md, "The old scenario format".
@@ -14,7 +15,9 @@ import numpy as np
 
 import units
 
-FORMATS = {b"1.21"}             # format versions that this reader knows (genie-scx: player data version 1.14)
+FORMATS = {b"1.18", b"1.19", b"1.20", b"1.21",        # format versions that this reader knows (the object frame from 1.15,
+           b"1.22", b"1.23", b"1.24", b"1.25", b"1.26"}  # "garrisoned in" from 1.13: one object layout); 1.22 to 1.26:
+                                                        # the HD Edition (.aoe2scenario too, #3862)
 CIVS = [r["name"] for r in units.rows("scx_civs.jsonl")]   # the index is the civilization ID, the DE IDs too
 
 
