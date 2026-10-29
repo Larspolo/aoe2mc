@@ -1573,7 +1573,7 @@ class Gather:
             self.mark(name, {(x0, z0), (x1 - 1, z1 - 1)})
         elif self.selected and (cell := self.map.pick_ground(eye, d)) and self.map.free(*cell):
             if not add_waypoint(self, name, cell):                     # a sneak click adds a waypoint (#3515)
-                self.walk_to(name, cell)                               # the move order of AoE2 (#1368)
+                queue_move(self, self.walk_to(name, cell))             # the move order of AoE2 (#1368)
             self.order_voice()
         elif any(replay.ship(self.soldiers.get(u, "")) for u in self.selected) \
                 and (cell := fleet.pick(self, eye, d)) and self.map.wet(*cell):
@@ -2307,6 +2307,12 @@ def add_attack(g, name, target):
         start_attack(g, new, target, None if not queued else new)
         ways.update({u: [] for u in new})
     return True
+
+
+def queue_move(g, out):
+    """A normal move order starts an empty queue: a later sneak click adds a point after it (#3805). out: walk_to."""
+    vars(g).setdefault("waypoints", {}).update({u: [] for u in out})
+    g.waypoint_at = vars(g).get("waypoint_at", {}) | out
 
 
 def queue_attack(g, target):
