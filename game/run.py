@@ -692,6 +692,8 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
     if settings["challenge"]:                                    # the civilization of the challenge (#3900)
         import challenge
         settings["civ"] = {**(settings["civ"] or {}), 1: challenge.CHALLENGES[settings["challenge"]]["civ"]}
+        if settings["age"] == "dark":                            # the start age of the challenge (#3908)
+            settings["age"] = challenge.CHALLENGES[settings["challenge"]].get("age", "dark")
         if enemy := challenge.CHALLENGES[settings["challenge"]].get("enemy"):   # a bot town that does not attack (#3905)
             settings["civ"][2], bot = enemy["civ"], bot or 1
     apply_civs(data, settings["civ"])                             # before the Gathers: all bonuses (civs.civ) follow it

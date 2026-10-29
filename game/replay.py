@@ -458,6 +458,7 @@ class Replay:
         self.eco_rows = None                    # the shown rows of the economy text (#3756)
         self.samples, self.minute = {}, -1      # player -> [(minute, pop, villagers, military, resources)], last minute (#3446)
         self.apms, self.ended = None, 0         # player -> sorted times of its actions (#3763); game time of the end (ms)
+        self.orders = None                      # player -> [(time, label)] of its build order (#4047)
         self.eyes = None                        # (x, y, z) of each player; None: not known, each gather step shows (#2761)
         self.queue = None                       # in run() on Paper: the commands that wait for flush() (#2761)
         import gather                                               # gather -> build -> replay: import it late
@@ -546,6 +547,31 @@ class Replay:
     def mean_apm(self, p, t):
         """The average actions per minute of player p up to game time t (ms, #3763); 0 at t <= 0."""
         return round(bisect.bisect_right(self.actions(p), t) / (t / 60000)) if t > 0 else 0
+
+    def build_order(self, p, t):
+        """The build order of player p up to game time t (ms, #4047): the first building and the first unit of each
+        type (no villagers), the technologies and the ages, as (time, label) in time order. A dict of lists, made once."""
+        if self.orders is None:
+            self.orders, first = {}, set()
+            for e in sorted(self.data.get("timeline", []), key=lambda e: e["time"]):
+                q, kind = e.get("player"), e["kind"]
+                name = e.get("name") or self.kinds.get(e.get("type"), ("?", ""))[1]
+                if q is None:
+                    continue
+                if kind == "build" or (kind == "queue" and not name.startswith("VILLAGER")):
+                    if (q, name) in first:
+                        continue
+                    first.add((q, name))
+                    label = units.pretty(name)
+                elif kind == "research" and not e.get("technology", "").endswith(" Age"):
+                    label = e["technology"]
+                elif kind == "age" and e.get("age"):
+                    label = pretty(e["age"])
+                else:
+                    continue
+                self.orders.setdefault(q, []).append((e["time"], label))
+        steps = self.orders.get(p, [])
+        return steps[:bisect.bisect_right(steps, t, key=lambda s: s[0])]
 
     def graphs(self, t):
         """The commands of the graphs at game time t (ms, #3448, decision #3447: B): in the sky above the overview one

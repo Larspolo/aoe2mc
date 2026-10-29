@@ -4,7 +4,7 @@
 {"name": "MILL", "cost": {"wood": 100}, "time": 35, "icon": "white_wool", "bot": 2, "near": "food", "not_civs": ["INCAS", "MAPUCHE", "MUISCA", "POLES", "TUPI"]}
 {"name": "FARM", "cost": {"wood": 60}, "time": 15, "icon": "wheat"}
 {"name": "BARRACKS", "cost": {"wood": 175}, "time": 50, "icon": "stone_brick_wall", "bot": 4, "military": true}
-{"name": "BLACKSMITH", "cost": {"wood": 150}, "time": 40, "icon": "anvil", "age": 1}
+{"name": "BLACKSMITH", "cost": {"wood": 150}, "time": 40, "icon": "anvil", "age": 1, "bot": 5}
 {"name": "BOMBARD_TOWER", "cost": {"gold": 100, "stone": 125}, "time": 80, "icon": "polished_basalt", "age": 3, "needs": "BOMBARD_TOWER_TECH"}
 {"name": "ARCHERY_RANGE", "cost": {"wood": 175}, "time": 50, "icon": "target", "age": 1, "military": true}
 {"name": "STABLE", "cost": {"wood": 175}, "time": 50, "icon": "hay_block", "age": 1, "military": true}
