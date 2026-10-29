@@ -59,6 +59,27 @@ def report(checks):
     return lines, int(not all(ok for _, ok, _ in checks))
 
 
+def account_checks(env, read=None, tasks=("main", "haiku", "deep")):
+    """One check per Claude account of the secrets (`pacer.accounts`, #4240): its quota read (`read(token)`; None
+    for the first account: the token of the process) and the tasks the pacer can fire for it (a dry run of
+    `pacer.has_url`). A failed read is a problem: the pacer gives that account no run."""
+    import pacer
+    import usage
+    read = read or (lambda token: usage.read_usage() if token is None else usage.read_usage(token=token))
+    checks = []
+    for i, (name, e) in enumerate(pacer.accounts(env)):
+        fire = " ".join(t for t in tasks if pacer.has_url(e, t)) or "no task"
+        try:
+            u = read(None if i == 0 else e.get(pacer.TOKEN))
+        except Exception as x:                          # a timeout or a bad token of one account
+            u, why = None, f"{type(x).__name__}: {x}"
+        else:
+            why = "no usage from the CLI"
+        text = " · ".join(f"{w} {v[0]:.0%}" for w, v in sorted(u.items())) if u else f"no quota read ({why})"
+        checks.append((f"account {name}", bool(u), f"{text} · fires {fire}"))
+    return checks
+
+
 def run_checks(now):
     import dashboard
     import feedback
@@ -73,6 +94,7 @@ def run_checks(now):
     except Exception as e:                                      # no CLI or no subscription
         target = None
         checks.append(("quota", False, f"{type(e).__name__}: {e}"))
+    checks += account_checks(dict(os.environ))
     open_all = dashboard.pages("issues?state=open")
     paused = any({dashboard.STATUS, dashboard.PAUSED} <= set(dashboard.labels(i)) for i in open_all)
     checks.append(("paused", not paused, f"label {dashboard.PAUSED} on the status issue" if paused else "no"))

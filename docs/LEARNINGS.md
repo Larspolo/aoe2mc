@@ -29,6 +29,7 @@ and `tests/test_learnings.py` fails above 80 lines (#1698).
 - Blocked too: `docs.racket-lang.org` and `plt.cs.northwestern.edu` (the docs of the AoE2 random map script DSL, DNS fails). For a random map script fact, a `WebSearch` summary of them works (#3966).
 - A `git checkout -b agent/N-...` after `claim.py N` makes the next beat name another run: `claim.py N --beat` then says "took #N over" (#4134). Work on the session branch, or move the changes with `git stash -u`, `checkout -B <session branch> origin/main`, `stash pop`.
 - The Blacksmith pages (`aok.heavengames.com`) work, but `getfile.php?id=N&dd=1&s=TOKEN` (TOKEN from `get_file(...)` of `showfile.php`) redirects to `files.heavengames.com`: blocked until the owner pastes `scripts/allowed-domains.txt` (#4189).
+- A later ticket of a run (brief or not): `git checkout -B <session branch>-<k> origin/main` before `claim.py N --adopt CLAIM`; the claim takes the branch name of the call. After the wrong order, `claim.py N --adopt <old branch>` on the new branch moves it (#4240).
 
 ## Code
 
