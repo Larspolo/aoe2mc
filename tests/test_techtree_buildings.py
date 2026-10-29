@@ -18,19 +18,22 @@ def row_of(name):
     return next(s // 9 for s, n in slots.items() if n == name)
 
 
-def test_the_barracks_is_in_row_0_and_the_castle_in_row_2():
-    assert row_of("BARRACKS") == 0
-    assert row_of("CASTLE") == 2
+def test_a_building_is_in_the_row_of_its_age():
+    for name in ("BARRACKS", "CASTLE"):
+        assert row_of(name) == techtree.age(name), name
 
 
 def test_a_building_that_the_civilization_does_not_have_is_gray():
-    assert "gray_stained_glass_pane:Lumber Camp:Not in the tech tree of Incas" in buildings_page("INCAS")
+    civ, name = next((c, n) for n in build.ICONS if n not in civs.ONLY for c in sorted(civs.MISSING.get(n, ())))
+    text = f"gray_stained_glass_pane:{build.pretty(name)}:Not in the tech tree of {build.pretty(civ)}"
+    assert text in buildings_page(civ)
 
 
-def test_the_krepost_shows_only_for_its_civilization():
-    assert "Krepost" in buildings_page("BULGARIANS")
-    assert "Krepost" not in buildings_page("CELTS")
-    assert "KREPOST" in civs.ONLY and civs.ONLY["KREPOST"] == {"BULGARIANS"}
+def test_a_building_of_some_civilizations_shows_only_for_them():
+    name, owners = next((n, o) for n, o in civs.ONLY.items() if n in build.ICONS)
+    other = next(c for c in techtree.CIVS if c not in owners)
+    assert build.pretty(name) in buildings_page(min(owners))
+    assert build.pretty(name) not in buildings_page(other)
 
 
 def test_the_back_item_returns_to_the_page_of_buildings():

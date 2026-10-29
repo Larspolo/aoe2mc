@@ -1,4 +1,4 @@
-"""game/train.py: a click on the own town center queues a villager for 50 food; it appears after the AoE2 train
+"""game/train.py: a click on the own town center queues a villager for its food; it appears after the AoE2 train
 time next to the town center and can gather (#612)."""
 import contextlib
 import io
@@ -10,6 +10,8 @@ import pytest
 from test_gather import FakeServer, grid
 
 from game import combat, gather, run, train
+
+FOOD = train.COSTS["VILLAGER_MALE"]["food"]
 
 
 def setup(food=60):
@@ -27,18 +29,18 @@ def setup(food=60):
     return server, g
 
 
-def test_a_click_on_the_town_center_queues_a_villager_and_takes_50_food():
-    server, g = setup()
+def test_a_click_on_the_town_center_queues_a_villager_and_takes_its_food():
+    server, g = setup(food=FOOD + 10)
     for name in g.clicks():
         g.click(name)                                                  # opens the menu of the town center (#620)
     server.scores["aoe_menu"] = 1                                      # a click on the villager item
     g.clicks()
-    assert g.stock["food"] == 10 and "scoreboard players remove Food aoe_res 50" in server.log
+    assert g.stock["food"] == 10 and f"scoreboard players remove Food aoe_res {FOOD}" in server.log
     assert g.queues == {(2, 5, 2, 5): [{"name": "VILLAGER_MALE", "progress": 0.0, "player": "Steve"}]}
     server.scores["aoe_menu"] = 1                                      # 10 food: no second villager
     g.clicks()
     assert g.stock["food"] == 10 and len(g.queues[2, 5, 2, 5]) == 1
-    assert any(c.startswith("tellraw Steve") and "50 food" in c for c in server.log)
+    assert any(c.startswith("tellraw Steve") and f"{FOOD} food" in c for c in server.log)
 
 
 def test_no_queue_at_the_town_center_of_another_player_or_on_the_ground():
@@ -48,13 +50,13 @@ def test_no_queue_at_the_town_center_of_another_player_or_on_the_ground():
 
 
 def test_the_queue_holds_15_units():
-    server, g = setup(food=1000)
+    server, g = setup(food=FOOD * (train.QUEUE + 1))
     assert all(train.queue(g, "Steve", (3, 3)) for _ in range(train.QUEUE))
-    assert train.queue(g, "Steve", (3, 3)) is None and g.stock["food"] == 1000 - 50 * train.QUEUE
+    assert train.queue(g, "Steve", (3, 3)) is None and g.stock["food"] == FOOD
 
 
-def test_the_villager_appears_after_25_aoe2_seconds_in_front_of_the_town_center():
-    server, g = setup(food=100)
+def test_the_villager_appears_after_its_train_time_in_front_of_the_town_center():
+    server, g = setup(food=2 * FOOD)
     train.queue(g, "Steve", (3, 3))
     train.queue(g, "Steve", (3, 3))
     steps = round(train.TRAIN_TIMES["VILLAGER_MALE"] / (g.tick * gather.NORMAL))
@@ -105,7 +107,7 @@ def test_a_trained_villager_chops_on_a_server(tmp_path):
     with run.Game(tmp_path / "W") as game:
         game.forceload()
         g = gather.Gather(game, data, tick=0.25, carry=3, chop=0.25, start={}).setup()
-        g.stock["food"] = 50
+        g.stock["food"] = FOOD
         assert train.queue(g, "nobody", (4 * 4 + 1, 4 * 4 + 1))
         new, = train.tick(g, train.TRAIN_TIMES["VILLAGER_MALE"])
         assert g.pos(new.uuid), "the trained villager exists"

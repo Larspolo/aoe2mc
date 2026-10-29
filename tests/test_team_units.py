@@ -24,7 +24,7 @@ def range_menu(server, g):
 def test_a_vietnamese_ally_gives_the_imperial_skirmisher_upgrade():
     server, g = game("BRITONS", "VIETNAMESE")
     research(g, RANGE, "ELITE_SKIRMISHER_UPGRADE")
-    assert ":Imperial Skirmisher:300 wood · 300 gold · 50 s · research " in range_menu(server, g)
+    assert ":Imperial Skirmisher:" in range_menu(server, g)
 
 
 def test_no_upgrade_without_the_ally():

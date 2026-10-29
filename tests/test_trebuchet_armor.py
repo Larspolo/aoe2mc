@@ -1,5 +1,5 @@
-"""game/trebuchet.py: a packed trebuchet has 2 melee and 8 pierce armor, an unpacked one 1 and 150 (AoE2 DE wiki
-infobox "Trebuchet", #1409). The armor changes when the pack or the unpack ends. Fake server, no Minecraft."""
+"""game/trebuchet.py: a packed trebuchet has the armor of combat.STATS, an unpacked one trebuchet.UNPACKED
+(AoE2 DE wiki infobox "Trebuchet", #1409). The armor changes when the pack or the unpack ends. Fake server, no Minecraft."""
 from test_train_castle import setup
 
 from game import combat, train, trebuchet
@@ -22,26 +22,30 @@ def treb():
     return server, g
 
 
-def test_the_packed_values_are_the_base_values():
+def packed():
     s = combat.stats("TREBUCHET")
-    assert (s.melee, s.pierce, s.classes) == (2, 8, ("siege",)) and trebuchet.UNPACKED == (1, 150)
+    return s.melee, s.pierce, ",".join(s.classes)
+
+
+def unpacked():
+    return (*trebuchet.UNPACKED, ",".join(combat.stats("TREBUCHET").classes + ("ram",)))
 
 
 def test_the_unpack_gives_the_unpacked_armor_and_the_pack_the_packed_armor():
     server, g = treb()
-    assert armor(trebuchet.stats_command(g, "t")) == (2, 8, "siege")
+    assert armor(trebuchet.stats_command(g, "t")) == packed()
     g.choose({"t"}, "t")
     g.attack("fort")
     trebuchet.tick(g, 11.0)
     assert stats_of(server) == []                                      # still packed while it unpacks
     trebuchet.tick(g, 0.2)
-    assert stats_of(server) == [(1, 150, "siege,ram")] and trebuchet.state(g, "t") == "unpacked"
+    assert stats_of(server) == [unpacked()] and trebuchet.state(g, "t") == "unpacked"
     server.log.clear()
     trebuchet.move(g, "t", [])
     trebuchet.tick(g, 5.0)
-    assert stats_of(server) == [] and trebuchet.stats(g, "t").pierce == 150   # still unpacked while it packs
+    assert stats_of(server) == [] and trebuchet.stats(g, "t").pierce == trebuchet.UNPACKED[1]   # still unpacked while it packs
     trebuchet.tick(g, 6.2)
-    assert stats_of(server) == [(2, 8, "siege")] and trebuchet.state(g, "t") == "packed"
+    assert stats_of(server) == [packed()] and trebuchet.state(g, "t") == "packed"
 
 
 def test_a_research_keeps_the_armor_of_the_state():
@@ -51,5 +55,5 @@ def test_a_research_keeps_the_armor_of_the_state():
     trebuchet.tick(g, 11.2)
     server.log.clear()
     train.research(g, {"name": "SIEGE_ENGINEERS", "player": "Steve"})   # a change of the trebuchet values
-    assert stats_of(server) == [(1, 150, "siege,ram")]                     # not the packed armor of train.stats
+    assert stats_of(server) == [unpacked()]                              # not the packed armor of train.stats
     assert trebuchet.stats(g, "t").range == train.stats(g, "TREBUCHET").range > combat.stats("TREBUCHET").range

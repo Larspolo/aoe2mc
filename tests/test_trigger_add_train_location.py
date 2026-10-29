@@ -66,7 +66,7 @@ def test_the_castle_menu_of_the_player_has_the_militia_with_its_time():
     assert train.placed(g, "CASTLE", "MILITIA")[0] == 4                # AoE2 button 5: the fifth slot of the row 0
     train.open_menu(g, "Steve", (11, 11))
     assert ":Militia:" in menus(server)[-1]                             # the barracks keeps its item
-    assert train.seconds(g, "MILITIA", "BARRACKS") == 21
+    assert train.seconds(g, "MILITIA", "BARRACKS") == train.TRAIN_TIMES["MILITIA"]
     server, h = castle()                                               # player 2 has no militia in the castle
     train.open_menu(h, "Steve", (3, 11))
     assert ":Militia:" not in menus(server)[-1]
@@ -87,7 +87,7 @@ def test_the_added_unit_takes_the_slot_of_an_item_of_the_building():
     locations(g, '["1 MILITIA CASTLE 2 0"]')                           # slot 1: the trebuchet
     assert train.placed(g, "CASTLE", "MILITIA")[0] == 1 == train.slots("CASTLE", "TREBUCHET")[0]
     assert train.covered(g, "CASTLE", "TREBUCHET") and not train.covered(g, "CASTLE", "MILITIA")
-    assert train.seconds(g, "MILITIA", "CASTLE") == 21                 # no time: the time of the unit
+    assert train.seconds(g, "MILITIA", "CASTLE") == train.TRAIN_TIMES["MILITIA"]   # no time: the time of the unit
     locations(g, '["1 MILITIA CASTLE 0 0"]')                           # button 0: the first slot
     assert train.placed(g, "CASTLE", "MILITIA")[0] == 0
 

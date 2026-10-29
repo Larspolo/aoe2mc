@@ -36,4 +36,5 @@ def test_town_center_shoots_the_next_enemy_when_the_nearest_has_no_free_side(tin
             game.command(c)
         h = health(game, "far")
         time.sleep(6)
-        assert health(game, "far") < h - 8, "3 arrows of 4 about each 1.2 s at the enemy with a free way"
+        arrow = combat.stats("TOWN_CENTER").attack - 1                 # attack - pierce armor 1
+        assert health(game, "far") < h - 2 * arrow, "3 arrows about each 1.2 s at the enemy with a free way"

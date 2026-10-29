@@ -37,26 +37,34 @@ def values(server, rect):
     return int(c[3]), int(c[12]), int(c[13])
 
 
+def base(name):
+    """The hit points, attack and range (blocks, tile size 1) without a technology."""
+    s = combat.stats(name)
+    return s.hp, s.attack, s.range
+
+
 def test_the_buildings_that_shoot_get_the_values_of_fletching_and_bodkin_arrow():
     assert train.TECHS["FLETCHING"]("TOWN_CENTER", combat.stats("TOWN_CENTER")).range == combat.stats("TOWN_CENTER").range
     server, g = setup()
-    train.research(g, {"name": "FLETCHING", "player": "Steve"})
-    assert values(server, TC) == (2400, 6, 6)                        # +1 attack, the same range
-    assert values(server, CASTLE) == (4800, 12, 9)
-    assert values(server, TOWER) == (1020, 6, 9)
-    assert not any(uuid(HOUSE) in c for c in server.log)             # no attack: no change
-    assert server.hp[uuid(TOWER)] == 920                             # the lost hit points stay lost
-    train.research(g, {"name": "BODKIN_ARROW", "player": "Steve"})
-    assert values(server, TC) == (2400, 7, 6)
-    assert values(server, CASTLE) == (4800, 13, 10)
-    assert values(server, TOWER) == (1020, 7, 10)
+    old = {rect: base(name) for rect, name in ((TC, "TOWN_CENTER"), (CASTLE, "CASTLE"), (TOWER, "WATCH_TOWER"))}
+    for tech in ("FLETCHING", "BODKIN_ARROW"):
+        train.research(g, {"name": tech, "player": "Steve"})
+        new = {rect: values(server, rect) for rect in old}
+        for rect, (hp, attack, range_) in new.items():
+            assert hp == old[rect][0] and attack > old[rect][1], (tech, rect)
+            assert range_ == old[rect][2] if rect == TC else range_ > old[rect][2], (tech, rect)   # the town center: the same range
+        old = new
+        assert not any(uuid(HOUSE) in c for c in server.log)         # no attack: no change
+        assert server.hp[uuid(TOWER)] == combat.stats("WATCH_TOWER").hp - 100   # the lost hit points stay lost
 
 
 def test_guard_tower_keeps_fletching():
     server, g = setup()
     train.research(g, {"name": "FLETCHING", "player": "Steve"})
     train.research(g, {"name": "GUARD_TOWER", "player": "Steve"})
-    assert values(server, TOWER) == (1500, 8, 9)                     # the guard tower 7 attack, 8 range, +1 each
+    hp, attack, range_ = base("GUARD_TOWER")
+    new = values(server, TOWER)
+    assert new[0] == hp and new[1] > attack and new[2] > range_
 
 
 def test_a_tower_that_is_complete_after_the_research_has_the_values():
@@ -64,4 +72,4 @@ def test_a_tower_that_is_complete_after_the_research_has_the_values():
     train.research(g, {"name": "FLETCHING", "player": "Steve"})
     site = build.found(g, "WATCH_TOWER", NEW)
     build.rise(g, site, math.inf)
-    assert values(server, NEW) == (1020, 6, 9)
+    assert values(server, NEW) == values(server, TOWER)

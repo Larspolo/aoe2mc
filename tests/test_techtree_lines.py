@@ -9,7 +9,7 @@ def column(slots, name):
 def test_the_militia_line_has_one_column():
     slots = techtree.pages(train.TRAINS["BARRACKS"])[0]
     assert [column(slots, n) for n in ("MILITIA", "MAN_AT_ARMS_UPGRADE", "LONG_SWORDSMAN_UPGRADE")] \
-        == [(column(slots, "MILITIA")[0], r) for r in range(3)]
+        == [(column(slots, "MILITIA")[0], techtree.age(n)) for n in ("MILITIA", "MAN_AT_ARMS_UPGRADE", "LONG_SWORDSMAN_UPGRADE")]
 
 
 def test_the_spearman_line_has_another_column():

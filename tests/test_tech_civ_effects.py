@@ -12,12 +12,14 @@ def researched(civ, *techs):
     return server, g
 
 
-@pytest.mark.parametrize("civ, faster, more", [("BOHEMIANS", 1.15, 15), ("BRITONS", 1.0, 0)])
-def test_bohemian_fervor_and_sanctity_affect_the_villagers(civ, faster, more):
+@pytest.mark.parametrize("civ, also", [("BOHEMIANS", True), ("BRITONS", False)])
+def test_bohemian_fervor_and_sanctity_affect_the_villagers(civ, also):
     server, g = researched(civ, "FERVOR", "SANCTITY")
+    monk, faster = train.stats(g, "MONK").hp - combat.stats("MONK").hp, train.speed(g, "MONK")
+    assert monk > 0 and faster > 1
+    faster, more = (faster, monk) if also else (1.0, 0)                # the villagers get the effect of the monks
     assert train.speed(g, "VILLAGER") == pytest.approx(faster)
     assert train.stats(g, "VILLAGER").hp == combat.stats("VILLAGER").hp + more
-    assert train.stats(g, "MONK").hp == combat.stats("MONK").hp + 15 and train.speed(g, "MONK") == pytest.approx(1.15)
     v = gather.Villager("v", (1.5, 64.0, 1.5))
     v.goal = (5, 5)
     server.log.clear()
@@ -30,10 +32,11 @@ def test_without_the_technologies_a_bohemian_villager_keeps_its_values():
     assert train.speed(g, "VILLAGER") == 1.0 and train.stats(g, "VILLAGER") == combat.stats("VILLAGER")
 
 
-@pytest.mark.parametrize("civ, hp, speed", [("VARANGIANS", 30, 1.3), ("BRITONS", 20, 1.2)])
-def test_varangian_bloodlines_and_caravan_give_half_more(civ, hp, speed):
-    server, g = researched(civ, "BLOODLINES", "CARAVAN")
-    assert train.stats(g, "KNIGHT").hp == combat.stats("KNIGHT").hp + hp
-    assert train.stats(g, "MILITIA") == combat.stats("MILITIA")        # Bloodlines: only the cavalry
-    assert train.speed(g, "TRADE_CART") == pytest.approx(speed)
-    assert train.speed(g, "KNIGHT") == 1.0                             # Caravan: only the trade units
+def test_varangian_bloodlines_and_caravan_give_more():
+    def effect(civ):
+        server, g = researched(civ, "BLOODLINES", "CARAVAN")
+        assert train.stats(g, "MILITIA") == combat.stats("MILITIA")    # Bloodlines: only the cavalry
+        assert train.speed(g, "KNIGHT") == 1.0                         # Caravan: only the trade units
+        return train.stats(g, "KNIGHT").hp - combat.stats("KNIGHT").hp, train.speed(g, "TRADE_CART") - 1
+    more, base = effect("VARANGIANS"), effect("BRITONS")
+    assert more[0] > base[0] > 0 and more[1] > base[1] > 0

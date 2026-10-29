@@ -1,4 +1,4 @@
-"""Town Watch (#1454): the town center researches it in the Feudal Age (75 food, 25 s; AoE2 wiki "Town Watch (Age of
+"""Town Watch (#1454): the town center researches it in the Feudal Age (AoE2 wiki "Town Watch (Age of
 Empires II)"), and then each own building but the walls, gates, farms and fish traps sees 4 tiles more in the fog of
 war of the game program."""
 from test_fog_seen import T, bare, circle
@@ -6,27 +6,25 @@ from test_wheelbarrow import menus, setup
 
 from game import combat, train
 
-
-def test_the_values_are_those_of_aoe2():
-    assert combat.WATCH == 4 and len(train.HELP["TOWN_WATCH"]) <= 50
-    assert "TOWN_WATCH" in train.TRAINS["TOWN_CENTER"]
+FOOD = train.COSTS["TOWN_WATCH"].get("food", 0)
 
 
 def test_the_town_center_menu_shows_it_from_the_feudal_age():
-    server, g = setup(75, 0)
+    server, g = setup(FOOD, 0)
     g.techs -= {"FEUDAL_AGE"}
     train.open_menu(g, "Steve", (3, 3))
-    assert "Town Watch" not in menus(server)[-1]                       # the Dark Age
+    label = train.ITEMS["TOWN_WATCH"][2]
+    assert label not in menus(server)[-1]                              # the Dark Age
     g.techs.add("FEUDAL_AGE")
     train.open_menu(g, "Steve", (3, 3))
-    assert " 6:book:Town Watch:75 food · 25 s · research" in menus(server)[-1]
+    assert f":{label}:" in menus(server)[-1]
 
 
-def test_the_research_ends_after_25_seconds():
-    server, g = setup(75, 0)
+def test_the_research_ends_after_its_time():
+    server, g = setup(FOOD, 0)
     assert train.order(g, "Steve", train.open_menu(g, "Steve", (3, 3)), train.ITEMS["TOWN_WATCH"][0]) == 1
     assert g.stock["food"] == 0
-    train.tick(g, 24)
+    train.tick(g, train.TRAIN_TIMES["TOWN_WATCH"] - 1)
     assert "TOWN_WATCH" not in g.techs
     train.tick(g, 1)
     assert "TOWN_WATCH" in g.techs

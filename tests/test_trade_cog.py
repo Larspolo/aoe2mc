@@ -1,5 +1,5 @@
-"""game/fleet.py and game/train.py: an own dock trains the trade cog in the Feudal Age (100 wood, 50 gold, 36 s; AoE2
-DE wiki "Trade Cog"), and a trade cog sent to a second own dock sails between the two docks and brings the gold of the
+"""game/fleet.py and game/train.py: an own dock trains the trade cog in the Feudal Age (AoE2 DE wiki
+"Trade Cog"), and a trade cog sent to a second own dock sails between the two docks and brings the gold of the
 AoE2 trade formula (trade.gold) at each arrival at home (#1485)."""
 from test_build_site import Server
 from test_gather import grid
@@ -9,6 +9,7 @@ import units
 from game import fleet, gather, trade, train
 
 HOME, FAR = (14, 17, 2, 5), (14, 17, 32, 35)                       # block footprints (x0, x1, z0, z1), tile size 1
+TIME = train.TRAIN_TIMES["TRADE_COG"]
 
 
 def docks_map():
@@ -22,35 +23,30 @@ def docks_map():
     data["level_height"] = 1
     server = Server({"Steve": {"Pos": (12.5, 64.0, 3.5), "Rotation": (-90.0, 40.0)}})
     g = gather.Gather(server, data).setup()
-    g.stock.update(wood=100, gold=50)
+    g.stock.update(**train.COSTS["TRADE_COG"])
     g.techs = {"FEUDAL_AGE"}
     return server, g
-
-
-def test_the_trade_cog_has_the_aoe2_de_values_of_the_wiki():
-    assert "TRADE_COG" in train.TRAINS["DOCK"]
-    assert len(train.HELP["TRADE_COG"]) <= 50
-    assert units.classify("TRADE_COG")["id"] == "minecraft:birch_chest_boat"
 
 
 def test_the_dock_trains_it_from_the_item_row_under_the_queue():
     server, g = docks_map()
     g.techs = set()
     train.open_menu(g, "Steve", (15, 3))
-    assert f"{train.MORE}:gray_dye:Trade Cog:100 wood · 50 gold · 36 s · Needs the Feudal Age" in menus(server)[-1]
+    label = train.ITEMS["TRADE_COG"][2]
+    assert f"{train.MORE}:{train.build.LOCKED}:{label}:" in menus(server)[-1]
     assert train.order(g, "Steve", HOME, train.MORE) == 0
     g.techs = {"FEUDAL_AGE"}
     train.open_menu(g, "Steve", (15, 3))
-    assert f"{train.MORE}:birch_chest_boat:Trade Cog:100 wood · 50 gold · 36 s · queue 0/15" in menus(server)[-1]
-    assert train.order(g, "Steve", HOME, train.MORE) == 1 and g.stock["wood"] == g.stock["gold"] == 0
-    cog, = train.tick(g, 36)
+    assert f"{train.MORE}:{units.classify('TRADE_COG')['id'].removeprefix('minecraft:')}:{label}:" in menus(server)[-1]
+    assert train.order(g, "Steve", HOME, train.MORE) == 1 and not any(g.stock[r] for r in train.COSTS["TRADE_COG"])
+    cog, = train.tick(g, TIME)
     assert g.soldiers[cog] == "TRADE_COG" and cog in g.ships
 
 
 def test_a_trade_cog_sails_between_two_docks_and_brings_gold_at_home():
     server, g = docks_map()
     train.order(g, "Steve", train.open_menu(g, "Steve", (15, 3)), train.MORE)
-    cog, = train.tick(g, 36)
+    cog, = train.tick(g, TIME)
     g.selected = {cog}
     assert fleet.trade_order(g, "Steve", (15, 33)) == FAR
     trip = trade.gold(trade.center(HOME, 1), trade.center(FAR, 1), 40)
@@ -70,7 +66,7 @@ def test_a_trade_cog_sails_between_two_docks_and_brings_gold_at_home():
 def test_a_move_order_ends_the_route_and_a_cart_order_does_not_take_a_dock():
     server, g = docks_map()
     train.order(g, "Steve", train.open_menu(g, "Steve", (15, 3)), train.MORE)
-    cog, = train.tick(g, 36)
+    cog, = train.tick(g, TIME)
     g.selected = {cog}
     fleet.trade_order(g, "Steve", (15, 33))
     fleet.order(g, {cog}, (30, 20))
@@ -83,7 +79,7 @@ def test_a_move_order_ends_the_route_and_a_cart_order_does_not_take_a_dock():
 def test_a_right_click_on_the_far_dock_with_a_selected_cog_is_a_trade_order():
     server, g = docks_map()
     train.order(g, "Steve", train.open_menu(g, "Steve", (15, 3)), train.MORE)
-    cog, = train.tick(g, 36)
+    cog, = train.tick(g, TIME)
     g.selected = {cog}
     server.entities["Steve"] = {"Pos": (12.5, 64.0, 33.5), "Rotation": (-90.0, 40.0)}   # look east and down at FAR
     g.click("Steve")

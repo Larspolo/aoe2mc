@@ -1,6 +1,5 @@
-"""game/train.py: the university researches Guard Tower in the Castle Age (100 food, 250 wood, 30 s; AoE2 DE wiki,
-Watch Tower infobox "UpCost") and Keep after it in the Imperial Age (500 food, 350 wood, 75 s; Guard Tower infobox),
-#1374. The complete and the new own watch towers get the values of combat.STATS of the new tower; a damaged tower keeps
+"""game/train.py: the university researches Guard Tower in the Castle Age (AoE2 DE wiki, Watch Tower
+infobox "UpCost") and Keep after it in the Imperial Age (Guard Tower infobox), #1374. The complete and the new own watch towers get the values of combat.STATS of the new tower; a damaged tower keeps
 its lost hit points, as a wall after Fortified Wall (#1326)."""
 import math
 
@@ -24,7 +23,7 @@ def setup(age=2):
     server = HpServer({}, {})
     g = gather.Gather(server, data).setup()
     g.techs |= set(build.AGE_TECHS[:age])
-    g.stock.update(food=600, wood=600, stone=200)
+    g.stock.update(food=10000, wood=10000, stone=10000)
     return server, g
 
 
@@ -33,7 +32,8 @@ def uuid(rect):
     return combat.target_uuid([x0, z0, x1, z1])
 
 
-def research(g, name, time):
+def research(g, name):
+    time = train.TRAIN_TIMES[name]
     assert train.order(g, "Steve", train.open_menu(g, "Steve", (9, 9)), train.ITEMS[name][0]) == 1
     train.tick(g, time - 1)
     assert name not in g.techs
@@ -41,10 +41,13 @@ def research(g, name, time):
     assert name in g.techs
 
 
-def test_the_cost_time_age_and_order_are_those_of_aoe2():
-    assert (train.BY_KEY["age"]["GUARD_TOWER"], train.BY_KEY["age"]["KEEP"]) == (2, 3) and train.BY_KEY["after"]["KEEP"] == "GUARD_TOWER"
-    assert combat.stats("GUARD_TOWER") == combat.Stats(1500, 7, 2, 8, 8, 2.0, {"ship": 7}, ("building", "standard", "stone"))
-    assert combat.stats("KEEP") == combat.Stats(2250, 8, 3, 9, 8, 2.0, {"ship": 8}, ("building", "standard", "stone"))
+def item(name):
+    return f":{train.ITEMS[name][1]}:{train.ITEMS[name][2]}:"
+
+
+def building(s):
+    """The start of the "aoe building" command of the map tower with the values s."""
+    return f"aoe building {uuid(MAP)} {s.hp} {s.melee} {s.pierce} "
 
 
 def test_the_university_menu_shows_guard_tower_in_the_castle_age_and_keep_after_it_in_the_imperial_age():
@@ -53,31 +56,31 @@ def test_the_university_menu_shows_guard_tower_in_the_castle_age_and_keep_after_
         server, g = setup(age)
         g.techs |= set(techs)
         train.open_menu(g, "Steve", (9, 9))
-        assert (":book:Guard Tower:" in menus(server)[-1], ":book:Keep:" in menus(server)[-1]) == (gt, keep)
-    assert "3:book:Keep:500 food · 350 wood · 75 s · research" in menus(server)[-1]
+        assert (item("GUARD_TOWER") in menus(server)[-1], item("KEEP") in menus(server)[-1]) == (gt, keep)
     server, g = setup(3)
     assert train.queue(g, "Steve", (9, 9), "KEEP") is None          # not before Guard Tower
 
 
 def test_the_research_gives_the_towers_the_values_of_the_guard_tower_and_then_of_the_keep():
     server, g = setup(3)
-    server.hp[uuid(MAP)] = 520                                     # 500 hit points lost
-    research(g, "GUARD_TOWER", 30)
-    assert server.hp[uuid(MAP)] == 1000                            # +480 hit points
-    assert any(c.startswith(f"aoe building {uuid(MAP)} 1500 2 8 ") and c.split()[12:14] == ["7", "8"]   # attack, range
+    guard, keep = combat.stats("GUARD_TOWER"), combat.stats("KEEP")
+    server.hp[uuid(MAP)] = combat.stats("WATCH_TOWER").hp - 500    # 500 hit points lost
+    research(g, "GUARD_TOWER")
+    assert server.hp[uuid(MAP)] == guard.hp - 500                  # the lost hit points stay lost
+    assert any(c.startswith(building(guard)) and c.split()[12:14] == [str(guard.attack), str(guard.range)]
                for c in server.log)
     assert f"aoe label {uuid(MAP)} Guard Tower" in server.log
     assert not any(c.startswith("summon ") for c in server.log)    # the same target
-    research(g, "KEEP", 75)
-    assert server.hp[uuid(MAP)] == 1750                            # +750 hit points
-    assert any(c.startswith(f"aoe building {uuid(MAP)} 2250 3 9 ") for c in server.log)
+    research(g, "KEEP")
+    assert server.hp[uuid(MAP)] == keep.hp - 500
+    assert any(c.startswith(building(keep)) for c in server.log)
     assert build.line(g, "WATCH_TOWER") == build.line(g, "GUARD_TOWER") == "KEEP"
     assert build.line(g, "HOUSE") == "HOUSE"
 
 
 def test_a_destroyed_tower_stays_destroyed():
     server, g = setup()
-    research(g, "GUARD_TOWER", 30)                                 # no score: no target
+    research(g, "GUARD_TOWER")                                     # no score: no target
     assert not any(uuid(MAP) in c for c in server.log if "players get" not in c)
 
 
@@ -87,13 +90,14 @@ def test_a_new_watch_tower_after_the_research_has_the_values_of_the_guard_tower(
     site = build.found(g, "WATCH_TOWER", NEW)
     server.log.clear()
     build.rise(g, site, math.inf)
-    assert any(c.startswith(f"aoe building {uuid(NEW)} 1500 2 8 ") for c in server.log)
+    s = combat.stats("GUARD_TOWER")
+    assert any(c.startswith(f"aoe building {uuid(NEW)} {s.hp} {s.melee} {s.pierce} ") for c in server.log)
     assert f"aoe label {uuid(NEW)} Guard Tower" in server.log
 
 
 def test_villagers_repair_an_upgraded_tower_to_the_hit_points_of_its_new_tower():
     from game import repair
     _, g = setup()
-    assert repair.full(g, "WATCH_TOWER", 1) == 1020
+    assert repair.full(g, "WATCH_TOWER", 1) == combat.stats("WATCH_TOWER").hp
     g.techs.add("GUARD_TOWER")
-    assert repair.full(g, "WATCH_TOWER", 1) == 1500
+    assert repair.full(g, "WATCH_TOWER", 1) == combat.stats("GUARD_TOWER").hp

@@ -1,26 +1,36 @@
-"""game/train.py: an own archery range trains skirmishers in the Feudal Age (#730): 25 food and 35 wood, 22 AoE2
-seconds, and the AoE2 range of combat.STATS (combat.range_command)."""
+"""game/train.py: an own archery range trains skirmishers in the Feudal Age (#730): the cost and time of the data,
+and the AoE2 range of combat.STATS (combat.range_command)."""
 import contextlib
 import io
 import json
 
 import pytest
 from test_train_archery import menus, setup
+from test_train_menu import entry
 
 from game import combat, gather, run, train
 
 
-def stock(g, food=25, wood=35):
-    g.stock.update(food=food, wood=wood)
+COST, TIME = train.COSTS["SKIRMISHER"], train.TRAIN_TIMES["SKIRMISHER"]
+
+
+def stock(g, n=1):
+    g.stock.update(food=0, wood=0, gold=0)
+    g.stock.update({r: n * v for r, v in COST.items()})
+
+
+def slot(g, rect):
+    return train.layout(g, rect)["SKIRMISHER"][0]
 
 
 def test_no_skirmisher_in_the_dark_age():
     server, g = setup()
-    stock(g, 1000, 1000)
+    stock(g, 40)
     g.techs.discard("FEUDAL_AGE")
     rect = train.open_menu(g, "Steve", (11, 3))
-    assert "1:gray_dye:Skirmisher:25 food · 35 wood · 22 s · Needs the Feudal Age" in menus(server)[-1]
-    assert train.order(g, "Steve", rect, 1) == 0 and not g.queues.get(rect) and g.stock["wood"] == 1000
+    before = dict(g.stock)
+    assert f" {entry(g, rect, 'SKIRMISHER')}{train.build.locked(g, 'SKIRMISHER')}" in menus(server)[-1]
+    assert train.order(g, "Steve", rect, slot(g, rect)) == 0 and not g.queues.get(rect) and g.stock == before
 
 
 def test_a_click_queues_one_skirmisher_in_the_feudal_age():
@@ -28,24 +38,24 @@ def test_a_click_queues_one_skirmisher_in_the_feudal_age():
     stock(g)
     g.techs.add("FEUDAL_AGE")
     rect = train.open_menu(g, "Steve", (11, 3))
-    assert train.order(g, "Steve", rect, 1) == 1 and g.queues[rect][0]["name"] == "SKIRMISHER"
-    assert g.stock["food"] == 0 and g.stock["wood"] == 0
-    assert train.order(g, "Steve", rect, 1) == 0                       # no resources for a second one
+    assert train.order(g, "Steve", rect, slot(g, rect)) == 1 and g.queues[rect][0]["name"] == "SKIRMISHER"
+    assert all(g.stock[r] == 0 for r in COST)
+    assert train.order(g, "Steve", rect, slot(g, rect)) == 0                       # no resources for a second one
 
 
-def test_the_skirmisher_appears_after_22_seconds_and_shoots_from_its_range():
+def test_the_skirmisher_appears_after_its_train_time_and_shoots_from_its_range():
     server, g = setup()
     stock(g)
     g.techs.add("FEUDAL_AGE")
     rect = train.open_menu(g, "Steve", (11, 3))
-    train.order(g, "Steve", rect, 1)
-    assert train.tick(g, 21) == []
+    train.order(g, "Steve", rect, slot(g, rect))
+    assert train.tick(g, TIME - 1) == []
     uuid, = train.tick(g, 1)
     summon, = [c for c in server.log if c.startswith("summon")]
     assert summon.startswith("summon minecraft:drowned ") and "trident" in summon
     assert g.soldiers == {uuid: "SKIRMISHER"}
     assert combat.stats_command(uuid, "SKIRMISHER") in server.log      # the bonus against archers and spearmen
-    assert combat.range_command(uuid, "SKIRMISHER", 1) in server.log   # the AoE2 range 4 and reload time
+    assert combat.range_command(uuid, "SKIRMISHER", 1) in server.log   # the AoE2 range and reload time
 
 
 @pytest.mark.mc

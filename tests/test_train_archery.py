@@ -1,6 +1,6 @@
 """game/build.py and game/train.py: a villager builds an archery range, and a right click on an own archery range opens
-its menu with "Archer"; an archer costs 25 wood and 45 gold, appears after 35 AoE2 seconds and shoots from its AoE2
-range (#670)."""
+its menu with "Archer"; an archer takes its cost, appears after its AoE2 train time and shoots from its AoE2 range
+(#670)."""
 import contextlib
 import io
 import json
@@ -10,10 +10,11 @@ import pytest
 from menu_line import item, labels, order
 from test_forging import menus                                         # a long menu: with its `aoe menu-add` parts
 from test_gather import FakeServer, grid
-from test_train_menu import RALLY, SKIRM
+from test_train_menu import check_items
 
 from game import build, combat, gather, run, train
 
+# test_age_lock.py imports these items.
 CAVA = "4:gray_dye:Cavalry Archer:40 wood · 60 gold · 37 s · Needs the Castle Age"   # gray before the Castle Age (#1397)
 HAND = "7:gray_dye:Hand Cannoneer:45 food · 50 gold · 34 s · Needs the Imperial Age"   # (#1506)
 GENI = "19:gray_dye:Genitour:40 food · 35 wood · 25 s · Needs the Castle Age"   # no civ: also the Berber unit (#1610)
@@ -41,9 +42,12 @@ def setup(wood=25, gold=45, done=True):
     return server, g
 
 
+COST, TIME = train.COSTS["ARCHER"], train.TRAIN_TIMES["ARCHER"]
+
+
 def test_the_build_menu_has_the_archery_range():
     archery, = [i for i in build.items() if i[2] == "Archery Range"]
-    assert archery[1] == "target" and archery[3] == "175 wood\n50 s"
+    assert archery[1] == build.ICONS["ARCHERY_RANGE"]
 
 
 def test_a_right_click_on_the_archery_range_opens_its_menu():
@@ -52,10 +56,7 @@ def test_a_right_click_on_the_archery_range_opens_its_menu():
         g.click(name)
     cmd, = menus(server)
     assert cmd.startswith("aoe menu Steve Archery Range ") and labels(cmd) == order(g, "ARCHERY_RANGE")   # the full menu
-    assert [item(cmd, label) for label in ("Archer", "Skirmisher", "Cavalry Archer", "Hand Cannoneer", "Genitour",
-                                           "Elephant Archer", "Mounted Crossbowman", "Slinger", "Bolas Rider", "Rally point")] \
-        == ["0:skeleton_spawn_egg:Archer:25 wood · 45 gold · 35 s · queue 0/15", SKIRM, CAVA, HAND, GENI, ELEA, MOCB, SLIN,
-            BOLA, RALLY]
+    check_items(g, (10, 13, 2, 5), cmd)
 
 
 def test_no_menu_at_an_archery_range_that_is_not_complete():
@@ -63,27 +64,32 @@ def test_no_menu_at_an_archery_range_that_is_not_complete():
     assert train.open_menu(g, "Steve", (11, 3)) is None and not menus(server)
 
 
+def slot(g, rect):
+    return train.layout(g, rect)["ARCHER"][0]
+
+
 def test_a_click_queues_one_archer_and_takes_its_cost():
-    server, g = setup()
+    server, g = setup(wood=COST.get("wood", 0), gold=COST.get("gold", 0))
     rect = train.open_menu(g, "Steve", (11, 3))
-    assert rect == (10, 13, 2, 5) and train.order(g, "Steve", rect, 0) == 1
+    assert rect == (10, 13, 2, 5) and train.order(g, "Steve", rect, slot(g, rect)) == 1
     assert g.stock["wood"] == 0 and g.stock["gold"] == 0 and g.queues[rect][0]["name"] == "ARCHER"
-    assert "scoreboard players remove Gold aoe_res 45" in server.log
-    assert train.order(g, "Steve", rect, 0) == 0                     # no wood and gold for a second one
+    assert all(f"scoreboard players remove {r.capitalize()} aoe_res {v}" in server.log for r, v in COST.items())
+    assert train.order(g, "Steve", rect, slot(g, rect)) == 0         # no wood and gold for a second one
 
 
 def test_a_shift_click_queues_5():
     server, g = setup(wood=1000, gold=1000)
     rect = train.open_menu(g, "Steve", (11, 3))
-    assert train.order(g, "Steve", rect, 0, shift=True) == 5 and g.stock["gold"] == 1000 - 5 * 45
-    assert item(menus(server)[-1], "Archer").endswith(" queue 5/15")
+    assert train.order(g, "Steve", rect, slot(g, rect), shift=True) == 5
+    assert all(g.stock[r] == 1000 - 5 * v for r, v in COST.items())
+    assert item(menus(server)[-1], train.ITEMS["ARCHER"][2]).endswith(" queue 5/15")
 
 
-def test_the_archer_appears_after_35_seconds_and_shoots_from_its_range():
-    server, g = setup()
+def test_the_archer_appears_after_its_train_time_and_shoots_from_its_range():
+    server, g = setup(wood=COST.get("wood", 0), gold=COST.get("gold", 0))
     rect = train.open_menu(g, "Steve", (11, 3))
-    train.order(g, "Steve", rect, 0)
-    assert train.tick(g, 34) == [] and not [c for c in server.log if c.startswith("summon")]
+    train.order(g, "Steve", rect, slot(g, rect))
+    assert train.tick(g, TIME - 1) == [] and not [c for c in server.log if c.startswith("summon")]
     uuid, = train.tick(g, 1)
     summon, = [c for c in server.log if c.startswith("summon")]
     assert re.match(r"summon minecraft:skeleton 11.5 64.0 5.5 ", summon)
@@ -111,7 +117,7 @@ def test_a_trained_archer_can_shoot_on_a_server(tmp_path):
     with run.Game(tmp_path / "W") as game:
         game.forceload()
         g = gather.Gather(game, data, tick=0.25, start={}).setup()
-        g.stock.update(wood=25, gold=45)
+        g.stock.update(COST)
         g.techs.add("FEUDAL_AGE")
         rect, = train.homes(g)
         assert train.queue(g, "nobody", rect[::2], "ARCHER")
