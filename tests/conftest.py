@@ -38,6 +38,13 @@ def no_pack_assets(monkeypatch):
     monkeypatch.setattr(units, "ASSETS", False)
 
 
+@pytest.fixture(autouse=True)
+def own_medal_file(monkeypatch, tmp_path):
+    """The medal file of the Art of War challenges in the test folder, not in the home folder (#3904)."""
+    import challenge
+    monkeypatch.setattr(challenge, "MEDAL_FILE", str(tmp_path / "medals.json"))
+
+
 def pytest_terminal_summary(terminalreporter, exitstatus, config):
     """The result line also with -qq: addopts has -q, so `pytest -q` printed no "N passed" line, and runs ran the full
     suite again to find the result (#1243, #2510)."""

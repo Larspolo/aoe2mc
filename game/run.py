@@ -1119,8 +1119,9 @@ def main(argv=None, scenario=None):
     ap.add_argument("--victory", choices=sorted(VICTORIES), default="standard", help="--play: the AoE2 setting "
                     "\"Victory\" (default standard; " + "; ".join(f"{k}: {v}" for k, v in sorted(VICTORIES.items())
                                                        if k != "standard") + ")")
-    ap.add_argument("--challenge", choices=sorted(challenge_names()), metavar="NAME", help="--play: an AoE2 \"Art "
-                    "of War\" challenge with its civilization, goal and medals: " + ", ".join(sorted(challenge_names())))
+    ap.add_argument("--challenge", choices=sorted(challenge_names()) + ["list"], metavar="NAME", help="--play: an "
+                    "AoE2 \"Art of War\" challenge with its civilization, goal and medals; it opens after a medal in "
+                    "the one before it (list: each one, its state and best medal): " + ", ".join(sorted(challenge_names())))
     ap.add_argument("--victory-value", type=int, metavar="N", help="--play: the years of --victory time-limit "
                     "(default 500) or the points of --victory score (default 10000)")
     ap.add_argument("--pop-limit", type=pop_limit, default=200, metavar="N",
@@ -1164,6 +1165,13 @@ def main(argv=None, scenario=None):
                     "(no team), for example 1,1,2,2: allies do not fight and share their team bonuses (default: the "
                     "teams of the scenario)")
     a = ap.parse_args(argv)
+    if a.challenge:                                  # the unlock order and the best medals (#3904)
+        import challenge
+        if a.challenge == "list":
+            print("\n".join(challenge.listing()))
+            sys.exit(0)
+        if not challenge.opened(a.challenge):
+            ap.error(f"--challenge {a.challenge} is closed: win a medal in {challenge.CHALLENGES[a.challenge]['after']} first")
     if a.camera and a.follow is not None:
         ap.error("--camera auto and --follow N both move the spectators: give only one of them")
     import savegame
