@@ -80,7 +80,7 @@ def test_the_pacer_record_holds_the_quota_the_plan_the_starts_and_the_numbers_of
 
 def test_the_pacer_adds_one_line_per_cycle_to_its_log(monkeypatch, tmp_path):
     monkeypatch.setattr(pacer.usage, "read_usage", lambda: {"five_hour": (0.2, 0, "allowed")})
-    monkeypatch.setattr(pacer.usage, "fire", lambda *a, skip=(), status=None: (1, {"haiku": 0}, LINE))
+    monkeypatch.setattr(pacer.usage, "fire", lambda *a, skip=(), status=None, **kw: (1, {"haiku": 0}, LINE))
     monkeypatch.setattr(pacer.usage, "read_status", lambda: ([], ""))
     monkeypatch.setattr(pacer.usage, "burns", lambda comments: (0.01, None))
     log = tmp_path / "pacer.jsonl"

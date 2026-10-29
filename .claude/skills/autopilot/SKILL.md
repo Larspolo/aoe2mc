@@ -97,12 +97,13 @@ A main run never takes a ticket of a `reserved` lane (`lane:haiku`, `lane:deep`,
 Before the pick (only deep runs while `reserved` names `deep`), check the open epics with no open sub-issue (at most 3 per run), and refill the queue when R < N
 (N = the target and R = the ready tickets on the stderr line of `python3 tools/usage.py --fire`): `queue.md`.
 If there is no candidate, go to step 8 and report "No ticket is ready".
-Claim it with `python3 tools/claim.py N`. It pushes a unique commit to the ref `claim/N` without force, so only one
-run can win (#211). Exit 0: the ticket is yours; the tool added `in-progress` and "Started by `<your branch>`.".
-Exit 1: it names the run that was first (a claim, a "Started by" of the last 30 minutes, an open PR changed in the
-last 30 minutes, or a closed issue): pick the next candidate. Never comment "Started by" yourself (#288, #1749).
-Exit 2 (of each `claim.py` call): a git or GitHub error, not another run (#3064): wait one minute and run the
-command one more time.
+Claim with `python3 tools/claim.py N --or M K` (the candidates in order: one call tries each). It pushes a unique
+commit to the ref `claim/N` without force, so only one run can win (#211). Exit 0: the named ticket is yours; the
+tool added `in-progress` and "Started by `<your branch>`.". Exit 1: another run was first for each (a claim, a
+"Started by" or an open PR changed in the last 30 minutes, or a closed issue): take the next candidates. Never
+comment "Started by" yourself (#288, #1749).
+Exit 2 (of each `claim.py` call): a git or GitHub error, not another run (#3064): wait one minute, then run it
+once more.
 Each time you give a ticket back without a merge (hand-off, `blocked`, `needs-human`), run
 `python3 tools/claim.py N --release`: it releases the claim and removes `in-progress` (#3234), so that another run
 can claim the ticket again.

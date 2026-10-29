@@ -66,6 +66,26 @@ def record(at, found, burn, burn7, k, runs, started, line, problems=()):
     return {**rec, "problems": list(problems), "line": line}
 
 
+def recent_starts(path, now, minutes=usage.PENDING):
+    """{task: runs} that the cycles of the log file `path` (`--log`) started in the last `minutes` before `now` (a Unix
+    time): `usage.fire` counts those with no claim yet. An absent or broken log: none."""
+    out = {}
+    try:
+        with open(path) as f:
+            for line in f:
+                try:
+                    r = json.loads(line)
+                    at = datetime.datetime.strptime(r["at"], "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=datetime.timezone.utc)
+                except (ValueError, KeyError, TypeError):
+                    continue
+                if at.timestamp() >= now - minutes * 60:
+                    for task, n in (r.get("started") or {}).items():
+                        out[task] = out.get(task, 0) + n
+    except OSError:
+        pass
+    return out
+
+
 def main(argv=None, env=os.environ):
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--dry-run", action="store_true", help="print the calls, send nothing")
@@ -76,7 +96,8 @@ def main(argv=None, env=os.environ):
         sys.exit("no rate_limit_event in the CLI output: start no run")
     status = usage.read_status()                       # one read for both fire calls (#3069)
     burn, burn7 = usage.burns(status[0])
-    k, runs, line = usage.fire(found, now, burn, burn7, status=status)
+    started = recent_starts(a.log, now) if a.log else {}   # the runs of the last cycles that have no claim yet
+    k, runs, line = usage.fire(found, now, burn, burn7, status=status, started=started)
     todo = calls(k, runs, env)
     skipped = sorted({t for t, n in [*runs.items(), ("main", k - sum(runs.values()))]
                       if n and not env.get(f"PACER_URL_{t.upper()}")})
@@ -97,7 +118,7 @@ def main(argv=None, env=os.environ):
                 failed.append(f"{task}: {e}")
     blocked = sum(1 for t, *_ in todo if t in limited and t != "main") - sum(started[t] for t in limited)
     if blocked > 0 and "main" not in limited:          # give the room of the blocked lane runs to the main task
-        k2, runs2, _ = usage.fire(found, now, burn, burn7, skip=limited, status=status)
+        k2, runs2, _ = usage.fire(found, now, burn, burn7, skip=limited, status=status, started=started)
         more = calls(min(blocked, k2 - sum(runs2.values())), {}, env)
         for task, url, token in more:
             try:

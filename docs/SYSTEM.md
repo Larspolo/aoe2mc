@@ -104,7 +104,8 @@ wait until the budget per hour is large enough again (#1695). Below `week_free` 
 usage there is no weekly guard: the runs fill each 5-hour window (owner, 2026-10-27). `week_guard` of `agent.toml` turns the weekly guard on
 (`true`) or off (`false`: only the 5-hour window counts; owner, 2026-10-28). The CLI line shows the projection
 (`week ahead +38 pt · runs out Wed 11:22`, at the mean rate of the week so far). `--fire` gives the number of runs to start now: the
-target less the runs with a claim beat in the last 25 minutes. A run cannot start other runs (no `fire_trigger`, #566),
+target less the runs with a claim beat in the last 25 minutes, and less the runs that the pacer started in the last 12 minutes and
+that have no claim yet (`usage.pending`, from the `--log` of `pacer.py`; each takes a ready ticket of its lane, 2026-10-29). A run cannot start other runs (no `fire_trigger`, #566),
 so the pacer starts them (at most `max_fire` of `agent.toml` per cycle, and at most the ready tickets plus `refill_runs`: those runs refill the queue). The pacer is the workflow `pacer.yml` (#3193, #3194): each cycle fetches `main` and runs
 `tools/pacer.py`, so a change of the pacing rules works at the next cycle. It starts each run with one call of the
 API trigger of its task; a task takes at most 30 API starts per hour (an account 100), and when a lane task answers

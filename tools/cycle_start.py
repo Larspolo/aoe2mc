@@ -14,7 +14,7 @@ Sections: `Status` (exit 3 when the status issue has `paused`: stop), `Usage` (k
 a conflict, a closed ticket, or green and not merged after 10 minutes), `Main CI` (the last run and the last night run),
 `Feedback` (`feedback.py`), `Triage` (open issues without a priority label), `Candidates` (the pick order of
 `dashboard.py --next`, without the tickets that a run holds; the first 8 of the top priority group turned by the
-branch name, so that parallel runs try other first picks, #3832) and `Release checks` (only when a check can start and has
+branch name, so that parallel runs try other first picks, #3832; and the `claim.py N --or M ...` command of the first 5) and `Release checks` (only when a check can start and has
 no ticket, `release.due()`). The skill says what to do with each line.
 """
 import argparse
@@ -252,7 +252,9 @@ def main(argv=None):
         picks = prefer(picks, last, a.lane)
     section(f"Candidates ({len(picks)} ready, pick order)", [
         f"#{i['number']} {i['title']} ({dashboard.tag(i, 'P')}, {dashboard.tag(i, 'size:')}, overlap "
-        f"{len(dashboard.overlap(i, busy))}{', related' if last and related(i, last) else ''})" for i in picks[:SHOW]])
+        f"{len(dashboard.overlap(i, busy))}{', related' if last and related(i, last) else ''})" for i in picks[:SHOW]]
+        + [f"Claim: python3 tools/claim.py {picks[0]['number']}"            # one call for the candidates (--or)
+           + (" --or " + " ".join(str(i["number"]) for i in picks[1:SHOW]) if len(picks) > 1 else "")] * bool(picks))
     if checks := due_checks():
         section("Release checks (no ticket, make them in the refill)", checks)
     return 0

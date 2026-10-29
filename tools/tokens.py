@@ -193,7 +193,8 @@ PHASE_RULES = (("conflict", r"merge_main\.py|unconflict\.py|\bgit merge\b"),
                ("report", REPORT_FILE),
                ("code", r"\bsed -i\b|\bcat >|\bpython3 - <<|\btee\b"))
 ORDER = ("conflict", "verify", "ci", "code", "claim", "report", "read")   # a call with several tools: the first here
-CLAIMED = re.compile(r"claim\.py (\d+)(?:\s+--takeover)?(?=\s*(?:$|[;&|)<>\n]|\d>))")   # a claim: no option but --takeover
+# a claim: no option but --takeover, or --or with the next candidates (`claim.py N --or M K`)
+CLAIMED = re.compile(r"claim\.py (\d+)(?:\s+--or((?:\s+\d+)+)|\s+--takeover)?(?=\s*(?:$|[;&|)<>\n]|\d>))")
 PHASES = ("read", "claim", "code", "verify", "ci", "conflict", "report")   # the order of the Metrics: line
 
 
@@ -252,14 +253,15 @@ def phases(records):
                 ps = [phase(b.get("name", ""), b.get("input") or {}) for b in tools]
                 calls.append([when(r), min(ps, key=ORDER.index), None])
                 for b in tools:
-                    m = CLAIMED.search((b.get("input") or {}).get("command", "") + "\n") if b.get("name") == "Bash" else None
-                    if m:
-                        claims[b["id"]] = (len(calls) - 1, int(m[1]))
+                    ns = claim_numbers((b.get("input") or {}).get("command", "")) if b.get("name") == "Bash" else []
+                    if ns:
+                        claims[b["id"]] = (len(calls) - 1, ns)
         elif r.get("type") == "user" and isinstance(content, list):
             for b in content:
                 if b.get("type") == "tool_result" and b.get("tool_use_id") in claims:
-                    i, n = claims.pop(b["tool_use_id"])
-                    if n not in done and won(b, n):
+                    i, ns = claims.pop(b["tool_use_id"])
+                    n = won(b, ns)
+                    if n is not None and n not in done:
                         done.add(n)
                         calls[i][2] = n
     out, ticket = {}, None
@@ -272,11 +274,19 @@ def phases(records):
     return out
 
 
-def won(block, n):
-    """True when the tool result `block` says that the claim of ticket n won (`claimed claim/N`, `claim/N-2`)."""
+def claim_numbers(cmd):
+    """The tickets that the command claims, in the order of the tries: `claim.py N` and `claim.py N --or M K`."""
+    m = CLAIMED.search(cmd + "\n")
+    return [int(m[1]), *map(int, (m[2] or "").split())] if m else []
+
+
+def won(block, numbers):
+    """The ticket of `numbers` whose claim the tool result `block` says that it won (`claimed claim/N`, `claim/N-2`),
+    or None."""
     c = block.get("content")
     text = c if isinstance(c, str) else " ".join(x.get("text", "") for x in c or [] if isinstance(x, dict))
-    return re.search(rf"claimed claim/{n}\b", text or "") is not None
+    m = re.search(r"claimed claim/(\d+)\b", text or "")
+    return int(m[1]) if m and int(m[1]) in numbers else None
 
 
 def steps(records):
@@ -299,14 +309,15 @@ def steps(records):
                 if b.get("type") == "tool_use":
                     p = phase(b.get("name", ""), b.get("input") or {})
                     row["phase"] = p if row["phase"] is None else min(row["phase"], p, key=ORDER.index)
-                    m = CLAIMED.search((b.get("input") or {}).get("command", "") + "\n") if b.get("name") == "Bash" else None
-                    if m:
-                        claims[b["id"]] = (row, int(m[1]))
+                    ns = claim_numbers((b.get("input") or {}).get("command", "")) if b.get("name") == "Bash" else []
+                    if ns:
+                        claims[b["id"]] = (row, ns)
         elif r.get("type") == "user":
             for b in content:
                 if b.get("type") == "tool_result" and b.get("tool_use_id") in claims:
-                    row, n = claims.pop(b["tool_use_id"])
-                    if n not in done and won(b, n):
+                    row, ns = claims.pop(b["tool_use_id"])
+                    n = won(b, ns)
+                    if n is not None and n not in done:
                         done.add(n)
                         row["ticket"] = n
     last = "read"
