@@ -25,6 +25,8 @@ first attack, "soldiers" in the first wave. AoE2 does not publish what each leve
 
 Defense (#3399): a predator in the sight of a bot villager gets the hunt order of the DEFENDERS nearest villagers, as
 the AoE2 AI does. After the kill they go back to their last resource and source.
+Town defense (#3954): an enemy unit in the sight of a bot building or villager gets the attack order of the bot soldiers
+that are not in a wave, also before the attack time, as the AoE2 AI does. When it dies or leaves, they walk back.
 """
 import math
 import os
@@ -97,6 +99,7 @@ class Bot:
         self.g.home = self.home                                        # the next bush or mine of Gather.nearest too
         self.guarded = -LOOK                                           # AoE2 seconds of the last look for predators
         self.defense = {}                                              # villager -> (predator, last res, last tree)
+        self.guards = {}                                               # soldier -> (enemy in the town, its place before)
         self.g.work_on = False                                         # the bot gives the tasks after a build or a tree (#3271)
         self.scouted = False                                           # the start scouts get Auto Scout once (#3704)
 
@@ -161,6 +164,7 @@ class Bot:
             scouts = {scout.CAVALRY, *scout.SCOUTS.values()}
             autoscout.start(g, [u for u, n in g.soldiers.items() if n in scouts])
         self.defend()
+        self.guard()
         self.build()
         share = self.shares()
         work = {r: 0 for r in SHARE}
@@ -220,6 +224,44 @@ class Bot:
                 v = g.villagers[u]
                 self.defense[u] = (prey, v.res, v.tree)
             g.hunt(prey, who)
+
+    def guard(self):
+        """Send the soldiers that are not in a wave against the enemy units in the sight of a bot building or villager
+        (#3954): the AoE2 AI defends its town also before its attack. A soldier whose enemy died or left walks back to
+        its place. Runs with defend(): one look each LOOK seconds."""
+        g, T = self.g, self.g.map.T
+        if self.time != self.guarded:                                  # defend() looked in this tick
+            return
+        if self.charged:                                               # a wave fights in fight(): its targets win
+            self.guards = {}
+            return
+        eyes = [((x0 + x1 + 1) / 2, (z0 + z1 + 1) / 2, combat.sight(o["name"]) * T) for o in g.data["objects"]
+                if o["kind"] == "building" and o["player"] == g.player and "footprint" in o
+                for x0, z0, x1, z1 in [o["footprint"]]]
+        eyes += [((x0 + x1 + 1) / 2, (z0 + z1 + 1) / 2, combat.sight(s["name"]) * T) for s in g.sites
+                 if s.get("player", g.player) == g.player and s.get("done") for x0, x1, z0, z1 in [s["footprint"]]]
+        eyes += [(v.pos[0], v.pos[2], combat.sight("VILLAGER_MALE") * T) for v in g.villagers.values() if v.pos]
+        units = sorted(u for u, n in g.enemies.items() if not herd.herdable(n))   # no allies (gather.allied, owners.add)
+        near = {k: p for k, p in (g.positions(units) if eyes else {}).items()
+                if any(math.dist((x, z), (p[0], p[2])) <= r for x, z, r in eyes)}
+        if not near and not self.guards:                               # each position costs one RCON command
+            return
+        mine = g.positions(sorted(u for u, n in g.soldiers.items() if combat.stats(n).attack))
+        for u, (t, back) in sorted(self.guards.items()):
+            if t not in near or u not in mine:
+                del self.guards[u]
+                if u in mine:
+                    ai.move(g.game, u, g.soldiers[u], T, *back)
+        if not near:
+            return
+        orders = {}
+        for u in sorted(mine.keys() - self.guards.keys()):
+            t = min(near, key=lambda k: (math.dist(near[k], mine[u]), k))
+            self.guards[u] = (t, mine[u])
+            orders.setdefault(t, []).append(u)
+        for t, us in sorted(orders.items()):
+            ai.attack(g.game, us, [g.soldiers[u] for u in us], T, t,
+                      [gather.NORMAL * train.speed(g, g.soldiers[u], u) for u in us])
 
     def go(self, v, res):
         """Send villager v to the nearest source of res that has some left and a free cell next to it. False when there
