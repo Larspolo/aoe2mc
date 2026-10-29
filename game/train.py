@@ -131,9 +131,10 @@ def more_arrows(g, building):
 
 
 def weight(g, name):
-    """The population of one unit: the product of the factors of the researched technologies with the key "population"
-    for its building (Logistics of Antiquity Mode: 1/2 for the Barracks, #3918), else 1."""
-    return math.prod(f for t, (b, f) in BY_KEY["population"].items() if t in g.techs and BUILDING_OF.get(name) == b)
+    """The population of one unit (None: a villager): the product of the factors of the researched technologies with the
+    key "population" whose units (as faster: a building, a group, a class, a name or a list) cover it (Logistics of
+    Antiquity Mode: 1/2 for the Barracks, #3918; Mahayana, Aznauri Cavalry, #4256), else 1."""
+    return math.prod(f for t, (b, f) in BY_KEY["population"].items() if t in g.techs and faster(b, name or "VILLAGER"))
 
 
 def work(g, building):
@@ -277,7 +278,7 @@ def test(t, name, s):
 def effect(e, more=1):
     """The function (name, s) -> s of the key "effect" of a technology of data/train.jsonl (#2029): the name of a
     function of this module (an effect with real logic), or {"if": [tests], "add": {field: n}, "times": {field: f},
-    "bonus": {class: n}}. The unit gets the change when one of the tests holds (test(); no "if": each unit). {}: no
+    "bonus": {class: n}, "bonus_times": {class: f}} (a factor of a bonus, Northmen's Fury, #4259). The unit gets the change when one of the tests holds (test(); no "if": each unit). {}: no
     change of the combat values, the effect is in another place (its "note"). A list: each change in turn (an age gives
     the eagle scout and the Flemish Militia other values, #2155). more: the factor of the change (civs.MORE, #2173)."""
     if isinstance(e, str):
@@ -297,6 +298,9 @@ def effect(e, more=1):
                 for k, f in e.get("times", {}).items()}     # a reload of 2.0 × 0.75 stays 1.5 (Stirrups, #4098)
         if "bonus" in e:
             new["bonus"] = {**s.bonus, **{k: s.bonus.get(k, 0) + part(n) for k, n in e["bonus"].items()}}
+        if "bonus_times" in e:                  # a factor of a bonus, rounded as civs.units (#2272)
+            new["bonus"] = {**new.get("bonus", s.bonus), **{k: math.floor(s.bonus[k] * (f if more == 1 else 1 + (f - 1) * more) + 0.5)
+                                                            for k, f in e["bonus_times"].items() if k in s.bonus}}
         return s._replace(**new)
     return change
 

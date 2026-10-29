@@ -12,7 +12,7 @@
 {"name": "costs", "text": "A technology that changes the cost of a group of items: a list of [a rule what of civs.has, a resource or null for all, the factor], as the rules of civs.COSTS. civs.cost.", "issue": 4225}
 {"name": "doctrine", "text": "A switch of the Recruitment Doctrines of its building (Macedonians): no queue and no cost, the next doctrine of the civ key \"doctrines\". train.DOCTRINES, train.switch.", "issue": 2483}
 {"name": "economy", "text": "true: an economic technology that the AI bot researches when its age and building offer it (Loom, Double-Bit Axe, Wheelbarrow). game/bot.py research.", "issue": 3950}
-{"name": "effect", "text": "The change of the AoE2 combat values of a technology (train.effect: a dict, or a list of changes in turn). train.TECHS and train.EACH compute it; civs.MORE changes it.", "issue": 2029}
+{"name": "effect", "text": "The change of the AoE2 combat values of a technology (train.effect: a dict, or a list of changes in turn; \"bonus_times\" multiplies a bonus). train.TECHS and train.EACH compute it; civs.MORE changes it.", "issue": 2029}
 {"name": "faster", "text": "A unit that trains faster from an age: [age, its train time from that age] (the eagle scout and eagle warrior). train.seconds.", "issue": 2155}
 {"name": "glow", "text": "Treason: the enemy Kings glow for so many AoE2 seconds. regicide.treason.", "issue": 2388}
 {"name": "housing_factor", "text": "A technology that multiplies the population room of a building (Urbanization: {\"HOUSE\": 2}). train.limit.", "issue": 3919}
@@ -21,7 +21,7 @@
 {"name": "on_research", "text": "The functions (\"module.function\") that run at the research of a technology, with (g, entry): its special effect in its own module, not an if block of train.research.", "issue": 3243}
 {"name": "rest", "text": "A technology that changes the rest of a priest after a conversion: the factor of the AoE2 seconds of the rest (Fanaticism: 0.5). monk.convert.", "issue": 3987}
 {"name": "shares", "text": "A technology that shares the sight of the player with its allies (Antiquity Mode: Writing): before its research the allies do not see for the player, also with \"Shared Exploration\" on. fog.shares.", "issue": 3920}
-{"name": "population", "text": "A technology that changes the population of the units of one building: [the building, the factor]. train.weight.", "issue": 3918}
+{"name": "population", "text": "A technology that changes the population of its units: [the units (as \"walk\": a building, a group, a class, a name or a list), the factor]. train.weight.", "issue": 3918}
 {"name": "reach", "text": "A technology that adds conversion range and line of sight in tiles to the monks (Afterlife of Antiquity Mode: priests +3). monk.near, gather.seen.", "issue": 3988}
 {"name": "start_age", "text": "The name of the age before the first age (the line of the first age only): Dark Age, Stone Age. build.AGE_NAMES.", "issue": 3666}
 {"name": "team", "text": "true: the allies of the player get the technology too, with its keys \"work\" and \"costs\" (Kasbah, Butalmapu). train.researched.", "issue": 4329}
@@ -44,4 +44,5 @@
 {"name": "rival_years", "text": "A technology that adds years to the relic and wonder victory timers of each enemy (Atheism: 100). wonder.later.", "issue": 4336}
 {"name": "rival_relic_gold", "text": "The factor of the relic gold of each enemy after the technology (Atheism: 0.5). monk.relic_tick.", "issue": 4336}
 {"name": "work", "text": "A technology that makes one building work faster: [the building, the factor of its train and research rate] (Perfusion: [\"BARRACKS\", 2]). A unit group can join the form later. train.work, train.seconds.", "issue": 4226}
+{"name": "trickle", "text": "A technology that adds income for each working unit of a kind: [who (\"farm\", \"wood\" or \"military\"), {resource: per AoE2 second}] (Tuntian). feitoria.tick.", "issue": 4279}
 {"name": "train_group", "text": "A technology that makes a unit group train faster: [the units, as \"walk\", the factor of the train rate] (Steppe Husbandry: the scout line 2). train.group_rate, train.seconds.", "issue": 4260}
