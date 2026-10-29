@@ -1,7 +1,7 @@
 """
 The land of a random map from an AoE2 random map script (.rms, #963, decision A of #961): the user gives the script
 of the own AoE2 install, the repository has no game script. generate() reads the land part of the script and returns
-a map description of #960 (aoe2mc.read_json): the terrain of each tile, elevation 0, and only the trees of the
+a map description of #960 (aoe2mc.read_json): the terrain and the elevation of each tile, and only the trees of the
 forest tiles as objects (FOREST_TREES) yet.
 
 Read: `#const`, `#define`, `if`/`elseif`/`else`/`endif`, `start_random`/`percent_chance`/`end_random`,
@@ -10,7 +10,9 @@ Read: `#const`, `#define`, `if`/`elseif`/`else`/`endif`, `start_random`/`percent
 `left_border`, `right_border`, `top_border`, `bottom_border`: percent of the map size at the low x, high x, low y and
 high y side that the land does not take) and
 <TERRAIN_GENERATION> (`create_terrain` with `base_terrain`, `number_of_clumps`, `number_of_tiles`, `land_percent`,
-`spacing_to_other_terrain_types`, `set_avoid_player_start_areas`, `clumping_factor`). Other sections and attributes:
+`spacing_to_other_terrain_types`, `set_avoid_player_start_areas`, `clumping_factor`) and <ELEVATION_GENERATION>
+(`create_elevation HEIGHT` with `base_terrain`, `number_of_clumps`, `number_of_tiles`, `spacing`: hills level by level,
+never on water or shallows, #3822). Other sections and attributes:
 a warning. `#include_drs random_map.def` has no effect (the constants are in TERRAINS); another #include file: a
 warning. All randomness comes from numpy.random.default_rng(seed).
 """
@@ -34,7 +36,7 @@ BORDERS = ("left_border", "right_border", "top_border", "bottom_border")   # of 
 RING = 0.35                     # the circle of the player lands: radius in map sizes
 AVOID = 13                      # set_avoid_player_start_areas: default tiles from a player origin
 STEPS = ((1, 0), (-1, 0), (0, 1), (0, -1))
-SECTIONS = ("PLAYER_SETUP", "LAND_GENERATION", "TERRAIN_GENERATION")
+SECTIONS = ("PLAYER_SETUP", "LAND_GENERATION", "TERRAIN_GENERATION", "ELEVATION_GENERATION")
 
 
 class RmsError(ValueError):
@@ -308,7 +310,29 @@ def generate(text, seed, players=2, size=None, warn=None):
         for a in set(attrs) - {"base_terrain", "number_of_clumps", "number_of_tiles", "land_percent", "clumping_factor",
                                "spacing_to_other_terrain_types", "set_avoid_player_start_areas"}:
             warn(f"create_terrain: {a} is not read yet")
-    return {"size": n, "terrain": terrain.tolist(), "elevation": [[0] * n for _ in range(n)], "objects": trees(terrain),
+    elevation = np.zeros((n, n), np.int16)
+    for cmd, args, attrs in sections.get("ELEVATION_GENERATION", ()):
+        if cmd != "create_elevation":
+            warn(f"{cmd} is not read yet")
+            continue
+        top = value(args[0], consts) if args else 1
+        on = value(attrs["base_terrain"][0], consts) if "base_terrain" in attrs else 0
+        free = (terrain == on) & ~np.isin(terrain, [TERRAINS["WATER"], TERRAINS["SHALLOW"]]) & (elevation == 0)
+        clumps = value(attrs["number_of_clumps"][0], consts) if "number_of_clumps" in attrs else 1
+        each = tiles(attrs, consts, n, 1) // max(clumps, 1)
+        spacing = value(attrs["spacing"][0], consts) if "spacing" in attrs else 1
+        spots = np.argwhere(free)
+        if len(spots) and top > 0:
+            mark = np.full((n, n), -1, np.int32)
+            grow(mark, [{"id": k, "cells": [tuple(int(v) for v in spots[rng.integers(len(spots))])], "target": each,
+                         "clump": 8} for k in range(clumps)], free, rng)
+            hill = mark >= 0
+            for k in range(top):                 # level k + 1 inside level k, spacing tiles from its edge
+                elevation[hill] = k + 1
+                hill &= ~dilate(~hill, max(spacing, 1))
+        for a in set(attrs) - {"base_terrain", "number_of_clumps", "number_of_tiles", "spacing"}:
+            warn(f"create_elevation: {a} is not read yet")
+    return {"size": n, "terrain": terrain.tolist(), "elevation": elevation.tolist(), "objects": trees(terrain),
             "players": {str(p): {"color": p - 1} for p in range(1, players + 1)}, "lands": starts}
 
 
