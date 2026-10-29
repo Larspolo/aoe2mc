@@ -82,6 +82,7 @@ UPGRADE_UNI = "aoe2mc.upgrade_uni"  # entity tag of the University researches, o
 UNI_SHOWN = 8                        # the University labels of a player at most, then "+N": the RCON limit (#3790)
 GRAPH_MINUTES = 20          # the last minutes of each graph row: a long game keeps a short text
 ARMY = "aoe2mc.army"        # entity tag of the army text of each player in the sky, below the graphs (#3696)
+ORDER = "aoe2mc.order"      # entity tag of the build order text of each player in the sky, below the army texts (#4049)
 ECO = "aoe2mc.eco"          # entity tag of the economy text above the graphs (#3756)
 FOLLOWED = "aoe2mc.followed"  # the tag of the entity that the spectators of --follow look through (#1095)
 TRAIL = 3                   # tiles: a follower farther than this from its target walks to it again (#2551)
@@ -459,6 +460,7 @@ class Replay:
         self.smith = {}                         # tag -> the shown rows of an upgrade display (#3786, #3790)
         self.graph = {}                         # value index -> the shown rows of its graph (#3448)
         self.army_shown = {}                    # player -> the shown army text (#3696)
+        self.order_shown = {}                   # player -> the shown build order text (#4049)
         self.eco_rows = None                    # the shown rows of the economy text (#3756)
         self.samples, self.minute = {}, -1      # player -> [(minute, pop, villagers, military, resources)], last minute (#3446)
         self.apms, self.ended = None, 0         # player -> sorted times of its actions (#3763); game time of the end (ms)
@@ -631,6 +633,25 @@ class Replay:
                        else f"summon text_display {c} {y - 4 * (k + 2)} {c} {{text:{value},billboard:\"center\","
                             f'shadow:1b,line_width:1000,Tags:["{ARMY}","{tag}"]}}')
             self.army_shown[p] = line
+        return out
+
+    def build_order_view(self, t):
+        """The commands of the build order texts at game time t (ms, #4049): one text display per player in its color,
+        below the army texts, with the last 4 steps of its build order. Only the texts that changed since the last call."""
+        if getattr(self, "view", None) is None:
+            self.overview()                                         # it sets the place of the overview
+        y, c, out = int(self.view.split()[1]) + 12, f"{self.n / 2:.1f}", []
+        players = self.ranked([int(q) for q in self.data["players"] if q != "0"])
+        for k, p in enumerate(players):
+            who, color = self.label(p)
+            line = f"{who}: " + (" · ".join(f"{mmss(s)} {label}" for s, label in self.build_order(p, t)[-4:]) or "-")
+            if self.order_shown.get(p) == line:
+                continue
+            tag, value = f"{ORDER}.{p}", json.dumps(text(line, color), ensure_ascii=False, separators=(",", ":"))
+            out.append(f"data merge entity @e[type=text_display,tag={tag},limit=1] {{text:{value}}}" if p in self.order_shown
+                       else f"summon text_display {c} {max(0, y - 4 * (len(players) + k + 2))} {c} {{text:{value},"
+                            f'billboard:"center",shadow:1b,line_width:1000,Tags:["{ORDER}","{tag}"]}}')
+            self.order_shown[p] = line
         return out
 
     def upgrade_view(self, t):
@@ -3006,6 +3027,7 @@ class Replay:
                     self.idle_at = to
                     self.send(self.graphs(to))
                     self.send(self.army_view(to))
+                    self.send(self.build_order_view(to))
                     self.send(self.upgrade_view(to))
                     self.send(self.ecoview())
                 continue
@@ -3022,6 +3044,7 @@ class Replay:
                 self.idle_time(now)
                 self.send(self.graphs(now))
                 self.send(self.army_view(now))
+                self.send(self.build_order_view(now))
                 self.send(self.upgrade_view(now))
                 self.send(self.ecoview())
                 self.send(self.fog())
