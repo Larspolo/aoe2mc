@@ -73,7 +73,7 @@ def test_a_dry_run_sends_nothing(monkeypatch, server, capsys):
 
 def test_a_session_gets_no_run_from_fire(monkeypatch, capsys):
     monkeypatch.setattr(pacer.usage, "read_usage", lambda: {"five_hour": (0.2, 0, "allowed")})
-    monkeypatch.setattr(pacer.usage, "fire", lambda *a, status=None: (8, {"haiku": 5}, "inputs"))
+    monkeypatch.setattr(pacer.usage, "fire", lambda *a, status=None, **kw: (8, {"haiku": 5}, "inputs"))
     monkeypatch.setattr(pacer.usage, "read_status", lambda: ([], ""))
     pacer.usage.main(["--fire"])
     out, err = capsys.readouterr()
