@@ -27,6 +27,7 @@ import flare  # noqa: E402
 import lobby  # noqa: E402
 import market  # noqa: E402
 import menu  # noqa: E402
+import pause  # noqa: E402
 import savegame  # noqa: E402
 import table  # noqa: E402
 
@@ -35,7 +36,9 @@ ITEM = ('minecraft:carrot_on_a_stick[item_model="minecraft:writable_book",item_n
         "custom_data={aoe_game_menu:1b}]")
 BUTTONS = {0: ("writable_book", "Diplomacy", "Send tribute to other players."),   # slot: the buttons of the Game menu
            1: ("end_rod", "Flare", "Show the place that you look at to your team."),   # (#1234)
-           3: ("writable_book", "Save", "Save the game. Load it with run.py --load.")}     # savegame.py (#2259)
+           3: ("writable_book", "Save", "Save the game. Load it with run.py --load."),     # savegame.py (#2259)
+           5: ("clock", "Pause", "Pause the game for all players.")}   # pause.py (#3374): "Continue" while paused
+PAUSE_SLOT = 5
 SPEED_SLOT = 4                                                     # the button "Game speed" with --unlock-speed (#2933)
 SPEEDS = (1.0, 1.5, 2.0)                                           # times the Normal speed, as run.py --speed
 RESOURCES = {"food": "wheat", "wood": "oak_log", "gold": "gold_ingot", "stone": "cobblestone"}   # rows 1-4
@@ -63,6 +66,8 @@ def open_menu(g, player):
     buttons = BUTTONS | ({lobby.SLOT: lobby.BUTTON} if lobby.shown(g) else {}) | \
         ({SPEED_SLOT: ("clock", "Game speed", f"Now {main(g).speed:g}. Click: {after(main(g).speed):g}.")}
          if getattr(g, "unlock_speed", False) else {})   # AoE2 "Lock Speed" off (#2933)
+    if getattr(main(g), "paused", False):
+        buttons[PAUSE_SLOT] = ("clock", "Pause", "Continue")
     menu.show(g, player, "Game menu", [(s, m, n, lore) for s, (m, n, lore) in buttons.items()],
               lambda p, slot, shift: button(g, p, slot))
 
@@ -83,6 +88,9 @@ def button(g, player, slot):
     if slot == SPEED_SLOT and getattr(g, "unlock_speed", False):
         menu.close(g, player)
         return faster(g)
+    if slot == PAUSE_SLOT:
+        menu.close(g, player)
+        return pause.toggle(g, player)
 
 
 def main(g):
