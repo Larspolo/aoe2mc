@@ -152,14 +152,16 @@ def order(g, player, cell):
     return rect
 
 
-def bell(g, player):
+def bell(g, player, chosen=None):
     """Ring the town bell (#3419, AoE2 DE wiki "Town Bell"): each own villager and mule cart walks into the nearest own
     building of holders() with room left within the line of sight of a town center, the same walk as order(); one with no such building
-    keeps working. Not a dock or a building of BY: they take only ships or animals. Returns the sent units."""
+    keeps working. Not a dock or a building of BY: they take only ships or animals. Returns the sent units.
+    chosen: only these units go, with no bell sound (Seek Shelter of the selection, #3440)."""
     import ai, combat, train                                       # ai and train import gather, gather imports this module
     homes = {r: o for r, o in holders(g).items() if o["name"] != "DOCK" and o["name"] not in BY and door(g, r) is not None}
     room = {r: size(g, o["name"]) - len(g.garrisons.get(r, [])) - sum(e == r for e in g.entering.values()) for r, o in homes.items()}
     units = sorted(set(g.villagers) | {u for u, n in g.soldiers.items() if n == "MULE_CART"})
+    units = units if chosen is None else [u for u in units if u in chosen]
     pos, sent, far = g.positions(units), {}, combat.sight("TOWN_CENTER") * g.map.T
     for u in [u for u in units if u in pos and u not in g.entering and not any(u in us for us in g.garrisons.values())]:
         near = sorted((math.dist((pos[u][0], pos[u][2]), (d[0] + 0.5, d[1] + 0.5)), r) for r in homes if room[r] > 0 for d in [door(g, r)])
@@ -181,8 +183,11 @@ def bell(g, player):
         name = unit_name(g, u)
         ai.move(g, u, name, g.map.T, x + 0.5, g.map.y(x, z), z + 0.5, ai.NORMAL * train.speed(g, name, u))
         g.entering[u] = rect
-    text = f"The town bell rings: {len(sent)} villagers seek shelter" if units else "You have no villagers."
-    g.command(f"playsound minecraft:block.bell.use master {player}")
+    if chosen is not None:
+        text = f"{len(sent)} villagers seek shelter" if units else "No villager is selected."
+    else:
+        text = f"The town bell rings: {len(sent)} villagers seek shelter" if units else "You have no villagers."
+        g.command(f"playsound minecraft:block.bell.use master {player}")
     g.command(f"tellraw {player} " + json.dumps({"text": text, "color": "gray"}))
     return sent
 

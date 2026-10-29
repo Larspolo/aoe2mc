@@ -473,6 +473,8 @@ class Replay:
         if kind in aoe2mc.UNIT_USE - {"stance"} | {"delete", "stop"}:   # a new order ends a FOLLOW or GUARD (#2551)
             for i in e.get("objects") or ():
                 self.follows.pop(i, None)
+                if getattr(v := self.units.get(i), "hunt", None) is not None:   # the new order starts at the chase (#3540)
+                    v.pos, v.leg, v.hunt = self.at(v, e["time"]), None, None
                 self.idle.pop(i, None)                                # a new order: settle() does not check it
                 self.scouts.pop(i, None)
         if kind == "patrol" and e.get("objects") and e.get("tile"):
@@ -1205,6 +1207,8 @@ class Replay:
                     v.pos, v.path = (x + 0.5, float(v.pos[1] if y is None else y), z + 0.5), []
                     speed = next((s for k, s in SPEEDS.items() if v.name.startswith(k)), 1.0) * self.T
                     v.leg = (start, e["time"], e["time"] + 1000 * math.dist(start[::2], v.pos[::2]) / speed)
+                if e and e.get("target") in self.units and e["target"] != i:
+                    v.hunt = e["target"]                                # at() follows the target after the leg (#3540)
             else:
                 rest.append((i, v))
         return out, rest
@@ -1537,11 +1541,14 @@ class Replay:
         lag = math.dist(at, (v.pos[0], v.pos[2])) - d
         return min(CATCH_UP, max(1.0, 1 + lag / min(d, reach or d)))
 
-    def at(self, v, t):
+    def at(self, v, t, hunt=True):
         """The replay position of unit v at game time t (ms): on the line of its leg while it walks, else v.pos.
         A new order starts there, not at the end of the leg: a scout gets a new order every 2 to 5 s, and its
-        replay position jumped up to 250 blocks ahead of it (#851)."""
+        replay position jumped up to 250 blocks ahead of it (#851). After its leg, an attacker of a unit of the record
+        is at the replay position of its target until the next order (hunt False: of a target that hunts too, #3540)."""
         start, t0, t1 = getattr(v, "leg", None) or (v.pos, 0, 0)
+        if t >= t1 and (w := self.units.get(getattr(v, "hunt", None))) is not None and w is not v:
+            return self.at(w, t, False) if hunt else w.pos              # an attacker chases its target (#3540)
         if not t0 <= t < t1:
             return v.pos
         f = (t - t0) / (t1 - t0)
