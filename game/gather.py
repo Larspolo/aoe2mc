@@ -60,6 +60,7 @@ import bossbar  # noqa: E402
 import capture_relic  # noqa: E402
 import cheats  # noqa: E402
 import civs  # noqa: E402
+import challenge  # noqa: E402
 import conquest  # noqa: E402
 import defend_wonder  # noqa: E402
 import demolish  # noqa: E402
@@ -661,6 +662,7 @@ class Gather:
     speed = 1.0                                                        # times the Normal speed: shorter real steps (#2057)
     later = {}                                                         # the bonus of the first town center (civs.TOWN_CENTER)
     nomad = False                                                      # a Nomad start: no town center yet (#2466)
+    challenge = None                                                   # an Art of War challenge (challenge.py, #3900)
     victory = "standard"                                               # AoE2 "Victory"; "conquest": no wonder, no relics (#2316)
                                                                        # "king-of-the-hill": hill.py (#2360)
                                                                        # "time-limit", "score": time_limit.py (#2356)
@@ -2273,6 +2275,8 @@ class Gather:
             spectator.tick(self)                                       # the sidebar of the spectators (#2900)
             if self.victory in ("time-limit", "score"):                # after the conquest: it wins before (#2356)
                 time_limit.tick(self, self.tick * NORMAL)
+            if self.challenge:                                         # an Art of War challenge: its goal (#3900)
+                challenge.tick(self)
             treaty.tick(self, self.tick * NORMAL)
             record.tick(self, self.tick * NORMAL)                      # the game time of Record Game (#2649)
             time.sleep(max(0.0, self.tick / self.speed - (time.monotonic() - t)))   # a step stays tick game seconds
