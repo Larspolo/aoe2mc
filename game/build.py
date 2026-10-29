@@ -255,14 +255,23 @@ def items(g=None):
                        + [locked(g, n)] * bool(locked(g, n)))) for i, n in enumerate(MENU)]
 
 
+DELETE = 35                                                            # slot: kill the selected own units (#3451)
+
+
 def open_menu(g, player):
     """Show the build menu. A click sets the trigger score, as /trigger aoe_build set N does, and closes the menu.
-    A building that the civilization does not have is not in it (hidden); the other items keep their slots."""
+    A building that the civilization does not have is not in it (hidden); the other items keep their slots.
+    The last slot deletes the selected own units (stance.delete, #3451)."""
     def choose(p, slot, shift):                                        # shift: one building all the same
-        if slot < len(MENU) and not locked(g, MENU[slot]) and not hidden(g, MENU[slot]):
+        if slot == DELETE:
+            import stance                                              # stance imports gather, gather imports this module
+            stance.delete(g)
+            chest.close(g, p)
+        elif slot < len(MENU) and not locked(g, MENU[slot]) and not hidden(g, MENU[slot]):
             g.command(f"scoreboard players set {p} {OBJECTIVE} {slot + 1}")
             chest.close(g, p)
-    return chest.show(g, player, "Build", [it for it in items(g) if not hidden(g, MENU[it[0]])], choose)
+    return chest.show(g, player, "Build", [it for it in items(g) if not hidden(g, MENU[it[0]])]
+                      + [(DELETE, "tnt", "Delete", "Kills the selected units")], choose)
 
 
 def chosen(g, player):
