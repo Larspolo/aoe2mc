@@ -11,7 +11,7 @@ def test_each_effect_has_a_known_form():
         if isinstance(e, str):
             assert callable(getattr(train, e, None)), r["name"]
         for e in [] if isinstance(e, str) or e is None else e if isinstance(e, list) else [e]:   # a list: #2155
-            assert set(e) <= {"if", "add", "times", "bonus"}, r["name"]
+            assert set(e) <= {"if", "add", "times", "bonus", "bonus_times"}, r["name"]
             assert set(e.get("add", {})) | set(e.get("times", {})) <= FIELDS - {"bonus", "classes"}, r["name"]
             for t in e.get("if", []):
                 assert len(t) == 1 and set(t) <= TESTS, r["name"]

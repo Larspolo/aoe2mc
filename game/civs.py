@@ -294,7 +294,7 @@ def cost(g, name, base, player=None):
     import train                                                   # train imports this module
     out, age = dict(base), build.ages(g)
     own = player is None or player == g.player
-    techs = [(tuples(w), r, [c] * 4) for t, rules in train.BY_KEY["costs"].items() if own and t in vars(g).get("techs", ())
+    techs = [(tuples(w), r, [c] * 4) for t, rules in train.BY_KEY["costs"].items() if own and train.researched(g, t)
              for w, r, c in rules]                                 # the key "costs" of a technology (#4225)
     if own and name in vars(g).get("trigger_costs", {}):            # "Change Object Cost" of a scenario (#2776)
         return dict(g.trigger_costs[name])

@@ -75,7 +75,7 @@ def pr_work(pr, open_issues, checks, beat, now, me="", ticket=None):
     ticket = ticket or pr_ticket(pr, {})
     issue = open_issues.get(ticket)
     if ticket and issue is None:
-        return "its ticket is closed: close the PR when the ticket is \"not planned\""
+        return "its ticket is closed: the Close workflow closes the PR"
     if issue and dashboard.labels(issue) & WAITS:
         return None
     conflict = "conflict" in dashboard.labels(pr)
