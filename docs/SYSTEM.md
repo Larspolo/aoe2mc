@@ -221,6 +221,7 @@ of `tools/bootstrap.py` (they copy this repository) and the tests that need a sp
 | `.claude/skills/autopilot/process.md` | generic | The issue numbers of the lessons (step 9). |
 | `.claude/skills/autopilot/queue.md` | generic | The issue numbers of the lessons (epics, refill, haiku lane). |
 | `.claude/skills/autopilot/report.md` | generic | The issue numbers of the lessons (step 8, metrics line). |
+| `.claude/skills/autopilot/start.md` | generic | The issue numbers of the lessons (steps 1 to 5, the runs with no brief of the pacer). |
 | `.claude/skills/scheduled/SKILL.md` | generic | The rules of a scheduled run: the prompt of each task is `/scheduled ARGUMENT`. |
 | `.claude/skills/verify/SKILL.md` | specific | The check levels (preview image, world reader, Minecraft server, screenshots). |
 | `.claude/skills/ticket/SKILL.md` | generic | The examples. |
