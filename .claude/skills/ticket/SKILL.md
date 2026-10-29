@@ -54,7 +54,9 @@ name each file and function that the ticket changes, and no others (tools that o
 
 ## Split an L ticket
 
-1. Make S or M sub-issues (`sub_issue_write` in a cloud session, or "Depends on" lines in a local session).
+1. Make S or M sub-issues (`gh api repos/OWNER/NAME/issues/E/sub_issues -F sub_issue_id=<id of the child, not its number>`,
+   or "Depends on" lines in a local session). Not the MCP `sub_issue_write`: each call returns the whole parent issue
+   and its repository (about 4k tokens; 5 calls cost 20k tokens in one refill).
    Make the first sub-issue small and useful alone.
 2. Give the sub-issues the priority of the parent and the order of the work (lower number = first).
 3. Add `epic` to the parent. Its acceptance criteria check that the whole goal is covered, not only the sub-issues
