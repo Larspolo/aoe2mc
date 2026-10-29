@@ -146,13 +146,20 @@ def stats_line(g, uuid, name, s=None):
     friendly fire that it takes (civs.taken, civs.friendly) and its damage over time (dot(), #4339)."""
     import combat                                                  # combat imports gather, gather imports this module
     s = s or stats(g, name, uuid)
-    return combat.stats_command(uuid, name, s, civs.taken(g, name), civs.friendly(g, name), dot(g, name, s))
+    return combat.stats_command(uuid, name, s, civs.taken(g, name), civs.friendly(g, name), **hits(g, name),
+                                 dot=dot(g, name, s))
 
 
 def weight(g, name):
     """The population of one unit: the product of the factors of the researched technologies with the key "population"
     for its building (Logistics of Antiquity Mode: 1/2 for the Barracks, #3918), else 1."""
     return math.prod(f for t, (b, f) in BY_KEY["population"].items() if t in g.techs and BUILDING_OF.get(name) == b)
+
+
+def work(g, building):
+    """The factor of the work rate of building (a name) from the researched technologies with the key "work":
+    [the building, the factor] (Perfusion: the Barracks 2, #4226), else 1."""
+    return math.prod(f for t, (b, f) in BY_KEY["work"].items() if t in g.techs and b == building)
 
 
 def value(key, name, default=None):
@@ -285,7 +292,7 @@ def effect(e, more=1):
     def change(name, s):
         if "if" in e and not any(test(t, name, s) for t in e["if"]):
             return s
-        part = (lambda n: n) if more == 1 else (lambda n: round(n * more))
+        part = (lambda n: n) if more == 1 else (lambda n: n * more if isinstance(n, float) else round(n * more))   # a blast radius stays a part of a tile (#4283)
         new = {k: getattr(s, k) + part(n) for k, n in e.get("add", {}).items()}
         new |= {k: (round if isinstance(getattr(s, k), int) else float)(getattr(s, k) * (f if more == 1 else 1 + (f - 1) * more))
                 for k, f in e.get("times", {}).items()}     # a reload of 2.0 × 0.75 stays 1.5 (Stirrups, #4098)
@@ -884,8 +891,13 @@ def switch(g, player, building):
 
 
 def per_enemy(g, name):
-    """The cost of name before the civilization bonuses: COSTS, or for PER_ENEMY (Spies, #2193) that cost for each
-    enemy civilian unit, at least once and at most the "most" of the line (AoE2 DE wiki: 200 to 30,000 gold)."""
+    """The cost of name before the civilization bonuses: COSTS, plus for the key "per_own" [kinds, cost] that cost for
+    each own unit of the kinds, or for PER_ENEMY (Spies, #2193) that cost for each enemy civilian unit, at least once and at most the "most" of the line (AoE2 DE wiki: 200 to 30,000 gold)."""
+    if (own := value("per_own", name)):                            # Flemish Revolution: more for each own unit (#4323)
+        kinds, more = own
+        names = [o["name"] for o in g.units if o.get("uuid") in g.villagers] + list(g.soldiers.values())
+        n = sum(any(u.startswith(k) for k in kinds) for u in names)
+        return {r: COSTS[name].get(r, 0) + more.get(r, 0) * n for r in COSTS[name] | more}
     if name not in PER_ENEMY:
         return COSTS[name]
     import fog                                                     # fog imports gather, gather imports this module
@@ -1003,7 +1015,7 @@ def seconds(g, name, building=None, k=None):
     base = vars(g).get("trigger_times", {}).get(name)                  # "Change Technology Research Time" (#2820)
     own = (added(g, building, name) or (0, 0))[1] if building else 0   # Add Train Location (#2865)
     return (own or (base if base is not None else time if build.ages(g) >= age else TRAIN_TIMES[name])) \
-        / (civs.work_rate(g, building) if building else 1) \
+        / (civs.work_rate(g, building) * work(g, building) if building else 1) \
         / civs.train_rate(g, name) / civs.age_rate(g, name) * civs.research_time(g, name) / civs.turbo(g, name) \
         * (civs.train_time(g, building, name) if building else 1) \
         * (doctrine(g, building, k)[2] if building and name not in TECHS else 1)
@@ -1037,6 +1049,20 @@ def faster(unit, name):
     s = combat.stats(name)
     return unit == name or unit in civs.GROUPS and civs.GROUPS[unit](name, s) or unit.islower() and unit in s.classes \
         or BUILDING_OF.get(name) == unit
+
+
+def hits(g, name):
+    """The keywords of combat.damage and combat.stats_command for unit name of the player of g (#4331): less, {attacker
+    class: n} of the key "less" of its technologies whose units cover it (Royal Heirs), and ignore, True when a
+    technology with the key "ignore_armor" covers this melee unit (Wootz Steel). faster() tests the units of both."""
+    import combat                                                  # combat imports gather, gather imports this module
+    less = {}
+    for t, (unit, cut) in BY_KEY["less"].items():
+        if t in getattr(g, "techs", ()) and faster(unit, name):
+            less = {c: less.get(c, 0) + cut.get(c, 0) for c in less | cut}
+    ignore = combat.stats(name).range <= 0 and any(faster(u, name) for t, u in BY_KEY["ignore_armor"].items()
+                                                    if t in getattr(g, "techs", ()))
+    return {"less": less, "ignore": ignore}
 
 
 def start(g, setting):
@@ -1155,12 +1181,13 @@ def research(g, entry, start=False, rect=None):
     if vars(g).get("hasted"):                                      # the values below have no haste: haste() sends
         g.hasted = {}                                              # them again (#2497)
     for uuid, name in [(u["uuid"], u["name"]) for u in g.units if "uuid" in u] + list(g.soldiers.items()):
-        if stats(g, name, uuid) != combat.stats(name) or dot(g, name, stats(g, name, uuid)):   # Curare: no other change
+        if stats(g, name, uuid) != combat.stats(name) or hits(g, name) != hits(None, name) or dot(g, name, stats(g, name, uuid)):
             g.command(trebuchet.stats_command(g, uuid) if name == trebuchet.NAME   # the armor of its state (#1409)
                       else stats_line(g, uuid, name))
         if name == trebuchet.NAME and trebuchet.state(g, uuid) != "unpacked":
             continue                                               # packed: range 0, the unpack sends the range (#1414)
-        if stats(g, name).range != combat.stats(name).range:          # Fletching (#724)
+        new, base = stats(g, name), combat.stats(name)              # the range (Fletching, #724) or the blast (Warwolf, #4283)
+        if (new.range, new.blast) != (base.range, base.blast):
             g.command(combat.range_command(uuid, name, g.map.T, s=stats(g, name, uuid)))
     for cmd in [c for uuid, name in g.soldiers.items() for c in fire_commands(g, uuid, name, {entry["name"]})]:
         g.command(cmd)                                             # the live fire ships: Siphons, Incendiaries (#2165)

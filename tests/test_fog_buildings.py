@@ -1,4 +1,4 @@
-"""The line of sight of the own buildings in the fog of war of the game program (#1470): a construction site and a
+"""The line of sight of the own buildings in the fog of war of the game program (#1470): a complete site and a
 garrisoned building see, a destroyed building (its target is gone) does not."""
 import os
 import sys
@@ -36,10 +36,10 @@ def test_a_garrisoned_building_sees():
     assert (42, 42 - combat.sight("TOWN_CENTER")) in g.seen_tiles({}, {UUID})
 
 
-def test_a_foundation_sees_without_a_target_and_a_complete_site_needs_one():
+def test_a_foundation_sees_nothing_and_a_complete_site_needs_a_target():
     site = {"name": "HOUSE", "player": 1, "footprint": (10 * T, 12 * T, 70 * T, 72 * T), "progress": 0.5}
     g = bare(sites=[site])
-    assert (11, 71) in g.seen_tiles({}, set())                       # a foundation has no target yet
+    assert g.seen_tiles({}, set()) == set()                           # no sight before it is complete (#4176)
     site["progress"] = 1.0
     assert g.seen_tiles({}, set()) == set()
     assert (11, 71) in g.seen_tiles({}, {combat.target_uuid([10 * T, 70 * T, 12 * T, 72 * T])})

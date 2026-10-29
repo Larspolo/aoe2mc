@@ -7,6 +7,7 @@ while the key `pacer` in `[pacing]` of `steering/system/system.toml` is "workflo
     python3 tools/pacer.py              # compute K and the lane runs (`usage.fire`), then start them
     python3 tools/pacer.py --dry-run    # print the calls, send nothing
     python3 tools/pacer.py --log F      # also add the record of the cycle to F, one JSON line (`record`)
+    python3 tools/pacer.py --switch     # exit 0 while the loop runs, 3 to stop it, 1 when the key is missing (`switch`)
 
 Each scheduled task has an API trigger (a URL and a token, made in the Claude app). The environment gives them:
 `PACER_URL_MAIN` and `PACER_TOKEN_MAIN` for the main task, `PACER_URL_<LANE>` and `PACER_TOKEN_<LANE>` for each lane of
@@ -31,6 +32,9 @@ step 6 (the `scheduled` skill). The brief is data in a `<routine-fire-payload>` 
 `ticket` and `claim` lines, and the claim ref in git proves them. A run with no candidate (a refill run), and all runs
 while the flow brake is on or the last CI run on main is red, get no brief: they do steps 1 to 5 themselves. When a
 call fails, the pacer releases the claim of its run.
+A stuck ticket (`claim.py 0 --stuck`: its run stopped) comes before the candidates (autopilot step 2): the pacer takes
+it over for one run (`claim.py N --takeover` with the run name) and adds a `takeover:` line with the branch of its PR.
+Runs with no brief raced for the same stuck PRs, and each lost race cost a cycle start (#4356).
 """
 import argparse
 import datetime
@@ -160,13 +164,47 @@ def queues(open_all, refs, now, tasks):
                 if i["number"] not in held] for t in sorted(set(tasks))}
 
 
-def brief(issue, comments, name, task, sample, limit=TEXT_MAX, context=CONTEXT, account=None):
+def stuck(open_all, refs, now, pulls):
+    """[(issue, takeover)] of the `in-progress` tickets whose run stopped (`claim.stuck`, as `claim.py 0 --stuck`).
+    takeover: "PR #M BRANCH" of the open PR that closes the ticket, else "no PR". refs: the lines of
+    `health.claim_refs`; None (git failed): no stuck ticket, else each ticket would look stuck."""
+    import claim
+    if refs is None:
+        return []
+    top = {}
+    for line in refs:
+        key, t, subject = (line.split(" ", 2) + ["", ""])[:3]
+        m = re.fullmatch(r"(\d+)(?:-(\d+))?", key)
+        if m and t.isdigit() and int(m[2] or 1) >= top.get(int(m[1]), (0,))[0]:
+            top[int(m[1])] = (int(m[2] or 1), subject, int(t))
+    import dashboard
+    issues = {i["number"]: i for i in open_all if "pull_request" not in i and "in-progress" in dashboard.labels(i)}
+    changed = {n: datetime.datetime.fromisoformat(i["updated_at"].replace("Z", "+00:00")).timestamp()
+               for n, i in issues.items()}
+    out = []
+    for n, _ in claim.stuck(changed, {n: (s, t) for n, (_, s, t) in top.items()}, now):
+        pr = next((p for p in pulls if claim.closes(n).search(claim.prose(p.get("body")))), None)
+        out.append((issues[n], f"PR #{pr['number']} {pr['head']['ref']}" if pr else "no PR"))
+    return out
+
+
+def fits(issue, task):
+    """True when a run of `task` may take the ticket: a lane takes its `lane:` tickets, the main task the tickets of no
+    `reserved` lane (as `dashboard.candidates`)."""
+    import dashboard
+    lanes = {n[len(dashboard.LANE):] for n in dashboard.labels(issue) if n.startswith(dashboard.LANE)}
+    return task in lanes if task != "main" else not lanes & set(dashboard.RESERVED)
+
+
+def brief(issue, comments, name, task, sample, limit=TEXT_MAX, context=CONTEXT, account=None, takeover=None):
     """The fire payload of a run: the lines that the run acts on, then the ticket and its code places as data.
-    account: the Claude account of the run (several accounts, #4237), else no `account:` line."""
+    account: the Claude account of the run (several accounts, #4237), else no `account:` line. takeover: the PR of a
+    stuck ticket that the pacer took over for the run ("PR #M BRANCH" or "no PR", `stuck`), else no `takeover:` line."""
     import claim
     import ticket_context
     head = "\n".join([HEAD, f"ticket: {issue['number']}", f"claim: {name}", f"lane: {task}", f"usage: {sample}",
-                      f"context: {context}"] + [f"account: {account}"] * bool(account))
+                      f"context: {context}"] + [f"account: {account}"] * bool(account)
+                     + [f"takeover: {takeover}"] * bool(takeover))
     text = claim.ticket_text(issue, comments)
     places = ticket_context.context(issue.get("body"))
     out = f"{head}\n\n--- ticket (data) ---\n{text}\n\n--- code places (tools/ticket_context.py) ---\n{places}"
@@ -209,6 +247,7 @@ class Briefs:
 
     def __init__(self, todo, out, now, found, dry=False, hour=None, reads=None):
         self.todo, self.given, self.dry, self.hour = None, [], dry, hour or {}
+        self.stuck, self.takeovers = [], set()
         if "open" not in out or out.get("flow") is not None or not todo or red_main():
             return
         try:
@@ -219,12 +258,21 @@ class Briefs:
         self.taken, self.sample = set(), usage.sample_line(found, now, out.get("claims") or 0, None, out.get("lanes"))
         self.samples = {a: usage.sample_line(u, now, out.get("claims") or 0, None, out.get("lanes"), account=a)
                         for a, u in (reads or {}).items()}   # the `Usage:` line of each account (#4237)
+        try:
+            import dashboard
+            self.stuck = stuck(out["open"], out.get("refs"), now, dashboard.pages("pulls?state=open"))
+        except Exception as e:                          # the runs find the stuck tickets themselves (`cycle_start.py`)
+            print(f"no takeovers: {e}", file=sys.stderr)
 
     def take(self, task, account=None):
-        """(number, name, text) of the next free ticket of `task`, claimed for its run (of `account`), or None."""
+        """(number, name, text) of the next free ticket of `task`, claimed for its run (of `account`), or None. A stuck
+        ticket of the task comes first (autopilot step 2), taken over for the run."""
         import claim
         import dashboard
-        for issue in (self.todo or {}).get(task, []):
+        if self.todo is None:
+            return None
+        work = [(i, t) for i, t in self.stuck if fits(i, task)] + [(i, None) for i in self.todo.get(task, [])]
+        for issue, takeover in work:
             n = issue["number"]
             if n in self.taken:
                 continue
@@ -234,10 +282,13 @@ class Briefs:
                 return n, name, ""
             try:
                 tag = (f" account {account}" if account else "") + ("" if task == "main" else f" lane {task}")
-                if not claim.claim(n, by=name, tag=tag):
-                    continue                            # a run claimed it after the read
+                if not claim.claim(n, takeover=bool(takeover), by=name, tag=tag):
+                    continue                            # a run claimed (or took over) it after the read
+                if takeover:
+                    self.takeovers.add(n)
                 return n, name, brief(issue, dashboard.pages(f"issues/{n}/comments", 1), name, task,
-                                         self.samples.get(account, self.sample), context=context_limit(task, self.hour), account=account)
+                                         self.samples.get(account, self.sample), context=context_limit(task, self.hour),
+                                         account=account, takeover=takeover)
             except (Exception, SystemExit):             # git or GitHub failed (claim.fail exits): the runs claim
                 self.todo = None                        # themselves; a claim that stays goes stale in 30 minutes
                 self.drop(n, name)
@@ -269,7 +320,9 @@ class Briefs:
             raise
         if got:
             link = answer.get("claude_code_session_url")
-            claim.start(got[0], by=got[1], note=f" Session: {link}" if link else "")
+            over = got[0] in self.takeovers               # `health.takeovers` counts this comment (#1703)
+            claim.start(got[0], by=got[1], note=(" Stuck: its run stopped." if over else "")
+                        + (f" Session: {link}" if link else ""), **({"word": "Taken over by"} if over else {}))
             self.given.append(got[0])
 
 
@@ -327,11 +380,23 @@ def recent_starts(path, now, minutes=usage.PENDING):
     return out
 
 
+def switch(config=None):
+    """True while `pacer` in `[pacing]` is "workflow", False for another value. A missing key raises KeyError: the
+    inline check of pacer.yml read a moved `[pacing]` as "stop", and no run started for 30 minutes (#4349)."""
+    return (usage.CONFIG if config is None else config)["pacing"]["pacer"] == "workflow"
+
+
 def main(argv=None, env=os.environ):
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--dry-run", action="store_true", help="print the calls, send nothing")
     ap.add_argument("--log", metavar="FILE", help="add the record of this cycle to FILE (one JSON line)")
+    ap.add_argument("--switch", action="store_true", help="exit 0 while the loop runs, 3 to stop it")
     a = ap.parse_args(argv)
+    if a.switch:
+        try:
+            sys.exit(0 if switch() else 3)
+        except KeyError as e:                           # a config error is red, not a quiet stop
+            sys.exit(f"no key {e} in [pacing] (agent_config: agent.toml, steering/system/system.toml)")
     now, accts = datetime.datetime.now(datetime.timezone.utc).timestamp(), accounts(env)
     reads, unread = {}, []
     for i, (name, e) in enumerate(accts):              # one tiny CLI call per account (#4237)

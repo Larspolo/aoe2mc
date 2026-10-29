@@ -136,12 +136,14 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *                                              defensive chases an enemy only CHASE blocks past its range (#1105)
  *   aoe stance <selector>                      the stance of the first unit (#1107), for checks
  *   aoe stats <selector> <hp> <attack> <melee armor> <pierce armor> <ranged 0|1|2> <classes|-> <class:bonus,...|->
- *             [reload ticks [taken [friendly [damage ticks classes|-]]]]  the AoE2 values of a unit (#514, game/combat.py
- *                                              stats_command); a melee unit hits once per reload (#848, default 20:
- *                                              the vanilla cooldown); taken: the factor of the bonus damage that it
- *                                              takes (#2248, default 1); friendly: the factor of the blast damage of
- *                                              own and allied units on it (Jurchen military units 0.5, #2418, default
- *                                              1); damage ticks classes: each hit on a unit or building of these
+ *             [reload ticks [taken [friendly [less [ignore [damage ticks classes|-]]]]]]  the AoE2 values of a unit (#514, combat.stats_command); a melee
+ *                                              unit hits once per reload (#848, default 20: the vanilla cooldown);
+ *                                              taken: the factor of the bonus damage that it takes (#2248, default 1);
+ *                                              friendly: the factor of the blast damage of own and allied units on it
+ *                                              (Jurchen military units 0.5, #2418, default 1); less: class:n,... the
+ *                                              damage less from an attacker of the class (Royal Heirs, "-": none);
+ *                                              ignore: 1 when its hits ignore a positive armor (Wootz Steel, #4331);
+ *                                              damage ticks classes: each hit on a unit or building of these
  *                                              classes ("-": each) deals this damage over time (Dot.java, #4339)
  *   aoe stop <selector>                        stop the walk and turn the AI off: the unit stands still (#437)
  *   aoe unwear <selector>                      forget the kept blocks of the damage stages of each building target: the
@@ -306,21 +308,32 @@ import net.kyori.adventure.text.format.NamedTextColor;
 public final class AoePlugin extends JavaPlugin implements Listener {
     // ranged: the unit shoots; pierces: its hit takes the pierce armor (not so for a Throwing Axeman, #800);
     // reload: the ticks between two melee hits (#848); taken: the factor of the bonus damage that the unit takes (#2248);
-    // friendly: the factor of the friendly fire (the blast of an own or allied unit) that the unit takes (#2418)
+    // friendly: the factor of the friendly fire (the blast of an own or allied unit) that the unit takes (#2418);
+    // less: the damage less from an attacker of a class (Royal Heirs), ignores: its hits ignore the armor (Wootz Steel, #4331)
     private record Stats(int attack, int melee, int pierce, boolean ranged, boolean pierces, Set<String> classes,
-                         Map<String, Integer> bonus, int reload, double taken, double friendly) {
+                         Map<String, Integer> bonus, int reload, double taken, double friendly, Map<String, Integer> less,
+                         boolean ignores) {
         Stats(int attack, int melee, int pierce, boolean ranged, boolean pierces, Set<String> classes,
               Map<String, Integer> bonus, int reload) {
             this(attack, melee, pierce, ranged, pierces, classes, bonus, reload, 1.0, 1.0);
         }
 
+        Stats(int attack, int melee, int pierce, boolean ranged, boolean pierces, Set<String> classes,
+              Map<String, Integer> bonus, int reload, double taken, double friendly) {
+            this(attack, melee, pierce, ranged, pierces, classes, bonus, reload, taken, friendly, Map.of(), false);
+        }
+
         int damage(Stats t) {                                 // the same rule as game/combat.py damage()
-            int bonus = 0;
+            int bonus = 0, cut = 0;
             for (String c : t.classes) {
                 bonus += this.bonus.getOrDefault(c, 0);
             }
-            return (int) Math.max(1, Math.max(0, attack - (pierces ? t.pierce : t.melee))
-                    + Math.floor(bonus * t.taken + 0.5));     // rounded half up, as combat.damage
+            for (String c : classes) {                        // the most of the classes of the attacker (Royal Heirs)
+                cut = Math.max(cut, t.less.getOrDefault(c, 0));
+            }
+            int armor = pierces ? t.pierce : t.melee;
+            return (int) Math.max(1, Math.max(0, attack - (ignores ? Math.min(0, armor) : armor))
+                    + Math.floor(bonus * t.taken + 0.5) - cut);   // rounded half up, as combat.damage
         }
     }
 
@@ -753,7 +766,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     // attack with no bonus (AoE2 DE: the extra projectile of an Armenian galley deals 1 attack).
     private static Stats volley(Stats a, int attack) {
         return attack <= 0 ? a : new Stats(attack, a.melee(), a.pierce(), a.ranged(), a.pierces(), a.classes(), Map.of(),
-                a.reload(), a.taken(), a.friendly());
+                a.reload(), a.taken(), a.friendly(), a.less(), a.ignores());
     }
 
     // The values of the projectile p of a unit with the values a: those of its tag (an extra arrow), else a.
@@ -2796,7 +2809,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             sender.sendMessage("Stance: " + n + " units");
             return true;
         }
-        if (args.length >= 9 && args.length <= 15 && args.length != 13 && args.length != 14 && args[0].equals("stats")) {
+        if (args.length >= 9 && (args.length <= 14 || args.length == 17) && args[0].equals("stats")) {
             double hp;
             Stats st;
             Dot.Rule dot;
@@ -2806,9 +2819,11 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                         !args[6].equals("0"), args[6].equals("1"), args[7].equals("-") ? Set.of() : Set.of(args[7].split(",")),
                         bonus(args[8]), args.length >= 10 ? Integer.parseInt(args[9]) : 20,
                         args.length >= 11 ? Double.parseDouble(args[10]) : 1.0,    // the bonus damage taken (#2248)
-                        args.length >= 12 ? Double.parseDouble(args[11]) : 1.0);   // the friendly fire taken (#2418)
-                dot = args.length == 15 ? new Dot.Rule(Double.parseDouble(args[12]), Math.max(1, Integer.parseInt(args[13])),
-                        args[14].equals("-") ? Set.of() : Set.of(args[14].split(","))) : null;   // (#4339)
+                        args.length >= 12 ? Double.parseDouble(args[11]) : 1.0,    // the friendly fire taken (#2418)
+                        args.length >= 13 ? bonus(args[12]) : Map.of(),            // Royal Heirs (#4331)
+                        args.length >= 14 && args[13].equals("1"));               // Wootz Steel (#4331)
+                dot = args.length == 17 ? new Dot.Rule(Double.parseDouble(args[14]), Math.max(1, Integer.parseInt(args[15])),
+                        args[16].equals("-") ? Set.of() : Set.of(args[16].split(","))) : null;   // (#4339)
             } catch (RuntimeException e) {                 // a bad number or a bonus without ":"
                 sender.sendMessage("Bad value: " + e.getMessage());
                 return true;
