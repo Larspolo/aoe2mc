@@ -676,7 +676,7 @@ class Replay:
         if kind == "garrison" and e.get("objects"):
             return self.move(dict(e, kind="order", garrison=True))
         if kind == "ungarrison" and e.get("objects"):
-            return [c for r in self.holders(e) for c in self.release(r)]
+            return self.ungarrison(e)
         if kind == "back_to_work" and e.get("objects"):
             return self.back(e)[0]
         if kind == "delete" and e.get("objects"):
@@ -2047,6 +2047,19 @@ class Replay:
             v.pos = (x + 0.5, float(y), z + 0.5)
             out += garrison.leave(v.uuid, x, y, z) + [f"aoe label {v.uuid}"] * self.ai
         return out + self.arrows(rect)
+
+    def ungarrison(self, e):
+        """UNGARRISON: the units come out of each building, and walk to its last GATHER POINT and work there, as in
+        AoE2 (#3826: a boar lure in the town center left the villagers idle). Returns the commands."""
+        out = []
+        for b, name in zip(e["objects"], e.get("names") or [None] * len(e["objects"])):
+            for r in self.holders(dict(e, objects=[b], names=[name])):
+                ids, p = list(self.garrisons.get(r, [])), self.points.get(b)
+                out += self.release(r)
+                if ids and p is not None:
+                    out += self.move(dict(p, time=e["time"], kind="order" if p.get("target") is not None else "move",
+                                          objects=ids, names=[self.units[i].name for i in ids]))
+        return out
 
     def leave(self, i, rect):
         """Unit i comes out of the building rect alone, on the first free cell next to it (release()). Returns the
