@@ -425,7 +425,8 @@ def release(number, remote="origin", word="Release", by=None, adopt=None):
     if line.split(" ")[3:4] not in ([by or who()], [adopt]):  # "Claim #N by <branch> (...)", "Beat #N by <branch>"
         sys.exit(f"{ref} belongs to another run: {owner(line)} took #{number} over ({line}). Stop the work on #{number}"
                  f" now: no push, no comment, no release; pick the next ticket.")
-    tag = account() + (re.search(r" lane \w+$", line)[0] if adopt and re.search(r" lane \w+$", line) else lane())
+    own = account() or (m[0] if adopt and (m := re.search(r" account \S+", line)) else "")   # the account of the brief
+    tag = own + (re.search(r" lane \w+$", line)[0] if adopt and re.search(r" lane \w+$", line) else lane())
     sha = git("commit-tree", EMPTY_TREE, "-p", "FETCH_HEAD", "-m", f"{word} #{number} by {by or who()}{tag}").stdout.strip()
     return ref if push(sha, ref, remote) else None
 
