@@ -984,7 +984,7 @@ def write_progress(folder, **values):
         json.dump(data | values, f)
 
 
-STORAGE = os.path.join("data", "command_storage_aoe2mc.dat")   # the data storages aoe2mc:* of a world (#3508)
+STORAGE = os.path.join("data", "aoe2mc", "command_storage.dat")   # the data storages aoe2mc:* of a 26.3 world (#3508, #3771)
 
 
 def world_keys(world):
@@ -1188,6 +1188,7 @@ def main(argv=None, scenario=None):
             if not getattr(g, "ended", None):
                 return
             if folder:                               # a campaign goes on with the next or the same scenario (#3507)
+                game.command("save-all flush")      # the server writes the storage of the keys now (#3771)
                 if keys := campaign_keys(folder) | world_keys(a.world):   # the keys go into the next scenario (#3508)
                     write_progress(folder, keys=keys)
                 after = advance(folder, number, g.ended == "Victory")

@@ -123,7 +123,7 @@ KEPT = (                                                               # the fie
     *TOGGLES,
     *VICTORY,
 )
-JOB = ("state", "load", "res", "job", "lap", "prey")                  # fields of a gather.Villager, as they are
+JOB = ("state", "load", "res", "job", "lap", "prey", "task")                # fields of a gather.Villager, as they are
 BOT = ("time", "charged", "attack")                                    # fields of a bot.Bot, as they are (#2325)
 SETTINGS = (                                                           # run.py options (#2325, #2409): one per line,
     "ai_difficulty",                                                   # in alphabetical order (parallel tickets add)

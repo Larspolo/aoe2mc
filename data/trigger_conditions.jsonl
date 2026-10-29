@@ -2,8 +2,8 @@
 {"name": "AI_SIGNAL", "text": "not supported: the bots of the game program run no AI script"}
 {"name": "AI_SIGNAL_MULTIPLAYER", "text": "not supported: the bots of the game program run no AI script"}
 {"name": "AND", "text": "the default between two conditions: all conditions of one group in one `execute if ... if ...` line (#2765)"}
-{"name": "BRING_OBJECT_TO_AREA", "text": "`execute if entity @e[tag=aoe2mc.rN,x=..,dx=..]` in the tick function (units, #2620); a building: not supported yet"}
-{"name": "BRING_OBJECT_TO_OBJECT", "text": "`execute at @e[tag=aoe2mc.rA,limit=1] if entity @e[tag=aoe2mc.rB,distance=..T]` in the tick function: within one tile (units, #2771); a building: not supported yet"}
+{"name": "BRING_OBJECT_TO_AREA", "text": "`execute if entity @e[tag=aoe2mc.rN,x=..,dx=..]` in the tick function (units, #2620); a building: `unless score #fN aoe_fallen matches 1..` when its tile is in the area, else never (#3782)"}
+{"name": "BRING_OBJECT_TO_OBJECT", "text": "`execute at @e[tag=aoe2mc.rA,limit=1] if entity @e[tag=aoe2mc.rB,distance=..T]` in the tick function: within one tile (units, #2771); a building: `positioned` at the corner of the tiles around its tile and the other unit in that box (#3782)"}
 {"name": "BUILDING_IS_TRADING", "text": "`if score #rN aoe_trade matches 1` (0 when inverted) in the tick function: the scenario mode of the game program sets the score while a trade cart has the market on its route (#2868); a dock: not supported (no trade cogs)"}
 {"name": "CAPTURE_OBJECT", "text": "`execute if entity @e[tag=aoe2mc.rN,tag=aoe2mc.pN]` in the tick function (units, #2619); a building: `if score #oN aoe_owner matches N`, set by the scenario mode to its owner (#2940)"}
 {"name": "CHANCE", "text": "`execute store result score ... run random value 1..100` once per second (alone, after the timers or with the ticked conditions: #2574)"}
