@@ -1,5 +1,5 @@
 """The run report of autopilot step 8 with one command (#1701): the text, the release bar (`release.py`), the `Usage:`
-line of the run start (the release bar only when the project has `release.py`), one `Metrics:` line per ticket and the `Tokens:` line (`tokens.py`). `tools/health.py` parses it.
+line of the run start (the release bar only when the project has `release.py`), one `Metrics:` line per ticket, the `Tokens:`, `Calls:` and `Run:` lines (`tokens.py`). `tools/health.py` parses it.
 
     python3 tools/report.py --usage "$(cat USAGE)" --text "What I did. Next: ..." \\
         --ticket 1701 --size S --result "pr #1770" --setup 2 --checks 1 --checks-min 4 --sinks none \\
@@ -70,13 +70,16 @@ def measured():
     return {m[1]: m[2] for m in re.finditer(r"^#(\d+|None): (\S+)$", tool("tokens.py", "--phases"), re.M)}
 
 
-def report(text, usage, lines, release=None, tokens=None, calls=None):
-    """The comment: text, release bar (none when it is empty), `Usage:`, `Metrics:`, `Tokens:` and `Calls:` lines, footer."""
+def report(text, usage, lines, release=None, tokens=None, calls=None, run=None, lane=None):
+    """The comment: text, release bar (none when it is empty), `Usage:`, `Metrics:`, `Tokens:`, `Calls:` and `Run:`
+    lines, footer. The `Run:` line ends with the lane of the run (`opus` when the run set none, as in `health.lanes`)."""
     release = tool("release.py") if release is None else release
     tokens = (tool("tokens.py").splitlines() or [""])[-1] if tokens is None else tokens
     calls = tool("tokens.py", "--calls-line") if calls is None else calls
+    run = tool("tokens.py", "--run-line") if run is None else run
+    lane = git_lane() if lane is None else lane
     return "\n".join([text.strip(), "", *([release, ""] if release else []), usage.strip(), *lines, tokens,
-                      *([calls] if calls else [])]) + FOOTER
+                      *([calls] if calls else []), *([f"{run} · lane {lane or 'opus'}"] if run else [])]) + FOOTER
 
 
 def counted(body, now=None):

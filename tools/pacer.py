@@ -6,6 +6,7 @@ while the key `pacer` in `[pacing]` of `agent.toml` is "workflow" (any other val
 
     python3 tools/pacer.py              # compute K and the lane runs (`usage.fire`), then start them
     python3 tools/pacer.py --dry-run    # print the calls, send nothing
+    python3 tools/pacer.py --log F      # also add the record of the cycle to F, one JSON line (`record`)
 
 Each scheduled task has an API trigger (a URL and a token, made in the Claude app). The environment gives them:
 `PACER_URL_MAIN` and `PACER_TOKEN_MAIN` for the main task, `PACER_URL_<LANE>` and `PACER_TOKEN_<LANE>` for each lane of
@@ -20,6 +21,7 @@ import argparse
 import datetime
 import json
 import os
+import re
 import sys
 import urllib.error
 import urllib.request
@@ -48,9 +50,26 @@ def send(url, token, timeout=30):
         return r.status
 
 
+NUMBERS = {"target": r"target (\d+) runs", "claims": r"claims (\d+) ", "claims_opus": r"\(([\d.]+) Opus runs\)",
+           "ready": r"ready (\d+) ", "refill": r"refill (\d+) "}
+
+
+def record(at, found, burn, burn7, k, runs, started, line, problems=()):
+    """The JSON record of one cycle (`--log`, 2026-10-29): the quota, the burns, the planned and the started runs and
+    the inputs of `usage.fire`. Only the Actions log had them (no tool reads it, and it expires): with the starts and
+    the `Run:` lines of the reports, a run that ends with no report shows."""
+    rec = {"at": f"{at:%Y-%m-%dT%H:%M:%SZ}", "k": k, "plan": runs, "started": started, "burn": burn, "burn7": burn7,
+           **{w: list(found[w]) for w in ("five_hour", "seven_day") if w in found}}
+    for key, rx in NUMBERS.items():
+        m = re.search(rx, line)
+        rec[key] = None if m is None else float(m[1]) if "." in m[1] else int(m[1])
+    return {**rec, "problems": list(problems), "line": line}
+
+
 def main(argv=None, env=os.environ):
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--dry-run", action="store_true", help="print the calls, send nothing")
+    ap.add_argument("--log", metavar="FILE", help="add the record of this cycle to FILE (one JSON line)")
     a = ap.parse_args(argv)
     found, now = usage.read_usage(), datetime.datetime.now(datetime.timezone.utc).timestamp()
     if not found:
@@ -93,12 +112,20 @@ def main(argv=None, env=os.environ):
                 break
     if a.dry_run:
         started = {t: sum(1 for x, *_ in todo if x == t) for t in started}
-    print(f"Pacer {datetime.datetime.now(datetime.timezone.utc):%H:%MZ}: K={k}, "
+    at = datetime.datetime.now(datetime.timezone.utc)
+    print(f"Pacer {at:%H:%MZ}: K={k}, "
           + ", ".join(f"{t} {n}" for t, n in runs.items())
           + f". {'Would start' if a.dry_run else 'Started'} " + json.dumps(started)
           + (f", no URL for {', '.join(skipped)}" if skipped else "")
           + (f", hourly limit: {', '.join(sorted(limited))}" if limited else "")
           + (f", failed: {'; '.join(failed)}" if failed else "") + f". {line}")
+    if a.log and not a.dry_run:
+        problems = [f"no URL: {t}" for t in skipped] + [f"hourly limit: {t}" for t in sorted(limited)] + failed
+        try:                                            # the log never stops the starts
+            with open(a.log, "a") as f:
+                f.write(json.dumps(record(at, found, burn, burn7, k, runs, started, line, problems)) + "\n")
+        except OSError as e:
+            print(f"no pacer log: {e}", file=sys.stderr)
     sys.exit(int(bool(failed)))
 
 

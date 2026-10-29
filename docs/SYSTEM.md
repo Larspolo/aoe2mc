@@ -30,10 +30,10 @@ controls, read `docs/STEERING.md`. This document links to them and does not copy
 | `unconflict.yml` (Unconflict) | Every 20 minutes, after each merge | Merges `main` into a conflicted agent PR when git solves the conflict alone (`merge=union` files) or both sides only add lines (`tools/unconflict.py`, #1864; not the same `def` on both sides, and the merge passes `ruff check`, #2631), and starts CI. When `main` is green again, it also merges `main` into a PR whose last CI run failed while `main` was red, and starts CI (#3685): no run must take it over. |
 | `claims.yml` (Claims) | A ticket closes, each day | Deletes the claim refs of closed tickets and old comment locks. The runs cannot delete refs (403). |
 | `dashboard.yml` (Dashboard) | Every 10 minutes (not on events: the API rate limit, #2168) | Writes the dashboard in the body of the status issue (`tools/dashboard.py`). |
-| `pacer.yml` (Pacer) | One run loops for 5.5 hours (a cycle every 10 minutes), then starts the next run; the cron (`*/30`) only restarts a dead loop: GitHub fires the cron schedules of this repository a few times per day | Only while `pacer = "workflow"` in `[pacing]` of `agent.toml`: starts the runs that the quota target misses through the API trigger of each task (`tools/pacer.py`, #3193). Secrets: `CLAUDE_CODE_OAUTH_TOKEN` (the quota read), `PACER_URL_<TASK>` and `PACER_TOKEN_<TASK>` for `MAIN`, `HAIKU`, `DEEP`. A task takes at most 30 API starts per hour, an account 100. |
+| `pacer.yml` (Pacer) | One run loops for 5.5 hours (a cycle every 10 minutes), then starts the next run; the cron (`*/30`) only restarts a dead loop: GitHub fires the cron schedules of this repository a few times per day | Only while `pacer = "workflow"` in `[pacing]` of `agent.toml`: starts the runs that the quota target misses through the API trigger of each task (`tools/pacer.py`, #3193). Each cycle also writes the new status comments and its own record (quota, burns, target, claims, ready tickets, planned and started runs: `pacer.py --log`) to the branch `metrics` (`status/` and `pacer/`, `metrics_log.py --push`, 2026-10-29). Secrets: `CLAUDE_CODE_OAUTH_TOKEN` (the quota read), `PACER_URL_<TASK>` and `PACER_TOKEN_<TASK>` for `MAIN`, `HAIKU`, `DEEP`. A task takes at most 30 API starts per hour, an account 100. |
 | `dashboard-site.yml` (Dashboard site) | Each pacer cycle (`pacer.yml` starts it), the cron as a fallback, by hand | Builds the owner's dashboard (`tools/dashboard_site.py`: the page of `tools/dashboard_artifact/`, the data of `tools/dashboard_data.py`) and publishes it to GitHub Pages (owner decision A, 2026-10-28). It replaces the hourly Claude task "aoe2mc dashboard refresh" and the artifact (the skill `dashboard-refresh` was removed with the `Artifact` tool, 2026-10-28). |
 | `coverage.yml` (Coverage) | Each push to `main` | Writes `docs/coverage.md`, `MAX` of `tests/test_coverage.py` and a column of `docs/DESIGN.md`. PRs do not change these files, so they do not conflict there. |
-| `metrics.yml` (Metrics) | Each 15 minutes, by hand with `days` | Writes the status issue comments to the orphan branch `metrics` (`tools/metrics_log.py`, one file per day). `tools/health.py` reads them and only the newest comments from the API (#1983). |
+| `metrics.yml` (Metrics) | The cron (`*/15`, a few times a day), by hand with `days` | Writes the status issue comments to the orphan branch `metrics` (`tools/metrics_log.py`, one file per day). `tools/health.py` reads them and only the newest comments from the API (#1983). The pacer loop writes the branch in each cycle too (2026-10-29): this workflow is the fallback and the backfill. |
 | `labels.yml` (Labels) | A change of `.github/labels.txt` | Creates the labels. |
 
 ### Tools of the system
@@ -124,7 +124,9 @@ its claims end with ` lane haiku`, the `Usage:` lines count its runs (`· haiku 
 the weight from them (least squares, at least 10 intervals with Haiku runs; before that `weights` of `agent.toml`,
 0.25). `usage.py --fire` gives the ready `lane:haiku` tickets Haiku runs first, then Opus runs take the rest. A lane in `reserved` of `[pacing]` keeps its tickets for its own runs (Opus runs never take them, #1994). `tools/tokens.py` reads the transcript of the
 session and writes the `Tokens:` line of each run report: the tokens of the run and its largest sinks. `health.py`
-adds them. The `improve` skill finds the largest loss of quota from this data, or the data that is missing, and
+adds them. The `Run:` line (`tokens.py --run-line`, 2026-10-29) names the session, the branch, the start, the wall minutes, the
+model, the effort, the thinking tokens, the eq of each phase and of each ticket, and the lane: it joins the reports of
+one run and the starts of the pacer, so that a run that stops with no report shows. The `improve` skill finds the largest loss of quota from this data, or the data that is missing, and
 makes one `Process: <bottleneck>` ticket for it on the board.
 
 ## The steering
@@ -296,6 +298,7 @@ of `tools/bootstrap.py` (they copy this repository) and the tests that need a sp
 | `tests/test_tokens_verify.py` | generic | None (a test of `tools/tokens.py`). |
 | `tests/test_tokens_cost.py` | generic | None (a test of `tools/tokens.py`). |
 | `tests/test_tokens_phases.py` | generic | None (a test of `tools/tokens.py`). |
+| `tests/test_run_data.py` | generic | None (a test of `tools/tokens.py`, `tools/pacer.py` and `tools/metrics_log.py`). |
 | `tests/test_unconflict.py` | generic | None (a test of `tools/unconflict.py`). |
 | `tests/test_automerge_failure.py` | generic | None (a test of `.github/workflows/automerge.yml`). |
 | `tests/test_unconflict_no_markers.py` | generic | None (a test of `tools/unconflict.py`, #3062). |

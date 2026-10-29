@@ -9,6 +9,7 @@ that cost the most: a result stays in the context, so each later call reads it a
     python3 tools/tokens.py FILE.jsonl    # another transcript
     python3 tools/tokens.py --verify      # the minutes and repeats of each check command (#1704)
     python3 tools/tokens.py --phases      # the measured phase minutes of each claimed ticket (`report.py` uses them)
+    python3 tools/tokens.py --run-line    # the Run: line of the run report: who, when, the model, the eq per phase
 
 The unit is "eq": input-token equivalents with the API price ratios (input 1, cache write 1.25 for 5 minutes and 2 for
 1 hour, cache read 0.1, output 5). The subscription quota is not public, but it follows the cost of the calls.
@@ -25,6 +26,9 @@ Field `force` (#3461): the count of the force pushes that failed (`git push --fo
 Phases (`--phases`): each tool call gets a phase (`phase()`), and the wall time from the call to the next call of the
 session counts for it. A call `claim.py N` that wins starts ticket N; the time before the first claim counts for
 the first ticket. The phases that runs gave by hand were guesses: 37 minutes for a 6.5-minute run (2026-10-28).
+Run line (`--run-line`, 2026-10-29): the session ID and the branch (they join the reports of one run, its claims and
+the starts of the pacer), the start and wall minutes, the model, the effort, the thinking tokens (a part of `out`),
+the eq of each phase (the eq of a call goes to the phase of its tool calls) and the eq of each claimed ticket.
 The pure functions take plain records, so the tests need no files.
 """
 import argparse
@@ -34,7 +38,7 @@ import os
 import re
 import sys
 from collections import Counter, defaultdict
-from datetime import datetime
+from datetime import datetime, timezone
 
 W_IN, W_5M, W_1H, W_READ, W_OUT = 1.0, 1.25, 2.0, 0.1, 5.0
 CHARS = 4                    # characters per token (an estimate: the transcript has no token count of a result)
@@ -189,7 +193,8 @@ PHASE_RULES = (("conflict", r"merge_main\.py|unconflict\.py|\bgit merge\b"),
                ("report", REPORT_FILE),
                ("code", r"\bsed -i\b|\bcat >|\bpython3 - <<|\btee\b"))
 ORDER = ("conflict", "verify", "ci", "code", "claim", "report", "read")   # a call with several tools: the first here
-CLAIMED = re.compile(r"claim\.py (\d+)\s*(?:$|[;&|)\n])")          # `claim.py N` with no option: a claim
+CLAIMED = re.compile(r"claim\.py (\d+)(?:\s+--takeover)?(?=\s*(?:$|[;&|)<>\n]|\d>))")   # a claim: no option but --takeover
+PHASES = ("read", "claim", "code", "verify", "ci", "conflict", "report")   # the order of the Metrics: line
 
 
 def phase(name, inp):
@@ -237,7 +242,7 @@ def phases(records):
     """{ticket: {phase: minutes}} of one chain of records, in the order of the tickets; the time before the first
     claim counts for the first ticket (key None when no claim won)."""
     calls = []                                        # (time, phase, claimed ticket or None)
-    claims, won = {}, set()
+    claims, done = {}, set()
     for r in records:
         msg = r.get("message") or {}
         content = msg.get("content")
@@ -253,20 +258,96 @@ def phases(records):
         elif r.get("type") == "user" and isinstance(content, list):
             for b in content:
                 if b.get("type") == "tool_result" and b.get("tool_use_id") in claims:
-                    text = b.get("content") if isinstance(b.get("content"), str) else " ".join(
-                        x.get("text", "") for x in b.get("content") or [] if isinstance(x, dict))
                     i, n = claims.pop(b["tool_use_id"])
-                    if re.search(rf"claimed claim/{n}\b", text or "") and n not in won:
-                        won.add(n)
+                    if n not in done and won(b, n):
+                        done.add(n)
                         calls[i][2] = n
     out, ticket = {}, None
     first = next((c[2] for c in calls if c[2] is not None), None)
     for (t, ph, claimed), nxt in zip(calls, calls[1:] + [None]):
         ticket = claimed if claimed is not None else ticket
         key = ticket if ticket is not None else first
-        m = out.setdefault(key, dict.fromkeys(("read", "claim", "code", "verify", "ci", "conflict", "report"), 0.0))
+        m = out.setdefault(key, dict.fromkeys(PHASES, 0.0))
         m[ph] += ((nxt[0] if nxt else t) - t) / 60
     return out
+
+
+def won(block, n):
+    """True when the tool result `block` says that the claim of ticket n won (`claimed claim/N`, `claim/N-2`)."""
+    c = block.get("content")
+    text = c if isinstance(c, str) else " ".join(x.get("text", "") for x in c or [] if isinstance(x, dict))
+    return re.search(rf"claimed claim/{n}\b", text or "") is not None
+
+
+def steps(records):
+    """One dict per API call of one chain, in order: `at`, `phase` (of its tool calls, the first in ORDER; a call with
+    no tool call has the phase of the call before), `ticket` (the ticket of a claim of this call that won), `eq`,
+    `model`, `effort` and `think` (the thinking tokens of its output)."""
+    rows, by_id, claims, done = [], {}, {}, set()
+    for r in records:
+        msg = r.get("message") or {}
+        content = msg.get("content") if isinstance(msg.get("content"), list) else []
+        if r.get("type") == "assistant":
+            row = by_id.get(msg.get("id"))
+            if row is None:                         # one record per content block, all with the same usage
+                u = msg.get("usage") or {}
+                row = by_id[msg.get("id")] = dict(at=when(r), phase=None, ticket=None, eq=eq(u), model=msg.get("model"),
+                                                  effort=r.get("effort"),
+                                                  think=(u.get("output_tokens_details") or {}).get("thinking_tokens") or 0)
+                rows.append(row)
+            for b in content:
+                if b.get("type") == "tool_use":
+                    p = phase(b.get("name", ""), b.get("input") or {})
+                    row["phase"] = p if row["phase"] is None else min(row["phase"], p, key=ORDER.index)
+                    m = CLAIMED.search((b.get("input") or {}).get("command", "") + "\n") if b.get("name") == "Bash" else None
+                    if m:
+                        claims[b["id"]] = (row, int(m[1]))
+        elif r.get("type") == "user":
+            for b in content:
+                if b.get("type") == "tool_result" and b.get("tool_use_id") in claims:
+                    row, n = claims.pop(b["tool_use_id"])
+                    if n not in done and won(b, n):
+                        done.add(n)
+                        row["ticket"] = n
+    last = "read"
+    for row in rows:
+        row["phase"] = last = row["phase"] or last
+    return rows
+
+
+def ticket_eq(rows):
+    """{ticket: eq} of the rows of steps(): a call counts for the ticket of the last won claim; the calls before the
+    first claim count for the first ticket (key None when no claim won)."""
+    out, ticket = {}, None
+    first = next((r["ticket"] for r in rows if r["ticket"] is not None), None)
+    for r in rows:
+        ticket = r["ticket"] if r["ticket"] is not None else ticket
+        key = ticket if ticket is not None else first
+        out[key] = out.get(key, 0.0) + r["eq"]
+    return out
+
+
+def run_line(records):
+    """The Run: line of the run report (2026-10-29): `Run: <session> · branch B · start T · wall M min · model X ·
+    effort E · think T · eq <phase> X, ... · tickets #N X, ...`. The session ID joins the reports of one run, the
+    branch its claims and PRs. One chain: the main transcript."""
+    rows = steps(records)
+    first = lambda key: next((r[key] for r in records if r.get(key)), None)
+    times = [t for t in map(when, records) if t is not None]
+    m = lambda x: f"{x / 1e6:.2f}M"
+    common = lambda c: ", ".join(f"{k} {n}" for k, n in c.most_common()) or "-"
+    by_phase = defaultdict(float)
+    for r in rows:
+        by_phase[r["phase"]] += r["eq"]
+    tickets = {n: x for n, x in ticket_eq(rows).items() if n is not None}
+    start = datetime.fromtimestamp(min(times), timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ") if times else "-"
+    return (f"Run: {first('sessionId') or '-'} · branch {first('gitBranch') or '-'} · start {start} · "
+            f"wall {(max(times) - min(times)) / 60 if times else 0:.0f} min · "
+            f"model {common(Counter((r['model'] or '').removeprefix('claude-') for r in rows if r['model']))} · "
+            f"effort {common(Counter(r['effort'] for r in rows if r['effort']))} · "
+            f"think {m(sum(r['think'] for r in rows))} · cli {first('version') or '-'} · eq "
+            + ", ".join(f"{p} {m(by_phase[p])}" for p in PHASES)
+            + ("" if not tickets else " · tickets " + ", ".join(f"#{n} {m(x)}" for n, x in tickets.items())))
 
 
 def size(content):
@@ -397,6 +478,8 @@ def main(argv=None):
                     "calls and pairs of calls (#3459)")
     ap.add_argument("--phases", action="store_true", help="print the measured phase minutes of each claimed ticket")
     ap.add_argument("--calls-line", action="store_true", help="print the Calls: line of the run (#3970)")
+    ap.add_argument("--run-line", action="store_true", help="print the Run: line of the run (session, start, model, "
+                    "eq per phase and ticket)")
     a = ap.parse_args(argv)
     path = a.file or newest()
     if not path:
@@ -419,6 +502,9 @@ def main(argv=None):
         return 0
     if a.calls_line:
         print(calls_line(chains[0]))
+        return 0
+    if a.run_line:
+        print(run_line(chains[0]))
         return 0
     if a.phases:
         for n, p in phases(chains[0]).items():
