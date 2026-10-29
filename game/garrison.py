@@ -96,7 +96,7 @@ def arrows(building, names, factor=1, more=0):
     if building == "BOMBARD_TOWER":
         return 1
     if building == "DOCK":
-        return min(SIZES["DOCK"], sum(n.startswith(FISHER) for n in names))
+        return min(SIZES["DOCK"], sum(n.startswith(FISHER) for n in names)) + more   # a harbor: Thalassocracy (#4337)
     if building == "FORTIFIED_CHURCH":
         return sum(n.startswith("VILLAGER") for n in names)
     if building in combat.BUILDINGS and not combat.BUILDINGS[building].attack:   # a Khmer house does not shoot (#2117)
