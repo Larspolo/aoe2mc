@@ -1,5 +1,5 @@
 """A deleted own building counts as lost (#3736): it leaves the economy score (score.buildings) and the recap counts
-it in "Buildings: N built, M lost" (ruins.fall keeps it in g.fell), also a start building of the map."""
+it in "Buildings: N built, M lost" (ruins.fall keeps it in g.buildings_lost), also a start building of the map."""
 import pytest
 from test_own_building_fall import HOUSE, fallen_town, stand
 

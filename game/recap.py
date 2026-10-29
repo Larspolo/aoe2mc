@@ -61,7 +61,7 @@ def parts(g, won):
     for h in sides:
         lost = vars(h).get("losses", {})
         alive = sum(u not in lost for u in (*h.villagers, *h.soldiers))
-        fell = vars(h).get("fell", [])                             # deleted or razed, also start buildings (#3736)
+        fell = vars(h).get("buildings_lost", [])                   # deleted or razed, also start buildings (#3736)
         built = sum(own for _, own in [*score.buildings(h, set()), *fell])
         fallen = built - sum(own for _, own in score.buildings(h, gone)) - sum(own for _, own in fell) + len(fell)
         given = vars(h).get("given", set())

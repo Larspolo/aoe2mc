@@ -29,7 +29,7 @@ def test_the_house_goes_and_the_complete_mill_stands_on_its_tile_with_no_loss():
     server, g = town(STORED)
     assert [(s["name"], s["player"], tuple(s["footprint"]), bool(s.get("done"))) for s in g.sites] == \
         [("MILL", 1, (9, 11, 11, 13), True)]
-    assert not vars(g).get("fell")                                     # the score and the recap count no lost building
+    assert not vars(g).get("buildings_lost")                         # the score and the recap count no lost building
     assert any(c.startswith("aoe destroy ") for c in server.log)
     _, g = town(STORED.replace("5 5 20 20", "0 0 3 3"))                # out of the area: the house stays
     assert [s["name"] for s in g.sites] == ["HOUSE"]
