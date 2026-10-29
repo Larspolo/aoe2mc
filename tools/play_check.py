@@ -62,6 +62,7 @@ class Driver(bot.Bot):
         self.foes, self.rung = {}, None                                # foe soldiers near home, the belled town center
         self.guards = 0                                                # own soldiers with an attack (defend)
         self.ready = None                                              # the age whose villager number was there (#3544)
+        self.bells = []                                                # [start, end] game times of the rung bell (#3561)
 
     def step(self):
         """Only the orders: Gather.run steps the Gather of player 1 itself."""
@@ -74,7 +75,8 @@ class Driver(bot.Bot):
             self.looked = self.time
             self.defend()
             self.bell()
-        if self.rung:                                                  # the villagers wait in the town center
+        if self.rung:                                                  # the villagers wait in the town center,
+            self.drill()                                               # the barracks trains defenders (#3561)
             self.time += self.g.tick * gather.NORMAL
             return
         self.advance()
@@ -96,6 +98,29 @@ class Driver(bot.Bot):
     def recruit(self):
         if not self.saving:                                            # a person stops the queues for the next age
             super().recruit()
+        elif self.foes:                                                # but trains defenders in a raid (#3561)
+            self.drill()
+
+    def drill(self):
+        """Keep bot.QUEUED soldiers in the queue of each military building, not villagers at the town center: the
+        defense of a person while the town bell rings or a raid comes during the saving (#3561)."""
+        g = self.g
+        for rect, name in sorted(train.homes(g).items()):
+            units = [] if name == "TOWN_CENTER" else \
+                [n for n in train.trains(g, name) if gather.military(n) and n not in train.TECHS and not build.locked(g, n)]
+            for n in units[:1]:
+                while len(g.queues.get(rect, [])) < bot.QUEUED and all(g.stock[r] >= v for r, v in train.price(g, n).items()) \
+                        and train.queue(g, self.nobody, (rect[0], rect[2]), n):
+                    pass
+
+    def shares(self):
+        """While it saves for an age, the shares follow the price of the age (#3561), with bot.WOOD for farms and
+        houses, as Bot.shares does for the army; else Bot.shares."""
+        if not self.saving:
+            return super().shares()
+        cost = train.price(self.g, self.saving)
+        total = sum(cost.values())
+        return {r: (bot.WOOD if r == "wood" else 0) + (1 - bot.WOOD) * cost.get(r, 0) / total for r in bot.SHARE}
 
     def defend(self):
         """Each soldier without a target attacks the nearest foe unit within HOME tiles of the own town center."""
@@ -126,6 +151,8 @@ class Driver(bot.Bot):
             g.selected = set(g.villagers)
             self.rung = garrison.order(g, self.nobody, (tc[0], tc[2]))
             g.selected = set()
+            if self.rung:
+                self.bells.append([recap.game_time(g), None])
         elif not raid and self.rung:
             garrison.out(g, self.rung)
             for u, v in g.villagers.items():                           # the ones that did not get in
@@ -133,6 +160,8 @@ class Driver(bot.Bot):
                     v.state = "idle"
                     vars(g).get("entering", {}).pop(u, None)
             self.rung = None
+            if self.bells:
+                self.bells[-1][1] = recap.game_time(g)
 
 
 def states(g):
@@ -222,7 +251,8 @@ def result(g, driver, watch, log):
                              "villagers": len(x.villagers), "soldiers": len(x.soldiers), "stock": dict(x.stock)}
     for side in watch.sides:                                           # the buildings of its foe that stand
         players[side.foe]["buildings"] = len(side.forts())
-    return {"end": end, "time": recap.mmss(recap.game_time(g)), "players": players,
+    bells = [f"{recap.mmss(a)}-{recap.mmss(recap.game_time(g) if b is None else b)}" for a, b in driver.bells]
+    return {"end": end, "time": recap.mmss(recap.game_time(g)), "players": players, "bells": bells,
             "stuck": sorted(watch.stuck.values(), key=lambda s: (s["player"], s["since"])), "errors": errors(log)}
 
 
@@ -263,6 +293,7 @@ def report(r):
         ages = ", ".join(f"{a} {t}" for a, t in s["ages"].items()) or "none"
         lines.append(f"Player {p}: {s['age']} (ages: {ages}), {s['villagers']} villagers, {s['soldiers']} soldiers, "
                      f"{s.get('buildings', '?')} buildings, stock {s['stock']}.")
+    lines.append(f"Town bell of player 1 (game time): {', '.join(r.get('bells', [])) or 'none'}.")
     lines.append(f"Stuck units: {len(r['stuck'])}.")
     lines += [f"  player {s['player']} {s['unit']} {s['order']} at {s['at']} since {s['since']} ({s['seconds']} s)"
               for s in r["stuck"]]

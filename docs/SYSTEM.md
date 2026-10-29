@@ -19,7 +19,7 @@ controls, read `docs/STEERING.md`. This document links to them and does not copy
 | GitHub | The issues are the tickets. Issue #1 (label `agent-status`) is the status issue: the dashboard in its body, the run reports as comments. The labels are in `.github/labels.txt`. |
 | Workflows (`.github/workflows/`) | CI, Automerge, Unconflict, Claims, Close, Dashboard, Coverage, Labels, Bundles (see below). |
 | Cloud environment | The setup script `scripts/cloud-setup.sh` (Java, packages, server jars), the network access, the SessionStart hook. |
-| Hooks (`.claude/hooks/`) | `session-start.sh` installs the Python packages, registers the merge driver `merge=jsonl` (#2004) and compares `SETUP_VERSION`. `guard-main.sh` blocks a force push, a history rewrite or a delete of `main`. |
+| Hooks (`.claude/hooks/`) | `session-start.sh` installs the Python packages (a pip pillow and setuptools if the Debian ones are there), registers the merge driver `merge=jsonl` (#2004), sets an empty `TMPDIR` to `/tmp` and compares `SETUP_VERSION`. `guard-main.sh` blocks a force push, a history rewrite or a delete of `main`. `guard-shell.sh` blocks the shell pitfalls of `docs/LEARNINGS.md`: `cat > FILE <<` over a tracked file, a redirect into `$VAR/` with an empty variable, `pkill -f` with no bracket in the pattern, and `git stash` in a merge. |
 
 ### Workflows
 
@@ -217,6 +217,7 @@ of `tools/bootstrap.py` (they copy this repository) and the tests that need a sp
 | `.claude/settings.json` | generic | The permission rules name the repository (they cannot read `agent.toml`). |
 | `.claude/hooks/session-start.sh` | generic | The Python packages and the setup version file name. |
 | `.claude/hooks/guard-main.sh` | generic | None. |
+| `.claude/hooks/guard-shell.sh` | generic | None. |
 | `scripts/cloud-setup.sh` | specific | Java, the Minecraft server jars, the Vulkan and X tools of the client. |
 | `scripts/autopilot.sh` | generic | None (runs on the owner's computer). |
 | `tools/agent_config.py` | generic | None (reads `agent.toml`). |

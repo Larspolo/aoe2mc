@@ -252,6 +252,14 @@ The owner decides on the platform first (decision ticket). The other tickets dep
 - #137 Start a game program that controls the server through RCON.
 - #138 Let villagers gather wood on the player's command (the milestone).
 
+## Delete (#3452)
+
+- AoE2 DE: the Delete button (bottom right of the command panel) makes an own building fall at once, as at 0 hit
+  points: the units inside come out, the queue gives its cost back. `game/demolish.py` puts it in the last menu slot.
+- A foundation that no villager started to build gives back its full cost; a started one gives back nothing.
+  Source: the behavior of the game (AoE2 DE). The AoE2 wiki (MediaWiki API, 2026-10-29) has no page "Delete" and no
+  refund rule on "Building (Age of Empires II)": check it in the game when a refund looks wrong.
+
 ## Decisions of the owner (2026-10-28)
 
 - Bot difficulty (#2648, option A): the six AoE2 DE names (Easiest, Standard, Moderate, Hard, Hardest, Extreme), each
@@ -530,3 +538,4 @@ Moved from `docs/LEARNINGS.md` (improve run, 2026-10-26).
 - `Gather.selected` is the selection of `Gather.person` since #3486 (co-op: each Minecraft player of one AoE2 player selects on its own). `click()`, `box()`, `deselect()`, `menu.clicks` and `hints.state` set the person. Code that removes a unit from the selection of all people (death, new owner) calls `g.drop(u)`, not `g.selected.discard(u)`. A selection that code made with person `""` (a setup, a test) goes to the first named person.
 - What the bot soldiers do in `tools/play_check.py`: wrap `bot.Bot.fight` in a script and log `self.targets`, the target kind (`t in g.forts`), the distance, and the hit points (`scoreboard players get T aoe_hp` for a building, `data get entity T Health` for a unit) each 20 AoE2 seconds. Use `Bot.time` as the clock: `recap.game_time` of a bot Gather ignores `--speed` (#3513). A target whose hit points do not drop while its soldiers stand still is a target that they cannot hit (#3441).
 - A building arrow that does no damage: count the arrows and read their place (`execute if entity @e[type=arrow]`, `data get entity @e[type=arrow,limit=1,sort=nearest,x=X,y=Y,z=Z] Pos`). The invisible target slime of an own building does not stop an arrow; a block does, and the arrow stays in it (#3562: 30 arrows in the wall of a house between the town center and the militia). `AoePlugin.start` then starts the arrow above the target.
+- A mob with a brain (a hoglin; also a piglin, an axolotl, a warden) gives null for `Mob#getTarget` after `Mob#setTarget`: it reads the attack memory of the brain. Use `target(mob)` and `setTarget(mob, t)` of `AoePlugin.java`, not the API calls (#3624: the hoglin bears did not hunt).

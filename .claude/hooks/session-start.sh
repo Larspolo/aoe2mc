@@ -7,12 +7,22 @@ set -euo pipefail
 ( cd "${CLAUDE_PROJECT_DIR:-.}" && gd=$(git rev-parse --path-format=absolute --git-common-dir) &&
   cp tools/merge_jsonl.py "$gd/" && git config merge.jsonl.driver "python3 $gd/merge_jsonl.py %O %A %B" ) || true
 
+# The Bash tool of a cloud session has no TMPDIR: "$TMPDIR/x.py" was "/x.py" (#2032).
+if [ -n "${CLAUDE_ENV_FILE:-}" ] && [ -z "${TMPDIR:-}" ]; then
+  echo "export TMPDIR=/tmp" >> "$CLAUDE_ENV_FILE"
+fi
+
 if [ "${CLAUDE_CODE_REMOTE:-}" != "true" ]; then
   exit 0
 fi
 
 cd "${CLAUDE_PROJECT_DIR:-.}"
-python3 -m pip install --quiet --disable-pip-version-check --root-user-action=ignore -r requirements-dev.txt
+PIP="python3 -m pip install --quiet --disable-pip-version-check --root-user-action=ignore"
+# As scripts/cloud-setup.sh: an older environment has the Debian pillow ("cannot import name '_imaging'") and the
+# Debian setuptools, which cannot build mgz.
+python3 -c "from PIL import _imaging" 2>/dev/null || $PIP --ignore-installed pillow || true
+python3 -c "import mgz" 2>/dev/null || $PIP --ignore-installed setuptools || true
+$PIP -r requirements-dev.txt
 
 # The environment runs the setup script that the owner pasted. Tell the agent when it is older than the repository.
 # One environment can serve more projects (#1964): it then has the version file of another project. With no version
