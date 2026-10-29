@@ -15,9 +15,10 @@ high y side that the land does not take) and
 lands, #3868; `create_connect_all_lands`, `create_connect_to_nonplayer_land`, `create_connect_same_land_zones`,
 `create_connect_land_zones` and the `zone` of a land, #3869) and <ELEVATION_GENERATION>
 (`create_elevation HEIGHT` with `base_terrain`, `number_of_clumps`, `number_of_tiles`, `spacing`: hills level by level,
-never on water or shallows, #3822). The sections run in the AoE2 DE order: lands, elevation, terrains, connections
-(#3966); then all water goes to level 0. Other sections and attributes: a warning. `#include_drs random_map.def`
-has no effect (the constants are in TERRAINS); another #include file: a warning. All randomness comes from numpy.random.default_rng(seed).
+never on water or shallows, #3822) and <CLIFF_GENERATION> (cliff lines of CLIFF_DEFAULT objects, cliffs(), #3850).
+The sections run in the AoE2 DE order: lands, elevation, terrains, connections (#3966); then all water goes to level 0.
+Other sections and attributes: a warning. `#include_drs random_map.def` has no effect (the constants are in
+TERRAINS); another #include file: a warning. All randomness comes from numpy.random.default_rng(seed).
 """
 import heapq
 import re
@@ -40,7 +41,13 @@ BORDERS = ("left_border", "right_border", "top_border", "bottom_border")   # of 
 RING = 0.35                     # the circle of the player lands: radius in map sizes
 AVOID = 13                      # set_avoid_player_start_areas: default tiles from a player origin
 STEPS = ((1, 0), (-1, 0), (0, 1), (0, -1))
-SECTIONS = ("PLAYER_SETUP", "LAND_GENERATION", "TERRAIN_GENERATION", "CONNECTION_GENERATION", "ELEVATION_GENERATION")
+SECTIONS = ("PLAYER_SETUP", "LAND_GENERATION", "TERRAIN_GENERATION", "CONNECTION_GENERATION", "ELEVATION_GENERATION",
+            "CLIFF_GENERATION")
+# <CLIFF_GENERATION> defaults of the AoE2 DE random map scripting guide (#3850). A length counts cliff pieces.
+CLIFF_DEFAULTS = {"min_number_of_cliffs": 3, "max_number_of_cliffs": 8, "min_length_of_cliff": 5,
+                  "max_length_of_cliff": 9, "cliff_curliness": 36, "min_distance_cliffs": 2, "min_terrain_distance": 2}
+CLIFF_STEP = 3                  # tiles between two cliff pieces: the converter draws a CLIFF 3 tiles wide (aoe2mc, big)
+DIRS = ((1, 0), (1, 1), (0, 1), (-1, 1), (-1, 0), (-1, -1), (0, -1), (1, -1))
 
 
 class RmsError(ValueError):
@@ -452,8 +459,51 @@ def generate(text, seed, players=2, size=None, warn=None):
             warn(f"create_terrain: {a} is not read yet")
     connections(terrain, links, sections.get("CONNECTION_GENERATION", ()), consts, rng, warn)
     elevation = lower_to_water(terrain, elevation)
-    return {"size": n, "terrain": terrain.tolist(), "elevation": elevation.tolist(), "objects": trees(terrain),
+    objects = trees(terrain) + cliffs(sections.get("CLIFF_GENERATION", ()), terrain, starts, consts, rng, warn)
+    return {"size": n, "terrain": terrain.tolist(), "elevation": elevation.tolist(), "objects": objects,
             "players": {str(p): {"color": p - 1} for p in range(1, players + 1)}, "lands": [{k: v for k, v in st.items() if k != "land"} for st in starts]}
+
+
+def cliffs(cmds, terrain, starts, consts, rng, warn):
+    """The cliff objects of <CLIFF_GENERATION> (#3850): lines of CLIFF_DEFAULT pieces CLIFF_STEP tiles apart. A line
+    grows from a random free land tile and turns 45° at cliff_curliness percent of the steps. Free: no water, shallows
+    or forest within min_terrain_distance, no player start area (base_size), no other line within min_distance_cliffs."""
+    if not cmds:
+        return []
+    o = dict(CLIFF_DEFAULTS)
+    for cmd, args, _ in cmds:
+        if cmd in o and args:
+            o[cmd] = value(args[0], consts)
+        else:
+            warn(f"{cmd} is not read yet")
+    n = len(terrain)
+    free = ~dilate(np.isin(terrain, [TERRAINS["WATER"], TERRAINS["SHALLOW"], *FOREST_TREES]), o["min_terrain_distance"])
+    for st in starts:
+        for c in square((st["x"], st["y"]), st["base_size"], n):
+            free[c] = False
+    out, count = [], int(rng.integers(o["min_number_of_cliffs"], max(o["min_number_of_cliffs"], o["max_number_of_cliffs"]) + 1))
+    lo, hi = o["min_length_of_cliff"], max(o["min_length_of_cliff"], o["max_length_of_cliff"])
+    for _ in range(count * 20):                  # tries: a line that cannot reach its length is dropped
+        if len(out) == count or not free.any():
+            break
+        spots = np.argwhere(free)
+        c, d, want = spots[rng.integers(len(spots))], int(rng.integers(8)), int(rng.integers(lo, hi + 1))
+        line = [tuple(int(v) for v in c)]
+        while len(line) < want:
+            if rng.integers(100) < o["cliff_curliness"]:
+                d = (d + (1 if rng.integers(2) else -1)) % 8
+            x, y = line[-1][0] + DIRS[d][0] * CLIFF_STEP, line[-1][1] + DIRS[d][1] * CLIFF_STEP
+            if not (0 <= x < n and 0 <= y < n and free[x, y]):
+                break
+            line.append((x, y))
+        if len(line) < lo:
+            continue
+        out.append(line)
+        mask = np.zeros((n, n), bool)
+        mask[tuple(np.array(line).T)] = True
+        free &= ~dilate(mask, CLIFF_STEP + o["min_distance_cliffs"])
+    return [{"name": f"CLIFF_DEFAULT_{int(rng.integers(1, 10))}", "player": 0, "x": x + 0.5, "y": y + 0.5, "line": k}
+            for k, line in enumerate(out) for x, y in line]
 
 
 # Own generators (#993, decision B of #961): the land of a map type in the script language of generate(). The text is
