@@ -320,7 +320,7 @@ def read_scx(path):
 
 def read_json(path):
     """A map description in JSON (#960), as read_scenario returns it: {"size": N, "terrain": N × N terrain IDs,
-    "elevation": N × N levels (default 0), "objects": [{"name", "player", "x", "y", "rotation"} ...],
+    "elevation": N × N levels (default 0), "layer": N × N land layer IDs (default -1 = none, #3689), "objects": [{"name", "player", "x", "y", "rotation"} ...],
     "players": {"1": {"civ": "BRITONS", "color": 0} ...}}. The IDs and names are those of AoE2ScenarioParser
     (TerrainId, object_kinds). The color is an index of buildings.COLOR_NAMES (default: the player number - 1)."""
     with open(path) as f:
@@ -335,13 +335,15 @@ def map_description(d, path):
         raise OptionError(f"{path}: \"size\" must be a positive integer")
     terrain_names = {t.value: t.name for t in TerrainId}
     arrays = {}
-    for key, default in (("terrain", None), ("elevation", 0)):
+    for key, default in (("terrain", None), ("elevation", 0), ("layer", -1)):
         a = np.array(d.get(key, default if default is None else [[default] * size] * size))
         if a.shape != (size, size):
             raise OptionError(f"{path}: \"{key}\" must be {size} lists of {size} numbers, not shape {a.shape}")
         arrays[key] = a
     if (bad := sorted(set(arrays["terrain"].ravel().tolist()) - set(terrain_names))):
         raise OptionError(f"{path}: unknown terrain IDs {bad[:10]} (see AoE2ScenarioParser TerrainId)")
+    if (bad := sorted(set(arrays["layer"].ravel().tolist()) - set(terrain_names) - {-1})):
+        raise OptionError(f"{path}: unknown layer IDs {bad[:10]} (-1 = no layer, see AoE2ScenarioParser TerrainId)")
     kinds = object_kinds(old=False)
     ids = {name: (i, prefix) for i, (prefix, name) in kinds.items()}
     objects = []
@@ -359,8 +361,19 @@ def map_description(d, path):
                         "arch": buildings.CIV_TO_ARCH.get(civ, "western"), "civ": civ, "view": None}
     for pid in {o["player"] for o in objects} - set(players):          # an object of a player without an entry
         players[pid] = {"color": buildings.COLOR_NAMES[(pid - 1) % 8], "arch": "western", "civ": "?", "view": None}
-    return (size, arrays["terrain"].astype(np.int16), arrays["elevation"].astype(np.float32), terrain_names,
+    terrain = apply_layers(arrays["terrain"].astype(np.int16), arrays["layer"], terrain_names)
+    return (size, terrain, arrays["elevation"].astype(np.float32), terrain_names,
             {k: "" for k in CHAPTERS}, objects, players)
+
+
+def apply_layers(terrain, layer, terrain_names):
+    """Give each tile its land layer (a road painted in the DE editor, #3688): a land layer on a land base gives the
+    tile the layer ID, water on either side keeps the base. layer -1 = no layer. Returns the terrain array."""
+    land = {i: terrain_style(n)["depth"] == 0 for i, n in terrain_names.items()}
+    for x, y in zip(*np.nonzero(layer >= 0)):
+        if land.get(int(terrain[x, y])) and land.get(int(layer[x, y])):
+            terrain[x, y] = layer[x, y]
+    return terrain
 
 
 def read_scenario(path):
@@ -376,14 +389,13 @@ def read_scenario(path):
     size = mm.map_size
     terrain = np.zeros((size, size), np.int16)
     elevation = np.zeros((size, size), np.float32)
+    layer = np.full((size, size), -1, np.int16)
     terrain_names = {t.value: t.name for t in TerrainId}
-    land = {i: terrain_style(n)["depth"] == 0 for i, n in terrain_names.items()}
     for t in mm.terrain:
         terrain[t.x, t.y] = t.terrain_id
         elevation[t.x, t.y] = t.elevation
-        # a land layer (a road painted in the DE editor) gives the look of the tile; water keeps its base (#3688)
-        if t.layer >= 0 and land.get(t.terrain_id) and land.get(t.layer):
-            terrain[t.x, t.y] = t.layer
+        layer[t.x, t.y] = t.layer
+    terrain = apply_layers(terrain, layer, terrain_names)
 
     kinds = object_kinds()
     other = {r["tech"]: r["name"] for r in units.rows("tech_names.jsonl")}   # the names of game/data/train.jsonl
@@ -452,6 +464,11 @@ def read_scenario(path):
                                                getattr(e, "color_mood", None) in set(ColorMood) else {}))
                                        for e in (in_order(t.effects, t.effect_order) if shown else t.effects)])
                          for t in triggers]
+    tiles = {u.reference_id: [int(u.x), int(u.y)] for us in scn.unit_manager.units for u in us}
+    for c in (c for t in texts["triggers"] for c in t["conditions"]):   # the tile of a building: no entity (#3782)
+        if c["type"] in (BRING_OBJECT_TO_AREA, BRING_OBJECT_TO_OBJECT):
+            c["tile"] = None if c.get("unit") else tiles.get(c.get("ref"))
+            c["next_tile"] = None if c.get("next_unit", True) else tiles.get(c.get("next"))
     mood = mm.map_color_mood                 # a ColorMood, or a string that the parser does not know (#1594)
     texts["mood"] = (getattr(mood, "name", None) or str(mood or "DEFAULT")).upper()
     om = scn.option_manager                  # the tab "Global Victory" for the scenario mode (#2566, run.VICTORIES)
@@ -800,17 +817,19 @@ def train_ms(unit):
     return (train(unit) or (30,))[0] * 1000
 
 
-def training(timeline, research=False):
+def training(timeline, research=False, research_s=None):
     """The trainings of a recorded game: (end time ms, QUEUE event, building ID) for each unit, in the order of the
     QUEUE commands. A building trains one unit after the other; its research (RESEARCH_S) delays them. The record
     does not show a cancelled queue or the population limit. research: also (end, RESEARCH event, building ID) for
-    each technology with a RESEARCH_S value (#2810)."""
+    each technology with a RESEARCH_S value (#2810). research_s: the seconds of each technology in place of RESEARCH_S
+    (the game program has all of them, #3738)."""
     busy, out = {}, []                   # building -> free at
+    research_s = RESEARCH_S if research_s is None else research_s
     for e in timeline:
         kind, t = e["kind"], e["time"]
         if kind in ("queue", "research") and e.get("objects"):
             name = e.get("name", "") if kind == "queue" else e.get("technology", "")
-            s = train_ms(name) if kind == "queue" else RESEARCH_S.get(name, 0) * 1000
+            s = train_ms(name) if kind == "queue" else research_s.get(name, 0) * 1000
             for n in range(max(1, int(e.get("amount", 1))) if kind == "queue" else 1):
                 b = e["objects"][n % len(e["objects"])]
                 busy[b] = max(busy.get(b, 0), t) + s
@@ -4642,8 +4661,10 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
         chance = (TRIGGER_CHANCE, False) in kinds
         rest = kinds - {(TRIGGER_CHANCE, False)}
         if any(c["type"] in OBJECT_TESTS and (c.get("ref", -1) is None or c.get("ref", -1) < 0
-                                              or not c.get("unit") and not fallen_building(c) and not owned_building(c))
-               or c["type"] == BRING_OBJECT_TO_OBJECT and (c.get("next") is None or c["next"] < 0 or not c.get("next_unit"))
+                                              or not c.get("unit") and not fallen_building(c) and not owned_building(c)
+                                              and not brought_building(c, T))
+               or c["type"] == BRING_OBJECT_TO_OBJECT and (c.get("next") is None or c["next"] < 0
+                                                           or not c.get("next_unit") and not brought_building(c, T))
                for c in conds):            # no object, or a building: blocks, no entity (but #2910, #2940: its score)
             stats["object condition (not an entity, not supported yet)"] += t["enabled"]
             continue
@@ -4711,6 +4732,10 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
             if owned_building(c):                                      # the owner of a building: its score (#2940)
                 tests.append(f"{'unless' if c['inverted'] else 'if'} score #o{c['ref']} aoe_owner matches {c['player']}")
                 unless.append(f"{'if' if c['inverted'] else 'unless'} score #o{c['ref']} aoe_owner matches {c['player']}")
+                continue
+            if test := brought_building(c, T):                         # a building: its tile and its score (#3782)
+                tests.append(test[c["inverted"]])
+                unless.append(test[not c["inverted"]])
                 continue
             if c["type"] in SCORE_TESTS:                               # a score of the world or the game
                 test = SCORE_TESTS[c["type"]](c)
@@ -4876,6 +4901,30 @@ def research_list(triggers):
 def fallen_building(c):
     """The "Destroy Object" condition of a building (#2910): the score #f<ref> of aoe_fallen, not the tag of an entity."""
     return c["type"] == DESTROY_OBJECT and not c.get("unit")
+
+
+def brought_building(c, T):
+    """The tests (holds, does not hold) of "Bring Object to Area" or "Bring Object to Object" with a building (#3782),
+    or None. A building does not move: in the area, the test is "it stands" (its score #f<ref> of aoe_fallen, #2910),
+    else a score that is never set. Next to an object: the other unit in the box of the tiles around its tile."""
+    stands = "unless score #f{0} aoe_fallen matches 1.."
+    if c["type"] == BRING_OBJECT_TO_AREA and not c.get("unit") and c.get("tile") and min(c.get("area", [-1])) >= 0:
+        (x, y), (x1, y1, x2, y2) = c["tile"], c["area"]
+        if min(x1, x2) <= x <= max(x1, x2) and min(y1, y2) <= y <= max(y1, y2):
+            return stands.format(c["ref"]), f"if score #f{c['ref']} aoe_fallen matches 1.."
+        return "if score #never aoe_trig matches 1", "unless score #never aoe_trig matches 1"
+    if c["type"] != BRING_OBJECT_TO_OBJECT or c.get("next") is None or c["next"] < 0 or c.get("ref", -1) < 0:
+        return None
+    if c.get("unit") and not c.get("next_unit") and c.get("next_tile"):
+        building, tile, other = c["next"], c["next_tile"], c["ref"]
+    elif not c.get("unit") and c.get("next_unit") and c.get("tile"):
+        building, tile, other = c["ref"], c["tile"], c["next"]
+    else:
+        return None
+    at = f"positioned {(tile[0] - 1) * T} {MIN_Y} {(tile[1] - 1) * T}"
+    box = f"@e[tag=aoe2mc.r{other},dx={3 * T - 1},dy={HEIGHT - 1},dz={3 * T - 1}]"
+    # does not hold: the unit is not near (a fallen building with the unit near does not reset a looping trigger)
+    return f"{stands.format(building)} {at} if entity {box}", f"{at} unless entity {box}"
 
 
 def fallen_list(triggers):

@@ -118,6 +118,9 @@ PATH_FAR = 200              # cells per block of straight way that the search of
 # The walk speed of common units, tiles per game second (AoE2 DE), the ages and the Society buildings: one line per
 # name in data/replay.jsonl (#2034). A walk speed name is the start of the unit names.
 ROWS = table.load("replay.jsonl")
+RESEARCH_S = aoe2mc.RESEARCH_S | {r["label"]: r["time"] for r in table.load("train.jsonl")      # the book items: each
+                                  if r.get("item") == "book" and "time" in r}                       # research (#3738)
+TECHS = {r["label"]: r["name"] for r in table.load("train.jsonl") if r.get("item") == "book"}   # text -> name (#3785)
 SPEEDS = {r["name"]: r["walk"] for r in ROWS if "walk" in r}
 AGES = tuple(r["name"] for r in sorted((r for r in ROWS if "age" in r), key=lambda r: r["age"]))   # (#1067)
 SOCIETY = tuple(r["name"] for r in ROWS if r.get("society"))      # the buildings of the Society tab (#1086)
@@ -401,6 +404,7 @@ class Replay:
         self.troops, self.fallen = {}, {}       # player -> {military unit name: live count, count lost} (#3695)
         self.censused = False                   # a census counted the live units (the base of the units lost)
         self.reached, self.researched = {}, {}  # player -> {age: game time (ms)}, researched technologies (#1067)
+        self.learned = {}                       # player -> [(game time ms, technology name)] (#3785)
         self.vills, self.vhigh = {}, {}         # player -> live villagers (est.), the highest count (#1086)
         self.graph = {}                         # value index -> the shown rows of its graph (#3448)
         self.samples, self.minute = {}, -1      # player -> [(minute, pop, villagers, military, resources)], last minute (#3446)
@@ -444,6 +448,11 @@ class Replay:
     def learn(self, e):
         """Count a research of the timeline for the summary (#1067)."""
         self.researched[e.get("player")] = self.researched.get(e.get("player"), 0) + 1
+        self.learned.setdefault(e.get("player"), []).append((e.get("time", 0), TECHS.get(e["technology"], e["technology"])))
+
+    def upgrades(self, p, t):
+        """The technology names that player p researched up to game time t (ms), in time order (#3785)."""
+        return [name for time, name in self.learned.get(p, ()) if time <= t]
 
     def villager(self, p, n, live=None):
         """n more live villagers of player p, or the `live` count of the census: keep the highest count (#1086)."""
@@ -686,7 +695,7 @@ class Replay:
             if e["time"] <= t < end:
                 n = e.get("name") if e["kind"] == "queue" else e.get("technology")
                 if n:
-                    s = end - (aoe2mc.train_ms(n) if e["kind"] == "queue" else aoe2mc.RESEARCH_S[n] * 1000)
+                    s = end - aoe2mc.train_ms(n) if e["kind"] == "queue" else max(e["time"], end - RESEARCH_S[n] * 1000)
                     now.setdefault(b, []).append((end, s, n, e))
         out, shown = [], self.panels
         for b, items in sorted(now.items()):
@@ -695,7 +704,8 @@ class Replay:
                 continue
             count = sum(item[2] == n for item in items) if e["kind"] == "queue" else 1
             done = round(PANEL_BAR * (t - s) / max(1, end - s))
-            line = f"{pretty(n) if e['kind'] == 'queue' else n}{f' ×{count}' * (count > 1)} " \
+            label = n if e["kind"] != "queue" else "Villager" if n.startswith("VILLAGER_") else pretty(n)  # AoE2 (#3740)
+            line = f"{label}{f' ×{count}' * (count > 1)} " \
                    f"[{'|' * done}{'.' * (PANEL_BAR - done)}]"
             if shown.get(b) == line:
                 continue
@@ -976,9 +986,13 @@ class Replay:
 
     @functools.cached_property
     def trainings(self):
-        """aoe2mc.training of the timeline: (end ms, QUEUE event, building ID) for each unit."""
+        """aoe2mc.training of the timeline: (end ms, QUEUE event, building ID) for each unit. An age-up ends at the
+        "age" event of its player and age (#3739): the queue guess can be later, the record time is exact."""
         self.unknown_research
-        return aoe2mc.training(self.data.get("timeline", ()), research=True)
+        timeline = self.data.get("timeline", ())
+        ages = {(e.get("player"), pretty(e["age"])): e["time"] for e in timeline if e["kind"] == "age" and e.get("age")}
+        return [(ages.get((e.get("player"), e.get("technology")), end) if e["kind"] == "research" else end, e, b)
+                for end, e, b in aoe2mc.training(timeline, research=True, research_s=RESEARCH_S)]
 
     def production(self, t):
         """{player: [(name, count, start, end), ...]}: the units in training or in the queue of their building at game
@@ -989,7 +1003,7 @@ class Replay:
             if e["kind"] == "research" and e["time"] <= t < end:
                 n = e["technology"]
                 tech.setdefault(e["player"], []).append(
-                    (n, end - aoe2mc.RESEARCH_S[n] * 1000, end, "age" if n.endswith(" Age") else "research"))
+                    (n, max(e["time"], end - RESEARCH_S[n] * 1000), end, "age" if n.endswith(" Age") else "research"))
             elif e["time"] <= t < end and e.get("name"):
                 out.setdefault(e["player"], {}).setdefault(e["name"], []).append(end)
         return {p: sorted([(n, len(ends), min(ends) - aoe2mc.train_ms(n), min(ends))
@@ -1000,7 +1014,7 @@ class Replay:
     def unknown_research(self):
         """The technologies of the timeline with no RESEARCH_S value: no production item, one log line (#2810)."""
         names = sorted({e.get("technology", "") for e in self.data.get("timeline", ())
-                        if e["kind"] == "research" and e.get("technology", "") not in aoe2mc.RESEARCH_S})
+                        if e["kind"] == "research" and e.get("technology", "") not in RESEARCH_S})
         if names:
             print(f"research with no time (not in the production): {', '.join(names)}", file=sys.stderr)
         return names
@@ -1009,7 +1023,8 @@ class Replay:
         """A "spawn" event for each unit that a QUEUE command trains, at the end of its training."""
         return [{"time": end, "player": e["player"], "kind": "spawn", "type": e["type"], "name": e["name"],
                  "building": b, "where": (e.get("names") or [None] * len(e["objects"]))[e["objects"].index(b)]}
-                for end, e, b in aoe2mc.training(self.data.get("timeline", ())) if "type" in e and e.get("name")]
+                for end, e, b in aoe2mc.training(self.data.get("timeline", ()), research_s=RESEARCH_S)
+                if "type" in e and e.get("name")]
 
     def fireworks(self, player):
         """Three firework rockets in the player color above the first town center of the player, and one sound for
@@ -2150,8 +2165,17 @@ class Replay:
                 f": villagers trained {self.villagers.get(p, 0)}, gathered {res}")]))
             out.append("tellraw @a " + json.dumps([text(name, color), text(              # military (#1066)
                 f": military units trained {self.army.get(p, 0)}, units lost {self.lost.get(p, 0)}, "
-                f"buildings lost {self.razed.get(p, 0)}")]))
+                f"buildings lost {self.razed.get(p, 0)}{self.army_text(p)}")]))
         return out + self.tech_commands() + self.society_commands()
+
+    def army_text(self, p):
+        """The army at the end and the losses by type of player p, most first, at most 6 types and "+N" (#3697)."""
+        def top(counts):
+            items = sorted(((n, c) for n, c in counts.items() if c), key=lambda x: (-x[1], x[0]))
+            words = [f"{c} {pretty(n)}" for n, c in items[:6]] + ([f"+{len(items) - 6}"] if len(items) > 6 else [])
+            return ", ".join(words)
+        army, lost = top(self.troops.get(p, {})), top(self.fallen.get(p, {}))
+        return "".join(f", {k} {v}" for k, v in (("army at the end:", army), ("lost:", lost)) if v)
 
     def tech_commands(self):
         """One chat line per player with the game time of each age-up (MM:SS, "-": not reached) and the number of
@@ -2291,6 +2315,20 @@ class Replay:
                     self.fallen.setdefault(p, {})[name] = self.fallen.get(p, {}).get(name, 0) + was - n
                 kept[name] = n
         self.censused = True
+
+    def eco(self):
+        """The villagers of each player on each kind of work (#3755): food, wood, gold, stone, build or idle. A start
+        villager has no task yet: it counts as idle. Units are keyed by uuid: a gather point can hold the same unit."""
+        keys = ("food", "wood", "gold", "stone", "build", "idle")
+        out = {p: dict.fromkeys(keys, 0) for p in self.pop}
+        for v in {v.uuid: v for v in self.units.values()}.values():
+            if not v.name.startswith("VILLAGER"):
+                continue
+            t = v.task or "none"
+            k = ("idle" if t == "none" or v.job == units.IDLE_JOB else "build" if "BUILDER" in t or "REPAIRER" in t
+                 else "wood" if "LUMBERJACK" in t else "gold" if "GOLD" in t else "stone" if "STONE" in t else "food")
+            out.setdefault(v.player, dict.fromkeys(keys, 0))[k] += 1
+        return out
 
     def troop(self, p, name):
         """One more live military unit of this type for player p (a start unit or a spawn, #3695)."""

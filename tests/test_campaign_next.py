@@ -36,7 +36,7 @@ def test_a_victory_starts_the_next_scenario(folder):
     seen["ends"] = ["Victory"]
     run.main([str(tmp_path), "--play"])
     assert seen["worlds"] == ["1 S1", "2 S2"]
-    assert json.loads((tmp_path / "progress.json").read_text()) == {"won": [1]}
+    assert json.loads((tmp_path / "progress.json").read_text()) == {"won": [1], "difficulty": "standard"}
     assert "say Scenario 2 starts. Join again." in seen["commands"]
 
 
@@ -45,7 +45,7 @@ def test_a_loss_starts_the_same_scenario_on_the_converted_world(folder):
     seen["ends"] = ["Defeat"]
     run.main([str(tmp_path), "--play"])
     assert seen["worlds"] == ["1 S1", "1 S1"]
-    assert not (tmp_path / "progress.json").exists()
+    assert "won" not in json.loads((tmp_path / "progress.json").read_text())
     assert (tmp_path / ".start" / "1 S1" / "level.dat").exists() and not (tmp_path / ".start" / "1 S1" / "changed").exists()
 
 
@@ -54,7 +54,7 @@ def test_the_last_victory_completes_the_campaign(folder):
     seen["ends"] = ["Victory", "Victory"]
     run.main([str(tmp_path), "--play"])
     assert seen["worlds"] == ["1 S1", "2 S2"]
-    assert json.loads((tmp_path / "progress.json").read_text()) == {"won": [1, 2]}
+    assert json.loads((tmp_path / "progress.json").read_text()) == {"won": [1, 2], "difficulty": "standard"}
     assert 'title @a title "Campaign complete"' in seen["commands"]
 
 

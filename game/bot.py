@@ -33,11 +33,13 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import ai  # noqa: E402
+import autoscout  # noqa: E402
 import build  # noqa: E402
 import combat  # noqa: E402
 import garrison  # noqa: E402
 import gather  # noqa: E402
 import herd  # noqa: E402
+import scout  # noqa: E402
 import table  # noqa: E402
 import train  # noqa: E402
 
@@ -96,6 +98,7 @@ class Bot:
         self.guarded = -LOOK                                           # AoE2 seconds of the last look for predators
         self.defense = {}                                              # villager -> (predator, last res, last tree)
         self.g.work_on = False                                         # the bot gives the tasks after a build or a tree (#3271)
+        self.scouted = False                                           # the start scouts get Auto Scout once (#3704)
 
     def setup(self):
         """Find the villagers of the player (the entities must be loaded) and make the objective of the resources."""
@@ -153,6 +156,10 @@ class Bot:
     def orders(self):
         """Orders for the idle villagers, the sites, the queues and the soldiers."""
         g = self.g
+        if not self.scouted:                                           # the AoE2 AI scouts the map at the start (#3704)
+            self.scouted = True
+            scouts = {scout.CAVALRY, *scout.SCOUTS.values()}
+            autoscout.start(g, [u for u, n in g.soldiers.items() if n in scouts])
         self.defend()
         self.build()
         share = self.shares()

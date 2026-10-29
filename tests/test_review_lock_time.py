@@ -21,6 +21,7 @@ def github(monkeypatch):
     monkeypatch.setattr(claim, "last_lock", lambda kind, remote="origin": seen.get("lock"))
     monkeypatch.setattr(claim, "merged_since", lambda last, gap, remote="origin": seen["since"].append(last) or seen["merged"])
     monkeypatch.setattr(claim, "claim_lock", lambda kind, key, remote="origin": seen["keys"].append(key) and False)
+    monkeypatch.setattr(claim, "refill_starved", lambda: False)           # no quota call (#3741: tests/test_roadmap_early.py)
     return seen
 
 

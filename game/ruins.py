@@ -58,10 +58,14 @@ def fall(g, rect):
     g.ruins, its queue goes with its cost back, and the units inside come out."""
     import build, combat, fleet, garrison, train                   # they import gather, which imports this module
     sites = [s for s in g.sites if s.get("done") and s["player"] == g.player and tuple(s["footprint"]) == rect]
+    fell = vars(g).setdefault("fell", [])                          # (name, built by the player): the recap counts them lost (#3736)
     if sites:
         g.sites = [s for s in g.sites if all(s is not t for t in sites)]
+        fell += [(s["name"], True) for s in sites]
     else:
         g.ruins.add(rect)
+        fell += [(o["name"], False) for o in g.data["objects"] if o["kind"] == "building" and o["player"] == g.player
+                 and fallen(g, o)][:1]
     for e in g.queues.pop(rect, []):
         for r, v in e.get("paid", train.COSTS[e["name"]]).items():   # as train.cancel: a free technology gives nothing
             g.stock[r] += v

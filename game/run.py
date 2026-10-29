@@ -777,8 +777,16 @@ def start_on_join(game, sides, people, sleep=time.sleep):
         sleep(0.5)
     import gather
     game.command("tick unfreeze")
+    show_titles(game)                                # nobody saw a title before the join (#3772)
     for h in sides:                                                    # a loaded game goes on at its saved game time (#3377)
         h.t0 = h.clock() - vars(game).get("loaded_seconds", 0.0) / (gather.NORMAL * getattr(h, "speed", 1.0))
+
+
+def show_titles(game):
+    """The campaign name as title and "Scenario N: name" as subtitle to all players online (#3506)."""
+    if titles := vars(game).get("titles"):
+        game.command(f"title @a subtitle {json.dumps(titles[1])}")
+        game.command(f"title @a title {json.dumps(titles[0])}")
 
 
 def unveil(g):
@@ -927,11 +935,28 @@ def campaign(folder, number=None):
 
 def progress(folder):
     """The numbers of the won scenarios of a campaign folder (progress.json, #3507)."""
+    return progress_file(folder).get("won", [])
+
+
+def progress_file(folder):
+    """The content of progress.json of a campaign folder: "won", "difficulty" (#3507, #3520)."""
     try:
         with open(os.path.join(folder, "progress.json"), encoding="utf-8") as f:
-            return json.load(f).get("won", [])
+            return json.load(f)
     except FileNotFoundError:
-        return []
+        return {}
+
+
+def campaign_difficulty(folder, chosen):
+    """AoE2 DE: one difficulty for the whole campaign (#3520). The first start writes the chosen one into
+    progress.json, a later start keeps the value of the file."""
+    kept = progress_file(folder).get("difficulty")
+    if kept is None:
+        write_progress(folder, difficulty=chosen)
+        return chosen
+    if kept != chosen:
+        print(f"The campaign difficulty is {kept}.", file=sys.stderr)
+    return kept
 
 
 def campaign_keys(folder):
@@ -967,7 +992,7 @@ def write_progress(folder, **values):
         json.dump(data | values, f)
 
 
-STORAGE = os.path.join("data", "command_storage_aoe2mc.dat")   # the data storages aoe2mc:* of a world (#3508)
+STORAGE = os.path.join("data", "aoe2mc", "command_storage.dat")   # the data storages aoe2mc:* of a 26.3 world (#3508, #3771)
 
 
 def world_keys(world):
@@ -1130,6 +1155,7 @@ def main(argv=None, scenario=None):
         folder = a.world
         a.world, *titles, number = campaign(folder, a.scenario)
         a.mode = "scenario"
+        a.ai_difficulty = campaign_difficulty(folder, a.ai_difficulty)
         if not a.load:
             fresh(folder, a.world)
             put_keys(a.world, campaign_keys(folder))     # the keys of the scenarios before it (#3508)
@@ -1155,9 +1181,9 @@ def main(argv=None, scenario=None):
             print(f"{bench(game, a.bench):.0f} commands per second through RCON")
             return
         commands = console(game)                     # type commands at any time (#1777)
-        if titles:                                   # the campaign and the scenario name (#3506)
-            game.command(f"title @a subtitle {json.dumps(titles[1])}")
-            game.command(f"title @a title {json.dumps(titles[0])}")
+        game.titles = titles or ()                   # the campaign and the scenario name (#3506)
+        if not (a.play and not a.replay):            # else start_on_join sends them after the join (#3772)
+            show_titles(game)
         if a.replay:                                 # after the end the player can look around (#978)
             replay(game, a.world, a.speed, a.start, a.follow, view=a.view or None, replay_file=a.replay_file,
                    camera=a.camera == "auto")
@@ -1170,6 +1196,7 @@ def main(argv=None, scenario=None):
             if not getattr(g, "ended", None):
                 return
             if folder:                               # a campaign goes on with the next or the same scenario (#3507)
+                game.command("save-all flush")      # the server writes the storage of the keys now (#3771)
                 if keys := campaign_keys(folder) | world_keys(a.world):   # the keys go into the next scenario (#3508)
                     write_progress(folder, keys=keys)
                 after = advance(folder, number, g.ended == "Victory")
