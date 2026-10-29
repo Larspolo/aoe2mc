@@ -226,6 +226,13 @@ def calls(records):
     return by_phase, by_label, pairs
 
 
+def calls_line(records, k=5):
+    """The Calls: line of the run report (#3970): the calls per phase and the k most frequent labels of a run."""
+    ph, lab, _ = calls(records)
+    return (f"Calls: {', '.join(f'{p} {n}' for p, n in ph.most_common())} · "
+            f"top {', '.join(f'{n}x {x}' for x, n in lab.most_common(k))}")
+
+
 def phases(records):
     """{ticket: {phase: minutes}} of one chain of records, in the order of the tickets; the time before the first
     claim counts for the first ticket (key None when no claim won)."""
@@ -389,6 +396,7 @@ def main(argv=None):
     ap.add_argument("--calls", type=int, metavar="N", help="print the tool calls per phase and the N most frequent "
                     "calls and pairs of calls (#3459)")
     ap.add_argument("--phases", action="store_true", help="print the measured phase minutes of each claimed ticket")
+    ap.add_argument("--calls-line", action="store_true", help="print the Calls: line of the run (#3970)")
     a = ap.parse_args(argv)
     path = a.file or newest()
     if not path:
@@ -408,6 +416,9 @@ def main(argv=None):
             print(f"  {n:4d}x  {k}")
         for (x, y), n in pairs.most_common(a.calls):
             print(f"  {n:4d}x  {x} -> {y}")
+        return 0
+    if a.calls_line:
+        print(calls_line(chains[0]))
         return 0
     if a.phases:
         for n, p in phases(chains[0]).items():
