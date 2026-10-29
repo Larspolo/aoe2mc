@@ -122,6 +122,13 @@ UNIQUE = civs.UNIQUE
 # it does, its issue, #2507), as civs.value (#2281). A new key then needs no new table here.
 KEYS = {r["name"]: f"{r['text']} (#{r['issue']})" for r in table.load("train_keys.jsonl")}
 BY_KEY = {k: {r["name"]: r[k] for r in ROWS if k in r} for k in sorted(KEYS)}
+BUILDING_OF = {r["name"]: r["building"] for r in ROWS}
+
+
+def weight(g, name):
+    """The population of one unit: the product of the factors of the researched technologies with the key "population"
+    for its building (Logistics of Antiquity Mode: 1/2 for the Barracks, #3918), else 1."""
+    return math.prod(f for t, (b, f) in BY_KEY["population"].items() if t in g.techs and BUILDING_OF.get(name) == b)
 
 
 def value(key, name, default=None):
@@ -963,13 +970,16 @@ def seconds(g, name, building=None, k=None):
 
 def speed(g, name, uuid=None):
     """The factor of the walk speed of unit name: the bonus of the civilization (civs.speed) and the technologies of the
-    player (the key "walk": Fervor, #1261; Squires for the class infantry, #1415; Husbandry for the mounted units, #1416), with
-    the changes of civs.ALSO and civs.MORE (Bohemian Fervor for the villagers, Varangian Caravan +50 %, #2173); unit uuid
+    player (the key "walk": Fervor, #1261; Squires for the class infantry, #1415; Husbandry for the mounted units, #1416) and the
+    added tiles per second (the key "walk_add": Aristocracy, #3921), with the changes of civs.ALSO and civs.MORE (Bohemian Fervor for the villagers, Varangian Caravan +50 %, #2173); unit uuid
     near a Military Town Center walks faster (g.hurried, regen.military, #2496). The speed changes of the triggers on
     unit uuid (unit_values, scenario.values, #3083) change its tiles per second (a set: that speed)."""
     also, more = civs.ALSO.get(civs.civ(g), {}), civs.MORE.get(civs.civ(g), {})
     f = civs.speed(g, name) * math.prod((1 + (f - 1) * more[t] if t in more else f) ** count(g, t)
                                         for t, (unit, f) in BY_KEY["walk"].items() if faster(unit, name) or t in also and faster(also[t], name))
+    if add := sum(v * count(g, t) for t, (unit, v) in BY_KEY["walk_add"].items() if faster(unit, name)):
+        import ai                                                  # ai imports gather, gather imports this module
+        f += add / ai.walk_speed(name, 1, 1)                       # tiles per second on the base speed (Aristocracy, #3921)
     if changes := [(op, q) for field, op, q in vars(g).get("unit_values", {}).get(uuid, ()) if field == "speed"]:
         import ai                                                  # ai imports gather, gather imports this module
         base = ai.walk_speed(name, 1, 1)                           # tiles per AoE2 second
@@ -1155,7 +1165,11 @@ def limit(g):
     """The population limit: 5 per complete own town center and house, 20 per castle (civs.HOUSING: other values of
     a civilization, #2118), at most max_pop()."""
     own = civs.HOUSING.get(civs.civ(g), {})
-    return min(max_pop(g), sum(own.get(n, HOUSING.get(n, 0)) for n in owned(g)))
+    factor = {}                                                        # Urbanization: the houses give double (#3919)
+    for t in getattr(g, "techs", ()):
+        for n, f in value("housing_factor", t, {}).items():
+            factor[n] = factor.get(n, 1) * f
+    return min(max_pop(g), sum(own.get(n, HOUSING.get(n, 0)) * factor.get(n, 1) for n in owned(g)))
 
 
 def max_pop(g):
@@ -1186,7 +1200,7 @@ def census(g):
     for u in [u for u in g.soldiers if u not in live]:                # the ticks of ships and towers wait for it (#3122)
         del g.soldiers[u]
         g.drop(u)                                                      # from the selection of each person (#3486)
-    g.pop, g.census = sum(g.soldiers.get(u) not in build.MOVES for u in live), 0.0   # a mule cart is a building
+    g.pop, g.census = sum(weight(g, g.soldiers.get(u)) for u in live if g.soldiers.get(u) not in build.MOVES), 0.0   # a mule cart is a building
     sidebar(g)
 
 
@@ -1196,7 +1210,7 @@ LABELS = {"Limit": "Pop. limit"}                                  # the shown na
 def sidebar(g):
     """Show the population and the limit as two lines of the sidebar (g.board) and the age in its title, only when
     they changed."""
-    for name, n in (("Population", g.pop), ("Limit", limit(g))):
+    for name, n in (("Population", math.ceil(g.pop)), ("Limit", limit(g))):   # a half unit counts as one (#3918)
         if g.shown.get(name) != n:
             first, g.shown[name] = name not in g.shown, n
             g.command(f"scoreboard players set {name} {g.board} {n}")
@@ -1221,7 +1235,8 @@ def tick(g, work):
     requeue(g)
     cap, out, home = limit(g), [], homes(g)
     fast = {r for r, n in home.items() if n in CONSCRIPT[0]} if "CONSCRIPTION" in g.techs else set()   # (#1455)
-    room = cap - g.pop - sum(1 for q in g.queues.values() if q and q[0]["progress"] > 0 and q[0]["name"] not in TECHS)
+    room = cap - g.pop - sum(weight(g, q[0]["name"]) for q in g.queues.values()
+                             if q and q[0]["progress"] > 0 and q[0]["name"] not in TECHS)
     for rect, q in g.queues.items():
         if not q:
             continue
@@ -1229,10 +1244,10 @@ def tick(g, work):
             if room <= 0:
                 if not q[0].get("waits"):                              # as the "need more houses" message of AoE2
                     q[0]["waits"] = True
-                    build.say(g, q[0]["player"], f"The population is at the limit ({g.pop}/{cap}): "
+                    build.say(g, q[0]["player"], f"The population is at the limit ({math.ceil(g.pop)}/{cap}): "
                               + ("build more houses." if cap < max_pop(g) else "no more units."))
                 continue
-            room -= 1
+            room -= weight(g, q[0]["name"])
             q[0]["waits"] = False
         rate = CONSCRIPT[1] if rect in fast and q[0]["name"] not in TECHS else 1   # units only, not technologies
         rate *= SHIPWRIGHT[1] if shipwright(g, q[0]["name"]) else 1          # the ships of a dock, not its technologies
@@ -1242,11 +1257,10 @@ def tick(g, work):
         if q[0]["progress"] >= 1 and q[0]["name"] in TECHS:
             research(g, q.pop(0), rect=rect)
         elif q[0]["progress"] >= 1 and (v := spawn(g, rect, q[0]["name"])):   # no room: it waits in the queue (#2470)
-            q.pop(0)
+            g.pop += weight(g, q.pop(0)["name"])
             out.append(v)
             record.trained(g, v)                                       # its object ID (#2649)
             trained_voice(g, rect, v)
-            g.pop += 1
     refresh(g)
     sidebar(g)
     return out

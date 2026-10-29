@@ -486,9 +486,13 @@ class Replay:
         self.pay(e.get("player"), e["age"])
 
     def learn(self, e):
-        """Count a research of the timeline for the summary (#1067)."""
+        """Count a research of the timeline for the summary (#1067). A second event of the same technology (de-64.3
+        has one) counts nothing (#3923)."""
+        name = TECHS.get(e["technology"], e["technology"])
+        if name in self.upgrades(e.get("player"), math.inf):
+            return
         self.researched[e.get("player")] = self.researched.get(e.get("player"), 0) + 1
-        self.learned.setdefault(e.get("player"), []).append((e.get("time", 0), TECHS.get(e["technology"], e["technology"])))
+        self.learned.setdefault(e.get("player"), []).append((e.get("time", 0), name))
 
     def upgrades(self, p, t):
         """The technology names that player p researched up to game time t (ms), in time order (#3785)."""

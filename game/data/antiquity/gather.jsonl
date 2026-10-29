@@ -1,7 +1,7 @@
 {"name": "GRANARY", "drop": ["food"]}
 {"name": "STORAGE_PIT", "drop": ["wood", "gold", "stone", "meat"]}
 {"name": "ARTISANSHIP", "carry": 2, "work": {"wood": 1.2}}
-{"name": "CITY_WATCH", "watch": true}
+{"name": "CITY_WATCH", "watch": 3}
 {"name": "COINAGE", "work": {"gold": 1.25}}
 {"name": "CRAFTSMANSHIP", "carry": 2, "work": {"wood": 1.2}}
 {"name": "DOMESTICATION", "farm": 75}
