@@ -76,6 +76,7 @@ GRAPH = "aoe2mc.graph"      # entity tag of the graph text in the sky above the 
 GRAPH_BARS = "▁▂▃▄▅▆▇█"     # one bar per game minute, its height relative to the highest value of all players
 UPGRADE = "aoe2mc.upgrade"  # entity tag of the Blacksmith tiers in the sky below the graphs (#3786)
 GRAPH_MINUTES = 20          # the last minutes of each graph row: a long game keeps a short text
+ARMY = "aoe2mc.army"        # entity tag of the army text of each player in the sky, below the graphs (#3696)
 ECO = "aoe2mc.eco"          # entity tag of the economy text above the graphs (#3756)
 FOLLOWED = "aoe2mc.followed"  # the tag of the entity that the spectators of --follow look through (#1095)
 TRAIL = 3                   # tiles: a follower farther than this from its target walks to it again (#2551)
@@ -158,6 +159,13 @@ def start_job(name):
 
 def text(s, color=None):
     return {"text": s, "color": color} if color else {"text": s}
+
+
+def counts_text(counts):
+    """The counts by type, most first, at most 6 types and "+N" for the rest: "12 Knight, 8 Archer" (#3697, #3696)."""
+    items = sorted(((n, c) for n, c in counts.items() if c), key=lambda x: (-x[1], x[0]))
+    words = [f"{c} {pretty(n)}" for n, c in items[:6]] + ([f"+{len(items) - 6}"] if len(items) > 6 else [])
+    return ", ".join(words)
 
 
 def taunt(chat):
@@ -428,6 +436,7 @@ class Replay:
         self.vills, self.vhigh = {}, {}         # player -> live villagers (est.), the highest count (#1086)
         self.smith = None                       # the shown rows of the Blacksmith tiers (#3786)
         self.graph = {}                         # value index -> the shown rows of its graph (#3448)
+        self.army_shown = {}                    # player -> the shown army text (#3696)
         self.eco_rows = None                    # the shown rows of the economy text (#3756)
         self.samples, self.minute = {}, -1      # player -> [(minute, pop, villagers, military, resources)], last minute (#3446)
         self.apms, self.ended = None, 0         # player -> sorted times of its actions (#3763); game time of the end (ms)
@@ -541,6 +550,33 @@ class Replay:
                        else f"summon text_display {c} {min(319, y + 4 * (4 - i))} {c} {{text:{line},billboard:\"center\","
                             f'shadow:1b,line_width:1000,Tags:["{GRAPH}","{tag}"]}}')
             self.graph[i] = rows
+        return out
+
+    def army_view(self, t):
+        """The commands of the army texts at game time t (ms, #3696): in the sky below the graphs, one text display per
+        player in its color: the live military units by type, the units in training and the units lost. Only the
+        texts that changed since the last call."""
+        if getattr(self, "view", None) is None:
+            self.overview()                                         # it sets the place of the overview
+        y, c, out = int(self.view.split()[1]) + 12, f"{self.n / 2:.1f}", []
+        training = collections.defaultdict(collections.Counter)
+        for end, e, _ in self.trainings:
+            if e["kind"] == "queue" and e["time"] <= t < end:
+                training[e["player"]][e["name"]] += 1
+        for k, p in enumerate(self.ranked([int(q) for q in self.data["players"] if q != "0"])):
+            who, color = self.label(p)
+            line = f"{who}: {counts_text(self.troops.get(p, {})) or '-'}"
+            if training.get(p):
+                line += f" · training {counts_text(training[p])}"
+            if lost := sum(self.fallen.get(p, {}).values()):
+                line += f" · lost {lost}"
+            if self.army_shown.get(p) == line:
+                continue
+            tag, value = f"{ARMY}.{p}", json.dumps(text(line, color), ensure_ascii=False, separators=(",", ":"))
+            out.append(f"data merge entity @e[type=text_display,tag={tag},limit=1] {{text:{value}}}" if p in self.army_shown
+                       else f"summon text_display {c} {y - 4 * (k + 1)} {c} {{text:{value},billboard:\"center\","
+                            f'shadow:1b,line_width:1000,Tags:["{ARMY}","{tag}"]}}')
+            self.army_shown[p] = line
         return out
 
     def upgrade_view(self, t):
@@ -2263,11 +2299,7 @@ class Replay:
 
     def army_text(self, p):
         """The army at the end and the losses by type of player p, most first, at most 6 types and "+N" (#3697)."""
-        def top(counts):
-            items = sorted(((n, c) for n, c in counts.items() if c), key=lambda x: (-x[1], x[0]))
-            words = [f"{c} {pretty(n)}" for n, c in items[:6]] + ([f"+{len(items) - 6}"] if len(items) > 6 else [])
-            return ", ".join(words)
-        army, lost = top(self.troops.get(p, {})), top(self.fallen.get(p, {}))
+        army, lost = counts_text(self.troops.get(p, {})), counts_text(self.fallen.get(p, {}))
         return "".join(f", {k} {v}" for k, v in (("army at the end:", army), ("lost:", lost)) if v)
 
     def tech_commands(self):
@@ -2726,6 +2758,7 @@ class Replay:
                     self.sample(to)
                     self.idle_at = to
                     self.send(self.graphs(to))
+                    self.send(self.army_view(to))
                     self.send(self.upgrade_view(to))
                     self.send(self.ecoview())
                 continue
@@ -2741,6 +2774,7 @@ class Replay:
                 self.sample(now)
                 self.idle_time(now)
                 self.send(self.graphs(now))
+                self.send(self.army_view(now))
                 self.send(self.upgrade_view(now))
                 self.send(self.ecoview())
                 self.send(self.fog())
