@@ -4,7 +4,7 @@ Play one full game of player 1 against the bot with a script (#3324): release ch
 docs/RELEASE.md.
 
 Usage:
-    python3 tools/scenarios.py owner_loop OUT.aoe2scenario && python3 aoe2mc.py OUT.aoe2scenario OUTWorld
+    python3 aoe2mc.py --random-map arabia --seed 1 OUTWorld       # the resources of a real game (#3544)
     python3 tools/play_check.py OUTWorld [--speed 2] [--minutes 40] [--log F.jsonl] [--server-log F.log] [--json F.json]
 
 The tool copies the world (the game changes it), starts Paper without a client and plays `run.play(..., bot=True)`:
@@ -60,6 +60,8 @@ class Driver(bot.Bot):
                          foe=foe.player, group=group, own=g)
         self.saving = None                                             # the age that the resources go to
         self.foes, self.rung = {}, None                                # foe soldiers near home, the belled town center
+        self.guards = 0                                                # own soldiers with an attack (defend)
+        self.ready = None                                              # the age whose villager number was there (#3544)
 
     def step(self):
         """Only the orders: Gather.run steps the Gather of player 1 itself."""
@@ -83,7 +85,9 @@ class Driver(bot.Bot):
         build order); until then save for it."""
         g = self.g
         age = next((a for a in AGES if a not in g.techs and not train.queued(g, a)), None)
-        self.saving = age if age and len(g.villagers) >= AGES[age] and train.missing(g, age) is None \
+        if age and len(g.villagers) >= AGES[age]:                       # a dead villager does not stop the saving
+            self.ready = age
+        self.saving = age if age and self.ready == age and train.missing(g, age) is None \
             and not build.locked(g, age) else None
         tc = next((r for r, n in sorted(train.homes(g).items()) if n == "TOWN_CENTER"), None)
         if self.saving and tc and all(g.stock[r] >= v for r, v in train.price(g, age).items()):
@@ -102,6 +106,7 @@ class Driver(bot.Bot):
         self.foes = foes = {u: p for u, p in g.positions(sorted(self.share.soldiers)).items()
                             if math.dist((p[0], p[2]), center) <= HOME * T}
         mine = g.positions(sorted(u for u, n in g.soldiers.items() if combat.stats(n).attack))   # no transport ship
+        self.guards = len(mine)
         live = {t for t in set(self.targets.values()) if t in foes}
         self.targets = {u: t for u, t in self.targets.items() if u in mine and t in live}
         for u in sorted(mine.keys() - self.targets.keys()):
@@ -112,21 +117,30 @@ class Driver(bot.Bot):
 
 
     def bell(self):
-        """The town bell of a person (garrison.py): the villagers go into the town center while foe soldiers are near
-        it (defend), and come out when they are gone."""
+        """The town bell of a person (garrison.py): the villagers go into the town center while the foe soldiers near
+        it are more than the own soldiers (defend, a raid), and come out when they are not."""
         g = self.g
+        raid = len(self.foes) > self.guards
         tc = next((r for r, n in sorted(garrison.holders(g).items()) if n["name"] == "TOWN_CENTER"), None)
-        if self.foes and not self.rung and tc and g.villagers:
+        if raid and not self.rung and tc and g.villagers:
             g.selected = set(g.villagers)
             self.rung = garrison.order(g, self.nobody, (tc[0], tc[2]))
             g.selected = set()
-        elif not self.foes and self.rung:
+        elif not raid and self.rung:
             garrison.out(g, self.rung)
             for u, v in g.villagers.items():                           # the ones that did not get in
                 if v.state == "garrison":
                     v.state = "idle"
                     vars(g).get("entering", {}).pop(u, None)
             self.rung = None
+
+
+def states(g):
+    """The villager states of g as `state/resource` counts, for example "idle/wood 6, to_tree/wood 2"."""
+    n = {}
+    for v in g.villagers.values():
+        n[f"{v.state}/{v.res}"] = n.get(f"{v.state}/{v.res}", 0) + 1
+    return ", ".join(f"{k} {c}" for k, c in sorted(n.items()))
 
 
 class Watch:
@@ -147,7 +161,9 @@ class Watch:
         if now >= self.shown + 60:                                     # the state each game minute
             self.shown = now
             print(f"{recap.mmss(now)} " + "; ".join(
-                f"player {s.g.player}: {train.age(s.g)}, {len(s.g.villagers)} villagers, {len(s.g.soldiers)} soldiers"
+                f"player {s.g.player}: {train.age(s.g)}, {len(s.g.villagers)} villagers, {len(s.g.soldiers)} soldiers, "
+                f"stock {' '.join(f'{r} {round(v)}' for r, v in sorted(s.g.stock.items()))}"
+                + (", rung" if getattr(s, "rung", None) else "") + f", {states(s.g)}"
                 for s in sorted(self.sides, key=lambda s: s.g.player)) + f"; stuck {len(self.stuck)}", file=sys.stderr)
 
     def sample(self, side, now):
