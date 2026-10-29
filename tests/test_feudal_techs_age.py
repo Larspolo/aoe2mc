@@ -8,17 +8,17 @@ import test_horse_collar
 
 from game import train
 
-TECHS = {"GOLD_MINING": (test_gold_mining, (2, 3), "Gold Mining"),
-         "STONE_MINING": (test_gold_mining, (2, 3), "Stone Mining"),
-         "HORSE_COLLAR": (test_horse_collar, (2, 3), "Horse Collar"),
-         "FORGING": (test_forging, (11, 3), "Forging"),
-         "SCALE_MAIL_ARMOR": (test_forging, (11, 3), "Scale Mail Armor"),
-         "FLETCHING": (test_fletching, (11, 3), "Fletching")}
+TECHS = {"GOLD_MINING": (test_gold_mining, (2, 3)),
+         "STONE_MINING": (test_gold_mining, (2, 3)),
+         "HORSE_COLLAR": (test_horse_collar, (2, 3)),
+         "FORGING": (test_forging, (11, 3)),
+         "SCALE_MAIL_ARMOR": (test_forging, (11, 3)),
+         "FLETCHING": (test_fletching, (11, 3))}
 
 
 @pytest.mark.parametrize("name", TECHS)
 def test_in_the_dark_age_the_menu_hides_the_technology_and_the_queue_refuses_it(name):
-    module, cell, label = TECHS[name]
+    (module, cell), label = TECHS[name], train.ITEMS[name][2]
     server, g = module.setup(age=0)
     g.stock.update(food=1000, wood=1000, gold=1000)
     assert train.open_menu(g, "Steve", cell) is not None
@@ -28,7 +28,7 @@ def test_in_the_dark_age_the_menu_hides_the_technology_and_the_queue_refuses_it(
 
 @pytest.mark.parametrize("name", TECHS)
 def test_in_the_feudal_age_the_technology_shows_and_can_be_researched(name):
-    module, cell, label = TECHS[name]
+    (module, cell), label = TECHS[name], train.ITEMS[name][2]
     server, g = module.setup()
     g.stock.update(food=1000, wood=1000, gold=1000)
     train.open_menu(g, "Steve", cell)

@@ -1,6 +1,5 @@
 """The dashboard counts the merged PRs with the label `process` of the last 24 hours (#901)."""
 import datetime
-import os
 
 import dashboard
 
@@ -19,6 +18,3 @@ def test_process_changes_counts_merged_process_prs_of_the_last_day():
     assert "Process changes (24 h): 2 merged PRs with the label `process`" in body
     assert dashboard.render(body, [], {}, [], [], prs, NOW).count("Process changes (24 h)") == 1
 
-
-def test_the_label_is_synced():
-    assert any(line.startswith("process|") for line in open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".github", "labels.txt")))

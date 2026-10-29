@@ -16,15 +16,16 @@ def last_menu(server):
 
 def test_the_town_center_menu_has_delete_and_a_click_makes_it_fall():
     server, g, live = fallen_town()
+    food = g.stock["food"]
     for _ in range(2):
         train.queue(g, "Steve", (3, 3))
-    assert g.stock["food"] == 900
+    assert g.stock["food"] < food
     train.open_menu(g, "Steve", (3, 3))
     assert item(last_menu(server), "Delete").startswith(f"{demolish.ITEM[0]}:tnt:")
     train.order(g, "Steve", TC, demolish.ITEM[0])
     assert f"aoe destroy {uuid(TC)}" in server.log
     assert TC not in train.homes(g) and TC in g.ruins
-    assert not g.queues.get(TC) and g.stock["food"] == 1000            # the queue gives its cost back
+    assert not g.queues.get(TC) and g.stock["food"] == food            # the queue gives its cost back
     assert "aoe menu-close Steve" in server.log
 
 

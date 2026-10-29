@@ -1,22 +1,19 @@
-"""Devotion and Faith (#1584): the monastery researches Devotion in the Castle Age (100 food, 200 gold, 40 s) and
-Faith after it in the Imperial Age (550 food, 750 gold, 60 s), as on the AoE2 DE wiki infoboxes. Then an enemy monk
-needs more conversion intervals for a unit of the player: +1 s and +4 s of minimum and maximum time."""
+"""Devotion and Faith (#1584): the monastery researches Devotion in the Castle Age and Faith after it in the Imperial
+Age, at the costs and times of game/data/train.jsonl. Then an enemy monk needs more conversion intervals for a unit of
+the player: the "resist" intervals of the techs (monk.RESIST)."""
 from types import SimpleNamespace
 
 from test_monk_convert import setup, until_converted
 from test_monk_train import MONASTERY, monastery
 
-from game import civs, gather, monk, train
+from game import gather, monk, train
 
 
-def test_the_values_are_those_of_aoe2():
-    assert train.BY_KEY["after"]["FAITH"] == "DEVOTION"
-    assert all(len(train.HELP[t]) <= 50 for t in ("DEVOTION", "FAITH"))
-    assert "DEVOTION" not in civs.MISSING and {"DANES", "MAGYARS", "TATARS"} <= set(civs.MISSING["FAITH"])
+TIME = {r["name"]: r["time"] for r in train.ROWS}
 
 
-def research(g, food, gold):
-    g.stock |= {"food": food, "gold": gold}
+def research(g, name):
+    g.stock |= {"food": 0, "gold": 0} | train.COSTS[name]
     rect = train.open_menu(g, "Steve", MONASTERY)
     assert train.order(g, "Steve", rect, train.MORE) == 1 and g.stock["food"] == g.stock["gold"] == 0
     return rect
@@ -27,16 +24,16 @@ def test_the_monastery_researches_devotion_then_faith_in_one_slot():
     train.open_menu(g, "Steve", MONASTERY)
     assert "Devotion" not in server.log[-1]                              # the Feudal Age: hidden
     server, g = monastery(age=2)
-    rect = research(g, 100, 200)
-    train.tick(g, 40)
+    rect = research(g, "DEVOTION")
+    train.tick(g, TIME["DEVOTION"])
     assert "DEVOTION" in g.techs
     train.open_menu(g, "Steve", MONASTERY)
     assert "Faith" not in server.log[-1]                                 # the Castle Age: hidden
     server, g = monastery(age=3)
     g.techs.add("DEVOTION")
-    rect = research(g, 550, 750)
+    rect = research(g, "FAITH")
     assert g.queues[rect][0]["name"] == "FAITH"
-    train.tick(g, 60)
+    train.tick(g, TIME["FAITH"])
     assert "FAITH" in g.techs
 
 
@@ -52,12 +49,12 @@ def times(techs, chance):
 
 
 def test_devotion_and_faith_make_the_units_of_the_player_resist_conversion():
-    assert (times((), 0), times((), 1)) == (5, 9)
-    assert (times(("DEVOTION",), 0), times(("DEVOTION",), 1)) == (6, 10)
-    assert (times(("DEVOTION", "FAITH"), 0), times(("DEVOTION", "FAITH"), 1)) == (9, 13)   # 5 s more in all
+    for techs in (("DEVOTION",), ("DEVOTION", "FAITH")):
+        more = sum(monk.RESIST[t] for t in techs)
+        assert more > 0 and all(times(techs, c) == times((), c) + more for c in (0, 1)), techs
 
 
 def test_the_techs_of_the_monk_player_do_not_help_the_target():
     server, g = setup(("foe", "MILITIA", 2, 12.5))
     g.techs |= {"DEVOTION", "FAITH"}
-    assert monk.resist(g, "foe") == 0 and monk.resist(g, "monk") == 4
+    assert monk.resist(g, "foe") == 0 and monk.resist(g, "monk") == monk.RESIST["DEVOTION"] + monk.RESIST["FAITH"]

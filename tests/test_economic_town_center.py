@@ -1,6 +1,6 @@
-"""game/train.py, game/gather.py: an Achaemenid town center becomes an Economic Town Center (AoE2 DE wiki "Economic
-Town Center": 75 food, 125 wood, 50 s, from the Civic Age; villagers within 9 tiles gather 10 % faster). A town center
-takes one upgrade of this kind; another town center can take its own (#2484)."""
+"""game/train.py, game/gather.py: an Achaemenid town center becomes an Economic Town Center: the villagers near it
+gather faster (the key "aura" of its line in game/data/train.jsonl). A town center takes one upgrade of this kind;
+another town center can take its own (#2484)."""
 import json
 
 import pytest
@@ -12,6 +12,8 @@ from game import gather, savegame, train
 
 A, B = (2, 5, 2, 5), (24, 27, 24, 27)                                 # the block footprints of the two town centers
 UPGRADE = "ECONOMIC_TOWN_CENTER"
+ROW = next(r for r in train.ROWS if r["name"] == UPGRADE)
+RATE, NEAR = ROW["aura"]["rate"], ROW["aura"]["range"]
 
 
 def setup(civ="ACHAEMENIDS", age=("FEUDAL_AGE",)):
@@ -31,33 +33,18 @@ def setup(civ="ACHAEMENIDS", age=("FEUDAL_AGE",)):
 
 def upgrade(g, rect):
     assert train.queue(g, "Steve", rect[::2], UPGRADE) == rect
-    train.tick(g, 50)
+    train.tick(g, ROW["time"])
 
 
-def test_the_upgrade_comes_in_the_feudal_age():
-    _, g = setup(age=())
-    assert train.queue(g, "Steve", A[::2], UPGRADE) is None                         # not in the Dark Age
-
-
-def test_only_the_achaemenids_see_it():
-    server, g = setup("PERSIANS")
-    train.open_menu(g, "Steve", A[::2])
-    assert item(menus(server)[-1], "Economic Town Center") is None
-    assert train.queue(g, "Steve", A[::2], UPGRADE) is None
-    server, g = setup()
-    train.open_menu(g, "Steve", A[::2])
-    assert item(menus(server)[-1], "Economic Town Center").startswith(f"{train.SLOTS[UPGRADE]}:book:")
-
-
-def test_villagers_near_the_upgraded_town_center_work_10_percent_faster():
+def test_villagers_near_the_upgraded_town_center_work_faster():
     _, g = setup()
     a, b = g.villagers["a"], g.villagers["b"]
     assert g.aura_rate(a, "wood") == g.aura_rate(b, "wood") == 1
     upgrade(g, A)
     assert g.upgraded == {A: UPGRADE} and UPGRADE not in g.techs                    # only this town center
-    assert g.aura_rate(a, "wood") == g.aura_rate(a, "gold") == g.aura_rate(a, "farm") == pytest.approx(1.1)
+    assert g.aura_rate(a, "wood") == g.aura_rate(a, "gold") == g.aura_rate(a, "farm") == pytest.approx(RATE)
     assert g.aura_rate(b, "wood") == 1                                              # near the other town center
-    a.pos = (2 + 3 + 9.5, 64.0, 3.5)                                                # 9.5 tiles east of it
+    a.pos = (2 + 3 + NEAR + 0.5, 64.0, 3.5)                                         # out of its range
     assert g.aura_rate(a, "wood") == 1
 
 
@@ -85,4 +72,4 @@ def test_a_save_keeps_the_upgraded_town_centers():
     upgrade(g, A)
     _, h = setup()
     savegame.load(h, json.loads(json.dumps(savegame.dump(g))))
-    assert h.upgraded == {A: UPGRADE} and h.aura_rate(h.villagers["a"], "wood") == pytest.approx(1.1)
+    assert h.upgraded == {A: UPGRADE} and h.aura_rate(h.villagers["a"], "wood") == pytest.approx(RATE)

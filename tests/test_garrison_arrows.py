@@ -10,10 +10,11 @@ from game import combat, garrison, run
 from test_damage import health
 
 
-def test_town_center_with_3_villagers_shoots_3_arrows():
-    assert garrison.arrows("TOWN_CENTER", ["VILLAGER_MALE", "VILLAGER_FEMALE", "VILLAGER"]) == 3   # empty: 0 (#1201)
-    assert garrison.arrows("WATCH_TOWER", ["ARCHER", "HAND_CANNONEER"]) == 3      # foot archers
-    assert garrison.arrows("WATCH_TOWER", ["CAVALRY_ARCHER", "MILITIA", "KNIGHT"]) == 1   # no foot archer
+def test_town_center_with_3_villagers_shoots_3_more_arrows():
+    tc, tower = garrison.arrows("TOWN_CENTER", []), garrison.arrows("WATCH_TOWER", [])   # the base arrows (#1201)
+    assert garrison.arrows("TOWN_CENTER", ["VILLAGER_MALE", "VILLAGER_FEMALE", "VILLAGER"]) == tc + 3
+    assert garrison.arrows("WATCH_TOWER", ["ARCHER", "HAND_CANNONEER"]) == tower + 2     # foot archers
+    assert garrison.arrows("WATCH_TOWER", ["CAVALRY_ARCHER", "MILITIA", "KNIGHT"]) == tower   # no foot archer
 
 
 def test_garrison_and_ungarrison_send_the_arrows():
@@ -22,9 +23,10 @@ def test_garrison_and_ungarrison_send_the_arrows():
     g.choose({"v0", "v1", "v2"}, "v0")
     garrison.order(g, "Steve", (3, 3))
     arrive(server, g, TC)
-    assert [c for c in server.log if c.startswith("aoe arrows")] == [f"aoe arrows {uuid} {n}" for n in (1, 2, 3)]
+    base = garrison.arrows("TOWN_CENTER", [])
+    assert [c for c in server.log if c.startswith("aoe arrows")] == [f"aoe arrows {uuid} {base + n}" for n in (1, 2, 3)]
     garrison.out(g, TC)
-    assert server.log.count(f"aoe arrows {uuid} 0") == 1
+    assert server.log.count(f"aoe arrows {uuid} {base}") == 1
 
 
 @pytest.mark.mc

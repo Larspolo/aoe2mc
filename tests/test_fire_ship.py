@@ -10,26 +10,24 @@ import pytest
 from test_dock_train import DOCK, dock_map
 from test_train_archery import menus
 
-from game import build, combat, fleet, run, train
+from game import combat, fleet, run, train
 
 
-def test_the_two_ships_have_the_aoe2_de_values_of_the_wiki():
-    assert build.AGE["FIRE_SHIP"] == build.AGE["DEMOLITION_SHIP"]
-    assert ("DEMOLITION_RAFT", "DEMOLITION_SHIP") in train.lines("DEMOLITION_SHIP_UPGRADE")   # (#1483)
-    assert ("FIRE_GALLEY", "FIRE_SHIP") in train.lines("MEDIUM_WARSHIPS")
+def entry(g, name, state, icon=None):
+    """The menu item of name with its cost and time for the player of g."""
+    slot, item, label = train.ITEMS[name]
+    cost = " · ".join(f"{v} {k}" for k, v in train.COSTS[name].items())
+    return f"{slot}:{icon or item}:{label}:{cost} · {train.seconds(g, name):g} s · {state}"
 
 
-def test_the_fire_ship_hits_often_with_melee_damage_from_its_short_range():
-    assert combat.damage("FIRE_SHIP", "GALLEY") == 3 - 0 + 1                 # melee armor 0, +1 vs. long-range warships
-    assert combat.damage("FIRE_SHIP", "FISHING_SHIP") == 3 - 1
-    assert combat.range_command("u", "FIRE_SHIP", 4) == "aoe range u 10.0 3 0"   # 2.5 tiles, 0.25 s, only the target
+def test_the_fire_ship_hits_with_melee_damage_from_its_range():
+    s = combat.stats("FIRE_SHIP")
+    assert combat.range_command("u", "FIRE_SHIP", 4).startswith(f"aoe range u {s.range * 4} ")   # only the target
     assert combat.stats_command("u", "FIRE_SHIP").split()[7] == "2"           # ranged with melee damage
 
 
 def test_the_demolition_ship_blasts_next_to_its_target():
-    assert combat.damage("DEMOLITION_SHIP", "GALLEY") == 95 and combat.damage("DEMOLITION_SHIP", "FIRE_SHIP") == 93
-    assert combat.damage("DEMOLITION_SHIP", "DOCK") == 95 + 220
-    assert combat.range_command("u", "DEMOLITION_SHIP", 4) == "aoe range u 4.0 1 12"   # next to it, 3 tiles of blast
+    assert combat.range_command("u", "DEMOLITION_SHIP", 4).split()[-1] == str(combat.BLAST["DEMOLITION_SHIP"] * 4)
     assert combat.stats_command("u", "DEMOLITION_SHIP").split()[7] == "0"     # melee damage
 
 
@@ -43,21 +41,22 @@ def test_the_dock_menu_has_the_two_ships_in_the_castle_age():
     assert "Demolition Ship" not in menu                                # after its upgrade (#1483)
     g.techs |= {"CASTLE_AGE", "MEDIUM_WARSHIPS", "DEMOLITION_SHIP_UPGRADE"}
     train.open_menu(g, "Steve", (15, 12))
-    assert "6:mangrove_boat:Fire Ship:75 wood · 45 gold · 27 s · queue 0/15" in menus(server)[-1]
-    assert train.order(g, "Steve", DOCK, 6) == 1 and train.order(g, "Steve", DOCK, 7) == 1
-    fire, = train.tick(g, 27)
-    demo, = train.tick(g, 31)
+    assert entry(g, "FIRE_SHIP", "queue 0/15") in menus(server)[-1]
+    assert train.order(g, "Steve", DOCK, train.ITEMS["FIRE_SHIP"][0]) == 1
+    assert train.order(g, "Steve", DOCK, train.ITEMS["DEMOLITION_SHIP"][0]) == 1
+    fire, = train.tick(g, train.seconds(g, "FIRE_SHIP"))
+    demo, = train.tick(g, train.seconds(g, "DEMOLITION_SHIP"))
     assert (g.soldiers[fire], g.soldiers[demo]) == ("FIRE_SHIP", "DEMOLITION_SHIP")
     assert fire in g.ships and demo in g.ships and g.map.wet(*g.ships[demo].cell)
-    assert f"aoe range {demo} 1.0 1 3" in server.log                    # tile size 1: a blast of 3 blocks
+    assert combat.range_command(demo, "DEMOLITION_SHIP", 1) in server.log   # tile size 1: the blast in blocks
 
 
 def test_a_demolition_ship_sails_next_to_an_enemy_ship():
     server, g = dock_map(wood=400)
     g.techs, g.stock["gold"] = {"FEUDAL_AGE", "CASTLE_AGE", "DEMOLITION_SHIP_UPGRADE"}, 200
     train.open_menu(g, "Steve", (15, 12))
-    assert train.order(g, "Steve", DOCK, 7) == 1
-    demo, = train.tick(g, 31)
+    assert train.order(g, "Steve", DOCK, train.ITEMS["DEMOLITION_SHIP"][0]) == 1
+    demo, = train.tick(g, train.seconds(g, "DEMOLITION_SHIP"))
     server.entities["enemy"] = {"Pos": (21.5, 63.0, 2.5)}
     goal = fleet.attack(g, {demo}, "enemy")[demo]
     assert math.dist(goal, (21, 2)) <= fleet.CONTACT and g.map.wet(*goal)

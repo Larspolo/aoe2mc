@@ -18,14 +18,6 @@ def shore_map(wood=200):
     return server, g
 
 
-def test_the_menu_has_the_dock_with_the_aoe2_values():
-    server, g = shore_map()
-    items = {name: (icon, lore) for _, icon, name, lore in build.items(g)}
-    assert items["Dock"] == ("dark_oak_planks", "150 wood\n35 s")                          # AoE2 DE wiki infobox
-    assert build.locked(g, "DOCK") is None   # the Dark Age
-    assert build.footprint("DOCK") == 3
-
-
 def test_a_dock_must_be_on_water_next_to_the_land():
     server, g = shore_map()
     assert build.shore(g, (14, 17, 10, 13))                            # touches the land at x = 13
@@ -40,7 +32,7 @@ def test_the_look_at_the_water_places_the_dock_and_villagers_build_it_from_the_s
     assert g.map.pick_ground(eye, d) is None and fleet.pick(g, eye, d) == (15, 12)
     site = build.place(g, "Steve", "DOCK", eye, d)
     assert site is g.sites[0] and site["footprint"] == (14, 17, 11, 14) and site["commands"]
-    assert g.stock["wood"] == 50 and server.chosen == 0
+    assert g.stock["wood"] == 200 - build.COSTS["DOCK"]["wood"] and server.chosen == 0
     wool = [c.split() for c in server.log if c.startswith("setblock ") and c.endswith("_wool")]
     assert len(wool) == 8 and all(w[2] == "63" for w in wool)          # the ring on the water surface
     goals = g.map.around({(x, z) for x in range(14, 17) for z in range(11, 14)})

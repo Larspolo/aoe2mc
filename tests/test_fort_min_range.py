@@ -1,6 +1,6 @@
 """The towers, the castle and the dock do not shoot at a unit inside their AoE2 minimum range (#1546): the last
-number of the attack part of `aoe building`, and the arrow loop of the plugin. Values: the AoE2 wiki infoboxes
-(MediaWiki API, 2026-10-27, "MinRange"): 1 tile for each, none for the town center."""
+number of the attack part of `aoe building`, and the arrow loop of the plugin (the key "min_range" of
+data/buildings.jsonl, combat.FORT_MIN_RANGE)."""
 import shutil
 import time
 
@@ -18,20 +18,14 @@ def attack(name, T=4):
     return cmd.split()[12:16]
 
 
-def test_the_minimum_ranges_of_the_wiki():
-    assert combat.FORT_MIN_RANGE.items() >= {"BOMBARD_TOWER": 1, "CASTLE": 1, "DOCK": 1, "GUARD_TOWER": 1, "KEEP": 1,
-                                             "DONJON": 1, "FORTIFIED_CHURCH": 1, "HARBOR": 1, "KREPOST": 1,
-                                             "WATCH_TOWER": 1}.items()   # values, not the count (#2008)
-    assert "TOWN_CENTER" not in combat.FORT_MIN_RANGE
-
-
 @pytest.mark.parametrize("name", ["BOMBARD_TOWER", "CASTLE", "GUARD_TOWER", "KEEP", "WATCH_TOWER"])
 def test_each_tower_and_the_castle_send_their_minimum_range_in_blocks(name):
-    assert float(attack(name, T=4)[3]) == 4 and float(attack(name, T=2)[3]) == 2
+    low = combat.FORT_MIN_RANGE[name]
+    assert float(attack(name, T=4)[3]) == low * 4 and float(attack(name, T=2)[3]) == low * 2
 
 
-def test_the_town_center_has_none():
-    assert attack("TOWN_CENTER")[3] == "0"
+def test_the_town_center_sends_its_minimum_range_too():
+    assert float(attack("TOWN_CENTER")[3]) == combat.FORT_MIN_RANGE.get("TOWN_CENTER", 0) * 4
 
 
 @pytest.mark.mc

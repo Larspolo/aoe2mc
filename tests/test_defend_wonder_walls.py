@@ -5,7 +5,8 @@ from test_gather import FakeServer, grid
 
 from game import bot, defend_wonder, gather
 
-RING = defend_wonder.MODE["ring"]
+MODE = defend_wonder.MODE
+RING = MODE["ring"]
 TCS = {1: [22, 22, 26, 26], 2: [70, 22, 74, 26]}                       # [x0, z0, x1, z1], tile size 1
 
 
@@ -28,8 +29,10 @@ def players(g):
 def test_each_attacker_starts_with_a_complete_castle():
     g = game()
     castles = {n: [s for s in h.sites if s["name"] == "CASTLE"] for n, h in players(g).items()}
-    assert castles[1] == [] and len(castles[2]) == 1 and castles[2][0]["done"]   # player 1 defends
-    assert not [s for s in game(teams=(1, 1)).bots[0].g.sites if s["name"] == "CASTLE"]   # a team mate: no Castle
+    count = lambda side: MODE["side_buildings"].get(side, {}).get("CASTLE", 0)   # noqa: E731
+    assert {n: len(c) for n, c in castles.items()} == {1: count("defender"), 2: count("attacker")}   # player 1 defends
+    assert all(s["done"] for c in castles.values() for s in c)
+    assert len([s for s in game(teams=(1, 1)).bots[0].g.sites if s["name"] == "CASTLE"]) == count("ally")
 
 
 def inside(h, start):

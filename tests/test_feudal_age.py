@@ -1,10 +1,20 @@
-"""game/train.py: the town center menu has "Feudal Age" (500 food, 130 AoE2 seconds). It needs 2 types of Dark Age
-buildings; after the research the sidebar title shows the age, all players see it, and the item leaves the menu (#672)."""
+"""game/train.py: the town center menu has "Feudal Age" at its cost and time. It needs 2 types of Dark Age buildings;
+after the research the sidebar title shows the age, all players see it, and the item leaves the menu (#672)."""
 from menu_line import item
 from test_loom import menus, setup
 from test_train_menu import CASTLE
 
 from game import train
+
+AGE = "FEUDAL_AGE"
+SLOT, COST, TIME = train.ITEMS[AGE][0], train.COSTS[AGE]["food"], train.TRAIN_TIMES[AGE]
+
+
+def entry(g, name, state, icon=None):
+    """The menu item of name with its cost and time for the player of g."""
+    slot, item, label = train.ITEMS[name]
+    cost = " · ".join(f"{v} {k}" for k, v in train.COSTS[name].items())
+    return f"{slot}:{icon or item}:{label}:{cost} · {train.seconds(g, name):g} s · {state}"
 
 
 def add(g, *names):
@@ -17,9 +27,10 @@ def test_without_two_dark_age_buildings_the_item_says_what_is_missing_and_a_clic
     server, g = setup(food=1000)
     add(g, "LUMBER_CAMP", "LUMBER_CAMP", "HOUSE")                       # one type, and a house does not count
     rect = train.open_menu(g, "Steve", (3, 3))
-    assert item(menus(server)[-1], "Feudal Age") == "2:bell:Feudal Age:500 food · 130 s · " \
-        "needs 2 of barracks, mill, lumber camp, mining camp, dock (1/2)" and item(menus(server)[-1], "Castle Age") == CASTLE
-    assert train.order(g, "Steve", rect, 2) == 0 and g.stock["food"] == 1000 and not g.queues.get(rect)
+    feudal = item(menus(server)[-1], "Feudal Age")
+    assert feudal.startswith(entry(g, AGE, "needs 2 of ")) and feudal.endswith(" (1/2)")
+    assert item(menus(server)[-1], "Castle Age") == CASTLE
+    assert train.order(g, "Steve", rect, SLOT) == 0 and g.stock["food"] == 1000 and not g.queues.get(rect)
     assert any("Feudal Age needs 2 of" in c for c in server.log)
 
 
@@ -28,19 +39,19 @@ def test_a_built_mill_completes_the_need_and_a_click_queues_the_age_once():
     add(g, "BARRACKS")
     g.sites.append({"name": "MILL", "player": 1, "footprint": [11, 10, 13, 12], "done": True})
     rect = train.open_menu(g, "Steve", (3, 3))
-    assert item(menus(server)[-1], "Feudal Age") == "2:bell:Feudal Age:500 food · 130 s · research"
-    assert train.order(g, "Steve", rect, 2, shift=True) == 1 and g.stock["food"] == 500
-    assert train.order(g, "Steve", rect, 2) == 0 and g.stock["food"] == 500
-    assert item(menus(server)[-1], "Feudal Age") == "2:bell:Feudal Age:500 food · 130 s · researching"
+    assert item(menus(server)[-1], "Feudal Age") == entry(g, AGE, "research")
+    assert train.order(g, "Steve", rect, SLOT, shift=True) == 1 and g.stock["food"] == 1000 - COST
+    assert train.order(g, "Steve", rect, SLOT) == 0 and g.stock["food"] == 1000 - COST
+    assert item(menus(server)[-1], "Feudal Age") == entry(g, AGE, "researching")
 
 
-def test_after_130_seconds_the_player_is_in_the_feudal_age():
-    server, g = setup(food=500)
+def test_after_its_time_the_player_is_in_the_feudal_age():
+    server, g = setup(food=COST)
     add(g, "MINING_CAMP", "DOCK")
     rect = train.open_menu(g, "Steve", (3, 3))
     assert 'scoreboard objectives modify aoe_res displayname "Resources (Dark Age)"' in server.log
-    train.order(g, "Steve", rect, 2)
-    train.tick(g, 129)
+    train.order(g, "Steve", rect, SLOT)
+    train.tick(g, TIME - 1)
     assert train.age(g) == "Dark Age"
     train.tick(g, 1)
     assert train.age(g) == "Feudal Age" and "FEUDAL_AGE" in g.techs and not g.queues.get(rect)
