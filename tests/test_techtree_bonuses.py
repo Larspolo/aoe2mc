@@ -9,8 +9,8 @@ def test_the_britons_page_has_the_bonuses_in_slot_46_with_the_team_bonus():
     server, g = setup("BRITONS")
     diplomacy.open_menu(g, "Steve")
     text = click(server, g, diplomacy.TECH_TREE_SLOT)
-    assert f"{techtree.BONUSES}:written_book:Civilization bonuses:" in text and "49:paper:Britons" in text
-    lore = " ".join(text.split(f"{techtree.BONUSES}:written_book:Civilization bonuses:")[1].split(" 4")[0].split())
+    assert f"{techtree.BONUSES}:book:Civilization bonuses:" in text and "49:paper:Britons" in text
+    lore = " ".join(text.split(f"{techtree.BONUSES}:book:Civilization bonuses:")[1].split(" 4")[0].split())
     assert "Team bonus: Archery Ranges work 10% faster" in lore and "Shepherds work 25% faster" in lore
 
 
