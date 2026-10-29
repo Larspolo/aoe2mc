@@ -20,6 +20,8 @@
 {"name": "MESOPOTAMIAN_GARDEN", "monument": true}
 {"name": "MESOPOTAMIAN_TOMB", "monument": true}
 {"name": "BURNED_BUILDING", "monument": true}
+{"name": "CLIFF_DESERT", "rocks": ["sandstone", "sandstone", "smooth_sandstone", "cut_sandstone", "red_sandstone", "sandstone", "terracotta", "smooth_sandstone"]}
+{"name": "CLIFF_SNOW", "rocks": ["stone", "andesite", "snow_block", "stone", "packed_ice", "snow_block", "stone", "andesite"]}
 {"name": "CONSTRUCTION_CRANE", "monument": true}
 {"name": "SCAFFOLDING", "monument": true}
 {"name": "THEATRE", "monument": true}
