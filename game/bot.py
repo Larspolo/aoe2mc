@@ -428,25 +428,32 @@ class Bot:
         g = self.g
         for rect, name in sorted(train.homes(g).items(), key=lambda kv: (kv[1] != "TOWN_CENTER", kv[0])):
             more = len(g.villagers) + sum(e["name"] == "VILLAGER_MALE" for q in g.queues.values() for e in q)
-            units = ["VILLAGER_MALE"] if name == "TOWN_CENTER" else \
-                [n for n in train.trains(g, name) if gather.military(n) and n not in train.TECHS and not build.locked(g, n)]
+            units = ["VILLAGER_MALE"] if name == "TOWN_CENTER" else self.soldiers(name)
             for n in units[:1]:
                 while len(g.queues.get(rect, [])) < QUEUED and (n != "VILLAGER_MALE" or more < self.villagers) \
                         and all(g.stock[r] >= v for r, v in train.price(g, n).items()) \
                         and train.queue(g, self.nobody, (rect[0], rect[2]), n):
                     more += n == "VILLAGER_MALE"
 
+    def soldiers(self, name):
+        """The military units that building name trains now (recruit trains the first one)."""
+        g = self.g
+        return [n for n in train.trains(g, name) if gather.military(n) and n not in train.TECHS and not build.locked(g, n)]
+
     def research(self):
-        """Research the economy technologies of the age at each building that offers them (the AoE2 AI does, #3949).
-        The villagers of self.villagers come first. One technology in each queue."""
+        """Research the economy technologies of the age at each building that offers them (the AoE2 AI does, #3949),
+        and the upgrade of the unit that the building trains (#3952: Militia to Man-at-Arms), so that recruit then
+        trains the new unit. The villagers of self.villagers come first. One technology in each queue."""
         g = self.g
         if len(g.villagers) + sum(e["name"] == "VILLAGER_MALE" for q in g.queues.values() for e in q) < self.villagers:
             return
         for rect, name in sorted(train.homes(g).items(), key=lambda kv: kv[0]):
             if any(e["name"] in train.TECHS for e in g.queues.get(rect, [])):
                 continue
+            line = set(self.soldiers(name)[:1])
             for n in train.trains(g, name):
-                if train.value("economy", n) and n in train.TECHS and not build.locked(g, n) \
+                if (train.value("economy", n) or n in train.UPGRADES and line & {old for old, _ in train.lines(n, g)}) \
+                        and n in train.TECHS and not build.locked(g, n) \
                         and all(g.stock[r] >= v for r, v in train.price(g, n).items()) \
                         and train.queue(g, self.nobody, (rect[0], rect[2]), n):
                     break
