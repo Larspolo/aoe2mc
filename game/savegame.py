@@ -35,7 +35,7 @@ OPTIONAL = ("auto", "auto_by",                                         # the aut
 MONK = ("carrier_at", "converting", "faith", "fetching", "heal_time", "monk_at", "relic_gold", "relic_homes",
         "relic_time", "relics")                                        # game/monk.py: the relics and monk orders (#2412)
 NOMAD = ("later", "nomad")                                             # a Nomad start: the first town center bonus (#2986)
-ORDERS = ("patrols", "trigger_attributes", "trigger_costs",            # scenario.py: the patrols (#2647), attributes (#2763),
+ORDERS = ("kept", "patrols", "trigger_attributes", "trigger_costs",            # scenario.py: the patrols (#2647), attributes (#2763),
           "trigger_menus", "trigger_names",                            # costs (#2776), menu items (#2775), names (#2821)
           "trigger_places", "trigger_stacks", "trigger_times",         # the menu places (#2864), stacking (#2866), times (#2820),
           "trigger_trains", "trigger_civs",                            # train locations (#2865), civilization names (#2905),
