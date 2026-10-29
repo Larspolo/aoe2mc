@@ -714,6 +714,17 @@ class Replay:
             total += -gold if buy else gold
         return r, (n * market.LOT if buy else -n * market.LOT), total
 
+    def tribute(self, e):
+        """A tribute of the record: the sender pays the amount and the fee (diplomacy.cost), the receiver gets the amount
+        (#3940). An old record has one resource and one amount."""
+        import diplomacy                                            # diplomacy -> build -> replay: import it late
+        p, to = e.get("player"), e["to"]
+        g = types.SimpleNamespace(techs=set(self.upgrades(p, e["time"])))
+        sums = {r: e.get(r, 0) for r in START} if any(e.get(r, 0) for r in START) else {e["resource"].lower(): e.get("amount", 0)}
+        for r, n in sums.items():
+            self.resources(p)[r] -= diplomacy.cost(g, n)
+            self.resources(to)[r] += n
+
     def trade_text(self, e, r, amount, gold, color):
         """The trade as a text above its market for EFFECT_MS, and particles (#3942). The trades of one market within
         TRADE_MS join in one text with the sums. No known market: no commands."""
@@ -807,6 +818,9 @@ class Replay:
                 self.research(e, color)
         if kind in ("buy", "sell") and e.get("resource"):       # the market trades change the estimate (#3939)
             return self.trade_text(e, *self.trade(e), color)
+        if kind == "tribute" and e.get("to"):                   # the tributes change the estimate (#3940)
+            self.tribute(e)
+            return []
         if kind == "resign":
             return ["title @a subtitle " + json.dumps(text("The game ends")),
                     "title @a title " + json.dumps(text(f"{name} resigns", color))]
