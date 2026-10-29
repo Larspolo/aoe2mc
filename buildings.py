@@ -2249,7 +2249,7 @@ def wall_segment(c, w, st, col, T, ctx):
         if pillar and w >= 4:
             c.box(x0 + 1, x1 - 1, h - 1, h + 2, z0 + 1, z1 - 1, "air")
             c.box(x0 + 1, x1 - 1, h - 1, h, z0 + 1, z1 - 1, "spruce_planks")
-        wall_banners(c, w, ctx, h - 1, col)
+        wall_banners(c, w, ctx, h - 1, col, (x0, x1, z0, z1))
         return
     fort = any(k in name for k in ("FORTIFIED", "CITY", "FORT_", "SEA_WALL"))
     h = T + (3 if fort else 2)
@@ -2268,7 +2268,7 @@ def wall_segment(c, w, st, col, T, ctx):
         c.box(0, w, ph, ph + 1, 0, w, st.accent)
         if w >= 3:
             c.crenels(0, w, 0, w, ph + 1, cap, gx, gz)
-    wall_banners(c, w, ctx, h - 1, col)
+    wall_banners(c, w, ctx, h - 1, col, (0, w, 0, w) if pillar else (x0, x1, z0, z1))
 
 
 def fence(c, w, st, col, T, ctx):
@@ -2316,17 +2316,19 @@ def barricade(c, w, st, col, T, ctx):
             c.set(i, h[i, j] + 1, j, BARRICADE_TOP[top[i, j]])
 
 
-def wall_banners(c, w, ctx, y, col, every=4):
-    """A banner in the player color on the open sides of every 4th wall tile."""
+def wall_banners(c, w, ctx, y, col, body=None, every=4):
+    """A banner in the player color on the open sides of every 4th wall tile. It hangs on the face of the wall
+    body (x0, x1, z0, z1), so that it does not float in front of a thin wall."""
     gx, gz = ctx["origin"]
     if (gx // w + gz // w) % every:
         return
     n, s, wst, e = ctx["neighbours"]
     m = w // 2
-    if not s: c.banner(m, y, w, col, "south")
-    if not n: c.banner(m, y, -1, col, "north")
-    if not e: c.banner(w, y, m, col, "east")
-    if not wst: c.banner(-1, y, m, col, "west")
+    x0, x1, z0, z1 = body or (0, w, 0, w)
+    if not s: c.banner(m, y, z1, col, "south")
+    if not n: c.banner(m, y, z0 - 1, col, "north")
+    if not e: c.banner(x1, y, m, col, "east")
+    if not wst: c.banner(x0 - 1, y, m, col, "west")
 
 
 def gate(c, w, st, col, T, ctx):
