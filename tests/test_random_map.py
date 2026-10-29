@@ -36,7 +36,7 @@ def test_the_same_seed_gives_the_same_map_and_another_seed_another():
 
 def test_read_map_reads_the_random_map_source():
     size, terrain, elevation, _, _, objects, players = aoe2mc.read_map(aoe2mc.RANDOM_MAP + "arabia", 7)
-    assert size == 120 and terrain.shape == (120, 120) and not elevation.any()
+    assert size == 120 and terrain.shape == (120, 120) and elevation.any()  # hills, #3824
     assert sum(o["name"] == "TOWN_CENTER" for o in objects) == 2 and {1, 2} <= set(players)
 
 

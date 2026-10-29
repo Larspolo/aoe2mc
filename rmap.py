@@ -354,6 +354,8 @@ create_terrain WATER { base_terrain DIRT number_of_clumps 2 number_of_tiles 50 s
   spacing_to_other_terrain_types 3 clumping_factor 20 }
 create_terrain DIRT3 { base_terrain DIRT number_of_clumps 12 land_percent 4 }
 create_terrain GRASS3 { base_terrain GRASS number_of_clumps 10 land_percent 3 }
+<ELEVATION_GENERATION>
+create_elevation 2 { base_terrain DIRT number_of_clumps 14 number_of_tiles 600 spacing 2 }
 """
 # The start objects of each player: (name, count, distance in tiles from the town center, owner: 0 = Gaia, 1 = the
 # player). A group of more than one object stands on next tiles.
@@ -400,6 +402,8 @@ create_terrain FOREST { base_terrain GRASS number_of_clumps 10 number_of_tiles 1
   spacing_to_other_terrain_types 2 }
 create_terrain DIRT3 { base_terrain GRASS number_of_clumps 10 land_percent 3 }
 create_terrain GRASS3 { base_terrain GRASS2 number_of_clumps 8 land_percent 3 }
+<ELEVATION_GENERATION>
+create_elevation 3 { base_terrain GRASS number_of_clumps 10 number_of_tiles 700 spacing 2 }
 """
 # Mediterranean: a sea in the middle of the map, the player lands on the land ring around it, a beach at the coast
 # (COASTS).
@@ -552,6 +556,11 @@ def river(d, spec, rng):
     terrain[ford] = TERRAINS["SHALLOW"]
     terrain[dilate(ford, 3) & np.isin(terrain, list(FOREST_TREES))] = TERRAINS["GRASS"]
     d["terrain"] = terrain.tolist()
+    elevation = np.array(d["elevation"])               # all water at level 0 (#164), a bank of level 1 at most
+    wet = water | ford
+    elevation[dilate(wet, 1) & ~wet] = np.minimum(elevation[dilate(wet, 1) & ~wet], 1)
+    elevation[wet] = 0
+    d["elevation"] = elevation.tolist()
 
 
 def isles(d, gap):
