@@ -1129,6 +1129,13 @@ def research(g, entry, start=False, rect=None):
         for rect, o in garrison.holders(g).items():
             if o["name"] in more:
                 g.command(garrison.arrows_command(g, rect))
+    if (free := value("spawn", entry["name"])) and not start:     # free units at own buildings (First Crusade, #4365)
+        unit = free["unit"]
+        while (up := next((n for t in sorted(g.techs & set(UPGRADES)) for o, n in lines(t, g) if o == unit), None)):
+            unit = up                                              # the upgraded unit of the line (Elite Serjeant)
+        for rect in sorted(r for r, n in homes(g).items() if n == free["at"])[:free["most"]]:
+            for _ in range(free["count"]):
+                spawn(g, rect, unit)
     for hook in value("on_research", entry["name"], ()):          # the special effect in its own module (#3243):
         module, function = hook.rsplit(".", 1)                     # import it late, it imports gather or this module
         getattr(importlib.import_module(module), function)(g, entry)
