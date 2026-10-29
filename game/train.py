@@ -84,6 +84,7 @@ import ruins  # noqa: E402
 import table  # noqa: E402
 
 DATA = os.path.join(table.DIR, "train.jsonl")
+SOUNDS = {r["name"]: r for r in table.load("sounds.jsonl")}       # building name -> the sound of a click on it (#3501)
 
 
 def load(path=DATA):
@@ -527,8 +528,18 @@ def open_menu(g, player, cell, click=False):
         return rect                                                    # a spam click: the uses that came before the menu showed (#3267)
     if rect is not None:
         opened[player] = rect, g.clock()
+        click_sound(g, player, rect)
         show(g, player, rect)
     return rect
+
+
+def click_sound(g, player, rect):
+    """Play the sound of the own building rect to the player who opened its menu, as AoE2 DE does (#3501). Only own
+    buildings open a menu, so an enemy or allied building plays no sound. A building with no line plays none."""
+    if (v := SOUNDS.get(homes(g)[rect])) and not getattr(g, "noui", False):
+        x, z = (rect[0] + rect[1]) / 2, (rect[2] + rect[3]) / 2
+        g.command(f"execute as {player} at @s positioned {x:.1f} ~ {z:.1f} run "
+                  f"playsound minecraft:{v['select']} voice @s ~ ~ ~ 1 {v['pitch']}")
 
 
 def show(g, player, rect):
