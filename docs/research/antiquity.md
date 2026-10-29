@@ -323,7 +323,6 @@ the units, the technologies and the bots, then the check ticket (item 9).
   - Siegecraft: villagers do not attack walls and towers. Follow-up: #3887.
   - Architecture: no +20 % building HP, no faster build. Follow-up: #3887.
   - Logistics: barracks units take full population. Follow-up: #3887.
-  - Urbanization: houses do not give double population. Follow-up: #3887.
   - Writing: no shared exploration with allies. Follow-up: #3887.
   - Alchemy: the Fire Galley +6 (no ships yet). Follow-up: #3887.
   - Aristocracy: academy units do not walk faster (the key "walk" is a factor, not +0.225). Follow-up: #3887.

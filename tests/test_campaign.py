@@ -143,6 +143,6 @@ def test_cpx_with_other_formats_converts_the_rest_and_gives_the_steps(tmp_path):
         aoe2mc.main([str(c), str(tmp_path / "out")])
     msg = str(e.value.code)
     assert "(.scn, .scx)" in msg and "  2 Alt.scx\n  3 Karte.scn" in msg and "Gut" not in msg
-    assert "2 Alt.scx: " in out.getvalue() and "1.18" in out.getvalue()
+    assert "2 Alt.scx: " in out.getvalue() and "does not decompress" in out.getvalue()   # 3 Karte.scn: not tried (#3863)
     assert sorted(p.name for p in (tmp_path / "out").iterdir()) == ["1 Gut", "2 Alt.scx", "3 Karte.scn", "campaign.json"]
     assert (tmp_path / "out" / "1 Gut" / "level.dat").exists()
