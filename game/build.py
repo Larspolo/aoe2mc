@@ -70,6 +70,7 @@ AGE_NAMES = (lambda t: (t[AGE_TECHS[0]]["start_age"], *(t[a]["label"] for a in A
 WALLS = tuple(r["name"] for r in ROWS if r.get("wall"))          # a line of 1-tile sites with two clicks (#1322)
 GATES = tuple(r["name"] for r in ROWS if r.get("gate"))          # on 4 own wall tiles in a line (#1324)
 NEEDS = {r["name"]: r["needs"] for r in ROWS if "needs" in r}     # a unit or building after a technology (#1380)
+UNLOCKED_BY = {r["name"]: r["unlocked_by"] for r in ROWS if "unlocked_by" in r}   # after an own building (Antiquity, #3668)
 SHORE = ("DOCK",)                                                  # on water next to the land, as in AoE2 (#1382)
 WATER = ("FISH_TRAP",)                                             # on free water only, ships build it (#1438)
 FLAT = tuple(r["name"] for r in ROWS if r.get("flat"))                 # on one elevation level also for the Thracians (#2545)
@@ -204,6 +205,10 @@ def locked(g, name):
         return f"Needs the {AGE_NAMES[age]}"
     if g is not None and name in NEEDS and NEEDS[name] not in getattr(g, "techs", ()):
         return "Needs " + pretty(NEEDS[name].removesuffix("_TECH"))
+    if name in UNLOCKED_BY and hasattr(g, "sites") and hasattr(g, "data"):
+        import train                                                   # train imports this module
+        if UNLOCKED_BY[name] not in train.owned(g):
+            return "Needs a " + pretty(UNLOCKED_BY[name])
     from gather import has_mode                                        # gather imports this module
     if name == "TOWN_CENTER" and has_mode(g, "sudden-death") and town_center(g):
         return "Sudden Death: only one town center"                    # (#2407)
