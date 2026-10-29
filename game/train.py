@@ -416,7 +416,7 @@ def unlocked(g, name):
     a scenario trigger turned on (g.trigger_menus, #2775) needs no age."""
     return (value("age", name, 0) - civs.earlier(g, name) <= build.ages(g) or getattr(g, "trigger_menus", {}).get(name, False)) \
         and value("after", name, "") in {""} | set(getattr(g, "techs", ())) \
-        and not (hasattr(g, "data") and civs.missing(g, name)) \
+        and not (hasattr(g, "data") and civs.missing(g, name) and name not in granted(g)) \
         and (name not in UPGRADES or name in REQUIRES or bool(lines(name, g))) and not swapped(g, name)   # not of this
                                                                    # civilization (#1373), no new unit (#1483); an
                                                                    # age also upgrades (#2130)
@@ -518,6 +518,32 @@ def line_upgrades(line):
 
 
 def trains(g, building):
+    """own() of the building, and the free units of the technologies of the player and its allies (granted())."""
+    out = own(g, building)
+    return out + tuple(n for n in granted(g, building) if n not in out)
+
+
+def granted(g, building=None):
+    """{unit: count} of the free units of building (any building with None) that the technologies of the key "free"
+    of the player or of an allied player give to each of its buildings (Cuman Mercenaries, #4330)."""
+    import fog, gather                                             # both import gather, gather imports this module
+    if not BY_KEY["free"] or not hasattr(g, "players"):
+        return {}
+    out = {}
+    for h in fog.gathers(g):
+        if h.player == g.player or gather.allied(g.players, g.player, h.player):
+            for t, (b, unit, n) in BY_KEY["free"].items():
+                if t in h.techs and building in (None, b):
+                    out[unit] = max(out.get(unit, 0), n)
+    return out
+
+
+def free_left(g, rect, name):
+    """The free units name that the building rect can still train (granted()), 0 for none."""
+    return max(0, granted(g, homes(g)[rect]).get(name, 0) - vars(g).get("free_trained", {}).get(rect, {}).get(name, 0))
+
+
+def own(g, building):
     """The units and technologies of the own building: a castle trains the unique unit of the player's civilization,
     a Krepost the Konnik, a Donjon the Serjeant."""
     new = {old: unit for t in UPGRADES if t in g.techs for old, unit in lines(t, g)}   # the barracks trains the new unit
@@ -598,7 +624,7 @@ def show(g, player, rect):
         return f"queue {n}/{QUEUE}" + (" · Auto-queue: on" if vars(g).get("auto", {}).get(rect) == name else "")
     names = vars(g).get("trigger_names", {})                          # "Change Technology Name" (#2821)
     items = [(slot, build.LOCKED if build.locked(g, name) else item, names.get(name, label),
-              (" · ".join(f"{v} {r}" for r, v in price(g, name, building).items()) or "free") + f" · {round(seconds(g, name, building), 1):g} s · "
+              (" · ".join(f"{v} {r}" for r, v in price(g, name, building, rect).items()) or "free") + f" · {round(seconds(g, name, building), 1):g} s · "
               + state(name))
              for name, (slot, item, label) in layout(g, rect).items()]
     items += [RALLY] if units_of(g, building) else []
@@ -647,7 +673,7 @@ def requeue(g):
         if rect not in home:
             del on[rect]
         elif not g.queues.get(rect) and not build.locked(g, name) and not missing(g, name) \
-                and all(g.stock[r] >= v for r, v in price(g, name, home[rect]).items()):
+                and all(g.stock[r] >= v for r, v in price(g, name, home[rect], rect).items()):
             queue(g, g.auto_by.get(rect, "@a"), rect[::2], name)
 
 
@@ -693,7 +719,10 @@ def cancel(g, player, rect, group):
     name, start, k = gs[group]
     if vars(g).get("auto", {}).get(rect) == name:                      # a cancel also ends its auto-queue (#3524)
         del g.auto[rect]
-    for r, v in q.pop(start + k - 1).get("paid", COSTS[name]).items():   # a free technology gives back nothing
+    e = q.pop(start + k - 1)
+    if e.get("free"):                                                  # the free unit is free again (#4330)
+        g.free_trained[rect][name] -= 1
+    for r, v in e.get("paid", COSTS[name]).items():                    # a free technology gives back nothing
         g.stock[r] += v
         g.command(f"scoreboard players add {r.capitalize()} {g.board} {v}")
     return name
@@ -788,7 +817,10 @@ def queue(g, player, cell, name="VILLAGER_MALE"):
     if len(q) >= QUEUE:
         build.say(g, player, f"The queue is full ({QUEUE} units).")
         return None
-    cost = price(g, name, homes(g)[rect])
+    if not offered(g, rect, name) and name not in own(g, homes(g)[rect]):   # no free unit left (#4330)
+        return None
+    free = bool(free_left(g, rect, name))
+    cost = price(g, name, homes(g)[rect], rect)
     if any(g.stock[r] < v for r, v in cost.items()):
         build.say(g, player, f"Not enough resources: a {build.pretty(name).lower()} costs "
                              + ", ".join(f"{v} {r}" for r, v in cost.items()) + ".")
@@ -797,7 +829,11 @@ def queue(g, player, cell, name="VILLAGER_MALE"):
         g.stock[r] -= v
         g.command(f"scoreboard players remove {r.capitalize()} {g.board} {v}")
     k = vars(g).get("doctrines", {}).get(homes(g)[rect], 0)            # its doctrine stays (#2483)
+    if free:                                                           # one of the free units (#4330)
+        n = vars(g).setdefault("free_trained", {}).setdefault(rect, {})
+        n[name] = n.get(name, 0) + 1
     q.append({"name": name, "progress": 0.0, "player": player} | ({"paid": cost} if cost != COSTS[name] else {})
+             | ({"free": True} if free else {})
              | ({"doctrine": k} if k and name not in TECHS else {}))
     record.queued(g, name, rect)                                       # Record Game (#2649)
     return rect
@@ -811,6 +847,8 @@ def count(g, t):
 def offered(g, rect, name):
     """True when the building rect offers name: an upgrade of one building (ONE_BUILDING) only to a building that has
     none and researches none (#2484), the other items as repeatable() and unlocked()."""
+    if name not in own(g, homes(g)[rect]) and not free_left(g, rect, name):   # no free unit left (#4330)
+        return False
     if name in ONE_BUILDING and (rect in getattr(g, "upgraded", {})
                                  or any(e["name"] in ONE_BUILDING for e in g.queues.get(rect, ()))):
         return False
@@ -829,10 +867,13 @@ def repeatable(g, name):
         and value("walls", name) is None and count(g, name) < REPEAT
 
 
-def price(g, name, building=None):
+def price(g, name, building=None, rect=None):
     """The cost of unit or technology name with the bonuses of the civilization (civs.COSTS, #1091); a technology is
     free with the cheat "tech tech one two free" (#968). Shipwright: a ship costs 20 % less wood (#1490). A unit of
-    building: the food and wood factor of its Recruitment Doctrine (doctrine(), Macedonians, #2483)."""
+    building: the food and wood factor of its Recruitment Doctrine (doctrine(), Macedonians, #2483). A free unit of
+    the building rect (free_left(), #4330) costs nothing."""
+    if rect is not None and free_left(g, rect, name):
+        return {}
     if name in TECHS and getattr(g, "free_techs", False):
         return {}
     if name in (p := civs.policies(g)).get("effects", ()):          # a switch of policy: the gold of the next one (#2485)
