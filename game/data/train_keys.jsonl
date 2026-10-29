@@ -28,3 +28,4 @@
 {"name": "walls", "text": "A wall technology (Fortified Wall): {wall: the new wall}. The new and the complete own walls get the new design (build.design).", "issue": 1326}
 {"name": "heal_rate", "text": "A factor of the hit points that a monk heals per second (Medicine of Antiquity Mode: 2). monk.heal.", "issue": 3984}
 {"name": "convert_rate", "text": "A factor of the conversion speed of a monk (Astrology of Antiquity Mode: 1.3). monk.convert.", "issue": 3985}
+{"name": "sight", "text": "Tiles of line of sight for the units of its tests: {\"if\": [tests], \"add\": n} (Engineering of Antiquity Mode: siege units and ships +2). train.sight_more: the attack sight and gather.seen.", "issue": 3981}
