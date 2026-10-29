@@ -268,12 +268,19 @@ def dock_order(g, player, rect):
 
 def adopt(g):
     """The units that a trigger made inside an own building ("Create Garrisoned Object", aoe2mc.MADE_INSIDE, #2764)
-    join its garrison, so UNGARRISON lets them out. The tag goes: each unit joins once."""
+    join its garrison, so UNGARRISON lets them out. The tag goes: each unit joins once. The others can be inside an own
+    transport ship or ram (transport.adopt, #3779)."""
+    rest = []
     for u, (x, _, z) in g.where(None, f"@e[tag={MADE_INSIDE},tag=aoe2mc.p{g.player}]").items():
         rect = next((r for r in holders(g) if r[0] <= x < r[1] and r[2] <= z < r[3]), None)
         if rect is not None:
             g.garrisons.setdefault(rect, []).append(u)
             g.command(f"tag {u} remove {MADE_INSIDE}")
+        else:
+            rest.append(u)
+    if rest:
+        import transport                                           # transport imports this module
+        transport.adopt(g, rest)
 
 
 def tick(g):

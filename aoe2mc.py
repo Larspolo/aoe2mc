@@ -2165,6 +2165,9 @@ UNSELECTABLE = "aoe2mc.unselectable"   # entity tag: no click of a person select
 SELECTED = "aoe2mc.sel"             # temporary entity tag: the selected objects and the area units of an effect (#2975)
 MADE_INSIDE = "aoe2mc.made_inside"  # entity tag of a unit that a trigger made inside a building: the game program adds
                                     # it to the garrison of the building (#2764)
+INTO = "aoe2mc.in"                  # entity tag aoe2mc.in<ref>: a unit that a trigger made inside the ship or ram ref (#3779)
+CARRIERS = {r["name"]: r["garrison"] for r in units.rows("carriers.jsonl")}   # units that a ship or ram holds (#3779)
+CARRIER_REFS = {}           # reference ID of a transport ship or ram of the scenario -> its name (trigger_files, #3779)
 GARRISON_CELLS = 20         # free cells of a building in aoe2mc.json: the largest AoE2 garrison (castle, #808)
 SUN = ("minecraft:zombie", "minecraft:zombie_villager", "minecraft:skeleton", "minecraft:stray", "minecraft:drowned")
 
@@ -3328,9 +3331,11 @@ def garrisoned_lines(e, c):
     """The commands of "Create Garrisoned Object" (#2764): a summon of the unit (object2, units.make_entity) in the
     state of a garrisoned unit of the converter (plan_units, #807) on the inside cells of each selected building
     (buildings.INSIDE). The tag MADE_INSIDE lets the game program add it to the garrison, so UNGARRISON lets it out.
-    A holder that is not a building with rooms (a ship, a ram) or no selected object: not supported yet."""
+    A transport ship or a ram (CARRIER_REFS, #3779): the unit appears at the holder (its tag aoe2mc.r<ref>) with the
+    tag aoe2mc.in<ref>, and the game program puts it on the holder (game/transport.py adopt). Another holder or no
+    selected object: not supported yet."""
     kind, name = e.get("object2") or (None, None)
-    holders = [r for r in e.get("selected", []) if r in buildings.INSIDE]
+    holders = [r for r in e.get("selected", []) if r in buildings.INSIDE or r in CARRIER_REFS]
     nbt = units.make_entity(dict(name=name, player=max(e["player"], 0), rotation=math.pi / 2, hero=kind == "H"),
                             c.players or {},
                             (0.0, 0.0, 0.0), np.random.default_rng(c.t["id"])) if kind in ("U", "H") else None
@@ -3351,6 +3356,13 @@ def garrisoned_lines(e, c):
         parts += list(part.get("Passengers", []))
     lines = []
     for ref in holders:                                                # one unit per building, as in AoE2
+        if ref not in buildings.INSIDE:
+            part = units.top_entity(nbt)
+            tags = part["Tags"]
+            part["Tags"] = List[String](list(tags) + [String(f"{INTO}{ref}")])
+            lines.append(f"execute at @e[tag=aoe2mc.r{ref},limit=1] run summon {entity} ~ ~ ~ {nbt.snbt()}")
+            part["Tags"] = tags
+            continue
         cells, y, center = buildings.INSIDE[ref]
         x, z = cells[0] if len(cells) else center
         lines.append(f"summon {entity} {x + 0.5} {int(y)} {z + 0.5} {nbt.snbt()}")
@@ -4140,13 +4152,13 @@ def unload_lines(e, c):
     or with no selection each such building with its center in the area, goes into the list of the storage
     aoe2mc:orders as one text "unload <player> <ref>", with the block of the target tile on the ground "x y z" when
     the effect has one. The scenario mode of the game program (game/scenario.py orders) lets the units of the holder
-    out and walks them there (aoe moveto). A ship or a ram holder: not supported yet (the game program has no garrison
-    of them from a trigger)."""
+    out and walks them there (aoe moveto). A selected transport ship or ram (CARRIER_REFS, #3779) too: the game program
+    lets its units out on the nearest land (transport.out)."""
     T, ground, a = c.T, c.ground, e.get("area", [-1])
     refs = e.get("selected") or ([r for r, (_, _, (x, z)) in sorted(buildings.INSIDE.items())
                                   if a[0] * T <= x < (a[2] + 1) * T and a[1] * T <= z < (a[3] + 1) * T]
                                  if min(a, default=-1) >= 0 else [])
-    holders = [r for r in refs if r in buildings.INSIDE]
+    holders = [r for r in refs if r in buildings.INSIDE or r in CARRIER_REFS]
     if not holders or e["player"] <= 0:
         c.stats["unload (not supported yet)"] += 1
         return []
@@ -5337,6 +5349,8 @@ def write_datapack(out, objects, ground, biome_names=(), ambience="basic", playe
     team_load, team_pulse = team_lines(objects, players or {})
     # each player gets the map of the world in the off-hand once, so the minimap is there without a search (#966)
     team_pulse = team_pulse + MAP_PULSE
+    CARRIER_REFS.clear()
+    CARRIER_REFS.update({o["ref"]: o["name"] for o in objects if o.get("name") in CARRIERS and o.get("ref") is not None})
     trigger_load, trigger_fns = trigger_files(triggers, T, ground, players, trigger_stats, mood)
     files = {
         "pack.mcmeta": {"pack": {"description": "aoe2mc: work sounds and ambience", "pack_format": MC["pack_format"],
