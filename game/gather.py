@@ -145,6 +145,7 @@ CLOSED = 2000                # cells: a search this long checks if its goals are
 NUMBER = r"(-?[\d.]+(?:E-?\d+)?)[df]"
 CIVILIANS = tuple(t['name'] for t in ROWS if t.get('civilian'))
 SELECT = "aoe2mc.selected"                                         # entity tag of the selected units
+VOICES = {r["name"]: r for r in table.load("sounds.jsonl")}   # unit class -> its select voice (#3499)
 TYPE_REACH = 16                                                    # blocks: a second click selects its type this near (#743)
 WAND = "warped_fungus_on_a_stick"     # the selection wand: a second item with its own "used" statistic (#778)
 LEFT = "aoe_left"                     # score of a left click with the command stick (Paper plugin, #1788)
@@ -902,7 +903,27 @@ class Gather:
         for s in vars(self).get("selections", {}).values():
             s.discard(uuid)
 
-    def select(self, uuid):
+    def voice_class(self, uuid):
+        """The class of unit uuid in game/data/sounds.jsonl, or None (#3499)."""
+        import combat                                                  # combat imports this module
+        if uuid in getattr(self, "ships", {}):
+            return "ship"
+        if uuid in getattr(self, "villagers", {}):
+            return "villager"
+        name = getattr(self, "soldiers", {}).get(uuid)
+        if name is None:
+            return None
+        cs = set(combat.STATS[name].classes) if name in combat.STATS else set()
+        return "monk" if name == "MONK" else next((v for v, k in (
+            ("ship", {"ship", "warship", "fireship"}), ("siege", {"siege", "ram", "heavysiege"}),
+            ("cavalry", {"cavalry", "camel", "elephant"}), ("archer", {"archer", "skirmisher"})) if cs & k), "infantry")
+
+    def voice(self, uuid):
+        """Play the select voice of unit uuid to the person who clicked, one line per click as in AoE2 DE (#3499)."""
+        if (v := VOICES.get(self.voice_class(uuid))) and not self.noui:
+            self.command(f"playsound minecraft:{v['select']} voice {self.person or self.who} ~ ~ ~ 1 {v['pitch']}")
+
+    def select(self, uuid, voice=True):
         """Select one villager (glowing), as a click in AoE2 does. A click on a military unit adds it to selected
         military units, as a shift click in AoE2 does."""
         keep = {uuid} | (self.selected if uuid in self.soldiers and self.selected <= set(self.soldiers) else set())
@@ -914,6 +935,8 @@ class Gather:
         for u in sorted(self.selected ^ keep | {uuid}):                 # the name line shows the selection (#661)
             self.command(f"aoe label {u}")
         self.selected = keep
+        if voice:
+            self.voice(uuid)
         bossbar.show(self, uuid)                                        # the boss bar of the selection (#659)
 
     def select_type(self, uuid):
@@ -929,7 +952,7 @@ class Gather:
             self.command(f"aoe label {u}")
         self.selected &= near
         for u in sorted(near - self.selected - {uuid}) + [uuid]:      # the clicked unit last: its boss bar
-            self.select(u)
+            self.select(u, voice=u == uuid)
 
     def choose(self, uuids, last=None):
         """Make uuids the selection: the other units leave it, the new ones glow. The boss bar shows unit last."""
@@ -941,7 +964,9 @@ class Gather:
             self.command(f"tag {u} add {SELECT}")
         for u in sorted(self.selected ^ uuids):                        # the name line shows the selection (#661)
             self.command(f"aoe label {u}")
-        self.selected = set(uuids)
+        new, self.selected = uuids - self.selected, set(uuids)
+        if new and last is not None:                                   # a pick, not a unit that left (#3499)
+            self.voice(last)
         bossbar.show(self, last)
 
     def box(self, name, cell):
