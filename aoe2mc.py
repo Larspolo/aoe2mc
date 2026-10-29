@@ -37,6 +37,7 @@ Coordinates: AoE2 tile (x, y) becomes Minecraft block x = x * tile-size, z = y *
 The world is saved with Minecraft data version 26.3. Newer Minecraft versions upgrade it on load.
 """
 import argparse
+import bisect
 import contextlib
 import functools
 import glob
@@ -862,17 +863,19 @@ def near(mask, r):
     return np.any([pad[r + dx:r + dx + w, r + dy:r + dy + h] for dx in range(-r, r + 1) for dy in range(-r, r + 1)], 0)
 
 
-def name_timeline(objects, timeline, window=16, water=None):
+def name_timeline(objects, timeline, window=1024, water=None):
     """The object IDs of a recorded game (#407). Start objects keep the ID of the record (`ref`, also GAIA animals
     that a player takes). The game gives each new object the next free ID, in the order that it makes them:
     a foundation at its BUILD or WALL command (one per wall tile), a unit when its training ends (the queue of its
     building, TRAIN_S and RESEARCH_S). Objects that the record does not show (for example dead animals) take IDs
-    too, so match each predicted object to the first ID in the next `window` IDs that the commands use in the same
+    too, so match each predicted object to the first free ID of its player (#4063) in the next `window` IDs (16 for
+    a building) above the IDs in use before it that the commands use in the same
     way (a building ID in QUEUE and RESEARCH, of the building that trains its units; a unit ID in MOVE, ORDER and
     BUILD; a building or ship ID as the target of GARRISON) and not before the object exists. A building that is not matched gets the name of its units' building.
     water (a bool array of the water tiles): a ship is not matched to an ID whose first MOVE goes to a land tile more
     than SHORE tiles from the water (#2629): a ship cannot go there, a click on the shore can. Such an ID gets the
     last land unit that its player trained before its first use (a military unit when it does not build or gather).
+    Another unit ID with no match that builds or gathers gets the last villager of its player (#4063).
     Adds "names" (a name or None per ID of "objects") and the "target_name" of a new target ID to the events and
     returns {id: name}."""
     names = {o["ref"]: o["name"] for o in objects if o.get("ref") is not None}
@@ -905,27 +908,31 @@ def name_timeline(objects, timeline, window=16, water=None):
             for tile in tiles:
                 if (e["name"], *tile) not in seen:       # the same foundation again (a second click)
                     seen.add((e["name"], *tile))
-                    made.append((t, t, "B", e["name"]))
-    made += [(end, e["time"], "U", e.get("name", "")) for end, e, _ in training(timeline)]
+                    made.append((t, t, "B", e["name"], e.get("player")))
+    made += [(end, e["time"], "U", e.get("name", ""), e.get("player")) for end, e, _ in training(timeline)]
     firsts = sorted((u[0], i) for i, u in used.items())
-    nxt, k, below = top + 1, 0, top
-    for t, cmd, role, name in sorted(made):
+    k, below, mine = 0, top, {}                          # mine: player -> the IDs that it uses first (#4063)
+    for i in sorted(used):                               # an ID with no player of its first use: each player
+        for p in {used[i][5]} if used[i][5] is not None else {m[4] for m in made}:
+            mine.setdefault(p, []).append(i)
+    for t, cmd, role, name, player in sorted(made, key=lambda m: m[:4]):
         while k < len(firsts) and firsts[k][0] < cmd:   # an ID in use before the command is older than the object
             below, k = max(below, firsts[k][1]), k + 1
-        nxt = max(nxt, below + 1)
-        while nxt in names:                              # the ID of a summoned unit (#3028)
-            nxt += 1
-        ids = [i for i in range(nxt, nxt + window) if i in used and i not in names and
+        nxt = below + 1                                  # no pointer after the last match: the training times are
+        while nxt in names:                              # estimates, and one wrong match skipped many IDs (#4063)
+            nxt += 1                                     # the ID of a summoned unit (#3028)
+        own = mine.get(player, [])                       # projectiles take IDs too: a unit looks far, a building
+        own = own[bisect.bisect_right(own, below):bisect.bisect_left(own, nxt + (window if role == "U" else 16))]
+        ids = [i for i in own if i not in names and   # (exact time) near
                (used[i][1] in (role, None) or used[i][1] == "G" and (role == "B" or "SHIP" in name)) and
                used[i][0] >= t - 5000 and used[i][2] <= {name} and   # 5 s: the training times are estimates
                not (used[i][3] and "VILLAGER" not in name)]         # only villagers build and gather on land (#765)
         if units.is_boat(units.classify(name)):             # a ship does not go inland (#2629): a land unit
             inland |= {i for i in ids[:1] if used[i][4]}     # takes the ID (below)
             ids = [i for i in ids if not used[i][4]]
-        i = ids[0] if ids else nxt if nxt not in used else None
-        if i is not None:
-            names[i] = name             # a unit skips a GARRISON target: a later building can take it
-            nxt = next((j for j in range(nxt, i) if used.get(j, (0, None))[1] == "G" and j not in names), i + 1)
+        while not ids and (nxt in used or nxt in names):  # no command uses the object: the next free ID
+            nxt += 1
+        names[ids[0] if ids else nxt] = name
     trained = [(end, e.get("player"), e.get("name", "")) for end, e, _ in training(timeline)
                if not units.is_boat(units.classify(e.get("name", "")))]   # a ship is no land unit (#3031)
     for i, u in sorted(used.items()):
@@ -934,6 +941,9 @@ def name_timeline(objects, timeline, window=16, water=None):
         elif i not in names and i in inland:             # the last land unit of its player (#2629), a soldier
             land = [(end, n) for end, p, n in trained if p == u[5] and end <= u[0] + 5000]   # when it does not work
             if pick := [x for x in land if "VILLAGER" not in x[1]] * (not u[3]) or land:
+                names[i] = max(pick)[1]
+        elif i not in names and u[1] == "U" and u[3]:    # a builder or gatherer: the last villager of its player
+            if pick := [(end, n) for end, p, n in trained if p == u[5] and "VILLAGER" in n and end <= u[0] + 5000]:
                 names[i] = max(pick)[1]
     for e in timeline:
         if e.get("objects"):
@@ -1860,13 +1870,17 @@ def chinese_garden(E, n, rect, y, put):
 
 
 def cliff_ridges(E, cols, rects, rng):
-    """All cliffs together form continuous rock ridges: high in the middle, sloped at the open sides."""
+    """All cliffs together form continuous rock ridges: high in the middle, sloped at the open sides.
+    rects: (footprint, name); a name of a "rocks" line of objects.jsonl (CLIFF_DESERT, CLIFF_SNOW) has its own rocks (#4115)."""
     if not rects:
         return
     n, T = cols.n, cols.T
     mask = np.zeros((n, n), bool)
-    for x0, x1, z0, z1 in rects:
+    kind = np.zeros((n, n), np.uint8)                  # 0: the default rocks, i + 1: the rocks of CLIFF_ROCKS[i]
+    for (x0, x1, z0, z1), name in rects:
         mask[max(0, x0):max(0, min(n, x1)), max(0, z0):max(0, min(n, z1))] = True
+        kind[max(0, x0):max(0, min(n, x1)), max(0, z0):max(0, min(n, z1))] = next(
+            (i + 1 for i, r in enumerate(CLIFF_ROCKS) if name.startswith(r["name"])), 0)
     dist = np.zeros((n, n), np.int16)
     cur = mask.copy()
     for k in range(1, T + 2):                          # distance to the edge of the ridge
@@ -1880,9 +1894,10 @@ def cliff_ridges(E, cols, rects, rng):
     base = cols.wtop[xs, zs].astype(np.int32) + 1
     X, Z = np.repeat(xs, hs), np.repeat(zs, hs)
     Y = np.repeat(base, hs) + (np.arange(hs.sum()) - np.repeat(np.cumsum(hs) - hs, hs))
-    rocks = np.array([B(b) for b in ("stone", "stone", "andesite", "andesite", "tuff", "cobblestone", "stone", "mossy_cobblestone")], np.uint16)
-    E.add(X, Y, Z, rocks[rng.integers(len(rocks), size=len(X))])
-    snowy = cols.top_id[xs, zs] == B("snow_block")         # snow on top of ridges in snow areas
+    rocks = np.array([[B(b) for b in ("stone", "stone", "andesite", "andesite", "tuff", "cobblestone", "stone", "mossy_cobblestone")],
+                      *([B(b) for b in r["rocks"]] for r in CLIFF_ROCKS)], np.uint16)
+    E.add(X, Y, Z, rocks[kind[X, Z], rng.integers(rocks.shape[1], size=len(X))])
+    snowy = (cols.top_id[xs, zs] == B("snow_block")) | (kind[xs, zs] == 1 + SNOW_CLIFF)   # snow on top in snow areas
     if snowy.any():
         E.add(xs[snowy], (base + hs)[snowy], zs[snowy], "snow[layers=2]")
 
@@ -1917,6 +1932,8 @@ MONUMENTS = tuple(r["name"] for r in OBJECTS if r.get("monument"))
 PASSABLE_OBJECTS = tuple(r["name"] for r in OBJECTS if r.get("passable"))
 OBSTACLES = tuple(r["name"] for r in OBJECTS if r.get("obstacle"))
 STATUES = tuple(r["name"] for r in OBJECTS if r.get("decor") == "statue")
+CLIFF_ROCKS = [r for r in OBJECTS if "rocks" in r]         # cliff types with their own rocks (#4115)
+SNOW_CLIFF = next(i for i, r in enumerate(CLIFF_ROCKS) if "snow_block" in r["rocks"])   # it gets snow on top
 
 
 def object_footprint(o, T):
@@ -2023,7 +2040,7 @@ def place_objects(objects, players, cols, rng):
             buildings.place_building(E, cols, B, dict(o, kind="B", name="MILL_GRANARY"), players | {o["player"]: dict(players.get(o["player"], {"color": "light_gray", "arch": "western"}), arch="middle_eastern")}, set(), {})
             stats["buildings"] += 1
         elif kind == "O" and name.startswith("CLIFF"):
-            cliffs.append(E.footprint)
+            cliffs.append((E.footprint, name))
             stats["cliffs"] += 1
         elif kind == "O" and "PYRAMID" in name:
             buildings.place_building(E, cols, B, dict(o, kind="B", x=int(o["x"]) + 0.5, y=int(o["y"]) + 0.5),

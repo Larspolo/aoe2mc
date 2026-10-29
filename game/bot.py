@@ -458,13 +458,13 @@ class Bot:
         """Keep QUEUED units in the queue of each training building: villagers at the town centers up to
         self.villagers, and the first military unit of the age at the other buildings, when the resources are there.
         A town center comes first: the villagers get the resources first."""
-        g = self.g
+        g, keep = self.g, self.keep()
         for rect, name in sorted(train.homes(g).items(), key=lambda kv: (kv[1] != "TOWN_CENTER", kv[0])):
             more = len(g.villagers) + sum(e["name"] == "VILLAGER_MALE" for q in g.queues.values() for e in q)
             units = ["VILLAGER_MALE"] if name == "TOWN_CENTER" else self.soldiers(name)
             for n in units[:1]:
                 while len(g.queues.get(rect, [])) < QUEUED and (n != "VILLAGER_MALE" or more < self.villagers) \
-                        and all(g.stock[r] >= v for r, v in train.price(g, n).items()) \
+                        and all(g.stock[r] >= v + keep.get(r, 0) for r, v in train.price(g, n).items()) \
                         and train.queue(g, self.nobody, (rect[0], rect[2]), n):
                     more += n == "VILLAGER_MALE"
 
@@ -481,6 +481,7 @@ class Bot:
         g = self.g
         if len(g.villagers) + sum(e["name"] == "VILLAGER_MALE" for q in g.queues.values() for e in q) < self.villagers:
             return
+        keep = self.keep()
         army = {n for n in [*g.soldiers.values(), *(e["name"] for q in g.queues.values() for e in q)]
                 if n not in train.TECHS and gather.military(n)}
 
@@ -495,19 +496,38 @@ class Bot:
                 if n in train.TECHS and (train.value("economy", n) or smith(n)
                                          or n in train.UPGRADES and line & {old for old, _ in train.lines(n, g)}) \
                         and not build.locked(g, n) \
-                        and all(g.stock[r] >= v for r, v in train.price(g, n).items()) \
+                        and all(g.stock[r] >= v + keep.get(r, 0) for r, v in train.price(g, n).items()) \
                         and train.queue(g, self.nobody, (rect[0], rect[2]), n):
                     break
 
-    def age_up(self):
-        """Queue the next age (build.AGE_TECHS) at a town center when the bot has its villager number, each building
-        of its order that the present age allows, and the cost of the age, as an AoE2 bot (#3912). build.locked keeps
-        an age above end_age out."""
+    def next_age(self):
+        """(age, missing): the next age (build.AGE_TECHS) when the bot has its villager number and the age is not
+        queued, and the first building of its order that the present age allows and the bot lacks (None when it has
+        each). (None, None) else. build.locked keeps an age above end_age out."""
         g = self.g
         if build.ages(g) >= len(build.AGE_TECHS) or len(g.villagers) < self.villagers:
-            return
+            return None, None
         age, have = build.AGE_TECHS[build.ages(g)], train.owned(g)
-        if train.queued(g, age) or build.locked(g, age) or any(n not in have for n in self.order if not build.locked(g, n)):
+        if train.queued(g, age) or build.locked(g, age):
+            return None, None
+        return age, next((n for n in self.order if n not in have and not build.locked(g, n)), None)
+
+    def keep(self):
+        """The resources that the bot keeps for its next age (#4087): the cost of the missing building of its order,
+        then the cost of the age. Soldiers and technologies take only the resources above it, else they spend each
+        60 food and 25 wood, and the bot never gets the 500 food of the Feudal Age or the wood of a Blacksmith."""
+        g = self.g
+        age, missing = self.next_age()
+        if missing:
+            return build.price(g, missing)
+        tc = next((name for name in train.homes(g).values() if name == "TOWN_CENTER"), None)
+        return train.price(g, age, tc) if age and tc else {}
+
+    def age_up(self):
+        """Queue the next age (next_age) at a town center when the bot has the cost of the age, as an AoE2 bot (#3912)."""
+        g = self.g
+        age, missing = self.next_age()
+        if age is None or missing:
             return
         for rect, name in sorted(train.homes(g).items()):
             if name == "TOWN_CENTER" and age in train.trains(g, name) \
