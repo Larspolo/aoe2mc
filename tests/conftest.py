@@ -1,3 +1,4 @@
+import faulthandler
 import io
 import os
 import sys
@@ -6,6 +7,7 @@ import pytest
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path[:0] = [ROOT, os.path.join(ROOT, "tools")]
+sys.path.append(os.path.join(ROOT, "game"))      # game modules import each other by name ("No module named 'bossbar'", #1045)
 
 
 @pytest.fixture(autouse=True)
@@ -13,6 +15,19 @@ def empty_stdin(monkeypatch):
     """An empty stdin: the run.console thread of a test game ends at once. Else pytest prints a thread warning of about
     10 lines for each such test, and they hide the result line at the end of the output (#2510)."""
     monkeypatch.setattr(sys, "stdin", io.StringIO())
+
+
+@pytest.fixture(autouse=True)
+def stack_of_a_slow_test(request):
+    """The stack of a fast test that runs longer than 90 s: else the suite stops at one percent with no clue (#2484).
+    Not for the slow and mc tests: they can take minutes."""
+    if request.node.get_closest_marker("slow") or request.node.get_closest_marker("mc"):
+        yield
+        return
+    from _pytest.faulthandler import fault_handler_stderr_fd_key   # the real stderr: the capture hides fd 2
+    faulthandler.dump_traceback_later(90, file=request.config.stash[fault_handler_stderr_fd_key])
+    yield
+    faulthandler.cancel_dump_traceback_later()
 
 
 @pytest.fixture(autouse=True)

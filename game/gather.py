@@ -61,6 +61,7 @@ import cheats  # noqa: E402
 import civs  # noqa: E402
 import conquest  # noqa: E402
 import defend_wonder  # noqa: E402
+import demolish  # noqa: E402
 import diplomacy  # noqa: E402
 import flare  # noqa: E402
 import fleet  # noqa: E402
@@ -1553,7 +1554,8 @@ class Gather:
             self.order_voice()
             self.mark(name, self.map.spot(tile))
         elif self.selected and (site := build.pick(self, eye, d)):
-            self.build(site)
+            if not build.queue(self, name, site):                      # a sneak click queues the site (#3517)
+                self.build(site)
             self.order_voice()
             repair.build_order(self, site, self.selected)              # Serjeants build a Donjon (#2129)
             x0, x1, z0, z1 = site["footprint"]
@@ -1566,6 +1568,8 @@ class Gather:
                 and (cell := fleet.pick(self, eye, d)) and self.map.wet(*cell):
             self.walk_to(name, cell)                                   # the ships sail on the water (#1383)
             self.order_voice()
+        else:                                                          # an own house, tower, wall or site: Delete (#3452)
+            demolish.open_menu(self, name, self.map.pick_ground(eye, d)) or demolish.open_menu(self, name, fleet.pick(self, eye, d))
 
     def new_order(self, units):
         """A new order ends each old order of the units, as in AoE2 (#3007): the repair of a Serjeant (#2128), the

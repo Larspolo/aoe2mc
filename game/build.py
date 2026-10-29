@@ -256,22 +256,28 @@ def items(g=None):
 
 
 DELETE = 35                                                            # slot: kill the selected own units (#3451)
+SHELTER = 44                                     # slot: the selected villagers seek shelter (#3440), last of the next free row
 
 
 def open_menu(g, player):
     """Show the build menu. A click sets the trigger score, as /trigger aoe_build set N does, and closes the menu.
     A building that the civilization does not have is not in it (hidden); the other items keep their slots.
-    The last slot deletes the selected own units (stance.delete, #3451)."""
+    Slot DELETE deletes the selected own units (stance.delete, #3451), slot SHELTER sends them into a building (#3440)."""
     def choose(p, slot, shift):                                        # shift: one building all the same
         if slot == DELETE:
             import stance                                              # stance imports gather, gather imports this module
             stance.delete(g)
             chest.close(g, p)
+        elif slot == SHELTER:
+            import garrison                                            # garrison imports gather, gather imports this module
+            garrison.bell(g, p, set(g.selected))
+            chest.close(g, p)
         elif slot < len(MENU) and not locked(g, MENU[slot]) and not hidden(g, MENU[slot]):
             g.command(f"scoreboard players set {p} {OBJECTIVE} {slot + 1}")
             chest.close(g, p)
     return chest.show(g, player, "Build", [it for it in items(g) if not hidden(g, MENU[it[0]])]
-                      + [(DELETE, "tnt", "Delete", "Kills the selected units")], choose)
+                      + [(DELETE, "tnt", "Delete", "Kills the selected units"),
+                         (SHELTER, "oak_door", "Seek Shelter", "The selected villagers go into the nearest building")], choose)
 
 
 def chosen(g, player):
@@ -482,6 +488,17 @@ def next_tile(g, site):
     return min(rest, key=lambda s: math.dist(s["footprint"][::2], site["footprint"][::2]), default=None)
 
 
+def queue(g, player, site):
+    """A sneak right click on the site with selected builders at work on another site: the site goes into the row of
+    that site, so that the builders build it next, as the shift queue of AoE2 (#3517). True when queued."""
+    now = next((v.site for u, v in sorted(g.villagers.items()) if u in g.selected and v.site is not None
+                and v.site is not site and v.site["progress"] < 1 and v.state in ("to_site", "build")), None)
+    if now is None or "passed" not in g.command(f"execute as {player} if predicate {SNEAK}"):
+        return False
+    site["row"] = now.setdefault("row", f"{player} {id(now)}")
+    return True
+
+
 def near(g, name, cell, reach=12):
     """A free footprint of name whose middle tile is next to the block cell (a source or the town center), with one
     free block around it for the paths, or None. The nearest tile first, the same order each time."""
@@ -500,7 +517,8 @@ def found(g, name, rect, way=None, tiles=None, free=False):
     the construction site. way: the way of a gate (gate_spot); tiles: the tiles of a diagonal gate, the other tiles
     of its footprint stay free (#1655). free: no cost (the start town of a game mode, empire_wars.py, #2408)."""
     import fleet                                                       # fleet -> gather -> build: import it late
-    for r, v in () if free else price(g, name).items():
+    paid = {} if free else price(g, name)                              # a deleted foundation gives it back (demolish.py)
+    for r, v in paid.items():
         g.stock[r] -= v
         g.command(f"scoreboard players remove {r.capitalize()} {g.board} {v}")
     record.built(g, name, rect, free)                                  # Record Game (#2649), free: a setup (#3028)
@@ -521,7 +539,7 @@ def found(g, name, rect, way=None, tiles=None, free=False):
         along_z=z1 - z0 > x1 - x0 if way is None else way,             # a gate along z (#1324) or diagonal (#1655)
         water=int(fleet.level(g)) + 1 if name in WATER else None)      # a fish trap on the open water (#1438)
     site = {"name": name, "player": g.player, "footprint": rect, "commands": cmds, "sent": 0, "progress": 0.0,
-            "ring": dict.fromkeys(ring, f"minecraft:{color}_wool"), "under": under}   # under: the design blocks on the ring
+            "paid": paid, "ring": dict.fromkeys(ring, f"minecraft:{color}_wool"), "under": under}   # under: the design blocks on the ring
     if way is not None:
         site["way"] = way
     if tiles is not None and str(way).startswith("diag"):
