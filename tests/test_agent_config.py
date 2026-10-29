@@ -42,3 +42,15 @@ def test_no_tool_skill_or_workflow_names_the_repository():
                             ":!tools/dashboard_artifact"],
                            cwd=ROOT, capture_output=True, text=True).stdout.split()
     assert found == [".claude/settings.json"]
+
+
+def test_load_joins_the_system_file(tmp_path):
+    import agent_config
+    import pytest
+    (tmp_path / "a.toml").write_text(FAKE)
+    (tmp_path / "s.toml").write_text("[pacing]\nmax_runs = 3\n")
+    config = agent_config.load(str(tmp_path / "a.toml"), str(tmp_path / "s.toml"))
+    assert config["pacing"] == {"max_runs": 3} and config["status"]["issue"] == 7
+    (tmp_path / "s.toml").write_text("[status]\nissue = 3\n")
+    with pytest.raises(ValueError):
+        agent_config.load(str(tmp_path / "a.toml"), str(tmp_path / "s.toml"))

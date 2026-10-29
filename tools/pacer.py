@@ -2,7 +2,7 @@
 
 The old pacer session kept an old "cap of 4 per cycle" in its context and fired 4 Haiku runs for H = 8
 (2026-10-28, #3147; removed in #3427). A script has no memory: `.github/workflows/pacer.yml` runs it every 10 minutes
-while the key `pacer` in `[pacing]` of `agent.toml` is "workflow" (any other value stops the loop: a PR changes it).
+while the key `pacer` in `[pacing]` of `steering/system/system.toml` is "workflow" (any other value stops the loop: a PR changes it).
 
     python3 tools/pacer.py              # compute K and the lane runs (`usage.fire`), then start them
     python3 tools/pacer.py --dry-run    # print the calls, send nothing
@@ -10,7 +10,7 @@ while the key `pacer` in `[pacing]` of `agent.toml` is "workflow" (any other val
 
 Each scheduled task has an API trigger (a URL and a token, made in the Claude app). The environment gives them:
 `PACER_URL_MAIN` and `PACER_TOKEN_MAIN` for the main task, `PACER_URL_<LANE>` and `PACER_TOKEN_<LANE>` for each lane of
-`weights` in `[pacing]` of `agent.toml`. A lane without a URL gets no runs: its tickets wait.
+`weights` in `[pacing]` of `steering/system/system.toml`. A lane without a URL gets no runs: its tickets wait.
 Exit 1 when a call fails: the workflow run goes red. HTTP 429 is no failure: a task takes at most 30 starts per hour,
 an account 100 API starts per hour (the docs of the scheduled tasks, "Usage and limits"); the next cycle starts the
 runs that the target still misses. No retry: each call that succeeds starts a run, so a retry can start two. When a
