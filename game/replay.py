@@ -398,6 +398,7 @@ class Replay:
         self.stock = {}                         # player -> estimated resources: START + gather steps - costs (#932)
         self.gathered, self.villagers = {}, {}  # player -> resources of the gather steps, trained villagers (#1065)
         self.army, self.lost, self.razed = {}, {}, {}   # player -> military units trained, units lost, buildings lost (#1066)
+        self.troops, self.fallen = {}, {}       # player -> {military unit name: live count, count lost} (#3695)
         self.censused = False                   # a census counted the live units (the base of the units lost)
         self.reached, self.researched = {}, {}  # player -> {age: game time (ms)}, researched technologies (#1067)
         self.vills, self.vhigh = {}, {}         # player -> live villagers (est.), the highest count (#1086)
@@ -405,9 +406,12 @@ class Replay:
         self.samples, self.minute = {}, -1      # player -> [(minute, pop, villagers, military, resources)], last minute (#3446)
         self.eyes = None                        # (x, y, z) of each player; None: not known, each gather step shows (#2761)
         self.queue = None                       # in run() on Paper: the commands that wait for flush() (#2761)
+        import gather                                               # gather -> build -> replay: import it late
         for o in data["objects"]:
             if o["kind"] == "unit" and o.get("player") and not units.animal(o["name"]):
                 self.pop[o["player"]] = self.pop.get(o["player"], 0) + 1
+                if gather.military(o["name"]):
+                    self.troop(o["player"], o["name"])
                 self.counted += [o["uuid"]] * ("uuid" in o)
             if o["kind"] == "unit" and o.get("player") and o["name"].startswith("VILLAGER"):
                 self.villager(o["player"], 1)
@@ -1058,6 +1062,7 @@ class Replay:
         import gather                                               # gather -> build -> replay: import it late
         if gather.military(e["name"]):
             self.army[e["player"]] = self.army.get(e["player"], 0) + 1
+            self.troop(e["player"], e["name"])
         rect = self.home(e) if prefix in ("U", "H") else None
         if rect is None:
             return []
@@ -2271,7 +2276,23 @@ class Replay:
             m = re.search(r"Count: (\d+)", self.game.command(
                 f"execute if entity @e[tag={COUNTED},tag=aoe2mc.p{p},type=minecraft:villager]"))
             self.villager(p, 0, int(m[1]) if m else 0)               # the record has no deaths (#1086)
+        ids = units.type_ids()
+        for p, kept in self.troops.items():
+            for name, was in kept.items():
+                if not was or name not in ids:                      # its last unit died: no command until a spawn
+                    continue
+                m = re.search(r"Count: (\d+)", self.game.command(
+                    f"execute if entity @e[tag={COUNTED},tag=aoe2mc.p{p},tag=aoe2mc.t{ids[name]}]"))
+                n = int(m[1]) if m else 0
+                if self.censused and n < was:
+                    self.fallen.setdefault(p, {})[name] = self.fallen.get(p, {}).get(name, 0) + was - n
+                kept[name] = n
         self.censused = True
+
+    def troop(self, p, name):
+        """One more live military unit of this type for player p (a start unit or a spawn, #3695)."""
+        kept = self.troops.setdefault(p, {})
+        kept[name] = kept.get(name, 0) + 1
 
     def flush(self):
         """Send the commands of the queue in one batch (run.Game.batch): before each wait of run() and each read of
