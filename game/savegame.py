@@ -82,6 +82,7 @@ MAP = (                                                                # gather.
     "trees",
 )
 VICTORY = (                                                            # the victory modes (#2476), pack()
+    "challenge_foes",                                                  # army.py: the enemy units of a battle challenge (#3910)
     "conquest_seen",
     "corruption_at",
     "corruption_time",
