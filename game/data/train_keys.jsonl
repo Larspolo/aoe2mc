@@ -17,6 +17,7 @@
 {"name": "on_research", "text": "The functions (\"module.function\") that run at the research of a technology, with (g, entry): its special effect in its own module, not an if block of train.research.", "issue": 3243}
 {"name": "shares", "text": "A technology that shares the sight of the player with its allies (Antiquity Mode: Writing): before its research the allies do not see for the player, also with \"Shared Exploration\" on. fog.shares.", "issue": 3920}
 {"name": "population", "text": "A technology that changes the population of the units of one building: [the building, the factor]. train.weight.", "issue": 3918}
+{"name": "reach", "text": "A technology that adds conversion range and line of sight in tiles to the monks (Afterlife of Antiquity Mode: priests +3). monk.near, gather.seen.", "issue": 3988}
 {"name": "start_age", "text": "The name of the age before the first age (the line of the first age only): Dark Age, Stone Age. build.AGE_NAMES.", "issue": 3666}
 {"name": "toggle", "text": "A switch of the player with no queue and no cost: the name of a flag of the Gather (off at the start). A click switches it, the item says on or off. train.queue, train.show.", "issue": 3422}
 {"name": "towers", "text": "Guard Tower and Keep: {tower: the tower of its values}, in the research order (file order). build.line.", "issue": 1374}

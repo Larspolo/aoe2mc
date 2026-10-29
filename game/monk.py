@@ -369,14 +369,16 @@ def resist(g, uuid):
 
 def near(g, m, target, pos):
     """True when monk m is in its conversion range of the target: next to a building, ram or trebuchet (TOUCH),
-    else the range of MONKS (and PRINTING more after Block Printing)."""
+    else the range of MONKS (and PRINTING more after Block Printing, and the key "reach" of the techs)."""
     if target in g.forts:
         x0, _, z0, x1, _, z1 = g.forts[target]
         x, _, z = pos[m]
         return math.hypot(max(x0 - x, 0, x - x1 - 1), max(z0 - z, 0, z - z1 - 1)) <= TOUCH
     if any(n in g.enemies[target] for n in NEXT):
         return math.dist(pos[m], pos[target]) <= TOUCH + 1         # to its middle: about 1 block from its side
+    import train                                                   # train imports gather, gather imports this module
     reach = MONKS.get(g.soldiers.get(m), CONVERT) + PRINTING * ("BLOCK_PRINTING" in g.techs)
+    reach += sum(train.value("reach", t, 0) for t in g.techs)     # Afterlife of Antiquity Mode (#3988)
     return math.dist(pos[m], pos[target]) <= reach * g.map.T
 
 
