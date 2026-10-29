@@ -60,7 +60,7 @@ can see which features have an epic: `gh api "repos/Larspolo/aoe2mc/issues?label
 - [x] `play:fog` The explored area and the fog of war: a player sees only what the own units and buildings see (epic #1387)
 - [x] `play:save` Save a game of the game program and load it again (units, resources, queues, ages) (epic #2253)
 - [x] `play:hunt` Hunt and herd: villagers kill deer, lure and kill boars, and herd sheep that the first player who sees them owns (#1058, `game/herd.py`, #2310)
-- [ ] `play:setup` Set up a game before it starts: the starting age, starting resources, population limit, the civilizations and the number of bots
+- [x] `play:setup` Set up a game before it starts: the starting age, starting resources, population limit, the civilizations and the number of bots (epic #2263)
 - [x] `play:scenario` Play a converted scenario in the game program: its objectives, triggers and victory conditions work, the scenario AI players are bots (epic #2538)
 - [x] `play:minimap` A minimap as in AoE2: a held Minecraft map item that shows the own and the seen enemy units and buildings as markers in the player colors, and a click on it sends the selection there (epic #2580)
 - [x] `play:spectate` Spectators on the server of a game: they fly and see all players, without a side, as the AoE2 spectator mode (epic #2897)
@@ -68,22 +68,23 @@ can see which features have an epic: `gh api "repos/Larspolo/aoe2mc/issues?label
 - [x] `play:speed` Pause and game speed of the game program, as the AoE2 pause key and the speed setting: the units, queues and gathering stop and go on (epic #3373)
 - [x] `play:postgame` The statistics at the end of a game of the game program, as the AoE2 achievements screen: military, economy, technology, the time of each age (the recap book, #2660, #2706)
 - [x] `play:taunts` AoE2 taunts: a player types a taunt number (1-105) in the chat, and all players hear its sound and see its text (#3318)
-- [ ] `play:wildlife` Wild predators as in AoE2: wolves, tigers and other predators of the map attack villagers and units near them
+- [x] `play:wildlife` Wild predators as in AoE2: wolves, tigers and other predators of the map attack villagers and units near them (epic #3395)
 - [x] `play:farm-reseed` Farm reseeds as in AoE2: the mill queues farms, and an exhausted farm is built again by its farmer when the player has the wood (#3283)
 - [x] `play:game-modes` The AoE2 game modes in the game setup: Regicide (a king per player), Death Match (large start resources), King of the Hill (hold the monument) and Empire Wars (a running start economy) (#2387, #2452, #2383, #2428)
-- [ ] `play:formations` AoE2 formations for a selected group (line, box, staggered, flank): the units keep their places on the walk, and the slowest unit sets the speed
+- [x] `play:formations` AoE2 formations for a selected group (line, box, staggered, flank): the units keep their places on the walk, and the slowest unit sets the speed (epic #3412)
 - [ ] `play:town-bell` The town bell as in AoE2: a click at the town center sends the villagers into the nearest own buildings, a second click lets them out
-- [ ] `play:delete` Delete an own unit or building as the AoE2 Delete key: the unit dies, the building falls down
+- [x] `play:delete` Delete an own unit or building as the AoE2 Delete key: the unit dies, the building falls down (epic #3450)
 - [x] `play:auto-gather` Villagers go on to work as in AoE2: a villager that builds a lumber camp, mining camp or mill gathers the nearest resource of that kind next, and the builder of a farm farms it (#3271)
-- [ ] `play:co-op` Co-op as in AoE2: two or more Minecraft players control one AoE2 player (one civilization, one stock and population), each with an own selection
-- [ ] `play:unit-sounds` The AoE2 sounds of the units and buildings: a voice line when the player selects a unit and gives an order, the sound of a selected building, the age-up fanfare
+- [x] `play:co-op` Co-op as in AoE2: two or more Minecraft players control one AoE2 player (one civilization, one stock and population), each with an own selection (epic #3485)
+- [x] `play:unit-sounds` The AoE2 sounds of the units and buildings: a voice line when the player selects a unit and gives an order, the sound of a selected building, the age-up fanfare (epic #3498)
 - [ ] `play:campaign` Play a campaign in the game program: its scenarios in order, the next scenario after a victory, the intro and history texts of each scenario
 - [ ] `play:waypoints` Queued orders as in AoE2 (a shift click): a selected group walks to several points in a row, and a villager builds several construction sites one after the other
 - [ ] `play:auto-queue` The AoE2 DE auto-queue: a building trains one unit again and again while the player has the resources and the population, until the player stops it
 - [ ] `play:tech-tree` The AoE2 tech tree screen: the units, buildings and technologies of the own civilization by age and building, and the ones that the civilization does not have
-- [ ] `play:team-chat` The AoE2 chat targets: a chat line to all players, to the allies only or to one player, in the player color (Minecraft `/teammsg` and `/msg`)
+- [x] `play:team-chat` The AoE2 chat targets: a chat line to all players, to the allies only or to one player, in the player color (Minecraft `/teammsg` and `/msg`) (epic #3552)
 - [ ] `play:antiquity` Antiquity Mode of AoE2 DE (Return of Rome): its civilizations, ages (Stone, Tool, Bronze, Iron Age), units and technologies in the game program (owner decision B, #3583)
 - [ ] `play:auto-scout` The AoE2 DE order "Auto Scout": a scout explores the map by itself, walks to the tiles that the player did not see yet, and turns away from the enemies
+- [ ] `play:art-of-war` The AoE2 DE "Art of War" challenges: short training games with one goal and a time limit (early economy, booming, defend against a rush, wall in, micro), a gold, silver or bronze medal by the time
 
 ## 3. Replay a recorded game in Minecraft (`game/replay.py`, `aoe2mc.read_timeline`)
 
@@ -110,6 +111,9 @@ can see which features have an epic: `gh api "repos/Larspolo/aoe2mc/issues?label
 - [x] `replay:auto-camera` An automatic camera of the live replay, as a caster view: the spectator view moves by itself to the place with the most fights or the most new buildings (epic #3365)
 - [ ] `replay:graphs` Live graphs of the replay, as the statistics of the AoE2 DE replay overlay: the military, the economy and the population of each player over the game time
 - [ ] `replay:army` The army of each player in the live replay, as the caster tool CaptureAge shows it: the number of units of each type, the units in training and the units lost
+- [ ] `replay:eco` The villagers of each player on food, wood, gold and stone and the idle villagers in the live replay, as the eco panel of CaptureAge
+- [ ] `replay:upgrades` The researched upgrades of each player in the live replay (blacksmith, economy, unit lines), as the upgrade row of CaptureAge: an upgrade shows when its research ends
+- [ ] `replay:apm` The actions per minute of each player from the commands of the record, as CaptureAge shows them: a value in the score panel and a line in the summary
 
 ## 4. The agent system (`.claude/skills/`, `tools/`, `.github/workflows/`)
 
