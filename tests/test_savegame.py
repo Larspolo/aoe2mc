@@ -16,6 +16,7 @@ def played():
     g.spare, g.seconds = {"food": 0.25}, {"gold": 0.5}
     g.techs.update({"FEUDAL_AGE", "LOOM", "DOUBLE_BIT_AXE"})
     g.repeats, g.pop = {"LOOM": 2}, 7
+    g.clock = lambda: g.t0 + 60                     # a fixed game time: the save holds it (#3377), main red in #3601
     return server, g
 
 
