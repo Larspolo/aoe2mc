@@ -205,6 +205,7 @@ def gate(g, order, ref):
 # one sentence of the docstring and in one `if` line conflicted in each trigger ticket, 2026-10-28).
 ORDER_KINDS = {
     "builds": r'"build (\d+) (\w+) (-?\d+) (-?\d+) (-?\d+) (-?\d+)"',   # "Build Object" (#2863): finish()
+    "damages": r'"damage (\d+) (\w+) (-?\d+) (-?\d+) (-?\d+) (-?\d+) (-?\d+)"',   # "Damage Object" (#3776): damage()
     "found": r'"(found|create) (\d+) (\w+) (\d+) (\d+)"',    # "Place Foundation" (#2825), "Create Object" (#2911): foundation()
     "gates": r'"(lock|unlock) (\d+)"',                         # "Lock Gate", "Unlock Gate" (#2762): gate()
     "owners": r'"owner (aoe_order[\w.]+) (\d+) (-?\d+)"',   # "Change Ownership" (#2998): owner()
@@ -242,6 +243,8 @@ def orders(g):
         owner(g, tag, int(new))
     for player, name, *area in m["builds"]:
         finish(g, int(player), name, [int(v) for v in area])
+    for player, name, *area, q in m["damages"]:
+        damage(g, int(player), name, [int(v) for v in area], int(q))
     for player, which, x, y, area in m["rallies"]:
         rally(g, int(player), which, (int(x), int(y)), [int(v) for v in area.split()])
     patrols = vars(g).setdefault("patrols", [])
@@ -386,6 +389,32 @@ def finish(g, player, name, area):
             tx, ty = (x0 + x1) // 2 // T, (z0 + z1) // 2 // T
             if area[0] < 0 or area[0] <= tx <= area[2] and area[1] <= ty <= area[3]:
                 build.rise(x, site, float("inf"))
+
+
+def damage(g, player, name, area, q):
+    """A "Damage Object" order of a building type (aoe2mc.damage_lines, #3776): each building name of the player with
+    its middle tile in the area [x1, y1, x2, y2] (-1: the whole map) loses q hit points (the score aoe_hp of its target
+    entity, repair.hp), a negative q heals it up to its full hit points (repair.full). At 0 it falls as the plugin
+    razes it (`aoe destroy`: the fall of combat.building), so the score, the recap and "Destroy Object" see it."""
+    import build, repair                                               # build imports gather
+    T = g.map.T
+    rects = {(x0, x1, z0, z1) for o in g.data.get("objects", ()) if o["kind"] == "building" and "footprint" in o
+             and o["name"] == name and o["player"] == player for x0, z0, x1, z1 in [o["footprint"]]}
+    rects |= {tuple(s["footprint"]) for x in build.sides(g) for s in x.sites
+              if s.get("done") and s["name"] == name and s["player"] == player}
+    for rect in sorted(rects):
+        tx, ty = (rect[0] + rect[1]) // 2 // T, (rect[2] + rect[3]) // 2 // T
+        if area[0] >= 0 and not (area[0] <= tx <= area[2] and area[1] <= ty <= area[3]):
+            continue
+        if (now := repair.hp(g, rect)) is None:                        # fallen, or no target entity
+            continue
+        uuid, new = repair.uuid(rect), now - q if q > 0 else min(now - q, max(now, repair.full(g, name, player, rect)))
+        if new <= 0:
+            g.command(f"aoe destroy {uuid}")
+            vars(g).setdefault("sieged", set()).add(uuid)              # Gather.fall frees the footprint
+            continue
+        g.command(f"scoreboard players set {uuid} aoe_hp {new}")
+        g.command(f"aoe label {uuid}")
 
 
 def rally(g, player, which, tile, area):
