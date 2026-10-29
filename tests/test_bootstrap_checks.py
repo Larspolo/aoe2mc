@@ -16,7 +16,9 @@ def test_lint_and_fast_tests_pass_after_the_bootstrap(tmp_path):
         subprocess.run(cmd, cwd=tmp_path, check=True)
     for cmd in ([sys.executable, "-m", "ruff", "check", "."], [sys.executable, "-m", "pytest", "-q", "-p", "no:cacheprovider"]):
         r = subprocess.run(cmd, cwd=tmp_path, capture_output=True, text=True, timeout=120)
-        assert r.returncode == 0, (cmd, r.stdout[-2000:], r.stderr[-2000:])
+        assert r.returncode == 0, (cmd, r.stdout[-2000:], r.stderr[-2000:],
+                                   "the copy has only the generic tools: a generic tool must import a project tool "
+                                   "inside its try (#3560)")
 
 
 def test_the_starts_have_what_the_hook_and_ci_read(tmp_path):
