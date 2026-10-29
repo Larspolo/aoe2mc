@@ -186,6 +186,33 @@ The Granary researches the walls and towers of each age (page "Granary (Age of E
 Tower (Tool Age), Medium Wall and Sentry Tower (Bronze Age), Fortified Wall, Guard Tower and Ballista Tower (Iron
 Age, the Ballista Tower after Ballistics). Their costs are on the page of each wall and tower.
 
+### 1.6 The civilization bonuses that are not done yet (#3667)
+
+`game/data/antiquity/civs.jsonl` has the 17 civilizations with the bonus texts of the wiki. These bonuses work: the
+start resources (Carthaginians, Palmyrans, Shang), the gather rates and loads (Babylonians, Egyptians, Lac Viet,
+Minoans, Palmyrans, Persians, Phoenicians), the villager values (Assyrians, Palmyrans, Shang, Sumerians), the archer
+values (Assyrians, Hittites), the Greek town centers, the Lac Viet military train rate and the Yamato mounted cost.
+#3827 does the others; they need the buildings of #3668 or the units of #3669:
+
+- Assyrians: siege upgrades -50 %.
+- Babylonians: market technologies -30 %, walls and towers +60 % hit points, priests, chariots.
+- Carthaginians: Academy units and elephants +25 % hit points, Fire Galleys, transport ships, free Nobility.
+- Choson: the swordsmen hit points, Storage Pit technologies, tower range, priests.
+- Egyptians: farms -20 %, chariots +33 % hit points, priest range.
+- Greeks: Academy units, ships, free Polytheism and Astrology.
+- Hittites: the catapult hit points, the warship range, the Wheel.
+- Lac Viet: the armor of the Archery Range units and Ballistae.
+- Macedonians: line of sight, Academy armor, Siege Workshop costs, conversion.
+- Minoans: ship costs, the Improved Bowman range.
+- Palmyrans: camel speed, tribute, trade.
+- Persians: elephant speed, the Scout Ship rate, wall costs.
+- Phoenicians: elephant costs, the Catapult Trireme rate, docks.
+- Romans: building and tower costs, the swordsman rate, Ballista range.
+- Shang: wall hit points, the cavalry rate.
+- Sumerians: the catapult rate, farm food, camels.
+- Yamato: fishing boats, ship hit points, Stable and Archery Range upgrades.
+- All: the team bonuses (only their text), and the key `"missing"` (the missing units and technologies).
+
 ## 2. The data structure of a second rule set
 
 ### 2.1 The present structure
