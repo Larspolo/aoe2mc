@@ -1174,13 +1174,16 @@ class Replay:
         return None
 
     def far(self, e):
-        """True when the target unit of ORDER e stands more than FAR tiles from the tile of e in the replay: the
-        record has the target at the tile, so the units walk to the tile (#2635)."""
+        """True when the target unit of ORDER e stands more than FAR tiles from the tile of e and from each unit of e
+        in the replay: the record has the target at the tile, so the units walk to the tile (#2635). A unit near the
+        target attacks it: the replay place of a target is often more than FAR tiles off its tile (#3636)."""
         u, tile = self.units.get(e.get("target")), e.get("tile")
         if u is None or tile is None:
             return False
         x, _, z = self.at(u, e["time"])
-        return math.hypot(x / self.T - tile[0], z / self.T - tile[1]) > FAR
+        places = [(p[0] / self.T, p[2] / self.T) for i in e.get("objects") or () if (v := self.units.get(i))
+                  for p in [self.at(v, e["time"])]]
+        return all(math.hypot(x / self.T - a, z / self.T - b) > FAR for a, b in [tile, *places])
 
     def target_mark(self, e):
         """The red order marker at the target of an attack ORDER, as the game program shows it (#796, #845): a unit
