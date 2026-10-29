@@ -89,6 +89,7 @@ VICTORY = (                                                            # the vic
     "defeated",
     "hill",
     "monument",
+    "siege_target",                                                    # challenge.besiege: the target of the enemy castle (#3908)
     "towns",
 )
 SCORE = (                                                              # Gather: the counts of score.py (#2475)
