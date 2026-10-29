@@ -550,6 +550,7 @@ CREATE_OBJECT = (               # the attributes of create_object that objects()
     "find_closest",                 # the free tile nearest to the origin of the land, first in scan order (#4135)
     "find_closest_to_map_center",   # the free tile nearest to the map middle (#4135)
     "find_closest_to_map_edge",     # the free tile nearest to a map edge (#4135)
+    "generate_for_first_land_only", # only the first land of set_place_for_every_player (#4138)
     "group_placement_radius",       # tiles of a loose group from its first object, default 3 (#3856)
     "group_variance",               # ± objects in each group (#3856)
     "layer_to_place_on",            # only the tiles of this land layer (#4132, `layer`: the land layer of each tile)
@@ -568,6 +569,7 @@ CREATE_OBJECT = (               # the attributes of create_object that objects()
     "set_scaling_to_map_size",      # scale the groups, else the objects: a 100 × 100 map is the base (#3857)
     "set_scaling_to_player_number", # scale the groups, else the objects, by the player count (#3857)
     "set_tight_grouping",           # each next object on a free tile next to an object of the group (#3856)
+    "temp_min_distance_group_placement",  # tiles between the groups of this command only (#4138)
     "terrain_to_place_on",          # only on this terrain (#3857)
 )
 
@@ -575,7 +577,9 @@ CREATE_OBJECT = (               # the attributes of create_object that objects()
 def objects(cmds, consts, terrain, starts, rng, warn, owner=None, ridges=(), layer=None):
     """The objects of the create_object commands of <OBJECTS_GENERATION> (#3855), with the attributes of
     `CREATE_OBJECT`: number_of_objects on random free tiles, in groups with number_of_groups (#3856).
-    Never on water (only a fish or a ship), a forest, a cliff or another object; an object with no free tile is missing."""
+    Never on water (only a fish or a ship), a forest, a cliff or another object; an object with no free tile is missing.
+    temp_min_distance_group_placement keeps the groups of one command apart; later commands do not avoid them (#4138).
+    generate_for_first_land_only gives the objects of set_place_for_every_player to the first land only (#4138)."""
     import aoe2mc
     kinds = aoe2mc.object_kinds(old=False)
     n, out = terrain.shape[0], []
@@ -604,6 +608,8 @@ def objects(cmds, consts, terrain, starts, rng, warn, owner=None, ridges=(), lay
         water = any(w in base for w in ("FISH", "SHIP", "BOAT"))
         owners = ([(st, 0 if "set_gaia_object_only" in attrs else st["player"]) for st in starts]
                   if "set_place_for_every_player" in attrs else [(None, 0)])
+        if "generate_for_first_land_only" in attrs:
+            owners = owners[:1]
         groups = value(attrs["number_of_groups"][0], consts) if "number_of_groups" in attrs else None
         vary = value(attrs["group_variance"][0], consts) if "group_variance" in attrs else 0
         radius = value(attrs["group_placement_radius"][0], consts) if "group_placement_radius" in attrs else 3
@@ -619,6 +625,8 @@ def objects(cmds, consts, terrain, starts, rng, warn, owner=None, ridges=(), lay
         if "layer_to_place_on" in attrs and layer is not None:
             ground = ground & (layer == value(attrs["layer_to_place_on"][0], consts))
         gap = value(attrs["min_distance_group_placement"][0], consts) if "min_distance_group_placement" in attrs else 0
+        temp = value(attrs["temp_min_distance_group_placement"][0], consts) if "temp_min_distance_group_placement" in attrs else 0
+        mine = np.zeros((n, n), bool)                  # the tiles of the groups of this command (temp_min_distance_group_placement)
         zones = value(attrs["max_distance_to_other_zones"][0], consts) if "max_distance_to_other_zones" in attrs else 0
         forest = np.isin(terrain, list(FOREST_TREES))
         # the filters of the ground: one each, in alphabetical order (#4224)
@@ -651,7 +659,7 @@ def objects(cmds, consts, terrain, starts, rng, warn, owner=None, ridges=(), lay
                    np.minimum(np.minimum(x, y), np.minimum(n - 1 - x, n - 1 - y)) if "find_closest_to_map_edge" in attrs else None)
             sizes = [1] * count if groups is None else [max(1, count + int(rng.integers(-vary, vary + 1))) for _ in range(groups)]
             for size in sizes:
-                free = ~used & place & ~dilate(placed, gap)
+                free = ~used & place & ~dilate(placed, gap) & ~(dilate(mine, temp) if temp else mine)
                 spots = np.argwhere((dist >= lo) & (dist <= hi) & free)
                 if not len(spots):
                     warn(f"create_object {args[0]}: no free tile")
@@ -672,6 +680,7 @@ def objects(cmds, consts, terrain, starts, rng, warn, owner=None, ridges=(), lay
                     near = [tuple(int(v) for v in t) for t in near if tuple(t) != mid]
                     cells = [mid] + [near[i] for i in rng.permutation(len(near))[:size - 1]]
                 for tx, ty in cells:
+                    mine[tx, ty] = True
                     name = base
                     r = 3 if kind == "B" else 1                      # a building: its tile is the corner of its middle
                     used[max(0, tx - r):tx + r, max(0, ty - r):ty + r] = True
