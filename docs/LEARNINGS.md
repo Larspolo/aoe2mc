@@ -55,3 +55,4 @@ and `tests/test_learnings.py` fails above 80 lines (#1698).
 - A list of AoE2 building names in code (`("LUMBER_CAMP", "MILL")`) fails `test_game_names_in_code.py`: take them from the data, for example the `building` of the rows with a `line` key (#3790).
 - A new `convert()` keyword must not be named `players`: `convert` unpacks its own `players` (the player dict), and ruff reports F821 at the call (#3945: `nplayers`).
 - A "Damage Object" effect with no type and amount 0: `damage_lines` reads `e["object"][1]` on the building path, so `object` must be a tuple, not None (#4073 test: `(None, None)`).
+- A test that lists the castle items of the default civilization (`tests/test_trebuchet.py`) breaks when a unique technology of that civilization joins the list: filter the new name, do not change the civilization (Franks have their own units, #4103).
