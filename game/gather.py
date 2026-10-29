@@ -1379,6 +1379,10 @@ class Gather:
 
     def click(self, name):
         self.person = name                                             # its own selection (#3486)
+        if getattr(diplomacy.main(self), "paused", False):             # no orders and menus while paused (#3376)
+            self.looks.pop(name, None), self.grouping.pop(name, None), self.wands.discard(name)
+            self.command(f'title {name} actionbar "The game is paused."')
+            return
         if (n := self.grouping.pop(name, None)) is not None:          # a group item (#779): no ray
             self.group(name, *n)
             return
