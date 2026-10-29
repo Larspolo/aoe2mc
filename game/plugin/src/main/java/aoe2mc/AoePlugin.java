@@ -2375,6 +2375,9 @@ public final class AoePlugin extends JavaPlugin implements Listener {
      *  NO_TARGET on b. */
     private static boolean calm(Entity a, Entity b) {
         String s = side(b);         // no side (the crew of a siege unit, #1820): Set.of().contains(null) throws
+        if (side(a) == null && s == null) {     // a predator of Gaia attacks no animal and no Gaia unit (#3397)
+            return true;
+        }
         return sameTeam(a, b) || s != null && NEUTRAL.getOrDefault(side(a), Set.of()).contains(s)
                 || b.getScoreboardTags().contains(NO_TARGET);       // "Disable Unit Targeting" of a trigger (#2826)
     }
