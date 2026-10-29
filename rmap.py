@@ -276,7 +276,8 @@ def route(weight, a, b):
 
 def connections(terrain, origins, cmds, consts, rng, warn):
     """<CONNECTION_GENERATION>: a path between each two player origins; replace_terrain changes the terrain on it,
-    and terrain_size widens it on the tiles of a terrain (radius ± variance). terrain_cost 0: never on a path."""
+    and terrain_size widens it on the tiles of a terrain (radius ± variance). terrain_cost 0: never on a path.
+    default_terrain_replacement: the terrain of the other path tiles. accumulate_connections has no source yet (#3870)."""
     n = len(terrain)
     for cmd, args, attrs in cmds:
         if cmd != "create_connect_all_players_land":
@@ -299,7 +300,9 @@ def connections(terrain, origins, cmds, consts, rng, warn):
         old = terrain.copy()
         for a, b in each("replace_terrain"):
             terrain[wide & (old == a)] = b
-        for a in set(attrs) - {"replace_terrain", "terrain_cost", "terrain_size"}:
+        for d, in each("default_terrain_replacement"):                # the path tiles of no replace_terrain (#3870)
+            terrain[wide & ~np.isin(old, [a for a, _ in each("replace_terrain")])] = d
+        for a in set(attrs) - {"default_terrain_replacement", "replace_terrain", "terrain_cost", "terrain_size"}:
             warn(f"{cmd}: {a} is not read yet")
 
 
