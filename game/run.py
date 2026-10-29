@@ -891,10 +891,25 @@ def ctrl_c():
         signal.signal(signal.SIGBREAK, signal.default_int_handler)
 
 
+def campaign(folder, number=None):
+    """The folder of a converted campaign (campaign.json, #3505) -> (world folder, name, "Scenario N: <name>") of
+    scenario N, default the first converted one (#3506). A wrong or not converted N stops with the open ones."""
+    with open(os.path.join(folder, "campaign.json"), encoding="utf-8") as f:
+        index = json.load(f)
+    open_ = [s for s in index["scenarios"] if s.get("converted", True)]
+    pick = next((s for s in open_ if number is None or s["number"] == number), None)
+    if pick is None:
+        sys.exit(f"--scenario {number}: no converted scenario {number} in {index['name']}. Open scenarios: "
+                 + ", ".join(f"{s['number']} ({s['name']})" for s in open_))
+    return os.path.join(folder, pick["world"]), index["name"], f"Scenario {pick['number']}: {pick['name']}"
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0].strip(),
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("world")
+    ap.add_argument("--scenario", type=int, metavar="N", help="a campaign folder (campaign.json): play its scenario N "
+                    "(default: the first one) in the scenario mode")
     ap.add_argument("--version", default=mc_check.DEFAULT_VERSION, help="Minecraft version of the world")
     ap.add_argument("--server", choices=["paper", "vanilla"], default="paper", help="server program (default: Paper)")
     ap.add_argument("--bench", type=int, metavar="N", help="send N commands, print the commands per second, stop")
@@ -991,6 +1006,10 @@ def main(argv=None):
     import train
     if min(train.STARTS[a.age]["ages"], 3) > train.STARTS[a.end_age]["ages"]:   # post-imperial is the Imperial Age
         sys.exit(f"--age {a.age} is after --end-age {a.end_age}: the game must start in or before its last age")
+    titles = None
+    if not os.path.isfile(os.path.join(a.world, "level.dat")) and os.path.isfile(os.path.join(a.world, "campaign.json")):
+        a.world, *titles = campaign(a.world, a.scenario)
+        a.mode = "scenario"
     if not os.path.isfile(os.path.join(a.world, "level.dat")):
         sys.exit(f"no level.dat in {a.world}")
     teams = None
@@ -1010,6 +1029,9 @@ def main(argv=None):
             print(f"{bench(game, a.bench):.0f} commands per second through RCON")
             return
         commands = console(game)                     # type commands at any time (#1777)
+        if titles:                                   # the campaign and the scenario name (#3506)
+            game.command(f"title @a subtitle {json.dumps(titles[1])}")
+            game.command(f"title @a title {json.dumps(titles[0])}")
         if a.replay:                                 # after the end the player can look around (#978)
             replay(game, a.world, a.speed, a.start, a.follow, view=a.view or None, replay_file=a.replay_file,
                    camera=a.camera == "auto")
