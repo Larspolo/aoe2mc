@@ -4,6 +4,7 @@
 {"name": "aoe2_name", "text": "The AoE2 name of a unit with no name of the scenario parser (the record of Record Game writes its AoE2 type): TRADE_CART_EMPTY, WAR_CHARIOT_FOCUS_FIRE, RATHA_RANGED, ELITE_RATHA_RANGED. record.queued.", "issue": 3045}
 {"name": "arrows", "text": "An upgrade of one building (one_building): the arrows that the building shoots more, also with no garrison. garrison.arrows_command.", "issue": 2497}
 {"name": "attack_aura", "text": "An upgrade of one building (one_building): the own military units within \"range\" tiles of the building attack \"rate\" times as fast, {\"rate\", \"range\"}. train.haste.", "issue": 2497}
+{"name": "build_rate", "text": "A technology that makes the builders of the player work faster: the factor of the work per second (Antiquity Architecture). build.rise.", "issue": 3917}
 {"name": "breach", "text": "true: after this technology the villagers attack enemy walls, gates and towers (Siegecraft of Antiquity Mode). gather.breach.", "issue": 3916}
 {"name": "civ", "text": "The civilization of a unique technology: only its castle researches it (civs.MISSING of the others).", "issue": 2021}
 {"name": "doctrine", "text": "A switch of the Recruitment Doctrines of its building (Macedonians): no queue and no cost, the next doctrine of the civ key \"doctrines\". train.DOCTRINES, train.switch.", "issue": 2483}
