@@ -464,6 +464,11 @@ def read_scenario(path):
                                                getattr(e, "color_mood", None) in set(ColorMood) else {}))
                                        for e in (in_order(t.effects, t.effect_order) if shown else t.effects)])
                          for t in triggers]
+    tiles = {u.reference_id: [int(u.x), int(u.y)] for us in scn.unit_manager.units for u in us}
+    for c in (c for t in texts["triggers"] for c in t["conditions"]):   # the tile of a building: no entity (#3782)
+        if c["type"] in (BRING_OBJECT_TO_AREA, BRING_OBJECT_TO_OBJECT):
+            c["tile"] = None if c.get("unit") else tiles.get(c.get("ref"))
+            c["next_tile"] = None if c.get("next_unit", True) else tiles.get(c.get("next"))
     mood = mm.map_color_mood                 # a ColorMood, or a string that the parser does not know (#1594)
     texts["mood"] = (getattr(mood, "name", None) or str(mood or "DEFAULT")).upper()
     om = scn.option_manager                  # the tab "Global Victory" for the scenario mode (#2566, run.VICTORIES)
@@ -3208,12 +3213,16 @@ def damage_lines(e, c):
     """The commands of "Damage Object" (#2571): a `damage` of each unit of the effect (effect_units) by its amount.
     The amount is in AoE2 hit points: the game program gives each unit max_health = its AoE2 hit points
     (combat.stats_command); a vanilla world keeps the health of the mob. A negative amount heals, as in AoE2: the
-    commands of "Heal Object" (heal_commands, #2907)."""
+    commands of "Heal Object" (heal_commands, #2907). A building type: the order "damage <player> <building> <x1> <y1>
+    <x2> <y2> <amount>" (-1: the whole map) for game/scenario.py damage (#3776)."""
     q, stats = e.get("quantity") or 0, c.stats
     found = effect_units(e, c.T) if q else None
-    if found is None:
-        stats["damage (building, not supported yet)" if q else "damage (no amount)"] += 1
-        return []
+    if found is None:                                                  # a building: an order (#3776)
+        stats["damage (building)" if q else "damage (no amount)"] += 1
+        a, name = e.get("area", [-1] * 4), e["object"][1]
+        x0, y0, x1, y1 = (min(a[0], a[2]), min(a[1], a[3]), max(a[0], a[2]), max(a[1], a[3])) if min(a) >= 0 else [-1] * 4
+        return [f'data modify storage aoe2mc:orders list append value "damage {e["player"]} {name} {x0} {y0} {x1} {y1} {q}"'] * \
+            bool(q and e["player"] >= 0)
     stats["damage"] += 1                                               # Gaia: the tag aoe2mc.p0 (effect_units)
     if q < 0:
         return heal_commands(found, -q, c)
@@ -4664,8 +4673,10 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
         chance = (TRIGGER_CHANCE, False) in kinds
         rest = kinds - {(TRIGGER_CHANCE, False)}
         if any(c["type"] in OBJECT_TESTS and (c.get("ref", -1) is None or c.get("ref", -1) < 0
-                                              or not c.get("unit") and not fallen_building(c) and not owned_building(c))
-               or c["type"] == BRING_OBJECT_TO_OBJECT and (c.get("next") is None or c["next"] < 0 or not c.get("next_unit"))
+                                              or not c.get("unit") and not fallen_building(c) and not owned_building(c)
+                                              and not attacked_building(c) and not brought_building(c, T))
+               or c["type"] == BRING_OBJECT_TO_OBJECT and (c.get("next") is None or c["next"] < 0
+                                                           or not c.get("next_unit") and not brought_building(c, T))
                for c in conds):            # no object, or a building: blocks, no entity (but #2910, #2940: its score)
             stats["object condition (not an entity, not supported yet)"] += t["enabled"]
             continue
@@ -4730,9 +4741,17 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
                 tests.append(f"{'unless' if c['inverted'] else 'if'} score #f{c['ref']} aoe_fallen matches 1..")
                 unless.append(f"{'if' if c['inverted'] else 'unless'} score #f{c['ref']} aoe_fallen matches 1..")
                 continue
+            if attacked_building(c):                                   # a building that is hit: its score (#3775)
+                tests.append(f"{'unless' if c['inverted'] else 'if'} score #h{c['ref']} aoe_hit matches 1")
+                unless.append(f"{'if' if c['inverted'] else 'unless'} score #h{c['ref']} aoe_hit matches 1")
+                continue
             if owned_building(c):                                      # the owner of a building: its score (#2940)
                 tests.append(f"{'unless' if c['inverted'] else 'if'} score #o{c['ref']} aoe_owner matches {c['player']}")
                 unless.append(f"{'if' if c['inverted'] else 'unless'} score #o{c['ref']} aoe_owner matches {c['player']}")
+                continue
+            if test := brought_building(c, T):                         # a building: its tile and its score (#3782)
+                tests.append(test[c["inverted"]])
+                unless.append(test[not c["inverted"]])
                 continue
             if c["type"] in SCORE_TESTS:                               # a score of the world or the game
                 test = SCORE_TESTS[c["type"]](c)
@@ -4844,6 +4863,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
             "aoe_difficulty",
             "aoe_fallen",
             "aoe_gar",
+            "aoe_hit",
             "aoe_lost",
             "aoe_owner",
             "aoe_seen",
@@ -4900,11 +4920,47 @@ def fallen_building(c):
     return c["type"] == DESTROY_OBJECT and not c.get("unit")
 
 
+def brought_building(c, T):
+    """The tests (holds, does not hold) of "Bring Object to Area" or "Bring Object to Object" with a building (#3782),
+    or None. A building does not move: in the area, the test is "it stands" (its score #f<ref> of aoe_fallen, #2910),
+    else a score that is never set. Next to an object: the other unit in the box of the tiles around its tile."""
+    stands = "unless score #f{0} aoe_fallen matches 1.."
+    if c["type"] == BRING_OBJECT_TO_AREA and not c.get("unit") and c.get("tile") and min(c.get("area", [-1])) >= 0:
+        (x, y), (x1, y1, x2, y2) = c["tile"], c["area"]
+        if min(x1, x2) <= x <= max(x1, x2) and min(y1, y2) <= y <= max(y1, y2):
+            return stands.format(c["ref"]), f"if score #f{c['ref']} aoe_fallen matches 1.."
+        return "if score #never aoe_trig matches 1", "unless score #never aoe_trig matches 1"
+    if c["type"] != BRING_OBJECT_TO_OBJECT or c.get("next") is None or c["next"] < 0 or c.get("ref", -1) < 0:
+        return None
+    if c.get("unit") and not c.get("next_unit") and c.get("next_tile"):
+        building, tile, other = c["next"], c["next_tile"], c["ref"]
+    elif not c.get("unit") and c.get("next_unit") and c.get("tile"):
+        building, tile, other = c["ref"], c["tile"], c["next"]
+    else:
+        return None
+    at = f"positioned {(tile[0] - 1) * T} {MIN_Y} {(tile[1] - 1) * T}"
+    box = f"@e[tag=aoe2mc.r{other},dx={3 * T - 1},dy={HEIGHT - 1},dz={3 * T - 1}]"
+    # does not hold: the unit is not near (a fallen building with the unit near does not reset a looping trigger)
+    return f"{stands.format(building)} {at} if entity {box}", f"{at} unless entity {box}"
+
+
 def fallen_list(triggers):
     """The refs of the "Destroy Object" conditions of buildings that the tick function of trigger_files tests, for
     aoe2mc.json "fallen" (#2910): the scenario mode of the game program sets their score when the building falls."""
     tick = trigger_files(triggers)[1].get("data/aoe2mc/function/tick.mcfunction", "")
     return sorted({int(r) for r in re.findall(r"#f(\d+) aoe_fallen ", tick)})
+
+
+def attacked_building(c):
+    """The "Object Attacked" condition of a building (#3775): the score #h<ref> of aoe_hit, not the tag of an entity."""
+    return c["type"] == OBJECT_ATTACKED and not c.get("unit")
+
+
+def attacked_list(triggers):
+    """The refs of the "Object Attacked" conditions of buildings that the tick function of trigger_files tests, for
+    aoe2mc.json "attacked" (#3775): the scenario mode of the game program sets their score when the hit points fall."""
+    tick = trigger_files(triggers)[1].get("data/aoe2mc/function/tick.mcfunction", "")
+    return sorted({int(r) for r in re.findall(r"#h(\d+) aoe_hit ", tick)})
 
 
 def owned_building(c):
@@ -4938,6 +4994,7 @@ def visible_list(triggers):
 # list is one line here, in alphabetical order (#2832): no new keyword of write_objects.
 TRIGGER_LISTS = {
     "actions": action_list,                                     # the units of aoe_action (#2867)
+    "attacked": attacked_list,                                  # the buildings of aoe_hit (#3775)
     "fallen": fallen_list,                                      # the buildings of aoe_fallen (#2910)
     "owners": owner_list,                                       # the buildings of aoe_owner (#2940)
     "research": research_list,                                  # the "Research Technology" effects (#2577)
