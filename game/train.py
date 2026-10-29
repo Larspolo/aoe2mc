@@ -1155,7 +1155,11 @@ def limit(g):
     """The population limit: 5 per complete own town center and house, 20 per castle (civs.HOUSING: other values of
     a civilization, #2118), at most max_pop()."""
     own = civs.HOUSING.get(civs.civ(g), {})
-    return min(max_pop(g), sum(own.get(n, HOUSING.get(n, 0)) for n in owned(g)))
+    factor = {}                                                        # Urbanization: the houses give double (#3919)
+    for t in getattr(g, "techs", ()):
+        for n, f in value("housing_factor", t, {}).items():
+            factor[n] = factor.get(n, 1) * f
+    return min(max_pop(g), sum(own.get(n, HOUSING.get(n, 0)) * factor.get(n, 1) for n in owned(g)))
 
 
 def max_pop(g):
