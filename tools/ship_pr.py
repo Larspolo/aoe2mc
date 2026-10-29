@@ -10,7 +10,8 @@ Steps: `git commit -F MSG.txt` of the staged files (without `--message`: the com
 the tests (the test files of the branch and the test files that import its changed modules, never the full
 suite: the quick CI runs it, owner #4187; `--tested`: you ran them on this tree), `claim.py N --guard` and the push (`merge_main.push`), the PR (a new
 one with `Closes #N` in its body; or the open PR of the branch), and `mergeable_state` (`dirty`: run
-`python3 tools/merge_main.py --push N`). Exit 0: shipped. Exit 2: ruff or a test fails (nothing pushed). Exit 3: the
+`python3 tools/merge_main.py --push N`). Exit 0: shipped. Exit 2: ruff or a test fails, or a change of data
+files only adds a test (`docs/extend.md`; nothing pushed). Exit 3: the
 guard or the push fails (do not push by hand). Exit 4: no commit to ship, or the PR call fails.
 """
 import argparse
@@ -27,10 +28,19 @@ import merge_main  # noqa: E402
 from agent_config import CONFIG  # noqa: E402
 
 push = merge_main.push
+DATA = ("data/", "game/data/", "tools/mcdata/")      # data files: a change there needs no test (owner, 2026-10-29)
 
 
 def git(*args):
     return subprocess.run(["git", *args], capture_output=True, text=True)
+
+
+def data_only_tests(changed):
+    """The test files of a change that else changes only data files and docs, or []. Such a test checks the content of
+    the data: a change of the data must not make a test fail (owner, 2026-10-29, #4242)."""
+    tests = [f for f in changed if f.startswith("tests/")]
+    rest = [f for f in changed if not f.startswith("tests/") and not f.endswith(".md")]
+    return tests if tests and rest and all(f.startswith(DATA) for f in rest) else []
 
 
 def checks():
@@ -92,6 +102,10 @@ def main(argv=None):
         return 4
     owner = CONFIG["repo"].split("/")[0]
     pr = next(iter(dashboard.api(f"pulls?head={owner}:{branch}&state=open")), None)
+    changed = git("diff", "--name-only", f"origin/{CONFIG['branch']}...HEAD").stdout.split()
+    if bad := data_only_tests(changed):                  # also with --tested
+        print(f"a change of data files only must not add or change tests: remove {' '.join(bad)} (docs/extend.md)")
+        return 2
     if not a.tested and not checks():
         return 2
     if not push(a.number):

@@ -139,6 +139,12 @@ def line_account(line):
     return m[1] if m else first_account()
 
 
+def claim_account(subject):
+    """The Claude account of a claim or beat message (` account NAME` before the lane, #4236), else the first account."""
+    m = re.search(r" account (\S+)", subject)
+    return m[1] if m else first_account()
+
+
 def usage_lines(comments, account=None):
     """The `Usage:` lines of the comments; with `account`, only the lines of that account: each account has its own
     quota windows, so a pair of lines of two accounts gives no burn (#4236)."""
@@ -435,9 +441,9 @@ def count_beating(lines, now, minutes=25):
     return sum(count_lanes(lines, now, minutes).values())
 
 
-def count_lanes(lines, now, minutes=25):
+def count_lanes(lines, now, minutes=25, account=None):
     """{lane: beating claims}: the lane is the ` lane NAME` at the end of the last claim or beat message, else
-    "opus" (#1727)."""
+    "opus" (#1727). account: only the claims of that Claude account (` account NAME`; none: the first account, #4237)."""
     top = {}
     for line in lines:
         slot, t, subject = (line.split(" ", 2) + [""])[:3]
@@ -449,7 +455,7 @@ def count_lanes(lines, now, minutes=25):
     cut = now.timestamp() - minutes * 60
     out = {}
     for _, t, s in top.values():
-        if t >= cut and not s.startswith("Release"):
+        if t >= cut and not s.startswith("Release") and (account is None or claim_account(s) == account):
             name = re.search(r" lane (\w+)$", s)
             out[name[1] if name else "opus"] = out.get(name[1] if name else "opus", 0) + 1
     return out

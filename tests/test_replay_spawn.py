@@ -42,7 +42,7 @@ def test_a_queue_of_two_gives_two_units_one_after_the_other():
     (k1, x1, y1, z1), (k2, x2, y2, z2) = summons(game.sent)
     assert k1 == k2 == "minecraft:villager" and y1 == y2 == 70
     assert z1 == z2 == 24.5 and (x1, z1) != (x2, z2) and 8 <= x1 < 24     # in front of the town center (south side)
-    first = next(c for c in game.sent if replay.PANEL not in c and replay.ARMY not in c and replay.ORDER not in c)  # not the production (#2811) or army (#3696) or build order (#4049) text
+    first = next(c for c in game.sent if replay.PANEL not in c and not c.startswith("item "))  # not the production (#2811) text or a stats book (#3924)
     assert "Villager" in first and "aoe2mc.p1" in first                       # name and team tag
 
 

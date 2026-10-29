@@ -41,7 +41,7 @@ import gather  # noqa: E402
 import recap  # noqa: E402
 import train  # noqa: E402
 
-AGES = {"FEUDAL_AGE": 20, "CASTLE_AGE": 25}                        # the ages of the driver: villagers before each one
+AGES = dict(zip(build.AGE_TECHS, (20, 25)))   # the first two ages of the rule set (#3716): villagers before each one
 STEP, STUCK, MOVED = 5.0, 60.0, 1.0                                # game seconds, game seconds, blocks
 HOME = 12                                                          # tiles: a foe unit this near the town center attacks
 ERROR = re.compile(r"Exception|ERROR\]|Caused by:")                # the lines of a server or plugin exception
@@ -253,7 +253,7 @@ def result(g, driver, watch, log):
     for x in (g, driver.share):
         players[x.player] = {"age": train.age(x), "ages": {a: recap.mmss(t) for a, t in sorted(vars(x).get("age_times", {}).items())},
                              "villagers": len(x.villagers), "soldiers": len(x.soldiers), "stock": dict(x.stock),
-                             "techs": sorted(set(vars(x).get("techs", ())) - set(AGES) - {"IMPERIAL_AGE"}),
+                             "techs": sorted(set(vars(x).get("techs", ())) - set(build.AGE_TECHS)),
                              "waves": watch.waves.get(x.player, 0)}
     for side in watch.sides:                                           # the buildings of its foe that stand
         players[side.foe]["buildings"] = len(side.forts())
