@@ -500,7 +500,8 @@ def found(g, name, rect, way=None, tiles=None, free=False):
     the construction site. way: the way of a gate (gate_spot); tiles: the tiles of a diagonal gate, the other tiles
     of its footprint stay free (#1655). free: no cost (the start town of a game mode, empire_wars.py, #2408)."""
     import fleet                                                       # fleet -> gather -> build: import it late
-    for r, v in () if free else price(g, name).items():
+    paid = {} if free else price(g, name)                              # a deleted foundation gives it back (demolish.py)
+    for r, v in paid.items():
         g.stock[r] -= v
         g.command(f"scoreboard players remove {r.capitalize()} {g.board} {v}")
     record.built(g, name, rect, free)                                  # Record Game (#2649), free: a setup (#3028)
@@ -521,7 +522,7 @@ def found(g, name, rect, way=None, tiles=None, free=False):
         along_z=z1 - z0 > x1 - x0 if way is None else way,             # a gate along z (#1324) or diagonal (#1655)
         water=int(fleet.level(g)) + 1 if name in WATER else None)      # a fish trap on the open water (#1438)
     site = {"name": name, "player": g.player, "footprint": rect, "commands": cmds, "sent": 0, "progress": 0.0,
-            "ring": dict.fromkeys(ring, f"minecraft:{color}_wool"), "under": under}   # under: the design blocks on the ring
+            "paid": paid, "ring": dict.fromkeys(ring, f"minecraft:{color}_wool"), "under": under}   # under: the design blocks on the ring
     if way is not None:
         site["way"] = way
     if tiles is not None and str(way).startswith("diag"):

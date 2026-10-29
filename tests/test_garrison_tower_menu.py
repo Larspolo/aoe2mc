@@ -58,11 +58,11 @@ def test_the_ungarrison_item_lets_the_units_out_next_to_the_door_and_closes_the_
         assert f"tag {u} remove aoe2mc.garrisoned" in server.log
 
 
-def test_an_own_tower_with_no_units_inside_opens_no_menu():
+def test_an_own_tower_with_no_units_inside_opens_only_the_delete_menu():
     server, g = setup()
     aim_at_the_tower(server)
     right_click(server, g)
-    assert not menus(server) and not g.menus
+    assert "Ungarrison" not in " ".join(menus(server)) and "Delete" in menus(server)[-1]   # demolish.py (#3452)
 
 
 def test_a_right_click_with_a_selection_on_the_tower_is_still_a_garrison_order():
