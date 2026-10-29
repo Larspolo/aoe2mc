@@ -36,3 +36,5 @@
 {"name": "building_taken", "text": "The factor of the bonus damage that a building of the player takes after the technology: {building: factor} (Citadels: a castle 0.75). build.taken.", "issue": 4281}
 {"name": "less", "text": "A technology that cuts the damage that its units take from attackers of some classes: [the units (as \"walk\"), {attacker class: n}]; the most of the classes of the attacker counts (Royal Heirs). train.hits.", "issue": 4331}
 {"name": "ignore_armor", "text": "A technology whose melee units ignore the armor of the target (a negative armor still counts): the units, as \"walk\" (Wootz Steel). train.hits.", "issue": 4331}
+{"name": "rival_years", "text": "A technology that adds years to the relic and wonder victory timers of each enemy (Atheism: 100). wonder.later.", "issue": 4336}
+{"name": "rival_relic_gold", "text": "The factor of the relic gold of each enemy after the technology (Atheism: 0.5). monk.relic_tick.", "issue": 4336}
