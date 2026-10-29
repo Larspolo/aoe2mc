@@ -44,8 +44,9 @@ parallel tickets do not change the same lines. Most rules have a check: `tools/d
   content of the data, also when it goes through a menu or a fight: it fails when the data changes. The code that reads
   the keys has its tests already. A test belongs only to a change of code, and it uses test data (a monkeypatched
   table, a fixture) or the expected value from the data. When a key or a combination of keys has no test of its code,
-  that is a code ticket: one test of the code with test data, not one test per data line. Do not copy an older test
-  per data line (`tests/test_techs_*.py`): they break this rule. `tools/ship_pr.py` stops such a change (exit 2).
+  that is a code ticket: one test of the code with test data, not one test per data line (the old
+  `tests/test_techs_*.py` broke this rule and are deleted; `tests/test_tech_effect_code.py`). `tools/ship_pr.py` stops
+  such a change (exit 2).
 - A new command of the Paper plugin: its line in the command list at the top of `AoePlugin.java` and its
   `if` block in `onCommand` go in alphabetical order of the command name, not after the last one (#795 and #813 conflicted).
 - A new game setting of `game/run.py` (a lobby setting, epic #2263) is one line in `run.SETTINGS` and an option of the
