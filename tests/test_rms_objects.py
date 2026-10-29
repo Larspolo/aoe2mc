@@ -24,7 +24,7 @@ def test_town_centers_at_the_origins_and_gold_around_them(seed):
     gold = [o for o in d["objects"] if o["name"] == "GOLD_MINE"]
     assert len(gold) == 14 and {o["player"] for o in gold} == {0}
     for st in d["lands"]:
-        near = [o for o in gold if 12 <= np.hypot(int(o["x"]) - st["x"], int(o["y"]) - st["y"]) <= 16]
+        near = [o for o in gold if 12 <= max(abs(int(o["x"]) - st["x"]), abs(int(o["y"]) - st["y"])) <= 16]
         assert len(near) >= 7
     vills = [o for o in d["objects"] if o["name"].startswith("VILLAGER")]
     assert len(vills) == 6 and {o["player"] for o in vills} == {1, 2}

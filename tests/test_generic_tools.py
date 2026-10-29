@@ -29,7 +29,7 @@ def specific_tools(rows, read):
 
 
 def test_no_generic_file_needs_a_specific_tool():
-    rows = bootstrap.table(open(bootstrap.SYSTEM).read())
+    rows = bootstrap.rows()
     assert set(specific_tools(rows, lambda p: open(os.path.join(ROOT, p)).read())) - OPTIONAL == set()
 
 
