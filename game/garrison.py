@@ -53,6 +53,7 @@ FISHER = "FISHING_SHIP"     # the only unit that goes into a dock (#1949)
 DOOR = 2.5                  # blocks from the door cell: there a unit goes in
 UNGARRISON = (7, "oak_door", "Ungarrison", "Click: all units come out")   # a slot of the first row, before RALLY
 BELL = (24, "bell", "Ring Town Bell", "Click: all villagers seek shelter")   # town center: first free slot after the policies (#3419)
+BACK = (24, "bell", "All Back to Work", "Click: the villagers of the bell go back to work")   # after the bell (#3420)
 SPARE = 26                  # the last slot of the third row: UNGARRISON of a building with an item in slot 7 (the
                             # demolition raft of the dock #1949, Illumination of the fortified church #1948)
 INSIDE = "{Invulnerable:1b,NoAI:1b,CustomNameVisible:0b}"         # the NBT of a garrisoned unit (#807)
@@ -169,6 +170,12 @@ def bell(g, player, chosen=None):
             sent[u] = rect
     if sent:
         g.new_order(list(sent))
+    work = vars(g).setdefault("bell_work", {})                     # the work before the bell: "All Back to Work" (#3420)
+    for u in sent:
+        if (v := g.villagers.get(u)) is not None and v.site is not None:
+            work[u] = ("site", tuple(v.site["footprint"]))
+        elif v is not None and v.tree is not None and v.state != "idle":
+            work[u] = ("tile", tuple(v.tree))
     for u, rect in sent.items():
         if (v := g.villagers.get(u)) is not None:                  # the villager stops its work
             v.state, v.path, v.goal, v.site = "garrison", [], None, None
@@ -183,6 +190,39 @@ def bell(g, player, chosen=None):
         g.command(f"playsound minecraft:block.bell.use master {player}")
     g.command(f"tellraw {player} " + json.dumps({"text": text, "color": "gray"}))
     return sent
+
+
+def bell_item(g):
+    """The item of slot 24 of a town center: "All Back to Work" while villagers of the bell have work stored, else BELL."""
+    return BACK if vars(g).get("bell_work") else BELL
+
+
+def all_back(g, player):
+    """The second click of the bell (#3420, AoE2 DE "All Back to Work"): the buildings with villagers of the bell let
+    their units out (out() sends them back to work), and the villagers that still walk to a door go back to work too."""
+    work = vars(g).get("bell_work", {})
+    for rect in [r for r, us in getattr(g, "garrisons", {}).items() if work.keys() & set(us)]:
+        out(g, rect)
+    back(g, [u for u in work if u in vars(g).get("entering", {})])
+    work.clear()
+    g.command(f"tellraw {player} " + json.dumps({"text": "All back to work", "color": "gray"}))
+
+
+def back(g, units):
+    """Send each villager of units with stored work of the bell back to it: its tree, mine, bush or farm (Gather.send;
+    a taken farm: the nearest free one), or its construction site while it is not complete (Gather.build). A villager
+    whose work is gone stays idle."""
+    work = vars(g).get("bell_work", {})
+    for u in units:
+        if (job := work.pop(u, None)) is None or u not in g.villagers:
+            continue
+        kind, where = job
+        if kind == "site":
+            site = next((s for s in g.sites if tuple(s["footprint"]) == where and s["progress"] < 1), None)
+            if site is not None:
+                g.build(site, {u})
+        elif where in g.map.trees or g.map.resource(where) != "wood":     # a farm, bush or mine is food or gold
+            g.send(where, {u})
 
 
 def open_menu(g, player, cell):
@@ -313,6 +353,7 @@ def out(g, rect):
             v.pos, v.state = (x + 0.5, float(y), z + 0.5), "idle"
     if units:
         g.command(f"tellraw @a[team=p{g.player}] " + json.dumps({"text": f"{len(units)} units came out", "color": "gray"}))
+    back(g, units)                                                 # the villagers of the bell go back to work (#3420)
     return units
 
 

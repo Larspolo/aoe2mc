@@ -8,7 +8,9 @@ the previous or next civilization of data/civs.jsonl (#3535); the tree opens wit
 """
 import copy
 import os
+import re
 import sys
+import textwrap
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import build  # noqa: E402
@@ -26,6 +28,8 @@ NEXT = 53
 GRAY = "gray_stained_glass_pane"
 CIVS = [r["name"] for r in civs.ROWS]                              # the order of data/civs.jsonl
 PREVIOUS, NAME, FOLLOWING = 48, 49, 50
+OBJECTIVE = "aoe_techtree"                                          # the chat command /trigger aoe_techtree (#3670)
+BONUSES = 46                                                       # the civilization bonuses and the team bonus (#3536)
 
 
 def view(g, civ):
@@ -45,6 +49,17 @@ def civ_items(civ):
             (FOLLOWING, "spectral_arrow", "Next civilization", "")]
 
 
+def bonus_items(civ):
+    """The item of slot 46: the bonus lines of civ and its team bonus (the key "texts" of data/civs.jsonl, the text at
+    the left of the AoE2 DE tech tree), lines of 50 characters at most. None for a civilization with no texts."""
+    texts = civs.value("texts", civ, None)
+    if not texts:
+        return []
+    lines = [w for b in texts["bonuses"] for w in textwrap.wrap("• " + b, 50, subsequent_indent="  ")]
+    lines += [""] + textwrap.wrap(f"Team bonus: {texts['team']}", 50, subsequent_indent="  ")
+    return [(BONUSES, "written_book", "Civilization bonuses", "\n".join(lines))]
+
+
 def other(civ, slot):
     """The civilization before (slot 48) or after (slot 50) civ in CIVS, else None (no civilization slot)."""
     step = {PREVIOUS: -1, FOLLOWING: 1}.get(slot)
@@ -56,7 +71,7 @@ def open_menu(g, player, civ=None):
     (else the own one)."""
     civ = civ or civs.real(g)
     items = [(i, build.ICONS.get(b, "chest"), build.pretty(b), "Click: its units and technologies")
-             for i, b in enumerate(BUILDINGS)] + civ_items(civ)
+             for i, b in enumerate(BUILDINGS)] + bonus_items(civ) + civ_items(civ)
     items.append((ALL, "bricks", "Buildings", "All buildings of your civilization by age"))
 
     def click(p, slot, shift):
@@ -178,3 +193,20 @@ def buildings(g, player, number=0):
         if slot == NEXT and number + 1 < len(all_pages):
             return buildings(g, p, number + 1)
     menu.show(g, player, "Tech tree: Buildings", items, click)
+
+
+def setup(g):
+    g.command(f"scoreboard objectives add {OBJECTIVE} trigger")
+
+
+def tick(g):
+    """Enable the trigger, and open the tech tree for each person that used it (its score goes back to 0). Like
+    flare.tick: the score selector first, so that a tick without a user costs one command."""
+    who = getattr(g, "who", "@a")
+    g.command(f"scoreboard players enable {who} {OBJECTIVE}")
+    sel = who[:-1] + f",scores={{{OBJECTIVE}=1..}}]" if who.endswith("]") else who + f"[scores={{{OBJECTIVE}=1..}}]"
+    if "passed" in g.command(f"execute if entity {sel}"):
+        for name in g.people():
+            if name and re.search(r" has [1-9]", g.command(f"scoreboard players get {name} {OBJECTIVE}")):
+                g.command(f"scoreboard players set {name} {OBJECTIVE} 0")
+                open_menu(g, name)
