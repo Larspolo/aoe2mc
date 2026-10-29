@@ -19,6 +19,7 @@ import subprocess
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import agent_config  # noqa: E402
 from claim import agent_state, utc, with_state  # noqa: E402
 from dashboard import FOOTER, STATUS, api, pages  # noqa: E402
 from health import PHASES  # noqa: E402
@@ -58,6 +59,11 @@ def git_lane():
     return r.stdout.strip() or None
 
 
+def git_account():
+    """The Claude account of the run (`agent_config.account()`, #4236), else None: the `Run:` line gets no account."""
+    return agent_config.account()
+
+
 def tool(*args):
     """The output of another tool of this directory, without its trailing newline; "" when the project has no such
     tool or it fails (a new project has no `release.py`, #1963)."""
@@ -74,16 +80,19 @@ def measured():
     return {m[1]: m[2] for m in re.finditer(r"^#(\d+|None): (\S+)$", tool("tokens.py", "--phases"), re.M)}
 
 
-def report(text, usage, lines, release=None, tokens=None, calls=None, run=None, lane=None):
+def report(text, usage, lines, release=None, tokens=None, calls=None, run=None, lane=None, account=None):
     """The comment: text, release bar (none when it is empty), `Usage:`, `Metrics:`, `Tokens:`, `Calls:` and `Run:`
-    lines, footer. The `Run:` line ends with the lane of the run (`opus` when the run set none, as in `health.lanes`)."""
+    lines, footer. The `Run:` line ends with the lane of the run (`opus` when the run set none, as in `health.lanes`)
+    and the account of the run, when it has one (#4236)."""
     release = tool("release.py") if release is None else release
     tokens = (tool("tokens.py").splitlines() or [""])[-1] if tokens is None else tokens
     calls = tool("tokens.py", "--calls-line") if calls is None else calls
     run = tool("tokens.py", "--run-line") if run is None else run
     lane = git_lane() if lane is None else lane
+    account = git_account() if account is None else account
+    run = run and f"{run} · lane {lane or 'opus'}" + (f" · account {account}" if account else "")
     return "\n".join([text.strip(), "", *([release, ""] if release else []), usage.strip(), *lines, tokens,
-                      *([calls] if calls else []), *([f"{run} · lane {lane or 'opus'}"] if run else [])]) + FOOTER
+                      *([calls] if calls else []), *([run] if run else [])]) + FOOTER
 
 
 def numbers():
