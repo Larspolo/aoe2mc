@@ -92,6 +92,7 @@ VICTORY = (                                                            # the vic
 )
 SCORE = (                                                              # Gather: the counts of score.py (#2475)
     "fallen",                                                          # spoils.py: the units that gave their spoils
+    "fell",                                                            # ruins.py: the own buildings that fell, lost in the recap (#3736)
     "given",                                                           # train.py: the free units and technologies
     "losses",
     "razed",
