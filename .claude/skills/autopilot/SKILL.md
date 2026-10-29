@@ -160,6 +160,6 @@ Answer the questions of `process.md`. Do the action for each "yes". Spend little
 ## More tickets
 
 If the argument asks for more than 1 ticket, go back to step 2 after step 8: read `more.md` first (branch reset,
-push). Never force-push. Start a next ticket only when the context is below 120k tokens (`more.md`).
+push). Never force-push. Start a next work item only when the context is below 120k tokens (`more.md`).
 Argument `max`: continue until no ticket is ready, a usage limit stops you, or the context is 120k or more.
 Do not start other runs (no `fire_trigger`, #566): the pacer (`pacer.yml`, #3193) starts them.

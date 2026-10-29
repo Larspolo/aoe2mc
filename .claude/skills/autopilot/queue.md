@@ -21,7 +21,7 @@ names `lane deep`, run `git config aoe2mc.lane deep` first (the claims and the r
 `python3 tools/cycle_start.py --lane deep`. A deep run does the epic check and the queue refill of step 5, the roadmap
 review and the process review: while `reserved` in `[pacing]` of `agent.toml` names `deep`, `claim.py` gives those
 locks (`--review`, `--roadmap`, `--refill`) only to deep runs, and the other runs skip them. Stop when no `lane:deep`
-ticket is ready and the refill is done: the main runs take the other tickets for less.
+ticket is ready and the refill is done, or at 120k context (`more.md`): the main runs take the other tickets for less.
 
 ## Large tickets (step 4)
 

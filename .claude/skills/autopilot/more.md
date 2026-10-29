@@ -16,7 +16,9 @@ that also names a deleted branch fails as a whole). The scheduled task allows th
 Push it with `git push -u origin <session branch>-<k>`, and check that the output shows `-> <session branch>-<k>`.
 The open PR of the last ticket needs no wait: Automerge merges it when CI is green, and `unconflict.yml` merges `main`
 into it. Never force-push: the auto mode denies it ("Git Destructive"; 33 runs lost a step on it on 2026-10-26).
-Start a next ticket only when the context is below 120k tokens (`python3 tools/tokens.py` prints it as `peak`).
+Start a next work item only when the context is below 120k tokens (`python3 tools/tokens.py` prints it as `peak`).
+A work item is a ticket, a takeover of a stuck PR, a refill, an epic check, a roadmap review or a process review: two
+deep runs that did a takeover, a review and a ticket reached 200k and used 1.8M and 2.3M eq (2026-10-29).
 A fresh run pays about 0.18M eq before its first claim (the 47k base written to the cache at 2 times the price, and
 the start calls). A next ticket in this run pays about 30 calls × 0.1 × the extra context. Below 120k the next ticket
 is cheaper here (2 tickets per run: 0.38M eq per PR, 1 ticket: 0.62M), above it a fresh run is cheaper
