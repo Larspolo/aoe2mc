@@ -547,6 +547,9 @@ CREATE_OBJECT = (               # the attributes of create_object that objects()
     "avoid_all_actor_areas",        # out of each actor area (#4134)
     "avoid_cliff_zone",             # tiles from a cliff, default 1; never on the cliff tiles (#4131, `ridges`: the cliffs)
     "avoid_forest_zone",            # tiles from a forest, default 1 (#3858)
+    "find_closest",                 # the free tile nearest to the origin of the land, first in scan order (#4135)
+    "find_closest_to_map_center",   # the free tile nearest to the map middle (#4135)
+    "find_closest_to_map_edge",     # the free tile nearest to a map edge (#4135)
     "group_placement_radius",       # tiles of a loose group from its first object, default 3 (#3856)
     "group_variance",               # ± objects in each group (#3856)
     "layer_to_place_on",            # only the tiles of this land layer (#4132, `layer`: the land layer of each tile)
@@ -641,6 +644,9 @@ def objects(cmds, consts, terrain, starts, rng, warn, owner=None, ridges=(), lay
             dist = np.hypot(x - st["x"], y - st["y"]) if st else np.full((n, n), float(lo))
             # without number_of_groups each object is a group of 1; with it, number_of_objects (± group_variance) is
             # the size of each group (AoE2 DE scripting guide; loose grouping and radius 3 are the defaults)
+            key = (dist if "find_closest" in attrs and st else
+                   np.hypot(x - (n - 1) / 2, y - (n - 1) / 2) if "find_closest_to_map_center" in attrs else
+                   np.minimum(np.minimum(x, y), np.minimum(n - 1 - x, n - 1 - y)) if "find_closest_to_map_edge" in attrs else None)
             sizes = [1] * count if groups is None else [max(1, count + int(rng.integers(-vary, vary + 1))) for _ in range(groups)]
             for size in sizes:
                 free = ~used & place & ~dilate(placed, gap)
@@ -648,7 +654,10 @@ def objects(cmds, consts, terrain, starts, rng, warn, owner=None, ridges=(), lay
                 if not len(spots):
                     warn(f"create_object {args[0]}: no free tile")
                     break
-                mid = tuple(int(v) for v in spots[rng.integers(len(spots))])
+                if key is None:
+                    mid = tuple(int(v) for v in spots[rng.integers(len(spots))])
+                else:                           # find_closest: the first spot of the smallest key (#4135)
+                    mid = tuple(int(v) for v in spots[np.argmin(key[spots[:, 0], spots[:, 1]])])
                 if tight:
                     cells = [mid]               # each next object on a free tile next to an object of the group
                     while len(cells) < size:
