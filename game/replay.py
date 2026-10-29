@@ -439,6 +439,7 @@ class Replay:
         self.relics = {r: {"at": (int(o["tile"][0] * self.T), int(o["tile"][1] * self.T)), "monk": None, "home": None}
                        for r, o in self.refs.items() if o["kind"] == "other" and "RELIC" in o["name"] and "tile" in o}
         self.fetching = {}                      # object ID of a monk -> the relic ref that it walks to (#4009)
+        self.homing = {}                        # object ID of a monk with a relic -> (monastery rect, player) (#4010)
         self.rng = np.random.default_rng(1)
         self.kinds, self.seen = aoe2mc.object_kinds(), set()
         self.sent, self.busy = 0, 0.0           # commands sent, seconds spent sending them
@@ -764,6 +765,7 @@ class Replay:
                 self.patrols.pop(i, None)
                 self.scouts.pop(i, None)
                 self.fetching.pop(i, None)                  # and the walk to a relic (#4009)
+                self.homing.pop(i, None)                    # and the walk to a monastery (#4010)
         if kind in aoe2mc.UNIT_USE - {"stance"} | {"delete", "stop"}:   # a new order ends a FOLLOW or GUARD (#2551)
             for i in e.get("objects") or ():
                 self.follows.pop(i, None)
@@ -1635,6 +1637,9 @@ class Replay:
                  if (v := self.unit(i, name, e["player"])) is not None]
         if e["kind"] == "order" and (relic := e.get("target")) in self.relics:   # only a monk carries a relic (#4009)
             self.fetching.update({i: relic for i, v in group if v.name in monk.MONKS})
+        if (church := self.monastery(e)) is not None:              # a monk with a relic puts it in (#4010)
+            carry = {r["monk"] for r in self.relics.values()}
+            self.homing.update({i: (church, e["player"]) for i, v in group if i in carry})
         tile = self.resource(e)
         if tile in self.map.farms or tile in self.map.carcasses:    # a farmer stands on the farm, a hunter at the carcass
             goals = self.crew.goals(tile)
@@ -1653,7 +1658,7 @@ class Replay:
                 self.work[i] = v.tree
             fish = fisher(v.name) and tile in self.map.fish         # a fishing ship only fishes (#1283)
             v.tree = tile if v.name.startswith("VILLAGER") or fish else None    # a sheep of the selection does not gather
-            if home and not (not e.get("garrison") and v.load and v.name.startswith("VILLAGER")
+            if home and i not in self.homing and not (not e.get("garrison") and v.load and v.name.startswith("VILLAGER")
                              and home[1]["name"] in self.gather.DROP_SITES.get(v.res, ())):   # it drops its load
                 self.entering[i] = [*home, None]
         boats = [(i, v) for i, v in group if ship(v.name)]          # ships sail on the water (#866)
@@ -2257,6 +2262,8 @@ class Replay:
         A farmer works on its farm (gather.Gather.goals). A unit that goes into a building arrives (enter())."""
         if i in self.fetching:
             self.send(self.pickup(i, v))
+        if i in self.homing:
+            self.send(self.deliver(i))
         if i in self.entering:
             x0, x1, z0, z1 = self.entering[i][0]
             if v.cell in self.map.around({(x, z) for x in range(x0, x1) for z in range(z0, z1)}):
@@ -2286,6 +2293,31 @@ class Replay:
                 f"item:{{id:\"{monk.POT}\",count:1}},transformation:{{left_rotation:[0f,0f,0f,1f],"
                 f"right_rotation:[0f,0f,0f,1f],translation:[0f,0.4f,0f],scale:[0.5f,0.5f,0.5f]}}}}",
                 f"ride @e[type=item_display,tag=aoe_relic_{ref},limit=1] mount {v.uuid}"]
+
+    def monastery(self, e):
+        """The footprint of the own start monastery (or a building that stands for it, combat.STANDS_FOR) that an ORDER
+        or a GARRISON targets, or None."""
+        import combat
+        o = self.refs.get(e.get("target"))
+        if not o or o["kind"] != "building" or o["player"] != e["player"]:
+            return None
+        if combat.STANDS_FOR.get(o["name"], o["name"]) != "MONASTERY":
+            return None
+        return next((s[3] for s in self.starts if s[0] == o["ref"]), None)
+
+    def deliver(self, i):
+        """The commands of monk i that ends its walk to its monastery with a relic: the relic goes into the building
+        (its pot goes), the monk stays outside, as monk.relic_tick (kind "home", #4010)."""
+        rect, p = self.homing.pop(i)
+        ref = next((r for r, q in self.relics.items() if q["monk"] == i), None)
+        if ref is None:
+            return []
+        self.relics[ref].update(monk=None, home=rect, player=p)
+        return [f"kill @e[type=item_display,tag=aoe_relic_{ref}]"]
+
+    def relic_count(self, p):
+        """The relics in the monasteries of player p (#4010)."""
+        return sum(r["home"] is not None and r.get("player") == p for r in self.relics.values())
 
     def rate(self, v):
         """The AoE2 work rate of unit v at its resource (per game second): a farm, a hunt and a fish have their own
