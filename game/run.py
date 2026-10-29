@@ -494,6 +494,15 @@ def bot_seat(players, people):
     return player, bot_foe(players, player)
 
 
+def difficulty_list(text):
+    """The value of --ai-difficulty: one level, or a comma list with one level for each bot in seat order (#4020)."""
+    names = [r["name"] for r in table.load("difficulty.jsonl")]
+    bad = [part for part in text.split(",") if part not in names]
+    if bad:
+        raise argparse.ArgumentTypeError(f"{bad[0]} is no level: use {', '.join(names)} (or a comma list of them)")
+    return text
+
+
 def bots_count(text):
     """The value of --bots: a number of bots or "all" (#4017)."""
     if text == "all":
@@ -719,8 +728,9 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
         seats = scenario.bot_seats(data["players"], players)
     else:
         seats = bot_seats(data["players"], players, bot) if bot else []
-    for player, foe in seats:                        # after the people, next to their Sides (#1794)
+    for k, (player, foe) in enumerate(seats):        # after the people, next to their Sides (#1794)
         import bot as bots
+        level = bots.level_of(settings["ai_difficulty"], k)   # one level for each bot in seat order (#4020)
         import replay
         import treaty as treaties
         attack = max(bot_attack, settings["treaty"], key=replay.aoe2mc.game_time)   # the bot waits for the treaty too
@@ -729,10 +739,10 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
         g.bots = [*g.bots, bots.Bot(game, data, player=player, share=g, log=log, foe=foe,
                                     attack=math.inf if attack == "never" else replay.aoe2mc.game_time(attack) / 1000,
                                     resources=settings["resources"], pop_limit=settings["pop_limit"],
-                                    difficulty=settings["ai_difficulty"]).setup()]
+                                    difficulty=level).setup()]
         at = math.inf if attack == "never" else \
-            replay.aoe2mc.game_time(attack) / 1000 * bots.LEVELS[settings["ai_difficulty"]]["attack"]
-        print(f"A bot ({settings['ai_difficulty']}) plays player {player}: {len(g.bots[-1].g.villagers)} villagers "
+            replay.aoe2mc.game_time(attack) / 1000 * bots.LEVELS[level]["attack"]
+        print(f"A bot ({level}) plays player {player}: {len(g.bots[-1].g.villagers)} villagers "
               f"gather, its soldiers attack {'no player (no enemy)' if foe is None else f'player {foe}'} "
               f"{'never' if at == math.inf else 'at %d:%02d' % divmod(round(at), 60)}.", file=sys.stderr)
     import combat
@@ -1117,8 +1127,9 @@ def main(argv=None, scenario=None):
     ap.add_argument("--people", type=int, default=1, metavar="N", help="--play: N people play players 1 to N, in the "
                     "order in which they join (#1310); with --bot the bot plays player N + 1")
     levels = [r["name"] for r in table.load("difficulty.jsonl")]           # in the order of the AoE2 lobby
-    ap.add_argument("--ai-difficulty", choices=levels, default="standard", help="--bot: the AoE2 setting \"AI "
-                    f"difficulty\" ({', '.join(levels)}; default standard): the gather rate of the bot, the time of "
+    ap.add_argument("--ai-difficulty", type=difficulty_list, default="standard", metavar="LEVEL[,LEVEL...]",
+                    help=f"--bot: the AoE2 setting \"AI difficulty\" ({', '.join(levels)}; default standard; a comma "
+                    "list gives each bot its own level in seat order, #4020): the gather rate of the bot, the time of "
                     "its first attack (times --bot-attack) and the soldiers of its first wave")
     ap.add_argument("--bot-attack", default="10:00", metavar="MM:SS", help="--bot: its soldiers attack its foe "
                     "from this game time (default 10:00)")
