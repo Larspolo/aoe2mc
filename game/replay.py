@@ -70,6 +70,7 @@ BURST = 500                 # ms of game time between two bursts of a flare colu
 TEAM_STEP = 10000           # sidebar score of a team game: team key × TEAM_STEP + population, the panel sorts by it (#1189)
 COUNTED = "aoe2mc.pop"      # entity tag of the units that the population counts (#787)
 EFFECT = "aoe2mc.effect"    # entity tag of the texts above a building (#843)
+TRADE_MS = 2000              # the trades of one market within this time join in one text (#3942)
 PANEL = "aoe2mc.panel"      # entity tag of the production texts above a building (#2811, decision #2808: C)
 PANEL_BAR = 10              # characters of the text progress bar of a production item
 GRAPH = "aoe2mc.graph"      # entity tag of the graph text in the sky above the overview (#3448, decision #3447: B)
@@ -383,6 +384,11 @@ def formation_cells(free, group, target, kind="Line", T=4, long=False):
     return out
 
 
+def trade_line(sums):
+    """The text of the trades of one market: "+100 wood −130 gold" (#3942)."""
+    return " ".join(f"{'+' if v >= 0 else '−'}{abs(v)} {r}" for r, v in sums.items() if v)
+
+
 class Replay:
     """The timeline of aoe2mc.json `data` on a server (game.command sends one command)."""
 
@@ -422,6 +428,7 @@ class Replay:
         self.scouts = {}                        # object ID on AUTOSCOUT -> the tiles that it walked to (#2678)
         self.trail = math.inf                   # game time (ms) of the next check of the followers (#2551)
         self.adopted, self.rallied = {}, 0      # temporary ID of a unit at a gather point -> its object ID (#1227)
+        self.trade_texts = {}                   # market object ID -> the last trade text: time, tag, sums (#3942)
         self.effects = {}                       # entity tag of a research text -> game time (ms) of its end (#843)
         self.panels = {}                        # building ID -> its shown production text (#2811)
         self.flares = []                        # (x, y, z, game time (ms) of the end, RGB) of the live flares (#2402)
@@ -672,11 +679,37 @@ class Replay:
         import market                                               # market -> build -> replay: import it late
         p, r, buy = e.get("player"), e["resource"].lower(), e["kind"] == "buy"
         g = types.SimpleNamespace(rates=self.rates, techs=set(self.upgrades(p, e["time"])), data=self.data, player=p)
-        for _ in range(max(1, e.get("amount", market.LOT) // market.LOT)):
+        n, total = max(1, e.get("amount", market.LOT) // market.LOT), 0
+        for _ in range(n):
             gold = market.price(g, r, buy)
             self.resources(p)["gold"] += -gold if buy else gold
             self.resources(p)[r] += market.LOT if buy else -market.LOT
             self.rates[r] = min(max(self.rates[r] + (market.STEP if buy else -market.STEP), market.LIMITS[0]), market.LIMITS[1])
+            total += -gold if buy else gold
+        return r, (n * market.LOT if buy else -n * market.LOT), total
+
+    def trade_text(self, e, r, amount, gold, color):
+        """The trade as a text above its market for EFFECT_MS, and particles (#3942). The trades of one market within
+        TRADE_MS join in one text with the sums. No known market: no commands."""
+        i = (e.get("objects") or [None])[0]
+        last = self.trade_texts.get(i)
+        if last and e["time"] - last["time"] <= TRADE_MS and last["tag"] in self.effects:
+            last["sums"][r] = last["sums"].get(r, 0) + amount
+            last["sums"]["gold"] = last["sums"].get("gold", 0) + gold
+            last["time"], self.effects[last["tag"]] = e["time"], e["time"] + EFFECT_MS
+            return [f"data merge entity @e[type=text_display,tag={last['tag']},limit=1] "
+                    f"{{text:{json.dumps(text(trade_line(last['sums']), color))}}}"]
+        spot = self.roof(i, (e.get("names") or [None])[0], e.get("player"))
+        if not spot:
+            return []
+        x, top, z, (x0, x1, z0, z1) = spot
+        tag = f"{EFFECT}.{len(self.effects)}.{e['time']}"
+        self.effects[tag] = e["time"] + EFFECT_MS
+        self.trade_texts[i] = {"time": e["time"], "tag": tag, "sums": {r: amount, "gold": gold}}
+        return [f"summon text_display {x} {top + 3} {z} {{text:{json.dumps(text(trade_line(self.trade_texts[i]['sums']), color))},"
+                f'billboard:"center",shadow:1b,transformation:{{left_rotation:[0f,0f,0f,1f],right_rotation:[0f,0f,0f,1f],'
+                f'translation:[0f,0f,0f],scale:[{SCALE}f,{SCALE}f,{SCALE}f]}},Tags:["{EFFECT}","{tag}"]}}',
+                f"particle minecraft:happy_villager {x} {top + 1} {z} {(x1 - x0) / 4} 0.5 {(z1 - z0) / 4} 1 20"]
 
     def commands(self, e):
         """The commands of one timeline event (an empty list for the events that change nothing visible)."""
@@ -747,8 +780,7 @@ class Replay:
             return ["title @a actionbar " + json.dumps([text(name, color), text(f" researches {e['technology']}")])] + \
                 self.research(e, color)
         if kind in ("buy", "sell") and e.get("resource"):       # the market trades change the estimate (#3939)
-            self.trade(e)
-            return []
+            return self.trade_text(e, *self.trade(e), color)
         if kind == "resign":
             return ["title @a subtitle " + json.dumps(text("The game ends")),
                     "title @a title " + json.dumps(text(f"{name} resigns", color))]
@@ -2411,7 +2443,7 @@ class Replay:
         """One chat line per player with the values of the AoE2 Society tab (#1086): castles and wonders built (each
         foundation once, as build()), tribute sent and received (all resources), and the highest villager count
         (est.: the start and the trained villagers, the census of the plugin counts the losses)."""
-        built, sent, got, seen = {}, {}, {}, set()
+        built, sent, got, seen, traded = {}, {}, {}, set(), {}
         for e in self.data.get("timeline", []):
             p = e.get("player")
             name = e.get("name") or self.kinds.get(e.get("type"), ("?", ""))[1]
@@ -2421,13 +2453,16 @@ class Replay:
             elif e["kind"] == "tribute" and e.get("to"):
                 n = sum(e.get(r, 0) for r in START) or int(e.get("amount", 0))   # old records: one resource
                 sent[p], got[e["to"]] = sent.get(p, 0) + n, got.get(e["to"], 0) + n
+            elif e["kind"] in ("buy", "sell") and e.get("resource"):    # the market trades (#3941)
+                traded[p, e["kind"]] = traded.get((p, e["kind"]), 0) + e.get("amount", 0)
         out = []
         for p in self.ranked(self.pop.keys() | self.vhigh.keys() | sent.keys() | got.keys() | {q for q, _ in built}
-                             - {None}):
+                             | {q for q, _ in traded} - {None}):
             name, color = self.label(p)
             counts = "".join(f"{n.lower()}s {built.get((p, n), 0)}, " for n in SOCIETY)   # castles N, wonders N
+            market = f"bought {traded.get((p, 'buy'), 0)}, sold {traded.get((p, 'sell'), 0)}, "
             out.append("tellraw @a " + json.dumps([text(name, color), text(
-                f": {counts}tribute sent {sent.get(p, 0)}, received {got.get(p, 0)}, villager high "
+                f": {counts}{market}tribute sent {sent.get(p, 0)}, received {got.get(p, 0)}, villager high "
                 f"{self.vhigh.get(p, 0)} (est.)")]))
         return out
 

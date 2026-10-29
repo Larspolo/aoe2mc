@@ -61,3 +61,15 @@
 {"name": "FISH_DORADO", "fish": ["islands", 3, 6]}
 {"name": "FISH_TUNA", "fish": ["mediterranean", 2, 4]}
 {"name": "FISH_TUNA", "fish": ["nomad", 2, 4]}
+{"name": "BOAR", "object": 48}
+{"name": "DEER", "object": 65}
+{"name": "FORAGE", "object": 59}
+{"name": "GOLD", "object": 66}
+{"name": "RELIC", "object": 285}
+{"name": "SCOUT", "object": 448}
+{"name": "SHEEP", "object": 594}
+{"name": "STONE", "object": 102}
+{"name": "TOWN_CENTER", "object": 109}
+{"name": "TURKEY", "object": 833}
+{"name": "VILLAGER", "object": 83}
+{"name": "WOLF", "object": 126}

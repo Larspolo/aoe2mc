@@ -15,10 +15,11 @@ high y side that the land does not take) and
 lands, #3868; `create_connect_all_lands`, `create_connect_to_nonplayer_land`, `create_connect_same_land_zones`,
 `create_connect_land_zones` and the `zone` of a land, #3869) and <ELEVATION_GENERATION>
 (`create_elevation HEIGHT` with `base_terrain`, `number_of_clumps`, `number_of_tiles`, `spacing`: hills level by level,
-never on water or shallows, #3822) and <CLIFF_GENERATION> (cliff lines of CLIFF_DEFAULT objects, cliffs(), #3850).
-The sections run in the AoE2 DE order: lands, elevation, terrains, connections (#3966); then all water goes to level 0.
-Other sections and attributes: a warning. `#include_drs random_map.def` has no effect (the constants are in
-TERRAINS); another #include file: a warning. All randomness comes from numpy.random.default_rng(seed).
+never on water or shallows, #3822), <CLIFF_GENERATION> (cliff lines of CLIFF_DEFAULT objects, cliffs(), #3850) and
+<OBJECTS_GENERATION> (`create_object`: objects(), #3855). The sections run in the AoE2 DE order: lands, elevation,
+terrains, connections (#3966); then all water goes to level 0. Other sections and attributes: a warning.
+`#include_drs random_map.def` has no effect (the constants are in TERRAINS); another #include file: a warning. All
+randomness comes from numpy.random.default_rng(seed).
 """
 import heapq
 import re
@@ -33,6 +34,7 @@ from units import rows
 # a scenario keeps them as objects. "start", "scatter", "fish", "shore_fish": see START, SCATTER, FISH and fish().
 RMAP = rows("rmap.jsonl")
 TERRAINS = {r["name"]: r["terrain"] for r in RMAP if "terrain" in r}
+OBJECTS = {r["name"]: r["object"] for r in RMAP if "object" in r}     # the object constants of random_map.def: AoE2 IDs
 FOREST_TREES = dict(sorted((t, r["name"]) for r in RMAP for t in r.get("forest", ())))
 SHORE_FISH = next(r["name"] for r in RMAP if r.get("shore_fish"))
 SIZES = {1: 120, 2: 120, 3: 144, 4: 144, 5: 168, 6: 168, 7: 200, 8: 200}    # AoE2 map size of a player count
@@ -42,7 +44,7 @@ RING = 0.35                     # the circle of the player lands: radius in map 
 AVOID = 13                      # set_avoid_player_start_areas: default tiles from a player origin
 STEPS = ((1, 0), (-1, 0), (0, 1), (0, -1))
 SECTIONS = ("PLAYER_SETUP", "LAND_GENERATION", "TERRAIN_GENERATION", "CONNECTION_GENERATION", "ELEVATION_GENERATION",
-            "CLIFF_GENERATION")
+            "CLIFF_GENERATION", "OBJECTS_GENERATION")
 # <CLIFF_GENERATION> defaults of the AoE2 DE random map scripting guide (#3850). A length counts cliff pieces.
 CLIFF_DEFAULTS = {"min_number_of_cliffs": 3, "max_number_of_cliffs": 8, "min_length_of_cliff": 5,
                   "max_length_of_cliff": 9, "cliff_curliness": 36, "min_distance_cliffs": 2, "min_terrain_distance": 2}
@@ -375,7 +377,7 @@ def generate(text, seed, players=2, size=None, warn=None):
     rng = np.random.default_rng(seed)
     n = size or SIZES.get(players, 200)
     defined = {next((label for s, label in LABELS if n <= s), "GIGANTIC_MAP")}
-    consts = dict(TERRAINS)
+    consts = TERRAINS | OBJECTS
     includes = []
     sections = commands(expand(tokens(text), rng, defined, consts, includes))
     for s in sections:
@@ -459,9 +461,56 @@ def generate(text, seed, players=2, size=None, warn=None):
             warn(f"create_terrain: {a} is not read yet")
     connections(terrain, links, sections.get("CONNECTION_GENERATION", ()), consts, rng, warn)
     elevation = lower_to_water(terrain, elevation)
-    objects = trees(terrain) + cliffs(sections.get("CLIFF_GENERATION", ()), terrain, starts, consts, rng, warn)
-    return {"size": n, "terrain": terrain.tolist(), "elevation": elevation.tolist(), "objects": objects,
+    ridges = cliffs(sections.get("CLIFF_GENERATION", ()), terrain, starts, consts, rng, warn)
+    placed = objects(sections.get("OBJECTS_GENERATION", ()), consts, terrain, starts, rng, warn)
+    return {"size": n, "terrain": terrain.tolist(), "elevation": elevation.tolist(),
+            "objects": placed + trees(terrain) + ridges,
             "players": {str(p): {"color": p - 1} for p in range(1, players + 1)}, "lands": [{k: v for k, v in st.items() if k != "land"} for st in starts]}
+
+
+def objects(cmds, consts, terrain, starts, rng, warn):
+    """The objects of the create_object commands of <OBJECTS_GENERATION> (#3855): number_of_objects (default 1) on
+    random free tiles, set_place_for_every_player: that many for each player (its own, or Gaia with
+    set_gaia_object_only), min_distance_to_players and max_distance_to_players: tiles from the origin of the player
+    land. Never on water (only a fish or a ship), a forest or another object; an object with no free tile is missing."""
+    import aoe2mc
+    kinds = aoe2mc.object_kinds(old=False)
+    n, out = terrain.shape[0], []
+    wet = np.isin(terrain, [TERRAINS["WATER"], TERRAINS["SHALLOW"], TERRAINS["DEEP_WATER"]])
+    used = np.isin(terrain, list(FOREST_TREES))
+    x, y = np.mgrid[0:n, 0:n]
+    for cmd, args, attrs in cmds:
+        if cmd != "create_object":
+            warn(f"{cmd} is not read yet")
+            continue
+        kind, base = kinds.get(value(args[0], consts), (None, None))
+        if base is None:
+            warn(f"create_object: unknown object {args[0]}")
+            continue
+        count = value(attrs["number_of_objects"][0], consts) if "number_of_objects" in attrs else 1
+        lo = value(attrs["min_distance_to_players"][0], consts) if "min_distance_to_players" in attrs else 0
+        hi = value(attrs["max_distance_to_players"][0], consts) if "max_distance_to_players" in attrs else 2 * n
+        water = any(w in base for w in ("FISH", "SHIP", "BOAT"))
+        owners = ([(st, 0 if "set_gaia_object_only" in attrs else st["player"]) for st in starts]
+                  if "set_place_for_every_player" in attrs else [(None, 0)])
+        for st, player in owners:
+            dist = np.hypot(x - st["x"], y - st["y"]) if st else np.full((n, n), float(lo))
+            for _ in range(count):
+                name = base
+                spots = np.argwhere((dist >= lo) & (dist <= hi) & ~used & (wet == water))
+                if not len(spots):
+                    warn(f"create_object {args[0]}: no free tile")
+                    break
+                tx, ty = (int(v) for v in spots[rng.integers(len(spots))])
+                r = 3 if kind == "B" else 1                      # a building: its tile is the corner of its middle
+                used[max(0, tx - r):tx + r, max(0, ty - r):ty + r] = True
+                if name == "VILLAGER_MALE" and rng.integers(2):    # AoE2 DE: a male or a female villager
+                    name = "VILLAGER_FEMALE"
+                out.append({"name": name, "player": player, "x": tx + 0.5 * (kind != "B"), "y": ty + 0.5 * (kind != "B")})
+        for a in set(attrs) - {"number_of_objects", "set_place_for_every_player", "set_gaia_object_only",
+                               "min_distance_to_players", "max_distance_to_players"}:
+            warn(f"create_object: {a} is not read yet")
+    return out
 
 
 def cliffs(cmds, terrain, starts, consts, rng, warn):
@@ -508,7 +557,7 @@ def cliffs(cmds, terrain, starts, consts, rng, warn):
 
 # Own generators (#993, decision B of #961): the land of a map type in the script language of generate(). The text is
 # not a game script: it holds only facts about the map. Arabia: open grass and dirt land, small forests, a few single
-# trees, small ponds away from the players.
+# trees, small ponds away from the players, "a few scattered cliffs" (AoE2 wiki "Arabia", #3853).
 ARABIA = """
 <LAND_GENERATION>
 base_terrain DIRT
@@ -526,6 +575,11 @@ create_terrain DIRT3 { base_terrain DIRT number_of_clumps 12 land_percent 4 }
 create_terrain GRASS3 { base_terrain GRASS number_of_clumps 10 land_percent 3 }
 <ELEVATION_GENERATION>
 create_elevation 2 { base_terrain DIRT number_of_clumps 14 number_of_tiles 600 spacing 2 }
+<CLIFF_GENERATION>
+min_number_of_cliffs 3
+max_number_of_cliffs 5
+min_length_of_cliff 4
+max_length_of_cliff 6
 """
 # The start objects of each player: (name, count, distance in tiles from the town center, owner: 0 = Gaia, 1 = the
 # player). A group of more than one object stands on next tiles.
@@ -560,7 +614,8 @@ create_terrain DIRT3 { base_terrain GRASS number_of_clumps 10 land_percent 3 }
 create_terrain FOREST { base_terrain GRASS number_of_clumps 8 number_of_tiles 25 set_avoid_player_start_areas 16
   spacing_to_other_terrain_types 2 }
 """
-# Highland: grass land with forests, a river across the map between the players (RIVERS) with shallow fords.
+# Highland: grass land with forests, a river across the map between the players (RIVERS) with shallow fords, and
+# "a cliffed, highly forested land" (AoE2 wiki "Highland", #3853). The wiki pages of the other maps name no cliffs.
 HIGHLAND = """
 <LAND_GENERATION>
 base_terrain GRASS
@@ -574,6 +629,9 @@ create_terrain DIRT3 { base_terrain GRASS number_of_clumps 10 land_percent 3 }
 create_terrain GRASS3 { base_terrain GRASS2 number_of_clumps 8 land_percent 3 }
 <ELEVATION_GENERATION>
 create_elevation 3 { base_terrain GRASS number_of_clumps 10 number_of_tiles 700 spacing 2 }
+<CLIFF_GENERATION>
+min_number_of_cliffs 4
+max_number_of_cliffs 8
 """
 # Mediterranean: a sea in the middle of the map, the player lands on the land ring around it, a beach at the coast
 # (COASTS).
@@ -789,6 +847,8 @@ def random_map(kind, seed, players=2):
     if kind in COASTS:
         coast(d, COASTS[kind])
     objects = walls(d, WALLS[kind], rng) if kind in WALLS else []
+    wet = dilate(np.isin(np.array(d["terrain"]), [TERRAINS["WATER"], TERRAINS["SHALLOW"]]), 1)
+    objects += [o for o in d["objects"] if o["name"].startswith("CLIFF") and not wet[int(o["x"]), int(o["y"])]]  # not on the river
     if kind in GOLDS:
         objects += goldfield(d, GOLDS[kind], RINGS[kind], rng)
     n, terrain = d["size"], np.array(d["terrain"])
@@ -852,6 +912,8 @@ def fish(terrain, spec, players, rng):
                 break
             if not taken[x[i], y[i]]:
                 taken[max(0, x[i] - 2):x[i] + 3, max(0, y[i] - 2):y[i] + 3] = True
+                if name == "VILLAGER_MALE" and rng.integers(2):    # AoE2 DE: a male or a female villager
+                    name = "VILLAGER_FEMALE"
                 out.append({"name": name, "player": 0, "x": x[i] + 0.5, "y": y[i] + 0.5})
                 placed += 1
     return out
@@ -876,6 +938,8 @@ def scatter(used, players, rng, villagers):
                 continue
             for t in cells:
                 used[max(0, t[0] - 1):t[0] + 2, max(0, t[1] - 1):t[1] + 2] = True
+                if name == "VILLAGER_MALE" and rng.integers(2):    # AoE2 DE: a male or a female villager
+                    name = "VILLAGER_FEMALE"
                 out.append({"name": name, "player": 0, "x": t[0] + 0.5, "y": t[1] + 0.5})
     return out
 

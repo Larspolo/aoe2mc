@@ -77,6 +77,8 @@ TOUCH = 1.5     # blocks between a monk and a building, ram or trebuchet that it
 NEXT = tuple(r["name"] for r in RULES if r.get("next"))   # the siege units that a monk converts only next to them
 # More warm intervals and a later sure one: +1 s and +4 s (AoE2 DE wiki), 5 s in all (#1584, "resist" of data/train.jsonl)
 RESIST = {r["name"]: r["resist"] for r in table.load("train.jsonl") if "resist" in r}
+# A technology that converts more: "buildings" (Monotheism, antiquity mode, #3986), "monks" (the priests, as Atonement)
+CONVERTS = {r["name"]: r["converts"] for r in table.load("train.jsonl") if "converts" in r}
 FORT = (14, 0.13, 25)   # a building: warm intervals, chance (38 % / resistance 3) and the sure interval (AoE2 wiki)
 # Parts of the names of the buildings that no monk converts, also with Redemption
 LASTING = tuple(r["name"] for r in RULES if r.get("lasting"))
@@ -287,18 +289,24 @@ def heal(g, dt):
                 break
 
 
+def converts(g, what):
+    """True when a researched technology converts `what` (CONVERTS, key "converts" of data/train.jsonl)."""
+    return any(what in CONVERTS.get(t, ()) for t in g.techs)
+
+
 def convertible(g, uuid):
-    """True for an enemy unit that a monk converts: no monk (the religious units are evokers; with Atonement: also
-    them), king, hero or siege (with Redemption: siege, and an enemy building that is not LASTING)."""
+    """True for an enemy unit that a monk converts: no monk (the religious units are evokers; with Atonement or
+    Monotheism: also them), king, hero or siege (with Redemption: siege, and an enemy building that is not LASTING;
+    Monotheism: the building too)."""
     redeemed = "REDEMPTION" in g.techs
     if uuid in g.forts:
-        return redeemed and not any(n in g.fort_names.get(uuid, "") for n in LASTING)
+        return (redeemed or converts(g, "buildings")) and not any(n in g.fort_names.get(uuid, "") for n in LASTING)
     name = g.enemies.get(uuid)
     if name is None or name in IMMUNE or units.siege(name) and not redeemed or "EMPEROR" in name:
         return False
     hero = any(o.get("hero") for o in g.data["objects"] if o.get("uuid") == uuid)
     religious = name in MONKS or str((units.classify(name, hero) or {}).get("id")) == "minecraft:evoker"
-    return not hero and (not religious or "ATONEMENT" in g.techs)
+    return not hero and (not religious or "ATONEMENT" in g.techs or converts(g, "monks"))
 
 
 def convert_order(g, monks, target):
