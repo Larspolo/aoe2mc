@@ -402,6 +402,7 @@ class Replay:
         self.army, self.lost, self.razed = {}, {}, {}   # player -> military units trained, units lost, buildings lost (#1066)
         self.troops, self.fallen = {}, {}       # player -> {military unit name: live count, count lost} (#3695)
         self.censused = False                   # a census counted the live units (the base of the units lost)
+        self.idled, self.idle_at = {}, 0        # player -> idle villager time (s), game time (ms) of the last count (#3757)
         self.reached, self.researched = {}, {}  # player -> {age: game time (ms)}, researched technologies (#1067)
         self.vills, self.vhigh = {}, {}         # player -> live villagers (est.), the highest count (#1086)
         self.graph = {}                         # value index -> the shown rows of its graph (#3448)
@@ -2155,11 +2156,17 @@ class Replay:
             g = self.gathered.get(p, dict.fromkeys(START, 0))
             res = ", ".join(f"{r} {v}" for r, v in g.items())
             out.append("tellraw @a " + json.dumps([text(name, color), text(
-                f": villagers trained {self.villagers.get(p, 0)}, gathered {res}")]))
+                f": villagers trained {self.villagers.get(p, 0)}, gathered {res}, idle villager time "
+                f"{self.idle_text(p)}")]))
             out.append("tellraw @a " + json.dumps([text(name, color), text(              # military (#1066)
                 f": military units trained {self.army.get(p, 0)}, units lost {self.lost.get(p, 0)}, "
                 f"buildings lost {self.razed.get(p, 0)}{self.army_text(p)}")]))
         return out + self.tech_commands() + self.society_commands()
+
+    def idle_text(self, p):
+        """The idle villager time of player p as M:SS (#3757)."""
+        m, s = divmod(round(self.idled.get(p, 0)), 60)
+        return f"{m}:{s:02d}"
 
     def army_text(self, p):
         """The army at the end and the losses by type of player p, most first, at most 6 types and "+N" (#3697)."""
@@ -2322,6 +2329,13 @@ class Replay:
                  else "wood" if "LUMBERJACK" in t else "gold" if "GOLD" in t else "stone" if "STONE" in t else "food")
             out.setdefault(v.player, dict.fromkeys(keys, 0))[k] += 1
         return out
+
+    def idle_time(self, t):
+        """Add the idle villager time up to game time t (ms) to each player (#3757): the idle villagers now times the
+        game time since the last count. A jump sets idle_at only: the skipped time adds nothing."""
+        for p, n in self.eco().items():
+            self.idled[p] = self.idled.get(p, 0) + (t - self.idle_at) / 1000 * n["idle"]
+        self.idle_at = t
 
     def troop(self, p, name):
         """One more live military unit of this type for player p (a start unit or a spawn, #3695)."""
@@ -2614,6 +2628,7 @@ class Replay:
                     send(self.clock_commands(to, end, self.speed) + self.score_commands())
                     self.send(self.panel(to))
                     self.sample(to)
+                    self.idle_at = to
                     self.send(self.graphs(to))
                 continue
             lag = max(lag, clock() - r0 - (now - g0) / 1000 / self.speed)
@@ -2626,6 +2641,7 @@ class Replay:
                 send(self.clock_commands(now, end, self.speed) + self.score_commands() + self.overview(join=True))
                 self.send(self.panel(now))
                 self.sample(now)
+                self.idle_time(now)
                 self.send(self.graphs(now))
                 self.send(self.fog())
             if e is None:                                           # behind its clock: all the steps up to the
