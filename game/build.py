@@ -868,7 +868,7 @@ def diagonal_doors(site, T):
 def target(g, site):
     """A complete building of combat.BUILDINGS gets its target entity, as a building of the map (combat.setup): the
     AoE2 hit points, and the arrows of a town center, tower or castle (#1202). wonder.tick makes the one of a wonder."""
-    import combat                                                      # combat -> gather -> build: import it late
+    import combat, train                                               # combat -> gather -> build: import them late
     if not is_fort(site):
         return
     x0, x1, z0, z1 = site["footprint"]
@@ -878,7 +878,8 @@ def target(g, site):
                                                                        # (#1322), a guard tower or keep (#1374)
     s = combat.wall(name, ages(g), civs.civ(g, site["player"]), civs.handicap(g.data, site["player"])) if wall else values(g, name)   # Chemistry (#1375), Masonry (#1398)
     for c in combat.building(uuid, name, site["player"], box, g.map.T, s=s, low=minimum(g, name),
-                             factor=civs.arrows(g, name, site["player"])) \
+                             factor=civs.arrows(g, name, site["player"]),
+                             more=train.more_arrows(g, name) if site["player"] == g.player else 0) \
             + [f"tag {uuid} add {combat.WALL_TAG}"] * wall + [combat.label_command(uuid, name)]:
         g.command(c)
     forts(g, site)

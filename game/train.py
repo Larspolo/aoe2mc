@@ -125,6 +125,11 @@ BY_KEY = {k: {r["name"]: r[k] for r in ROWS if k in r} for k in sorted(KEYS)}
 BUILDING_OF = {r["name"]: r["building"] for r in ROWS}
 
 
+def more_arrows(g, building):
+    """The arrows that the technologies of g.techs add to one shot of the building (Yasama, Tigui: "more_arrows", #4258)."""
+    return sum(value("more_arrows", t, {}).get(building, 0) for t in g.techs)
+
+
 def weight(g, name):
     """The population of one unit: the product of the factors of the researched technologies with the key "population"
     for its building (Logistics of Antiquity Mode: 1/2 for the Barracks, #3918), else 1."""
@@ -397,6 +402,11 @@ def ship(name, s):
 def foot_archers(name, s):
     """True for the foot archers (civs.foot_archer): Yeomen."""
     return civs.foot_archer(s)
+
+
+def infantry_but_spears(name, s):
+    """True for the infantry except the Spearman line (forms("SPEARMAN")): Fereters (Armenians, #4273)."""
+    return "infantry" in s.classes and name not in forms("SPEARMAN")
 
 
 def unlocked(g, name):
@@ -1101,6 +1111,10 @@ def research(g, entry, start=False, rect=None):
         names = {n for names, _ in civs.ARROWS.get(civs.civ(g), ()) for n in names}
         for rect in [r for r, o in garrison.holders(g).items() if o["name"] in names]:
             g.command(garrison.arrows_command(g, rect))
+    if (more := value("more_arrows", entry["name"])):              # the own buildings of the names shoot more (#4258)
+        for rect, o in garrison.holders(g).items():
+            if o["name"] in more:
+                g.command(garrison.arrows_command(g, rect))
     for hook in value("on_research", entry["name"], ()):          # the special effect in its own module (#3243):
         module, function = hook.rsplit(".", 1)                     # import it late, it imports gather or this module
         getattr(importlib.import_module(module), function)(g, entry)
