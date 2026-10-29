@@ -209,10 +209,12 @@ def foot_archer(s):
 
 
 def changes(g, name, s):
-    """The (value, change) of the civilization bonuses of UNITS for unit name (combat.Stats s) in the age of g."""
+    """The (value, change) of the civilization bonuses of UNITS for unit name (combat.Stats s) in the age of g. The
+    group of a rule is a name of GROUPS or a list of unit names."""
     import build                                                   # build imports gather, gather imports this module
     age = build.ages(g)
-    return [(v, c[age]) for k, v, c in UNITS.get(civ(g), []) if GROUPS[k](name, s)]
+    return [(v, c[age]) for k, v, c in UNITS.get(civ(g), [])
+            if (name in k if isinstance(k, tuple) else GROUPS[k](name, s))]   # a list of names (Antiquity, #3827)
 
 
 def smith(g, name, s):

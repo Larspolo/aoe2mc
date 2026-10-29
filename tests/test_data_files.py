@@ -130,11 +130,12 @@ def check_civs(row):
 def check_gather(row):
     form(row, {"name": str}, {"drop": list, "work": dict, "fish": int, "shore": bool, "hunt": int, "herd": bool,
                               "farm": int, "dark": bool, "ship": list, "civilian": bool, "mine": list, "carry": int,
-                              "pace": float, "watch": bool, "decay": float, "res": str})
+                              "pace": float, "decay": float, "res": str})
     n = row["name"]
     assert len(row) > 1 and set(row.get("drop", ())) <= RES | {"meat"} and set(row.get("work", {})) <= RES, n
     assert all(isinstance(v, NUMBER) for v in row.get("work", {}).values()), n
     assert row.get("res", "food") in RES and ("res" not in row or "fish" in row), n   # an oyster: gold (#2465)
+    assert type(row.get("watch", True)) in (bool, int), n         # true: Town Watch sight; a number: tiles (#3915)
     if "mine" in row:                                      # [the resource, its amount, the villager name of the miner]
         res, amount, miner = row["mine"]
         assert res in RES and isinstance(amount, int) and miner.isupper(), n
@@ -207,7 +208,7 @@ def check_difficulty(row):                                 # a level of "AI diff
 
 def check_challenges(row):                                 # an Art of War challenge: its medal limits (#3761)
     form(row, {"name": str, "civ": str, "goal": str, "medal": str, "gold": int, "silver": int, "bronze": int,
-               "note": str}, {"after": (str, type(None))})
+               "note": str}, {"after": (str, type(None)), "check": str, "need": dict})
     assert row["civ"] in NAMES["civs.jsonl"] and row["medal"] in ("time", "lost"), row["name"]
     assert 0 <= row["gold"] < row["silver"] < row["bronze"] and row["note"].startswith("AoE2 wiki"), row["name"]
     assert row["after"] is None or row["after"] in NAMES["challenges.jsonl"], row["name"]

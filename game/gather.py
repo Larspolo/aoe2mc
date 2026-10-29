@@ -60,6 +60,7 @@ import bossbar  # noqa: E402
 import capture_relic  # noqa: E402
 import cheats  # noqa: E402
 import civs  # noqa: E402
+import challenge  # noqa: E402
 import conquest  # noqa: E402
 import defend_wonder  # noqa: E402
 import demolish  # noqa: E402
@@ -120,6 +121,7 @@ BUSH_FOOD = 125                                                    # food in one
 AOE2_WORK, NORMAL = {"wood": 0.39, "food": 0.31, "farm": 0.33, "gold": 0.38, "stone": 0.36, "hunt": 0.41,
                      "fish": 0.43, "oyster": 0.38}, 1.7            # fish: a fisherman at a shore fish (#1283)
 WORK_SECONDS = {r: 1 / (w * NORMAL) for r, w in AOE2_WORK.items()}    # real seconds per unit, as at Normal speed
+WATCH_ROWS = {t['name']: t['watch'] for t in ROWS if t.get('watch')}   # true: combat.WATCH tiles, a number: that many
 CARRY = {t['name']: t['carry'] for t in ROWS if 'carry' in t}
 FOOD_CARRY = {"HEAVY_PLOW": 1}                                     # more food only per trip, as in AoE2 (#1424)
 PACE = {t['name']: t['pace'] for t in ROWS if 'pace' in t}
@@ -181,6 +183,17 @@ WORK_LOOK = {"wood": ("minecraft:oak_log", "minecraft:block.wood.hit"),
 EVENTS = {"idle": "idle", "to_tree": "walk", "chop": "chop", "to_drop": "carry",    # state -> event in the log
           "to_site": "walk", "build": "build", "to_rally": "walk", "to_prey": "walk", "hunt": "hunt",
           "to_repair": "walk", "repair": "build"}
+
+
+def breach(g, fort):
+    """True when the villagers of g may attack the enemy building fort: a wall, a gate or a tower, after a technology
+    with the key "breach" (Siegecraft of Antiquity Mode, #3916)."""
+    import combat                                                      # combat imports this module
+    name = g.fort_names.get(fort, "")
+    if not any(train.value("breach", t) for t in getattr(g, "techs", ())):
+        return False
+    s = combat.wall(name, 0) if name in combat.WALLS else combat.stats(name)
+    return bool({combat.WALL, combat.STONE} & set(s.classes)) or name.endswith("_TOWER")
 
 
 def only(who, *filters):
@@ -661,6 +674,7 @@ class Gather:
     speed = 1.0                                                        # times the Normal speed: shorter real steps (#2057)
     later = {}                                                         # the bonus of the first town center (civs.TOWN_CENTER)
     nomad = False                                                      # a Nomad start: no town center yet (#2466)
+    challenge = None                                                   # an Art of War challenge (challenge.py, #3900)
     victory = "standard"                                               # AoE2 "Victory"; "conquest": no wonder, no relics (#2316)
                                                                        # "king-of-the-hill": hill.py (#2360)
                                                                        # "time-limit", "score": time_limit.py (#2356)
@@ -1085,7 +1099,8 @@ class Gather:
                       if n not in hp or k < 1 or combat.target_uuid([fp[i] for i in (0, 2, 1, 3)]) in alive]
         import combat                                                  # combat imports this module
         printing = monk.PRINTING * ("BLOCK_PRINTING" in getattr(self, "techs", ()))   # the monks see more (#1475)
-        watch = combat.WATCH * len({t['name'] for t in ROWS if t.get('watch')} & set(getattr(self, "techs", ())))   # (#1454, #1579)
+        techs = set(getattr(self, "techs", ()))
+        watch = sum(combat.WATCH if w is True else w for n, w in WATCH_ROWS.items() if n in techs)   # (#1454, #1579; a number: tiles, #3915)
         lit = {n for n, _, _ in placed} - combat.WALLS.keys() - {t['name'] for t in ROWS if t.get('dark')}   # as in AoE2
         return replay.seen(mobs, [(self.player, n, fp) for n, fp, _ in placed], self.player, self.map.T,
                            lambda n: combat.sight(n) + printing * (n in monk.MONKS) + watch * (n in lit)
@@ -1141,6 +1156,16 @@ class Gather:
 
     def hunt(self, prey, who=None):
         """Send the selected villagers (or the villagers who) to hunt the animal prey, with the hunter look (#1058)."""
+        if prey in self.forts:                                         # a wall or tower: next to it (breach, #3916)
+            who = (self.selected if who is None else who) & self.villagers.keys()
+            self.new_order(who)
+            x0, _, z0, x1, _, z1 = self.forts[prey]
+            cells = self.map.around({(x, z) for x in range(x0, x1 + 1) for z in range(z0, z1 + 1)})
+            for u in sorted(who):
+                v = self.villagers[u]
+                v.tree, v.site, v.prey = None, None, prey
+                self.go(v, "to_prey", cells or {(x0, z0)})
+            return
         if not (pos := self.pos(prey)):
             return
         self.seen[prey] = pos
@@ -1159,6 +1184,8 @@ class Gather:
         """A hunter hits its animal once per AoE2 villager reload (VILLAGER_HIT), with aegis at once and to death
         (#817). The `damage` source is the villager, so a boar hits back. A dead animal leaves its carcass on the tile
         of its last place, and its hunters gather it: the work of a bush."""
+        if v.prey in self.forts:                                      # a wall or tower (breach, #3916)
+            return self.batter(v)
         if v.prey not in self.dead and (pos := self.pos(v.prey)):
             self.seen[v.prey] = pos
             if math.dist((pos[0], pos[2]), (v.pos[0], v.pos[2])) > 3:   # it ran away: follow it
@@ -1187,6 +1214,19 @@ class Gather:
                     self.map.herds.add(tile)
         v.tree, v.prey, v.path = self.dead.get(v.prey), None, []
         self.set(v, "to_tree" if v.tree else "idle")                   # it stands at the carcass: the next step gathers
+
+    def batter(self, v):
+        """A villager hits the enemy wall or tower v.prey once per AoE2 villager reload (#3916). The `damage` source is
+        the villager: the plugin gives the AoE2 damage of the villager (AoePlugin.onHit). A fallen building leaves
+        self.forts (fall): the villager stops."""
+        x0, _, z0, x1, _, z1 = self.forts[v.prey]
+        if max(x0 - v.pos[0], v.pos[0] - x1 - 1, z0 - v.pos[2], v.pos[2] - z1 - 1) > 2:   # not next to it: walk again
+            return self.hunt(v.prey, {v.uuid})
+        v.timer += self.tick
+        if self.aegis or v.timer >= VILLAGER_HIT[1] / NORMAL:
+            v.timer = 0.0
+            self.command(f"rotate {v.uuid} facing entity {v.prey}")
+            self.command(f"damage {v.prey} {1000 if self.aegis else VILLAGER_HIT[0]} minecraft:mob_attack by {v.uuid}")
 
     def decay(self, dt):
         """The carcasses lose food at their AoE2 rate (Map.rot, AoE2 wiki "Hunt": "decay ... begins to subtract from the
@@ -1512,6 +1552,13 @@ class Gather:
         if kind == "unit":
             self.select(u)
             return
+        if kind == "fort" and self.selected and self.selected <= self.villagers.keys():   # Siegecraft (#3916)
+            self.sieged.add(u)
+            self.hunt(u)
+            self.order_voice()
+            x0, _, z0, x1, _, z1 = self.forts[u]
+            self.mark(name, {(x0, z0), (x1, z1)}, "attack")
+            return
         if kind == "fort":
             monk.convert_order(self, self.monks(), u)                 # with Redemption (#1264)
             self.sieged.add(u)
@@ -1691,7 +1738,8 @@ class Gather:
             kind = "enemy" if u in self.enemies else "prey" if u in self.prey and (hunters or u not in self.flock) \
                 else "unit"
             return kind, u, {(math.floor(at[u][0]), math.floor(at[u][2]))}
-        if self.selected and self.selected <= set(self.soldiers) and (fort := self.pick_fort(eye, d)):
+        if self.selected and (self.selected <= set(self.soldiers) or self.selected <= self.villagers.keys()) \
+                and (fort := self.pick_fort(eye, d)) and (self.selected <= set(self.soldiers) or breach(self, fort)):
             x0, _, z0, x1, _, z1 = self.forts[fort]
             return "fort", fort, {(x0, z0), (x1, z1)}
         cell = self.map.pick_ground(eye, d)
@@ -2273,6 +2321,8 @@ class Gather:
             spectator.tick(self)                                       # the sidebar of the spectators (#2900)
             if self.victory in ("time-limit", "score"):                # after the conquest: it wins before (#2356)
                 time_limit.tick(self, self.tick * NORMAL)
+            if self.challenge:                                         # an Art of War challenge: its goal (#3900)
+                challenge.tick(self)
             treaty.tick(self, self.tick * NORMAL)
             record.tick(self, self.tick * NORMAL)                      # the game time of Record Game (#2649)
             time.sleep(max(0.0, self.tick / self.speed - (time.monotonic() - t)))   # a step stays tick game seconds

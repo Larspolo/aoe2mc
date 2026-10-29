@@ -44,7 +44,7 @@ def test_unfreeze_and_clock_start_after_the_last_join(people):
     sides = [Side(lambda: now[0]) for _ in range(people + 1)]       # the people and a bot
     sleep = join_after(game, ["Steve", "Alex"], now)
     run.start_on_join(game, sides, people, sleep=lambda s: (game.command("sleep"), sleep(s)))
-    assert game.sent == ["sleep"] * people + ["tick unfreeze"]
+    assert game.sent == ["sleep"] * people + ["scoreboard players reset #wait aoe_trig", "tick unfreeze"]
     assert len(game.joined) == people
     assert all(h.t0 == now[0] == 10 * people for h in sides)    # the game clock is 0 at the last join
 
