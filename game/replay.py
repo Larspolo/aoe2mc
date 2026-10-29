@@ -695,7 +695,8 @@ class Replay:
                 continue
             count = sum(item[2] == n for item in items) if e["kind"] == "queue" else 1
             done = round(PANEL_BAR * (t - s) / max(1, end - s))
-            line = f"{pretty(n) if e['kind'] == 'queue' else n}{f' ×{count}' * (count > 1)} " \
+            label = n if e["kind"] != "queue" else "Villager" if n.startswith("VILLAGER_") else pretty(n)  # AoE2 (#3740)
+            line = f"{label}{f' ×{count}' * (count > 1)} " \
                    f"[{'|' * done}{'.' * (PANEL_BAR - done)}]"
             if shown.get(b) == line:
                 continue
