@@ -22,6 +22,9 @@ its target and does no damage to it for STALL seconds (#3441): AoE2 units that c
 Difficulty (#2661, decision #2648): the AoE2 DE setting "AI difficulty" (run.py --ai-difficulty) is one line of
 game/data/difficulty.jsonl (LEVELS): "gather" times the work rate of the bot villagers, "attack" times the time of the
 first attack, "soldiers" in the first wave. AoE2 does not publish what each level changes: the values are a guess.
+
+Defense (#3399): a predator in the sight of a bot villager gets the hunt order of the DEFENDERS nearest villagers, as
+the AoE2 AI does. After the kill they go back to their last resource and source.
 """
 import math
 import os
@@ -50,6 +53,7 @@ ATTACK = 600.0                                                     # AoE2 second
 LOOK = 2.0                                                         # AoE2 seconds between two looks for targets
 RETRY = 60.0                                                       # AoE2 seconds: try a source with no path again
 STALL = 30.0                                                       # AoE2 seconds with no step nearer and no damage
+DEFENDERS = 3                                                      # villagers that attack one predator
 LEVELS = {r["name"]: r for r in table.load("difficulty.jsonl")}    # "AI difficulty", in the order of the AoE2 lobby
 
 
@@ -89,6 +93,8 @@ class Bot:
         self.sent = {}                                                 # villager -> the tile that go() sent it to
         self.sides = (None, {})                                        # (own and foe places, {tile: at home}) (#1810)
         self.g.home = self.home                                        # the next bush or mine of Gather.nearest too
+        self.guarded = -LOOK                                           # AoE2 seconds of the last look for predators
+        self.defense = {}                                              # villager -> (predator, last res, last tree)
         self.g.work_on = False                                         # the bot gives the tasks after a build or a tree (#3271)
 
     def setup(self):
@@ -147,6 +153,7 @@ class Bot:
     def orders(self):
         """Orders for the idle villagers, the sites, the queues and the soldiers."""
         g = self.g
+        self.defend()
         self.build()
         share = self.shares()
         work = {r: 0 for r in SHARE}
@@ -178,6 +185,34 @@ class Bot:
         if self.time >= self.attack and self.time >= self.looked + LOOK:   # each look costs RCON commands
             self.looked = self.time
             self.fight()
+
+    def defend(self):
+        """Send the DEFENDERS nearest villagers to a predator in the sight of a bot villager (#3399). A defender whose
+        predator is dead goes back to its last task: orders() sends an idle villager with a tree to that tree."""
+        g = self.g
+        if self.time < self.guarded + LOOK:                            # each predator costs one RCON command
+            return
+        self.guarded = self.time
+        for u, (prey, res, tree) in sorted(self.defense.items()):
+            if prey not in g.prey and (v := g.villagers.get(u)):
+                del self.defense[u]
+                if v.prey is None:
+                    v.res, v.tree = res, tree
+            elif u not in g.villagers:
+                del self.defense[u]
+        hunted = {p for p, *_ in self.defense.values()}
+        reach = combat.sight("VILLAGER_MALE") * g.map.T
+        for prey in sorted(p for p, name in g.prey.items() if gather.predator(name) and p not in hunted):
+            if not (pos := g.pos(prey)):
+                continue
+            gap = {u: math.dist((v.pos[0], v.pos[2]), (pos[0], pos[2])) for u, v in g.villagers.items() if v.pos}
+            if not gap or min(gap.values()) > reach:
+                continue
+            who = set(sorted(gap, key=lambda u: (gap[u], u))[:DEFENDERS])
+            for u in who:
+                v = g.villagers[u]
+                self.defense[u] = (prey, v.res, v.tree)
+            g.hunt(prey, who)
 
     def go(self, v, res):
         """Send villager v to the nearest source of res that has some left. False when there is none."""
