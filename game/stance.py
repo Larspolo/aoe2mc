@@ -4,9 +4,11 @@ unit opens a chest menu (menu.py), as a right click on a selected villager opens
 of the four AoE2 stances sends `aoe stance` (combat.stance_command, #1104) to each selected military unit, not to the
 villagers, and closes the menu. The fifth item selects all units of the type near the clicked unit: the second click
 did that before (#743). The sixth item stops the selected military units at once (#3353). The seventh item
-sends them on a patrol to the next clicked ground cell (#3355).
+sends them on a patrol to the next clicked ground cell (#3355). The eighth item is the Attack Move (#3357).
 The boss bar of the selected unit shows a stance other than aggressive (bossbar.py).
 """
+import math
+
 import bossbar
 import menu as chest
 
@@ -18,6 +20,7 @@ ITEMS = (("aggressive", "iron_sword", "Aggressive", "Attacks enemies in sight an
 TYPE = len(ITEMS)                                                  # slot: select all of the type (#743)
 STOP = TYPE + 1                                                    # slot: stop the selected military units (#3353)
 PATROL = STOP + 1                                                  # slot: patrol to a clicked point (#3355)
+ATTACK_MOVE = PATROL + 1                                           # slot: walk to a clicked point, attack on the way (#3357)
 
 
 def stance(g, uuid):
@@ -29,7 +32,8 @@ def items(g, uuid):
     return [(i, item, name, text + "\nNow" * (s == now)) for i, (s, item, name, text) in enumerate(ITEMS)] + \
         [(TYPE, "spyglass", "Select All of the Type", "The units of this type near it"),
          (STOP, "barrier", "Stop", "Stops the units at once"),
-         (PATROL, "compass", "Patrol", "Walk between here and a point; attack the enemies on the way")]
+         (PATROL, "compass", "Patrol", "Walk between here and a point; attack the enemies on the way"),
+         (ATTACK_MOVE, "iron_axe", "Attack Move", "Walk to a point; attack each enemy on the way")]
 
 
 def open_menu(g, player, uuid):
@@ -43,6 +47,8 @@ def open_menu(g, player, uuid):
             stop(g)
         elif slot == PATROL:
             vars(g).setdefault("ordering", {})[p] = "patrol"                                # the next right click picks the point
+        elif slot == ATTACK_MOVE:
+            vars(g).setdefault("ordering", {})[p] = "attack_move"
         else:
             return
         chest.close(g, p)
@@ -91,3 +97,48 @@ def patrol(g, player, cell):
     g.command(f"aoe moveto @e[tag={tag}] {b[0]} {b[1]} {b[2]}")
     for c in gather.marker(g.map, {tuple(cell)}, "go", player):
         g.command(c)
+
+
+def attack_move(g, player, cell):
+    """Send the selected military units to the clicked ground cell (x, z), as the AoE2 Attack Move (#3357): they walk
+    with the stance aggressive, so that the mob AI attacks each enemy on the way. arrive() gives the old stance back at
+    the point; a new order ends it (end_attack_moves)."""
+    import gather                                                  # gather imports this module
+    units = [u for u in sorted(g.selected) if u in g.soldiers]
+    if not units:
+        return
+    cells = g.walk_to(player, cell, units=units) or {}             # a new order ends the old attack moves first
+    moves = vars(g).setdefault("attack_moves", {})
+    for u, c in cells.items():
+        moves[u] = [c, g.stances.pop(u, "aggressive")]
+        g.command(f"aoe stance {u} aggressive")
+    for c in gather.marker(g.map, {tuple(cell)}, "go", player):
+        g.command(c)
+
+
+def restore(g, u, old):
+    """Give the unit its stance old again (the stance before its attack move)."""
+    g.command(f"aoe stance {u} {old}")
+    g.stances.pop(u, None) if old == "aggressive" else g.stances.update({u: old})
+
+
+def arrive(g):
+    """Each attack move ends when its unit is near its point (or dead): the old stance comes back (#3357)."""
+    moves = vars(g).get("attack_moves")
+    if not moves:
+        return
+    pos = g.positions(list(moves))
+    for u, (c, old) in list(moves.items()):
+        p = pos.get(u)
+        if p is None or math.hypot(p[0] - c[0] - 0.5, p[2] - c[1] - 0.5) <= 2:
+            del moves[u]
+            if p is not None:
+                restore(g, u, old)
+
+
+def end_attack_moves(g, units):
+    """A new order ends the attack moves of the units: the old stance comes back at once (#3357)."""
+    moves = vars(g).get("attack_moves", {})
+    for u in sorted(units):
+        if u in moves:
+            restore(g, u, moves.pop(u)[1])

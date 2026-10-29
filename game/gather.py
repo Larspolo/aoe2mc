@@ -1391,8 +1391,12 @@ class Gather:
         if (rect := self.rallying.pop(name, None)) and (cell := self.map.pick_ground(eye, d)):   # the menu item (#707)
             train.rally(self, rect, cell, self.map.pick_tree(eye, d))
             return
-        if vars(self).get("ordering", {}).pop(name, None) == "patrol" and (cell := self.map.pick_ground(eye, d)):
+        order = vars(self).get("ordering", {}).pop(name, None)
+        if order == "patrol" and (cell := self.map.pick_ground(eye, d)):
             stance.patrol(self, name, cell)                            # the Patrol menu item (#3355)
+            return
+        if order == "attack_move" and (cell := self.map.pick_ground(eye, d)):
+            stance.attack_move(self, name, cell)                       # the Attack Move menu item (#3357)
             return
         kind, u, _ = self.target(eye, d, self.positions(sorted(self.pickable()))) or (None, None, None)
         if kind in ("enemy", "fort") and treaty.refuse(self, name):   # no attack before the end of the treaty (#2297)
@@ -1497,6 +1501,7 @@ class Gather:
         units = set(units)
         repair.drop(self, units)
         self.end_patrols(units)
+        stance.end_attack_moves(self, units)
         for key in ("entering", "boarding", "loading", "converting", "fetching", "trade"):
             table = vars(self).get(key, {})
             for u in units & table.keys():
@@ -2130,6 +2135,7 @@ class Gather:
                 scenario.resources(self)                               # "Tribute", "Modify Resource" (#2576)
             else:
                 scenario.patrol(self)                                  # the patrols of the players (#3355)
+            stance.arrive(self)                                        # the attack moves: the old stance at the point (#3357)
             fog.tick(self)                                             # after the bots: their units too (#1389)
             herd.tick(self)                                            # all players: the bots capture too (#1792)
             if self.victory == "standard" or self.mode in wonder.RACE:  # a wonder or all relics win too (#2316)
