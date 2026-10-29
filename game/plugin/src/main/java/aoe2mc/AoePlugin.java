@@ -56,6 +56,7 @@ import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.EntityRegainHealthEvent;
 import org.bukkit.event.entity.EntityTargetEvent;
 import org.bukkit.event.entity.EntityTransformEvent;
+import org.bukkit.event.entity.SlimeSplitEvent;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
@@ -336,6 +337,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     private record Building(Stats stats, String box, int max, int[] b, double range, double min) {}
 
     private final Map<UUID, Building> buildings = new HashMap<>();
+    private static final String BUILDING = "aoe2mc.building";   // the tag of a target slime (combat.building)
     private final Map<UUID, Integer> arrows = new HashMap<>();       // the arrows of a shot of a building (#1113)
     private final Map<UUID, Wear> wear = new HashMap<>();             // the damage stage of a building and its blocks (#1522)
     // aoe hide: also for a player that joins later. The teams that do not see the unit, ALL: each player (#2921)
@@ -1552,13 +1554,21 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     @EventHandler(ignoreCancelled = true)
     public void onHurt(EntityDamageEvent ev) {               // suffocation in its walls, fire, fall ...
         Entity e = ev.getEntity();
-        if (!(ev instanceof EntityDamageByEntityEvent) && buildings.containsKey(e.getUniqueId())) {
+        if (!(ev instanceof EntityDamageByEntityEvent) && (buildings.containsKey(e.getUniqueId())
+                || e.getScoreboardTags().contains(BUILDING))) {       // also a target with no entry yet (#3723)
             ev.setCancelled(true);
         } else if (ev.getCause() == EntityDamageEvent.DamageCause.DROWNING && e.getVehicle() instanceof Boat
                 && stats.containsKey(e.getUniqueId())) {
             ev.setCancelled(true);                            // the blaze crew of a fire ship in the rain (#1440)
         } else if (names.containsKey(e.getUniqueId())) {      // the new health is set after the event
             Bukkit.getScheduler().runTask(this, () -> nameLine(e));
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onSplit(SlimeSplitEvent ev) {                 // the small slimes of a dead target have its name but no
+        if (ev.getEntity().getScoreboardTags().contains(BUILDING)) {   // entry: they suffocate in its walls (#3723)
+            ev.setCancelled(true);
         }
     }
 
