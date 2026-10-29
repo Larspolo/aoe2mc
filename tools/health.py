@@ -24,7 +24,7 @@ from collections import Counter
 import numpy
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from agent_config import CONFIG  # noqa: E402
+from agent_config import CONFIG, first_account  # noqa: E402
 from dashboard import api, closes, merges, owner_work, start_after  # noqa: E402
 from feedback import by_owner  # noqa: E402
 
@@ -128,14 +128,28 @@ def lane_runs(line):
     return {k: int(v) for k, v in re.findall(r"· (\w+) (\d+)(?= ·|$)", line) if k in LANES}
 
 
-def usage_lines(comments):
-    return [line for c in comments for line in (c.get("body") or "").splitlines() if line.startswith("Usage:")]
+ACCOUNT = re.compile(r" · account (\S+)")
 
 
-def raw_samples(comments):
-    """[(time, 5-hour usage 0..1, reset time, all claims, {lane: claims})] of the `Usage:` lines, by time."""
+def line_account(line):
+    """The Claude account of a `Usage:` line (`· account NAME`, #4236); a line with no account word belongs to the
+    first account of `[accounts]` (the lines before #4236)."""
+    m = ACCOUNT.search(line)
+    return m[1] if m else first_account()
+
+
+def usage_lines(comments, account=None):
+    """The `Usage:` lines of the comments; with `account`, only the lines of that account: each account has its own
+    quota windows, so a pair of lines of two accounts gives no burn (#4236)."""
+    return [line for c in comments for line in (c.get("body") or "").splitlines() if line.startswith("Usage:")
+            and (account is None or line_account(line) == account)]
+
+
+def raw_samples(comments, account=None):
+    """[(time, 5-hour usage 0..1, reset time, all claims, {lane: claims})] of the `Usage:` lines (of one account), by
+    time."""
     return sorted((ts(m[1]), float(m[2]) / 100, ts(m[3]), int(m[4]), lane_runs(line))
-                  for line in usage_lines(comments) for m in [SAMPLE.match(line)] if m)
+                  for line in usage_lines(comments, account) for m in [SAMPLE.match(line)] if m)
 
 
 def lane_weights(comments, need=10):
@@ -189,11 +203,12 @@ def opus_equivalent(claims, lanes, weights):
     return claims - sum(lanes.values()) + sum(weights.get(k, 1.0) * n for k, n in lanes.items())
 
 
-def samples(comments, weights=None):
+def samples(comments, weights=None, account=None):
     """[(time, 5-hour usage 0..1, reset time, claims in Opus runs)] of the `Usage:` lines of the run reports (#462),
-    by time. A Haiku run counts its weight (#1727): else 2 hours of Haiku runs look like a plan upgrade (`ratio`)."""
+    by time; with `account`, only its lines (#4236: burn_pairs and burn_ratio then pair the lines of one account).
+    A Haiku run counts its weight (#1727): else 2 hours of Haiku runs look like a plan upgrade (`ratio`)."""
     weights = weights or lane_weights(comments)[0]
-    return [(t, u, r, opus_equivalent(k, lanes, weights)) for t, u, r, k, lanes in raw_samples(comments)]
+    return [(t, u, r, opus_equivalent(k, lanes, weights)) for t, u, r, k, lanes in raw_samples(comments, account)]
 
 
 def burn_pairs(samples, min_hours=0.25):
@@ -244,22 +259,24 @@ def ratio(intervals, need):
 WEEK_RUNS = re.compile(r"^Usage: (\S+) · .*?· runs (\d+) · week (\d+(?:\.\d+)?)%", re.M)
 
 
-def weekly_burn(comments, now, hours=24, need=5):
+def weekly_burn(comments, now, hours=24, need=5, account=None):
     """Share of the 7-day quota that one run uses per hour (#1695): the sum of the rises of the 7-day usage of
-    consecutive `Usage:` lines of the last `hours`, divided by their claim-hours, as burn_ratio. A drop is the 7-day
-    reset. None with fewer than `need` intervals. A plan upgrade: `ratio`."""
+    consecutive `Usage:` lines of the last `hours` (of one account, #4236), divided by their claim-hours, as
+    burn_ratio. A drop is the 7-day reset. None with fewer than `need` intervals. A plan upgrade: `ratio`."""
     weights = lane_weights(comments)[0]                        # a Haiku run counts its weight (#1727)
     pts = sorted((ts(m[1]), opus_equivalent(int(m[2]), lane_runs(line), weights), float(m[3]) / 100)
-                 for line in usage_lines(comments) for m in [WEEK_RUNS.match(line)] if m)
+                 for line in usage_lines(comments, account) for m in [WEEK_RUNS.match(line)] if m)
     pts = [p for p in pts if p[0] >= now - datetime.timedelta(hours=hours)]
     out = [(b[0], b[2] - a[2], (b[0] - a[0]).total_seconds() / 3600 * (a[1] + b[1]) / 2) for a, b in zip(pts, pts[1:])
            if b[2] >= a[2] and b[0] > a[0] and a[1] + b[1] > 0]
     return ratio(out, need) or None
 
 
-def measured_burn(comments, now, hours=24, need=5):
-    """The burn ratio of the samples of the last `hours`, or None when there are fewer than `need` intervals."""
-    return burn_ratio([s for s in samples(comments) if s[0] >= now - datetime.timedelta(hours=hours)], need)
+def measured_burn(comments, now, hours=24, need=5, account=None):
+    """The burn ratio of the samples of the last `hours` (of one account, #4236), or None when there are fewer than
+    `need` intervals."""
+    return burn_ratio([s for s in samples(comments, account=account) if s[0] >= now - datetime.timedelta(hours=hours)],
+                      need)
 
 
 PHASES = ("read", "claim", "code", "verify", "ci", "conflict", "report")    # the phase minutes of a Metrics line (#899)

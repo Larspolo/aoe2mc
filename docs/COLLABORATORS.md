@@ -46,8 +46,8 @@ Automerge holds each PR that changes `owners` or `[accounts]` until an owner app
 
 Each collaborator makes an own cloud environment (`docs/SYSTEM.md`, setup step 2) and sets the environment variable
 `AGENT_ACCOUNT=<name>` there. The SessionStart hook copies it to `git config aoe2mc.account`, as the lane today.
-`tools/claim.py` writes it into each claim (`... lane deep account bob`), and `tools/report.py` and `tools/tokens.py`
-write it into the `Usage:` and `Run:` lines (`· account bob`). With no variable, the run belongs to the first
+`tools/claim.py` writes it into each claim (`... account bob lane deep`: the lane stays at the end, where its readers
+look), and `tools/usage.py` and `tools/report.py` write it into the `Usage:` and `Run:` lines (`· account bob`). With no variable, the run belongs to the first
 account (the present runs keep working with no change).
 Why the environment and not the task prompt: the environment is per account already, it also covers a collaborator's
 own sessions, and the prompt stays `/scheduled ARGUMENT` (owner, 2026-10-29).
