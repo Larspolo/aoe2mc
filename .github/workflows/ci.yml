@@ -50,6 +50,11 @@ jobs:
       - name: Lint
         if: steps.select.outputs.tests == ''
         run: ruff check .
+      # A change of data files only adds no test (owner, 2026-10-29, #4242): a run with an older ship_pr.py can push one.
+      - name: Data-only change adds no test
+        if: github.event_name == 'pull_request'
+        run: |
+          python3 -c "import sys, subprocess; sys.path.insert(0, 'tools'); import ship_pr; c = subprocess.run(['git', 'diff', '--name-only', 'HEAD^1...HEAD'], capture_output=True, text=True).stdout.split(); bad = ship_pr.data_only_tests(c); sys.exit('a change of data files only must not add or change tests: ' + ' '.join(bad) + ' (docs/extend.md)') if bad else None"
       - name: Fast tests
         run: pytest -n auto ${{ steps.select.outputs.tests }}   # all cores (#2415)
       # Two green PRs can merge into a main whose plugin does not compile (#2418): compile it when the change (a PR

@@ -57,6 +57,8 @@ def tick(g, dt):
                   f"bossbar set {BAR} players @a"):
             g.command(c)
         g.command("tellraw @a " + json.dumps({"text": f"Player {n} holds all relics.", "color": "yellow"}))
+    if (more := wonder.later(g, t)) is not None:                    # an enemy researched Atheism (#4336)
+        g.command(f"bossbar set {BAR} max {int((wonder.years(g.data.get('map_size')) * wonder.YEAR + more) / wonder.YEAR)}")
     t["left"] -= dt
     if t["left"] <= 0:
         from gather import allied                               # gather imports this module

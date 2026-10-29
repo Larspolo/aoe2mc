@@ -227,7 +227,9 @@ def relic_tick(g, dt):
     if (n := sum(r["home"] is not None and own(g, r) for r in relics(g))) != getattr(g, "relic_homes", 0):
         g.relic_homes = n
         rearm(g)
-    g.relic_gold += GOLD * dt * sum(r["home"] in homes for r in relics(g))
+    import wonder                                                  # wonder imports cheats, which imports this module
+    g.relic_gold += GOLD * dt * sum(r["home"] in homes for r in relics(g)) * \
+        math.prod(wonder.rivals(g, g.player, "rival_relic_gold"))  # Atheism of an enemy: half (#4336)
     if (n := int(g.relic_gold)) > 0:
         g.relic_gold -= n
         g.earn("gold", n)

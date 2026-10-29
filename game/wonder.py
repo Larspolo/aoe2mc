@@ -33,6 +33,27 @@ def years(size):
     return next(y for s, y in YEARS if (size or 0) <= s)
 
 
+def rivals(g, n, key):
+    """The values of key (data/train.jsonl) of the technologies of the enemies of player n in the game of g (Atheism,
+    #4336): all Gathers of the game (fog.gathers of conquest.main) that are no allies of n."""
+    import train
+    from conquest import main
+    from fog import gathers                                            # fog imports gather, which imports this module
+    from gather import allied
+    return [v for h in gathers(main(g)) if not allied(g.players, n, h.player)
+            for t in sorted(getattr(h, "techs", ())) if (v := train.value(key, t)) is not None]
+
+
+def later(g, t):
+    """Add the years of the enemies' technologies (key "rival_years") to the victory timer t of a player, also to a
+    timer that runs at the research (Atheism, #4336). Returns the added game seconds when they changed, else None."""
+    more = sum(rivals(g, t["player"], "rival_years")) * YEAR
+    if more == t.get("later", 0.0):
+        return None
+    t["left"], t["later"] = t["left"] + more - t.get("later", 0.0), more
+    return more
+
+
 def bar(n):
     return f"aoe2mc:wonder_p{n}"
 
@@ -91,6 +112,9 @@ def tick(g, dt):
                     g.command(c)
                 shown[n] = None
             g.command("tellraw @a " + json.dumps({"text": f"Player {n} built a wonder.", "color": "yellow"}))
+    for t in timers.values():
+        if (more := later(g, t)) is not None:
+            g.command(f"bossbar set {bar(t['player'])} max {int((RACE.get(g.mode, years(g.data.get('map_size'))) * YEAR + more) / YEAR)}")
     for n in sorted({t["player"] for t in timers.values()}):
         left = min(t["left"] for t in timers.values() if t["player"] == n)
         if left <= 0:
