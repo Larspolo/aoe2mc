@@ -10,6 +10,7 @@ import copy
 import os
 import re
 import sys
+import textwrap
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import build  # noqa: E402
@@ -27,6 +28,7 @@ GRAY = "gray_stained_glass_pane"
 CIVS = [r["name"] for r in civs.ROWS]                              # the order of data/civs.jsonl
 PREVIOUS, NAME, FOLLOWING = 48, 49, 50
 OBJECTIVE = "aoe_techtree"                                          # the chat command /trigger aoe_techtree (#3670)
+BONUSES = 46                                                       # the civilization bonuses and the team bonus (#3536)
 
 
 def view(g, civ):
@@ -46,6 +48,17 @@ def civ_items(civ):
             (FOLLOWING, "spectral_arrow", "Next civilization", "")]
 
 
+def bonus_items(civ):
+    """The item of slot 46: the bonus lines of civ and its team bonus (the key "texts" of data/civs.jsonl, the text at
+    the left of the AoE2 DE tech tree), lines of 50 characters at most. None for a civilization with no texts."""
+    texts = civs.value("texts", civ, None)
+    if not texts:
+        return []
+    lines = [w for b in texts["bonuses"] for w in textwrap.wrap("• " + b, 50, subsequent_indent="  ")]
+    lines += [""] + textwrap.wrap(f"Team bonus: {texts['team']}", 50, subsequent_indent="  ")
+    return [(BONUSES, "written_book", "Civilization bonuses", "\n".join(lines))]
+
+
 def other(civ, slot):
     """The civilization before (slot 48) or after (slot 50) civ in CIVS, else None (no civilization slot)."""
     step = {PREVIOUS: -1, FOLLOWING: 1}.get(slot)
@@ -57,7 +70,7 @@ def open_menu(g, player, civ=None):
     (else the own one)."""
     civ = civ or civs.real(g)
     items = [(i, build.ICONS.get(b, "chest"), build.pretty(b), "Click: its units and technologies")
-             for i, b in enumerate(BUILDINGS)] + civ_items(civ)
+             for i, b in enumerate(BUILDINGS)] + bonus_items(civ) + civ_items(civ)
 
     def click(p, slot, shift):
         if (c := other(civ, slot)):
