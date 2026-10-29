@@ -89,6 +89,7 @@ import siege_tower  # noqa: E402
 import sudden_death  # noqa: E402
 import stance  # noqa: E402
 import table  # noqa: E402
+import techtree  # noqa: E402
 import time_limit  # noqa: E402
 import trade  # noqa: E402
 import transport  # noqa: E402
@@ -794,6 +795,7 @@ class Gather:
         build.setup(self)
         menu.setup(self)
         flare.setup(self)
+        techtree.setup(self)
         if self.paper:
             self.command(f'scoreboard objectives add {LEFT} dummy "Left click"')    # set by the plugin (#1788)
             train.lore(self)                                           # the help lines of the menus (#1160)
@@ -1304,6 +1306,7 @@ class Gather:
         """Players who clicked since the last call. Clicks in a chest menu go to the handler of the menu (#619)."""
         build.tick(self)
         flare.tick(self)
+        techtree.tick(self)
         hints.tick(self)
         map_table.tick(self)
         menu.clicks(self)
