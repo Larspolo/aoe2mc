@@ -57,6 +57,7 @@ tools/report.py
 tools/ticket_context.py
 tools/tokens.py
 tools/operator_check.py
+tools/owner_gate.py
 tools/owner_tasks.py
 tools/unconflict.py
 tools/unconflict_pick.py
