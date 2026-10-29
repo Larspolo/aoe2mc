@@ -75,6 +75,7 @@ PANEL_BAR = 10              # characters of the text progress bar of a productio
 GRAPH = "aoe2mc.graph"      # entity tag of the graph text in the sky above the overview (#3448, decision #3447: B)
 GRAPH_BARS = "▁▂▃▄▅▆▇█"     # one bar per game minute, its height relative to the highest value of all players
 GRAPH_MINUTES = 20          # the last minutes of each graph row: a long game keeps a short text
+ECO = "aoe2mc.eco"          # entity tag of the economy text above the graphs (#3756)
 FOLLOWED = "aoe2mc.followed"  # the tag of the entity that the spectators of --follow look through (#1095)
 TRAIL = 3                   # tiles: a follower farther than this from its target walks to it again (#2551)
 TRAIL_MS = 1000             # ms of game time between two checks of the followers (#2551)
@@ -409,6 +410,7 @@ class Replay:
         self.learned = {}                       # player -> [(game time ms, technology name)] (#3785)
         self.vills, self.vhigh = {}, {}         # player -> live villagers (est.), the highest count (#1086)
         self.graph = {}                         # value index -> the shown rows of its graph (#3448)
+        self.eco_rows = None                    # the shown rows of the economy text (#3756)
         self.samples, self.minute = {}, -1      # player -> [(minute, pop, villagers, military, resources)], last minute (#3446)
         self.apms, self.ended = None, 0         # player -> sorted times of its actions (#3763); game time of the end (ms)
         self.eyes = None                        # (x, y, z) of each player; None: not known, each gather step shows (#2761)
@@ -522,6 +524,26 @@ class Replay:
                             f'shadow:1b,line_width:1000,Tags:["{GRAPH}","{tag}"]}}')
             self.graph[i] = rows
         return out
+
+    def ecoview(self):
+        """The commands of the economy text at the current time (#3756): in the sky above the graphs, one row per player
+        in its color with the villagers on each kind of work. One display for all players, sent only when its text
+        changed."""
+        if getattr(self, "view", None) is None:
+            self.overview()                                         # it sets the place of the overview
+        counts, y, c = self.eco(), min(319, int(self.view.split()[1]) + 32), f"{self.n / 2:.1f}"
+        rows = []
+        for p in self.ranked(counts):
+            who, color = self.label(p)
+            rows.append(text(f"{who}: " + " · ".join(f"{k} {n}" for k, n in counts[p].items()) + "\n", color))
+        if not rows or rows == self.eco_rows:
+            return []
+        line = json.dumps(rows, ensure_ascii=False, separators=(",", ":"))
+        out = (f"data merge entity @e[type=text_display,tag={ECO},limit=1] {{text:{line}}}" if self.eco_rows is not None
+               else f"summon text_display {c} {y} {c} {{text:{line},billboard:\"center\","
+                    f'shadow:1b,line_width:1000,Tags:["{ECO}"]}}')
+        self.eco_rows = rows
+        return [out]
 
     def resources(self, p):
         return self.stock.setdefault(p, dict(START))
@@ -2661,6 +2683,7 @@ class Replay:
                     self.sample(to)
                     self.idle_at = to
                     self.send(self.graphs(to))
+                    self.send(self.ecoview())
                 continue
             lag = max(lag, clock() - r0 - (now - g0) / 1000 / self.speed)
             if int(now) // 1000 != shown:                              # at most once per game second
@@ -2674,6 +2697,7 @@ class Replay:
                 self.sample(now)
                 self.idle_time(now)
                 self.send(self.graphs(now))
+                self.send(self.ecoview())
                 self.send(self.fog())
             if e is None:                                           # behind its clock: all the steps up to the
                 late = g0 if self.paused else g0 + (clock() - r0) * 1000 * self.speed    # game time now in one
