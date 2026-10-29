@@ -1,0 +1,26 @@
+name: CI
+
+# Quick checks on each PR and on main: Automerge merges a green agent PR (workflow name "CI", job "quick").
+on:
+  push:
+    branches: [{branch}]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  quick:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: {install}
+      - name: Lint
+        run: {lint}
+      - name: Fast tests
+        run: {fast}

@@ -52,9 +52,9 @@ jobs:
           end=$((SECONDS + 330 * 60))
           while [ $SECONDS -lt $end ]; do
             git fetch -q --depth 1 origin main && git reset -q --hard FETCH_HEAD   # the newest code and switch
-            # agent_config joins agent.toml and steering/system/system.toml: a move of [pacing] does not stop the loop (#4266)
-            python3 -c "import sys; sys.path.insert(0, 'tools'); import agent_config as a; sys.exit(a.CONFIG.get('pacing', {}).get('pacer') != 'workflow')" \
-              || { echo "pacer is not \"workflow\" in [pacing] (steering/system/system.toml): stop the loop"; exit 0; }
+            # exit 3: another value stops the loop; a missing key is red, not a quiet stop (#4349, `pacer.switch`)
+            python3 tools/pacer.py --switch || { rc=$?; [ $rc -eq 3 ] || exit $rc
+              echo "pacer is not \"workflow\" in [pacing] (steering/system/system.toml): stop the loop"; exit 0; }
             if ! python3 tools/pacer.py --log "$RUNNER_TEMP/pacer.jsonl"; then   # a failed call (HTTP 401, 500): red now
               sleep 600                                # the next cycle waits as usual: no fast loop of red runs
               gh workflow run pacer.yml --repo "$GITHUB_REPOSITORY" --ref main

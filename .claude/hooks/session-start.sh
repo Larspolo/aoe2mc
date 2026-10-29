@@ -12,6 +12,13 @@ if [ -n "${CLAUDE_ENV_FILE:-}" ] && [ -z "${TMPDIR:-}" ]; then
   echo "export TMPDIR=/tmp" >> "$CLAUDE_ENV_FILE"
 fi
 
+# A build of the plugin by hand (game/plugin/gradlew jar) needs JDK 25, but the cloud JAVA_HOME is JDK 21: "release
+# version 25 not supported" cost 4 runs (docs/research/gameplay.md, #4331). run.build_plugin sets its own JAVA_HOME.
+JDK25=/usr/lib/jvm/java-25-openjdk-amd64
+if [ -n "${CLAUDE_ENV_FILE:-}" ] && [ -x "$JDK25/bin/javac" ] && [ "${JAVA_HOME:-}" != "$JDK25" ]; then
+  echo "export JAVA_HOME=$JDK25" >> "$CLAUDE_ENV_FILE"
+fi
+
 # The Claude account of the run (#4236, docs/COLLABORATORS.md): the variable AGENT_ACCOUNT of the cloud environment
 # of each collaborator. tools/claim.py, tools/report.py and tools/usage.py write it into their lines.
 if [ -n "${AGENT_ACCOUNT:-}" ]; then

@@ -29,6 +29,7 @@ and `tests/test_learnings.py` fails above 80 lines (#1698).
 - Blocked too: `docs.racket-lang.org` and `plt.cs.northwestern.edu` (the docs of the AoE2 random map script DSL, DNS fails). For a random map script fact, a `WebSearch` summary of them works (#3966).
 - A `git checkout -b agent/N-...` after `claim.py N` makes the next beat name another run: `claim.py N --beat` then says "took #N over" (#4134). Work on the session branch, or move the changes with `git stash -u`, `checkout -B <session branch> origin/main`, `stash pop`.
 - The Blacksmith pages (`aok.heavengames.com`) work, but `getfile.php?id=N&dd=1&s=TOKEN` (TOKEN from `get_file(...)` of `showfile.php`) redirects to `files.heavengames.com`: blocked until the owner pastes `scripts/allowed-domains.txt` (#4189).
+- A later ticket of a run (brief or not): `git checkout -B <session branch>-<k> origin/main` before `claim.py N --adopt CLAIM`; the claim takes the branch name of the call. After the wrong order, `claim.py N --adopt <old branch>` on the new branch moves it (#4240).
 
 ## Code
 
@@ -60,3 +61,4 @@ and `tests/test_learnings.py` fails above 80 lines (#1698).
 - A test that lists the castle items of the default civilization (`tests/test_trebuchet.py`) breaks when a unique technology of that civilization joins the list: filter the new name, do not change the civilization (Franks have their own units, #4103).
 - A field set with `vars(g).setdefault(NAME, ...)` on a Gather hides a method of the same name: `ruins.fall` set `g.fell` (a list) and the next felled tree stopped the game (#4147). `grep -n "def NAME" game/gather.py` before you add a field.
 - `tools/claim.py N` succeeds for each N it gets: a loop over several numbers claims all of them (#4132 run took 4 by mistake). Call it once per ticket, and read exit 0 before you work on it.
+- A test of a building with `footprint` in aoe2mc.json uses `[x0, z0, x1, z1]`, but `homes()` and the test constants of `(x0, x1, z0, z1)`: a castle at `(8, 12, 8, 12)` put into the data gave no menu (#4337). Write the data order by hand.

@@ -32,10 +32,11 @@ def form(row, need, may=()):
 
 STATS = {"hp": int, "attack": int, "melee": int, "pierce": int, "range": NUMBER, "reload": float, "bonus": dict,
          "classes": list}
+OPTIONAL = {"blast"}                                    # a field of combat.Stats with a default (#4283)
 
 
 def stats(row):
-    assert set(combat.Stats._fields) == set(STATS)
+    assert set(combat.Stats._fields) - OPTIONAL == set(STATS)
     assert row["hp"] > 0 and row["attack"] >= 0 and row["range"] >= 0 and row["reload"] >= 0, row["name"]
     assert set(row["classes"]) <= CLASSES and len(set(row["classes"])) == len(row["classes"]), row["name"]
     bonus = CLASSES | {combat.STANDARD, combat.STONE, combat.WALL}   # the code adds these classes to the buildings
