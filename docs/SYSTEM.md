@@ -108,7 +108,7 @@ usage there is no weekly guard: the runs fill each 5-hour window (owner, 2026-10
 target less the runs with a claim beat in the last 25 minutes, and less the runs that the pacer started in the last 12 minutes and
 that have no claim yet (`usage.pending`, from the `--log` of `pacer.py`; each takes a ready ticket of its lane, 2026-10-29). A run cannot start other runs (no `fire_trigger`, #566),
 so the pacer starts them (at most `max_fire` of `agent.toml` per cycle, and at most the ready tickets plus `refill_runs`: those runs refill the queue). The pacer is the workflow `pacer.yml` (#3193, #3194): each cycle fetches `main` and runs
-`tools/pacer.py`, so a change of the pacing rules works at the next cycle. It starts each run with one call of the
+`tools/pacer.py`, so a change of the pacing rules works at the next cycle. The pacer also does steps 1 to 5 of the autopilot for each run that it starts (owner, 2026-10-29): it takes the next candidate of the lane of the run, claims it as `pacer-r<hex>`, adds `in-progress` and "Started by" with the session link, and sends a brief (the ticket, its comments, the code places of `ticket_context.py`, the `Usage:` line) in the `text` of the call. The run adopts the claim with `claim.py N --adopt NAME` and starts at step 6 (`scheduled` skill, step 0). A refill run (no candidate left), and all runs while the flow brake is on or the last CI run on main is red, get no brief. A failed call releases its claim. It starts each run with one call of the
 API trigger of its task; a task takes at most 30 API starts per hour (an account 100), and when a lane task answers
 HTTP 429 its runs go to the main task. `tools/health.py` measures the quota use of one run from the
 `Usage:` lines of the run reports, and `usage.py` uses that value. After a plan upgrade the same work is a smaller share of the larger quota: when the burn of
@@ -222,6 +222,7 @@ of `tools/bootstrap.py` (they copy this repository) and the tests that need a sp
 | `.claude/skills/autopilot/process.md` | generic | The issue numbers of the lessons (step 9). |
 | `.claude/skills/autopilot/queue.md` | generic | The issue numbers of the lessons (epics, refill, haiku lane). |
 | `.claude/skills/autopilot/report.md` | generic | The issue numbers of the lessons (step 8, metrics line). |
+| `.claude/skills/autopilot/start.md` | generic | The issue numbers of the lessons (steps 1 to 5, the runs with no brief of the pacer). |
 | `.claude/skills/scheduled/SKILL.md` | generic | The rules of a scheduled run: the prompt of each task is `/scheduled ARGUMENT`. |
 | `.claude/skills/verify/SKILL.md` | specific | The check levels (preview image, world reader, Minecraft server, screenshots). |
 | `.claude/skills/ticket/SKILL.md` | generic | The examples. |

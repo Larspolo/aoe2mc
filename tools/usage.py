@@ -361,12 +361,14 @@ def describe(usage, now, burn=BURN, burn7=None):
     return " · ".join(out + [week] * bool(week)) + f" · burn {burn:.3f} · max {HI} runs · target {target_runs(usage, now, burn, burn7=burn7)} runs"
 
 
-def fire(usage, now, burn=BURN, burn7=None, skip=(), status=None, started=None):
+def fire(usage, now, burn=BURN, burn7=None, skip=(), status=None, started=None, out=None):
     """(K, {lane: runs}, line): the runs that the pacer starts now, and the line of its inputs (`--fire`,
     `tools/pacer.py`). Reads GitHub and the claim refs. `skip`: lanes that can start no run now (the hourly limit
     of their task): they count no ready tickets, so the main runs get the room. `status`: read_status() of the
     burns, else it reads the status comments. `started`: {task: runs} that the pacer started in the last PENDING
-    minutes; those with no claim yet (`pending`) count as claims and take a ready ticket of their lane each."""
+    minutes; those with no claim yet (`pending`) count as claims and take a ready ticket of their lane each.
+    `out`: a dict that gets the reads that the pacer uses again (`open`: the open issues and PRs, `refs`: the claim
+    refs, `flow`: the cap of the flow brake, `claims`, `lanes`: the beating claims), so that it reads GitHub once."""
     comments, note = status or read_status()
     import dashboard
     import health
@@ -377,6 +379,8 @@ def fire(usage, now, burn=BURN, burn7=None, skip=(), status=None, started=None):
     refs = health.claim_refs()
     lanes = None if refs is None else health.count_lanes(refs, t)
     claims = health.active_claims(t) if lanes is None else sum(lanes.values())
+    if out is not None:
+        out.update(open=open_all, refs=refs, claims=claims, lanes=lanes)
     weights, source = health.lane_weights(comments)
     eq = claims if lanes is None else health.opus_equivalent(claims, lanes, weights)   # in Opus runs (#1727)
     target = target_runs(usage, now, burn, burn7=burn7)
@@ -394,6 +398,8 @@ def fire(usage, now, burn=BURN, burn7=None, skip=(), status=None, started=None):
     lanes = [(n, max(0, c - wait.get(n, 0)), w) for n, c, w in lanes]
     k, runs = plan(target, eq, max(0, ready - sum(wait.values())), lanes, paused, refill=refill, refill_lane=refill_lane)
     cap, flow = read_flow(now)
+    if out is not None:
+        out["flow"] = cap
     if cap is not None:                                     # the flow is the bottleneck: Opus runs repair the PRs
         k, runs = min(k, cap), dict.fromkeys(runs, 0)
     line = (f"{describe(usage, now, burn, burn7)} · claims {claims} ({eq:.2f} Opus runs) · ready {ready} · "
