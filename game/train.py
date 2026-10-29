@@ -130,6 +130,25 @@ def more_arrows(g, building):
     return sum(value("more_arrows", t, {}).get(building, 0) for t in g.techs)
 
 
+def dot(g, name, s):
+    """The damage over time of a hit of unit name (combat.Stats s) of the player of g (#4339): (damage, AoE2 seconds, the
+    target classes or ()) of the first technology of g.techs (in name order) with an entry of the key "damage_over_time"
+    whose test holds (test(): Curare, Red Cliffs Tactics), else None. The plugin deals it (Dot.java)."""
+    for t in sorted(getattr(g, "techs", ())):
+        for e in value("damage_over_time", t, ()):
+            if any(test(x, name, s) for x in e["if"]):
+                return e["damage"], e["seconds"], tuple(e.get("on", ()))
+    return None
+
+
+def stats_line(g, uuid, name, s=None):
+    """The "aoe stats" command of unit uuid of the player of g: its values s (default stats()), the bonus damage and the
+    friendly fire that it takes (civs.taken, civs.friendly) and its damage over time (dot(), #4339)."""
+    import combat                                                  # combat imports gather, gather imports this module
+    s = s or stats(g, name, uuid)
+    return combat.stats_command(uuid, name, s, civs.taken(g, name), civs.friendly(g, name), dot(g, name, s))
+
+
 def weight(g, name):
     """The population of one unit: the product of the factors of the researched technologies with the key "population"
     for its building (Logistics of Antiquity Mode: 1/2 for the Barracks, #3918), else 1."""
@@ -1059,7 +1078,7 @@ def haste(g, dt):
             continue
         s = stats(g, name, u)
         s = s._replace(reload=s.reload / fast.get(u, 1))
-        g.command(combat.stats_command(u, name, s, civs.taken(g, name), civs.friendly(g, name)))
+        g.command(stats_line(g, u, name, s))
         if cmd := combat.range_command(u, name, T, s=s):
             g.command(cmd)
     g.hasted = fast
@@ -1124,7 +1143,7 @@ def research(g, entry, start=False, rect=None):
             g.soldiers[uuid] = new
             for cmd in type_tag_commands(uuid, old, new):          # the triggers count the new type (#2977)
                 g.command(cmd)
-            g.command(combat.stats_command(uuid, new, stats(g, new, uuid), civs.taken(g, new), civs.friendly(g, new)))
+            g.command(stats_line(g, uuid, new))
             if cmd := combat.range_command(uuid, new, g.map.T, s=stats(g, new, uuid)):   # the range and blast of an onager
                 g.command(cmd)
             if cmd := volley_command(g, uuid, new):               # a war galley of the Armenians (#2379)
@@ -1136,9 +1155,9 @@ def research(g, entry, start=False, rect=None):
     if vars(g).get("hasted"):                                      # the values below have no haste: haste() sends
         g.hasted = {}                                              # them again (#2497)
     for uuid, name in [(u["uuid"], u["name"]) for u in g.units if "uuid" in u] + list(g.soldiers.items()):
-        if stats(g, name, uuid) != combat.stats(name):
+        if stats(g, name, uuid) != combat.stats(name) or dot(g, name, stats(g, name, uuid)):   # Curare: no other change
             g.command(trebuchet.stats_command(g, uuid) if name == trebuchet.NAME   # the armor of its state (#1409)
-                      else combat.stats_command(uuid, name, stats(g, name, uuid), civs.taken(g, name), civs.friendly(g, name)))
+                      else stats_line(g, uuid, name))
         if name == trebuchet.NAME and trebuchet.state(g, uuid) != "unpacked":
             continue                                               # packed: range 0, the unpack sends the range (#1414)
         if stats(g, name).range != combat.stats(name).range:          # Fletching (#724)
@@ -1332,7 +1351,7 @@ def summon(g, name, pos, rotation=math.pi / 2, player=None):
         import owners                                              # owners imports gather, gather imports this module
         owners.add(g, uuid, name, o["player"])                     # an enemy of the other sides (#2992)
     import combat, gather                                          # both import gather, gather imports this module
-    g.command(combat.stats_command(uuid, name, stats(g, name), civs.taken(g, name), civs.friendly(g, name)))
+    g.command(stats_line(g, uuid, name, stats(g, name)))
     import spoils                                                  # spoils imports this module
     if cmd := spoils.tag_command(uuid, name):                      # its hits make gold (#2376)
         g.command(cmd)

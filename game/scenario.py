@@ -328,7 +328,7 @@ def values(g, tag, field, operation, quantity):
     change in unit_values of its side ({uuid: [[field, operation, quantity], ...]}): train.stats and train.speed
     apply it after the changes of the unit type, so later technologies and orders keep it. The unit gets its new
     `aoe stats` or walk speed at once, and the tag goes."""
-    import ai, civs, combat, trebuchet                             # combat -> gather -> scenario
+    import ai, trebuchet                                           # ai -> gather -> scenario
     for x in [g, *(s.g for s in g.bots)]:
         for uuid, name in [(u["uuid"], u["name"]) for u in x.units if "uuid" in u] + sorted(x.soldiers.items()):
             if "passed" not in g.command(f"execute as {uuid} if entity @s[tag={tag}]"):
@@ -337,8 +337,7 @@ def values(g, tag, field, operation, quantity):
             if field == "speed":
                 x.command(ai.speed_command(uuid, name, x.map.T, gather.NORMAL * train.speed(x, name, uuid)))
             else:
-                x.command(trebuchet.stats_command(x, uuid) if name == trebuchet.NAME else combat.stats_command(
-                    uuid, name, train.stats(x, name, uuid), civs.taken(x, name), civs.friendly(x, name)))
+                x.command(trebuchet.stats_command(x, uuid) if name == trebuchet.NAME else train.stats_line(x, uuid, name))
     g.command(f"tag @e[tag={tag}] remove {tag}")
 
 
@@ -619,7 +618,7 @@ def attributes(g):
     unit type or a class "@<class>" of "Modify Attribute for Class", train.applies, #2859):
     train.stats applies them in order, so the units that the player trains later get the new values. The units of the
     type that exist get the new values at once (the same commands as a technology, train.research)."""
-    import civs, combat                                                # combat -> gather -> scenario
+    import combat                                                      # combat -> gather -> scenario
     new = re.findall(r'"(\d+) (@?\w+) (\w+) ([1-5]) (-?[\d.]+)"', g.command(f"data get storage {ATTRIBUTES} list") or "")
     if new:
         g.command(f"data remove storage {ATTRIBUTES} list")
@@ -632,7 +631,7 @@ def attributes(g):
             if not train.applies(name, n):                             # a type, or a class (#2859)
                 continue
             s = train.stats(x, n, uuid)
-            x.command(combat.stats_command(uuid, n, s, civs.taken(x, n), civs.friendly(x, n)))
+            x.command(train.stats_line(x, uuid, n, s))
             if field == "range" and (cmd := combat.range_command(uuid, n, x.map.T, s=s)):
                 x.command(cmd)
 

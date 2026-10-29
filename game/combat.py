@@ -143,19 +143,22 @@ def elevation_command(data):
                                                                    for full in [{} if data.get("full_tech_tree") else p]])
 
 
-def stats_command(uuid, name, s=None, taken=1.0, friendly=1.0):
+def stats_command(uuid, name, s=None, taken=1.0, friendly=1.0, dot=None):
     """The plugin command that gives entity `uuid` the values of AoE2 unit `name` (or the values s, for example with
     technologies, #655): max_health = hit points (at most 1024, the limit of the attribute), the lost hit points stay lost
     (a new unit has full health, #940), and the values of `damage` (the same rule in AoePlugin.java). The range kind:
     0 melee, 1 ranged, 2 ranged with melee damage (MELEE_RANGED, #800). Then the reload in ticks at Normal speed: a melee unit hits once per reload (#848). Last, only when it is
     not 1, the factor of the bonus damage that the unit takes (civs.taken, #2248), and when friendly is not 1, the factor
-    of the friendly fire that it takes (civs.friendly, #2418)."""
+    of the friendly fire that it takes (civs.friendly, #2418). dot: the damage over time of each hit, (damage, AoE2
+    seconds, the target classes or ()) of train.dot (#4339): after taken and friendly, its seconds as ticks at Normal speed."""
     s = s or stats(name)
     bonus = ",".join(f"{c}:{n}" for c, n in sorted(s.bonus.items())) or "-"
     kind = 0 if s.range <= 0 else 2 if name in MELEE_RANGED else 1
+    tail = f" {taken:g}" * (taken != 1 or friendly != 1 or bool(dot)) + f" {friendly:g}" * (friendly != 1 or bool(dot))
+    if dot:                                                            # Curare, Red Cliffs Tactics (Dot.java)
+        tail += f" {dot[0]:g} {max(1, round(dot[1] / NORMAL * 20))} {','.join(sorted(dot[2])) or '-'}"
     return (f"aoe stats {uuid} {min(s.hp, 1024)} {s.attack} {s.melee} {s.pierce} {kind} "
-            f"{','.join(s.classes) or '-'} {bonus} {round(s.reload / NORMAL * 20) or 20}"
-            + f" {taken:g}" * (taken != 1 or friendly != 1) + f" {friendly:g}" * (friendly != 1))
+            f"{','.join(s.classes) or '-'} {bonus} {round(s.reload / NORMAL * 20) or 20}" + tail)
 
 
 def label_command(uuid, name=None):

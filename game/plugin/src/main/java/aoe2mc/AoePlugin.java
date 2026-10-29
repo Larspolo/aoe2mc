@@ -136,11 +136,13 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *                                              defensive chases an enemy only CHASE blocks past its range (#1105)
  *   aoe stance <selector>                      the stance of the first unit (#1107), for checks
  *   aoe stats <selector> <hp> <attack> <melee armor> <pierce armor> <ranged 0|1|2> <classes|-> <class:bonus,...|->
- *             [reload ticks [taken [friendly]]]  the AoE2 values of a unit (#514, game/combat.py stats_command); a melee
- *                                              unit hits once per reload (#848, default 20: the vanilla cooldown);
- *                                              taken: the factor of the bonus damage that it takes (#2248, default 1);
- *                                              friendly: the factor of the blast damage of own and allied units on it
- *                                              (Jurchen military units 0.5, #2418, default 1)
+ *             [reload ticks [taken [friendly [damage ticks classes|-]]]]  the AoE2 values of a unit (#514, game/combat.py
+ *                                              stats_command); a melee unit hits once per reload (#848, default 20:
+ *                                              the vanilla cooldown); taken: the factor of the bonus damage that it
+ *                                              takes (#2248, default 1); friendly: the factor of the blast damage of
+ *                                              own and allied units on it (Jurchen military units 0.5, #2418, default
+ *                                              1); damage ticks classes: each hit on a unit or building of these
+ *                                              classes ("-": each) deals this damage over time (Dot.java, #4339)
  *   aoe stop <selector>                        stop the walk and turn the AI off: the unit stands still (#437)
  *   aoe unwear <selector>                      forget the kept blocks of the damage stages of each building target: the
  *                                              next stage keeps the blocks of a new design (a wall technology, #3071)
@@ -324,6 +326,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
 
     private final Map<UUID, Stats> stats = new HashMap<>();
     private final Ghost ghost = new Ghost(this);
+    private final Dot dots = new Dot();                             // damage over time (Curare, #4339)
     private final Cheats cheats = new Cheats(this);
     private final ChatName chatName = new ChatName();               // the player color of a chat name (#3681)
     private final SpecChat specChat = new SpecChat();               // the chat of the spectators (#3554)
@@ -491,9 +494,9 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                 Stats a = stats.get(mob.getUniqueId());
                 Building b = buildings.get(t.getUniqueId());
                 if (a != null && b != null) {           // the arrow sticks in the walls: the shot hits (#608)
-                    hit(t, b, damage(a, b, mob, t));
+                    hit(t, b, damage(a, b, mob, t), mob);
                     for (int k = 0; k < extra[0]; k++) {
-                        hit(t, b, damage(volley(a, extra[1]), b, mob, t));
+                        hit(t, b, damage(volley(a, extra[1]), b, mob, t), mob);
                     }
                     hitEffect(t, b, mob);
                     alerts.hit(t, true, mob);
@@ -601,7 +604,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         Building b = buildings.get(t.getUniqueId());
         Location at = t.getLocation();
         if (b != null) {                                  // a building takes the shot alone
-            hit(t, b, damage(a, b, from, t));
+            hit(t, b, damage(a, b, from, t), from);
             hitEffect(t, b, mob);
             alerts.hit(t, true, mob);
         } else if (r <= 0) {
@@ -1134,6 +1137,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         Bukkit.getScheduler().runTaskTimer(this, this::siege, 1L, 1L);
         Bukkit.getScheduler().runTaskTimer(this, this::carts, 1L, 1L);
         Bukkit.getScheduler().runTaskTimer(this, this::burn, 20L, 20L);
+        Bukkit.getScheduler().runTaskTimer(this, () -> dots.tick(this::dotHurt), Dot.STEP, Dot.STEP);
         Bukkit.getScheduler().runTaskTimer(this, this::unhit, 1L, 1L);
         Bukkit.getScheduler().runTaskTimer(this, this::watch, 20L, 20L);
         Bukkit.getScheduler().runTaskTimer(this, this::towers, 2L, 2L);
@@ -1176,7 +1180,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             ev.setCancelled(true);
             if (a != null && b != null && !(ev.getDamager() instanceof Projectile) && ready(from, a)) {   // RangeGoal counts a shot
                 lastHit.put(from.getUniqueId(), Bukkit.getCurrentTick());
-                hit(ev.getEntity(), b, damage(a, b, from, ev.getEntity()));
+                hit(ev.getEntity(), b, damage(a, b, from, ev.getEntity()), from);
                 hitEffect(ev.getEntity(), b, from);
                 alerts.hit(ev.getEntity(), true, from);
             }
@@ -1263,6 +1267,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         double before = victim.getHealth();
         double damage = Math.max(1, a.damage(t) * (from == null ? 1 : elevation(from, victim)));   // AoE2: after the armor
         victim.setHealth(Math.max(0, before - damage * part));     // 0 kills it
+        dots.start(from, victim, t.classes());                     // Curare (#4339)
         gold(from, victim, a);
         if (before > 0 && victim.getHealth() <= 0) {
             kill(from, a, t);
@@ -1630,6 +1635,37 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     // The damage of a hit of a on building b, with the elevation of from over target (#2307)
     private static int damage(Stats a, Building b, Entity from, Entity target) {
         return (int) Math.max(1, Math.round(a.damage(b.stats) * elevation(from, target)));
+    }
+
+    // A hit of from on building target b: also its damage over time (Red Cliffs Tactics, #4339)
+    private void hit(Entity target, Building b, int damage, Entity from) {
+        hit(target, b, damage);
+        dots.start(from, target, b.stats().classes());
+    }
+
+    // One step of a damage over time (Dot.java, #4339): a building target loses whole hit points, a unit loses the
+    // damage with no armor, no hurt animation and no attack back, and its death counts for the attacker.
+    private void dotHurt(Entity target, UUID from, double damage, int whole) {
+        Building b = buildings.get(target.getUniqueId());
+        if (b != null) {
+            if (whole > 0) {
+                hit(target, b, whole);
+            }
+            return;
+        }
+        Stats t = stats.get(target.getUniqueId());
+        if (!(target instanceof LivingEntity victim) || t == null || victim.getHealth() <= 0) {
+            return;
+        }
+        victim.setHealth(Math.max(0, victim.getHealth() - damage));     // 0 kills it
+        hitTag(victim);
+        Entity by = Bukkit.getEntity(from);
+        Stats a = stats.get(from);
+        if (victim.getHealth() <= 0 && by != null && a != null) {
+            kill(by, a, t);
+            unitKill(by, victim, a);
+        }
+        nameLine(victim);
     }
 
     private void hit(Entity target, Building b, int damage) {
@@ -2760,16 +2796,19 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             sender.sendMessage("Stance: " + n + " units");
             return true;
         }
-        if (args.length >= 9 && args.length <= 12 && args[0].equals("stats")) {
+        if (args.length >= 9 && args.length <= 15 && args.length != 13 && args.length != 14 && args[0].equals("stats")) {
             double hp;
             Stats st;
+            Dot.Rule dot;
             try {
                 hp = Double.parseDouble(args[2]);
                 st = new Stats(Integer.parseInt(args[3]), Integer.parseInt(args[4]), Integer.parseInt(args[5]),
                         !args[6].equals("0"), args[6].equals("1"), args[7].equals("-") ? Set.of() : Set.of(args[7].split(",")),
                         bonus(args[8]), args.length >= 10 ? Integer.parseInt(args[9]) : 20,
                         args.length >= 11 ? Double.parseDouble(args[10]) : 1.0,    // the bonus damage taken (#2248)
-                        args.length == 12 ? Double.parseDouble(args[11]) : 1.0);   // the friendly fire taken (#2418)
+                        args.length >= 12 ? Double.parseDouble(args[11]) : 1.0);   // the friendly fire taken (#2418)
+                dot = args.length == 15 ? new Dot.Rule(Double.parseDouble(args[12]), Math.max(1, Integer.parseInt(args[13])),
+                        args[14].equals("-") ? Set.of() : Set.of(args[14].split(","))) : null;   // (#4339)
             } catch (RuntimeException e) {                 // a bad number or a bonus without ":"
                 sender.sendMessage("Bad value: " + e.getMessage());
                 return true;
@@ -2785,10 +2824,12 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                         le.setHealth(Math.min(max.getValue(), Math.max(Math.min(1, hp), hp - lost)));
                     }
                     stats.put(le.getUniqueId(), st);
+                    dots.set(le.getUniqueId(), dot);
                     nameLine(le);
                     Mob r = rider(le);
                     if (r != null) {
                         stats.put(r.getUniqueId(), st);          // its hits take the AoE2 attack (#710)
+                        dots.set(r.getUniqueId(), dot);
                     }
                     n++;
                 }
