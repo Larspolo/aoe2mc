@@ -71,10 +71,10 @@ def tiles(g):
 
 def buildings(g, gone):
     """The standing buildings of g (AoE2 name, built by the player): the ones of the map and the complete construction
-    sites whose target uuid is not in gone."""
-    import combat                                                   # combat imports gather, gather this module
+    sites whose target uuid is not in gone. A start building that fell (g.ruins: deleted or razed) does not stand."""
+    import combat, ruins                                            # combat imports gather, gather this module
     out = [(o["name"], False) for o in g.data["objects"] if o["kind"] == "building" and o["player"] == g.player
-           and "footprint" in o and combat.target_uuid(o["footprint"]) not in gone]
+           and "footprint" in o and combat.target_uuid(o["footprint"]) not in gone and not ruins.fallen(g, o)]   # #3736
     return out + [(s["name"], True) for s in g.sites if s.get("done") and s["player"] == g.player
                   and combat.target_uuid([s["footprint"][i] for i in (0, 2, 1, 3)]) not in gone]
 

@@ -29,7 +29,7 @@ def panel_of(r, t):
 
 def test_a_unit_in_training_shows_its_name_and_a_progress_bar():
     (summon,) = panel_of(make(), UNIT_TIME)
-    assert r'Villager Male \u00d74 [|||||.....]' in summon     # json.dumps escapes the count sign
+    assert r'Villager \u00d74 [|||||.....]' in summon     # json.dumps escapes the count sign
 
 
 def test_a_research_in_the_same_building_names_the_technology():

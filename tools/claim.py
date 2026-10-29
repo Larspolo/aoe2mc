@@ -48,8 +48,8 @@ Parallel runs read the same `runs` counter of the status issue, so "every 5th ru
 (#898). So `--review` locks one review: `claim/review-<gap>pr-<last review>-<k>`, and only when `gap` PRs merged after
 the last review (`last_review` in the state comment of #1). A review with no change doubles the gap (50, 100, 200
 merged PRs), a change sets it back to 50 (`--reviewed`). `--roadmap` locks the roadmap review the same way, 100 merged
-PRs after `last_roadmap` or its newest lock ref (#3352: a write of the body can be lost). A gap counts merged PRs, not
-minutes: the speed of the project changes (#2039). The other times of this tool stay in seconds: a run that stopped
+PRs after `last_roadmap` or its newest lock ref (#3352: a write of the body can be lost), 30 while the refill has no
+source (#3741). A gap counts merged PRs, not minutes: the speed of the project changes (#2039). The other times of this tool stay in seconds: a run that stopped
 merges nothing, so only the clock finds it.
 
 Exit 2: git failed for another reason (network, permission). The workflow `claims.yml` deletes the refs
@@ -70,6 +70,7 @@ EMPTY_TREE = "4b825dc642cb6eb9a060e54bf8d69288fbee4904"
 REVIEW, REVIEW_MAX = 200, 800   # merged PRs: the first and the longest gap of the process review (#898, #1697, #2039, #3465)
 REVIEW_HOURS = 4                # and at least these hours after the last review (#3465: 8 reviews in 24 hours)
 ROADMAP = 100               # merged PRs between two reviews of docs/ROADMAP.md (#2039)
+ROADMAP_EARLY = 30          # the same while the refill has no source: R < N, each roadmap feature has an epic (#3741)
 STATUS = CONFIG["status"]["issue"]   # the status issue: its state comment holds the last reviews
 # The times below find a run that stopped: a stopped run merges nothing, so they stay on the clock (#2039).
 STALE = 30 * 60             # seconds without a claim or beat: the run stopped (usage limit, crash)
@@ -308,9 +309,11 @@ def last_lock(kind, remote="origin"):
     return utc(int(git("log", "-1", "--format=%ct", "FETCH_HEAD").stdout))
 
 
-def review_slot(kind, remote="origin"):
+def review_slot(kind, remote="origin", starved=None):
     """(lock key, gap) of the process review (`review`) or the roadmap review (`roadmap`); the key is None when the review
-    is not due. For `--review`, `--roadmap` and `usage.due_reviews` (a due review is work of a deep run, #3560)."""
+    is not due. For `--review`, `--roadmap` and `usage.due_reviews` (a due review is work of a deep run, #3560).
+    starved: a function that is True when the refill has no source (default `starved`); the roadmap gap is then
+    ROADMAP_EARLY, so that the queue does not run empty for 100 merged PRs (#3741). It is read only in that window."""
     body = api(f"issues/{STATUS}")["body"] if on_github(remote) else ""
     state = agent_state(body)
     last, gap = (state.get("last_review"), max(state.get("review_prs", REVIEW), REVIEW)) if kind == "review" else \
@@ -319,7 +322,28 @@ def review_slot(kind, remote="origin"):
     # time: its lock comes before the review, and a review that no run finished must open again (pr_slot).
     if kind == "roadmap" and on_github(remote):
         last = max(filter(None, (last, last_lock(kind, remote))), default=None)
-    return pr_slot(last, gap, merged_since(last, gap, remote), REVIEW_HOURS if kind == "review" else 0), gap
+    merged = merged_since(last, gap, remote)
+    if kind == "roadmap" and ROADMAP_EARLY <= merged < gap and (starved or refill_starved)():
+        gap = ROADMAP_EARLY
+    return pr_slot(last, gap, merged, REVIEW_HOURS if kind == "review" else 0), gap
+
+
+def refill_starved():
+    """True when fewer tickets are ready than the target runs and the refill has no source: no epic or release check, no
+    roadmap feature with no epic, no fallback (`usage.refill_need`, #3741). Reads the quota and GitHub; an error: False."""
+    import usage                                                   # usage imports this module in due_reviews
+    try:
+        import dashboard
+        usage_now, now = usage.read_usage(), time.time()
+        burn, burn7 = usage.burns(usage.read_status()[0])
+        target = usage.target_runs(usage_now, now, burn, burn7=burn7)
+        issues = dashboard.pages("issues?state=open")
+        ready = len(dashboard.candidates(issues, reserved=()))
+        return target is not None and ready < target and \
+            not usage.refill_need(ready, target, issues, usage.release_due, lambda: [], usage.free_sources)
+    except Exception as e:                                         # a quota, GitHub or file error
+        print(f"refill sources: {e}", file=sys.stderr)
+        return False
 
 
 def claim_lock(kind, key, remote="origin"):

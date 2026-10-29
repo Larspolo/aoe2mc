@@ -179,13 +179,14 @@ def release_due():
         return []
 
 
-def due_reviews(remote="origin"):
-    """The due reviews whose lock no run holds yet (`claim.review_slot`, #3560). A read error counts as due."""
+def due_reviews(remote="origin", starved=None):
+    """The due reviews whose lock no run holds yet (`claim.review_slot`, #3560). A read error counts as due. starved:
+    True when the refill has no source (the roadmap review is due earlier then, #3741; default `claim.refill_starved`)."""
     import claim
     out = []
     for kind, name in (("review", "process review"), ("roadmap", "roadmap review")):
         try:
-            key, _ = claim.review_slot(kind, remote)
+            key, _ = claim.review_slot(kind, remote, starved=starved)
             taken = key and claim.git("ls-remote", remote, f"refs/heads/claim/{kind}-{key}").stdout.strip()
         except (Exception, SystemExit) as e:                # claim.fail exits 2 on a GitHub error
             print(f"{name}: {e}", file=sys.stderr)
@@ -351,7 +352,8 @@ def fire(usage, now, burn=BURN, burn7=None, skip=(), status=None):
     weights, source = health.lane_weights(comments)
     eq = claims if lanes is None else health.opus_equivalent(claims, lanes, weights)   # in Opus runs (#1727)
     target = target_runs(usage, now, burn, burn7=burn7)
-    need = refill_need(ready, target, open_all, release_due, due_reviews, free_sources)
+    need = refill_need(ready, target, open_all, release_due, free=free_sources,   # it asks the reviews after the checks
+                       reviews=lambda: due_reviews(starved=lambda: target is not None and ready < target and not free_sources()))
     if need and refill_recent(refs, now) and ready >= target // 2:
         need = ""                                           # a refill runs now or ran; a near-empty queue refills at once
     refill = refill_runs(open_all, now) if need else 0   # #3547: no refill run with no refill work

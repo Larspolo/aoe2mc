@@ -320,7 +320,7 @@ def read_scx(path):
 
 def read_json(path):
     """A map description in JSON (#960), as read_scenario returns it: {"size": N, "terrain": N × N terrain IDs,
-    "elevation": N × N levels (default 0), "objects": [{"name", "player", "x", "y", "rotation"} ...],
+    "elevation": N × N levels (default 0), "layer": N × N land layer IDs (default -1 = none, #3689), "objects": [{"name", "player", "x", "y", "rotation"} ...],
     "players": {"1": {"civ": "BRITONS", "color": 0} ...}}. The IDs and names are those of AoE2ScenarioParser
     (TerrainId, object_kinds). The color is an index of buildings.COLOR_NAMES (default: the player number - 1)."""
     with open(path) as f:
@@ -335,13 +335,15 @@ def map_description(d, path):
         raise OptionError(f"{path}: \"size\" must be a positive integer")
     terrain_names = {t.value: t.name for t in TerrainId}
     arrays = {}
-    for key, default in (("terrain", None), ("elevation", 0)):
+    for key, default in (("terrain", None), ("elevation", 0), ("layer", -1)):
         a = np.array(d.get(key, default if default is None else [[default] * size] * size))
         if a.shape != (size, size):
             raise OptionError(f"{path}: \"{key}\" must be {size} lists of {size} numbers, not shape {a.shape}")
         arrays[key] = a
     if (bad := sorted(set(arrays["terrain"].ravel().tolist()) - set(terrain_names))):
         raise OptionError(f"{path}: unknown terrain IDs {bad[:10]} (see AoE2ScenarioParser TerrainId)")
+    if (bad := sorted(set(arrays["layer"].ravel().tolist()) - set(terrain_names) - {-1})):
+        raise OptionError(f"{path}: unknown layer IDs {bad[:10]} (-1 = no layer, see AoE2ScenarioParser TerrainId)")
     kinds = object_kinds(old=False)
     ids = {name: (i, prefix) for i, (prefix, name) in kinds.items()}
     objects = []
@@ -359,8 +361,19 @@ def map_description(d, path):
                         "arch": buildings.CIV_TO_ARCH.get(civ, "western"), "civ": civ, "view": None}
     for pid in {o["player"] for o in objects} - set(players):          # an object of a player without an entry
         players[pid] = {"color": buildings.COLOR_NAMES[(pid - 1) % 8], "arch": "western", "civ": "?", "view": None}
-    return (size, arrays["terrain"].astype(np.int16), arrays["elevation"].astype(np.float32), terrain_names,
+    terrain = apply_layers(arrays["terrain"].astype(np.int16), arrays["layer"], terrain_names)
+    return (size, terrain, arrays["elevation"].astype(np.float32), terrain_names,
             {k: "" for k in CHAPTERS}, objects, players)
+
+
+def apply_layers(terrain, layer, terrain_names):
+    """Give each tile its land layer (a road painted in the DE editor, #3688): a land layer on a land base gives the
+    tile the layer ID, water on either side keeps the base. layer -1 = no layer. Returns the terrain array."""
+    land = {i: terrain_style(n)["depth"] == 0 for i, n in terrain_names.items()}
+    for x, y in zip(*np.nonzero(layer >= 0)):
+        if land.get(int(terrain[x, y])) and land.get(int(layer[x, y])):
+            terrain[x, y] = layer[x, y]
+    return terrain
 
 
 def read_scenario(path):
@@ -376,14 +389,13 @@ def read_scenario(path):
     size = mm.map_size
     terrain = np.zeros((size, size), np.int16)
     elevation = np.zeros((size, size), np.float32)
+    layer = np.full((size, size), -1, np.int16)
     terrain_names = {t.value: t.name for t in TerrainId}
-    land = {i: terrain_style(n)["depth"] == 0 for i, n in terrain_names.items()}
     for t in mm.terrain:
         terrain[t.x, t.y] = t.terrain_id
         elevation[t.x, t.y] = t.elevation
-        # a land layer (a road painted in the DE editor) gives the look of the tile; water keeps its base (#3688)
-        if t.layer >= 0 and land.get(t.terrain_id) and land.get(t.layer):
-            terrain[t.x, t.y] = t.layer
+        layer[t.x, t.y] = t.layer
+    terrain = apply_layers(terrain, layer, terrain_names)
 
     kinds = object_kinds()
     other = {r["tech"]: r["name"] for r in units.rows("tech_names.jsonl")}   # the names of game/data/train.jsonl
@@ -486,6 +498,7 @@ def read_record(path):
     except ImportError:
         raise SystemExit("A .aoe2record file needs the mgz package: python3 -m pip install mgz") from None
     from AoE2ScenarioParser.datasets.terrains import TerrainId
+    new_saves()
     try:
         with open(path, "rb") as f:
             match = parse_match(f)
@@ -640,6 +653,29 @@ def own_selection():
         Inputs.add_action = add
 
 
+def new_saves():
+    """mgz 1.8.51 reads DE records up to save version 66.6. Save 68.9 (#3686) has one more DE string at the end of
+    each player of the DE header and two more after the string before the timestamp: add these reads to
+    mgz.fast.header.parse_de. A patch of its source, not a copy of the parser; once, as the fix belongs in mgz."""
+    import inspect
+    import textwrap
+    from mgz.fast import header
+    if getattr(header.parse_de, "new_saves", False):
+        return
+    src = textwrap.dedent(inspect.getsource(header.parse_de))
+    for old, new in (("            data.read(4)\n\n        players.append(",
+                      "            data.read(4)\n        if save > 66.6:\n            de_string(data)\n\n"
+                      "        players.append("),
+                     ("    if not skip:\n        de_string(data)\n",
+                      "    if not skip:\n        de_string(data)\n        if save > 66.6:\n"
+                      "            de_string(data)\n            de_string(data)\n")):
+        if src.count(old) != 1:                                     # another mgz version: leave it as it is
+            return
+        src = src.replace(old, new)
+    exec(compile(src, header.__file__, "exec"), header.__dict__)
+    header.parse_de.new_saves = True
+
+
 TIMELINE_KEYS = {"building_id": "type", "unit_id": "type", "technology_id": "technology_id", "object_ids": "objects",
                  "target_id": "target", "amount": "amount", "resource": "resource", "stance": "stance",
                  "formation": "formation", "order": "order", "command": "command",
@@ -657,6 +693,7 @@ def read_timeline(path):
     from mgz.model import parse_match
     names, parse = object_kinds(), fast.parse_action
     fast.parse_action = de_queue(parse)
+    new_saves()
     try:
         with open(path, "rb") as f, own_selection():
             match = parse_match(f)
@@ -775,17 +812,19 @@ def train_ms(unit):
     return (train(unit) or (30,))[0] * 1000
 
 
-def training(timeline, research=False):
+def training(timeline, research=False, research_s=None):
     """The trainings of a recorded game: (end time ms, QUEUE event, building ID) for each unit, in the order of the
     QUEUE commands. A building trains one unit after the other; its research (RESEARCH_S) delays them. The record
     does not show a cancelled queue or the population limit. research: also (end, RESEARCH event, building ID) for
-    each technology with a RESEARCH_S value (#2810)."""
+    each technology with a RESEARCH_S value (#2810). research_s: the seconds of each technology in place of RESEARCH_S
+    (the game program has all of them, #3738)."""
     busy, out = {}, []                   # building -> free at
+    research_s = RESEARCH_S if research_s is None else research_s
     for e in timeline:
         kind, t = e["kind"], e["time"]
         if kind in ("queue", "research") and e.get("objects"):
             name = e.get("name", "") if kind == "queue" else e.get("technology", "")
-            s = train_ms(name) if kind == "queue" else RESEARCH_S.get(name, 0) * 1000
+            s = train_ms(name) if kind == "queue" else research_s.get(name, 0) * 1000
             for n in range(max(1, int(e.get("amount", 1))) if kind == "queue" else 1):
                 b = e["objects"][n % len(e["objects"])]
                 busy[b] = max(busy.get(b, 0), t) + s

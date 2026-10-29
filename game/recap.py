@@ -61,14 +61,15 @@ def parts(g, won):
     for h in sides:
         lost = vars(h).get("losses", {})
         alive = sum(u not in lost for u in (*h.villagers, *h.soldiers))
-        built = sum(own for _, own in score.buildings(h, set()))
-        standing = sum(own for _, own in score.buildings(h, gone))
+        fell = vars(h).get("fell", [])                             # deleted or razed, also start buildings (#3736)
+        built = sum(own for _, own in [*score.buildings(h, set()), *fell])
+        fallen = built - sum(own for _, own in score.buildings(h, gone)) - sum(own for _, own in fell) + len(fell)
         given = vars(h).get("given", set())
         techs = sorted(train.ITEMS[t][2] for t in h.techs if t not in given and t not in build.AGE_TECHS and t in train.ITEMS)
         ages = vars(h).get("age_times", {})
         out.append((f"Player {h.player}", "\n".join([
             f"Units: {sum(n + 1 for n in h.trained.values())} trained, {alive} alive, {len(lost)} lost",
-            f"Buildings: {built} built, {built - standing} lost",
+            f"Buildings: {built} built, {fallen} lost",
             f"Ages: {', '.join(f'{train.ITEMS[a][2]} {mmss(t)}' for a, t in sorted(ages.items(), key=lambda x: x[1])) or 'none'}",
             f"Technologies: {len(techs)}" + "".join(f"\n- {t}" for t in techs)])))
     return out
