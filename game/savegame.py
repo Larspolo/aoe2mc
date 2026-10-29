@@ -102,6 +102,7 @@ SCORE = (                                                              # Gather:
     "buildings_lost",                                                  # ruins.py: the own buildings that fell, lost in the recap (#3736);
     "fallen",                                                          # not "fell": that hides Gather.fell (#4147)
     "given",                                                           # train.py: the free units and technologies
+    "housing_kept",                                                    # ruins.fall: the fallen houses that keep their room (Nomads, #4280)
     "losses",
     "razed",
     "tributes",                                                        # diplomacy.py

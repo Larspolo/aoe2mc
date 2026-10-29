@@ -59,6 +59,7 @@ def fall(g, rect):
     import build, combat, fleet, garrison, train                   # they import gather, which imports this module
     sites = [s for s in g.sites if s.get("done") and s["player"] == g.player and tuple(s["footprint"]) == rect]
     fell = vars(g).setdefault("buildings_lost", [])                # (name, built by the player): the recap counts them lost (#3736)
+    n = len(fell)
     if sites:
         g.sites = [s for s in g.sites if all(s is not t for t in sites)]
         fell += [(s["name"], True) for s in sites]
@@ -66,6 +67,8 @@ def fall(g, rect):
         g.ruins.add(rect)
         fell += [(o["name"], False) for o in g.data["objects"] if o["kind"] == "building" and o["player"] == g.player
                  and fallen(g, o)][:1]
+    keep = {b for t in getattr(g, "techs", ()) for b in train.value("keep_housing", t, ())}   # Nomads (#4280)
+    vars(g).setdefault("housing_kept", []).extend(name for name, _ in fell[n:] if name in keep)
     for e in g.queues.pop(rect, []):
         for r, v in e.get("paid", train.COSTS[e["name"]]).items():   # as train.cancel: a free technology gives nothing
             g.stock[r] += v
