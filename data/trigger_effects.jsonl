@@ -83,7 +83,7 @@
 {"name": "PLACE_FOUNDATION", "text": "the order `found <player> <building> <x> <y>` in the storage `aoe2mc:orders`: the scenario mode of the game program puts the construction site of the building for free at the tile when the place is free (`build.found`, #2825)"}
 {"name": "PLAY_SOUND", "text": "`playsound` of the vanilla sound of the name part (`data/sounds.jsonl`), at the tile or at each player (#2644)"}
 {"name": "REMOVE_OBJECT", "text": "`kill @e[tag=aoe2mc.pN,type=..,x=..,y=..,z=..,dx=..,dy=..,dz=..]` (timer triggers: #656)"}
-{"name": "REPLACE_OBJECT", "text": "`tag` of the old units, `execute at` each one `run summon` of the new entity of the target player (`units.make_entity()`), then `kill` of the old units and their mounts (#2703); buildings: not supported yet"}
+{"name": "REPLACE_OBJECT", "text": "`tag` of the old units, `execute at` each one `run summon` of the new entity of the target player (`units.make_entity()`), then `kill` of the old units and their mounts (#2703); buildings: the order `replace <player> <old> <new> <x1> <y1> <x2> <y2>` in `aoe2mc:orders`, and the game program puts the complete new building on the tile of each old one (#3778)"}
 {"name": "RESEARCH_LOCAL_TECHNOLOGY", "text": "not supported: Chronicles only, the game program has no local technologies"}
 {"name": "RESEARCH_TECHNOLOGY", "text": "`scoreboard players set #rN.I aoe_tech 1`: the scenario mode of the game program gives the technology (#2577)"}
 {"name": "SCRIPT_CALL", "text": "not supported: no XS scripts"}

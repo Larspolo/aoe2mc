@@ -209,6 +209,7 @@ ORDER_KINDS = {
     "gates": r'"(lock|unlock) (\d+)"',                         # "Lock Gate", "Unlock Gate" (#2762): gate()
     "owners": r'"owner (aoe_order[\w.]+) (\d+) (-?\d+)"',   # "Change Ownership" (#2998): owner()
     "queued": r'"(train|research) (\d+) (\w+) ?(\d+)?"',      # "Train Unit", "Initiate Research" (#2772): queues()
+    "replaces": r'"replace (\d+) (\w+) (\w+) (-?\d+) (-?\d+) (-?\d+) (-?\d+)"',   # "Replace Object" (#3778): replace()
     "rallies": r'"rally (\d+) (\w+) (\d+) (\d+) ?(\d+ \d+ \d+ \d+)?"',  # "Set Building Gather Point": rally()
     "tags": r'"(patrol|attack_move|range|stance|stop) (aoe_order[\w.]+) ?(-?\d+(?: -?\d+)*)?"',   # see orders()
     "unloads": r'"unload (\d+) (\d+) ?(-?\d+ -?\d+ -?\d+)?"',  # "Unload" (#2773): unload()
@@ -242,6 +243,8 @@ def orders(g):
         owner(g, tag, int(new))
     for player, name, *area in m["builds"]:
         finish(g, int(player), name, [int(v) for v in area])
+    for player, old, new, *area in m["replaces"]:
+        replace(g, int(player), old, new, [int(v) for v in area])
     for player, which, x, y, area in m["rallies"]:
         rally(g, int(player), which, (int(x), int(y)), [int(v) for v in area.split()])
     patrols = vars(g).setdefault("patrols", [])
@@ -386,6 +389,27 @@ def finish(g, player, name, area):
             tx, ty = (x0 + x1) // 2 // T, (z0 + z1) // 2 // T
             if area[0] < 0 or area[0] <= tx <= area[2] and area[1] <= ty <= area[3]:
                 build.rise(x, site, float("inf"))
+
+
+def replace(g, player, old, new, area):
+    """A "Replace Object" order of buildings (aoe2mc.replace_lines, #3778): each complete building of the player (a
+    person or a bot) of type old with its middle tile in the area [x1, y1, x2, y2] (-1: the whole map) goes, and a
+    complete building of type new stands with its middle on the same tile (foundation with done). The removal is free
+    (demolish.fall, then out of g.fell): the score and the recap count no lost building, as in AoE2."""
+    import demolish, ruins                                             # they import gather
+    for x in [g, *(s.g for s in g.bots)]:
+        if x.player != player or "objects" not in x.data:
+            continue
+        T = x.map.T
+        for rect in list(ruins.own(x).values()):
+            x0, x1, z0, z1 = rect
+            tx, ty = (x0 + x1) // 2 // T, (z0 + z1) // 2 // T
+            if demolish.name(x, rect) != old or not (area[0] < 0 or area[0] <= tx <= area[2] and area[1] <= ty <= area[3]):
+                continue
+            n = len(vars(x).get("fell", []))
+            demolish.fall(x, rect)
+            del x.fell[n:]                                             # no loss
+            foundation(g, player, new, (tx, ty), done=True)
 
 
 def rally(g, player, which, tile, area):

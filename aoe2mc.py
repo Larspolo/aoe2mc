@@ -3538,9 +3538,17 @@ def replace_lines(e, c):
     """The commands of "Replace Object" (#2703): a summon of the entity of the new type (units.make_entity, as "Create
     Object") of the target player at each unit of the effect (effect_units), then a kill of the old units and their
     mounts. Minecraft cannot change the type of a mob. A temporary tag marks the old units first: a new unit of the
-    same entity type and player must stay. A type with no entity (a building) is not supported yet."""
+    same entity type and player must stay. A building by a building (#3778): the order "replace <player> <old> <new>
+    <x1> <y1> <x2> <y2>" (-1: the whole map) goes into the storage aoe2mc:orders, and game/scenario.py replace puts
+    the complete new building on the tile of each old one. Other types with no entity are not supported yet."""
     T, stats = c.T, c.stats
     kind, name = e.get("object2") or (None, None)
+    if kind == "B" and (e.get("object") or ("",))[0] == "B" and e["player"] > 0:
+        stats["replace"] += 1
+        a = e.get("area", [-1] * 4)
+        x0, y0, x1, y1 = (min(a[0], a[2]), min(a[1], a[3]), max(a[0], a[2]), max(a[1], a[3])) if min(a) >= 0 else [-1] * 4
+        return [f'data modify storage aoe2mc:orders list append value "replace {e["player"]} {e["object"][1]} {name} '
+                f'{x0} {y0} {x1} {y1}"']
     found = effect_units(e, T) if e.get("object") else None
     nbt = units.make_entity(dict(name=name, player=max(e.get("target", -1), 0), rotation=math.pi / 2, hero=kind == "H"),
                             c.players or {},
