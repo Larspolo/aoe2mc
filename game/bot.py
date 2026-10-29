@@ -38,6 +38,7 @@ import ai  # noqa: E402
 import autoscout  # noqa: E402
 import build  # noqa: E402
 import combat  # noqa: E402
+import conquest  # noqa: E402
 import garrison  # noqa: E402
 import gather  # noqa: E402
 import herd  # noqa: E402
@@ -325,6 +326,7 @@ class Bot:
         if len(mine.keys() - self.wave) >= self.group:                 # the new soldiers wait for a full wave (#3953)
             self.wave |= mine.keys()
         self.charged = bool(self.wave)
+        self.retarget()
         if not self.charged or self.foe is None:                      # no enemy: no attack (#3107)
             return
         mine = {u: p for u, p in mine.items() if u in self.wave}       # the others stay at their buildings
@@ -365,6 +367,20 @@ class Bot:
                 g.sieged.add(t)                                        # Gather.fall frees its footprint
             ai.attack(g.game, us, [g.soldiers[u] for u in us], g.map.T, t,
                       [gather.NORMAL * train.speed(g, g.soldiers[u], u) for u in us])
+
+    def retarget(self):
+        """When self.foe is out of the game (conquest.left), take the enemy still in the game (not an ally,
+        gather.allied) whose town center is nearest to the own one, as the AoE2 AI (#4019); None with no enemy."""
+        if self.share is None or self.foe is None or self.foe in (left := conquest.left(self.share)):
+            return
+        g, me = self.g, self.center()
+
+        def far(p):
+            tc = next((o["footprint"] for o in g.data["objects"] if o["kind"] == "building" and o["player"] == p
+                       and o["name"] == "TOWN_CENTER"), None)
+            return math.inf if tc is None or me is None else math.dist(me, ((tc[0] + tc[2]) / 2, (tc[1] + tc[3]) / 2))
+        self.foe = min((p for p in sorted(left) if not gather.allied(g.players, g.player, p)), key=far, default=None)
+        self.sides = (None, {})                                        # a new foe: decide each tile again
 
     def stalled(self, mine):
         """Drop the target of each soldier that came no block nearer to it and did no damage to it for STALL AoE2
