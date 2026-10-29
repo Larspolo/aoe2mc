@@ -1209,13 +1209,14 @@ def research(g, entry, start=False, rect=None):
 
 def limit(g):
     """The population limit: 5 per complete own town center and house, 20 per castle (civs.HOUSING: other values of
-    a civilization, #2118), at most max_pop()."""
+    a civilization, #2118), also of the buildings in g.housing_kept (ruins.fall: Nomads, #4280), at most max_pop()."""
     own = civs.HOUSING.get(civs.civ(g), {})
     factor = {}                                                        # Urbanization: the houses give double (#3919)
     for t in getattr(g, "techs", ()):
         for n, f in value("housing_factor", t, {}).items():
             factor[n] = factor.get(n, 1) * f
-    return min(max_pop(g), sum(own.get(n, HOUSING.get(n, 0)) * factor.get(n, 1) for n in owned(g)))
+    kept = vars(g).get("housing_kept", [])                             # fell after a "keep_housing" research (#4280)
+    return min(max_pop(g), sum(own.get(n, HOUSING.get(n, 0)) * factor.get(n, 1) for n in owned(g) + kept))
 
 
 def max_pop(g):
