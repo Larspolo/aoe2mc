@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 aoe2mc - Convert an Age of Empires II: DE scenario (.aoe2scenario) or the start state of a recorded game
-(.aoe2record) or an old scenario (.scx, format 1.21) to a Minecraft Java world. A campaign (.aoe2campaign) gives one world per scenario; an old campaign
+(.aoe2record) or an old scenario (.scx, format 1.21; .scn, 1.18 to 1.20) to a Minecraft Java world. A campaign (.aoe2campaign) gives one world per scenario; an old campaign
 (.cpx, .cpn) too; its scenarios that are not .scx 1.21 give the files and the steps to save them in the DE editor.
 
 Usage:
@@ -262,7 +262,7 @@ def read_map(path, seed=1):
         return map_description(rmap.random_map(p[len(RANDOM_MAP):], seed), path)
     if p.endswith(".rms"):
         return read_rms(path, seed)
-    return (read_record if p.endswith(RECORDS) else read_scx if p.endswith(".scx") else
+    return (read_record if p.endswith(RECORDS) else read_scx if p.endswith((".scx", ".scn")) else
             read_json if p.endswith(".json") else read_scenario)(path)
 
 
@@ -285,8 +285,9 @@ FLAGX, SHALLOWS_OBJECT = 162, 447   # an invisible editor flag (units.INVISIBLE)
 
 
 def read_scx(path):
-    """An old scenario (.scx format 1.21, #312), as read_scenario returns it. The old terrain and object IDs are the
-    DE IDs. A map that is not square gets the edge tiles repeated to a square. Old scenarios give no texts here."""
+    """An old scenario (.scx format 1.21, #312; .scn formats 1.18 to 1.20, #3860), as read_scenario returns it.
+    The old terrain and object IDs are the DE IDs. A map that is not square gets the edge tiles repeated to a square.
+    Old scenarios give no texts here."""
     import scx
     from AoE2ScenarioParser.datasets.terrains import TerrainId
     try:
@@ -6174,7 +6175,7 @@ def convert_campaign(src, out, only=None, name=None, **kw):
         old, done = [], []
         for i, fn, data in chosen:
             stem = os.path.splitext(fn)[0]
-            if fn.lower().endswith(".scx"):
+            if fn.lower().endswith((".scx", ".scn")):
                 with tempfile.TemporaryDirectory() as tmp:
                     path = os.path.join(tmp, fn)       # "Read <fn>" names the scenario (#578)
                     with open(path, "wb") as f:
