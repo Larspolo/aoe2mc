@@ -8,6 +8,7 @@
 {"name": "breach", "text": "true: after this technology the villagers attack enemy walls, gates and towers (Siegecraft of Antiquity Mode). gather.breach.", "issue": 3916}
 {"name": "civ", "text": "The civilization of a unique technology: only its castle researches it (civs.MISSING of the others).", "issue": 2021}
 {"name": "converts", "text": "A technology that converts more: [\"buildings\" (enemy buildings, as Redemption), \"monks\" (enemy priests and monks, as Atonement)]. monk.CONVERTS.", "issue": 3986}
+{"name": "costs", "text": "A technology that changes the cost of a group of items: a list of [a rule what of civs.has, a resource or null for all, the factor], as the rules of civs.COSTS. civs.cost.", "issue": 4225}
 {"name": "doctrine", "text": "A switch of the Recruitment Doctrines of its building (Macedonians): no queue and no cost, the next doctrine of the civ key \"doctrines\". train.DOCTRINES, train.switch.", "issue": 2483}
 {"name": "economy", "text": "true: an economic technology that the AI bot researches when its age and building offer it (Loom, Double-Bit Axe, Wheelbarrow). game/bot.py research.", "issue": 3950}
 {"name": "effect", "text": "The change of the AoE2 combat values of a technology (train.effect: a dict, or a list of changes in turn). train.TECHS and train.EACH compute it; civs.MORE changes it.", "issue": 2029}
@@ -36,3 +37,4 @@
 {"name": "building_taken", "text": "The factor of the bonus damage that a building of the player takes after the technology: {building: factor} (Citadels: a castle 0.75). build.taken.", "issue": 4281}
 {"name": "less", "text": "A technology that cuts the damage that its units take from attackers of some classes: [the units (as \"walk\"), {attacker class: n}]; the most of the classes of the attacker counts (Royal Heirs). train.hits.", "issue": 4331}
 {"name": "ignore_armor", "text": "A technology whose melee units ignore the armor of the target (a negative armor still counts): the units, as \"walk\" (Wootz Steel). train.hits.", "issue": 4331}
+{"name": "work", "text": "A technology that makes one building work faster: [the building, the factor of its train and research rate] (Perfusion: [\"BARRACKS\", 2]). A unit group can join the form later. train.work, train.seconds.", "issue": 4226}
