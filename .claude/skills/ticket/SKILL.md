@@ -151,7 +151,7 @@ does not say?
 ## Rules
 
 - One goal per ticket. If you write "and also", make two tickets.
-- Search the open issues first. Do not make a duplicate. For a bug that a run found outside its ticket, lock it first with `python3 tools/claim.py 0 --ticket KEY` (#4231).
+- Search the open issues first. Do not make a duplicate.
 - Do not change the priority of a ticket that the owner set. Propose the change in a comment.
 - A ticket that uses a tool, file or function of a ticket that is not merged yet gets "Depends on: #<that ticket>": else it is a candidate at once, and a run claims it without the tool (#829 needed `tools/replay_drift.py` of the open PR #830).
 - A ticket that adds an item to the menu of a building (`train.ITEMS`) names its slot: the first free slot of that

@@ -17,8 +17,7 @@ dashboard counts them.
 - Did 3 or more tool calls do what one tool call could do (the pattern of `cycle_start.py` and `ship_pr.py`)? → a
   `tooling` ticket (lever 2 of the `improve` skill).
 - Would a test or tool have found a problem earlier? → make a `tooling` ticket (`P1` if it blocks other tickets).
-- Did you see a bug outside the ticket? → make a ticket. Do not fix it in this PR. Lock it first: `python3 tools/claim.py 0 --ticket KEY`
-  (exit 1: another run makes the ticket, so make none; exit 0: search the open issues again, then make it).
+- Did you see a bug outside the ticket? → make a ticket. Do not fix it in this PR.
 - Did you write own logic where the platform has a feature for it (CLAUDE.md: the platform features first)? → use the
   feature in this PR when it is small, else make a ticket.
 - Did you install a package or download a file by hand? → add it to `scripts/cloud-setup.sh` (raise `SETUP_VERSION`).

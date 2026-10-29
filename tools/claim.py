@@ -24,7 +24,6 @@ a second push of another claim commit is never a fast-forward. Later claims of t
     python3 tools/claim.py ID --comment   # lock owner comment ID (autopilot step 3); exit 1: another run handles it
     python3 tools/claim.py E --refill     # lock the sub-issues of epic E (0: the whole queue refill, autopilot step 5)
     python3 tools/claim.py 0 --fixmain --state SHA   # lock the "Fix main" ticket of the break in commit SHA (step 2)
-    python3 tools/claim.py 0 --ticket KEY # lock the make of a new bug ticket: one run makes it (#4231)
     python3 tools/claim.py 0 --review     # lock the process review after its gap of merged PRs (`improve` skill,
                                           # `[review]` of agent.toml; it prints the owner work since the last review)
     python3 tools/claim.py 0 --reviewed change   # after the review: "change" or "none" sets the next gap
@@ -90,7 +89,7 @@ RECENT = 30 * 60            # seconds: a "Started by" comment of another branch 
 CONFLICT = 10 * 60          # seconds: the stale time of a ticket whose PR has the label `conflict` (#1773)
 
 
-LOCK_DAYS = {"comment": 1, "fixmain": 1, "review": 1, "roadmap": 1, "refill": 7, "ticket": 1}   # days that `--prune` keeps a lock
+LOCK_DAYS = {"comment": 1, "fixmain": 1, "review": 1, "roadmap": 1, "refill": 7}   # days that `--prune` keeps a lock
 NS = "refs/aoe2mc-prune"    # the local copies of the claim refs of `--prune`
 
 
@@ -617,7 +616,6 @@ def main(argv=None):
     g.add_argument("--comment", action="store_true", help="lock the owner comment with this ID")
     g.add_argument("--refill", action="store_true", help="lock the new sub-issues of this epic (0: the whole refill)")
     g.add_argument("--fixmain", action="store_true", help="lock the Fix main ticket of the break in --state SHA (number 0)")
-    g.add_argument("--ticket", metavar="KEY", help="lock the make of a new bug ticket with this KEY (number 0)")
     g.add_argument("--review", action="store_true", help="lock the process review after its gap of merged PRs (number 0)")
     g.add_argument("--reviewed", choices=("change", "none"), help="after the review: set the next gap")
     g.add_argument("--roadmap", action="store_true", help="lock the roadmap review after 100 merged PRs (number 0)")
@@ -646,13 +644,6 @@ def main(argv=None):
             print(f"claimed fixmain {sha}")
             return 0
         print(f"fixmain {sha}: another run makes the ticket")
-        return 1
-    if a.ticket:
-        key = re.sub(r"[^a-z0-9_-]+", "-", a.ticket.lower()).strip("-")     # one lock for each spelling of a symptom
-        if claim_lock("ticket", key, a.remote):
-            print(f"claimed ticket {key}")
-            return 0
-        print(f"ticket {key}: another run makes the ticket")
         return 1
     if (a.review or a.roadmap or a.refill) and not deep_lane():
         print(f"the deep lane does the {'process review' if a.review else 'roadmap review' if a.roadmap else 'queue refill'}"
