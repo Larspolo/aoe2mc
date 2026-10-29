@@ -2703,7 +2703,7 @@ class Replay:
         dead = {u for u in self.workers(p) if "Test passed" not in (self.game.command(f"execute if entity {u}") or "")}
         for i in [i for i, v in self.units.items() if v.uuid in dead]:
             del self.units[i]
-            for state in (self.moving, self.working):
+            for state in (self.moving, self.working, self.arriving, self.entering, self.builds):   # built() (#3943)
                 state.pop(i, None)
 
     def eco(self):
