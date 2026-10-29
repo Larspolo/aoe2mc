@@ -67,6 +67,10 @@ def test_the_sidebar_has_8_lines_in_8_colors():
     sets = [c.split()[3] for c in sent if c.startswith("scoreboard players set ") and replay.POP in c]
     assert sets == [f"P{p}" for p in PLAYERS]
     names = [json.loads(c.split(" ", 6)[6]) for c in sent if c.startswith("scoreboard players display name ")]
+    first = {}                                   # the APM (#3764) renames a player again: the first name of each
+    for n in names:
+        first.setdefault(n["text"].split(" · ")[0], n)
+    names = list(first.values())
     assert [n["text"].split(" · ")[0] for n in names] == [f"Player {p} ({c.title()})" for p, c in zip(PLAYERS, CIVS)]
     assert len({n["color"] for n in names}) == 8
 

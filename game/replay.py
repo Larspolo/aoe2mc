@@ -2295,11 +2295,12 @@ class Replay:
             longest = max(lines, key=lambda p: len(lines[p]))
             lines[longest].pop()
 
-    def score_commands(self):
+    def score_commands(self, t=None):
         """The sidebar commands for the population of each player that changed since the last call (#741). The score
         holder is "P<n>" (a holder name has no space); its display name is the player name in the player color, the
-        age of the player (#805) and its estimated resources (#932). In a team game the score is a team key plus the
-        population, so the sidebar shows each team together, and a fixed number format shows the population (#1189)."""
+        age of the player (#805), its estimated resources (#932) and its actions of the last minute at game time t
+        (#3764; no APM part without t). In a team game the score is a team key plus the population, so the sidebar
+        shows each team together, and a fixed number format shows the population (#1189)."""
         out, top = [], max((self.team(p) or 0 for p in self.pop), default=0)
         if self.shown is None:
             self.shown, out = {}, [f'scoreboard objectives add {POP} dummy "Population"',
@@ -2307,7 +2308,8 @@ class Replay:
         for p in sorted(self.pop):
             name, color = self.label(p)
             res = " ".join(f"{r[0].upper()} {max(0, v)}" for r, v in self.resources(p).items())
-            if self.named.get(p) != (line := f"{name} · {self.ages.get(p, 'Dark')} · {res} (est.)"):
+            apm = "" if t is None else f" · APM {self.apm(p, t)}"
+            if self.named.get(p) != (line := f"{name} · {self.ages.get(p, 'Dark')} · {res} (est.){apm}"):
                 out.append(f"scoreboard players display name P{p} {POP} {json.dumps(text(line, color))}")
                 self.named[p] = line
             if self.shown.get(p) != self.pop[p]:
@@ -2656,7 +2658,7 @@ class Replay:
                         self.working = {i: max(t, to) for i, t in self.working.items()}   # walks after it (#1125)
                     g0, r0 = to, clock()
                     shown = int(to) // 1000
-                    send(self.clock_commands(to, end, self.speed) + self.score_commands())
+                    send(self.clock_commands(to, end, self.speed) + self.score_commands(to))
                     self.send(self.panel(to))
                     self.sample(to)
                     self.idle_at = to
@@ -2669,7 +2671,7 @@ class Replay:
                     census()
                     look()
                     counted = clock()
-                send(self.clock_commands(now, end, self.speed) + self.score_commands() + self.overview(join=True))
+                send(self.clock_commands(now, end, self.speed) + self.score_commands(now) + self.overview(join=True))
                 self.send(self.panel(now))
                 self.sample(now)
                 self.idle_time(now)
