@@ -267,6 +267,8 @@ def heal(g, dt):
     last, g.monk_at = g.monk_at, {m: pos[m] for m in monks if m in pos}
     import civs                                                    # civs imports gather, gather imports this module
     reach = RANGE * civs.HEAL_RANGE.get(civs.civ(g), 1) * g.map.T   # the Teutons: twice (#2269)
+    import train                                                   # train imports this module's callers (#3984)
+    rate = RATE * math.prod(train.value("heal_rate", t, 1) for t in g.techs)   # Medicine of Antiquity Mode: 2
     hurt, taken = {}, set()
     for m in monks:
         if m in inside or m in g.converting or m not in pos or m not in last or math.dist(pos[m], last[m]) > STILL:
@@ -278,7 +280,7 @@ def heal(g, dt):
             if u not in hurt:
                 hurt[u] = health(g, u)
             if hurt[u] and hurt[u][0] < hurt[u][1]:
-                hp = min(hurt[u][1], hurt[u][0] + RATE * dt)
+                hp = min(hurt[u][1], hurt[u][0] + rate * dt)
                 g.command(f"data modify entity {u} Health set value {round(hp, 2)}f")
                 g.command(f"execute at {u} anchored eyes run particle minecraft:heart ^ ^ ^ 0.3 0.3 0.3 0 2")   # #1634
                 taken.add(u)
@@ -436,5 +438,7 @@ def convert(g, dt):
                 (win if fort else die if heresy(g, owner) else take)(g, target)
                 for k in group:
                     del g.converting[k]
+                import train                                       # train imports this module (#3502)
+                rest_factor = math.prod(train.value("rest", t, 1) for t in g.techs)   # Fanaticism: 0.5 (#3987)
                 for k in rest:                                     # the group in range (Theocracy: one)
-                    g.faith[k] = (ILLUMINATED if "ILLUMINATION" in g.techs else REST) / faith(g)
+                    g.faith[k] = (ILLUMINATED if "ILLUMINATION" in g.techs else REST) * rest_factor / faith(g)

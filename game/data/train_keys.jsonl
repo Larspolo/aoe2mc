@@ -15,6 +15,7 @@
 {"name": "housing_factor", "text": "A technology that multiplies the population room of a building (Urbanization: {\"HOUSE\": 2}). train.limit.", "issue": 3919}
 {"name": "line", "text": "The short name of a line at its first technology (Blacksmith, or an economy line: lumber, mining, mill, town center); the line follows the \"after\" chain. replay.SMITH and replay.ECO_LINES, the tiers of the live replay.", "issue": 3786}
 {"name": "on_research", "text": "The functions (\"module.function\") that run at the research of a technology, with (g, entry): its special effect in its own module, not an if block of train.research.", "issue": 3243}
+{"name": "rest", "text": "A technology that changes the rest of a priest after a conversion: the factor of the AoE2 seconds of the rest (Fanaticism: 0.5). monk.convert.", "issue": 3987}
 {"name": "shares", "text": "A technology that shares the sight of the player with its allies (Antiquity Mode: Writing): before its research the allies do not see for the player, also with \"Shared Exploration\" on. fog.shares.", "issue": 3920}
 {"name": "population", "text": "A technology that changes the population of the units of one building: [the building, the factor]. train.weight.", "issue": 3918}
 {"name": "start_age", "text": "The name of the age before the first age (the line of the first age only): Dark Age, Stone Age. build.AGE_NAMES.", "issue": 3666}
@@ -23,3 +24,4 @@
 {"name": "walk", "text": "A technology that makes units walk faster: [the unit, a class of combat.STATS in lower case or a group of civs.GROUPS, the walk speed factor]. train.speed.", "issue": 1415}
 {"name": "walk_add", "text": "A technology that adds walk speed in tiles per second: [the unit, a class of combat.STATS in lower case or a group of civs.GROUPS, the added speed]. train.speed.", "issue": 3921}
 {"name": "walls", "text": "A wall technology (Fortified Wall): {wall: the new wall}. The new and the complete own walls get the new design (build.design).", "issue": 1326}
+{"name": "heal_rate", "text": "A factor of the hit points that a monk heals per second (Medicine of Antiquity Mode: 2). monk.heal.", "issue": 3984}

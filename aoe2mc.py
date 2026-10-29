@@ -14,6 +14,7 @@ Options:
     --name TEXT        World name in the Minecraft menu (default: file name)
     --seed N           Seed for the random details (tree heights, flowers), of a random map script (.rms) and
                        of --random-map (default 1)
+    --players N        Number of players of a random map script (.rms) and of --random-map (1 to 8, default 2)
     --random-map KIND  Make the map with an own generator (arabia, arena, black_forest, gold_rush, highland,
                        islands, mediterranean, nomad), no input file:
                        aoe2mc.py --random-map arabia OUT
@@ -254,15 +255,15 @@ RECORDS = (".aoe2record", ".mgz", ".mgx", ".mgl")      # recorded games: DE, HD;
 RANDOM_MAP = "random-map:"          # the source name of --random-map KIND (#993): read_map makes the map of the seed
 
 
-def read_map(path, seed=1):
+def read_map(path, seed=1, players=2):
     """read_record for recorded games (RECORDS), read_scx for old .scx scenarios, read_json for a map in JSON,
     read_rms for a random map script (the land of seed), rmap.random_map for RANDOM_MAP + kind, else read_scenario."""
     p = path.lower()
     if p.startswith(RANDOM_MAP):
         import rmap
-        return map_description(rmap.random_map(p[len(RANDOM_MAP):], seed), path)
+        return map_description(rmap.random_map(p[len(RANDOM_MAP):], seed, players), path)
     if p.endswith(".rms"):
-        return read_rms(path, seed)
+        return read_rms(path, seed, players)
     return (read_record if p.endswith(RECORDS) else read_scx if p.endswith((".scx", ".scn")) or old_format(path) else
             read_json if p.endswith(".json") else read_scenario)(path)
 
@@ -276,13 +277,13 @@ def old_format(path):
         return f.read(4) in scx.FORMATS
 
 
-def read_rms(path, seed):
+def read_rms(path, seed, players=2):
     """The land of a random map script (#963): rmap.generate makes a map description of the seed (read_json)."""
     import rmap
     with open(path, encoding="utf-8", errors="replace") as f:
         text = f.read()
     try:
-        return map_description(rmap.generate(text, seed), path)
+        return map_description(rmap.generate(text, seed, players), path)
     except rmap.RmsError as e:
         raise OptionError(f"{path}: {e}") from None
 
@@ -5857,8 +5858,8 @@ class Progress:
 def convert(src, out, T=4, H=3, name=None, seed=1, preview=False, arch=None, player_arch=(), with_units=True,
             barriers=True, mc_version=VERSION_NAME, spawn=None, birds=True, orientation="ne", verbose=False,
             garrison="inside", border_design="diorama", ambience="basic", at=None, mood="on", fog=False,
-            resource_pack=False):
-    """at: recorded games only, the time in ms (--at): convert the state at that time (apply_timeline).
+            resource_pack=False, nplayers=2):
+    """nplayers: the players of a random map script or --random-map (#3944). at: recorded games only, the time in ms (--at): convert the state at that time (apply_timeline).
     mood: "on" sets the time of day of the map color mood (MOODS), "off" keeps noon (#1595).
     fog: the fog of a fog mood (FOG, #1626); ambience "full" gives it too.
     resource_pack: resources.zip with human faces for the zombie units (#2738) and own armor (units.ASSETS, #2742)."""
@@ -5868,7 +5869,7 @@ def convert(src, out, T=4, H=3, name=None, seed=1, preview=False, arch=None, pla
     PALETTE_CACHE.clear()   # the cached entries can have the block names of another version
     try:
         _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units, barriers, spawn, birds, orientation,
-                 verbose, garrison, border_design, ambience, at, mood, fog, resource_pack)
+                 verbose, garrison, border_design, ambience, at, mood, fog, resource_pack, nplayers)
     finally:
         MC = VERSIONS[VERSION_NAME]
         PALETTE_CACHE.clear()
@@ -5891,7 +5892,8 @@ def clear_old_output(out):
 
 
 def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units, barriers, spawn, birds, orientation,
-             verbose, garrison, border_design, ambience, at=None, mood="on", fog=False, resource_pack=False):
+             verbose, garrison, border_design, ambience, at=None, mood="on", fog=False, resource_pack=False,
+             nplayers=2):
     buildings.BARRIERS = barriers
     buildings.TURN, yaw = ORIENTATIONS[orientation]
     MOVED.clear()           # the counts of an earlier conversion in this process
@@ -5908,7 +5910,7 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
         times[phase] = times.get(phase, 0.0) + now - clock[0]
         clock[0] = now
 
-    size, terrain, elevation, tnames, texts, objects, players = read_map(src, seed)
+    size, terrain, elevation, tnames, texts, objects, players = read_map(src, seed, nplayers)
     record = src.lower().endswith(RECORDS)
     timeline = read_timeline(src) if record else None
     if timeline is not None:
@@ -6267,6 +6269,8 @@ def main(argv=None):
     ap.add_argument("--level-height", type=int_range(1, 16), default=3, help="blocks per elevation level (default 3)")
     ap.add_argument("--name", help="world name in the Minecraft menu")
     ap.add_argument("--seed", type=int_range(0, 2**63 - 1), default=1, help="seed for random details and random maps (default 1)")
+    ap.add_argument("--players", type=int_range(1, 8), metavar="N",
+                    help="players of a random map script (.rms) or of --random-map, 1 to 8 (default 2)")
     ap.add_argument("--preview", action="store_true", help="also write preview.png")
     ap.add_argument("--architecture", choices=sorted(buildings.ARCH),
                     help="use one architecture set for all players (default: from each player's civilization)")
@@ -6317,7 +6321,9 @@ def main(argv=None):
         a.name = a.name or f"{a.random_map.title()} {a.seed}"
     if a.output is None:
         ap.error("give the input file and the output world folder")
-    kw = dict(T=a.tile_size, H=a.level_height, seed=a.seed, preview=a.preview, arch=a.architecture,
+    if a.players is not None and not (a.scenario.lower().endswith(".rms") or a.scenario.lower().startswith(RANDOM_MAP)):
+        ap.error("--players needs a random map script or --random-map")
+    kw = dict(T=a.tile_size, H=a.level_height, seed=a.seed, preview=a.preview, arch=a.architecture, nplayers=a.players or 2,
               player_arch=a.player_architecture, with_units=not a.no_units, barriers=not a.no_barriers,
               mc_version=a.mc_version, spawn=a.spawn, birds=not a.no_birds, orientation=a.orientation,
               verbose=a.verbose, garrison=a.garrison, border_design=a.border, ambience=a.ambience,
