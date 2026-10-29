@@ -22,6 +22,8 @@ def run(command, cwd=ROOT):
     'python3 x.py > "${OUT}/a.txt"',
     "pkill -f server.jar",
     "pgrep -f 'java -Xmx2G' | xargs kill",
+    "gh api repos/a/b/issues/1/comments -F body=@- <<EOF\nRun `ruff check .` first.\nEOF",
+    "S=/tmp/s && mkdir -p $S & python3 x.py > $S/out.txt",
 ])
 def test_blocks(command):
     assert run(command) == 2, command
@@ -41,12 +43,18 @@ def test_blocks(command):
     "git stash",
     "echo 'pkill -f server.jar' | grep pkill",
     "cat > out/t.py <<'EOF'\ncat > tests/conftest.py <<X\npkill -f java\nEOF",
+    "gh api x -F body=@- <<'EOF'\nRun `ruff check .` first.\nEOF",
+    "python3 - <<EOF\nprint($N)\nEOF",
+    "cat <<< `date`",
+    "S=/tmp/s; python3 a.py > $S/a 2>&1 & python3 b.py > $S/b",
+    "python3 a.py 2>&1 & S=/tmp/s; echo $S",
+    "git checkout --ours docs/coverage.md",
 ])
 def test_allows(command):
     assert run(command) == 0, command
 
 
-def test_blocks_a_stash_in_a_merge(tmp_path):
+def test_blocks_a_stash_and_ours_in_a_merge(tmp_path):
     def git(*a):
         subprocess.run(["git", "-C", str(tmp_path), "-c", "user.name=t", "-c", "user.email=t@t", *a], check=True,
                        capture_output=True)
@@ -56,3 +64,5 @@ def test_blocks_a_stash_in_a_merge(tmp_path):
     open(os.path.join(tmp_path, ".git", "MERGE_HEAD"), "w").write("0" * 40 + "\n")
     assert run("git stash", cwd=str(tmp_path)) == 2
     assert run("git stash list", cwd=str(tmp_path)) == 0
+    assert run("git checkout --ours a.py", cwd=str(tmp_path)) == 2
+    assert run("git checkout --theirs docs/coverage.md", cwd=str(tmp_path)) == 0
