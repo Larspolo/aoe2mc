@@ -186,6 +186,8 @@ ticket #903 made the same change of the autopilot skill at the same time: one PR
 ## 4. Clean up
 
 - `docs/LEARNINGS.md` below 80 lines (only this skill merges and removes lines there; ticket runs only add), `CLAUDE.md` below 150 lines. Remove lines that are no longer true.
+- Turn a learning line into a check when you can (a rule of `.claude/hooks/guard-shell.sh`, a fast test, a clear
+  assert message, a setting of the start hook), then remove the line.
 - Read the skills for instructions that contradict each other. Correct them.
 
 ## 5. Report
