@@ -23,6 +23,7 @@ after an ORDER. The record names the unit only in its first command, so until th
 Replay(game, data).run(speed) plays it; commands(e) gives the commands of one event (the unit tests use it).
 With bar=True (game/run.py --replay) a boss bar shows the game time, the speed and the progress (#684).
 """
+import bisect
 import collections
 import functools
 import json
@@ -406,6 +407,7 @@ class Replay:
         self.vills, self.vhigh = {}, {}         # player -> live villagers (est.), the highest count (#1086)
         self.graph = {}                         # value index -> the shown rows of its graph (#3448)
         self.samples, self.minute = {}, -1      # player -> [(minute, pop, villagers, military, resources)], last minute (#3446)
+        self.apms, self.ended = None, 0         # player -> sorted times of its actions (#3763); game time of the end (ms)
         self.eyes = None                        # (x, y, z) of each player; None: not known, each gather step shows (#2761)
         self.queue = None                       # in run() on Paper: the commands that wait for flush() (#2761)
         import gather                                               # gather -> build -> replay: import it late
@@ -464,6 +466,27 @@ class Replay:
     def stats(self, t):
         """The samples of each player up to game time t (ms): (minute, population, villagers, military, resources)."""
         return {p: [s for s in ss if s[0] * 60000 <= t] for p, ss in self.samples.items()}
+
+    def actions(self, p):
+        """The sorted times (ms) of the commands of player p in the timeline (#3763): not the chat and not the ages
+        that the reader adds. A dict of lists, made at the first call: a long record has 50 000 events or more."""
+        if self.apms is None:
+            self.apms = {}
+            for e in self.data.get("timeline", []):
+                if e["kind"] not in ("chat", "age") and e.get("player") is not None:
+                    self.apms.setdefault(e["player"], []).append(e["time"])
+            for times in self.apms.values():
+                times.sort()
+        return self.apms.get(p, [])
+
+    def apm(self, p, t):
+        """The actions of player p in the last game minute up to game time t (ms, #3763): t - 60000 < time <= t."""
+        times = self.actions(p)
+        return bisect.bisect_right(times, t) - bisect.bisect_right(times, t - 60000)
+
+    def mean_apm(self, p, t):
+        """The average actions per minute of player p up to game time t (ms, #3763); 0 at t <= 0."""
+        return round(bisect.bisect_right(self.actions(p), t) / (t / 60000)) if t > 0 else 0
 
     def graphs(self, t):
         """The commands of the graphs at game time t (ms, #3448, decision #3447: B): in the sky above the overview one
@@ -2158,7 +2181,7 @@ class Replay:
                 f": villagers trained {self.villagers.get(p, 0)}, gathered {res}")]))
             out.append("tellraw @a " + json.dumps([text(name, color), text(              # military (#1066)
                 f": military units trained {self.army.get(p, 0)}, units lost {self.lost.get(p, 0)}, "
-                f"buildings lost {self.razed.get(p, 0)}")]))
+                f"buildings lost {self.razed.get(p, 0)}, APM {self.mean_apm(p, self.ended)}")]))
         return out + self.tech_commands() + self.society_commands()
 
     def tech_commands(self):
@@ -2514,6 +2537,7 @@ class Replay:
             ({"jump": to} if to is not None else {})
         self.control["fights"] = found
         end, shown, counted = events[-1]["time"] if events else start, None, -math.inf
+        self.ended = end                                            # the average APM of the summary (#3763)
         send = self.send if bar else lambda cmds: None
         send([f'bossbar add {BAR} ""', f"bossbar set {BAR} color white",
                    f"bossbar set {BAR} max {max(1, int(end) // 1000)}"] +
