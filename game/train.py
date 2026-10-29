@@ -139,7 +139,26 @@ def weight(g, name):
 def work(g, building):
     """The factor of the work rate of building (a name) from the researched technologies with the key "work":
     [the building, the factor] (Perfusion: the Barracks 2, #4226), else 1."""
-    return math.prod(f for t, (b, f) in BY_KEY["work"].items() if t in g.techs and b == building)
+    return math.prod(f for t, (b, f) in BY_KEY["work"].items() if researched(g, t) and b == building)
+
+
+def researched(g, tech):
+    """True when the player of g researched tech, or an ally did and tech has the key "team" (Kasbah, Butalmapu,
+    #4329). The allies are the Gathers of the game (fog.gathers; a bot reaches them by its share)."""
+    if tech in vars(g).get("techs", ()):
+        return True
+    if not BY_KEY["team"].get(tech):
+        return False
+    import gather                                                  # gather imports this module
+    root = vars(g).get("share") or g
+    return any(tech in vars(h).get("techs", ()) and gather.allied(g.players, g.player, h.player)
+               for h in [root, *(b.g for b in getattr(root, "bots", ())), *getattr(root, "peers", ())])
+
+
+def group_rate(g, name):
+    """The factor of the train rate of unit name from the researched technologies with the key "train_group": [the
+    units, as "walk" (faster()), the factor] (Steppe Husbandry: the scout line 2, #4260), else 1."""
+    return math.prod(f for t, (u, f) in BY_KEY["train_group"].items() if t in g.techs and faster(u, name))
 
 
 def value(key, name, default=None):
@@ -365,11 +384,18 @@ def volley_command(g, uuid, name):
     return None if attack is None else f"aoe volley {uuid} 1 {attack}"
 
 
-def lead_command(g, uuid, name):
+def lead_command(g, uuid, name, techs=None):
     """The command that lets the shots of own unit name lead a moving target, as with Ballistics (the key "lead" of
-    data/civs.jsonl: Spanish Cannon Galleons, #2430), else None. Minecraft feature: a scoreboard tag that the plugin
-    reads (AoePlugin.lead)."""
-    return f"tag {uuid} add aoe2mc.lead" if name in civs.value("lead", civs.civ(g), ()) else None
+    data/civs.jsonl: Spanish Cannon Galleons, #2430; the key "lead" of data/train.jsonl of the technologies techs,
+    default g.techs: Arquebus, #4364), else None. Minecraft feature: a scoreboard tag that the plugin reads (AoePlugin.lead)."""
+    import combat                                                  # combat imports this module's data: import it late
+    if name in civs.value("lead", civs.civ(g), ()):
+        return f"tag {uuid} add aoe2mc.lead"
+    s = combat.stats(name)
+    if any(test(t, name, s) for tech in (g.techs if techs is None else techs) if (e := BY_KEY["lead"].get(tech))
+           for t in e["if"]):
+        return f"tag {uuid} add aoe2mc.lead"
+    return None
 
 
 ORDERS = {r["name"] for r in UNIT_ROWS if r.get("orders")}         # not military, but they take move orders (summon)
@@ -996,7 +1022,7 @@ def seconds(g, name, building=None, k=None):
     own = (added(g, building, name) or (0, 0))[1] if building else 0   # Add Train Location (#2865)
     return (own or (base if base is not None else time if build.ages(g) >= age else TRAIN_TIMES[name])) \
         / (civs.work_rate(g, building) * work(g, building) if building else 1) \
-        / civs.train_rate(g, name) / civs.age_rate(g, name) * civs.research_time(g, name) / civs.turbo(g, name) \
+        / civs.train_rate(g, name) / (group_rate(g, name) if name not in TECHS else 1) / civs.age_rate(g, name) * civs.research_time(g, name) / civs.turbo(g, name) \
         * (civs.train_time(g, building, name) if building else 1) \
         * (doctrine(g, building, k)[2] if building and name not in TECHS else 1)
 
@@ -1173,6 +1199,9 @@ def research(g, entry, start=False, rect=None):
             g.command(combat.range_command(uuid, name, g.map.T, s=stats(g, name, uuid)))
     for cmd in [c for uuid, name in g.soldiers.items() for c in fire_commands(g, uuid, name, {entry["name"]})]:
         g.command(cmd)                                             # the live fire ships: Siphons, Incendiaries (#2165)
+    for uuid, name in g.soldiers.items():                          # the live gunpowder units aim ahead (Arquebus, #4364)
+        if cmd := lead_command(g, uuid, name, {entry["name"]}):
+            g.command(cmd)
     if entry["name"] in BY_KEY["walk"]:                            # the live units walk faster (Fervor)
         import ai, fleet                                           # ai imports gather, gather imports this module
         for uuid, name in g.soldiers.items():                      # a ship: fleet.tick reads speed() (#2136)
