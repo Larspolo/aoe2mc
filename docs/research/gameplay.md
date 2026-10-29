@@ -262,6 +262,9 @@ The owner decides on the platform first (decision ticket). The other tickets dep
 - Resources left (#3275, option B, #3284): a `text_display` above each partially drained tree, fruit bush, mine, farm
   and carcass shows the whole amount left (`game/amounts.py`). A full resource shows nothing; a carcass shows from the
   kill, because it rots at once.
+- Co-op (#3488, option B, #3489): `game/run.py --play --seats 1,1,2` gives the AoE2 player of each person in join
+  order. Two people on one player share its stock, population, units and score (one Gather), each with an own
+  selection (#3486). The lobby menu still refuses a taken player.
 
 ## Pitfalls of the game program
 
