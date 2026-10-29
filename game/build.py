@@ -774,6 +774,14 @@ def values(g, name, techs=None, rect=None):
     return s
 
 
+def taken(g, name, techs=None):
+    """The factor of the bonus damage that building name of the player of g takes: the key "building_taken" of its
+    technologies (Citadels: a castle 0.75, #4281). techs: the technologies (default: those of the player)."""
+    import train                                                       # train imports this module
+    techs = getattr(g, "techs", ()) if techs is None else techs
+    return math.prod(train.value("building_taken", t, {}).get(name, 1) for t in sorted(techs))
+
+
 def minimum(g, name, techs=None):
     """The minimum range in tiles of building name of the player of g (combat.FORT_MIN_RANGE): 0 after Murder Holes
     (#1547). techs: the technologies (default: those of the player)."""
@@ -793,11 +801,12 @@ def retower(g, before, fresh=None):
     for x0, x1, z0, z1, name in rects:
         rect = (x0, x1, z0, z1)
         a, b, new = values(g, name, before, None if rect == fresh else rect), values(g, name, rect=rect), line(g, name)
-        if (a, minimum(g, new, before)) == (b, minimum(g, new)) or (hp := repair.hp(g, (x0, x1, z0, z1))) is None or hp <= 0:
+        if (a, minimum(g, new, before), taken(g, new, before)) == (b, minimum(g, new), taken(g, new)) or (hp := repair.hp(g, (x0, x1, z0, z1))) is None or hp <= 0:
             continue
         uuid = combat.target_uuid([x0, z0, x1, z1])
         box = combat.building_box({"footprint": [x0, z0, x1, z1]}, g.map.ground)
-        for c in [c for c in combat.building(uuid, new, g.player, box, g.map.T, s=b, low=minimum(g, new)) if c.startswith("aoe building ")] \
+        for c in [c for c in combat.building(uuid, new, g.player, box, g.map.T, s=b, low=minimum(g, new),
+                                                taken=taken(g, new)) if c.startswith("aoe building ")] \
                 + [f"scoreboard players set {uuid} aoe_hp {min(b.hp, hp + b.hp - a.hp)}", combat.label_command(uuid, new)]:
             g.command(c)
 
@@ -878,7 +887,7 @@ def target(g, site):
                                                                        # (#1322), a guard tower or keep (#1374)
     s = combat.wall(name, ages(g), civs.civ(g, site["player"]), civs.handicap(g.data, site["player"])) if wall else values(g, name)   # Chemistry (#1375), Masonry (#1398)
     for c in combat.building(uuid, name, site["player"], box, g.map.T, s=s, low=minimum(g, name),
-                             factor=civs.arrows(g, name, site["player"])) \
+                             factor=civs.arrows(g, name, site["player"]), taken=taken(g, name)) \
             + [f"tag {uuid} add {combat.WALL_TAG}"] * wall + [combat.label_command(uuid, name)]:
         g.command(c)
     forts(g, site)
