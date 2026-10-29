@@ -41,6 +41,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 import aoe2mc  # noqa: E402
 import buildings  # noqa: E402
+import monk  # noqa: E402
 import table  # noqa: E402
 import replay_input  # noqa: E402
 import units  # noqa: E402
@@ -435,6 +436,9 @@ class Replay:
         self.formations = {}                    # object ID -> the AoE2 formation of the record: Line, Box ... (#2553)
         self.burst = math.inf                   # game time (ms) of the next burst of the live flares (#2506)
         self.refs = {o["ref"]: o for o in data["objects"] if o.get("ref") is not None}
+        self.relics = {r: {"at": (int(o["tile"][0] * self.T), int(o["tile"][1] * self.T)), "monk": None, "home": None}
+                       for r, o in self.refs.items() if o["kind"] == "other" and "RELIC" in o["name"] and "tile" in o}
+        self.fetching = {}                      # object ID of a monk -> the relic ref that it walks to (#4009)
         self.rng = np.random.default_rng(1)
         self.kinds, self.seen = aoe2mc.object_kinds(), set()
         self.sent, self.busy = 0, 0.0           # commands sent, seconds spent sending them
@@ -722,6 +726,7 @@ class Replay:
             for i in e.get("objects") or ():                    # another order ends the patrol (#2550), the scouting (#2678)
                 self.patrols.pop(i, None)
                 self.scouts.pop(i, None)
+                self.fetching.pop(i, None)                  # and the walk to a relic (#4009)
         if kind in aoe2mc.UNIT_USE - {"stance"} | {"delete", "stop"}:   # a new order ends a FOLLOW or GUARD (#2551)
             for i in e.get("objects") or ():
                 self.follows.pop(i, None)
@@ -1588,6 +1593,8 @@ class Replay:
         out0 = [c for i in e["objects"] if i in inside for c in self.leave(i, inside[i])]   # says it is out (#1229)
         group = [(i, v) for i, name in zip(e["objects"], e.get("names") or [None] * len(e["objects"]))
                  if (v := self.unit(i, name, e["player"])) is not None]
+        if e["kind"] == "order" and (relic := e.get("target")) in self.relics:   # only a monk carries a relic (#4009)
+            self.fetching.update({i: relic for i, v in group if v.name in monk.MONKS})
         tile = self.resource(e)
         if tile in self.map.farms or tile in self.map.carcasses:    # a farmer stands on the farm, a hunter at the carcass
             goals = self.crew.goals(tile)
@@ -2208,6 +2215,8 @@ class Replay:
         """A unit with a resource that ends its walk next to it gathers from game time t on, at the AoE2 work rate
         of the resource (gather.AOE2_WORK, per game second). The record has no drop-off: it does not carry.
         A farmer works on its farm (gather.Gather.goals). A unit that goes into a building arrives (enter())."""
+        if i in self.fetching:
+            self.send(self.pickup(i, v))
         if i in self.entering:
             x0, x1, z0, z1 = self.entering[i][0]
             if v.cell in self.map.around({(x, z) for x in range(x0, x1) for z in range(z0, z1)}):
@@ -2221,6 +2230,22 @@ class Replay:
             self.working[i] = t + 1000 / self.rate(v)
             if self.ai and not ship(v.name):                        # a boat sails with /tp steps: it is there
                 self.arriving[i], v.again, v.stand = t, False, None
+
+    def pickup(self, i, v):
+        """The commands of monk i that ends its walk to its relic: the pot block goes and a pot rides the monk, as
+        monk.relic_tick. Nothing when the relic is not on the ground or a monk carries one (#4009)."""
+        ref = self.fetching.pop(i)
+        r = self.relics[ref]
+        if r["at"] is None or any(q["monk"] == i for q in self.relics.values()):
+            return []
+        x, z = r["at"]
+        y = self.map.y(x, z)
+        r.update(at=None, monk=i)
+        return [f"fill {x} {y - 1} {z} {x} {y + 1} {z} air replace {monk.POT}",
+                f"execute at {v.uuid} run summon item_display ~ ~ ~ {{Tags:[\"aoe_relic_{ref}\"],"
+                f"item:{{id:\"{monk.POT}\",count:1}},transformation:{{left_rotation:[0f,0f,0f,1f],"
+                f"right_rotation:[0f,0f,0f,1f],translation:[0f,0.4f,0f],scale:[0.5f,0.5f,0.5f]}}}}",
+                f"ride @e[type=item_display,tag=aoe_relic_{ref},limit=1] mount {v.uuid}"]
 
     def rate(self, v):
         """The AoE2 work rate of unit v at its resource (per game second): a farm, a hunt and a fish have their own
