@@ -61,6 +61,13 @@ DEFENDERS = 3                                                      # villagers t
 LEVELS = {r["name"]: r for r in table.load("difficulty.jsonl")}    # "AI difficulty", in the order of the AoE2 lobby
 
 
+def level_of(setting, k):
+    """The level of bot k (0 first) of a setting: one name, or a comma list with one name for each bot in seat
+    order; the last name serves the bots after the list (#4020)."""
+    names = setting.split(",")
+    return names[min(k, len(names) - 1)]
+
+
 def box_gap(box, p):
     """Blocks from position p to the side of building box (x0, y0, z0, x1, y1, z1) on the ground; 0 inside it."""
     return math.hypot(max(box[0] - p[0], 0, p[0] - box[3] - 1), max(box[2] - p[2], 0, p[2] - box[5] - 1))
