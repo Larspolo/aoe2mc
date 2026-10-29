@@ -76,6 +76,7 @@ import units  # noqa: E402
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import build  # noqa: E402
 import civs  # noqa: E402
+import demolish  # noqa: E402
 import garrison  # noqa: E402
 import menu  # noqa: E402
 import monk  # noqa: E402
@@ -84,6 +85,7 @@ import ruins  # noqa: E402
 import table  # noqa: E402
 
 DATA = os.path.join(table.DIR, "train.jsonl")
+SOUNDS = {r["name"]: r for r in table.load("sounds.jsonl")}       # building name -> the sound of a click on it (#3501)
 
 
 def load(path=DATA):
@@ -463,6 +465,8 @@ def layout(g, rect):
     names = [n for n in trains(g, building) if offered(g, rect, n) and not covered(g, building, n)]
     used = {RALLY[0]} if units_of(g, building) else set()          # the items of show() after the trained ones
     used |= {garrison.ungarrison(building)[0]} if getattr(g, "garrisons", {}).get(rect) else set()
+    used |= {garrison.BELL[0]} if building == "TOWN_CENTER" else set()
+    used |= {demolish.ITEM[0]}                                         # the item Delete (#3452)
     out = {}
     for name in names:
         slot, item, label = placed(g, building, name)
@@ -526,8 +530,18 @@ def open_menu(g, player, cell, click=False):
         return rect                                                    # a spam click: the uses that came before the menu showed (#3267)
     if rect is not None:
         opened[player] = rect, g.clock()
+        click_sound(g, player, rect)
         show(g, player, rect)
     return rect
+
+
+def click_sound(g, player, rect):
+    """Play the sound of the own building rect to the player who opened its menu, as AoE2 DE does (#3501). Only own
+    buildings open a menu, so an enemy or allied building plays no sound. A building with no line plays none."""
+    if (v := SOUNDS.get(homes(g)[rect])) and not getattr(g, "noui", False):
+        x, z = (rect[0] + rect[1]) / 2, (rect[2] + rect[3]) / 2
+        g.command(f"execute as {player} at @s positioned {x:.1f} ~ {z:.1f} run "
+                  f"playsound minecraft:{v['select']} voice @s ~ ~ ~ 1 {v['pitch']}")
 
 
 def show(g, player, rect):
@@ -550,6 +564,8 @@ def show(g, player, rect):
              for name, (slot, item, label) in layout(g, rect).items()]
     items += [RALLY] if units_of(g, building) else []
     items += [garrison.ungarrison(building)] if getattr(g, "garrisons", {}).get(rect) else []   # only with units inside (#808)
+    items += [garrison.BELL] if building == "TOWN_CENTER" else []    # the town bell (#3419)
+    items += [demolish.ITEM] if demolish.shown(g, rect) else []        # the building falls (#3452)
     if building == "MARKET":                                           # the buy and sell rows under the queue (#1286)
         import market                                                  # only for a market
         items += [(market.ROW + slot, *item) for slot, *item in market.items(g)]
@@ -625,6 +641,12 @@ def order(g, player, rect, slot, shift=False):
     if slot == garrison.ungarrison(homes(g)[rect])[0] and getattr(g, "garrisons", {}).get(rect):   # all units come out (#808)
         garrison.out(g, rect)
         show(g, player, rect)
+        return 0
+    if slot == garrison.BELL[0] and homes(g)[rect] == "TOWN_CENTER":   # the town bell (#3419)
+        garrison.bell(g, player)
+        menu.close(g, player)
+        return 0
+    if slot == demolish.ITEM[0] and demolish.delete(g, player, rect):   # the building falls (#3452)
         return 0
     if ROW <= slot < MORE:                                         # the queue row; MORE: more items (#1485)
         cancel(g, player, rect, slot - ROW)

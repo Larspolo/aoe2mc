@@ -392,6 +392,7 @@ class Replay:
         self.censused = False                   # a census counted the live units (the base of the units lost)
         self.reached, self.researched = {}, {}  # player -> {age: game time (ms)}, researched technologies (#1067)
         self.vills, self.vhigh = {}, {}         # player -> live villagers (est.), the highest count (#1086)
+        self.samples, self.minute = {}, -1      # player -> [(minute, pop, villagers, military, resources)], last minute (#3446)
         self.eyes = None                        # (x, y, z) of each player; None: not known, each gather step shows (#2761)
         self.queue = None                       # in run() on Paper: the commands that wait for flush() (#2761)
         for o in data["objects"]:
@@ -434,6 +435,19 @@ class Replay:
         """n more live villagers of player p, or the `live` count of the census: keep the highest count (#1086)."""
         self.vills[p] = live if live is not None else self.vills.get(p, 0) + n
         self.vhigh[p] = max(self.vhigh.get(p, 0), self.vills[p])
+
+    def sample(self, t):
+        """One sample of each player for each new game minute up to game time t (ms). A jump gives the skipped
+        minutes the values after the jump (#3446)."""
+        for m in range(self.minute + 1, int(t) // 60000 + 1):
+            for p in sorted(self.pop.keys() | self.vills.keys() | self.gathered.keys()):
+                n, v = self.pop.get(p, 0), self.vills.get(p, 0)
+                self.samples.setdefault(p, []).append((m, n, v, max(0, n - v), round(sum(self.gathered.get(p, {}).values()))))
+            self.minute = m
+
+    def stats(self, t):
+        """The samples of each player up to game time t (ms): (minute, population, villagers, military, resources)."""
+        return {p: [s for s in ss if s[0] * 60000 <= t] for p, ss in self.samples.items()}
 
     def resources(self, p):
         return self.stock.setdefault(p, dict(START))
@@ -2507,6 +2521,7 @@ class Replay:
                     shown = int(to) // 1000
                     send(self.clock_commands(to, end, self.speed) + self.score_commands())
                     self.send(self.panel(to))
+                    self.sample(to)
                 continue
             lag = max(lag, clock() - r0 - (now - g0) / 1000 / self.speed)
             if int(now) // 1000 != shown:                              # at most once per game second
@@ -2517,6 +2532,7 @@ class Replay:
                     counted = clock()
                 send(self.clock_commands(now, end, self.speed) + self.score_commands() + self.overview(join=True))
                 self.send(self.panel(now))
+                self.sample(now)
                 self.send(self.fog())
             if e is None:                                           # behind its clock: all the steps up to the
                 late = g0 if self.paused else g0 + (clock() - r0) * 1000 * self.speed    # game time now in one

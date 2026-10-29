@@ -1,7 +1,13 @@
-{"name": "archer", "select": "item.crossbow.loading_end", "pitch": 1.0}
-{"name": "cavalry", "select": "entity.horse.ambient", "pitch": 1.0}
-{"name": "infantry", "select": "item.armor.equip_iron", "pitch": 1.0}
-{"name": "monk", "select": "entity.evoker.ambient", "pitch": 1.2}
-{"name": "ship", "select": "entity.boat.paddle_water", "pitch": 1.0}
-{"name": "siege", "select": "block.wooden_door.close", "pitch": 0.6}
-{"name": "villager", "select": "entity.villager.yes", "pitch": 1.0}
+{"name": "archer", "select": "item.crossbow.loading_end", "order": "item.crossbow.quick_charge_1", "pitch": 1.0}
+{"name": "cavalry", "select": "entity.horse.ambient", "order": "entity.horse.gallop", "pitch": 1.0}
+{"name": "infantry", "select": "item.armor.equip_iron", "order": "item.armor.equip_chain", "pitch": 1.0}
+{"name": "monk", "select": "entity.evoker.ambient", "order": "entity.evoker.cast_spell", "pitch": 1.2}
+{"name": "ship", "select": "entity.boat.paddle_water", "order": "entity.generic.splash", "pitch": 1.0}
+{"name": "siege", "select": "block.wooden_door.close", "order": "block.piston.extend", "pitch": 0.6}
+{"name": "villager", "select": "entity.villager.yes", "order": "entity.villager.celebrate", "pitch": 1.0}
+{"name": "BLACKSMITH", "select": "block.anvil.use", "pitch": 1.0}
+{"name": "DOCK", "select": "entity.villager.work_fisherman", "pitch": 1.0}
+{"name": "MONASTERY", "select": "block.note_block.chime", "pitch": 1.0}
+{"name": "SIEGE_WORKSHOP", "select": "block.smithing_table.use", "pitch": 1.0}
+{"name": "STABLE", "select": "entity.horse.ambient", "pitch": 1.0}
+{"name": "TOWN_CENTER", "select": "block.bell.use", "pitch": 1.0}

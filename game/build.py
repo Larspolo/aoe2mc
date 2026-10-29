@@ -482,6 +482,17 @@ def next_tile(g, site):
     return min(rest, key=lambda s: math.dist(s["footprint"][::2], site["footprint"][::2]), default=None)
 
 
+def queue(g, player, site):
+    """A sneak right click on the site with selected builders at work on another site: the site goes into the row of
+    that site, so that the builders build it next, as the shift queue of AoE2 (#3517). True when queued."""
+    now = next((v.site for u, v in sorted(g.villagers.items()) if u in g.selected and v.site is not None
+                and v.site is not site and v.site["progress"] < 1 and v.state in ("to_site", "build")), None)
+    if now is None or "passed" not in g.command(f"execute as {player} if predicate {SNEAK}"):
+        return False
+    site["row"] = now.setdefault("row", f"{player} {id(now)}")
+    return True
+
+
 def near(g, name, cell, reach=12):
     """A free footprint of name whose middle tile is next to the block cell (a source or the town center), with one
     free block around it for the paths, or None. The nearest tile first, the same order each time."""
@@ -500,7 +511,8 @@ def found(g, name, rect, way=None, tiles=None, free=False):
     the construction site. way: the way of a gate (gate_spot); tiles: the tiles of a diagonal gate, the other tiles
     of its footprint stay free (#1655). free: no cost (the start town of a game mode, empire_wars.py, #2408)."""
     import fleet                                                       # fleet -> gather -> build: import it late
-    for r, v in () if free else price(g, name).items():
+    paid = {} if free else price(g, name)                              # a deleted foundation gives it back (demolish.py)
+    for r, v in paid.items():
         g.stock[r] -= v
         g.command(f"scoreboard players remove {r.capitalize()} {g.board} {v}")
     record.built(g, name, rect, free)                                  # Record Game (#2649), free: a setup (#3028)
@@ -521,7 +533,7 @@ def found(g, name, rect, way=None, tiles=None, free=False):
         along_z=z1 - z0 > x1 - x0 if way is None else way,             # a gate along z (#1324) or diagonal (#1655)
         water=int(fleet.level(g)) + 1 if name in WATER else None)      # a fish trap on the open water (#1438)
     site = {"name": name, "player": g.player, "footprint": rect, "commands": cmds, "sent": 0, "progress": 0.0,
-            "ring": dict.fromkeys(ring, f"minecraft:{color}_wool"), "under": under}   # under: the design blocks on the ring
+            "paid": paid, "ring": dict.fromkeys(ring, f"minecraft:{color}_wool"), "under": under}   # under: the design blocks on the ring
     if way is not None:
         site["way"] = way
     if tiles is not None and str(way).startswith("diag"):

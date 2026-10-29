@@ -1,7 +1,8 @@
 """
 Chest menus in the game program (#619, part of #618). Vanilla has no clickable item menu, so the Paper plugin
 (game/plugin) opens one: `aoe menu <player> <title> <slot>:<material>:<name>:<lore> ...` shows the items in an
-inventory, and a click on an item sets the score aoe_menu of the player to slot + 1 (a shift click: -(slot + 1)). The player takes no item, and the
+inventory, and a click on an item sets the score aoe_menu of the player to slot + 1 (a shift click: -(slot + 1), a right click:
+slot + 1 + RIGHT, #3523). A handler with a keyword `right` gets the right click; another handler gets a normal click. The player takes no item, and the
 menu stays open, so a second click queues one more (owner, 2026-10-26). `aoe menu-close <player>` closes it.
 The texts are URL-encoded: RCON splits the arguments at spaces, and ":" splits the fields of an item.
 One RCON command holds at most rcon.MAX bytes: a longer menu goes out as `aoe menu` with the item of the last slot (it
@@ -9,6 +10,7 @@ gives the size of the inventory) and `aoe menu-add` commands with the other item
 gather.Gather.clicks calls clicks(): it reads and resets the score and calls the handler of the open menu.
 """
 import os
+import inspect
 import re
 import sys
 from urllib.parse import quote
@@ -17,6 +19,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from rcon import MAX  # noqa: E402
 
 OBJECTIVE = "aoe_menu"
+RIGHT = 1000                                                   # a right click adds it (AoePlugin MENU_RIGHT, #3523)
 
 
 def setup(g):
@@ -63,7 +66,8 @@ def lore(g, material, name, text):
 
 
 def show(g, player, title, items, handler):
-    """Open (or refresh) a menu for player; handler(player, slot, shift) gets each click."""
+    """Open (or refresh) a menu for player; handler(player, slot, shift) gets each click (a handler with
+    a keyword `right` also gets right=True for a right click, #3523)."""
     g.menus[player] = handler
     return [g.command(c) for c in commands(player, title, items)][0]
 
@@ -81,8 +85,13 @@ def clicks(g):
         m = re.search(r" has (-?\d+) ", g.command(f"scoreboard players get {player} {OBJECTIVE}"))
         if m and int(m.group(1)) != 0:
             g.command(f"scoreboard players reset {player} {OBJECTIVE}")
-            slot = abs(int(m.group(1))) - 1
+            v = int(m.group(1))
+            right = v > RIGHT
+            slot = abs(v) - 1 - RIGHT * right
             out.append((player, slot))
             g.person = player                                      # the menu acts on its selection (#3486)
-            handler(player, slot, int(m.group(1)) < 0)
+            if right and "right" in inspect.signature(handler).parameters:
+                handler(player, slot, False, right=True)
+            else:
+                handler(player, slot, v < 0)
     return out

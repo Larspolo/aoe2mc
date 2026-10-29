@@ -52,6 +52,7 @@ BASE = {r["name"]: r["arrows"] for r in ROWS if "arrows" in r}   # arrows of an 
 FISHER = "FISHING_SHIP"     # the only unit that goes into a dock (#1949)
 DOOR = 2.5                  # blocks from the door cell: there a unit goes in
 UNGARRISON = (7, "oak_door", "Ungarrison", "Click: all units come out")   # a slot of the first row, before RALLY
+BELL = (24, "bell", "Ring Town Bell", "Click: all villagers seek shelter")   # town center: first free slot after the policies (#3419)
 SPARE = 26                  # the last slot of the third row: UNGARRISON of a building with an item in slot 7 (the
                             # demolition raft of the dock #1949, Illumination of the fortified church #1948)
 INSIDE = "{Invulnerable:1b,NoAI:1b,CustomNameVisible:0b}"         # the NBT of a garrisoned unit (#807)
@@ -150,10 +151,39 @@ def order(g, player, cell):
     return rect
 
 
+def bell(g, player):
+    """Ring the town bell (#3419, AoE2 DE wiki "Town Bell"): each own villager and mule cart walks into the nearest own
+    building of holders() with room left within the line of sight of a town center, the same walk as order(); one with no such building
+    keeps working. Not a dock or a building of BY: they take only ships or animals. Returns the sent units."""
+    import ai, combat, train                                       # ai and train import gather, gather imports this module
+    homes = {r: o for r, o in holders(g).items() if o["name"] != "DOCK" and o["name"] not in BY and door(g, r) is not None}
+    room = {r: size(g, o["name"]) - len(g.garrisons.get(r, [])) - sum(e == r for e in g.entering.values()) for r, o in homes.items()}
+    units = sorted(set(g.villagers) | {u for u, n in g.soldiers.items() if n == "MULE_CART"})
+    pos, sent, far = g.positions(units), {}, combat.sight("TOWN_CENTER") * g.map.T
+    for u in [u for u in units if u in pos and u not in g.entering and not any(u in us for us in g.garrisons.values())]:
+        near = sorted((math.dist((pos[u][0], pos[u][2]), (d[0] + 0.5, d[1] + 0.5)), r) for r in homes if room[r] > 0 for d in [door(g, r)])
+        if near and near[0][0] <= far:
+            room[rect := near[0][1]] -= 1
+            sent[u] = rect
+    if sent:
+        g.new_order(list(sent))
+    for u, rect in sent.items():
+        if (v := g.villagers.get(u)) is not None:                  # the villager stops its work
+            v.state, v.path, v.goal, v.site = "garrison", [], None, None
+        x, z = door(g, rect)
+        name = unit_name(g, u)
+        ai.move(g, u, name, g.map.T, x + 0.5, g.map.y(x, z), z + 0.5, ai.NORMAL * train.speed(g, name, u))
+        g.entering[u] = rect
+    text = f"The town bell rings: {len(sent)} villagers seek shelter" if units else "You have no villagers."
+    g.command(f"playsound minecraft:block.bell.use master {player}")
+    g.command(f"tellraw {player} " + json.dumps({"text": text, "color": "gray"}))
+    return sent
+
+
 def open_menu(g, player, cell):
     """Open the menu of an own building with no training menu (a tower, a keep, a house of the Khmer), at the block cell
     (x, z), when units are inside: its item UNGARRISON lets them out (#2970). Returns its footprint, or None."""
-    import build, menu, train                                      # train imports this module
+    import build, demolish, menu, train                            # train imports this module
     rect = next((r for r in holders(g) if cell and r[0] <= cell[0] < r[1] and r[2] <= cell[1] < r[3]), None)
     if rect is None or not getattr(g, "garrisons", {}).get(rect) or train.home(g, cell) is not None:
         return None
@@ -163,7 +193,9 @@ def open_menu(g, player, cell):
         if slot == ungarrison(name)[0]:
             out(g, rect)
             menu.close(g, p)
-    menu.show(g, player, build.pretty(name), [ungarrison(name)], click)
+        elif slot == demolish.ITEM[0]:                             # the building falls (#3452)
+            demolish.delete(g, p, rect)
+    menu.show(g, player, build.pretty(name), [ungarrison(name)] + [demolish.ITEM] * demolish.shown(g, rect), click)
     return rect
 
 
