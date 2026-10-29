@@ -11,7 +11,7 @@ def sites(b):
 
 def test_a_house_at_two_below_the_limit_with_one_builder():
     server, me, b = bot_map()
-    b.g.stock["wood"] = 30
+    b.g.stock["wood"] = build.price(b.g, "HOUSE")["wood"] + 5
     b.g.pop = 3                                                        # town center: limit 5
     b.step()
     assert sites(b) == ["HOUSE"] and b.g.stock["wood"] == 5

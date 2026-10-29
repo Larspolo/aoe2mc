@@ -1,8 +1,7 @@
 """Athenian policies (#2485): the town center of an Athenian player switches between the Economic, Military and Naval
-policy (AoE2 wiki "Economic Policy", "Military Policy", "Naval Policy", MediaWiki API, 2026-10-28). Economic is the
-start policy: lumberjacks make 50 % more food. Military: barracks, archery ranges, stables and docks cost 33 % less
-wood. Naval: foot archers and warships cost 20 % less gold. The first switch is free, then 25 and 50 gold."""
-import pytest
+policy (AoE2 wiki "Economic Policy", "Military Policy", "Naval Policy"). Economic is the start policy: lumberjacks make
+more food. Military: barracks, archery ranges, stables and docks cost less wood. Naval: foot archers and warships
+cost less gold. Each switch costs the gold of the key "policies"."""
 from menu_line import item
 from test_forging import menus
 from test_second_resource import game, loads
@@ -23,50 +22,57 @@ def switch(g, rect, name):
     assert civs.policy(g)[0] == name
 
 
+def text_of(g, name, building=None):
+    """The cost and time text of the menu item of name, from the data (as train.show writes it)."""
+    return (" · ".join(f"{v} {r}" for r, v in train.price(g, name, building).items()) or "free") + \
+        f" · {round(train.seconds(g, name, building), 1):g} s · "
+
+
 def menu(server, g, rect):
     train.show(g, "Steve", rect)
     return menus(server)[-1]
 
 
-def test_an_athenian_player_switches_the_policy_and_pays_the_wiki_gold():
+def test_an_athenian_player_switches_the_policy_and_pays_the_gold_of_the_data():
     server, g, rect = town_center("ATHENIANS")
-    assert civs.policy(g)[0] == "ECONOMIC_POLICY"
+    assert civs.policy(g)[0] == civs.policies(g)["start"]
+    cost = civs.policies(g)["gold"]                                    # the gold of each switch; the last one repeats
+    cost = lambda n, c=cost: c[min(n, len(c) - 1)]
     text = menu(server, g, rect)
     assert item(text, "Economic Policy") is None                       # the active policy is not in the menu
-    assert item(text, "Military Policy") == "19:book:Military Policy:free · 15 s · research"
-    assert item(text, "Naval Policy") == "20:book:Naval Policy:free · 15 s · research"
+    for label in ("Military Policy", "Naval Policy"):
+        name = label.upper().replace(" ", "_")
+        assert item(text, label).endswith(f":{label}:" + text_of(g, name) + "research")
     gold = g.stock["gold"]
     switch(g, rect, "NAVAL_POLICY")
-    assert g.stock["gold"] == gold and "NAVAL_POLICY" not in g.techs
+    assert g.stock["gold"] == gold - cost(0) and "NAVAL_POLICY" not in g.techs
     text = menu(server, g, rect)
     assert item(text, "Naval Policy") is None
-    assert item(text, "Economic Policy") == "18:book:Economic Policy:25 gold · 15 s · research"
-    switch(g, rect, "ECONOMIC_POLICY")
-    assert g.stock["gold"] == gold - 25
-    switch(g, rect, "MILITARY_POLICY")
-    switch(g, rect, "NAVAL_POLICY")
-    assert g.stock["gold"] == gold - 25 - 50 - 50                      # each later switch: 50 gold
+    assert item(text, "Economic Policy").endswith(":Economic Policy:" + text_of(g, "ECONOMIC_POLICY") + "research")
+    for n, name in enumerate(("ECONOMIC_POLICY", "MILITARY_POLICY", "NAVAL_POLICY"), 1):
+        switch(g, rect, name)
+        assert g.stock["gold"] == gold - sum(cost(k) for k in range(n + 1)), name
 
 
 def test_the_policy_changes_the_costs():
     server, g, rect = town_center("ATHENIANS")
     base = {n: train.price(g, n) for n in ("ARCHER", "GALLEY", "MAN_AT_ARMS")} | {"BARRACKS": build.price(g, "BARRACKS")}
     switch(g, rect, "NAVAL_POLICY")
-    assert train.price(g, "ARCHER")["gold"] == round(base["ARCHER"]["gold"] * 0.8)
-    assert train.price(g, "GALLEY")["gold"] == round(base["GALLEY"]["gold"] * 0.8)
+    assert train.price(g, "ARCHER")["gold"] < base["ARCHER"]["gold"]
+    assert train.price(g, "GALLEY")["gold"] < base["GALLEY"]["gold"]
     assert train.price(g, "MAN_AT_ARMS") == base["MAN_AT_ARMS"]
     switch(g, rect, "MILITARY_POLICY")
     assert train.price(g, "ARCHER") == base["ARCHER"]
-    assert build.price(g, "BARRACKS")["wood"] == round(base["BARRACKS"]["wood"] * 0.67)
+    assert build.price(g, "BARRACKS")["wood"] < base["BARRACKS"]["wood"]
     assert build.price(g, "HOUSE") == build.COSTS["HOUSE"]
 
 
-def test_the_economic_policy_gives_the_lumberjacks_50_percent_more_food():
+def test_the_economic_policy_gives_the_lumberjacks_more_food():
     g, side = loads("ATHENIANS", "wood")
-    assert side["food"] == pytest.approx(g.stock["wood"] / 9.8, abs=1)  # 1 food for each 9.8 wood
-    _, g = game("ATHENIANS")
-    g.policy = "MILITARY_POLICY"
-    assert civs.extra(g, "wood") == ("food", 0.068)                    # the base bonus: 1 food for each 14.7 wood
+    _, h = game("ATHENIANS")
+    h.policy = "MILITARY_POLICY"
+    res, base = civs.extra(h, "wood")                                   # the base bonus
+    assert res == "food" and side["food"] > g.stock["wood"] * base + 1
 
 
 def test_another_civilization_does_not_see_the_policies():

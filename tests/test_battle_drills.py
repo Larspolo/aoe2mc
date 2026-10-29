@@ -35,5 +35,5 @@ def test_the_barracks_menu_of_the_castle_age():
                                   "footprint": [16, 10, 20, 14]})
         train.open_menu(x, "Steve", (18, 12))
         return item(menus(server)[-1], "Two-Handed Swordsman")
-    assert line("THRACIANS").startswith("2:book:") and "Needs" not in line("THRACIANS")
+    assert line("THRACIANS") is not None and "Needs" not in line("THRACIANS")
     assert line("SPARTANS") is None                                    # the next upgrade shows from its age on

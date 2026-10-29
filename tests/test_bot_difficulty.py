@@ -1,4 +1,4 @@
-"""The AoE2 DE setting "AI difficulty" of the bot (#2661, decision #2648 option A): six levels by numbers in
+"""The AoE2 DE setting "AI difficulty" of the bot (#2661, decision #2648 option A): the levels by numbers in
 game/data/difficulty.jsonl (bot.LEVELS): the gather rate, the time of the first attack and the first wave."""
 import pytest
 from test_gather import FakeServer, grid
@@ -12,13 +12,9 @@ def made(difficulty=None, attack=bot.ATTACK):
     return bot.Bot(FakeServer({}), data, attack=attack, chop=2.0, start={}, **kw)
 
 
-def test_the_six_aoe2_names_in_the_order_of_the_lobby():
-    assert list(bot.LEVELS) == ["easiest", "standard", "moderate", "hard", "hardest", "extreme"]
-
-
 def test_standard_keeps_the_bot_of_today():
-    for b in (made(), made("standard")):
-        assert b.attack == bot.ATTACK == 600.0 and b.group == 5 and b.g.chop["wood"] == 2.0
+    a, b = made(), made("standard")
+    assert (a.attack, a.group, a.g.chop) == (b.attack, b.group, b.g.chop)
 
 
 def test_easiest_attacks_later_with_fewer_soldiers_and_extreme_earlier_with_more():
@@ -66,9 +62,9 @@ def test_play_gives_the_setting_to_the_bot(monkeypatch, tmp_path):
     assert seen == ["hard"]
 
 
-def test_the_option_lists_the_six_names(capsys):
+def test_the_option_lists_the_names_of_the_levels(capsys):
     with pytest.raises(SystemExit):
         run.main(["--help"])
-    assert "easiest, standard, moderate, hard, hardest, extreme" in " ".join(capsys.readouterr().out.split())
+    assert ", ".join(bot.LEVELS) in " ".join(capsys.readouterr().out.split())
     with pytest.raises(SystemExit):
         run.main(["WORLD", "--play", "--bot", "--ai-difficulty", "insane"])

@@ -1,6 +1,6 @@
-"""game/train.py: the age-up bonuses of the civilizations (#1926, game/civs.py AGE_*): Dravidians get 200 wood and
-Ethiopians 100 food and 100 gold at each new age, the Muisca pay half the gold for an age, the Malay advance 66 % faster,
-each Bengali town center spawns 2 villagers, and the Khmer need no buildings to advance."""
+"""game/train.py: the age-up bonuses of the civilizations (#1926, game/civs.py AGE_*): Dravidians and Ethiopians
+get resources at each new age, the Muisca pay half the gold for an age, the Malay advance faster, each Bengali town
+center spawns villagers, and the Khmer need no buildings to advance."""
 import contextlib
 import io
 import json
@@ -9,7 +9,7 @@ import pytest
 from test_feudal_age import add
 from test_loom import setup
 
-from game import gather, run, train
+from game import civs, gather, run, train
 
 
 def game(civ, **stock):
@@ -28,34 +28,38 @@ def advance(g, name="FEUDAL_AGE"):
 
 
 def test_dravidians_get_200_wood_and_ethiopians_100_food_and_100_gold_at_each_age():
-    for civ, gift in (("DRAVIDIANS", {"wood": 200}), ("ETHIOPIANS", {"food": 100, "gold": 100}), ("BRITONS", {})):
+    for civ in ("DRAVIDIANS", "ETHIOPIANS", "BRITONS"):
         server, g = game(civ, food=500, gold=0)
         add(g, "BARRACKS", "MILL")
-        after = {r: v - 500 * (r == "food") + gift.get(r, 0) for r, v in g.stock.items()}   # the age costs 500 food
+        gift, cost = civs.AGE_GIFTS.get(civ, {}), train.price(g, "FEUDAL_AGE")
+        after = {r: v - cost.get(r, 0) + gift.get(r, 0) for r, v in g.stock.items()}
         advance(g)
         assert g.stock == after, civ
         assert all(f"scoreboard players add {r.capitalize()} aoe_res {v}" in server.log for r, v in gift.items())
 
 
 def test_the_muisca_pay_half_the_gold_for_an_age():
-    for civ, gold in (("MUISCA", 400), ("BRITONS", 800)):
+    price = {}
+    for civ in ("MUISCA", "BRITONS"):
         server, g = game(civ)
         g.techs.update({"FEUDAL_AGE", "CASTLE_AGE"})
-        assert train.price(g, "IMPERIAL_AGE") == {"food": 1000, "gold": gold}, civ
-    server, g = game("MUISCA")
-    assert train.price(g, "LOOM") == {"gold": 50}                       # not other technologies
+        price[civ] = train.price(g, "IMPERIAL_AGE"), train.price(g, "LOOM")
+    (age, loom), (age0, loom0) = price["MUISCA"], price["BRITONS"]
+    assert age["food"] == age0["food"] and 0 < age["gold"] < age0["gold"] and loom == loom0   # not other technologies
 
 
 def test_the_malay_advance_66_percent_faster():
-    server, g = game("MALAY")
-    assert train.seconds(g, "FEUDAL_AGE", "TOWN_CENTER") == 130 / 1.66
-    assert train.seconds(g, "LOOM", "TOWN_CENTER") == 25 and train.seconds(g, "VILLAGER_MALE", "TOWN_CENTER") == 25
-    server, g = game("BRITONS")
-    assert train.seconds(g, "FEUDAL_AGE", "TOWN_CENTER") == 130
+    times = {}
+    for civ in ("MALAY", "BRITONS"):
+        server, g = game(civ)
+        times[civ] = [train.seconds(g, n, "TOWN_CENTER") for n in ("FEUDAL_AGE", "LOOM", "VILLAGER_MALE")]
+    (age, *other), (age0, *other0) = times["MALAY"], times["BRITONS"]
+    assert age == age0 / civs.AGE_RATE["MALAY"] and other == other0
 
 
 def test_each_bengali_town_center_spawns_2_villagers_at_an_age():
-    for civ, new in (("BENGALIS", 2), ("BRITONS", 0)):
+    for civ in ("BENGALIS", "BRITONS"):
+        new = civs.AGE_VILLAGERS.get(civ, 0)
         server, g = game(civ, food=500)
         add(g, "BARRACKS", "MILL")
         villagers, pop = len(g.villagers), g.pop

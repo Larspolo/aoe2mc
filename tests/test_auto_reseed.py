@@ -26,16 +26,17 @@ def wood():
 def test_the_mill_menu_shows_the_switch_and_a_click_switches_it():
     server, g = farm_map()
     rect = next(r for r, n in train.homes(g).items() if n == "MILL")
-    assert train.ITEMS["AUTO_RESEED"][0] == 2 and "AUTO_RESEED" in train.layout(g, rect)
+    slot = train.ITEMS["AUTO_RESEED"][0]
+    assert "AUTO_RESEED" in train.layout(g, rect)
     stock = dict(g.stock)
     train.show(g, "Steve", rect)
     assert any("Auto reseed:free · 0 s · off" in unquote(c) for c in server.log)
     server.log.clear()
-    assert train.order(g, "Steve", rect, 2) == 1
+    assert train.order(g, "Steve", rect, slot) == 1
     assert g.auto_reseed is True and g.stock == stock and not g.queues.get(rect)   # no cost and no queue
     assert any("Auto reseed: on." in c for c in server.log)
     assert any("Auto reseed:free · 0 s · on" in unquote(c) for c in server.log)
-    train.order(g, "Steve", rect, 2)
+    train.order(g, "Steve", rect, slot)
     assert g.auto_reseed is False
 
 

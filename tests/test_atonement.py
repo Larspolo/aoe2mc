@@ -1,27 +1,24 @@
-"""Atonement (#1581): the monastery researches it in the Castle Age (325 gold, 40 s, AoE2 wiki "Atonement"), and then
-a monk converts enemy monks."""
+"""Atonement (#1581): the monastery researches it in the Castle Age (AoE2 wiki "Atonement"), and then a monk converts
+enemy monks."""
 from test_monk_convert import setup, until_converted
 from test_monk_techs import MONASTERY, research
 from test_monk_train import monastery
 
-from game import civs, monk, train
+from game import monk, train
 
-
-def test_the_values_are_those_of_aoe2():
-    assert len(train.HELP["ATONEMENT"]) <= 50
-    assert {"BRITONS", "CELTS", "WEI"} <= set(civs.MISSING["ATONEMENT"])
-    assert "AZTECS" not in civs.MISSING["ATONEMENT"]
+SLOT = train.ITEMS["ATONEMENT"][0]
 
 
 def test_the_monastery_researches_it_only_in_the_castle_age():
     server, g = monastery(age=1)
-    g.stock["gold"] = 325
+    gold = train.price(g, "ATONEMENT")["gold"]
+    g.stock["gold"] = gold
     rect = train.open_menu(g, "Steve", MONASTERY)
-    assert train.order(g, "Steve", rect, 5) == 0 and g.stock["gold"] == 325
+    assert train.order(g, "Steve", rect, SLOT) == 0 and g.stock["gold"] == gold
     server, g = monastery(age=2)
-    rect = research(g, 5, 325)
+    rect = research(g, SLOT, gold)
     assert g.queues[rect][0]["name"] == "ATONEMENT"
-    train.tick(g, 40)
+    train.tick(g, train.TRAIN_TIMES["ATONEMENT"])
     assert "ATONEMENT" in g.techs
 
 

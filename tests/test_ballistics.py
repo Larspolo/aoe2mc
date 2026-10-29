@@ -1,5 +1,5 @@
-"""game/train.py and the Paper plugin: the university researches Ballistics in the Castle Age (300 wood, 175 gold, 60 s;
-AoE2 DE wiki), #1549. After it, the arrows of the own archers and buildings aim at the place where a moving target will
+"""game/train.py and the Paper plugin: the university researches Ballistics in the Castle Age,
+#1549. After it, the arrows of the own archers and buildings aim at the place where a moving target will
 be when the arrow arrives (aoe ballistics)."""
 import re
 import shutil
@@ -7,15 +7,17 @@ import time
 
 import pytest
 from test_damage import health
+from menu_line import item
 from test_loom import menus
 from test_tower_upgrades import research, setup
 
 from game import combat, run, train
 
 
-def test_the_cost_time_and_age_are_those_of_aoe2():
-    assert "BALLISTICS" in train.TRAINS["UNIVERSITY"]
-    assert len(train.HELP["BALLISTICS"]) <= 50
+def text(g, name, building=None):
+    """The cost and time text of the menu item of name, from the data (as train.show writes it)."""
+    return (" · ".join(f"{v} {r}" for r, v in train.price(g, name, building).items()) or "free") + \
+        f" · {round(train.seconds(g, name, building), 1):g} s · "
 
 
 def test_the_university_menu_shows_ballistics_in_the_castle_age():
@@ -23,7 +25,7 @@ def test_the_university_menu_shows_ballistics_in_the_castle_age():
         server, g = setup(age)
         train.open_menu(g, "Steve", (9, 9))
         assert (":book:Ballistics:" in menus(server)[-1]) == shown
-    assert f"{train.MORE + 3}:book:Ballistics:300 wood · 175 gold · 60 s · research" in menus(server)[-1]
+    assert item(menus(server)[-1], "Ballistics").endswith(":Ballistics:" + text(g, "BALLISTICS") + "research")
 
 
 def test_the_research_turns_on_the_aim_of_the_plugin_on_paper():
@@ -31,7 +33,7 @@ def test_the_research_turns_on_the_aim_of_the_plugin_on_paper():
         server, g = setup()
         g.paper = paper
         g.stock.update(wood=600, gold=600)
-        research(g, "BALLISTICS", 60)
+        research(g, "BALLISTICS")
         assert ("aoe ballistics p1 on" in server.log) == paper
 
 

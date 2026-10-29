@@ -14,7 +14,8 @@ def entry(g, name, state):
     return f"{slot}:{item}:{label}:{cost} · {train.seconds(g, name):g} s · {state}"
 
 
-COST, SLOT = train.COSTS["FORGING"]["food"], train.ITEMS["FORGING"][0]
+# .get: the Antiquity rules have no Forging, and their tests import setup() from here
+COST, SLOT = train.COSTS.get("FORGING", {}).get("food", 0), train.ITEMS.get("FORGING", (None,))[0]
 
 
 def setup(food=COST, age=1):

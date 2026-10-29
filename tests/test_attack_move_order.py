@@ -1,4 +1,4 @@
-"""game/stance.py: the stance menu has an "Attack Move" item (slot 7). A click on it and then on a ground cell sends the
+"""game/stance.py: the stance menu has an "Attack Move" item. A click on it and then on a ground cell sends the
 selected military units to the cell with the stance aggressive; each unit gets its old stance back at the point, and a
 new order ends the attack move (AoE2 Attack Move, #3357)."""
 from game import gather, stance
@@ -22,9 +22,8 @@ def setup(monkeypatch):
     return server, g
 
 
-def test_the_menu_has_attack_move_in_slot_7(monkeypatch):
+def test_the_menu_has_attack_move(monkeypatch):
     server, g = setup(monkeypatch)
-    assert stance.ATTACK_MOVE == 7
     assert [name for slot, _, name, _ in stance.items(g, "m-1") if slot == stance.ATTACK_MOVE] == ["Attack Move"]
     assert g.ordering == {"Steve": "attack_move"}
 

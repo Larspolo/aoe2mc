@@ -33,7 +33,7 @@ def test_the_unique_units_stay_with_their_civilization():
     server, g = stable("BRITONS", all_techs=True)
     assert "LONGBOWMAN" in train.trains(g, "CASTLE") and "MANGUDAI" not in train.trains(g, "CASTLE")
     assert civs.missing(g, "JAGUAR_WARRIOR") and civs.missing(g, "ELITE_JAGUAR_WARRIOR_UPGRADE")
-    assert train.BY_KEY["civ"]["ATLATL"] == "AZTECS" and civs.missing(g, "ATLATL")   # a unique technology
+    assert train.BY_KEY["civ"]["ATLATL"] != "BRITONS" and civs.missing(g, "ATLATL")   # a unique technology
 
 
 def test_without_the_setting_the_tech_tree_stays():

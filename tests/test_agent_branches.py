@@ -1,5 +1,4 @@
-"""Each place that names the branches of agent PRs names the same prefixes (#3382): agent/, claude/ and the ccr- of
-owner sessions."""
+"""Each place that names the branches of agent PRs names the same prefixes as cycle_start.AGENT (#3382)."""
 import re
 from pathlib import Path
 
@@ -10,7 +9,6 @@ import usage
 import cycle_start
 
 ROOT = Path(__file__).resolve().parent.parent
-PREFIXES = {"agent/", "claude/", "ccr-"}
 
 
 def test_the_workflows_name_the_same_prefixes():
@@ -19,15 +17,14 @@ def test_the_workflows_name_the_same_prefixes():
         found = set(re.findall(r"startsWith\([^,]+, '([^']+)'\)", text))
         for group in re.findall(r'test\(\\?"\^\(([^)]*)\)', text):  # automerge.yml: unescaped in AGENT (#3383)
             found |= set(group.split("|"))
-        assert found == PREFIXES, name
+        assert found == set(cycle_start.AGENT), name
 
 
 def test_the_tools_name_the_same_prefixes():
-    assert set(cycle_start.AGENT) == PREFIXES
     for mod in (usage, operator_check):
         text = Path(mod.__file__).read_text()
         assert {p for g in re.findall(r"startswith\(\(([^)]*)\)\)", text) for p in re.findall(r'"([^"]+)"', g)} \
-            == PREFIXES, mod.__name__
+            == set(cycle_start.AGENT), mod.__name__
 
 
 def test_a_red_owner_session_pr_is_work():

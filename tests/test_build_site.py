@@ -43,7 +43,7 @@ def test_new_players_get_the_menu_and_the_trigger():
     assert "scoreboard objectives add aoe_build trigger" in server.log
     g.clicks()
     menu = next(c for c in server.log if c.startswith("execute as @a unless score @s aoe_build matches 0.. run tellraw @s "))
-    assert "/trigger aoe_build set 1: House (25 wood)" in menu and "Town Center (275 wood, 100 stone)" in menu
+    assert "/trigger aoe_build set 1: House (" in menu and "Town Center (" in menu
     assert "scoreboard players enable @a aoe_build" in server.log
 
 
@@ -56,7 +56,8 @@ def test_a_click_places_a_foundation_and_takes_the_cost():
     site, = g.sites
     x0, x1, z0, z1 = site["footprint"]
     assert site["name"] == "HOUSE" and x1 - x0 == z1 - z0 == 2 and x0 <= cell[0] < x1 and z0 <= cell[1] < z1
-    assert g.stock["wood"] == 175 and "scoreboard players remove Wood aoe_res 25" in server.log
+    wood = build.price(g, "HOUSE")["wood"]
+    assert g.stock["wood"] == 200 - wood and f"scoreboard players remove Wood aoe_res {wood}" in server.log
     wool = [c for c in server.log if c.startswith("setblock ")]
     assert len(wool) == 4 and all(c.endswith(" 64 " + c.split()[3] + " minecraft:blue_wool") for c in wool)
     assert not any(g.map.free(x, z) for x in range(x0, x1) for z in range(z0, z1))

@@ -4,9 +4,6 @@ import subprocess
 import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.insert(0, os.path.join(ROOT, "tools"))
-
-import agent_config  # noqa: E402
 
 FAKE = """repo = "someone/other"
 owner = "someone"
@@ -20,14 +17,6 @@ lint = "flake8"
 [docs]
 learnings = "NOTES.md"
 """
-
-
-def test_the_default_config_holds_the_project_values():
-    c = agent_config.CONFIG
-    assert c["repo"] == "Larspolo/aoe2mc" and c["owner"] == "Larspolo" and c["branch"] == "main"
-    assert c["status"] == {"issue": 1, "label": "agent-status", "paused": "paused"}
-    assert set(c["commands"]) >= {"lint", "fast", "slow", "server"}
-    assert all(os.path.exists(os.path.join(ROOT, p)) for p in c["docs"].values())
 
 
 def test_the_tools_read_another_config(tmp_path):

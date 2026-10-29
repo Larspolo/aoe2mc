@@ -43,12 +43,13 @@ def test_hits_and_fire_of_a_building(tiny_world, tmp_path):
         assert game.command(combat.stats_command("@e[tag=a,limit=1]", "CHAMPION")).strip() == "Stats: 1 units"
         start = len(game.server.log)
         assert game.command(f"aoe attack @e[tag=a] {uuid}").strip() == "Attack: 1 units"
-        assert wait(lambda: hp(game, uuid) <= 550 - 3 * 13, 30)        # 3 hits, each with the hit effect
+        full = combat.stats("HOUSE").hp
+        assert wait(lambda: hp(game, uuid) <= full - 3 * combat.damage("CHAMPION", "HOUSE"), 30)   # 3 hits, each with the hit effect
         game.command("kill @e[tag=a]")
         assert not wait(lambda: tagged(game, uuid), 2)                 # above half: no fire
-        game.command(f"scoreboard players set {uuid} aoe_hp 100")
+        game.command(f"scoreboard players set {uuid} aoe_hp {full // 5}")
         assert wait(lambda: tagged(game, uuid))                        # below half: it burns
-        game.command(f"scoreboard players set {uuid} aoe_hp 550")      # repaired
+        game.command(f"scoreboard players set {uuid} aoe_hp {full}")   # repaired
         assert wait(lambda: not tagged(game, uuid))
         game.command(f"scoreboard players set {uuid} aoe_hp 10")
         assert wait(lambda: tagged(game, uuid))

@@ -1,4 +1,4 @@
-"""game/stance.py: the item "Auto Scout" of the stance menu is in slot 11 for a scout only. A click gives the selected
+"""game/stance.py: the item "Auto Scout" of the stance menu is for a scout only. A click gives the selected
 scouts the order (autoscout.start) and shows "Auto Scout" in the action bar (#3703)."""
 from game import gather, stance
 
@@ -16,9 +16,8 @@ def setup():
     return server, g
 
 
-def test_the_menu_of_a_scout_has_auto_scout_in_slot_11_and_the_menu_of_a_militia_has_none():
+def test_the_menu_of_a_scout_has_auto_scout_and_the_menu_of_a_militia_has_none():
     server, g = setup()
-    assert stance.AUTO_SCOUT == 11
     assert [name for slot, _, name, _ in stance.items(g, "s-1") if slot == stance.AUTO_SCOUT] == ["Auto Scout"]
     assert not [name for slot, _, name, _ in stance.items(g, "k-1") if slot == stance.AUTO_SCOUT]
 

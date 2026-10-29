@@ -46,7 +46,7 @@ def test_villagers_carry_wood_to_a_new_lumber_camp():
         g.step()
         if v.state == "to_drop" and not v.path:
             assert v.cell in g.map.around(cells)
-    assert server.wood() >= 10 and g.stock["wood"] == 500 - 100 + server.wood()
+    assert server.wood() >= 10 and g.stock["wood"] == 500 - build.price(g, "LUMBER_CAMP")["wood"] + server.wood()
 
 
 def test_a_complete_house_is_no_drop_site():

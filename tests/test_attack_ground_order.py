@@ -1,4 +1,4 @@
-"""game/stance.py: the stance menu has an "Attack Ground" item (slot 12). A click on it and then on a ground cell lets
+"""game/stance.py: the stance menu has an "Attack Ground" item. A click on it and then on a ground cell lets
 the selected siege units shoot at that point (`aoe attackground`, #4078); the other units ignore it (#4079)."""
 from game import gather, hints, stance
 
@@ -21,7 +21,6 @@ def setup(monkeypatch, names):
 
 def test_the_mangonel_shoots_at_the_point_and_the_militia_gets_nothing(monkeypatch):
     server, g = setup(monkeypatch, {"o-1": "MANGONEL", "m-1": "MILITIA"})
-    assert stance.ATTACK_GROUND == 12
     assert [name for slot, _, name, _ in stance.items(g, "o-1") if slot == stance.ATTACK_GROUND] == ["Attack Ground"]
     assert g.ordering == {"Steve": "attack_ground"}
     assert hints.state(g, "Steve") == ("attack_ground", hints.TEXTS["attack_ground"])

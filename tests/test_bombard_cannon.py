@@ -1,8 +1,8 @@
 """game/train.py: an own siege workshop trains the bombard cannon in the Imperial Age, only after Chemistry, with its
-AoE2 DE cost and time (#1380). Values: the AoE2 wiki infobox "Bombard_Cannon" (MediaWiki API, 2026-10-27: Time 56,
-Wood 225, Gold 225, TrainReq Chemistry)."""
+AoE2 DE cost and time (#1380)."""
 import re
 
+from menu_line import item
 from test_gather import FakeServer, grid
 from test_loom import menus
 
@@ -23,11 +23,10 @@ def setup(ages=3, techs=()):
     return server, g
 
 
-def test_the_bombard_cannon_has_the_aoe2_cost_time_and_age():
-    assert (train.COSTS["BOMBARD_CANNON"], train.TRAIN_TIMES["BOMBARD_CANNON"], build.AGE["BOMBARD_CANNON"]) \
-        == ({"wood": 225, "gold": 225}, 56, 3)
-    assert "BOMBARD_CANNON" in train.TRAINS["SIEGE_WORKSHOP"] and train.HELP["BOMBARD_CANNON"]
-    assert build.NEEDS["BOMBARD_CANNON"] == "CHEMISTRY"
+def text(g, name, building=None):
+    """The cost and time text of the menu item of name, from the data (as train.show writes it)."""
+    return (" · ".join(f"{v} {r}" for r, v in train.price(g, name, building).items()) or "free") + \
+        f" · {round(train.seconds(g, name, building), 1):g} s · "
 
 
 def test_the_bombard_cannon_is_gray_before_the_imperial_age_and_before_chemistry():
@@ -36,17 +35,21 @@ def test_the_bombard_cannon_is_gray_before_the_imperial_age_and_before_chemistry
     server, g = setup()
     assert build.locked(g, "BOMBARD_CANNON") == "Needs Chemistry"
     train.open_menu(g, "Steve", (3, 3))
-    assert "7:gray_dye:Bombard Cannon:225 wood · 225 gold · 56 s · Needs Chemistry" in menus(server)[-1]
+    line = item(menus(server)[-1], "Bombard Cannon")
+    assert ":gray_dye:Bombard Cannon:" in line and line.endswith(text(g, "BOMBARD_CANNON", "SIEGE_WORKSHOP") + "Needs Chemistry")
     assert not train.queue(g, "Steve", (3, 3), "BOMBARD_CANNON") and g.stock["wood"] == 1000
     server, g = setup(techs=["CHEMISTRY"])
     train.open_menu(g, "Steve", (3, 3))
-    assert "7:tnt_minecart:Bombard Cannon:225 wood · 225 gold · 56 s · queue 0/15" in menus(server)[-1]
+    assert item(menus(server)[-1], "Bombard Cannon").endswith(":Bombard Cannon:" + text(g, "BOMBARD_CANNON", "SIEGE_WORKSHOP") +
+                                                               "queue 0/15")
 
 
 def test_a_trained_bombard_cannon_shoots_with_its_values_and_minimum_range():
     server, g = setup(techs=["CHEMISTRY"])
-    assert train.order(g, "Steve", SHOP, 7) == 1 and (g.stock["wood"], g.stock["gold"]) == (775, 775)
-    assert train.tick(g, 55) == []
+    cost, t = train.price(g, "BOMBARD_CANNON", "SIEGE_WORKSHOP"), train.seconds(g, "BOMBARD_CANNON", "SIEGE_WORKSHOP")
+    assert train.order(g, "Steve", SHOP, train.ITEMS["BOMBARD_CANNON"][0]) == 1
+    assert (g.stock["wood"], g.stock["gold"]) == (1000 - cost.get("wood", 0), 1000 - cost.get("gold", 0))
+    assert train.tick(g, t - 1) == []
     uuid, = train.tick(g, 1)
     summon, = [c for c in server.log if c.startswith("summon")]
     assert units.siege("BOMBARD_CANNON") and re.match(r"summon minecraft:minecart ", summon)
@@ -54,5 +57,5 @@ def test_a_trained_bombard_cannon_shoots_with_its_values_and_minimum_range():
     assert s.attack == combat.stats("BOMBARD_CANNON").attack                   # Chemistry: no +1 for gunpowder (#1506)
     assert combat.stats_command(uuid, "BOMBARD_CANNON", s) in server.log
     shot = combat.range_command(uuid, "BOMBARD_CANNON", g.map.T, s=s)
-    assert shot in server.log and shot.split()[-2:] == [f"{0.5 * g.map.T}", f"{5 * g.map.T}"]   # blast, minimum range
+    assert shot in server.log and shot.split()[-1] == f"{combat.MIN_RANGE['BOMBARD_CANNON'] * g.map.T}"   # minimum range
     assert g.soldiers[uuid] == "BOMBARD_CANNON"

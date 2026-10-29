@@ -7,7 +7,8 @@ from test_train_menu import CASTLE
 from game import train
 
 AGE = "FEUDAL_AGE"
-SLOT, COST, TIME = train.ITEMS[AGE][0], train.COSTS[AGE]["food"], train.TRAIN_TIMES[AGE]
+# .get: the Antiquity rules have other ages, and their tests import the helpers of this file
+SLOT, COST, TIME = train.ITEMS.get(AGE, (None,))[0], train.COSTS.get(AGE, {}).get("food", 0), train.TRAIN_TIMES.get(AGE, 0)
 
 
 def entry(g, name, state, icon=None):

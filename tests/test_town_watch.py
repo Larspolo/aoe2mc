@@ -6,7 +6,8 @@ from test_wheelbarrow import menus, setup
 
 from game import combat, train
 
-FOOD = train.COSTS["TOWN_WATCH"].get("food", 0)
+# .get: the Antiquity rules have no Town Watch, and their tests import the helpers of this file
+FOOD = train.COSTS.get("TOWN_WATCH", {}).get("food", 0)
 
 
 def test_the_town_center_menu_shows_it_from_the_feudal_age():

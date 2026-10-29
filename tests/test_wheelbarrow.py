@@ -8,8 +8,9 @@ from test_urumi_swordsman import item as text
 
 from game import ai, gather, train
 
-NAME = train.ITEMS["WHEELBARROW"][2]
-COST = train.COSTS["WHEELBARROW"]
+# .get: the Antiquity rules have no Wheelbarrow, and their tests import setup() from here
+NAME = train.ITEMS.get("WHEELBARROW", (None,) * 3)[2]
+COST = train.COSTS.get("WHEELBARROW", {})
 
 
 def setup(food=175, wood=50):

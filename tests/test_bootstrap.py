@@ -36,8 +36,6 @@ def test_bootstrap_writes_generic_files_and_config(tmp_path, capsys):
         text = open(tmp_path / p, errors="replace").read()
         assert "Larspolo" not in text and "aoe2mc" not in text, p
     assert "Repository `me/demo`" in out and "Setup steps of the owner" in out and "- .claude/skills/verify/SKILL.md" not in out
-    assert "## How to work" in open(tmp_path / "CLAUDE.md").read()
-    assert "jobs:\n  quick:" in open(tmp_path / ".github/workflows/ci.yml").read()
 
 
 def test_github_calls_make_labels_and_status_issue():

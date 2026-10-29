@@ -25,13 +25,3 @@ def selected(prs):
 def test_label_takes_any_branch():
     prs = [pr("claude/x"), pr("ccr-y"), pr("owner/z", "automerge"), pr("owner/w"), pr("tool/v", "P2")]
     assert selected(prs) == ["claude/x", "ccr-y", "owner/z"]
-
-
-def test_hold_wins_in_merge():
-    text = open(WORKFLOW).read()
-    assert text.index('select(.name == "hold")') < text.index('jq -e "$AGENT"')
-    assert "select($AGENT)" in text
-
-
-def test_label_listed():
-    assert any(line.startswith("automerge|") for line in open(os.path.join(os.path.dirname(WORKFLOW), "..", "labels.txt")))

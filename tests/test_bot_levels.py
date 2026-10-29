@@ -33,7 +33,7 @@ def test_an_unknown_level_in_the_list_names_the_levels(capsys):
     with pytest.raises(SystemExit):
         run.main(["WORLD", "--play", "--bot", "--ai-difficulty", "hard,insane"])
     err = capsys.readouterr().err
-    assert "insane is no level" in err and "easiest, standard, moderate, hard, hardest, extreme" in err
+    assert "insane is no level" in err and ", ".join(bot.LEVELS) in err
 
 
 def test_the_two_bots_get_their_own_levels(monkeypatch, tmp_path):

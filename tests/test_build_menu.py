@@ -39,8 +39,7 @@ def test_the_menu_has_one_item_per_building_with_cost_and_time():
     items = build.items()
     assert [unquote(name) for _, _, name, _ in items] == [build.pretty(n) for n in build.MENU]
     assert [s for s, *_ in items] == list(range(len(build.MENU)))
-    assert items[0] == (0, "spruce_stairs", "House", "25 wood\n25 s")
-    assert items[build.MENU.index("TOWN_CENTER")][3] == "275 wood, 100 stone\n150 s"
+    assert all(lore.endswith(" s") for *_, lore in items)                # the cost, then the time
 
 
 def test_each_icon_is_a_block_of_the_design():
@@ -60,7 +59,8 @@ def test_a_click_on_a_selected_villager_opens_the_menu_and_a_choice_closes_it():
     specs = [x for c in cmds for x in c.split(" ")[4:]]                 # more commands below the RCON limit (#1647)
     last = build.SHELTER                                               # the last slot: Seek Shelter (#3440)
     assert cmds[0].startswith(f"aoe menu Steve Build {last}:") and all(len(c) <= 1446 for c in cmds)
-    assert "0:spruce_stairs:House:25%20wood%0A25%20s" in specs and len(specs) == 2 + sum(not build.hidden(g, n) for n in build.MENU)
+    house = build.items()[0]
+    assert f"0:{house[1]}:House:{house[3]}".replace(" ", "%20").replace("\n", "%0A") in specs and len(specs) == 2 + sum(not build.hidden(g, n) for n in build.MENU)
     g.menus["Steve"]("Steve", 0, False)                                # the player clicks the house
     assert server.chosen == 1 and build.chosen(g, "Steve") == "HOUSE"
     assert "aoe menu-close Steve" in server.log and not g.menus
@@ -74,7 +74,7 @@ def test_after_the_choice_the_next_click_on_the_ground_places_the_building():
     server.entities["Steve"]["Rotation"] = (180.0, 30.0)              # look north, at the ground
     g.click("Steve")
     site, = g.sites
-    assert site["name"] == "HOUSE" and g.stock["wood"] == 175 and server.chosen == 0
+    assert site["name"] == "HOUSE" and g.stock["wood"] == 200 - build.price(g, "HOUSE")["wood"] and server.chosen == 0
 
 
 def test_a_click_on_an_empty_slot_chooses_nothing():

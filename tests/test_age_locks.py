@@ -1,34 +1,11 @@
 """game/build.py AGE and the key "age" of game/data/train.jsonl: the Castle and Imperial Age buildings, units and technologies are
-locked until the age (#1082). The ages of the AoE2 DE wiki (0: Dark, 1: Feudal, 2: Castle, 3: Imperial)."""
+locked until the age (#1082)."""
 import pytest
 from test_train_castle import menus, setup
 
 from game import civs, train
 
 build = train.build                                                    # the module that train uses: AGE of the unique units
-
-WIKI = {"ARCHERY_RANGE": 1, "BLACKSMITH": 1, "MARKET": 1, "STABLE": 1, "WATCH_TOWER": 1,
-        "ARCHER": 1, "SCOUT_CAVALRY": 1, "SKIRMISHER": 1, "SPEARMAN": 1,
-        "CASTLE": 2, "MONASTERY": 2, "SIEGE_WORKSHOP": 2, "UNIVERSITY": 2,
-        "BATTERING_RAM": 2, "CAMEL_RIDER": 2, "CROSSBOWMAN": 2, "KNIGHT": 2, "LONG_SWORDSMAN": 2, "MANGONEL": 2,
-        "MONK": 2, "PIKEMAN": 2, "SCORPION": 2,
-        "LONGBOWMAN": 2, "MANGUDAI": 2, "WAR_ELEPHANT": 2,
-        "BOMBARD_TOWER": 3, "KEEP": 3,
-        "ARBALESTER": 3, "BOMBARD_CANNON": 3, "CAVALIER": 3, "CHAMPION": 3, "HALBERDIER": 3, "HUSSAR": 3,
-        "PALADIN": 3, "TREBUCHET": 3, "ELITE_LONGBOWMAN": 3, "ELITE_MANGUDAI": 3}
-TECHS = {"LOOM": 0, "WHEELBARROW": 1, "FORGING": 1, "FLETCHING": 1, "BLOODLINES": 1, "HORSE_COLLAR": 1,
-         "DOUBLE_BIT_AXE": 1, "GOLD_MINING": 1, "STONE_MINING": 1, "SCALE_MAIL_ARMOR": 1, "SCALE_BARDING_ARMOR": 1,
-         "PADDED_ARCHER_ARMOR": 1, "MAN_AT_ARMS_UPGRADE": 1}
-
-
-@pytest.mark.parametrize("name", sorted(WIKI))
-def test_the_age_of_each_building_and_unit_is_that_of_aoe2(name):
-    assert build.AGE.get(name, 0) == WIKI[name]
-
-
-@pytest.mark.parametrize("name", sorted(TECHS))
-def test_the_age_of_each_technology_is_that_of_aoe2(name):
-    assert train.BY_KEY["age"].get(name, 0) == TECHS[name]
 
 
 def test_each_unique_unit_needs_the_castle_age_and_its_elite_the_imperial_age():

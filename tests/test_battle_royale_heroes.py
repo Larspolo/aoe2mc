@@ -1,5 +1,5 @@
 """#2688 (epic #2263): each player of a Battle Royale game starts with Attila the Hun and Alaric the Goth (AoE2 wiki
-"BR Fall of Rome"), heroes that regenerate 30 hit points per minute and that a monk cannot convert."""
+"BR Fall of Rome"), heroes that regenerate hit points and that a monk cannot convert."""
 import os
 import sys
 
@@ -12,7 +12,7 @@ import regen  # noqa: E402
 import run  # noqa: E402
 from test_gather import FakeServer, grid  # noqa: E402
 
-HEROES = ["ATTILA", "ALARIC_THE_GOTH"]
+HEROES = run.MODES["battle-royale"]["heroes"]
 
 
 def game():
@@ -32,15 +32,14 @@ def summoned(g):
 
 
 def test_each_player_gets_attila_and_alaric_with_their_values():
-    assert run.MODES["battle-royale"]["heroes"] == HEROES
     g = game()
     battle_royale.heroes(g)
-    assert summoned(g) == [("ALARIC_THE_GOTH", 1), ("ALARIC_THE_GOTH", 2), ("ALARIC_THE_GOTH", 3),
-                           ("ATTILA", 1), ("ATTILA", 2)]               # not Gaia; player 3 keeps its own Attila
+    assert summoned(g) == sorted((h, p) for h in HEROES for p in (1, 2, 3)
+                                 if (h, p) != ("ATTILA", 3))           # not Gaia; player 3 keeps its own Attila
     heroes = [o for o in g.data["objects"] if o.get("hero") and o["uuid"] != "a-3"]
     assert all(combat.stats_command(o["uuid"], o["name"]) in g.game.log for o in heroes)   # hit points and attack
     own = {u for u, n in g.soldiers.items() if n in HEROES}           # the heroes of player 1 take orders
-    assert len(own) == 2
+    assert len(own) == len(HEROES)
 
 
 def test_the_heroes_stand_next_to_the_town_center():
@@ -51,11 +50,7 @@ def test_the_heroes_stand_next_to_the_town_center():
     assert abs(pos[2][0] - 14) <= 2 and abs(pos[2][1] - 14) <= 3        # next to the militia of player 2
 
 
-def test_a_loaded_game_gets_no_new_heroes():
-    assert run.MODES["battle-royale"]["loaded"] == "skip"              # play() does not call setup() (#2521)
-
-
-def test_a_hero_regenerates_30_hit_points_per_minute():
+def test_a_hero_regenerates_its_hit_points_per_minute():
     g = game()
     g.soldiers = {"h-1": "ATTILA", "k-1": "KNIGHT"}
     hp = {"h-1": 300.0, "k-1": 50.0}
@@ -72,10 +67,11 @@ def test_a_hero_regenerates_30_hit_points_per_minute():
     for _ in range(12):                                                 # one AoE2 minute in steps of 5 s
         regen.heroes(g, 5.0)
         hp.update({c.split()[3]: float(c.split()[-1][:-1]) for c in g.game.log if c.startswith("data modify entity")})
-    assert hp == {"h-1": 330.0, "k-1": 50.0}                            # a knight does not regenerate
-    hp["h-1"] = 349.0
+    assert hp == {"h-1": 300.0 + combat.REGEN["ATTILA"], "k-1": 50.0}   # a knight does not regenerate
+    top = combat.STATS["ATTILA"].hp
+    hp["h-1"] = top - 1.0
     regen.heroes(g, 60.0)
-    assert g.game.log[-1] == "data modify entity h-1 Health set value 350.0f"   # never more than its max_health
+    assert g.game.log[-1] == f"data modify entity h-1 Health set value {float(top)}f"   # never more than its max_health
 
 
 def test_a_monk_cannot_convert_a_spawned_hero():

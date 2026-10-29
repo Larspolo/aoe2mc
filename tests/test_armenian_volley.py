@@ -8,7 +8,7 @@ import time
 import pytest
 from test_dock_train import dock_map
 
-from game import combat, run, train
+from game import civs, combat, run, train
 
 
 def summoned(civ, name):
@@ -20,15 +20,10 @@ def summoned(civ, name):
     return uuid, server.log
 
 
-def test_an_armenian_galley_fires_a_second_projectile_of_1_attack():
-    for name in ("GALLEY", "WAR_GALLEY", "GALLEON"):
+def test_each_armenian_unit_of_the_key_volley_fires_a_second_projectile():
+    for name, attack in civs.value("volley", "ARMENIANS", {}).items():
         uuid, log = summoned("ARMENIANS", name)
-        assert f"aoe volley {uuid} 1 1" in log and any(c.startswith(f"aoe range {uuid} ") for c in log), name
-
-
-def test_an_armenian_dromon_fires_a_second_projectile_with_its_full_attack():
-    uuid, log = summoned("ARMENIANS", "DROMON")
-    assert f"aoe volley {uuid} 1 0" in log
+        assert f"aoe volley {uuid} 1 {attack}" in log and any(c.startswith(f"aoe range {uuid} ") for c in log), name
 
 
 def test_a_frank_galley_and_an_armenian_fire_galley_fire_one_projectile():
@@ -73,5 +68,5 @@ def test_an_armenian_galley_hits_with_two_arrows_on_a_server(tiny_world, tmp_pat
             if len(set(hp)) >= 4:
                 break
         drops = [round(a - b) for a, b in zip(hp, hp[1:]) if a != b]
-        # one shot: 8 damage (3 attack + 5 against ships, combat.damage) and 1 of the extra arrow
-        assert combat.damage("GALLEY", "GALLEY") == 8 and drops and any(d % 8 for d in drops), hp
+        shot = combat.damage("GALLEY", "GALLEY")                      # one shot, and the damage of the extra arrow
+        assert drops and any(d % shot for d in drops), hp
