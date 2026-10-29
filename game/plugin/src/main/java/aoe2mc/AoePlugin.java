@@ -117,8 +117,10 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *   aoe hide <players> <uuid> ...              Player#hideEntity: the players do not see these entities, also a
  *                                              player that joins later (#1302: the enemy units out of sight in the
  *                                              view of one replay player). With team=T in the selector: only a
- *                                              player of team T that joins later, and no spectator (#2921)
- *   aoe hide <players> team                    each player sees the units of the hides of its own team (or of all
+ *                                              player of team T that joins later, and no spectator (#2921).
+ *                                              The riders of an entity (a ship crew, a war elephant rider) go
+ *                                              with it, also on the minimap (#3674)
+ *   aoe hide <players> team                   each player sees the units of the hides of its own team (or of all
  *                                              players) as hidden and all other units of the hides (a person who
  *                                              joins a team or changes it, #3070)
  *   aoe hide <players> view <uuid> ...         the same for these players only (the view of a spectator, #2901):
@@ -1003,9 +1005,30 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         for (UUID u : hidden.keySet()) {
             Entity e = Bukkit.getEntity(u);
             if (e != null && hiddenFor(ev.getPlayer(), u)) {
-                ev.getPlayer().hideEntity(this, e);
+                see(ev.getPlayer(), e, false);
             }
         }
+    }
+
+    /** Hide or show e and its riders (Passengers) for p: the UUID of a unit is its root entity (the boat of a ship,
+     * the mount of a war elephant), and Player#hideEntity does not hide the riders (#3674). */
+    private void see(Player p, Entity e, boolean show) {
+        if (show) {
+            p.showEntity(this, e);
+        } else {
+            p.hideEntity(this, e);
+        }
+        for (Entity r : e.getPassengers()) {
+            see(p, r, show);
+        }
+    }
+
+    /** True when the unit of entity e is hidden for p: the hide names the root vehicle of a rider (#3674). */
+    boolean hiddenFor(Player p, Entity e) {
+        while (e.getVehicle() != null && !hidden.containsKey(e.getUniqueId())) {
+            e = e.getVehicle();
+        }
+        return hiddenFor(p, e.getUniqueId());
     }
 
     /** A hide of the team of the player, or of all players (a player with no team yet: each hide, the replay). */
@@ -2867,9 +2890,9 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                     if (e != null) {
                         for (Player p : who) {
                             if (hiddenFor(p, u)) {
-                                p.hideEntity(this, e);
+                                see(p, e, false);
                             } else {
-                                p.showEntity(this, e);
+                                see(p, e, true);
                             }
                         }
                         n++;
@@ -2882,7 +2905,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                 for (var h : hidden.entrySet()) {
                     Entity e = Bukkit.getEntity(h.getKey());
                     if (e != null && !h.getValue().contains(ALL)) {
-                        who.forEach(p -> p.showEntity(this, e));
+                        who.forEach(p -> see(p, e, true));
                         n++;
                     }
                 }
@@ -2909,9 +2932,9 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                 }
                 for (Player p : who) {
                     if (hide) {
-                        p.hideEntity(this, e);
+                        see(p, e, false);
                     } else {
-                        p.showEntity(this, e);
+                        see(p, e, true);
                     }
                 }
                 n++;

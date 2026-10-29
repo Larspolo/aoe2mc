@@ -54,6 +54,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import build  # noqa: E402
 import replay  # noqa: E402  (build imports it too)
 import amounts  # noqa: E402
+import autoscout  # noqa: E402
 import battle_royale  # noqa: E402
 import bossbar  # noqa: E402
 import capture_relic  # noqa: E402
@@ -267,7 +268,7 @@ class Map:
         self.aura = civs.AURA.get(civ, {})                             # Thracians (#2378)
         self.auras = []                                                # the cells of own aura buildings
         for o in data["objects"]:
-            if o["kind"] == "building":
+            if o["kind"] == "building" and "footprint" in o:           # not the drawn monument (hill.mark, #3692)
                 x0, z0, x1, z1 = o["footprint"]
                 self.building(o["name"], (x0, x1, z0, z1), (int(o["tile"][0]), int(o["tile"][1])) if "tile" in o
                               else None, o["player"] == player, o.get("open", ()))
@@ -1038,23 +1039,24 @@ class Gather:
             return None
         return (pos[0], pos[1] + 1.62, pos[2]), direction(*map(float, rot))
 
-    def attack(self, target):
-        """Send the selected military units to attack the unit target, with their AoE2 walk speed (ai.py). A monk does
-        not attack: it converts (monk.convert_order, #1245) or stays."""
+    def attack(self, target, units=None):
+        """Send the selected military units (or units: a queue of #3516) to attack the unit target, with their AoE2
+        walk speed (ai.py). A monk does not attack: it converts (monk.convert_order, #1245) or stays."""
         import ai                                                      # ai imports this module
-        monks = self.monks()
+        sel = self.selected if units is None else set(units)
+        monks = {u for u in sel if self.soldiers.get(u) in monk.MONKS}
         converts = {m for m in monks if self.converting.get(m, [None])[0] == target}   # the order of the same click
-        self.new_order(self.selected - converts)
-        trebs = {u for u in self.selected if self.soldiers.get(u) == trebuchet.NAME}
+        self.new_order(sel - converts)
+        trebs = {u for u in sel if self.soldiers.get(u) == trebuchet.NAME}
         for u in sorted(trebs):                                        # it unpacks first (#1351)
             trebuchet.unpack(self, u, target)
-        fleet.attack(self, {u for u in self.selected if replay.ship(self.soldiers.get(u, ""))}, target)   # (#1386)
-        for u in sorted(self.selected - monks - trebs):
+        fleet.attack(self, {u for u in sel if replay.ship(self.soldiers.get(u, ""))}, target)   # (#1386)
+        for u in sorted(sel - monks - trebs):
             self.command(ai.speed_command(u, self.soldiers[u], self.map.T, NORMAL * train.speed(self, self.soldiers[u], u)))
-        record.ordered(self, "order", self.selected, target=target)    # Record Game (#2649)
-        if not monks and not trebs:
+        record.ordered(self, "order", sel, target=target)              # Record Game (#2649)
+        if not monks and not trebs and units is None:
             return self.command(f"aoe attack @e[tag={SELECT}] {target}")
-        return [self.command(f"aoe attack {u} {target}") for u in sorted(self.selected - monks - trebs)]
+        return [self.command(f"aoe attack {u} {target}") for u in sorted(sel - monks - trebs)]
 
     def monks(self):
         """The selected monks."""
@@ -1469,9 +1471,14 @@ class Gather:
             return
         if kind in ("enemy", "fort") and treaty.refuse(self, name):   # no attack before the end of the treaty (#2297)
             return
+        if kind in ("enemy", "fort") and add_attack(self, name, u):   # a sneak click queues the target (#3516)
+            self.order_voice()
+            self.command(glow(u)) if kind == "enemy" else self.mark(name, set(cells), "attack")
+            return
         if kind == "enemy":
             monk.convert_order(self, self.monks(), u)                    # the monks convert it, the others attack (#1245)
             self.attack(u)
+            queue_attack(self, u)
             self.order_voice()
             self.command(glow(u))                                     # the order marker of an attack (#796)
             return
@@ -1505,6 +1512,7 @@ class Gather:
             monk.convert_order(self, self.monks(), u)                 # with Redemption (#1264)
             self.sieged.add(u)
             self.attack(u)
+            queue_attack(self, u)
             self.order_voice()
             x0, _, z0, x1, _, z1 = self.forts[u]
             self.mark(name, {(x0, z0), (x1, z1)}, "attack")
@@ -1583,6 +1591,7 @@ class Gather:
         self.end_patrols(units)
         stance.end_attack_moves(self, units)
         follow.end(self, units)
+        autoscout.end(self, units)                                     # the Auto Scout order (#3702)
         for key in ("entering", "boarding", "loading", "converting", "fetching", "trade"):
             table = vars(self).get(key, {})
             for u in units & table.keys():
@@ -2246,6 +2255,7 @@ class Gather:
             waypoint(self)                                             # the next waypoint of a move (#3515)
             stance.arrive(self)                                        # the attack moves: the old stance at the point (#3357)
             follow.tick(self)                                          # the Follow and Guard orders (#3358)
+            autoscout.tick(self)                                       # the Auto Scout order (#3702)
             fog.tick(self)                                             # after the bots: their units too (#1389)
             herd.tick(self)                                            # all players: the bots capture too (#1792)
             if self.victory == "standard" or self.mode in wonder.RACE:  # a wonder or all relics win too (#2316)
@@ -2283,10 +2293,50 @@ def add_waypoint(g, name, cell):
     return True
 
 
+def add_attack(g, name, target):
+    """A sneak right click on an enemy unit or building adds an attack target, as the Shift click of AoE2 (#3516). It
+    goes into the queue of the waypoints (add_waypoint) as {"attack": target}, in the click order. The selected units
+    with no queue attack it at once. Returns False without sneak: the click is a normal attack order."""
+    if "passed" not in g.command(f"execute as {name} if predicate {SNEAK}"):
+        return False
+    ways = vars(g).setdefault("waypoints", {})
+    queued = g.selected & ways.keys()
+    for u in queued:
+        ways[u].append({"attack": target})
+    if new := g.selected - queued:
+        start_attack(g, new, target, None if not queued else new)
+        ways.update({u: [] for u in new})
+    return True
+
+
+def queue_attack(g, target):
+    """A normal attack order starts an empty queue: a later sneak click adds to it (#3516)."""
+    units = g.selected & g.soldiers.keys()
+    vars(g).setdefault("waypoints", {}).update({u: [] for u in units})
+    g.waypoint_at = vars(g).get("waypoint_at", {}) | {u: {"attack": target} for u in units}
+
+
+def start_attack(g, units, target, only=None):
+    """units attack target; only: the units of a queue (not the whole selection, Gather.attack). waypoint_at holds
+    the target until it is dead."""
+    if target in g.forts:
+        g.sieged.add(target)
+    g.attack(target, only)
+    if only is None:
+        queue_attack(g, target)
+    g.waypoint_at |= {u: {"attack": target} for u in units}
+
+
+def dead(g, target):
+    """A queued attack target is dead: its building fell (not in g.forts) or its unit is not loaded."""
+    return target not in g.forts and not g.pos(target)
+
+
 def waypoint(g):
     """The units of a queue walk to its next point when one of them is scenario.NEAR blocks from its present target
-    (#3515). The group of a queue (the units with the same points) walks one leg at a time, in its formation (walk_to,
-    #3414). A dead unit leaves its queue; an empty list ends it."""
+    (#3515), or attack its next target when the present target is dead (#3516: a dead queued target is skipped). The
+    group of a queue (the units with the same points) walks one leg at a time, in its formation (walk_to, #3414). A
+    dead unit leaves its queue; an empty list ends it."""
     ways = vars(g).get("waypoints")
     if not ways:
         return
@@ -2296,20 +2346,26 @@ def waypoint(g):
     at = g.waypoint_at
     groups = collections.defaultdict(set)
     for u, rest in ways.items():
-        groups[tuple(rest)].add(u)
-    for rest, units in sorted(groups.items(), key=lambda kv: sorted(kv[1])):
-        if not any(u in at and math.dist((pos[u][0], pos[u][2]), (at[u][0] + 0.5, at[u][1] + 0.5)) <= scenario.NEAR
+        groups[tuple(map(repr, rest))].add(u)
+    for _, units in sorted(groups.items(), key=lambda kv: sorted(kv[1])):
+        rest = ways[min(units)]
+        if not any(u in at and (dead(g, at[u]["attack"]) if isinstance(at[u], dict) else
+                                math.dist((pos[u][0], pos[u][2]), (at[u][0] + 0.5, at[u][1] + 0.5)) <= scenario.NEAR)
                    for u in units):
             continue
+        while rest and isinstance(rest[0], dict) and dead(g, rest[0]["attack"]):
+            rest = rest[1:]                                            # a dead target of the queue is skipped
         if not rest:                                                   # the last point: the queue ends
             for u in units:
                 del ways[u]
             continue
         for u in units:                                                # walk_to ends the queue (new_order): keep the rest
             del ways[u]
-        out = g.walk_to(None, rest[0], units)
+        if isinstance(rest[0], dict):
+            start_attack(g, units, rest[0]["attack"], units)
+        else:
+            at.update(g.walk_to(None, rest[0], units))
         ways.update({u: list(rest[1:]) for u in units})
-        at.update(out)
 
 
 def reseed(g, entry):
