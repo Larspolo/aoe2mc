@@ -13,7 +13,7 @@ Owner decisions (2026-10-26): the agents make the epics themselves, a new epic s
 Do this in the refill of autopilot step 5 (you hold its lock, `python3 tools/claim.py 0 --refill`), when the open
 epics have no goal left that an agent can do.
 
-1. List the epics: `gh api "repos/OWNER/NAME/issues?labels=epic&state=all&per_page=100"` (`repo` in `agent.toml`). A feature has an
+1. List the epics: `gh api "repos/OWNER/NAME/issues?labels=epic&state=all&per_page=100"` (`repo` in `agent.toml`), and the same with `&page=2` (more than 100 epics since 2026-10-29; `--paginate` stops after page 1, `autopilot/github.md`). A feature has an
    epic when an epic body names its key ("Roadmap: `<key>`") or the roadmap line names an epic number. A `muted` epic
    counts too: do not make a second epic for its feature, and do not give it sub-issues. A plain ticket that names the
    key (an owner request, `play:farm-reseed` in #3283) does not count: grep the open and the closed issues of the last day
