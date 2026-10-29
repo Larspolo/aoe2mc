@@ -46,7 +46,8 @@ The trigger: the section "Release checks (no ticket, make them in the refill)" o
 
 ## Review the feature list (the roadmap review)
 
-When `python3 tools/claim.py 0 --roadmap` exits 0 (one run after each 100 merged PRs, #898, #2039), after step 8 of the autopilot skill:
+When `python3 tools/claim.py 0 --roadmap` exits 0 (one run after each 100 merged PRs, #898, #2039; after 30 while the refill has
+no source: R < N, each feature has an epic, no fallback, `claim.ROADMAP_EARLY`, #3741), after step 8 of the autopilot skill:
 
 1. Mark a feature done (`[x]`, with the epic number) when its epic is closed.
 2. Compare each goal with AoE2 DE and with the code: what does a player see or do in AoE2 that the converter, the

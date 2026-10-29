@@ -30,7 +30,7 @@ def fake(monkeypatch):
     monkeypatch.setattr(dashboard, "pages", lambda path: [EPIC])
     monkeypatch.setattr(dashboard, "api", lambda path: {"total_count": 0})
     monkeypatch.setattr(usage, "read_flow", lambda now: (None, "flow ok"))
-    monkeypatch.setattr(usage, "due_reviews", lambda: [])
+    monkeypatch.setattr(usage, "due_reviews", lambda **_: [])
     monkeypatch.setattr(usage, "release_due", lambda: [])
     refs = []
     monkeypatch.setattr(health, "claim_refs", lambda remote="origin": refs)

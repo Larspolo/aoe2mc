@@ -688,7 +688,7 @@ class Replay:
             if e["time"] <= t < end:
                 n = e.get("name") if e["kind"] == "queue" else e.get("technology")
                 if n:
-                    s = end - (aoe2mc.train_ms(n) if e["kind"] == "queue" else RESEARCH_S[n] * 1000)
+                    s = end - aoe2mc.train_ms(n) if e["kind"] == "queue" else max(e["time"], end - RESEARCH_S[n] * 1000)
                     now.setdefault(b, []).append((end, s, n, e))
         out, shown = [], self.panels
         for b, items in sorted(now.items()):
@@ -978,9 +978,13 @@ class Replay:
 
     @functools.cached_property
     def trainings(self):
-        """aoe2mc.training of the timeline: (end ms, QUEUE event, building ID) for each unit."""
+        """aoe2mc.training of the timeline: (end ms, QUEUE event, building ID) for each unit. An age-up ends at the
+        "age" event of its player and age (#3739): the queue guess can be later, the record time is exact."""
         self.unknown_research
-        return aoe2mc.training(self.data.get("timeline", ()), research=True, research_s=RESEARCH_S)
+        timeline = self.data.get("timeline", ())
+        ages = {(e.get("player"), pretty(e["age"])): e["time"] for e in timeline if e["kind"] == "age" and e.get("age")}
+        return [(ages.get((e.get("player"), e.get("technology")), end) if e["kind"] == "research" else end, e, b)
+                for end, e, b in aoe2mc.training(timeline, research=True, research_s=RESEARCH_S)]
 
     def production(self, t):
         """{player: [(name, count, start, end), ...]}: the units in training or in the queue of their building at game
@@ -991,7 +995,7 @@ class Replay:
             if e["kind"] == "research" and e["time"] <= t < end:
                 n = e["technology"]
                 tech.setdefault(e["player"], []).append(
-                    (n, end - RESEARCH_S[n] * 1000, end, "age" if n.endswith(" Age") else "research"))
+                    (n, max(e["time"], end - RESEARCH_S[n] * 1000), end, "age" if n.endswith(" Age") else "research"))
             elif e["time"] <= t < end and e.get("name"):
                 out.setdefault(e["player"], {}).setdefault(e["name"], []).append(end)
         return {p: sorted([(n, len(ends), min(ends) - aoe2mc.train_ms(n), min(ends))

@@ -60,12 +60,12 @@ def test_free_sources_reads_the_roadmap_and_the_coverage(tmp_path, monkeypatch):
 def test_a_read_error_counts_as_a_source(tmp_path, monkeypatch):
     monkeypatch.setattr(release, "load", lambda: 1 / 0)
     assert usage.free_sources(tmp_path) == ["read error"]
-    monkeypatch.setattr(claim, "review_slot", lambda kind, remote="origin": claim.fail("GitHub API failed"))
+    monkeypatch.setattr(claim, "review_slot", lambda kind, remote="origin", **_: claim.fail("GitHub API failed"))
     assert usage.due_reviews() == ["process review", "roadmap review"]
 
 
 def test_a_taken_review_lock_is_not_due(monkeypatch):
-    monkeypatch.setattr(claim, "review_slot", lambda kind, remote="origin": ("100pr-none-1", 100))
+    monkeypatch.setattr(claim, "review_slot", lambda kind, remote="origin", **_: ("100pr-none-1", 100))
     taken = type("R", (), {"stdout": "abc\trefs/heads/claim/roadmap-100pr-none-1\n"})
     monkeypatch.setattr(claim, "git", lambda *a, **k: taken if "roadmap" in a[-1] else type("R", (), {"stdout": ""}))
     assert usage.due_reviews() == ["process review"]

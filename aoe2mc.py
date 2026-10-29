@@ -320,7 +320,7 @@ def read_scx(path):
 
 def read_json(path):
     """A map description in JSON (#960), as read_scenario returns it: {"size": N, "terrain": N × N terrain IDs,
-    "elevation": N × N levels (default 0), "objects": [{"name", "player", "x", "y", "rotation"} ...],
+    "elevation": N × N levels (default 0), "layer": N × N land layer IDs (default -1 = none, #3689), "objects": [{"name", "player", "x", "y", "rotation"} ...],
     "players": {"1": {"civ": "BRITONS", "color": 0} ...}}. The IDs and names are those of AoE2ScenarioParser
     (TerrainId, object_kinds). The color is an index of buildings.COLOR_NAMES (default: the player number - 1)."""
     with open(path) as f:
@@ -335,13 +335,15 @@ def map_description(d, path):
         raise OptionError(f"{path}: \"size\" must be a positive integer")
     terrain_names = {t.value: t.name for t in TerrainId}
     arrays = {}
-    for key, default in (("terrain", None), ("elevation", 0)):
+    for key, default in (("terrain", None), ("elevation", 0), ("layer", -1)):
         a = np.array(d.get(key, default if default is None else [[default] * size] * size))
         if a.shape != (size, size):
             raise OptionError(f"{path}: \"{key}\" must be {size} lists of {size} numbers, not shape {a.shape}")
         arrays[key] = a
     if (bad := sorted(set(arrays["terrain"].ravel().tolist()) - set(terrain_names))):
         raise OptionError(f"{path}: unknown terrain IDs {bad[:10]} (see AoE2ScenarioParser TerrainId)")
+    if (bad := sorted(set(arrays["layer"].ravel().tolist()) - set(terrain_names) - {-1})):
+        raise OptionError(f"{path}: unknown layer IDs {bad[:10]} (-1 = no layer, see AoE2ScenarioParser TerrainId)")
     kinds = object_kinds(old=False)
     ids = {name: (i, prefix) for i, (prefix, name) in kinds.items()}
     objects = []
@@ -359,8 +361,19 @@ def map_description(d, path):
                         "arch": buildings.CIV_TO_ARCH.get(civ, "western"), "civ": civ, "view": None}
     for pid in {o["player"] for o in objects} - set(players):          # an object of a player without an entry
         players[pid] = {"color": buildings.COLOR_NAMES[(pid - 1) % 8], "arch": "western", "civ": "?", "view": None}
-    return (size, arrays["terrain"].astype(np.int16), arrays["elevation"].astype(np.float32), terrain_names,
+    terrain = apply_layers(arrays["terrain"].astype(np.int16), arrays["layer"], terrain_names)
+    return (size, terrain, arrays["elevation"].astype(np.float32), terrain_names,
             {k: "" for k in CHAPTERS}, objects, players)
+
+
+def apply_layers(terrain, layer, terrain_names):
+    """Give each tile its land layer (a road painted in the DE editor, #3688): a land layer on a land base gives the
+    tile the layer ID, water on either side keeps the base. layer -1 = no layer. Returns the terrain array."""
+    land = {i: terrain_style(n)["depth"] == 0 for i, n in terrain_names.items()}
+    for x, y in zip(*np.nonzero(layer >= 0)):
+        if land.get(int(terrain[x, y])) and land.get(int(layer[x, y])):
+            terrain[x, y] = layer[x, y]
+    return terrain
 
 
 def read_scenario(path):
@@ -376,14 +389,13 @@ def read_scenario(path):
     size = mm.map_size
     terrain = np.zeros((size, size), np.int16)
     elevation = np.zeros((size, size), np.float32)
+    layer = np.full((size, size), -1, np.int16)
     terrain_names = {t.value: t.name for t in TerrainId}
-    land = {i: terrain_style(n)["depth"] == 0 for i, n in terrain_names.items()}
     for t in mm.terrain:
         terrain[t.x, t.y] = t.terrain_id
         elevation[t.x, t.y] = t.elevation
-        # a land layer (a road painted in the DE editor) gives the look of the tile; water keeps its base (#3688)
-        if t.layer >= 0 and land.get(t.terrain_id) and land.get(t.layer):
-            terrain[t.x, t.y] = t.layer
+        layer[t.x, t.y] = t.layer
+    terrain = apply_layers(terrain, layer, terrain_names)
 
     kinds = object_kinds()
     other = {r["tech"]: r["name"] for r in units.rows("tech_names.jsonl")}   # the names of game/data/train.jsonl

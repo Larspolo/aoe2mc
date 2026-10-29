@@ -927,11 +927,28 @@ def campaign(folder, number=None):
 
 def progress(folder):
     """The numbers of the won scenarios of a campaign folder (progress.json, #3507)."""
+    return progress_file(folder).get("won", [])
+
+
+def progress_file(folder):
+    """The content of progress.json of a campaign folder: "won", "difficulty" (#3507, #3520)."""
     try:
         with open(os.path.join(folder, "progress.json"), encoding="utf-8") as f:
-            return json.load(f).get("won", [])
+            return json.load(f)
     except FileNotFoundError:
-        return []
+        return {}
+
+
+def campaign_difficulty(folder, chosen):
+    """AoE2 DE: one difficulty for the whole campaign (#3520). The first start writes the chosen one into
+    progress.json, a later start keeps the value of the file."""
+    kept = progress_file(folder).get("difficulty")
+    if kept is None:
+        write_progress(folder, difficulty=chosen)
+        return chosen
+    if kept != chosen:
+        print(f"The campaign difficulty is {kept}.", file=sys.stderr)
+    return kept
 
 
 def campaign_keys(folder):
@@ -1130,6 +1147,7 @@ def main(argv=None, scenario=None):
         folder = a.world
         a.world, *titles, number = campaign(folder, a.scenario)
         a.mode = "scenario"
+        a.ai_difficulty = campaign_difficulty(folder, a.ai_difficulty)
         if not a.load:
             fresh(folder, a.world)
             put_keys(a.world, campaign_keys(folder))     # the keys of the scenarios before it (#3508)
