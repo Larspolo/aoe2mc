@@ -713,6 +713,7 @@ class Gather:
         self.techs = set()                                             # the researched technologies (train.TECHS)
         self.repeats = {}                                              # technology -> researches after the first (#968)
         self.rally, self.rallying, self.marks = {}, {}, {}             # building -> rally point, player -> building,
+        self.ordering = {}                                             # player -> a pending menu order ("patrol", #3355)
         #                                                                tag of a rally marker -> AoE2 seconds left
         self.pop, self.census, self.shown = 0, 0.0, {}                 # live units, AoE2 seconds since the count, sidebar
         import combat                                                  # combat imports this module
@@ -1295,7 +1296,7 @@ class Gather:
                 elif "aoe_use" in used and goto.in_hand(self, name):    # the "Go to" compass (#1830): no ray
                     out.remove(name)
                     goto.open_menu(self, name)
-                elif "aoe_use" in used and self.paper and not (name in self.rallying or build.chosen(self, name)):
+                elif "aoe_use" in used and self.paper and not (name in self.rallying or name in self.ordering or build.chosen(self, name)):
                     out.remove(name)                                   # a click or a hold: short() or drag decides
                     self.hold(name, int(re.search(r"has (\d+)", scores["aoe_use"])[1]))
                 for obj in objs:
@@ -1389,6 +1390,9 @@ class Gather:
             return
         if (rect := self.rallying.pop(name, None)) and (cell := self.map.pick_ground(eye, d)):   # the menu item (#707)
             train.rally(self, rect, cell, self.map.pick_tree(eye, d))
+            return
+        if vars(self).get("ordering", {}).pop(name, None) == "patrol" and (cell := self.map.pick_ground(eye, d)):
+            stance.patrol(self, name, cell)                            # the Patrol menu item (#3355)
             return
         kind, u, _ = self.target(eye, d, self.positions(sorted(self.pickable()))) or (None, None, None)
         if kind in ("enemy", "fort") and treaty.refuse(self, name):   # no attack before the end of the treaty (#2297)
@@ -2124,6 +2128,8 @@ class Gather:
                 scenario.victory(self)
                 scenario.tick(self)
                 scenario.resources(self)                               # "Tribute", "Modify Resource" (#2576)
+            else:
+                scenario.patrol(self)                                  # the patrols of the players (#3355)
             fog.tick(self)                                             # after the bots: their units too (#1389)
             herd.tick(self)                                            # all players: the bots capture too (#1792)
             if self.victory == "standard" or self.mode in wonder.RACE:  # a wonder or all relics win too (#2316)

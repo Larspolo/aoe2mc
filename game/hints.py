@@ -15,6 +15,7 @@ TEXTS = {                                                          # short: the 
     "corner": "Selection box: right click the other corner",
     "drag": "Selection box: hold right click, look at the other corner, release · Release here: cancel",
     "military": "{n} military unit{s} · Right click: attack an enemy, stance menu · Empty box: deselect",
+    "patrol": "Patrol: right click the ground",
     "none": "Right click: select a unit · Hold right click: selection box",
     "none-wand": "Right click: select a unit · Wand: selection box",
     "villagers": "{n} villager{s} · Right click: gather, build, build menu · Empty box: deselect",
@@ -28,6 +29,8 @@ def state(g, player=None):
         return "drag", TEXTS["drag"]
     if player in g.corners:
         return "corner", TEXTS["corner"]
+    if getattr(g, "ordering", {}).get(player) == "patrol":         # the Patrol menu item (#3355)
+        return "patrol", TEXTS["patrol"]
     if building := getattr(g, "ghosts", {}).get(player, [None])[0]:
         return "building", TEXTS["building"].format(building=pretty(building))
     if player is not None:                                         # the own selection of player (#3486)
