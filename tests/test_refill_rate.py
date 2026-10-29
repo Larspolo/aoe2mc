@@ -12,6 +12,6 @@ def test_the_whole_refill_lock_changes_with_its_slot():
 
 
 def test_a_refill_run_when_no_ticket_is_ready():
-    assert usage.runs_to_start(target=6, claims=1, ready=0, paused=False, hi=8) == usage.REFILL
+    assert usage.runs_to_start(target=6, claims=1, ready=0, paused=False) == usage.REFILL
     assert usage.runs_to_start(target=6, claims=6, ready=0, paused=False) == 0   # enough runs: one of them refills
     assert usage.runs_to_start(target=6, claims=1, ready=0, paused=True) == 0

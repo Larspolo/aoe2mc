@@ -45,7 +45,7 @@ def test_the_usage_line_counts_the_lanes():
 
 
 def test_haiku_tickets_get_cheap_runs_first():
-    assert usage.lane_plan(2, 0, 3, 3, 0.25, False, hi=8) == (4, 3)    # 3 Haiku runs (0.75) and 1 Opus run, at most 4
+    assert usage.lane_plan(2, 0, 3, 3, 0.25, False) == (4, 3)    # 3 Haiku runs (0.75) and 1 Opus run, at most 4
     assert usage.lane_plan(2, 0, 10, 0, 0.25, False) == (2, 0) == (usage.runs_to_start(2, 0, 10, False), 0)
     assert usage.lane_plan(2, 1.75, 10, 3, 0.25, False) == (1, 1)  # 0.25 left: one Haiku run
     assert usage.lane_plan(2, 0, 3, 3, 0.25, True) == (0, 0)
