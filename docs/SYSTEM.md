@@ -210,7 +210,8 @@ second project starts).
 | File | Kind | What is specific to aoe2mc |
 |---|---|---|
 | `agent.toml` | specific | All the project values that the generic files use. `tools/agent_config.py` reads it. |
-| `CLAUDE.md` | specific | The commands, the code map, the rules of the domain. The sections "How to work" and "Improve the process" are generic. |
+| `CLAUDE.md` | specific | The commands, the code map, the rules of the domain. It imports `framework/CLAUDE.md` with `@framework/CLAUDE.md`. |
+| `framework/CLAUDE.md` | generic | The rules of how to work and of the process: the sections "How to work" and "Improve the process" (#4193). |
 | `docs/STEERING.md` | generic | The owner login. |
 | `docs/ENVIRONMENT.md` | specific | The hosts of the tests and the tools of the setup script (Mojang, Java, Minecraft, #1900). |
 | `docs/LEARNINGS.md` | specific | The lessons of this project. The first section (environment and GitHub) is mostly generic. |

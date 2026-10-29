@@ -195,9 +195,8 @@ def bootstrap(target, repo, branch="main"):
     owner, name = repo.split("/")
     system = open(SYSTEM).read()
     rows = table(system)
-    claude = open(os.path.join(ROOT, "CLAUDE.md")).read()
     values = {"repo": repo, "owner": owner, "name": name, "branch": branch, **CONFIG["commands"],
-              "generic": section(claude, "How to work") + "\n" + section(claude, "Improve the process")}
+              "generic": "@framework/CLAUDE.md"}      # the generic rules: the copy of framework/CLAUDE.md (#4193)
     copied, written = [], []
     for path, kind in rows:
         if kind != "generic":
