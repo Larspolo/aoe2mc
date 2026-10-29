@@ -934,17 +934,74 @@ def progress(folder):
         return []
 
 
+def campaign_keys(folder):
+    """The key values of the played scenarios of a campaign folder (progress.json "keys", #3508)."""
+    try:
+        with open(os.path.join(folder, "progress.json"), encoding="utf-8") as f:
+            return json.load(f).get("keys", {})
+    except FileNotFoundError:
+        return {}
+
+
 def advance(folder, number, won):
     """The end of scenario number of a campaign (#3507): a victory goes into progress.json and gives the next
     converted scenario, a loss gives the same one again. None: the last scenario is won."""
     if not won:
         return number
     done = sorted(set(progress(folder)) | {number})
-    with open(os.path.join(folder, "progress.json"), "w", encoding="utf-8") as f:
-        json.dump({"won": done}, f)
+    write_progress(folder, won=done)
     with open(os.path.join(folder, "campaign.json"), encoding="utf-8") as f:
         later = [s["number"] for s in json.load(f)["scenarios"] if s.get("converted", True) and s["number"] > number]
     return min(later, default=None)
+
+
+def write_progress(folder, **values):
+    """Set the keys of progress.json of a campaign folder; the other keys stay."""
+    path = os.path.join(folder, "progress.json")
+    try:
+        with open(path, encoding="utf-8") as f:
+            data = json.load(f)
+    except FileNotFoundError:
+        data = {}
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(data | values, f)
+
+
+STORAGE = os.path.join("data", "command_storage_aoe2mc.dat")   # the data storages aoe2mc:* of a world (#3508)
+
+
+def world_keys(world):
+    """The key values of the trigger effect "Store Key Value" (aoe2mc.key_lines: storage aoe2mc:keys) of a world."""
+    from nbtlib import load
+    try:
+        values = load(os.path.join(world, STORAGE))["data"]["contents"]["keys"]["values"]
+    except (FileNotFoundError, KeyError):
+        return {}
+    return {k: int(v) for k, v in values.items()}
+
+
+def put_keys(world, values):
+    """Add the key values to the storage aoe2mc:keys of a world: a given key wins, a key of the world only stays.
+    The other storages stay."""
+    if not values:
+        return
+    from nbtlib import File, load
+    from nbtlib.tag import Compound, Int
+    path = os.path.join(world, STORAGE)
+    try:
+        root = load(path)
+    except FileNotFoundError:
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        import aoe2mc
+        root = File({"DataVersion": Int(aoe2mc.DATA_VERSION), "data": Compound({"contents": Compound()})}, gzipped=True)
+    keys = root["data"]["contents"].setdefault("keys", Compound())
+    keys["values"] = Compound(dict(keys.get("values", {})) | {k: Int(v) for k, v in values.items()})
+    root.save(path, gzipped=True)
+
+
+def carry_keys(old, new):
+    """The key values of the world old go into the world new, as AoE2 DE keeps them in a campaign (#3508)."""
+    put_keys(new, world_keys(old))
 
 
 def fresh(folder, world):
@@ -1075,6 +1132,7 @@ def main(argv=None, scenario=None):
         a.mode = "scenario"
         if not a.load:
             fresh(folder, a.world)
+            put_keys(a.world, campaign_keys(folder))     # the keys of the scenarios before it (#3508)
     if not os.path.isfile(os.path.join(a.world, "level.dat")):
         sys.exit(f"no level.dat in {a.world}")
     teams = None
@@ -1112,6 +1170,8 @@ def main(argv=None, scenario=None):
             if not getattr(g, "ended", None):
                 return
             if folder:                               # a campaign goes on with the next or the same scenario (#3507)
+                if keys := campaign_keys(folder) | world_keys(a.world):   # the keys go into the next scenario (#3508)
+                    write_progress(folder, keys=keys)
                 after = advance(folder, number, g.ended == "Victory")
                 game.command("title @a title " + json.dumps("Campaign complete") if after is None else
                              "say " + json.dumps(f"Scenario {after} starts. Join again.")[1:-1])
