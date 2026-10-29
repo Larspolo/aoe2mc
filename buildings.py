@@ -2226,6 +2226,11 @@ def wall_shape(w, ctx, every=3):
     return (0, w, 0, w), True
 
 
+def fortified(name):
+    """A higher wall or gate with the accent cap: the same test for the walls and their gates (#3104)."""
+    return any(k in name for k in ("FORTIFIED", "CITY", "FORT_", "SEA_"))
+
+
 def wall_segment(c, w, st, col, T, ctx):
     """One wall tile. ctx: name, neighbours (N, S, W, E booleans), global block offset.
     Like the game: a wall between square pillars that are higher and wider, with a band in the player color
@@ -2251,7 +2256,7 @@ def wall_segment(c, w, st, col, T, ctx):
             c.box(x0 + 1, x1 - 1, h - 1, h, z0 + 1, z1 - 1, "spruce_planks")
         wall_banners(c, w, ctx, h - 1, col, (x0, x1, z0, z1))
         return
-    fort = any(k in name for k in ("FORTIFIED", "CITY", "FORT_", "SEA_WALL"))
+    fort = fortified(name)
     h = T + (3 if fort else 2)
     cap = st.accent if fort else (st.merlon or st.stone)
     c.box(x0, x1, 1, h + 1, z0, z1, st.stone)
@@ -2349,7 +2354,7 @@ def gate(c, w, st, col, T, ctx):
         c.box(T, w - T, 4, 5, z0, z0 + 1, "iron_bars")                     # the raised grille
         c.flag(T - 1, h + 3, z1 // 2, col, 2); c.flag(w - T, h + 3, z1 // 2, col, 2)
         return
-    fort = any(k in name for k in ("FORTIFIED", "CITY", "FORT_"))
+    fort = fortified(name)
     h = T + (3 if fort else 2)
     th = h + 3
     cap = st.accent if fort else (st.merlon or st.stone)
@@ -2371,7 +2376,7 @@ def diagonal_gate(c, w, st, col, T, ctx):
     """Gate on the diagonal x = z (w = 3 tiles): a band of wall, a tower on each end tile and an opening
     in the middle tile. Units go through it in the direction (+1, -1)."""
     palisade = "PALISADE" in ctx["name"]
-    fort = any(k in ctx["name"] for k in ("FORTIFIED", "CITY", "FORT_"))
+    fort = fortified(ctx["name"])
     h = T + 1 if palisade else T + (3 if fort else 2)
     mat = "spruce_log" if palisade else st.stone
     r = T // 2
