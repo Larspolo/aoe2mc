@@ -56,6 +56,7 @@ import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.EntityRegainHealthEvent;
 import org.bukkit.event.entity.EntityTargetEvent;
 import org.bukkit.event.entity.EntityTransformEvent;
+import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
@@ -283,7 +284,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
  * in the walls, so the goal takes the hit points for each shot, and an arrow that hits the slime does nothing.
  * Vanilla has no clickable item menu: "aoe menu" opens an inventory with the items (#619). A click on an item is
  * cancelled (the player takes nothing) and sets the score aoe_menu of the player to slot + 1 (a shift click: -(slot + 1),
- * #620); the menu stays open, so the player can click again. "aoe menu" on an open menu of the same title and size only changes the items.
+ * #620; a right click: slot + 1 + MENU_RIGHT, #3523); the menu stays open, so the player can click again. "aoe menu" on an open menu of the same title and size only changes the items.
  * The name line of a unit or building (#661, owner decision #658): the custom name of the mob holds the name and 5 hearts
  * ("Militia ❤❤❤❤❤", red: full, gray: empty, each heart 20 % of the hit points). It is visible only for a hurt unit or a
  * selected one (tag aoe2mc.selected, game/gather.py), as the bars in AoE2. Each hit and "aoe stats" update it.
@@ -340,6 +341,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     private final Map<UUID, TextDisplay> labels = new HashMap<>();   // the name line over the roof of a building (#1811)
     static final String LABEL = "aoe2mc.label";                       // the tag of that text display
     private static final int HEARTS = 5;
+    private static final int MENU_RIGHT = 1000;                        // a right click: slot + 1 + MENU_RIGHT (game/menu.py RIGHT, #3523)
     private static final int WHERE_PAGE = 40;                          // aoe where: about 3000 bytes per answer
     private final Map<UUID, Integer> lastHit = new HashMap<>();      // tick of the last melee hit of a unit
     private final Set<UUID> fought = new HashSet<>();                 // a target or a hit since the last aoe where (#1169)
@@ -1042,7 +1044,8 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         int slot = ev.getRawSlot();
         if (slot >= 0 && slot < ev.getView().getTopInventory().getSize() && ev.getCurrentItem() != null
                 && !ev.getCurrentItem().isEmpty()) {
-            menuScore().getScore(ev.getWhoClicked().getName()).setScore(ev.isShiftClick() ? -(slot + 1) : slot + 1);
+            menuScore().getScore(ev.getWhoClicked().getName()).setScore(ev.isShiftClick() ? -(slot + 1)
+                    : ev.getClick() == ClickType.RIGHT ? slot + 1 + MENU_RIGHT : slot + 1);
         }
     }
 
