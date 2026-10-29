@@ -64,6 +64,9 @@ SNEAK = '{type:"minecraft:entity_properties",entity:"this",predicate:{flags:{is_
 ICONS = {r["name"]: r["icon"] for r in ROWS if "icon" in r}           # a block of the design
 AGE_TECHS = tuple(r["name"] for r in sorted((r for r in ROWS if "age_tech" in r), key=lambda r: r["age_tech"]))
 AGE = {r["name"]: r["age"] for r in ROWS if "age" in r}           # (0: Dark)
+# The age names (#3666): the start age ("start_age" of the first age line of train.jsonl), then the label of each age
+AGE_NAMES = (lambda t: (t[AGE_TECHS[0]]["start_age"], *(t[a]["label"] for a in AGE_TECHS)))(
+    {r["name"]: r for r in table.load("train.jsonl")})
 WALLS = tuple(r["name"] for r in ROWS if r.get("wall"))          # a line of 1-tile sites with two clicks (#1322)
 GATES = tuple(r["name"] for r in ROWS if r.get("gate"))          # on 4 own wall tiles in a line (#1324)
 NEEDS = {r["name"]: r["needs"] for r in ROWS if "needs" in r}     # a unit or building after a technology (#1380)
@@ -196,9 +199,9 @@ def locked(g, name):
     """The text "Needs the ... Age" when the player is not yet in the AoE2 age of building or unit name, else None.
     An age after the AoE2 setting "Ending age" (aoe2mc.json "end_age", run.py --end-age, #2346) stays locked."""
     if name in AGE_TECHS and AGE_TECHS.index(name) + 1 > getattr(g, "data", {}).get("end_age", len(AGE_TECHS)):
-        return f"The game ends in the {('Dark', 'Feudal', 'Castle', 'Imperial')[g.data['end_age']]} Age"   # #2346
+        return f"The game ends in the {AGE_NAMES[g.data['end_age']]}"   # #2346
     if g is not None and (age := AGE.get(name, 0) - civs.earlier(g, name)) > ages(g):
-        return f"Needs the {('Dark', 'Feudal', 'Castle', 'Imperial')[age]} Age"
+        return f"Needs the {AGE_NAMES[age]}"
     if g is not None and name in NEEDS and NEEDS[name] not in getattr(g, "techs", ()):
         return "Needs " + pretty(NEEDS[name].removesuffix("_TECH"))
     from gather import has_mode                                        # gather imports this module

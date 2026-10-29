@@ -106,10 +106,10 @@ GENERIC = frozenset(NOT)   # the AoE2 setting "All Techs" gives them to all (#22
 # building, the Xolotl Warrior, a team bonus unit). AoE2 wiki "Full Tech Tree".
 FULL = {r["name"]: r["full_tech_tree"] for f in ("train.jsonl", "build.jsonl") for r in table.load(f)
         if "full_tech_tree" in r}
-ELEPHANTS = tuple(r["name"] for r in ROWS if r["name"] not in MISSING["BATTLE_ELEPHANT"])   # the battle elephant (#1556)
-EAGLES = tuple(r["name"] for r in ROWS if r["name"] not in MISSING["EAGLE_SCOUT"])   # the eagle line (#1555)
-LANCERS = tuple(r["name"] for r in ROWS if r["name"] not in MISSING["STEPPE_LANCER"])   # the steppe lancers (#1557)
-FIRE_LANCERS = tuple(r["name"] for r in ROWS if r["name"] not in MISSING["FIRE_LANCER"])   # the fire lancer (#1953)
+ELEPHANTS = tuple(r["name"] for r in ROWS if r["name"] not in MISSING.get("BATTLE_ELEPHANT", ()))   # the battle elephant (#1556)
+EAGLES = tuple(r["name"] for r in ROWS if r["name"] not in MISSING.get("EAGLE_SCOUT", ()))   # the eagle line (#1555)
+LANCERS = tuple(r["name"] for r in ROWS if r["name"] not in MISSING.get("STEPPE_LANCER", ()))   # the steppe lancers (#1557)
+FIRE_LANCERS = tuple(r["name"] for r in ROWS if r["name"] not in MISSING.get("FIRE_LANCER", ()))   # the fire lancer (#1953)
 # "aura" (#2378): the own complete buildings that make the gatherers of some resources work faster near them and take
 # these resources: {"buildings", "resources", "rate", "range": tiles from the footprint} (Thracian forts and towers).
 # gather.Map.drop_site adds them to the drop sites, Gather.aura_rate gives the rate.

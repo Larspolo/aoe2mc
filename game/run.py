@@ -567,6 +567,7 @@ SETTINGS = {
     "age": "dark",                    # "Starting age" (train.STARTS, #2265)
     "ai_difficulty": "standard",      # "AI difficulty" of the bots (bot.LEVELS, game/data/difficulty.jsonl, #2661)
     "all_techs": False,               # "All Techs" (civs.missing, #2298)
+    "antiquity": False,               # Antiquity Mode: the Return of Rome rule set (table.use, game/data/antiquity, #3666)
     "civ": None,                      # {player: civilization} in place of the scenario's (civ_choices, #2267)
     "empire_wars": False,             # "Empire Wars Mode" on top of the mode (ON_TOP, #2490)
     "end_age": "imperial",            # "Ending age" (build.locked, #2346)
@@ -1080,6 +1081,8 @@ def main(argv=None, scenario=None):
     ap.add_argument("--age", choices=["dark", "feudal", "castle", "imperial", "post-imperial"], default="dark",
                     help="--play: the AoE2 setting \"Starting age\" of each player, with the technologies of the "
                     "earlier ages (default dark; post-imperial: all technologies)")
+    ap.add_argument("--antiquity", action="store_true", help="--play: Antiquity Mode, the rules of Return of Rome: "
+                    "the Stone, Tool, Bronze and Iron Age (game/data/antiquity; only with --mode standard)")
     ap.add_argument("--end-age", choices=["dark", "feudal", "castle", "imperial"], default="imperial",
                     help="--play: the AoE2 setting \"Ending age\": the last age that the players can reach (default "
                     "imperial)")
@@ -1143,6 +1146,9 @@ def main(argv=None, scenario=None):
     state = savegame.read(a.load) if a.load else None
     if state:                                        # the settings of the save, but the options given here win (#2325)
         savegame.settings(a, state, given(ap, argv))
+    if a.antiquity and (a.replay or a.mode != "standard"):
+        sys.exit("--antiquity plays only --mode standard, and not --replay (the records are AoE2 games)")
+    table.use("antiquity" if a.antiquity else "aoe2")   # before the first rule module loads (civ_choices, #3666)
     civ = civ_choices(a.civ)
     handicap = handicap_choices(a.handicap)
     import train
