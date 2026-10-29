@@ -28,4 +28,5 @@ def test_each_skill_and_workflow_is_in_the_table():
     skills = {f".claude/skills/{d}/SKILL.md" for d in os.listdir(os.path.join(ROOT, ".claude", "skills"))}
     flows = {f".github/workflows/{f}" for f in os.listdir(os.path.join(ROOT, ".github", "workflows"))
              if f != "worlds.yml"}                                  # releases of worlds: not a part of the agent loop
-    assert not (skills | flows) - paths
+    missing = (skills | flows) - paths
+    assert not missing, f"add a row for each of {sorted(missing)} to the table 'Generic and specific files' of docs/SYSTEM.md"
