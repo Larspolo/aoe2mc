@@ -316,6 +316,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     private final Map<UUID, Stats> stats = new HashMap<>();
     private final Ghost ghost = new Ghost(this);
     private final Cheats cheats = new Cheats(this);
+    private final ChatName chatName = new ChatName();               // the player color of a chat name (#3681)
     private final SpecChat specChat = new SpecChat();               // the chat of the spectators (#3554)
     private final TeamChat teamChat = new TeamChat();               // the team chat to the allies (#3553)
     private final Deaths deaths = new Deaths(this);
@@ -1075,6 +1076,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         Bukkit.getScheduler().runTaskTimer(this, sight::tick, Sight.PERIOD, Sight.PERIOD);
         Bukkit.getPluginManager().registerEvents(this, this);
         Bukkit.getPluginManager().registerEvents(cheats, this);
+        Bukkit.getPluginManager().registerEvents(chatName, this);
         Bukkit.getPluginManager().registerEvents(specChat, this);
         Bukkit.getPluginManager().registerEvents(teamChat, this);
         Bukkit.getPluginManager().registerEvents(deaths, this);
