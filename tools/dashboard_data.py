@@ -5,6 +5,10 @@
 Writes aoe2mc-merged-prs.json, aoe2mc-tickets.json, aoe2mc-epics.json, aoe2mc-roadmap.json, aoe2mc-release-bar.json,
 aoe2mc-usage.json and aoe2mc-tokens.json, and copies aoe2mc-setup.json (written by hand: tools/dashboard_artifact/setup.json). The page
 reads them as data files: `tools/dashboard_site.py` builds the GitHub Pages site with them (#982).
+
+With `DASHBOARD_CACHE` (a folder that `dashboard-site.yml` keeps with `actions/cache`), it reads only the issues and
+PRs that changed since the last build (`cached`): all issues and all closed PRs were about 60 API pages in each build,
+6 builds an hour, and the REST limit of the workflow token ran out (2026-10-29). Once a day it reads all again.
 """
 import datetime as dt
 import json
@@ -37,6 +41,57 @@ def pages(path):
 
 def ts(s):
     return dt.datetime.strptime(s, "%Y-%m-%dT%H:%M:%SZ")
+
+
+FULL_HOURS = 24             # a cache older than this reads all issues and PRs again (deleted or missed items)
+OVERLAP = 120               # seconds: the next read starts this much before the start of this read
+
+
+def slim(item):
+    """The fields of an issue or a PR that the data files use: a small cache. The body only for an epic (`KEY`)."""
+    names = [label["name"] for label in item.get("labels") or []]
+    out = {k: item.get(k) for k in ("number", "title", "state", "created_at", "closed_at", "merged_at", "updated_at",
+                                    "sub_issues_summary", "parent_issue_url")}
+    out["labels"] = [{"name": n} for n in names]
+    out["body"] = (item.get("body") or "") if "epic" in names else ""
+    if "pull_request" in item:
+        out["pull_request"] = {}
+    if "head" in item:
+        out["head"] = {"ref": item["head"]["ref"]}
+    return out
+
+
+def cached(folder, now=None, read=None):
+    """(issues, closed PRs) as `pages` gives them, from the cache in `folder` and the items that changed since its
+    last read: `issues?since=` and the closed PRs by update time until an older one. No cache, or a cache older than
+    FULL_HOURS: all of them. Writes the cache back."""
+    now, read = now or dt.datetime.now(dt.timezone.utc), read or pages
+    path = os.path.join(folder, "items.json")
+    try:
+        with open(path) as f:
+            c = json.load(f)
+    except (OSError, ValueError):
+        c = {}
+    start = f"{now - dt.timedelta(seconds=OVERLAP):%Y-%m-%dT%H:%M:%SZ}"
+    full = not c or c.get("full_at", "") < f"{now - dt.timedelta(hours=FULL_HOURS):%Y-%m-%dT%H:%M:%SZ}"
+    issues, pulls = ({}, {}) if full else (c["issues"], c["pulls"])
+    if full:
+        new_issues, new_pulls = read("issues?state=all"), read("pulls?state=closed")
+    else:
+        new_issues = read(f"issues?state=all&since={c['since']}&sort=updated&direction=asc")
+        new_pulls, page = [], 1
+        while True:                                 # newest update first: stop at the first one before `since`
+            part = health.api(f"pulls?state=closed&sort=updated&direction=desc&per_page=100&page={page}")
+            new_pulls += [p for p in part if p["updated_at"] >= c["since"]]
+            if len(part) < 100 or part[-1]["updated_at"] < c["since"]:
+                break
+            page += 1
+    issues.update({str(i["number"]): slim(i) for i in new_issues})
+    pulls.update({str(p["number"]): slim(p) for p in new_pulls})
+    os.makedirs(folder, exist_ok=True)
+    with open(path, "w") as f:
+        json.dump({"since": start, "full_at": start if full else c["full_at"], "issues": issues, "pulls": pulls}, f)
+    return list(issues.values()), list(pulls.values())
 
 
 def merged_prs(pulls):
@@ -242,9 +297,10 @@ def check(out_dir, page):
 def main(out_dir):
     os.makedirs(out_dir, exist_ok=True)
     root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    issues = pages("issues?state=all")
+    folder = os.environ.get("DASHBOARD_CACHE")
+    issues, pulls = cached(folder) if folder else (pages("issues?state=all"), pages("pulls?state=closed"))
     files = {
-        "aoe2mc-merged-prs.json": merged_prs(pages("pulls?state=closed")),
+        "aoe2mc-merged-prs.json": merged_prs(pulls),
         "aoe2mc-tickets.json": tickets(issues),
         "aoe2mc-epics.json": epics(issues),
         "aoe2mc-roadmap.json": roadmap(open(os.path.join(root, "docs", "ROADMAP.md")).read()),
