@@ -37,12 +37,13 @@ The agent takes instructions only from comments and issues by `Larspolo`.
 | Stop the agent | Add label `paused` to the status issue. Remove it to continue. A process review can add it too, when the runs must wait for your steps: its comment names the ticket and the steps. |
 | Cancel a ticket | Close it as "not planned". |
 | Mute a ticket until later | Add the label `muted`. No agent works on it (also not on a muted epic), and "Waiting for you" hides it. Remove the label to bring it back. |
+| Do a ticket only after the next release | Add the label `after-release`. No agent works on it before the next release. A push of a tag `v*` removes the label from all issues (workflow `after-release.yml`); remove it by hand to bring one ticket back earlier. |
 | Reject a process change | Comment on the status issue. The agent reverts it and notes why. |
 | Ask for a process review | Comment "process review" on the status issue. A PR of your own session that the runs did not make (no commit with `Agent-Run:`) also makes the next review come soon: the review learns the lever from it. |
 | Check or repair the start of the runs | Follow `docs/OPERATOR.md` (check, repair, a new project, a move to another account), or start a session at claude.ai/code and write "Follow docs/OPERATOR.md, section 1". A long-lived owner session is not necessary. |
 
 Order of work: `P0` → `P1` → `P2` → `P3`. With the same priority, the lowest issue number goes first.
-Tickets with `needs-human`, `blocked`, `muted` or `epic` wait. A ticket that depends on a muted ticket waits too.
+Tickets with `needs-human`, `blocked`, `muted`, `after-release` or `epic` wait. A ticket that depends on a muted ticket waits too.
 
 The agent asks you only on GitHub: on the issue that needs the answer, with the label `needs-human` and a
 comment that mentions `@Larspolo` (#862). It does not ask with phone notifications or only in the status report.
@@ -52,7 +53,7 @@ comment that mentions `@Larspolo` (#862). It does not ask with phone notificatio
 - Priority: `P0`, `P1`, `P2`, `P3`
 - Size: `size:S`, `size:M`, `size:L` (L tickets are split before work starts)
 - Kind: `bug`, `feature`, `tooling`, `design`, `docs`, `cleanup`
-- Flow: `needs-human`, `blocked`, `muted`, `in-progress`, `epic`, `agent-status`, `paused`
+- Flow: `needs-human`, `blocked`, `muted`, `after-release`, `in-progress`, `epic`, `agent-status`, `paused`
 
 The file `.github/labels.txt` defines the labels. The Labels workflow creates them on `main`.
 

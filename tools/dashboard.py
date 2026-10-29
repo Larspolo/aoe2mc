@@ -27,7 +27,8 @@ REPO = os.environ.get("GITHUB_REPOSITORY") or CONFIG["repo"]
 STATUS, PAUSED = CONFIG["status"]["label"], CONFIG["status"]["paused"]
 MUTED = "muted"                # the owner mutes a ticket: no agent works on it, and "Waiting for you" hides it
 CLOSE = "close"                # the work is done, close.yml closes the ticket: no candidate (#2920)
-SKIP = {"needs-human", "blocked", "epic", STATUS, "in-progress", MUTED, CLOSE}
+AFTER = "after-release"        # the owner holds a ticket until the next release: after-release.yml removes it (#4175)
+SKIP = {"needs-human", "blocked", "epic", STATUS, "in-progress", MUTED, CLOSE, AFTER}
 PRIORITY = ["P0", "P1", "P2", "P3"]
 # Names in ticket text that do not count for the overlap: tools for checks, and LEARNINGS.md (merge=union: no conflicts).
 # A PR that changes them still counts (work() takes the files of the PRs as they are).
@@ -261,6 +262,8 @@ def render(old_body, issues, comments, open_prs, closed_issues, closed_prs, now,
     muted = sum(MUTED in labels(i) for i in issues)
     if muted:
         out.append(f"- Muted: {muted} ticket{'s' * (muted != 1)} (label `{MUTED}`: no agent works on them; remove the label to bring one back)")
+    if after := sum(AFTER in labels(i) for i in issues):
+        out.append(f"- After the release: {after} ticket{'s' * (after != 1)} (label `{AFTER}`: no agent works on them before the next release)")
 
     out += ["", "### Working on"]
     for i in sorted(issues, key=lambda i: i["number"]):

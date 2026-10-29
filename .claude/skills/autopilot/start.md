@@ -55,7 +55,7 @@ For each issue of section `Triage` (no priority label):
 
 ## 5. Pick and claim one ticket
 
-Candidates: open issues without `needs-human`, `blocked`, `epic`, `agent-status`, `in-progress`, `muted`, and whose
+Candidates: open issues without `needs-human`, `blocked`, `epic`, `agent-status`, `in-progress`, `muted`, `after-release`, and whose
 "Depends on: #n" issues are all closed, whose "Start after:" time or count of merged PRs is past (#496, #2039). Order: `P0`, `P1`, `P2`, `P3`, then the
 least overlap with the work in progress (files and functions that open PRs change or claimed tickets name, #487),
 then the lowest issue number.

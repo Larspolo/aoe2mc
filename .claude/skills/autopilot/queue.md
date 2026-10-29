@@ -33,7 +33,7 @@ runs): give the ticket `lane:deep` and pick the next one.
 ## Epics and refill (step 5)
 
 Epics first: an epic is never a candidate, so its rest of the work needs sub-issues. Before you claim a ticket, look
-at the open epics (label `epic`, not `needs-human`, not `muted`, any priority) with no open sub-issue, at most 3 per run. The
+at the open epics (label `epic`, not `needs-human`, not `muted` or `after-release`, any priority) with no open sub-issue, at most 3 per run. The
 priority does not matter here: a check of `P2` and `P3` epics was skipped, and six finished epics stayed open (#799).
 For each one, read its acceptance criteria and all its comments. An owner comment after the last agent comment comes
 first: handle it as in step 3 (lock, answer). Do not post a request that the epic already has (#820: two runs asked
@@ -63,7 +63,7 @@ feature with no epic and no fallback (#3560). A due process or roadmap review st
 It starts none while a refill lock is younger than `refill_gap` minutes (`agent.toml`, `usage.refill_recent`), unless R < N / 2.
 Give each new ticket its lane (`ticket` skill, "Model lanes").
 Also lock each epic E with `python3 tools/claim.py E --refill` before you make its tickets (exit 1: skip that epic, #505).
-A `muted` ticket or epic (the owner mutes it until later, 2026-10-26) is out of all these steps: no split, no check, no
+A `muted` or `after-release` ticket or epic (the owner holds it until later, 2026-10-26, #4175) is out of all these steps: no split, no check, no
 new sub-issues, no `needs-human`. Still answer an owner comment on it (step 3).
 1. Split each `size:L` ticket N without open sub-issues (`ticket` skill), also when it is not a candidate yet. Lock it
    first with `python3 tools/claim.py N --refill` (exit 1: skip it).

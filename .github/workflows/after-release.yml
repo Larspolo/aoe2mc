@@ -1,0 +1,27 @@
+name: After release
+
+# Removes the label `after-release` from each open issue when a release tag v* is pushed (#4175). The owner holds a
+# ticket until the next release with this label: `tools/dashboard.py` skips it (`AFTER`), so no run takes it before.
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:     # by hand: release the held tickets now
+
+permissions:
+  issues: write          # labels
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Remove the label after-release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          R: ${{ github.repository }}
+        run: |
+          for i in $(gh api --paginate "repos/$R/issues?state=open&labels=after-release&per_page=100" --jq '.[].number'); do
+            gh api "repos/$R/issues/$i/labels/after-release" -X DELETE > /dev/null
+            gh api "repos/$R/issues/$i/comments" -f body="Released by the After release workflow (\`${GITHUB_REF_NAME}\`, #4175): the agents can take it now." > /dev/null
+            echo "released #$i"
+          done

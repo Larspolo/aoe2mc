@@ -22,8 +22,9 @@ on (`claim.py N --stale` and `--takeover` use 10 minutes then, #1773). Take it o
 (`python3 tools/claim.py N --takeover` with the ticket number N, then comment "Taken over by `<your branch>`: stalled."), for example when its run stopped. Then read the PR comments again: if an older "Taken over by" comment of another branch is less than
 30 minutes old, leave the PR to that run. Work on the PR from your session branch (`claim.py` takes the run name
 from the current local branch), push with `git push origin HEAD:<branch of the PR>`, and run the guard with
-`--pr-branch <branch of the PR>` (#361). A merge of main: `python3 tools/merge_main.py --push N --pr-branch
-<branch of the PR>` does both (#3678).
+`--pr-branch <branch of the PR>` (#361). A merge of main: `git checkout -B <session branch> origin/<branch of the PR>` first (the tool merges into the
+current branch: on a session branch at `main` it merges nothing and the push fails, #4175), then
+`python3 tools/merge_main.py --push N --pr-branch <branch of the PR>` does both (#3678).
 A PR whose ticket has no `in-progress` label is free: any run can fix it (hand-off).
 If your usage limit stops you, the next run continues your work through this rule.
 
