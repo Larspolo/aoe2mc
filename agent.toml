@@ -51,3 +51,9 @@ system = "docs/SYSTEM.md"
 steering = "docs/STEERING.md"
 learnings = "docs/LEARNINGS.md"
 roadmap = "steering/project/ROADMAP.md"
+
+[accounts]                      # the Claude accounts of the runs (#4236, docs/COLLABORATORS.md). A run names its account
+                                # with the variable AGENT_ACCOUNT (git config aoe2mc.account); a line with no account
+                                # word belongs to the first table
+[accounts.lars]                 # the first account: the present secrets
+login = "Larspolo"              # the GitHub login of the collaborator
