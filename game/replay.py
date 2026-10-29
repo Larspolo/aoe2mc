@@ -307,18 +307,24 @@ def formation_cells(free, group, target, kind="Line", T=4, long=False):
     if long and kind == "Line" and d > FAR_TILES * T:
         cols = 1 if n == 2 else min(n, 2)
     rows = -(-n // cols)
+    few = sum(bool(u[4]) for u in group) if kind == "Box" else 0     # Box: grow until the weak units fit inside
+    while few and (rows - 2) * (cols - 2) < few and rows + cols <= n - few:
+        rows, cols = (rows + 1, cols) if rows < cols else (rows, cols + 1)   # (#3640)
     r = max(2 * T, math.ceil(max(cols, rows) * S) + 4 * S * (kind == "Flank"))
     x0, z0 = int(tx), int(tz)
     todo = {(x, z) for x in range(x0 - r, x0 + r + 1) for z in range(z0 - r, z0 + r + 1) if free(x, z)}
     group = sorted(group, key=lambda u: (u[3], (tx - u[1]) * dx + (tz - u[2]) * dz))
     slots = []                                                      # (key, row, offset across the walk)
     if kind == "Box":
-        cells = [(q, j) for q in range(rows) for j in range(cols)][:n]
+        cells = [(q, j) for q in range(rows) for j in range(cols)]
         inner = [c for c in cells if 0 < c[0] < rows - 1 and 0 < c[1] < cols - 1]
-        outer = [c for c in cells if c not in inner]
+        ring = sorted((c for c in cells if c not in inner),                  # around the square, in angle order
+                      key=lambda c: math.atan2(c[0] - (rows - 1) / 2, c[1] - (cols - 1) / 2))
         weak = [u for u in group if u[4]]
         order = weak + [u for u in group if not u[4]]
-        cells = inner[:len(weak)] + outer + inner[len(weak):]
+        k = min(len(ring), n - min(len(weak), len(inner)))           # the units on the ring, spread over it (#3640)
+        outer = [ring[i * len(ring) // k] for i in range(k)] if k else []
+        cells = inner[:len(weak)] + outer + [c for c in ring if c not in outer] + inner[len(weak):]
         slots = [(u[0], q, (j - (cols - 1) / 2) * S) for u, (q, j) in zip(order, cells)]
     else:
         for q in range(rows):
