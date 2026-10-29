@@ -74,7 +74,8 @@ import table  # noqa: E402
 from rcon import Rcon  # noqa: E402
 
 # A chat line starts with "<name>", not with a name. Paper 26.3 writes "System chat: " and color codes (#1310).
-JOINED = re.compile(r"[/ ]INFO\]: (?:System chat: )?(?:\x1b\[[0-9;]*m)?(\w{1,16}) joined the game(?:\x1b\[0m)?$")
+JOINED = re.compile(r"[/ ]INFO\]: (?:System chat: )?(?:\x1b\[[0-9;]*m)?(\w{1,16})(?:\x1b\[[0-9;]*m)? joined the game"
+                    r"(?:\x1b\[0m)?$")                # Paper 26.3: the name in its own color (#3566)
 PAPER = os.path.join(os.path.dirname(mc_check.CACHE), "paper")       # ~/.cache/aoe2mc/paper/VERSION/
 FILL = "https://fill.papermc.io/v3/projects/paper/versions"
 AGENT = {"User-Agent": "aoe2mc (https://github.com/Larspolo/aoe2mc)"}   # the Paper API refuses Python-urllib (403)
