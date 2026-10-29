@@ -28,6 +28,7 @@ PACKED = ("queues", "trained", "sites", "rally",                       # with tu
           "ruins",                                                     # the fallen start buildings: ruins.py (#3008)
           "soldiers", "units")                                         # the units of the game, trained or upgraded (#2532)
 OPTIONAL = ("auto_reseed",                                             # the mill switch (#3422)
+            "bell_work",                                               # the work before the town bell (#3420)
             "limit_left", "policy", "rates", "relic_timer", "reseeds", "switches", "upgraded", "wonder_shown", "wonders",   # only on a
             "wonders_gone")                                            # Gather that has them (#2324; the policy: #2515)
 MONK = ("carrier_at", "converting", "faith", "fetching", "heal_time", "monk_at", "relic_gold", "relic_homes",
