@@ -28,6 +28,7 @@ import argparse
 import datetime
 import json
 import math
+import re
 import subprocess
 import sys
 
@@ -134,6 +135,34 @@ def refill_runs(issues, now, minutes=60, refill=REFILL):
     new = any("pull_request" not in i and now - datetime.datetime.fromisoformat(
         i["created_at"].replace("Z", "+00:00")).timestamp() < minutes * 60 for i in issues)
     return refill if new else min(refill, 1)
+
+
+def refill_need(ready, target, issues, due=lambda: []):
+    """The reason of the refill runs, or "" when they have no work (#3547): the `autopilot` skill refills only when
+    R < N (`queue.md`), so with R >= N a refill run finds work only in an open epic with no open sub-issue and no open
+    "Part of #E" ticket (the epic check), or in a release check with no ticket. 5 deep runs in one hour found none
+    (2026-10-29). issues: the open issues and PRs; due: the release checks with no ticket (read only when needed)."""
+    import dashboard
+    if ready < target:
+        return f"ready {ready} < target {target}"
+    work = {int(n) for i in issues if "pull_request" not in i for n in re.findall(r"Part of #(\d+)", i.get("body") or "")}
+    subs = lambda i: (s := i.get("sub_issues_summary") or {}).get("total", 0) - s.get("completed", 0)   # open sub-issues
+    epics = [i["number"] for i in issues if "epic" in dashboard.labels(i) and i["number"] not in work and not subs(i)
+             and not {dashboard.MUTED, dashboard.CLOSE, "needs-human"} & dashboard.labels(i)]
+    if epics:
+        return "epic check " + ", ".join(f"#{n}" for n in epics)
+    return f"{len(checks)} release checks" if (checks := due()) else ""
+
+
+def release_due():
+    """The release checks with no ticket (`release.due`), or [] when the read fails: the pacer must still start runs."""
+    import release
+    try:
+        features, _, rows, epics = release.load()
+        return release.due(features, rows, epics)
+    except Exception as e:                                  # a GitHub or file error
+        print(f"release checks: {e}", file=sys.stderr)
+        return []
 
 
 def plan(target, claims, ready, lanes, paused, hi=MAX_FIRE, refill=REFILL, refill_lane=None):
@@ -275,14 +304,16 @@ def fire(usage, now, burn=BURN, burn7=None, skip=(), status=None):
     weights, source = health.lane_weights(comments)
     eq = claims if lanes is None else health.opus_equivalent(claims, lanes, weights)   # in Opus runs (#1727)
     target = target_runs(usage, now, burn, burn7=burn7)
-    refill = refill_runs(open_all, now)
+    need = refill_need(ready, target, open_all, release_due)
+    refill = refill_runs(open_all, now) if need else 0   # #3547: no refill run with no refill work
     lanes = [(n, 0 if n in skip else len(dashboard.candidates(open_all, lane=n)), weights[n]) for n in weights]   # agent.toml order
     k, runs = plan(target, eq, ready, lanes, paused, refill=refill,
                    refill_lane="deep" if "deep" in dashboard.RESERVED else None)
     cap, flow = read_flow(now)
     if cap is not None:                                     # the flow is the bottleneck: Opus runs repair the PRs
         k, runs = min(k, cap), dict.fromkeys(runs, 0)
-    line = (f"{describe(usage, now, burn, burn7)} · claims {claims} ({eq:.2f} Opus runs) · ready {ready} · refill {refill} · "
+    line = (f"{describe(usage, now, burn, burn7)} · claims {claims} ({eq:.2f} Opus runs) · ready {ready} · "
+            f"refill {refill} ({need or f'ready {ready} >= target {target}, no epic or release check'}) · "
             f"paused {paused} · {flow} · max_fire {MAX_FIRE} · weights "
             + ", ".join(f"{n} {w:.2f} ({source[n]})" for n, w in weights.items()) + note)
     return k, runs, line
