@@ -880,6 +880,19 @@ class Gather:
             sel[self.person] = sel.pop("", set()) if self.person else set()
         return sel
 
+    @property
+    def groups(self):
+        """The control groups {n: units} of Gather.person (#3490): each person of one AoE2 player has own groups, as in
+        AoE2 co-op. As with selected, the first named person takes the groups of the person "" over."""
+        own = vars(self).setdefault("person_groups", {})
+        if self.person not in own:
+            own[self.person] = own.pop("", {}) if self.person else {}
+        return own[self.person]
+
+    @groups.setter
+    def groups(self, groups):
+        vars(self).setdefault("person_groups", {})[self.person] = groups
+
     def others(self):
         """The units that another person of this Gather has selected: they keep their glow and their tag."""
         return set().union(*(s for n, s in vars(self).get("selections", {}).items() if n != self.person))
@@ -1266,9 +1279,11 @@ class Gather:
         self.command(f"execute as {self.who} unless items entity @s container.* minecraft:carrot_on_a_stick[!custom_data] "
                      "run give @s minecraft:carrot_on_a_stick")       # not a group item
         if self.calls % GROUP_GIVE == 0:
-            for n, (slot, _) in GROUPS.items():
-                self.command(f"execute as {self.who} unless items entity @s hotbar.{slot} *[custom_data={{aoe_group:{n}}}] "
-                             f"run item replace entity @s hotbar.{slot} with {group_item(n, len(self.groups.get(n, ())))}")
+            for name in filter(None, self.people()):                   # the groups of each person (#3490)
+                self.person = name
+                for n, (slot, _) in GROUPS.items():
+                    self.command(f"execute as {name} unless items entity @s hotbar.{slot} *[custom_data={{aoe_group:{n}}}] "
+                                 f"run item replace entity @s hotbar.{slot} with {group_item(n, len(self.groups.get(n, ())))}")
             diplomacy.give(self)                                       # the Game menu item (#1588)
             goto.give(self)                                            # the "Go to" compass (#1830)
         self.calls += 1
@@ -1375,8 +1390,8 @@ class Gather:
             self.choose(out, min(out, default=None))
             text = f"Group {n}: {len(out)} units"
         self.command(f"title {name} actionbar " + json.dumps({"text": text}))
-        # the item names the units of the group now (#1812): the players of this Gather share the groups
-        self.command(f"item replace entity {self.who} hotbar.{GROUPS[n][0]} with {group_item(n, len(self.groups[n]))}")
+        # the item names the units of the group now (#1812), only in the hotbar of this person (#3490)
+        self.command(f"item replace entity {name} hotbar.{GROUPS[n][0]} with {group_item(n, len(self.groups[n]))}")
 
     def click(self, name):
         self.person = name                                             # its own selection (#3486)

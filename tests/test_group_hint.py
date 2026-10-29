@@ -29,7 +29,7 @@ def test_a_save_renames_the_item_and_a_select_follows_a_dead_unit():
     server, g = setup()
     g.choose({"m-1", "m-2"})
     log = use(server, g, 1, sneak=True)
-    assert 'item_name="Group 1: 2 units"' in item(log, 1) and item(log, 1).split()[3] == g.who
+    assert 'item_name="Group 1: 2 units"' in item(log, 1) and item(log, 1).split()[3] == "Steve"
     server.log.clear()
     del server.entities["m-2"]
     log = use(server, g, 1)
