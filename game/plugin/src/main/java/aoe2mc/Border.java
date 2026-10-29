@@ -28,8 +28,10 @@ final class Border {
     private static final double REACH = 64;                          // blocks: the ray of the look, as Ghost.java
     private static final int MAX = 400;                              // particles of one border: a coarser step above
     private final Map<UUID, Box> boxes = new HashMap<>();
+    private final Map<UUID, Block> corners = new HashMap<>();        // the last far corner of each player (#3082)
 
-    /** aoe box PLAYER X Z DYE: the first corner (block X, Z) in the dye color; aoe box-clear PLAYER. */
+    /** aoe box PLAYER X Z DYE: the first corner (block X, Z) in the dye color; aoe box-clear PLAYER;
+     *  aoe box-corner PLAYER: the block X Z of the last far corner (a check of the tests, #3082). */
     boolean command(CommandSender sender, String[] args, List<Player> players) {
         int n = 0;
         for (Player p : players) {
@@ -48,6 +50,11 @@ final class Border {
                     n++;
                 }
                 case "box-clear" -> n += boxes.remove(p.getUniqueId()) == null ? 0 : 1;
+                case "box-corner" -> {
+                    Block c = corners.get(p.getUniqueId());
+                    sender.sendMessage(c == null ? "Corner: none" : "Corner: " + c.getX() + " " + c.getZ());
+                    return true;
+                }
                 default -> {
                     return false;
                 }
@@ -66,11 +73,16 @@ final class Border {
                 it.remove();
                 continue;
             }
-            RayTraceResult r = p.rayTraceBlocks(REACH, FluidCollisionMode.SOURCE_ONLY);   // the water surface (#2060)
+            // The water surface (#2060) and the barriers are ground as in fleet.pick(); plants are not (#3082, as
+            // Ghost.java): the ray of the world ignores the passable blocks, Player#rayTraceBlocks does not.
+            var eye = p.getEyeLocation();
+            RayTraceResult r = p.getWorld().rayTraceBlocks(eye, eye.getDirection(), REACH,
+                    FluidCollisionMode.SOURCE_ONLY, true);
             Block b = r == null ? null : r.getHitBlock();
             if (b == null) {
                 continue;
             }
+            corners.put(p.getUniqueId(), b);
             Box box = e.getValue();
             int x0 = Math.min(box.x(), b.getX()), x1 = Math.max(box.x(), b.getX()) + 1;   // the cells of both corners
             int z0 = Math.min(box.z(), b.getZ()), z1 = Math.max(box.z(), b.getZ()) + 1;   // are in the box

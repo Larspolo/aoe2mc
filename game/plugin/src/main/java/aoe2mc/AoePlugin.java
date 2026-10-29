@@ -213,6 +213,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *                                              galleys and dromons (#2379, game/train.py volley_command)
  *   aoe box <player> <x> <z> <dye>             draw the selection box from this corner to the look (#795, Border.java)
  *   aoe box-clear <player>                     end the border of the selection box
+ *   aoe box-corner <player>                    the block X Z of the last far corner of the border (#3082, a check)
  *   aoego <x> <z>                              (no permission) the player goes to a view of an alert place of the
  *                                              own team (#1816, Alerts.go): the click of an attack alert line
  * Converted units have no AI (NoAI): an order turns it on. Such a unit finds no path before its first AI tick
