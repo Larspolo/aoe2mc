@@ -204,6 +204,13 @@ used mines and farms, and the exact unit paths. Next: #438 lets Minecraft path f
 A taunt plays a vanilla Minecraft sound only when a good Minecraft sound fits it ("Yes", "No", a laugh); all other
 taunts show only their text. The AoE2 taunt sounds are not free to copy (#2662).
 
+## Live graphs (decision #3447, 2026-10-29)
+
+The live replay shows the graphs of each player (population, villagers, military, estimated resources, epic #3445)
+as a large text display "chart" in the sky above the overview view: one row per player in its color, one bar
+character (▁▂▃▄▅▆▇█) per game minute. It is vanilla (P2, P3). The owner checks the graphs in the game; a map item
+with a real line graph (Paper `MapRenderer`) can replace it later (P4).
+
 ## Pitfalls
 
 Moved from `docs/LEARNINGS.md` (improve run, 2026-10-26).
