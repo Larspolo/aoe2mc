@@ -57,7 +57,7 @@ def bonus_items(civ):
         return []
     lines = [w for b in texts["bonuses"] for w in textwrap.wrap("• " + b, 50, subsequent_indent="  ")]
     lines += [""] + textwrap.wrap(f"Team bonus: {texts['team']}", 50, subsequent_indent="  ")
-    return [(BONUSES, "written_book", "Civilization bonuses", "\n".join(lines))]
+    return [(BONUSES, "book", "Civilization bonuses", "\n".join(lines))]
 
 
 def other(civ, slot):
