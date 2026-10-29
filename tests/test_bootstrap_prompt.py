@@ -13,8 +13,8 @@ def test_the_bootstrap_prints_the_prompt_of_the_new_project(tmp_path, capsys):
     bootstrap.main([str(tmp_path), "--repo", "me/demo", "--branch", "trunk"])
     out = capsys.readouterr().out
     prompt = out.split('The prompt of the scheduled task "demo autopilot" (step 4), to paste as it is:\n\n', 1)[1]
-    assert prompt.startswith("You work on the GitHub repository me/demo (default branch: trunk).")
-    assert "(owner me, repo demo, access push)" in prompt and "GitHub login me)" in prompt
+    assert prompt.split("\n\n")[0] == "/scheduled max"      # the rules are in git: .claude/skills/scheduled (2026-10-29)
+    assert (tmp_path / ".claude/skills/scheduled/SKILL.md").exists()
     assert "Larspolo" not in prompt and "aoe2mc" not in prompt and "{" not in prompt
     assert "Merge the first PR of the bootstrap by hand" in out
 
