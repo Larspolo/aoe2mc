@@ -5,7 +5,7 @@ than 6 units lost" is a silver limit of 5).
 run.py --play --challenge NAME (#3900, decision #3760: own challenge maps) plays one on a converted world: player 1
 gets the civilization of the line, and tick() ends the game with the medal when the goal function of the key "check"
 ("module.function", (g, row) -> True when complete) says so. A new challenge is one data line and one goal function.
-A challenge with the key "setup" ("module.function", (g, row)) places its units at the start (start()).
+A challenge with the key "setup" ("module.function", (g, row)) places its units at the start (setup()).
 A challenge with the key "enemy" gets a bot town of player 2 that does not attack (setup, #3905).
 A challenge opens after a medal in the challenge of its key "after" (#3904, AoE2 DE). The best medal of each one goes
 into MEDAL_FILE in the user folder (the medals belong to the player, not to one map); `--challenge list` prints them.
@@ -98,7 +98,7 @@ ASK = 2.0                                                          # game second
 
 def fleets(g, c):
     """The setup of Naval Battle (#3909): the fleet of the player (the key "fleet" of its line, {AoE2 name: count}) on
-    the west water and the enemy warships (the key "enemy", player 2; the wiki gives no count) on the east water, one
+    the west water and the enemy warships (the key "enemy_fleet", player 2; the wiki gives no count) on the east water, one
     ship on each open water cell of a GAP grid (its 8 neighbours are water too), none on land. The AoE2 map: the player
     starts in the north-west and sails east to the enemy blockades."""
     import train                                                       # train imports gather, gather imports this module
@@ -106,7 +106,7 @@ def fleets(g, c):
     cells = sorted((x, z) for z in range(0, m.n, GAP) for x in range(0, m.n, GAP)
                    if all(m.wet(x + dx, z + dz) for dx in (-1, 0, 1) for dz in (-1, 0, 1)))
     own = [n for n, k in sorted(c["fleet"].items()) for _ in range(k)]
-    enemy = [n for n, k in sorted(c["enemy"].items()) for _ in range(k)]
+    enemy = [n for n, k in sorted(c["enemy_fleet"].items()) for _ in range(k)]
     if len(cells) < len(own) + len(enemy):
         print(f"{c['name']}: {len(cells)} open water cells for {len(own) + len(enemy)} ships: fewer ships",
               file=sys.stderr)
@@ -131,14 +131,6 @@ def sunk(g, c):
 
 
 
-def start(g):
-    """Place the units of challenge g.challenge (its "setup" function), once at the start of the game."""
-    c = CHALLENGES[g.challenge]
-    if "setup" in c:
-        module, _, function = c["setup"].rpartition(".")
-        getattr(importlib.import_module(module), function)(g, c)
-
-
 def lost(g):
     """The own units that died in the game (score.fallen keeps them in g.losses)."""
     return len(vars(g).get("losses", {}))
@@ -158,9 +150,13 @@ def rush(g, c):
 
 def setup(g):
     """The enemy town of challenge g.challenge (its key "enemy"), for free and complete at once: a town center when
-    player 2 has none, the buildings near it and its villagers. The bot of player 2 sends them to work."""
+    player 2 has none, the buildings near it and its villagers. The bot of player 2 sends them to work. A line with
+    the key "setup" ("module.function", (g, row)) places its own units first (Naval Battle, #3909)."""
     import build, train                                             # they import gather, gather imports this module
     c, h = CHALLENGES[g.challenge], enemies(g)
+    if "setup" in c:
+        module, _, function = c["setup"].rpartition(".")
+        getattr(importlib.import_module(module), function)(g, c)
     if "enemy" not in c or h is None:
         return None
     e = c["enemy"]

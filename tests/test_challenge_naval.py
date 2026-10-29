@@ -42,9 +42,9 @@ def test_both_fleets_are_on_water_and_apart(monkeypatch):
     monkeypatch.setattr(train, "summon", lambda g, name, pos, player=None: placed.append((name, pos, player))
                         or f"s{len(placed)}")
     g = fake()
-    challenge.start(g)
+    challenge.setup(g)
     row = challenge.CHALLENGES["naval-battle"]
-    assert sum(row["fleet"].values()) + sum(row["enemy"].values()) > len(placed) == 16   # 16 open water cells
+    assert sum(row["fleet"].values()) + sum(row["enemy_fleet"].values()) > len(placed) == 16   # 16 open water cells
     assert all(g.map.wet(int(x), int(z)) for _, (x, _, z), _ in placed)
     own = [p for p in placed if p[2] == 1]
     enemy = [p for p in placed if p[2] == 2]
