@@ -2392,7 +2392,7 @@ class Replay:
             res = ", ".join(f"{r} {v}" for r, v in g.items())
             out.append("tellraw @a " + json.dumps([text(name, color), text(
                 f": villagers trained {self.villagers.get(p, 0)}, gathered {res}, idle villager time "
-                f"{self.idle_text(p)}")]))
+                f"{self.idle_text(p)}, idle TC time {self.tc_text(p)}")]))
             out.append("tellraw @a " + json.dumps([text(name, color), text(              # military (#1066)
                 f": military units trained {self.army.get(p, 0)}, units lost {self.lost.get(p, 0)}, "
                 f"buildings lost {self.razed.get(p, 0)}, APM {self.mean_apm(p, self.ended)}{self.army_text(p)}")]))
@@ -2401,6 +2401,11 @@ class Replay:
     def idle_text(self, p):
         """The idle villager time of player p as M:SS (#3757)."""
         m, s = divmod(round(self.idled.get(p, 0)), 60)
+        return f"{m}:{s:02d}"
+
+    def tc_text(self, p):
+        """The idle town center time of player p at the end of the replay as M:SS (#4052)."""
+        m, s = divmod(round(self.tc_idle(p, self.ended)), 60)
         return f"{m}:{s:02d}"
 
     def army_text(self, p):
@@ -2606,6 +2611,40 @@ class Replay:
         for p, n in self.eco().items():
             self.idled[p] = self.idled.get(p, 0) + (t - self.idle_at) / 1000 * n["idle"]
         self.idle_at = t
+
+    @functools.cached_property
+    def town_centers(self):
+        """({player: {town center ID: alive from (ms)}}, {building ID: sorted busy intervals (ms)}) for tc_idle (#4052).
+        A start object is alive from 0; a building is alive from its first QUEUE of a villager. The busy time of a
+        building is each training and each technology in research of it."""
+        alive, busy = {}, {}
+        for o in self.data["objects"]:
+            if o.get("name") == "TOWN_CENTER":
+                alive.setdefault(o["player"], {})[o["ref"]] = 0
+        for end, e, b in self.trainings:
+            if e["kind"] == "queue" and e.get("name", "").startswith("VILLAGER"):
+                tc = alive.setdefault(e["player"], {})
+                tc[b] = min(tc.get(b, e["time"]), e["time"])
+            d = aoe2mc.train_ms(e.get("name", "")) if e["kind"] == "queue" else RESEARCH_S[e["technology"]] * 1000
+            busy.setdefault(b, []).append((max(e["time"], end - d), end))
+        return alive, {b: sorted(spans) for b, spans in busy.items()}
+
+    def tc_idle(self, p, t):
+        """The idle seconds of the town centers of player p up to game time t (ms, #4052): the time each one is alive
+        up to t, minus the union of its busy intervals in that time."""
+        alive, busy = self.town_centers
+        out = 0
+        for b, start in alive.get(p, {}).items():
+            if start >= t:
+                continue
+            covered, last = 0, start
+            for s, e in busy.get(b, ()):
+                s, e = max(s, last), min(e, t)
+                if e > s:
+                    covered += e - s
+                    last = e
+            out += t - start - covered
+        return out / 1000
 
     def troop(self, p, name):
         """One more live military unit of this type for player p (a start unit or a spawn, #3695)."""
