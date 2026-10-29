@@ -14,7 +14,7 @@ The flow brake (owner, 2026-10-27): the quota is not the only bottleneck. When C
 stops the merges, the agent PRs build up, and a night of new PRs gives many conflicts. So `--fire` counts the open
 agent PRs older than `pr_minutes` (they wait for something that is not the quota) and the queued CI runs. At
 `max_waiting_prs` it starts at most 1 run per cycle, and that run only repairs PRs (autopilot step 2). At
-`max_ci_queue` it starts no run: a run cannot make CI faster. The limits are in `[pacing]` of `agent.toml`.
+`max_ci_queue` it starts no run: a run cannot make CI faster. The limits are in `[pacing]` of `steering/system/system.toml`.
 
 BURN and BURN7 (the same for the 7-day window, #1695) are the defaults. When the run reports on the status issue
 have enough `Usage:` lines (at least 5 pairs in the last 24 hours), `tools/health.py` measures the burns from them
@@ -67,8 +67,10 @@ def parse(lines):
     return {}
 
 
-def read_usage(timeout=120):
-    r = subprocess.run(CALL, capture_output=True, text=True, timeout=timeout, cwd="/tmp")
+def read_usage(timeout=120, token=None):
+    """The quota of the account of the process, or with `token` (its `CLAUDE_CODE_OAUTH_TOKEN`) of that account (#4237)."""
+    env = None if token is None else {**os.environ, "CLAUDE_CODE_OAUTH_TOKEN": token}
+    r = subprocess.run(CALL, capture_output=True, text=True, timeout=timeout, cwd="/tmp", env=env)
     return parse(r.stdout.splitlines())
 
 
@@ -306,31 +308,33 @@ def read_status():
         return [], f" · status comments failed ({type(e).__name__}: {str(e)[:100]}): default burns, start weights"
 
 
-def measured_burn7(comments=None):
-    """The share of the 7-day quota of one run-hour that `tools/health.py` measures from the `Usage:` lines, or None.
-    comments: those of read_status, else it reads them."""
+def measured_burn7(comments=None, account=None):
+    """The share of the 7-day quota of one run-hour that `tools/health.py` measures from the `Usage:` lines (of one
+    account, #4237), or None. comments: those of read_status, else it reads them."""
     try:
         import health
         comments = health.status_comments() if comments is None else comments
-        return health.weekly_burn(comments, datetime.datetime.now(datetime.timezone.utc))
+        return health.weekly_burn(comments, datetime.datetime.now(datetime.timezone.utc), account=account)
     except Exception:                                           # no GitHub access: the old guard
         return None
 
 
-def measured_burn(comments=None):
-    """The burn that `tools/health.py` measures from the `Usage:` lines of the status issue, or None.
+def measured_burn(comments=None, account=None):
+    """The burn that `tools/health.py` measures from the `Usage:` lines of the status issue (of one account, #4237), or
+    None.
     comments: those of read_status, else it reads them."""
     try:
         import health
         comments = health.status_comments() if comments is None else comments
-        return health.measured_burn(comments, datetime.datetime.now(datetime.timezone.utc))
+        return health.measured_burn(comments, datetime.datetime.now(datetime.timezone.utc), account=account)
     except Exception:                                           # no GitHub access: use the default
         return None
 
 
-def burns(comments, burn=None):
-    """(burn, burn7): `burn` (--burn), else measured from the comments of read_status, else BURN and BURN7."""
-    return burn or measured_burn(comments) or BURN, measured_burn7(comments) or BURN7
+def burns(comments, burn=None, account=None):
+    """(burn, burn7): `burn` (--burn), else measured from the comments of read_status (the lines of `account` only, when
+    it is given), else BURN and BURN7."""
+    return burn or measured_burn(comments, account) or BURN, measured_burn7(comments, account) or BURN7
 
 
 def sample_line(usage, now, claims, release=None, lanes=None, account=None):
@@ -365,14 +369,15 @@ def describe(usage, now, burn=BURN, burn7=None):
     return " · ".join(out + [week] * bool(week)) + f" · burn {burn:.3f} · max {HI} runs · target {target_runs(usage, now, burn, burn7=burn7)} runs"
 
 
-def fire(usage, now, burn=BURN, burn7=None, skip=(), status=None, started=None, out=None, account=None):
+def fire(usage, now, burn=BURN, burn7=None, skip=(), status=None, started=None, out=None, target=None, account=None):
     """(K, {lane: runs}, line): the runs that the pacer starts now, and the line of its inputs (`--fire`,
     `tools/pacer.py`). Reads GitHub and the claim refs. `skip`: lanes that can start no run now (the hourly limit
     of their task): they count no ready tickets, so the main runs get the room. `status`: read_status() of the
     burns, else it reads the status comments. `started`: {task: runs} that the pacer started in the last PENDING
     minutes; those with no claim yet (`pending`) count as claims and take a ready ticket of their lane each.
     `out`: a dict that gets the reads that the pacer uses again (`open`: the open issues and PRs, `refs`: the claim
-    refs, `flow`: the cap of the flow brake, `claims`, `lanes`: the beating claims), so that it reads GitHub once."""
+    refs, `flow`: the cap of the flow brake, `claims`, `lanes`: the beating claims), so that it reads GitHub once.
+    `target`: the target in Opus runs in place of `target_runs(usage)` (the pacer with several accounts, #4237)."""
     comments, note = status or read_status()
     import dashboard
     import health
@@ -387,7 +392,7 @@ def fire(usage, now, burn=BURN, burn7=None, skip=(), status=None, started=None, 
         out.update(open=open_all, refs=refs, claims=claims, lanes=lanes)
     weights, source = health.lane_weights(comments)
     eq = claims if lanes is None else health.opus_equivalent(claims, lanes, weights)   # in Opus runs (#1727)
-    target = target_runs(usage, now, burn, burn7=burn7)
+    target = target_runs(usage, now, burn, burn7=burn7) if target is None else target
     reviews = functools.cache(lambda: due_reviews(starved=lambda: target is not None and ready < target
                                                   and not free_sources()))
     need = refill_need(ready, target, open_all, release_due, free=free_sources, reviews=reviews)   # reviews after checks

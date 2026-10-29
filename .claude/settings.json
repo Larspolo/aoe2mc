@@ -129,6 +129,15 @@
             "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/guard-shell.sh"
           }
         ]
+      },
+      {
+        "matcher": "mcp__github__issue_write|mcp__github__add_issue_comment|mcp__github__create_pull_request",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/guard-body.sh"
+          }
+        ]
       }
     ]
   }

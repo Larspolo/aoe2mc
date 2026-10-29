@@ -23,7 +23,7 @@ def play(timeline, objects=(VIL, HOUSE), speed=4.0, n=64):
         now[0] += s
     r = replay.Replay(game, d, ai=True)
     stats = r.run(speed, clock=lambda: now[0], sleep=sleep, log=None, finish=True)
-    return r, [c for c in game.sent if replay.GRAPH not in c and replay.ECO not in c and replay.ARMY not in c and replay.ORDER not in c], stats  # graphs (#3448, #3756), army (#3696), build order (#4049)
+    return r, [c for c in game.sent if not c.startswith(("item replace entity @a hotbar.", "item modify entity @a hotbar."))], stats  # the stats books (#3924)
 
 
 def orders(sent):

@@ -67,6 +67,9 @@ def why():
                 return ("python3 -m pytest with no test file runs the full fast suite: never do it, the quick CI runs it "
                         "on each push (owner, #4187). Name the test files of the change: python3 -m pytest tests/test_a.py. A $VAR or "
                         "$(...) can be empty (#4244): grep -l X tests/*.py | xargs -r python3 -m pytest -q.")
+        if "gh" in w and any(a in ("-f", "--raw-field") and b.startswith("body=@") for a, b in zip(w, w[1:])):
+            return ("-f sends the text @file literally: the issue body is only a path (#4250). "
+                    "Use -F body=@file.md.")
         if re.match(r"\s*\(?\s*git\s+(?:-C\s+\S+\s+)?stash\b", seg):
             sub = (w[w.index("stash") + 1:] or ["push"])[0]
             if sub not in ("list", "show") and in_merge():

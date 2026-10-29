@@ -53,6 +53,8 @@ own sessions, and the prompt stays `/scheduled ARGUMENT` (owner, 2026-10-29).
 
 ### 3. The pacer reads and fires each account
 
+Done in #4237 (`tools/pacer.py` `accounts`, `account_targets`, `assign`).
+
 - Secrets: the first account keeps the present names. Each other account adds `CLAUDE_CODE_OAUTH_TOKEN_<NAME>`,
   `PACER_URL_<NAME>_<TASK>` and `PACER_TOKEN_<NAME>_<TASK>` (`<TASK>` = `MAIN`, `HAIKU`, `DEEP`).
 - `pacer.yml` gives the step `ALL_SECRETS: ${{ toJSON(secrets) }}` in place of the list of single secrets.

@@ -74,16 +74,10 @@ EFFECT = "aoe2mc.effect"    # entity tag of the texts above a building (#843)
 TRADE_MS = 2000              # the trades of one market within this time join in one text (#3942)
 PANEL = "aoe2mc.panel"      # entity tag of the production texts above a building (#2811, decision #2808: C)
 PANEL_BAR = 10              # characters of the text progress bar of a production item
-GRAPH = "aoe2mc.graph"      # entity tag of the graph text in the sky above the overview (#3448, decision #3447: B)
-GRAPH_BARS = "▁▂▃▄▅▆▇█"     # one bar per game minute, its height relative to the highest value of all players
-UPGRADE = "aoe2mc.upgrade"  # entity tag of the Blacksmith tiers in the sky below the graphs (#3786)
-UPGRADE_ECO = "aoe2mc.upgrade_eco"  # entity tag of the economy tiers, one display below the Blacksmith one (#3790)
-UPGRADE_UNI = "aoe2mc.upgrade_uni"  # entity tag of the University researches, one display more below (#3790)
-UNI_SHOWN = 8                        # the University labels of a player at most, then "+N": the RCON limit (#3790)
-GRAPH_MINUTES = 20          # the last minutes of each graph row: a long game keeps a short text
-ARMY = "aoe2mc.army"        # entity tag of the army text of each player in the sky, below the graphs (#3696)
-ORDER = "aoe2mc.order"      # entity tag of the build order text of each player in the sky, below the army texts (#4049)
-ECO = "aoe2mc.eco"          # entity tag of the economy text above the graphs (#3756)
+GRAPH_BARS = "░▒▓█"         # one bar per game minute, its shade relative to the highest value of all players (#3924: the book font has no ▁▂▃▅▆▇)
+UNI_SHOWN = 8                        # the University labels of a player at most, then "+N" (#3790)
+GRAPH_MINUTES = 8           # the last minutes of each graph line: "Pop ████████ 120" fits in BOOK_COLS
+STAT_BOOKS = {"Graphs": 3, "Army": 4, "Upgrades": 5, "Economy": 6}   # book -> hotbar slot (#3924; replay_input.ITEMS has the rest)
 FOLLOWED = "aoe2mc.followed"  # the tag of the entity that the spectators of --follow look through (#1095)
 TRAIL = 3                   # tiles: a follower farther than this from its target walks to it again (#2551)
 TRAIL_MS = 1000             # ms of game time between two checks of the followers (#2551)
@@ -459,11 +453,7 @@ class Replay:
         self.reached, self.researched = {}, {}  # player -> {age: game time (ms)}, researched technologies (#1067)
         self.learned = {}                       # player -> [(game time ms, technology name)] (#3785)
         self.vills, self.vhigh = {}, {}         # player -> live villagers (est.), the highest count (#1086)
-        self.smith = {}                         # tag -> the shown rows of an upgrade display (#3786, #3790)
-        self.graph = {}                         # value index -> the shown rows of its graph (#3448)
-        self.army_shown = {}                    # player -> the shown army text (#3696)
-        self.order_shown = {}                   # player -> the shown build order text (#4049)
-        self.eco_rows = None                    # the shown rows of the economy text (#3756)
+        self.books = {}                         # title -> the shown lines of a stats book (#3924)
         self.samples, self.minute = {}, -1      # player -> [(minute, pop, villagers, military, resources)], last minute (#3446)
         self.apms, self.ended = None, 0         # player -> sorted times of its actions (#3763); game time of the end (ms)
         self.orders = None                      # player -> [(time, label)] of its build order (#4047)
@@ -582,139 +572,77 @@ class Replay:
         return steps[:bisect.bisect_right(steps, t, key=lambda s: s[0])]
 
     def graphs(self, t):
-        """The commands of the graphs at game time t (ms, #3448, decision #3447: B): in the sky above the overview one
-        large text display per value (population, villagers, military, estimated resources), one row per player in
-        its color, one bar per game minute. One display per value keeps each command below the RCON limit with 8
-        players. Only the displays whose text changed: the samples change once per minute."""
+        """The book "Graphs" at game time t (ms, #3448, #3924): a page per player with a line per value (population,
+        villagers, military, estimated resources), one bar per game minute relative to the highest value of all players,
+        and the last value. Commands only when a value changed: the samples change once per minute."""
         stats = {p: ss[-GRAPH_MINUTES:] for p, ss in self.stats(t).items() if ss}
-        if not stats:
-            return []
-        if getattr(self, "view", None) is None:
-            self.overview()                                         # it sets the place of the overview
-        y, c, out = int(self.view.split()[1]) + 12, f"{self.n / 2:.1f}", []
-        for i, name in enumerate(("Population", "Villagers", "Military", "Resources (estimated)"), 1):
-            top = max(s[i] for ss in stats.values() for s in ss) or 1
-            rows = [text(name + "\n")]
-            for p in self.ranked(stats):
-                who, color = self.label(p)
+        lines = {p: [] for p in stats}
+        for i, name in enumerate(("Pop", "Vil", "Mil", "Res"), 1):
+            top = max((s[i] for ss in stats.values() for s in ss), default=0) or 1
+            for p in stats:
                 bars = "".join(GRAPH_BARS[round(s[i] / top * (len(GRAPH_BARS) - 1))] for s in stats[p])
-                rows.append(text(f"{who} {bars} {stats[p][-1][i]}\n", color))
-            if rows == self.graph.get(i):
-                continue
-            line, tag = json.dumps(rows, ensure_ascii=False, separators=(",", ":")), f"{GRAPH}.{i}"
-            out.append(f"data merge entity @e[type=text_display,tag={tag},limit=1] {{text:{line}}}" if i in self.graph
-                       else f"summon text_display {c} {min(319, y + 4 * (4 - i))} {c} {{text:{line},billboard:\"center\","
-                            f'shadow:1b,line_width:1000,Tags:["{GRAPH}","{tag}"]}}')
-            self.graph[i] = rows
-        return out
+                lines[p].append(f"{name} {bars} {stats[p][-1][i]}")
+        return self.stat_book("Graphs", lines)
 
     def army_view(self, t):
-        """The commands of the army texts at game time t (ms, #3696): in the sky below the graphs and the Blacksmith
-        tiers (#3818: the Blacksmith display is one step below the lowest graph), one text display per player in its
-        color: the live military units by type, the units in training and the units lost. Only the texts that changed
-        since the last call."""
-        if getattr(self, "view", None) is None:
-            self.overview()                                         # it sets the place of the overview
-        y, c, out = int(self.view.split()[1]) + 12, f"{self.n / 2:.1f}", []
+        """The book "Army" at game time t (ms, #3696, #4049, #3924): a page per player with its live military units by
+        type, the units in training, the units lost and the last 4 steps of its build order. Commands only when a page
+        changed."""
         training = collections.defaultdict(collections.Counter)
         import gather                                               # gather -> build -> replay: import it late
         for end, e, _ in self.trainings:                            # military only, as the troops (#3818)
             if e["kind"] == "queue" and e["time"] <= t < end and gather.military(e["name"]):
                 training[e["player"]][e["name"]] += 1
-        for k, p in enumerate(self.ranked([int(q) for q in self.data["players"] if q != "0"])):
-            who, color = self.label(p)
-            line = f"{who}: {counts_text(self.troops.get(p, {})) or '-'}"
+        lines = {}
+        for p in (int(q) for q in self.data["players"] if q != "0"):
+            lines[p] = [f"Army: {counts_text(self.troops.get(p, {})) or '-'}"]
             if training.get(p):
-                line += f" · training {counts_text(training[p])}"
+                lines[p].append(f"Training: {counts_text(training[p])}")
             if lost := sum(self.fallen.get(p, {}).values()):
-                line += f" · lost {lost}"
-            if self.army_shown.get(p) == line:
-                continue
-            tag, value = f"{ARMY}.{p}", json.dumps(text(line, color), ensure_ascii=False, separators=(",", ":"))
-            out.append(f"data merge entity @e[type=text_display,tag={tag},limit=1] {{text:{value}}}" if p in self.army_shown
-                       else f"summon text_display {c} {y - 4 * (k + 2)} {c} {{text:{value},billboard:\"center\","
-                            f'shadow:1b,line_width:1000,Tags:["{ARMY}","{tag}"]}}')
-            self.army_shown[p] = line
-        return out
-
-    def build_order_view(self, t):
-        """The commands of the build order texts at game time t (ms, #4049): one text display per player in its color,
-        below the army texts, with the last 4 steps of its build order. Only the texts that changed since the last call."""
-        if getattr(self, "view", None) is None:
-            self.overview()                                         # it sets the place of the overview
-        y, c, out = int(self.view.split()[1]) + 12, f"{self.n / 2:.1f}", []
-        players = self.ranked([int(q) for q in self.data["players"] if q != "0"])
-        for k, p in enumerate(players):
-            who, color = self.label(p)
-            line = f"{who}: " + (" · ".join(f"{mmss(s)} {label}" for s, label in self.build_order(p, t)[-4:]) or "-")
-            if self.order_shown.get(p) == line:
-                continue
-            tag, value = f"{ORDER}.{p}", json.dumps(text(line, color), ensure_ascii=False, separators=(",", ":"))
-            out.append(f"data merge entity @e[type=text_display,tag={tag},limit=1] {{text:{value}}}" if p in self.order_shown
-                       else f"summon text_display {c} {max(0, y - 4 * (len(players) + k + 2))} {c} {{text:{value},"
-                            f'billboard:"center",shadow:1b,line_width:1000,Tags:["{ORDER}","{tag}"]}}')
-            self.order_shown[p] = line
-        return out
+                lines[p].append(f"Lost: {lost}")
+            lines[p] += ["", "Build order:"] + ([f"{mmss(s)} {label}" for s, label in self.build_order(p, t)[-4:]] or ["-"])
+        return self.stat_book("Army", lines)
 
     def upgrade_view(self, t):
-        """The commands of the upgrade displays at game time t (ms): the Blacksmith tiers (#3786), the economy tiers
-        (#3790) and the University researches (#3790). One text display per row group in the sky below the graphs, one
-        row per player in its color, for example "Melee 2/3 · Archer 1/3". Only when the text changed, and only after
-        the first research of the group. One display per group keeps each command below the RCON limit."""
-        players = self.ranked(int(q) for q in self.data["players"] if q != "0")
+        """The book "Upgrades" at game time t (ms, #3786, #3790, #3924): a page per player with the Blacksmith tiers,
+        the economy tiers ("Melee 2/3") and the University researches. Only after the first research of a player."""
+        players = [int(q) for q in self.data["players"] if q != "0"]
         done = {p: self.upgrades(p, t) for p in players}
-        tiers = lambda lines: {p: [sum(n in done[p] for n in chain) for _, chain in lines] for p in players}
-        groups = [(UPGRADE, "Blacksmith", SMITH, tiers(SMITH)), (UPGRADE_ECO, "Economy", ECO_LINES, tiers(ECO_LINES))]
-        uni = {p: [TECH_ROW[n]["label"] for n in done[p] if TECH_ROW.get(n, {}).get("building") == "UNIVERSITY"]
-               for p in players}
-        out, y0 = [], None
-        for k, (tag, title, lines_, count) in enumerate(groups + [(UPGRADE_UNI, "University", None, uni)]):
-            if lines_ is None:
-                texts = {p: ", ".join(count[p][:UNI_SHOWN] + ([f"+{len(count[p]) - UNI_SHOWN}"] if len(count[p]) > UNI_SHOWN
-                                                              else [])) for p in players}
-                progress = any(count.values())
-            else:
-                texts = {p: " · ".join(f"{line} {k2}/{len(chain)}" for (line, chain), k2 in zip(lines_, count[p]))
-                         for p in players}
-                progress = any(map(any, count.values()))
-            if self.smith.get(tag) is None and not progress:
-                continue
-            rows = [text(title + "\n")] + [text(f"{self.label(p)[0]}: " + texts[p] + "\n", self.label(p)[1]) for p in players]
-            if rows == self.smith.get(tag):
-                continue
-            line, shown = json.dumps(rows, ensure_ascii=False, separators=(",", ":")), self.smith.get(tag)
-            self.smith[tag] = rows
-            if shown is not None:
-                out.append(f"data merge entity @e[type=text_display,tag={tag},limit=1] {{text:{line}}}")
-                continue
-            if y0 is None:
-                if getattr(self, "view", None) is None:
-                    self.overview()                                 # it sets the place of the overview
-                y0 = int(self.view.split()[1]) + 12 - 4 * 4         # one step below the lowest graph
-            c, y = f"{self.n / 2:.1f}", y0 - 4 * (len(players) + 1) * k    # each group one display below the one above
-            out.append(f"summon text_display {c} {max(0, min(319, y))} {c} {{text:{line},billboard:\"center\","
-                       f'shadow:1b,line_width:1000,Tags:["{tag}"]}}')
-        return out
+        if not any(done.values()):
+            return []
+        lines = {}
+        for p in players:
+            lines[p] = [f"{line} {sum(n in done[p] for n in chain)}/{len(chain)}" for line, chain in SMITH + ECO_LINES]
+            uni = [TECH_ROW[n]["label"] for n in done[p] if TECH_ROW.get(n, {}).get("building") == "UNIVERSITY"]
+            if uni:
+                lines[p] += ["University:"] + uni[:UNI_SHOWN] + ([f"+{len(uni) - UNI_SHOWN}"] if len(uni) > UNI_SHOWN else [])
+        return self.stat_book("Upgrades", lines)
 
     def ecoview(self):
-        """The commands of the economy text at the current time (#3756): in the sky above the graphs, one row per player
-        in its color with the villagers on each kind of work. One display for all players, sent only when its text
-        changed."""
-        if getattr(self, "view", None) is None:
-            self.overview()                                         # it sets the place of the overview
-        counts, y, c = self.eco(), min(319, int(self.view.split()[1]) + 32), f"{self.n / 2:.1f}"
-        rows = []
-        for p in self.ranked(counts):
-            who, color = self.label(p)
-            rows.append(text(f"{who}: " + " · ".join(f"{k} {n}" for k, n in counts[p].items()) + "\n", color))
-        if not rows or rows == self.eco_rows:
+        """The book "Economy" at the current time (#3756, #3924): a page per player with the villagers on each kind of
+        work. Commands only when a count changed."""
+        return self.stat_book("Economy", {p: [f"{k} {n}" for k, n in c.items()] for p, c in self.eco().items()})
+
+    def stat_book(self, title, lines):
+        """The commands that put the written book `title` (lines: player -> text lines, a page per player) into the
+        hotbar slot STAT_BOOKS[title] of each viewer, only when its lines changed (#3924). `item replace` puts the first
+        pages; when the book is longer than one RCON command (RCON_MAX), `item modify` appends the rest."""
+        if not lines or self.books.get(title) == lines:
             return []
-        line = json.dumps(rows, ensure_ascii=False, separators=(",", ":"))
-        out = (f"data merge entity @e[type=text_display,tag={ECO},limit=1] {{text:{line}}}" if self.eco_rows is not None
-               else f"summon text_display {c} {y} {c} {{text:{line},billboard:\"center\","
-                    f'shadow:1b,line_width:1000,Tags:["{ECO}"]}}')
-        self.eco_rows = rows
-        return [out]
+        self.books[title] = {p: list(v) for p, v in lines.items()}
+        slot, pages = STAT_BOOKS[title], [json.dumps(pg, ensure_ascii=False, separators=(",", ":"))
+                                         for pg in self.book_pages(lines)]
+        head = f"item replace entity @a hotbar.{slot} with minecraft:written_book[minecraft:written_book_content=" + \
+            json.dumps({"title": title, "author": "aoe2mc"}, separators=(",", ":"))[:-1] + ',"pages":['
+        more = f'item modify entity @a hotbar.{slot} {{function:"set_written_book_pages",mode:"append",pages:['
+        out, cmd, n = [], head, 0
+        for pg in pages:
+            ends = "]}]" if not out else "]}"
+            if n and len((cmd + "," + pg + ends).encode()) > RCON_MAX:
+                out.append(cmd + ends)
+                cmd, n = more, 0
+            cmd, n = cmd + ("," if n else "") + pg, n + 1
+        return out + [cmd + ("]}]" if not out else "]}")]
 
     def resources(self, p):
         return self.stock.setdefault(p, dict(START))
@@ -763,7 +691,7 @@ class Replay:
             last["time"], self.effects[last["tag"]] = e["time"], e["time"] + EFFECT_MS
             return [f"data merge entity @e[type=text_display,tag={last['tag']},limit=1] "
                     f"{{text:{json.dumps(text(trade_line(last['sums']), color))}}}"]
-        spot = self.roof(i, (e.get("names") or [None])[0], e.get("player"))
+        spot = self.roof(i, (e.get("names") or [None])[0] or "MARKET", e.get("player"))   # no name of a market of the game (#4322)
         if not spot:
             return []
         x, top, z, (x0, x1, z0, z1) = spot
@@ -1197,6 +1125,7 @@ class Replay:
                     self.added -= 1
                 out += [f"aoe minimap unbuild {rect[0]} {rect[2]}"] * (self.pov is None and self.drawn.pop(rect, 0) != 0)
                 out += self.fall(rect)
+                out += self.unshelter(rect)
             elif (v := self.unit(i, name, e["player"])) is not None:
                 del self.units[i]
                 self.refs.pop(i, None)
@@ -1210,6 +1139,7 @@ class Replay:
                 self.pop[e["player"]] = max(0, self.pop.get(e["player"], 0) - 1)
                 self.lost[v.player] = self.lost.get(v.player, 0) + (not e.get("free"))   # a scout swap (#3028)
                 out.append(f"kill {v.uuid}")
+                out += self.carried(i, v, e["time"])
         return out
 
     def fall(self, rect):
@@ -2340,6 +2270,31 @@ class Replay:
         self.relics[ref].update(monk=None, home=rect, player=p, home_t=t)
         return [f"kill @e[type=item_display,tag=aoe_relic_{ref}]"]
 
+    def drop(self, ref, cell):
+        """The commands of relic ref that drops on the block cell (monk.lay: a pot block, #4013)."""
+        cell, cmds = monk.lay(self, ref, cell)
+        self.relics[ref].update(at=cell, monk=None, home=None)
+        self.relics[ref].pop("player", None)
+        return cmds
+
+    def carried(self, i, v, t):
+        """The commands of dead monk i: its relic drops at its replay position at game time t (AoE2, #4013)."""
+        self.fetching.pop(i, None)
+        self.homing.pop(i, None)
+        x, _, z = self.at(v, t)
+        return [c for ref, r in self.relics.items() if r["monk"] == i for c in self.drop(ref, (math.floor(x), math.floor(z)))]
+
+    def unshelter(self, rect):
+        """The commands of the relics in the fallen monastery rect: one pot on each free cell at its door (#4013)."""
+        out = []
+        for ref, r in self.relics.items():
+            if r["home"] == rect:
+                taken = {q["at"] for q in self.relics.values() if q["at"]}
+                ring = sorted(self.map.front(rect))
+                out += self.drop(ref, next((c for c in ring + sorted(self.map.around(set(ring))) if c not in taken),
+                                           (rect[0], rect[2])))
+        return out
+
     def relic_count(self, p):
         """The relics in the monasteries of player p (#4010)."""
         return sum(r["home"] is not None and r.get("player") == p for r in self.relics.values())
@@ -2634,6 +2589,27 @@ class Replay:
                 lines.setdefault(p, []).append(f"{mmss(e['time'])} {line}")
         return self.book_command("Timeline", lines)
 
+    def book_pages(self, lines):
+        """The pages of a written book with a page per player (lines: player -> text lines, #1068): each player starts a
+        page with a heading in its player color and its team (#1643); a long list goes on to the next page."""
+        pages = []
+        for p in sorted(lines):
+            name, color = self.player(p)                            # the heading and an empty line
+            team = self.team(p)
+            name = f"■ {f'Team {team} · ' if team is not None else ''}{name}"
+            rows, page = BOOK_ROWS - 1 - len(textwrap.wrap(name, BOOK_COLS)), ""
+            head = {"text": name, "color": color if color != "white" else "black"}   # the sidebar color (#1643)
+            for line in lines[p]:
+                n = len(textwrap.wrap(line, BOOK_COLS))
+                if n > rows:
+                    pages.append({"text": "", "extra": [head, {"text": "\n" + page.rstrip("\n")}]} if head
+                                 else {"text": page.strip("\n")})
+                    rows, page, head = BOOK_ROWS, "", None
+                rows, page = rows - n, page + "\n" + line
+            pages.append({"text": "", "extra": [head, {"text": "\n" + page.rstrip("\n")}]} if head
+                         else {"text": page.strip("\n")})       # only the heading has a color, the lines are black
+        return pages
+
     def book_command(self, title, lines):
         """A written book `title` with a page per player (lines: player -> text lines, #1068). Each player starts a page
         with a heading in its player color and its team (#1643); a long list goes on to the next page. One RCON
@@ -2641,22 +2617,7 @@ class Replay:
         if not lines:
             return []
         while True:
-            pages = []
-            for p in sorted(lines):
-                name, color = self.player(p)                            # the heading and an empty line
-                team = self.team(p)
-                name = f"■ {f'Team {team} · ' if team is not None else ''}{name}"
-                rows, page = BOOK_ROWS - 1 - len(textwrap.wrap(name, BOOK_COLS)), ""
-                head = {"text": name, "color": color if color != "white" else "black"}   # the sidebar color (#1643)
-                for line in lines[p]:
-                    n = len(textwrap.wrap(line, BOOK_COLS))
-                    if n > rows:
-                        pages.append({"text": "", "extra": [head, {"text": "\n" + page.rstrip("\n")}]} if head
-                                     else {"text": page.strip("\n")})
-                        rows, page, head = BOOK_ROWS, "", None
-                    rows, page = rows - n, page + "\n" + line
-                pages.append({"text": "", "extra": [head, {"text": "\n" + page.rstrip("\n")}]} if head
-                             else {"text": page.strip("\n")})       # only the heading has a color, the lines are black
+            pages = self.book_pages(lines)
             book = {"title": title, "author": "aoe2mc", "pages": pages}
             cmd = "give @a minecraft:written_book[minecraft:written_book_content=" + \
                 json.dumps(book, ensure_ascii=False, separators=(",", ":")) + "]"
@@ -2699,7 +2660,7 @@ class Replay:
                         f"scoreboard players display numberformat P{p} {POP} fixed {json.dumps(text(str(self.pop[p])))}"]
         return out
 
-    def census(self):
+    def census(self, t=math.inf):
         """With the fights of the plugin (ai) a unit dies without a timeline event (#787): count the live units of
         each player with the entity selector of their tags (a dead entity does not match). The chunks are loaded
         (run.py --replay: forceload)."""
@@ -2728,6 +2689,9 @@ class Replay:
                     self.fallen.setdefault(p, {})[name] = self.fallen.get(p, {}).get(name, 0) + was - n
                 kept[name] = n
         self.censused = True
+        for i in {r["monk"] for r in self.relics.values()} - {None}:     # a monk with a relic died in a fight (#4013)
+            if (v := self.units.get(i)) and "Test passed" not in (self.game.command(f"execute if entity {v.uuid}") or ""):
+                self.send(self.carried(i, v, t))
 
     def workers(self, p):
         """The villagers of player p in self.units, by uuid: a gather point can hold the same unit."""
@@ -3026,7 +2990,7 @@ class Replay:
              self.overview())
         if to is None:                                              # not again after a jump back (#2949)
             send(replay_input.fight_lines(self.control["fights"], self.control["players"]))
-        census = self.census if bar and self.ai else lambda: None
+        census = self.census if bar and self.ai else lambda t=0: None
         watching = self.control["camera"]                           # the camera state of the last poll (#3369)
         look = self.look_around if bar and self.ai else lambda: None          # as census: a server of run.py --replay
         while k < len(events) or self.moving or self.builds or self.charging or self.idle:
@@ -3097,7 +3061,6 @@ class Replay:
                     self.idle_at = to
                     self.send(self.graphs(to))
                     self.send(self.army_view(to))
-                    self.send(self.build_order_view(to))
                     self.send(self.upgrade_view(to))
                     self.send(self.ecoview())
                 continue
@@ -3105,7 +3068,7 @@ class Replay:
             if int(now) // 1000 != shown:                              # at most once per game second
                 shown = int(now) // 1000
                 if clock() - counted >= CENSUS:
-                    census()
+                    census(now)
                     look()
                     counted = clock()
                 send(self.clock_commands(now, end, self.speed) + self.score_commands(now) + self.overview(join=True))
@@ -3115,7 +3078,6 @@ class Replay:
                 self.relic_income(now)
                 self.send(self.graphs(now))
                 self.send(self.army_view(now))
-                self.send(self.build_order_view(now))
                 self.send(self.upgrade_view(now))
                 self.send(self.ecoview())
                 self.send(self.fog())
@@ -3132,7 +3094,7 @@ class Replay:
                     m, s = divmod(e["time"] // 1000, 60)
                     log(f"{m:02d}:{s:02d} {e['kind']} {e.get('name') or e.get('age') or ''} "
                         f"player {e.get('player')}: {len(cmds)} commands")
-        census()
+        census(end)
         self.send(self.expire(math.inf) + self.panel(math.inf))
         send(self.clock_commands(end, end, speed, done=True) + self.score_commands() + self.end_commands(end) +
              self.summary_commands() + self.timeline_commands(end) +

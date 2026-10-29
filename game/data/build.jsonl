@@ -2,7 +2,7 @@
 {"name": "LUMBER_CAMP", "cost": {"wood": 100}, "time": 35, "icon": "oak_log", "bot": 1, "near": "wood", "full_tech_tree": "own", "not_civs": ["ARMENIANS", "GEORGIANS", "INCAS", "MAPUCHE", "MUISCA", "TUPI"]}
 {"name": "MINING_CAMP", "cost": {"wood": 100}, "time": 35, "icon": "raw_gold_block", "bot": 3, "near": "gold", "full_tech_tree": "own", "not_civs": ["ARMENIANS", "GEORGIANS", "INCAS", "MAPUCHE", "MUISCA", "TUPI"]}
 {"name": "MILL", "cost": {"wood": 100}, "time": 35, "icon": "white_wool", "bot": 2, "near": "food", "not_civs": ["INCAS", "MAPUCHE", "MUISCA", "POLES", "TUPI"]}
-{"name": "FARM", "cost": {"wood": 60}, "time": 15, "icon": "wheat"}
+{"name": "FARM", "cost": {"wood": 60}, "time": 15, "icon": "wheat", "not_civs": ["KHITANS"]}
 {"name": "BARRACKS", "cost": {"wood": 175}, "time": 50, "icon": "stone_brick_wall", "bot": 4, "military": true}
 {"name": "BLACKSMITH", "cost": {"wood": 150}, "time": 40, "icon": "anvil", "age": 1, "bot": 5}
 {"name": "BOMBARD_TOWER", "cost": {"gold": 100, "stone": 125}, "time": 80, "icon": "polished_basalt", "age": 3, "needs": "BOMBARD_TOWER_TECH"}
@@ -31,6 +31,7 @@
 {"name": "MULE_CART", "cost": {"food": 20, "wood": 80}, "time": 25, "icon": "spruce_trapdoor", "full_tech_tree": "own", "not_civs": ["ACHAEMENIDS", "ATHENIANS", "AZTECS", "BENGALIS", "BERBERS", "BOHEMIANS", "BRITONS", "BULGARIANS", "BURGUNDIANS", "BURMESE", "BYZANTINES", "CELTS", "CHINESE", "CUMANS", "DANES", "DRAVIDIANS", "ETHIOPIANS", "FRANKS", "GOTHS", "GURJARAS", "HINDUSTANIS", "HUNS", "INCAS", "ITALIANS", "JAPANESE", "JURCHENS", "KHITANS", "KHMER", "KOREANS", "LITHUANIANS", "MACEDONIANS", "MAGYARS", "MALAY", "MALIANS", "MAPUCHE", "MAYANS", "MONGOLS", "MUISCA", "PERSIANS", "POLES", "PORTUGUESE", "PURU", "ROMANS", "SARACENS", "SAXONS", "SHU", "SICILIANS", "SLAVS", "SPANISH", "SPARTANS", "TATARS", "TEUTONS", "THRACIANS", "TUPI", "TURKS", "VARANGIANS", "VIETNAMESE", "VIKINGS", "WEI", "WU"]}
 {"name": "CARAVANSERAI", "cost": {"wood": 175, "stone": 50}, "time": 60, "icon": "chiseled_sandstone", "age": 3, "civs": ["HINDUSTANIS", "PERSIANS"]}
 {"name": "SETTLEMENT", "cost": {"wood": 125}, "time": 40, "icon": "hay_block", "civs": ["INCAS", "MAPUCHE", "MUISCA", "TUPI"]}
+{"name": "PASTURE", "cost": {"wood": 110}, "time": 22, "icon": "spruce_fence", "civs": ["KHITANS"], "full_tech_tree": "none", "food": 345}
 {"name": "ARBALESTER", "age": 3}
 {"name": "ARCHER", "age": 1}
 {"name": "ARMORED_ELEPHANT", "age": 2}
