@@ -80,7 +80,7 @@ def test_a_random_branch_and_an_if_take_one_way():
 
 def test_unread_sections_and_attributes_give_a_warning():
     _, notes = make(1)
-    assert "<OBJECTS_GENERATION> is not read yet" in notes
+    assert "<OBJECTS_GENERATION> is not read yet" not in notes        # create_object: #3855
     assert "random_placement is not read yet" not in notes            # PLAYER_SETUP: nothing to do here
     _, notes = make(1, script="<LAND_GENERATION> create_land { terrain_type WATER land_id 3 }")
     assert notes == ["create_land: land_id is not read yet"]
@@ -100,7 +100,9 @@ def test_read_map_takes_a_script(tmp_path):
     size, terrain, elevation, names, _, objects, players = aoe2mc.read_map(str(path), seed=5)
     assert size == 120 and terrain.shape == (120, 120) and not elevation.any()
     forest = {(int(x), int(y)) for x, y in np.argwhere(terrain == rmap.TERRAINS["FOREST"])}
-    assert {(int(o["x"]), int(o["y"])) for o in objects} == forest and {o["name"] for o in objects} == {"TREE_OAK_FOREST"}
+    trees = [o for o in objects if o["name"] != "TOWN_CENTER"]
+    assert {(int(o["x"]), int(o["y"])) for o in trees} == forest and {o["name"] for o in trees} == {"TREE_OAK_FOREST"}
+    assert sorted(o["player"] for o in objects if o["name"] == "TOWN_CENTER") == [1, 2]
     assert (terrain == np.array(make(5)[0]["terrain"])).all() and names[10] == "FOREST_OAK"
     assert sorted(players) == [0, 1, 2]
     (tmp_path / "Bad.rms").write_text("<LAND_GENERATION> base_terrain LAVA")
