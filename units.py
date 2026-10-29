@@ -311,7 +311,7 @@ def pretty(name, hero=False):
     """ELITE_TEUTONIC_KNIGHT -> Elite Teutonic Knight."""
     parts = name.split("_")
     # A one-letter part is a variant letter (COW_A), but a hero keeps its numeral (HENRY_V) and particles (#3059)
-    parts = [p for p in parts if p not in DROP and not (len(p) == 1 and p.isalpha() and not hero)]
+    parts = [p for p in parts if p not in DROP and not (len(p) == 1 and p.isalpha() and not hero)] or parts  # BARRACKS (#4145)
     if parts and parts[0] == "VILLAGER" and len(parts) > 1:
         parts = parts[1:]
     small = {"OF", "THE", "DE", "D", "AP", "VON", "IBN", "WITH", "IN", "A", "DA"}
