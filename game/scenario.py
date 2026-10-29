@@ -54,6 +54,7 @@ import replay  # noqa: E402
 import trade  # noqa: E402
 import train  # noqa: E402
 import table  # noqa: E402
+import transport  # noqa: E402
 import treaty  # noqa: E402
 
 SLOT = "inventory.26"                                                  # the last slot of the inventory: not the hotbar
@@ -470,12 +471,14 @@ def rally(g, player, which, tile, area):
 def unload(g, player, ref, where):
     """An "Unload" order (aoe2mc.unload_lines, #2773): the units inside the building ref of the player (a person or a
     bot: garrison.holders) come out (garrison.out), and `aoe moveto` walks them to the block "x y z" when the order has
-    one. A building that fell or that is not of the player: nothing."""
+    one. An own transport ship or ram lets its units out on the nearest land (transport.out, #3779). A building that
+    fell or that is not of the player: nothing."""
     for x in [g, *(s.g for s in g.bots)]:
         if x.player != player or "objects" not in x.data:
             continue
         rect = next((r for r, o in garrison.holders(x).items() if o.get("ref") == ref), None)
-        for u in garrison.out(x, rect) if rect is not None else []:
+        ship = transport.carriers(x).get(ref)                          # a transport ship or a ram (#3779)
+        for u in garrison.out(x, rect) if rect is not None else transport.out(x, ship) if ship else []:
             if where:
                 x.command(f"aoe moveto {u} {where}")
 
