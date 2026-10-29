@@ -75,6 +75,9 @@ PANEL_BAR = 10              # characters of the text progress bar of a productio
 GRAPH = "aoe2mc.graph"      # entity tag of the graph text in the sky above the overview (#3448, decision #3447: B)
 GRAPH_BARS = "▁▂▃▄▅▆▇█"     # one bar per game minute, its height relative to the highest value of all players
 UPGRADE = "aoe2mc.upgrade"  # entity tag of the Blacksmith tiers in the sky below the graphs (#3786)
+UPGRADE_ECO = "aoe2mc.upgrade_eco"  # entity tag of the economy tiers, one display below the Blacksmith one (#3790)
+UPGRADE_UNI = "aoe2mc.upgrade_uni"  # entity tag of the University researches, one display more below (#3790)
+UNI_SHOWN = 8                        # the University labels of a player at most, then "+N": the RCON limit (#3790)
 GRAPH_MINUTES = 20          # the last minutes of each graph row: a long game keeps a short text
 ARMY = "aoe2mc.army"        # entity tag of the army text of each player in the sky, below the graphs (#3696)
 ECO = "aoe2mc.eco"          # entity tag of the economy text above the graphs (#3756)
@@ -129,12 +132,12 @@ TECH_ROW = {r["name"]: r for r in table.load("train.jsonl")}   # name -> row: la
 ECONOMY = tuple(r["name"] for r in ROWS if r.get("economy"))   # the buildings of the economy researches (#3789)
 
 
-def smith_lines(rows):
-    """The Blacksmith lines: (the "line" name of the first technology, its technologies along the "after" chain)."""
-    nxt = {r["after"]: r["name"] for r in rows if r.get("building") == "BLACKSMITH" and "after" in r}
+def lines(rows, building):
+    """The lines of one building: (the "line" name of the first technology, its technologies along the "after" chain)."""
+    nxt = {r["after"]: r["name"] for r in rows if r.get("building") == building and "after" in r}
     out = []
     for r in rows:
-        if "line" in r:
+        if "line" in r and r.get("building") == building:
             chain = [r["name"]]
             while chain[-1] in nxt:
                 chain.append(nxt[chain[-1]])
@@ -142,7 +145,10 @@ def smith_lines(rows):
     return out
 
 
-SMITH = smith_lines(table.load("train.jsonl"))     # (#3786)
+TRAIN = table.load("train.jsonl")
+SMITH = lines(TRAIN, "BLACKSMITH")                  # (#3786)
+ECO_LINES = [x for b in dict.fromkeys(r["building"] for r in TRAIN if "line" in r and r["building"] != "BLACKSMITH")
+             for x in lines(TRAIN, b)]                              # the economy lines of the buildings (#3790)
 SPEEDS = {r["name"]: r["walk"] for r in ROWS if "walk" in r}
 AGES = tuple(r["name"] for r in sorted((r for r in ROWS if "age" in r), key=lambda r: r["age"]))   # (#1067)
 SOCIETY = tuple(r["name"] for r in ROWS if r.get("society"))      # the buildings of the Society tab (#1086)
@@ -436,7 +442,7 @@ class Replay:
         self.reached, self.researched = {}, {}  # player -> {age: game time (ms)}, researched technologies (#1067)
         self.learned = {}                       # player -> [(game time ms, technology name)] (#3785)
         self.vills, self.vhigh = {}, {}         # player -> live villagers (est.), the highest count (#1086)
-        self.smith = None                       # the shown rows of the Blacksmith tiers (#3786)
+        self.smith = {}                         # tag -> the shown rows of an upgrade display (#3786, #3790)
         self.graph = {}                         # value index -> the shown rows of its graph (#3448)
         self.army_shown = {}                    # player -> the shown army text (#3696)
         self.eco_rows = None                    # the shown rows of the economy text (#3756)
@@ -584,27 +590,44 @@ class Replay:
         return out
 
     def upgrade_view(self, t):
-        """The command of the Blacksmith tiers at game time t (ms, #3786): one text display in the sky below the
-        graphs, one row per player in its color, for example "Melee 2/3 · Archer 1/3". Only when the text changed,
-        and only after the first Blacksmith research of the game."""
+        """The commands of the upgrade displays at game time t (ms): the Blacksmith tiers (#3786), the economy tiers
+        (#3790) and the University researches (#3790). One text display per row group in the sky below the graphs, one
+        row per player in its color, for example "Melee 2/3 · Archer 1/3". Only when the text changed, and only after
+        the first research of the group. One display per group keeps each command below the RCON limit."""
         players = self.ranked(int(q) for q in self.data["players"] if q != "0")
-        done = {p: set(self.upgrades(p, t)) for p in players}
-        tiers = {p: [sum(n in done[p] for n in chain) for _, chain in SMITH] for p in players}
-        if self.smith is None and not any(map(any, tiers.values())):
-            return []
-        rows = [text("Blacksmith\n")] + [text(f"{self.label(p)[0]}: " + " · ".join(
-            f"{line} {k}/{len(chain)}" for (line, chain), k in zip(SMITH, tiers[p])) + "\n", self.label(p)[1])
-            for p in players]
-        if rows == self.smith:
-            return []
-        line, shown, self.smith = json.dumps(rows, ensure_ascii=False, separators=(",", ":")), self.smith, rows
-        if shown is not None:
-            return [f"data merge entity @e[type=text_display,tag={UPGRADE},limit=1] {{text:{line}}}"]
-        if getattr(self, "view", None) is None:
-            self.overview()                                         # it sets the place of the overview
-        y, c = int(self.view.split()[1]) + 12 - 4 * 4, f"{self.n / 2:.1f}"   # one step below the lowest graph
-        return [f"summon text_display {c} {min(319, y)} {c} {{text:{line},billboard:\"center\","
-                f'shadow:1b,line_width:1000,Tags:["{UPGRADE}"]}}']
+        done = {p: self.upgrades(p, t) for p in players}
+        tiers = lambda lines: {p: [sum(n in done[p] for n in chain) for _, chain in lines] for p in players}
+        groups = [(UPGRADE, "Blacksmith", SMITH, tiers(SMITH)), (UPGRADE_ECO, "Economy", ECO_LINES, tiers(ECO_LINES))]
+        uni = {p: [TECH_ROW[n]["label"] for n in done[p] if TECH_ROW.get(n, {}).get("building") == "UNIVERSITY"]
+               for p in players}
+        out, y0 = [], None
+        for k, (tag, title, lines_, count) in enumerate(groups + [(UPGRADE_UNI, "University", None, uni)]):
+            if lines_ is None:
+                texts = {p: ", ".join(count[p][:UNI_SHOWN] + ([f"+{len(count[p]) - UNI_SHOWN}"] if len(count[p]) > UNI_SHOWN
+                                                              else [])) for p in players}
+                progress = any(count.values())
+            else:
+                texts = {p: " · ".join(f"{line} {k2}/{len(chain)}" for (line, chain), k2 in zip(lines_, count[p]))
+                         for p in players}
+                progress = any(map(any, count.values()))
+            if self.smith.get(tag) is None and not progress:
+                continue
+            rows = [text(title + "\n")] + [text(f"{self.label(p)[0]}: " + texts[p] + "\n", self.label(p)[1]) for p in players]
+            if rows == self.smith.get(tag):
+                continue
+            line, shown = json.dumps(rows, ensure_ascii=False, separators=(",", ":")), self.smith.get(tag)
+            self.smith[tag] = rows
+            if shown is not None:
+                out.append(f"data merge entity @e[type=text_display,tag={tag},limit=1] {{text:{line}}}")
+                continue
+            if y0 is None:
+                if getattr(self, "view", None) is None:
+                    self.overview()                                 # it sets the place of the overview
+                y0 = int(self.view.split()[1]) + 12 - 4 * 4         # one step below the lowest graph
+            c, y = f"{self.n / 2:.1f}", y0 - 4 * (len(players) + 1) * k    # each group one display below the one above
+            out.append(f"summon text_display {c} {max(0, min(319, y))} {c} {{text:{line},billboard:\"center\","
+                       f'shadow:1b,line_width:1000,Tags:["{tag}"]}}')
+        return out
 
     def ecoview(self):
         """The commands of the economy text at the current time (#3756): in the sky above the graphs, one row per player
