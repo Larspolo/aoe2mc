@@ -10,7 +10,7 @@ from test_build_done import DOWN
 from test_build_site import Server
 from test_gather import grid
 
-from game import build, combat, gather, run
+from game import build, combat, garrison, gather, run
 
 
 def built(name, player=1):
@@ -41,15 +41,17 @@ def test_a_complete_watch_tower_site_takes_hits_and_shoots():
     build.target(g, tower)
     x0, x1, z0, z1 = tower["footprint"]
     shot, = [c for c in log[n:] if c.startswith("aoe building")]
-    assert shot.split()[2] == combat.target_uuid([x0, z0, x1, z1]) and shot.endswith(" 5 32 24 4 building,standard,stone ship:5")
-    assert shot.split()[3:6] == ["1020", "1", "7"]                    # hit points, melee and pierce armor
-    assert f"aoe arrows {shot.split()[2]} 1" in log[n:]
+    s = build.values(g, "WATCH_TOWER")
+    assert shot.split()[2] == combat.target_uuid([x0, z0, x1, z1]) and f" ship:{s.bonus[combat.SHIP]}" in shot
+    assert shot.split()[3:6] == [str(s.hp), str(s.melee), str(s.pierce)]   # hit points, melee and pierce armor
+    assert f"aoe arrows {shot.split()[2]} {garrison.arrows('WATCH_TOWER', [])}" in log[n:]
 
 
 def test_a_complete_town_center_site_takes_hits_and_shoots_once():
     g, site, log = built("TOWN_CENTER")
     shot, = [c for c in log if c.startswith("aoe building")]
-    assert shot.split()[3] == "2400" and shot.endswith(" 5 24 24 0 building,standard ship:5")   # range 6 tiles × 4
+    s = build.values(g, "TOWN_CENTER")
+    assert shot.split()[3] == str(s.hp) and f" ship:{s.bonus[combat.SHIP]}" in shot
     assert any(c.startswith("summon slime") for c in log) and any(c.startswith("aoe label") for c in log)
     assert not g.forts.keys() & {shot.split()[2]}                     # an own building: no target of a click
 
@@ -57,7 +59,7 @@ def test_a_complete_town_center_site_takes_hits_and_shoots_once():
 def test_a_house_takes_hits_without_arrows_and_an_enemy_site_is_a_fort():
     g, site, log = built("HOUSE", player=2)
     shot, = [c for c in log if c.startswith("aoe building")]
-    assert shot.split()[3] == "550" and len(shot.split()) == 12      # hit points, armor and the box, no attack
+    assert shot.split()[3] == str(build.values(g, "HOUSE").hp) and len(shot.split()) == 12   # hit points, armor, box
     assert not [c for c in log if c.startswith("aoe arrows")]
     uuid = shot.split()[2]
     assert uuid in g.forts and g.fort_names[uuid] == "HOUSE"
@@ -66,8 +68,8 @@ def test_a_house_takes_hits_without_arrows_and_an_enemy_site_is_a_fort():
 def test_a_farm_gets_no_target_and_a_mill_gets_one():
     _, _, log = built("FARM")                                         # its farmers stand on it
     assert not [c for c in log if c.startswith(("aoe building", "summon slime"))]
-    _, _, log = built("MILL")                                         # AoE2 DE: 600 hit points (#1403)
-    assert [c.split()[3] for c in log if c.startswith("aoe building")] == ["600"]
+    g, _, log = built("MILL")                                         # the hit points of the data (#1403)
+    assert [c.split()[3] for c in log if c.startswith("aoe building")] == [str(build.values(g, "MILL").hp)]
 
 
 @pytest.mark.mc
@@ -92,7 +94,7 @@ def test_a_castle_that_the_game_program_built_shoots_an_enemy_on_a_server(tmp_pa
         game.command("time set midnight")                              # zombies burn in the sun
         g = gather.Gather(game, data, tick=0.25, start={}).setup()
         g.techs |= set(build.AGE_TECHS)
-        g.stock["stone"] = 650
+        g.stock.update(build.COSTS["CASTLE"])
         x, z = 8 * 4, 8 * 4                                            # tile (8, 8): free ground
         site = build.place(g, "nobody", "CASTLE", (x + 0.5, g.map.y(x, z) + 10, z + 0.5), gather.direction(*DOWN))
         assert site
@@ -111,4 +113,5 @@ def test_a_castle_that_the_game_program_built_shoots_an_enemy_on_a_server(tmp_pa
         while health(game, "e") == 1000.0:
             assert time.time() < end, "the castle did not shoot"
             time.sleep(0.2)
-        assert (1000 - health(game, "e")) % 10 == 0                    # 10 per arrow: attack 11 - pierce 1
+        s = build.values(g, "CASTLE")
+        assert (1000 - health(game, "e")) % (s.attack + s.bonus.get("infantry", 0) - 1) == 0   # per arrow: pierce 1

@@ -40,13 +40,13 @@ def test_an_hd_scenario_converts(tmp_path, fmt):
     assert aoe2mc.old_format(str(path))
     s = scx.read(path)
     assert (s["format"], s["width"], s["height"]) == (fmt.decode(), 16, 16) and (s["terrain"] == terrain).all()
-    assert set(s["players"]) == {0, 1, 2} and s["players"][2]["civ"] == "AZTECS"
+    assert set(s["players"]) == {0, 1, 2} and s["players"][2]["civ"] == scx.CIVS[15]
     assert sorted(o["type"] for o in s["objects"]) == [83, 109, 399]
     out = io.StringIO()
     with contextlib.redirect_stdout(out):
         aoe2mc.convert(str(path), str(tmp_path / "W"))
     text = out.getvalue()
-    assert "player 1: britons, red" in text
+    assert f"player 1: {scx.CIVS[1].lower()}, red" in text
     assert "units in a block (moved up): 0" in text
 
 

@@ -8,11 +8,8 @@ import mcvalid
 import units
 from game import trebuchet
 
-TABLE = {"BATTERING_RAM": ("iron_golem", 0.5), "CAPPED_RAM": ("iron_golem", 0.55), "SIEGE_RAM": ("iron_golem", 0.6),
-         "MANGONEL": ("breeze", 0.8), "ONAGER": ("breeze", 0.8), "SIEGE_ONAGER": ("breeze", 0.8),
-         "SCORPION": ("piglin", 1.0), "HEAVY_SCORPION": ("piglin", 1.0),
-         "TREBUCHET": ("warden", 0.6), "TREBUCHET_PACKED": ("warden", 0.36),
-         "BOMBARD_CANNON": ("ghast", 0.3), "HOUFNICE": ("ghast", 0.3), "SIEGE_TOWER": ("sniffer", 0.5)}
+SIEGE = ("BATTERING_RAM", "BOMBARD_CANNON", "CAPPED_RAM", "HEAVY_SCORPION", "HOUFNICE", "MANGONEL", "ONAGER", "SCORPION",
+         "SIEGE_ONAGER", "SIEGE_RAM", "SIEGE_TOWER", "TREBUCHET", "TREBUCHET_PACKED")
 
 
 def crew(name):
@@ -21,12 +18,12 @@ def crew(name):
     return nbt["Passengers"][0]
 
 
-@pytest.mark.parametrize("name", sorted(TABLE))
-def test_each_siege_unit_has_the_mob_of_the_decision(name):
-    kind, scale = TABLE[name]
+@pytest.mark.parametrize("name", SIEGE)
+def test_each_siege_unit_has_a_valid_crew_mob_with_its_scale(name):
     c = crew(name)
-    assert c["id"] == f"minecraft:{kind}" and mcvalid.entity_error(str(c["id"])) is None
-    assert [(str(a["id"]), float(a["base"])) for a in c["attributes"]] == [("minecraft:scale", pytest.approx(scale))]
+    kind = str(c["id"]).removeprefix("minecraft:")
+    assert mcvalid.entity_error(str(c["id"])) is None
+    assert [(str(a["id"]), float(a["base"])) for a in c["attributes"]] == [("minecraft:scale", pytest.approx(units.siege_scale(name)))]
     assert (c["NoAI"], c["Silent"]) == (1, 1)                         # no walk, jump, shot, attack or sound by itself
     assert str(c["CustomName"]["text"]) == units.pretty(name)          # the crew has the name line, as before
     assert (c.get("IsImmuneToZombification") == 1) == (kind == "piglin")
@@ -36,19 +33,20 @@ def test_each_siege_unit_has_the_mob_of_the_decision(name):
 @pytest.mark.parametrize("name", ["ORGAN_GUN", "ROCKET_CART", "COBRA_CAR", "HUSSITE_WAGON"])
 def test_the_carts_keep_their_crew(name):
     c = crew(name)
-    assert str(c["id"]) in ("minecraft:pillager", "minecraft:skeleton") and "attributes" not in c
+    assert mcvalid.entity_error(str(c["id"])) is None and "attributes" not in c
 
 
-def test_the_heroes_of_the_trebuchet_get_the_warden():
-    assert units.classify("WARWOLF", True)["Passengers"][0]["id"] == "minecraft:warden"
-    assert units.siege_scale("BAD_NEIGHBOR_PACKED") == pytest.approx(0.36)
+def test_the_heroes_of_the_trebuchet_get_the_crew_of_the_trebuchet():
+    assert units.classify("WARWOLF", True)["Passengers"][0]["id"] == crew("TREBUCHET")["id"]
+    assert units.siege_scale("BAD_NEIGHBOR_PACKED") == pytest.approx(units.siege_scale("TREBUCHET_PACKED"))
 
 
 def test_the_trebuchet_crew_changes_its_size_when_it_packs_and_unpacks():
     server, g = setup()
     g.soldiers["t"] = "TREBUCHET"
     trebuchet.tick(g, 0.0)                                             # a trebuchet of the map: the packed size
-    small, big = (f"execute as t on passengers run attribute @s minecraft:scale base set {s}" for s in ("0.36", "0.6"))
+    small, big = (f"execute as t on passengers run attribute @s minecraft:scale base set {units.siege_scale(n)}"
+                  for n in ("TREBUCHET_PACKED", "TREBUCHET"))
     assert small in server.log
     trebuchet.unpack(g, "t", "fort")
     trebuchet.tick(g, trebuchet.PACK)

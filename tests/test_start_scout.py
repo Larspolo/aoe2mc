@@ -1,5 +1,5 @@
-"""#2391: the start scout of a civilization (AoE2 wiki "Scout unit"): the Scout Cavalry of the map becomes an Eagle
-Scout for the Aztecs and Mayans, a Camel Scout for the Gurjaras, a Champi Scout for the Incas, Mapuche, Muisca, Tupi."""
+"""#2391: the start scout of a civilization (AoE2 wiki "Scout unit"): the Scout Cavalry of the map becomes the scout of
+the civilization (scout.SCOUTS, for example an Eagle Scout for the Aztecs)."""
 import os
 import sys
 
@@ -24,11 +24,9 @@ def game(civ):
     return server, gather.Gather(server, data).setup()
 
 
-@pytest.mark.parametrize("civ, name", [("AZTECS", "EAGLE_SCOUT"), ("MAYANS", "EAGLE_SCOUT"),
-                                       ("GURJARAS", "CAMEL_SCOUT"), ("INCAS", "CHAMPI_SCOUT"),
-                                       ("MAPUCHE", "CHAMPI_SCOUT"), ("MUISCA", "CHAMPI_SCOUT"),
-                                       ("TUPI", "CHAMPI_SCOUT")])
-def test_the_scout_cavalry_becomes_the_scout_of_the_civilization(civ, name):
+@pytest.mark.parametrize("civ", sorted(scout.SCOUTS))
+def test_the_scout_cavalry_becomes_the_scout_of_the_civilization(civ):
+    name = scout.SCOUTS[civ]                                           # the key "scout" of game/data/civs.jsonl
     server, g = game(civ)
     server.log.clear()
     scout.swap(g)

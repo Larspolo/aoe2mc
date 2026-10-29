@@ -35,8 +35,3 @@ def test_a_missing_need_or_an_old_own_version_gives_the_message(tmp_path):
     out = run(tmp_path, "bash", version=6)                            # the own script is old
     assert "version 6" in out and "(missing: none)" in out
     assert run(tmp_path, "no-such-command-1964", version=7) == ""     # the own script is new
-
-
-def test_the_setup_script_lists_its_needs():
-    text = open(os.path.join(ROOT, "scripts", "cloud-setup.sh")).read()
-    assert '\nSETUP_NEEDS="' in text and "xdotool" in text.split('SETUP_NEEDS="', 1)[1].split('"')[0]

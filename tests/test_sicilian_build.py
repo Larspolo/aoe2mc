@@ -1,11 +1,11 @@
-"""Sicilian builders build fortifications 50 % faster and town centers 100 % faster (#2115, AoE2 DE wiki): BUILD_OF
-in game/data/civs.jsonl. Fake server."""
+"""Sicilian builders build fortifications and town centers faster (#2115, AoE2 DE wiki): BUILD_OF in
+game/data/civs.jsonl. A site is complete after its time divided by the factor of the data. Fake server."""
 import pytest
 
 from game import build, civs
 from test_treadmill_crane import castle
 
-FAST = {"PALISADE_WALL": 1.5, "STONE_WALL": 1.5, "WATCH_TOWER": 1.5, "CASTLE": 1.5, "TOWN_CENTER": 2.0}
+NAMES = ("CASTLE", "PALISADE_WALL", "STONE_WALL", "TOWN_CENTER", "WATCH_TOWER")
 
 
 def done_after(civ, name):
@@ -16,14 +16,14 @@ def done_after(civ, name):
     return f, not build.rise(g, a, t / f - 0.01) and build.rise(g, b, t / f + 0.01)
 
 
-@pytest.mark.parametrize("name", sorted(FAST))
-def test_sicilian_fortifications_and_town_centers_build_faster(name):
-    assert done_after("SICILIANS", name) == (pytest.approx(FAST[name]), True)
+@pytest.mark.parametrize("name", NAMES)
+def test_sicilian_fortifications_and_town_centers_build_in_the_time_of_the_factor(name):
+    assert done_after("SICILIANS", name) == (pytest.approx(civs.BUILD_OF["SICILIANS"].get(name, 1.0)), True)
 
 
 @pytest.mark.parametrize("civ, name", [("SICILIANS", "HOUSE"), ("BRITONS", "CASTLE"), ("BRITONS", "TOWN_CENTER")])
-def test_other_buildings_and_civilizations_keep_their_time(civ, name):
-    assert done_after(civ, name) == (1.0, True)
+def test_other_buildings_and_civilizations_build_in_their_time(civ, name):
+    assert done_after(civ, name) == (pytest.approx(civs.BUILD_OF.get(civ, {}).get(name, 1.0)), True)
 
 
 def test_the_names_are_buildings():

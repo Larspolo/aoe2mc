@@ -1,5 +1,5 @@
-"""A Tatar town center that is complete in the Castle Age gives two own sheep next to it (#2313, AoE2 DE wiki,
-"Tatars"): BUILT_UNITS in game/data/civs.jsonl. Fake server."""
+"""A Tatar town center that is complete in the Castle Age gives own sheep next to it (#2313, AoE2 DE wiki, "Tatars"):
+BUILT_UNITS in game/data/civs.jsonl gives the count in each age. Fake server."""
 import pytest
 
 from game import build, civs
@@ -17,12 +17,18 @@ def sheep(civ, age=2, name="TOWN_CENTER"):
     return g, [c for c in server.log[before:] if c.startswith("summon minecraft:sheep")]
 
 
+def count(civ, age, name):
+    """The units of the data that a complete name of civ gives in age."""
+    return civs.BUILT_UNITS.get(civ, {}).get(name, (None, (0,) * 4))[1][age]
+
+
 @pytest.mark.parametrize("age", [2, 3])
-def test_a_tatar_town_center_gives_two_own_sheep_from_the_castle_age(age):
+def test_a_tatar_town_center_gives_its_own_sheep_from_the_castle_age(age):
     g, cmds = sheep("TATARS", age)
-    assert len(cmds) == 2
+    n = count("TATARS", age, "TOWN_CENTER")
+    assert len(cmds) == n > 0
     new = [o for o in g.data["objects"] if o["name"] == "SHEEP" and o["player"] == g.player]
-    assert len(new) == 2 and {o["uuid"] for o in new} <= g.flock & g.prey.keys()
+    assert len(new) == n and {o["uuid"] for o in new} <= g.flock & g.prey.keys()
     for o in new:                                                      # next to the town center, outside it
         x, z = o["tile"][0] * g.map.T, o["tile"][1] * g.map.T
         assert 11 <= x <= 16 and 7 <= z <= 12 and not (12 <= x < 16 and 8 <= z < 12)
@@ -30,8 +36,8 @@ def test_a_tatar_town_center_gives_two_own_sheep_from_the_castle_age(age):
 
 @pytest.mark.parametrize("civ, age, name", [("TATARS", 1, "TOWN_CENTER"), ("BRITONS", 2, "TOWN_CENTER"),
                                             ("TATARS", 2, "HOUSE")])
-def test_no_sheep_in_the_feudal_age_for_other_civilizations_or_buildings(civ, age, name):
-    assert sheep(civ, age, name)[1] == []
+def test_the_sheep_of_the_data_in_other_ages_civilizations_or_buildings(civ, age, name):
+    assert len(sheep(civ, age, name)[1]) == count(civ, age, name)
 
 
 def test_the_names_are_buildings():

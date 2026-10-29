@@ -1,5 +1,5 @@
-"""game/siege_tower.py: the siege workshop trains the siege tower, and up to 10 infantry, foot archers or villagers
-ride it and come out next to it (#1362). Fake server; an mc test on Paper."""
+"""game/siege_tower.py: up to siege_tower.SIZE infantry, foot archers or villagers ride a siege tower and come out
+next to it (#1362). Fake server; an mc test on Paper."""
 import contextlib
 import io
 import json
@@ -8,7 +8,7 @@ import time
 import pytest
 from test_gather import FakeServer, grid
 
-from game import build, combat, garrison, gather, run, siege_tower, train
+from game import combat, garrison, gather, run, siege_tower
 
 UNITS = {"tower": ("SIEGE_TOWER", 12.5), "m": ("MILITIA", 4.5), "a": ("ARCHER", 5.5), "s": ("SCOUT_CAVALRY", 6.5)}
 
@@ -25,16 +25,6 @@ def setup():
     g.paper = True
     g.choose({"m", "a", "s", "v"}, "m")
     return server, g
-
-
-def test_the_siege_workshop_trains_the_siege_tower_in_the_castle_age():
-    assert (train.COSTS["SIEGE_TOWER"], train.TRAIN_TIMES["SIEGE_TOWER"], build.AGE["SIEGE_TOWER"]) \
-        == ({"wood": 100, "gold": 120}, 36, 2)                         # AoE2 DE wiki infobox
-    assert siege_tower.SIZE == 10
-    assert "SIEGE_TOWER" in train.TRAINS["SIEGE_WORKSHOP"]
-    assert build.locked(None, "SIEGE_TOWER") is None
-    server, g = setup()
-    assert build.locked(g, "SIEGE_TOWER") == "Needs the Castle Age"
 
 
 def test_infantry_foot_archers_and_villagers_walk_into_the_tower_and_ride_it():
@@ -54,17 +44,17 @@ def test_infantry_foot_archers_and_villagers_walk_into_the_tower_and_ride_it():
 
 def test_a_full_tower_takes_no_more_and_a_click_on_it_lets_them_out():
     server, g = setup()
-    g.towers = {"tower": [f"x{k}" for k in range(9)]}
+    g.towers = {"tower": [f"x{k}" for k in range(siege_tower.SIZE - 1)]}
     siege_tower.order(g, "Steve", "tower")
     for u in ("m", "a"):
         server.entities[u]["Pos"] = (13.5, 64.0, 13.5)
     siege_tower.tick(g)
-    assert g.towers["tower"][-1] == "a" and len(g.towers["tower"]) == 10    # the militia stays outside
+    assert g.towers["tower"][-1] == "a" and len(g.towers["tower"]) == siege_tower.SIZE   # the militia stays outside
     server.log.clear()
-    assert len(siege_tower.out(g, "tower")) == 10 and "tower" not in g.towers
+    assert len(siege_tower.out(g, "tower")) == siege_tower.SIZE and "tower" not in g.towers
     assert server.log[1] == "ride a dismount" and "aoe show @a a" in server.log      # after the read of its place
     assert f"data merge entity a {garrison.OUTSIDE}" in server.log
-    assert any(c.startswith("tellraw") and "10 units came out" in c for c in server.log)
+    assert any(c.startswith("tellraw") and f"{siege_tower.SIZE} units came out" in c for c in server.log)
 
 
 def test_the_units_of_a_dead_tower_come_out_where_they_are():

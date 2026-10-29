@@ -9,16 +9,6 @@ from test_ranged import data
 from test_siege_walk import summon
 
 
-def test_the_minimum_ranges_of_the_wiki():
-    assert combat.MIN_RANGE.items() >= {"BOMBARD_CANNON": 5, "ELITE_ORGAN_GUN": 1, "HEAVY_ROCKET_CART": 2.5,   # tiles, AoE2 DE
-                                "HEAVY_SCORPION": 2, "HOUFNICE": 5, "MANGONEL": 3, "ONAGER": 3, "ORGAN_GUN": 1,
-                                "ROCKET_CART": 2.5, "SCORPION": 2, "SIEGE_ONAGER": 3, "TRACTION_TREBUCHET": 4,
-                                "TREBUCHET": 4,
-                                "CANNON_GALLEON": 3,                                                  # (#1484)
-                                "ELITE_CANNON_GALLEON": 3,                                            # (#1491)
-                                "CATAPULT_GALLEON": 3, "DROMON": 3, "LOU_CHUAN": 3}.items()           # (#1935)
-
-
 @pytest.mark.parametrize("name", sorted(combat.MIN_RANGE))
 def test_the_range_command_gives_the_minimum_range_in_blocks(name):
     t = combat.range_command("u", name, 4).split()

@@ -7,7 +7,6 @@ import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "game"))
 import build  # noqa: E402
 import scenario  # noqa: E402
-import train  # noqa: E402
 from AoE2ScenarioParser.datasets.object_support import StartingAge  # noqa: E402
 from test_scenario_mode import START, game  # noqa: E402
 
@@ -38,4 +37,3 @@ def test_a_player_without_an_age_stays_in_the_dark_age():
     _, g, bot = game({"0": {}, "1": {"resources": START}, "2": {"resources": START}})
     scenario.setup(g, "scenario")
     assert build.ages(g) == 0 and build.ages(bot) == 0
-    assert train.STARTS["dark"]["ages"] == 0

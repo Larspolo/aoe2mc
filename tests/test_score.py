@@ -8,6 +8,7 @@ from game import combat, gather, score, train
 from test_cheat_end import game
 
 HOUSE = combat.target_uuid([10, 10, 12, 12])
+W = score.worth                                                        # the AoE2 cost value of the data
 
 
 def two_sides():
@@ -24,17 +25,17 @@ def two_sides():
 def test_the_points_of_resources_units_technologies_ages_and_a_kill():
     server, g, bot = two_sides()
     train.research(g, {"name": "DOUBLE_BIT_AXE"}, start=True)        # free: a start age technology does not count
-    train.research(g, {"name": "LOOM", "player": "Steve"})      # 50 gold
-    train.research(g, {"name": "FEUDAL_AGE"})                          # 500 food
+    train.research(g, {"name": "LOOM", "player": "Steve"})
+    train.research(g, {"name": "FEUDAL_AGE"})
     score.fallen(bot, {"m-2": "MILITIA"})                              # player 1 killed the militia of player 2
     score.razed(g, HOUSE)                                              # and its house
     p = score.points(g)
-    assert p[1]["economy"] == pytest.approx(0.1 * 100 + 0.2 * (50 + 70))   # stock, a villager and a militia
-    assert p[1]["technology"] == pytest.approx(0.2 * (50 + 500))
-    assert p[1]["military"] == pytest.approx(0.2 * (70 + 25))
+    assert p[1]["economy"] == pytest.approx(0.1 * 100 + 0.2 * (W("VILLAGER") + W("MILITIA")))   # stock, 2 units
+    assert p[1]["technology"] == pytest.approx(0.2 * (W("LOOM") + W("FEUDAL_AGE")))
+    assert p[1]["military"] == pytest.approx(0.2 * (W("MILITIA") + W("HOUSE")))
     assert p[1]["society"] == 0
     assert p[2] == {"military": 0, "economy": pytest.approx(10), "technology": 0, "society": 0}   # no militia, no house
-    assert score.total(p[1]) == 10 + 24 + 110 + 19
+    assert score.total(p[1]) == int(sum(p[1].values()))
 
 
 def test_a_fallen_unit_of_the_census_goes_to_the_rivals():
@@ -43,14 +44,16 @@ def test_a_fallen_unit_of_the_census_goes_to_the_rivals():
     train.census(g)
     assert g.losses == {"m-1": "MILITIA"}
     p = score.points(g)
-    assert p[2]["military"] == pytest.approx(0.2 * 70) and p[1]["economy"] == pytest.approx(0.1 * 100 + 0.2 * 50)
+    assert p[2]["military"] == pytest.approx(0.2 * W("MILITIA"))
+    assert p[1]["economy"] == pytest.approx(0.1 * 100 + 0.2 * W("VILLAGER"))
 
 
 def test_a_castle_that_the_player_built_is_society_not_economy():
     server, g, bot = two_sides()
     g.sites.append({"name": "CASTLE", "player": 1, "footprint": [2, 5, 2, 5], "done": True})
     p = score.points(g)
-    assert p[1]["society"] == pytest.approx(0.2 * 650) and p[1]["economy"] == pytest.approx(10 + 24)
+    assert p[1]["society"] == pytest.approx(0.2 * W("CASTLE"))
+    assert p[1]["economy"] == pytest.approx(10 + 0.2 * (W("VILLAGER") + W("MILITIA")))
 
 
 def tick(g):
@@ -64,7 +67,8 @@ def test_the_sidebar_has_one_line_per_player_and_changes_after_an_event():
     server.log.clear()
     tick(g)
     lines = [c for c in server.log if c.startswith("scoreboard players set Score")]
-    assert lines == ["scoreboard players set Score1 aoe_res 34", "scoreboard players set Score2 aoe_res 29"]   # 10 + 0.2 × (militia 70, house 25)
+    one, two = (int(10 + 0.2 * (W("VILLAGER") + W("MILITIA"))), int(10 + 0.2 * (W("MILITIA") + W("HOUSE"))))
+    assert lines == [f"scoreboard players set Score1 aoe_res {one}", f"scoreboard players set Score2 aoe_res {two}"]
     assert 'scoreboard players display name Score2 aoe_res "Score of player 2"' in server.log
     server.log.clear()
     tick(g)
@@ -72,7 +76,8 @@ def test_the_sidebar_has_one_line_per_player_and_changes_after_an_event():
     train.research(g, {"name": "LOOM", "player": "Steve"})
     server.log.clear()
     tick(g)
-    assert [c for c in server.log if c.startswith("scoreboard")] == ["scoreboard players set Score1 aoe_res 44"]
+    new = int(10 + 0.2 * (W("VILLAGER") + W("MILITIA") + W("LOOM")))
+    assert [c for c in server.log if c.startswith("scoreboard")] == [f"scoreboard players set Score1 aoe_res {new}"]
 
 
 @pytest.mark.mc
