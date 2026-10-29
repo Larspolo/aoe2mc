@@ -493,7 +493,7 @@ def generate(text, seed, players=2, size=None, warn=None, teams=None):
     elevation = lower_to_water(terrain, elevation)
     ridges = cliffs(sections.get("CLIFF_GENERATION", ()), terrain, starts, consts, rng, warn)   # draws before objects()
     found = []                                     # one line per object part, so that parallel parts do not conflict
-    found += objects(sections.get("OBJECTS_GENERATION", ()), consts, terrain, starts, rng, warn, owner, ridges)
+    found += objects(sections.get("OBJECTS_GENERATION", ()), consts, terrain, starts, rng, warn, owner, ridges, layer)
     found += trees(terrain)
     found += ridges
     return {"size": n, "terrain": terrain.tolist(), "elevation": elevation.tolist(), "layer": layer.tolist(),
@@ -533,7 +533,7 @@ def circle(setup, players, teams, seed):
     return rng.permutation(order).tolist()
 
 
-def objects(cmds, consts, terrain, starts, rng, warn, owner=None, ridges=()):
+def objects(cmds, consts, terrain, starts, rng, warn, owner=None, ridges=(), layer=None):
     """The objects of the create_object commands of <OBJECTS_GENERATION> (#3855): number_of_objects (default 1) on
     random free tiles, set_place_for_every_player: that many for each player (its own, or Gaia with
     set_gaia_object_only), min_distance_to_players and max_distance_to_players: tiles from the origin of the player
@@ -544,6 +544,7 @@ def objects(cmds, consts, terrain, starts, rng, warn, owner=None, ridges=()):
     default 1), place_on_forest_zone (the tiles next to a forest), actor_area with actor_area_radius (default 1) marks
     the tiles around each object for a later avoid_actor_area, second_object: one more object on each tile (#3858).
     avoid_cliff_zone N (tiles from a cliff, default 1) and the cliff tiles themselves (#4131, `ridges`: the cliffs).
+    layer_to_place_on T: only the tiles of the land layer T (layer: the land layer of each tile, #4132).
     Never on water (only a fish or a ship), a forest, a cliff or another object; an object with no free tile is missing."""
     import aoe2mc
     kinds = aoe2mc.object_kinds(old=False)
@@ -584,6 +585,8 @@ def objects(cmds, consts, terrain, starts, rng, warn, owner=None, ridges=()):
         elif k != 1:
             groups = max(1, round(groups * k))
         ground = (terrain == value(attrs["terrain_to_place_on"][0], consts)) if "terrain_to_place_on" in attrs else wet == water
+        if "layer_to_place_on" in attrs and layer is not None:
+            ground = ground & (layer == value(attrs["layer_to_place_on"][0], consts))
         gap = value(attrs["min_distance_group_placement"][0], consts) if "min_distance_group_placement" in attrs else 0
         zones = value(attrs["max_distance_to_other_zones"][0], consts) if "max_distance_to_other_zones" in attrs else 0
         forest = np.isin(terrain, list(FOREST_TREES))
@@ -644,7 +647,7 @@ def objects(cmds, consts, terrain, starts, rng, warn, owner=None, ridges=()):
                                "terrain_to_place_on", "min_distance_group_placement", "max_distance_to_other_zones",
                                "set_scaling_to_map_size", "set_scaling_to_player_number", "avoid_forest_zone",
                                "place_on_forest_zone", "actor_area", "actor_area_radius", "avoid_actor_area",
-                               "second_object", "avoid_cliff_zone"}:
+                               "second_object", "avoid_cliff_zone", "layer_to_place_on"}:
             warn(f"create_object: {a} is not read yet")
     return out
 
