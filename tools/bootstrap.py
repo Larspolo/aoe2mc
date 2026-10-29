@@ -5,7 +5,7 @@
 Copies the generic files of `framework/files.txt` (#4192; the specific files: the table "Generic and specific files"
 in `docs/SYSTEM.md`), with the repository, the owner login and the project name of the new project in place of aoe2mc. Writes
 `agent.toml` with the new values and placeholder commands, and short starts of the specific files that the generic
-files need (`STUBS`). Prints the setup steps of the owner (`docs/SYSTEM.md`) and the specific files that stay to do.
+files need (`STUBS`: the files of `framework/template/` that the owner fills, #4196). Prints the setup steps of the owner (`docs/SYSTEM.md`) and the specific files that stay to do.
 `--github` also makes the labels of `.github/labels.txt` and the status issue with `gh api` (REST).
 """
 import argparse
@@ -23,108 +23,8 @@ SYSTEM = os.path.join(ROOT, CONFIG["docs"]["system"])
 FILES = os.path.join(ROOT, "framework", "files.txt")
 ROW = re.compile(r"^\| `([^`]+)` \| (generic|specific|steering) \|", re.M)
 
-CONFIG_TOML = """# Project values of the agent system (#905). The tools in tools/ read this file (tools/agent_config.py).
+TEMPLATE = os.path.join(ROOT, "framework", "template")   # the files that the owner fills (#4196)
 
-repo = "{repo}"
-owner = "{owner}"
-branch = "{branch}"
-
-[status]
-issue = 1
-label = "agent-status"
-paused = "paused"
-
-[pacing]
-max_runs = 16                   # the most runs at one time (tools/usage.py)
-max_waiting_prs = 10            # flow brake: at this many old agent PRs the pacer starts only 1 repair run
-max_ci_queue = 5                # flow brake: at this many queued CI runs the pacer starts no run
-weights = {{ haiku = 0.25 }}     # a lane run in Opus runs (start value)
-pacer = "workflow"              # pacer.yml starts the runs (tools/pacer.py); another value stops its loop
-trigger = ""                    # the ID of the scheduled task "NAME autopilot": docs/OPERATOR.md, section 3
-
-[review]                        # the process review (`improve` skill): merged PRs, never hours
-gap = 80                        # merged PRs: the first gap, and the reset when the result of the reviews turns
-min_gap = 10                    # a review with a change halves a gap up to `gap`, down to this
-max_gap = 640                   # a review with no change doubles a gap from `gap` up, up to this
-owner_gap = 20                  # the gap when an owner session merged a PR since the last review
-
-[commands]                      # change these to the commands of the project
-install = "python3 -m pip install -r requirements-dev.txt"
-lint = "ruff check ."
-fast = "python3 -m pytest"
-slow = "python3 -m pytest -m slow"
-server = ""
-
-[docs]
-system = "docs/SYSTEM.md"
-steering = "docs/STEERING.md"
-learnings = "docs/LEARNINGS.md"
-roadmap = "steering/project/ROADMAP.md"
-"""
-
-CI = """name: CI
-
-# Quick checks on each PR and on main: Automerge merges a green agent PR (workflow name "CI", job "quick").
-on:
-  push:
-    branches: [{branch}]
-  pull_request:
-  workflow_dispatch:
-
-permissions:
-  contents: read
-
-jobs:
-  quick:
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-      - run: {install}
-      - name: Lint
-        run: {lint}
-      - name: Fast tests
-        run: {fast}
-"""
-
-PYPROJECT = """[tool.ruff]
-line-length = 130
-
-[tool.ruff.lint]
-select = ["F"]                  # the copied tools pass these rules; add more rules for the project code
-
-[tool.pytest.ini_options]
-testpaths = ["tests"]
-"""
-
-CLOUD_SETUP = """#!/bin/bash
-# The setup script of the cloud environment: the owner pastes it into the environment settings (docs/SYSTEM.md).
-# Install here what the project needs before a session starts (system packages, tools).
-set -euo pipefail
-SETUP_VERSION=1   # raise it with each change: the SessionStart hook compares it with /etc/{name}-setup-version
-SETUP_NEEDS=""    # the commands or paths that it installs: the hook checks them with the setup script of another project
-
-python3 -m pip install --quiet -r requirements-dev.txt || true
-echo "$SETUP_VERSION" > /etc/{name}-setup-version || true
-"""
-
-VERIFY = """---
-name: verify
-description: Verify a change to {name} before commit. Selects the check level from the type of change. Use before each commit and when a ticket says "verify".
----
-
-# Verify a change
-
-## Level 1: lint and fast tests (each change)
-
-    {lint}
-    {fast}
-
-Both must pass before the commit. Add the next levels of the project here (slow tests, a run of the program).
-"""
 
 # The prompt of the scheduled task: only the command, so git controls the rules (`.claude/skills/scheduled/SKILL.md`,
 # owner, 2026-10-29). Text after it would become a part of the skill argument. The lane tasks: `/scheduled max lane L`.
@@ -138,30 +38,22 @@ def label_result(call, r):
     return ("ok  " if ok else "FAIL ") + " ".join(call[:3]) + ("" if ok else f": {r.stderr.strip()}")
 
 
-STUBS = {   # specific files that the generic files need, as a short start for the new project
-    "agent.toml": CONFIG_TOML,
-    ".github/workflows/ci.yml": CI,
-    ".claude/skills/verify/SKILL.md": VERIFY,
-    "pyproject.toml": PYPROJECT,
-    "requirements-dev.txt": "numpy      # tools/health.py\npytest\nruff\n",
-    "scripts/cloud-setup.sh": CLOUD_SETUP,
-    "tests/test_smoke.py": '"""A first test, so that pytest finds one (no test: exit 5, CI red)."""\nimport tomllib\n\n\n'
-                           'def test_agent_toml_has_the_repository():\n'
-                           '    assert "/" in tomllib.load(open("agent.toml", "rb"))["repo"]\n',
-    ".gitattributes": "# Ticket runs only add lines here, so a merge keeps the new lines of both sides.\n"
-                      "docs/LEARNINGS.md merge=union\n",
-    "CLAUDE.md": "# {name} – guide for Claude Code\n\nThe owner is **{owner}**. The agent system: `docs/SYSTEM.md`.\n"
-                 "The project values: `agent.toml`.\n\n## Commands\n\nTODO: install, lint, tests.\n\n## Code map\n\n"
-                 "TODO\n\n{generic}\n@docs/LEARNINGS.md\n",
-    "docs/LEARNINGS.md": "# Learnings\n\nThe agent writes here what it learned the hard way. Each line must save time "
-                         "in a later session.\n\n## Environment and libraries\n\n## Code\n",
-    "docs/ENVIRONMENT.md": "# Environment\n\nThe project part of the cloud environment of {name} (`docs/STEERING.md`).\n\n"
-                           "## Network\n\nTODO: the hosts that the tests need outside the package managers.\n\n"
-                           "## Setup script\n\nTODO: the tools that `scripts/cloud-setup.sh` installs.\n",
-    "steering/project/ROADMAP.md": "# Roadmap\n\nThe goals of {name} and their features: done (`[x]`) or missing (`[ ]`). "
-                       "The `roadmap` skill makes the next epic from a missing feature.\n\n## 1. TODO\n\n"
-                       "- [ ] `goal:feature` TODO\n",
-}
+CACHE = {".ruff_cache", "__pycache__", ".pytest_cache"}   # tool caches in the template: no part of it
+
+
+def template(root=TEMPLATE):
+    """{path: text} of the files of framework/template: the specific files that the generic files need, with comments
+    that say what to fill (#4196)."""
+    return {os.path.relpath(os.path.join(d, f), root): open(os.path.join(d, f)).read()
+            for d, _, fs in sorted(os.walk(root)) if not CACHE & set(d.split(os.sep)) for f in sorted(fs)}
+
+
+def fill(text, values):
+    """The text with each {key} of values replaced; other braces (TOML tables, shell) stay."""
+    return re.sub(r"\{(\w+)\}", lambda m: str(values.get(m[1], m[0])), text)
+
+
+STUBS = template()
 
 
 def table(text):
@@ -230,7 +122,7 @@ def bootstrap(target, repo, branch="main"):
         dst = os.path.join(target, path)
         os.makedirs(os.path.dirname(dst) or target, exist_ok=True)
         with open(dst, "w") as f:
-            f.write(rename(text.format(**values), repo, name, owner) if path != "agent.toml" else text.format(**values))
+            f.write(rename(fill(text, values), repo, name, owner) if path != "agent.toml" else fill(text, values))
         if path.endswith(".sh"):
             os.chmod(dst, 0o755)
         written.append(path)
