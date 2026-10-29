@@ -271,6 +271,40 @@ class Client:
     def key(self, name):
         self.xdo("key", name)
 
+    def pick(self, g, want, dists=(3, 5, 7), wait=2.0):
+        """Aim at want (a unit UUID, or the footprint rect of an own building) of the Gather g and right click it
+        (#2963). Try each stand point of aims() and click only when g.target() picks want: a ray past a unit can hit
+        the building behind it (#2945). Return the stand point, or None when no side hits it."""
+        if isinstance(want, str):
+            if not (feet := g.pos(want)):
+                return None
+            mid = (feet[0], feet[1] + 1.0, feet[2])                    # the body of the unit, not its feet
+        else:
+            mid = ((want[0] + want[1]) / 2, g.pos(self.name)[1] + 1.62, (want[2] + want[3]) / 2)
+        for stand, face in aims(mid, dists):
+            g.command(f"tp {self.name} {stand[0]:.2f} {stand[1]:.2f} {stand[2]:.2f} facing "
+                      f"{face[0]:.2f} {face[1]:.2f} {face[2]:.2f}")
+            time.sleep(0.5)
+            if (look := g.look(self.name)) and hits(g.target(*look, g.positions(sorted(g.pickable()))), want):
+                self.click(self.size[0] // 2, self.size[1] // 2, button=3)
+                time.sleep(wait)                                       # gather.HOLD: one click, no selection box
+                return stand
+        return None
+
+
+def aims(mid, dists=(3, 5, 7)):
+    """(stand feet, facing point) for each distance and 8 directions around mid, the point that the eye ray must
+    hit. tp ... facing aims the ray of the feet, so the facing point is 1.62 below mid (#1666)."""
+    x, y, z = mid
+    face = (x, y - 1.62, z)
+    return [((x + d * dx, y - 1.62, z + d * dz), face) for d in dists
+            for dx, dz in ((0, 1), (1, 1), (1, 0), (1, -1), (0, -1), (-1, -1), (-1, 0), (-1, 1))]
+
+
+def hits(target, want):
+    """True when the target of Gather.target() is want: a UUID, or the rect of a building."""
+    return bool(target) and target[1] == (want if isinstance(want, str) else tuple(want))
+
 
 def view_spec(v):
     try:
