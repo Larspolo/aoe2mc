@@ -118,6 +118,8 @@ PATH_FAR = 200              # cells per block of straight way that the search of
 # The walk speed of common units, tiles per game second (AoE2 DE), the ages and the Society buildings: one line per
 # name in data/replay.jsonl (#2034). A walk speed name is the start of the unit names.
 ROWS = table.load("replay.jsonl")
+RESEARCH_S = aoe2mc.RESEARCH_S | {r["label"]: r["time"] for r in table.load("train.jsonl")      # the book items: each
+                                  if r.get("item") == "book" and "time" in r}                       # research (#3738)
 SPEEDS = {r["name"]: r["walk"] for r in ROWS if "walk" in r}
 AGES = tuple(r["name"] for r in sorted((r for r in ROWS if "age" in r), key=lambda r: r["age"]))   # (#1067)
 SOCIETY = tuple(r["name"] for r in ROWS if r.get("society"))      # the buildings of the Society tab (#1086)
@@ -686,7 +688,7 @@ class Replay:
             if e["time"] <= t < end:
                 n = e.get("name") if e["kind"] == "queue" else e.get("technology")
                 if n:
-                    s = end - (aoe2mc.train_ms(n) if e["kind"] == "queue" else aoe2mc.RESEARCH_S[n] * 1000)
+                    s = end - (aoe2mc.train_ms(n) if e["kind"] == "queue" else RESEARCH_S[n] * 1000)
                     now.setdefault(b, []).append((end, s, n, e))
         out, shown = [], self.panels
         for b, items in sorted(now.items()):
@@ -978,7 +980,7 @@ class Replay:
     def trainings(self):
         """aoe2mc.training of the timeline: (end ms, QUEUE event, building ID) for each unit."""
         self.unknown_research
-        return aoe2mc.training(self.data.get("timeline", ()), research=True)
+        return aoe2mc.training(self.data.get("timeline", ()), research=True, research_s=RESEARCH_S)
 
     def production(self, t):
         """{player: [(name, count, start, end), ...]}: the units in training or in the queue of their building at game
@@ -989,7 +991,7 @@ class Replay:
             if e["kind"] == "research" and e["time"] <= t < end:
                 n = e["technology"]
                 tech.setdefault(e["player"], []).append(
-                    (n, end - aoe2mc.RESEARCH_S[n] * 1000, end, "age" if n.endswith(" Age") else "research"))
+                    (n, end - RESEARCH_S[n] * 1000, end, "age" if n.endswith(" Age") else "research"))
             elif e["time"] <= t < end and e.get("name"):
                 out.setdefault(e["player"], {}).setdefault(e["name"], []).append(end)
         return {p: sorted([(n, len(ends), min(ends) - aoe2mc.train_ms(n), min(ends))
@@ -1000,7 +1002,7 @@ class Replay:
     def unknown_research(self):
         """The technologies of the timeline with no RESEARCH_S value: no production item, one log line (#2810)."""
         names = sorted({e.get("technology", "") for e in self.data.get("timeline", ())
-                        if e["kind"] == "research" and e.get("technology", "") not in aoe2mc.RESEARCH_S})
+                        if e["kind"] == "research" and e.get("technology", "") not in RESEARCH_S})
         if names:
             print(f"research with no time (not in the production): {', '.join(names)}", file=sys.stderr)
         return names
@@ -1009,7 +1011,8 @@ class Replay:
         """A "spawn" event for each unit that a QUEUE command trains, at the end of its training."""
         return [{"time": end, "player": e["player"], "kind": "spawn", "type": e["type"], "name": e["name"],
                  "building": b, "where": (e.get("names") or [None] * len(e["objects"]))[e["objects"].index(b)]}
-                for end, e, b in aoe2mc.training(self.data.get("timeline", ())) if "type" in e and e.get("name")]
+                for end, e, b in aoe2mc.training(self.data.get("timeline", ()), research_s=RESEARCH_S)
+                if "type" in e and e.get("name")]
 
     def fireworks(self, player):
         """Three firework rockets in the player color above the first town center of the player, and one sound for
