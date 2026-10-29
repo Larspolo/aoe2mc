@@ -86,7 +86,7 @@ def open_menu(g, player, uuid):
             if siege(g):
                 vars(g).setdefault("ordering", {})[p] = "attack_ground"                     # the next right click picks the point
             else:
-                g.command(f"title {p} actionbar " + json.dumps({"text": "No unit can attack the ground"}))
+                g.command(f"title {p} actionbar " + json.dumps({"text": packed_hint(g) or "No unit can attack the ground"}))
         elif FORMATION <= slot < FORMATION + len(FORMATIONS):
             form(g, p, FORMATIONS[slot - FORMATION][0])
         else:
@@ -186,13 +186,26 @@ def attack_move(g, player, cell):
 def siege(g):
     """The selected units that can attack the ground (combat.GROUND, the AoE2 list of #4078)."""
     import combat                                                  # combat imports gather, gather imports this module
-    return [u for u in sorted(g.selected) if g.soldiers.get(u) in combat.GROUND]
+    return [u for u in sorted(g.selected) if g.soldiers.get(u) in combat.GROUND and not packed(g, u)]
+
+
+def packed(g, u):
+    """True for a Trebuchet that is not unpacked: AoE2 lets only an unpacked Trebuchet attack the ground (#4207)."""
+    import trebuchet                                               # trebuchet imports gather
+    return g.soldiers.get(u) == trebuchet.NAME and trebuchet.state(g, u) != "unpacked"
+
+
+def packed_hint(g):
+    """The hint when a selected Trebuchet is packed, else None."""
+    return "Unpack the Trebuchet first" if any(packed(g, u) for u in g.selected) else None
 
 
 def attack_ground(g, player, cell):
     """The selected siege units shoot at the clicked ground cell (x, z) until a new order, as the AoE2 Attack Ground
     (#4079): `aoe attackground` of the plugin (#4078). The other selected units ignore the order."""
     import gather                                                  # gather imports this module
+    if hint := packed_hint(g):
+        g.command(f"title {player} actionbar " + json.dumps({"text": hint}))
     if not (units := siege(g)):
         return
     g.new_order(units)

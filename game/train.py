@@ -136,6 +136,12 @@ def weight(g, name):
     return math.prod(f for t, (b, f) in BY_KEY["population"].items() if t in g.techs and BUILDING_OF.get(name) == b)
 
 
+def work(g, building):
+    """The factor of the work rate of building (a name) from the researched technologies with the key "work":
+    [the building, the factor] (Perfusion: the Barracks 2, #4226), else 1."""
+    return math.prod(f for t, (b, f) in BY_KEY["work"].items() if t in g.techs and b == building)
+
+
 def value(key, name, default=None):
     """The value of key of data/train.jsonl for item name (BY_KEY), else default. A key needs its line in
     train_keys.jsonl."""
@@ -868,8 +874,13 @@ def switch(g, player, building):
 
 
 def per_enemy(g, name):
-    """The cost of name before the civilization bonuses: COSTS, or for PER_ENEMY (Spies, #2193) that cost for each
-    enemy civilian unit, at least once and at most the "most" of the line (AoE2 DE wiki: 200 to 30,000 gold)."""
+    """The cost of name before the civilization bonuses: COSTS, plus for the key "per_own" [kinds, cost] that cost for
+    each own unit of the kinds, or for PER_ENEMY (Spies, #2193) that cost for each enemy civilian unit, at least once and at most the "most" of the line (AoE2 DE wiki: 200 to 30,000 gold)."""
+    if (own := value("per_own", name)):                            # Flemish Revolution: more for each own unit (#4323)
+        kinds, more = own
+        names = [o["name"] for o in g.units if o.get("uuid") in g.villagers] + list(g.soldiers.values())
+        n = sum(any(u.startswith(k) for k in kinds) for u in names)
+        return {r: COSTS[name].get(r, 0) + more.get(r, 0) * n for r in COSTS[name] | more}
     if name not in PER_ENEMY:
         return COSTS[name]
     import fog                                                     # fog imports gather, gather imports this module
@@ -987,7 +998,7 @@ def seconds(g, name, building=None, k=None):
     base = vars(g).get("trigger_times", {}).get(name)                  # "Change Technology Research Time" (#2820)
     own = (added(g, building, name) or (0, 0))[1] if building else 0   # Add Train Location (#2865)
     return (own or (base if base is not None else time if build.ages(g) >= age else TRAIN_TIMES[name])) \
-        / (civs.work_rate(g, building) if building else 1) \
+        / (civs.work_rate(g, building) * work(g, building) if building else 1) \
         / civs.train_rate(g, name) / civs.age_rate(g, name) * civs.research_time(g, name) / civs.turbo(g, name) \
         * (civs.train_time(g, building, name) if building else 1) \
         * (doctrine(g, building, k)[2] if building and name not in TECHS else 1)
