@@ -145,7 +145,7 @@ itself and lists each change on the status issue.
 ## Setup steps of the owner
 
 Only the owner can do these steps. An agent that needs a change makes a `needs-human` ticket with numbered steps.
-For a new project, `python3 tools/bootstrap.py DIR --repo OWNER/NAME` copies the generic files, writes `agent.toml` and
+For a new project, follow `framework/docs/NEW_PROJECT.md` (the template, then these steps). `python3 tools/bootstrap.py DIR --repo OWNER/NAME` copies the generic files, writes `agent.toml` and
 the starts of the specific files, and prints these steps for the new repository (`--github`: also the labels and the
 status issue). Merge the first PR of the bootstrap by hand: Automerge cannot merge it, because the workflows are not
 on `main` yet.
