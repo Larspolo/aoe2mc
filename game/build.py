@@ -77,6 +77,7 @@ FLAT = tuple(r["name"] for r in ROWS if r.get("flat"))                 # on one 
 MOVES = {r["name"] for r in table.load("buildings.jsonl") if r.get("moves")}   # a mob when complete (cart, #2209)
 GHOST = 400                                                        # block displays of one ghost: a coarser shape above
 CRANE = 1.2                                                        # the build speed factor of Treadmill Crane (#1422)
+BUILD_RATE = {r["name"]: r["build_rate"] for r in table.load("train.jsonl") if "build_rate" in r}   # Antiquity Architecture (#3917)
 NOT_UNITS = ("block_display", "interaction", "item_display", "marker", "text_display")   # ghosts, name lines
 LOCKED = "gray_dye"                                                # the item of a locked building or unit
 
@@ -644,7 +645,8 @@ def rise(g, site, work):
         x0, x1, z0, z1 = site["footprint"]                                 # the builders stand at its edge
         work *= CRANE ** ("TREADMILL_CRANE" in getattr(g, "techs", ())) * civs.build_rate(g, site["name"]) \
             * civs.church_rate(g, ((x0 + x1) / 2, (z0 + z1) / 2)) \
-            * civs.turbo(g, site["name"])                              # Georgian Fortified Church (#1930), Turbo (#2359)
+            * civs.turbo(g, site["name"]) \
+            * math.prod(BUILD_RATE[t] for t in getattr(g, "techs", ()) if t in BUILD_RATE)   # Georgian Fortified Church (#1930), Turbo (#2359)
     site["progress"] = min(1.0, site["progress"] + work / BUILD_TIMES[site["name"]])
     cmds, ring = site["commands"], site.get("ring", {})
     k = len(cmds) if site["progress"] >= 1 else math.floor(site["progress"] * len(cmds))
