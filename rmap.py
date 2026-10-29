@@ -508,7 +508,7 @@ def cliffs(cmds, terrain, starts, consts, rng, warn):
 
 # Own generators (#993, decision B of #961): the land of a map type in the script language of generate(). The text is
 # not a game script: it holds only facts about the map. Arabia: open grass and dirt land, small forests, a few single
-# trees, small ponds away from the players.
+# trees, small ponds away from the players, "a few scattered cliffs" (AoE2 wiki "Arabia", #3853).
 ARABIA = """
 <LAND_GENERATION>
 base_terrain DIRT
@@ -526,6 +526,11 @@ create_terrain DIRT3 { base_terrain DIRT number_of_clumps 12 land_percent 4 }
 create_terrain GRASS3 { base_terrain GRASS number_of_clumps 10 land_percent 3 }
 <ELEVATION_GENERATION>
 create_elevation 2 { base_terrain DIRT number_of_clumps 14 number_of_tiles 600 spacing 2 }
+<CLIFF_GENERATION>
+min_number_of_cliffs 3
+max_number_of_cliffs 5
+min_length_of_cliff 4
+max_length_of_cliff 6
 """
 # The start objects of each player: (name, count, distance in tiles from the town center, owner: 0 = Gaia, 1 = the
 # player). A group of more than one object stands on next tiles.
@@ -560,7 +565,8 @@ create_terrain DIRT3 { base_terrain GRASS number_of_clumps 10 land_percent 3 }
 create_terrain FOREST { base_terrain GRASS number_of_clumps 8 number_of_tiles 25 set_avoid_player_start_areas 16
   spacing_to_other_terrain_types 2 }
 """
-# Highland: grass land with forests, a river across the map between the players (RIVERS) with shallow fords.
+# Highland: grass land with forests, a river across the map between the players (RIVERS) with shallow fords, and
+# "a cliffed, highly forested land" (AoE2 wiki "Highland", #3853). The wiki pages of the other maps name no cliffs.
 HIGHLAND = """
 <LAND_GENERATION>
 base_terrain GRASS
@@ -574,6 +580,9 @@ create_terrain DIRT3 { base_terrain GRASS number_of_clumps 10 land_percent 3 }
 create_terrain GRASS3 { base_terrain GRASS2 number_of_clumps 8 land_percent 3 }
 <ELEVATION_GENERATION>
 create_elevation 3 { base_terrain GRASS number_of_clumps 10 number_of_tiles 700 spacing 2 }
+<CLIFF_GENERATION>
+min_number_of_cliffs 4
+max_number_of_cliffs 8
 """
 # Mediterranean: a sea in the middle of the map, the player lands on the land ring around it, a beach at the coast
 # (COASTS).
@@ -789,6 +798,8 @@ def random_map(kind, seed, players=2):
     if kind in COASTS:
         coast(d, COASTS[kind])
     objects = walls(d, WALLS[kind], rng) if kind in WALLS else []
+    wet = dilate(np.isin(np.array(d["terrain"]), [TERRAINS["WATER"], TERRAINS["SHALLOW"]]), 1)
+    objects += [o for o in d["objects"] if o["name"].startswith("CLIFF") and not wet[int(o["x"]), int(o["y"])]]  # not on the river
     if kind in GOLDS:
         objects += goldfield(d, GOLDS[kind], RINGS[kind], rng)
     n, terrain = d["size"], np.array(d["terrain"])
