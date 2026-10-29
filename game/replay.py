@@ -71,6 +71,9 @@ COUNTED = "aoe2mc.pop"      # entity tag of the units that the population counts
 EFFECT = "aoe2mc.effect"    # entity tag of the texts above a building (#843)
 PANEL = "aoe2mc.panel"      # entity tag of the production texts above a building (#2811, decision #2808: C)
 PANEL_BAR = 10              # characters of the text progress bar of a production item
+GRAPH = "aoe2mc.graph"      # entity tag of the graph text in the sky above the overview (#3448, decision #3447: B)
+GRAPH_BARS = "▁▂▃▄▅▆▇█"     # one bar per game minute, its height relative to the highest value of all players
+GRAPH_MINUTES = 20          # the last minutes of each graph row: a long game keeps a short text
 FOLLOWED = "aoe2mc.followed"  # the tag of the entity that the spectators of --follow look through (#1095)
 TRAIL = 3                   # tiles: a follower farther than this from its target walks to it again (#2551)
 TRAIL_MS = 1000             # ms of game time between two checks of the followers (#2551)
@@ -392,6 +395,7 @@ class Replay:
         self.censused = False                   # a census counted the live units (the base of the units lost)
         self.reached, self.researched = {}, {}  # player -> {age: game time (ms)}, researched technologies (#1067)
         self.vills, self.vhigh = {}, {}         # player -> live villagers (est.), the highest count (#1086)
+        self.graph = {}                         # value index -> the shown rows of its graph (#3448)
         self.samples, self.minute = {}, -1      # player -> [(minute, pop, villagers, military, resources)], last minute (#3446)
         self.eyes = None                        # (x, y, z) of each player; None: not known, each gather step shows (#2761)
         self.queue = None                       # in run() on Paper: the commands that wait for flush() (#2761)
@@ -448,6 +452,33 @@ class Replay:
     def stats(self, t):
         """The samples of each player up to game time t (ms): (minute, population, villagers, military, resources)."""
         return {p: [s for s in ss if s[0] * 60000 <= t] for p, ss in self.samples.items()}
+
+    def graphs(self, t):
+        """The commands of the graphs at game time t (ms, #3448, decision #3447: B): in the sky above the overview one
+        large text display per value (population, villagers, military, estimated resources), one row per player in
+        its color, one bar per game minute. One display per value keeps each command below the RCON limit with 8
+        players. Only the displays whose text changed: the samples change once per minute."""
+        stats = {p: ss[-GRAPH_MINUTES:] for p, ss in self.stats(t).items() if ss}
+        if not stats:
+            return []
+        if getattr(self, "view", None) is None:
+            self.overview()                                         # it sets the place of the overview
+        y, c, out = int(self.view.split()[1]) + 12, f"{self.n / 2:.1f}", []
+        for i, name in enumerate(("Population", "Villagers", "Military", "Resources (estimated)"), 1):
+            top = max(s[i] for ss in stats.values() for s in ss) or 1
+            rows = [text(name + "\n")]
+            for p in self.ranked(stats):
+                who, color = self.label(p)
+                bars = "".join(GRAPH_BARS[round(s[i] / top * (len(GRAPH_BARS) - 1))] for s in stats[p])
+                rows.append(text(f"{who} {bars} {stats[p][-1][i]}\n", color))
+            if rows == self.graph.get(i):
+                continue
+            line, tag = json.dumps(rows, ensure_ascii=False, separators=(",", ":")), f"{GRAPH}.{i}"
+            out.append(f"data merge entity @e[type=text_display,tag={tag},limit=1] {{text:{line}}}" if i in self.graph
+                       else f"summon text_display {c} {min(319, y + 4 * (4 - i))} {c} {{text:{line},billboard:\"center\","
+                            f'shadow:1b,line_width:1000,Tags:["{GRAPH}","{tag}"]}}')
+            self.graph[i] = rows
+        return out
 
     def resources(self, p):
         return self.stock.setdefault(p, dict(START))
@@ -2515,6 +2546,7 @@ class Replay:
                     send(self.clock_commands(to, end, self.speed) + self.score_commands())
                     self.send(self.panel(to))
                     self.sample(to)
+                    self.send(self.graphs(to))
                 continue
             lag = max(lag, clock() - r0 - (now - g0) / 1000 / self.speed)
             if int(now) // 1000 != shown:                              # at most once per game second
@@ -2526,6 +2558,7 @@ class Replay:
                 send(self.clock_commands(now, end, self.speed) + self.score_commands() + self.overview(join=True))
                 self.send(self.panel(now))
                 self.sample(now)
+                self.send(self.graphs(now))
                 self.send(self.fog())
             if e is None:                                           # behind its clock: all the steps up to the
                 late = g0 if self.paused else g0 + (clock() - r0) * 1000 * self.speed    # game time now in one
