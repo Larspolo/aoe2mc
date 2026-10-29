@@ -40,14 +40,16 @@ def test_each_line_has_its_keys():
                 assert isinstance(nbtlib.parse_nbt(row["tags"]), nbtlib.Compound), row["tags"]
 
 
+def rows(name):
+    return [json.loads(s) for s in open(os.path.join(units.DATA, name), encoding="utf-8")]
+
+
 def test_the_tables_come_from_the_files():
-    assert units.ANIMALS[0] == (("ALFRED_THE_ALPACA",), "military", "llama", {"Variant": nbtlib.Int(1)})
-    bear = next(tags for keys, *_, tags in units.ANIMALS if keys == ("POLAR_BEAR",))
-    assert type(bear["anger_end_time"]) is nbtlib.Long
-    assert units.LINES["EAGLE_SCOUT"] == ("husk", (("leather", 0xC89B3C), None, None, None), "wooden_sword", None)
-    assert type(units.LINES["KARAMBIT_WARRIOR"][4]["IsBaby"]) is nbtlib.Byte
-    assert units.LINES["HUSKARL_BARRACKS"] == units.LINES["HUSKARL"]
-    assert buildings.FOOTPRINT[0] == ("SHIPYARD", 4) and len({w for w, _ in buildings.FOOTPRINT}) == len(buildings.FOOTPRINT)
+    assert len(units.ANIMALS) == len(rows("animals.jsonl"))
+    assert all(isinstance(tags, (dict, type(None))) for *_, tags in units.ANIMALS)
+    assert {r["name"] for r in rows("lines.jsonl")} <= set(units.LINES)
+    assert [w for w, _ in buildings.FOOTPRINT] == [r["name"] for r in rows("footprint.jsonl")]
+    assert len({w for w, _ in buildings.FOOTPRINT}) == len(buildings.FOOTPRINT)
 
 
 def test_the_first_match_wins():

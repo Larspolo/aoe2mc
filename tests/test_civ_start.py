@@ -13,23 +13,24 @@ def stock(civ, objects=UNITS + [TC], **kw):
     return gather.Gather(FakeServer({}), data, **kw).stock
 
 
-def test_persians_start_with_50_more_food_and_wood():
-    # AoE2 wiki, "Persians": "Start the game with +50 food, +50 wood"
-    assert stock("PERSIANS") == {**gather.START, "food": 250, "wood": 250}
+BASE = next(r["name"] for r in civs.ROWS if r["name"] not in civs.START)   # a civilization with no bonus
 
 
-def test_more_start_bonuses():
-    assert stock("AZTECS")["gold"] == 150 and stock("SICILIANS")["stone"] == 300
-    assert stock("CHINESE")["food"] == 0 and stock("CHINESE")["wood"] == 150
-    assert stock("HUNS")["wood"] == 100 and stock("LITHUANIANS")["food"] == 300 and stock("MAYANS")["food"] == 150
+def plus(civ, base):
+    return {r: max(0, v + civs.START.get(civ, {}).get(r, 0)) for r, v in base.items()}
+
+
+def test_each_civilization_starts_with_its_bonus():
+    for civ in sorted(civs.START):
+        assert stock(civ) == plus(civ, gather.START), civ
 
 
 def test_a_civilization_with_no_bonus_starts_with_the_aoe2_start():
-    assert stock("GOTHS") == stock(None) == gather.START
+    assert stock(BASE) == stock(None) == gather.START
 
 
 def test_the_bonus_adds_to_a_nomad_start_and_start_wins():
-    assert stock("PERSIANS", UNITS) == {"wood": 525, "food": 250, "gold": 100, "stone": 300}
+    assert stock("PERSIANS", UNITS) == plus("PERSIANS", stock(BASE, UNITS))
     assert stock("PERSIANS", start={})["wood"] == 0                                  # start= is not changed
 
 

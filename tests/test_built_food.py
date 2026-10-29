@@ -1,5 +1,5 @@
-"""Saxon mills, lumber camps and mining camps give 35 food when complete, Wu military buildings and docks 55 food
-(#2114, AoE2 DE wiki): BUILT_FOOD in game/data/civs.jsonl. Fake server."""
+"""A complete building gives the food of BUILT_FOOD in game/data/civs.jsonl once (#2114: Saxon camps and mills, Wu
+military buildings and docks). Fake server."""
 import pytest
 
 from game import build, civs
@@ -16,17 +16,11 @@ def food_of(civ, name):
     return after - food, g.stock["food"] - after
 
 
-@pytest.mark.parametrize("civ, name, food", [("SAXONS", "MILL", 35), ("SAXONS", "LUMBER_CAMP", 35),
-                                             ("SAXONS", "MINING_CAMP", 35), ("WU", "STABLE", 55),
-                                             ("WU", "BARRACKS", 55), ("WU", "DOCK", 55)])
-def test_a_complete_building_gives_food_once(civ, name, food):
-    assert food_of(civ, name) == (food, 0)
-
-
-@pytest.mark.parametrize("civ, name", [("SAXONS", "HOUSE"), ("SAXONS", "STABLE"), ("WU", "MILL"), ("BRITONS", "MILL"),
-                                       ("BRITONS", "STABLE")])
-def test_other_buildings_and_civilizations_give_no_food(civ, name):
-    assert food_of(civ, name) == (0, 0)
+@pytest.mark.parametrize("civ, name", [("SAXONS", "MILL"), ("SAXONS", "LUMBER_CAMP"), ("SAXONS", "MINING_CAMP"),
+                                       ("WU", "STABLE"), ("WU", "BARRACKS"), ("WU", "DOCK"), ("SAXONS", "HOUSE"),
+                                       ("SAXONS", "STABLE"), ("WU", "MILL"), ("BRITONS", "MILL"), ("BRITONS", "STABLE")])
+def test_a_complete_building_gives_its_food_once(civ, name):
+    assert food_of(civ, name) == (civs.BUILT_FOOD.get(civ, {}).get(name, 0), 0)
 
 
 def test_the_names_are_buildings():

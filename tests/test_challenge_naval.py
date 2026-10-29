@@ -9,6 +9,8 @@ import cheats  # noqa: E402  (game/ is on sys.path after the import of game.chal
 import recap  # noqa: E402
 import train  # noqa: E402
 
+ROW = challenge.CHALLENGES["naval-battle"]
+
 
 class Map:
     """16 x 16 blocks: land in the columns x < 2, the rest is water."""
@@ -21,7 +23,7 @@ class Map:
         return 62.0
 
 
-def fake(lost=4, alive=()):
+def fake(lost=ROW["gold"], alive=()):
     g = types.SimpleNamespace(player=1, ended=None, challenge="naval-battle", sent=[], map=Map(), seconds=900.0,
                               losses={f"u{i}": "FIRE_SHIP" for i in range(lost)}, challenge_enemy=["e1", "e2"])
     g.command = g.sent.append
@@ -53,14 +55,14 @@ def test_both_fleets_are_on_water_and_apart(monkeypatch):
     assert len({(x, z) for _, (x, _, z), _ in placed}) == len(placed)
 
 
-def test_all_enemy_warships_dead_with_4_ships_lost_give_the_gold_medal(ends):
-    g = fake(lost=4)
+def test_all_enemy_warships_dead_with_the_gold_limit_of_ships_lost_give_the_gold_medal(ends):
+    g = fake(lost=ROW["gold"])
     challenge.tick(g)
     assert ends == [True] and any("Gold medal" in c and "subtitle" in c for c in g.sent)
 
 
-def test_5_ships_lost_give_the_silver_medal(ends):
-    g = fake(lost=5)
+def test_one_ship_more_lost_gives_the_silver_medal(ends):
+    g = fake(lost=ROW["gold"] + 1)
     challenge.tick(g)
     assert any("Silver medal" in c and "subtitle" in c for c in g.sent)
 
@@ -68,4 +70,4 @@ def test_5_ships_lost_give_the_silver_medal(ends):
 def test_a_live_enemy_warship_does_not_end_the_game(ends):
     g = fake(alive={"e2"})
     challenge.tick(g)
-    assert ends == [] and any("4 units lost, gold medal up to 4" in c for c in g.sent)
+    assert ends == [] and any(f"{ROW['gold']} units lost, gold medal up to {ROW['gold']}" in c for c in g.sent)

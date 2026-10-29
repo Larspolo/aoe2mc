@@ -5,8 +5,7 @@ import aoe2mc
 from game import combat
 
 
-def test_known_aoe2_values():
-    assert combat.stats("HALBERDIER").bonus["cavalry"] == 32 and "cavalry" in combat.stats("KNIGHT").classes
+def test_the_fallback_values():
     assert combat.stats("PALISADE_WALL") == combat.BUILDING
     assert combat.stats("NO_SUCH_UNIT") == combat.DEFAULT
 

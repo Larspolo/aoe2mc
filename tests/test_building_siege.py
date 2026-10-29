@@ -81,7 +81,7 @@ def test_an_archer_shoots_a_house(tiny_world, tmp_path):
         assert game.command(combat.stats_command("@e[tag=a,limit=1]", "ARCHER")).strip() == "Stats: 1 units"
         assert game.command(combat.range_command("@e[tag=a,limit=1]", "ARCHER", 4)).strip() == "Range: 1 units"
         assert game.command(f"aoe attack @e[tag=a] {uuid}").strip() == "Attack: 1 units"
-        seen, end = [550], time.time() + 20
+        seen, end = [combat.BUILDINGS["HOUSE"].hp], time.time() + 20
         while time.time() < end:
             if (h := hp(game, uuid)) != seen[-1]:
                 seen.append(h)

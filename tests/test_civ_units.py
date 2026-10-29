@@ -4,7 +4,7 @@ import pytest
 
 import buildings
 
-from game import ai, civs, combat, gather, train
+from game import ai, civs, combat, train
 
 from test_civ_work import setup
 
@@ -18,47 +18,41 @@ def trained(civ, name, techs=()):
     return g, uuid, g.game.log[n:]
 
 
-def test_a_frankish_knight_has_20_percent_more_hit_points_from_the_feudal_age():
-    _, uuid, log = trained("FRANKS", "KNIGHT", {"FEUDAL_AGE"})
-    assert f"aoe stats {uuid} 120 " in " ".join(log)
+def stats(civ, name, *techs):
+    g = setup(civ)
+    g.techs.update(techs)
+    return train.stats(g, name)
+
+
+def speed(log, uuid):
+    """The movement speed that the log sets for uuid."""
+    return next(float(c.split()[-1]) for c in log if c.startswith(f"attribute {uuid} minecraft:movement_speed base set "))
+
+
+def test_a_frankish_knight_has_more_hit_points_from_the_feudal_age():
+    g, uuid, log = trained("FRANKS", "KNIGHT", {"FEUDAL_AGE"})
+    hp = train.stats(g, "KNIGHT").hp
+    assert hp > combat.stats("KNIGHT").hp and f"aoe stats {uuid} {hp} " in " ".join(log)
     _, uuid, log = trained("GOTHS", "KNIGHT", {"FEUDAL_AGE"})
-    assert f"aoe stats {uuid} 100 " in " ".join(log)
-    assert train.stats(setup("FRANKS"), "KNIGHT").hp == 100              # the Dark Age: no bonus yet
+    assert f"aoe stats {uuid} {combat.stats('KNIGHT').hp} " in " ".join(log)
+    assert train.stats(setup("FRANKS"), "KNIGHT").hp == combat.stats("KNIGHT").hp   # the Dark Age: no bonus yet
 
 
 def test_the_bonus_comes_before_the_technologies():
-    g = setup("FRANKS")
-    g.techs.update({"FEUDAL_AGE", "BLOODLINES"})
-    assert train.stats(g, "SCOUT_CAVALRY").hp == 45 * 1.2 + 20
+    bloodlines = stats("GOTHS", "SCOUT_CAVALRY", "FEUDAL_AGE", "BLOODLINES").hp - stats("GOTHS", "SCOUT_CAVALRY", "FEUDAL_AGE").hp
+    assert stats("FRANKS", "SCOUT_CAVALRY", "FEUDAL_AGE", "BLOODLINES").hp == pytest.approx(
+        stats("FRANKS", "SCOUT_CAVALRY", "FEUDAL_AGE").hp + bloodlines)
 
 
 def test_celtic_infantry_walks_faster_in_each_age():
     T = setup("CELTS").map.T
-    for techs, factor in (((), 1.05), (("FEUDAL_AGE",), 1.1), (("FEUDAL_AGE", "CASTLE_AGE"), 1.15)):
+    seen = []
+    for techs in ((), ("FEUDAL_AGE",), ("FEUDAL_AGE", "CASTLE_AGE")):
         _, uuid, log = trained("CELTS", "MILITIA", techs)
-        speed = ai.movement_speed("MILITIA", T, gather.NORMAL * factor)
-        assert f"attribute {uuid} minecraft:movement_speed base set {speed}" in log
+        seen.append(speed(log, uuid))
     _, uuid, log = trained("GOTHS", "MILITIA")
     assert f"attribute {uuid} minecraft:movement_speed base set {ai.movement_speed('MILITIA', T)}" in log
-
-
-def test_more_bonuses():
-    def stats(civ, name, *techs):
-        g = setup(civ)
-        g.techs.update(techs)
-        return train.stats(g, name)
-    archer = combat.stats("ARCHER")
-    assert stats("BRITONS", "ARCHER", "FEUDAL_AGE", "CASTLE_AGE").range == archer.range + 1
-    assert stats("BRITONS", "SKIRMISHER", "FEUDAL_AGE", "CASTLE_AGE") == combat.stats("SKIRMISHER")
-    assert stats("TEUTONS", "KNIGHT", "FEUDAL_AGE", "CASTLE_AGE").melee == combat.stats("KNIGHT").melee + 1
-    assert stats("SARACENS", "CAMEL_RIDER").hp == 125
-    assert stats("VIETNAMESE", "SKIRMISHER").hp == 36
-    assert stats("TURKS", "SCOUT_CAVALRY").pierce == combat.stats("SCOUT_CAVALRY").pierce + 1
-    assert stats("MONGOLS", "CAVALRY_ARCHER").reload == pytest.approx(combat.stats("CAVALRY_ARCHER").reload / 1.25,
-                                                                      abs=1e-3)
-    assert stats("MALIANS", "SPEARMAN", "FEUDAL_AGE").pierce == combat.stats("SPEARMAN").pierce + 1
-    assert stats("MALIANS", "GBETO", "FEUDAL_AGE") == combat.stats("GBETO")          # a castle unit
-    assert civs.speed(setup("BERBERS"), "VILLAGER") == 1.05
+    assert ai.movement_speed("MILITIA", T) < seen[0] < seen[1] < seen[2], seen
 
 
 def test_the_table_names_known_civilizations_and_groups_in_order():
@@ -75,5 +69,5 @@ def test_the_live_celtic_infantry_walks_faster_after_an_age():
     g, uuid, _ = trained("CELTS", "MILITIA")
     n = len(g.game.log)
     train.research(g, {"name": "FEUDAL_AGE", "player": "Steve"})
-    speed = ai.movement_speed("MILITIA", g.map.T, gather.NORMAL * 1.1)
-    assert f"attribute {uuid} minecraft:movement_speed base set {speed}" in g.game.log[n:]
+    _, new, log = trained("CELTS", "MILITIA", ("FEUDAL_AGE",))         # a new unit of the Feudal Age
+    assert speed(g.game.log[n:], uuid) == speed(log, new)

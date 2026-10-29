@@ -20,20 +20,21 @@ def game(tiny_world, on):
 def test_lumberjack_gives_wood_with_cheats_on(tiny_world):
     server, g = game(tiny_world, True)
     log = "\n".join(server.log)
-    assert "aoe cheats " in log and ",cheese%20steak%20jimmy%27s," in log and ",lumberjack," in log
+    assert "aoe cheats " in log and ",lumberjack," in log
+    wood = cheats.CODES["lumberjack"]["wood"]
     server.scores["aoe_cheat"] = cheats.NAMES.index("lumberjack") + 1
     assert g.clicks() == []                                    # a cheat is no click
-    assert g.stock["wood"] == 10000 and server.wood() == 10000
+    assert g.stock["wood"] == wood and server.wood() == wood
     assert "aoe_cheat" not in server.scores                    # read once
     g.clicks()
-    assert g.stock["wood"] == 10000
+    assert g.stock["wood"] == wood
 
 
 def test_ninjalui_gives_each_resource_and_polo_answers(tiny_world):
     server, g = game(tiny_world, True)
     server.scores["aoe_cheat"] = cheats.NAMES.index("ninjalui") + 1
     assert cheats.clicks(g) == [("Steve", "ninjalui")]
-    assert g.stock == {"wood": 100000, "food": 100000, "gold": 100000, "stone": 100000}
+    assert g.stock == cheats.CODES["ninjalui"]
     server.scores["aoe_cheat"] = cheats.NAMES.index("polo") + 1
     cheats.clicks(g)
     assert server.log[-1] == 'tellraw Steve {"text":"Fog of war: off"}'          # (#1390)

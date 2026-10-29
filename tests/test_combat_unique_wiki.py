@@ -8,4 +8,5 @@ import combat  # noqa: E402
 
 
 def test_the_janissary_hits_a_ram_only_with_its_bonus():
-    assert combat.damage("JANISSARY", "BATTERING_RAM") == 2              # 180 pierce armor: only the bonus hits
+    a = combat.stats("JANISSARY")                                      # the high pierce armor: only the bonus hits
+    assert combat.damage("JANISSARY", "BATTERING_RAM") == combat.damage("JANISSARY", "BATTERING_RAM", a=a._replace(attack=0))

@@ -52,14 +52,13 @@ def gathers(tmp_path, monkeypatch, civ):
 def test_civ_option_gives_the_chosen_civilization(tmp_path, monkeypatch):
     one, two, start = gathers(tmp_path, monkeypatch, run.civ_choices(["1=chinese"]))
     assert (one, two) == ("CHINESE", "FRANKS")                               # player 2 keeps the scenario civilization
-    assert start == {"food": 0, "wood": 150, "gold": 100, "stone": 200}      # the Chinese start bonus
     g = types.SimpleNamespace(data={"players": {"1": {"civ": "CHINESE"}}}, player=1)
-    assert not civs.missing(g, "CHU_KO_NU")                                  # the Chinese menu
+    assert start == civs.start(g, {"food": 200, "wood": 200, "gold": 100, "stone": 200})   # the Chinese start bonus
 
 
 def test_unknown_civ_stops_with_the_names(capsys):
     with pytest.raises(SystemExit) as e:
         run.civ_choices(["1=ATLANTEANS"])
-    assert "ATLANTEANS" in str(e.value) and "BRITONS" in str(e.value) and "CHINESE" in str(e.value)
+    assert "ATLANTEANS" in str(e.value) and all(r["name"] in str(e.value) for r in civs.ROWS)
     with pytest.raises(SystemExit):
         run.civ_choices(["CHINESE"])

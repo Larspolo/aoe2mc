@@ -9,8 +9,11 @@ import build  # noqa: E402  (game/ is on sys.path after the import of game.chall
 import recap  # noqa: E402
 import cheats  # noqa: E402
 
+C = challenge.CHALLENGES["fast-castle-age"]
+N = C["need"]
 
-def fake(villagers=27, houses=5, seconds=0.0):
+
+def fake(villagers=N["villagers"], houses=N["houses"], seconds=0.0):
     """A Gather of player 1 with the full goal of Fast Castle Age."""
     g = types.SimpleNamespace(player=1, ended=None, challenge="fast-castle-age", sent=[], data={"objects": []},
                               villagers={f"v{i}": None for i in range(villagers)},
@@ -29,21 +32,21 @@ def ends(monkeypatch):
     return out
 
 
-def test_the_full_goal_at_800_seconds_ends_the_game_with_the_gold_medal(ends):
-    g = fake(seconds=800)
+def test_the_full_goal_in_the_gold_time_ends_the_game_with_the_gold_medal(ends):
+    g = fake(seconds=C["gold"])
     challenge.tick(g)
     assert ends == [True] and any("Gold medal" in c and "subtitle" in c for c in g.sent)
 
 
-@pytest.mark.parametrize("villagers, houses", [(27, 4), (26, 5)])
-def test_a_goal_with_fewer_houses_or_villagers_does_not_end_the_game(ends, villagers, houses):
-    g = fake(villagers=villagers, houses=houses, seconds=800)
+@pytest.mark.parametrize("less", ["houses", "villagers"])
+def test_a_goal_with_fewer_houses_or_villagers_does_not_end_the_game(ends, less):
+    g = fake(seconds=C["gold"], **{less: N[less] - 1})
     challenge.tick(g)
     assert ends == [] and not g.ended
 
 
 def test_the_castle_age_is_needed(ends):
-    g = fake(seconds=800)
+    g = fake(seconds=C["gold"])
     g.techs = {build.AGE_TECHS[0]}
     challenge.tick(g)
     assert ends == [] and not g.ended

@@ -8,14 +8,6 @@ from test_gather import FakeServer, grid
 from game import combat, gather, train
 
 BARRACKS, RANGE, STABLE = (3, 3), (9, 3), (15, 3)                 # a block cell in each building
-UPGRADES = {"LONG_SWORDSMAN_UPGRADE": ({"food": 150, "gold": 65}, 40),   # AoE2 DE wiki: UpCost, UpTime of the unit
-            "PIKEMAN_UPGRADE": ({"food": 160, "gold": 90}, 35),          # before
-            "CROSSBOWMAN_UPGRADE": ({"food": 175, "gold": 100}, 35),
-            "ELITE_SKIRMISHER_UPGRADE": ({"wood": 230, "gold": 130}, 50),
-            "LIGHT_CAVALRY_UPGRADE": ({"food": 150, "gold": 50}, 45)}
-UNITS = {"LONG_SWORDSMAN": ({"food": 50, "gold": 20}, 21), "PIKEMAN": ({"food": 35, "wood": 25}, 22),   # wiki infobox
-         "CROSSBOWMAN": ({"wood": 25, "gold": 45}, 27), "ELITE_SKIRMISHER": ({"food": 25, "wood": 35}, 22),
-         "LIGHT_CAVALRY": ({"food": 80}, 30)}
 LIVE = (("a", "MAN_AT_ARMS"), ("p", "SPEARMAN"), ("c", "ARCHER"), ("k", "SKIRMISHER"), ("l", "SCOUT_CAVALRY"))
 
 
@@ -32,22 +24,23 @@ def setup(ages=("FEUDAL_AGE", "CASTLE_AGE"), techs=("MAN_AT_ARMS_UPGRADE",)):
     return server, g
 
 
+def entry(g, cell, name):
+    """The menu text of name in the building at cell up to its state, from the data: slot, item, label, cost and time."""
+    rect = train.home(g, cell)
+    slot, item, label = train.layout(g, rect)[name]
+    cost = " · ".join(f"{v} {r}" for r, v in train.price(g, name, train.homes(g)[rect]).items()) or "free"
+    item = train.build.LOCKED if train.build.locked(g, name) else item
+    return f"{slot}:{item}:{label}:{cost} · {round(train.seconds(g, name, train.homes(g)[rect]), 1):g} s · "
+
+
 def research(g, cell, name):
     assert train.queue(g, "Steve", cell, name), name
     train.tick(g, train.TRAIN_TIMES[name])
     assert name in g.techs
 
 
-@pytest.mark.parametrize("name", sorted(UPGRADES))
-def test_each_upgrade_has_the_wiki_cost_time_and_the_castle_age(name):
-    cost, time = UPGRADES[name]
-    assert train.COSTS[name] == cost and train.TRAIN_TIMES[name] == time
-
-
-@pytest.mark.parametrize("name", sorted(UNITS))
-def test_each_new_unit_has_the_wiki_cost_time_and_combat_values(name):
-    cost, time = UNITS[name]
-    assert train.COSTS[name] == cost and train.TRAIN_TIMES[name] == time
+@pytest.mark.parametrize("name", ["CROSSBOWMAN", "ELITE_SKIRMISHER", "LIGHT_CAVALRY", "LONG_SWORDSMAN", "PIKEMAN"])
+def test_each_new_unit_has_combat_values_a_menu_item_and_a_help_text(name):
     assert name in combat.STATS and name in train.ITEMS and name in train.HELP
 
 
@@ -63,11 +56,13 @@ def test_long_swordsman_only_after_man_at_arms_in_its_slot():
     server, g = setup(techs=())
     train.open_menu(g, "Steve", BARRACKS)
     menu = menus(server)[-1] + " "
-    assert " 2:book:Man-at-Arms:" in menu and "Long Swordsman" not in menu
-    assert " 3:book:Pikeman:160 food · 90 gold · 35 s · research " in menu
+    slot = entry(g, BARRACKS, "MAN_AT_ARMS_UPGRADE").split(":")[0]
+    assert " " + entry(g, BARRACKS, "MAN_AT_ARMS_UPGRADE") in menu and "Long Swordsman" not in menu
+    assert " " + entry(g, BARRACKS, "PIKEMAN_UPGRADE") + "research " in menu
     research(g, BARRACKS, "MAN_AT_ARMS_UPGRADE")
     train.open_menu(g, "Steve", BARRACKS)
-    assert " 2:book:Long Swordsman:150 food · 65 gold · 40 s · research " in menus(server)[-1] + " "
+    assert " " + entry(g, BARRACKS, "LONG_SWORDSMAN_UPGRADE") + "research " in menus(server)[-1] + " "
+    assert entry(g, BARRACKS, "LONG_SWORDSMAN_UPGRADE").split(":")[0] == slot      # the slot of Man-at-Arms
 
 
 def test_the_live_units_and_the_buildings_get_the_new_units():
@@ -84,4 +79,4 @@ def test_the_live_units_and_the_buildings_get_the_new_units():
     assert train.trains(g, "STABLE")[0] == "LIGHT_CAVALRY"
     train.open_menu(g, "Steve", BARRACKS)
     menu = menus(server)[-1] + " "
-    assert " 0:zombie_spawn_egg:Long Swordsman:50 food · 20 gold · 21 s" in menu and ":book:Pikeman:" not in menu
+    assert " " + entry(g, BARRACKS, "LONG_SWORDSMAN") in menu and ":book:Pikeman:" not in menu

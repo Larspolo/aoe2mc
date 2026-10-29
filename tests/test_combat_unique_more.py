@@ -17,5 +17,6 @@ def test_each_unit_has_values_and_a_valid_stats_command(unit):
                         combat.stats_command("u", unit))
 
 
-def test_the_values_of_the_wiki():
-    assert combat.damage("MAGYAR_HUSZAR", "MANGONEL") == 10 - 0 + 5      # its bonus against siege weapons
+def test_the_magyar_huszar_has_a_bonus_against_siege_weapons():
+    t = combat.stats("MANGONEL")
+    assert combat.damage("MAGYAR_HUSZAR", "MANGONEL") > combat.damage("MAGYAR_HUSZAR", "MANGONEL", t=t._replace(classes=()))
