@@ -3,8 +3,10 @@ The tech tree of the own civilization (#3532, part of #3531), as the AoE2 DE tec
 Game menu (diplomacy.py) opens a page with one item for each building that trains or researches. A click on a
 building shows its units and technologies by age, one column for each unit line (#3533): row 0 the Dark Age, row 1 the Feudal Age, row 2 the Castle Age,
 row 3 the Imperial Age (the key "age" of data/train.jsonl). An item that the civilization does not have is a gray pane.
-The tree only shows: a click on an item of a building page trains nothing.
+The tree only shows: a click on an item of a building page trains nothing. Slots 48-50 of each page show the tree of
+the previous or next civilization of data/civs.jsonl (#3535); the tree opens with the own civilization.
 """
+import copy
 import os
 import sys
 
@@ -21,13 +23,45 @@ MORE = 4                                                           # the row of 
 BACK = (45, "arrow", "Back", "The page of buildings")
 NEXT = 53
 GRAY = "gray_stained_glass_pane"
+CIVS = [r["name"] for r in civs.ROWS]                              # the order of data/civs.jsonl
+PREVIOUS, NAME, FOLLOWING = 48, 49, 50
 
 
-def open_menu(g, player):
-    """The page of buildings: one item for each building of train.TRAINS (its build menu icon)."""
+def view(g, civ):
+    """A copy of g in which the player has civilization civ: train.trains and civs.missing read it, and the game state
+    of g does not change. A copy of g, not a civ argument: both functions and their helpers read civs.real(g)."""
+    v = copy.copy(g)
+    players = dict(g.data.get("players", {}))
+    players[str(g.player)] = {**players.get(str(g.player), {}), "civ": civ}
+    v.data = {**g.data, "players": players}
+    return v
+
+
+def civ_items(civ):
+    """The items of slots 48-50: previous civilization, the name of the shown civilization, next civilization."""
+    return [(PREVIOUS, "arrow", "Previous civilization", ""),
+            (NAME, "paper", build.pretty(civ) if civ else "Your civilization", "The tech tree of this civilization"),
+            (FOLLOWING, "spectral_arrow", "Next civilization", "")]
+
+
+def other(civ, slot):
+    """The civilization before (slot 48) or after (slot 50) civ in CIVS, else None (no civilization slot)."""
+    step = {PREVIOUS: -1, FOLLOWING: 1}.get(slot)
+    return step and CIVS[((CIVS.index(civ) if civ in CIVS else -1 if step > 0 else 0) + step) % len(CIVS)]
+
+
+def open_menu(g, player, civ=None):
+    """The page of buildings: one item for each building of train.TRAINS (its build menu icon), of civilization civ
+    (else the own one)."""
+    civ = civ or civs.real(g)
     items = [(i, build.ICONS.get(b, "chest"), build.pretty(b), "Click: its units and technologies")
-             for i, b in enumerate(BUILDINGS)]
-    menu.show(g, player, "Tech tree", items, lambda p, slot, shift: slot < len(BUILDINGS) and page(g, p, BUILDINGS[slot]))
+             for i, b in enumerate(BUILDINGS)] + civ_items(civ)
+
+    def click(p, slot, shift):
+        if (c := other(civ, slot)):
+            return open_menu(g, p, c)
+        return slot < len(BUILDINGS) and page(g, p, BUILDINGS[slot], civ=civ)
+    menu.show(g, player, "Tech tree", items, click)
 
 
 def age(name):
@@ -88,16 +122,21 @@ def item(g, building, name):
     return material, label, "\n".join([cost] + [train.HELP[name]] * bool(train.HELP.get(name)))
 
 
-def page(g, player, building, number=0):
-    """The units and technologies of building (train.trains) by age; slot 45 goes back, slot 53 to the next page."""
-    all_pages = pages(train.trains(g, building))
+def page(g, player, building, number=0, civ=None):
+    """The units and technologies of building (train.trains) by age of civilization civ (else the own one); slot 45 goes
+    back, slot 53 to the next page."""
+    civ = civ or civs.real(g)
+    shown = view(g, civ)
+    all_pages = pages(train.trains(shown, building))
     number = min(number, len(all_pages) - 1)
-    items = [(s, *item(g, building, n)) for s, n in all_pages[number].items()] + [BACK]
+    items = [(s, *item(shown, building, n)) for s, n in all_pages[number].items()] + [BACK] + civ_items(civ)
     items += [(NEXT, "paper", "Next page", f"Page {number + 2} of {len(all_pages)}")] * (number + 1 < len(all_pages))
 
     def click(p, slot, shift):
         if slot == BACK[0]:
-            return open_menu(g, p)
+            return open_menu(g, p, civ)
+        if (c := other(civ, slot)):
+            return page(g, p, building, civ=c)
         if slot == NEXT and number + 1 < len(all_pages):
-            return page(g, p, building, number + 1)
+            return page(g, p, building, number + 1, civ)
     menu.show(g, player, f"Tech tree: {build.pretty(building)}", items, click)
