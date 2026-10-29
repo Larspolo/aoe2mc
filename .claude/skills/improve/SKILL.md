@@ -51,7 +51,7 @@ change of this review. Fewer than 50 merged PRs → too early: keep it and say s
 Run `python3 tools/health.py --prs 100 --compare` (about 2 minutes): the last 100 merged PRs, and under each line that
 differs, the 100 PRs before (`  before: ...`). A change of more than 20 % between the two periods is a finding. It
 prints CI, setup, takeovers, conflicts and their files, phases, quota per merged PR, release points per 1 % of 7-day
-quota (the main number: progress to the goals 1 to 3 of `docs/ROADMAP.md` per quota), tokens and their sinks, lanes,
+quota (the main number: progress to the goals 1 to 3 of `steering/project/ROADMAP.md` per quota), tokens and their sinks, lanes,
 weak spots, misses, owner work, time waits, data in the code, review slots and files that do not belong in git.
 `--hours N` only for a real clock (the night runs).
 
@@ -62,8 +62,8 @@ Also, only when a lever needs it:
 - CI: the last 50 runs of each workflow and the steps of slow runs; the log of a failed job (`mcp__github__get_job_logs`).
 - Environment: the `setup` minutes, and time sinks with "install", "download", "blocked" or "denied".
 - `docs/LEARNINGS.md` and the "Process changes" list (what was tried before).
-- Decisions: the share of `taken` in the last 10 lines of `docs/DECISIONS.md` with a recommendation. Lower than the 10
-  before, or 3 lines with `new` → update `docs/PRINCIPLES.md` in this review.
+- Decisions: the share of `taken` in the last 10 lines of `steering/project/DECISIONS.md` and `steering/system/DECISIONS.md` with a recommendation. Lower than the 10
+  before, or 3 lines with `new` → update `steering/project/PRINCIPLES.md` and `steering/system/PRINCIPLES.md` in this review.
 
 ## 3. Walk all levers
 

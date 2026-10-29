@@ -14,8 +14,8 @@
   clear options and no single best one (for example the interface of a feature or a game rule), do not choose. Make a
   decision ticket (`ticket` skill, "Decision tickets"), let the work that needs it depend on it, and continue with
   other work. When one option is clearly best, choose it and say why in the PR.
-- **Recommend by the principles**: `docs/PRINCIPLES.md` is the direction of the project, made from the owner's
-  decisions (`docs/DECISIONS.md`). Read it before a recommendation or a decision ticket (`ticket` skill), and name the principle.
+- **Recommend by the principles**: `steering/project/PRINCIPLES.md` and `steering/system/PRINCIPLES.md` are the direction of the project, made from the owner's
+  decisions (`steering/project/DECISIONS.md` and `steering/system/DECISIONS.md`). Read them before a recommendation or a decision ticket (`ticket` skill), and name the principle.
 - **An epic checks its whole goal** (owner rule, 2026-10-26, #820): its acceptance criteria always check that the full
   scope is covered (each item works, or the owner excluded it), never only that the sub-issues are closed (`ticket` skill).
 

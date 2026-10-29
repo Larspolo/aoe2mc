@@ -1,6 +1,6 @@
 # Release bar
 
-The owner decision of #878 (2026-10-26): a goal is at 100 % when all its features of `docs/ROADMAP.md` are done
+The owner decision of #878 (2026-10-26): a goal is at 100 % when all its features of `steering/project/ROADMAP.md` are done
 (milestone C), its release checks pass and its bug reserve is used. The milestones B (a smaller first test) and A
 (the core) are indications only: the priority labels alone decide the order of the work.
 `python3 tools/release.py` prints the progress of each goal and milestone.
@@ -9,7 +9,7 @@ Bug reserve: 0.3
 
 ## Rules
 
-1. A row names a feature of `docs/ROADMAP.md` by its key, or a release check by an id that ends in `-check-...`.
+1. A row names a feature of `steering/project/ROADMAP.md` by its key, or a release check by an id that ends in `-check-...`.
    A roadmap feature without a row is milestone C. Give each new roadmap feature a row (`roadmap` skill).
 2. The epics of a feature: an epic whose body has the line ``Roadmap: `key` ``, and the epics that its roadmap line
    names (`#N`).

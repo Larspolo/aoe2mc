@@ -1,11 +1,11 @@
 ---
 name: roadmap
-description: Turn the three goals of aoe2mc (convert maps, play AoE2 in Minecraft, replay a recorded game) into epics. Use in the queue refill (autopilot step 5) when the open epics have no work left, and when `python3 tools/claim.py 0 --roadmap` gives the roadmap review to the run (once per 100 merged PRs) to review the feature list in docs/ROADMAP.md.
+description: Turn the three goals of aoe2mc (convert maps, play AoE2 in Minecraft, replay a recorded game) into epics. Use in the queue refill (autopilot step 5) when the open epics have no work left, and when `python3 tools/claim.py 0 --roadmap` gives the roadmap review to the run (once per 100 merged PRs) to review the feature list in steering/project/ROADMAP.md.
 ---
 
 # Plan toward the goals
 
-`docs/ROADMAP.md` lists the features of each goal: done (`[x]`) or missing (`[ ]`, with a key such as `play:health`).
+`steering/project/ROADMAP.md` lists the features of each goal: done (`[x]`) or missing (`[ ]`, with a key such as `play:health`).
 Owner decisions (2026-10-26): the agents make the epics themselves, a new epic starts at `P3`, and the goals take turns.
 
 ## Make the next epic (in the refill)
@@ -31,16 +31,16 @@ epics have no goal left that an agent can do.
    ticket first (`ticket` skill, "Decision tickets") and let the sub-issues that need it depend on it.
 5. Make its first 3–5 sub-issues (`size:S` or `size:M`, `P3`, `gh api .../sub_issues`: `ticket` skill). The first one is small and useful
    alone. Name the files and functions that each one changes.
-6. Do not change `docs/ROADMAP.md` for a new epic: the key in the epic body is enough (no merge conflicts).
+6. Do not change `steering/project/ROADMAP.md` for a new epic: the key in the epic body is enough (no merge conflicts).
 
-## Release checks (`docs/RELEASE.md`, owner decision #878)
+## Release checks (`steering/project/RELEASE.md`, owner decision #878)
 
 Do not change the order of the work for the release bar: the priority labels alone decide it. Look at the bar in the
 roadmap review (below).
 When all features of a milestone (B, A or C) of a goal are done (`python3 tools/release.py`: 0 features left in that
 milestone), make each release check of the goal that has no ticket yet as a check ticket ("Check X in the game",
 `ticket` skill, level 4 of `verify`), at the priority of the goal's epics, and write its number in the `ticket`
-column of `docs/RELEASE.md`.
+column of `steering/project/RELEASE.md`.
 The trigger: the section "Release checks (no ticket, make them in the refill)" of `python3 tools/cycle_start.py`
 (`release.due()`, #3342) lists these checks at each run start. A deep run makes their tickets in step 5 (`queue.md`).
 
@@ -53,7 +53,7 @@ no source: R < N, each feature has an epic, no fallback, `claim.ROADMAP_EARLY`, 
 2. Compare each goal with AoE2 DE and with the code: what does a player see or do in AoE2 that the converter, the
    game program or the replay cannot do yet? Add at most 5 missing features, each with a new key and one line.
 3. Keep the order: the features that the next features need come first.
-4. Give each new feature a row in `docs/RELEASE.md` (milestone C, unless the owner says otherwise), and correct the
+4. Give each new feature a row in `steering/project/RELEASE.md` (milestone C, unless the owner says otherwise), and correct the
    estimates there. Do not remove an estimate: `release.py` takes the larger of the estimate and the sub-issues of
    the epic, and with no estimate the median of the closed epics, more than a small epic has (#3678: 20 tickets).
 5. Put the change into the PR of your ticket. The owner can change the list at any time.

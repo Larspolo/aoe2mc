@@ -50,4 +50,4 @@ data = "tests/data/game_names_in_code.txt"   # the places of domain data left in
 system = "docs/SYSTEM.md"
 steering = "docs/STEERING.md"
 learnings = "docs/LEARNINGS.md"
-roadmap = "docs/ROADMAP.md"
+roadmap = "steering/project/ROADMAP.md"
