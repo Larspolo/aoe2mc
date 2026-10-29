@@ -393,6 +393,11 @@ def ship(name, s):
     return combat.SHIP in s.classes or name == "TRANSPORT_SHIP"
 
 
+def foot_archers(name, s):
+    """True for the foot archers (civs.foot_archer): Yeomen."""
+    return civs.foot_archer(s)
+
+
 def unlocked(g, name):
     """True when the player has the age of technology name (the key "age"). As in AoE2, the menu shows a technology only
     from its age, but a building or unit of a later age as a gray item (build.locked), and never one that the
