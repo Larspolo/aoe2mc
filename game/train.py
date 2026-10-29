@@ -76,6 +76,7 @@ import units  # noqa: E402
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import build  # noqa: E402
 import civs  # noqa: E402
+import demolish  # noqa: E402
 import garrison  # noqa: E402
 import menu  # noqa: E402
 import monk  # noqa: E402
@@ -465,6 +466,7 @@ def layout(g, rect):
     used = {RALLY[0]} if units_of(g, building) else set()          # the items of show() after the trained ones
     used |= {garrison.ungarrison(building)[0]} if getattr(g, "garrisons", {}).get(rect) else set()
     used |= {garrison.BELL[0]} if building == "TOWN_CENTER" else set()
+    used |= {demolish.ITEM[0]}                                         # the item Delete (#3452)
     out = {}
     for name in names:
         slot, item, label = placed(g, building, name)
@@ -573,6 +575,7 @@ def show(g, player, rect):
     items += [RALLY] if units_of(g, building) else []
     items += [garrison.ungarrison(building)] if getattr(g, "garrisons", {}).get(rect) else []   # only with units inside (#808)
     items += [garrison.BELL] if building == "TOWN_CENTER" else []    # the town bell (#3419)
+    items += [demolish.ITEM] if demolish.shown(g, rect) else []        # the building falls (#3452)
     if building == "MARKET":                                           # the buy and sell rows under the queue (#1286)
         import market                                                  # only for a market
         items += [(market.ROW + slot, *item) for slot, *item in market.items(g)]
@@ -652,6 +655,8 @@ def order(g, player, rect, slot, shift=False):
     if slot == garrison.BELL[0] and homes(g)[rect] == "TOWN_CENTER":   # the town bell (#3419)
         garrison.bell(g, player)
         menu.close(g, player)
+        return 0
+    if slot == demolish.ITEM[0] and demolish.delete(g, player, rect):   # the building falls (#3452)
         return 0
     if ROW <= slot < MORE:                                         # the queue row; MORE: more items (#1485)
         cancel(g, player, rect, slot - ROW)

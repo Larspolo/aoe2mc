@@ -29,7 +29,8 @@ KEYS = {"animals.jsonl": ({"keys", "behavior", "mob"}, {"tags", "note"}),
 
 
 def test_each_line_has_its_keys():
-    assert sorted(os.listdir(units.DATA)) == sorted(KEYS)
+    assert sorted(os.listdir(units.DATA)) == sorted(KEYS), \
+        "give each data/*.jsonl file its line in KEYS: put a new line after the animals.jsonl line, not at the end (#2072)"
     for name, (need, may) in KEYS.items():
         for line in open(os.path.join(units.DATA, name), encoding="utf-8"):
             row = json.loads(line)
