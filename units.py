@@ -351,7 +351,8 @@ def invisible(n):
 
 def animal(n):
     """(AoE2 behavior, minecraft mob, extra tags) for an animal name, else None."""
-    if "ELEPHANT" in n and n not in ANIMAL_EXACT or has(n, "CAMEL_", "ARCHER", "RIDER", "CAVALRY", "_WARRIOR"):
+    if "ELEPHANT" in n and n not in ANIMAL_EXACT or has(n, "CAMEL_", "ARCHER", "RIDER", "CAVALRY", "_WARRIOR") or \
+            n in HEROES["mounted"] or siege_scale(n) is not None:   # Richard the Lionheart, the Warwolf trebuchet (#3626)
         return None
     return next((row[1:] for row in ANIMALS if has(n, *row[0])), None)
 
