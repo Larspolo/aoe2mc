@@ -22,7 +22,8 @@ def test_the_unit_keys_name_units():
 def test_the_technology_keys_name_technologies_and_buildings():
     for table in (train.BY_KEY["walk"], train.BY_KEY["walls"], train.BY_KEY["towers"], train.REQUIRES):
         assert table and set(table) <= set(train.COSTS)
-    assert all(isinstance(unit, str) and f > 1 for unit, f in train.BY_KEY["walk"].values())
+    assert all(isinstance(u, str) for unit, _ in train.BY_KEY["walk"].values() for u in (unit if isinstance(unit, list) else [unit]))
+    assert all(f > 1 for _, f in train.BY_KEY["walk"].values())
     for n, (count, names, *alone) in train.REQUIRES.items():
         assert 0 < count <= len(names) and all(set(b) <= set(combat.BUILDINGS) for b in (names, *alone)), n
     for t, towers in train.BY_KEY["towers"].items():
