@@ -2,7 +2,8 @@
 """
 aoe2mc - Convert an Age of Empires II: DE scenario (.aoe2scenario) or the start state of a recorded game
 (.aoe2record) or an old scenario (.scx, format 1.21; .scn, 1.18 to 1.20) to a Minecraft Java world. A campaign (.aoe2campaign) gives one world per scenario; an old campaign
-(.cpx, .cpn) too; its scenarios that are not .scx 1.21 give the files and the steps to save them in the DE editor.
+(.cpx, .cpn) too; its scenarios of other formats (not .scn 1.18 to 1.20, .scx 1.21 or HD 1.22 to 1.26) give the files and the
+steps to save them in the DE editor.
 
 Usage:
     python aoe2mc.py MAP.aoe2scenario OUTPUT_WORLD_FOLDER [options]
@@ -6176,9 +6177,10 @@ Do these steps to convert them:
 
 def convert_campaign(src, out, only=None, name=None, **kw):
     """One world per scenario: out/<number> <scenario name>/. only: the number of one scenario (1 = first).
-    An old campaign (.cpx, .cpn): convert its .scx scenarios of format 1.21 (#347); write the other scenario files to
-    out/ and stop with the steps for the DE editor."""
+    An old campaign (.cpx, .cpn): convert its scenarios of a format in scx.FORMATS (.scn 1.18 to 1.20, .scx 1.21, HD,
+    #347, #3863); write the other scenario files to out/ and stop with the steps for the DE editor."""
     import tempfile
+    import scx
     version, title, entries = read_campaign(src)
     if only is not None and not 1 <= only <= len(entries):
         raise OptionError(f"--scenario {only}: the campaign {title!r} has {len(entries)} scenarios")
@@ -6189,9 +6191,10 @@ def convert_campaign(src, out, only=None, name=None, **kw):
         old, done = [], []
         for i, fn, data in chosen:
             stem = os.path.splitext(fn)[0]
-            if fn.lower().endswith((".scx", ".scn")):
+            if data[:4] in scx.FORMATS:                # the format, not the file name, chooses (#3863)
                 with tempfile.TemporaryDirectory() as tmp:
-                    path = os.path.join(tmp, fn)       # "Read <fn>" names the scenario (#578)
+                    ext = "" if fn.lower().endswith((".scx", ".scn", ".aoe2scenario")) else ".scx"   # read_scx reads it
+                    path = os.path.join(tmp, fn + ext)  # "Read <fn>" names the scenario (#578)
                     with open(path, "wb") as f:
                         f.write(data)
                     try:
@@ -6248,8 +6251,8 @@ def main(argv=None):
     ap.add_argument("scenario", nargs="?", help=".aoe2scenario file, .aoe2record, .mgz, .mgx or .mgl (the start state of a recorded game), .scx "
                     "(an old scenario, format 1.21), .json (a map description, README), .rms (the land of a random map "
                     "script, with --seed), or "
-                    ".aoe2campaign, .cpx or .cpn (one world per scenario; old scenarios that are not .scx 1.21: the "
-                    "steps for the DE editor)")
+                    ".aoe2campaign, .cpx or .cpn (one world per scenario; old scenarios of other formats than .scn 1.18 to "
+                    "1.20, .scx 1.21 and HD 1.22 to 1.26: the steps for the DE editor)")
     ap.add_argument("output", nargs="?", help="output world folder (put it in .minecraft/saves/); for a campaign the "
                     "folder of the worlds")
     ap.add_argument("--random-map", choices=("arabia", "arena", "black_forest", "gold_rush", "highland",
