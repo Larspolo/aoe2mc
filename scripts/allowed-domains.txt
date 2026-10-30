@@ -21,3 +21,4 @@ aok.heavengames.com
 aoe2.heavengames.com
 files.heavengames.com
 steamcommunity.com
+airef.github.io

@@ -177,6 +177,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *                                              less its melee armor (ignore 1: no armor; a technology, epic #4096)
  *   aoe unwear <selector>                      forget the kept blocks of the damage stages of each building target: the
  *                                              next stage keeps the blocks of a new design (a wall technology, #3071)
+ *   aoe range <selector> off                  the unit shoots no more: no range goal (melee mode of the Ratha, #4504)
  *   aoe range <selector> <blocks> <ticks> [blast [min [pass [part]]]]
  *                                              a ranged unit shoots from this range, one shot per ticks (#515); a
  *                                              shot with a blast radius in blocks hits all units near the target, and
@@ -3267,6 +3268,21 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                 }
             }
             sender.sendMessage("Stats: " + n + " units");
+            return true;
+        }
+        if (args.length == 3 && args[0].equals("range") && args[2].equals("off")) {   // melee mode (#4504)
+            int n = 0;
+            for (Entity e : select(sender, args[1])) {
+                if (sailors(rider(e)) instanceof Mob mob) {
+                    ranges.remove(mob.getUniqueId());
+                    Bukkit.getMobGoals().removeGoal(mob, rangeKey);
+                    if (mob.hasAI()) {
+                        unit(mob);                               // its melee goals again
+                    }
+                    n++;
+                }
+            }
+            sender.sendMessage("Range: " + n + " units");
             return true;
         }
         if (args.length >= 4 && args.length <= 8 && args[0].equals("range")) {
