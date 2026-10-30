@@ -41,7 +41,9 @@ once: the key "player" of a relic names the player of its monk or monastery (own
 
 Civilization bonuses (#2314, AoE2 DE wiki): each relic in an own monastery gives +1 attack to the Lithuanian knights
 and Leitis, at most +4 (civs.RELIC_ATTACK, civs.units; relic_tick sends the new values), and Muisca monks regain faith
-100 % faster (civs.FAITH: the rest after a conversion is half as long).
+100 % faster (civs.FAITH: the rest after a conversion is half as long). The key "convert_resist" (a factor f, Antiquity
+Mode Macedonians: 4, #4449) makes the units of a civilization f times harder to convert: f times the warm and sure
+intervals and 1/f of the chance, so the mean conversion time is about f times as long (3.9 times for 4).
 
     monk.order(g, player, cell)   # gather.Gather.click: a relic or a monastery at the block cell; True when it was one
     monk.relic_tick(g, dt)        # gather.Gather.step: pick up, put in, drop, and the gold
@@ -429,7 +431,7 @@ def convert(g, dt):
             del g.faith[m]
     if not g.converting:
         return
-    import ai, train                                               # ai imports gather, gather imports this module
+    import ai, civs, train                                         # ai imports gather, gather imports this module
     pos = g.positions(sorted(set(g.converting) | {t for t, _, _ in g.converting.values()}))
     for m, job in sorted(g.converting.items()):
         if m not in g.converting:
@@ -453,7 +455,8 @@ def convert(g, dt):
             job[1] -= INTERVAL
             job[2] += 1
             more = 0 if fort else resist(g, target)
-            warm, chance, sure = FORT if fort else (WARM + more, CHANCE, SURE + more)
+            f = 1 if fort else civs.value("convert_resist", civs.civ(g, owners.player(g, target)), 1)   # Macedonians: 4
+            warm, chance, sure = FORT if fort else ((WARM + more) * f, CHANCE / f, (SURE + more) * f)
             if job[2] > warm and (job[2] >= sure or g.chance.random() < chance):
                 group = [k for k, j in g.converting.items() if j[0] == target]
                 rest = [m] if "THEOCRACY" in g.techs else [k for k in group if k in pos and near(g, k, target, pos)]
