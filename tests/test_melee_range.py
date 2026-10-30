@@ -13,7 +13,8 @@ def test_melee_ranged_units_hit_the_melee_armor():
     target = combat.Stats(100, 1, 0, 50, 0, 2.0)                       # melee armor 0, pierce armor 50, no class
     assert combat.MELEE_RANGED
     for name in sorted(combat.MELEE_RANGED):
-        assert combat.damage(name, "X", t=target) == max(1, combat.stats(name).attack), name   # not the pierce armor
+        t = target._replace(classes=("building",)) if name in combat.VS_UNITS else target   # anti-unit mode: pierce (#4505)
+        assert combat.damage(name, "X", t=t) - combat.stats(name).bonus.get("building", 0) * (t is not target) == max(1, combat.stats(name).attack), name   # not the pierce armor
     ranged = combat.Stats(30, 6, 0, 0, 4, 2.0)
     assert combat.damage("X", "Y", a=ranged, t=target) == 1            # a ranged unit still hits the pierce armor
     assert combat.damage("X", "Y", a=ranged._replace(range=0), t=target) == 6
