@@ -326,6 +326,9 @@ Tickets for the refill (items 3 and 4 of #4745): Random #4755, Random pool #4756
 Hidden civilizations #4758. The "?" text against no civilization text for hidden players is the
 decision ticket #4754.
 
+Decision of the owner (#4754, A, 2026-10-30): with hidden civilizations, `lobby.name` and `diplomacy.name` show
+"Player 2 (?)" for the civilization of an enemy player, as AoE2 DE. Allies see the civilization.
+
 ## Decisions of the owner (2026-10-28)
 
 - Bot difficulty (#2648, option A): the six AoE2 DE names (Easiest, Standard, Moderate, Hard, Hardest, Extreme), each
