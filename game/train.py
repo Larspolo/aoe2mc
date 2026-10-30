@@ -131,6 +131,13 @@ def more_arrows(g, building):
     return sum(value("more_arrows", t, {}).get(building, 0) for t in g.techs)
 
 
+def pass_arrows(g, building):
+    """The end of `aoe arrows` for the own building: " <blocks> <part>" when a technology of g.techs lets its arrows pass
+    through the units (Svan Towers: "pass_arrows", #4282), else ""."""
+    v = next((v for t in sorted(g.techs) if building in (v := value("pass_arrows", t, {})).get("names", ())), None)
+    return f" {v['tiles'] * g.map.T} {v['part']}" if v else ""
+
+
 def weight(g, name):
     """The population of one unit (None: a villager): the product of the factors of the researched technologies with the
     key "population" whose units (as faster: a building, a group, a class, a name or a list) cover it (Logistics of
@@ -1228,9 +1235,9 @@ def research(g, entry, start=False, rect=None):
         names = {n for names, _ in civs.ARROWS.get(civs.civ(g), ()) for n in names}
         for rect in [r for r, o in garrison.holders(g).items() if o["name"] in names]:
             g.command(garrison.arrows_command(g, rect))
-    if (more := value("more_arrows", entry["name"])):              # the own buildings of the names shoot more (#4258)
-        for rect, o in garrison.holders(g).items():
-            if o["name"] in more:
+    if (more := value("more_arrows", entry["name"])) or (more := value("pass_arrows", entry["name"], {}).get("names")):
+        for rect, o in garrison.holders(g).items():                # the own buildings of the names shoot more (#4258),
+            if o["name"] in more:                                  # or their arrows pass through (#4282)
                 g.command(garrison.arrows_command(g, rect))
     if (free := value("spawn", entry["name"])) and not start:     # free units at own buildings (First Crusade, #4365)
         unit = free["unit"]
