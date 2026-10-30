@@ -55,7 +55,7 @@ def repo(tmp_path):
     bin_ = tmp_path / "bin"
     bin_.mkdir()
     log = tmp_path / "calls"
-    for name, code in (("gh", "0"), ("sleep", "0"), ("python3", '$(case "$*" in *--switch*) echo 3;; *) echo 0;; esac)')):
+    for name, code in (("gh", "0"), ("sleep", "0"), ("python3", '$(case "$*" in (*--switch*) echo 3;; (*) echo 0;; esac)')):
         f = bin_ / name
         f.write_text(f'#!/bin/sh\necho "{name} $*" >> {log}\nexit {code}\n')
         f.chmod(0o755)
