@@ -46,6 +46,7 @@ Read it before a download, a blocked host or a server test.
 - `-m mc` needs `javac` and `xdotool` (setup script, #493, #638); without `xdotool` it skips `tests/test_menu_client.py`. The full `-m mc` suite takes hours: CI runs it in 6 shards (#1710). Run only the `-m mc` files that use the changed code (`grep -l "aoe moveto" tests/*.py | xargs grep -l mark.mc`) in the background (#1669).
 - Blocked too: `docs.racket-lang.org` and `plt.cs.northwestern.edu` (the docs of the AoE2 random map script DSL, DNS fails). For a random map script fact, a `WebSearch` summary of them works (#3966).
 - The Blacksmith pages (`aok.heavengames.com`) work, but `getfile.php?id=N&dd=1&s=TOKEN` (TOKEN from `get_file(...)` of `showfile.php`) redirects to `files.heavengames.com`: blocked until the owner pastes `scripts/allowed-domains.txt` (#4189).
+- Public AoE2 scripts for a random map script ticket: `raw.githubusercontent.com/Naramsim/AoE2-random-map-scripts/master/The%20forgotten/NAME.rms` (HD versions, also `The%20conquerors/`; the GitHub API of that repository is blocked, guess the name). Unknown DE constants stop them: map an unknown constant to -1 in a local probe. Blocked: `twharris.dev`, `gist.githubusercontent.com` (#4699).
 
 ## Converter code
 
