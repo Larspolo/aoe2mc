@@ -231,10 +231,11 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *   aoe charge <selector> <ticks> <attack> <shots> <blast> <class:bonus,...|->
  *                                              Siphons (#2165): a fire ship that hits a ship also hits each enemy unit
  *                                              within blast blocks of it with shots melee hits of attack, once per ticks
- *   aoe chargeattack <selector> <ticks> <attack>
+ *   aoe chargeattack <selector> <ticks> <attack> [<part> <blocks>]
  *                                              the charge of a melee hit (Comitatenses, #4370): the first melee hit
  *                                              on a unit after ticks has attack more (before the armor), then the
- *                                              charge starts again; a new unit starts full
+ *                                              charge starts again; a new unit starts full; part and blocks: the
+ *                                              charged hit also hurts the near enemy units (Urumi Swordsman, #4544)
  *   aoe cheats <code>,<code>,...|-             the AoE2 cheat codes in the chat (#816, Cheats.java; URL-encoded)
  *   aoe deathmarks on|off                      a short mark where a replay unit dies (#846, Deaths.java)
  *   aoe destroy <selector>                     the buildings fall as at 0 hit points: "Destroy: <n> buildings" (#819)
@@ -531,6 +532,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     private final Map<UUID, Integer> charged = new HashMap<>();      // the first tick of the next charge attack
     private final Map<UUID, int[]> meleeCharges = new HashMap<>();   // aoe chargeattack (#4370): {ticks, attack}
     private final Map<UUID, Integer> meleeCharged = new HashMap<>(); // the first tick of the next charged melee hit
+    private final Map<UUID, Trample> meleeBlasts = new HashMap<>();  // the blast of a charged hit (Urumi, #4544)
     private final Map<UUID, Charge> detonations = new HashMap<>();
     // A charged ranged attack of a melee unit (Gothikon, #4368, aoe throw): at most shots axes, one charges in ticks;
     // axes: {charged axes, the tick where the next charge started, the first tick of the next throw}
@@ -1402,6 +1404,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         }
         ev.setCancelled(true);
         Dodge dodge = dodges.getOrDefault(ev.getEntity().getUniqueId(), dodges.get(hurt.getUniqueId()));
+        Trample blast = null;                                // the blast of a charged hit (#4544)
         if (ev.getDamager() instanceof Projectile p && dodge != null && !dodge.melee && dodge.take()) {
             p.remove();                                      // a Shrivamsha Rider dodges it (#4399)
             return;
@@ -1436,7 +1439,9 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             if (dodge != null && dodge.melee && dodge.take()) {
                 return;                                      // an Iron Pagoda ignores the melee hit (#4465)
             }
+            Stats plain = a;
             a = charged(from, a);                            // a charge attack (Comitatenses, #4370)
+            blast = a != plain ? meleeBlasts.get(from.getUniqueId()) : null;
         }
         if (ev.getDamager() instanceof Projectile p) {     // a cancelled hit lets the arrow fly on: one hit per arrow
             p.remove();
@@ -1457,7 +1462,8 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             nameLine(attacker);
         }
         if (!(ev.getDamager() instanceof Projectile)) {
-            trample(from, a, hurt, ev.getEntity());           // an elephant hurts the units next to its target (#4397)
+            trample(from, a, hurt, ev.getEntity(), tramples.get(from.getUniqueId()));   // an elephant (#4397)
+            trample(from, a, hurt, ev.getEntity(), blast);    // the charged hit of an Urumi Swordsman (#4544)
         }
     }
 
@@ -1479,8 +1485,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     // enemy unit with AoE2 values within its blocks of the target takes max(1, round(part × the AoE2 damage on it)), or
     // the fixed damage less its melee armor (at least 1; ignore: a negative armor only). Not the own or allied units.
     // A mounted unit has the hit points of its horse (#732): only the horse counts.
-    private void trample(Entity from, Stats a, Entity hurt, Entity target) {
-        Trample tr = tramples.get(from.getUniqueId());
+    private void trample(Entity from, Stats a, Entity hurt, Entity target, Trample tr) {
         if (tr == null || tr.blocks() <= 0) {
             return;
         }
@@ -3178,10 +3183,12 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         if (args.length == 7 && args[0].equals("charge")) {            // Siphons (#2165)
             return charges(sender, args[1], charges, args[2], args[3], args[4], args[5], args[6]);
         }
-        if (args.length == 4 && args[0].equals("chargeattack")) {      // Comitatenses (#4370)
+        if ((args.length == 4 || args.length == 6) && args[0].equals("chargeattack")) {   // Comitatenses (#4370)
             int[] c;
+            Trample b;
             try {
                 c = new int[] {Integer.parseInt(args[2]), Integer.parseInt(args[3])};
+                b = args.length == 6 ? new Trample(Double.parseDouble(args[4]), Double.parseDouble(args[5]), 0, false) : null;
             } catch (NumberFormatException e) {
                 sender.sendMessage("Bad value: " + e.getMessage());
                 return true;
@@ -3189,8 +3196,10 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             int n = 0;
             for (Entity e : select(sender, args[1])) {
                 meleeCharges.put(e.getUniqueId(), c);
+                meleeBlasts.compute(e.getUniqueId(), (k, v) -> b);
                 if (rider(e) instanceof Mob r) {
                     meleeCharges.put(r.getUniqueId(), c);        // the rider of a mounted unit hits (#710)
+                    meleeBlasts.compute(r.getUniqueId(), (k, v) -> b);
                 }
                 n++;
             }
