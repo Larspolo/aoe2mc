@@ -65,9 +65,9 @@ def test_a_bengali_elephant_takes_less_bonus_damage():
 
 def test_the_plugin_gets_the_factor_of_the_bonus_damage_taken():
     s = combat.stats("KNIGHT")
-    assert combat.stats_command("u", "KNIGHT", s, 0.6).endswith(" 0.6")
+    assert combat.stats_command("u", "KNIGHT", s, 0.6).endswith(" taken=0.6")
     assert combat.stats_command("u", "KNIGHT", s) == combat.stats_command("u", "KNIGHT")   # 1: no last field
-    assert not combat.stats_command("u", "KNIGHT").endswith(" 1")
+    assert "taken=" not in combat.stats_command("u", "KNIGHT")
 
 
 @pytest.mark.mc

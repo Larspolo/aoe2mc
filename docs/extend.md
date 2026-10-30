@@ -49,6 +49,8 @@ parallel tickets do not change the same lines. Most rules have a check: `tools/d
   such a change (exit 2).
 - A new command of the Paper plugin: its line in the command list at the top of `AoePlugin.java` and its
   `if` block in `onCommand` go in alphabetical order of the command name, not after the last one (#795 and #813 conflicted).
+- A new optional field of `aoe stats` (a hit rule) is one `key=value` pair in the `tail` of `combat.stats_command`
+  and one `case` in the `stats` block of `AoePlugin.java`, not a new position (#4460).
 - A new game setting of `game/run.py` (a lobby setting, epic #2263) is one line in `run.SETTINGS` and an option of the
   same name, not a new keyword of `play()` (#2373).
 - A new part of the saved game is one function `(x, p)` or `(g, d)` and one line in `SIDE_STEPS` or `GAME_STEPS` of
