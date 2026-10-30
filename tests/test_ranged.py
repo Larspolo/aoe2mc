@@ -26,7 +26,7 @@ def test_range_command():
                                         {"kind": "unit", "player": 2, "name": "MILITIA", "uuid": "m"}]}
     assert combat.setup(Game(), data) == 2
     assert Game.sent == [combat.range_command("a", "ARCHER", 3), combat.stats_command("a", "ARCHER"),
-                         combat.stats_command("m", "MILITIA"),
+                         combat.stats_command("m", "MILITIA"), *combat.aura_tags("m", "MILITIA"),   # (#4470)
                          combat.sight_command("a", "ARCHER", 3), combat.sight_command("m", "MILITIA", 3),   # (#775)
                          ai.speed_command("a", "ARCHER", 3), ai.speed_command("m", "MILITIA", 3)]
 

@@ -42,7 +42,8 @@ def test_stats_command():
     data = {"objects": [{"kind": "unit", "player": 1, "name": "MILITIA", "uuid": "a"},
                         {"kind": "unit", "player": 0, "name": "DEER", "uuid": "b"},       # Gaia keeps vanilla
                         {"kind": "building", "player": 1, "name": "HOUSE"}]}
-    assert combat.setup(Game(), data) == 1 and Game.sent == [combat.stats_command("a", "MILITIA"), combat.sight_command("a", "MILITIA", 4),
+    assert combat.setup(Game(), data) == 1 and Game.sent == [combat.stats_command("a", "MILITIA"), *combat.aura_tags("a", "MILITIA"),   # (#4470)
+                                                    combat.sight_command("a", "MILITIA", 4),
                                                     ai.speed_command("a", "MILITIA", 4)]
 
 
