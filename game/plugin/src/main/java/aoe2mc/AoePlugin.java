@@ -41,6 +41,7 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.Hoglin;
 import org.bukkit.entity.ItemDisplay;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Marker;
 import org.bukkit.entity.Minecart;
 import org.bukkit.entity.Mob;
 import org.bukkit.entity.Pig;
@@ -1960,6 +1961,10 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     @EventHandler
     public void onDeath(EntityDeathEvent ev) {               // the rider dies with its horse, else it stays (#732)
         stances.remove(ev.getEntity().getUniqueId());
+        if (ev.getEntity().getScoreboardTags().contains("aoe2mc.on_death")) {   // a Konnik (#4471): game/train.py fell()
+            ev.getEntity().getWorld().spawn(ev.getEntity().getLocation(), Marker.class,   // summons the new unit here
+                    m -> m.addScoreboardTag("aoe2mc.fell." + ev.getEntity().getUniqueId()));
+        }
         throwers.remove(ev.getEntity().getUniqueId());
         axes.remove(ev.getEntity().getUniqueId());
         afterBlasts.remove(ev.getEntity().getUniqueId());

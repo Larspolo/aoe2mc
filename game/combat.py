@@ -89,6 +89,8 @@ MIN_RANGE = {r["name"]: r["min_range"] for r in UNIT_ROWS if "min_range" in r}
 ACCURACY = {r["name"]: r["accuracy"] for r in UNIT_ROWS if "accuracy" in r}   # siege shots at units that hit (#2479)
 MISS = {r["name"]: r["miss"] for r in UNIT_ROWS if "miss" in r}               # a missed shot hurts a near unit (#4549)
 DODGE = {r["name"]: r["dodge"] for r in UNIT_ROWS if "dodge" in r}           # projectiles that do no damage (#4399)
+ON_DEATH = {r["name"]: r["on_death"] for r in UNIT_ROWS if "on_death" in r}   # the unit that rises where it dies (#4471)
+FELL = "aoe2mc.fell."            # the tag + UUID of the marker that the plugin leaves where a unit of ON_DEATH dies
 SPEED_CHARGE = {r["name"]: r["speed_charge"] for r in UNIT_ROWS if "speed_charge" in r}   # faster near a target (#4545)
 VOLLEY = {r["name"]: r["volley"] for r in UNIT_ROWS if "volley" in r}       # the key "volley": {"shots": n, "attack": a}, the extra projectiles of each shot (#4502)
 FRENZY = {r["name"]: r["frenzy"] for r in UNIT_ROWS if "frenzy" in r}        # a shorter reload in a long fight (#4468)
@@ -334,6 +336,13 @@ def shield_command(uuid, name):
     return f"aoe shield {uuid} {s['part']:g} {s['takes']}" if s else None
 
 
+def on_death_command(uuid, name):
+    """The command that tags unit name when another unit rises where it dies (the key "on_death" of data/units.jsonl:
+    the Konnik, #4471), or None. The plugin leaves a marker with the tag FELL + uuid at the place of the death of a
+    tagged unit (AoePlugin.onDeath); train.census reads it. A removed unit (a sunk boat, an unloaded chunk) leaves none."""
+    return f"tag {uuid} add aoe2mc.on_death" if name in ON_DEATH else None
+
+
 def melee_mode(name, s=None):
     """The values of unit name in its melee mode (the key "melee_mode", the Ratha, #4504): range 0 and the attack of the
     key; s: the values of the ranged mode, default those of the unit line. Its trample: MELEE_MODE[name]["trample"]."""
@@ -455,6 +464,9 @@ def setup(game, data):
             game.command(cmd)
     for o in units:                                  # a Shrivamsha Rider dodges projectiles (#4399)
         if cmd := dodge_command(o["uuid"], o["name"]):
+            game.command(cmd)
+    for o in units:                                  # a Konnik rises as a Dismounted Konnik (#4471)
+        if cmd := on_death_command(o["uuid"], o["name"]):
             game.command(cmd)
     for o in units:                                  # the Lou Chuan shoots units in its anti-unit mode (#4505)
         if cmd := vs_units_command(o["uuid"], o["name"], data.get("tile_size", 4)):
