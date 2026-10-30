@@ -178,6 +178,52 @@ def held(issue, now, after=prs_after):
         return True
 
 
+WATCHED = {"needs-human", MUTED, AFTER, "in-progress", "epic", STATUS, CLOSE}   # an owner, a run or a workflow acts
+
+
+def orphans(issues, after=prs_after):
+    """[(number, reason)] of the open tickets that wait for nothing (#4553): no candidate, no run holds them
+    (`in-progress`: `claim.py --stuck` finds a stopped run), and the owner does not see them (`needs-human`, `muted`,
+    `after-release`). issues: the open issues and PRs. A `blocked` ticket waits for another ticket: with no open
+    "Depends on" item nothing removes the label (#303 waited 49 hours, #4442 asked the owner with no `needs-human`).
+    A decision with no `needs-human` (#1569), a "Depends on" cycle, and a "Start after: N PRs after #M" line whose #M
+    is no open PR and did not merge also wait for ever."""
+    open_numbers = {i["number"] for i in issues}
+    open_prs = {i["number"] for i in issues if "pull_request" in i}
+    tickets = {i["number"]: i for i in issues if "pull_request" not in i}
+
+    def cycle(n):
+        seen, todo = set(), [d for d in depends(tickets[n]) if d in tickets]
+        while todo:
+            d = todo.pop()
+            if d == n:
+                return True
+            if d not in seen:
+                seen.add(d)
+                todo += [x for x in depends(tickets[d]) if x in tickets]
+        return False
+    out = []
+    for n, i in sorted(tickets.items()):
+        if labels(i) & WATCHED:
+            continue
+        if i.get("title", "").startswith("Decide:"):
+            out.append((n, "a decision with no `needs-human`: act on the owner's answer, or add `needs-human`"))
+        elif "blocked" in labels(i) and not any(d in open_numbers for d in depends(i)):
+            out.append((n, "`blocked` with no open \"Depends on\" ticket: remove `blocked`, or add `needs-human` "
+                           "and the question"))
+        elif cycle(n):
+            out.append((n, "a \"Depends on\" cycle: remove the wrong line"))
+        elif (s := start_after_prs(i)) and s[1] not in open_prs:
+            try:
+                gone = after(s[1]) is None
+            except Exception:                               # a #M that is no PR: GitHub answers 404
+                gone = True
+            if gone:
+                out.append((n, f"\"Start after\" counts after #{s[1]}, which is no open PR and did not merge: "
+                               "correct the line"))
+    return out
+
+
 def claimed(lines, now, minutes=30):
     """The tickets that a run holds now: a claim ref (top slot `N` or `N-k`, tools/claim.py) with a claim or beat in the
     last `minutes` and no release. `--next` skips them: 4 claims of 4 runs failed on such tickets (2026-10-28).

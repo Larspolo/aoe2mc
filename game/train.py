@@ -386,7 +386,8 @@ FIRE = {r["name"]: (k, r[k]) for r in ROWS for k in ("charge", "charge_attack", 
 def fire_commands(g, uuid, name, techs=None):
     """The plugin commands of the charge attack (`aoe charge`) and the blast at death (`aoe detonate`) of an own ship
     after the research of their technologies (FIRE, #2165), of the charge of the next melee hit of an own unit
-    (`aoe chargeattack`, #4370), and of the thrown axes of a melee unit (`aoe throw`, the key "throw": Gothikon, #4368),
+    (`aoe chargeattack`, #4370), of the thrown axes of a melee unit (`aoe throw`, the key "throw": Gothikon, #4368), and
+    of the delayed second blast where a shot lands (`aoe afterblast`, the key "after_blast": Thunderclap Bombs, #4369),
     or of the technologies techs only. Vanilla has no second attack, no "on death" command, one attack value per mob
     and no shot of a melee mob. An axe has the values of the unit (its attack with the upgrades)."""
     import combat, gather                                          # both import gather, gather imports this module
@@ -402,6 +403,11 @@ def fire_commands(g, uuid, name, techs=None):
             out.append(f"aoe charge {uuid} {max(1, round(c['reload'] / gather.NORMAL * 20))} {c['attack']} {c['shots']} "
                        f"{blast} {bonus}" if kind == "charge" else
                        f"aoe detonate {uuid} {c['attack']} {blast} {bonus}" + " foes" * isinstance(parts, list))
+    for tech, parts in BY_KEY["after_blast"].items():              # Thunderclap Bombs: a second blast where a shot lands
+        for c in parts:                                            # (#4369); buildings: only a shot at a building
+            if tech in (g.techs if techs is None else techs) and any(test(t, name, combat.stats(name)) for t in c["if"]):
+                out.append(f"aoe afterblast {uuid} {max(1, round(c['delay'] / gather.NORMAL * 20))} {c['attack']} "
+                           f"{c['blast'] * g.map.T:g} {c['times']}" + " buildings" * c.get("buildings", False))
     for tech, c in BY_KEY["throw"].items():                        # Gothikon: the axes of a melee unit (#4368)
         if tech in (g.techs if techs is None else techs) and any(test(t, name, combat.stats(name)) for t in c["if"]):
             ticks = [max(1, round(c[k] / gather.NORMAL * 20)) for k in ("reload", "gap")]
@@ -1580,7 +1586,7 @@ def summon(g, name, pos, rotation=math.pi / 2, player=None):
         g.command(cmd)
     if cmd := combat.speed_charge_command(uuid, name, g.map.T):     # a Samurai runs faster to a near target (#4545)
         g.command(cmd)
-    if cmd := combat.charged_volley_command(uuid, name):           # a Xianbei Raider fires a charged volley (#4546)
+    if cmd := combat.charged_volley_command(uuid, name, g.map.T):           # a Xianbei Raider fires a charged volley (#4546)
         g.command(cmd)
     if cmd := combat.dodge_command(uuid, name):                    # a Shrivamsha Rider dodges projectiles (#4399)
         g.command(cmd)
