@@ -3166,6 +3166,7 @@ class Replay:
             timeline += new
             for name in ("trainings", "told", "town_centers", "unknown_research"):   # the cached views of the timeline
                 self.__dict__.pop(name, None)
+            self.apms = None                                         # the APM counts the new actions too (#4775)
             last = max([last] + [e["time"] for e in new])
             own = owners(self.data.get("objects", []), timeline)
             fresh = [f for f in fights(timeline, own) if old < f["start"] <= last]   # new indices: the news stay right
