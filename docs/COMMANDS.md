@@ -5,6 +5,12 @@ these rows are here (2026-10-29).
 
 | Task | Command |
 |---|---|
+| Install | `python3 -m pip install -r requirements-dev.txt` (the setup script and the SessionStart hook do it; a `pip` on the PATH can be another Python) |
+| Test scenarios | `python3 tools/scenarios.py NAME OUT.aoe2scenario`: `tiny`, `gallery`, `stress`, `buildings`, `units`, `village`, `facing`, `walls`, `river` (raised river with dock, bridge, boats), `river_town`, `four_civs`, `battle`, `triggers` (timer, area, create and remove triggers; count with `tools/triggers.py FILE...`), `large` (480 × 480 tiles, #690), `owner_loop` (the play-test map of the `human` skill, #1674), `layers` (terrain layers, #3690), `moods` (the village with `--mood NIGHT`, #1598) |
+| Coverage of AoE2 types | `python3 tools/coverage.py OUT.md` (designs, mappings, fallbacks). Do not commit `docs/coverage.md`: CI on main does it, and `tools/feature_table.py` for `docs/DESIGN.md` |
+| Agent system tools | `health.py`, `operator_check.py`, `feedback.py`, `tokens.py`, `usage.py`, `dashboard.py`, `release.py`: `framework/docs/SYSTEM.md`, "Tools of the system" |
+| Game program options | `python3 game/run.py OUTWorld`: `--server vanilla` (Mojang's server), `--bench N` (commands per second), `--play` (gather resources), `--cheats` (the AoE2 cheat codes in the chat), `--replay [--speed N]` (replay a recorded game) |
+| In-game screenshot options | `tools/mc_shot.py`: `--at X Y Z --look YAW PITCH`, `--more X,Y,Z,YAW,PITCH`, `--player` (adventure mode; a spectator sees invisible mobs); `mc_shot.Client`: a player on the Paper server that clicks menus |
 | Unread random map commands | `python3 tools/rms_survey.py DIR` (Markdown: each `*.rms` of a folder with its warnings, and the warnings with their map counts) |
 | Gather timing | `python3 tools/measure_gather.py` (server, no client: walk, chop and trip times next to AoE2; `--read F.jsonl` reads a `game/run.py --play --log` file) |
 | Replay drift | `python3 tools/replay_drift.py samples/de-64.3.aoe2record --speed 4 --until 10:00 --log F.jsonl` (Paper, no client: distance of each unit to its replay position, stuck, stray and dead units per kind; `--read F.jsonl`, #813) |

@@ -7,9 +7,9 @@ A PR that changes the agent system gets the label `process` (`/issues/N/labels -
 dashboard counts them.
 - Did something cost you time that one line of text prevents? → a pitfall of one topic (the game program, the replay,
   Paper, the server, records, a design) goes to the end of the "Pitfalls" section of its document (the list in
-  `docs/LEARNINGS.md`, "Environment and libraries"); only a line for all runs goes to the end of its section in
-  `docs/LEARNINGS.md`: each run loads that file (run 135 moved 16 topic lines out). Do not change other lines
-  there, also not to stay below 80 lines: the `improve` skill does that.
+  `docs/LEARNINGS.md`), another lesson for some tickets to the end of its section in `docs/PITFALLS.md`; only a line
+  for all runs goes to the end of `docs/LEARNINGS.md` (each call of each run loads it, at most 3000 bytes, #4454).
+  Do not change other lines there: the `improve` skill does that.
 - Did a shell command or a code pattern cost you time that a check can find? → add a rule to
   `.claude/hooks/guard-shell.sh` (with a case in `tests/test_guard_shell.py`) or a fast test, not a line of text.
 - Was an instruction in `CLAUDE.md` or a skill wrong or missing? → correct it.
