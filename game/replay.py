@@ -452,6 +452,7 @@ class Replay:
         self.idled, self.idle_at = {}, 0        # player -> idle villager time (s), game time (ms) of the last count (#3757)
         self.reached, self.researched = {}, {}  # player -> {age: game time (ms)}, researched technologies (#1067)
         self.learned = {}                       # player -> [(game time ms, technology name)] (#3785)
+        self.spends = {}                        # player -> [(game time ms, group, total cost)] of pay (#4390)
         self.vills, self.vhigh = {}, {}         # player -> live villagers (est.), the highest count (#1086)
         self.books = {}                         # title -> the shown lines of a stats book (#3924)
         self.samples, self.minute = {}, -1      # player -> [(minute, pop, villagers, military, resources)], last minute (#3446)
@@ -492,7 +493,7 @@ class Replay:
     def age(self, e):
         self.ages[e.get("player")] = pretty(e["age"]).removesuffix(" Age")
         self.reached.setdefault(e.get("player"), {})[e["age"]] = e.get("time", 0)
-        self.pay(e.get("player"), e["age"])
+        self.pay(e.get("player"), e["age"], e.get("time", 0))
 
     def learn(self, e):
         """Count a research of the timeline for the summary (#1067). A second event of the same technology (de-64.3
@@ -501,7 +502,7 @@ class Replay:
         if name in self.upgrades(e.get("player"), math.inf):
             return
         if not name.endswith(" Age"):
-            self.pay(e.get("player"), name)
+            self.pay(e.get("player"), name, e.get("time", 0))
         self.researched[e.get("player")] = self.researched.get(e.get("player"), 0) + 1
         self.learned.setdefault(e.get("player"), []).append((e.get("time", 0), name))
 
@@ -649,12 +650,29 @@ class Replay:
     def resources(self, p):
         return self.stock.setdefault(p, dict(START))
 
-    def pay(self, p, name):
-        """The record has no resources: subtract the AoE2 cost of a unit, building, technology or age (train and build COSTS)."""
-        import build                                                # gather -> build -> replay: import it late
+    def pay(self, p, name, t=0):
+        """The record has no resources: subtract the AoE2 cost of a unit, building, technology or age (train and build COSTS).
+        The payment keeps its game time t (ms) and its group, for spent (#4390)."""
+        import build, gather                                        # gather -> build -> replay: import them late
         import train
-        for r, v in (train.COSTS.get(name) or build.COSTS.get(name) or {}).items():
+        cost = train.COSTS.get(name) or build.COSTS.get(name) or {}
+        for r, v in cost.items():
             self.resources(p)[r] -= v
+        if name in build.COSTS:
+            group = "buildings"
+        elif TECH_ROW.get(name, {}).get("item") in ("book", "bell") or name.endswith(" Age"):
+            group = "technologies"
+        else:
+            group = "military" if gather.military(name) else "economy"
+        self.spends.setdefault(p, []).append((t, group, sum(cost.values())))
+
+    def spent(self, p, t):
+        """What player p paid up to the game time t (ms), by group: economy, military, technologies, buildings (#4390)."""
+        out = {g: 0 for g in ("economy", "military", "technologies", "buildings")}
+        for when, group, total in self.spends.get(p, []):
+            if when <= t:
+                out[group] += total
+        return out
 
     def trade(self, e):
         """A buy or sell of the record at the own market: the gold and the resource change as in market.trade, and the
@@ -798,7 +816,7 @@ class Replay:
             if (name, x, y) not in self.seen:
                 self.seen.add((name, x, y))
                 if not e.get("free"):                               # a setup of the game program (#3028)
-                    self.pay(e["player"], name)
+                    self.pay(e["player"], name, e["time"])
                 k = len(self.placed)
                 out += self.building(name, e["player"], x, y)
                 if len(self.placed) > k:
@@ -1275,7 +1293,7 @@ class Replay:
         """The summon command of a trained unit, on a free cell in front of its building (south side first). The
         units of one building take the cells one after the other."""
         prefix, _ = self.kinds.get(e["type"], ("?", ""))
-        self.pay(e["player"], e["name"])
+        self.pay(e["player"], e["name"], e["time"])
         if e["name"].startswith("VILLAGER"):
             self.villagers[e["player"]] = self.villagers.get(e["player"], 0) + 1
             self.villager(e["player"], 1)
