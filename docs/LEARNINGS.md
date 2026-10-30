@@ -62,3 +62,4 @@ and `tests/test_learnings.py` fails above 80 lines (#1698).
 - A field set with `vars(g).setdefault(NAME, ...)` on a Gather hides a method of the same name: `ruins.fall` set `g.fell` (a list) and the next felled tree stopped the game (#4147). `grep -n "def NAME" game/gather.py` before you add a field.
 - `tools/claim.py N` succeeds for each N it gets: a loop over several numbers claims all of them (#4132 run took 4 by mistake). Call it once per ticket, and read exit 0 before you work on it.
 - A test of a building with `footprint` in aoe2mc.json uses `[x0, z0, x1, z1]`, but `homes()` and the test constants of `(x0, x1, z0, z1)`: a castle at `(8, 12, 8, 12)` put into the data gave no menu (#4337). Write the data order by hand.
+- A test that patches a data table of a civilization key (`civs.BY_KEY`) must patch the plain `civs` too: `game/monk.py` imports it by its plain name, so a patch of `game.civs` alone changes nothing (#4447, as `tests/test_techs_saxons.py`).
