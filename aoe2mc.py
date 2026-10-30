@@ -1062,6 +1062,23 @@ def turn_map(k, size, terrain, elevation, objects, players):
     return np.rot90(terrain, k).copy(), np.rot90(elevation, k).copy()
 
 
+def water_tiles(terrain, tnames):
+    """The water tiles of the map (bool per tile): name_timeline needs them for the ships."""
+    return np.vectorize(lambda t: terrain_style(tnames.get(int(t), "GRASS_1"))["depth"] > 0, otypes=[bool])(terrain)
+
+
+def record_timeline(src, turn=0):
+    """The timeline of a recorded game as convert() writes it to aoe2mc.json: read, named, turned by `turn` quarter
+    turns and through JSON. The live replay reads a record that AoE2 DE still writes again with it (#4663)."""
+    size, terrain, _, tnames, _, objects, _ = read_map(src)
+    timeline = read_timeline(src)
+    if timeline is None:
+        return []
+    name_timeline(objects, timeline, water=water_tiles(terrain, tnames))
+    turn_timeline(timeline, size, turn)
+    return json.loads(json.dumps(timeline))
+
+
 def turn_timeline(timeline, size, k):
     """Turn the tiles of the timeline events by k quarter turns. A wall tile is a tile index: its middle turns, as the
     trigger tiles do (#3029). The other tiles are points."""
@@ -6026,8 +6043,7 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
     record = src.lower().endswith(RECORDS)
     timeline = read_timeline(src) if record else None
     if timeline is not None:
-        name_timeline(objects, timeline, water=np.vectorize(lambda t: terrain_style(tnames.get(int(t), "GRASS_1"))["depth"] > 0,
-                                                            otypes=[bool])(terrain))
+        name_timeline(objects, timeline, water=water_tiles(terrain, tnames))
     at_stats = Counter()
     if at is not None:
         if timeline is None:
