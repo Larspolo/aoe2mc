@@ -656,6 +656,7 @@ CREATE_OBJECT = (               # the attributes of create_object that objects()
     "max_distance_to_other_zones",  # tiles from the lands of the other players (#3857)
     "max_distance_to_players",      # tiles from the origin of the player land (#3855)
     "min_distance_group_placement", # tiles from the other objects (#3857)
+    "min_distance_to_map_edge",     # tiles from each map edge (#4427)
     "min_distance_to_players",      # tiles from the origin of the player land (#3855)
     "number_of_groups",             # groups of number_of_objects (± group_variance) objects (#3856)
     "number_of_objects",            # default 1; 3 for a VILLAGER: the start villagers of AoE2 DE (#3855, #4120)
@@ -761,6 +762,11 @@ def objects(cmds, consts, terrain, starts, rng, warn, owner=None, ridges=(), lay
             ground = ground & ~dilate(cliff, value(attrs["avoid_cliff_zone"][0], consts) if attrs["avoid_cliff_zone"] else 1)
         if "avoid_forest_zone" in attrs:
             ground = ground & ~dilate(forest, value(attrs["avoid_forest_zone"][0], consts) if attrs["avoid_forest_zone"] else 1)
+        if "min_distance_to_map_edge" in attrs:        # no tile within N tiles of an edge (#4427)
+            edge = np.zeros((n, n), bool)
+            m = value(attrs["min_distance_to_map_edge"][0], consts)
+            edge[m:n - m, m:n - m] = True
+            ground = ground & edge
         if "place_on_forest_zone" in attrs:
             ground = ground & dilate(forest, 1) & ~forest
         land = None                                    # the land of place_on_specific_land_id (#4133)
