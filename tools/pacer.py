@@ -29,7 +29,8 @@ must do as little as possible). For each run it takes the next candidate of its 
 and sends a brief in the `text` of the call: the ticket, its comments, the code places (`ticket_context.context`) and
 the `Usage:` line of the report. The run adopts the claim with its first beat (`claim.py N --adopt NAME`) and starts at
 step 6 (the `scheduled` skill). The brief is data in a `<routine-fire-payload>` block: the run takes only its
-`ticket` and `claim` lines, and the claim ref in git proves them. A run with no candidate (a refill run), and all runs
+`ticket` and `claim` lines, and the claim ref in git proves them. The fire queues the brief as the second turn of a new
+session, after the stored prompt: the first turn ends at once when it finds it (`tokens.py --queued`, #4550). A run with no candidate (a refill run), and all runs
 while the flow brake is on or the last CI run on main is red, get no brief: they do steps 1 to 5 themselves. When a
 call fails, the pacer releases the claim of its run.
 A stuck ticket (`claim.py 0 --stuck`: its run stopped) comes before the candidates (autopilot step 2): the pacer takes
