@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 aoe2mc - Convert an Age of Empires II: DE scenario (.aoe2scenario) or the start state of a recorded game
-(.aoe2record) or an old scenario (.scx, format 1.21; .scn, 1.18 to 1.20) to a Minecraft Java world. A campaign (.aoe2campaign) gives one world per scenario; an old campaign
+(.aoe2record) or of a saved game (.aoe2spgame, .aoe2mpgame) or an old scenario (.scx, format 1.21; .scn, 1.18 to 1.20) to a Minecraft Java world. A campaign (.aoe2campaign) gives one world per scenario; an old campaign
 (.cpx, .cpn) too; its scenarios of other formats (not .scn 1.18 to 1.20, .scx 1.21 or HD 1.22 to 1.26) give the files and the
 steps to save them in the DE editor.
 
@@ -254,6 +254,8 @@ def object_kinds(old=True):
 
 
 RECORDS = (".aoe2record", ".mgz", ".mgx", ".mgl")      # recorded games: DE, HD; UserPatch, AoC; AoK
+SAVES = (".aoe2spgame", ".aoe2mpgame")                  # saved games of DE: single and multiplayer (#4564)
+SAVE_LOG_VERSION = 5                                    # log_version of the DE records 63.0 and 64.3 (saved-games.md)
 RANDOM_MAP = "random-map:"          # the source name of --random-map KIND (#993): read_map makes the map of the seed
 
 
@@ -266,7 +268,7 @@ def read_map(path, seed=1, players=2, teams=None):
         return map_description(rmap.random_map(p[len(RANDOM_MAP):], seed, players, teams), path)
     if p.endswith(".rms"):
         return read_rms(path, seed, players, teams)
-    return (read_record if p.endswith(RECORDS) else read_scx if p.endswith((".scx", ".scn")) or old_format(path) else
+    return (read_record if p.endswith(RECORDS) else read_saved if p.endswith(SAVES) else read_scx if p.endswith((".scx", ".scn")) or old_format(path) else
             read_json if p.endswith(".json") else read_scenario)(path)
 
 
@@ -512,20 +514,50 @@ def read_scenario(path):
 ANNEXES = {618, 619, 620}       # the three annex parts of a town center: the TC design draws them
 
 
-def read_record(path):
-    """The start state of a recorded game (the header snapshot), as read_scenario returns it. The mgz model
-    has no rotation (0) and no texts; the start view of a player is its start position."""
+def saved_match(path):
+    """The mgz match of a saved game of DE (SAVES, #4564; docs/research/saved-games.md): a save is the header of a
+    record. A file that ends after the header gets the log_version and an empty meta block (40 zero bytes) in memory,
+    as parse_match needs them. Not a save: SystemExit with one line. replay:restored reads a save here too."""
+    import io
     try:
         from mgz.model import parse_match
     except ImportError:
-        raise SystemExit("A .aoe2record file needs the mgz package: python3 -m pip install mgz") from None
-    from AoE2ScenarioParser.datasets.terrains import TerrainId
+        raise SystemExit("A saved game needs the mgz package: python3 -m pip install mgz") from None
+    with open(path, "rb") as f:
+        data = f.read()
+    end = int.from_bytes(data[:4], "little") if len(data) >= 8 else 0
+    if not 8 < end <= len(data):
+        raise SystemExit(f"{path}: not a saved game of AoE2 DE (no header block)")
+    if len(data) < end + 4:
+        data = data[:end] + SAVE_LOG_VERSION.to_bytes(4, "little") + bytes(40)
     new_saves()
     try:
-        with open(path, "rb") as f:
-            match = parse_match(f)
-    except RuntimeError as e:      # the mgz model reads DE 13.34 and later only: read the header of older games
-        return read_old_record(path, e)
+        return parse_match(io.BytesIO(data))
+    except Exception as e:          # mgz raises many kinds on bytes that are not a save
+        raise SystemExit(f"{path}: not a saved game of AoE2 DE that mgz can read ({e})") from None
+
+
+def read_saved(path):
+    """The state of a saved game of DE (#4564) in the form of read_record."""
+    return read_record(path, saved_match(path))
+
+
+def read_record(path, match=None):
+    """The start state of a recorded game (the header snapshot), as read_scenario returns it. The mgz model
+    has no rotation (0) and no texts; the start view of a player is its start position. match: a parsed mgz match
+    (read_saved)."""
+    from AoE2ScenarioParser.datasets.terrains import TerrainId
+    if match is None:
+        try:
+            from mgz.model import parse_match
+        except ImportError:
+            raise SystemExit("A .aoe2record file needs the mgz package: python3 -m pip install mgz") from None
+        new_saves()
+        try:
+            with open(path, "rb") as f:
+                match = parse_match(f)
+        except RuntimeError as e:  # the mgz model reads DE 13.34 and later only: read the header of older games
+            return read_old_record(path, e)
     size = match.map.dimension
     terrain = np.zeros((size, size), np.int16)
     elevation = np.zeros((size, size), np.float32)
@@ -6300,7 +6332,8 @@ def match_record(game, profile):
 
 def main(argv=None):
     ap = argparse.ArgumentParser(description="Convert an AoE2 DE scenario to a Minecraft Java world.")
-    ap.add_argument("scenario", nargs="?", help=".aoe2scenario file, .aoe2record, .mgz, .mgx or .mgl (the start state of a recorded game), .scx "
+    ap.add_argument("scenario", nargs="?", help=".aoe2scenario file, .aoe2record, .mgz, .mgx or .mgl (the start state of a recorded game), "
+                    ".aoe2spgame or .aoe2mpgame (the state of a saved game of DE), .scx "
                     "(an old scenario, format 1.21), .json (a map description, README), .rms (the land of a random map "
                     "script, with --seed), or "
                     ".aoe2campaign, .cpx or .cpn (one world per scenario; old scenarios of other formats than .scn 1.18 to "
