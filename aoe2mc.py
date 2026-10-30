@@ -288,7 +288,8 @@ def read_rms(path, seed, players=2, teams=None):
     with open(path, encoding="utf-8", errors="replace") as f:
         text = f.read()
     try:
-        return map_description(rmap.generate(text, seed, players, teams=teams, folder=os.path.dirname(path)), path)
+        return map_description(rmap.generate(text, seed, players, teams=teams, folder=os.path.dirname(path),
+                                                     name=os.path.basename(path)), path)
     except rmap.RmsError as e:
         raise OptionError(f"{path}: {e}") from None
 
