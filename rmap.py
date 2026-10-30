@@ -636,7 +636,10 @@ def generate(text, seed, players=2, size=None, warn=None, teams=None, folder=Non
                         continue
                     a = turn + 2 * np.pi * order.index(p) / players
                     r = ring + (rng.uniform(-vary, vary) if vary else 0)   # no draw with no change: same maps
-                    c = (int(round((n - 1) / 2 + r * n * np.cos(a))), int(round((n - 1) / 2 + r * n * np.sin(a))))
+                    c = (int(round((box[0] + box[1] - 1) / 2 + r * n * np.cos(a))),   # the circle in the box middle,
+                         int(round((box[2] + box[3] - 1) / 2 + r * n * np.sin(a))))   # each start inside the box (#4719)
+                    c = tuple(int(np.clip(v, lo + min(base, (hi - lo) // 2), hi - 1 - min(base, (hi - lo - 1) // 2)))
+                              for v, lo, hi in ((c[0], box[0], box[1]), (c[1], box[2], box[3])))
                     starts.append({"player": p, "x": c[0], "y": c[1], "base_size": base, "land": len(lands)})
                     t = teams[p - 1] if teams and "set_zone_by_team" in attrs else None
                     z = zone if zone is not None else -1 - len(lands)
