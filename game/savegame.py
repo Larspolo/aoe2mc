@@ -303,6 +303,8 @@ def dump(g):
                     for x in sides(g)}}
     for b in bots(g):
         d["players"][str(b.g.player)]["bot"] = {f: getattr(b, f) for f in BOT}
+        if getattr(b, "script", None):                                 # the rules come from the .per file again (#4575)
+            d["players"][str(b.g.player)]["bot"]["script"] = script_state(b.script)
     if getattr(g.game, "settings", None):
         d["settings"] = dict(g.game.settings)
     if getattr(g.game, "treaty", 0):                                   # treaty.start: the time goes on (#2409)
@@ -313,6 +315,12 @@ def dump(g):
     import recap                                                       # recap imports train, which imports savegame
     d["game_time"] = round(recap.game_time(g), 3)                      # the game seconds: a pause keeps them (#3377)
     return d
+
+
+def script_state(s):
+    """The state of a per.Script: JSON keys are strings, so the goals and timers are [id, value] pairs."""
+    return {"goals": sorted(map(list, s.goals.items())), "timers": sorted(map(list, s.timers.items())),
+            "off": sorted(s.off), "sn": dict(sorted(s.sn.items())), "attacking": s.attacking}
 
 
 def owner_record(g):
@@ -569,10 +577,17 @@ def relics_again(g, d):
 
 
 def bots_again(g, d):
-    """The attack time and wave, the foe and the difficulty of each bot go on (#2325, #4022)."""
+    """The attack time and wave, the foe, the difficulty and the AI script state of each bot go on (#2325, #4022,
+    #4575)."""
     import bot as ai
     for b in bots(g):
         for f, v in d["players"].get(str(b.g.player), {}).get("bot", {}).items():
+            if f == "script":
+                if getattr(b, "script", None):                         # a bot with no script now ignores the state
+                    sc = b.script
+                    sc.goals, sc.timers = dict(map(tuple, v["goals"])), dict(map(tuple, v["timers"]))
+                    sc.off, sc.sn, sc.attacking = set(v["off"]), dict(v["sn"]), v["attacking"]
+                continue
             if f == "difficulty" and v != b.difficulty:                # the work rate of the saved level (bot.Bot)
                 r = ai.LEVELS[b.difficulty]["gather"] / ai.LEVELS[v]["gather"]
                 b.g.chop = {k: s * r for k, s in b.g.chop.items()}
