@@ -253,7 +253,23 @@ class Script:
         row = names().get(name)
         if row is None or row["kind"] not in kinds:
             return self.warn(" or ".join(kinds), name)
+        if "set" in row:                                    # a set or class: count() sums its units (#4681)
+            return tuple(row["set"])
+        if "civ" in row:                                    # the unique unit or technology of the civilization (#4681)
+            return self.unique(row["civ"]) or self.warn(" or ".join(kinds), name)
         return row.get("game")
+
+    def unique(self, part):
+        """The unique unit ("unit"), its elite unit ("elite"), its elite upgrade ("upgrade") or the Castle Age unique
+        technology ("research") of the civilization of the bot, or None."""
+        import civs
+        import train
+        civ = civs.real(self.bot.g)
+        u = civs.UNIQUE.get(civ)
+        names = {r["name"] for r in train.ROWS}
+        n = {"unit": u, "elite": u and f"ELITE_{u}", "upgrade": u and f"ELITE_{u}_UPGRADE",
+             "research": next((r["name"] for r in train.ROWS if r.get("civ") == civ and r.get("age") == 2), None)}[part]
+        return n if n in names else None
 
     def step(self):
         """Check the facts of each rule that is not disabled and run the actions of each rule whose facts are true."""
@@ -343,6 +359,8 @@ class Script:
         """The live units or complete buildings of game name n of Gather g (default: the own one); total: also the
         queued units and the buildings under construction (the -total facts)."""
         import train
+        if isinstance(n, tuple):
+            return sum(self.count(m, g, total) for m in n)
         g = g or self.bot.g
         alive = len(g.villagers) if n.startswith("VILLAGER") else \
             sum(u == n for u in g.soldiers.values()) + train.owned(g).count(n)
