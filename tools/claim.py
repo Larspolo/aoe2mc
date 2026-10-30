@@ -451,8 +451,6 @@ def foreign(number, base=f"origin/{CONFIG['branch']}"):
     """(M, commit) for each own commit of HEAD that closes another ticket M (`Closes #M`): such a branch ships two
     tickets (#4569). A merge of `base` adds nothing: `base..HEAD` leaves out its commits."""
     if git("rev-parse", "--is-shallow-repository", check=False).stdout.strip() == "true":
-        git("fetch", "-q", "--unshallow", base.split("/")[0], check=False)   # else old commits of main look own (#4471)
-    if git("rev-parse", "--is-shallow-repository", check=False).stdout.strip() == "true":
         # A shallow clone cuts off the merge bases: the commits of main then show as own commits (#4604).
         git("fetch", "--quiet", "--unshallow", base.split("/")[0], check=False)
     out = []
