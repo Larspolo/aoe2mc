@@ -8,12 +8,13 @@ while the key `pacer` in `[pacing]` of `steering/system/system.toml` is "workflo
     python3 framework/tools/pacer.py --dry-run    # print the calls, send nothing
     python3 framework/tools/pacer.py --log F      # also add the record of the cycle to F, one JSON line (`record`)
     python3 framework/tools/pacer.py --switch     # exit 0 while the loop runs, 3 to stop it, 1 when the key is missing (`switch`)
+    python3 framework/tools/pacer.py --secrets    # the JSON list of the secret names that pacer.yml reads (`secret_names`)
 
 Each scheduled task has an API trigger (a URL and a token, made in the Claude app). The environment gives them:
 `PACER_URL_MAIN` and `PACER_TOKEN_MAIN` for the main task, `PACER_URL_<LANE>` and `PACER_TOKEN_<LANE>` for each lane of
 `weights` in `[pacing]` of `steering/system/system.toml`. A lane without a URL gets no runs: its tickets wait.
 Several Claude accounts (#4237, `accounts`): another account NAME has `CLAUDE_CODE_OAUTH_TOKEN_<NAME>`,
-`PACER_URL_<NAME>_<TASK>` and `PACER_TOKEN_<NAME>_<TASK>` in `ALL_SECRETS` (all secrets of pacer.yml). Each account
+`PACER_URL_<NAME>_<TASK>` and `PACER_TOKEN_<NAME>_<TASK>` (`secret_names`: pacer.yml reads them by name). Each account
 gets its own quota read, target and claims (`account_targets`); the global limits of `usage.fire` cap the sum of the
 missing runs, and `assign` gives each run to the account with the most missing runs. With one account the plan is the
 same as before.
@@ -66,14 +67,35 @@ def calls(k, runs, env):
 TOKEN = "CLAUDE_CODE_OAUTH_TOKEN"   # the secret of the quota read of an account (`usage.read_usage`)
 
 
+SLOTS = 35   # the `SECRET_<i>` lines of pacer.yml: the first account and 4 more, each with 3 tasks
+
+
+def secret_names(config=None):
+    """The names of the secrets that pacer.yml reads, padded with "" to `SLOTS` (`--secrets`): the first account and
+    each other table of `[accounts]`, for the main task and each lane of `weights` in `[pacing]`. pacer.yml reads them
+    one by one, not as `toJSON(secrets)`: GitHub held runs that read all secrets as "may be malicious" (2026-10-30)."""
+    config = usage.CONFIG if config is None else config
+    tasks = ["MAIN", *(lane.upper() for lane in config["pacing"]["weights"])]
+    names = []
+    for i, account in enumerate(config.get("accounts") or [None]):
+        tag = "" if i == 0 else f"_{account.upper()}"
+        names += [f"{TOKEN}{tag}", *(f"PACER_{kind}{tag}_{t}" for t in tasks for kind in ("URL", "TOKEN"))]
+    if len(names) > SLOTS:
+        raise ValueError(f"{len(names)} secrets, pacer.yml has {SLOTS} SECRET_<i> lines: add lines and raise SLOTS")
+    return names + [""] * (SLOTS - len(names))
+
+
 def accounts(env, config=None):
-    """[(name, env)]: the Claude accounts of the secrets (#4237, docs/COLLABORATORS.md part 3). `ALL_SECRETS` (the JSON
-    of all secrets, pacer.yml) adds to `env`. The first account (the first table of `[accounts]`) has the present names
-    (`CLAUDE_CODE_OAUTH_TOKEN`, `PACER_URL_<TASK>`, `PACER_TOKEN_<TASK>`). Another account NAME has
+    """[(name, env)]: the Claude accounts of the secrets (#4237, docs/COLLABORATORS.md part 3). pacer.yml gives the
+    secrets of `secret_names` as `SECRET_NAMES` (their JSON list) and `SECRET_<i>` (the value of name i); `ALL_SECRETS`
+    (a JSON dict, for a local `operator_check.py`) adds to `env` too. The first account (the first table of `[accounts]`)
+    has the present names (`CLAUDE_CODE_OAUTH_TOKEN`, `PACER_URL_<TASK>`, `PACER_TOKEN_<TASK>`). Another account NAME has
     `CLAUDE_CODE_OAUTH_TOKEN_<NAME>`, `PACER_URL_<NAME>_<TASK>` and `PACER_TOKEN_<NAME>_<TASK>`: its env gets them under the
-    present names, so that each account reads the same way. A new account needs only its secrets."""
+    present names, so that each account reads the same way. A new account needs its secrets and its table."""
     import agent_config
     env = {**env, **json.loads(env.get("ALL_SECRETS") or "{}")}
+    env |= {n: env[f"SECRET_{i}"] for i, n in enumerate(json.loads(env.get("SECRET_NAMES") or "[]"))
+            if n and env.get(f"SECRET_{i}")}
     out = [(agent_config.first_account(config), env)]
     for name in sorted(k[len(TOKEN) + 1:] for k in env if k.startswith(f"{TOKEN}_") and env[k]):
         own = {TOKEN: env[f"{TOKEN}_{name}"]}
@@ -393,7 +415,11 @@ def main(argv=None, env=os.environ):
     ap.add_argument("--dry-run", action="store_true", help="print the calls, send nothing")
     ap.add_argument("--log", metavar="FILE", help="add the record of this cycle to FILE (one JSON line)")
     ap.add_argument("--switch", action="store_true", help="exit 0 while the loop runs, 3 to stop it")
+    ap.add_argument("--secrets", action="store_true", help="print the JSON list of the secret names of pacer.yml")
     a = ap.parse_args(argv)
+    if a.secrets:
+        print(json.dumps(secret_names()))
+        return
     if a.switch:
         try:
             sys.exit(0 if switch() else 3)

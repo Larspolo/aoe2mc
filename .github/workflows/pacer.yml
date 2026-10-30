@@ -23,7 +23,16 @@ concurrency:
   cancel-in-progress: false   # one loop at a time; a new run waits for the live loop
 
 jobs:
+  names:   # the secret names of the accounts in agent.toml and the lanes (`pacer.py secret_names`)
+    runs-on: ubuntu-latest
+    outputs:
+      list: ${{ steps.names.outputs.list }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: names
+        run: echo "list=$(python3 framework/tools/pacer.py --secrets)" >> "$GITHUB_OUTPUT"
   pacer:
+    needs: names
     runs-on: ubuntu-latest
     timeout-minutes: 350     # below the 360 of GitHub: the loop ends at 330 and starts the next run
     steps:
@@ -44,11 +53,46 @@ jobs:
           GIT_AUTHOR_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
           GIT_COMMITTER_NAME: github-actions[bot]
           GIT_COMMITTER_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
-          # The quota read of the first account (`usage.read_usage`). All secrets: `framework/tools/pacer.py accounts()` finds each
-          # account in them (`PACER_URL_<TASK>`, and `CLAUDE_CODE_OAUTH_TOKEN_<NAME>`, `PACER_URL_<NAME>_<TASK>`
-          # of another account, #4237): a new account needs only its secrets.
+          # The quota read of the first account (`usage.read_usage`). The secrets of each account in agent.toml, one by
+          # one (`framework/tools/pacer.py secret_names`, `accounts`, #4237): name i of SECRET_NAMES has the value SECRET_<i>.
+          # Not `toJSON(secrets)`: GitHub held runs that read all secrets as "may be malicious" (2026-10-30).
           CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          ALL_SECRETS: ${{ toJSON(secrets) }}
+          SECRET_NAMES: ${{ needs.names.outputs.list }}
+          SECRET_0: ${{ secrets[fromJSON(needs.names.outputs.list)[0]] }}
+          SECRET_1: ${{ secrets[fromJSON(needs.names.outputs.list)[1]] }}
+          SECRET_2: ${{ secrets[fromJSON(needs.names.outputs.list)[2]] }}
+          SECRET_3: ${{ secrets[fromJSON(needs.names.outputs.list)[3]] }}
+          SECRET_4: ${{ secrets[fromJSON(needs.names.outputs.list)[4]] }}
+          SECRET_5: ${{ secrets[fromJSON(needs.names.outputs.list)[5]] }}
+          SECRET_6: ${{ secrets[fromJSON(needs.names.outputs.list)[6]] }}
+          SECRET_7: ${{ secrets[fromJSON(needs.names.outputs.list)[7]] }}
+          SECRET_8: ${{ secrets[fromJSON(needs.names.outputs.list)[8]] }}
+          SECRET_9: ${{ secrets[fromJSON(needs.names.outputs.list)[9]] }}
+          SECRET_10: ${{ secrets[fromJSON(needs.names.outputs.list)[10]] }}
+          SECRET_11: ${{ secrets[fromJSON(needs.names.outputs.list)[11]] }}
+          SECRET_12: ${{ secrets[fromJSON(needs.names.outputs.list)[12]] }}
+          SECRET_13: ${{ secrets[fromJSON(needs.names.outputs.list)[13]] }}
+          SECRET_14: ${{ secrets[fromJSON(needs.names.outputs.list)[14]] }}
+          SECRET_15: ${{ secrets[fromJSON(needs.names.outputs.list)[15]] }}
+          SECRET_16: ${{ secrets[fromJSON(needs.names.outputs.list)[16]] }}
+          SECRET_17: ${{ secrets[fromJSON(needs.names.outputs.list)[17]] }}
+          SECRET_18: ${{ secrets[fromJSON(needs.names.outputs.list)[18]] }}
+          SECRET_19: ${{ secrets[fromJSON(needs.names.outputs.list)[19]] }}
+          SECRET_20: ${{ secrets[fromJSON(needs.names.outputs.list)[20]] }}
+          SECRET_21: ${{ secrets[fromJSON(needs.names.outputs.list)[21]] }}
+          SECRET_22: ${{ secrets[fromJSON(needs.names.outputs.list)[22]] }}
+          SECRET_23: ${{ secrets[fromJSON(needs.names.outputs.list)[23]] }}
+          SECRET_24: ${{ secrets[fromJSON(needs.names.outputs.list)[24]] }}
+          SECRET_25: ${{ secrets[fromJSON(needs.names.outputs.list)[25]] }}
+          SECRET_26: ${{ secrets[fromJSON(needs.names.outputs.list)[26]] }}
+          SECRET_27: ${{ secrets[fromJSON(needs.names.outputs.list)[27]] }}
+          SECRET_28: ${{ secrets[fromJSON(needs.names.outputs.list)[28]] }}
+          SECRET_29: ${{ secrets[fromJSON(needs.names.outputs.list)[29]] }}
+          SECRET_30: ${{ secrets[fromJSON(needs.names.outputs.list)[30]] }}
+          SECRET_31: ${{ secrets[fromJSON(needs.names.outputs.list)[31]] }}
+          SECRET_32: ${{ secrets[fromJSON(needs.names.outputs.list)[32]] }}
+          SECRET_33: ${{ secrets[fromJSON(needs.names.outputs.list)[33]] }}
+          SECRET_34: ${{ secrets[fromJSON(needs.names.outputs.list)[34]] }}
         run: |
           text=$(git rev-parse HEAD:.github/workflows/pacer.yml)   # the checkout is the commit of the text of this run
           end=$((SECONDS + 330 * 60))
