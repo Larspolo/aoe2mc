@@ -45,7 +45,7 @@ def stats(row):
 
 def check_units(row):
     form(row, {"name": str, **STATS}, {"sight": int, "min_range": NUMBER, "note": str, "sail": NUMBER, "convert": int,
-                                       "accuracy": NUMBER, "dodge": dict, "on_death": str})
+                                       "accuracy": NUMBER, "dodge": dict, "on_death": str, "trample": dict})
     stats(row)
     assert row.get("on_death", "MILITIA") in NAMES["units.jsonl"], row["name"]   # combat.ON_DEATH (#4471)
 

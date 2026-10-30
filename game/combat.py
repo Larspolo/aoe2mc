@@ -102,6 +102,7 @@ FORT_MIN_RANGE = {r["name"]: r["min_range"] for r in BUILDING_ROWS if "min_range
 ATTACK_GOLD = {r["name"]: r["attack_gold"] for r in UNIT_ROWS if "attack_gold" in r}
 REGEN = {r["name"]: r["regen"] for r in UNIT_ROWS if "regen" in r}             # the key "regen": hit points per minute (#2688)
 PASS = {r["name"]: r["pass"] for r in UNIT_ROWS if "pass" in r}               # the key "pass" of data/units.jsonl
+TRAMPLE = {r["name"]: r["trample"] for r in UNIT_ROWS if "trample" in r}       # the key "trample": the elephants (#4397)
 # The part of the damage on the units behind the target, when it is not one half (wiki: "100% pass-through damage").
 PASS_PART = {r["name"]: r["pass_part"] for r in UNIT_ROWS if "pass_part" in r}
 DEFAULT, BUILDING = Stats(40, 4, 0, 0, 0, 2.0), Stats(1000, 0, 0, 7, 0, 0.0, {}, ("building",))
@@ -154,7 +155,7 @@ def elevation_command(data):
                                                                    for full in [{} if data.get("full_tech_tree") else p]])
 
 
-def stats_command(uuid, name, s=None, taken=1.0, friendly=1.0, less=None, ignore=False, rage=0, reflect=0.0):
+def stats_command(uuid, name, s=None, taken=1.0, friendly=1.0, less=None, ignore=False, rage=0, reflect=0.0, dot=None):
     """The plugin command that gives entity `uuid` the values of AoE2 unit `name` (or the values s, for example with
     technologies, #655): max_health = hit points (at most 1024, the limit of the attribute), the lost hit points stay lost
     (a new unit has full health, #940), and the values of `damage` (the same rule in AoePlugin.java). The range kind:
@@ -163,13 +164,16 @@ def stats_command(uuid, name, s=None, taken=1.0, friendly=1.0, less=None, ignore
     of the friendly fire that it takes (civs.friendly, #2418). Then, when they are set, the damage less from attacker
     classes (less, Royal Heirs) and 1 when its hits ignore the armor (ignore, Wootz Steel): train.hits (#4331), the attack
     more for each 10 % of lost hit points (rage, Hamask) and the part of a melee hit that the attacker takes back
-    (reflect, Lamellar Armor, #4332)."""
+    (reflect, Lamellar Armor, #4332). Last, dot: the damage over time of each hit, (damage, AoE2 seconds, the target
+    classes or ()) of train.dot (#4339), its seconds as ticks at Normal speed."""
     s = s or stats(name)
     bonus = ",".join(f"{c}:{n}" for c, n in sorted(s.bonus.items())) or "-"
     kind = 0 if s.range <= 0 else 2 if name in MELEE_RANGED else 1
     tail = [(f"{taken:g}", taken != 1), (f"{friendly:g}", friendly != 1),
             (",".join(f"{c}:{n}" for c, n in sorted((less or {}).items())) or "-", bool(less)), ("1" if ignore else "0", ignore),
             (f"{rage:g}", rage != 0), (f"{reflect:g}", reflect != 0)]
+    if dot:                                                            # Curare, Red Cliffs Tactics (Dot.java)
+        tail += [(f"{dot[0]:g}", True), (str(max(1, round(dot[1] / NORMAL * 20))), True), (",".join(sorted(dot[2])) or "-", True)]
     last = max([i + 1 for i, (_, on) in enumerate(tail) if on] + [0])   # the fields up to the last set one
     return (f"aoe stats {uuid} {min(s.hp, 1024)} {s.attack} {s.melee} {s.pierce} {kind} "
             f"{','.join(s.classes) or '-'} {bonus} {round(s.reload / NORMAL * 20) or 20}"
@@ -230,6 +234,18 @@ def on_death_command(uuid, name):
     the Konnik, #4471), or None. The plugin leaves a marker with the tag FELL + uuid at the place of the death of a
     tagged unit (AoePlugin.onDeath); train.census reads it. A removed unit (a sunk boat, an unloaded chunk) leaves none."""
     return f"tag {uuid} add aoe2mc.on_death" if name in ON_DEATH else None
+
+
+def trample_command(uuid, name, T, t=None):
+    """The plugin command of the trample damage of unit name (the key "trample" of data/units.jsonl: the elephants,
+    #4397), or None. Each melee hit also hurts the other enemy units within "radius" tiles (× T blocks) of the target
+    with "part" of the AoE2 damage on each (AoE2 DE wiki "Trample damage"). t: other values, for example of a technology
+    (epic #4096): a fixed "damage" instead of the part, and "ignore": true for a damage that ignores the armor."""
+    t = t or TRAMPLE.get(name)
+    if not t:
+        return None
+    fixed = f" {t['damage']:g} {int(bool(t.get('ignore')))}" if t.get("damage") else ""
+    return f"aoe trample {uuid} {t.get('part', 0):g} {round(t['radius'] * T, 6):g}{fixed}"
 
 
 def sight(name, s=None):
@@ -312,6 +328,9 @@ def setup(game, data):
     for o in units:                                  # a Konnik rises as a Dismounted Konnik (#4471)
         if cmd := on_death_command(o["uuid"], o["name"]):
             game.command(cmd)
+    for o in units:                                  # an elephant tramples the units next to its target (#4397)
+        if cmd := trample_command(o["uuid"], o["name"], data.get("tile_size", 4)):
+            game.command(cmd)
     for o in units:                                  # after the stats: the plugin needs them for the sight
         if cmd := sight_command(o["uuid"], o["name"], data.get("tile_size", 4)):
             game.command(cmd)
@@ -340,7 +359,7 @@ def wall(name, age, civ=None, factor=1):
     return civs.hp(civ, name, Stats(hp[age], 0, melee, pierce, 0, 0.0, {}, ("building", WALL) + (STONE,) * (not name.startswith("PALISADE"))), age, factor)
 
 
-def building(uuid, name, player, box, T=4, inside=(), s=None, low=None, factor=1, more=0, taken=1):
+def building(uuid, name, player, box, T=4, inside=(), s=None, low=None, factor=1, more=0, taken=1, through=""):
     """The commands that make building `name` of `player` a target of attacks (#517): an invisible slime without AI
     that fills the footprint takes the attacks (a mob attacks only a living entity: AoePlugin.java), and the plugin
     keeps the AoE2 hit points. box: the blocks (x0, y0, z0, x1, y1, z1), both ends included, y0 the ground.
@@ -352,7 +371,8 @@ def building(uuid, name, player, box, T=4, inside=(), s=None, low=None, factor=1
     s: the Stats (default: stats(name); a wall of the game program: wall(), #1322). factor: of the base arrows
     (civs.arrows, #2178). more: the arrows of the technologies (train.more_arrows, #4258). taken: the factor of the
     bonus damage that the building takes (build.taken: Citadels, #4281), only for a building that shoots; a factor
-    other than 1 writes the classes and the bonus ("-": none) before it.
+    other than 1 writes the classes and the bonus ("-": none) before it. through: the end of `aoe arrows` for arrows that
+    pass through the units (train.pass_arrows: Svan Towers, #4282).
     At 0 hit points the plugin fills the box with air. The invisibility effect hides the slime: the tag Invisible is
     only for armor stands, the server drops it on a slime (#636)."""
     x0, y0, z0, x1, y1, z1 = box
@@ -365,7 +385,7 @@ def building(uuid, name, player, box, T=4, inside=(), s=None, low=None, factor=1
     return [f"summon slime {(x0 + x1 + 1) / 2} {y0} {(z0 + z1 + 1) / 2} {{Size:{size - 1},NoAI:1b,Silent:1b,"
             f"NoGravity:1b,PersistenceRequired:1b,{INVISIBLE},Tags:[\"aoe2mc.building\"],UUID:[I;{ints}]}}",
             f"team join p{player} {uuid}"] + \
-        [f"aoe arrows {uuid} {garrison.arrows(name, inside, factor, more)}"] * bool(s.attack and s.range) + \
+        [f"aoe arrows {uuid} {garrison.arrows(name, inside, factor, more)}{through}"] * bool(s.attack and s.range) + \
         [f"aoe building {uuid} {s.hp} {s.melee} {s.pierce} {' '.join(map(str, box))}"   # after the arrows: no shot of 1
          + (f" {s.attack} {s.range * T} {round(s.reload / NORMAL * 20)} {low * T}"   # (#1546)
             if s.attack and s.range else "")
