@@ -11,7 +11,7 @@ import pytest
 import aoe2mc
 import mcvalid
 import world_reader
-from conftest import entity_ids
+from entities import entity_ids
 
 SAMPLES = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "samples")
 

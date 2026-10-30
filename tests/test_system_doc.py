@@ -1,4 +1,4 @@
-"""docs/SYSTEM.md: each file of the table "Generic and specific files" and of framework/files.txt exists (#904, #4192)."""
+"""framework/docs/SYSTEM.md: each file of the table "Generic and specific files" and of framework/files.txt exists (#904, #4192)."""
 import os
 import sys
 
@@ -13,7 +13,7 @@ def table_paths():
 
 def test_the_table_has_the_system_files():
     paths = table_paths()
-    for p in ("CLAUDE.md", "tools/claim.py", ".claude/skills/autopilot/SKILL.md", ".github/workflows/automerge.yml"):
+    for p in ("CLAUDE.md", "framework/tools/claim.py", ".claude/skills/autopilot/SKILL.md", ".github/workflows/automerge.yml"):
         assert p in paths
 
 
@@ -28,4 +28,4 @@ def test_each_skill_and_workflow_is_in_the_table():
     flows = {f".github/workflows/{f}" for f in os.listdir(os.path.join(ROOT, ".github", "workflows"))
              if f != "worlds.yml"}                                  # releases of worlds: not a part of the agent loop
     missing = (skills | flows) - paths
-    assert not missing, f"add a row for each of {sorted(missing)} to the table 'Generic and specific files' of docs/SYSTEM.md"
+    assert not missing, f"add a row for each of {sorted(missing)} to the table 'Generic and specific files' of framework/docs/SYSTEM.md"

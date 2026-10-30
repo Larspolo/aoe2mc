@@ -459,7 +459,7 @@
     <div class="ax-card ax-wide" id="reviews-card">
       <div>
         <h2 class="ax-card-title">How often the process review runs</h2>
-        <p class="ax-note">Each bar is one process review of the <code>improve</code> skill (a report that starts with "Process review"). Its height is the number of pull requests that merged since the review before it: the gap of <code>tools/claim.py --review</code> (a review with a change makes the next gap smaller, a review with no change makes it larger). A blue bar names PRs in its report, an orange bar names none. Hover a bar for its numbers.</p>
+        <p class="ax-note">Each bar is one process review of the <code>improve</code> skill (a report that starts with "Process review"). Its height is the number of pull requests that merged since the review before it: the gap of <code>framework/tools/claim.py --review</code> (a review with a change makes the next gap smaller, a review with no change makes it larger). A blue bar names PRs in its report, an orange bar names none. Hover a bar for its numbers.</p>
       </div>
       <div class="ax-chart ax-chart-sm" id="reviews-chart" data-source="reviews"></div>
     </div>
@@ -523,7 +523,7 @@
             <dt>Started by</dt><dd>Scheduled task “aoe2mc autopilot haiku” (model Haiku): no schedule, only the pacer fires it, a new session each time.</dd>
             <dt>Tickets</dt><dd>Only lane:haiku: size S, each file and value named, a merged PR with the same pattern, verify level 1. A ticket that is not clear loses the label and goes to Opus.</dd>
             <dt>Work</dt><dd>The tickets only: no epic check, queue refill, roadmap or process review. Stops when no lane:haiku ticket is ready.</dd>
-            <dt>Quota</dt><dd>One run counts 0.25 (start value in agent.toml) until <code>tools/health.py</code> measures the weight from 10 usage intervals with Haiku runs.</dd>
+            <dt>Quota</dt><dd>One run counts 0.25 (start value in agent.toml) until <code>framework/tools/health.py</code> measures the weight from 10 usage intervals with Haiku runs.</dd>
           </dl>
         </div>
       </div>
@@ -1160,7 +1160,7 @@ dash.calc('goal_history', {
       .call(styleAxis)
       .call((g) => g.select('.domain').remove())
       .call((g) => g.selectAll('.tick line').attr('stroke', 'var(--cds-chart-grid)'));
-    // The owner's target: 90 % two hours before the reset (tools/usage.py), a fixed reference.
+    // The owner's target: 90 % two hours before the reset (framework/tools/usage.py), a fixed reference.
     svg.append('line').attr('x1', left).attr('x2', W - 6).attr('y1', y(0.9)).attr('y2', y(0.9))
       .attr('stroke', 'var(--cds-chart-reference)').attr('stroke-dasharray', '2 3');
     svg.append('text').attr('x', W - 8).attr('y', y(0.9) - 4).attr('text-anchor', 'end')

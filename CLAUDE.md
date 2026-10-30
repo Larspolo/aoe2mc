@@ -1,8 +1,8 @@
 # aoe2mc – guide for Claude Code
 
 aoe2mc converts an Age of Empires II: DE scenario (`.aoe2scenario`) into a Minecraft Java world.
-The owners (`owners` in `agent.toml`; `owner`, Larspolo, decides, #4229) steer through GitHub Issues (`docs/STEERING.md`).
-The agent system: `docs/SYSTEM.md`. Write all text in ASD-STE100 Simplified Technical English (short sentences,
+The owners (`owners` in `agent.toml`; `owner`, Larspolo, decides, #4229) steer through GitHub Issues (`framework/docs/STEERING.md`).
+The agent system: `framework/docs/SYSTEM.md`. Write all text in ASD-STE100 Simplified Technical English (short sentences,
 active voice, imperative), as the README does.
 
 ## Commands

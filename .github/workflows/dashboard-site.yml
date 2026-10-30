@@ -25,7 +25,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5  # pip for numpy (tools/health.py): the system Python refuses it (#2631)
+      - uses: actions/setup-python@v5  # pip for numpy (framework/tools/health.py): the system Python refuses it (#2631)
         with:
           python-version: "3.12"
       - run: python3 -m pip install -q numpy

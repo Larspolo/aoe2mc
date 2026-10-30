@@ -12,7 +12,9 @@ The wiki HTML pages give a Cloudflare challenge (403); the API and the image ser
 import argparse
 import io
 import json
+import os
 import re
+import sys
 import time
 import urllib.error
 import urllib.parse
@@ -20,7 +22,8 @@ import urllib.request
 
 from PIL import Image
 
-from agent_config import CONFIG
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "framework", "tools"))
+from agent_config import CONFIG  # noqa: E402
 
 API = "https://ageofempires.fandom.com/api.php"
 HEADERS = {"User-Agent": f"aoe2mc-refimage/1.0 (https://github.com/{CONFIG['repo']})"}   # the default urllib agent gets 403

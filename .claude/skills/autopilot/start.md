@@ -2,11 +2,11 @@
 
 Read this file at the start of a run with no brief of the pacer, and before each later ticket of a run (`more.md`).
 A run with an adopted brief (`scheduled` skill, step 0) does not read it for its first ticket: the pacer did these
-steps for it (`tools/pacer.py`). Part of the `autopilot` skill (#1700).
+steps for it (`framework/tools/pacer.py`). Part of the `autopilot` skill (#1700).
 
 ## 1. Start
 
-Steps 1 to 5 read GitHub in one call: `python3 tools/cycle_start.py` (`--lane L` in lane L). Run it at the
+Steps 1 to 5 read GitHub in one call: `python3 framework/tools/cycle_start.py` (`--lane L` in lane L). Run it at the
 start and before each later ticket, act on its sections, and call the API only for what it does not show.
 1. Exit 3 (label `paused`): stop now, do not comment. No status issue: make it (`report.md`).
 2. Keep a short list of time sinks during the run (`report.py` measures the times)
@@ -21,7 +21,7 @@ Section `PRs` lists the open agent PRs (branch `claude/*`, `agent/*` or `ccr-*`,
 - Its ticket is closed as "not planned" → close the PR with a one-line comment.
 - Green and open for more than 10 minutes → start the Automerge sweep and say so on the status issue (`github.md`, #734).
 - Red CI, a conflict, or owner review comments (section `Feedback`) and no live run → take it over and fix it now
-  (a conflict: `python3 tools/merge_main.py --push N` on its branch, `conflict.md`; else step 6.8). That is the work
+  (a conflict: `python3 framework/tools/merge_main.py --push N` on its branch, `conflict.md`; else step 6.8). That is the work
   of this cycle.
 - Section `Flow brake` is on → repair one PR or go to step 8: no new ticket (`overlap.md`).
 
@@ -37,10 +37,10 @@ broke it), and do it first. CI makes the same ticket by itself. Make it only und
 
 ## 3. Read the owner's feedback
 
-Section `Feedback` (`tools/feedback.py`, #971) lists the owner comments of the last 6 hours (issues and PR reviews)
+Section `Feedback` (`framework/tools/feedback.py`, #971) lists the owner comments of the last 6 hours (issues and PR reviews)
 without a comment lock. Do not read only the comments after `last_run` (#820). Also read the issues that the owner
 opened after `last_run`. An agent comment shows only when it has no footer and no app: lock it and do nothing.
-For each listed comment, read its thread, then lock it first: `python3 tools/claim.py ID --comment` (ID = the `id` of the comment).
+For each listed comment, read its thread, then lock it first: `python3 framework/tools/claim.py ID --comment` (ID = the `id` of the comment).
 Exit 1: another run handles it, skip it (#320). Exit 0: act on it:
 - A question → answer it in the same thread.
 - A change to a ticket (scope, priority, "do this first") → change the labels or the body. Reply in one line.
@@ -69,9 +69,9 @@ Section `Candidates` shows them in this order, without held tickets (`dashboard.
 A main run never takes a ticket of a `reserved` lane (`lane:haiku`, `lane:deep`, #1994).
 **Lane runs** (the argument names `lane haiku` or `lane deep`): read `queue.md`, section of the lane, before the pick.
 Before the pick (only deep runs while `reserved` names `deep`), check the open epics with no open sub-issue (at most 3 per run), and refill the queue when R < N
-(N = the target and R = the ready tickets on the stderr line of `python3 tools/usage.py --fire`): `queue.md`.
+(N = the target and R = the ready tickets on the stderr line of `python3 framework/tools/usage.py --fire`): `queue.md`.
 If there is no candidate, go to step 8 and report "No ticket is ready".
-Claim with `python3 tools/claim.py N --or M K` (the candidates in order: one call tries each). It pushes a unique
+Claim with `python3 framework/tools/claim.py N --or M K` (the candidates in order: one call tries each). It pushes a unique
 commit to the ref `claim/N` without force, so only one run can win (#211). Exit 0: the named ticket is yours; the
 tool added `in-progress` and "Started by `<your branch>`.". Exit 1: another run was first for each (a claim, a
 "Started by" or an open PR changed in the last 30 minutes, or a closed issue): take the next candidates. Never
@@ -79,6 +79,6 @@ comment "Started by" yourself (#288, #1749).
 Exit 2 (of each `claim.py` call): a git or GitHub error, not another run (#3064): wait one minute, then run it
 once more.
 Each time you give a ticket back without a merge (hand-off, `blocked`, `needs-human`), run
-`python3 tools/claim.py N --release`: it releases the claim and removes `in-progress` (#3234), so that another run
+`python3 framework/tools/claim.py N --release`: it releases the claim and removes `in-progress` (#3234), so that another run
 can claim the ticket again.
 The workflow `claims.yml` deletes the refs when the ticket closes.

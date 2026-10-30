@@ -6,12 +6,12 @@ Read this file when a PR has a merge conflict (label `conflict`, or `mergeable_s
 A PR with a merge conflict: do the steps below, then continue at step 6.8. Remove the label `conflict` when you push the fix.
 The workflow `unconflict.yml` (after each merge and every 20 minutes) merges `origin/main` into a conflicted PR
 when git solves the conflict alone (`merge=union` files; `game/data/*.jsonl` by name, key and list item, #2064) or
-when both sides only add lines, for example two new entries at one place of a table (`tools/unconflict.py`, #1864),
+when both sides only add lines, for example two new entries at one place of a table (`framework/tools/unconflict.py`, #1864),
 and starts CI (#280). Automerge does the same merge for a green PR that GitHub calls `dirty`, and merges it at once
 with no new CI run (#3199). So a conflict that stays is a real one: Automerge or Unconflict gives it the label `conflict`.
 
 **Merge main with one call** (each merge by hand took about 6 calls and a resolver script, 25 % of the cost of the
-runs on 2026-10-28): `python3 tools/merge_main.py --push N` (N = the ticket of the PR). It refreshes the merge driver,
+runs on 2026-10-28): `python3 framework/tools/merge_main.py --push N` (N = the ticket of the PR). It refreshes the merge driver,
 merges `origin/main` with diff3, solves the hunks in which both sides only add lines (also next to a real conflict),
 commits, runs `ruff check .` and the test files of the merge (not the full fast suite: the quick CI runs it, `verify`
 level 1, #1732), runs `claim.py N --guard` and pushes. Exit 1: it prints each real conflict hunk; edit only those
@@ -33,8 +33,8 @@ Do this for each conflict that you solved by hand (also a local merge before the
 Spend 5 minutes or less: the ticket stays the main work, and this check must not grow into its own project.
 1. Name the hunk: the file, and the table, function or test in it. Find the cause in this list:
    - A generated file or column → generate it on main (`coverage.yml`) or give it a merge driver (`.gitattributes`).
-   - Game data in a code literal → a line in a `.jsonl` file with the merge driver `merge=jsonl` (`tools/merge_jsonl.py`).
-   - Two new entries at one place that `tools/unconflict.py` did not solve → find why it did not, and teach it that case.
+   - Game data in a code literal → a line in a `.jsonl` file with the merge driver `merge=jsonl` (`framework/tools/merge_jsonl.py`).
+   - Two new entries at one place that `framework/tools/unconflict.py` did not solve → find why it did not, and teach it that case.
    - A test that asserts a value that changes often (a count, the length of a list, a full list, an exact text)
      → test the behavior or the form of the data, not the value (#1916, #2008). No test checks the content of a data
      or configuration file (owner, 2026-10-29).
@@ -51,7 +51,7 @@ Spend 5 minutes or less: the ticket stays the main work, and this check must not
    cause <cause>; prevent: none | #ticket | PR #n`. The `improve` skill reads these sentences (weak spots).
 
 A push to your own PR branch fails with "fetch first": the workflow Unconflict merged `main` into it (#2120: three
-times in 30 minutes while main moved fast). `tools/merge_main.py --push N` then merges `origin/<branch>` and pushes
+times in 30 minutes while main moved fast). `framework/tools/merge_main.py --push N` then merges `origin/<branch>` and pushes
 again by itself.
 
 `mergeable_state` can read `dirty` for a short time after a merge into main, also when the PR merges clean (#2628):

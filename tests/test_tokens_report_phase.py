@@ -13,4 +13,4 @@ def test_pr_text_files_are_report():
 def test_code_files_stay_code():
     assert tokens.phase("Bash", {"command": "cat > tests/test_x.py <<'EOF'\nx\nEOF"}) == "code"
     assert tokens.phase("Write", {"file_path": "tools/x.py"}) == "code"
-    assert tokens.phase("Edit", {"file_path": "tools/tokens.py"}) == "code"
+    assert tokens.phase("Edit", {"file_path": "framework/tools/tokens.py"}) == "code"

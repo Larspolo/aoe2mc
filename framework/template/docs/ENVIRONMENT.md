@@ -1,6 +1,6 @@
 # Environment
 
-The project part of the cloud environment of {name} (`docs/STEERING.md`).
+The project part of the cloud environment of {name} (`framework/docs/STEERING.md`).
 
 ## Network
 

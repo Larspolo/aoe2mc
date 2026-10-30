@@ -35,7 +35,7 @@ Start after: <YYYY-MM-DD HH:MM> UTC   (only for a real date outside the project,
 ```
 
 A ticket that measures a change counts merged PRs, never hours ("the 100 PRs before and after #M", not "24 hours
-after"): the speed of the project changes, and a paused project merges nothing (owner, 2026-10-29). `tools/health.py`
+after"): the speed of the project changes, and a paused project merges nothing (owner, 2026-10-29). `framework/tools/health.py`
 lists the open tickets with a date in `Start after:` ("Time waits").
 
 A new line of a data file in `game/data/` needs no criterion "the values are those of the source" and no test of its values:

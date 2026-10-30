@@ -1,4 +1,4 @@
-"""tools/ship_pr.py runs the data format tests when the change has a .jsonl file (#4614)."""
+"""framework/tools/ship_pr.py runs the data format tests when the change has a .jsonl file (#4614)."""
 from test_ship_pr_scope import branch, git, runs
 
 import ship_pr as ship

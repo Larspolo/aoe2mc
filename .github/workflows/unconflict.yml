@@ -6,9 +6,9 @@ name: Unconflict
 # and Automerge accepts that CI run.
 # A PR whose CI failed while main was red waited for a takeover only to merge main (#3685): when main is green again,
 # this job merges main into it too, and starts CI.
-# Two new lines at one place of a table (`TECHS` in game/train.py) are a conflict for git too: `tools/unconflict.py`
+# Two new lines at one place of a table (`TECHS` in game/train.py) are a conflict for git too: `framework/tools/unconflict.py`
 # keeps both sides when no side changes a base line (#1864), and CI checks the result.
-# `tools/unconflict_pick.py` finds the PRs with git (merge-tree, log) and 3 to 4 API calls: the old loop read each
+# `framework/tools/unconflict_pick.py` finds the PRs with git (merge-tree, log) and 3 to 4 API calls: the old loop read each
 # open PR, the CI run of its head and its head commit by REST, about 3 + 2 calls per PR at 38 runs an hour.
 on:
   schedule:
@@ -43,13 +43,13 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git config merge.conflictStyle diff3     # tools/unconflict.py needs the base of each hunk
-          cp tools/unconflict.py tools/merge_jsonl.py "$RUNNER_TEMP/"   # main's copy: an older PR branch does not have it
+          git config merge.conflictStyle diff3     # framework/tools/unconflict.py needs the base of each hunk
+          cp framework/tools/unconflict.py framework/tools/merge_jsonl.py "$RUNNER_TEMP/"   # main's copy: an older PR branch does not have it
           git config merge.jsonl.driver "python3 $RUNNER_TEMP/merge_jsonl.py %O %A %B"   # game/data/*.jsonl (#2004)
           python3 -m pip install -q "$(grep '^ruff' requirements-dev.txt)"   # checks a "keep both sides" merge (#2631)
-          # The PRs to merge main into, with git and 3 to 4 API calls (tools/unconflict_pick.py, 2026-10-29): one line
+          # The PRs to merge main into, with git and 3 to 4 API calls (framework/tools/unconflict_pick.py, 2026-10-29): one line
           # "<number> <branch> <sha> <label 1|0> <dirty|red>". It reads main's tools: the loop checks out PR branches.
-          GITHUB_TOKEN="$GH_TOKEN" python3 tools/unconflict_pick.py > picks.txt
+          GITHUB_TOKEN="$GH_TOKEN" python3 framework/tools/unconflict_pick.py > picks.txt
           while read -r n branch sha label why <&3; do   # fd 3: a command in the loop cannot read the list
             [ "$label" = 1 ] && label=true || label=false
             how='git solved the conflict alone (`merge=union`)'
@@ -58,7 +58,7 @@ jobs:
             git checkout -q -B "$branch" "origin/$branch"
             if ! git merge -q --no-edit origin/main; then
               if python3 "$RUNNER_TEMP/unconflict.py" && git commit -q --no-edit; then
-                how='both sides only added lines, `tools/unconflict.py` kept both (#1864)'
+                how='both sides only added lines, `framework/tools/unconflict.py` kept both (#1864)'
                 py=$(git diff --name-only --diff-filter=d origin/main -- '*.py')
                 if [ -n "$py" ] && ! ruff check $py; then   # for example a function that both sides define (#2631)
                   git reset -q --hard "origin/$branch"

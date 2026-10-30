@@ -1,4 +1,4 @@
-"""tools/cycle_start.py names the merged fix of a red night run (#3229)."""
+"""framework/tools/cycle_start.py names the merged fix of a red night run (#3229)."""
 import cycle_start as start
 
 

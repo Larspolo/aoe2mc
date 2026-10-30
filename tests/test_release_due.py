@@ -1,5 +1,5 @@
 """tools/release.py `due()`: the release checks that can start and have no ticket, and their section in
-tools/cycle_start.py (#3342)."""
+framework/tools/cycle_start.py (#3342)."""
 import os
 import sys
 

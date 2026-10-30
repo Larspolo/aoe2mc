@@ -1,4 +1,4 @@
-"""tools/claim.py --refill: the lock of a ticket with no sub-issue expires with the 10-minute slot (#855)."""
+"""framework/tools/claim.py --refill: the lock of a ticket with no sub-issue expires with the 10-minute slot (#855)."""
 import claim
 
 T = 1793000000                                                      # 2026-10-26 07:33 UTC

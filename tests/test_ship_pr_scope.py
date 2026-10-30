@@ -1,4 +1,4 @@
-"""tools/ship_pr.py runs only the test files of the change, never the full fast suite: CI runs it (owner, #4187)."""
+"""framework/tools/ship_pr.py runs only the test files of the change, never the full fast suite: CI runs it (owner, #4187)."""
 import subprocess
 
 import ship_pr as ship

@@ -5,7 +5,7 @@ team bonuses and the unique technologies). Each bonus has one state: "in" names 
 it, its key of game/data/civs.jsonl (civs.KEYS, #2281) or the game/ file that has it; "gap" names the roadmap key of a bonus whose part the game program has, but not the
 bonus yet (a ticket can add it); "later" names the roadmap key of the part that the game program does not have yet.
 A bonus of two tables lists both ("in": [...], the Khitan
-upgrade one age earlier and at half cost, #2268). One line per bonus, with the name "CIV: bonus", so that tools/merge_jsonl.py merges two tickets by line (#2100)."""
+upgrade one age earlier and at half cost, #2268). One line per bonus, with the name "CIV: bonus", so that framework/tools/merge_jsonl.py merges two tickets by line (#2100)."""
 import json
 import os
 import re
