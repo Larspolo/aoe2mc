@@ -370,14 +370,15 @@ def main(argv=None):
     from feedback import fetch as unanswered               # owner comments without a lock (#971)
     open_prs, owner, now = api("pulls?state=open&per_page=100"), unanswered(), datetime.datetime.now(datetime.timezone.utc)
     nxt = candidates(open_all, now=now)[:5]
-    # Read the body again after all other reads (#3002): a run writes the state comment and the process changes
-    # while the reads above take about 20 s, and the PATCH of the old body deleted them.
-    status = api(f"issues/{status['number']}")
     try:                                                    # the accounts section (#4239): one row per Claude account
         import dashboard_data                               # a project tool: a copy of the generic tools has none (#3560)
         accounts = dashboard_data.accounts()
-    except ImportError:
+    except (ImportError, OSError, subprocess.CalledProcessError) as e:   # a failed read: no section, the rest updates
+        print(f"accounts: {e}", file=sys.stderr)
         accounts = None
+    # Read the body again after all other reads (#3002): a run writes the state comment and the process changes
+    # while the reads above take about 20 s, and the PATCH of the old body deleted them.
+    status = api(f"issues/{status['number']}")
     body = render(status["body"], open_all, comments, open_prs, closed, closed_prs, now, owner, nxt, accounts=accounts)
     if a.dry_run:
         print(body)
