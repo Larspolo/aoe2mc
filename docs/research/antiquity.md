@@ -202,7 +202,6 @@ These bonuses do not work yet. Each needs a feature that the game program does n
 - Macedonians: +2 line of sight of the units, and conversion resistance. `combat.Stats` has no line of sight, and no
   key changes the conversion time.
 - Palmyrans: camel speed works; tributes without tax and +20 % trade gold do not. No key changes them.
-- Sumerians: farms +125 food. No key changes the food of a new farm.
 - All: the team bonuses (only their text). The game program has team bonuses only for the repair rate and cost
   (`repair_team`, `repair_cost`) and shared units, not a general rule for the keys of an ally.
 
