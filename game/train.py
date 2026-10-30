@@ -425,11 +425,15 @@ def volley_command(g, uuid, name):
     """The plugin command of the extra projectiles in each shot of own unit name (the key "volley" of data/civs.jsonl:
     the Armenian galley line and dromons, #2379; the key "volley" of the researched technologies: {unit: {"shots": n,
     "attack": a or "part": p}}, Double Crossbow, #4338), else None. "attack" is the AoE2 attack of each extra
-    projectile, "part" a part of the attack of the unit, neither the full attack (0). The plugin keeps one attack for
+    projectile, "part" a part of the attack of the unit, neither the full attack (0). The key "volley" of the unit line
+    (Chu Ko Nu, Kipchak, Hussite Wagon, #4502) starts the count. The plugin keeps one attack for
     all extra projectiles of a unit: the last technology wins. Minecraft feature: one more Arrow entity; the plugin
     gives it its AoE2 damage."""
-    attack = civs.value("volley", civs.civ(g), {}).get(name)
-    shots, attack = (0, 0) if attack is None else (1, attack)
+    import combat                                                  # combat imports this module's data: import it late
+    base = combat.VOLLEY.get(name)
+    shots, attack = (0, 0) if base is None else (base["shots"], base["attack"])
+    if (civ := civs.value("volley", civs.civ(g), {}).get(name)) is not None:
+        shots, attack = shots + 1, civ
     for t in sorted(vars(g).get("techs", ())):
         if v := value("volley", t, {}).get(name):
             shots += v["shots"]
@@ -1315,6 +1319,8 @@ def research(g, entry, start=False, rect=None):
                 g.command(cmd)
             if cmd := combat.low_hp_command(uuid, new):           # an Elite Jian Swordsman (#4472)
                 g.command(cmd)
+            if cmd := combat.pack_command(uuid, new, g.map.T):    # an Elite Monaspa (#4469)
+                g.command(cmd)
             if cmd := combat.veteran_command(uuid, new):          # an Elite Jaguar Warrior keeps its kills (#4467)
                 g.command(cmd)
             if cmd := combat.sunder_command(uuid, new):           # an Elite Obuch (#4466)
@@ -1546,7 +1552,9 @@ def summon(g, name, pos, rotation=math.pi / 2, player=None):
         g.command(cmd)
     if cmd := combat.accuracy_command(uuid, name, civs.value("accuracy", civs.civ(g), {}).get(name, 0.0), g.map.T):
         g.command(cmd)                                             # a Hun trebuchet hits units more often (#2479)
-    if cmd := combat.charge_command(uuid, name):                   # the Coustillier charges its attack (#4398)
+    if cmd := combat.charge_command(uuid, name, g.map.T):          # the Coustillier charges its attack (#4398)
+        g.command(cmd)
+    if cmd := combat.speed_charge_command(uuid, name, g.map.T):     # a Samurai runs faster to a near target (#4545)
         g.command(cmd)
     if cmd := combat.charged_volley_command(uuid, name):           # a Xianbei Raider fires a charged volley (#4546)
         g.command(cmd)
@@ -1560,6 +1568,8 @@ def summon(g, name, pos, rotation=math.pi / 2, player=None):
     if cmd := combat.frenzy_command(uuid, name):                   # a Temple Guard attacks faster in a long fight (#4468)
         g.command(cmd)
     if cmd := combat.low_hp_command(uuid, name):                   # a Jian Swordsman loses its shield below 45 HP (#4472)
+        g.command(cmd)
+    if cmd := combat.pack_command(uuid, name, g.map.T):            # a Monaspa gets attack near its pack (#4469)
         g.command(cmd)
     if cmd := combat.veteran_command(uuid, name):                  # a Jaguar Warrior gets attack for each kill (#4467)
         g.command(cmd)

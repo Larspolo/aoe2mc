@@ -46,7 +46,8 @@ def stats(row):
 def check_units(row):
     form(row, {"name": str, **STATS}, {"sight": int, "min_range": NUMBER, "note": str, "sail": NUMBER, "convert": int,
                                        "accuracy": NUMBER, "aura": dict, "dodge": dict, "low_hp": dict, "ignore_armor": bool,
-                                       "miss": dict, "trample": dict, "veteran": dict, "frenzy": dict, "sunder": int})
+                                       "miss": dict, "pack": dict, "trample": dict, "veteran": dict, "frenzy": dict,
+                                       "sunder": int, "volley": dict})
     stats(row)
     if "aura" in row:                                                     # combat.AURA (#4470)
         form(row["aura"], {"radius": NUMBER, "speed": NUMBER, "attack_speed": NUMBER, "units": list}, {})
