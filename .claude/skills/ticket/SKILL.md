@@ -39,7 +39,7 @@ after"): the speed of the project changes, and a paused project merges nothing (
 lists the open tickets with a date in `Start after:` ("Time waits").
 
 A new line of a data file in `game/data/` needs no criterion "the values are those of the source" and no test of its values:
-`tests/test_data_files.py` checks the form of each line (#1916). A ticket that changes only data files names no new
+`tests/test_data_files.py` checks the form of each line with the module of its file in `tests/data_checks/` (#1916, #4778). A ticket that changes only data files names no new
 test and no test file: its criterion is that the existing tests pass (owner, 2026-10-29, #4242; `docs/extend.md`).
 A test of a menu or a bonus with the names and values of the new line is a test of the data content too. Name a test
 of behavior only for a change of code, with test data or the expected value from the data. Never copy the test of an

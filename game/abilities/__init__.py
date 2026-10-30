@@ -1,7 +1,7 @@
 """The special abilities of the units (epic #4387): one module per ability. The package finds its modules by itself (no
 list, #4588), so a new ability adds one file and changes no shared line of combat.py or train.py.
 
-Each module has KEY (its key of data/units.jsonl), TYPE (the type of its value: tests/test_data_files.py), UNITS
+Each module has KEY (its key of data/units.jsonl), TYPE (the type of its value: tests/data_checks/units.py), UNITS
 ({unit name: value}, values(KEY)) and command(uuid, name, T): the plugin command of the ability of unit name (T blocks
 per tile), or None. combat.setup, train.summon and train.research (an elite upgrade) send commands()."""
 import importlib

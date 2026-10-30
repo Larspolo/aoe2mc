@@ -43,7 +43,8 @@ def data_only_tests(changed):
     return tests if tests and rest and all(f.startswith(DATA) for f in rest) else []
 
 
-DATA_TESTS = ("tests/test_data_files.py", "tests/test_data_format.py")
+DATA_TESTS = ("tests/test_data_files.py", "tests/test_data_format.py", "tests/test_data_checks.py")
+DATA_CHECKS = "tests/data_checks/"                     # the form check of each data file (#4778): no test_*.py
 
 
 def checks():
@@ -56,7 +57,7 @@ def checks():
     changed = git("diff", "--name-only", f"origin/{CONFIG['branch']}...HEAD").stdout.split()
     tests = {f: open(f, encoding="utf-8").read() for f in glob.glob("tests/test_*.py") + glob.glob("framework/tests/test_*.py")}
     run = merge_main.test_files(changed, changed, tests)[0]
-    if any(f.endswith(".jsonl") for f in changed):     # a data file is no module: no import finds its tests (#4614)
+    if any(f.endswith(".jsonl") or f.startswith(DATA_CHECKS) for f in changed):   # no import finds their tests (#4614)
         run = sorted(set(run) | {f for f in DATA_TESTS if f in tests})
     if not run:
         print("no test file of the branch: the quick CI runs the fast suite")
