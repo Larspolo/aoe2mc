@@ -519,6 +519,7 @@ def generate(text, seed, players=2, size=None, warn=None, teams=None, folder=Non
     owner = np.full((n, n), -1, np.int32)
     layer = np.full((n, n), -1, np.int16)            # the land layer of each tile (aoe2mc.read_json "layer", -1 = none)
     lands, starts, kinds, links, layers = [], [], {}, [], {}
+    heights = {}                                     # the base_elevation of each land index (#4418)
     ids = {}                                         # the land_id of a create_land -> its land index (#4133)
     mood = None                                      # color_correction CC_X: the color mood X (aoe2mc.MOODS, #4430)
     for cmd, args, attrs in sections.get("LAND_GENERATION", ()):
@@ -539,6 +540,7 @@ def generate(text, seed, players=2, size=None, warn=None, teams=None, folder=Non
             kind = value(attrs["terrain_type"][0], consts) if "terrain_type" in attrs else 0
             zone = value(attrs["zone"][0], consts) if "zone" in attrs else None      # None: a zone of its own
             top = value(attrs["base_layer"][0], consts) if "base_layer" in attrs else None   # a layer on the land
+            height = value(attrs["base_elevation"][0], consts) if "base_elevation" in attrs else 0
             edge = {a: value(attrs[a][0], consts) * n // 100 if a in attrs else 0 for a in BORDERS}
             box = (edge["left_border"], n - edge["right_border"], edge["top_border"], n - edge["bottom_border"])
             fuzz = value(attrs["border_fuzziness"][0], consts) if "border_fuzziness" in attrs else 100   # strict (#4422)
@@ -558,6 +560,7 @@ def generate(text, seed, players=2, size=None, warn=None, teams=None, folder=Non
                                   "target": max(total // players, (2 * base + 1) ** 2)})
                     kinds[len(lands) - 1] = kind
                     layers[len(lands) - 1] = top
+                    heights[len(lands) - 1] = height
             else:
                 if "land_position" in attrs:
                     c = tuple(min(n - 1, value(v, consts) * n // 100) for v in attrs["land_position"][:2])
@@ -577,6 +580,7 @@ def generate(text, seed, players=2, size=None, warn=None, teams=None, folder=Non
                               "target": tiles(attrs, consts, n, (2 * base + 1) ** 2)})
                 kinds[len(lands) - 1] = kind
                 layers[len(lands) - 1] = top
+                heights[len(lands) - 1] = height
                 if "land_id" in attrs:                  # only create_land: the guide gives player lands no ID
                     ids[value(attrs["land_id"][0], consts)] = len(lands) - 1
             for a in sorted(set(attrs) - set(CREATE_LAND)):
@@ -597,6 +601,16 @@ def generate(text, seed, players=2, size=None, warn=None, teams=None, folder=Non
         if layers[lid] is not None:
             layer[owner == lid] = layers[lid]
     elevation = elevate(sections.get("ELEVATION_GENERATION", ()), terrain, layer, owner, starts, consts, rng, warn)
+    for lid, height in heights.items():              # a raised land: its edge steps up one level per tile (AoE2 DE)
+        land, step = owner == lid, 1
+        near = ~land
+        while step < height:
+            near = dilate(near, 1)
+            ring = land & near & (elevation < step)
+            elevation[ring] = step
+            land &= ~near
+            step += 1
+        elevation[land & (elevation < height)] = height
     for cmd, args, attrs in sections.get("TERRAIN_GENERATION", ()):
         if cmd != "create_terrain":
             warn(f"{cmd} is not read yet")
@@ -690,6 +704,7 @@ def circle(setup, players, teams, seed):
 CREATE_LAND = (                 # the attributes of create_land and create_player_lands that generate() reads: one per line (#4417)
     "assign_to_player",
     "assign_to_team",
+    "base_elevation",
     "base_layer",
     "base_size",
     "border_fuzziness",
