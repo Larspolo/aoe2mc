@@ -39,6 +39,7 @@ Usage:
     python3 game/run.py WORLD --play --mode capture-the-relic --regicide   # a King on top of the mode (also
                                                      # --sudden-death, --empire-wars: AoE2 "Advanced Settings", #2490)
     python3 game/run.py WORLD --play --civ 1=BRITONS --civ 2=FRANKS   # the civilization of each player (#2267)
+    python3 game/run.py WORLD --play --civ-mode mirror   # all play the civilization of player 1 (also team-random, #4757)
     python3 game/run.py WORLD --play --teams 1,1,2,2   # the team of each player, - is no team (#2296)
     python3 game/run.py WORLD --play --load SAVE   # go on with a saved game: Ctrl-C of --play saves into saves/ (#2255)
     python3 game/run.py WORLD --replay [--speed 4] [--follow N] [--view N]  # replay the recorded game of the world (game/replay.py), then wait for Ctrl-C
@@ -565,9 +566,21 @@ def civ_choices(values):
     return out
 
 
-def apply_civs(data, civs):
+def civ_pool_choice(text):
+    """The sorted civilizations of the --civ-pool value ("BRITONS,FRANKS", #4756): the civilizations that the host
+    enables, Random picks only from them. An unknown name stops with the list of names."""
+    import civs
+    names = sorted(r["name"] for r in civs.ROWS)
+    pool = sorted({n.strip().upper() for n in text.split(",") if n.strip()})
+    if not pool or set(pool) - set(names):
+        sys.exit(f"--civ-pool {text}: write CIVILIZATION,CIVILIZATION,..., each one of: {', '.join(names)}")
+    return pool
+
+
+def apply_civs(data, civs, pool=None):
     """Write the --civ choices {player: civilization} into the players of aoe2mc.json. A player whose scenario locks
-    its civilization ("Lock Civilizations", #3295) keeps the scenario civilization: a line on stderr says why."""
+    its civilization ("Lock Civilizations", #3295) keeps the scenario civilization: a line on stderr says why. RANDOM
+    picks from the pool (civ_pool_choice, #4756), else from all civilizations."""
     for player, name in (civs or {}).items():
         p = data.setdefault("players", {}).setdefault(str(player), {})
         if p.get("lock_civ"):
@@ -578,9 +591,37 @@ def apply_civs(data, civs):
 
             import civs
             seed = f"{data.get('map_size')}-{len(data.get('objects', ()))}-{player}"
-            name = random.Random(seed).choice(sorted(r["name"] for r in civs.ROWS))
+            name = random.Random(seed).choice(sorted(pool or (r["name"] for r in civs.ROWS)))
             print(f"player {player}: --civ RANDOM gives {name}", file=sys.stderr)
         p["civ"] = name
+
+
+def apply_civ_mode(data, mode):
+    """The lobby options "Mirror" (all players get the civilization of player 1, one random one when it is RANDOM)
+    and "Team Random" (each team gets one random civilization) on the players of aoe2mc.json, after apply_civs and the
+    teams (#4757). A player with no team is a team of its own. A locked civilization (#3295) stays."""
+    if mode == "normal":
+        return
+    import civs
+    players = {k: p for k, p in data.get("players", {}).items() if int(k) > 0}
+    if mode == "mirror":
+        groups = {"all": sorted(players, key=int)}
+    else:
+        groups = {}
+        for k in sorted(players, key=int):
+            groups.setdefault(players[k].get("team") or f"-{k}", []).append(k)
+    for group, members in groups.items():
+        first = players[members[0]].get("civ") if mode == "mirror" else "RANDOM"
+        if first in (None, "RANDOM"):
+            import random
+            seed = f"{data.get('map_size')}-{len(data.get('objects', ()))}-{mode}-{group}"
+            first = random.Random(seed).choice(sorted(r["name"] for r in civs.ROWS))
+        for k in members:
+            if players[k].get("lock_civ"):
+                print(f"player {k}: the scenario locks its civilization, --civ-mode {mode} is not used", file=sys.stderr)
+                continue
+            players[k]["civ"] = first
+        print(f"--civ-mode {mode}: players {','.join(members)} play {first}", file=sys.stderr)
 
 
 def handicap_choices(values):
@@ -644,6 +685,8 @@ SETTINGS = {
     "antiquity": False,               # Antiquity Mode: the Return of Rome rule set (table.use, game/data/antiquity, #3666)
     "challenge": None,                # an Art of War challenge (challenge.CHALLENGES, #3900)
     "civ": None,                      # {player: civilization} in place of the scenario's (civ_choices, #2267)
+    "civ_mode": "normal",             # "mirror" or "team-random": the same civilization for all or per team (#4757)
+    "civ_pool": None,                 # the enabled civilizations of Random (civ_pool_choice, #4756)
     "empire_wars": False,             # "Empire Wars Mode" on top of the mode (ON_TOP, #2490)
     "end_age": "imperial",            # "Ending age" (build.locked, #2346)
     "full_tech_tree": False,          # "Full Tech Tree": the full tech tree and no civilization bonuses (civs.civ, #2354)
@@ -726,11 +769,12 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
             settings["age"] = challenge.CHALLENGES[settings["challenge"]].get("age", "dark")
         if enemy := challenge.CHALLENGES[settings["challenge"]].get("enemy"):   # a bot town that does not attack (#3905)
             settings["civ"][2], bot = enemy["civ"], bot or 1
-    apply_civs(data, settings["civ"])                             # before the Gathers: all bonuses (civs.civ) follow it
+    apply_civs(data, settings["civ"], settings["civ_pool"])                             # before the Gathers: all bonuses (civs.civ) follow it
     for player, pct in (settings["handicap"] or {}).items():     # before the Gathers: the start resources (#2474)
         data.setdefault("players", {}).setdefault(str(player), {})["handicap"] = pct
     for player, team in (settings["teams"] or {}).items():       # gather.allied and the scoreboard teams follow it
         data["players"][str(player)]["team"] = team
+    apply_civ_mode(data, settings["civ_mode"])                   # after the teams: Team Random follows them (#4757)
     data["all_techs"] = settings["all_techs"]                    # one data for all Gathers: the people and the bot (#2298)
     data["end_age"] = train.STARTS[settings["end_age"]]["ages"]  # the last age (build.locked, #2346)
     data["full_tech_tree"] = settings["full_tech_tree"]          # (#2354)
@@ -938,7 +982,7 @@ def live_error(world, record):
     return f"--live needs a world of a recorded game: convert the record first (python3 aoe2mc.py {record} {world})"
 
 
-def replay(game, world, speed=1.0, start="0:00", follow=None, guide=None, view=None, replay_file=None, camera=False,
+def replay(game, world, speed=1.0, start="0:00", follow=None, guide=None, view=None, replay_file=None, camera=None,
            live=None, delay=None):
     """guide: a poll(control) next to the hotbar input that gets `input` and the replay `r` (game/watch.py, #1123).
     view: the replay starts with the view of player N (#1303: the units out of its sight are hidden).
@@ -1193,7 +1237,8 @@ def main(argv=None, scenario=None):
     ap.add_argument("--speed", type=float, default=1.0, help="--replay, --play: times the game speed "
                     "(default 1; --play: the server ticks faster too)")
     ap.add_argument("--from", dest="start", default="0:00", metavar="MM:SS", help="--replay: start at this game time")
-    ap.add_argument("--camera", choices=["auto"], help="--replay: the spectators move to each fight and group of new buildings (#3367)")
+    ap.add_argument("--camera", choices=["auto", "player"], help="--replay: auto: the spectators move to each fight and group of new "
+                    "buildings (#3367); player: to the views of the recording player (#4768)")
     ap.add_argument("--follow", type=int, metavar="N", help="--replay: the spectators follow the units of player N")
     ap.add_argument("--view", type=int, default=0, metavar="N", help="--replay: start with the view of player N: the "
                     "units out of its sight are hidden (default 0: all players)")
@@ -1278,6 +1323,11 @@ def main(argv=None, scenario=None):
     ap.add_argument("--civ", action="append", metavar="N=CIV", help="--play: player N plays civilization CIV (for "
                     "example 1=BRITONS, or 1=RANDOM; repeat it for more players): the game rules change, the buildings of the "
                     "world keep the architecture of the scenario")
+    ap.add_argument("--civ-pool", type=civ_pool_choice, metavar="CIV,CIV", help="--play: the civilizations that the "
+                    "host enables: --civ N=RANDOM picks only from them (for example BRITONS,FRANKS,MONGOLS)")
+    ap.add_argument("--civ-mode", choices=["normal", "mirror", "team-random"], default="normal", help="--play: the "
+                    "AoE2 lobby options \"Mirror\" (all players play the civilization of player 1, one random one for "
+                    "all when it is RANDOM) and \"Team Random\" (the players of each team play one random civilization)")
     ap.add_argument("--handicap", action="append", metavar="N=PCT", help="--play: the AoE2 setting \"Handicap\" of "
                     "player N, 100 to 200 percent in steps of 5 (for example 1=150, repeat it for more players): more "
                     "start resources, villager work rate and hit points, building hit points and military building "
@@ -1297,7 +1347,7 @@ def main(argv=None, scenario=None):
         if not challenge.opened(a.challenge):
             ap.error(f"--challenge {a.challenge} is closed: win a medal in {challenge.CHALLENGES[a.challenge]['after']} first")
     if a.camera and a.follow is not None:
-        ap.error("--camera auto and --follow N both move the spectators: give only one of them")
+        ap.error("--camera and --follow N both move the spectators: give only one of them")
     import savegame
     state = savegame.read(a.load) if a.load else None
     if state:                                        # the settings of the save, but the options given here win (#2325)
@@ -1351,7 +1401,7 @@ def main(argv=None, scenario=None):
             show_titles(game)
         if a.replay:                                 # after the end the player can look around (#978)
             replay(game, a.world, a.speed, a.start, a.follow, view=a.view or None, replay_file=a.replay_file,
-                   camera=a.camera == "auto", live=a.live, delay=a.delay)
+                   camera=a.camera, live=a.live, delay=a.delay)
             print("The replay ended. The server stays up: type commands, Ctrl-C stops it.", file=sys.stderr)
         if a.play:
             with open(a.log, "w") if a.log else contextlib.nullcontext() as log:
