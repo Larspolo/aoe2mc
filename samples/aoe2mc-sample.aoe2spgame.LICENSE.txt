@@ -1,0 +1,11 @@
+samples/aoe2mc-sample.aoe2spgame
+
+Source: the owner (Larspolo) made this saved game in AoE2 DE for Mac 1.3 (build 493785) on 2026-10-30 (#4563).
+Game: single player, Arabia, 2 players (the owner and 1 AI), standard settings, about 10 minutes. The owner
+researched Loom, the Feudal Age and Double-Bit Axe, and built a house and a lumber camp (#4623).
+Form: the file is one raw deflate stream (`zlib.decompress(data, wbits=-15)`, it starts with "VER 9.4"), with no
+`header_length` prefix as a record has.
+Use: test data for the saved games of epic #4561.
+
+License: CC0 1.0 Universal (public domain dedication), https://creativecommons.org/publicdomain/zero/1.0/.
+The owner gave the file for the repository under a public license (the `/human` session of 2026-10-30).
