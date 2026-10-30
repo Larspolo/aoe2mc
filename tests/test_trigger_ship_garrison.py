@@ -7,6 +7,7 @@ from collections import Counter
 from test_gather import FakeServer, grid
 
 import aoe2mc
+import buildings
 from game import garrison, gather, scenario, transport
 
 STORED = "Storage aoe2mc:orders has the following contents: "
@@ -20,6 +21,7 @@ def effect(kind, ref, name="ARCHER"):
 
 def test_the_converter_summons_the_unit_at_the_ship_and_orders_its_unload(monkeypatch):
     monkeypatch.setattr(aoe2mc, "CARRIER_REFS", {7: "TRANSPORT_SHIP", 8: "BATTERING_RAM"})
+    monkeypatch.setattr(buildings, "INSIDE", {})                       # a global: other tests fill it (#4605)
     e, c = effect(aoe2mc.CREATE_GARRISONED_OBJECT, 7)
     line, = aoe2mc.garrisoned_lines(e, c)
     assert line.startswith("execute at @e[tag=aoe2mc.r7,limit=1] run summon ") and " ~ ~ ~ " in line

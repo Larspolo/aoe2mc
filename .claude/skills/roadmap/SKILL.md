@@ -58,4 +58,5 @@ no source: R < N, each feature has an epic, no fallback, `claim.ROADMAP_EARLY`, 
 4. Give each new feature a row in `steering/project/RELEASE.md` (milestone C, unless the owner says otherwise), and correct the
    estimates there. Do not remove an estimate: `release.py` takes the larger of the estimate and the sub-issues of
    the epic, and with no estimate the median of the closed epics, more than a small epic has (#3678: 20 tickets).
-5. Put the change into the PR of your ticket. The owner can change the list at any time.
+5. Put the change into the PR of your ticket. A run with no ticket (a deep run after an empty refill) makes a
+   `docs`, `size:S` ticket for the review, claims it and ships it (#4600). The owner can change the list at any time.

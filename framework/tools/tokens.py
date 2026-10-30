@@ -10,6 +10,7 @@ that cost the most: a result stays in the context, so each later call reads it a
     python3 framework/tools/tokens.py --verify      # the minutes and repeats of each check command (#1704)
     python3 framework/tools/tokens.py --phases      # the measured phase minutes of each claimed ticket (`report.py` uses them)
     python3 framework/tools/tokens.py --run-line    # the Run: line of the run report: who, when, the model, the eq per phase
+    python3 framework/tools/tokens.py --queued      # exit 0: a brief of the pacer waits as the next turn (`scheduled` step 0)
 
 The unit is "eq": input-token equivalents with the API price ratios (input 1, cache write 1.25 for 5 minutes and 2 for
 1 hour, cache read 0.1, output 5). The subscription quota is not public, but it follows the cost of the calls.
@@ -506,6 +507,31 @@ def newest(cwd=None):
     return fs[-1] if fs else None
 
 
+BRIEF = "aoe2mc pacer brief"   # `pacer.HEAD`: the first line of a brief
+
+
+def queued_brief(records):
+    """The `ticket:` line of a brief of the pacer that waits in the queue of this session, or None. A fire of the
+    pacer makes a new session with two queued turns: the stored prompt of the task ("/scheduled ...", no brief) and,
+    8 ms later, the brief. The brief comes only when the first turn ends: a first turn that did a whole run got its
+    brief at 102k to 140k context and gave the ticket back (#4550). The queue is FIFO: `enqueue` adds, `dequeue`
+    takes the oldest."""
+    queue = []
+    for r in records:
+        if r.get("type") != "queue-operation":
+            continue
+        if r.get("operation") == "enqueue":
+            queue.append(r.get("content") or "")
+        elif r.get("operation") == "dequeue" and queue:
+            queue.pop(0)
+        elif r.get("operation") == "remove" and r.get("content") in queue:
+            queue.remove(r["content"])
+    for text in queue:
+        if BRIEF in text:
+            return next((x.strip() for x in text.splitlines() if x.strip().startswith("ticket:")), "ticket: ?")
+    return None
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("file", nargs="?", help="a transcript (default: the newest session of this directory)")
@@ -518,10 +544,16 @@ def main(argv=None):
     ap.add_argument("--run-line", action="store_true", help="print the Run: line of the run (session, start, model, "
                     "eq per phase and ticket)")
     ap.add_argument("--json", action="store_true", help="print all numbers of the run as one JSON object (report.py)")
+    ap.add_argument("--queued", action="store_true", help="exit 0 and print its ticket line when a brief of the "
+                    "pacer waits as the next turn of this session (`scheduled` skill, step 0, #4550), else exit 1")
     a = ap.parse_args(argv)
     path = a.file or newest()
     if not path:
         sys.exit("no transcript in ~/.claude/projects for this directory")
+    if a.queued:
+        got = queued_brief(load(path))
+        print(f"queued brief: {got}" if got else "no queued brief")
+        return 0 if got else 1
     subs = sorted(glob.glob(os.path.join(path[:-len(".jsonl")], "subagents", "*.jsonl")))
     chains = [load(path)] + [load(s) for s in subs]
     t = merge([analyse(c) for c in chains])

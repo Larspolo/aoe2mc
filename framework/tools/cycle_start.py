@@ -12,8 +12,9 @@ whole context again. This tool reads all of it and prints one short section per 
 Sections: `Status` (exit 3 when the status issue has `paused`: stop; the time and the values of `agent.toml` that the
 skill needs: repo, owner, branch), `Usage` (keep the line for the report of step 8),
 `Stuck` (`claim.py 0 --stuck`), `Flow brake` (`usage.py --flow`), `PRs` (the open agent PRs that need work: red CI,
-a conflict, a closed ticket, or green and not merged after 10 minutes), `Main CI` (the last run and the last night run),
-`Feedback` (`feedback.py`), `Triage` (open issues without a priority label), `Candidates` (the pick order of
+a conflict, a closed ticket, green and not merged after 10 minutes, a `hold` or no CI run that nothing ends),
+`Main CI` (the last run and the last night run), `Feedback` (`feedback.py`), `Orphans` (`dashboard.orphans`: open
+tickets that wait for nothing, #4553), `Triage` (open issues without a priority label), `Candidates` (the pick order of
 `dashboard.py --next`, without the tickets that a run holds; the first 8 of the top priority group turned by the
 branch name, so that parallel runs try other first picks, #3832; and the `claim.py N --or M ...` command of the first 5) and `Release checks` (only when a check can start and has
 no ticket, `release.due()`). The skill says what to do with each line.
@@ -71,7 +72,7 @@ def pr_work(pr, open_issues, checks, beat, now, me="", ticket=None):
     """The work that an open agent PR needs, or None. pr: an entry of /pulls; checks: [(name, status, conclusion)] of
     its head commit; beat: (minutes, subject) of its ticket claim, or None; me: the current branch; ticket: `pr_ticket`. The PRs of this run
     (`<session branch>` and `<session branch>-<k>`, autopilot `more.md`) are yours."""
-    if not pr["head"]["ref"].startswith(AGENT) or "hold" in dashboard.labels(pr):
+    if not pr["head"]["ref"].startswith(AGENT):
         return None
     ticket = ticket or pr_ticket(pr, {})
     issue = open_issues.get(ticket)
@@ -79,8 +80,16 @@ def pr_work(pr, open_issues, checks, beat, now, me="", ticket=None):
         return "its ticket is closed: the Close workflow closes the PR"
     if issue and dashboard.labels(issue) & WAITS:
         return None
+    idle = (now - dashboard.ts(pr.get("updated_at") or pr["created_at"])).total_seconds() / 60
+    live = beat and not beat[1].startswith("Release") and beat[0] < STALE
+    if "hold" in dashboard.labels(pr):     # nothing removes `hold`: a run that stopped left it for ever (#4553)
+        return None if live or idle < STALE else (
+            f"`hold`, no live claim, no change for {idle:.0f} min: remove `hold` when its own checks passed, "
+            f"else add `needs-human` to #{ticket} with the reason")
     conflict = "conflict" in dashboard.labels(pr)
     red = [n for n, s, c in checks if s == "completed" and c in ("failure", "timed_out", "cancelled", "action_required")]
+    if not checks and not conflict and idle > STALE:   # no CI event (a push of GITHUB_TOKEN): Automerge waits for ever
+        return f"no CI run on its head for {idle:.0f} min: start CI on its branch (`github.md`)"
     if not conflict and not red:
         age = (now - dashboard.ts(pr["created_at"])).total_seconds() / 60
         quick = any(n == "quick" and c == "success" for n, _, c in checks)
@@ -258,6 +267,8 @@ def main(argv=None):
     section("Main CI", [ci_line(main_ci(), issues)])
     code, text = tool("feedback.py")
     section("Feedback (lock each with `claim.py ID --comment`)", [t for t in text.splitlines() if re.match(r"\d+ #\d+ ", t)])
+    section("Orphans (no run, workflow or owner list takes them up, #4553)",
+            [f"#{n} {issues[n]['title']}: {why}" for n, why in dashboard.orphans(open_all)])
     section("Triage (no priority label)", [f"#{n} {i['title']}" for n, i in sorted(issues.items())
                                            if not dashboard.labels(i) & (set(dashboard.PRIORITY) | {dashboard.STATUS})])
     pr_numbers = [i["number"] for i in open_all if "pull_request" in i]

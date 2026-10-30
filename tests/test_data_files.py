@@ -43,10 +43,28 @@ def stats(row):
     assert set(row["bonus"]) <= bonus and all(isinstance(v, int) for v in row["bonus"].values()), row["name"]
 
 
+UNIT_KEYS = {                                   # the optional keys of units.jsonl: one per line (#4585)
+    "accuracy": NUMBER,
+    "convert": int,
+    "dodge": dict,
+    "frenzy": dict,
+    "ignore_armor": bool,
+    "low_hp": dict,
+    "min_range": NUMBER,
+    "miss": dict,
+    "note": str,
+    "pack": dict,
+    "sail": NUMBER,
+    "sight": int,
+    "sunder": int,
+    "trample": dict,
+    "veteran": dict,
+    "volley": dict,
+}
+
+
 def check_units(row):
-    form(row, {"name": str, **STATS}, {"sight": int, "min_range": NUMBER, "note": str, "sail": NUMBER, "convert": int,
-                                       "accuracy": NUMBER, "dodge": dict, "low_hp": dict, "ignore_armor": bool, "miss": dict,
-                                       "trample": dict, "veteran": dict, "frenzy": dict, "sunder": int})
+    form(row, {"name": str, **STATS}, UNIT_KEYS)
     stats(row)
 
 
@@ -260,7 +278,8 @@ CHECKS = {                                                 # one file per line: 
 
 # The keys with two types by design: an "effect" is data, a list of data (#2155) or the name of a function of
 # game/train.py (#2098, #2122)
-TWO_TYPES = {("train.jsonl", "effect"): (dict, list, str)}
+TWO_TYPES = {("train.jsonl", "detonate"): (dict, list),   # one blast, or one per unit line (#4367)
+             ("train.jsonl", "effect"): (dict, list, str)}
 
 
 @pytest.mark.parametrize("name", sorted(NAMES))
