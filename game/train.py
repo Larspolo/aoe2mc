@@ -139,11 +139,12 @@ def pass_arrows(g, building):
     return f" {v['tiles'] * g.map.T} {v['part']}" if v else ""
 
 
-def dot(g, name, s):
+def dot(g, name, s, techs=None):
     """The damage over time of a hit of unit name (combat.Stats s) of the player of g (#4339): (damage, AoE2 seconds, the
     target classes or ()) of the first technology of g.techs (in name order) with an entry of the key "damage_over_time"
-    whose test holds (test(): Curare, Red Cliffs Tactics), else None. The plugin deals it (Dot.java)."""
-    for t in sorted(getattr(g, "techs", ())):
+    whose test holds (test(): Curare, Red Cliffs Tactics), else None. The plugin deals it (Dot.java). A building name
+    gets the rule of its arrows (Curare: towers and castles, #4641). techs: the technologies (default: g.techs)."""
+    for t in sorted(getattr(g, "techs", ()) if techs is None else techs):
         for e in value("damage_over_time", t, ()):
             if any(test(x, name, s) for x in e["if"]):
                 return e["damage"], e["seconds"], tuple(e.get("on", ()))
