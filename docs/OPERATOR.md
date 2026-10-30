@@ -88,6 +88,6 @@ NAME is the account name in lower case (for example `bob`), and NAME_UP the same
    `PACER_TOKEN_NAME_UP_HAIKU`, `PACER_URL_NAME_UP_DEEP`, `PACER_TOKEN_NAME_UP_DEEP`.
 7. A PR adds to `agent.toml` the table `[accounts.NAME]` with `login = "<GitHub login>"` (optional: `reserve = 0.2`,
    `docs/COLLABORATORS.md`, part 1). Automerge holds it until an owner approves it.
-8. After the merge: `python3 tools/operator_check.py` with the secrets in the environment (`ALL_SECRETS` as in
-   `pacer.yml`). It prints one line `account NAME` for each account: its quota and the tasks the pacer can fire.
+8. After the merge: `python3 tools/operator_check.py` with the secrets in the environment (each secret
+   under its name, or all of them as the JSON dict `ALL_SECRETS`). It prints one line `account NAME` for each account: its quota and the tasks the pacer can fire.
    `PROBLEM account NAME`: the quota read failed (a wrong token). `fires no task`: the secrets of step 6 are missing. Then do section 1.

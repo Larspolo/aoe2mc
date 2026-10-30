@@ -57,10 +57,12 @@ Done in #4237 (`tools/pacer.py` `accounts`, `account_targets`, `assign`).
 
 - Secrets: the first account keeps the present names. Each other account adds `CLAUDE_CODE_OAUTH_TOKEN_<NAME>`,
   `PACER_URL_<NAME>_<TASK>` and `PACER_TOKEN_<NAME>_<TASK>` (`<TASK>` = `MAIN`, `HAIKU`, `DEEP`).
-- `pacer.yml` gives the step `ALL_SECRETS: ${{ toJSON(secrets) }}` in place of the list of single secrets.
-  `tools/pacer.py` finds the accounts in it by these names. So a new collaborator adds secrets and nothing else in the
-  workflow: the pacer uses the account at its next cycle (automatic scaling). An account with secrets and no table in
-  `agent.toml` gets the defaults.
+- `pacer.yml` reads the secrets one by one, by name (2026-10-30). Its first job prints the names of the secrets of
+  each table of `[accounts]` in `agent.toml` and each task (`tools/pacer.py --secrets`, `secret_names`). The pacer job
+  gets the value of name i as `SECRET_<i>` (`secrets[...]` of the name), and `tools/pacer.py` finds the accounts by
+  these names. So a new collaborator adds secrets and a table in `agent.toml`, and nothing else in the workflow: the
+  pacer uses the account at its next loop (automatic scaling). The workflow has 35 slots: the first account and 4 more.
+  Do not give the step `toJSON(secrets)`: GitHub held the runs that did it as "may be malicious".
 - `tools/usage.py read_usage(token)`: one tiny CLI call per account, with that account's token in the environment of
   the call (about 1 s each).
 - Per account: its own target (`target_runs` with its own usage, `reserve`, 5-hour and 7-day burns, `week_guard`) and
