@@ -329,10 +329,12 @@ def add_front(land, c, n):
             land["front"].append(d)
 
 
-def square(c, r, n):
-    """The tiles within r of tile c (a square), in the map."""
+def square(c, r, n, circular=False):
+    """The tiles within r of tile c (a square), in the map. circular: only the tiles of the circle of radius r
+    (set_circular_base, #4420)."""
     return [(x, y) for x in range(max(0, c[0] - r), min(n, c[0] + r + 1))
-            for y in range(max(0, c[1] - r), min(n, c[1] + r + 1))]
+            for y in range(max(0, c[1] - r), min(n, c[1] + r + 1))
+            if not circular or (x - c[0]) ** 2 + (y - c[1]) ** 2 <= r * r]
 
 
 def tiles(attrs, consts, n, default=0):
@@ -546,15 +548,19 @@ def generate(text, seed, players=2, size=None, warn=None, teams=None, folder=Non
             if cmd == "create_player_lands":
                 total, turn = tiles(attrs, consts, n), rng.uniform(0, 2 * np.pi)
                 order = circle(sections.get("PLAYER_SETUP", ()), players, teams, seed)
+                radius = attrs.get("circle_radius")       # percent of the map size and its random change (#4420)
+                ring = value(radius[0], consts) / 100 if radius else RING
+                vary = value(radius[1], consts) / 100 if radius and len(radius) > 1 else 0
                 for p in range(1, players + 1):
                     if any(st["player"] == p for st in starts):     # a land with assign_to_player has it (#3947)
                         continue
                     a = turn + 2 * np.pi * order.index(p) / players
-                    c = (int(round((n - 1) / 2 + RING * n * np.cos(a))), int(round((n - 1) / 2 + RING * n * np.sin(a))))
+                    r = ring + (rng.uniform(-vary, vary) if vary else 0)   # no draw with no change: same maps
+                    c = (int(round((n - 1) / 2 + r * n * np.cos(a))), int(round((n - 1) / 2 + r * n * np.sin(a))))
                     starts.append({"player": p, "x": c[0], "y": c[1], "base_size": base, "land": len(lands)})
                     links.append((c, p, zone if zone is not None else -1 - len(lands)))
-                    lands.append({"id": len(lands), "cells": square(c, base, n), "clump": clump, "box": box, "fuzz": fuzz,
-                                  "zone": links[-1][2], "avoid": avoid,
+                    lands.append({"id": len(lands), "cells": square(c, base, n, circular="set_circular_base" in attrs),
+                                  "clump": clump, "box": box, "fuzz": fuzz, "zone": links[-1][2], "avoid": avoid,
                                   "target": max(total // players, (2 * base + 1) ** 2)})
                     kinds[len(lands) - 1] = kind
                     layers[len(lands) - 1] = top
@@ -572,8 +578,8 @@ def generate(text, seed, players=2, size=None, warn=None, teams=None, folder=Non
                 if p:                                       # direct_placement: the land of player p (#3947)
                     starts.append({"player": p, "x": c[0], "y": c[1], "base_size": base, "land": len(lands)})
                 links.append((c, p, zone if zone is not None else -1 - len(lands)))
-                lands.append({"id": len(lands), "cells": square(c, base, n), "clump": clump, "box": box, "fuzz": fuzz,
-                              "zone": links[-1][2], "avoid": avoid,
+                lands.append({"id": len(lands), "cells": square(c, base, n, circular="set_circular_base" in attrs),
+                              "clump": clump, "box": box, "fuzz": fuzz, "zone": links[-1][2], "avoid": avoid,
                               "target": tiles(attrs, consts, n, (2 * base + 1) ** 2)})
                 kinds[len(lands) - 1] = kind
                 layers[len(lands) - 1] = top
@@ -694,6 +700,7 @@ CREATE_LAND = (                 # the attributes of create_land and create_playe
     "base_size",
     "border_fuzziness",
     "bottom_border",
+    "circle_radius",
     "clumping_factor",
     "generate_mode",                # no source gives its effect: read with no warning (#4423)
     "land_conformity",              # no source gives its effect: read with no warning (#4423)
@@ -705,6 +712,7 @@ CREATE_LAND = (                 # the attributes of create_land and create_playe
     "number_of_tiles",
     "other_zone_avoidance_distance",
     "right_border",
+    "set_circular_base",
     "terrain_type",
     "top_border",
     "zone",
