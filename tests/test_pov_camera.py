@@ -10,11 +10,18 @@ VIEWS = [{"time": 2000, "tile": [5, 6]}, {"time": 6000, "tile": [10.5, 3]}, {"ti
 
 
 def spectator_tps(commands):
-    return [c for c in commands if "tp @s" in c and "gamemode=spectator" in c]
+    """The moves of the camera: a tp of the spectators (--camera auto) or of the camera entity (#4770)."""
+    return [c for c in commands if ("tp @s" in c and "gamemode=spectator" in c) or c.startswith("tp @e[type=item_display")]
 
 
 def shot(tile):
-    return replay.Replay(Fake(), data([])).shot_view(tile)[0]
+    r = replay.Replay(Fake(), data([]))
+    return f"tp @e[type=item_display,tag={replay.CAMERA_ENTITY},limit=1] {r.shot_place(tile)}"
+
+
+def first(tile):
+    """The first view also puts the spectators there, at the new camera entity (#4770)."""
+    return [f"execute as @a[gamemode=spectator] run tp @s {replay.Replay(Fake(), data([])).shot_place(tile)}", shot(tile)]
 
 
 def run(views, camera="player", jump=None):
@@ -33,12 +40,12 @@ def run(views, camera="player", jump=None):
 
 def test_each_view_moves_the_spectators_above_its_tile(monkeypatch):
     monkeypatch.setattr(replay, "camera_plan", lambda events, owner: [])
-    assert spectator_tps(run(VIEWS)) == [shot(v["tile"]) for v in VIEWS]
+    assert spectator_tps(run(VIEWS)) == first(VIEWS[0]["tile"]) + [shot(v["tile"]) for v in VIEWS[1:]]
 
 
 def test_a_jump_forward_moves_the_camera_to_the_last_view_before_it(monkeypatch):
     monkeypatch.setattr(replay, "camera_plan", lambda events, owner: [])
-    assert spectator_tps(run(VIEWS, jump=8000)) == [shot([10.5, 3]), shot([2, 9.5])]
+    assert spectator_tps(run(VIEWS, jump=8000)) == first([10.5, 3]) + [shot([2, 9.5])]
 
 
 def test_views_move_nothing_with_the_auto_camera(monkeypatch):
