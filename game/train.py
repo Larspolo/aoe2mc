@@ -1301,6 +1301,8 @@ def research(g, entry, start=False, rect=None):
                 g.command(cmd)
             if cmd := lead_command(g, uuid, new):                 # an elite Spanish cannon galleon (#2430)
                 g.command(cmd)
+            if cmd := combat.accuracy_command(uuid, new, civs.value("accuracy", civs.civ(g), {}).get(new, 0.0), g.map.T):
+                g.command(cmd)                                    # an Elite Arambai hits more often (#4549)
             if cmd := combat.dodge_command(uuid, new):            # an Elite Shrivamsha Rider dodges more (#4399)
                 g.command(cmd)
             if cmd := combat.frenzy_command(uuid, new):           # an Elite Temple Guard (#4468)
@@ -1536,7 +1538,7 @@ def summon(g, name, pos, rotation=math.pi / 2, player=None):
         g.command(cmd)
     if cmd := lead_command(g, uuid, name):                         # a Spanish cannon galleon aims ahead (#2430)
         g.command(cmd)
-    if cmd := combat.accuracy_command(uuid, name, civs.value("accuracy", civs.civ(g), {}).get(name, 0.0)):
+    if cmd := combat.accuracy_command(uuid, name, civs.value("accuracy", civs.civ(g), {}).get(name, 0.0), g.map.T):
         g.command(cmd)                                             # a Hun trebuchet hits units more often (#2479)
     if cmd := combat.charge_command(uuid, name):                   # the Coustillier charges its attack (#4398)
         g.command(cmd)

@@ -87,6 +87,7 @@ CONTACT = 1.0         # tiles: the reach of a demolition ship (range 0, #1440): 
 # Tiles: no shot at a unit nearer (AoE2 DE, wiki infobox "MinRange", #1350). The key "min_range" of data/units.jsonl.
 MIN_RANGE = {r["name"]: r["min_range"] for r in UNIT_ROWS if "min_range" in r}
 ACCURACY = {r["name"]: r["accuracy"] for r in UNIT_ROWS if "accuracy" in r}   # siege shots at units that hit (#2479)
+MISS = {r["name"]: r["miss"] for r in UNIT_ROWS if "miss" in r}               # a missed shot hurts a near unit (#4549)
 DODGE = {r["name"]: r["dodge"] for r in UNIT_ROWS if "dodge" in r}           # projectiles that do no damage (#4399)
 FRENZY = {r["name"]: r["frenzy"] for r in UNIT_ROWS if "frenzy" in r}        # a shorter reload in a long fight (#4468)
 LOW_HP = {r["name"]: r["low_hp"] for r in UNIT_ROWS if "low_hp" in r}      # another form below some hit points (#4472)
@@ -223,11 +224,15 @@ def range_command(uuid, name, T, rate=NORMAL, s=None):
     return reach and (s.reload or name in BLAST) and f"aoe range {uuid} {reach} {max(1, round(s.reload / rate * 20))}{blast}" or None
 
 
-def accuracy_command(uuid, name, bonus=0.0):
-    """The plugin command of the AoE2 accuracy of a siege shot at a unit (the key "accuracy" of data/units.jsonl: the
-    Trebuchet 15 %, #2479) plus bonus (the civilization key "accuracy": Huns +35 %), or None when each shot hits."""
+def accuracy_command(uuid, name, bonus=0.0, T=4):
+    """The plugin command of the AoE2 accuracy of a shot at a unit (the key "accuracy" of data/units.jsonl: the
+    Trebuchet 15 %, #2479) plus bonus (the civilization key "accuracy": Huns +35 %), or None when each shot hits.
+    The key "miss" (the Arambai, #4549, AoE2 wiki: "Missed projectiles deal 100% damage too"): a missed shot hurts
+    another enemy unit within "radius" tiles of the target with "part" of the damage; the command gets the part and
+    the radius in blocks (T blocks per tile)."""
     part = min(1.0, ACCURACY.get(name, 1.0) + bonus)
-    return f"aoe accuracy {uuid} {part:g}" if part < 1 else None
+    m = MISS.get(name)
+    return f"aoe accuracy {uuid} {part:g}" + (f" {m['part']:g} {m['radius'] * T:g}" if m else "") if part < 1 else None
 
 
 def vs_units_command(uuid, name, T):
@@ -395,7 +400,8 @@ def setup(game, data):
             game.command(cmd)
     for o in units:                                  # a trebuchet misses units (#2479), with the bonus of its civ
         civ = None if data.get("full_tech_tree") else data.get("players", {}).get(str(o["player"]), {}).get("civ")
-        if cmd := accuracy_command(o["uuid"], o["name"], civs.value("accuracy", civ, {}).get(o["name"], 0.0)):
+        if cmd := accuracy_command(o["uuid"], o["name"], civs.value("accuracy", civ, {}).get(o["name"], 0.0),
+                                   data.get("tile_size", 4)):
             game.command(cmd)
     for o in units:                                  # the Coustillier charges its attack (#4398)
         if cmd := charge_command(o["uuid"], o["name"]):
