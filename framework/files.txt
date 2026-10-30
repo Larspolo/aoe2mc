@@ -102,6 +102,7 @@ framework/tests/test_health.py
 framework/tests/test_health_compare.py
 framework/tests/test_health_conflicts.py
 framework/tests/test_health_pr.py
+framework/tests/test_health_pacer.py
 framework/tests/test_health_reviews.py
 framework/tests/test_health_takeovers.py
 framework/tests/test_health_misses.py
