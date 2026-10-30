@@ -64,6 +64,26 @@ UNIT_KEYS = {                     # the optional keys of units.jsonl: one line e
 }
 
 
+UNIT_KEYS = {                                   # the optional keys of units.jsonl: one per line (#4585)
+    "accuracy": NUMBER,
+    "convert": int,
+    "dodge": dict,
+    "frenzy": dict,
+    "ignore_armor": bool,
+    "low_hp": dict,
+    "min_range": NUMBER,
+    "miss": dict,
+    "note": str,
+    "pack": dict,
+    "sail": NUMBER,
+    "sight": int,
+    "sunder": int,
+    "trample": dict,
+    "veteran": dict,
+    "volley": dict,
+}
+
+
 def check_units(row):
     form(row, {"name": str, **STATS}, UNIT_KEYS)
     stats(row)
