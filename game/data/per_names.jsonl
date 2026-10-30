@@ -65,7 +65,6 @@
 {"name": "imperial-camel", "game": "IMPERIAL_CAMEL_RIDER", "kind": "unit"}
 {"name": "imperial-skirmisher", "game": "IMPERIAL_SKIRMISHER", "kind": "unit"}
 {"name": "keep", "game": "KEEP", "kind": "building"}
-{"name": "king", "game": "KING", "kind": "unit"}
 {"name": "knight", "game": "KNIGHT", "kind": "unit"}
 {"name": "knight-line", "game": "KNIGHT", "kind": "unit"}
 {"name": "krepost", "game": "KREPOST", "kind": "building"}
