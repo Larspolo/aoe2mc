@@ -1,5 +1,5 @@
 #!/bin/bash
-# Install the Python dependencies in a Claude Code cloud session, so that tests and lint work.
+# Install the packages of the project (the install command of agent.toml) in a Claude Code cloud session, so that tests and lint work.
 set -euo pipefail
 
 # The merge driver of game/data/*.jsonl (.gitattributes, #2004): merge the lines by "name", not by union. Also local.
@@ -10,13 +10,6 @@ set -euo pipefail
 # The Bash tool of a cloud session has no TMPDIR: "$TMPDIR/x.py" was "/x.py" (#2032).
 if [ -n "${CLAUDE_ENV_FILE:-}" ] && [ -z "${TMPDIR:-}" ]; then
   echo "export TMPDIR=/tmp" >> "$CLAUDE_ENV_FILE"
-fi
-
-# A build of the plugin by hand (game/plugin/gradlew jar) needs JDK 25, but the cloud JAVA_HOME is JDK 21: "release
-# version 25 not supported" cost 4 runs (docs/research/gameplay.md, #4331). run.build_plugin sets its own JAVA_HOME.
-JDK25=/usr/lib/jvm/java-25-openjdk-amd64
-if [ -n "${CLAUDE_ENV_FILE:-}" ] && [ -x "$JDK25/bin/javac" ] && [ "${JAVA_HOME:-}" != "$JDK25" ]; then
-  echo "export JAVA_HOME=$JDK25" >> "$CLAUDE_ENV_FILE"
 fi
 
 # The Claude account of the run (#4236, docs/COLLABORATORS.md): the variable AGENT_ACCOUNT of the cloud environment
@@ -30,12 +23,12 @@ if [ "${CLAUDE_CODE_REMOTE:-}" != "true" ]; then
 fi
 
 cd "${CLAUDE_PROJECT_DIR:-.}"
-PIP="python3 -m pip install --quiet --disable-pip-version-check --root-user-action=ignore"
-# As scripts/cloud-setup.sh: an older environment has the Debian pillow ("cannot import name '_imaging'") and the
-# Debian setuptools, which cannot build mgz.
-python3 -c "from PIL import _imaging" 2>/dev/null || $PIP --ignore-installed pillow || true
-python3 -c "import mgz" 2>/dev/null || $PIP --ignore-installed setuptools || true
-$PIP -r requirements-dev.txt
+# The project-specific steps (framework/docs/SYSTEM.md, "Generic and specific files"), then the install command of
+# agent.toml (#4801): the setup script runs before the clone and cannot install the packages of the repository.
+if [ -f scripts/session-setup.sh ]; then bash scripts/session-setup.sh; fi
+install=$(python3 -c 'import tomllib; print(tomllib.load(open("agent.toml", "rb")).get("commands", {}).get("install", ""))' \
+  2>/dev/null || true)
+if [ -n "$install" ]; then bash -c "$install"; fi
 
 # The environment runs the setup script that the owner pasted. Tell the agent when it is older than the repository.
 # One environment can serve more projects (#1964): it then has the version file of another project. With no version

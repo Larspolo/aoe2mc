@@ -124,7 +124,8 @@ selects "Use it".
    - `.claude/skills/verify/SKILL.md`: level 1 lint and fast tests, then the levels of the stack (slow tests, a run of
      the program, a screenshot for a user interface).
    - `.github/workflows/ci.yml`: the setup step of the language next to `setup-python`. Keep the job name `quick`.
-   - `scripts/cloud-setup.sh`: the install of the stack, in `SETUP_NEEDS` too. `scripts/allowed-domains.txt`: the
+   - `scripts/cloud-setup.sh`: the tools of the stack by name (it runs before the clone and cannot read a file of the
+     repository; the SessionStart hook runs the `install` command of `agent.toml`), in `SETUP_NEEDS` too. `scripts/allowed-domains.txt`: the
      package hosts of the stack. `docs/ENVIRONMENT.md`: both in words.
    - `pyproject.toml`, `requirements-dev.txt`: keep them. For another language, add its project file (`package.json`,
      `Cargo.toml`, ...) with the lint and test tools, and one smoke test of the language.
