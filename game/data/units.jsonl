@@ -43,7 +43,7 @@
 {"name": "CENTURION", "hp": 110, "attack": 13, "melee": 2, "pierce": 3, "range": 0, "reload": 1.9, "bonus": {}, "classes": ["cavalry", "unique"]}
 {"name": "CHAKRAM_THROWER", "hp": 40, "attack": 3, "melee": 1, "pierce": 0, "range": 5, "reload": 2.0, "bonus": {"building": 1}, "classes": ["infantry", "unique"], "sight": 9, "note": "the Gurjaras castle (#1612)", "melee_ranged": true, "pass": 2, "pass_part": 1.0}
 {"name": "CHU_KO_NU", "hp": 45, "attack": 8, "melee": 0, "pierce": 0, "range": 4, "reload": 3.0, "bonus": {"spearman": 2}, "classes": ["archer", "unique"], "volley": {"shots": 2, "attack": 3}}
-{"name": "COMPOSITE_BOWMAN", "hp": 40, "attack": 4, "melee": 1, "pierce": 0, "range": 4, "reload": 2.0, "bonus": {"spearman": 2}, "classes": ["archer", "unique"], "sight": 7}
+{"name": "COMPOSITE_BOWMAN", "hp": 40, "attack": 4, "melee": 1, "pierce": 0, "range": 4, "reload": 2.0, "bonus": {"spearman": 2}, "classes": ["archer", "unique"], "sight": 7, "ignore_armor": true}
 {"name": "CONQUISTADOR", "hp": 55, "attack": 16, "melee": 2, "pierce": 1, "range": 6, "reload": 2.9, "bonus": {"siege": 4}, "classes": ["archer", "cavalry", "unique"], "groups": ["conquistador type"]}
 {"name": "COUSTILLIER", "hp": 115, "attack": 8, "melee": 2, "pierce": 2, "range": 0, "reload": 1.9, "bonus": {}, "classes": ["cavalry", "unique"], "sight": 5, "charge_attack": {"time": 40, "attack": 20}}
 {"name": "ELITE_TEUTONIC_KNIGHT", "hp": 110, "attack": 17, "melee": 8, "pierce": 2, "range": 0, "reload": 2.0, "bonus": {"building": 4}, "classes": ["infantry", "unique"], "sight": 7}
@@ -97,7 +97,7 @@
 {"name": "ELITE_CENTURION", "hp": 155, "attack": 15, "melee": 3, "pierce": 3, "range": 0, "reload": 1.9, "bonus": {}, "classes": ["cavalry", "unique"]}
 {"name": "ELITE_CHAKRAM_THROWER", "hp": 50, "attack": 4, "melee": 1, "pierce": 0, "range": 6, "reload": 2.0, "bonus": {"building": 2, "infantry": 1}, "classes": ["infantry", "unique"], "sight": 10, "melee_ranged": true, "pass": 2, "pass_part": 1.0}
 {"name": "ELITE_CHU_KO_NU", "hp": 50, "attack": 10, "melee": 0, "pierce": 0, "range": 4, "reload": 3.0, "bonus": {"spearman": 2}, "classes": ["archer", "unique"], "volley": {"shots": 4, "attack": 3}}
-{"name": "ELITE_COMPOSITE_BOWMAN", "hp": 50, "attack": 4, "melee": 2, "pierce": 0, "range": 4, "reload": 2.0, "bonus": {"spearman": 2}, "classes": ["archer", "unique"], "sight": 7}
+{"name": "ELITE_COMPOSITE_BOWMAN", "hp": 50, "attack": 4, "melee": 2, "pierce": 0, "range": 4, "reload": 2.0, "bonus": {"spearman": 2}, "classes": ["archer", "unique"], "sight": 7, "ignore_armor": true}
 {"name": "ELITE_CONQUISTADOR", "hp": 70, "attack": 19, "melee": 2, "pierce": 2, "range": 6, "reload": 2.9, "bonus": {"siege": 6, "building": 2}, "classes": ["archer", "cavalry", "unique"], "sight": 9, "groups": ["conquistador type"]}
 {"name": "ELITE_COUSTILLIER", "hp": 145, "attack": 11, "melee": 2, "pierce": 2, "range": 0, "reload": 1.9, "bonus": {}, "classes": ["cavalry", "unique"], "sight": 5, "charge_attack": {"time": 40, "attack": 25}}
 {"name": "ELITE_GBETO", "hp": 50, "attack": 13, "melee": 0, "pierce": 0, "range": 6, "reload": 2.0, "bonus": {}, "classes": ["infantry", "unique"], "sight": 9, "melee_ranged": true}
