@@ -186,6 +186,7 @@ def read(path, defined=()):
 NAMES = {}                                                         # script name -> its line of per_names.jsonl
 OPS = {"<": operator.lt, "<=": operator.le, ">": operator.gt, ">=": operator.ge, "==": operator.eq, "!=": operator.ne}
 STOCK = ("food", "wood", "gold", "stone")
+TOWN = 30                       # tiles around the own town center: "in town" (AoE2 sn-maximum-town-size, airef "Facts")
 
 
 def names():
@@ -238,16 +239,16 @@ class Script:
             return name == "true"
         if name in ("can-train", "can-build", "can-research", "research-completed"):
             return self.can(name, args[0])
-        if name in ("unit-type-count", "building-type-count"):
+        if name in ("unit-type-count", "building-type-count", "unit-type-count-total", "building-type-count-total"):
             if (n := self.game(args[0], "unit" if name[0] == "u" else "building")) is None:
                 return False
-            return OPS[args[1]](self.count(n), args[2])
+            return OPS[args[1]](self.count(n, total=name.endswith("-total")), args[2])
         if name == "current-age":
-            row = names().get(args[1])
-            if row is None or row["kind"] != "age":
-                return self.warn("age", args[1]) or False
-            import build
-            return OPS[args[0]](build.ages(self.bot.g), row["age"])
+            return self.age(self.bot.g, *args)
+        if name == "enemy-buildings-in-town":
+            return self.in_town()
+        if name.startswith("players-"):                            # (players-FACT PLAYER ...): the other players
+            return self.players(name.removeprefix("players-"), args[0], args[1:])
         value = self.value(name)
         if value is None:
             return self.warn("fact", name) or False
@@ -264,13 +265,78 @@ class Script:
                 "housing-headroom": lambda: max(train.limit(g) - g.pop, 0),
                 "population-headroom": lambda: max(train.max_pop(g) - g.pop, 0)}.get(name, lambda: None)()
 
-    def count(self, n):
-        """The own live units or complete buildings of game name n."""
+    def count(self, n, g=None, total=False):
+        """The live units or complete buildings of game name n of Gather g (default: the own one); total: also the
+        queued units and the buildings under construction (the -total facts)."""
         import train
-        g = self.bot.g
-        if n.startswith("VILLAGER"):
-            return len(g.villagers)
-        return sum(u == n for u in g.soldiers.values()) + train.owned(g).count(n)
+        g = g or self.bot.g
+        alive = len(g.villagers) if n.startswith("VILLAGER") else \
+            sum(u == n for u in g.soldiers.values()) + train.owned(g).count(n)
+        if not total:
+            return alive
+        like = (lambda m: m.startswith("VILLAGER")) if n.startswith("VILLAGER") else n.__eq__
+        return alive + sum(like(e["name"]) for q in g.queues.values() for e in q) + \
+            sum(like(s["name"]) and not s.get("done") for s in g.sites if s.get("player", g.player) == g.player)
+
+    def age(self, g, op, arg):
+        row = names().get(arg)
+        if row is None or row["kind"] != "age":
+            return self.warn("age", arg) or False
+        import build
+        return OPS[op](build.ages(g), row["age"])
+
+    def sides(self, who):
+        """(the Gathers of the players of a player parameter, every): a number, focus-player (the foe of the bot), or
+        any-/every- with enemy, ally, player, computer or human (airef "Facts", "Player parameters")."""
+        import build
+        import diplomacy
+        g, b = self.bot.g, self.bot
+        sides = {x.player: x for x in build.sides(g)}
+        sides[g.player] = g
+        if isinstance(who, int) or who == "focus-player":
+            x = sides.get(b.foe if who == "focus-player" else who)
+            return [x] if x else [], False
+        mode, _, kind = who.partition("-")
+        if mode not in ("any", "every") or kind not in ("enemy", "ally", "player", "computer", "human"):
+            return self.warn("player", who) or [], False
+        test = {"enemy": lambda x: diplomacy.stance(g, x.player) == "enemy",
+                "ally": lambda x: diplomacy.stance(g, x.player) == "ally",
+                "player": lambda x: True, "computer": lambda x: getattr(x, "share", None) is not None,
+                "human": lambda x: getattr(x, "share", None) is None}[kind]
+        return [x for p, x in sorted(sides.items()) if p != g.player and test(x)], mode == "every"
+
+    def players(self, fact, who, args):
+        """A fact of the other players: true for one of them (any-, a number) or for all of them (every-)."""
+        xs, every = self.sides(who)
+        if fact == "current-age":
+            got = [self.age(x, *args) for x in xs]
+        elif fact == "building-type-count":
+            if (n := self.game(args[0], "building")) is None:
+                return False
+            got = [OPS[args[1]](self.count(n, x), args[2]) for x in xs]
+        elif fact in ("population", "military-population"):
+            got = [OPS[args[0]](x.pop if fact == "population" else len(x.soldiers), args[1]) for x in xs]
+        else:
+            return self.warn("fact", "players-" + fact) or False
+        return bool(got) and (all(got) if every else any(got))
+
+    def in_town(self):
+        """True when a building of an enemy stands within TOWN tiles of the own town center."""
+        import build
+        import diplomacy
+        import ruins
+        g, at = self.bot.g, self.bot.center()
+        if at is None:
+            return False
+        r = TOWN * g.data["tile_size"]
+        near = lambda x, z: (x - at[0]) ** 2 + (z - at[1]) ** 2 <= r * r   # noqa: E731
+        foes = {x.player: x for x in build.sides(g) if diplomacy.stance(g, x.player) == "enemy"}
+        return any(o["kind"] == "building" and o["player"] in foes and "footprint" in o
+                   and not ruins.fallen(foes[o["player"]], o)
+                   and near((o["footprint"][0] + o["footprint"][2]) / 2, (o["footprint"][1] + o["footprint"][3]) / 2)
+                   for o in g.data["objects"]) or \
+            any(near((x0 + x1) / 2, (z0 + z1) / 2) for x in foes.values() for s in x.sites
+                if s.get("player", x.player) == x.player for x0, x1, z0, z1 in [s["footprint"]])
 
     def paid(self, cost):
         return all(self.bot.g.stock[r] >= v for r, v in cost.items())
