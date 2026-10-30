@@ -62,6 +62,9 @@ def check_units(row):
     form(row, {"name": str, **STATS}, UNIT_KEYS | {m.KEY: m.TYPE for m in abilities.MODULES})
     stats(row)
     assert row.get("on_death", "MILITIA") in NAMES["units.jsonl"], row["name"]   # abilities.on_death (#4471)
+    if "aura" in row:                                                     # abilities.aura (#4470)
+        form(row["aura"], {"radius": NUMBER, "speed": NUMBER, "attack_speed": NUMBER, "units": list}, {})
+        assert set(row["aura"]["units"]) <= NAMES["units.jsonl"], row["name"]
 
 
 def check_buildings(row):
