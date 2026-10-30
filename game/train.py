@@ -425,11 +425,15 @@ def volley_command(g, uuid, name):
     """The plugin command of the extra projectiles in each shot of own unit name (the key "volley" of data/civs.jsonl:
     the Armenian galley line and dromons, #2379; the key "volley" of the researched technologies: {unit: {"shots": n,
     "attack": a or "part": p}}, Double Crossbow, #4338), else None. "attack" is the AoE2 attack of each extra
-    projectile, "part" a part of the attack of the unit, neither the full attack (0). The plugin keeps one attack for
+    projectile, "part" a part of the attack of the unit, neither the full attack (0). The key "volley" of the unit line
+    (Chu Ko Nu, Kipchak, Hussite Wagon, #4502) starts the count. The plugin keeps one attack for
     all extra projectiles of a unit: the last technology wins. Minecraft feature: one more Arrow entity; the plugin
     gives it its AoE2 damage."""
-    attack = civs.value("volley", civs.civ(g), {}).get(name)
-    shots, attack = (0, 0) if attack is None else (1, attack)
+    import combat                                                  # combat imports this module's data: import it late
+    base = combat.VOLLEY.get(name)
+    shots, attack = (0, 0) if base is None else (base["shots"], base["attack"])
+    if (civ := civs.value("volley", civs.civ(g), {}).get(name)) is not None:
+        shots, attack = shots + 1, civ
     for t in sorted(vars(g).get("techs", ())):
         if v := value("volley", t, {}).get(name):
             shots += v["shots"]

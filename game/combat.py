@@ -89,6 +89,7 @@ MIN_RANGE = {r["name"]: r["min_range"] for r in UNIT_ROWS if "min_range" in r}
 ACCURACY = {r["name"]: r["accuracy"] for r in UNIT_ROWS if "accuracy" in r}   # siege shots at units that hit (#2479)
 MISS = {r["name"]: r["miss"] for r in UNIT_ROWS if "miss" in r}               # a missed shot hurts a near unit (#4549)
 DODGE = {r["name"]: r["dodge"] for r in UNIT_ROWS if "dodge" in r}           # projectiles that do no damage (#4399)
+VOLLEY = {r["name"]: r["volley"] for r in UNIT_ROWS if "volley" in r}       # the key "volley": {"shots": n, "attack": a}, the extra projectiles of each shot (#4502)
 FRENZY = {r["name"]: r["frenzy"] for r in UNIT_ROWS if "frenzy" in r}        # a shorter reload in a long fight (#4468)
 LOW_HP = {r["name"]: r["low_hp"] for r in UNIT_ROWS if "low_hp" in r}      # another form below some hit points (#4472)
 VETERAN = {r["name"]: r["veteran"] for r in UNIT_ROWS if "veteran" in r}     # attack more for each kill (#4467)
