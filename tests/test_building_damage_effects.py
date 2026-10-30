@@ -6,9 +6,9 @@ import shutil
 import time
 
 import pytest
+from test_building_damage import hp
 
 from game import combat, run
-from test_building_damage import hp
 
 
 def tagged(game, uuid):

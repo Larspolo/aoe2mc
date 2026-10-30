@@ -1,9 +1,9 @@
 """#2705 (epic #2538): the trigger effect "Change Object Stance" tags the units of a player in an area and puts a stance
 order into the data storage aoe2mc:orders; the scenario mode of the game program sets the stance with the plugin."""
 import numpy as np
+from test_scenario_patrol import play, trigger
 
 import aoe2mc
-from test_scenario_patrol import play, trigger
 
 
 def test_the_trigger_function_tags_the_units_and_stores_the_stance():

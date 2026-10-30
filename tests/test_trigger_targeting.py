@@ -5,10 +5,10 @@ import time
 
 import numpy as np
 import pytest
+from test_damage import health
 
 import aoe2mc
 from game import combat, run
-from test_damage import health
 
 
 def effect(type, area=(1, 2, 2, 3), player=1):

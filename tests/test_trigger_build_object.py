@@ -1,10 +1,11 @@
 """#2863 (epic #2538): the trigger effect "Build Object". The converter puts the order "build <player> <building> <x1>
 <y1> <x2> <y2>" into the data storage aoe2mc:orders; the scenario mode of the game program completes the construction
 sites of the player in the area at once, with no villager work (game/scenario.py finish, build.rise)."""
-import aoe2mc
-from game import scenario
 from test_scenario_mode import train
 from test_trigger_foundation import STORED, lines, play
+
+import aoe2mc
+from game import scenario
 
 ORDER = 'data modify storage aoe2mc:orders list append value "build 1 {} {} {} {} {}"'
 

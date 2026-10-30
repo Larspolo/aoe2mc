@@ -3,14 +3,14 @@ import contextlib
 import io
 
 import numpy as np
+import scenarios
+import world_reader
 from AoE2ScenarioParser.datasets.buildings import BuildingInfo
 from AoE2ScenarioParser.datasets.players import PlayerId
 from AoE2ScenarioParser.datasets.terrains import TerrainId
 from AoE2ScenarioParser.datasets.units import UnitInfo
 
 import aoe2mc
-import scenarios
-import world_reader
 
 T, H = 4, 3
 

@@ -4,10 +4,10 @@ import shutil
 import time
 
 import pytest
-
-from game import cheats, gather
 from test_gather import FakeServer
 from test_mc_check import mojang_reachable
+
+from game import cheats, gather
 
 
 def game(tiny_world, on):
@@ -59,6 +59,7 @@ def test_a_player_types_a_cheat_in_the_chat(tiny_world, tmp_path):
             or not paper_reachable():
         pytest.skip("Xvfb, xdotool, Mojang or Paper is not available")
     import mc_shot
+
     from game import run
     world = shutil.copytree(tiny_world[0], tmp_path / "W")
     gold = cheats.NAMES.index("robin hood") + 1

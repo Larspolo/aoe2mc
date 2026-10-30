@@ -1,13 +1,13 @@
 """game/civs.py: the combat bonuses of each age of the Byzantines, Mapuche, Muisca and Jurchens (AoE2 DE wiki, #2116):
 more in each age. A unit or building that exists at the age-up gets the bonus of the new age, as in AoE2."""
 import pytest
-
-from game import build, civs, combat, train
-
 from test_civ_units import trained
 from test_civ_work import setup
 from test_masonry import TC
-from test_tower_upgrades import setup as towers, uuid
+from test_tower_upgrades import setup as towers
+from test_tower_upgrades import uuid
+
+from game import build, civs, combat, train
 
 AGES = ((), ("FEUDAL_AGE",), ("FEUDAL_AGE", "CASTLE_AGE"), ("FEUDAL_AGE", "CASTLE_AGE", "IMPERIAL_AGE"))
 

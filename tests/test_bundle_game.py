@@ -4,7 +4,6 @@ import os
 import sys
 
 import gui
-
 from game import run
 
 

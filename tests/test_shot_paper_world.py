@@ -5,8 +5,9 @@ import sys
 from nbtlib import List, String, load
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "tools"))
-import aoe2mc  # noqa: E402
 import mc_shot  # noqa: E402
+
+import aoe2mc  # noqa: E402
 
 
 def test_paper_world_gets_vanilla(tmp_path):

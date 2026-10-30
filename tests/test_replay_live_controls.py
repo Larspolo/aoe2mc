@@ -7,11 +7,10 @@ import re
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from test_replay import data  # noqa: E402
-from test_replay_live import DELAY, TIMELINE, Writer, read_lines  # noqa: E402
-
 import live  # noqa: E402
 import replay  # noqa: E402
+from test_replay import data  # noqa: E402
+from test_replay_live import DELAY, TIMELINE, Writer, read_lines  # noqa: E402
 
 ALL = {e["text"] for e in TIMELINE}
 

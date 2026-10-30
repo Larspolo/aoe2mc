@@ -4,10 +4,10 @@ import io
 import json
 
 import pytest
-
-import aoe2mc
 import scenarios
 from test_campaign import campaign
+
+import aoe2mc
 
 
 @pytest.fixture(scope="module")

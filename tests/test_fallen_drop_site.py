@@ -1,8 +1,9 @@
 """game/ruins.py: a fallen own drop site (lumber camp, town center, dock) leaves the drop sites of each side, so that
 the villagers and fishing ships with a load go to another drop site and each side can build on its ground (#3009)."""
-from game import build, fleet, gather, ruins
 from test_drop_sites import Server, building, data
 from test_trade_cog import FAR, HOME, docks_map
+
+from game import build, fleet, gather, ruins
 
 CAMP, TC = (4, 8, 4, 8), (30, 34, 30, 34)                           # block footprints (x0, x1, z0, z1)
 

@@ -9,13 +9,13 @@ import sys
 import pytest
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import replay  # noqa: E402
 from test_replay import Fake, data  # noqa: E402
 from test_replay_ai import MIL  # noqa: E402
 from test_replay_spawn import REC  # noqa: E402
 from test_replay_walk import VIL  # noqa: E402
 
 import aoe2mc  # noqa: E402
-import replay  # noqa: E402
 
 N = 64
 SEA = {(x, z) for x in range(N) for z in range(40, N)}        # the water south of z = 40 (ground cells, not tiles)

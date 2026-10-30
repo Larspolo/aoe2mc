@@ -4,9 +4,9 @@ import shutil
 import time
 
 import pytest
+from test_building_target_fire import fire
 
 from game import combat, run
-from test_building_target_fire import fire
 
 
 @pytest.mark.mc

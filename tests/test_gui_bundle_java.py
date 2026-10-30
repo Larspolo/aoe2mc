@@ -2,8 +2,9 @@
 brings the plugin jar and needs a Java runtime, not a JDK."""
 import sys
 
-import gui
 from test_gui_java import JDK25, problem
+
+import gui
 
 
 def test_bundle_accepts_java_25_without_javac(monkeypatch):

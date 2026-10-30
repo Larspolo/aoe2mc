@@ -47,8 +47,9 @@ import herd  # noqa: E402
 import menu as chest  # noqa: E402  (menu() below is the chat text)
 import monk  # noqa: E402
 import record  # noqa: E402
-from replay import Replay  # noqa: E402
 import table  # noqa: E402
+from replay import Replay  # noqa: E402
+
 import units  # noqa: E402
 
 # The buildings of the menu (in menu order), the age of each building, unit and age, and the technology that each
@@ -158,7 +159,8 @@ def ghost_commands(g, player, name, rect, origin=None, way=None):
 def ghosts(g):
     """Each tick: the players who chose a building see its ghost (#794), green over a free footprint and red over a
     blocked one, as place() tests it; the ghost goes away when the choice ends (placed, cancelled)."""
-    import fleet, gather                                               # gather imports build
+    import fleet  # gather imports build
+    import gather
     who = {}
     if "passed" in g.command(f"execute if entity {gather.only(g.who, f'scores={{{OBJECTIVE}=1..}}')}"):
         for p in g.people():
@@ -207,14 +209,14 @@ def locked(g, name):
     if g is not None and name in NEEDS and NEEDS[name] not in getattr(g, "techs", ()):
         return "Needs " + pretty(NEEDS[name].removesuffix("_TECH"))
     if name in UNLOCKED_BY and hasattr(g, "sites") and hasattr(g, "data"):
-        import train                                                   # train imports this module
+        import train  # train imports this module
         if UNLOCKED_BY[name] not in train.owned(g):
             return "Needs a " + pretty(UNLOCKED_BY[name])
-    from gather import has_mode                                        # gather imports this module
+    from gather import has_mode  # gather imports this module
     if name == "TOWN_CENTER" and has_mode(g, "sudden-death") and town_center(g):
         return "Sudden Death: only one town center"                    # (#2407)
     if getattr(g, "mode", None) == "capture-the-relic":
-        import combat                                                  # combat -> gather -> build: import it late
+        import combat  # combat -> gather -> build: import it late
         if combat.STANDS_FOR.get(name, name) == "MONASTERY":           # the fortified church too (#1930)
             return "Capture the Relic: no more monasteries"            # (#2458)
     if g is not None and name == "TOWN_CENTER" and ages(g) < (1 if civs.civ(g) == "CUMANS" else 2) and town_center(g):
@@ -224,7 +226,7 @@ def locked(g, name):
 def town_center(g, player=None):
     """True when the player (default g.player) has a town center: a construction site, or a complete one whose target
     still stands."""
-    import combat                                                      # combat imports gather, which imports this module
+    import combat  # combat imports gather, which imports this module
     player = g.player if player is None else player
     sites = [s for s in getattr(g, "sites", ()) if s["name"] == "TOWN_CENTER" and s["player"] == player]
     if any(not s.get("done") for s in sites):
@@ -274,11 +276,11 @@ def open_menu(g, player):
     Slot DELETE deletes the selected own units (stance.delete, #3451), slot SHELTER sends them into a building (#3440)."""
     def choose(p, slot, shift):                                        # shift: one building all the same
         if slot == DELETE:
-            import stance                                              # stance imports gather, gather imports this module
+            import stance  # stance imports gather, gather imports this module
             stance.delete(g)
             chest.close(g, p)
         elif slot == SHELTER:
-            import garrison                                            # garrison imports gather, gather imports this module
+            import garrison  # garrison imports gather, gather imports this module
             garrison.bell(g, p, set(g.selected))
             chest.close(g, p)
         elif slot < len(MENU) and not locked(g, MENU[slot]) and not hidden(g, MENU[slot]):
@@ -340,7 +342,7 @@ def water(g, rect):
 
 def place(g, player, name, eye, d):
     """Place a foundation of name at the ground that the player looks at. Returns the site or None."""
-    import fleet                                                       # fleet -> gather -> build: import it late
+    import fleet  # fleet -> gather -> build: import it late
     if need := locked(g, name):                                        # a /trigger choice of a later age
         say(g, player, f"{pretty(name)}: {need}.")
         return None
@@ -471,7 +473,7 @@ def gate(g, player, name, cell):
         say(g, player, f"Not enough resources: a {pretty(name).lower()} costs "
                        + ", ".join(f"{v} {r}" for r, v in cost.items()) + ".")
         return None
-    import combat                                                      # combat -> gather -> build: import it late
+    import combat  # combat -> gather -> build: import it late
     old = [s for t, s in wall_tiles_of(g).items() if s and t in tiles]
     builders = {v.uuid for v in getattr(g, "villagers", {}).values() if v.site in old}
     for s in old:
@@ -525,7 +527,7 @@ def found(g, name, rect, way=None, tiles=None, free=False):
     """Pay for name and put its foundation (a wool ring in the player color) on the free footprint rect. Returns
     the construction site. way: the way of a gate (gate_spot); tiles: the tiles of a diagonal gate, the other tiles
     of its footprint stay free (#1655). free: no cost (the start town of a game mode, empire_wars.py, #2408)."""
-    import fleet                                                       # fleet -> gather -> build: import it late
+    import fleet  # fleet -> gather -> build: import it late
     paid = {} if free else price(g, name)                              # a deleted foundation gives it back (demolish.py)
     for r, v in paid.items():
         g.stock[r] -= v
@@ -569,7 +571,7 @@ def squares(g):
     """{(x0, z0, x1, z1): player} of the building squares on the minimap: the buildings of aoe2mc.json (not Gaia) and
     the construction sites of each side (a loaded game), not the buildings that fell (score.razed of a side, #2981):
     the sites keep them."""
-    import combat                                                      # combat -> gather -> build: import it late
+    import combat  # combat -> gather -> build: import it late
     rects = {tuple(o["footprint"]): o["player"] for o in g.data["objects"]
              if o["kind"] == "building" and o["player"] > 0 and "footprint" in o}
     for x in sides(g):
@@ -693,7 +695,7 @@ def cart(g, site):
     """A complete building that moves (MOVES: the mule cart, AoE2 DE wiki "Mule Cart", #2209): its blocks go, and a
     mob with its AoE2 values stands in their place. It takes move orders as a trade cart, and the mob path finding moves
     it (Minecraft features first). Its footprint and its drop cells follow the mob (moved_carts)."""
-    import train                                                   # train imports this module
+    import train  # train imports this module
     x0, x1, z0, z1 = site["footprint"]
     cells = {(x, z) for x in range(x0, x1) for z in range(z0, z1)}
     g.map.blocked -= cells                                         # the cart blocks no path (found blocked them)
@@ -740,7 +742,7 @@ def folwark(g, farm, tile):
 def design(g, name, player):
     """The design of building name of player: a stone wall (gate) of the player after Fortified Wall is a fortified
     wall (gate), #1326."""
-    import train                                                       # train imports this module
+    import train  # train imports this module
     new = {old: wall for t, walls in train.BY_KEY["walls"].items() if t in getattr(g, "techs", ()) for old, wall in walls.items()}
     return new.get(name, name) if player == g.player else name
 
@@ -748,7 +750,7 @@ def design(g, name, player):
 def line(g, name, techs=None):
     """The building whose AoE2 values building name of the player of g has: a watch tower after Guard Tower (Keep) has
     those of the guard tower (keep), #1374. techs: the technologies (default: those of the player)."""
-    import train                                                       # train imports this module
+    import train  # train imports this module
     techs = getattr(g, "techs", ()) if techs is None else techs
     for t, towers in train.BY_KEY["towers"].items():                  # in the research order
         name = towers.get(name, name) if t in techs else name
@@ -760,7 +762,8 @@ def values(g, name, techs=None, rect=None):
     technologies (train.TECHS: Chemistry, Masonry, #1398). techs: the technologies (default: those of the player). A
     technology sees the name of the tower of the values (Arrowslits: a keep +3, #1504). rect: the footprint of the
     building, with the effect of its upgrade of one building (g.upgraded: the Defensive Town Center, #2497)."""
-    import combat, train                                               # combat -> gather -> build: import it late
+    import combat  # combat -> gather -> build: import it late
+    import train
     techs = getattr(g, "techs", ()) if techs is None else techs
     name = line(g, name, techs)
     wall = name in combat.WALLS or name.endswith(("_WALL", "_GATE"))   # its age: combat.wall (upgrade, #1372)
@@ -777,7 +780,7 @@ def values(g, name, techs=None, rect=None):
 def taken(g, name, techs=None):
     """The factor of the bonus damage that building name of the player of g takes: the key "building_taken" of its
     technologies (Citadels: a castle 0.75, #4281). techs: the technologies (default: those of the player)."""
-    import train                                                       # train imports this module
+    import train  # train imports this module
     techs = getattr(g, "techs", ()) if techs is None else techs
     return math.prod(train.value("building_taken", t, {}).get(name, 1) for t in sorted(techs))
 
@@ -785,7 +788,7 @@ def taken(g, name, techs=None):
 def minimum(g, name, techs=None):
     """The minimum range in tiles of building name of the player of g (combat.FORT_MIN_RANGE): 0 after Murder Holes
     (#1547). techs: the technologies (default: those of the player)."""
-    import combat                                                      # combat -> gather -> build: import it late
+    import combat  # combat -> gather -> build: import it late
     techs = getattr(g, "techs", ()) if techs is None else techs
     return 0 if "MURDER_HOLES" in techs else combat.FORT_MIN_RANGE.get(name, 0)
 
@@ -794,7 +797,9 @@ def retower(g, before, fresh=None):
     """The complete own buildings get their new values after a tower technology (#1374) or Masonry (#1398, values): the
     target keeps its lost hit points, as a wall (upgrade). before: the technologies before the research. fresh: the
     footprint of a building that has a new upgrade of one building (#2497), else None. A destroyed building stays air."""
-    import combat, repair, train                                       # combat -> gather -> build: import it late
+    import combat  # combat -> gather -> build: import it late
+    import repair
+    import train
     rects = [(x0, x1, z0, z1, o["name"]) for o in g.data["objects"] if o["kind"] == "building" and o["player"] == g.player
              and "footprint" in o for x0, z0, x1, z1 in [o["footprint"]]] \
         + [(*s["footprint"], s["name"]) for s in g.sites if s.get("done") and s["player"] == g.player]
@@ -818,7 +823,8 @@ def upgrade(g, site, old, redraw=True):
     design of its new wall after a wall technology (#1326). old: its Stats before the change (the old wall, or the
     last age: #1372). The target keeps its lost hit points, as in AoE2 (the score aoe_hp, repair.hp). A destroyed
     wall stays air."""
-    import combat, repair                                              # combat -> gather -> build: import it late
+    import combat  # combat -> gather -> build: import it late
+    import repair
     x0, x1, z0, z1 = site["footprint"]
     name, T = design(g, site["name"], site["player"]), g.map.T
     new = combat.wall(name, ages(g), civs.civ(g, site["player"]), civs.handicap(g.data, site["player"]))
@@ -879,7 +885,8 @@ def diagonal_doors(site, T):
 def target(g, site):
     """A complete building of combat.BUILDINGS gets its target entity, as a building of the map (combat.setup): the
     AoE2 hit points, and the arrows of a town center, tower or castle (#1202). wonder.tick makes the one of a wonder."""
-    import combat, train                                               # combat -> gather -> build: import them late
+    import combat  # combat -> gather -> build: import them late
+    import train
     if not is_fort(site):
         return
     x0, x1, z0, z1 = site["footprint"]
@@ -900,7 +907,7 @@ def target(g, site):
 
 def is_fort(site):
     """A complete building that the sides can attack: a building or a wall of combat.py, but not a wonder (#2458)."""
-    import combat                                                      # combat -> gather -> build: import it late
+    import combat  # combat -> gather -> build: import it late
     return (site["name"] in combat.BUILDINGS or site["name"] in combat.WALLS) and site["name"] != "WONDER" \
         and not site.get("lasting")                                    # the monastery of Capture the Relic (#2458)
 
@@ -931,7 +938,7 @@ def settle(g, site, loaded=False):
 def forts(g, site):
     """Each side knows a complete building as a fort, with its target entity: each other side can attack it, the bot and
     player 1 alike (#1819). No command: the target entity is in the world already (savegame.load, #2980)."""
-    import combat                                                      # combat -> gather -> build: import it late
+    import combat  # combat -> gather -> build: import it late
     x0, x1, z0, z1 = site["footprint"]
     uuid = combat.target_uuid([x0, z0, x1, z1])
     box = combat.building_box({"footprint": [x0, z0, x1, z1]}, g.map.ground)

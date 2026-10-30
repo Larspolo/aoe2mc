@@ -6,10 +6,11 @@ import os
 import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "tools"))
-import aoe2mc  # noqa: E402
 import scenarios  # noqa: E402
 from AoE2ScenarioParser.datasets.effects import EffectId  # noqa: E402
 from AoE2ScenarioParser.datasets.techs import TechInfo  # noqa: E402
+
+import aoe2mc  # noqa: E402
 
 COMMON = {"type", "message", "player", "time", "object", "tile", "area", "selected"}
 

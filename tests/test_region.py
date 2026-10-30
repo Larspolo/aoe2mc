@@ -3,9 +3,9 @@ import io
 
 import nbtlib
 import numpy as np
+import world_reader
 
 import aoe2mc
-import world_reader
 
 
 def nbt_bytes(compound):

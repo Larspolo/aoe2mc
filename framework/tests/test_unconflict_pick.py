@@ -2,7 +2,6 @@
 import subprocess
 
 import pytest
-
 import unconflict_pick as up
 
 NOW = 1_800_000_000

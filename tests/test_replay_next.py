@@ -1,7 +1,6 @@
 """Live replay: a villager whose tree or mine is empty takes the nearest one of the same kind, as in AoE2 (#720)."""
-import pytest
-
 import gather
+import pytest
 from test_replay_gather import MINE, TREE, hits, order, play
 from test_replay_walk import tps
 

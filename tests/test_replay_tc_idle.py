@@ -4,9 +4,10 @@ import os
 import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "game"))
-import aoe2mc  # noqa: E402
 import replay  # noqa: E402
 from test_replay_army_view import make  # noqa: E402
+
+import aoe2mc  # noqa: E402
 
 V, L = aoe2mc.train_ms("VILLAGER") / 1000, replay.RESEARCH_S["Loom"]   # seconds of training and of Loom (the data)
 

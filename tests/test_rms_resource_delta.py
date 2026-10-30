@@ -1,7 +1,7 @@
 """resource_delta of create_object (#4429): the objects carry the delta, and gather adds it to the amount of a mine."""
-import rmap
 from test_gather import FakeServer, grid
 
+import rmap
 from game import gather
 
 SCRIPT = """<LAND_GENERATION>

@@ -1,8 +1,8 @@
 """The key "work" of a technology: the factor of the work rate of one building (Perfusion, Chivalry, #4226). Test data,
 not the data lines (owner, 2026-10-29, #4242)."""
+import pytest
 from test_train_castle import setup
 
-import pytest
 from game import train
 
 

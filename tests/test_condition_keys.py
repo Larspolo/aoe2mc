@@ -6,9 +6,9 @@ import re
 
 import numpy as np
 import pytest
+import scenarios
 
 import aoe2mc
-import scenarios
 
 
 def table_lines(name):

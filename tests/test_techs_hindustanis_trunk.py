@@ -4,7 +4,8 @@ Trunk Road, with the values of the AoE2 DE wiki ("Unique technology"): more gold
 import pytest
 from test_free_relic import church
 from test_techs_persians import label
-from test_trade_cart import FAR, HOME, moves, setup as trade_setup
+from test_trade_cart import FAR, HOME, moves
+from test_trade_cart import setup as trade_setup
 from test_train_castle import menus, setup
 from test_treadmill_crane import castle
 

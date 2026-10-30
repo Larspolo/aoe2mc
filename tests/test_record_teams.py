@@ -4,9 +4,9 @@ import os
 
 import numpy as np
 import pytest
+from test_terrain import columns
 
 import aoe2mc
-from test_terrain import columns
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 pytest.importorskip("mgz.model")

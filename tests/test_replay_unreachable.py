@@ -1,7 +1,6 @@
 """Live replay: a villager whose target tree has no path chops the nearest tree that it can reach, as in AoE2 (#869)."""
-import pytest
-
 import gather
+import pytest
 from test_replay_gather import TREE, hits, order, play
 
 

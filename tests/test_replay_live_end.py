@@ -6,12 +6,12 @@ import os
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import live  # noqa: E402
+import replay  # noqa: E402
 from test_replay import data  # noqa: E402
 from test_replay_control import Clock, chats  # noqa: E402
 
 import aoe2mc  # noqa: E402
-import live  # noqa: E402
-import replay  # noqa: E402
 
 TIMELINE = chats(*range(1000, 60001, 7000)) + [{"time": 61000, "player": 2, "kind": "resign"}]
 IDLE = 300.0                        # longer than the whole test: only the record end can stop the replay

@@ -1,6 +1,5 @@
 """tools/tick_cost.py (#458): the answer of /tick query, the report, and one real server run on the village."""
 import pytest
-
 import tick_cost
 
 ANSWER = ("The game is running normallyTarget tick rate: 20.0 per second.\nAverage time per tick: 2.3ms (Target: 50.0ms)"

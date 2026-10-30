@@ -10,7 +10,7 @@ def command(uuid, name, T=4):
     projectile hit after a charge of "time" AoE2 seconds has "attack" more and slows the target by "slow" for "for"
     seconds. Minecraft slowness lowers the speed by 15 % for each level: amplifier = slow / 0.15 - 1. The ticks as in
     charge.command."""
-    from gather import NORMAL                    # gather imports train, train imports this package
+    from gather import NORMAL  # gather imports train, train imports this package
     c = UNITS.get(name)
     if not c:
         return None

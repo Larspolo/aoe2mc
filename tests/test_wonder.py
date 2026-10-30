@@ -1,7 +1,7 @@
 """game/wonder.py: a player who keeps a complete wonder for the wonder timer wins (#1137)."""
-from game import combat, wonder
-
 from test_cheat_end import game
+
+from game import combat, wonder
 
 SITE = {"name": "WONDER", "player": 1, "footprint": (4, 9, 4, 9), "done": True, "progress": 1.0}
 

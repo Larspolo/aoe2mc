@@ -4,8 +4,9 @@ import contextlib
 import io
 import math
 
-import aoe2mc
 import world_reader
+
+import aoe2mc
 
 
 def frames(path):

@@ -7,12 +7,11 @@ import sys
 import pytest
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import replay  # noqa: E402
 from test_replay import data  # noqa: E402
 from test_replay_control import Clock  # noqa: E402
 from test_replay_score import KNIGHT  # noqa: E402
 from test_replay_walk import VIL  # noqa: E402
-
-import replay  # noqa: E402
 
 
 def chat(t):

@@ -1,10 +1,8 @@
 """The roadmap review counts the merged PRs from the later of `last_roadmap` and its newest lock ref (#3352): a write of
 the status issue body can be lost, a lock ref cannot."""
-import pytest
-
-from test_claim import clones  # noqa: F401
-
 import claim
+import pytest
+from test_claim import clones  # noqa: F401
 
 STATE = "2026-10-28T06:47:32Z"
 LOCK = "2026-10-28T09:15:30Z"

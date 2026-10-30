@@ -10,7 +10,7 @@ def command(uuid, name, T=4):
     the first melee hit on a unit after a full charge of "time" AoE2 seconds has "attack" more (aoe chargeattack of
     #4370; its time as ticks at Normal speed). A "blast" {"part", "radius"} (the Urumi Swordsman, #4544): the charged
     hit also hurts the near enemy units, radius in tiles of T blocks."""
-    from gather import NORMAL                    # gather imports train, train imports this package
+    from gather import NORMAL  # gather imports train, train imports this package
     c = UNITS.get(name)
     if not c:
         return None

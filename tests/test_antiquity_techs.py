@@ -4,6 +4,7 @@ The rule modules read their data at import, so the checks run in one child proce
 import json
 
 from test_antiquity_setting import child
+
 CODE = r'''
 import json, sys
 sys.path[:0] = ["game", "tests"]

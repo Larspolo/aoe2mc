@@ -1,9 +1,9 @@
 """game/gather.py: on Paper a right click with the command stick ends the choice of a building (#2056; the left click
 places it, #4703). The score aoe_build goes to 0, the sneak clicks of build.place forget their row, and build.ghosts
 clears the ghost."""
-from game import build
-
 from test_deselect import paper
+
+from game import build
 
 
 def test_a_right_click_ends_the_building_choice():

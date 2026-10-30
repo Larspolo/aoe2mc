@@ -32,14 +32,14 @@ def state(g, u):
 
 def pack_time(g):
     """The AoE2 seconds to pack or unpack: PACK times the factor of the technologies (Kataparuto: 0.25, #4275)."""
-    import train                                                   # train imports gather, gather imports this module
+    import train  # train imports gather, gather imports this module
     return PACK * math.prod(train.value("pack_time", t, 1) for t in g.techs)
 
 
 def stats(g, u):
     """The combat values of trebuchet u with the technologies of the player (train.stats) and the armor of its state:
     packed (also while it unpacks) the armor of combat.STATS, unpacked (also while it packs) UNPACKED and the class ram."""
-    import combat                                                  # combat imports gather, gather imports this module
+    import combat  # combat imports gather, gather imports this module
     import train
     s, base = train.stats(g, NAME, u), combat.stats(NAME)
     if state(g, u) in ("unpacked", "packing"):
@@ -50,7 +50,8 @@ def stats(g, u):
 
 def stats_command(g, u):
     """The `aoe stats` command of trebuchet u in its state (#1409)."""
-    import civs, combat
+    import civs
+    import combat
     return combat.stats_command(u, NAME, stats(g, u), civs.taken(g, NAME), civs.friendly(g, NAME))
 
 
@@ -62,7 +63,7 @@ def scale_command(u, packed):
 
 def range_command(g, u, blocks=None):
     """The `aoe range` command of trebuchet u: its AoE2 range (with the technologies of the player), or blocks."""
-    import combat                                                  # combat imports gather, gather imports this module
+    import combat  # combat imports gather, gather imports this module
     import train
     cmd = combat.range_command(u, NAME, g.map.T, s=train.stats(g, NAME)).split()
     return " ".join(cmd[:3] + [str(cmd[3] if blocks is None else blocks)] + cmd[4:])
@@ -81,13 +82,13 @@ def gap(g, u, target):
         d = p and to and math.hypot(to[0] - p[0], to[2] - p[2])
     if d is None:
         return None
-    import train                                                   # train imports gather, gather imports this module
+    import train  # train imports gather, gather imports this module
     return d - (train.stats(g, NAME).range * g.map.T - MARGIN), to
 
 
 def walk(g, u, target, to):
     """The packed trebuchet u walks toward place to of target, at its walk speed."""
-    import ai                                                      # ai imports this module
+    import ai  # ai imports this module
     import gather
     import train
     g.command(ai.speed_command(u, NAME, g.map.T, gather.NORMAL * train.speed(g, NAME, u)))

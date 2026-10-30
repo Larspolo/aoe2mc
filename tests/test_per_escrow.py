@@ -4,7 +4,7 @@ from test_per_save import scripted
 from test_savegame_bots import game
 
 from game import per, savegame
-from game.bot import train                                             # the module that per uses
+from game.bot import train  # the module that per uses
 
 
 def script(text):

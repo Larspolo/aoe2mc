@@ -1,8 +1,7 @@
 """tools/render.py draws a building design and an area of a world as an isometric PNG."""
 import numpy as np
-from PIL import Image
-
 import render
+from PIL import Image
 
 
 def test_render_a_house(tmp_path):

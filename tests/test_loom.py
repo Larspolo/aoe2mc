@@ -2,8 +2,8 @@
 have more hit points and armor, and the item leaves the menu (#655)."""
 from urllib.parse import unquote
 
-from test_gather import FakeServer, grid
 from menu_line import item
+from test_gather import FakeServer, grid
 
 from game import combat, gather, train
 

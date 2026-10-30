@@ -40,7 +40,6 @@ import sys
 import tempfile
 
 import numpy as np
-
 from AoE2ScenarioParser.datasets.buildings import BuildingInfo
 from AoE2ScenarioParser.datasets.object_support import Civilization
 from AoE2ScenarioParser.datasets.other import OtherInfo

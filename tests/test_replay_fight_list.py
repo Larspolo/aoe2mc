@@ -5,11 +5,10 @@ import sys
 from urllib.parse import unquote
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from test_replay import Fake, data  # noqa: E402
-from test_replay_input import Scores, poll  # noqa: E402
-
 import replay  # noqa: E402
 import replay_input as ri  # noqa: E402
+from test_replay import Fake, data  # noqa: E402
+from test_replay_input import Scores, poll  # noqa: E402
 
 PLAYERS = {1: ("Player 1 (Britons)", "blue"), 2: ("Player 2 (Aztecs)", "gold")}
 FIGHTS = [{"start": 754000, "end": 790000, "players": [1, 2], "tile": [30, 30], "units": 24},

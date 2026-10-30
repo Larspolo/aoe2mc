@@ -6,7 +6,6 @@ from test_own_building_fall import HOUSE, TC, fallen_town, uuid
 
 from game import demolish, garrison, train
 
-
 SKY = 260                                                          # air: above each building box
 
 
@@ -111,10 +110,10 @@ def test_a_deleted_house_leaves_its_footprint_free_of_blocks_on_a_server(tmp_pat
     import io
     import json
 
-    import aoe2mc
     import scenarios
     from AoE2ScenarioParser.datasets.buildings import BuildingInfo
 
+    import aoe2mc
     from game import combat, gather, run
     scn = scenarios.new_scenario(24)
     scn.unit_manager.add_unit(scenarios.PlayerId.ONE, BuildingInfo.HOUSE.ID, x=16, y=6)

@@ -1,7 +1,6 @@
 """framework/tools/claim.py ignores closing keywords in code of a PR body (#536): PR #492 quoted `Closes #428`."""
-from test_claim_active_pr import NOW, pr
-
 import claim
+from test_claim_active_pr import NOW, pr
 
 QUOTED = "Why: PR #471 (`Closes #428`) was 14 minutes old.\n```\nCloses #428\n```\n"
 

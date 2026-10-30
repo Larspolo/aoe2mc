@@ -1,8 +1,8 @@
 """The key "costs" of a technology changes the cost of a group of units (Kshatriyas, Szlachta Privileges, #4225).
 Test data: monkeypatched train.BY_KEY lines, not the values of the data lines (owner, 2026-10-29, #4242)."""
+import train as plain_train  # civs.cost imports train by its plain name (not game.train)
 from test_train_castle import setup
 
-import train as plain_train          # civs.cost imports train by its plain name (not game.train)
 from game import civs
 
 

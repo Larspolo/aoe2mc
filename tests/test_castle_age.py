@@ -1,9 +1,9 @@
 """game/train.py: the town center menu has "Castle Age". Before the Feudal Age the item is gray; then it needs 2 types
 of Feudal Age buildings; after the research the sidebar title shows the Castle Age, all players see it, and the item
 leaves the menu (#1080)."""
+from menu_line import item
 from test_castle_upgrades import entry
 from test_feudal_age import add
-from menu_line import item
 from test_loom import menus, setup
 
 from game import train

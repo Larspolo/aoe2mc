@@ -1,6 +1,7 @@
 """The cheat code "marco" answers "polo": an easter egg with the name of the owner (#1057)."""
-from game import cheats
 from test_cheats import game
+
+from game import cheats
 
 
 def test_marco_answers_polo(tiny_world):

@@ -1,9 +1,9 @@
 """game/gather.py: a second click on a selected military unit opens the stance menu (#1107); its last item selects all
 own units of its type near it (#743)."""
-from game import gather, stance
-
 from test_gather import FakeServer, grid
 from test_gather_attack import click
+
+from game import gather, stance
 
 
 def setup():

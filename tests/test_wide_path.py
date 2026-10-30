@@ -18,9 +18,9 @@ def test_five_trade_cart_trips_to_the_south_east_arrive_in_time(tmp_path):
     import json
     import time
 
-    import aoe2mc
     import scenarios
 
+    import aoe2mc
     from game import ai, run, train
     src = str(tmp_path / "t.aoe2scenario")
     scenarios.save(scenarios.new_scenario(48), src)

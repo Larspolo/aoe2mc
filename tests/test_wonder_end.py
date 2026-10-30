@@ -1,8 +1,8 @@
 """The wonder boss bars go when the game ends (#1178): the check of #1138 saw "1 year left" after the Victory."""
-from game import combat, wonder  # noqa: F401 (combat puts game/ on sys.path)
-
 from test_cheat_end import cheat
 from test_wonder import start, tick
+
+from game import combat, wonder  # noqa: F401 (combat puts game/ on sys.path)
 
 
 def test_the_bar_goes_at_the_end_of_the_countdown():

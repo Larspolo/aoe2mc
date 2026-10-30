@@ -1,9 +1,9 @@
 """The key "keep_housing" of a technology (Nomads of the Mongols, #4280): an own building of its names that falls after
 the research keeps its population room (train.limit). Test data, not the data line (owner, 2026-10-29, #4242)."""
+import train as plain_train  # ruins.fall imports train by its plain name (not game.train)
 from test_own_building_fall import HOUSE, ROOM
 from test_train_population import setup as town
 
-import train as plain_train          # ruins.fall imports train by its plain name (not game.train)
 from game import ruins, train
 
 

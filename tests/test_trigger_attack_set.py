@@ -3,9 +3,9 @@ player in their area the new value (#2909): the modifiers of the earlier add and
 from collections import Counter
 
 import numpy as np
+from test_trigger_unit_values import unit_value
 
 import aoe2mc
-from test_trigger_unit_values import unit_value
 
 SET, ADD, SUBTRACT = 1, 2, 3
 AT = "execute as @e[tag=aoe2mc.p1,tag=!aoe2mc.mount,x=8,y=-64,z=12,dx=11,dy=383,dz=11]"

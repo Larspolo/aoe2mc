@@ -2,8 +2,8 @@
 or with its monk, the monastery gives its gold, and a monk that converts or rests goes on. Fake server."""
 import json
 
-from test_monk_heal import HealServer
 from test_gather import grid
+from test_monk_heal import HealServer
 
 from game import gather, monk, savegame
 

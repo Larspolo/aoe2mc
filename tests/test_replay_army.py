@@ -5,8 +5,9 @@ import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "game"))
 import replay  # noqa: E402
-import units  # noqa: E402
 from test_replay import Fake, data  # noqa: E402
+
+import units  # noqa: E402
 
 
 class Census(Fake):

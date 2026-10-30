@@ -4,9 +4,9 @@ import shutil
 
 import pytest
 from abilities import pack
+from test_veteran import first_loss, uuid
 
 from game import combat, run
-from test_veteran import first_loss, uuid
 
 
 def test_the_pack_command_gives_the_per_the_blocks_the_max_and_the_type_tags(monkeypatch):

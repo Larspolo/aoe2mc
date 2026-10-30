@@ -1,7 +1,7 @@
 """game/bot.py: the start scout of the bot gets the Auto Scout order at its first tick, once (#3704)."""
-from game import bot
-
 from test_bot_gather import bot_map
+
+from game import bot
 
 
 def counted(monkeypatch):

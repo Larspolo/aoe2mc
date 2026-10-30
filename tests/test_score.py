@@ -2,10 +2,9 @@
 import types
 
 import pytest
+from test_cheat_end import game
 
 from game import combat, gather, score, train
-
-from test_cheat_end import game
 
 HOUSE = combat.target_uuid([10, 10, 12, 12])
 W = score.worth                                                        # the AoE2 cost value of the data
@@ -91,8 +90,9 @@ def test_the_score_lines_reach_the_sidebar_on_a_server(tmp_path):
     import re
     import time
 
-    import aoe2mc
     import scenarios
+
+    import aoe2mc
     from game import run
     with contextlib.redirect_stdout(io.StringIO()):
         aoe2mc.convert(scenarios.four_civs(str(tmp_path / "s.aoe2scenario")), str(tmp_path / "W"))

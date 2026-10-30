@@ -1,9 +1,9 @@
 """Sicilian builders build fortifications and town centers faster (#2115, AoE2 DE wiki): BUILD_OF in
 game/data/civs.jsonl. A site is complete after its time divided by the factor of the data. Fake server."""
 import pytest
+from test_treadmill_crane import castle
 
 from game import build, civs
-from test_treadmill_crane import castle
 
 NAMES = ("CASTLE", "PALISADE_WALL", "STONE_WALL", "TOWN_CENTER", "WATCH_TOWER")
 

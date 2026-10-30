@@ -1,10 +1,10 @@
 """The end of a game of two people (#1936): the team of each person gets its own "Victory" or "Defeat" title."""
 import types
 
-from game import gather, relic_victory, run, wonder
-
 from test_cheat_end import game
 from test_conquest import check, live
+
+from game import gather, relic_victory, run, wonder
 
 
 def title(n, text):

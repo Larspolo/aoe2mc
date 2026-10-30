@@ -3,10 +3,9 @@ import os
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import replay  # noqa: E402
 from test_replay import data  # noqa: E402
 from test_replay_control import Clock, chats  # noqa: E402
-
-import replay  # noqa: E402
 
 SLOW = 50.0                                                         # real seconds of the send of the jump commands
 

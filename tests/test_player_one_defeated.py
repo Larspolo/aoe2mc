@@ -9,11 +9,11 @@ import pytest
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "game"))
 import regicide  # noqa: E402
 import sudden_death  # noqa: E402
-from game import cheats, gather, run  # noqa: E402
-
 from test_cheat_end import game  # noqa: E402
 from test_conquest import check, live  # noqa: E402
 from test_two_players_end import title  # noqa: E402
+
+from game import cheats, gather, run  # noqa: E402
 
 
 def people(teams=None):

@@ -4,10 +4,10 @@ import shutil
 import time
 
 import pytest
-
-from game import combat, run
 from test_mounted_attack import floor
 from test_ranged import data
+
+from game import combat, run
 
 CAVALIER = ('summon horse {x} {y} {z} {{NoAI:1b,Tame:1b,Tags:["k","k{i}"],'
             'equipment:{{saddle:{{id:"minecraft:saddle",count:1}}}},'

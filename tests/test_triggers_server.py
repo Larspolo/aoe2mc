@@ -6,12 +6,12 @@ import re
 import shutil
 import time
 
-import pytest
-
-import aoe2mc
 import mc_check
 import mc_shot
+import pytest
 from test_mc_check import mojang_reachable
+
+import aoe2mc
 from tools import scenarios
 
 WELCOME = "[CHAT] Welcome to the tiny map."

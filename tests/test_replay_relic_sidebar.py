@@ -7,7 +7,6 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(
 import replay  # noqa: E402
 from test_replay import Fake, data  # noqa: E402
 
-
 EST = " ".join(f"{r[0].upper()} {v}" for r, v in replay.START.items())   # the start resources of the sidebar
 
 

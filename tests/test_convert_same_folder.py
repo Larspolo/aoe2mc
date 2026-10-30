@@ -3,10 +3,10 @@ the files of other worlds stay (#3030, _convert)."""
 import os
 
 import pytest
-
-import aoe2mc
 import scenarios
 import world_diff
+
+import aoe2mc
 
 OVERWORLD = os.path.join("dimensions", "minecraft", "overworld")
 

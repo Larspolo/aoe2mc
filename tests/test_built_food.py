@@ -1,9 +1,9 @@
 """A complete building gives the food of BUILT_FOOD in game/data/civs.jsonl once (#2114: Saxon camps and mills, Wu
 military buildings and docks). Fake server."""
 import pytest
+from test_treadmill_crane import castle
 
 from game import build, civs
-from test_treadmill_crane import castle
 
 
 def food_of(civ, name):

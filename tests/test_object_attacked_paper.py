@@ -6,10 +6,10 @@ import shutil
 import time
 
 import pytest
+from test_damage import health
 
 import aoe2mc
 from game import combat, run
-from test_damage import health
 
 
 @pytest.mark.mc

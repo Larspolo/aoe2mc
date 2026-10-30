@@ -64,8 +64,8 @@ def test_the_graph_commands_run_on_a_server(tiny_world, tmp_path):
 
 
 def test_the_graph_book_of_8_players_stays_below_the_rcon_limit():
-    from test_replay_eight_players import eight
     import rcon
+    from test_replay_eight_players import eight
     r = replay.Replay(Fake(), eight([]))
     for p in range(1, 9):
         r.pop[p] = 199 - p

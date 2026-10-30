@@ -1,6 +1,7 @@
 """A trigger with no conditions fires as soon as it is on, as in AoE2 (#2972)."""
-import aoe2mc
 from test_trigger_activate import FN, trig
+
+import aoe2mc
 
 
 def test_a_trigger_with_no_conditions_fires_at_the_start_and_after_an_activation():

@@ -305,8 +305,9 @@ def read_scx(path):
     """An old scenario (.scx format 1.21, #312; .scn formats 1.18 to 1.20, #3860), as read_scenario returns it.
     The old terrain and object IDs are the DE IDs. A map that is not square gets the edge tiles repeated to a square.
     Old scenarios give no texts here."""
-    import scx
     from AoE2ScenarioParser.datasets.terrains import TerrainId
+
+    import scx
     try:
         s = scx.read(path)
     except scx.ScxError as e:
@@ -398,10 +399,10 @@ def apply_layers(terrain, layer, terrain_names):
 
 
 def read_scenario(path):
-    from AoE2ScenarioParser.scenarios.aoe2_de_scenario import AoE2DEScenario
-    from AoE2ScenarioParser.datasets.terrains import TerrainId
     from AoE2ScenarioParser.datasets.techs import TechInfo
+    from AoE2ScenarioParser.datasets.terrains import TerrainId
     from AoE2ScenarioParser.datasets.trigger_lists import ColorMood, SecondaryGameMode, VictoryCondition
+    from AoE2ScenarioParser.scenarios.aoe2_de_scenario import AoE2DEScenario
 
     with contextlib.redirect_stdout(io.StringIO()):   # the parser prints a lot of status text
         scn = AoE2DEScenario.from_file(path)
@@ -664,6 +665,7 @@ def read_old_record(path, error):
     "for performance reasons": read them too. error: the error of the mgz model, for the message."""
     import sys
     from importlib.metadata import version
+
     from AoE2ScenarioParser.datasets.terrains import TerrainId
     from mgz.summary.full import FullSummary
     skip = trees_switch(sys.modules["mgz.header.initial"].player)
@@ -719,6 +721,7 @@ def de_queue(parse_action):
     """mgz 1.8.51 reads DE_QUEUE of new records (an object count, 4 bytes, building type, unit, amount, the object
     IDs) with 4 bytes too many before the IDs, and returns ERROR (469 times in samples/, #372). Read it here."""
     import struct
+
     from mgz.fast import Action
 
     def parse(action_type, data):
@@ -763,6 +766,7 @@ def new_saves():
     mgz.fast.header.parse_de. A patch of its source, not a copy of the parser; once, as the fix belongs in mgz."""
     import inspect
     import textwrap
+
     from mgz.fast import header
     if getattr(header.parse_de, "new_saves", False):
         return
@@ -6315,6 +6319,7 @@ def convert_campaign(src, out, only=None, name=None, **kw):
     An old campaign (.cpx, .cpn): convert its scenarios of a format in scx.FORMATS (.scn 1.18 to 1.20, .scx 1.21, HD,
     #347, #3863); write the other scenario files to out/ and stop with the steps for the DE editor."""
     import tempfile
+
     import scx
     version, title, entries = read_campaign(src)
     if only is not None and not 1 <= only <= len(entries):
@@ -6395,7 +6400,7 @@ def match_record(game, profile):
     have = sorted(glob.glob(os.path.join(folder, "*.aoe2record")))
     if have:
         return have[0]
-    from tools import record_api       # a tool of the repository clone, not of the installed package
+    from tools import record_api  # a tool of the repository clone, not of the installed package
     os.makedirs(folder, exist_ok=True)
     return record_api.download(game, profile, folder)
 

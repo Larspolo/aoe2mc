@@ -5,8 +5,8 @@ import shutil
 import time
 
 import pytest
-
 import replay
+
 from game import run
 
 

@@ -1,13 +1,12 @@
 """run.py --play --challenge fast-castle-age: the goal function "challenge.castle" ends the game with its medal (#3902)."""
 import types
 
+import build  # noqa: E402  (game/ is on sys.path after the import of game.challenge)
+import cheats  # noqa: E402
 import pytest
+import recap  # noqa: E402
 
 from game import challenge
-
-import build  # noqa: E402  (game/ is on sys.path after the import of game.challenge)
-import recap  # noqa: E402
-import cheats  # noqa: E402
 
 C = challenge.CHALLENGES["fast-castle-age"]
 N = C["need"]

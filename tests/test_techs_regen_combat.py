@@ -2,11 +2,11 @@
 their max hit points near an enemy, own buildings of a list regain hit points (civs.regen, regen.buildings). Test data:
 monkeypatched train.BY_KEY lines, not the menu or the values of the data lines (owner, #4242)."""
 import pytest
+import train as plain_train  # civs and regen import train by its plain name (not game.train)
 from test_gather import grid
 from test_repair import HpServer
 from test_train_castle import setup
 
-import train as plain_train          # civs and regen import train by its plain name (not game.train)
 from game import civs, combat, gather, regen, repair, train
 
 HOUSE, CASTLE = (4, 6, 4, 6), (12, 16, 12, 16)                     # block footprints (x0, x1, z0, z1)

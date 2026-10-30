@@ -1,8 +1,8 @@
 """game/gather.py: the held right click sets corner 1 of the selection box on the first use, with no wait for the
 next use (#3268, owner feedback: "I have to hold it, wait a bit, and only then drag")."""
-from game import gather
-
 from test_select_hold import look, paper, use
+
+from game import gather
 
 
 def test_the_first_use_sets_corner_1_at_once():
