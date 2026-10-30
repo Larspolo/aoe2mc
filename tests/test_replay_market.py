@@ -5,6 +5,7 @@ import sys
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "game"))
 import market  # noqa: E402
 import replay  # noqa: E402
+import train  # noqa: E402
 from test_replay import Fake, data  # noqa: E402
 from test_replay_learned import research  # noqa: E402
 
@@ -38,4 +39,5 @@ def test_a_player_with_guilds_pays_the_guild_fee():
     r = replay.Replay(Fake(), data([]))
     r.learn(research(500, "GUILDS"))
     r.commands(trade("buy", 100, t=1000))
-    assert r.stock[1]["gold"] == replay.START["gold"] - (market.RATES["wood"] * (100 + market.FEES["GUILDS"]) + 50) // 100
+    guilds = train.COSTS["GUILDS"].get("gold", 0)                     # the research pays its cost (#4389)
+    assert r.stock[1]["gold"] == replay.START["gold"] - guilds - (market.RATES["wood"] * (100 + market.FEES["GUILDS"]) + 50) // 100
