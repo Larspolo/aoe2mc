@@ -580,7 +580,8 @@ def civ_pool_choice(text):
 def apply_civs(data, civs, pool=None):
     """Write the --civ choices {player: civilization} into the players of aoe2mc.json. A player whose scenario locks
     its civilization ("Lock Civilizations", #3295) keeps the scenario civilization: a line on stderr says why. RANDOM
-    picks from the pool (civ_pool_choice, #4756), else from all civilizations."""
+    picks from the pool (civ_pool_choice, #4756), else from all civilizations; also for a scenario player whose
+    civilization is RANDOM (#4746)."""
     for player, name in (civs or {}).items():
         p = data.setdefault("players", {}).setdefault(str(player), {})
         if p.get("lock_civ"):
@@ -594,6 +595,14 @@ def apply_civs(data, civs, pool=None):
             name = random.Random(seed).choice(sorted(pool or (r["name"] for r in civs.ROWS)))
             print(f"player {player}: --civ RANDOM gives {name}", file=sys.stderr)
         p["civ"] = name
+    for player, p in (data.get("players") or {}).items():        # the scenario says Random (#4746)
+        if p.get("civ") == "RANDOM" and int(player) > 0:
+            import random
+
+            import civs
+            seed = f"{data.get('map_size')}-{len(data.get('objects', ()))}-{player}"
+            p["civ"] = random.Random(seed).choice(sorted(pool or (r["name"] for r in civs.ROWS)))
+            print(f"player {player}: the scenario civilization RANDOM gives {p['civ']}", file=sys.stderr)
 
 
 def apply_civ_mode(data, mode):
