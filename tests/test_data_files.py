@@ -226,6 +226,13 @@ def check_challenges(row):                                 # an Art of War chall
     assert row["after"] is None or row["after"] in NAMES["challenges.jsonl"], row["name"]
 
 
+def check_per_names(row):                                  # a name of an AI script: its name in the game (#4528)
+    form(row, {"name": str, "kind": str}, {"game": str, "age": int})
+    assert row["kind"] in ("age", "building", "tech", "unit") and row["name"] == row["name"].lower(), row["name"]
+    assert "game" not in row or row["game"] in NAMES["train.jsonl"] | NAMES["build.jsonl"], row["name"]
+    assert ("age" in row) == (row["kind"] == "age") and ("game" in row or row["kind"] == "age"), row["name"]
+
+
 def check_taunts(row):                                     # a taunt: its number and AoE2 text (#2234)
     form(row, {"name": str, "text": str}, {"sound": str})                  # sound: a vanilla match (#2662)
     assert row["name"].isdigit() and row["name"] == str(int(row["name"])) and row["text"], row["name"]
@@ -247,6 +254,7 @@ CHECKS = {                                                 # one file per line: 
     "difficulty.jsonl": check_difficulty,
     "gather.jsonl": check_gather,
     "monk.jsonl": check_monk,
+    "per_names.jsonl": check_per_names,
     "replay.jsonl": check_replay,
     "setup.jsonl": check_setup,
     "setup_keys.jsonl": check_setup_keys,
