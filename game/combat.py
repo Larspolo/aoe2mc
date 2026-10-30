@@ -92,6 +92,7 @@ FRENZY = {r["name"]: r["frenzy"] for r in UNIT_ROWS if "frenzy" in r}        # a
 LOW_HP = {r["name"]: r["low_hp"] for r in UNIT_ROWS if "low_hp" in r}      # another form below some hit points (#4472)
 VETERAN = {r["name"]: r["veteran"] for r in UNIT_ROWS if "veteran" in r}     # attack more for each kill (#4467)
 PACK = {r["name"]: r["pack"] for r in UNIT_ROWS if "pack" in r}               # attack more near own units (#4469)
+SUNDER = {r["name"]: r["sunder"] for r in UNIT_ROWS if "sunder" in r}         # armor less on the target per hit (#4466)
 SHIELD = {r["name"]: r["shield"] for r in UNIT_ROWS if "shield" in r}         # projectiles through it hurt less (#4507)
 # The minimum range of the buildings that shoot, in tiles from the edge of the footprint (AoE2 DE, wiki infobox
 # "MinRange", #1546). The town center has none. Murder Holes removes it.
@@ -107,6 +108,7 @@ REGEN = {r["name"]: r["regen"] for r in UNIT_ROWS if "regen" in r}             #
 # the key "ignore_armor": its hits ignore a positive armor (#4394)
 IGNORE = {r["name"] for r in UNIT_ROWS if r.get("ignore_armor")}
 PASS = {r["name"]: r["pass"] for r in UNIT_ROWS if "pass" in r}               # the key "pass" of data/units.jsonl
+VS_UNITS = {r["name"]: r["vs_units"] for r in UNIT_ROWS if "vs_units" in r}    # the anti-unit mode: the Lou Chuan (#4505)
 CHARGE_ATTACK = {r["name"]: r["charge_attack"] for r in UNIT_ROWS if "charge_attack" in r}   # the Coustillier (#4398)
 TRAMPLE = {r["name"]: r["trample"] for r in UNIT_ROWS if "trample" in r}       # the key "trample": the elephants (#4397)
 MELEE_MODE = {r["name"]: r["melee_mode"] for r in UNIT_ROWS if "melee_mode" in r}   # the key "melee_mode": the Ratha (#4504)
@@ -132,9 +134,12 @@ def damage(attacker, target, a=None, t=None, taken=1.0, less=None, ignore=False,
     ignore: the attacker ignores the armor, a negative armor still counts (Wootz Steel). Both: train.hits (#4331).
     rage: the attack more for each 10 % of the hit points that the attacker lost (lost: that part, Hamask); reflect
     does not change this damage: after a hit with no projectile the attacker takes that part of it, with no armor
-    (Lamellar Armor, the plugin: onHit). train.hits (#4332)."""
+    (Lamellar Armor, the plugin: onHit). train.hits (#4332). A unit of VS_UNITS hits a target that is not a building
+    with the pierce attack of its anti-unit mode (the Lou Chuan, #4505; the plugin: harm)."""
     a, t = a or stats(attacker), t or stats(target)
-    armor = t.pierce if a.range and attacker not in MELEE_RANGED else t.melee
+    vs = VS_UNITS.get(attacker) if "building" not in t.classes else None
+    a = a._replace(attack=vs["attack"], range=vs["range"], bonus=vs.get("bonus", {})) if vs else a
+    armor = t.pierce if a.range and (vs or attacker not in MELEE_RANGED) else t.melee
     armor = min(0, armor) if ignore else armor
     cut = max([(less or {}).get(c, 0) for c in a.classes] + [0])
     attack = a.attack + rage * math.floor(lost * 10 + 1e-9)
@@ -226,6 +231,14 @@ def accuracy_command(uuid, name, bonus=0.0):
     return f"aoe accuracy {uuid} {part:g}" if part < 1 else None
 
 
+def vs_units_command(uuid, name, T):
+    """The plugin command of the anti-unit mode of unit name (the key "vs_units" of data/units.jsonl: the Lou Chuan,
+    #4505), or None: at a unit it shoots from that range (tiles × T blocks) with that pierce attack and bonus."""
+    v = VS_UNITS.get(name)
+    bonus = ",".join(f"{c}:{n}" for c, n in sorted(v.get("bonus", {}).items())) or "-" if v else ""
+    return f"aoe vsunits {uuid} {v['attack']} {bonus} {v['range'] * T}" if v else None
+
+
 def charge_command(uuid, name):
     """The plugin command of the own charge attack of unit name (the key "charge_attack" of data/units.jsonl: the
     Coustillier, #4398), or None: the first melee hit on a unit after a full charge of "time" AoE2 seconds has
@@ -301,6 +314,14 @@ def veteran_command(uuid, name):
     kill, up to "max". The plugin keeps the kills of a unit when it gets the command again (an Elite upgrade)."""
     v = VETERAN.get(name)
     return f"aoe veteran {uuid} {v['attack']} {v['max']}" if v else None
+
+
+def sunder_command(uuid, name):
+    """The plugin command of the armor cut of unit name (the key "sunder" of data/units.jsonl: the Obuch, #4466), or
+    None. AoE2 wiki ("Obuch"): "Reduces armor and pierce armor of units by 1 (cannot be reduced below 0) each with
+    every attack": each hit lowers the melee and the pierce armor of the target by "sunder", down to 0."""
+    n = SUNDER.get(name)
+    return f"aoe sunder {uuid} {n}" if n else None
 
 
 def trample_command(uuid, name, T, t=None):
@@ -395,6 +416,9 @@ def setup(game, data):
     for o in units:                                  # a Shrivamsha Rider dodges projectiles (#4399)
         if cmd := dodge_command(o["uuid"], o["name"]):
             game.command(cmd)
+    for o in units:                                  # the Lou Chuan shoots units in its anti-unit mode (#4505)
+        if cmd := vs_units_command(o["uuid"], o["name"], data.get("tile_size", 4)):
+            game.command(cmd)
     for o in units:                                  # a Temple Guard attacks faster in a long fight (#4468)
         if cmd := frenzy_command(o["uuid"], o["name"]):
             game.command(cmd)
@@ -406,6 +430,9 @@ def setup(game, data):
             game.command(cmd)
     for o in units:                                  # a Jaguar Warrior gets attack for each kill (#4467)
         if cmd := veteran_command(o["uuid"], o["name"]):
+            game.command(cmd)
+    for o in units:                                  # an Obuch lowers the armor of its target (#4466)
+        if cmd := sunder_command(o["uuid"], o["name"]):
             game.command(cmd)
     for o in units:                                  # a Hussite Wagon shields the units behind it (#4507)
         if cmd := shield_command(o["uuid"], o["name"]):
