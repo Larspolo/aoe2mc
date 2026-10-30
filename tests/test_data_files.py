@@ -244,10 +244,12 @@ def check_challenges(row):                                 # an Art of War chall
 
 
 def check_per_names(row):                                  # a name of an AI script: its name in the game (#4528)
-    form(row, {"name": str, "kind": str}, {"game": str, "age": int})
+    form(row, {"name": str, "kind": str}, {"game": str, "age": int, "civ": str, "set": list})
+    assert row.get("civ") in (None, "unit", "elite", "upgrade", "research"), row["name"]
+    assert all(n in NAMES["train.jsonl"] | NAMES["gather.jsonl"] for n in row.get("set", ())), row["name"]
     assert row["kind"] in ("age", "building", "tech", "unit") and row["name"] == row["name"].lower(), row["name"]
     assert "game" not in row or row["game"] in NAMES["train.jsonl"] | NAMES["build.jsonl"], row["name"]
-    assert ("age" in row) == (row["kind"] == "age") and ("game" in row or row["kind"] == "age"), row["name"]
+    assert ("age" in row) == (row["kind"] == "age") and ("game" in row or row["kind"] == "age" or "civ" in row or "set" in row), row["name"]
 
 
 def check_per_numbers(row):                                # a strategic number of an AI script (#4685)
