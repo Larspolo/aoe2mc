@@ -447,6 +447,17 @@ def revived(path=CONFIG["docs"]["learnings"], base=f"origin/{CONFIG['branch']}")
     return [line for line in head if line.strip() and line not in old and line not in own]
 
 
+def foreign(number, base=f"origin/{CONFIG['branch']}"):
+    """(M, commit) for each own commit of HEAD that closes another ticket M (`Closes #M`): such a branch ships two
+    tickets (#4569). A merge of `base` adds nothing: `base..HEAD` leaves out its commits."""
+    out = []
+    for commit in filter(None, git("log", "--no-merges", "--format=%h %B%x00", f"{base}..HEAD", check=False).stdout.split("\0")):
+        for m in re.findall(r"\b(?:close[sd]?|fix(?:es|ed)?|resolve[sd]?)\s*:?\s+#(\d+)", commit, re.I):
+            if int(m) != number:
+                out.append((int(m), commit.strip().splitlines()[0]))
+    return out
+
+
 def prunable(tips, open_numbers, now, days=LOCK_DAYS):
     """The claim refs to delete, from {name: Unix time of its tip} (name: the part after `claim/`): the slots of a
     ticket that is not open, the refill locks of an epic that is not open, and the locks older than `days` of their
@@ -731,6 +742,11 @@ def main(argv=None):
         if back:
             print(f"docs/LEARNINGS.md keeps {len(back)} lines that main removed (union merge, #563): remove them")
             print("\n".join(back))
+            return 1
+        other = foreign(a.number, f"{a.remote}/main")
+        if other:
+            for m, commit in other:
+                print(f"the branch carries commits of #{m} ({commit}): remove them from the branch")
             return 1
         pr = on_github(a.remote) and other_pr(api("pulls?state=all&per_page=30"), a.number, who(), a.pr_branch)
         if pr:

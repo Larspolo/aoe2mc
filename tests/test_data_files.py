@@ -54,11 +54,13 @@ UNIT_KEYS = {                     # the optional keys of units.jsonl: one line e
     "min_range": NUMBER,
     "note": str,
     "on_death": str,
+    "pack": dict,
     "sail": NUMBER,
     "sight": int,
     "sunder": int,
     "trample": dict,
     "veteran": dict,
+    "volley": dict,
 }
 
 
