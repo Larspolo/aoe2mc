@@ -6,7 +6,7 @@ import sys
 import claim
 from test_claim import clones, tool  # noqa: F401 (fixture)
 
-TOOL = os.path.join(os.path.dirname(__file__), "..", "framework", "tools", "claim.py")
+TOOL = os.path.join(os.path.dirname(__file__), "..", "tools", "claim.py")
 
 
 def test_one_run_makes_the_fix_main_ticket(clones):  # noqa: F811
