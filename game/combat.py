@@ -90,6 +90,7 @@ ACCURACY = {r["name"]: r["accuracy"] for r in UNIT_ROWS if "accuracy" in r}   # 
 MISS = {r["name"]: r["miss"] for r in UNIT_ROWS if "miss" in r}               # a missed shot hurts a near unit (#4549)
 DODGE = {r["name"]: r["dodge"] for r in UNIT_ROWS if "dodge" in r}           # projectiles that do no damage (#4399)
 SPEED_CHARGE = {r["name"]: r["speed_charge"] for r in UNIT_ROWS if "speed_charge" in r}   # faster near a target (#4545)
+VOLLEY = {r["name"]: r["volley"] for r in UNIT_ROWS if "volley" in r}       # the key "volley": {"shots": n, "attack": a}, the extra projectiles of each shot (#4502)
 FRENZY = {r["name"]: r["frenzy"] for r in UNIT_ROWS if "frenzy" in r}        # a shorter reload in a long fight (#4468)
 LOW_HP = {r["name"]: r["low_hp"] for r in UNIT_ROWS if "low_hp" in r}      # another form below some hit points (#4472)
 VETERAN = {r["name"]: r["veteran"] for r in UNIT_ROWS if "veteran" in r}     # attack more for each kill (#4467)
@@ -245,12 +246,16 @@ def vs_units_command(uuid, name, T):
     return f"aoe vsunits {uuid} {v['attack']} {bonus} {v['range'] * T}" if v else None
 
 
-def charge_command(uuid, name):
+def charge_command(uuid, name, T=4):
     """The plugin command of the own charge attack of unit name (the key "charge_attack" of data/units.jsonl: the
     Coustillier, #4398), or None: the first melee hit on a unit after a full charge of "time" AoE2 seconds has
-    "attack" more (aoe chargeattack of #4370; its time as ticks at Normal speed)."""
+    "attack" more (aoe chargeattack of #4370; its time as ticks at Normal speed). A "blast" {"part", "radius"} (the
+    Urumi Swordsman, #4544): the charged hit also hurts the near enemy units, radius in tiles of T blocks."""
     c = CHARGE_ATTACK.get(name)
-    return f"aoe chargeattack {uuid} {max(1, round(c['time'] / NORMAL * 20))} {c['attack']}" if c else None
+    if not c:
+        return None
+    b = f" {c['blast']['part']:g} {c['blast']['radius'] * T:g}" if c.get("blast") else ""
+    return f"aoe chargeattack {uuid} {max(1, round(c['time'] / NORMAL * 20))} {c['attack']}{b}"
 
 
 def charged_volley_command(uuid, name):
@@ -423,7 +428,7 @@ def setup(game, data):
                                    data.get("tile_size", 4)):
             game.command(cmd)
     for o in units:                                  # the Coustillier charges its attack (#4398)
-        if cmd := charge_command(o["uuid"], o["name"]):
+        if cmd := charge_command(o["uuid"], o["name"], data.get("tile_size", 4)):
             game.command(cmd)
     for o in units:                                  # a Samurai runs faster to a near target (#4545)
         if cmd := speed_charge_command(o["uuid"], o["name"], data.get("tile_size", 4)):
