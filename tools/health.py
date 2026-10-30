@@ -155,8 +155,9 @@ def usage_lines(comments, account=None):
 def raw_samples(comments, account=None):
     """[(time, 5-hour usage 0..1, reset time, all claims, {lane: claims})] of the `Usage:` lines (of one account), by
     time."""
-    return sorted((ts(m[1]), float(m[2]) / 100, ts(m[3]), int(m[4]), lane_runs(line))
-                  for line in usage_lines(comments, account) for m in [SAMPLE.match(line)] if m)
+    return sorted(((ts(m[1]), float(m[2]) / 100, ts(m[3]), int(m[4]), lane_runs(line))
+                   for line in usage_lines(comments, account) for m in [SAMPLE.match(line)] if m),
+                  key=lambda s: s[:4])                     # equal values: a dict has no order (#4434)
 
 
 def lane_weights(comments, need=10):
