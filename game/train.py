@@ -74,6 +74,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import units  # noqa: E402
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import abilities  # noqa: E402
 import build  # noqa: E402
 import civs  # noqa: E402
 import demolish  # noqa: E402
@@ -129,6 +130,33 @@ BUILDING_OF = {r["name"]: r["building"] for r in ROWS}
 def more_arrows(g, building):
     """The arrows that the technologies of g.techs add to one shot of the building (Yasama, Tigui: "more_arrows", #4258)."""
     return sum(value("more_arrows", t, {}).get(building, 0) for t in g.techs)
+
+
+def pass_arrows(g, building):
+    """The end of `aoe arrows` for the own building: " <blocks> <part>" when a technology of g.techs lets its arrows pass
+    through the units (Svan Towers: "pass_arrows", #4282), else ""."""
+    v = next((v for t in sorted(g.techs) if building in (v := value("pass_arrows", t, {})).get("names", ())), None)
+    return f" {v['tiles'] * g.map.T} {v['part']}" if v else ""
+
+
+def dot(g, name, s):
+    """The damage over time of a hit of unit name (combat.Stats s) of the player of g (#4339): (damage, AoE2 seconds, the
+    target classes or ()) of the first technology of g.techs (in name order) with an entry of the key "damage_over_time"
+    whose test holds (test(): Curare, Red Cliffs Tactics), else None. The plugin deals it (Dot.java)."""
+    for t in sorted(getattr(g, "techs", ())):
+        for e in value("damage_over_time", t, ()):
+            if any(test(x, name, s) for x in e["if"]):
+                return e["damage"], e["seconds"], tuple(e.get("on", ()))
+    return None
+
+
+def stats_line(g, uuid, name, s=None):
+    """The "aoe stats" command of unit uuid of the player of g: its values s (default stats()), the bonus damage and the
+    friendly fire that it takes (civs.taken, civs.friendly) and its damage over time (dot(), #4339)."""
+    import combat                                                  # combat imports gather, gather imports this module
+    s = s or stats(g, name, uuid)
+    return combat.stats_command(uuid, name, s, civs.taken(g, name), civs.friendly(g, name), **hits(g, name),
+                                 dot=dot(g, name, s))
 
 
 def weight(g, name):
@@ -350,23 +378,37 @@ ROW = 9                                                            # the first s
 
 HULKS = tuple(r["name"] for r in UNIT_ROWS if r.get("melee_ship"))   # melee warships: the blacksmith attack too (#1509)
 # Siphons and Incendiaries (#2165): technology: the key "charge" or "detonate" of its line of data/train.jsonl and its
-# values: {"if": [tests], "attack": n, "blast": tiles, "bonus": {class: n}}, a charge also "reload" (s) and "shots"
-FIRE = {r["name"]: (k, r[k]) for r in ROWS for k in ("charge", "detonate") if k in r}
+# values: {"if": [tests], "attack": n, "blast": tiles, "bonus": {class: n}}, a charge also "reload" (s) and "shots";
+# a list of them: one per unit line, and the blast hurts no own or allied unit (Thunderclap Bombs, #4367).
+# The charge of a melee hit (Comitatenses, #4370): the key "charge_attack": {"if": [tests], "attack": n, "time": s}
+FIRE = {r["name"]: (k, r[k]) for r in ROWS for k in ("charge", "charge_attack", "detonate") if k in r}
 
 
 def fire_commands(g, uuid, name, techs=None):
     """The plugin commands of the charge attack (`aoe charge`) and the blast at death (`aoe detonate`) of an own ship
-    after the research of their technologies (FIRE, #2165), and of the thrown axes of a melee unit (`aoe throw`, the
-    key "throw": Gothikon, #4368), or of the technologies techs only. Vanilla has no second attack, no "on death"
-    command and no shot of a melee mob. An axe has the values of the unit (its attack with the upgrades)."""
+    after the research of their technologies (FIRE, #2165), of the charge of the next melee hit of an own unit
+    (`aoe chargeattack`, #4370), of the thrown axes of a melee unit (`aoe throw`, the key "throw": Gothikon, #4368), and
+    of the delayed second blast where a shot lands (`aoe afterblast`, the key "after_blast": Thunderclap Bombs, #4369),
+    or of the technologies techs only. Vanilla has no second attack, no "on death" command, one attack value per mob
+    and no shot of a melee mob. An axe has the values of the unit (its attack with the upgrades)."""
     import combat, gather                                          # both import gather, gather imports this module
     out = []
-    for tech, (kind, c) in FIRE.items():
-        if tech not in (g.techs if techs is None else techs) or not any(test(t, name, combat.stats(name)) for t in c["if"]):
-            continue
-        bonus, blast = ",".join(f"{k}:{v}" for k, v in sorted(c["bonus"].items())) or "-", c["blast"] * g.map.T
-        out.append(f"aoe charge {uuid} {max(1, round(c['reload'] / gather.NORMAL * 20))} {c['attack']} {c['shots']} "
-                   f"{blast} {bonus}" if kind == "charge" else f"aoe detonate {uuid} {c['attack']} {blast} {bonus}")
+    for tech, (kind, parts) in FIRE.items():                       # a list: one value per unit line, foes only (#4367)
+        for c in parts if isinstance(parts, list) else [parts]:
+            if tech not in (g.techs if techs is None else techs) or not any(test(t, name, combat.stats(name)) for t in c["if"]):
+                continue
+            if kind == "charge_attack":
+                out.append(f"aoe chargeattack {uuid} {max(1, round(c['time'] / gather.NORMAL * 20))} {c['attack']}")
+                continue
+            bonus, blast = ",".join(f"{k}:{v}" for k, v in sorted(c["bonus"].items())) or "-", c["blast"] * g.map.T
+            out.append(f"aoe charge {uuid} {max(1, round(c['reload'] / gather.NORMAL * 20))} {c['attack']} {c['shots']} "
+                       f"{blast} {bonus}" if kind == "charge" else
+                       f"aoe detonate {uuid} {c['attack']} {blast} {bonus}" + " foes" * isinstance(parts, list))
+    for tech, parts in BY_KEY["after_blast"].items():              # Thunderclap Bombs: a second blast where a shot lands
+        for c in parts:                                            # (#4369); buildings: only a shot at a building
+            if tech in (g.techs if techs is None else techs) and any(test(t, name, combat.stats(name)) for t in c["if"]):
+                out.append(f"aoe afterblast {uuid} {max(1, round(c['delay'] / gather.NORMAL * 20))} {c['attack']} "
+                           f"{c['blast'] * g.map.T:g} {c['times']}" + " buildings" * c.get("buildings", False))
     for tech, c in BY_KEY["throw"].items():                        # Gothikon: the axes of a melee unit (#4368)
         if tech in (g.techs if techs is None else techs) and any(test(t, name, combat.stats(name)) for t in c["if"]):
             ticks = [max(1, round(c[k] / gather.NORMAL * 20)) for k in ("reload", "gap")]
@@ -390,11 +432,15 @@ def volley_command(g, uuid, name):
     """The plugin command of the extra projectiles in each shot of own unit name (the key "volley" of data/civs.jsonl:
     the Armenian galley line and dromons, #2379; the key "volley" of the researched technologies: {unit: {"shots": n,
     "attack": a or "part": p}}, Double Crossbow, #4338), else None. "attack" is the AoE2 attack of each extra
-    projectile, "part" a part of the attack of the unit, neither the full attack (0). The plugin keeps one attack for
+    projectile, "part" a part of the attack of the unit, neither the full attack (0). The key "volley" of the unit line
+    (Chu Ko Nu, Kipchak, Hussite Wagon, #4502) starts the count. The plugin keeps one attack for
     all extra projectiles of a unit: the last technology wins. Minecraft feature: one more Arrow entity; the plugin
     gives it its AoE2 damage."""
-    attack = civs.value("volley", civs.civ(g), {}).get(name)
-    shots, attack = (0, 0) if attack is None else (1, attack)
+    import combat                                                  # combat imports this module's data: import it late
+    base = combat.VOLLEY.get(name)
+    shots, attack = (0, 0) if base is None else (base["shots"], base["attack"])
+    if (civ := civs.value("volley", civs.civ(g), {}).get(name)) is not None:
+        shots, attack = shots + 1, civ
     for t in sorted(vars(g).get("techs", ())):
         if v := value("volley", t, {}).get(name):
             shots += v["shots"]
@@ -466,7 +512,7 @@ def unlocked(g, name):
     a scenario trigger turned on (g.trigger_menus, #2775) needs no age."""
     return (value("age", name, 0) - civs.earlier(g, name) <= build.ages(g) or getattr(g, "trigger_menus", {}).get(name, False)) \
         and value("after", name, "") in {""} | set(getattr(g, "techs", ())) \
-        and not (hasattr(g, "data") and civs.missing(g, name)) \
+        and not (hasattr(g, "data") and civs.missing(g, name) and name not in granted(g)) \
         and (name not in UPGRADES or name in REQUIRES or bool(lines(name, g))) and not swapped(g, name)   # not of this
                                                                    # civilization (#1373), no new unit (#1483); an
                                                                    # age also upgrades (#2130)
@@ -568,6 +614,32 @@ def line_upgrades(line):
 
 
 def trains(g, building):
+    """own() of the building, and the free units of the technologies of the player and its allies (granted())."""
+    out = own(g, building)
+    return out + tuple(n for n in granted(g, building) if n not in out)
+
+
+def granted(g, building=None):
+    """{unit: count} of the free units of building (any building with None) that the technologies of the key "free"
+    of the player or of an allied player give to each of its buildings (Cuman Mercenaries, #4330)."""
+    import fog, gather                                             # both import gather, gather imports this module
+    if not BY_KEY["free"] or not hasattr(g, "players"):
+        return {}
+    out = {}
+    for h in fog.gathers(g):
+        if h.player == g.player or gather.allied(g.players, g.player, h.player):
+            for t, (b, unit, n) in BY_KEY["free"].items():
+                if t in h.techs and building in (None, b):
+                    out[unit] = max(out.get(unit, 0), n)
+    return out
+
+
+def free_left(g, rect, name):
+    """The free units name that the building rect can still train (granted()), 0 for none."""
+    return max(0, granted(g, homes(g)[rect]).get(name, 0) - vars(g).get("free_trained", {}).get(rect, {}).get(name, 0))
+
+
+def own(g, building):
     """The units and technologies of the own building: a castle trains the unique unit of the player's civilization,
     a Krepost the Konnik, a Donjon the Serjeant."""
     new = {old: unit for t in UPGRADES if t in g.techs for old, unit in lines(t, g)}   # the barracks trains the new unit
@@ -648,7 +720,7 @@ def show(g, player, rect):
         return f"queue {n}/{QUEUE}" + (" · Auto-queue: on" if vars(g).get("auto", {}).get(rect) == name else "")
     names = vars(g).get("trigger_names", {})                          # "Change Technology Name" (#2821)
     items = [(slot, build.LOCKED if build.locked(g, name) else item, names.get(name, label),
-              (" · ".join(f"{v} {r}" for r, v in price(g, name, building).items()) or "free") + f" · {round(seconds(g, name, building), 1):g} s · "
+              (" · ".join(f"{v} {r}" for r, v in price(g, name, building, rect).items()) or "free") + f" · {round(seconds(g, name, building), 1):g} s · "
               + state(name))
              for name, (slot, item, label) in layout(g, rect).items()]
     items += [RALLY] if units_of(g, building) else []
@@ -697,7 +769,7 @@ def requeue(g):
         if rect not in home:
             del on[rect]
         elif not g.queues.get(rect) and not build.locked(g, name) and not missing(g, name) \
-                and all(g.stock[r] >= v for r, v in price(g, name, home[rect]).items()):
+                and all(g.stock[r] >= v for r, v in price(g, name, home[rect], rect).items()):
             queue(g, g.auto_by.get(rect, "@a"), rect[::2], name)
 
 
@@ -743,7 +815,10 @@ def cancel(g, player, rect, group):
     name, start, k = gs[group]
     if vars(g).get("auto", {}).get(rect) == name:                      # a cancel also ends its auto-queue (#3524)
         del g.auto[rect]
-    for r, v in q.pop(start + k - 1).get("paid", COSTS[name]).items():   # a free technology gives back nothing
+    e = q.pop(start + k - 1)
+    if e.get("free"):                                                  # the free unit is free again (#4330)
+        g.free_trained[rect][name] -= 1
+    for r, v in e.get("paid", COSTS[name]).items():                    # a free technology gives back nothing
         g.stock[r] += v
         g.command(f"scoreboard players add {r.capitalize()} {g.board} {v}")
     return name
@@ -838,7 +913,10 @@ def queue(g, player, cell, name="VILLAGER_MALE"):
     if len(q) >= QUEUE:
         build.say(g, player, f"The queue is full ({QUEUE} units).")
         return None
-    cost = price(g, name, homes(g)[rect])
+    if not offered(g, rect, name) and name not in own(g, homes(g)[rect]):   # no free unit left (#4330)
+        return None
+    free = bool(free_left(g, rect, name))
+    cost = price(g, name, homes(g)[rect], rect)
     if any(g.stock[r] < v for r, v in cost.items()):
         build.say(g, player, f"Not enough resources: a {build.pretty(name).lower()} costs "
                              + ", ".join(f"{v} {r}" for r, v in cost.items()) + ".")
@@ -847,7 +925,11 @@ def queue(g, player, cell, name="VILLAGER_MALE"):
         g.stock[r] -= v
         g.command(f"scoreboard players remove {r.capitalize()} {g.board} {v}")
     k = vars(g).get("doctrines", {}).get(homes(g)[rect], 0)            # its doctrine stays (#2483)
+    if free:                                                           # one of the free units (#4330)
+        n = vars(g).setdefault("free_trained", {}).setdefault(rect, {})
+        n[name] = n.get(name, 0) + 1
     q.append({"name": name, "progress": 0.0, "player": player} | ({"paid": cost} if cost != COSTS[name] else {})
+             | ({"free": True} if free else {})
              | ({"doctrine": k} if k and name not in TECHS else {}))
     record.queued(g, name, rect)                                       # Record Game (#2649)
     return rect
@@ -861,6 +943,8 @@ def count(g, t):
 def offered(g, rect, name):
     """True when the building rect offers name: an upgrade of one building (ONE_BUILDING) only to a building that has
     none and researches none (#2484), the other items as repeatable() and unlocked()."""
+    if name not in own(g, homes(g)[rect]) and not free_left(g, rect, name):   # no free unit left (#4330)
+        return False
     if name in ONE_BUILDING and (rect in getattr(g, "upgraded", {})
                                  or any(e["name"] in ONE_BUILDING for e in g.queues.get(rect, ()))):
         return False
@@ -879,10 +963,13 @@ def repeatable(g, name):
         and value("walls", name) is None and count(g, name) < REPEAT
 
 
-def price(g, name, building=None):
+def price(g, name, building=None, rect=None):
     """The cost of unit or technology name with the bonuses of the civilization (civs.COSTS, #1091); a technology is
     free with the cheat "tech tech one two free" (#968). Shipwright: a ship costs 20 % less wood (#1490). A unit of
-    building: the food and wood factor of its Recruitment Doctrine (doctrine(), Macedonians, #2483)."""
+    building: the food and wood factor of its Recruitment Doctrine (doctrine(), Macedonians, #2483). A free unit of
+    the building rect (free_left(), #4330) costs nothing."""
+    if rect is not None and free_left(g, rect, name):
+        return {}
     if name in TECHS and getattr(g, "free_techs", False):
         return {}
     if name in (p := civs.policies(g)).get("effects", ()):          # a switch of policy: the gold of the next one (#2485)
@@ -997,6 +1084,19 @@ def applies(unit, name):
     return unit == name or test is not None and name in combat.STATS and test(set(combat.stats(name).classes))
 
 
+def trample_command(g, uuid, name):
+    """The trample command of the splash of a researched technology with the key "trample" whose effect holds for unit
+    name (Druzhina, #4496), with the blast radius of the unit (stats). None for a unit with its own trample (the
+    elephants, #4397: abilities.commands gives it) and without such a technology."""
+    import combat                                                  # combat imports gather, gather imports this module
+    if name in abilities.trample.UNITS:
+        return None
+    s = stats(g, name, uuid)
+    t = next((t for tech, t in sorted(BY_KEY["trample"].items()) if tech in g.techs and s.blast and not s.range
+              and any(test(x, name, combat.stats(name)) for x in value("effect", tech).get("if", ()))), None)
+    return t and abilities.trample.command(uuid, name, g.map.T, {**t, "radius": s.blast})
+
+
 def stats(g, name, uuid=None):
     """The combat values of AoE2 unit name with the bonuses of the civilization (civs.UNITS) and the technologies of
     the player (combat.stats and TECHS), twice for civs.TWICE (#1561), n times for civs.SMITH_UNITS (#2174), and the
@@ -1081,7 +1181,8 @@ def faster(unit, name):
 def hits(g, name):
     """The keywords of combat.damage and combat.stats_command for unit name of the player of g (#4331): less, {attacker
     class: n} of the key "less" of its technologies whose units cover it (Royal Heirs), and ignore, True when a
-    technology with the key "ignore_armor" covers this melee unit (Wootz Steel). faster() tests the units of both.
+    technology with the key "ignore_armor" covers this melee unit (Wootz Steel), or the unit has the key "ignore_armor"
+    in data/units.jsonl (Leitis, #4394). faster() tests the units of both.
     rage: the attack for each 10 % of lost hit points of the key "rage" (Hamask), reflect: the part of the key "reflect"
     (Lamellar Armor, #4332), both summed over the technologies whose units cover it."""
     import combat                                                  # combat imports gather, gather imports this module
@@ -1089,8 +1190,8 @@ def hits(g, name):
     for t, (unit, cut) in BY_KEY["less"].items():
         if t in getattr(g, "techs", ()) and faster(unit, name):
             less = {c: less.get(c, 0) + cut.get(c, 0) for c in less | cut}
-    ignore = combat.stats(name).range <= 0 and any(faster(u, name) for t, u in BY_KEY["ignore_armor"].items()
-                                                    if t in getattr(g, "techs", ()))
+    ignore = name in combat.IGNORE or combat.stats(name).range <= 0 and any(
+        faster(u, name) for t, u in BY_KEY["ignore_armor"].items() if t in getattr(g, "techs", ()))
     more = {k: sum(n for t, (unit, n) in BY_KEY[k].items() if t in getattr(g, "techs", ()) and faster(unit, name))
             for k in ("rage", "reflect")}
     return {"less": less, "ignore": ignore} | more
@@ -1135,7 +1236,7 @@ def haste(g, dt):
             continue
         s = stats(g, name, u)
         s = s._replace(reload=s.reload / fast.get(u, 1))
-        g.command(combat.stats_command(u, name, s, civs.taken(g, name), civs.friendly(g, name), **hits(g, name)))
+        g.command(stats_line(g, u, name, s))
         if cmd := combat.range_command(u, name, T, s=s):
             g.command(cmd)
     g.hasted = fast
@@ -1187,9 +1288,9 @@ def research(g, entry, start=False, rect=None):
         names = {n for names, _ in civs.ARROWS.get(civs.civ(g), ()) for n in names}
         for rect in [r for r, o in garrison.holders(g).items() if o["name"] in names]:
             g.command(garrison.arrows_command(g, rect))
-    if (more := value("more_arrows", entry["name"])):              # the own buildings of the names shoot more (#4258)
-        for rect, o in garrison.holders(g).items():
-            if o["name"] in more:
+    if (more := value("more_arrows", entry["name"])) or (more := value("pass_arrows", entry["name"], {}).get("names")):
+        for rect, o in garrison.holders(g).items():                # the own buildings of the names shoot more (#4258),
+            if o["name"] in more:                                  # or their arrows pass through (#4282)
                 g.command(garrison.arrows_command(g, rect))
     if (free := value("spawn", entry["name"])) and not start:     # free units at own buildings (First Crusade, #4365)
         unit = free["unit"]
@@ -1207,30 +1308,34 @@ def research(g, entry, start=False, rect=None):
             g.soldiers[uuid] = new
             for cmd in type_tag_commands(uuid, old, new):          # the triggers count the new type (#2977)
                 g.command(cmd)
-            g.command(combat.stats_command(uuid, new, stats(g, new, uuid), civs.taken(g, new), civs.friendly(g, new),
-                                           **hits(g, new)))
+            g.command(stats_line(g, uuid, new))
             if cmd := combat.range_command(uuid, new, g.map.T, s=stats(g, new, uuid)):   # the range and blast of an onager
                 g.command(cmd)
             if cmd := volley_command(g, uuid, new):               # a war galley of the Armenians (#2379)
                 g.command(cmd)
             if cmd := lead_command(g, uuid, new):                 # an elite Spanish cannon galleon (#2430)
                 g.command(cmd)
-            if cmd := combat.dodge_command(uuid, new):            # an Elite Shrivamsha Rider dodges more (#4399)
+            if cmd := combat.accuracy_command(uuid, new, civs.value("accuracy", civs.civ(g), {}).get(new, 0.0), g.map.T):
+                g.command(cmd)                                    # an Elite Arambai hits more often (#4549)
+            for cmd in abilities.commands(uuid, new, g.map.T):      # the abilities of the elite unit (#4588)
+                g.command(cmd)
+            if cmd := trample_command(g, uuid, new):              # the splash of a technology (#4496)
                 g.command(cmd)
             g.command(combat.label_command(uuid, new))               # the name of a new unit (units.pretty)
     import trebuchet                                               # trebuchet imports this module: import it late
     if vars(g).get("hasted"):                                      # the values below have no haste: haste() sends
         g.hasted = {}                                              # them again (#2497)
     for uuid, name in [(u["uuid"], u["name"]) for u in g.units if "uuid" in u] + list(g.soldiers.items()):
-        if stats(g, name, uuid) != combat.stats(name) or hits(g, name) != hits(None, name):   # also Royal Heirs (#4331)
+        if stats(g, name, uuid) != combat.stats(name) or hits(g, name) != hits(None, name) or dot(g, name, stats(g, name, uuid)):
             g.command(trebuchet.stats_command(g, uuid) if name == trebuchet.NAME   # the armor of its state (#1409)
-                      else combat.stats_command(uuid, name, stats(g, name, uuid), civs.taken(g, name), civs.friendly(g, name),
-                                                **hits(g, name)))
+                      else stats_line(g, uuid, name))
         if name == trebuchet.NAME and trebuchet.state(g, uuid) != "unpacked":
             continue                                               # packed: range 0, the unpack sends the range (#1414)
         new, base = stats(g, name), combat.stats(name)              # the range (Fletching, #724) or the blast (Warwolf, #4283)
-        if (new.range, new.blast) != (base.range, base.blast):
-            g.command(combat.range_command(uuid, name, g.map.T, s=stats(g, name, uuid)))
+        if (new.range, new.blast) != (base.range, base.blast) and (cmd := combat.range_command(uuid, name, g.map.T, s=stats(g, name, uuid))):
+            g.command(cmd)                                         # a melee unit with a blast has no range (#4496)
+        if entry["name"] in BY_KEY["trample"] and (cmd := trample_command(g, uuid, name)):
+            g.command(cmd)                                         # the live units get the splash (Druzhina, #4496)
     for cmd in [c for uuid, name in g.soldiers.items() for c in fire_commands(g, uuid, name, {entry["name"]})]:
         g.command(cmd)                                             # the live fire ships: Siphons, Incendiaries (#2165)
     for uuid, name in g.soldiers.items():                          # the live gunpowder units aim ahead (Arquebus, #4364)
@@ -1313,6 +1418,7 @@ def census(g):
     import score                                                       # score imports this module
     dead = {u: "VILLAGER" if u in g.villagers else g.soldiers[u] for u in [*g.villagers, *g.soldiers] if u not in live}
     spoils.fallen(g, dead)                                             # Tupi (#2271)
+    fell(g, dead)                                                      # Konnik (#4471)
     score.fallen(g, dead)                                              # #2355
     spoils.kills(g)                                                    # Mapuche (#2271)
     spoils.attacks(g)                                                  # Varangian Guard (#2376)
@@ -1326,6 +1432,31 @@ def census(g):
         g.drop(u)                                                      # from the selection of each person (#3486)
     g.pop, g.census = sum(weight(g, g.soldiers.get(u)) for u in live if g.soldiers.get(u) not in build.MOVES), 0.0   # a mule cart is a building
     sidebar(g)
+
+
+RISE = 3.0                                                          # AoE2 seconds from a death to the new unit (wiki "Konnik")
+
+
+def fell(g, dead):
+    """Keep the new unit and the place of each dead own unit of abilities.on_death (the Konnik, #4471) in g.risers: the
+    marker that the plugin left at the place of the death (on_death.command). A dead unit with no marker was
+    removed (an unloaded chunk, a sunk boat), not killed: nothing rises. The census sees a death up to CENSUS seconds
+    late, so the wait starts at RISE - CENSUS / 2."""
+    rise = abilities.on_death
+    for u, name in dead.items():
+        if name in rise.UNITS and (p := g.pos(f"@e[type=marker,tag={rise.FELL}{u},limit=1]")):
+            g.command(f"kill @e[type=marker,tag={rise.FELL}{u}]")
+            vars(g).setdefault("risers", []).append([RISE - CENSUS / 2, rise.UNITS[name], p])
+
+
+def risen(g, work):
+    """Summon each unit of g.risers (fell) whose wait is over, for free: a new own soldier at the place of the death.
+    AoE2: the Dismounted Konnik takes the population slot of the Konnik."""
+    for r in list(vars(g).get("risers", ())):
+        r[0] -= work
+        if r[0] <= 0:
+            g.risers.remove(r)
+            summon(g, r[1], r[2])
 
 
 LABELS = {"Limit": "Pop. limit"}                                  # the shown name of a sidebar line (owner, #990)
@@ -1351,6 +1482,7 @@ def tick(g, work):
     g.census += work
     if g.census >= CENSUS:
         census(g)
+    risen(g, work)
     for tag in list(g.marks):                                          # rally markers end
         g.marks[tag] -= work
         if g.marks[tag] <= 0:
@@ -1427,7 +1559,7 @@ def summon(g, name, pos, rotation=math.pi / 2, player=None):
         import owners                                              # owners imports gather, gather imports this module
         owners.add(g, uuid, name, o["player"])                     # an enemy of the other sides (#2992)
     import combat, gather                                          # both import gather, gather imports this module
-    g.command(combat.stats_command(uuid, name, stats(g, name), civs.taken(g, name), civs.friendly(g, name), **hits(g, name)))
+    g.command(stats_line(g, uuid, name, stats(g, name)))
     import spoils                                                  # spoils imports this module
     if cmd := spoils.tag_command(uuid, name):                      # its hits make gold (#2376)
         g.command(cmd)
@@ -1437,11 +1569,14 @@ def summon(g, name, pos, rotation=math.pi / 2, player=None):
         g.command(cmd)
     if cmd := lead_command(g, uuid, name):                         # a Spanish cannon galleon aims ahead (#2430)
         g.command(cmd)
-    if cmd := combat.accuracy_command(uuid, name, civs.value("accuracy", civs.civ(g), {}).get(name, 0.0)):
+    if cmd := combat.accuracy_command(uuid, name, civs.value("accuracy", civs.civ(g), {}).get(name, 0.0), g.map.T):
         g.command(cmd)                                             # a Hun trebuchet hits units more often (#2479)
-    if cmd := combat.dodge_command(uuid, name):                    # a Shrivamsha Rider dodges projectiles (#4399)
+    for cmd in abilities.commands(uuid, name, g.map.T):            # its abilities: game/abilities (#4588)
         g.command(cmd)
-    if cmd := combat.sight_command(uuid, name, g.map.T, s=stats(g, name), more=sight_more(g.techs, name, combat.stats(name))):   # it attacks enemies in sight (#775)
+    if cmd := trample_command(g, uuid, name):                      # the splash of a technology (Druzhina, #4496)
+        g.command(cmd)
+    if cmd := combat.sight_command(uuid, name, g.map.T, s=stats(g, name), more=sight_more(g.techs, name, combat.stats(name))
+                                  + civs.sight_units(g, name, combat.stats(name))):   # it attacks enemies in sight (#775)
         g.command(cmd)
     import ai                                                      # ai imports gather, gather imports this module
     g.command(ai.speed_command(uuid, name, g.map.T, gather.NORMAL * speed(g, name)))   # also without an order (#849)

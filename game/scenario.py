@@ -328,7 +328,7 @@ def values(g, tag, field, operation, quantity):
     change in unit_values of its side ({uuid: [[field, operation, quantity], ...]}): train.stats and train.speed
     apply it after the changes of the unit type, so later technologies and orders keep it. The unit gets its new
     `aoe stats` or walk speed at once, and the tag goes."""
-    import ai, civs, combat, trebuchet                             # combat -> gather -> scenario
+    import ai, trebuchet                                           # ai -> gather -> scenario
     for x in [g, *(s.g for s in g.bots)]:
         for uuid, name in [(u["uuid"], u["name"]) for u in x.units if "uuid" in u] + sorted(x.soldiers.items()):
             if "passed" not in g.command(f"execute as {uuid} if entity @s[tag={tag}]"):
@@ -337,8 +337,7 @@ def values(g, tag, field, operation, quantity):
             if field == "speed":
                 x.command(ai.speed_command(uuid, name, x.map.T, gather.NORMAL * train.speed(x, name, uuid)))
             else:
-                x.command(trebuchet.stats_command(x, uuid) if name == trebuchet.NAME else combat.stats_command(
-                    uuid, name, train.stats(x, name, uuid), civs.taken(x, name), civs.friendly(x, name), **train.hits(x, name)))
+                x.command(trebuchet.stats_command(x, uuid) if name == trebuchet.NAME else train.stats_line(x, uuid, name))
     g.command(f"tag @e[tag={tag}] remove {tag}")
 
 
@@ -619,7 +618,7 @@ def attributes(g):
     unit type or a class "@<class>" of "Modify Attribute for Class", train.applies, #2859):
     train.stats applies them in order, so the units that the player trains later get the new values. The units of the
     type that exist get the new values at once (the same commands as a technology, train.research)."""
-    import civs, combat                                                # combat -> gather -> scenario
+    import combat                                                      # combat -> gather -> scenario
     new = re.findall(r'"(\d+) (@?\w+) (\w+) ([1-5]) (-?[\d.]+)"', g.command(f"data get storage {ATTRIBUTES} list") or "")
     if new:
         g.command(f"data remove storage {ATTRIBUTES} list")
@@ -632,7 +631,7 @@ def attributes(g):
             if not train.applies(name, n):                             # a type, or a class (#2859)
                 continue
             s = train.stats(x, n, uuid)
-            x.command(combat.stats_command(uuid, n, s, civs.taken(x, n), civs.friendly(x, n), **train.hits(x, n)))
+            x.command(train.stats_line(x, uuid, n, s))
             if field == "range" and (cmd := combat.range_command(uuid, n, x.map.T, s=s)):
                 x.command(cmd)
 
@@ -709,15 +708,24 @@ def setup(g, mode="scenario", start=True):
         print("The world has no scenario start values: the game starts with the lobby settings.", file=sys.stderr)
         return g
     for x, p in rows.items():
-        if "age" in p:                                                 # the starting age of the editor (#3296)
-            train.start(x, p["age"])                                   # before the stock: no age cost (train.start)
-        for name in p.get("disabled", ()):                             # the tab "Options" of the editor (#3299)
-            vars(x).setdefault("trigger_menus", {})[name] = False      # an "Enable Object" trigger turns it on again
-        x.stock.update(p.get("resources", {}))
-        x.pop_limit = p.get("pop_limit", x.pop_limit)
-        x.show_stock()                                                 # the sidebar of the resources (Gather.setup)
-        train.sidebar(x)
+        start_values(x, p)
     return g
+
+
+def start_values(x, p):
+    """Put the start values of a player of aoe2mc.json (p) on its Gather x: the age, the technologies, the disabled
+    objects, the resources and the population limit. Also for a converted saved game (run.py, #4565)."""
+    if "age" in p:                                                 # the starting age of the editor (#3296)
+        train.start(x, p["age"])                                   # before the stock: no age cost (train.start)
+    for t in p.get("techs", ()):                                   # the researched technologies of a save (#4565)
+        if t not in x.techs:
+            train.research(x, {"name": t}, start=True)
+    for name in p.get("disabled", ()):                             # the tab "Options" of the editor (#3299)
+        vars(x).setdefault("trigger_menus", {})[name] = False      # an "Enable Object" trigger turns it on again
+    x.stock.update(p.get("resources", {}))
+    x.pop_limit = p.get("pop_limit", x.pop_limit)
+    x.show_stock()                                                 # the sidebar of the resources (Gather.setup)
+    train.sidebar(x)
 
 
 def visible(g):

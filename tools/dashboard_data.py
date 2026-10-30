@@ -3,7 +3,7 @@
     python3 tools/dashboard_data.py OUT_DIR
 
 Writes aoe2mc-merged-prs.json, aoe2mc-tickets.json, aoe2mc-epics.json, aoe2mc-roadmap.json, aoe2mc-release-bar.json,
-aoe2mc-usage.json and aoe2mc-tokens.json, and copies aoe2mc-setup.json (written by hand: tools/dashboard_artifact/setup.json). The page
+aoe2mc-usage.json, aoe2mc-tokens.json and aoe2mc-reviews.json, and copies aoe2mc-setup.json (written by hand: tools/dashboard_artifact/setup.json). The page
 reads them as data files: `tools/dashboard_site.py` builds the GitHub Pages site with them (#982).
 
 With `DASHBOARD_CACHE` (a folder that `dashboard-site.yml` keeps with `actions/cache`), it reads only the issues and
@@ -17,11 +17,13 @@ import re
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(1, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "framework", "tools"))
 import health  # noqa: E402
 
 DATASETS = {"merges": "aoe2mc-merged-prs.json", "tickets": "aoe2mc-tickets.json", "epics": "aoe2mc-epics.json",
             "roadmap": "aoe2mc-roadmap.json", "release_bar": "aoe2mc-release-bar.json", "usage": "aoe2mc-usage.json",
-            "tokens": "aoe2mc-tokens.json", "setup": "aoe2mc-setup.json"}
+            "tokens": "aoe2mc-tokens.json", "reviews": "aoe2mc-reviews.json", "setup": "aoe2mc-setup.json",
+            "accounts": "aoe2mc-accounts.json"}
 ROWS = re.compile(r"\s*\.(filter|find|some|every|forEach|map|flatMap|sort)\(\s*\(?\s*(\w+)(?:\s*,\s*(\w+))?\s*\)?\s*=>")
 
 GOALS = {"1": "convert", "2": "play", "3": "replay", "4": "system"}
@@ -222,7 +224,7 @@ RESULT = re.compile(r"^Metrics: ticket #\d+ · [^·]* · (merged|pr #\d+)", re.M
 
 
 def tokens(hours=168, comments=None):
-    """The cost of each run report with a `Tokens:` line (tools/tokens.py): its M eq, calls, peak context in k tokens,
+    """The cost of each run report with a `Tokens:` line (framework/tools/tokens.py): its M eq, calls, peak context in k tokens,
     the share 0..1 of the sink `base` (None when not in the top sinks) and its PRs (the `Metrics:` lines with the
     result `merged` or `pr #N`). The chart "Usage per merged PR" divides the eq by the PRs (owner, 2026-10-29)."""
     comments = health.status_comments(hours=hours) if comments is None else comments
@@ -234,6 +236,58 @@ def tokens(hours=168, comments=None):
             rows.append(dict(at=c["created_at"], eq=float(m[1]), calls=int(m[2]), peak=int(m[3]),
                              base=int(m[4]) / 100 if m[4] else None, prs=len(RESULT.findall(body))))
     return sorted(rows, key=lambda r: r["at"])
+
+
+RUN_LINE = re.compile(r"^Run: .*$", re.M)
+WEEK_USED = re.compile(r" · week (\d+(?:\.\d+)?)%")
+
+
+def accounts(hours=168, comments=None):
+    """One row per Claude account (#4239): its last 5-hour usage, 7-day usage and runs (the last `Usage:` line of the
+    account), its merged PRs and tokens per merged PR. A `Run:` line names the account of its report (`health.line_account`:
+    a line with no account word belongs to the first account). Values of an account with no line are None."""
+    comments = health.status_comments(hours=hours) if comments is None else comments
+    rows = {}
+    for c in sorted(comments, key=lambda c: c.get("created_at") or ""):
+        body = c.get("body") or ""
+        run = RUN_LINE.search(body)
+        owner = health.line_account(run[0]) if run else health.first_account()
+        for line in body.splitlines():
+            m = health.SAMPLE.match(line) if line.startswith("Usage:") else None
+            if m:
+                week = WEEK_USED.search(line)
+                rows.setdefault(health.line_account(line), {}).update(
+                    five_hour=float(m[2]) / 100, runs=int(m[4]), week=float(week[1]) / 100 if week else None)
+        t = TOKEN_LINE.search(body)
+        if t:
+            acc = rows.setdefault(owner, {})
+            acc["eq"], acc["prs"] = acc.get("eq", 0) + float(t[1]), acc.get("prs", 0) + len(RESULT.findall(body))
+    return [dict(account=name, five_hour=r.get("five_hour"), week=r.get("week"), runs=r.get("runs"),
+                 merged=r.get("prs", 0), tokens_per_pr=r["eq"] / r["prs"] if r.get("prs") else None)
+            for name, r in sorted(rows.items(), key=lambda x: str(x[0]))]
+
+
+REVIEW = re.compile(r"^\s*Process review", re.I)
+CHANGE_PR = re.compile(r"\bPR #(\d+)")
+
+
+def reviews(merges, hours=24 * 60, comments=None):
+    """The process reviews of the `improve` skill (#4347): each report comment that starts with "Process review", its
+    first paragraph (`text`, at most 400 characters), the PRs that it names (`changes`: "PR #N"),
+    and the merged PRs between the review before it and this one (`prs`; None for the first review of the log): the
+    real gap of the review algorithm of `framework/tools/claim.py`."""
+    comments = health.status_comments(hours=hours) if comments is None else comments
+    times = sorted(m["merged_at"] for m in merges)
+    rows, last = [], None
+    for c in sorted((c for c in comments if REVIEW.match(c.get("body") or "") and c.get("created_at")),
+                    key=lambda c: c["created_at"]):
+        at, body = c["created_at"], c["body"].strip()
+        prs = None if last is None else sum(last < t <= at for t in times)
+        text = body.split("\n\n")[0].strip()
+        rows.append(dict(at=at, prs=prs, changes=sorted({int(n) for n in CHANGE_PR.findall(body)}),
+                         text=text[:397] + "..." if len(text) > 400 else text))
+        last = at
+    return rows
 
 
 def close(text, i):
@@ -299,14 +353,17 @@ def main(out_dir):
     root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     folder = os.environ.get("DASHBOARD_CACHE")
     issues, pulls = cached(folder) if folder else (pages("issues?state=all"), pages("pulls?state=closed"))
+    merges = merged_prs(pulls)
     files = {
-        "aoe2mc-merged-prs.json": merged_prs(pulls),
+        "aoe2mc-merged-prs.json": merges,
         "aoe2mc-tickets.json": tickets(issues),
         "aoe2mc-epics.json": epics(issues),
         "aoe2mc-roadmap.json": roadmap(open(os.path.join(root, "steering", "project", "ROADMAP.md")).read()),
         "aoe2mc-release-bar.json": release_bar(open(os.path.join(root, "steering", "project", "RELEASE.md")).read()),
         "aoe2mc-usage.json": usage(),
         "aoe2mc-tokens.json": tokens(),
+        "aoe2mc-accounts.json": accounts(),
+        "aoe2mc-reviews.json": reviews(merges),
         "aoe2mc-setup.json": json.load(open(os.path.join(root, "tools", "dashboard_artifact", "setup.json"))),
     }
     for name, rows in files.items():

@@ -27,7 +27,7 @@ def test_blocks_the_full_suite(command):
     "grep -l pytest tests/*.py",
     "grep -l X tests/*.py | xargs -r python3 -m pytest -q",
     "xargs --no-run-if-empty python3 -m pytest -q < files.txt",
-    "python3 tools/report.py --text 'ran python3 -m pytest'",
+    "python3 framework/tools/report.py --text 'ran python3 -m pytest'",
 ])
 def test_allows_test_files_and_markers(command):
     assert run(command) == 0, command

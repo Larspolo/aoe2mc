@@ -4,6 +4,7 @@ of its values: the values come from the AoE2 wiki, and this file checks their fo
 import json
 import os
 
+import abilities
 import pytest
 
 from game import build, civs, combat, table, train
@@ -32,7 +33,7 @@ def form(row, need, may=()):
 
 STATS = {"hp": int, "attack": int, "melee": int, "pierce": int, "range": NUMBER, "reload": float, "bonus": dict,
          "classes": list}
-OPTIONAL = {"blast"}                                    # a field of combat.Stats with a default (#4283)
+OPTIONAL = {"blast", "passes", "pass_part"}                  # a field of combat.Stats with a default (#4283)
 
 
 def stats(row):
@@ -43,10 +44,27 @@ def stats(row):
     assert set(row["bonus"]) <= bonus and all(isinstance(v, int) for v in row["bonus"].values()), row["name"]
 
 
+UNIT_KEYS = {                                   # the optional keys of units.jsonl: one per line (#4585);
+                                                # the keys of the unit abilities: game/abilities (#4588)
+    "accuracy": NUMBER,
+    "convert": int,
+    "ignore_armor": bool,
+    "min_range": NUMBER,
+    "miss": dict,
+    "note": str,
+    "sail": NUMBER,
+    "sight": int,
+    "volley": dict,
+}
+
+
 def check_units(row):
-    form(row, {"name": str, **STATS}, {"sight": int, "min_range": NUMBER, "note": str, "sail": NUMBER, "convert": int,
-                                       "accuracy": NUMBER, "dodge": dict})
+    form(row, {"name": str, **STATS}, UNIT_KEYS | {m.KEY: m.TYPE for m in abilities.MODULES})
     stats(row)
+    assert row.get("on_death", "MILITIA") in NAMES["units.jsonl"], row["name"]   # abilities.on_death (#4471)
+    if "aura" in row:                                                     # abilities.aura (#4470)
+        form(row["aura"], {"radius": NUMBER, "speed": NUMBER, "attack_speed": NUMBER, "units": list}, {})
+        assert set(row["aura"]["units"]) <= NAMES["units.jsonl"], row["name"]
 
 
 def check_buildings(row):
@@ -225,6 +243,13 @@ def check_challenges(row):                                 # an Art of War chall
     assert row["after"] is None or row["after"] in NAMES["challenges.jsonl"], row["name"]
 
 
+def check_per_names(row):                                  # a name of an AI script: its name in the game (#4528)
+    form(row, {"name": str, "kind": str}, {"game": str, "age": int})
+    assert row["kind"] in ("age", "building", "tech", "unit") and row["name"] == row["name"].lower(), row["name"]
+    assert "game" not in row or row["game"] in NAMES["train.jsonl"] | NAMES["build.jsonl"], row["name"]
+    assert ("age" in row) == (row["kind"] == "age") and ("game" in row or row["kind"] == "age"), row["name"]
+
+
 def check_taunts(row):                                     # a taunt: its number and AoE2 text (#2234)
     form(row, {"name": str, "text": str}, {"sound": str})                  # sound: a vanilla match (#2662)
     assert row["name"].isdigit() and row["name"] == str(int(row["name"])) and row["text"], row["name"]
@@ -246,6 +271,7 @@ CHECKS = {                                                 # one file per line: 
     "difficulty.jsonl": check_difficulty,
     "gather.jsonl": check_gather,
     "monk.jsonl": check_monk,
+    "per_names.jsonl": check_per_names,
     "replay.jsonl": check_replay,
     "setup.jsonl": check_setup,
     "setup_keys.jsonl": check_setup_keys,
@@ -259,7 +285,8 @@ CHECKS = {                                                 # one file per line: 
 
 # The keys with two types by design: an "effect" is data, a list of data (#2155) or the name of a function of
 # game/train.py (#2098, #2122)
-TWO_TYPES = {("train.jsonl", "effect"): (dict, list, str)}
+TWO_TYPES = {("train.jsonl", "detonate"): (dict, list),   # one blast, or one per unit line (#4367)
+             ("train.jsonl", "effect"): (dict, list, str)}
 
 
 @pytest.mark.parametrize("name", sorted(NAMES))

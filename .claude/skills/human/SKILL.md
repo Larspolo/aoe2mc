@@ -30,12 +30,12 @@ the checks that the chosen ticket needs (a decision needs only GitHub).
 | A `.aoe2record` file (replay tickets) | `python3 -c "import mgz"` (`.venv/bin/python` when it exists) | `python3 -m pip install mgz` (`.venv/bin/python -m pip install mgz` when `.venv` exists) |
 
 When `.venv/bin/python` exists, use it in place of `python3` for each command of this skill (`tools/scenarios.py`,
-`aoe2mc.py`, `game/run.py`, `tools/owner_tasks.py`): the Bash tool does not keep `source .venv/bin/activate` between
+`aoe2mc.py`, `game/run.py`, `framework/tools/owner_tasks.py`): the Bash tool does not keep `source .venv/bin/activate` between
 two calls. Tell the owner to type `source .venv/bin/activate` in each new terminal.
 
 ## 2. Sort the tickets and make one plan
 
-Run `python3 tools/owner_tasks.py`. It prints the open `needs-human` tickets that are not muted, decision tickets
+Run `python3 framework/tools/owner_tasks.py`. It prints the open `needs-human` tickets that are not muted, decision tickets
 first, then the oldest first, each with its kind and its question. With no ticket: say so and offer "Wait for the
 next ticket" (below); if the owner does not want to wait, stop.
 
@@ -47,7 +47,7 @@ Check each ticket: is the owner really needed (#1674)? Read its body and its las
 3. **Owner needed**: sound, the feel of a control, "is it fun", a look that the agent could not decide (it says why,
    #1707), a decision or a setting. Clicks and a look next to the AoE2 image are agent work (`verify`, level 5).
 
-Then run `python3 tools/owner_tasks.py --plan`: it puts each ticket into "close now", "replay", "play game" or
+Then run `python3 framework/tools/owner_tasks.py --plan`: it puts each ticket into "close now", "replay", "play game" or
 "no game". Move the tickets of group 2 out, and show the plan to the owner: one replay with `game/watch.py` for all
 replay tickets (one stage list), one play game with `game/play_guide.py` for all play tickets (one step file), then
 the decisions and settings. Ask with `AskUserQuestion` whether to start the plan, or which single ticket to do.
@@ -71,18 +71,18 @@ Pitfalls of the session of #1674 (avoid them):
 - macOS: the first start of a downloaded app or JDK can need System Settings → Privacy & Security → "Open Anyway" (#1668).
 
 Sample check (owner decision B, #1708): agents close check tickets on their evidence with the label `owner-sample`.
-Run `python3 tools/owner_tasks.py --sample` and offer some of these tickets (the oldest first) as one more play game or
+Run `python3 framework/tools/owner_tasks.py --sample` and offer some of these tickets (the oldest first) as one more play game or
 replay, with the owner points of their last agent comment. A finding becomes a bug ticket (step 5). Remove
 `owner-sample` from each ticket that the owner checked, also without a finding.
 
-Wait for the next ticket (#1025): start `python3 tools/owner_tasks.py --wait` with `run_in_background` and end the
+Wait for the next ticket (#1025): start `python3 framework/tools/owner_tasks.py --wait` with `run_in_background` and end the
 turn. While it waits, the session uses no model turn (one GitHub request each 5 minutes, at most 12 hours). Exit 0:
 it printed the new ticket in the format of the list: show it and ask the owner with `AskUserQuestion` whether to do
 it now (step 3). Exit 1 ("No new ticket in 12 hours."): say so and offer to wait again.
 
 ## 3. Prepare the chosen ticket
 
-Run `python3 tools/owner_tasks.py --show N`. It prints the section `## For the owner` of the ticket (the `ticket`
+Run `python3 framework/tools/owner_tasks.py --show N`. It prints the section `## For the owner` of the ticket (the `ticket`
 skill asks for it), else the last request of the agent. Read the ticket body and its comments too. Then prepare by
 the kind:
 
@@ -125,7 +125,7 @@ the tree from the old tree, #718).
 ## 5. Report
 
 1. Comment on the ticket in ASD-STE100: what the owner did, the owner's words quoted (`> ...`), the images, and the result.
-   End the comment with the footer of `tools/dashboard.py` (`FOOTER`).
+   End the comment with the footer of `framework/tools/dashboard.py` (`FOOTER`).
 2. For each problem: a bug ticket with the `ticket` skill, and "Depends on: #bug" on the check ticket, so that a run
    checks again after the fix (#668). Do not fix it in this session unless the owner asks.
 3. Remove `needs-human` when the answer is complete. For a decision: write the decision into the document of the

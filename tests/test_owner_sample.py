@@ -1,4 +1,4 @@
-"""tools/owner_tasks.py --sample lists the check tickets that the agent closed on its evidence (decision B of #1708)."""
+"""framework/tools/owner_tasks.py --sample lists the check tickets that the agent closed on its evidence (decision B of #1708)."""
 import owner_tasks
 
 

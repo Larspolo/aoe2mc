@@ -8,7 +8,7 @@ Read: `#const` (also `rnd(A,B)`, fractions and `(MATH)`, #4306), `#define`, `if`
 <PLAYER_SETUP> (`grouped_by_team` with --teams), <LAND_GENERATION> (`base_terrain`, `create_player_lands`, `create_land` with
 `terrain_type`, `base_layer` (a land layer on the terrain_type, #3967), `land_percent`, `number_of_tiles`, `base_size`, `clumping_factor`, `land_position`, `assign_to_player` and `assign_to_team` (direct_placement, #3947) and the borders
 `left_border`, `right_border`, `top_border`, `bottom_border`: percent of the map size at the low x, high x, low y and
-high y side that the land does not take) and
+high y side that the land does not take; `other_zone_avoidance_distance`, `min_placement_distance`, #4421) and
 <TERRAIN_GENERATION> (`create_terrain` with `base_terrain`, `number_of_clumps`, `number_of_tiles`, `land_percent`,
 `spacing_to_other_terrain_types`, `set_avoid_player_start_areas`, `clumping_factor`), <CONNECTION_GENERATION>
 (`create_connect_all_players_land` with `replace_terrain`, `terrain_cost`, `terrain_size`: paths between the player
@@ -38,6 +38,7 @@ RMAP = rows("rmap.jsonl")
 TERRAINS = {r["name"]: r["terrain"] for r in RMAP if "terrain" in r}
 OBJECTS = {r["name"]: r["object"] for r in RMAP if "object" in r}     # the object constants of random_map.def: AoE2 IDs
 FOREST_TREES = dict(sorted((t, r["name"]) for r in RMAP for t in r.get("forest", ())))
+ASSIGN = {r["name"]: r["assign"] for r in RMAP if "assign" in r}       # the targets of assign_to: player, color, team
 CLIFF_TYPES = {r["name"]: r["cliff_type"] for r in RMAP if "cliff_type" in r}   # cliff_type word: object name prefix
 SHORE_FISH = next(r["name"] for r in RMAP if r.get("shore_fish"))
 SIZES = {1: 120, 2: 120, 3: 144, 4: 144, 5: 168, 6: 168, 7: 200, 8: 200}    # AoE2 map size of a player count
@@ -261,12 +262,27 @@ def grow(owner, lands, free, rng):
     """Grow the lands at the same time, one tile each in turn, as AoE2 does: a land takes a free tile next to it. A
     higher clumping factor tries more tiles and takes the one with most tiles of the land around it (round lands).
     lands: [{"id", "cells" (start tiles), "target" (tiles), "clump", "box" (optional: (x0, x1, y0, y1), the tiles
-    that the land can take)}]; free: a bool array of the tiles to take."""
+    that the land can take), "zone" and "avoid" (optional: other_zone_avoidance_distance, #4421)}]; free: a bool
+    array of the tiles to take."""
     n = owner.shape[0]
+    zone = {land["id"]: land.get("zone", -1 - land["id"]) for land in lands}
+    avoid = {land["id"]: land.get("avoid", 0) for land in lands}
+    r = max(avoid.values(), default=0)
+
+    def apart(land, c):                         # no tile of another zone within the larger avoidance distance
+        if not r:
+            return True
+        x0, y0 = max(0, c[0] - r), max(0, c[1] - r)
+        box = owner[x0:c[0] + r + 1, y0:c[1] + r + 1]
+        for x, y in zip(*np.nonzero(box >= 0)):
+            o = int(box[x, y])
+            if zone[o] != zone[land["id"]] and max(abs(x0 + x - c[0]), abs(y0 + y - c[1])) <= max(avoid[o], avoid[land["id"]]):
+                return False
+        return True
     for land in lands:
         land["front"], land["seen"], land["count"] = [], set(), 0
         for c in land["cells"]:
-            if free[c] and owner[c] < 0 and inside(land, c):
+            if free[c] and owner[c] < 0 and inside(land, c) and apart(land, c):
                 owner[c] = land["id"]
                 land["count"] += 1
         for c in zip(*np.nonzero(owner == land["id"])):
@@ -282,7 +298,7 @@ def grow(owner, lands, free, rng):
                 c = front[k]
                 front[k] = front[-1]
                 front.pop()
-                if owner[c] >= 0 or not free[c] or not inside(land, c):
+                if owner[c] >= 0 or not free[c] or not inside(land, c, rng) or not apart(land, c):
                     continue
                 owner[c] = land["id"]
                 land["count"] += 1
@@ -293,10 +309,14 @@ def grow(owner, lands, free, rng):
             return
 
 
-def inside(land, c):
-    """True when tile c is in the borders of the land (its "box"), or the land has no borders."""
+def inside(land, c, rng=None):
+    """True when tile c is in the borders of the land (its "box"), or the land has no borders. A land with a "fuzz"
+    (border_fuzziness 0 to 100, #4422) takes a tile out of the box with the chance (100 - fuzz) %: 0 ignores the
+    borders, 100 keeps them. It draws only for such a tile, so that the maps of other scripts stay the same."""
     x0, x1, y0, y1 = land.get("box", (0, 1 << 30, 0, 1 << 30))
-    return x0 <= c[0] < x1 and y0 <= c[1] < y1
+    if x0 <= c[0] < x1 and y0 <= c[1] < y1:
+        return True
+    return rng is not None and land.get("fuzz", 100) < 100 and rng.uniform(0, 100) >= land["fuzz"]
 
 
 def near(c, n):
@@ -310,10 +330,12 @@ def add_front(land, c, n):
             land["front"].append(d)
 
 
-def square(c, r, n):
-    """The tiles within r of tile c (a square), in the map."""
+def square(c, r, n, circular=False):
+    """The tiles within r of tile c (a square), in the map. circular: only the tiles of the circle of radius r
+    (set_circular_base, #4420)."""
     return [(x, y) for x in range(max(0, c[0] - r), min(n, c[0] + r + 1))
-            for y in range(max(0, c[1] - r), min(n, c[1] + r + 1))]
+            for y in range(max(0, c[1] - r), min(n, c[1] + r + 1))
+            if not circular or (x - c[0]) ** 2 + (y - c[1]) ** 2 <= r * r]
 
 
 def tiles(attrs, consts, n, default=0):
@@ -475,7 +497,9 @@ def lower_to_water(terrain, elevation):
 
 def generate(text, seed, players=2, size=None, warn=None, teams=None, folder=None):
     """The map description (aoe2mc.read_json) of the land part of script text, for players on a map of size tiles
-    (default: the AoE2 size of the player count). folder: the folder of the script, for its #include_drs files. teams: one team (or None) per player (#3946), see circle(). "lands": [{"player", "x", "y", "base_size"}] of the player lands."""
+    (default: the AoE2 size of the player count). folder: the folder of the script, for its #include_drs files. teams: one team (or None) per player (#3946), see circle(). "lands": [{"player", "x", "y", "base_size"}] of the player lands.
+    "mood": the color mood of color_correction (aoe2mc.MOODS). enable_waves and water_definition have no effect: Minecraft
+    water takes its color from the biome."""
     warn = warn or (lambda m: print(f"rms: {m}", file=sys.stderr))
     rng = np.random.default_rng(seed)
     n = size or SIZES.get(players, 200)
@@ -488,6 +512,11 @@ def generate(text, seed, players=2, size=None, warn=None, teams=None, folder=Non
             n = int(value(a[0], consts))
         elif cmd != "override_map_size":
             warn(f"{cmd} is not read yet")
+    for cmd, a, _ in sections.get("PLAYER_SETUP", ()):   # override_map_size works here too (#4580)
+        if cmd == "override_map_size" and a and not size:
+            n = int(value(a[0], consts))
+        elif cmd not in PLAYER_SETUP:
+            warn(f"{cmd} is not read yet")
     for s in sections:
         if s not in SECTIONS:
             warn(f"<{s}> is not read yet")
@@ -498,49 +527,75 @@ def generate(text, seed, players=2, size=None, warn=None, teams=None, folder=Non
     owner = np.full((n, n), -1, np.int32)
     layer = np.full((n, n), -1, np.int16)            # the land layer of each tile (aoe2mc.read_json "layer", -1 = none)
     lands, starts, kinds, links, layers = [], [], {}, [], {}
+    heights = {}                                     # the base_elevation of each land index (#4418)
     ids = {}                                         # the land_id of a create_land -> its land index (#4133)
+    mood = None                                      # color_correction CC_X: the color mood X (aoe2mc.MOODS, #4430)
     for cmd, args, attrs in sections.get("LAND_GENERATION", ()):
         if cmd == "base_terrain":
             terrain[:] = value(args[0], consts)
+        elif cmd == "color_correction":
+            from aoe2mc import MOODS
+            name = args[0].upper().removeprefix("CC_") if args else ""
+            if name in MOODS:
+                mood = name
+            else:
+                warn(f"color_correction {' '.join(args)}: no such color mood")
+        elif cmd in ("enable_waves", "water_definition"):   # Minecraft water has no waves and no look of its own
+            pass
         elif cmd in ("create_player_lands", "create_land"):
             base = value(attrs["base_size"][0], consts) if "base_size" in attrs else 3
             clump = value(attrs["clumping_factor"][0], consts) if "clumping_factor" in attrs else 8
             kind = value(attrs["terrain_type"][0], consts) if "terrain_type" in attrs else 0
             zone = value(attrs["zone"][0], consts) if "zone" in attrs else None      # None: a zone of its own
             top = value(attrs["base_layer"][0], consts) if "base_layer" in attrs else None   # a layer on the land
+            height = value(attrs["base_elevation"][0], consts) if "base_elevation" in attrs else 0
             edge = {a: value(attrs[a][0], consts) * n // 100 if a in attrs else 0 for a in BORDERS}
             box = (edge["left_border"], n - edge["right_border"], edge["top_border"], n - edge["bottom_border"])
+            fuzz = value(attrs["border_fuzziness"][0], consts) if "border_fuzziness" in attrs else 100   # strict (#4422)
+            avoid = value(attrs["other_zone_avoidance_distance"][0], consts) if "other_zone_avoidance_distance" in attrs else 0
             if cmd == "create_player_lands":
                 total, turn = tiles(attrs, consts, n), rng.uniform(0, 2 * np.pi)
                 order = circle(sections.get("PLAYER_SETUP", ()), players, teams, seed)
+                radius = attrs.get("circle_radius")       # percent of the map size and its random change (#4420)
+                ring = value(radius[0], consts) / 100 if radius else RING
+                vary = value(radius[1], consts) / 100 if radius and len(radius) > 1 else 0
                 for p in range(1, players + 1):
                     if any(st["player"] == p for st in starts):     # a land with assign_to_player has it (#3947)
                         continue
                     a = turn + 2 * np.pi * order.index(p) / players
-                    c = (int(round((n - 1) / 2 + RING * n * np.cos(a))), int(round((n - 1) / 2 + RING * n * np.sin(a))))
+                    r = ring + (rng.uniform(-vary, vary) if vary else 0)   # no draw with no change: same maps
+                    c = (int(round((n - 1) / 2 + r * n * np.cos(a))), int(round((n - 1) / 2 + r * n * np.sin(a))))
                     starts.append({"player": p, "x": c[0], "y": c[1], "base_size": base, "land": len(lands)})
                     links.append((c, p, zone if zone is not None else -1 - len(lands)))
-                    lands.append({"id": len(lands), "cells": square(c, base, n), "clump": clump, "box": box,
+                    lands.append({"id": len(lands), "cells": square(c, base, n, circular="set_circular_base" in attrs),
+                                  "clump": clump, "box": box, "fuzz": fuzz, "zone": links[-1][2], "avoid": avoid,
                                   "target": max(total // players, (2 * base + 1) ** 2)})
                     kinds[len(lands) - 1] = kind
                     layers[len(lands) - 1] = top
+                    heights[len(lands) - 1] = height
             else:
                 if "land_position" in attrs:
                     c = tuple(min(n - 1, value(v, consts) * n // 100) for v in attrs["land_position"][:2])
                 else:
                     c = tuple(int(v) for v in rng.integers(0, n, 2))
+                    far = value(attrs["min_placement_distance"][0], consts) if "min_placement_distance" in attrs else 0
+                    for _ in range(100):                # draw again until the origins before it are far enough (#4421)
+                        if all(np.hypot(c[0] - o[0][0], c[1] - o[0][1]) >= far for o in links):
+                            break
+                        c = tuple(int(v) for v in rng.integers(0, n, 2))
                 p = owner_of(attrs, consts, starts, players, teams)
                 if p:                                       # direct_placement: the land of player p (#3947)
                     starts.append({"player": p, "x": c[0], "y": c[1], "base_size": base, "land": len(lands)})
                 links.append((c, p, zone if zone is not None else -1 - len(lands)))
-                lands.append({"id": len(lands), "cells": square(c, base, n), "clump": clump, "box": box,
+                lands.append({"id": len(lands), "cells": square(c, base, n, circular="set_circular_base" in attrs),
+                              "clump": clump, "box": box, "fuzz": fuzz, "zone": links[-1][2], "avoid": avoid,
                               "target": tiles(attrs, consts, n, (2 * base + 1) ** 2)})
                 kinds[len(lands) - 1] = kind
                 layers[len(lands) - 1] = top
+                heights[len(lands) - 1] = height
                 if "land_id" in attrs:                  # only create_land: the guide gives player lands no ID
                     ids[value(attrs["land_id"][0], consts)] = len(lands) - 1
-            for a in set(attrs) - {"base_layer", "base_size", "clumping_factor", "terrain_type", "land_percent", "number_of_tiles",
-                                   "land_id", "land_position", "zone", "assign_to_player", "assign_to_team", *BORDERS}:
+            for a in sorted(set(attrs) - set(CREATE_LAND)):
                 warn(f"{cmd}: {a} is not read yet")
         else:
             warn(f"{cmd} is not read yet")
@@ -558,6 +613,16 @@ def generate(text, seed, players=2, size=None, warn=None, teams=None, folder=Non
         if layers[lid] is not None:
             layer[owner == lid] = layers[lid]
     elevation = elevate(sections.get("ELEVATION_GENERATION", ()), terrain, layer, owner, starts, consts, rng, warn)
+    for lid, height in heights.items():              # a raised land: its edge steps up one level per tile (AoE2 DE)
+        land, step = owner == lid, 1
+        near = ~land
+        while step < height:
+            near = dilate(near, 1)
+            ring = land & near & (elevation < step)
+            elevation[ring] = step
+            land &= ~near
+            step += 1
+        elevation[land & (elevation < height)] = height
     for cmd, args, attrs in sections.get("TERRAIN_GENERATION", ()):
         if cmd != "create_terrain":
             warn(f"{cmd} is not read yet")
@@ -565,9 +630,21 @@ def generate(text, seed, players=2, size=None, warn=None, teams=None, folder=Non
         kind = value(args[0], consts)
         on = value(attrs["base_terrain"][0], consts) if "base_terrain" in attrs else 0
         free = terrain == on
+        if "height_limits" in attrs:               # only on the hill levels from MIN to MAX (AoE2 DE)
+            lo, hi = (value(v, consts) for v in attrs["height_limits"][:2])
+            free &= (elevation >= lo) & (elevation <= hi)
+        if "set_flat_terrain_only" in attrs:       # only where the 8 neighbours have the same level
+            p, flat = np.pad(elevation, 1, mode="edge"), np.ones((n, n), bool)
+            for dy in (0, 1, 2):
+                for dx in (0, 1, 2):
+                    flat &= p[dy:dy + n, dx:dx + n] == elevation
+            free &= flat
         if (s := value(attrs["spacing_to_other_terrain_types"][0], consts)
                 if "spacing_to_other_terrain_types" in attrs else 0):
             free &= ~dilate(terrain != on, s)
+        if "spacing_to_specific_terrain" in attrs:          # N tiles from terrain T
+            t, s = (value(v, consts) for v in attrs["spacing_to_specific_terrain"][:2])
+            free &= ~dilate(terrain == t, s)
         avoid = attrs.get("set_avoid_player_start_areas")      # None: not set; []: the default distance
         far = 0 if avoid is None else value(avoid[0], consts) if avoid else AVOID
         for st in starts:                      # never in the start area of a player (its base_size square)
@@ -585,10 +662,18 @@ def generate(text, seed, players=2, size=None, warn=None, teams=None, folder=Non
         group = [{"id": k, "cells": [tuple(int(v) for v in spots[rng.integers(len(spots))])], "target": each,
                   "clump": clump} for k in range(clumps)]
         grow(mark, group, free, rng)
-        terrain[mark >= 0] = kind
-        for a in set(attrs) - {"base_terrain", "number_of_clumps", "number_of_tiles", "land_percent", "clumping_factor",
-                               "spacing_to_other_terrain_types", "set_avoid_player_start_areas",
-                               "set_scale_by_groups", "set_scale_by_size"}:
+        mask = value(attrs["terrain_mask"][0], consts) if "terrain_mask" in attrs else 0
+        if mask == 1:                          # on top: the new terrain is only the look (#4419)
+            layer[mark >= 0] = kind
+        elif mask == 2:                        # under: the new terrain has the game role, the old one the look
+            layer[mark >= 0] = terrain[mark >= 0]
+            terrain[mark >= 0] = kind
+        else:
+            terrain[mark >= 0] = kind
+        wet = np.isin(terrain, [TERRAINS["WATER"], TERRAINS["SHALLOW"]])
+        if "beach_terrain" in attrs and wet[mark >= 0].all():   # the land tiles at the shore of new water get T
+            terrain[dilate(mark >= 0, 1) & ~wet] = value(attrs["beach_terrain"][0], consts)
+        for a in sorted(set(attrs) - set(CREATE_TERRAIN)):
             warn(f"create_terrain: {a} is not read yet")
     connections(terrain, links, sections.get("CONNECTION_GENERATION", ()), consts, rng, warn)
     elevation = lower_to_water(terrain, elevation)
@@ -599,15 +684,22 @@ def generate(text, seed, players=2, size=None, warn=None, teams=None, folder=Non
     found += trees(terrain)
     found += ridges
     return {"size": n, "terrain": terrain.tolist(), "elevation": elevation.tolist(), "layer": layer.tolist(),
-            "objects": found,
+            "objects": found, **({"mood": mood} if mood else {}),
             "players": {str(p): {"color": p - 1} | ({"team": teams[p - 1]} if teams else {}) for p in range(1, players + 1)},
             "lands": [{k: v for k, v in st.items() if k != "land"} for st in starts]}
 
 
 def owner_of(attrs, consts, starts, players, teams):
     """The player of a create_land (#3947): assign_to_player N, or for assign_to_team T the next player of team T
-    (teams, #3946) with no land yet. 0: no player."""
+    (teams, #3946) with no land yet; assign_to TARGET N (#4424): the player N, the player of color N (the default
+    colors: player N) or the next player of team N (-1: any team). 0: no player."""
     taken = {st["player"] for st in starts}
+    if "assign_to" in attrs:
+        target, n = ASSIGN.get(attrs["assign_to"][0]), value(attrs["assign_to"][1], consts)
+        if target != "team":
+            return n if 1 <= n <= players and n not in taken else 0
+        return next((p for p in range(1, players + 1) if p not in taken
+                     and (n == -1 and teams and teams[p - 1] is not None or teams and teams[p - 1] == n)), 0)
     if "assign_to_player" in attrs:
         p = value(attrs["assign_to_player"][0], consts)
         return p if 1 <= p <= players and p not in taken else 0
@@ -635,6 +727,64 @@ def circle(setup, players, teams, seed):
     return rng.permutation(order).tolist()
 
 
+PLAYER_SETUP = (                # the commands of <PLAYER_SETUP> that generate() reads or that have no map effect: no warning (#4580)
+    "ai_info_map_type",             # the AI map type: no effect on the land
+    "behavior_version",             # the script version: no effect on the land
+    "direct_placement",             # the start of the players: the game's own choice
+    "effect_amount",                # the player settings of the game: no effect on the land
+    "effect_percent",               # the player settings of the game: no effect on the land
+    "force_nomad_treaty",           # the game rule: no effect on the land
+    "grouped_by_team",              # the order of the players on the circle (circle())
+    "guard_state",                  # the start units: no effect on the land
+    "nomad_resources",              # the start resources: no effect on the land
+    "override_map_size",            # the map size, the last value wins (generate())
+    "random_placement",             # the order of the players on the circle (circle())
+    "set_gaia_civilization",        # the Gaia civilization: no effect on the land
+    "terrain_state",                # the terrain look: no effect on the land
+    "weather_type",                 # the weather: no effect on the land
+)
+CREATE_LAND = (                 # the attributes of create_land and create_player_lands that generate() reads: one per line (#4417)
+    "assign_to",
+    "assign_to_player",
+    "assign_to_team",
+    "base_elevation",
+    "base_layer",
+    "base_size",
+    "border_fuzziness",
+    "bottom_border",
+    "circle_radius",
+    "clumping_factor",
+    "generate_mode",                # no source gives its effect: read with no warning (#4423)
+    "land_conformity",              # no source gives its effect: read with no warning (#4423)
+    "land_id",
+    "land_percent",
+    "land_position",
+    "left_border",
+    "min_placement_distance",
+    "number_of_tiles",
+    "other_zone_avoidance_distance",
+    "right_border",
+    "set_circular_base",
+    "terrain_type",
+    "top_border",
+    "zone",
+)
+CREATE_TERRAIN = (              # the attributes of create_terrain that generate() reads: one per line (#4417)
+    "base_terrain",
+    "beach_terrain",
+    "clumping_factor",
+    "height_limits",
+    "land_percent",
+    "number_of_clumps",
+    "number_of_tiles",
+    "set_avoid_player_start_areas",
+    "set_flat_terrain_only",
+    "set_scale_by_groups",
+    "set_scale_by_size",
+    "spacing_to_other_terrain_types",
+    "spacing_to_specific_terrain",
+    "terrain_mask",
+)
 CREATE_OBJECT = (               # the attributes of create_object that objects() reads: one per line, in alphabetical order (#4224)
     "actor_area",                   # mark the tiles around each object for a later avoid_actor_area (#3858)
     "actor_area_radius",            # the radius of actor_area, default 1 (#3858)
@@ -656,12 +806,14 @@ CREATE_OBJECT = (               # the attributes of create_object that objects()
     "max_distance_to_other_zones",  # tiles from the lands of the other players (#3857)
     "max_distance_to_players",      # tiles from the origin of the player land (#3855)
     "min_distance_group_placement", # tiles from the other objects (#3857)
+    "min_distance_to_map_edge",     # tiles from each map edge (#4427)
     "min_distance_to_players",      # tiles from the origin of the player land (#3855)
     "number_of_groups",             # groups of number_of_objects (± group_variance) objects (#3856)
     "number_of_objects",            # default 1; 3 for a VILLAGER: the start villagers of AoE2 DE (#3855, #4120)
     "place_on_forest_zone",         # only the tiles next to a forest (#3858)
     "place_on_specific_land_id",    # only the tiles of the create_land with this land_id (#4133)
     "require_path",                 # only the tiles with a land path to the origin of the player land (#4137)
+    "resource_delta",               # more or less resources in the object: a key of the object for gather (#4429)
     "second_object",                # one more object on each tile (#3858)
     "set_circular_placement",       # a circle band of min and max_distance_to_players, default a square (#4136)
     "set_gaia_object_only",         # Gaia owns the objects of set_place_for_every_player (#3855)
@@ -732,6 +884,7 @@ def objects(cmds, consts, terrain, starts, rng, warn, owner=None, ridges=(), lay
             owners = owners[:1]
         groups = value(attrs["number_of_groups"][0], consts) if "number_of_groups" in attrs else None
         vary = value(attrs["group_variance"][0], consts) if "group_variance" in attrs else 0
+        delta = {"resource_delta": value(attrs["resource_delta"][0], consts)} if "resource_delta" in attrs else {}
         radius = value(attrs["group_placement_radius"][0], consts) if "group_placement_radius" in attrs else 3
         tight = "set_tight_grouping" in attrs
         circle = "set_circular_placement" in attrs
@@ -761,6 +914,11 @@ def objects(cmds, consts, terrain, starts, rng, warn, owner=None, ridges=(), lay
             ground = ground & ~dilate(cliff, value(attrs["avoid_cliff_zone"][0], consts) if attrs["avoid_cliff_zone"] else 1)
         if "avoid_forest_zone" in attrs:
             ground = ground & ~dilate(forest, value(attrs["avoid_forest_zone"][0], consts) if attrs["avoid_forest_zone"] else 1)
+        if "min_distance_to_map_edge" in attrs:        # no tile within N tiles of an edge (#4427)
+            edge = np.zeros((n, n), bool)
+            m = value(attrs["min_distance_to_map_edge"][0], consts)
+            edge[m:n - m, m:n - m] = True
+            ground = ground & edge
         if "place_on_forest_zone" in attrs:
             ground = ground & dilate(forest, 1) & ~forest
         land = None                                    # the land of place_on_specific_land_id (#4133)
@@ -823,7 +981,8 @@ def objects(cmds, consts, terrain, starts, rng, warn, owner=None, ridges=(), lay
                     placed[max(0, tx - r):tx + r, max(0, ty - r):ty + r] = True
                     if name == "VILLAGER_MALE" and rng.integers(2):    # AoE2 DE: a male or a female villager
                         name = "VILLAGER_FEMALE"
-                    out.append({"name": name, "player": player, "x": tx + 0.5 * (kind != "B"), "y": ty + 0.5 * (kind != "B")})
+                    out.append({"name": name, "player": player, "x": tx + 0.5 * (kind != "B"), "y": ty + 0.5 * (kind != "B")}
+                               | delta)                                # more or less food, wood, gold or stone (#4429)
                     if second:
                         out.append({"name": second, "player": player, "x": tx + 0.5, "y": ty + 0.5})
                     if actor is not None:

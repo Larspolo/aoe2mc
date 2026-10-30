@@ -11,7 +11,7 @@ import aoe2mc
 import mcvalid
 import scenarios
 import world_reader
-from conftest import entity_ids
+from entities import entity_ids
 
 
 @pytest.mark.slow

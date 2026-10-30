@@ -31,6 +31,8 @@ OPTIONAL = ("auto", "auto_by",                                         # the aut
             "auto_reseed",                                             # the mill switch (#3422)
             "bell_work",                                               # the work before the town bell (#3420)
             "challenge_enemy",                                         # the enemy fleet of Naval Battle (#3909)
+            "free_trained",                                            # the free units of a castle: Cuman Mercenaries (#4330)
+            "risers",                                                  # the units that rise where a Konnik died: train.fell (#4471)
             "limit_left", "policy", "rates", "relic_timer", "reseeds", "switches", "upgraded", "wonder_shown", "wonders",   # only on a
             "wonders_gone")                                            # Gather that has them (#2324; the policy: #2515)
 MONK = ("carrier_at", "converting", "faith", "fetching", "heal_time", "monk_at", "relic_gold", "relic_homes",
@@ -44,6 +46,7 @@ ORDERS = ("kept", "patrols", "trigger_attributes", "trigger_costs",            #
           "attack_moves",                                              # stance.py: the attack moves and the old stances (#3357)
           "follows",                                                   # follow.py: the Follow and Guard orders (#3358)
           "formations",                                                # stance.py: the formations of the units (#3416)
+          "unit_modes",                                                # stance.py: the melee mode of the Ratha (#4504)
           "scouting",                                                  # autoscout.py: the Auto Scout order (#3702)
           "waypoint_at", "waypoints")                                  # gather.add_waypoint: the queued points of the units (#3518)
 ROUTES = ("trade", "trebs")                                            # trade.py, trebuchet.py: as OPTIONAL (#2413)
@@ -109,8 +112,7 @@ SCORE = (                                                              # Gather:
     "tributes",                                                        # diplomacy.py
 )
 SPOILS = (                                                             # spoils.py: the plugin scores that gave gold
-    "attack_ticks",                                                    # (the world keeps the scores, #2513)
-    "kills",
+    "kills",                                                           # (the world keeps the scores, #2513)
     "unit_kills",                                                      # the kills of enemy units for a policy (#2512)
 )
 TOGGLES = (                                                            # the choices of the player (#2537):
@@ -173,6 +175,8 @@ NOT_SAVED = (                                                          # the fie
     "attacked_hp",                                                     # scenario.attacked: a load reads the hit points again
     "attacked_sent",                                                   # scenario.attacked: a load sets the same score again
     "bar",                                                             # bossbar.py: the shown unit
+    "bastion_hp",                                                      # regen.buildings: the fractions of a hit point (a load loses less than 1 hp)
+    "bastion_time",                                                    # regen.buildings: a tick timer
     "book_at",                                                         # scenario.py: the next check time (the world keeps the tags)
     "bots",                                                            # run.play makes the bots again
     "capture",                                                         # herd.py: a tick timer
@@ -239,6 +243,7 @@ NOT_SAVED = (                                                          # the fie
     "tech_state_at",                                                   # scenario.py: the next check time
     "tech_state_sent",                                                 # scenario.tech_states: a load sends them again
     "trade_sent",                                                      # scenario.trading: a load sends them again
+    "unit_aura_time",                                                  # regen.py: a tick timer of the monk aura (#4366)
     "unlock_speed",                                                    # run.py: from the saved settings
     "unselectable",                                                    # scenario.selection: the world keeps the tags, the next check reads them
     "victory",                                                         # run.py: from the saved settings
@@ -298,6 +303,8 @@ def dump(g):
                     for x in sides(g)}}
     for b in bots(g):
         d["players"][str(b.g.player)]["bot"] = {f: getattr(b, f) for f in BOT}
+        if getattr(b, "script", None):                                 # the rules come from the .per file again (#4575)
+            d["players"][str(b.g.player)]["bot"]["script"] = script_state(b.script)
     if getattr(g.game, "settings", None):
         d["settings"] = dict(g.game.settings)
     if getattr(g.game, "treaty", 0):                                   # treaty.start: the time goes on (#2409)
@@ -308,6 +315,12 @@ def dump(g):
     import recap                                                       # recap imports train, which imports savegame
     d["game_time"] = round(recap.game_time(g), 3)                      # the game seconds: a pause keeps them (#3377)
     return d
+
+
+def script_state(s):
+    """The state of a per.Script: JSON keys are strings, so the goals and timers are [id, value] pairs."""
+    return {"goals": sorted(map(list, s.goals.items())), "timers": sorted(map(list, s.timers.items())),
+            "off": sorted(s.off), "sn": dict(sorted(s.sn.items())), "attacking": s.attacking}
 
 
 def owner_record(g):
@@ -547,6 +560,15 @@ def orders_again(x, p):
     train.sidebar(x)
 
 
+def modes_again(x, p):
+    """The units in melee mode (stance.switch_mode, #4504) get its values, weapon and goals again."""
+    import stance
+    for u, mode in sorted(vars(x).get("unit_modes", {}).items()):
+        if (name := x.soldiers.get(u)) is not None:
+            for c in filter(None, stance.mode_commands(x, u, name, mode)):
+                x.command(c)
+
+
 def relics_again(g, d):
     """The one relic list, in place: the sides share the list (#3116)."""
     if (rs := relics(d, sides(g))) is not None:
@@ -555,10 +577,17 @@ def relics_again(g, d):
 
 
 def bots_again(g, d):
-    """The attack time and wave, the foe and the difficulty of each bot go on (#2325, #4022)."""
+    """The attack time and wave, the foe, the difficulty and the AI script state of each bot go on (#2325, #4022,
+    #4575)."""
     import bot as ai
     for b in bots(g):
         for f, v in d["players"].get(str(b.g.player), {}).get("bot", {}).items():
+            if f == "script":
+                if getattr(b, "script", None):                         # a bot with no script now ignores the state
+                    sc = b.script
+                    sc.goals, sc.timers = dict(map(tuple, v["goals"])), dict(map(tuple, v["timers"]))
+                    sc.off, sc.sn, sc.attacking = set(v["off"]), dict(v["sn"]), v["attacking"]
+                continue
             if f == "difficulty" and v != b.difficulty:                # the work rate of the saved level (bot.Bot)
                 r = ai.LEVELS[b.difficulty]["gather"] / ai.LEVELS[v]["gather"]
                 b.g.chop = {k: s * r for k, s in b.g.chop.items()}
@@ -605,6 +634,7 @@ SIDE_STEPS = (                                                          # load()
     map_again,
     explored_again,
     known_again,
+    modes_again,
     orders_again,                                                       # last: the sidebars show the loaded state
 )
 GAME_STEPS = (                                                          # load(): once for the game, after SIDE_STEPS

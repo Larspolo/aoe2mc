@@ -1,6 +1,6 @@
 # Environment
 
-The project part of the cloud environment of aoe2mc. `docs/STEERING.md` (generic) points here (#1900).
+The project part of the cloud environment of aoe2mc. `framework/docs/STEERING.md` (generic) points here (#1900).
 
 ## Network
 
@@ -11,7 +11,7 @@ tests (#12), the Paper and Gradle hosts for the game program and its plugin.
 When a ticket needs a new host:
 1. Add the host to `scripts/allowed-domains.txt` in the PR of the ticket (one line, no other change).
 2. Make a `needs-human` ticket (P1, size:S, `## For the owner`, Kind: setting) that asks the owner to paste the whole
-   file again (the steps of `docs/STEERING.md`, section "Network for the tests"), if no open ticket asks it already.
+   file again (the steps of `framework/docs/STEERING.md`, section "Network for the tests"), if no open ticket asks it already.
 3. Until the owner pasted it, the host is blocked: continue with other work.
 
 A `needs-human` ticket that only one account can do (a setup script or a host of its cloud environment) also

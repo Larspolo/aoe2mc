@@ -22,8 +22,8 @@ def call(seconds, uid, command):
 
 
 def test_the_setup_is_the_time_from_the_start_to_the_first_won_claim():
-    recs = [{"type": "user", "timestamp": at(0)}, call(30, "a", "python3 tools/cycle_start.py"),
-            call(90, "b", "python3 tools/claim.py 7 --or 8"),
+    recs = [{"type": "user", "timestamp": at(0)}, call(30, "a", "python3 framework/tools/cycle_start.py"),
+            call(90, "b", "python3 framework/tools/claim.py 7 --or 8"),
             {"type": "user", "timestamp": at(95), "message": {"content": [
                 {"type": "tool_result", "tool_use_id": "b", "content": "#7 owned by another run\nclaimed claim/8"}]}}]
     assert tokens.run_data(recs)["setup"] == 1.5

@@ -1,4 +1,4 @@
-"""The log of the status comments on the branch `metrics` (#1983): `tools/metrics_log.py` and its use in health.py."""
+"""The log of the status comments on the branch `metrics` (#1983): `framework/tools/metrics_log.py` and its use in health.py."""
 import datetime
 import json
 import subprocess

@@ -16,8 +16,8 @@ def test_each_file_once_and_real():
 
 
 def test_comments_blank_lines_and_globs():
-    got = bootstrap.generic("# tools\n\ntools/claim.py\n  # more\ntests/test_framework_*.py\n")
-    assert got == ["tools/claim.py", "tests/test_framework_files.py"]
+    got = bootstrap.generic("# tools\n\nframework/tools/claim.py\n  # more\ntests/test_framework_*.py\n")
+    assert got == ["framework/tools/claim.py", "tests/test_framework_files.py"]
 
 
 def test_the_table_of_the_system_doc_holds_no_generic_file():

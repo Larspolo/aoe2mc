@@ -13,6 +13,7 @@ The boss bar of the selected unit shows a stance other than aggressive (bossbar.
 import json
 import math
 
+import abilities
 import autoscout
 import bossbar
 import menu as chest
@@ -32,6 +33,7 @@ GUARD = FOLLOW + 1                                                 # slot: guard
 DELETE = GUARD + 1                                                 # slot: kill the selected own units (#3451)
 AUTO_SCOUT = DELETE + 1                                            # slot: explore the map by itself, scouts only (#3703)
 ATTACK_GROUND = AUTO_SCOUT + 1                                     # slot: siege units shoot at a clicked point (#4079)
+MODE = ATTACK_GROUND + 1                                           # slot: switch the melee and ranged mode, the Ratha (#4504)
 SCOUT_NAMES = {scout.CAVALRY, *scout.SCOUTS.values()}              # the unit names that get the item
 FORMATION = 18                                                     # third row: the four formations of AoE2 (#3416)
 FORMATIONS = (("Line", "rail", "Units in rows across the walk"),
@@ -60,6 +62,7 @@ def items(g, uuid):
          (DELETE, "tnt", "Delete", "Kills the selected units")] + \
         ([(AUTO_SCOUT, "filled_map", "Auto Scout", "Explores the map by itself")] if getattr(g, "soldiers", {}).get(uuid) in SCOUT_NAMES else []) + \
         [(ATTACK_GROUND, "fire_charge", "Attack Ground", "Siege units shoot at a point on the ground")] + \
+        mode_items(g, uuid) + \
         [(FORMATION + i, item, k, text + "\nNow" * (k == form)) for i, (k, item, text) in enumerate(FORMATIONS)]
 
 
@@ -87,12 +90,56 @@ def open_menu(g, player, uuid):
                 vars(g).setdefault("ordering", {})[p] = "attack_ground"                     # the next right click picks the point
             else:
                 g.command(f"title {p} actionbar " + json.dumps({"text": packed_hint(g) or "No unit can attack the ground"}))
+        elif slot == MODE and mode_items(g, uuid):
+            switch_mode(g, "ranged" if vars(g).get("unit_modes", {}).get(uuid) == "melee" else "melee")
         elif FORMATION <= slot < FORMATION + len(FORMATIONS):
             form(g, p, FORMATIONS[slot - FORMATION][0])
         else:
             return
         chest.close(g, p)
     return chest.show(g, player, "Stance", items(g, uuid), choose)
+
+
+def mode_items(g, uuid):
+    """The mode item of the menu, only for a unit with a melee mode (combat.MELEE_MODE, the Ratha, #4504)."""
+    import combat                                                  # combat imports gather, gather imports this module
+    if getattr(g, "soldiers", {}).get(uuid) not in combat.MELEE_MODE:
+        return []
+    melee = vars(g).get("unit_modes", {}).get(uuid) == "melee"
+    return [(MODE, "bow" if melee else "iron_sword", "Ranged Mode" if melee else "Melee Mode",
+             "Shoots from its range" if melee else "Fights in melee, hurts the units near the target")]
+
+
+def switch_mode(g, mode):
+    """Put each selected unit with a melee mode into mode ("melee" or "ranged", the start): g.unit_modes, its values, its
+    weapon (a skeleton with a sword takes the vanilla melee goal, one with a bow shoots) and its range goal."""
+    import combat                                                  # combat imports gather, gather imports this module
+    modes = vars(g).setdefault("unit_modes", {})
+    for u in sorted(g.selected):
+        name = g.soldiers.get(u)
+        if name not in combat.MELEE_MODE:
+            continue
+        for c in filter(None, mode_commands(g, u, name, mode)):
+            g.command(c)
+        if mode == "melee":
+            modes[u] = "melee"
+        else:
+            modes.pop(u, None)
+
+
+def mode_commands(g, u, name, mode):
+    """The commands that put unit u (AoE2 name) into mode: aoe stats, the weapon, the range goal and the trample."""
+    import combat
+    import train
+    s = train.stats(g, name, u)
+    melee = mode == "melee"
+    weapon = "iron_sword" if melee else "bow"
+    t = combat.MELEE_MODE[name]["trample"] if melee else {"part": 0, "radius": 0}
+    return [combat.stats_command(u, name, combat.melee_mode(name, s) if melee else s),
+            f"execute as {u} if entity @s[type=skeleton] run item replace entity @s weapon.mainhand with {weapon}",
+            f"execute as {u} on passengers if entity @s[type=skeleton] run item replace entity @s weapon.mainhand with {weapon}",
+            f"aoe range {u} off" if melee else combat.range_command(u, name, g.map.T, s=s),
+            abilities.trample.command(u, name, g.map.T, t)]
 
 
 def put(g, s):

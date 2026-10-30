@@ -110,7 +110,7 @@ turns the skip off (about 1 s more).
 
 The converter reads `.aoe2record`, `.mgz` (UserPatch), `.mgx` (AoC) and `.mgl` (AoK). `--at` needs the
 timeline: for a game without one it stops with "mgz cannot read the commands of this recorded game". Only
-`hd-4.6` is in `samples/`: the other records are larger than 1 MB (`tools/health.py`).
+`hd-4.6` is in `samples/`: the other records are larger than 1 MB (`framework/tools/health.py`).
 
 ### Team games (#1190)
 
@@ -286,3 +286,5 @@ Moved from `docs/LEARNINGS.md` (improve run, 2026-10-26).
 - `Replay.census()` runs only with `Replay(..., ai=True)` and `run(..., bar=True)` (as `run.py --replay`): a test of the losses (`fallen`, `lost`) with a fake census needs both, else it never asks the fake (#3843). In `de-64.3` the first archers of player 2 come after 15:00.
 - `Replay.jump()` has its own event loop: an event kind that `commands()` handles for the state (estimate, rates, ages) must also go into `jump()`, else a `--from` start loses it (#4162: trades and tributes).
 - A count of the commands of a record by plain `mgz` misses the DE_QUEUE commands (ERROR, 2 in the first 5 minutes of `de-64.3`): patch the reader as `read_timeline` does (`de_queue`, `new_saves`, `own_selection`, #3842).
+- The offline replay (`Replay(Fake(), ...)`) has no fights: a villager that dies in the game stays in `units` and counts as idle to the end. In `de-64.3` 60 to 70 % of the offline idle time goes to villagers with no later record command, and player 1 has 221 units at 44:00 (cap 200). Measure the idle time of the live summary on Paper (`tools/replay_drift.py`, the census buries the dead, #3885, #4063).
+- `aoe2mc.name_timeline` writes the names into the events of the timeline: a measure script that calls it before `Replay(...)` changes the replay (#4063: P1 idle time 204 → 152 min). Since #4063 the summary counts the idle time of a villager only up to its next record command (`Replay.told`).

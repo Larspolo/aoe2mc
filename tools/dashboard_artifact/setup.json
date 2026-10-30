@@ -25,34 +25,34 @@
   "group": "Runs",
   "when": "A cycle every 10 minutes (GitHub workflow pacer.yml)",
   "does": "A script with no Claude session. Reads the 5-hour and 7-day usage and starts 0 to 8 new runs through the API triggers of the tasks, so that usage follows the target: the lane runs (haiku, deep) for their ready tickets and the refill first, then Opus runs",
-  "where": ".github/workflows/pacer.yml, tools/pacer.py, tools/usage.py --fire"
+  "where": ".github/workflows/pacer.yml, framework/tools/pacer.py, framework/tools/usage.py --fire"
  },
  {
   "part": "Quota target",
   "group": "Rules",
   "when": "Each pacer cycle",
-  "does": "90 % of the 5-hour window 2 hours before the reset, then 98 % at the reset; the 7-day window limits it too when week_guard in agent.toml is true (now true). The target counts Opus runs: a lane run counts its weight (agent.toml weights, measured by tools/health.py)",
-  "where": "tools/usage.py"
+  "does": "90 % of the 5-hour window 2 hours before the reset, then 98 % at the reset; the 7-day window limits it too when week_guard in agent.toml is true (now true). The target counts Opus runs: a lane run counts its weight (agent.toml weights, measured by framework/tools/health.py)",
+  "where": "framework/tools/usage.py"
  },
  {
   "part": "Model lanes",
   "group": "Rules",
   "when": "When a run writes a ticket, and each pacer cycle",
   "does": "The ticket skill gives each ticket the cheapest lane that does it right at the first try: lane:haiku when the body leaves nothing to decide (also when unsure), no label for the main runs, lane:deep when a wrong answer can pass the tests (about 10 to 20 %). The main runs never take a ticket of a reserved lane",
-  "where": ".claude/skills/ticket (Model lanes), agent.toml [pacing] weights, tools/health.py lane_weights"
+  "where": ".claude/skills/ticket (Model lanes), agent.toml [pacing] weights, framework/tools/health.py lane_weights"
  },
  {
   "part": "Claims",
   "group": "Rules",
   "when": "Each run, a beat every few minutes",
   "does": "A run locks its ticket with the ref claim/N and beats it; a claim without a beat for 25 minutes is free again",
-  "where": "tools/claim.py"
+  "where": "framework/tools/claim.py"
  },
  {
   "part": "Queue refill",
   "group": "Rules",
   "when": "When fewer tickets are ready than runs",
-  "does": "Makes new tickets from the open epics, at most 2 × runs − ready (12 at most); closes finished epics; only deep runs do it (tools/claim.py --refill)",
+  "does": "Makes new tickets from the open epics, at most 2 × runs − ready (12 at most); closes finished epics; only deep runs do it (framework/tools/claim.py --refill)",
   "where": ".claude/skills/autopilot (step 5)"
  },
  {
@@ -60,14 +60,14 @@
   "group": "Rules",
   "when": "When the epics have no work left; a review once per 2 hours (a lock)",
   "does": "Turns the missing features of the three goals into new epics",
-  "where": "steering/project/ROADMAP.md, .claude/skills/roadmap, tools/claim.py 0 --roadmap (deep runs only)"
+  "where": "steering/project/ROADMAP.md, .claude/skills/roadmap, framework/tools/claim.py 0 --roadmap (deep runs only)"
  },
  {
   "part": "Process review",
   "group": "Rules",
   "when": "A time-slot lock: one review per 45 minutes; a slot without a large loss doubles (up to 6 hours)",
   "does": "Looks at the whole system (how runs start, the loop, time and quota, quality, weak spots, reuse); changes one thing only when a loss is above its threshold, and checks the last change",
-  "where": ".claude/skills/improve, tools/claim.py 0 --review, tools/health.py (deep runs only)"
+  "where": ".claude/skills/improve, framework/tools/claim.py 0 --review, framework/tools/health.py (deep runs only)"
  },
  {
   "part": "Release bar",
@@ -81,14 +81,14 @@
   "group": "Rules",
   "when": "Read by each tool",
   "does": "The project values (owner, repository, commands, labels) in one file, so that the system can run another project",
-  "where": "agent.toml, tools/agent_config.py"
+  "where": "agent.toml, framework/tools/agent_config.py"
  },
  {
   "part": "Bootstrap",
   "group": "Rules",
   "when": "Once, for a new project",
   "does": "Copies the generic parts to a new repository and prints the setup steps that only the owner can do",
-  "where": "tools/bootstrap.py, docs/SYSTEM.md"
+  "where": "framework/tools/bootstrap.py, framework/docs/SYSTEM.md"
  },
  {
   "part": "Decision tickets",
@@ -102,7 +102,7 @@
   "group": "Owner",
   "when": "Any time",
   "does": "Issues and comments by Larspolo; priorities P0 to P3; the label muted parks a ticket; the label paused on the status issue stops all runs",
-  "where": "docs/STEERING.md"
+  "where": "framework/docs/STEERING.md"
  },
  {
   "part": "CI quick",
@@ -129,7 +129,7 @@
   "part": "Unconflict",
   "group": "GitHub Actions",
   "when": "Every 20 minutes",
-  "does": "Merges main into PRs with a conflict, or labels them conflict; a run merges main in one call with tools/merge_main.py",
+  "does": "Merges main into PRs with a conflict, or labels them conflict; a run merges main in one call with framework/tools/merge_main.py",
   "where": ".github/workflows/unconflict.yml"
  },
  {

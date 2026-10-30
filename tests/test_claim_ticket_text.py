@@ -1,4 +1,4 @@
-"""tools/claim.py: a won claim prints the ticket and its comments, so that the run needs no extra API call (#3459)."""
+"""framework/tools/claim.py: a won claim prints the ticket and its comments, so that the run needs no extra API call (#3459)."""
 import claim
 
 
@@ -17,7 +17,7 @@ def test_the_calls_of_a_transcript_by_phase_label_and_pair():
     import tokens
     rec = lambda tid, cmd: {"type": "assistant", "message": {"id": tid, "content": [
         {"type": "tool_use", "id": tid, "name": "Bash", "input": {"command": cmd}}]}}
-    ph, lab, pairs = tokens.calls([rec("a", "python3 tools/claim.py 5"), rec("b", "gh api repos/x/issues/5"),
-                                   rec("c", "python3 tools/claim.py 6"), rec("d", "gh api repos/x/issues/6")])
+    ph, lab, pairs = tokens.calls([rec("a", "python3 framework/tools/claim.py 5"), rec("b", "gh api repos/x/issues/5"),
+                                   rec("c", "python3 framework/tools/claim.py 6"), rec("d", "gh api repos/x/issues/6")])
     assert ph["claim"] == 2 and sum(ph.values()) == 4
     assert lab["Bash claim.py"] == 2 and pairs[("Bash claim.py", "Bash gh api")] == 2

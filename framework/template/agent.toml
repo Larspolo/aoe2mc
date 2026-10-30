@@ -1,4 +1,4 @@
-# Project values of the agent system (#905). The tools in tools/ read this file (tools/agent_config.py).
+# Project values of the agent system (#905). The tools in tools/ read this file (framework/tools/agent_config.py).
 
 repo = "{repo}"
 owner = "{owner}"
@@ -17,7 +17,7 @@ slow = "python3 -m pytest -m slow"
 server = ""
 
 [docs]
-system = "docs/SYSTEM.md"
-steering = "docs/STEERING.md"
+system = "framework/docs/SYSTEM.md"
+steering = "framework/docs/STEERING.md"
 learnings = "docs/LEARNINGS.md"
 roadmap = "steering/project/ROADMAP.md"

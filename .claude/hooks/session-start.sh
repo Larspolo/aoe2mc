@@ -3,9 +3,9 @@
 set -euo pipefail
 
 # The merge driver of game/data/*.jsonl (.gitattributes, #2004): merge the lines by "name", not by union. Also local.
-# A copy in the git directory: an older branch that merges main does not have tools/merge_jsonl.py in its tree.
+# A copy in the git directory: an older branch that merges main does not have framework/tools/merge_jsonl.py in its tree.
 ( cd "${CLAUDE_PROJECT_DIR:-.}" && gd=$(git rev-parse --path-format=absolute --git-common-dir) &&
-  cp tools/merge_jsonl.py "$gd/" && git config merge.jsonl.driver "python3 $gd/merge_jsonl.py %O %A %B" ) || true
+  cp framework/tools/merge_jsonl.py "$gd/" && git config merge.jsonl.driver "python3 $gd/merge_jsonl.py %O %A %B" ) || true
 
 # The Bash tool of a cloud session has no TMPDIR: "$TMPDIR/x.py" was "/x.py" (#2032).
 if [ -n "${CLAUDE_ENV_FILE:-}" ] && [ -z "${TMPDIR:-}" ]; then
@@ -20,7 +20,7 @@ if [ -n "${CLAUDE_ENV_FILE:-}" ] && [ -x "$JDK25/bin/javac" ] && [ "${JAVA_HOME:
 fi
 
 # The Claude account of the run (#4236, docs/COLLABORATORS.md): the variable AGENT_ACCOUNT of the cloud environment
-# of each collaborator. tools/claim.py, tools/report.py and tools/usage.py write it into their lines.
+# of each collaborator. framework/tools/claim.py, framework/tools/report.py and framework/tools/usage.py write it into their lines.
 if [ -n "${AGENT_ACCOUNT:-}" ]; then
   ( cd "${CLAUDE_PROJECT_DIR:-.}" && git config aoe2mc.account "$AGENT_ACCOUNT" ) || true
 fi
@@ -51,5 +51,5 @@ if [ "$have" != "$want" ] && { [ "$have" != none ] || [ -n "$missing" ]; }; then
   echo "aoe2mc: the cloud environment runs setup script version $have, scripts/cloud-setup.sh is version $want" \
        "(missing:${missing:- none})." \
        "If no open ticket asks the owner to paste it, make one (needs-human, P1, size:S) with the steps" \
-       "of docs/STEERING.md, section 'Setup script (faster start)'."
+       "of framework/docs/STEERING.md, section 'Setup script (faster start)'."
 fi

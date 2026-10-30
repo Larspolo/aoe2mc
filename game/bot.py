@@ -44,6 +44,7 @@ import conquest  # noqa: E402
 import garrison  # noqa: E402
 import gather  # noqa: E402
 import herd  # noqa: E402
+import per  # noqa: E402
 import scout  # noqa: E402
 import table  # noqa: E402
 import train  # noqa: E402
@@ -81,14 +82,16 @@ class Bot:
     order = ORDER                                                      # the buildings after the houses (build)
 
     def __init__(self, game, data, player=2, share=None, villagers=20, attack=ATTACK, foe=1, group=None,
-                 difficulty="standard", own=None, **kw):
+                 difficulty="standard", own=None, script=None, **kw):
         """share: the Gather of the human player. Both then use the same trees, bushes and mines.
         villagers: the bot trains villagers up to this number, then soldiers.
         attack: the game time (AoE2 seconds) of the first attack on player foe, times the "attack" of the difficulty.
         group: the soldiers of the first wave (default: the "soldiers" of the difficulty); until then they stay at
         their buildings (#1051). difficulty: a name of LEVELS (#2661).
         own: the Gather of a person that the bot plays for (tools/play_check.py drives player 1, #3324): its run()
-        steps it, so the bot only gives orders (orders()), and share is the Gather of the foe."""
+        steps it, so the bot only gives orders (orders()), and share is the Gather of the foe.
+        script: the rules of an AoE2 AI script (per.parse, run.py --ai, #4529): they train, build and research in place
+        of age_up(), research(), recruit() and the build order."""
         level = LEVELS[difficulty]
         self.g = own or gather.Gather(game, data, player=player, **kw)
         self.g.chop = {k: s / level["gather"] for k, s in self.g.chop.items()}   # seconds per unit: work_time
@@ -115,6 +118,7 @@ class Bot:
         self.guards = {}                                               # soldier -> (enemy in the town, its place before)
         self.g.work_on = False                                         # the bot gives the tasks after a build or a tree (#3271)
         self.scouted = False                                           # the start scouts get Auto Scout once (#3704)
+        self.script = None if script is None else per.Script(script, self)
 
     def setup(self):
         """Find the villagers of the player (the entities must be loaded) and make the objective of the resources."""
@@ -206,14 +210,19 @@ class Bot:
         self.move(share, work)
         self.spend()
         self.time += g.tick * gather.NORMAL
-        if self.time >= self.attack and self.time >= self.looked + LOOK:   # each look costs RCON commands
+        due = self.script.attacking if self.script else self.time >= self.attack   # a script: attack-now (#4530)
+        if due and self.time >= self.looked + LOOK:   # each look costs RCON commands
             self.looked = self.time
             self.fight()
 
     def spend(self):
         """Spend the resources above keep(): the next age, then the technologies, then the units. The AoE2 AI
         researches its economy technologies before more soldiers: else each soldier takes the food above the reserve,
-        and the bot never has the food of a technology (#4285: 2 technologies in 30 minutes)."""
+        and the bot never has the food of a technology (#4285: 2 technologies in 30 minutes).
+        A script: one pass of its rules in each step (AoE2 checks them about 4 times each second, #4529)."""
+        if self.script:
+            self.script.step()
+            return
         self.age_up()
         self.research()
         self.recruit()
@@ -317,6 +326,8 @@ class Bot:
         the army, a resource whose stock is SPARE above the needs of the bot (needs) gets no share, and the other
         shares grow: the AoE2 AI scripts change their gatherer percentages by the stock, else 4 villagers mine 1000
         gold that nothing takes while the economy technologies wait for wood (#4285)."""
+        if self.script and (pct := self.script.percent()):            # the gatherer percentages of the script (#4530)
+            return pct
         unit = len(self.g.villagers) >= self.villagers and self.army()
         if not unit:
             return SHARE
@@ -366,8 +377,12 @@ class Bot:
         mine = g.positions(sorted(u for u, n in g.soldiers.items() if combat.stats(n).attack))   # a dead soldier
                                                                        # is not in it, a transport ship has no attack
         self.wave = getattr(self, "wave", set()) & mine.keys()           # the soldiers of the running wave
-        if len(mine.keys() - self.wave) >= self.group:                 # the new soldiers wait for a full wave (#3953)
-            self.wave |= mine.keys()
+        group, most = self.group, 0
+        if self.script:                                                # the attack group sizes of the script (#4530)
+            group = self.script.number("sn-minimum-attack-group-size")
+            most = self.script.number("sn-maximum-attack-group-size")
+        if len(new := sorted(mine.keys() - self.wave)) >= group:       # the new soldiers wait for a full wave (#3953)
+            self.wave |= set(new[:most] if most else new)
         self.charged = bool(self.wave)
         self.retarget()
         if not self.charged or self.foe is None:                      # no enemy: no attack (#3107)
@@ -483,16 +498,28 @@ class Bot:
     def recruit(self):
         """Keep QUEUED units in the queue of each training building: villagers at the town centers up to
         self.villagers, and the first military unit of the age at the other buildings, when the resources are there.
-        A town center comes first: the villagers get the resources first."""
-        g, keep = self.g, self.keep()
+        A town center comes first: the villagers get the resources first. Soldiers keep reserve(): else each soldier
+        takes the gold above keep(), and the bot never has the cost of its next technology (#4495)."""
+        g, keep, army = self.g, self.keep(), self.reserve()
         for rect, name in sorted(train.homes(g).items(), key=lambda kv: (kv[1] != "TOWN_CENTER", kv[0])):
             more = len(g.villagers) + sum(e["name"] == "VILLAGER_MALE" for q in g.queues.values() for e in q)
             units = ["VILLAGER_MALE"] if name == "TOWN_CENTER" else self.soldiers(name)
+            hold = keep if name == "TOWN_CENTER" else army
             for n in units[:1]:
                 while len(g.queues.get(rect, [])) < QUEUED and (n != "VILLAGER_MALE" or more < self.villagers) \
-                        and all(g.stock[r] >= v + keep.get(r, 0) for r, v in train.price(g, n).items()) \
+                        and all(g.stock[r] >= v + hold.get(r, 0) for r, v in train.price(g, n).items()) \
                         and train.queue(g, self.nobody, (rect[0], rect[2]), n):
                     more += n == "VILLAGER_MALE"
+
+    def reserve(self):
+        """keep() and the cost of the first technology of wanted() whose building has a free queue: the AoE2 AI saves
+        for its next technology before it trains more soldiers (#4495)."""
+        g, need = self.g, dict(self.keep())
+        busy = {rect for rect, q in g.queues.items() if any(e["name"] in train.TECHS for e in q)}
+        n = next((n for rect, n in self.wanted() if rect not in busy), None)
+        for r, v in (train.price(g, n) if n else {}).items():
+            need[r] = need.get(r, 0) + v
+        return need
 
     def soldiers(self, name):
         """The military units that building name trains now (recruit trains the first one)."""
@@ -568,12 +595,15 @@ class Bot:
 
     def build(self):
         """Start the next house, farm or building of ORDER when the bot can pay for it and no site of it is unfinished.
-        A farm when no food source is left at its base (#1026, #1810), at most one for each food villager of the shares."""
+        A farm when no food source is left at its base (#1026, #1810), at most one for each food villager of the shares.
+        A bot with a script only finds builders for its open sites."""
         g = self.g
         if open_ := [s for s in g.sites if not s.get("done")]:           # one site at a time
             for site in open_:                                         # its builder left or died (#1121)
                 if g.villagers and not any(v.site is site and v.state != "idle" for v in g.villagers.values()):
                     self.builder(site)
+            return
+        if self.script:                                                # the script builds (per.Script.act, #4529)
             return
         cap, have = train.limit(g), train.owned(g)
         farms = sum(k > 0 for t, k in g.map.farms.items() if t in g.map.own_farms)

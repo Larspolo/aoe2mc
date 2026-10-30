@@ -1,4 +1,4 @@
-"""tools/cycle_start.py names a closed "Fix main" ticket also in a shallow clone, many hours after the fix (#3305)."""
+"""framework/tools/cycle_start.py names a closed "Fix main" ticket also in a shallow clone, many hours after the fix (#3305)."""
 import subprocess
 
 import cycle_start as start

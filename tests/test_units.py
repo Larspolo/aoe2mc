@@ -10,7 +10,7 @@ from AoE2ScenarioParser.datasets.units import UnitInfo
 import aoe2mc
 import mcvalid
 import units
-from conftest import entity_ids
+from entities import entity_ids
 
 NAMES = sorted({(u.name, False) for u in UnitInfo} | {(h.name, True) for h in HeroInfo})
 

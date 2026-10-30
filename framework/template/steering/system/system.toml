@@ -1,12 +1,12 @@
-# The owner's settings of the agent system (tools/agent_config.py joins them with agent.toml).
+# The owner's settings of the agent system (framework/tools/agent_config.py joins them with agent.toml).
 
 [pacing]
-max_runs = 16                   # the most runs at one time (tools/usage.py)
+max_runs = 16                   # the most runs at one time (framework/tools/usage.py)
 max_waiting_prs = 10            # flow brake: at this many old agent PRs the pacer starts only 1 repair run
 max_ci_queue = 5                # flow brake: at this many queued CI runs the pacer starts no run
 weights = { haiku = 0.25 }     # a lane run in Opus runs (start value)
-pacer = "workflow"              # pacer.yml starts the runs (tools/pacer.py); another value stops its loop
-trigger = ""                    # the ID of the scheduled task "NAME autopilot": docs/OPERATOR.md, section 3
+pacer = "workflow"              # pacer.yml starts the runs (framework/tools/pacer.py); another value stops its loop
+trigger = ""                    # the ID of the scheduled task "NAME autopilot": framework/docs/OPERATOR.md, section 3
 
 [review]                        # the process review (`improve` skill): merged PRs, never hours
 gap = 80                        # merged PRs: the first gap, and the reset when the result of the reviews turns

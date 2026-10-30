@@ -10,6 +10,11 @@ The Achaemenid Military Town Center (military, #2496): the own military units wi
 per AoE2 minute and walk 15 % faster (the "aura" of its line in game/data/train.jsonl, train.ONE_BUILDING).
 The heroes (heroes, #2688): an own unit with the key "regen" of data/units.jsonl (combat.REGEN: Attila the Hun and
 Alaric the Goth of Battle Royale, 30 hit points per AoE2 minute) regenerates in each civilization and age.
+The unit aura (units, #4366): after a technology with the key "unit_aura" of data/train.jsonl (Bimaristan), each own unit
+of its group "from" heals the allied units of its "group" within its "range" tiles by its "rate" per AoE2 minute; not
+itself, and several auras do not add up (the largest rate).
+The buildings (buildings, #4334): after a technology with the key "building_regen" of data/train.jsonl (Fortified
+Bastions), the own complete buildings of its list regain its "rate" hit points per AoE2 minute (repair.hp).
 
 Minecraft feature: the same Health change as the monk heal (monk.py). The `regeneration` effect is not used: its rates
 (1 health per 50, 25, 12 ... ticks) do not match the AoE2 rates, and the plugin cancels the natural heal of AoE2 units
@@ -31,16 +36,20 @@ def tick(g, dt):
     """Give the own units of g that regenerate (civs.regen) their hit points of dt AoE2 seconds back."""
     import combat                                                  # combat imports gather, gather imports this module
     aura(g, dt)
+    units(g, dt)
     military(g, dt)
     heroes(g, dt)
-    if civs.civ(g) not in civs.REGEN:
+    buildings(g, dt)
+    import train
+    fight = any(t in g.techs for t in train.BY_KEY["combat_regen"])   # Ordo Cavalry (#4334)
+    if civs.civ(g) not in civs.REGEN and not fight:
         return
     g.regen_time = vars(g).get("regen_time", 0.0) + dt
     if g.regen_time < EVERY:
         return
     dt, g.regen_time = g.regen_time, 0.0
     names = {o["uuid"]: o["name"] for o in g.units if o.get("uuid") in g.villagers} | g.soldiers
-    foes = fog.units(g)[1] if any(len(r) > 2 for r in civs.REGEN[civs.civ(g)]) else {}   # only for a radius rule
+    foes = fog.units(g)[1] if fight or any(len(r) > 2 for r in civs.REGEN.get(civs.civ(g), [])) else {}   # a radius
     pos = g.where(set(names) | set(foes)) if foes else {}
     for u, n in sorted(names.items()):
         foe = min((math.dist(pos[u][::2], p[::2]) / g.map.T for f, p in pos.items() if f in foes and u in pos),
@@ -52,6 +61,26 @@ def tick(g, dt):
             new = round(min(h[1], h[0] + rate * dt / 60), 3)
             g.command((repair.crew(u) + "data modify entity @s" if ship else f"data modify entity {u}")
                       + f" Health set value {new}f")
+
+
+def buildings(g, dt):
+    """Give the own buildings of the researched "building_regen" technologies (train.BY_KEY) their hit points of dt AoE2
+    seconds back, up to their full hit points (repair.full)."""
+    import train                                                   # train imports gather, gather imports this module
+    if not (techs := [a for t, a in sorted(train.BY_KEY["building_regen"].items()) if t in g.techs]):
+        return
+    g.bastion_time = vars(g).get("bastion_time", 0.0) + dt
+    if g.bastion_time < EVERY:
+        return
+    dt, g.bastion_time = g.bastion_time, 0.0
+    g.bastion_hp = vars(g).get("bastion_hp", {})                   # the fractions of a hit point
+    for rect, (n, p) in sorted(repair.owners(g).items()):
+        if p != g.player or not (rate := max((a["rate"] for a in techs if n in a["buildings"]), default=0)):
+            continue
+        if (now := repair.hp(g, rect)) is not None and 0 < now < (top := repair.full(g, n, p, rect)):
+            whole = g.bastion_hp.get(rect, 0.0) + rate * dt / 60
+            g.bastion_hp[rect] = whole - math.floor(whole)
+            g.command(f"scoreboard players set {repair.uuid(rect)} aoe_hp {min(top, now + math.floor(whole))}")
 
 
 def heroes(g, dt):
@@ -88,6 +117,29 @@ def aura(g, dt):
     for u, (x, _, z) in sorted(g.where(set(names)).items()):
         rate = max((a["rate"][age] for (x0, x1, z0, z1), a in rects if civs.GROUPS[a["group"]](names[u], combat.stats(names[u]))
                     and x0 - (r := a["range"] * g.map.T) <= x < x1 + r and z0 - r <= z < z1 + r), default=0)
+        if rate and (hp := monk.health(g, u)) and hp[0] < hp[1]:
+            g.command(f"data modify entity {u} Health set value {round(min(hp[1], hp[0] + rate * dt / 60), 3)}f")
+
+
+def units(g, dt):
+    """Heal the allied units near the own units of a researched "unit_aura" technology (train.BY_KEY) for dt AoE2 seconds."""
+    import combat, gather, train                                   # they import gather, gather imports this module
+    if not (auras := [a for t, a in sorted(train.BY_KEY["unit_aura"].items()) if t in g.techs]):
+        return
+    g.unit_aura_time = vars(g).get("unit_aura_time", 0.0) + dt
+    if g.unit_aura_time < EVERY:
+        return
+    dt, g.unit_aura_time = g.unit_aura_time, 0.0
+    names = {}
+    for h in fog.gathers(g):
+        if gather.allied(g.players, g.player, h.player):
+            names |= {o["uuid"]: o["name"] for o in h.units if o.get("uuid") in h.villagers} | h.soldiers
+    src = {(u, i) for i, a in enumerate(auras) for u, n in g.soldiers.items() if civs.GROUPS[a["from"]](n, combat.stats(n))}
+    pos = g.where(set(names) | {u for u, _ in src})
+    for u, (x, _, z) in sorted((u, p) for u, p in pos.items() if u in names):
+        rate = max((a["rate"] for i, a in enumerate(auras) if civs.GROUPS[a["group"]](names[u], combat.stats(names[u]))
+                    and any(m != u and m in pos and math.dist((x, z), pos[m][::2]) <= a["range"] * g.map.T
+                            for m, j in src if j == i)), default=0)
         if rate and (hp := monk.health(g, u)) and hp[0] < hp[1]:
             g.command(f"data modify entity {u} Health set value {round(min(hp[1], hp[0] + rate * dt / 60), 3)}f")
 

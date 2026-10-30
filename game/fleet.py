@@ -279,7 +279,8 @@ def route(g, v):
         v.state = "idle"
         return
     if r["to"] == r["home"]:
-        r["rest"] += trade.gold(trade.center(r["home"], g.map.T), trade.center(r["dock"], g.map.T), g.map.n / g.map.T)
+        r["rest"] += trade.gold(trade.center(r["home"], g.map.T), trade.center(r["dock"], g.map.T), g.map.n / g.map.T) \
+            * civs.value("trade_gold", civs.civ(g), 1)                # Palmyrans +20 % (#4446)
         n, r["rest"] = int(r["rest"]), r["rest"] - int(r["rest"])
         if n:
             g.earn("gold", n)

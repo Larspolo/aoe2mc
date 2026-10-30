@@ -1,6 +1,6 @@
 name: Claims
 
-# Deletes the claim refs (claim/N, claim/N-2 ...) of a closed ticket (tools/claim.py, #211).
+# Deletes the claim refs (claim/N, claim/N-2 ...) of a closed ticket (framework/tools/claim.py, #211).
 # The runs cannot do it: the session proxy gives 403 for branch deletes.
 # It also deletes the comment locks (claim/comment-ID, #320), the review locks (claim/review-*, claim/roadmap-*, #898)
 # and the "Fix main" locks (claim/fixmain-SHA, #3480) older than one day, and the refill locks of closed epics or
@@ -31,4 +31,4 @@ jobs:
       - name: Delete the claim refs of closed tickets and old locks
         env:
           GITHUB_TOKEN: ${{ github.token }}
-        run: python3 tools/claim.py 0 --prune
+        run: python3 framework/tools/claim.py 0 --prune

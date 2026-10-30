@@ -1,4 +1,4 @@
-# Project values of the agent system (#905). The tools in tools/ read this file (tools/agent_config.py), and the
+# Project values of the agent system (#905). The tools in tools/ read this file (framework/tools/agent_config.py), and the
 # skills name it in place of the values. For another repository, change this file. The workflows take the repository
 # from GitHub ($GITHUB_REPOSITORY). The permission rules in .claude/settings.json cannot read a file: change them too.
 
@@ -18,16 +18,16 @@ fast = "python3 -m pytest -n auto"
 slow = "python3 -m pytest -m slow"
 server = "python3 -m pytest -m mc"
 
-[owner_tasks]                   # tools/owner_tasks.py
+[owner_tasks]                   # framework/tools/owner_tasks.py
 play = "Minecraft client"       # a needs-human body with this text is a play test
 replay = '\.aoe2record\b'        # a regex: a ticket with a match goes into the group "replay" of --plan
 
-[lint]                          # tools/health.py counts the lines of this list (#1909)
+[lint]                          # framework/tools/health.py counts the lines of this list (#1909)
 data = "tests/data/game_names_in_code.txt"   # the places of domain data left in the code: only gets shorter
 
 [docs]
-system = "docs/SYSTEM.md"
-steering = "docs/STEERING.md"
+system = "framework/docs/SYSTEM.md"
+steering = "framework/docs/STEERING.md"
 learnings = "docs/LEARNINGS.md"
 roadmap = "steering/project/ROADMAP.md"
 

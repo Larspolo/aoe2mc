@@ -9,7 +9,7 @@ import ci_select  # noqa: E402
 
 def test_a_code_change_runs_all_tests():
     assert ci_select.select(["aoe2mc.py"]) is None
-    assert ci_select.select(["docs/LEARNINGS.md", "tools/claim.py"]) is None
+    assert ci_select.select(["docs/LEARNINGS.md", "framework/tools/claim.py"]) is None
     assert ci_select.select(["game/data/train.jsonl"]) is None
     assert ci_select.select([]) is None
 
