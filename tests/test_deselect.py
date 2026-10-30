@@ -12,6 +12,7 @@ from test_select_type import setup
 def paper():
     server, g = setup()
     g.paper = True                                                     # after setup: no plugin commands to the fake
+    server.entities["Steve"] = {"Pos": (20.5, 64.0, 30.5), "Rotation": (0.0, -90.0)}   # looks at the sky (#4703)
     return server, g
 
 
