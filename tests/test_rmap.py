@@ -82,8 +82,8 @@ def test_unread_sections_and_attributes_give_a_warning():
     _, notes = make(1)
     assert "<OBJECTS_GENERATION> is not read yet" not in notes        # create_object: #3855
     assert "random_placement is not read yet" not in notes            # PLAYER_SETUP: nothing to do here
-    _, notes = make(1, script="<LAND_GENERATION> create_land { terrain_type WATER other_zone_avoidance_distance 3 }")
-    assert notes == ["create_land: other_zone_avoidance_distance is not read yet"]
+    _, notes = make(1, script="<LAND_GENERATION> create_land { terrain_type WATER no_such_attribute 3 }")
+    assert notes == ["create_land: no_such_attribute is not read yet"]
 
 
 def test_errors_name_the_problem():

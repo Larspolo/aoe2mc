@@ -2653,6 +2653,21 @@ class Replay:
         lines = {p: [f"{mmss(t)} {label}" for t, label in self.build_order(p, end)] for p in players}
         return self.book_command("Build order", {p: v for p, v in lines.items() if v})
 
+    def spending_commands(self, end):
+        """A written book "Spending" for each viewer at the end of the replay (#4392, item 4 of #4386): what each player
+        paid up to `end` (ms) by group, with its share of the total. A player with no payment gets no page."""
+        lines = {}
+        for p in sorted(self.spends):
+            spent = self.spent(p, end)
+            total = sum(spent.values())
+            if any(t <= end for t, *_ in self.spends[p]):
+                share = lambda v: round(100 * v / total) if total else 0      # 0 % when nothing was paid
+                lines[p] = [f"{name} {v} ({share(v)} %)" for name, v in
+                            (("Economy", spent["economy"]), ("Military", spent["military"]),
+                             ("Technologies", spent["technologies"]), ("Buildings", spent["buildings"]))]
+                lines[p].append(f"Total {total}")
+        return self.book_command("Spending", lines)
+
     def score_commands(self, t=None):
         """The sidebar commands for the population of each player that changed since the last call (#741). The score
         holder is "P<n>" (a holder name has no space); its display name is the player name in the player color, the
@@ -3118,7 +3133,7 @@ class Replay:
         self.send(self.expire(math.inf) + self.panel(math.inf))
         send(self.clock_commands(end, end, speed, done=True) + self.score_commands() + self.end_commands(end) +
              self.summary_commands() + self.timeline_commands(end) +
-             self.build_order_commands(end))
+             self.build_order_commands(end) + self.spending_commands(end))
         span = (events[-1]["time"] - start) / 1000 / speed if events else 0                 # at the start speed
         return {"events": n, "commands": self.sent, "busy": round(self.busy, 2), "lag": round(lag, 2),
                 "rate": round(self.sent / self.busy) if self.busy else 0, "need": round(self.sent / span) if span else 0}

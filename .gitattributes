@@ -1,5 +1,6 @@
 # Ticket runs only add lines here, so a merge keeps the new lines of both sides; the improve skill cleans up.
 docs/LEARNINGS.md merge=union
+docs/PITFALLS.md merge=union
 # The "Pitfalls" section is the last one of these documents, and runs only add lines there (as in LEARNINGS.md).
 # 21 changes of gameplay.md in 24 hours conflicted with each other at its end (#437).
 docs/research/gameplay.md merge=union
