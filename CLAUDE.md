@@ -2,7 +2,7 @@
 
 aoe2mc converts an Age of Empires II: DE scenario (`.aoe2scenario`) into a Minecraft Java world.
 The owner is **Larspolo** (one person, one Claude Max account). The agent works on the project automatically.
-The owner steers asynchronously through GitHub Issues (see `docs/STEERING.md`). Each login of `owners` in `agent.toml` steers too; `owner` is the tie-breaker (#4229). The whole agent system (parts, locks, pacing, setup): `docs/SYSTEM.md`.
+The owner steers asynchronously through GitHub Issues (see `framework/docs/STEERING.md`). Each login of `owners` in `agent.toml` steers too; `owner` is the tie-breaker (#4229). The whole agent system (parts, locks, pacing, setup): `framework/docs/SYSTEM.md`.
 
 ## Language
 
@@ -24,7 +24,7 @@ The README already uses this style. Keep it.
 | 3D image | `python3 tools/render.py building CASTLE --arch western OUT.png` (`--cut 3`: the rooms inside; or `world OUTWorld X0 Z0 X1 Z1 OUT.png`) |
 | Check states | `tools/mcvalid.py` (`block_error`, `entity_error`, `biome_error`, `sound_error`) |
 | Coverage of AoE2 types | `python3 tools/coverage.py OUT.md` (designs, mappings, fallbacks). Do not commit `docs/coverage.md`: CI on main does it, and `tools/feature_table.py` for `docs/DESIGN.md` |
-| Agent system tools | `health.py`, `operator_check.py`, `feedback.py`, `tokens.py`, `usage.py`, `dashboard.py`, `release.py`: `docs/SYSTEM.md`, "Tools of the system" |
+| Agent system tools | `health.py`, `operator_check.py`, `feedback.py`, `tokens.py`, `usage.py`, `dashboard.py`, `release.py`: `framework/docs/SYSTEM.md`, "Tools of the system" |
 | Server check | `python3 tools/mc_check.py OUTWorld` (headless Minecraft, load errors; `--keep DIR` keeps the saved world), `python3 -m pytest -m mc` |
 | Game program | `python3 game/run.py OUTWorld` (Paper server with RCON, `--server vanilla`: Mojang's; type commands; `--bench N`: commands per second; `--play`: gather resources, `--cheats`: the AoE2 cheat codes in the chat; `--replay [--speed N]`: replay a recorded game) |
 | In-game screenshot | `python3 tools/mc_shot.py OUTWorld OUT.png [--at X Y Z --look YAW PITCH] [--more X,Y,Z,YAW,PITCH]` (real client, ~25 s per world; `mc_shot.Client`: a player on the Paper server that clicks menus; `--player`: adventure mode, a spectator sees invisible mobs) |
@@ -93,7 +93,7 @@ still in the code, add each entry on its own line, in alphabetical order, not at
 **No test checks the content of a data file or a configuration file** (owner, 2026-10-29): a change of a value, a text
 or a setting there must not make a test fail. Test the form of the data and the behavior of the code, with the
 expected value computed from the data or with test data (a fixture, a temporary file).
-A change of data files only adds no test, also when the ticket asks for one (#4242; `tools/ship_pr.py` stops it).
+A change of data files only adds no test, also when the ticket asks for one (#4242; `framework/tools/ship_pr.py` stops it).
 
 ## How to verify
 

@@ -1,4 +1,4 @@
-"""tools/claim.py does not claim a closed issue (#2339): the candidate list can name a ticket that closed seconds ago."""
+"""framework/tools/claim.py does not claim a closed issue (#2339): the candidate list can name a ticket that closed seconds ago."""
 import claim
 from test_claim import clones  # noqa: F401  (fixture)
 

@@ -5,4 +5,4 @@ line-length = 130
 select = ["F"]                  # the copied tools pass these rules; add more rules for the project code
 
 [tool.pytest.ini_options]
-testpaths = ["tests"]
+testpaths = ["tests", "framework/tests"]

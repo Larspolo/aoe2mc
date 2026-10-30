@@ -1,4 +1,4 @@
-"""tools/cycle_start.py turns the first picks of each run, so that parallel runs claim other tickets first (#3832)."""
+"""framework/tools/cycle_start.py turns the first picks of each run, so that parallel runs claim other tickets first (#3832)."""
 import cycle_start as start
 from test_cycle_start import ticket
 

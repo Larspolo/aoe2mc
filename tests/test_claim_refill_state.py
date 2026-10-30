@@ -1,4 +1,4 @@
-"""tools/claim.py --refill: the slot lock of an epic with all sub-issues closed stays after its first new sub-issue
+"""framework/tools/claim.py --refill: the slot lock of an epic with all sub-issues closed stays after its first new sub-issue
 (#3454: the state changed from "4-<slot>" to "4", and a second run made the same sub-issues again)."""
 from test_claim import clones, tool  # noqa: F401 (fixture)
 from test_claim_refill import deep

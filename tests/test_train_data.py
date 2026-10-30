@@ -1,4 +1,4 @@
-"""The menu items of the game program are one JSON line each in game/data/train.jsonl, and tools/merge_jsonl.py merges
+"""The menu items of the game program are one JSON line each in game/data/train.jsonl, and framework/tools/merge_jsonl.py merges
 two new lines (#1702, #2004)."""
 import json
 

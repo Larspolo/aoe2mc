@@ -1,4 +1,4 @@
-"""tools/claim.py stops a run whose ticket closed after the pacer claimed it (#4249): --adopt and --guard exit 1."""
+"""framework/tools/claim.py stops a run whose ticket closed after the pacer claimed it (#4249): --adopt and --guard exit 1."""
 import claim
 from test_claim import clones  # noqa: F401  (fixture)
 

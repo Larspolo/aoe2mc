@@ -1,4 +1,4 @@
-"""tools/tokens.py and tools/health.py: the count of the refused force pushes of the runs (#903, #3461)."""
+"""framework/tools/tokens.py and framework/tools/health.py: the count of the refused force pushes of the runs (#903, #3461)."""
 import health
 import tokens
 

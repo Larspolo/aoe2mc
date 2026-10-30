@@ -15,7 +15,7 @@ The Minecraft client runs only headless: it makes screenshots (level 5). Write t
 
 Never run the full fast suite (`python3 -m pytest` with no test file, owner #4187): the quick CI runs it on each push,
 and Automerge waits for it. Run `ruff check .`, the test files of the change, and the test files of the changed code
-(`grep -l MODULE tests/*.py`; `tools/ship_pr.py` runs this set by itself). Add other test files when you think that
+(`grep -l MODULE tests/*.py`; `framework/tools/ship_pr.py` runs this set by itself). Add other test files when you think that
 the change can break them. Use `-n auto` (`pytest-xdist`, #2415) only for more than about 8 files: a few files start
 faster without it, and do not use it for `-m mc` (each test starts a server). Before #4187, the full runs took 44 %
 of the run minutes (408 of 920 minutes in 100 merged PRs).
@@ -95,7 +95,7 @@ For what only a person can see, make a check ticket with: the scenario or the co
 test world, and exact steps for the owner. An agent runs the check (server, simulated clicks, screenshots), comments
 the results and the images, and lists the points that only a person can check (#580). Then it closes the ticket on
 this evidence with the label `owner-sample`, not `needs-human` (owner decision B, #1708): the owner checks a sample of
-the closed checks later (`human` skill, `tools/owner_tasks.py --sample`).
+the closed checks later (`human` skill, `framework/tools/owner_tasks.py --sample`).
 A check that finds a bug does not go to the owner: make the bug tickets, add "Depends on: #bug" to the check ticket and
 check again when they are closed (#668).
 Example steps: ("Open the world. Stand at X Y Z. Look north. The knight must

@@ -1,4 +1,4 @@
-"""tools/ship_pr.py --hold adds the label hold to the PR at once (#3245)."""
+"""framework/tools/ship_pr.py --hold adds the label hold to the PR at once (#3245)."""
 import ship_pr as ship
 from test_ship_pr import fake_github, repo
 

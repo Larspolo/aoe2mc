@@ -1,4 +1,4 @@
-"""tools/usage.py: below `week_free` of the 7-day usage the runs fill each 5-hour window, above it the weekly guard
+"""framework/tools/usage.py: below `week_free` of the 7-day usage the runs fill each 5-hour window, above it the weekly guard
 counts again (owner, 2026-10-27)."""
 import usage
 

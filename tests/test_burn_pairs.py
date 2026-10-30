@@ -1,4 +1,4 @@
-"""tools/health.py pairs each `Usage:` sample with the first sample 15 minutes later in the same window (#571)."""
+"""framework/tools/health.py pairs each `Usage:` sample with the first sample 15 minutes later in the same window (#571)."""
 import datetime
 
 import health

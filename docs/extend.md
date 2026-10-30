@@ -4,7 +4,7 @@ Read this file before you add a new item, key, setting, mode, plugin command or 
 file (`CLAUDE.md`, "Code style"). Each rule puts the new thing in one line of a data file or a table, so that
 parallel tickets do not change the same lines. Most rules have a check: `tools/data_lint.py`,
 `tests/test_data_files.py`, `tests/test_data_keys.py`, `tests/test_conflict_prone.py` and the merge driver
-`tools/merge_jsonl.py`.
+`framework/tools/merge_jsonl.py`.
 
 - Never test the number of entries of a data table (`len(combat.SIGHT) == 154`): each new line changes it, and parallel
   tickets conflict there (owner, #2008; `tests/test_conflict_prone.py`).
@@ -15,7 +15,7 @@ parallel tickets do not change the same lines. Most rules have a check: `tools/d
   (`combat.damage(a, b) == stats.attack - armor`), with a relation (more with the bonus than without), or with test
   data (a fixture, a temporary file, a monkeypatched table).
 - A new menu item of a building (cost, time, slot, help, age) is one new line in `game/data/train.jsonl`, at the end of
-  its building block (a technology also gets its key `"effect"`: the change of the combat values, `train.effect()`, #2029; a new key of an effect also goes into the set of known keys of `tests/test_tech_effects.py`, #4259): the merge driver `tools/merge_jsonl.py` (`merge=jsonl`, #2004) merges the lines by name (a line that both sides changed: by key and list item, #2064), and `train.load()` stops on a name in two lines (#1702).
+  its building block (a technology also gets its key `"effect"`: the change of the combat values, `train.effect()`, #2029; a new key of an effect also goes into the set of known keys of `tests/test_tech_effects.py`, #4259): the merge driver `framework/tools/merge_jsonl.py` (`merge=jsonl`, #2004) merges the lines by name (a line that both sides changed: by key and list item, #2064), and `train.load()` stops on a name in two lines (#1702).
 - A menu test checks only its own item (`item()` of `tests/menu_line.py`), never the whole menu line: one `order()` test per
   building checks the full menu from the data (#2099).
 - The combat values of a new unit are one new line in `game/data/units.jsonl` (`combat.STATS`, #1912), of a new building
@@ -45,7 +45,7 @@ parallel tickets do not change the same lines. Most rules have a check: `tools/d
   the keys has its tests already. A test belongs only to a change of code, and it uses test data (a monkeypatched
   table, a fixture) or the expected value from the data. When a key or a combination of keys has no test of its code,
   that is a code ticket: one test of the code with test data, not one test per data line (the old
-  `tests/test_techs_*.py` broke this rule and are deleted; `tests/test_tech_effect_code.py`). `tools/ship_pr.py` stops
+  `tests/test_techs_*.py` broke this rule and are deleted; `tests/test_tech_effect_code.py`). `framework/tools/ship_pr.py` stops
   such a change (exit 2).
 - A new command of the Paper plugin: its line in the command list at the top of `AoePlugin.java` and its
   `if` block in `onCommand` go in alphabetical order of the command name, not after the last one (#795 and #813 conflicted).

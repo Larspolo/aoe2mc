@@ -1,4 +1,4 @@
-"""tools/claim.py --fixmain: one run makes the "Fix main" ticket of one break of main (#3480: 8 copies in 6 minutes)."""
+"""framework/tools/claim.py --fixmain: one run makes the "Fix main" ticket of one break of main (#3480: 8 copies in 6 minutes)."""
 import os
 import subprocess
 import sys
@@ -6,7 +6,7 @@ import sys
 import claim
 from test_claim import clones, tool  # noqa: F401 (fixture)
 
-TOOL = os.path.join(os.path.dirname(__file__), "..", "tools", "claim.py")
+TOOL = os.path.join(os.path.dirname(__file__), "..", "framework", "tools", "claim.py")
 
 
 def test_one_run_makes_the_fix_main_ticket(clones):  # noqa: F811

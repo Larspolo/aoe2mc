@@ -1,4 +1,4 @@
-"""tools/usage.py: `week_guard` of `agent.toml` turns the weekly guard on and off (owner, 2026-10-28)."""
+"""framework/tools/usage.py: `week_guard` of `agent.toml` turns the weekly guard on and off (owner, 2026-10-28)."""
 import usage
 
 NOW = 1_800_000_000

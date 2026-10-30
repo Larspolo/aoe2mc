@@ -1,4 +1,4 @@
-"""The generic files of docs/SYSTEM.md do not name the domain of aoe2mc (#1900): the bootstrap copies them into a
+"""The generic files of framework/docs/SYSTEM.md do not name the domain of aoe2mc (#1900): the bootstrap copies them into a
 new project, and a rename changes only the repository, the owner and the project name."""
 import os
 import re
@@ -14,10 +14,10 @@ ALLOW = {"aoe2mc"}          # the project name: rename() replaces it
 
 
 def found(path, text):
-    """The lines of a generic file with a domain word. The rows of the table in docs/SYSTEM.md say what is specific."""
+    """The lines of a generic file with a domain word. The rows of the table in framework/docs/SYSTEM.md say what is specific."""
     return [f"{path}:{i}: {line.strip()[:100]}" for i, line in enumerate(text.splitlines(), 1)
             if WORDS.search(re.sub("|".join(ALLOW), "", line))
-            and not (path == "docs/SYSTEM.md" and line.startswith("| `"))]
+            and not (path == "framework/docs/SYSTEM.md" and line.startswith("| `"))]
 
 
 def test_no_generic_file_names_the_domain():
@@ -33,4 +33,4 @@ def test_no_generic_file_names_the_domain():
 
 def test_a_domain_word_fails():
     assert found("tools/x.py", "# start the Minecraft server\nrepo aoe2mc") == ["tools/x.py:1: # start the Minecraft server"]
-    assert found("docs/SYSTEM.md", "| `x.sh` | specific | Minecraft jars. |") == []
+    assert found("framework/docs/SYSTEM.md", "| `x.sh` | specific | Minecraft jars. |") == []

@@ -1,4 +1,4 @@
-"""tools/ship_pr.py --part: a new PR says "Part of #N" and does not close its ticket (#3324)."""
+"""framework/tools/ship_pr.py --part: a new PR says "Part of #N" and does not close its ticket (#3324)."""
 import claim
 import ship_pr as ship
 from test_ship_pr import fake_github, repo

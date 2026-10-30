@@ -17,6 +17,7 @@ import re
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(1, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "framework", "tools"))
 import health  # noqa: E402
 
 DATASETS = {"merges": "aoe2mc-merged-prs.json", "tickets": "aoe2mc-tickets.json", "epics": "aoe2mc-epics.json",
@@ -222,7 +223,7 @@ RESULT = re.compile(r"^Metrics: ticket #\d+ · [^·]* · (merged|pr #\d+)", re.M
 
 
 def tokens(hours=168, comments=None):
-    """The cost of each run report with a `Tokens:` line (tools/tokens.py): its M eq, calls, peak context in k tokens,
+    """The cost of each run report with a `Tokens:` line (framework/tools/tokens.py): its M eq, calls, peak context in k tokens,
     the share 0..1 of the sink `base` (None when not in the top sinks) and its PRs (the `Metrics:` lines with the
     result `merged` or `pr #N`). The chart "Usage per merged PR" divides the eq by the PRs (owner, 2026-10-29)."""
     comments = health.status_comments(hours=hours) if comments is None else comments
@@ -244,7 +245,7 @@ def reviews(merges, hours=24 * 60, comments=None):
     """The process reviews of the `improve` skill (#4347): each report comment that starts with "Process review", its
     first paragraph (`text`, at most 400 characters), the PRs that it names (`changes`: "PR #N"),
     and the merged PRs between the review before it and this one (`prs`; None for the first review of the log): the
-    real gap of the review algorithm of `tools/claim.py`."""
+    real gap of the review algorithm of `framework/tools/claim.py`."""
     comments = health.status_comments(hours=hours) if comments is None else comments
     times = sorted(m["merged_at"] for m in merges)
     rows, last = [], None

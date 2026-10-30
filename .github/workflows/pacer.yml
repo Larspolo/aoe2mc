@@ -1,6 +1,6 @@
 name: Pacer
 
-# Starts the autopilot runs that the quota target misses (`tools/pacer.py`, #3193):
+# Starts the autopilot runs that the quota target misses (`framework/tools/pacer.py`, #3193):
 # a script keeps no old rule in memory (the old pacer session fired 4 runs for 8, #3147). Only while `pacer` in
 # `[pacing]` of steering/system/system.toml is "workflow" (#3194): another value stops the loop.
 # One run loops for about 5.5 hours (a cycle every 10 minutes), then starts the next run itself: GitHub fires the
@@ -30,11 +30,11 @@ jobs:
       - uses: actions/setup-python@v5  # pip for numpy: the system Python of the runner refuses it (#2631)
         with:
           python-version: "3.12"
-      - name: Install the Claude Code CLI (the quota read, `usage.read_usage`) and numpy (`tools/health.py`)
+      - name: Install the Claude Code CLI (the quota read, `usage.read_usage`) and numpy (`framework/tools/health.py`)
         run: |
           npm install -g @anthropic-ai/claude-code
           python3 -m pip install -q numpy
-      - name: Check out the branch metrics (the log of each cycle, `tools/metrics_log.py --push`)
+      - name: Check out the branch metrics (the log of each cycle, `framework/tools/metrics_log.py --push`)
         run: git fetch -q --depth 1 origin metrics && git worktree add -q --detach "$RUNNER_TEMP/metrics" FETCH_HEAD || true
       - name: Start the runs every 10 minutes
         env:
@@ -43,7 +43,7 @@ jobs:
           GIT_AUTHOR_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
           GIT_COMMITTER_NAME: github-actions[bot]
           GIT_COMMITTER_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
-          # The quota read of the first account (`usage.read_usage`). All secrets: `tools/pacer.py accounts()` finds each
+          # The quota read of the first account (`usage.read_usage`). All secrets: `framework/tools/pacer.py accounts()` finds each
           # account in them (`PACER_URL_<TASK>`, and `CLAUDE_CODE_OAUTH_TOKEN_<NAME>`, `PACER_URL_<NAME>_<TASK>`
           # of another account, #4237): a new account needs only its secrets.
           CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
@@ -53,9 +53,9 @@ jobs:
           while [ $SECONDS -lt $end ]; do
             git fetch -q --depth 1 origin main && git reset -q --hard FETCH_HEAD   # the newest code and switch
             # exit 3: another value stops the loop; a missing key is red, not a quiet stop (#4349, `pacer.switch`)
-            python3 tools/pacer.py --switch || { rc=$?; [ $rc -eq 3 ] || exit $rc
+            python3 framework/tools/pacer.py --switch || { rc=$?; [ $rc -eq 3 ] || exit $rc
               echo "pacer is not \"workflow\" in [pacing] (steering/system/system.toml): stop the loop"; exit 0; }
-            if ! python3 tools/pacer.py --log "$RUNNER_TEMP/pacer.jsonl"; then   # a failed call (HTTP 401, 500): red now
+            if ! python3 framework/tools/pacer.py --log "$RUNNER_TEMP/pacer.jsonl"; then   # a failed call (HTTP 401, 500): red now
               sleep 600                                # the next cycle waits as usual: no fast loop of red runs
               gh workflow run pacer.yml --repo "$GITHUB_REPOSITORY" --ref main
               exit 1
@@ -64,7 +64,7 @@ jobs:
             # the status issue: 6 runs an hour, not one after each merge (35 an hour, 30 to 50 API calls each, 2026-10-29)
             gh workflow run dashboard.yml --repo "$GITHUB_REPOSITORY" --ref main || true
             # the status comments and the cycle records to the branch metrics: the cron of metrics.yml fires a few times a day
-            [ -d "$RUNNER_TEMP/metrics" ] && python3 tools/metrics_log.py "$RUNNER_TEMP/metrics" --pacer "$RUNNER_TEMP/pacer.jsonl" --push || true
+            [ -d "$RUNNER_TEMP/metrics" ] && python3 framework/tools/metrics_log.py "$RUNNER_TEMP/metrics" --pacer "$RUNNER_TEMP/pacer.jsonl" --push || true
             sleep 600
           done
           gh workflow run pacer.yml --repo "$GITHUB_REPOSITORY" --ref main   # the next loop

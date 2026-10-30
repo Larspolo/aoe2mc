@@ -40,7 +40,7 @@ Scan of `git log -p --all --text` (571 commits, all branches) on 2026-10-25:
 - GitHub tokens (`ghp_`, `github_pat_`, `gho_`, `ghs_`), API keys (`sk-`, `sk-ant-`, `AKIA`, `AIza`), Slack tokens
   (`xox`) and private keys (`BEGIN ... PRIVATE KEY`): none.
 - Lines with `password`, `secret`, `token`, `api_key` or `credential` and `=` or `:`: only `${{ github.token }}` in the
-  workflows, the name `GITHUB_TOKEN` in `tools/dashboard.py`, and the RCON password of `game/run.py`, which
+  workflows, the name `GITHUB_TOKEN` in `framework/tools/dashboard.py`, and the RCON password of `game/run.py`, which
   `secrets.token_hex(16)` makes for each start.
 
 ## Personal data in the history

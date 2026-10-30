@@ -1,6 +1,6 @@
 ---
 name: roadmap
-description: Turn the three goals of aoe2mc (convert maps, play AoE2 in Minecraft, replay a recorded game) into epics. Use in the queue refill (autopilot step 5) when the open epics have no work left, and when `python3 tools/claim.py 0 --roadmap` gives the roadmap review to the run (once per 100 merged PRs) to review the feature list in steering/project/ROADMAP.md.
+description: Turn the three goals of aoe2mc (convert maps, play AoE2 in Minecraft, replay a recorded game) into epics. Use in the queue refill (autopilot step 5) when the open epics have no work left, and when `python3 framework/tools/claim.py 0 --roadmap` gives the roadmap review to the run (once per 100 merged PRs) to review the feature list in steering/project/ROADMAP.md.
 ---
 
 # Plan toward the goals
@@ -10,7 +10,7 @@ Owner decisions (2026-10-26): the agents make the epics themselves, a new epic s
 
 ## Make the next epic (in the refill)
 
-Do this in the refill of autopilot step 5 (you hold its lock, `python3 tools/claim.py 0 --refill`), when the open
+Do this in the refill of autopilot step 5 (you hold its lock, `python3 framework/tools/claim.py 0 --refill`), when the open
 epics have no goal left that an agent can do.
 
 1. List the epics: `gh api "repos/OWNER/NAME/issues?labels=epic&state=all&per_page=100"` (`repo` in `agent.toml`), and the same with `&page=2` (more than 100 epics since 2026-10-29; `--paginate` stops after page 1, `autopilot/github.md`). A feature has an
@@ -41,12 +41,12 @@ When all features of a milestone (B, A or C) of a goal are done (`python3 tools/
 milestone), make each release check of the goal that has no ticket yet as a check ticket ("Check X in the game",
 `ticket` skill, level 4 of `verify`), at the priority of the goal's epics, and write its number in the `ticket`
 column of `steering/project/RELEASE.md`.
-The trigger: the section "Release checks (no ticket, make them in the refill)" of `python3 tools/cycle_start.py`
+The trigger: the section "Release checks (no ticket, make them in the refill)" of `python3 framework/tools/cycle_start.py`
 (`release.due()`, #3342) lists these checks at each run start. A deep run makes their tickets in step 5 (`queue.md`).
 
 ## Review the feature list (the roadmap review)
 
-When `python3 tools/claim.py 0 --roadmap` exits 0 (one run after each 100 merged PRs, #898, #2039; after 30 while the refill has
+When `python3 framework/tools/claim.py 0 --roadmap` exits 0 (one run after each 100 merged PRs, #898, #2039; after 30 while the refill has
 no source: R < N, each feature has an epic, no fallback, `claim.ROADMAP_EARLY`, #3741), after step 8 of the autopilot skill:
 
 1. Mark a feature done (`[x]`, with the epic number) when its epic is closed.

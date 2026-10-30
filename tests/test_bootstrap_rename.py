@@ -1,4 +1,4 @@
-"""tools/bootstrap.py: rename() never replaces a new value again (#953)."""
+"""framework/tools/bootstrap.py: rename() never replaces a new value again (#953)."""
 import os
 import sys
 

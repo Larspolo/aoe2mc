@@ -1,6 +1,6 @@
 ---
 name: improve
-description: Review the whole agent system of aoe2mc and make the changes that pay (CLAUDE.md, skills, tools, tests, CI workflows, the cloud setup script, settings), also large redesigns and changes that need owner steps. Use when `python3 tools/claim.py 0 --review` gives the review slot to the run (autopilot step 9: after a gap of merged PRs, or soon after owner work on the system), after a run that failed or took more than 90 minutes, or when the owner asks for a process review.
+description: Review the whole agent system of aoe2mc and make the changes that pay (CLAUDE.md, skills, tools, tests, CI workflows, the cloud setup script, settings), also large redesigns and changes that need owner steps. Use when `python3 framework/tools/claim.py 0 --review` gives the review slot to the run (autopilot step 9: after a gap of merged PRs, or soon after owner work on the system), after a run that failed or took more than 90 minutes, or when the owner asks for a process review.
 ---
 
 # Improve the process
@@ -15,7 +15,7 @@ only when each lever of step 3 is below its threshold, and the report gives the 
 
 **Count work, not time** (owner, 2026-10-29). A wait to measure a change counts merged PRs ("wait 50 PRs", not "wait
 24 hours"): the speed of the project changes, and a paused project merges nothing. Only a real clock stays in time: a
-quota window, a stale claim of a stopped run, a nightly job (`docs/SYSTEM.md`, "Clock or count").
+quota window, a stale claim of a stopped run, a nightly job (`framework/docs/SYSTEM.md`, "Clock or count").
 
 **The limit is the usage limit** (owner, 2026-10-27). The 7-day and the 5-hour windows limit the runs. So the main cost
 of a loss is quota; minutes come second. Find the bottleneck from data, do not assume it. A known lever of step 3 with
@@ -24,7 +24,7 @@ its signal above the threshold is enough data. A hunch outside the levers is a t
 ## 0. Learn from the owner's work (misses)
 
 `claim.py 0 --review` prints `owner work #N: <title>`: the PRs merged since the last review with no commit of a run
-(each run commit has the trailer `Agent-Run:`: `tools/claim.py` installs a `commit-msg` hook at each claim). `tools/health.py` prints the same as
+(each run commit has the trailer `Agent-Run:`: `framework/tools/claim.py` installs a `commit-msg` hook at each claim). `framework/tools/health.py` prints the same as
 "Owner work", and "Misses": the issues that the owner opened to change the system (labels `process`, `tooling`,
 `cleanup`). An owner comment on a process ticket that asks for a wider fix is a miss too (#1702).
 
@@ -33,7 +33,7 @@ For each item:
 2. A feature or a steering choice of the owner (a game rule, a dashboard chart that the owner wanted): no miss. Write
    `feature` in the report and go on.
 3. A change of the system: name its lever (step 3). Find the signal that would have found it, and add it when it is
-   missing (a line of `tools/health.py`, a field of the `Tokens:` or `Calls:` line). Then find the other places of the
+   missing (a line of `framework/tools/health.py`, a field of the `Tokens:` or `Calls:` line). Then find the other places of the
    same lever and fix them too ("Fix all places", step 4). The owner fixed one place; this loop fixes the class.
 4. Report it as `- <date>: miss #N (<lever>): <the new signal> · <the general change> (PR #n)`.
 
@@ -42,13 +42,13 @@ Misses come first: they are the changes of this review, before the largest loss 
 ## 1. Check the earlier changes
 
 Read the lines of "Process changes" on the status issue that have `before:` numbers. For each change with at least 50
-merged PRs after its merge (count them: `python3 tools/health.py --prs 50 --until <merge time>` gives the "before"):
+merged PRs after its merge (count them: `python3 framework/tools/health.py --prs 50 --until <merge time>` gives the "before"):
 compute the same numbers now. Better → keep it. Not better → undo it, or fix the same loss in another way: that is a
 change of this review. Fewer than 50 merged PRs → too early: keep it and say so.
 
 ## 2. Collect the data
 
-Run `python3 tools/health.py --prs 100 --compare` (about 2 minutes): the last 100 merged PRs, and under each line that
+Run `python3 framework/tools/health.py --prs 100 --compare` (about 2 minutes): the last 100 merged PRs, and under each line that
 differs, the 100 PRs before (`  before: ...`). A change of more than 20 % between the two periods is a finding. It
 prints CI, setup, takeovers, conflicts and their files, phases, quota per merged PR, release points per 1 % of 7-day
 quota (the main number: progress to the goals 1 to 3 of `steering/project/ROADMAP.md` per quota), tokens and their sinks, lanes,
@@ -56,7 +56,7 @@ weak spots, misses, owner work, time waits, data in the code, review slots and f
 `--hours N` only for a real clock (the night runs).
 
 Also, only when a lever needs it:
-- Tokens of one run: `python3 tools/tokens.py --top 15`; the `Calls:` lines of the run reports (the most frequent
+- Tokens of one run: `python3 framework/tools/tokens.py --top 15`; the `Calls:` lines of the run reports (the most frequent
   commands of each run).
 - Run reports and pacer cycles: the branch `metrics` (`git fetch origin metrics`; `status/`, `runs/`, `pacer/`).
 - CI: the last 50 runs of each workflow and the steps of slow runs; the log of a failed job (`mcp__github__get_job_logs`).
@@ -79,12 +79,12 @@ A lever with no number is a measurement gap: lever 10.
 | 4 | API calls | `Calls:` count of `gh api` and `mcp`; the REST budget in the pacer log; 403 and 429 in workflow logs | above 10 calls per ticket, or a workflow above half of its budget | Git in place of the API (refs, `merge-tree`, the branch `metrics`); one list call in place of one call per item; a cache; only the needed fields | #4171, #4172, #4178, #4180 |
 | 5 | Merge conflicts by design | Conflicts per 100 merged PRs; the files and the tables of the conflict hunks | 3 conflicts per 100 PRs in one file or table | One file per item (`tests/test_<topic>.py`, one data line per item); a registry that finds its items (a glob), not a list; a generated file only on `main`; no test of the content of a data file | #2008, #3203, #3462, #4177 |
 | 6 | Data in the code | `Data in the code` | a new place, or the count does not go down | A sub-issue of the data epic per place; `.jsonl` with `merge=jsonl` | #1909, #2100 |
-| 7 | Conflicts that a merge driver can solve | Conflicts that a run solved by hand where both sides only added; `solved by Unconflict` | a file with 2 such conflicts | `merge=union` or `merge=jsonl` in `.gitattributes`; a rule of `tools/unconflict.py`; `land()` of Automerge | #2004, #3199, #3202 |
+| 7 | Conflicts that a merge driver can solve | Conflicts that a run solved by hand where both sides only added; `solved by Unconflict` | a file with 2 such conflicts | `merge=union` or `merge=jsonl` in `.gitattributes`; a rule of `framework/tools/unconflict.py`; `land()` of Automerge | #2004, #3199, #3202 |
 | 8 | Clocks that measure work | `Time waits`; constants in minutes or hours in the tools that wait for work | any | `Start after: N PRs after #M`; a gap of merged PRs (`[review]` of `agent.toml`) | #2039, #3865 |
 | 9 | Owner chores | `needs-human` tickets about the environment; owner PRs that paste, test hosts, set secrets | any step that the owner did twice | One file to paste; a check that names exactly what is missing; a workflow or an API that does the step | #1964, #3614, #4181 |
-| 10 | Measurement gaps | A lever of this table with no number | any | Add the number to `tools/health.py`, `tools/tokens.py` or the pacer log first | #3819, #3970, #4171 |
+| 10 | Measurement gaps | A lever of this table with no number | any | Add the number to `framework/tools/health.py`, `framework/tools/tokens.py` or the pacer log first | #3819, #3970, #4171 |
 | 11 | Quality | Rework, reopened tickets, bugs of check tickets, red night runs | rework above 5 % of the merged PRs | A check in the `verify` skill or CI; a rule from owner feedback; a fix of the flaky test | - |
-| 12 | Waste of runs | Runs that merge nothing, idle starts, lost claims, takeovers | above 5 % of the runs | Rules of the pacer (`tools/usage.py`) and of the claims (`tools/claim.py`) | #3147, #4173 |
+| 12 | Waste of runs | Runs that merge nothing, idle starts, lost claims, takeovers | above 5 % of the runs | Rules of the pacer (`framework/tools/usage.py`) and of the claims (`framework/tools/claim.py`) | #3147, #4173 |
 
 The threshold also counts a loss that comes back with its full cost: its quota, the takeovers that it causes, and
 the rule lines that it added to `CLAUDE.md` and `docs/LEARNINGS.md` (each run loads them in each turn).
@@ -105,7 +105,7 @@ its fix, the next fix goes one level up. A level-1 rule that stays is debt: make
 case. Make one epic for a large set (`ticket` skill), with all places as sub-issues, so the owner sees the whole plan.
 
 **Each lever is a ticket on the board** (owner, 2026-10-27). First list the open process tickets
-(`/issues?state=open&labels=process`). When one names the lever, claim it (`tools/claim.py N`) and do it, or, when
+(`/issues?state=open&labels=process`). When one names the lever, claim it (`framework/tools/claim.py N`) and do it, or, when
 another run owns it, go to the next lever. Else make `Process: <lever>` (`ticket` skill, labels `process`, `tooling`,
 `P1`, `lane:deep` when it needs judgement): the evidence, the before-numbers, the cause or the question for new data.
 
@@ -138,7 +138,7 @@ miss as in step 0. Comment 3–6 lines: the misses and what they taught, the res
 each lever (`1 base 41 % · 2 claim 12 % · ...`), what you changed, and what you expect. The owner can reject a change
 in a comment: then revert it and add the reason to `docs/LEARNINGS.md`.
 
-Then set the next review: `python3 tools/claim.py 0 --reviewed change` after a change, or `--reviewed none` when no
+Then set the next review: `python3 framework/tools/claim.py 0 --reviewed change` after a change, or `--reviewed none` when no
 lever was above its threshold. The gap of merged PRs moves (`claim.next_gap`, the values in `[review]` of
 `agent.toml`, owner 2026-10-29): `change` halves a gap up to `gap` (down to `min_gap`) and resets a larger one to `gap`;
 `none` doubles a gap from `gap` up (up to `max_gap`) and resets a smaller one to `gap`. Owner work since the last review makes it `owner_gap`. So reviews that find

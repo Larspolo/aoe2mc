@@ -1,7 +1,7 @@
 name: Metrics
 
 # Writes the status issue comments (the run reports) to the orphan branch `metrics`, one file per day (#1983):
-# tools/health.py reads the files and only the newest comments from the API. The pacer loop (pacer.yml) writes the
+# framework/tools/health.py reads the files and only the newest comments from the API. The pacer loop (pacer.yml) writes the
 # branch in each cycle too: this cron fires only a few times a day (8 runs in 38 hours, 2026-10-29), so it is the
 # fallback and the backfill (`days`). `metrics_log.py --push` adds again when the other writer pushed first.
 # No issue_comment trigger: it starts one run for each comment of the repository
@@ -44,4 +44,4 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
           DAYS: ${{ inputs.days }}
-        run: python3 tools/metrics_log.py log ${DAYS:+--days "$DAYS"} --push
+        run: python3 framework/tools/metrics_log.py log ${DAYS:+--days "$DAYS"} --push

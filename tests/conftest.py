@@ -6,7 +6,7 @@ import sys
 import pytest
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path[:0] = [ROOT, os.path.join(ROOT, "tools")]
+sys.path[:0] = [ROOT, os.path.join(ROOT, "tools"), os.path.join(ROOT, "framework", "tools")]
 sys.path.append(os.path.join(ROOT, "game"))      # game modules import each other by name ("No module named 'bossbar'", #1045)
 
 
@@ -48,7 +48,8 @@ def own_medal_file(monkeypatch, tmp_path):
 def pytest_terminal_summary(terminalreporter, exitstatus, config):
     """The result line also with -qq: addopts has -q, so `pytest -q` printed no "N passed" line, and runs ran the full
     suite again to find the result (#1243, #2510)."""
-    if config.get_verbosity() < -1:
+    if config.get_verbosity() < -1 and not getattr(config, "result_line", False):
+        config.result_line = True
         counts = {k: len(v) for k, v in terminalreporter.stats.items() if k and k != "warnings"}
         terminalreporter.write_line(", ".join(f"{n} {k}" for k, n in sorted(counts.items())) + f" (exit {exitstatus})")
 

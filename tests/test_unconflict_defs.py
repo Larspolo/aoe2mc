@@ -1,4 +1,4 @@
-"""tools/unconflict.py does not keep both sides when both add a function of the same name (#2631)."""
+"""framework/tools/unconflict.py does not keep both sides when both add a function of the same name (#2631)."""
 from test_unconflict import BASE, conflict, tool   # BASE: the file of the merge base
 
 

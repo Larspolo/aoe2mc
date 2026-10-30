@@ -110,7 +110,7 @@ turns the skip off (about 1 s more).
 
 The converter reads `.aoe2record`, `.mgz` (UserPatch), `.mgx` (AoC) and `.mgl` (AoK). `--at` needs the
 timeline: for a game without one it stops with "mgz cannot read the commands of this recorded game". Only
-`hd-4.6` is in `samples/`: the other records are larger than 1 MB (`tools/health.py`).
+`hd-4.6` is in `samples/`: the other records are larger than 1 MB (`framework/tools/health.py`).
 
 ### Team games (#1190)
 

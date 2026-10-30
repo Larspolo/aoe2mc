@@ -84,7 +84,7 @@ def scan(root=ROOT, known=None):
 
 
 def read(path=LIST):
-    """The (place, count) pairs of the list, in file order (`tools/health.py` reads it the same way)."""
+    """The (place, count) pairs of the list, in file order (`framework/tools/health.py` reads it the same way)."""
     with open(path, encoding="utf-8") as f:
         return [(p, int(n)) for p, n in (s.split() for s in f if s.strip() and not s.startswith("#"))]
 

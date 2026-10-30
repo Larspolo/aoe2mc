@@ -9,7 +9,7 @@ import usage
 
 T0 = datetime.datetime(2026, 10, 27, 0, tzinfo=datetime.timezone.utc)
 RESET = T0 + datetime.timedelta(days=2)
-TOOL = os.path.join(os.path.dirname(__file__), "..", "tools", "claim.py")
+TOOL = os.path.join(os.path.dirname(__file__), "..", "framework", "tools", "claim.py")
 
 
 def lines(rows, step=0.25, burn=0.04, weight=0.25):
