@@ -197,8 +197,6 @@ the Antiquity units have no AoE2 groups (`civs.changes`). The missing units and 
 
 These bonuses do not work yet. Each needs a feature that the game program does not have:
 
-- Carthaginians, Greeks: the ships move faster (transport ships +25 %, ships +20 %). The ships have fixed speeds
-  (`fleet.SPEEDS`) and no civilization factor.
 - Choson: towers +2 range. No key changes the range of a building.
 - Egyptians: priests +2/+3 range. The conversion range of `game/monk.py` has no civilization factor.
 - Macedonians: +2 line of sight of the units, and conversion resistance. `combat.Stats` has no line of sight, and no
