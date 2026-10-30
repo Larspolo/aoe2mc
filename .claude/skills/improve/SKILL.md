@@ -125,7 +125,7 @@ with all work in progress), add the label `paused` to the status issue and comme
 
 ## 5. Clean up
 
-- `docs/LEARNINGS.md` below 80 lines (only this skill merges and removes lines there; ticket runs only add),
+- `docs/LEARNINGS.md` at 3000 bytes or less (lines for some tickets go to `docs/PITFALLS.md`, #4454) (only this skill merges and removes lines there; ticket runs only add),
   `CLAUDE.md` below 150 lines. Remove lines that are no longer true.
 - Turn a learning line into a check when you can (a rule of `.claude/hooks/guard-shell.sh`, a fast test, a clear
   assert message, a setting of the start hook), then remove the line.

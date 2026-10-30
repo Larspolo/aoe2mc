@@ -882,22 +882,24 @@ def name_timeline(objects, timeline, window=1024, water=None):
     top = max(names, default=0)
     names |= {i: e["name"] for e in timeline if e["kind"] == "summon" for i in e.get("objects", ())}   # a setup (#3028)
     used = {}             # new ID -> [time of its first use, "B", "U" or None, {building of its units}, a worker,
-    #                       its first MOVE goes inland (None: no MOVE yet), the player of its first use]
+    #                       its first MOVE goes inland (None: no MOVE yet), the player of its first use, a relic
+    #                       carrier (#4413)]
     far = None if water is None else ~near(water, SHORE)       # the tiles that a ship cannot go to
     for e in timeline:                                   # not SPECIAL and others: their numbers are not all IDs
         role = "U" if e["kind"] in UNIT_USE else "B" if e["kind"] in BUILDING_USE else None
         work = e["kind"] in ("build", "wall") or e["kind"] == "order" and WORK.match(names.get(e.get("target"), ""))
+        relic = e["kind"] == "order" and names.get(e.get("target")) == "RELIC"   # only a monk picks it up (#4413)
         for i in e.get("objects", ()) if role else ():
             if i > top:
-                u = used.setdefault(i, [e["time"], None, set(), False, None, e.get("player")])
-                u[1], u[3] = u[1] or role, u[3] or bool(work)
+                u = used.setdefault(i, [e["time"], None, set(), False, None, e.get("player"), False])
+                u[1], u[3], u[6] = u[1] or role, u[3] or bool(work), u[6] or relic
                 if e["kind"] == "move" and u[4] is None and far is not None and "tile" in e:
                     x, y = (min(max(int(v), 0), n - 1) for v, n in zip(e["tile"], far.shape))
                     u[4] = bool(far[x, y])
                 if e["kind"] == "queue" and train(e.get("name", "")):
                     u[2].add(train(e["name"])[1])
         if role == "U" and e.get("target", 0) > top:
-            u = used.setdefault(e["target"], [e["time"], None, set(), False, None, None])
+            u = used.setdefault(e["target"], [e["time"], None, set(), False, None, None, False])
             if e["kind"] == "garrison":                  # its target is a building or a ship (#912)
                 u[1] = u[1] or "G"
     made, seen, inland = [], set(), set()   # (time ms, command time, "B" or "U", name); IDs that no ship takes
@@ -926,7 +928,8 @@ def name_timeline(objects, timeline, window=1024, water=None):
         ids = [i for i in own if i not in names and   # (exact time) near
                (used[i][1] in (role, None) or used[i][1] == "G" and (role == "B" or "SHIP" in name)) and
                used[i][0] >= t - 5000 and used[i][2] <= {name} and   # 5 s: the training times are estimates
-               not (used[i][3] and "VILLAGER" not in name)]         # only villagers build and gather on land (#765)
+               not (used[i][3] and "VILLAGER" not in name) and     # only villagers build and gather on land (#765)
+               not (used[i][6] and "MONK" not in name)]            # only monks carry relics (#4413)
         if units.is_boat(units.classify(name)):             # a ship does not go inland (#2629): a land unit
             inland |= {i for i in ids[:1] if used[i][4]}     # takes the ID (below)
             ids = [i for i in ids if not used[i][4]]
@@ -941,6 +944,9 @@ def name_timeline(objects, timeline, window=1024, water=None):
         elif i not in names and i in inland:             # the last land unit of its player (#2629), a soldier
             land = [(end, n) for end, p, n in trained if p == u[5] and end <= u[0] + 5000]   # when it does not work
             if pick := [x for x in land if "VILLAGER" not in x[1]] * (not u[3]) or land:
+                names[i] = max(pick)[1]
+        elif i not in names and u[1] == "U" and u[6]:    # a relic carrier: the last monk of its player (#4413)
+            if pick := [(end, n) for end, p, n in trained if p == u[5] and "MONK" in n and end <= u[0] + 5000]:
                 names[i] = max(pick)[1]
         elif i not in names and u[1] == "U" and u[3]:    # a builder or gatherer: the last villager of its player
             if pick := [(end, n) for end, p, n in trained if p == u[5] and "VILLAGER" in n and end <= u[0] + 5000]:

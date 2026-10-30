@@ -112,7 +112,7 @@ def arrows_command(g, rect):
     import train                                                   # train imports this module
     building = holders(g).get(rect, {}).get("name")
     more = train.value("arrows", vars(g).get("upgraded", {}).get(rect), 0)   # the Defensive Town Center (#2497)
-    return f"aoe arrows {combat.target_uuid([rect[0], rect[2], rect[1], rect[3]])} {arrows(building, names, civs.arrows(g, building), train.more_arrows(g, building)) + more}"
+    return f"aoe arrows {combat.target_uuid([rect[0], rect[2], rect[1], rect[3]])} {arrows(building, names, civs.arrows(g, building), train.more_arrows(g, building)) + more}{train.pass_arrows(g, building)}"
 
 
 def ungarrison(building):
