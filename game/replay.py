@@ -2351,12 +2351,14 @@ class Replay:
 
     def rate(self, v):
         """The AoE2 work rate of unit v at its resource (per game second): a farm, a hunt and a fish have their own
-        rates, and a fishing ship has its own rates (#1283)."""
+        rates, and a fishing ship has its own rates (#1283). The work technologies of the player (gather.WORK_TECHS:
+        Double-Bit Axe, Bow Saw, ...) make it faster: without them the estimate of a live replay went far below 0 (#4584)."""
         m, t = self.map, v.tree
         if t in m.fish and ship(v.name):
             return self.gather.SHIP_WORK["shore" if t in m.shore else "deep"]
-        return self.gather.AOE2_WORK["farm" if t in m.farms else "hunt" if t in m.carcasses else "fish" if t in m.fish
-                                     else m.resource(t)]
+        kind = "farm" if t in m.farms else "hunt" if t in m.carcasses else "fish" if t in m.fish else m.resource(t)
+        return self.gather.AOE2_WORK[kind] * math.prod(self.gather.WORK_TECHS.get(n, {}).get(kind, 1)
+                                                      for n in self.upgrades(v.player, math.inf))
 
     def state(self, i):
         return aoe2mc.B.states[i]
