@@ -51,6 +51,10 @@ def start_after(issue):
     m = re.search(r"^Start after:\s*(\d{4}-\d{2}-\d{2})(?:[ T](\d{2}:\d{2}))?", issue.get("body") or "", re.M)
     if not m:
         return None
+    # fromisoformat() accepts "24:00" on Python 3.14 but not 3.12: reject it here so every version agrees
+    hour, minute = map(int, (m.group(2) or "00:00").split(":"))
+    if hour > 23 or minute > 59:
+        raise ValueError(f"bad time {m.group(2)}")
     return datetime.datetime.fromisoformat(f"{m.group(1)}T{m.group(2) or '00:00'}+00:00")
 
 

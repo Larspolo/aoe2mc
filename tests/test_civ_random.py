@@ -28,4 +28,4 @@ def test_a_scenario_player_with_random_civ_gets_a_real_one(capsys):
     data = {"players": {"1": {"civ": "RANDOM"}}}
     run.apply_civs(data, None)
     assert data["players"]["1"]["civ"] in {r["name"] for r in civs.ROWS} - {"GAIA"}
-    assert "player 1: random civilization" in capsys.readouterr().err
+    assert "player 1: the scenario civilization RANDOM gives" in capsys.readouterr().err

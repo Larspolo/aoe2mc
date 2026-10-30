@@ -231,7 +231,8 @@ def transform(g, t):
             g.command(f"data modify entity {new} Health set value {max(1.0, round(hp * part, 1))}f")
     g.units = [o for o in g.units if o.get("uuid") not in gone]
     g.farmers = {k: u for k, u in g.farmers.items() if u not in gone}
-    g.choose(g.selected - gone)
+    if gone & vars(g).get("selections", {}).get(g.person, set()):   # no read of g.selected: it adds a selection
+        g.choose(g.selected - gone)                                     # entry, which a loaded game lacks (#4746)
 
 
 def flemish(g, entry):
