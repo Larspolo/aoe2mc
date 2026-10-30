@@ -1542,6 +1542,8 @@ def summon(g, name, pos, rotation=math.pi / 2, player=None):
         g.command(cmd)
     if cmd := combat.dodge_command(uuid, name):                    # a Shrivamsha Rider dodges projectiles (#4399)
         g.command(cmd)
+    if cmd := combat.vs_units_command(uuid, name, g.map.T):        # the Lou Chuan shoots units in its anti-unit mode (#4505)
+        g.command(cmd)
     if cmd := combat.frenzy_command(uuid, name):                   # a Temple Guard attacks faster in a long fight (#4468)
         g.command(cmd)
     if cmd := combat.low_hp_command(uuid, name):                   # a Jian Swordsman loses its shield below 45 HP (#4472)
