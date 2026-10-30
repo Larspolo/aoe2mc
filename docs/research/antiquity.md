@@ -198,11 +198,12 @@ the Antiquity units have no AoE2 groups (`civs.changes`). The missing units and 
 These bonuses do not work yet. Each needs a feature that the game program does not have:
 
 - Choson: towers +2 range. No key changes the range of a building.
-- Macedonians: +2 line of sight of the units, and conversion resistance. `combat.Stats` has no line of sight, and no
-  key changes the conversion time.
+- Macedonians: conversion resistance. No key changes the conversion time.
 - Palmyrans: camel speed and +20 % trade gold work (`trade_gold`, #4446); tributes without tax do not. No key changes them.
-- All: the team bonuses (only their text). The game program has team bonuses only for the repair rate and cost
-  (`repair_team`, `repair_cost`) and shared units, not a general rule for the keys of an ally.
+- Team bonuses (the key `"team"`, #4452: it counts for the player and each ally, `civs.Team`): 13 of 17 work. Only
+  their text: Macedonian houses +50 hit points (the key `"hp"` holds a factor, not added hit points), Phoenician archers
+  +2 line of sight (no key for the sight of a unit), Roman priests heal 50 % faster (no key for the heal speed), Shang
+  town centers +4 population room (`"housing"` replaces the population of a building, it does not add to it).
 
 ## 2. The data structure of a second rule set
 
