@@ -26,6 +26,7 @@ import re
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import table  # noqa: E402
 
 Rule = collections.namedtuple("Rule", "facts actions file line")   # facts: (name, *args) or (logic, *facts)
 LOGIC = {"and", "nand", "nor", "not", "or"}
@@ -197,14 +198,10 @@ def names():
     return NAMES
 
 
-# The strategic numbers that the bot reads, with their AoE2 defaults (airef "Strategic numbers"); 0 for a gatherer
-# percentage: a script that sets none keeps bot.SHARE.
-SN = {"sn-food-gatherer-percentage": 0,
-      "sn-gold-gatherer-percentage": 0,
-      "sn-maximum-attack-group-size": 0,
-      "sn-minimum-attack-group-size": 4,
-      "sn-stone-gatherer-percentage": 0,
-      "sn-wood-gatherer-percentage": 0}
+# The strategic numbers of AoE2 DE with their defaults and ids (airef "Strategic numbers", #4685): only the gatherer
+# percentages and the attack group sizes change the bot (Script.number); the others keep their value for the script.
+SN = {r["name"]: r["default"] for r in table.load("per_numbers.jsonl")}
+SN_IDS = {r["id"]: r["name"] for r in table.load("per_numbers.jsonl")}   # a script can name a number by its id
 
 
 class Script:
@@ -271,6 +268,7 @@ class Script:
             op, v = ("==", args[1]) if len(args) == 2 else args[1:3]
             return self.compare(op, self.goals.get(args[0], -1), v)
         if name == "strategic-number":                             # (strategic-number NAME REL VALUE)
+            args = (SN_IDS.get(args[0], args[0]),) + tuple(args[1:])
             if args[0] not in SN:
                 return self.warn("strategic number", args[0]) or False
             return self.compare(args[1], self.sn.get(args[0], SN[args[0]]), args[2])
@@ -463,6 +461,7 @@ class Script:
         elif name == "set-goal":
             self.goals[args[0]] = args[1]
         elif name == "set-strategic-number":
+            args = (SN_IDS.get(args[0], args[0]),) + tuple(args[1:])
             if args[0] not in SN:
                 return self.warn("strategic number", args[0])
             self.sn[args[0]] = args[1]
