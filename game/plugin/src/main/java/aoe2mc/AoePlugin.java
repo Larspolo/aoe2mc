@@ -22,6 +22,7 @@ import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
+import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.block.Block;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.command.Command;
@@ -112,6 +113,10 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *                                              hit with no damage and fills by shots in ticks; melee hits pass.
  *                                              melee 1: it takes melee hits instead, projectiles pass (Iron Pagoda,
  *                                              #4465). Default 0
+ *   aoe lowhp <selector> <hp> <melee> <pierce> <speed>  the unit switches to another form below hp hit points (the
+ *                                              Jian Swordsman, #4472, game/combat.py low_hp_command): that melee and
+ *                                              pierce armor and a movement speed factor; at hp or more again the armor
+ *                                              of its last aoe stats and no speed modifier
  *   aoe attackground <selector> <x> <y> <z>    AoE2 "Attack Ground" (#4078): a siege unit with a blast walks into its
  *                                              range of the point and shoots there with its reload until a new order
  *   aoe ballistics <team> on|off               Ballistics of the player (#1549): its archers and buildings aim where a
@@ -449,6 +454,24 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     // the part of the siege shots at a unit that hit (aoe accuracy, #2479): the Trebuchet 0.15; missing: 1
     private final Map<UUID, Double> accuracy = new HashMap<>();
     private final Map<UUID, Dodge> dodges = new HashMap<>();    // aoe dodge: the shield of a unit (#4399)
+    private final Map<UUID, LowHp> lowHps = new HashMap<>();    // aoe lowhp: the low hit point form of a unit (#4472)
+    private static final NamespacedKey LOW_SPEED = new NamespacedKey("aoe2mc", "low_hp_speed");
+
+    // The low hit point form of a unit (#4472): below "hp" the armor "melee" and "pierce" and the speed factor "speed".
+    // low: the unit is in that form; normal: the melee and pierce armor of its last aoe stats.
+    private static final class LowHp {
+        final double hp, speed;
+        final int melee, pierce;
+        boolean low;
+        int[] normal;
+
+        LowHp(double hp, int melee, int pierce, double speed) {
+            this.hp = hp;
+            this.melee = melee;
+            this.pierce = pierce;
+            this.speed = speed;
+        }
+    }
 
     // The AoE2 dodge of a unit (#4399): "gauge" shots left at tick "at"; it fills by "shots" in "ticks", up to "shots".
     private static final class Dodge {
@@ -1293,6 +1316,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         Bukkit.getScheduler().runTaskTimer(this, this::burn, 20L, 20L);
         Bukkit.getScheduler().runTaskTimer(this, () -> dots.tick(this::dotHurt), Dot.STEP, Dot.STEP);
         Bukkit.getScheduler().runTaskTimer(this, this::unhit, 1L, 1L);
+        Bukkit.getScheduler().runTaskTimer(this, this::lowHp, 1L, 1L);
         Bukkit.getScheduler().runTaskTimer(this, this::watch, 20L, 20L);
         Bukkit.getScheduler().runTaskTimer(this, this::towers, 2L, 2L);
         Bukkit.getScheduler().runTaskTimer(this, this::hold, 4L, 4L);
@@ -1478,6 +1502,43 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             }
             h.getKey().removeScoreboardTag("aoe2mc.hit");
             return true;
+        });
+    }
+
+    // Each tick, not at each change of the hit points: hits, heals and setHealth have many places (harm, regen, monks).
+    private void lowHp() {
+        lowHps.entrySet().removeIf(en -> {
+            if (!(Bukkit.getEntity(en.getKey()) instanceof LivingEntity le) || !le.isValid()) {
+                return true;
+            }
+            LowHp l = en.getValue();
+            Stats s = stats.get(en.getKey());
+            if (s == null) {
+                return false;
+            }
+            if (l.low && (s.melee() != l.melee || s.pierce() != l.pierce)) {
+                l.low = false;                               // a new aoe stats (an upgrade) set the normal armor
+            }
+            boolean low = le.getHealth() < l.hp;
+            if (low == l.low) {
+                return false;
+            }
+            if (low) {
+                l.normal = new int[] {s.melee(), s.pierce()};
+            }
+            int m = low ? l.melee : l.normal[0], p = low ? l.pierce : l.normal[1];
+            stats.put(en.getKey(), new Stats(s.attack(), m, p, s.ranged(), s.pierces(), s.classes(), s.bonus(),
+                    s.reload(), s.taken(), s.friendly(), s.less(), s.ignores(), s.rage(), s.reflect()));
+            AttributeInstance speed = le.getAttribute(Attribute.MOVEMENT_SPEED);
+            if (speed != null) {
+                speed.removeModifier(LOW_SPEED);
+                if (low) {
+                    speed.addTransientModifier(new AttributeModifier(LOW_SPEED, l.speed - 1,
+                            AttributeModifier.Operation.MULTIPLY_SCALAR_1));
+                }
+            }
+            l.low = low;
+            return false;
         });
     }
 
@@ -2875,6 +2936,26 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                 n++;
             }
             sender.sendMessage("Dodge: " + n + " units");
+            return true;
+        }
+        if (args.length == 6 && args[0].equals("lowhp")) {             // a Jian Swordsman (#4472)
+            double hp, speed;
+            int melee, pierce;
+            try {
+                hp = Double.parseDouble(args[2]);
+                melee = Integer.parseInt(args[3]);
+                pierce = Integer.parseInt(args[4]);
+                speed = Double.parseDouble(args[5]);
+            } catch (NumberFormatException e) {
+                sender.sendMessage("Bad number: " + e.getMessage());
+                return true;
+            }
+            int n = 0;
+            for (Entity e : select(sender, args[1])) {
+                lowHps.put(e.getUniqueId(), new LowHp(hp, melee, pierce, speed));
+                n++;
+            }
+            sender.sendMessage("Low HP: " + n + " units");
             return true;
         }
         if (args.length >= 2 && args[0].equals("allies")) {            // the alliances of the players (#1315)
