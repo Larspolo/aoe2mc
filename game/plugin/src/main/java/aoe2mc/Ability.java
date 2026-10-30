@@ -47,6 +47,12 @@ public interface Ability {
         return false;
     }
 
+    /** The values a of a projectile hit of from on hurt that deals damage (after the dodge and the accuracy): the
+     *  values of the hit (the charged shot of the Bolas Rider, #4548). */
+    default AoePlugin.Stats hit(AoePlugin p, Entity from, LivingEntity hurt, AoePlugin.Stats a) {
+        return a;
+    }
+
     /** After a melee hit of from with the values a on hurt (target: the entity that the hit was on, the rider of a
      *  horse; the elephants, #4397). */
     default void melee(AoePlugin p, Entity from, AoePlugin.Stats a, Entity hurt, Entity target) {
