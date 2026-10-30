@@ -38,6 +38,7 @@ RMAP = rows("rmap.jsonl")
 TERRAINS = {r["name"]: r["terrain"] for r in RMAP if "terrain" in r}
 OBJECTS = {r["name"]: r["object"] for r in RMAP if "object" in r}     # the object constants of random_map.def: AoE2 IDs
 FOREST_TREES = dict(sorted((t, r["name"]) for r in RMAP for t in r.get("forest", ())))
+ASSIGN = {r["name"]: r["assign"] for r in RMAP if "assign" in r}       # the targets of assign_to: player, color, team
 CLIFF_TYPES = {r["name"]: r["cliff_type"] for r in RMAP if "cliff_type" in r}   # cliff_type word: object name prefix
 SHORE_FISH = next(r["name"] for r in RMAP if r.get("shore_fish"))
 SIZES = {1: 120, 2: 120, 3: 144, 4: 144, 5: 168, 6: 168, 7: 200, 8: 200}    # AoE2 map size of a player count
@@ -685,8 +686,15 @@ def generate(text, seed, players=2, size=None, warn=None, teams=None, folder=Non
 
 def owner_of(attrs, consts, starts, players, teams):
     """The player of a create_land (#3947): assign_to_player N, or for assign_to_team T the next player of team T
-    (teams, #3946) with no land yet. 0: no player."""
+    (teams, #3946) with no land yet; assign_to TARGET N (#4424): the player N, the player of color N (the default
+    colors: player N) or the next player of team N (-1: any team). 0: no player."""
     taken = {st["player"] for st in starts}
+    if "assign_to" in attrs:
+        target, n = ASSIGN.get(attrs["assign_to"][0]), value(attrs["assign_to"][1], consts)
+        if target != "team":
+            return n if 1 <= n <= players and n not in taken else 0
+        return next((p for p in range(1, players + 1) if p not in taken
+                     and (n == -1 and teams and teams[p - 1] is not None or teams and teams[p - 1] == n)), 0)
     if "assign_to_player" in attrs:
         p = value(attrs["assign_to_player"][0], consts)
         return p if 1 <= p <= players and p not in taken else 0
@@ -715,6 +723,7 @@ def circle(setup, players, teams, seed):
 
 
 CREATE_LAND = (                 # the attributes of create_land and create_player_lands that generate() reads: one per line (#4417)
+    "assign_to",
     "assign_to_player",
     "assign_to_team",
     "base_elevation",

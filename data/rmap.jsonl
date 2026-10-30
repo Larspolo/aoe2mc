@@ -92,3 +92,6 @@
 {"name": "CT_DEFAULT", "cliff_type": "CLIFF_DEFAULT"}
 {"name": "CT_DESERT", "cliff_type": "CLIFF_DESERT"}
 {"name": "CT_SNOW", "cliff_type": "CLIFF_SNOW"}
+{"name": "AT_COLOR", "assign": "color"}
+{"name": "AT_PLAYER", "assign": "player"}
+{"name": "AT_TEAM", "assign": "team"}
