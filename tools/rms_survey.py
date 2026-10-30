@@ -13,6 +13,7 @@ import argparse
 import glob
 import os
 import sys
+import traceback
 from collections import Counter
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -29,10 +30,13 @@ def survey(path):
         text = f.read()
     warnings = []
     try:
-        rmap.generate(text, 1, warn=warnings.append, folder=os.path.dirname(path))
+        rmap.generate(text, 1, warn=warnings.append, folder=os.path.dirname(path), name=os.path.basename(path))
         state = "ok"
     except Exception as e:  # one broken script must not stop the survey
         state = f"error: {type(e).__name__}: {e}"
+        if not isinstance(e, rmap.RmsError) and e.__traceback__:  # the place of a bug, no script text
+            f = traceback.extract_tb(e.__traceback__)[-1]
+            state += f" (at {os.path.basename(f.filename)}:{f.lineno} {f.name})"
     return list(dict.fromkeys(warnings)), state
 
 

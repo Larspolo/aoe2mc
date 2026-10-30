@@ -46,6 +46,7 @@ Read it before a download, a blocked host or a server test.
 - `-m mc` needs `javac` and `xdotool` (setup script, #493, #638); without `xdotool` it skips `tests/test_menu_client.py`. The full `-m mc` suite takes hours: CI runs it in 6 shards (#1710). Run only the `-m mc` files that use the changed code (`grep -l "aoe moveto" tests/*.py | xargs grep -l mark.mc`) in the background (#1669).
 - Blocked too: `docs.racket-lang.org` and `plt.cs.northwestern.edu` (the docs of the AoE2 random map script DSL, DNS fails). For a random map script fact, a `WebSearch` summary of them works (#3966).
 - The Blacksmith pages (`aok.heavengames.com`) work, but `getfile.php?id=N&dd=1&s=TOKEN` (TOKEN from `get_file(...)` of `showfile.php`) redirects to `files.heavengames.com`: blocked until the owner pastes `scripts/allowed-domains.txt` (#4189).
+- Public AoE2 scripts for a random map script ticket: `raw.githubusercontent.com/Naramsim/AoE2-random-map-scripts/master/The%20forgotten/NAME.rms` (HD versions, also `The%20conquerors/`; the GitHub API of that repository is blocked, guess the name). Unknown DE constants stop them: map an unknown constant to -1 in a local probe. Blocked: `twharris.dev`, `gist.githubusercontent.com` (#4699).
 
 ## Converter code
 
@@ -69,6 +70,7 @@ Read it before a change of `aoe2mc.py`, `buildings.py`, the scenarios or a world
 - `docs/triggers.md` cannot be regenerated from a test scenario: `tools/triggers.py --doc` counts the files it gets, so a `triggers` scenario alone rewrites its file list and 136 rows (#3775). Edit its one row by hand, or regenerate it from the full file set of CI.
 - A new `convert()` keyword must not be named `players`: `convert` unpacks its own `players` (the player dict), and ruff reports F821 at the call (#3945: `nplayers`).
 - A test of a building with `footprint` in aoe2mc.json uses `[x0, z0, x1, z1]`, but `homes()` and the test constants of `(x0, x1, z0, z1)`: a castle at `(8, 12, 8, 12)` put into the data gave no menu (#4337). Write the data order by hand.
+- The RMS control words of the game: the parser of goto-bus-stop (gist `cb59e5f0ae03ec12c3800f120c16eef3`, `parser.js`) is a good model: separate `if` and random stacks, `/*` `*/` are counted words (nested comments), a dead `if` branch skips `percent_chance` (#4692).
 
 ## Game program code
 

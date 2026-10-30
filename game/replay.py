@@ -3129,7 +3129,7 @@ class Replay:
         at the game time of its save, its "restore" event (#4568). `more`: the source of a record that still grows (#4662,
         epic #4660): more() gives (the new timeline events, already named; True when the record is complete). The replay
         calls it at most each POLL seconds of real time while it waits (`grow`), and waits at its last event until more()
-        gives events or says that the record is complete."""
+        gives events or says that the record is complete. A jump forward in it stops at its last event (#4733)."""
         start = max([start] + [e["time"] for e in self.data.get("timeline", []) if e["kind"] == "restore"])
         last = math.inf if finish else max((e["time"] for e in self.data.get("timeline", [])), default=start)
         found = fights(self.data.get("timeline", []), owners(self.data.get("objects", []), self.data.get("timeline", [])))
@@ -3246,6 +3246,10 @@ class Replay:
                     break
             if to is not None:
                 k -= e is not None                                  # the event waits for the jump
+                if not complete and to > end:                       # a live record: no time after its last given
+                    to = end                                        # event, "newest − delay" (#4733)
+                    say = text("Live replay: the jump stops at the delay behind the game.", "yellow")
+                    send([f"tellraw @a {json.dumps(say)}"])
                 if rewind and to < (g0 if self.paused else g0 + (clock() - r0) * 1000 * self.speed):
                     say = text("The server restarts for the jump back: join it again.", "yellow")
                     send(self.clock_commands(to, end, self.speed, jump=True) + [f"tellraw @a {json.dumps(say)}"])

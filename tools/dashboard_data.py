@@ -299,7 +299,35 @@ def insights(hours=168, comments=None):
         line = SINKS.search(body[t.start():].split("\n", 1)[0]) if t else None
         for name, share in SINK.findall(line[1]) if line else ():
             sinks[name.strip()] = sinks.get(name.strip(), 0.0) + eq * int(share) / 100
-    return dict(lanes=lanes, sizes=sizes, sinks=sorted(sinks.items(), key=lambda x: -x[1])[:5])
+    return dict(lanes=lanes, sizes=sizes, sinks=sorted(sinks.items(), key=lambda x: -x[1])[:5],
+                days=activity(comments=comments))
+
+
+PHASE = re.compile(r"· phases ((?:\w+ \d+(?:\.\d+)?(?: · )?)+)")
+WORK = {"read": "read and triage", "claim": "read and triage", "code": "tickets", "verify": "tickets",
+        "ci": "CI fixes", "conflict": "conflicts", "report": "reports"}
+
+
+def activity(hours=168, comments=None):
+    """What the runs do per day (#4725), from the run reports: the runs, the merged PRs, the runs per merged PR, the
+    kind of each run (`ticket`: a `Metrics:` line, `review`: a process review, `idle`: no ticket) and the minutes of
+    the phases of its tickets, grouped by work (`WORK`). The newest day first."""
+    comments = health.status_comments(hours=hours) if comments is None else comments
+    days = {}
+    for c in comments:
+        body = c.get("body") or ""
+        if not (c.get("created_at") and (TOKEN_LINE.search(body) or METRIC.search(body) or REVIEW.match(body))):
+            continue
+        row = days.setdefault(c["created_at"][:10], dict(runs=0, merged=0, kinds={}, work={}))
+        row["runs"] += 1
+        row["merged"] += len(RESULT.findall(body))
+        kind = "review" if REVIEW.match(body) else "ticket" if METRIC.search(body) else "idle"
+        row["kinds"][kind] = row["kinds"].get(kind, 0) + 1
+        for line in PHASE.findall(body):
+            for name, minutes in re.findall(r"(\w+) (\d+(?:\.\d+)?)", line):
+                work = WORK.get(name, name)
+                row["work"][work] = row["work"].get(work, 0.0) + float(minutes)
+    return [dict(day=d, **days[d]) for d in sorted(days, reverse=True)]
 
 
 REVIEW = re.compile(r"^\s*Process review", re.I)

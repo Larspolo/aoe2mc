@@ -344,6 +344,14 @@ def render(old_body, issues, comments, open_prs, closed_issues, closed_prs, now,
                 for k, r in sorted(insights["sizes"].items())]
         if insights.get("sinks"):
             out += ["", "Top costs (M eq): " + ", ".join(f"{k} {v:.1f}" for k, v in insights["sinks"])]
+    if insights and insights.get("days"):              # what the runs do per day (#4725)
+        out += ["", "### Activity (7 days)", "| Day | Runs | Merged PRs | Runs per PR | Runs: ticket, review, idle | Minutes |",
+                "|---|---|---|---|---|---|"]
+        for r in insights["days"]:
+            k, work = r["kinds"], sorted(r["work"].items(), key=lambda x: -x[1])
+            out.append(f"| {r['day']} | {r['runs']} | {r['merged']} | " + (f"{r['runs'] / r['merged']:.1f}" if r["merged"] else "–") +
+                       f" | {k.get('ticket', 0)}, {k.get('review', 0)}, {k.get('idle', 0)} | " +
+                       (", ".join(f"{n} {m:g}" for n, m in work if m) or "–") + " |")
     out += ["", "### Recently done"]
     merged = [p for p in closed_prs if p.get("merged_at")]
     done = [i for i in closed_issues if "pull_request" not in i and i.get("state_reason") == "completed"]

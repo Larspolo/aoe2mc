@@ -131,7 +131,8 @@ def test_a_real_record_in_4_parts(tmp_path):
             f.write(body[len(body) * (i - 1) // 4:len(body) * i // 4])
         now[0] += 2.0
         new, complete = source.more()
-        assert not complete and all(e["time"] <= source.events[-1]["time"] - DELAY * 1000 for e in new)
+        assert complete == (i == 4)                     # the full record has its resign: complete (#4664)
+        assert complete or all(e["time"] <= source.events[-1]["time"] - DELAY * 1000 for e in new)
         got += new
     now[0] += 60.0
     new, complete = source.more()

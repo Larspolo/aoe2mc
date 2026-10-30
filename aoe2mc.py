@@ -288,7 +288,8 @@ def read_rms(path, seed, players=2, teams=None):
     with open(path, encoding="utf-8", errors="replace") as f:
         text = f.read()
     try:
-        return map_description(rmap.generate(text, seed, players, teams=teams, folder=os.path.dirname(path)), path)
+        return map_description(rmap.generate(text, seed, players, teams=teams, folder=os.path.dirname(path),
+                                                     name=os.path.basename(path)), path)
     except rmap.RmsError as e:
         raise OptionError(f"{path}: {e}") from None
 
@@ -789,14 +790,15 @@ TIMELINE_KEYS = {"building_id": "type", "unit_id": "type", "technology_id": "tec
                  "player_id_to": "to"}                               # the receiver of a tribute (#1086)
 
 
-def read_timeline(path):
+def read_timeline(path, state=None):
     """The commands of a recorded game in time order (#372): a list of events {"time": ms, "player": number or
     None, "kind": "build", "wall", "queue", "research", "move", "order", "garrison", "chat" ..., and the data of the
     kind: "type" and "name" (building or unit, as in read_record), "tile" [x, y], "end" [x, y] (wall),
     "technology", "objects" (the object IDs that the command selects), "target" (object ID), "text" (chat)}.
     Tiles are AoE2 tiles. Actions that mgz cannot read are left out. None for the games that the mgz model
     cannot read (read_old_record reads only their start state, #376). All times are game times: a restored record
-    starts with a "restore" event at the game time of its save (#4568; mgz adds it to chat and age times only)."""
+    starts with a "restore" event at the game time of its save (#4568; mgz adds it to chat and age times only).
+    state: a dict that gets "complete": True when the record has the end of the game (mgz match.completed, #4664)."""
     import mgz.fast as fast
     from mgz.model import parse_match
     names, parse = object_kinds(), fast.parse_action
@@ -810,6 +812,8 @@ def read_timeline(path):
     finally:
         fast.parse_action = parse
     ms = lambda t: int(round(t.total_seconds() * 1000))           # noqa: E731
+    if state is not None:
+        state["complete"] = bool(getattr(match, "completed", False))
     restore = ms(match.restored_at) if getattr(match, "restored", False) else 0
     events = [{"time": restore, "player": None, "kind": "restore"}] if restore else []
     for a in match.actions:
@@ -1071,11 +1075,12 @@ def water_tiles(terrain, tnames):
     return np.vectorize(lambda t: terrain_style(tnames.get(int(t), "GRASS_1"))["depth"] > 0, otypes=[bool])(terrain)
 
 
-def record_timeline(src, turn=0):
+def record_timeline(src, turn=0, state=None):
     """The timeline of a recorded game as convert() writes it to aoe2mc.json: read, named, turned by `turn` quarter
-    turns and through JSON. The live replay reads a record that AoE2 DE still writes again with it (#4663)."""
+    turns and through JSON. The live replay reads a record that AoE2 DE still writes again with it (#4663);
+    state: as read_timeline (#4664)."""
     size, terrain, _, tnames, _, objects, _ = read_map(src)
-    timeline = read_timeline(src)
+    timeline = read_timeline(src, state)
     if timeline is None:
         return []
     name_timeline(objects, timeline, water=water_tiles(terrain, tnames))
