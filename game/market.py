@@ -14,6 +14,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import build  # noqa: E402
 import civs  # noqa: E402
 import menu  # noqa: E402
+import table  # noqa: E402
 
 RATES = {"wood": 100, "food": 115, "stone": 130}                   # the AoE2 DE start rates, gold per 100
 STEP = 2                                                           # the rate change of one trade
@@ -21,7 +22,7 @@ LIMITS = (20, 9999)                                                # the lowest 
 LOT = 100                                                          # the resource of one trade
 SHIFT = 5                                                          # trades of a shift click (500, as in AoE2)
 FEE = 30                                                           # the commodity trading fee in percent
-FEES = {"GUILDS": 15}                                              # a technology of the player: its fee
+FEES = {r["name"]: r["fee"] for r in table.load("train.jsonl") if "fee" in r}   # a technology of the player: its fee
 CIV_FEES = {"SARACENS": 5}                                         # the civilization bonus of the Saracens
 ITEMS = {"wood": "oak_log", "food": "wheat", "stone": "cobblestone"}   # the menu item of each resource
 SELL = 9                                                           # the first slot of the sell row
