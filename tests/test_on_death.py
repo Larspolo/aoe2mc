@@ -1,6 +1,7 @@
 """A dead Konnik rises as a Dismounted Konnik at its place (#4471, AoE2 DE wiki "Konnik": "Turn into a(n) (Elite)
 Dismounted Konnik upon death"): the key "on_death", combat.on_death_command, the marker of AoePlugin.onDeath and
 train.fell / train.risen. Test data on a fake server, and a death on a server."""
+import json
 import shutil
 import time
 
@@ -8,7 +9,7 @@ import combat as inner  # the module that game/train.py imports (game/ is on sys
 import pytest
 from test_castle_upgrades import setup
 
-from game import combat, run, train
+from game import combat, gather, run, savegame, train
 
 MARKER = "@e[type=marker,tag=aoe2mc.fell.l,limit=1]"                 # the marker of the plugin for unit "l"
 
@@ -59,6 +60,21 @@ def test_a_removed_or_live_unit_gives_no_new_unit(monkeypatch):
     train.census(g)                                                    # "c" lives on (a conversion keeps it)
     train.risen(g, 10)
     assert "MILITIA" not in g.soldiers.values() and "c" in g.soldiers
+
+
+def test_a_save_keeps_the_wait_of_a_new_unit(monkeypatch):
+    keys(monkeypatch, {"SCOUT_CAVALRY": "MILITIA"})
+    server, g = setup()
+    del server.entities["l"]
+    server.entities[MARKER] = {"Pos": (20.5, 64.0, 7.5)}
+    train.census(g)
+    train.risen(g, 1.0)
+    h = gather.Gather(server, g.data).setup()
+    savegame.load(h, json.loads(json.dumps(savegame.dump(g))))
+    assert h.risers == g.risers
+    before = set(h.soldiers)
+    train.risen(h, train.RISE)
+    assert [h.soldiers[u] for u in set(h.soldiers) - before] == ["MILITIA"]
 
 
 @pytest.mark.mc

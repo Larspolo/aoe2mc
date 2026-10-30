@@ -32,6 +32,7 @@ OPTIONAL = ("auto", "auto_by",                                         # the aut
             "bell_work",                                               # the work before the town bell (#3420)
             "challenge_enemy",                                         # the enemy fleet of Naval Battle (#3909)
             "free_trained",                                            # the free units of a castle: Cuman Mercenaries (#4330)
+            "risers",                                                  # the units that rise where a Konnik died: train.fell (#4471)
             "limit_left", "policy", "rates", "relic_timer", "reseeds", "switches", "upgraded", "wonder_shown", "wonders",   # only on a
             "wonders_gone")                                            # Gather that has them (#2324; the policy: #2515)
 MONK = ("carrier_at", "converting", "faith", "fetching", "heal_time", "monk_at", "relic_gold", "relic_homes",
