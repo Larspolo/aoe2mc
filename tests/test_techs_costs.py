@@ -19,8 +19,11 @@ def test_a_researched_technology_changes_the_cost_of_its_group_only(monkeypatch)
     assert plain_train.price(g, "MILITIA")["gold"] == before["MILITIA"]["gold"]
 
 
+RES = ("food", "wood", "gold", "stone")
+
+
 def test_each_costs_line_has_the_form_of_a_cost_rule():
     for t, rules in plain_train.BY_KEY["costs"].items():
         for what, r, c in rules:
-            assert (isinstance(what, list) or what in civs.GROUPS) and r in (None, "food", "wood", "gold", "stone"), t
+            assert (isinstance(what, list) or what in civs.GROUPS or what.endswith(" technologies")) and all(k in RES for k in (r or "food").split(">")), t
             assert isinstance(c, float), t
