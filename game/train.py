@@ -387,11 +387,19 @@ def type_tag_commands(uuid, old, new):
 
 
 def volley_command(g, uuid, name):
-    """The plugin command of the extra projectile in each shot of own unit name (the key "volley" of data/civs.jsonl:
-    the Armenian galley line and dromons, #2379), else None. Minecraft feature: one more Arrow entity; the plugin gives
-    it its AoE2 damage."""
+    """The plugin command of the extra projectiles in each shot of own unit name (the key "volley" of data/civs.jsonl:
+    the Armenian galley line and dromons, #2379; the key "volley" of the researched technologies: {unit: {"shots": n,
+    "attack": a or "part": p}}, Double Crossbow, #4338), else None. "attack" is the AoE2 attack of each extra
+    projectile, "part" a part of the attack of the unit, neither the full attack (0). The plugin keeps one attack for
+    all extra projectiles of a unit: the last technology wins. Minecraft feature: one more Arrow entity; the plugin
+    gives it its AoE2 damage."""
     attack = civs.value("volley", civs.civ(g), {}).get(name)
-    return None if attack is None else f"aoe volley {uuid} 1 {attack}"
+    shots, attack = (0, 0) if attack is None else (1, attack)
+    for t in sorted(vars(g).get("techs", ())):
+        if v := value("volley", t, {}).get(name):
+            shots += v["shots"]
+            attack = v["attack"] if "attack" in v else max(1, round(stats(g, name, uuid).attack * v["part"])) if "part" in v else 0
+    return f"aoe volley {uuid} {shots} {attack}" if shots else None
 
 
 def lead_command(g, uuid, name, techs=None):
@@ -1226,6 +1234,9 @@ def research(g, entry, start=False, rect=None):
     for uuid, name in g.soldiers.items():                          # the live gunpowder units aim ahead (Arquebus, #4364)
         if cmd := lead_command(g, uuid, name, {entry["name"]}):
             g.command(cmd)
+    for uuid, name in g.soldiers.items():                          # the extra projectiles of the live units (#4338):
+        if any(value("volley", t, {}).get(name) for t in g.techs) and (cmd := volley_command(g, uuid, name)):
+            g.command(cmd)                                         # also a new attack of a "part" after an upgrade
     if entry["name"] in BY_KEY["walk"]:                            # the live units walk faster (Fervor)
         import ai, fleet                                           # ai imports gather, gather imports this module
         for uuid, name in g.soldiers.items():                      # a ship: fleet.tick reads speed() (#2136)
