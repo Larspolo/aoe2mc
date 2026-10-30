@@ -88,6 +88,7 @@ CONTACT = 1.0         # tiles: the reach of a demolition ship (range 0, #1440): 
 MIN_RANGE = {r["name"]: r["min_range"] for r in UNIT_ROWS if "min_range" in r}
 ACCURACY = {r["name"]: r["accuracy"] for r in UNIT_ROWS if "accuracy" in r}   # siege shots at units that hit (#2479)
 DODGE = {r["name"]: r["dodge"] for r in UNIT_ROWS if "dodge" in r}           # projectiles that do no damage (#4399)
+VOLLEY = {r["name"]: r["volley"] for r in UNIT_ROWS if "volley" in r}       # the key "volley": {"shots": n, "attack": a}, the extra projectiles of each shot (#4502)
 # The minimum range of the buildings that shoot, in tiles from the edge of the footprint (AoE2 DE, wiki infobox
 # "MinRange", #1546). The town center has none. Murder Holes removes it.
 # The key "min_range" of a line of data/buildings.jsonl (the dock shoots only with fishing ships inside, #1949).
