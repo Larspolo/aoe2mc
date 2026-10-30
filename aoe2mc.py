@@ -668,7 +668,9 @@ def read_old_record(path, error):
             s = FullSummary(f)
         s.get_dataset()
     except (RuntimeError, ValueError) as e:
-        raise SystemExit(f"{path}: mgz {version('mgz')} cannot read this recorded game ({error}; {e})") from None
+        # a file cut in the header (a game of the first seconds, #4661) has no start yet
+        raise SystemExit(f"{path}: the record has no start yet (mgz {version('mgz')} cannot read this recorded game "
+                         f"({error}; {e}))") from None
     finally:
         skip.keyfunc = keyfunc
     h = s.get_header()
