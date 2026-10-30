@@ -34,12 +34,14 @@ from units import rows
 # The lines of data/rmap.jsonl (#2037): "terrain": the AoE2 terrain ID (AoE2ScenarioParser TerrainId value) of a
 # terrain constant of the RMS language. "forest": the forest terrains of a tree: the game puts one on each forest tile,
 # a scenario keeps them as objects. "start", "scatter", "fish", "shore_fish": see START, SCATTER, FISH and fish().
+# "blank": a DE placeholder object (BLANK): objects() places it, but it gives no object (#4698).
 RMAP = rows("rmap.jsonl")
 TERRAINS = {r["name"]: r["terrain"] for r in RMAP if "terrain" in r}
 OBJECTS = {r["name"]: r["object"] for r in RMAP if "object" in r}     # the object constants of random_map.def: AoE2 IDs
 FOREST_TREES = dict(sorted((t, r["name"]) for r in RMAP for t in r.get("forest", ())))
 ASSIGN = {r["name"]: r["assign"] for r in RMAP if "assign" in r}       # the targets of assign_to: player, color, team
 CLIFF_TYPES = {r["name"]: r["cliff_type"] for r in RMAP if "cliff_type" in r}   # cliff_type word: object name prefix
+BLANK = {r["name"] for r in RMAP if r.get("blank")}     # placeholders: a tile and an actor_area, no object (#4698)
 SHORE_FISH = next(r["name"] for r in RMAP if r.get("shore_fish"))
 SIZES = {1: 120, 2: 120, 3: 144, 4: 144, 5: 168, 6: 168, 7: 200, 8: 200}    # AoE2 map size of a player count
 LABELS = ((120, "TINY_MAP"), (144, "SMALL_MAP"), (168, "MEDIUM_MAP"), (200, "LARGE_MAP"), (220, "HUGE_MAP"))
@@ -869,7 +871,8 @@ def objects(cmds, consts, terrain, starts, rng, warn, owner=None, ridges=(), lay
         if cmd != "create_object":
             warn(f"{cmd} is not read yet")
             continue
-        kind, base = kinds.get(value(args[0], consts), (None, None))
+        blank = args[0] in BLANK                       # by its word: random_map.def gives it an ID that kinds has not
+        kind, base = ("O", args[0]) if blank else kinds.get(value(args[0], consts), (None, None))
         if base is None:
             warn(f"create_object: unknown object {args[0]}")
             continue
@@ -981,8 +984,9 @@ def objects(cmds, consts, terrain, starts, rng, warn, owner=None, ridges=(), lay
                     placed[max(0, tx - r):tx + r, max(0, ty - r):ty + r] = True
                     if name == "VILLAGER_MALE" and rng.integers(2):    # AoE2 DE: a male or a female villager
                         name = "VILLAGER_FEMALE"
-                    out.append({"name": name, "player": player, "x": tx + 0.5 * (kind != "B"), "y": ty + 0.5 * (kind != "B")}
-                               | delta)                                # more or less food, wood, gold or stone (#4429)
+                    if not blank:
+                        out.append({"name": name, "player": player, "x": tx + 0.5 * (kind != "B"), "y": ty + 0.5 * (kind != "B")}
+                                   | delta)                            # more or less food, wood, gold or stone (#4429)
                     if second:
                         out.append({"name": second, "player": player, "x": tx + 0.5, "y": ty + 0.5})
                     if actor is not None:
