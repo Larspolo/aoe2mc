@@ -81,25 +81,36 @@ def expand(words, rng, defined, consts, includes, folder=None, depth=0):
     out, stack, i = [], [], 0
     def on():
         return all(f["on"] for f in stack)
+    def arg():                                      # a command as the last word: an RmsError, not an IndexError (#4697)
+        if i + 1 >= len(words):
+            raise RmsError(f"{w} has no argument")
+        return words[i + 1]
+    def top():
+        if not stack:
+            raise RmsError(f"{w} without its start")
+        return stack[-1]
     while i < len(words):
         w = words[i]
         if w == "if":
-            c = on() and words[i + 1] in defined
+            c = on() and arg() in defined
             stack.append({"on": c, "done": c})
             i += 2
         elif w == "elseif":
-            f = stack[-1]
-            f["on"] = not f["done"] and words[i + 1] in defined
+            f = top()
+            f["on"] = not f["done"] and arg() in defined
             f["done"] |= f["on"]
             i += 2
         elif w == "else":
-            stack[-1]["on"], stack[-1]["done"] = not stack[-1]["done"], True
+            f = top()
+            f["on"], f["done"] = not f["done"], True
             i += 1
         elif w == "start_random":
             stack.append({"on": False, "done": False, "roll": int(rng.integers(100)) if on() else 100, "acc": 0})
             i += 1
         elif w == "percent_chance":
-            f, n = stack[-1], int(words[i + 1])
+            f, n = top(), int(arg())
+            if "roll" not in f:
+                raise RmsError("percent_chance outside start_random")
             f["on"] = not f["done"] and f["acc"] <= f["roll"] < f["acc"] + n
             f["done"] |= f["on"]
             f["acc"] += n
@@ -112,17 +123,17 @@ def expand(words, rng, defined, consts, includes, folder=None, depth=0):
         elif not on():
             i += 1
         elif w.startswith("#include"):
-            path = folder and os.path.join(folder, *words[i + 1].replace("\\", "/").split("/"))
+            path = folder and os.path.join(folder, *arg().replace("\\", "/").split("/"))
             if w == "#include_drs" and path and os.path.isfile(path):
                 if depth >= 8:
                     raise RmsError(f"#include_drs {words[i + 1]}: more than 8 levels (a loop?)")
                 with open(path, encoding="utf-8", errors="replace") as f:
                     out += expand(tokens(f.read()), rng, defined, consts, includes, folder, depth + 1)
             else:
-                includes.append((w, words[i + 1]))
+                includes.append((w, arg()))
             i += 3 if w == "#include_drs" and i + 2 < len(words) and words[i + 2].isdigit() else 2
         elif w == "#define":
-            defined.add(words[i + 1])
+            defined.add(arg())
             i += 2
         elif w == "#const":                             # a #const with no value defines nothing (#4309)
             v = words[i + 2] if i + 2 < len(words) else ""
@@ -143,6 +154,19 @@ def expand(words, rng, defined, consts, includes, folder=None, depth=0):
     return out
 
 
+class Args(list):
+    """The arguments of a command or an attribute: a missing one gives an RmsError with the name (#4697)."""
+    def __init__(self, name, words):
+        super().__init__(words)
+        self.name = name
+
+    def __getitem__(self, k):
+        try:
+            return super().__getitem__(k)
+        except IndexError:
+            raise RmsError(f"{self.name}: too few arguments") from None
+
+
 class Attrs(dict):
     """The attributes of a command: the arguments of the last one of each name; .many: of each one (replace_terrain
     can come more than once in a block)."""
@@ -155,8 +179,8 @@ def commands(words):
     """{section: [(command, [args], {attribute: [args]})]}. A command or an attribute is a lower case word; its
     arguments are the next words that are numbers or upper case constants."""
     out, section, i = {}, None, 0          # a command before the first section goes to "HEADER" (#4308)
-    def args(i):
-        a = []
+    def args(name, i):
+        a = Args(name, [])
         while i < len(words) and not re.fullmatch(r"[a-z_][a-z0-9_]*|[{}]|<\w+>", words[i]):
             a.append(words[i])
             i += 1
@@ -167,13 +191,13 @@ def commands(words):
             section = out.setdefault(m[1], [])
             i += 1
             continue
-        a, i = args(i + 1)
+        a, i = args(w, i + 1)
         attrs = Attrs()
         if i < len(words) and words[i] == "{":
             i += 1
             while i < len(words) and words[i] != "}":
                 name = words[i]
-                attrs[name], i = args(i + 1)
+                attrs[name], i = args(name, i + 1)
                 attrs.many.setdefault(name, []).append(attrs[name])
             i += 1
         if section is None:
