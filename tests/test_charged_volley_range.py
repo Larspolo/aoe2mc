@@ -5,6 +5,7 @@ import shutil
 import time
 
 import pytest
+from abilities import charged_volley
 from test_damage import health
 
 from game import combat, run
@@ -13,13 +14,13 @@ VOLLEY = {"time": 30, "shots": 3, "attack": 3, "bonus": {"ram": 2}}
 
 
 def test_range_and_ignore_give_the_extra_fields(monkeypatch):
-    monkeypatch.setattr(combat, "CHARGED_VOLLEY", {"MILITIA": {**VOLLEY, "range": 4, "ignore": True}})
-    assert combat.charged_volley_command("u", "MILITIA", 4).endswith(" 3 3 ram:2 16 1")
+    monkeypatch.setattr(charged_volley, "UNITS", {"MILITIA": {**VOLLEY, "range": 4, "ignore": True}})
+    assert charged_volley.command("u", "MILITIA", 4).endswith(" 3 3 ram:2 16 1")
 
 
 def test_a_key_without_them_gives_the_short_command(monkeypatch):
-    monkeypatch.setattr(combat, "CHARGED_VOLLEY", {"MILITIA": VOLLEY})
-    assert combat.charged_volley_command("u", "MILITIA", 4).endswith(" 3 3 ram:2")
+    monkeypatch.setattr(charged_volley, "UNITS", {"MILITIA": VOLLEY})
+    assert charged_volley.command("u", "MILITIA", 4).endswith(" 3 3 ram:2")
 
 
 @pytest.mark.mc

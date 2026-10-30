@@ -1,28 +1,27 @@
 """A dead Konnik rises as a Dismounted Konnik at its place (#4471, AoE2 DE wiki "Konnik": "Turn into a(n) (Elite)
-Dismounted Konnik upon death"): the key "on_death", combat.on_death_command, the marker of AoePlugin.onDeath and
+Dismounted Konnik upon death"): the key "on_death", game/abilities/on_death.py, the marker of AoePlugin.onDeath and
 train.fell / train.risen. Test data on a fake server, and a death on a server."""
 import json
 import shutil
 import time
 
-import combat as inner  # the module that game/train.py imports (game/ is on sys.path)
 import pytest
+from abilities import on_death
 from test_castle_upgrades import setup
 
-from game import combat, gather, run, savegame, train
+from game import gather, run, savegame, train
 
 MARKER = "@e[type=marker,tag=aoe2mc.fell.l,limit=1]"                 # the marker of the plugin for unit "l"
 
 
 def keys(monkeypatch, table):
-    for m in (combat, inner):
-        monkeypatch.setattr(m, "ON_DEATH", table)
+    monkeypatch.setattr(on_death, "UNITS", table)
 
 
 def test_only_a_unit_with_the_key_gets_the_tag(monkeypatch):
     keys(monkeypatch, {"TEST_RIDER": "MILITIA"})
-    assert combat.on_death_command("u-1", "TEST_RIDER") == "tag u-1 add aoe2mc.on_death"
-    assert combat.on_death_command("u-1", "ARCHER") is None
+    assert on_death.command("u-1", "TEST_RIDER") == "tag u-1 add aoe2mc.on_death"
+    assert on_death.command("u-1", "ARCHER") is None
 
 
 def test_a_summoned_unit_with_the_key_gets_the_tag(monkeypatch):
@@ -89,7 +88,7 @@ def test_a_killed_unit_with_the_tag_leaves_a_marker_at_its_place(tiny_world, tmp
         game.command(f"fill 0 {y - 1} 0 15 {y - 1} 15 stone_bricks")
         game.command(f"summon zombie 4.5 {y} 6.5 {{NoAI:1b,UUID:[I;1,2,3,4]}}")
         game.command(f"summon zombie 9.5 {y} 6.5 {{NoAI:1b,UUID:[I;5,6,7,8]}}")
-        game.command(f"tag {tagged} add aoe2mc.on_death")             # combat.on_death_command
+        game.command(f"tag {tagged} add aoe2mc.on_death")             # on_death.command
         game.command(f"kill {tagged}")
         game.command(f"kill {other}")
         time.sleep(1.0)

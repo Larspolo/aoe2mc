@@ -4,19 +4,18 @@ test_gather, and a Paper server."""
 import shutil
 import time
 
-import combat as plain
 import pytest
+from abilities import speed_charge as ability
 from test_kill_spoils import game
 from test_low_hp import value
 
-from game import combat, run, train
+from game import run, train
 
 CHARGE = {"speed": 0.25, "min": 2, "max": 6}
 
 
 def speed_charge(monkeypatch):
-    for m in (combat, plain):                                          # train imports the plain name
-        monkeypatch.setattr(m, "SPEED_CHARGE", {"MILITIA": CHARGE})
+    monkeypatch.setattr(ability, "UNITS", {"MILITIA": CHARGE})
 
 
 def test_a_new_unit_with_the_key_gets_its_speed_charge(monkeypatch):
@@ -25,7 +24,7 @@ def test_a_new_unit_with_the_key_gets_its_speed_charge(monkeypatch):
     u = train.summon(g, "MILITIA", (8.5, 64.0, 8.5))
     T = g.map.T
     assert f"aoe speedcharge {u} 0.25 {2 * T} {6 * T}" in server.log
-    assert combat.speed_charge_command("u", "MILITIA", 4) == "aoe speedcharge u 0.25 8 24"
+    assert ability.command("u", "MILITIA", 4) == "aoe speedcharge u 0.25 8 24"
 
 
 def test_a_unit_without_the_key_gets_none(monkeypatch):
@@ -33,7 +32,7 @@ def test_a_unit_without_the_key_gets_none(monkeypatch):
     server, g = game("FRANKS")
     train.summon(g, "SPEARMAN", (8.5, 64.0, 8.5))
     assert not any(c.startswith("aoe speedcharge") for c in server.log)
-    assert combat.speed_charge_command("u", "SPEARMAN", 4) is None
+    assert ability.command("u", "SPEARMAN", 4) is None
 
 
 @pytest.mark.mc

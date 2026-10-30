@@ -708,15 +708,24 @@ def setup(g, mode="scenario", start=True):
         print("The world has no scenario start values: the game starts with the lobby settings.", file=sys.stderr)
         return g
     for x, p in rows.items():
-        if "age" in p:                                                 # the starting age of the editor (#3296)
-            train.start(x, p["age"])                                   # before the stock: no age cost (train.start)
-        for name in p.get("disabled", ()):                             # the tab "Options" of the editor (#3299)
-            vars(x).setdefault("trigger_menus", {})[name] = False      # an "Enable Object" trigger turns it on again
-        x.stock.update(p.get("resources", {}))
-        x.pop_limit = p.get("pop_limit", x.pop_limit)
-        x.show_stock()                                                 # the sidebar of the resources (Gather.setup)
-        train.sidebar(x)
+        start_values(x, p)
     return g
+
+
+def start_values(x, p):
+    """Put the start values of a player of aoe2mc.json (p) on its Gather x: the age, the technologies, the disabled
+    objects, the resources and the population limit. Also for a converted saved game (run.py, #4565)."""
+    if "age" in p:                                                 # the starting age of the editor (#3296)
+        train.start(x, p["age"])                                   # before the stock: no age cost (train.start)
+    for t in p.get("techs", ()):                                   # the researched technologies of a save (#4565)
+        if t not in x.techs:
+            train.research(x, {"name": t}, start=True)
+    for name in p.get("disabled", ()):                             # the tab "Options" of the editor (#3299)
+        vars(x).setdefault("trigger_menus", {})[name] = False      # an "Enable Object" trigger turns it on again
+    x.stock.update(p.get("resources", {}))
+    x.pop_limit = p.get("pop_limit", x.pop_limit)
+    x.show_stock()                                                 # the sidebar of the resources (Gather.setup)
+    train.sidebar(x)
 
 
 def visible(g):

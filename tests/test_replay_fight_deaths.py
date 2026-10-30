@@ -27,6 +27,7 @@ def test_a_dead_villager_leaves_the_eco_view():
     for k in (1, 2, 3):
         vill(r, "VILLAGER_MALE", 1, k)
     r.pop, r.troops = {1: 3}, {}
+    r.told = {k: [30_000] for k in (1, 2, 3)}                   # the record commands them again (#4063)
     r.census()
     r.idle_time(0)
     r.game.live.discard("u2")                                   # died in a fight: no timeline event
