@@ -95,28 +95,29 @@ jobs:
           SECRET_34: ${{ secrets[fromJSON(needs.names.outputs.list)[34]] }}
         run: |
           text=$(git rev-parse HEAD:.github/workflows/pacer.yml)   # the checkout is the commit of the text of this run
+          # Each exit starts the next run, also a failed command: a loop that died stayed dead for hours (the cron fires
+          # a few times a day; 2026-10-29 22:31 and 2026-10-30 10:50, a start by hand). Only the switch stops the loop.
+          # A red exit waits one cycle first: no fast loop of red runs. The next run reads the newest text and code.
+          stop=
+          trap 'rc=$?; [ -n "$stop" ] && exit $rc; [ $rc -eq 0 ] || sleep 600
+                gh workflow run pacer.yml --repo "$GITHUB_REPOSITORY" --ref main; exit $rc' EXIT
           end=$((SECONDS + 330 * 60))
           while [ $SECONDS -lt $end ]; do
             git fetch -q --depth 1 origin main && git reset -q --hard FETCH_HEAD   # the newest code and switch
             # a new pacer.yml on main: the next run reads it. This old text can call a moved file (tools/pacer.py, #4488)
             if [ "$(git rev-parse HEAD:.github/workflows/pacer.yml)" != "$text" ]; then
               echo "pacer.yml changed on main: start a new loop with the new text"
-              gh workflow run pacer.yml --repo "$GITHUB_REPOSITORY" --ref main
               exit 0
             fi
             # exit 3: another value stops the loop; a missing key is red, not a quiet stop (#4349, `pacer.switch`)
             python3 framework/tools/pacer.py --switch || { rc=$?; [ $rc -eq 3 ] || exit $rc
-              echo "pacer is not \"workflow\" in [pacing] (steering/system/system.toml): stop the loop"; exit 0; }
-            if ! python3 framework/tools/pacer.py --log "$RUNNER_TEMP/pacer.jsonl"; then   # a failed call (HTTP 401, 500): red now
-              sleep 600                                # the next cycle waits as usual: no fast loop of red runs
-              gh workflow run pacer.yml --repo "$GITHUB_REPOSITORY" --ref main
-              exit 1
-            fi
+              echo "pacer is not \"workflow\" in [pacing] (steering/system/system.toml): stop the loop"; stop=1; exit 0; }
+            # a failed call (HTTP 401, 500): red now, and the next run after one cycle
+            python3 framework/tools/pacer.py --log "$RUNNER_TEMP/pacer.jsonl" || exit 1
             gh workflow run dashboard-site.yml --repo "$GITHUB_REPOSITORY" --ref main || true   # the dashboard, fresh each cycle
             # the status issue: 6 runs an hour, not one after each merge (35 an hour, 30 to 50 API calls each, 2026-10-29)
             gh workflow run dashboard.yml --repo "$GITHUB_REPOSITORY" --ref main || true
             # the status comments and the cycle records to the branch metrics: the cron of metrics.yml fires a few times a day
             [ -d "$RUNNER_TEMP/metrics" ] && python3 framework/tools/metrics_log.py "$RUNNER_TEMP/metrics" --pacer "$RUNNER_TEMP/pacer.jsonl" --push || true
             sleep 600
-          done
-          gh workflow run pacer.yml --repo "$GITHUB_REPOSITORY" --ref main   # the next loop
+          done   # the trap starts the next loop
