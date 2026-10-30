@@ -442,6 +442,12 @@ def read_scenario(path):
             name = (p.tribe_name or "").strip()     # the name of the "Players" tab; "Player N" is the default (#3295)
             if name and name != f"Player {p.player_id}":
                 players[p.player_id]["name"] = name
+            ai = (getattr(p, "ai_script", "") or "").strip()     # the embedded AI script of the player (#4531)
+            if ai:
+                players[p.player_id]["ai"] = ai
+            elif (getattr(p, "personality", "") or "").strip() not in ("", "None"):
+                print(f"Player {p.player_id}: the AI {p.personality.strip()} has no embedded script: its bot plays by "
+                      "its own logic.", file=sys.stderr)
             if p.lock_civ:                          # "Lock Civilizations": the player keeps its civilization (#3295)
                 players[p.player_id]["lock_civ"] = True
             off = sorted({techs.get(i, f"TECH_{i}") for i in p.disabled_techs or ()} |   # the tab "Options" (#3299)
@@ -2868,7 +2874,7 @@ def write_objects(path, size, T, H, players, objects, cols, ground, timeline=Non
         objs.append(e)
     data = {"map_size": size, "tile_size": T, "level_height": H, "mood": mood,
             "players": {str(pid): {"civ": p["civ"], "color": p["color"], "arch": p["arch"]}
-                        | {k: p[k] for k in ("team", "neutral", "resources", "pop_limit", "computer", "age", "name", "lock_civ", "start", "disabled", "saved", "techs") if k in p} for pid, p in sorted(players.items())},
+                        | {k: p[k] for k in ("team", "neutral", "resources", "pop_limit", "computer", "ai", "age", "name", "lock_civ", "start", "disabled", "saved", "techs") if k in p} for pid, p in sorted(players.items())},
             "objects": objs, "yaw": float(yaw)}
     n, wet = cols.n, cols.wtop > cols.top
     data["ground"] = [" ".join("-" if wet[x, z] else str(ground[x, z]) for x in range(n)) for z in range(n)]

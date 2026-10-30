@@ -2224,11 +2224,12 @@ class Gather:
         self.command(f"fill {fx0} {min(ys) - 2} {fz0} {fx1 - 1} {max(ys) + 3} {fz1 - 1} air replace minecraft:barrier")
         if flat or not felled:
             self.stump(sx, sz, ys)
-        if flat:                                                       # a building may go on the stump, as in AoE2 (#3265)
-            for x in range(fx0, fx1):
-                for z in range(fz0, fz1):
-                    self.map.blocked.discard((x, z))
-                    self.map.ground[z][x] = ys[0]
+        feet = {(x, z) for x in range(fx0, fx1) for z in range(fz0, fz1)}
+        near = [self.map.y(x, z) for x, z in self.map.around(feet)]
+        if flat or near and max(near) - min(near) <= 1:            # a building may go on the stump, as in AoE2 (#3265);
+            for x, z in feet:                                       # a walker crosses a step of 1 block: in de-64.3 cut
+                self.map.blocked.discard((x, z))                    # trees shut lumberjacks in (#4063)
+                self.map.ground[z][x] = ys[0] if flat else min(near)
         self.trunks.pop(tile, None)
 
     def berries(self, tile):

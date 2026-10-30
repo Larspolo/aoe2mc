@@ -35,7 +35,7 @@ def test_the_upgrade_changes_the_live_and_the_new_units():
     assert train.queue(g, "Steve", CASTLE, "ELITE_COMPOSITE_BOWMAN_UPGRADE")
     train.tick(g, train.TRAIN_TIMES["ELITE_COMPOSITE_BOWMAN_UPGRADE"])
     assert "ELITE_COMPOSITE_BOWMAN_UPGRADE" in g.techs and g.soldiers["cb"] == "ELITE_COMPOSITE_BOWMAN"
-    assert combat.stats_command("cb", "ELITE_COMPOSITE_BOWMAN") in server.log
+    assert combat.stats_command("cb", "ELITE_COMPOSITE_BOWMAN", **train.hits(g, "ELITE_COMPOSITE_BOWMAN")) in server.log   # (#4463)
     train.open_menu(g, "Steve", CASTLE)
     menu = menus(server)[-1] + " "
     assert " " + entry(g, CASTLE, "ELITE_COMPOSITE_BOWMAN") + "queue 0/15 " in menu
