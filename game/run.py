@@ -565,9 +565,21 @@ def civ_choices(values):
     return out
 
 
-def apply_civs(data, civs):
+def civ_pool_choice(text):
+    """The sorted civilizations of the --civ-pool value ("BRITONS,FRANKS", #4756): the civilizations that the host
+    enables, Random picks only from them. An unknown name stops with the list of names."""
+    import civs
+    names = sorted(r["name"] for r in civs.ROWS)
+    pool = sorted({n.strip().upper() for n in text.split(",") if n.strip()})
+    if not pool or set(pool) - set(names):
+        sys.exit(f"--civ-pool {text}: write CIVILIZATION,CIVILIZATION,..., each one of: {', '.join(names)}")
+    return pool
+
+
+def apply_civs(data, civs, pool=None):
     """Write the --civ choices {player: civilization} into the players of aoe2mc.json. A player whose scenario locks
-    its civilization ("Lock Civilizations", #3295) keeps the scenario civilization: a line on stderr says why."""
+    its civilization ("Lock Civilizations", #3295) keeps the scenario civilization: a line on stderr says why. RANDOM
+    picks from the pool (civ_pool_choice, #4756), else from all civilizations."""
     for player, name in (civs or {}).items():
         p = data.setdefault("players", {}).setdefault(str(player), {})
         if p.get("lock_civ"):
@@ -578,7 +590,7 @@ def apply_civs(data, civs):
 
             import civs
             seed = f"{data.get('map_size')}-{len(data.get('objects', ()))}-{player}"
-            name = random.Random(seed).choice(sorted(r["name"] for r in civs.ROWS))
+            name = random.Random(seed).choice(sorted(pool or (r["name"] for r in civs.ROWS)))
             print(f"player {player}: --civ RANDOM gives {name}", file=sys.stderr)
         p["civ"] = name
 
@@ -644,6 +656,7 @@ SETTINGS = {
     "antiquity": False,               # Antiquity Mode: the Return of Rome rule set (table.use, game/data/antiquity, #3666)
     "challenge": None,                # an Art of War challenge (challenge.CHALLENGES, #3900)
     "civ": None,                      # {player: civilization} in place of the scenario's (civ_choices, #2267)
+    "civ_pool": None,                 # the enabled civilizations of Random (civ_pool_choice, #4756)
     "empire_wars": False,             # "Empire Wars Mode" on top of the mode (ON_TOP, #2490)
     "end_age": "imperial",            # "Ending age" (build.locked, #2346)
     "full_tech_tree": False,          # "Full Tech Tree": the full tech tree and no civilization bonuses (civs.civ, #2354)
@@ -726,7 +739,7 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
             settings["age"] = challenge.CHALLENGES[settings["challenge"]].get("age", "dark")
         if enemy := challenge.CHALLENGES[settings["challenge"]].get("enemy"):   # a bot town that does not attack (#3905)
             settings["civ"][2], bot = enemy["civ"], bot or 1
-    apply_civs(data, settings["civ"])                             # before the Gathers: all bonuses (civs.civ) follow it
+    apply_civs(data, settings["civ"], settings["civ_pool"])                             # before the Gathers: all bonuses (civs.civ) follow it
     for player, pct in (settings["handicap"] or {}).items():     # before the Gathers: the start resources (#2474)
         data.setdefault("players", {}).setdefault(str(player), {})["handicap"] = pct
     for player, team in (settings["teams"] or {}).items():       # gather.allied and the scoreboard teams follow it
@@ -1278,6 +1291,8 @@ def main(argv=None, scenario=None):
     ap.add_argument("--civ", action="append", metavar="N=CIV", help="--play: player N plays civilization CIV (for "
                     "example 1=BRITONS, or 1=RANDOM; repeat it for more players): the game rules change, the buildings of the "
                     "world keep the architecture of the scenario")
+    ap.add_argument("--civ-pool", type=civ_pool_choice, metavar="CIV,CIV", help="--play: the civilizations that the "
+                    "host enables: --civ N=RANDOM picks only from them (for example BRITONS,FRANKS,MONGOLS)")
     ap.add_argument("--handicap", action="append", metavar="N=PCT", help="--play: the AoE2 setting \"Handicap\" of "
                     "player N, 100 to 200 percent in steps of 5 (for example 1=150, repeat it for more players): more "
                     "start resources, villager work rate and hit points, building hit points and military building "
