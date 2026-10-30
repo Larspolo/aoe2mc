@@ -27,6 +27,7 @@
 {"name": "extra", "text": "The second resource of a gather kind (\"forage\": a fruit bush), {kind: [resource, amount for each unit]}: Poles and Puru stone miners, Portuguese foragers, Shu lumberjacks. Gather.second adds it at each gathered unit.", "issue": 2113}
 {"name": "faith", "text": "The factor of the speed of the monks that regain faith after a conversion (Muisca: 100 % faster). game/monk.py.", "issue": 2314}
 {"name": "fallen", "text": "The part of the cost of a fallen own unit that the player gets back (Tupi). game/spoils.py.", "issue": 2271}
+{"name": "farm_food", "text": "The food that a new own farm gets on top of FARM_FOOD (Sumerians +125). gather.Map adds it to Map.farm_food.", "issue": 4444}
 {"name": "farm_upgrades", "text": "The factor of the food of the farm upgrades (Sicilians: +125 %). train.research.", "issue": 2230}
 {"name": "free_relic", "text": "The free relics of the first complete own building of a kind, {building: relics} (Armenians: one relic in the first Fortified Church). monk.free_relic puts them into it.", "issue": 2419}
 {"name": "garrison", "text": "The units inside a building, {building: units} (garrison.size).", "issue": 2117}

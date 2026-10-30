@@ -282,6 +282,7 @@ class Map:
         self.traps = {}                                                # own fish trap tile -> its cells (#1438)
         civ = None if data.get("full_tech_tree") else data.get("players", {}).get(str(player), {}).get("civ")   # #2354
         self.trap_food = round(TRAP_FOOD * civs.value("trap_food", civ, 1))   # food of a new own fish trap (Malay, #2333)
+        self.farm_food += civs.value("farm_food", civ, 0)              # more food of a new own farm (Sumerians, #4444)
         self.aura = civs.AURA.get(civ, {})                             # Thracians (#2378)
         self.auras = []                                                # the cells of own aura buildings
         for o in data["objects"]:
