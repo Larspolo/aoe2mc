@@ -540,7 +540,7 @@ def read_record(path):
         civ = (p.civilization or "?").upper()
         players[p.number] = {"team": teams.get(p.number), "color": buildings.COLOR_NAMES[p.color_id] if 0 <= p.color_id < 8 else "light_gray",
                              "arch": buildings.CIV_TO_ARCH.get(civ, "western"), "civ": civ,
-                             "view": (p.position.x, p.position.y) if p.position else None}
+                             "view": (p.position.x, p.position.y) if p.position and p.position.x is not None else None}
 
     kinds, objects = object_kinds(), []
     for player, objs in [(0, match.gaia)] + [(p.number, p.objects) for p in match.players]:
