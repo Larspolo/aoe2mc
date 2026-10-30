@@ -5,14 +5,20 @@ The first push of a ticket took 2 to 6 tool calls in each run on 2026-10-28, and
 
     python3 framework/tools/ship_pr.py N --message MSG.txt --title "Title" --body BODY.md   # the first push of ticket N
     python3 framework/tools/ship_pr.py N --message MSG.txt                                  # a later push to the open PR
+    python3 framework/tools/ship_pr.py N --ci                                               # only wait for the quick CI again
 
 Steps: `git commit -F MSG.txt` of the staged files (without `--message`: the commits that are there), `ruff check .`,
 the tests (the test files of the branch and the test files that import its changed modules, never the full
 suite: the quick CI runs it, owner #4187; `--tested`: you ran them on this tree), `claim.py N --guard` and the push (`merge_main.push`), the PR (a new
 one with `Closes #N` in its body; or the open PR of the branch), and `mergeable_state` (`dirty`: run
-`python3 framework/tools/merge_main.py --push N`). Exit 0: shipped. Exit 2: ruff or a test fails, or a change of data
+`python3 framework/tools/merge_main.py --push N`). Then it waits for the quick CI of the pushed commit, up to `WAIT`
+minutes after its start (#4784): a red quick CI after the end of its run cost a takeover and a cold run 30 to 40
+minutes later (11 to 25 of 50 takeovers on 2026-10-30); the run that wrote the code fixes it with its warm context.
+Run it with the Bash `timeout` 600000. Exit 0: shipped (the quick CI is green, still runs at the time limit: `--ci`
+waits again, or a conflict stops it). Exit 2: ruff or a test fails, or a change of data
 files only adds a test (`docs/extend.md`; nothing pushed). Exit 3: the
-guard or the push fails (do not push by hand). Exit 4: no commit to ship, or the PR call fails.
+guard or the push fails (do not push by hand). Exit 4: no commit to ship, or the PR call fails. Exit 5: the quick CI
+is red: it prints the failed steps and tests; fix them, commit and run it again.
 """
 import argparse
 import glob
@@ -28,6 +34,9 @@ import merge_main  # noqa: E402
 from agent_config import CONFIG  # noqa: E402
 
 push = merge_main.push
+QUICK = "quick"                                     # the check of ci.yml that Automerge waits for
+WAIT = 9          # minutes: the quick CI of a PR took 6.2 (median) and 7.2 (p90) minutes on 2026-10-30 (#4784)
+POLL = 20         # seconds
 DATA = ("data/", "game/data/", "tools/mcdata/")      # data files: a change there needs no test (owner, 2026-10-29)
 
 
@@ -86,6 +95,46 @@ def state(number, tries=6, wait=5):
     return "unknown"
 
 
+def quick(sha):
+    """The check run `quick` of commit `sha`, or None (not queued yet)."""
+    return next(iter(dashboard.api(f"commits/{sha}/check-runs?check_name={QUICK}").get("check_runs", [])), None)
+
+
+def failures(check):
+    """The failed steps and the failure annotations of a check run (ci.yml writes the failed tests as annotations: the
+    cloud blocks the host of the job logs, #4784)."""
+    steps = [s["name"] for s in dashboard.api(f"actions/jobs/{check['id']}").get("steps", []) if s["conclusion"] == "failure"]
+    notes = [a["message"] for a in dashboard.api(f"check-runs/{check['id']}/annotations")
+             if a["annotation_level"] == "failure" and not a["message"].startswith("Process completed with exit code")]
+    return [f"failed step: {s}" for s in steps] + notes
+
+
+def wait_ci(sha, deadline, get=quick, now=time.monotonic, sleep=time.sleep):
+    """The completed check run `quick` of `sha`, or None at the deadline (a `now` time)."""
+    while True:
+        c = get(sha)
+        if c and c["status"] == "completed":
+            return c
+        if now() + POLL > deadline:
+            return None
+        sleep(POLL)
+
+
+def ci(number, sha, deadline):
+    """Wait for the quick CI of `sha` and print its result. Exit 5 when it is red, else 0."""
+    print(f"waiting for the quick CI of {sha[:8]} (at most until {WAIT} minutes after the start)", flush=True)
+    c = wait_ci(sha, deadline)
+    if c is None:
+        print(f"the quick CI still runs: run `python3 framework/tools/ship_pr.py {number} --ci` to wait again")
+        return 0
+    print(f"quick CI {c['conclusion']}")
+    if c["conclusion"] != "failure":
+        return 0
+    print("\n".join(failures(c)) or "no failed step: open the run of the check")
+    print(f"fix it, commit and run `python3 framework/tools/ship_pr.py {number}` again (autopilot step 6.9)")
+    return 5
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("number", type=int, help="the ticket")
@@ -96,8 +145,19 @@ def main(argv=None):
     ap.add_argument("--hold", action="store_true", help="add the label `hold`: Automerge waits for the PR's own checks")
     ap.add_argument("--part", action="store_true", help="`Part of #N` in place of `Closes #N` in a new PR: the ticket "
                     "stays open (a check ticket that waits for its bug tickets, autopilot `owner.md`)")
+    ap.add_argument("--ci", action="store_true", help="only wait for the quick CI of the open PR of the branch")
+    ap.add_argument("--wait", type=float, default=WAIT, help=f"minutes after the start to wait for the quick CI "
+                    f"(default {WAIT}; 0: do not wait)")
     a = ap.parse_args(argv)
+    deadline = time.monotonic() + a.wait * 60
     branch = git("branch", "--show-current").stdout.strip()
+    if a.ci:
+        owner = CONFIG["repo"].split("/")[0]
+        pr = next(iter(dashboard.api(f"pulls?head={owner}:{branch}&state=open")), None)
+        if pr is None:
+            print(f"no open PR of {branch}")
+            return 4
+        return ci(a.number, pr["head"]["sha"], deadline)
     if a.message:
         c = git("commit", "-q", "-F", a.message)
         if c.returncode:
@@ -134,7 +194,9 @@ def main(argv=None):
         print(f"label hold on PR #{pr['number']}")
     s = state(pr["number"])
     print(f"mergeable_state {s}" + (f": run `python3 framework/tools/merge_main.py --push {a.number}`" if s == "dirty" else ""))
-    return 0
+    if s == "dirty" or a.wait <= 0:                 # a conflict: GitHub starts no CI on the PR
+        return 0
+    return ci(a.number, git("rev-parse", "HEAD").stdout.strip(), deadline)
 
 
 if __name__ == "__main__":
