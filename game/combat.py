@@ -289,7 +289,7 @@ def setup(game, data):
     for o in data["objects"]:
         if o["kind"] == "building" and o["player"] and "footprint" in o and o["name"] in BUILDINGS:
             uuid, civ = target_uuid(o["footprint"]), data.get("players", {}).get(str(o["player"]), {}).get("civ")
-            civ = None if data.get("full_tech_tree") else civ          # no civilization bonus (#2354)
+            civ = None if data.get("full_tech_tree") else civs.with_team(civ, data.get("players", {}), o["player"])   # no civilization bonus (#2354); allies (#4790)
             for c in building(uuid, o["name"], o["player"], building_box(o, ground), data.get("tile_size", 4),
                               held.get(o.get("ref"), ()), civs.hp(civ, o["name"], stats(o["name"]), 0,
                                                                   civs.handicap(data, o["player"]))) \
