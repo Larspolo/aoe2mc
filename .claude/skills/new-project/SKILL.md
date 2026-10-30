@@ -6,7 +6,7 @@ description: Set up a new project with this agent system from a short project id
 # Set up a new project
 
 The goal: the owner gives an idea and a few answers, you do all other work. The owner does only the steps that need
-the owner's own accounts (step 7). Write all text in ASD-STE100 Simplified Technical English. The manual form of
+the owner's own accounts (step 8). Write all text in ASD-STE100 Simplified Technical English. The manual form of
 these steps: `framework/docs/NEW_PROJECT.md`.
 
 **Rules for the questions**
@@ -51,7 +51,31 @@ Ask in one AskUserQuestion call (skip a question when the idea answers it):
 2. "Stack": your stack, with the lint and test tools in the description (Recommended), and one other good stack.
 3. "Visibility": public (Recommended: free Actions minutes), private.
 
-## 4. Suggest the roadmap
+## 4. Ask the direction
+
+The runs work for months with no owner in the session. These answers tell them what the owner wants. Ask them in
+one AskUserQuestion call, with options that you make from the idea (not general words):
+
+1. **"Philosophy"** (one or two questions): find the main tension of the project, where two good goals pull apart,
+   and ask which side wins. Examples: a port of a game to another platform ("the rules of the game, the look and the
+   controls of the platform" against "all as in the original"), a tool ("few options that work at once" against
+   "each option of the expert"), a model ("fast and close" against "slow and exact"). Make 2 or 3 options per
+   tension; recommend the one that fits the idea best. Also ask, or decide with a reason: use the features of the
+   platform or library first, or own code.
+2. **"Your decisions"** (multiSelect): the areas where the owner decides each choice, also when one option is
+   clearly best. Suggest areas of this project, for example: the look and the user interface, the rules or the
+   behavior that a user sees, the order of the features, a new dependency or a service with a cost, the architecture.
+   Add "Only real ties (Recommended)": the agents decide, and ask only when two options are equally good.
+3. **"Try a feature"**: how the owner tries a new feature. Suggest what fits the project kind:
+   - "Images in each PR (Recommended)": screenshots, a short recording or the output of a run; no work for the owner.
+   - "A test ticket at the end of each epic": a `needs-human` ticket with the steps to try the feature on the
+     owner's computer.
+   - "A build to download": each epic makes a release (a file, a package, an installer) that the owner runs.
+   - "A live preview": each PR or epic gets a preview URL (web projects only).
+
+Write the answers in step 6. When an answer is "Other", use the owner's words.
+
+## 5. Suggest the roadmap
 
 Write a draft of `steering/project/ROADMAP.md` yourself. The runs make all epics and tickets from it, so it must
 describe the whole product:
@@ -62,17 +86,19 @@ describe the whole product:
 - Each feature: `- [ ] \`goal:feature\` text`, with a short key in lower case (`convert:terrain`), and 1 to 3
   sub-items under it (`  - text`): what the user can do or see when the feature is done. A sub-item is a check,
   not a task.
+- Follow the philosophy of step 4: a feature that goes against it is not on the roadmap. When the owner tries
+  features with a test ticket or a build, make each epic end with a result that the owner can try.
 - Keep the head of the template file (the text above `## 1.`).
 
 Show the draft in the chat. Then ask with AskUserQuestion: "Roadmap": "Use it" (Recommended), "Change some items"
 (the owner writes the changes), "More features", "Fewer features". Change the draft and ask again, until the owner
 selects "Use it".
 
-## 5. Fill the project
+## 6. Fill the project
 
 1. `python3 framework/tools/bootstrap.py DIR --repo OWNER/NAME`, with DIR a new directory in the scratchpad.
 2. Fill each start file in DIR (each `TODO` line). Do not leave a `TODO`:
-   - `steering/project/ROADMAP.md`: the roadmap of step 4.
+   - `steering/project/ROADMAP.md`: the roadmap of step 5.
    - `agent.toml`: the commands of step 3 in `[commands]`. Keep the other values.
    - `CLAUDE.md`: the idea in two sentences, the commands table, the planned code map (the directories of the stack).
    - `.claude/skills/verify/SKILL.md`: level 1 lint and fast tests, then the levels of the stack (slow tests, a run of
@@ -82,10 +108,16 @@ selects "Use it".
      package hosts of the stack. `docs/ENVIRONMENT.md`: both in words.
    - `pyproject.toml`, `requirements-dev.txt`: keep them. For another language, add its project file (`package.json`,
      `Cargo.toml`, ...) with the lint and test tools, and one smoke test of the language.
-   - `steering/project/PRINCIPLES.md`: keep it empty.
-3. In DIR, run the install, lint and fast test commands. All must pass before step 6. Fix the files, not the tests.
+   - `steering/project/PRINCIPLES.md`: the answers of step 4. One principle per philosophy answer (`## P1. <rule>`,
+     2 or 3 lines: what wins, and one example of this project). The section "Owner involvement": the areas of
+     "Your decisions". The section "Try a feature": the way of "Try a feature", with what the agents make for it.
+   - `CLAUDE.md`: the rule of P1 in one line in a section "Rules of the domain" (each run reads `CLAUDE.md`).
+   - `[owner_tasks]` in `agent.toml`: with a test ticket, `play` = the words that each test ticket body has
+     (for example "Try it on your computer").
+   - `.claude/skills/verify/SKILL.md`: with images in each PR, a last level that makes them.
+3. In DIR, run the install, lint and fast test commands. All must pass before step 7. Fix the files, not the tests.
 
-## 6. Make the repository
+## 7. Make the repository
 
 **With `gh` (a local session):**
 
@@ -97,13 +129,13 @@ selects "Use it".
 **With no `gh` (a cloud session):**
 
 1. Make the repository with `mcp__github__create_repository` (the name, the description, `private` of step 3).
-2. Ask the owner to install the Claude GitHub app on the new repository (step 7, item 1) and wait for the answer.
+2. Ask the owner to install the Claude GitHub app on the new repository (step 8, item 1) and wait for the answer.
    Then add the repository to the session with `add_repo`, and push DIR: `git -C DIR init -b main`, commit, add the
    remote, `git push -u origin main`.
 3. The settings, labels and status issue need `gh`: give the owner the command of the local way, item 1. The first
    run of the agents also makes the status issue when it is missing.
 
-## 7. The steps of the owner
+## 8. The steps of the owner
 
 Give the owner one numbered list with only these steps, with the real repository name in each line:
 
@@ -125,9 +157,9 @@ Give the owner one numbered list with only these steps, with the real repository
 When the owner gives the ID, write it to `trigger` in `[pacing]` of `DIR/steering/system/system.toml`, commit,
 push to the default branch, and run `python3 framework/tools/new_repo.py DIR --repo OWNER/NAME --start`.
 
-## 8. Check and report
+## 9. Check and report
 
 1. `gh run list --repo OWNER/NAME --limit 5`: CI and Pacer start.
-2. Tell the owner: the repository URL, the roadmap goals, the stack, and what the first run does (it makes the
+2. Tell the owner: the repository URL, the roadmap goals, the stack, the principles, and what the first run does (it makes the
    epics and the tickets from the roadmap). The owner steers through issues from then on
-   (`framework/docs/STEERING.md`).
+   (`framework/docs/STEERING.md`). To change the direction later, the owner edits `steering/project/PRINCIPLES.md`.
