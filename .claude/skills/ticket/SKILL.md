@@ -122,7 +122,8 @@ the order of features), the owner decides on GitHub. Do not choose, and do not a
   and close the decision ticket. When the answer follows no principle, or goes against one, say it in the comment that
   records the decision: "This does not follow P<n> (<rule>). I will add it as an exception; reply if P<n> must change."
   Do not add `needs-human` for this: the owner replies only when the principle must change.
-- One clearly best option: no decision ticket. Choose it and say why in the PR.
+- One clearly best option: no decision ticket. Choose it and say why in the PR. Exception: an area of the section
+  "Owner involvement" of `steering/project/PRINCIPLES.md` (when the file has it) always gets a decision ticket.
 
 A research result that waits for the owner (options, milestones, "the owner decides") gets a `needs-human` ticket
 for each decision, with the options and your recommendation, before the research ticket closes. A decision that

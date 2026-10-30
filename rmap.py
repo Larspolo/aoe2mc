@@ -68,9 +68,17 @@ class RmsError(ValueError):
 
 
 def tokens(text):
-    """The words of a script without its /* comments */; braces and section names are words."""
-    text = re.sub(r"/\*.*?\*/", " ", text, flags=re.S)
-    return re.sub(r"([{}])", r" \1 ", text).split()
+    """The words of a script without its /* comments */; braces and section names are words. Comments nest, as in the
+    game: the */ of an inner comment does not end the outer one (a commented-out block with a note in it, #4695)."""
+    keep, depth = [], 0
+    for part in re.split(r"(/\*|\*/)", text):
+        if part == "/*":
+            depth += 1
+        elif part == "*/":
+            depth = max(depth - 1, 0)
+        elif not depth:
+            keep.append(part)
+    return re.sub(r"([{}])", r" \1 ", " ".join(keep)).split()
 
 
 def expand(words, rng, defined, consts, includes, folder=None, depth=0):
@@ -81,48 +89,59 @@ def expand(words, rng, defined, consts, includes, folder=None, depth=0):
     out, stack, i = [], [], 0
     def on():
         return all(f["on"] for f in stack)
+    def arg():                                      # a command as the last word: an RmsError, not an IndexError (#4697)
+        if i + 1 >= len(words):
+            raise RmsError(f"{w} has no argument")
+        return words[i + 1]
+    def top():
+        if not stack:
+            raise RmsError(f"{w} without its start")
+        return stack[-1]
     while i < len(words):
         w = words[i]
         if w == "if":
-            c = on() and words[i + 1] in defined
+            c = on() and arg() in defined
             stack.append({"on": c, "done": c})
             i += 2
         elif w == "elseif":
-            f = stack[-1]
-            f["on"] = not f["done"] and words[i + 1] in defined
+            f = top()
+            f["on"] = not f["done"] and arg() in defined
             f["done"] |= f["on"]
             i += 2
         elif w == "else":
-            stack[-1]["on"], stack[-1]["done"] = not stack[-1]["done"], True
+            f = top()
+            f["on"], f["done"] = not f["done"], True
             i += 1
         elif w == "start_random":
             stack.append({"on": False, "done": False, "roll": int(rng.integers(100)) if on() else 100, "acc": 0})
             i += 1
         elif w == "percent_chance":
-            f, n = stack[-1], int(words[i + 1])
+            f, n = top(), int(arg())
+            if "roll" not in f:
+                raise RmsError("percent_chance outside start_random")
             f["on"] = not f["done"] and f["acc"] <= f["roll"] < f["acc"] + n
             f["done"] |= f["on"]
             f["acc"] += n
             i += 2
         elif w in ("endif", "end_random"):
             if not stack:
-                raise RmsError(f"{w} without its start")
+                raise RmsError(f"{w} without its start (after: {' '.join(words[max(0, i - 8):i])})")
             stack.pop()
             i += 1
         elif not on():
             i += 1
         elif w.startswith("#include"):
-            path = folder and os.path.join(folder, *words[i + 1].replace("\\", "/").split("/"))
+            path = folder and os.path.join(folder, *arg().replace("\\", "/").split("/"))
             if w == "#include_drs" and path and os.path.isfile(path):
                 if depth >= 8:
                     raise RmsError(f"#include_drs {words[i + 1]}: more than 8 levels (a loop?)")
                 with open(path, encoding="utf-8", errors="replace") as f:
                     out += expand(tokens(f.read()), rng, defined, consts, includes, folder, depth + 1)
             else:
-                includes.append((w, words[i + 1]))
+                includes.append((w, arg()))
             i += 3 if w == "#include_drs" and i + 2 < len(words) and words[i + 2].isdigit() else 2
         elif w == "#define":
-            defined.add(words[i + 1])
+            defined.add(arg())
             i += 2
         elif w == "#const":                             # a #const with no value defines nothing (#4309)
             v = words[i + 2] if i + 2 < len(words) else ""
@@ -143,6 +162,19 @@ def expand(words, rng, defined, consts, includes, folder=None, depth=0):
     return out
 
 
+class Args(list):
+    """The arguments of a command or an attribute: a missing one gives an RmsError with the name (#4697)."""
+    def __init__(self, name, words):
+        super().__init__(words)
+        self.name = name
+
+    def __getitem__(self, k):
+        try:
+            return super().__getitem__(k)
+        except IndexError:
+            raise RmsError(f"{self.name}: too few arguments") from None
+
+
 class Attrs(dict):
     """The attributes of a command: the arguments of the last one of each name; .many: of each one (replace_terrain
     can come more than once in a block)."""
@@ -155,8 +187,8 @@ def commands(words):
     """{section: [(command, [args], {attribute: [args]})]}. A command or an attribute is a lower case word; its
     arguments are the next words that are numbers or upper case constants."""
     out, section, i = {}, None, 0          # a command before the first section goes to "HEADER" (#4308)
-    def args(i):
-        a = []
+    def args(name, i):
+        a = Args(name, [])
         while i < len(words) and not re.fullmatch(r"[a-z_][a-z0-9_]*|[{}]|<\w+>", words[i]):
             a.append(words[i])
             i += 1
@@ -167,13 +199,13 @@ def commands(words):
             section = out.setdefault(m[1], [])
             i += 1
             continue
-        a, i = args(i + 1)
+        a, i = args(w, i + 1)
         attrs = Attrs()
         if i < len(words) and words[i] == "{":
             i += 1
             while i < len(words) and words[i] != "}":
                 name = words[i]
-                attrs[name], i = args(i + 1)
+                attrs[name], i = args(name, i + 1)
                 attrs.many.setdefault(name, []).append(attrs[name])
             i += 1
         if section is None:
@@ -504,7 +536,7 @@ def generate(text, seed, players=2, size=None, warn=None, teams=None, folder=Non
     rng = np.random.default_rng(seed)
     n = size or SIZES.get(players, 200)
     defined = {next((label for s, label in LABELS if n <= s), "GIGANTIC_MAP")}
-    consts = TERRAINS | OBJECTS
+    consts = TERRAINS | OBJECTS | {"MAPSIZE_SIDE": n}   # DE: the side of the map in tiles (#4693)
     includes = []
     sections = commands(expand(tokens(text), rng, defined, consts, includes, folder))
     for cmd, a, _ in sections.pop("HEADER", []):
@@ -566,7 +598,9 @@ def generate(text, seed, players=2, size=None, warn=None, teams=None, folder=Non
                     r = ring + (rng.uniform(-vary, vary) if vary else 0)   # no draw with no change: same maps
                     c = (int(round((n - 1) / 2 + r * n * np.cos(a))), int(round((n - 1) / 2 + r * n * np.sin(a))))
                     starts.append({"player": p, "x": c[0], "y": c[1], "base_size": base, "land": len(lands)})
-                    links.append((c, p, zone if zone is not None else -1 - len(lands)))
+                    t = teams[p - 1] if teams and "set_zone_by_team" in attrs else None
+                    z = zone if zone is not None else -1 - len(lands)
+                    links.append((c, p, ("team", t) if t is not None else z))   # one zone per team (#4696)
                     lands.append({"id": len(lands), "cells": square(c, base, n, circular="set_circular_base" in attrs),
                                   "clump": clump, "box": box, "fuzz": fuzz, "zone": links[-1][2], "avoid": avoid,
                                   "target": max(total // players, (2 * base + 1) ** 2)})
@@ -765,6 +799,7 @@ CREATE_LAND = (                 # the attributes of create_land and create_playe
     "other_zone_avoidance_distance",
     "right_border",
     "set_circular_base",
+    "set_zone_by_team",             # the lands of a team share one zone (#4696)
     "terrain_type",
     "top_border",
     "zone",
@@ -847,7 +882,7 @@ def path(land, origin):
 
 def objects(cmds, consts, terrain, starts, rng, warn, owner=None, ridges=(), layer=None, land_ids=None):
     """The objects of the create_object commands of <OBJECTS_GENERATION> (#3855), with the attributes of
-    `CREATE_OBJECT`: number_of_objects on random free tiles, in groups with number_of_groups (#3856).
+    `CREATE_OBJECT`: number_of_objects on random free tiles, in groups with number_of_groups or a grouping attribute (#3856, #4699).
     Never on water (only a fish or a ship), a forest, a cliff or another object; an object with no free tile is missing.
     temp_min_distance_group_placement keeps the groups of one command apart; later commands do not avoid them (#4138).
     generate_for_first_land_only gives the objects of set_place_for_every_player to the first land only (#4138).
@@ -887,6 +922,7 @@ def objects(cmds, consts, terrain, starts, rng, warn, owner=None, ridges=(), lay
         delta = {"resource_delta": value(attrs["resource_delta"][0], consts)} if "resource_delta" in attrs else {}
         radius = value(attrs["group_placement_radius"][0], consts) if "group_placement_radius" in attrs else 3
         tight = "set_tight_grouping" in attrs
+        grouped = groups is not None or any(a in attrs for a in ("group_placement_radius", "set_loose_grouping", "set_tight_grouping"))
         circle = "set_circular_placement" in attrs
         k = (n * n / 10000 if "set_scaling_to_map_size" in attrs else 1) * (
             len(starts) if "set_scaling_to_player_number" in attrs else 1)
@@ -943,12 +979,14 @@ def objects(cmds, consts, terrain, starts, rng, warn, owner=None, ridges=(), lay
             if "require_path" in attrs and st:          # a land path: no water, forest or cliff (#4137)
                 place = place & path(~wet & ~forest & ~cliff, (int(st["x"]), int(st["y"])))
             dist = (np.hypot(x - st["x"], y - st["y"]) if circle else np.maximum(abs(x - st["x"]), abs(y - st["y"]))) if st else np.full((n, n), float(lo))
-            # without number_of_groups each object is a group of 1; with it, number_of_objects (± group_variance) is
-            # the size of each group (AoE2 DE scripting guide; loose grouping and radius 3 are the defaults)
+            # number_of_objects (± group_variance) is the size of each group (AoE2 DE scripting guide; loose grouping and
+            # radius 3 are the defaults). Without number_of_groups: one group when a grouping attribute is set (the 7 gold
+            # of Arabia), else each object is a group of 1. Single objects with min_distance_group_placement fill the ring (#4699).
             key = (dist if "find_closest" in attrs and st else
                    np.hypot(x - (n - 1) / 2, y - (n - 1) / 2) if "find_closest_to_map_center" in attrs else
                    np.minimum(np.minimum(x, y), np.minimum(n - 1 - x, n - 1 - y)) if "find_closest_to_map_edge" in attrs else None)
-            sizes = [1] * count if groups is None else [max(1, count + int(rng.integers(-vary, vary + 1))) for _ in range(groups)]
+            sizes = [1] * count if groups is None and not grouped else [
+                max(1, count + int(rng.integers(-vary, vary + 1))) for _ in range(groups or 1)]
             for size in sizes:
                 free = ~used & place & ~dilate(placed, gap) & ~(dilate(mine, temp) if temp else mine)
                 spots = np.argwhere((dist >= lo) & (dist <= hi) & free)

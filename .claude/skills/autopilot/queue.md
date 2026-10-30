@@ -40,7 +40,8 @@ first: handle it as in step 3 (lock, answer). Do not post a request that the epi
 the same thing, and no run answered the owner's question between them). An epic without a criterion that checks that the
 whole goal is covered (owner rule, #820: never only "All sub-issues are closed") gets one first (`ticket` skill, "Split
 an L ticket"). Check that criterion against the full scope (for "all X": the full list, for example a wiki of the original) and
-name each missing item. Close the epic with a comment only when all criteria are met
+name each missing item. When `steering/project/PRINCIPLES.md` has the section "Try a feature", do what it says first
+(for example a `needs-human` test ticket, or a build); the epic waits for it. Close the epic with a comment only when all criteria are met
 (name the evidence for each, then the label `close`: `owner.md`, "Close an issue", #1740). Else lock the epic first: `python3 framework/tools/claim.py E --refill`
 (E = the epic; exit 1: another run makes its sub-issue, skip the epic, #505). Then make one sub-issue (same priority)
 for the criteria that an agent can do. A criterion that needs the owner stays on the epic. Then pick again (#176, #155 waited while P3 tickets ran).

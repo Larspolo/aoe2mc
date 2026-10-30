@@ -42,6 +42,7 @@ Usage:
     python3 game/run.py WORLD --play --teams 1,1,2,2   # the team of each player, - is no team (#2296)
     python3 game/run.py WORLD --play --load SAVE   # go on with a saved game: Ctrl-C of --play saves into saves/ (#2255)
     python3 game/run.py WORLD --replay [--speed 4] [--follow N] [--view N]  # replay the recorded game of the world (game/replay.py), then wait for Ctrl-C
+    python3 game/run.py WORLD --replay --live RECORD [--delay 30]  # follow the record that AoE2 DE still writes, 30 s behind (#4663)
 
 Join with Minecraft (multiplayer, localhost): players play in creative mode and get operator rights.
 The server plays the world in place (the game changes it). Server files (eula, properties, logs) go to .cache/.
@@ -915,10 +916,25 @@ def restore(saved, world):
     shutil.copytree(saved, world, dirs_exist_ok=True)
 
 
-def replay(game, world, speed=1.0, start="0:00", follow=None, guide=None, view=None, replay_file=None, camera=False):
+def live_error(world, record):
+    """The error line of --live RECORD on `world`, or None (#4663)."""
+    if not os.path.isfile(record):
+        return f"--live: the record {record} does not exist"
+    try:
+        with open(os.path.join(world, "aoe2mc.json")) as f:
+            if "timeline" in json.load(f):
+                return None
+    except (OSError, ValueError):
+        pass
+    return f"--live needs a world of a recorded game: convert the record first (python3 aoe2mc.py {record} {world})"
+
+
+def replay(game, world, speed=1.0, start="0:00", follow=None, guide=None, view=None, replay_file=None, camera=False,
+           live=None, delay=None):
     """guide: a poll(control) next to the hotbar input that gets `input` and the replay `r` (game/watch.py, #1123).
     view: the replay starts with the view of player N (#1303: the units out of its sight are hidden).
-    replay_file: the timeline of a game of --play --record on this world in place of the one of aoe2mc.json (#2649)."""
+    replay_file: the timeline of a game of --play --record on this world in place of the one of aoe2mc.json (#2649).
+    live: the record file that AoE2 DE still writes: the replay follows it, `delay` seconds behind (game/live.py, #4663)."""
     import replay
     start = replay.aoe2mc.game_time(start)
     with open(os.path.join(world, "aoe2mc.json")) as f:
@@ -928,6 +944,15 @@ def replay(game, world, speed=1.0, start="0:00", follow=None, guide=None, view=N
         data = record.apply(data, replay_file)
     if "timeline" not in data:
         sys.exit("--replay needs a world of a recorded game (.aoe2record)")
+    kw = {}
+    if live:
+        import live as follow_live
+        try:
+            source = follow_live.Source(live, follow_live.DELAY if delay is None else delay, data.get("turn", 0))
+        except OSError as e:
+            sys.exit(str(e))
+        data["timeline"] = source.first()
+        kw["more"] = source.more
     import replay_input
     control = replay_input.Input(game)              # hotbar items, menu and /trigger aoe_replay (#688)
     if guide:
@@ -956,7 +981,7 @@ def replay(game, world, speed=1.0, start="0:00", follow=None, guide=None, view=N
             guide.r = r
         return r
     try:
-        stats = replay.live(make, speed, start, restart, bar=True, poll=guide or control)
+        stats = replay.live(make, speed, start, restart, bar=True, poll=guide or control, **kw)
     finally:
         shutil.rmtree(saved, ignore_errors=True)
     print(f"{stats['events']} events, {stats['commands']} commands in {stats['busy']} s "
@@ -1234,6 +1259,10 @@ def main(argv=None, scenario=None):
                     "game into FILE (one JSON line per timeline event); --replay --replay-file FILE plays them again")
     ap.add_argument("--replay-file", metavar="FILE", help="--replay: play the timeline of a game of --play --record on "
                     "this world in place of the one of aoe2mc.json")
+    ap.add_argument("--live", metavar="RECORD", help="--replay: follow the record file that AoE2 DE still writes "
+                    "while the game runs (the world comes from the start of this record, game/live.py)")
+    ap.add_argument("--delay", type=float, metavar="S", help="--replay --live: stay S seconds of game time behind "
+                    "the newest event of the record (default 30)")
     ap.add_argument("--log", metavar="FILE", help="--play: write one JSON line per villager event (time, state, load)")
     ap.add_argument("--load", metavar="SAVE", help="--play: go on with a saved game (a folder of saves/: the end of "
                     "--play with Ctrl-C saves the world and the resources, technologies and ages there)")
@@ -1264,6 +1293,8 @@ def main(argv=None, scenario=None):
     state = savegame.read(a.load) if a.load else None
     if state:                                        # the settings of the save, but the options given here win (#2325)
         savegame.settings(a, state, given(ap, argv))
+    if a.live and (err := live_error(a.world, a.live)):   # before the server starts (#4663)
+        sys.exit(err)
     if a.antiquity and (a.replay or a.mode != "standard"):
         sys.exit("--antiquity plays only --mode standard, and not --replay (the records are AoE2 games)")
     table.use("antiquity" if a.antiquity else "aoe2")   # before the first rule module loads (civ_choices, #3666)
@@ -1311,7 +1342,7 @@ def main(argv=None, scenario=None):
             show_titles(game)
         if a.replay:                                 # after the end the player can look around (#978)
             replay(game, a.world, a.speed, a.start, a.follow, view=a.view or None, replay_file=a.replay_file,
-                   camera=a.camera == "auto")
+                   camera=a.camera == "auto", live=a.live, delay=a.delay)
             print("The replay ended. The server stays up: type commands, Ctrl-C stops it.", file=sys.stderr)
         if a.play:
             with open(a.log, "w") if a.log else contextlib.nullcontext() as log:

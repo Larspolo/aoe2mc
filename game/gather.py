@@ -1453,19 +1453,48 @@ class Gather:
 
     def deselect(self):
         """Paper: a left click with the command stick (the score LEFT of the plugin, AoePlugin.onLeftClick) clears the
-        selection, as a click on empty ground in AoE2 (#1788), and ends the choice of a building (#2056). Vanilla has no
-        event for it: the empty box (#992)."""
+        selection, as a click on empty ground in AoE2 (#1788); a click on an own unit selects it, and with a chosen
+        building it places the foundation (#4703). Vanilla has no event for it: the empty box (#992)."""
         if "passed" not in self.command(f"execute if entity {only(self.who, f'scores={{{LEFT}=1..}}')}"):
             return
         for name in self.people():
             if name and re.search(r"has [1-9]", self.command(f"scoreboard players get {name} {LEFT}")):
                 self.command(f"scoreboard players reset {name} {LEFT}")
                 self.person = name
+                if self.left(name):                                    # select or place (#4703)
+                    continue
                 self.choose(set())
-                vars(self).get("rows", {}).pop(name, None)             # the sneak clicks of build.place (#1805)
-                vars(self).get("wall_start", {}).pop(name, None)
-                if re.search(r"has [1-9]", self.command(f"scoreboard players get {name} {build.OBJECTIVE}")):
-                    self.command(f"scoreboard players set {name} {build.OBJECTIVE} 0")   # build.ghosts clears the ghost (#2056)
+
+    def cancel(self, name):
+        """End the choice of a building of name (#2056): a right click on Paper, as in AoE2 (#4703)."""
+        vars(self).get("rows", {}).pop(name, None)                     # the sneak clicks of build.place (#1805)
+        vars(self).get("wall_start", {}).pop(name, None)
+        if re.search(r"has [1-9]", self.command(f"scoreboard players get {name} {build.OBJECTIVE}")):
+            self.command(f"scoreboard players set {name} {build.OBJECTIVE} 0")   # build.ghosts clears the ghost
+
+    def place(self, name, building, eye, d):
+        """Place the foundation of the chosen building at the look of name; the selected builders build it."""
+        if (site := build.place(self, name, building, eye, d)) and building in build.WATER:
+            fleet.build_site(self, self.selected, site)                # the selected fishing ships build it (#1438)
+        elif site and self.selected & self.villagers.keys() and not self.row_busy(site):
+            self.build(site)                                           # the selected villagers build it at once, as in AoE2 (#1654)
+            self.order_voice()
+        if site:
+            repair.build_order(self, site, self.selected)              # the selected Serjeants build a Donjon (#2129)
+
+    def left(self, name):
+        """A left click of name as in AoE2 (#4703): place the chosen building, or select the own unit under the look.
+        True: done. False: a click on the ground or the air, which clears the selection."""
+        if getattr(diplomacy.main(self), "paused", False) or not (look := self.look(name)):
+            return False
+        if building := build.chosen(self, name):
+            self.place(name, building, *look)
+            return True
+        kind, u, _ = self.target(*look, self.positions(sorted(self.pickable()))) or (None, None, None)
+        if kind == "unit":
+            self.select(u)
+            return True
+        return False
 
     def people(self):
         """The names of the Minecraft players of this Gather: all, or the players of its team (#1310). Not `team list`:
@@ -1598,15 +1627,11 @@ class Gather:
             for c in siege_mark(u, what, full, name):
                 self.command(c)
             return
-        building = build.chosen(self, name)
-        if building:                                                   # a chosen building: place its foundation
-            if (site := build.place(self, name, building, eye, d)) and building in build.WATER:
-                fleet.build_site(self, self.selected, site)            # the selected fishing ships build it (#1438)
-            elif site and self.selected & self.villagers.keys() and not self.row_busy(site):
-                self.build(site)                                       # the selected villagers build it at once, as in AoE2 (#1654)
-                self.order_voice()
-            if site:
-                repair.build_order(self, site, self.selected)          # the selected Serjeants build a Donjon (#2129)
+        if building := build.chosen(self, name):                      # a chosen building: place its foundation
+            if self.paper:                                             # Paper: the left click places it, the right click cancels (#4703)
+                self.cancel(name)
+            else:                                                      # vanilla has no left click event
+                self.place(name, building, eye, d)
             return
         if monk.order(self, name, self.map.pick_ground(eye, d)):      # a monk to a relic or to a monastery (#1246)
             return
