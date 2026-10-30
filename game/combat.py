@@ -105,6 +105,7 @@ IGNORE = {r["name"] for r in UNIT_ROWS if r.get("ignore_armor")}
 PASS = {r["name"]: r["pass"] for r in UNIT_ROWS if "pass" in r}               # the key "pass" of data/units.jsonl
 CHARGE_ATTACK = {r["name"]: r["charge_attack"] for r in UNIT_ROWS if "charge_attack" in r}   # the Coustillier (#4398)
 TRAMPLE = {r["name"]: r["trample"] for r in UNIT_ROWS if "trample" in r}       # the key "trample": the elephants (#4397)
+MELEE_MODE = {r["name"]: r["melee_mode"] for r in UNIT_ROWS if "melee_mode" in r}   # the key "melee_mode": the Ratha (#4504)
 # The part of the damage on the units behind the target, when it is not one half (wiki: "100% pass-through damage").
 PASS_PART = {r["name"]: r["pass_part"] for r in UNIT_ROWS if "pass_part" in r}
 DEFAULT, BUILDING = Stats(40, 4, 0, 0, 0, 2.0), Stats(1000, 0, 0, 7, 0, 0.0, {}, ("building",))
@@ -248,6 +249,13 @@ def shield_command(uuid, name):
     the first entity on its line, so the plugin gives that hit to the target of the shooter."""
     s = SHIELD.get(name)
     return f"aoe shield {uuid} {s['part']:g} {s['takes']}" if s else None
+
+
+def melee_mode(name, s=None):
+    """The values of unit name in its melee mode (the key "melee_mode", the Ratha, #4504): range 0 and the attack of the
+    key; s: the values of the ranged mode, default those of the unit line. Its trample: MELEE_MODE[name]["trample"]."""
+    s = s or stats(name)
+    return s._replace(range=0, attack=MELEE_MODE[name]["attack"])
 
 
 def trample_command(uuid, name, T, t=None):
