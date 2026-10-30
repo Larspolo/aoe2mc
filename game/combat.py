@@ -89,6 +89,7 @@ MIN_RANGE = {r["name"]: r["min_range"] for r in UNIT_ROWS if "min_range" in r}
 ACCURACY = {r["name"]: r["accuracy"] for r in UNIT_ROWS if "accuracy" in r}   # siege shots at units that hit (#2479)
 MISS = {r["name"]: r["miss"] for r in UNIT_ROWS if "miss" in r}               # a missed shot hurts a near unit (#4549)
 DODGE = {r["name"]: r["dodge"] for r in UNIT_ROWS if "dodge" in r}           # projectiles that do no damage (#4399)
+SPEED_CHARGE = {r["name"]: r["speed_charge"] for r in UNIT_ROWS if "speed_charge" in r}   # faster near a target (#4545)
 VOLLEY = {r["name"]: r["volley"] for r in UNIT_ROWS if "volley" in r}       # the key "volley": {"shots": n, "attack": a}, the extra projectiles of each shot (#4502)
 FRENZY = {r["name"]: r["frenzy"] for r in UNIT_ROWS if "frenzy" in r}        # a shorter reload in a long fight (#4468)
 LOW_HP = {r["name"]: r["low_hp"] for r in UNIT_ROWS if "low_hp" in r}      # another form below some hit points (#4472)
@@ -268,6 +269,13 @@ def charged_volley_command(uuid, name):
         if c else None
 
 
+def speed_charge_command(uuid, name, T):
+    """The plugin command of the speed charge of unit name (the key "speed_charge" of data/units.jsonl: the Samurai,
+    #4545), or None: the unit walks "speed" faster while its target is "min" to "max" tiles (× T blocks) away."""
+    c = SPEED_CHARGE.get(name)
+    return f"aoe speedcharge {uuid} {c['speed']} {c['min'] * T} {c['max'] * T}" if c else None
+
+
 def dodge_command(uuid, name):
     """The plugin command of the dodge of unit name (the key "dodge" of data/units.jsonl: the Shrivamsha Rider, #4399),
     or None when it dodges nothing. The AoE2 wiki ("Shrivamsha Rider"): a second, regenerating health bar takes each
@@ -434,6 +442,9 @@ def setup(game, data):
             game.command(cmd)
     for o in units:                                  # the Coustillier charges its attack (#4398)
         if cmd := charge_command(o["uuid"], o["name"], data.get("tile_size", 4)):
+            game.command(cmd)
+    for o in units:                                  # a Samurai runs faster to a near target (#4545)
+        if cmd := speed_charge_command(o["uuid"], o["name"], data.get("tile_size", 4)):
             game.command(cmd)
     for o in units:                                  # a Xianbei Raider fires a charged volley (#4546)
         if cmd := charged_volley_command(o["uuid"], o["name"]):
