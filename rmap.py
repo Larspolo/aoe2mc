@@ -22,6 +22,7 @@ terrains, connections (#3966); then all water goes to level 0. Other sections an
 (the constants are in TERRAINS), another #include file gives a warning. All
 randomness comes from numpy.random.default_rng(seed).
 """
+import functools
 import heapq
 import os
 import re
@@ -41,6 +42,21 @@ FOREST_TREES = dict(sorted((t, r["name"]) for r in RMAP for t in r.get("forest",
 ASSIGN = {r["name"]: r["assign"] for r in RMAP if "assign" in r}       # the targets of assign_to: player, color, team
 CLIFF_TYPES = {r["name"]: r["cliff_type"] for r in RMAP if "cliff_type" in r}   # cliff_type word: object name prefix
 SHORE_FISH = next(r["name"] for r in RMAP if r.get("shore_fish"))
+
+
+def is_wet(terrain):
+    """The water and shallow tiles (bool per tile): each terrain with a water depth in the terrain table of the
+    converter (aoe2mc.terrain_style), also MED_WATER, DLC_WATER4 and the DE shallows (#4720)."""
+    return np.isin(terrain, wet_ids())
+
+
+@functools.cache
+def wet_ids():
+    import aoe2mc
+    from AoE2ScenarioParser.datasets.terrains import TerrainId
+    return [t.value for t in TerrainId if aoe2mc.terrain_style(t.name)["depth"] > 0]
+
+
 SIZES = {1: 120, 2: 120, 3: 144, 4: 144, 5: 168, 6: 168, 7: 200, 8: 200}    # AoE2 map size of a player count
 LABELS = ((120, "TINY_MAP"), (144, "SMALL_MAP"), (168, "MEDIUM_MAP"), (200, "LARGE_MAP"), (220, "HUGE_MAP"))
 BORDERS = ("left_border", "right_border", "top_border", "bottom_border")   # of create_land (low x, high x, low y, high y)
@@ -493,7 +509,7 @@ def elevate(section, terrain, layer, owner, starts, consts, rng, warn):
         top = value(args[0], consts) if args else 1
         on = value(attrs["base_terrain"][0], consts) if "base_terrain" in attrs else 0
         under = (layer == value(attrs["base_layer"][0], consts)) if "base_layer" in attrs else terrain == on
-        free = under & ~np.isin(terrain, [TERRAINS["WATER"], TERRAINS["SHALLOW"]]) & (elevation == 0)
+        free = under & ~is_wet(terrain) & (elevation == 0)
         clumps, total = scaled(attrs, consts, n, value(attrs["number_of_clumps"][0], consts)
                                if "number_of_clumps" in attrs else 1, tiles(attrs, consts, n, 1))
         spacing = value(attrs["spacing"][0], consts) if "spacing" in attrs else 1
@@ -520,7 +536,7 @@ def elevate(section, terrain, layer, owner, starts, consts, rng, warn):
 def lower_to_water(terrain, elevation):
     """All water at level 0 (#164) and the land at most d levels high d tiles from it: a hill steps down to a lake of
     <TERRAIN_GENERATION> or a river one level per tile, with no wall of blocks."""
-    wet, out, near = np.isin(terrain, [TERRAINS["WATER"], TERRAINS["SHALLOW"]]), np.array(elevation), None
+    wet, out, near = is_wet(terrain), np.array(elevation), None
     for d in range(int(out.max(initial=0))):
         near = wet if near is None else dilate(near, 1)
         out[near & (out > d)] = d
@@ -704,7 +720,7 @@ def generate(text, seed, players=2, size=None, warn=None, teams=None, folder=Non
             terrain[mark >= 0] = kind
         else:
             terrain[mark >= 0] = kind
-        wet = np.isin(terrain, [TERRAINS["WATER"], TERRAINS["SHALLOW"]])
+        wet = is_wet(terrain)
         if "beach_terrain" in attrs and wet[mark >= 0].all():   # the land tiles at the shore of new water get T
             terrain[dilate(mark >= 0, 1) & ~wet] = value(attrs["beach_terrain"][0], consts)
         for a in sorted(set(attrs) - set(CREATE_TERRAIN)):
@@ -890,7 +906,7 @@ def objects(cmds, consts, terrain, starts, rng, warn, owner=None, ridges=(), lay
     import aoe2mc
     kinds = aoe2mc.object_kinds(old=False)
     n, out = terrain.shape[0], []
-    wet = np.isin(terrain, [TERRAINS["WATER"], TERRAINS["SHALLOW"], TERRAINS["DEEP_WATER"]])
+    wet = is_wet(terrain)
     used = np.isin(terrain, list(FOREST_TREES))
     cliff = np.zeros((n, n), bool)                     # the cliff pieces and their neighbours (#4131)
     for r in ridges:
@@ -1049,7 +1065,7 @@ def cliffs(cmds, terrain, starts, consts, rng, warn):
         else:
             warn(f"{cmd} is not read yet")
     n = len(terrain)
-    free = ~dilate(np.isin(terrain, [TERRAINS["WATER"], TERRAINS["SHALLOW"], *FOREST_TREES]), o["min_terrain_distance"])
+    free = ~dilate(is_wet(terrain) | np.isin(terrain, list(FOREST_TREES)), o["min_terrain_distance"])
     for st in starts:
         for c in square((st["x"], st["y"]), st["base_size"], n):
             free[c] = False
@@ -1368,12 +1384,12 @@ def random_map(kind, seed, players=2, teams=None):
     if kind in COASTS:
         coast(d, COASTS[kind])
     objects = walls(d, WALLS[kind], rng) if kind in WALLS else []
-    wet = dilate(np.isin(np.array(d["terrain"]), [TERRAINS["WATER"], TERRAINS["SHALLOW"]]), 1)
+    wet = dilate(is_wet(np.array(d["terrain"])), 1)
     objects += [o for o in d["objects"] if o["name"].startswith("CLIFF") and not wet[int(o["x"]), int(o["y"])]]  # not on the river
     if kind in GOLDS:
         objects += goldfield(d, GOLDS[kind], RINGS[kind], rng)
     n, terrain = d["size"], np.array(d["terrain"])
-    used = np.isin(terrain, list(FOREST_TREES) + [TERRAINS["WATER"], TERRAINS["SHALLOW"]])
+    used = is_wet(terrain) | np.isin(terrain, list(FOREST_TREES))
     for o in objects:                                      # no start object next to a wall or a gold mine
         used[max(0, int(o["x"]) - 1):int(o["x"]) + 2, max(0, int(o["y"]) - 1):int(o["y"]) + 2] = True
     for st in d["lands"]:
