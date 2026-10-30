@@ -2,9 +2,9 @@
 chosen building, as in AoE2 (#4703). A left click on the ground still clears the selection (#1788)."""
 import math
 
-from game import gather
-
 from test_deselect import paper
+
+from game import gather
 
 
 def left(server, g, at, look):
