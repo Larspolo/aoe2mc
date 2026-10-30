@@ -261,7 +261,8 @@ CHECKS = {                                                 # one file per line: 
 
 # The keys with two types by design: an "effect" is data, a list of data (#2155) or the name of a function of
 # game/train.py (#2098, #2122)
-TWO_TYPES = {("train.jsonl", "effect"): (dict, list, str)}
+TWO_TYPES = {("train.jsonl", "detonate"): (dict, list),   # one blast, or one per unit line (#4367)
+             ("train.jsonl", "effect"): (dict, list, str)}
 
 
 @pytest.mark.parametrize("name", sorted(NAMES))
