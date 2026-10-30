@@ -88,6 +88,7 @@ CONTACT = 1.0         # tiles: the reach of a demolition ship (range 0, #1440): 
 MIN_RANGE = {r["name"]: r["min_range"] for r in UNIT_ROWS if "min_range" in r}
 ACCURACY = {r["name"]: r["accuracy"] for r in UNIT_ROWS if "accuracy" in r}   # siege shots at units that hit (#2479)
 DODGE = {r["name"]: r["dodge"] for r in UNIT_ROWS if "dodge" in r}           # projectiles that do no damage (#4399)
+FRENZY = {r["name"]: r["frenzy"] for r in UNIT_ROWS if "frenzy" in r}        # a shorter reload in a long fight (#4468)
 VETERAN = {r["name"]: r["veteran"] for r in UNIT_ROWS if "veteran" in r}     # attack more for each kill (#4467)
 SHIELD = {r["name"]: r["shield"] for r in UNIT_ROWS if "shield" in r}         # projectiles through it hurt less (#4507)
 # The minimum range of the buildings that shoot, in tiles from the edge of the footprint (AoE2 DE, wiki infobox
@@ -242,6 +243,16 @@ def dodge_command(uuid, name):
     return f"aoe dodge {uuid} {d['shots']} {round(d['time'] * 20)}" + (" 1" if d.get("melee") else "")
 
 
+def frenzy_command(uuid, name):
+    """The plugin command of the frenzy of unit name (the key "frenzy" of data/units.jsonl: the Temple Guard, #4468), or
+    None. The AoE2 wiki ("Temple Guard"): each attack makes the reload "less" seconds shorter for "time" seconds, down
+    to "min" seconds. The values as ticks (AoE2 seconds x 20, as dodge_command)."""
+    f = FRENZY.get(name)
+    if not f:
+        return None
+    return f"aoe frenzy {uuid} {round(f['less'] * 20)} {round(f['time'] * 20)} {round(f['min'] * 20)}"
+
+
 def shield_command(uuid, name):
     """The plugin command of the projectile obstruction of unit name (the key "shield" of data/units.jsonl: the Hussite
     Wagon, #4507), or None. AoE2 DE wiki "Hussite Wagon": an enemy projectile that passes through its box deals "part"
@@ -350,6 +361,9 @@ def setup(game, data):
             game.command(cmd)
     for o in units:                                  # a Shrivamsha Rider dodges projectiles (#4399)
         if cmd := dodge_command(o["uuid"], o["name"]):
+            game.command(cmd)
+    for o in units:                                  # a Temple Guard attacks faster in a long fight (#4468)
+        if cmd := frenzy_command(o["uuid"], o["name"]):
             game.command(cmd)
     for o in units:                                  # a Jaguar Warrior gets attack for each kill (#4467)
         if cmd := veteran_command(o["uuid"], o["name"]):
