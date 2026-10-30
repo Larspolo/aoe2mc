@@ -29,7 +29,7 @@ def gathers(g):
 
 def side(g, n):
     """The side of player n: "defender", "ally" (a team mate of the defender) or "attacker"."""
-    from gather import allied                                          # gather imports this module
+    from gather import allied  # gather imports this module
     return "defender" if n == g.defender else "ally" if allied(g.players, g.defender, n) else "attacker"
 
 
@@ -38,7 +38,7 @@ def setup(g, mode="defend-the-wonder", start=True):
     player the resources of its side. g: the Gather of player 1. start False (a loaded game, run.py): the Wonder and
     the resources are in the saved game, only find the Wonder site of the defender again."""
     import combat
-    import train                                                       # train imports gather, gather imports build
+    import train  # train imports gather, gather imports build
     playing = gathers(g)
     g.defender = min(playing)
     x = playing[g.defender]

@@ -34,8 +34,8 @@ def setup(g, mode="regicide", start=True):
     front of its first town center, with the more units and buildings of the mode, and the starting resources of the
     mode for the level of aoe2mc.json "resources" (run.py; start False: a loaded game keeps its stock). g.kings: the
     players that have a King, the players of the mode."""
-    import gather                                                      # gather imports this module
-    import train                                                       # train imports gather, gather imports this module
+    import gather  # gather imports this module
+    import train  # train imports gather, gather imports this module
     level = start and "resources" in g.data and gather.level(g.data["resources"], g.data)
     gathers = {x.player: x for x in [g, *(s.g for s in g.bots)]}       # an own unit goes to the Gather of its player
     for x in gathers.values():
@@ -68,7 +68,7 @@ def setup(g, mode="regicide", start=True):
 def start_stock(x, line, level):
     """The starting resources of the mode (its key "start") in place of those of level for the Gather x: the
     civilization bonuses stay (#2388)."""
-    import gather                                                      # gather imports this module
+    import gather  # gather imports this module
     for r, v in line.get("start", {}).get(level, {}).items():
         x.stock[r] = max(0, x.stock[r] + v - gather.LEVELS[level][r])
         x.command(f"scoreboard players set {r.capitalize()} {x.board} {x.stock[r]}")
@@ -77,7 +77,7 @@ def start_stock(x, line, level):
 def found(x, name, cell):
     """A free construction site of building name of the Gather x next to the block cell (the town center), if there
     is room."""
-    import build                                                       # build imports gather, gather imports this module
+    import build  # build imports gather, gather imports this module
     rect = build.near(x, name, cell)
     if rect is None:
         return
@@ -91,7 +91,7 @@ def found(x, name, cell):
 def reveal(g, seconds):
     """Treason (#2388): the Kings of the enemies of the player of g glow for `seconds` AoE2 seconds. The Minecraft
     effect Glowing shows a mob through the blocks."""
-    import gather                                                      # gather imports this module
+    import gather  # gather imports this module
     real = max(1, round(seconds / getattr(g, "speed", 1.0)))
     for n in sorted(int(p) for p in g.players if int(p) and not gather.allied(g.players, g.player, int(p))):
         g.command(f"effect give @e[tag=aoe2mc.p{n},tag={KING}] minecraft:glowing {real} 0 true")
@@ -100,7 +100,7 @@ def reveal(g, seconds):
 def treason(g, entry):
     """The research of Treason (the key "on_research" of data/train.jsonl, #3243): the enemy Kings glow for the
     seconds of its key "glow"."""
-    import train                                                       # train imports gather, gather this module
+    import train  # train imports gather, gather this module
     reveal(g, train.value("glow", entry["name"]))
 
 def tick(g):

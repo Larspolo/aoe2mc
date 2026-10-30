@@ -1,7 +1,7 @@
 """The key "ignore_armor" of a line of data/units.jsonl (#4394): the hits of that unit ignore the armor of the target,
 as the Leitis of AoE2 DE. The rule of train.hits reads the set combat.IGNORE, as the Wootz Steel rule (#4331) does."""
-import combat, train   # the modules that train.hits imports (game/ on the path, as the other tests of the rule)
-
+import combat  # the modules that train.hits imports (game/ on the path, as the other tests of the rule)
+import train
 from test_train_castle import setup
 
 

@@ -20,10 +20,10 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import agent_config  # noqa: E402
+import metrics_log  # noqa: E402
 from claim import agent_state, utc, with_state  # noqa: E402
 from dashboard import FOOTER, STATUS, api, pages  # noqa: E402
 from health import PHASES  # noqa: E402
-import metrics_log  # noqa: E402
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 

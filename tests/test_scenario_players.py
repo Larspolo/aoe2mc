@@ -5,10 +5,10 @@ import os
 
 import numpy as np
 import pytest
-
-import aoe2mc
 import scenarios
 from test_scx import build
+
+import aoe2mc
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 

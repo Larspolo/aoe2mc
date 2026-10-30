@@ -5,6 +5,7 @@ import json
 
 from game import train
 
+
 def test_train_py_has_no_upgrades_literal():
     assert "UPGRADES = {\n" not in inspect.getsource(train)
 

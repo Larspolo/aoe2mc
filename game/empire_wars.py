@@ -63,7 +63,7 @@ def town(g, mode, tc):
 
 def setup(g, mode="empire-wars"):
     """Give each player with a Gather its town and its villagers at work. g: the Gather of player 1."""
-    import train                                                       # train imports gather, gather imports build
+    import train  # train imports gather, gather imports build
     for x in [g, *(s.g for s in getattr(g, "bots", ()))]:
         tc = next((r for r, n in sorted(train.homes(x).items()) if n == "TOWN_CENTER"), None)
         if tc is None:

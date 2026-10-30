@@ -1,7 +1,7 @@
 """game/gather.py: a new order ends each old order of a unit, as in AoE2 (#3007): a walk into a building, a siege tower
 or a transport ship, a conversion, a relic trip and a farm (Gather.new_order). Fake servers."""
-from test_gather import FakeServer, grid
 from test_garrison_game import Server, arrive
+from test_gather import FakeServer, grid
 from test_monk_heal import HealServer
 
 from game import combat, garrison, gather, monk, siege_tower, transport

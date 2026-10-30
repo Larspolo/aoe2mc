@@ -1,9 +1,9 @@
 """game/gather.py: a click with selected military units on an enemy unit sends them to attack it (#516)."""
 import math
 
-from game import ai, gather
-
 from test_gather import FakeServer, grid
+
+from game import ai, gather
 
 
 def setup():

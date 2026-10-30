@@ -38,6 +38,7 @@ def test_a_right_click_near_a_villager_counts_and_opens_no_trades(tiny_world, tm
             or not paper_reachable():
         pytest.skip("Xvfb, xdotool, Mojang or Paper is not available")
     import mc_shot
+
     from game import run
     world = shutil.copytree(tiny_world[0], tmp_path / "W")
     with run.Game(world) as game, mc_shot.Client(game.game_port, game.version) as client:

@@ -1,10 +1,9 @@
 """game/train.py: a click on an own building plays the sound of its line in game/data/sounds.jsonl (#3501)."""
 import pytest
+from test_castle_upgrades import setup
 
 from game import table, train
 from tools import mcvalid
-
-from test_castle_upgrades import setup
 
 
 def sounds(log):

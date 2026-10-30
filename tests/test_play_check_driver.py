@@ -1,8 +1,7 @@
 """tools/play_check.py: the driver plays player 1 as a person (#3544): the bell, the saving for an age, the minute line."""
+import play_check
 from test_bot_gather import bot_map
 from test_play_check import ready
-
-import play_check
 
 
 def raid(foes, monkeypatch):

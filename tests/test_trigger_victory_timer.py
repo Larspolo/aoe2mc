@@ -11,10 +11,11 @@ import numpy as np
 from AoE2ScenarioParser.scenarios.aoe2_de_scenario import AoE2DEScenario
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "game"))
-import aoe2mc  # noqa: E402
 import gather  # noqa: E402
 import scenario  # noqa: E402
 from test_gather import FakeServer, grid  # noqa: E402
+
+import aoe2mc  # noqa: E402
 from tools import scenarios  # noqa: E402
 
 WONDER, RELIC, HILL = 0, 1, 2                                          # AoE2 VictoryTimerType

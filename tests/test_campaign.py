@@ -4,9 +4,9 @@ import io
 import struct
 
 import pytest
+import scenarios
 
 import aoe2mc
-import scenarios
 
 
 def de_string(text):

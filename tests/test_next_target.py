@@ -4,11 +4,11 @@ import shutil
 import time
 
 import pytest
-
-from game import ai, combat, run
 from test_building_damage import hp
 from test_siege_walk import summon
 from test_unit_ai import data
+
+from game import ai, combat, run
 
 
 def test_the_units_of_building_sight_take_buildings_in_sight():

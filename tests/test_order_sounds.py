@@ -1,10 +1,10 @@
 """game/gather.py: an order of the person plays one order voice of the first selected unit (#3500, sounds.jsonl)."""
 import math
 
-from game import gather
-
 from test_gather import FakeServer, grid
 from test_gather_attack import click
+
+from game import gather
 
 
 def setup():

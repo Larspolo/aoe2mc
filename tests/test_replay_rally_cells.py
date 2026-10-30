@@ -3,7 +3,6 @@
 import math
 
 import pytest
-
 from test_replay_rally import play, point
 from test_replay_spawn import queue
 

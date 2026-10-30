@@ -1,8 +1,8 @@
 """game/train.py: the town center menu has "Imperial Age". Before the Castle Age the item is gray; then it needs a
 castle or 2 types of Castle Age buildings; after the research the sidebar title shows the Imperial Age, all players see
 it, and the item leaves the menu (#1081)."""
-from test_feudal_age import add
 from menu_line import item
+from test_feudal_age import add
 from test_loom import menus, setup
 
 from game import train

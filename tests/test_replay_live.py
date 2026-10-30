@@ -9,13 +9,13 @@ import sys
 import pytest
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import live  # noqa: E402
+import replay  # noqa: E402
+import run  # noqa: E402
 from test_replay import data  # noqa: E402
 from test_replay_control import Clock, chats  # noqa: E402
 
 import aoe2mc  # noqa: E402
-import live  # noqa: E402
-import replay  # noqa: E402
-import run  # noqa: E402
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 REC = os.path.join(ROOT, "samples", "de-64.3.aoe2record")

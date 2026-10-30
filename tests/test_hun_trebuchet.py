@@ -46,9 +46,10 @@ def test_a_trebuchet_with_accuracy_0_misses_and_with_1_hits_on_a_server(tmp_path
     from test_mc_check import mojang_reachable
     if not mojang_reachable():
         pytest.skip("Mojang is not reachable")
-    import aoe2mc
     import scenarios
     from AoE2ScenarioParser.datasets.units import UnitInfo
+
+    import aoe2mc
     scn = scenarios.new_scenario(32)
     um = scn.unit_manager
     um.add_unit(scenarios.PlayerId.ONE, UnitInfo.TREBUCHET.ID, x=6.5, y=16.5)

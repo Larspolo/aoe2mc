@@ -2,10 +2,9 @@
 import json
 
 import pytest
+from test_select_type import setup
 
 from game import hints
-
-from test_select_type import setup
 
 
 def game():

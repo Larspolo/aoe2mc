@@ -4,7 +4,6 @@ import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "game"))
 import watch  # noqa: E402
-
 from test_watch import Game, chop_replay, drive  # noqa: E402
 
 

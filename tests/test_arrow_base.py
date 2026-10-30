@@ -4,9 +4,9 @@ import shutil
 import time
 
 import pytest
+from test_damage import health
 
 from game import combat, garrison, run
-from test_damage import health
 
 UUID = "00000000-0000-0000-0000-000000000001"
 BOX = (8, 64, 8, 23, 104, 23)

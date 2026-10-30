@@ -355,7 +355,7 @@ def render(old_body, issues, comments, open_prs, closed_issues, closed_prs, now,
         out.append("- nothing")
     out += ["", f"Process changes (24 h): {process_changes(closed_prs, now)} merged PRs with the label `process`"]
     if unanswered is not None:
-        from feedback import HOURS, issue_number           # feedback imports this module: import at the call
+        from feedback import HOURS, issue_number  # feedback imports this module: import at the call
         out.append(f"Owner comments without an answer ({HOURS:g} h): {len(unanswered)}" + "".join(
             f" #{n}" for n in dict.fromkeys(issue_number(c) for c in unanswered)) +
             " (`framework/tools/feedback.py`: the next run answers them)" * bool(unanswered))
@@ -409,7 +409,7 @@ def main(argv=None):
     if a.next:
         prs = [i["number"] for i in open_all if "pull_request" in i]
         busy = work(open_all, {n: [f["filename"] for f in pages(f"pulls/{n}/files", 3)] for n in prs})
-        import health                                       # health imports this module
+        import health  # health imports this module
         held = claimed(health.claim_refs() or [], datetime.datetime.now(datetime.timezone.utc))
         for i in (i for i in candidates(open_all, busy, lane=a.lane) if i["number"] not in held):
             ov = overlap(i, busy)
@@ -424,11 +424,11 @@ def main(argv=None):
                 for i in issues if labels(i) & {"needs-human", "in-progress"}}
     closed = api("issues?state=closed&sort=updated&direction=desc&per_page=50")
     closed_prs = pages("pulls?state=closed&sort=updated&direction=desc", 5)    # about 24 h of merges (#901)
-    from feedback import fetch as unanswered               # owner comments without a lock (#971)
+    from feedback import fetch as unanswered  # owner comments without a lock (#971)
     open_prs, owner, now = api("pulls?state=open&per_page=100"), unanswered(), datetime.datetime.now(datetime.timezone.utc)
     nxt = candidates(open_all, now=now)[:5]
     try:                                                    # the accounts section (#4239): one row per Claude account
-        import dashboard_data                               # a project tool: a copy of the generic tools has none (#3560)
+        import dashboard_data  # a project tool: a copy of the generic tools has none (#3560)
         accounts = dashboard_data.accounts()
     except (ImportError, OSError, subprocess.CalledProcessError) as e:   # a failed read: no section, the rest updates
         print(f"accounts: {e}", file=sys.stderr)

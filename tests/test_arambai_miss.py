@@ -6,9 +6,9 @@ import shutil
 import time
 
 import pytest
+from test_unit_shield_wagon import health
 
 from game import combat, run
-from test_unit_shield_wagon import health
 
 
 def test_the_miss_key_adds_the_part_and_the_blocks(monkeypatch):

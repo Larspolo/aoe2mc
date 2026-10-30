@@ -103,7 +103,7 @@ def tick(g, dt):
     if holds(g):
         return show(g)
     close(g)
-    import gather                                                      # gather imports this module
+    import gather  # gather imports this module
     if g.paper:
         g.command(gather.neutral_command(g.data.get("players", {})))
     g.command("tellraw @a " + json.dumps({"text": "The treaty ended: players can attack now.", "color": "yellow"}))

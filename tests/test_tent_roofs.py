@@ -1,11 +1,11 @@
 """Tent roofs are cloth slopes of wool stairs (#525)."""
 from collections import Counter
 
+import mcvalid
 import pytest
+from test_furnish_landmarks import blocks
 
 import aoe2mc
-import mcvalid
-from test_furnish_landmarks import blocks
 
 
 @pytest.mark.parametrize("name,wool", [("GREEK_ARMY_TENT", "white_wool"), ("TENT_A", "brown_wool"), ("TENT_B", "brown_wool")])

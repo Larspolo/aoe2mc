@@ -75,9 +75,10 @@ def test_convert_an_old_scenario(tmp_path):
     import contextlib
     import io
 
+    import world_reader
+
     import aoe2mc
     import buildings
-    import world_reader
     terrain = np.zeros((16, 16), np.int16)
     terrain[12:, :] = 22                                                     # deep water in the east
     elevation = np.zeros((16, 16), np.float32)

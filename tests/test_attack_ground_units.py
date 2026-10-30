@@ -1,8 +1,8 @@
 """Each unit of the AoE2 Attack Ground list (combat.GROUND) gets a range with a blast value, which `aoe attackground`
 needs (#4207). A packed Trebuchet refuses the order with a hint; an unpacked one shoots."""
-from game import combat, stance, trebuchet
-
 from test_attack_ground_order import setup
+
+from game import combat, stance, trebuchet
 
 
 def test_each_attack_ground_unit_has_a_blast_value():

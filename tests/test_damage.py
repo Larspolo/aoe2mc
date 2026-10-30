@@ -7,7 +7,6 @@ import pytest
 
 from game import ai, combat, run
 
-
 S = combat.Stats
 
 

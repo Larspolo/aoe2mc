@@ -1,11 +1,11 @@
 """The civilization factor "trade_gold" (data/civs.jsonl, Palmyrans +20 %, #4446) multiplies the gold of each trade trip
 of a trade cart and a trade cog, not the relic gold. The tests change the factor with a patch of civs.BY_KEY."""
+import civs
 import pytest
 import test_relics
 import test_trade_cart
 from test_trade_cog import FAR, TIME, docks_map
 
-import civs
 from game import fleet, monk, trade, train
 
 

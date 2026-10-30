@@ -1,7 +1,7 @@
 """game/civs.py: each player starts with the start resources of the own civilization (AoE2 DE bonuses, #1269)."""
-from game import civs, gather, train
-
 from test_gather import FakeServer, grid
+
+from game import civs, gather, train
 
 UNITS = [{"kind": "unit", "name": "VILLAGER_MALE", "player": 1, "uuid": "v0", "tile": [1.5, 1.5]}]
 TC = {"kind": "building", "name": "TOWN_CENTER", "player": 1, "tile": [4.0, 4.0], "footprint": [2, 2, 6, 6]}

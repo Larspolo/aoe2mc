@@ -1,9 +1,9 @@
 """tools/play_check.py: the driver of player 1 trains soldiers while its town bell rings and in a raid while it saves
 for an age, and its villagers gather the price of the age (#3561)."""
+import play_check
 from test_bot_gather import bot_map
 from test_play_check import ready
 
-import play_check
 from game import bot
 
 

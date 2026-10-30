@@ -5,9 +5,9 @@ import io
 from collections import Counter
 
 import numpy as np
+from test_trigger_unit_values import unit_value
 
 import aoe2mc
-from test_trigger_unit_values import unit_value
 from tools import scenarios
 
 

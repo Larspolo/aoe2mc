@@ -1,9 +1,9 @@
 """An own sheep or goat has the wool of its player, as the herdables of AoE2; a Gaia one keeps its color (#1790)."""
 import numpy as np
 import pytest
+from mcvalid import entity_error
 
 import units
-from mcvalid import entity_error
 
 PLAYERS = {0: {"color": "light_gray"}, 1: {"color": "blue"}, 2: {"color": "red"}, 3: {"color": "orange"}}
 

@@ -1,8 +1,8 @@
 """game/stance.py: the stance menu has a "Stop" item (slot 5) that stops the selected military units at once and ends
 their patrol (AoE2 Stop, #3353). A villager in the selection gets no command."""
-from game import gather, stance
-
 from test_gather import FakeServer, grid
+
+from game import gather, stance
 
 
 def setup():

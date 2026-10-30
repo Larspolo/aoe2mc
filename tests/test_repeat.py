@@ -2,9 +2,10 @@
 import contextlib
 import io
 
-import aoe2mc
 import scenarios
 import world_reader
+
+import aoe2mc
 
 
 def run(src, out, **kw):

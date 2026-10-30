@@ -4,9 +4,8 @@ import json
 import os
 import re
 
-import pytest
-
 import pacer
+import pytest
 from test_pacer_accounts import secrets, server, usage_of  # noqa: F401 (server is a fixture)
 
 ONE = {"accounts": {"lars": {}}, "pacing": {"weights": {"haiku": 0.25, "deep": 4.0}}}

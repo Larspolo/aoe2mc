@@ -4,9 +4,9 @@ import shutil
 import time
 
 import pytest
+import train as plain_train  # garrison imports train by its plain name (not game.train)
 from test_train_castle import setup
 
-import train as plain_train          # garrison imports train by its plain name (not game.train)
 from game import combat, garrison, run, train
 
 PASS = {"names": ["TOWN_CENTER"], "tiles": 2, "part": 0.25}

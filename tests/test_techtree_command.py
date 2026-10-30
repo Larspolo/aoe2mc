@@ -1,9 +1,9 @@
 """game/techtree.py: the chat command /trigger aoe_techtree opens the tech tree of the own civilization (#3670).
 A person with a score of 1 gets the menu, and a person without a score gets none. Fake server."""
+from test_flare import Server
 from test_gather import grid
 
 from game import gather, techtree
-from test_flare import Server
 
 
 def setup():

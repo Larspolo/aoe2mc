@@ -16,11 +16,11 @@ def test_the_town_center_shoots_after_a_garrison_came_out_of_a_tower(tmp_path):
     from test_mc_check import mojang_reachable
     if not mojang_reachable():
         pytest.skip("Mojang is not reachable")
-    import aoe2mc
     import scenarios
     from AoE2ScenarioParser.datasets.buildings import BuildingInfo
     from AoE2ScenarioParser.datasets.units import UnitInfo
 
+    import aoe2mc
     from game import run
     scn = scenarios.new_scenario(48)
     um = scn.unit_manager

@@ -1,8 +1,9 @@
 """The castle and the wonder have copper lanterns, chains and bars; other designs keep iron ones (#543)."""
-import aoe2mc
-import buildings
 import mcvalid
 import render
+
+import aoe2mc
+import buildings
 
 
 def names(name, arch):

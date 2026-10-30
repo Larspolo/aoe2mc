@@ -1,11 +1,11 @@
 """game/garrison.py: a right click on an own tower, keep or house with units inside opens a menu with the item
 UNGARRISON, which lets them out. Only buildings with no training menu (#2970)."""
+import civs
 from menu_line import item
 from test_garrison_game import TOWER, arrive, setup
 from test_gather import FakeServer, grid
 from test_train_menu import menus
 
-import civs
 from game import build, garrison, gather, train
 
 UNGARRISON = "7:oak_door:Ungarrison:Click: all units come out"

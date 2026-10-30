@@ -1,6 +1,7 @@
 """A right click on a menu item (#3523): the plugin sets aoe_menu to slot + 1 + menu.RIGHT."""
-from game import menu
 from test_menu import Game
+
+from game import menu
 
 
 def test_a_handler_with_right_gets_the_right_click():

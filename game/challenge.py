@@ -79,7 +79,8 @@ BAR = "aoe2mc:challenge"
 def economy(g, c):
     """The goal of an economy challenge (the key "need" of its line): the resources in the stock, the villagers, the
     complete buildings and the number of ages."""
-    import build, train                                             # they import gather, gather imports this module
+    import build  # they import gather, gather imports this module
+    import train
     need, own = c["need"], train.owned(g)
     return all(g.stock[r] >= need[r] for r in ("food", "wood", "gold", "stone") if r in need) \
         and len(g.villagers) >= need.get("villagers", 0) and all(b in own for b in need.get("buildings", ())) \
@@ -88,7 +89,8 @@ def economy(g, c):
 
 def castle(g, c):
     """The goal of Fast Castle Age (the key "need" of its line): the villagers, the houses and the ages."""
-    import build, train                                             # they import gather, gather imports this module
+    import build  # they import gather, gather imports this module
+    import train
     need = c["need"]
     return len(g.villagers) >= need["villagers"] and train.owned(g).count("HOUSE") >= need["houses"] \
         and build.ages(g) >= need["ages"]
@@ -103,7 +105,7 @@ def fleets(g, c):
     the west water and the enemy warships (the key "enemy_fleet", player 2; the wiki gives no count) on the east water, one
     ship on each open water cell of a GAP grid (its 8 neighbours are water too), none on land. The AoE2 map: the player
     starts in the north-west and sails east to the enemy blockades."""
-    import train                                                       # train imports gather, gather imports this module
+    import train  # train imports gather, gather imports this module
     m = g.map
     cells = sorted((x, z) for z in range(0, m.n, GAP) for x in range(0, m.n, GAP)
                    if all(m.wet(x + dx, z + dz) for dx in (-1, 0, 1) for dz in (-1, 0, 1)))
@@ -139,20 +141,22 @@ def lost(g):
 
 def town(g):
     """The block footprint (x0, x1, z0, z1) of the first own town center that stands, or None."""
-    import train                                                    # train imports gather, gather imports this module
+    import train  # train imports gather, gather imports this module
     return next((r for r, n in sorted(train.homes(g).items()) if n == "TOWN_CENTER"), None)
 
 
 def defend(g, c):
     """The goal of Defending Against A Rush: the Castle Age while a town center stands."""
-    import build                                                    # build imports gather, gather imports this module
+    import build  # build imports gather, gather imports this module
     return build.ages(g) >= 2 and town(g) is not None
 
 
 def attacks(g, c, now):
     """Each wave of the key "attacks" whose time came: summon its units of player 2 at the map corner that is farthest
     from the town center, and send them with `aoe attack` to the town center (Minecraft path finding, game/ai.py)."""
-    import ai, combat, train                                        # they import gather, gather imports this module
+    import ai  # they import gather, gather imports this module
+    import combat
+    import train
     sent, tc = vars(g).get("challenge_attacks", 0), town(g)
     while tc and sent < len(c["attacks"]) and now >= c["attacks"][sent]["at"]:
         far = lambda a, b: 2 if (a + b) / 2 > g.map.n / 2 else g.map.n - 3   # noqa: E731
@@ -169,7 +173,9 @@ def besiege(g, c):
     """The setup of Destroying a Castle (#3908): a complete castle of player 2 with its defenders (the key "defenders")
     next to the town center of player 2 (else the middle of the map), and the start army of player 1 (the key "army")
     in front of its town center. g.siege_target: the target entity of the castle."""
-    import build, combat, train                                     # they import gather, gather imports this module
+    import build  # they import gather, gather imports this module
+    import combat
+    import train
     tc = next((o["footprint"] for o in g.data["objects"] if o["kind"] == "building" and o["player"] == 2
                and o["name"] == "TOWN_CENTER" and "footprint" in o), None)
     middle = ((tc[0] + tc[2]) // 2, (tc[1] + tc[3]) // 2) if tc else (g.map.n // 2, g.map.n // 2)
@@ -213,7 +219,8 @@ def setup(g):
     """The enemy town of challenge g.challenge (its key "enemy"), for free and complete at once: a town center when
     player 2 has none, the buildings near it and its villagers;
     first the function of its key "setup" (#3908). The bot of player 2 sends them to work."""
-    import build, train                                             # they import gather, gather imports this module
+    import build  # they import gather, gather imports this module
+    import train
     c, h = CHALLENGES[g.challenge], enemies(g)
     if "setup" in c:                                                # its start objects (besiege, #3908)
         module, _, function = c["setup"].rpartition(".")

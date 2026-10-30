@@ -1,8 +1,7 @@
 """The Celts capture enemy herdables also next to units of the owner (#1825), as in AoE2 (AoE2 wiki, "Herdable
 animal": "Celts: Enemy herdables can be converted regardless of enemy units next to them")."""
-from test_herd_capture import MILITIA, SCOUT, game, near
-
 import herd
+from test_herd_capture import MILITIA, SCOUT, game, near
 
 
 def play(civ):

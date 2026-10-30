@@ -1,13 +1,12 @@
 """run.py --play --challenge naval-battle: both fleets on water, the medal by the ships lost (#3909, epic #3759)."""
 import types
 
-import pytest
-
-from game import challenge
-
 import cheats  # noqa: E402  (game/ is on sys.path after the import of game.challenge)
+import pytest
 import recap  # noqa: E402
 import train  # noqa: E402
+
+from game import challenge
 
 ROW = challenge.CHALLENGES["naval-battle"]
 

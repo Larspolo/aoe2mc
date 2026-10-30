@@ -3,9 +3,8 @@
 import datetime
 import subprocess
 
-import pytest
-
 import dashboard
+import pytest
 
 NOW = datetime.datetime(2026, 10, 28, tzinfo=datetime.timezone.utc)
 

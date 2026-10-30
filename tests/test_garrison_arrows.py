@@ -4,10 +4,10 @@ import shutil
 import time
 
 import pytest
+from test_damage import health
 from test_garrison_game import TC, arrive, setup
 
 from game import combat, garrison, run
-from test_damage import health
 
 
 def test_town_center_with_3_villagers_shoots_3_more_arrows():

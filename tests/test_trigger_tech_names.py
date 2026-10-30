@@ -5,10 +5,11 @@ import os
 import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "game"))
-import aoe2mc  # noqa: E402
 import scenarios  # noqa: E402
 import train  # noqa: E402
 from AoE2ScenarioParser.datasets.techs import TechInfo  # noqa: E402
+
+import aoe2mc  # noqa: E402
 from units import rows  # noqa: E402
 
 

@@ -6,11 +6,10 @@ import shutil
 import time
 
 import pytest
-
-from game import combat, run, train
-
 from test_damage import health
 from test_train_castle import menus, setup
+
+from game import combat, run, train
 
 CASTLE = (12, 4)
 TECHS = {"ETHIOPIANS": "ROYAL_HEIRS", "DRAVIDIANS": "WOOTZ_STEEL"}

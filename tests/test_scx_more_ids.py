@@ -3,9 +3,9 @@ import contextlib
 import io
 
 import numpy as np
+from test_scx import build
 
 import aoe2mc
-from test_scx import build
 
 # Town center parts RTWC2X and RTWC1X, a palisade gate corner, a battering ram, FLAGX, shallows
 OLD = [(1, 4.0, 4.0, 617), (1, 12.0, 4.0, 621), (1, 4.5, 12.5, 795), (1, 8.5, 12.5, 35), (0, 14.5, 14.5, 162),

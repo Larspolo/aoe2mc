@@ -6,8 +6,8 @@ import shutil
 import time
 
 import pytest
-from test_dock_train import DOCK, dock_map
 from test_castle_upgrades import entry
+from test_dock_train import DOCK, dock_map
 from test_train_archery import menus
 
 import buildings

@@ -2,9 +2,10 @@
 import json
 import os
 
-import aoe2mc
 import scenarios
 from AoE2ScenarioParser.datasets.trigger_lists import ColorMood
+
+import aoe2mc
 
 
 def mood_of(tmp_path, mood):

@@ -4,10 +4,10 @@ building there (game/scenario.py rally, train.rally), and its new units walk to 
 import types
 
 import numpy as np
+from test_gather import FakeServer, grid
 
 import aoe2mc
 from game import gather, scenario, train
-from test_gather import FakeServer, grid
 
 BARRACKS = {"kind": "building", "name": "BARRACKS", "player": 1, "ref": 7, "footprint": [2, 2, 5, 5]}
 RECT = (2, 5, 2, 5)

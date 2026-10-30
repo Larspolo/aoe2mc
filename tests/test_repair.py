@@ -108,11 +108,11 @@ def test_repair_on_a_server(tmp_path):
     import json
     import time
 
-    import aoe2mc
     import scenarios
     from AoE2ScenarioParser.datasets.buildings import BuildingInfo
     from AoE2ScenarioParser.datasets.units import UnitInfo
 
+    import aoe2mc
     from game import run
     scn = scenarios.new_scenario(24)
     um = scn.unit_manager

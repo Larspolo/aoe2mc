@@ -2,10 +2,9 @@
 import re
 
 import pytest
+from test_gather import FakeServer, grid
 
 from game import gather
-
-from test_gather import FakeServer, grid
 
 HP = {"DEER": 20.0, "WILD_BOAR": 20.0, "SHEEP": 8.0}                    # vanilla health of the horse, panda and sheep
 

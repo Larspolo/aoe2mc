@@ -1,10 +1,10 @@
 """A technology with the key "unit_aura" (Bimaristan, #4366): the own monks heal the allied land units near them
 (regen.units). Test data: a monkeypatched train.BY_KEY line, not the values of the data line (owner, #4242)."""
 import pytest
+import train as plain_train  # regen imports train by its plain name (not game.train)
 from test_gather import grid
 from test_monk_heal import HealServer
 
-import train as plain_train          # regen imports train by its plain name (not game.train)
 from game import gather, regen
 
 TECH = "TEST_UNIT_AURA"

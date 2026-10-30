@@ -6,9 +6,10 @@ import sys
 import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "game"))
-import aoe2mc  # noqa: E402
 import replay  # noqa: E402
 from test_replay import Fake, data  # noqa: E402
+
+import aoe2mc  # noqa: E402
 
 TC = {"kind": "building", "name": "TOWN_CENTER", "player": 1, "ref": 5, "tile": [8.0, 8.0], "footprint": [26, 26, 38, 38]}
 V, L = aoe2mc.train_ms("VILLAGER_MALE"), replay.RESEARCH_S["Loom"] * 1000   # ms of the data

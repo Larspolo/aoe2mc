@@ -7,11 +7,11 @@ import os
 import sys
 
 import numpy as np
-
-import aoe2mc
 import scenarios
 from test_civ_costs import setup
 from test_trigger_modify_attribute import apply
+
+import aoe2mc
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "game"))
 from game import combat, train  # noqa: E402

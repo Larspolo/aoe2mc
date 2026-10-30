@@ -2,10 +2,11 @@
 import json
 import os
 
-import aoe2mc
 import mcvalid
 import world_reader
 from entities import entity_ids
+
+import aoe2mc
 
 
 def test_world_files(tiny_world):

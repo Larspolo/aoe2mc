@@ -61,9 +61,9 @@ def test_a_trained_ram_has_its_values_and_drives_to_an_order_on_a_server(tmp_pat
     import math
     import time
 
-    import aoe2mc
     import scenarios
 
+    import aoe2mc
     from game import ai, run
     src = str(tmp_path / "t.aoe2scenario")
     scenarios.save(scenarios.new_scenario(24), src)

@@ -1,8 +1,8 @@
 """About 1 oak or dead tree in 10 has bracket fungus (shelf_mushroom) on the trunk, facing away from it (#558)."""
 import numpy as np
+from mcvalid import block_error
 
 import aoe2mc
-from mcvalid import block_error
 
 
 def trees(kind, n=200):
