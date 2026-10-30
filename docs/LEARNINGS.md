@@ -9,7 +9,7 @@ records: `docs/research/replays.md`; bundles: `docs/packaging.md`; water: `docs/
 
 - Read the section of `docs/PITFALLS.md` before its case: claims, pushes, PRs, merge conflicts and check tickets;
   background commands and waits; downloads and blocked hosts; converter code; game program code.
-- `framework/tools/claim.py` names the run by the current local branch: run each call on the branch that pushes the ticket,
+- The claim tool (`framework/tools/claim.py`) names the run by the current local branch: run each call on the branch that pushes the ticket,
   one call per tool call and per ticket, and read the exit code before the next step (#361, #965, #4132).
 - `git fetch origin main` before each `git checkout -B <branch> origin/main`: the clone can be days old (#2278).
 - Wait for an `echo rc=$?` line, not for the first output; read the one result line of `pytest`, do not run it again.
