@@ -547,15 +547,18 @@ def prose(body):
     return re.sub(r"```.*?(```|$)|`[^`\n]*`", "", body or "", flags=re.S)
 
 
-def other_pr(pulls, number, me, taken=None):
+def other_pr(pulls, number, me, taken=None, still_open=False):
     """Number of an open or merged PR of another branch whose body closes ticket `number`, else None.
     taken: the branch of a PR that this run took over (#361): its open PR is the run's own. A PR with `Part of #N`
-    (ship_pr.py --part) leaves the ticket open, also when its prose says "does not close #N" (#4063)."""
+    (ship_pr.py --part) leaves the ticket open, also when its prose says "does not close #N" (#4063).
+    still_open: the ticket is open on GitHub, so no merged PR closed it (#4063: the body of #4633 quoted "does not
+    close #4063" and had `Part of #4063` only in a code span)."""
     closes_n, part = closes(number), re.compile(rf"\bPart of #{number}\b")
     for p in pulls:
         own = p["head"]["ref"] == me or p["head"]["ref"] == taken and p["state"] == "open"
         text = prose(p["body"])
-        if not own and (p["state"] == "open" or p.get("merged_at")) and closes_n.search(text) and not part.search(text):
+        live = p["state"] == "open" or p.get("merged_at") and not still_open
+        if not own and live and closes_n.search(text) and not part.search(text):
             return p["number"]
     return None
 
@@ -753,7 +756,8 @@ def main(argv=None):
             for m, commit in other:
                 print(f"the branch carries commits of #{m} ({commit}): remove them from the branch")
             return 1
-        pr = on_github(a.remote) and other_pr(api("pulls?state=all&per_page=30"), a.number, who(), a.pr_branch)
+        pr = on_github(a.remote) and other_pr(api("pulls?state=all&per_page=30"), a.number, who(), a.pr_branch,
+                                                isinstance(issue, dict) and issue.get("state") == "open")
         if pr:
             print(f"PR #{pr} of another branch closes #{a.number}: stop and release")
             return 1

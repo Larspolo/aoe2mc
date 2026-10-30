@@ -458,6 +458,7 @@ class Replay:
         self.idled, self.idle_at = {}, 0        # player -> idle villager time (s), game time (ms) of the last count (#3757)
         self.waiting, self.told_at = {}, 0      # uuid -> [player, idle s since its last record command], game time (ms)
                                                 # of the last check of the record commands (#4063)
+        self.fighting = set()                   # IDs of villagers with an ORDER on an enemy unit: not idle (#4063)
         self.reached, self.researched = {}, {}  # player -> {age: game time (ms)}, researched technologies (#1067)
         self.learned = {}                       # player -> [(game time ms, technology name)] (#3785)
         self.spends = {}                        # player -> [(game time ms, group, total cost)] of pay (#4390)
@@ -784,6 +785,9 @@ class Replay:
                     v.pos, v.leg, v.hunt = self.at(v, e["time"]), None, None
                 self.idle.pop(i, None)                                # a new order: settle() does not check it
                 self.scouts.pop(i, None)
+                self.fighting.discard(i)
+            if kind == "order" and getattr(self.units.get(e.get("target")), "player", 0) not in (0, e["player"]):
+                self.fighting.update(e.get("objects") or ())            # AoE2: it fights (idle_time, #4063)
         if kind == "patrol" and e.get("objects") and e.get("tile"):
             return self.patrol(e)
         if kind == "autoscout" and e.get("objects"):
@@ -2847,15 +2851,16 @@ class Replay:
         game time since the last count. A jump sets idle_at only: the skipped time adds nothing. The idle time of a
         villager counts only up to its next record command (#4063): a villager that the record never commands again
         died in the game (the record has no deaths) or worked on with no command, so in de-64.3 it gave 60 % of the
-        idle time (P2 641 of 903 min)."""
-        ids = {}
+        idle time (P2 641 of 903 min). A villager that attacks an enemy unit fights up to its next command: the record has no end of
+        the fight (in de-64.3, 8 villagers on one archer gave 75 of 250 min of P1)."""
+        ids, fight = {}, {self.units[i].uuid for i in self.fighting if i in self.units}
         for i, v in self.units.items():
             ids.setdefault(v.uuid, []).append(i)
         for u, v in {v.uuid: v for v in self.units.values()}.items():
             if not v.name.startswith("VILLAGER"):
                 continue
             self.idled.setdefault(v.player, 0)
-            if not v.task or v.task == "none" or v.job == units.IDLE_JOB:
+            if (not v.task or v.task == "none" or v.job == units.IDLE_JOB) and u not in fight:
                 self.waiting.setdefault(u, [v.player, 0])[1] += (t - self.idle_at) / 1000
             if u in self.waiting and any(bisect.bisect_right(ts := self.told.get(i, ()), self.told_at)
                                          < bisect.bisect_right(ts, t) for i in ids[u]):   # a command in (told_at, t]
