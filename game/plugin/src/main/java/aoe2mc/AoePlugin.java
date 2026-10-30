@@ -1479,8 +1479,8 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         return damage * part;
     }
 
-    // A unit with the tag aoe2mc.gold.N (N gold per AoE2 minute while it attacks enemy units: the Varangian Guard,
-    // game/spoils.py, #2376) that hits an enemy unit adds N × its reload ticks to the score aoe_attack_gold of its side.
+    // A unit with the tag aoe2mc.gold.N (N gold per 100 AoE2 minutes while it attacks enemy units: the Varangian Guard,
+    // the Keshik, game/spoils.py, #2376) that hits an enemy unit adds N × its reload ticks to the score aoe_attack_gold of its side.
     // A hit on a building gives no gold: it does not come here.
     private static void gold(Entity from, Entity victim, Stats a) {
         String side = from == null || sameTeam(from, victim) ? null : side(from);
