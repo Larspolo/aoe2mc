@@ -563,7 +563,12 @@ def read_saved(path):
     of the save (#4565) and "saved": the game program starts it with them (scenario.start_values). mgz reads no
     technologies: the age gives them (docs/research/saved-games.md)."""
     match = saved_match(path)
-    state = read_record(path, match)
+    return read_saved_state(match, read_record(path, match))
+
+
+def read_saved_state(match, state):
+    """Put the resources, the age and "saved" of each player of a match of saved_match on the players of state
+    (read_record): for a save and a restored record (#4592), whose header is its save."""
     for number, a in match.attributes.items():
         if number in state[6] and number and len(a) > SAVE_AGE:
             p = state[6][number]
@@ -588,6 +593,8 @@ def read_record(path, match=None):
                 match = parse_match(f)
         except RuntimeError as e:  # the mgz model reads DE 13.34 and later only: read the header of older games
             return read_old_record(path, e)
+        if getattr(match, "restored", False):   # the header is the save at the restore time (#4592)
+            return read_saved_state(m := saved_match(path), read_record(path, m))
     size = match.map.dimension
     terrain = np.zeros((size, size), np.int16)
     elevation = np.zeros((size, size), np.float32)

@@ -477,6 +477,24 @@ class Replay:
                 self.counted += [o["uuid"]] * ("uuid" in o)
             if o["kind"] == "unit" and o.get("player") and o["name"].startswith("VILLAGER"):
                 self.villager(o["player"], 1)
+        self.restored()
+
+    def restored(self):
+        """A restored record starts with the state of its save (#4592): the age, the technologies and the resources of
+        each player of aoe2mc.json "saved" (aoe2mc.read_saved_state, #4565) at the time of its "restore" event (#4568)."""
+        at = [e["time"] for e in self.data.get("timeline", []) if e["kind"] == "restore"]
+        for key, info in dict(self.data.get("players") or {}).items():
+            if not at or not info.get("saved") or not (p := int(key)):
+                continue
+            n = next((i + 1 for i, a in enumerate(AGES) if a.lower().startswith(info.get("age", "dark"))), 0)
+            for a in AGES[:n]:                                     # the age and the ages before it, not paid
+                self.reached.setdefault(p, {})[a] = max(at)
+                self.ages[p] = pretty(a).removesuffix(" Age")
+            for t in info.get("techs", ()):
+                self.researched[p] = self.researched.get(p, 0) + 1
+                self.learned.setdefault(p, []).append((max(at), TECHS.get(t, t)))
+            if "resources" in info:
+                self.stock[p] = dict(info["resources"])
 
     def player(self, p):
         info = self.data["players"].get(str(p), {})
@@ -499,6 +517,8 @@ class Replay:
         return sorted(players, key=lambda p: (self.team(p) or 0, p))
 
     def age(self, e):
+        if e["age"] in self.reached.get(e.get("player"), {}):        # the save has it (#4592): no second payment
+            return
         self.ages[e.get("player")] = pretty(e["age"]).removesuffix(" Age")
         self.reached.setdefault(e.get("player"), {})[e["age"]] = e.get("time", 0)
         self.pay(e.get("player"), e["age"], e.get("time", 0))
