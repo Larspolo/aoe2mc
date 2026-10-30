@@ -1632,8 +1632,8 @@ class Replay:
         elif tile and e.get("target") not in self.refs and e.get("target") not in self.units:   # a cut tree (#3976)
             goals = self.map.around(self.map.cells(tile)) or goals
         home = self.holder(e)
-        if home and e.get("target") not in self.refs:              # a building of the replay: next to it (#876)
-            x0, x1, z0, z1 = home[0]
+        if (home or church) and e.get("target") not in self.refs:  # a building of the replay: next to it (#876, #4602)
+            x0, x1, z0, z1 = home[0] if home else church
             goals = self.map.around({(x, z) for x in range(x0, x1) for z in range(z0, z1)})
         for i, v in group:                                          # a new MOVE or ORDER stops the work
             self.working.pop(i, None)
@@ -2290,7 +2290,10 @@ class Replay:
         """The footprint of the own start monastery (or a building that stands for it, combat.STANDS_FOR) that an ORDER
         or a GARRISON targets, or None."""
         import combat
-        o = self.refs.get(e.get("target"))
+        t, n = e.get("target"), e.get("target_name")
+        o = self.refs.get(t)
+        if o is None and t is not None and t not in self.units and combat.STANDS_FOR.get(n, n) == "MONASTERY":
+            return self.new_building(t, n, e["player"], e.get("tile"))        # a monastery of the replay (#4602)
         if not o or o["kind"] != "building" or o["player"] != e["player"]:
             return None
         if combat.STANDS_FOR.get(o["name"], o["name"]) != "MONASTERY":
