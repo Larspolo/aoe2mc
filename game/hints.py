@@ -21,7 +21,7 @@ TEXTS = {                                                          # short: the 
     "guard": "Guard: right click an own or allied unit or building",
     "military": "{n} military unit{s} · Right click: attack an enemy, stance menu · Empty box: deselect",
     "patrol": "Patrol: right click the ground",
-    "none": "Right click: select a unit · Hold right click: selection box",
+    "none": "Left click: select a unit · Hold right click: selection box",
     "none-wand": "Right click: select a unit · Wand: selection box",
     "villagers": "{n} villager{s} · Right click: gather, build, build menu · Empty box: deselect",
 }

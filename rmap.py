@@ -68,9 +68,17 @@ class RmsError(ValueError):
 
 
 def tokens(text):
-    """The words of a script without its /* comments */; braces and section names are words."""
-    text = re.sub(r"/\*.*?\*/", " ", text, flags=re.S)
-    return re.sub(r"([{}])", r" \1 ", text).split()
+    """The words of a script without its /* comments */; braces and section names are words. Comments nest, as in the
+    game: the */ of an inner comment does not end the outer one (a commented-out block with a note in it, #4695)."""
+    keep, depth = [], 0
+    for part in re.split(r"(/\*|\*/)", text):
+        if part == "/*":
+            depth += 1
+        elif part == "*/":
+            depth = max(depth - 1, 0)
+        elif not depth:
+            keep.append(part)
+    return re.sub(r"([{}])", r" \1 ", " ".join(keep)).split()
 
 
 def expand(words, rng, defined, consts, includes, folder=None, depth=0):
@@ -566,7 +574,9 @@ def generate(text, seed, players=2, size=None, warn=None, teams=None, folder=Non
                     r = ring + (rng.uniform(-vary, vary) if vary else 0)   # no draw with no change: same maps
                     c = (int(round((n - 1) / 2 + r * n * np.cos(a))), int(round((n - 1) / 2 + r * n * np.sin(a))))
                     starts.append({"player": p, "x": c[0], "y": c[1], "base_size": base, "land": len(lands)})
-                    links.append((c, p, zone if zone is not None else -1 - len(lands)))
+                    t = teams[p - 1] if teams and "set_zone_by_team" in attrs else None
+                    z = zone if zone is not None else -1 - len(lands)
+                    links.append((c, p, ("team", t) if t is not None else z))   # one zone per team (#4696)
                     lands.append({"id": len(lands), "cells": square(c, base, n, circular="set_circular_base" in attrs),
                                   "clump": clump, "box": box, "fuzz": fuzz, "zone": links[-1][2], "avoid": avoid,
                                   "target": max(total // players, (2 * base + 1) ** 2)})
@@ -765,6 +775,7 @@ CREATE_LAND = (                 # the attributes of create_land and create_playe
     "other_zone_avoidance_distance",
     "right_border",
     "set_circular_base",
+    "set_zone_by_team",             # the lands of a team share one zone (#4696)
     "terrain_type",
     "top_border",
     "zone",
