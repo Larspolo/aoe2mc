@@ -695,6 +695,8 @@ CREATE_LAND = (                 # the attributes of create_land and create_playe
     "border_fuzziness",
     "bottom_border",
     "clumping_factor",
+    "generate_mode",                # no source gives its effect: read with no warning (#4423)
+    "land_conformity",              # no source gives its effect: read with no warning (#4423)
     "land_id",
     "land_percent",
     "land_position",
