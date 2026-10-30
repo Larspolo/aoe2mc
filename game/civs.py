@@ -41,6 +41,7 @@ RULES = {
     "land military units but siege": lambda n, s: not civilian(n) and "siege" not in s.classes
         and not GROUPS["ships"](n, s),
     "land siege, Lou Chuans": lambda n, s: "siege" in s.classes,   # the ships of the group: "groups" (data/units.jsonl)
+    "land units but siege": lambda n, s: "siege" not in s.classes and not GROUPS["ships"](n, s),   # Bimaristan (#4366)
     "military": lambda n, s: not n.startswith("VILLAGER"),
     "military units": lambda n, s: not civilian(n),
     "mounted": lambda n, s: mounted(s),
@@ -302,7 +303,11 @@ def cost(g, name, base, player=None):
     if own and name in vars(g).get("trigger_costs", {}):            # "Change Object Cost" of a scenario (#2776)
         return dict(g.trigger_costs[name])
     for what, r, c in [*COSTS.get(civ(g, player), []), *policy(g)[1].get("costs", ()) * own, *techs]:   # (#2485)
-        if has(what, name):
+        if has(what, name) and r and ">" in r:                       # a swap: a part c of one resource to another (#4325)
+            k, to = r.split(">")
+            move = int(out.get(k, 0) * c[age] + 0.5)
+            out[k], out[to] = out.get(k, 0) - move, out.get(to, 0) + move
+        elif has(what, name):
             for k in [r] if r else list(out):
                 if k in out:
                     out[k] = max(0, int(out[k] * c[age] + 0.5) if isinstance(c[age], float) else out[k] + c[age])
