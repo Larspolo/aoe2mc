@@ -540,7 +540,7 @@ def read_record(path):
         civ = (p.civilization or "?").upper()
         players[p.number] = {"team": teams.get(p.number), "color": buildings.COLOR_NAMES[p.color_id] if 0 <= p.color_id < 8 else "light_gray",
                              "arch": buildings.CIV_TO_ARCH.get(civ, "western"), "civ": civ,
-                             "view": (p.position.x, p.position.y) if p.position else None}
+                             "view": (p.position.x, p.position.y) if p.position and p.position.x is not None else None}
 
     kinds, objects = object_kinds(), []
     for player, objs in [(0, match.gaia)] + [(p.number, p.objects) for p in match.players]:
@@ -710,7 +710,8 @@ def read_timeline(path):
     kind: "type" and "name" (building or unit, as in read_record), "tile" [x, y], "end" [x, y] (wall),
     "technology", "objects" (the object IDs that the command selects), "target" (object ID), "text" (chat)}.
     Tiles are AoE2 tiles. Actions that mgz cannot read are left out. None for the games that the mgz model
-    cannot read (read_old_record reads only their start state, #376)."""
+    cannot read (read_old_record reads only their start state, #376). All times are game times: a restored record
+    starts with a "restore" event at the game time of its save (#4568; mgz adds it to chat and age times only)."""
     import mgz.fast as fast
     from mgz.model import parse_match
     names, parse = object_kinds(), fast.parse_action
@@ -724,12 +725,13 @@ def read_timeline(path):
     finally:
         fast.parse_action = parse
     ms = lambda t: int(round(t.total_seconds() * 1000))           # noqa: E731
-    events = []
+    restore = ms(match.restored_at) if getattr(match, "restored", False) else 0
+    events = [{"time": restore, "player": None, "kind": "restore"}] if restore else []
     for a in match.actions:
         kind = a.type.name.lower().removeprefix("de_")
         if kind == "error":
             continue
-        e = {"time": ms(a.timestamp), "player": a.player.number if a.player else None, "kind": kind}
+        e = {"time": ms(a.timestamp) + restore, "player": a.player.number if a.player else None, "kind": kind}
         for k, v in a.payload.items():
             if k in TIMELINE_KEYS and v is not None and v != -1:
                 e[TIMELINE_KEYS[k]] = v

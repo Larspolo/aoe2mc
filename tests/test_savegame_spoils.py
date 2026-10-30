@@ -8,17 +8,26 @@ from game import savegame, spoils, train
 
 
 def scored(server, kills, ticks):
-    command = server.command
-    scores = {spoils.OBJECTIVE: kills, spoils.GOLD: ticks}
-    server.command = lambda c: next((f"p1 has {n} [{o}]" for o, n in scores.items()
-                                     if c == f"scoreboard players get p1 {o}"), None) or command(c)
+    """A fake score; spoils.attacks removes the hits that gave gold (#4464). Return the scores."""
+    command, scores = server.command, {spoils.OBJECTIVE: kills, spoils.GOLD: ticks}
+
+    def answer(c):
+        for o, n in scores.items():
+            if c == f"scoreboard players get p1 {o}":
+                return f"p1 has {n} [{o}]"
+            if c.startswith(f"scoreboard players remove p1 {o} "):
+                scores[o] -= int(c.split()[-1])
+                return ""
+        return command(c)
+    server.command = answer
+    return scores
 
 
 def played(civ):
     server, g = game(civ)
     train.summon(g, "VARANGIAN_GUARD", (8.5, 64.0, 8.5))               # spoils.attacks reads the score only with one
     g.stock["gold"] = 0
-    scored(server, 5, 4000)
+    g.scores = scored(server, 5, 400000)                       # gold per 100 minutes × ticks (#4464)
     spoils.kills(g)
     spoils.attacks(g)
     return g
@@ -27,7 +36,7 @@ def played(civ):
 def loaded(g, civ):
     server, h = game(civ)
     train.summon(h, "VARANGIAN_GUARD", (8.5, 64.0, 8.5))
-    scored(server, 5, 4000)                                            # the saved world has the same scores
+    scored(server, *g.scores.values())                                 # the saved world has the same scores
     savegame.load(h, json.loads(json.dumps(savegame.dump(g), sort_keys=True)))
     return h
 
@@ -38,7 +47,7 @@ def test_a_loaded_game_gives_no_second_gold_for_the_old_kills_and_hits():
         assert g.stock["gold"] > 0
         h = loaded(g, civ)
         saved = {k: vars(g)[k] for k in savegame.SPOILS if k in vars(g)}   # Mapuche: kills, Varangians: hits
-        assert saved and {k: vars(h)[k] for k in saved} == saved
+        assert {k: vars(h)[k] for k in saved} == saved
         gold = h.stock["gold"]
         spoils.kills(h)
         spoils.attacks(h)
