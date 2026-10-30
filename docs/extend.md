@@ -36,6 +36,11 @@ parallel tickets do not change the same lines. Most rules have a check: `tools/d
   `"on_research"` (`"module.function"`) on its line, not an `if` block in `train.research()` (#3243).
 - A new key of `game/data/setup.jsonl` (a game mode, a lobby setting) is one line in `game/data/setup_keys.jsonl` (`"type"`,
   `"kind": true` for a key of the "one kind" rule, `"text"`, `"issue"`), not a change of `check_setup()` in `tests/test_data_files.py` (#2558).
+- A new unit ability (epic #4387: a plugin command per unit, as `aoe frenzy`) is one new module in `game/abilities/`
+  with `KEY` (its key of `game/data/units.jsonl`), `TYPE` (the type of its value), `UNITS = values(KEY)` and
+  `command(uuid, name, T)`: the package finds it (`pkgutil`), and `combat.setup`, `train.summon` and the elite upgrade
+  of `train.research` send it. Change no line of `game/combat.py`, `game/train.py` or `tests/test_data_files.py`
+  (#4588: each ability PR appended to the same 5 places, and each pair of open ability PRs conflicted).
 - A new key of a line of `game/data/units.jsonl` needs no entry in the `may` dict of `check_units` (`tests/test_data_files.py`):
   `form()` accepts a new key, and `test_each_key_has_one_type` checks its type. Tickets that added their key to that one
   line conflicted (PR #4411, #4507).

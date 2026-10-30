@@ -13,6 +13,7 @@ The boss bar of the selected unit shows a stance other than aggressive (bossbar.
 import json
 import math
 
+import abilities
 import autoscout
 import bossbar
 import menu as chest
@@ -138,7 +139,7 @@ def mode_commands(g, u, name, mode):
             f"execute as {u} if entity @s[type=skeleton] run item replace entity @s weapon.mainhand with {weapon}",
             f"execute as {u} on passengers if entity @s[type=skeleton] run item replace entity @s weapon.mainhand with {weapon}",
             f"aoe range {u} off" if melee else combat.range_command(u, name, g.map.T, s=s),
-            combat.trample_command(u, name, g.map.T, t)]
+            abilities.trample.command(u, name, g.map.T, t)]
 
 
 def put(g, s):

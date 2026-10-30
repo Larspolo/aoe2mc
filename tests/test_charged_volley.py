@@ -3,8 +3,8 @@ the plugin command aoe chargedvolley for each new unit. Test data, fake server o
 import shutil
 import time
 
-import combat as plain
 import pytest
+from abilities import charged_volley
 from test_damage import health
 from test_kill_spoils import game
 
@@ -14,8 +14,7 @@ VOLLEY = {"time": 30, "shots": 5, "attack": 1, "bonus": {"spearman": 4, "infantr
 
 
 def volley(monkeypatch):
-    for m in (combat, plain):                                          # train imports the plain name
-        monkeypatch.setattr(m, "CHARGED_VOLLEY", {"ARCHER": VOLLEY})
+    monkeypatch.setattr(charged_volley, "UNITS", {"ARCHER": VOLLEY})
 
 
 def test_a_new_unit_with_the_key_gets_its_charged_volley(monkeypatch):
@@ -31,7 +30,7 @@ def test_a_unit_without_the_key_gets_none(monkeypatch):
     server, g = game("BRITONS")
     train.summon(g, "MILITIA", (8.5, 64.0, 8.5))
     assert not any(c.startswith("aoe chargedvolley") for c in server.log)
-    assert combat.charged_volley_command("u", "MILITIA") is None
+    assert charged_volley.command("u", "MILITIA") is None
 
 
 @pytest.mark.mc

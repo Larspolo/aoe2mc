@@ -48,6 +48,7 @@ import math
 import os
 import re
 import shutil
+import struct
 import sys
 import textwrap
 import time
@@ -531,15 +532,49 @@ def saved_match(path):
     if len(data) < end + 4:
         data = data[:end] + SAVE_LOG_VERSION.to_bytes(4, "little") + bytes(40)
     new_saves()
+    import mgz.fast.header as header
+    parse_player, attributes = header.parse_player, {}
+
+    def player(f, number, players, save):          # mgz skips the attributes of a player: read them first (#4565)
+        at = f.tell()
+        *_, length = header.unpack(f"<bx{players}x{players if save >= 61.5 else 9}i5xh", f)
+        _, n = header.unpack(f"<{length - 1}s2xIx", f)
+        attributes[number] = struct.unpack(f"<{n}f", f.read(4 * n))   # 8 bytes each from save 63: the floats first
+        f.seek(at)
+        return parse_player(f, number, players, save)
+    header.parse_player = player
     try:
-        return parse_match(io.BytesIO(data))
+        match = parse_match(io.BytesIO(data))
     except Exception as e:          # mgz raises many kinds on bytes that are not a save
         raise SystemExit(f"{path}: not a saved game of AoE2 DE that mgz can read ({e})") from None
+    finally:
+        header.parse_player = parse_player
+    match.attributes = attributes
+    return match
+
+
+SAVE_RESOURCES = {"food": 0, "wood": 1, "stone": 2, "gold": 3}   # the attributes of a player (resource IDs of AoE2)
+SAVE_AGE = 6                                                      # the attribute "current age": 0 is the Dark Age
+SAVE_AGES = ("dark", "feudal", "castle", "imperial")              # game/data/setup.jsonl "Starting age"
 
 
 def read_saved(path):
-    """The state of a saved game of DE (#4564) in the form of read_record."""
-    return read_record(path, saved_match(path))
+    """The state of a saved game of DE (#4564) in the form of read_record. Each player gets the resources and the age
+    of the save (#4565) and "saved": the game program starts it with them (scenario.start_values). mgz reads no
+    technologies: the age gives them (docs/research/saved-games.md)."""
+    match = saved_match(path)
+    return read_saved_state(match, read_record(path, match))
+
+
+def read_saved_state(match, state):
+    """Put the resources, the age and "saved" of each player of a match of saved_match on the players of state
+    (read_record): for a save and a restored record (#4592), whose header is its save."""
+    for number, a in match.attributes.items():
+        if number in state[6] and number and len(a) > SAVE_AGE:
+            p = state[6][number]
+            p["resources"] = {r: int(a[i]) for r, i in SAVE_RESOURCES.items()}
+            p["age"], p["saved"] = SAVE_AGES[min(max(int(a[SAVE_AGE]), 0), 3)], True
+    return state
 
 
 def read_record(path, match=None):
@@ -558,6 +593,8 @@ def read_record(path, match=None):
                 match = parse_match(f)
         except RuntimeError as e:  # the mgz model reads DE 13.34 and later only: read the header of older games
             return read_old_record(path, e)
+        if getattr(match, "restored", False):   # the header is the save at the restore time (#4592)
+            return read_saved_state(m := saved_match(path), read_record(path, m))
     size = match.map.dimension
     terrain = np.zeros((size, size), np.int16)
     elevation = np.zeros((size, size), np.float32)
@@ -2831,7 +2868,7 @@ def write_objects(path, size, T, H, players, objects, cols, ground, timeline=Non
         objs.append(e)
     data = {"map_size": size, "tile_size": T, "level_height": H, "mood": mood,
             "players": {str(pid): {"civ": p["civ"], "color": p["color"], "arch": p["arch"]}
-                        | {k: p[k] for k in ("team", "neutral", "resources", "pop_limit", "computer", "age", "name", "lock_civ", "start", "disabled") if k in p} for pid, p in sorted(players.items())},
+                        | {k: p[k] for k in ("team", "neutral", "resources", "pop_limit", "computer", "age", "name", "lock_civ", "start", "disabled", "saved", "techs") if k in p} for pid, p in sorted(players.items())},
             "objects": objs, "yaw": float(yaw)}
     n, wet = cols.n, cols.wtop > cols.top
     data["ground"] = [" ".join("-" if wet[x, z] else str(ground[x, z]) for x in range(n)) for z in range(n)]

@@ -1,19 +1,20 @@
 """The Jaguar Warrior gets +1 attack for each unit that it kills, up to +4 (#4467, AoE2 wiki "Jaguar Warrior": "Gains
-+1 attack for each unit killed (up to 4)"): the key "veteran", combat.veteran_command and `aoe veteran` of the plugin.
++1 attack for each unit killed (up to 4)"): the key "veteran", game/abilities/veteran.py and `aoe veteran` of the plugin.
 Test data, and kills on a server."""
 import re
 import shutil
 import time
 
 import pytest
+from abilities import veteran
 
 from game import combat, run
 
 
 def test_the_veteran_command_gives_the_attack_and_the_max(monkeypatch):
-    monkeypatch.setattr(combat, "VETERAN", {"MILITIA": {"attack": 1, "max": 4}})
-    assert combat.veteran_command("u-1", "MILITIA") == "aoe veteran u-1 1 4"
-    assert combat.veteran_command("u-1", "ARCHER") is None
+    monkeypatch.setattr(veteran, "UNITS", {"MILITIA": {"attack": 1, "max": 4}})
+    assert veteran.command("u-1", "MILITIA") == "aoe veteran u-1 1 4"
+    assert veteran.command("u-1", "ARCHER") is None
 
 
 def uuid(n):

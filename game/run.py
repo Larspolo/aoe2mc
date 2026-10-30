@@ -11,6 +11,7 @@ Usage:
     python3 game/run.py WORLD --play --bot        # also a bot plays player 2: its villagers gather (game/bot.py)
     python3 game/run.py WORLD --play --bot --bot-attack 5:00   # its soldiers attack player 1 from 5:00 (default 10:00)
     python3 game/run.py WORLD --play --bot --ai-difficulty hard   # the AoE2 setting "AI difficulty" (#2661)
+    python3 game/run.py WORLD --play --bot --ai my.per   # the bot plays by an AoE2 AI script (game/per.py, #4529)
     python3 game/run.py WORLD --play --log F.jsonl  # also write a timed event log (tools/measure_gather.py reads it)
     python3 game/run.py WORLD --play --record F.jsonl  # Record Game: --replay --replay-file F.jsonl plays it (#2649)
     python3 game/run.py WORLD --play --bot --treaty 20:00   # the AoE2 setting "Treaty length": no attack before 20:00 (#2297)
@@ -508,6 +509,15 @@ def difficulty_list(text):
     return text
 
 
+def script_list(text):
+    """The value of --ai: one AI script (.per) for each bot in seat order (#4529). A missing file stops the program
+    before the server starts."""
+    files = text.split(",")
+    if bad := [f for f in files if not os.path.isfile(f)]:
+        raise argparse.ArgumentTypeError(f"no AI script {os.path.abspath(bad[0])}")
+    return files
+
+
 def bots_count(text):
     """The value of --bots: a number of bots or "all" (#4017)."""
     if text == "all":
@@ -609,7 +619,8 @@ VICTORIES = {                        # the AoE2 setting "Victory" (--victory, Ga
 # The AoE2 lobby settings of play() for each player and bot (epic #2263), name: default. main() passes the option of
 # the same name. A new setting is one line here, in alphabetical order, not a change of the play() lines (#2373).
 SETTINGS = {
-    "age": "dark",                    # "Starting age" (train.STARTS, #2265)
+    "age": "dark",
+    "ai": None,                       # the AoE2 AI script of each bot in seat order (script_list, per.read, #4529)                    # "Starting age" (train.STARTS, #2265)
     "ai_difficulty": "standard",      # "AI difficulty" of the bots (bot.LEVELS, game/data/difficulty.jsonl, #2661)
     "all_techs": False,               # "All Techs" (civs.missing, #2298)
     "antiquity": False,               # Antiquity Mode: the Return of Rome rule set (table.use, game/data/antiquity, #3666)
@@ -738,7 +749,10 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
         seats = bot_seats(data["players"], players, bot) if bot else []
     for k, (player, foe) in enumerate(seats):        # after the people, next to their Sides (#1794)
         import bot as bots
+        import per
         level = bots.level_of(settings["ai_difficulty"], k)   # one level for each bot in seat order (#4020)
+        files = settings["ai"] or []                 # a bot after the list plays by its own logic (#4529)
+        script = per.read(files[k]) if k < len(files) else None
         import replay
         import treaty as treaties
         attack = max(bot_attack, settings["treaty"], key=replay.aoe2mc.game_time)   # the bot waits for the treaty too
@@ -748,7 +762,7 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
         g.bots = [*g.bots, bots.Bot(game, data, player=player, share=g, log=log, foe=foe,
                                     attack=math.inf if attack == "never" else replay.aoe2mc.game_time(attack) / 1000,
                                     resources=settings["resources"], pop_limit=settings["pop_limit"],
-                                    difficulty=level).setup()]
+                                    difficulty=level, script=script).setup()]
         at = math.inf if attack == "never" else \
             replay.aoe2mc.game_time(attack) / 1000 * bots.LEVELS[level]["attack"]
         print(f"A bot ({level}) plays player {player}: {len(g.bots[-1].g.villagers)} villagers "
@@ -768,6 +782,12 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
         import train
         for x in [g, *(s.g for s in g.bots)]:
             train.start(x, settings["age"])
+    saved = {k: p for k, p in dict(data.get("players") or {}).items() if p.get("saved")}
+    if not state and saved and settings["mode"] != "scenario":  # a converted saved game: its resources, ages and
+        import scenario                                          # technologies (aoe2mc.json "saved", #4565)
+        for x in [g, *(s.g for s in g.bots)]:
+            if p := saved.get(str(x.player)):
+                scenario.start_values(x, p)
     if settings["record"]:                                       # the orders of the people and the bots (#2649), and
         import record                                            # the objects of the setups below at 0:00 (#3028)
         record.start([g, *(b.g for b in g.bots)], settings["record"])
@@ -1149,6 +1169,9 @@ def main(argv=None, scenario=None):
                     help=f"--bot: the AoE2 setting \"AI difficulty\" ({', '.join(levels)}; default standard; a comma "
                     "list gives each bot its own level in seat order, #4020): the gather rate of the bot, the time of "
                     "its first attack (times --bot-attack) and the soldiers of its first wave")
+    ap.add_argument("--ai", type=script_list, default=None, metavar="FILE[,FILE...]",
+                    help="--bot: an AoE2 AI script (.per) for each bot in seat order (#4529): the bot trains, builds "
+                    "and researches only by its rules; a bot after the list plays by its own logic")
     ap.add_argument("--bot-attack", default="10:00", metavar="MM:SS", help="--bot: its soldiers attack its foe "
                     "from this game time (default 10:00)")
     ap.add_argument("--treaty", default="0:00", metavar="MM:SS", help="--play: the AoE2 setting \"Treaty length\": "

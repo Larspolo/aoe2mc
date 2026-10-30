@@ -549,11 +549,13 @@ def prose(body):
 
 def other_pr(pulls, number, me, taken=None):
     """Number of an open or merged PR of another branch whose body closes ticket `number`, else None.
-    taken: the branch of a PR that this run took over (#361): its open PR is the run's own."""
-    closes_n = closes(number)
+    taken: the branch of a PR that this run took over (#361): its open PR is the run's own. A PR with `Part of #N`
+    (ship_pr.py --part) leaves the ticket open, also when its prose says "does not close #N" (#4063)."""
+    closes_n, part = closes(number), re.compile(rf"\bPart of #{number}\b")
     for p in pulls:
         own = p["head"]["ref"] == me or p["head"]["ref"] == taken and p["state"] == "open"
-        if not own and (p["state"] == "open" or p.get("merged_at")) and closes_n.search(prose(p["body"])):
+        text = prose(p["body"])
+        if not own and (p["state"] == "open" or p.get("merged_at")) and closes_n.search(text) and not part.search(text):
             return p["number"]
     return None
 

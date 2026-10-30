@@ -27,6 +27,7 @@ import tarfile
 import tempfile
 import threading
 import time
+import urllib.parse
 import urllib.request
 import zipfile
 
@@ -42,6 +43,10 @@ PROBLEM = re.compile(r"/(WARN|ERROR|FATAL)\]|Exception|Invalid|Unknown block|Cou
 
 
 def get(url):
+    # a runner with no token has 60 GitHub API calls per hour per address, shared by the macOS runners (#4629)
+    token = os.environ.get("GH_TOKEN") or os.environ.get("GITHUB_TOKEN")
+    if token and urllib.parse.urlsplit(url).hostname == "api.github.com":
+        url = urllib.request.Request(url, headers={"Authorization": f"Bearer {token}"})
     with urllib.request.urlopen(url, timeout=60) as r:
         return r.read()
 

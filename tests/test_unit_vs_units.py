@@ -3,8 +3,8 @@ range and bonus at a target that is not a building; a building takes the values 
 import shutil
 import time
 
-import combat as plain
 import pytest
+from abilities import vs_units
 from test_building_damage import hp as house
 from test_ranged import data
 
@@ -14,8 +14,7 @@ MODE = {"attack": 5, "range": 10, "bonus": {"ship": 5}}
 
 
 def mode(monkeypatch, vs=MODE):
-    for m in (combat, plain):                                          # train imports the plain name
-        monkeypatch.setattr(m, "VS_UNITS", {"TREBUCHET": vs})
+    monkeypatch.setattr(vs_units, "UNITS", {"TREBUCHET": vs})
 
 
 def test_a_unit_takes_the_anti_unit_damage(monkeypatch):
@@ -35,10 +34,10 @@ def test_a_building_takes_the_values_of_the_line(monkeypatch):
 
 def test_the_command_holds_the_mode(monkeypatch):
     mode(monkeypatch)
-    assert combat.vs_units_command("u", "TREBUCHET", 4) == "aoe vsunits u 5 ship:5 40"
-    assert combat.vs_units_command("u", "MILITIA", 4) is None
+    assert vs_units.command("u", "TREBUCHET", 4) == "aoe vsunits u 5 ship:5 40"
+    assert vs_units.command("u", "MILITIA", 4) is None
     mode(monkeypatch, {"attack": 3, "range": 2})
-    assert combat.vs_units_command("u", "TREBUCHET", 4) == "aoe vsunits u 3 - 8"
+    assert vs_units.command("u", "TREBUCHET", 4) == "aoe vsunits u 3 - 8"
 
 
 @pytest.mark.mc
@@ -46,8 +45,7 @@ def test_the_plugin_hurts_a_unit_in_the_anti_unit_mode_and_a_building_with_the_l
     from test_paper import paper_reachable
     if not paper_reachable():
         pytest.skip("Paper is not reachable")
-    for m in (combat, plain):
-        monkeypatch.setattr(m, "VS_UNITS", {"CHAMPION": MODE})
+    monkeypatch.setattr(vs_units, "UNITS", {"CHAMPION": MODE})
     world = shutil.copytree(tiny_world[0], tmp_path / "W")
     y, box = 200, (8, 200, 8, 13, 240, 13)                             # a house in the air, inside the world border
     with run.Game(world) as game:
@@ -65,7 +63,7 @@ def test_the_plugin_hurts_a_unit_in_the_anti_unit_mode_and_a_building_with_the_l
             game.command(f"team join {team} @e[tag={tag}]")
             game.command(combat.stats_command(f"@e[tag={tag},limit=1]", name))
         for tag in ("a", "b"):
-            assert game.command(combat.vs_units_command(f"@e[tag={tag},limit=1]", "CHAMPION", 4)).strip() == "Vsunits: 1 units"
+            assert game.command(vs_units.command(f"@e[tag={tag},limit=1]", "CHAMPION", 4)).strip() == "Vsunits: 1 units"
         full, hp = combat.stats("MILITIA").hp, combat.stats("HOUSE").hp
         assert game.command("aoe attack @e[tag=a] @e[tag=m,limit=1]").strip() == "Attack: 1 units"
         end = time.time() + 20

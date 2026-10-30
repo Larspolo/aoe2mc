@@ -43,8 +43,8 @@ with no body (open question 1).
 | Owner | the player of the list (`Player.number`) | read |
 | Object id | `Object.instance_id` | read |
 | Hit points | none | `parse_object` skips it |
-| Resources | none | `parse_player` skips them (`header.read(resources * resources_len)`: food, wood, gold, stone, population, age and more as floats) |
-| Age | none | in the resources list (attribute 6, "current age") |
+| Resources | none | `aoe2mc.saved_match` reads them before `parse_player` skips them (#4565): from save 63 each attribute has 8 bytes, the first half of the block is the floats (0 food, 1 wood, 2 stone, 3 gold) |
+| Age | none | attribute 6, "current age" (0 = Dark Age), read with the resources (#4565) |
 | Researched technologies | none | not parsed (the tech block of the player is skipped) |
 | Game time | `match.duration` (0 for a header) | the game time of the save is in the header, not parsed |
 | Map, terrain | `match.map.tiles`, `.dimension`, `.name` | read |

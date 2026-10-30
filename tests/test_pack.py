@@ -1,18 +1,19 @@
 """The Monaspa gets +1 attack for every 7 own Monaspas or Knight-line units within 15 tiles, up to +4 (#4469, AoE2
-wiki "Monaspa"): the key "pack", combat.pack_command and `aoe pack` of the plugin. Test data, and hits on a server."""
+wiki "Monaspa"): the key "pack", game/abilities/pack.py and `aoe pack` of the plugin. Test data, and hits on a server."""
 import shutil
 
 import pytest
+from abilities import pack
 
 from game import combat, run
 from test_veteran import first_loss, uuid
 
 
 def test_the_pack_command_gives_the_per_the_blocks_the_max_and_the_type_tags(monkeypatch):
-    monkeypatch.setattr(combat, "PACK", {"KNIGHT": {"per": 7, "radius": 15, "max": 4, "with": ["KNIGHT", "CAVALIER"]}})
+    monkeypatch.setattr(pack, "UNITS", {"KNIGHT": {"per": 7, "radius": 15, "max": 4, "with": ["KNIGHT", "CAVALIER"]}})
     ids = combat.units.type_ids()
-    assert combat.pack_command("u-1", "KNIGHT", 4) == f"aoe pack u-1 7 60 4 aoe2mc.t{ids['KNIGHT']},aoe2mc.t{ids['CAVALIER']}"
-    assert combat.pack_command("u-1", "ARCHER", 4) is None
+    assert pack.command("u-1", "KNIGHT", 4) == f"aoe pack u-1 7 60 4 aoe2mc.t{ids['KNIGHT']},aoe2mc.t{ids['CAVALIER']}"
+    assert pack.command("u-1", "ARCHER", 4) is None
 
 
 @pytest.mark.mc

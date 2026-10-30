@@ -35,5 +35,6 @@ def test_an_option_given_with_load_wins_over_the_saved_resources(tmp_path, monke
 def test_each_setting_is_saved_or_has_its_reason():
     """A new lobby setting fails here until it is in savegame.SETTINGS (saved) or in this list (not saved)."""
     not_saved = {"age": "the saved technologies hold the age, and play() starts no age in a loaded game",
+                 "ai": "the paths of the AI script files; the player names them again, the rules hold no state",
                  "record": "the player names a record file for each run, a saved path would write over it"}
     assert set(run.SETTINGS) - set(savegame.SETTINGS) == set(not_saved)
