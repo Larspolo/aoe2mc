@@ -897,6 +897,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                 a.reload(), a.taken(), a.friendly(), a.less(), a.ignores(), a.rage(), a.reflect());
     }
 
+
     // Thunderclap Bombs (#4369, AoE2 DE wiki): a shot of from landed at the point at (unit: at a unit). A Paper timer
     // per shot sets off the second blast there after the delay, also when from dies before. Vanilla has no such shot.
     private void afterBlast(Entity from, Location at, boolean unit) {
@@ -1502,6 +1503,9 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         if (ev.getDamager() instanceof Projectile p) {     // a cancelled hit lets the arrow fly on: one hit per arrow
             p.remove();
             a = volley(p, a);                                // an extra arrow of a volley (#2379)
+            for (Ability ab : abilities) {
+                a = ab.hit(this, from, victim, a);           // a charged shot (Bolas Rider, #4548)
+            }
         }
         double dealt = harm(victim, t, a, fort != null ? ev.getDamager() : from);   // a unit does not attack back at a building
         if (fort == null && sunders.get(from.getUniqueId()) instanceof Integer n && stats.get(hurt.getUniqueId()) == t) {

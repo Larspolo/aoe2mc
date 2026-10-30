@@ -77,6 +77,7 @@ UNIT_KEYS = {                                   # the optional keys of units.jso
     "pack": dict,
     "sail": NUMBER,
     "sight": int,
+    "snare": dict,
     "sunder": int,
     "trample": dict,
     "veteran": dict,

@@ -87,6 +87,7 @@ CONTACT = 1.0         # tiles: the reach of a demolition ship (range 0, #1440): 
 # Tiles: no shot at a unit nearer (AoE2 DE, wiki infobox "MinRange", #1350). The key "min_range" of data/units.jsonl.
 MIN_RANGE = {r["name"]: r["min_range"] for r in UNIT_ROWS if "min_range" in r}
 ACCURACY = {r["name"]: r["accuracy"] for r in UNIT_ROWS if "accuracy" in r}   # siege shots at units that hit (#2479)
+SNARE = {r["name"]: r["snare"] for r in UNIT_ROWS if "snare" in r}           # a charged shot that slows (#4548)
 MISS = {r["name"]: r["miss"] for r in UNIT_ROWS if "miss" in r}               # a missed shot hurts a near unit (#4549)
 DODGE = {r["name"]: r["dodge"] for r in UNIT_ROWS if "dodge" in r}           # projectiles that do no damage (#4399)
 ON_DEATH = {r["name"]: r["on_death"] for r in UNIT_ROWS if "on_death" in r}   # the unit that rises where it dies (#4471)
@@ -259,6 +260,18 @@ def charge_command(uuid, name, T=4):
         return None
     b = f" {c['blast']['part']:g} {c['blast']['radius'] * T:g}" if c.get("blast") else ""
     return f"aoe chargeattack {uuid} {max(1, round(c['time'] / NORMAL * 20))} {c['attack']}{b}"
+
+
+def snare_command(uuid, name):
+    """The plugin command of the charged shot of unit name (the key "snare" of data/units.jsonl: the Bolas Rider,
+    #4548), or None: the first projectile hit after a charge of "time" AoE2 seconds has "attack" more and slows the
+    target by "slow" for "for" seconds. Minecraft slowness lowers the speed by 15 % for each level: amplifier =
+    slow / 0.15 - 1. The ticks as in charge_command."""
+    c = SNARE.get(name)
+    if not c:
+        return None
+    ticks = [max(1, round(c[k] / NORMAL * 20)) for k in ("time", "for")]
+    return f"aoe snare {uuid} {ticks[0]} {c['attack']} {round(c['slow'] / 0.15) - 1} {ticks[1]}"
 
 
 def charged_volley_command(uuid, name, T=4):
@@ -458,6 +471,8 @@ def setup(game, data):
             game.command(cmd)
     for o in units:                                  # a Samurai runs faster to a near target (#4545)
         if cmd := speed_charge_command(o["uuid"], o["name"], data.get("tile_size", 4)):
+            game.command(cmd)
+        if cmd := snare_command(o["uuid"], o["name"]):  # the Bolas Rider charges a shot (#4548)
             game.command(cmd)
     for o in units:                                  # a Xianbei Raider fires a charged volley (#4546)
         if cmd := charged_volley_command(o["uuid"], o["name"], data.get("tile_size", 4)):

@@ -1314,6 +1314,8 @@ def research(g, entry, start=False, rect=None):
                 g.command(cmd)
             if cmd := lead_command(g, uuid, new):                 # an elite Spanish cannon galleon (#2430)
                 g.command(cmd)
+            if cmd := combat.snare_command(uuid, new):            # an Elite Bolas Rider: more attack (#4548)
+                g.command(cmd)
             if cmd := combat.accuracy_command(uuid, new, civs.value("accuracy", civs.civ(g), {}).get(new, 0.0), g.map.T):
                 g.command(cmd)                                    # an Elite Arambai hits more often (#4549)
             if cmd := combat.dodge_command(uuid, new):            # an Elite Shrivamsha Rider dodges more (#4399)
@@ -1585,6 +1587,8 @@ def summon(g, name, pos, rotation=math.pi / 2, player=None):
     if cmd := combat.charge_command(uuid, name, g.map.T):          # the Coustillier charges its attack (#4398)
         g.command(cmd)
     if cmd := combat.speed_charge_command(uuid, name, g.map.T):     # a Samurai runs faster to a near target (#4545)
+        g.command(cmd)
+    if cmd := combat.snare_command(uuid, name):                    # the Bolas Rider charges a shot (#4548)
         g.command(cmd)
     if cmd := combat.charged_volley_command(uuid, name, g.map.T):           # a Xianbei Raider fires a charged volley (#4546)
         g.command(cmd)
