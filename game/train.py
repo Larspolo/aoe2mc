@@ -1418,6 +1418,7 @@ def census(g):
     import score                                                       # score imports this module
     dead = {u: "VILLAGER" if u in g.villagers else g.soldiers[u] for u in [*g.villagers, *g.soldiers] if u not in live}
     spoils.fallen(g, dead)                                             # Tupi (#2271)
+    fell(g, dead)                                                      # Konnik (#4471)
     score.fallen(g, dead)                                              # #2355
     spoils.kills(g)                                                    # Mapuche (#2271)
     spoils.attacks(g)                                                  # Varangian Guard (#2376)
@@ -1431,6 +1432,31 @@ def census(g):
         g.drop(u)                                                      # from the selection of each person (#3486)
     g.pop, g.census = sum(weight(g, g.soldiers.get(u)) for u in live if g.soldiers.get(u) not in build.MOVES), 0.0   # a mule cart is a building
     sidebar(g)
+
+
+RISE = 3.0                                                          # AoE2 seconds from a death to the new unit (wiki "Konnik")
+
+
+def fell(g, dead):
+    """Keep the new unit and the place of each dead own unit of abilities.on_death (the Konnik, #4471) in g.risers: the
+    marker that the plugin left at the place of the death (on_death.command). A dead unit with no marker was
+    removed (an unloaded chunk, a sunk boat), not killed: nothing rises. The census sees a death up to CENSUS seconds
+    late, so the wait starts at RISE - CENSUS / 2."""
+    rise = abilities.on_death
+    for u, name in dead.items():
+        if name in rise.UNITS and (p := g.pos(f"@e[type=marker,tag={rise.FELL}{u},limit=1]")):
+            g.command(f"kill @e[type=marker,tag={rise.FELL}{u}]")
+            vars(g).setdefault("risers", []).append([RISE - CENSUS / 2, rise.UNITS[name], p])
+
+
+def risen(g, work):
+    """Summon each unit of g.risers (fell) whose wait is over, for free: a new own soldier at the place of the death.
+    AoE2: the Dismounted Konnik takes the population slot of the Konnik."""
+    for r in list(vars(g).get("risers", ())):
+        r[0] -= work
+        if r[0] <= 0:
+            g.risers.remove(r)
+            summon(g, r[1], r[2])
 
 
 LABELS = {"Limit": "Pop. limit"}                                  # the shown name of a sidebar line (owner, #990)
@@ -1456,6 +1482,7 @@ def tick(g, work):
     g.census += work
     if g.census >= CENSUS:
         census(g)
+    risen(g, work)
     for tag in list(g.marks):                                          # rally markers end
         g.marks[tag] -= work
         if g.marks[tag] <= 0:

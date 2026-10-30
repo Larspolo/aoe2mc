@@ -197,7 +197,7 @@ the Antiquity units have no AoE2 groups (`civs.changes`). The missing units and 
 
 These bonuses do not work yet. Each needs a feature that the game program does not have:
 
-- Palmyrans: camel speed works; tributes without tax and +20 % trade gold do not. No key changes them.
+- Palmyrans: camel speed and +20 % trade gold work (`trade_gold`, #4446); tributes without tax do not. No key changes them.
 - Team bonuses (the key `"team"`, #4452: it counts for the player and each ally, `civs.Team`): 13 of 17 work. Only
   their text: Macedonian houses +50 hit points (the key `"hp"` holds a factor, not added hit points), Phoenician archers
   +2 line of sight (no key for the sight of a unit), Roman priests heal 50 % faster (no key for the heal speed), Shang

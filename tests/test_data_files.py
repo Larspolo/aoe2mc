@@ -33,7 +33,7 @@ def form(row, need, may=()):
 
 STATS = {"hp": int, "attack": int, "melee": int, "pierce": int, "range": NUMBER, "reload": float, "bonus": dict,
          "classes": list}
-OPTIONAL = {"blast"}                                    # a field of combat.Stats with a default (#4283)
+OPTIONAL = {"blast", "passes", "pass_part"}                  # a field of combat.Stats with a default (#4283)
 
 
 def stats(row):
@@ -61,6 +61,7 @@ UNIT_KEYS = {                                   # the optional keys of units.jso
 def check_units(row):
     form(row, {"name": str, **STATS}, UNIT_KEYS | {m.KEY: m.TYPE for m in abilities.MODULES})
     stats(row)
+    assert row.get("on_death", "MILITIA") in NAMES["units.jsonl"], row["name"]   # abilities.on_death (#4471)
 
 
 def check_buildings(row):
@@ -239,6 +240,13 @@ def check_challenges(row):                                 # an Art of War chall
     assert row["after"] is None or row["after"] in NAMES["challenges.jsonl"], row["name"]
 
 
+def check_per_names(row):                                  # a name of an AI script: its name in the game (#4528)
+    form(row, {"name": str, "kind": str}, {"game": str, "age": int})
+    assert row["kind"] in ("age", "building", "tech", "unit") and row["name"] == row["name"].lower(), row["name"]
+    assert "game" not in row or row["game"] in NAMES["train.jsonl"] | NAMES["build.jsonl"], row["name"]
+    assert ("age" in row) == (row["kind"] == "age") and ("game" in row or row["kind"] == "age"), row["name"]
+
+
 def check_taunts(row):                                     # a taunt: its number and AoE2 text (#2234)
     form(row, {"name": str, "text": str}, {"sound": str})                  # sound: a vanilla match (#2662)
     assert row["name"].isdigit() and row["name"] == str(int(row["name"])) and row["text"], row["name"]
@@ -260,6 +268,7 @@ CHECKS = {                                                 # one file per line: 
     "difficulty.jsonl": check_difficulty,
     "gather.jsonl": check_gather,
     "monk.jsonl": check_monk,
+    "per_names.jsonl": check_per_names,
     "replay.jsonl": check_replay,
     "setup.jsonl": check_setup,
     "setup_keys.jsonl": check_setup_keys,
