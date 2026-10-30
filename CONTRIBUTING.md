@@ -10,9 +10,9 @@ the document is correct:
 
 | Document | Content |
 |---|---|
-| `docs/SYSTEM.md` | All parts of the agent system, the locks, the pacing, the setup steps of the owner. |
-| `docs/OPERATOR.md` | Check, repair, a new project, a move to another Claude account. |
-| `docs/STEERING.md` | How the owner steers the agents through GitHub Issues. |
+| `framework/docs/SYSTEM.md` | All parts of the agent system, the locks, the pacing, the setup steps of the owner. |
+| `framework/docs/OPERATOR.md` | Check, repair, a new project, a move to another Claude account. |
+| `framework/docs/STEERING.md` | How the owner steers the agents through GitHub Issues. |
 | `docs/ENVIRONMENT.md` | The network hosts and the setup script of the cloud environment. |
 | `scripts/allowed-domains.txt` | The allowed domains of the cloud environment: paste the whole file. |
 | `CLAUDE.md` | The commands, the code map and the rules of the code. |
@@ -77,7 +77,7 @@ These settings are on the account, not in the repository. They make each run use
 2. Settings → Capabilities → **Connector search**: turn it **off**.
 3. **Auto-fix pull requests**: keep it **off**. Automerge and the runs repair the PRs.
 4. **Create pull requests automatically**: keep it **off**. Each run makes its own PR
-   (`tools/ship_pr.py`).
+   (`framework/tools/ship_pr.py`).
 5. Customize → Connectors: connect only **GitHub**. Do not add other connectors. Each connector adds its tool
    descriptions or its instructions to each call of each run.
 6. Customize → Skills and Customize → Plugins: keep them **empty**. All skills of the runs are in
@@ -169,10 +169,10 @@ Delete these old tasks if they exist: "aoe2mc pacer heartbeat" and "aoe2mc dashb
 4. After 20 minutes, run the check:
 
    ```bash
-   python3 tools/operator_check.py
+   python3 framework/tools/operator_check.py
    ```
 
-   Each line must be `OK`. Also see `docs/OPERATOR.md`, section 1.
+   Each line must be `OK`. Also see `framework/docs/OPERATOR.md`, section 1.
 
 ## 8. Workflows (no action)
 
@@ -206,7 +206,7 @@ Use a local Claude Code session in a clone of the repository for the work that n
 
 ## 10. Steer and stop
 
-- Steer through GitHub Issues: `docs/STEERING.md`.
+- Steer through GitHub Issues: `framework/docs/STEERING.md`.
 - Stop all runs: add the label `paused` to issue #1. Remove it to continue.
 - Stop one PR: add the label `hold` to it.
-- Move to another Claude account: `docs/OPERATOR.md`, section 4.
+- Move to another Claude account: `framework/docs/OPERATOR.md`, section 4.
