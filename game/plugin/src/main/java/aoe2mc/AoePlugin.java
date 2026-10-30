@@ -2049,7 +2049,8 @@ public final class AoePlugin extends JavaPlugin implements Listener {
 
     @EventHandler(ignoreCancelled = true)
     public void onCombust(EntityCombustEvent ev) {           // the lava cauldron of a blacksmith: an invisible target
-        if (buildings.containsKey(ev.getEntity().getUniqueId())) {   // that burns shows the fire over the footprint (#1526)
+        if (buildings.containsKey(ev.getEntity().getUniqueId())   // that burns shows the fire over the footprint (#1526);
+                || ev.getEntity().getScoreboardTags().contains(BUILDING)) {   // also before "aoe building" (#4690)
             ev.setCancelled(true);
         }
     }
