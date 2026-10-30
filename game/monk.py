@@ -287,7 +287,8 @@ def heal(g, dt):
     import civs  # civs imports gather, gather imports this module
     reach = RANGE * civs.HEAL_RANGE.get(civs.civ(g), 1) * g.map.T   # the Teutons: twice (#2269)
     import train  # train imports this module's callers (#3984)
-    rate = RATE * math.prod(train.value("heal_rate", t, 1) for t in g.techs)   # Medicine of Antiquity Mode: 2
+    rate = RATE * math.prod(train.value("heal_rate", t, 1) for t in g.techs) \
+        * civs.value("heal_rate", civs.civ(g), 1)   # Medicine of Antiquity Mode: 2; the Romans' team bonus (#4789)
     hurt, taken = {}, set()
     for m in monks:
         if m in inside or m in g.converting or m not in pos or m not in last or math.dist(pos[m], last[m]) > STILL:
