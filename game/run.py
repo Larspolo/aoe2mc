@@ -11,6 +11,7 @@ Usage:
     python3 game/run.py WORLD --play --bot        # also a bot plays player 2: its villagers gather (game/bot.py)
     python3 game/run.py WORLD --play --bot --bot-attack 5:00   # its soldiers attack player 1 from 5:00 (default 10:00)
     python3 game/run.py WORLD --play --bot --ai-difficulty hard   # the AoE2 setting "AI difficulty" (#2661)
+    python3 game/run.py WORLD --play --bot --ai my.per   # the bot plays by an AoE2 AI script (game/per.py, #4529)
     python3 game/run.py WORLD --play --log F.jsonl  # also write a timed event log (tools/measure_gather.py reads it)
     python3 game/run.py WORLD --play --record F.jsonl  # Record Game: --replay --replay-file F.jsonl plays it (#2649)
     python3 game/run.py WORLD --play --bot --treaty 20:00   # the AoE2 setting "Treaty length": no attack before 20:00 (#2297)
@@ -41,6 +42,7 @@ Usage:
     python3 game/run.py WORLD --play --teams 1,1,2,2   # the team of each player, - is no team (#2296)
     python3 game/run.py WORLD --play --load SAVE   # go on with a saved game: Ctrl-C of --play saves into saves/ (#2255)
     python3 game/run.py WORLD --replay [--speed 4] [--follow N] [--view N]  # replay the recorded game of the world (game/replay.py), then wait for Ctrl-C
+    python3 game/run.py WORLD --replay --live RECORD [--delay 30]  # follow the record that AoE2 DE still writes, 30 s behind (#4663)
 
 Join with Minecraft (multiplayer, localhost): players play in creative mode and get operator rights.
 The server plays the world in place (the game changes it). Server files (eula, properties, logs) go to .cache/.
@@ -291,7 +293,7 @@ class Game:
         self.server = self.rcon = None
         self.lock, self.seen = threading.Lock(), 0     # the op thread and the game send commands
         self.sides = {}
-        import units                                 # a world with the resource pack: own armor and weapons (#2742, #2744)
+        import units  # a world with the resource pack: own armor and weapons (#2742, #2744)
         units.ASSETS = pack_file(self.world) is not None
 
     def start(self):
@@ -481,6 +483,15 @@ def bot_foe(players, player):
     return next((p for p in [*range(1, player), *others] if p != player and not gather.allied(players, player, p)), None)
 
 
+def bot_script(players, player, files, k):
+    """The AI rules of the bot k of player: the embedded script of its scenario row (aoe2mc.json "ai", #4531), else
+    the file k of --ai (#4529), else None: a bot after the list plays by its own logic."""
+    import per
+    if text := players.get(str(player), {}).get("ai"):
+        return per.parse(text, file=f"<script of player {player}>")
+    return per.read(files[k]) if k < len(files or ()) else None
+
+
 def bot_seats(players, people, n):
     """[(player, foe)] of the n bots (#4017): they play the player slots after the people, in order, each with its
     bot_foe. n "all": each free slot of the map."""
@@ -508,6 +519,15 @@ def difficulty_list(text):
     return text
 
 
+def script_list(text):
+    """The value of --ai: one AI script (.per) for each bot in seat order (#4529). A missing file stops the program
+    before the server starts."""
+    files = text.split(",")
+    if bad := [f for f in files if not os.path.isfile(f)]:
+        raise argparse.ArgumentTypeError(f"no AI script {os.path.abspath(bad[0])}")
+    return files
+
+
 def bots_count(text):
     """The value of --bots: a number of bots or "all" (#4017)."""
     if text == "all":
@@ -533,12 +553,13 @@ def challenge_names():
 
 
 def civ_choices(values):
-    """{player: civilization} of the --civ values ("1=BRITONS", #2267). An unknown name stops with the list of names."""
+    """{player: civilization} of the --civ values ("1=BRITONS", #2267). "RANDOM" (the lobby choice "Random", #4755)
+    stays: apply_civs picks it. An unknown name stops with the list of names."""
     import civs
     names, out = sorted(r["name"] for r in civs.ROWS), {}
     for v in values or ():
         player, _, name = v.partition("=")
-        if not player.isdigit() or name.upper() not in names:
+        if not player.isdigit() or name.upper() not in names + ["RANDOM"]:
             sys.exit(f"--civ {v}: write PLAYER=CIVILIZATION, one of: {', '.join(names)}")
         out[int(player)] = name.upper()
     return out
@@ -552,6 +573,13 @@ def apply_civs(data, civs):
         if p.get("lock_civ"):
             print(f"player {player}: the scenario locks its civilization, --civ {name} is not used", file=sys.stderr)
             continue
+        if name == "RANDOM":                                     # one of all civilizations, seeded by the scenario (#4755)
+            import random
+
+            import civs
+            seed = f"{data.get('map_size')}-{len(data.get('objects', ()))}-{player}"
+            name = random.Random(seed).choice(sorted(r["name"] for r in civs.ROWS))
+            print(f"player {player}: --civ RANDOM gives {name}", file=sys.stderr)
         p["civ"] = name
 
 
@@ -609,7 +637,8 @@ VICTORIES = {                        # the AoE2 setting "Victory" (--victory, Ga
 # The AoE2 lobby settings of play() for each player and bot (epic #2263), name: default. main() passes the option of
 # the same name. A new setting is one line here, in alphabetical order, not a change of the play() lines (#2373).
 SETTINGS = {
-    "age": "dark",                    # "Starting age" (train.STARTS, #2265)
+    "age": "dark",
+    "ai": None,                       # the AoE2 AI script of each bot in seat order (script_list, per.read, #4529)                    # "Starting age" (train.STARTS, #2265)
     "ai_difficulty": "standard",      # "AI difficulty" of the bots (bot.LEVELS, game/data/difficulty.jsonl, #2661)
     "all_techs": False,               # "All Techs" (civs.missing, #2298)
     "antiquity": False,               # Antiquity Mode: the Return of Rome rule set (table.use, game/data/antiquity, #3666)
@@ -667,7 +696,8 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
     settings: the AoE2 lobby settings (SETTINGS); a missing one has its default."""
     if wait:                                         # the trigger timers start at the join, not at the load
         freeze(game)
-    import gather, train
+    import gather
+    import train
     if unknown := sorted(set(settings) - set(SETTINGS)):
         raise TypeError(f"play() has no setting {', '.join(unknown)} (SETTINGS)")
     settings = mode_defaults({**SETTINGS, **settings})
@@ -739,6 +769,7 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
     for k, (player, foe) in enumerate(seats):        # after the people, next to their Sides (#1794)
         import bot as bots
         level = bots.level_of(settings["ai_difficulty"], k)   # one level for each bot in seat order (#4020)
+        script = bot_script(data["players"], player, settings["ai"], k)
         import replay
         import treaty as treaties
         attack = max(bot_attack, settings["treaty"], key=replay.aoe2mc.game_time)   # the bot waits for the treaty too
@@ -748,7 +779,7 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
         g.bots = [*g.bots, bots.Bot(game, data, player=player, share=g, log=log, foe=foe,
                                     attack=math.inf if attack == "never" else replay.aoe2mc.game_time(attack) / 1000,
                                     resources=settings["resources"], pop_limit=settings["pop_limit"],
-                                    difficulty=level).setup()]
+                                    difficulty=level, script=script).setup()]
         at = math.inf if attack == "never" else \
             replay.aoe2mc.game_time(attack) / 1000 * bots.LEVELS[level]["attack"]
         print(f"A bot ({level}) plays player {player}: {len(g.bots[-1].g.villagers)} villagers "
@@ -758,7 +789,7 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
     combat.setup(game, data)                         # AoE2 hit points and damage (#514)
     modes = {settings["mode"], *(m for m in ON_TOP if settings[m.replace("-", "_")])} - {"standard"}   # (#2490)
     if settings["age"] == "dark" and (ages := [MODES[m]["age"] for m in modes if "age" in MODES[m]]):   # (#2408)
-        import train                                             # the latest start age of the modes (#2441)
+        import train  # the latest start age of the modes (#2441)
         settings["age"] = max(ages, key=lambda a: train.STARTS[a]["ages"])
     for x in [g, *(s.g for s in g.bots)]:                        # before the age: train.research sets the scores (#3089)
         x.modes = frozenset(modes)                               # gather.has_mode: build.locked, Gather.run (#2490)
@@ -768,8 +799,14 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
         import train
         for x in [g, *(s.g for s in g.bots)]:
             train.start(x, settings["age"])
+    saved = {k: p for k, p in dict(data.get("players") or {}).items() if p.get("saved")}
+    if not state and saved and settings["mode"] != "scenario":  # a converted saved game: its resources, ages and
+        import scenario  # technologies (aoe2mc.json "saved", #4565)
+        for x in [g, *(s.g for s in g.bots)]:
+            if p := saved.get(str(x.player)):
+                scenario.start_values(x, p)
     if settings["record"]:                                       # the orders of the people and the bots (#2649), and
-        import record                                            # the objects of the setups below at 0:00 (#3028)
+        import record  # the objects of the setups below at 0:00 (#3028)
         record.start([g, *(b.g for b in g.bots)], settings["record"])
     import scout
     if not state and scout.used(data):               # the scout of each civilization (#2391), not twice after a load
@@ -780,7 +817,7 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
         for x in [g, *(s.g for s in g.bots)]:
             start_buildings.place(x)
     if state:                                                    # before the modes and the minimap: they see the save
-        import savegame                                          # (the Wonder, the defeated, the sites, #2981)
+        import savegame  # (the Wonder, the defeated, the sites, #2981)
         savegame.load(g, state)
     for mode in sorted(modes):                                   # after the age: the town of Empire Wars, the Wonder;
         line = MODES[mode]                                       # the Kings go to the Gathers of the bots (#2347)
@@ -888,10 +925,25 @@ def restore(saved, world):
     shutil.copytree(saved, world, dirs_exist_ok=True)
 
 
-def replay(game, world, speed=1.0, start="0:00", follow=None, guide=None, view=None, replay_file=None, camera=False):
+def live_error(world, record):
+    """The error line of --live RECORD on `world`, or None (#4663)."""
+    if not os.path.isfile(record):
+        return f"--live: the record {record} does not exist"
+    try:
+        with open(os.path.join(world, "aoe2mc.json")) as f:
+            if "timeline" in json.load(f):
+                return None
+    except (OSError, ValueError):
+        pass
+    return f"--live needs a world of a recorded game: convert the record first (python3 aoe2mc.py {record} {world})"
+
+
+def replay(game, world, speed=1.0, start="0:00", follow=None, guide=None, view=None, replay_file=None, camera=False,
+           live=None, delay=None):
     """guide: a poll(control) next to the hotbar input that gets `input` and the replay `r` (game/watch.py, #1123).
     view: the replay starts with the view of player N (#1303: the units out of its sight are hidden).
-    replay_file: the timeline of a game of --play --record on this world in place of the one of aoe2mc.json (#2649)."""
+    replay_file: the timeline of a game of --play --record on this world in place of the one of aoe2mc.json (#2649).
+    live: the record file that AoE2 DE still writes: the replay follows it, `delay` seconds behind (game/live.py, #4663)."""
     import replay
     start = replay.aoe2mc.game_time(start)
     with open(os.path.join(world, "aoe2mc.json")) as f:
@@ -901,6 +953,15 @@ def replay(game, world, speed=1.0, start="0:00", follow=None, guide=None, view=N
         data = record.apply(data, replay_file)
     if "timeline" not in data:
         sys.exit("--replay needs a world of a recorded game (.aoe2record)")
+    kw = {}
+    if live:
+        import live as follow_live
+        try:
+            source = follow_live.Source(live, follow_live.DELAY if delay is None else delay, data.get("turn", 0))
+        except OSError as e:
+            sys.exit(str(e))
+        data["timeline"] = source.first()
+        kw["more"] = source.more
     import replay_input
     control = replay_input.Input(game)              # hotbar items, menu and /trigger aoe_replay (#688)
     if guide:
@@ -929,7 +990,7 @@ def replay(game, world, speed=1.0, start="0:00", follow=None, guide=None, view=N
             guide.r = r
         return r
     try:
-        stats = replay.live(make, speed, start, restart, bar=True, poll=guide or control)
+        stats = replay.live(make, speed, start, restart, bar=True, poll=guide or control, **kw)
     finally:
         shutil.rmtree(saved, ignore_errors=True)
     print(f"{stats['events']} events, {stats['commands']} commands in {stats['busy']} s "
@@ -1149,6 +1210,9 @@ def main(argv=None, scenario=None):
                     help=f"--bot: the AoE2 setting \"AI difficulty\" ({', '.join(levels)}; default standard; a comma "
                     "list gives each bot its own level in seat order, #4020): the gather rate of the bot, the time of "
                     "its first attack (times --bot-attack) and the soldiers of its first wave")
+    ap.add_argument("--ai", type=script_list, default=None, metavar="FILE[,FILE...]",
+                    help="--bot: an AoE2 AI script (.per) for each bot in seat order (#4529): the bot trains, builds "
+                    "and researches only by its rules; a bot after the list plays by its own logic")
     ap.add_argument("--bot-attack", default="10:00", metavar="MM:SS", help="--bot: its soldiers attack its foe "
                     "from this game time (default 10:00)")
     ap.add_argument("--treaty", default="0:00", metavar="MM:SS", help="--play: the AoE2 setting \"Treaty length\": "
@@ -1204,11 +1268,15 @@ def main(argv=None, scenario=None):
                     "game into FILE (one JSON line per timeline event); --replay --replay-file FILE plays them again")
     ap.add_argument("--replay-file", metavar="FILE", help="--replay: play the timeline of a game of --play --record on "
                     "this world in place of the one of aoe2mc.json")
+    ap.add_argument("--live", metavar="RECORD", help="--replay: follow the record file that AoE2 DE still writes "
+                    "while the game runs (the world comes from the start of this record, game/live.py)")
+    ap.add_argument("--delay", type=float, metavar="S", help="--replay --live: stay S seconds of game time behind "
+                    "the newest event of the record (default 30)")
     ap.add_argument("--log", metavar="FILE", help="--play: write one JSON line per villager event (time, state, load)")
     ap.add_argument("--load", metavar="SAVE", help="--play: go on with a saved game (a folder of saves/: the end of "
                     "--play with Ctrl-C saves the world and the resources, technologies and ages there)")
     ap.add_argument("--civ", action="append", metavar="N=CIV", help="--play: player N plays civilization CIV (for "
-                    "example 1=BRITONS, repeat it for more players): the game rules change, the buildings of the "
+                    "example 1=BRITONS, or 1=RANDOM; repeat it for more players): the game rules change, the buildings of the "
                     "world keep the architecture of the scenario")
     ap.add_argument("--handicap", action="append", metavar="N=PCT", help="--play: the AoE2 setting \"Handicap\" of "
                     "player N, 100 to 200 percent in steps of 5 (for example 1=150, repeat it for more players): more "
@@ -1234,6 +1302,8 @@ def main(argv=None, scenario=None):
     state = savegame.read(a.load) if a.load else None
     if state:                                        # the settings of the save, but the options given here win (#2325)
         savegame.settings(a, state, given(ap, argv))
+    if a.live and (err := live_error(a.world, a.live)):   # before the server starts (#4663)
+        sys.exit(err)
     if a.antiquity and (a.replay or a.mode != "standard"):
         sys.exit("--antiquity plays only --mode standard, and not --replay (the records are AoE2 games)")
     table.use("antiquity" if a.antiquity else "aoe2")   # before the first rule module loads (civ_choices, #3666)
@@ -1281,7 +1351,7 @@ def main(argv=None, scenario=None):
             show_titles(game)
         if a.replay:                                 # after the end the player can look around (#978)
             replay(game, a.world, a.speed, a.start, a.follow, view=a.view or None, replay_file=a.replay_file,
-                   camera=a.camera == "auto")
+                   camera=a.camera == "auto", live=a.live, delay=a.delay)
             print("The replay ended. The server stays up: type commands, Ctrl-C stops it.", file=sys.stderr)
         if a.play:
             with open(a.log, "w") if a.log else contextlib.nullcontext() as log:

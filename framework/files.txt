@@ -1,13 +1,13 @@
 # The generic files of the agent system (#4192): they work for another project with no change, or with a change of
-# agent.toml only. tools/bootstrap.py copies them into a new project. One path per line; a line with a * is a glob.
-# The specific files (what a new project writes itself): the table "Generic and specific files" of docs/SYSTEM.md.
+# agent.toml only. framework/tools/bootstrap.py copies them into a new project. One path per line; a line with a * is a glob.
+# The specific files (what a new project writes itself): the table "Generic and specific files" of framework/docs/SYSTEM.md.
 
 # The rules and the docs of the process
 framework/CLAUDE.md
 framework/docs/NEW_PROJECT.md
-docs/STEERING.md
-docs/SYSTEM.md
-docs/OPERATOR.md
+framework/docs/STEERING.md
+framework/docs/SYSTEM.md
+framework/docs/OPERATOR.md
 
 # The skills (Claude Code finds them in .claude/skills/)
 .claude/skills/autopilot/SKILL.md
@@ -23,6 +23,7 @@ docs/OPERATOR.md
 .claude/skills/scheduled/SKILL.md
 .claude/skills/ticket/SKILL.md
 .claude/skills/improve/SKILL.md
+.claude/skills/new-project/SKILL.md
 
 # The settings and the hooks of Claude Code
 .claude/settings.json
@@ -45,90 +46,97 @@ docs/OPERATOR.md
 
 # The tools
 scripts/autopilot.sh
-tools/agent_config.py
-tools/bootstrap.py
-tools/claim.py
-tools/usage.py
-tools/pacer.py
-tools/dashboard.py
-tools/feedback.py
-tools/health.py
-tools/metrics_log.py
-tools/report.py
-tools/ticket_context.py
-tools/tokens.py
-tools/operator_check.py
-tools/owner_gate.py
-tools/owner_tasks.py
-tools/unconflict.py
-tools/unconflict_pick.py
-tools/merge_main.py
-tools/cycle_start.py
-tools/ship_pr.py
-tools/merge_jsonl.py
+framework/tools/agent_config.py
+framework/tools/bootstrap.py
+framework/tools/new_repo.py
+framework/tools/claim.py
+framework/tools/usage.py
+framework/tools/pacer.py
+framework/tools/dashboard.py
+framework/tools/feedback.py
+framework/tools/health.py
+framework/tools/metrics_log.py
+framework/tools/report.py
+framework/tools/ticket_context.py
+framework/tools/tokens.py
+framework/tools/operator_check.py
+framework/tools/owner_gate.py
+framework/tools/owner_tasks.py
+framework/tools/unconflict.py
+framework/tools/unconflict_pick.py
+framework/tools/merge_main.py
+framework/tools/cycle_start.py
+framework/tools/ship_pr.py
+framework/tools/merge_jsonl.py
 
 # The tests of the tools
-tests/test_agent_config.py
-tests/test_claim.py
-tests/test_claim_active_pr.py
-tests/test_claim_code_span.py
-tests/test_claim_conflict.py
-tests/test_claim_exit.py
-tests/test_claim_first.py
-tests/test_claim_refill.py
-tests/test_claim_release_label.py
-tests/test_refill_all_closed.py
-tests/test_claim_revived.py
-tests/test_claim_takeover.py
-tests/test_dashboard.py
-tests/test_deep_lane.py
-tests/test_dashboard_claimed.py
-tests/test_dashboard_decide.py
-tests/test_dashboard_fresh.py
-tests/test_dashboard_muted.py
-tests/test_dashboard_overlap.py
-tests/test_dashboard_process.py
-tests/test_dashboard_start.py
-tests/test_dashboard_start_bad.py
-tests/test_dashboard_start_prs.py
-tests/test_feedback.py
-tests/test_feedback_gap.py
-tests/test_feedback_quote.py
-tests/test_health.py
-tests/test_health_compare.py
-tests/test_health_conflicts.py
-tests/test_health_pr.py
-tests/test_health_reviews.py
-tests/test_health_takeovers.py
-tests/test_health_misses.py
-tests/test_owner_work.py
-tests/test_review_gap.py
-tests/test_health_until_pages.py
-tests/test_operator.py
-tests/test_owner_tasks.py
-tests/test_owner_tasks_close.py
-tests/test_owner_tasks_project.py
-tests/test_owner_tasks_wait.py
-tests/test_report.py
-tests/test_tokens.py
-tests/test_tokens_verify.py
-tests/test_tokens_cost.py
-tests/test_tokens_phases.py
-tests/test_run_data.py
-tests/test_unconflict.py
-tests/test_automerge_failure.py
-tests/test_unconflict_no_markers.py
-tests/test_unconflict_pick.py
-tests/test_merge_main.py
-tests/test_cycle_start.py
-tests/test_ship_pr.py
-tests/test_merge_jsonl.py
-tests/test_merge_jsonl_order.py
-tests/test_pacer.py
-tests/test_pacer_script.py
-tests/test_usage.py
-tests/test_usage_status_once.py
-tests/test_usage_week.py
+framework/tests/conftest.py
+framework/tests/test_account_login.py
+framework/tests/test_agent_config.py
+framework/tests/test_claim.py
+framework/tests/test_claim_active_pr.py
+framework/tests/test_claim_code_span.py
+framework/tests/test_claim_conflict.py
+framework/tests/test_claim_exit.py
+framework/tests/test_claim_first.py
+framework/tests/test_claim_refill.py
+framework/tests/test_claim_release_label.py
+framework/tests/test_refill_all_closed.py
+framework/tests/test_claim_revived.py
+framework/tests/test_claim_takeover.py
+framework/tests/test_dashboard.py
+framework/tests/test_deep_lane.py
+framework/tests/test_dashboard_claimed.py
+framework/tests/test_dashboard_decide.py
+framework/tests/test_dashboard_fresh.py
+framework/tests/test_dashboard_muted.py
+framework/tests/test_dashboard_overlap.py
+framework/tests/test_dashboard_process.py
+framework/tests/test_dashboard_start.py
+framework/tests/test_dashboard_start_bad.py
+framework/tests/test_dashboard_start_prs.py
+framework/tests/test_feedback.py
+framework/tests/test_feedback_gap.py
+framework/tests/test_feedback_quote.py
+framework/tests/test_health.py
+framework/tests/test_health_compare.py
+framework/tests/test_health_conflicts.py
+framework/tests/test_health_pr.py
+framework/tests/test_health_pacer.py
+framework/tests/test_health_reviews.py
+framework/tests/test_health_takeovers.py
+framework/tests/test_health_misses.py
+framework/tests/test_owner_work.py
+framework/tests/test_review_gap.py
+framework/tests/test_health_until_pages.py
+framework/tests/test_operator.py
+framework/tests/test_owner_tasks.py
+framework/tests/test_owner_tasks_close.py
+framework/tests/test_owner_tasks_project.py
+framework/tests/test_owner_tasks_wait.py
+framework/tests/test_report.py
+framework/tests/test_tokens.py
+framework/tests/test_tokens_verify.py
+framework/tests/test_tokens_cost.py
+framework/tests/test_tokens_phases.py
+framework/tests/test_run_data.py
+framework/tests/test_unconflict.py
+framework/tests/test_automerge_failure.py
+framework/tests/test_unconflict_no_markers.py
+framework/tests/test_unconflict_pick.py
+framework/tests/test_merge_main.py
+framework/tests/test_cycle_start.py
+framework/tests/test_ship_pr.py
+framework/tests/test_merge_jsonl.py
+framework/tests/test_merge_jsonl_order.py
+framework/tests/test_pacer.py
+framework/tests/test_pacer_script.py
+framework/tests/test_pacer_exit.py
+framework/tests/test_pacer_restart.py
+framework/tests/test_usage.py
+framework/tests/test_usage_status_once.py
+framework/tests/test_usage_week.py
+framework/tests/test_new_repo.py
 
 # This list
 framework/files.txt

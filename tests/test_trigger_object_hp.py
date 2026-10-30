@@ -5,9 +5,9 @@ from collections import Counter
 
 import numpy as np
 import pytest
+from test_trigger_unit_values import unit_value
 
 import aoe2mc
-from test_trigger_unit_values import unit_value
 from tools import scenarios
 
 SET, ADD, SUBTRACT, MULTIPLY, DIVIDE = 1, 2, 3, 4, 5
@@ -109,6 +109,7 @@ def test_the_hp_functions_change_the_max_health_on_a_server(tmp_path):
     import re
 
     from test_paper import paper_reachable
+
     from game import run
     if not paper_reachable():
         pytest.skip("Paper is not reachable")

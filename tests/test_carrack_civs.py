@@ -4,6 +4,7 @@ from test_carrack import DOCK, imperial, menus
 
 from game import train
 
+
 def test_a_war_hulk_without_the_carrack_stays_a_war_hulk_after_heavy_warships():
     server, g = imperial(techs=["MEDIUM_WARSHIPS"])
     g.data["players"]["1"]["civ"] = sorted(train.civs.MISSING["CARRACK"])[0]

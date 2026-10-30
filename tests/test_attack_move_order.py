@@ -1,9 +1,9 @@
 """game/stance.py: the stance menu has an "Attack Move" item. A click on it and then on a ground cell sends the
 selected military units to the cell with the stance aggressive; each unit gets its old stance back at the point, and a
 new order ends the attack move (AoE2 Attack Move, #3357)."""
-from game import gather, stance
-
 from test_gather import FakeServer, grid
+
+from game import gather, stance
 
 
 def setup(monkeypatch):

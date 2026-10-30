@@ -12,7 +12,7 @@ docs/research/water.md merge=union
 # One line per owner decision, added at the end (ticket skill, "Decision tickets").
 steering/project/DECISIONS.md merge=union
 steering/system/DECISIONS.md merge=union
-# The game tables merge by the key "name" (#2004): tools/merge_jsonl.py, registered by .claude/hooks/session-start.sh
+# The game tables merge by the key "name" (#2004): framework/tools/merge_jsonl.py, registered by .claude/hooks/session-start.sh
 # and the workflow unconflict.yml. Without the driver, git merges them as text.
 # One JSON object per civilization (#1914); table.load() stops on a name in two lines.
 game/data/civs.jsonl merge=jsonl
@@ -41,6 +41,8 @@ game/data/challenges.jsonl merge=jsonl
 # One JSON object per cheat code with a unit, per monk rule name and per replay name (#2034); table.load() stops on a name in two lines.
 game/data/cheats.jsonl merge=jsonl
 game/data/monk.jsonl merge=jsonl
+game/data/per_names.jsonl merge=jsonl
+game/data/per_numbers.jsonl merge=jsonl
 game/data/replay.jsonl merge=jsonl
 # One JSON object per option value of the game setup (#2264); table.load() stops on a name in two lines.
 game/data/setup.jsonl merge=jsonl
@@ -59,3 +61,5 @@ data/trigger_effects.jsonl merge=jsonl
 # fails on two lines of one place and on a line that a merge put back.
 tests/data/game_names_in_code.txt merge=union
 framework/files.txt merge=union
+# One class name per unit ability of the plugin (#4589): each ability PR adds one line, ServiceLoader reads them.
+game/plugin/src/main/resources/META-INF/services/aoe2mc.Ability merge=union

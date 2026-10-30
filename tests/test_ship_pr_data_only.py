@@ -1,4 +1,4 @@
-"""tools/ship_pr.py stops a change of data files only that adds or changes a test: such a test checks the content of
+"""framework/tools/ship_pr.py stops a change of data files only that adds or changes a test: such a test checks the content of
 the data (owner, 2026-10-29, #4242)."""
 import ship_pr as ship
 

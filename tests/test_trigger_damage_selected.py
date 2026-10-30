@@ -4,9 +4,10 @@ aoe_hp of the building with that reference (game/scenario.py hurt), as the order
 import re
 import types
 
+from test_trigger_foundation import lines
+
 import aoe2mc
 from game import repair, scenario
-from test_trigger_foundation import lines
 
 ORDER = 'data modify storage aoe2mc:orders list append value "hurt {} {}"'
 HOUSE = dict(kind="building", name="HOUSE", player=1, ref=7, footprint=[40, 48, 48, 56])

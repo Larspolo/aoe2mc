@@ -2,15 +2,15 @@
 import os
 from collections import Counter
 
+import mcvalid
 import numpy as np
 import pytest
 from AoE2ScenarioParser.datasets.heroes import HeroInfo
 from AoE2ScenarioParser.datasets.units import UnitInfo
+from entities import entity_ids
 
 import aoe2mc
-import mcvalid
 import units
-from conftest import entity_ids
 
 NAMES = sorted({(u.name, False) for u in UnitInfo} | {(h.name, True) for h in HeroInfo})
 
@@ -150,8 +150,9 @@ def test_facing_map_knights_face_away_from_the_center(tmp_path):
     center in Minecraft (#20). The owner compares this with the AoE2 editor (docs/facing.md)."""
     import math
 
-    import aoe2mc
     import scenarios
+
+    import aoe2mc
     *_, objects, players = aoe2mc.read_scenario(scenarios.facing(str(tmp_path / "facing.aoe2scenario")))
     knights = [o for o in objects if o["name"] == "KNIGHT"]
     assert len(knights) == 8 and len([o for o in objects if o["name"] == "ARCHER"]) == 8

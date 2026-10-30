@@ -6,12 +6,11 @@ import io
 
 import numpy as np
 from AoE2ScenarioParser.datasets.techs import TechInfo
-
-import aoe2mc
 from test_civ_costs import setup
 from test_scenario_patrol import trigger
 from test_trigger_cost import GOLD, WOOD, costs
 
+import aoe2mc
 from game import train  # noqa: E402
 from tools import scenarios  # noqa: E402
 

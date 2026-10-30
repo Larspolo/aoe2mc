@@ -2,15 +2,14 @@
 center completes the goal, a lost town center is a defeat (#3907, epic #3759)."""
 import types
 
-import pytest
-
-from game import challenge
-
 import build  # noqa: E402  (game/ is on sys.path after the import of game.challenge)
 import cheats  # noqa: E402
 import combat  # noqa: E402
+import pytest
 import recap  # noqa: E402
 import train  # noqa: E402
+
+from game import challenge
 
 TC = (40, 56, 40, 56)
 

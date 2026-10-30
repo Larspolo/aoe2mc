@@ -6,12 +6,11 @@ import math
 import types
 
 from test_bot_attack import armed, orders
+from test_cheat_end import game
 from test_treaty import clicked
 from test_wonder import SITE, targets, tick
 
 from game import combat, run, treaty
-
-from test_cheat_end import game
 
 
 def test_an_attack_order_does_nothing_for_the_whole_game():

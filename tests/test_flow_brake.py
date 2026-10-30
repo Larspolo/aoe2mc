@@ -1,4 +1,4 @@
-"""tools/usage.py: the flow brake lowers the runs when CI or the merges are the bottleneck, not the quota (owner, 2026-10-27)."""
+"""framework/tools/usage.py: the flow brake lowers the runs when CI or the merges are the bottleneck, not the quota (owner, 2026-10-27)."""
 import usage
 
 NOW = 1_800_000_000

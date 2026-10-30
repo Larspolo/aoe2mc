@@ -1,14 +1,13 @@
 """run.py --play --challenge land-battle: six enemy waves, one after the other, and the medal from the units lost (#3906)."""
 import types
 
-import pytest
-
-from game import challenge
-
 import ai  # noqa: E402  (game/ is on sys.path after the import of game.challenge)
 import cheats  # noqa: E402
+import pytest
 import recap  # noqa: E402
 import train  # noqa: E402
+
+from game import challenge
 
 ROW = challenge.CHALLENGES["land-battle"]
 

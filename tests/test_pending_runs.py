@@ -9,14 +9,13 @@ import sys
 
 import dashboard
 import health
-import pytest
-
 import pacer
+import pytest
 import tokens
 import usage
 
 NOW = 1_800_000_000
-TOOL = os.path.join(os.path.dirname(__file__), "..", "tools", "claim.py")
+TOOL = os.path.join(os.path.dirname(__file__), "..", "framework", "tools", "claim.py")
 
 
 def ref(key, minutes_ago, subject):
@@ -105,7 +104,7 @@ def test_or_claims_the_first_free_candidate_in_one_call(clones):
 
 
 def test_the_phases_see_the_ticket_that_or_won():
-    assert tokens.claim_numbers("python3 tools/claim.py 7 --or 8 9; echo rc=$?") == [7, 8, 9]
-    assert tokens.claim_numbers("python3 tools/claim.py 7 --guard") == []
+    assert tokens.claim_numbers("python3 framework/tools/claim.py 7 --or 8 9; echo rc=$?") == [7, 8, 9]
+    assert tokens.claim_numbers("python3 framework/tools/claim.py 7 --guard") == []
     block = {"type": "tool_result", "content": "#7 owned by another run: x\nclaimed claim/8\n"}
     assert tokens.won(block, [7, 8, 9]) == 8 and tokens.won(block, [7]) is None

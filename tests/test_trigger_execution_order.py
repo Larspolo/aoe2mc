@@ -1,12 +1,13 @@
 """Triggers and effects run in their display order, as AoE2 DE does by default (#3087). The stored order is kept
 for a scenario with "Run triggers and effects in display order" off (legacy_execution_order)."""
-import sys
 import os
+import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "tools"))
-import aoe2mc  # noqa: E402
 import scenarios  # noqa: E402
 from AoE2ScenarioParser.datasets.effects import EffectId  # noqa: E402
+
+import aoe2mc  # noqa: E402
 
 
 def two_effects(tmp_path, legacy=False):

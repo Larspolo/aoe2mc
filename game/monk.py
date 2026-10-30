@@ -58,6 +58,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import owners  # noqa: E402
 import table  # noqa: E402
 import trade  # noqa: E402
+
 import units  # noqa: E402
 
 RATE = 2.5      # hit points per AoE2 second of one monk: 150 per minute
@@ -112,7 +113,7 @@ def own(g, r):
 def free_relic(g, site):
     """Put the free relics of the civilization (key free_relic, {building: relics}) into the complete own building
     site: only into the first one of the game (AoE2 DE wiki "Armenians": the first Fortified Church, #2419)."""
-    import civs                                                    # civs imports gather, gather imports this module
+    import civs  # civs imports gather, gather imports this module
     n = civs.value("free_relic", civs.civ(g), {}).get(site["name"], 0)
     if n and not any(r.get("free") and own(g, r) for r in relics(g)):      # one for each player (#3116)
         g.relics += [{"at": None, "monk": None, "home": tuple(site["footprint"]), "free": True, "player": g.player}
@@ -126,8 +127,8 @@ def carriers(g):
 
 def monasteries(g):
     """The footprints of the complete own monasteries."""
-    import train                                                   # train imports gather, gather imports this module
     import combat
+    import train  # train imports gather, gather imports this module
     return {r for r, n in train.homes(g).items() if combat.STANDS_FOR.get(n, n) == "MONASTERY"}   # the church too (#1930)
 
 
@@ -137,7 +138,8 @@ def order(g, player, cell):
     monks = [u for u in sorted(g.selected) if g.soldiers.get(u) in MONKS]
     if not cell or not monks or not g.paper:
         return False
-    import ai, train                                               # ai imports gather, gather imports this module
+    import ai  # ai imports gather, gather imports this module
+    import train
     T, held = g.map.T, carriers(g)
     free = [i for i, r in enumerate(relics(g)) if r["at"] and max(abs(r["at"][0] - cell[0]), abs(r["at"][1] - cell[1])) <= REACH
             and i not in [t for k, t in g.fetching.values() if k == "relic"]]
@@ -162,7 +164,8 @@ def order(g, player, cell):
 def lay(g, i, cell):
     """The cell and the commands of relic i that drops on the block cell of g.map, or on the nearest free land cell
     when the cell is water (#3119): the display goes and a pot block comes. The live replay uses it too (#4013)."""
-    import capture_relic, transport                                # they import gather, gather imports this module
+    import capture_relic  # they import gather, gather imports this module
+    import transport
     if not g.map.free(*cell):
         cell = next(iter(transport.land(g, cell, 1, tiles=capture_relic.SEARCH)), cell)
     x, z = cell
@@ -230,7 +233,7 @@ def relic_tick(g, dt):
     if (n := sum(r["home"] is not None and own(g, r) for r in relics(g))) != getattr(g, "relic_homes", 0):
         g.relic_homes = n
         rearm(g)
-    import wonder                                                  # wonder imports cheats, which imports this module
+    import wonder  # wonder imports cheats, which imports this module
     g.relic_gold += GOLD * dt * trade.gold_rate(g) * sum(r["home"] in homes for r in relics(g)) * \
         math.prod(wonder.rivals(g, g.player, "rival_relic_gold"))  # Atheism of an enemy: half (#4336)
     if (n := int(g.relic_gold)) > 0:
@@ -240,7 +243,9 @@ def relic_tick(g, dt):
 
 def rearm(g):
     """The own units of civs.RELIC_ATTACK get the attack of the relics in own monasteries (Lithuanians, #2314)."""
-    import civs, combat, train                                     # they import gather, gather imports this module
+    import civs  # they import gather, gather imports this module
+    import combat
+    import train
     names = civs.RELIC_ATTACK.get(civs.civ(g), ((),))[0]
     for uuid, name in [(u["uuid"], u["name"]) for u in g.units if "uuid" in u] + list(g.soldiers.items()):
         if name in names:
@@ -250,7 +255,7 @@ def rearm(g):
 def healable(name):
     """True for an AoE2 unit that a monk heals: no siege unit (a minecart), no ship (a boat) and no building that moves
     (the mule cart, AoE2 DE wiki "Mule Cart": "a building which can move and not a unit", #2522)."""
-    import combat                                                  # combat imports gather, gather imports this module
+    import combat  # combat imports gather, gather imports this module
     d, classes = units.classify(name), combat.stats(name).classes
     return combat.SIE not in classes and "building" not in classes and not units.is_boat(d) \
         and (d or {}).get("id") != "minecraft:minecart"
@@ -258,7 +263,7 @@ def healable(name):
 
 def health(g, uuid):
     """(Health, max_health) of unit uuid, or None when the server gives no number."""
-    from gather import NUMBER                                      # gather imports this module
+    from gather import NUMBER  # gather imports this module
     hp = re.findall(NUMBER, g.command(f"data get entity {uuid} Health").rsplit(":", 1)[-1])
     top = re.findall(r"(-?[\d.]+)", g.command(f"attribute {uuid} minecraft:max_health get").rsplit(" is ", 1)[-1])
     return (float(hp[0]), float(top[0])) if hp and top else None
@@ -279,9 +284,9 @@ def heal(g, dt):
     others = sorted(u for u, n in names.items() if u not in inside and healable(n))
     pos = g.positions(others)
     last, g.monk_at = g.monk_at, {m: pos[m] for m in monks if m in pos}
-    import civs                                                    # civs imports gather, gather imports this module
+    import civs  # civs imports gather, gather imports this module
     reach = RANGE * civs.HEAL_RANGE.get(civs.civ(g), 1) * g.map.T   # the Teutons: twice (#2269)
-    import train                                                   # train imports this module's callers (#3984)
+    import train  # train imports this module's callers (#3984)
     rate = RATE * math.prod(train.value("heal_rate", t, 1) for t in g.techs)   # Medicine of Antiquity Mode: 2
     hurt, taken = {}, set()
     for m in monks:
@@ -345,14 +350,14 @@ def take(g, uuid):
     g.command(f"aoe stop {uuid}")
     owners.give(g, uuid, new)                                      # the lists of all sides (#2993)
     g.command(f"tellraw @a[team=p{g.player}] " + json.dumps({"text": f"A monk converts the {units.pretty(name)}.", "color": "gold"}))
-    import train                                                   # train imports this module (#3502)
+    import train  # train imports this module (#3502)
     g.command(f"execute at {uuid} run playsound {train.EVENT_SOUNDS['convert']} master @a ~ ~ ~ 1 1")
 
 
 def heresy(g, player):
     """True when player researched Heresy (#1582): its Gather is g, a bot of g (bot.Bot) or the human Gather that the bot
     of g shares."""
-    import build                                                   # build imports gather, which imports this module
+    import build  # build imports gather, which imports this module
     return any(h.player == player and "HERESY" in h.techs for h in [g, *build.sides(g)])   # also a second person (#3106)
 
 
@@ -369,7 +374,8 @@ def die(g, uuid):
 def win(g, uuid):
     """Give the enemy building with the target uuid to the player of g (Redemption): its target entity joins the team
     of the player, and its entry of aoe2mc.json gets the player, so that it trains and takes a garrison for it."""
-    import build, combat                                           # they import gather, gather imports this module
+    import build  # they import gather, gather imports this module
+    import combat
     owners.give_building(g, uuid, g.player)                        # the sides of the game, and the sites (#2994)
     g.sieged.discard(uuid)
     for o in g.data["objects"]:
@@ -384,7 +390,7 @@ def resist(g, uuid):
     """The extra conversion intervals of the unit uuid: Devotion and Faith of its player (RESIST), from the Gather of
     that player (g or one of its bots)."""
     player = owners.player(g, uuid)                                # also a unit of the game (#2992)
-    import build                                                   # build imports gather, which imports this module
+    import build  # build imports gather, which imports this module
     techs = next((x.techs for x in (g, *build.sides(g)) if x.player == player), ())   # also a second person (#3106)
     return sum(RESIST.get(t, 0) for t in techs)
 
@@ -398,12 +404,13 @@ def near(g, m, target, pos):
         return math.hypot(max(x0 - x, 0, x - x1 - 1), max(z0 - z, 0, z - z1 - 1)) <= TOUCH
     if any(n in g.enemies[target] for n in NEXT):
         return math.dist(pos[m], pos[target]) <= TOUCH + 1         # to its middle: about 1 block from its side
-    import train                                                   # train imports gather, gather imports this module
+    import train  # train imports gather, gather imports this module
     reach = MONKS.get(g.soldiers.get(m), CONVERT) + PRINTING * ("BLOCK_PRINTING" in g.techs)
     reach += sum(train.value("reach", t, 0) for t in g.techs)     # Afterlife of Antiquity Mode (#3988)
     reach += sum(train.value("convert_range", t, 0) for t in g.techs)   # Clerical Recruitment (#4276)
     reach += sum(train.value("unit_convert_range", t, {}).get(g.soldiers.get(m), 0) for t in g.techs)   # Inquisition (#4326)
-    import build, civs                                             # build and civs import gather, which imports this module
+    import build  # build and civs import gather, which imports this module
+    import civs
     reach += civs.value("convert_range", civs.civ(g), (0,) * 4)[min(build.ages(g), 3)]   # Egyptian priests (#4447)
     return math.dist(pos[m], pos[target]) <= reach * g.map.T
 
@@ -420,7 +427,7 @@ def spot(g, m, target, pos):
 
 def faith(g):
     """The factor of the speed of the own monks that regain faith after a conversion (civs.FAITH: Muisca 2, #2314)."""
-    import civs                                                    # civs imports gather, gather imports this module
+    import civs  # civs imports gather, gather imports this module
     return civs.FAITH.get(civs.civ(g), 1)
 
 
@@ -432,7 +439,9 @@ def convert(g, dt):
             del g.faith[m]
     if not g.converting:
         return
-    import ai, civs, train                                         # ai imports gather, gather imports this module
+    import ai  # ai imports gather, gather imports this module
+    import civs
+    import train
     pos = g.positions(sorted(set(g.converting) | {t for t, _, _ in g.converting.values()}))
     for m, job in sorted(g.converting.items()):
         if m not in g.converting:
@@ -465,7 +474,7 @@ def convert(g, dt):
                 (win if fort else die if heresy(g, owner) else take)(g, target)
                 for k in group:
                     del g.converting[k]
-                import train                                       # train imports this module (#3502)
+                import train  # train imports this module (#3502)
                 rest_factor = math.prod(train.value("rest", t, 1) for t in g.techs)   # Fanaticism: 0.5 (#3987)
                 for k in rest:                                     # the group in range (Theocracy: one)
                     g.faith[k] = (ILLUMINATED if "ILLUMINATION" in g.techs else REST) * rest_factor / faith(g)

@@ -4,9 +4,9 @@ import io
 import json
 
 import pytest
+import world_reader
 
 import aoe2mc
-import world_reader
 
 
 def write(path, **kw):

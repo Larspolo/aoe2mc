@@ -7,12 +7,11 @@ import subprocess
 import sys
 import threading
 
-import pytest
-
 import claim
 import pacer
+import pytest
 
-TOOL = os.path.join(os.path.dirname(__file__), "..", "tools", "claim.py")
+TOOL = os.path.join(os.path.dirname(__file__), "..", "framework", "tools", "claim.py")
 
 
 def git(*args, cwd):

@@ -1,6 +1,7 @@
 """The bootstrap sets up the agent system in a new repository (#906)."""
 import os
 import sys
+
 import tomllib
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -15,7 +16,7 @@ def files(d):
 
 def test_table_names_real_files():
     rows = bootstrap.rows()
-    assert len(rows) > 20 and ("tools/claim.py", "generic") in rows and ("CLAUDE.md", "specific") in rows
+    assert len(rows) > 20 and ("framework/tools/claim.py", "generic") in rows and ("CLAUDE.md", "specific") in rows
     assert [p for p, _ in rows if not os.path.exists(os.path.join(ROOT, p))] == []
 
 

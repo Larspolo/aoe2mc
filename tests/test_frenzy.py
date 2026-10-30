@@ -1,19 +1,20 @@
 """The Temple Guard attacks faster the longer it fights (#4468, AoE2 DE wiki "Temple Guard": "Every attack of the
 Temple Guard decreases its attack reload time by 0.2 seconds for 5 seconds"): the key "frenzy",
-combat.frenzy_command and `aoe frenzy` of the plugin. Test data, and melee hits on a server."""
+game/abilities/frenzy.py and `aoe frenzy` of the plugin. Test data, and melee hits on a server."""
 import re
 import shutil
 import time
 
 import pytest
+from abilities import frenzy
 
-from game import combat, run
+from game import run
 
 
 def test_the_frenzy_command_gives_the_values_in_ticks(monkeypatch):
-    monkeypatch.setattr(combat, "FRENZY", {"MILITIA": {"less": 0.2, "time": 5, "min": 1}})
-    assert combat.frenzy_command("u-1", "MILITIA") == "aoe frenzy u-1 4 100 20"
-    assert combat.frenzy_command("u-1", "ARCHER") is None
+    monkeypatch.setattr(frenzy, "UNITS", {"MILITIA": {"less": 0.2, "time": 5, "min": 1}})
+    assert frenzy.command("u-1", "MILITIA") == "aoe frenzy u-1 4 100 20"
+    assert frenzy.command("u-1", "ARCHER") is None
 
 
 def health(game, tag):

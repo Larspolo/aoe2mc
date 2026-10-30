@@ -6,7 +6,7 @@ import sys
 import pytest
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path[:0] = [ROOT, os.path.join(ROOT, "tools")]
+sys.path[:0] = [ROOT, os.path.join(ROOT, "tools"), os.path.join(ROOT, "framework", "tools")]
 sys.path.append(os.path.join(ROOT, "game"))      # game modules import each other by name ("No module named 'bossbar'", #1045)
 
 
@@ -24,7 +24,7 @@ def stack_of_a_slow_test(request):
     if request.node.get_closest_marker("slow") or request.node.get_closest_marker("mc"):
         yield
         return
-    from _pytest.faulthandler import fault_handler_stderr_fd_key   # the real stderr: the capture hides fd 2
+    from _pytest.faulthandler import fault_handler_stderr_fd_key  # the real stderr: the capture hides fd 2
     faulthandler.dump_traceback_later(90, file=request.config.stash[fault_handler_stderr_fd_key])
     yield
     faulthandler.cancel_dump_traceback_later()
@@ -48,17 +48,10 @@ def own_medal_file(monkeypatch, tmp_path):
 def pytest_terminal_summary(terminalreporter, exitstatus, config):
     """The result line also with -qq: addopts has -q, so `pytest -q` printed no "N passed" line, and runs ran the full
     suite again to find the result (#1243, #2510)."""
-    if config.get_verbosity() < -1:
+    if config.get_verbosity() < -1 and not getattr(config, "result_line", False):
+        config.result_line = True
         counts = {k: len(v) for k, v in terminalreporter.stats.items() if k and k != "warnings"}
         terminalreporter.write_line(", ".join(f"{n} {k}" for k, n in sorted(counts.items())) + f" (exit {exitstatus})")
-
-
-def entity_ids(nbt_or_desc):
-    """All entity IDs of an entity and its passengers (riders)."""
-    out = [str(nbt_or_desc["id"])]
-    for p in nbt_or_desc.get("Passengers", []):
-        out += entity_ids(p)
-    return out
 
 
 @pytest.fixture(scope="session")
@@ -67,8 +60,9 @@ def tiny_world(tmp_path_factory):
     import contextlib
     import io
 
-    import aoe2mc
     import scenarios
+
+    import aoe2mc
 
     d = tmp_path_factory.mktemp("tiny")
     src = scenarios.tiny(str(d / "tiny.aoe2scenario"))

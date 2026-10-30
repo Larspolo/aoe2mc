@@ -5,12 +5,11 @@ import contextlib
 import io
 
 import numpy as np
-
-import aoe2mc
 from test_civ_costs import setup
 from test_scenario_patrol import trigger
 from test_trigger_modify_attribute import ADD, HIT_POINTS, apply
 
+import aoe2mc
 from game import train
 from tools import scenarios
 

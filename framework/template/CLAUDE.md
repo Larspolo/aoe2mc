@@ -1,6 +1,6 @@
 # {name} – guide for Claude Code
 
-The owner is **{owner}**. The agent system: `docs/SYSTEM.md`.
+The owner is **{owner}**. The agent system: `framework/docs/SYSTEM.md`.
 The project values: `agent.toml`.
 
 ## Commands

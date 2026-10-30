@@ -9,7 +9,6 @@ import pytest
 from game import run
 
 
-
 def test_plugin_jar_name_follows_the_source(tmp_path, monkeypatch):
     """The jar name has the hash of the source: a changed source gives a new build, the same source none."""
     monkeypatch.setattr(run.mc_check, "CACHE", str(tmp_path / "mc"))

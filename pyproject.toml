@@ -32,7 +32,7 @@ packages = ["aoe2mc_app", "aoe2mc_app.data", "aoe2mc_app.tools.mcdata"]   # 26.3
 "aoe2mc_app.data" = ["*.jsonl"]
 
 [tool.pytest.ini_options]
-testpaths = ["tests"]
+testpaths = ["tests", "framework/tests"]
 addopts = "-q -m 'not slow and not mc'"
 markers = ["slow: long tests (full gallery conversion); run with: pytest -m slow",
            "mc: load a world in a real Minecraft server (downloads 50 MB); run with: pytest -m mc"]
@@ -43,4 +43,7 @@ line-length = 130
 extend-exclude = ["tools/mcdata"]
 
 [tool.ruff.lint]
-select = ["F"]        # pyflakes: undefined names, unused variables and imports
+select = ["F", "I"]   # pyflakes: undefined names, unused variables and imports; isort: sorted imports (#4557)
+
+[tool.ruff.lint.isort]
+known-first-party = ["game", "tools"]

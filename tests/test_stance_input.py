@@ -5,11 +5,10 @@ import shutil
 from urllib.parse import unquote
 
 import pytest
-
-from game import gather, run, stance
-
 from test_gather_attack import click
 from test_select_type import setup
+
+from game import gather, run, stance
 
 
 def test_the_stance_menu_sets_the_stance_of_the_selected_soldiers():

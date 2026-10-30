@@ -3,8 +3,8 @@
 Read this file before you add a new item, key, setting, mode, plugin command or trigger type, or a test of a data
 file (`CLAUDE.md`, "Code style"). Each rule puts the new thing in one line of a data file or a table, so that
 parallel tickets do not change the same lines. Most rules have a check: `tools/data_lint.py`,
-`tests/test_data_files.py`, `tests/test_data_keys.py`, `tests/test_conflict_prone.py` and the merge driver
-`tools/merge_jsonl.py`.
+`tests/test_data_files.py` (with one module per data file in `tests/data_checks/`), `tests/test_data_keys.py`, `tests/test_conflict_prone.py` and the merge driver
+`framework/tools/merge_jsonl.py`.
 
 - Never test the number of entries of a data table (`len(combat.SIGHT) == 154`): each new line changes it, and parallel
   tickets conflict there (owner, #2008; `tests/test_conflict_prone.py`).
@@ -15,7 +15,7 @@ parallel tickets do not change the same lines. Most rules have a check: `tools/d
   (`combat.damage(a, b) == stats.attack - armor`), with a relation (more with the bonus than without), or with test
   data (a fixture, a temporary file, a monkeypatched table).
 - A new menu item of a building (cost, time, slot, help, age) is one new line in `game/data/train.jsonl`, at the end of
-  its building block (a technology also gets its key `"effect"`: the change of the combat values, `train.effect()`, #2029; a new key of an effect also goes into the set of known keys of `tests/test_tech_effects.py`, #4259): the merge driver `tools/merge_jsonl.py` (`merge=jsonl`, #2004) merges the lines by name (a line that both sides changed: by key and list item, #2064), and `train.load()` stops on a name in two lines (#1702).
+  its building block (a technology also gets its key `"effect"`: the change of the combat values, `train.effect()`, #2029; a new key of an effect also goes into the set of known keys of `tests/test_tech_effects.py`, #4259): the merge driver `framework/tools/merge_jsonl.py` (`merge=jsonl`, #2004) merges the lines by name (a line that both sides changed: by key and list item, #2064), and `train.load()` stops on a name in two lines (#1702).
 - A menu test checks only its own item (`item()` of `tests/menu_line.py`), never the whole menu line: one `order()` test per
   building checks the full menu from the data (#2099).
 - The combat values of a new unit are one new line in `game/data/units.jsonl` (`combat.STATS`, #1912), of a new building
@@ -35,10 +35,20 @@ parallel tickets do not change the same lines. Most rules have a check: `tools/d
 - A special effect of a technology at its research is a function `(g, entry)` in its own module and the key
   `"on_research"` (`"module.function"`) on its line, not an `if` block in `train.research()` (#3243).
 - A new key of `game/data/setup.jsonl` (a game mode, a lobby setting) is one line in `game/data/setup_keys.jsonl` (`"type"`,
-  `"kind": true` for a key of the "one kind" rule, `"text"`, `"issue"`), not a change of `check_setup()` in `tests/test_data_files.py` (#2558).
-- A new key of a line of `game/data/units.jsonl` needs no entry in the `may` dict of `check_units` (`tests/test_data_files.py`):
+  `"kind": true` for a key of the "one kind" rule, `"text"`, `"issue"`), not a change of `tests/data_checks/setup.py` (#2558).
+- A new unit ability (epic #4387: a plugin command per unit, as `aoe frenzy`) is one new module in `game/abilities/`
+  with `KEY` (its key of `game/data/units.jsonl`), `TYPE` (the type of its value), `UNITS = values(KEY)` and
+  `command(uuid, name, T)`: the package finds it (`pkgutil`), and `combat.setup`, `train.summon` and the elite upgrade
+  of `train.research` send it. Change no line of `game/combat.py`, `game/train.py` or `tests/data_checks/units.py`
+  (#4588: each ability PR appended to the same 5 places, and each pair of open ability PRs conflicted).
+- A new key of a line of `game/data/units.jsonl` needs no entry in `KEYS` of `tests/data_checks/units.py`:
   `form()` accepts a new key, and `test_each_key_has_one_type` checks its type. Tickets that added their key to that one
   line conflicted (PR #4411, #4507).
+- The form check of a data file `game/data/F.jsonl` is `check(row)` in its own module `tests/data_checks/F.py` (#4778):
+  `tests/test_data_files.py` finds the modules with `pkgutil` and has no line per file or per key. A new data file is one
+  new module (the test fails for a file with none); the type or name check of a new key goes into the module of its
+  file; a key with two types by design is one line in `TWO_TYPES` of that module. The shared parts (`form`, `NAMES`,
+  `stats`, `only`) are in `tests/data_checks/__init__.py`. Ten PRs in one day changed the old shared file.
 - A new data line needs no test of its values: `tests/test_data_files.py` checks the form of each line of `game/data/`
   (keys, types, names that exist, #1916), and `tests/test_data_keys.py` checks that the code reads each key (#2188): a new key needs no test line. Test the behavior that the code computes
   from it (a fight, a menu, a bonus).
@@ -48,8 +58,13 @@ parallel tickets do not change the same lines. Most rules have a check: `tools/d
   the keys has its tests already. A test belongs only to a change of code, and it uses test data (a monkeypatched
   table, a fixture) or the expected value from the data. When a key or a combination of keys has no test of its code,
   that is a code ticket: one test of the code with test data, not one test per data line (the old
-  `tests/test_techs_*.py` broke this rule and are deleted; `tests/test_tech_effect_code.py`). `tools/ship_pr.py` stops
+  `tests/test_techs_*.py` broke this rule and are deleted; `tests/test_tech_effect_code.py`). `framework/tools/ship_pr.py` stops
   such a change (exit 2).
+- A new unit ability of the Paper plugin (an `aoe NAME` command and its hooks in the fights, epic #4387) is one new
+  class that implements `Ability` (`game/plugin/src/main/java/aoe2mc/Ability.java`; its comment names the command and
+  the ticket) and its line in `src/main/resources/META-INF/services/aoe2mc.Ability` (`merge=union`): no change of
+  `AoePlugin.java`. A hook that the ability needs and `Ability` does not have yet is one default method there and one
+  loop at its place in `AoePlugin.java` (#4589, `tests/test_plugin_abilities.py`).
 - A new command of the Paper plugin: its line in the command list at the top of `AoePlugin.java` and its
   `if` block in `onCommand` go in alphabetical order of the command name, not after the last one (#795 and #813 conflicted).
 - A new optional field of `aoe stats` (a hit rule) is one `key=value` pair in the `tail` of `combat.stats_command`

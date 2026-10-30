@@ -3,15 +3,15 @@
 import shutil
 
 import pytest
+from test_select_type import setup
 
 from game import gather, hints
-
-from test_select_type import setup
 
 
 def paper():
     server, g = setup()
     g.paper = True                                                     # after setup: no plugin commands to the fake
+    server.entities["Steve"] = {"Pos": (20.5, 64.0, 30.5), "Rotation": (0.0, -90.0)}   # looks at the sky (#4703)
     return server, g
 
 
@@ -60,6 +60,7 @@ def test_a_left_click_deselects_on_paper(tiny_world, tmp_path):
     import time
 
     import mc_shot
+
     from game import run
     world = shutil.copytree(tiny_world[0], tmp_path / "W")
     data = json.load(open(world / "aoe2mc.json"))

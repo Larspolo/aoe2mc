@@ -1,4 +1,4 @@
-"""tools/claim.py --stuck: the `in-progress` tickets of stopped runs, also when bots keep their PR busy."""
+"""framework/tools/claim.py --stuck: the `in-progress` tickets of stopped runs, also when bots keep their PR busy."""
 import subprocess
 
 import claim

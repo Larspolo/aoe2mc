@@ -1,8 +1,8 @@
 # aoe2mc – guide for Claude Code
 
 aoe2mc converts an Age of Empires II: DE scenario (`.aoe2scenario`) into a Minecraft Java world.
-The owners (`owners` in `agent.toml`; `owner`, Larspolo, decides, #4229) steer through GitHub Issues (`docs/STEERING.md`).
-The agent system: `docs/SYSTEM.md`. Write all text in ASD-STE100 Simplified Technical English (short sentences,
+The owners (`owners` in `agent.toml`; `owner`, Larspolo, decides, #4229) steer through GitHub Issues (`framework/docs/STEERING.md`).
+The agent system: `framework/docs/SYSTEM.md`. Write all text in ASD-STE100 Simplified Technical English (short sentences,
 active voice, imperative), as the README does.
 
 ## Commands
@@ -11,7 +11,7 @@ Use `python3 -m` (another Python can be on the PATH). Rare tools and options: `d
 
 | Task | Command |
 |---|---|
-| Lint | `ruff check .` |
+| Lint | `ruff check .` (`--fix` sorts the imports, rule `I`, #4557) |
 | Tests of a change | `python3 -m pytest tests/test_a.py ...` (`-n auto` for many files). Never the full fast suite: the quick CI runs it (#4187). Slow: `-m slow`; server: `-m mc` |
 | Test scenario | `python3 tools/scenarios.py tiny OUT.aoe2scenario` (more names: `docs/COMMANDS.md`) |
 | Convert | `python3 aoe2mc.py IN.aoe2scenario OUTWorld --preview` |

@@ -35,11 +35,11 @@ Start after: <YYYY-MM-DD HH:MM> UTC   (only for a real date outside the project,
 ```
 
 A ticket that measures a change counts merged PRs, never hours ("the 100 PRs before and after #M", not "24 hours
-after"): the speed of the project changes, and a paused project merges nothing (owner, 2026-10-29). `tools/health.py`
+after"): the speed of the project changes, and a paused project merges nothing (owner, 2026-10-29). `framework/tools/health.py`
 lists the open tickets with a date in `Start after:` ("Time waits").
 
 A new line of a data file in `game/data/` needs no criterion "the values are those of the source" and no test of its values:
-`tests/test_data_files.py` checks the form of each line (#1916). A ticket that changes only data files names no new
+`tests/test_data_files.py` checks the form of each line with the module of its file in `tests/data_checks/` (#1916, #4778). A ticket that changes only data files names no new
 test and no test file: its criterion is that the existing tests pass (owner, 2026-10-29, #4242; `docs/extend.md`).
 A test of a menu or a bonus with the names and values of the new line is a test of the data content too. Name a test
 of behavior only for a change of code, with test data or the expected value from the data. Never copy the test of an
@@ -122,7 +122,8 @@ the order of features), the owner decides on GitHub. Do not choose, and do not a
   and close the decision ticket. When the answer follows no principle, or goes against one, say it in the comment that
   records the decision: "This does not follow P<n> (<rule>). I will add it as an exception; reply if P<n> must change."
   Do not add `needs-human` for this: the owner replies only when the principle must change.
-- One clearly best option: no decision ticket. Choose it and say why in the PR.
+- One clearly best option: no decision ticket. Choose it and say why in the PR. Exception: an area of the section
+  "Owner involvement" of `steering/project/PRINCIPLES.md` (when the file has it) always gets a decision ticket.
 
 A research result that waits for the owner (options, milestones, "the owner decides") gets a `needs-human` ticket
 for each decision, with the options and your recommendation, before the research ticket closes. A decision that

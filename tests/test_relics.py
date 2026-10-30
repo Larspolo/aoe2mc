@@ -1,8 +1,8 @@
 """game/monk.py: a monk picks up a relic, carries it into an own monastery, and each relic there gives gold
 (monk.GOLD); a monk with a relic does not heal, and a killed monk drops it (#1246). Fake server."""
 import pytest
-from test_monk_heal import HealServer
 from test_gather import grid
+from test_monk_heal import HealServer
 
 from game import gather, monk
 
@@ -96,12 +96,12 @@ def test_a_monk_carries_a_relic_into_a_monastery_on_a_server(tmp_path):
     from test_mc_check import mojang_reachable
     if not mojang_reachable():
         pytest.skip("Mojang is not reachable")
-    import aoe2mc
     import scenarios
     from AoE2ScenarioParser.datasets.buildings import BuildingInfo
     from AoE2ScenarioParser.datasets.other import OtherInfo
     from AoE2ScenarioParser.datasets.units import UnitInfo
 
+    import aoe2mc
     from game import run
     scn = scenarios.new_scenario(16)
     um = scn.unit_manager

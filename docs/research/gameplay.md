@@ -291,6 +291,41 @@ Only the shots with an area damage hit at the point: a Turtle Ship fires its can
 The plugin command `aoe attackground <selector> <x> <y> <z>` takes each unit with a siege shot (`aoe range` with a blast).
 A unit with blast 0 (the Trebuchet) shoots, but its shot hits no unit at the point.
 
+## Civilization choices (#4747)
+
+The lobby options of AoE2 DE for the civilization of a player (part of epic #4745). The cloud blocks the wiki hosts
+(HTTP 403): the rules come from the game and the wiki pages below; a later run with access checks the links.
+
+| Option | Rule in AoE2 DE | Source |
+|---|---|---|
+| Per-player civilization | Each player selects one civilization in the lobby. | [Civilizations](https://ageofempires.fandom.com/wiki/Civilizations_(Age_of_Empires_II)) |
+| Random | The game gives the player one civilization from all civilizations of the game at the start. Players can get the same one. | [Game settings](https://ageofempires.fandom.com/wiki/Game_settings) |
+| Random pool | The host disables civilizations; Random selects only from the enabled civilizations. | [Game settings](https://ageofempires.fandom.com/wiki/Game_settings) |
+| Mirror | All players get the same civilization: the host civilization, or one random civilization for all when the host has Random. | [Game settings](https://ageofempires.fandom.com/wiki/Game_settings) |
+| Team Random (same per team) | Each team gets one random civilization for all its players. | [Game settings](https://ageofempires.fandom.com/wiki/Game_settings) |
+| Hidden civilizations | The lobby and the game show "?" for the civilization of the other players. The civilization shows in the end screen (Achievements). Allies see each other: the team bonus shows. | [Game settings](https://ageofempires.fandom.com/wiki/Game_settings) |
+| Lock civilizations | A scenario keeps its civilizations; the lobby cannot change them. The converter keeps it: `lock_civ` (#3295). | `game/run.py` `apply_civs` |
+
+The displays of the civilization of a player in the game program:
+
+| File | Function | What it shows |
+|---|---|---|
+| `game/lobby.py` | `name` | The lobby menu: "Player N (Civ)", also "You play ..." and "... is taken" |
+| `game/diplomacy.py` | `name` | The diplomacy menu: "Name (Civ)" of each player |
+| `game/scenario.py` | trigger display (`trigger_civs`) | A scenario trigger renames the civilization of a player (#2905); lobby and diplomacy show it |
+| `game/recap.py` | `give` (page lines) | The end book: "Player N (Civ)"; `RANDOM` shows no name |
+| `game/replay.py` | `Replay.player` | The replay panel: "Name (Civ)" of the record |
+| `game/techtree.py` | `view` | The tech tree: the own civilization first, the next and previous of all civilizations |
+| `game/run.py` | `civ_choices`, `apply_civs` | The `--civ PLAYER=CIV` option; no Random, pool, Mirror or Hidden value yet |
+
+The score panel (`game/score.py`), the tab list and the chat show no civilization. Hidden civilizations must change
+`lobby.name`, `diplomacy.name` and `techtree` (it lets a player open any tree, which is no leak), and keep `recap` (the
+end screen shows all).
+
+Tickets for the refill (items 3 and 4 of #4745): Random #4755, Random pool #4756, Mirror and Team Random #4757,
+Hidden civilizations #4758. The "?" text against no civilization text for hidden players is the
+decision ticket #4754.
+
 ## Decisions of the owner (2026-10-28)
 
 - Bot difficulty (#2648, option A): the six AoE2 DE names (Easiest, Standard, Moderate, Hard, Hardest, Extreme), each
@@ -517,7 +552,7 @@ Moved from `docs/LEARNINGS.md` (improve run, 2026-10-26).
 - `tools/data_lint.py` counts the AoE2 names in the whole `civs.RULES` dict, also in its lambdas: a second name (`n == "SLINGER"`) fails `test_game_names_in_code.py`. Give the units a tag in the key "groups" of `game/data/units.jsonl` and use `tagged(n, ...)` (#2116).
 - Parallel unique-unit tickets take the same free slot of a menu (the Temple Guard #2157 and the Ibirapema Warrior #2158: barracks slot 23). Just before the push, `git fetch origin main` and list the slots of the building in `game/data/train.jsonl`; the menu shows the items in file order, so put the new lines at the end of the block.
 - A server test that hurts an enemy unit: the target hits back (the default stance, #733: a galley shoots its attacker), so do not assert the full hit points of the attacker; use a unit out of the fight (#2165).
-- A new key of a line of `game/data/civs.jsonl` (`"arrows"`, `"hp"`): the code must read it (`tests/test_data_keys.py`, #2188), and add it to `check_civs` of `tests/test_data_files.py`; a new table of `game/civs.py` for `tests/data/civ_bonuses.jsonl` "in" also goes into `TABLES` of `tests/test_civ_wiki.py` (#2178).
+- A new key of a line of `game/data/civs.jsonl` (`"arrows"`, `"hp"`): the code must read it (`tests/test_data_keys.py`, #2188), and add it to `check` of `tests/data_checks/civs.py`; a new table of `game/civs.py` for `tests/data/civ_bonuses.jsonl` "in" also goes into `TABLES` of `tests/test_civ_wiki.py` (#2178).
 - A unit whose values grow with each age (Flemish Militia): give `CASTLE_AGE` and `IMPERIAL_AGE` a list `"effect"` (one change per unit, `train.effect`), and a shorter train time from an age the key `"faster": [age, seconds]` of its line in `game/data/train.jsonl` (`train.FASTER`, #2155).
 - `gather.Gather` has many short attribute names (`carry` is the villager load limit, `tick`, `chop`): grep `self.NAME =` in `game/gather.py` before you add one. A new `self.carry = {}` broke 48 tests through `limit()` (#2111).
 - A new regional unit of a menu (#2133): a Dark Age unit has no line in `game/data/build.jsonl` (`"age": 0` fails `test_data_files.py`).
@@ -534,7 +569,7 @@ Moved from `docs/LEARNINGS.md` (improve run, 2026-10-26).
 - The wikitext of an AoE2 wiki page (the bonuses): `refimage.fetch(refimage.API + "?" + urlencode(dict(action="parse", page=P, prop="wikitext", format="json")))`. `refimage.query()` always sends `action=query`: `query(action="parse")` stops with a TypeError (#2333).
 - A server test of two melee units on different blocks (a step, #2307): after the first hit the vanilla melee goal walks them off the step or onto it (also with `stand_ground`), so later hits take the damage of one level. Check only the first hit of each unit (the first health below full).
 - Carcasses decay in game seconds of each `Gather.step` (`Map.rot`, #2310): a test that loops `step()` with no sleep loses most of the food of a hunt. A test that counts the full food of a carcass uses a Jurchen player (`"civ": "JURCHENS"`, no decay).
-- A new value of the key `"units"` of `game/data/civs.jsonl` that is no `combat.Stats` field (`"taken"`, `"friendly"`, #2418) needs its name in the skip tuple of `civs.units()` (else `getattr` fails) and in the value tuple of `tests/test_data_files.py`. A unit that gets the `aoe stats` command without the factor (a trebuchet, a refresh after a technology) resets it to 1 in the plugin: pass it at each call of `combat.stats_command`.
+- A new value of the key `"units"` of `game/data/civs.jsonl` that is no `combat.Stats` field (`"taken"`, `"friendly"`, #2418) needs its name in the skip tuple of `civs.units()` (else `getattr` fails) and in the value tuple of `tests/data_checks/civs.py`. A unit that gets the `aoe stats` command without the factor (a trebuchet, a refresh after a technology) resets it to 1 in the plugin: pass it at each call of `combat.stats_command`.
 - A new `tick` call in `Gather.run`: import its module at the top of `game/gather.py` (not in the loop) and patch it in `loop()` of `tests/test_play_speed.py`, `tests/test_victory_option.py` and `tests/test_regicide.py` (`grep -l "object.__new__(gather.Gather)" tests/`): they build a Gather with `object.__new__` (no `clock`, no `data`), so the new tick fails there unless patched; a lazy import in the loop cannot be patched (#2355).
 - An arrow on a ship hits its boat: `AoePlugin.onBoatHit` (`VehicleDamageEvent`) gives the damage, not `onHit`. A change to the damage of a projectile must go into both (#2379: the extra arrow of an Armenian galley did its full damage on ships).
 - Paper `Pathfinder#moveTo` with the target of the current path returns that path again while it is not done, also a part of the way that ends before the target: call `stopPathfinding()` first for a new search (#1713, #2303: trained replay units stopped 10 to 20 blocks before their rally point as "no path"). A test that opens a wall during the walk does not show it: Minecraft searches again when a block near the path changes. To see the "no path" lines of `tools/replay_drift.py`, copy `logs/latest.log` of `game.folder` before the `run.Game` block ends.
@@ -543,7 +578,7 @@ Moved from `docs/LEARNINGS.md` (improve run, 2026-10-26).
 - `train.tick` runs `train.census`, and it sets `g.pop` again from the live units of the FakeServer: a test of a free unit checks `g.pop` right after one research, not across two `advance()` calls (#2480). `tools/refimage.py`: `query()` always sends `action=query`; for the wikitext of a page call `fetch(API + "?" + urlencode(dict(action="parse", page=..., prop="wikitext", format="json")))`.
 - A new unit of `game/data/units.jsonl` also needs an age line in `game/data/build.jsonl` (ages 1 to 3; a Dark Age unit has none), and its test must not copy a stat (`tests/test_conflict_prone.py`). A bonus line of `tests/data/civ_bonuses.jsonl` with two tables: `"in": ["COSTS", "UNITS"]` (#2482). The wiki text of a page: `refimage.fetch(API + "?action=parse&page=NAME&prop=wikitext&format=json&redirects=1")` (`refimage.query` sets `action=query`).
 - An in-game check of the game program needs no clicks (#2381): with a `mc_shot.Client` joined, `g = run.play(game, W, seconds=2)` gives the Gather; drive it with `train.queue`, `build.found`, `Gather.build`, `Gather.send`, then `g.run(N)`; a load is `run.restore(SAVE/world, W)` and `run.play(..., state=savegame.read(SAVE))`. Copy the values that you compare (`json.loads(json.dumps(...))`): a dict that holds the live `g.queues` lists shows their later state.
-- The mode setup chain of `run.play` (`if settings["mode"] == ...` / `elif`) and the last line of the `form(...)` keys of `check_setup` (`tests/test_data_files.py`) conflict on each new mode: #2406 needed 6 merges of main in 90 minutes. Add a new `elif` branch before `elif settings["mode"] != "standard"`, a new key on its own line before the last line, and do not change the lines of other modes.
+- The mode setup chain of `run.play` (`if settings["mode"] == ...` / `elif`) and the last line of the `form(...)` keys of `check_setup` (now `tests/data_checks/setup.py`, keys in `game/data/setup_keys.jsonl`) conflicted on each new mode: #2406 needed 6 merges of main in 90 minutes. Add a new `elif` branch before `elif settings["mode"] != "standard"`, a new key on its own line before the last line, and do not change the lines of other modes.
 - A unit that walks away with no order and no target ("stray" in `tools/replay_drift.py`) can still have its Minecraft path: on a slope `steer()` and `glide()` take the mob past path points that Minecraft does not count, so after the arrival it walks back to them, up to 25 blocks (#2303). The plugin stops the path at the arrival when its next point is not at the goal (`behind()`). To find what moves a unit between two samples, log the state changes of each unit (order, target, a path with no order) in a scratch copy of the plugin.
 - A split menu (longer than one RCON command, `menu.commands`) sends its items with the last slot first: a test of the full order (`menu_line.order`) must accept that order too (`test_train_barracks.py`, #2483). `test_loom.menus` joins the `aoe menu-add` parts now, as `test_forging.menus`.
 - `Replay.run` wakes only at the times in its `step` list (walks, gather steps, texts, builds): a new timed state of the live replay (`charging`, #2552) needs its time there and in the `while` condition, else `steps()` never sees it.
@@ -581,3 +616,5 @@ Moved from `docs/LEARNINGS.md` (improve run, 2026-10-26).
 - A new optional field at the end of `aoe stats` (`combat.stats_command`, its list `tail`): a field that is not set prints its "off" value when a later field is set ("-", "0"). The `ignore` field of #4331 printed "1" always, so with a later field each unit ignored the armor (fixed in #4332). Change the parse in `AoePlugin.java` (`args.length` limit) too.
 - A test that monkeypatches `train.BY_KEY` must patch both modules when other code imports `train` by its plain name (`import train` in `game/near.py`, `civs.regen`): `from game import train` is another module object with its own dict. Patch `train.BY_KEY` and `plain_train.BY_KEY` (`import train as plain_train`, as `tests/test_tech_effect_code.py`, #4333).
 - In a `-m mc` test, a unit that takes a hit attacks back (the default stance, #733): it walks to the attacker, and the melee hits of the attacker add to the damage that the test counts. Give the target `movement_speed` 0 (`attribute ... base set 0`) when the test counts the hits of one attack (#4368: 4 hits in place of the 2 axes).
+- A `monkeypatch` of a table of `game.combat` (`ON_DEATH`, `DODGE` ...) does not reach `train.py`, `spoils.py` or `scenario.py`: they read the bare `combat`. Patch both (`import combat as inner`, `keys()` of `tests/test_on_death.py`, #4471).
+- The airef pages (AI script facts and actions) are made by JavaScript: WebFetch and curl get only the page frame. The texts are in `https://airef.github.io/js/commands.js` (`cX.description = "..."`, X the command in CamelCase): fetch it with curl to the scratchpad and grep it (#4740).

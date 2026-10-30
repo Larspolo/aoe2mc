@@ -51,9 +51,9 @@ import garrison  # noqa: E402
 import gather  # noqa: E402
 import rcon  # noqa: E402
 import replay  # noqa: E402
+import table  # noqa: E402
 import trade  # noqa: E402
 import train  # noqa: E402
-import table  # noqa: E402
 import transport  # noqa: E402
 import treaty  # noqa: E402
 
@@ -189,7 +189,7 @@ def gate(g, order, ref):
     of the game program on it (build.portcullis: the iron bars and `aoe gate`), then the plugin locks it
     (`aoe gate lock X Z`: the bars stay down for all units) or unlocks it (an own or allied unit opens it again).
     A diagonal gate has no portcullis yet: no lock."""
-    import build                                                       # build imports gather
+    import build  # build imports gather
     kind = lambda o: next((n for n in sorted(build.GATES, key=len, reverse=True) if n in o["name"]), None)
     o = next((o for o in g.data.get("objects", ()) if o.get("ref") == ref and kind(o) and o.get("footprint")), None)
     if o is None or o["footprint"][2] - o["footprint"][0] == o["footprint"][3] - o["footprint"][1]:
@@ -260,7 +260,7 @@ def orders(g):
     for order, tag, where in m["tags"]:
         p, sel = [int(v) for v in where.split()], f"@e[tag={tag}]"
         if order == "stance":                                          # "Change Object Stance" (#2705)
-            import combat                                              # combat -> gather -> scenario
+            import combat  # combat -> gather -> scenario
             g.command(f"aoe stance {sel} {combat.STANCES[p[0]]}")
             g.command(f"tag {sel} remove {tag}")
             continue
@@ -309,7 +309,7 @@ def ranges(g, tag, operation, quantity):
     """Send the new range of each ranged unit with the tag (`aoe range`): the AoE2 operation (1 set, 2 add, 3 subtract,
     4 multiply, 5 divide) on its range in tiles, not below 0. The own units have the values with the technologies of
     the player (train.stats). A melee unit keeps its range: Minecraft gives it no shot."""
-    import combat                                                  # combat -> gather -> scenario
+    import combat  # combat -> gather -> scenario
     own = {u["uuid"]: u["name"] for u in g.units if "uuid" in u} | dict(g.soldiers)
     every = {o["uuid"]: o["name"] for o in g.data.get("objects", []) if o["kind"] == "unit" and "uuid" in o} | own
     for uuid, name in sorted(every.items()):
@@ -328,7 +328,8 @@ def values(g, tag, field, operation, quantity):
     change in unit_values of its side ({uuid: [[field, operation, quantity], ...]}): train.stats and train.speed
     apply it after the changes of the unit type, so later technologies and orders keep it. The unit gets its new
     `aoe stats` or walk speed at once, and the tag goes."""
-    import ai, trebuchet                                           # ai -> gather -> scenario
+    import ai  # ai -> gather -> scenario
+    import trebuchet
     for x in [g, *(s.g for s in g.bots)]:
         for uuid, name in [(u["uuid"], u["name"]) for u in x.units if "uuid" in u] + sorted(x.soldiers.items()):
             if "passed" not in g.command(f"execute as {uuid} if entity @s[tag={tag}]"):
@@ -344,7 +345,7 @@ def values(g, tag, field, operation, quantity):
 def owner(g, tag, new):
     """A "Change Ownership" order (aoe2mc.owner_lines, #2998): the units with the tag belong to player new in the game
     program (owners.give, #2993), and the tag goes. The units come from one `aoe where` (Paper only, as selection)."""
-    import owners                                                  # owners -> build -> gather -> this module
+    import owners  # owners -> build -> gather -> this module
     for uuid in g.where(None, f"@e[tag={tag}]"):
         owners.give(g, uuid, new)
     g.command(f"tag @e[tag={tag}] remove {tag}")
@@ -369,7 +370,7 @@ def foundation(g, player, name, tile, done=False):
     a click of the player (build.free, shore, water, level). Its villagers build it as any site. A wall, a gate, a
     building that the game program cannot build or a blocked place: nothing. done: "Create Object" (#2911), the
     building is complete at once (build.rise with no end of work, as finish)."""
-    import build                                                       # build imports gather
+    import build  # build imports gather
     if name not in build.MENU or name in build.WALLS + build.GATES:
         return
     ok = build.shore if name in build.SHORE else build.water if name in build.WATER else build.free
@@ -389,7 +390,7 @@ def finish(g, player, name, area):
     building name (ANY: each building) with its middle tile in the area [x1, y1, x2, y2] (-1: the whole map) is
     complete at once, with no villager work (build.rise with no end of work, as empire_wars.town). Its builders stop in
     the next step of the Gather. No such site: nothing, as in AoE2."""
-    import build                                                       # build imports gather
+    import build  # build imports gather
     for x in [g, *(s.g for s in g.bots)]:
         if x.player != player:
             continue
@@ -406,7 +407,8 @@ def replace(g, player, old, new, area):
     person or a bot) of type old with its middle tile in the area [x1, y1, x2, y2] (-1: the whole map) goes, and a
     complete building of type new stands with its middle on the same tile (foundation with done). The removal is free
     (demolish.fall, then out of g.buildings_lost): the score and the recap count no lost building, as in AoE2."""
-    import demolish, ruins                                             # they import gather
+    import demolish  # they import gather
+    import ruins
     for x in [g, *(s.g for s in g.bots)]:
         if x.player != player or "objects" not in x.data:
             continue
@@ -427,7 +429,7 @@ def damage(g, player, name, area, q):
     its middle tile in the area [x1, y1, x2, y2] (-1: the whole map) loses q hit points (the score aoe_hp of its target
     entity, repair.hp), a negative q heals it up to its full hit points (repair.full). At 0 it falls as the plugin
     razes it (`aoe destroy`: the fall of combat.building), so the score, the recap and "Destroy Object" see it."""
-    import build                                                       # build imports gather
+    import build  # build imports gather
     T = g.map.T
     rects = {(x0, x1, z0, z1) for o in g.data.get("objects", ()) if o["kind"] == "building" and "footprint" in o
              and o["name"] == name and o["player"] == player for x0, z0, x1, z1 in [o["footprint"]]}
@@ -534,7 +536,7 @@ def costs(g):
             side = sides[int(player)]
             pairs = [part.split("=") for part in cost.split()]
             if any(r.startswith("+") for r, _ in pairs):          # "Set Object Cost" (#2857): one resource, the rest stays
-                import build                                       # build imports gather, gather imports civs
+                import build  # build imports gather, gather imports civs
                 base = build.price(side, name) if name in build.COSTS else train.price(side, name)
                 pairs = [(r.lstrip("+"), v) for r, v in pairs]
                 vars(side).setdefault("trigger_costs", {})[name] = {k: v for k, v in {**base, **{r: int(v) for r, v in pairs}}.items() if v}
@@ -618,7 +620,7 @@ def attributes(g):
     unit type or a class "@<class>" of "Modify Attribute for Class", train.applies, #2859):
     train.stats applies them in order, so the units that the player trains later get the new values. The units of the
     type that exist get the new values at once (the same commands as a technology, train.research)."""
-    import combat                                                      # combat -> gather -> scenario
+    import combat  # combat -> gather -> scenario
     new = re.findall(r'"(\d+) (@?\w+) (\w+) ([1-5]) (-?[\d.]+)"', g.command(f"data get storage {ATTRIBUTES} list") or "")
     if new:
         g.command(f"data remove storage {ATTRIBUTES} list")
@@ -640,7 +642,7 @@ def reads(g):
     """The requests of "Modify Variable by Attribute" (aoe2mc.variable_by_attribute_lines, #2858): read and empty the
     list of the data storage READS, and change the score #v<N> of aoe_var by the value of the unit type of the player
     (train.stats; AoE2 variables are whole numbers) with a scoreboard operation."""
-    import combat                                                      # combat -> gather -> scenario
+    import combat  # combat -> gather -> scenario
     new = re.findall(r'"(\d+) (\w+) (\w+) ([1-5]) (\d+)"', g.command(f"data get storage {READS} list") or "")
     if new:
         g.command(f"data remove storage {READS} list")
@@ -708,15 +710,24 @@ def setup(g, mode="scenario", start=True):
         print("The world has no scenario start values: the game starts with the lobby settings.", file=sys.stderr)
         return g
     for x, p in rows.items():
-        if "age" in p:                                                 # the starting age of the editor (#3296)
-            train.start(x, p["age"])                                   # before the stock: no age cost (train.start)
-        for name in p.get("disabled", ()):                             # the tab "Options" of the editor (#3299)
-            vars(x).setdefault("trigger_menus", {})[name] = False      # an "Enable Object" trigger turns it on again
-        x.stock.update(p.get("resources", {}))
-        x.pop_limit = p.get("pop_limit", x.pop_limit)
-        x.show_stock()                                                 # the sidebar of the resources (Gather.setup)
-        train.sidebar(x)
+        start_values(x, p)
     return g
+
+
+def start_values(x, p):
+    """Put the start values of a player of aoe2mc.json (p) on its Gather x: the age, the technologies, the disabled
+    objects, the resources and the population limit. Also for a converted saved game (run.py, #4565)."""
+    if "age" in p:                                                 # the starting age of the editor (#3296)
+        train.start(x, p["age"])                                   # before the stock: no age cost (train.start)
+    for t in p.get("techs", ()):                                   # the researched technologies of a save (#4565)
+        if t not in x.techs:
+            train.research(x, {"name": t}, start=True)
+    for name in p.get("disabled", ()):                             # the tab "Options" of the editor (#3299)
+        vars(x).setdefault("trigger_menus", {})[name] = False      # an "Enable Object" trigger turns it on again
+    x.stock.update(p.get("resources", {}))
+    x.pop_limit = p.get("pop_limit", x.pop_limit)
+    x.show_stock()                                                 # the sidebar of the resources (Gather.setup)
+    train.sidebar(x)
 
 
 def visible(g):
@@ -790,7 +801,7 @@ def garrisons(g):
 def fallen(g):
     """Once per game second: the score #f<ref> of aoe_fallen is 1 when a converted building of the triggers
     (aoe2mc.json "fallen", #2910) has fallen: its target entity is gone (combat.target_uuid). Set once per building."""
-    import combat                                                  # combat imports gather
+    import combat  # combat imports gather
     if not g.data.get("fallen") or g.clock() < vars(g).get("fallen_at", 0.0):
         return
     g.fallen_at = g.clock() + 1.0
@@ -809,7 +820,7 @@ def attacked(g):
     """Once per game second: the score #h<ref> of aoe_hit of a converted building of the triggers (aoe2mc.json
     "attacked", #3775) is 1 when its hit points are lower than at the last read, else 0, for the condition "Object
     Attacked". One command per change, so the score is 1 for one second only after each hit."""
-    import repair                                                  # repair imports gather
+    import repair  # repair imports gather
     if not g.data.get("attacked") or g.clock() < vars(g).get("attacked_at", 0.0):
         return
     g.attacked_at = g.clock() + 1.0
@@ -917,7 +928,7 @@ def timers(g):
     """The years that are left on each running victory timer: {(player, AoE2 VictoryTimerType): years}. Type 0 is the
     lowest wonder timer of the player (wonder.tick), 1 the relic timer (relic_victory.tick), 2 King of the Hill
     (hill.tick)."""
-    import wonder                                                      # wonder -> cheats -> gather: import it late
+    import wonder  # wonder -> cheats -> gather: import it late
     left = {}
     for t in vars(g).get("wonders", {}).values():
         left[(t["player"], 0)] = min(left.get((t["player"], 0), t["left"]), t["left"])
@@ -961,7 +972,8 @@ def tech_state(x, name):
 
 def victory(g):
     """End the game when a trigger declared the victory of a player (the score #p<N> of aoe_win is 1)."""
-    import cheats, conquest                                            # they import gather: import them late
+    import cheats  # they import gather: import them late
+    import conquest
     if g.ended or g.clock() < vars(g).get("win_at", 0.0):
         return
     g.win_at = g.clock() + conquest.EVERY
@@ -1042,7 +1054,7 @@ def diplomacy(g):
     g.command(gather.allies_command(g.players))
     if not treaty.holds(g):
         g.command(gather.neutral_command(g.players))
-    import owners                                                      # owners -> build -> gather -> this module
+    import owners  # owners -> build -> gather -> this module
     owners.update_enemies(g)                                           # the new enemies and allies (#2996)
 
 

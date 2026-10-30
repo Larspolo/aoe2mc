@@ -47,7 +47,7 @@ def doc_tests(root=ROOT):
     """The test files that read a Markdown file, sorted."""
     mods = {n: p for n, p in modules(root).items() if reads_md(p)}
     out = []
-    for p in sorted(glob.glob(os.path.join(root, "tests", "test_*.py"))):
+    for p in sorted(glob.glob(os.path.join(root, "tests", "test_*.py")) + glob.glob(os.path.join(root, "framework", "tests", "test_*.py"))):
         with open(p) as f:
             text = f.read()
         if MD.search(text) or imports(text) & mods.keys():

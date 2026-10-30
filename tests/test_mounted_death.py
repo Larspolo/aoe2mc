@@ -4,10 +4,10 @@ import shutil
 import time
 
 import pytest
-
-from game import combat, run
 from test_mounted_attack import KNIGHT, floor, hits
 from test_ranged import data
+
+from game import combat, run
 
 
 @pytest.mark.mc

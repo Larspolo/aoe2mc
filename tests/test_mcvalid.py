@@ -1,6 +1,7 @@
 """mcvalid checks with the Minecraft data of the output version."""
-import aoe2mc
 import mcvalid
+
+import aoe2mc
 
 
 def test_default_version_is_the_output_version():

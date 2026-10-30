@@ -24,4 +24,4 @@ def test_the_bootstrap_writes_the_template_and_the_framework(tmp_path):
 def test_the_new_project_guide_names_the_template_and_system_links_it():
     text = open(os.path.join(ROOT, "framework/docs/NEW_PROJECT.md")).read()
     assert "framework/template/" in text and "bootstrap.py" in text
-    assert "framework/docs/NEW_PROJECT.md" in open(os.path.join(ROOT, "docs/SYSTEM.md")).read()
+    assert "framework/docs/NEW_PROJECT.md" in open(os.path.join(ROOT, "framework/docs/SYSTEM.md")).read()

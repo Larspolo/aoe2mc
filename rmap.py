@@ -22,6 +22,7 @@ terrains, connections (#3966); then all water goes to level 0. Other sections an
 (the constants are in TERRAINS), another #include file gives a warning. All
 randomness comes from numpy.random.default_rng(seed).
 """
+import functools
 import heapq
 import os
 import re
@@ -34,12 +35,32 @@ from units import rows
 # The lines of data/rmap.jsonl (#2037): "terrain": the AoE2 terrain ID (AoE2ScenarioParser TerrainId value) of a
 # terrain constant of the RMS language. "forest": the forest terrains of a tree: the game puts one on each forest tile,
 # a scenario keeps them as objects. "start", "scatter", "fish", "shore_fish": see START, SCATTER, FISH and fish().
+# "blank": a DE placeholder object (BLANK): objects() places it, but it gives no object (#4698).
 RMAP = rows("rmap.jsonl")
 TERRAINS = {r["name"]: r["terrain"] for r in RMAP if "terrain" in r}
 OBJECTS = {r["name"]: r["object"] for r in RMAP if "object" in r}     # the object constants of random_map.def: AoE2 IDs
+LIKE = {r["name"]: r["like"] for r in RMAP if "like" in r}   # a DE object that object_kinds has not: the object to place (#4714)
 FOREST_TREES = dict(sorted((t, r["name"]) for r in RMAP for t in r.get("forest", ())))
+ASSIGN = {r["name"]: r["assign"] for r in RMAP if "assign" in r}       # the targets of assign_to: player, color, team
 CLIFF_TYPES = {r["name"]: r["cliff_type"] for r in RMAP if "cliff_type" in r}   # cliff_type word: object name prefix
+BLANK = {r["name"] for r in RMAP if r.get("blank")}     # placeholders: a tile and an actor_area, no object (#4698)
 SHORE_FISH = next(r["name"] for r in RMAP if r.get("shore_fish"))
+
+
+def is_wet(terrain):
+    """The water and shallow tiles (bool per tile): each terrain with a water depth in the terrain table of the
+    converter (aoe2mc.terrain_style), also MED_WATER, DLC_WATER4 and the DE shallows (#4720)."""
+    return np.isin(terrain, wet_ids())
+
+
+@functools.cache
+def wet_ids():
+    from AoE2ScenarioParser.datasets.terrains import TerrainId
+
+    import aoe2mc
+    return [t.value for t in TerrainId if aoe2mc.terrain_style(t.name)["depth"] > 0]
+
+
 SIZES = {1: 120, 2: 120, 3: 144, 4: 144, 5: 168, 6: 168, 7: 200, 8: 200}    # AoE2 map size of a player count
 LABELS = ((120, "TINY_MAP"), (144, "SMALL_MAP"), (168, "MEDIUM_MAP"), (200, "LARGE_MAP"), (220, "HUGE_MAP"))
 BORDERS = ("left_border", "right_border", "top_border", "bottom_border")   # of create_land (low x, high x, low y, high y)
@@ -67,9 +88,17 @@ class RmsError(ValueError):
 
 
 def tokens(text):
-    """The words of a script without its /* comments */; braces and section names are words."""
-    text = re.sub(r"/\*.*?\*/", " ", text, flags=re.S)
-    return re.sub(r"([{}])", r" \1 ", text).split()
+    """The words of a script without its /* comments */; braces and section names are words. Comments nest, as in the
+    game: the */ of an inner comment does not end the outer one (a commented-out block with a note in it, #4695)."""
+    keep, depth = [], 0
+    for part in re.split(r"(/\*|\*/)", text):
+        if part == "/*":
+            depth += 1
+        elif part == "*/":
+            depth = max(depth - 1, 0)
+        elif not depth:
+            keep.append(part)
+    return re.sub(r"([{}])", r" \1 ", " ".join(keep)).split()
 
 
 def expand(words, rng, defined, consts, includes, folder=None, depth=0):
@@ -78,50 +107,64 @@ def expand(words, rng, defined, consts, includes, folder=None, depth=0):
     line is not a word: the words of an #include_drs file in folder take its place (#4304), else its (directive,
     file) goes into includes."""
     out, stack, i = [], [], 0
-    def on():
-        return all(f["on"] for f in stack)
+    def on(frames=None):
+        return all(f["on"] for f in (stack if frames is None else frames))
+    def arg():                                      # a command as the last word: an RmsError, not an IndexError (#4697)
+        if i + 1 >= len(words):
+            raise RmsError(f"{w} has no argument")
+        return words[i + 1]
+    def top():
+        if not stack:
+            raise RmsError(f"{w} without its start")
+        return stack[-1]
     while i < len(words):
         w = words[i]
-        if w == "if":
-            c = on() and words[i + 1] in defined
+        if w == "if":                               # AoE2 DE reads an if apart from the random blocks (#4692)
+            c = on([f for f in stack if "acc" not in f]) and arg() in defined
             stack.append({"on": c, "done": c})
             i += 2
         elif w == "elseif":
-            f = stack[-1]
-            f["on"] = not f["done"] and words[i + 1] in defined
+            f = top()
+            f["on"] = not f["done"] and arg() in defined
             f["done"] |= f["on"]
             i += 2
         elif w == "else":
-            stack[-1]["on"], stack[-1]["done"] = not stack[-1]["done"], True
+            f = top()
+            f["on"], f["done"] = not f["done"], True
             i += 1
         elif w == "start_random":
             stack.append({"on": False, "done": False, "roll": int(rng.integers(100)) if on() else 100, "acc": 0})
             i += 1
-        elif w == "percent_chance":
-            f, n = stack[-1], int(words[i + 1])
-            f["on"] = not f["done"] and f["acc"] <= f["roll"] < f["acc"] + n
-            f["done"] |= f["on"]
-            f["acc"] += n
+        elif w == "percent_chance":                 # of the last start_random, also inside an if (#4692)
+            n = int(arg())
+            k = next((k for k in range(len(stack) - 1, -1, -1) if "acc" in stack[k]), None)
+            if k is None:
+                raise RmsError("percent_chance outside start_random")
+            if on(stack[k + 1:]):                   # a percent_chance in an inactive if branch does not count
+                f = stack[k]
+                f["on"] = not f["done"] and f["acc"] <= f["roll"] < f["acc"] + n
+                f["done"] |= f["on"]
+                f["acc"] += n
             i += 2
         elif w in ("endif", "end_random"):
             if not stack:
-                raise RmsError(f"{w} without its start")
+                raise RmsError(f"{w} without its start (after: {' '.join(words[max(0, i - 8):i])})")
             stack.pop()
             i += 1
         elif not on():
             i += 1
         elif w.startswith("#include"):
-            path = folder and os.path.join(folder, *words[i + 1].replace("\\", "/").split("/"))
+            path = folder and os.path.join(folder, *arg().replace("\\", "/").split("/"))
             if w == "#include_drs" and path and os.path.isfile(path):
                 if depth >= 8:
                     raise RmsError(f"#include_drs {words[i + 1]}: more than 8 levels (a loop?)")
                 with open(path, encoding="utf-8", errors="replace") as f:
                     out += expand(tokens(f.read()), rng, defined, consts, includes, folder, depth + 1)
             else:
-                includes.append((w, words[i + 1]))
+                includes.append((w, arg()))
             i += 3 if w == "#include_drs" and i + 2 < len(words) and words[i + 2].isdigit() else 2
         elif w == "#define":
-            defined.add(words[i + 1])
+            defined.add(arg())
             i += 2
         elif w == "#const":                             # a #const with no value defines nothing (#4309)
             v = words[i + 2] if i + 2 < len(words) else ""
@@ -142,6 +185,19 @@ def expand(words, rng, defined, consts, includes, folder=None, depth=0):
     return out
 
 
+class Args(list):
+    """The arguments of a command or an attribute: a missing one gives an RmsError with the name (#4697)."""
+    def __init__(self, name, words):
+        super().__init__(words)
+        self.name = name
+
+    def __getitem__(self, k):
+        try:
+            return super().__getitem__(k)
+        except IndexError:
+            raise RmsError(f"{self.name}: too few arguments") from None
+
+
 class Attrs(dict):
     """The attributes of a command: the arguments of the last one of each name; .many: of each one (replace_terrain
     can come more than once in a block)."""
@@ -154,8 +210,8 @@ def commands(words):
     """{section: [(command, [args], {attribute: [args]})]}. A command or an attribute is a lower case word; its
     arguments are the next words that are numbers or upper case constants."""
     out, section, i = {}, None, 0          # a command before the first section goes to "HEADER" (#4308)
-    def args(i):
-        a = []
+    def args(name, i):
+        a = Args(name, [])
         while i < len(words) and not re.fullmatch(r"[a-z_][a-z0-9_]*|[{}]|<\w+>", words[i]):
             a.append(words[i])
             i += 1
@@ -166,13 +222,13 @@ def commands(words):
             section = out.setdefault(m[1], [])
             i += 1
             continue
-        a, i = args(i + 1)
+        a, i = args(w, i + 1)
         attrs = Attrs()
         if i < len(words) and words[i] == "{":
             i += 1
             while i < len(words) and words[i] != "}":
                 name = words[i]
-                attrs[name], i = args(i + 1)
+                attrs[name], i = args(name, i + 1)
                 attrs.many.setdefault(name, []).append(attrs[name])
             i += 1
         if section is None:
@@ -460,7 +516,7 @@ def elevate(section, terrain, layer, owner, starts, consts, rng, warn):
         top = value(args[0], consts) if args else 1
         on = value(attrs["base_terrain"][0], consts) if "base_terrain" in attrs else 0
         under = (layer == value(attrs["base_layer"][0], consts)) if "base_layer" in attrs else terrain == on
-        free = under & ~np.isin(terrain, [TERRAINS["WATER"], TERRAINS["SHALLOW"]]) & (elevation == 0)
+        free = under & ~is_wet(terrain) & (elevation == 0)
         clumps, total = scaled(attrs, consts, n, value(attrs["number_of_clumps"][0], consts)
                                if "number_of_clumps" in attrs else 1, tiles(attrs, consts, n, 1))
         spacing = value(attrs["spacing"][0], consts) if "spacing" in attrs else 1
@@ -487,23 +543,37 @@ def elevate(section, terrain, layer, owner, starts, consts, rng, warn):
 def lower_to_water(terrain, elevation):
     """All water at level 0 (#164) and the land at most d levels high d tiles from it: a hill steps down to a lake of
     <TERRAIN_GENERATION> or a river one level per tile, with no wall of blocks."""
-    wet, out, near = np.isin(terrain, [TERRAINS["WATER"], TERRAINS["SHALLOW"]]), np.array(elevation), None
+    wet, out, near = is_wet(terrain), np.array(elevation), None
     for d in range(int(out.max(initial=0))):
         near = wet if near is None else dilate(near, 1)
         out[near & (out > d)] = d
     return out
 
 
-def generate(text, seed, players=2, size=None, warn=None, teams=None, folder=None):
+def base_scenario(folder, name, warn):
+    """The base scenario of a real world map script name (#4729): the .scx or .aoe2scenario of its stem in folder, as
+    aoe2mc.read_map returns it, or None with a warning that names the file to give."""
+    import aoe2mc
+    stem = os.path.splitext(os.path.basename(name))[0]
+    for ext in (".aoe2scenario", ".scx"):
+        path = os.path.join(folder or ".", stem + ext)
+        if os.path.exists(path):
+            return aoe2mc.read_map(path)
+    warn(f"no <LAND_GENERATION> and no base scenario: give {stem}.scx or {stem}.aoe2scenario of the game next to the script")
+    return None
+
+
+def generate(text, seed, players=2, size=None, warn=None, teams=None, folder=None, name=None):
     """The map description (aoe2mc.read_json) of the land part of script text, for players on a map of size tiles
     (default: the AoE2 size of the player count). folder: the folder of the script, for its #include_drs files. teams: one team (or None) per player (#3946), see circle(). "lands": [{"player", "x", "y", "base_size"}] of the player lands.
+    name: the file name of the script; with no <LAND_GENERATION>, the land comes from its base scenario (base_scenario).
     "mood": the color mood of color_correction (aoe2mc.MOODS). enable_waves and water_definition have no effect: Minecraft
     water takes its color from the biome."""
     warn = warn or (lambda m: print(f"rms: {m}", file=sys.stderr))
     rng = np.random.default_rng(seed)
     n = size or SIZES.get(players, 200)
     defined = {next((label for s, label in LABELS if n <= s), "GIGANTIC_MAP")}
-    consts = TERRAINS | OBJECTS
+    consts = TERRAINS | OBJECTS | {"MAPSIZE_SIDE": n}   # DE: the side of the map in tiles (#4693)
     includes = []
     sections = commands(expand(tokens(text), rng, defined, consts, includes, folder))
     for cmd, a, _ in sections.pop("HEADER", []):
@@ -511,18 +581,26 @@ def generate(text, seed, players=2, size=None, warn=None, teams=None, folder=Non
             n = int(value(a[0], consts))
         elif cmd != "override_map_size":
             warn(f"{cmd} is not read yet")
+    for cmd, a, _ in sections.get("PLAYER_SETUP", ()):   # override_map_size works here too (#4580)
+        if cmd == "override_map_size" and a and not size:
+            n = int(value(a[0], consts))
+        elif cmd not in PLAYER_SETUP:
+            warn(f"{cmd} is not read yet")
     for s in sections:
         if s not in SECTIONS:
             warn(f"<{s}> is not read yet")
     for directive, file in includes:               # random_map.def gives the constants; XS scripts are not run
         if file != "random_map.def":
             warn(f"{directive} {file} is not read")
+    scn = base_scenario(folder, name, warn) if name and "LAND_GENERATION" not in sections else None
+    if scn:                                          # a real world map: the land, levels and starts of the scenario
+        n = scn[0]
     terrain = np.zeros((n, n), np.int16)
     owner = np.full((n, n), -1, np.int32)
     layer = np.full((n, n), -1, np.int16)            # the land layer of each tile (aoe2mc.read_json "layer", -1 = none)
     lands, starts, kinds, links, layers = [], [], {}, [], {}
     heights = {}                                     # the base_elevation of each land index (#4418)
-    ids = {}                                         # the land_id of a create_land -> its land index (#4133)
+    ids = {}                                         # the land_id -> the land indices of its lands (#4133, #4722)
     mood = None                                      # color_correction CC_X: the color mood X (aoe2mc.MOODS, #4430)
     for cmd, args, attrs in sections.get("LAND_GENERATION", ()):
         if cmd == "base_terrain":
@@ -558,15 +636,22 @@ def generate(text, seed, players=2, size=None, warn=None, teams=None, folder=Non
                         continue
                     a = turn + 2 * np.pi * order.index(p) / players
                     r = ring + (rng.uniform(-vary, vary) if vary else 0)   # no draw with no change: same maps
-                    c = (int(round((n - 1) / 2 + r * n * np.cos(a))), int(round((n - 1) / 2 + r * n * np.sin(a))))
+                    c = (int(round((box[0] + box[1] - 1) / 2 + r * n * np.cos(a))),   # the circle in the box middle,
+                         int(round((box[2] + box[3] - 1) / 2 + r * n * np.sin(a))))   # each start inside the box (#4719)
+                    c = tuple(int(np.clip(v, lo + min(base, (hi - lo) // 2), hi - 1 - min(base, (hi - lo - 1) // 2)))
+                              for v, lo, hi in ((c[0], box[0], box[1]), (c[1], box[2], box[3])))
                     starts.append({"player": p, "x": c[0], "y": c[1], "base_size": base, "land": len(lands)})
-                    links.append((c, p, zone if zone is not None else -1 - len(lands)))
+                    t = teams[p - 1] if teams and "set_zone_by_team" in attrs else None
+                    z = zone if zone is not None else -1 - len(lands)
+                    links.append((c, p, ("team", t) if t is not None else z))   # one zone per team (#4696)
                     lands.append({"id": len(lands), "cells": square(c, base, n, circular="set_circular_base" in attrs),
                                   "clump": clump, "box": box, "fuzz": fuzz, "zone": links[-1][2], "avoid": avoid,
                                   "target": max(total // players, (2 * base + 1) ** 2)})
                     kinds[len(lands) - 1] = kind
                     layers[len(lands) - 1] = top
                     heights[len(lands) - 1] = height
+                    if "land_id" in attrs:              # every player land of the block has the ID (#4722)
+                        ids.setdefault(value(attrs["land_id"][0], consts), []).append(len(lands) - 1)
             else:
                 if "land_position" in attrs:
                     c = tuple(min(n - 1, value(v, consts) * n // 100) for v in attrs["land_position"][:2])
@@ -587,12 +672,23 @@ def generate(text, seed, players=2, size=None, warn=None, teams=None, folder=Non
                 kinds[len(lands) - 1] = kind
                 layers[len(lands) - 1] = top
                 heights[len(lands) - 1] = height
-                if "land_id" in attrs:                  # only create_land: the guide gives player lands no ID
-                    ids[value(attrs["land_id"][0], consts)] = len(lands) - 1
+                if "land_id" in attrs:
+                    ids.setdefault(value(attrs["land_id"][0], consts), []).append(len(lands) - 1)
             for a in sorted(set(attrs) - set(CREATE_LAND)):
                 warn(f"{cmd}: {a} is not read yet")
         else:
             warn(f"{cmd} is not read yet")
+    scenery = []                                     # the cliffs of the base scenario: ridges (its other objects: none)
+    if scn:
+        terrain[:] = scn[1]
+        for o in scn[5]:
+            if o["name"] == "TOWN_CENTER" and 0 < o["player"] <= players and all(st["player"] != o["player"] for st in starts):
+                c = (int(o["x"]), int(o["y"]))
+                starts.append({"player": o["player"], "x": c[0], "y": c[1], "base_size": 3, "land": len(lands)})
+                links.append((c, o["player"], -1 - len(lands)))
+                lands.append({"id": len(lands), "cells": square(c, 3, n), "clump": 8, "box": (0, n, 0, n), "target": 49})
+            elif o["name"].startswith("CLIFF"):
+                scenery.append({"name": o["name"], "player": 0, "x": o["x"], "y": o["y"]})
     if starts and len(starts) < players:            # direct_placement with too few lands: the rest on the circle
         for p in sorted(set(range(1, players + 1)) - {st["player"] for st in starts}):
             warn(f"player {p} has no land: a land on the circle")
@@ -607,6 +703,8 @@ def generate(text, seed, players=2, size=None, warn=None, teams=None, folder=Non
         if layers[lid] is not None:
             layer[owner == lid] = layers[lid]
     elevation = elevate(sections.get("ELEVATION_GENERATION", ()), terrain, layer, owner, starts, consts, rng, warn)
+    if scn:
+        elevation = np.maximum(elevation, np.asarray(scn[2]).astype(elevation.dtype))
     for lid, height in heights.items():              # a raised land: its edge steps up one level per tile (AoE2 DE)
         land, step = owner == lid, 1
         near = ~land
@@ -664,14 +762,14 @@ def generate(text, seed, players=2, size=None, warn=None, teams=None, folder=Non
             terrain[mark >= 0] = kind
         else:
             terrain[mark >= 0] = kind
-        wet = np.isin(terrain, [TERRAINS["WATER"], TERRAINS["SHALLOW"]])
+        wet = is_wet(terrain)
         if "beach_terrain" in attrs and wet[mark >= 0].all():   # the land tiles at the shore of new water get T
             terrain[dilate(mark >= 0, 1) & ~wet] = value(attrs["beach_terrain"][0], consts)
         for a in sorted(set(attrs) - set(CREATE_TERRAIN)):
             warn(f"create_terrain: {a} is not read yet")
     connections(terrain, links, sections.get("CONNECTION_GENERATION", ()), consts, rng, warn)
     elevation = lower_to_water(terrain, elevation)
-    ridges = cliffs(sections.get("CLIFF_GENERATION", ()), terrain, starts, consts, rng, warn)   # draws before objects()
+    ridges = scenery + cliffs(sections.get("CLIFF_GENERATION", ()), terrain, starts, consts, rng, warn)   # before objects()
     found = []                                     # one line per object part, so that parallel parts do not conflict
     found += objects(sections.get("OBJECTS_GENERATION", ()), consts, terrain, starts, rng, warn, owner, ridges, layer,
                      land_ids=ids)
@@ -685,8 +783,15 @@ def generate(text, seed, players=2, size=None, warn=None, teams=None, folder=Non
 
 def owner_of(attrs, consts, starts, players, teams):
     """The player of a create_land (#3947): assign_to_player N, or for assign_to_team T the next player of team T
-    (teams, #3946) with no land yet. 0: no player."""
+    (teams, #3946) with no land yet; assign_to TARGET N (#4424): the player N, the player of color N (the default
+    colors: player N) or the next player of team N (-1: any team). 0: no player."""
     taken = {st["player"] for st in starts}
+    if "assign_to" in attrs:
+        target, n = ASSIGN.get(attrs["assign_to"][0]), value(attrs["assign_to"][1], consts)
+        if target != "team":
+            return n if 1 <= n <= players and n not in taken else 0
+        return next((p for p in range(1, players + 1) if p not in taken
+                     and (n == -1 and teams and teams[p - 1] is not None or teams and teams[p - 1] == n)), 0)
     if "assign_to_player" in attrs:
         p = value(attrs["assign_to_player"][0], consts)
         return p if 1 <= p <= players and p not in taken else 0
@@ -714,7 +819,24 @@ def circle(setup, players, teams, seed):
     return rng.permutation(order).tolist()
 
 
+PLAYER_SETUP = (                # the commands of <PLAYER_SETUP> that generate() reads or that have no map effect: no warning (#4580)
+    "ai_info_map_type",             # the AI map type: no effect on the land
+    "behavior_version",             # the script version: no effect on the land
+    "direct_placement",             # the start of the players: the game's own choice
+    "effect_amount",                # the player settings of the game: no effect on the land
+    "effect_percent",               # the player settings of the game: no effect on the land
+    "force_nomad_treaty",           # the game rule: no effect on the land
+    "grouped_by_team",              # the order of the players on the circle (circle())
+    "guard_state",                  # the start units: no effect on the land
+    "nomad_resources",              # the start resources: no effect on the land
+    "override_map_size",            # the map size, the last value wins (generate())
+    "random_placement",             # the order of the players on the circle (circle())
+    "set_gaia_civilization",        # the Gaia civilization: no effect on the land
+    "terrain_state",                # the terrain look: no effect on the land
+    "weather_type",                 # the weather: no effect on the land
+)
 CREATE_LAND = (                 # the attributes of create_land and create_player_lands that generate() reads: one per line (#4417)
+    "assign_to",
     "assign_to_player",
     "assign_to_team",
     "base_elevation",
@@ -735,6 +857,7 @@ CREATE_LAND = (                 # the attributes of create_land and create_playe
     "other_zone_avoidance_distance",
     "right_border",
     "set_circular_base",
+    "set_zone_by_team",             # the lands of a team share one zone (#4696)
     "terrain_type",
     "top_border",
     "zone",
@@ -817,15 +940,16 @@ def path(land, origin):
 
 def objects(cmds, consts, terrain, starts, rng, warn, owner=None, ridges=(), layer=None, land_ids=None):
     """The objects of the create_object commands of <OBJECTS_GENERATION> (#3855), with the attributes of
-    `CREATE_OBJECT`: number_of_objects on random free tiles, in groups with number_of_groups (#3856).
+    `CREATE_OBJECT`: number_of_objects on random free tiles, in groups with number_of_groups or a grouping attribute (#3856, #4699).
     Never on water (only a fish or a ship), a forest, a cliff or another object; an object with no free tile is missing.
     temp_min_distance_group_placement keeps the groups of one command apart; later commands do not avoid them (#4138).
     generate_for_first_land_only gives the objects of set_place_for_every_player to the first land only (#4138).
     require_path, force_placement and ignore_terrain_restrictions as in `CREATE_OBJECT` (#4137)."""
     import aoe2mc
     kinds = aoe2mc.object_kinds(old=False)
+    ids = {name: i for i, (_, name) in kinds.items()}
     n, out = terrain.shape[0], []
-    wet = np.isin(terrain, [TERRAINS["WATER"], TERRAINS["SHALLOW"], TERRAINS["DEEP_WATER"]])
+    wet = is_wet(terrain)
     used = np.isin(terrain, list(FOREST_TREES))
     cliff = np.zeros((n, n), bool)                     # the cliff pieces and their neighbours (#4131)
     for r in ridges:
@@ -836,10 +960,13 @@ def objects(cmds, consts, terrain, starts, rng, warn, owner=None, ridges=(), lay
     x, y = np.mgrid[0:n, 0:n]
     areas = {}                                         # actor_area ID -> the tiles of its objects (#3858)
     for cmd, args, attrs in cmds:
+        if args and args[0] in LIKE:                   # by its word: random_map.def gives it an ID that kinds has not
+            args = [str(ids[LIKE[args[0]]]), *args[1:]]
         if cmd != "create_object":
             warn(f"{cmd} is not read yet")
             continue
-        kind, base = kinds.get(value(args[0], consts), (None, None))
+        blank = args[0] in BLANK                       # by its word: random_map.def gives it an ID that kinds has not
+        kind, base = ("O", args[0]) if blank else kinds.get(value(args[0], consts), (None, None))
         if base is None:
             warn(f"create_object: unknown object {args[0]}")
             continue
@@ -857,6 +984,7 @@ def objects(cmds, consts, terrain, starts, rng, warn, owner=None, ridges=(), lay
         delta = {"resource_delta": value(attrs["resource_delta"][0], consts)} if "resource_delta" in attrs else {}
         radius = value(attrs["group_placement_radius"][0], consts) if "group_placement_radius" in attrs else 3
         tight = "set_tight_grouping" in attrs
+        grouped = groups is not None or any(a in attrs for a in ("group_placement_radius", "set_loose_grouping", "set_tight_grouping"))
         circle = "set_circular_placement" in attrs
         k = (n * n / 10000 if "set_scaling_to_map_size" in attrs else 1) * (
             len(starts) if "set_scaling_to_player_number" in attrs else 1)
@@ -897,7 +1025,7 @@ def objects(cmds, consts, terrain, starts, rng, warn, owner=None, ridges=(), lay
             if land is None or owner is None:
                 warn(f"create_object {args[0]}: unknown land_id {attrs['place_on_specific_land_id'][0]}")
                 continue
-            ground = ground & (owner == land)
+            ground = ground & np.isin(owner, land)
         other = value(attrs["avoid_other_land_zones"][0], consts) if "avoid_other_land_zones" in attrs else 0
         actor = value(attrs["actor_area"][0], consts) if "actor_area" in attrs else None
         reach = value(attrs["actor_area_radius"][0], consts) if "actor_area_radius" in attrs else 1
@@ -913,20 +1041,23 @@ def objects(cmds, consts, terrain, starts, rng, warn, owner=None, ridges=(), lay
             if "require_path" in attrs and st:          # a land path: no water, forest or cliff (#4137)
                 place = place & path(~wet & ~forest & ~cliff, (int(st["x"]), int(st["y"])))
             dist = (np.hypot(x - st["x"], y - st["y"]) if circle else np.maximum(abs(x - st["x"]), abs(y - st["y"]))) if st else np.full((n, n), float(lo))
-            # without number_of_groups each object is a group of 1; with it, number_of_objects (± group_variance) is
-            # the size of each group (AoE2 DE scripting guide; loose grouping and radius 3 are the defaults)
+            # number_of_objects (± group_variance) is the size of each group (AoE2 DE scripting guide; loose grouping and
+            # radius 3 are the defaults). Without number_of_groups: one group when a grouping attribute is set (the 7 gold
+            # of Arabia), else each object is a group of 1. Single objects with min_distance_group_placement fill the ring (#4699).
             key = (dist if "find_closest" in attrs and st else
                    np.hypot(x - (n - 1) / 2, y - (n - 1) / 2) if "find_closest_to_map_center" in attrs else
                    np.minimum(np.minimum(x, y), np.minimum(n - 1 - x, n - 1 - y)) if "find_closest_to_map_edge" in attrs else None)
-            sizes = [1] * count if groups is None else [max(1, count + int(rng.integers(-vary, vary + 1))) for _ in range(groups)]
-            for size in sizes:
+            sizes = [1] * count if groups is None and not grouped else [
+                max(1, count + int(rng.integers(-vary, vary + 1))) for _ in range(groups or 1)]
+            for i, size in enumerate(sizes):
                 free = ~used & place & ~dilate(placed, gap) & ~(dilate(mine, temp) if temp else mine)
                 spots = np.argwhere((dist >= lo) & (dist <= hi) & free)
                 if not len(spots) and "force_placement" in attrs:   # objects on the same tile (#4137)
                     free = place.copy()
                     spots = np.argwhere((dist >= lo) & (dist <= hi) & free)
-                if not len(spots):
-                    warn(f"create_object {args[0]}: no free tile")
+                if not len(spots):            # AoE2 places the groups that fit: a warning only with no group (#4721)
+                    if not i:
+                        warn(f"create_object {args[0]}: no free tile")
                     break
                 if key is None:
                     mid = tuple(int(v) for v in spots[rng.integers(len(spots))])
@@ -951,8 +1082,9 @@ def objects(cmds, consts, terrain, starts, rng, warn, owner=None, ridges=(), lay
                     placed[max(0, tx - r):tx + r, max(0, ty - r):ty + r] = True
                     if name == "VILLAGER_MALE" and rng.integers(2):    # AoE2 DE: a male or a female villager
                         name = "VILLAGER_FEMALE"
-                    out.append({"name": name, "player": player, "x": tx + 0.5 * (kind != "B"), "y": ty + 0.5 * (kind != "B")}
-                               | delta)                                # more or less food, wood, gold or stone (#4429)
+                    if not blank:
+                        out.append({"name": name, "player": player, "x": tx + 0.5 * (kind != "B"), "y": ty + 0.5 * (kind != "B")}
+                                   | delta)                            # more or less food, wood, gold or stone (#4429)
                     if second:
                         out.append({"name": second, "player": player, "x": tx + 0.5, "y": ty + 0.5})
                     if actor is not None:
@@ -981,7 +1113,7 @@ def cliffs(cmds, terrain, starts, consts, rng, warn):
         else:
             warn(f"{cmd} is not read yet")
     n = len(terrain)
-    free = ~dilate(np.isin(terrain, [TERRAINS["WATER"], TERRAINS["SHALLOW"], *FOREST_TREES]), o["min_terrain_distance"])
+    free = ~dilate(is_wet(terrain) | np.isin(terrain, list(FOREST_TREES)), o["min_terrain_distance"])
     for st in starts:
         for c in square((st["x"], st["y"]), st["base_size"], n):
             free[c] = False
@@ -1300,12 +1432,12 @@ def random_map(kind, seed, players=2, teams=None):
     if kind in COASTS:
         coast(d, COASTS[kind])
     objects = walls(d, WALLS[kind], rng) if kind in WALLS else []
-    wet = dilate(np.isin(np.array(d["terrain"]), [TERRAINS["WATER"], TERRAINS["SHALLOW"]]), 1)
+    wet = dilate(is_wet(np.array(d["terrain"])), 1)
     objects += [o for o in d["objects"] if o["name"].startswith("CLIFF") and not wet[int(o["x"]), int(o["y"])]]  # not on the river
     if kind in GOLDS:
         objects += goldfield(d, GOLDS[kind], RINGS[kind], rng)
     n, terrain = d["size"], np.array(d["terrain"])
-    used = np.isin(terrain, list(FOREST_TREES) + [TERRAINS["WATER"], TERRAINS["SHALLOW"]])
+    used = is_wet(terrain) | np.isin(terrain, list(FOREST_TREES))
     for o in objects:                                      # no start object next to a wall or a gold mine
         used[max(0, int(o["x"]) - 1):int(o["x"]) + 2, max(0, int(o["y"]) - 1):int(o["y"]) + 2] = True
     for st in d["lands"]:

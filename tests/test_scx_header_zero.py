@@ -2,9 +2,9 @@
 import struct
 
 import numpy as np
+from test_scx import build
 
 import scx
-from test_scx import build
 
 
 def test_header_length_zero_reads_the_body_after_the_fields(tmp_path):

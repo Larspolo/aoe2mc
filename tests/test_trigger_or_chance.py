@@ -3,8 +3,9 @@
 tick line of the group tests it; the activation starts the timer of each group (switch_lines, c.clocks)."""
 from collections import Counter
 
-import aoe2mc
 from test_trigger_or import AREA, CHAT, OR, RUN
+
+import aoe2mc
 
 CHANCE = dict(type=aoe2mc.TRIGGER_CHANCE, timer=0, inverted=False, quantity=50)
 TIMER = dict(type=aoe2mc.TIMER, timer=60, inverted=False)

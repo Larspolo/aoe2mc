@@ -6,9 +6,9 @@ import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "game"))
 import scenario  # noqa: E402
+import scenarios  # noqa: E402
 
 import aoe2mc  # noqa: E402
-import scenarios  # noqa: E402
 
 
 def convert(tmp_path, computer):

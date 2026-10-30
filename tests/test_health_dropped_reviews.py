@@ -1,4 +1,4 @@
-"""The dropped review locks in tools/health.py: a lock that a later lock of its slot followed did not finish (#3337)."""
+"""The dropped review locks in framework/tools/health.py: a lock that a later lock of its slot followed did not finish (#3337)."""
 import datetime
 
 import health

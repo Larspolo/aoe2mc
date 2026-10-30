@@ -37,9 +37,9 @@ def wait(cond, secs):
 
 @pytest.mark.mc
 def test_a_wolf_kills_a_lone_villager_and_spares_wolves_and_people(tiny_world, tmp_path):
+    import mc_shot
     from test_mc_check import mojang_reachable
     from test_paper import paper_reachable
-    import mc_shot
     if not all(shutil.which(t) for t in ("Xvfb", "import", "xdotool")) or not mojang_reachable() \
             or not paper_reachable():
         pytest.skip("Xvfb, xdotool, Mojang or Paper is not available")

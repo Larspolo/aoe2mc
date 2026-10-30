@@ -1,4 +1,4 @@
-"""tools/ship_pr.py data_only_tests: the quick CI fails a change that adds or changes a test of data files only
+"""framework/tools/ship_pr.py data_only_tests: the quick CI fails a change that adds or changes a test of data files only
 (owner, 2026-10-29, #4353; the step "Data-only change adds no test" of ci.yml)."""
 import sys
 

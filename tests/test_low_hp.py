@@ -1,18 +1,19 @@
 """The Jian Swordsman switches to its unshielded form below 45 HP (#4472, AoE2 DE wiki "Jian Swordsman"): the key
-"low_hp" of data/units.jsonl, combat.low_hp_command and `aoe lowhp`. Test data, and arrows on a server."""
+"low_hp" of data/units.jsonl, game/abilities/low_hp.py and `aoe lowhp`. Test data, and arrows on a server."""
 import re
 import shutil
 import time
 
 import pytest
+from abilities import low_hp
 
-from game import combat, run
+from game import run
 
 
 def test_low_hp_command_gives_the_form_of_the_data(monkeypatch):
-    monkeypatch.setattr(combat, "LOW_HP", {"MILITIA": {"hp": 20, "melee": 1, "pierce": 0, "speed": 1.25}})
-    assert combat.low_hp_command("u-1", "MILITIA") == "aoe lowhp u-1 20 1 0 1.25"
-    assert combat.low_hp_command("u-1", "ARCHER") is None
+    monkeypatch.setattr(low_hp, "UNITS", {"MILITIA": {"hp": 20, "melee": 1, "pierce": 0, "speed": 1.25}})
+    assert low_hp.command("u-1", "MILITIA") == "aoe lowhp u-1 20 1 0 1.25"
+    assert low_hp.command("u-1", "ARCHER") is None
 
 
 def value(out):

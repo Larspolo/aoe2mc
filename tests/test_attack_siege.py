@@ -4,9 +4,9 @@ import shutil
 import time
 
 import pytest
+from test_siege_walk import summon
 
 from game import ai, combat, run
-from test_siege_walk import summon
 
 
 def crew_hp(game, r):

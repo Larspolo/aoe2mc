@@ -9,7 +9,7 @@ import health
 import report
 import usage
 
-TOOL = os.path.join(os.path.dirname(__file__), "..", "tools", "claim.py")
+TOOL = os.path.join(os.path.dirname(__file__), "..", "framework", "tools", "claim.py")
 NOW = datetime.datetime(2026, 10, 26, 6, 0, tzinfo=datetime.timezone.utc)
 RESET = NOW + datetime.timedelta(hours=1)
 

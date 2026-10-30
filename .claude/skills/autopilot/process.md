@@ -27,12 +27,12 @@ dashboard counts them.
 - Did something block you that only the owner can change (a host, the environment, the scheduled task, a GitHub
   setting)? → make a `needs-human` ticket with numbered steps and the exact values. Look for an open one first.
 
-After step 8, run `python3 tools/claim.py 0 --review`: exit 0 means that this run does the process review (#898: a gap
+After step 8, run `python3 framework/tools/claim.py 0 --review`: exit 0 means that this run does the process review (#898: a gap
 of merged PRs in `[review]` of `agent.toml`, shorter after owner work on the system; owner, 2026-10-29). Then run the
 `improve` skill with the `owner work` lines that the command printed.
 Run it also when this run failed, or when a ticket took more than 90 minutes. The `improve` skill reviews the whole
 system, learns from the misses (owner work and owner tickets for the system), walks all its levers, and makes each
-change whose lever is above its threshold. The questions above stay the small check of each ticket. Then run `python3 tools/claim.py 0 --roadmap`: exit 0 means that this run
+change whose lever is above its threshold. The questions above stay the small check of each ticket. Then run `python3 framework/tools/claim.py 0 --roadmap`: exit 0 means that this run
 reviews the feature list of `steering/project/ROADMAP.md` (the `roadmap` skill, one review per 100 merged PRs).
 Do not change a priority that the owner set. Propose it.
 

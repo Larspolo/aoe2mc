@@ -17,11 +17,13 @@ import re
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(1, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "framework", "tools"))
 import health  # noqa: E402
 
 DATASETS = {"merges": "aoe2mc-merged-prs.json", "tickets": "aoe2mc-tickets.json", "epics": "aoe2mc-epics.json",
             "roadmap": "aoe2mc-roadmap.json", "release_bar": "aoe2mc-release-bar.json", "usage": "aoe2mc-usage.json",
-            "tokens": "aoe2mc-tokens.json", "reviews": "aoe2mc-reviews.json", "setup": "aoe2mc-setup.json"}
+            "tokens": "aoe2mc-tokens.json", "reviews": "aoe2mc-reviews.json", "setup": "aoe2mc-setup.json",
+            "accounts": "aoe2mc-accounts.json"}
 ROWS = re.compile(r"\s*\.(filter|find|some|every|forEach|map|flatMap|sort)\(\s*\(?\s*(\w+)(?:\s*,\s*(\w+))?\s*\)?\s*=>")
 
 GOALS = {"1": "convert", "2": "play", "3": "replay", "4": "system"}
@@ -222,7 +224,7 @@ RESULT = re.compile(r"^Metrics: ticket #\d+ · [^·]* · (merged|pr #\d+)", re.M
 
 
 def tokens(hours=168, comments=None):
-    """The cost of each run report with a `Tokens:` line (tools/tokens.py): its M eq, calls, peak context in k tokens,
+    """The cost of each run report with a `Tokens:` line (framework/tools/tokens.py): its M eq, calls, peak context in k tokens,
     the share 0..1 of the sink `base` (None when not in the top sinks) and its PRs (the `Metrics:` lines with the
     result `merged` or `pr #N`). The chart "Usage per merged PR" divides the eq by the PRs (owner, 2026-10-29)."""
     comments = health.status_comments(hours=hours) if comments is None else comments
@@ -236,6 +238,98 @@ def tokens(hours=168, comments=None):
     return sorted(rows, key=lambda r: r["at"])
 
 
+RUN_LINE = re.compile(r"^Run: .*$", re.M)
+WEEK_USED = re.compile(r" · week (\d+(?:\.\d+)?)%")
+
+
+def accounts(hours=168, comments=None):
+    """One row per Claude account (#4239): its last 5-hour usage, 7-day usage and runs (the last `Usage:` line of the
+    account), its merged PRs and tokens per merged PR. A `Run:` line names the account of its report (`health.line_account`:
+    a line with no account word belongs to the first account). Values of an account with no line are None."""
+    comments = health.status_comments(hours=hours) if comments is None else comments
+    rows = {}
+    for c in sorted(comments, key=lambda c: c.get("created_at") or ""):
+        body = c.get("body") or ""
+        run = RUN_LINE.search(body)
+        owner = health.line_account(run[0]) if run else health.first_account()
+        for line in body.splitlines():
+            m = health.SAMPLE.match(line) if line.startswith("Usage:") else None
+            if m:
+                week = WEEK_USED.search(line)
+                rows.setdefault(health.line_account(line), {}).update(
+                    five_hour=float(m[2]) / 100, runs=int(m[4]), week=float(week[1]) / 100 if week else None)
+        t = TOKEN_LINE.search(body)
+        if t:
+            acc = rows.setdefault(owner, {})
+            acc["eq"], acc["prs"] = acc.get("eq", 0) + float(t[1]), acc.get("prs", 0) + len(RESULT.findall(body))
+    return [dict(account=name, five_hour=r.get("five_hour"), week=r.get("week"), runs=r.get("runs"),
+                 merged=r.get("prs", 0), tokens_per_pr=r["eq"] / r["prs"] if r.get("prs") else None)
+            for name, r in sorted(rows.items(), key=lambda x: str(x[0]))]
+
+
+RUN_LANE = re.compile(r"^Run: .*· lane (\S+)", re.M)
+METRIC = re.compile(r"^Metrics: ticket #\d+ · ([^·]*?) · ([^·]*?) ·", re.M)
+SINKS = re.compile(r"· sinks (.*)$", re.M)
+SINK = re.compile(r"([^,]+?) (\d+)%")
+
+
+def insights(hours=168, comments=None):
+    """Where the usage goes (#4646), from the run reports: per lane its runs, M eq and merged PRs; per ticket size its
+    tickets, merged PRs and M eq (a report with several tickets splits its eq evenly); the top sinks in M eq (the
+    `sinks` shares of each `Tokens:` line times its eq)."""
+    comments = health.status_comments(hours=hours) if comments is None else comments
+    lanes, sizes, sinks = {}, {}, {}
+    for c in comments:
+        body = c.get("body") or ""
+        t = TOKEN_LINE.search(body)
+        eq = float(t[1]) if t else 0.0
+        run = RUN_LANE.search(body)
+        tickets = METRIC.findall(body)
+        if not (t or tickets):
+            continue
+        lane = lanes.setdefault(run[1] if run else "opus", dict(runs=0, eq=0.0, merged=0))
+        lane["runs"] += 1
+        lane["eq"] += eq
+        lane["merged"] += len(RESULT.findall(body))
+        for size, result in tickets:
+            row = sizes.setdefault(size.removeprefix("size:").strip() or "none", dict(tickets=0, merged=0, eq=0.0))
+            row["tickets"] += 1
+            row["merged"] += result == "merged" or result.startswith("pr #")
+            row["eq"] += eq / len(tickets)
+        line = SINKS.search(body[t.start():].split("\n", 1)[0]) if t else None
+        for name, share in SINK.findall(line[1]) if line else ():
+            sinks[name.strip()] = sinks.get(name.strip(), 0.0) + eq * int(share) / 100
+    return dict(lanes=lanes, sizes=sizes, sinks=sorted(sinks.items(), key=lambda x: -x[1])[:5],
+                days=activity(comments=comments))
+
+
+PHASE = re.compile(r"· phases ((?:\w+ \d+(?:\.\d+)?(?: · )?)+)")
+WORK = {"read": "read and triage", "claim": "read and triage", "code": "tickets", "verify": "tickets",
+        "ci": "CI fixes", "conflict": "conflicts", "report": "reports"}
+
+
+def activity(hours=168, comments=None):
+    """What the runs do per day (#4725), from the run reports: the runs, the merged PRs, the runs per merged PR, the
+    kind of each run (`ticket`: a `Metrics:` line, `review`: a process review, `idle`: no ticket) and the minutes of
+    the phases of its tickets, grouped by work (`WORK`). The newest day first."""
+    comments = health.status_comments(hours=hours) if comments is None else comments
+    days = {}
+    for c in comments:
+        body = c.get("body") or ""
+        if not (c.get("created_at") and (TOKEN_LINE.search(body) or METRIC.search(body) or REVIEW.match(body))):
+            continue
+        row = days.setdefault(c["created_at"][:10], dict(runs=0, merged=0, kinds={}, work={}))
+        row["runs"] += 1
+        row["merged"] += len(RESULT.findall(body))
+        kind = "review" if REVIEW.match(body) else "ticket" if METRIC.search(body) else "idle"
+        row["kinds"][kind] = row["kinds"].get(kind, 0) + 1
+        for line in PHASE.findall(body):
+            for name, minutes in re.findall(r"(\w+) (\d+(?:\.\d+)?)", line):
+                work = WORK.get(name, name)
+                row["work"][work] = row["work"].get(work, 0.0) + float(minutes)
+    return [dict(day=d, **days[d]) for d in sorted(days, reverse=True)]
+
+
 REVIEW = re.compile(r"^\s*Process review", re.I)
 CHANGE_PR = re.compile(r"\bPR #(\d+)")
 
@@ -244,7 +338,7 @@ def reviews(merges, hours=24 * 60, comments=None):
     """The process reviews of the `improve` skill (#4347): each report comment that starts with "Process review", its
     first paragraph (`text`, at most 400 characters), the PRs that it names (`changes`: "PR #N"),
     and the merged PRs between the review before it and this one (`prs`; None for the first review of the log): the
-    real gap of the review algorithm of `tools/claim.py`."""
+    real gap of the review algorithm of `framework/tools/claim.py`."""
     comments = health.status_comments(hours=hours) if comments is None else comments
     times = sorted(m["merged_at"] for m in merges)
     rows, last = [], None
@@ -331,6 +425,7 @@ def main(out_dir):
         "aoe2mc-release-bar.json": release_bar(open(os.path.join(root, "steering", "project", "RELEASE.md")).read()),
         "aoe2mc-usage.json": usage(),
         "aoe2mc-tokens.json": tokens(),
+        "aoe2mc-accounts.json": accounts(),
         "aoe2mc-reviews.json": reviews(merges),
         "aoe2mc-setup.json": json.load(open(os.path.join(root, "tools", "dashboard_artifact", "setup.json"))),
     }

@@ -1,4 +1,4 @@
-"""tools/health.py measures the burn of one run from the `Usage:` lines, and tools/usage.py uses it (#462)."""
+"""framework/tools/health.py measures the burn of one run from the `Usage:` lines, and framework/tools/usage.py uses it (#462)."""
 import datetime
 
 import health

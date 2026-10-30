@@ -6,13 +6,12 @@ import sys
 import pytest
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import gather  # noqa: E402
+import replay  # noqa: E402
 from test_replay import data  # noqa: E402
 from test_replay_control import Clock  # noqa: E402
 from test_replay_farm import VIL, farm_build, order  # noqa: E402
 from test_replay_gather import TREE  # noqa: E402
-
-import gather  # noqa: E402
-import replay  # noqa: E402
 
 END = 300000
 

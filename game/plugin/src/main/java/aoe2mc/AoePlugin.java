@@ -2,13 +2,15 @@ package aoe2mc;
 
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
@@ -40,6 +42,7 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.Hoglin;
 import org.bukkit.entity.ItemDisplay;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Marker;
 import org.bukkit.entity.Minecart;
 import org.bukkit.entity.Mob;
 import org.bukkit.entity.Pig;
@@ -58,6 +61,7 @@ import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.EntityRegainHealthEvent;
 import org.bukkit.event.entity.EntityTargetEvent;
 import org.bukkit.event.entity.EntityTransformEvent;
+import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.entity.SlimeSplitEvent;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -97,9 +101,17 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *   aoe neutral <team>:<team>,...|- ...        the neutral stances of the players (#1645): the units and buildings of
  *                                              the first team do not attack the units of the listed teams by
  *                                              themselves (an order does). Each call replaces all stances; "-": none
- *   aoe accuracy <selector> <part>             the part of the siege shots (blast 0) of the unit that hit a unit target,
- *                                              the others miss (AoE2 accuracy: the Trebuchet 15 %, Huns 50 %, #2479,
- *                                              game/combat.py accuracy_command). Default 1: each shot hits
+ *   aoe accuracy <selector> <part> [<miss part> <blocks>]  the part of the siege shots (blast 0) and arrows of
+ *                                              the unit that hit a unit target, the others miss (AoE2 accuracy: the
+ *                                              Trebuchet 15 %, Huns 50 %, #2479, game/combat.py accuracy_command).
+ *                                              Default 1: each shot hits. With the miss fields a missed arrow hurts
+ *                                              one random other enemy unit within blocks of the target with miss part
+ *                                              of the damage (the Arambai, #4549); none there: no hit
+ *   aoe afterblast <selector> <ticks> <attack> <blocks> <times> [buildings]
+ *                                              Thunderclap Bombs (#4369): ticks after a shot of the unit lands, a
+ *                                              second blast there hits each enemy unit within blocks with times melee
+ *                                              hits of attack (no own or allied unit); buildings: only a shot at a
+ *                                              building or at the ground (the anti-building shot of the Lou Chuan)
  *   aoe allies <team>,<team>,...|- ...         the alliances of the players (#1315): allied teams are one side for the
  *                                              arrows of buildings, the hit back and the attack alerts. Each call
  *                                              replaces all alliances; "-": no allies
@@ -109,21 +121,24 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *   aoe arrows <uuid> <n> <pass> <part>        also: its arrows hurt the enemy units on their line up to pass blocks
  *                                              past its range, with this part of the damage (Svan Towers, #4282)
  *   aoe attack <selector> <target selector>    Mob#setTarget: the mob attacks with its own AI
+ *   aoe NAME ...                           the command of a unit ability: each class of Ability (#4589)
  *   aoe dodge <selector> <shots> <ticks> [melee 0|1]  the unit dodges projectiles (the Shrivamsha Rider, #4399,
  *                                              game/combat.py dodge_command): a gauge of shots takes each projectile
  *                                              hit with no damage and fills by shots in ticks; melee hits pass.
  *                                              melee 1: it takes melee hits instead, projectiles pass (Iron Pagoda,
  *                                              #4465). Default 0
- *   aoe frenzy <selector> <less> <time> <min>  the melee reload of the unit gets less ticks shorter for each of its
- *                                              hits of the last time ticks, down to min ticks (the Temple Guard,
- *                                              #4468, game/combat.py frenzy_command)
- *   aoe lowhp <selector> <hp> <melee> <pierce> <speed>  the unit switches to another form below hp hit points (the
- *                                              Jian Swordsman, #4472, game/combat.py low_hp_command): that melee and
- *                                              pierce armor and a movement speed factor; at hp or more again the armor
- *                                              of its last aoe stats and no speed modifier
- *   aoe veteran <selector> <attack> <max>      the unit gets attack more for each unit that it kills, up to max (the
- *                                              Jaguar Warrior, #4467, game/combat.py veteran_command); a new call
- *                                              keeps the kills (an Elite upgrade)
+ *   aoe speedcharge <selector> <speed> <min> <max>  the unit walks speed (a factor, 0.25 = 25 %) faster while its
+ *                                              target is min to max blocks away (the Samurai, #4545, game/combat.py
+ *                                              speed_charge_command); nearer (at its hit) the normal speed again
+ *   aoe pack <selector> <per> <blocks> <max> <tag>,...  the unit gets +1 attack for every per own units with one of
+ *                                              the tags within blocks, up to max; it does not count itself (the
+ *                                              Monaspa, #4469, game/combat.py pack_command)
+ *   aoe aura <selector> <blocks> <speed> <attack> <tag>,...  the own units with one of the tags within blocks of
+ *                                              the unit move speed and attack attack faster (fractions); two auras do
+ *                                              not add up (the Centurion, #4470, game/abilities/aura.py, Aura.java)
+ *   aoe sunder <selector> <n>                  each hit of the unit on a unit lowers its melee and pierce armor by n,
+ *                                              down to 0 (the Obuch, #4466, game/combat.py sunder_command). A later
+ *                                              aoe stats of the target (an upgrade) sets its armor again
  *   aoe attackground <selector> <x> <y> <z>    AoE2 "Attack Ground" (#4078): a siege unit with a blast walks into its
  *                                              range of the point and shoots there with its reload until a new order
  *   aoe ballistics <team> on|off               Ballistics of the player (#1549): its archers and buildings aim where a
@@ -174,11 +189,6 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *                                              Gothikon (#4368): a melee unit also throws an axe (an arrow with the
  *                                              values of the unit) at its target within blocks; it holds at most shots
  *                                              axes, one charges in ticks, two throws are gap ticks apart
- *   aoe trample <selector> <part> <blocks> [<damage> <ignore 0|1>]
- *                                              trample damage (the elephants, #4397, game/combat.py trample_command):
- *                                              a melee hit of the unit also hurts each other enemy unit within blocks
- *                                              of the target with part of the AoE2 damage on it, or with a fixed damage
- *                                              less its melee armor (ignore 1: no armor; a technology, epic #4096)
  *   aoe unwear <selector>                      forget the kept blocks of the damage stages of each building target: the
  *                                              next stage keeps the blocks of a new design (a wall technology, #3071)
  *   aoe range <selector> off                  the unit shoots no more: no range goal (melee mode of the Ratha, #4504)
@@ -196,10 +206,6 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *   aoe show <players> <uuid> ...              Player#showEntity: the players see these entities again (#1302)
  *   aoe show <players> all                     the players see all the units that a team=T hide hides (a spectator,
  *                                              team spec, #2921); a hide with no team stays
- *   aoe shield <selector> <part> <takes>       the unit shields the units behind it (the Hussite Wagon, #4507,
- *                                              game/combat.py shield_command): an enemy projectile that hits it on its
- *                                              way to another target deals part of its damage to that target, and the
- *                                              unit takes "takes" hit points
  *   aoe sight <selector> <blocks>              an idle unit attacks an enemy in this line of sight (#775)
  *   aoe sight <selector> <blocks> only|first   ... and enemy buildings: only buildings, or buildings before units
  *                                              (#1820: the ram line and the trebuchet, the elephant and cannon galleon)
@@ -225,17 +231,25 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *   aoe charge <selector> <ticks> <attack> <shots> <blast> <class:bonus,...|->
  *                                              Siphons (#2165): a fire ship that hits a ship also hits each enemy unit
  *                                              within blast blocks of it with shots melee hits of attack, once per ticks
- *   aoe chargeattack <selector> <ticks> <attack>
+ *   aoe chargeattack <selector> <ticks> <attack> [<part> <blocks>]
  *                                              the charge of a melee hit (Comitatenses, #4370): the first melee hit
  *                                              on a unit after ticks has attack more (before the armor), then the
- *                                              charge starts again; a new unit starts full
+ *                                              charge starts again; a new unit starts full; part and blocks: the
+ *                                              charged hit also hurts the near enemy units (Urumi Swordsman, #4544)
+ *   aoe chargedvolley <selector> <ticks> <shots> <attack> <class:bonus,...|-> [range blocks] [ignore 0|1]
+ *                                              the charged volley of a ranged unit (Xianbei Raider, #4546): a shot at
+ *                                              a unit that is not siege after ticks also hits it with shots arrows of
+ *                                              attack and bonus (AoE2 accuracy 100 %), then the charge starts again.
+ *                                              range: a melee unit fires it at its target within range blocks before
+ *                                              the melee (Fire Lancer, #4547); ignore 1: the shots ignore the armor
  *   aoe cheats <code>,<code>,...|-             the AoE2 cheat codes in the chat (#816, Cheats.java; URL-encoded)
  *   aoe deathmarks on|off                      a short mark where a replay unit dies (#846, Deaths.java)
  *   aoe destroy <selector>                     the buildings fall as at 0 hit points: "Destroy: <n> buildings" (#819)
- *   aoe detonate <selector> <attack> <blast> <class:bonus,...|->
+ *   aoe detonate <selector> <attack> <blast> <class:bonus,...|-> [foes]
  *                                              Incendiaries (#2165): the ship explodes when it sinks; each unit within
  *                                              blast blocks takes a melee hit of attack, as in the blast of a
- *                                              demolition ship also the own units
+ *                                              demolition ship also the own units; the last word foes: not the
+ *                                              own or allied units (Thunderclap Bombs, #4367)
  *   aoe elevation <blocks> <team>:<up>:<low>:<high> ...
  *                                              the AoE2 elevation rule (#2307, game/combat.py elevation): a hit from
  *                                              blocks or more higher takes up (of the attacker's team) times high (of
@@ -269,6 +283,9 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *                                              AoE2 attack and no bonus (0: the values of the unit): the Armenian
  *                                              galleys and dromons (#2379, game/train.py volley_command), the
  *                                              technologies with the key "volley" (#4338): also a siege shot
+ *   aoe vsunits <selector> <attack> <bonus> <blocks>   the second attack mode of the unit (the Lou Chuan, #4505,
+ *                                              game/combat.py vs_units_command): at a unit (not a building) it
+ *                                              shoots from this range with this pierce attack and bonus
  *   aoe box <player> <x> <z> <dye>             draw the selection box from this corner to the look (#795, Border.java)
  *   aoe box-clear <player>                     end the border of the selection box
  *   aoe box-corner <player>                    the block X Z of the last far corner of the border (#3082, a check)
@@ -355,7 +372,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     // less: the damage less from an attacker of a class (Royal Heirs), ignores: its hits ignore the armor (Wootz Steel, #4331);
     // rage: the attack more for each 10 % of lost hit points (Hamask), reflect: the part of a melee hit that the attacker
     // takes back (Lamellar Armor, #4332)
-    private record Stats(int attack, int melee, int pierce, boolean ranged, boolean pierces, Set<String> classes,
+    record Stats(int attack, int melee, int pierce, boolean ranged, boolean pierces, Set<String> classes,
                          Map<String, Integer> bonus, int reload, double taken, double friendly, Map<String, Integer> less,
                          boolean ignores, int rage, double reflect) {
         Stats(int attack, int melee, int pierce, boolean ranged, boolean pierces, Set<String> classes,
@@ -386,8 +403,11 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         }
     }
 
-    private final Map<UUID, Stats> stats = new HashMap<>();
+    final Map<UUID, Stats> stats = new HashMap<>();
     private final Ghost ghost = new Ghost(this);
+    // The unit abilities (#4589): one class each, named in META-INF/services/aoe2mc.Ability
+    private final List<Ability> abilities = ServiceLoader.load(Ability.class, AoePlugin.class.getClassLoader()).stream()
+            .map(ServiceLoader.Provider::get).toList();
     private final Dot dots = new Dot();                             // damage over time (Curare, #4339)
     private final Cheats cheats = new Cheats(this);
     private final ChatName chatName = new ChatName();               // the player color of a chat name (#3681)
@@ -407,7 +427,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     private static final int MAX_FILL = 32768;                    // blocks of one /fill (the 26.3 default, #3076)
     private record Building(Stats stats, String box, int max, int[] b, double range, double min) {}
 
-    private final Map<UUID, Building> buildings = new HashMap<>();
+    final Map<UUID, Building> buildings = new HashMap<>();
     private static final String BUILDING = "aoe2mc.building";   // the tag of a target slime (combat.building)
     private final Map<UUID, Integer> arrows = new HashMap<>();       // the arrows of a shot of a building (#1113)
     private final Map<UUID, double[]> fortPass = new HashMap<>();    // blocks past the range, damage part (Svan Towers, #4282)
@@ -461,28 +481,18 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     private final Map<UUID, Charge> charges = new HashMap<>();
     // the part of the siege shots at a unit that hit (aoe accuracy, #2479): the Trebuchet 0.15; missing: 1
     private final Map<UUID, Double> accuracy = new HashMap<>();
+    private final Map<UUID, double[]> misses = new HashMap<>();   // aoe accuracy (#4549): {part, blocks} of a miss
     private final Map<UUID, Dodge> dodges = new HashMap<>();    // aoe dodge: the shield of a unit (#4399)
-    private final Map<UUID, int[]> frenzies = new HashMap<>();  // aoe frenzy (#4468): {less, time, min} in ticks
-    private final Map<UUID, ArrayDeque<Integer>> frenzyHits = new HashMap<>();   // the ticks of its recent hits
-    private final Map<UUID, LowHp> lowHps = new HashMap<>();    // aoe lowhp: the low hit point form of a unit (#4472)
-    private static final NamespacedKey LOW_SPEED = new NamespacedKey("aoe2mc", "low_hp_speed");
+    private final Map<UUID, VsUnits> vsUnits = new HashMap<>();  // aoe vsunits: the anti-unit mode of a unit (#4505)
 
-    // The low hit point form of a unit (#4472): below "hp" the armor "melee" and "pierce" and the speed factor "speed".
-    // low: the unit is in that form; normal: the melee and pierce armor of its last aoe stats.
-    private static final class LowHp {
-        final double hp, speed;
-        final int melee, pierce;
-        boolean low;
-        int[] normal;
+    // The anti-unit mode of a unit with two attack modes (the Lou Chuan, #4505): pierce attack, bonus and range in blocks.
+    private record VsUnits(int attack, Map<String, Integer> bonus, double blocks) {}
+    private final Map<UUID, Integer> sunders = new HashMap<>();  // aoe sunder (#4466): the armor less per hit
+    private final Map<UUID, double[]> speedCharges = new HashMap<>();   // aoe speedcharge (#4545): {speed, min, max}
+    private static final NamespacedKey CHARGE_SPEED = new NamespacedKey("aoe2mc", "speed_charge");
 
-        LowHp(double hp, int melee, int pierce, double speed) {
-            this.hp = hp;
-            this.melee = melee;
-            this.pierce = pierce;
-            this.speed = speed;
-        }
-    }
-    private final Map<UUID, int[]> veterans = new HashMap<>();  // aoe veteran (#4467): {attack, max, kills}; rider and horse share it
+    private final Map<UUID, Pack> packs = new HashMap<>();      // aoe pack (#4469); rider and horse share it
+    private record Pack(int per, double blocks, int max, Set<String> tags) {}
 
     // The AoE2 dodge of a unit (#4399): "gauge" shots left at tick "at"; it fills by "shots" in "ticks", up to "shots".
     private static final class Dodge {
@@ -516,23 +526,30 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     private final Map<UUID, Integer> charged = new HashMap<>();      // the first tick of the next charge attack
     private final Map<UUID, int[]> meleeCharges = new HashMap<>();   // aoe chargeattack (#4370): {ticks, attack}
     private final Map<UUID, Integer> meleeCharged = new HashMap<>(); // the first tick of the next charged melee hit
+    private final Map<UUID, Blast> meleeBlasts = new HashMap<>();  // the blast of a charged hit (Urumi, #4544)
+    private record ChargedVolley(int ticks, int shots, Stats arrow, double range) {}  // aoe chargedvolley (#4546);
+    private static final double VOLLEY_MELEE = 2.0;   // blocks: nearer, a Fire Lancer fights in melee (#4547)
+    private final Map<UUID, ChargedVolley> chargedVolleys = new HashMap<>();
+    private final Map<UUID, Integer> volleyCharged = new HashMap<>();  // the first tick of the next charged volley
     private final Map<UUID, Charge> detonations = new HashMap<>();
+    private final Set<UUID> spare = new HashSet<>();       // detonations that hurt no own or allied unit (#4367)
+    // The second blast where a shot lands (aoe afterblast, #4369): charge ticks is the delay, shots the hits; buildings:
+    // only a shot that is not at a unit
+    private record AfterBlast(Charge charge, boolean buildings) {
+    }
+
+    private final Map<UUID, AfterBlast> afterBlasts = new HashMap<>();
+    private static final String LANDED = "aoe2mc.landed";   // a projectile that made its second blast
     // A charged ranged attack of a melee unit (Gothikon, #4368, aoe throw): at most shots axes, one charges in ticks;
     // axes: {charged axes, the tick where the next charge started, the first tick of the next throw}
     private record Throw(int ticks, int gap, double blocks, int shots) {
     }
 
     private final Map<UUID, Throw> throwers = new HashMap<>();
-    // Trample damage (aoe trample, #4397): part of the AoE2 damage within blocks of the target; damage > 0: a fixed damage
-    private record Trample(double part, double blocks, double damage, boolean ignore) {
+    // Trample damage (Trample, #4397): part of the AoE2 damage within blocks of the target; damage > 0: a fixed damage
+    record Blast(double part, double blocks, double damage, boolean ignore) {
     }
 
-    private final Map<UUID, Trample> tramples = new HashMap<>();
-    // The projectile obstruction of a unit (aoe shield, #4507): part of the damage goes on to the target, takes on the unit
-    private record Shield(double part, int takes) {
-    }
-
-    private final Map<UUID, Shield> shields = new HashMap<>();
     private final Map<UUID, int[]> axes = new HashMap<>();
     private final Map<UUID, Double> sights = new HashMap<>();       // the line of sight of a unit in blocks (#775)
     private final Map<UUID, String> modes = new HashMap<>();        // "only" or "first": it takes buildings (#1820)
@@ -593,7 +610,9 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             // a building: the range to its nearest side, and no sight of the eye of its target in the walls (#608)
             boolean wall = buildings.containsKey(t.getUniqueId());
             double d2 = wall ? gap(mob, t) : mob.getLocation().distanceSquared(t.getLocation());
-            boolean near = d2 <= range.blocks * range.blocks && (wall || mob.hasLineOfSight(t));
+            VsUnits vs = wall ? null : vsUnits.getOrDefault(mob.getUniqueId(), vsUnits.get(crew(mob).getUniqueId()));
+            double reach = vs != null ? vs.blocks() : range.blocks;     // the anti-unit mode at a unit (#4505)
+            boolean near = d2 <= reach * reach && (wall || mob.hasLineOfSight(t));
             boolean close = d2 < range.min * range.min;  // inside the minimum range: it stays and does not shoot (#1350)
             if (close) {
                 mob.getPathfinder().stopPathfinding();
@@ -628,6 +647,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                         }
                     }
                 }
+                chargedVolley(mob, t);
                 next = now + range.ticks;
                 Stats a = stats.get(mob.getUniqueId());
                 Building b = buildings.get(t.getUniqueId());
@@ -664,6 +684,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             if (now >= next && near && stats.get(from.getUniqueId()) instanceof Stats a) {
                 next = now + range.ticks;
                 blastAt(from, a, g, range.blast);
+                afterBlast(from, g, false);
             }
         }
 
@@ -724,7 +745,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     }
 
     // The entity with the AoE2 values of a shooter: the crew of a siege unit for its carrier (aoe stats, #836).
-    private static Entity crew(Mob mob) {
+    static Entity crew(Mob mob) {
         return mob.getPassengers().isEmpty() || !(mob.getPassengers().get(0) instanceof Minecart cart)
                 || cart.getPassengers().isEmpty() ? mob : cart.getPassengers().get(0);
     }
@@ -739,9 +760,11 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             return;
         }
         int[] extra = volleys.getOrDefault(from.getUniqueId(), new int[] {0, 0});
+        Location at = t.getLocation();
         for (int k = 0; k <= extra[0] && t.isValid(); k++) {   // the extra shots of a volley (aoe volley, #4338)
             blast(mob, t, range, from, k == 0 ? a : volley(a, extra[1]));
         }
+        afterBlast(from, at, !buildings.containsKey(t.getUniqueId()));
     }
 
     // One blast shot of the crew from (the entity with the AoE2 values a) of mob at t.
@@ -829,6 +852,42 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         burst(from, t.getLocation(), c, true);
     }
 
+    // The charged volley of a shot of from at t (#4546, the Xianbei Raider): with a full charge the shots extra arrows
+    // hit a unit that is not siege (AoE2 accuracy 100 %, wiki "Xianbei Raider"), then the charge starts again from 0.
+    private void chargedVolley(Entity from, LivingEntity t) {
+        ChargedVolley c = chargedVolleys.get(from.getUniqueId());
+        LivingEntity v = t.getVehicle() instanceof LivingEntity h && stats.containsKey(h.getUniqueId()) ? h : t;
+        Stats s = stats.get(v.getUniqueId());
+        int now = Bukkit.getCurrentTick();
+        if (c == null || s == null || buildings.containsKey(v.getUniqueId()) || s.classes().contains("siege")
+                || now < volleyCharged.getOrDefault(from.getUniqueId(), 0)) {
+            return;
+        }
+        volleyCharged.put(from.getUniqueId(), now + c.ticks());
+        for (int k = 0; k < c.shots() && v.isValid(); k++) {
+            harm(v, s, c.arrow(), from);
+        }
+        v.getWorld().spawnParticle(Particle.CRIT, v.getLocation().add(0, 1, 0), 4 * c.shots());
+    }
+
+    // The charged volley of a melee unit (#4547, the Fire Lancer): it fires at its target within the range before the
+    // melee ("except when in melee combat", wiki "Fire Lancer"). Vanilla melee AI has no ranged shot.
+    private void meleeVolleys() {
+        for (Map.Entry<UUID, ChargedVolley> en : chargedVolleys.entrySet()) {
+            double r = en.getValue().range();
+            if (r <= 0 || !(Bukkit.getEntity(en.getKey()) instanceof Mob mob) || !mob.isValid()) {
+                continue;
+            }
+            LivingEntity t = target(mob);
+            if (t != null && t.isValid() && !t.isDead() && t.getWorld() == mob.getWorld() && !sameTeam(mob, t)) {
+                double d = mob.getLocation().distance(t.getLocation());
+                if (d > VOLLEY_MELEE && d <= r && mob.hasLineOfSight(t)) {
+                    chargedVolley(mob, t);
+                }
+            }
+        }
+    }
+
     // The values of a melee hit of from (#4370): with a full charge (aoe chargeattack) the attack is more, and the
     // charge starts again from 0, as the AoE2 charge attack (wiki "Charge attack"). The armor counts once.
     private Stats charged(Entity from, Stats a) {
@@ -840,6 +899,30 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         meleeCharged.put(from.getUniqueId(), now + c[0]);
         return new Stats(a.attack() + c[1], a.melee(), a.pierce(), a.ranged(), a.pierces(), a.classes(), a.bonus(),
                 a.reload(), a.taken(), a.friendly(), a.less(), a.ignores(), a.rage(), a.reflect());
+    }
+
+
+    // Thunderclap Bombs (#4369, AoE2 DE wiki): a shot of from landed at the point at (unit: at a unit). A Paper timer
+    // per shot sets off the second blast there after the delay, also when from dies before. Vanilla has no such shot.
+    private void afterBlast(Entity from, Location at, boolean unit) {
+        AfterBlast b = afterBlasts.get(from.getUniqueId());
+        if (b != null && !(b.buildings() && unit)) {
+            Location p = at.clone();
+            Bukkit.getScheduler().runTaskLater(this, () -> burst(from, p, b.charge(), true), b.charge().ticks());
+        }
+    }
+
+    // An arrow or a trident of a unit of aoe afterblast lands on an entity or a block (#4369): one second blast per
+    // shot, so not for the extra arrows of a volley, and once for a projectile that bounces off.
+    @EventHandler
+    public void onLand(ProjectileHitEvent ev) {
+        Projectile p = ev.getEntity();
+        if (p.getShooter() instanceof Entity from && afterBlasts.containsKey(from.getUniqueId())
+                && p.getScoreboardTags().stream().noneMatch(t -> t.startsWith(VOLLEY)) && p.addScoreboardTag(LANDED)) {
+            Entity hit = ev.getHitEntity();
+            afterBlast(from, hit != null ? hit.getLocation() : p.getLocation(),
+                    hit != null && !buildings.containsKey(hit.getUniqueId()));
+        }
     }
 
     // The hits of a charge or a detonation on each unit with AoE2 values within its blast; foes: not the own or
@@ -944,7 +1027,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     }
 
     // The values of the projectile p of a unit with the values a: those of its tag (an extra arrow), else a.
-    private static Stats volley(Projectile p, Stats a) {
+    static Stats volley(Projectile p, Stats a) {
         for (String tag : p.getScoreboardTags()) {
             if (tag.startsWith(VOLLEY)) {
                 return volley(a, Integer.parseInt(tag.substring(VOLLEY.length())));
@@ -1324,10 +1407,12 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         Bukkit.getScheduler().runTaskTimer(this, this::siege, 1L, 1L);
         Bukkit.getScheduler().runTaskTimer(this, this::carts, 1L, 1L);
         Bukkit.getScheduler().runTaskTimer(this, this::throwAxes, 2L, 2L);
+        Bukkit.getScheduler().runTaskTimer(this, this::meleeVolleys, 2L, 2L);
         Bukkit.getScheduler().runTaskTimer(this, this::burn, 20L, 20L);
         Bukkit.getScheduler().runTaskTimer(this, () -> dots.tick(this::dotHurt), Dot.STEP, Dot.STEP);
         Bukkit.getScheduler().runTaskTimer(this, this::unhit, 1L, 1L);
-        Bukkit.getScheduler().runTaskTimer(this, this::lowHp, 1L, 1L);
+        Bukkit.getScheduler().runTaskTimer(this, () -> abilities.forEach(ab -> ab.tick(this)), 1L, 1L);
+        Bukkit.getScheduler().runTaskTimer(this, this::speedCharge, 2L, 2L);
         Bukkit.getScheduler().runTaskTimer(this, this::watch, 20L, 20L);
         Bukkit.getScheduler().runTaskTimer(this, this::towers, 2L, 2L);
         Bukkit.getScheduler().runTaskTimer(this, this::hold, 4L, 4L);
@@ -1385,20 +1470,26 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         }
         ev.setCancelled(true);
         Dodge dodge = dodges.getOrDefault(ev.getEntity().getUniqueId(), dodges.get(hurt.getUniqueId()));
+        Blast blast = null;                                // the blast of a charged hit (#4544)
         if (ev.getDamager() instanceof Projectile p && dodge != null && !dodge.melee && dodge.take()) {
             p.remove();                                      // a Shrivamsha Rider dodges it (#4399)
             return;
         }
-        Shield shield = shields.getOrDefault(ev.getEntity().getUniqueId(), shields.get(hurt.getUniqueId()));
-        if (ev.getDamager() instanceof Projectile p && shield != null && from instanceof Mob m && !sameTeam(from, hurt)
-                && body(target(m)) instanceof LivingEntity aim && aim != hurt && aim.isValid() && !aim.isDead()
-                && stats.containsKey(aim.getUniqueId()) && !buildings.containsKey(aim.getUniqueId())
-                && from.getLocation().distanceSquared(hurt.getLocation()) < from.getLocation().distanceSquared(aim.getLocation())) {
-            p.remove();                    // a Hussite Wagon: the shot passes on to the target of the shooter (#4507)
-            victim.playHurtAnimation(0);
-            victim.setHealth(Math.max(0, victim.getHealth() - shield.takes()));   // no armor (AoE2 DE wiki)
-            nameLine(victim);
-            harm(aim, stats.get(aim.getUniqueId()), volley(p, a), from, shield.part());
+        if (ev.getDamager() instanceof Projectile p) {
+            for (Ability ab : abilities) {
+                if (ab.shot(this, p, from, ev.getEntity(), victim, a)) {
+                    return;                                  // a Hussite Wagon (#4507)
+                }
+            }
+        }
+        Range sr = ranges.get(from.getUniqueId());
+        if (ev.getDamager() instanceof Projectile p && (sr == null || !sr.siege) && fort == null
+                && ThreadLocalRandom.current().nextDouble() >= accuracy.getOrDefault(from.getUniqueId(), 1.0)) {
+            p.remove();                                      // AoE2 accuracy of an arrow (an Arambai, #4549): a miss
+            double[] miss = misses.get(from.getUniqueId());
+            if (miss != null && near(from, hurt, miss[1]) instanceof LivingEntity n) {
+                harm(n, stats.get(n.getUniqueId()), volley(p, a), from, miss[0]);   // it hurts a unit near the target
+            }
             return;
         }
         if (!(ev.getDamager() instanceof Projectile)) {      // a melee hit: once per AoE2 reload (#848)
@@ -1409,13 +1500,24 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             if (dodge != null && dodge.melee && dodge.take()) {
                 return;                                      // an Iron Pagoda ignores the melee hit (#4465)
             }
+            Stats plain = a;
             a = charged(from, a);                            // a charge attack (Comitatenses, #4370)
+            blast = a != plain ? meleeBlasts.get(from.getUniqueId()) : null;
         }
         if (ev.getDamager() instanceof Projectile p) {     // a cancelled hit lets the arrow fly on: one hit per arrow
             p.remove();
             a = volley(p, a);                                // an extra arrow of a volley (#2379)
+            for (Ability ab : abilities) {
+                a = ab.hit(this, from, victim, a);           // a charged shot (Bolas Rider, #4548)
+            }
         }
         double dealt = harm(victim, t, a, fort != null ? ev.getDamager() : from);   // a unit does not attack back at a building
+        if (fort != null) {
+            dots.start(from, victim, t.classes());           // harm() has the arrow, not the building (Curare, #4641)
+        }
+        if (fort == null && sunders.get(from.getUniqueId()) instanceof Integer n && stats.get(hurt.getUniqueId()) == t) {
+            stats.put(hurt.getUniqueId(), sunder(t, n));      // an Obuch lowers the armor of its target (#4466)
+        }
         double[] through = fort != null ? fortPass.get(from.getUniqueId()) : null;
         if (through != null && through[0] > 0 && from instanceof Mob slime) {   // Svan Towers: hurts the units behind (#4282)
             pass(slime, victim, fort.range + through[0], a, from, through[1]);
@@ -1427,16 +1529,32 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             nameLine(attacker);
         }
         if (!(ev.getDamager() instanceof Projectile)) {
-            trample(from, a, hurt, ev.getEntity());           // an elephant hurts the units next to its target (#4397)
+            for (Ability ab : abilities) {
+                ab.melee(this, from, a, hurt, ev.getEntity());   // an elephant (#4397)
+            }
+            trample(from, a, hurt, ev.getEntity(), blast);    // the charged hit of an Urumi Swordsman (#4544)
         }
+    }
+
+    // A random other enemy unit of from with AoE2 values within blocks of the unit hurt, or null: the unit that a
+    // missed shot hits (#4549). A mounted unit has the hit points of its horse (#732): only the horse counts.
+    private LivingEntity near(Entity from, Entity hurt, double blocks) {
+        List<LivingEntity> all = new ArrayList<>();
+        for (Entity o : hurt.getNearbyEntities(blocks, blocks, blocks)) {
+            if (o instanceof LivingEntity le && le.isValid() && !le.isDead() && le != from && o.getVehicle() != hurt
+                    && stats.containsKey(o.getUniqueId()) && !buildings.containsKey(o.getUniqueId())
+                    && !sameTeam(from, o) && o.getLocation().distance(hurt.getLocation()) <= blocks) {
+                all.add(le);
+            }
+        }
+        return all.isEmpty() ? null : all.get(ThreadLocalRandom.current().nextInt(all.size()));
     }
 
     // AoE2 trample damage (#4397, AoE2 DE wiki "Trample damage"): after a melee hit of a unit of aoe trample, each other
     // enemy unit with AoE2 values within its blocks of the target takes max(1, round(part × the AoE2 damage on it)), or
     // the fixed damage less its melee armor (at least 1; ignore: a negative armor only). Not the own or allied units.
     // A mounted unit has the hit points of its horse (#732): only the horse counts.
-    private void trample(Entity from, Stats a, Entity hurt, Entity target) {
-        Trample tr = tramples.get(from.getUniqueId());
+    void trample(Entity from, Stats a, Entity hurt, Entity target, Blast tr) {
         if (tr == null || tr.blocks() <= 0) {
             return;
         }
@@ -1458,23 +1576,49 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     }
 
     // The entity with the hit points of unit e: the horse of a rider (#732), else e.
-    private Entity body(Entity e) {
+    Entity body(Entity e) {
         return e != null && e.getVehicle() instanceof LivingEntity horse && stats.containsKey(horse.getUniqueId()) ? horse : e;
     }
 
     // The attack more of a hit of unit e with the values a (Hamask, #4332): rage for each 10 % of its lost hit points.
     private int rage(Stats a, Entity e) {
         if (a.rage <= 0 || !(body(e) instanceof LivingEntity le) || le.getAttribute(Attribute.MAX_HEALTH) == null) {
-            return veteran(e);
+            return bonus(e) + pack(e);
         }
         double max = le.getAttribute(Attribute.MAX_HEALTH).getValue();
-        return a.rage * (int) Math.floor(Math.max(0, 1 - le.getHealth() / max) * 10 + 1e-9) + veteran(e);
+        return a.rage * (int) Math.floor(Math.max(0, 1 - le.getHealth() / max) * 10 + 1e-9) + bonus(e) + pack(e);
     }
 
-    // The attack more of unit e of its kills (aoe veteran, the Jaguar Warrior, #4467): attack for each kill, up to max.
-    private int veteran(Entity e) {
-        int[] v = e == null ? null : veterans.get(e.getUniqueId());
-        return v == null ? 0 : Math.min(v[1], v[0] * v[2]);
+    // The attack more of unit e near its own units (aoe pack, the Monaspa, #4469): the type tag sits on the rider of a
+    // mounted unit, so the tagged entities count once and the horse of e and e itself not at all.
+    private int pack(Entity e) {
+        Pack p = e == null ? null : packs.get(e.getUniqueId());
+        if (p == null) {
+            return 0;
+        }
+        Entity me = body(e), rider = me.getPassengers().isEmpty() ? me : me.getPassengers().get(0);
+        String own = side(rider);
+        if (own == null) {
+            return 0;
+        }
+        int n = 0;
+        for (Entity o : me.getNearbyEntities(p.blocks, p.blocks, p.blocks)) {
+            if (o == e || o == rider || o.getLocation().distance(me.getLocation()) > p.blocks
+                    || !own.equals(side(o)) || Collections.disjoint(o.getScoreboardTags(), p.tags)) {
+                continue;
+            }
+            n++;
+        }
+        return Math.min(p.max, n / p.per);
+    }
+
+    // The attack more of unit e of its abilities (the Jaguar Warrior, #4467).
+    private int bonus(Entity e) {
+        int n = 0;
+        for (Ability ab : abilities) {
+            n += ab.attack(e);
+        }
+        return n;
     }
 
     // A fight between two samples of aoe where (#1169): tools/replay_drift.py does not count the moves of a fight as
@@ -1522,39 +1666,34 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         });
     }
 
-    // Each tick, not at each change of the hit points: hits, heals and setHealth have many places (harm, regen, monks).
-    private void lowHp() {
-        lowHps.entrySet().removeIf(en -> {
-            if (!(Bukkit.getEntity(en.getKey()) instanceof LivingEntity le) || !le.isValid()) {
+    // The values t with the melee and the pierce armor each n less, down to 0 (aoe sunder, #4466); a negative armor stays.
+    private static Stats sunder(Stats t, int n) {
+        return new Stats(t.attack, t.melee > 0 ? Math.max(0, t.melee - n) : t.melee,
+                t.pierce > 0 ? Math.max(0, t.pierce - n) : t.pierce, t.ranged, t.pierces, t.classes, t.bonus, t.reload,
+                t.taken, t.friendly, t.less, t.ignores, t.rage, t.reflect);
+    }
+
+    // The speed charge (aoe speedcharge, #4545): vanilla has no "faster near the target" rule, so the plugin reads the
+    // distance to the target and sets a speed modifier on the mob that walks (the horse of a mounted unit). Below min
+    // blocks (the hit) the modifier goes, as the charge "dissipates once impact is made" (AoE2 wiki, "Samurai").
+    private void speedCharge() {
+        speedCharges.entrySet().removeIf(en -> {
+            if (!(Bukkit.getEntity(en.getKey()) instanceof Mob m) || !m.isValid()) {
                 return true;
             }
-            LowHp l = en.getValue();
-            Stats s = stats.get(en.getKey());
-            if (s == null) {
-                return false;
-            }
-            if (l.low && (s.melee() != l.melee || s.pierce() != l.pierce)) {
-                l.low = false;                               // a new aoe stats (an upgrade) set the normal armor
-            }
-            boolean low = le.getHealth() < l.hp;
-            if (low == l.low) {
-                return false;
-            }
-            if (low) {
-                l.normal = new int[] {s.melee(), s.pierce()};
-            }
-            int m = low ? l.melee : l.normal[0], p = low ? l.pierce : l.normal[1];
-            stats.put(en.getKey(), new Stats(s.attack(), m, p, s.ranged(), s.pierces(), s.classes(), s.bonus(),
-                    s.reload(), s.taken(), s.friendly(), s.less(), s.ignores(), s.rage(), s.reflect()));
-            AttributeInstance speed = le.getAttribute(Attribute.MOVEMENT_SPEED);
-            if (speed != null) {
-                speed.removeModifier(LOW_SPEED);
-                if (low) {
-                    speed.addTransientModifier(new AttributeModifier(LOW_SPEED, l.speed - 1,
-                            AttributeModifier.Operation.MULTIPLY_SCALAR_1));
+            double[] c = en.getValue();
+            LivingEntity t = target(m);
+            double d = t == null || t.getWorld() != m.getWorld() ? -1 : m.getLocation().distance(t.getLocation());
+            boolean on = d >= c[1] && d <= c[2];
+            LivingEntity walker = m.getVehicle() instanceof LivingEntity v ? v : m;
+            AttributeInstance speed = walker.getAttribute(Attribute.MOVEMENT_SPEED);
+            if (speed != null && on != (speed.getModifier(CHARGE_SPEED) != null)) {
+                speed.removeModifier(CHARGE_SPEED);
+                if (on) {
+                    speed.addTransientModifier(new AttributeModifier(CHARGE_SPEED, c[0],
+                            AttributeModifier.Operation.ADD_SCALAR));
                 }
             }
-            l.low = low;
             return false;
         });
     }
@@ -1564,7 +1703,8 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     }
 
     // part: the part of the AoE2 damage (0.5 for a unit behind the target of a Scorpion bolt, #1401). It gives the damage.
-    private double harm(LivingEntity victim, Stats t, Stats a, Entity from, double part) {
+    double harm(LivingEntity victim, Stats t, Stats a, Entity from, double part) {
+        a = vs(from, a);                                  // a unit is the target: the anti-unit mode (#4505)
         alerts.hit(victim, false, from);                  // before the hit: a unit that dies of it is attacked too
         fight(victim);
         fight(from);
@@ -1578,8 +1718,8 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         if (before > 0 && victim.getHealth() <= 0) {
             kill(from, a, t);
             unitKill(from, victim, a);
-            if (from != null && veterans.get(from.getUniqueId()) instanceof int[] v) {
-                v[2]++;                                            // a Jaguar Warrior gets stronger (#4467)
+            if (from != null) {
+                abilities.forEach(ab -> ab.killed(from));           // a Jaguar Warrior gets stronger (#4467)
             }
         }
         nameLine(victim);
@@ -1589,8 +1729,8 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         return damage * part;
     }
 
-    // A unit with the tag aoe2mc.gold.N (N gold per AoE2 minute while it attacks enemy units: the Varangian Guard,
-    // game/spoils.py, #2376) that hits an enemy unit adds N × its reload ticks to the score aoe_attack_gold of its side.
+    // A unit with the tag aoe2mc.gold.N (N gold per 100 AoE2 minutes while it attacks enemy units: the Varangian Guard,
+    // the Keshik, game/spoils.py, #2376) that hits an enemy unit adds N × its reload ticks to the score aoe_attack_gold of its side.
     // A hit on a building gives no gold: it does not come here.
     private static void gold(Entity from, Entity victim, Stats a) {
         String side = from == null || sameTeam(from, victim) ? null : side(from);
@@ -1832,11 +1972,16 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     @EventHandler
     public void onDeath(EntityDeathEvent ev) {               // the rider dies with its horse, else it stays (#732)
         stances.remove(ev.getEntity().getUniqueId());
+        if (ev.getEntity().getScoreboardTags().contains("aoe2mc.on_death")) {   // a Konnik (#4471): game/train.py fell()
+            ev.getEntity().getWorld().spawn(ev.getEntity().getLocation(), Marker.class,   // summons the new unit here
+                    m -> m.addScoreboardTag("aoe2mc.fell." + ev.getEntity().getUniqueId()));
+        }
         throwers.remove(ev.getEntity().getUniqueId());
         axes.remove(ev.getEntity().getUniqueId());
+        afterBlasts.remove(ev.getEntity().getUniqueId());
         Charge blast = detonations.remove(ev.getEntity().getUniqueId());
         if (blast != null) {                                     // Incendiaries: the fire ship explodes (#2165)
-            burst(ev.getEntity(), ev.getEntity().getLocation(), blast, false);
+            burst(ev.getEntity(), ev.getEntity().getLocation(), blast, spare.remove(ev.getEntity().getUniqueId()));
         }
         if (stats.containsKey(ev.getEntity().getUniqueId()) && ev.getEntity().getVehicle() instanceof Boat boat) {
             ev.getDrops().clear();                               // the crew of a ship at 0 hit points: the ship sinks (#1386)
@@ -1904,7 +2049,8 @@ public final class AoePlugin extends JavaPlugin implements Listener {
 
     @EventHandler(ignoreCancelled = true)
     public void onCombust(EntityCombustEvent ev) {           // the lava cauldron of a blacksmith: an invisible target
-        if (buildings.containsKey(ev.getEntity().getUniqueId())) {   // that burns shows the fire over the footprint (#1526)
+        if (buildings.containsKey(ev.getEntity().getUniqueId())   // that burns shows the fire over the footprint (#1526);
+                || ev.getEntity().getScoreboardTags().contains(BUILDING)) {   // also before "aoe building" (#4690)
             ev.setCancelled(true);
         }
     }
@@ -1944,6 +2090,13 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         return o != null ? o : sb.registerNewObjective("aoe_hp", Criteria.DUMMY, "Hit points");
     }
 
+    // The values a of from in its anti-unit mode (aoe vsunits, the Lou Chuan, #4505): a pierce attack; else a.
+    private Stats vs(Entity from, Stats a) {
+        VsUnits v = from == null ? null : vsUnits.get(from.getUniqueId());
+        return v == null ? a : new Stats(v.attack(), a.melee(), a.pierce(), true, true, a.classes(), v.bonus(), a.reload(),
+                a.taken(), a.friendly(), a.less(), a.ignores(), a.rage(), a.reflect());
+    }
+
     // The damage of a hit of a on building b, with the elevation of from over target (#2307)
     private static int damage(Stats a, Building b, Entity from, Entity target) {
         return (int) Math.max(1, Math.round(a.damage(b.stats) * elevation(from, target)));
@@ -1976,9 +2129,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         if (victim.getHealth() <= 0 && by != null && a != null) {
             kill(by, a, t);
             unitKill(by, victim, a);
-            if (veterans.get(by.getUniqueId()) instanceof int[] v) {
-                v[2]++;                                            // a Jaguar Warrior gets stronger (#4467)
-            }
+            abilities.forEach(ab -> ab.killed(by));                 // a Jaguar Warrior gets stronger (#4467)
         }
         nameLine(victim);
     }
@@ -2182,7 +2333,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
 
     /** The name and the hearts of the hit points; visible only when hurt or selected (#661). The first call keeps the
      *  custom name of the converter (the unit name in the player color) as the name. */
-    private void nameLine(Entity e) {
+    void nameLine(Entity e) {
         if (!(e instanceof LivingEntity le)) {
             return;
         }
@@ -2240,21 +2391,15 @@ public final class AoePlugin extends JavaPlugin implements Listener {
 
     private boolean ready(Entity unit, Stats a) {
         int now = Bukkit.getCurrentTick(), reload = a.reload;
-        int[] f = frenzies.get(unit.getUniqueId());
-        if (f != null) {                                     // a Temple Guard: each hit of the last f[1] ticks (#4468)
-            ArrayDeque<Integer> hits = frenzyHits.getOrDefault(unit.getUniqueId(), new ArrayDeque<>());
-            hits.removeIf(t -> now - t >= f[1]);
-            reload = Math.max(f[2], reload - f[0] * hits.size());
+        for (Ability ab : abilities) {
+            reload = ab.reload(unit, reload);                // a Temple Guard (#4468)
         }
         return now - lastHit.getOrDefault(unit.getUniqueId(), -1000) >= reload;
     }
 
     private void struck(Entity unit) {                       // a melee hit of the unit: its reload starts
-        int now = Bukkit.getCurrentTick();
-        lastHit.put(unit.getUniqueId(), now);
-        if (frenzies.containsKey(unit.getUniqueId())) {
-            frenzyHits.computeIfAbsent(unit.getUniqueId(), k -> new ArrayDeque<>()).add(now);
-        }
+        lastHit.put(unit.getUniqueId(), Bukkit.getCurrentTick());
+        abilities.forEach(ab -> ab.struck(unit));
     }
 
     // Each tick: a melee unit next to its target hits when its reload is over. The vanilla melee goal hits each 20
@@ -2283,7 +2428,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     // gives null after Mob#setTarget. The plugin keeps the target of a hoglin here; the other mobs use their own.
     private static final Map<UUID, UUID> BRAIN_TARGETS = new HashMap<>();
 
-    private static LivingEntity target(Mob mob) {
+    static LivingEntity target(Mob mob) {
         if (!(mob instanceof Hoglin)) {
             return mob.getTarget();
         }
@@ -2327,9 +2472,10 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         }
     }
 
-    // aoe charge and aoe detonate (#2165): the values go to the crew of a ship, which has the AoE2 values (#1386).
+    // aoe charge and aoe detonate (#2165): the values go to the crew of a ship or a minecart, which has the AoE2 values
+    // and dies (#1386, #3013, #4367).
     private boolean charges(CommandSender sender, String selector, Map<UUID, Charge> to, String ticks, String attack,
-                            String shots, String blast, String bonus) {
+                            String shots, String blast, String bonus, boolean foes) {
         Charge c;
         try {
             c = new Charge(Integer.parseInt(ticks), new Stats(Integer.parseInt(attack), 0, 0, false, false, Set.of(),
@@ -2340,8 +2486,13 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         }
         int n = 0;
         for (Entity e : select(sender, selector)) {
-            if (sailors(e) instanceof LivingEntity le) {
+            if (crew(e) instanceof LivingEntity le) {
                 to.put(le.getUniqueId(), c);
+                if (to == detonations && foes) {
+                    spare.add(le.getUniqueId());
+                } else if (to == detonations) {
+                    spare.remove(le.getUniqueId());
+                }
                 n++;
             }
         }
@@ -2852,7 +3003,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         return s != null && s.ranged();
     }
 
-    private static boolean sameTeam(Entity a, Entity b) {
+    static boolean sameTeam(Entity a, Entity b) {
         return allied(side(a), side(b));
     }
 
@@ -2921,7 +3072,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         return null;
     }
 
-    private static List<Entity> select(CommandSender sender, String selector) {
+    static List<Entity> select(CommandSender sender, String selector) {
         try {
             return Bukkit.selectEntities(sender, selector);
         } catch (IllegalArgumentException e) {
@@ -2937,18 +3088,31 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         if (args.length >= 2 && args[0].startsWith("ghost")) {          // the ghost of a building (#794)
             return ghost.command(sender, args, players(sender, args[1]));
         }
-        if (args.length == 3 && args[0].equals("accuracy")) {          // a trebuchet misses units (#2479)
+        for (Ability ab : abilities) {                                  // a unit ability (#4589)
+            if (args.length >= 1 && args[0].equals(ab.name()) && ab.command(this, sender, args)) {
+                return true;
+            }
+        }
+        if ((args.length == 3 || args.length == 5) && args[0].equals("accuracy")) {   // a trebuchet misses units (#2479)
             double part;
+            double[] miss;
             try {
                 part = Double.parseDouble(args[2]);
+                miss = args.length == 5 ? new double[] {Double.parseDouble(args[3]), Double.parseDouble(args[4])} : null;
             } catch (NumberFormatException e) {
                 sender.sendMessage("Bad number: " + e.getMessage());
                 return true;
             }
             int n = 0;
             for (Entity e : select(sender, args[1])) {
-                Entity t = crew(e);
-                accuracy.put(t.getUniqueId(), part);               // the crew of a siege unit has its stats (#836)
+                for (Entity t : concat(crew(e), e.getPassengers())) {   // the crew of a siege unit has its stats (#836),
+                    accuracy.put(t.getUniqueId(), part);                // the rider of a horse shoots (#732)
+                    if (miss != null) {
+                        misses.put(t.getUniqueId(), miss);
+                    } else {
+                        misses.remove(t.getUniqueId());
+                    }
+                }
                 n++;
             }
             sender.sendMessage("Accuracy: " + n + " units");
@@ -2976,70 +3140,85 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             sender.sendMessage("Dodge: " + n + " units");
             return true;
         }
-        if (args.length == 5 && args[0].equals("frenzy")) {          // a Temple Guard: faster in a long fight (#4468)
-            int[] f = new int[3];
+        if (args.length == 6 && args[0].equals("pack")) {             // a Monaspa: attack near its pack (#4469)
+            int per, max;
+            double blocks;
             try {
-                for (int i = 0; i < 3; i++) {
-                    f[i] = Integer.parseInt(args[i + 2]);
-                }
+                per = Integer.parseInt(args[2]);
+                blocks = Double.parseDouble(args[3]);
+                max = Integer.parseInt(args[4]);
             } catch (NumberFormatException e) {
                 sender.sendMessage("Bad number: " + e.getMessage());
                 return true;
             }
+            Pack pk = new Pack(Math.max(1, per), blocks, max, Set.of(args[5].split(",")));
             int n = 0;
             for (Entity e : select(sender, args[1])) {
-                for (Entity t : new Entity[] {crew(e), e.getVehicle()}) {   // the rider and its horse (#732)
-                    if (t != null) {
-                        frenzies.put(t.getUniqueId(), f);
-                    }
-                }
-                n++;
-            }
-            sender.sendMessage("Frenzy: " + n + " units");
-            return true;
-        }
-        if (args.length == 6 && args[0].equals("lowhp")) {             // a Jian Swordsman (#4472)
-            double hp, speed;
-            int melee, pierce;
-            try {
-                hp = Double.parseDouble(args[2]);
-                melee = Integer.parseInt(args[3]);
-                pierce = Integer.parseInt(args[4]);
-                speed = Double.parseDouble(args[5]);
-            } catch (NumberFormatException e) {
-                sender.sendMessage("Bad number: " + e.getMessage());
-                return true;
-            }
-            int n = 0;
-            for (Entity e : select(sender, args[1])) {
-                lowHps.put(e.getUniqueId(), new LowHp(hp, melee, pierce, speed));
-                n++;
-            }
-            sender.sendMessage("Low HP: " + n + " units");
-            return true;
-        }
-        if (args.length == 4 && args[0].equals("veteran")) {          // a Jaguar Warrior: attack for each kill (#4467)
-            int attack, max;
-            try {
-                attack = Integer.parseInt(args[2]);
-                max = Integer.parseInt(args[3]);
-            } catch (NumberFormatException e) {
-                sender.sendMessage("Bad number: " + e.getMessage());
-                return true;
-            }
-            int n = 0;
-            for (Entity e : select(sender, args[1])) {
-                int[] v = veterans.getOrDefault(e.getUniqueId(), new int[3]);   // an Elite upgrade keeps the kills
-                v[0] = attack;
-                v[1] = max;
                 for (Entity t : new Entity[] {crew(e), e.getVehicle(), e}) {   // the rider and its horse (#732)
                     if (t != null) {
-                        veterans.put(t.getUniqueId(), v);
+                        packs.put(t.getUniqueId(), pk);
                     }
                 }
                 n++;
             }
-            sender.sendMessage("Veteran: " + n + " units");
+            sender.sendMessage("Pack: " + n + " units");
+            return true;
+        }
+        if (args.length == 5 && args[0].equals("speedcharge")) {      // a Samurai: faster near its target (#4545)
+            double[] c;
+            try {
+                c = new double[] {Double.parseDouble(args[2]), Double.parseDouble(args[3]), Double.parseDouble(args[4])};
+            } catch (NumberFormatException e) {
+                sender.sendMessage("Bad number: " + e.getMessage());
+                return true;
+            }
+            int n = 0;
+            for (Entity e : select(sender, args[1])) {
+                Entity u = rider(e) instanceof Mob r ? r : e;      // the rider of a mounted unit has the target (#710)
+                speedCharges.put(u.getUniqueId(), c);
+                n++;
+            }
+            sender.sendMessage("Speed charge: " + n + " units");
+            return true;
+        }
+        if (args.length == 3 && args[0].equals("sunder")) {           // an Obuch: armor less per hit (#4466)
+            int armor;
+            try {
+                armor = Integer.parseInt(args[2]);
+            } catch (NumberFormatException e) {
+                sender.sendMessage("Bad number: " + e.getMessage());
+                return true;
+            }
+            int n = 0;
+            for (Entity e : select(sender, args[1])) {
+                for (Entity t : new Entity[] {crew(e), e.getVehicle(), e}) {   // the rider and its horse (#732)
+                    if (t != null) {
+                        sunders.put(t.getUniqueId(), armor);
+                    }
+                }
+                n++;
+            }
+            sender.sendMessage("Sunder: " + n + " units");
+            return true;
+        }
+        if ((args.length == 6 || args.length == 7 && args[6].equals("buildings")) && args[0].equals("afterblast")) {
+            AfterBlast b;                                              // Thunderclap Bombs (#4369)
+            try {
+                b = new AfterBlast(new Charge(Math.max(1, Integer.parseInt(args[2])), new Stats(Integer.parseInt(args[3]),
+                        0, 0, false, false, Set.of(), Map.of(), 20), Integer.parseInt(args[5]),
+                        Double.parseDouble(args[4])), args.length == 7);
+            } catch (NumberFormatException e) {
+                sender.sendMessage("Bad number: " + e.getMessage());
+                return true;
+            }
+            int n = 0;
+            for (Entity e : select(sender, args[1])) {
+                if (crew(e) instanceof LivingEntity le) {
+                    afterBlasts.put(le.getUniqueId(), b);
+                    n++;
+                }
+            }
+            sender.sendMessage("Afterblast: " + n + " units");
             return true;
         }
         if (args.length >= 2 && args[0].equals("allies")) {            // the alliances of the players (#1315)
@@ -3089,12 +3268,14 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             return true;
         }
         if (args.length == 7 && args[0].equals("charge")) {            // Siphons (#2165)
-            return charges(sender, args[1], charges, args[2], args[3], args[4], args[5], args[6]);
+            return charges(sender, args[1], charges, args[2], args[3], args[4], args[5], args[6], false);
         }
-        if (args.length == 4 && args[0].equals("chargeattack")) {      // Comitatenses (#4370)
+        if ((args.length == 4 || args.length == 6) && args[0].equals("chargeattack")) {   // Comitatenses (#4370)
             int[] c;
+            Blast b;
             try {
                 c = new int[] {Integer.parseInt(args[2]), Integer.parseInt(args[3])};
+                b = args.length == 6 ? new Blast(Double.parseDouble(args[4]), Double.parseDouble(args[5]), 0, false) : null;
             } catch (NumberFormatException e) {
                 sender.sendMessage("Bad value: " + e.getMessage());
                 return true;
@@ -3102,12 +3283,36 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             int n = 0;
             for (Entity e : select(sender, args[1])) {
                 meleeCharges.put(e.getUniqueId(), c);
+                meleeBlasts.compute(e.getUniqueId(), (k, v) -> b);
                 if (rider(e) instanceof Mob r) {
                     meleeCharges.put(r.getUniqueId(), c);        // the rider of a mounted unit hits (#710)
+                    meleeBlasts.compute(r.getUniqueId(), (k, v) -> b);
                 }
                 n++;
             }
             sender.sendMessage("Charge attack: " + n + " units");
+            return true;
+        }
+        if (args.length >= 6 && args.length <= 8 && args[0].equals("chargedvolley")) {   // Xianbei Raider (#4546)
+            ChargedVolley c;
+            try {
+                c = new ChargedVolley(Integer.parseInt(args[2]), Integer.parseInt(args[3]), new Stats(
+                        Integer.parseInt(args[4]), 0, 0, true, true, Set.of(), bonus(args[5]), 0, 1.0, 1.0, Map.of(),
+                        args.length > 7 && args[7].equals("1"), 0, 0.0),
+                        args.length > 6 ? Double.parseDouble(args[6]) : 0);
+            } catch (NumberFormatException | ArrayIndexOutOfBoundsException e) {
+                sender.sendMessage("Bad value: " + e.getMessage());
+                return true;
+            }
+            int n = 0;
+            for (Entity e : select(sender, args[1])) {
+                if (rider(e) instanceof RangedEntity) {
+                    e = rider(e);                                // a mounted archer: the rider shoots (#710)
+                }
+                chargedVolleys.put(e.getUniqueId(), c);
+                n++;
+            }
+            sender.sendMessage("Charged volley: " + n + " units");
             return true;
         }
         if (args.length == 2 && args[0].equals("cheats")) {
@@ -3128,8 +3333,9 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             sender.sendMessage("Destroy: " + n + " buildings");
             return true;
         }
-        if (args.length == 5 && args[0].equals("detonate")) {          // Incendiaries (#2165)
-            return charges(sender, args[1], detonations, "0", args[2], "1", args[3], args[4]);
+        if ((args.length == 5 || args.length == 6 && args[5].equals("foes")) && args[0].equals("detonate")) {
+            // Incendiaries (#2165); foes: Thunderclap Bombs (#4367)
+            return charges(sender, args[1], detonations, "0", args[2], "1", args[3], args[4], args.length == 6);
         }
         if (args.length >= 2 && args[0].equals("elevation")) {         // the damage from higher ground (#2307)
             try {
@@ -3363,28 +3569,6 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             sender.sendMessage("Sees: " + (!who.isEmpty() && e != null && who.get(0).canSee(e) ? 1 : 0));
             return true;
         }
-        if (args.length == 4 && args[0].equals("shield")) {           // a Hussite Wagon shields the units behind it (#4507)
-            double part;
-            int takes;
-            try {
-                part = Double.parseDouble(args[2]);
-                takes = Integer.parseInt(args[3]);
-            } catch (NumberFormatException e) {
-                sender.sendMessage("Bad number: " + e.getMessage());
-                return true;
-            }
-            int n = 0;
-            for (Entity e : select(sender, args[1])) {
-                for (Entity t : new Entity[] {crew(e), e.getVehicle()}) {   // the crew of a cart, the horse of a rider
-                    if (t != null) {
-                        shields.put(t.getUniqueId(), new Shield(part, takes));
-                    }
-                }
-                n++;
-            }
-            sender.sendMessage("Shield: " + n + " units");
-            return true;
-        }
         if ((args.length == 3 || args.length == 4 && Set.of("only", "first").contains(args[3]))
                 && args[0].equals("sight")) {
             double r;
@@ -3413,6 +3597,18 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         }
         if (args.length >= 3 && args[0].equals("sightedge")) {          // the edge of the line of sight (#3330)
             return sight.command(sender, args, args[1].equals("count") ? List.of() : players(sender, args[1]));
+        }
+        Dot.Rule fortDot = null;                             // the last field dot=damage:ticks:classes (Curare, #4641)
+        if (args.length >= 12 && args[0].equals("building") && args[args.length - 1].startsWith("dot=")) {
+            String[] d = args[args.length - 1].substring(4).split(":", 3);
+            try {
+                fortDot = new Dot.Rule(Double.parseDouble(d[0]), Math.max(1, Integer.parseInt(d[1])),
+                        d.length < 3 || d[2].equals("-") ? Set.of() : Set.of(d[2].split(",")));
+            } catch (RuntimeException e) {
+                sender.sendMessage("Bad number: " + e.getMessage());
+                return true;
+            }
+            args = Arrays.copyOf(args, args.length - 1);
         }
         if ((args.length == 11 || args.length == 12 || args.length >= 15 && args.length <= 18) && args[0].equals("building")) {
             int hp;
@@ -3448,6 +3644,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                     le.setCollidable(false);                  // units walk up to the walls, not off the slime
                     le.setFireTicks(0);                       // it can stand in lava before this command (#1526)
                     buildings.put(le.getUniqueId(), new Building(st, box, hp, b, range, min));
+                    dots.set(le.getUniqueId(), fortDot);       // the arrows of the building (Curare, #4641)
                     hp().getScoreFor(le).setScore(hp);
                     n++;
                 }
@@ -3590,26 +3787,6 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             sender.sendMessage("Throw: " + n + " units");
             return true;
         }
-        if ((args.length == 4 || args.length == 6) && args[0].equals("trample")) {   // the elephants (#4397)
-            Trample tr;
-            try {
-                tr = new Trample(Double.parseDouble(args[2]), Double.parseDouble(args[3]),
-                        args.length == 6 ? Double.parseDouble(args[4]) : 0, args.length == 6 && args[5].equals("1"));
-            } catch (NumberFormatException e) {
-                sender.sendMessage("Bad number: " + e.getMessage());
-                return true;
-            }
-            int n = 0;
-            for (Entity e : select(sender, args[1])) {
-                tramples.put(e.getUniqueId(), tr);
-                if (e instanceof Mob mob) {
-                    tramples.put(crew(mob).getUniqueId(), tr);       // the crew of a siege unit hits (#836)
-                }
-                n++;
-            }
-            sender.sendMessage("Trample: " + n + " units");
-            return true;
-        }
         if (args.length == 2 && args[0].equals("unwear")) {            // a redraw after a wall technology (#3071)
             int n = 0;
             for (Entity e : select(sender, args[1])) {
@@ -3668,6 +3845,26 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                 }
             }
             sender.sendMessage("Volley: " + n + " units");
+            return true;
+        }
+        if (args.length == 5 && args[0].equals("vsunits")) {          // the Lou Chuan (#4505)
+            VsUnits v;
+            try {
+                v = new VsUnits(Integer.parseInt(args[2]), bonus(args[3]), Double.parseDouble(args[4]));
+            } catch (RuntimeException e) {                 // a bad number or a bonus without ":"
+                sender.sendMessage("Bad value: " + e.getMessage());
+                return true;
+            }
+            int n = 0;
+            for (Entity e : select(sender, args[1])) {
+                for (Entity t : new Entity[] {e, crew(e), rider(e)}) {   // the ship and its crew, as aoe stats
+                    if (t != null) {
+                        vsUnits.put(t.getUniqueId(), v);
+                    }
+                }
+                n++;
+            }
+            sender.sendMessage("Vsunits: " + n + " units");
             return true;
         }
         if ((args.length == 2 || args.length == 3) && args[0].equals("where")) {

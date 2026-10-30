@@ -69,10 +69,10 @@ def test_the_classic_unique_units_exist_on_a_server(tmp_path):
     import io
     import json
 
-    import aoe2mc
     import scenarios
     from AoE2ScenarioParser.datasets.buildings import BuildingInfo
 
+    import aoe2mc
     from game import gather, run
     scn = scenarios.new_scenario(16)
     scn.unit_manager.add_unit(scenarios.PlayerId.ONE, BuildingInfo.CASTLE.ID, x=5, y=5)   # population 20

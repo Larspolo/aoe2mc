@@ -21,6 +21,7 @@ on:
 permissions:
   contents: read
   issues: write
+  actions: read      # the main run reads the artifacts of the green PR runs (step "Tree tested")
 
 concurrency:
   # A quick run does not stop the full run. Main gets one group per run: each merge gets a complete run, so a red
@@ -47,16 +48,39 @@ jobs:
         id: select
         if: github.event_name == 'pull_request'
         run: echo "tests=$(python3 tools/ci_select.py HEAD^1)" >> "$GITHUB_OUTPUT"
+      # A squash merge of a PR whose base did not move gives the tree that its PR run tested: the main run after the
+      # merge skips the lint and the fast tests (about 7 minutes of 7, #4653). The tree name is the artifact name.
+      - name: Tree tested
+        id: tested
+        if: github.ref == 'refs/heads/main' && github.event_name != 'schedule' && inputs.full != true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tree=$(git rev-parse 'HEAD^{tree}')
+          n=$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts?name=green-$tree&per_page=1" --jq .total_count || echo 0)
+          [ "$n" = 0 ] || { echo "a green PR run tested tree $tree: no fast tests"; echo "skip=1" >> "$GITHUB_OUTPUT"; }
       - name: Lint
-        if: steps.select.outputs.tests == ''
+        if: steps.select.outputs.tests == '' && !steps.tested.outputs.skip
         run: ruff check .
       # A change of data files only adds no test (owner, 2026-10-29, #4242): a run with an older ship_pr.py can push one.
       - name: Data-only change adds no test
         if: github.event_name == 'pull_request'
         run: |
-          python3 -c "import sys, subprocess; sys.path.insert(0, 'tools'); import ship_pr; c = subprocess.run(['git', 'diff', '--name-only', 'HEAD^1...HEAD'], capture_output=True, text=True).stdout.split(); bad = ship_pr.data_only_tests(c); sys.exit('a change of data files only must not add or change tests: ' + ' '.join(bad) + ' (docs/extend.md)') if bad else None"
+          python3 -c "import sys, subprocess; sys.path.insert(0, 'framework/tools'); import ship_pr; c = subprocess.run(['git', 'diff', '--name-only', 'HEAD^1...HEAD'], capture_output=True, text=True).stdout.split(); bad = ship_pr.data_only_tests(c); sys.exit('a change of data files only must not add or change tests: ' + ' '.join(bad) + ' (docs/extend.md)') if bad else None"
       - name: Fast tests
+        if: ${{ !steps.tested.outputs.skip }}
         run: pytest -n auto ${{ steps.select.outputs.tests }}   # all cores (#2415)
+      # Only a run of the whole fast suite marks its tree green (not the doc tests of ci_select).
+      - name: Tree name
+        id: tree
+        if: github.event_name == 'pull_request' && steps.select.outputs.tests == ''
+        run: git rev-parse 'HEAD^{tree}' > tree.txt && echo "tree=$(cat tree.txt)" >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@v4
+        if: steps.tree.outputs.tree
+        with:
+          name: green-${{ steps.tree.outputs.tree }}
+          path: tree.txt
+          retention-days: 1
       # Two green PRs can merge into a main whose plugin does not compile (#2418): compile it when the change (a PR
       # against its base, a merge on main) touches game/plugin, as game/run.py builds it (#2437).
       - name: Plugin changed

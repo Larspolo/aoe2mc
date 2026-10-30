@@ -5,9 +5,10 @@ import os
 import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "game"))
-import aoe2mc  # noqa: E402
 import train  # noqa: E402
 from test_scenario_mode import game  # noqa: E402
+
+import aoe2mc  # noqa: E402
 
 
 def trig(player=1, tech="LOOM", looping=False):

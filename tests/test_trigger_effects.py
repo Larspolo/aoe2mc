@@ -2,8 +2,9 @@
 effect with the context of its trigger, and an effect with no handler gives no command."""
 import re
 
-import aoe2mc
 from test_trigger_objects import effect, lines
+
+import aoe2mc
 
 
 def test_trigger_files_runs_the_handler_of_each_effect_in_order(monkeypatch):

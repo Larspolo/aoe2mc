@@ -6,8 +6,8 @@ import shutil
 import time
 
 import pytest
-from test_damage import health
 from menu_line import item
+from test_damage import health
 from test_loom import menus
 from test_tower_upgrades import research, setup
 

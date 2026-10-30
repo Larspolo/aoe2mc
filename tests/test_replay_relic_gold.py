@@ -1,10 +1,9 @@
 """Live replay: each relic in an own monastery gives monk.GOLD per AoE2 second to its player's estimate; a relic that a
 monk carries gives none (#4011). Fake RCON."""
-from test_replay_relic_monastery import CHURCH
-from test_replay_relic_pickup import MONK, RELIC, play
-
 import monk
 import replay
+from test_replay_relic_monastery import CHURCH
+from test_replay_relic_pickup import MONK, RELIC, play
 
 RELIC2 = dict(RELIC, ref=31, tile=[5.5, 11.5])
 

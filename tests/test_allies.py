@@ -1,7 +1,7 @@
 """game/gather.py: the units of an allied player (the same team of aoe2mc.json) are not enemies (#1312)."""
-from game import gather
-
 from test_gather import FakeServer, grid
+
+from game import gather
 
 UNITS = [{"kind": "unit", "name": "MILITIA", "player": p, "uuid": f"m-{p}", "tile": [2.5 + p, 2.5]} for p in (1, 2, 3)]
 

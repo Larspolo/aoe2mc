@@ -1,7 +1,7 @@
 name: After release
 
 # Removes the label `after-release` from each open issue when a release tag v* is pushed (#4175). The owner holds a
-# ticket until the next release with this label: `tools/dashboard.py` skips it (`AFTER`), so no run takes it before.
+# ticket until the next release with this label: `framework/tools/dashboard.py` skips it (`AFTER`), so no run takes it before.
 on:
   push:
     tags: ["v*"]

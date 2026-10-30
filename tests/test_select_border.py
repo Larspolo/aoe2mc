@@ -4,7 +4,6 @@ import json
 import shutil
 
 import pytest
-
 from test_select_box import box
 from test_select_type import setup
 

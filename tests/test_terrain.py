@@ -1,9 +1,9 @@
 """Every AoE2 terrain gives valid Minecraft blocks and a valid biome."""
+import mcvalid
 import pytest
 from AoE2ScenarioParser.datasets.terrains import TerrainId
 
 import aoe2mc
-import mcvalid
 
 
 @pytest.mark.parametrize("name", sorted(t.name for t in TerrainId))

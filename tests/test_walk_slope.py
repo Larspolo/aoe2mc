@@ -4,9 +4,9 @@ import shutil
 import time
 
 import pytest
+from test_unit_ai import data
 
 from game import ai, run
-from test_unit_ai import data
 
 STEPS = 24                                 # a slope of one block down per block, as the hill of samples/de-64.3
 

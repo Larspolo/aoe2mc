@@ -1,4 +1,4 @@
-"""The git calls of tools/health.py and tools/metrics_log.py end in a fixed time (#3290)."""
+"""The git calls of framework/tools/health.py and framework/tools/metrics_log.py end in a fixed time (#3290)."""
 import datetime
 import subprocess
 

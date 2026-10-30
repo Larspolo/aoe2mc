@@ -1,12 +1,12 @@
 """The generic fallback building is furnished inside (#498)."""
 from collections import Counter
 
+import mcvalid
 import pytest
+from test_furnish_landmarks import blocks
 
 import aoe2mc
 import buildings
-import mcvalid
-from test_furnish_landmarks import blocks
 
 NAME = "UNKNOWN_BUILDING"                                # select() gives generic() for a name it does not know
 

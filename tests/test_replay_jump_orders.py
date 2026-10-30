@@ -4,11 +4,10 @@ import os
 import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "game"))
+import replay  # noqa: E402
 from test_replay import Fake, data  # noqa: E402
 from test_replay_ai import MIL  # noqa: E402
 from test_replay_walk import VIL  # noqa: E402
-
-import replay  # noqa: E402
 
 
 def jump(timeline, to=60000):

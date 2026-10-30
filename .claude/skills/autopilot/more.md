@@ -3,20 +3,20 @@
 Read this file after step 8 when the argument asks for more than 1 ticket (part of the `autopilot` skill, #1700).
 
 If the argument asks for more than 1 ticket, go back to step 2 after step 8 (finish stalled PRs of other runs, then new owner
-feedback, step 3: run `python3 tools/cycle_start.py --last N` again, N = your last ticket: within a priority it puts
+feedback, step 3: run `python3 framework/tools/cycle_start.py --last N` again, N = your last ticket: within a priority it puts
 the tickets of the same epic or files first, and the code that you read already makes them cheaper). The PRs of this run (on `<session branch>` or `<session branch>-<k>`)
 are yours in step 2: when one is red or conflicted, check out its branch (`git fetch origin <b> && git checkout -B <b>
-origin/<b>`) and fix it there (`python3 tools/merge_main.py --push N`).
+origin/<b>`) and fix it there (`python3 framework/tools/merge_main.py --push N`).
 
 Do each later ticket on a new branch, also while the PR of the last ticket is open: do not wait for that PR (one run
 spent 32 calls on such a wait, 2026-10-28). Before the claim of step 5, run `git fetch origin main && git checkout -B
 <session branch>-<k> origin/main` (k = 2, 3, ...: one more for each new branch of this run; fetch `main` alone: a fetch
 that also names a deleted branch fails as a whole). The scheduled task allows the push to these branches.
-`tools/claim.py` names the owner of a claim by the current branch, so claim, beat, guard and push on the new branch.
+`framework/tools/claim.py` names the owner of a claim by the current branch, so claim, beat, guard and push on the new branch.
 Push it with `git push -u origin <session branch>-<k>`, and check that the output shows `-> <session branch>-<k>`.
 The open PR of the last ticket needs no wait: Automerge merges it when CI is green, and `unconflict.yml` merges `main`
 into it. Never force-push: the auto mode denies it ("Git Destructive"; 33 runs lost a step on it on 2026-10-26).
-Start a next work item only when the context is below 120k tokens (`python3 tools/tokens.py` prints it as `peak`),
+Start a next work item only when the context is below 120k tokens (`python3 framework/tools/tokens.py` prints it as `peak`),
 or below the `context:` line of the brief of the pacer (`pacer.context_limit`: higher while the task is near its hourly
 start limit, so that no fresh run can start, #4190).
 A work item is a ticket, a takeover of a stuck PR, a refill, an epic check, a roadmap review or a process review: two

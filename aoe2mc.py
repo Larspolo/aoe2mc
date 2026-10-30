@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 aoe2mc - Convert an Age of Empires II: DE scenario (.aoe2scenario) or the start state of a recorded game
-(.aoe2record) or an old scenario (.scx, format 1.21; .scn, 1.18 to 1.20) to a Minecraft Java world. A campaign (.aoe2campaign) gives one world per scenario; an old campaign
+(.aoe2record) or of a saved game (.aoe2spgame, .aoe2mpgame) or an old scenario (.scx, format 1.21; .scn, 1.18 to 1.20) to a Minecraft Java world. A campaign (.aoe2campaign) gives one world per scenario; an old campaign
 (.cpx, .cpn) too; its scenarios of other formats (not .scn 1.18 to 1.20, .scx 1.21 or HD 1.22 to 1.26) give the files and the
 steps to save them in the DE editor.
 
@@ -48,6 +48,7 @@ import math
 import os
 import re
 import shutil
+import struct
 import sys
 import textwrap
 import time
@@ -254,6 +255,8 @@ def object_kinds(old=True):
 
 
 RECORDS = (".aoe2record", ".mgz", ".mgx", ".mgl")      # recorded games: DE, HD; UserPatch, AoC; AoK
+SAVES = (".aoe2spgame", ".aoe2mpgame")                  # saved games of DE: single and multiplayer (#4564)
+SAVE_LOG_VERSION = 5                                    # log_version of the DE records 63.0 and 64.3 (saved-games.md)
 RANDOM_MAP = "random-map:"          # the source name of --random-map KIND (#993): read_map makes the map of the seed
 
 
@@ -266,7 +269,7 @@ def read_map(path, seed=1, players=2, teams=None):
         return map_description(rmap.random_map(p[len(RANDOM_MAP):], seed, players, teams), path)
     if p.endswith(".rms"):
         return read_rms(path, seed, players, teams)
-    return (read_record if p.endswith(RECORDS) else read_scx if p.endswith((".scx", ".scn")) or old_format(path) else
+    return (read_record if p.endswith(RECORDS) else read_saved if p.endswith(SAVES) else read_scx if p.endswith((".scx", ".scn")) or old_format(path) else
             read_json if p.endswith(".json") else read_scenario)(path)
 
 
@@ -285,7 +288,8 @@ def read_rms(path, seed, players=2, teams=None):
     with open(path, encoding="utf-8", errors="replace") as f:
         text = f.read()
     try:
-        return map_description(rmap.generate(text, seed, players, teams=teams, folder=os.path.dirname(path)), path)
+        return map_description(rmap.generate(text, seed, players, teams=teams, folder=os.path.dirname(path),
+                                                     name=os.path.basename(path)), path)
     except rmap.RmsError as e:
         raise OptionError(f"{path}: {e}") from None
 
@@ -301,8 +305,9 @@ def read_scx(path):
     """An old scenario (.scx format 1.21, #312; .scn formats 1.18 to 1.20, #3860), as read_scenario returns it.
     The old terrain and object IDs are the DE IDs. A map that is not square gets the edge tiles repeated to a square.
     Old scenarios give no texts here."""
-    import scx
     from AoE2ScenarioParser.datasets.terrains import TerrainId
+
+    import scx
     try:
         s = scx.read(path)
     except scx.ScxError as e:
@@ -394,10 +399,10 @@ def apply_layers(terrain, layer, terrain_names):
 
 
 def read_scenario(path):
-    from AoE2ScenarioParser.scenarios.aoe2_de_scenario import AoE2DEScenario
-    from AoE2ScenarioParser.datasets.terrains import TerrainId
     from AoE2ScenarioParser.datasets.techs import TechInfo
+    from AoE2ScenarioParser.datasets.terrains import TerrainId
     from AoE2ScenarioParser.datasets.trigger_lists import ColorMood, SecondaryGameMode, VictoryCondition
+    from AoE2ScenarioParser.scenarios.aoe2_de_scenario import AoE2DEScenario
 
     with contextlib.redirect_stdout(io.StringIO()):   # the parser prints a lot of status text
         scn = AoE2DEScenario.from_file(path)
@@ -439,6 +444,12 @@ def read_scenario(path):
             name = (p.tribe_name or "").strip()     # the name of the "Players" tab; "Player N" is the default (#3295)
             if name and name != f"Player {p.player_id}":
                 players[p.player_id]["name"] = name
+            ai = (getattr(p, "ai_script", "") or "").strip()     # the embedded AI script of the player (#4531)
+            if ai:
+                players[p.player_id]["ai"] = ai
+            elif (getattr(p, "personality", "") or "").strip() not in ("", "None"):
+                print(f"Player {p.player_id}: the AI {p.personality.strip()} has no embedded script: its bot plays by "
+                      "its own logic.", file=sys.stderr)
             if p.lock_civ:                          # "Lock Civilizations": the player keeps its civilization (#3295)
                 players[p.player_id]["lock_civ"] = True
             off = sorted({techs.get(i, f"TECH_{i}") for i in p.disabled_techs or ()} |   # the tab "Options" (#3299)
@@ -512,20 +523,86 @@ def read_scenario(path):
 ANNEXES = {618, 619, 620}       # the three annex parts of a town center: the TC design draws them
 
 
-def read_record(path):
-    """The start state of a recorded game (the header snapshot), as read_scenario returns it. The mgz model
-    has no rotation (0) and no texts; the start view of a player is its start position."""
+def saved_match(path):
+    """The mgz match of a saved game of DE (SAVES, #4564; docs/research/saved-games.md): a save is the header of a
+    record. A file that ends after the header gets the log_version and an empty meta block (40 zero bytes) in memory,
+    as parse_match needs them. Not a save: SystemExit with one line. replay:restored reads a save here too."""
+    import io
     try:
         from mgz.model import parse_match
     except ImportError:
-        raise SystemExit("A .aoe2record file needs the mgz package: python3 -m pip install mgz") from None
-    from AoE2ScenarioParser.datasets.terrains import TerrainId
+        raise SystemExit("A saved game needs the mgz package: python3 -m pip install mgz") from None
+    with open(path, "rb") as f:
+        data = f.read()
+    end = int.from_bytes(data[:4], "little") if len(data) >= 8 else 0
+    if not 8 < end <= len(data):
+        raise SystemExit(f"{path}: not a saved game of AoE2 DE (no header block)")
+    if len(data) < end + 4:
+        data = data[:end] + SAVE_LOG_VERSION.to_bytes(4, "little") + bytes(40)
     new_saves()
+    import mgz.fast.header as header
+    parse_player, attributes = header.parse_player, {}
+
+    def player(f, number, players, save):          # mgz skips the attributes of a player: read them first (#4565)
+        at = f.tell()
+        *_, length = header.unpack(f"<bx{players}x{players if save >= 61.5 else 9}i5xh", f)
+        _, n = header.unpack(f"<{length - 1}s2xIx", f)
+        attributes[number] = struct.unpack(f"<{n}f", f.read(4 * n))   # 8 bytes each from save 63: the floats first
+        f.seek(at)
+        return parse_player(f, number, players, save)
+    header.parse_player = player
     try:
-        with open(path, "rb") as f:
-            match = parse_match(f)
-    except RuntimeError as e:      # the mgz model reads DE 13.34 and later only: read the header of older games
-        return read_old_record(path, e)
+        match = parse_match(io.BytesIO(data))
+    except Exception as e:          # mgz raises many kinds on bytes that are not a save
+        raise SystemExit(f"{path}: not a saved game of AoE2 DE that mgz can read ({e})") from None
+    finally:
+        header.parse_player = parse_player
+    match.attributes = attributes
+    return match
+
+
+SAVE_RESOURCES = {"food": 0, "wood": 1, "stone": 2, "gold": 3}   # the attributes of a player (resource IDs of AoE2)
+SAVE_AGE = 6                                                      # the attribute "current age": 0 is the Dark Age
+SAVE_AGES = ("dark", "feudal", "castle", "imperial")              # game/data/setup.jsonl "Starting age"
+
+
+def read_saved(path):
+    """The state of a saved game of DE (#4564) in the form of read_record. Each player gets the resources and the age
+    of the save (#4565) and "saved": the game program starts it with them (scenario.start_values). mgz reads no
+    technologies: the age gives them (docs/research/saved-games.md)."""
+    match = saved_match(path)
+    return read_saved_state(match, read_record(path, match))
+
+
+def read_saved_state(match, state):
+    """Put the resources, the age and "saved" of each player of a match of saved_match on the players of state
+    (read_record): for a save and a restored record (#4592), whose header is its save."""
+    for number, a in match.attributes.items():
+        if number in state[6] and number and len(a) > SAVE_AGE:
+            p = state[6][number]
+            p["resources"] = {r: int(a[i]) for r, i in SAVE_RESOURCES.items()}
+            p["age"], p["saved"] = SAVE_AGES[min(max(int(a[SAVE_AGE]), 0), 3)], True
+    return state
+
+
+def read_record(path, match=None):
+    """The start state of a recorded game (the header snapshot), as read_scenario returns it. The mgz model
+    has no rotation (0) and no texts; the start view of a player is its start position. match: a parsed mgz match
+    (read_saved)."""
+    from AoE2ScenarioParser.datasets.terrains import TerrainId
+    if match is None:
+        try:
+            from mgz.model import parse_match
+        except ImportError:
+            raise SystemExit("A .aoe2record file needs the mgz package: python3 -m pip install mgz") from None
+        new_saves()
+        try:
+            with open(path, "rb") as f:
+                match = parse_match(f)
+        except RuntimeError as e:  # the mgz model reads DE 13.34 and later only: read the header of older games
+            return read_old_record(path, e)
+        if getattr(match, "restored", False):   # the header is the save at the restore time (#4592)
+            return read_saved_state(m := saved_match(path), read_record(path, m))
     size = match.map.dimension
     terrain = np.zeros((size, size), np.int16)
     elevation = np.zeros((size, size), np.float32)
@@ -540,7 +617,11 @@ def read_record(path):
         civ = (p.civilization or "?").upper()
         players[p.number] = {"team": teams.get(p.number), "color": buildings.COLOR_NAMES[p.color_id] if 0 <= p.color_id < 8 else "light_gray",
                              "arch": buildings.CIV_TO_ARCH.get(civ, "western"), "civ": civ,
-                             "view": (p.position.x, p.position.y) if p.position else None}
+                             "view": (p.position.x, p.position.y) if p.position and p.position.x is not None else None}
+        if getattr(p, "name", None):   # the names of the replay (#4667); a bot or an offline game has no profile
+            players[p.number]["name"] = p.name
+        if (getattr(p, "profile_id", None) or 0) > 0:
+            players[p.number]["profile"] = p.profile_id
 
     kinds, objects = object_kinds(), []
     for player, objs in [(0, match.gaia)] + [(p.number, p.objects) for p in match.players]:
@@ -584,6 +665,7 @@ def read_old_record(path, error):
     "for performance reasons": read them too. error: the error of the mgz model, for the message."""
     import sys
     from importlib.metadata import version
+
     from AoE2ScenarioParser.datasets.terrains import TerrainId
     from mgz.summary.full import FullSummary
     skip = trees_switch(sys.modules["mgz.header.initial"].player)
@@ -593,7 +675,9 @@ def read_old_record(path, error):
             s = FullSummary(f)
         s.get_dataset()
     except (RuntimeError, ValueError) as e:
-        raise SystemExit(f"{path}: mgz {version('mgz')} cannot read this recorded game ({error}; {e})") from None
+        # a file cut in the header (a game of the first seconds, #4661) has no start yet
+        raise SystemExit(f"{path}: the record has no start yet (mgz {version('mgz')} cannot read this recorded game "
+                         f"({error}; {e}))") from None
     finally:
         skip.keyfunc = keyfunc
     h = s.get_header()
@@ -637,6 +721,7 @@ def de_queue(parse_action):
     """mgz 1.8.51 reads DE_QUEUE of new records (an object count, 4 bytes, building type, unit, amount, the object
     IDs) with 4 bytes too many before the IDs, and returns ERROR (469 times in samples/, #372). Read it here."""
     import struct
+
     from mgz.fast import Action
 
     def parse(action_type, data):
@@ -681,6 +766,7 @@ def new_saves():
     mgz.fast.header.parse_de. A patch of its source, not a copy of the parser; once, as the fix belongs in mgz."""
     import inspect
     import textwrap
+
     from mgz.fast import header
     if getattr(header.parse_de, "new_saves", False):
         return
@@ -704,13 +790,15 @@ TIMELINE_KEYS = {"building_id": "type", "unit_id": "type", "technology_id": "tec
                  "player_id_to": "to"}                               # the receiver of a tribute (#1086)
 
 
-def read_timeline(path):
+def read_timeline(path, state=None):
     """The commands of a recorded game in time order (#372): a list of events {"time": ms, "player": number or
     None, "kind": "build", "wall", "queue", "research", "move", "order", "garrison", "chat" ..., and the data of the
     kind: "type" and "name" (building or unit, as in read_record), "tile" [x, y], "end" [x, y] (wall),
     "technology", "objects" (the object IDs that the command selects), "target" (object ID), "text" (chat)}.
     Tiles are AoE2 tiles. Actions that mgz cannot read are left out. None for the games that the mgz model
-    cannot read (read_old_record reads only their start state, #376)."""
+    cannot read (read_old_record reads only their start state, #376). All times are game times: a restored record
+    starts with a "restore" event at the game time of its save (#4568; mgz adds it to chat and age times only).
+    state: a dict that gets "complete": True when the record has the end of the game (mgz match.completed, #4664)."""
     import mgz.fast as fast
     from mgz.model import parse_match
     names, parse = object_kinds(), fast.parse_action
@@ -724,12 +812,15 @@ def read_timeline(path):
     finally:
         fast.parse_action = parse
     ms = lambda t: int(round(t.total_seconds() * 1000))           # noqa: E731
-    events = []
+    if state is not None:
+        state["complete"] = bool(getattr(match, "completed", False))
+    restore = ms(match.restored_at) if getattr(match, "restored", False) else 0
+    events = [{"time": restore, "player": None, "kind": "restore"}] if restore else []
     for a in match.actions:
         kind = a.type.name.lower().removeprefix("de_")
         if kind == "error":
             continue
-        e = {"time": ms(a.timestamp), "player": a.player.number if a.player else None, "kind": kind}
+        e = {"time": ms(a.timestamp) + restore, "player": a.player.number if a.player else None, "kind": kind}
         for k, v in a.payload.items():
             if k in TIMELINE_KEYS and v is not None and v != -1:
                 e[TIMELINE_KEYS[k]] = v
@@ -977,6 +1068,24 @@ def turn_map(k, size, terrain, elevation, objects, players):
         if p.get("view"):
             p["view"] = turn_tile(*p["view"], size, k)
     return np.rot90(terrain, k).copy(), np.rot90(elevation, k).copy()
+
+
+def water_tiles(terrain, tnames):
+    """The water tiles of the map (bool per tile): name_timeline needs them for the ships."""
+    return np.vectorize(lambda t: terrain_style(tnames.get(int(t), "GRASS_1"))["depth"] > 0, otypes=[bool])(terrain)
+
+
+def record_timeline(src, turn=0, state=None):
+    """The timeline of a recorded game as convert() writes it to aoe2mc.json: read, named, turned by `turn` quarter
+    turns and through JSON. The live replay reads a record that AoE2 DE still writes again with it (#4663);
+    state: as read_timeline (#4664)."""
+    size, terrain, _, tnames, _, objects, _ = read_map(src)
+    timeline = read_timeline(src, state)
+    if timeline is None:
+        return []
+    name_timeline(objects, timeline, water=water_tiles(terrain, tnames))
+    turn_timeline(timeline, size, turn)
+    return json.loads(json.dumps(timeline))
 
 
 def turn_timeline(timeline, size, k):
@@ -2797,7 +2906,7 @@ def write_objects(path, size, T, H, players, objects, cols, ground, timeline=Non
         objs.append(e)
     data = {"map_size": size, "tile_size": T, "level_height": H, "mood": mood,
             "players": {str(pid): {"civ": p["civ"], "color": p["color"], "arch": p["arch"]}
-                        | {k: p[k] for k in ("team", "neutral", "resources", "pop_limit", "computer", "age", "name", "lock_civ", "start", "disabled") if k in p} for pid, p in sorted(players.items())},
+                        | {k: p[k] for k in ("team", "neutral", "resources", "pop_limit", "computer", "ai", "age", "name", "lock_civ", "start", "disabled", "saved", "techs") if k in p} for pid, p in sorted(players.items())},
             "objects": objs, "yaw": float(yaw)}
     n, wet = cols.n, cols.wtop > cols.top
     data["ground"] = [" ".join("-" if wet[x, z] else str(ground[x, z]) for x in range(n)) for z in range(n)]
@@ -5943,8 +6052,7 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
     record = src.lower().endswith(RECORDS)
     timeline = read_timeline(src) if record else None
     if timeline is not None:
-        name_timeline(objects, timeline, water=np.vectorize(lambda t: terrain_style(tnames.get(int(t), "GRASS_1"))["depth"] > 0,
-                                                            otypes=[bool])(terrain))
+        name_timeline(objects, timeline, water=water_tiles(terrain, tnames))
     at_stats = Counter()
     if at is not None:
         if timeline is None:
@@ -6211,6 +6319,7 @@ def convert_campaign(src, out, only=None, name=None, **kw):
     An old campaign (.cpx, .cpn): convert its scenarios of a format in scx.FORMATS (.scn 1.18 to 1.20, .scx 1.21, HD,
     #347, #3863); write the other scenario files to out/ and stop with the steps for the DE editor."""
     import tempfile
+
     import scx
     version, title, entries = read_campaign(src)
     if only is not None and not 1 <= only <= len(entries):
@@ -6291,14 +6400,15 @@ def match_record(game, profile):
     have = sorted(glob.glob(os.path.join(folder, "*.aoe2record")))
     if have:
         return have[0]
-    from tools import record_api       # a tool of the repository clone, not of the installed package
+    from tools import record_api  # a tool of the repository clone, not of the installed package
     os.makedirs(folder, exist_ok=True)
     return record_api.download(game, profile, folder)
 
 
 def main(argv=None):
     ap = argparse.ArgumentParser(description="Convert an AoE2 DE scenario to a Minecraft Java world.")
-    ap.add_argument("scenario", nargs="?", help=".aoe2scenario file, .aoe2record, .mgz, .mgx or .mgl (the start state of a recorded game), .scx "
+    ap.add_argument("scenario", nargs="?", help=".aoe2scenario file, .aoe2record, .mgz, .mgx or .mgl (the start state of a recorded game), "
+                    ".aoe2spgame or .aoe2mpgame (the state of a saved game of DE), .scx "
                     "(an old scenario, format 1.21), .json (a map description, README), .rms (the land of a random map "
                     "script, with --seed), or "
                     ".aoe2campaign, .cpx or .cpn (one world per scenario; old scenarios of other formats than .scn 1.18 to "

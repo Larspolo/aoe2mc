@@ -6,12 +6,12 @@ import contextlib
 import io
 import os
 
+import mcvalid
 import pytest
+import world_reader
+from entities import entity_ids
 
 import aoe2mc
-import mcvalid
-import world_reader
-from conftest import entity_ids
 
 SAMPLES = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "samples")
 

@@ -4,10 +4,10 @@ import shutil
 import time
 
 import pytest
-
-from game import ai, combat, run
 from test_ranged import data
 from test_siege_walk import summon
+
+from game import ai, combat, run
 
 X0, Y, Z0 = 1, 200, 1                         # a floor in the air, inside the world border
 

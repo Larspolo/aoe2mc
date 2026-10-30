@@ -1,4 +1,4 @@
-"""tools/health.py: phase minutes, quota per merged PR, release per 7-day quota and weak spots (#899)."""
+"""framework/tools/health.py: phase minutes, quota per merged PR, release per 7-day quota and weak spots (#899)."""
 import datetime
 
 import health

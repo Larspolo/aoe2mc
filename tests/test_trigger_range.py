@@ -2,11 +2,10 @@
 order into the data storage aoe2mc:orders; the scenario mode of the game program sends the new range of each tagged
 ranged unit with the plugin (`aoe range`)."""
 import numpy as np
+from test_scenario_mode import game
+from test_scenario_patrol import scenario, trigger
 
 import aoe2mc
-from test_scenario_patrol import scenario, trigger
-from test_scenario_mode import game
-
 from game import combat
 
 

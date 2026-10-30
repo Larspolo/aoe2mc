@@ -63,7 +63,7 @@ def center(rect, T):
 
 def markets(g):
     """The block footprints of the complete own markets."""
-    import train                                                   # train imports gather, gather imports this module
+    import train  # train imports gather, gather imports this module
     return sorted(r for r, n in train.homes(g).items() if n == "MARKET")
 
 
@@ -81,7 +81,7 @@ def walk(g, uuid, rect, pos):
 def covers(g, cell, auras):
     """The values of auras ({name: (value, tiles of the aura from each edge)}) of the complete buildings of the player
     and its allies (gather.allied) with the block cell (x, z) in their aura."""
-    import gather                                                  # gather imports this module
+    import gather  # gather imports this module
     start = [(o["player"], o["name"], (x0, x1, z0, z1)) for o in g.data["objects"] if o["kind"] == "building"
              and o["name"] in auras for x0, z0, x1, z1 in [o["footprint"]]]
     built = [(s["player"], s["name"], tuple(s["footprint"])) for s in g.sites if s["name"] in auras and s.get("done")]
@@ -103,7 +103,7 @@ def heal(g, dt):
     g.cart_heal = vars(g).get("cart_heal", 0.0) + dt if carts and HEALS else 0.0
     if g.cart_heal < HEAL_EVERY:
         return
-    import monk                                                    # monk imports gather, gather imports this module
+    import monk  # monk imports gather, gather imports this module
     dt, g.cart_heal = g.cart_heal, 0.0
     for u, (x, _, z) in sorted(g.positions(carts).items()):
         if (rate := max(covers(g, (math.floor(x), math.floor(z)), HEALS), default=0)) and (h := monk.health(g, u)) \
@@ -114,7 +114,8 @@ def heal(g, dt):
 def leg(g, uuid, cell):
     """The plugin walks cart uuid to the block cell (x, z) at the AoE2 speed of a trade cart (Caravan: train.speed),
     faster when the cell is in the aura of a Caravanserai (aura): the end cell of a leg gives the speed of the leg."""
-    import ai, train                                               # both import gather, gather imports this module
+    import ai  # both import gather, gather imports this module
+    import train
     x, z = cell
     ai.move(g, uuid, CART, g.map.T, x + 0.5, g.map.y(x, z), z + 0.5, ai.NORMAL * train.speed(g, CART, uuid) * aura(g, cell))
 
@@ -163,7 +164,9 @@ def tick(g):
         if math.dist((pos[u][0], pos[u][2]), (x + 0.5, z + 0.5)) > ARRIVE:
             continue
         if t["to"] == t["home"]:
-            t["rest"] += gold(center(t["home"], g.map.T), center(t["market"], g.map.T), g.map.n / g.map.T) * gold_rate(g)
+            import civs  # civs imports monk, which imports this module
+            t["rest"] += gold(center(t["home"], g.map.T), center(t["market"], g.map.T), g.map.n / g.map.T) * gold_rate(g) \
+                * civs.value("trade_gold", civs.civ(g), 1)            # Palmyrans +20 % (#4446); the relics do not get it
             n, t["rest"] = int(t["rest"]), t["rest"] - int(t["rest"])
             if n:
                 g.earn("gold", n)

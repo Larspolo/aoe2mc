@@ -19,16 +19,18 @@ import uuid as uuids
 from collections import namedtuple
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from gather import NORMAL, predator  # noqa: E402
+import abilities  # noqa: E402
 import civs  # noqa: E402
 import garrison  # noqa: E402
 import table  # noqa: E402
+from abilities import vs_units  # noqa: E402
+from gather import NORMAL, predator  # noqa: E402
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import units  # noqa: E402
 from units import pretty  # noqa: E402
 
-Stats = namedtuple("Stats", "hp attack melee pierce range reload bonus classes blast", defaults=({}, (), 0))
+Stats = namedtuple("Stats", "hp attack melee pierce range reload bonus classes blast passes pass_part", defaults=({}, (), 0, 0, 0.0))
 
 INF, ARC, CAV, CAM, ELE, SIE, SPE = "infantry", "archer", "cavalry", "camel", "elephant", "siege", "spearman"
 HSI = "heavysiege"                                    # the Hussite Wagon and Ballista Elephant lines (wiki "Armor class", #1402)
@@ -39,8 +41,9 @@ SHIP, WAR = "ship", "warship"                         # the ships; "warship": th
 FIRE = "fireship"                                     # the AoE2 class "Fire Ships" (the hulk bonus, #1489)
 # The values of each unit: one line per unit in data/units.jsonl (#1912). "note" is the source of a value.
 UNIT_ROWS = table.load("units.jsonl")
-STATS = {r["name"]: Stats(**{f: r[f] for f in Stats._fields[:-2]}, classes=tuple(r["classes"]), blast=r.get("blast", 0))
-         for r in UNIT_ROWS}                                    # blast: the radius that technologies change (#4283)
+STATS = {r["name"]: Stats(**{f: r[f] for f in Stats._fields[:7]}, classes=tuple(r["classes"]), blast=r.get("blast", 0),
+                          passes=r.get("pass", 0), pass_part=r.get("pass_part", 0.5 * ("pass" in r)))
+         for r in UNIT_ROWS}             # blast, passes, pass_part: values that technologies change (#4283, Malon #4335)
 REPAIRS = {r["name"]: r["repairs"] for r in UNIT_ROWS if "repairs" in r}   # a soldier that repairs a building (#2128)
 # Buildings: hit points, melee and pierce armor (Dark Age base), one line per building in data/buildings.jsonl (#1913).
 # The high pierce armor makes arrows weak, as in AoE2. The towers have the AoE2 DE values of the wiki: a watch tower of
@@ -48,7 +51,7 @@ REPAIRS = {r["name"]: r["repairs"] for r in UNIT_ROWS if "repairs" in r}   # a s
 # infobox (#1564; the dock: the Castle Age). A line with only a "sight" has no target.
 BUILDING_ROWS = table.load("buildings.jsonl")
 STANDS_FOR = {r["name"]: r["as"] for r in BUILDING_ROWS if "as" in r}   # a regional building: the one it replaces (#1874, #1930)
-BUILDINGS = {r["name"]: Stats(**{f: r[f] for f in Stats._fields[:-2]}, classes=tuple(r["classes"]))
+BUILDINGS = {r["name"]: Stats(**{f: r[f] for f in Stats._fields[:7]}, classes=tuple(r["classes"]))
              for r in BUILDING_ROWS if "hp" in r}
 # The walls that a player builds in the game program (#1322, AoE2 DE wiki infobox): the hit points in the Dark, Feudal,
 # Castle and Imperial Age, the melee and the pierce armor. Their targets have WALL_TAG: a wall keeps no player alive in
@@ -87,11 +90,8 @@ CONTACT = 1.0         # tiles: the reach of a demolition ship (range 0, #1440): 
 # Tiles: no shot at a unit nearer (AoE2 DE, wiki infobox "MinRange", #1350). The key "min_range" of data/units.jsonl.
 MIN_RANGE = {r["name"]: r["min_range"] for r in UNIT_ROWS if "min_range" in r}
 ACCURACY = {r["name"]: r["accuracy"] for r in UNIT_ROWS if "accuracy" in r}   # siege shots at units that hit (#2479)
-DODGE = {r["name"]: r["dodge"] for r in UNIT_ROWS if "dodge" in r}           # projectiles that do no damage (#4399)
-FRENZY = {r["name"]: r["frenzy"] for r in UNIT_ROWS if "frenzy" in r}        # a shorter reload in a long fight (#4468)
-LOW_HP = {r["name"]: r["low_hp"] for r in UNIT_ROWS if "low_hp" in r}      # another form below some hit points (#4472)
-VETERAN = {r["name"]: r["veteran"] for r in UNIT_ROWS if "veteran" in r}     # attack more for each kill (#4467)
-SHIELD = {r["name"]: r["shield"] for r in UNIT_ROWS if "shield" in r}         # projectiles through it hurt less (#4507)
+MISS = {r["name"]: r["miss"] for r in UNIT_ROWS if "miss" in r}               # a missed shot hurts a near unit (#4549)
+VOLLEY = {r["name"]: r["volley"] for r in UNIT_ROWS if "volley" in r}       # the key "volley": {"shots": n, "attack": a}, the extra projectiles of each shot (#4502)
 # The minimum range of the buildings that shoot, in tiles from the edge of the footprint (AoE2 DE, wiki infobox
 # "MinRange", #1546). The town center has none. Murder Holes removes it.
 # The key "min_range" of a line of data/buildings.jsonl (the dock shoots only with fishing ships inside, #1949).
@@ -106,8 +106,6 @@ REGEN = {r["name"]: r["regen"] for r in UNIT_ROWS if "regen" in r}             #
 # the key "ignore_armor": its hits ignore a positive armor (#4394)
 IGNORE = {r["name"] for r in UNIT_ROWS if r.get("ignore_armor")}
 PASS = {r["name"]: r["pass"] for r in UNIT_ROWS if "pass" in r}               # the key "pass" of data/units.jsonl
-CHARGE_ATTACK = {r["name"]: r["charge_attack"] for r in UNIT_ROWS if "charge_attack" in r}   # the Coustillier (#4398)
-TRAMPLE = {r["name"]: r["trample"] for r in UNIT_ROWS if "trample" in r}       # the key "trample": the elephants (#4397)
 MELEE_MODE = {r["name"]: r["melee_mode"] for r in UNIT_ROWS if "melee_mode" in r}   # the key "melee_mode": the Ratha (#4504)
 # The part of the damage on the units behind the target, when it is not one half (wiki: "100% pass-through damage").
 PASS_PART = {r["name"]: r["pass_part"] for r in UNIT_ROWS if "pass_part" in r}
@@ -131,9 +129,12 @@ def damage(attacker, target, a=None, t=None, taken=1.0, less=None, ignore=False,
     ignore: the attacker ignores the armor, a negative armor still counts (Wootz Steel). Both: train.hits (#4331).
     rage: the attack more for each 10 % of the hit points that the attacker lost (lost: that part, Hamask); reflect
     does not change this damage: after a hit with no projectile the attacker takes that part of it, with no armor
-    (Lamellar Armor, the plugin: onHit). train.hits (#4332)."""
+    (Lamellar Armor, the plugin: onHit). train.hits (#4332). A unit of vs_units.UNITS hits a target that is not a building
+    with the pierce attack of its anti-unit mode (the Lou Chuan, #4505; the plugin: harm)."""
     a, t = a or stats(attacker), t or stats(target)
-    armor = t.pierce if a.range and attacker not in MELEE_RANGED else t.melee
+    vs = vs_units.UNITS.get(attacker) if "building" not in t.classes else None
+    a = a._replace(attack=vs["attack"], range=vs["range"], bonus=vs.get("bonus", {})) if vs else a
+    armor = t.pierce if a.range and (vs or attacker not in MELEE_RANGED) else t.melee
     armor = min(0, armor) if ignore else armor
     cut = max([(less or {}).get(c, 0) for c in a.classes] + [0])
     attack = a.attack + rage * math.floor(lost * 10 + 1e-9)
@@ -205,74 +206,29 @@ def range_command(uuid, name, T, rate=NORMAL, s=None):
     minecart, or the horse of a War Wagon: units.wagon, #2746) gets its blast radius in blocks last, 0 when its shot hits
     only the target (the Scorpion, #1062): the plugin then lets the minecart (or the horse) shoot too (#1050). Then its minimum range in blocks (MIN_RANGE, #1350), when it has
     one: it does not shoot at a target nearer than that. Then the blocks of PASS (#1401): its bolt hurts the enemy units on
-    its line up to that far past its range, and the part of the damage (PASS_PART) when it is not one half. A unit that
+    its line up to that far past its range, and the part of the damage (PASS_PART) when it is not one half (s.passes
+    and s.pass_part: PASS and PASS_PART with technologies, Malon and Pirotechnia, #4335). A unit that
     shoots as a mob and has a PASS (the chakram thrower, #1638) gets "-" for the blast. A melee siege unit (the ram line, range 0) gets the reach
     RAM_REACH: a carrier pig has no melee goal, so the range goal walks it to the target and hits (#1399). A demolition
     ship (#1440) gets the reach CONTACT: its blast goes off next to the target."""
     s = s or stats(name)
     cart = (units.classify(name) or {}).get("id") == "minecraft:minecart" or units.wagon(name)   # (#2746)
-    blast = f" {round(s.blast * T, 6)}" if name in BLAST or cart or name in GROUND else " -" if name in PASS else ""   # s.blast: BLAST, technologies; GROUND: aoe attackground needs it (#4207)
-    blast += f" {MIN_RANGE.get(name, 0) * T}" * bool(blast and (name in MIN_RANGE or name in PASS))
-    blast += f" {PASS.get(name, 0) * T}" * bool(blast and name in PASS) + f" {PASS_PART.get(name)}" * (name in PASS_PART)
+    blast = f" {round(s.blast * T, 6)}" if name in BLAST or cart or name in GROUND else " -" if s.passes else ""   # s.blast: BLAST, technologies; GROUND: aoe attackground needs it (#4207)
+    blast += f" {MIN_RANGE.get(name, 0) * T}" * bool(blast and (name in MIN_RANGE or s.passes))
+    blast += f" {s.passes * T}" * bool(blast and s.passes) + f" {s.pass_part}" * bool(s.passes and s.pass_part != 0.5)
     reach = s.range * T or RAM_REACH * bool(cart and s.attack) or CONTACT * T * bool(name in BLAST and s.attack)
     return reach and (s.reload or name in BLAST) and f"aoe range {uuid} {reach} {max(1, round(s.reload / rate * 20))}{blast}" or None
 
 
-def accuracy_command(uuid, name, bonus=0.0):
-    """The plugin command of the AoE2 accuracy of a siege shot at a unit (the key "accuracy" of data/units.jsonl: the
-    Trebuchet 15 %, #2479) plus bonus (the civilization key "accuracy": Huns +35 %), or None when each shot hits."""
+def accuracy_command(uuid, name, bonus=0.0, T=4):
+    """The plugin command of the AoE2 accuracy of a shot at a unit (the key "accuracy" of data/units.jsonl: the
+    Trebuchet 15 %, #2479) plus bonus (the civilization key "accuracy": Huns +35 %), or None when each shot hits.
+    The key "miss" (the Arambai, #4549, AoE2 wiki: "Missed projectiles deal 100% damage too"): a missed shot hurts
+    another enemy unit within "radius" tiles of the target with "part" of the damage; the command gets the part and
+    the radius in blocks (T blocks per tile)."""
     part = min(1.0, ACCURACY.get(name, 1.0) + bonus)
-    return f"aoe accuracy {uuid} {part:g}" if part < 1 else None
-
-
-def charge_command(uuid, name):
-    """The plugin command of the own charge attack of unit name (the key "charge_attack" of data/units.jsonl: the
-    Coustillier, #4398), or None: the first melee hit on a unit after a full charge of "time" AoE2 seconds has
-    "attack" more (aoe chargeattack of #4370; its time as ticks at Normal speed)."""
-    c = CHARGE_ATTACK.get(name)
-    return f"aoe chargeattack {uuid} {max(1, round(c['time'] / NORMAL * 20))} {c['attack']}" if c else None
-
-
-def dodge_command(uuid, name):
-    """The plugin command of the dodge of unit name (the key "dodge" of data/units.jsonl: the Shrivamsha Rider, #4399),
-    or None when it dodges nothing. The AoE2 wiki ("Shrivamsha Rider"): a second, regenerating health bar takes each
-    projectile ("shots" of them in "time" AoE2 seconds) and fills again during combat; melee hits pass. The plugin
-    fills the gauge evenly: one shot per time / shots seconds, up to shots. "melee": true (the Iron Pagoda, #4465): the
-    gauge takes melee hits instead and projectiles pass; the command gets a last field 1."""
-    d = DODGE.get(name)
-    if not d:
-        return None
-    return f"aoe dodge {uuid} {d['shots']} {round(d['time'] * 20)}" + (" 1" if d.get("melee") else "")
-
-
-def frenzy_command(uuid, name):
-    """The plugin command of the frenzy of unit name (the key "frenzy" of data/units.jsonl: the Temple Guard, #4468), or
-    None. The AoE2 wiki ("Temple Guard"): each attack makes the reload "less" seconds shorter for "time" seconds, down
-    to "min" seconds. The values as ticks (AoE2 seconds x 20, as dodge_command)."""
-    f = FRENZY.get(name)
-    if not f:
-        return None
-    return f"aoe frenzy {uuid} {round(f['less'] * 20)} {round(f['time'] * 20)} {round(f['min'] * 20)}"
-
-
-def low_hp_command(uuid, name):
-    """The plugin command of the low hit point form of unit name (the key "low_hp" of data/units.jsonl: the Jian
-    Swordsman, #4472), or None when it has none. The AoE2 wiki ("Jian Swordsman"): it switches by itself to its
-    unshielded form below "hp" hit points (that melee and pierce armor, "speed" times the speed) and back at hp or
-    more. The plugin checks the hit points each tick."""
-    lo = LOW_HP.get(name)
-    if not lo:
-        return None
-    return f"aoe lowhp {uuid} {lo['hp']:g} {lo['melee']} {lo['pierce']} {lo['speed']:g}"
-
-
-def shield_command(uuid, name):
-    """The plugin command of the projectile obstruction of unit name (the key "shield" of data/units.jsonl: the Hussite
-    Wagon, #4507), or None. AoE2 DE wiki "Hussite Wagon": an enemy projectile that passes through its box deals "part"
-    of its damage to the unit behind it, and the wagon takes "takes" damage. Minecraft feature: a vanilla projectile hits
-    the first entity on its line, so the plugin gives that hit to the target of the shooter."""
-    s = SHIELD.get(name)
-    return f"aoe shield {uuid} {s['part']:g} {s['takes']}" if s else None
+    m = MISS.get(name)
+    return f"aoe accuracy {uuid} {part:g}" + (f" {m['part']:g} {m['radius'] * T:g}" if m else "") if part < 1 else None
 
 
 def melee_mode(name, s=None):
@@ -280,26 +236,6 @@ def melee_mode(name, s=None):
     key; s: the values of the ranged mode, default those of the unit line. Its trample: MELEE_MODE[name]["trample"]."""
     s = s or stats(name)
     return s._replace(range=0, attack=MELEE_MODE[name]["attack"])
-
-
-def veteran_command(uuid, name):
-    """The plugin command of the kill bonus of unit name (the key "veteran" of data/units.jsonl: the Jaguar Warrior,
-    #4467), or None. AoE2 wiki ("Jaguar Warrior"): "Gains +1 attack for each unit killed (up to 4)": "attack" for each
-    kill, up to "max". The plugin keeps the kills of a unit when it gets the command again (an Elite upgrade)."""
-    v = VETERAN.get(name)
-    return f"aoe veteran {uuid} {v['attack']} {v['max']}" if v else None
-
-
-def trample_command(uuid, name, T, t=None):
-    """The plugin command of the trample damage of unit name (the key "trample" of data/units.jsonl: the elephants,
-    #4397), or None. Each melee hit also hurts the other enemy units within "radius" tiles (× T blocks) of the target
-    with "part" of the AoE2 damage on each (AoE2 DE wiki "Trample damage"). t: other values, for example of a technology
-    (epic #4096): a fixed "damage" instead of the part, and "ignore": true for a damage that ignores the armor."""
-    t = t or TRAMPLE.get(name)
-    if not t:
-        return None
-    fixed = f" {t['damage']:g} {int(bool(t.get('ignore')))}" if t.get("damage") else ""
-    return f"aoe trample {uuid} {t.get('part', 0):g} {round(t['radius'] * T, 6):g}{fixed}"
 
 
 def sight(name, s=None):
@@ -368,39 +304,22 @@ def setup(game, data):
         if cmd := range_command(o["uuid"], o["name"], data.get("tile_size", 4)):
             game.command(cmd)
     n = sum(game.command(stats_command(o["uuid"], o["name"], villager(data, o))).strip() == "Stats: 1 units" for o in units)
-    import spoils                                    # spoils imports this module
+    import spoils  # spoils imports this module
     for o in units:                                  # the hits of a Varangian Guard make gold (#2376)
         if cmd := spoils.tag_command(o["uuid"], o["name"]):
             game.command(cmd)
     for o in units:                                  # a trebuchet misses units (#2479), with the bonus of its civ
         civ = None if data.get("full_tech_tree") else data.get("players", {}).get(str(o["player"]), {}).get("civ")
-        if cmd := accuracy_command(o["uuid"], o["name"], civs.value("accuracy", civ, {}).get(o["name"], 0.0)):
+        if cmd := accuracy_command(o["uuid"], o["name"], civs.value("accuracy", civ, {}).get(o["name"], 0.0),
+                                   data.get("tile_size", 4)):
             game.command(cmd)
-    for o in units:                                  # the Coustillier charges its attack (#4398)
-        if cmd := charge_command(o["uuid"], o["name"]):
-            game.command(cmd)
-    for o in units:                                  # a Shrivamsha Rider dodges projectiles (#4399)
-        if cmd := dodge_command(o["uuid"], o["name"]):
-            game.command(cmd)
-    for o in units:                                  # a Temple Guard attacks faster in a long fight (#4468)
-        if cmd := frenzy_command(o["uuid"], o["name"]):
-            game.command(cmd)
-    for o in units:                                  # a Jian Swordsman loses its shield at low hit points (#4472)
-        if cmd := low_hp_command(o["uuid"], o["name"]):
-            game.command(cmd)
-    for o in units:                                  # a Jaguar Warrior gets attack for each kill (#4467)
-        if cmd := veteran_command(o["uuid"], o["name"]):
-            game.command(cmd)
-    for o in units:                                  # a Hussite Wagon shields the units behind it (#4507)
-        if cmd := shield_command(o["uuid"], o["name"]):
-            game.command(cmd)
-    for o in units:                                  # an elephant tramples the units next to its target (#4397)
-        if cmd := trample_command(o["uuid"], o["name"], data.get("tile_size", 4)):
+    for o in units:                                  # the abilities of the units (game/abilities, #4588)
+        for cmd in abilities.commands(o["uuid"], o["name"], data.get("tile_size", 4)):
             game.command(cmd)
     for o in units:                                  # after the stats: the plugin needs them for the sight
         if cmd := sight_command(o["uuid"], o["name"], data.get("tile_size", 4)):
             game.command(cmd)
-    import ai                                        # ai -> gather -> build -> replay -> combat: import it late
+    import ai  # ai -> gather -> build -> replay -> combat: import it late
     for o in units:                                  # the AoE2 walk speed also without an order (#849)
         game.command(ai.speed_command(o["uuid"], o["name"], data.get("tile_size", 4)))
     return n
@@ -425,7 +344,7 @@ def wall(name, age, civ=None, factor=1):
     return civs.hp(civ, name, Stats(hp[age], 0, melee, pierce, 0, 0.0, {}, ("building", WALL) + (STONE,) * (not name.startswith("PALISADE"))), age, factor)
 
 
-def building(uuid, name, player, box, T=4, inside=(), s=None, low=None, factor=1, more=0, taken=1, through=""):
+def building(uuid, name, player, box, T=4, inside=(), s=None, low=None, factor=1, more=0, taken=1, through="", dot=None):
     """The commands that make building `name` of `player` a target of attacks (#517): an invisible slime without AI
     that fills the footprint takes the attacks (a mob attacks only a living entity: AoePlugin.java), and the plugin
     keeps the AoE2 hit points. box: the blocks (x0, y0, z0, x1, y1, z1), both ends included, y0 the ground.
@@ -438,7 +357,9 @@ def building(uuid, name, player, box, T=4, inside=(), s=None, low=None, factor=1
     (civs.arrows, #2178). more: the arrows of the technologies (train.more_arrows, #4258). taken: the factor of the
     bonus damage that the building takes (build.taken: Citadels, #4281), only for a building that shoots; a factor
     other than 1 writes the classes and the bonus ("-": none) before it. through: the end of `aoe arrows` for arrows that
-    pass through the units (train.pass_arrows: Svan Towers, #4282).
+    pass through the units (train.pass_arrows: Svan Towers, #4282). dot: the damage over time of each arrow, (damage,
+    AoE2 seconds, the target classes or ()) of train.dot (Curare, #4641), only for a building that shoots: the last
+    field "dot=damage:ticks:classes", as in stats_command.
     At 0 hit points the plugin fills the box with air. The invisibility effect hides the slime: the tag Invisible is
     only for armor stands, the server drops it on a slime (#636)."""
     x0, y0, z0, x1, y1, z1 = box
@@ -458,7 +379,9 @@ def building(uuid, name, player, box, T=4, inside=(), s=None, low=None, factor=1
          + (f" {','.join(s.classes)}" if s.classes != ("building", STANDARD) or bonus or taken != 1 else "")   # a wall, a
                                                                             # gate, the wonder (#1419), a tower (STONE, #1590)
          + (f" {bonus or '-'}" if bonus or taken != 1 else "")              # the arrow bonus (Heated Shot, #1548)
-         + (f" {taken:g}" if taken != 1 else "")]                           # Citadels (#4281)
+         + (f" {taken:g}" if taken != 1 else "")                            # Citadels (#4281)
+         + (f" dot={dot[0]:g}:{max(1, round(dot[1] / NORMAL * 20))}:{','.join(sorted(dot[2])) or '-'}"
+            if dot and s.attack and s.range else "")]                       # Curare (Dot.java, #4641)
 
 
 def building_box(o, ground):

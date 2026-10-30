@@ -6,10 +6,10 @@ import zlib
 
 import numpy as np
 import pytest
+from test_scx import build
 
 import aoe2mc
 import scx
-from test_scx import build
 
 
 def hd_file(path, fmt):

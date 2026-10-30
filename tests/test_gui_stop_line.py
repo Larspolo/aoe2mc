@@ -3,8 +3,9 @@ It writes the stop line to its stdin, and run.console interrupts the main thread
 import queue
 from pathlib import Path
 
-import gui
 from test_gui_play import fake
+
+import gui
 
 ROOT = Path(__file__).resolve().parent.parent
 

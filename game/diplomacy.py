@@ -179,7 +179,8 @@ def change(g, player, n):
         g.command(gather.neutral_command(g.players))
     g.command(f"tellraw @a[team=p{n}] " + json.dumps({"text": f"Player {g.player} changed its stance to you: "
                                                               f"{kind.capitalize()}.", "color": "gold"}))
-    show(g, player)
+    if player:                                                         # an AI script has no menu (#4574)
+        show(g, player)
     return kind
 
 
@@ -199,7 +200,7 @@ def cost(g, n):
 
 def receiver(g, n):
     """The Gather of player n (g itself, a bot or another person: build.sides, #3106), or None."""
-    import build                                                   # build imports gather, which imports this module
+    import build  # build imports gather, which imports this module
     return next((x for x in [g, *build.sides(g)] if x.player == n), None)
 
 

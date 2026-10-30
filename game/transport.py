@@ -24,9 +24,10 @@ import math
 
 import civs
 import replay
+from garrison import INSIDE, OUTSIDE
+
 import units as unit_types
 from aoe2mc import CARRIERS, GARRISONED, INTO, MADE_INSIDE
-from garrison import INSIDE, OUTSIDE
 
 NAME = "TRANSPORT_SHIP"
 SIZE = 20                   # units inside, as in AoE2 DE (5 before update 141935)
@@ -51,7 +52,7 @@ def land(g, cell, n, tiles=SHORE):
 def body(g, start, limit=BODY):
     """The free land cells that a unit on the block cell start reaches on foot (8 neighbours, steps of at most 1
     block, as Map.path), at most limit cells. Empty when start is not free land."""
-    from gather import STEPS                                       # gather imports this module
+    from gather import STEPS  # gather imports this module
     if not g.map.free(*start):
         return set()
     seen, todo = {start}, collections.deque([start])
@@ -83,7 +84,9 @@ def order(g, player, ship):
         tiles *= 2                                                 # far from the land: look farther (#1653)
     if not who or not at:
         return False
-    import ai, fleet, train                                        # ai, fleet and train import gather
+    import ai  # ai, fleet and train import gather
+    import fleet
+    import train
     x, z = at[0]
     if not (berth := fleet.order(g, {ship}, (x, z))):              # no water path to that shore
         return False

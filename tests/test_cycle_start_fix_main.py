@@ -1,4 +1,4 @@
-"""tools/cycle_start.py names a "Fix main" ticket that closed after the red run (owner, #3225)."""
+"""framework/tools/cycle_start.py names a "Fix main" ticket that closed after the red run (owner, #3225)."""
 import cycle_start as start
 
 RED_AT = "2026-10-28T09:36"

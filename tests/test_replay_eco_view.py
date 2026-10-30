@@ -8,7 +8,6 @@ import replay  # noqa: E402
 from test_replay import Fake, data  # noqa: E402
 from test_replay_stat_books import page, pages  # noqa: E402
 
-
 SPENT = ["Spent:", "Eco 0", "Mil 0", "Tech 0", "Build 0"]     # the spending lines under the villagers (#4391)
 
 
@@ -48,8 +47,8 @@ def test_a_change_of_one_count_changes_the_book():
 
 
 def test_the_book_of_8_players_stays_below_the_rcon_limit():
-    from test_replay_eight_players import eight
     import rcon
+    from test_replay_eight_players import eight
     r = replay.Replay(Fake(), eight([]))
     for p in range(1, 9):
         r.pop[p] = 199 - p

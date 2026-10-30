@@ -28,4 +28,4 @@ jobs:
       - name: Update the status issue
         env:
           GITHUB_TOKEN: ${{ github.token }}
-        run: python3 tools/dashboard.py
+        run: python3 framework/tools/dashboard.py

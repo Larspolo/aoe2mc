@@ -69,6 +69,7 @@ def where(game, selector):
 def sample(r, now, found):
     """The samples (dicts) of the player units of Replay r at game time now (ms); found: the answer of where()."""
     import replay
+
     import units
     rows, due = [], {id(r.units[i]): t for i, t in r.moving.items() if i in r.units}
     for key, v in list(r.units.items()) + [(None, v) for _, v in r.new]:
@@ -175,6 +176,7 @@ def played(world, data, near=2):
     its tile in aoe2mc.json: a world that a game saved stands at the place where that game stopped (#2667: eagle scout
     1665 of de-64.3 stood at its 11:55 place, 366 blocks away, and the drift of a later run was wrong)."""
     import uuid
+
     import world_reader
     pos = {}
     for e in world_reader.World(world).entities():
@@ -194,11 +196,12 @@ def measure(src, speed=4.0, until=None, every=10, log=None, version=None, server
     """Play the replay of src (a record or a converted world) on Paper; returns the samples. server_log: copy the
     server log to this file at the end, also after an error. profile: (from, to) game times in ms: record the server
     thread between them and print the tables of server_profile.py."""
-    import aoe2mc
     import mc_check
     import replay
     import run
     import server_profile
+
+    import aoe2mc
     samples = []
     with tempfile.TemporaryDirectory() as tmp:
         world = os.path.join(tmp, "DriftWorld")

@@ -3,11 +3,10 @@
 game program keeps the new values of each unit, and later technologies and orders keep them."""
 import numpy as np
 import pytest
+from test_scenario_mode import game
+from test_scenario_patrol import scenario, trigger
 
 import aoe2mc
-from test_scenario_patrol import scenario, trigger
-from test_scenario_mode import game
-
 from game import ai, combat, gather, train
 
 
@@ -147,6 +146,7 @@ def test_the_trigger_lines_store_orders_that_the_game_program_reads_on_a_server(
     import re
 
     from test_paper import paper_reachable
+
     from game import run as game_run
     from tools import scenarios
     if not paper_reachable():

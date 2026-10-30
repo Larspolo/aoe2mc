@@ -1,9 +1,9 @@
 """Shelves with goods in the market and tools in the blacksmith (#526)."""
+import mcvalid
 import render
 
 import aoe2mc
 import buildings
-import mcvalid
 
 
 def shelves(name, arch="western"):

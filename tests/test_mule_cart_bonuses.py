@@ -2,10 +2,9 @@
 technologies are more effective (civs.MORE). The values come from the data: the tests compare with other civilizations.
 Fake server."""
 import pytest
+from test_gather import FakeServer, grid
 
 from game import build, gather
-
-from test_gather import FakeServer, grid
 
 
 def game(civ):

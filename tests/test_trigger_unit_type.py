@@ -2,8 +2,9 @@
 aoe2mc.t<ID>, not a Minecraft mob, so a crossbowman or a monk is not an archer or a wolf."""
 from collections import Counter
 
-import aoe2mc
 from test_trigger_objects import effect, lines
+
+import aoe2mc
 
 
 def test_kill_object_selects_the_type_tag_of_the_archer():

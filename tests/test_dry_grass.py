@@ -1,10 +1,10 @@
 """Dry terrain gets the dry grass blocks of 26.3; green terrain keeps green grass (#523)."""
 from collections import Counter
 
+import mcvalid
 import numpy as np
 
 import aoe2mc
-import mcvalid
 
 
 def plants(terrain):

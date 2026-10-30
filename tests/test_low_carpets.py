@@ -1,8 +1,8 @@
 """A carpet next to leaves at head height stops a unit (#2390): the converter takes the carpet away."""
 import numpy as np
+from test_terrain import columns
 
 import aoe2mc
-from test_terrain import columns
 
 
 def test_no_carpet_under_a_block_at_head_height():

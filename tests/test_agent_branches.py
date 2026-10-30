@@ -2,12 +2,11 @@
 import re
 from pathlib import Path
 
+import cycle_start
 import operator_check
 import test_cycle_start as t
 import unconflict_pick
 import usage
-
-import cycle_start
 
 ROOT = Path(__file__).resolve().parent.parent
 

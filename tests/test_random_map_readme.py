@@ -4,10 +4,10 @@ from pathlib import Path
 
 import numpy as np
 import pytest
+from test_random_map_highland import reach
 
 import aoe2mc
 import rmap
-from test_random_map_highland import reach
 
 T = rmap.TERRAINS
 

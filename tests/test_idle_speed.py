@@ -3,9 +3,9 @@ import shutil
 import time
 
 import pytest
+from test_unit_ai import data
 
 from game import ai, combat, run
-from test_unit_ai import data
 
 
 def test_setup_sends_the_walk_speed_of_each_unit():

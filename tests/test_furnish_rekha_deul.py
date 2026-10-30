@@ -1,11 +1,11 @@
 """The rekha deul temple has a sanctum with an idol behind its porch (#499)."""
 from collections import Counter
 
+import mcvalid
 import pytest
+from test_furnish_landmarks import blocks
 
 import aoe2mc
-import mcvalid
-from test_furnish_landmarks import blocks
 
 NEEDS = ("gold_block", "chiseled_cinnabar", "candle", "orange_carpet", "potted_red_tulip", "lantern")
 

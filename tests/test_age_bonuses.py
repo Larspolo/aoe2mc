@@ -82,9 +82,10 @@ def test_a_bengali_town_center_spawns_2_villagers_on_a_server(tmp_path):
     from test_paper import paper_reachable
     if not mojang_reachable() or not paper_reachable():
         pytest.skip("Mojang or Paper is not reachable")
-    import aoe2mc
     import scenarios
     from AoE2ScenarioParser.datasets.buildings import BuildingInfo
+
+    import aoe2mc
     scn = scenarios.new_scenario(16)
     scn.unit_manager.add_unit(scenarios.PlayerId.ONE, BuildingInfo.TOWN_CENTER.ID, x=5.5, y=5.5)
     src = str(tmp_path / "tc.aoe2scenario")

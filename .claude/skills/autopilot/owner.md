@@ -20,7 +20,7 @@ claim refs. Use it for a finished epic, an answered decision ticket and a check 
 denies the label too (a session without the owner's `autoMode` rule, #1740: `claude auto-mode config` lists its allow
 lines), do not try another way: keep the comment, add `needs-human` and "Please close".
 
-If the ticket is wrong or not possible: comment why, add `needs-human`, run `python3 tools/claim.py N --release` (it
+If the ticket is wrong or not possible: comment why, add `needs-human`, run `python3 framework/tools/claim.py N --release` (it
 removes `in-progress`). Do not merge partial work: add `hold` to its PR (the workflow also skips a PR whose ticket has `needs-human` or `blocked`).
 
 ## Check tickets (step 7)
@@ -31,7 +31,7 @@ simulated clicks through the same functions as the player input, `tools/mc_shot.
 images. When the check finds a bug, it makes a bug ticket for each one, adds "Depends on: #bug" to the check ticket, and does
 not add `needs-human`: when the bugs are closed, the check ticket is a candidate again and a later run checks again (owner, #668).
 A check ticket that also ships a tool (#3324) and finds bugs: ship the tool with
-`python3 tools/ship_pr.py N --part` ("Part of #N"): the merge then does not close the check ticket.
+`python3 framework/tools/ship_pr.py N --part` ("Part of #N"): the merge then does not close the check ticket.
 After a check without bugs it closes the check ticket on its evidence (owner decision B, #1708: progress does not wait
 for the owner): a comment with the evidence of each point (screenshots, real clicks, values) and a short list of what only
 a person can check (sound, the feel of a control, "is it fun": `verify` level 5, #1707), the label `owner-sample`, then the close. The owner checks a

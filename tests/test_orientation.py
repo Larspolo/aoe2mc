@@ -3,13 +3,13 @@ import contextlib
 import io
 import math
 
+import mcvalid
 import numpy as np
 import pytest
+import world_reader
 
 import aoe2mc
 import buildings
-import mcvalid
-import world_reader
 
 
 @pytest.mark.parametrize("o", sorted(aoe2mc.ORIENTATIONS))

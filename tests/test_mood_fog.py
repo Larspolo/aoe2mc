@@ -3,10 +3,11 @@ in the datapack with --fog or --ambience full, and none without them (no "Experi
 import json
 import os
 
-import aoe2mc
 import pytest
 import scenarios
 from AoE2ScenarioParser.datasets.trigger_lists import ColorMood
+
+import aoe2mc
 
 FOG = os.path.join("datapacks", "aoe2mc", "data", "aoe2mc", "timeline", "fog.json")
 TAG = os.path.join("datapacks", "aoe2mc", "data", "minecraft", "tags", "timeline", "in_overworld.json")

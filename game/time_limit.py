@@ -49,7 +49,7 @@ def best(g):
 
 def win(g, players):
     """End the game: players and their allies win."""
-    from gather import allied                                       # gather imports this module
+    from gather import allied  # gather imports this module
     cheats.over(g, lambda m: any(allied(g.players, n, m) for n in players))
 
 

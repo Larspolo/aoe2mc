@@ -1,8 +1,7 @@
 """#2852: the lane weight has a standard error; a noisy fit keeps the start weight of agent.toml."""
+import health
 import numpy as np
 from test_lane_weights import lines
-
-import health
 
 
 def test_clean_samples_give_the_true_weight_and_a_small_error():

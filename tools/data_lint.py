@@ -19,7 +19,7 @@ import json
 import os
 import sys
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "framework", "tools"))
 from agent_config import CONFIG  # noqa: E402
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -84,7 +84,7 @@ def scan(root=ROOT, known=None):
 
 
 def read(path=LIST):
-    """The (place, count) pairs of the list, in file order (`tools/health.py` reads it the same way)."""
+    """The (place, count) pairs of the list, in file order (`framework/tools/health.py` reads it the same way)."""
     with open(path, encoding="utf-8") as f:
         return [(p, int(n)) for p, n in (s.split() for s in f if s.strip() and not s.startswith("#"))]
 

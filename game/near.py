@@ -14,9 +14,8 @@ RCON commands).
 
     near.tick(g, dt)        # gather.Gather.step: dt AoE2 seconds
 """
-import numpy as np
-
 import civs
+import numpy as np
 
 EVERY = 5.0     # AoE2 seconds between two passes
 
@@ -24,7 +23,8 @@ EVERY = 5.0     # AoE2 seconds between two passes
 def steps(g, pos):
     """{UUID: {technology: steps}} of the own soldiers at pos {UUID: (x, y, z)} for the researched technologies of g
     with the key "near"; a unit with no step is not in it."""
-    import combat, train                                           # they import gather, gather imports this module
+    import combat  # they import gather, gather imports this module
+    import train
     out = {}
     for t, c in sorted(train.BY_KEY["near"].items()):
         us = sorted(u for u in pos if t in g.techs and (n := g.soldiers.get(u))
@@ -47,7 +47,8 @@ def change(c, k, s):
 
 def tick(g, dt):
     """Count the own units near each own soldier of g, and send the new values of each unit whose steps changed."""
-    import combat, train                                           # they import gather, gather imports this module
+    import combat  # they import gather, gather imports this module
+    import train
     if not vars(g).get("near") and not any(t in g.techs for t in train.BY_KEY["near"]):
         return
     g.near_time = vars(g).get("near_time", 0.0) + dt

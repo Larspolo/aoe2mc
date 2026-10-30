@@ -3,10 +3,9 @@
 import os
 import subprocess
 
-import pytest
-
 import claim
 import pacer
+import pytest
 
 NOW = 1_800_000_000
 DAY = 86400

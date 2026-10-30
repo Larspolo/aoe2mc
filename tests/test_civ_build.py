@@ -1,9 +1,9 @@
 """The build speed bonuses of the civilizations (#1893, AoE2 DE wiki: Spanish and Roman builders work faster, civs.
 build_rate); Treadmill Crane multiplies with them. Fake server."""
 import pytest
+from test_treadmill_crane import castle
 
 from game import build, civs
-from test_treadmill_crane import castle
 
 T = build.BUILD_TIMES["HOUSE"]
 

@@ -4,11 +4,10 @@ import os
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import replay  # noqa: E402
 from test_replay import build, data  # noqa: E402
 from test_replay_control import Clock  # noqa: E402
 from test_replay_walk import HOUSE, VIL  # noqa: E402
-
-import replay  # noqa: E402
 
 MIL = {"kind": "unit", "name": "MILITIA", "player": 1, "uuid": "u2", "ref": 8, "tile": [3.5, 3.5]}
 

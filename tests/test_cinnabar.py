@@ -1,11 +1,11 @@
 """The pagoda and the rekha deul have red-painted stone of cinnabar (#542)."""
 from collections import Counter
 
+import mcvalid
 import pytest
+from test_furnish_landmarks import blocks
 
 import aoe2mc
-import mcvalid
-from test_furnish_landmarks import blocks
 
 
 @pytest.mark.parametrize("name,arch,needs", [("WONDER", "east_asian", ("polished_cinnabar",)),

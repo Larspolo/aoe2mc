@@ -1,11 +1,10 @@
 """game/gather.py: a click that selects an own unit plays one voice line of its class (#3499, game/data/sounds.jsonl)."""
 import pytest
+from test_gather import FakeServer, grid
+from test_gather_attack import click
 
 from game import gather, table
 from tools import mcvalid
-
-from test_gather import FakeServer, grid
-from test_gather_attack import click
 
 
 def setup():

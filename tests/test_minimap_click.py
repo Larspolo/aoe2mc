@@ -7,7 +7,6 @@ import re
 import shutil
 
 import pytest
-
 from test_gather import FakeServer, grid
 from test_move_order import moves
 
@@ -84,6 +83,7 @@ def test_a_click_on_the_framed_map_sends_a_villager_on_paper(tiny_world, tmp_pat
     import time
 
     import mc_shot
+
     from game import run
     world = shutil.copytree(tiny_world[0], tmp_path / "W")
     data = json.load(open(world / "aoe2mc.json"))
