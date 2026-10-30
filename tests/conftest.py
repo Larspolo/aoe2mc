@@ -54,14 +54,6 @@ def pytest_terminal_summary(terminalreporter, exitstatus, config):
         terminalreporter.write_line(", ".join(f"{n} {k}" for k, n in sorted(counts.items())) + f" (exit {exitstatus})")
 
 
-def entity_ids(nbt_or_desc):
-    """All entity IDs of an entity and its passengers (riders)."""
-    out = [str(nbt_or_desc["id"])]
-    for p in nbt_or_desc.get("Passengers", []):
-        out += entity_ids(p)
-    return out
-
-
 @pytest.fixture(scope="session")
 def tiny_world(tmp_path_factory):
     """The synthetic tiny scenario, converted once per test session. Returns (world path, console output)."""

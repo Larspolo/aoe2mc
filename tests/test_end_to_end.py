@@ -5,7 +5,7 @@ import os
 import aoe2mc
 import mcvalid
 import world_reader
-from conftest import entity_ids
+from entities import entity_ids
 
 
 def test_world_files(tiny_world):

@@ -68,6 +68,7 @@ framework/tools/ship_pr.py
 framework/tools/merge_jsonl.py
 
 # The tests of the tools
+framework/tests/test_account_login.py
 framework/tests/test_agent_config.py
 framework/tests/test_claim.py
 framework/tests/test_claim_active_pr.py

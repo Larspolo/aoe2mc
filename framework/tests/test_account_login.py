@@ -1,5 +1,5 @@
 """The GitHub login of a Claude account: `agent_config.login` (#4243)."""
-from tools import agent_config
+import agent_config
 
 CONFIG = {
     "owner": "owner-login",
