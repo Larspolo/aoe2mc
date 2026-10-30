@@ -282,7 +282,7 @@ def grow(owner, lands, free, rng):
                 c = front[k]
                 front[k] = front[-1]
                 front.pop()
-                if owner[c] >= 0 or not free[c] or not inside(land, c):
+                if owner[c] >= 0 or not free[c] or not inside(land, c, rng):
                     continue
                 owner[c] = land["id"]
                 land["count"] += 1
@@ -293,10 +293,14 @@ def grow(owner, lands, free, rng):
             return
 
 
-def inside(land, c):
-    """True when tile c is in the borders of the land (its "box"), or the land has no borders."""
+def inside(land, c, rng=None):
+    """True when tile c is in the borders of the land (its "box"), or the land has no borders. A land with a "fuzz"
+    (border_fuzziness 0 to 100, #4422) takes a tile out of the box with the chance (100 - fuzz) %: 0 ignores the
+    borders, 100 keeps them. It draws only for such a tile, so that the maps of other scripts stay the same."""
     x0, x1, y0, y1 = land.get("box", (0, 1 << 30, 0, 1 << 30))
-    return x0 <= c[0] < x1 and y0 <= c[1] < y1
+    if x0 <= c[0] < x1 and y0 <= c[1] < y1:
+        return True
+    return rng is not None and land.get("fuzz", 100) < 100 and rng.uniform(0, 100) >= land["fuzz"]
 
 
 def near(c, n):
@@ -510,6 +514,7 @@ def generate(text, seed, players=2, size=None, warn=None, teams=None, folder=Non
             top = value(attrs["base_layer"][0], consts) if "base_layer" in attrs else None   # a layer on the land
             edge = {a: value(attrs[a][0], consts) * n // 100 if a in attrs else 0 for a in BORDERS}
             box = (edge["left_border"], n - edge["right_border"], edge["top_border"], n - edge["bottom_border"])
+            fuzz = value(attrs["border_fuzziness"][0], consts) if "border_fuzziness" in attrs else 100   # strict (#4422)
             if cmd == "create_player_lands":
                 total, turn = tiles(attrs, consts, n), rng.uniform(0, 2 * np.pi)
                 order = circle(sections.get("PLAYER_SETUP", ()), players, teams, seed)
@@ -520,7 +525,7 @@ def generate(text, seed, players=2, size=None, warn=None, teams=None, folder=Non
                     c = (int(round((n - 1) / 2 + RING * n * np.cos(a))), int(round((n - 1) / 2 + RING * n * np.sin(a))))
                     starts.append({"player": p, "x": c[0], "y": c[1], "base_size": base, "land": len(lands)})
                     links.append((c, p, zone if zone is not None else -1 - len(lands)))
-                    lands.append({"id": len(lands), "cells": square(c, base, n), "clump": clump, "box": box,
+                    lands.append({"id": len(lands), "cells": square(c, base, n), "clump": clump, "box": box, "fuzz": fuzz,
                                   "target": max(total // players, (2 * base + 1) ** 2)})
                     kinds[len(lands) - 1] = kind
                     layers[len(lands) - 1] = top
@@ -533,7 +538,7 @@ def generate(text, seed, players=2, size=None, warn=None, teams=None, folder=Non
                 if p:                                       # direct_placement: the land of player p (#3947)
                     starts.append({"player": p, "x": c[0], "y": c[1], "base_size": base, "land": len(lands)})
                 links.append((c, p, zone if zone is not None else -1 - len(lands)))
-                lands.append({"id": len(lands), "cells": square(c, base, n), "clump": clump, "box": box,
+                lands.append({"id": len(lands), "cells": square(c, base, n), "clump": clump, "box": box, "fuzz": fuzz,
                               "target": tiles(attrs, consts, n, (2 * base + 1) ** 2)})
                 kinds[len(lands) - 1] = kind
                 layers[len(lands) - 1] = top
@@ -637,6 +642,7 @@ CREATE_LAND = (                 # the attributes of create_land and create_playe
     "assign_to_team",
     "base_layer",
     "base_size",
+    "border_fuzziness",
     "bottom_border",
     "clumping_factor",
     "land_id",
