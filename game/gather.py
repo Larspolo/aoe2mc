@@ -302,7 +302,7 @@ class Map:
                 tile = int(o["tile"][0]), int(o["tile"][1])
                 if o["name"] in MINES:                                 # a mine at x.0 covers 2 tiles
                     res, amount, _ = MINES[o["name"]]
-                    self.mines[res][tile] = amount
+                    self.mines[res][tile] = amount + o.get("resource_delta", 0)   # resource_delta of a random map (#4429)
                     self.feet[tile] = object_footprint({"name": o["name"], "x": o["tile"][0], "y": o["tile"][1]}, self.T)
                     self.mine_at.update(dict.fromkeys(self.spot(tile), tile))
                     self.blocked |= self.spot(tile)
@@ -1116,7 +1116,8 @@ class Gather:
         return replay.seen(mobs, [(self.player, n, fp) for n, fp, _ in placed], self.player, self.map.T,
                            lambda n: combat.sight(n) + printing * (n in monk.MONKS) + watch * (n in lit)
                            + civs.SIGHT.get(civs.civ(self), {}).get(n, 0)   # the Chinese town center (#2118)
-                           + train.sight_more(techs, n, combat.stats(n)))   # Engineering (#3981)
+                           + train.sight_more(techs, n, combat.stats(n))    # Engineering (#3981)
+                           + civs.sight_units(self, n, combat.stats(n)))    # Macedonian units (#4448)
 
     def task(self, v, name):
         """Give the villager the look of its AoE2 task (`LUMBERJACK` ...), with the table of the converter."""

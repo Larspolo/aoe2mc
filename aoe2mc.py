@@ -334,8 +334,8 @@ def read_scx(path):
 
 def read_json(path):
     """A map description in JSON (#960), as read_scenario returns it: {"size": N, "terrain": N × N terrain IDs,
-    "elevation": N × N levels (default 0), "layer": N × N land layer IDs (default -1 = none, #3689), "objects": [{"name", "player", "x", "y", "rotation"} ...],
-    "players": {"1": {"civ": "BRITONS", "color": 0} ...}}. The IDs and names are those of AoE2ScenarioParser
+    "elevation": N × N levels (default 0), "layer": N × N land layer IDs (default -1 = none, #3689), "objects": [{"name", "player", "x", "y", "rotation", "resource_delta"} ...],
+    "players": {"1": {"civ": "BRITONS", "color": 0} ...}, "mood": a key of MOODS (optional)}. The IDs and names are those of AoE2ScenarioParser
     (TerrainId, object_kinds). The color is an index of buildings.COLOR_NAMES (default: the player number - 1)."""
     with open(path) as f:
         return map_description(json.load(f), path)
@@ -367,7 +367,8 @@ def map_description(d, path):
         t, prefix = ids[o["name"]]
         objects.append(dict(kind="U" if prefix == "H" else prefix, hero=prefix == "H", name=o["name"], id=t,
                             player=int(o.get("player", 0)), x=float(o["x"]), y=float(o["y"]),
-                            rotation=float(o.get("rotation", 0)), garrisoned=False, ref=ref, holder=None))
+                            rotation=float(o.get("rotation", 0)), garrisoned=False, ref=ref, holder=None)
+                       | ({"resource_delta": int(o["resource_delta"])} if "resource_delta" in o else {}))
     players = {0: {"color": "light_gray", "arch": "western", "civ": "GAIA", "view": None}}
     for pid, p in d.get("players", {}).items():
         pid, civ, color = int(pid), p.get("civ", "?").upper(), p.get("color", int(pid) - 1)
@@ -379,7 +380,7 @@ def map_description(d, path):
         players[pid] = {"color": buildings.COLOR_NAMES[(pid - 1) % 8], "arch": "western", "civ": "?", "view": None}
     terrain = apply_layers(arrays["terrain"].astype(np.int16), arrays["layer"], terrain_names)
     return (size, terrain, arrays["elevation"].astype(np.float32), terrain_names,
-            {k: "" for k in CHAPTERS}, objects, players)
+            {k: "" for k in CHAPTERS} | ({"mood": d["mood"]} if d.get("mood") in MOODS else {}), objects, players)
 
 
 def apply_layers(terrain, layer, terrain_names):
@@ -2783,7 +2784,7 @@ def write_objects(path, size, T, H, players, objects, cols, ground, timeline=Non
              "tile": [round(float(o["x"]), 3), round(float(o["y"]), 3)], "rotation": round(o.get("rotation", 0.0), 4)}
         if o.get("hero"):
             e["hero"] = True
-        for k in ("uuid", "footprint", "open"):
+        for k in ("uuid", "footprint", "open", "resource_delta"):
             if k in o:
                 e[k] = o[k]
         if o.get("ref") is not None:                    # the object ID of a recorded game (#407, #408)
@@ -6276,6 +6277,25 @@ def game_time(text):
     return ((h * 60 + mm) * 60 + ss) * 1000
 
 
+def match_spec(text):
+    """--match GAME:PROFILE → (GAME, PROFILE), two numbers."""
+    m = re.fullmatch(r"(\d+):(\d+)", text)
+    if not m:
+        raise argparse.ArgumentTypeError(f"{text!r}: give GAME:PROFILE, two numbers, for example 123:456")
+    return m.groups()
+
+
+def match_record(game, profile):
+    """The path of the record of a match: out/records/GAME_PROFILE/ keeps it, so a second call does not download."""
+    folder = os.path.join("out", "records", f"{game}_{profile}")
+    have = sorted(glob.glob(os.path.join(folder, "*.aoe2record")))
+    if have:
+        return have[0]
+    from tools import record_api       # a tool of the repository clone, not of the installed package
+    os.makedirs(folder, exist_ok=True)
+    return record_api.download(game, profile, folder)
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description="Convert an AoE2 DE scenario to a Minecraft Java world.")
     ap.add_argument("scenario", nargs="?", help=".aoe2scenario file, .aoe2record, .mgz, .mgx or .mgl (the start state of a recorded game), .scx "
@@ -6341,8 +6361,15 @@ def main(argv=None):
     ap.add_argument("--at", type=game_time, metavar="MM:SS",
                     help="recorded game: convert the state at this game time (buildings and trained units of the "
                          "commands until then; default: the start)")
+    ap.add_argument("--match", type=match_spec, metavar="GAME:PROFILE",
+                    help="recorded game: download the record of match GAME of player PROFILE (tools/record_api.py) "
+                    "into out/records/ and convert it; give only the output (#4484)")
     ap.add_argument("--verbose", action="store_true", help="print the time of each phase")
     a = ap.parse_args(argv)
+    if a.match:
+        if a.output is not None:
+            ap.error("--match replaces the input file: give only the output world folder")
+        a.output, a.scenario = a.scenario, match_record(*a.match)
     if a.fog and a.ambience == "off":
         ap.error("--fog writes a datapack: not with --ambience off")
     if a.random_map:
