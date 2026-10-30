@@ -1,19 +1,20 @@
 """The Hussite Wagon shields the units behind it (#4507, AoE2 DE wiki "Hussite Wagon": "Halves the damage dealt by enemy
-projectiles passing through its hitbox by taking 1 damage"): the key "shield", combat.shield_command and `aoe shield` of
+projectiles passing through its hitbox by taking 1 damage"): the key "shield", game/abilities/shield.py and `aoe shield` of
 the plugin. Test data, and arrows on a server."""
 import re
 import shutil
 import time
 
 import pytest
+from abilities import shield
 
 from game import combat, run
 
 
 def test_the_shield_command_gives_the_part_and_the_damage_of_the_wagon(monkeypatch):
-    monkeypatch.setattr(combat, "SHIELD", {"TEST_WAGON": {"part": 0.25, "takes": 2}})
-    assert combat.shield_command("u-1", "TEST_WAGON") == "aoe shield u-1 0.25 2"
-    assert combat.shield_command("u-1", "ARCHER") is None
+    monkeypatch.setattr(shield, "UNITS", {"TEST_WAGON": {"part": 0.25, "takes": 2}})
+    assert shield.command("u-1", "TEST_WAGON") == "aoe shield u-1 0.25 2"
+    assert shield.command("u-1", "ARCHER") is None
 
 
 def health(game, tag):
