@@ -50,6 +50,11 @@ parallel tickets do not change the same lines. Most rules have a check: `tools/d
   that is a code ticket: one test of the code with test data, not one test per data line (the old
   `tests/test_techs_*.py` broke this rule and are deleted; `tests/test_tech_effect_code.py`). `tools/ship_pr.py` stops
   such a change (exit 2).
+- A new unit ability of the Paper plugin (an `aoe NAME` command and its hooks in the fights, epic #4387) is one new
+  class that implements `Ability` (`game/plugin/src/main/java/aoe2mc/Ability.java`; its comment names the command and
+  the ticket) and its line in `src/main/resources/META-INF/services/aoe2mc.Ability` (`merge=union`): no change of
+  `AoePlugin.java`. A hook that the ability needs and `Ability` does not have yet is one default method there and one
+  loop at its place in `AoePlugin.java` (#4589, `tests/test_plugin_abilities.py`).
 - A new command of the Paper plugin: its line in the command list at the top of `AoePlugin.java` and its
   `if` block in `onCommand` go in alphabetical order of the command name, not after the last one (#795 and #813 conflicted).
 - A new optional field of `aoe stats` (a hit rule) is one `key=value` pair in the `tail` of `combat.stats_command`

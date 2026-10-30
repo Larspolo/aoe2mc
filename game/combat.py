@@ -260,14 +260,18 @@ def charge_command(uuid, name, T=4):
     return f"aoe chargeattack {uuid} {max(1, round(c['time'] / NORMAL * 20))} {c['attack']}{b}"
 
 
-def charged_volley_command(uuid, name):
+def charged_volley_command(uuid, name, T=4):
     """The plugin command of the charged volley of unit name (the key "charged_volley" of data/units.jsonl: the Xianbei
     Raider, #4546), or None: a shot at a unit that is not siege after a full charge of "time" AoE2 seconds also fires
-    "shots" arrows of "attack" with "bonus" (aoe chargedvolley; its time as ticks at Normal speed)."""
+    "shots" arrows of "attack" with "bonus" (aoe chargedvolley; its time as ticks at Normal speed). The optional
+    "range" (tiles × T blocks: a melee unit fires at its target in it, the Fire Lancer, #4547) and "ignore" (the shots
+    ignore the armor) are extra fields."""
     c = CHARGED_VOLLEY.get(name)
-    bonus = ",".join(f"{k}:{v}" for k, v in sorted(c.get("bonus", {}).items())) or "-" if c else ""
-    return f"aoe chargedvolley {uuid} {max(1, round(c['time'] / NORMAL * 20))} {c['shots']} {c['attack']} {bonus}" \
-        if c else None
+    if not c:
+        return None
+    bonus = ",".join(f"{k}:{v}" for k, v in sorted(c.get("bonus", {}).items())) or "-"
+    extra = f" {c.get('range', 0) * T} {int(c.get('ignore', False))}" if "range" in c or c.get("ignore") else ""
+    return f"aoe chargedvolley {uuid} {max(1, round(c['time'] / NORMAL * 20))} {c['shots']} {c['attack']} {bonus}" + extra
 
 
 def speed_charge_command(uuid, name, T):
@@ -468,7 +472,7 @@ def setup(game, data):
         if cmd := speed_charge_command(o["uuid"], o["name"], data.get("tile_size", 4)):
             game.command(cmd)
     for o in units:                                  # a Xianbei Raider fires a charged volley (#4546)
-        if cmd := charged_volley_command(o["uuid"], o["name"]):
+        if cmd := charged_volley_command(o["uuid"], o["name"], data.get("tile_size", 4)):
             game.command(cmd)
     for o in units:                                  # a Shrivamsha Rider dodges projectiles (#4399)
         if cmd := dodge_command(o["uuid"], o["name"]):

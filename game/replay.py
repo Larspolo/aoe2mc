@@ -108,6 +108,8 @@ POLL = 0.2                  # seconds between two calls of the poll of Replay.ru
 CENSUS = 1.0                # seconds of real time between two censuses: each count is one RCON round trip (2 to 5 ms
                             # at a 45 ms server tick); once per game second at speed 4 took 23 % of the loop (#2761)
 NEXT = 5                    # tiles: an empty resource sends its villager to the next one this near (#720)
+NEXT_TREES = 8              # tiles: the same for a tree: AoE2 lumberjacks walk farther; in de-64.3, 19 had the next
+                            # tree 5 to 8 tiles away and stood idle (#4063)
 NEAR = 2                    # blocks: a unit of the plugin this near to its replay position is at its resource (#766)
 SEEN = 32                   # blocks: the server sends a particle only to the players this near (a sound of volume 1
                             # carries 16): a gather step farther from each player sends no look (#2761, the loop lag)
@@ -1632,8 +1634,8 @@ class Replay:
         elif tile and e.get("target") not in self.refs and e.get("target") not in self.units:   # a cut tree (#3976)
             goals = self.map.around(self.map.cells(tile)) or goals
         home = self.holder(e)
-        if home and e.get("target") not in self.refs:              # a building of the replay: next to it (#876)
-            x0, x1, z0, z1 = home[0]
+        if (home or church) and e.get("target") not in self.refs:  # a building of the replay: next to it (#876, #4602)
+            x0, x1, z0, z1 = home[0] if home else church
             goals = self.map.around({(x, z) for x in range(x0, x1) for z in range(z0, z1)})
         for i, v in group:                                          # a new MOVE or ORDER stops the work
             self.working.pop(i, None)
@@ -2026,13 +2028,13 @@ class Replay:
         return self.look(v, "none") if way is None else self.go(i, v, *way, t)
 
     def reachable(self, v, at):
-        """(tile, path) of the resource of the kind of v within NEXT tiles of cell `at` that has something left and
-        is nearest on a path from v (one path search for all of them, #869), or None."""
-        T, w = self.T, ship(v.name)
-        far = {k: math.dist((at[0] / T, at[1] / T), (k[0] + 0.5, k[1] + 0.5)) for k, n in self.crew.source(v).items()
-               if n > 0}
+        """(tile, path) of the resource of the kind of v within NEXT tiles (a tree: NEXT_TREES) of cell `at` that has
+        something left and is nearest on a path from v (one path search for all of them, #869), or None."""
+        T, w, src = self.T, ship(v.name), self.crew.source(v)
+        far = {k: math.dist((at[0] / T, at[1] / T), (k[0] + 0.5, k[1] + 0.5)) for k, n in src.items() if n > 0}
+        near = NEXT_TREES if src is self.map.trees else NEXT
         goals = {}
-        for d, k in sorted((d, k) for k, d in far.items() if d <= NEXT):
+        for d, k in sorted((d, k) for k, d in far.items() if d <= near):
             for c in self.map.around(self.map.spot(k), w):        # a fishing ship: the water next to the fish
                 goals.setdefault(c, k)                              # a cell next to two of them: the nearer one
         path = self.map.path(v.cell, goals, PATH_CELLS, w)
@@ -2290,7 +2292,10 @@ class Replay:
         """The footprint of the own start monastery (or a building that stands for it, combat.STANDS_FOR) that an ORDER
         or a GARRISON targets, or None."""
         import combat
-        o = self.refs.get(e.get("target"))
+        t, n = e.get("target"), e.get("target_name")
+        o = self.refs.get(t)
+        if o is None and t is not None and t not in self.units and combat.STANDS_FOR.get(n, n) == "MONASTERY":
+            return self.new_building(t, n, e["player"], e.get("tile"))        # a monastery of the replay (#4602)
         if not o or o["kind"] != "building" or o["player"] != e["player"]:
             return None
         if combat.STANDS_FOR.get(o["name"], o["name"]) != "MONASTERY":
@@ -2351,12 +2356,14 @@ class Replay:
 
     def rate(self, v):
         """The AoE2 work rate of unit v at its resource (per game second): a farm, a hunt and a fish have their own
-        rates, and a fishing ship has its own rates (#1283)."""
+        rates, and a fishing ship has its own rates (#1283). The work technologies of the player (gather.WORK_TECHS:
+        Double-Bit Axe, Bow Saw, ...) make it faster: without them the estimate of a live replay went far below 0 (#4584)."""
         m, t = self.map, v.tree
         if t in m.fish and ship(v.name):
             return self.gather.SHIP_WORK["shore" if t in m.shore else "deep"]
-        return self.gather.AOE2_WORK["farm" if t in m.farms else "hunt" if t in m.carcasses else "fish" if t in m.fish
-                                     else m.resource(t)]
+        kind = "farm" if t in m.farms else "hunt" if t in m.carcasses else "fish" if t in m.fish else m.resource(t)
+        return self.gather.AOE2_WORK[kind] * math.prod(self.gather.WORK_TECHS.get(n, {}).get(kind, 1)
+                                                      for n in self.upgrades(getattr(v, "player", None), math.inf))
 
     def state(self, i):
         return aoe2mc.B.states[i]
