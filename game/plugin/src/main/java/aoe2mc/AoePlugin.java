@@ -124,6 +124,9 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *                                              Jian Swordsman, #4472, game/combat.py low_hp_command): that melee and
  *                                              pierce armor and a movement speed factor; at hp or more again the armor
  *                                              of its last aoe stats and no speed modifier
+ *   aoe speedcharge <selector> <speed> <min> <max>  the unit walks speed (a factor, 0.25 = 25 %) faster while its
+ *                                              target is min to max blocks away (the Samurai, #4545, game/combat.py
+ *                                              speed_charge_command); nearer (at its hit) the normal speed again
  *   aoe veteran <selector> <attack> <max>      the unit gets attack more for each unit that it kills, up to max (the
  *                                              Jaguar Warrior, #4467, game/combat.py veteran_command); a new call
  *                                              keeps the kills (an Elite upgrade)
@@ -485,6 +488,8 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     private final Map<UUID, ArrayDeque<Integer>> frenzyHits = new HashMap<>();   // the ticks of its recent hits
     private final Map<UUID, LowHp> lowHps = new HashMap<>();    // aoe lowhp: the low hit point form of a unit (#4472)
     private static final NamespacedKey LOW_SPEED = new NamespacedKey("aoe2mc", "low_hp_speed");
+    private final Map<UUID, double[]> speedCharges = new HashMap<>();   // aoe speedcharge (#4545): {speed, min, max}
+    private static final NamespacedKey CHARGE_SPEED = new NamespacedKey("aoe2mc", "speed_charge");
 
     // The low hit point form of a unit (#4472): below "hp" the armor "melee" and "pierce" and the speed factor "speed".
     // low: the unit is in that form; normal: the melee and pierce armor of its last aoe stats.
@@ -1371,6 +1376,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         Bukkit.getScheduler().runTaskTimer(this, () -> dots.tick(this::dotHurt), Dot.STEP, Dot.STEP);
         Bukkit.getScheduler().runTaskTimer(this, this::unhit, 1L, 1L);
         Bukkit.getScheduler().runTaskTimer(this, this::lowHp, 1L, 1L);
+        Bukkit.getScheduler().runTaskTimer(this, this::speedCharge, 2L, 2L);
         Bukkit.getScheduler().runTaskTimer(this, this::watch, 20L, 20L);
         Bukkit.getScheduler().runTaskTimer(this, this::towers, 2L, 2L);
         Bukkit.getScheduler().runTaskTimer(this, this::hold, 4L, 4L);
@@ -1597,6 +1603,31 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         return new Stats(t.attack, t.melee > 0 ? Math.max(0, t.melee - n) : t.melee,
                 t.pierce > 0 ? Math.max(0, t.pierce - n) : t.pierce, t.ranged, t.pierces, t.classes, t.bonus, t.reload,
                 t.taken, t.friendly, t.less, t.ignores, t.rage, t.reflect);
+    }
+
+    // The speed charge (aoe speedcharge, #4545): vanilla has no "faster near the target" rule, so the plugin reads the
+    // distance to the target and sets a speed modifier on the mob that walks (the horse of a mounted unit). Below min
+    // blocks (the hit) the modifier goes, as the charge "dissipates once impact is made" (AoE2 wiki, "Samurai").
+    private void speedCharge() {
+        speedCharges.entrySet().removeIf(en -> {
+            if (!(Bukkit.getEntity(en.getKey()) instanceof Mob m) || !m.isValid()) {
+                return true;
+            }
+            double[] c = en.getValue();
+            LivingEntity t = target(m);
+            double d = t == null || t.getWorld() != m.getWorld() ? -1 : m.getLocation().distance(t.getLocation());
+            boolean on = d >= c[1] && d <= c[2];
+            LivingEntity walker = m.getVehicle() instanceof LivingEntity v ? v : m;
+            AttributeInstance speed = walker.getAttribute(Attribute.MOVEMENT_SPEED);
+            if (speed != null && on != (speed.getModifier(CHARGE_SPEED) != null)) {
+                speed.removeModifier(CHARGE_SPEED);
+                if (on) {
+                    speed.addTransientModifier(new AttributeModifier(CHARGE_SPEED, c[0],
+                            AttributeModifier.Operation.ADD_SCALAR));
+                }
+            }
+            return false;
+        });
     }
 
     // Each tick, not at each change of the hit points: hits, heals and setHealth have many places (harm, regen, monks).
@@ -3109,6 +3140,23 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                 n++;
             }
             sender.sendMessage("Low HP: " + n + " units");
+            return true;
+        }
+        if (args.length == 5 && args[0].equals("speedcharge")) {      // a Samurai: faster near its target (#4545)
+            double[] c;
+            try {
+                c = new double[] {Double.parseDouble(args[2]), Double.parseDouble(args[3]), Double.parseDouble(args[4])};
+            } catch (NumberFormatException e) {
+                sender.sendMessage("Bad number: " + e.getMessage());
+                return true;
+            }
+            int n = 0;
+            for (Entity e : select(sender, args[1])) {
+                Entity u = rider(e) instanceof Mob r ? r : e;      // the rider of a mounted unit has the target (#710)
+                speedCharges.put(u.getUniqueId(), c);
+                n++;
+            }
+            sender.sendMessage("Speed charge: " + n + " units");
             return true;
         }
         if (args.length == 4 && args[0].equals("veteran")) {          // a Jaguar Warrior: attack for each kill (#4467)
