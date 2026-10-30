@@ -794,19 +794,21 @@ def retower(g, before, fresh=None):
     """The complete own buildings get their new values after a tower technology (#1374) or Masonry (#1398, values): the
     target keeps its lost hit points, as a wall (upgrade). before: the technologies before the research. fresh: the
     footprint of a building that has a new upgrade of one building (#2497), else None. A destroyed building stays air."""
-    import combat, repair                                              # combat -> gather -> build: import it late
+    import combat, repair, train                                       # combat -> gather -> build: import it late
     rects = [(x0, x1, z0, z1, o["name"]) for o in g.data["objects"] if o["kind"] == "building" and o["player"] == g.player
              and "footprint" in o for x0, z0, x1, z1 in [o["footprint"]]] \
         + [(*s["footprint"], s["name"]) for s in g.sites if s.get("done") and s["player"] == g.player]
     for x0, x1, z0, z1, name in rects:
         rect = (x0, x1, z0, z1)
         a, b, new = values(g, name, before, None if rect == fresh else rect), values(g, name, rect=rect), line(g, name)
-        if (a, minimum(g, new, before), taken(g, new, before)) == (b, minimum(g, new), taken(g, new)) or (hp := repair.hp(g, (x0, x1, z0, z1))) is None or hp <= 0:
+        if (a, minimum(g, new, before), taken(g, new, before), train.dot(g, new, a, before)) == \
+                (b, minimum(g, new), taken(g, new), train.dot(g, new, b)) or (hp := repair.hp(g, (x0, x1, z0, z1))) is None or hp <= 0:
             continue
         uuid = combat.target_uuid([x0, z0, x1, z1])
         box = combat.building_box({"footprint": [x0, z0, x1, z1]}, g.map.ground)
         for c in [c for c in combat.building(uuid, new, g.player, box, g.map.T, s=b, low=minimum(g, new),
-                                                taken=taken(g, new)) if c.startswith("aoe building ")] \
+                                                taken=taken(g, new), dot=train.dot(g, new, b))
+                  if c.startswith("aoe building ")] \
                 + [f"scoreboard players set {uuid} aoe_hp {min(b.hp, hp + b.hp - a.hp)}", combat.label_command(uuid, new)]:
             g.command(c)
 
@@ -889,7 +891,8 @@ def target(g, site):
     for c in combat.building(uuid, name, site["player"], box, g.map.T, s=s, low=minimum(g, name),
                              factor=civs.arrows(g, name, site["player"]), taken=taken(g, name),
                              more=train.more_arrows(g, name) if site["player"] == g.player else 0,
-                             through=train.pass_arrows(g, name) if site["player"] == g.player else "") \
+                             through=train.pass_arrows(g, name) if site["player"] == g.player else "",
+                             dot=train.dot(g, name, s) if site["player"] == g.player else None) \
             + [f"tag {uuid} add {combat.WALL_TAG}"] * wall + [combat.label_command(uuid, name)]:
         g.command(c)
     forts(g, site)

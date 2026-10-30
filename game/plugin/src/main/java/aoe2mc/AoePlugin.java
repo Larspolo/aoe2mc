@@ -3,6 +3,7 @@ package aoe2mc;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -1511,6 +1512,9 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             }
         }
         double dealt = harm(victim, t, a, fort != null ? ev.getDamager() : from);   // a unit does not attack back at a building
+        if (fort != null) {
+            dots.start(from, victim, t.classes());           // harm() has the arrow, not the building (Curare, #4641)
+        }
         if (fort == null && sunders.get(from.getUniqueId()) instanceof Integer n && stats.get(hurt.getUniqueId()) == t) {
             stats.put(hurt.getUniqueId(), sunder(t, n));      // an Obuch lowers the armor of its target (#4466)
         }
@@ -3593,6 +3597,18 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         if (args.length >= 3 && args[0].equals("sightedge")) {          // the edge of the line of sight (#3330)
             return sight.command(sender, args, args[1].equals("count") ? List.of() : players(sender, args[1]));
         }
+        Dot.Rule fortDot = null;                             // the last field dot=damage:ticks:classes (Curare, #4641)
+        if (args.length >= 12 && args[0].equals("building") && args[args.length - 1].startsWith("dot=")) {
+            String[] d = args[args.length - 1].substring(4).split(":", 3);
+            try {
+                fortDot = new Dot.Rule(Double.parseDouble(d[0]), Math.max(1, Integer.parseInt(d[1])),
+                        d.length < 3 || d[2].equals("-") ? Set.of() : Set.of(d[2].split(",")));
+            } catch (RuntimeException e) {
+                sender.sendMessage("Bad number: " + e.getMessage());
+                return true;
+            }
+            args = Arrays.copyOf(args, args.length - 1);
+        }
         if ((args.length == 11 || args.length == 12 || args.length >= 15 && args.length <= 18) && args[0].equals("building")) {
             int hp;
             double range = 0, min = 0;
@@ -3627,6 +3643,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                     le.setCollidable(false);                  // units walk up to the walls, not off the slime
                     le.setFireTicks(0);                       // it can stand in lava before this command (#1526)
                     buildings.put(le.getUniqueId(), new Building(st, box, hp, b, range, min));
+                    dots.set(le.getUniqueId(), fortDot);       // the arrows of the building (Curare, #4641)
                     hp().getScoreFor(le).setScore(hp);
                     n++;
                 }

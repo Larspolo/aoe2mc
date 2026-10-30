@@ -344,7 +344,7 @@ def wall(name, age, civ=None, factor=1):
     return civs.hp(civ, name, Stats(hp[age], 0, melee, pierce, 0, 0.0, {}, ("building", WALL) + (STONE,) * (not name.startswith("PALISADE"))), age, factor)
 
 
-def building(uuid, name, player, box, T=4, inside=(), s=None, low=None, factor=1, more=0, taken=1, through=""):
+def building(uuid, name, player, box, T=4, inside=(), s=None, low=None, factor=1, more=0, taken=1, through="", dot=None):
     """The commands that make building `name` of `player` a target of attacks (#517): an invisible slime without AI
     that fills the footprint takes the attacks (a mob attacks only a living entity: AoePlugin.java), and the plugin
     keeps the AoE2 hit points. box: the blocks (x0, y0, z0, x1, y1, z1), both ends included, y0 the ground.
@@ -357,7 +357,9 @@ def building(uuid, name, player, box, T=4, inside=(), s=None, low=None, factor=1
     (civs.arrows, #2178). more: the arrows of the technologies (train.more_arrows, #4258). taken: the factor of the
     bonus damage that the building takes (build.taken: Citadels, #4281), only for a building that shoots; a factor
     other than 1 writes the classes and the bonus ("-": none) before it. through: the end of `aoe arrows` for arrows that
-    pass through the units (train.pass_arrows: Svan Towers, #4282).
+    pass through the units (train.pass_arrows: Svan Towers, #4282). dot: the damage over time of each arrow, (damage,
+    AoE2 seconds, the target classes or ()) of train.dot (Curare, #4641), only for a building that shoots: the last
+    field "dot=damage:ticks:classes", as in stats_command.
     At 0 hit points the plugin fills the box with air. The invisibility effect hides the slime: the tag Invisible is
     only for armor stands, the server drops it on a slime (#636)."""
     x0, y0, z0, x1, y1, z1 = box
@@ -377,7 +379,9 @@ def building(uuid, name, player, box, T=4, inside=(), s=None, low=None, factor=1
          + (f" {','.join(s.classes)}" if s.classes != ("building", STANDARD) or bonus or taken != 1 else "")   # a wall, a
                                                                             # gate, the wonder (#1419), a tower (STONE, #1590)
          + (f" {bonus or '-'}" if bonus or taken != 1 else "")              # the arrow bonus (Heated Shot, #1548)
-         + (f" {taken:g}" if taken != 1 else "")]                           # Citadels (#4281)
+         + (f" {taken:g}" if taken != 1 else "")                            # Citadels (#4281)
+         + (f" dot={dot[0]:g}:{max(1, round(dot[1] / NORMAL * 20))}:{','.join(sorted(dot[2])) or '-'}"
+            if dot and s.attack and s.range else "")]                       # Curare (Dot.java, #4641)
 
 
 def building_box(o, ground):
