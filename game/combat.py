@@ -89,6 +89,7 @@ MIN_RANGE = {r["name"]: r["min_range"] for r in UNIT_ROWS if "min_range" in r}
 ACCURACY = {r["name"]: r["accuracy"] for r in UNIT_ROWS if "accuracy" in r}   # siege shots at units that hit (#2479)
 AURA = {r["name"]: r["aura"] for r in UNIT_ROWS if "aura" in r}              # own units near it move and attack faster (#4470)
 DODGE = {r["name"]: r["dodge"] for r in UNIT_ROWS if "dodge" in r}           # projectiles that do no damage (#4399)
+VETERAN = {r["name"]: r["veteran"] for r in UNIT_ROWS if "veteran" in r}     # attack more for each kill (#4467)
 SHIELD = {r["name"]: r["shield"] for r in UNIT_ROWS if "shield" in r}         # projectiles through it hurt less (#4507)
 # The minimum range of the buildings that shoot, in tiles from the edge of the footprint (AoE2 DE, wiki infobox
 # "MinRange", #1546). The town center has none. Murder Holes removes it.
@@ -271,6 +272,14 @@ def shield_command(uuid, name):
     return f"aoe shield {uuid} {s['part']:g} {s['takes']}" if s else None
 
 
+def veteran_command(uuid, name):
+    """The plugin command of the kill bonus of unit name (the key "veteran" of data/units.jsonl: the Jaguar Warrior,
+    #4467), or None. AoE2 wiki ("Jaguar Warrior"): "Gains +1 attack for each unit killed (up to 4)": "attack" for each
+    kill, up to "max". The plugin keeps the kills of a unit when it gets the command again (an Elite upgrade)."""
+    v = VETERAN.get(name)
+    return f"aoe veteran {uuid} {v['attack']} {v['max']}" if v else None
+
+
 def trample_command(uuid, name, T, t=None):
     """The plugin command of the trample damage of unit name (the key "trample" of data/units.jsonl: the elephants,
     #4397), or None. Each melee hit also hurts the other enemy units within "radius" tiles (× T blocks) of the target
@@ -367,6 +376,9 @@ def setup(game, data):
         for cmd in [aura_command(o["uuid"], o["name"], data.get("tile_size", 4))] + aura_tags(o["uuid"], o["name"]):
             if cmd:
                 game.command(cmd)
+    for o in units:                                  # a Jaguar Warrior gets attack for each kill (#4467)
+        if cmd := veteran_command(o["uuid"], o["name"]):
+            game.command(cmd)
     for o in units:                                  # a Hussite Wagon shields the units behind it (#4507)
         if cmd := shield_command(o["uuid"], o["name"]):
             game.command(cmd)

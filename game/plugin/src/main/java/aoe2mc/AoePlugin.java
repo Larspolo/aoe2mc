@@ -117,6 +117,9 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *                                              move and attack faster (the Centurion, #4470, game/combat.py
  *                                              aura_command): movement speed * (1 + speed), melee reload / (1 + attack
  *                                              speed). Two auras do not add up: the highest values count
+ *   aoe veteran <selector> <attack> <max>      the unit gets attack more for each unit that it kills, up to max (the
+ *                                              Jaguar Warrior, #4467, game/combat.py veteran_command); a new call
+ *                                              keeps the kills (an Elite upgrade)
  *   aoe attackground <selector> <x> <y> <z>    AoE2 "Attack Ground" (#4078): a siege unit with a blast walks into its
  *                                              range of the point and shoots there with its reload until a new order
  *   aoe ballistics <team> on|off               Ballistics of the player (#1549): its archers and buildings aim where a
@@ -460,6 +463,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     private Map<UUID, Double> boosted = new HashMap<>();
     // one key for all auras: a second aura replaces the modifier, so two auras do not stack (the Minecraft feature)
     private static final NamespacedKey AURA_KEY = new NamespacedKey("aoe2mc", "aura");
+    private final Map<UUID, int[]> veterans = new HashMap<>();  // aoe veteran (#4467): {attack, max, kills}; rider and horse share it
 
     // The AoE2 dodge of a unit (#4399): "gauge" shots left at tick "at"; it fills by "shots" in "ticks", up to "shots".
     private static final class Dodge {
@@ -1442,10 +1446,16 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     // The attack more of a hit of unit e with the values a (Hamask, #4332): rage for each 10 % of its lost hit points.
     private int rage(Stats a, Entity e) {
         if (a.rage <= 0 || !(body(e) instanceof LivingEntity le) || le.getAttribute(Attribute.MAX_HEALTH) == null) {
-            return 0;
+            return veteran(e);
         }
         double max = le.getAttribute(Attribute.MAX_HEALTH).getValue();
-        return a.rage * (int) Math.floor(Math.max(0, 1 - le.getHealth() / max) * 10 + 1e-9);
+        return a.rage * (int) Math.floor(Math.max(0, 1 - le.getHealth() / max) * 10 + 1e-9) + veteran(e);
+    }
+
+    // The attack more of unit e of its kills (aoe veteran, the Jaguar Warrior, #4467): attack for each kill, up to max.
+    private int veteran(Entity e) {
+        int[] v = e == null ? null : veterans.get(e.getUniqueId());
+        return v == null ? 0 : Math.min(v[1], v[0] * v[2]);
     }
 
     // A fight between two samples of aoe where (#1169): tools/replay_drift.py does not count the moves of a fight as
@@ -1512,6 +1522,9 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         if (before > 0 && victim.getHealth() <= 0) {
             kill(from, a, t);
             unitKill(from, victim, a);
+            if (from != null && veterans.get(from.getUniqueId()) instanceof int[] v) {
+                v[2]++;                                            // a Jaguar Warrior gets stronger (#4467)
+            }
         }
         nameLine(victim);
         if (victim.getHealth() > 0 && from instanceof LivingEntity attacker && !attacker.isDead()) {   // a detonation
@@ -1907,6 +1920,9 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         if (victim.getHealth() <= 0 && by != null && a != null) {
             kill(by, a, t);
             unitKill(by, victim, a);
+            if (veterans.get(by.getUniqueId()) instanceof int[] v) {
+                v[2]++;                                            // a Jaguar Warrior gets stronger (#4467)
+            }
         }
         nameLine(victim);
     }
@@ -2945,6 +2961,30 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                 n++;
             }
             sender.sendMessage("Aura: " + n + " units");
+            return true;
+        }
+        if (args.length == 4 && args[0].equals("veteran")) {          // a Jaguar Warrior: attack for each kill (#4467)
+            int attack, max;
+            try {
+                attack = Integer.parseInt(args[2]);
+                max = Integer.parseInt(args[3]);
+            } catch (NumberFormatException e) {
+                sender.sendMessage("Bad number: " + e.getMessage());
+                return true;
+            }
+            int n = 0;
+            for (Entity e : select(sender, args[1])) {
+                int[] v = veterans.getOrDefault(e.getUniqueId(), new int[3]);   // an Elite upgrade keeps the kills
+                v[0] = attack;
+                v[1] = max;
+                for (Entity t : new Entity[] {crew(e), e.getVehicle(), e}) {   // the rider and its horse (#732)
+                    if (t != null) {
+                        veterans.put(t.getUniqueId(), v);
+                    }
+                }
+                n++;
+            }
+            sender.sendMessage("Veteran: " + n + " units");
             return true;
         }
         if (args.length >= 2 && args[0].equals("allies")) {            // the alliances of the players (#1315)

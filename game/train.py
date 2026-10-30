@@ -1293,6 +1293,8 @@ def research(g, entry, start=False, rect=None):
             for cmd in [combat.aura_command(uuid, new, g.map.T)] + combat.aura_tags(uuid, new):   # Elite Centurion (#4470)
                 if cmd:
                     g.command(cmd)
+            if cmd := combat.veteran_command(uuid, new):          # an Elite Jaguar Warrior keeps its kills (#4467)
+                g.command(cmd)
             if cmd := combat.shield_command(uuid, new):           # an Elite Hussite Wagon (#4507)
                 g.command(cmd)
             if cmd := combat.trample_command(uuid, new, g.map.T):   # an elite elephant tramples (#4397)
@@ -1525,6 +1527,8 @@ def summon(g, name, pos, rotation=math.pi / 2, player=None):
     for cmd in [combat.aura_command(uuid, name, g.map.T)] + combat.aura_tags(uuid, name):   # a Centurion aura (#4470)
         if cmd:
             g.command(cmd)
+    if cmd := combat.veteran_command(uuid, name):                  # a Jaguar Warrior gets attack for each kill (#4467)
+        g.command(cmd)
     if cmd := combat.shield_command(uuid, name):                   # a Hussite Wagon shields the units behind it (#4507)
         g.command(cmd)
     if cmd := combat.trample_command(uuid, name, g.map.T):         # an elephant tramples the units next to its target (#4397)
