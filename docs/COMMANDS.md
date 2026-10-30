@@ -15,6 +15,7 @@ these rows are here (2026-10-29).
 | Gather timing | `python3 tools/measure_gather.py` (server, no client: walk, chop and trip times next to AoE2; `--read F.jsonl` reads a `game/run.py --play --log` file) |
 | Replay drift | `python3 tools/replay_drift.py samples/de-64.3.aoe2record --speed 4 --until 10:00 --log F.jsonl` (Paper, no client: distance of each unit to its replay position, stuck, stray and dead units per kind; `--read F.jsonl`, #813) |
 | Convert a match | `python3 aoe2mc.py --match GAME:PROFILE OUTWorld` (downloads the record into `out/records/` once; `python3 tools/record_api.py download GAME PROFILE DIR` writes only the `.aoe2record`, #4484) |
+| Idle villager causes | `python3 tools/idle_split.py OUTWorld/aoe2mc.json` (offline replay of a converted record, no server, about 2 min: the idle time of each player split by the last record event of each villager; `--unit ID,ID --from MM:SS --to MM:SS` traces units, #4063) |
 | Server profile | `python3 tools/server_profile.py [--seconds 60]` (next to a running Paper server: the top methods of the server thread, own and inclusive, Java Flight Recorder; `replay_drift.py --profile MM:SS-MM:SS`, #3336) |
 | Conversion cost | `python3 tools/measure_convert.py IN.aoe2scenario` (seconds and peak memory of each phase; `docs/research/large-maps.md`) |
 | Unit count cost | `python3 tools/measure_units.py [--units 200,500,1000]` (Paper, no client: RCON commands per second and `/tick query` with many units that walk with `aoe moveto`, #943) |
