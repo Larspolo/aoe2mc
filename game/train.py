@@ -1070,6 +1070,19 @@ def applies(unit, name):
     return unit == name or test is not None and name in combat.STATS and test(set(combat.stats(name).classes))
 
 
+def trample_command(g, uuid, name):
+    """combat.trample_command of unit name: its own trample (the elephants, #4397), else the splash of a researched
+    technology with the key "trample" whose effect holds for the unit (Druzhina, #4496), with the blast radius of the
+    unit (stats). None without both."""
+    import combat                                                  # combat imports gather, gather imports this module
+    if name in combat.TRAMPLE:
+        return combat.trample_command(uuid, name, g.map.T)
+    s = stats(g, name, uuid)
+    t = next((t for tech, t in sorted(BY_KEY["trample"].items()) if tech in g.techs and s.blast and not s.range
+              and any(test(x, name, combat.stats(name)) for x in value("effect", tech).get("if", ()))), None)
+    return t and combat.trample_command(uuid, name, g.map.T, {**t, "radius": s.blast})
+
+
 def stats(g, name, uuid=None):
     """The combat values of AoE2 unit name with the bonuses of the civilization (civs.UNITS) and the technologies of
     the player (combat.stats and TECHS), twice for civs.TWICE (#1561), n times for civs.SMITH_UNITS (#2174), and the
@@ -1293,11 +1306,13 @@ def research(g, entry, start=False, rect=None):
             for cmd in [combat.aura_command(uuid, new, g.map.T)] + combat.aura_tags(uuid, new):   # Elite Centurion (#4470)
                 if cmd:
                     g.command(cmd)
+            if cmd := combat.low_hp_command(uuid, new):           # an Elite Jian Swordsman (#4472)
+                g.command(cmd)
             if cmd := combat.veteran_command(uuid, new):          # an Elite Jaguar Warrior keeps its kills (#4467)
                 g.command(cmd)
             if cmd := combat.shield_command(uuid, new):           # an Elite Hussite Wagon (#4507)
                 g.command(cmd)
-            if cmd := combat.trample_command(uuid, new, g.map.T):   # an elite elephant tramples (#4397)
+            if cmd := trample_command(g, uuid, new):              # an elite elephant tramples (#4397)
                 g.command(cmd)
             g.command(combat.label_command(uuid, new))               # the name of a new unit (units.pretty)
     import trebuchet                                               # trebuchet imports this module: import it late
@@ -1310,8 +1325,10 @@ def research(g, entry, start=False, rect=None):
         if name == trebuchet.NAME and trebuchet.state(g, uuid) != "unpacked":
             continue                                               # packed: range 0, the unpack sends the range (#1414)
         new, base = stats(g, name), combat.stats(name)              # the range (Fletching, #724) or the blast (Warwolf, #4283)
-        if (new.range, new.blast) != (base.range, base.blast):
-            g.command(combat.range_command(uuid, name, g.map.T, s=stats(g, name, uuid)))
+        if (new.range, new.blast) != (base.range, base.blast) and (cmd := combat.range_command(uuid, name, g.map.T, s=stats(g, name, uuid))):
+            g.command(cmd)                                         # a melee unit with a blast has no range (#4496)
+        if entry["name"] in BY_KEY["trample"] and (cmd := trample_command(g, uuid, name)):
+            g.command(cmd)                                         # the live units get the splash (Druzhina, #4496)
     for cmd in [c for uuid, name in g.soldiers.items() for c in fire_commands(g, uuid, name, {entry["name"]})]:
         g.command(cmd)                                             # the live fire ships: Siphons, Incendiaries (#2165)
     for uuid, name in g.soldiers.items():                          # the live gunpowder units aim ahead (Arquebus, #4364)
@@ -1527,11 +1544,13 @@ def summon(g, name, pos, rotation=math.pi / 2, player=None):
     for cmd in [combat.aura_command(uuid, name, g.map.T)] + combat.aura_tags(uuid, name):   # a Centurion aura (#4470)
         if cmd:
             g.command(cmd)
+    if cmd := combat.low_hp_command(uuid, name):                   # a Jian Swordsman loses its shield below 45 HP (#4472)
+        g.command(cmd)
     if cmd := combat.veteran_command(uuid, name):                  # a Jaguar Warrior gets attack for each kill (#4467)
         g.command(cmd)
     if cmd := combat.shield_command(uuid, name):                   # a Hussite Wagon shields the units behind it (#4507)
         g.command(cmd)
-    if cmd := combat.trample_command(uuid, name, g.map.T):         # an elephant tramples the units next to its target (#4397)
+    if cmd := trample_command(g, uuid, name):                      # an elephant tramples the units next to its target (#4397)
         g.command(cmd)
     if cmd := combat.sight_command(uuid, name, g.map.T, s=stats(g, name), more=sight_more(g.techs, name, combat.stats(name))
                                   + civs.sight_units(g, name, combat.stats(name))):   # it attacks enemies in sight (#775)

@@ -89,6 +89,7 @@ MIN_RANGE = {r["name"]: r["min_range"] for r in UNIT_ROWS if "min_range" in r}
 ACCURACY = {r["name"]: r["accuracy"] for r in UNIT_ROWS if "accuracy" in r}   # siege shots at units that hit (#2479)
 AURA = {r["name"]: r["aura"] for r in UNIT_ROWS if "aura" in r}              # own units near it move and attack faster (#4470)
 DODGE = {r["name"]: r["dodge"] for r in UNIT_ROWS if "dodge" in r}           # projectiles that do no damage (#4399)
+LOW_HP = {r["name"]: r["low_hp"] for r in UNIT_ROWS if "low_hp" in r}      # another form below some hit points (#4472)
 VETERAN = {r["name"]: r["veteran"] for r in UNIT_ROWS if "veteran" in r}     # attack more for each kill (#4467)
 SHIELD = {r["name"]: r["shield"] for r in UNIT_ROWS if "shield" in r}         # projectiles through it hurt less (#4507)
 # The minimum range of the buildings that shoot, in tiles from the edge of the footprint (AoE2 DE, wiki infobox
@@ -107,6 +108,7 @@ IGNORE = {r["name"] for r in UNIT_ROWS if r.get("ignore_armor")}
 PASS = {r["name"]: r["pass"] for r in UNIT_ROWS if "pass" in r}               # the key "pass" of data/units.jsonl
 CHARGE_ATTACK = {r["name"]: r["charge_attack"] for r in UNIT_ROWS if "charge_attack" in r}   # the Coustillier (#4398)
 TRAMPLE = {r["name"]: r["trample"] for r in UNIT_ROWS if "trample" in r}       # the key "trample": the elephants (#4397)
+MELEE_MODE = {r["name"]: r["melee_mode"] for r in UNIT_ROWS if "melee_mode" in r}   # the key "melee_mode": the Ratha (#4504)
 # The part of the damage on the units behind the target, when it is not one half (wiki: "100% pass-through damage").
 PASS_PART = {r["name"]: r["pass_part"] for r in UNIT_ROWS if "pass_part" in r}
 DEFAULT, BUILDING = Stats(40, 4, 0, 0, 0, 2.0), Stats(1000, 0, 0, 7, 0, 0.0, {}, ("building",))
@@ -263,6 +265,17 @@ def aura_tags(uuid, name):
     return [f"tag {uuid} add {aura_tag(a)}" for a, v in sorted(AURA.items()) if name in v["units"]]
 
 
+def low_hp_command(uuid, name):
+    """The plugin command of the low hit point form of unit name (the key "low_hp" of data/units.jsonl: the Jian
+    Swordsman, #4472), or None when it has none. The AoE2 wiki ("Jian Swordsman"): it switches by itself to its
+    unshielded form below "hp" hit points (that melee and pierce armor, "speed" times the speed) and back at hp or
+    more. The plugin checks the hit points each tick."""
+    lo = LOW_HP.get(name)
+    if not lo:
+        return None
+    return f"aoe lowhp {uuid} {lo['hp']:g} {lo['melee']} {lo['pierce']} {lo['speed']:g}"
+
+
 def shield_command(uuid, name):
     """The plugin command of the projectile obstruction of unit name (the key "shield" of data/units.jsonl: the Hussite
     Wagon, #4507), or None. AoE2 DE wiki "Hussite Wagon": an enemy projectile that passes through its box deals "part"
@@ -270,6 +283,13 @@ def shield_command(uuid, name):
     the first entity on its line, so the plugin gives that hit to the target of the shooter."""
     s = SHIELD.get(name)
     return f"aoe shield {uuid} {s['part']:g} {s['takes']}" if s else None
+
+
+def melee_mode(name, s=None):
+    """The values of unit name in its melee mode (the key "melee_mode", the Ratha, #4504): range 0 and the attack of the
+    key; s: the values of the ranged mode, default those of the unit line. Its trample: MELEE_MODE[name]["trample"]."""
+    s = s or stats(name)
+    return s._replace(range=0, attack=MELEE_MODE[name]["attack"])
 
 
 def veteran_command(uuid, name):
@@ -376,6 +396,9 @@ def setup(game, data):
         for cmd in [aura_command(o["uuid"], o["name"], data.get("tile_size", 4))] + aura_tags(o["uuid"], o["name"]):
             if cmd:
                 game.command(cmd)
+    for o in units:                                  # a Jian Swordsman loses its shield at low hit points (#4472)
+        if cmd := low_hp_command(o["uuid"], o["name"]):
+            game.command(cmd)
     for o in units:                                  # a Jaguar Warrior gets attack for each kill (#4467)
         if cmd := veteran_command(o["uuid"], o["name"]):
             game.command(cmd)
