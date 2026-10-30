@@ -2358,7 +2358,7 @@ class Replay:
             return self.gather.SHIP_WORK["shore" if t in m.shore else "deep"]
         kind = "farm" if t in m.farms else "hunt" if t in m.carcasses else "fish" if t in m.fish else m.resource(t)
         return self.gather.AOE2_WORK[kind] * math.prod(self.gather.WORK_TECHS.get(n, {}).get(kind, 1)
-                                                      for n in self.upgrades(v.player, math.inf))
+                                                      for n in self.upgrades(getattr(v, "player", None), math.inf))
 
     def state(self, i):
         return aoe2mc.B.states[i]
