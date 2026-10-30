@@ -65,16 +65,19 @@ report of step 8, and the `Usage:` line (of the brief, else of the first `cycle_
    It runs ruff and the test files of the change (`--tested`: you ran them on this tree), commits, runs the guard (hard rule before each
    push: it fails when the claim is not yours or another branch has a PR that closes #N, #288), pushes and opens the
    PR. A PR that changes `packaging/` or a workflow with its own PR checks: add `--hold` (the label `hold` at once).
+   Then it waits for the quick CI (about 6 minutes, #4784): give the Bash call `timeout: 600000`.
    Exit 3: do not push: `claim.py N --release` (when the claim is yours; it removes `in-progress`), comment the reason
    in one line on the ticket and pick the next ticket.
 8. It prints `mergeable_state`. `dirty`: run `python3 framework/tools/merge_main.py --push N` (`conflict.md`).
-   Do not wait for CI and do not merge by hand: CI runs only the quick checks on each PR (lint and fast tests,
-   about 1 minute), and the Automerge workflow merges the PR when CI is green, removes `in-progress` and deletes the
-   branch. The slow and server tests run only each night on main: do the levels of the `verify` skill that the
-   change needs (slow tests, server check) before the push. Continue with step 7 and the next ticket. Step 2 of a
-   later cycle finds a red or conflicted PR.
-9. CI red → find the cause, fix, push. After 3 failed attempts stop: comment the cause on the ticket,
-   add `blocked` or `needs-human` and `hold`, run `claim.py N --release` (it removes `in-progress`), and go to step 8 of the skill (report).
+   Do not merge by hand: CI runs only the quick checks on each PR (lint and fast tests, about 6 minutes), and the
+   Automerge workflow merges the PR when CI is green, removes `in-progress` and deletes the branch. Exit 5: the quick
+   CI is red, go to 9 now (a red PR after the run ends costs a takeover by a cold run, #4784). The CI still runs at
+   the time limit: `ship_pr.py N --ci` once, then continue. The slow and server tests run only each night on main:
+   do the levels of the `verify` skill that the change needs (slow tests, server check) before the push. Continue
+   with step 7 and the next ticket. Step 2 of a later cycle finds a red or conflicted PR.
+9. CI red → find the cause in the printed failed steps and tests, fix, commit, `ship_pr.py N --message MSG.txt`.
+   After 3 failed attempts stop: comment the cause on the ticket, add `blocked` or `needs-human` and `hold`, run
+   `claim.py N --release` (it removes `in-progress`), and go to step 8 of the skill (report).
 10. Merge conflict → as in 8.
 11. CI green → the Automerge workflow merges. Add label `hold` to the PR if it must not merge yet.
 

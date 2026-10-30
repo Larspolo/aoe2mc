@@ -3,7 +3,7 @@
 Read this file before you add a new item, key, setting, mode, plugin command or trigger type, or a test of a data
 file (`CLAUDE.md`, "Code style"). Each rule puts the new thing in one line of a data file or a table, so that
 parallel tickets do not change the same lines. Most rules have a check: `tools/data_lint.py`,
-`tests/test_data_files.py`, `tests/test_data_keys.py`, `tests/test_conflict_prone.py` and the merge driver
+`tests/test_data_files.py` (with one module per data file in `tests/data_checks/`), `tests/test_data_keys.py`, `tests/test_conflict_prone.py` and the merge driver
 `framework/tools/merge_jsonl.py`.
 
 - Never test the number of entries of a data table (`len(combat.SIGHT) == 154`): each new line changes it, and parallel
@@ -35,15 +35,20 @@ parallel tickets do not change the same lines. Most rules have a check: `tools/d
 - A special effect of a technology at its research is a function `(g, entry)` in its own module and the key
   `"on_research"` (`"module.function"`) on its line, not an `if` block in `train.research()` (#3243).
 - A new key of `game/data/setup.jsonl` (a game mode, a lobby setting) is one line in `game/data/setup_keys.jsonl` (`"type"`,
-  `"kind": true` for a key of the "one kind" rule, `"text"`, `"issue"`), not a change of `check_setup()` in `tests/test_data_files.py` (#2558).
+  `"kind": true` for a key of the "one kind" rule, `"text"`, `"issue"`), not a change of `tests/data_checks/setup.py` (#2558).
 - A new unit ability (epic #4387: a plugin command per unit, as `aoe frenzy`) is one new module in `game/abilities/`
   with `KEY` (its key of `game/data/units.jsonl`), `TYPE` (the type of its value), `UNITS = values(KEY)` and
   `command(uuid, name, T)`: the package finds it (`pkgutil`), and `combat.setup`, `train.summon` and the elite upgrade
-  of `train.research` send it. Change no line of `game/combat.py`, `game/train.py` or `tests/test_data_files.py`
+  of `train.research` send it. Change no line of `game/combat.py`, `game/train.py` or `tests/data_checks/units.py`
   (#4588: each ability PR appended to the same 5 places, and each pair of open ability PRs conflicted).
-- A new key of a line of `game/data/units.jsonl` needs no entry in the `may` dict of `check_units` (`tests/test_data_files.py`):
+- A new key of a line of `game/data/units.jsonl` needs no entry in `KEYS` of `tests/data_checks/units.py`:
   `form()` accepts a new key, and `test_each_key_has_one_type` checks its type. Tickets that added their key to that one
   line conflicted (PR #4411, #4507).
+- The form check of a data file `game/data/F.jsonl` is `check(row)` in its own module `tests/data_checks/F.py` (#4778):
+  `tests/test_data_files.py` finds the modules with `pkgutil` and has no line per file or per key. A new data file is one
+  new module (the test fails for a file with none); the type or name check of a new key goes into the module of its
+  file; a key with two types by design is one line in `TWO_TYPES` of that module. The shared parts (`form`, `NAMES`,
+  `stats`, `only`) are in `tests/data_checks/__init__.py`. Ten PRs in one day changed the old shared file.
 - A new data line needs no test of its values: `tests/test_data_files.py` checks the form of each line of `game/data/`
   (keys, types, names that exist, #1916), and `tests/test_data_keys.py` checks that the code reads each key (#2188): a new key needs no test line. Test the behavior that the code computes
   from it (a fight, a menu, a bonus).

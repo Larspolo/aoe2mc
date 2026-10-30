@@ -603,16 +603,19 @@ def conflict_files(files_of, n=5, prefix=""):
 
 
 RUN = re.compile(r"^(?:Started|Taken over) by `([^`]+)`")
-CAUSES = ("quota", "merge conflict", "long mc test", "no report", "after the report")
+CAUSES = ("quota", "merge conflict", "long mc test", "red CI", "no report", "after the report")
 
 
-def takeovers(comments, status_comments, prs=(), since=None, full=0.95):
+def takeovers(comments, status_comments, prs=(), since=None, full=0.95, runs=()):
     """[(time, item, old run, minutes since its last report or None, cause)] of the "Taken over by" comments (#1703).
     The old run: the last other "Started by" or "Taken over by" branch on the item, its ticket or its PR, else the
-    PR branch. The first rule that matches gives the cause: a `Usage:` line at `full` or more after the old run
-    started (quota), an Automerge merge failure or "conflict" in the takeover text (merge conflict), `-m mc` in the
-    last report of the old run (long mc test), no report of the old run after its start (the session ended in the
-    ticket: no report), else the run reported and did not come back (after the report)."""
+    PR branch. Its report: a report after its start that names its branch or a PR branch of the item (the `Run:`
+    line has no backticks, and a run of the pacer starts as `pacer-r...`) or a ticket of the item (`Metrics:`, #4777:
+    28 of 33 "no report" takeovers had one). The first rule that matches gives the cause: a `Usage:` line at `full` or
+    more after the old run started (quota), an Automerge merge failure or "conflict" in the takeover text (merge
+    conflict), `-m mc` in the last report of the old run (long mc test), a failure of the last CI run of a PR branch of
+    the item in `runs` (red CI), no report of the old run after its start (the session ended in the ticket: no
+    report), else the run reported and did not come back (after the report)."""
     num = lambda c: int(c["issue_url"].rsplit("/", 1)[1])
     by_pr = {p["number"]: p for p in prs}
     out = []
@@ -627,9 +630,13 @@ def takeovers(comments, status_comments, prs=(), since=None, full=0.95):
                  for m in [RUN.match((c.get("body") or "").lstrip())] if m and m[1] != new]
         start, old = max(prior) if prior else (None, by_pr.get(item, {}).get("head", {}).get("ref", "?"))
         after = lambda c: c["created_at"] < when and (start is None or c["created_at"] >= start)
-        reports = sorted((c for c in status_comments if after(c) and f"`{old}`" in (c.get("body") or "")),
+        heads = {old} | {p["head"]["ref"] for n, p in by_pr.items() if n in rel and p.get("head")}
+        mine = re.compile("|".join([rf"`{re.escape(b)}`|\bbranch {re.escape(b)}(?:\s|$)" for b in heads]
+                                   + [rf"\bticket #{n}\b" for n in rel]))
+        reports = sorted((c for c in status_comments if after(c) and mine.search(c.get("body") or "")),
                          key=lambda c: c["created_at"])
         last = reports[-1] if reports else None
+        ci = [r for r in runs if r.get("name") == "CI" and r.get("head_branch") in heads and after(r)]
         if any(s[1] >= full for s in raw_samples([c for c in status_comments if after(c)])):
             cause = "quota"
         elif "conflict" in t["body"] or any(num(c) in rel and after(c) and (c.get("body") or "").lstrip().startswith(
@@ -637,6 +644,8 @@ def takeovers(comments, status_comments, prs=(), since=None, full=0.95):
             cause = "merge conflict"
         elif last and "-m mc" in last["body"]:
             cause = "long mc test"
+        elif ci and max(ci, key=lambda r: r["created_at"]).get("conclusion") == "failure":
+            cause = "red CI"
         else:
             cause = "after the report" if last else "no report"
         out.append((when, item, old, None if last is None else round(minutes(last["created_at"], when)), cause))
@@ -669,7 +678,7 @@ def report(since, runs, jobs, status_comments, comments, prs, files, files_of=No
                + (f" ({', '.join(f'#{n}' for n in lost)})" if lost else ""))
     e = events(comments)
     out.append(f"Takeovers {e['takeovers']}, releases {e['releases']}, merge conflicts {e['conflicts']} (solved by Unconflict {e['solved']})")
-    out.append(takeover_lines(takeovers(comments, status_comments, prs, since))[-1])
+    out.append(takeover_lines(takeovers(comments, status_comments, prs, since, runs=runs))[-1])
     if files_of:
         out.append(f"Files of the {len(files_of)} conflicted PRs (PRs): "
                    + "; ".join(f"{f} {k}" for f, k in conflict_files(files_of)))
@@ -817,7 +826,8 @@ def period(until, hours, past, only_takeovers=False):
                                                                     issues, events)
     if only_takeovers:                          # the open PRs too: their branch and ticket
         return "\n".join(takeover_lines(takeovers(comments, status_comments,
-                                                   prs + api("pulls?state=open&per_page=100"), since)))
+                                                   prs + api("pulls?state=open&per_page=100"), since,
+                                                   runs=runs)))
     files_of = {n: [f["filename"] for f in api(f"pulls/{n}/files?per_page=100")] for n in conflicted(comments)}
     from feedback import fetch as unanswered
     refs = claim_refs()
