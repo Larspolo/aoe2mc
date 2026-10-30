@@ -334,8 +334,8 @@ def read_scx(path):
 
 def read_json(path):
     """A map description in JSON (#960), as read_scenario returns it: {"size": N, "terrain": N × N terrain IDs,
-    "elevation": N × N levels (default 0), "layer": N × N land layer IDs (default -1 = none, #3689), "objects": [{"name", "player", "x", "y", "rotation"} ...],
-    "players": {"1": {"civ": "BRITONS", "color": 0} ...}}. The IDs and names are those of AoE2ScenarioParser
+    "elevation": N × N levels (default 0), "layer": N × N land layer IDs (default -1 = none, #3689), "objects": [{"name", "player", "x", "y", "rotation", "resource_delta"} ...],
+    "players": {"1": {"civ": "BRITONS", "color": 0} ...}, "mood": a key of MOODS (optional)}. The IDs and names are those of AoE2ScenarioParser
     (TerrainId, object_kinds). The color is an index of buildings.COLOR_NAMES (default: the player number - 1)."""
     with open(path) as f:
         return map_description(json.load(f), path)
@@ -367,7 +367,8 @@ def map_description(d, path):
         t, prefix = ids[o["name"]]
         objects.append(dict(kind="U" if prefix == "H" else prefix, hero=prefix == "H", name=o["name"], id=t,
                             player=int(o.get("player", 0)), x=float(o["x"]), y=float(o["y"]),
-                            rotation=float(o.get("rotation", 0)), garrisoned=False, ref=ref, holder=None))
+                            rotation=float(o.get("rotation", 0)), garrisoned=False, ref=ref, holder=None)
+                       | ({"resource_delta": int(o["resource_delta"])} if "resource_delta" in o else {}))
     players = {0: {"color": "light_gray", "arch": "western", "civ": "GAIA", "view": None}}
     for pid, p in d.get("players", {}).items():
         pid, civ, color = int(pid), p.get("civ", "?").upper(), p.get("color", int(pid) - 1)
@@ -379,7 +380,7 @@ def map_description(d, path):
         players[pid] = {"color": buildings.COLOR_NAMES[(pid - 1) % 8], "arch": "western", "civ": "?", "view": None}
     terrain = apply_layers(arrays["terrain"].astype(np.int16), arrays["layer"], terrain_names)
     return (size, terrain, arrays["elevation"].astype(np.float32), terrain_names,
-            {k: "" for k in CHAPTERS}, objects, players)
+            {k: "" for k in CHAPTERS} | ({"mood": d["mood"]} if d.get("mood") in MOODS else {}), objects, players)
 
 
 def apply_layers(terrain, layer, terrain_names):
@@ -539,7 +540,7 @@ def read_record(path):
         civ = (p.civilization or "?").upper()
         players[p.number] = {"team": teams.get(p.number), "color": buildings.COLOR_NAMES[p.color_id] if 0 <= p.color_id < 8 else "light_gray",
                              "arch": buildings.CIV_TO_ARCH.get(civ, "western"), "civ": civ,
-                             "view": (p.position.x, p.position.y) if p.position else None}
+                             "view": (p.position.x, p.position.y) if p.position and p.position.x is not None else None}
 
     kinds, objects = object_kinds(), []
     for player, objs in [(0, match.gaia)] + [(p.number, p.objects) for p in match.players]:
@@ -709,7 +710,8 @@ def read_timeline(path):
     kind: "type" and "name" (building or unit, as in read_record), "tile" [x, y], "end" [x, y] (wall),
     "technology", "objects" (the object IDs that the command selects), "target" (object ID), "text" (chat)}.
     Tiles are AoE2 tiles. Actions that mgz cannot read are left out. None for the games that the mgz model
-    cannot read (read_old_record reads only their start state, #376)."""
+    cannot read (read_old_record reads only their start state, #376). All times are game times: a restored record
+    starts with a "restore" event at the game time of its save (#4568; mgz adds it to chat and age times only)."""
     import mgz.fast as fast
     from mgz.model import parse_match
     names, parse = object_kinds(), fast.parse_action
@@ -723,12 +725,13 @@ def read_timeline(path):
     finally:
         fast.parse_action = parse
     ms = lambda t: int(round(t.total_seconds() * 1000))           # noqa: E731
-    events = []
+    restore = ms(match.restored_at) if getattr(match, "restored", False) else 0
+    events = [{"time": restore, "player": None, "kind": "restore"}] if restore else []
     for a in match.actions:
         kind = a.type.name.lower().removeprefix("de_")
         if kind == "error":
             continue
-        e = {"time": ms(a.timestamp), "player": a.player.number if a.player else None, "kind": kind}
+        e = {"time": ms(a.timestamp) + restore, "player": a.player.number if a.player else None, "kind": kind}
         for k, v in a.payload.items():
             if k in TIMELINE_KEYS and v is not None and v != -1:
                 e[TIMELINE_KEYS[k]] = v
@@ -882,22 +885,24 @@ def name_timeline(objects, timeline, window=1024, water=None):
     top = max(names, default=0)
     names |= {i: e["name"] for e in timeline if e["kind"] == "summon" for i in e.get("objects", ())}   # a setup (#3028)
     used = {}             # new ID -> [time of its first use, "B", "U" or None, {building of its units}, a worker,
-    #                       its first MOVE goes inland (None: no MOVE yet), the player of its first use]
+    #                       its first MOVE goes inland (None: no MOVE yet), the player of its first use, a relic
+    #                       carrier (#4413)]
     far = None if water is None else ~near(water, SHORE)       # the tiles that a ship cannot go to
     for e in timeline:                                   # not SPECIAL and others: their numbers are not all IDs
         role = "U" if e["kind"] in UNIT_USE else "B" if e["kind"] in BUILDING_USE else None
         work = e["kind"] in ("build", "wall") or e["kind"] == "order" and WORK.match(names.get(e.get("target"), ""))
+        relic = e["kind"] == "order" and names.get(e.get("target")) == "RELIC"   # only a monk picks it up (#4413)
         for i in e.get("objects", ()) if role else ():
             if i > top:
-                u = used.setdefault(i, [e["time"], None, set(), False, None, e.get("player")])
-                u[1], u[3] = u[1] or role, u[3] or bool(work)
+                u = used.setdefault(i, [e["time"], None, set(), False, None, e.get("player"), False])
+                u[1], u[3], u[6] = u[1] or role, u[3] or bool(work), u[6] or relic
                 if e["kind"] == "move" and u[4] is None and far is not None and "tile" in e:
                     x, y = (min(max(int(v), 0), n - 1) for v, n in zip(e["tile"], far.shape))
                     u[4] = bool(far[x, y])
                 if e["kind"] == "queue" and train(e.get("name", "")):
                     u[2].add(train(e["name"])[1])
         if role == "U" and e.get("target", 0) > top:
-            u = used.setdefault(e["target"], [e["time"], None, set(), False, None, None])
+            u = used.setdefault(e["target"], [e["time"], None, set(), False, None, None, False])
             if e["kind"] == "garrison":                  # its target is a building or a ship (#912)
                 u[1] = u[1] or "G"
     made, seen, inland = [], set(), set()   # (time ms, command time, "B" or "U", name); IDs that no ship takes
@@ -926,7 +931,8 @@ def name_timeline(objects, timeline, window=1024, water=None):
         ids = [i for i in own if i not in names and   # (exact time) near
                (used[i][1] in (role, None) or used[i][1] == "G" and (role == "B" or "SHIP" in name)) and
                used[i][0] >= t - 5000 and used[i][2] <= {name} and   # 5 s: the training times are estimates
-               not (used[i][3] and "VILLAGER" not in name)]         # only villagers build and gather on land (#765)
+               not (used[i][3] and "VILLAGER" not in name) and     # only villagers build and gather on land (#765)
+               not (used[i][6] and "MONK" not in name)]            # only monks carry relics (#4413)
         if units.is_boat(units.classify(name)):             # a ship does not go inland (#2629): a land unit
             inland |= {i for i in ids[:1] if used[i][4]}     # takes the ID (below)
             ids = [i for i in ids if not used[i][4]]
@@ -941,6 +947,9 @@ def name_timeline(objects, timeline, window=1024, water=None):
         elif i not in names and i in inland:             # the last land unit of its player (#2629), a soldier
             land = [(end, n) for end, p, n in trained if p == u[5] and end <= u[0] + 5000]   # when it does not work
             if pick := [x for x in land if "VILLAGER" not in x[1]] * (not u[3]) or land:
+                names[i] = max(pick)[1]
+        elif i not in names and u[1] == "U" and u[6]:    # a relic carrier: the last monk of its player (#4413)
+            if pick := [(end, n) for end, p, n in trained if p == u[5] and "MONK" in n and end <= u[0] + 5000]:
                 names[i] = max(pick)[1]
         elif i not in names and u[1] == "U" and u[3]:    # a builder or gatherer: the last villager of its player
             if pick := [(end, n) for end, p, n in trained if p == u[5] and "VILLAGER" in n and end <= u[0] + 5000]:
@@ -2777,7 +2786,7 @@ def write_objects(path, size, T, H, players, objects, cols, ground, timeline=Non
              "tile": [round(float(o["x"]), 3), round(float(o["y"]), 3)], "rotation": round(o.get("rotation", 0.0), 4)}
         if o.get("hero"):
             e["hero"] = True
-        for k in ("uuid", "footprint", "open"):
+        for k in ("uuid", "footprint", "open", "resource_delta"):
             if k in o:
                 e[k] = o[k]
         if o.get("ref") is not None:                    # the object ID of a recorded game (#407, #408)
@@ -6270,6 +6279,25 @@ def game_time(text):
     return ((h * 60 + mm) * 60 + ss) * 1000
 
 
+def match_spec(text):
+    """--match GAME:PROFILE → (GAME, PROFILE), two numbers."""
+    m = re.fullmatch(r"(\d+):(\d+)", text)
+    if not m:
+        raise argparse.ArgumentTypeError(f"{text!r}: give GAME:PROFILE, two numbers, for example 123:456")
+    return m.groups()
+
+
+def match_record(game, profile):
+    """The path of the record of a match: out/records/GAME_PROFILE/ keeps it, so a second call does not download."""
+    folder = os.path.join("out", "records", f"{game}_{profile}")
+    have = sorted(glob.glob(os.path.join(folder, "*.aoe2record")))
+    if have:
+        return have[0]
+    from tools import record_api       # a tool of the repository clone, not of the installed package
+    os.makedirs(folder, exist_ok=True)
+    return record_api.download(game, profile, folder)
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description="Convert an AoE2 DE scenario to a Minecraft Java world.")
     ap.add_argument("scenario", nargs="?", help=".aoe2scenario file, .aoe2record, .mgz, .mgx or .mgl (the start state of a recorded game), .scx "
@@ -6335,8 +6363,15 @@ def main(argv=None):
     ap.add_argument("--at", type=game_time, metavar="MM:SS",
                     help="recorded game: convert the state at this game time (buildings and trained units of the "
                          "commands until then; default: the start)")
+    ap.add_argument("--match", type=match_spec, metavar="GAME:PROFILE",
+                    help="recorded game: download the record of match GAME of player PROFILE (tools/record_api.py) "
+                    "into out/records/ and convert it; give only the output (#4484)")
     ap.add_argument("--verbose", action="store_true", help="print the time of each phase")
     a = ap.parse_args(argv)
+    if a.match:
+        if a.output is not None:
+            ap.error("--match replaces the input file: give only the output world folder")
+        a.output, a.scenario = a.scenario, match_record(*a.match)
     if a.fog and a.ambience == "off":
         ap.error("--fog writes a datapack: not with --ambience off")
     if a.random_map:

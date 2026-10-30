@@ -435,6 +435,7 @@ class Replay:
                        for r, o in self.refs.items() if o["kind"] == "other" and "RELIC" in o["name"] and "tile" in o}
         self.fetching = {}                      # object ID of a monk -> the relic ref that it walks to (#4009)
         self.homing = {}                        # object ID of a monk with a relic -> (monastery rect, player) (#4010)
+        self.queued = {}                        # object ID of a monk in `fetching` -> its monastery ORDER (#4517)
         self.relic_at, self.relic_gold = 0, {}  # game time (ms) of the last relic gold, player -> gold not yet whole (#4011)
         self.rng = np.random.default_rng(1)
         self.kinds, self.seen = aoe2mc.object_kinds(), set()
@@ -621,10 +622,18 @@ class Replay:
                 lines[p] += ["University:"] + uni[:UNI_SHOWN] + ([f"+{len(uni) - UNI_SHOWN}"] if len(uni) > UNI_SHOWN else [])
         return self.stat_book("Upgrades", lines)
 
-    def ecoview(self):
-        """The book "Economy" at the current time (#3756, #3924): a page per player with the villagers on each kind of
-        work. Commands only when a count changed."""
-        return self.stat_book("Economy", {p: [f"{k} {n}" for k, n in c.items()] for p, c in self.eco().items()})
+    def ecoview(self, t=0):
+        """The book "Economy" at game time t (ms, #3756, #3924, #4391): a page per player with the villagers on each kind
+        of work, then what the player spent up to t. A player with spending but no villager gets a page too.
+        Commands only when a line changed."""
+        eco = self.eco()
+        lines = {}
+        for p in list(eco) + [p for p in self.spends if p not in eco]:
+            s = self.spent(p, t)
+            lines[p] = [f"{k} {n}" for k, n in eco.get(p, {}).items()] + ["Spent:"] + \
+                [f"{name} {s[g]}" for g, name in (("economy", "Eco"), ("military", "Mil"), ("technologies", "Tech"),
+                                                  ("buildings", "Build"))]
+        return self.stat_book("Economy", lines)
 
     def stat_book(self, title, lines):
         """The commands that put the written book `title` (lines: player -> text lines, a page per player) into the
@@ -731,9 +740,14 @@ class Replay:
         if kind == "news":                                      # a fight starts: the chat line and the horn (#2951)
             return replay_input.fight_news(self.control["fights"][e["fight"]], e["fight"], self.control["players"])
         if kind in ("attack_move", "move", "order", "stop", "delete", "garrison", "follow", "guard", "autoscout"):
+            church = kind == "order" and self.monastery(e) is not None
             for i in e.get("objects") or ():                    # another order ends the patrol (#2550), the scouting (#2678)
                 self.patrols.pop(i, None)
                 self.scouts.pop(i, None)
+                self.queued.pop(i, None)
+                if church and i in self.fetching:           # AoE2: a monk keeps its relic task, then goes home (#4517)
+                    self.queued[i] = e
+                    continue
                 self.fetching.pop(i, None)                  # and the walk to a relic (#4009)
                 self.homing.pop(i, None)                    # and the walk to a monastery (#4010)
         if kind in aoe2mc.UNIT_USE - {"stance"} | {"delete", "stop"}:   # a new order ends a FOLLOW or GUARD (#2551)
@@ -1606,7 +1620,7 @@ class Replay:
         inside = {u: r for r, us in self.garrisons.items() for u in us}   # AoE2 selects no unit inside: an order
         out0 = [c for i in e["objects"] if i in inside for c in self.leave(i, inside[i])]   # says it is out (#1229)
         group = [(i, v) for i, name in zip(e["objects"], e.get("names") or [None] * len(e["objects"]))
-                 if (v := self.unit(i, name, e["player"])) is not None]
+                 if (v := self.unit(i, name, e["player"])) is not None and self.queued.get(i) is not e]
         if e["kind"] == "order" and (relic := e.get("target")) in self.relics:   # only a monk carries a relic (#4009)
             self.fetching.update({i: relic for i, v in group if v.name in monk.MONKS})
         if (church := self.monastery(e)) is not None:              # a monk with a relic puts it in (#4010)
@@ -2237,6 +2251,9 @@ class Replay:
         A farmer works on its farm (gather.Gather.goals). A unit that goes into a building arrives (enter())."""
         if i in self.fetching:
             self.send(self.pickup(i, v))
+            if i in self.queued:                                    # the queued monastery ORDER (#4517)
+                self.send(self.move(dict(self.queued.pop(i), time=t, objects=[i], names=[v.name])))
+                return
         if i in self.homing:
             self.send(self.deliver(i, t))
         if i in self.entering:
@@ -2301,6 +2318,7 @@ class Replay:
         """The commands of dead monk i: its relic drops at its replay position at game time t (AoE2, #4013)."""
         self.fetching.pop(i, None)
         self.homing.pop(i, None)
+        self.queued.pop(i, None)
         x, _, z = self.at(v, t)
         return [c for ref, r in self.relics.items() if r["monk"] == i for c in self.drop(ref, (math.floor(x), math.floor(z)))]
 
@@ -2620,7 +2638,7 @@ class Replay:
             rows, page = BOOK_ROWS - 1 - len(textwrap.wrap(name, BOOK_COLS)), ""
             head = {"text": name, "color": color if color != "white" else "black"}   # the sidebar color (#1643)
             for line in lines[p]:
-                n = len(textwrap.wrap(line, BOOK_COLS))
+                n = max(1, len(textwrap.wrap(line, BOOK_COLS)))       # an empty line is a row too (#4552)
                 if n > rows:
                     pages.append({"text": "", "extra": [head, {"text": "\n" + page.rstrip("\n")}]} if head
                                  else {"text": page.strip("\n")})
@@ -2652,6 +2670,21 @@ class Replay:
         players = sorted({e["player"] for e in self.data.get("timeline", []) if e.get("player") is not None})
         lines = {p: [f"{mmss(t)} {label}" for t, label in self.build_order(p, end)] for p in players}
         return self.book_command("Build order", {p: v for p, v in lines.items() if v})
+
+    def spending_commands(self, end):
+        """A written book "Spending" for each viewer at the end of the replay (#4392, item 4 of #4386): what each player
+        paid up to `end` (ms) by group, with its share of the total. A player with no payment gets no page."""
+        lines = {}
+        for p in sorted(self.spends):
+            spent = self.spent(p, end)
+            total = sum(spent.values())
+            if any(t <= end for t, *_ in self.spends[p]):
+                share = lambda v: round(100 * v / total) if total else 0      # 0 % when nothing was paid
+                lines[p] = [f"{name} {v} ({share(v)} %)" for name, v in
+                            (("Economy", spent["economy"]), ("Military", spent["military"]),
+                             ("Technologies", spent["technologies"]), ("Buildings", spent["buildings"]))]
+                lines[p].append(f"Total {total}")
+        return self.book_command("Spending", lines)
 
     def score_commands(self, t=None):
         """The sidebar commands for the population of each player that changed since the last call (#741). The score
@@ -2982,7 +3015,9 @@ class Replay:
         the stats have "rewind" (the time), "speed", "paused", "view" and "camera" (#979: the replay keeps no earlier states, `live`
         starts a fresh replay). "time" is the game time now (ms) for poll. `to`: jump to this time at the start;
         `paused`: start in a pause. The replay ends at the time of its last event, as the record (#978); `finish`:
-        play the walks and the trainings to their end (tests of one walk or one queue)."""
+        play the walks and the trainings to their end (tests of one walk or one queue). A restored record starts
+        at the game time of its save, its "restore" event (#4568)."""
+        start = max([start] + [e["time"] for e in self.data.get("timeline", []) if e["kind"] == "restore"])
         last = math.inf if finish else max((e["time"] for e in self.data.get("timeline", [])), default=start)
         found = fights(self.data.get("timeline", []), owners(self.data.get("objects", []), self.data.get("timeline", [])))
         news = [{"time": f["start"], "kind": "news", "fight": i} for i, f in enumerate(found)]    # the fight starts (#2951)
@@ -3082,7 +3117,7 @@ class Replay:
                     self.send(self.graphs(to))
                     self.send(self.army_view(to))
                     self.send(self.upgrade_view(to))
-                    self.send(self.ecoview())
+                    self.send(self.ecoview(to))
                 continue
             lag = max(lag, clock() - r0 - (now - g0) / 1000 / self.speed)
             if int(now) // 1000 != shown:                              # at most once per game second
@@ -3099,7 +3134,7 @@ class Replay:
                 self.send(self.graphs(now))
                 self.send(self.army_view(now))
                 self.send(self.upgrade_view(now))
-                self.send(self.ecoview())
+                self.send(self.ecoview(now))
                 self.send(self.fog())
             if e is None:                                           # behind its clock: all the steps up to the
                 late = g0 if self.paused else g0 + (clock() - r0) * 1000 * self.speed    # game time now in one
@@ -3118,7 +3153,7 @@ class Replay:
         self.send(self.expire(math.inf) + self.panel(math.inf))
         send(self.clock_commands(end, end, speed, done=True) + self.score_commands() + self.end_commands(end) +
              self.summary_commands() + self.timeline_commands(end) +
-             self.build_order_commands(end))
+             self.build_order_commands(end) + self.spending_commands(end))
         span = (events[-1]["time"] - start) / 1000 / speed if events else 0                 # at the start speed
         return {"events": n, "commands": self.sent, "busy": round(self.busy, 2), "lag": round(lag, 2),
                 "rate": round(self.sent / self.busy) if self.busy else 0, "need": round(self.sent / span) if span else 0}

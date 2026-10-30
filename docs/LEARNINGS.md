@@ -17,3 +17,4 @@ records: `docs/research/replays.md`; bundles: `docs/packaging.md`; water: `docs/
 - The auto mode denies the close of an issue: comment the evidence, then add the label `close` (#1740).
 - Automerge takes the first "close #N" (also "fix", "resolve") in a PR body as the ticket: never write those words
   before another issue number (#984).
+- A test that patches a data table of a civilization key (`civs.BY_KEY`) must patch the plain `civs` too: `game/monk.py` imports it by its plain name, so a patch of `game.civs` alone changes nothing (#4447, as `tests/test_techs_saxons.py`).

@@ -131,6 +131,13 @@ def more_arrows(g, building):
     return sum(value("more_arrows", t, {}).get(building, 0) for t in g.techs)
 
 
+def pass_arrows(g, building):
+    """The end of `aoe arrows` for the own building: " <blocks> <part>" when a technology of g.techs lets its arrows pass
+    through the units (Svan Towers: "pass_arrows", #4282), else ""."""
+    v = next((v for t in sorted(g.techs) if building in (v := value("pass_arrows", t, {})).get("names", ())), None)
+    return f" {v['tiles'] * g.map.T} {v['part']}" if v else ""
+
+
 def dot(g, name, s):
     """The damage over time of a hit of unit name (combat.Stats s) of the player of g (#4339): (damage, AoE2 seconds, the
     target classes or ()) of the first technology of g.techs (in name order) with an entry of the key "damage_over_time"
@@ -1063,6 +1070,19 @@ def applies(unit, name):
     return unit == name or test is not None and name in combat.STATS and test(set(combat.stats(name).classes))
 
 
+def trample_command(g, uuid, name):
+    """combat.trample_command of unit name: its own trample (the elephants, #4397), else the splash of a researched
+    technology with the key "trample" whose effect holds for the unit (Druzhina, #4496), with the blast radius of the
+    unit (stats). None without both."""
+    import combat                                                  # combat imports gather, gather imports this module
+    if name in combat.TRAMPLE:
+        return combat.trample_command(uuid, name, g.map.T)
+    s = stats(g, name, uuid)
+    t = next((t for tech, t in sorted(BY_KEY["trample"].items()) if tech in g.techs and s.blast and not s.range
+              and any(test(x, name, combat.stats(name)) for x in value("effect", tech).get("if", ()))), None)
+    return t and combat.trample_command(uuid, name, g.map.T, {**t, "radius": s.blast})
+
+
 def stats(g, name, uuid=None):
     """The combat values of AoE2 unit name with the bonuses of the civilization (civs.UNITS) and the technologies of
     the player (combat.stats and TECHS), twice for civs.TWICE (#1561), n times for civs.SMITH_UNITS (#2174), and the
@@ -1147,7 +1167,8 @@ def faster(unit, name):
 def hits(g, name):
     """The keywords of combat.damage and combat.stats_command for unit name of the player of g (#4331): less, {attacker
     class: n} of the key "less" of its technologies whose units cover it (Royal Heirs), and ignore, True when a
-    technology with the key "ignore_armor" covers this melee unit (Wootz Steel). faster() tests the units of both.
+    technology with the key "ignore_armor" covers this melee unit (Wootz Steel), or the unit has the key "ignore_armor"
+    in data/units.jsonl (Leitis, #4394). faster() tests the units of both.
     rage: the attack for each 10 % of lost hit points of the key "rage" (Hamask), reflect: the part of the key "reflect"
     (Lamellar Armor, #4332), both summed over the technologies whose units cover it."""
     import combat                                                  # combat imports gather, gather imports this module
@@ -1155,8 +1176,8 @@ def hits(g, name):
     for t, (unit, cut) in BY_KEY["less"].items():
         if t in getattr(g, "techs", ()) and faster(unit, name):
             less = {c: less.get(c, 0) + cut.get(c, 0) for c in less | cut}
-    ignore = combat.stats(name).range <= 0 and any(faster(u, name) for t, u in BY_KEY["ignore_armor"].items()
-                                                    if t in getattr(g, "techs", ()))
+    ignore = name in combat.IGNORE or combat.stats(name).range <= 0 and any(
+        faster(u, name) for t, u in BY_KEY["ignore_armor"].items() if t in getattr(g, "techs", ()))
     more = {k: sum(n for t, (unit, n) in BY_KEY[k].items() if t in getattr(g, "techs", ()) and faster(unit, name))
             for k in ("rage", "reflect")}
     return {"less": less, "ignore": ignore} | more
@@ -1253,9 +1274,9 @@ def research(g, entry, start=False, rect=None):
         names = {n for names, _ in civs.ARROWS.get(civs.civ(g), ()) for n in names}
         for rect in [r for r, o in garrison.holders(g).items() if o["name"] in names]:
             g.command(garrison.arrows_command(g, rect))
-    if (more := value("more_arrows", entry["name"])):              # the own buildings of the names shoot more (#4258)
-        for rect, o in garrison.holders(g).items():
-            if o["name"] in more:
+    if (more := value("more_arrows", entry["name"])) or (more := value("pass_arrows", entry["name"], {}).get("names")):
+        for rect, o in garrison.holders(g).items():                # the own buildings of the names shoot more (#4258),
+            if o["name"] in more:                                  # or their arrows pass through (#4282)
                 g.command(garrison.arrows_command(g, rect))
     if (free := value("spawn", entry["name"])) and not start:     # free units at own buildings (First Crusade, #4365)
         unit = free["unit"]
@@ -1280,7 +1301,21 @@ def research(g, entry, start=False, rect=None):
                 g.command(cmd)
             if cmd := lead_command(g, uuid, new):                 # an elite Spanish cannon galleon (#2430)
                 g.command(cmd)
+            if cmd := combat.accuracy_command(uuid, new, civs.value("accuracy", civs.civ(g), {}).get(new, 0.0), g.map.T):
+                g.command(cmd)                                    # an Elite Arambai hits more often (#4549)
             if cmd := combat.dodge_command(uuid, new):            # an Elite Shrivamsha Rider dodges more (#4399)
+                g.command(cmd)
+            if cmd := combat.frenzy_command(uuid, new):           # an Elite Temple Guard (#4468)
+                g.command(cmd)
+            if cmd := combat.low_hp_command(uuid, new):           # an Elite Jian Swordsman (#4472)
+                g.command(cmd)
+            if cmd := combat.veteran_command(uuid, new):          # an Elite Jaguar Warrior keeps its kills (#4467)
+                g.command(cmd)
+            if cmd := combat.sunder_command(uuid, new):           # an Elite Obuch (#4466)
+                g.command(cmd)
+            if cmd := combat.shield_command(uuid, new):           # an Elite Hussite Wagon (#4507)
+                g.command(cmd)
+            if cmd := trample_command(g, uuid, new):              # an elite elephant tramples (#4397)
                 g.command(cmd)
             g.command(combat.label_command(uuid, new))               # the name of a new unit (units.pretty)
     import trebuchet                                               # trebuchet imports this module: import it late
@@ -1293,8 +1328,10 @@ def research(g, entry, start=False, rect=None):
         if name == trebuchet.NAME and trebuchet.state(g, uuid) != "unpacked":
             continue                                               # packed: range 0, the unpack sends the range (#1414)
         new, base = stats(g, name), combat.stats(name)              # the range (Fletching, #724) or the blast (Warwolf, #4283)
-        if (new.range, new.blast) != (base.range, base.blast):
-            g.command(combat.range_command(uuid, name, g.map.T, s=stats(g, name, uuid)))
+        if (new.range, new.blast) != (base.range, base.blast) and (cmd := combat.range_command(uuid, name, g.map.T, s=stats(g, name, uuid))):
+            g.command(cmd)                                         # a melee unit with a blast has no range (#4496)
+        if entry["name"] in BY_KEY["trample"] and (cmd := trample_command(g, uuid, name)):
+            g.command(cmd)                                         # the live units get the splash (Druzhina, #4496)
     for cmd in [c for uuid, name in g.soldiers.items() for c in fire_commands(g, uuid, name, {entry["name"]})]:
         g.command(cmd)                                             # the live fire ships: Siphons, Incendiaries (#2165)
     for uuid, name in g.soldiers.items():                          # the live gunpowder units aim ahead (Arquebus, #4364)
@@ -1501,11 +1538,30 @@ def summon(g, name, pos, rotation=math.pi / 2, player=None):
         g.command(cmd)
     if cmd := lead_command(g, uuid, name):                         # a Spanish cannon galleon aims ahead (#2430)
         g.command(cmd)
-    if cmd := combat.accuracy_command(uuid, name, civs.value("accuracy", civs.civ(g), {}).get(name, 0.0)):
+    if cmd := combat.accuracy_command(uuid, name, civs.value("accuracy", civs.civ(g), {}).get(name, 0.0), g.map.T):
         g.command(cmd)                                             # a Hun trebuchet hits units more often (#2479)
+    if cmd := combat.charge_command(uuid, name):                   # the Coustillier charges its attack (#4398)
+        g.command(cmd)
+    if cmd := combat.charged_volley_command(uuid, name):           # a Xianbei Raider fires a charged volley (#4546)
+        g.command(cmd)
     if cmd := combat.dodge_command(uuid, name):                    # a Shrivamsha Rider dodges projectiles (#4399)
         g.command(cmd)
-    if cmd := combat.sight_command(uuid, name, g.map.T, s=stats(g, name), more=sight_more(g.techs, name, combat.stats(name))):   # it attacks enemies in sight (#775)
+    if cmd := combat.vs_units_command(uuid, name, g.map.T):        # the Lou Chuan shoots units in its anti-unit mode (#4505)
+        g.command(cmd)
+    if cmd := combat.frenzy_command(uuid, name):                   # a Temple Guard attacks faster in a long fight (#4468)
+        g.command(cmd)
+    if cmd := combat.low_hp_command(uuid, name):                   # a Jian Swordsman loses its shield below 45 HP (#4472)
+        g.command(cmd)
+    if cmd := combat.veteran_command(uuid, name):                  # a Jaguar Warrior gets attack for each kill (#4467)
+        g.command(cmd)
+    if cmd := combat.sunder_command(uuid, name):                   # an Obuch lowers the armor of its target (#4466)
+        g.command(cmd)
+    if cmd := combat.shield_command(uuid, name):                   # a Hussite Wagon shields the units behind it (#4507)
+        g.command(cmd)
+    if cmd := trample_command(g, uuid, name):                      # an elephant tramples the units next to its target (#4397)
+        g.command(cmd)
+    if cmd := combat.sight_command(uuid, name, g.map.T, s=stats(g, name), more=sight_more(g.techs, name, combat.stats(name))
+                                  + civs.sight_units(g, name, combat.stats(name))):   # it attacks enemies in sight (#775)
         g.command(cmd)
     import ai                                                      # ai imports gather, gather imports this module
     g.command(ai.speed_command(uuid, name, g.map.T, gather.NORMAL * speed(g, name)))   # also without an order (#849)
