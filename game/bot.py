@@ -13,6 +13,8 @@ the town center. An unfinished site without a working builder gets a new one (#1
 Army shares (#1049): when the bot has its villager number and a building that trains a soldier, the shares follow the
 cost of that soldier (train.COSTS), with WOOD for farms and houses; stone gets no new villagers. Each step moves at
 most one working villager from a resource above its share to the resource most below its share, as an AoE2 bot does.
+A resource whose stock is SPARE above the needs of the bot (the age reserve, the soldier, the economy technologies)
+gets no share then (#4285). The bot spends on the next age first, then on technologies, then on units (spend).
 
 Attack (#859): until the game time `attack` (AoE2 seconds) the soldiers stay at their buildings. Then each soldier
 without a live target attacks the nearest unit of player `foe`, else its nearest building, with the mob AI of the
@@ -48,6 +50,7 @@ import train  # noqa: E402
 
 SHARE = {"food": 0.4, "wood": 0.3, "gold": 0.2, "stone": 0.1}     # the villagers on each resource (a simple AoE2 bot)
 WOOD = 0.2                                                         # the wood share for farms and houses with an army
+SPARE = 200                                                        # stock above the needs: the resource gets no share
 QUEUED = 2                                                         # units in the queue of each building of the bot
 # The build order after the houses (the key "bot" of data/build.jsonl), and the resource that a drop site goes next to
 FAR = 12                                                           # tiles from a drop site to its sources (remote)
@@ -201,13 +204,19 @@ class Bot:
                     work[res] += 1
                     break
         self.move(share, work)
-        self.age_up()
-        self.recruit()
-        self.research()
+        self.spend()
         self.time += g.tick * gather.NORMAL
         if self.time >= self.attack and self.time >= self.looked + LOOK:   # each look costs RCON commands
             self.looked = self.time
             self.fight()
+
+    def spend(self):
+        """Spend the resources above keep(): the next age, then the technologies, then the units. The AoE2 AI
+        researches its economy technologies before more soldiers: else each soldier takes the food above the reserve,
+        and the bot never has the food of a technology (#4285: 2 technologies in 30 minutes)."""
+        self.age_up()
+        self.research()
+        self.recruit()
 
     def defend(self):
         """Send the DEFENDERS nearest villagers to a predator in the sight of a bot villager (#3399). A defender whose
@@ -304,13 +313,30 @@ class Bot:
                      and not build.locked(g, n)), None)
 
     def shares(self):
-        """SHARE, or the shares of the army (#1049) when the bot has its villager number and trains a soldier."""
+        """SHARE, or the shares of the army (#1049) when the bot has its villager number and trains a soldier. With
+        the army, a resource whose stock is SPARE above the needs of the bot (needs) gets no share, and the other
+        shares grow: the AoE2 AI scripts change their gatherer percentages by the stock, else 4 villagers mine 1000
+        gold that nothing takes while the economy technologies wait for wood (#4285)."""
         unit = len(self.g.villagers) >= self.villagers and self.army()
         if not unit:
             return SHARE
         cost = train.price(self.g, unit)
         total = sum(cost.values())
-        return {r: (WOOD if r == "wood" else 0) + (1 - WOOD) * cost.get(r, 0) / total for r in SHARE}
+        share = {r: (WOOD if r == "wood" else 0) + (1 - WOOD) * cost.get(r, 0) / total for r in SHARE}
+        need = self.needs(unit)
+        rich = {r for r, v in share.items() if v and self.g.stock[r] >= need.get(r, 0) + SPARE}
+        total = sum(v for r, v in share.items() if r not in rich)
+        return {r: 0 if r in rich else v / total for r, v in share.items()} if rich and total else share
+
+    def needs(self, unit):
+        """{resource: amount} that the bot spends next: the reserve of keep(), the unit and the economy technologies
+        of wanted()."""
+        g, need = self.g, dict(self.keep())
+        techs = [n for _, n in self.wanted() if train.value("economy", n)]
+        for c in [train.price(g, unit), *(train.price(g, n) for n in techs)]:
+            for r, v in c.items():
+                need[r] = need.get(r, 0) + v
+        return need
 
     def move(self, share, work):
         """Move one working villager from the resource most above its share to the resource most below it, when the
@@ -473,16 +499,15 @@ class Bot:
         g = self.g
         return [n for n in train.trains(g, name) if gather.military(n) and n not in train.TECHS and not build.locked(g, n)]
 
-    def research(self):
-        """Research the economy technologies of the age at each building that offers them (the AoE2 AI does, #3949),
-        the upgrade of the unit that the building trains (#3952: Militia to Man-at-Arms), so that recruit then
-        trains the new unit, and the Blacksmith technologies that change a live or queued soldier of the bot (#3951).
-        The economy technologies of all buildings come before the others (#4206).
-        The villagers of self.villagers come first. One technology in each queue."""
+    def wanted(self):
+        """[(rect, technology)] that research takes when it has the cost: the economy technologies of the age at each
+        building that offers them (the AoE2 AI does, #3949), the upgrade of the unit that the building trains (#3952:
+        Militia to Man-at-Arms), so that recruit then trains the new unit, and the Blacksmith technologies that change a
+        live or queued soldier of the bot (#3951). The economy technologies of all buildings come first (#4206).
+        None while the bot has less than self.villagers villagers, and none at a building with a technology in its queue."""
         g = self.g
         if len(g.villagers) + sum(e["name"] == "VILLAGER_MALE" for q in g.queues.values() for e in q) < self.villagers:
-            return
-        keep = self.keep()
+            return []
         army = {n for n in [*g.soldiers.values(), *(e["name"] for q in g.queues.values() for e in q)]
                 if n not in train.TECHS and gather.military(n)}
 
@@ -494,12 +519,15 @@ class Bot:
             if any(e["name"] in train.TECHS for e in g.queues.get(rect, [])):
                 continue
             line = set(self.soldiers(name)[:1])
-            wants += [(rect, n) for n in train.trains(g, name) if n in train.TECHS and (
+            wants += [(rect, n) for n in train.trains(g, name) if n in train.TECHS and not build.locked(g, n) and (
                 train.value("economy", n) or smith(n) or n in train.UPGRADES and line & {old for old, _ in train.lines(n, g)})]
-        busy = set()                                                   # the economy of all buildings first (#4206)
-        for rect, n in sorted(wants, key=lambda w: not train.value("economy", w[1])):
-            if rect not in busy and not build.locked(g, n) \
-                    and all(g.stock[r] >= v + keep.get(r, 0) for r, v in train.price(g, n).items()) \
+        return sorted(wants, key=lambda w: not train.value("economy", w[1]))
+
+    def research(self):
+        """Research the technologies of wanted() in its order, one in each queue, with the resources above keep()."""
+        g, keep, busy = self.g, self.keep(), set()
+        for rect, n in self.wanted():
+            if rect not in busy and all(g.stock[r] >= v + keep.get(r, 0) for r, v in train.price(g, n).items()) \
                     and train.queue(g, self.nobody, (rect[0], rect[2]), n):
                 busy.add(rect)
 
