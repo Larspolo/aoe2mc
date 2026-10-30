@@ -34,6 +34,7 @@ can see which features have an epic: `gh api "repos/Larspolo/aoe2mc/issues?label
 - [ ] `convert:old-formats` Old scenarios of the other formats: The Age of Kings (`.scn`, format 1.18 to 1.20) and the HD Edition (`.aoe2scenario` of HD, format 1.22 and later) convert as the `.scx` scenarios of The Conquerors
 - [x] `convert:rms-players` Random maps for 3 to 8 players in teams, as the AoE2 lobby: `--players` and `--teams`, the player lands of a team next to each other (`<PLAYER_SETUP>`: `random_placement`, `grouped_by_team`, `direct_placement` with `assign_to_player`) (epic #3944)
 - [ ] `convert:rms-standard` The standard random maps of AoE2 DE convert from their real script files (Acropolis, Baltic, Fortress, Hideout, Valley and the other maps of the DE map list): each script reads with no error, and its land, water, hills, cliffs, objects and player starts come from the script, not from own tables; a list names the state of each map
+- [ ] `convert:saved-games` A saved game of AoE2 DE (`.aoe2spgame`, `.aoe2mpgame`) converts as a scenario does: the map, the units and buildings of each player at the time of the save, their resources, ages and technologies, so that the game program continues the game
 
 ## 2. Play AoE2 in Minecraft (`game/`)
 
@@ -95,7 +96,7 @@ can see which features have an epic: `gh api "repos/Larspolo/aoe2mc/issues?label
 - [x] `play:auto-scout` The AoE2 DE order "Auto Scout": a scout explores the map by itself, walks to the tiles that the player did not see yet, and turns away from the enemies (epic #3701)
 - [x] `play:art-of-war` The AoE2 DE "Art of War" challenges: short training games with one goal and a time limit (early economy, booming, defend against a rush, wall in, micro), a gold, silver or bronze medal by the time (epic #3759)
 - [ ] `play:bot-strategy` The bot plays a whole game as the AoE2 computer player: it ages up, researches the economy and Blacksmith technologies, upgrades its unit lines, attacks in waves and defends its town
-- [ ] `play:bots` Several bots in one game, as the AoE2 lobby with a computer player in each free slot: each bot plays its own player and team, and attacks the enemy teams, not its allies
+- [x] `play:bots` Several bots in one game, as the AoE2 lobby with a computer player in each free slot: each bot plays its own player and team, and attacks the enemy teams, not its allies (epic #4017)
 - [ ] `play:ai-scripts` The bot plays by an AoE2 AI script (a `.per` file: `defrule` rules with facts and actions, as the AoE2 computer player and the community AIs): the game setup and a scenario that names an AI file give it to that player
 - [x] `play:attack-ground` The AoE2 order "Attack Ground": a selected Mangonel, Trebuchet or other siege unit shoots at a point of the ground again and again, and its blast hits all units there (epic #4077)
 - [x] `play:unique-buildings` The unique buildings of each civilization that the game program lacks (the Feitoria, the Harbor, the Pasture ...): built from the build menu, and each one works as in AoE2 DE (epic #4080)
@@ -128,7 +129,7 @@ can see which features have an epic: `gh api "repos/Larspolo/aoe2mc/issues?label
 - [x] `replay:graphs` Live graphs of the replay, as the statistics of the AoE2 DE replay overlay: the military, the economy and the population of each player over the game time (epic #3445)
 - [x] `replay:army` The army of each player in the live replay, as the caster tool CaptureAge shows it: the number of units of each type, the units in training and the units lost (epic #3693)
 - [ ] `replay:eco` The villagers of each player on food, wood, gold and stone and the idle villagers in the live replay, as the eco panel of CaptureAge
-- [ ] `replay:upgrades` The researched upgrades of each player in the live replay (blacksmith, economy, unit lines), as the upgrade row of CaptureAge: an upgrade shows when its research ends
+- [x] `replay:upgrades` The researched upgrades of each player in the live replay (blacksmith, economy, unit lines), as the upgrade row of CaptureAge: an upgrade shows when its research ends (epic #3784)
 - [x] `replay:apm` The actions per minute of each player from the commands of the record, as CaptureAge shows them: a value in the score panel and a line in the summary (epic #3762)
 - [ ] `replay:market` The market trades and the tributes of the record change the estimated resources of each player in the live replay, at the AoE2 exchange rates and fees
 - [ ] `replay:relics` The relics of the live replay: a monk that the record sends to a relic carries it to a monastery, and the score panel shows the relics of each player, as the AoE2 relic count
@@ -136,6 +137,7 @@ can see which features have an epic: `gh api "repos/Larspolo/aoe2mc/issues?label
 - [x] `replay:idle-tc` The idle time of the town centers of each player (no villager or technology in training), as CaptureAge shows it: a live value in the score panel and a line in the summary (epic #4051)
 - [ ] `replay:spending` The resources that each player spent on villagers, military units, technologies and buildings, from the commands of the record and the costs of the game data: a live split in the score panel and a page of the summary book
 - [ ] `replay:download` Replay a ranked or lobby game with no record file: get the record by its match ID or the name of a player from the AoE2 record API (`api.ageofempires.com`), as AoE2 DE and AoE2 Insights do
+- [ ] `replay:restored` A record of a restored game (a lobby game that the players saved and loaded again after a drop: mgz `restored`, `restore_time`) replays from its restore time with the units, buildings and stock of the save, and its clock shows the game time, not the time since the restore
 
 ## 4. The agent system (`.claude/skills/`, `tools/`, `.github/workflows/`)
 
