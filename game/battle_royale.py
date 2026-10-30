@@ -68,7 +68,9 @@ def start(g):
     """The start of the mode: each player (not Gaia) loses its town centers ("aoe destroy" of their targets, Gather.free
     frees the footprints: no razing and no loot, #3113) and its villagers (kill, also the units of a player with no Gather), and each Gather of a
     player has 0 of the resources of the key "none" (stone), but an infinite level keeps them (gather.Endless)."""
-    import combat, gather, owners                                      # combat imports gather, gather imports the modes
+    import combat  # combat imports gather, gather imports the modes
+    import gather
+    import owners
     objs = [o for o in g.data["objects"] if o["player"] and o["player"] > 0]
     gone = {combat.target_uuid(o["footprint"]) for o in objs
             if o["kind"] == "building" and o["name"] == "TOWN_CENTER" and "footprint" in o}
@@ -94,7 +96,7 @@ def start(g):
 def heroes(g):
     """Summon the units of the key "heroes" for each player (not Gaia) that has none of them yet, on the spawn cells of
     its first town center (the footprint stays in g.data after start()), else next to its first unit (its "tile")."""
-    import train                                                       # train imports gather, gather imports the modes
+    import train  # train imports gather, gather imports the modes
     if not (players := sorted(int(p) for p in getattr(g, "players", {}) if int(p))):
         return
     gathers = {x.player: x for x in [g, *(b.g for b in getattr(g, "bots", ()))]}   # an own unit to its own Gather

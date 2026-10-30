@@ -1,9 +1,8 @@
 """#2396: the AoE2 score gets 10 technology points for each 1 % of the explored map (game/score.py, explore)."""
 import pytest
+from test_score import two_sides
 
 from game import combat, score  # noqa: F401 (combat puts game/ on sys.path)
-
-from test_score import two_sides
 
 
 def explore(g):

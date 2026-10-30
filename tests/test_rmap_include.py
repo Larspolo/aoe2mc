@@ -1,6 +1,5 @@
 """The #include lines of an AoE2 random map script (#3058): random_map.def has the constants, the XS files are not run."""
 import pytest
-
 from test_rmap import SCRIPT, make
 
 

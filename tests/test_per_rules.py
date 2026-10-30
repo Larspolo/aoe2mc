@@ -2,7 +2,7 @@
 from test_bot_gather import bot_map
 
 from game import per
-from game.bot import build, train                                     # the modules that per uses
+from game.bot import build, train  # the modules that per uses
 
 
 def run(text, steps=1, **stock):

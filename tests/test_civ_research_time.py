@@ -5,7 +5,6 @@ from test_age_bonuses import game
 
 from game import train
 
-
 FASTER = {"ACHAEMENIDS": (("BLOODLINES", "STABLE"), ("HUSBANDRY", "STABLE")),
           "GOTHS": (("LOOM", "TOWN_CENTER"),),
           "JURCHENS": (("SIEGE_ENGINEERS", "UNIVERSITY"), ("MASONRY", "UNIVERSITY"))}

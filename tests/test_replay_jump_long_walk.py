@@ -6,10 +6,9 @@ import sys
 import pytest
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import replay  # noqa: E402
 from test_replay import Fake, data  # noqa: E402
 from test_replay_gather import order  # noqa: E402
-
-import replay  # noqa: E402
 
 FAR = {"kind": "unit", "name": "VILLAGER_MALE", "player": 1, "uuid": "u1", "ref": 7, "tile": [30.5, 30.5]}
 TREE = {"kind": "other", "name": "TREE_OAK", "player": 0, "ref": 20, "tile": [3.5, 3.5]}

@@ -8,12 +8,12 @@ import zipfile
 
 import numpy as np
 import pytest
+from test_ranged import data
+from test_siege_walk import summon
 
 import aoe2mc
 import units
 from game import ai, combat, run
-from test_ranged import data
-from test_siege_walk import summon
 
 
 def wagon(name="WAR_WAGON"):

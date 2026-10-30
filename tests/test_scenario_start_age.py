@@ -7,11 +7,11 @@ import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "game"))
 import build  # noqa: E402
 import scenario  # noqa: E402
+import scenarios  # noqa: E402
 from AoE2ScenarioParser.datasets.object_support import StartingAge  # noqa: E402
 from test_scenario_mode import START, game  # noqa: E402
 
 import aoe2mc  # noqa: E402
-import scenarios  # noqa: E402
 
 
 def test_aoe2mc_json_has_the_starting_age_of_each_player(tmp_path):

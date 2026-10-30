@@ -1,9 +1,9 @@
 """The key "trickle" of game/data/train.jsonl (#4279): each working unit of a kind adds income after the research.
 Test data only (owner, 2026-10-29, #4242)."""
+import pytest
+import train as plain_train  # feitoria imports train by its plain name
 from test_train_castle import setup
 
-import pytest
-import train as plain_train          # feitoria imports train by its plain name
 from game import feitoria, gather
 
 RATE = 0.02

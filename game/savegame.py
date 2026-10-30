@@ -312,7 +312,7 @@ def dump(g):
     d["stances"] = {n: {k: p[k] for k in ("team", "neutral", "sees") if k in p}   # the Diplomacy page (#2934), the
                     for n, p in sorted(g.players.items())}                       # triggers' stances and sight (#2989)
     d["owners"] = owner_record(g)
-    import recap                                                       # recap imports train, which imports savegame
+    import recap  # recap imports train, which imports savegame
     d["game_time"] = round(recap.game_time(g), 3)                      # the game seconds: a pause keeps them (#3377)
     return d
 

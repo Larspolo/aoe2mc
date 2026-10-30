@@ -1,8 +1,9 @@
 """The trigger effect "Change Ownership" with the target player 0 makes the units of the player in the area Gaia units
 (#2908): they and their mounts lose the tag aoe2mc.p<old>, get the tag aoe2mc.p0 and leave the team, as a Gaia unit has
 the tag aoe2mc.p0 and no team (units.make_entity, #2916)."""
-import aoe2mc
 from test_trigger_ownership import lines, trig
+
+import aoe2mc
 
 
 def test_the_units_of_player_1_in_the_area_go_to_gaia():

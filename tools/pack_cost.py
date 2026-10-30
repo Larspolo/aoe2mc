@@ -126,8 +126,9 @@ def main(argv=None):
     ap.add_argument("--seconds", type=float, default=10, help="profiler time per world (default 10)")
     ap.add_argument("--out", help="keep the two worlds in this folder")
     a = ap.parse_args(argv)
-    import aoe2mc
     import scenarios
+
+    import aoe2mc
     folder = a.out or tempfile.mkdtemp(dir=os.path.join(mc_check.ROOT, ".cache"))
     os.makedirs(folder, exist_ok=True)
     src = os.path.join(folder, f"{a.scenario}.aoe2scenario")

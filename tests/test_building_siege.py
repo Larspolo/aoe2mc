@@ -4,11 +4,10 @@ import shutil
 import time
 
 import pytest
-
-from game import combat, gather, run
-
 from test_building_damage import hp
 from test_gather import FakeServer, grid
+
+from game import combat, gather, run
 
 
 def setup():

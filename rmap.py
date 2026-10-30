@@ -55,8 +55,9 @@ def is_wet(terrain):
 
 @functools.cache
 def wet_ids():
-    import aoe2mc
     from AoE2ScenarioParser.datasets.terrains import TerrainId
+
+    import aoe2mc
     return [t.value for t in TerrainId if aoe2mc.terrain_style(t.name)["depth"] > 0]
 
 
@@ -599,7 +600,7 @@ def generate(text, seed, players=2, size=None, warn=None, teams=None, folder=Non
     layer = np.full((n, n), -1, np.int16)            # the land layer of each tile (aoe2mc.read_json "layer", -1 = none)
     lands, starts, kinds, links, layers = [], [], {}, [], {}
     heights = {}                                     # the base_elevation of each land index (#4418)
-    ids = {}                                         # the land_id of a create_land -> its land index (#4133)
+    ids = {}                                         # the land_id -> the land indices of its lands (#4133, #4722)
     mood = None                                      # color_correction CC_X: the color mood X (aoe2mc.MOODS, #4430)
     for cmd, args, attrs in sections.get("LAND_GENERATION", ()):
         if cmd == "base_terrain":
@@ -646,6 +647,8 @@ def generate(text, seed, players=2, size=None, warn=None, teams=None, folder=Non
                     kinds[len(lands) - 1] = kind
                     layers[len(lands) - 1] = top
                     heights[len(lands) - 1] = height
+                    if "land_id" in attrs:              # every player land of the block has the ID (#4722)
+                        ids.setdefault(value(attrs["land_id"][0], consts), []).append(len(lands) - 1)
             else:
                 if "land_position" in attrs:
                     c = tuple(min(n - 1, value(v, consts) * n // 100) for v in attrs["land_position"][:2])
@@ -666,8 +669,8 @@ def generate(text, seed, players=2, size=None, warn=None, teams=None, folder=Non
                 kinds[len(lands) - 1] = kind
                 layers[len(lands) - 1] = top
                 heights[len(lands) - 1] = height
-                if "land_id" in attrs:                  # only create_land: the guide gives player lands no ID
-                    ids[value(attrs["land_id"][0], consts)] = len(lands) - 1
+                if "land_id" in attrs:
+                    ids.setdefault(value(attrs["land_id"][0], consts), []).append(len(lands) - 1)
             for a in sorted(set(attrs) - set(CREATE_LAND)):
                 warn(f"{cmd}: {a} is not read yet")
         else:
@@ -1019,7 +1022,7 @@ def objects(cmds, consts, terrain, starts, rng, warn, owner=None, ridges=(), lay
             if land is None or owner is None:
                 warn(f"create_object {args[0]}: unknown land_id {attrs['place_on_specific_land_id'][0]}")
                 continue
-            ground = ground & (owner == land)
+            ground = ground & np.isin(owner, land)
         other = value(attrs["avoid_other_land_zones"][0], consts) if "avoid_other_land_zones" in attrs else 0
         actor = value(attrs["actor_area"][0], consts) if "actor_area" in attrs else None
         reach = value(attrs["actor_area_radius"][0], consts) if "actor_area_radius" in attrs else 1

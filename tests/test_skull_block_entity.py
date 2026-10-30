@@ -3,8 +3,9 @@ import contextlib
 import io
 import json
 
-import aoe2mc
 import world_reader
+
+import aoe2mc
 
 
 def test_each_skull_block_has_a_skull_block_entity(tmp_path):

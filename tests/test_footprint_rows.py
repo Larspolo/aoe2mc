@@ -1,6 +1,7 @@
 """Each AoE2 building has a footprint line in data/footprint.jsonl (#3092)."""
-import buildings
 from AoE2ScenarioParser.datasets.buildings import BuildingInfo
+
+import buildings
 
 
 def test_each_building_matches_a_footprint_line():

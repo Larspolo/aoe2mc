@@ -1,5 +1,6 @@
 """--ai-difficulty with a comma list: each bot gets its own AI difficulty in seat order (#4020)."""
 import pytest
+
 from game import bot, run
 
 

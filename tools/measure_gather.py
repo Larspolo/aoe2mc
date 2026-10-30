@@ -28,9 +28,8 @@ sys.path[:0] = [ROOT, HERE, os.path.join(ROOT, "game")]
 
 # AoE2 DE villagers, per game second: speed 0.8 tiles/s, carry 10 (unit 123 VMLUM, owner's data in #267). The work
 # rates per resource are in game/gather.py (AOE2_WORK, #393).
-from gather import AOE2_WORK, NORMAL, WORK_SECONDS  # noqa: E402
-
 import ai  # noqa: E402
+from gather import AOE2_WORK, NORMAL, WORK_SECONDS  # noqa: E402
 
 AOE2_SPEED, AOE2_CARRY = 0.8, 10                                   # tiles/s, resource
 RESOURCES = {"wood": ("TREE_OAK", "wood"), "food": ("FRUIT_BUSH", "food"), "farm": ("FARM", "food"),
@@ -112,10 +111,11 @@ def measure(distance=10, loads=2, tick=0.25, chop=None, carry=10, log=None, vers
     """Convert the measure map, play on a server until loads loads are dropped. Returns (events, tile size)."""
     import time
 
-    import aoe2mc
     import gather
     import mc_check
     import run
+
+    import aoe2mc
     with tempfile.TemporaryDirectory(dir=mc_check.workdir()) as tmp:
         src = scenario(os.path.join(tmp, "measure.aoe2scenario"), distance, resource)
         world = os.path.join(tmp, "MeasureWorld")

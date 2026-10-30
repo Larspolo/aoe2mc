@@ -1,9 +1,9 @@
 """game/per.py: the my-unique-* names of the civilization of the bot, and the sets and classes in the counts (#4681).
 The map of test_bot_gather: the bot is player 2."""
-from test_per_players import script
-
 import civs
 import train
+from test_per_players import script
+
 from game import per
 
 

@@ -66,6 +66,32 @@ def ci_runs(runs, since):
     return out
 
 
+def loop_gaps(runs, since, until):
+    """(longest gap, sum of the gaps) in hours with no live run of `runs` between `since` and `until`: the pacer loop
+    died quietly twice in 12 hours, and the owner started it by hand (#4647). A run that did not start (queued, held)
+    counts as no run; a live run lasts to `until`."""
+    spans = sorted((max(ts(r["run_started_at"]), since), min(until, ts(r["updated_at"]) if r.get("status") == "completed"
+                    else until)) for r in runs if r.get("status") in ("completed", "in_progress") and r.get("run_started_at"))
+    gaps, t = [], since
+    for a, b in spans:
+        if a > t:
+            gaps.append((a - t).total_seconds() / 3600)
+        t = max(t, b)
+    if until > t:
+        gaps.append((until - t).total_seconds() / 3600)
+    return max(gaps, default=0.0), sum(gaps)
+
+
+def held_runs(runs):
+    """({workflow: runs that GitHub held}, {workflow: runs that a person started again}): a held run waits for an
+    approval (#4645: GitHub held the pacer runs that read `toJSON(secrets)` as "may be malicious"); no tool starts a run
+    again, so an attempt 2 or more is owner work (lever 9)."""
+    held = Counter(r["name"] for r in runs if "action_required" in (r.get("status"), r.get("conclusion"))
+                   or r.get("status") == "waiting")
+    again = Counter(r["name"] for r in runs if r.get("run_attempt", 1) > 1)
+    return dict(held), dict(again)
+
+
 def slow_steps(jobs, n=3):
     """[(median min, "job / step")] of the n slowest steps over all jobs (the `jobs` lists of several runs)."""
     times = {}
@@ -626,10 +652,15 @@ def takeover_lines(rows):
 
 
 def report(since, runs, jobs, status_comments, comments, prs, files, files_of=None, issues=(), issue_events=(),
-           unanswered=None, reviews=None, data_rows=None, owner=None, waits=None):
+           unanswered=None, reviews=None, data_rows=None, owner=None, waits=None, loop=None):
     out = [f"Health since {since:%Y-%m-%d %H:%M} UTC", "", "CI runs (count, median min, max min, failures):"]
     for name, (k, m, mx, fail) in ci_runs(runs, since).items():
         out.append(f"  {name}: {k}, {fmt(m)}, {fmt(mx)}, {fail}")
+    if loop is not None:                        # a dead pacer loop starts no run (#4647): (longest, sum, hours)
+        out.append(f"Pacer loop gaps (no live run, #4647): longest {loop[0]:.1f} h, sum {loop[1]:.1f} h of {loop[2]:.1f} h")
+    held, again = held_runs(runs)
+    out.append("Runs held by GitHub (#4645): " + (", ".join(f"{k} {v}" for k, v in sorted(held.items())) or "0")
+               + " · started again by hand: " + (", ".join(f"{k} {v}" for k, v in sorted(again.items())) or "0"))
     out.append("Slowest CI steps (median min): " + "; ".join(f"{k} {fmt(m)}" for m, k in slow_steps(jobs)))
     setup = setup_minutes(status_comments)
     out.append(f"Setup (median min of {len(setup)} Metrics lines): {fmt(med(setup))}")
@@ -793,8 +824,20 @@ def period(until, hours, past, only_takeovers=False):
     merged = sorted(t for p in prs if p.get("merged_at") and (t := ts(p["merged_at"])) >= since)
     text = report(since, runs, jobs, status_comments, comments, prs, git_files(), files_of, issues, events,
                   unanswered(), None if refs is None else review_delays(refs, merged, since), data_rows(),
-                  *owner_and_waits(since, until if past else None))
+                  *owner_and_waits(since, until if past else None), loop=pacer_loop(since, until))
     return text.replace(" UTC", f" UTC until {until:%Y-%m-%d %H:%M} UTC", 1) if past else text
+
+
+def pacer_loop(since, until):
+    """(longest gap, sum of the gaps, hours of the period) of the runs of pacer.yml; None with no such workflow. One
+    call: the runs that started up to 6 hours before `since` too (a loop lasts 5.5 hours)."""
+    created = f"{since - datetime.timedelta(hours=6):%Y-%m-%dT%H:%M:%SZ}..{until:%Y-%m-%dT%H:%M:%SZ}"
+    try:
+        runs = api(f"actions/workflows/pacer.yml/runs?per_page=100&created={created}")["workflow_runs"]
+    except Exception as e:                      # a project with no pacer workflow
+        print(f"health: no runs of pacer.yml ({e})", file=sys.stderr)
+        return None
+    return (*loop_gaps(runs, since, until), (until - since).total_seconds() / 3600)
 
 
 def merge_times(n, until):

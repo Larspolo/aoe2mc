@@ -100,8 +100,9 @@ can see which features have an epic: `gh api "repos/Larspolo/aoe2mc/issues?label
 - [ ] `play:ai-scripts` The bot plays by an AoE2 AI script (a `.per` file: `defrule` rules with facts and actions, as the AoE2 computer player and the community AIs): the game setup and a scenario that names an AI file give it to that player
 - [x] `play:attack-ground` The AoE2 order "Attack Ground": a selected Mangonel, Trebuchet or other siege unit shoots at a point of the ground again and again, and its blast hits all units there (epic #4077)
 - [x] `play:unique-buildings` The unique buildings of each civilization that the game program lacks (the Feitoria, the Harbor, the Pasture ...): built from the build menu, and each one works as in AoE2 DE (epic #4080)
-- [ ] `play:unique-techs` The two unique technologies of each civilization at its castle (Castle Age and Imperial Age), each with its AoE2 DE effect: for example Yeomen of the Britons and Logistica of the Byzantines (epic #4096)
-- [ ] `play:unit-abilities` The special abilities of the units as in AoE2 DE: the trample damage of the elephants, the charge attack of the Coustillier and the Urumi Swordsman, the Leitis that ignores armor, the Shrivamsha Rider that dodges arrows, the Ratha that switches between melee and ranged
+- [x] `play:unique-techs` The two unique technologies of each civilization at its castle (Castle Age and Imperial Age), each with its AoE2 DE effect: for example Yeomen of the Britons and Logistica of the Byzantines (epic #4096)
+- [x] `play:unit-abilities` The special abilities of the units as in AoE2 DE: the trample damage of the elephants, the charge attack of the Coustillier and the Urumi Swordsman, the Leitis that ignores armor, the Shrivamsha Rider that dodges arrows, the Ratha that switches between melee and ranged (epic #4387)
+- [ ] `play:civ-choice` The civilization choices of the AoE2 DE lobby: Random (a random civilization for a player), Mirror (all players get the same civilization) and hidden civilizations (a player sees the civilization of an enemy only when an own unit sees one of its units or buildings)
 
 ## 3. Replay a recorded game in Minecraft (`game/replay.py`, `aoe2mc.read_timeline`)
 
@@ -128,7 +129,7 @@ can see which features have an epic: `gh api "repos/Larspolo/aoe2mc/issues?label
 - [x] `replay:auto-camera` An automatic camera of the live replay, as a caster view: the spectator view moves by itself to the place with the most fights or the most new buildings (epic #3365)
 - [x] `replay:graphs` Live graphs of the replay, as the statistics of the AoE2 DE replay overlay: the military, the economy and the population of each player over the game time (epic #3445)
 - [x] `replay:army` The army of each player in the live replay, as the caster tool CaptureAge shows it: the number of units of each type, the units in training and the units lost (epic #3693)
-- [ ] `replay:eco` The villagers of each player on food, wood, gold and stone and the idle villagers in the live replay, as the eco panel of CaptureAge
+- [x] `replay:eco` The villagers of each player on food, wood, gold and stone and the idle villagers in the live replay, as the eco panel of CaptureAge (epic #3754)
 - [x] `replay:upgrades` The researched upgrades of each player in the live replay (blacksmith, economy, unit lines), as the upgrade row of CaptureAge: an upgrade shows when its research ends (epic #3784)
 - [x] `replay:apm` The actions per minute of each player from the commands of the record, as CaptureAge shows them: a value in the score panel and a line in the summary (epic #3762)
 - [x] `replay:market` The market trades and the tributes of the record change the estimated resources of each player in the live replay, at the AoE2 exchange rates and fees (epic #3938)
@@ -137,9 +138,10 @@ can see which features have an epic: `gh api "repos/Larspolo/aoe2mc/issues?label
 - [x] `replay:idle-tc` The idle time of the town centers of each player (no villager or technology in training), as CaptureAge shows it: a live value in the score panel and a line in the summary (epic #4051)
 - [x] `replay:spending` The resources that each player spent on villagers, military units, technologies and buildings, from the commands of the record and the costs of the game data: a live split in the score panel and a page of the summary book (epic #4386)
 - [x] `replay:download` Replay a ranked or lobby game with no record file: get the record by its match ID or the name of a player from the AoE2 record API (`api.ageofempires.com`), as AoE2 DE and AoE2 Insights do (epic #4481)
-- [ ] `replay:restored` A record of a restored game (a lobby game that the players saved and loaded again after a drop: mgz `restored`, `restore_time`) replays from its restore time with the units, buildings and stock of the save, and its clock shows the game time, not the time since the restore
+- [x] `replay:restored` A record of a restored game (a lobby game that the players saved and loaded again after a drop: mgz `restored`, `restore_time`) replays from its restore time with the units, buildings and stock of the save, and its clock shows the game time, not the time since the restore (epic #4566)
 - [ ] `replay:live-game` Watch a game while it runs, as the AoE2 DE spectator mode: the live replay reads the record file that AoE2 DE still writes during the game, plays each new part when it comes, and keeps a set delay behind the game
 - [ ] `replay:players` The players of the record as the AoE2 DE loading screen and the match page of AoE2 Insights show them: name, civilization, color, team and rating (from the AoE2 record API, `tools/record_api.py`) in the score panel and on the first page of the summary book
+- [ ] `replay:pov-camera` The view of the player who recorded the game, as the AoE2 DE replay: the spectator view follows the camera of that player (the view locks of the record, mgz `Operation.VIEWLOCK`)
 
 ## 4. The agent system (`.claude/skills/`, `tools/`, `.github/workflows/`)
 

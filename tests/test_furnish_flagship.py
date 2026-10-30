@@ -1,11 +1,11 @@
 """The deck of the Flagship of Nearchos has rowing benches and cargo (#500)."""
 from collections import Counter
 
+import mcvalid
 import pytest
+from test_furnish_landmarks import blocks
 
 import aoe2mc
-import mcvalid
-from test_furnish_landmarks import blocks
 
 NEEDS = ("spruce_slab", "barrel", "chest", "hay_block", "lantern")
 

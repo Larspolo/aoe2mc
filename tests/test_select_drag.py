@@ -1,8 +1,8 @@
 """game/gather.py: on Paper the player holds the right click with the wand to draw the selection box (#992, choice A)."""
-from game import hints
-
 from test_gather_attack import click
 from test_select_type import setup
+
+from game import hints
 
 
 def drag():

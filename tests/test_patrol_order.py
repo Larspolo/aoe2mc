@@ -1,9 +1,9 @@
 """game/stance.py: the stance menu has a "Patrol" item (slot 6). A click on it and then on a ground cell sends the
 selected military units on a patrol between their place and the cell (AoE2 Patrol, #3355); scenario.patrol walks the
 legs in each game, and a new order ends the patrol."""
-from game import gather, scenario, stance
-
 from test_gather import FakeServer, grid
+
+from game import gather, scenario, stance
 
 
 def setup(monkeypatch):

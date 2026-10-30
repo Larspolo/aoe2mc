@@ -1,8 +1,8 @@
 """cliff_type in <CLIFF_GENERATION>: the cliff objects of the type (#3852)."""
 import pytest
+from test_rms_cliffs import CLIFFS
 
 import rmap
-from test_rms_cliffs import CLIFFS
 
 
 def cliffs(text, warn=lambda m: pytest.fail(m)):

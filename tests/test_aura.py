@@ -6,9 +6,9 @@ import time
 
 import abilities
 import pytest
-import units
 from abilities import aura
 
+import units
 from game import run
 
 AURA = {"TEST_LEADER": {"radius": 3, "speed": 0.1, "attack_speed": 0.2, "units": ["MILITIA", "CHAMPION"]}}

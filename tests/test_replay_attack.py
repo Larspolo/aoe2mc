@@ -73,11 +73,11 @@ def test_two_replay_units_fight_and_one_dies(tmp_path):
     import json
     import time
 
-    import aoe2mc
+    import run
     import scenarios
     from AoE2ScenarioParser.datasets.units import UnitInfo
 
-    import run
+    import aoe2mc
     scn = scenarios.new_scenario(16)
     scn.unit_manager.add_unit(scenarios.PlayerId.ONE, UnitInfo.MILITIA.ID, x=6.5, y=8.5)
     scn.unit_manager.add_unit(scenarios.PlayerId.TWO, UnitInfo.VILLAGER_MALE.ID, x=9.5, y=8.5)

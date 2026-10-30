@@ -6,10 +6,11 @@ import re
 import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "game"))
-import buildings  # noqa: E402
 import replay  # noqa: E402
 from test_replay import Fake, data  # noqa: E402
 from test_replay_walk import VIL  # noqa: E402
+
+import buildings  # noqa: E402
 
 CIVS = ["BRITONS", "FRANKS", "GOTHS", "TEUTONS", "JAPANESE", "CHINESE", "BYZANTINES", "PERSIANS"]
 PLAYERS = range(1, 9)

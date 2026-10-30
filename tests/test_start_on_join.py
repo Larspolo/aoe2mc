@@ -98,11 +98,12 @@ def test_a_late_client_gets_the_first_timed_message(tmp_path):
     import threading
     import time
 
-    import aoe2mc
     import mc_shot
     from test_mc_check import mojang_reachable
     from test_paper import paper_reachable
     from test_triggers_server import WELCOME, wait
+
+    import aoe2mc
     from tools import scenarios
     if not all(shutil.which(t) for t in ("Xvfb", "import", "xdotool")) or not mojang_reachable() \
             or not paper_reachable():

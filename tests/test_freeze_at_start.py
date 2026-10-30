@@ -51,11 +51,12 @@ def fired(game):
 
 @pytest.mark.mc
 def test_a_timer_trigger_fires_after_the_join_not_before(tmp_path):
-    import aoe2mc
     import scenarios
     from test_mc_check import mojang_reachable
     from test_paper import paper_reachable
     from test_triggers_server import wait
+
+    import aoe2mc
     if not mojang_reachable() or not paper_reachable():
         pytest.skip("Mojang or Paper is not available")
     src, world = scenarios.triggers(str(tmp_path / "t.aoe2scenario")), str(tmp_path / "W")

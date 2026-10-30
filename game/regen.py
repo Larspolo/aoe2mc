@@ -34,7 +34,7 @@ EVERY = 5.0     # AoE2 seconds between two passes (fewer commands)
 
 def tick(g, dt):
     """Give the own units of g that regenerate (civs.regen) their hit points of dt AoE2 seconds back."""
-    import combat                                                  # combat imports gather, gather imports this module
+    import combat  # combat imports gather, gather imports this module
     aura(g, dt)
     units(g, dt)
     military(g, dt)
@@ -66,7 +66,7 @@ def tick(g, dt):
 def buildings(g, dt):
     """Give the own buildings of the researched "building_regen" technologies (train.BY_KEY) their hit points of dt AoE2
     seconds back, up to their full hit points (repair.full)."""
-    import train                                                   # train imports gather, gather imports this module
+    import train  # train imports gather, gather imports this module
     if not (techs := [a for t, a in sorted(train.BY_KEY["building_regen"].items()) if t in g.techs]):
         return
     g.bastion_time = vars(g).get("bastion_time", 0.0) + dt
@@ -85,7 +85,7 @@ def buildings(g, dt):
 
 def heroes(g, dt):
     """Give the own units of combat.REGEN (the heroes) their hit points of dt AoE2 seconds back."""
-    import combat                                                  # combat imports gather, gather imports this module
+    import combat  # combat imports gather, gather imports this module
     if not (names := {u: n for u, n in vars(g).get("soldiers", {}).items() if n in combat.REGEN}):
         return
     g.hero_time = vars(g).get("hero_time", 0.0) + dt
@@ -99,7 +99,10 @@ def heroes(g, dt):
 
 def aura(g, dt):
     """Heal the allied units of the group of civs.HEAL_AURA near the complete own buildings of g for dt AoE2 seconds."""
-    import build, combat, gather, train                            # they import gather, gather imports this module
+    import build  # they import gather, gather imports this module
+    import combat
+    import gather
+    import train
     if not (heals := civs.HEAL_AURA.get(civs.civ(g))):
         return
     g.aura_time = vars(g).get("aura_time", 0.0) + dt
@@ -123,7 +126,9 @@ def aura(g, dt):
 
 def units(g, dt):
     """Heal the allied units near the own units of a researched "unit_aura" technology (train.BY_KEY) for dt AoE2 seconds."""
-    import combat, gather, train                                   # they import gather, gather imports this module
+    import combat  # they import gather, gather imports this module
+    import gather
+    import train
     if not (auras := [a for t, a in sorted(train.BY_KEY["unit_aura"].items()) if t in g.techs]):
         return
     g.unit_aura_time = vars(g).get("unit_aura_time", 0.0) + dt
@@ -147,7 +152,9 @@ def units(g, dt):
 def military(g, dt):
     """The upgraded own buildings of g with a "heal" aura (Military Town Center, train.ONE_BUILDING, #2496): heal the own
     military units within its "range" for dt AoE2 seconds, and give them its "speed" (g.hurried, train.speed)."""
-    import ai, gather, train                                       # they import gather, gather imports this module
+    import ai  # they import gather, gather imports this module
+    import gather
+    import train
     rects = [(r, a) for r, n in sorted(vars(g).get("upgraded", {}).items())
              if (a := train.ONE_BUILDING.get(n)) and "heal" in a and r in train.homes(g)]
     if not rects and not vars(g).get("hurried"):

@@ -66,8 +66,9 @@ NEAR = 2                    # blocks from the footprint: a Serjeant there repair
 def owners(g):
     """{block footprint (x0, x1, z0, z1): (name, player)} of the own and the allied buildings with AoE2 hit points (a
     target entity): the start ones and the complete construction sites of the player and of the bots (#1361)."""
-    from gather import allied                                      # gather imports this module
-    import build, combat
+    import build
+    import combat
+    from gather import allied  # gather imports this module
     mine = {g.player} | {int(p) for p in g.players if int(p) and allied(g.players, g.player, int(p))}   # no Gaia
     out = {(x0, x1, z0, z1): (o["name"], o["player"]) for o in g.data["objects"] if o["kind"] == "building"
            and o["name"] in combat.BUILDINGS and o["player"] in mine and "footprint" in o for x0, z0, x1, z1 in [o["footprint"]]}
@@ -84,7 +85,9 @@ def full(g, name, player, rect=None):
     """The full hit points of building name of player: a wall or gate has those of its design in the age of its
     player (combat.wall, as build.target, #1360), a watch tower those of its tower technology (build.line, #1374), a
     building those of Masonry (build.values, #1398) and of its upgrade of one building at the footprint rect (#2497)."""
-    import build, civs, combat                                     # build imports gather
+    import build  # build imports gather
+    import civs
+    import combat
     who = next((x for x in build.sides(g) if x.player == player and x is not g), g)   # an ally: its techs and age (#3106)
     if name not in combat.WALLS:
         return build.values(who, name, rect=rect).hp
@@ -106,7 +109,8 @@ def hp(g, rect):
 
 def cost(g, name, player=None):
     """{resource: amount} for the full hit points of building name of the player of g, or of an ally (#1361)."""
-    import build, civs                                             # build imports gather
+    import build  # build imports gather
+    import civs
     if name not in build.COSTS:
         return {}
     price, k = build.price(g, name, player), civs.repair_cost(g)    # the Georgian team bonus (#1730)
@@ -123,13 +127,13 @@ def crew(u):
 def body(g, u):
     """The prefix of a command that runs on the mob of unit u with its hit points: the crew of a siege unit or ship,
     the mob itself of a mule cart (build.MOVES, a mule with no passenger, #2504)."""
-    import build                                                   # build imports gather
+    import build  # build imports gather
     return f"execute as {u} run " if g.soldiers.get(u) in build.MOVES else crew(u)
 
 
 def unit_hp(g, u):
     """(Health, max_health) of siege unit, ship or mule cart u, or None when the server gives no number (dead, unloaded)."""
-    from gather import NUMBER                                      # gather imports this module
+    from gather import NUMBER  # gather imports this module
     hp = re.findall(NUMBER, g.command(body(g, u) + "data get entity @s Health").rsplit(":", 1)[-1])
     top = re.findall(r"(-?[\d.]+)", g.command(body(g, u) + "attribute @s minecraft:max_health get").rsplit(" is ", 1)[-1])
     return (float(hp[0]), float(top[0])) if hp and top else None
@@ -150,7 +154,7 @@ def send(g, who, key, goals):
 def resume(g, u, key, state):
     """Villager u of a loaded game repairs key again (a building footprint or the UUID of a siege unit, savegame, #2380):
     "to_repair" walks to it again, "repair" works on at its place. Returns False when key is gone."""
-    import fleet                                                   # fleet imports gather
+    import fleet  # fleet imports gather
     if isinstance(key, str) and (pos := g.pos(key)):
         cell = (math.floor(pos[0]), math.floor(pos[2]))
         goals = shore(g, cell) if g.soldiers.get(key) in fleet.SPEEDS else g.map.around({cell})
@@ -176,8 +180,10 @@ def shore(g, cell):
 def unit_order(g, player, u):
     """The selected villagers repair the own damaged siege unit, ship or mule cart u. Returns True, or False (no own
     siege unit, ship or mule cart, it has its full hit points, a ship far from the shore, or no villager is selected)."""
-    import build, fleet                                            # build and fleet import gather
-    import units                                                   # the converter's table (gather puts it on the path)
+    import build  # build and fleet import gather
+    import fleet
+
+    import units  # the converter's table (gather puts it on the path)
     name, who = g.soldiers.get(u), sorted(g.selected & g.villagers.keys())
     if not name or not (units.siege(name) or name in fleet.SPEEDS or name in build.MOVES) or not who or not (pos := g.pos(u)):
         return False
@@ -214,7 +220,8 @@ def order(g, player, cell):
 def march(g, men, rect, goals, job="mending", what=None):
     """The Serjeants men walk to the free cells goals next to the Donjon rect and repair it there (#2128), or build the
     site what there (job "raising", #2129)."""
-    import ai, train                                               # ai and train import gather
+    import ai  # ai and train import gather
+    import train
     from gather import NORMAL
     jobs = vars(g).setdefault(job, {})
     cells = sorted(goals)
@@ -259,7 +266,7 @@ def raisers(g, site):
 def rate(g, vs):
     """Hit points per AoE2 second of the repairers vs of a building, with the bonus of the civilization (#1730) and the
     mean bonus of the Fortified Church at the places of the repairers (civs.church_rate, #1930)."""
-    import civs                                                    # gather puts game/ on the path
+    import civs  # gather puts game/ on the path
     near = sum(civs.church_rate(g, (v.pos[0], v.pos[2])) for v in vs) / len(vs)
     return (RATE + MORE * (len(vs) - 1)) * civs.repair_rate(g) * near
 
@@ -328,7 +335,8 @@ def charge(g, key, vs, full, share, name):
 def unit_tick(g, u, vs, dt):
     """dt AoE2 seconds of repair of siege unit or ship u by the villagers vs: its crew gets Health back, the stock pays
     half the training cost for the full hit points. It stops when the unit is full, dead or moves."""
-    import build, train                                            # build and train import gather
+    import build  # build and train import gather
+    import train
     name, h, pos = g.soldiers.get(u), unit_hp(g, u), g.pos(u)
     start = vars(g).get("repair_at", {}).get(u)
     if not name or not h or not 0 < h[0] < h[1] or not pos or not start or math.dist(pos, start) > STILL:

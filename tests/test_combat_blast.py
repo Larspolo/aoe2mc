@@ -3,10 +3,10 @@ import shutil
 import time
 
 import pytest
-
-from game import ai, combat, run
 from test_ranged import data
 from test_siege_walk import summon
+
+from game import ai, combat, run
 
 
 def test_the_range_command_gives_the_blast_in_blocks():

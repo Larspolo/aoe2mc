@@ -1,10 +1,9 @@
 """game/civs.py: the villagers of a player work at the rate of the own civilization (AoE2 DE bonuses, #1089)."""
 import pytest
-
-from game import civs, gather, train
-
 from test_gather import FakeServer, grid
 from test_gather_hunt import game as hunt_game
+
+from game import civs, gather, train
 
 
 def setup(civ):

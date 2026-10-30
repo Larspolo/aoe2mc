@@ -1,6 +1,7 @@
 """The bootstrap sets up the agent system in a new repository (#906)."""
 import os
 import sys
+
 import tomllib
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

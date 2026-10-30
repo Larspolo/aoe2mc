@@ -61,7 +61,7 @@ def tick(g, dt):
         g.command(f"bossbar set {BAR} max {int((wonder.years(g.data.get('map_size')) * wonder.YEAR + more) / wonder.YEAR)}")
     t["left"] -= dt
     if t["left"] <= 0:
-        from gather import allied                               # gather imports this module
+        from gather import allied  # gather imports this module
         return cheats.over(g, lambda m: allied(g.players, n, m))   # n and its allies win (#1936)
     if (y := math.ceil(t["left"] / wonder.YEAR)) != t["shown"]:       # a command only when the years change
         t["shown"] = y

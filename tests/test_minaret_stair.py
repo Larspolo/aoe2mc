@@ -1,10 +1,10 @@
 """The Minaret of Jam has a door and a spiral stair up to the top balcony (#452)."""
+import mcvalid
 import numpy as np
 import pytest
 
 import aoe2mc
 import buildings
-import mcvalid
 
 
 def blocks(monkeypatch, tile=4):

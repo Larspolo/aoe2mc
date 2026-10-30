@@ -2,9 +2,9 @@
 two new lines (#1702, #2004)."""
 import json
 
+import merge_jsonl
 import pytest
 
-import merge_jsonl
 from game import train
 
 KEYS = {"name", "building", "slot", "item", "label", "cost", "time", "help"}

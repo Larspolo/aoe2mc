@@ -7,13 +7,12 @@ import types
 import pytest
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import gather  # noqa: E402
+import replay  # noqa: E402
 from test_replay import data  # noqa: E402
 from test_replay_control import Clock  # noqa: E402
 from test_replay_ships import DOCK, FISH, SHIP, WATER  # noqa: E402
 from test_replay_spawn import queue  # noqa: E402
-
-import gather  # noqa: E402
-import replay  # noqa: E402
 
 N, END = 64, 300000
 SHORE = {"kind": "other", "name": "SHORE_FISH", "ref": 13, "tile": [3.5, 10.5]}   # next to the land (z < 40)

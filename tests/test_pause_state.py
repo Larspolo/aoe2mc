@@ -4,12 +4,11 @@ import os
 import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "game"))
-from test_bot_gather import bot_map  # noqa: E402
-
 import gather  # noqa: E402
 import pause  # noqa: E402
 import train  # noqa: E402
 import treaty  # noqa: E402
+from test_bot_gather import bot_map  # noqa: E402
 
 
 class FakeTime:

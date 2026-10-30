@@ -4,7 +4,6 @@ from test_bot_gather import bot_map
 from game import per
 
 
-
 def script(monkeypatch, text):
     monkeypatch.setattr(per, "SN", {**per.SN, "sn-test-number": 5})      # test data
     monkeypatch.setattr(per, "SN_IDS", {77: "sn-test-number"})

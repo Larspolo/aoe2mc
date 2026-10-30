@@ -5,14 +5,14 @@ import shutil
 import time
 
 import pytest
+import scenarios
 from AoE2ScenarioParser.datasets.players import PlayerId
 from AoE2ScenarioParser.datasets.trigger_lists import DiplomacyState
-
-import aoe2mc
-import scenarios
-from game import combat, gather, run
 from test_damage import health
 from test_gather import FakeServer, grid
+
+import aoe2mc
+from game import combat, gather, run
 
 UNITS = [{"kind": "unit", "name": "MILITIA", "player": p, "uuid": f"m-{p}", "tile": [2.5 + p, 2.5]} for p in (1, 2, 3)]
 

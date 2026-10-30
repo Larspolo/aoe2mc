@@ -4,6 +4,7 @@ import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "game"))
 import combat  # noqa: E402
+
 from tools import mc_shot  # noqa: E402
 
 

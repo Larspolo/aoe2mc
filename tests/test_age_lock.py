@@ -1,6 +1,6 @@
 """game/build.py and game/train.py: the Feudal Age buildings and units are locked until the Feudal Age (#674)."""
-from test_build_menu import villager_map
 from menu_line import item
+from test_build_menu import villager_map
 from test_train_archery import menus
 from test_train_archery import setup as archery
 from test_train_menu import entry

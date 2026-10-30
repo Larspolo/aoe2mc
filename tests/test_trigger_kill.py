@@ -2,8 +2,9 @@
 (#656): the Minecraft kill shows the death of the unit, as the AoE2 death."""
 from collections import Counter
 
-import aoe2mc
 from test_trigger_objects import effect, lines
+
+import aoe2mc
 
 
 def test_kill_object_kills_the_units_of_the_player_and_type_in_the_area():

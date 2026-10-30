@@ -120,9 +120,10 @@ def test_a_militia_rides_a_transport_ship_to_another_shore_on_paper(tmp_path):
     import io
     import json
 
-    import aoe2mc
     import scenarios
     from AoE2ScenarioParser.datasets.units import UnitInfo
+
+    import aoe2mc
     scn = scenarios.new_scenario(24)
     for t in scn.map_manager.terrain:                                   # a sea between two shores
         if 8 <= t.x < 16:

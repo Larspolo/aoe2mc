@@ -1,9 +1,9 @@
 """The aim of gunpowder units (the key "lead" of data/train.jsonl, Arquebus of the Portuguese, #4364): a researched
 technology with the key tags the own units that its test matches, and its research tags the live ones. The test
 technology is monkeypatched, so the test does not depend on the values of the data line."""
+import train as plain_train  # build imports train by its plain name (not game.train)
 from test_train_castle import setup
 
-import train as plain_train          # build imports train by its plain name (not game.train)
 from game import train
 
 TECH = "TEST_TECH"

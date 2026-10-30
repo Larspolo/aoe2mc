@@ -2,10 +2,9 @@
 import shutil
 
 import pytest
+from test_select_type import setup
 
 from game import gather
-
-from test_select_type import setup
 
 
 class GroupServer:

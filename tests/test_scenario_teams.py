@@ -2,11 +2,11 @@
 aoe2mc.json (`players[N]["team"]`), so that the game program treats them as allies (gather.allied, #1312)."""
 import json
 
+import scenarios
 from AoE2ScenarioParser.datasets.players import PlayerId
 from AoE2ScenarioParser.datasets.trigger_lists import DiplomacyState
 
 import aoe2mc
-import scenarios
 from game import gather
 
 

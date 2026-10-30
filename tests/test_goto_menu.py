@@ -2,7 +2,6 @@
 from urllib.parse import unquote
 
 import pytest
-
 from test_loom import setup
 
 from game import gather, goto

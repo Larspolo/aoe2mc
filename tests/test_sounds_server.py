@@ -31,6 +31,7 @@ def test_each_sound_plays_for_a_player(tiny_world, tmp_path):
             or not paper_reachable():
         pytest.skip("Xvfb, xdotool, Mojang or Paper is not available")
     import mc_shot
+
     from game import run
     world = shutil.copytree(tiny_world[0], tmp_path / "W")
     with run.Game(world) as game, mc_shot.Client(game.game_port, game.version) as client:

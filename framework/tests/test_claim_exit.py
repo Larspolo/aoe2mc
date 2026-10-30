@@ -3,9 +3,8 @@ import os
 import subprocess
 import sys
 
-import pytest
-
 import claim
+import pytest
 
 TOOL = os.path.join(os.path.dirname(__file__), "..", "tools", "claim.py")
 

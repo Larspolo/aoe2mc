@@ -1,7 +1,6 @@
 """Each key of game/data/setup.jsonl has one line in game/data/setup_keys.jsonl (#2558): its type, what it does, its
 issue. A new game mode or lobby setting then adds a line there, not a key to the shared lines of check_setup()."""
 import pytest
-
 from test_data_files import check_setup
 
 

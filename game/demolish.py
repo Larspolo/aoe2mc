@@ -26,7 +26,7 @@ def site(g, rect):
 
 def shown(g, rect):
     """True when the menu of the own building or site rect has the item Delete."""
-    import ruins                                                   # ruins -> gather -> this module
+    import ruins  # ruins -> gather -> this module
     return site(g, rect) is not None or getattr(g, "paper", False) and tuple(rect) in ruins.own(g).values()
 
 
@@ -48,7 +48,8 @@ def name(g, rect):
 def open_menu(g, player, cell):
     """Open the menu with only the item Delete of the own building or site at the block cell (x, z). Returns its
     footprint, or None."""
-    import build, menu
+    import build
+    import menu
     rect = at(g, cell)
     if rect is None or not shown(g, rect):
         return None
@@ -76,7 +77,8 @@ def delete(g, player, rect):
 
 def fall(g, rect):
     """The complete own building rect falls as at 0 hit points: the plugin removes its target and its blocks."""
-    import combat, ruins
+    import combat
+    import ruins
     x0, x1, z0, z1 = rect
     uuid = combat.target_uuid([x0, z0, x1, z1])
     g.command(f"aoe destroy {uuid}")
@@ -88,7 +90,9 @@ def fall(g, rect):
 def unfound(g, s):
     """Remove the unfinished site s: the refund of AoE2, air in its box (the water under a dock or a fish trap comes
     back), free cells, and its builders stop."""
-    import build, combat, fleet
+    import build
+    import combat
+    import fleet
     if s["progress"] == 0:
         for r, v in s.get("paid", build.price(g, s["name"])).items():
             g.stock[r] += v

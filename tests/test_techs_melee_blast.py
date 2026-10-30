@@ -2,9 +2,9 @@
 data/train.jsonl with the blast radius of the unit, train.trample_command and `aoe trample` of the plugin.
 Test data, not the data lines (owner, 2026-10-29, #4242). Fake server."""
 import pytest
+import train as plain_train  # build and gather import train by its plain name (not game.train)
 from test_dock_train import dock_map
 
-import train as plain_train          # build and gather import train by its plain name (not game.train)
 from game import train
 
 EFFECT = {"if": [{"names": ["MILITIA"]}], "add": {"blast": 0.5}}

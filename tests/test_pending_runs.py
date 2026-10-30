@@ -9,9 +9,8 @@ import sys
 
 import dashboard
 import health
-import pytest
-
 import pacer
+import pytest
 import tokens
 import usage
 

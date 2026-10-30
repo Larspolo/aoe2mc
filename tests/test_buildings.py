@@ -1,13 +1,13 @@
 """Every AoE2 building draws without errors in every architecture set, with valid block states only."""
 from collections import Counter
 
+import mcvalid
 import numpy as np
 import pytest
 from AoE2ScenarioParser.datasets.buildings import BuildingInfo
 
 import aoe2mc
 import buildings
-import mcvalid
 
 T = 4
 

@@ -2,10 +2,9 @@
 import math
 import re
 
+import gather
 import pytest
 from test_gather import FakeServer, tiny
-
-import gather
 
 
 class FakePaper(FakeServer):
