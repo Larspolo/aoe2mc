@@ -197,8 +197,8 @@ def ci_line(ci, issues):
 def due_checks():
     """The release checks that can start and have no ticket (`release.due()`, #3342), or [] when the read fails: a
     planning gap must not stop the run start."""
-    import release
     try:
+        import release
         features, _, rows, epics = release.load()
         return release.due_lines(release.due(features, rows, epics))
     except Exception as e:                                  # a GitHub or file error: the other sections still print
