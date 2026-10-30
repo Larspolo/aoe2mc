@@ -568,7 +568,8 @@ def civ_choices(values):
 def apply_civs(data, civs, seed=1):
     """Write the --civ choices {player: civilization} into the players of aoe2mc.json. A player whose scenario locks
     its civilization ("Lock Civilizations", #3295) keeps the scenario civilization: a line on stderr says why.
-    RANDOM (--civ or the scenario, #4755, #4746): a civilization of civs.ROWS from the seed and the player number."""
+    RANDOM (--civ or the scenario, #4755, #4746): a civilization of civs.ROWS from the seed and the player number.
+    The seed gives the same civilization again in a loaded game (--load, #2255)."""
     import civs as table
     import numpy as np
     for player, name in (civs or {}).items():
@@ -578,7 +579,7 @@ def apply_civs(data, civs, seed=1):
             continue
         p["civ"] = name
     pool = sorted(r["name"] for r in table.ROWS if r["name"] != "GAIA")
-    for player, p in data.get("players", {}).items():
+    for player, p in (data.get("players") or {}).items():
         if p.get("civ") == "RANDOM" and not p.get("lock_civ"):
             p["civ"] = pool[np.random.default_rng([seed, int(player)]).integers(len(pool))]
             print(f"player {player}: random civilization {p['civ']} (seed {seed})", file=sys.stderr)
