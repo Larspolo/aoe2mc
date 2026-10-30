@@ -1,19 +1,20 @@
 """Each hit of the Obuch lowers the melee and the pierce armor of the target by 1, down to 0 (#4466, AoE2 wiki "Obuch":
 "Reduces armor and pierce armor of units by 1 (cannot be reduced below 0) each with every attack"): the key "sunder",
-combat.sunder_command and `aoe sunder` of the plugin. Test data, and hits on a server."""
+game/abilities/sunder.py and `aoe sunder` of the plugin. Test data, and hits on a server."""
 import re
 import shutil
 import time
 
 import pytest
+from abilities import sunder
 
 from game import combat, run
 
 
 def test_the_sunder_command_gives_the_armor_less_per_hit(monkeypatch):
-    monkeypatch.setattr(combat, "SUNDER", {"MILITIA": 1})
-    assert combat.sunder_command("u-1", "MILITIA") == "aoe sunder u-1 1"
-    assert combat.sunder_command("u-1", "ARCHER") is None
+    monkeypatch.setattr(sunder, "UNITS", {"MILITIA": 1})
+    assert sunder.command("u-1", "MILITIA") == "aoe sunder u-1 1"
+    assert sunder.command("u-1", "ARCHER") is None
 
 
 def health(game, tag):

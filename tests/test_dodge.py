@@ -1,19 +1,20 @@
 """The Shrivamsha Rider dodges projectiles (#4399, AoE2 DE wiki "Shrivamsha Rider": "Can dodge five (seven for Elite)
-consecutive projectiles in a 20 second time frame"): the key "dodge", combat.dodge_command and `aoe dodge` of the
+consecutive projectiles in a 20 second time frame"): the key "dodge", game/abilities/dodge.py and `aoe dodge` of the
 plugin. Test data, and arrows on a server."""
 import re
 import shutil
 import time
 
 import pytest
+from abilities import dodge
 
 from game import combat, run
 
 
 def test_the_dodge_command_gives_the_shots_and_the_time_in_ticks(monkeypatch):
-    monkeypatch.setattr(combat, "DODGE", {"TEST_RIDER": {"shots": 3, "time": 12.5}})
-    assert combat.dodge_command("u-1", "TEST_RIDER") == "aoe dodge u-1 3 250"
-    assert combat.dodge_command("u-1", "ARCHER") is None
+    monkeypatch.setattr(dodge, "UNITS", {"TEST_RIDER": {"shots": 3, "time": 12.5}})
+    assert dodge.command("u-1", "TEST_RIDER") == "aoe dodge u-1 3 250"
+    assert dodge.command("u-1", "ARCHER") is None
 
 
 def data(game, tag, path):

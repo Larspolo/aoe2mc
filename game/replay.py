@@ -107,6 +107,7 @@ BOOK_COLS, BOOK_ROWS = 19, 14   # characters per line and lines of a book page (
 POLL = 0.2                  # seconds between two calls of the poll of Replay.run while it waits (#685)
 CENSUS = 1.0                # seconds of real time between two censuses: each count is one RCON round trip (2 to 5 ms
                             # at a 45 ms server tick); once per game second at speed 4 took 23 % of the loop (#2761)
+POP_LIMIT = 200             # the AoE2 population cap: a trained unit waits until a unit dies (#4626)
 NEXT = 5                    # tiles: an empty resource sends its villager to the next one this near (#720)
 NEXT_TREES = 8              # tiles: the same for a tree: AoE2 lumberjacks walk farther; in de-64.3, 19 had the next
                             # tree 5 to 8 tiles away and stood idle (#4063)
@@ -411,6 +412,7 @@ class Replay:
         self.moving = {}                        # object ID -> game time (ms) of its next step
         self.idle = {}                          # object ID -> (game time (ms) of its next check, end of its walk) (#2633)
         self.working = {}                       # object ID -> game time (ms) of its next gather step (#631)
+        self.guessing = {}                      # object ID -> game time (ms) since its income with no gather step (#4627)
         self.arriving = {}                      # object ID -> game time (ms) of its work start, until it is there (#766)
         self.entering = {}                      # object ID -> [footprint, building entry, arrival (ms) or None] (#809)
         self.builds = {}                        # object ID of a builder -> (game time (ms) of the build end, order then) (#1282)
@@ -443,6 +445,7 @@ class Replay:
         self.kinds, self.seen = aoe2mc.object_kinds(), set()
         self.sent, self.busy = 0, 0.0           # commands sent, seconds spent sending them
         self.pop, self.shown = {}, None         # player -> live units (no animals), the value in the sidebar (#741)
+        self.held = {}                          # player -> spawn events that wait at the population cap (#4626)
         self.ages, self.named = {}, {}          # player -> age ("Feudal"); the age in its sidebar name (#805)
         self.counted = []                       # UUIDs of the start units that the population counts
         self.stock = {}                         # player -> estimated resources: START + gather steps - costs (#932)
@@ -453,6 +456,8 @@ class Replay:
         self.troops, self.fallen = {}, {}       # player -> {military unit name: live count, count lost} (#3695)
         self.censused = False                   # a census counted the live units (the base of the units lost)
         self.idled, self.idle_at = {}, 0        # player -> idle villager time (s), game time (ms) of the last count (#3757)
+        self.waiting, self.told_at = {}, 0      # uuid -> [player, idle s since its last record command], game time (ms)
+                                                # of the last check of the record commands (#4063)
         self.reached, self.researched = {}, {}  # player -> {age: game time (ms)}, researched technologies (#1067)
         self.learned = {}                       # player -> [(game time ms, technology name)] (#3785)
         self.spends = {}                        # player -> [(game time ms, group, total cost)] of pay (#4390)
@@ -1176,7 +1181,7 @@ class Replay:
                 self.lost[v.player] = self.lost.get(v.player, 0) + (not e.get("free"))   # a scout swap (#3028)
                 out.append(f"kill {v.uuid}")
                 out += self.carried(i, v, e["time"])
-        return out
+        return out + self.unhold(e["time"])
 
     def fall(self, rect):
         """The commands that clear the building with the block footprint rect = (x0, x1, z0, z1), from the lowest
@@ -1307,7 +1312,10 @@ class Replay:
 
     def spawn(self, e):
         """The summon command of a trained unit, on a free cell in front of its building (south side first). The
-        units of one building take the cells one after the other."""
+        units of one building take the cells one after the other. At the population cap the unit waits (unhold)."""
+        if self.pop.get(e["player"], 0) >= POP_LIMIT:
+            self.held.setdefault(e["player"], []).append(e)
+            return []
         prefix, _ = self.kinds.get(e["type"], ("?", ""))
         self.pay(e["player"], e["name"], e["time"])
         if e["name"].startswith("VILLAGER"):
@@ -1333,6 +1341,14 @@ class Replay:
             return []
         self.new.append((e["player"], v))
         return out + self.rally(e, v)
+
+    def unhold(self, t):
+        """The units that wait at the population cap (#4626), at game time t, while their player has room."""
+        out = []
+        for p, held in self.held.items():
+            while held and self.pop.get(p, 0) < POP_LIMIT:
+                out += self.spawn(dict(held.pop(0), time=t))
+        return out
 
     def newcomer(self, e, pos, hero=False):
         """(gather.Villager, the summon commands) of the unit e["name"] of player e["player"] at pos (it faces south),
@@ -1937,6 +1953,7 @@ class Replay:
         out += self.calm([i for i in self.charging if i not in self.moving and self.calm_at(i) <= t])   # (#2552)
         out += self.settle(t)
         out += self.enter(t)
+        self.guess(t)
         self.crew.command = out.append
         for i, due in list(self.working.items()):
             v = self.units[i]
@@ -1989,6 +2006,18 @@ class Replay:
                 del self.working[i]
                 out += self.next_resource(i, v, due - 1000 / self.rate(v))
         return out
+
+    def guess(self, t):
+        """Add to the estimate the income of each villager with a resource but no gather step at game time t (ms), as
+        skipped() does in a jump, also at an empty resource (the walk to the next one did not start): most villagers
+        of a record do not work in the replay, and without their income the live estimate went far below 0 (#4627)."""
+        busy = self.moving.keys() | self.working.keys() | self.entering.keys() | self.builds.keys() \
+            | {u for us in self.garrisons.values() for u in us}
+        self.guessing = {i: self.guessing.get(i, t) for i, v in self.units.items()
+                         if i not in busy and getattr(v, "tree", None) is not None}
+        for i, t0 in self.guessing.items():
+            if (n := self.skipped(i, t0, t, task=True)):
+                self.guessing[i] = t0 + n * 1000 / self.rate(self.units[i])     # the rest of a step waits
 
     def rest(self, i, t):
         """Unit i of the plugin ends its walk at game time t with no work there: settle() checks that it got there."""
@@ -2749,6 +2778,7 @@ class Replay:
                     self.fallen.setdefault(p, {})[name] = self.fallen.get(p, {}).get(name, 0) + was - n
                 kept[name] = n
         self.censused = True
+        self.send(self.unhold(t if t < math.inf else self.ended))
         for i in {r["monk"] for r in self.relics.values()} - {None}:     # a monk with a relic died in a fight (#4013)
             if (v := self.units.get(i)) and "Test passed" not in (self.game.command(f"execute if entity {v.uuid}") or ""):
                 self.send(self.carried(i, v, t))
@@ -2763,8 +2793,10 @@ class Replay:
         dead = {u for u in self.workers(p) if "Test passed" not in (self.game.command(f"execute if entity {u}") or "")}
         for i in [i for i, v in self.units.items() if v.uuid in dead]:
             del self.units[i]
-            for state in (self.moving, self.working, self.arriving, self.entering, self.builds):   # built() (#3943)
-                state.pop(i, None)
+            for state in (self.moving, self.working, self.arriving, self.entering, self.builds, self.work):   # built()
+                state.pop(i, None)                                  # (#3943)
+            for us in self.garrisons.values():                      # BACK TO WORK lets it out (#4063)
+                us[:] = [u for u in us if u != i]
 
     def eco(self):
         """The villagers of each player on each kind of work (#3755): food, wood, gold, stone, build or idle. A start
@@ -2780,12 +2812,38 @@ class Replay:
             out.setdefault(v.player, dict.fromkeys(keys, 0))[k] += 1
         return out
 
+    @functools.cached_property
+    def told(self):
+        """{object ID: sorted game times (ms) of the record commands of the unit} for idle_time (#4063)."""
+        out = {}
+        for e in self.data["timeline"]:
+            if e["kind"] in aoe2mc.UNIT_USE | {"stop", "delete"}:
+                for i in e.get("objects") or ():
+                    out.setdefault(i, []).append(e["time"])
+        return {i: sorted(ts) for i, ts in out.items()}
+
     def idle_time(self, t):
         """Add the idle villager time up to game time t (ms) to each player (#3757): the idle villagers now times the
-        game time since the last count. A jump sets idle_at only: the skipped time adds nothing."""
-        for p, n in self.eco().items():
-            self.idled[p] = self.idled.get(p, 0) + (t - self.idle_at) / 1000 * n["idle"]
-        self.idle_at = t
+        game time since the last count. A jump sets idle_at only: the skipped time adds nothing. The idle time of a
+        villager counts only up to its next record command (#4063): a villager that the record never commands again
+        died in the game (the record has no deaths) or worked on with no command, so in de-64.3 it gave 60 % of the
+        idle time (P2 641 of 903 min)."""
+        ids = {}
+        for i, v in self.units.items():
+            ids.setdefault(v.uuid, []).append(i)
+        for u, v in {v.uuid: v for v in self.units.values()}.items():
+            if not v.name.startswith("VILLAGER"):
+                continue
+            self.idled.setdefault(v.player, 0)
+            if not v.task or v.task == "none" or v.job == units.IDLE_JOB:
+                self.waiting.setdefault(u, [v.player, 0])[1] += (t - self.idle_at) / 1000
+            if u in self.waiting and any(bisect.bisect_right(ts := self.told.get(i, ()), self.told_at)
+                                         < bisect.bisect_right(ts, t) for i in ids[u]):   # a command in (told_at, t]
+                p, s = self.waiting.pop(u)
+                self.idled[p] = self.idled.get(p, 0) + s
+        for p in self.pop:
+            self.idled.setdefault(p, 0)
+        self.idle_at = self.told_at = t
 
     @functools.cached_property
     def town_centers(self):
@@ -2886,7 +2944,8 @@ class Replay:
         jobs = {i: v.job for i, v in self.units.items()}            # move() gives the looks: send the last ones
         since = {} if start is None else {i: start if i in self.working else self.walk_end(v, start)
                                           for i, v in self.units.items()
-                                          if (i in self.moving or i in self.working) and v.tree is not None}
+                                          if (i in self.moving or i in self.working or i in self.guessing)
+                                          and v.tree is not None}
 
         def walks(ids):                                             # a place each tile on the paths (#1801)
             trail.extend(Seen(v.player, v.name, (x + 0.5, 0.0, z + 0.5)) for i in ids
@@ -2948,6 +3007,7 @@ class Replay:
             elif e["kind"] == "tribute" and e.get("to"):
                 self.tribute(e)
         built(to)
+        self.guessing = {}                                          # since `to`: the jump added the time before
         out += self.enter(to) + self.expire(to)
         for tile in list(self.prey):                                # the hunters were there in the skipped time
             out += self.kill(tile)
@@ -2981,12 +3041,12 @@ class Replay:
         speed = next((s for k, s in SPEEDS.items() if v.name.startswith(k)), 1.0) * self.T    # blocks per second
         return t + (1000 * math.dist(v.cell, v.path[-1]) / speed if v.path else 0)
 
-    def skipped(self, i, t0, t1):
+    def skipped(self, i, t0, t1, task=False):
         """Add to the estimate the resources that unit i gathers at its resource from game time t0 to t1 (ms) in a
         jump: the jump runs no gather steps, so without it the costs of the skipped time take the estimate below 0
         (#1056). The AoE2 rate for the whole skipped time, with no cap of the one resource: in play the villager walks
         to the next resource when its resource is empty (#1147). The resource itself keeps its amount (the world shows
-        no gather)."""
+        no gather). task: also at an empty resource (its task, guess()). Returns the amount."""
         v = self.units.get(i)
         if t0 is None or t1 <= t0 or v is None or not (v.name.startswith("VILLAGER") or fisher(v.name)) \
                 or v.tree is None:
@@ -2997,9 +3057,10 @@ class Replay:
         m = self.map
         left = (m.farms if v.tree in m.farms else m.carcasses if v.tree in m.carcasses else m.fish if v.tree in m.fish
                 else m.bushes if res == "food" else m.trees if res == "wood" else m.mines.get(res, {})).get(v.tree, 0)
-        n = int(self.rate(v) * (t1 - t0) / 1000) if left > 0 else 0         # left 0: no resource, `res` is not sure
+        n = int(self.rate(v) * (t1 - t0) / 1000) if left > 0 or task else 0     # left 0: no resource, `res` is not sure
         self.resources(v.player)[res] += n
         self.gathered.setdefault(v.player, dict.fromkeys(START, 0))[res] += n     # the summary (#1097)
+        return n
 
     def run(self, *args, **kw):
         """Play the timeline (`play`). On Paper the commands wait in `queue` and go out in batches (flush, #2761)."""

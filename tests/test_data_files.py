@@ -4,6 +4,7 @@ of its values: the values come from the AoE2 wiki, and this file checks their fo
 import json
 import os
 
+import abilities
 import pytest
 
 from game import build, civs, combat, table, train
@@ -32,7 +33,7 @@ def form(row, need, may=()):
 
 STATS = {"hp": int, "attack": int, "melee": int, "pierce": int, "range": NUMBER, "reload": float, "bonus": dict,
          "classes": list}
-OPTIONAL = {"blast"}                                    # a field of combat.Stats with a default (#4283)
+OPTIONAL = {"blast", "passes", "pass_part"}                  # a field of combat.Stats with a default (#4283)
 
 
 def stats(row):
@@ -43,29 +44,24 @@ def stats(row):
     assert set(row["bonus"]) <= bonus and all(isinstance(v, int) for v in row["bonus"].values()), row["name"]
 
 
-UNIT_KEYS = {                                   # the optional keys of units.jsonl: one per line (#4585)
+UNIT_KEYS = {                                   # the optional keys of units.jsonl: one per line (#4585);
+                                                # the keys of the unit abilities: game/abilities (#4588)
     "accuracy": NUMBER,
     "convert": int,
-    "dodge": dict,
-    "frenzy": dict,
     "ignore_armor": bool,
-    "low_hp": dict,
     "min_range": NUMBER,
     "miss": dict,
     "note": str,
-    "pack": dict,
     "sail": NUMBER,
     "sight": int,
-    "sunder": int,
-    "trample": dict,
-    "veteran": dict,
     "volley": dict,
 }
 
 
 def check_units(row):
-    form(row, {"name": str, **STATS}, UNIT_KEYS)
+    form(row, {"name": str, **STATS}, UNIT_KEYS | {m.KEY: m.TYPE for m in abilities.MODULES})
     stats(row)
+    assert row.get("on_death", "MILITIA") in NAMES["units.jsonl"], row["name"]   # abilities.on_death (#4471)
 
 
 def check_buildings(row):

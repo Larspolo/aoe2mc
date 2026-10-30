@@ -74,6 +74,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import units  # noqa: E402
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import abilities  # noqa: E402
 import build  # noqa: E402
 import civs  # noqa: E402
 import demolish  # noqa: E402
@@ -1084,16 +1085,16 @@ def applies(unit, name):
 
 
 def trample_command(g, uuid, name):
-    """combat.trample_command of unit name: its own trample (the elephants, #4397), else the splash of a researched
-    technology with the key "trample" whose effect holds for the unit (Druzhina, #4496), with the blast radius of the
-    unit (stats). None without both."""
+    """The trample command of the splash of a researched technology with the key "trample" whose effect holds for unit
+    name (Druzhina, #4496), with the blast radius of the unit (stats). None for a unit with its own trample (the
+    elephants, #4397: abilities.commands gives it) and without such a technology."""
     import combat                                                  # combat imports gather, gather imports this module
-    if name in combat.TRAMPLE:
-        return combat.trample_command(uuid, name, g.map.T)
+    if name in abilities.trample.UNITS:
+        return None
     s = stats(g, name, uuid)
     t = next((t for tech, t in sorted(BY_KEY["trample"].items()) if tech in g.techs and s.blast and not s.range
               and any(test(x, name, combat.stats(name)) for x in value("effect", tech).get("if", ()))), None)
-    return t and combat.trample_command(uuid, name, g.map.T, {**t, "radius": s.blast})
+    return t and abilities.trample.command(uuid, name, g.map.T, {**t, "radius": s.blast})
 
 
 def stats(g, name, uuid=None):
@@ -1316,21 +1317,9 @@ def research(g, entry, start=False, rect=None):
                 g.command(cmd)
             if cmd := combat.accuracy_command(uuid, new, civs.value("accuracy", civs.civ(g), {}).get(new, 0.0), g.map.T):
                 g.command(cmd)                                    # an Elite Arambai hits more often (#4549)
-            if cmd := combat.dodge_command(uuid, new):            # an Elite Shrivamsha Rider dodges more (#4399)
+            for cmd in abilities.commands(uuid, new, g.map.T):      # the abilities of the elite unit (#4588)
                 g.command(cmd)
-            if cmd := combat.frenzy_command(uuid, new):           # an Elite Temple Guard (#4468)
-                g.command(cmd)
-            if cmd := combat.low_hp_command(uuid, new):           # an Elite Jian Swordsman (#4472)
-                g.command(cmd)
-            if cmd := combat.pack_command(uuid, new, g.map.T):    # an Elite Monaspa (#4469)
-                g.command(cmd)
-            if cmd := combat.veteran_command(uuid, new):          # an Elite Jaguar Warrior keeps its kills (#4467)
-                g.command(cmd)
-            if cmd := combat.sunder_command(uuid, new):           # an Elite Obuch (#4466)
-                g.command(cmd)
-            if cmd := combat.shield_command(uuid, new):           # an Elite Hussite Wagon (#4507)
-                g.command(cmd)
-            if cmd := trample_command(g, uuid, new):              # an elite elephant tramples (#4397)
+            if cmd := trample_command(g, uuid, new):              # the splash of a technology (#4496)
                 g.command(cmd)
             g.command(combat.label_command(uuid, new))               # the name of a new unit (units.pretty)
     import trebuchet                                               # trebuchet imports this module: import it late
@@ -1429,6 +1418,7 @@ def census(g):
     import score                                                       # score imports this module
     dead = {u: "VILLAGER" if u in g.villagers else g.soldiers[u] for u in [*g.villagers, *g.soldiers] if u not in live}
     spoils.fallen(g, dead)                                             # Tupi (#2271)
+    fell(g, dead)                                                      # Konnik (#4471)
     score.fallen(g, dead)                                              # #2355
     spoils.kills(g)                                                    # Mapuche (#2271)
     spoils.attacks(g)                                                  # Varangian Guard (#2376)
@@ -1442,6 +1432,31 @@ def census(g):
         g.drop(u)                                                      # from the selection of each person (#3486)
     g.pop, g.census = sum(weight(g, g.soldiers.get(u)) for u in live if g.soldiers.get(u) not in build.MOVES), 0.0   # a mule cart is a building
     sidebar(g)
+
+
+RISE = 3.0                                                          # AoE2 seconds from a death to the new unit (wiki "Konnik")
+
+
+def fell(g, dead):
+    """Keep the new unit and the place of each dead own unit of abilities.on_death (the Konnik, #4471) in g.risers: the
+    marker that the plugin left at the place of the death (on_death.command). A dead unit with no marker was
+    removed (an unloaded chunk, a sunk boat), not killed: nothing rises. The census sees a death up to CENSUS seconds
+    late, so the wait starts at RISE - CENSUS / 2."""
+    rise = abilities.on_death
+    for u, name in dead.items():
+        if name in rise.UNITS and (p := g.pos(f"@e[type=marker,tag={rise.FELL}{u},limit=1]")):
+            g.command(f"kill @e[type=marker,tag={rise.FELL}{u}]")
+            vars(g).setdefault("risers", []).append([RISE - CENSUS / 2, rise.UNITS[name], p])
+
+
+def risen(g, work):
+    """Summon each unit of g.risers (fell) whose wait is over, for free: a new own soldier at the place of the death.
+    AoE2: the Dismounted Konnik takes the population slot of the Konnik."""
+    for r in list(vars(g).get("risers", ())):
+        r[0] -= work
+        if r[0] <= 0:
+            g.risers.remove(r)
+            summon(g, r[1], r[2])
 
 
 LABELS = {"Limit": "Pop. limit"}                                  # the shown name of a sidebar line (owner, #990)
@@ -1467,6 +1482,7 @@ def tick(g, work):
     g.census += work
     if g.census >= CENSUS:
         census(g)
+    risen(g, work)
     for tag in list(g.marks):                                          # rally markers end
         g.marks[tag] -= work
         if g.marks[tag] <= 0:
@@ -1555,29 +1571,9 @@ def summon(g, name, pos, rotation=math.pi / 2, player=None):
         g.command(cmd)
     if cmd := combat.accuracy_command(uuid, name, civs.value("accuracy", civs.civ(g), {}).get(name, 0.0), g.map.T):
         g.command(cmd)                                             # a Hun trebuchet hits units more often (#2479)
-    if cmd := combat.charge_command(uuid, name, g.map.T):          # the Coustillier charges its attack (#4398)
+    for cmd in abilities.commands(uuid, name, g.map.T):            # its abilities: game/abilities (#4588)
         g.command(cmd)
-    if cmd := combat.speed_charge_command(uuid, name, g.map.T):     # a Samurai runs faster to a near target (#4545)
-        g.command(cmd)
-    if cmd := combat.charged_volley_command(uuid, name, g.map.T):           # a Xianbei Raider fires a charged volley (#4546)
-        g.command(cmd)
-    if cmd := combat.dodge_command(uuid, name):                    # a Shrivamsha Rider dodges projectiles (#4399)
-        g.command(cmd)
-    if cmd := combat.vs_units_command(uuid, name, g.map.T):        # the Lou Chuan shoots units in its anti-unit mode (#4505)
-        g.command(cmd)
-    if cmd := combat.frenzy_command(uuid, name):                   # a Temple Guard attacks faster in a long fight (#4468)
-        g.command(cmd)
-    if cmd := combat.low_hp_command(uuid, name):                   # a Jian Swordsman loses its shield below 45 HP (#4472)
-        g.command(cmd)
-    if cmd := combat.pack_command(uuid, name, g.map.T):            # a Monaspa gets attack near its pack (#4469)
-        g.command(cmd)
-    if cmd := combat.veteran_command(uuid, name):                  # a Jaguar Warrior gets attack for each kill (#4467)
-        g.command(cmd)
-    if cmd := combat.sunder_command(uuid, name):                   # an Obuch lowers the armor of its target (#4466)
-        g.command(cmd)
-    if cmd := combat.shield_command(uuid, name):                   # a Hussite Wagon shields the units behind it (#4507)
-        g.command(cmd)
-    if cmd := trample_command(g, uuid, name):                      # an elephant tramples the units next to its target (#4397)
+    if cmd := trample_command(g, uuid, name):                      # the splash of a technology (Druzhina, #4496)
         g.command(cmd)
     if cmd := combat.sight_command(uuid, name, g.map.T, s=stats(g, name), more=sight_more(g.techs, name, combat.stats(name))
                                   + civs.sight_units(g, name, combat.stats(name))):   # it attacks enemies in sight (#775)

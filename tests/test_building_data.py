@@ -16,7 +16,7 @@ def test_each_building_line_has_the_stats_fields_or_only_a_sight():
     for line in open(os.path.join(table.DIR, "buildings.jsonl"), encoding="utf-8"):
         row = json.loads(line)
         # only the required keys: an optional key is no line here (#2164), test_data_files.py checks its type
-        shapes = [k for k in ({"name", *combat.Stats._fields} - {"blast"}, {"name", "hp_ages", "melee", "pierce"}) if k <= set(row)]
+        shapes = [k for k in ({"name", *combat.Stats._fields} - {"blast", "passes", "pass_part"}, {"name", "hp_ages", "melee", "pierce"}) if k <= set(row)]
         assert shapes or not set(row) & {*combat.Stats._fields, "hp_ages"}, row["name"]
         assert "sight" in row or shapes, row["name"]
 
