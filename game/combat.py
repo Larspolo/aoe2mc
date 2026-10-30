@@ -111,6 +111,7 @@ IGNORE = {r["name"] for r in UNIT_ROWS if r.get("ignore_armor")}
 PASS = {r["name"]: r["pass"] for r in UNIT_ROWS if "pass" in r}               # the key "pass" of data/units.jsonl
 VS_UNITS = {r["name"]: r["vs_units"] for r in UNIT_ROWS if "vs_units" in r}    # the anti-unit mode: the Lou Chuan (#4505)
 CHARGE_ATTACK = {r["name"]: r["charge_attack"] for r in UNIT_ROWS if "charge_attack" in r}   # the Coustillier (#4398)
+CHARGED_VOLLEY = {r["name"]: r["charged_volley"] for r in UNIT_ROWS if "charged_volley" in r}   # Xianbei Raider (#4546)
 TRAMPLE = {r["name"]: r["trample"] for r in UNIT_ROWS if "trample" in r}       # the key "trample": the elephants (#4397)
 MELEE_MODE = {r["name"]: r["melee_mode"] for r in UNIT_ROWS if "melee_mode" in r}   # the key "melee_mode": the Ratha (#4504)
 # The part of the damage on the units behind the target, when it is not one half (wiki: "100% pass-through damage").
@@ -250,6 +251,16 @@ def charge_command(uuid, name):
     "attack" more (aoe chargeattack of #4370; its time as ticks at Normal speed)."""
     c = CHARGE_ATTACK.get(name)
     return f"aoe chargeattack {uuid} {max(1, round(c['time'] / NORMAL * 20))} {c['attack']}" if c else None
+
+
+def charged_volley_command(uuid, name):
+    """The plugin command of the charged volley of unit name (the key "charged_volley" of data/units.jsonl: the Xianbei
+    Raider, #4546), or None: a shot at a unit that is not siege after a full charge of "time" AoE2 seconds also fires
+    "shots" arrows of "attack" with "bonus" (aoe chargedvolley; its time as ticks at Normal speed)."""
+    c = CHARGED_VOLLEY.get(name)
+    bonus = ",".join(f"{k}:{v}" for k, v in sorted(c.get("bonus", {}).items())) or "-" if c else ""
+    return f"aoe chargedvolley {uuid} {max(1, round(c['time'] / NORMAL * 20))} {c['shots']} {c['attack']} {bonus}" \
+        if c else None
 
 
 def dodge_command(uuid, name):
@@ -426,6 +437,9 @@ def setup(game, data):
             game.command(cmd)
     for o in units:                                  # the Coustillier charges its attack (#4398)
         if cmd := charge_command(o["uuid"], o["name"]):
+            game.command(cmd)
+    for o in units:                                  # a Xianbei Raider fires a charged volley (#4546)
+        if cmd := charged_volley_command(o["uuid"], o["name"]):
             game.command(cmd)
     for o in units:                                  # a Shrivamsha Rider dodges projectiles (#4399)
         if cmd := dodge_command(o["uuid"], o["name"]):

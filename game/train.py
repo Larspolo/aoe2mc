@@ -1545,6 +1545,8 @@ def summon(g, name, pos, rotation=math.pi / 2, player=None):
         g.command(cmd)                                             # a Hun trebuchet hits units more often (#2479)
     if cmd := combat.charge_command(uuid, name):                   # the Coustillier charges its attack (#4398)
         g.command(cmd)
+    if cmd := combat.charged_volley_command(uuid, name):           # a Xianbei Raider fires a charged volley (#4546)
+        g.command(cmd)
     if cmd := combat.dodge_command(uuid, name):                    # a Shrivamsha Rider dodges projectiles (#4399)
         g.command(cmd)
     for cmd in [combat.aura_command(uuid, name, g.map.T)] + combat.aura_tags(uuid, name):   # a Centurion aura (#4470)

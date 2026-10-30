@@ -239,6 +239,10 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *                                              the charge of a melee hit (Comitatenses, #4370): the first melee hit
  *                                              on a unit after ticks has attack more (before the armor), then the
  *                                              charge starts again; a new unit starts full
+ *   aoe chargedvolley <selector> <ticks> <shots> <attack> <class:bonus,...|->
+ *                                              the charged volley of a ranged unit (Xianbei Raider, #4546): a shot at
+ *                                              a unit that is not siege after ticks also hits it with shots arrows of
+ *                                              attack and bonus (AoE2 accuracy 100 %), then the charge starts again
  *   aoe cheats <code>,<code>,...|-             the AoE2 cheat codes in the chat (#816, Cheats.java; URL-encoded)
  *   aoe deathmarks on|off                      a short mark where a replay unit dies (#846, Deaths.java)
  *   aoe destroy <selector>                     the buildings fall as at 0 hit points: "Destroy: <n> buildings" (#819)
@@ -541,6 +545,9 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     private final Map<UUID, Integer> charged = new HashMap<>();      // the first tick of the next charge attack
     private final Map<UUID, int[]> meleeCharges = new HashMap<>();   // aoe chargeattack (#4370): {ticks, attack}
     private final Map<UUID, Integer> meleeCharged = new HashMap<>(); // the first tick of the next charged melee hit
+    private record ChargedVolley(int ticks, int shots, Stats arrow) {}  // aoe chargedvolley (#4546): arrow: its values
+    private final Map<UUID, ChargedVolley> chargedVolleys = new HashMap<>();
+    private final Map<UUID, Integer> volleyCharged = new HashMap<>();  // the first tick of the next charged volley
     private final Map<UUID, Charge> detonations = new HashMap<>();
     // A charged ranged attack of a melee unit (Gothikon, #4368, aoe throw): at most shots axes, one charges in ticks;
     // axes: {charged axes, the tick where the next charge started, the first tick of the next throw}
@@ -655,6 +662,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                         }
                     }
                 }
+                chargedVolley(mob, t);
                 next = now + range.ticks;
                 Stats a = stats.get(mob.getUniqueId());
                 Building b = buildings.get(t.getUniqueId());
@@ -854,6 +862,24 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         }
         charged.put(from.getUniqueId(), now + c.ticks);
         burst(from, t.getLocation(), c, true);
+    }
+
+    // The charged volley of a shot of from at t (#4546, the Xianbei Raider): with a full charge the shots extra arrows
+    // hit a unit that is not siege (AoE2 accuracy 100 %, wiki "Xianbei Raider"), then the charge starts again from 0.
+    private void chargedVolley(Entity from, LivingEntity t) {
+        ChargedVolley c = chargedVolleys.get(from.getUniqueId());
+        LivingEntity v = t.getVehicle() instanceof LivingEntity h && stats.containsKey(h.getUniqueId()) ? h : t;
+        Stats s = stats.get(v.getUniqueId());
+        int now = Bukkit.getCurrentTick();
+        if (c == null || s == null || buildings.containsKey(v.getUniqueId()) || s.classes().contains("siege")
+                || now < volleyCharged.getOrDefault(from.getUniqueId(), 0)) {
+            return;
+        }
+        volleyCharged.put(from.getUniqueId(), now + c.ticks());
+        for (int k = 0; k < c.shots() && v.isValid(); k++) {
+            harm(v, s, c.arrow(), from);
+        }
+        v.getWorld().spawnParticle(Particle.CRIT, v.getLocation().add(0, 1, 0), 4 * c.shots());
     }
 
     // The values of a melee hit of from (#4370): with a full charge (aoe chargeattack) the attack is more, and the
@@ -3264,6 +3290,26 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                 n++;
             }
             sender.sendMessage("Charge attack: " + n + " units");
+            return true;
+        }
+        if (args.length == 6 && args[0].equals("chargedvolley")) {     // Xianbei Raider (#4546)
+            ChargedVolley c;
+            try {
+                c = new ChargedVolley(Integer.parseInt(args[2]), Integer.parseInt(args[3]), new Stats(
+                        Integer.parseInt(args[4]), 0, 0, true, true, Set.of(), bonus(args[5]), 0));
+            } catch (NumberFormatException | ArrayIndexOutOfBoundsException e) {
+                sender.sendMessage("Bad value: " + e.getMessage());
+                return true;
+            }
+            int n = 0;
+            for (Entity e : select(sender, args[1])) {
+                if (rider(e) instanceof RangedEntity) {
+                    e = rider(e);                                // a mounted archer: the rider shoots (#710)
+                }
+                chargedVolleys.put(e.getUniqueId(), c);
+                n++;
+            }
+            sender.sendMessage("Charged volley: " + n + " units");
             return true;
         }
         if (args.length == 2 && args[0].equals("cheats")) {
