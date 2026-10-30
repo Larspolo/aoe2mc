@@ -197,6 +197,16 @@ def names():
     return NAMES
 
 
+# The strategic numbers that the bot reads, with their AoE2 defaults (airef "Strategic numbers"); 0 for a gatherer
+# percentage: a script that sets none keeps bot.SHARE.
+SN = {"sn-food-gatherer-percentage": 0,
+      "sn-gold-gatherer-percentage": 0,
+      "sn-maximum-attack-group-size": 0,
+      "sn-minimum-attack-group-size": 4,
+      "sn-stone-gatherer-percentage": 0,
+      "sn-wood-gatherer-percentage": 0}
+
+
 class Script:
     """The rules of an AI script on a bot.Bot: goals and timers keep their values between steps."""
 
@@ -205,6 +215,17 @@ class Script:
         self.off = set()                                           # the rules after disable-self
         self.goals, self.timers = {}, {}                           # goal id -> value; timer id -> AoE2 second due
         self.warned = set()
+        self.sn = {}                                               # strategic number name -> value (#4530)
+        self.attacking = False                                     # attack-now ran: the bot may attack
+
+    def number(self, name):
+        return self.sn.get(name, SN[name])
+
+    def percent(self):
+        """The shares of the four gatherer percentages (in percent of the villagers), or None when the script set none."""
+        pct = {r: max(self.number(f"sn-{r}-gatherer-percentage"), 0) for r in ("food", "wood", "gold", "stone")}
+        total = sum(pct.values())
+        return {r: v / total for r, v in pct.items()} if total else None
 
     def warn(self, what, name):
         if (what, name) not in self.warned:
@@ -233,6 +254,10 @@ class Script:
         if name == "goal":                                         # (goal ID VALUE) or (goal ID REL VALUE)
             op, v = ("==", args[1]) if len(args) == 2 else args[1:3]
             return OPS[op](self.goals.get(args[0], -1), v)
+        if name == "strategic-number":                             # (strategic-number NAME REL VALUE)
+            if args[0] not in SN:
+                return self.warn("strategic number", args[0]) or False
+            return OPS[args[1]](self.sn.get(args[0], SN[args[0]]), args[2])
         if name == "timer-triggered":
             return args[0] in self.timers and self.bot.time >= self.timers[args[0]]
         if name in ("true", "false"):
@@ -405,6 +430,12 @@ class Script:
             self.off.add(k)
         elif name == "set-goal":
             self.goals[args[0]] = args[1]
+        elif name == "set-strategic-number":
+            if args[0] not in SN:
+                return self.warn("strategic number", args[0])
+            self.sn[args[0]] = args[1]
+        elif name == "attack-now":
+            self.attacking = True
         elif name == "enable-timer":
             self.timers[args[0]] = b.time + args[1]
         elif name == "disable-timer":
