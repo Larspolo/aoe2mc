@@ -43,11 +43,29 @@ def stats(row):
     assert set(row["bonus"]) <= bonus and all(isinstance(v, int) for v in row["bonus"].values()), row["name"]
 
 
+UNIT_KEYS = {                                   # the optional keys of units.jsonl: one per line (#4585)
+    "accuracy": NUMBER,
+    "convert": int,
+    "dodge": dict,
+    "frenzy": dict,
+    "ignore_armor": bool,
+    "low_hp": dict,
+    "min_range": NUMBER,
+    "miss": dict,
+    "note": str,
+    "pack": dict,
+    "sail": NUMBER,
+    "sight": int,
+    "snare": dict,
+    "sunder": int,
+    "trample": dict,
+    "veteran": dict,
+    "volley": dict,
+}
+
+
 def check_units(row):
-    form(row, {"name": str, **STATS}, {"sight": int, "min_range": NUMBER, "note": str, "sail": NUMBER, "convert": int,
-                                       "accuracy": NUMBER, "dodge": dict, "low_hp": dict, "ignore_armor": bool, "miss": dict,
-                                       "pack": dict, "trample": dict, "veteran": dict, "frenzy": dict, "sunder": int,
-                                       "volley": dict, "snare": dict})
+    form(row, {"name": str, **STATS}, UNIT_KEYS)
     stats(row)
 
 
@@ -227,6 +245,13 @@ def check_challenges(row):                                 # an Art of War chall
     assert row["after"] is None or row["after"] in NAMES["challenges.jsonl"], row["name"]
 
 
+def check_per_names(row):                                  # a name of an AI script: its name in the game (#4528)
+    form(row, {"name": str, "kind": str}, {"game": str, "age": int})
+    assert row["kind"] in ("age", "building", "tech", "unit") and row["name"] == row["name"].lower(), row["name"]
+    assert "game" not in row or row["game"] in NAMES["train.jsonl"] | NAMES["build.jsonl"], row["name"]
+    assert ("age" in row) == (row["kind"] == "age") and ("game" in row or row["kind"] == "age"), row["name"]
+
+
 def check_taunts(row):                                     # a taunt: its number and AoE2 text (#2234)
     form(row, {"name": str, "text": str}, {"sound": str})                  # sound: a vanilla match (#2662)
     assert row["name"].isdigit() and row["name"] == str(int(row["name"])) and row["text"], row["name"]
@@ -248,6 +273,7 @@ CHECKS = {                                                 # one file per line: 
     "difficulty.jsonl": check_difficulty,
     "gather.jsonl": check_gather,
     "monk.jsonl": check_monk,
+    "per_names.jsonl": check_per_names,
     "replay.jsonl": check_replay,
     "setup.jsonl": check_setup,
     "setup_keys.jsonl": check_setup_keys,

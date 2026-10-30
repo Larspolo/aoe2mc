@@ -1,4 +1,5 @@
 {"name": "after", "text": "The technology before this one in its menu slot: the menu shows it only after that research. train.unlocked.", "issue": 1423}
+{"name": "after_blast", "text": "A delayed second blast where a shot of the unit lands, after the technology: [{\"if\": [tests], \"delay\": AoE2 s after the landing, \"attack\": the melee attack of each hit, \"blast\": tiles, \"times\": hits, \"buildings\": true: only a shot at a building or at the ground}] (Thunderclap Bombs). No harm to own or allied units. train.fire_commands, aoe afterblast.", "issue": 4369}
 {"name": "age", "text": "The age of a technology (0 Dark, 1 Feudal, 2 Castle, 3 Imperial; build.AGE for the units and buildings). The menu shows it from that age on.", "issue": 1046}
 {"name": "age_times", "text": "The train or research time in each age (Return of Rome docks: [Stone, Tool, Bronze, Iron]), in place of \"time\". train.seconds.", "issue": 3713}
 {"name": "aoe2_name", "text": "The AoE2 name of a unit with no name of the scenario parser (the record of Record Game writes its AoE2 type): TRADE_CART_EMPTY, WAR_CHARIOT_FOCUS_FIRE, RATHA_RANGED, ELITE_RATHA_RANGED. record.queued.", "issue": 3045}
