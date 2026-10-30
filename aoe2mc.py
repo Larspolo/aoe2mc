@@ -788,6 +788,7 @@ TIMELINE_KEYS = {"building_id": "type", "unit_id": "type", "technology_id": "tec
                  "target_id": "target", "amount": "amount", "resource": "resource", "stance": "stance",
                  "formation": "formation", "order": "order", "command": "command",
                  "player_id_to": "to"}                               # the receiver of a tribute (#1086)
+VIEW_TILES = 3      # read_timeline keeps a view lock this many tiles or more from the last kept one (#4767)
 
 
 def read_timeline(path, state=None):
@@ -798,7 +799,9 @@ def read_timeline(path, state=None):
     Tiles are AoE2 tiles. Actions that mgz cannot read are left out. None for the games that the mgz model
     cannot read (read_old_record reads only their start state, #376). All times are game times: a restored record
     starts with a "restore" event at the game time of its save (#4568; mgz adds it to chat and age times only).
-    state: a dict that gets "complete": True when the record has the end of the game (mgz match.completed, #4664)."""
+    state: a dict that gets "complete": True when the record has the end of the game (mgz match.completed, #4664),
+    and, when the record has view locks, "recorder" (the number of the recording player) and "views" (#4767): the
+    view locks of the recorder [{"time": ms, "tile": [x, y]}], thinned to steps of VIEW_TILES or more."""
     import mgz.fast as fast
     from mgz.model import parse_match
     names, parse = object_kinds(), fast.parse_action
@@ -816,6 +819,14 @@ def read_timeline(path, state=None):
         state["complete"] = bool(getattr(match, "completed", False))
     restore = ms(match.restored_at) if getattr(match, "restored", False) else 0
     events = [{"time": restore, "player": None, "kind": "restore"}] if restore else []
+    locks = getattr(match.file, "viewlocks", None) or []
+    if state is not None and locks:
+        views = []
+        for v in sorted(locks, key=lambda v: v.timestamp):
+            tile = [round(float(v.position.x), 3), round(float(v.position.y), 3)]
+            if not views or math.dist(tile, views[-1]["tile"]) >= VIEW_TILES:
+                views.append({"time": ms(v.timestamp) + restore, "tile": tile})
+        state["recorder"], state["views"] = match.file.perspective.number, views
     for a in match.actions:
         kind = a.type.name.lower().removeprefix("de_")
         if kind == "error":
@@ -1095,7 +1106,7 @@ def turn_timeline(timeline, size, k):
         for key in ("tile", "end"):
             if key not in e:
                 continue
-            if e["kind"] == "wall":
+            if e.get("kind") == "wall":
                 e[key] = [int(v) for v in turn_tile(e[key][0] + 0.5, e[key][1] + 0.5, size, k)]
             else:
                 e[key] = [round(float(v), 3) for v in turn_tile(*e[key], size, k)]
@@ -2859,7 +2870,7 @@ def write_region(path, chunks):
 
 
 def write_objects(path, size, T, H, players, objects, cols, ground, timeline=None, mood="DEFAULT", map_ground=None,
-                  victory=None, messages=None, lists=None, yaw=SPAWN_YAW):
+                  victory=None, messages=None, lists=None, yaw=SPAWN_YAW, views=None):
     """aoe2mc.json: the data that a game program needs (docs/research/gameplay.md). Tiles are in the turned grid
     (--orientation): block x = tile x × T, block z = tile y × T. Units have the UUID of their entity, buildings
     their footprint [x0, z0, x1, z1) in blocks. Objects of a recorded game have their object ID ("ref").
@@ -2881,7 +2892,9 @@ def write_objects(path, size, T, H, players, objects, cols, ground, timeline=Non
     "custom" (only its triggers end the game), "score" or "years" of that condition} (#2566).
     "messages": the scenario texts of CHAPTERS that are not empty (chapter -> text): the book of the scenario mode (#2541).
     "turn": the clockwise quarter turns of --orientation, if not 0 (#3035).
-    "start" of a player: the block (x, y, z) where its person starts (its start view, #3344); "yaw": the spawn yaw."""
+    "start" of a player: the block (x, y, z) where its person starts (its start view, #3344); "yaw": the spawn yaw.
+    views (recorded games with view locks only, #4767): {"views": the view locks of the recorder (read_timeline, tiles
+    in the turned grid), "recorder": its player number}: the keys "views" and "recorder", out of "timeline" (APM)."""
     kinds = {"U": "unit", "B": "building", "O": "other"}
     objs = []
     for o in objects:
@@ -2914,6 +2927,8 @@ def write_objects(path, size, T, H, players, objects, cols, ground, timeline=Non
         data["timeline"] = timeline
     if victory is not None:
         data["victory"] = victory
+    if views:
+        data.update(views)
     if messages and (texts := {k: v for k, v in messages.items() if k in CHAPTERS and (v or "").strip()}):
         data["messages"] = texts
     for key, items in (lists or {}).items():
@@ -6050,7 +6065,10 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
 
     size, terrain, elevation, tnames, texts, objects, players = read_map(src, seed, nplayers, teams)
     record = src.lower().endswith(RECORDS)
-    timeline = read_timeline(src) if record else None
+    record_state = {}
+    timeline = read_timeline(src, record_state) if record else None
+    views = record_state.get("views")
+    turn_timeline(views or (), size, buildings.TURN)    # points, as the tiles of the events
     if timeline is not None:
         name_timeline(objects, timeline, water=water_tiles(terrain, tnames))
     at_stats = Counter()
@@ -6177,7 +6195,8 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
     img = Image.fromarray(np.clip(img * shade[..., None], 0, 255).astype(np.uint8))
     write_objects(os.path.join(out, "aoe2mc.json"), size, T, H, players, objects, cols, ground, timeline,
                   texts.get("mood", "DEFAULT"), map_colors(np.asarray(img))[0], texts.get("global_victory"), texts,
-                  {k: f(texts.get("triggers", [])) for k, f in TRIGGER_LISTS.items()}, yaw)
+                  {k: f(texts.get("triggers", [])) for k, f in TRIGGER_LISTS.items()}, yaw,
+                  views and {"views": views, "recorder": record_state["recorder"]})
     triggers, tstats = texts.get("triggers", []), Counter()
     haze = FOG.get(texts.get("mood")) if mood == "on" and (fog or ambience == "full") else None
     n, amb = write_datapack(out, objects, ground, cols.biome_names, ambience, players, triggers, T, tstats, haze,
