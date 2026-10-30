@@ -39,7 +39,7 @@ def test_an_onager_blast_hurts_an_own_jurchen_unit_half(tiny_world, tmp_path):
         assert "Summoned" in summon(game, "ONAGER", x0 + 1.5, y, z0 + 4.5, "o")
         o = "@e[type=minecart,tag=o,limit=1]"
         # the target (an enemy) and two own militia in the blast (5 blocks): one with the Jurchen factor 0.5
-        for tag, x, z, team, friendly in (("e", 20.5, 4.5, "p2", ""), ("j", 20.5, 5.5, "p1", " 1 0.5"),
+        for tag, x, z, team, friendly in (("e", 20.5, 4.5, "p2", ""), ("j", 20.5, 5.5, "p1", " friendly=0.5"),
                                           ("c", 21.5, 4.5, "p1", "")):
             game.command(f'summon zombie {x0 + x} {y} {z0 + z} {{NoAI:1b,IsBaby:0b,Tags:["{tag}"]}}')
             game.command(f"team join {team} @e[tag={tag}]")

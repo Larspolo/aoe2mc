@@ -232,6 +232,22 @@ class Script:
             self.warned.add((what, name))
             print(f"AI script: unknown {what} {name}: skipped", file=sys.stderr)
 
+    def compare(self, op, value, ref):
+        """value REL ref; a typed operator (airef "Typed operators") reads ref as a constant (c:), the value of a
+        strategic number (s:) or of a goal (g:). An unknown operator, number or goal gives one warning and is false."""
+        kind, _, rel = op.rpartition(":")
+        if rel not in OPS or kind not in ("", "c", "s", "g"):
+            return self.warn("operator", op) or False
+        if kind == "s":
+            if ref not in SN:
+                return self.warn("strategic number", ref) or False
+            ref = self.number(ref)
+        elif kind == "g":
+            if ref not in self.goals:
+                return self.warn("goal", ref) or False
+            ref = self.goals[ref]
+        return OPS[rel](value, ref)
+
     def game(self, name, *kinds):
         """The name of the game program of a script name of one of kinds, or None (one warning)."""
         row = names().get(name)
@@ -253,11 +269,11 @@ class Script:
             return {"and": all(got), "or": any(got), "nand": not all(got), "nor": not any(got), "not": not got[0]}[name]
         if name == "goal":                                         # (goal ID VALUE) or (goal ID REL VALUE)
             op, v = ("==", args[1]) if len(args) == 2 else args[1:3]
-            return OPS[op](self.goals.get(args[0], -1), v)
+            return self.compare(op, self.goals.get(args[0], -1), v)
         if name == "strategic-number":                             # (strategic-number NAME REL VALUE)
             if args[0] not in SN:
                 return self.warn("strategic number", args[0]) or False
-            return OPS[args[1]](self.sn.get(args[0], SN[args[0]]), args[2])
+            return self.compare(args[1], self.sn.get(args[0], SN[args[0]]), args[2])
         if name == "timer-triggered":
             return args[0] in self.timers and self.bot.time >= self.timers[args[0]]
         if name in ("true", "false"):
@@ -270,14 +286,14 @@ class Script:
         if name in ("unit-type-count", "building-type-count", "unit-type-count-total", "building-type-count-total"):
             if (n := self.game(args[0], "unit" if name[0] == "u" else "building")) is None:
                 return False
-            return OPS[args[1]](self.count(n, total=name.endswith("-total")), args[2])
+            return self.compare(args[1], self.count(n, total=name.endswith("-total")), args[2])
         if name in ("can-buy-commodity", "can-sell-commodity"):
             return self.trade_ok(name == "can-buy-commodity", args[0])
         if name in ("commodity-buying-price", "commodity-selling-price"):
             import market
             if args[0] not in market.RATES:
                 return self.warn("commodity", args[0]) or False
-            return OPS[args[1]](market.price(self.bot.g, args[0], name == "commodity-buying-price"), args[2])
+            return self.compare(args[1], market.price(self.bot.g, args[0], name == "commodity-buying-price"), args[2])
         if name == "current-age":
             return self.age(self.bot.g, *args)
         if name == "enemy-buildings-in-town":
@@ -287,7 +303,7 @@ class Script:
         value = self.value(name)
         if value is None:
             return self.warn("fact", name) or False
-        return OPS[args[0]](value, args[1])
+        return self.compare(args[0], value, args[1])
 
     def value(self, name):
         """The number of a fact (REL VALUE), or None for an unknown fact."""
@@ -318,7 +334,7 @@ class Script:
         if row is None or row["kind"] != "age":
             return self.warn("age", arg) or False
         import build
-        return OPS[op](build.ages(g), row["age"])
+        return self.compare(op, build.ages(g), row["age"])
 
     def sides(self, who):
         """(the Gathers of the players of a player parameter, every): a number, focus-player (the foe of the bot), or
@@ -348,12 +364,28 @@ class Script:
         elif fact == "building-type-count":
             if (n := self.game(args[0], "building")) is None:
                 return False
-            got = [OPS[args[1]](self.count(n, x), args[2]) for x in xs]
+            got = [self.compare(args[1], self.count(n, x), args[2]) for x in xs]
         elif fact in ("population", "military-population"):
-            got = [OPS[args[0]](x.pop if fact == "population" else len(x.soldiers), args[1]) for x in xs]
+            got = [self.compare(args[0], x.pop if fact == "population" else len(x.soldiers), args[1]) for x in xs]
         else:
             return self.warn("fact", "players-" + fact) or False
         return bool(got) and (all(got) if every else any(got))
+
+    def forward(self):
+        """The cell two thirds of the way from the own town center to the town center of the nearest enemy, or None
+        (build-forward, #4654)."""
+        import build
+        import diplomacy
+        import ruins
+        g, at = self.bot.g, self.bot.center()
+        foes = {x.player: x for x in build.sides(g) if diplomacy.stance(g, x.player) == "enemy"}
+        tcs = [((o["footprint"][0] + o["footprint"][2]) // 2, (o["footprint"][1] + o["footprint"][3]) // 2)
+               for o in g.data["objects"] if o["kind"] == "building" and o["name"] == "TOWN_CENTER"
+               and o["player"] in foes and "footprint" in o and not ruins.fallen(foes[o["player"]], o)]
+        if at is None or not tcs:
+            return None
+        far = min(tcs, key=lambda c: (c[0] - at[0]) ** 2 + (c[1] - at[1]) ** 2)
+        return ((at[0] + 2 * far[0]) // 3, (at[1] + 2 * far[1]) // 3)     # 2/3 of the way: the midpoint ties with home
 
     def in_town(self):
         """True when a building of an enemy stands within TOWN tiles of the own town center."""
@@ -421,10 +453,10 @@ class Script:
             n = self.game(args[0], "unit") if name == "train" else self.game(args[0], "tech", "age")
             if n and self.can("can-" + name, args[0]):
                 next((c for c in self.homes(n) if train.queue(g, b.nobody, c, n)), None)
-        elif name == "build":
+        elif name in ("build", "build-forward"):
             n = self.game(args[0], "building")
-            if n and self.can("can-build", args[0]) and (center := b.center()) \
-                    and (rect := build.near(g, n, center)) is not None:
+            center = b.center() if name == "build" else self.forward()
+            if n and self.can("can-build", args[0]) and center and (rect := build.near(g, n, center)) is not None:
                 b.builder(build.found(g, n, rect))
         elif name == "disable-self":
             self.off.add(k)
