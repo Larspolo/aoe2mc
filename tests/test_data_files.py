@@ -32,7 +32,7 @@ def form(row, need, may=()):
 
 STATS = {"hp": int, "attack": int, "melee": int, "pierce": int, "range": NUMBER, "reload": float, "bonus": dict,
          "classes": list}
-OPTIONAL = {"blast"}                                    # a field of combat.Stats with a default (#4283)
+OPTIONAL = {"blast", "passes", "pass_part"}                  # a field of combat.Stats with a default (#4283)
 
 
 def stats(row):
