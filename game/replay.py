@@ -411,6 +411,7 @@ class Replay:
         self.units, self.new = {}, []           # object ID -> gather.Villager; spawned units without a known ID
         self.moving = {}                        # object ID -> game time (ms) of its next step
         self.idle = {}                          # object ID -> (game time (ms) of its next check, end of its walk) (#2633)
+        self.fighting = {}                      # villager ID -> game time (ms) of the last record command of its enemy (#4063)
         self.working = {}                       # object ID -> game time (ms) of its next gather step (#631)
         self.guessing = {}                      # object ID -> game time (ms) since its income with no gather step (#4627)
         self.arriving = {}                      # object ID -> game time (ms) of its work start, until it is there (#766)
@@ -763,6 +764,7 @@ class Replay:
                 if getattr(v := self.units.get(i), "hunt", None) is not None:   # the new order starts at the chase (#3540)
                     v.pos, v.leg, v.hunt = self.at(v, e["time"]), None, None
                 self.idle.pop(i, None)                                # a new order: settle() does not check it
+                self.fighting.pop(i, None)
                 self.scouts.pop(i, None)
         if kind == "patrol" and e.get("objects") and e.get("tile"):
             return self.patrol(e)
@@ -1678,6 +1680,8 @@ class Replay:
         if not group and not boats:
             return out0 + first
         looks = [c for _, v in group for c in self.look(v, self.gather.job_of(self.map, tile) if tile else "none")]
+        if (foe := e.get("target")) in self.units and self.enemy(e) and (alive := max(self.told.get(foe, [0]))) > e["time"]:
+            self.fighting.update({i: alive for i, v in group if v.name.startswith("VILLAGER")})   # it fights (#4063)
         to_tile = not (e["kind"] == "order" and e.get("target") is not None)
         slots = self.formation([v for _, v in group], e["tile"]) if to_tile and group else {}
         out = []
@@ -2827,7 +2831,9 @@ class Replay:
         game time since the last count. A jump sets idle_at only: the skipped time adds nothing. The idle time of a
         villager counts only up to its next record command (#4063): a villager that the record never commands again
         died in the game (the record has no deaths) or worked on with no command, so in de-64.3 it gave 60 % of the
-        idle time (P2 641 of 903 min)."""
+        idle time (P2 641 of 903 min). A villager that attacks an enemy unit fights in AoE2 until the enemy dies: it
+        counts as busy up to the last record command of the enemy (the record has no deaths, so the enemy lives at least
+        that long; in de-64.3 three villagers chased a scout from 15:13 to 22:01)."""
         ids = {}
         for i, v in self.units.items():
             ids.setdefault(v.uuid, []).append(i)
@@ -2835,7 +2841,8 @@ class Replay:
             if not v.name.startswith("VILLAGER"):
                 continue
             self.idled.setdefault(v.player, 0)
-            if not v.task or v.task == "none" or v.job == units.IDLE_JOB:
+            if (not v.task or v.task == "none" or v.job == units.IDLE_JOB) and \
+                    not any(self.fighting.get(i, 0) > t for i in ids[u]):
                 self.waiting.setdefault(u, [v.player, 0])[1] += (t - self.idle_at) / 1000
             if u in self.waiting and any(bisect.bisect_right(ts := self.told.get(i, ()), self.told_at)
                                          < bisect.bisect_right(ts, t) for i in ids[u]):   # a command in (told_at, t]

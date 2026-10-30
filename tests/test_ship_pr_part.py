@@ -16,3 +16,12 @@ def test_part_does_not_close_the_ticket(tmp_path, monkeypatch):
 
 def test_part_keeps_a_body_that_names_it():
     assert ship.body_with_ticket("Part of #5: the tool.", 5, part=True) == "Part of #5: the tool."
+
+
+def test_a_part_body_that_quotes_a_close_stops_the_ship(tmp_path, monkeypatch, capsys):
+    monkeypatch.chdir(repo(tmp_path))
+    calls = fake_github(monkeypatch)
+    monkeypatch.setattr(ship, "push", lambda n: calls.append(("push",)) or True)
+    (tmp_path / "body.md").write_text('The ticket stays open: "It does not close #5".\n\nPart of #5\n')
+    assert ship.main(["5", "--title", "T", "--body", str(tmp_path / "body.md"), "--tested"]) == 4
+    assert calls == [] and "GitHub closes #5" in capsys.readouterr().out    # no push, no PR (#4063)

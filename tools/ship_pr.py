@@ -97,6 +97,11 @@ def main(argv=None):
                     "stays open (a check ticket that waits for its bug tickets, autopilot `owner.md`)")
     a = ap.parse_args(argv)
     branch = git("branch", "--show-current").stdout.strip()
+    text = open(a.body, encoding="utf-8").read() if a.body else ""
+    if (a.part or f"Part of #{a.number}" in text) and claim.closes(a.number).search(claim.prose(text)):
+        print(f"the body is `Part of #{a.number}`, but GitHub closes #{a.number} from its prose (a quote like "
+              f"\"does not close #{a.number}\" also closes it, #4063): write it in other words")
+        return 4
     if a.message:
         c = git("commit", "-q", "-F", a.message)
         if c.returncode:
