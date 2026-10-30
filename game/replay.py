@@ -736,7 +736,7 @@ class Replay:
         (#3940). An old record has one resource and one amount."""
         import diplomacy  # diplomacy -> build -> replay: import it late
         p, to = e.get("player"), e["to"]
-        g = types.SimpleNamespace(techs=set(self.upgrades(p, e["time"])))
+        g = types.SimpleNamespace(techs=set(self.upgrades(p, e["time"])), data=self.data, player=p)
         sums = {r: e.get(r, 0) for r in START} if any(e.get(r, 0) for r in START) else {e["resource"].lower(): e.get("amount", 0)}
         for r, n in sums.items():
             self.resources(p)[r] -= diplomacy.cost(g, n)
