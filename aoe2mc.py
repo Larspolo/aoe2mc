@@ -819,7 +819,7 @@ def read_timeline(path, state=None):
         state["complete"] = bool(getattr(match, "completed", False))
     restore = ms(match.restored_at) if getattr(match, "restored", False) else 0
     events = [{"time": restore, "player": None, "kind": "restore"}] if restore else []
-    locks = getattr(match.file, "viewlocks", None) or []
+    locks = getattr(getattr(match, "file", None), "viewlocks", None) or []   # a test match can have no file
     if state is not None and locks:
         views = []
         for v in sorted(locks, key=lambda v: v.timestamp):
