@@ -87,6 +87,7 @@ CONTACT = 1.0         # tiles: the reach of a demolition ship (range 0, #1440): 
 # Tiles: no shot at a unit nearer (AoE2 DE, wiki infobox "MinRange", #1350). The key "min_range" of data/units.jsonl.
 MIN_RANGE = {r["name"]: r["min_range"] for r in UNIT_ROWS if "min_range" in r}
 ACCURACY = {r["name"]: r["accuracy"] for r in UNIT_ROWS if "accuracy" in r}   # siege shots at units that hit (#2479)
+DODGE = {r["name"]: r["dodge"] for r in UNIT_ROWS if "dodge" in r}           # projectiles that do no damage (#4399)
 # The minimum range of the buildings that shoot, in tiles from the edge of the footprint (AoE2 DE, wiki infobox
 # "MinRange", #1546). The town center has none. Murder Holes removes it.
 # The key "min_range" of a line of data/buildings.jsonl (the dock shoots only with fishing ships inside, #1949).
@@ -213,6 +214,15 @@ def accuracy_command(uuid, name, bonus=0.0):
     return f"aoe accuracy {uuid} {part:g}" if part < 1 else None
 
 
+def dodge_command(uuid, name):
+    """The plugin command of the dodge of unit name (the key "dodge" of data/units.jsonl: the Shrivamsha Rider, #4399),
+    or None when it dodges nothing. The AoE2 wiki ("Shrivamsha Rider"): a second, regenerating health bar takes each
+    projectile ("shots" of them in "time" AoE2 seconds) and fills again during combat; melee hits pass. The plugin
+    fills the gauge evenly: one shot per time / shots seconds, up to shots."""
+    d = DODGE.get(name)
+    return f"aoe dodge {uuid} {d['shots']} {round(d['time'] * 20)}" if d else None
+
+
 def sight(name, s=None):
     """The AoE2 line of sight of unit name in tiles: an idle soldier attacks an enemy in it. Most units see 4 tiles,
     a ranged unit about 2 tiles more than its range."""
@@ -286,6 +296,9 @@ def setup(game, data):
     for o in units:                                  # a trebuchet misses units (#2479), with the bonus of its civ
         civ = None if data.get("full_tech_tree") else data.get("players", {}).get(str(o["player"]), {}).get("civ")
         if cmd := accuracy_command(o["uuid"], o["name"], civs.value("accuracy", civ, {}).get(o["name"], 0.0)):
+            game.command(cmd)
+    for o in units:                                  # a Shrivamsha Rider dodges projectiles (#4399)
+        if cmd := dodge_command(o["uuid"], o["name"]):
             game.command(cmd)
     for o in units:                                  # after the stats: the plugin needs them for the sight
         if cmd := sight_command(o["uuid"], o["name"], data.get("tile_size", 4)):
