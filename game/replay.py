@@ -80,6 +80,10 @@ UNI_SHOWN = 8                        # the University labels of a player at most
 GRAPH_MINUTES = 8           # the last minutes of each graph line: "Pop ████████ 120" fits in BOOK_COLS
 STAT_BOOKS = {"Graphs": 3, "Army": 4, "Upgrades": 5, "Economy": 6}   # book -> hotbar slot (#3924; replay_input.ITEMS has the rest)
 FOLLOWED = "aoe2mc.followed"  # the tag of the entity that the spectators of --follow look through (#1095)
+CAMERA_ENTITY = "aoe2mc.camera"   # the tag of the display entity of --camera player (#4770)
+GLIDE = 20                  # ticks: the longest glide of the camera of --camera player (#4770; Minecraft: up to 59)
+JUMP = 64                   # blocks: a view of --camera player this far from the last one jumps (#4770): well in the
+                            # chunks that a client has around it (render distance 8: 128 blocks)
 TRAIL = 3                   # tiles: a follower farther than this from its target walks to it again (#2551)
 TRAIL_MS = 1000             # ms of game time between two checks of the followers (#2551)
 FIGHT_MS = 60000            # ms of game time: an attack order this near in time to one of a fight joins it (#2948)
@@ -397,6 +401,8 @@ class Replay:
         # of camera_plan (#3367); --camera player: to each view of the recorder (#4768)
         self.game, self.data, self.ai, self.speed, self.paused = game, data, ai, 1.0, False  # ai: plugin walks
         self.follow, self.followed = follow, (None, -math.inf)  # the spectators follow player N: (UUID, game time)
+        self.views, self.glide = [], None       # --camera player: the views; (teleport_duration, place, time of
+        # the last /spectate) of its entity (#4770)
         self.pov, self.hidden = pov, set()      # the view of player N (#1302): UUIDs of the enemy units hidden from @a
         self.explored, self.fogged = {}, None   # player -> tiles it saw once; (view, seen, explored) on the minimap (#1567)
         self.drawn, self.known = {}, {}         # footprint -> player on the minimap; view -> the enemy ones it saw (#1678)
@@ -771,7 +777,7 @@ class Replay:
         if kind == "shot":                                      # --camera auto (#3367), the menu switch (#3369)
             return self.shot_view(e["tile"]) if self.control.get("camera") == "auto" else []
         if kind == "view":                                      # --camera player: the view of the recorder (#4768)
-            return self.shot_view(e["tile"]) if self.control.get("camera") == "player" else []
+            return self.view_glide(e["tile"], e["time"]) if self.control.get("camera") == "player" else []
         if kind == "news":                                      # a fight starts: the chat line and the horn (#2951)
             return replay_input.fight_news(self.control["fights"][e["fight"]], e["fight"], self.control["players"])
         if kind in ("attack_move", "move", "order", "stop", "delete", "garrison", "follow", "guard", "autoscout"):
@@ -2541,15 +2547,50 @@ class Replay:
             (g for row in self.ground for g in row if g is not None), 64)
         return replay_input.place_commands(tile, self.T, y)
 
-    def shot_view(self, tile):
-        """The spectators above a shot of the camera plan (#3367): CAMERA_UP blocks above the ground of the tile and
+    def shot_place(self, tile):
+        """"x y z yaw pitch" of the camera of a shot (#3367): CAMERA_UP blocks above the ground of the tile and
         CAMERA_BACK blocks south of it, looking north (yaw 180) and down at the tile."""
         x, z = (min(self.n - 1, max(0, int(c * self.T))) for c in tile)
         y = self.ground[z][x] if self.ground[z][x] is not None else next(
             (g for row in self.ground for g in row if g is not None), 64)
         bx, bz = (round(c * self.T + self.T / 2, 1) for c in tile)
         pitch = round(math.degrees(math.atan2(CAMERA_UP, CAMERA_BACK)), 1)
-        return [f"execute as @a[gamemode=spectator] run tp @s {bx} {min(319, y + CAMERA_UP)} {bz + CAMERA_BACK} 180 {pitch}"]
+        return f"{bx} {min(319, y + CAMERA_UP)} {bz + CAMERA_BACK} 180 {pitch}"
+
+    def shot_view(self, tile):
+        """The spectators above a shot of the camera plan (#3367), at shot_place."""
+        return [f"execute as @a[gamemode=spectator] run tp @s {self.shot_place(tile)}"]
+
+    def view_glide(self, tile, time):
+        """--camera player (#4770): the spectators look through the display entity CAMERA_ENTITY (/spectate), and one
+        `tp` of it per view: the client interpolates the teleport of a display entity over its teleport_duration, so
+        the view glides, as the camera of AoE2 DE, and does not jump. The duration is the real time to the next view
+        at the replay speed, at most GLIDE ticks. A view more than JUMP blocks away jumps, as a click on the minimap of
+        AoE2: in the server check the client lost the entity after a tp of 340 blocks, out of its loaded chunks, and
+        showed the old place. So the first view and a far view put the spectators there, summon a new entity at them
+        and /spectate it. /spectate again each CAMERA_MS: a new spectator gets on it, Shift leaves it."""
+        place, cam = self.shot_place(tile), f"@e[type=item_display,tag={CAMERA_ENTITY},limit=1]"
+        nxt = next((v["time"] for v in self.views if v["time"] > time), None)
+        ticks = GLIDE if nxt is None else max(1, min(GLIDE, round((nxt - time) / 50 / self.speed)))
+        at = [float(c) for c in place.split()[:3]]
+        spectate = f"execute as @a[gamemode=spectator] run spectate {cam} @s"
+        if self.glide is None or math.dist(at, self.glide[1]) > JUMP:
+            self.glide = (ticks, at, time)
+            return [f"kill @e[type=item_display,tag={CAMERA_ENTITY}]", f"execute as @a[gamemode=spectator] run tp @s {place}",
+                    f"summon item_display {' '.join(place.split()[:3])} {{Tags:[\"{CAMERA_ENTITY}\"],"
+                    f"teleport_duration:{ticks}}}", f"tp {cam} {place}", spectate]
+        out = [f"data merge entity {cam} {{teleport_duration:{ticks}}}"] * (ticks != self.glide[0]) + [f"tp {cam} {place}"]
+        again = time - self.glide[2] >= CAMERA_MS
+        self.glide = (ticks, at, time if again else self.glide[2])
+        return out + [spectate] * again
+
+    def camera_off(self):
+        """The end of --camera player (#4770): kill the entity CAMERA_ENTITY; a spectator of a dead entity gets its
+        own view again (Minecraft)."""
+        if self.glide is None:
+            return []
+        self.glide = None
+        return [f"kill @e[type=item_display,tag={CAMERA_ENTITY}]"]
 
     def overview(self, join=False):
         """The view of a player at the start of the replay (#737, owner decision #782): adventure mode, a text about
@@ -3140,7 +3181,7 @@ class Replay:
         owner = owners(self.data.get("objects", []), self.data.get("timeline", []))
         shots = [{"time": c["time"], "kind": "shot", "tile": c["tile"]}      # the camera can switch on later (#3369)
                  for c in camera_plan(self.data.get("timeline", []), owner)]
-        views = [{"time": v["time"], "kind": "view", "tile": v["tile"]} for v in self.data.get("views", [])]
+        views = self.views = [{"time": v["time"], "kind": "view", "tile": v["tile"]} for v in self.data.get("views", [])]
         if self.camera == "player" and not views:                   # the free camera (#4768)
             self.camera = None
             self.send(["tellraw @a " + json.dumps(text("This record has no camera of its player.", "yellow"))])
@@ -3240,6 +3281,7 @@ class Replay:
                         self.follow = None                          # the follow view ends
                         self.send(self.place_view(place))
                     if self.control.get("camera") != watching:      # the camera menu (#3369): the shot of now at once
+                        self.send(self.camera_off())                # the player camera ends (#4770)
                         watching = self.control.get("camera")
                         if watching == "auto" and (now_shots := [s for s in shots if s["time"] <= self.control["time"]]):
                             self.send(self.shot_view(now_shots[-1]["tile"]))
@@ -3264,6 +3306,7 @@ class Replay:
                 if rewind and to < (g0 if self.paused else g0 + (clock() - r0) * 1000 * self.speed):
                     say = text("The server restarts for the jump back: join it again.", "yellow")
                     send(self.clock_commands(to, end, self.speed, jump=True) + [f"tellraw @a {json.dumps(say)}"])
+                    self.send(self.camera_off())
                     return {"rewind": to, "speed": self.speed, "paused": self.paused, "view": self.pov,
                             "camera": self.camera, "events": n,
                             "commands": self.sent, "busy": round(self.busy, 2), "lag": round(lag, 2)}
@@ -3275,7 +3318,7 @@ class Replay:
                     if shots and (held := [s for s in shots if s["time"] <= to]):    # the camera goes at once to the
                         self.send(self.shot_view(held[-1]["tile"]))                    # shot of the new time (#3368)
                     if self.control.get("camera") == "player" and (seen := [v for v in views if v["time"] <= to]):
-                        self.send(self.shot_view(seen[-1]["tile"]))                    # and the view (#4768)
+                        self.send(self.view_glide(seen[-1]["tile"], to))               # and the view (#4768)
                     if self.moving or self.working:                 # the gather steps of the skipped time at once,
                         self.send(self.steps(to))                   # and no step before `to`: an older time on the
                         self.moving = {i: max(t, to) for i, t in self.moving.items()}     # bar and fast catch-up
@@ -3323,7 +3366,7 @@ class Replay:
                     log(f"{m:02d}:{s:02d} {e['kind']} {e.get('name') or e.get('age') or ''} "
                         f"player {e.get('player')}: {len(cmds)} commands")
         census(end)
-        self.send(self.expire(math.inf) + self.panel(math.inf))
+        self.send(self.expire(math.inf) + self.panel(math.inf) + self.camera_off())
         send(self.clock_commands(end, end, speed, done=True) + self.score_commands() + self.end_commands(end) +
              self.summary_commands() + self.timeline_commands(end) +
              self.build_order_commands(end) + self.spending_commands(end))
