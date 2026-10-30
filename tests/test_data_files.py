@@ -53,11 +53,13 @@ UNIT_KEYS = {                                   # the optional keys of units.jso
     "min_range": NUMBER,
     "miss": dict,
     "note": str,
+    "pack": dict,
     "sail": NUMBER,
     "sight": int,
     "sunder": int,
     "trample": dict,
     "veteran": dict,
+    "volley": dict,
 }
 
 
