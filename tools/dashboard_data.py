@@ -21,7 +21,8 @@ import health  # noqa: E402
 
 DATASETS = {"merges": "aoe2mc-merged-prs.json", "tickets": "aoe2mc-tickets.json", "epics": "aoe2mc-epics.json",
             "roadmap": "aoe2mc-roadmap.json", "release_bar": "aoe2mc-release-bar.json", "usage": "aoe2mc-usage.json",
-            "tokens": "aoe2mc-tokens.json", "reviews": "aoe2mc-reviews.json", "setup": "aoe2mc-setup.json"}
+            "tokens": "aoe2mc-tokens.json", "reviews": "aoe2mc-reviews.json", "setup": "aoe2mc-setup.json",
+            "accounts": "aoe2mc-accounts.json"}
 ROWS = re.compile(r"\s*\.(filter|find|some|every|forEach|map|flatMap|sort)\(\s*\(?\s*(\w+)(?:\s*,\s*(\w+))?\s*\)?\s*=>")
 
 GOALS = {"1": "convert", "2": "play", "3": "replay", "4": "system"}
@@ -236,6 +237,35 @@ def tokens(hours=168, comments=None):
     return sorted(rows, key=lambda r: r["at"])
 
 
+RUN_LINE = re.compile(r"^Run: .*$", re.M)
+WEEK_USED = re.compile(r" · week (\d+(?:\.\d+)?)%")
+
+
+def accounts(hours=168, comments=None):
+    """One row per Claude account (#4239): its last 5-hour usage, 7-day usage and runs (the last `Usage:` line of the
+    account), its merged PRs and tokens per merged PR. A `Run:` line names the account of its report (`health.line_account`:
+    a line with no account word belongs to the first account). Values of an account with no line are None."""
+    comments = health.status_comments(hours=hours) if comments is None else comments
+    rows = {}
+    for c in sorted(comments, key=lambda c: c.get("created_at") or ""):
+        body = c.get("body") or ""
+        run = RUN_LINE.search(body)
+        owner = health.line_account(run[0]) if run else health.first_account()
+        for line in body.splitlines():
+            m = health.SAMPLE.match(line) if line.startswith("Usage:") else None
+            if m:
+                week = WEEK_USED.search(line)
+                rows.setdefault(health.line_account(line), {}).update(
+                    five_hour=float(m[2]) / 100, runs=int(m[4]), week=float(week[1]) / 100 if week else None)
+        t = TOKEN_LINE.search(body)
+        if t:
+            acc = rows.setdefault(owner, {})
+            acc["eq"], acc["prs"] = acc.get("eq", 0) + float(t[1]), acc.get("prs", 0) + len(RESULT.findall(body))
+    return [dict(account=name, five_hour=r.get("five_hour"), week=r.get("week"), runs=r.get("runs"),
+                 merged=r.get("prs", 0), tokens_per_pr=r["eq"] / r["prs"] if r.get("prs") else None)
+            for name, r in sorted(rows.items(), key=lambda x: str(x[0]))]
+
+
 REVIEW = re.compile(r"^\s*Process review", re.I)
 CHANGE_PR = re.compile(r"\bPR #(\d+)")
 
@@ -331,6 +361,7 @@ def main(out_dir):
         "aoe2mc-release-bar.json": release_bar(open(os.path.join(root, "steering", "project", "RELEASE.md")).read()),
         "aoe2mc-usage.json": usage(),
         "aoe2mc-tokens.json": tokens(),
+        "aoe2mc-accounts.json": accounts(),
         "aoe2mc-reviews.json": reviews(merges),
         "aoe2mc-setup.json": json.load(open(os.path.join(root, "tools", "dashboard_artifact", "setup.json"))),
     }

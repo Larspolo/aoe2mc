@@ -87,7 +87,9 @@ CONTACT = 1.0         # tiles: the reach of a demolition ship (range 0, #1440): 
 # Tiles: no shot at a unit nearer (AoE2 DE, wiki infobox "MinRange", #1350). The key "min_range" of data/units.jsonl.
 MIN_RANGE = {r["name"]: r["min_range"] for r in UNIT_ROWS if "min_range" in r}
 ACCURACY = {r["name"]: r["accuracy"] for r in UNIT_ROWS if "accuracy" in r}   # siege shots at units that hit (#2479)
+MISS = {r["name"]: r["miss"] for r in UNIT_ROWS if "miss" in r}               # a missed shot hurts a near unit (#4549)
 DODGE = {r["name"]: r["dodge"] for r in UNIT_ROWS if "dodge" in r}           # projectiles that do no damage (#4399)
+VOLLEY = {r["name"]: r["volley"] for r in UNIT_ROWS if "volley" in r}       # the key "volley": {"shots": n, "attack": a}, the extra projectiles of each shot (#4502)
 FRENZY = {r["name"]: r["frenzy"] for r in UNIT_ROWS if "frenzy" in r}        # a shorter reload in a long fight (#4468)
 LOW_HP = {r["name"]: r["low_hp"] for r in UNIT_ROWS if "low_hp" in r}      # another form below some hit points (#4472)
 VETERAN = {r["name"]: r["veteran"] for r in UNIT_ROWS if "veteran" in r}     # attack more for each kill (#4467)
@@ -110,6 +112,7 @@ IGNORE = {r["name"] for r in UNIT_ROWS if r.get("ignore_armor")}
 PASS = {r["name"]: r["pass"] for r in UNIT_ROWS if "pass" in r}               # the key "pass" of data/units.jsonl
 VS_UNITS = {r["name"]: r["vs_units"] for r in UNIT_ROWS if "vs_units" in r}    # the anti-unit mode: the Lou Chuan (#4505)
 CHARGE_ATTACK = {r["name"]: r["charge_attack"] for r in UNIT_ROWS if "charge_attack" in r}   # the Coustillier (#4398)
+CHARGED_VOLLEY = {r["name"]: r["charged_volley"] for r in UNIT_ROWS if "charged_volley" in r}   # Xianbei Raider (#4546)
 TRAMPLE = {r["name"]: r["trample"] for r in UNIT_ROWS if "trample" in r}       # the key "trample": the elephants (#4397)
 MELEE_MODE = {r["name"]: r["melee_mode"] for r in UNIT_ROWS if "melee_mode" in r}   # the key "melee_mode": the Ratha (#4504)
 # The part of the damage on the units behind the target, when it is not one half (wiki: "100% pass-through damage").
@@ -224,11 +227,15 @@ def range_command(uuid, name, T, rate=NORMAL, s=None):
     return reach and (s.reload or name in BLAST) and f"aoe range {uuid} {reach} {max(1, round(s.reload / rate * 20))}{blast}" or None
 
 
-def accuracy_command(uuid, name, bonus=0.0):
-    """The plugin command of the AoE2 accuracy of a siege shot at a unit (the key "accuracy" of data/units.jsonl: the
-    Trebuchet 15 %, #2479) plus bonus (the civilization key "accuracy": Huns +35 %), or None when each shot hits."""
+def accuracy_command(uuid, name, bonus=0.0, T=4):
+    """The plugin command of the AoE2 accuracy of a shot at a unit (the key "accuracy" of data/units.jsonl: the
+    Trebuchet 15 %, #2479) plus bonus (the civilization key "accuracy": Huns +35 %), or None when each shot hits.
+    The key "miss" (the Arambai, #4549, AoE2 wiki: "Missed projectiles deal 100% damage too"): a missed shot hurts
+    another enemy unit within "radius" tiles of the target with "part" of the damage; the command gets the part and
+    the radius in blocks (T blocks per tile)."""
     part = min(1.0, ACCURACY.get(name, 1.0) + bonus)
-    return f"aoe accuracy {uuid} {part:g}" if part < 1 else None
+    m = MISS.get(name)
+    return f"aoe accuracy {uuid} {part:g}" + (f" {m['part']:g} {m['radius'] * T:g}" if m else "") if part < 1 else None
 
 
 def vs_units_command(uuid, name, T):
@@ -245,6 +252,16 @@ def charge_command(uuid, name):
     "attack" more (aoe chargeattack of #4370; its time as ticks at Normal speed)."""
     c = CHARGE_ATTACK.get(name)
     return f"aoe chargeattack {uuid} {max(1, round(c['time'] / NORMAL * 20))} {c['attack']}" if c else None
+
+
+def charged_volley_command(uuid, name):
+    """The plugin command of the charged volley of unit name (the key "charged_volley" of data/units.jsonl: the Xianbei
+    Raider, #4546), or None: a shot at a unit that is not siege after a full charge of "time" AoE2 seconds also fires
+    "shots" arrows of "attack" with "bonus" (aoe chargedvolley; its time as ticks at Normal speed)."""
+    c = CHARGED_VOLLEY.get(name)
+    bonus = ",".join(f"{k}:{v}" for k, v in sorted(c.get("bonus", {}).items())) or "-" if c else ""
+    return f"aoe chargedvolley {uuid} {max(1, round(c['time'] / NORMAL * 20))} {c['shots']} {c['attack']} {bonus}" \
+        if c else None
 
 
 def dodge_command(uuid, name):
@@ -408,10 +425,14 @@ def setup(game, data):
             game.command(cmd)
     for o in units:                                  # a trebuchet misses units (#2479), with the bonus of its civ
         civ = None if data.get("full_tech_tree") else data.get("players", {}).get(str(o["player"]), {}).get("civ")
-        if cmd := accuracy_command(o["uuid"], o["name"], civs.value("accuracy", civ, {}).get(o["name"], 0.0)):
+        if cmd := accuracy_command(o["uuid"], o["name"], civs.value("accuracy", civ, {}).get(o["name"], 0.0),
+                                   data.get("tile_size", 4)):
             game.command(cmd)
     for o in units:                                  # the Coustillier charges its attack (#4398)
         if cmd := charge_command(o["uuid"], o["name"]):
+            game.command(cmd)
+    for o in units:                                  # a Xianbei Raider fires a charged volley (#4546)
+        if cmd := charged_volley_command(o["uuid"], o["name"]):
             game.command(cmd)
     for o in units:                                  # a Shrivamsha Rider dodges projectiles (#4399)
         if cmd := dodge_command(o["uuid"], o["name"]):

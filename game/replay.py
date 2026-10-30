@@ -3015,7 +3015,9 @@ class Replay:
         the stats have "rewind" (the time), "speed", "paused", "view" and "camera" (#979: the replay keeps no earlier states, `live`
         starts a fresh replay). "time" is the game time now (ms) for poll. `to`: jump to this time at the start;
         `paused`: start in a pause. The replay ends at the time of its last event, as the record (#978); `finish`:
-        play the walks and the trainings to their end (tests of one walk or one queue)."""
+        play the walks and the trainings to their end (tests of one walk or one queue). A restored record starts
+        at the game time of its save, its "restore" event (#4568)."""
+        start = max([start] + [e["time"] for e in self.data.get("timeline", []) if e["kind"] == "restore"])
         last = math.inf if finish else max((e["time"] for e in self.data.get("timeline", [])), default=start)
         found = fights(self.data.get("timeline", []), owners(self.data.get("objects", []), self.data.get("timeline", [])))
         news = [{"time": f["start"], "kind": "news", "fight": i} for i, f in enumerate(found)]    # the fight starts (#2951)
