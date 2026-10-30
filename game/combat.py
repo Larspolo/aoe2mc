@@ -88,6 +88,7 @@ CONTACT = 1.0         # tiles: the reach of a demolition ship (range 0, #1440): 
 MIN_RANGE = {r["name"]: r["min_range"] for r in UNIT_ROWS if "min_range" in r}
 ACCURACY = {r["name"]: r["accuracy"] for r in UNIT_ROWS if "accuracy" in r}   # siege shots at units that hit (#2479)
 DODGE = {r["name"]: r["dodge"] for r in UNIT_ROWS if "dodge" in r}           # projectiles that do no damage (#4399)
+VETERAN = {r["name"]: r["veteran"] for r in UNIT_ROWS if "veteran" in r}     # attack more for each kill (#4467)
 SHIELD = {r["name"]: r["shield"] for r in UNIT_ROWS if "shield" in r}         # projectiles through it hurt less (#4507)
 # The minimum range of the buildings that shoot, in tiles from the edge of the footprint (AoE2 DE, wiki infobox
 # "MinRange", #1546). The town center has none. Murder Holes removes it.
@@ -104,6 +105,7 @@ REGEN = {r["name"]: r["regen"] for r in UNIT_ROWS if "regen" in r}             #
 IGNORE = {r["name"] for r in UNIT_ROWS if r.get("ignore_armor")}
 PASS = {r["name"]: r["pass"] for r in UNIT_ROWS if "pass" in r}               # the key "pass" of data/units.jsonl
 VS_UNITS = {r["name"]: r["vs_units"] for r in UNIT_ROWS if "vs_units" in r}    # the anti-unit mode: the Lou Chuan (#4505)
+CHARGE_ATTACK = {r["name"]: r["charge_attack"] for r in UNIT_ROWS if "charge_attack" in r}   # the Coustillier (#4398)
 TRAMPLE = {r["name"]: r["trample"] for r in UNIT_ROWS if "trample" in r}       # the key "trample": the elephants (#4397)
 # The part of the damage on the units behind the target, when it is not one half (wiki: "100% pass-through damage").
 PASS_PART = {r["name"]: r["pass_part"] for r in UNIT_ROWS if "pass_part" in r}
@@ -232,6 +234,14 @@ def vs_units_command(uuid, name, T):
     return f"aoe vsunits {uuid} {v['attack']} {bonus} {v['range'] * T}" if v else None
 
 
+def charge_command(uuid, name):
+    """The plugin command of the own charge attack of unit name (the key "charge_attack" of data/units.jsonl: the
+    Coustillier, #4398), or None: the first melee hit on a unit after a full charge of "time" AoE2 seconds has
+    "attack" more (aoe chargeattack of #4370; its time as ticks at Normal speed)."""
+    c = CHARGE_ATTACK.get(name)
+    return f"aoe chargeattack {uuid} {max(1, round(c['time'] / NORMAL * 20))} {c['attack']}" if c else None
+
+
 def dodge_command(uuid, name):
     """The plugin command of the dodge of unit name (the key "dodge" of data/units.jsonl: the Shrivamsha Rider, #4399),
     or None when it dodges nothing. The AoE2 wiki ("Shrivamsha Rider"): a second, regenerating health bar takes each
@@ -251,6 +261,14 @@ def shield_command(uuid, name):
     the first entity on its line, so the plugin gives that hit to the target of the shooter."""
     s = SHIELD.get(name)
     return f"aoe shield {uuid} {s['part']:g} {s['takes']}" if s else None
+
+
+def veteran_command(uuid, name):
+    """The plugin command of the kill bonus of unit name (the key "veteran" of data/units.jsonl: the Jaguar Warrior,
+    #4467), or None. AoE2 wiki ("Jaguar Warrior"): "Gains +1 attack for each unit killed (up to 4)": "attack" for each
+    kill, up to "max". The plugin keeps the kills of a unit when it gets the command again (an Elite upgrade)."""
+    v = VETERAN.get(name)
+    return f"aoe veteran {uuid} {v['attack']} {v['max']}" if v else None
 
 
 def trample_command(uuid, name, T, t=None):
@@ -339,11 +357,17 @@ def setup(game, data):
         civ = None if data.get("full_tech_tree") else data.get("players", {}).get(str(o["player"]), {}).get("civ")
         if cmd := accuracy_command(o["uuid"], o["name"], civs.value("accuracy", civ, {}).get(o["name"], 0.0)):
             game.command(cmd)
+    for o in units:                                  # the Coustillier charges its attack (#4398)
+        if cmd := charge_command(o["uuid"], o["name"]):
+            game.command(cmd)
     for o in units:                                  # a Shrivamsha Rider dodges projectiles (#4399)
         if cmd := dodge_command(o["uuid"], o["name"]):
             game.command(cmd)
     for o in units:                                  # the Lou Chuan shoots units in its anti-unit mode (#4505)
         if cmd := vs_units_command(o["uuid"], o["name"], data.get("tile_size", 4)):
+            game.command(cmd)
+    for o in units:                                  # a Jaguar Warrior gets attack for each kill (#4467)
+        if cmd := veteran_command(o["uuid"], o["name"]):
             game.command(cmd)
     for o in units:                                  # a Hussite Wagon shields the units behind it (#4507)
         if cmd := shield_command(o["uuid"], o["name"]):
