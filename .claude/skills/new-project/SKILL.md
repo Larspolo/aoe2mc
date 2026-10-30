@@ -176,7 +176,8 @@ selects "Use it".
 
 ## 8. Guide the owner
 
-Guide the owner through the steps that only the owner can do, **one step at a time**. For each step: give the exact
+Guide the owner through the steps that need the owner's accounts, **one step at a time** (with a browser tool, do the
+clicks yourself: below). For each step: give the exact
 clicks and the values to paste (the real repository name, the real task names), then ask with AskUserQuestion
 "Done", "Problem" (the owner says what went wrong; help, then ask again) or "Later" (put the step in the report).
 After each step that GitHub can show, run `python3 framework/tools/new_repo.py DIR --repo OWNER/NAME --check` and say
@@ -203,6 +204,15 @@ its current clicks: the app changes faster than this text.
    `[pacing]` of `DIR/steering/system/system.toml`, commit, push to the default branch, and run
    `python3 framework/tools/new_repo.py DIR --repo OWNER/NAME --start`. In a cloud session, give the owner the two
    lines to change and the commands.
+
+**With a browser tool** (Claude in Chrome or the built-in browser of the desktop app; load its skill first): ask the
+owner once with AskUserQuestion: "I do the clicks (Recommended)" or "You do the clicks". When you do them, open each
+page in a new tab with the owner's sign-in, fill the forms, and show the result. These limits stay:
+- Stop before each grant of access (the "Install" of the GitHub app, a sign-in, a new connection): the owner clicks it.
+- Never read, copy or type a secret value (the token of an API trigger, of `claude setup-token`). When a page shows
+  one, tell the owner to copy it, then use the `--secrets` prompt of item 5. A fire URL and a task ID are no secrets.
+- Item 5 needs a terminal: the owner types the `!` command.
+- When a page differs from the steps, or asks for a payment, stop and ask the owner.
 
 At the end, run `--check` again. Each `MISSING` line goes into the report with its step.
 
