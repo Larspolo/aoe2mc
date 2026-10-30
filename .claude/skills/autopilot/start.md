@@ -25,6 +25,12 @@ Section `PRs` lists the open agent PRs (branch `claude/*`, `agent/*` or `ccr-*`,
   of this cycle.
 - Section `Flow brake` is on → repair one PR or go to step 8: no new ticket (`overlap.md`).
 
+Section `Orphans` lists the open tickets that wait for nothing (#4553): no run picks them, and the owner does not see
+them. Fix each line in one or two calls, then go on: read the last comments, then remove `blocked` (its tickets closed),
+or add `needs-human` and one precise question for the owner (`owner.md`); correct a wrong "Depends on" or "Start after"
+line. An outside event (a Minecraft release) is no ticket to wait for: give a "Start after: <date> UTC" line for the
+next check.
+
 Section `Main CI` red (the last run on main, or the night run with the full suite) and no "Fix main" merge after it:
 find the open `P0` ticket "Fix main: ..." or make one (`P0`, `bug`, `size:S`: the failing test and the commit that
 broke it), and do it first. CI makes the same ticket by itself. Make it only under a lock (`overlap.md`, "Fix main").
