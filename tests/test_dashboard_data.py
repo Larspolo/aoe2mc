@@ -94,6 +94,7 @@ def test_main_writes_the_eight_files(tmp_path, monkeypatch):
     monkeypatch.setattr(dd, "pages", lambda path: ISSUES if path.startswith("issues") else PULLS)
     monkeypatch.setattr(dd, "usage", lambda: [])
     monkeypatch.setattr(dd, "tokens", lambda: [])
+    monkeypatch.setattr(dd, "accounts", lambda: [])
     monkeypatch.setattr(dd, "reviews", lambda merges: [])
     dd.main(str(tmp_path))
     assert sorted(os.listdir(tmp_path)) == sorted(dd.DATASETS.values())
