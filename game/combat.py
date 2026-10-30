@@ -89,9 +89,12 @@ MIN_RANGE = {r["name"]: r["min_range"] for r in UNIT_ROWS if "min_range" in r}
 ACCURACY = {r["name"]: r["accuracy"] for r in UNIT_ROWS if "accuracy" in r}   # siege shots at units that hit (#2479)
 MISS = {r["name"]: r["miss"] for r in UNIT_ROWS if "miss" in r}               # a missed shot hurts a near unit (#4549)
 DODGE = {r["name"]: r["dodge"] for r in UNIT_ROWS if "dodge" in r}           # projectiles that do no damage (#4399)
+SPEED_CHARGE = {r["name"]: r["speed_charge"] for r in UNIT_ROWS if "speed_charge" in r}   # faster near a target (#4545)
+VOLLEY = {r["name"]: r["volley"] for r in UNIT_ROWS if "volley" in r}       # the key "volley": {"shots": n, "attack": a}, the extra projectiles of each shot (#4502)
 FRENZY = {r["name"]: r["frenzy"] for r in UNIT_ROWS if "frenzy" in r}        # a shorter reload in a long fight (#4468)
 LOW_HP = {r["name"]: r["low_hp"] for r in UNIT_ROWS if "low_hp" in r}      # another form below some hit points (#4472)
 VETERAN = {r["name"]: r["veteran"] for r in UNIT_ROWS if "veteran" in r}     # attack more for each kill (#4467)
+PACK = {r["name"]: r["pack"] for r in UNIT_ROWS if "pack" in r}               # attack more near own units (#4469)
 SUNDER = {r["name"]: r["sunder"] for r in UNIT_ROWS if "sunder" in r}         # armor less on the target per hit (#4466)
 SHIELD = {r["name"]: r["shield"] for r in UNIT_ROWS if "shield" in r}         # projectiles through it hurt less (#4507)
 # The minimum range of the buildings that shoot, in tiles from the edge of the footprint (AoE2 DE, wiki infobox
@@ -110,6 +113,7 @@ IGNORE = {r["name"] for r in UNIT_ROWS if r.get("ignore_armor")}
 PASS = {r["name"]: r["pass"] for r in UNIT_ROWS if "pass" in r}               # the key "pass" of data/units.jsonl
 VS_UNITS = {r["name"]: r["vs_units"] for r in UNIT_ROWS if "vs_units" in r}    # the anti-unit mode: the Lou Chuan (#4505)
 CHARGE_ATTACK = {r["name"]: r["charge_attack"] for r in UNIT_ROWS if "charge_attack" in r}   # the Coustillier (#4398)
+CHARGED_VOLLEY = {r["name"]: r["charged_volley"] for r in UNIT_ROWS if "charged_volley" in r}   # Xianbei Raider (#4546)
 TRAMPLE = {r["name"]: r["trample"] for r in UNIT_ROWS if "trample" in r}       # the key "trample": the elephants (#4397)
 MELEE_MODE = {r["name"]: r["melee_mode"] for r in UNIT_ROWS if "melee_mode" in r}   # the key "melee_mode": the Ratha (#4504)
 # The part of the damage on the units behind the target, when it is not one half (wiki: "100% pass-through damage").
@@ -243,12 +247,37 @@ def vs_units_command(uuid, name, T):
     return f"aoe vsunits {uuid} {v['attack']} {bonus} {v['range'] * T}" if v else None
 
 
-def charge_command(uuid, name):
+def charge_command(uuid, name, T=4):
     """The plugin command of the own charge attack of unit name (the key "charge_attack" of data/units.jsonl: the
     Coustillier, #4398), or None: the first melee hit on a unit after a full charge of "time" AoE2 seconds has
-    "attack" more (aoe chargeattack of #4370; its time as ticks at Normal speed)."""
+    "attack" more (aoe chargeattack of #4370; its time as ticks at Normal speed). A "blast" {"part", "radius"} (the
+    Urumi Swordsman, #4544): the charged hit also hurts the near enemy units, radius in tiles of T blocks."""
     c = CHARGE_ATTACK.get(name)
-    return f"aoe chargeattack {uuid} {max(1, round(c['time'] / NORMAL * 20))} {c['attack']}" if c else None
+    if not c:
+        return None
+    b = f" {c['blast']['part']:g} {c['blast']['radius'] * T:g}" if c.get("blast") else ""
+    return f"aoe chargeattack {uuid} {max(1, round(c['time'] / NORMAL * 20))} {c['attack']}{b}"
+
+
+def charged_volley_command(uuid, name, T=4):
+    """The plugin command of the charged volley of unit name (the key "charged_volley" of data/units.jsonl: the Xianbei
+    Raider, #4546), or None: a shot at a unit that is not siege after a full charge of "time" AoE2 seconds also fires
+    "shots" arrows of "attack" with "bonus" (aoe chargedvolley; its time as ticks at Normal speed). The optional
+    "range" (tiles × T blocks: a melee unit fires at its target in it, the Fire Lancer, #4547) and "ignore" (the shots
+    ignore the armor) are extra fields."""
+    c = CHARGED_VOLLEY.get(name)
+    if not c:
+        return None
+    bonus = ",".join(f"{k}:{v}" for k, v in sorted(c.get("bonus", {}).items())) or "-"
+    extra = f" {c.get('range', 0) * T} {int(c.get('ignore', False))}" if "range" in c or c.get("ignore") else ""
+    return f"aoe chargedvolley {uuid} {max(1, round(c['time'] / NORMAL * 20))} {c['shots']} {c['attack']} {bonus}" + extra
+
+
+def speed_charge_command(uuid, name, T):
+    """The plugin command of the speed charge of unit name (the key "speed_charge" of data/units.jsonl: the Samurai,
+    #4545), or None: the unit walks "speed" faster while its target is "min" to "max" tiles (× T blocks) away."""
+    c = SPEED_CHARGE.get(name)
+    return f"aoe speedcharge {uuid} {c['speed']} {c['min'] * T} {c['max'] * T}" if c else None
 
 
 def dodge_command(uuid, name):
@@ -282,6 +311,18 @@ def low_hp_command(uuid, name):
     if not lo:
         return None
     return f"aoe lowhp {uuid} {lo['hp']:g} {lo['melee']} {lo['pierce']} {lo['speed']:g}"
+
+
+def pack_command(uuid, name, T):
+    """The plugin command of the pack bonus of unit name (the key "pack" of data/units.jsonl: the Monaspa, #4469), or
+    None. AoE2 wiki "Monaspa": +1 attack for every "per" own units of the types "with" within "radius" tiles, up to
+    "max"; the unit itself does not count. The plugin finds them by their type tags (aoe2mc.t<ID>, on the rider)."""
+    p = PACK.get(name)
+    if not p:
+        return None
+    ids = units.type_ids()
+    tags = ",".join(f"aoe2mc.t{ids[n]}" for n in p["with"] if ids.get(n) is not None)
+    return f"aoe pack {uuid} {p['per']} {p['radius'] * T:g} {p['max']} {tags}" if tags else None
 
 
 def shield_command(uuid, name):
@@ -404,7 +445,13 @@ def setup(game, data):
                                    data.get("tile_size", 4)):
             game.command(cmd)
     for o in units:                                  # the Coustillier charges its attack (#4398)
-        if cmd := charge_command(o["uuid"], o["name"]):
+        if cmd := charge_command(o["uuid"], o["name"], data.get("tile_size", 4)):
+            game.command(cmd)
+    for o in units:                                  # a Samurai runs faster to a near target (#4545)
+        if cmd := speed_charge_command(o["uuid"], o["name"], data.get("tile_size", 4)):
+            game.command(cmd)
+    for o in units:                                  # a Xianbei Raider fires a charged volley (#4546)
+        if cmd := charged_volley_command(o["uuid"], o["name"], data.get("tile_size", 4)):
             game.command(cmd)
     for o in units:                                  # a Shrivamsha Rider dodges projectiles (#4399)
         if cmd := dodge_command(o["uuid"], o["name"]):
@@ -417,6 +464,9 @@ def setup(game, data):
             game.command(cmd)
     for o in units:                                  # a Jian Swordsman loses its shield at low hit points (#4472)
         if cmd := low_hp_command(o["uuid"], o["name"]):
+            game.command(cmd)
+    for o in units:                                  # a Monaspa gets attack near own Monaspas and Knights (#4469)
+        if cmd := pack_command(o["uuid"], o["name"], data.get("tile_size", 4)):
             game.command(cmd)
     for o in units:                                  # a Jaguar Warrior gets attack for each kill (#4467)
         if cmd := veteran_command(o["uuid"], o["name"]):
