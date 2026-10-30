@@ -1,7 +1,10 @@
 package aoe2mc;
 
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
@@ -14,13 +17,13 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.Mob;
 
 /**
- * aoe aura &lt;selector&gt; &lt;blocks&gt; &lt;speed&gt; &lt;attack speed&gt; &lt;tag&gt;: the own units with the tag within blocks of the
- * unit move and attack faster (the Centurion, #4470, game/combat.py aura_command): movement speed * (1 + speed), melee
- * reload / (1 + attack speed). Two auras do not add up: the highest values count (AoE2 wiki "Centurion": no stack,
+ * aoe aura &lt;selector&gt; &lt;blocks&gt; &lt;speed&gt; &lt;attack speed&gt; &lt;tag&gt;,...: the own units with one of the
+ * tags (their type tags aoe2mc.t&lt;ID&gt;) within blocks of the unit move and attack faster (the Centurion, #4470,
+ * game/abilities/aura.py): movement speed * (1 + speed), melee reload / (1 + attack speed). Two auras do not add up: the highest values count (AoE2 wiki "Centurion": no stack,
  * not for allies).
  */
 public final class Aura implements Ability {
-    private record Spec(double blocks, double speed, double attack, String tag) {}
+    private record Spec(double blocks, double speed, double attack, Set<String> tags) {}
 
     // one key for all auras: a second aura replaces the modifier, so two auras do not stack (the Minecraft feature)
     private static final NamespacedKey KEY = new NamespacedKey("aoe2mc", "aura");
@@ -48,14 +51,14 @@ public final class Aura implements Ability {
         }
         int n = 0;
         for (Entity e : AoePlugin.select(sender, args[1])) {
-            auras.put(e.getUniqueId(), new Spec(blocks, speed, attack, args[5]));
+            auras.put(e.getUniqueId(), new Spec(blocks, speed, attack, Set.copyOf(List.of(args[5].split(",")))));
             n++;
         }
         sender.sendMessage("Aura: " + n + " units");
         return true;
     }
 
-    // Each second: the own units with the tag of a live aura in its circle get its boost, the others lose it.
+    // Each second: the own units with a tag of a live aura in its circle get its boost, the others lose it.
     @Override
     public void tick(AoePlugin p) {
         if (Bukkit.getCurrentTick() % 20 != 0) {
@@ -68,7 +71,7 @@ public final class Aura implements Ability {
             Spec u = a.getValue();
             String side = AoePlugin.side(c);
             for (Entity t : c.getNearbyEntities(u.blocks, u.blocks, u.blocks)) {
-                if (t instanceof Mob && side != null && side.equals(AoePlugin.side(t)) && t.getScoreboardTags().contains(u.tag)
+                if (t instanceof Mob && side != null && side.equals(AoePlugin.side(t)) && !Collections.disjoint(t.getScoreboardTags(), u.tags)
                         && t.getLocation().distanceSquared(c.getLocation()) <= u.blocks * u.blocks) {
                     now.merge(t.getUniqueId(), new double[] {u.speed, u.attack},
                             (x, y) -> new double[] {Math.max(x[0], y[0]), Math.max(x[1], y[1])});
