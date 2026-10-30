@@ -214,6 +214,7 @@ class Script:
         self.rules, self.bot = list(rules), bot
         self.off = set()                                           # the rules after disable-self
         self.goals, self.timers = {}, {}                           # goal id -> value; timer id -> AoE2 second due
+        self.aged = {}                                             # player -> (ages, AoE2 second of the last age up)
         self.warned = set()
         self.sn = {}                                               # strategic number name -> value (#4530)
         self.attacking = False                                     # attack-now ran: the bot may attack
@@ -281,7 +282,7 @@ class Script:
         if name == "stance-toward":                                # (stance-toward PLAYER STANCE)
             import diplomacy
             return diplomacy.stance(self.bot.g, args[0]) == args[1]
-        if name in ("can-train", "can-build", "can-research", "research-completed"):
+        if name in ("can-train", "can-build", "can-research", "research-available", "research-completed"):
             return self.can(name, args[0])
         if name in ("unit-type-count", "building-type-count", "unit-type-count-total", "building-type-count-total"):
             if (n := self.game(args[0], "unit" if name[0] == "u" else "building")) is None:
@@ -296,6 +297,10 @@ class Script:
             return self.compare(args[1], market.price(self.bot.g, args[0], name == "commodity-buying-price"), args[2])
         if name == "current-age":
             return self.age(self.bot.g, *args)
+        if name == "current-age-time":
+            return self.compare(args[0], self.age_time(self.bot.g), args[1])
+        if name in ("taunt-detected", "players-taunt-detected"):  # the game program has no taunts yet: never true
+            return False
         if name == "enemy-buildings-in-town":
             return self.in_town()
         if name.startswith("players-"):                            # (players-FACT PLAYER ...): the other players
@@ -336,6 +341,16 @@ class Script:
         import build
         return self.compare(op, build.ages(g), row["age"])
 
+    def age_time(self, g):
+        """The AoE2 seconds since the last age up of Gather g: the script sees the age change at its next check."""
+        import build
+        n, t = build.ages(g), self.bot.time
+        if g.player not in self.aged:
+            self.aged[g.player] = (n, 0.0)
+        elif self.aged[g.player][0] != n:
+            self.aged[g.player] = (n, t)
+        return t - self.aged[g.player][1]
+
     def sides(self, who):
         """(the Gathers of the players of a player parameter, every): a number, focus-player (the foe of the bot), or
         any-/every- with enemy, ally, player, computer or human (airef "Facts", "Player parameters")."""
@@ -361,12 +376,17 @@ class Script:
         xs, every = self.sides(who)
         if fact == "current-age":
             got = [self.age(x, *args) for x in xs]
-        elif fact == "building-type-count":
-            if (n := self.game(args[0], "building")) is None:
+        elif fact in ("building-type-count", "unit-type-count"):
+            if (n := self.game(args[0], fact.split("-")[0])) is None:
                 return False
             got = [self.compare(args[1], self.count(n, x), args[2]) for x in xs]
         elif fact in ("population", "military-population"):
             got = [self.compare(args[0], x.pop if fact == "population" else len(x.soldiers), args[1]) for x in xs]
+        elif fact == "stance":                                     # the stance of the bot toward the player
+            import diplomacy
+            got = [diplomacy.stance(self.bot.g, x.player) == args[0] for x in xs]
+        elif fact == "current-age-time":
+            got = [self.compare(args[0], self.age_time(x), args[1]) for x in xs]
         else:
             return self.warn("fact", "players-" + fact) or False
         return bool(got) and (all(got) if every else any(got))
@@ -429,11 +449,11 @@ class Script:
             return False
         if name == "research-completed":
             return train.researched(g, n)
-        if name == "can-research" and (train.researched(g, n) or train.queued(g, n)):
+        if name in ("can-research", "research-available") and (train.researched(g, n) or train.queued(g, n)):
             return False
         if name == "can-train" and g.pop >= train.limit(g):
             return False
-        return bool(self.homes(n)) and self.paid(train.price(g, n))
+        return bool(self.homes(n)) and (name == "research-available" or self.paid(train.price(g, n)))
 
     def trade_ok(self, buy, res):
         """A trade of 100 res is possible now: an own market and the gold (a buy) or the resource (a sell)."""
@@ -494,5 +514,5 @@ class Script:
             for _ in range(max(args[2], 0) // diplomacy.LOT):        # one tribute of the menu per 100
                 if not diplomacy.send(g, b.nobody, args[0], args[1]):
                     break
-        elif name != "do-nothing":
+        elif name not in ("do-nothing", "acknowledge-taunt", "chat-local-to-self"):   # no taunts; no one sees a self chat
             self.warn("action", name)
