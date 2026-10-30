@@ -1,8 +1,8 @@
 """Battle Drills one age earlier for the Thracians (#2481, epic #1088). The game program has no Levy: the Chronicles
 civilizations train the militia line, and Battle Drills is the Chronicles form of the Two-Handed Swordsman upgrade
 (AoE2 wiki "Battle Drills"). So the Thracians get that upgrade in the Castle (Classical) Age."""
-from test_civ_earlier import setup
 from menu_line import item
+from test_civ_earlier import setup
 from test_train_castle import menus
 
 from game import train

@@ -5,11 +5,12 @@ import sys
 from collections import Counter
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "game"))
-import aoe2mc  # noqa: E402
 import scenario  # noqa: E402
 import train  # noqa: E402
 from test_scenario_mode import game  # noqa: E402
 from test_trigger_objects import effect, trig  # noqa: E402
+
+import aoe2mc  # noqa: E402
 
 
 def research(tech, player=1):

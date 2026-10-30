@@ -1,7 +1,6 @@
 """tools/coverage.py writes a report with a summary and one table per group. The fallbacks must not go up."""
-import pytest
-
 import coverage as cov
+import pytest
 
 # Allowed maximums (ratchet). Do not change them in a PR: the workflow coverage.yml lowers them on main (#233).
 MAX = {"Buildings": {"fallback": 0, "default": 0},

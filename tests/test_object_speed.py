@@ -1,9 +1,9 @@
 """The fast tree and barrier code of #702 puts the same blocks as one add for each part."""
 import numpy as np
+from test_terrain import columns
 
 import aoe2mc
 import buildings
-from test_terrain import columns
 
 
 def blocks(E):

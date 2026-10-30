@@ -92,7 +92,9 @@ def test_the_victory_value_goes_to_play(tmp_path, monkeypatch):
 
 def test_a_saved_game_keeps_the_time_left():
     import json
+
     from test_loom import setup
+
     from game import savegame
     _, g = setup()
     g.limit_left = 123.0

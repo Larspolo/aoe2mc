@@ -2,10 +2,10 @@
 "regen", the key "pack_time", the "walk" lists and buildings and the key "more_arrows" (#4098, #4150, #4255, #4275,
 #4254, #4258). These replace tests of single data lines (owner,
 2026-10-29, #4242)."""
+import pytest
+import train as plain_train  # civs.regen and trebuchet.pack_time import train by its plain name (not game.train)
 from test_train_castle import setup
 
-import pytest
-import train as plain_train          # civs.regen and trebuchet.pack_time import train by its plain name (not game.train)
 from game import civs, combat, garrison, train, trebuchet
 
 

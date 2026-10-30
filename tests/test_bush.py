@@ -1,8 +1,8 @@
 """AoE2 bushes and shrubs are the bush blocks of 26.3, not only leaves (#524)."""
+import mcvalid
 import numpy as np
 
 import aoe2mc
-import mcvalid
 
 
 def blocks(name, terrain="GRASS_1", water=False):

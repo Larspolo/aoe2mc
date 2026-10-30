@@ -1,16 +1,17 @@
 """#3775 (epic #3774): a trigger with the condition "Object Attacked" on a building fires in the scenario mode when the
 building loses hit points. The converter tests the score #h<ref> of aoe_hit; the game program sets it once per
 change of the hit points (game/scenario.py attacked). A unit keeps the tag test (test_trigger_attacked.py)."""
+import os
 import re
 import sys
-import os
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "game"))
-import aoe2mc  # noqa: E402
 import combat  # noqa: E402
 import gather  # noqa: E402
 import scenario  # noqa: E402
 from test_gather import FakeServer, grid  # noqa: E402
+
+import aoe2mc  # noqa: E402
 
 BUILDING = {"kind": "building", "name": "CASTLE", "player": 2, "ref": 7, "footprint": [4, 4, 8, 8]}
 UUID = combat.target_uuid(BUILDING["footprint"])

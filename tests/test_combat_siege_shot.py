@@ -3,10 +3,10 @@ import shutil
 import time
 
 import pytest
-
-from game import ai, combat, run
 from test_ranged import data
 from test_siege_walk import summon
+
+from game import ai, combat, run
 
 SHOOTERS = ("SCORPION", "HEAVY_SCORPION", "TREBUCHET", "BOMBARD_CANNON", "ORGAN_GUN", "ROCKET_CART")
 

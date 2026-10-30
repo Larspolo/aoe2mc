@@ -5,15 +5,16 @@ import os
 import sys
 
 import numpy as np
-
-import aoe2mc
 from test_civ_costs import setup
 from test_forging import menus
 from test_scenario_patrol import trigger
+
+import aoe2mc
 from tools import triggers
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "game"))
 import scenario  # noqa: E402
+
 from game import train  # noqa: E402
 
 

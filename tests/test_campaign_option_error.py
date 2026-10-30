@@ -2,9 +2,9 @@ import contextlib
 import io
 
 import pytest
+from test_campaign import cpx, scx_bytes
 
 import aoe2mc
-from test_campaign import cpx, scx_bytes
 
 
 def test_wrong_option_for_a_readable_old_scenario_is_a_usage_error(tmp_path):

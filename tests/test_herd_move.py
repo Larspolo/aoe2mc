@@ -3,7 +3,6 @@
 import re
 
 import pytest
-
 from test_gather import FakeServer, grid
 
 from game import gather
@@ -94,10 +93,10 @@ def test_a_selected_own_sheep_walks_to_the_clicked_cell_on_a_server(tmp_path):
     import math
     import time
 
-    import aoe2mc
     import scenarios
     from AoE2ScenarioParser.datasets.units import UnitInfo
 
+    import aoe2mc
     from game import run
     scn = scenarios.new_scenario(24)
     scn.unit_manager.add_unit(scenarios.PlayerId.ONE, UnitInfo.SHEEP.ID, x=6.5, y=12.5)

@@ -1,8 +1,8 @@
 """Autumn trees get poplar wood and yellow, orange or red poplar leaves (#539)."""
+import mcvalid
 import numpy as np
 
 import aoe2mc as A
-import mcvalid
 
 
 def tree_states(name, seed=0):

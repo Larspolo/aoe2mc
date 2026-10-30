@@ -82,6 +82,7 @@ def wait_score(game, want, secs=5):
 @pytest.mark.mc
 def test_area_trigger_fires_on_a_server(tmp_path):
     from test_paper import paper_reachable
+
     from game import run
     if not paper_reachable():
         pytest.skip("Paper is not reachable")

@@ -2,10 +2,9 @@
 import datetime
 import urllib.parse
 
-import pytest
-
 import dashboard
 import health
+import pytest
 
 NOW = datetime.datetime(2026, 10, 28, 12, 0, tzinfo=datetime.timezone.utc)
 STEP = datetime.timedelta(seconds=190)

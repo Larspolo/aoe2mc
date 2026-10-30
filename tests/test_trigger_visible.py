@@ -8,10 +8,11 @@ import types
 import numpy as np
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "game"))
-import aoe2mc  # noqa: E402
 import gather  # noqa: E402
 import scenario  # noqa: E402
 from test_gather import FakeServer, grid  # noqa: E402
+
+import aoe2mc  # noqa: E402
 
 
 def trig(kind, ref=5, player=1):

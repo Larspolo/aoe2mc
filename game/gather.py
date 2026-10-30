@@ -51,25 +51,24 @@ from aoe2mc import PASSABLE_OBJECTS, WOODS, object_footprint, object_mob, player
 from units import IDLE_JOB, TEAM_COLOR, VILLAGER_JOBS, animal, pretty  # noqa: E402
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import build  # noqa: E402
-import replay  # noqa: E402  (build imports it too)
 import amounts  # noqa: E402
 import autoscout  # noqa: E402
 import battle_royale  # noqa: E402
 import bossbar  # noqa: E402
+import build  # noqa: E402
 import capture_relic  # noqa: E402
+import challenge  # noqa: E402
 import cheats  # noqa: E402
 import civs  # noqa: E402
-import challenge  # noqa: E402
 import conquest  # noqa: E402
 import defend_wonder  # noqa: E402
 import demolish  # noqa: E402
 import diplomacy  # noqa: E402
-import flare  # noqa: E402
 import feitoria  # noqa: E402
+import flare  # noqa: E402
 import fleet  # noqa: E402
-import follow  # noqa: E402
 import fog  # noqa: E402
+import follow  # noqa: E402
 import garrison  # noqa: E402
 import goto  # noqa: E402
 import herd  # noqa: E402
@@ -85,21 +84,22 @@ import regen  # noqa: E402
 import regicide  # noqa: E402
 import relic_victory  # noqa: E402
 import repair  # noqa: E402
+import replay  # noqa: E402  (build imports it too)
 import ruins  # noqa: E402
 import scenario  # noqa: E402
 import score  # noqa: E402
-import spectator  # noqa: E402
 import siege_tower  # noqa: E402
-import sudden_death  # noqa: E402
+import spectator  # noqa: E402
 import stance  # noqa: E402
+import sudden_death  # noqa: E402
 import table  # noqa: E402
 import techtree  # noqa: E402
 import time_limit  # noqa: E402
 import trade  # noqa: E402
-import transport  # noqa: E402
 import train  # noqa: E402
-import trebuchet  # noqa: E402
+import transport  # noqa: E402
 import treaty  # noqa: E402
+import trebuchet  # noqa: E402
 import wonder  # noqa: E402
 
 RESOURCES = ("Wood", "Food", "Gold", "Stone")
@@ -191,7 +191,7 @@ EVENTS = {"idle": "idle", "to_tree": "walk", "chop": "chop", "to_drop": "carry",
 def breach(g, fort):
     """True when the villagers of g may attack the enemy building fort: a wall, a gate or a tower, after a technology
     with the key "breach" (Siegecraft of Antiquity Mode, #3916)."""
-    import combat                                                      # combat imports this module
+    import combat  # combat imports this module
     name = g.fort_names.get(fort, "")
     if not any(train.value("breach", t) for t in getattr(g, "techs", ())):
         return False
@@ -571,7 +571,7 @@ def rank(name):
     """The place of a unit in an AoE2 formation, from the front (AoE2 wiki "Unit formation", #3414): 0 melee cavalry,
     camels and elephants, 1 infantry, 2 archers (also on horse), 3 gunpowder foot units, 4 the siege units and the
     civilians (monks, trade carts, kings)."""
-    import combat                                                      # combat imports this module
+    import combat  # combat imports this module
     s = combat.stats(name)
     if "siege" in s.classes or not military(name):
         return 4
@@ -747,7 +747,7 @@ class Gather:
         self.ordering = {}                                             # player -> a pending menu order ("patrol", #3355)
         #                                                                tag of a rally marker -> AoE2 seconds left
         self.pop, self.census, self.shown = 0, 0.0, {}                 # live units, AoE2 seconds since the count, sidebar
-        import combat                                                  # combat imports this module
+        import combat  # combat imports this module
         ground = [r.split() for r in data["ground"]]
         self.forts = {combat.target_uuid(o["footprint"]): combat.building_box(o, ground) for o in data["objects"]
                       if o["kind"] == "building" and o["player"] not in (0, player) and "footprint" in o
@@ -934,7 +934,7 @@ class Gather:
 
     def voice_class(self, uuid):
         """The class of unit uuid in game/data/sounds.jsonl, or None (#3499)."""
-        import combat                                                  # combat imports this module
+        import combat  # combat imports this module
         if uuid in getattr(self, "ships", {}):
             return "ship"
         if uuid in getattr(self, "villagers", {}):
@@ -1067,7 +1067,7 @@ class Gather:
     def attack(self, target, units=None):
         """Send the selected military units (or units: a queue of #3516) to attack the unit target, with their AoE2
         walk speed (ai.py). A monk does not attack: it converts (monk.convert_order, #1245) or stays."""
-        import ai                                                      # ai imports this module
+        import ai  # ai imports this module
         sel = self.selected if units is None else set(units)
         monks = {u for u in sel if self.soldiers.get(u) in monk.MONKS}
         converts = {m for m in monks if self.converting.get(m, [None])[0] == target}   # the order of the same click
@@ -1104,11 +1104,11 @@ class Gather:
         placed += [(s["name"], s["footprint"], s["progress"]) for s in self.sites
                    if s["progress"] >= 1]                              # a foundation sees nothing until complete (#4176)
         if alive is not None:                                          # only a complete building of BUILDINGS or
-            import combat                                              # WALLS has a target (combat.setup, build.target)
+            import combat  # WALLS has a target (combat.setup, build.target)
             hp = combat.BUILDINGS.keys() | combat.WALLS.keys()
             placed = [(n, fp, k) for n, fp, k in placed
                       if n not in hp or k < 1 or combat.target_uuid([fp[i] for i in (0, 2, 1, 3)]) in alive]
-        import combat                                                  # combat imports this module
+        import combat  # combat imports this module
         techs = set(getattr(self, "techs", ()))
         printing = monk.PRINTING * ("BLOCK_PRINTING" in techs) + sum(train.value("reach", t, 0) for t in techs)   # the monks see more (#1475, #3988)
         watch = sum(combat.WATCH if w is True else w for n, w in WATCH_ROWS.items() if n in techs)   # (#1454, #1579; a number: tiles, #3915)
@@ -1342,7 +1342,7 @@ class Gather:
     def earn(self, res, n):
         """Add the income n of resource res to the stock and the sidebar. After the cheat "sharing is caring" (#969) the
         income goes to the allied Gathers (fog.gathers) in equal parts, as in AoE2; with no ally the player keeps it."""
-        import fog                                                     # fog imports gather
+        import fog  # fog imports gather
         to = [h for h in fog.gathers(self) if h.player != self.player and allied(self.players, self.player, h.player)]
         to = to if self.sharing and to else [self]
         for i, h in enumerate(to):
@@ -1583,7 +1583,7 @@ class Gather:
             self.order_voice()
             self.command(glow(u))
             return
-        import combat                                                  # combat imports this module
+        import combat  # combat imports this module
         if kind == "unit" and u in self.selected and (u in self.villagers   # a click on a selected villager (#621)
                                                       or self.soldiers.get(u) in combat.REPAIRS):   # or Serjeant (#2129)
             build.open_menu(self, name)
@@ -1619,7 +1619,7 @@ class Gather:
             self.order_voice()
             x0, _, z0, x1, _, z1 = self.forts[u]
             self.mark(name, {(x0, z0), (x1, z1)}, "attack")
-            import combat                                              # combat imports this module
+            import combat  # combat imports this module
             what = self.fort_names.get(u, "")
             owner = self.fort_players.get(u, 0)                        # Persians (#1895), Byzantines in the own age (#2116)
             full = civs.hp(civs.civ(self, owner), what, combat.stats(what), build.ages(self) if owner == self.player else 0,
@@ -1722,7 +1722,7 @@ class Gather:
         replay.formation_cells, rank). Military units walk with the plugin path finding at their AoE2 speed; villagers
         stop their work and walk there. Ships sail to the water near it (fleet.order, also at a water cell). units: these
         units, not the selection, and no mark (transport.tick, #1515). Returns the cells {uuid: cell}."""
-        import ai                                                      # ai imports this module
+        import ai  # ai imports this module
         units = self.selected if units is None else set(units)
         self.new_order(units)
         boats = {u for u in units if replay.ship(self.soldiers.get(u, ""))}
@@ -1891,7 +1891,7 @@ class Gather:
         """Free the footprints of the buildings whose target the plugin removed: paths go through them."""
         for uuid in [u for u in self.sieged if "passed" not in self.command(f"execute if entity {u}")]:
             self.sieged.discard(uuid)
-            import spoils                                              # spoils imports this module
+            import spoils  # spoils imports this module
             spoils.loot(self, uuid)                                    # Danes (#2271)
             score.razed(self, uuid)                                    # the military score (#2355)
             self.free(uuid)
@@ -2081,7 +2081,7 @@ class Gather:
                                        for cs in m.auras if cs in m.drops[kind]) else best
 
     def move(self, v):
-        import ai                                                      # ai imports gather
+        import ai  # ai imports gather
         if v.goal:
             x, z = v.goal
             ai.move(self, v.uuid, "VILLAGER", self.map.T, x + 0.5, self.map.y(x, z), z + 0.5,

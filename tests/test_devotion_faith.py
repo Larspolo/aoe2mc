@@ -8,7 +8,6 @@ from test_monk_train import MONASTERY, monastery
 
 from game import gather, monk, train
 
-
 TIME = {r["name"]: r["time"] for r in train.ROWS}
 
 

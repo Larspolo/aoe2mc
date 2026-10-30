@@ -4,10 +4,9 @@ import os
 import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "game"))
+import replay  # noqa: E402
 from test_replay import Fake, data  # noqa: E402
 from test_replay_ai import MIL, orders  # noqa: E402
-
-import replay  # noqa: E402
 
 START = (14.5, 70.0, 42.5)                                       # the cell of MIL (tile 3.5, 10.5)
 

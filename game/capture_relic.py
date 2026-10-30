@@ -37,7 +37,7 @@ def center(g):
 
 def monastery(g):
     """Put the lasting monastery of the player of g next to its first town center (once). Returns its site or None."""
-    import train                                                       # train imports gather, gather imports build
+    import train  # train imports gather, gather imports build
     tc = next((r for r, n in sorted(train.homes(g).items()) if n == "TOWN_CENTER"), None)
     if tc is None or any(s.get("lasting") for s in g.sites):
         return None
@@ -69,5 +69,5 @@ def tick(g):
         return
     for h in fog.gathers(g):
         if any(r.get("center") and r["home"] in monk.monasteries(h) for r in monk.relics(h)):
-            from gather import allied                                  # gather imports this module
+            from gather import allied  # gather imports this module
             return cheats.over(g, lambda n: allied(g.players, h.player, n))

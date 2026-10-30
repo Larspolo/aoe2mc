@@ -1,8 +1,8 @@
 """game/stance.py: the item "Auto Scout" of the stance menu is for a scout only. A click gives the selected
 scouts the order (autoscout.start) and shows "Auto Scout" in the action bar (#3703)."""
-from game import gather, stance
-
 from test_gather import FakeServer, grid
+
+from game import gather, stance
 
 
 def setup():

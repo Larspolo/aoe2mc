@@ -5,7 +5,6 @@ import sys
 from urllib.parse import unquote
 
 import pytest
-
 from test_build_site import Server
 from test_gather import grid
 

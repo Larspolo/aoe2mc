@@ -2,12 +2,11 @@
 (epic #2538): the mode starts again in a loaded game with start False, so the save keeps the stock and the scores."""
 import json
 
-from test_scenario_mode import START, game
-
 import run  # noqa: E402
 import savegame  # noqa: E402
 import scenario  # noqa: E402
 import train  # noqa: E402
+from test_scenario_mode import START, game
 
 PLAYERS = {"0": {}, "1": {"resources": START, "pop_limit": 25}, "2": {"pop_limit": 125}}
 

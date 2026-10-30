@@ -39,11 +39,12 @@ import numpy as np
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
+import monk  # noqa: E402
+import replay_input  # noqa: E402
+import table  # noqa: E402
+
 import aoe2mc  # noqa: E402
 import buildings  # noqa: E402
-import monk  # noqa: E402
-import table  # noqa: E402
-import replay_input  # noqa: E402
 import units  # noqa: E402
 
 # Dye color of a player (aoe2mc.PLAYER_COLORS) -> text color of /tellraw and /title
@@ -218,7 +219,7 @@ def seen(mobs, placed, player, T, sight=None):
     tiles around each one, from the tile center. mobs: units with name, player and pos (blocks, Replay.units), placed:
     (player, name, (x0, x1, z0, z1) in blocks) as Replay.placed. sight: name -> tiles with the technologies of the
     player (the game program, #1475), default combat.sight."""
-    import combat                                                   # combat -> gather -> build -> replay
+    import combat  # combat -> gather -> build -> replay
     objs = [(v.pos[0] / T, v.pos[2] / T, v.name) for v in mobs if v.player == player and v.pos is not None]
     objs += [((x0 + x1) / 2 / T, (z0 + z1) / 2 / T, name) for p, name, (x0, x1, z0, z1) in placed if p == player]
     out = set()
@@ -449,7 +450,7 @@ class Replay:
         self.ages, self.named = {}, {}          # player -> age ("Feudal"); the age in its sidebar name (#805)
         self.counted = []                       # UUIDs of the start units that the population counts
         self.stock = {}                         # player -> estimated resources: START + gather steps - costs (#932)
-        import market                           # market -> build -> replay: import it late
+        import market  # market -> build -> replay: import it late
         self.rates = dict(market.RATES)         # the exchange rates of the market, global for all players (#3939)
         self.gathered, self.villagers = {}, {}  # player -> resources of the gather steps, trained villagers (#1065)
         self.army, self.lost, self.razed = {}, {}, {}   # player -> military units trained, units lost, buildings lost (#1066)
@@ -469,7 +470,7 @@ class Replay:
         self.orders = None                      # player -> [(time, label)] of its build order (#4047)
         self.eyes = None                        # (x, y, z) of each player; None: not known, each gather step shows (#2761)
         self.queue = None                       # in run() on Paper: the commands that wait for flush() (#2761)
-        import gather                                               # gather -> build -> replay: import it late
+        import gather  # gather -> build -> replay: import it late
         for o in data["objects"]:
             if o["kind"] == "unit" and o.get("player") and not units.animal(o["name"]):
                 self.pop[o["player"]] = self.pop.get(o["player"], 0) + 1
@@ -623,7 +624,7 @@ class Replay:
         type, the units in training, the units lost and the last 4 steps of its build order. Commands only when a page
         changed."""
         training = collections.defaultdict(collections.Counter)
-        import gather                                               # gather -> build -> replay: import it late
+        import gather  # gather -> build -> replay: import it late
         for end, e, _ in self.trainings:                            # military only, as the troops (#3818)
             if e["kind"] == "queue" and e["time"] <= t < end and gather.military(e["name"]):
                 training[e["player"]][e["name"]] += 1
@@ -692,7 +693,8 @@ class Replay:
     def pay(self, p, name, t=0):
         """The record has no resources: subtract the AoE2 cost of a unit, building, technology or age (train and build COSTS).
         The payment keeps its game time t (ms) and its group, for spent (#4390)."""
-        import build, gather                                        # gather -> build -> replay: import them late
+        import build  # gather -> build -> replay: import them late
+        import gather
         import train
         cost = train.COSTS.get(name) or build.COSTS.get(name) or {}
         for r, v in cost.items():
@@ -716,7 +718,7 @@ class Replay:
     def trade(self, e):
         """A buy or sell of the record at the own market: the gold and the resource change as in market.trade, and the
         rate moves by STEP (#3939). The estimate may go below 0: the record is the truth, the estimate is a guess."""
-        import market                                               # market -> build -> replay: import it late
+        import market  # market -> build -> replay: import it late
         p, r, buy = e.get("player"), e["resource"].lower(), e["kind"] == "buy"
         g = types.SimpleNamespace(rates=self.rates, techs=set(self.upgrades(p, e["time"])), data=self.data, player=p)
         n, total = max(1, e.get("amount", market.LOT) // market.LOT), 0
@@ -731,7 +733,7 @@ class Replay:
     def tribute(self, e):
         """A tribute of the record: the sender pays the amount and the fee (diplomacy.cost), the receiver gets the amount
         (#3940). An old record has one resource and one amount."""
-        import diplomacy                                            # diplomacy -> build -> replay: import it late
+        import diplomacy  # diplomacy -> build -> replay: import it late
         p, to = e.get("player"), e["to"]
         g = types.SimpleNamespace(techs=set(self.upgrades(p, e["time"])))
         sums = {r: e.get(r, 0) for r in START} if any(e.get(r, 0) for r in START) else {e["resource"].lower(): e.get("amount", 0)}
@@ -887,7 +889,7 @@ class Replay:
         with n builders, t × 3 / (n + 2) (t: build.BUILD_TIMES, one builder; 0 for a building that it does not
         list). Then the ORDER `then` starts (built()), else they stand idle: before, the builders of a house gathered
         while they built (#1282). Returns the commands."""
-        import build                                                # gather -> build -> replay: import it late
+        import build  # gather -> build -> replay: import it late
         group = [(i, v) for i, n in zip(e.get("objects", ()), e.get("names") or [None] * len(e.get("objects", ())))
                  if (v := self.unit(i, n, e["player"])) is not None and v.name.startswith("VILLAGER")]
         x0, x1, z0, z1 = rect
@@ -1000,7 +1002,7 @@ class Replay:
         done = [tag for tag, end in self.effects.items() if end <= t]
         for tag in done:
             del self.effects[tag]
-        import flare                                                # game/: on the path of the replay
+        import flare  # game/: on the path of the replay
         self.flares = [f for f in self.flares if f[3] > t]
         self.burst = t + BURST                                      # a step of run() while a flare lives (#2506)
         return [f"kill @e[type=text_display,tag={tag}]" for tag in done] + \
@@ -1347,7 +1349,7 @@ class Replay:
         if e["name"].startswith("VILLAGER"):
             self.villagers[e["player"]] = self.villagers.get(e["player"], 0) + 1
             self.villager(e["player"], 1)
-        import gather                                               # gather -> build -> replay: import it late
+        import gather  # gather -> build -> replay: import it late
         if gather.military(e["name"]):
             self.army[e["player"]] = self.army.get(e["player"], 0) + 1
             self.troop(e["player"], e["name"])
@@ -1390,7 +1392,7 @@ class Replay:
         self.pop[e["player"]] = self.pop.get(e["player"], 0) + 1
         out = [f"summon {kind} {pos[0]} {pos[1]} {pos[2]} {units.summon_snbt(nbt)}"]
         if self.ai:                                                 # the AoE2 values: plugin commands (#632)
-            import combat                                           # combat -> gather -> build -> replay
+            import combat  # combat -> gather -> build -> replay
             out += [combat.stats_command(v.uuid, v.name)] + [c for c in [combat.range_command(v.uuid, v.name, self.T)] if c]
             out.append(f"tag {v.uuid} add {COUNTED}")              # census() counts it
         return v, out
@@ -1440,7 +1442,7 @@ class Replay:
         start state (the entities of aoe2mc.json with an object ID)."""
         T = self.T                                                  # also for the buildings of later calls (#788)
         if self.map is None:
-            import gather                                           # gather -> build -> replay: import it late
+            import gather  # gather -> build -> replay: import it late
             self.gather, self.map = gather, gather.Map(self.data)
             self.crew = gather.Gather.__new__(gather.Gather)       # adapter: the resource looks of gather.Gather
             self.crew.map, self.crew.trunks, self.crew.bushes, self.crew.crops = self.map, {}, {}, {}
@@ -1598,7 +1600,7 @@ class Replay:
     def stance(self, e):
         """STANCE: the military units of the selection get the AoE2 stance of the record on Paper (#2548): the stance
         goals of the plugin (combat.stance_command, #1104). An unknown stance changes nothing."""
-        import combat                                                   # combat -> gather -> build -> replay
+        import combat  # combat -> gather -> build -> replay
         stance = str(e.get("stance", "")).lower().replace(" ", "_")
         if not self.ai or stance not in combat.STANCES:
             return []
@@ -1614,7 +1616,7 @@ class Replay:
         """ATTACK MOVE (#2552): the group walks to the tile as with MOVE, and on Paper its military units take the
         aggressive stance for the walk, so the mob AI attacks each enemy in sight on the way (the stance goals of the
         plugin, #1104). A unit that the record set to another stance gets it back at the end of the walk (calm())."""
-        import combat                                                   # combat -> gather -> build -> replay
+        import combat  # combat -> gather -> build -> replay
         out = self.calm(e["objects"]) + self.move(dict(e, kind="move"))
         if not self.ai:
             return out
@@ -1823,7 +1825,7 @@ class Replay:
         The replay takes the unit at the end of its leg (only the first gather step reads the entity, #766). Returns the commands
         and the game time (ms) at the end of the leg (the next leg starts then, if v.path has one). behind: the next
         leg of a long walk. It and a walk less than RECENT ms after the last leg read the entity to catch up (catch_up)."""
-        import ai                                                   # ai -> replay: import it late
+        import ai  # ai -> replay: import it late
         x, z = legs[0]
         chain, v.stand = behind, getattr(v, "stand", None) if behind else None   # a new walk: no old place
         behind = behind or (getattr(v, "leg", None) or (0, 0, -RECENT))[2] > t - RECENT
@@ -1847,7 +1849,7 @@ class Replay:
         speed again. A turn on a leg (an order back) costs the mob 1 to 3 s of game time that order() cannot see: a
         villager of de-64.3 stayed 5 to 11 blocks behind for 30 s (#1293). One command per long leg, and the /tp of a
         unit that stands still (unstick)."""
-        import ai                                                   # ai -> replay: import it late
+        import ai  # ai -> replay: import it late
         v.check = None
         speed = next((s for k, s in SPEEDS.items() if v.name.startswith(k)), 1.0) * self.T    # blocks per second
         at = self.entity(v)
@@ -1922,7 +1924,7 @@ class Replay:
     def formation(self, group, tile):
         """The end cell of each unit of a group that walks to a tile (#410), in the formation of the record (#2553):
         formation_cells. The ranged and civilian units are the weak ones inside a Box."""
-        import combat                                                   # combat -> gather -> build -> replay
+        import combat  # combat -> gather -> build -> replay
         ids = {v: i for i, v in self.units.items()}
         kind = collections.Counter(self.formations.get(ids.get(v), "Line") for v in group).most_common(1)[0][0]
         weak = (lambda v: combat.stats(v.name).range > 0 or not self.gather.military(v.name)) if kind == "Box" \
@@ -2179,7 +2181,8 @@ class Replay:
     def arrows(self, rect):
         """`aoe arrows` of the plugin for the start building rect with the units inside it (#1203), as the game program
         (#1113): only with the plugin, and only for a building with a target entity that shoots (combat.setup)."""
-        import combat, garrison
+        import combat
+        import garrison
         name = next((s[2] for s in self.starts if s[3] == rect), None)
         s = combat.stats(name) if self.ai and name in combat.BUILDINGS else None
         if not (s and s.attack and s.range):
@@ -2460,7 +2463,7 @@ class Replay:
         mobs, sight = self.explore()                                # also without a view player (#1801)
         if self.pov is None and not self.hidden and not self.fogged:
             return []
-        import gather                                               # gather -> build -> replay: import it late
+        import gather  # gather -> build -> replay: import it late
         teams = self.data.get("players", {})
         own = {p for p in sight if gather.allied(teams, self.pov, p)}
         tiles = set().union(*(sight[p] for p in own))               # allies share the sight (#1567)
@@ -2482,7 +2485,7 @@ class Replay:
                 if v.uuid and hasattr(v, "player")}.values()
         placed = [s[1:] for s in self.starts] + self.placed
         sight = {p: seen([*mobs, *trail], placed, p, self.T) for p in ({v.player for v in mobs} | {p for p, _, _ in placed}) - {0, None}}
-        import gather                                               # gather -> build -> replay: import it late
+        import gather  # gather -> build -> replay: import it late
         teams = self.data.get("players", {})
         for p in sight:                                             # allies share the sight (#1567)
             self.explored.setdefault(p, set()).update(*(t for q, t in sight.items() if gather.allied(teams, p, q)))
@@ -2677,7 +2680,7 @@ class Replay:
         """A written book "Timeline" for each viewer at the end of the replay (#1068): per player its age-ups, its
         first military unit, its first castle, its resign and the arrival of each relic in a monastery, in time order,
         from the whole timeline (also the time of a jump) up to `end` (ms), see `book_command`."""
-        import gather                                               # gather -> build -> replay: import it late
+        import gather  # gather -> build -> replay: import it late
         lines, army, castle = {}, set(), set()
         arrivals = [{"time": r["home_t"], "player": r["player"], "kind": "relic"} for r in self.relics.values()
                     if r["home"] is not None]                       # a relic in a monastery (#4010)
@@ -2966,7 +2969,7 @@ class Replay:
         g = g0 if self.paused else g0 + (r - r0) * 1000 * self.speed
         self.speed, self.paused = speed, paused
         if self.ai:
-            import ai                                               # ai -> replay: import it late
+            import ai  # ai -> replay: import it late
             # a unit on its last or only leg is not in self.moving, but the plugin still walks it (#3024)
             walking = set(self.moving) | {i for i, v in self.units.items() if (getattr(v, "leg", None) or (0, 0, 0))[2] > g}
             self.send([ai.speed_command(v.uuid, v.name, self.T, 0 if paused else speed * PATH)
@@ -3163,6 +3166,7 @@ class Replay:
             timeline += new
             for name in ("trainings", "told", "town_centers", "unknown_research"):   # the cached views of the timeline
                 self.__dict__.pop(name, None)
+            self.apms = None                                         # the APM counts the new actions too (#4775)
             last = max([last] + [e["time"] for e in new])
             own = owners(self.data.get("objects", []), timeline)
             fresh = [f for f in fights(timeline, own) if old < f["start"] <= last]   # new indices: the news stay right

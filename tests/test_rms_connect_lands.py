@@ -1,9 +1,9 @@
 """The other connection commands of a random map script: all lands, non-player lands, zones (#3869)."""
 import numpy as np
 import pytest
+from test_rms_connections import reach
 
 import rmap
-from test_rms_connections import reach
 
 W, S = rmap.TERRAINS["WATER"], rmap.TERRAINS["SHALLOW"]
 MIDDLE = """<LAND_GENERATION>

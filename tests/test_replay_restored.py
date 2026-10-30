@@ -5,10 +5,11 @@ import types
 from datetime import timedelta
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "game"))
-import aoe2mc  # noqa: E402
 import replay  # noqa: E402
 from test_replay import data  # noqa: E402
 from test_replay_control import Clock  # noqa: E402
+
+import aoe2mc  # noqa: E402
 
 RESTORE = 20 * 60 * 1000
 

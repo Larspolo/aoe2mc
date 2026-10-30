@@ -8,9 +8,10 @@ import sys
 import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "game"))
-import aoe2mc  # noqa: E402
 import replay  # noqa: E402
 from test_replay import Fake, data  # noqa: E402
+
+import aoe2mc  # noqa: E402
 
 PREFIX = "give @a minecraft:written_book[minecraft:written_book_content="
 TIMELINE = [{"time": 0, "player": 1, "kind": "queue", "type": 83, "objects": [5], "name": "VILLAGER_MALE"},

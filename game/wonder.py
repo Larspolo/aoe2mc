@@ -38,7 +38,7 @@ def rivals(g, n, key):
     #4336): all Gathers of the game (fog.gathers of conquest.main) that are no allies of n."""
     import train
     from conquest import main
-    from fog import gathers                                            # fog imports gather, which imports this module
+    from fog import gathers  # fog imports gather, which imports this module
     from gather import allied
     return [v for h in gathers(main(g)) if not allied(g.players, n, h.player)
             for t in sorted(getattr(h, "techs", ())) if (v := train.value(key, t)) is not None]
@@ -80,7 +80,7 @@ def tick(g, dt):
     """Count down the wonders by dt game seconds, stop the ones whose target is gone, and end the game at 0."""
     if g.ended:
         return
-    import combat                                                      # combat -> gather -> wonder: import it late
+    import combat  # combat -> gather -> wonder: import it late
     timers, gone = vars(g).setdefault("wonders", {}), vars(g).setdefault("wonders_gone", set())
     shown = vars(g).setdefault("wonder_shown", {})                     # player -> years on its bar
     for t in timers.values():
@@ -118,7 +118,7 @@ def tick(g, dt):
     for n in sorted({t["player"] for t in timers.values()}):
         left = min(t["left"] for t in timers.values() if t["player"] == n)
         if left <= 0:
-            from gather import allied                               # gather imports this module
+            from gather import allied  # gather imports this module
             return cheats.over(g, lambda m: allied(g.players, n, m))   # n and its allies win (#1936)
         if (y := math.ceil(left / YEAR)) != shown.get(n):                # a command only when the years change
             shown[n] = y

@@ -1,10 +1,10 @@
 """The mob in the minecart of each siege unit (#1664, owner decision on #1525): the converter, the trained units and
 the size of the trebuchet crew when it packs and unpacks."""
+import mcvalid
 import numpy as np
 import pytest
 from test_train_castle import setup
 
-import mcvalid
 import units
 from game import trebuchet
 

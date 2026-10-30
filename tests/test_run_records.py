@@ -4,10 +4,9 @@ import datetime
 import json
 import subprocess
 
-import pytest
-
 import health
 import metrics_log
+import pytest
 import report
 
 NOW = datetime.datetime(2026, 10, 29, 14, 30, 5, tzinfo=datetime.timezone.utc)

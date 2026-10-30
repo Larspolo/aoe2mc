@@ -95,10 +95,10 @@ def test_a_monk_converts_an_enemy_militia_on_a_server(tmp_path):
     from test_mc_check import mojang_reachable
     if not mojang_reachable():
         pytest.skip("Mojang is not reachable")
-    import aoe2mc
     import scenarios
     from AoE2ScenarioParser.datasets.units import UnitInfo
 
+    import aoe2mc
     from game import run
     scn = scenarios.new_scenario(16)
     scn.unit_manager.add_unit(scenarios.PlayerId.ONE, UnitInfo.MONK.ID, x=6, y=6)

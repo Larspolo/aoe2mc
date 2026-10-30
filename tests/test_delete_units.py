@@ -2,9 +2,9 @@
 unit at once, as the AoE2 Delete key (#3451). The census counts the deaths as after a fight."""
 import re
 
-from game import build, gather, stance
-
 from test_gather import FakeServer, grid
+
+from game import build, gather, stance
 
 
 class KillServer(FakeServer):

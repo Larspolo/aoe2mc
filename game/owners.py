@@ -14,7 +14,8 @@ KILLED = "killed_units"                                                # UUIDs t
 def add(g, uuid, name, player):
     """Keep player as the owner of the new unit uuid (AoE2 name) and make it an enemy of each side that is not its
     ally (gather.allied), as build.target does for a new building."""
-    import build, gather                                               # gather -> train -> this module
+    import build  # gather -> train -> this module
+    import gather
     g.data.setdefault(KEY, {})[uuid] = player
     for o in build.sides(g):
         if not gather.allied(o.players, o.player, player):
@@ -31,7 +32,8 @@ def give_building(g, target, new):
     """Give the enemy building target to player new on each side of the game (Redemption, #2994): its owner (fort_players),
     its box in forts of each side that is not new, and its construction site (train.homes reads the sites of the Gather
     of the owner)."""
-    import build, combat                                               # build imports gather, gather imports this module
+    import build  # build imports gather, gather imports this module
+    import combat
     sides = build.sides(g)
     box = next((o.forts[target] for o in sides if target in o.forts), None)
     for o in sides:
@@ -50,7 +52,8 @@ def give(g, uuid, new):
     from its units, selection (glow, tag), groups, farms and ships, the new owner takes it as a soldier or a villager
     (gather.soldier; fleet.ship makes the entry of a ship at its first use), `enemies` of each side follows the
     alliances, and its owner record is new. The commands to the world (tag, team, name color) stay with the caller."""
-    import build, gather                                               # gather -> train -> this module
+    import build  # gather -> train -> this module
+    import gather
     sides = build.sides(g)
     known = [*(o.enemies for o in sides), *(o.soldiers for o in sides),
              *({u.get("uuid"): u["name"]} for u in [*g.data["objects"], *(u for o in sides for u in o.units)])]
@@ -103,7 +106,9 @@ def update_enemies(g):
     conquest.last_man, diplomacy.change, savegame.load): the units of the aoe2mc.json objects and of the owner record,
     with their present player, that are not of an ally, not of Gaia, not herdable (herd.take: prey, not an enemy) and
     not killed by the program."""
-    import build, gather, herd                                              # gather -> train -> this module
+    import build  # gather -> train -> this module
+    import gather
+    import herd
     sides = [o for o in (build.sides(g) if hasattr(g, "peers") else [g]) if hasattr(o, "enemies")]   # also a stub of a test
     if not sides or not hasattr(g, "data"):
         return

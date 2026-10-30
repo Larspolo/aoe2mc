@@ -5,7 +5,6 @@ from test_castle_gathering import menus, setup
 
 from game import gather, train
 
-
 SLOT, ITEM, NAME = train.ITEMS["TWO_MAN_SAW"]                          # the menu item of game/data/train.jsonl
 
 

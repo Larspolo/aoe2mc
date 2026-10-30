@@ -153,7 +153,8 @@ def start(number, by=None, note="", word="Started by"):
     without the claim worked on one ticket with another run (#288, #1749), so only the claim writes them.
     by: the name of the claim (the pacer claims for a run that has no branch yet); note: more text of the comment;
     word: "Taken over by" after a takeover of the pacer (#4356)."""
-    from dashboard import FOOTER, api as call
+    from dashboard import FOOTER
+    from dashboard import api as call
     by = by or who()
     try:
         call(f"issues/{number}/labels", "POST", {"labels": ["in-progress"]})
@@ -393,7 +394,7 @@ def review_slot(kind, remote="origin", starved=None):
 def refill_starved():
     """True when fewer tickets are ready than the target runs and the refill has no source: no epic or release check, no
     roadmap feature with no epic, no fallback (`usage.refill_need`, #3741). Reads the quota and GitHub; an error: False."""
-    import usage                                                   # usage imports this module in due_reviews
+    import usage  # usage imports this module in due_reviews
     try:
         import dashboard
         usage_now, now = usage.read_usage(), time.time()
@@ -510,7 +511,7 @@ def on_github(remote="origin"):
 
 
 def api(path):
-    from dashboard import api as get                    # gh api in cloud sessions, else GITHUB_TOKEN
+    from dashboard import api as get  # gh api in cloud sessions, else GITHUB_TOKEN
     try:
         return get(path)
     except Exception as e:                              # exit 2 like a git error, not 1 ("owned by another run")

@@ -44,7 +44,7 @@ def place(g):
     commands (none when the map has one)."""
     if any(o["name"] == "MONUMENT" for o in g.data["objects"]):
         return []
-    import build                                                   # build imports gather, gather imports this module
+    import build  # build imports gather, gather imports this module
     from replay import Replay
     (cx, cz), T = center(g), g.map.T
     cell = (int(cx * T), int(cz * T))                              # the nearest free footprint: not on a building
@@ -70,7 +70,7 @@ def mark(g, rect):
 
 def trickle(g, n, dt):
     """Give player n (its Gather of fog.gathers) TRICKLE of each resource per game second for dt game seconds."""
-    import fog                                                     # fog imports gather, gather imports this module
+    import fog  # fog imports gather, gather imports this module
     import spoils
     for h in [h for h in fog.gathers(g) if h.player == n][:1]:
         spoils.gain(h, dict.fromkeys(RESOURCES, TRICKLE * dt), 1)
@@ -79,7 +79,7 @@ def trickle(g, n, dt):
 def units(g):
     """{uuid: player} of the units of the players: those of aoe2mc.json, and those of each Gather of the game (fog.gathers:
     its own units, the bots, the peers)."""
-    import fog                                                     # fog imports gather, gather imports this module
+    import fog  # fog imports gather, gather imports this module
     out = {o["uuid"]: o["player"] for o in g.data["objects"] if o["kind"] == "unit" and o.get("uuid") and o["player"]}
     for h in fog.gathers(g):
         out.update(dict.fromkeys([*h.villagers, *h.soldiers], h.player))
@@ -118,7 +118,7 @@ def tick(g, dt):
     if s["check"] <= 0:
         s["check"] = EVERY
         if (n := owner(g, s["owner"])) != s["owner"]:
-            from gather import allied                              # gather imports this module
+            from gather import allied  # gather imports this module
             if s["owner"] is not None and not allied(g.players, n, s["owner"]):
                 s["left"] = max(s["left"], RESET * wonder.YEAR)
             s["owner"] = n
@@ -126,7 +126,7 @@ def tick(g, dt):
     if (n := s["owner"]) is None:
         return
     if s["left"] <= 0:
-        from gather import allied                                  # gather imports this module
+        from gather import allied  # gather imports this module
         return cheats.over(g, lambda m: allied(g.players, n, m))
     if s["shown"] is None:
         for c in (f'bossbar add {BAR} ""', f"bossbar set {BAR} color yellow", f"bossbar set {BAR} max {YEARS}",

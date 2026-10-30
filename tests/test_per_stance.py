@@ -1,9 +1,9 @@
 """game/per.py: set-stance and stance-toward (#4574), on the map of test_bot_gather (the bot is player 2)."""
+import diplomacy  # noqa: E402
 from test_bot_gather import bot_map
 
 from game import per
 from game.bot import build  # noqa: F401  (puts game/ on the path for the plain names)
-import diplomacy  # noqa: E402
 
 RULES = "(defrule (game-time > 60) => (set-stance 1 ally)) (defrule (stance-toward 1 ally) => (set-goal 1 1))"
 

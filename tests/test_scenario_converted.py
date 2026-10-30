@@ -10,12 +10,13 @@ import sys
 from AoE2ScenarioParser.scenarios.aoe2_de_scenario import AoE2DEScenario
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "game"))
-import aoe2mc  # noqa: E402
 import gather  # noqa: E402
 import scenario  # noqa: E402
 import scenarios  # noqa: E402
 import train  # noqa: E402
 from test_gather import FakeServer  # noqa: E402
+
+import aoe2mc  # noqa: E402
 
 START = {"food": 321, "wood": 432, "gold": 543, "stone": 654}
 

@@ -102,6 +102,7 @@ framework/tests/test_health.py
 framework/tests/test_health_compare.py
 framework/tests/test_health_conflicts.py
 framework/tests/test_health_pr.py
+framework/tests/test_health_pacer.py
 framework/tests/test_health_reviews.py
 framework/tests/test_health_takeovers.py
 framework/tests/test_health_misses.py
@@ -130,6 +131,7 @@ framework/tests/test_merge_jsonl.py
 framework/tests/test_merge_jsonl_order.py
 framework/tests/test_pacer.py
 framework/tests/test_pacer_script.py
+framework/tests/test_pacer_exit.py
 framework/tests/test_pacer_restart.py
 framework/tests/test_usage.py
 framework/tests/test_usage_status_once.py

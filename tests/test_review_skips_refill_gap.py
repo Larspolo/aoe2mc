@@ -1,8 +1,7 @@
 """A due review starts its deep run also while a refill lock is younger than `refill_gap` (owner, 2026-10-29): the
 review lock lets one run take it, so the gap of the refill runs must not delay it."""
-from test_refill_gap import fake, fire, ref  # noqa: F401
-
 import usage
+from test_refill_gap import fake, fire, ref  # noqa: F401
 
 
 def test_a_due_review_skips_the_refill_gap(fake, monkeypatch):  # noqa: F811

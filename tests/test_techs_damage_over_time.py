@@ -7,10 +7,10 @@ import time
 from types import SimpleNamespace
 
 import pytest
+import train as plain_train  # gather and scenario import train by its plain name (not game.train)
 from test_ranged import data
 from test_train_castle import menus, setup
 
-import train as plain_train          # gather and scenario import train by its plain name (not game.train)
 from game import civs, combat, run, train
 
 CASTLE = (12, 4)

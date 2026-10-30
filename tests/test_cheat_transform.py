@@ -90,10 +90,10 @@ def test_pitchforks_turn_a_villager_into_a_militia_that_walks_on_a_server(tmp_pa
     from test_mc_check import mojang_reachable
     if not mojang_reachable():
         pytest.skip("Mojang is not reachable")
-    import aoe2mc
     import scenarios
     from AoE2ScenarioParser.datasets.units import UnitInfo
 
+    import aoe2mc
     from game import ai, run
     scn = scenarios.new_scenario(16)
     scn.unit_manager.add_unit(scenarios.PlayerId.ONE, UnitInfo.VILLAGER_MALE.ID, x=6, y=6)

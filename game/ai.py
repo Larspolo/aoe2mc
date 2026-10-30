@@ -19,6 +19,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from gather import NORMAL  # noqa: E402
 from replay import SPEEDS  # noqa: E402
+
 from units import siege  # noqa: E402
 
 # Walk speed on a Minecraft path, blocks per second = WALK * movement_speed ** 2 (the mob input is the speed, and
@@ -47,7 +48,7 @@ def move(game, uuid, name, T, x, y, z, rate=NORMAL):
     """Walk unit `uuid` (AoE2 unit `name`) to block position (x, y, z). Returns the answer of the plugin. A trebuchet
     of the game program packs first (trebuchet.move, #1351)."""
     if name == "TREBUCHET" and hasattr(game, "soldiers"):
-        import trebuchet                                            # gather imports trebuchet and this module: late
+        import trebuchet  # gather imports trebuchet and this module: late
         return trebuchet.move(game, uuid, [speed_command(uuid, name, T, rate), f"aoe moveto {uuid} {x} {y} {z}"])
     game.command(speed_command(uuid, name, T, rate))
     return game.command(f"aoe moveto {uuid} {x} {y} {z}")

@@ -2,9 +2,9 @@
 (AoE2 DE civilization bonuses, #2112). The factors come from civs.LAST."""
 import math
 
-from game import civs, gather
-
 from test_gather import FakeServer, grid
+
+from game import civs, gather
 
 
 def gathered(civ, obj=None, carcass=None):

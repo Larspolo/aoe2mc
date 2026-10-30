@@ -77,11 +77,11 @@ def test_a_replay_villager_chops_next_to_its_tree_in_the_forest(tmp_path):
     import math
     import re
 
-    import aoe2mc
-
     import combat
     import gather
     import run
+
+    import aoe2mc
     with contextlib.redirect_stdout(io.StringIO()):
         aoe2mc.convert(os.path.join(ROOT, "samples", "de-64.3.aoe2record"), str(tmp_path / "W"))
     with open(tmp_path / "W" / "aoe2mc.json") as f:

@@ -45,7 +45,7 @@ def ship(g, uuid):
 def spawn(g, rect, name):
     """Summon the ship name of g.player on a water cell in front of the dock rect (the cells one after the other, as
     train.spawn). Returns its UUID, or None."""
-    import train                                                      # train imports this module
+    import train  # train imports this module
     cells = g.map.front(rect, water=True)
     if not cells:
         return None
@@ -116,7 +116,7 @@ def reach(g, name):
     """Blocks from which ship name shoots: its AoE2 range (combat.STATS) less one tile, so that it stays in range when
     the target moves a bit; CONTACT for a demolition ship (range 0, a blast, #1440). 0 for a ship without an attack
     (a fishing ship)."""
-    import combat                                                     # combat imports gather, gather this module
+    import combat  # combat imports gather, gather this module
     s = combat.stats(name)
     return 0 if not s.attack else int(max(1, s.range - 1) * g.map.T) if s.range else CONTACT * (name in combat.BLAST)
 
@@ -157,7 +157,7 @@ def chase(g, v):
 def speed(name, T, g=None, uuid=None):
     """Blocks per game second of ship name; with g, also the factor of the technologies and the civilization of its
     player (train.speed: Caravan for the trade cog, #1497; ship uuid near a Military Town Center, #2496)."""
-    import train                                                      # train imports gather, gather this module
+    import train  # train imports gather, gather this module
     return next((s for k, s in SPEEDS.items() if name.startswith(k)), 1.0) * T * (train.speed(g, name, uuid) if g else 1)
 
 
@@ -241,7 +241,7 @@ def fish_order(g, name, eye, d):
 
 def docks(g):
     """The block footprints of the complete own docks."""
-    import train                                                      # train imports this module
+    import train  # train imports this module
     return sorted(r for r, n in train.homes(g).items() if n == "DOCK")
 
 
@@ -273,7 +273,7 @@ def trade_order(g, player, cell):
 def route(g, v):
     """Trade cog v is at a dock of its route: at home it gives the gold of the trip (the fraction stays for the next
     trip, as in AoE2), then it sails to the other dock. A dock that fell ends the route."""
-    import trade                                                      # trade imports gather, gather this module
+    import trade  # trade imports gather, gather this module
     r, own = v.route, docks(g)
     if r["home"] not in own or r["dock"] not in own:
         v.state = "idle"
@@ -311,7 +311,7 @@ def build_site(g, uuids, site):
 def build_order(g, name, eye, d):
     """A look of player name at an own unfinished fish trap with own fishing ships in the selection: they build it.
     True when the click was a build order."""
-    import build                                                      # build imports this module
+    import build  # build imports this module
     boats = {u for u in g.selected if replay.fisher(g.soldiers.get(u, ""))}
     cell = boats and pick(g, eye, d)
     site = cell and next((s for s in g.sites if s["progress"] < 1 and s["name"] in build.WATER
@@ -360,7 +360,7 @@ def rate(g, fish):
     """Food per game second of an own fishing ship at fish: the AoE2 DE rate (gather.SHIP_WORK) with the dock
     technologies of the player (gather.SHIP_TECHS, #1439) and the bonus of its civilization in its age (civs.ship_work).
     An oyster: gold, with the bonus of the gather kind "oyster" (civs.work: Puru, #2465)."""
-    import train                                                      # train imports this module
+    import train  # train imports this module
     oyster = fish in g.map.oysters
     return gather.SHIP_WORK["oyster" if oyster else "trap" if fish in g.map.traps else "shore" if fish in g.map.shore
                             else "deep"] * civs.work(g, "oyster") ** oyster * \
@@ -371,7 +371,7 @@ def rate(g, fish):
 def carry(g):
     """Food of one trip of an own fishing ship: CARRY, the more food of the dock technologies (#1439) and of the
     civilization (the kind "ship" of civs.CARRY, not the villager bonus of all kinds)."""
-    import train                                                      # train imports this module
+    import train  # train imports this module
     n = CARRY + sum(n for k, n in civs.CARRY.get(civs.civ(g), ()) if k == "ship") + \
         sum(c * train.count(g, t) for t, (_, c) in gather.SHIP_TECHS.items())
     return n if gather.civs.turbo(g) == 1 else round(n * gather.civs.turbo(g))   # Turbo Mode (#2359)

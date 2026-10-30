@@ -4,11 +4,10 @@ import os
 import subprocess
 import time
 
-import pytest
-
 import claim
 import dashboard
 import pacer
+import pytest
 import ticket_context
 
 OLD = int(time.time()) - 2 * claim.STALE          # a claim with no beat for an hour: its run stopped

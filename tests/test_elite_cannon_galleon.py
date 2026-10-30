@@ -1,9 +1,10 @@
 """Elite Cannon Galleon (#1491): the dock researches the upgrade in the Imperial Age after the technology of its "after"
 key. Then the live cannon galleons are elite cannon galleons, and the dock trains them in the slot of the cannon
 galleon. Only the civilizations with it (civs.MISSING) see it."""
-from game import civs, combat, train
 from test_dock_train import DOCK, dock_map
 from test_train_archery import menus
+
+from game import civs, combat, train
 
 build = train.build                                                    # the module that train uses
 UP = "ELITE_CANNON_GALLEON_UPGRADE"

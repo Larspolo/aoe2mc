@@ -95,10 +95,10 @@ def test_the_bar_follows_the_health_on_a_server(tmp_path):
     import io
     import json
 
-    import aoe2mc
     import scenarios
     from AoE2ScenarioParser.datasets.units import UnitInfo
 
+    import aoe2mc
     from game import combat, run
     scn = scenarios.new_scenario(16)
     scn.unit_manager.add_unit(scenarios.PlayerId.ONE, UnitInfo.MILITIA.ID, x=8.5, y=8.5)

@@ -1,5 +1,7 @@
 {"name": "ACADEMY", "hp": 350, "attack": 0, "melee": 0, "pierce": 0, "range": 0, "reload": 0.0, "bonus": {}, "classes": ["building"], "sight": 5, "conscription": true}
 {"name": "GOVERNMENT_CENTER", "hp": 350, "attack": 0, "melee": 0, "pierce": 0, "range": 0, "reload": 0.0, "bonus": {}, "classes": ["building"], "sight": 5}
 {"name": "GRANARY", "hp": 350, "attack": 0, "melee": 0, "pierce": 0, "range": 0, "reload": 0.0, "bonus": {}, "classes": ["building"], "sight": 4}
+{"name": "HOUSE", "hp": 550, "attack": 0, "melee": 0, "pierce": 7, "range": 0, "reload": 0.0, "bonus": {}, "classes": ["building"], "sight": 2, "housing": 4, "garrison_by": ["KING", "VILLAGER"], "note": "Return of Rome: 4 population per House (wiki, #3664)"}
 {"name": "STORAGE_PIT", "hp": 350, "attack": 0, "melee": 0, "pierce": 0, "range": 0, "reload": 0.0, "bonus": {}, "classes": ["building"], "sight": 4}
 {"name": "TEMPLE", "hp": 350, "attack": 0, "melee": 0, "pierce": 0, "range": 0, "reload": 0.0, "bonus": {}, "classes": ["building"], "sight": 5}
+{"name": "TOWN_CENTER", "hp": 2400, "attack": 5, "melee": 3, "pierce": 5, "range": 6, "reload": 2.0, "bonus": {"ship": 5}, "classes": ["building"], "sight": 8, "housing": 4, "garrison": 15, "arrows": 0, "note": "Return of Rome: Pop 4 (wiki, #3664)"}

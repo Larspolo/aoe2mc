@@ -45,7 +45,7 @@ class Recorder:
 
     def remember(self, rect):
         """Keep the UUID of the building of footprint rect (x0, x1, z0, z1): an attack names the building by it (#3004)."""
-        import combat                                                  # combat imports gather, which imports this module
+        import combat  # combat imports gather, which imports this module
         self.rects[combat.target_uuid([rect[0], rect[2], rect[1], rect[3]])] = tuple(int(v) for v in rect)
 
     def id(self, thing):
@@ -134,7 +134,7 @@ def summoned(g, uuid, name, pos, player=None):
     """A unit that a setup summons at the block position pos (train.summon: the scout of scout.swap, the villagers
     of Empire Wars, the King of Regicide, #3028): a "summon" event with its new ID, which the replay summons at its
     tile. A unit of the game (a queue: trained(), a cheat) writes none."""
-    import train                                                       # train imports this module
+    import train  # train imports this module
     if (r := getattr(g, "record", None)) is None or not r.setup or (unit := train.value("aoe2_name", name, name)) \
             not in types() or not isinstance(uuid, str):
         return
@@ -153,7 +153,7 @@ def queued(g, name, rect):
     """A unit, a research or an age in the queue of the building rect (train.queue)."""
     if getattr(g, "record", None) is None:
         return
-    import train                                                       # train imports this module
+    import train  # train imports this module
     at = [g.record.id(rect)]
     unit = train.value("aoe2_name", name, name)                        # a unit with another AoE2 name (#3045)
     if name not in train.TECHS and not name.endswith("_AGE") and unit in types():

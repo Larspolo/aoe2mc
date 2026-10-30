@@ -2,9 +2,10 @@
 import contextlib
 import io
 
-import aoe2mc
 import scenarios
 import world_reader
+
+import aoe2mc
 
 TOWN_CENTERS = {1: (17, 17), 2: (63, 17), 3: (17, 63), 4: (63, 63)}
 

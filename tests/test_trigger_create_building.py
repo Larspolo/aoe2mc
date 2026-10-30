@@ -2,9 +2,9 @@
 <building> <x> <y>" into the data storage aoe2mc:orders; the scenario mode of the game program puts the complete
 building there when the place is free (game/scenario.py foundation with done, build.rise)."""
 import numpy as np
+from test_trigger_foundation import play
 
 import aoe2mc
-from test_trigger_foundation import play
 
 STORED = 'Storage aoe2mc:orders has the following contents: {list: ["create 1 HOUSE 10 12"]}'
 

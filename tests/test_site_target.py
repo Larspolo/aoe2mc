@@ -78,9 +78,10 @@ def test_a_castle_that_the_game_program_built_shoots_an_enemy_on_a_server(tmp_pa
     from test_paper import paper_reachable
     if not paper_reachable():
         pytest.skip("Paper is not reachable")
-    import aoe2mc
     import scenarios
     from AoE2ScenarioParser.datasets.units import UnitInfo
+
+    import aoe2mc
     scn = scenarios.new_scenario(24)
     scn.unit_manager.add_unit(scenarios.PlayerId.ONE, UnitInfo.VILLAGER_MALE.ID, x=2.5, y=2.5)
     src = str(tmp_path / "castle.aoe2scenario")

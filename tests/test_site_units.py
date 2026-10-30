@@ -44,9 +44,10 @@ def test_a_unit_on_a_new_site_lives_outside_it_on_a_server(tmp_path):
     from test_paper import paper_reachable
     if not paper_reachable():
         pytest.skip("Paper is not reachable")
-    import aoe2mc
     import scenarios
     from AoE2ScenarioParser.datasets.units import UnitInfo
+
+    import aoe2mc
     scn = scenarios.new_scenario(24)
     scn.unit_manager.add_unit(scenarios.PlayerId.ONE, UnitInfo.VILLAGER_MALE.ID, x=2.5, y=2.5)
     scn.unit_manager.add_unit(scenarios.PlayerId.ONE, UnitInfo.MILITIA.ID, x=9.5, y=9.5)

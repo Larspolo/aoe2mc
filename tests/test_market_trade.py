@@ -5,7 +5,6 @@ import shutil
 from urllib.parse import unquote
 
 import pytest
-
 from menu_line import item
 from test_train import setup
 from test_train_menu import entry

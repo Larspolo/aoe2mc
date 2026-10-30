@@ -3,8 +3,9 @@ import contextlib
 import io
 import json
 
-import aoe2mc
 import scenarios
+
+import aoe2mc
 from game import run
 
 

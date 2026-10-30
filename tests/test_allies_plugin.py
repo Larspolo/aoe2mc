@@ -3,9 +3,9 @@ import shutil
 import time
 
 import pytest
+from test_damage import health
 
 from game import combat, gather, run
-from test_damage import health
 
 
 def test_allies_command_groups_the_teams_of_aoe2mc_json():

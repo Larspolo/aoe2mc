@@ -1,9 +1,8 @@
 """game/conquest.py: the AoE2 conquest rule, a player without units and buildings is defeated (#1135)."""
 import pytest
+from test_cheat_end import game
 
 from game import combat, conquest
-
-from test_cheat_end import game
 
 
 def live(server, alive):

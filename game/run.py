@@ -293,7 +293,7 @@ class Game:
         self.server = self.rcon = None
         self.lock, self.seen = threading.Lock(), 0     # the op thread and the game send commands
         self.sides = {}
-        import units                                 # a world with the resource pack: own armor and weapons (#2742, #2744)
+        import units  # a world with the resource pack: own armor and weapons (#2742, #2744)
         units.ASSETS = pack_file(self.world) is not None
 
     def start(self):
@@ -553,14 +553,14 @@ def challenge_names():
 
 
 def civ_choices(values):
-    """{player: civilization} of the --civ values ("1=BRITONS", #2267). RANDOM: a random civilization (apply_civs, #4746).
-    An unknown name stops with the list of names."""
+    """{player: civilization} of the --civ values ("1=BRITONS", #2267). "RANDOM" (the lobby choice "Random", #4755)
+    stays: apply_civs picks it. An unknown name stops with the list of names."""
     import civs
     names, out = sorted(r["name"] for r in civs.ROWS), {}
     for v in values or ():
         player, _, name = v.partition("=")
         if not player.isdigit() or name.upper() not in names + ["RANDOM"]:
-            sys.exit(f"--civ {v}: write PLAYER=CIVILIZATION, one of: {', '.join(names + ['RANDOM'])}")
+            sys.exit(f"--civ {v}: write PLAYER=CIVILIZATION, one of: {', '.join(names)}")
         out[int(player)] = name.upper()
     return out
 
@@ -568,9 +568,9 @@ def civ_choices(values):
 def apply_civs(data, civs, seed=1):
     """Write the --civ choices {player: civilization} into the players of aoe2mc.json. A player whose scenario locks
     its civilization ("Lock Civilizations", #3295) keeps the scenario civilization: a line on stderr says why.
-    RANDOM (--civ or the scenario, #4746): a civilization of civs.ROWS from the seed and the player number."""
-    import numpy as np
+    RANDOM (--civ or the scenario, #4755, #4746): a civilization of civs.ROWS from the seed and the player number."""
     import civs as table
+    import numpy as np
     for player, name in (civs or {}).items():
         p = data.setdefault("players", {}).setdefault(str(player), {})
         if p.get("lock_civ"):
@@ -697,7 +697,8 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
     settings: the AoE2 lobby settings (SETTINGS); a missing one has its default."""
     if wait:                                         # the trigger timers start at the join, not at the load
         freeze(game)
-    import gather, train
+    import gather
+    import train
     if unknown := sorted(set(settings) - set(SETTINGS)):
         raise TypeError(f"play() has no setting {', '.join(unknown)} (SETTINGS)")
     settings = mode_defaults({**SETTINGS, **settings})
@@ -789,7 +790,7 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
     combat.setup(game, data)                         # AoE2 hit points and damage (#514)
     modes = {settings["mode"], *(m for m in ON_TOP if settings[m.replace("-", "_")])} - {"standard"}   # (#2490)
     if settings["age"] == "dark" and (ages := [MODES[m]["age"] for m in modes if "age" in MODES[m]]):   # (#2408)
-        import train                                             # the latest start age of the modes (#2441)
+        import train  # the latest start age of the modes (#2441)
         settings["age"] = max(ages, key=lambda a: train.STARTS[a]["ages"])
     for x in [g, *(s.g for s in g.bots)]:                        # before the age: train.research sets the scores (#3089)
         x.modes = frozenset(modes)                               # gather.has_mode: build.locked, Gather.run (#2490)
@@ -801,12 +802,12 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
             train.start(x, settings["age"])
     saved = {k: p for k, p in dict(data.get("players") or {}).items() if p.get("saved")}
     if not state and saved and settings["mode"] != "scenario":  # a converted saved game: its resources, ages and
-        import scenario                                          # technologies (aoe2mc.json "saved", #4565)
+        import scenario  # technologies (aoe2mc.json "saved", #4565)
         for x in [g, *(s.g for s in g.bots)]:
             if p := saved.get(str(x.player)):
                 scenario.start_values(x, p)
     if settings["record"]:                                       # the orders of the people and the bots (#2649), and
-        import record                                            # the objects of the setups below at 0:00 (#3028)
+        import record  # the objects of the setups below at 0:00 (#3028)
         record.start([g, *(b.g for b in g.bots)], settings["record"])
     import scout
     if not state and scout.used(data):               # the scout of each civilization (#2391), not twice after a load
@@ -817,7 +818,7 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
         for x in [g, *(s.g for s in g.bots)]:
             start_buildings.place(x)
     if state:                                                    # before the modes and the minimap: they see the save
-        import savegame                                          # (the Wonder, the defeated, the sites, #2981)
+        import savegame  # (the Wonder, the defeated, the sites, #2981)
         savegame.load(g, state)
     for mode in sorted(modes):                                   # after the age: the town of Empire Wars, the Wonder;
         line = MODES[mode]                                       # the Kings go to the Gathers of the bots (#2347)
@@ -1276,7 +1277,7 @@ def main(argv=None, scenario=None):
     ap.add_argument("--load", metavar="SAVE", help="--play: go on with a saved game (a folder of saves/: the end of "
                     "--play with Ctrl-C saves the world and the resources, technologies and ages there)")
     ap.add_argument("--civ", action="append", metavar="N=CIV", help="--play: player N plays civilization CIV (for "
-                    "example 1=BRITONS, repeat it for more players): the game rules change, the buildings of the "
+                    "example 1=BRITONS, or 1=RANDOM; repeat it for more players): the game rules change, the buildings of the "
                     "world keep the architecture of the scenario")
     ap.add_argument("--handicap", action="append", metavar="N=PCT", help="--play: the AoE2 setting \"Handicap\" of "
                     "player N, 100 to 200 percent in steps of 5 (for example 1=150, repeat it for more players): more "

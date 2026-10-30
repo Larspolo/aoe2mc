@@ -1,8 +1,9 @@
 """The first Fortified Church of an Armenian player gets a free relic (#2419, AoE2 DE wiki "Armenians": "the first one
 constructed receives a free Relic"; "Fortified Church": "The first Armenian Fortified Church provides a free garrisoned
 Relic"). Key free_relic of game/data/civs.jsonl. Fake server."""
-from game import build, monk
 from test_treadmill_crane import castle
+
+from game import build, monk
 
 
 def church(g, rect):

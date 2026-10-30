@@ -1,7 +1,7 @@
 """tools/play_check.py: the driver of player 1 and the stuck units of a scripted game against the bot (#3324)."""
+import play_check
 from test_bot_gather import bot_map
 
-import play_check
 from game import gather, train
 
 

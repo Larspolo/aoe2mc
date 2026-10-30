@@ -102,11 +102,12 @@ def test_two_soldiers_of_the_bot_attack_on_a_server(tmp_path):
     from test_paper import paper_reachable
     if not paper_reachable():
         pytest.skip("Paper is not reachable")
-    import aoe2mc
     import scenarios
     from AoE2ScenarioParser.datasets.buildings import BuildingInfo
     from AoE2ScenarioParser.datasets.units import UnitInfo
     from test_building_damage import hp
+
+    import aoe2mc
     scn = scenarios.new_scenario(24)
     um = scn.unit_manager
     um.add_unit(scenarios.PlayerId.ONE, BuildingInfo.TOWN_CENTER.ID, x=4, y=4)

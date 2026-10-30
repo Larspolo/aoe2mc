@@ -10,7 +10,6 @@ from test_train_menu import entry
 
 from game import combat, gather, run, train
 
-
 COST, TIME = train.COSTS["SKIRMISHER"], train.TRAIN_TIMES["SKIRMISHER"]
 
 
@@ -63,9 +62,10 @@ def test_a_trained_skirmisher_can_shoot_on_a_server(tmp_path):
     from test_mc_check import mojang_reachable
     if not mojang_reachable():
         pytest.skip("Mojang is not reachable")
-    import aoe2mc
     import scenarios
     from AoE2ScenarioParser.datasets.buildings import BuildingInfo
+
+    import aoe2mc
     scn = scenarios.new_scenario(16)
     scn.unit_manager.add_unit(scenarios.PlayerId.ONE, BuildingInfo.ARCHERY_RANGE.ID, x=4.5, y=4.5)
     scn.unit_manager.add_unit(scenarios.PlayerId.ONE, BuildingInfo.HOUSE.ID, x=11, y=11)   # population 5

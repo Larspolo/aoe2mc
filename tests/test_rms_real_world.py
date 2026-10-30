@@ -1,9 +1,9 @@
 """A real world map script with no <LAND_GENERATION> takes the land of its base scenario (#4729)."""
 import numpy as np
+import scenarios
 
 import aoe2mc
 import rmap
-import scenarios
 
 SCRIPT = "<OBJECTS_GENERATION>\ncreate_object TOWN_CENTER { set_place_for_every_player max_distance_to_players 0 }\n"
 
