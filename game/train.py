@@ -350,19 +350,24 @@ ROW = 9                                                            # the first s
 
 HULKS = tuple(r["name"] for r in UNIT_ROWS if r.get("melee_ship"))   # melee warships: the blacksmith attack too (#1509)
 # Siphons and Incendiaries (#2165): technology: the key "charge" or "detonate" of its line of data/train.jsonl and its
-# values: {"if": [tests], "attack": n, "blast": tiles, "bonus": {class: n}}, a charge also "reload" (s) and "shots"
-FIRE = {r["name"]: (k, r[k]) for r in ROWS for k in ("charge", "detonate") if k in r}
+# values: {"if": [tests], "attack": n, "blast": tiles, "bonus": {class: n}}, a charge also "reload" (s) and "shots".
+# The charge of a melee hit (Comitatenses, #4370): the key "charge_attack": {"if": [tests], "attack": n, "time": s}
+FIRE = {r["name"]: (k, r[k]) for r in ROWS for k in ("charge", "charge_attack", "detonate") if k in r}
 
 
 def fire_commands(g, uuid, name, techs=None):
     """The plugin commands of the charge attack (`aoe charge`) and the blast at death (`aoe detonate`) of an own ship
-    after the research of their technologies (FIRE, #2165), and of the thrown axes of a melee unit (`aoe throw`, the
-    key "throw": Gothikon, #4368), or of the technologies techs only. Vanilla has no second attack, no "on death"
-    command and no shot of a melee mob. An axe has the values of the unit (its attack with the upgrades)."""
+    after the research of their technologies (FIRE, #2165), of the charge of the next melee hit of an own unit
+    (`aoe chargeattack`, #4370), and of the thrown axes of a melee unit (`aoe throw`, the key "throw": Gothikon, #4368),
+    or of the technologies techs only. Vanilla has no second attack, no "on death" command, one attack value per mob
+    and no shot of a melee mob. An axe has the values of the unit (its attack with the upgrades)."""
     import combat, gather                                          # both import gather, gather imports this module
     out = []
     for tech, (kind, c) in FIRE.items():
         if tech not in (g.techs if techs is None else techs) or not any(test(t, name, combat.stats(name)) for t in c["if"]):
+            continue
+        if kind == "charge_attack":
+            out.append(f"aoe chargeattack {uuid} {max(1, round(c['time'] / gather.NORMAL * 20))} {c['attack']}")
             continue
         bonus, blast = ",".join(f"{k}:{v}" for k, v in sorted(c["bonus"].items())) or "-", c["blast"] * g.map.T
         out.append(f"aoe charge {uuid} {max(1, round(c['reload'] / gather.NORMAL * 20))} {c['attack']} {c['shots']} "

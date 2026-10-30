@@ -1,10 +1,11 @@
 # Learnings
 
-The agent writes here what it learned the hard way. Each line must save time in a later session.
-Ticket runs: add new lines at the end of a section and do not change other lines (`merge=union` in `.gitattributes`
-keeps the lines of both sides). A pitfall of one topic goes into the "Pitfalls" section of its document (list below; add
-at its end, do not change other lines): this file loads into each turn of each run. The `improve` skill merges lines,
-and `tests/test_learnings.py` fails above 80 lines (#1698).
+Each session loads this file in each call: only lines for all runs go here, at most 3000 bytes
+(`tests/test_learnings.py`, #4454). Add a line at the end and do not change other lines (`merge=union`).
+A lesson that only some tickets need goes to the end of its section in `docs/PITFALLS.md`, or to the "Pitfalls"
+section of its topic document: the Minecraft server, client and NBT: `docs/minecraft-versions.md`; Paper, the game
+program, menus, `combat`, AoE2 wiki values: `docs/research/gameplay.md`; RCON `@e`, datapack items: `docs/datapack.md`;
+records: `docs/research/replays.md`; bundles: `docs/packaging.md`; water: `docs/research/water.md`; designs: the `design` skill.
 
 ## Environment and libraries
 
@@ -63,3 +64,13 @@ and `tests/test_learnings.py` fails above 80 lines (#1698).
 - `tools/claim.py N` succeeds for each N it gets: a loop over several numbers claims all of them (#4132 run took 4 by mistake). Call it once per ticket, and read exit 0 before you work on it.
 - A test of a building with `footprint` in aoe2mc.json uses `[x0, z0, x1, z1]`, but `homes()` and the test constants of `(x0, x1, z0, z1)`: a castle at `(8, 12, 8, 12)` put into the data gave no menu (#4337). Write the data order by hand.
 - A new `aoe2mc-*.json` file of `tools/dashboard_data.py` also changes the exact file list of `test_main_writes_the_eight_files` (`tests/test_dashboard_data.py`): add the name there and stub the function (#4239).
+- Read the section of `docs/PITFALLS.md` before its case: claims, pushes, PRs, merge conflicts and check tickets;
+  background commands and waits; downloads and blocked hosts; converter code; game program code.
+- `tools/claim.py` names the run by the current local branch: run each call on the branch that pushes the ticket,
+  one call per tool call and per ticket, and read the exit code before the next step (#361, #965, #4132).
+- `git fetch origin main` before each `git checkout -B <branch> origin/main`: the clone can be days old (#2278).
+- Wait for an `echo rc=$?` line, not for the first output; read the one result line of `pytest`, do not run it again.
+  Wait for a background command by the task ID of its own result (#1243, #2510, #2342).
+- The auto mode denies the close of an issue: comment the evidence, then add the label `close` (#1740).
+- Automerge takes the first "close #N" (also "fix", "resolve") in a PR body as the ticket: never write those words
+  before another issue number (#984).
