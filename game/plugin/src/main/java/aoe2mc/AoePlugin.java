@@ -159,6 +159,11 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *                                              Gothikon (#4368): a melee unit also throws an axe (an arrow with the
  *                                              values of the unit) at its target within blocks; it holds at most shots
  *                                              axes, one charges in ticks, two throws are gap ticks apart
+ *   aoe trample <selector> <part> <blocks> [<damage> <ignore 0|1>]
+ *                                              trample damage (the elephants, #4397, game/combat.py trample_command):
+ *                                              a melee hit of the unit also hurts each other enemy unit within blocks
+ *                                              of the target with part of the AoE2 damage on it, or with a fixed damage
+ *                                              less its melee armor (ignore 1: no armor; a technology, epic #4096)
  *   aoe unwear <selector>                      forget the kept blocks of the damage stages of each building target: the
  *                                              next stage keeps the blocks of a new design (a wall technology, #3071)
  *   aoe range <selector> <blocks> <ticks> [blast [min [pass [part]]]]
@@ -475,6 +480,11 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     }
 
     private final Map<UUID, Throw> throwers = new HashMap<>();
+    // Trample damage (aoe trample, #4397): part of the AoE2 damage within blocks of the target; damage > 0: a fixed damage
+    private record Trample(double part, double blocks, double damage, boolean ignore) {
+    }
+
+    private final Map<UUID, Trample> tramples = new HashMap<>();
     private final Map<UUID, int[]> axes = new HashMap<>();
     private final Map<UUID, Double> sights = new HashMap<>();       // the line of sight of a unit in blocks (#775)
     private final Map<UUID, String> modes = new HashMap<>();        // "only" or "first": it takes buildings (#1820)
@@ -1352,6 +1362,35 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             attacker.setHealth(Math.max(0, attacker.getHealth() - dealt * t.reflect));   // no armor (AoE2 DE wiki)
             nameLine(attacker);
         }
+        if (!(ev.getDamager() instanceof Projectile)) {
+            trample(from, a, hurt, ev.getEntity());           // an elephant hurts the units next to its target (#4397)
+        }
+    }
+
+    // AoE2 trample damage (#4397, AoE2 DE wiki "Trample damage"): after a melee hit of a unit of aoe trample, each other
+    // enemy unit with AoE2 values within its blocks of the target takes max(1, round(part × the AoE2 damage on it)), or
+    // the fixed damage less its melee armor (at least 1; ignore: a negative armor only). Not the own or allied units.
+    // A mounted unit has the hit points of its horse (#732): only the horse counts.
+    private void trample(Entity from, Stats a, Entity hurt, Entity target) {
+        Trample tr = tramples.get(from.getUniqueId());
+        if (tr == null || tr.blocks() <= 0) {
+            return;
+        }
+        Location at = hurt.getLocation();
+        double r = tr.blocks();
+        for (Entity e : at.getWorld().getNearbyEntities(at, r, r, r)) {
+            if (e instanceof LivingEntity le && le.isValid() && !le.isDead() && le != hurt && le != target && le != from
+                    && le != from.getVehicle() && stats.containsKey(le.getUniqueId()) && !buildings.containsKey(le.getUniqueId())
+                    && !(le.getVehicle() instanceof LivingEntity v && stats.containsKey(v.getUniqueId()))
+                    && !sameTeam(from, le) && !friendlyFire(from, le) && le.getLocation().distanceSquared(at) <= r * r) {
+                Stats t2 = stats.get(le.getUniqueId());
+                double full = Math.max(1, a.damage(t2, rage(a, from)) * elevation(from, le));   // the rule of harm
+                double hit = tr.damage() <= 0 ? Math.max(1, Math.round(tr.part() * full))
+                        : tr.ignore() ? tr.damage() - Math.min(0, t2.melee()) : Math.max(1, tr.damage() - t2.melee());
+                harm(le, t2, a, from, hit / full);
+            }
+        }
+        at.getWorld().spawnParticle(Particle.SWEEP_ATTACK, at.clone().add(0, 1, 0), 1);
     }
 
     // The entity with the hit points of unit e: the horse of a rider (#732), else e.
@@ -3302,6 +3341,26 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                 }
             }
             sender.sendMessage("Throw: " + n + " units");
+            return true;
+        }
+        if ((args.length == 4 || args.length == 6) && args[0].equals("trample")) {   // the elephants (#4397)
+            Trample tr;
+            try {
+                tr = new Trample(Double.parseDouble(args[2]), Double.parseDouble(args[3]),
+                        args.length == 6 ? Double.parseDouble(args[4]) : 0, args.length == 6 && args[5].equals("1"));
+            } catch (NumberFormatException e) {
+                sender.sendMessage("Bad number: " + e.getMessage());
+                return true;
+            }
+            int n = 0;
+            for (Entity e : select(sender, args[1])) {
+                tramples.put(e.getUniqueId(), tr);
+                if (e instanceof Mob mob) {
+                    tramples.put(crew(mob).getUniqueId(), tr);       // the crew of a siege unit hits (#836)
+                }
+                n++;
+            }
+            sender.sendMessage("Trample: " + n + " units");
             return true;
         }
         if (args.length == 2 && args[0].equals("unwear")) {            // a redraw after a wall technology (#3071)

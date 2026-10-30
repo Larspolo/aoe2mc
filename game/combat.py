@@ -100,6 +100,7 @@ FORT_MIN_RANGE = {r["name"]: r["min_range"] for r in BUILDING_ROWS if "min_range
 ATTACK_GOLD = {r["name"]: r["attack_gold"] for r in UNIT_ROWS if "attack_gold" in r}
 REGEN = {r["name"]: r["regen"] for r in UNIT_ROWS if "regen" in r}             # the key "regen": hit points per minute (#2688)
 PASS = {r["name"]: r["pass"] for r in UNIT_ROWS if "pass" in r}               # the key "pass" of data/units.jsonl
+TRAMPLE = {r["name"]: r["trample"] for r in UNIT_ROWS if "trample" in r}       # the key "trample": the elephants (#4397)
 # The part of the damage on the units behind the target, when it is not one half (wiki: "100% pass-through damage").
 PASS_PART = {r["name"]: r["pass_part"] for r in UNIT_ROWS if "pass_part" in r}
 DEFAULT, BUILDING = Stats(40, 4, 0, 0, 0, 2.0), Stats(1000, 0, 0, 7, 0, 0.0, {}, ("building",))
@@ -226,6 +227,18 @@ def dodge_command(uuid, name):
     return f"aoe dodge {uuid} {d['shots']} {round(d['time'] * 20)}" if d else None
 
 
+def trample_command(uuid, name, T, t=None):
+    """The plugin command of the trample damage of unit name (the key "trample" of data/units.jsonl: the elephants,
+    #4397), or None. Each melee hit also hurts the other enemy units within "radius" tiles (× T blocks) of the target
+    with "part" of the AoE2 damage on each (AoE2 DE wiki "Trample damage"). t: other values, for example of a technology
+    (epic #4096): a fixed "damage" instead of the part, and "ignore": true for a damage that ignores the armor."""
+    t = t or TRAMPLE.get(name)
+    if not t:
+        return None
+    fixed = f" {t['damage']:g} {int(bool(t.get('ignore')))}" if t.get("damage") else ""
+    return f"aoe trample {uuid} {t.get('part', 0):g} {round(t['radius'] * T, 6):g}{fixed}"
+
+
 def sight(name, s=None):
     """The AoE2 line of sight of unit name in tiles: an idle soldier attacks an enemy in it. Most units see 4 tiles,
     a ranged unit about 2 tiles more than its range."""
@@ -302,6 +315,9 @@ def setup(game, data):
             game.command(cmd)
     for o in units:                                  # a Shrivamsha Rider dodges projectiles (#4399)
         if cmd := dodge_command(o["uuid"], o["name"]):
+            game.command(cmd)
+    for o in units:                                  # an elephant tramples the units next to its target (#4397)
+        if cmd := trample_command(o["uuid"], o["name"], data.get("tile_size", 4)):
             game.command(cmd)
     for o in units:                                  # after the stats: the plugin needs them for the sight
         if cmd := sight_command(o["uuid"], o["name"], data.get("tile_size", 4)):
