@@ -5,8 +5,9 @@ bootstrap, do the settings, and the runs then build the project from its roadmap
 
 **The easy way:** start a Claude Code session in a clone of this repository and type `/new-project <your idea>`. The
 skill `.claude/skills/new-project/SKILL.md` suggests the stack and the roadmap, fills the files, and makes and sets up
-the repository (`framework/tools/new_repo.py`). It asks you only what it cannot decide and the steps that need your
-accounts. A local session with `gh auth login` does the most work. The steps below are the manual way.
+the repository (`framework/tools/new_repo.py`). It asks you only what it cannot decide (the idea, the direction,
+your resources), and guides you one step at a time through the steps that need your accounts (`new_repo.py --check`
+shows which are done). A local session with `gh auth login` does the most work. The steps below are the manual way.
 
 ## 1. Fill the template
 

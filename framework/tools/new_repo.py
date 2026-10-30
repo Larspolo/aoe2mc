@@ -3,6 +3,7 @@
     python3 framework/tools/new_repo.py DIR --repo OWNER/NAME [--description TEXT] [--private] [--dry-run]
     python3 framework/tools/new_repo.py DIR --repo OWNER/NAME --secrets    # asks for each secret, no echo
     python3 framework/tools/new_repo.py DIR --repo OWNER/NAME --start      # starts the pacer once
+    python3 framework/tools/new_repo.py DIR --repo OWNER/NAME --check      # one line per setup step: OK or MISSING
 
 DIR is the output of `framework/tools/bootstrap.py`, with the specific files filled. The default run makes the first
 commit, makes the repository (public: free Actions minutes), pushes, and does the GitHub steps of
@@ -106,6 +107,36 @@ def set_secrets(repo, names, env, ask=getpass.getpass):
     return done
 
 
+def trigger(target):
+    """The ID of the scheduled task "NAME autopilot" in `[pacing]` of steering/system/system.toml ("" when not set)."""
+    try:
+        with open(os.path.join(target, "steering", "system", "system.toml"), "rb") as f:
+            return tomllib.load(f).get("pacing", {}).get("trigger", "")
+    except (OSError, tomllib.TOMLDecodeError):
+        return ""
+
+
+def checks(target, repo, gh):
+    """(name, ok, hint) of each setup step that GitHub or DIR can show. gh(args) gives the stdout of a `gh` call, or
+    None when it fails. The app, the cloud environment and the tasks show only in the Claude app: the owner says them."""
+    secrets = set((gh(["secret", "list", "--repo", repo, "--json", "name", "--jq", ".[].name"]) or "").split())
+    rules = gh(["api", f"repos/{repo}/rulesets", "--jq", ".[].name"]) or ""
+    perms = gh(["api", f"repos/{repo}/actions/permissions/workflow", "--jq", ".default_workflow_permissions"]) or ""
+    runs = gh(["run", "list", "--repo", repo, "--workflow", "pacer.yml", "--limit", "1", "--json", "status", "--jq", ".[].status"])
+    return [("repository", gh(["repo", "view", repo, "--json", "name"]) is not None, "run this tool with no option"),
+            ("workflow permissions", perms.strip() == "write", "run this tool with no option"),
+            ("ruleset Protect main", RULESET["name"] in rules.splitlines(), "run this tool with no option"),
+            ("status issue", status_exists(repo), "run this tool with no option"),
+            *((f"secret {n}", n in secrets, "run this tool with --secrets") for n in secret_names(target)),
+            ("trigger in steering/system/system.toml", bool(trigger(target)), "write the ID of the task \"NAME autopilot\""),
+            ("a run of the workflow Pacer", bool((runs or "").strip()), "run this tool with --start")]
+
+
+def gh_out(args):
+    r = subprocess.run(["gh", *args], capture_output=True, text=True)
+    return r.stdout if r.returncode == 0 else None
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("target")
@@ -116,9 +147,15 @@ def main(argv=None):
     ap.add_argument("--dry-run", action="store_true", help="print the calls, change nothing")
     ap.add_argument("--secrets", action="store_true", help="set the secrets of pacer.yml")
     ap.add_argument("--start", action="store_true", help="start the workflow Pacer once")
+    ap.add_argument("--check", action="store_true", help="show which setup steps are done")
     a = ap.parse_args(argv)
     if a.repo.count("/") != 1:
         ap.error("--repo must be OWNER/NAME")
+    if a.check:
+        rows = checks(a.target, a.repo, gh_out)
+        for name, good, hint in rows:
+            print(f"OK       {name}" if good else f"MISSING  {name}: {hint}")
+        return 0 if all(good for _, good, _ in rows) else 1
     if a.secrets:
         names = secret_names(a.target)
         if a.dry_run:

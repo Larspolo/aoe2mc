@@ -51,3 +51,13 @@ def test_secrets_come_from_the_environment_or_a_prompt_and_never_print(monkeypat
     assert done == ["A", "B"] and sent == [("A", "env-value"), ("B", "typed-value")]
     out = capsys.readouterr().out
     assert "env-value" not in out and "typed-value" not in out
+
+
+def test_the_check_names_each_missing_step(tmp_path, monkeypatch):
+    project(tmp_path, "{}")
+    monkeypatch.setattr(new_repo, "status_exists", lambda repo: True)
+    answers = {"secret": "CLAUDE_CODE_OAUTH_TOKEN\nPACER_URL_MAIN\n", "repo": "{}", "run": ""}
+    gh = lambda args: answers.get(args[0], "write" if "workflow" in args[1] else "Protect main")
+    rows = {name: good for name, good, _ in new_repo.checks(str(tmp_path), "me/demo", gh)}
+    missing = sorted(n for n, good in rows.items() if not good)
+    assert missing == ["a run of the workflow Pacer", "secret PACER_TOKEN_MAIN", "trigger in steering/system/system.toml"]

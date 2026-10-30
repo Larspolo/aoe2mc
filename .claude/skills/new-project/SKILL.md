@@ -17,9 +17,12 @@ these steps: `framework/docs/NEW_PROJECT.md`.
 
 ## 1. Check the place
 
-1. Run `gh auth status`. With a login, the scripts of step 6 do all GitHub work. With no login (a cloud session), use
-   the cloud way of step 6.
+1. Run `gh auth status`. With a login (a local session), the scripts of step 7 do all GitHub work. With no login (a
+   cloud session), use the cloud way of step 7.
 2. Get the owner login: `gh api user --jq .login`, else `mcp__github__get_me`.
+3. Know your limits: `.claude/settings.json` denies the session tools of scheduled tasks and repositories
+   (`mcp__claude-code-remote`). You cannot make a scheduled task, an API trigger, a cloud environment or a secret
+   value. The owner does these steps, and you guide each one (step 8).
 
 ## 2. Get the idea
 
@@ -51,6 +54,19 @@ Ask in one AskUserQuestion call (skip a question when the idea answers it):
 2. "Stack": your stack, with the lint and test tools in the description (Recommended), and one other good stack.
 3. "Visibility": public (Recommended: free Actions minutes), private.
 
+Then ask for the resources of the owner in a second AskUserQuestion call. The answers decide what the agents can
+plan, and how the owner can try a feature (step 4):
+
+1. "Computer": macOS, Windows, Linux, "Only a phone or a tablet". With a computer, the project gets a development
+   server that the owner starts with `/try`.
+2. "Accounts and devices" (multiSelect, from the idea): what the project needs and the owner may have, for example
+   a license of a program or a game, a test device (a phone, a console), a hosting account, an API key of a paid
+   service. Add "None of these".
+3. "Budget" for services: "Free only (Recommended)", "Up to 10 USD a month", "More". With "Free only", a service with
+   a cost always gets a decision ticket.
+4. "Runs" (the Claude plan): "One main task (Recommended)": one scheduled task, 3 secrets. "Main and a haiku lane":
+   small tickets on a cheap model, one task more. "Main, haiku and deep lanes": for a big plan, two tasks more.
+
 ## 4. Ask the direction
 
 The runs work for months with no owner in the session. These answers tell them what the owner wants. Ask them in
@@ -66,12 +82,16 @@ one AskUserQuestion call, with options that you make from the idea (not general 
    clearly best. Suggest areas of this project, for example: the look and the user interface, the rules or the
    behavior that a user sees, the order of the features, a new dependency or a service with a cost, the architecture.
    Add "Only real ties (Recommended)": the agents decide, and ask only when two options are equally good.
-3. **"Try a feature"**: how the owner tries a new feature. Suggest what fits the project kind:
-   - "Images in each PR (Recommended)": screenshots, a short recording or the output of a run; no work for the owner.
-   - "A test ticket at the end of each epic": a `needs-human` ticket with the steps to try the feature on the
-     owner's computer.
+3. **"Try a feature"** (multiSelect): how the owner tries a new feature. An image does not show an interaction (a
+   click, an input, a game, a flow of pages). Recommend a development server for each project with interaction, when
+   the owner has a computer. Suggest what fits the project kind and the resources:
+   - "Development server (`/try`)": one command (`dev` in `[commands]`) starts the project on the owner's computer.
+     The owner types `/try` in a local session: it starts the server at the newest main, lists what is new with steps
+     to try it, and makes a ticket for each feedback.
+   - "Images in each PR": screenshots, a short recording or the output of a run; no work for the owner.
+   - "A test ticket at the end of each epic": a `needs-human` ticket with the steps to try the feature.
    - "A build to download": each epic makes a release (a file, a package, an installer) that the owner runs.
-   - "A live preview": each PR or epic gets a preview URL (web projects only).
+   - "A live preview": each PR or epic gets a preview URL (web projects, and only with a hosting account).
 
 Write the answers in step 6. When an answer is "Other", use the owner's words.
 
@@ -115,7 +135,22 @@ selects "Use it".
    - `[owner_tasks]` in `agent.toml`: with a test ticket, `play` = the words that each test ticket body has
      (for example "Try it on your computer").
    - `.claude/skills/verify/SKILL.md`: with images in each PR, a last level that makes them.
-3. In DIR, run the install, lint and fast test commands. All must pass before step 7. Fix the files, not the tests.
+   - `docs/ENVIRONMENT.md`, section "Resources of the owner": the answers of the resource questions of step 3.
+   - With a development server: `dev` in `[commands]` (for example `python3 -m http.server`, `npm run dev`), and a
+     feature in the first goal of the roadmap that makes it work. Else delete `.claude/skills/try/`.
+   - `.claude/skills/roadmap/SKILL.md`: keep it. The runs make the epics with it.
+3. Remove what the project does not need:
+   - `weights` in `[pacing]` of `steering/system/system.toml`, from the "Runs" answer: `{}` (one main task),
+     `{ haiku = 0.25 }`, or `{ haiku = 0.25, deep = 4.0 }` with `reserved = ["haiku", "deep"]`. Each lane is a
+     scheduled task and two secrets more for the owner.
+   - `.claude/skills/new-project/`: delete it, unless the owner wants to make more projects from the new one.
+   - `.claude/settings.json`: add `allow` rules for the commands of the stack (for example `Bash(npm:*)`,
+     `Bash(cargo:*)`). Remove nothing from `deny`.
+   - The list "Write these specific files" that the bootstrap printed names the specific files of the source project.
+     Most belong only to it (its design, demo and human skills, its release and site workflows): leave them out. Write
+     only the ones that this project needs (for example `steering/project/DECISIONS.md`, empty), and name the others
+     in the report in one line.
+4. In DIR, run the install, lint and fast test commands. All must pass before step 7. Fix the files, not the tests.
 
 ## 7. Make the repository
 
@@ -126,40 +161,56 @@ selects "Use it".
    the push, the workflow permissions, the ruleset `Protect main`, the labels and the status issue.
 2. Read each `FAIL` line. Fix the cause and run the tool again: it skips the steps that are done.
 
-**With no `gh` (a cloud session):**
+**With no `gh` (a cloud session):** the session can push only to this repository.
 
-1. Make the repository with `mcp__github__create_repository` (the name, the description, `private` of step 3).
-2. Ask the owner to install the Claude GitHub app on the new repository (step 8, item 1) and wait for the answer.
-   Then add the repository to the session with `add_repo`, and push DIR: `git -C DIR init -b main`, commit, add the
-   remote, `git push -u origin main`.
-3. The settings, labels and status issue need `gh`: give the owner the command of the local way, item 1. The first
-   run of the agents also makes the status issue when it is missing.
+1. Commit DIR as a new branch with no history: `git -C DIR init -b new-project/NAME`, `git -C DIR add -A`, commit,
+   then push it to this repository (`git -C DIR push <the URL of origin of this clone> new-project/NAME`).
+2. Give the owner these commands for a terminal on a computer with `gh auth login` done:
 
-## 8. The steps of the owner
+       git clone -b new-project/NAME --single-branch <the URL of this repository> NAME && cd NAME
+       git branch -m main && git remote remove origin
+       python3 framework/tools/new_repo.py . --repo OWNER/NAME --description "<one line>"
 
-Give the owner one numbered list with only these steps, with the real repository name in each line:
+3. When the owner says that it is done, delete the branch `new-project/NAME` of this repository. Then continue with
+   step 8. Give the commands of step 8 with `.` in place of DIR, for the clone of the owner.
 
-1. Install the Claude GitHub app on the repository: https://github.com/apps/claude/installations/select_target.
-2. At claude.ai/code, make a cloud environment: "Allow package managers" on, the whole file
-   `scripts/allowed-domains.txt` as the allowed domains, the whole file `scripts/cloud-setup.sh` as the setup script.
-   Show both files in the chat, ready to copy.
-3. Make the scheduled task "NAME autopilot": the repository, the environment of item 2, no schedule, the prompt
-   `/scheduled max`, Opus at effort low. Add an API trigger, and keep its fire URL and token. The same for each lane
-   of `weights` in `steering/system/system.toml` ("NAME autopilot haiku": Haiku, the prompt `/scheduled max lane haiku`).
-   When the session has a tool that makes scheduled tasks, make them yourself and give the owner only the API triggers.
-4. Run `claude setup-token` on your computer.
-5. Type `! python3 framework/tools/new_repo.py DIR --repo OWNER/NAME --secrets` in this session. The tool asks for
-   the token of item 4 and the URL and token of each task, with no echo. In a cloud session: add each secret of
-   `python3 framework/tools/new_repo.py DIR --repo OWNER/NAME --dry-run --secrets` at GitHub → Settings → Secrets and
-   variables → Actions. Never ask for a secret in the chat.
-6. Give me the ID of the task "NAME autopilot".
+## 8. Guide the owner
 
-When the owner gives the ID, write it to `trigger` in `[pacing]` of `DIR/steering/system/system.toml`, commit,
-push to the default branch, and run `python3 framework/tools/new_repo.py DIR --repo OWNER/NAME --start`.
+Guide the owner through the steps that only the owner can do, **one step at a time**. For each step: give the exact
+clicks and the values to paste (the real repository name, the real task names), then ask with AskUserQuestion
+"Done", "Problem" (the owner says what went wrong; help, then ask again) or "Later" (put the step in the report).
+After each step that GitHub can show, run `python3 framework/tools/new_repo.py DIR --repo OWNER/NAME --check` and say
+the result in one line. When the session has the tool `read_documentation`, read the page of the step first and use
+its current clicks: the app changes faster than this text.
+
+1. **Claude GitHub app.** Open https://github.com/apps/claude/installations/select_target, select the account, and
+   add the repository OWNER/NAME to the installation.
+2. **Cloud environment.** At claude.ai/code, make a new environment "NAME": "Allow package managers" on, the whole
+   file `scripts/allowed-domains.txt` in "Allowed domains", the whole file `scripts/cloud-setup.sh` as the setup
+   script. Show both files in the chat in code blocks, ready to copy.
+3. **Scheduled task "NAME autopilot".** At claude.ai/code, make a scheduled task with: the name "NAME autopilot", the
+   repository OWNER/NAME, the environment of item 2, no schedule (the pacer starts it), the prompt `/scheduled max`,
+   Opus at effort low. Then edit the task, add an API trigger, and generate a token. Keep the fire URL, the token and
+   the task ID (`trig_...`) for items 5 and 6.
+4. **The lane tasks** (only for each lane of `weights`): the same as item 3, with the name "NAME autopilot <lane>",
+   the prompt `/scheduled max lane <lane>`, and "a new session on each fire". haiku: Haiku. deep: Opus at effort high.
+5. **Secrets.** Run `claude setup-token` in a terminal. Then type in this session
+   `! python3 framework/tools/new_repo.py DIR --repo OWNER/NAME --secrets`: the tool asks for the token, and the fire
+   URL and the token of each task, with no echo. In a cloud session, give the same command for the owner's terminal,
+   or the names of `--dry-run --secrets` for GitHub → Settings → Secrets and variables → Actions → "New repository
+   secret". Never ask for a secret value in the chat.
+6. **The task ID.** Ask the owner for the ID of "NAME autopilot" (it is no secret). Write it to `trigger` in
+   `[pacing]` of `DIR/steering/system/system.toml`, commit, push to the default branch, and run
+   `python3 framework/tools/new_repo.py DIR --repo OWNER/NAME --start`. In a cloud session, give the owner the two
+   lines to change and the commands.
+
+At the end, run `--check` again. Each `MISSING` line goes into the report with its step.
 
 ## 9. Check and report
 
-1. `gh run list --repo OWNER/NAME --limit 5`: CI and Pacer start.
-2. Tell the owner: the repository URL, the roadmap goals, the stack, the principles, and what the first run does (it makes the
+1. `python3 framework/tools/new_repo.py DIR --repo OWNER/NAME --check` and `gh run list --repo OWNER/NAME --limit 5`:
+   CI and Pacer start.
+2. Tell the owner: the repository URL, the roadmap goals, the stack, the principles, the steps put "Later", how to
+   try a feature (with a development server: `/try` in a local session of a clone), and what the first run does (it makes the
    epics and the tickets from the roadmap). The owner steers through issues from then on
    (`framework/docs/STEERING.md`). To change the direction later, the owner edits `steering/project/PRINCIPLES.md`.
