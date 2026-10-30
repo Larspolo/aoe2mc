@@ -65,6 +65,8 @@ parallel tickets do not change the same lines. Most rules have a check: `tools/d
   datapack text of a trigger type (`tools/triggers.py` `MAP`) is its line in `data/trigger_conditions.jsonl` or `data/trigger_effects.jsonl`.
 - A new section command of a random map script (`rmap.generate`) is one name line in `rmap.SECTIONS` (AoE2 DE order) and,
   when it makes objects, one `found += part(...)` line before the `return` of `generate()`, not a change of the `return` line (#4014).
+- A new attribute of `create_land` or `create_player_lands` (`rmap.generate`) is one line in `rmap.CREATE_LAND`, of
+  `create_terrain` one line in `rmap.CREATE_TERRAIN` (alphabetical order, #4417).
 - A new attribute of `create_object` (`rmap.objects`) is one line in `rmap.CREATE_OBJECT` (alphabetical order, its short
   description as a comment) and, when it limits the tiles, one `if "X" in attrs:` filter of `ground` at its alphabetical place
   among the filters, not a change of the docstring (#4224, `tests/test_rmap_create_object.py`).
