@@ -69,6 +69,15 @@ def git_calls(target, branch):
             (["git", "-C", target, "add", "-A"], None), (["git", "-C", target, "commit", "-q", "-m", "Set up the agent system"], None)]
 
 
+def ruleset_names(repo):
+    """The names of the rulesets of the repository, one per line of the output; [] when there is none or no repository yet."""
+    try:
+        r = subprocess.run(["gh", "api", f"repos/{repo}/rulesets", "--jq", ".[].name"], capture_output=True, text=True)
+    except OSError:
+        return []
+    return r.stdout.splitlines() if r.returncode == 0 else []
+
+
 def repo_calls(target, repo, branch, description="", private=False, exists=False):
     """(command, stdin) of each step of the default run, in order."""
     make = [] if exists else [(["gh", "repo", "create", repo, "--private" if private else "--public", "--description",
@@ -76,8 +85,9 @@ def repo_calls(target, repo, branch, description="", private=False, exists=False
     push = [(["git", "-C", target, "push", "-u", "origin", branch], None)] if exists else []
     settings = [(["gh", "api", f"repos/{repo}", "-X", "PATCH", "-F", "has_issues=true", "-F", "allow_squash_merge=true"], None),
                 (["gh", "api", f"repos/{repo}/actions/permissions/workflow", "-X", "PUT",
-                  "-f", "default_workflow_permissions=write"], None),
-                (["gh", "api", f"repos/{repo}/rulesets", "-X", "POST", "--input", "-"], json.dumps(RULESET))]
+                  "-f", "default_workflow_permissions=write"], None)]
+    if RULESET["name"] not in ruleset_names(repo):             # a second run: the ruleset exists, GitHub answers 422 with another text
+        settings.append((["gh", "api", f"repos/{repo}/rulesets", "-X", "POST", "--input", "-"], json.dumps(RULESET)))
     labels = open(os.path.join(target, ".github", "labels.txt")).read()
     return make + push + settings + [(c, None) for c in bootstrap.github_calls(repo, labels)]
 
