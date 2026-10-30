@@ -499,7 +499,9 @@ class Replay:
 
     def player(self, p):
         info = self.data["players"].get(str(p), {})
-        return f"Player {p}" + (f" ({pretty(info['civ'])})" if info.get("civ") else ""), \
+        name = info.get("name")                     # the name of the record (#4668); a long one is cut for the panel
+        name = (name if len(name) <= 16 else name[:15] + "…") if isinstance(name, str) and name else f"Player {p}"
+        return name + (f" ({pretty(info['civ'])})" if info.get("civ") else ""), \
             TEXT_COLORS.get(info.get("color"), "white")
 
     def team(self, p):
