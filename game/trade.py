@@ -163,7 +163,9 @@ def tick(g):
         if math.dist((pos[u][0], pos[u][2]), (x + 0.5, z + 0.5)) > ARRIVE:
             continue
         if t["to"] == t["home"]:
-            t["rest"] += gold(center(t["home"], g.map.T), center(t["market"], g.map.T), g.map.n / g.map.T) * gold_rate(g)
+            import civs                                               # civs imports monk, which imports this module
+            t["rest"] += gold(center(t["home"], g.map.T), center(t["market"], g.map.T), g.map.n / g.map.T) * gold_rate(g) \
+                * civs.value("trade_gold", civs.civ(g), 1)            # Palmyrans +20 % (#4446); the relics do not get it
             n, t["rest"] = int(t["rest"]), t["rest"] - int(t["rest"])
             if n:
                 g.earn("gold", n)
