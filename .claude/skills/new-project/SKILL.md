@@ -128,6 +128,8 @@ selects "Use it".
      package hosts of the stack. `docs/ENVIRONMENT.md`: both in words.
    - `pyproject.toml`, `requirements-dev.txt`: keep them. For another language, add its project file (`package.json`,
      `Cargo.toml`, ...) with the lint and test tools, and one smoke test of the language.
+     For TypeScript or JavaScript, also write `biome.json` (`npx biome init`) with 2-space indent and `files.includes`
+     without `framework`, `.claude`, `.github` and `**/*.md`: Biome 2.6 checks YAML, Markdown and HTML too.
    - `steering/project/PRINCIPLES.md`: the answers of step 4. One principle per philosophy answer (`## P1. <rule>`,
      2 or 3 lines: what wins, and one example of this project). The section "Owner involvement": the areas of
      "Your decisions". The section "Try a feature": the way of "Try a feature", with what the agents make for it.
