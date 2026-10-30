@@ -3111,7 +3111,7 @@ class Replay:
             self.queue = None
 
     def play(self, speed=1.0, start=0, clock=time.monotonic, sleep=time.sleep, log=print, bar=False, poll=None,
-             finish=False, to=None, paused=False, rewind=False):
+             finish=False, to=None, paused=False, rewind=False, more=None):
         """Play the timeline from game time `start` (ms) at `speed` times the game speed; `bar`: show the game time
         in a boss bar (`clock_commands`). Returns the stats:
         commands, events, the seconds of sending, the largest lag behind the timeline (s), commands per second
@@ -3123,7 +3123,10 @@ class Replay:
         starts a fresh replay). "time" is the game time now (ms) for poll. `to`: jump to this time at the start;
         `paused`: start in a pause. The replay ends at the time of its last event, as the record (#978); `finish`:
         play the walks and the trainings to their end (tests of one walk or one queue). A restored record starts
-        at the game time of its save, its "restore" event (#4568)."""
+        at the game time of its save, its "restore" event (#4568). `more`: the source of a record that still grows (#4662,
+        epic #4660): more() gives (the new timeline events, already named; True when the record is complete). The replay
+        calls it at most each POLL seconds of real time while it waits (`grow`), and waits at its last event until more()
+        gives events or says that the record is complete."""
         start = max([start] + [e["time"] for e in self.data.get("timeline", []) if e["kind"] == "restore"])
         last = math.inf if finish else max((e["time"] for e in self.data.get("timeline", [])), default=start)
         found = fights(self.data.get("timeline", []), owners(self.data.get("objects", []), self.data.get("timeline", [])))
@@ -3143,6 +3146,36 @@ class Replay:
         end, shown, counted = events[-1]["time"] if events else start, None, -math.inf
         self.ended = end                                            # the average APM of the summary (#3763)
         send = self.send if bar else lambda cmds: None
+        asked, complete = -math.inf, more is None                   # the real time of the last more(); no more parts
+
+        def grow(force=False):
+            """Take the new part of a live record (#4662): its events, their spawns, fight news and camera shots go in
+            time order after the events that the replay played; the end and the boss bar move. The events that the
+            replay played keep their names, and a fight that started before the part keeps its news. True with events."""
+            nonlocal asked, complete, last, end
+            if complete or not force and clock() - asked < POLL:
+                return False
+            asked = clock()
+            new, complete = more()
+            if not new:
+                return False
+            old, timeline = last, self.data.setdefault("timeline", [])
+            timeline += new
+            for name in ("trainings", "told", "town_centers", "unknown_research"):   # the cached views of the timeline
+                self.__dict__.pop(name, None)
+            last = max([last] + [e["time"] for e in new])
+            own = owners(self.data.get("objects", []), timeline)
+            fresh = [f for f in fights(timeline, own) if old < f["start"] <= last]   # new indices: the news stay right
+            found.extend(fresh)
+            later = [{"time": c["time"], "kind": "shot", "tile": c["tile"]} for c in camera_plan(timeline, own)
+                     if old < c["time"] <= last]
+            shots.extend(later)
+            add = [e for e in new if start <= e["time"] <= last] + [s for s in self.spawns() if old < s["time"] <= last] + \
+                [{"time": f["start"], "kind": "news", "fight": len(found) - len(fresh) + i} for i, f in enumerate(fresh)] + later
+            events[k:] = sorted(events[k:] + add, key=lambda e: e["time"])
+            end = self.ended = max(end, events[-1]["time"]) if events else end
+            send([f"bossbar set {BAR} max {max(1, int(end) // 1000)}"])
+            return True
         send([f'bossbar add {BAR} ""', f"bossbar set {BAR} color white",
                    f"bossbar set {BAR} max {max(1, int(end) // 1000)}"] +
              ([f"tag {u} add {COUNTED}" for u in self.counted] + ["aoe deathmarks on", "aoe minimap on", f"aoe minimap frame {FRAME * self.T}"]) * self.ai +
@@ -3155,7 +3188,7 @@ class Replay:
         census = self.census if bar and self.ai else lambda t=0: None
         watching = self.control["camera"]                           # the camera state of the last poll (#3369)
         look = self.look_around if bar and self.ai else lambda: None          # as census: a server of run.py --replay
-        while k < len(events) or self.moving or self.builds or self.charging or self.idle:
+        while k < len(events) or self.moving or self.builds or self.charging or self.idle or not complete:
             step = min([*self.moving.values(), *self.working.values(), *self.effects.values(),   # walk, gather, text
                         *[self.calm_at(i) for i in self.charging if i not in self.moving],         # an attack-move ends
                         *[self.burst] * bool(self.flares),                                        # a flare column
@@ -3166,7 +3199,18 @@ class Replay:
                         *[c for i in self.moving if self.ai and (c := getattr(self.units[i], "check", None))]],
                        default=math.inf)                            # the recheck of a long leg (#1293)
             if k == len(events) and step > end and not finish:        # the record ends at its last event: do not wait for walks (#978)
-                break
+                if complete:
+                    break
+                held = end                                          # a live record: wait for its next part (#4662)
+                while not grow(force=True) and not complete:
+                    self.flush()
+                    if poll:
+                        self.control["time"] = end
+                        poll(self.control)
+                    sleep(POLL)
+                if not self.paused:                                 # the new part starts at the end of the old one
+                    g0, r0 = held, clock()
+                continue
             e = events[k] if k < len(events) and events[k]["time"] <= step else None
             k += e is not None
             now = e["time"] if e else step
@@ -3187,6 +3231,8 @@ class Replay:
                         watching = self.control.get("camera")
                         if watching == "auto" and (now_shots := [s for s in shots if s["time"] <= self.control["time"]]):
                             self.send(self.shot_view(now_shots[-1]["tile"]))
+                if more is not None:                                # the next part of a live record (#4662)
+                    grow()
                 if (to := self.control.pop("jump", None)) is not None:
                     break
                 wait = POLL if self.paused else (now - g0) / 1000 / self.speed - (clock() - r0)
