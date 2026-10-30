@@ -539,8 +539,7 @@ def generate(text, seed, players=2, size=None, warn=None, teams=None, folder=Non
                 layers[len(lands) - 1] = top
                 if "land_id" in attrs:                  # only create_land: the guide gives player lands no ID
                     ids[value(attrs["land_id"][0], consts)] = len(lands) - 1
-            for a in set(attrs) - {"base_layer", "base_size", "clumping_factor", "terrain_type", "land_percent", "number_of_tiles",
-                                   "land_id", "land_position", "zone", "assign_to_player", "assign_to_team", *BORDERS}:
+            for a in sorted(set(attrs) - set(CREATE_LAND)):
                 warn(f"{cmd}: {a} is not read yet")
         else:
             warn(f"{cmd} is not read yet")
@@ -586,9 +585,7 @@ def generate(text, seed, players=2, size=None, warn=None, teams=None, folder=Non
                   "clump": clump} for k in range(clumps)]
         grow(mark, group, free, rng)
         terrain[mark >= 0] = kind
-        for a in set(attrs) - {"base_terrain", "number_of_clumps", "number_of_tiles", "land_percent", "clumping_factor",
-                               "spacing_to_other_terrain_types", "set_avoid_player_start_areas",
-                               "set_scale_by_groups", "set_scale_by_size"}:
+        for a in sorted(set(attrs) - set(CREATE_TERRAIN)):
             warn(f"create_terrain: {a} is not read yet")
     connections(terrain, links, sections.get("CONNECTION_GENERATION", ()), consts, rng, warn)
     elevation = lower_to_water(terrain, elevation)
@@ -635,6 +632,34 @@ def circle(setup, players, teams, seed):
     return rng.permutation(order).tolist()
 
 
+CREATE_LAND = (                 # the attributes of create_land and create_player_lands that generate() reads: one per line (#4417)
+    "assign_to_player",
+    "assign_to_team",
+    "base_layer",
+    "base_size",
+    "bottom_border",
+    "clumping_factor",
+    "land_id",
+    "land_percent",
+    "land_position",
+    "left_border",
+    "number_of_tiles",
+    "right_border",
+    "terrain_type",
+    "top_border",
+    "zone",
+)
+CREATE_TERRAIN = (              # the attributes of create_terrain that generate() reads: one per line (#4417)
+    "base_terrain",
+    "clumping_factor",
+    "land_percent",
+    "number_of_clumps",
+    "number_of_tiles",
+    "set_avoid_player_start_areas",
+    "set_scale_by_groups",
+    "set_scale_by_size",
+    "spacing_to_other_terrain_types",
+)
 CREATE_OBJECT = (               # the attributes of create_object that objects() reads: one per line, in alphabetical order (#4224)
     "actor_area",                   # mark the tiles around each object for a later avoid_actor_area (#3858)
     "actor_area_radius",            # the radius of actor_area, default 1 (#3858)

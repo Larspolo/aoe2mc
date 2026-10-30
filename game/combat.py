@@ -152,7 +152,7 @@ def elevation_command(data):
                                                                    for full in [{} if data.get("full_tech_tree") else p]])
 
 
-def stats_command(uuid, name, s=None, taken=1.0, friendly=1.0, less=None, ignore=False, rage=0, reflect=0.0):
+def stats_command(uuid, name, s=None, taken=1.0, friendly=1.0, less=None, ignore=False, rage=0, reflect=0.0, dot=None):
     """The plugin command that gives entity `uuid` the values of AoE2 unit `name` (or the values s, for example with
     technologies, #655): max_health = hit points (at most 1024, the limit of the attribute), the lost hit points stay lost
     (a new unit has full health, #940), and the values of `damage` (the same rule in AoePlugin.java). The range kind:
@@ -161,13 +161,16 @@ def stats_command(uuid, name, s=None, taken=1.0, friendly=1.0, less=None, ignore
     of the friendly fire that it takes (civs.friendly, #2418). Then, when they are set, the damage less from attacker
     classes (less, Royal Heirs) and 1 when its hits ignore the armor (ignore, Wootz Steel): train.hits (#4331), the attack
     more for each 10 % of lost hit points (rage, Hamask) and the part of a melee hit that the attacker takes back
-    (reflect, Lamellar Armor, #4332)."""
+    (reflect, Lamellar Armor, #4332). Last, dot: the damage over time of each hit, (damage, AoE2 seconds, the target
+    classes or ()) of train.dot (#4339), its seconds as ticks at Normal speed."""
     s = s or stats(name)
     bonus = ",".join(f"{c}:{n}" for c, n in sorted(s.bonus.items())) or "-"
     kind = 0 if s.range <= 0 else 2 if name in MELEE_RANGED else 1
     tail = [(f"{taken:g}", taken != 1), (f"{friendly:g}", friendly != 1),
             (",".join(f"{c}:{n}" for c, n in sorted((less or {}).items())) or "-", bool(less)), ("1" if ignore else "0", ignore),
             (f"{rage:g}", rage != 0), (f"{reflect:g}", reflect != 0)]
+    if dot:                                                            # Curare, Red Cliffs Tactics (Dot.java)
+        tail += [(f"{dot[0]:g}", True), (str(max(1, round(dot[1] / NORMAL * 20))), True), (",".join(sorted(dot[2])) or "-", True)]
     last = max([i + 1 for i, (_, on) in enumerate(tail) if on] + [0])   # the fields up to the last set one
     return (f"aoe stats {uuid} {min(s.hp, 1024)} {s.attack} {s.melee} {s.pierce} {kind} "
             f"{','.join(s.classes) or '-'} {bonus} {round(s.reload / NORMAL * 20) or 20}"

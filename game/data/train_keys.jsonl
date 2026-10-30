@@ -6,6 +6,7 @@
 {"name": "attack_aura", "text": "An upgrade of one building (one_building): the own military units within \"range\" tiles of the building attack \"rate\" times as fast, {\"rate\", \"range\"}. train.haste.", "issue": 2497}
 {"name": "build_rate", "text": "A technology that makes the builders of the player work faster: the factor of the work per second (Antiquity Architecture). build.rise.", "issue": 3917}
 {"name": "breach", "text": "true: after this technology the villagers attack enemy walls, gates and towers (Siegecraft of Antiquity Mode). gather.breach.", "issue": 3916}
+{"name": "charge_attack", "text": "The charge of the next melee hit of the own units of its tests after the research: {\"if\": [tests], \"attack\": n, \"time\": s} (Comitatenses): the first melee hit after time AoE2 seconds does n more attack, then the charge starts again. train.FIRE, train.fire_commands, the plugin command aoe chargeattack.", "issue": 4370}
 {"name": "civ", "text": "The civilization of a unique technology: only its castle researches it (civs.MISSING of the others).", "issue": 2021}
 {"name": "converts", "text": "A technology that converts more: [\"buildings\" (enemy buildings, as Redemption), \"monks\" (enemy priests and monks, as Atonement)]. monk.CONVERTS.", "issue": 3986}
 {"name": "costs", "text": "A technology that changes the cost of a group of items: a list of [a rule what of civs.has, a resource or null for all, the factor], as the rules of civs.COSTS. civs.cost.", "issue": 4225}
@@ -36,8 +37,10 @@
 {"name": "pack_time", "text": "A factor of the AoE2 seconds to pack or unpack a trebuchet (Kataparuto: 0.25). trebuchet.pack_time.", "issue": 4275}
 {"name": "regen", "text": "A technology that regenerates hit points of a group of units: [a group of civs.GROUPS, the hit points per AoE2 minute]. civs.regen.", "issue": 4255}
 {"name": "building_taken", "text": "The factor of the bonus damage that a building of the player takes after the technology: {building: factor} (Citadels: a castle 0.75). build.taken.", "issue": 4281}
+{"name": "damage_over_time", "text": "A technology that adds damage over time to the hits of units: a list of {\"if\": [tests of train.test], \"damage\": n, \"seconds\": AoE2 seconds, \"on\": [the target classes, default each unit]} (Curare, Red Cliffs Tactics). train.dot, the plugin Dot.java.", "issue": 4339}
 {"name": "less", "text": "A technology that cuts the damage that its units take from attackers of some classes: [the units (as \"walk\"), {attacker class: n}]; the most of the classes of the attacker counts (Royal Heirs). train.hits.", "issue": 4331}
 {"name": "ignore_armor", "text": "A technology whose melee units ignore the armor of the target (a negative armor still counts): the units, as \"walk\" (Wootz Steel). train.hits.", "issue": 4331}
+{"name": "unit_aura", "text": "A technology whose units of the group \"from\" heal the allied units of \"group\" within \"range\" tiles by \"rate\" hit points per AoE2 minute: the largest rate counts (Bimaristan). regen.units.", "issue": 4366}
 {"name": "free", "text": "Free units of a technology for the player and its allies: [the building, the unit, the count per building of each player]. train.granted.", "issue": 4330}
 {"name": "combat_regen", "text": "A technology whose units regenerate a share of their max hit points per AoE2 minute while an enemy unit is within some tiles (in combat): [the group of civs.GROUPS, the share, the tiles] (Ordo Cavalry). civs.regen.", "issue": 4334}
 {"name": "building_regen", "text": "A technology whose own complete buildings of a list regain hit points: {\"buildings\": [names], \"rate\": hit points per AoE2 minute} (Fortified Bastions). regen.buildings.", "issue": 4334}

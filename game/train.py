@@ -138,6 +138,26 @@ def pass_arrows(g, building):
     return f" {v['tiles'] * g.map.T} {v['part']}" if v else ""
 
 
+def dot(g, name, s):
+    """The damage over time of a hit of unit name (combat.Stats s) of the player of g (#4339): (damage, AoE2 seconds, the
+    target classes or ()) of the first technology of g.techs (in name order) with an entry of the key "damage_over_time"
+    whose test holds (test(): Curare, Red Cliffs Tactics), else None. The plugin deals it (Dot.java)."""
+    for t in sorted(getattr(g, "techs", ())):
+        for e in value("damage_over_time", t, ()):
+            if any(test(x, name, s) for x in e["if"]):
+                return e["damage"], e["seconds"], tuple(e.get("on", ()))
+    return None
+
+
+def stats_line(g, uuid, name, s=None):
+    """The "aoe stats" command of unit uuid of the player of g: its values s (default stats()), the bonus damage and the
+    friendly fire that it takes (civs.taken, civs.friendly) and its damage over time (dot(), #4339)."""
+    import combat                                                  # combat imports gather, gather imports this module
+    s = s or stats(g, name, uuid)
+    return combat.stats_command(uuid, name, s, civs.taken(g, name), civs.friendly(g, name), **hits(g, name),
+                                 dot=dot(g, name, s))
+
+
 def weight(g, name):
     """The population of one unit (None: a villager): the product of the factors of the researched technologies with the
     key "population" whose units (as faster: a building, a group, a class, a name or a list) cover it (Logistics of
@@ -357,19 +377,24 @@ ROW = 9                                                            # the first s
 
 HULKS = tuple(r["name"] for r in UNIT_ROWS if r.get("melee_ship"))   # melee warships: the blacksmith attack too (#1509)
 # Siphons and Incendiaries (#2165): technology: the key "charge" or "detonate" of its line of data/train.jsonl and its
-# values: {"if": [tests], "attack": n, "blast": tiles, "bonus": {class: n}}, a charge also "reload" (s) and "shots"
-FIRE = {r["name"]: (k, r[k]) for r in ROWS for k in ("charge", "detonate") if k in r}
+# values: {"if": [tests], "attack": n, "blast": tiles, "bonus": {class: n}}, a charge also "reload" (s) and "shots".
+# The charge of a melee hit (Comitatenses, #4370): the key "charge_attack": {"if": [tests], "attack": n, "time": s}
+FIRE = {r["name"]: (k, r[k]) for r in ROWS for k in ("charge", "charge_attack", "detonate") if k in r}
 
 
 def fire_commands(g, uuid, name, techs=None):
     """The plugin commands of the charge attack (`aoe charge`) and the blast at death (`aoe detonate`) of an own ship
-    after the research of their technologies (FIRE, #2165), and of the thrown axes of a melee unit (`aoe throw`, the
-    key "throw": Gothikon, #4368), or of the technologies techs only. Vanilla has no second attack, no "on death"
-    command and no shot of a melee mob. An axe has the values of the unit (its attack with the upgrades)."""
+    after the research of their technologies (FIRE, #2165), of the charge of the next melee hit of an own unit
+    (`aoe chargeattack`, #4370), and of the thrown axes of a melee unit (`aoe throw`, the key "throw": Gothikon, #4368),
+    or of the technologies techs only. Vanilla has no second attack, no "on death" command, one attack value per mob
+    and no shot of a melee mob. An axe has the values of the unit (its attack with the upgrades)."""
     import combat, gather                                          # both import gather, gather imports this module
     out = []
     for tech, (kind, c) in FIRE.items():
         if tech not in (g.techs if techs is None else techs) or not any(test(t, name, combat.stats(name)) for t in c["if"]):
+            continue
+        if kind == "charge_attack":
+            out.append(f"aoe chargeattack {uuid} {max(1, round(c['time'] / gather.NORMAL * 20))} {c['attack']}")
             continue
         bonus, blast = ",".join(f"{k}:{v}" for k, v in sorted(c["bonus"].items())) or "-", c["blast"] * g.map.T
         out.append(f"aoe charge {uuid} {max(1, round(c['reload'] / gather.NORMAL * 20))} {c['attack']} {c['shots']} "
@@ -1183,7 +1208,7 @@ def haste(g, dt):
             continue
         s = stats(g, name, u)
         s = s._replace(reload=s.reload / fast.get(u, 1))
-        g.command(combat.stats_command(u, name, s, civs.taken(g, name), civs.friendly(g, name), **hits(g, name)))
+        g.command(stats_line(g, u, name, s))
         if cmd := combat.range_command(u, name, T, s=s):
             g.command(cmd)
     g.hasted = fast
@@ -1255,8 +1280,7 @@ def research(g, entry, start=False, rect=None):
             g.soldiers[uuid] = new
             for cmd in type_tag_commands(uuid, old, new):          # the triggers count the new type (#2977)
                 g.command(cmd)
-            g.command(combat.stats_command(uuid, new, stats(g, new, uuid), civs.taken(g, new), civs.friendly(g, new),
-                                           **hits(g, new)))
+            g.command(stats_line(g, uuid, new))
             if cmd := combat.range_command(uuid, new, g.map.T, s=stats(g, new, uuid)):   # the range and blast of an onager
                 g.command(cmd)
             if cmd := volley_command(g, uuid, new):               # a war galley of the Armenians (#2379)
@@ -1270,10 +1294,9 @@ def research(g, entry, start=False, rect=None):
     if vars(g).get("hasted"):                                      # the values below have no haste: haste() sends
         g.hasted = {}                                              # them again (#2497)
     for uuid, name in [(u["uuid"], u["name"]) for u in g.units if "uuid" in u] + list(g.soldiers.items()):
-        if stats(g, name, uuid) != combat.stats(name) or hits(g, name) != hits(None, name):   # also Royal Heirs (#4331)
+        if stats(g, name, uuid) != combat.stats(name) or hits(g, name) != hits(None, name) or dot(g, name, stats(g, name, uuid)):
             g.command(trebuchet.stats_command(g, uuid) if name == trebuchet.NAME   # the armor of its state (#1409)
-                      else combat.stats_command(uuid, name, stats(g, name, uuid), civs.taken(g, name), civs.friendly(g, name),
-                                                **hits(g, name)))
+                      else stats_line(g, uuid, name))
         if name == trebuchet.NAME and trebuchet.state(g, uuid) != "unpacked":
             continue                                               # packed: range 0, the unpack sends the range (#1414)
         new, base = stats(g, name), combat.stats(name)              # the range (Fletching, #724) or the blast (Warwolf, #4283)
@@ -1475,7 +1498,7 @@ def summon(g, name, pos, rotation=math.pi / 2, player=None):
         import owners                                              # owners imports gather, gather imports this module
         owners.add(g, uuid, name, o["player"])                     # an enemy of the other sides (#2992)
     import combat, gather                                          # both import gather, gather imports this module
-    g.command(combat.stats_command(uuid, name, stats(g, name), civs.taken(g, name), civs.friendly(g, name), **hits(g, name)))
+    g.command(stats_line(g, uuid, name, stats(g, name)))
     import spoils                                                  # spoils imports this module
     if cmd := spoils.tag_command(uuid, name):                      # its hits make gold (#2376)
         g.command(cmd)
