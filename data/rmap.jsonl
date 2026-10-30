@@ -89,3 +89,6 @@
 {"name": "CLIFF_DEFAULT", "cliff_type": "CLIFF_DEFAULT"}
 {"name": "CLIFF_DESERT", "cliff_type": "CLIFF_DESERT"}
 {"name": "CLIFF_SNOW", "cliff_type": "CLIFF_SNOW"}
+{"name": "CT_DEFAULT", "cliff_type": "CLIFF_DEFAULT"}
+{"name": "CT_DESERT", "cliff_type": "CLIFF_DESERT"}
+{"name": "CT_SNOW", "cliff_type": "CLIFF_SNOW"}
