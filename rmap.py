@@ -494,7 +494,9 @@ def lower_to_water(terrain, elevation):
 
 def generate(text, seed, players=2, size=None, warn=None, teams=None, folder=None):
     """The map description (aoe2mc.read_json) of the land part of script text, for players on a map of size tiles
-    (default: the AoE2 size of the player count). folder: the folder of the script, for its #include_drs files. teams: one team (or None) per player (#3946), see circle(). "lands": [{"player", "x", "y", "base_size"}] of the player lands."""
+    (default: the AoE2 size of the player count). folder: the folder of the script, for its #include_drs files. teams: one team (or None) per player (#3946), see circle(). "lands": [{"player", "x", "y", "base_size"}] of the player lands.
+    "mood": the color mood of color_correction (aoe2mc.MOODS). enable_waves and water_definition have no effect: Minecraft
+    water takes its color from the biome."""
     warn = warn or (lambda m: print(f"rms: {m}", file=sys.stderr))
     rng = np.random.default_rng(seed)
     n = size or SIZES.get(players, 200)
@@ -518,9 +520,19 @@ def generate(text, seed, players=2, size=None, warn=None, teams=None, folder=Non
     layer = np.full((n, n), -1, np.int16)            # the land layer of each tile (aoe2mc.read_json "layer", -1 = none)
     lands, starts, kinds, links, layers = [], [], {}, [], {}
     ids = {}                                         # the land_id of a create_land -> its land index (#4133)
+    mood = None                                      # color_correction CC_X: the color mood X (aoe2mc.MOODS, #4430)
     for cmd, args, attrs in sections.get("LAND_GENERATION", ()):
         if cmd == "base_terrain":
             terrain[:] = value(args[0], consts)
+        elif cmd == "color_correction":
+            from aoe2mc import MOODS
+            name = args[0].upper().removeprefix("CC_") if args else ""
+            if name in MOODS:
+                mood = name
+            else:
+                warn(f"color_correction {' '.join(args)}: no such color mood")
+        elif cmd in ("enable_waves", "water_definition"):   # Minecraft water has no waves and no look of its own
+            pass
         elif cmd in ("create_player_lands", "create_land"):
             base = value(attrs["base_size"][0], consts) if "base_size" in attrs else 3
             clump = value(attrs["clumping_factor"][0], consts) if "clumping_factor" in attrs else 8
@@ -604,6 +616,9 @@ def generate(text, seed, players=2, size=None, warn=None, teams=None, folder=Non
         if (s := value(attrs["spacing_to_other_terrain_types"][0], consts)
                 if "spacing_to_other_terrain_types" in attrs else 0):
             free &= ~dilate(terrain != on, s)
+        if "spacing_to_specific_terrain" in attrs:          # N tiles from terrain T
+            t, s = (value(v, consts) for v in attrs["spacing_to_specific_terrain"][:2])
+            free &= ~dilate(terrain == t, s)
         avoid = attrs.get("set_avoid_player_start_areas")      # None: not set; []: the default distance
         far = 0 if avoid is None else value(avoid[0], consts) if avoid else AVOID
         for st in starts:                      # never in the start area of a player (its base_size square)
@@ -622,6 +637,9 @@ def generate(text, seed, players=2, size=None, warn=None, teams=None, folder=Non
                   "clump": clump} for k in range(clumps)]
         grow(mark, group, free, rng)
         terrain[mark >= 0] = kind
+        wet = np.isin(terrain, [TERRAINS["WATER"], TERRAINS["SHALLOW"]])
+        if "beach_terrain" in attrs and wet[mark >= 0].all():   # the land tiles at the shore of new water get T
+            terrain[dilate(mark >= 0, 1) & ~wet] = value(attrs["beach_terrain"][0], consts)
         for a in sorted(set(attrs) - set(CREATE_TERRAIN)):
             warn(f"create_terrain: {a} is not read yet")
     connections(terrain, links, sections.get("CONNECTION_GENERATION", ()), consts, rng, warn)
@@ -633,7 +651,7 @@ def generate(text, seed, players=2, size=None, warn=None, teams=None, folder=Non
     found += trees(terrain)
     found += ridges
     return {"size": n, "terrain": terrain.tolist(), "elevation": elevation.tolist(), "layer": layer.tolist(),
-            "objects": found,
+            "objects": found, **({"mood": mood} if mood else {}),
             "players": {str(p): {"color": p - 1} | ({"team": teams[p - 1]} if teams else {}) for p in range(1, players + 1)},
             "lands": [{k: v for k, v in st.items() if k != "land"} for st in starts]}
 
@@ -677,6 +695,8 @@ CREATE_LAND = (                 # the attributes of create_land and create_playe
     "border_fuzziness",
     "bottom_border",
     "clumping_factor",
+    "generate_mode",                # no source gives its effect: read with no warning (#4423)
+    "land_conformity",              # no source gives its effect: read with no warning (#4423)
     "land_id",
     "land_percent",
     "land_position",
@@ -691,6 +711,7 @@ CREATE_LAND = (                 # the attributes of create_land and create_playe
 )
 CREATE_TERRAIN = (              # the attributes of create_terrain that generate() reads: one per line (#4417)
     "base_terrain",
+    "beach_terrain",
     "clumping_factor",
     "height_limits",
     "land_percent",
@@ -701,6 +722,7 @@ CREATE_TERRAIN = (              # the attributes of create_terrain that generate
     "set_scale_by_groups",
     "set_scale_by_size",
     "spacing_to_other_terrain_types",
+    "spacing_to_specific_terrain",
 )
 CREATE_OBJECT = (               # the attributes of create_object that objects() reads: one per line, in alphabetical order (#4224)
     "actor_area",                   # mark the tiles around each object for a later avoid_actor_area (#3858)
