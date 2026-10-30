@@ -331,6 +331,16 @@ class Script:
             if args[0] not in market.RATES:
                 return self.warn("commodity", args[0]) or False
             return self.compare(args[1], market.price(self.bot.g, args[0], name == "commodity-buying-price"), args[2])
+        if name in ("resource-found", "dropsite-min-distance"):       # (dropsite-min-distance RESOURCE REL VALUE)
+            if args[0] in ("live-boar", "dead-boar"):                  # the game program has no hunt for bots yet
+                return name != "resource-found" and self.compare(args[1], 255, args[2])
+            if args[0] not in STOCK:
+                return self.warn("resource", args[0]) or False
+            if name == "resource-found":                               # no fog for bots: each source counts
+                return any(k > 0 for k in self.bot.sources(args[0]).values())
+            return self.compare(args[1], self.drop_distance(args[0]), args[2])
+        if name == "sheep-and-forage-too-far":
+            return self.forage_far()
         if name == "escrow-amount":                                # (escrow-amount RESOURCE REL VALUE)
             return self.compare(args[1], self.escrow.get(args[0], 0), args[2])
         if name == "current-age":
@@ -349,6 +359,24 @@ class Script:
         if value is None:
             return self.warn("fact", name) or False
         return self.compare(args[0], value, args[1])
+
+    def drop_distance(self, res):
+        """The distance in tiles from the nearest drop site of res to its nearest source; 255 when none (airef: -1 or a
+        large value; 255 keeps a rule "< VALUE" false, as the byte limit of the game)."""
+        m, T = self.bot.g.map, self.bot.g.map.T
+        tiles = [t for t, k in self.bot.sources(res).items() if k > 0]
+        cells = [c for d in m.drops[res] for c in d]
+        if not tiles or not cells:
+            return 255
+        return int(min(math.dist(((t[0] + 0.5) * T, (t[1] + 0.5) * T), c) for t in tiles for c in cells) // T)
+
+    def forage_far(self):
+        """True when no fruit bush and no own sheep is within sn-maximum-food-drop-distance tiles of the town center."""
+        m, T, c = self.bot.g.map, self.bot.g.map.T, self.bot.center()
+        far = self.number("sn-maximum-food-drop-distance")
+        far = 8 if far < 0 else far                                    # -1 is "no limit" in AoE2: the reach of a near base
+        food = [t for t, k in m.bushes.items() if k > 0] + list(m.herds)
+        return not c or not any(math.dist(((t[0] + 0.5) * T, (t[1] + 0.5) * T), c) <= far * T for t in food)
 
     def value(self, name):
         """The number of a fact (REL VALUE), or None for an unknown fact."""
