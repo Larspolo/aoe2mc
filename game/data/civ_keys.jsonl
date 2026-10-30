@@ -9,6 +9,7 @@
 {"name": "build", "text": "The build speed of the builders (a factor). build.rise multiplies the work of the builders (civs.build_rate).", "issue": 1893}
 {"name": "build_of", "text": "The build speed of some buildings, {building: factor} (Sicilian fortifications and town centers). build.rise (civs.build_rate).", "issue": 2115}
 {"name": "build_wonder", "text": "The build speed of the builders of a wonder (Spanish: 20 % for wonders). build.rise (civs.build_rate).", "issue": 1893}
+{"name": "building_range", "text": "The extra range of a building in tiles, {building: tiles} (Choson towers: +2). civs.hp adds it to the combat.Stats of the building, so the arrows reach farther.", "issue": 4450}
 {"name": "built_food", "text": "The food that a complete building gives, {building: food} (Saxons, Wu). civs.built_food.", "issue": 2114}
 {"name": "built_units", "text": "The herdables that a complete building gives, {building: [unit, number in the Dark, Feudal, Castle and Imperial Age]} (Tatar sheep).", "issue": 2313}
 {"name": "bushes", "text": "[count, food] of the forage bushes next to the town center at the start (Gurjaras: 2 of 175).", "issue": 2293}

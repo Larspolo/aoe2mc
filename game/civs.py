@@ -191,6 +191,7 @@ REPAIR_TEAM = {r["name"]: r["repair_team"] for r in ROWS if "repair_team" in r}
 WORK_RATE = Table("work_rate", lambda v: {b: tuple(f) for b, f in v.items()})
 TRAIN_RATE = {r["name"]: [tuples(b) for b in r["train_rate"]] for r in ROWS if "train_rate" in r}
 HP = {r["name"]: r["hp"] for r in ROWS if "hp" in r}
+BUILDING_RANGE = {r["name"]: r["building_range"] for r in ROWS if "building_range" in r}   # extra tower range (Choson, #4450)
 ARROWS = {r["name"]: tuples(r["arrows"]) for r in ROWS if "arrows" in r}   # factor of the base arrows in each age (#2178)
 GARRISON = {r["name"]: r["garrison"] for r in ROWS if "garrison" in r}   # units inside a building (garrison.size, #2117)
 TRAINS = {r["name"]: r["trains"] for r in ROWS if "trains" in r}         # more units of a building (Mapuche, #2432)
@@ -520,7 +521,9 @@ def repair_cost(g):
 def hp(civ, building, s, age=0, factor=1):
     """The combat.Stats s of building (a name) with the hit points bonus of civilization civ (HP, #1895) and of its
     age (HP_AGE: 0 = Dark .. 3 = Imperial, #2116), and the factor of the owner's handicap (#2474). AoE2 rounds the hit
-    points to a whole number."""
+    points to a whole number. The key "building_range" adds tiles to the range of the building (Choson towers, #4450)."""
+    if extra := BUILDING_RANGE.get(civ, {}).get(building, 0):
+        s = s._replace(range=s.range + extra)
     f = HP.get(civ, {}).get(building, 1) * HP_AGE.get(civ, (1,) * 4)[min(age, 3)] * factor
     return s if f == 1 else s._replace(hp=round(s.hp * f))
 
