@@ -236,6 +236,9 @@ class Script:
             return args[0] in self.timers and self.bot.time >= self.timers[args[0]]
         if name in ("true", "false"):
             return name == "true"
+        if name == "stance-toward":                                # (stance-toward PLAYER STANCE)
+            import diplomacy
+            return diplomacy.stance(self.bot.g, args[0]) == args[1]
         if name in ("can-train", "can-build", "can-research", "research-completed"):
             return self.can(name, args[0])
         if name in ("unit-type-count", "building-type-count"):
@@ -324,6 +327,13 @@ class Script:
             self.timers[args[0]] = b.time + args[1]
         elif name == "disable-timer":
             self.timers.pop(args[0], None)
+        elif name == "set-stance":                                 # the path of the player menu; a locked team stays
+            import diplomacy
+            if g.data.get("unlock_teams") and args[1] in diplomacy.STANCES:
+                for _ in diplomacy.STANCES:
+                    if diplomacy.stance(g, args[0]) == args[1]:
+                        break
+                    diplomacy.change(g, None, args[0])
         elif name == "chat-to-all":
             g.command("tellraw @a " + json.dumps({"text": f"<Player {g.player}> {args[0]}"}))
         elif name != "do-nothing":
