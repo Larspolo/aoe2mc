@@ -1301,6 +1301,8 @@ def research(g, entry, start=False, rect=None):
                 g.command(cmd)
             if cmd := lead_command(g, uuid, new):                 # an elite Spanish cannon galleon (#2430)
                 g.command(cmd)
+            if cmd := combat.snare_command(uuid, new):            # an Elite Bolas Rider: more attack (#4548)
+                g.command(cmd)
             if cmd := combat.dodge_command(uuid, new):            # an Elite Shrivamsha Rider dodges more (#4399)
                 g.command(cmd)
             if cmd := combat.low_hp_command(uuid, new):           # an Elite Jian Swordsman (#4472)
@@ -1535,6 +1537,8 @@ def summon(g, name, pos, rotation=math.pi / 2, player=None):
     if cmd := combat.accuracy_command(uuid, name, civs.value("accuracy", civs.civ(g), {}).get(name, 0.0)):
         g.command(cmd)                                             # a Hun trebuchet hits units more often (#2479)
     if cmd := combat.charge_command(uuid, name):                   # the Coustillier charges its attack (#4398)
+        g.command(cmd)
+    if cmd := combat.snare_command(uuid, name):                    # the Bolas Rider charges a shot (#4548)
         g.command(cmd)
     if cmd := combat.dodge_command(uuid, name):                    # a Shrivamsha Rider dodges projectiles (#4399)
         g.command(cmd)

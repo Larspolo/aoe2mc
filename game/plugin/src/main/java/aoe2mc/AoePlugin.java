@@ -69,6 +69,8 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scoreboard.Criteria;
 import org.bukkit.scoreboard.Objective;
 import org.bukkit.scoreboard.Scoreboard;
@@ -224,6 +226,11 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *   aoe chargeattack <selector> <ticks> <attack>
  *                                              the charge of a melee hit (Comitatenses, #4370): the first melee hit
  *                                              on a unit after ticks has attack more (before the armor), then the
+ *                                              charge starts again; a new unit starts full
+ *   aoe snare <selector> <ticks> <attack> <amplifier> <effect ticks>
+ *                                              the charged shot (Bolas Rider, #4548, game/combat.py snare_command):
+ *                                              the first projectile hit on a unit after ticks has attack more and
+ *                                              gives the target slowness of amplifier for effect ticks, then the
  *                                              charge starts again; a new unit starts full
  *   aoe cheats <code>,<code>,...|-             the AoE2 cheat codes in the chat (#816, Cheats.java; URL-encoded)
  *   aoe deathmarks on|off                      a short mark where a replay unit dies (#846, Deaths.java)
@@ -510,6 +517,8 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     private final Map<UUID, Integer> charged = new HashMap<>();      // the first tick of the next charge attack
     private final Map<UUID, int[]> meleeCharges = new HashMap<>();   // aoe chargeattack (#4370): {ticks, attack}
     private final Map<UUID, Integer> meleeCharged = new HashMap<>(); // the first tick of the next charged melee hit
+    private final Map<UUID, int[]> snares = new HashMap<>();   // aoe snare (#4548): {ticks, attack, amplifier, effect ticks}
+    private final Map<UUID, Integer> snared = new HashMap<>(); // the first tick of the next charged shot
     private final Map<UUID, Charge> detonations = new HashMap<>();
     // A charged ranged attack of a melee unit (Gothikon, #4368, aoe throw): at most shots axes, one charges in ticks;
     // axes: {charged axes, the tick where the next charge started, the first tick of the next throw}
@@ -832,6 +841,20 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             return a;
         }
         meleeCharged.put(from.getUniqueId(), now + c[0]);
+        return new Stats(a.attack() + c[1], a.melee(), a.pierce(), a.ranged(), a.pierces(), a.classes(), a.bonus(),
+                a.reload(), a.taken(), a.friendly(), a.less(), a.ignores(), a.rage(), a.reflect());
+    }
+
+    // The values of a projectile hit of from on victim (#4548): with a full charge (aoe snare) the attack is more, the
+    // victim gets the vanilla effect slowness (15 % for each level, the AoE2 value), and the charge starts again.
+    private Stats snare(Entity from, Stats a, LivingEntity victim) {
+        int[] c = snares.get(from.getUniqueId());
+        int now = Bukkit.getCurrentTick();
+        if (c == null || now < snared.getOrDefault(from.getUniqueId(), 0)) {
+            return a;
+        }
+        snared.put(from.getUniqueId(), now + c[0]);
+        victim.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, c[3], c[2]));
         return new Stats(a.attack() + c[1], a.melee(), a.pierce(), a.ranged(), a.pierces(), a.classes(), a.bonus(),
                 a.reload(), a.taken(), a.friendly(), a.less(), a.ignores(), a.rage(), a.reflect());
     }
@@ -1408,6 +1431,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         if (ev.getDamager() instanceof Projectile p) {     // a cancelled hit lets the arrow fly on: one hit per arrow
             p.remove();
             a = volley(p, a);                                // an extra arrow of a volley (#2379)
+            a = snare(from, a, victim);                      // a charged shot (Bolas Rider, #4548)
         }
         double dealt = harm(victim, t, a, fort != null ? ev.getDamager() : from);   // a unit does not attack back at a building
         double[] through = fort != null ? fortPass.get(from.getUniqueId()) : null;
@@ -3065,6 +3089,27 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                 n++;
             }
             sender.sendMessage("Charge attack: " + n + " units");
+            return true;
+        }
+        if (args.length == 6 && args[0].equals("snare")) {             // a Bolas Rider (#4548)
+            int[] c = new int[4];
+            try {
+                for (int i = 0; i < 4; i++) {
+                    c[i] = Integer.parseInt(args[i + 2]);
+                }
+            } catch (NumberFormatException e) {
+                sender.sendMessage("Bad value: " + e.getMessage());
+                return true;
+            }
+            int n = 0;
+            for (Entity e : select(sender, args[1])) {
+                snares.put(e.getUniqueId(), c);
+                if (rider(e) instanceof Mob r) {
+                    snares.put(r.getUniqueId(), c);              // the rider of a mounted unit shoots (#710)
+                }
+                n++;
+            }
+            sender.sendMessage("Snare: " + n + " units");
             return true;
         }
         if (args.length == 2 && args[0].equals("cheats")) {

@@ -46,7 +46,7 @@ def stats(row):
 def check_units(row):
     form(row, {"name": str, **STATS}, {"sight": int, "min_range": NUMBER, "note": str, "sail": NUMBER, "convert": int,
                                        "accuracy": NUMBER, "dodge": dict, "low_hp": dict, "ignore_armor": bool, "trample": dict,
-                                       "veteran": dict})
+                                       "veteran": dict, "snare": dict})
     stats(row)
 
 

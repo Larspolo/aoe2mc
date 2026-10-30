@@ -87,6 +87,7 @@ CONTACT = 1.0         # tiles: the reach of a demolition ship (range 0, #1440): 
 # Tiles: no shot at a unit nearer (AoE2 DE, wiki infobox "MinRange", #1350). The key "min_range" of data/units.jsonl.
 MIN_RANGE = {r["name"]: r["min_range"] for r in UNIT_ROWS if "min_range" in r}
 ACCURACY = {r["name"]: r["accuracy"] for r in UNIT_ROWS if "accuracy" in r}   # siege shots at units that hit (#2479)
+SNARE = {r["name"]: r["snare"] for r in UNIT_ROWS if "snare" in r}           # a charged shot that slows (#4548)
 DODGE = {r["name"]: r["dodge"] for r in UNIT_ROWS if "dodge" in r}           # projectiles that do no damage (#4399)
 LOW_HP = {r["name"]: r["low_hp"] for r in UNIT_ROWS if "low_hp" in r}      # another form below some hit points (#4472)
 VETERAN = {r["name"]: r["veteran"] for r in UNIT_ROWS if "veteran" in r}     # attack more for each kill (#4467)
@@ -232,6 +233,18 @@ def charge_command(uuid, name):
     return f"aoe chargeattack {uuid} {max(1, round(c['time'] / NORMAL * 20))} {c['attack']}" if c else None
 
 
+def snare_command(uuid, name):
+    """The plugin command of the charged shot of unit name (the key "snare" of data/units.jsonl: the Bolas Rider,
+    #4548), or None: the first projectile hit after a charge of "time" AoE2 seconds has "attack" more and slows the
+    target by "slow" for "for" seconds. Minecraft slowness lowers the speed by 15 % for each level: amplifier =
+    slow / 0.15 - 1. The ticks as in charge_command."""
+    c = SNARE.get(name)
+    if not c:
+        return None
+    ticks = [max(1, round(c[k] / NORMAL * 20)) for k in ("time", "for")]
+    return f"aoe snare {uuid} {ticks[0]} {c['attack']} {round(c['slow'] / 0.15) - 1} {ticks[1]}"
+
+
 def dodge_command(uuid, name):
     """The plugin command of the dodge of unit name (the key "dodge" of data/units.jsonl: the Shrivamsha Rider, #4399),
     or None when it dodges nothing. The AoE2 wiki ("Shrivamsha Rider"): a second, regenerating health bar takes each
@@ -367,6 +380,8 @@ def setup(game, data):
             game.command(cmd)
     for o in units:                                  # the Coustillier charges its attack (#4398)
         if cmd := charge_command(o["uuid"], o["name"]):
+            game.command(cmd)
+        if cmd := snare_command(o["uuid"], o["name"]):  # the Bolas Rider charges a shot (#4548)
             game.command(cmd)
     for o in units:                                  # a Shrivamsha Rider dodges projectiles (#4399)
         if cmd := dodge_command(o["uuid"], o["name"]):
