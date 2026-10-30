@@ -1294,6 +1294,8 @@ def research(g, entry, start=False, rect=None):
                 g.command(cmd)
             if cmd := combat.dodge_command(uuid, new):            # an Elite Shrivamsha Rider dodges more (#4399)
                 g.command(cmd)
+            if cmd := combat.shield_command(uuid, new):           # an Elite Hussite Wagon (#4507)
+                g.command(cmd)
             if cmd := combat.trample_command(uuid, new, g.map.T):   # an elite elephant tramples (#4397)
                 g.command(cmd)
             g.command(combat.label_command(uuid, new))               # the name of a new unit (units.pretty)
@@ -1518,6 +1520,8 @@ def summon(g, name, pos, rotation=math.pi / 2, player=None):
     if cmd := combat.accuracy_command(uuid, name, civs.value("accuracy", civs.civ(g), {}).get(name, 0.0)):
         g.command(cmd)                                             # a Hun trebuchet hits units more often (#2479)
     if cmd := combat.dodge_command(uuid, name):                    # a Shrivamsha Rider dodges projectiles (#4399)
+        g.command(cmd)
+    if cmd := combat.shield_command(uuid, name):                   # a Hussite Wagon shields the units behind it (#4507)
         g.command(cmd)
     if cmd := combat.trample_command(uuid, name, g.map.T):         # an elephant tramples the units next to its target (#4397)
         g.command(cmd)

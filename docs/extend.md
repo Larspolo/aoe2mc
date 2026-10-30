@@ -36,6 +36,9 @@ parallel tickets do not change the same lines. Most rules have a check: `tools/d
   `"on_research"` (`"module.function"`) on its line, not an `if` block in `train.research()` (#3243).
 - A new key of `game/data/setup.jsonl` (a game mode, a lobby setting) is one line in `game/data/setup_keys.jsonl` (`"type"`,
   `"kind": true` for a key of the "one kind" rule, `"text"`, `"issue"`), not a change of `check_setup()` in `tests/test_data_files.py` (#2558).
+- A new key of a line of `game/data/units.jsonl` needs no entry in the `may` dict of `check_units` (`tests/test_data_files.py`):
+  `form()` accepts a new key, and `test_each_key_has_one_type` checks its type. Tickets that added their key to that one
+  line conflicted (PR #4411, #4507).
 - A new data line needs no test of its values: `tests/test_data_files.py` checks the form of each line of `game/data/`
   (keys, types, names that exist, #1916), and `tests/test_data_keys.py` checks that the code reads each key (#2188): a new key needs no test line. Test the behavior that the code computes
   from it (a fight, a menu, a bonus).
