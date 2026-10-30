@@ -760,6 +760,7 @@ CREATE_OBJECT = (               # the attributes of create_object that objects()
     "place_on_forest_zone",         # only the tiles next to a forest (#3858)
     "place_on_specific_land_id",    # only the tiles of the create_land with this land_id (#4133)
     "require_path",                 # only the tiles with a land path to the origin of the player land (#4137)
+    "resource_delta",               # more or less resources in the object: a key of the object for gather (#4429)
     "second_object",                # one more object on each tile (#3858)
     "set_circular_placement",       # a circle band of min and max_distance_to_players, default a square (#4136)
     "set_gaia_object_only",         # Gaia owns the objects of set_place_for_every_player (#3855)
@@ -830,6 +831,7 @@ def objects(cmds, consts, terrain, starts, rng, warn, owner=None, ridges=(), lay
             owners = owners[:1]
         groups = value(attrs["number_of_groups"][0], consts) if "number_of_groups" in attrs else None
         vary = value(attrs["group_variance"][0], consts) if "group_variance" in attrs else 0
+        delta = {"resource_delta": value(attrs["resource_delta"][0], consts)} if "resource_delta" in attrs else {}
         radius = value(attrs["group_placement_radius"][0], consts) if "group_placement_radius" in attrs else 3
         tight = "set_tight_grouping" in attrs
         circle = "set_circular_placement" in attrs
@@ -926,7 +928,8 @@ def objects(cmds, consts, terrain, starts, rng, warn, owner=None, ridges=(), lay
                     placed[max(0, tx - r):tx + r, max(0, ty - r):ty + r] = True
                     if name == "VILLAGER_MALE" and rng.integers(2):    # AoE2 DE: a male or a female villager
                         name = "VILLAGER_FEMALE"
-                    out.append({"name": name, "player": player, "x": tx + 0.5 * (kind != "B"), "y": ty + 0.5 * (kind != "B")})
+                    out.append({"name": name, "player": player, "x": tx + 0.5 * (kind != "B"), "y": ty + 0.5 * (kind != "B")}
+                               | delta)                                # more or less food, wood, gold or stone (#4429)
                     if second:
                         out.append({"name": second, "player": player, "x": tx + 0.5, "y": ty + 0.5})
                     if actor is not None:
