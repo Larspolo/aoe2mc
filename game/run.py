@@ -482,6 +482,15 @@ def bot_foe(players, player):
     return next((p for p in [*range(1, player), *others] if p != player and not gather.allied(players, player, p)), None)
 
 
+def bot_script(players, player, files, k):
+    """The AI rules of the bot k of player: the embedded script of its scenario row (aoe2mc.json "ai", #4531), else
+    the file k of --ai (#4529), else None: a bot after the list plays by its own logic."""
+    import per
+    if text := players.get(str(player), {}).get("ai"):
+        return per.parse(text, file=f"<script of player {player}>")
+    return per.read(files[k]) if k < len(files or ()) else None
+
+
 def bot_seats(players, people, n):
     """[(player, foe)] of the n bots (#4017): they play the player slots after the people, in order, each with its
     bot_foe. n "all": each free slot of the map."""
@@ -749,10 +758,8 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
         seats = bot_seats(data["players"], players, bot) if bot else []
     for k, (player, foe) in enumerate(seats):        # after the people, next to their Sides (#1794)
         import bot as bots
-        import per
         level = bots.level_of(settings["ai_difficulty"], k)   # one level for each bot in seat order (#4020)
-        files = settings["ai"] or []                 # a bot after the list plays by its own logic (#4529)
-        script = per.read(files[k]) if k < len(files) else None
+        script = bot_script(data["players"], player, settings["ai"], k)
         import replay
         import treaty as treaties
         attack = max(bot_attack, settings["treaty"], key=replay.aoe2mc.game_time)   # the bot waits for the treaty too
