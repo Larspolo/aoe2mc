@@ -1,0 +1,36 @@
+{"name": "archer", "game": "ARCHER", "kind": "unit"}
+{"name": "archer-line", "game": "ARCHER", "kind": "unit"}
+{"name": "archery-range", "game": "ARCHERY_RANGE", "kind": "building"}
+{"name": "barracks", "game": "BARRACKS", "kind": "building"}
+{"name": "blacksmith", "game": "BLACKSMITH", "kind": "building"}
+{"name": "castle-age", "game": "CASTLE_AGE", "kind": "age", "age": 2}
+{"name": "dark-age", "kind": "age", "age": 0}
+{"name": "farm", "game": "FARM", "kind": "building"}
+{"name": "feudal-age", "game": "FEUDAL_AGE", "kind": "age", "age": 1}
+{"name": "house", "game": "HOUSE", "kind": "building"}
+{"name": "imperial-age", "game": "IMPERIAL_AGE", "kind": "age", "age": 3}
+{"name": "knight", "game": "KNIGHT", "kind": "unit"}
+{"name": "lumber-camp", "game": "LUMBER_CAMP", "kind": "building"}
+{"name": "man-at-arms", "game": "MAN_AT_ARMS", "kind": "unit"}
+{"name": "market", "game": "MARKET", "kind": "building"}
+{"name": "militia", "game": "MILITIA", "kind": "unit"}
+{"name": "militiaman-line", "game": "MILITIA", "kind": "unit"}
+{"name": "mill", "game": "MILL", "kind": "building"}
+{"name": "mining-camp", "game": "MINING_CAMP", "kind": "building"}
+{"name": "ri-bow-saw", "game": "BOW_SAW", "kind": "tech"}
+{"name": "ri-double-bit-axe", "game": "DOUBLE_BIT_AXE", "kind": "tech"}
+{"name": "ri-gold-mining", "game": "GOLD_MINING", "kind": "tech"}
+{"name": "ri-horse-collar", "game": "HORSE_COLLAR", "kind": "tech"}
+{"name": "ri-loom", "game": "LOOM", "kind": "tech"}
+{"name": "ri-man-at-arms", "game": "MAN_AT_ARMS_UPGRADE", "kind": "tech"}
+{"name": "ri-stone-mining", "game": "STONE_MINING", "kind": "tech"}
+{"name": "ri-wheelbarrow", "game": "WHEELBARROW", "kind": "tech"}
+{"name": "scout-cavalry", "game": "SCOUT_CAVALRY", "kind": "unit"}
+{"name": "scout-cavalry-line", "game": "SCOUT_CAVALRY", "kind": "unit"}
+{"name": "skirmisher", "game": "SKIRMISHER", "kind": "unit"}
+{"name": "skirmisher-line", "game": "SKIRMISHER", "kind": "unit"}
+{"name": "spearman", "game": "SPEARMAN", "kind": "unit"}
+{"name": "spearman-line", "game": "SPEARMAN", "kind": "unit"}
+{"name": "stable", "game": "STABLE", "kind": "building"}
+{"name": "town-center", "game": "TOWN_CENTER", "kind": "building"}
+{"name": "villager", "game": "VILLAGER_MALE", "kind": "unit"}
