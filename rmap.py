@@ -125,7 +125,7 @@ def expand(words, rng, defined, consts, includes, folder=None, depth=0):
             i += 2
         elif w in ("endif", "end_random"):
             if not stack:
-                raise RmsError(f"{w} without its start")
+                raise RmsError(f"{w} without its start (after: {' '.join(words[max(0, i - 8):i])})")
             stack.pop()
             i += 1
         elif not on():
