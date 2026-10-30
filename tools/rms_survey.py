@@ -30,7 +30,7 @@ def survey(path):
         text = f.read()
     warnings = []
     try:
-        rmap.generate(text, 1, warn=warnings.append, folder=os.path.dirname(path))
+        rmap.generate(text, 1, warn=warnings.append, folder=os.path.dirname(path), name=os.path.basename(path))
         state = "ok"
     except Exception as e:  # one broken script must not stop the survey
         state = f"error: {type(e).__name__}: {e}"

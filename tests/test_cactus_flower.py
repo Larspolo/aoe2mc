@@ -1,8 +1,8 @@
 """Some desert cacti have a cactus flower on top (#540)."""
 import numpy as np
+from mcvalid import block_error
 
 import aoe2mc
-from mcvalid import block_error
 
 T, H = 4, 3
 

@@ -1,9 +1,9 @@
 """Desert and snow cliffs have their own rocks (#4115)."""
 import numpy as np
 import pytest
+from mcvalid import block_error
 
 import aoe2mc
-from mcvalid import block_error
 
 T, H = 4, 3
 DEFAULT = {"stone", "andesite", "tuff", "cobblestone", "mossy_cobblestone"}

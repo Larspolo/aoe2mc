@@ -5,9 +5,9 @@ import shutil
 import time
 
 import pytest
+from test_damage import health
 
 from game import combat, run
-from test_damage import health
 
 UUID = "00000000-0000-0000-0000-000000000001"
 

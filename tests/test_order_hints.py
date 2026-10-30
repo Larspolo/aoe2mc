@@ -1,8 +1,8 @@
 """game/hints.py and game/gather.py: the pending Attack Move, Follow and Guard orders show their hint in the action bar
 (as Patrol, #3355), and a Follow or Guard order shows the order marker on its target (#796, #3358)."""
-from game import gather, hints, stance
-
 from test_follow_guard_order import setup
+
+from game import gather, hints, stance
 
 
 def test_each_pending_order_has_its_own_hint(monkeypatch):

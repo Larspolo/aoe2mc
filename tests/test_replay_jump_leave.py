@@ -6,10 +6,9 @@ import sys
 import pytest
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import replay  # noqa: E402
 from test_replay import Fake, data  # noqa: E402
 from test_replay_garrison import RECT, TC, vil  # noqa: E402
-
-import replay  # noqa: E402
 
 
 def inside_replay(ai):

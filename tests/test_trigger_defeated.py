@@ -5,9 +5,10 @@ import os
 import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "tools"))
-import aoe2mc  # noqa: E402
 import triggers  # noqa: E402
 from test_conquest import check, live, setup  # noqa: E402
+
+import aoe2mc  # noqa: E402
 
 
 def trig(player=2):

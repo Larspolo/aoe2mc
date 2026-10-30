@@ -6,10 +6,10 @@ import shutil
 import time
 
 import pytest
-
-from game import ai, run
 from test_horse_rest import track
 from test_unit_ai import data
+
+from game import ai, run
 
 
 @pytest.mark.mc

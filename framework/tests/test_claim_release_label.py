@@ -2,10 +2,9 @@
 candidate again at once, and no run must take it over as stuck."""
 import subprocess
 
-import pytest
-
 import claim
 import dashboard
+import pytest
 
 
 @pytest.fixture

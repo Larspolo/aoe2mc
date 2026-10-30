@@ -37,6 +37,7 @@ import sys
 
 import agent_config
 from agent_config import CONFIG
+
 sys.path.append(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "tools"))   # the project tools: release.py (#4195)
 
 BURN = 0.03         # share of the 5-hour quota that one run uses per hour (16 runs used about 50 % per hour, 2026-10-25)
@@ -204,7 +205,7 @@ def refill_need(ready, target, issues, due=lambda: [], reviews=lambda: [], free=
 def release_due():
     """The release checks with no ticket (`release.due`), or [] when the read fails: the pacer must still start runs."""
     try:
-        import release                                      # not in a bootstrap copy (`framework/tools/bootstrap.py`)
+        import release  # not in a bootstrap copy (`framework/tools/bootstrap.py`)
         features, _, rows, epics = release.load()
         return release.due(features, rows, epics)
     except Exception as e:                                  # a GitHub or file error

@@ -21,7 +21,7 @@ def lines(sent, p):    # without the APM part (#3764), each line once
 
 def paid(*names):
     """The start resources less the AoE2 costs of the names (train and build COSTS)."""
-    import build as builds                                             # `build` of test_replay is a timeline event
+    import build as builds  # `build` of test_replay is a timeline event
     s = dict(replay.START)
     for n in names:
         for k, v in (train.COSTS.get(n) or builds.COSTS.get(n) or {}).items():

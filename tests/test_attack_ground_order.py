@@ -1,8 +1,8 @@
 """game/stance.py: the stance menu has an "Attack Ground" item. A click on it and then on a ground cell lets
 the selected siege units shoot at that point (`aoe attackground`, #4078); the other units ignore it (#4079)."""
-from game import gather, hints, stance
-
 from test_gather import FakeServer, grid
+
+from game import gather, hints, stance
 
 
 def setup(monkeypatch, names):

@@ -91,10 +91,11 @@ def test_a_trained_villager_chops_on_a_server(tmp_path):
     from test_mc_check import mojang_reachable
     if not mojang_reachable():
         pytest.skip("Mojang is not reachable")
-    import aoe2mc
     import scenarios
     from AoE2ScenarioParser.datasets.buildings import BuildingInfo
     from AoE2ScenarioParser.datasets.other import OtherInfo
+
+    import aoe2mc
     scn = scenarios.new_scenario(16)
     scn.unit_manager.add_unit(scenarios.PlayerId.ONE, BuildingInfo.TOWN_CENTER.ID, x=4, y=4)
     scn.unit_manager.add_unit(scenarios.PlayerId.GAIA, OtherInfo.TREE_OAK_FOREST.ID, x=10.5, y=4.5)

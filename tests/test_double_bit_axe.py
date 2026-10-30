@@ -7,7 +7,6 @@ from test_gather import FakeServer, grid
 
 from game import gather, train
 
-
 TECH = "DOUBLE_BIT_AXE"
 COST, TIME = train.COSTS[TECH], train.TRAIN_TIMES[TECH]
 

@@ -8,11 +8,11 @@ import sys
 import types
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "game"))
-import aoe2mc  # noqa: E402
 import gather  # noqa: E402
 import scenario  # noqa: E402
 from test_gather import FakeServer, grid  # noqa: E402
 
+import aoe2mc  # noqa: E402
 from tools import scenarios  # noqa: E402
 
 MARKET = {"kind": "building", "name": "MARKET", "player": 1, "ref": 12, "footprint": [2, 2, 6, 6]}

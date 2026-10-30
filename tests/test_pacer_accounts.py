@@ -4,9 +4,8 @@ import http.server
 import json
 import threading
 
-import pytest
-
 import pacer
+import pytest
 
 NOW = 1_800_000_000
 

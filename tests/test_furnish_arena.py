@@ -1,11 +1,11 @@
 """The Colosseum and the Amphitheatre have stepped seats, an arena with props and a gate passage (#451)."""
 from collections import Counter
 
+import mcvalid
 import pytest
+from test_furnish_landmarks import blocks
 
 import aoe2mc
-import mcvalid
-from test_furnish_landmarks import blocks
 
 NEEDS = {"COLOSSEUM": ("iron_bars", "hay_block", "lantern", "blue_wall_banner", "smooth_quartz_stairs", "red_carpet"),
          "AMPHITHEATRE": ("iron_bars", "lantern", "blue_wall_banner", "dark_oak_slab", "potted_fern")}

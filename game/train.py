@@ -154,7 +154,7 @@ def dot(g, name, s, techs=None):
 def stats_line(g, uuid, name, s=None):
     """The "aoe stats" command of unit uuid of the player of g: its values s (default stats()), the bonus damage and the
     friendly fire that it takes (civs.taken, civs.friendly) and its damage over time (dot(), #4339)."""
-    import combat                                                  # combat imports gather, gather imports this module
+    import combat  # combat imports gather, gather imports this module
     s = s or stats(g, name, uuid)
     return combat.stats_command(uuid, name, s, civs.taken(g, name), civs.friendly(g, name), **hits(g, name),
                                  dot=dot(g, name, s))
@@ -180,7 +180,7 @@ def researched(g, tech):
         return True
     if not BY_KEY["team"].get(tech):
         return False
-    import gather                                                  # gather imports this module
+    import gather  # gather imports this module
     root = vars(g).get("share") or g
     return any(tech in vars(h).get("techs", ()) and gather.allied(g.players, g.player, h.player)
                for h in [root, *(b.g for b in getattr(root, "bots", ())), *getattr(root, "peers", ())])
@@ -263,7 +263,7 @@ def masonry(name, s):
     """Masonry (AoE2 DE, wiki): a building +10 % hit points, +1 melee and +1 pierce armor; not the walls and gates
     (combat.WALLS) and not the farms and fish traps (no building Stats). The +3 building armor against the bonus damage
     of siege units and ships is not in the damage rule (combat.damage)."""
-    import combat                                                  # combat imports gather, gather imports this module
+    import combat  # combat imports gather, gather imports this module
     wall = name in combat.WALLS or name.endswith(("_WALL", "_GATE"))
     return s._replace(hp=round(s.hp * 1.1), melee=s.melee + 1, pierce=s.pierce + 1) if "building" in s.classes and not wall else s
 
@@ -392,7 +392,8 @@ def fire_commands(g, uuid, name, techs=None):
     of the delayed second blast where a shot lands (`aoe afterblast`, the key "after_blast": Thunderclap Bombs, #4369),
     or of the technologies techs only. Vanilla has no second attack, no "on death" command, one attack value per mob
     and no shot of a melee mob. An axe has the values of the unit (its attack with the upgrades)."""
-    import combat, gather                                          # both import gather, gather imports this module
+    import combat  # both import gather, gather imports this module
+    import gather
     out = []
     for tech, (kind, parts) in FIRE.items():                       # a list: one value per unit line, foes only (#4367)
         for c in parts if isinstance(parts, list) else [parts]:
@@ -437,7 +438,7 @@ def volley_command(g, uuid, name):
     (Chu Ko Nu, Kipchak, Hussite Wagon, #4502) starts the count. The plugin keeps one attack for
     all extra projectiles of a unit: the last technology wins. Minecraft feature: one more Arrow entity; the plugin
     gives it its AoE2 damage."""
-    import combat                                                  # combat imports this module's data: import it late
+    import combat  # combat imports this module's data: import it late
     base = combat.VOLLEY.get(name)
     shots, attack = (0, 0) if base is None else (base["shots"], base["attack"])
     if (civ := civs.value("volley", civs.civ(g), {}).get(name)) is not None:
@@ -453,7 +454,7 @@ def lead_command(g, uuid, name, techs=None):
     """The command that lets the shots of own unit name lead a moving target, as with Ballistics (the key "lead" of
     data/civs.jsonl: Spanish Cannon Galleons, #2430; the key "lead" of data/train.jsonl of the technologies techs,
     default g.techs: Arquebus, #4364), else None. Minecraft feature: a scoreboard tag that the plugin reads (AoePlugin.lead)."""
-    import combat                                                  # combat imports this module's data: import it late
+    import combat  # combat imports this module's data: import it late
     if name in civs.value("lead", civs.civ(g), ()):
         return f"tag {uuid} add aoe2mc.lead"
     s = combat.stats(name)
@@ -492,7 +493,7 @@ def monks(name, s):
 def ship(name, s):
     """True for the combat values s of ship name: the units of Careening and Dry Dock (#1441). The transport ship has
     no class "ship" in combat (the warships do not shoot at it), but it gets the armor too."""
-    import combat                                                  # combat imports gather, gather imports this module
+    import combat  # combat imports gather, gather imports this module
     return combat.SHIP in s.classes or name == "TRANSPORT_SHIP"
 
 
@@ -623,7 +624,8 @@ def trains(g, building):
 def granted(g, building=None):
     """{unit: count} of the free units of building (any building with None) that the technologies of the key "free"
     of the player or of an allied player give to each of its buildings (Cuman Mercenaries, #4330)."""
-    import fog, gather                                             # both import gather, gather imports this module
+    import fog  # both import gather, gather imports this module
+    import gather
     if not BY_KEY["free"] or not hasattr(g, "players"):
         return {}
     out = {}
@@ -700,7 +702,7 @@ def trained_voice(g, rect, unit):
     """Play the select voice of the class of the unit that the building rect completed, to the team of the own player
     (AoE2 DE, #3563). unit: a Villager, a UUID or a ship. A class with no line plays none; a setup or a cheat spawns
     with no sound."""
-    import gather                                                  # gather imports this module
+    import gather  # gather imports this module
     if (v := gather.VOICES.get(g.voice_class(getattr(unit, "uuid", unit)))) and not getattr(g, "noui", False):
         x, z = (rect[0] + rect[1]) / 2, (rect[2] + rect[3]) / 2
         g.command(f"playsound minecraft:{v['select']} voice @a[team=p{g.player}] {x:.1f} {g.map.y(int(x), int(z))} {z:.1f} 1 {v['pitch']}")
@@ -729,7 +731,7 @@ def show(g, player, rect):
     items += [garrison.bell_item(g)] if building == "TOWN_CENTER" else []    # the town bell (#3419)
     items += [demolish.ITEM] if demolish.shown(g, rect) else []        # the building falls (#3452)
     if building == "MARKET":                                           # the buy and sell rows under the queue (#1286)
-        import market                                                  # only for a market
+        import market  # only for a market
         items += [(market.ROW + slot, *item) for slot, *item in market.items(g)]
     q = g.queues.get(rect, [])                                         # the queue row first: the plugin sets the
     items = [(ROW + i, ITEMS[name][1], ITEMS[name][2] + (f" {int(100 * q[0]['progress'])} %" if start == 0 else ""),
@@ -878,7 +880,7 @@ def go(g, rect, uuid, name):
         return
     (x, z), tile = g.rally[rect]
     if uuid not in g.villagers:                                        # a military unit walks with the plugin
-        import ai                                                      # ai imports gather, gather imports this module
+        import ai  # ai imports gather, gather imports this module
         ai.move(g, uuid, name, g.map.T, x + 0.5, g.map.y(x, z), z + 0.5, ai.NORMAL * speed(g, name, uuid))
     elif tile:
         g.send(tile, {uuid})
@@ -1012,7 +1014,7 @@ def per_enemy(g, name):
         return {r: COSTS[name].get(r, 0) + more.get(r, 0) * n for r in COSTS[name] | more}
     if name not in PER_ENEMY:
         return COSTS[name]
-    import fog                                                     # fog imports gather, gather imports this module
+    import fog  # fog imports gather, gather imports this module
     kinds, most = PER_ENEMY[name]
     n = max(1, sum(any(u.startswith(k) for k in kinds) for u in fog.units(g)[1].values()))
     return {r: min(v * n, most.get(r, v * n)) for r, v in COSTS[name].items()}
@@ -1047,7 +1049,7 @@ def missing(g, name):
     n, names, *alone = REQUIRES.get(name, (0, ()))
     if civs.civ(g) in civs.AGE_NO_BUILDINGS:                       # the Khmer (#1926)
         return None
-    import combat                                                  # combat imports gather, gather imports this module
+    import combat  # combat imports gather, gather imports this module
     own = {combat.STANDS_FOR.get(b, b) for b in owned(g)}          # the Folwark is a mill, the church a monastery
     has, alone = sorted(set(names) & own), alone[0] if alone else ()
     count = len(has) + sum(AGE_COUNT.get(b, 1) - 1 for b in set(owned(g)) if combat.STANDS_FOR.get(b, b) in names)
@@ -1080,7 +1082,7 @@ CLASSES = {
 def applies(unit, name):
     """True when the unit of a "Modify Attribute" line is AoE2 unit name: its type, or its class "@<class>" (CLASSES,
     #2859). A class with no test: no unit."""
-    import combat                                                  # combat imports gather, gather imports this module
+    import combat  # combat imports gather, gather imports this module
     test = CLASSES.get(unit[1:]) if unit.startswith("@") else None
     return unit == name or test is not None and name in combat.STATS and test(set(combat.stats(name).classes))
 
@@ -1089,7 +1091,7 @@ def trample_command(g, uuid, name):
     """The trample command of the splash of a researched technology with the key "trample" whose effect holds for unit
     name (Druzhina, #4496), with the blast radius of the unit (stats). None for a unit with its own trample (the
     elephants, #4397: abilities.commands gives it) and without such a technology."""
-    import combat                                                  # combat imports gather, gather imports this module
+    import combat  # combat imports gather, gather imports this module
     if name in abilities.trample.UNITS:
         return None
     s = stats(g, name, uuid)
@@ -1103,7 +1105,7 @@ def stats(g, name, uuid=None):
     the player (combat.stats and TECHS), twice for civs.TWICE (#1561), n times for civs.SMITH_UNITS (#2174), and the
     hit points of civs.TECH_HP (#2269). With uuid: also the trigger changes of that unit (unit_values, #3083) and the
     steps of the own units near it (g.near, near.py, #4333)."""
-    import combat                                                  # combat imports gather, gather imports this module
+    import combat  # combat imports gather, gather imports this module
     s, twice = civs.units(g, name, combat.stats(name)), civs.TWICE.get(civs.civ(g), ())
     times, also, more = civs.smith(g, name, s), civs.ALSO.get(civs.civ(g), {}), civs.MORE.get(civs.civ(g), {})
     for t in sorted(g.techs):
@@ -1159,10 +1161,10 @@ def speed(g, name, uuid=None):
     f = civs.speed(g, name) * math.prod((1 + (f - 1) * more[t] if t in more else f) ** count(g, t)
                                         for t, (unit, f) in BY_KEY["walk"].items() if faster(unit, name) or t in also and faster(also[t], name))
     if add := sum(v * count(g, t) for t, (unit, v) in BY_KEY["walk_add"].items() if faster(unit, name)):
-        import ai                                                  # ai imports gather, gather imports this module
+        import ai  # ai imports gather, gather imports this module
         f += add / ai.walk_speed(name, 1, 1)                       # tiles per second on the base speed (Aristocracy, #3921)
     if changes := [(op, q) for field, op, q in vars(g).get("unit_values", {}).get(uuid, ()) if field == "speed"]:
-        import ai                                                  # ai imports gather, gather imports this module
+        import ai  # ai imports gather, gather imports this module
         base = ai.walk_speed(name, 1, 1)                           # tiles per AoE2 second
         f = max(0, functools.reduce(lambda v, c: OPERATIONS[c[0]](v, c[1]), changes, base * f)) / base
     return f * vars(g).get("hurried", {}).get(uuid, 1)
@@ -1173,7 +1175,7 @@ def faster(unit, name):
     building: the units it trains (Drill, #4254), or a list of these (Herbalism, #4254)) covers unit name."""
     if isinstance(unit, list):
         return any(faster(u, name) for u in unit)
-    import combat                                                  # combat imports gather, gather imports this module
+    import combat  # combat imports gather, gather imports this module
     s = combat.stats(name)
     return unit == name or unit in civs.GROUPS and civs.GROUPS[unit](name, s) or unit.islower() and unit in s.classes \
         or BUILDING_OF.get(name) == unit
@@ -1186,7 +1188,7 @@ def hits(g, name):
     in data/units.jsonl (Leitis, #4394). faster() tests the units of both.
     rage: the attack for each 10 % of lost hit points of the key "rage" (Hamask), reflect: the part of the key "reflect"
     (Lamellar Armor, #4332), both summed over the technologies whose units cover it."""
-    import combat                                                  # combat imports gather, gather imports this module
+    import combat  # combat imports gather, gather imports this module
     less = {}
     for t, (unit, cut) in BY_KEY["less"].items():
         if t in getattr(g, "techs", ()) and faster(unit, name):
@@ -1221,7 +1223,8 @@ def haste(g, dt):
     attack "rate" times as fast (the Defensive Town Center: +17.65 %, 8 tiles, #2497): a unit that comes in or goes out
     gets its values again, with the reload / rate. g.hasted: {uuid: rate} of the fast units. A trebuchet keeps its
     values (the values of its state: trebuchet.stats_command)."""
-    import combat, trebuchet                                       # both import this module: import them late
+    import combat  # both import this module: import them late
+    import trebuchet
     auras = [(r, a) for r, n in vars(g).get("upgraded", {}).items() if (a := value("attack_aura", n))]
     hasted = vars(g).get("hasted", {})
     g.haste_time = vars(g).get("haste_time", 0.0) + dt if auras or hasted else 0.0
@@ -1247,7 +1250,8 @@ def research(g, entry, start=False, rect=None):
     """A technology is complete: keep it in g.techs and give the live villagers and military units the new values.
     start: a technology of the start age (start()): no text and no bonus of an age or technology. An upgrade of one
     building (ONE_BUILDING) changes only the building rect that researched it (g.upgraded, #2484)."""
-    import combat, gather                                          # gather imports this module
+    import combat  # gather imports this module
+    import gather
     if entry["name"] in civs.policies(g).get("effects", ()):       # Athenians: the new policy, not a technology (#2485)
         g.policy, g.switches = entry["name"], vars(g).get("switches", 0) + 1
         g.command(f"tellraw {entry['player']} " + json.dumps({"text": f"{ITEMS[entry['name']][2]} is active.",
@@ -1283,7 +1287,7 @@ def research(g, entry, start=False, rect=None):
     build.retower(g, before)                                       # the complete own towers get the new values (#1374),
                                                                    # the buildings those of Masonry and Fletching (#1398, #1408)
     if entry["name"] in build.AGE_TECHS and not start:             # the timeline of the recap book (#2660)
-        import recap                                               # recap imports this module
+        import recap  # recap imports this module
         recap.aged(g, entry["name"])
     if entry["name"] in build.AGE_TECHS:                           # the base arrows of the new age (civs.ARROWS, #2178)
         names = {n for names, _ in civs.ARROWS.get(civs.civ(g), ()) for n in names}
@@ -1323,7 +1327,7 @@ def research(g, entry, start=False, rect=None):
             if cmd := trample_command(g, uuid, new):              # the splash of a technology (#4496)
                 g.command(cmd)
             g.command(combat.label_command(uuid, new))               # the name of a new unit (units.pretty)
-    import trebuchet                                               # trebuchet imports this module: import it late
+    import trebuchet  # trebuchet imports this module: import it late
     if vars(g).get("hasted"):                                      # the values below have no haste: haste() sends
         g.hasted = {}                                              # them again (#2497)
     for uuid, name in [(u["uuid"], u["name"]) for u in g.units if "uuid" in u] + list(g.soldiers.items()):
@@ -1346,12 +1350,13 @@ def research(g, entry, start=False, rect=None):
         if any(value("volley", t, {}).get(name) for t in g.techs) and (cmd := volley_command(g, uuid, name)):
             g.command(cmd)                                         # also a new attack of a "part" after an upgrade
     if entry["name"] in BY_KEY["walk"]:                            # the live units walk faster (Fervor)
-        import ai, fleet                                           # ai imports gather, gather imports this module
+        import ai  # ai imports gather, gather imports this module
+        import fleet
         for uuid, name in g.soldiers.items():                      # a ship: fleet.tick reads speed() (#2136)
             if faster(value("walk", entry["name"])[0], name) and name not in fleet.SPEEDS:
                 g.command(ai.speed_command(uuid, name, g.map.T, gather.NORMAL * speed(g, name, uuid)))
     if entry["name"] in REQUIRES:                                  # an age: all players see it, as in AoE2
-        import ai                                                  # ai imports gather, gather imports this module
+        import ai  # ai imports gather, gather imports this module
         for site in [s for s in g.sites if s["name"] in combat.WALLS and s.get("done") and s["player"] == g.player]:   # #1372
             build.upgrade(g, site, combat.wall(build.design(g, site["name"], g.player), build.ages(g) - 1, civs.civ(g),
                                                       civs.handicap(g.data, g.player)),
@@ -1415,8 +1420,8 @@ def census(g):
     A dead villager leaves g.villagers, the selection and its farm: the idle count and the bot see only live ones (#1039). A dead soldier leaves g.soldiers and
     the selection (#3122)."""
     live = g.positions(list(g.villagers) + list(g.soldiers))
-    import spoils                                                      # spoils imports this module
-    import score                                                       # score imports this module
+    import score  # score imports this module
+    import spoils  # spoils imports this module
     dead = {u: "VILLAGER" if u in g.villagers else g.soldiers[u] for u in [*g.villagers, *g.soldiers] if u not in live}
     spoils.fallen(g, dead)                                             # Tupi (#2271)
     fell(g, dead)                                                      # Konnik (#4471)
@@ -1528,7 +1533,7 @@ def spawn(g, rect, name):
     take the cells one after the other) and add it to the villagers of g (a military unit: to g.soldiers, #654).
     Returns the gather.Villager, the UUID of a military unit, or None. A dock puts its ship on the water (fleet.spawn)."""
     if units.is_boat(units.classify(name)):
-        import fleet                                                   # fleet imports this module
+        import fleet  # fleet imports this module
         return fleet.spawn(g, rect, name)
     cells = g.map.front(rect, "Passengers" in (units.classify(name) or {}))
     if not cells:
@@ -1557,11 +1562,12 @@ def summon(g, name, pos, rotation=math.pi / 2, player=None):
     g.command(f"summon {kind} {pos[0]} {pos[1]} {pos[2]} {units.summon_snbt(nbt)}")
     record.summoned(g, uuid, name, pos, o["player"])                  # a unit of a setup (Record Game, #3028)
     if o["player"] > 0:
-        import owners                                              # owners imports gather, gather imports this module
+        import owners  # owners imports gather, gather imports this module
         owners.add(g, uuid, name, o["player"])                     # an enemy of the other sides (#2992)
-    import combat, gather                                          # both import gather, gather imports this module
+    import combat  # both import gather, gather imports this module
+    import gather
     g.command(stats_line(g, uuid, name, stats(g, name)))
-    import spoils                                                  # spoils imports this module
+    import spoils  # spoils imports this module
     if cmd := spoils.tag_command(uuid, name):                      # its hits make gold (#2376)
         g.command(cmd)
     if cmd := combat.range_command(uuid, name, g.map.T, s=stats(g, name)):   # an archer shoots from its range (#670)
@@ -1579,7 +1585,7 @@ def summon(g, name, pos, rotation=math.pi / 2, player=None):
     if cmd := combat.sight_command(uuid, name, g.map.T, s=stats(g, name), more=sight_more(g.techs, name, combat.stats(name))
                                   + civs.sight_units(g, name, combat.stats(name))):   # it attacks enemies in sight (#775)
         g.command(cmd)
-    import ai                                                      # ai imports gather, gather imports this module
+    import ai  # ai imports gather, gather imports this module
     g.command(ai.speed_command(uuid, name, g.map.T, gather.NORMAL * speed(g, name)))   # also without an order (#849)
     if player not in (None, g.player):
         return uuid

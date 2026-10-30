@@ -3,12 +3,12 @@ import glob
 import json
 import os
 
-import numpy as np
-
-import aoe2mc
 import mcvalid
+import numpy as np
 import test_trigger_damage
 import test_trigger_object_hp_condition
+
+import aoe2mc
 
 
 def test_old_keys_give_an_error():

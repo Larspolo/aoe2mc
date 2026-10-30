@@ -2,11 +2,12 @@
 Murky have rain (snow in the cold biomes), the other moods and --mood off are clear."""
 import os
 
-import aoe2mc
 import pytest
 import scenarios
 from AoE2ScenarioParser.datasets.trigger_lists import ColorMood
 from nbtlib import File
+
+import aoe2mc
 
 
 def raining(world):

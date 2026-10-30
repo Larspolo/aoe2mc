@@ -4,10 +4,9 @@ import datetime
 import json
 import subprocess
 
-import pytest
-
 import metrics_log
 import pacer
+import pytest
 import report
 import tokens
 

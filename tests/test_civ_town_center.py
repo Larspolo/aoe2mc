@@ -2,9 +2,9 @@
 first town center (civs.TOWN_CENTER), Gurjaras start with forage bushes next to it (the key "bushes"). Fake server."""
 import math
 
-from game import build, civs, gather
-
 from test_gather import FakeServer, grid
+
+from game import build, civs, gather
 
 UNITS = [{"kind": "unit", "name": "VILLAGER_MALE", "player": 1, "uuid": "v0", "tile": [1.5, 1.5]}]
 TC = {"kind": "building", "name": "TOWN_CENTER", "player": 1, "tile": [8.0, 8.0], "footprint": [6, 6, 10, 10]}

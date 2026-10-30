@@ -2,12 +2,12 @@
 toward each other player in the scenario mode. The converter sets the score #m<N>.p<M> of aoe_dip."""
 from collections import Counter
 
+import gather
 import numpy as np
+import scenario
 from test_scenario_diplomacy import Game
 
 import aoe2mc
-import gather
-import scenario
 
 
 def mirror(a=1, b=2):

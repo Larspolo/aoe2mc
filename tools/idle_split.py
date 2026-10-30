@@ -39,6 +39,7 @@ def main():
     a = ap.parse_args()
     import contextlib
     import json
+
     import replay
 
     class Fake:

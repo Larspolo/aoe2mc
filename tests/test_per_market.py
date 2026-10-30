@@ -1,9 +1,9 @@
 """game/per.py: an AI script trades at the market, sends tribute and chats to one player (#4573)."""
+import diplomacy  # noqa: E402
+import market  # noqa: E402
 from test_per_rules import run
 
 from game.bot import build  # noqa: F401  (game modules on the path)
-import market  # noqa: E402
-import diplomacy  # noqa: E402
 
 SELL = "(defrule (food-amount > 300) (can-sell-commodity food) => (sell-commodity food))"
 

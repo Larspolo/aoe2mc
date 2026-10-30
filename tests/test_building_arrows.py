@@ -3,9 +3,9 @@ import shutil
 import time
 
 import pytest
+from test_damage import health
 
 from game import combat, run
-from test_damage import health
 
 
 def test_building_command_has_the_attack():

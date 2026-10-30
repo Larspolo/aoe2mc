@@ -1,10 +1,10 @@
 """Unique technology of the Armenians (#4273): the castle of the Armenians researches Fereters in the Imperial Age:
 infantry except the Spearman line gets +30 hit points (AoE2 DE wiki "Unique technology"). Only the Armenians have it
 (the key "civ" of data/train.jsonl)."""
+import combat
 from test_train_castle import setup
 
 from game import train
-import combat
 
 CASTLE = (12, 4)
 

@@ -2,9 +2,8 @@
 import urllib.error
 import urllib.request
 
-import pytest
-
 import mc_check
+import pytest
 
 LOG = """[17:14:40] [Server thread/INFO]: Starting minecraft server version 26.3
 [17:14:40] [Yggdrasil Key Fetcher/ERROR]: Failed to request yggdrasil public key
@@ -60,8 +59,9 @@ def test_server_loads_border_of_tiny_world(tmp_path):
     import contextlib
     import io
 
-    import aoe2mc
     import scenarios
+
+    import aoe2mc
     if not mojang_reachable():
         pytest.skip("Mojang is not reachable")
     src = scenarios.tiny(str(tmp_path / "tiny.aoe2scenario"))
@@ -79,8 +79,9 @@ def test_server_loads_custom_biomes(tmp_path):
     import contextlib
     import io
 
-    import aoe2mc
     import scenarios
+
+    import aoe2mc
     if not mojang_reachable():
         pytest.skip("Mojang is not reachable")
     src = scenarios.tiny(str(tmp_path / "tiny.aoe2scenario"))

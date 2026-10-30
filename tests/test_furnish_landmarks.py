@@ -1,12 +1,12 @@
 """The Hall of Heroes, the Temple of Heaven, the Oracle's temple and the Gol Gumbaz are furnished inside (#440)."""
 from collections import Counter
 
+import mcvalid
 import numpy as np
 import pytest
 
 import aoe2mc
 import buildings
-import mcvalid
 
 T = 4
 NEEDS = {"HALL_OF_HEROES": ("waxed_copper_block", "blue_carpet", "blue_wall_banner", "chest"),

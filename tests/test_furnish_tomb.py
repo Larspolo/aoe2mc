@@ -1,11 +1,11 @@
 """The Mesopotamian tomb has a burial room (#497)."""
 from collections import Counter
 
+import mcvalid
 import pytest
+from test_furnish_landmarks import blocks
 
 import aoe2mc
-import mcvalid
-from test_furnish_landmarks import blocks
 
 NEEDS = ("smooth_stone", "candle", "decorated_pot", "red_carpet")
 

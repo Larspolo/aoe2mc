@@ -1,10 +1,9 @@
 """Hussite Reforms and Detinets (#4325): a resource "gold>food" of the key "costs" of a technology moves a part of one
 resource of the cost to another (civs.cost). Test data: monkeypatched train.BY_KEY lines, not the values of the data
 lines (owner, 2026-10-29, #4242)."""
-from test_train_castle import setup
-
-import build as plain_build          # civs.cost imports build and train by their plain names
+import build as plain_build  # civs.cost imports build and train by their plain names
 import train as plain_train
+from test_train_castle import setup
 
 
 def test_a_swap_moves_the_gold_of_monks_and_monastery_technologies_to_food(monkeypatch):

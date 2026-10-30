@@ -6,7 +6,6 @@ import shutil
 import types
 
 import pytest
-
 from test_build_gates import line
 from test_build_site import site_map
 

@@ -1,9 +1,9 @@
 """set_zone_by_team of create_player_lands: the lands of a team share one zone (#4696)."""
 import numpy as np
 import pytest
+from test_rms_connections import reach
 
 import rmap
-from test_rms_connections import reach
 
 TEXT = """<PLAYER_SETUP>
 grouped_by_team

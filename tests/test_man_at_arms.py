@@ -73,10 +73,11 @@ def test_a_live_militia_gets_the_name_and_values_on_a_server(tmp_path):
     from test_paper import paper_reachable
     if not mojang_reachable() or not paper_reachable():
         pytest.skip("Mojang or Paper is not reachable")
-    import aoe2mc
     import scenarios
     from AoE2ScenarioParser.datasets.buildings import BuildingInfo
     from AoE2ScenarioParser.datasets.units import UnitInfo
+
+    import aoe2mc
     scn = scenarios.new_scenario(16)
     scn.unit_manager.add_unit(scenarios.PlayerId.ONE, BuildingInfo.BARRACKS.ID, x=4.5, y=4.5)
     scn.unit_manager.add_unit(scenarios.PlayerId.ONE, UnitInfo.MILITIA.ID, x=10.5, y=10.5)

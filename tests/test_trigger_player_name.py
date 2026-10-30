@@ -1,8 +1,9 @@
 """A trigger with the effect "Change Player Name" renames the team of its player in the converted world (#2711)."""
 from collections import Counter
 
-import aoe2mc
 from test_trigger_objects import trig
+
+import aoe2mc
 
 
 def effect(message="The Enemy", player=2):

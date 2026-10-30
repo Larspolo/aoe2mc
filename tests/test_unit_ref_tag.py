@@ -4,10 +4,10 @@ import contextlib
 import io
 
 import numpy as np
+import world_reader
 
 import aoe2mc
 import units
-import world_reader
 from tools import scenarios
 
 

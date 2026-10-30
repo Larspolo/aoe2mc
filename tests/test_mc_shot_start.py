@@ -22,6 +22,7 @@ def joined(server, name="aoe2mc"):
 def test_a_dead_player_starts_alive_the_next_time(tiny_world, tmp_path):
     needs_client()
     import mc_shot
+
     from game import run
     world = shutil.copytree(tiny_world[0], tmp_path / "W")
     with run.Game(world) as server, mc_shot.Client(server.game_port, server.version, world=world) as c:
@@ -41,8 +42,9 @@ def test_a_dead_player_starts_alive_the_next_time(tiny_world, tmp_path):
 def test_a_far_place_shows_the_world_and_a_zombie_has_health(tiny_world, tmp_path):
     needs_client()
     import mc_shot
-    from game import run
     from PIL import Image
+
+    from game import run
     world = shutil.copytree(tiny_world[0], tmp_path / "W")
     with run.Game(world) as server, mc_shot.Client(server.game_port, server.version, world=world) as c:
         c.wait_join(joined(server))

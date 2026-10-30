@@ -3,9 +3,10 @@ import os
 import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "game"))
-import aoe2mc  # noqa: E402
 import replay  # noqa: E402
 from test_replay import Fake, data  # noqa: E402
+
+import aoe2mc  # noqa: E402
 
 V, L, F = aoe2mc.train_ms("VILLAGER_MALE"), replay.RESEARCH_S["Loom"] * 1000, replay.RESEARCH_S["Feudal Age"] * 1000
 # Town center 5: 1 villager, Loom, Feudal Age, 1 villager; an unknown technology.

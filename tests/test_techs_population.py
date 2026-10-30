@@ -1,9 +1,9 @@
 """The key "population" of a unit group (Mahayana, Aznauri Cavalry, #4256): train.weight takes the units as "walk"
 (train.faster). Test data: monkeypatched train.BY_KEY lines, not the values of the data lines (owner, #4242)."""
 import pytest
+import train as plain_train  # gather imports train by its plain name (not game.train)
 from test_train_castle import setup
 
-import train as plain_train          # gather imports train by its plain name (not game.train)
 from game import train
 
 

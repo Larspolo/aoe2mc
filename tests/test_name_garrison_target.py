@@ -2,9 +2,9 @@
 import os
 
 import pytest
+from test_record_ids import REC, obj
 
 import aoe2mc
-from test_record_ids import REC, obj
 
 
 def test_a_garrison_target_gets_the_building_name():

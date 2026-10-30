@@ -2,12 +2,11 @@
 aoe2mc.UNSELECTABLE. The scenario mode of the game program reads the tagged units, and no click, box or double click
 selects them."""
 import numpy as np
+from test_gather_attack import click
+from test_select_type import setup
 
 import aoe2mc
 from game import scenario, stance
-
-from test_gather_attack import click
-from test_select_type import setup
 
 
 def effect(type, area=(1, 2, 2, 3), player=1):

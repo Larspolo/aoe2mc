@@ -4,10 +4,11 @@ import os
 import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "game"))
-import aoe2mc  # noqa: E402
 import replay  # noqa: E402
 from test_replay import Fake, data  # noqa: E402
 from test_replay_production_record import REC  # noqa: E402
+
+import aoe2mc  # noqa: E402
 
 AXE = 629174 + 2000         # ms: player 2 researches Double-Bit Axe in its lumber camp 9936
 

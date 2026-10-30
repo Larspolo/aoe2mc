@@ -24,7 +24,7 @@ EVERY = 1.0             # real seconds between two looks (fog.EVERY: the same `a
 def own(g):
     """{target UUID: block footprint (x0, x1, z0, z1)} of the complete own buildings of the player that still stand
     for it: the start ones not in g.ruins and the complete construction sites."""
-    import combat                                                  # combat imports gather, which imports this module
+    import combat  # combat imports gather, which imports this module
     out = {combat.target_uuid(o["footprint"]): (x0, x1, z0, z1) for o in g.data["objects"]
            if o["kind"] == "building" and o["player"] == g.player and "footprint" in o and not fallen(g, o)
            for x0, z0, x1, z1 in [o["footprint"]]}
@@ -56,7 +56,11 @@ def tick(g):
 def fall(g, rect):
     """The own building with block footprint rect fell: a complete site leaves g.sites, a start building goes into
     g.ruins, its queue goes with its cost back, and the units inside come out."""
-    import build, combat, fleet, garrison, train                   # they import gather, which imports this module
+    import build  # they import gather, which imports this module
+    import combat
+    import fleet
+    import garrison
+    import train
     sites = [s for s in g.sites if s.get("done") and s["player"] == g.player and tuple(s["footprint"]) == rect]
     fell = vars(g).setdefault("buildings_lost", [])                # (name, built by the player): the recap counts them lost (#3736)
     n = len(fell)

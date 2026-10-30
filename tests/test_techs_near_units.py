@@ -1,9 +1,9 @@
 """Values that depend on the own units near a unit (#4333, near.py): Shield Wall of the Saxons and Coiled Serpent Array
 of the Shu (AoE2 DE wiki). The key "near" of a technology of data/train.jsonl: test lines here, not the values of the
 data lines (#4242)."""
+import train as plain_train  # near.py imports train by its plain name (not game.train)
 from test_train_castle import setup
 
-import train as plain_train          # near.py imports train by its plain name (not game.train)
 from game import civs, combat, near, train
 
 ARMOR = {"if": [{"class": "infantry"}], "range": 3, "per": 2, "most": 2, "add": {"melee": 1, "pierce": 1}}

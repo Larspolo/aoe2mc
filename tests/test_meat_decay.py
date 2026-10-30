@@ -3,11 +3,10 @@ one strike."""
 import math
 
 import pytest
-
-from game import civs, gather
-
 from test_gather import grid
 from test_gather_hunt import Hunt
+
+from game import civs, gather
 
 
 def game(animal, civ, hp=20.0):

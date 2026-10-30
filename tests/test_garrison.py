@@ -3,14 +3,14 @@ import contextlib
 import io
 from collections import Counter
 
+import scenarios
+import world_reader
 from AoE2ScenarioParser.datasets.buildings import BuildingInfo
 from AoE2ScenarioParser.datasets.units import UnitInfo
 from test_terrain import columns
 
 import aoe2mc
 import buildings
-import scenarios
-import world_reader
 
 
 def garrison_map(path):

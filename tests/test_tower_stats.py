@@ -3,9 +3,10 @@ import shutil
 import time
 
 import pytest
+from test_damage import health
 
 from game import combat, run
-from test_damage import health
+
 
 def test_a_tower_gets_its_attack_in_the_building_command():
     uuid = "00000000-0000-0000-0000-000000000001"

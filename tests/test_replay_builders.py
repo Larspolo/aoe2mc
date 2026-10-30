@@ -7,14 +7,13 @@ import sys
 import pytest
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import build  # noqa: E402
+import gather  # noqa: E402
+import replay  # noqa: E402
 from test_replay import Fake, data  # noqa: E402
 from test_replay_control import Clock  # noqa: E402
 from test_replay_gather import TREE, VIL, order  # noqa: E402
 from test_replay_jump_team import CAMP, run  # noqa: E402
-
-import build  # noqa: E402
-import gather  # noqa: E402
-import replay  # noqa: E402
 
 VIL2 = dict(VIL, uuid="u2", ref=8, tile=[2.5, 11.5])
 HOUSE = dict(time=60000, player=1, kind="build", type=70, name="HOUSE", tile=[10.0, 6.0], objects=[7],

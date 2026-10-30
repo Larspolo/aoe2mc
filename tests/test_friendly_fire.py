@@ -4,12 +4,11 @@ import shutil
 import time
 
 import pytest
-
-from game import ai, combat, run, train
-
 from test_civ_work import setup
 from test_ranged import data
 from test_siege_walk import summon
+
+from game import ai, combat, run, train
 
 
 def test_the_friendly_fire_factor_changes_no_combat_value():

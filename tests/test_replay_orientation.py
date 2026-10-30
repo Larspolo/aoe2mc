@@ -7,9 +7,10 @@ import numpy as np
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "game"))
 import replay  # noqa: E402
+from test_replay import data  # noqa: E402
+
 import aoe2mc  # noqa: E402
 import buildings  # noqa: E402
-from test_replay import data  # noqa: E402
 
 
 def door_facings(data_extra):
@@ -35,6 +36,7 @@ def test_house_door_turns_with_the_map():
 
 def test_aoe2mc_json_has_the_turn(tmp_path, monkeypatch):
     import json
+
     from test_terrain import columns
     cols = columns(np.zeros((4, 4)))
     players = {0: {"civ": "GAIA", "color": "light_gray", "arch": "western"}}

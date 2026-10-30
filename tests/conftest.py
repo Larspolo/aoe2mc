@@ -24,7 +24,7 @@ def stack_of_a_slow_test(request):
     if request.node.get_closest_marker("slow") or request.node.get_closest_marker("mc"):
         yield
         return
-    from _pytest.faulthandler import fault_handler_stderr_fd_key   # the real stderr: the capture hides fd 2
+    from _pytest.faulthandler import fault_handler_stderr_fd_key  # the real stderr: the capture hides fd 2
     faulthandler.dump_traceback_later(90, file=request.config.stash[fault_handler_stderr_fd_key])
     yield
     faulthandler.cancel_dump_traceback_later()
@@ -60,8 +60,9 @@ def tiny_world(tmp_path_factory):
     import contextlib
     import io
 
-    import aoe2mc
     import scenarios
+
+    import aoe2mc
 
     d = tmp_path_factory.mktemp("tiny")
     src = scenarios.tiny(str(d / "tiny.aoe2scenario"))

@@ -6,9 +6,9 @@ from collections import Counter
 
 import numpy as np
 from AoE2ScenarioParser.datasets.effects import EffectId
+from test_trigger_damage import lines
 
 import aoe2mc
-from test_trigger_damage import lines
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "tools"))
 import scenarios  # noqa: E402

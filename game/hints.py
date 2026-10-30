@@ -61,7 +61,7 @@ def tick(g):
         return
     own = sorted(set(g.corners) | set(getattr(g, "ghosts", {})) | set(getattr(g, "pointing", {})))
     targets = {p: state(g, p)[1] for p in own}
-    import gather                                                      # gather imports this module
+    import gather  # gather imports this module
     who = getattr(g, "who", "@a")                                      # two people: only the own team (#1310)
     targets[gather.only(who, *(f"name=!{p}" for p in own)) if own else who] = state(g)[1]
     now, shown = g.clock(), g.hints

@@ -1,6 +1,6 @@
 """The hero siege units of the campaigns are siege units too: a minecart with a crew (#3020)."""
-from game import ai
 import units
+from game import ai
 
 HEROES = ("JEAN_BUREAU", "JEAN_DE_LORRAIN", "BAD_NEIGHBOR", "BAD_NEIGHBOR_PACKED", "GODS_OWN_SLING",
           "GODS_OWN_SLING_PACKED", "WARWOLF_TREBUCHET", "WARWOLF_TREBUCHET_PACKED")

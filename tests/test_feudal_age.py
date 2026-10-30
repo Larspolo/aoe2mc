@@ -1,8 +1,8 @@
 """game/train.py: the town center menu has "Feudal Age" at its cost and time. It needs 2 types of Dark Age buildings;
 after the research the sidebar title shows the age, all players see it, and the item leaves the menu (#672)."""
 from menu_line import item
-from test_loom import menus, setup
 from test_castle_upgrades import entry as text
+from test_loom import menus, setup
 
 from game import train
 

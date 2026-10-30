@@ -10,7 +10,7 @@ def command(uuid, name, T=4):
     shot at a unit that is not siege after a full charge of "time" AoE2 seconds also fires "shots" arrows of "attack"
     with "bonus" (aoe chargedvolley; its time as ticks at Normal speed). The optional "range" (tiles × T blocks: a melee
     unit fires at its target in it, the Fire Lancer, #4547) and "ignore" (the shots ignore the armor) are extra fields."""
-    from gather import NORMAL                    # gather imports train, train imports this package
+    from gather import NORMAL  # gather imports train, train imports this package
     c = UNITS.get(name)
     if not c:
         return None

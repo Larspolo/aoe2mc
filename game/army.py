@@ -23,7 +23,7 @@ def cells(g, center, n):
 
 def place(g, units, center, player):
     """Summon units {name: count} of player near center (train.summon). Returns the UUIDs."""
-    import train                                                       # train imports gather, gather imports challenge
+    import train  # train imports gather, gather imports challenge
     names = [n for n, k in sorted(units.items()) for _ in range(k)]
     out = []
     for name, (x, z) in zip(names, cells(g, center, len(names))):
@@ -34,7 +34,7 @@ def place(g, units, center, player):
 
 def wave(g, c, units):
     """Place the enemy units {name: count} north of the middle; a wave (#3906) attacks a live unit of the army."""
-    import ai                                                          # ai imports gather, gather imports challenge
+    import ai  # ai imports gather, gather imports challenge
     n = g.map.n // 2
     g.challenge_foes = place(g, units, (n, n - GAP // 2), 2)
     if (target := next(iter(g.positions(vars(g).get("challenge_army", ()))), None)) and "waves" in c:

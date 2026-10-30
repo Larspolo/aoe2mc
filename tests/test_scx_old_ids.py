@@ -3,9 +3,9 @@ import contextlib
 import io
 
 import numpy as np
+from test_scx import build
 
 import aoe2mc
-from test_scx import build
 
 OLD = [(0, 3.5, 3.5, 248), (0, 6.5, 3.5, 262), (0, 9.5, 3.5, 415), (0, 11.5, 3.5, 737), (1, 6.0, 10.0, 10),
        (0, 12.5, 12.5, 162)]

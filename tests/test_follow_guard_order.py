@@ -1,9 +1,9 @@
 """game/follow.py: the stance menu has "Follow" (slot 8) and "Guard" (slot 9). The next right click on an own unit (or,
 for Guard, an own building) gives the selected military units the order; follow.tick walks a far follower to its target,
 a guard attacks an enemy near its target, and a dead target or a new order ends the entry (#3358)."""
-from game import follow, gather, savegame, stance
-
 from test_gather import FakeServer, grid
+
+from game import follow, gather, savegame, stance
 
 
 def setup(monkeypatch, slot, feet=None):

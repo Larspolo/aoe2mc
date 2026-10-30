@@ -5,10 +5,10 @@ from collections import Counter
 
 import numpy as np
 import pytest
+from test_trigger_unit_values import unit_value
 
 import aoe2mc
 import units
-from test_trigger_unit_values import unit_value
 
 AREA = [2, 3, 4, 5]
 
@@ -85,6 +85,7 @@ def test_damage_object_on_a_knight_hurts_its_horse_on_a_server(tmp_path):
     import time
 
     from test_paper import paper_reachable
+
     from game import run
     from tools import scenarios
     if not paper_reachable():

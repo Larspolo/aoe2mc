@@ -2,10 +2,9 @@
 import time
 
 import pytest
+from test_gather import FakeServer, grid
 
 from game import cheats, combat, gather
-
-from test_gather import FakeServer, grid
 
 
 def game(on=True):
@@ -98,8 +97,9 @@ def test_torpedo_removes_player_2_on_a_server(tmp_path):
     import io
     import json
 
-    import aoe2mc
     import scenarios
+
+    import aoe2mc
     from game import run
     with contextlib.redirect_stdout(io.StringIO()):
         aoe2mc.convert(scenarios.four_civs(str(tmp_path / "s.aoe2scenario")), str(tmp_path / "W"))

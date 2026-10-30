@@ -4,10 +4,10 @@ import io
 
 import numpy as np
 import pytest
-
-import aoe2mc
 from test_campaign import cpx, scx_bytes
 from test_scn import build
+
+import aoe2mc
 
 
 def test_cpn_converts_118_and_121_and_gives_the_steps_for_the_rest(tmp_path):

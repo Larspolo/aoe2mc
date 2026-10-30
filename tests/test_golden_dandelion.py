@@ -2,9 +2,9 @@
 from collections import Counter
 
 import numpy as np
+from mcvalid import block_error
 
 import aoe2mc
-from mcvalid import block_error
 
 FLOWERS = {"poppy", "dandelion", "cornflower", "oxeye_daisy", "azure_bluet", "allium", "red_tulip", "white_tulip",
            "orange_tulip", "pink_tulip", "lily_of_the_valley", "golden_dandelion"}

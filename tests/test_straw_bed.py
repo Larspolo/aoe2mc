@@ -1,10 +1,10 @@
 """Straw beds in the camps, the mill and the barracks (#541): poor sleeping places, not beds in the player color."""
+import mcvalid
 import numpy as np
 import pytest
 
 import aoe2mc
 import buildings
-import mcvalid
 
 
 @pytest.mark.parametrize("arch", ["western", "east_asian"])                 # windmill and granary mills

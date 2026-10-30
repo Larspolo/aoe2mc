@@ -8,10 +8,10 @@ import sys
 import types
 
 import pytest
-
-import aoe2mc
 import scenarios
 from test_campaign import campaign
+
+import aoe2mc
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "game"))
 import run  # noqa: E402

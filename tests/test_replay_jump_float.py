@@ -6,12 +6,11 @@ import sys
 import pytest
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import replay  # noqa: E402
+import replay_input as ri  # noqa: E402
 from test_replay import data  # noqa: E402
 from test_replay_control import Clock  # noqa: E402
 from test_replay_jump import timeline  # noqa: E402
-
-import replay  # noqa: E402
-import replay_input as ri  # noqa: E402
 
 
 @pytest.mark.parametrize("n, to", [(ri.JUMP, "Jump to 02:01"), (ri.JUMP5, "Jump to 06:01"),

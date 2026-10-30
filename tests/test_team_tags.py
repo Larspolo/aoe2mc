@@ -4,9 +4,9 @@ import shutil
 import time
 
 import pytest
+from test_damage import health
 
 from game import combat, run
-from test_damage import health
 
 
 @pytest.mark.mc

@@ -59,7 +59,7 @@ def test_play_places_the_start_buildings_of_a_new_game_only(state, places, tmp_p
     import gather
     import run
     import savegame
-    import start_buildings as plain                                    # the module object that run.py imports
+    import start_buildings as plain  # the module object that run.py imports
     from test_play_speed import FakeGame
     (tmp_path / "aoe2mc.json").write_text('{"players": {"1": {"civ": "GEORGIANS"}}, "tile_size": 4}')
     seen = []
