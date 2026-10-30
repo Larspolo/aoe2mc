@@ -35,6 +35,7 @@ can see which features have an epic: `gh api "repos/Larspolo/aoe2mc/issues?label
 - [x] `convert:rms-players` Random maps for 3 to 8 players in teams, as the AoE2 lobby: `--players` and `--teams`, the player lands of a team next to each other (`<PLAYER_SETUP>`: `random_placement`, `grouped_by_team`, `direct_placement` with `assign_to_player`) (epic #3944)
 - [ ] `convert:rms-standard` The standard random maps of AoE2 DE convert from their real script files (Acropolis, Baltic, Fortress, Hideout, Valley and the other maps of the DE map list): each script reads with no error, and its land, water, hills, cliffs, objects and player starts come from the script, not from own tables; a list names the state of each map
 - [ ] `convert:saved-games` A saved game of AoE2 DE (`.aoe2spgame`, `.aoe2mpgame`) converts as a scenario does: the map, the units and buildings of each player at the time of the save, their resources, ages and technologies, so that the game program continues the game
+- [ ] `convert:rms-lobby` The lobby settings of a random map, as the AoE2 DE lobby: the map size (Tiny to Ludikris, also another size than the default of the player count, `--map-size`) and the game mode (Regicide, King of the Hill, Empire Wars ...) define the labels of the script (`LUDIKRIS_MAP`, `REGICIDE`, `KING_OT_HILL` ...), so that the script places the land, the kings, the monument and the start buildings of that mode
 
 ## 2. Play AoE2 in Minecraft (`game/`)
 
@@ -103,6 +104,7 @@ can see which features have an epic: `gh api "repos/Larspolo/aoe2mc/issues?label
 - [x] `play:unique-techs` The two unique technologies of each civilization at its castle (Castle Age and Imperial Age), each with its AoE2 DE effect: for example Yeomen of the Britons and Logistica of the Byzantines (epic #4096)
 - [x] `play:unit-abilities` The special abilities of the units as in AoE2 DE: the trample damage of the elephants, the charge attack of the Coustillier and the Urumi Swordsman, the Leitis that ignores armor, the Shrivamsha Rider that dodges arrows, the Ratha that switches between melee and ranged (epic #4387)
 - [ ] `play:civ-choice` The civilization choices of the AoE2 DE lobby: Random (a random civilization for a player), Mirror (all players get the same civilization) and hidden civilizations (a player sees the civilization of an enemy only when an own unit sees one of its units or buildings)
+- [ ] `play:ally-commands` Commands to an allied bot, as the AI commands of the AoE2 DE chat: a player tells an allied bot to attack an enemy now, to stop its attack, or to send food, wood, gold or stone; the bot does it and answers in the chat, and an AI script sees the command as a taunt (`taunt-detected`)
 
 ## 3. Replay a recorded game in Minecraft (`game/replay.py`, `aoe2mc.read_timeline`)
 
@@ -142,6 +144,7 @@ can see which features have an epic: `gh api "repos/Larspolo/aoe2mc/issues?label
 - [ ] `replay:live-game` Watch a game while it runs, as the AoE2 DE spectator mode: the live replay reads the record file that AoE2 DE still writes during the game, plays each new part when it comes, and keeps a set delay behind the game
 - [ ] `replay:players` The players of the record as the AoE2 DE loading screen and the match page of AoE2 Insights show them: name, civilization, color, team and rating (from the AoE2 record API, `tools/record_api.py`) in the score panel and on the first page of the summary book
 - [ ] `replay:pov-camera` The view of the player who recorded the game, as the AoE2 DE replay: the spectator view follows the camera of that player (the view locks of the record, mgz `Operation.VIEWLOCK`)
+- [ ] `replay:game-modes` A record of an AoE2 DE game mode (Regicide, Empire Wars, King of the Hill, Sudden Death, Capture the Relic, Antiquity Mode of Return of Rome ...) replays with the rules of that mode from the game program: the kings, the start economy, the monument and the victory of the mode; the score panel and the summary name the mode
 
 ## 4. The agent system (`.claude/skills/`, `tools/`, `.github/workflows/`)
 

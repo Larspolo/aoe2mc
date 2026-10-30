@@ -206,11 +206,19 @@ def orphans(issues, after=prs_after):
                 seen.add(d)
                 todo += [x for x in depends(tickets[d]) if x in tickets]
         return False
+    closers = {}                                    # ticket -> the open PRs that close it
+    for i in issues:
+        if "pull_request" in i:
+            for c in closes(i):
+                closers.setdefault(c, []).append(i["number"])
     out = []
     for n, i in sorted(tickets.items()):
         if labels(i) & WATCHED:
             continue
-        if i.get("title", "").startswith("Decide:"):
+        if i.get("title", "").startswith("Decide:") and n in closers:   # the owner answered in a `human/*` PR (#4754)
+            out.append((n, f"a decision that PR #{closers[n][0]} closes: Automerge takes no `human/*` branch without "
+                           "the label `automerge` (#3383): ask the owner on the ticket to add it or to merge"))
+        elif i.get("title", "").startswith("Decide:"):
             out.append((n, "a decision with no `needs-human`: act on the owner's answer, or add `needs-human`"))
         elif "blocked" in labels(i) and not any(d in open_numbers for d in depends(i)):
             out.append((n, "`blocked` with no open \"Depends on\" ticket: remove `blocked`, or add `needs-human` "
