@@ -334,7 +334,7 @@ def read_scx(path):
 
 def read_json(path):
     """A map description in JSON (#960), as read_scenario returns it: {"size": N, "terrain": N × N terrain IDs,
-    "elevation": N × N levels (default 0), "layer": N × N land layer IDs (default -1 = none, #3689), "objects": [{"name", "player", "x", "y", "rotation"} ...],
+    "elevation": N × N levels (default 0), "layer": N × N land layer IDs (default -1 = none, #3689), "objects": [{"name", "player", "x", "y", "rotation", "resource_delta"} ...],
     "players": {"1": {"civ": "BRITONS", "color": 0} ...}, "mood": a key of MOODS (optional)}. The IDs and names are those of AoE2ScenarioParser
     (TerrainId, object_kinds). The color is an index of buildings.COLOR_NAMES (default: the player number - 1)."""
     with open(path) as f:
@@ -367,7 +367,8 @@ def map_description(d, path):
         t, prefix = ids[o["name"]]
         objects.append(dict(kind="U" if prefix == "H" else prefix, hero=prefix == "H", name=o["name"], id=t,
                             player=int(o.get("player", 0)), x=float(o["x"]), y=float(o["y"]),
-                            rotation=float(o.get("rotation", 0)), garrisoned=False, ref=ref, holder=None))
+                            rotation=float(o.get("rotation", 0)), garrisoned=False, ref=ref, holder=None)
+                       | ({"resource_delta": int(o["resource_delta"])} if "resource_delta" in o else {}))
     players = {0: {"color": "light_gray", "arch": "western", "civ": "GAIA", "view": None}}
     for pid, p in d.get("players", {}).items():
         pid, civ, color = int(pid), p.get("civ", "?").upper(), p.get("color", int(pid) - 1)
@@ -2783,7 +2784,7 @@ def write_objects(path, size, T, H, players, objects, cols, ground, timeline=Non
              "tile": [round(float(o["x"]), 3), round(float(o["y"]), 3)], "rotation": round(o.get("rotation", 0.0), 4)}
         if o.get("hero"):
             e["hero"] = True
-        for k in ("uuid", "footprint", "open"):
+        for k in ("uuid", "footprint", "open", "resource_delta"):
             if k in o:
                 e[k] = o[k]
         if o.get("ref") is not None:                    # the object ID of a recorded game (#407, #408)
