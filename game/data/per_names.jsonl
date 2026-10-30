@@ -69,6 +69,7 @@
 {"name": "knight-line", "game": "KNIGHT", "kind": "unit"}
 {"name": "krepost", "game": "KREPOST", "kind": "building"}
 {"name": "light-cavalry", "game": "LIGHT_CAVALRY", "kind": "unit"}
+{"name": "livestock-class", "set": ["COW", "GOAT", "GOOSE", "LLAMA", "PIG", "SHEEP", "TURKEY", "WATER_BUFFALO"], "kind": "unit"}
 {"name": "long-swordsman", "game": "LONG_SWORDSMAN", "kind": "unit"}
 {"name": "longship", "game": "LONGSHIP", "kind": "unit"}
 {"name": "lumber-camp", "game": "LUMBER_CAMP", "kind": "building"}
@@ -84,6 +85,11 @@
 {"name": "missionary", "game": "MISSIONARY", "kind": "unit"}
 {"name": "monastery", "game": "MONASTERY", "kind": "building"}
 {"name": "monk", "game": "MONK", "kind": "unit"}
+{"name": "my-elite-unique-unit", "civ": "elite", "kind": "unit"}
+{"name": "my-unique-research", "civ": "research", "kind": "tech"}
+{"name": "my-unique-unit", "civ": "unit", "kind": "unit"}
+{"name": "my-unique-unit-line", "civ": "unit", "kind": "unit"}
+{"name": "my-unique-unit-upgrade", "civ": "upgrade", "kind": "tech"}
 {"name": "onager", "game": "ONAGER", "kind": "unit"}
 {"name": "paladin", "game": "PALADIN", "kind": "unit"}
 {"name": "palisade-gate", "game": "PALISADE_GATE", "kind": "building"}
@@ -120,6 +126,7 @@
 {"name": "trade-cog", "game": "TRADE_COG", "kind": "unit"}
 {"name": "transport-ship", "game": "TRANSPORT_SHIP", "kind": "unit"}
 {"name": "trebuchet", "game": "TREBUCHET", "kind": "unit"}
+{"name": "trebuchet-set", "set": ["TREBUCHET"], "kind": "unit"}
 {"name": "turtle-ship", "game": "TURTLE_SHIP", "kind": "unit"}
 {"name": "two-handed-swordsman", "game": "TWO_HANDED_SWORDSMAN", "kind": "unit"}
 {"name": "university", "game": "UNIVERSITY", "kind": "building"}
