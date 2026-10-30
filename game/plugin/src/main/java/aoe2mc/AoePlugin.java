@@ -2,6 +2,7 @@ package aoe2mc;
 
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -113,6 +114,9 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *                                              hit with no damage and fills by shots in ticks; melee hits pass.
  *                                              melee 1: it takes melee hits instead, projectiles pass (Iron Pagoda,
  *                                              #4465). Default 0
+ *   aoe frenzy <selector> <less> <time> <min>  the melee reload of the unit gets less ticks shorter for each of its
+ *                                              hits of the last time ticks, down to min ticks (the Temple Guard,
+ *                                              #4468, game/combat.py frenzy_command)
  *   aoe lowhp <selector> <hp> <melee> <pierce> <speed>  the unit switches to another form below hp hit points (the
  *                                              Jian Swordsman, #4472, game/combat.py low_hp_command): that melee and
  *                                              pierce armor and a movement speed factor; at hp or more again the armor
@@ -465,6 +469,8 @@ public final class AoePlugin extends JavaPlugin implements Listener {
 
     // The anti-unit mode of a unit with two attack modes (the Lou Chuan, #4505): pierce attack, bonus and range in blocks.
     private record VsUnits(int attack, Map<String, Integer> bonus, double blocks) {}
+    private final Map<UUID, int[]> frenzies = new HashMap<>();  // aoe frenzy (#4468): {less, time, min} in ticks
+    private final Map<UUID, ArrayDeque<Integer>> frenzyHits = new HashMap<>();   // the ticks of its recent hits
     private final Map<UUID, LowHp> lowHps = new HashMap<>();    // aoe lowhp: the low hit point form of a unit (#4472)
     private static final NamespacedKey LOW_SPEED = new NamespacedKey("aoe2mc", "low_hp_speed");
 
@@ -1371,7 +1377,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         } else if (buildings.containsKey(from.getUniqueId()) || b != null) {
             ev.setCancelled(true);
             if (a != null && b != null && !(ev.getDamager() instanceof Projectile) && ready(from, a)) {   // RangeGoal counts a shot
-                lastHit.put(from.getUniqueId(), Bukkit.getCurrentTick());
+                struck(from);
                 hit(ev.getEntity(), b, damage(a, b, from, ev.getEntity()), from);
                 hitEffect(ev.getEntity(), b, from);
                 alerts.hit(ev.getEntity(), true, from);
@@ -1408,7 +1414,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             if (!ready(from, a)) {
                 return;
             }
-            lastHit.put(from.getUniqueId(), Bukkit.getCurrentTick());
+            struck(from);
             if (dodge != null && dodge.melee && dodge.take()) {
                 return;                                      // an Iron Pagoda ignores the melee hit (#4465)
             }
@@ -2250,7 +2256,22 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     }
 
     private boolean ready(Entity unit, Stats a) {
-        return Bukkit.getCurrentTick() - lastHit.getOrDefault(unit.getUniqueId(), -1000) >= a.reload;
+        int now = Bukkit.getCurrentTick(), reload = a.reload;
+        int[] f = frenzies.get(unit.getUniqueId());
+        if (f != null) {                                     // a Temple Guard: each hit of the last f[1] ticks (#4468)
+            ArrayDeque<Integer> hits = frenzyHits.getOrDefault(unit.getUniqueId(), new ArrayDeque<>());
+            hits.removeIf(t -> now - t >= f[1]);
+            reload = Math.max(f[2], reload - f[0] * hits.size());
+        }
+        return now - lastHit.getOrDefault(unit.getUniqueId(), -1000) >= reload;
+    }
+
+    private void struck(Entity unit) {                       // a melee hit of the unit: its reload starts
+        int now = Bukkit.getCurrentTick();
+        lastHit.put(unit.getUniqueId(), now);
+        if (frenzies.containsKey(unit.getUniqueId())) {
+            frenzyHits.computeIfAbsent(unit.getUniqueId(), k -> new ArrayDeque<>()).add(now);
+        }
     }
 
     // Each tick: a melee unit next to its target hits when its reload is over. The vanilla melee goal hits each 20
@@ -2970,6 +2991,28 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                 n++;
             }
             sender.sendMessage("Dodge: " + n + " units");
+            return true;
+        }
+        if (args.length == 5 && args[0].equals("frenzy")) {          // a Temple Guard: faster in a long fight (#4468)
+            int[] f = new int[3];
+            try {
+                for (int i = 0; i < 3; i++) {
+                    f[i] = Integer.parseInt(args[i + 2]);
+                }
+            } catch (NumberFormatException e) {
+                sender.sendMessage("Bad number: " + e.getMessage());
+                return true;
+            }
+            int n = 0;
+            for (Entity e : select(sender, args[1])) {
+                for (Entity t : new Entity[] {crew(e), e.getVehicle()}) {   // the rider and its horse (#732)
+                    if (t != null) {
+                        frenzies.put(t.getUniqueId(), f);
+                    }
+                }
+                n++;
+            }
+            sender.sendMessage("Frenzy: " + n + " units");
             return true;
         }
         if (args.length == 6 && args[0].equals("lowhp")) {             // a Jian Swordsman (#4472)
