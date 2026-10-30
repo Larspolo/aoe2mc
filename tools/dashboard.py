@@ -244,10 +244,11 @@ def process_changes(prs, now, hours=24):
                and datetime.datetime.fromisoformat(p["merged_at"].replace("Z", "+00:00")) >= since)
 
 
-def render(old_body, issues, comments, open_prs, closed_issues, closed_prs, now, unanswered=None, nxt=None):
+def render(old_body, issues, comments, open_prs, closed_issues, closed_prs, now, unanswered=None, nxt=None, accounts=None):
     """The new body of the status issue. comments: {issue number: comments} for the needs-human and
     in-progress issues. unanswered: the owner comments without a lock (`tools/feedback.py`, #971).
-    nxt: the "Next up" tickets, if known (candidates() can read GitHub)."""
+    nxt: the "Next up" tickets, if known (candidates() can read GitHub). accounts: one row per Claude account
+    (`dashboard_data.accounts`, #4239); no section when None or when there is one account only."""
     nxt = candidates(issues, now=now)[:5] if nxt is None else nxt
     issues = [i for i in issues if "pull_request" not in i]
     state = re.search(r"<!-- agent-state:.*?-->", old_body or "")
@@ -279,6 +280,13 @@ def render(old_body, issues, comments, open_prs, closed_issues, closed_prs, now,
     out += [f"{k}. #{i['number']} {i['title']} ({tag(i, 'P') or 'no priority'}, {tag(i, 'size:') or 'no size'})"
             for k, i in enumerate(nxt, 1)] or ["No ticket is ready."]
 
+    if accounts and len(accounts) > 1:                 # one account: the body stays as it was (#4239)
+        out += ["", "### Accounts", "| Account | 5-hour | 7-day | Runs | Merged PRs | Tokens per merged PR |",
+                "|---|---|---|---|---|---|"]
+        pct = lambda v: "–" if v is None else f"{v * 100:.1f}%"
+        per_pr = lambda v: "–" if v is None else f"{v:.2f}M"
+        out += [f"| {r['account']} | {pct(r['five_hour'])} | {pct(r['week'])} | {r['runs'] or '–'} | {r['merged']} | "
+                f"{per_pr(r['tokens_per_pr'])} |" for r in accounts]
     out += ["", "### Recently done"]
     merged = [p for p in closed_prs if p.get("merged_at")]
     done = [i for i in closed_issues if "pull_request" not in i and i.get("state_reason") == "completed"]
@@ -362,10 +370,16 @@ def main(argv=None):
     from feedback import fetch as unanswered               # owner comments without a lock (#971)
     open_prs, owner, now = api("pulls?state=open&per_page=100"), unanswered(), datetime.datetime.now(datetime.timezone.utc)
     nxt = candidates(open_all, now=now)[:5]
+    try:                                                    # the accounts section (#4239): one row per Claude account
+        import dashboard_data                               # a project tool: a copy of the generic tools has none (#3560)
+        accounts = dashboard_data.accounts()
+    except (ImportError, OSError, subprocess.CalledProcessError) as e:   # a failed read: no section, the rest updates
+        print(f"accounts: {e}", file=sys.stderr)
+        accounts = None
     # Read the body again after all other reads (#3002): a run writes the state comment and the process changes
     # while the reads above take about 20 s, and the PATCH of the old body deleted them.
     status = api(f"issues/{status['number']}")
-    body = render(status["body"], open_all, comments, open_prs, closed, closed_prs, now, owner, nxt)
+    body = render(status["body"], open_all, comments, open_prs, closed, closed_prs, now, owner, nxt, accounts=accounts)
     if a.dry_run:
         print(body)
     elif re.sub(r"_Updated .*?_", "", body) != re.sub(r"_Updated .*?_", "", status["body"] or ""):
