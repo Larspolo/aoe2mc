@@ -249,6 +249,9 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *                                              AoE2 attack and no bonus (0: the values of the unit): the Armenian
  *                                              galleys and dromons (#2379, game/train.py volley_command), the
  *                                              technologies with the key "volley" (#4338): also a siege shot
+ *   aoe vsunits <selector> <attack> <bonus> <blocks>   the second attack mode of the unit (the Lou Chuan, #4505,
+ *                                              game/combat.py vs_units_command): at a unit (not a building) it
+ *                                              shoots from this range with this pierce attack and bonus
  *   aoe box <player> <x> <z> <dye>             draw the selection box from this corner to the look (#795, Border.java)
  *   aoe box-clear <player>                     end the border of the selection box
  *   aoe box-corner <player>                    the block X Z of the last far corner of the border (#3082, a check)
@@ -442,6 +445,10 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     // the part of the siege shots at a unit that hit (aoe accuracy, #2479): the Trebuchet 0.15; missing: 1
     private final Map<UUID, Double> accuracy = new HashMap<>();
     private final Map<UUID, Dodge> dodges = new HashMap<>();    // aoe dodge: the shield of a unit (#4399)
+    private final Map<UUID, VsUnits> vsUnits = new HashMap<>();  // aoe vsunits: the anti-unit mode of a unit (#4505)
+
+    // The anti-unit mode of a unit with two attack modes (the Lou Chuan, #4505): pierce attack, bonus and range in blocks.
+    private record VsUnits(int attack, Map<String, Integer> bonus, double blocks) {}
 
     // The AoE2 dodge of a unit (#4399): "gauge" shots left at tick "at"; it fills by "shots" in "ticks", up to "shots".
     private static final class Dodge {
@@ -545,7 +552,9 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             // a building: the range to its nearest side, and no sight of the eye of its target in the walls (#608)
             boolean wall = buildings.containsKey(t.getUniqueId());
             double d2 = wall ? gap(mob, t) : mob.getLocation().distanceSquared(t.getLocation());
-            boolean near = d2 <= range.blocks * range.blocks && (wall || mob.hasLineOfSight(t));
+            VsUnits vs = wall ? null : vsUnits.getOrDefault(mob.getUniqueId(), vsUnits.get(crew(mob).getUniqueId()));
+            double reach = vs != null ? vs.blocks() : range.blocks;     // the anti-unit mode at a unit (#4505)
+            boolean near = d2 <= reach * reach && (wall || mob.hasLineOfSight(t));
             boolean close = d2 < range.min * range.min;  // inside the minimum range: it stays and does not shoot (#1350)
             if (close) {
                 mob.getPathfinder().stopPathfinding();
@@ -1458,6 +1467,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
 
     // part: the part of the AoE2 damage (0.5 for a unit behind the target of a Scorpion bolt, #1401). It gives the damage.
     private double harm(LivingEntity victim, Stats t, Stats a, Entity from, double part) {
+        a = vs(from, a);                                  // a unit is the target: the anti-unit mode (#4505)
         alerts.hit(victim, false, from);                  // before the hit: a unit that dies of it is attacked too
         fight(victim);
         fight(from);
@@ -1832,6 +1842,13 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         Scoreboard sb = Bukkit.getScoreboardManager().getMainScoreboard();
         Objective o = sb.getObjective("aoe_hp");
         return o != null ? o : sb.registerNewObjective("aoe_hp", Criteria.DUMMY, "Hit points");
+    }
+
+    // The values a of from in its anti-unit mode (aoe vsunits, the Lou Chuan, #4505): a pierce attack; else a.
+    private Stats vs(Entity from, Stats a) {
+        VsUnits v = from == null ? null : vsUnits.get(from.getUniqueId());
+        return v == null ? a : new Stats(v.attack(), a.melee(), a.pierce(), true, true, a.classes(), v.bonus(), a.reload(),
+                a.taken(), a.friendly(), a.less(), a.ignores(), a.rage(), a.reflect());
     }
 
     // The damage of a hit of a on building b, with the elevation of from over target (#2307)
@@ -3421,6 +3438,26 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                 }
             }
             sender.sendMessage("Volley: " + n + " units");
+            return true;
+        }
+        if (args.length == 5 && args[0].equals("vsunits")) {          // the Lou Chuan (#4505)
+            VsUnits v;
+            try {
+                v = new VsUnits(Integer.parseInt(args[2]), bonus(args[3]), Double.parseDouble(args[4]));
+            } catch (RuntimeException e) {                 // a bad number or a bonus without ":"
+                sender.sendMessage("Bad value: " + e.getMessage());
+                return true;
+            }
+            int n = 0;
+            for (Entity e : select(sender, args[1])) {
+                for (Entity t : new Entity[] {e, crew(e), rider(e)}) {   // the ship and its crew, as aoe stats
+                    if (t != null) {
+                        vsUnits.put(t.getUniqueId(), v);
+                    }
+                }
+                n++;
+            }
+            sender.sendMessage("Vsunits: " + n + " units");
             return true;
         }
         if ((args.length == 2 || args.length == 3) && args[0].equals("where")) {

@@ -1514,6 +1514,8 @@ def summon(g, name, pos, rotation=math.pi / 2, player=None):
         g.command(cmd)                                             # a Hun trebuchet hits units more often (#2479)
     if cmd := combat.dodge_command(uuid, name):                    # a Shrivamsha Rider dodges projectiles (#4399)
         g.command(cmd)
+    if cmd := combat.vs_units_command(uuid, name, g.map.T):        # the Lou Chuan shoots units in its anti-unit mode (#4505)
+        g.command(cmd)
     if cmd := combat.trample_command(uuid, name, g.map.T):         # an elephant tramples the units next to its target (#4397)
         g.command(cmd)
     if cmd := combat.sight_command(uuid, name, g.map.T, s=stats(g, name), more=sight_more(g.techs, name, combat.stats(name))):   # it attacks enemies in sight (#775)

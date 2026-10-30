@@ -100,6 +100,7 @@ FORT_MIN_RANGE = {r["name"]: r["min_range"] for r in BUILDING_ROWS if "min_range
 ATTACK_GOLD = {r["name"]: r["attack_gold"] for r in UNIT_ROWS if "attack_gold" in r}
 REGEN = {r["name"]: r["regen"] for r in UNIT_ROWS if "regen" in r}             # the key "regen": hit points per minute (#2688)
 PASS = {r["name"]: r["pass"] for r in UNIT_ROWS if "pass" in r}               # the key "pass" of data/units.jsonl
+VS_UNITS = {r["name"]: r["vs_units"] for r in UNIT_ROWS if "vs_units" in r}    # the anti-unit mode: the Lou Chuan (#4505)
 TRAMPLE = {r["name"]: r["trample"] for r in UNIT_ROWS if "trample" in r}       # the key "trample": the elephants (#4397)
 # The part of the damage on the units behind the target, when it is not one half (wiki: "100% pass-through damage").
 PASS_PART = {r["name"]: r["pass_part"] for r in UNIT_ROWS if "pass_part" in r}
@@ -123,9 +124,12 @@ def damage(attacker, target, a=None, t=None, taken=1.0, less=None, ignore=False,
     ignore: the attacker ignores the armor, a negative armor still counts (Wootz Steel). Both: train.hits (#4331).
     rage: the attack more for each 10 % of the hit points that the attacker lost (lost: that part, Hamask); reflect
     does not change this damage: after a hit with no projectile the attacker takes that part of it, with no armor
-    (Lamellar Armor, the plugin: onHit). train.hits (#4332)."""
+    (Lamellar Armor, the plugin: onHit). train.hits (#4332). A unit of VS_UNITS hits a target that is not a building
+    with the pierce attack of its anti-unit mode (the Lou Chuan, #4505; the plugin: harm)."""
     a, t = a or stats(attacker), t or stats(target)
-    armor = t.pierce if a.range and attacker not in MELEE_RANGED else t.melee
+    vs = VS_UNITS.get(attacker) if "building" not in t.classes else None
+    a = a._replace(attack=vs["attack"], range=vs["range"], bonus=vs.get("bonus", {})) if vs else a
+    armor = t.pierce if a.range and (vs or attacker not in MELEE_RANGED) else t.melee
     armor = min(0, armor) if ignore else armor
     cut = max([(less or {}).get(c, 0) for c in a.classes] + [0])
     attack = a.attack + rage * math.floor(lost * 10 + 1e-9)
@@ -216,6 +220,14 @@ def accuracy_command(uuid, name, bonus=0.0):
     Trebuchet 15 %, #2479) plus bonus (the civilization key "accuracy": Huns +35 %), or None when each shot hits."""
     part = min(1.0, ACCURACY.get(name, 1.0) + bonus)
     return f"aoe accuracy {uuid} {part:g}" if part < 1 else None
+
+
+def vs_units_command(uuid, name, T):
+    """The plugin command of the anti-unit mode of unit name (the key "vs_units" of data/units.jsonl: the Lou Chuan,
+    #4505), or None: at a unit it shoots from that range (tiles × T blocks) with that pierce attack and bonus."""
+    v = VS_UNITS.get(name)
+    bonus = ",".join(f"{c}:{n}" for c, n in sorted(v.get("bonus", {}).items())) or "-" if v else ""
+    return f"aoe vsunits {uuid} {v['attack']} {bonus} {v['range'] * T}" if v else None
 
 
 def dodge_command(uuid, name):
@@ -315,6 +327,9 @@ def setup(game, data):
             game.command(cmd)
     for o in units:                                  # a Shrivamsha Rider dodges projectiles (#4399)
         if cmd := dodge_command(o["uuid"], o["name"]):
+            game.command(cmd)
+    for o in units:                                  # the Lou Chuan shoots units in its anti-unit mode (#4505)
+        if cmd := vs_units_command(o["uuid"], o["name"], data.get("tile_size", 4)):
             game.command(cmd)
     for o in units:                                  # an elephant tramples the units next to its target (#4397)
         if cmd := trample_command(o["uuid"], o["name"], data.get("tile_size", 4)):
