@@ -100,6 +100,7 @@ FORT_MIN_RANGE = {r["name"]: r["min_range"] for r in BUILDING_ROWS if "min_range
 ATTACK_GOLD = {r["name"]: r["attack_gold"] for r in UNIT_ROWS if "attack_gold" in r}
 REGEN = {r["name"]: r["regen"] for r in UNIT_ROWS if "regen" in r}             # the key "regen": hit points per minute (#2688)
 PASS = {r["name"]: r["pass"] for r in UNIT_ROWS if "pass" in r}               # the key "pass" of data/units.jsonl
+CHARGE_ATTACK = {r["name"]: r["charge_attack"] for r in UNIT_ROWS if "charge_attack" in r}   # the Coustillier (#4398)
 TRAMPLE = {r["name"]: r["trample"] for r in UNIT_ROWS if "trample" in r}       # the key "trample": the elephants (#4397)
 # The part of the damage on the units behind the target, when it is not one half (wiki: "100% pass-through damage").
 PASS_PART = {r["name"]: r["pass_part"] for r in UNIT_ROWS if "pass_part" in r}
@@ -218,6 +219,14 @@ def accuracy_command(uuid, name, bonus=0.0):
     return f"aoe accuracy {uuid} {part:g}" if part < 1 else None
 
 
+def charge_command(uuid, name):
+    """The plugin command of the own charge attack of unit name (the key "charge_attack" of data/units.jsonl: the
+    Coustillier, #4398), or None: the first melee hit on a unit after a full charge of "time" AoE2 seconds has
+    "attack" more (aoe chargeattack of #4370; its time as ticks at Normal speed)."""
+    c = CHARGE_ATTACK.get(name)
+    return f"aoe chargeattack {uuid} {max(1, round(c['time'] / NORMAL * 20))} {c['attack']}" if c else None
+
+
 def dodge_command(uuid, name):
     """The plugin command of the dodge of unit name (the key "dodge" of data/units.jsonl: the Shrivamsha Rider, #4399),
     or None when it dodges nothing. The AoE2 wiki ("Shrivamsha Rider"): a second, regenerating health bar takes each
@@ -315,6 +324,9 @@ def setup(game, data):
     for o in units:                                  # a trebuchet misses units (#2479), with the bonus of its civ
         civ = None if data.get("full_tech_tree") else data.get("players", {}).get(str(o["player"]), {}).get("civ")
         if cmd := accuracy_command(o["uuid"], o["name"], civs.value("accuracy", civ, {}).get(o["name"], 0.0)):
+            game.command(cmd)
+    for o in units:                                  # the Coustillier charges its attack (#4398)
+        if cmd := charge_command(o["uuid"], o["name"]):
             game.command(cmd)
     for o in units:                                  # a Shrivamsha Rider dodges projectiles (#4399)
         if cmd := dodge_command(o["uuid"], o["name"]):
