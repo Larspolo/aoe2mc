@@ -35,6 +35,7 @@
 {"name": "garrison", "text": "The units inside a building, {building: units} (garrison.size).", "issue": 2117}
 {"name": "heal_aura", "text": "The own complete buildings that heal the allied units of a group near them, {building: {\"range\": tiles from the footprint, \"group\": GROUPS, \"rate\": hit points per AoE2 minute in each age}} (Muisca Settlements). regen.aura.", "issue": 2432}
 {"name": "heal_range", "text": "The factor of the heal range of the monks.", "issue": 2269}
+{"name": "heal_rate", "text": "A factor of the hit points that the monks of the civilization heal (Antiquity Mode Romans, the team bonus: 1.5). monk.heal.", "issue": 4789}
 {"name": "herd_food", "text": "Herdable animals in a building make food (garrison.pasture), {building: [size, a, b]}: at most size animals in each, a × ln(F / b + 1) food per AoE2 minute for F food of the animals in all of them (Gurjara mills: 10, 15, 200, AoE2 DE wiki).", "issue": 2342}
 {"name": "housing", "text": "The population that a building supports in place of train.HOUSING, {building: population} (Chinese town centers 15, Inca houses 10). train.limit.", "issue": 2118}
 {"name": "hp", "text": "The hit points factor of a building, {building: factor} (Persians). build.values and combat.setup apply it before the technologies (Masonry).", "issue": 1895}
