@@ -20,6 +20,6 @@ def test_blocks(body):
     assert run(body) == 2, body
 
 
-@pytest.mark.parametrize("body", ["## Goal\nFix it." + FOOTER, "Read @/tmp/x/t.md for the log." + FOOTER, ""])
+@pytest.mark.parametrize("body", ["## Goal\nFix it." + FOOTER, "Read docs/x.md for the log." + FOOTER, ""])
 def test_allows(body):
     assert run(body) == 0, body
