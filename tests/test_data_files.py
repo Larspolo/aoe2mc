@@ -43,10 +43,24 @@ def stats(row):
     assert set(row["bonus"]) <= bonus and all(isinstance(v, int) for v in row["bonus"].values()), row["name"]
 
 
+UNIT_KEYS = {                     # the optional keys of units.jsonl: one line each, sorted (merge conflicts, #4471)
+    "accuracy": NUMBER,
+    "convert": int,
+    "dodge": dict,
+    "ignore_armor": bool,
+    "low_hp": dict,
+    "min_range": NUMBER,
+    "note": str,
+    "on_death": str,
+    "sail": NUMBER,
+    "sight": int,
+    "trample": dict,
+    "veteran": dict,
+}
+
+
 def check_units(row):
-    form(row, {"name": str, **STATS}, {"sight": int, "min_range": NUMBER, "note": str, "sail": NUMBER, "convert": int,
-                                       "accuracy": NUMBER, "dodge": dict, "low_hp": dict, "ignore_armor": bool, "on_death": str,
-                                       "trample": dict, "veteran": dict})
+    form(row, {"name": str, **STATS}, UNIT_KEYS)
     stats(row)
     assert row.get("on_death", "MILITIA") in NAMES["units.jsonl"], row["name"]   # combat.ON_DEATH (#4471)
 
