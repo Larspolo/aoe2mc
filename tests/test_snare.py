@@ -1,12 +1,12 @@
 """The charged shot of the Bolas Rider (#4548, AoE2 DE wiki "Bolas Rider": "Fires a projectile shot every 30 seconds
-that has +2 (+3 Elite) attack and slows targets by 15% for 10 seconds"): the key "snare", combat.snare_command and
+that has +2 (+3 Elite) attack and slows targets by 15% for 10 seconds"): the key "snare", game/abilities/snare.py and
 `aoe snare` of the plugin. Test data, fake server of test_gather, and arrows on a server."""
 import re
 import shutil
 import time
 
-import combat as plain
 import pytest
+from abilities import snare as ability
 from test_kill_spoils import game
 
 from game import combat, gather, run, train
@@ -15,8 +15,7 @@ SNARE = {"time": 30, "attack": 2, "slow": 0.15, "for": 10}
 
 
 def snare(monkeypatch):
-    for m in (combat, plain):                                          # train imports the plain name
-        monkeypatch.setattr(m, "SNARE", {"KNIGHT": SNARE})
+    monkeypatch.setattr(ability, "UNITS", {"KNIGHT": SNARE})
 
 
 def test_a_new_unit_with_the_key_gets_its_charged_shot(monkeypatch):
@@ -32,7 +31,7 @@ def test_a_unit_without_the_key_gets_none(monkeypatch):
     server, g = game("FRANKS")
     train.summon(g, "MILITIA", (8.5, 64.0, 8.5))
     assert not any(c.startswith("aoe snare") for c in server.log)
-    assert combat.snare_command("u", "MILITIA") is None
+    assert ability.command("u", "MILITIA") is None
 
 
 @pytest.mark.mc
