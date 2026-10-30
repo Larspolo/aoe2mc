@@ -5,6 +5,7 @@ Download the record (.aoe2record) of a recent AoE2 DE match from the record API 
 Usage:
     python3 tools/record_api.py download GAME PROFILE DIR
     python3 tools/record_api.py matches NAME [--count N]      (#4483: the last matches of a player)
+    python3 tools/record_api.py ratings WORLD                 (#4669: the rating of each player into aoe2mc.json)
 
 The URL redirects to the match replay: the answer is a zip with one .aoe2record file. The API keeps only recent games.
 """
@@ -76,6 +77,37 @@ def download(game, profile, folder, opener=urllib.request.urlopen):
     return path
 
 
+def rating(name, profile, opener=urllib.request.urlopen):
+    """The current 1v1 rating ("elo") of the player profile, None when the leaderboard has none. The match list has
+    no rating at the time of the match (seen 2026-10-30), and the leaderboard finds a player by name only."""
+    body = {"region": "7", "matchType": "3", "consoleMatchType": 15, "searchPlayer": name, "page": 1, "count": 10}
+    items = post(LEADERBOARD, body, opener).get("items") or []
+    return next((i["elo"] for i in items if i["rlUserId"] == profile), None)
+
+
+def ratings(world, opener=urllib.request.urlopen):
+    """Write "rating" and "rating_now" (the rating of today, not of the match) to each player of WORLD/aoe2mc.json
+    with a profile. A player that the API does not give: one warning line and no "rating"."""
+    path = os.path.join(world, "aoe2mc.json")
+    with open(path) as f:
+        meta = json.load(f)
+    for number, p in meta.get("players", {}).items():
+        if "profile" not in p:
+            continue
+        try:
+            elo = rating(p.get("name", ""), p["profile"], opener)
+        except (urllib.error.URLError, OSError, ValueError) as e:
+            elo = None
+            print(f"warning: no rating of player {number}: {e}")
+        else:
+            if elo is None:
+                print(f"warning: no rating of player {number}: profile {p['profile']} is not on the leaderboard")
+        if elo is not None:
+            p.update(rating=int(elo), rating_now=True)
+    with open(path, "w") as f:
+        json.dump(meta, f, indent=1)
+
+
 def main():
     parser = argparse.ArgumentParser(description="Download the record of a match from the AoE2 record API.")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -86,7 +118,12 @@ def main():
     m = sub.add_parser("matches", help="print the last matches of a player name")
     m.add_argument("name")
     m.add_argument("--count", type=int, default=5)
+    w = sub.add_parser("ratings", help="write the rating of each player with a profile into WORLD/aoe2mc.json")
+    w.add_argument("world")
     a = parser.parse_args()
+    if a.command == "ratings":
+        ratings(a.world)
+        return
     if a.command == "download":
         print(download(a.game, a.profile, a.dir))
         return
