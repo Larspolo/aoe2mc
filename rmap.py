@@ -539,8 +539,7 @@ def generate(text, seed, players=2, size=None, warn=None, teams=None, folder=Non
                 layers[len(lands) - 1] = top
                 if "land_id" in attrs:                  # only create_land: the guide gives player lands no ID
                     ids[value(attrs["land_id"][0], consts)] = len(lands) - 1
-            for a in set(attrs) - {"base_layer", "base_size", "clumping_factor", "terrain_type", "land_percent", "number_of_tiles",
-                                   "land_id", "land_position", "zone", "assign_to_player", "assign_to_team", *BORDERS}:
+            for a in sorted(set(attrs) - set(CREATE_LAND)):
                 warn(f"{cmd}: {a} is not read yet")
         else:
             warn(f"{cmd} is not read yet")
@@ -586,9 +585,7 @@ def generate(text, seed, players=2, size=None, warn=None, teams=None, folder=Non
                   "clump": clump} for k in range(clumps)]
         grow(mark, group, free, rng)
         terrain[mark >= 0] = kind
-        for a in set(attrs) - {"base_terrain", "number_of_clumps", "number_of_tiles", "land_percent", "clumping_factor",
-                               "spacing_to_other_terrain_types", "set_avoid_player_start_areas",
-                               "set_scale_by_groups", "set_scale_by_size"}:
+        for a in sorted(set(attrs) - set(CREATE_TERRAIN)):
             warn(f"create_terrain: {a} is not read yet")
     connections(terrain, links, sections.get("CONNECTION_GENERATION", ()), consts, rng, warn)
     elevation = lower_to_water(terrain, elevation)
@@ -635,6 +632,34 @@ def circle(setup, players, teams, seed):
     return rng.permutation(order).tolist()
 
 
+CREATE_LAND = (                 # the attributes of create_land and create_player_lands that generate() reads: one per line (#4417)
+    "assign_to_player",
+    "assign_to_team",
+    "base_layer",
+    "base_size",
+    "bottom_border",
+    "clumping_factor",
+    "land_id",
+    "land_percent",
+    "land_position",
+    "left_border",
+    "number_of_tiles",
+    "right_border",
+    "terrain_type",
+    "top_border",
+    "zone",
+)
+CREATE_TERRAIN = (              # the attributes of create_terrain that generate() reads: one per line (#4417)
+    "base_terrain",
+    "clumping_factor",
+    "land_percent",
+    "number_of_clumps",
+    "number_of_tiles",
+    "set_avoid_player_start_areas",
+    "set_scale_by_groups",
+    "set_scale_by_size",
+    "spacing_to_other_terrain_types",
+)
 CREATE_OBJECT = (               # the attributes of create_object that objects() reads: one per line, in alphabetical order (#4224)
     "actor_area",                   # mark the tiles around each object for a later avoid_actor_area (#3858)
     "actor_area_radius",            # the radius of actor_area, default 1 (#3858)
@@ -656,6 +681,7 @@ CREATE_OBJECT = (               # the attributes of create_object that objects()
     "max_distance_to_other_zones",  # tiles from the lands of the other players (#3857)
     "max_distance_to_players",      # tiles from the origin of the player land (#3855)
     "min_distance_group_placement", # tiles from the other objects (#3857)
+    "min_distance_to_map_edge",     # tiles from each map edge (#4427)
     "min_distance_to_players",      # tiles from the origin of the player land (#3855)
     "number_of_groups",             # groups of number_of_objects (± group_variance) objects (#3856)
     "number_of_objects",            # default 1; 3 for a VILLAGER: the start villagers of AoE2 DE (#3855, #4120)
@@ -761,6 +787,11 @@ def objects(cmds, consts, terrain, starts, rng, warn, owner=None, ridges=(), lay
             ground = ground & ~dilate(cliff, value(attrs["avoid_cliff_zone"][0], consts) if attrs["avoid_cliff_zone"] else 1)
         if "avoid_forest_zone" in attrs:
             ground = ground & ~dilate(forest, value(attrs["avoid_forest_zone"][0], consts) if attrs["avoid_forest_zone"] else 1)
+        if "min_distance_to_map_edge" in attrs:        # no tile within N tiles of an edge (#4427)
+            edge = np.zeros((n, n), bool)
+            m = value(attrs["min_distance_to_map_edge"][0], consts)
+            edge[m:n - m, m:n - m] = True
+            ground = ground & edge
         if "place_on_forest_zone" in attrs:
             ground = ground & dilate(forest, 1) & ~forest
         land = None                                    # the land of place_on_specific_land_id (#4133)

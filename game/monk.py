@@ -55,6 +55,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import owners  # noqa: E402
 import table  # noqa: E402
+import trade  # noqa: E402
 import units  # noqa: E402
 
 RATE = 2.5      # hit points per AoE2 second of one monk: 150 per minute
@@ -228,7 +229,7 @@ def relic_tick(g, dt):
         g.relic_homes = n
         rearm(g)
     import wonder                                                  # wonder imports cheats, which imports this module
-    g.relic_gold += GOLD * dt * sum(r["home"] in homes for r in relics(g)) * \
+    g.relic_gold += GOLD * dt * trade.gold_rate(g) * sum(r["home"] in homes for r in relics(g)) * \
         math.prod(wonder.rivals(g, g.player, "rival_relic_gold"))  # Atheism of an enemy: half (#4336)
     if (n := int(g.relic_gold)) > 0:
         g.relic_gold -= n
@@ -398,6 +399,7 @@ def near(g, m, target, pos):
     import train                                                   # train imports gather, gather imports this module
     reach = MONKS.get(g.soldiers.get(m), CONVERT) + PRINTING * ("BLOCK_PRINTING" in g.techs)
     reach += sum(train.value("reach", t, 0) for t in g.techs)     # Afterlife of Antiquity Mode (#3988)
+    reach += sum(train.value("convert_range", t, 0) for t in g.techs)   # Clerical Recruitment (#4276)
     return math.dist(pos[m], pos[target]) <= reach * g.map.T
 
 

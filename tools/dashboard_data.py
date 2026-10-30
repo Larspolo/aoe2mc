@@ -3,7 +3,7 @@
     python3 tools/dashboard_data.py OUT_DIR
 
 Writes aoe2mc-merged-prs.json, aoe2mc-tickets.json, aoe2mc-epics.json, aoe2mc-roadmap.json, aoe2mc-release-bar.json,
-aoe2mc-usage.json and aoe2mc-tokens.json, and copies aoe2mc-setup.json (written by hand: tools/dashboard_artifact/setup.json). The page
+aoe2mc-usage.json, aoe2mc-tokens.json and aoe2mc-reviews.json, and copies aoe2mc-setup.json (written by hand: tools/dashboard_artifact/setup.json). The page
 reads them as data files: `tools/dashboard_site.py` builds the GitHub Pages site with them (#982).
 
 With `DASHBOARD_CACHE` (a folder that `dashboard-site.yml` keeps with `actions/cache`), it reads only the issues and
@@ -21,7 +21,7 @@ import health  # noqa: E402
 
 DATASETS = {"merges": "aoe2mc-merged-prs.json", "tickets": "aoe2mc-tickets.json", "epics": "aoe2mc-epics.json",
             "roadmap": "aoe2mc-roadmap.json", "release_bar": "aoe2mc-release-bar.json", "usage": "aoe2mc-usage.json",
-            "tokens": "aoe2mc-tokens.json", "setup": "aoe2mc-setup.json"}
+            "tokens": "aoe2mc-tokens.json", "reviews": "aoe2mc-reviews.json", "setup": "aoe2mc-setup.json"}
 ROWS = re.compile(r"\s*\.(filter|find|some|every|forEach|map|flatMap|sort)\(\s*\(?\s*(\w+)(?:\s*,\s*(\w+))?\s*\)?\s*=>")
 
 GOALS = {"1": "convert", "2": "play", "3": "replay", "4": "system"}
@@ -236,6 +236,29 @@ def tokens(hours=168, comments=None):
     return sorted(rows, key=lambda r: r["at"])
 
 
+REVIEW = re.compile(r"^\s*Process review", re.I)
+CHANGE_PR = re.compile(r"\bPR #(\d+)")
+
+
+def reviews(merges, hours=24 * 60, comments=None):
+    """The process reviews of the `improve` skill (#4347): each report comment that starts with "Process review", its
+    first paragraph (`text`, at most 400 characters), the PRs that it names (`changes`: "PR #N"),
+    and the merged PRs between the review before it and this one (`prs`; None for the first review of the log): the
+    real gap of the review algorithm of `tools/claim.py`."""
+    comments = health.status_comments(hours=hours) if comments is None else comments
+    times = sorted(m["merged_at"] for m in merges)
+    rows, last = [], None
+    for c in sorted((c for c in comments if REVIEW.match(c.get("body") or "") and c.get("created_at")),
+                    key=lambda c: c["created_at"]):
+        at, body = c["created_at"], c["body"].strip()
+        prs = None if last is None else sum(last < t <= at for t in times)
+        text = body.split("\n\n")[0].strip()
+        rows.append(dict(at=at, prs=prs, changes=sorted({int(n) for n in CHANGE_PR.findall(body)}),
+                         text=text[:397] + "..." if len(text) > 400 else text))
+        last = at
+    return rows
+
+
 def close(text, i):
     """The index after the parenthesis that closes the one before index i."""
     depth = 1
@@ -299,14 +322,16 @@ def main(out_dir):
     root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     folder = os.environ.get("DASHBOARD_CACHE")
     issues, pulls = cached(folder) if folder else (pages("issues?state=all"), pages("pulls?state=closed"))
+    merges = merged_prs(pulls)
     files = {
-        "aoe2mc-merged-prs.json": merged_prs(pulls),
+        "aoe2mc-merged-prs.json": merges,
         "aoe2mc-tickets.json": tickets(issues),
         "aoe2mc-epics.json": epics(issues),
         "aoe2mc-roadmap.json": roadmap(open(os.path.join(root, "steering", "project", "ROADMAP.md")).read()),
         "aoe2mc-release-bar.json": release_bar(open(os.path.join(root, "steering", "project", "RELEASE.md")).read()),
         "aoe2mc-usage.json": usage(),
         "aoe2mc-tokens.json": tokens(),
+        "aoe2mc-reviews.json": reviews(merges),
         "aoe2mc-setup.json": json.load(open(os.path.join(root, "tools", "dashboard_artifact", "setup.json"))),
     }
     for name, rows in files.items():

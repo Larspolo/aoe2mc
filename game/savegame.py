@@ -31,6 +31,7 @@ OPTIONAL = ("auto", "auto_by",                                         # the aut
             "auto_reseed",                                             # the mill switch (#3422)
             "bell_work",                                               # the work before the town bell (#3420)
             "challenge_enemy",                                         # the enemy fleet of Naval Battle (#3909)
+            "free_trained",                                            # the free units of a castle: Cuman Mercenaries (#4330)
             "limit_left", "policy", "rates", "relic_timer", "reseeds", "switches", "upgraded", "wonder_shown", "wonders",   # only on a
             "wonders_gone")                                            # Gather that has them (#2324; the policy: #2515)
 MONK = ("carrier_at", "converting", "faith", "fetching", "heal_time", "monk_at", "relic_gold", "relic_homes",
@@ -62,6 +63,7 @@ COUNTERS = (                                                           # the par
     "herd_food",
     "hero_time",                                                       # regen.py: the heroes
     "military_time",                                                   # regen.py
+    "near_time",                                                       # near.py
     "regen_time",
     "repair_hp",                                                       # repair.py
     "repair_owed",
@@ -172,6 +174,8 @@ NOT_SAVED = (                                                          # the fie
     "attacked_hp",                                                     # scenario.attacked: a load reads the hit points again
     "attacked_sent",                                                   # scenario.attacked: a load sets the same score again
     "bar",                                                             # bossbar.py: the shown unit
+    "bastion_hp",                                                      # regen.buildings: the fractions of a hit point (a load loses less than 1 hp)
+    "bastion_time",                                                    # regen.buildings: a tick timer
     "book_at",                                                         # scenario.py: the next check time (the world keeps the tags)
     "bots",                                                            # run.play makes the bots again
     "capture",                                                         # herd.py: a tick timer
@@ -206,6 +210,7 @@ NOT_SAVED = (                                                          # the fie
     "limit_shown",                                                     # time_limit.py: the shown text
     "medal",                                                           # challenge.py: the medal at the end of the game
     "menu_opened",                                                     # train.open_menu: the time of the last open (spam clicks, #3267)
+    "near",                                                            # near.tick: a load sends the base values, the next pass the steps (#4333)
     "noui",                                                            # the cheat "noui": only the hints
     "ordering",                                                        # stance.py: a pending Patrol click, made again in the menu (#3355)
     "owners_at",                                                       # scenario.owners: the next check time

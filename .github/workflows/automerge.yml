@@ -45,6 +45,7 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git config merge.conflictStyle diff3     # tools/unconflict.py needs the base of each hunk
           cp tools/unconflict.py tools/merge_jsonl.py "$RUNNER_TEMP/"   # main's copy: the job checks out PR branches
+          mkdir -p "$RUNNER_TEMP/gate" && cp tools/owner_gate.py tools/agent_config.py agent.toml "$RUNNER_TEMP/gate/"   # main's owners (#4241)
           git config merge.jsonl.driver "python3 $RUNNER_TEMP/merge_jsonl.py %O %A %B"   # game/data/*.jsonl (#2004)
           python3 -m pip install -q "$(grep '^ruff' requirements-dev.txt)"
       - name: Merge the green agent PRs
@@ -97,6 +98,9 @@ jobs:
             fi
             if ! jq -e "$AGENT" <<<"$pr" >/dev/null; then
               echo "#$n: no agent branch and no label automerge"; return
+            fi
+            if ! R="$R" AGENT_CONFIG="$RUNNER_TEMP/gate/agent.toml" python3 "$RUNNER_TEMP/gate/owner_gate.py" "$n" "$sha"; then
+              return    # a change of owners or [accounts] waits for an owner approval (#4241)
             fi
             ticket=$(jq -r .body <<<"$pr" | grep -oiE '(close[sd]?|fix(e[sd])?|resolve[sd]?) #[0-9]+' | head -1 | grep -oE '[0-9]+$' || true)
             if [ -z "$ticket" ]; then   # an edited body lost its closing line: take it from the commits (#4122)

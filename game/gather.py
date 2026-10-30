@@ -79,6 +79,7 @@ import map_table  # noqa: E402
 import market  # noqa: E402
 import menu  # noqa: E402
 import monk  # noqa: E402
+import near  # noqa: E402
 import record  # noqa: E402
 import regen  # noqa: E402
 import regicide  # noqa: E402
@@ -1987,6 +1988,7 @@ class Gather:
         garrison.heal(self, self.tick * NORMAL)
         garrison.pasture(self, self.tick * NORMAL)
         regen.tick(self, self.tick * NORMAL)
+        near.tick(self, self.tick * NORMAL)                            # Shield Wall (#4333)
         repair.tick(self, self.tick * NORMAL)
         trebuchet.tick(self, self.tick * NORMAL)
         fleet.tick(self, self.tick * NORMAL)

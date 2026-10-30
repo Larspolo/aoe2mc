@@ -54,6 +54,7 @@ def test_main_checks_the_columns_and_fails_on_a_missing_one(tmp_path, monkeypatc
     monkeypatch.setattr(dd, "pages", lambda path: [])
     monkeypatch.setattr(dd, "usage", lambda: [])
     monkeypatch.setattr(dd, "tokens", lambda: [])
+    monkeypatch.setattr(dd, "reviews", lambda merges: [])
     assert dd.main(str(tmp_path)) == 0 and "columns: OK" in capsys.readouterr().out
     monkeypatch.setattr(dd, "tickets", lambda issues: [{"number": 1}])
     assert dd.main(str(tmp_path)) == 1
