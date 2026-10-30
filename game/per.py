@@ -214,9 +214,12 @@ class Script:
         self.rules, self.bot = list(rules), bot
         self.off = set()                                           # the rules after disable-self
         self.goals, self.timers = {}, {}                           # goal id -> value; timer id -> AoE2 second due
+        self.aged = {}                                             # player -> (ages, AoE2 second of the last age up)
         self.warned = set()
         self.sn = {}                                               # strategic number name -> value (#4530)
         self.attacking = False                                     # attack-now ran: the bot may attack
+        self.escrow, self.pct = {}, {}                             # resource -> escrow; -> escrow percentage (#4682)
+        self.last = None                                           # the stock after the last step: new income
 
     def number(self, name):
         return self.sn.get(name, SN[name])
@@ -257,10 +260,24 @@ class Script:
 
     def step(self):
         """Check the facts of each rule that is not disabled and run the actions of each rule whose facts are true."""
+        self.income()
         for k, rule in enumerate(self.rules):
             if k not in self.off and all(self.check(f) for f in rule.facts):
                 for a in rule.actions:
                     self.act(k, a)
+        self.last = dict(self.bot.g.stock)
+
+    def income(self):
+        """Put the escrow percentage of each new income (the growth of the stock since the last step) into escrow; the
+        escrow is never more than the stock."""
+        stock = self.bot.g.stock
+        for r in STOCK:
+            new = stock[r] - (self.last or stock).get(r, stock[r])
+            e = self.escrow.get(r, 0) + (new * self.pct.get(r, 0) // 100 if new > 0 else 0)
+            if e := min(e, stock[r]):
+                self.escrow[r] = e
+            else:
+                self.escrow.pop(r, None)
 
     def check(self, f):
         name, args = f[0], f[1:]
@@ -281,8 +298,10 @@ class Script:
         if name == "stance-toward":                                # (stance-toward PLAYER STANCE)
             import diplomacy
             return diplomacy.stance(self.bot.g, args[0]) == args[1]
-        if name in ("can-train", "can-build", "can-research", "research-completed"):
+        if name in ("can-train", "can-build", "can-research", "research-available", "research-completed"):
             return self.can(name, args[0])
+        if name in ("can-train-with-escrow", "can-build-with-escrow", "can-research-with-escrow"):
+            return self.can(name.removesuffix("-with-escrow"), args[0], True)
         if name in ("unit-type-count", "building-type-count", "unit-type-count-total", "building-type-count-total"):
             if (n := self.game(args[0], "unit" if name[0] == "u" else "building")) is None:
                 return False
@@ -294,8 +313,14 @@ class Script:
             if args[0] not in market.RATES:
                 return self.warn("commodity", args[0]) or False
             return self.compare(args[1], market.price(self.bot.g, args[0], name == "commodity-buying-price"), args[2])
+        if name == "escrow-amount":                                # (escrow-amount RESOURCE REL VALUE)
+            return self.compare(args[1], self.escrow.get(args[0], 0), args[2])
         if name == "current-age":
             return self.age(self.bot.g, *args)
+        if name == "current-age-time":
+            return self.compare(args[0], self.age_time(self.bot.g), args[1])
+        if name in ("taunt-detected", "players-taunt-detected"):  # the game program has no taunts yet: never true
+            return False
         if name == "enemy-buildings-in-town":
             return self.in_town()
         if name.startswith("players-"):                            # (players-FACT PLAYER ...): the other players
@@ -336,6 +361,16 @@ class Script:
         import build
         return self.compare(op, build.ages(g), row["age"])
 
+    def age_time(self, g):
+        """The AoE2 seconds since the last age up of Gather g: the script sees the age change at its next check."""
+        import build
+        n, t = build.ages(g), self.bot.time
+        if g.player not in self.aged:
+            self.aged[g.player] = (n, 0.0)
+        elif self.aged[g.player][0] != n:
+            self.aged[g.player] = (n, t)
+        return t - self.aged[g.player][1]
+
     def sides(self, who):
         """(the Gathers of the players of a player parameter, every): a number, focus-player (the foe of the bot), or
         any-/every- with enemy, ally, player, computer or human (airef "Facts", "Player parameters")."""
@@ -361,12 +396,17 @@ class Script:
         xs, every = self.sides(who)
         if fact == "current-age":
             got = [self.age(x, *args) for x in xs]
-        elif fact == "building-type-count":
-            if (n := self.game(args[0], "building")) is None:
+        elif fact in ("building-type-count", "unit-type-count"):
+            if (n := self.game(args[0], fact.split("-")[0])) is None:
                 return False
             got = [self.compare(args[1], self.count(n, x), args[2]) for x in xs]
         elif fact in ("population", "military-population"):
             got = [self.compare(args[0], x.pop if fact == "population" else len(x.soldiers), args[1]) for x in xs]
+        elif fact == "stance":                                     # the stance of the bot toward the player
+            import diplomacy
+            got = [diplomacy.stance(self.bot.g, x.player) == args[0] for x in xs]
+        elif fact == "current-age-time":
+            got = [self.compare(args[0], self.age_time(x), args[1]) for x in xs]
         else:
             return self.warn("fact", "players-" + fact) or False
         return bool(got) and (all(got) if every else any(got))
@@ -405,8 +445,9 @@ class Script:
             any(near((x0 + x1) / 2, (z0 + z1) / 2) for x in foes.values() for s in x.sites
                 if s.get("player", x.player) == x.player for x0, x1, z0, z1 in [s["footprint"]])
 
-    def paid(self, cost):
-        return all(self.bot.g.stock[r] >= v for r, v in cost.items())
+    def paid(self, cost, escrow=False):
+        """The stock pays cost; the escrow pays only with escrow (the -with-escrow facts)."""
+        return all(self.bot.g.stock[r] - (0 if escrow else self.escrow.get(r, 0)) >= v for r, v in cost.items())
 
     def homes(self, n):
         """The block cells of the own buildings that offer n now."""
@@ -417,23 +458,23 @@ class Script:
             return []
         return [(rect[0], rect[2]) for rect, home in sorted(train.homes(g).items()) if n in train.trains(g, home)]
 
-    def can(self, name, arg):
+    def can(self, name, arg, escrow=False):
         import build
         import train
         g = self.bot.g
         if name == "can-build":
             n = self.game(arg, "building")
-            return bool(n and g.villagers and not build.locked(g, n) and self.paid(build.price(g, n)))
+            return bool(n and g.villagers and not build.locked(g, n) and self.paid(build.price(g, n), escrow))
         n = self.game(arg, "unit") if name == "can-train" else self.game(arg, "tech", "age")
         if n is None:
             return False
         if name == "research-completed":
             return train.researched(g, n)
-        if name == "can-research" and (train.researched(g, n) or train.queued(g, n)):
+        if name in ("can-research", "research-available") and (train.researched(g, n) or train.queued(g, n)):
             return False
         if name == "can-train" and g.pop >= train.limit(g):
             return False
-        return bool(self.homes(n)) and self.paid(train.price(g, n))
+        return bool(self.homes(n)) and (name == "research-available" or self.paid(train.price(g, n), escrow))
 
     def trade_ok(self, buy, res):
         """A trade of 100 res is possible now: an own market and the gold (a buy) or the resource (a sell)."""
@@ -466,6 +507,12 @@ class Script:
             if args[0] not in SN:
                 return self.warn("strategic number", args[0])
             self.sn[args[0]] = args[1]
+        elif name == "set-escrow-percentage":                    # (set-escrow-percentage RESOURCE PCT)
+            if args[0] not in STOCK:
+                return self.warn("resource", args[0])
+            self.pct[args[0]] = min(max(args[1], 0), 100)
+        elif name == "release-escrow":
+            self.escrow.pop(args[0], None)
         elif name == "attack-now":
             self.attacking = True
         elif name == "enable-timer":
@@ -494,5 +541,5 @@ class Script:
             for _ in range(max(args[2], 0) // diplomacy.LOT):        # one tribute of the menu per 100
                 if not diplomacy.send(g, b.nobody, args[0], args[1]):
                     break
-        elif name != "do-nothing":
+        elif name not in ("do-nothing", "acknowledge-taunt", "chat-local-to-self"):   # no taunts; no one sees a self chat
             self.warn("action", name)

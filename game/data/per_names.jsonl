@@ -3,8 +3,12 @@
 {"name": "archery-range", "game": "ARCHERY_RANGE", "kind": "building"}
 {"name": "barracks", "game": "BARRACKS", "kind": "building"}
 {"name": "blacksmith", "game": "BLACKSMITH", "kind": "building"}
+{"name": "camel-line", "game": "CAMEL_RIDER", "kind": "unit"}
+{"name": "castle", "game": "CASTLE", "kind": "building"}
 {"name": "castle-age", "game": "CASTLE_AGE", "kind": "age", "age": 2}
+{"name": "crossbowman", "game": "CROSSBOWMAN", "kind": "unit"}
 {"name": "dark-age", "kind": "age", "age": 0}
+{"name": "dock", "game": "DOCK", "kind": "building"}
 {"name": "farm", "game": "FARM", "kind": "building"}
 {"name": "feudal-age", "game": "FEUDAL_AGE", "kind": "age", "age": 1}
 {"name": "house", "game": "HOUSE", "kind": "building"}
@@ -17,6 +21,7 @@
 {"name": "militiaman-line", "game": "MILITIA", "kind": "unit"}
 {"name": "mill", "game": "MILL", "kind": "building"}
 {"name": "mining-camp", "game": "MINING_CAMP", "kind": "building"}
+{"name": "monastery", "game": "MONASTERY", "kind": "building"}
 {"name": "ri-bow-saw", "game": "BOW_SAW", "kind": "tech"}
 {"name": "ri-double-bit-axe", "game": "DOUBLE_BIT_AXE", "kind": "tech"}
 {"name": "ri-gold-mining", "game": "GOLD_MINING", "kind": "tech"}
