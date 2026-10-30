@@ -79,12 +79,12 @@ def expand(words, rng, defined, consts, includes, folder=None, depth=0):
     line is not a word: the words of an #include_drs file in folder take its place (#4304), else its (directive,
     file) goes into includes."""
     out, stack, i = [], [], 0
-    def on():
-        return all(f["on"] for f in stack)
+    def on(frames=None):
+        return all(f["on"] for f in (stack if frames is None else frames))
     while i < len(words):
         w = words[i]
-        if w == "if":
-            c = on() and words[i + 1] in defined
+        if w == "if":                               # AoE2 DE reads an if apart from the random blocks (#4692)
+            c = on([f for f in stack if "acc" not in f]) and words[i + 1] in defined
             stack.append({"on": c, "done": c})
             i += 2
         elif w == "elseif":
@@ -98,11 +98,15 @@ def expand(words, rng, defined, consts, includes, folder=None, depth=0):
         elif w == "start_random":
             stack.append({"on": False, "done": False, "roll": int(rng.integers(100)) if on() else 100, "acc": 0})
             i += 1
-        elif w == "percent_chance":
-            f, n = stack[-1], int(words[i + 1])
-            f["on"] = not f["done"] and f["acc"] <= f["roll"] < f["acc"] + n
-            f["done"] |= f["on"]
-            f["acc"] += n
+        elif w == "percent_chance":                 # of the last start_random, also inside an if (#4692)
+            k = next((k for k in range(len(stack) - 1, -1, -1) if "acc" in stack[k]), None)
+            if k is None:
+                raise RmsError("percent_chance without start_random")
+            if on(stack[k + 1:]):                   # a percent_chance in an inactive if branch does not count
+                f, n = stack[k], int(words[i + 1])
+                f["on"] = not f["done"] and f["acc"] <= f["roll"] < f["acc"] + n
+                f["done"] |= f["on"]
+                f["acc"] += n
             i += 2
         elif w in ("endif", "end_random"):
             if not stack:
