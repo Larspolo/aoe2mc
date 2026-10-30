@@ -22,6 +22,7 @@ import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
+import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.block.Block;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.command.Command;
@@ -112,6 +113,10 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *                                              hit with no damage and fills by shots in ticks; melee hits pass.
  *                                              melee 1: it takes melee hits instead, projectiles pass (Iron Pagoda,
  *                                              #4465). Default 0
+ *   aoe aura <selector> <blocks> <speed> <attack speed> <tag>  the own units with the tag within blocks of the unit
+ *                                              move and attack faster (the Centurion, #4470, game/combat.py
+ *                                              aura_command): movement speed * (1 + speed), melee reload / (1 + attack
+ *                                              speed). Two auras do not add up: the highest values count
  *   aoe attackground <selector> <x> <y> <z>    AoE2 "Attack Ground" (#4078): a siege unit with a blast walks into its
  *                                              range of the point and shoots there with its reload until a new order
  *   aoe ballistics <team> on|off               Ballistics of the player (#1549): its archers and buildings aim where a
@@ -449,6 +454,12 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     // the part of the siege shots at a unit that hit (aoe accuracy, #2479): the Trebuchet 0.15; missing: 1
     private final Map<UUID, Double> accuracy = new HashMap<>();
     private final Map<UUID, Dodge> dodges = new HashMap<>();    // aoe dodge: the shield of a unit (#4399)
+    // aoe aura (the Centurion, #4470): the aura of a unit, and the attack speed of each unit in an aura now
+    private record Aura(double blocks, double speed, double attack, String tag) {}
+    private final Map<UUID, Aura> auras = new HashMap<>();
+    private Map<UUID, Double> boosted = new HashMap<>();
+    // one key for all auras: a second aura replaces the modifier, so two auras do not stack (the Minecraft feature)
+    private static final NamespacedKey AURA_KEY = new NamespacedKey("aoe2mc", "aura");
 
     // The AoE2 dodge of a unit (#4399): "gauge" shots left at tick "at"; it fills by "shots" in "ticks", up to "shots".
     private static final class Dodge {
@@ -1291,6 +1302,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         Bukkit.getScheduler().runTaskTimer(this, this::carts, 1L, 1L);
         Bukkit.getScheduler().runTaskTimer(this, this::throwAxes, 2L, 2L);
         Bukkit.getScheduler().runTaskTimer(this, this::burn, 20L, 20L);
+        Bukkit.getScheduler().runTaskTimer(this, this::auras, 20L, 20L);
         Bukkit.getScheduler().runTaskTimer(this, () -> dots.tick(this::dotHurt), Dot.STEP, Dot.STEP);
         Bukkit.getScheduler().runTaskTimer(this, this::unhit, 1L, 1L);
         Bukkit.getScheduler().runTaskTimer(this, this::watch, 20L, 20L);
@@ -2155,7 +2167,47 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     }
 
     private boolean ready(Entity unit, Stats a) {
-        return Bukkit.getCurrentTick() - lastHit.getOrDefault(unit.getUniqueId(), -1000) >= a.reload;
+        return Bukkit.getCurrentTick() - lastHit.getOrDefault(unit.getUniqueId(), -1000)
+                >= a.reload / (1 + boosted.getOrDefault(unit.getUniqueId(), 0.0));   // a Centurion aura (#4470)
+    }
+
+    // Each second: the own units with the tag of a live aura in its circle get its boost, the others lose it (#4470).
+    // AoE2 wiki "Centurion": no stack, not for allies; the highest values of the auras around a unit count.
+    private void auras() {
+        auras.keySet().removeIf(id -> Bukkit.getEntity(id) == null || !Bukkit.getEntity(id).isValid());
+        Map<UUID, double[]> now = new HashMap<>();
+        for (var a : auras.entrySet()) {
+            Entity c = Bukkit.getEntity(a.getKey());
+            Aura u = a.getValue();
+            String side = side(c);
+            for (Entity t : c.getNearbyEntities(u.blocks, u.blocks, u.blocks)) {
+                if (t instanceof Mob && side != null && side.equals(side(t)) && t.getScoreboardTags().contains(u.tag)
+                        && t.getLocation().distanceSquared(c.getLocation()) <= u.blocks * u.blocks) {
+                    now.merge(t.getUniqueId(), new double[] {u.speed, u.attack},
+                            (x, y) -> new double[] {Math.max(x[0], y[0]), Math.max(x[1], y[1])});
+                }
+            }
+        }
+        for (UUID id : boosted.keySet()) {
+            if (!now.containsKey(id) && Bukkit.getEntity(id) instanceof Mob mob
+                    && mob.getAttribute(Attribute.MOVEMENT_SPEED) instanceof AttributeInstance attr) {
+                attr.removeModifier(AURA_KEY);
+            }
+        }
+        Map<UUID, Double> next = new HashMap<>();
+        for (var e : now.entrySet()) {
+            if (Bukkit.getEntity(e.getKey()) instanceof Mob mob
+                    && mob.getAttribute(Attribute.MOVEMENT_SPEED) instanceof AttributeInstance attr) {
+                AttributeModifier m = attr.getModifier(AURA_KEY);
+                if (m == null || m.getAmount() != e.getValue()[0]) {
+                    attr.removeModifier(AURA_KEY);
+                    attr.addTransientModifier(new AttributeModifier(AURA_KEY, e.getValue()[0],
+                            AttributeModifier.Operation.ADD_SCALAR));
+                }
+                next.put(e.getKey(), e.getValue()[1]);
+            }
+        }
+        boosted = next;
     }
 
     // Each tick: a melee unit next to its target hits when its reload is over. The vanilla melee goal hits each 20
@@ -2875,6 +2927,24 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                 n++;
             }
             sender.sendMessage("Dodge: " + n + " units");
+            return true;
+        }
+        if (args.length == 6 && args[0].equals("aura")) {              // a Centurion (#4470)
+            double blocks, speed, attack;
+            try {
+                blocks = Double.parseDouble(args[2]);
+                speed = Double.parseDouble(args[3]);
+                attack = Double.parseDouble(args[4]);
+            } catch (NumberFormatException e) {
+                sender.sendMessage("Bad number: " + e.getMessage());
+                return true;
+            }
+            int n = 0;
+            for (Entity e : select(sender, args[1])) {
+                auras.put(e.getUniqueId(), new Aura(blocks, speed, attack, args[5]));
+                n++;
+            }
+            sender.sendMessage("Aura: " + n + " units");
             return true;
         }
         if (args.length >= 2 && args[0].equals("allies")) {            // the alliances of the players (#1315)

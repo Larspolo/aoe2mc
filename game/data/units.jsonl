@@ -40,7 +40,7 @@
 {"name": "BOYAR", "hp": 100, "attack": 12, "melee": 4, "pierce": 2, "range": 0, "reload": 1.9, "bonus": {}, "classes": ["cavalry", "unique"], "sight": 5}
 {"name": "CAMEL_ARCHER", "hp": 55, "attack": 7, "melee": 0, "pierce": 1, "range": 4, "reload": 2.0, "bonus": {}, "classes": ["archer", "camel", "unique"], "sight": 5}
 {"name": "CATAPHRACT", "hp": 110, "attack": 9, "melee": 2, "pierce": 1, "range": 0, "reload": 1.8, "bonus": {"infantry": 13}, "classes": ["cavalry", "unique"]}
-{"name": "CENTURION", "hp": 110, "attack": 13, "melee": 2, "pierce": 3, "range": 0, "reload": 1.9, "bonus": {}, "classes": ["cavalry", "unique"]}
+{"name": "CENTURION", "hp": 110, "attack": 13, "melee": 2, "pierce": 3, "range": 0, "reload": 1.9, "bonus": {}, "classes": ["cavalry", "unique"], "aura": {"radius": 10, "speed": 0.1, "attack_speed": 0.2, "units": ["MILITIA", "MAN_AT_ARMS", "LONG_SWORDSMAN", "TWO_HANDED_SWORDSMAN", "CHAMPION", "LEGIONARY"]}, "note": "AoE2 DE wiki \"Centurion (Age of Empires II)\", Ability: Imperium, range (circle) 10, movement speed +10%, attack speed +20% (#4470)"}
 {"name": "CHAKRAM_THROWER", "hp": 40, "attack": 3, "melee": 1, "pierce": 0, "range": 5, "reload": 2.0, "bonus": {"building": 1}, "classes": ["infantry", "unique"], "sight": 9, "note": "the Gurjaras castle (#1612)", "melee_ranged": true, "pass": 2, "pass_part": 1.0}
 {"name": "CHU_KO_NU", "hp": 45, "attack": 8, "melee": 0, "pierce": 0, "range": 4, "reload": 3.0, "bonus": {"spearman": 2}, "classes": ["archer", "unique"]}
 {"name": "COMPOSITE_BOWMAN", "hp": 40, "attack": 4, "melee": 1, "pierce": 0, "range": 4, "reload": 2.0, "bonus": {"spearman": 2}, "classes": ["archer", "unique"], "sight": 7}
@@ -93,7 +93,7 @@
 {"name": "ELITE_BOYAR", "hp": 130, "attack": 14, "melee": 8, "pierce": 3, "range": 0, "reload": 1.9, "bonus": {}, "classes": ["cavalry", "unique"], "sight": 5}
 {"name": "ELITE_CAMEL_ARCHER", "hp": 60, "attack": 8, "melee": 1, "pierce": 1, "range": 4, "reload": 2.0, "bonus": {}, "classes": ["archer", "camel", "unique"], "sight": 5}
 {"name": "ELITE_CATAPHRACT", "hp": 150, "attack": 12, "melee": 2, "pierce": 1, "range": 0, "reload": 1.7, "bonus": {"infantry": 18}, "classes": ["cavalry", "unique"], "sight": 5}
-{"name": "ELITE_CENTURION", "hp": 155, "attack": 15, "melee": 3, "pierce": 3, "range": 0, "reload": 1.9, "bonus": {}, "classes": ["cavalry", "unique"]}
+{"name": "ELITE_CENTURION", "hp": 155, "attack": 15, "melee": 3, "pierce": 3, "range": 0, "reload": 1.9, "bonus": {}, "classes": ["cavalry", "unique"], "aura": {"radius": 12, "speed": 0.15, "attack_speed": 0.2, "units": ["MILITIA", "MAN_AT_ARMS", "LONG_SWORDSMAN", "TWO_HANDED_SWORDSMAN", "CHAMPION", "LEGIONARY"]}, "note": "AoE2 DE wiki \"Centurion (Age of Empires II)\", Ability: Imperium, range (circle) 12, movement speed +15%, attack speed +20% (#4470)"}
 {"name": "ELITE_CHAKRAM_THROWER", "hp": 50, "attack": 4, "melee": 1, "pierce": 0, "range": 6, "reload": 2.0, "bonus": {"building": 2, "infantry": 1}, "classes": ["infantry", "unique"], "sight": 10, "melee_ranged": true, "pass": 2, "pass_part": 1.0}
 {"name": "ELITE_CHU_KO_NU", "hp": 50, "attack": 10, "melee": 0, "pierce": 0, "range": 4, "reload": 3.0, "bonus": {"spearman": 2}, "classes": ["archer", "unique"]}
 {"name": "ELITE_COMPOSITE_BOWMAN", "hp": 50, "attack": 4, "melee": 2, "pierce": 0, "range": 4, "reload": 2.0, "bonus": {"spearman": 2}, "classes": ["archer", "unique"], "sight": 7}

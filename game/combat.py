@@ -87,6 +87,7 @@ CONTACT = 1.0         # tiles: the reach of a demolition ship (range 0, #1440): 
 # Tiles: no shot at a unit nearer (AoE2 DE, wiki infobox "MinRange", #1350). The key "min_range" of data/units.jsonl.
 MIN_RANGE = {r["name"]: r["min_range"] for r in UNIT_ROWS if "min_range" in r}
 ACCURACY = {r["name"]: r["accuracy"] for r in UNIT_ROWS if "accuracy" in r}   # siege shots at units that hit (#2479)
+AURA = {r["name"]: r["aura"] for r in UNIT_ROWS if "aura" in r}              # own units near it move and attack faster (#4470)
 DODGE = {r["name"]: r["dodge"] for r in UNIT_ROWS if "dodge" in r}           # projectiles that do no damage (#4399)
 SHIELD = {r["name"]: r["shield"] for r in UNIT_ROWS if "shield" in r}         # projectiles through it hurt less (#4507)
 # The minimum range of the buildings that shoot, in tiles from the edge of the footprint (AoE2 DE, wiki infobox
@@ -241,6 +242,26 @@ def dodge_command(uuid, name):
     return f"aoe dodge {uuid} {d['shots']} {round(d['time'] * 20)}" + (" 1" if d.get("melee") else "")
 
 
+def aura_command(uuid, name, T):
+    """The plugin command of the aura of unit name (the key "aura" of data/units.jsonl: the Centurion, #4470), or None.
+    AoE2 wiki "Centurion": the own units of "units" within "radius" tiles move "speed" and attack "attack_speed"
+    faster; two auras do not add up. The plugin finds these units by the tag of aura_tag."""
+    a = AURA.get(name)
+    if not a:
+        return None
+    return f"aoe aura {uuid} {a['radius'] * T} {a['speed']} {a['attack_speed']} {aura_tag(name)}"
+
+
+def aura_tag(name):
+    """The tag of the units in the aura of unit name (aura_command)."""
+    return f"aoe2mc.aura.{name.lower()}"
+
+
+def aura_tags(uuid, name):
+    """The commands that tag unit name for each aura that covers it (the Militia line for the Centurion, #4470)."""
+    return [f"tag {uuid} add {aura_tag(a)}" for a, v in sorted(AURA.items()) if name in v["units"]]
+
+
 def shield_command(uuid, name):
     """The plugin command of the projectile obstruction of unit name (the key "shield" of data/units.jsonl: the Hussite
     Wagon, #4507), or None. AoE2 DE wiki "Hussite Wagon": an enemy projectile that passes through its box deals "part"
@@ -342,6 +363,10 @@ def setup(game, data):
     for o in units:                                  # a Shrivamsha Rider dodges projectiles (#4399)
         if cmd := dodge_command(o["uuid"], o["name"]):
             game.command(cmd)
+    for o in units:                                  # a Centurion makes the Militia line near it faster (#4470)
+        for cmd in [aura_command(o["uuid"], o["name"], data.get("tile_size", 4))] + aura_tags(o["uuid"], o["name"]):
+            if cmd:
+                game.command(cmd)
     for o in units:                                  # a Hussite Wagon shields the units behind it (#4507)
         if cmd := shield_command(o["uuid"], o["name"]):
             game.command(cmd)
