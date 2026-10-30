@@ -20,6 +20,7 @@ warning line and counts as false (a fact) or does nothing (an action).
 """
 import collections
 import json
+import math
 import operator
 import os
 import re
@@ -188,6 +189,8 @@ NAMES = {}                                                         # script name
 OPS = {"<": operator.lt, "<=": operator.le, ">": operator.gt, ">=": operator.ge, "==": operator.eq, "!=": operator.ne}
 STOCK = ("food", "wood", "gold", "stone")
 TOWN = 30                       # tiles around the own town center: "in town" (AoE2 sn-maximum-town-size, airef "Facts")
+PERIMETERS = {1: (10, 20), 2: (18, 30)}   # tiles from the town center to each wall ring (airef "build-wall", #4740)
+OCTAGON = math.tan(math.pi / 8)           # half the straight side of a regular octagon per its radius
 
 
 def names():
@@ -217,6 +220,7 @@ class Script:
         self.attacking = False                                     # attack-now ran: the bot may attack
         self.escrow, self.pct = {}, {}                             # resource -> escrow; -> escrow percentage (#4682)
         self.last = None                                           # the stock after the last step: new income
+        self.rings = {}                                            # perimeter -> the sides of its wall ring (ring())
 
     def number(self, name):
         return self.sn.get(name, SN[name])
@@ -335,6 +339,8 @@ class Script:
             return self.compare(args[0], self.age_time(self.bot.g), args[1])
         if name in ("taunt-detected", "players-taunt-detected"):  # the game program has no taunts yet: never true
             return False
+        if name == "wall-completed-percentage":                    # (wall-completed-percentage PERIMETER REL VALUE)
+            return self.ring(args[0]) is not None and self.compare(args[1], self.walled(args[0]), args[2])
         if name == "enemy-buildings-in-town":
             return self.in_town()
         if name.startswith("players-"):                            # (players-FACT PLAYER ...): the other players
@@ -461,6 +467,101 @@ class Script:
             any(near((x0 + x1) / 2, (z0 + z1) / 2) for x in foes.values() for s in x.sites
                 if s.get("player", x.player) == x.player for x0, x1, z0, z1 in [s["footprint"]])
 
+    def ring(self, p):
+        """The sides of the wall ring of perimeter p (lists of tiles), or None: a regular octagon around the own town
+        center, with a radius in the range of PERIMETERS that keeps the own buildings in it with one free tile between
+        (airef: "a roughly circular wall pattern within the given perimeter distances"). The straight sides take a
+        gate of 4 tiles, the diagonal ones a gate of 3. Tiles off the map and on water are cut. The first plan stays."""
+        import build
+        from aoe2mc import wall_tiles
+        if p not in PERIMETERS:
+            return self.warn("perimeter", p)
+        g, at = self.bot.g, self.bot.center()
+        if p in self.rings or at is None:
+            return self.rings.get(p)
+        T, (lo, hi) = g.map.T, PERIMETERS[p]
+        cx, cz = at[0] // T, at[1] // T
+        rects = [(x0, x1, z0, z1) for o in g.data["objects"] if o["kind"] == "building" and o["player"] == g.player
+                 and "footprint" in o for x0, z0, x1, z1 in [o["footprint"]]] + \
+            [s["footprint"] for s in g.sites if s.get("player", g.player) == g.player and s["name"] not in build.WALLS + build.GATES]
+        far = [d for x0, x1, z0, z1 in rects for x in (x0 // T, (x1 - 1) // T) for z in (z0 // T, (z1 - 1) // T)
+               if (d := math.ceil(max(abs(x - cx), abs(z - cz), (abs(x - cx) + abs(z - cz)) / (1 + OCTAGON)))) <= hi - 2]
+        r = min(max(max(far, default=0) + 2, lo), hi)
+        a = round(r * OCTAGON)
+        corners = [(a, r), (r, a), (r, -a), (a, -r), (-a, -r), (-r, -a), (-r, a), (-a, r)]
+        land = lambda t: all(g.map.y(*c) is not None for c in g.map.cells(t))   # noqa: E731
+        self.rings[p] = [[t for t in wall_tiles(cx + x0, cz + z0, cx + x1, cz + z1)[:-1] if land(t)]   # the last tile
+                         for (x0, z0), (x1, z1) in zip(corners, corners[1:] + corners[:1])]           # starts the next side
+        return self.rings[p]
+
+    def walled(self, p):
+        """The percentage of the tiles of the wall ring p with a complete own wall or gate, or with a tree or a mine
+        (airef: natural barriers count as complete). A ring with no tiles (all water) is complete."""
+        import build
+        g = self.bot.g
+        tiles = [t for side in self.ring(p) for t in side]
+        if not tiles:
+            return 100
+        done = {t for t, s in build.wall_tiles_of(g).items() if s is None or s["progress"] >= 1}
+        done |= {t for s in g.sites if s["name"] in build.GATES and s.get("player", g.player) == g.player
+                 and s["progress"] >= 1 for t in self.gate_tiles(s)}
+        barrier = lambda t: g.map.trees.get(t, 0) > 0 or any(c in g.map.mine_at for c in g.map.cells(t))   # noqa: E731
+        return 100 * sum(t in done or barrier(t) for t in tiles) // len(tiles)
+
+    def gate_tiles(self, site):
+        T = self.bot.g.map.T
+        x0, x1, z0, z1 = site["footprint"]
+        return {tuple(t) for t in site.get("tiles") or
+                [(x, z) for x in range(x0 // T, x1 // T) for z in range(z0 // T, z1 // T)]}
+
+    def wall(self, p, kind):
+        """(build-wall PERIMETER WALL-TYPE): sites on the free tiles of one side of the ring p, as many as the stock
+        without the escrow pays; the side nearest to the enemy first. One villager builds them, as a wall line of a
+        player (the key "line": build.next_tile)."""
+        import build
+        g, b = self.bot.g, self.bot
+        if (n := self.game(kind, "building")) is None or not (sides := self.ring(p)) or build.locked(g, n):
+            return
+        if n not in build.WALLS:
+            return self.warn("wall", kind)
+        T, to = g.map.T, self.forward()
+        if to:
+            sides = sorted(sides, key=lambda s: min((math.dist((x * T, z * T), to) for x, z in s), default=math.inf))
+        cost = build.price(g, n)
+        for side in sides:
+            rects = [r for x, z in side if build.free(g, r := (x * T, (x + 1) * T, z * T, (z + 1) * T))]
+            if rects:
+                k = min([len(rects)] + [(g.stock[r] - self.escrow.get(r, 0)) // v for r, v in cost.items() if v])
+                sites = [build.found(g, n, r) for r in rects[:max(k, 0)]]
+                for s in sites:
+                    s["line"] = rects[0]
+                if sites:
+                    b.builder(sites[0])
+                return
+
+    def gate(self, p):
+        """(build-gate PERIMETER): a gate on own wall tiles near the middle of a side of the ring p with no gate yet
+        (build.gate): first on the straight sides (4 tiles, airef: "replace four wall segments"), then on the diagonal
+        ones (3 tiles). sn-gate-type-for-wall 1: a palisade gate (airef)."""
+        import build
+        g, b = self.bot.g, self.bot
+        n = self.game("palisade-gate" if self.number("sn-gate-type-for-wall") == 1 else "gate", "building")
+        if not n or not (sides := self.ring(p)) or build.locked(g, n) or not self.paid(build.price(g, n)):
+            return
+        T = g.map.T
+        gated = {t for s in g.sites if s["name"] in build.GATES and s.get("player", g.player) == g.player
+                 for t in self.gate_tiles(s)}
+        for side in sorted(sides, key=lambda s: min(len({x for x, _ in s}), len({z for _, z in s})) > 1):   # straight first
+            if gated & set(side):
+                continue
+            for i in sorted(range(len(side)), key=lambda i: (abs(2 * i - len(side) + 1), i)):   # the middle first
+                cell = side[i][0] * T, side[i][1] * T
+                if (spot := build.gate_spot(g, cell)) and set(map(tuple, spot[2])) <= set(side):
+                    site = build.gate(g, b.nobody, n, cell)
+                    if site and not any(v.site is site for v in g.villagers.values()):
+                        b.builder(site)
+                    return
+
     def paid(self, cost, escrow=False):
         """The stock pays cost; the escrow pays only with escrow (the -with-escrow facts)."""
         return all(self.bot.g.stock[r] - (0 if escrow else self.escrow.get(r, 0)) >= v for r, v in cost.items())
@@ -515,6 +616,10 @@ class Script:
             center = b.center() if name == "build" else self.forward()
             if n and self.can("can-build", args[0]) and center and (rect := build.near(g, n, center)) is not None:
                 b.builder(build.found(g, n, rect))
+        elif name == "build-wall":                                     # (build-wall PERIMETER WALL-TYPE)
+            self.wall(args[0], args[1])
+        elif name == "build-gate":                                     # (build-gate PERIMETER)
+            self.gate(args[0])
         elif name == "disable-self":
             self.off.add(k)
         elif name == "set-goal":
@@ -558,5 +663,6 @@ class Script:
             for _ in range(max(args[2], 0) // diplomacy.LOT):        # one tribute of the menu per 100
                 if not diplomacy.send(g, b.nobody, args[0], args[1]):
                     break
-        elif name not in ("do-nothing", "acknowledge-taunt", "chat-local-to-self"):   # no taunts; no one sees a self chat
+        elif name not in ("do-nothing", "acknowledge-taunt", "chat-local-to-self", "enable-wall-placement"):
+            # no taunts; no one sees a self chat; each wall ring is always enabled (ring())
             self.warn("action", name)
