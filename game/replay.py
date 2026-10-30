@@ -453,6 +453,8 @@ class Replay:
         self.troops, self.fallen = {}, {}       # player -> {military unit name: live count, count lost} (#3695)
         self.censused = False                   # a census counted the live units (the base of the units lost)
         self.idled, self.idle_at = {}, 0        # player -> idle villager time (s), game time (ms) of the last count (#3757)
+        self.waiting, self.told_at = {}, 0      # uuid -> [player, idle s since its last record command], game time (ms)
+                                                # of the last check of the record commands (#4063)
         self.reached, self.researched = {}, {}  # player -> {age: game time (ms)}, researched technologies (#1067)
         self.learned = {}                       # player -> [(game time ms, technology name)] (#3785)
         self.spends = {}                        # player -> [(game time ms, group, total cost)] of pay (#4390)
@@ -2782,12 +2784,38 @@ class Replay:
             out.setdefault(v.player, dict.fromkeys(keys, 0))[k] += 1
         return out
 
+    @functools.cached_property
+    def told(self):
+        """{object ID: sorted game times (ms) of the record commands of the unit} for idle_time (#4063)."""
+        out = {}
+        for e in self.data["timeline"]:
+            if e["kind"] in aoe2mc.UNIT_USE | {"stop", "delete"}:
+                for i in e.get("objects") or ():
+                    out.setdefault(i, []).append(e["time"])
+        return {i: sorted(ts) for i, ts in out.items()}
+
     def idle_time(self, t):
         """Add the idle villager time up to game time t (ms) to each player (#3757): the idle villagers now times the
-        game time since the last count. A jump sets idle_at only: the skipped time adds nothing."""
-        for p, n in self.eco().items():
-            self.idled[p] = self.idled.get(p, 0) + (t - self.idle_at) / 1000 * n["idle"]
-        self.idle_at = t
+        game time since the last count. A jump sets idle_at only: the skipped time adds nothing. The idle time of a
+        villager counts only up to its next record command (#4063): a villager that the record never commands again
+        died in the game (the record has no deaths) or worked on with no command, so in de-64.3 it gave 60 % of the
+        idle time (P2 641 of 903 min)."""
+        ids = {}
+        for i, v in self.units.items():
+            ids.setdefault(v.uuid, []).append(i)
+        for u, v in {v.uuid: v for v in self.units.values()}.items():
+            if not v.name.startswith("VILLAGER"):
+                continue
+            self.idled.setdefault(v.player, 0)
+            if not v.task or v.task == "none" or v.job == units.IDLE_JOB:
+                self.waiting.setdefault(u, [v.player, 0])[1] += (t - self.idle_at) / 1000
+            if u in self.waiting and any(bisect.bisect_right(ts := self.told.get(i, ()), self.told_at)
+                                         < bisect.bisect_right(ts, t) for i in ids[u]):   # a command in (told_at, t]
+                p, s = self.waiting.pop(u)
+                self.idled[p] = self.idled.get(p, 0) + s
+        for p in self.pop:
+            self.idled.setdefault(p, 0)
+        self.idle_at = self.told_at = t
 
     @functools.cached_property
     def town_centers(self):
