@@ -41,6 +41,7 @@ RULES = {
     "land military units but siege": lambda n, s: not civilian(n) and "siege" not in s.classes
         and not GROUPS["ships"](n, s),
     "land siege, Lou Chuans": lambda n, s: "siege" in s.classes,   # the ships of the group: "groups" (data/units.jsonl)
+    "land units but siege": lambda n, s: "siege" not in s.classes and not GROUPS["ships"](n, s),   # Bimaristan (#4366)
     "military": lambda n, s: not n.startswith("VILLAGER"),
     "military units": lambda n, s: not civilian(n),
     "mounted": lambda n, s: mounted(s),
