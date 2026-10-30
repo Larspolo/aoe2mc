@@ -31,6 +31,7 @@ OPTIONAL = ("auto", "auto_by",                                         # the aut
             "auto_reseed",                                             # the mill switch (#3422)
             "bell_work",                                               # the work before the town bell (#3420)
             "challenge_enemy",                                         # the enemy fleet of Naval Battle (#3909)
+            "free_trained",                                            # the free units of a castle: Cuman Mercenaries (#4330)
             "limit_left", "policy", "rates", "relic_timer", "reseeds", "switches", "upgraded", "wonder_shown", "wonders",   # only on a
             "wonders_gone")                                            # Gather that has them (#2324; the policy: #2515)
 MONK = ("carrier_at", "converting", "faith", "fetching", "heal_time", "monk_at", "relic_gold", "relic_homes",
@@ -173,6 +174,8 @@ NOT_SAVED = (                                                          # the fie
     "attacked_hp",                                                     # scenario.attacked: a load reads the hit points again
     "attacked_sent",                                                   # scenario.attacked: a load sets the same score again
     "bar",                                                             # bossbar.py: the shown unit
+    "bastion_hp",                                                      # regen.buildings: the fractions of a hit point (a load loses less than 1 hp)
+    "bastion_time",                                                    # regen.buildings: a tick timer
     "book_at",                                                         # scenario.py: the next check time (the world keeps the tags)
     "bots",                                                            # run.play makes the bots again
     "capture",                                                         # herd.py: a tick timer
