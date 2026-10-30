@@ -616,6 +616,10 @@ def read_record(path, match=None):
         players[p.number] = {"team": teams.get(p.number), "color": buildings.COLOR_NAMES[p.color_id] if 0 <= p.color_id < 8 else "light_gray",
                              "arch": buildings.CIV_TO_ARCH.get(civ, "western"), "civ": civ,
                              "view": (p.position.x, p.position.y) if p.position and p.position.x is not None else None}
+        if getattr(p, "name", None):   # the names of the replay (#4667); a bot or an offline game has no profile
+            players[p.number]["name"] = p.name
+        if (getattr(p, "profile_id", None) or 0) > 0:
+            players[p.number]["profile"] = p.profile_id
 
     kinds, objects = object_kinds(), []
     for player, objs in [(0, match.gaia)] + [(p.number, p.objects) for p in match.players]:
