@@ -982,7 +982,7 @@ def live_error(world, record):
     return f"--live needs a world of a recorded game: convert the record first (python3 aoe2mc.py {record} {world})"
 
 
-def replay(game, world, speed=1.0, start="0:00", follow=None, guide=None, view=None, replay_file=None, camera=False,
+def replay(game, world, speed=1.0, start="0:00", follow=None, guide=None, view=None, replay_file=None, camera=None,
            live=None, delay=None):
     """guide: a poll(control) next to the hotbar input that gets `input` and the replay `r` (game/watch.py, #1123).
     view: the replay starts with the view of player N (#1303: the units out of its sight are hidden).
@@ -1237,7 +1237,8 @@ def main(argv=None, scenario=None):
     ap.add_argument("--speed", type=float, default=1.0, help="--replay, --play: times the game speed "
                     "(default 1; --play: the server ticks faster too)")
     ap.add_argument("--from", dest="start", default="0:00", metavar="MM:SS", help="--replay: start at this game time")
-    ap.add_argument("--camera", choices=["auto"], help="--replay: the spectators move to each fight and group of new buildings (#3367)")
+    ap.add_argument("--camera", choices=["auto", "player"], help="--replay: auto: the spectators move to each fight and group of new "
+                    "buildings (#3367); player: to the views of the recording player (#4768)")
     ap.add_argument("--follow", type=int, metavar="N", help="--replay: the spectators follow the units of player N")
     ap.add_argument("--view", type=int, default=0, metavar="N", help="--replay: start with the view of player N: the "
                     "units out of its sight are hidden (default 0: all players)")
@@ -1346,7 +1347,7 @@ def main(argv=None, scenario=None):
         if not challenge.opened(a.challenge):
             ap.error(f"--challenge {a.challenge} is closed: win a medal in {challenge.CHALLENGES[a.challenge]['after']} first")
     if a.camera and a.follow is not None:
-        ap.error("--camera auto and --follow N both move the spectators: give only one of them")
+        ap.error("--camera and --follow N both move the spectators: give only one of them")
     import savegame
     state = savegame.read(a.load) if a.load else None
     if state:                                        # the settings of the save, but the options given here win (#2325)
@@ -1400,7 +1401,7 @@ def main(argv=None, scenario=None):
             show_titles(game)
         if a.replay:                                 # after the end the player can look around (#978)
             replay(game, a.world, a.speed, a.start, a.follow, view=a.view or None, replay_file=a.replay_file,
-                   camera=a.camera == "auto", live=a.live, delay=a.delay)
+                   camera=a.camera, live=a.live, delay=a.delay)
             print("The replay ended. The server stays up: type commands, Ctrl-C stops it.", file=sys.stderr)
         if a.play:
             with open(a.log, "w") if a.log else contextlib.nullcontext() as log:
