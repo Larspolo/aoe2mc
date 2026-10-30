@@ -504,7 +504,7 @@ def generate(text, seed, players=2, size=None, warn=None, teams=None, folder=Non
     rng = np.random.default_rng(seed)
     n = size or SIZES.get(players, 200)
     defined = {next((label for s, label in LABELS if n <= s), "GIGANTIC_MAP")}
-    consts = TERRAINS | OBJECTS
+    consts = TERRAINS | OBJECTS | {"MAPSIZE_SIDE": n}   # DE: the side of the map in tiles (#4693)
     includes = []
     sections = commands(expand(tokens(text), rng, defined, consts, includes, folder))
     for cmd, a, _ in sections.pop("HEADER", []):
