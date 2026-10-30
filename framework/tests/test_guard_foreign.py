@@ -1,4 +1,4 @@
-"""tools/claim.py --guard: a branch that carries a commit closing another ticket ships two tickets (#4569)."""
+"""framework/tools/claim.py --guard: a branch that carries a commit closing another ticket ships two tickets (#4569)."""
 import subprocess
 import sys
 

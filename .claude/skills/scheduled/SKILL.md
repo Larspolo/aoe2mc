@@ -21,7 +21,7 @@ This is a scheduled, unattended run. Other runs can work at the same time. The p
    (`git checkout -B <session branch> origin/B`; a conflict: `python3 framework/tools/merge_main.py --push N --pr-branch B`; red
    CI: fix and `git push origin HEAD:B` after `claim.py N --guard --pr-branch B`). `no PR`: do the ticket from step 6.
    After its report, continue as usual (`more.md`: `cycle_start.py` before a later
-   ticket). Exit 1: follow this skill with no brief. No brief in this turn: first run `python3 tools/tokens.py
+   ticket). Exit 1: follow this skill with no brief. No brief in this turn: first run `python3 framework/tools/tokens.py
    --queued` (one call). Exit 0: a brief waits as the next turn of this session (a fire queues the prompt of the task
    first and its brief second, #4550): end this turn at once with one line, no other call; the brief then comes with a
    fresh context. Exit 1: follow this skill as usual.
