@@ -27,6 +27,7 @@
 {"name": "GOLD_MINING", "work": {"gold": 1.15}}
 {"name": "GOLD_SHAFT_MINING", "work": {"gold": 1.15}}
 {"name": "GOOSE", "hunt": 100, "herd": true, "decay": 0.25}
+{"name": "GRAND_TRUNK_ROAD", "work": {"gold": 1.1}}
 {"name": "GREAT_FISH_MARLIN", "fish": 350}
 {"name": "HAND_CART", "carry": 7, "pace": 1.1}
 {"name": "HEAVY_PLOW", "farm": 125}

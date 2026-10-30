@@ -62,6 +62,7 @@ COUNTERS = (                                                           # the par
     "herd_food",
     "hero_time",                                                       # regen.py: the heroes
     "military_time",                                                   # regen.py
+    "near_time",                                                       # near.py
     "regen_time",
     "repair_hp",                                                       # repair.py
     "repair_owed",
@@ -102,6 +103,7 @@ SCORE = (                                                              # Gather:
     "buildings_lost",                                                  # ruins.py: the own buildings that fell, lost in the recap (#3736);
     "fallen",                                                          # not "fell": that hides Gather.fell (#4147)
     "given",                                                           # train.py: the free units and technologies
+    "housing_kept",                                                    # ruins.fall: the fallen houses that keep their room (Nomads, #4280)
     "losses",
     "razed",
     "tributes",                                                        # diplomacy.py
@@ -205,6 +207,7 @@ NOT_SAVED = (                                                          # the fie
     "limit_shown",                                                     # time_limit.py: the shown text
     "medal",                                                           # challenge.py: the medal at the end of the game
     "menu_opened",                                                     # train.open_menu: the time of the last open (spam clicks, #3267)
+    "near",                                                            # near.tick: a load sends the base values, the next pass the steps (#4333)
     "noui",                                                            # the cheat "noui": only the hints
     "ordering",                                                        # stance.py: a pending Patrol click, made again in the menu (#3355)
     "owners_at",                                                       # scenario.owners: the next check time

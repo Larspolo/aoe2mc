@@ -496,10 +496,12 @@ class Replay:
 
     def learn(self, e):
         """Count a research of the timeline for the summary (#1067). A second event of the same technology (de-64.3
-        has one) counts nothing (#3923)."""
+        has one) counts nothing (#3923). It pays the cost, as a unit does (#4389); Replay.age pays an age-up."""
         name = TECHS.get(e["technology"], e["technology"])
         if name in self.upgrades(e.get("player"), math.inf):
             return
+        if not name.endswith(" Age"):
+            self.pay(e.get("player"), name)
         self.researched[e.get("player")] = self.researched.get(e.get("player"), 0) + 1
         self.learned.setdefault(e.get("player"), []).append((e.get("time", 0), name))
 
@@ -648,7 +650,7 @@ class Replay:
         return self.stock.setdefault(p, dict(START))
 
     def pay(self, p, name):
-        """The record has no resources: subtract the AoE2 cost of a unit, building or age (train and build COSTS)."""
+        """The record has no resources: subtract the AoE2 cost of a unit, building, technology or age (train and build COSTS)."""
         import build                                                # gather -> build -> replay: import it late
         import train
         for r, v in (train.COSTS.get(name) or build.COSTS.get(name) or {}).items():
@@ -2703,7 +2705,7 @@ class Replay:
         dead = {u for u in self.workers(p) if "Test passed" not in (self.game.command(f"execute if entity {u}") or "")}
         for i in [i for i, v in self.units.items() if v.uuid in dead]:
             del self.units[i]
-            for state in (self.moving, self.working):
+            for state in (self.moving, self.working, self.arriving, self.entering, self.builds):   # built() (#3943)
                 state.pop(i, None)
 
     def eco(self):

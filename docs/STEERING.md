@@ -134,3 +134,9 @@ The ruleset `Protect main` (Settings → Rules) refuses force pushes and deletes
 | `.claude/skills/roadmap/` | How the agent makes epics from the roadmap and reviews it. |
 
 You can edit these files. The agent follows the version on `main`.
+
+## Several owners (#4229)
+
+Each GitHub login of `owners` in `agent.toml` steers the agents (default: `[owner]`). When two owners ask opposite
+things, `owner` decides. A run never adds a login by itself: Automerge holds a PR that changes `owner`, `owners` or
+`[accounts]` until a login of main's `owners` approves it (`tools/owner_gate.py`).

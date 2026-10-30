@@ -80,6 +80,7 @@ import demolish  # noqa: E402
 import garrison  # noqa: E402
 import menu  # noqa: E402
 import monk  # noqa: E402
+import near  # noqa: E402
 import record  # noqa: E402
 import ruins  # noqa: E402
 import table  # noqa: E402
@@ -131,15 +132,35 @@ def more_arrows(g, building):
 
 
 def weight(g, name):
-    """The population of one unit: the product of the factors of the researched technologies with the key "population"
-    for its building (Logistics of Antiquity Mode: 1/2 for the Barracks, #3918), else 1."""
-    return math.prod(f for t, (b, f) in BY_KEY["population"].items() if t in g.techs and BUILDING_OF.get(name) == b)
+    """The population of one unit (None: a villager): the product of the factors of the researched technologies with the
+    key "population" whose units (as faster: a building, a group, a class, a name or a list) cover it (Logistics of
+    Antiquity Mode: 1/2 for the Barracks, #3918; Mahayana, Aznauri Cavalry, #4256), else 1."""
+    return math.prod(f for t, (b, f) in BY_KEY["population"].items() if t in g.techs and faster(b, name or "VILLAGER"))
 
 
 def work(g, building):
     """The factor of the work rate of building (a name) from the researched technologies with the key "work":
     [the building, the factor] (Perfusion: the Barracks 2, #4226), else 1."""
-    return math.prod(f for t, (b, f) in BY_KEY["work"].items() if t in g.techs and b == building)
+    return math.prod(f for t, (b, f) in BY_KEY["work"].items() if researched(g, t) and b == building)
+
+
+def researched(g, tech):
+    """True when the player of g researched tech, or an ally did and tech has the key "team" (Kasbah, Butalmapu,
+    #4329). The allies are the Gathers of the game (fog.gathers; a bot reaches them by its share)."""
+    if tech in vars(g).get("techs", ()):
+        return True
+    if not BY_KEY["team"].get(tech):
+        return False
+    import gather                                                  # gather imports this module
+    root = vars(g).get("share") or g
+    return any(tech in vars(h).get("techs", ()) and gather.allied(g.players, g.player, h.player)
+               for h in [root, *(b.g for b in getattr(root, "bots", ())), *getattr(root, "peers", ())])
+
+
+def group_rate(g, name):
+    """The factor of the train rate of unit name from the researched technologies with the key "train_group": [the
+    units, as "walk" (faster()), the factor] (Steppe Husbandry: the scout line 2, #4260), else 1."""
+    return math.prod(f for t, (u, f) in BY_KEY["train_group"].items() if t in g.techs and faster(u, name))
 
 
 def value(key, name, default=None):
@@ -258,7 +279,7 @@ def test(t, name, s):
 def effect(e, more=1):
     """The function (name, s) -> s of the key "effect" of a technology of data/train.jsonl (#2029): the name of a
     function of this module (an effect with real logic), or {"if": [tests], "add": {field: n}, "times": {field: f},
-    "bonus": {class: n}}. The unit gets the change when one of the tests holds (test(); no "if": each unit). {}: no
+    "bonus": {class: n}, "bonus_times": {class: f}} (a factor of a bonus, Northmen's Fury, #4259). The unit gets the change when one of the tests holds (test(); no "if": each unit). {}: no
     change of the combat values, the effect is in another place (its "note"). A list: each change in turn (an age gives
     the eagle scout and the Flemish Militia other values, #2155). more: the factor of the change (civs.MORE, #2173)."""
     if isinstance(e, str):
@@ -278,6 +299,9 @@ def effect(e, more=1):
                 for k, f in e.get("times", {}).items()}     # a reload of 2.0 × 0.75 stays 1.5 (Stirrups, #4098)
         if "bonus" in e:
             new["bonus"] = {**s.bonus, **{k: s.bonus.get(k, 0) + part(n) for k, n in e["bonus"].items()}}
+        if "bonus_times" in e:                  # a factor of a bonus, rounded as civs.units (#2272)
+            new["bonus"] = {**new.get("bonus", s.bonus), **{k: math.floor(s.bonus[k] * (f if more == 1 else 1 + (f - 1) * more) + 0.5)
+                                                            for k, f in e["bonus_times"].items() if k in s.bonus}}
         return s._replace(**new)
     return change
 
@@ -332,8 +356,9 @@ FIRE = {r["name"]: (k, r[k]) for r in ROWS for k in ("charge", "detonate") if k 
 
 def fire_commands(g, uuid, name, techs=None):
     """The plugin commands of the charge attack (`aoe charge`) and the blast at death (`aoe detonate`) of an own ship
-    after the research of their technologies (FIRE, #2165), or of the technologies techs only. Vanilla has no second
-    attack and no "on death" command."""
+    after the research of their technologies (FIRE, #2165), and of the thrown axes of a melee unit (`aoe throw`, the
+    key "throw": Gothikon, #4368), or of the technologies techs only. Vanilla has no second attack, no "on death"
+    command and no shot of a melee mob. An axe has the values of the unit (its attack with the upgrades)."""
     import combat, gather                                          # both import gather, gather imports this module
     out = []
     for tech, (kind, c) in FIRE.items():
@@ -342,6 +367,10 @@ def fire_commands(g, uuid, name, techs=None):
         bonus, blast = ",".join(f"{k}:{v}" for k, v in sorted(c["bonus"].items())) or "-", c["blast"] * g.map.T
         out.append(f"aoe charge {uuid} {max(1, round(c['reload'] / gather.NORMAL * 20))} {c['attack']} {c['shots']} "
                    f"{blast} {bonus}" if kind == "charge" else f"aoe detonate {uuid} {c['attack']} {blast} {bonus}")
+    for tech, c in BY_KEY["throw"].items():                        # Gothikon: the axes of a melee unit (#4368)
+        if tech in (g.techs if techs is None else techs) and any(test(t, name, combat.stats(name)) for t in c["if"]):
+            ticks = [max(1, round(c[k] / gather.NORMAL * 20)) for k in ("reload", "gap")]
+            out.append(f"aoe throw {uuid} {ticks[0]} {ticks[1]} {c['range'] * g.map.T:g} {c['shots']}")
     return out
 
 
@@ -358,18 +387,33 @@ def type_tag_commands(uuid, old, new):
 
 
 def volley_command(g, uuid, name):
-    """The plugin command of the extra projectile in each shot of own unit name (the key "volley" of data/civs.jsonl:
-    the Armenian galley line and dromons, #2379), else None. Minecraft feature: one more Arrow entity; the plugin gives
-    it its AoE2 damage."""
+    """The plugin command of the extra projectiles in each shot of own unit name (the key "volley" of data/civs.jsonl:
+    the Armenian galley line and dromons, #2379; the key "volley" of the researched technologies: {unit: {"shots": n,
+    "attack": a or "part": p}}, Double Crossbow, #4338), else None. "attack" is the AoE2 attack of each extra
+    projectile, "part" a part of the attack of the unit, neither the full attack (0). The plugin keeps one attack for
+    all extra projectiles of a unit: the last technology wins. Minecraft feature: one more Arrow entity; the plugin
+    gives it its AoE2 damage."""
     attack = civs.value("volley", civs.civ(g), {}).get(name)
-    return None if attack is None else f"aoe volley {uuid} 1 {attack}"
+    shots, attack = (0, 0) if attack is None else (1, attack)
+    for t in sorted(vars(g).get("techs", ())):
+        if v := value("volley", t, {}).get(name):
+            shots += v["shots"]
+            attack = v["attack"] if "attack" in v else max(1, round(stats(g, name, uuid).attack * v["part"])) if "part" in v else 0
+    return f"aoe volley {uuid} {shots} {attack}" if shots else None
 
 
-def lead_command(g, uuid, name):
+def lead_command(g, uuid, name, techs=None):
     """The command that lets the shots of own unit name lead a moving target, as with Ballistics (the key "lead" of
-    data/civs.jsonl: Spanish Cannon Galleons, #2430), else None. Minecraft feature: a scoreboard tag that the plugin
-    reads (AoePlugin.lead)."""
-    return f"tag {uuid} add aoe2mc.lead" if name in civs.value("lead", civs.civ(g), ()) else None
+    data/civs.jsonl: Spanish Cannon Galleons, #2430; the key "lead" of data/train.jsonl of the technologies techs,
+    default g.techs: Arquebus, #4364), else None. Minecraft feature: a scoreboard tag that the plugin reads (AoePlugin.lead)."""
+    import combat                                                  # combat imports this module's data: import it late
+    if name in civs.value("lead", civs.civ(g), ()):
+        return f"tag {uuid} add aoe2mc.lead"
+    s = combat.stats(name)
+    if any(test(t, name, s) for tech in (g.techs if techs is None else techs) if (e := BY_KEY["lead"].get(tech))
+           for t in e["if"]):
+        return f"tag {uuid} add aoe2mc.lead"
+    return None
 
 
 ORDERS = {r["name"] for r in UNIT_ROWS if r.get("orders")}         # not military, but they take move orders (summon)
@@ -956,7 +1000,8 @@ def applies(unit, name):
 def stats(g, name, uuid=None):
     """The combat values of AoE2 unit name with the bonuses of the civilization (civs.UNITS) and the technologies of
     the player (combat.stats and TECHS), twice for civs.TWICE (#1561), n times for civs.SMITH_UNITS (#2174), and the
-    hit points of civs.TECH_HP (#2269). With uuid: also the trigger changes of that unit (unit_values, #3083)."""
+    hit points of civs.TECH_HP (#2269). With uuid: also the trigger changes of that unit (unit_values, #3083) and the
+    steps of the own units near it (g.near, near.py, #4333)."""
     import combat                                                  # combat imports gather, gather imports this module
     s, twice = civs.units(g, name, combat.stats(name)), civs.TWICE.get(civs.civ(g), ())
     times, also, more = civs.smith(g, name, s), civs.ALSO.get(civs.civ(g), {}), civs.MORE.get(civs.civ(g), {})
@@ -969,6 +1014,8 @@ def stats(g, name, uuid=None):
     for group, building, hp in civs.TECH_HP.get(civs.civ(g), ()):   # the Aztec monks (#2269)
         if civs.GROUPS[group](name, s):
             s = s._replace(hp=s.hp + hp * sum(t in g.techs for t in TRAINS[building] if t in TECHS))
+    for t, k in sorted(vars(g).get("near", {}).get(uuid, {}).items()):   # the own units near it (near.py, #4333)
+        s = near.change(BY_KEY["near"][t], k, s)
     if name.startswith("VILLAGER") and (f := civs.handicap(g.data, g.player)) != 1:   # the AoE2 "Handicap" (#2474)
         s = s._replace(hp=round(s.hp * f))
     for unit, field, op, q in vars(g).get("trigger_attributes", ()):   # "Modify Attribute" of a scenario (#2763)
@@ -996,7 +1043,7 @@ def seconds(g, name, building=None, k=None):
     own = (added(g, building, name) or (0, 0))[1] if building else 0   # Add Train Location (#2865)
     return (own or (base if base is not None else time if build.ages(g) >= age else TRAIN_TIMES[name])) \
         / (civs.work_rate(g, building) * work(g, building) if building else 1) \
-        / civs.train_rate(g, name) / civs.age_rate(g, name) * civs.research_time(g, name) / civs.turbo(g, name) \
+        / civs.train_rate(g, name) / (group_rate(g, name) if name not in TECHS else 1) / civs.age_rate(g, name) * civs.research_time(g, name) / civs.turbo(g, name) \
         * (civs.train_time(g, building, name) if building else 1) \
         * (doctrine(g, building, k)[2] if building and name not in TECHS else 1)
 
@@ -1034,7 +1081,9 @@ def faster(unit, name):
 def hits(g, name):
     """The keywords of combat.damage and combat.stats_command for unit name of the player of g (#4331): less, {attacker
     class: n} of the key "less" of its technologies whose units cover it (Royal Heirs), and ignore, True when a
-    technology with the key "ignore_armor" covers this melee unit (Wootz Steel). faster() tests the units of both."""
+    technology with the key "ignore_armor" covers this melee unit (Wootz Steel). faster() tests the units of both.
+    rage: the attack for each 10 % of lost hit points of the key "rage" (Hamask), reflect: the part of the key "reflect"
+    (Lamellar Armor, #4332), both summed over the technologies whose units cover it."""
     import combat                                                  # combat imports gather, gather imports this module
     less = {}
     for t, (unit, cut) in BY_KEY["less"].items():
@@ -1042,7 +1091,9 @@ def hits(g, name):
             less = {c: less.get(c, 0) + cut.get(c, 0) for c in less | cut}
     ignore = combat.stats(name).range <= 0 and any(faster(u, name) for t, u in BY_KEY["ignore_armor"].items()
                                                     if t in getattr(g, "techs", ()))
-    return {"less": less, "ignore": ignore}
+    more = {k: sum(n for t, (unit, n) in BY_KEY[k].items() if t in getattr(g, "techs", ()) and faster(unit, name))
+            for k in ("rage", "reflect")}
+    return {"less": less, "ignore": ignore} | more
 
 
 def start(g, setting):
@@ -1140,6 +1191,13 @@ def research(g, entry, start=False, rect=None):
         for rect, o in garrison.holders(g).items():
             if o["name"] in more:
                 g.command(garrison.arrows_command(g, rect))
+    if (free := value("spawn", entry["name"])) and not start:     # free units at own buildings (First Crusade, #4365)
+        unit = free["unit"]
+        while (up := next((n for t in sorted(g.techs & set(UPGRADES)) for o, n in lines(t, g) if o == unit), None)):
+            unit = up                                              # the upgraded unit of the line (Elite Serjeant)
+        for rect in sorted(r for r, n in homes(g).items() if n == free["at"])[:free["most"]]:
+            for _ in range(free["count"]):
+                spawn(g, rect, unit)
     for hook in value("on_research", entry["name"], ()):          # the special effect in its own module (#3243):
         module, function = hook.rsplit(".", 1)                     # import it late, it imports gather or this module
         getattr(importlib.import_module(module), function)(g, entry)
@@ -1157,6 +1215,8 @@ def research(g, entry, start=False, rect=None):
                 g.command(cmd)
             if cmd := lead_command(g, uuid, new):                 # an elite Spanish cannon galleon (#2430)
                 g.command(cmd)
+            if cmd := combat.dodge_command(uuid, new):            # an Elite Shrivamsha Rider dodges more (#4399)
+                g.command(cmd)
             g.command(combat.label_command(uuid, new))               # the name of a new unit (units.pretty)
     import trebuchet                                               # trebuchet imports this module: import it late
     if vars(g).get("hasted"):                                      # the values below have no haste: haste() sends
@@ -1173,6 +1233,12 @@ def research(g, entry, start=False, rect=None):
             g.command(combat.range_command(uuid, name, g.map.T, s=stats(g, name, uuid)))
     for cmd in [c for uuid, name in g.soldiers.items() for c in fire_commands(g, uuid, name, {entry["name"]})]:
         g.command(cmd)                                             # the live fire ships: Siphons, Incendiaries (#2165)
+    for uuid, name in g.soldiers.items():                          # the live gunpowder units aim ahead (Arquebus, #4364)
+        if cmd := lead_command(g, uuid, name, {entry["name"]}):
+            g.command(cmd)
+    for uuid, name in g.soldiers.items():                          # the extra projectiles of the live units (#4338):
+        if any(value("volley", t, {}).get(name) for t in g.techs) and (cmd := volley_command(g, uuid, name)):
+            g.command(cmd)                                         # also a new attack of a "part" after an upgrade
     if entry["name"] in BY_KEY["walk"]:                            # the live units walk faster (Fervor)
         import ai, fleet                                           # ai imports gather, gather imports this module
         for uuid, name in g.soldiers.items():                      # a ship: fleet.tick reads speed() (#2136)
@@ -1220,13 +1286,14 @@ def research(g, entry, start=False, rect=None):
 
 def limit(g):
     """The population limit: 5 per complete own town center and house, 20 per castle (civs.HOUSING: other values of
-    a civilization, #2118), at most max_pop()."""
+    a civilization, #2118), also of the buildings in g.housing_kept (ruins.fall: Nomads, #4280), at most max_pop()."""
     own = civs.HOUSING.get(civs.civ(g), {})
     factor = {}                                                        # Urbanization: the houses give double (#3919)
     for t in getattr(g, "techs", ()):
         for n, f in value("housing_factor", t, {}).items():
             factor[n] = factor.get(n, 1) * f
-    return min(max_pop(g), sum(own.get(n, HOUSING.get(n, 0)) * factor.get(n, 1) for n in owned(g)))
+    kept = vars(g).get("housing_kept", [])                             # fell after a "keep_housing" research (#4280)
+    return min(max_pop(g), sum(own.get(n, HOUSING.get(n, 0)) * factor.get(n, 1) for n in owned(g) + kept))
 
 
 def max_pop(g):
@@ -1372,6 +1439,8 @@ def summon(g, name, pos, rotation=math.pi / 2, player=None):
         g.command(cmd)
     if cmd := combat.accuracy_command(uuid, name, civs.value("accuracy", civs.civ(g), {}).get(name, 0.0)):
         g.command(cmd)                                             # a Hun trebuchet hits units more often (#2479)
+    if cmd := combat.dodge_command(uuid, name):                    # a Shrivamsha Rider dodges projectiles (#4399)
+        g.command(cmd)
     if cmd := combat.sight_command(uuid, name, g.map.T, s=stats(g, name), more=sight_more(g.techs, name, combat.stats(name))):   # it attacks enemies in sight (#775)
         g.command(cmd)
     import ai                                                      # ai imports gather, gather imports this module

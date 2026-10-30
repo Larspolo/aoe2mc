@@ -2,6 +2,7 @@
 already in progress" come when two merges land in the same second, and the next sweep merges the PR."""
 import json
 import os
+import shutil
 import subprocess
 import sys
 import textwrap
@@ -36,6 +37,15 @@ def merge_function():
     return textwrap.dedent("\n".join(lines[start:end + 1]))
 
 
+def gate(tmp_path, config=None):
+    """The owner gate as the setup step copies it (#4241): main's owner_gate.py, agent_config.py and agent.toml."""
+    tools = os.path.join(os.path.dirname(__file__), "..", "tools")
+    (tmp_path / "gate").mkdir()
+    for f in ("owner_gate.py", "agent_config.py"):
+        shutil.copy(os.path.join(tools, f), tmp_path / "gate" / f)
+    (tmp_path / "gate" / "agent.toml").write_text(config or 'owner = "o"\n')
+
+
 def run(tmp_path, message, state="clean"):
     """Run merge() for a green PR whose merge fails with `message`; land() fails too. Gives (calls, $conflict)."""
     (tmp_path / "bin").mkdir()
@@ -48,8 +58,9 @@ def run(tmp_path, message, state="clean"):
     pr = json.dumps({"number": 7, "head": {"ref": "agent/7-x", "sha": "abc"}, "labels": [], "body": "A change."})
     script = "\n".join(["R=o/r merged=0 conflict=0 AGENT=true", "land() { return 1; }", "squash() { return 1; }",
                         merge_function(), f"merge '{pr}' abc", 'echo "conflict=$conflict"'])
+    gate(tmp_path)
     env = dict(os.environ, PATH=f"{tmp_path / 'bin'}:{os.environ['PATH']}", GH_LOG=str(tmp_path / "log"),
-               GH_TABLE=str(tmp_path / "table.json"))
+               GH_TABLE=str(tmp_path / "table.json"), RUNNER_TEMP=str(tmp_path))
     p = subprocess.run(["bash", "-c", script], cwd=tmp_path, env=env, capture_output=True, text=True)
     assert p.returncode == 0, p.stderr
     calls = [json.loads(line) for line in (tmp_path / "log").read_text().splitlines()]
