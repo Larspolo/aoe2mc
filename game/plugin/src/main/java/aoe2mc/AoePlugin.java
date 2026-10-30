@@ -3,6 +3,7 @@ package aoe2mc;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -120,6 +121,9 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *   aoe veteran <selector> <attack> <max>      the unit gets attack more for each unit that it kills, up to max (the
  *                                              Jaguar Warrior, #4467, game/combat.py veteran_command); a new call
  *                                              keeps the kills (an Elite upgrade)
+ *   aoe pack <selector> <per> <blocks> <max> <tag>,...  the unit gets +1 attack for every per own units with one of
+ *                                              the tags within blocks, up to max; it does not count itself (the
+ *                                              Monaspa, #4469, game/combat.py pack_command)
  *   aoe attackground <selector> <x> <y> <z>    AoE2 "Attack Ground" (#4078): a siege unit with a blast walks into its
  *                                              range of the point and shoots there with its reload until a new order
  *   aoe ballistics <team> on|off               Ballistics of the player (#1549): its archers and buildings aim where a
@@ -476,6 +480,8 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             this.speed = speed;
         }
     }
+    private final Map<UUID, Pack> packs = new HashMap<>();      // aoe pack (#4469); rider and horse share it
+    private record Pack(int per, double blocks, int max, Set<String> tags) {}
     private final Map<UUID, int[]> veterans = new HashMap<>();  // aoe veteran (#4467): {attack, max, kills}; rider and horse share it
 
     // The AoE2 dodge of a unit (#4399): "gauge" shots left at tick "at"; it fills by "shots" in "ticks", up to "shots".
@@ -1459,10 +1465,33 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     // The attack more of a hit of unit e with the values a (Hamask, #4332): rage for each 10 % of its lost hit points.
     private int rage(Stats a, Entity e) {
         if (a.rage <= 0 || !(body(e) instanceof LivingEntity le) || le.getAttribute(Attribute.MAX_HEALTH) == null) {
-            return veteran(e);
+            return veteran(e) + pack(e);
         }
         double max = le.getAttribute(Attribute.MAX_HEALTH).getValue();
-        return a.rage * (int) Math.floor(Math.max(0, 1 - le.getHealth() / max) * 10 + 1e-9) + veteran(e);
+        return a.rage * (int) Math.floor(Math.max(0, 1 - le.getHealth() / max) * 10 + 1e-9) + veteran(e) + pack(e);
+    }
+
+    // The attack more of unit e near its own units (aoe pack, the Monaspa, #4469): the type tag sits on the rider of a
+    // mounted unit, so the tagged entities count once and the horse of e and e itself not at all.
+    private int pack(Entity e) {
+        Pack p = e == null ? null : packs.get(e.getUniqueId());
+        if (p == null) {
+            return 0;
+        }
+        Entity me = body(e), rider = me.getPassengers().isEmpty() ? me : me.getPassengers().get(0);
+        String own = side(rider);
+        if (own == null) {
+            return 0;
+        }
+        int n = 0;
+        for (Entity o : me.getNearbyEntities(p.blocks, p.blocks, p.blocks)) {
+            if (o == e || o == rider || o.getLocation().distance(me.getLocation()) > p.blocks
+                    || !own.equals(side(o)) || Collections.disjoint(o.getScoreboardTags(), p.tags)) {
+                continue;
+            }
+            n++;
+        }
+        return Math.min(p.max, n / p.per);
     }
 
     // The attack more of unit e of its kills (aoe veteran, the Jaguar Warrior, #4467): attack for each kill, up to max.
@@ -2973,6 +3002,30 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                 n++;
             }
             sender.sendMessage("Low HP: " + n + " units");
+            return true;
+        }
+        if (args.length == 6 && args[0].equals("pack")) {             // a Monaspa: attack near its pack (#4469)
+            int per, max;
+            double blocks;
+            try {
+                per = Integer.parseInt(args[2]);
+                blocks = Double.parseDouble(args[3]);
+                max = Integer.parseInt(args[4]);
+            } catch (NumberFormatException e) {
+                sender.sendMessage("Bad number: " + e.getMessage());
+                return true;
+            }
+            Pack pk = new Pack(Math.max(1, per), blocks, max, Set.of(args[5].split(",")));
+            int n = 0;
+            for (Entity e : select(sender, args[1])) {
+                for (Entity t : new Entity[] {crew(e), e.getVehicle(), e}) {   // the rider and its horse (#732)
+                    if (t != null) {
+                        packs.put(t.getUniqueId(), pk);
+                    }
+                }
+                n++;
+            }
+            sender.sendMessage("Pack: " + n + " units");
             return true;
         }
         if (args.length == 4 && args[0].equals("veteran")) {          // a Jaguar Warrior: attack for each kill (#4467)

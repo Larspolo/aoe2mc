@@ -90,6 +90,7 @@ ACCURACY = {r["name"]: r["accuracy"] for r in UNIT_ROWS if "accuracy" in r}   # 
 DODGE = {r["name"]: r["dodge"] for r in UNIT_ROWS if "dodge" in r}           # projectiles that do no damage (#4399)
 LOW_HP = {r["name"]: r["low_hp"] for r in UNIT_ROWS if "low_hp" in r}      # another form below some hit points (#4472)
 VETERAN = {r["name"]: r["veteran"] for r in UNIT_ROWS if "veteran" in r}     # attack more for each kill (#4467)
+PACK = {r["name"]: r["pack"] for r in UNIT_ROWS if "pack" in r}               # attack more near own units (#4469)
 SHIELD = {r["name"]: r["shield"] for r in UNIT_ROWS if "shield" in r}         # projectiles through it hurt less (#4507)
 # The minimum range of the buildings that shoot, in tiles from the edge of the footprint (AoE2 DE, wiki infobox
 # "MinRange", #1546). The town center has none. Murder Holes removes it.
@@ -255,6 +256,18 @@ def low_hp_command(uuid, name):
     return f"aoe lowhp {uuid} {lo['hp']:g} {lo['melee']} {lo['pierce']} {lo['speed']:g}"
 
 
+def pack_command(uuid, name, T):
+    """The plugin command of the pack bonus of unit name (the key "pack" of data/units.jsonl: the Monaspa, #4469), or
+    None. AoE2 wiki "Monaspa": +1 attack for every "per" own units of the types "with" within "radius" tiles, up to
+    "max"; the unit itself does not count. The plugin finds them by their type tags (aoe2mc.t<ID>, on the rider)."""
+    p = PACK.get(name)
+    if not p:
+        return None
+    ids = units.type_ids()
+    tags = ",".join(f"aoe2mc.t{ids[n]}" for n in p["with"] if ids.get(n) is not None)
+    return f"aoe pack {uuid} {p['per']} {p['radius'] * T:g} {p['max']} {tags}" if tags else None
+
+
 def shield_command(uuid, name):
     """The plugin command of the projectile obstruction of unit name (the key "shield" of data/units.jsonl: the Hussite
     Wagon, #4507), or None. AoE2 DE wiki "Hussite Wagon": an enemy projectile that passes through its box deals "part"
@@ -373,6 +386,9 @@ def setup(game, data):
             game.command(cmd)
     for o in units:                                  # a Jian Swordsman loses its shield at low hit points (#4472)
         if cmd := low_hp_command(o["uuid"], o["name"]):
+            game.command(cmd)
+    for o in units:                                  # a Monaspa gets attack near own Monaspas and Knights (#4469)
+        if cmd := pack_command(o["uuid"], o["name"], data.get("tile_size", 4)):
             game.command(cmd)
     for o in units:                                  # a Jaguar Warrior gets attack for each kill (#4467)
         if cmd := veteran_command(o["uuid"], o["name"]):
