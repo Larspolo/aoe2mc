@@ -1,0 +1,10 @@
+; the small AI script of check #4656
+(defrule (civilian-population < 22) (can-train villager) => (train villager))
+(defrule (building-type-count-total mill < 1) (can-build mill) => (build mill))
+(defrule (building-type-count-total farm < 8) (can-build farm) (civilian-population >= 12) => (build farm))
+(defrule (true) => (set-strategic-number sn-food-gatherer-percentage 55) (set-strategic-number sn-wood-gatherer-percentage 35) (set-strategic-number sn-gold-gatherer-percentage 10) (disable-self))
+(defrule (housing-headroom < 5) (population-headroom > 0) (can-build house) (building-type-count-total house < 8) => (build house))
+(defrule (building-type-count-total barracks < 1) (can-build barracks) => (build barracks))
+(defrule (current-age == dark-age) (civilian-population >= 18) (can-research feudal-age) => (research feudal-age))
+(defrule (current-age >= feudal-age) (can-train militia) (military-population < 15) => (train militia))
+(defrule (military-population >= 5) => (attack-now))
