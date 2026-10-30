@@ -26,9 +26,9 @@ def patch(monkeypatch, entries):
 
 
 def tail(command):
-    """The damage, the ticks and the classes at the end of an "aoe stats" command, or None (16 words or fewer: the fields of taken, friendly, less, ignore, rage and reflect come first)."""
-    words = command.split()
-    return words[17:] if len(words) == 20 else None
+    """The damage, the ticks and the classes of the field dot of an "aoe stats" command (#4460), or None."""
+    dot = next((w[4:] for w in command.split() if w.startswith("dot=")), None)
+    return dot.split(":") if dot else None
 
 
 def test_each_technology_shows_only_in_the_castle_menu_of_its_civilization():

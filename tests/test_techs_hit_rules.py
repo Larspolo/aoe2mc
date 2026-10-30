@@ -62,12 +62,16 @@ def test_lamellar_armor_reflects_from_infantry_and_skirmishers_only():
     assert combat.damage("MILITIA", "SPEARMAN", **train.hits(g, "SPEARMAN")) == combat.damage("MILITIA", "SPEARMAN")
 
 
+def fields(command):
+    """The optional fields of an "aoe stats" command by name (key=value, #4460)."""
+    return dict(w.split("=", 1) for w in command.split() if "=" in w)
+
+
 def test_the_plugin_gets_the_hit_rules_with_the_stats():
     assert combat.stats_command("u", "CHAMPION", rage=0, reflect=0) == combat.stats_command("u", "CHAMPION")   # no flag
-    assert combat.stats_command("u", "CHAMPION", rage=2).split()[-5:] == ["1", "1", "-", "0", "2"]   # no Wootz Steel
-    words = combat.stats_command("u", "SPEARMAN", reflect=0.25).split()
-    assert words[-6:] == ["1", "1", "-", "0", "0", "0.25"]                          # the other fields first
-    assert combat.stats_command("u", "CHAMPION", ignore=True, rage=1).split()[-2:] == ["1", "1"]
+    assert fields(combat.stats_command("u", "CHAMPION", rage=2)) == {"rage": "2"}         # no Wootz Steel
+    assert fields(combat.stats_command("u", "SPEARMAN", reflect=0.25)) == {"reflect": "0.25"}
+    assert fields(combat.stats_command("u", "CHAMPION", ignore=True, rage=1)) == {"ignore": "1", "rage": "1"}
 
 
 def test_the_research_sends_the_new_rules_to_the_own_units():
@@ -77,7 +81,7 @@ def test_the_research_sends_the_new_rules_to_the_own_units():
         train.research(g, {"name": tech, "player": "Steve"})
         sent = [c for c in server.log if c.startswith("aoe stats u1 ")]
         assert sent and sent[-1] == combat.stats_command("u1", name, train.stats(g, name, "u1"), **train.hits(g, name))
-        assert sent[-1].endswith(f" {train.hits(g, name)[key]:g}")
+        assert fields(sent[-1])[key] == f"{train.hits(g, name)[key]:g}"
 
 
 @pytest.mark.mc

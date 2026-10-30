@@ -143,7 +143,8 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *                                              defensive chases an enemy only CHASE blocks past its range (#1105)
  *   aoe stance <selector>                      the stance of the first unit (#1107), for checks
  *   aoe stats <selector> <hp> <attack> <melee armor> <pierce armor> <ranged 0|1|2> <classes|-> <class:bonus,...|->
- *             [reload ticks [taken [friendly [less [ignore [rage [reflect [damage ticks classes|-]]]]]]]]  the AoE2 values
+ *             [reload ticks [key=value ...]]  the AoE2 values (the optional keys in any order, #4460: taken, friendly,
+ *                                              less, ignore, rage, reflect, dot=damage:ticks:classes)
  *                                              of a unit (#514, combat.stats_command); a melee
  *                                              unit hits once per reload (#848, default 20: the vanilla cooldown);
  *                                              taken: the factor of the bonus damage that it takes (#2248, default 1);
@@ -153,7 +154,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *                                              ignore: 1 when its hits ignore a positive armor (Wootz Steel, #4331);
  *                                              rage: the attack more for each 10 % of its lost hit points (Hamask);
  *                                              reflect: the part of a hit with no projectile on it that the attacker
- *                                              takes back (Lamellar Armor, #4332); damage ticks classes: each hit on a
+ *                                              takes back (Lamellar Armor, #4332); dot: each hit on a
  *                                              unit or building of these classes ("-": each) deals this damage over
  *                                              time (Dot.java, #4339)
  *   aoe stop <selector>                        stop the walk and turn the AI off: the unit stands still (#437)
@@ -3049,23 +3050,38 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             sender.sendMessage("Stance: " + n + " units");
             return true;
         }
-        if (args.length >= 9 && (args.length <= 16 || args.length == 19) && args[0].equals("stats")) {
+        if (args.length >= 9 && args[0].equals("stats")) {
             double hp;
             Stats st;
-            Dot.Rule dot;
+            Dot.Rule dot = null;
             try {
                 hp = Double.parseDouble(args[2]);
+                double taken = 1.0, friendly = 1.0, reflect = 0.0;
+                Map<String, Integer> less = Map.of();
+                boolean ignore = false;
+                int rage = 0;
+                for (int i = 10; i < args.length; i++) {   // the optional fields: key=value in any order (#4460)
+                    String[] kv = args[i].split("=", 2);
+                    String v = kv.length == 2 ? kv[1] : "";
+                    switch (kv[0]) {
+                        case "taken" -> taken = Double.parseDouble(v);          // the bonus damage taken (#2248)
+                        case "friendly" -> friendly = Double.parseDouble(v);    // the friendly fire taken (#2418)
+                        case "less" -> less = bonus(v);                         // Royal Heirs (#4331)
+                        case "ignore" -> ignore = v.equals("1");                // Wootz Steel (#4331)
+                        case "rage" -> rage = Integer.parseInt(v);              // Hamask (#4332)
+                        case "reflect" -> reflect = Double.parseDouble(v);      // Lamellar Armor (#4332)
+                        case "dot" -> {                                         // damage:ticks:classes (#4339)
+                            String[] d = v.split(":", 3);
+                            dot = new Dot.Rule(Double.parseDouble(d[0]), Math.max(1, Integer.parseInt(d[1])),
+                                    d[2].equals("-") ? Set.of() : Set.of(d[2].split(",")));
+                        }
+                        default -> throw new IllegalArgumentException("unknown field " + args[i]);
+                    }
+                }
                 st = new Stats(Integer.parseInt(args[3]), Integer.parseInt(args[4]), Integer.parseInt(args[5]),
                         !args[6].equals("0"), args[6].equals("1"), args[7].equals("-") ? Set.of() : Set.of(args[7].split(",")),
                         bonus(args[8]), args.length >= 10 ? Integer.parseInt(args[9]) : 20,
-                        args.length >= 11 ? Double.parseDouble(args[10]) : 1.0,    // the bonus damage taken (#2248)
-                        args.length >= 12 ? Double.parseDouble(args[11]) : 1.0,    // the friendly fire taken (#2418)
-                        args.length >= 13 ? bonus(args[12]) : Map.of(),            // Royal Heirs (#4331)
-                        args.length >= 14 && args[13].equals("1"),                // Wootz Steel (#4331)
-                        args.length >= 15 ? Integer.parseInt(args[14]) : 0,       // Hamask (#4332)
-                        args.length >= 16 ? Double.parseDouble(args[15]) : 0.0);  // Lamellar Armor (#4332)
-                dot = args.length == 19 ? new Dot.Rule(Double.parseDouble(args[16]), Math.max(1, Integer.parseInt(args[17])),
-                        args[18].equals("-") ? Set.of() : Set.of(args[18].split(","))) : null;   // (#4339)
+                        taken, friendly, less, ignore, rage, reflect);
             } catch (RuntimeException e) {                 // a bad number or a bonus without ":"
                 sender.sendMessage("Bad value: " + e.getMessage());
                 return true;

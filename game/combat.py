@@ -159,7 +159,7 @@ def stats_command(uuid, name, s=None, taken=1.0, friendly=1.0, less=None, ignore
     (a new unit has full health, #940), and the values of `damage` (the same rule in AoePlugin.java). The range kind:
     0 melee, 1 ranged, 2 ranged with melee damage (MELEE_RANGED, #800). Then the reload in ticks at Normal speed: a melee unit hits once per reload (#848). Last, only when it is
     not 1, the factor of the bonus damage that the unit takes (civs.taken, #2248), and when friendly is not 1, the factor
-    of the friendly fire that it takes (civs.friendly, #2418). Then, when they are set, the damage less from attacker
+    of the friendly fire that it takes (civs.friendly, #2418). Then, as key=value (#4460) and only when they are set, the damage less from attacker
     classes (less, Royal Heirs) and 1 when its hits ignore the armor (ignore, Wootz Steel): train.hits (#4331), the attack
     more for each 10 % of lost hit points (rage, Hamask) and the part of a melee hit that the attacker takes back
     (reflect, Lamellar Armor, #4332). Last, dot: the damage over time of each hit, (damage, AoE2 seconds, the target
@@ -167,15 +167,14 @@ def stats_command(uuid, name, s=None, taken=1.0, friendly=1.0, less=None, ignore
     s = s or stats(name)
     bonus = ",".join(f"{c}:{n}" for c, n in sorted(s.bonus.items())) or "-"
     kind = 0 if s.range <= 0 else 2 if name in MELEE_RANGED else 1
-    tail = [(f"{taken:g}", taken != 1), (f"{friendly:g}", friendly != 1),
-            (",".join(f"{c}:{n}" for c, n in sorted((less or {}).items())) or "-", bool(less)), ("1" if ignore else "0", ignore),
-            (f"{rage:g}", rage != 0), (f"{reflect:g}", reflect != 0)]
-    if dot:                                                            # Curare, Red Cliffs Tactics (Dot.java)
-        tail += [(f"{dot[0]:g}", True), (str(max(1, round(dot[1] / NORMAL * 20))), True), (",".join(sorted(dot[2])) or "-", True)]
-    last = max([i + 1 for i, (_, on) in enumerate(tail) if on] + [0])   # the fields up to the last set one
+    tail = {"taken": (f"{taken:g}", taken != 1), "friendly": (f"{friendly:g}", friendly != 1),   # key=value, only the set ones (#4460)
+            "less": (",".join(f"{c}:{n}" for c, n in sorted((less or {}).items())), bool(less)), "ignore": ("1", ignore),
+            "rage": (f"{rage:g}", rage != 0), "reflect": (f"{reflect:g}", reflect != 0),
+            "dot": (dot and f"{dot[0]:g}:{max(1, round(dot[1] / NORMAL * 20))}:{','.join(sorted(dot[2])) or '-'}",
+                    bool(dot))}                                         # Curare, Red Cliffs Tactics (Dot.java)
     return (f"aoe stats {uuid} {min(s.hp, 1024)} {s.attack} {s.melee} {s.pierce} {kind} "
             f"{','.join(s.classes) or '-'} {bonus} {round(s.reload / NORMAL * 20) or 20}"
-            + "".join(f" {v}" for v, _ in tail[:last]))
+            + "".join(f" {k}={v}" for k, (v, on) in tail.items() if on))
 
 
 def label_command(uuid, name=None):
