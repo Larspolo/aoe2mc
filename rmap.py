@@ -987,14 +987,15 @@ def objects(cmds, consts, terrain, starts, rng, warn, owner=None, ridges=(), lay
                    np.minimum(np.minimum(x, y), np.minimum(n - 1 - x, n - 1 - y)) if "find_closest_to_map_edge" in attrs else None)
             sizes = [1] * count if groups is None and not grouped else [
                 max(1, count + int(rng.integers(-vary, vary + 1))) for _ in range(groups or 1)]
-            for size in sizes:
+            for i, size in enumerate(sizes):
                 free = ~used & place & ~dilate(placed, gap) & ~(dilate(mine, temp) if temp else mine)
                 spots = np.argwhere((dist >= lo) & (dist <= hi) & free)
                 if not len(spots) and "force_placement" in attrs:   # objects on the same tile (#4137)
                     free = place.copy()
                     spots = np.argwhere((dist >= lo) & (dist <= hi) & free)
-                if not len(spots):
-                    warn(f"create_object {args[0]}: no free tile")
+                if not len(spots):            # AoE2 places the groups that fit: a warning only with no group (#4721)
+                    if not i:
+                        warn(f"create_object {args[0]}: no free tile")
                     break
                 if key is None:
                     mid = tuple(int(v) for v in spots[rng.integers(len(spots))])
