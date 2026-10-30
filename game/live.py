@@ -4,9 +4,12 @@ AoE2 DE writes the record file while the game runs. Minecraft cannot watch a fil
 file grows, it reads the record again (aoe2mc.record_timeline, as the converter does for aoe2mc.json) and gives
 the new events to the replay (`Replay.play(more=...)`, #4662). It keeps the events of the last `delay` seconds of
 game time back: the replay plays "newest event time − delay" or earlier, as the AoE2 DE spectator mode does.
-When the file did not grow for IDLE seconds, the game ended: the source gives the rest and says the record is complete.
+The game ended when the record has its end (mgz match.completed: a player resigned, #4664) or when the file did not
+grow for IDLE seconds (a crash, a draw, the players left): the source gives the rest, says the record is complete and
+logs one line that says why.
 """
 import os
+import sys
 import time
 
 import aoe2mc
@@ -18,15 +21,25 @@ IDLE = 60.0                 # seconds of real time with no growth of the file: t
 
 class Source:
     """The events of the record at `path`, `delay` seconds of game time behind its newest event. `read(path)` gives
-    the whole named timeline of the file (record_timeline); `turn`: the quarter turns of the world (aoe2mc.json)."""
+    the whole named timeline of the file (record_timeline) and may set `ended`; `turn`: the quarter turns of the world
+    (aoe2mc.json)."""
 
-    def __init__(self, path, delay=DELAY, turn=0, read=None, clock=time.monotonic, check=CHECK, idle=IDLE):
+    def __init__(self, path, delay=DELAY, turn=0, read=None, clock=time.monotonic, check=CHECK, idle=IDLE, log=None):
         if not os.path.isfile(path):
             raise OSError(f"--live: the record {path} does not exist")
         self.path, self.delay, self.clock, self.check, self.idle = path, delay * 1000, clock, check, idle
-        self.read = read or (lambda p: aoe2mc.record_timeline(p, turn))
+        self.log = log or (lambda m: print(m, file=sys.stderr))
+        self.turn, self.read = turn, read or self.record
+        self.ended, self.said = False, False             # the record has the end of the game; the end line is logged
         self.events, self.given, self.size = [], 0, None   # all events read, the number given, the file size read
         self.asked, self.grew = -float("inf"), clock()     # the real time of the last check and of the last growth
+
+    def record(self, path):
+        """The named timeline of the record file; `ended` when it has the end of the game."""
+        state = {}
+        events = aoe2mc.record_timeline(path, self.turn, state)
+        self.ended = state.get("complete", False)
+        return events
 
     def poll(self):
         """Read the file again if it grew. True when it grew."""
@@ -59,5 +72,10 @@ class Source:
             return [], False
         self.asked = self.clock()
         self.poll()
-        complete = self.clock() - self.grew >= self.idle
+        idle = self.clock() - self.grew >= self.idle
+        complete = self.ended or idle
+        if complete and not self.said:
+            self.said = True
+            self.log("live: the game ended: the record is complete" if self.ended else
+                     f"live: the record did not grow for {self.idle:g} s: the game ended")
         return self.take(complete), complete
