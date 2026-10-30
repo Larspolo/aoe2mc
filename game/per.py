@@ -197,6 +197,16 @@ def names():
     return NAMES
 
 
+# The strategic numbers that the bot reads, with their AoE2 defaults (airef "Strategic numbers"); 0 for a gatherer
+# percentage: a script that sets none keeps bot.SHARE.
+SN = {"sn-food-gatherer-percentage": 0,
+      "sn-gold-gatherer-percentage": 0,
+      "sn-maximum-attack-group-size": 0,
+      "sn-minimum-attack-group-size": 4,
+      "sn-stone-gatherer-percentage": 0,
+      "sn-wood-gatherer-percentage": 0}
+
+
 class Script:
     """The rules of an AI script on a bot.Bot: goals and timers keep their values between steps."""
 
@@ -205,6 +215,17 @@ class Script:
         self.off = set()                                           # the rules after disable-self
         self.goals, self.timers = {}, {}                           # goal id -> value; timer id -> AoE2 second due
         self.warned = set()
+        self.sn = {}                                               # strategic number name -> value (#4530)
+        self.attacking = False                                     # attack-now ran: the bot may attack
+
+    def number(self, name):
+        return self.sn.get(name, SN[name])
+
+    def percent(self):
+        """The shares of the four gatherer percentages (in percent of the villagers), or None when the script set none."""
+        pct = {r: max(self.number(f"sn-{r}-gatherer-percentage"), 0) for r in ("food", "wood", "gold", "stone")}
+        total = sum(pct.values())
+        return {r: v / total for r, v in pct.items()} if total else None
 
     def warn(self, what, name):
         if (what, name) not in self.warned:
@@ -233,6 +254,10 @@ class Script:
         if name == "goal":                                         # (goal ID VALUE) or (goal ID REL VALUE)
             op, v = ("==", args[1]) if len(args) == 2 else args[1:3]
             return OPS[op](self.goals.get(args[0], -1), v)
+        if name == "strategic-number":                             # (strategic-number NAME REL VALUE)
+            if args[0] not in SN:
+                return self.warn("strategic number", args[0]) or False
+            return OPS[args[1]](self.sn.get(args[0], SN[args[0]]), args[2])
         if name == "timer-triggered":
             return args[0] in self.timers and self.bot.time >= self.timers[args[0]]
         if name in ("true", "false"):
@@ -246,6 +271,13 @@ class Script:
             if (n := self.game(args[0], "unit" if name[0] == "u" else "building")) is None:
                 return False
             return OPS[args[1]](self.count(n, total=name.endswith("-total")), args[2])
+        if name in ("can-buy-commodity", "can-sell-commodity"):
+            return self.trade_ok(name == "can-buy-commodity", args[0])
+        if name in ("commodity-buying-price", "commodity-selling-price"):
+            import market
+            if args[0] not in market.RATES:
+                return self.warn("commodity", args[0]) or False
+            return OPS[args[1]](market.price(self.bot.g, args[0], name == "commodity-buying-price"), args[2])
         if name == "current-age":
             return self.age(self.bot.g, *args)
         if name == "enemy-buildings-in-town":
@@ -371,6 +403,15 @@ class Script:
             return False
         return bool(self.homes(n)) and self.paid(train.price(g, n))
 
+    def trade_ok(self, buy, res):
+        """A trade of 100 res is possible now: an own market and the gold (a buy) or the resource (a sell)."""
+        import market
+        g = self.bot.g
+        if res not in market.RATES:
+            return self.warn("commodity", res) or False
+        return bool(market.markets(g)) and (g.stock["gold"] >= market.price(g, res, True) if buy
+                                            else g.stock[res] >= market.LOT)
+
     def act(self, k, a):
         import build
         import train
@@ -389,6 +430,12 @@ class Script:
             self.off.add(k)
         elif name == "set-goal":
             self.goals[args[0]] = args[1]
+        elif name == "set-strategic-number":
+            if args[0] not in SN:
+                return self.warn("strategic number", args[0])
+            self.sn[args[0]] = args[1]
+        elif name == "attack-now":
+            self.attacking = True
         elif name == "enable-timer":
             self.timers[args[0]] = b.time + args[1]
         elif name == "disable-timer":
@@ -402,5 +449,18 @@ class Script:
                     diplomacy.change(g, None, args[0])
         elif name == "chat-to-all":
             g.command("tellraw @a " + json.dumps({"text": f"<Player {g.player}> {args[0]}"}))
+        elif name == "chat-to-player":                              # only the people of that seat (team pN)
+            g.command(f"tellraw @a[team=p{args[0]}] " + json.dumps({"text": f"<Player {g.player}> {args[1]}"}))
+        elif name in ("buy-commodity", "sell-commodity"):           # the path of the market menu (#4573)
+            import market
+            if self.trade_ok(name == "buy-commodity", args[0]):
+                market.trade(g, b.nobody, args[0], name == "buy-commodity")
+        elif name == "tribute-to-player":                           # (tribute-to-player PLAYER RESOURCE AMOUNT)
+            import diplomacy
+            if args[1] not in STOCK:
+                return self.warn("resource", args[1])
+            for _ in range(max(args[2], 0) // diplomacy.LOT):        # one tribute of the menu per 100
+                if not diplomacy.send(g, b.nobody, args[0], args[1]):
+                    break
         elif name != "do-nothing":
             self.warn("action", name)

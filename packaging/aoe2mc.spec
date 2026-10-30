@@ -2,6 +2,7 @@
 # command line (aoe2mc, aoe2mc.main) and the game program (aoe2mc-game, game/run.py main, #1778).
 # Build: python3 -m PyInstaller packaging/aoe2mc.spec (docs/packaging.md).
 import os
+import pkgutil
 import sys
 
 from PyInstaller.utils.hooks import collect_data_files, collect_submodules
@@ -13,6 +14,8 @@ DATAS = ([(os.path.join(ROOT, "tools", "mcdata", "26.3.json"), os.path.join("too
          + [(os.path.join(ROOT, "data", "*.jsonl"), "data")]   # units.py reads them (#1917)
          + collect_data_files("AoE2ScenarioParser") + collect_data_files("mgz") + collect_data_files("aocref"))   # mgz reads aocref
 HIDDEN = collect_submodules("AoE2ScenarioParser") + collect_submodules("mgz") + ["aocref"]   # imported in functions, by name
+# game/abilities finds its modules with pkgutil (#4588): the analysis does not see them
+HIDDEN += ["abilities"] + [f"abilities.{m.name}" for m in pkgutil.iter_modules([os.path.join(ROOT, "game", "abilities")])]
 # the game program: the modules of game/ and tools/ import each other by their short names (run.py puts both folders
 # on sys.path), so they are top-level modules of the bundle, and their data goes next to them. The plugin jar comes
 # from the workflow (gradlew jar): game/run.py takes it in a frozen app, so the user needs a Java runtime, no JDK.

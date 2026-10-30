@@ -132,6 +132,9 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *   aoe pack <selector> <per> <blocks> <max> <tag>,...  the unit gets +1 attack for every per own units with one of
  *                                              the tags within blocks, up to max; it does not count itself (the
  *                                              Monaspa, #4469, game/combat.py pack_command)
+ *   aoe aura <selector> <blocks> <speed> <attack> <tag>,...  the own units with one of the tags within blocks of
+ *                                              the unit move speed and attack attack faster (fractions); two auras do
+ *                                              not add up (the Centurion, #4470, game/abilities/aura.py, Aura.java)
  *   aoe sunder <selector> <n>                  each hit of the unit on a unit lowers its melee and pierce armor by n,
  *                                              down to 0 (the Obuch, #4466, game/combat.py sunder_command). A later
  *                                              aoe stats of the target (an upgrade) sets its armor again

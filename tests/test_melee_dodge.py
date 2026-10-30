@@ -1,20 +1,21 @@
 """The Iron Pagoda ignores one melee hit every 40 seconds (#4465, AoE2 DE wiki "Iron Pagoda": "Ignores one melee
-attack every 40 (30 for Elite) seconds"): the field "melee" of the key "dodge", combat.dodge_command and the last
+attack every 40 (30 for Elite) seconds"): the field "melee" of the key "dodge", game/abilities/dodge.py and the last
 argument of `aoe dodge`. Test data, and a melee hit and an arrow on a server."""
 import re
 import shutil
 import time
 
 import pytest
+from abilities import dodge
 
 from game import combat, run
 
 
 def test_a_melee_dodge_adds_the_last_field_1(monkeypatch):
-    monkeypatch.setattr(combat, "DODGE", {"KNIGHT": {"shots": 1, "time": 40, "melee": True},
+    monkeypatch.setattr(dodge, "UNITS", {"KNIGHT": {"shots": 1, "time": 40, "melee": True},
                                           "TEST_RIDER": {"shots": 3, "time": 12.5}})
-    assert combat.dodge_command("u-1", "KNIGHT") == "aoe dodge u-1 1 800 1"
-    assert combat.dodge_command("u-1", "TEST_RIDER") == "aoe dodge u-1 3 250"
+    assert dodge.command("u-1", "KNIGHT") == "aoe dodge u-1 1 800 1"
+    assert dodge.command("u-1", "TEST_RIDER") == "aoe dodge u-1 3 250"
 
 
 def health(game, tag):
