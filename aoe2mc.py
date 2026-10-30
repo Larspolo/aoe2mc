@@ -335,7 +335,7 @@ def read_scx(path):
 def read_json(path):
     """A map description in JSON (#960), as read_scenario returns it: {"size": N, "terrain": N × N terrain IDs,
     "elevation": N × N levels (default 0), "layer": N × N land layer IDs (default -1 = none, #3689), "objects": [{"name", "player", "x", "y", "rotation"} ...],
-    "players": {"1": {"civ": "BRITONS", "color": 0} ...}}. The IDs and names are those of AoE2ScenarioParser
+    "players": {"1": {"civ": "BRITONS", "color": 0} ...}, "mood": a key of MOODS (optional)}. The IDs and names are those of AoE2ScenarioParser
     (TerrainId, object_kinds). The color is an index of buildings.COLOR_NAMES (default: the player number - 1)."""
     with open(path) as f:
         return map_description(json.load(f), path)
@@ -379,7 +379,7 @@ def map_description(d, path):
         players[pid] = {"color": buildings.COLOR_NAMES[(pid - 1) % 8], "arch": "western", "civ": "?", "view": None}
     terrain = apply_layers(arrays["terrain"].astype(np.int16), arrays["layer"], terrain_names)
     return (size, terrain, arrays["elevation"].astype(np.float32), terrain_names,
-            {k: "" for k in CHAPTERS}, objects, players)
+            {k: "" for k in CHAPTERS} | ({"mood": d["mood"]} if d.get("mood") in MOODS else {}), objects, players)
 
 
 def apply_layers(terrain, layer, terrain_names):
