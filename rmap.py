@@ -564,6 +564,15 @@ def generate(text, seed, players=2, size=None, warn=None, teams=None, folder=Non
         kind = value(args[0], consts)
         on = value(attrs["base_terrain"][0], consts) if "base_terrain" in attrs else 0
         free = terrain == on
+        if "height_limits" in attrs:               # only on the hill levels from MIN to MAX (AoE2 DE)
+            lo, hi = (value(v, consts) for v in attrs["height_limits"][:2])
+            free &= (elevation >= lo) & (elevation <= hi)
+        if "set_flat_terrain_only" in attrs:       # only where the 8 neighbours have the same level
+            p, flat = np.pad(elevation, 1, mode="edge"), np.ones((n, n), bool)
+            for dy in (0, 1, 2):
+                for dx in (0, 1, 2):
+                    flat &= p[dy:dy + n, dx:dx + n] == elevation
+            free &= flat
         if (s := value(attrs["spacing_to_other_terrain_types"][0], consts)
                 if "spacing_to_other_terrain_types" in attrs else 0):
             free &= ~dilate(terrain != on, s)
@@ -652,10 +661,12 @@ CREATE_LAND = (                 # the attributes of create_land and create_playe
 CREATE_TERRAIN = (              # the attributes of create_terrain that generate() reads: one per line (#4417)
     "base_terrain",
     "clumping_factor",
+    "height_limits",
     "land_percent",
     "number_of_clumps",
     "number_of_tiles",
     "set_avoid_player_start_areas",
+    "set_flat_terrain_only",
     "set_scale_by_groups",
     "set_scale_by_size",
     "spacing_to_other_terrain_types",
