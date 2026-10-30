@@ -590,6 +590,9 @@ def generate(text, seed, players=2, size=None, warn=None, teams=None, folder=Non
         if (s := value(attrs["spacing_to_other_terrain_types"][0], consts)
                 if "spacing_to_other_terrain_types" in attrs else 0):
             free &= ~dilate(terrain != on, s)
+        if "spacing_to_specific_terrain" in attrs:          # N tiles from terrain T
+            t, s = (value(v, consts) for v in attrs["spacing_to_specific_terrain"][:2])
+            free &= ~dilate(terrain == t, s)
         avoid = attrs.get("set_avoid_player_start_areas")      # None: not set; []: the default distance
         far = 0 if avoid is None else value(avoid[0], consts) if avoid else AVOID
         for st in starts:                      # never in the start area of a player (its base_size square)
@@ -608,6 +611,9 @@ def generate(text, seed, players=2, size=None, warn=None, teams=None, folder=Non
                   "clump": clump} for k in range(clumps)]
         grow(mark, group, free, rng)
         terrain[mark >= 0] = kind
+        wet = np.isin(terrain, [TERRAINS["WATER"], TERRAINS["SHALLOW"]])
+        if "beach_terrain" in attrs and wet[mark >= 0].all():   # the land tiles at the shore of new water get T
+            terrain[dilate(mark >= 0, 1) & ~wet] = value(attrs["beach_terrain"][0], consts)
         for a in sorted(set(attrs) - set(CREATE_TERRAIN)):
             warn(f"create_terrain: {a} is not read yet")
     connections(terrain, links, sections.get("CONNECTION_GENERATION", ()), consts, rng, warn)
@@ -676,6 +682,7 @@ CREATE_LAND = (                 # the attributes of create_land and create_playe
 )
 CREATE_TERRAIN = (              # the attributes of create_terrain that generate() reads: one per line (#4417)
     "base_terrain",
+    "beach_terrain",
     "clumping_factor",
     "land_percent",
     "number_of_clumps",
@@ -684,6 +691,7 @@ CREATE_TERRAIN = (              # the attributes of create_terrain that generate
     "set_scale_by_groups",
     "set_scale_by_size",
     "spacing_to_other_terrain_types",
+    "spacing_to_specific_terrain",
 )
 CREATE_OBJECT = (               # the attributes of create_object that objects() reads: one per line, in alphabetical order (#4224)
     "actor_area",                   # mark the tiles around each object for a later avoid_actor_area (#3858)
