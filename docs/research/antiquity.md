@@ -199,7 +199,7 @@ These bonuses do not work yet. Each needs a feature that the game program does n
 
 - Choson: towers +2 range. No key changes the range of a building.
 - Macedonians: conversion resistance. No key changes the conversion time.
-- Palmyrans: camel speed works; tributes without tax and +20 % trade gold do not. No key changes them.
+- Palmyrans: camel speed works; +20 % trade gold does not. No key changes it.
 - Team bonuses (the key `"team"`, #4452: it counts for the player and each ally, `civs.Team`): 13 of 17 work. Only
   their text: Macedonian houses +50 hit points (the key `"hp"` holds a factor, not added hit points), Phoenician archers
   +2 line of sight (no key for the sight of a unit), Roman priests heal 50 % faster (no key for the heal speed), Shang

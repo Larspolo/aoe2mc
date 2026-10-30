@@ -23,6 +23,7 @@ from aoe2mc import player_color  # noqa: E402
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import build  # noqa: E402
+import civs  # noqa: E402
 import flare  # noqa: E402
 import lobby  # noqa: E402
 import market  # noqa: E402
@@ -187,8 +188,8 @@ def show(g, player):
 
 
 def fee(g):
-    """The tribute fee of the player g in percent: the lowest of FEE and its technologies."""
-    return min([FEE] + [f for t, f in FEES.items() if t in getattr(g, "techs", ())])
+    """The tribute fee of the player g in percent: the lowest of FEE, its civilization (Palmyrans: 0, #4445) and its technologies."""
+    return min([FEE, civs.value("tribute_fee", civs.civ(g), FEE)] + [f for t, f in FEES.items() if t in getattr(g, "techs", ())])
 
 
 def cost(g, n):
