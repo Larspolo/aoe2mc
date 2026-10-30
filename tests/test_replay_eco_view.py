@@ -9,7 +9,7 @@ from test_replay import Fake, data  # noqa: E402
 from test_replay_stat_books import page, pages  # noqa: E402
 
 
-SPENT = ["", "Spent:", "Eco 0", "Mil 0", "Tech 0", "Build 0"]     # the spending lines under the villagers (#4391)
+SPENT = ["Spent:", "Eco 0", "Mil 0", "Tech 0", "Build 0"]     # the spending lines under the villagers (#4391)
 
 
 def game():

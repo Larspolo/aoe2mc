@@ -629,7 +629,7 @@ class Replay:
         lines = {}
         for p in list(eco) + [p for p in self.spends if p not in eco]:
             s = self.spent(p, t)
-            lines[p] = [f"{k} {n}" for k, n in eco.get(p, {}).items()] + ["", "Spent:"] + \
+            lines[p] = [f"{k} {n}" for k, n in eco.get(p, {}).items()] + ["Spent:"] + \
                 [f"{name} {s[g]}" for g, name in (("economy", "Eco"), ("military", "Mil"), ("technologies", "Tech"),
                                                   ("buildings", "Build"))]
         return self.stat_book("Economy", lines)
@@ -2628,7 +2628,7 @@ class Replay:
             rows, page = BOOK_ROWS - 1 - len(textwrap.wrap(name, BOOK_COLS)), ""
             head = {"text": name, "color": color if color != "white" else "black"}   # the sidebar color (#1643)
             for line in lines[p]:
-                n = len(textwrap.wrap(line, BOOK_COLS))
+                n = max(1, len(textwrap.wrap(line, BOOK_COLS)))       # an empty line is a row too (#4552)
                 if n > rows:
                     pages.append({"text": "", "extra": [head, {"text": "\n" + page.rstrip("\n")}]} if head
                                  else {"text": page.strip("\n")})

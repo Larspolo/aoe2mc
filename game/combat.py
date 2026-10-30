@@ -88,6 +88,7 @@ CONTACT = 1.0         # tiles: the reach of a demolition ship (range 0, #1440): 
 MIN_RANGE = {r["name"]: r["min_range"] for r in UNIT_ROWS if "min_range" in r}
 ACCURACY = {r["name"]: r["accuracy"] for r in UNIT_ROWS if "accuracy" in r}   # siege shots at units that hit (#2479)
 DODGE = {r["name"]: r["dodge"] for r in UNIT_ROWS if "dodge" in r}           # projectiles that do no damage (#4399)
+FRENZY = {r["name"]: r["frenzy"] for r in UNIT_ROWS if "frenzy" in r}        # a shorter reload in a long fight (#4468)
 LOW_HP = {r["name"]: r["low_hp"] for r in UNIT_ROWS if "low_hp" in r}      # another form below some hit points (#4472)
 VETERAN = {r["name"]: r["veteran"] for r in UNIT_ROWS if "veteran" in r}     # attack more for each kill (#4467)
 PACK = {r["name"]: r["pack"] for r in UNIT_ROWS if "pack" in r}               # attack more near own units (#4469)
@@ -245,6 +246,16 @@ def dodge_command(uuid, name):
     return f"aoe dodge {uuid} {d['shots']} {round(d['time'] * 20)}" + (" 1" if d.get("melee") else "")
 
 
+def frenzy_command(uuid, name):
+    """The plugin command of the frenzy of unit name (the key "frenzy" of data/units.jsonl: the Temple Guard, #4468), or
+    None. The AoE2 wiki ("Temple Guard"): each attack makes the reload "less" seconds shorter for "time" seconds, down
+    to "min" seconds. The values as ticks (AoE2 seconds x 20, as dodge_command)."""
+    f = FRENZY.get(name)
+    if not f:
+        return None
+    return f"aoe frenzy {uuid} {round(f['less'] * 20)} {round(f['time'] * 20)} {round(f['min'] * 20)}"
+
+
 def low_hp_command(uuid, name):
     """The plugin command of the low hit point form of unit name (the key "low_hp" of data/units.jsonl: the Jian
     Swordsman, #4472), or None when it has none. The AoE2 wiki ("Jian Swordsman"): it switches by itself to its
@@ -383,6 +394,9 @@ def setup(game, data):
             game.command(cmd)
     for o in units:                                  # a Shrivamsha Rider dodges projectiles (#4399)
         if cmd := dodge_command(o["uuid"], o["name"]):
+            game.command(cmd)
+    for o in units:                                  # a Temple Guard attacks faster in a long fight (#4468)
+        if cmd := frenzy_command(o["uuid"], o["name"]):
             game.command(cmd)
     for o in units:                                  # a Jian Swordsman loses its shield at low hit points (#4472)
         if cmd := low_hp_command(o["uuid"], o["name"]):
