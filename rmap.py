@@ -882,7 +882,7 @@ def path(land, origin):
 
 def objects(cmds, consts, terrain, starts, rng, warn, owner=None, ridges=(), layer=None, land_ids=None):
     """The objects of the create_object commands of <OBJECTS_GENERATION> (#3855), with the attributes of
-    `CREATE_OBJECT`: number_of_objects on random free tiles, in groups with number_of_groups (#3856).
+    `CREATE_OBJECT`: number_of_objects on random free tiles, in groups with number_of_groups or a grouping attribute (#3856, #4699).
     Never on water (only a fish or a ship), a forest, a cliff or another object; an object with no free tile is missing.
     temp_min_distance_group_placement keeps the groups of one command apart; later commands do not avoid them (#4138).
     generate_for_first_land_only gives the objects of set_place_for_every_player to the first land only (#4138).
@@ -922,6 +922,7 @@ def objects(cmds, consts, terrain, starts, rng, warn, owner=None, ridges=(), lay
         delta = {"resource_delta": value(attrs["resource_delta"][0], consts)} if "resource_delta" in attrs else {}
         radius = value(attrs["group_placement_radius"][0], consts) if "group_placement_radius" in attrs else 3
         tight = "set_tight_grouping" in attrs
+        grouped = groups is not None or any(a in attrs for a in ("group_placement_radius", "set_loose_grouping", "set_tight_grouping"))
         circle = "set_circular_placement" in attrs
         k = (n * n / 10000 if "set_scaling_to_map_size" in attrs else 1) * (
             len(starts) if "set_scaling_to_player_number" in attrs else 1)
@@ -978,12 +979,14 @@ def objects(cmds, consts, terrain, starts, rng, warn, owner=None, ridges=(), lay
             if "require_path" in attrs and st:          # a land path: no water, forest or cliff (#4137)
                 place = place & path(~wet & ~forest & ~cliff, (int(st["x"]), int(st["y"])))
             dist = (np.hypot(x - st["x"], y - st["y"]) if circle else np.maximum(abs(x - st["x"]), abs(y - st["y"]))) if st else np.full((n, n), float(lo))
-            # without number_of_groups each object is a group of 1; with it, number_of_objects (± group_variance) is
-            # the size of each group (AoE2 DE scripting guide; loose grouping and radius 3 are the defaults)
+            # number_of_objects (± group_variance) is the size of each group (AoE2 DE scripting guide; loose grouping and
+            # radius 3 are the defaults). Without number_of_groups: one group when a grouping attribute is set (the 7 gold
+            # of Arabia), else each object is a group of 1. Single objects with min_distance_group_placement fill the ring (#4699).
             key = (dist if "find_closest" in attrs and st else
                    np.hypot(x - (n - 1) / 2, y - (n - 1) / 2) if "find_closest_to_map_center" in attrs else
                    np.minimum(np.minimum(x, y), np.minimum(n - 1 - x, n - 1 - y)) if "find_closest_to_map_edge" in attrs else None)
-            sizes = [1] * count if groups is None else [max(1, count + int(rng.integers(-vary, vary + 1))) for _ in range(groups)]
+            sizes = [1] * count if groups is None and not grouped else [
+                max(1, count + int(rng.integers(-vary, vary + 1))) for _ in range(groups or 1)]
             for size in sizes:
                 free = ~used & place & ~dilate(placed, gap) & ~(dilate(mine, temp) if temp else mine)
                 spots = np.argwhere((dist >= lo) & (dist <= hi) & free)
