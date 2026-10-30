@@ -621,10 +621,18 @@ class Replay:
                 lines[p] += ["University:"] + uni[:UNI_SHOWN] + ([f"+{len(uni) - UNI_SHOWN}"] if len(uni) > UNI_SHOWN else [])
         return self.stat_book("Upgrades", lines)
 
-    def ecoview(self):
-        """The book "Economy" at the current time (#3756, #3924): a page per player with the villagers on each kind of
-        work. Commands only when a count changed."""
-        return self.stat_book("Economy", {p: [f"{k} {n}" for k, n in c.items()] for p, c in self.eco().items()})
+    def ecoview(self, t=0):
+        """The book "Economy" at game time t (ms, #3756, #3924, #4391): a page per player with the villagers on each kind
+        of work, then what the player spent up to t. A player with spending but no villager gets a page too.
+        Commands only when a line changed."""
+        eco = self.eco()
+        lines = {}
+        for p in list(eco) + [p for p in self.spends if p not in eco]:
+            s = self.spent(p, t)
+            lines[p] = [f"{k} {n}" for k, n in eco.get(p, {}).items()] + ["", "Spent:"] + \
+                [f"{name} {s[g]}" for g, name in (("economy", "Eco"), ("military", "Mil"), ("technologies", "Tech"),
+                                                  ("buildings", "Build"))]
+        return self.stat_book("Economy", lines)
 
     def stat_book(self, title, lines):
         """The commands that put the written book `title` (lines: player -> text lines, a page per player) into the
@@ -2653,6 +2661,21 @@ class Replay:
         lines = {p: [f"{mmss(t)} {label}" for t, label in self.build_order(p, end)] for p in players}
         return self.book_command("Build order", {p: v for p, v in lines.items() if v})
 
+    def spending_commands(self, end):
+        """A written book "Spending" for each viewer at the end of the replay (#4392, item 4 of #4386): what each player
+        paid up to `end` (ms) by group, with its share of the total. A player with no payment gets no page."""
+        lines = {}
+        for p in sorted(self.spends):
+            spent = self.spent(p, end)
+            total = sum(spent.values())
+            if any(t <= end for t, *_ in self.spends[p]):
+                share = lambda v: round(100 * v / total) if total else 0      # 0 % when nothing was paid
+                lines[p] = [f"{name} {v} ({share(v)} %)" for name, v in
+                            (("Economy", spent["economy"]), ("Military", spent["military"]),
+                             ("Technologies", spent["technologies"]), ("Buildings", spent["buildings"]))]
+                lines[p].append(f"Total {total}")
+        return self.book_command("Spending", lines)
+
     def score_commands(self, t=None):
         """The sidebar commands for the population of each player that changed since the last call (#741). The score
         holder is "P<n>" (a holder name has no space); its display name is the player name in the player color, the
@@ -3082,7 +3105,7 @@ class Replay:
                     self.send(self.graphs(to))
                     self.send(self.army_view(to))
                     self.send(self.upgrade_view(to))
-                    self.send(self.ecoview())
+                    self.send(self.ecoview(to))
                 continue
             lag = max(lag, clock() - r0 - (now - g0) / 1000 / self.speed)
             if int(now) // 1000 != shown:                              # at most once per game second
@@ -3099,7 +3122,7 @@ class Replay:
                 self.send(self.graphs(now))
                 self.send(self.army_view(now))
                 self.send(self.upgrade_view(now))
-                self.send(self.ecoview())
+                self.send(self.ecoview(now))
                 self.send(self.fog())
             if e is None:                                           # behind its clock: all the steps up to the
                 late = g0 if self.paused else g0 + (clock() - r0) * 1000 * self.speed    # game time now in one
@@ -3118,7 +3141,7 @@ class Replay:
         self.send(self.expire(math.inf) + self.panel(math.inf))
         send(self.clock_commands(end, end, speed, done=True) + self.score_commands() + self.end_commands(end) +
              self.summary_commands() + self.timeline_commands(end) +
-             self.build_order_commands(end))
+             self.build_order_commands(end) + self.spending_commands(end))
         span = (events[-1]["time"] - start) / 1000 / speed if events else 0                 # at the start speed
         return {"events": n, "commands": self.sent, "busy": round(self.busy, 2), "lag": round(lag, 2),
                 "rate": round(self.sent / self.busy) if self.busy else 0, "need": round(self.sent / span) if span else 0}
