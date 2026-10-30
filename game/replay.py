@@ -622,10 +622,18 @@ class Replay:
                 lines[p] += ["University:"] + uni[:UNI_SHOWN] + ([f"+{len(uni) - UNI_SHOWN}"] if len(uni) > UNI_SHOWN else [])
         return self.stat_book("Upgrades", lines)
 
-    def ecoview(self):
-        """The book "Economy" at the current time (#3756, #3924): a page per player with the villagers on each kind of
-        work. Commands only when a count changed."""
-        return self.stat_book("Economy", {p: [f"{k} {n}" for k, n in c.items()] for p, c in self.eco().items()})
+    def ecoview(self, t=0):
+        """The book "Economy" at game time t (ms, #3756, #3924, #4391): a page per player with the villagers on each kind
+        of work, then what the player spent up to t. A player with spending but no villager gets a page too.
+        Commands only when a line changed."""
+        eco = self.eco()
+        lines = {}
+        for p in list(eco) + [p for p in self.spends if p not in eco]:
+            s = self.spent(p, t)
+            lines[p] = [f"{k} {n}" for k, n in eco.get(p, {}).items()] + ["", "Spent:"] + \
+                [f"{name} {s[g]}" for g, name in (("economy", "Eco"), ("military", "Mil"), ("technologies", "Tech"),
+                                                  ("buildings", "Build"))]
+        return self.stat_book("Economy", lines)
 
     def stat_book(self, title, lines):
         """The commands that put the written book `title` (lines: player -> text lines, a page per player) into the
@@ -3107,7 +3115,7 @@ class Replay:
                     self.send(self.graphs(to))
                     self.send(self.army_view(to))
                     self.send(self.upgrade_view(to))
-                    self.send(self.ecoview())
+                    self.send(self.ecoview(to))
                 continue
             lag = max(lag, clock() - r0 - (now - g0) / 1000 / self.speed)
             if int(now) // 1000 != shown:                              # at most once per game second
@@ -3124,7 +3132,7 @@ class Replay:
                 self.send(self.graphs(now))
                 self.send(self.army_view(now))
                 self.send(self.upgrade_view(now))
-                self.send(self.ecoview())
+                self.send(self.ecoview(now))
                 self.send(self.fog())
             if e is None:                                           # behind its clock: all the steps up to the
                 late = g0 if self.paused else g0 + (clock() - r0) * 1000 * self.speed    # game time now in one
