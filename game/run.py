@@ -553,26 +553,35 @@ def challenge_names():
 
 
 def civ_choices(values):
-    """{player: civilization} of the --civ values ("1=BRITONS", #2267). An unknown name stops with the list of names."""
+    """{player: civilization} of the --civ values ("1=BRITONS", #2267). RANDOM: a random civilization (apply_civs, #4746).
+    An unknown name stops with the list of names."""
     import civs
     names, out = sorted(r["name"] for r in civs.ROWS), {}
     for v in values or ():
         player, _, name = v.partition("=")
-        if not player.isdigit() or name.upper() not in names:
-            sys.exit(f"--civ {v}: write PLAYER=CIVILIZATION, one of: {', '.join(names)}")
+        if not player.isdigit() or name.upper() not in names + ["RANDOM"]:
+            sys.exit(f"--civ {v}: write PLAYER=CIVILIZATION, one of: {', '.join(names + ['RANDOM'])}")
         out[int(player)] = name.upper()
     return out
 
 
-def apply_civs(data, civs):
+def apply_civs(data, civs, seed=1):
     """Write the --civ choices {player: civilization} into the players of aoe2mc.json. A player whose scenario locks
-    its civilization ("Lock Civilizations", #3295) keeps the scenario civilization: a line on stderr says why."""
+    its civilization ("Lock Civilizations", #3295) keeps the scenario civilization: a line on stderr says why.
+    RANDOM (--civ or the scenario, #4746): a civilization of civs.ROWS from the seed and the player number."""
+    import numpy as np
+    import civs as table
     for player, name in (civs or {}).items():
         p = data.setdefault("players", {}).setdefault(str(player), {})
         if p.get("lock_civ"):
             print(f"player {player}: the scenario locks its civilization, --civ {name} is not used", file=sys.stderr)
             continue
         p["civ"] = name
+    pool = sorted(r["name"] for r in table.ROWS if r["name"] != "GAIA")
+    for player, p in data.get("players", {}).items():
+        if p.get("civ") == "RANDOM" and not p.get("lock_civ"):
+            p["civ"] = pool[np.random.default_rng([seed, int(player)]).integers(len(pool))]
+            print(f"player {player}: random civilization {p['civ']} (seed {seed})", file=sys.stderr)
 
 
 def handicap_choices(values):
