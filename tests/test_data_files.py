@@ -32,7 +32,7 @@ def form(row, need, may=()):
 
 STATS = {"hp": int, "attack": int, "melee": int, "pierce": int, "range": NUMBER, "reload": float, "bonus": dict,
          "classes": list}
-OPTIONAL = {"blast"}                                    # a field of combat.Stats with a default (#4283)
+OPTIONAL = {"blast", "passes", "pass_part"}                  # a field of combat.Stats with a default (#4283)
 
 
 def stats(row):
@@ -41,6 +41,27 @@ def stats(row):
     assert set(row["classes"]) <= CLASSES and len(set(row["classes"])) == len(row["classes"]), row["name"]
     bonus = CLASSES | {combat.STANDARD, combat.STONE, combat.WALL}   # the code adds these classes to the buildings
     assert set(row["bonus"]) <= bonus and all(isinstance(v, int) for v in row["bonus"].values()), row["name"]
+
+
+UNIT_KEYS = {                     # the optional keys of units.jsonl: one line each, sorted (merge conflicts, #4471)
+    "accuracy": NUMBER,
+    "convert": int,
+    "dodge": dict,
+    "frenzy": dict,
+    "ignore_armor": bool,
+    "low_hp": dict,
+    "miss": dict,
+    "min_range": NUMBER,
+    "note": str,
+    "on_death": str,
+    "pack": dict,
+    "sail": NUMBER,
+    "sight": int,
+    "sunder": int,
+    "trample": dict,
+    "veteran": dict,
+    "volley": dict,
+}
 
 
 UNIT_KEYS = {                                   # the optional keys of units.jsonl: one per line (#4585)
@@ -56,6 +77,7 @@ UNIT_KEYS = {                                   # the optional keys of units.jso
     "pack": dict,
     "sail": NUMBER,
     "sight": int,
+    "snare": dict,
     "sunder": int,
     "trample": dict,
     "veteran": dict,
@@ -66,6 +88,7 @@ UNIT_KEYS = {                                   # the optional keys of units.jso
 def check_units(row):
     form(row, {"name": str, **STATS}, UNIT_KEYS)
     stats(row)
+    assert row.get("on_death", "MILITIA") in NAMES["units.jsonl"], row["name"]   # combat.ON_DEATH (#4471)
 
 
 def check_buildings(row):

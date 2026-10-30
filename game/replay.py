@@ -107,6 +107,7 @@ BOOK_COLS, BOOK_ROWS = 19, 14   # characters per line and lines of a book page (
 POLL = 0.2                  # seconds between two calls of the poll of Replay.run while it waits (#685)
 CENSUS = 1.0                # seconds of real time between two censuses: each count is one RCON round trip (2 to 5 ms
                             # at a 45 ms server tick); once per game second at speed 4 took 23 % of the loop (#2761)
+POP_LIMIT = 200             # the AoE2 population cap: a trained unit waits until a unit dies (#4626)
 NEXT = 5                    # tiles: an empty resource sends its villager to the next one this near (#720)
 NEXT_TREES = 8              # tiles: the same for a tree: AoE2 lumberjacks walk farther; in de-64.3, 19 had the next
                             # tree 5 to 8 tiles away and stood idle (#4063)
@@ -443,6 +444,7 @@ class Replay:
         self.kinds, self.seen = aoe2mc.object_kinds(), set()
         self.sent, self.busy = 0, 0.0           # commands sent, seconds spent sending them
         self.pop, self.shown = {}, None         # player -> live units (no animals), the value in the sidebar (#741)
+        self.held = {}                          # player -> spawn events that wait at the population cap (#4626)
         self.ages, self.named = {}, {}          # player -> age ("Feudal"); the age in its sidebar name (#805)
         self.counted = []                       # UUIDs of the start units that the population counts
         self.stock = {}                         # player -> estimated resources: START + gather steps - costs (#932)
@@ -1176,7 +1178,7 @@ class Replay:
                 self.lost[v.player] = self.lost.get(v.player, 0) + (not e.get("free"))   # a scout swap (#3028)
                 out.append(f"kill {v.uuid}")
                 out += self.carried(i, v, e["time"])
-        return out
+        return out + self.unhold(e["time"])
 
     def fall(self, rect):
         """The commands that clear the building with the block footprint rect = (x0, x1, z0, z1), from the lowest
@@ -1307,7 +1309,10 @@ class Replay:
 
     def spawn(self, e):
         """The summon command of a trained unit, on a free cell in front of its building (south side first). The
-        units of one building take the cells one after the other."""
+        units of one building take the cells one after the other. At the population cap the unit waits (unhold)."""
+        if self.pop.get(e["player"], 0) >= POP_LIMIT:
+            self.held.setdefault(e["player"], []).append(e)
+            return []
         prefix, _ = self.kinds.get(e["type"], ("?", ""))
         self.pay(e["player"], e["name"], e["time"])
         if e["name"].startswith("VILLAGER"):
@@ -1333,6 +1338,14 @@ class Replay:
             return []
         self.new.append((e["player"], v))
         return out + self.rally(e, v)
+
+    def unhold(self, t):
+        """The units that wait at the population cap (#4626), at game time t, while their player has room."""
+        out = []
+        for p, held in self.held.items():
+            while held and self.pop.get(p, 0) < POP_LIMIT:
+                out += self.spawn(dict(held.pop(0), time=t))
+        return out
 
     def newcomer(self, e, pos, hero=False):
         """(gather.Villager, the summon commands) of the unit e["name"] of player e["player"] at pos (it faces south),
@@ -2356,12 +2369,14 @@ class Replay:
 
     def rate(self, v):
         """The AoE2 work rate of unit v at its resource (per game second): a farm, a hunt and a fish have their own
-        rates, and a fishing ship has its own rates (#1283)."""
+        rates, and a fishing ship has its own rates (#1283). The work technologies of the player (gather.WORK_TECHS:
+        Double-Bit Axe, Bow Saw, ...) make it faster: without them the estimate of a live replay went far below 0 (#4584)."""
         m, t = self.map, v.tree
         if t in m.fish and ship(v.name):
             return self.gather.SHIP_WORK["shore" if t in m.shore else "deep"]
-        return self.gather.AOE2_WORK["farm" if t in m.farms else "hunt" if t in m.carcasses else "fish" if t in m.fish
-                                     else m.resource(t)]
+        kind = "farm" if t in m.farms else "hunt" if t in m.carcasses else "fish" if t in m.fish else m.resource(t)
+        return self.gather.AOE2_WORK[kind] * math.prod(self.gather.WORK_TECHS.get(n, {}).get(kind, 1)
+                                                      for n in self.upgrades(getattr(v, "player", None), math.inf))
 
     def state(self, i):
         return aoe2mc.B.states[i]
@@ -2747,6 +2762,7 @@ class Replay:
                     self.fallen.setdefault(p, {})[name] = self.fallen.get(p, {}).get(name, 0) + was - n
                 kept[name] = n
         self.censused = True
+        self.send(self.unhold(t if t < math.inf else self.ended))
         for i in {r["monk"] for r in self.relics.values()} - {None}:     # a monk with a relic died in a fight (#4013)
             if (v := self.units.get(i)) and "Test passed" not in (self.game.command(f"execute if entity {v.uuid}") or ""):
                 self.send(self.carried(i, v, t))
@@ -2761,8 +2777,10 @@ class Replay:
         dead = {u for u in self.workers(p) if "Test passed" not in (self.game.command(f"execute if entity {u}") or "")}
         for i in [i for i, v in self.units.items() if v.uuid in dead]:
             del self.units[i]
-            for state in (self.moving, self.working, self.arriving, self.entering, self.builds):   # built() (#3943)
-                state.pop(i, None)
+            for state in (self.moving, self.working, self.arriving, self.entering, self.builds, self.work):   # built()
+                state.pop(i, None)                                  # (#3943)
+            for us in self.garrisons.values():                      # BACK TO WORK lets it out (#4063)
+                us[:] = [u for u in us if u != i]
 
     def eco(self):
         """The villagers of each player on each kind of work (#3755): food, wood, gold, stone, build or idle. A start
