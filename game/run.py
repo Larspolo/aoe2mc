@@ -768,6 +768,12 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
         import train
         for x in [g, *(s.g for s in g.bots)]:
             train.start(x, settings["age"])
+    saved = {k: p for k, p in dict(data.get("players") or {}).items() if p.get("saved")}
+    if not state and saved and settings["mode"] != "scenario":  # a converted saved game: its resources, ages and
+        import scenario                                          # technologies (aoe2mc.json "saved", #4565)
+        for x in [g, *(s.g for s in g.bots)]:
+            if p := saved.get(str(x.player)):
+                scenario.start_values(x, p)
     if settings["record"]:                                       # the orders of the people and the bots (#2649), and
         import record                                            # the objects of the setups below at 0:00 (#3028)
         record.start([g, *(b.g for b in g.bots)], settings["record"])
