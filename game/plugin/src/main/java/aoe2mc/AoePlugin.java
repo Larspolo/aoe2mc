@@ -59,6 +59,7 @@ import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.EntityRegainHealthEvent;
 import org.bukkit.event.entity.EntityTargetEvent;
 import org.bukkit.event.entity.EntityTransformEvent;
+import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.entity.SlimeSplitEvent;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -104,6 +105,11 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *                                              Default 1: each shot hits. With the miss fields a missed arrow hurts
  *                                              one random other enemy unit within blocks of the target with miss part
  *                                              of the damage (the Arambai, #4549); none there: no hit
+ *   aoe afterblast <selector> <ticks> <attack> <blocks> <times> [buildings]
+ *                                              Thunderclap Bombs (#4369): ticks after a shot of the unit lands, a
+ *                                              second blast there hits each enemy unit within blocks with times melee
+ *                                              hits of attack (no own or allied unit); buildings: only a shot at a
+ *                                              building or at the ground (the anti-building shot of the Lou Chuan)
  *   aoe allies <team>,<team>,...|- ...         the alliances of the players (#1315): allied teams are one side for the
  *                                              arrows of buildings, the hit back and the attack alerts. Each call
  *                                              replaces all alliances; "-": no allies
@@ -554,6 +560,13 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     private final Map<UUID, Integer> volleyCharged = new HashMap<>();  // the first tick of the next charged volley
     private final Map<UUID, Charge> detonations = new HashMap<>();
     private final Set<UUID> spare = new HashSet<>();       // detonations that hurt no own or allied unit (#4367)
+    // The second blast where a shot lands (aoe afterblast, #4369): charge ticks is the delay, shots the hits; buildings:
+    // only a shot that is not at a unit
+    private record AfterBlast(Charge charge, boolean buildings) {
+    }
+
+    private final Map<UUID, AfterBlast> afterBlasts = new HashMap<>();
+    private static final String LANDED = "aoe2mc.landed";   // a projectile that made its second blast
     // A charged ranged attack of a melee unit (Gothikon, #4368, aoe throw): at most shots axes, one charges in ticks;
     // axes: {charged axes, the tick where the next charge started, the first tick of the next throw}
     private record Throw(int ticks, int gap, double blocks, int shots) {
@@ -704,6 +717,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             if (now >= next && near && stats.get(from.getUniqueId()) instanceof Stats a) {
                 next = now + range.ticks;
                 blastAt(from, a, g, range.blast);
+                afterBlast(from, g, false);
             }
         }
 
@@ -779,9 +793,11 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             return;
         }
         int[] extra = volleys.getOrDefault(from.getUniqueId(), new int[] {0, 0});
+        Location at = t.getLocation();
         for (int k = 0; k <= extra[0] && t.isValid(); k++) {   // the extra shots of a volley (aoe volley, #4338)
             blast(mob, t, range, from, k == 0 ? a : volley(a, extra[1]));
         }
+        afterBlast(from, at, !buildings.containsKey(t.getUniqueId()));
     }
 
     // One blast shot of the crew from (the entity with the AoE2 values a) of mob at t.
@@ -898,6 +914,29 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         meleeCharged.put(from.getUniqueId(), now + c[0]);
         return new Stats(a.attack() + c[1], a.melee(), a.pierce(), a.ranged(), a.pierces(), a.classes(), a.bonus(),
                 a.reload(), a.taken(), a.friendly(), a.less(), a.ignores(), a.rage(), a.reflect());
+    }
+
+    // Thunderclap Bombs (#4369, AoE2 DE wiki): a shot of from landed at the point at (unit: at a unit). A Paper timer
+    // per shot sets off the second blast there after the delay, also when from dies before. Vanilla has no such shot.
+    private void afterBlast(Entity from, Location at, boolean unit) {
+        AfterBlast b = afterBlasts.get(from.getUniqueId());
+        if (b != null && !(b.buildings() && unit)) {
+            Location p = at.clone();
+            Bukkit.getScheduler().runTaskLater(this, () -> burst(from, p, b.charge(), true), b.charge().ticks());
+        }
+    }
+
+    // An arrow or a trident of a unit of aoe afterblast lands on an entity or a block (#4369): one second blast per
+    // shot, so not for the extra arrows of a volley, and once for a projectile that bounces off.
+    @EventHandler
+    public void onLand(ProjectileHitEvent ev) {
+        Projectile p = ev.getEntity();
+        if (p.getShooter() instanceof Entity from && afterBlasts.containsKey(from.getUniqueId())
+                && p.getScoreboardTags().stream().noneMatch(t -> t.startsWith(VOLLEY)) && p.addScoreboardTag(LANDED)) {
+            Entity hit = ev.getHitEntity();
+            afterBlast(from, hit != null ? hit.getLocation() : p.getLocation(),
+                    hit != null && !buildings.containsKey(hit.getUniqueId()));
+        }
     }
 
     // The hits of a charge or a detonation on each unit with AoE2 values within its blast; foes: not the own or
@@ -1979,6 +2018,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         stances.remove(ev.getEntity().getUniqueId());
         throwers.remove(ev.getEntity().getUniqueId());
         axes.remove(ev.getEntity().getUniqueId());
+        afterBlasts.remove(ev.getEntity().getUniqueId());
         Charge blast = detonations.remove(ev.getEntity().getUniqueId());
         if (blast != null) {                                     // Incendiaries: the fire ship explodes (#2165)
             burst(ev.getEntity(), ev.getEntity().getLocation(), blast, spare.remove(ev.getEntity().getUniqueId()));
@@ -3267,6 +3307,26 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                 n++;
             }
             sender.sendMessage("Sunder: " + n + " units");
+            return true;
+        }
+        if ((args.length == 6 || args.length == 7 && args[6].equals("buildings")) && args[0].equals("afterblast")) {
+            AfterBlast b;                                              // Thunderclap Bombs (#4369)
+            try {
+                b = new AfterBlast(new Charge(Math.max(1, Integer.parseInt(args[2])), new Stats(Integer.parseInt(args[3]),
+                        0, 0, false, false, Set.of(), Map.of(), 20), Integer.parseInt(args[5]),
+                        Double.parseDouble(args[4])), args.length == 7);
+            } catch (NumberFormatException e) {
+                sender.sendMessage("Bad number: " + e.getMessage());
+                return true;
+            }
+            int n = 0;
+            for (Entity e : select(sender, args[1])) {
+                if (crew(e) instanceof LivingEntity le) {
+                    afterBlasts.put(le.getUniqueId(), b);
+                    n++;
+                }
+            }
+            sender.sendMessage("Afterblast: " + n + " units");
             return true;
         }
         if (args.length >= 2 && args[0].equals("allies")) {            // the alliances of the players (#1315)
