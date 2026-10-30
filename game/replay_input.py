@@ -85,14 +85,16 @@ def apply(n, control):
         control["place"] = list(control["fights"][n - PLACE]["tile"])     # the view only (#2951)
         return "Fight place"
     if n == CAMERA:                                                # Replay.run sends the shot of the camera (#3369)
-        control["camera"] = None if control.get("camera") == "auto" else "auto"
+        cams = [None, "auto", "player"] if control.get("views") else [None, "auto"]   # no views: no player (#4769)
+        i = cams.index(control.get("camera")) if control.get("camera") in cams else -1
+        control["camera"] = cams[(i + 1) % len(cams)]
         return camera_name(control)
     return None
 
 
 def camera_name(control):
-    """The text of the camera of the control state: "Camera: auto" or "Camera: free" (#3369)."""
-    return "Camera: " + ("auto" if control.get("camera") == "auto" else "free")
+    """The text of the camera of the control state: "Camera: auto", "Camera: player" or "Camera: free" (#3369, #4769)."""
+    return "Camera: " + (control.get("camera") or "free")
 
 
 def place_commands(tile, T, ground, who="@a"):

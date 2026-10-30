@@ -3150,6 +3150,7 @@ class Replay:
         self.speed, self.paused = speed, paused
         self.control = {"speed": speed, "paused": paused, "view": self.pov,     # the view: replay_input VIEW (#1303)
                         "camera": self.camera,                               # replay_input CAMERA (#3369)
+                        "views": bool(views),                                # CAMERA has "player" only with views (#4769)
                         "players": {p: self.player(p) for p in sorted(int(q) for q in self.data["players"]) if p}} | \
             ({"jump": to} if to is not None else {})
         self.control["fights"] = found
@@ -3242,6 +3243,8 @@ class Replay:
                         watching = self.control.get("camera")
                         if watching == "auto" and (now_shots := [s for s in shots if s["time"] <= self.control["time"]]):
                             self.send(self.shot_view(now_shots[-1]["tile"]))
+                        if watching == "player" and (seen := [v for v in views if v["time"] <= self.control["time"]]):
+                            self.send(self.shot_view(seen[-1]["tile"]))     # the view of now at once (#4769)
                 if more is not None:                                # the next part of a live record (#4662)
                     grow()
                 if (to := self.control.pop("jump", None)) is not None:
