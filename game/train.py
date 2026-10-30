@@ -1515,6 +1515,8 @@ def summon(g, name, pos, rotation=math.pi / 2, player=None):
         g.command(cmd)
     if cmd := combat.accuracy_command(uuid, name, civs.value("accuracy", civs.civ(g), {}).get(name, 0.0)):
         g.command(cmd)                                             # a Hun trebuchet hits units more often (#2479)
+    if cmd := combat.charge_command(uuid, name):                   # the Coustillier charges its attack (#4398)
+        g.command(cmd)
     if cmd := combat.dodge_command(uuid, name):                    # a Shrivamsha Rider dodges projectiles (#4399)
         g.command(cmd)
     if cmd := combat.shield_command(uuid, name):                   # a Hussite Wagon shields the units behind it (#4507)
