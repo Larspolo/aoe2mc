@@ -68,8 +68,14 @@ jobs:
         run: |
           python3 -c "import sys, subprocess; sys.path.insert(0, 'framework/tools'); import ship_pr; c = subprocess.run(['git', 'diff', '--name-only', 'HEAD^1...HEAD'], capture_output=True, text=True).stdout.split(); bad = ship_pr.data_only_tests(c); sys.exit('a change of data files only must not add or change tests: ' + ' '.join(bad) + ' (docs/extend.md)') if bad else None"
       - name: Fast tests
+        id: fast
         if: ${{ !steps.tested.outputs.skip }}
-        run: pytest -n auto ${{ steps.select.outputs.tests }}   # all cores (#2415)
+        shell: bash          # with pipefail: the step keeps the exit code of pytest, not of tee
+        run: pytest -n auto ${{ steps.select.outputs.tests }} | tee pytest.log   # all cores (#2415)
+      # The cloud blocks the host of the job logs: the failed tests as annotations, for `ship_pr.py` (#4784).
+      - name: Failed tests
+        if: failure() && steps.fast.outcome == 'failure'
+        run: grep -E '^(FAILED|ERROR) ' pytest.log | head -10 | sed 's/^/::error title=Fast tests::/'
       # Only a run of the whole fast suite marks its tree green (not the doc tests of ci_select).
       - name: Tree name
         id: tree

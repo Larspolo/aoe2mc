@@ -46,12 +46,36 @@ def secret_names(target):
     return ["CLAUDE_CODE_OAUTH_TOKEN"] + [f"PACER_{k}_{t.upper()}" for t in ["main"] + lanes(target) for k in ("URL", "TOKEN")]
 
 
+def noreply_calls(target):
+    """The calls that set the local email of DIR to the GitHub noreply address: GitHub refuses a push whose commit has a
+    private email (#4796). No call when the email is a noreply address already."""
+    email = subprocess.run(["git", "-C", target, "config", "user.email"], capture_output=True, text=True).stdout.strip()
+    if email.endswith("@users.noreply.github.com"):
+        return []
+    ident = (gh_out(["api", "user", "--jq", ".id,.login"]) or "").split()
+    if len(ident) != 2:
+        return []
+    address = f"{ident[0]}+{ident[1]}@users.noreply.github.com"
+    print(f"local git identity of {target}: {ident[1]} <{address}> (the private email is refused by GitHub)")
+    return [(["git", "-C", target, "config", "user.email", address], None),
+            (["git", "-C", target, "config", "user.name", ident[1]], None)]
+
+
 def git_calls(target, branch):
     """The calls that make the first commit in DIR (no call when DIR has a commit already)."""
     if subprocess.run(["git", "-C", target, "rev-parse", "--verify", "-q", "HEAD"], capture_output=True).returncode == 0:
         return []
-    return [(["git", "-C", target, "init", "-q", "-b", branch], None), (["git", "-C", target, "add", "-A"], None),
-            (["git", "-C", target, "commit", "-q", "-m", "Set up the agent system"], None)]
+    return [(["git", "-C", target, "init", "-q", "-b", branch], None), *noreply_calls(target),
+            (["git", "-C", target, "add", "-A"], None), (["git", "-C", target, "commit", "-q", "-m", "Set up the agent system"], None)]
+
+
+def ruleset_names(repo):
+    """The names of the rulesets of the repository, one per line of the output; [] when there is none or no repository yet."""
+    try:
+        r = subprocess.run(["gh", "api", f"repos/{repo}/rulesets", "--jq", ".[].name"], capture_output=True, text=True)
+    except OSError:
+        return []
+    return r.stdout.splitlines() if r.returncode == 0 else []
 
 
 def repo_calls(target, repo, branch, description="", private=False, exists=False):
@@ -61,8 +85,9 @@ def repo_calls(target, repo, branch, description="", private=False, exists=False
     push = [(["git", "-C", target, "push", "-u", "origin", branch], None)] if exists else []
     settings = [(["gh", "api", f"repos/{repo}", "-X", "PATCH", "-F", "has_issues=true", "-F", "allow_squash_merge=true"], None),
                 (["gh", "api", f"repos/{repo}/actions/permissions/workflow", "-X", "PUT",
-                  "-f", "default_workflow_permissions=write"], None),
-                (["gh", "api", f"repos/{repo}/rulesets", "-X", "POST", "--input", "-"], json.dumps(RULESET))]
+                  "-f", "default_workflow_permissions=write"], None)]
+    if RULESET["name"] not in ruleset_names(repo):             # a second run: the ruleset exists, GitHub answers 422 with another text
+        settings.append((["gh", "api", f"repos/{repo}/rulesets", "-X", "POST", "--input", "-"], json.dumps(RULESET)))
     labels = open(os.path.join(target, ".github", "labels.txt")).read()
     return make + push + settings + [(c, None) for c in bootstrap.github_calls(repo, labels)]
 

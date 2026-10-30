@@ -7,7 +7,7 @@ def issue(n, *names, body="", **kw):
 
 
 def test_names():
-    text = ("In `buildings.py`: `hut()` and `aoe2mc.convert()`; run `tools/render.py building HUT OUT.png`. "
+    text = ("In `buildings.py`: `hut()` and `app.convert()`; run `tools/render.py building HUT OUT.png`. "
             "Edit `docs/DESIGN.md` and `game/gather.py`. Not names: `--next`, `HUT_A`, `x = 3`, `LEARNINGS.md`.")
     assert dashboard.names(text) == {"buildings.py", "hut()", "convert()", "DESIGN.md", "gather.py"}
     assert dashboard.names(None) == set()

@@ -147,6 +147,7 @@ SETTINGS = (                                                           # run.py 
     "cheats",
     "civ",
     "civ_pool",
+    "civ_mode",
     "empire_wars",
     "end_age",
     "full_tech_tree",

@@ -190,7 +190,7 @@ REPAIR_COST = {r["name"]: r["repair_cost"] for r in ROWS if "repair_cost" in r}
 REPAIR_TEAM = {r["name"]: r["repair_team"] for r in ROWS if "repair_team" in r}
 WORK_RATE = Table("work_rate", lambda v: {b: tuple(f) for b, f in v.items()})
 TRAIN_RATE = {r["name"]: [tuples(b) for b in r["train_rate"]] for r in ROWS if "train_rate" in r}
-HP = {r["name"]: r["hp"] for r in ROWS if "hp" in r}
+HP = Table("hp")   # factor of the hit points of a building (Persians, Macedonian houses: team key, #4790)
 BUILDING_RANGE = {r["name"]: r["building_range"] for r in ROWS if "building_range" in r}   # extra tower range (Choson, #4450)
 ARROWS = {r["name"]: tuples(r["arrows"]) for r in ROWS if "arrows" in r}   # factor of the base arrows in each age (#2178)
 GARRISON = {r["name"]: r["garrison"] for r in ROWS if "garrison" in r}   # units inside a building (garrison.size, #2117)
@@ -409,8 +409,14 @@ def civ(g, player=None):
     of the player or an ally (the key "team", gather.allied): a Team, which holds the civilizations of those bonuses."""
     if g.data.get("full_tech_tree") or (name := real(g, player)) is None:
         return None
+    return with_team(name, g.data.get("players", {}), g.player if player is None else player)
+
+
+def with_team(name, players, p):
+    """The civilization name with the team bonuses of the player p and of its allies (a Team), else name (#4452)."""
+    if name is None:
+        return None
     import gather  # gather imports this module
-    players, p = g.data.get("players", {}), g.player if player is None else player
     team = tuple(sorted({v.get("civ") for q, v in players.items() if gather.allied(players, int(q), p)} & TEAMS))
     if not team:
         return name
