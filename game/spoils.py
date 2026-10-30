@@ -6,9 +6,9 @@ Resources for kills and deaths in the game program (#2271, epic #1088), the civi
 - Athenians, Military Policy (civs.policy, the effect key "kill_gold", #2512): each enemy unit that an own infantry or
   cavalry unit kills gives 5 gold, not a King or a trade unit. The plugin counts these kills for each team in the score
   aoe_unit_kills (AoePlugin.unitKill), also under another policy: only the kills while the policy is active pay.
-- Varangian Guard (combat.ATTACK_GOLD, #2376): 35 gold for each AoE2 minute that it attacks enemy units, the
-  Varangians 50 % more (civs key "attack_gold"). Only the plugin sees a hit: each own unit with the tag aoe2mc.gold.N
-  adds N × its reload ticks to the score aoe_attack_gold of its team for each hit (AoePlugin.gold).
+- Varangian Guard and Keshik (combat.ATTACK_GOLD, #2376, #4464): 35 and 21.75 gold for each AoE2 minute that it
+  attacks enemy units, the Varangians 50 % more (civs key "attack_gold"). Only the plugin sees a hit: each own unit with the tag aoe2mc.gold.N
+  (N: gold per 100 minutes) adds N × its reload ticks to the score aoe_attack_gold of its team for each hit (AoePlugin.gold).
 - Danes (civs.LOOT): an enemy building that falls after an attack order gives 25 % of its cost, not a wall or a gate.
 AoE2 keeps the fractions of a part (g.spare, as the drop-off bonus): the next part gets them.
 
@@ -28,7 +28,8 @@ import train
 OBJECTIVE = "aoe_mounted_kills"   # the score of AoePlugin.java: kills of military units by mounted units, per team
 UNIT_KILLS = "aoe_unit_kills"     # the score of AoePlugin.java: kills of enemy units by infantry and cavalry, per team
 TRADE = "aoe2mc.trade"            # the tag of a trade unit: its kill gives no policy gold (AoePlugin.unitKill)
-GOLD = "aoe_attack_gold"          # the score of AoePlugin.java: gold per minute × reload ticks of the hits, per team
+GOLD = "aoe_attack_gold"          # the score of AoePlugin.java: gold per 100 minutes × reload ticks of the hits, per team
+PART = 100                        # the tag holds gold per 100 AoE2 minutes: 21.75 (Keshik) is a whole number (#4464)
 
 
 def gain(g, cost, part):
@@ -80,19 +81,19 @@ def tag_command(uuid, name):
     (no policy gold for its kill, #2512), else None."""
     if civs.tagged(name, "trade units"):
         return f"tag {uuid} add {TRADE}"
-    return f"tag {uuid} add aoe2mc.gold.{combat.ATTACK_GOLD[name]}" if name in combat.ATTACK_GOLD else None
+    return f"tag {uuid} add aoe2mc.gold.{round(combat.ATTACK_GOLD[name] * PART)}" if name in combat.ATTACK_GOLD else None
 
 
 def attacks(g):
     """Give the gold of the new hits of the own units with combat.ATTACK_GOLD in the score of the plugin: the score
-    holds gold per AoE2 minute × real ticks at Normal speed, times the civ key "attack_gold" (Varangians 1.5)."""
+    holds gold per 100 AoE2 minutes × real ticks at Normal speed, times the civ key "attack_gold" (Varangians 1.5).
+    Remove the read value from the score: it stays far from the Java int limit, and new hits stay in it."""
     if not any(n in combat.ATTACK_GOLD for n in g.soldiers.values()):
         return
     m = re.search(r"has (\d+)", g.command(f"scoreboard players get p{g.player} {GOLD}") or "")
-    n, seen = int(m.group(1)) if m else 0, vars(g).get("attack_ticks", 0)
-    if n > seen:
-        gain(g, {"gold": (n - seen) / 20 * combat.NORMAL / 60}, civs.value("attack_gold", civs.civ(g), 1))
-    g.attack_ticks = max(n, seen)
+    if n := int(m.group(1)) if m else 0:
+        g.command(f"scoreboard players remove p{g.player} {GOLD} {n}")
+        gain(g, {"gold": n / PART / 20 * combat.NORMAL / 60}, civs.value("attack_gold", civs.civ(g), 1))
 
 
 def loot(g, uuid):
