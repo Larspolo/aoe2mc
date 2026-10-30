@@ -290,7 +290,8 @@ def process_changes(prs, now, hours=24):
                and datetime.datetime.fromisoformat(p["merged_at"].replace("Z", "+00:00")) >= since)
 
 
-def render(old_body, issues, comments, open_prs, closed_issues, closed_prs, now, unanswered=None, nxt=None, accounts=None):
+def render(old_body, issues, comments, open_prs, closed_issues, closed_prs, now, unanswered=None, nxt=None, accounts=None,
+           insights=None):
     """The new body of the status issue. comments: {issue number: comments} for the needs-human and
     in-progress issues. unanswered: the owner comments without a lock (`framework/tools/feedback.py`, #971).
     nxt: the "Next up" tickets, if known (candidates() can read GitHub). accounts: one row per Claude account
@@ -333,6 +334,16 @@ def render(old_body, issues, comments, open_prs, closed_issues, closed_prs, now,
         per_pr = lambda v: "–" if v is None else f"{v:.2f}M"
         out += [f"| {r['account']} | {pct(r['five_hour'])} | {pct(r['week'])} | {r['runs'] or '–'} | {r['merged']} | "
                 f"{per_pr(r['tokens_per_pr'])} |" for r in accounts]
+    if insights and (insights.get("lanes") or insights.get("sizes")):   # where the usage goes (#4646)
+        out += ["", "### Insights (7 days)", "| Lane | Runs | M eq | Merged PRs | M eq per PR |", "|---|---|---|---|---|"]
+        per = lambda eq, n: f"{eq / n:.2f}" if n else "–"
+        out += [f"| {k} | {r['runs']} | {r['eq']:.1f} | {r['merged']} | {per(r['eq'], r['merged'])} |"
+                for k, r in sorted(insights["lanes"].items())]
+        out += ["", "| Size | Tickets | Merged PRs | M eq | M eq per ticket |", "|---|---|---|---|---|"]
+        out += [f"| {k} | {r['tickets']} | {r['merged']} | {r['eq']:.1f} | {per(r['eq'], r['tickets'])} |"
+                for k, r in sorted(insights["sizes"].items())]
+        if insights.get("sinks"):
+            out += ["", "Top costs (M eq): " + ", ".join(f"{k} {v:.1f}" for k, v in insights["sinks"])]
     out += ["", "### Recently done"]
     merged = [p for p in closed_prs if p.get("merged_at")]
     done = [i for i in closed_issues if "pull_request" not in i and i.get("state_reason") == "completed"]
@@ -422,10 +433,16 @@ def main(argv=None):
     except (ImportError, OSError, subprocess.CalledProcessError) as e:   # a failed read: no section, the rest updates
         print(f"accounts: {e}", file=sys.stderr)
         accounts = None
+    try:
+        insights = dashboard_data.insights()
+    except (NameError, AttributeError, OSError, subprocess.CalledProcessError) as e:   # no tool, an older one or a failed read
+        print(f"insights: {e}", file=sys.stderr)
+        insights = None
     # Read the body again after all other reads (#3002): a run writes the state comment and the process changes
     # while the reads above take about 20 s, and the PATCH of the old body deleted them.
     status = api(f"issues/{status['number']}")
-    body = render(status["body"], open_all, comments, open_prs, closed, closed_prs, now, owner, nxt, accounts=accounts)
+    body = render(status["body"], open_all, comments, open_prs, closed, closed_prs, now, owner, nxt, accounts=accounts,
+                  insights=insights)
     if a.dry_run:
         print(body)
     elif re.sub(r"_Updated .*?_", "", body) != re.sub(r"_Updated .*?_", "", status["body"] or ""):
