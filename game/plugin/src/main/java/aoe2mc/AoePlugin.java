@@ -97,9 +97,12 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *   aoe neutral <team>:<team>,...|- ...        the neutral stances of the players (#1645): the units and buildings of
  *                                              the first team do not attack the units of the listed teams by
  *                                              themselves (an order does). Each call replaces all stances; "-": none
- *   aoe accuracy <selector> <part>             the part of the siege shots (blast 0) of the unit that hit a unit target,
- *                                              the others miss (AoE2 accuracy: the Trebuchet 15 %, Huns 50 %, #2479,
- *                                              game/combat.py accuracy_command). Default 1: each shot hits
+ *   aoe accuracy <selector> <part> [<miss part> <blocks>]  the part of the siege shots (blast 0) and arrows of
+ *                                              the unit that hit a unit target, the others miss (AoE2 accuracy: the
+ *                                              Trebuchet 15 %, Huns 50 %, #2479, game/combat.py accuracy_command).
+ *                                              Default 1: each shot hits. With the miss fields a missed arrow hurts
+ *                                              one random other enemy unit within blocks of the target with miss part
+ *                                              of the damage (the Arambai, #4549); none there: no hit
  *   aoe allies <team>,<team>,...|- ...         the alliances of the players (#1315): allied teams are one side for the
  *                                              arrows of buildings, the hit back and the attack alerts. Each call
  *                                              replaces all alliances; "-": no allies
@@ -461,6 +464,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     private final Map<UUID, Charge> charges = new HashMap<>();
     // the part of the siege shots at a unit that hit (aoe accuracy, #2479): the Trebuchet 0.15; missing: 1
     private final Map<UUID, Double> accuracy = new HashMap<>();
+    private final Map<UUID, double[]> misses = new HashMap<>();   // aoe accuracy (#4549): {part, blocks} of a miss
     private final Map<UUID, Dodge> dodges = new HashMap<>();    // aoe dodge: the shield of a unit (#4399)
     private final Map<UUID, int[]> frenzies = new HashMap<>();  // aoe frenzy (#4468): {less, time, min} in ticks
     private final Map<UUID, ArrayDeque<Integer>> frenzyHits = new HashMap<>();   // the ticks of its recent hits
@@ -1401,6 +1405,16 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             harm(aim, stats.get(aim.getUniqueId()), volley(p, a), from, shield.part());
             return;
         }
+        Range sr = ranges.get(from.getUniqueId());
+        if (ev.getDamager() instanceof Projectile p && (sr == null || !sr.siege) && fort == null
+                && ThreadLocalRandom.current().nextDouble() >= accuracy.getOrDefault(from.getUniqueId(), 1.0)) {
+            p.remove();                                      // AoE2 accuracy of an arrow (an Arambai, #4549): a miss
+            double[] miss = misses.get(from.getUniqueId());
+            if (miss != null && near(from, hurt, miss[1]) instanceof LivingEntity n) {
+                harm(n, stats.get(n.getUniqueId()), volley(p, a), from, miss[0]);   // it hurts a unit near the target
+            }
+            return;
+        }
         if (!(ev.getDamager() instanceof Projectile)) {      // a melee hit: once per AoE2 reload (#848)
             if (!ready(from, a)) {
                 return;
@@ -1429,6 +1443,20 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         if (!(ev.getDamager() instanceof Projectile)) {
             trample(from, a, hurt, ev.getEntity());           // an elephant hurts the units next to its target (#4397)
         }
+    }
+
+    // A random other enemy unit of from with AoE2 values within blocks of the unit hurt, or null: the unit that a
+    // missed shot hits (#4549). A mounted unit has the hit points of its horse (#732): only the horse counts.
+    private LivingEntity near(Entity from, Entity hurt, double blocks) {
+        List<LivingEntity> all = new ArrayList<>();
+        for (Entity o : hurt.getNearbyEntities(blocks, blocks, blocks)) {
+            if (o instanceof LivingEntity le && le.isValid() && !le.isDead() && le != from && o.getVehicle() != hurt
+                    && stats.containsKey(o.getUniqueId()) && !buildings.containsKey(o.getUniqueId())
+                    && !sameTeam(from, o) && o.getLocation().distance(hurt.getLocation()) <= blocks) {
+                all.add(le);
+            }
+        }
+        return all.isEmpty() ? null : all.get(ThreadLocalRandom.current().nextInt(all.size()));
     }
 
     // AoE2 trample damage (#4397, AoE2 DE wiki "Trample damage"): after a melee hit of a unit of aoe trample, each other
@@ -2937,18 +2965,26 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         if (args.length >= 2 && args[0].startsWith("ghost")) {          // the ghost of a building (#794)
             return ghost.command(sender, args, players(sender, args[1]));
         }
-        if (args.length == 3 && args[0].equals("accuracy")) {          // a trebuchet misses units (#2479)
+        if ((args.length == 3 || args.length == 5) && args[0].equals("accuracy")) {   // a trebuchet misses units (#2479)
             double part;
+            double[] miss;
             try {
                 part = Double.parseDouble(args[2]);
+                miss = args.length == 5 ? new double[] {Double.parseDouble(args[3]), Double.parseDouble(args[4])} : null;
             } catch (NumberFormatException e) {
                 sender.sendMessage("Bad number: " + e.getMessage());
                 return true;
             }
             int n = 0;
             for (Entity e : select(sender, args[1])) {
-                Entity t = crew(e);
-                accuracy.put(t.getUniqueId(), part);               // the crew of a siege unit has its stats (#836)
+                for (Entity t : concat(crew(e), e.getPassengers())) {   // the crew of a siege unit has its stats (#836),
+                    accuracy.put(t.getUniqueId(), part);                // the rider of a horse shoots (#732)
+                    if (miss != null) {
+                        misses.put(t.getUniqueId(), miss);
+                    } else {
+                        misses.remove(t.getUniqueId());
+                    }
+                }
                 n++;
             }
             sender.sendMessage("Accuracy: " + n + " units");
