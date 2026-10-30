@@ -267,6 +267,41 @@ def accounts(hours=168, comments=None):
             for name, r in sorted(rows.items(), key=lambda x: str(x[0]))]
 
 
+RUN_LANE = re.compile(r"^Run: .*· lane (\S+)", re.M)
+METRIC = re.compile(r"^Metrics: ticket #\d+ · ([^·]*?) · ([^·]*?) ·", re.M)
+SINKS = re.compile(r"· sinks (.*)$", re.M)
+SINK = re.compile(r"([^,]+?) (\d+)%")
+
+
+def insights(hours=168, comments=None):
+    """Where the usage goes (#4646), from the run reports: per lane its runs, M eq and merged PRs; per ticket size its
+    tickets, merged PRs and M eq (a report with several tickets splits its eq evenly); the top sinks in M eq (the
+    `sinks` shares of each `Tokens:` line times its eq)."""
+    comments = health.status_comments(hours=hours) if comments is None else comments
+    lanes, sizes, sinks = {}, {}, {}
+    for c in comments:
+        body = c.get("body") or ""
+        t = TOKEN_LINE.search(body)
+        eq = float(t[1]) if t else 0.0
+        run = RUN_LANE.search(body)
+        tickets = METRIC.findall(body)
+        if not (t or tickets):
+            continue
+        lane = lanes.setdefault(run[1] if run else "opus", dict(runs=0, eq=0.0, merged=0))
+        lane["runs"] += 1
+        lane["eq"] += eq
+        lane["merged"] += len(RESULT.findall(body))
+        for size, result in tickets:
+            row = sizes.setdefault(size.removeprefix("size:").strip() or "none", dict(tickets=0, merged=0, eq=0.0))
+            row["tickets"] += 1
+            row["merged"] += result == "merged" or result.startswith("pr #")
+            row["eq"] += eq / len(tickets)
+        line = SINKS.search(body[t.start():].split("\n", 1)[0]) if t else None
+        for name, share in SINK.findall(line[1]) if line else ():
+            sinks[name.strip()] = sinks.get(name.strip(), 0.0) + eq * int(share) / 100
+    return dict(lanes=lanes, sizes=sizes, sinks=sorted(sinks.items(), key=lambda x: -x[1])[:5])
+
+
 REVIEW = re.compile(r"^\s*Process review", re.I)
 CHANGE_PR = re.compile(r"\bPR #(\d+)")
 
