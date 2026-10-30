@@ -355,6 +355,22 @@ class Script:
             return self.warn("fact", "players-" + fact) or False
         return bool(got) and (all(got) if every else any(got))
 
+    def forward(self):
+        """The cell two thirds of the way from the own town center to the town center of the nearest enemy, or None
+        (build-forward, #4654)."""
+        import build
+        import diplomacy
+        import ruins
+        g, at = self.bot.g, self.bot.center()
+        foes = {x.player: x for x in build.sides(g) if diplomacy.stance(g, x.player) == "enemy"}
+        tcs = [((o["footprint"][0] + o["footprint"][2]) // 2, (o["footprint"][1] + o["footprint"][3]) // 2)
+               for o in g.data["objects"] if o["kind"] == "building" and o["name"] == "TOWN_CENTER"
+               and o["player"] in foes and "footprint" in o and not ruins.fallen(foes[o["player"]], o)]
+        if at is None or not tcs:
+            return None
+        far = min(tcs, key=lambda c: (c[0] - at[0]) ** 2 + (c[1] - at[1]) ** 2)
+        return ((at[0] + 2 * far[0]) // 3, (at[1] + 2 * far[1]) // 3)     # 2/3 of the way: the midpoint ties with home
+
     def in_town(self):
         """True when a building of an enemy stands within TOWN tiles of the own town center."""
         import build
@@ -421,10 +437,10 @@ class Script:
             n = self.game(args[0], "unit") if name == "train" else self.game(args[0], "tech", "age")
             if n and self.can("can-" + name, args[0]):
                 next((c for c in self.homes(n) if train.queue(g, b.nobody, c, n)), None)
-        elif name == "build":
+        elif name in ("build", "build-forward"):
             n = self.game(args[0], "building")
-            if n and self.can("can-build", args[0]) and (center := b.center()) \
-                    and (rect := build.near(g, n, center)) is not None:
+            center = b.center() if name == "build" else self.forward()
+            if n and self.can("can-build", args[0]) and center and (rect := build.near(g, n, center)) is not None:
                 b.builder(build.found(g, n, rect))
         elif name == "disable-self":
             self.off.add(k)
