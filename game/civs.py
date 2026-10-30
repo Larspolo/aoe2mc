@@ -46,6 +46,7 @@ RULES = {
     "military units": lambda n, s: not civilian(n),
     "mounted": lambda n, s: mounted(s),
     "mounted, fire lancers": lambda n, s: mounted(s) or tagged(n, "fire lancers"),
+    "non-ranged units": lambda n, s: s.range <= 0,                 # Macedonian sight (Antiquity, #4448)
     "scout line, steppe lancers": lambda n, s: tagged(n, "scout line"),
     "ships": lambda n, s: "ship" in s.classes or n.endswith(("_COG", "_SHIP")),   # also the trade cog and transport ship
     "siege": lambda n, s: "siege" in s.classes,
@@ -79,7 +80,54 @@ def frozen(x):
 
 
 KEYS = {r["name"]: f"{r['text']} (#{r['issue']})" for r in table.load("civ_keys.jsonl")}   # what each key does (#2281)
-BY_KEY = {k: {r["name"]: frozen(r[k]) for r in ROWS if k in r} for k in sorted(KEYS)}
+# The team bonuses (#4452): the key "team" of a civilization holds civilization keys that count for its player and each
+# ally. civ() gives a Team, and get() of a Table joins the "team" values of its civilizations into the own value, so the
+# readers stay as they are. A key whose table is no Table gives no team bonus (tests/test_team_keys.py checks the data).
+ADD = {"garrison", "housing", "sight", "start"}   # the keys whose numbers add up (tiles, population); others: factors
+
+
+class Team(str):
+    """The civilization name of a player (it equals the name: a plain table gives the own bonus) and `team`: the sorted
+    civilizations of the player and its allies with the key "team" (civ())."""
+    team = ()
+
+
+def join(a, b, add=False):
+    """Two values of one key: rule lists add up (each rule counts), dicts join by key, the numbers of a value per age
+    join one by one, other numbers multiply (factors) or add (add: ADD)."""
+    if a is None or b is None:
+        return b if a is None else a
+    if isinstance(a, dict):
+        return {k: join(a.get(k), b.get(k), add) for k in sorted(a.keys() | b.keys())}
+    if isinstance(a, (list, tuple)):
+        if a and all(isinstance(v, (int, float)) for v in (*a, *b)) and len(a) == len(b):
+            return tuple(join(x, y, add) for x, y in zip(a, b))
+        return (*a, *b)
+    return a + b if add else a * b
+
+
+class Table(dict):
+    """{civilization: value of key} of data/civs.jsonl, the value made by f. get() of a Team also joins the "team" value
+    of key of each civilization of its team (#4452)."""
+
+    def __init__(self, key, f=lambda v: v):
+        super().__init__({r["name"]: f(r[key]) for r in ROWS if key in r})
+        self.teams = {r["name"]: f(r["team"][key]) for r in ROWS if key in r.get("team", {})}
+        self.add, self.seen = key in ADD, {}
+
+    def get(self, civ, default=None):
+        team = getattr(civ, "team", ())
+        if not team:
+            return super().get(civ, default)
+        if (k := (str(civ), team)) not in self.seen:
+            v = super().get(civ)
+            for c in team:
+                v = join(v, self.teams.get(c), self.add)
+            self.seen[k] = v
+        return default if self.seen[k] is None else self.seen[k]
+
+
+BY_KEY = {k: Table(k, frozen) for k in sorted(KEYS)}
 
 
 def value(key, civ, default=None):
@@ -89,8 +137,8 @@ def value(key, civ, default=None):
 
 
 UNIQUE = {r["name"]: r["unique"] for r in ROWS if "unique" in r}
-UNITS = {r["name"]: [tuples(b) for b in r["units"]] for r in ROWS if "units" in r}
-COSTS = {r["name"]: [tuples(b) for b in r["costs"]] for r in ROWS if "costs" in r}
+UNITS = Table("units", lambda v: [tuples(b) for b in v])
+COSTS = Table("costs", lambda v: [tuples(b) for b in v])
 COST_PER = {r["name"]: [tuples(b) for b in r["cost_per"]] for r in ROWS if "cost_per" in r}
 TWICE = {r["name"]: tuples(r["twice"]) for r in ROWS if "twice" in r}
 SMITH_UNITS = {r["name"]: [tuples(b) for b in r["smith_units"]] for r in ROWS if "smith_units" in r}
@@ -116,6 +164,7 @@ FIRE_LANCERS = tuple(r["name"] for r in ROWS if r["name"] not in MISSING.get("FI
 # these resources: {"buildings", "resources", "rate", "range": tiles from the footprint} (Thracian forts and towers).
 # gather.Map.drop_site adds them to the drop sites, Gather.aura_rate gives the rate.
 AURA = {r["name"]: r["aura"] for r in ROWS if "aura" in r}
+TEAMS = {r["name"] for r in ROWS if "team" in r}   # the civilizations with a team bonus (civ(), #4452)
 TECH_ROWS = table.load("train.jsonl")
 SMITH = tuple(sorted(r["name"] for r in TECH_ROWS if r.get("building") == "BLACKSMITH"))   # the blacksmith (#1452)
 ECONOMY = tuple(sorted(r["name"] for r in TECH_ROWS if r.get("economy")))   # the economic technologies but Coinage and
@@ -131,15 +180,15 @@ DROP = {r["name"]: r["drop"] for r in ROWS if "drop" in r}
 SHARED = dict(sorted((n, r["name"]) for r in ROWS for n in r.get("shared", ())))
 NOT_SHARED = {n: tuple(sorted(r["name"] for r in ROWS if n in r.get("not_shared", ())))
               for n in sorted({n for r in ROWS for n in r.get("not_shared", ())})}
-BUILD = {r["name"]: r["build"] for r in ROWS if "build" in r}
+BUILD = Table("build")
 BUILD_WONDER = {r["name"]: r["build_wonder"] for r in ROWS if "build_wonder" in r}
-BUILD_OF = {r["name"]: r["build_of"] for r in ROWS if "build_of" in r}
+BUILD_OF = Table("build_of")
 BUILT_FOOD = {r["name"]: r["built_food"] for r in ROWS if "built_food" in r}
 BUILT_UNITS = {r["name"]: {b: tuples(v) for b, v in r["built_units"].items()} for r in ROWS if "built_units" in r}
 REPAIR = {r["name"]: r["repair"] for r in ROWS if "repair" in r}
 REPAIR_COST = {r["name"]: r["repair_cost"] for r in ROWS if "repair_cost" in r}
 REPAIR_TEAM = {r["name"]: r["repair_team"] for r in ROWS if "repair_team" in r}
-WORK_RATE = {r["name"]: {b: tuple(v) for b, v in r["work_rate"].items()} for r in ROWS if "work_rate" in r}
+WORK_RATE = Table("work_rate", lambda v: {b: tuple(f) for b, f in v.items()})
 TRAIN_RATE = {r["name"]: [tuples(b) for b in r["train_rate"]] for r in ROWS if "train_rate" in r}
 HP = {r["name"]: r["hp"] for r in ROWS if "hp" in r}
 ARROWS = {r["name"]: tuples(r["arrows"]) for r in ROWS if "arrows" in r}   # factor of the base arrows in each age (#2178)
@@ -154,13 +203,13 @@ ALSO = {r["name"]: r["also"] for r in ROWS if "also" in r}
 MORE = {r["name"]: r["more"] for r in ROWS if "more" in r}
 FARM_UPGRADES = {r["name"]: r["farm_upgrades"] for r in ROWS if "farm_upgrades" in r}   # the factor of the food of the
 #                                                                   farm upgrades (Sicilians: +125 %, train.research, #2230)
-RESEARCH_TIME = {r["name"]: [tuples(b) for b in r["research_time"]] for r in ROWS if "research_time" in r}
+RESEARCH_TIME = Table("research_time", lambda v: [tuples(b) for b in v])
 EXTRA = {r["name"]: {k: tuple(v) for k, v in r["extra"].items()} for r in ROWS if "extra" in r}
 DROP_EXTRA = {r["name"]: {k: tuple(v) for k, v in r["drop_extra"].items()} for r in ROWS if "drop_extra" in r}
 PER_MINUTE = {r["name"]: {k: tuple(v) for k, v in r["per_minute"].items()} for r in ROWS if "per_minute" in r}
 CARRY = {r["name"]: [tuple(b) for b in r["carry"]] for r in ROWS if "carry" in r}
-HOUSING = {r["name"]: r["housing"] for r in ROWS if "housing" in r}   # population of a building in place of train.HOUSING
-SIGHT = {r["name"]: r["sight"] for r in ROWS if "sight" in r}       # extra tiles of line of sight of a building (#2118)
+HOUSING = Table("housing")   # population of a building in place of train.HOUSING
+SIGHT = Table("sight")       # extra tiles of line of sight of a building (#2118)
 POP_CAP = {r["name"]: tuple(r["pop_cap"]) for r in ROWS if "pop_cap" in r}   # (age, extra population limit from it)
 # The age-up bonuses (#1926, AoE2 DE wiki): train.research applies AGE_GIFTS and AGE_VILLAGERS at the end of each age,
 # train.seconds divides the time of an age by AGE_RATE, and train.missing needs no buildings for AGE_NO_BUILDINGS (the
@@ -217,6 +266,13 @@ def changes(g, name, s):
     age = build.ages(g)
     return [(v, c[age]) for k, v, c in UNITS.get(civ(g), [])
             if (name in k if isinstance(k, tuple) else GROUPS[k](name, s))]   # a list of names (Antiquity, #3827)
+
+
+def sight_units(g, name, s):
+    """The extra tiles of line of sight of unit name (combat.Stats s) by the key "sight_units" of the civilization of g:
+    [group of GROUPS or a list of unit names, tiles] (the Macedonians in Antiquity Mode, #4448)."""
+    k, more = value("sight_units", civ(g), (None, 0))
+    return more if k is not None and (name in k if isinstance(k, list) else GROUPS[k](name, s)) else 0
 
 
 def smith(g, name, s):
@@ -346,8 +402,18 @@ def missing(g, name):
 def civ(g, player=None):
     """The civilization of the player of g, or of another player (aoe2mc.json "players"), for example "CELTS", else None.
     The AoE2 setting "Full Tech Tree" (#2354) removes all civilization and team bonuses: then None, because each bonus
-    table takes its civilization from here. The tech tree and the unique units take it from real()."""
-    return None if g.data.get("full_tech_tree") else real(g, player)
+    table takes its civilization from here. The tech tree and the unique units take it from real(). With a team bonus
+    of the player or an ally (the key "team", gather.allied): a Team, which holds the civilizations of those bonuses."""
+    if g.data.get("full_tech_tree") or (name := real(g, player)) is None:
+        return None
+    import gather                                                  # gather imports this module
+    players, p = g.data.get("players", {}), g.player if player is None else player
+    team = tuple(sorted({v.get("civ") for q, v in players.items() if gather.allied(players, int(q), p)} & TEAMS))
+    if not team:
+        return name
+    out = Team(name)
+    out.team = team
+    return out
 
 
 def handicap(data, player):
@@ -560,3 +626,7 @@ def per_minute(g, kind):
 def carry(g, kind):
     """The extra load of a villager of the player of g for gather kind (CARRY), else 0."""
     return sum(n for k, n in CARRY.get(civ(g), ()) if k in (None, kind))
+
+
+# The keys that take a team bonus: a Table, or only value() (BY_KEY) when no plain table of the older name holds the key.
+TEAM_KEYS = {k for k in KEYS if isinstance(globals().get(k.upper()), Table) or not isinstance(globals().get(k.upper()), dict)}

@@ -18,8 +18,8 @@ def test_the_friendly_fire_factor_changes_no_combat_value():
 
 def test_the_plugin_gets_the_factor_of_the_friendly_fire():
     s = combat.stats("KNIGHT")
-    assert combat.stats_command("u", "KNIGHT", s, 1.0, 0.5).endswith(" 1 0.5")   # the reload, then the bonus damage factor 1
-    assert combat.stats_command("u", "KNIGHT", s, 0.6, 0.5).endswith(" 0.6 0.5")
+    assert combat.stats_command("u", "KNIGHT", s, 1.0, 0.5).endswith(" friendly=0.5")   # no bonus damage factor 1
+    assert combat.stats_command("u", "KNIGHT", s, 0.6, 0.5).endswith(" taken=0.6 friendly=0.5")
     assert combat.stats_command("u", "KNIGHT", s, 1.0, 1.0) == combat.stats_command("u", "KNIGHT")   # 1: no field
 
 
