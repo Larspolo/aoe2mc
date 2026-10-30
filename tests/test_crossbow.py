@@ -3,9 +3,9 @@ import shutil
 import time
 
 import pytest
+from test_ranged import data
 
 from game import combat, run
-from test_ranged import data
 
 
 @pytest.mark.mc

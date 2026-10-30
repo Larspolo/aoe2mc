@@ -54,8 +54,9 @@ def is_wet(terrain):
 
 @functools.cache
 def wet_ids():
-    import aoe2mc
     from AoE2ScenarioParser.datasets.terrains import TerrainId
+
+    import aoe2mc
     return [t.value for t in TerrainId if aoe2mc.terrain_style(t.name)["depth"] > 0]
 
 

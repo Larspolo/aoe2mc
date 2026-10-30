@@ -31,7 +31,7 @@ def test_a_given_group_wins():
 
 
 def test_play_gives_the_setting_to_the_bot(monkeypatch, tmp_path):
-    import bot as bots                                                 # the modules of run.py (game/ on sys.path)
+    import bot as bots  # the modules of run.py (game/ on sys.path)
     import combat
     import gather as gathers
     seen = []

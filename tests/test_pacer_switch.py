@@ -1,7 +1,6 @@
 """The switch of the pacer loop (#4349): another value stops the loop, a missing key is an error, not a quiet stop."""
-import pytest
-
 import pacer
+import pytest
 
 
 def test_the_switch_is_on_only_for_workflow():

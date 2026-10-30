@@ -5,6 +5,7 @@
 The tools read `CONFIG` once at import."""
 import os
 import subprocess
+
 import tomllib
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))

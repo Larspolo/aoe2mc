@@ -1,9 +1,9 @@
 """game/gather.py: a control group item says how to use it (#1812): the save click when empty, the select click and the
 number of units when saved."""
-from game import gather
-
 from test_control_groups import use
 from test_select_type import setup
+
+from game import gather
 
 
 def item(log, n):

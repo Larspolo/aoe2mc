@@ -5,9 +5,9 @@ import shutil
 import time
 
 import pytest
+from test_unit_ai import data
 
 from game import ai, run
-from test_unit_ai import data
 
 LONG = 24                                  # the walk in blocks
 WET = range(8, 18)                         # the z of the water, 2 blocks deep, its surface 1 block under the ground: the

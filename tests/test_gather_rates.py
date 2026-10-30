@@ -1,9 +1,9 @@
 """game/gather.py: each resource has its AoE2 work rate (#413)."""
+import measure_gather
 import pytest
 from test_gather_farms import farm_map
 from test_gather_mines import mine_map
 
-import measure_gather
 from game import gather
 
 

@@ -75,6 +75,7 @@ def test_the_map_rows_name_the_commands_and_the_issue():
 @pytest.mark.mc
 def test_a_locked_gate_stays_closed_for_an_own_unit(tiny_world, tmp_path):
     from test_paper import paper_reachable
+
     from game import build, run
     if not paper_reachable():
         pytest.skip("Paper is not reachable")

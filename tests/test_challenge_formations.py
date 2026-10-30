@@ -1,14 +1,13 @@
 """run.py --play --challenge battle-formations: both armies of the wiki page, the medal from the units lost (#3910)."""
 import types
 
-import pytest
-
-from game import challenge
-
 import army  # noqa: E402  (game/ is on sys.path after the import of game.challenge)
 import cheats  # noqa: E402
+import pytest
 import recap  # noqa: E402
 import train  # noqa: E402
+
+from game import challenge
 
 ROW = challenge.CHALLENGES["battle-formations"]
 

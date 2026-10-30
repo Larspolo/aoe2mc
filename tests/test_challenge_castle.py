@@ -2,14 +2,13 @@
 the time to destroy the castle (#3908)."""
 import types
 
-import pytest
-
-from game import challenge
-
 import build  # noqa: E402  (game/ is on sys.path after the import of game.challenge)
 import cheats  # noqa: E402
+import pytest
 import recap  # noqa: E402
 import train  # noqa: E402
+
+from game import challenge
 
 C = challenge.CHALLENGES["destroying-a-castle"]
 

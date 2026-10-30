@@ -2,8 +2,9 @@
 ("Lock Civilizations"): a locked player keeps its scenario civilization when the game program sets another one."""
 import json
 
-import aoe2mc
 import scenarios
+
+import aoe2mc
 from game import diplomacy, run
 
 

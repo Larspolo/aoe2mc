@@ -3,9 +3,9 @@ import contextlib
 import io
 
 import pytest
+import scenarios
 
 import aoe2mc
-import scenarios
 
 
 def error(tmp_path, *opts, src="in.aoe2scenario"):

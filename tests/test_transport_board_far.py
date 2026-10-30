@@ -28,10 +28,10 @@ def test_a_militia_boards_a_ship_far_from_the_shore_on_paper(tmp_path):
     import math
     import time
 
-    import aoe2mc
     import scenarios
     from AoE2ScenarioParser.datasets.units import UnitInfo
 
+    import aoe2mc
     from game import combat, run
     scn = scenarios.new_scenario(24)
     for t in scn.map_manager.terrain:                                   # a sea between two shores

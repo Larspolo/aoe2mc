@@ -1,10 +1,10 @@
 """Leaf litter on the forest floor and wildflowers on grass, the new blocks of 26.3 (#522)."""
 from collections import Counter
 
+import mcvalid
 import numpy as np
 
 import aoe2mc
-import mcvalid
 
 
 def deco(name):

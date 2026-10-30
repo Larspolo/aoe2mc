@@ -71,9 +71,10 @@ def test_a_militia_rides_a_siege_tower_on_paper(tmp_path):
     from test_paper import paper_reachable
     if not paper_reachable():
         pytest.skip("Paper is not reachable")
-    import aoe2mc
     import scenarios
     from AoE2ScenarioParser.datasets.units import UnitInfo
+
+    import aoe2mc
     scn = scenarios.new_scenario(24)
     um = scn.unit_manager
     um.add_unit(scenarios.PlayerId.ONE, UnitInfo.SIEGE_TOWER.ID, x=12.5, y=12.5)

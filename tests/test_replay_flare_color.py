@@ -31,9 +31,9 @@ def test_the_colored_column_runs_on_a_server(tmp_path):
     import contextlib
     import io
 
-    import aoe2mc
     import scenarios
 
+    import aoe2mc
     from game import run
     src = str(tmp_path / "flare.aoe2scenario")
     scenarios.save(scenarios.new_scenario(16), src)

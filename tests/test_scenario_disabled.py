@@ -5,11 +5,12 @@ import os
 import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "game"))
-import aoe2mc  # noqa: E402
 import civs  # noqa: E402
 import scenario  # noqa: E402
 import scenarios  # noqa: E402
 from test_scenario_mode import START, game  # noqa: E402
+
+import aoe2mc  # noqa: E402
 
 OFF = ["CASTLE", "KNIGHT", "LOOM"]
 

@@ -1,8 +1,8 @@
 """default_terrain_replacement of <CONNECTION_GENERATION> (#3870)."""
 import numpy as np
+from test_rms_connections import FORDS
 
 import rmap
-from test_rms_connections import FORDS
 
 W, S, G, R = (rmap.TERRAINS[k] for k in ("WATER", "SHALLOW", "GRASS", "ROAD"))
 

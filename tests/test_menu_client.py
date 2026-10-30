@@ -2,12 +2,12 @@
 import shutil
 import time
 
+import mc_shot
 import numpy as np
 import pytest
-
-import mc_shot
-from game import menu
 from test_mc_check import mojang_reachable
+
+from game import menu
 
 
 def test_slot_pixels_of_a_chest_menu():

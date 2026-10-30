@@ -3,10 +3,9 @@
 import shutil
 
 import pytest
+from test_select_type import setup
 
 from game import gather, hints
-
-from test_select_type import setup
 
 
 def paper():
@@ -61,6 +60,7 @@ def test_a_left_click_deselects_on_paper(tiny_world, tmp_path):
     import time
 
     import mc_shot
+
     from game import run
     world = shutil.copytree(tiny_world[0], tmp_path / "W")
     data = json.load(open(world / "aoe2mc.json"))

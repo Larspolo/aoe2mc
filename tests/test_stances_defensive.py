@@ -4,10 +4,10 @@ import shutil
 import time
 
 import pytest
-
-from game import combat, run
 from test_damage import health
 from test_unit_ai import data
+
+from game import combat, run
 
 
 @pytest.mark.mc

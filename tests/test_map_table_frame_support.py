@@ -6,7 +6,6 @@ import re
 import shutil
 
 import pytest
-
 from test_minimap_click import setup as table_setup
 
 from game import run

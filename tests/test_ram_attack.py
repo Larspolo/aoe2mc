@@ -4,10 +4,10 @@ import shutil
 import time
 
 import pytest
-
-from game import ai, combat, run
 from test_building_damage import hp
 from test_siege_walk import summon
+
+from game import ai, combat, run
 
 
 def test_a_ram_gets_the_reach_of_a_melee_hit():

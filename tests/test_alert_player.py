@@ -40,6 +40,7 @@ def test_a_real_player_sees_the_alert_of_the_own_units_only(tiny_world, tmp_path
             or not paper_reachable():
         pytest.skip("Xvfb, xdotool, Mojang or Paper is not available")
     import mc_shot
+
     from game import combat, run
     world = shutil.copytree(tiny_world[0], tmp_path / "W")
     with open(os.path.join(world, "aoe2mc.json")) as f:

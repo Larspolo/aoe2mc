@@ -6,9 +6,9 @@ import sys
 from collections import Counter
 
 import pytest
+import world_reader
 
 import aoe2mc
-import world_reader
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 REC = os.path.join(ROOT, "samples", "de-64.3.aoe2record")

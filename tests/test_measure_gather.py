@@ -1,7 +1,6 @@
 """tools/measure_gather.py per resource (#393): the AoE2 values, the table, and one real server run per resource."""
-import pytest
-
 import measure_gather
+import pytest
 
 
 def test_aoe2_values_and_table_per_resource():

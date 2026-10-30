@@ -1,11 +1,11 @@
 """Every AoE2 'other' object (trees, mines, cliffs, decorations ...) places without errors and with valid blocks."""
 from collections import Counter
 
+import mcvalid
 import numpy as np
 from AoE2ScenarioParser.datasets.other import OtherInfo
 
 import aoe2mc
-import mcvalid
 
 
 def test_every_other_object():

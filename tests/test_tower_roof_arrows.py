@@ -16,10 +16,11 @@ def test_tower_and_castle_hit_a_near_enemy(tmp_path):
     from test_paper import paper_reachable
     if not paper_reachable():
         pytest.skip("Paper is not reachable")
-    import aoe2mc
     import scenarios
     from AoE2ScenarioParser.datasets.buildings import BuildingInfo
     from AoE2ScenarioParser.datasets.units import UnitInfo
+
+    import aoe2mc
     scn = scenarios.new_scenario(48)
     um = scn.unit_manager
     um.add_unit(scenarios.PlayerId.ONE, BuildingInfo.WATCH_TOWER.ID, x=38, y=10)

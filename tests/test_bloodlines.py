@@ -5,12 +5,12 @@ import shutil
 from urllib.parse import unquote
 
 import pytest
-from test_gather import FakeServer, grid
-
-from game import combat, gather, run, train
 from menu_line import item
+from test_gather import FakeServer, grid
 from test_mounted_attack import floor
 from test_ranged import data
+
+from game import combat, gather, run, train
 
 
 def setup(feudal=True):

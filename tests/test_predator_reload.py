@@ -35,9 +35,9 @@ def kill_time(game, kind, tag):
 
 @pytest.mark.mc
 def test_a_wolf_and_a_bear_hit_once_per_reload(tiny_world, tmp_path):
+    import mc_shot
     from test_mc_check import mojang_reachable
     from test_paper import paper_reachable
-    import mc_shot
     if not all(shutil.which(t) for t in ("Xvfb", "import", "xdotool")) or not mojang_reachable() \
             or not paper_reachable():
         pytest.skip("Xvfb, xdotool, Mojang or Paper is not available")

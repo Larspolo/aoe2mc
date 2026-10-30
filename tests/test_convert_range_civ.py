@@ -1,8 +1,8 @@
 """game/monk.py: the conversion range of a civilization by age (the key "convert_range", Egyptian priests +2/+3, #4447).
 Test data only: a monkeypatched line of civs.BY_KEY for the civilization of the test, and the age techs of each age.
 The rule modules import civs by its plain name too, so the line is patched in both (as tests/test_techs_saxons.py)."""
-import pytest
 import civs as plain_civs
+import pytest
 from test_monk_convert import setup
 
 from game import build, civs, monk

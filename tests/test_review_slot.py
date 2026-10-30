@@ -1,9 +1,8 @@
 """The process review and the roadmap review start after a count of merged PRs (#898, #2039): `claim.py 0 --review`,
 `--reviewed`, `--roadmap`."""
+import claim
 from test_claim import clones, tool  # noqa: F401
 from test_claim_refill import deep
-
-import claim
 
 T = 1793000000                                                                  # 2026-10-26 07:33:20 UTC
 BODY = 'Dashboard\n<!-- agent-state: {"last_run": "2026-10-26T07:00:00Z", "runs": 150, "review_minutes": 90} -->\n' \

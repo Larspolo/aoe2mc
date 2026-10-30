@@ -2,11 +2,11 @@
 technologies, twice the heal range, and hit points for each monastery technology. The values come from the data:
 the tests compare with a civilization without the bonus."""
 import pytest
+from test_civ_work import setup
+from test_monk_heal import run
+from test_monk_heal import setup as heal_setup
 
 from game import civs, combat, monk, train
-
-from test_civ_work import setup
-from test_monk_heal import run, setup as heal_setup
 
 
 def test_a_bengali_monk_has_more_melee_and_pierce_armor():

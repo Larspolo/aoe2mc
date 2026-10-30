@@ -8,8 +8,9 @@ import numpy as np
 import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "game"))
-import aoe2mc  # noqa: E402
 from test_replay_deaths import start  # noqa: E402
+
+import aoe2mc  # noqa: E402
 
 # block (x or z) -> map pixel of a 480 x 480 world: scale 2 (4 blocks per pixel), pixel 0 starts at block -16
 PLACES = {0: 4, 3: 4, 4: 5, 240: 64, 479: 123}

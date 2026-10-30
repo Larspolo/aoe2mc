@@ -4,7 +4,7 @@ from test_bot_gather import bot_map
 from test_bot_levels import FakeGather, Stop
 
 from game import bot, per, run
-from game.bot import build, train                                     # the modules that per uses
+from game.bot import build, train  # the modules that per uses
 
 SCRIPT = """(defrule (civilian-population < 10) (can-train villager) => (train villager))
 (defrule (housing-headroom < 2) (can-build house) => (build house))"""

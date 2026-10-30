@@ -2,10 +2,10 @@
 (units.make_entity), also one with a ref tag, one that "Change Ownership" gave to Gaia, and a type filter. The selector
 does not match the condition markers aoe2mc.m<ref> and the mounts."""
 import numpy as np
+from test_trigger_ownership import lines
 
 import aoe2mc
 import units
-from test_trigger_ownership import lines
 
 
 def tags(o):

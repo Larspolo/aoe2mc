@@ -4,7 +4,6 @@ import io
 
 import numpy as np
 import pytest
-
 from test_scx import build
 
 

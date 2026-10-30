@@ -16,8 +16,9 @@ the players (`aoe hide`). "Unload units over walls" is a later ticket.
 import json
 import math
 
-from aoe2mc import GARRISONED
 from garrison import INSIDE, OUTSIDE
+
+from aoe2mc import GARRISONED
 
 NAME = "SIEGE_TOWER"
 SIZE = 10                   # units inside, as in AoE2
@@ -26,7 +27,8 @@ DOOR = 2.5                  # blocks from the tower: there a unit goes in
 
 def fits(g, u):
     """True for a unit that goes into a siege tower: a villager, an infantry unit or a foot archer."""
-    import civs, combat                                            # combat imports gather, gather imports this module
+    import civs  # combat imports gather, gather imports this module
+    import combat
     if u in g.villagers:
         return True
     s = combat.stats(g.soldiers.get(u, ""))
@@ -41,7 +43,8 @@ def order(g, player, tower):
     who = sorted(u for u in g.selected - {tower} if fits(g, u))
     if not who:
         return False
-    import ai, train                                               # ai and train import gather
+    import ai  # ai and train import gather
+    import train
     g.new_order(who)
     for u in who:
         if (v := g.villagers.get(u)) is not None:                  # the villager stops its work

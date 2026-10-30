@@ -4,11 +4,10 @@ import sys
 import urllib.parse
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from test_replay import Fake, data  # noqa: E402
-from test_replay_input import Scores, poll  # noqa: E402
-
 import replay  # noqa: E402
 import replay_input as ri  # noqa: E402
+from test_replay import Fake, data  # noqa: E402
+from test_replay_input import Scores, poll  # noqa: E402
 
 SHOTS = [{"time": 2000, "tile": [5, 6], "why": "build"}, {"time": 30000, "tile": [10.5, 3], "why": "fight"},
          {"time": 50000, "tile": [1, 1], "why": "build"}]

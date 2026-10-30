@@ -6,12 +6,11 @@ import sys
 import pytest
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import gather  # noqa: E402
+import replay  # noqa: E402
 from test_replay import data  # noqa: E402
 from test_replay_control import Clock  # noqa: E402
 from test_replay_spawn import TC, queue  # noqa: E402
-
-import gather  # noqa: E402
-import replay  # noqa: E402
 
 TREE = {"kind": "other", "name": "TREE_OAK", "player": 0, "ref": 20, "tile": [10.5, 4.5]}
 SPAWN = 26000                                                          # the villager of queue(): 1 s + 25 s

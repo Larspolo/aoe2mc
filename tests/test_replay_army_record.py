@@ -7,12 +7,13 @@ import re
 import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "game"))
-import aoe2mc  # noqa: E402
 import gather  # noqa: E402
 import replay  # noqa: E402
 from test_replay import data  # noqa: E402
-from test_replay_stat_books import page  # noqa: E402
 from test_replay_control import Clock  # noqa: E402
+from test_replay_stat_books import page  # noqa: E402
+
+import aoe2mc  # noqa: E402
 
 REC = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "samples", "de-64.3.aoe2record")
 FIGHT = 16 * 60                                         # game seconds (speed 1): one archer of player 2 dies after it

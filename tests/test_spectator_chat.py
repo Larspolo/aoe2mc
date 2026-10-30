@@ -11,8 +11,9 @@ def test_a_spectator_chat_line_does_not_reach_the_players(tiny_world, tmp_path):
     if not all(shutil.which(t) for t in ("Xvfb", "import", "xdotool")) or not paper_reachable():
         pytest.skip("Xvfb, xdotool or Paper is not available")
     import mc_shot
-    from game import run
     from test_mc_check import mojang_reachable
+
+    from game import run
     if not mojang_reachable():
         pytest.skip("Mojang is not available")
     world = shutil.copytree(tiny_world[0], tmp_path / "W")

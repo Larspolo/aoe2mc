@@ -39,10 +39,10 @@ def test_replay_villagers_face_their_resource_on_paper(tmp_path):
     import contextlib
     import io
 
-    import aoe2mc
-
     import combat
     import run
+
+    import aoe2mc
     with contextlib.redirect_stdout(io.StringIO()):
         aoe2mc.convert(os.path.join(ROOT, "samples", "de-64.3.aoe2record"), str(tmp_path / "W"))
     with open(tmp_path / "W" / "aoe2mc.json") as f:

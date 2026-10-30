@@ -2,9 +2,10 @@
 (#2907): the same commands as "Heal Object" (#2692) with the amount turned positive."""
 from collections import Counter
 
-import aoe2mc
 import test_trigger_damage as damage
 import test_trigger_heal as heal
+
+import aoe2mc
 
 
 def test_a_negative_damage_gives_the_commands_of_heal_object():

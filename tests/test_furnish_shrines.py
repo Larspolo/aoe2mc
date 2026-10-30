@@ -1,11 +1,11 @@
 """The shrine and the pagan shrine are furnished (#450)."""
 from collections import Counter
 
+import mcvalid
 import pytest
+from test_furnish_landmarks import blocks
 
 import aoe2mc
-import mcvalid
-from test_furnish_landmarks import blocks
 
 NEEDS = {"SHRINE": ("gold_block", "candle", "blue_carpet", "potted_poppy", "lantern"),
          "PAGAN_SHRINE": ("mossy_cobblestone", "skeleton_skull", "campfire", "candle", "lantern")}

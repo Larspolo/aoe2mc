@@ -5,10 +5,9 @@ import os
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import replay  # noqa: E402
 from test_replay import build, data  # noqa: E402
 from test_replay_control import Clock, chats  # noqa: E402
-
-import replay  # noqa: E402
 
 TIMELINE = chats(1000, 4000) + [build("HOUSE", (8.0, 8.0), 5000)] + chats(9000) + \
     [build("HOUSE", (12.0, 8.0), 12000)] + chats(15000, 20000)

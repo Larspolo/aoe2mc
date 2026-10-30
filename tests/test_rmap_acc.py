@@ -2,9 +2,9 @@
 apart, so the percent_chance belongs to the random block under the if."""
 import numpy as np
 import pytest
+from test_rmap import SCRIPT, make
 
 import rmap
-from test_rmap import SCRIPT, make
 
 SIZED = """start_random
   if TINY_MAP

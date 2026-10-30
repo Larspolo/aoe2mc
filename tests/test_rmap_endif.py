@@ -1,7 +1,8 @@
 """A comment in a comment of an AoE2 random map script (#4695): the inner */ does not end the outer comment, as in the
 game, so a commented-out if/endif block with a comment in it stays a comment (Karsts)."""
-from rmap import tokens
 from test_rmap import SCRIPT, make
+
+from rmap import tokens
 
 BLOCK = "/* old code\nif TINY_MAP\n\t#define SMALL /* a note */\nendif\n*/\n"
 

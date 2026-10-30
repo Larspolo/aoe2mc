@@ -1,16 +1,17 @@
 """#2910 (epic #2538): a trigger with the condition "Destroy Object" on a building fires in the scenario mode when the
 building falls. The converter tests the score #f<ref> of aoe_fallen; the game program sets it once when the target
 entity of the building is gone (game/scenario.py fallen). A unit keeps the tag test (test_trigger_destroy.py)."""
+import os
 import re
 import sys
-import os
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "game"))
-import aoe2mc  # noqa: E402
 import combat  # noqa: E402
 import gather  # noqa: E402
 import scenario  # noqa: E402
 from test_gather import FakeServer, grid  # noqa: E402
+
+import aoe2mc  # noqa: E402
 
 BUILDING = {"kind": "building", "name": "CASTLE", "player": 2, "ref": 7, "footprint": [4, 4, 8, 8]}
 UUID = combat.target_uuid(BUILDING["footprint"])

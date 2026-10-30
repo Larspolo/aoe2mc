@@ -3,7 +3,6 @@ rate (repair.SIEGE), for half the training cost."""
 import re
 
 import pytest
-
 from test_gather import FakeServer, grid
 
 from game import combat, gather, repair, train
@@ -102,10 +101,10 @@ def test_siege_repair_on_a_server(tmp_path):
     import json
     import time
 
-    import aoe2mc
     import scenarios
     from AoE2ScenarioParser.datasets.units import UnitInfo
 
+    import aoe2mc
     from game import run
     scn = scenarios.new_scenario(24)
     um = scn.unit_manager

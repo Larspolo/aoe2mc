@@ -159,11 +159,11 @@ def test_garrison_on_a_server(tmp_path):
         pytest.skip("Mojang is not reachable")
     import time
 
-    import aoe2mc
     import scenarios
     from AoE2ScenarioParser.datasets.buildings import BuildingInfo
     from AoE2ScenarioParser.datasets.units import UnitInfo
 
+    import aoe2mc
     from game import run
     scn = scenarios.new_scenario(24)
     um = scn.unit_manager
@@ -213,7 +213,7 @@ def test_garrison_on_a_server(tmp_path):
         for u in vils:
             p = g.pos(u)
             assert math.dist((p[0], p[2]), (x + 0.5, z + 0.5)) <= 4 and nbt(u, "Invulnerable").endswith("0b")
-        import ai                                                      # a walk order moves them again
+        import ai  # a walk order moves them again
         ai.move(g, vils[0], "VILLAGER", g.map.T, x + 0.5, g.map.y(x, z + 6), z + 6.5)
         time.sleep(4)
         assert g.pos(vils[0])[2] > z + 3, "the villager walks after the ungarrison"

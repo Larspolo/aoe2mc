@@ -43,4 +43,7 @@ line-length = 130
 extend-exclude = ["tools/mcdata"]
 
 [tool.ruff.lint]
-select = ["F"]        # pyflakes: undefined names, unused variables and imports
+select = ["F", "I"]   # pyflakes: undefined names, unused variables and imports; isort: sorted imports (#4557)
+
+[tool.ruff.lint.isort]
+known-first-party = ["game", "tools"]

@@ -43,10 +43,11 @@ def usage(only=None):
     """{function name: Counter(block name: blocks written)} of all designs (or the names in `only`) in all architecture
     sets. The blocks
     count for the innermost function of buildings.py that draws them: `granary` (not `mill`), `decorate`, `log_pile`."""
-    import aoe2mc
     import render
     from AoE2ScenarioParser.datasets.buildings import BuildingInfo
     from AoE2ScenarioParser.datasets.other import OtherInfo
+
+    import aoe2mc
     names = {}
     for e in [*BuildingInfo, *(e for e in OtherInfo if e.name.startswith(aoe2mc.MONUMENTS))]:
         if e.name != "RUINS" and (only is None or e.name in only):

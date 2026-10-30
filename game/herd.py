@@ -18,7 +18,7 @@ RANGE = 2               # tiles: the line of sight of a herdable (AoE2 wiki, "He
 
 
 def herdable(name):
-    import gather                                                  # gather imports this module
+    import gather  # gather imports this module
     return ("COW" if name.startswith("COW_") else name) in gather.HERDS
 
 
@@ -27,7 +27,9 @@ def spawn(g, rect, name, n):
     and add them to the objects, the prey and the flock of g: they are herdables of the player, as the ones of the map
     (Tatar sheep at a new town center, #2313)."""
     import numpy as np
-    import owners, units
+    import owners
+
+    import units
     players = {int(p): v for p, v in g.data.get("players", {}).items() if p.isdigit()}
     for x, z in g.map.front(rect)[:n]:
         pos = (x + 0.5, float(g.map.y(x, z)), z + 0.5)
@@ -92,7 +94,9 @@ def tick(g):
 def take(g, gathers, o, new):
     """Give the herdable o to player new: its tag, team, name color and wool, and the lists of each Gather (prey,
     enemies, selection, hunters)."""
-    import gather, units
+    import gather
+
+    import units
     u, old = o["uuid"], o["player"]
     o["player"] = new
     g.command(f"tag {u} remove aoe2mc.p{old}")      # Gaia: aoe2mc.p0 (units.make_entity, #2916)

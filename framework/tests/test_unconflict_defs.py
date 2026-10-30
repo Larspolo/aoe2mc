@@ -1,5 +1,5 @@
 """framework/tools/unconflict.py does not keep both sides when both add a function of the same name (#2631)."""
-from test_unconflict import BASE, conflict, tool   # BASE: the file of the merge base
+from test_unconflict import BASE, conflict, tool  # BASE: the file of the merge base
 
 
 def test_two_new_functions_of_the_same_name_stay_a_conflict(tmp_path):

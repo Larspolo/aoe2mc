@@ -247,7 +247,7 @@ def tagged(n, group):
 
 def civilian(n):
     """True for the civilian units of gather.CIVILIANS (villagers, monks, trade units ...)."""
-    import gather                                                  # gather imports this module
+    import gather  # gather imports this module
     return n.startswith(gather.CIVILIANS)
 
 
@@ -263,7 +263,7 @@ def foot_archer(s):
 def changes(g, name, s):
     """The (value, change) of the civilization bonuses of UNITS for unit name (combat.Stats s) in the age of g. The
     group of a rule is a name of GROUPS or a list of unit names."""
-    import build                                                   # build imports gather, gather imports this module
+    import build  # build imports gather, gather imports this module
     age = build.ages(g)
     return [(v, c[age]) for k, v, c in UNITS.get(civ(g), [])
             if (name in k if isinstance(k, tuple) else GROUPS[k](name, s))]   # a list of names (Antiquity, #3827)
@@ -280,7 +280,7 @@ def smith(g, name, s):
     """{technology: n} of SMITH_UNITS for unit name (combat.Stats s) in the age of g: the Inca villagers get the
     infantry technologies from the Castle Age, the Macedonian cavalry the infantry armor, the Roman infantry twice the
     infantry armor (AoE2 DE wiki, #2174)."""
-    import build                                                   # build imports gather, gather imports this module
+    import build  # build imports gather, gather imports this module
     age = build.ages(g)
     return {t: c[age] for k, techs, c in SMITH_UNITS.get(civ(g), []) if c[age] and GROUPS[k](name, s) for t in techs}
 
@@ -290,8 +290,8 @@ def regen(g, name, s, foe=math.inf):
     else 0. Two rules of one civilization add up. foe: the tiles from the unit to the nearest enemy unit; a rule with a
     radius counts only when foe is more than it. The technologies of the player add their rate (the key "regen"), and a
     share of the max hit points per minute while an enemy unit is within its tiles ("combat_regen": in combat, #4334)."""
-    import build                                                   # build imports gather, gather imports this module
-    import train                                                   # train imports civs
+    import build  # build imports gather, gather imports this module
+    import train  # train imports civs
     age = build.ages(g)
     tech = sum(hp for t, (k, hp) in train.BY_KEY["regen"].items() if t in g.techs and GROUPS[k](name, s)) \
         + sum(f * s.hp for t, (k, f, r) in train.BY_KEY["combat_regen"].items() if t in g.techs and foe <= r
@@ -322,20 +322,22 @@ def units(g, name, s):
 
 def taken(g, name):
     """The factor of the bonus damage that unit name of the player of g takes (UNITS, value "taken"), else 1 (#2248)."""
-    import combat                                                  # combat imports gather, gather imports this module
+    import combat  # combat imports gather, gather imports this module
     return math.prod(c for v, c in changes(g, name, combat.stats(name)) if v == "taken")
 
 
 def friendly(g, name):
     """The factor of the friendly fire (the blast of an own or allied unit) that unit name of the player of g takes
     (UNITS, value "friendly"), else 1 (Jurchen military units, #2418)."""
-    import combat                                                  # combat imports gather, gather imports this module
+    import combat  # combat imports gather, gather imports this module
     return math.prod(c for v, c in changes(g, name, combat.stats(name)) if v == "friendly")
 
 
 def has(what, name):
     """True when the rule `what` of COSTS covers unit, technology or building name."""
-    import build, combat, train                                    # they import gather, gather imports this module
+    import build  # they import gather, gather imports this module
+    import combat
+    import train
     if isinstance(what, tuple):
         return name in what
     if what.startswith("buildings"):
@@ -351,8 +353,8 @@ def has(what, name):
 def cost(g, name, base, player=None):
     """The cost `base` ({resource: amount}) of name with the cost bonuses of the civilization of the player of g, or of
     another player (an ally: repair.cost, #1361). A cost of a scenario trigger (g.trigger_costs, #2776) wins."""
-    import build                                                   # build imports gather, gather imports this module
-    import train                                                   # train imports this module
+    import build  # build imports gather, gather imports this module
+    import train  # train imports this module
     out, age = dict(base), build.ages(g)
     own = player is None or player == g.player
     techs = [(tuples(w), r, [c] * 4) for t, rules in train.BY_KEY["costs"].items() if own and train.researched(g, t)
@@ -377,7 +379,7 @@ def cost(g, name, base, player=None):
 
 def speed(g, name):
     """The factor of the walk speed of unit name for the civilization of the player of g (UNITS), else 1."""
-    import combat                                                  # combat imports gather, gather imports this module
+    import combat  # combat imports gather, gather imports this module
     return math.prod(c for v, c in changes(g, name, combat.stats(name)) if v == "speed")
 
 
@@ -387,7 +389,7 @@ def missing(g, name):
     run.py --all-techs, #2298) gives each civilization the GENERIC items; the unique items stay with their civilization.
     The AoE2 setting "Full Tech Tree" (aoe2mc.json "full_tech_tree", run.py --full-tech-tree) also gives the ONLY items,
     with the exceptions of FULL (#2354)."""
-    import gather                                                  # gather imports this module
+    import gather  # gather imports this module
     if name in vars(g).get("trigger_menus", {}):                   # "Enable/Disable Object" of a scenario (#2775)
         return not g.trigger_menus[name]
     c = real(g)
@@ -407,7 +409,7 @@ def civ(g, player=None):
     of the player or an ally (the key "team", gather.allied): a Team, which holds the civilizations of those bonuses."""
     if g.data.get("full_tech_tree") or (name := real(g, player)) is None:
         return None
-    import gather                                                  # gather imports this module
+    import gather  # gather imports this module
     players, p = g.data.get("players", {}), g.player if player is None else player
     team = tuple(sorted({v.get("civ") for q, v in players.items() if gather.allied(players, int(q), p)} & TEAMS))
     if not team:
@@ -437,14 +439,14 @@ def earlier(g, name):
 def age_rate(g, name):
     """The factor of the research rate of technology name for the civilization of the player of g: AGE_RATE for an
     age, else 1."""
-    import build                                                   # build imports gather, gather imports this module
+    import build  # build imports gather, gather imports this module
     return AGE_RATE.get(civ(g), 1) if name in build.AGE_TECHS else 1
 
 
 def arrows(g, building, player=None):
     """The factor of the base arrows (garrison.BASE) of building name of the player of g (or of player) in the present
     age of g: ARROWS (the Saxon towers and castles: twice from the Castle Age, #2178), else 1."""
-    import build                                                   # build imports gather, gather imports this module
+    import build  # build imports gather, gather imports this module
     return next((f[build.ages(g)] for names, f in ARROWS.get(civ(g, player), ()) if building in names), 1)
 
 
@@ -480,7 +482,7 @@ def built_food(g, name):
 def built_units(g, name):
     """(unit, number) of the herdables that a complete building name of the player of g gives in its age
     (BUILT_UNITS), else None."""
-    import build                                                   # build imports gather, gather imports this module
+    import build  # build imports gather, gather imports this module
     unit, n = BUILT_UNITS.get(civ(g), {}).get(name, (None, (0,) * 4))
     return (unit, n[build.ages(g)]) if n[build.ages(g)] else None
 
@@ -492,7 +494,7 @@ def church_rate(g, pos):
     rate = value("church_rate", civ(g))
     if not rate:
         return 1
-    import train                                                   # train imports this module
+    import train  # train imports this module
     building, square, f = rate
     near = square / 2 * g.map.T                                    # blocks from the center of the building
     return f if any(max(abs(pos[0] - (x0 + x1) / 2), abs(pos[1] - (z0 + z1) / 2)) <= near
@@ -502,7 +504,7 @@ def church_rate(g, pos):
 def repair_rate(g):
     """The factor of the repair rate of the villagers of the player of g: its own bonus (REPAIR) times the largest team
     bonus (REPAIR_TEAM) of the civilization and its allies (gather.allied)."""
-    import gather                                                  # gather imports this module
+    import gather  # gather imports this module
     players = g.data.get("players", {})
     team = max([REPAIR_TEAM.get(civ(g, p), 1) for p in players if p.isdigit() and gather.allied(players, g.player, int(p))]
                + [REPAIR_TEAM.get(civ(g), 1)])
@@ -512,7 +514,7 @@ def repair_rate(g):
 def repair_cost(g):
     """The factor of the repair cost of the buildings of the player of g: a team bonus of REPAIR_COST counts for the
     civilization and its allies (gather.allied); the bonuses do not add up, the smallest factor counts. Not for units."""
-    import gather                                                  # gather imports this module
+    import gather  # gather imports this module
     players = g.data.get("players", {})
     return min([REPAIR_COST.get(civ(g, p), 1) for p in players if p.isdigit() and gather.allied(players, g.player, int(p))]
                + [REPAIR_COST.get(civ(g), 1)])
@@ -531,21 +533,21 @@ def hp(civ, building, s, age=0, factor=1):
 def work_rate(g, building):
     """The factor of the train and research rate of building (a name) of the player of g in its age (WORK_RATE), else 1,
     times the handicap of the player at a military building (build.MILITARY, #2474)."""
-    import build                                                   # build imports gather, gather imports this module
+    import build  # build imports gather, gather imports this module
     return WORK_RATE.get(civ(g), {}).get(building, (1,) * 4)[min(build.ages(g), 3)] \
         * (handicap(g.data, g.player) if building in build.MILITARY else 1)
 
 
 def ship_work(g):
     """The factor of the work rate of a fishing ship of the player of g in its age (the key "ship_work"), else 1."""
-    import build                                                   # build imports gather, gather imports this module
+    import build  # build imports gather, gather imports this module
     return value("ship_work", civ(g), (1,) * 4)[min(build.ages(g), 3)]
 
 
 def train_time(g, building, name):
     """The factor of the train time of unit name at building (a name) of the player of g in its age: a unit of a line of
     TRAINS (Mapuche Settlements, #2432), else 1."""
-    import build                                                   # build imports gather, gather imports this module
+    import build  # build imports gather, gather imports this module
     t = TRAINS.get(civ(g), {}).get(building)
     return t.get("time", (1,) * 4)[min(build.ages(g), 3)] if t and any(name in line for line in t["lines"]) else 1
 
@@ -553,7 +555,8 @@ def train_time(g, building, name):
 def train_rate(g, name):
     """The factor of the train rate of unit name of the player of g (TRAIN_RATE), also of an upgrade technology
     (train.UPGRADES) to a unit of the group when the bonus has its upgrades, else 1."""
-    import combat, train                                           # train imports this module
+    import combat  # train imports this module
+    import train
     unit = name in combat.STATS
     news = [name] if unit else [new for _, new in train.lines(name)] if name in train.UPGRADES else []
     return math.prod(f for group, f, upgrades in TRAIN_RATE.get(civ(g), ()) if (unit or upgrades)

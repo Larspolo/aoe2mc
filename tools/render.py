@@ -181,8 +181,9 @@ def world_blocks(path, x0, z0, x1, z1, y0=aoe2mc.MIN_Y):
 
 def sheet(name, out, view="se", scale=6, variants=3, T=4, cut=None):
     """One image with the design in all architecture sets (rows) and some variants (columns)."""
-    import buildings
     from PIL import ImageDraw
+
+    import buildings
     rows = [(arch, [draw(*building_blocks(name, arch, T, v, cut), view=view, scale=scale) for v in range(variants)])
             for arch in sorted(buildings.ARCH)]
     cw = max(i.width for _, r in rows for i in r) + 8

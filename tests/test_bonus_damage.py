@@ -5,11 +5,10 @@ import shutil
 import time
 
 import pytest
-
-from game import civs, combat, run, train
-
 from test_civ_work import setup
 from test_damage import health
+
+from game import civs, combat, run, train
 
 AGES = {"DARK": (), "FEUDAL": ("FEUDAL_AGE",), "CASTLE": ("FEUDAL_AGE", "CASTLE_AGE"),
         "IMPERIAL": ("FEUDAL_AGE", "CASTLE_AGE", "IMPERIAL_AGE")}

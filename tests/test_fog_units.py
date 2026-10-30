@@ -96,10 +96,10 @@ def test_an_enemy_shows_when_a_villager_walks_to_it_on_a_server(tmp_path):
     import json
     import time
 
-    import aoe2mc
     import scenarios
     from AoE2ScenarioParser.datasets.units import UnitInfo
 
+    import aoe2mc
     from game import ai, run
     scn = scenarios.new_scenario(32)
     scn.unit_manager.add_unit(scenarios.PlayerId.ONE, UnitInfo.VILLAGER_MALE.ID, x=4.5, y=4.5)

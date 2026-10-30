@@ -2,9 +2,8 @@
 import subprocess
 import sys
 
-import pytest
-
 import claim
+import pytest
 from test_claim import TOOL, run
 
 
