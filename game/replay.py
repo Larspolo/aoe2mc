@@ -392,8 +392,9 @@ def trade_line(sums):
 class Replay:
     """The timeline of aoe2mc.json `data` on a server (game.command sends one command)."""
 
-    def __init__(self, game, data, version=aoe2mc.VERSION_NAME, ai=False, follow=None, pov=None, camera=False):
-        self.camera = camera                    # --camera auto: the spectators move to each shot of camera_plan (#3367)
+    def __init__(self, game, data, version=aoe2mc.VERSION_NAME, ai=False, follow=None, pov=None, camera=None):
+        self.camera = "auto" if camera is True else camera or None   # --camera auto: the spectators move to each shot
+        # of camera_plan (#3367); --camera player: to each view of the recorder (#4768)
         self.game, self.data, self.ai, self.speed, self.paused = game, data, ai, 1.0, False  # ai: plugin walks
         self.follow, self.followed = follow, (None, -math.inf)  # the spectators follow player N: (UUID, game time)
         self.pov, self.hidden = pov, set()      # the view of player N (#1302): UUIDs of the enemy units hidden from @a
@@ -769,6 +770,8 @@ class Replay:
         kind = e["kind"]
         if kind == "shot":                                      # --camera auto (#3367), the menu switch (#3369)
             return self.shot_view(e["tile"]) if self.control.get("camera") == "auto" else []
+        if kind == "view":                                      # --camera player: the view of the recorder (#4768)
+            return self.shot_view(e["tile"]) if self.control.get("camera") == "player" else []
         if kind == "news":                                      # a fight starts: the chat line and the horn (#2951)
             return replay_input.fight_news(self.control["fights"][e["fight"]], e["fight"], self.control["players"])
         if kind in ("attack_move", "move", "order", "stop", "delete", "garrison", "follow", "guard", "autoscout"):
@@ -3137,12 +3140,16 @@ class Replay:
         owner = owners(self.data.get("objects", []), self.data.get("timeline", []))
         shots = [{"time": c["time"], "kind": "shot", "tile": c["tile"]}      # the camera can switch on later (#3369)
                  for c in camera_plan(self.data.get("timeline", []), owner)]
-        events = sorted((e for e in self.data.get("timeline", []) + self.spawns() + news + shots if start <= e["time"] <= last),
+        views = [{"time": v["time"], "kind": "view", "tile": v["tile"]} for v in self.data.get("views", [])]
+        if self.camera == "player" and not views:                   # the free camera (#4768)
+            self.camera = None
+            self.send(["tellraw @a " + json.dumps(text("This record has no camera of its player.", "yellow"))])
+        events = sorted((e for e in self.data.get("timeline", []) + self.spawns() + news + shots + views if start <= e["time"] <= last),
                         key=lambda e: e["time"])                     # the record ends at `last`: no spawn after it
         g0, r0, lag, n, k = start, clock(), 0.0, 0, 0                 # game time g0 (ms) at real time r0
         self.speed, self.paused = speed, paused
         self.control = {"speed": speed, "paused": paused, "view": self.pov,     # the view: replay_input VIEW (#1303)
-                        "camera": "auto" if self.camera else None,           # replay_input CAMERA (#3369)
+                        "camera": self.camera,                               # replay_input CAMERA (#3369)
                         "players": {p: self.player(p) for p in sorted(int(q) for q in self.data["players"]) if p}} | \
             ({"jump": to} if to is not None else {})
         self.control["fights"] = found
@@ -3264,6 +3271,8 @@ class Replay:
                     self.send(self.jump(skip, to, at))
                     if shots and (held := [s for s in shots if s["time"] <= to]):    # the camera goes at once to the
                         self.send(self.shot_view(held[-1]["tile"]))                    # shot of the new time (#3368)
+                    if self.control.get("camera") == "player" and (seen := [v for v in views if v["time"] <= to]):
+                        self.send(self.shot_view(seen[-1]["tile"]))                    # and the view (#4768)
                     if self.moving or self.working:                 # the gather steps of the skipped time at once,
                         self.send(self.steps(to))                   # and no step before `to`: an older time on the
                         self.moving = {i: max(t, to) for i, t in self.moving.items()}     # bar and fast catch-up
