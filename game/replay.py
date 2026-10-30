@@ -435,6 +435,7 @@ class Replay:
                        for r, o in self.refs.items() if o["kind"] == "other" and "RELIC" in o["name"] and "tile" in o}
         self.fetching = {}                      # object ID of a monk -> the relic ref that it walks to (#4009)
         self.homing = {}                        # object ID of a monk with a relic -> (monastery rect, player) (#4010)
+        self.queued = {}                        # object ID of a monk in `fetching` -> its monastery ORDER (#4517)
         self.relic_at, self.relic_gold = 0, {}  # game time (ms) of the last relic gold, player -> gold not yet whole (#4011)
         self.rng = np.random.default_rng(1)
         self.kinds, self.seen = aoe2mc.object_kinds(), set()
@@ -629,7 +630,7 @@ class Replay:
         lines = {}
         for p in list(eco) + [p for p in self.spends if p not in eco]:
             s = self.spent(p, t)
-            lines[p] = [f"{k} {n}" for k, n in eco.get(p, {}).items()] + ["", "Spent:"] + \
+            lines[p] = [f"{k} {n}" for k, n in eco.get(p, {}).items()] + ["Spent:"] + \
                 [f"{name} {s[g]}" for g, name in (("economy", "Eco"), ("military", "Mil"), ("technologies", "Tech"),
                                                   ("buildings", "Build"))]
         return self.stat_book("Economy", lines)
@@ -739,9 +740,14 @@ class Replay:
         if kind == "news":                                      # a fight starts: the chat line and the horn (#2951)
             return replay_input.fight_news(self.control["fights"][e["fight"]], e["fight"], self.control["players"])
         if kind in ("attack_move", "move", "order", "stop", "delete", "garrison", "follow", "guard", "autoscout"):
+            church = kind == "order" and self.monastery(e) is not None
             for i in e.get("objects") or ():                    # another order ends the patrol (#2550), the scouting (#2678)
                 self.patrols.pop(i, None)
                 self.scouts.pop(i, None)
+                self.queued.pop(i, None)
+                if church and i in self.fetching:           # AoE2: a monk keeps its relic task, then goes home (#4517)
+                    self.queued[i] = e
+                    continue
                 self.fetching.pop(i, None)                  # and the walk to a relic (#4009)
                 self.homing.pop(i, None)                    # and the walk to a monastery (#4010)
         if kind in aoe2mc.UNIT_USE - {"stance"} | {"delete", "stop"}:   # a new order ends a FOLLOW or GUARD (#2551)
@@ -1614,7 +1620,7 @@ class Replay:
         inside = {u: r for r, us in self.garrisons.items() for u in us}   # AoE2 selects no unit inside: an order
         out0 = [c for i in e["objects"] if i in inside for c in self.leave(i, inside[i])]   # says it is out (#1229)
         group = [(i, v) for i, name in zip(e["objects"], e.get("names") or [None] * len(e["objects"]))
-                 if (v := self.unit(i, name, e["player"])) is not None]
+                 if (v := self.unit(i, name, e["player"])) is not None and self.queued.get(i) is not e]
         if e["kind"] == "order" and (relic := e.get("target")) in self.relics:   # only a monk carries a relic (#4009)
             self.fetching.update({i: relic for i, v in group if v.name in monk.MONKS})
         if (church := self.monastery(e)) is not None:              # a monk with a relic puts it in (#4010)
@@ -2245,6 +2251,9 @@ class Replay:
         A farmer works on its farm (gather.Gather.goals). A unit that goes into a building arrives (enter())."""
         if i in self.fetching:
             self.send(self.pickup(i, v))
+            if i in self.queued:                                    # the queued monastery ORDER (#4517)
+                self.send(self.move(dict(self.queued.pop(i), time=t, objects=[i], names=[v.name])))
+                return
         if i in self.homing:
             self.send(self.deliver(i, t))
         if i in self.entering:
@@ -2309,6 +2318,7 @@ class Replay:
         """The commands of dead monk i: its relic drops at its replay position at game time t (AoE2, #4013)."""
         self.fetching.pop(i, None)
         self.homing.pop(i, None)
+        self.queued.pop(i, None)
         x, _, z = self.at(v, t)
         return [c for ref, r in self.relics.items() if r["monk"] == i for c in self.drop(ref, (math.floor(x), math.floor(z)))]
 
@@ -2628,7 +2638,7 @@ class Replay:
             rows, page = BOOK_ROWS - 1 - len(textwrap.wrap(name, BOOK_COLS)), ""
             head = {"text": name, "color": color if color != "white" else "black"}   # the sidebar color (#1643)
             for line in lines[p]:
-                n = len(textwrap.wrap(line, BOOK_COLS))
+                n = max(1, len(textwrap.wrap(line, BOOK_COLS)))       # an empty line is a row too (#4552)
                 if n > rows:
                     pages.append({"text": "", "extra": [head, {"text": "\n" + page.rstrip("\n")}]} if head
                                  else {"text": page.strip("\n")})
