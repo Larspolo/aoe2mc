@@ -42,6 +42,14 @@ HEALS = {r["name"]: (r["cart_heal"], r["aura"]) for r in table.load("buildings.j
 HEAL_EVERY = 5.0        # AoE2 seconds between two heal passes (fewer commands, garrison.HEAL_EVERY)
 
 
+GOLD_RATES = {r["name"]: r["gold_rate"] for r in table.load("train.jsonl") if "gold_rate" in r}   # trade, relics
+
+
+def gold_rate(g):
+    """The factor of the trade and relic gold of the player g: the product of its technologies (GOLD_RATES)."""
+    return math.prod(GOLD_RATES.get(t, 1) for t in getattr(g, "techs", ()))
+
+
 def gold(a, b, size):
     """The gold of one trip between the markets with the centers a and b (tiles) on a map of size tiles."""
     d = max(0.1, math.hypot(*(max(0.0, abs(p - q) - FREE) for p, q in zip(a, b))))
@@ -155,7 +163,7 @@ def tick(g):
         if math.dist((pos[u][0], pos[u][2]), (x + 0.5, z + 0.5)) > ARRIVE:
             continue
         if t["to"] == t["home"]:
-            t["rest"] += gold(center(t["home"], g.map.T), center(t["market"], g.map.T), g.map.n / g.map.T)
+            t["rest"] += gold(center(t["home"], g.map.T), center(t["market"], g.map.T), g.map.n / g.map.T) * gold_rate(g)
             n, t["rest"] = int(t["rest"]), t["rest"] - int(t["rest"])
             if n:
                 g.earn("gold", n)
