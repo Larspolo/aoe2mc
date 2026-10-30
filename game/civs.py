@@ -46,6 +46,7 @@ RULES = {
     "military units": lambda n, s: not civilian(n),
     "mounted": lambda n, s: mounted(s),
     "mounted, fire lancers": lambda n, s: mounted(s) or tagged(n, "fire lancers"),
+    "non-ranged units": lambda n, s: s.range <= 0,                 # Macedonian sight (Antiquity, #4448)
     "scout line, steppe lancers": lambda n, s: tagged(n, "scout line"),
     "ships": lambda n, s: "ship" in s.classes or n.endswith(("_COG", "_SHIP")),   # also the trade cog and transport ship
     "siege": lambda n, s: "siege" in s.classes,
@@ -217,6 +218,13 @@ def changes(g, name, s):
     age = build.ages(g)
     return [(v, c[age]) for k, v, c in UNITS.get(civ(g), [])
             if (name in k if isinstance(k, tuple) else GROUPS[k](name, s))]   # a list of names (Antiquity, #3827)
+
+
+def sight_units(g, name, s):
+    """The extra tiles of line of sight of unit name (combat.Stats s) by the key "sight_units" of the civilization of g:
+    [group of GROUPS or a list of unit names, tiles] (the Macedonians in Antiquity Mode, #4448)."""
+    k, more = value("sight_units", civ(g), (None, 0))
+    return more if k is not None and (name in k if isinstance(k, list) else GROUPS[k](name, s)) else 0
 
 
 def smith(g, name, s):
