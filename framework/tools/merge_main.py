@@ -27,7 +27,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import unconflict  # noqa: E402
 
-MAX_TESTS = 30      # more test files import a conflicted module (aoe2mc.py): run only the branch's, CI runs the rest
+MAX_TESTS = 30      # more test files import a conflicted module (the main module): run only the branch's, CI runs the rest
 HUNK_LINES = 40     # lines of each conflict hunk in the output
 IMPORT = re.compile(r"^\s*(?:from\s+([\w.]+)\s+)?import\s+\(?([\w., ]+)", re.M)
 
