@@ -37,6 +37,7 @@ from units import rows
 RMAP = rows("rmap.jsonl")
 TERRAINS = {r["name"]: r["terrain"] for r in RMAP if "terrain" in r}
 OBJECTS = {r["name"]: r["object"] for r in RMAP if "object" in r}     # the object constants of random_map.def: AoE2 IDs
+LIKE = {r["name"]: r["like"] for r in RMAP if "like" in r}   # a DE object that object_kinds has not: the object to place (#4714)
 FOREST_TREES = dict(sorted((t, r["name"]) for r in RMAP for t in r.get("forest", ())))
 ASSIGN = {r["name"]: r["assign"] for r in RMAP if "assign" in r}       # the targets of assign_to: player, color, team
 CLIFF_TYPES = {r["name"]: r["cliff_type"] for r in RMAP if "cliff_type" in r}   # cliff_type word: object name prefix
@@ -889,6 +890,7 @@ def objects(cmds, consts, terrain, starts, rng, warn, owner=None, ridges=(), lay
     require_path, force_placement and ignore_terrain_restrictions as in `CREATE_OBJECT` (#4137)."""
     import aoe2mc
     kinds = aoe2mc.object_kinds(old=False)
+    ids = {name: i for i, (_, name) in kinds.items()}
     n, out = terrain.shape[0], []
     wet = np.isin(terrain, [TERRAINS["WATER"], TERRAINS["SHALLOW"], TERRAINS["DEEP_WATER"]])
     used = np.isin(terrain, list(FOREST_TREES))
@@ -901,6 +903,8 @@ def objects(cmds, consts, terrain, starts, rng, warn, owner=None, ridges=(), lay
     x, y = np.mgrid[0:n, 0:n]
     areas = {}                                         # actor_area ID -> the tiles of its objects (#3858)
     for cmd, args, attrs in cmds:
+        if args and args[0] in LIKE:                   # by its word: random_map.def gives it an ID that kinds has not
+            args = [str(ids[LIKE[args[0]]]), *args[1:]]
         if cmd != "create_object":
             warn(f"{cmd} is not read yet")
             continue

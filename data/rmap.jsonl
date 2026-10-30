@@ -107,3 +107,7 @@
 {"name": "AT_COLOR", "assign": "color"}
 {"name": "AT_PLAYER", "assign": "player"}
 {"name": "AT_TEAM", "assign": "team"}
+{"name": "BIRD_A", "like": "HAWK"}
+{"name": "BIRD_B", "like": "STORK"}
+{"name": "DEAD_FISH_TRAP", "like": "SEA_ROCKS_1"}
+{"name": "PLANT_SHRUB_DRY", "like": "PLANT_DEAD"}
