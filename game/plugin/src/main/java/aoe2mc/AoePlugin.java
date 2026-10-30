@@ -124,6 +124,9 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *   aoe veteran <selector> <attack> <max>      the unit gets attack more for each unit that it kills, up to max (the
  *                                              Jaguar Warrior, #4467, game/combat.py veteran_command); a new call
  *                                              keeps the kills (an Elite upgrade)
+ *   aoe sunder <selector> <n>                  each hit of the unit on a unit lowers its melee and pierce armor by n,
+ *                                              down to 0 (the Obuch, #4466, game/combat.py sunder_command). A later
+ *                                              aoe stats of the target (an upgrade) sets its armor again
  *   aoe attackground <selector> <x> <y> <z>    AoE2 "Attack Ground" (#4078): a siege unit with a blast walks into its
  *                                              range of the point and shoots there with its reload until a new order
  *   aoe ballistics <team> on|off               Ballistics of the player (#1549): its archers and buildings aim where a
@@ -462,6 +465,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     // the part of the siege shots at a unit that hit (aoe accuracy, #2479): the Trebuchet 0.15; missing: 1
     private final Map<UUID, Double> accuracy = new HashMap<>();
     private final Map<UUID, Dodge> dodges = new HashMap<>();    // aoe dodge: the shield of a unit (#4399)
+    private final Map<UUID, Integer> sunders = new HashMap<>();  // aoe sunder (#4466): the armor less per hit
     private final Map<UUID, int[]> frenzies = new HashMap<>();  // aoe frenzy (#4468): {less, time, min} in ticks
     private final Map<UUID, ArrayDeque<Integer>> frenzyHits = new HashMap<>();   // the ticks of its recent hits
     private final Map<UUID, LowHp> lowHps = new HashMap<>();    // aoe lowhp: the low hit point form of a unit (#4472)
@@ -1416,6 +1420,9 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             a = volley(p, a);                                // an extra arrow of a volley (#2379)
         }
         double dealt = harm(victim, t, a, fort != null ? ev.getDamager() : from);   // a unit does not attack back at a building
+        if (fort == null && sunders.get(from.getUniqueId()) instanceof Integer n && stats.get(hurt.getUniqueId()) == t) {
+            stats.put(hurt.getUniqueId(), sunder(t, n));      // an Obuch lowers the armor of its target (#4466)
+        }
         double[] through = fort != null ? fortPass.get(from.getUniqueId()) : null;
         if (through != null && through[0] > 0 && from instanceof Mob slime) {   // Svan Towers: hurts the units behind (#4282)
             pass(slime, victim, fort.range + through[0], a, from, through[1]);
@@ -1520,6 +1527,13 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             h.getKey().removeScoreboardTag("aoe2mc.hit");
             return true;
         });
+    }
+
+    // The values t with the melee and the pierce armor each n less, down to 0 (aoe sunder, #4466); a negative armor stays.
+    private static Stats sunder(Stats t, int n) {
+        return new Stats(t.attack, t.melee > 0 ? Math.max(0, t.melee - n) : t.melee,
+                t.pierce > 0 ? Math.max(0, t.pierce - n) : t.pierce, t.ranged, t.pierces, t.classes, t.bonus, t.reload,
+                t.taken, t.friendly, t.less, t.ignores, t.rage, t.reflect);
     }
 
     // Each tick, not at each change of the hit points: hits, heals and setHealth have many places (harm, regen, monks).
@@ -3040,6 +3054,26 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                 n++;
             }
             sender.sendMessage("Veteran: " + n + " units");
+            return true;
+        }
+        if (args.length == 3 && args[0].equals("sunder")) {           // an Obuch: armor less per hit (#4466)
+            int armor;
+            try {
+                armor = Integer.parseInt(args[2]);
+            } catch (NumberFormatException e) {
+                sender.sendMessage("Bad number: " + e.getMessage());
+                return true;
+            }
+            int n = 0;
+            for (Entity e : select(sender, args[1])) {
+                for (Entity t : new Entity[] {crew(e), e.getVehicle(), e}) {   // the rider and its horse (#732)
+                    if (t != null) {
+                        sunders.put(t.getUniqueId(), armor);
+                    }
+                }
+                n++;
+            }
+            sender.sendMessage("Sunder: " + n + " units");
             return true;
         }
         if (args.length >= 2 && args[0].equals("allies")) {            // the alliances of the players (#1315)

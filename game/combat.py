@@ -91,6 +91,7 @@ DODGE = {r["name"]: r["dodge"] for r in UNIT_ROWS if "dodge" in r}           # p
 FRENZY = {r["name"]: r["frenzy"] for r in UNIT_ROWS if "frenzy" in r}        # a shorter reload in a long fight (#4468)
 LOW_HP = {r["name"]: r["low_hp"] for r in UNIT_ROWS if "low_hp" in r}      # another form below some hit points (#4472)
 VETERAN = {r["name"]: r["veteran"] for r in UNIT_ROWS if "veteran" in r}     # attack more for each kill (#4467)
+SUNDER = {r["name"]: r["sunder"] for r in UNIT_ROWS if "sunder" in r}         # armor less on the target per hit (#4466)
 SHIELD = {r["name"]: r["shield"] for r in UNIT_ROWS if "shield" in r}         # projectiles through it hurt less (#4507)
 # The minimum range of the buildings that shoot, in tiles from the edge of the footprint (AoE2 DE, wiki infobox
 # "MinRange", #1546). The town center has none. Murder Holes removes it.
@@ -290,6 +291,14 @@ def veteran_command(uuid, name):
     return f"aoe veteran {uuid} {v['attack']} {v['max']}" if v else None
 
 
+def sunder_command(uuid, name):
+    """The plugin command of the armor cut of unit name (the key "sunder" of data/units.jsonl: the Obuch, #4466), or
+    None. AoE2 wiki ("Obuch"): "Reduces armor and pierce armor of units by 1 (cannot be reduced below 0) each with
+    every attack": each hit lowers the melee and the pierce armor of the target by "sunder", down to 0."""
+    n = SUNDER.get(name)
+    return f"aoe sunder {uuid} {n}" if n else None
+
+
 def trample_command(uuid, name, T, t=None):
     """The plugin command of the trample damage of unit name (the key "trample" of data/units.jsonl: the elephants,
     #4397), or None. Each melee hit also hurts the other enemy units within "radius" tiles (× T blocks) of the target
@@ -390,6 +399,9 @@ def setup(game, data):
             game.command(cmd)
     for o in units:                                  # a Jaguar Warrior gets attack for each kill (#4467)
         if cmd := veteran_command(o["uuid"], o["name"]):
+            game.command(cmd)
+    for o in units:                                  # an Obuch lowers the armor of its target (#4466)
+        if cmd := sunder_command(o["uuid"], o["name"]):
             game.command(cmd)
     for o in units:                                  # a Hussite Wagon shields the units behind it (#4507)
         if cmd := shield_command(o["uuid"], o["name"]):

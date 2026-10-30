@@ -67,7 +67,7 @@
 {"name": "MAMELUKE", "hp": 80, "attack": 8, "melee": 0, "pierce": 0, "range": 3, "reload": 2.0, "bonus": {"cavalry": 9}, "classes": ["camel", "unique"], "melee_ranged": true}
 {"name": "MANGUDAI", "hp": 60, "attack": 6, "melee": 0, "pierce": 0, "range": 4, "reload": 2.1, "bonus": {"siege": 3, "spearman": 1}, "classes": ["archer", "cavalry", "unique"]}
 {"name": "MONASPA", "hp": 70, "attack": 12, "melee": 3, "pierce": 2, "range": 0, "reload": 1.8, "bonus": {}, "classes": ["cavalry", "unique"]}
-{"name": "OBUCH", "hp": 80, "attack": 8, "melee": 2, "pierce": 2, "range": 0, "reload": 2.0, "bonus": {"building": 4}, "classes": ["infantry", "unique"], "sight": 5}
+{"name": "OBUCH", "hp": 80, "attack": 8, "melee": 2, "pierce": 2, "range": 0, "reload": 2.0, "bonus": {"building": 4}, "classes": ["infantry", "unique"], "sight": 5, "sunder": 1}
 {"name": "ORGAN_GUN", "hp": 50, "attack": 6, "melee": 2, "pierce": 4, "range": 7, "reload": 3.45, "bonus": {"infantry": 2}, "classes": ["gunpowder", "siege", "unique"], "sight": 8, "min_range": 1}
 {"name": "PLUMED_ARCHER", "hp": 50, "attack": 5, "melee": 0, "pierce": 1, "range": 4, "reload": 1.9, "bonus": {"infantry": 1, "spearman": 2}, "classes": ["archer", "unique"]}
 {"name": "RATHA", "hp": 100, "attack": 5, "melee": 3, "pierce": 1, "range": 4, "reload": 2.0, "bonus": {"spearman": 1}, "classes": ["archer", "cavalry", "unique"], "melee_mode": {"attack": 10, "trample": {"part": 0.2, "radius": 0.5}}}
@@ -117,7 +117,7 @@
 {"name": "ELITE_MAMELUKE", "hp": 90, "attack": 10, "melee": 1, "pierce": 0, "range": 3, "reload": 2.0, "bonus": {"cavalry": 12}, "classes": ["camel", "unique"], "melee_ranged": true}
 {"name": "ELITE_MANGUDAI", "hp": 60, "attack": 8, "melee": 1, "pierce": 0, "range": 4, "reload": 2.1, "bonus": {"siege": 5, "spearman": 1}, "classes": ["archer", "cavalry", "unique"]}
 {"name": "ELITE_MONASPA", "hp": 80, "attack": 14, "melee": 5, "pierce": 2, "range": 0, "reload": 1.8, "bonus": {}, "classes": ["cavalry", "unique"], "sight": 5}
-{"name": "ELITE_OBUCH", "hp": 95, "attack": 10, "melee": 2, "pierce": 2, "range": 0, "reload": 2.0, "bonus": {"building": 6}, "classes": ["infantry", "unique"], "sight": 5}
+{"name": "ELITE_OBUCH", "hp": 95, "attack": 10, "melee": 2, "pierce": 2, "range": 0, "reload": 2.0, "bonus": {"building": 6}, "classes": ["infantry", "unique"], "sight": 5, "sunder": 1}
 {"name": "ELITE_ORGAN_GUN", "hp": 70, "attack": 8, "melee": 2, "pierce": 6, "range": 7, "reload": 3.45, "bonus": {"infantry": 2, "siege": 1, "building": 1}, "classes": ["gunpowder", "siege", "unique"], "min_range": 1}
 {"name": "ELITE_PLUMED_ARCHER", "hp": 65, "attack": 5, "melee": 0, "pierce": 2, "range": 5, "reload": 1.9, "bonus": {"infantry": 2, "spearman": 2}, "classes": ["archer", "unique"], "sight": 6}
 {"name": "ELITE_RATHA", "hp": 115, "attack": 6, "melee": 3, "pierce": 3, "range": 4, "reload": 2.0, "bonus": {"spearman": 2}, "classes": ["archer", "cavalry", "unique"], "note": "ranged mode (#1891)", "melee_mode": {"attack": 12, "trample": {"part": 0.2, "radius": 0.5}}}
