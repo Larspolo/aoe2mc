@@ -2761,8 +2761,10 @@ class Replay:
         dead = {u for u in self.workers(p) if "Test passed" not in (self.game.command(f"execute if entity {u}") or "")}
         for i in [i for i, v in self.units.items() if v.uuid in dead]:
             del self.units[i]
-            for state in (self.moving, self.working, self.arriving, self.entering, self.builds):   # built() (#3943)
-                state.pop(i, None)
+            for state in (self.moving, self.working, self.arriving, self.entering, self.builds, self.work):   # built()
+                state.pop(i, None)                                  # (#3943)
+            for us in self.garrisons.values():                      # BACK TO WORK lets it out (#4063)
+                us[:] = [u for u in us if u != i]
 
     def eco(self):
         """The villagers of each player on each kind of work (#3755): food, wood, gold, stone, build or idle. A start
