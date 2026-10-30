@@ -435,7 +435,7 @@ def main(argv=None):
         accounts = None
     try:
         insights = dashboard_data.insights()
-    except (NameError, OSError, subprocess.CalledProcessError) as e:     # no project tool or a failed read: no section
+    except (NameError, AttributeError, OSError, subprocess.CalledProcessError) as e:   # no tool, an older one or a failed read
         print(f"insights: {e}", file=sys.stderr)
         insights = None
     # Read the body again after all other reads (#3002): a run writes the state comment and the process changes
