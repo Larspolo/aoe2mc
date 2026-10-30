@@ -144,6 +144,10 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *                                              damage less from an attacker of the class (Royal Heirs, "-": none);
  *                                              ignore: 1 when its hits ignore a positive armor (Wootz Steel, #4331)
  *   aoe stop <selector>                        stop the walk and turn the AI off: the unit stands still (#437)
+ *   aoe throw <selector> <ticks> <gap> <blocks> <shots>
+ *                                              Gothikon (#4368): a melee unit also throws an axe (an arrow with the
+ *                                              values of the unit) at its target within blocks; it holds at most shots
+ *                                              axes, one charges in ticks, two throws are gap ticks apart
  *   aoe unwear <selector>                      forget the kept blocks of the damage stages of each building target: the
  *                                              next stage keeps the blocks of a new design (a wall technology, #3071)
  *   aoe range <selector> <blocks> <ticks> [blast [min [pass [part]]]]
@@ -413,6 +417,13 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     private static final String VOLLEY = "aoe2mc.volley.";      // the tag of an extra arrow, with its attack
     private final Map<UUID, Integer> charged = new HashMap<>();      // the first tick of the next charge attack
     private final Map<UUID, Charge> detonations = new HashMap<>();
+    // A charged ranged attack of a melee unit (Gothikon, #4368, aoe throw): at most shots axes, one charges in ticks;
+    // axes: {charged axes, the tick where the next charge started, the first tick of the next throw}
+    private record Throw(int ticks, int gap, double blocks, int shots) {
+    }
+
+    private final Map<UUID, Throw> throwers = new HashMap<>();
+    private final Map<UUID, int[]> axes = new HashMap<>();
     private final Map<UUID, Double> sights = new HashMap<>();       // the line of sight of a unit in blocks (#775)
     private final Map<UUID, String> modes = new HashMap<>();        // "only" or "first": it takes buildings (#1820)
     private static final Set<String> STANCES = Set.of("aggressive", "defensive", "stand_ground", "no_attack");
@@ -650,6 +661,34 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         at.getWorld().playSound(at, Sound.ENTITY_GENERIC_EXPLODE, 1.0f, 1.0f);
         if (from instanceof Creeper c) {      // the demolition ship (#1440), the petard (#2192): one blast, then it dies. No
             c.setHealth(0);                   // vanilla explosion: it breaks no block, and the damage is the AoE2 one
+        }
+    }
+
+    // Gothikon (#4368, AoE2 DE wiki): a unit of aoe throw throws a charged axe at its enemy target in range, with its
+    // own melee values (onHit: the arrow of a melee unit). A full unit does not charge, so the first throw of a fight
+    // comes at once and the next one ticks after it. Not at a building: an arrow does not hurt it (onHit).
+    private void throwAxes() {
+        int now = Bukkit.getCurrentTick();
+        for (Map.Entry<UUID, Throw> en : throwers.entrySet()) {
+            Throw w = en.getValue();
+            int[] a = axes.computeIfAbsent(en.getKey(), k -> new int[] {w.shots, now, now});
+            while (a[0] < w.shots && now >= a[1] + w.ticks) {
+                a[0]++;
+                a[1] += w.ticks;
+            }
+            if (a[0] >= w.shots) {
+                a[1] = now;
+            }
+            if (a[0] == 0 || now < a[2] || !(Bukkit.getEntity(en.getKey()) instanceof Mob mob) || !mob.isValid()) {
+                continue;
+            }
+            LivingEntity t = target(mob);
+            if (t != null && t.isValid() && !t.isDead() && !buildings.containsKey(t.getUniqueId()) && !sameTeam(mob, t)
+                    && mob.getLocation().distanceSquared(t.getLocation()) <= w.blocks * w.blocks && mob.hasLineOfSight(t)) {
+                shoot(mob, t);
+                a[0]--;
+                a[2] = now + w.gap;
+            }
         }
     }
 
@@ -1146,6 +1185,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         Bukkit.getScheduler().runTaskTimer(this, border::tick, 4L, 4L);
         Bukkit.getScheduler().runTaskTimer(this, this::siege, 1L, 1L);
         Bukkit.getScheduler().runTaskTimer(this, this::carts, 1L, 1L);
+        Bukkit.getScheduler().runTaskTimer(this, this::throwAxes, 2L, 2L);
         Bukkit.getScheduler().runTaskTimer(this, this::burn, 20L, 20L);
         Bukkit.getScheduler().runTaskTimer(this, this::unhit, 1L, 1L);
         Bukkit.getScheduler().runTaskTimer(this, this::watch, 20L, 20L);
@@ -1530,6 +1570,8 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     @EventHandler
     public void onDeath(EntityDeathEvent ev) {               // the rider dies with its horse, else it stays (#732)
         stances.remove(ev.getEntity().getUniqueId());
+        throwers.remove(ev.getEntity().getUniqueId());
+        axes.remove(ev.getEntity().getUniqueId());
         Charge blast = detonations.remove(ev.getEntity().getUniqueId());
         if (blast != null) {                                     // Incendiaries: the fire ship explodes (#2165)
             burst(ev.getEntity(), ev.getEntity().getLocation(), blast, false);
@@ -3046,6 +3088,26 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                 }
             }
             sender.sendMessage("Stopped " + n + " units");
+            return true;
+        }
+        if (args.length == 6 && args[0].equals("throw")) {             // Gothikon (#4368)
+            Throw w;
+            try {
+                w = new Throw(Math.max(1, Integer.parseInt(args[2])), Integer.parseInt(args[3]),
+                        Double.parseDouble(args[4]), Integer.parseInt(args[5]));
+            } catch (NumberFormatException e) {
+                sender.sendMessage("Bad number: " + e.getMessage());
+                return true;
+            }
+            int n = 0;
+            for (Entity e : select(sender, args[1])) {
+                if (e instanceof Mob mob) {
+                    throwers.put(mob.getUniqueId(), w);
+                    axes.remove(mob.getUniqueId());
+                    n++;
+                }
+            }
+            sender.sendMessage("Throw: " + n + " units");
             return true;
         }
         if (args.length == 2 && args[0].equals("unwear")) {            // a redraw after a wall technology (#3071)

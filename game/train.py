@@ -356,8 +356,9 @@ FIRE = {r["name"]: (k, r[k]) for r in ROWS for k in ("charge", "detonate") if k 
 
 def fire_commands(g, uuid, name, techs=None):
     """The plugin commands of the charge attack (`aoe charge`) and the blast at death (`aoe detonate`) of an own ship
-    after the research of their technologies (FIRE, #2165), or of the technologies techs only. Vanilla has no second
-    attack and no "on death" command."""
+    after the research of their technologies (FIRE, #2165), and of the thrown axes of a melee unit (`aoe throw`, the
+    key "throw": Gothikon, #4368), or of the technologies techs only. Vanilla has no second attack, no "on death"
+    command and no shot of a melee mob. An axe has the values of the unit (its attack with the upgrades)."""
     import combat, gather                                          # both import gather, gather imports this module
     out = []
     for tech, (kind, c) in FIRE.items():
@@ -366,6 +367,10 @@ def fire_commands(g, uuid, name, techs=None):
         bonus, blast = ",".join(f"{k}:{v}" for k, v in sorted(c["bonus"].items())) or "-", c["blast"] * g.map.T
         out.append(f"aoe charge {uuid} {max(1, round(c['reload'] / gather.NORMAL * 20))} {c['attack']} {c['shots']} "
                    f"{blast} {bonus}" if kind == "charge" else f"aoe detonate {uuid} {c['attack']} {blast} {bonus}")
+    for tech, c in BY_KEY["throw"].items():                        # Gothikon: the axes of a melee unit (#4368)
+        if tech in (g.techs if techs is None else techs) and any(test(t, name, combat.stats(name)) for t in c["if"]):
+            ticks = [max(1, round(c[k] / gather.NORMAL * 20)) for k in ("reload", "gap")]
+            out.append(f"aoe throw {uuid} {ticks[0]} {ticks[1]} {c['range'] * g.map.T:g} {c['shots']}")
     return out
 
 
@@ -1174,6 +1179,13 @@ def research(g, entry, start=False, rect=None):
         for rect, o in garrison.holders(g).items():
             if o["name"] in more:
                 g.command(garrison.arrows_command(g, rect))
+    if (free := value("spawn", entry["name"])) and not start:     # free units at own buildings (First Crusade, #4365)
+        unit = free["unit"]
+        while (up := next((n for t in sorted(g.techs & set(UPGRADES)) for o, n in lines(t, g) if o == unit), None)):
+            unit = up                                              # the upgraded unit of the line (Elite Serjeant)
+        for rect in sorted(r for r, n in homes(g).items() if n == free["at"])[:free["most"]]:
+            for _ in range(free["count"]):
+                spawn(g, rect, unit)
     for hook in value("on_research", entry["name"], ()):          # the special effect in its own module (#3243):
         module, function = hook.rsplit(".", 1)                     # import it late, it imports gather or this module
         getattr(importlib.import_module(module), function)(g, entry)
