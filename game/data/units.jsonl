@@ -55,7 +55,7 @@
 {"name": "GHULAM", "hp": 60, "attack": 9, "melee": 0, "pierce": 3, "range": 0, "reload": 2.0, "bonus": {"archer": 5, "building": 2}, "classes": ["infantry", "unique"], "sight": 8}
 {"name": "HUSKARL", "hp": 60, "attack": 10, "melee": 0, "pierce": 6, "range": 0, "reload": 2.0, "bonus": {"archer": 6, "building": 2}, "classes": ["infantry", "unique"], "sight": 5}
 {"name": "HUSSITE_WAGON", "hp": 160, "attack": 10, "melee": 0, "pierce": 7, "range": 6, "reload": 3.45, "bonus": {"siege": 3, "building": 1}, "classes": ["siege", "unique", "heavysiege"]}
-{"name": "JAGUAR_WARRIOR", "hp": 65, "attack": 15, "melee": 1, "pierce": 2, "range": 0, "reload": 2.0, "bonus": {"infantry": 5, "building": 2}, "classes": ["infantry", "unique"], "sight": 5}
+{"name": "JAGUAR_WARRIOR", "hp": 65, "attack": 15, "melee": 1, "pierce": 2, "range": 0, "reload": 2.0, "bonus": {"infantry": 5, "building": 2}, "classes": ["infantry", "unique"], "sight": 5, "veteran": {"attack": 1, "max": 4}}
 {"name": "JANISSARY", "hp": 35, "attack": 17, "melee": 1, "pierce": 0, "range": 7, "reload": 3.45, "bonus": {"siege": 2}, "classes": ["archer", "gunpowder", "unique"], "sight": 10}
 {"name": "KAMAYUK", "hp": 70, "attack": 7, "melee": 1, "pierce": 0, "range": 0, "reload": 2.0, "bonus": {"cavalry": 8, "camel": 6, "elephant": 20}, "classes": ["infantry", "unique"], "sight": 6}
 {"name": "KARAMBIT_WARRIOR", "hp": 30, "attack": 7, "melee": 0, "pierce": 1, "range": 0, "reload": 2.0, "bonus": {}, "classes": ["infantry", "unique"], "sight": 5}
@@ -104,7 +104,7 @@
 {"name": "ELITE_GHULAM", "hp": 70, "attack": 11, "melee": 0, "pierce": 6, "range": 0, "reload": 2.0, "bonus": {"archer": 6, "building": 2}, "classes": ["infantry", "unique"], "sight": 8}
 {"name": "ELITE_HUSKARL", "hp": 70, "attack": 12, "melee": 0, "pierce": 8, "range": 0, "reload": 2.0, "bonus": {"archer": 10, "building": 3}, "classes": ["infantry", "unique"], "sight": 7}
 {"name": "ELITE_HUSSITE_WAGON", "hp": 230, "attack": 13, "melee": 1, "pierce": 10, "range": 6, "reload": 3.45, "bonus": {"siege": 3, "building": 2}, "classes": ["siege", "unique", "heavysiege"]}
-{"name": "ELITE_JAGUAR_WARRIOR", "hp": 75, "attack": 19, "melee": 2, "pierce": 2, "range": 0, "reload": 2.0, "bonus": {"infantry": 6, "building": 2}, "classes": ["infantry", "unique"], "sight": 7}
+{"name": "ELITE_JAGUAR_WARRIOR", "hp": 75, "attack": 19, "melee": 2, "pierce": 2, "range": 0, "reload": 2.0, "bonus": {"infantry": 6, "building": 2}, "classes": ["infantry", "unique"], "sight": 7, "veteran": {"attack": 1, "max": 4}}
 {"name": "ELITE_JANISSARY", "hp": 40, "attack": 22, "melee": 2, "pierce": 0, "range": 8, "reload": 3.45, "bonus": {"siege": 3}, "classes": ["archer", "gunpowder", "unique"]}
 {"name": "ELITE_KAMAYUK", "hp": 80, "attack": 8, "melee": 1, "pierce": 1, "range": 0, "reload": 2.0, "bonus": {"cavalry": 12, "camel": 10, "elephant": 20}, "classes": ["infantry", "unique"], "sight": 7}
 {"name": "ELITE_KARAMBIT_WARRIOR", "hp": 40, "attack": 8, "melee": 1, "pierce": 1, "range": 0, "reload": 2.0, "bonus": {"building": 1}, "classes": ["infantry", "unique"], "sight": 5}
