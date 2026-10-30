@@ -28,7 +28,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import units  # noqa: E402
 from units import pretty  # noqa: E402
 
-Stats = namedtuple("Stats", "hp attack melee pierce range reload bonus classes blast", defaults=({}, (), 0))
+Stats = namedtuple("Stats", "hp attack melee pierce range reload bonus classes blast passes pass_part", defaults=({}, (), 0, 0, 0.0))
 
 INF, ARC, CAV, CAM, ELE, SIE, SPE = "infantry", "archer", "cavalry", "camel", "elephant", "siege", "spearman"
 HSI = "heavysiege"                                    # the Hussite Wagon and Ballista Elephant lines (wiki "Armor class", #1402)
@@ -39,8 +39,9 @@ SHIP, WAR = "ship", "warship"                         # the ships; "warship": th
 FIRE = "fireship"                                     # the AoE2 class "Fire Ships" (the hulk bonus, #1489)
 # The values of each unit: one line per unit in data/units.jsonl (#1912). "note" is the source of a value.
 UNIT_ROWS = table.load("units.jsonl")
-STATS = {r["name"]: Stats(**{f: r[f] for f in Stats._fields[:-2]}, classes=tuple(r["classes"]), blast=r.get("blast", 0))
-         for r in UNIT_ROWS}                                    # blast: the radius that technologies change (#4283)
+STATS = {r["name"]: Stats(**{f: r[f] for f in Stats._fields[:7]}, classes=tuple(r["classes"]), blast=r.get("blast", 0),
+                          passes=r.get("pass", 0), pass_part=r.get("pass_part", 0.5 * ("pass" in r)))
+         for r in UNIT_ROWS}             # blast, passes, pass_part: values that technologies change (#4283, Malon #4335)
 REPAIRS = {r["name"]: r["repairs"] for r in UNIT_ROWS if "repairs" in r}   # a soldier that repairs a building (#2128)
 # Buildings: hit points, melee and pierce armor (Dark Age base), one line per building in data/buildings.jsonl (#1913).
 # The high pierce armor makes arrows weak, as in AoE2. The towers have the AoE2 DE values of the wiki: a watch tower of
@@ -48,7 +49,7 @@ REPAIRS = {r["name"]: r["repairs"] for r in UNIT_ROWS if "repairs" in r}   # a s
 # infobox (#1564; the dock: the Castle Age). A line with only a "sight" has no target.
 BUILDING_ROWS = table.load("buildings.jsonl")
 STANDS_FOR = {r["name"]: r["as"] for r in BUILDING_ROWS if "as" in r}   # a regional building: the one it replaces (#1874, #1930)
-BUILDINGS = {r["name"]: Stats(**{f: r[f] for f in Stats._fields[:-2]}, classes=tuple(r["classes"]))
+BUILDINGS = {r["name"]: Stats(**{f: r[f] for f in Stats._fields[:7]}, classes=tuple(r["classes"]))
              for r in BUILDING_ROWS if "hp" in r}
 # The walls that a player builds in the game program (#1322, AoE2 DE wiki infobox): the hit points in the Dark, Feudal,
 # Castle and Imperial Age, the melee and the pierce armor. Their targets have WALL_TAG: a wall keeps no player alive in
@@ -218,15 +219,16 @@ def range_command(uuid, name, T, rate=NORMAL, s=None):
     minecart, or the horse of a War Wagon: units.wagon, #2746) gets its blast radius in blocks last, 0 when its shot hits
     only the target (the Scorpion, #1062): the plugin then lets the minecart (or the horse) shoot too (#1050). Then its minimum range in blocks (MIN_RANGE, #1350), when it has
     one: it does not shoot at a target nearer than that. Then the blocks of PASS (#1401): its bolt hurts the enemy units on
-    its line up to that far past its range, and the part of the damage (PASS_PART) when it is not one half. A unit that
+    its line up to that far past its range, and the part of the damage (PASS_PART) when it is not one half (s.passes
+    and s.pass_part: PASS and PASS_PART with technologies, Malon and Pirotechnia, #4335). A unit that
     shoots as a mob and has a PASS (the chakram thrower, #1638) gets "-" for the blast. A melee siege unit (the ram line, range 0) gets the reach
     RAM_REACH: a carrier pig has no melee goal, so the range goal walks it to the target and hits (#1399). A demolition
     ship (#1440) gets the reach CONTACT: its blast goes off next to the target."""
     s = s or stats(name)
     cart = (units.classify(name) or {}).get("id") == "minecraft:minecart" or units.wagon(name)   # (#2746)
-    blast = f" {round(s.blast * T, 6)}" if name in BLAST or cart or name in GROUND else " -" if name in PASS else ""   # s.blast: BLAST, technologies; GROUND: aoe attackground needs it (#4207)
-    blast += f" {MIN_RANGE.get(name, 0) * T}" * bool(blast and (name in MIN_RANGE or name in PASS))
-    blast += f" {PASS.get(name, 0) * T}" * bool(blast and name in PASS) + f" {PASS_PART.get(name)}" * (name in PASS_PART)
+    blast = f" {round(s.blast * T, 6)}" if name in BLAST or cart or name in GROUND else " -" if s.passes else ""   # s.blast: BLAST, technologies; GROUND: aoe attackground needs it (#4207)
+    blast += f" {MIN_RANGE.get(name, 0) * T}" * bool(blast and (name in MIN_RANGE or s.passes))
+    blast += f" {s.passes * T}" * bool(blast and s.passes) + f" {s.pass_part}" * bool(s.passes and s.pass_part != 0.5)
     reach = s.range * T or RAM_REACH * bool(cart and s.attack) or CONTACT * T * bool(name in BLAST and s.attack)
     return reach and (s.reload or name in BLAST) and f"aoe range {uuid} {reach} {max(1, round(s.reload / rate * 20))}{blast}" or None
 
