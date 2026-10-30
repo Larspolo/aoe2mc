@@ -246,6 +246,13 @@ class Script:
             if (n := self.game(args[0], "unit" if name[0] == "u" else "building")) is None:
                 return False
             return OPS[args[1]](self.count(n, total=name.endswith("-total")), args[2])
+        if name in ("can-buy-commodity", "can-sell-commodity"):
+            return self.trade_ok(name == "can-buy-commodity", args[0])
+        if name in ("commodity-buying-price", "commodity-selling-price"):
+            import market
+            if args[0] not in market.RATES:
+                return self.warn("commodity", args[0]) or False
+            return OPS[args[1]](market.price(self.bot.g, args[0], name == "commodity-buying-price"), args[2])
         if name == "current-age":
             return self.age(self.bot.g, *args)
         if name == "enemy-buildings-in-town":
@@ -371,6 +378,15 @@ class Script:
             return False
         return bool(self.homes(n)) and self.paid(train.price(g, n))
 
+    def trade_ok(self, buy, res):
+        """A trade of 100 res is possible now: an own market and the gold (a buy) or the resource (a sell)."""
+        import market
+        g = self.bot.g
+        if res not in market.RATES:
+            return self.warn("commodity", res) or False
+        return bool(market.markets(g)) and (g.stock["gold"] >= market.price(g, res, True) if buy
+                                            else g.stock[res] >= market.LOT)
+
     def act(self, k, a):
         import build
         import train
@@ -402,5 +418,18 @@ class Script:
                     diplomacy.change(g, None, args[0])
         elif name == "chat-to-all":
             g.command("tellraw @a " + json.dumps({"text": f"<Player {g.player}> {args[0]}"}))
+        elif name == "chat-to-player":                              # only the people of that seat (team pN)
+            g.command(f"tellraw @a[team=p{args[0]}] " + json.dumps({"text": f"<Player {g.player}> {args[1]}"}))
+        elif name in ("buy-commodity", "sell-commodity"):           # the path of the market menu (#4573)
+            import market
+            if self.trade_ok(name == "buy-commodity", args[0]):
+                market.trade(g, b.nobody, args[0], name == "buy-commodity")
+        elif name == "tribute-to-player":                           # (tribute-to-player PLAYER RESOURCE AMOUNT)
+            import diplomacy
+            if args[1] not in STOCK:
+                return self.warn("resource", args[1])
+            for _ in range(max(args[2], 0) // diplomacy.LOT):        # one tribute of the menu per 100
+                if not diplomacy.send(g, b.nobody, args[0], args[1]):
+                    break
         elif name != "do-nothing":
             self.warn("action", name)
