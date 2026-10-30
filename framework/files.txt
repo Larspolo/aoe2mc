@@ -23,6 +23,7 @@ framework/docs/OPERATOR.md
 .claude/skills/scheduled/SKILL.md
 .claude/skills/ticket/SKILL.md
 .claude/skills/improve/SKILL.md
+.claude/skills/new-project/SKILL.md
 
 # The settings and the hooks of Claude Code
 .claude/settings.json
@@ -47,6 +48,7 @@ framework/docs/OPERATOR.md
 scripts/autopilot.sh
 framework/tools/agent_config.py
 framework/tools/bootstrap.py
+framework/tools/new_repo.py
 framework/tools/claim.py
 framework/tools/usage.py
 framework/tools/pacer.py
@@ -132,6 +134,7 @@ framework/tests/test_pacer_restart.py
 framework/tests/test_usage.py
 framework/tests/test_usage_status_once.py
 framework/tests/test_usage_week.py
+framework/tests/test_new_repo.py
 
 # This list
 framework/files.txt
