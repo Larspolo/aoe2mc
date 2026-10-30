@@ -1116,7 +1116,8 @@ class Gather:
         return replay.seen(mobs, [(self.player, n, fp) for n, fp, _ in placed], self.player, self.map.T,
                            lambda n: combat.sight(n) + printing * (n in monk.MONKS) + watch * (n in lit)
                            + civs.SIGHT.get(civs.civ(self), {}).get(n, 0)   # the Chinese town center (#2118)
-                           + train.sight_more(techs, n, combat.stats(n)))   # Engineering (#3981)
+                           + train.sight_more(techs, n, combat.stats(n))    # Engineering (#3981)
+                           + civs.sight_units(self, n, combat.stats(n)))    # Macedonian units (#4448)
 
     def task(self, v, name):
         """Give the villager the look of its AoE2 task (`LUMBERJACK` ...), with the table of the converter."""
