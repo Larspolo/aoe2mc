@@ -46,12 +46,27 @@ def secret_names(target):
     return ["CLAUDE_CODE_OAUTH_TOKEN"] + [f"PACER_{k}_{t.upper()}" for t in ["main"] + lanes(target) for k in ("URL", "TOKEN")]
 
 
+def noreply_calls(target):
+    """The calls that set the local email of DIR to the GitHub noreply address: GitHub refuses a push whose commit has a
+    private email (#4796). No call when the email is a noreply address already."""
+    email = subprocess.run(["git", "-C", target, "config", "user.email"], capture_output=True, text=True).stdout.strip()
+    if email.endswith("@users.noreply.github.com"):
+        return []
+    ident = (gh_out(["api", "user", "--jq", ".id,.login"]) or "").split()
+    if len(ident) != 2:
+        return []
+    address = f"{ident[0]}+{ident[1]}@users.noreply.github.com"
+    print(f"local git identity of {target}: {ident[1]} <{address}> (the private email is refused by GitHub)")
+    return [(["git", "-C", target, "config", "user.email", address], None),
+            (["git", "-C", target, "config", "user.name", ident[1]], None)]
+
+
 def git_calls(target, branch):
     """The calls that make the first commit in DIR (no call when DIR has a commit already)."""
     if subprocess.run(["git", "-C", target, "rev-parse", "--verify", "-q", "HEAD"], capture_output=True).returncode == 0:
         return []
-    return [(["git", "-C", target, "init", "-q", "-b", branch], None), (["git", "-C", target, "add", "-A"], None),
-            (["git", "-C", target, "commit", "-q", "-m", "Set up the agent system"], None)]
+    return [(["git", "-C", target, "init", "-q", "-b", branch], None), *noreply_calls(target),
+            (["git", "-C", target, "add", "-A"], None), (["git", "-C", target, "commit", "-q", "-m", "Set up the agent system"], None)]
 
 
 def repo_calls(target, repo, branch, description="", private=False, exists=False):
