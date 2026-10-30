@@ -26,6 +26,7 @@ import os
 import re
 import subprocess
 import sys
+import urllib.error
 import zlib
 sys.path.append(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "tools"))   # the project tools: release.py (#4195)
 
@@ -255,8 +256,11 @@ def main(argv=None):
     prs = [p for p in dashboard.pages("pulls?state=open") if p["head"]["ref"].startswith(AGENT)]
     work = []
     for p in prs:
-        checks = [(c["name"], c["status"], c["conclusion"]) for c in
-                  dashboard.api(f"commits/{p['head']['sha']}/check-runs").get("check_runs", [])]
+        try:                                                         # a GitHub 500 on one PR must not stop the start
+            runs = dashboard.api(f"commits/{p['head']['sha']}/check-runs").get("check_runs", [])
+        except urllib.error.HTTPError:
+            runs = []
+        checks = [(c["name"], c["status"], c["conclusion"]) for c in runs]
         t = pr_ticket(p, held)
         w = pr_work(p, issues, checks, held.get(t), now, me, t)
         if w:
