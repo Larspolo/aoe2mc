@@ -235,10 +235,12 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *                                              the charge of a melee hit (Comitatenses, #4370): the first melee hit
  *                                              on a unit after ticks has attack more (before the armor), then the
  *                                              charge starts again; a new unit starts full
- *   aoe chargedvolley <selector> <ticks> <shots> <attack> <class:bonus,...|->
+ *   aoe chargedvolley <selector> <ticks> <shots> <attack> <class:bonus,...|-> [range blocks] [ignore 0|1]
  *                                              the charged volley of a ranged unit (Xianbei Raider, #4546): a shot at
  *                                              a unit that is not siege after ticks also hits it with shots arrows of
- *                                              attack and bonus (AoE2 accuracy 100 %), then the charge starts again
+ *                                              attack and bonus (AoE2 accuracy 100 %), then the charge starts again.
+ *                                              range: a melee unit fires it at its target within range blocks before
+ *                                              the melee (Fire Lancer, #4547); ignore 1: the shots ignore the armor
  *   aoe cheats <code>,<code>,...|-             the AoE2 cheat codes in the chat (#816, Cheats.java; URL-encoded)
  *   aoe deathmarks on|off                      a short mark where a replay unit dies (#846, Deaths.java)
  *   aoe destroy <selector>                     the buildings fall as at 0 hit points: "Destroy: <n> buildings" (#819)
@@ -536,7 +538,8 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     private final Map<UUID, Integer> charged = new HashMap<>();      // the first tick of the next charge attack
     private final Map<UUID, int[]> meleeCharges = new HashMap<>();   // aoe chargeattack (#4370): {ticks, attack}
     private final Map<UUID, Integer> meleeCharged = new HashMap<>(); // the first tick of the next charged melee hit
-    private record ChargedVolley(int ticks, int shots, Stats arrow) {}  // aoe chargedvolley (#4546): arrow: its values
+    private record ChargedVolley(int ticks, int shots, Stats arrow, double range) {}  // aoe chargedvolley (#4546);
+    private static final double VOLLEY_MELEE = 2.0;   // blocks: nearer, a Fire Lancer fights in melee (#4547)
     private final Map<UUID, ChargedVolley> chargedVolleys = new HashMap<>();
     private final Map<UUID, Integer> volleyCharged = new HashMap<>();  // the first tick of the next charged volley
     private final Map<UUID, Charge> detonations = new HashMap<>();
@@ -872,6 +875,24 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             harm(v, s, c.arrow(), from);
         }
         v.getWorld().spawnParticle(Particle.CRIT, v.getLocation().add(0, 1, 0), 4 * c.shots());
+    }
+
+    // The charged volley of a melee unit (#4547, the Fire Lancer): it fires at its target within the range before the
+    // melee ("except when in melee combat", wiki "Fire Lancer"). Vanilla melee AI has no ranged shot.
+    private void meleeVolleys() {
+        for (Map.Entry<UUID, ChargedVolley> en : chargedVolleys.entrySet()) {
+            double r = en.getValue().range();
+            if (r <= 0 || !(Bukkit.getEntity(en.getKey()) instanceof Mob mob) || !mob.isValid()) {
+                continue;
+            }
+            LivingEntity t = target(mob);
+            if (t != null && t.isValid() && !t.isDead() && t.getWorld() == mob.getWorld() && !sameTeam(mob, t)) {
+                double d = mob.getLocation().distance(t.getLocation());
+                if (d > VOLLEY_MELEE && d <= r && mob.hasLineOfSight(t)) {
+                    chargedVolley(mob, t);
+                }
+            }
+        }
     }
 
     // The values of a melee hit of from (#4370): with a full charge (aoe chargeattack) the attack is more, and the
@@ -1369,6 +1390,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         Bukkit.getScheduler().runTaskTimer(this, this::siege, 1L, 1L);
         Bukkit.getScheduler().runTaskTimer(this, this::carts, 1L, 1L);
         Bukkit.getScheduler().runTaskTimer(this, this::throwAxes, 2L, 2L);
+        Bukkit.getScheduler().runTaskTimer(this, this::meleeVolleys, 2L, 2L);
         Bukkit.getScheduler().runTaskTimer(this, this::burn, 20L, 20L);
         Bukkit.getScheduler().runTaskTimer(this, () -> dots.tick(this::dotHurt), Dot.STEP, Dot.STEP);
         Bukkit.getScheduler().runTaskTimer(this, this::unhit, 1L, 1L);
@@ -3231,11 +3253,13 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             sender.sendMessage("Charge attack: " + n + " units");
             return true;
         }
-        if (args.length == 6 && args[0].equals("chargedvolley")) {     // Xianbei Raider (#4546)
+        if (args.length >= 6 && args.length <= 8 && args[0].equals("chargedvolley")) {   // Xianbei Raider (#4546)
             ChargedVolley c;
             try {
                 c = new ChargedVolley(Integer.parseInt(args[2]), Integer.parseInt(args[3]), new Stats(
-                        Integer.parseInt(args[4]), 0, 0, true, true, Set.of(), bonus(args[5]), 0));
+                        Integer.parseInt(args[4]), 0, 0, true, true, Set.of(), bonus(args[5]), 0, 1.0, 1.0, Map.of(),
+                        args.length > 7 && args[7].equals("1"), 0, 0.0),
+                        args.length > 6 ? Double.parseDouble(args[6]) : 0);
             } catch (NumberFormatException | ArrayIndexOutOfBoundsException e) {
                 sender.sendMessage("Bad value: " + e.getMessage());
                 return true;
