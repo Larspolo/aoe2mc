@@ -105,6 +105,9 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *                                              0, #1201) and 1 for each garrisoned villager or foot archer (#1113,
  *                                              game/garrison.py); 0: it does not shoot. Default 1
  *   aoe attack <selector> <target selector>    Mob#setTarget: the mob attacks with its own AI
+ *   aoe dodge <selector> <shots> <ticks>       the unit dodges projectiles (the Shrivamsha Rider, #4399,
+ *                                              game/combat.py dodge_command): a gauge of shots takes each projectile
+ *                                              hit with no damage and fills by shots in ticks; melee hits pass
  *   aoe attackground <selector> <x> <y> <z>    AoE2 "Attack Ground" (#4078): a siege unit with a blast walks into its
  *                                              range of the point and shoots there with its reload until a new order
  *   aoe ballistics <team> on|off               Ballistics of the player (#1549): its archers and buildings aim where a
@@ -408,6 +411,32 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     private final Map<UUID, Charge> charges = new HashMap<>();
     // the part of the siege shots at a unit that hit (aoe accuracy, #2479): the Trebuchet 0.15; missing: 1
     private final Map<UUID, Double> accuracy = new HashMap<>();
+    private final Map<UUID, Dodge> dodges = new HashMap<>();    // aoe dodge: the shield of a unit (#4399)
+
+    // The AoE2 dodge of a unit (#4399): "gauge" shots left at tick "at"; it fills by "shots" in "ticks", up to "shots".
+    private static final class Dodge {
+        final int shots, ticks;
+        double gauge;
+        int at;
+
+        Dodge(int shots, int ticks) {
+            this.shots = shots;
+            this.ticks = Math.max(1, ticks);
+            this.gauge = shots;
+            this.at = Bukkit.getCurrentTick();
+        }
+
+        boolean take() {                                     // true: the projectile does no damage
+            int now = Bukkit.getCurrentTick();
+            gauge = Math.min(shots, gauge + (now - at) * (double) shots / ticks);
+            at = now;
+            if (gauge < 1) {
+                return false;
+            }
+            gauge -= 1;
+            return true;
+        }
+    }
     // the extra arrows of each shot of a unit (aoe volley, #2379): {arrows, attack of each, 0: the attack of the unit}
     private final Map<UUID, int[]> volleys = new HashMap<>();
     private static final String VOLLEY = "aoe2mc.volley.";      // the tag of an extra arrow, with its attack
@@ -1204,6 +1233,11 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             return;
         }
         ev.setCancelled(true);
+        Dodge dodge = dodges.getOrDefault(ev.getEntity().getUniqueId(), dodges.get(hurt.getUniqueId()));
+        if (ev.getDamager() instanceof Projectile p && dodge != null && dodge.take()) {
+            p.remove();                                      // a Shrivamsha Rider dodges it (#4399)
+            return;
+        }
         if (!(ev.getDamager() instanceof Projectile)) {      // a melee hit: once per AoE2 reload (#848)
             if (!ready(from, a)) {
                 return;
@@ -2599,6 +2633,27 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                 n++;
             }
             sender.sendMessage("Accuracy: " + n + " units");
+            return true;
+        }
+        if (args.length == 4 && args[0].equals("dodge")) {            // a Shrivamsha Rider dodges projectiles (#4399)
+            int shots, ticks;
+            try {
+                shots = Integer.parseInt(args[2]);
+                ticks = Integer.parseInt(args[3]);
+            } catch (NumberFormatException e) {
+                sender.sendMessage("Bad number: " + e.getMessage());
+                return true;
+            }
+            int n = 0;
+            for (Entity e : select(sender, args[1])) {
+                for (Entity t : new Entity[] {crew(e), e.getVehicle()}) {   // the rider and its horse (#732)
+                    if (t != null) {
+                        dodges.put(t.getUniqueId(), new Dodge(shots, ticks));
+                    }
+                }
+                n++;
+            }
+            sender.sendMessage("Dodge: " + n + " units");
             return true;
         }
         if (args.length >= 2 && args[0].equals("allies")) {            // the alliances of the players (#1315)
