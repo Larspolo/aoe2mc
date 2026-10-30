@@ -2196,21 +2196,33 @@ class Replay:
 
     def back(self, e):
         """BACK TO WORK (#1179): the units inside the buildings come out, and each goes back to the resource that it
-        left for the garrison, as in AoE2. Returns the commands and the IDs of the units that work again."""
-        out, work = [], {}
-        for r in self.holders(e):
-            units = list(self.garrisons.get(r, []))
-            out += self.release(r)
-            for i in [i for i, (rect, *_) in self.entering.items() if rect == r]:   # on the way in: back too (#4063)
-                del self.entering[i]
-                units.append(i)
-            for i in units:
-                if (tile := self.work.pop(i, None)) is not None:
-                    work.setdefault(tile, []).append(i)
+        left for the garrison, as in AoE2. A unit with no work walks to the last GATHER POINT of its building, as
+        UNGARRISON (#4063: in de-64.3 P2 set the gather point of its new town center on a resource 4 s before the
+        BACK TO WORK of its idle builders). Returns the commands and the IDs of the units that work again."""
+        out, work, free = [], {}, []
+        for b, name in zip(e["objects"], e.get("names") or [None] * len(e["objects"])):
+            for r in self.holders(dict(e, objects=[b], names=[name])):
+                units = list(self.garrisons.get(r, []))
+                out += self.release(r)
+                for i in [i for i, (rect, *_) in self.entering.items() if rect == r]:   # on the way in: back too
+                    del self.entering[i]                                                # (#4063)
+                    units.append(i)
+                rest = []
+                for i in units:
+                    if (tile := self.work.pop(i, None)) is not None:
+                        work.setdefault(tile, []).append(i)
+                    else:
+                        rest.append(i)
+                if rest and (p := self.points.get(b)) is not None:
+                    free.append((p, rest))
         for (x, z), ids in sorted(work.items()):                    # an order on the resource tile
             out += self.move(dict(time=e["time"], player=e["player"], kind="order", target=-1, objects=ids,
                                   names=[None] * len(ids), tile=[x + 0.5, z + 0.5], resource=(x, z)))
-        return out, [i for ids in work.values() for i in ids]
+        for p, ids in free:
+            out += self.move(dict(p, time=e["time"], kind="order" if p.get("target") is not None else "move",
+                                  objects=ids, names=[self.units[i].name for i in ids]))
+        return out, [i for ids in work.values() for i in ids] + [i for _, ids in free for i in ids
+                                                                  if self.units[i].tree is not None]
 
     def release(self, rect):
         """The units inside the building rect come out on the free cells next to it, the door side first."""
