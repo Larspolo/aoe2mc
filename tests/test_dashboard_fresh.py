@@ -1,7 +1,9 @@
 """tools/dashboard.py reads the status issue again after all other reads (#3002): a state comment or a process-change
 line that a run writes while the dashboard reads GitHub stays in the PATCH body."""
+import sys
+import types
+
 import dashboard
-import dashboard_data
 import feedback
 
 OLD = ('<!-- agent-state: {"last_run": "2026-10-28T08:35:33Z", "runs": 721, "review_prs": 50} -->\n## Agent status\n\n'
@@ -27,7 +29,7 @@ def test_a_write_during_the_reads_stays(monkeypatch):
     monkeypatch.setattr(dashboard, "pages", pages)
     monkeypatch.setattr(dashboard, "api", api)
     monkeypatch.setattr(feedback, "fetch", lambda: [])
-    monkeypatch.setattr(dashboard_data, "accounts", lambda: [])          # no read of the metrics (#4239)
+    monkeypatch.setitem(sys.modules, "dashboard_data", types.SimpleNamespace(accounts=lambda: []))  # a project tool (#4239)
     assert dashboard.main([]) == 0
     (path, body), = patches
     assert path == "issues/1"
@@ -47,6 +49,6 @@ def test_no_patch_when_the_fresh_body_is_the_same(monkeypatch):
     monkeypatch.setattr(dashboard, "pages", lambda path, limit=10: [dict(status)] if path == "issues?state=open" else [])
     monkeypatch.setattr(dashboard, "api", api)
     monkeypatch.setattr(feedback, "fetch", lambda: [])
-    monkeypatch.setattr(dashboard_data, "accounts", lambda: [])          # no read of the metrics (#4239)
+    monkeypatch.setitem(sys.modules, "dashboard_data", types.SimpleNamespace(accounts=lambda: []))  # a project tool (#4239)
     assert dashboard.main([]) == 0 and len(patches) == 1
     assert dashboard.main([]) == 0 and len(patches) == 1            # the same body: "no change"
