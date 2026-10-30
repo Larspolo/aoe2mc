@@ -543,9 +543,23 @@ def lower_to_water(terrain, elevation):
     return out
 
 
-def generate(text, seed, players=2, size=None, warn=None, teams=None, folder=None):
+def base_scenario(folder, name, warn):
+    """The base scenario of a real world map script name (#4729): the .scx or .aoe2scenario of its stem in folder, as
+    aoe2mc.read_map returns it, or None with a warning that names the file to give."""
+    import aoe2mc
+    stem = os.path.splitext(os.path.basename(name))[0]
+    for ext in (".aoe2scenario", ".scx"):
+        path = os.path.join(folder or ".", stem + ext)
+        if os.path.exists(path):
+            return aoe2mc.read_map(path)
+    warn(f"no <LAND_GENERATION> and no base scenario: give {stem}.scx or {stem}.aoe2scenario of the game next to the script")
+    return None
+
+
+def generate(text, seed, players=2, size=None, warn=None, teams=None, folder=None, name=None):
     """The map description (aoe2mc.read_json) of the land part of script text, for players on a map of size tiles
     (default: the AoE2 size of the player count). folder: the folder of the script, for its #include_drs files. teams: one team (or None) per player (#3946), see circle(). "lands": [{"player", "x", "y", "base_size"}] of the player lands.
+    name: the file name of the script; with no <LAND_GENERATION>, the land comes from its base scenario (base_scenario).
     "mood": the color mood of color_correction (aoe2mc.MOODS). enable_waves and water_definition have no effect: Minecraft
     water takes its color from the biome."""
     warn = warn or (lambda m: print(f"rms: {m}", file=sys.stderr))
@@ -571,6 +585,9 @@ def generate(text, seed, players=2, size=None, warn=None, teams=None, folder=Non
     for directive, file in includes:               # random_map.def gives the constants; XS scripts are not run
         if file != "random_map.def":
             warn(f"{directive} {file} is not read")
+    scn = base_scenario(folder, name, warn) if name and "LAND_GENERATION" not in sections else None
+    if scn:                                          # a real world map: the land, levels and starts of the scenario
+        n = scn[0]
     terrain = np.zeros((n, n), np.int16)
     owner = np.full((n, n), -1, np.int32)
     layer = np.full((n, n), -1, np.int16)            # the land layer of each tile (aoe2mc.read_json "layer", -1 = none)
@@ -649,6 +666,17 @@ def generate(text, seed, players=2, size=None, warn=None, teams=None, folder=Non
                 warn(f"{cmd}: {a} is not read yet")
         else:
             warn(f"{cmd} is not read yet")
+    scenery = []                                     # the cliffs of the base scenario: ridges (its other objects: none)
+    if scn:
+        terrain[:] = scn[1]
+        for o in scn[5]:
+            if o["name"] == "TOWN_CENTER" and 0 < o["player"] <= players and all(st["player"] != o["player"] for st in starts):
+                c = (int(o["x"]), int(o["y"]))
+                starts.append({"player": o["player"], "x": c[0], "y": c[1], "base_size": 3, "land": len(lands)})
+                links.append((c, o["player"], -1 - len(lands)))
+                lands.append({"id": len(lands), "cells": square(c, 3, n), "clump": 8, "box": (0, n, 0, n), "target": 49})
+            elif o["name"].startswith("CLIFF"):
+                scenery.append({"name": o["name"], "player": 0, "x": o["x"], "y": o["y"]})
     if starts and len(starts) < players:            # direct_placement with too few lands: the rest on the circle
         for p in sorted(set(range(1, players + 1)) - {st["player"] for st in starts}):
             warn(f"player {p} has no land: a land on the circle")
@@ -663,6 +691,8 @@ def generate(text, seed, players=2, size=None, warn=None, teams=None, folder=Non
         if layers[lid] is not None:
             layer[owner == lid] = layers[lid]
     elevation = elevate(sections.get("ELEVATION_GENERATION", ()), terrain, layer, owner, starts, consts, rng, warn)
+    if scn:
+        elevation = np.maximum(elevation, np.asarray(scn[2]).astype(elevation.dtype))
     for lid, height in heights.items():              # a raised land: its edge steps up one level per tile (AoE2 DE)
         land, step = owner == lid, 1
         near = ~land
@@ -727,7 +757,7 @@ def generate(text, seed, players=2, size=None, warn=None, teams=None, folder=Non
             warn(f"create_terrain: {a} is not read yet")
     connections(terrain, links, sections.get("CONNECTION_GENERATION", ()), consts, rng, warn)
     elevation = lower_to_water(terrain, elevation)
-    ridges = cliffs(sections.get("CLIFF_GENERATION", ()), terrain, starts, consts, rng, warn)   # draws before objects()
+    ridges = scenery + cliffs(sections.get("CLIFF_GENERATION", ()), terrain, starts, consts, rng, warn)   # before objects()
     found = []                                     # one line per object part, so that parallel parts do not conflict
     found += objects(sections.get("OBJECTS_GENERATION", ()), consts, terrain, starts, rng, warn, owner, ridges, layer,
                      land_ids=ids)
