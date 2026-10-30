@@ -45,6 +45,7 @@ ORDERS = ("kept", "patrols", "trigger_attributes", "trigger_costs",            #
           "attack_moves",                                              # stance.py: the attack moves and the old stances (#3357)
           "follows",                                                   # follow.py: the Follow and Guard orders (#3358)
           "formations",                                                # stance.py: the formations of the units (#3416)
+          "unit_modes",                                                # stance.py: the melee mode of the Ratha (#4504)
           "scouting",                                                  # autoscout.py: the Auto Scout order (#3702)
           "waypoint_at", "waypoints")                                  # gather.add_waypoint: the queued points of the units (#3518)
 ROUTES = ("trade", "trebs")                                            # trade.py, trebuchet.py: as OPTIONAL (#2413)
@@ -551,6 +552,15 @@ def orders_again(x, p):
     train.sidebar(x)
 
 
+def modes_again(x, p):
+    """The units in melee mode (stance.switch_mode, #4504) get its values, weapon and goals again."""
+    import stance
+    for u, mode in sorted(vars(x).get("unit_modes", {}).items()):
+        if (name := x.soldiers.get(u)) is not None:
+            for c in filter(None, stance.mode_commands(x, u, name, mode)):
+                x.command(c)
+
+
 def relics_again(g, d):
     """The one relic list, in place: the sides share the list (#3116)."""
     if (rs := relics(d, sides(g))) is not None:
@@ -609,6 +619,7 @@ SIDE_STEPS = (                                                          # load()
     map_again,
     explored_again,
     known_again,
+    modes_again,
     orders_again,                                                       # last: the sidebars show the loaded state
 )
 GAME_STEPS = (                                                          # load(): once for the game, after SIDE_STEPS
