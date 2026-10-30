@@ -24,7 +24,7 @@ from collections import Counter
 import numpy
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from agent_config import CONFIG, first_account  # noqa: E402
+from agent_config import CONFIG, first_account, owners  # noqa: E402
 from dashboard import api, closes, merges, owner_work, start_after  # noqa: E402
 from feedback import by_owner  # noqa: E402
 
@@ -34,7 +34,8 @@ CI_JOB_RUNS = 20                          # read the step times of this many CI 
 DENY = (".log", ".mca", ".png")           # suffixes that do not belong in git ...
 DENY_OK = ("docs/", "samples/")           # ... except .png in these folders
 BIG = 1 << 20
-OWNER = CONFIG["owner"]                   # a reopen by the owner is rework (#899)
+OWNER = CONFIG["owner"]                   # a reopen by an owner is rework (#899)
+OWNERS = owners(CONFIG)                   # each login of `owners` (#4241)
 STATUS = CONFIG["status"]["label"]
 PRS = 50                                  # the default period: the last 50 merged PRs (#2039)
 MISS_LABELS = {"cleanup", "process", "tooling"}   # an owner ticket of these kinds is a miss of the improve loop (#1909)
@@ -387,7 +388,7 @@ def weak_spots(issues, events, prs, runs, since):
     merged = {p["number"] for p in prs if p.get("merged_at") and ts(p["merged_at"]) >= since}
     checks = {i["number"] for i in issues if i["title"].startswith("Check ")}
     named = lambda i: {int(n) for n in re.findall(r"#(\d+)", i.get("body") or "")}
-    return {"reopened": sum(e["event"] == "reopened" and (e.get("actor") or {}).get("login") == OWNER
+    return {"reopened": sum(e["event"] == "reopened" and (e.get("actor") or {}).get("login") in OWNERS
                             and ts(e["created_at"]) >= since for e in events),
             "rework": sum(bool(named(i) & merged) for i in bugs),
             "check bugs": sum(bool(named(i) & checks) for i in bugs),
