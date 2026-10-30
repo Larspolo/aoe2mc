@@ -621,7 +621,14 @@ def generate(text, seed, players=2, size=None, warn=None, teams=None, folder=Non
         group = [{"id": k, "cells": [tuple(int(v) for v in spots[rng.integers(len(spots))])], "target": each,
                   "clump": clump} for k in range(clumps)]
         grow(mark, group, free, rng)
-        terrain[mark >= 0] = kind
+        mask = value(attrs["terrain_mask"][0], consts) if "terrain_mask" in attrs else 0
+        if mask == 1:                          # on top: the new terrain is only the look (#4419)
+            layer[mark >= 0] = kind
+        elif mask == 2:                        # under: the new terrain has the game role, the old one the look
+            layer[mark >= 0] = terrain[mark >= 0]
+            terrain[mark >= 0] = kind
+        else:
+            terrain[mark >= 0] = kind
         for a in sorted(set(attrs) - set(CREATE_TERRAIN)):
             warn(f"create_terrain: {a} is not read yet")
     connections(terrain, links, sections.get("CONNECTION_GENERATION", ()), consts, rng, warn)
@@ -701,6 +708,7 @@ CREATE_TERRAIN = (              # the attributes of create_terrain that generate
     "set_scale_by_groups",
     "set_scale_by_size",
     "spacing_to_other_terrain_types",
+    "terrain_mask",
 )
 CREATE_OBJECT = (               # the attributes of create_object that objects() reads: one per line, in alphabetical order (#4224)
     "actor_area",                   # mark the tiles around each object for a later avoid_actor_area (#3858)
