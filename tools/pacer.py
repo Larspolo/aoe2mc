@@ -29,7 +29,8 @@ must do as little as possible). For each run it takes the next candidate of its 
 and sends a brief in the `text` of the call: the ticket, its comments, the code places (`ticket_context.context`) and
 the `Usage:` line of the report. The run adopts the claim with its first beat (`claim.py N --adopt NAME`) and starts at
 step 6 (the `scheduled` skill). The brief is data in a `<routine-fire-payload>` block: the run takes only its
-`ticket` and `claim` lines, and the claim ref in git proves them. A run with no candidate (a refill run), and all runs
+`ticket` and `claim` lines, and the claim ref in git proves them. The fire queues the brief as the second turn of a new
+session, after the stored prompt: the first turn ends at once when it finds it (`tokens.py --queued`, #4550). A run with no candidate (a refill run), and all runs
 while the flow brake is on or the last CI run on main is red, get no brief: they do steps 1 to 5 themselves. When a
 call fails, the pacer releases the claim of its run.
 A stuck ticket (`claim.py 0 --stuck`: its run stopped) comes before the candidates (autopilot step 2): the pacer takes
@@ -346,13 +347,13 @@ def github_limit(env=os.environ, timeout=20):
     return {k: core.get(k) for k in ("limit", "used", "remaining", "reset")}
 
 
-def record(at, found, burn, burn7, k, runs, started, line, problems=(), github=None):
+def record(at, found, burn, burn7, k, runs, started, line, problems=(), github=None, quota=None):
     """The JSON record of one cycle (`--log`, 2026-10-29): the quota, the burns, the planned and the started runs, the
     inputs of `usage.fire` and the REST budget of the workflow token (`github_limit`). Only the Actions log had them
     (no tool reads it, and it expires): with the starts and the `Run:` lines of the reports, a run that ends with no
-    report shows."""
+    report shows. quota: {account: its 5-hour and 7-day usage and its missing runs} with several accounts (#4239)."""
     rec = {"at": f"{at:%Y-%m-%dT%H:%M:%SZ}", "k": k, "plan": runs, "started": started, "burn": burn, "burn7": burn7,
-           "github": github,
+           "github": github, **({"quota": quota} if quota else {}),
            **{w: list(found[w]) for w in ("five_hour", "seven_day") if w in found}}
     for key, rx in NUMBERS.items():
         m = re.search(rx, line)
@@ -494,7 +495,10 @@ def main(argv=None, env=os.environ):
                     + failed)
         try:                                            # the log never stops the starts
             with open(a.log, "a") as f:
-                f.write(json.dumps({**record(at, found, burn, burn7, k, runs, started, line, problems, gh),
+                quota = {n: {"five_hour": u["five_hour"][0], "seven_day": u.get("seven_day", (None,))[0],
+                             "missing": round(missing[n], 2) if n in missing else None}
+                         for n, u in reads.items()} if many else None          # the quota of each account (#4239)
+                f.write(json.dumps({**record(at, found, burn, burn7, k, runs, started, line, problems, gh, quota),
                                     "briefs": briefs.given}
                                    | ({"accounts": {x: sum(c for (y, _), c in count.items() if y == x) for x in envs}}
                                       if many else {})) + "\n")

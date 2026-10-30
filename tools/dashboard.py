@@ -178,6 +178,52 @@ def held(issue, now, after=prs_after):
         return True
 
 
+WATCHED = {"needs-human", MUTED, AFTER, "in-progress", "epic", STATUS, CLOSE}   # an owner, a run or a workflow acts
+
+
+def orphans(issues, after=prs_after):
+    """[(number, reason)] of the open tickets that wait for nothing (#4553): no candidate, no run holds them
+    (`in-progress`: `claim.py --stuck` finds a stopped run), and the owner does not see them (`needs-human`, `muted`,
+    `after-release`). issues: the open issues and PRs. A `blocked` ticket waits for another ticket: with no open
+    "Depends on" item nothing removes the label (#303 waited 49 hours, #4442 asked the owner with no `needs-human`).
+    A decision with no `needs-human` (#1569), a "Depends on" cycle, and a "Start after: N PRs after #M" line whose #M
+    is no open PR and did not merge also wait for ever."""
+    open_numbers = {i["number"] for i in issues}
+    open_prs = {i["number"] for i in issues if "pull_request" in i}
+    tickets = {i["number"]: i for i in issues if "pull_request" not in i}
+
+    def cycle(n):
+        seen, todo = set(), [d for d in depends(tickets[n]) if d in tickets]
+        while todo:
+            d = todo.pop()
+            if d == n:
+                return True
+            if d not in seen:
+                seen.add(d)
+                todo += [x for x in depends(tickets[d]) if x in tickets]
+        return False
+    out = []
+    for n, i in sorted(tickets.items()):
+        if labels(i) & WATCHED:
+            continue
+        if i.get("title", "").startswith("Decide:"):
+            out.append((n, "a decision with no `needs-human`: act on the owner's answer, or add `needs-human`"))
+        elif "blocked" in labels(i) and not any(d in open_numbers for d in depends(i)):
+            out.append((n, "`blocked` with no open \"Depends on\" ticket: remove `blocked`, or add `needs-human` "
+                           "and the question"))
+        elif cycle(n):
+            out.append((n, "a \"Depends on\" cycle: remove the wrong line"))
+        elif (s := start_after_prs(i)) and s[1] not in open_prs:
+            try:
+                gone = after(s[1]) is None
+            except Exception:                               # a #M that is no PR: GitHub answers 404
+                gone = True
+            if gone:
+                out.append((n, f"\"Start after\" counts after #{s[1]}, which is no open PR and did not merge: "
+                               "correct the line"))
+    return out
+
+
 def claimed(lines, now, minutes=30):
     """The tickets that a run holds now: a claim ref (top slot `N` or `N-k`, tools/claim.py) with a claim or beat in the
     last `minutes` and no release. `--next` skips them: 4 claims of 4 runs failed on such tickets (2026-10-28).
@@ -244,10 +290,11 @@ def process_changes(prs, now, hours=24):
                and datetime.datetime.fromisoformat(p["merged_at"].replace("Z", "+00:00")) >= since)
 
 
-def render(old_body, issues, comments, open_prs, closed_issues, closed_prs, now, unanswered=None, nxt=None):
+def render(old_body, issues, comments, open_prs, closed_issues, closed_prs, now, unanswered=None, nxt=None, accounts=None):
     """The new body of the status issue. comments: {issue number: comments} for the needs-human and
     in-progress issues. unanswered: the owner comments without a lock (`tools/feedback.py`, #971).
-    nxt: the "Next up" tickets, if known (candidates() can read GitHub)."""
+    nxt: the "Next up" tickets, if known (candidates() can read GitHub). accounts: one row per Claude account
+    (`dashboard_data.accounts`, #4239); no section when None or when there is one account only."""
     nxt = candidates(issues, now=now)[:5] if nxt is None else nxt
     issues = [i for i in issues if "pull_request" not in i]
     state = re.search(r"<!-- agent-state:.*?-->", old_body or "")
@@ -279,6 +326,13 @@ def render(old_body, issues, comments, open_prs, closed_issues, closed_prs, now,
     out += [f"{k}. #{i['number']} {i['title']} ({tag(i, 'P') or 'no priority'}, {tag(i, 'size:') or 'no size'})"
             for k, i in enumerate(nxt, 1)] or ["No ticket is ready."]
 
+    if accounts and len(accounts) > 1:                 # one account: the body stays as it was (#4239)
+        out += ["", "### Accounts", "| Account | 5-hour | 7-day | Runs | Merged PRs | Tokens per merged PR |",
+                "|---|---|---|---|---|---|"]
+        pct = lambda v: "–" if v is None else f"{v * 100:.1f}%"
+        per_pr = lambda v: "–" if v is None else f"{v:.2f}M"
+        out += [f"| {r['account']} | {pct(r['five_hour'])} | {pct(r['week'])} | {r['runs'] or '–'} | {r['merged']} | "
+                f"{per_pr(r['tokens_per_pr'])} |" for r in accounts]
     out += ["", "### Recently done"]
     merged = [p for p in closed_prs if p.get("merged_at")]
     done = [i for i in closed_issues if "pull_request" not in i and i.get("state_reason") == "completed"]
@@ -362,10 +416,16 @@ def main(argv=None):
     from feedback import fetch as unanswered               # owner comments without a lock (#971)
     open_prs, owner, now = api("pulls?state=open&per_page=100"), unanswered(), datetime.datetime.now(datetime.timezone.utc)
     nxt = candidates(open_all, now=now)[:5]
+    try:                                                    # the accounts section (#4239): one row per Claude account
+        import dashboard_data                               # a project tool: a copy of the generic tools has none (#3560)
+        accounts = dashboard_data.accounts()
+    except (ImportError, OSError, subprocess.CalledProcessError) as e:   # a failed read: no section, the rest updates
+        print(f"accounts: {e}", file=sys.stderr)
+        accounts = None
     # Read the body again after all other reads (#3002): a run writes the state comment and the process changes
     # while the reads above take about 20 s, and the PATCH of the old body deleted them.
     status = api(f"issues/{status['number']}")
-    body = render(status["body"], open_all, comments, open_prs, closed, closed_prs, now, owner, nxt)
+    body = render(status["body"], open_all, comments, open_prs, closed, closed_prs, now, owner, nxt, accounts=accounts)
     if a.dry_run:
         print(body)
     elif re.sub(r"_Updated .*?_", "", body) != re.sub(r"_Updated .*?_", "", status["body"] or ""):

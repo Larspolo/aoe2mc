@@ -377,7 +377,8 @@ ROW = 9                                                            # the first s
 
 HULKS = tuple(r["name"] for r in UNIT_ROWS if r.get("melee_ship"))   # melee warships: the blacksmith attack too (#1509)
 # Siphons and Incendiaries (#2165): technology: the key "charge" or "detonate" of its line of data/train.jsonl and its
-# values: {"if": [tests], "attack": n, "blast": tiles, "bonus": {class: n}}, a charge also "reload" (s) and "shots".
+# values: {"if": [tests], "attack": n, "blast": tiles, "bonus": {class: n}}, a charge also "reload" (s) and "shots";
+# a list of them: one per unit line, and the blast hurts no own or allied unit (Thunderclap Bombs, #4367).
 # The charge of a melee hit (Comitatenses, #4370): the key "charge_attack": {"if": [tests], "attack": n, "time": s}
 FIRE = {r["name"]: (k, r[k]) for r in ROWS for k in ("charge", "charge_attack", "detonate") if k in r}
 
@@ -385,20 +386,28 @@ FIRE = {r["name"]: (k, r[k]) for r in ROWS for k in ("charge", "charge_attack", 
 def fire_commands(g, uuid, name, techs=None):
     """The plugin commands of the charge attack (`aoe charge`) and the blast at death (`aoe detonate`) of an own ship
     after the research of their technologies (FIRE, #2165), of the charge of the next melee hit of an own unit
-    (`aoe chargeattack`, #4370), and of the thrown axes of a melee unit (`aoe throw`, the key "throw": Gothikon, #4368),
+    (`aoe chargeattack`, #4370), of the thrown axes of a melee unit (`aoe throw`, the key "throw": Gothikon, #4368), and
+    of the delayed second blast where a shot lands (`aoe afterblast`, the key "after_blast": Thunderclap Bombs, #4369),
     or of the technologies techs only. Vanilla has no second attack, no "on death" command, one attack value per mob
     and no shot of a melee mob. An axe has the values of the unit (its attack with the upgrades)."""
     import combat, gather                                          # both import gather, gather imports this module
     out = []
-    for tech, (kind, c) in FIRE.items():
-        if tech not in (g.techs if techs is None else techs) or not any(test(t, name, combat.stats(name)) for t in c["if"]):
-            continue
-        if kind == "charge_attack":
-            out.append(f"aoe chargeattack {uuid} {max(1, round(c['time'] / gather.NORMAL * 20))} {c['attack']}")
-            continue
-        bonus, blast = ",".join(f"{k}:{v}" for k, v in sorted(c["bonus"].items())) or "-", c["blast"] * g.map.T
-        out.append(f"aoe charge {uuid} {max(1, round(c['reload'] / gather.NORMAL * 20))} {c['attack']} {c['shots']} "
-                   f"{blast} {bonus}" if kind == "charge" else f"aoe detonate {uuid} {c['attack']} {blast} {bonus}")
+    for tech, (kind, parts) in FIRE.items():                       # a list: one value per unit line, foes only (#4367)
+        for c in parts if isinstance(parts, list) else [parts]:
+            if tech not in (g.techs if techs is None else techs) or not any(test(t, name, combat.stats(name)) for t in c["if"]):
+                continue
+            if kind == "charge_attack":
+                out.append(f"aoe chargeattack {uuid} {max(1, round(c['time'] / gather.NORMAL * 20))} {c['attack']}")
+                continue
+            bonus, blast = ",".join(f"{k}:{v}" for k, v in sorted(c["bonus"].items())) or "-", c["blast"] * g.map.T
+            out.append(f"aoe charge {uuid} {max(1, round(c['reload'] / gather.NORMAL * 20))} {c['attack']} {c['shots']} "
+                       f"{blast} {bonus}" if kind == "charge" else
+                       f"aoe detonate {uuid} {c['attack']} {blast} {bonus}" + " foes" * isinstance(parts, list))
+    for tech, parts in BY_KEY["after_blast"].items():              # Thunderclap Bombs: a second blast where a shot lands
+        for c in parts:                                            # (#4369); buildings: only a shot at a building
+            if tech in (g.techs if techs is None else techs) and any(test(t, name, combat.stats(name)) for t in c["if"]):
+                out.append(f"aoe afterblast {uuid} {max(1, round(c['delay'] / gather.NORMAL * 20))} {c['attack']} "
+                           f"{c['blast'] * g.map.T:g} {c['times']}" + " buildings" * c.get("buildings", False))
     for tech, c in BY_KEY["throw"].items():                        # Gothikon: the axes of a melee unit (#4368)
         if tech in (g.techs if techs is None else techs) and any(test(t, name, combat.stats(name)) for t in c["if"]):
             ticks = [max(1, round(c[k] / gather.NORMAL * 20)) for k in ("reload", "gap")]
@@ -422,11 +431,15 @@ def volley_command(g, uuid, name):
     """The plugin command of the extra projectiles in each shot of own unit name (the key "volley" of data/civs.jsonl:
     the Armenian galley line and dromons, #2379; the key "volley" of the researched technologies: {unit: {"shots": n,
     "attack": a or "part": p}}, Double Crossbow, #4338), else None. "attack" is the AoE2 attack of each extra
-    projectile, "part" a part of the attack of the unit, neither the full attack (0). The plugin keeps one attack for
+    projectile, "part" a part of the attack of the unit, neither the full attack (0). The key "volley" of the unit line
+    (Chu Ko Nu, Kipchak, Hussite Wagon, #4502) starts the count. The plugin keeps one attack for
     all extra projectiles of a unit: the last technology wins. Minecraft feature: one more Arrow entity; the plugin
     gives it its AoE2 damage."""
-    attack = civs.value("volley", civs.civ(g), {}).get(name)
-    shots, attack = (0, 0) if attack is None else (1, attack)
+    import combat                                                  # combat imports this module's data: import it late
+    base = combat.VOLLEY.get(name)
+    shots, attack = (0, 0) if base is None else (base["shots"], base["attack"])
+    if (civ := civs.value("volley", civs.civ(g), {}).get(name)) is not None:
+        shots, attack = shots + 1, civ
     for t in sorted(vars(g).get("techs", ())):
         if v := value("volley", t, {}).get(name):
             shots += v["shots"]
@@ -1301,13 +1314,19 @@ def research(g, entry, start=False, rect=None):
                 g.command(cmd)
             if cmd := lead_command(g, uuid, new):                 # an elite Spanish cannon galleon (#2430)
                 g.command(cmd)
+            if cmd := combat.accuracy_command(uuid, new, civs.value("accuracy", civs.civ(g), {}).get(new, 0.0), g.map.T):
+                g.command(cmd)                                    # an Elite Arambai hits more often (#4549)
             if cmd := combat.dodge_command(uuid, new):            # an Elite Shrivamsha Rider dodges more (#4399)
                 g.command(cmd)
             if cmd := combat.frenzy_command(uuid, new):           # an Elite Temple Guard (#4468)
                 g.command(cmd)
             if cmd := combat.low_hp_command(uuid, new):           # an Elite Jian Swordsman (#4472)
                 g.command(cmd)
+            if cmd := combat.pack_command(uuid, new, g.map.T):    # an Elite Monaspa (#4469)
+                g.command(cmd)
             if cmd := combat.veteran_command(uuid, new):          # an Elite Jaguar Warrior keeps its kills (#4467)
+                g.command(cmd)
+            if cmd := combat.sunder_command(uuid, new):           # an Elite Obuch (#4466)
                 g.command(cmd)
             if cmd := combat.shield_command(uuid, new):           # an Elite Hussite Wagon (#4507)
                 g.command(cmd)
@@ -1534,17 +1553,27 @@ def summon(g, name, pos, rotation=math.pi / 2, player=None):
         g.command(cmd)
     if cmd := lead_command(g, uuid, name):                         # a Spanish cannon galleon aims ahead (#2430)
         g.command(cmd)
-    if cmd := combat.accuracy_command(uuid, name, civs.value("accuracy", civs.civ(g), {}).get(name, 0.0)):
+    if cmd := combat.accuracy_command(uuid, name, civs.value("accuracy", civs.civ(g), {}).get(name, 0.0), g.map.T):
         g.command(cmd)                                             # a Hun trebuchet hits units more often (#2479)
-    if cmd := combat.charge_command(uuid, name):                   # the Coustillier charges its attack (#4398)
+    if cmd := combat.charge_command(uuid, name, g.map.T):          # the Coustillier charges its attack (#4398)
+        g.command(cmd)
+    if cmd := combat.speed_charge_command(uuid, name, g.map.T):     # a Samurai runs faster to a near target (#4545)
+        g.command(cmd)
+    if cmd := combat.charged_volley_command(uuid, name, g.map.T):           # a Xianbei Raider fires a charged volley (#4546)
         g.command(cmd)
     if cmd := combat.dodge_command(uuid, name):                    # a Shrivamsha Rider dodges projectiles (#4399)
+        g.command(cmd)
+    if cmd := combat.vs_units_command(uuid, name, g.map.T):        # the Lou Chuan shoots units in its anti-unit mode (#4505)
         g.command(cmd)
     if cmd := combat.frenzy_command(uuid, name):                   # a Temple Guard attacks faster in a long fight (#4468)
         g.command(cmd)
     if cmd := combat.low_hp_command(uuid, name):                   # a Jian Swordsman loses its shield below 45 HP (#4472)
         g.command(cmd)
+    if cmd := combat.pack_command(uuid, name, g.map.T):            # a Monaspa gets attack near its pack (#4469)
+        g.command(cmd)
     if cmd := combat.veteran_command(uuid, name):                  # a Jaguar Warrior gets attack for each kill (#4467)
+        g.command(cmd)
+    if cmd := combat.sunder_command(uuid, name):                   # an Obuch lowers the armor of its target (#4466)
         g.command(cmd)
     if cmd := combat.shield_command(uuid, name):                   # a Hussite Wagon shields the units behind it (#4507)
         g.command(cmd)
