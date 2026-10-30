@@ -210,7 +210,8 @@ class Bot:
         self.move(share, work)
         self.spend()
         self.time += g.tick * gather.NORMAL
-        if self.time >= self.attack and self.time >= self.looked + LOOK:   # each look costs RCON commands
+        due = self.script.attacking if self.script else self.time >= self.attack   # a script: attack-now (#4530)
+        if due and self.time >= self.looked + LOOK:   # each look costs RCON commands
             self.looked = self.time
             self.fight()
 
@@ -325,6 +326,8 @@ class Bot:
         the army, a resource whose stock is SPARE above the needs of the bot (needs) gets no share, and the other
         shares grow: the AoE2 AI scripts change their gatherer percentages by the stock, else 4 villagers mine 1000
         gold that nothing takes while the economy technologies wait for wood (#4285)."""
+        if self.script and (pct := self.script.percent()):            # the gatherer percentages of the script (#4530)
+            return pct
         unit = len(self.g.villagers) >= self.villagers and self.army()
         if not unit:
             return SHARE
@@ -374,8 +377,12 @@ class Bot:
         mine = g.positions(sorted(u for u, n in g.soldiers.items() if combat.stats(n).attack))   # a dead soldier
                                                                        # is not in it, a transport ship has no attack
         self.wave = getattr(self, "wave", set()) & mine.keys()           # the soldiers of the running wave
-        if len(mine.keys() - self.wave) >= self.group:                 # the new soldiers wait for a full wave (#3953)
-            self.wave |= mine.keys()
+        group, most = self.group, 0
+        if self.script:                                                # the attack group sizes of the script (#4530)
+            group = self.script.number("sn-minimum-attack-group-size")
+            most = self.script.number("sn-maximum-attack-group-size")
+        if len(new := sorted(mine.keys() - self.wave)) >= group:       # the new soldiers wait for a full wave (#3953)
+            self.wave |= set(new[:most] if most else new)
         self.charged = bool(self.wave)
         self.retarget()
         if not self.charged or self.foe is None:                      # no enemy: no attack (#3107)
