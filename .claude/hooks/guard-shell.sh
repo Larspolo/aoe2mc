@@ -70,7 +70,7 @@ def why():
         if "gh" in w and any(a in ("-f", "--raw-field") and b.startswith("body=@") for a, b in zip(w, w[1:])):
             return ("-f sends the text @file literally: the issue body is only a path (#4250). "
                     "Use -F body=@file.md.")
-        if "gh" in w and any(a in ("--body", "-b") and b.startswith("@") or a.startswith("--body=@")
+        if w[:1] == ["gh"] and any(a in ("--body", "-b") and b.startswith("@") or a.startswith("--body=@")
                              for a, b in zip(w, w[1:] + [""])):
             return ("gh --body sends the text @file literally: the issue body is only a path (#4458). "
                     "Use --body-file file.md.")

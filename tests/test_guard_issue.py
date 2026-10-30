@@ -37,6 +37,7 @@ def test_mcp_body(tool, args, code):
     ("gh api repos/a/b/issues -f body=@t.md", 2),
     ("gh issue create --title x --body-file t.md", 0),
     ("gh issue comment 5 --body 'Done in #12.'", 0),
+    ('python3 r.py --text "a; the hook refuses gh --body @file."', 0),
 ])
 def test_shell_body(command, code):
     assert run("guard-shell.sh", {"tool_input": {"command": command}, "cwd": ROOT}).returncode == code, command
