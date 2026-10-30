@@ -88,6 +88,8 @@ CONTACT = 1.0         # tiles: the reach of a demolition ship (range 0, #1440): 
 MIN_RANGE = {r["name"]: r["min_range"] for r in UNIT_ROWS if "min_range" in r}
 ACCURACY = {r["name"]: r["accuracy"] for r in UNIT_ROWS if "accuracy" in r}   # siege shots at units that hit (#2479)
 DODGE = {r["name"]: r["dodge"] for r in UNIT_ROWS if "dodge" in r}           # projectiles that do no damage (#4399)
+ON_DEATH = {r["name"]: r["on_death"] for r in UNIT_ROWS if "on_death" in r}   # the unit that rises where it dies (#4471)
+FELL = "aoe2mc.fell."            # the tag + UUID of the marker that the plugin leaves where a unit of ON_DEATH dies
 # The minimum range of the buildings that shoot, in tiles from the edge of the footprint (AoE2 DE, wiki infobox
 # "MinRange", #1546). The town center has none. Murder Holes removes it.
 # The key "min_range" of a line of data/buildings.jsonl (the dock shoots only with fishing ships inside, #1949).
@@ -223,6 +225,13 @@ def dodge_command(uuid, name):
     return f"aoe dodge {uuid} {d['shots']} {round(d['time'] * 20)}" if d else None
 
 
+def on_death_command(uuid, name):
+    """The command that tags unit name when another unit rises where it dies (the key "on_death" of data/units.jsonl:
+    the Konnik, #4471), or None. The plugin leaves a marker with the tag FELL + uuid at the place of the death of a
+    tagged unit (AoePlugin.onDeath); train.census reads it. A removed unit (a sunk boat, an unloaded chunk) leaves none."""
+    return f"tag {uuid} add aoe2mc.on_death" if name in ON_DEATH else None
+
+
 def sight(name, s=None):
     """The AoE2 line of sight of unit name in tiles: an idle soldier attacks an enemy in it. Most units see 4 tiles,
     a ranged unit about 2 tiles more than its range."""
@@ -299,6 +308,9 @@ def setup(game, data):
             game.command(cmd)
     for o in units:                                  # a Shrivamsha Rider dodges projectiles (#4399)
         if cmd := dodge_command(o["uuid"], o["name"]):
+            game.command(cmd)
+    for o in units:                                  # a Konnik rises as a Dismounted Konnik (#4471)
+        if cmd := on_death_command(o["uuid"], o["name"]):
             game.command(cmd)
     for o in units:                                  # after the stats: the plugin needs them for the sight
         if cmd := sight_command(o["uuid"], o["name"], data.get("tile_size", 4)):
