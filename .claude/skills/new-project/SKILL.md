@@ -191,17 +191,23 @@ its current clicks: the app changes faster than this text.
 2. **Cloud environment.** At claude.ai/code, make a new environment "NAME": "Allow package managers" on, the whole
    file `scripts/allowed-domains.txt` in "Allowed domains", the whole file `scripts/cloud-setup.sh` as the setup
    script. Show both files in the chat in code blocks, ready to copy.
-3. **Scheduled task "NAME autopilot".** At claude.ai/code, make a scheduled task with: the name "NAME autopilot", the
-   repository OWNER/NAME, the environment of item 2, no schedule (the pacer starts it), the prompt `/scheduled max`,
-   Opus at effort low. Then edit the task, add an API trigger, and generate a token. Keep the fire URL, the token and
-   the task ID (`trig_...`) for items 5 and 6.
+3. **Scheduled task "NAME autopilot".** At claude.ai/code/routines (the app calls the scheduled tasks "Routines"), click
+   "New task" → "Set up manually", and set: the name "NAME autopilot", the repository OWNER/NAME, the environment of
+   item 2, no schedule (the pacer starts it), the prompt `/scheduled max`, and the model Opus with "Effort" (a submenu
+   of the model menu) at low. Then add the trigger type "API" in the task form and click "Create". The token shows once,
+   after "Create": the owner copies it for item 5. Open the task page and click "Copy fire URL". The task ID is the end
+   of the page address (`trig_...`). Keep the fire URL and the task ID for items 5 and 6.
 4. **The lane tasks** (only for each lane of `weights`): the same as item 3, with the name "NAME autopilot <lane>",
-   the prompt `/scheduled max lane <lane>`, and "a new session on each fire". haiku: Haiku. deep: Opus at effort high.
-5. **Secrets.** Run `claude setup-token` in a terminal. Then type in this session
-   `! python3 framework/tools/new_repo.py DIR --repo OWNER/NAME --secrets`: the tool asks for the token, and the fire
-   URL and the token of each task, with no echo. In a cloud session, give the same command for the owner's terminal,
-   or the names of `--dry-run --secrets` for GitHub → Settings → Secrets and variables → Actions → "New repository
-   secret". Never ask for a secret value in the chat.
+   the prompt `/scheduled max lane <lane>`, and "a new session on each fire". haiku: Haiku. deep: Opus, Effort high.
+5. **Secrets.** Open the Terminal panel of the desktop app and type one line there:
+   `claude setup-token && python3 framework/tools/new_repo.py DIR --repo OWNER/NAME --secrets`. `claude setup-token`
+   prints the token in that tab; the owner copies it from there. If it signs in with the wrong account, the owner
+   switches the account in the default browser first, then runs the line again. The `--secrets` prompt, with no echo,
+   asks in this order: `CLAUDE_CODE_OAUTH_TOKEN`, then the fire URL and the token of main, then the fire URL and the
+   token of each lane in the order of `secret_names()`. Tell the owner this order. The agent never reads the Terminal
+   tab and never reads a secret. In a cloud session, give the same line for the owner's terminal, or the names of
+   `--dry-run --secrets` for GitHub → Settings → Secrets and variables → Actions → "New repository secret". Never ask
+   for a secret value in the chat.
 6. **The task ID.** Ask the owner for the ID of "NAME autopilot" (it is no secret). Write it to `trigger` in
    `[pacing]` of `DIR/steering/system/system.toml`, commit, push to the default branch, and run
    `python3 framework/tools/new_repo.py DIR --repo OWNER/NAME --start`. In a cloud session, give the owner the two
@@ -213,7 +219,7 @@ page in a new tab with the owner's sign-in, fill the forms, and show the result.
 - Stop before each grant of access (the "Install" of the GitHub app, a sign-in, a new connection): the owner clicks it.
 - Never read, copy or type a secret value (the token of an API trigger, of `claude setup-token`). When a page shows
   one, tell the owner to copy it, then use the `--secrets` prompt of item 5. A fire URL and a task ID are no secrets.
-- Item 5 needs a terminal: the owner types the `!` command.
+- Item 5 needs a terminal: the owner runs its line in the Terminal panel.
 - When a page differs from the steps, or asks for a payment, stop and ask the owner.
 
 At the end, run `--check` again. Each `MISSING` line goes into the report with its step.
