@@ -8,7 +8,7 @@ Read: `#const` (also `rnd(A,B)`, fractions and `(MATH)`, #4306), `#define`, `if`
 <PLAYER_SETUP> (`grouped_by_team` with --teams), <LAND_GENERATION> (`base_terrain`, `create_player_lands`, `create_land` with
 `terrain_type`, `base_layer` (a land layer on the terrain_type, #3967), `land_percent`, `number_of_tiles`, `base_size`, `clumping_factor`, `land_position`, `assign_to_player` and `assign_to_team` (direct_placement, #3947) and the borders
 `left_border`, `right_border`, `top_border`, `bottom_border`: percent of the map size at the low x, high x, low y and
-high y side that the land does not take) and
+high y side that the land does not take; `other_zone_avoidance_distance`, `min_placement_distance`, #4421) and
 <TERRAIN_GENERATION> (`create_terrain` with `base_terrain`, `number_of_clumps`, `number_of_tiles`, `land_percent`,
 `spacing_to_other_terrain_types`, `set_avoid_player_start_areas`, `clumping_factor`), <CONNECTION_GENERATION>
 (`create_connect_all_players_land` with `replace_terrain`, `terrain_cost`, `terrain_size`: paths between the player
@@ -261,12 +261,27 @@ def grow(owner, lands, free, rng):
     """Grow the lands at the same time, one tile each in turn, as AoE2 does: a land takes a free tile next to it. A
     higher clumping factor tries more tiles and takes the one with most tiles of the land around it (round lands).
     lands: [{"id", "cells" (start tiles), "target" (tiles), "clump", "box" (optional: (x0, x1, y0, y1), the tiles
-    that the land can take)}]; free: a bool array of the tiles to take."""
+    that the land can take), "zone" and "avoid" (optional: other_zone_avoidance_distance, #4421)}]; free: a bool
+    array of the tiles to take."""
     n = owner.shape[0]
+    zone = {land["id"]: land.get("zone", -1 - land["id"]) for land in lands}
+    avoid = {land["id"]: land.get("avoid", 0) for land in lands}
+    r = max(avoid.values(), default=0)
+
+    def apart(land, c):                         # no tile of another zone within the larger avoidance distance
+        if not r:
+            return True
+        x0, y0 = max(0, c[0] - r), max(0, c[1] - r)
+        box = owner[x0:c[0] + r + 1, y0:c[1] + r + 1]
+        for x, y in zip(*np.nonzero(box >= 0)):
+            o = int(box[x, y])
+            if zone[o] != zone[land["id"]] and max(abs(x0 + x - c[0]), abs(y0 + y - c[1])) <= max(avoid[o], avoid[land["id"]]):
+                return False
+        return True
     for land in lands:
         land["front"], land["seen"], land["count"] = [], set(), 0
         for c in land["cells"]:
-            if free[c] and owner[c] < 0 and inside(land, c):
+            if free[c] and owner[c] < 0 and inside(land, c) and apart(land, c):
                 owner[c] = land["id"]
                 land["count"] += 1
         for c in zip(*np.nonzero(owner == land["id"])):
@@ -282,7 +297,7 @@ def grow(owner, lands, free, rng):
                 c = front[k]
                 front[k] = front[-1]
                 front.pop()
-                if owner[c] >= 0 or not free[c] or not inside(land, c):
+                if owner[c] >= 0 or not free[c] or not inside(land, c) or not apart(land, c):
                     continue
                 owner[c] = land["id"]
                 land["count"] += 1
@@ -512,6 +527,7 @@ def generate(text, seed, players=2, size=None, warn=None, teams=None, folder=Non
             top = value(attrs["base_layer"][0], consts) if "base_layer" in attrs else None   # a layer on the land
             edge = {a: value(attrs[a][0], consts) * n // 100 if a in attrs else 0 for a in BORDERS}
             box = (edge["left_border"], n - edge["right_border"], edge["top_border"], n - edge["bottom_border"])
+            avoid = value(attrs["other_zone_avoidance_distance"][0], consts) if "other_zone_avoidance_distance" in attrs else 0
             if cmd == "create_player_lands":
                 total, turn = tiles(attrs, consts, n), rng.uniform(0, 2 * np.pi)
                 order = circle(sections.get("PLAYER_SETUP", ()), players, teams, seed)
@@ -527,7 +543,8 @@ def generate(text, seed, players=2, size=None, warn=None, teams=None, folder=Non
                     starts.append({"player": p, "x": c[0], "y": c[1], "base_size": base, "land": len(lands)})
                     links.append((c, p, zone if zone is not None else -1 - len(lands)))
                     lands.append({"id": len(lands), "cells": square(c, base, n, circular="set_circular_base" in attrs),
-                                  "clump": clump, "box": box, "target": max(total // players, (2 * base + 1) ** 2)})
+                                  "clump": clump, "box": box, "zone": links[-1][2], "avoid": avoid,
+                                  "target": max(total // players, (2 * base + 1) ** 2)})
                     kinds[len(lands) - 1] = kind
                     layers[len(lands) - 1] = top
             else:
@@ -535,12 +552,18 @@ def generate(text, seed, players=2, size=None, warn=None, teams=None, folder=Non
                     c = tuple(min(n - 1, value(v, consts) * n // 100) for v in attrs["land_position"][:2])
                 else:
                     c = tuple(int(v) for v in rng.integers(0, n, 2))
+                    far = value(attrs["min_placement_distance"][0], consts) if "min_placement_distance" in attrs else 0
+                    for _ in range(100):                # draw again until the origins before it are far enough (#4421)
+                        if all(np.hypot(c[0] - o[0][0], c[1] - o[0][1]) >= far for o in links):
+                            break
+                        c = tuple(int(v) for v in rng.integers(0, n, 2))
                 p = owner_of(attrs, consts, starts, players, teams)
                 if p:                                       # direct_placement: the land of player p (#3947)
                     starts.append({"player": p, "x": c[0], "y": c[1], "base_size": base, "land": len(lands)})
                 links.append((c, p, zone if zone is not None else -1 - len(lands)))
                 lands.append({"id": len(lands), "cells": square(c, base, n, circular="set_circular_base" in attrs),
-                              "clump": clump, "box": box, "target": tiles(attrs, consts, n, (2 * base + 1) ** 2)})
+                              "clump": clump, "box": box, "zone": links[-1][2], "avoid": avoid,
+                              "target": tiles(attrs, consts, n, (2 * base + 1) ** 2)})
                 kinds[len(lands) - 1] = kind
                 layers[len(lands) - 1] = top
                 if "land_id" in attrs:                  # only create_land: the guide gives player lands no ID
@@ -570,6 +593,15 @@ def generate(text, seed, players=2, size=None, warn=None, teams=None, folder=Non
         kind = value(args[0], consts)
         on = value(attrs["base_terrain"][0], consts) if "base_terrain" in attrs else 0
         free = terrain == on
+        if "height_limits" in attrs:               # only on the hill levels from MIN to MAX (AoE2 DE)
+            lo, hi = (value(v, consts) for v in attrs["height_limits"][:2])
+            free &= (elevation >= lo) & (elevation <= hi)
+        if "set_flat_terrain_only" in attrs:       # only where the 8 neighbours have the same level
+            p, flat = np.pad(elevation, 1, mode="edge"), np.ones((n, n), bool)
+            for dy in (0, 1, 2):
+                for dx in (0, 1, 2):
+                    flat &= p[dy:dy + n, dx:dx + n] == elevation
+            free &= flat
         if (s := value(attrs["spacing_to_other_terrain_types"][0], consts)
                 if "spacing_to_other_terrain_types" in attrs else 0):
             free &= ~dilate(terrain != on, s)
@@ -650,7 +682,9 @@ CREATE_LAND = (                 # the attributes of create_land and create_playe
     "land_percent",
     "land_position",
     "left_border",
+    "min_placement_distance",
     "number_of_tiles",
+    "other_zone_avoidance_distance",
     "right_border",
     "set_circular_base",
     "terrain_type",
@@ -660,10 +694,12 @@ CREATE_LAND = (                 # the attributes of create_land and create_playe
 CREATE_TERRAIN = (              # the attributes of create_terrain that generate() reads: one per line (#4417)
     "base_terrain",
     "clumping_factor",
+    "height_limits",
     "land_percent",
     "number_of_clumps",
     "number_of_tiles",
     "set_avoid_player_start_areas",
+    "set_flat_terrain_only",
     "set_scale_by_groups",
     "set_scale_by_size",
     "spacing_to_other_terrain_types",
