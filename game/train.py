@@ -1516,7 +1516,8 @@ def summon(g, name, pos, rotation=math.pi / 2, player=None):
         g.command(cmd)
     if cmd := combat.trample_command(uuid, name, g.map.T):         # an elephant tramples the units next to its target (#4397)
         g.command(cmd)
-    if cmd := combat.sight_command(uuid, name, g.map.T, s=stats(g, name), more=sight_more(g.techs, name, combat.stats(name))):   # it attacks enemies in sight (#775)
+    if cmd := combat.sight_command(uuid, name, g.map.T, s=stats(g, name), more=sight_more(g.techs, name, combat.stats(name))
+                                  + civs.sight_units(g, name, combat.stats(name))):   # it attacks enemies in sight (#775)
         g.command(cmd)
     import ai                                                      # ai imports gather, gather imports this module
     g.command(ai.speed_command(uuid, name, g.map.T, gather.NORMAL * speed(g, name)))   # also without an order (#849)
