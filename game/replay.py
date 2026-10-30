@@ -108,6 +108,8 @@ POLL = 0.2                  # seconds between two calls of the poll of Replay.ru
 CENSUS = 1.0                # seconds of real time between two censuses: each count is one RCON round trip (2 to 5 ms
                             # at a 45 ms server tick); once per game second at speed 4 took 23 % of the loop (#2761)
 NEXT = 5                    # tiles: an empty resource sends its villager to the next one this near (#720)
+NEXT_TREES = 8              # tiles: the same for a tree: AoE2 lumberjacks walk farther; in de-64.3, 19 had the next
+                            # tree 5 to 8 tiles away and stood idle (#4063)
 NEAR = 2                    # blocks: a unit of the plugin this near to its replay position is at its resource (#766)
 SEEN = 32                   # blocks: the server sends a particle only to the players this near (a sound of volume 1
                             # carries 16): a gather step farther from each player sends no look (#2761, the loop lag)
@@ -2026,13 +2028,13 @@ class Replay:
         return self.look(v, "none") if way is None else self.go(i, v, *way, t)
 
     def reachable(self, v, at):
-        """(tile, path) of the resource of the kind of v within NEXT tiles of cell `at` that has something left and
-        is nearest on a path from v (one path search for all of them, #869), or None."""
-        T, w = self.T, ship(v.name)
-        far = {k: math.dist((at[0] / T, at[1] / T), (k[0] + 0.5, k[1] + 0.5)) for k, n in self.crew.source(v).items()
-               if n > 0}
+        """(tile, path) of the resource of the kind of v within NEXT tiles (a tree: NEXT_TREES) of cell `at` that has
+        something left and is nearest on a path from v (one path search for all of them, #869), or None."""
+        T, w, src = self.T, ship(v.name), self.crew.source(v)
+        far = {k: math.dist((at[0] / T, at[1] / T), (k[0] + 0.5, k[1] + 0.5)) for k, n in src.items() if n > 0}
+        near = NEXT_TREES if src is self.map.trees else NEXT
         goals = {}
-        for d, k in sorted((d, k) for k, d in far.items() if d <= NEXT):
+        for d, k in sorted((d, k) for k, d in far.items() if d <= near):
             for c in self.map.around(self.map.spot(k), w):        # a fishing ship: the water next to the fish
                 goals.setdefault(c, k)                              # a cell next to two of them: the nearer one
         path = self.map.path(v.cell, goals, PATH_CELLS, w)
