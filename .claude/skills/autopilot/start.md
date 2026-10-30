@@ -28,7 +28,7 @@ Section `PRs` lists the open agent PRs (branch `claude/*`, `agent/*` or `ccr-*`,
 Section `Orphans` lists the open tickets that wait for nothing (#4553): no run picks them, and the owner does not see
 them. Fix each line in one or two calls, then go on: read the last comments, then remove `blocked` (its tickets closed),
 or add `needs-human` and one precise question for the owner (`owner.md`); correct a wrong "Depends on" or "Start after"
-line. An outside event (a Minecraft release) is no ticket to wait for: give a "Start after: <date> UTC" line for the
+line. An outside event (a release of a dependency) is no ticket to wait for: give a "Start after: <date> UTC" line for the
 next check.
 
 Section `Main CI` red (the last run on main, or the night run with the full suite) and no "Fix main" merge after it:
