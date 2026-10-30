@@ -37,6 +37,7 @@
 {"name": "pack_time", "text": "A factor of the AoE2 seconds to pack or unpack a trebuchet (Kataparuto: 0.25). trebuchet.pack_time.", "issue": 4275}
 {"name": "regen", "text": "A technology that regenerates hit points of a group of units: [a group of civs.GROUPS, the hit points per AoE2 minute]. civs.regen.", "issue": 4255}
 {"name": "building_taken", "text": "The factor of the bonus damage that a building of the player takes after the technology: {building: factor} (Citadels: a castle 0.75). build.taken.", "issue": 4281}
+{"name": "damage_over_time", "text": "A technology that adds damage over time to the hits of units: a list of {\"if\": [tests of train.test], \"damage\": n, \"seconds\": AoE2 seconds, \"on\": [the target classes, default each unit]} (Curare, Red Cliffs Tactics). train.dot, the plugin Dot.java.", "issue": 4339}
 {"name": "less", "text": "A technology that cuts the damage that its units take from attackers of some classes: [the units (as \"walk\"), {attacker class: n}]; the most of the classes of the attacker counts (Royal Heirs). train.hits.", "issue": 4331}
 {"name": "ignore_armor", "text": "A technology whose melee units ignore the armor of the target (a negative armor still counts): the units, as \"walk\" (Wootz Steel). train.hits.", "issue": 4331}
 {"name": "unit_aura", "text": "A technology whose units of the group \"from\" heal the allied units of \"group\" within \"range\" tiles by \"rate\" hit points per AoE2 minute: the largest rate counts (Bimaristan). regen.units.", "issue": 4366}
