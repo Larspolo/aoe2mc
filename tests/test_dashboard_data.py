@@ -94,8 +94,10 @@ def test_main_writes_the_eight_files(tmp_path, monkeypatch):
     monkeypatch.setattr(dd, "pages", lambda path: ISSUES if path.startswith("issues") else PULLS)
     monkeypatch.setattr(dd, "usage", lambda: [])
     monkeypatch.setattr(dd, "tokens", lambda: [])
+    monkeypatch.setattr(dd, "accounts", lambda: [])
     dd.main(str(tmp_path))
     assert sorted(os.listdir(tmp_path)) == [f"aoe2mc-{n}.json" for n in
-                                            ("epics", "merged-prs", "release-bar", "roadmap", "setup", "tickets", "tokens", "usage")]
+                                            ("accounts", "epics", "merged-prs", "release-bar", "roadmap", "setup",
+                                             "tickets", "tokens", "usage")]
     setup = json.load(open(tmp_path / "aoe2mc-setup.json"))
     assert setup and set(setup[0]) == {"part", "group", "when", "does", "where"}
