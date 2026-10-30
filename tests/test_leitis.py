@@ -30,7 +30,7 @@ def test_the_upgrade_changes_the_live_and_the_new_units():
     assert train.queue(g, "Steve", CASTLE, "ELITE_LEITIS_UPGRADE")
     train.tick(g, train.seconds(g, "ELITE_LEITIS_UPGRADE", "CASTLE"))
     assert "ELITE_LEITIS_UPGRADE" in g.techs and g.soldiers["lt"] == "ELITE_LEITIS"
-    assert combat.stats_command("lt", "ELITE_LEITIS") in server.log
+    assert combat.stats_command("lt", "ELITE_LEITIS", **train.hits(g, "ELITE_LEITIS")) in server.log   # with its hit rules (#4394)
     train.open_menu(g, "Steve", CASTLE)
     menu = menus(server)[-1]
     assert item(menu, "Elite Leitis").endswith(" · queue 0/15")
