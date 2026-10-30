@@ -3,6 +3,11 @@
 A new project starts from the template `framework/template/` (#4196). You fill a short list of files, run the
 bootstrap, do the settings, and the runs then build the project from its roadmap with no other step.
 
+**The easy way:** start a Claude Code session in a clone of this repository and type `/new-project <your idea>`. The
+skill `.claude/skills/new-project/SKILL.md` suggests the stack and the roadmap, fills the files, and makes and sets up
+the repository (`framework/tools/new_repo.py`). It asks you only what it cannot decide and the steps that need your
+accounts. A local session with `gh auth login` does the most work. The steps below are the manual way.
+
 ## 1. Fill the template
 
 `python3 framework/tools/bootstrap.py DIR --repo OWNER/NAME` writes the files of `framework/template/` into DIR, with the
