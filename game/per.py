@@ -501,6 +501,7 @@ class Script:
         (airef: "a roughly circular wall pattern within the given perimeter distances"). The straight sides take a
         gate of 4 tiles, the diagonal ones a gate of 3. Tiles off the map and on water are cut. The first plan stays."""
         import build
+
         from aoe2mc import wall_tiles
         if p not in PERIMETERS:
             return self.warn("perimeter", p)
