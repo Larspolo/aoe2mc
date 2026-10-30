@@ -8,7 +8,7 @@
 {"name": "breach", "text": "true: after this technology the villagers attack enemy walls, gates and towers (Siegecraft of Antiquity Mode). gather.breach.", "issue": 3916}
 {"name": "civ", "text": "The civilization of a unique technology: only its castle researches it (civs.MISSING of the others).", "issue": 2021}
 {"name": "converts", "text": "A technology that converts more: [\"buildings\" (enemy buildings, as Redemption), \"monks\" (enemy priests and monks, as Atonement)]. monk.CONVERTS.", "issue": 3986}
-{"name": "costs", "text": "A technology that changes the cost of a group of items: a list of [a rule what of civs.has, a resource or null for all, the factor], as the rules of civs.COSTS. civs.cost.", "issue": 4225}
+{"name": "costs", "text": "A technology that changes the cost of a group of items: a list of [a rule what of civs.has, a resource or null for all, the factor], as the rules of civs.COSTS; a resource \"gold>food\": the factor is the part of the gold that becomes food (#4325). civs.cost.", "issue": 4225}
 {"name": "doctrine", "text": "A switch of the Recruitment Doctrines of its building (Macedonians): no queue and no cost, the next doctrine of the civ key \"doctrines\". train.DOCTRINES, train.switch.", "issue": 2483}
 {"name": "economy", "text": "true: an economic technology that the AI bot researches when its age and building offer it (Loom, Double-Bit Axe, Wheelbarrow). game/bot.py research.", "issue": 3950}
 {"name": "effect", "text": "The change of the AoE2 combat values of a technology (train.effect: a dict, or a list of changes in turn; \"bonus_times\" multiplies a bonus). train.TECHS and train.EACH compute it; civs.MORE changes it.", "issue": 2029}
