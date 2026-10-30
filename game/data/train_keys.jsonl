@@ -6,6 +6,7 @@
 {"name": "attack_aura", "text": "An upgrade of one building (one_building): the own military units within \"range\" tiles of the building attack \"rate\" times as fast, {\"rate\", \"range\"}. train.haste.", "issue": 2497}
 {"name": "build_rate", "text": "A technology that makes the builders of the player work faster: the factor of the work per second (Antiquity Architecture). build.rise.", "issue": 3917}
 {"name": "breach", "text": "true: after this technology the villagers attack enemy walls, gates and towers (Siegecraft of Antiquity Mode). gather.breach.", "issue": 3916}
+{"name": "charge_attack", "text": "The charge of the next melee hit of the own units of its tests after the research: {\"if\": [tests], \"attack\": n, \"time\": s} (Comitatenses): the first melee hit after time AoE2 seconds does n more attack, then the charge starts again. train.FIRE, train.fire_commands, the plugin command aoe chargeattack.", "issue": 4370}
 {"name": "civ", "text": "The civilization of a unique technology: only its castle researches it (civs.MISSING of the others).", "issue": 2021}
 {"name": "converts", "text": "A technology that converts more: [\"buildings\" (enemy buildings, as Redemption), \"monks\" (enemy priests and monks, as Atonement)]. monk.CONVERTS.", "issue": 3986}
 {"name": "costs", "text": "A technology that changes the cost of a group of items: a list of [a rule what of civs.has, a resource or null for all, the factor], as the rules of civs.COSTS. civs.cost.", "issue": 4225}

@@ -196,6 +196,10 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *   aoe charge <selector> <ticks> <attack> <shots> <blast> <class:bonus,...|->
  *                                              Siphons (#2165): a fire ship that hits a ship also hits each enemy unit
  *                                              within blast blocks of it with shots melee hits of attack, once per ticks
+ *   aoe chargeattack <selector> <ticks> <attack>
+ *                                              the charge of a melee hit (Comitatenses, #4370): the first melee hit
+ *                                              on a unit after ticks has attack more (before the armor), then the
+ *                                              charge starts again; a new unit starts full
  *   aoe cheats <code>,<code>,...|-             the AoE2 cheat codes in the chat (#816, Cheats.java; URL-encoded)
  *   aoe deathmarks on|off                      a short mark where a replay unit dies (#846, Deaths.java)
  *   aoe destroy <selector>                     the buildings fall as at 0 hit points: "Destroy: <n> buildings" (#819)
@@ -456,6 +460,8 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     private final Map<UUID, int[]> volleys = new HashMap<>();
     private static final String VOLLEY = "aoe2mc.volley.";      // the tag of an extra arrow, with its attack
     private final Map<UUID, Integer> charged = new HashMap<>();      // the first tick of the next charge attack
+    private final Map<UUID, int[]> meleeCharges = new HashMap<>();   // aoe chargeattack (#4370): {ticks, attack}
+    private final Map<UUID, Integer> meleeCharged = new HashMap<>(); // the first tick of the next charged melee hit
     private final Map<UUID, Charge> detonations = new HashMap<>();
     // A charged ranged attack of a melee unit (Gothikon, #4368, aoe throw): at most shots axes, one charges in ticks;
     // axes: {charged axes, the tick where the next charge started, the first tick of the next throw}
@@ -757,6 +763,19 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         }
         charged.put(from.getUniqueId(), now + c.ticks);
         burst(from, t.getLocation(), c, true);
+    }
+
+    // The values of a melee hit of from (#4370): with a full charge (aoe chargeattack) the attack is more, and the
+    // charge starts again from 0, as the AoE2 charge attack (wiki "Charge attack"). The armor counts once.
+    private Stats charged(Entity from, Stats a) {
+        int[] c = meleeCharges.get(from.getUniqueId());
+        int now = Bukkit.getCurrentTick();
+        if (c == null || now < meleeCharged.getOrDefault(from.getUniqueId(), 0)) {
+            return a;
+        }
+        meleeCharged.put(from.getUniqueId(), now + c[0]);
+        return new Stats(a.attack() + c[1], a.melee(), a.pierce(), a.ranged(), a.pierces(), a.classes(), a.bonus(),
+                a.reload(), a.taken(), a.friendly(), a.less(), a.ignores(), a.rage(), a.reflect());
     }
 
     // The hits of a charge or a detonation on each unit with AoE2 values within its blast; foes: not the own or
@@ -1309,6 +1328,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                 return;
             }
             lastHit.put(from.getUniqueId(), Bukkit.getCurrentTick());
+            a = charged(from, a);                            // a charge attack (Comitatenses, #4370)
         }
         if (ev.getDamager() instanceof Projectile p) {     // a cancelled hit lets the arrow fly on: one hit per arrow
             p.remove();
@@ -2790,6 +2810,25 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         }
         if (args.length == 7 && args[0].equals("charge")) {            // Siphons (#2165)
             return charges(sender, args[1], charges, args[2], args[3], args[4], args[5], args[6]);
+        }
+        if (args.length == 4 && args[0].equals("chargeattack")) {      // Comitatenses (#4370)
+            int[] c;
+            try {
+                c = new int[] {Integer.parseInt(args[2]), Integer.parseInt(args[3])};
+            } catch (NumberFormatException e) {
+                sender.sendMessage("Bad value: " + e.getMessage());
+                return true;
+            }
+            int n = 0;
+            for (Entity e : select(sender, args[1])) {
+                meleeCharges.put(e.getUniqueId(), c);
+                if (rider(e) instanceof Mob r) {
+                    meleeCharges.put(r.getUniqueId(), c);        // the rider of a mounted unit hits (#710)
+                }
+                n++;
+            }
+            sender.sendMessage("Charge attack: " + n + " units");
+            return true;
         }
         if (args.length == 2 && args[0].equals("cheats")) {
             return cheats.command(sender, args);
