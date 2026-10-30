@@ -6277,6 +6277,25 @@ def game_time(text):
     return ((h * 60 + mm) * 60 + ss) * 1000
 
 
+def match_spec(text):
+    """--match GAME:PROFILE → (GAME, PROFILE), two numbers."""
+    m = re.fullmatch(r"(\d+):(\d+)", text)
+    if not m:
+        raise argparse.ArgumentTypeError(f"{text!r}: give GAME:PROFILE, two numbers, for example 123:456")
+    return m.groups()
+
+
+def match_record(game, profile):
+    """The path of the record of a match: out/records/GAME_PROFILE/ keeps it, so a second call does not download."""
+    folder = os.path.join("out", "records", f"{game}_{profile}")
+    have = sorted(glob.glob(os.path.join(folder, "*.aoe2record")))
+    if have:
+        return have[0]
+    from tools import record_api       # a tool of the repository clone, not of the installed package
+    os.makedirs(folder, exist_ok=True)
+    return record_api.download(game, profile, folder)
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description="Convert an AoE2 DE scenario to a Minecraft Java world.")
     ap.add_argument("scenario", nargs="?", help=".aoe2scenario file, .aoe2record, .mgz, .mgx or .mgl (the start state of a recorded game), .scx "
@@ -6342,8 +6361,15 @@ def main(argv=None):
     ap.add_argument("--at", type=game_time, metavar="MM:SS",
                     help="recorded game: convert the state at this game time (buildings and trained units of the "
                          "commands until then; default: the start)")
+    ap.add_argument("--match", type=match_spec, metavar="GAME:PROFILE",
+                    help="recorded game: download the record of match GAME of player PROFILE (tools/record_api.py) "
+                    "into out/records/ and convert it; give only the output (#4484)")
     ap.add_argument("--verbose", action="store_true", help="print the time of each phase")
     a = ap.parse_args(argv)
+    if a.match:
+        if a.output is not None:
+            ap.error("--match replaces the input file: give only the output world folder")
+        a.output, a.scenario = a.scenario, match_record(*a.match)
     if a.fog and a.ambience == "off":
         ap.error("--fog writes a datapack: not with --ambience off")
     if a.random_map:
