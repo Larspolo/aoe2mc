@@ -107,9 +107,11 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *   aoe arrows <uuid> <n> <pass> <part>        also: its arrows hurt the enemy units on their line up to pass blocks
  *                                              past its range, with this part of the damage (Svan Towers, #4282)
  *   aoe attack <selector> <target selector>    Mob#setTarget: the mob attacks with its own AI
- *   aoe dodge <selector> <shots> <ticks>       the unit dodges projectiles (the Shrivamsha Rider, #4399,
+ *   aoe dodge <selector> <shots> <ticks> [melee 0|1]  the unit dodges projectiles (the Shrivamsha Rider, #4399,
  *                                              game/combat.py dodge_command): a gauge of shots takes each projectile
- *                                              hit with no damage and fills by shots in ticks; melee hits pass
+ *                                              hit with no damage and fills by shots in ticks; melee hits pass.
+ *                                              melee 1: it takes melee hits instead, projectiles pass (Iron Pagoda,
+ *                                              #4465). Default 0
  *   aoe attackground <selector> <x> <y> <z>    AoE2 "Attack Ground" (#4078): a siege unit with a blast walks into its
  *                                              range of the point and shoots there with its reload until a new order
  *   aoe ballistics <team> on|off               Ballistics of the player (#1549): its archers and buildings aim where a
@@ -446,11 +448,13 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     // The AoE2 dodge of a unit (#4399): "gauge" shots left at tick "at"; it fills by "shots" in "ticks", up to "shots".
     private static final class Dodge {
         final int shots, ticks;
+        final boolean melee;                                 // true: it takes melee hits, not projectiles (#4465)
         double gauge;
         int at;
 
-        Dodge(int shots, int ticks) {
+        Dodge(int shots, int ticks, boolean melee) {
             this.shots = shots;
+            this.melee = melee;
             this.ticks = Math.max(1, ticks);
             this.gauge = shots;
             this.at = Bukkit.getCurrentTick();
@@ -1336,7 +1340,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         }
         ev.setCancelled(true);
         Dodge dodge = dodges.getOrDefault(ev.getEntity().getUniqueId(), dodges.get(hurt.getUniqueId()));
-        if (ev.getDamager() instanceof Projectile p && dodge != null && dodge.take()) {
+        if (ev.getDamager() instanceof Projectile p && dodge != null && !dodge.melee && dodge.take()) {
             p.remove();                                      // a Shrivamsha Rider dodges it (#4399)
             return;
         }
@@ -1345,6 +1349,9 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                 return;
             }
             lastHit.put(from.getUniqueId(), Bukkit.getCurrentTick());
+            if (dodge != null && dodge.melee && dodge.take()) {
+                return;                                      // an Iron Pagoda ignores the melee hit (#4465)
+            }
             a = charged(from, a);                            // a charge attack (Comitatenses, #4370)
         }
         if (ev.getDamager() instanceof Projectile p) {     // a cancelled hit lets the arrow fly on: one hit per arrow
@@ -2826,8 +2833,9 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             sender.sendMessage("Accuracy: " + n + " units");
             return true;
         }
-        if (args.length == 4 && args[0].equals("dodge")) {            // a Shrivamsha Rider dodges projectiles (#4399)
+        if ((args.length == 4 || args.length == 5) && args[0].equals("dodge")) {   // a Shrivamsha Rider (#4399)
             int shots, ticks;
+            boolean melee = args.length == 5 && args[4].equals("1");      // an Iron Pagoda (#4465)
             try {
                 shots = Integer.parseInt(args[2]);
                 ticks = Integer.parseInt(args[3]);
@@ -2839,7 +2847,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             for (Entity e : select(sender, args[1])) {
                 for (Entity t : new Entity[] {crew(e), e.getVehicle()}) {   // the rider and its horse (#732)
                     if (t != null) {
-                        dodges.put(t.getUniqueId(), new Dodge(shots, ticks));
+                        dodges.put(t.getUniqueId(), new Dodge(shots, ticks, melee));
                     }
                 }
                 n++;

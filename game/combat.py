@@ -222,9 +222,12 @@ def dodge_command(uuid, name):
     """The plugin command of the dodge of unit name (the key "dodge" of data/units.jsonl: the Shrivamsha Rider, #4399),
     or None when it dodges nothing. The AoE2 wiki ("Shrivamsha Rider"): a second, regenerating health bar takes each
     projectile ("shots" of them in "time" AoE2 seconds) and fills again during combat; melee hits pass. The plugin
-    fills the gauge evenly: one shot per time / shots seconds, up to shots."""
+    fills the gauge evenly: one shot per time / shots seconds, up to shots. "melee": true (the Iron Pagoda, #4465): the
+    gauge takes melee hits instead and projectiles pass; the command gets a last field 1."""
     d = DODGE.get(name)
-    return f"aoe dodge {uuid} {d['shots']} {round(d['time'] * 20)}" if d else None
+    if not d:
+        return None
+    return f"aoe dodge {uuid} {d['shots']} {round(d['time'] * 20)}" + (" 1" if d.get("melee") else "")
 
 
 def trample_command(uuid, name, T, t=None):
