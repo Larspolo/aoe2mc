@@ -88,6 +88,30 @@ def world_version(world):
     return str(data["Version"]["Name"]), spawn
 
 
+def vanilla_world(world):
+    """Make a world copy that the Paper server played loadable by the vanilla client (#4617): remove the data packs
+    that vanilla does not know ("paper"), and add the files of data/minecraft/ that the copy has not (Paper keeps the
+    world gen settings in another place) from a level.dat of the converter."""
+    from nbtlib import load
+    sys.path.insert(0, mc_check.ROOT)
+    import aoe2mc
+    path = os.path.join(world, "level.dat")
+    f = load(path)
+    packs = f["Data"].get("DataPacks", {}).get("Enabled")
+    if packs is not None:
+        keep = [p for p in packs if str(p) == "vanilla" or str(p).startswith("file/")]
+        if len(keep) != len(packs):
+            f["Data"]["DataPacks"]["Enabled"] = type(packs)(keep)
+            f.save()
+    d = os.path.join(world, "data", "minecraft")
+    with tempfile.TemporaryDirectory() as tmp:
+        aoe2mc.write_level_dat(os.path.join(tmp, "level.dat"), "shot", (0, 0, 0))
+        for name in os.listdir(os.path.join(tmp, "data", "minecraft")):
+            if not os.path.exists(os.path.join(d, name)):
+                os.makedirs(d, exist_ok=True)
+                shutil.copy(os.path.join(tmp, "data", "minecraft", name), d)
+
+
 def add_data_pack(world, views, fmt, period, player=False):
     """A data pack that shows the views one after the other, `period` ticks each. player: adventure mode, not
     spectator (a spectator sees invisible mobs, #636), and a teleport in each tick of a view (else the player falls)."""
@@ -139,6 +163,7 @@ def shoot(world, out, views=None, version=None, size=(1280, 720), settle=8.0, ti
     with tempfile.TemporaryDirectory(dir=os.path.join(mc_check.ROOT, ".cache")) as game:
         name = "shot"
         shutil.copytree(world, os.path.join(game, "saves", name))
+        vanilla_world(os.path.join(game, "saves", name))
         add_data_pack(os.path.join(game, "saves", name), views, data_pack_format(cp[-1]), period, player)
         with open(os.path.join(game, "options.txt"), "w") as f:
             f.writelines(f"{k}:{v}\n" for k, v in OPTIONS.items())
