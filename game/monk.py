@@ -400,6 +400,7 @@ def near(g, m, target, pos):
     reach = MONKS.get(g.soldiers.get(m), CONVERT) + PRINTING * ("BLOCK_PRINTING" in g.techs)
     reach += sum(train.value("reach", t, 0) for t in g.techs)     # Afterlife of Antiquity Mode (#3988)
     reach += sum(train.value("convert_range", t, 0) for t in g.techs)   # Clerical Recruitment (#4276)
+    reach += sum(train.value("unit_convert_range", t, {}).get(g.soldiers.get(m), 0) for t in g.techs)   # Inquisition (#4326)
     import build, civs                                             # build and civs import gather, which imports this module
     reach += civs.value("convert_range", civs.civ(g), (0,) * 4)[min(build.ages(g), 3)]   # Egyptian priests (#4447)
     return math.dist(pos[m], pos[target]) <= reach * g.map.T
