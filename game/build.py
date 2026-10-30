@@ -888,7 +888,8 @@ def target(g, site):
     s = combat.wall(name, ages(g), civs.civ(g, site["player"]), civs.handicap(g.data, site["player"])) if wall else values(g, name)   # Chemistry (#1375), Masonry (#1398)
     for c in combat.building(uuid, name, site["player"], box, g.map.T, s=s, low=minimum(g, name),
                              factor=civs.arrows(g, name, site["player"]), taken=taken(g, name),
-                             more=train.more_arrows(g, name) if site["player"] == g.player else 0) \
+                             more=train.more_arrows(g, name) if site["player"] == g.player else 0,
+                             through=train.pass_arrows(g, name) if site["player"] == g.player else "") \
             + [f"tag {uuid} add {combat.WALL_TAG}"] * wall + [combat.label_command(uuid, name)]:
         g.command(c)
     forts(g, site)
