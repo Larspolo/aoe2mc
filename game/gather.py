@@ -302,7 +302,7 @@ class Map:
                 tile = int(o["tile"][0]), int(o["tile"][1])
                 if o["name"] in MINES:                                 # a mine at x.0 covers 2 tiles
                     res, amount, _ = MINES[o["name"]]
-                    self.mines[res][tile] = amount
+                    self.mines[res][tile] = amount + o.get("resource_delta", 0)   # resource_delta of a random map (#4429)
                     self.feet[tile] = object_footprint({"name": o["name"], "x": o["tile"][0], "y": o["tile"][1]}, self.T)
                     self.mine_at.update(dict.fromkeys(self.spot(tile), tile))
                     self.blocked |= self.spot(tile)
