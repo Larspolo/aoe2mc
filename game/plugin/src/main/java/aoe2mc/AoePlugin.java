@@ -246,10 +246,11 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *   aoe cheats <code>,<code>,...|-             the AoE2 cheat codes in the chat (#816, Cheats.java; URL-encoded)
  *   aoe deathmarks on|off                      a short mark where a replay unit dies (#846, Deaths.java)
  *   aoe destroy <selector>                     the buildings fall as at 0 hit points: "Destroy: <n> buildings" (#819)
- *   aoe detonate <selector> <attack> <blast> <class:bonus,...|->
+ *   aoe detonate <selector> <attack> <blast> <class:bonus,...|-> [foes]
  *                                              Incendiaries (#2165): the ship explodes when it sinks; each unit within
  *                                              blast blocks takes a melee hit of attack, as in the blast of a
- *                                              demolition ship also the own units
+ *                                              demolition ship also the own units; the last word foes: not the
+ *                                              own or allied units (Thunderclap Bombs, #4367)
  *   aoe elevation <blocks> <team>:<up>:<low>:<high> ...
  *                                              the AoE2 elevation rule (#2307, game/combat.py elevation): a hit from
  *                                              blocks or more higher takes up (of the attacker's team) times high (of
@@ -549,6 +550,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     private final Map<UUID, ChargedVolley> chargedVolleys = new HashMap<>();
     private final Map<UUID, Integer> volleyCharged = new HashMap<>();  // the first tick of the next charged volley
     private final Map<UUID, Charge> detonations = new HashMap<>();
+    private final Set<UUID> spare = new HashSet<>();       // detonations that hurt no own or allied unit (#4367)
     // A charged ranged attack of a melee unit (Gothikon, #4368, aoe throw): at most shots axes, one charges in ticks;
     // axes: {charged axes, the tick where the next charge started, the first tick of the next throw}
     private record Throw(int ticks, int gap, double blocks, int shots) {
@@ -1925,7 +1927,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         axes.remove(ev.getEntity().getUniqueId());
         Charge blast = detonations.remove(ev.getEntity().getUniqueId());
         if (blast != null) {                                     // Incendiaries: the fire ship explodes (#2165)
-            burst(ev.getEntity(), ev.getEntity().getLocation(), blast, false);
+            burst(ev.getEntity(), ev.getEntity().getLocation(), blast, spare.remove(ev.getEntity().getUniqueId()));
         }
         if (stats.containsKey(ev.getEntity().getUniqueId()) && ev.getEntity().getVehicle() instanceof Boat boat) {
             ev.getDrops().clear();                               // the crew of a ship at 0 hit points: the ship sinks (#1386)
@@ -2463,9 +2465,10 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         }
     }
 
-    // aoe charge and aoe detonate (#2165): the values go to the crew of a ship, which has the AoE2 values (#1386).
+    // aoe charge and aoe detonate (#2165): the values go to the crew of a ship or a minecart, which has the AoE2 values
+    // and dies (#1386, #3013, #4367).
     private boolean charges(CommandSender sender, String selector, Map<UUID, Charge> to, String ticks, String attack,
-                            String shots, String blast, String bonus) {
+                            String shots, String blast, String bonus, boolean foes) {
         Charge c;
         try {
             c = new Charge(Integer.parseInt(ticks), new Stats(Integer.parseInt(attack), 0, 0, false, false, Set.of(),
@@ -2476,8 +2479,13 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         }
         int n = 0;
         for (Entity e : select(sender, selector)) {
-            if (sailors(e) instanceof LivingEntity le) {
+            if (crew(e) instanceof LivingEntity le) {
                 to.put(le.getUniqueId(), c);
+                if (to == detonations && foes) {
+                    spare.add(le.getUniqueId());
+                } else if (to == detonations) {
+                    spare.remove(le.getUniqueId());
+                }
                 n++;
             }
         }
@@ -3271,7 +3279,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             return true;
         }
         if (args.length == 7 && args[0].equals("charge")) {            // Siphons (#2165)
-            return charges(sender, args[1], charges, args[2], args[3], args[4], args[5], args[6]);
+            return charges(sender, args[1], charges, args[2], args[3], args[4], args[5], args[6], false);
         }
         if (args.length == 4 && args[0].equals("chargeattack")) {      // Comitatenses (#4370)
             int[] c;
@@ -3330,8 +3338,9 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             sender.sendMessage("Destroy: " + n + " buildings");
             return true;
         }
-        if (args.length == 5 && args[0].equals("detonate")) {          // Incendiaries (#2165)
-            return charges(sender, args[1], detonations, "0", args[2], "1", args[3], args[4]);
+        if ((args.length == 5 || args.length == 6 && args[5].equals("foes")) && args[0].equals("detonate")) {
+            // Incendiaries (#2165); foes: Thunderclap Bombs (#4367)
+            return charges(sender, args[1], detonations, "0", args[2], "1", args[3], args[4], args.length == 6);
         }
         if (args.length >= 2 && args[0].equals("elevation")) {         // the damage from higher ground (#2307)
             try {

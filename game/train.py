@@ -377,7 +377,8 @@ ROW = 9                                                            # the first s
 
 HULKS = tuple(r["name"] for r in UNIT_ROWS if r.get("melee_ship"))   # melee warships: the blacksmith attack too (#1509)
 # Siphons and Incendiaries (#2165): technology: the key "charge" or "detonate" of its line of data/train.jsonl and its
-# values: {"if": [tests], "attack": n, "blast": tiles, "bonus": {class: n}}, a charge also "reload" (s) and "shots".
+# values: {"if": [tests], "attack": n, "blast": tiles, "bonus": {class: n}}, a charge also "reload" (s) and "shots";
+# a list of them: one per unit line, and the blast hurts no own or allied unit (Thunderclap Bombs, #4367).
 # The charge of a melee hit (Comitatenses, #4370): the key "charge_attack": {"if": [tests], "attack": n, "time": s}
 FIRE = {r["name"]: (k, r[k]) for r in ROWS for k in ("charge", "charge_attack", "detonate") if k in r}
 
@@ -390,15 +391,17 @@ def fire_commands(g, uuid, name, techs=None):
     and no shot of a melee mob. An axe has the values of the unit (its attack with the upgrades)."""
     import combat, gather                                          # both import gather, gather imports this module
     out = []
-    for tech, (kind, c) in FIRE.items():
-        if tech not in (g.techs if techs is None else techs) or not any(test(t, name, combat.stats(name)) for t in c["if"]):
-            continue
-        if kind == "charge_attack":
-            out.append(f"aoe chargeattack {uuid} {max(1, round(c['time'] / gather.NORMAL * 20))} {c['attack']}")
-            continue
-        bonus, blast = ",".join(f"{k}:{v}" for k, v in sorted(c["bonus"].items())) or "-", c["blast"] * g.map.T
-        out.append(f"aoe charge {uuid} {max(1, round(c['reload'] / gather.NORMAL * 20))} {c['attack']} {c['shots']} "
-                   f"{blast} {bonus}" if kind == "charge" else f"aoe detonate {uuid} {c['attack']} {blast} {bonus}")
+    for tech, (kind, parts) in FIRE.items():                       # a list: one value per unit line, foes only (#4367)
+        for c in parts if isinstance(parts, list) else [parts]:
+            if tech not in (g.techs if techs is None else techs) or not any(test(t, name, combat.stats(name)) for t in c["if"]):
+                continue
+            if kind == "charge_attack":
+                out.append(f"aoe chargeattack {uuid} {max(1, round(c['time'] / gather.NORMAL * 20))} {c['attack']}")
+                continue
+            bonus, blast = ",".join(f"{k}:{v}" for k, v in sorted(c["bonus"].items())) or "-", c["blast"] * g.map.T
+            out.append(f"aoe charge {uuid} {max(1, round(c['reload'] / gather.NORMAL * 20))} {c['attack']} {c['shots']} "
+                       f"{blast} {bonus}" if kind == "charge" else
+                       f"aoe detonate {uuid} {c['attack']} {blast} {bonus}" + " foes" * isinstance(parts, list))
     for tech, c in BY_KEY["throw"].items():                        # Gothikon: the axes of a melee unit (#4368)
         if tech in (g.techs if techs is None else techs) and any(test(t, name, combat.stats(name)) for t in c["if"]):
             ticks = [max(1, round(c[k] / gather.NORMAL * 20)) for k in ("reload", "gap")]

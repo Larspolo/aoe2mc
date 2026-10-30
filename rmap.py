@@ -512,6 +512,11 @@ def generate(text, seed, players=2, size=None, warn=None, teams=None, folder=Non
             n = int(value(a[0], consts))
         elif cmd != "override_map_size":
             warn(f"{cmd} is not read yet")
+    for cmd, a, _ in sections.get("PLAYER_SETUP", ()):   # override_map_size works here too (#4580)
+        if cmd == "override_map_size" and a and not size:
+            n = int(value(a[0], consts))
+        elif cmd not in PLAYER_SETUP:
+            warn(f"{cmd} is not read yet")
     for s in sections:
         if s not in SECTIONS:
             warn(f"<{s}> is not read yet")
@@ -722,6 +727,22 @@ def circle(setup, players, teams, seed):
     return rng.permutation(order).tolist()
 
 
+PLAYER_SETUP = (                # the commands of <PLAYER_SETUP> that generate() reads or that have no map effect: no warning (#4580)
+    "ai_info_map_type",             # the AI map type: no effect on the land
+    "behavior_version",             # the script version: no effect on the land
+    "direct_placement",             # the start of the players: the game's own choice
+    "effect_amount",                # the player settings of the game: no effect on the land
+    "effect_percent",               # the player settings of the game: no effect on the land
+    "force_nomad_treaty",           # the game rule: no effect on the land
+    "grouped_by_team",              # the order of the players on the circle (circle())
+    "guard_state",                  # the start units: no effect on the land
+    "nomad_resources",              # the start resources: no effect on the land
+    "override_map_size",            # the map size, the last value wins (generate())
+    "random_placement",             # the order of the players on the circle (circle())
+    "set_gaia_civilization",        # the Gaia civilization: no effect on the land
+    "terrain_state",                # the terrain look: no effect on the land
+    "weather_type",                 # the weather: no effect on the land
+)
 CREATE_LAND = (                 # the attributes of create_land and create_player_lands that generate() reads: one per line (#4417)
     "assign_to",
     "assign_to_player",
