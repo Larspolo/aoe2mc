@@ -373,9 +373,12 @@ def main(argv=None):
     # Read the body again after all other reads (#3002): a run writes the state comment and the process changes
     # while the reads above take about 20 s, and the PATCH of the old body deleted them.
     status = api(f"issues/{status['number']}")
-    import dashboard_data                                   # the accounts section (#4239): one row per Claude account
-    body = render(status["body"], open_all, comments, open_prs, closed, closed_prs, now, owner, nxt,
-                  accounts=dashboard_data.accounts())
+    try:                                                    # the accounts section (#4239): one row per Claude account
+        import dashboard_data                               # a project tool: a copy of the generic tools has none (#3560)
+        accounts = dashboard_data.accounts()
+    except ImportError:
+        accounts = None
+    body = render(status["body"], open_all, comments, open_prs, closed, closed_prs, now, owner, nxt, accounts=accounts)
     if a.dry_run:
         print(body)
     elif re.sub(r"_Updated .*?_", "", body) != re.sub(r"_Updated .*?_", "", status["body"] or ""):
