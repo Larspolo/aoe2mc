@@ -80,6 +80,7 @@ import demolish  # noqa: E402
 import garrison  # noqa: E402
 import menu  # noqa: E402
 import monk  # noqa: E402
+import near  # noqa: E402
 import record  # noqa: E402
 import ruins  # noqa: E402
 import table  # noqa: E402
@@ -355,8 +356,9 @@ FIRE = {r["name"]: (k, r[k]) for r in ROWS for k in ("charge", "detonate") if k 
 
 def fire_commands(g, uuid, name, techs=None):
     """The plugin commands of the charge attack (`aoe charge`) and the blast at death (`aoe detonate`) of an own ship
-    after the research of their technologies (FIRE, #2165), or of the technologies techs only. Vanilla has no second
-    attack and no "on death" command."""
+    after the research of their technologies (FIRE, #2165), and of the thrown axes of a melee unit (`aoe throw`, the
+    key "throw": Gothikon, #4368), or of the technologies techs only. Vanilla has no second attack, no "on death"
+    command and no shot of a melee mob. An axe has the values of the unit (its attack with the upgrades)."""
     import combat, gather                                          # both import gather, gather imports this module
     out = []
     for tech, (kind, c) in FIRE.items():
@@ -365,6 +367,10 @@ def fire_commands(g, uuid, name, techs=None):
         bonus, blast = ",".join(f"{k}:{v}" for k, v in sorted(c["bonus"].items())) or "-", c["blast"] * g.map.T
         out.append(f"aoe charge {uuid} {max(1, round(c['reload'] / gather.NORMAL * 20))} {c['attack']} {c['shots']} "
                    f"{blast} {bonus}" if kind == "charge" else f"aoe detonate {uuid} {c['attack']} {blast} {bonus}")
+    for tech, c in BY_KEY["throw"].items():                        # Gothikon: the axes of a melee unit (#4368)
+        if tech in (g.techs if techs is None else techs) and any(test(t, name, combat.stats(name)) for t in c["if"]):
+            ticks = [max(1, round(c[k] / gather.NORMAL * 20)) for k in ("reload", "gap")]
+            out.append(f"aoe throw {uuid} {ticks[0]} {ticks[1]} {c['range'] * g.map.T:g} {c['shots']}")
     return out
 
 
@@ -986,7 +992,8 @@ def applies(unit, name):
 def stats(g, name, uuid=None):
     """The combat values of AoE2 unit name with the bonuses of the civilization (civs.UNITS) and the technologies of
     the player (combat.stats and TECHS), twice for civs.TWICE (#1561), n times for civs.SMITH_UNITS (#2174), and the
-    hit points of civs.TECH_HP (#2269). With uuid: also the trigger changes of that unit (unit_values, #3083)."""
+    hit points of civs.TECH_HP (#2269). With uuid: also the trigger changes of that unit (unit_values, #3083) and the
+    steps of the own units near it (g.near, near.py, #4333)."""
     import combat                                                  # combat imports gather, gather imports this module
     s, twice = civs.units(g, name, combat.stats(name)), civs.TWICE.get(civs.civ(g), ())
     times, also, more = civs.smith(g, name, s), civs.ALSO.get(civs.civ(g), {}), civs.MORE.get(civs.civ(g), {})
@@ -999,6 +1006,8 @@ def stats(g, name, uuid=None):
     for group, building, hp in civs.TECH_HP.get(civs.civ(g), ()):   # the Aztec monks (#2269)
         if civs.GROUPS[group](name, s):
             s = s._replace(hp=s.hp + hp * sum(t in g.techs for t in TRAINS[building] if t in TECHS))
+    for t, k in sorted(vars(g).get("near", {}).get(uuid, {}).items()):   # the own units near it (near.py, #4333)
+        s = near.change(BY_KEY["near"][t], k, s)
     if name.startswith("VILLAGER") and (f := civs.handicap(g.data, g.player)) != 1:   # the AoE2 "Handicap" (#2474)
         s = s._replace(hp=round(s.hp * f))
     for unit, field, op, q in vars(g).get("trigger_attributes", ()):   # "Modify Attribute" of a scenario (#2763)
@@ -1170,6 +1179,13 @@ def research(g, entry, start=False, rect=None):
         for rect, o in garrison.holders(g).items():
             if o["name"] in more:
                 g.command(garrison.arrows_command(g, rect))
+    if (free := value("spawn", entry["name"])) and not start:     # free units at own buildings (First Crusade, #4365)
+        unit = free["unit"]
+        while (up := next((n for t in sorted(g.techs & set(UPGRADES)) for o, n in lines(t, g) if o == unit), None)):
+            unit = up                                              # the upgraded unit of the line (Elite Serjeant)
+        for rect in sorted(r for r, n in homes(g).items() if n == free["at"])[:free["most"]]:
+            for _ in range(free["count"]):
+                spawn(g, rect, unit)
     for hook in value("on_research", entry["name"], ()):          # the special effect in its own module (#3243):
         module, function = hook.rsplit(".", 1)                     # import it late, it imports gather or this module
         getattr(importlib.import_module(module), function)(g, entry)

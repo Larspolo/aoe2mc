@@ -6,6 +6,7 @@ import sys
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "game"))
 import diplomacy  # noqa: E402
 import replay  # noqa: E402
+import train  # noqa: E402
 from test_replay import Fake, data  # noqa: E402
 
 S = replay.START
@@ -31,7 +32,9 @@ def test_coinage_lowers_the_fee_of_the_tribute():
     r = make()
     r.commands({"time": 100_000, "player": 1, "kind": "research", "technology": "Coinage"})
     r.commands({"time": 200_000, "player": 1, "kind": "tribute", "to": 2, "food": 100, "wood": 0, "gold": 0, "stone": 0})
-    assert r.resources(1)["food"] == S["food"] - paid(diplomacy.FEES["COINAGE"]) > S["food"] - paid(diplomacy.FEE)
+    coinage = train.COSTS["COINAGE"].get("food", 0)                   # the research pays its cost (#4389)
+    assert r.resources(1)["food"] == S["food"] - coinage - paid(diplomacy.FEES["COINAGE"])
+    assert paid(diplomacy.FEES["COINAGE"]) < paid(diplomacy.FEE)
     assert r.resources(2)["food"] == S["food"] + 100
 
 
