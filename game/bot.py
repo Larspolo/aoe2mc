@@ -483,16 +483,28 @@ class Bot:
     def recruit(self):
         """Keep QUEUED units in the queue of each training building: villagers at the town centers up to
         self.villagers, and the first military unit of the age at the other buildings, when the resources are there.
-        A town center comes first: the villagers get the resources first."""
-        g, keep = self.g, self.keep()
+        A town center comes first: the villagers get the resources first. Soldiers keep reserve(): else each soldier
+        takes the gold above keep(), and the bot never has the cost of its next technology (#4495)."""
+        g, keep, army = self.g, self.keep(), self.reserve()
         for rect, name in sorted(train.homes(g).items(), key=lambda kv: (kv[1] != "TOWN_CENTER", kv[0])):
             more = len(g.villagers) + sum(e["name"] == "VILLAGER_MALE" for q in g.queues.values() for e in q)
             units = ["VILLAGER_MALE"] if name == "TOWN_CENTER" else self.soldiers(name)
+            hold = keep if name == "TOWN_CENTER" else army
             for n in units[:1]:
                 while len(g.queues.get(rect, [])) < QUEUED and (n != "VILLAGER_MALE" or more < self.villagers) \
-                        and all(g.stock[r] >= v + keep.get(r, 0) for r, v in train.price(g, n).items()) \
+                        and all(g.stock[r] >= v + hold.get(r, 0) for r, v in train.price(g, n).items()) \
                         and train.queue(g, self.nobody, (rect[0], rect[2]), n):
                     more += n == "VILLAGER_MALE"
+
+    def reserve(self):
+        """keep() and the cost of the first technology of wanted() whose building has a free queue: the AoE2 AI saves
+        for its next technology before it trains more soldiers (#4495)."""
+        g, need = self.g, dict(self.keep())
+        busy = {rect for rect, q in g.queues.items() if any(e["name"] in train.TECHS for e in q)}
+        n = next((n for rect, n in self.wanted() if rect not in busy), None)
+        for r, v in (train.price(g, n) if n else {}).items():
+            need[r] = need.get(r, 0) + v
+        return need
 
     def soldiers(self, name):
         """The military units that building name trains now (recruit trains the first one)."""
