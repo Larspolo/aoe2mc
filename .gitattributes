@@ -59,3 +59,5 @@ data/trigger_effects.jsonl merge=jsonl
 # fails on two lines of one place and on a line that a merge put back.
 tests/data/game_names_in_code.txt merge=union
 framework/files.txt merge=union
+# One class name per unit ability of the plugin (#4589): each ability PR adds one line, ServiceLoader reads them.
+game/plugin/src/main/resources/META-INF/services/aoe2mc.Ability merge=union
