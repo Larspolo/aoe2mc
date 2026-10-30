@@ -12,13 +12,20 @@ from test_ranged import data
 from game import civs, combat, run, spoils, train
 
 RATE = combat.ATTACK_GOLD["VARANGIAN_GUARD"]                        # gold per AoE2 minute
-TICKS = 720 * RATE        # 720 real ticks of hits at Normal speed (61.2 AoE2 seconds)
+TICKS = 720 * round(RATE * spoils.PART)   # 720 real ticks of hits at Normal speed (61.2 AoE2 seconds)
 
 
 def score(server, n):
+    """A fake score n["n"] of p1 that "scoreboard players remove" lowers."""
     command = server.command
-    server.command = lambda c: (f"p1 has {n['n']} [{spoils.GOLD}]"
-                                if c == f"scoreboard players get p1 {spoils.GOLD}" else command(c))
+
+    def fake(c):
+        if c == f"scoreboard players get p1 {spoils.GOLD}":
+            return f"p1 has {n['n']} [{spoils.GOLD}]"
+        if c.startswith(f"scoreboard players remove p1 {spoils.GOLD} "):
+            n["n"] -= int(c.split()[-1])
+        return command(c)
+    server.command = fake
 
 
 @pytest.mark.parametrize("civ", ["VIKINGS", "VARANGIANS"])
@@ -26,7 +33,7 @@ def test_a_varangian_guard_makes_gold_while_it_attacks(civ):
     gold = int(RATE * 720 / 20 * combat.NORMAL / 60 * civs.value("attack_gold", civ, 1))   # RATE × 61.2 / 60, the civ factor
     server, g = game(civ)
     u = train.summon(g, "VARANGIAN_GUARD", (8.5, 64.0, 8.5))
-    assert f"tag {u} add aoe2mc.gold.{RATE}" in server.log             # the plugin counts its hits
+    assert f"tag {u} add aoe2mc.gold.{round(RATE * spoils.PART)}" in server.log             # the plugin counts its hits
     n = {"n": 0}
     score(server, n)
     train.census(g)
@@ -68,5 +75,5 @@ def test_the_plugin_counts_the_hits_of_a_gold_unit_on_enemy_units(tiny_world, tm
             time.sleep(0.1)
         assert data(game, "m", "Health") is None, "the militia is alive"
         reload = int(combat.stats_command("u", "VARANGIAN_GUARD").split()[10])
-        hits = int(game.command(get).split("has ")[1].split()[0]) // (RATE * reload)
+        hits = int(game.command(get).split("has ")[1].split()[0]) // (round(RATE * spoils.PART) * reload)
         assert hits >= 3, game.command(get)            # 40 hit points, 13 damage a hit: 4 hits
