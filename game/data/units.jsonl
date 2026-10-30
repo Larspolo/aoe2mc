@@ -72,7 +72,7 @@
 {"name": "PLUMED_ARCHER", "hp": 50, "attack": 5, "melee": 0, "pierce": 1, "range": 4, "reload": 1.9, "bonus": {"infantry": 1, "spearman": 2}, "classes": ["archer", "unique"]}
 {"name": "RATHA", "hp": 100, "attack": 5, "melee": 3, "pierce": 1, "range": 4, "reload": 2.0, "bonus": {"spearman": 1}, "classes": ["archer", "cavalry", "unique"], "melee_mode": {"attack": 10, "trample": {"part": 0.2, "radius": 0.5}}}
 {"name": "RATTAN_ARCHER", "hp": 35, "attack": 6, "melee": 0, "pierce": 4, "range": 4, "reload": 2.0, "bonus": {"spearman": 2}, "classes": ["archer", "unique"]}
-{"name": "SAMURAI", "hp": 70, "attack": 10, "melee": 1, "pierce": 1, "range": 0, "reload": 1.9, "bonus": {"building": 2, "unique": 10}, "classes": ["infantry", "unique"], "sight": 6}
+{"name": "SAMURAI", "hp": 70, "attack": 10, "melee": 1, "pierce": 1, "range": 0, "reload": 1.9, "bonus": {"building": 2, "unique": 10}, "classes": ["infantry", "unique"], "sight": 6, "charge_attack": {"time": 30, "attack": 1}}
 {"name": "SERJEANT", "hp": 75, "attack": 8, "melee": 4, "pierce": 2, "range": 0, "reload": 2.0, "bonus": {"building": 2}, "classes": ["infantry", "unique"], "sight": 5, "repairs": "DONJON"}
 {"name": "SHOTEL_WARRIOR", "hp": 45, "attack": 16, "melee": 0, "pierce": 0, "range": 0, "reload": 2.0, "bonus": {}, "classes": ["infantry", "unique"], "sight": 5}
 {"name": "SHRIVAMSHA_RIDER", "hp": 55, "attack": 8, "melee": 0, "pierce": 1, "range": 0, "reload": 2.0, "bonus": {}, "classes": ["cavalry", "unique"], "sight": 5, "dodge": {"shots": 5, "time": 20}}
@@ -122,7 +122,7 @@
 {"name": "ELITE_PLUMED_ARCHER", "hp": 65, "attack": 5, "melee": 0, "pierce": 2, "range": 5, "reload": 1.9, "bonus": {"infantry": 2, "spearman": 2}, "classes": ["archer", "unique"], "sight": 6}
 {"name": "ELITE_RATHA", "hp": 115, "attack": 6, "melee": 3, "pierce": 3, "range": 4, "reload": 2.0, "bonus": {"spearman": 2}, "classes": ["archer", "cavalry", "unique"], "note": "ranged mode (#1891)", "melee_mode": {"attack": 12, "trample": {"part": 0.2, "radius": 0.5}}}
 {"name": "ELITE_RATTAN_ARCHER", "hp": 40, "attack": 7, "melee": 0, "pierce": 6, "range": 5, "reload": 2.0, "bonus": {"spearman": 2}, "classes": ["archer", "unique"], "sight": 6}
-{"name": "ELITE_SAMURAI", "hp": 80, "attack": 12, "melee": 1, "pierce": 1, "range": 0, "reload": 1.9, "bonus": {"building": 3, "unique": 12}, "classes": ["infantry", "unique"], "sight": 7}
+{"name": "ELITE_SAMURAI", "hp": 80, "attack": 12, "melee": 1, "pierce": 1, "range": 0, "reload": 1.9, "bonus": {"building": 3, "unique": 12}, "classes": ["infantry", "unique"], "sight": 7, "charge_attack": {"time": 30, "attack": 1}}
 {"name": "ELITE_SERJEANT", "hp": 85, "attack": 11, "melee": 6, "pierce": 3, "range": 0, "reload": 2.0, "bonus": {"building": 3}, "classes": ["infantry", "unique"], "sight": 7, "repairs": "DONJON"}
 {"name": "ELITE_SHOTEL_WARRIOR", "hp": 50, "attack": 18, "melee": 0, "pierce": 1, "range": 0, "reload": 2.0, "bonus": {"building": 1}, "classes": ["infantry", "unique"], "sight": 5}
 {"name": "ELITE_SHRIVAMSHA_RIDER", "hp": 70, "attack": 11, "melee": 0, "pierce": 1, "range": 0, "reload": 1.9, "bonus": {}, "classes": ["cavalry", "unique"], "sight": 6, "dodge": {"shots": 7, "time": 20}}
