@@ -553,12 +553,13 @@ def challenge_names():
 
 
 def civ_choices(values):
-    """{player: civilization} of the --civ values ("1=BRITONS", #2267). An unknown name stops with the list of names."""
+    """{player: civilization} of the --civ values ("1=BRITONS", #2267). "RANDOM" (the lobby choice "Random", #4755)
+    stays: apply_civs picks it. An unknown name stops with the list of names."""
     import civs
     names, out = sorted(r["name"] for r in civs.ROWS), {}
     for v in values or ():
         player, _, name = v.partition("=")
-        if not player.isdigit() or name.upper() not in names:
+        if not player.isdigit() or name.upper() not in names + ["RANDOM"]:
             sys.exit(f"--civ {v}: write PLAYER=CIVILIZATION, one of: {', '.join(names)}")
         out[int(player)] = name.upper()
     return out
@@ -572,6 +573,13 @@ def apply_civs(data, civs):
         if p.get("lock_civ"):
             print(f"player {player}: the scenario locks its civilization, --civ {name} is not used", file=sys.stderr)
             continue
+        if name == "RANDOM":                                     # one of all civilizations, seeded by the scenario (#4755)
+            import random
+
+            import civs
+            seed = f"{data.get('map_size')}-{len(data.get('objects', ()))}-{player}"
+            name = random.Random(seed).choice(sorted(r["name"] for r in civs.ROWS))
+            print(f"player {player}: --civ RANDOM gives {name}", file=sys.stderr)
         p["civ"] = name
 
 
@@ -1268,7 +1276,7 @@ def main(argv=None, scenario=None):
     ap.add_argument("--load", metavar="SAVE", help="--play: go on with a saved game (a folder of saves/: the end of "
                     "--play with Ctrl-C saves the world and the resources, technologies and ages there)")
     ap.add_argument("--civ", action="append", metavar="N=CIV", help="--play: player N plays civilization CIV (for "
-                    "example 1=BRITONS, repeat it for more players): the game rules change, the buildings of the "
+                    "example 1=BRITONS, or 1=RANDOM; repeat it for more players): the game rules change, the buildings of the "
                     "world keep the architecture of the scenario")
     ap.add_argument("--handicap", action="append", metavar="N=PCT", help="--play: the AoE2 setting \"Handicap\" of "
                     "player N, 100 to 200 percent in steps of 5 (for example 1=150, repeat it for more players): more "
