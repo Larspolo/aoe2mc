@@ -183,6 +183,10 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *   aoe show <players> <uuid> ...              Player#showEntity: the players see these entities again (#1302)
  *   aoe show <players> all                     the players see all the units that a team=T hide hides (a spectator,
  *                                              team spec, #2921); a hide with no team stays
+ *   aoe shield <selector> <part> <takes>       the unit shields the units behind it (the Hussite Wagon, #4507,
+ *                                              game/combat.py shield_command): an enemy projectile that hits it on its
+ *                                              way to another target deals part of its damage to that target, and the
+ *                                              unit takes "takes" hit points
  *   aoe sight <selector> <blocks>              an idle unit attacks an enemy in this line of sight (#775)
  *   aoe sight <selector> <blocks> only|first   ... and enemy buildings: only buildings, or buildings before units
  *                                              (#1820: the ram line and the trebuchet, the elephant and cannon galleon)
@@ -490,6 +494,11 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     }
 
     private final Map<UUID, Trample> tramples = new HashMap<>();
+    // The projectile obstruction of a unit (aoe shield, #4507): part of the damage goes on to the target, takes on the unit
+    private record Shield(double part, int takes) {
+    }
+
+    private final Map<UUID, Shield> shields = new HashMap<>();
     private final Map<UUID, int[]> axes = new HashMap<>();
     private final Map<UUID, Double> sights = new HashMap<>();       // the line of sight of a unit in blocks (#775)
     private final Map<UUID, String> modes = new HashMap<>();        // "only" or "first": it takes buildings (#1820)
@@ -1343,6 +1352,18 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         Dodge dodge = dodges.getOrDefault(ev.getEntity().getUniqueId(), dodges.get(hurt.getUniqueId()));
         if (ev.getDamager() instanceof Projectile p && dodge != null && !dodge.melee && dodge.take()) {
             p.remove();                                      // a Shrivamsha Rider dodges it (#4399)
+            return;
+        }
+        Shield shield = shields.getOrDefault(ev.getEntity().getUniqueId(), shields.get(hurt.getUniqueId()));
+        if (ev.getDamager() instanceof Projectile p && shield != null && from instanceof Mob m && !sameTeam(from, hurt)
+                && body(target(m)) instanceof LivingEntity aim && aim != hurt && aim.isValid() && !aim.isDead()
+                && stats.containsKey(aim.getUniqueId()) && !buildings.containsKey(aim.getUniqueId())
+                && from.getLocation().distanceSquared(hurt.getLocation()) < from.getLocation().distanceSquared(aim.getLocation())) {
+            p.remove();                    // a Hussite Wagon: the shot passes on to the target of the shooter (#4507)
+            victim.playHurtAnimation(0);
+            victim.setHealth(Math.max(0, victim.getHealth() - shield.takes()));   // no armor (AoE2 DE wiki)
+            nameLine(victim);
+            harm(aim, stats.get(aim.getUniqueId()), volley(p, a), from, shield.part());
             return;
         }
         if (!(ev.getDamager() instanceof Projectile)) {      // a melee hit: once per AoE2 reload (#848)
@@ -3160,6 +3181,28 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                 e = null;
             }
             sender.sendMessage("Sees: " + (!who.isEmpty() && e != null && who.get(0).canSee(e) ? 1 : 0));
+            return true;
+        }
+        if (args.length == 4 && args[0].equals("shield")) {           // a Hussite Wagon shields the units behind it (#4507)
+            double part;
+            int takes;
+            try {
+                part = Double.parseDouble(args[2]);
+                takes = Integer.parseInt(args[3]);
+            } catch (NumberFormatException e) {
+                sender.sendMessage("Bad number: " + e.getMessage());
+                return true;
+            }
+            int n = 0;
+            for (Entity e : select(sender, args[1])) {
+                for (Entity t : new Entity[] {crew(e), e.getVehicle()}) {   // the crew of a cart, the horse of a rider
+                    if (t != null) {
+                        shields.put(t.getUniqueId(), new Shield(part, takes));
+                    }
+                }
+                n++;
+            }
+            sender.sendMessage("Shield: " + n + " units");
             return true;
         }
         if ((args.length == 3 || args.length == 4 && Set.of("only", "first").contains(args[3]))
