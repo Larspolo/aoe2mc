@@ -271,9 +271,10 @@ def changes(g, name, s):
 
 def sight_units(g, name, s):
     """The extra tiles of line of sight of unit name (combat.Stats s) by the key "sight_units" of the civilization of g:
-    [group of GROUPS or a list of unit names, tiles] (the Macedonians in Antiquity Mode, #4448)."""
-    k, more = value("sight_units", civ(g), (None, 0))
-    return more if k is not None and (name in k if isinstance(k, list) else GROUPS[k](name, s)) else 0
+    rules [group of GROUPS or a list of unit names, tiles]: the tiles of each matching rule add up (the Macedonians and
+    the Phoenician team bonus in Antiquity Mode, #4448)."""
+    return sum(more for k, more in value("sight_units", civ(g), ())
+               if (name in k if isinstance(k, (list, tuple)) else GROUPS[k](name, s)))
 
 
 def smith(g, name, s):

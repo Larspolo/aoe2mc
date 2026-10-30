@@ -39,6 +39,7 @@ Usage:
     python3 game/run.py WORLD --play --mode capture-the-relic --regicide   # a King on top of the mode (also
                                                      # --sudden-death, --empire-wars: AoE2 "Advanced Settings", #2490)
     python3 game/run.py WORLD --play --civ 1=BRITONS --civ 2=FRANKS   # the civilization of each player (#2267)
+    python3 game/run.py WORLD --play --civ-mode mirror   # all play the civilization of player 1 (also team-random, #4757)
     python3 game/run.py WORLD --play --teams 1,1,2,2   # the team of each player, - is no team (#2296)
     python3 game/run.py WORLD --play --load SAVE   # go on with a saved game: Ctrl-C of --play saves into saves/ (#2255)
     python3 game/run.py WORLD --replay [--speed 4] [--follow N] [--view N]  # replay the recorded game of the world (game/replay.py), then wait for Ctrl-C
@@ -583,6 +584,34 @@ def apply_civs(data, civs):
         p["civ"] = name
 
 
+def apply_civ_mode(data, mode):
+    """The lobby options "Mirror" (all players get the civilization of player 1, one random one when it is RANDOM)
+    and "Team Random" (each team gets one random civilization) on the players of aoe2mc.json, after apply_civs and the
+    teams (#4757). A player with no team is a team of its own. A locked civilization (#3295) stays."""
+    if mode == "normal":
+        return
+    import civs
+    players = {k: p for k, p in data.get("players", {}).items() if int(k) > 0}
+    if mode == "mirror":
+        groups = {"all": sorted(players, key=int)}
+    else:
+        groups = {}
+        for k in sorted(players, key=int):
+            groups.setdefault(players[k].get("team") or f"-{k}", []).append(k)
+    for group, members in groups.items():
+        first = players[members[0]].get("civ") if mode == "mirror" else "RANDOM"
+        if first in (None, "RANDOM"):
+            import random
+            seed = f"{data.get('map_size')}-{len(data.get('objects', ()))}-{mode}-{group}"
+            first = random.Random(seed).choice(sorted(r["name"] for r in civs.ROWS))
+        for k in members:
+            if players[k].get("lock_civ"):
+                print(f"player {k}: the scenario locks its civilization, --civ-mode {mode} is not used", file=sys.stderr)
+                continue
+            players[k]["civ"] = first
+        print(f"--civ-mode {mode}: players {','.join(members)} play {first}", file=sys.stderr)
+
+
 def handicap_choices(values):
     """{player: percent} of the --handicap values ("1=150", #2474): the AoE2 setting "Handicap", 100 to 200 in steps of
     5. A wrong value stops with a message."""
@@ -644,6 +673,7 @@ SETTINGS = {
     "antiquity": False,               # Antiquity Mode: the Return of Rome rule set (table.use, game/data/antiquity, #3666)
     "challenge": None,                # an Art of War challenge (challenge.CHALLENGES, #3900)
     "civ": None,                      # {player: civilization} in place of the scenario's (civ_choices, #2267)
+    "civ_mode": "normal",             # "mirror" or "team-random": the same civilization for all or per team (#4757)
     "empire_wars": False,             # "Empire Wars Mode" on top of the mode (ON_TOP, #2490)
     "end_age": "imperial",            # "Ending age" (build.locked, #2346)
     "full_tech_tree": False,          # "Full Tech Tree": the full tech tree and no civilization bonuses (civs.civ, #2354)
@@ -731,6 +761,7 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
         data.setdefault("players", {}).setdefault(str(player), {})["handicap"] = pct
     for player, team in (settings["teams"] or {}).items():       # gather.allied and the scoreboard teams follow it
         data["players"][str(player)]["team"] = team
+    apply_civ_mode(data, settings["civ_mode"])                   # after the teams: Team Random follows them (#4757)
     data["all_techs"] = settings["all_techs"]                    # one data for all Gathers: the people and the bot (#2298)
     data["end_age"] = train.STARTS[settings["end_age"]]["ages"]  # the last age (build.locked, #2346)
     data["full_tech_tree"] = settings["full_tech_tree"]          # (#2354)
@@ -1278,6 +1309,9 @@ def main(argv=None, scenario=None):
     ap.add_argument("--civ", action="append", metavar="N=CIV", help="--play: player N plays civilization CIV (for "
                     "example 1=BRITONS, or 1=RANDOM; repeat it for more players): the game rules change, the buildings of the "
                     "world keep the architecture of the scenario")
+    ap.add_argument("--civ-mode", choices=["normal", "mirror", "team-random"], default="normal", help="--play: the "
+                    "AoE2 lobby options \"Mirror\" (all players play the civilization of player 1, one random one for "
+                    "all when it is RANDOM) and \"Team Random\" (the players of each team play one random civilization)")
     ap.add_argument("--handicap", action="append", metavar="N=PCT", help="--play: the AoE2 setting \"Handicap\" of "
                     "player N, 100 to 200 percent in steps of 5 (for example 1=150, repeat it for more players): more "
                     "start resources, villager work rate and hit points, building hit points and military building "
