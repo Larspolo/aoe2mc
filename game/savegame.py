@@ -320,7 +320,8 @@ def dump(g):
 def script_state(s):
     """The state of a per.Script: JSON keys are strings, so the goals and timers are [id, value] pairs."""
     return {"goals": sorted(map(list, s.goals.items())), "timers": sorted(map(list, s.timers.items())),
-            "off": sorted(s.off), "sn": dict(sorted(s.sn.items())), "attacking": s.attacking}
+            "off": sorted(s.off), "sn": dict(sorted(s.sn.items())), "attacking": s.attacking,
+            "escrow": dict(sorted(s.escrow.items())), "pct": dict(sorted(s.pct.items())), "last": s.last}
 
 
 def owner_record(g):
@@ -587,6 +588,7 @@ def bots_again(g, d):
                     sc = b.script
                     sc.goals, sc.timers = dict(map(tuple, v["goals"])), dict(map(tuple, v["timers"]))
                     sc.off, sc.sn, sc.attacking = set(v["off"]), dict(v["sn"]), v["attacking"]
+                    sc.escrow, sc.pct, sc.last = dict(v.get("escrow", {})), dict(v.get("pct", {})), v.get("last")
                 continue
             if f == "difficulty" and v != b.difficulty:                # the work rate of the saved level (bot.Bot)
                 r = ai.LEVELS[b.difficulty]["gather"] / ai.LEVELS[v]["gather"]
