@@ -9,6 +9,9 @@ from test_replay import Fake, data  # noqa: E402
 from test_replay_stat_books import page, pages  # noqa: E402
 
 
+SPENT = ["", "Spent:", "Eco 0", "Mil 0", "Tech 0", "Build 0"]     # the spending lines under the villagers (#4391)
+
+
 def game():
     return replay.Replay(Fake(), data([]), ai=True)
 
@@ -28,7 +31,7 @@ def test_the_first_call_gives_a_page_per_player_and_a_repeat_sends_nothing():
     vill(r, "VILLAGER_FEMALE", 2, 2)
     first = r.ecoview()
     assert len(first) == 1 and first[0].startswith(f"item replace entity @a hotbar.{replay.STAT_BOOKS['Economy']} ")
-    assert [page(first, k) for k in (0, 1)] == [["food 0", "wood 0", "gold 0", "stone 0", "build 0", "idle 1"]] * 2
+    assert [page(first, k) for k in (0, 1)] == [["food 0", "wood 0", "gold 0", "stone 0", "build 0", "idle 1"] + SPENT] * 2
     assert r.ecoview() == []                                    # the same counts: no command
 
 
@@ -40,7 +43,7 @@ def test_a_change_of_one_count_changes_the_book():
     r.ecoview()
     r.look(a, "LUMBERJACK")
     changed = r.ecoview()
-    assert len(changed) == 1 and page(changed, 0) == ["food 0", "wood 1", "gold 0", "stone 0", "build 0", "idle 0"]
+    assert len(changed) == 1 and page(changed, 0) == ["food 0", "wood 1", "gold 0", "stone 0", "build 0", "idle 0"] + SPENT
     assert r.ecoview() == []
 
 

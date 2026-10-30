@@ -90,6 +90,8 @@ ACCURACY = {r["name"]: r["accuracy"] for r in UNIT_ROWS if "accuracy" in r}   # 
 DODGE = {r["name"]: r["dodge"] for r in UNIT_ROWS if "dodge" in r}           # projectiles that do no damage (#4399)
 ON_DEATH = {r["name"]: r["on_death"] for r in UNIT_ROWS if "on_death" in r}   # the unit that rises where it dies (#4471)
 FELL = "aoe2mc.fell."            # the tag + UUID of the marker that the plugin leaves where a unit of ON_DEATH dies
+LOW_HP = {r["name"]: r["low_hp"] for r in UNIT_ROWS if "low_hp" in r}      # another form below some hit points (#4472)
+VETERAN = {r["name"]: r["veteran"] for r in UNIT_ROWS if "veteran" in r}     # attack more for each kill (#4467)
 SHIELD = {r["name"]: r["shield"] for r in UNIT_ROWS if "shield" in r}         # projectiles through it hurt less (#4507)
 # The minimum range of the buildings that shoot, in tiles from the edge of the footprint (AoE2 DE, wiki infobox
 # "MinRange", #1546). The town center has none. Murder Holes removes it.
@@ -105,7 +107,9 @@ REGEN = {r["name"]: r["regen"] for r in UNIT_ROWS if "regen" in r}             #
 # the key "ignore_armor": its hits ignore a positive armor (#4394)
 IGNORE = {r["name"] for r in UNIT_ROWS if r.get("ignore_armor")}
 PASS = {r["name"]: r["pass"] for r in UNIT_ROWS if "pass" in r}               # the key "pass" of data/units.jsonl
+CHARGE_ATTACK = {r["name"]: r["charge_attack"] for r in UNIT_ROWS if "charge_attack" in r}   # the Coustillier (#4398)
 TRAMPLE = {r["name"]: r["trample"] for r in UNIT_ROWS if "trample" in r}       # the key "trample": the elephants (#4397)
+MELEE_MODE = {r["name"]: r["melee_mode"] for r in UNIT_ROWS if "melee_mode" in r}   # the key "melee_mode": the Ratha (#4504)
 # The part of the damage on the units behind the target, when it is not one half (wiki: "100% pass-through damage").
 PASS_PART = {r["name"]: r["pass_part"] for r in UNIT_ROWS if "pass_part" in r}
 DEFAULT, BUILDING = Stats(40, 4, 0, 0, 0, 2.0), Stats(1000, 0, 0, 7, 0, 0.0, {}, ("building",))
@@ -222,6 +226,14 @@ def accuracy_command(uuid, name, bonus=0.0):
     return f"aoe accuracy {uuid} {part:g}" if part < 1 else None
 
 
+def charge_command(uuid, name):
+    """The plugin command of the own charge attack of unit name (the key "charge_attack" of data/units.jsonl: the
+    Coustillier, #4398), or None: the first melee hit on a unit after a full charge of "time" AoE2 seconds has
+    "attack" more (aoe chargeattack of #4370; its time as ticks at Normal speed)."""
+    c = CHARGE_ATTACK.get(name)
+    return f"aoe chargeattack {uuid} {max(1, round(c['time'] / NORMAL * 20))} {c['attack']}" if c else None
+
+
 def dodge_command(uuid, name):
     """The plugin command of the dodge of unit name (the key "dodge" of data/units.jsonl: the Shrivamsha Rider, #4399),
     or None when it dodges nothing. The AoE2 wiki ("Shrivamsha Rider"): a second, regenerating health bar takes each
@@ -232,6 +244,17 @@ def dodge_command(uuid, name):
     if not d:
         return None
     return f"aoe dodge {uuid} {d['shots']} {round(d['time'] * 20)}" + (" 1" if d.get("melee") else "")
+
+
+def low_hp_command(uuid, name):
+    """The plugin command of the low hit point form of unit name (the key "low_hp" of data/units.jsonl: the Jian
+    Swordsman, #4472), or None when it has none. The AoE2 wiki ("Jian Swordsman"): it switches by itself to its
+    unshielded form below "hp" hit points (that melee and pierce armor, "speed" times the speed) and back at hp or
+    more. The plugin checks the hit points each tick."""
+    lo = LOW_HP.get(name)
+    if not lo:
+        return None
+    return f"aoe lowhp {uuid} {lo['hp']:g} {lo['melee']} {lo['pierce']} {lo['speed']:g}"
 
 
 def shield_command(uuid, name):
@@ -248,6 +271,21 @@ def on_death_command(uuid, name):
     the Konnik, #4471), or None. The plugin leaves a marker with the tag FELL + uuid at the place of the death of a
     tagged unit (AoePlugin.onDeath); train.census reads it. A removed unit (a sunk boat, an unloaded chunk) leaves none."""
     return f"tag {uuid} add aoe2mc.on_death" if name in ON_DEATH else None
+
+
+def melee_mode(name, s=None):
+    """The values of unit name in its melee mode (the key "melee_mode", the Ratha, #4504): range 0 and the attack of the
+    key; s: the values of the ranged mode, default those of the unit line. Its trample: MELEE_MODE[name]["trample"]."""
+    s = s or stats(name)
+    return s._replace(range=0, attack=MELEE_MODE[name]["attack"])
+
+
+def veteran_command(uuid, name):
+    """The plugin command of the kill bonus of unit name (the key "veteran" of data/units.jsonl: the Jaguar Warrior,
+    #4467), or None. AoE2 wiki ("Jaguar Warrior"): "Gains +1 attack for each unit killed (up to 4)": "attack" for each
+    kill, up to "max". The plugin keeps the kills of a unit when it gets the command again (an Elite upgrade)."""
+    v = VETERAN.get(name)
+    return f"aoe veteran {uuid} {v['attack']} {v['max']}" if v else None
 
 
 def trample_command(uuid, name, T, t=None):
@@ -336,11 +374,20 @@ def setup(game, data):
         civ = None if data.get("full_tech_tree") else data.get("players", {}).get(str(o["player"]), {}).get("civ")
         if cmd := accuracy_command(o["uuid"], o["name"], civs.value("accuracy", civ, {}).get(o["name"], 0.0)):
             game.command(cmd)
+    for o in units:                                  # the Coustillier charges its attack (#4398)
+        if cmd := charge_command(o["uuid"], o["name"]):
+            game.command(cmd)
     for o in units:                                  # a Shrivamsha Rider dodges projectiles (#4399)
         if cmd := dodge_command(o["uuid"], o["name"]):
             game.command(cmd)
     for o in units:                                  # a Konnik rises as a Dismounted Konnik (#4471)
         if cmd := on_death_command(o["uuid"], o["name"]):
+            game.command(cmd)
+    for o in units:                                  # a Jian Swordsman loses its shield at low hit points (#4472)
+        if cmd := low_hp_command(o["uuid"], o["name"]):
+            game.command(cmd)
+    for o in units:                                  # a Jaguar Warrior gets attack for each kill (#4467)
+        if cmd := veteran_command(o["uuid"], o["name"]):
             game.command(cmd)
     for o in units:                                  # a Hussite Wagon shields the units behind it (#4507)
         if cmd := shield_command(o["uuid"], o["name"]):
