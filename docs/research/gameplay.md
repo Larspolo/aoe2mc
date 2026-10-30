@@ -291,6 +291,41 @@ Only the shots with an area damage hit at the point: a Turtle Ship fires its can
 The plugin command `aoe attackground <selector> <x> <y> <z>` takes each unit with a siege shot (`aoe range` with a blast).
 A unit with blast 0 (the Trebuchet) shoots, but its shot hits no unit at the point.
 
+## Civilization choices (#4747)
+
+The lobby options of AoE2 DE for the civilization of a player (part of epic #4745). The cloud blocks the wiki hosts
+(HTTP 403): the rules come from the game and the wiki pages below; a later run with access checks the links.
+
+| Option | Rule in AoE2 DE | Source |
+|---|---|---|
+| Per-player civilization | Each player selects one civilization in the lobby. | [Civilizations](https://ageofempires.fandom.com/wiki/Civilizations_(Age_of_Empires_II)) |
+| Random | The game gives the player one civilization from all civilizations of the game at the start. Players can get the same one. | [Game settings](https://ageofempires.fandom.com/wiki/Game_settings) |
+| Random pool | The host disables civilizations; Random selects only from the enabled civilizations. | [Game settings](https://ageofempires.fandom.com/wiki/Game_settings) |
+| Mirror | All players get the same civilization: the host civilization, or one random civilization for all when the host has Random. | [Game settings](https://ageofempires.fandom.com/wiki/Game_settings) |
+| Team Random (same per team) | Each team gets one random civilization for all its players. | [Game settings](https://ageofempires.fandom.com/wiki/Game_settings) |
+| Hidden civilizations | The lobby and the game show "?" for the civilization of the other players. The civilization shows in the end screen (Achievements). Allies see each other: the team bonus shows. | [Game settings](https://ageofempires.fandom.com/wiki/Game_settings) |
+| Lock civilizations | A scenario keeps its civilizations; the lobby cannot change them. The converter keeps it: `lock_civ` (#3295). | `game/run.py` `apply_civs` |
+
+The displays of the civilization of a player in the game program:
+
+| File | Function | What it shows |
+|---|---|---|
+| `game/lobby.py` | `name` | The lobby menu: "Player N (Civ)", also "You play ..." and "... is taken" |
+| `game/diplomacy.py` | `name` | The diplomacy menu: "Name (Civ)" of each player |
+| `game/scenario.py` | trigger display (`trigger_civs`) | A scenario trigger renames the civilization of a player (#2905); lobby and diplomacy show it |
+| `game/recap.py` | `give` (page lines) | The end book: "Player N (Civ)"; `RANDOM` shows no name |
+| `game/replay.py` | `Replay.player` | The replay panel: "Name (Civ)" of the record |
+| `game/techtree.py` | `view` | The tech tree: the own civilization first, the next and previous of all civilizations |
+| `game/run.py` | `civ_choices`, `apply_civs` | The `--civ PLAYER=CIV` option; no Random, pool, Mirror or Hidden value yet |
+
+The score panel (`game/score.py`), the tab list and the chat show no civilization. Hidden civilizations must change
+`lobby.name`, `diplomacy.name` and `techtree` (it lets a player open any tree, which is no leak), and keep `recap` (the
+end screen shows all).
+
+Tickets for the refill (items 3 and 4 of #4745): Random #4755, Random pool #4756, Mirror and Team Random #4757,
+Hidden civilizations #4758. The "?" text against no civilization text for hidden players is the
+decision ticket #4754.
+
 ## Decisions of the owner (2026-10-28)
 
 - Bot difficulty (#2648, option A): the six AoE2 DE names (Easiest, Standard, Moderate, Hard, Hardest, Extreme), each
