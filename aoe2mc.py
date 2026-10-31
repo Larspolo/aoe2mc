@@ -5806,6 +5806,29 @@ def once(line):
         "#loaded" not in line and "aoe2mc:loaded" not in line
 
 
+ACHIEVEMENTS = units.rows("achievements.jsonl")   # the AoE2 DE achievements of the advancement tab (#5278)
+ADVANCEMENT_ROOT = {"title": "Age of Empires II", "description": "The achievements of Age of Empires II",
+                    "icon": "minecraft:white_banner", "background": "minecraft:gui/advancements/backgrounds/stone"}
+
+
+def advancement_files(rows=None):
+    """The advancement tab "Age of Empires II" (#5278): root.json, granted at the first tick so that the tab shows,
+    and one advancement per line of data/achievements.jsonl. Its only criterion is minecraft:impossible: only the game
+    program gives it (/advancement grant)."""
+    def display(r, **more):
+        return {"icon": {"id": r["icon"]}, "title": {"text": r["title"]}, "description": {"text": r["description"]},
+                **more}
+    out = {"data/aoe2mc/advancement/root.json": {
+        "criteria": {"start": {"trigger": "minecraft:tick"}},
+        "display": display(ADVANCEMENT_ROOT, background=ADVANCEMENT_ROOT["background"], show_toast=False,
+                           announce_to_chat=False)}}
+    for r in ACHIEVEMENTS if rows is None else rows:
+        out[f"data/aoe2mc/advancement/{r['name'].lower()}.json"] = {
+            "parent": f"aoe2mc:{r['parent'].lower()}", "criteria": {"granted": {"trigger": "minecraft:impossible"}},
+            "display": display(r, frame="challenge" if r["parent"] == "root" else "task")}
+    return out
+
+
 def write_datapack(out, objects, ground, biome_names=(), ambience="basic", players=None, triggers=(), T=4,
                    trigger_stats=None, fog=None, mood=True, replay=False):
     """datapacks/aoe2mc: a function every 2 s plays a work sound at each building with a player near it
@@ -5868,6 +5891,7 @@ def write_datapack(out, objects, ground, biome_names=(), ambience="basic", playe
         "data/aoe2mc/function/pulse.mcfunction": "\n".join(lines + team_pulse + ["schedule function aoe2mc:pulse 40t replace"]) + "\n",
     }
     files.update(trigger_fns)
+    files.update(advancement_files())
     for name, chance in CHANCE.items():
         files[f"data/aoe2mc/predicate/{name}.json"] = {"type": "minecraft:random_chance", "chance": chance}
     for g in groups:
