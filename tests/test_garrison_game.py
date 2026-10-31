@@ -8,6 +8,7 @@ import re
 
 import pytest
 from test_gather import FakeServer, grid
+from test_lang_orders import plain_log
 from test_train_menu import menus
 
 from game import combat, garrison, gather, train
@@ -65,7 +66,7 @@ def test_an_order_on_the_own_town_center_sends_the_selection_inside():
     for name in g.clicks():
         g.click(name)
     assert set(g.entering) == {"v0", "v1", "v2"} and not g.menus     # an order, not the menu
-    assert all(any(c.startswith(f"aoe moveto {u} 3.5 64 5.5") for c in server.log) for u in g.entering)
+    assert all(any(c.startswith(f"aoe moveto {u} 3.5 64 5.5") for c in plain_log(server.log)) for u in g.entering)
     arrive(server, g, TC)
     assert g.garrisons == {TC: ["v0", "v1", "v2"]} and not g.entering and not g.selected
     for u, (x, z) in zip(["v0", "v1", "v2"], [(3, 3), (2, 3), (4, 3)]):

@@ -15,8 +15,8 @@ def test_siege_mark_glows_and_shows_name_and_hit_points():
     assert glow == f"effect give fort minecraft:glowing {gather.SIEGE_GLOW} 0 true" and 2 <= gather.SIEGE_GLOW <= 3
     assert bar.startswith("title Steve actionbar ")
     text = json.loads(bar.split(" ", 3)[3])
-    assert text[0]["text"] == "Attack: Stable (" and text[2]["text"] == "/1500)"
-    assert text[1] == {"score": {"name": "fort", "objective": "aoe_hp"}}
+    assert text["translate"] == "aoe2mc.gather.attack_siege"
+    assert text["with"] == ["Stable", {"score": {"name": "fort", "objective": "aoe_hp"}}, "1500"]
 
 
 def test_an_attack_order_on_a_building_marks_it():

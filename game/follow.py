@@ -7,6 +7,8 @@ g.follows: follower UUID -> [target UUID or building rect (x0, x1, z0, z1), "fol
 import json
 import math
 
+import lang
+
 TRAIL = 3                      # tiles: a follower farther than this from its target walks to it again (replay.TRAIL)
 GUARD = 5                      # tiles: a guard attacks the nearest enemy this near its target
 
@@ -25,8 +27,8 @@ def start(g, player, kind, target):
 
 def refuse(g, player, kind):
     """A click that does not hit a target of the pending order: a line in the action bar, the order ends."""
-    text = "Follow: click an own unit" if kind == "follow" else "Guard: click an own unit or building"
-    g.command(f"title {player} actionbar " + json.dumps({"text": text}))
+    text = lang.text("aoe2mc.follow.refuse_follow" if kind == "follow" else "aoe2mc.follow.refuse_guard")
+    g.command(f"title {player} actionbar " + json.dumps(text))
 
 
 def end(g, units):

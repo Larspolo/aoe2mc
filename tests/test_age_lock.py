@@ -1,6 +1,7 @@
 """game/build.py and game/train.py: the Feudal Age buildings and units are locked until the Feudal Age (#674)."""
 from menu_line import item
 from test_build_menu import villager_map
+from test_lang_orders import plain_log
 from test_train_archery import menus
 from test_train_archery import setup as archery
 from test_train_menu import entry
@@ -29,7 +30,7 @@ def test_in_the_dark_age_a_trigger_choice_of_the_archery_range_places_no_site():
     g.stock["wood"] = 500
     assert build.place(g, "Steve", "ARCHERY_RANGE", (8.5, 65.6, 12.5), (0.0, -0.5, -0.87)) is None
     assert not g.sites and g.stock["wood"] == 500
-    assert any("Archery Range: Needs the Feudal Age." in c for c in server.log)
+    assert any("Archery Range: Needs the Feudal Age." in c for c in plain_log(server.log))
 
 
 def test_after_the_feudal_age_the_items_are_normal():

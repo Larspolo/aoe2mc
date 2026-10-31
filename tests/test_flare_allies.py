@@ -1,6 +1,7 @@
 """game/flare.py: the allies of a player see and hear its flare too (#1942): one command per allied team. Fake server."""
 from test_flare import Server
 from test_gather import grid
+from test_lang_orders import component, plain_json
 
 from game import flare, gather
 
@@ -26,7 +27,7 @@ def test_a_flare_of_p1_reaches_its_ally_p3_and_not_the_enemy_p2():
     for kind in FLARE:
         assert len(sent(server, kind, "p1")) == len(sent(server, kind, "p3")) == 1
         assert not sent(server, kind, "p2")
-    assert all("Steve: Flare at 5 9" in c for c in sent(server, "tellraw", "p3"))
+    assert all("Steve: Flare at 5 9" in plain_json(component(c)) for c in sent(server, "tellraw", "p3"))
     server.t = 5.0
     flare.tick(g)                                                      # the column stays for each allied team
     assert len(sent(server, "particle", "p1")) == len(sent(server, "particle", "p3")) == 2

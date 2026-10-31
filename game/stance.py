@@ -16,6 +16,7 @@ import math
 import abilities
 import autoscout
 import bossbar
+import lang
 import menu as chest
 import scout
 
@@ -89,7 +90,7 @@ def open_menu(g, player, uuid):
             if siege(g):
                 vars(g).setdefault("ordering", {})[p] = "attack_ground"                     # the next right click picks the point
             else:
-                g.command(f"title {p} actionbar " + json.dumps({"text": packed_hint(g) or "No unit can attack the ground"}))
+                g.command(f"title {p} actionbar " + json.dumps(packed_hint(g) or lang.text("aoe2mc.stance.no_ground")))
         elif slot == MODE and mode_items(g, uuid):
             switch_mode(g, "ranged" if vars(g).get("unit_modes", {}).get(uuid) == "melee" else "melee")
         elif FORMATION <= slot < FORMATION + len(FORMATIONS):
@@ -160,7 +161,7 @@ def form(g, player, kind):
     for u in sorted(g.selected):
         if u in g.soldiers:
             f.pop(u, None) if kind == "Line" else f.update({u: kind})
-    g.command(f"title {player} actionbar " + json.dumps({"text": f"Formation: {kind}"}))
+    g.command(f"title {player} actionbar " + json.dumps(lang.text("aoe2mc.stance.formation", kind)))
 
 
 def stop(g):
@@ -191,7 +192,7 @@ def auto_scout(g, player):
     """Give the selected scouts the Auto Scout order (autoscout.start); the other selected units keep their order."""
     import json
     autoscout.start(g, [u for u in sorted(g.selected) if g.soldiers.get(u) in SCOUT_NAMES])
-    g.command(f"title {player} actionbar " + json.dumps({"text": "Auto Scout"}))
+    g.command(f"title {player} actionbar " + json.dumps(lang.text("aoe2mc.stance.auto_scout")))
 
 
 def patrol(g, player, cell):
@@ -249,7 +250,7 @@ def packed(g, u):
 
 def packed_hint(g):
     """The hint when a selected Trebuchet is packed, else None."""
-    return "Unpack the Trebuchet first" if any(packed(g, u) for u in g.selected) else None
+    return lang.text("aoe2mc.stance.unpack") if any(packed(g, u) for u in g.selected) else None
 
 
 def attack_ground(g, player, cell):
@@ -257,7 +258,7 @@ def attack_ground(g, player, cell):
     (#4079): `aoe attackground` of the plugin (#4078). The other selected units ignore the order."""
     import gather  # gather imports this module
     if hint := packed_hint(g):
-        g.command(f"title {player} actionbar " + json.dumps({"text": hint}))
+        g.command(f"title {player} actionbar " + json.dumps(hint))
     if not (units := siege(g)):
         return
     g.new_order(units)

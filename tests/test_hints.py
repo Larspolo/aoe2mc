@@ -4,7 +4,11 @@ import json
 import pytest
 from test_select_type import setup
 
-from game import hints
+from game import hints, lang
+
+
+def plain_state(st):
+    return st[0], lang.plain(st[1])
 
 
 def game():
@@ -15,27 +19,27 @@ def game():
 
 
 def bar(server):
-    return {c.split()[1]: json.loads(c.split(" actionbar ", 1)[1])["text"] for c in server.log if " actionbar " in c}
+    return {c.split()[1]: lang.plain(json.loads(c.split(" actionbar ", 1)[1])) for c in server.log if " actionbar " in c}
 
 
 def test_each_state_has_its_hint():
     _, g, _ = game()
     assert hints.state(g)[0] == "none"
     g.select("v-1")
-    assert hints.state(g) == ("villagers", "1 villager · Right click: gather, build, build menu · Empty box: deselect")
+    assert plain_state(hints.state(g)) == ("villagers", "1 villager · Right click: gather, build, build menu · Empty box: deselect")
     g.select("m-1")
-    assert hints.state(g)[0] == "military" and hints.state(g)[1].startswith("1 military unit ·")
+    assert hints.state(g)[0] == "military" and lang.plain(hints.state(g)[1]).startswith("1 military unit ·")
     g.corners["Steve"] = (2, 8)
     assert hints.state(g, "Steve")[0] == "corner" and hints.state(g)[0] == "military"
     del g.corners["Steve"]
     g.ghosts = {"Steve": ["LUMBER_CAMP", "green"]}
-    assert hints.state(g, "Steve")[1].startswith("Place the Lumber Camp: right click")
+    assert lang.plain(hints.state(g, "Steve")[1]).startswith("Place the Lumber Camp: right click")
 
 
 def test_the_hint_changes_at_once_and_repeats_while_the_state_lasts():
     server, g, now = game()
     hints.tick(g)
-    assert bar(server) == {"@a": hints.TEXTS["none-wand"]}
+    assert bar(server) == {"@a": lang.plain(hints.hint("none-wand"))}
     server.log.clear()
     now[0] += 5
     hints.tick(g)
@@ -60,18 +64,18 @@ def test_a_player_with_a_corner_gets_an_own_hint():
     g.box("Steve", (2, 8))
     hints.tick(g)
     shown = bar(server)
-    assert shown["Steve"] == hints.TEXTS["corner"]
+    assert shown["Steve"] == lang.plain(hints.hint("corner"))
     assert shown["@a[name=!Steve]"] == "1 villager · Right click: gather, build, build menu · Empty box: deselect"   # the other players
     g.box("Steve", (10, 18))
     server.log.clear()
     hints.tick(g)
-    assert bar(server) == {"@a": hints.TEXTS["military"].format(n=4, s="s")}
+    assert bar(server) == {"@a": "4 military units · Right click: attack an enemy, stance menu · Empty box: deselect"}
 
 
 def test_clicks_send_the_hint():
     server, g, _ = game()
     g.clicks()
-    assert bar(server) == {"@a": hints.TEXTS["none-wand"]}
+    assert bar(server) == {"@a": lang.plain(hints.hint("none-wand"))}
 
 
 @pytest.mark.mc

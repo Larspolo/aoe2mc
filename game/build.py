@@ -44,8 +44,10 @@ from buildings import footprint  # noqa: E402
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import civs  # noqa: E402
 import herd  # noqa: E402
+import lang  # noqa: E402
 import menu as chest  # noqa: E402  (menu() below is the chat text)
 import monk  # noqa: E402
+import rcon  # noqa: E402
 import record  # noqa: E402
 import table  # noqa: E402
 from replay import Replay  # noqa: E402
@@ -244,12 +246,25 @@ def hidden(g, name):
 
 
 def menu():
-    """The chat texts of the build menu: two halves, else one command is longer than RCON takes (rcon.MAX, #1930)."""
-    lines = [f"/trigger {OBJECTIVE} set {i}: {pretty(n)} ({', '.join(f'{v} {r}' for r, v in COSTS[n].items())})"
-             for i, n in enumerate(MENU, 1)]
-    half = (len(lines) + 1) // 2
-    return [json.dumps({"text": text, "color": "gray"})
-            for text in ("Build: " + "\n".join(lines[:half]), "\n".join(lines[half:]))]
+    """The chat texts of the build menu: one text per RCON command (rcon.MAX, #1930); the first one starts with "Build"."""
+    lines = [lang.text("aoe2mc.build.menu_line", i, pretty(n), ", ".join(f"{v} {r}" for r, v in COSTS[n].items()),
+                       color="gray") for i, n in enumerate(MENU, 1)]
+    chunks, cur = [], []
+    for line in lines:
+        grown = cur + (["\n"] if cur else []) + [line]
+        if cur and len(json.dumps(grown)) > rcon.MAX - 200:       # 200 bytes: the command around the text
+            chunks.append(cur)
+            cur = [line]
+        else:
+            cur = grown
+    chunks.append(cur)
+    head = lang.text("aoe2mc.build.menu_head", color="gray")
+    return [json.dumps([head] + chunks[0])] + [json.dumps(c) for c in chunks[1:]]
+
+
+def newlines(parts):
+    """The line components with a newline between them: one text component of the chat (the build menu)."""
+    return [c for k, p in enumerate(parts) for c in (["\n"] if k else []) + [p]]
 
 
 def price(g, name, player=None):
@@ -299,7 +314,8 @@ def chosen(g, player):
 
 
 def say(g, player, text):
-    g.command(f"tellraw {player} " + json.dumps({"text": text, "color": "red"}))
+    """A red chat line of player: a text component (lang.text), or the English text of another module."""
+    g.command(f"tellraw {player} " + json.dumps(text | {"color": "red"} if isinstance(text, dict) else {"text": text, "color": "red"}))
 
 
 def area(g, name, cell):
@@ -344,7 +360,7 @@ def place(g, player, name, eye, d):
     """Place a foundation of name at the ground that the player looks at. Returns the site or None."""
     import fleet  # fleet -> gather -> build: import it late
     if need := locked(g, name):                                        # a /trigger choice of a later age
-        say(g, player, f"{pretty(name)}: {need}.")
+        say(g, player, lang.text("aoe2mc.build.locked", pretty(name), need))
         return None
     cell = fleet.pick(g, eye, d) if name in SHORE + WATER else g.map.pick_ground(eye, d)   # as the ghost (#2058)
     if cell is None:
@@ -355,21 +371,20 @@ def place(g, player, name, eye, d):
         return gate(g, player, name, cell)
     rect = area(g, name, cell)
     if name in SHORE and not shore(g, rect):
-        say(g, player, f"A {pretty(name).lower()} must stand on water next to the shore.")
+        say(g, player, lang.text("aoe2mc.build.shore", pretty(name).lower()))
         return None
     if name in WATER and not water(g, rect):
-        say(g, player, f"A {pretty(name).lower()} must stand on the water.")
+        say(g, player, lang.text("aoe2mc.build.water", pretty(name).lower()))
         return None
     if name not in SHORE + WATER and not free(g, rect):
-        say(g, player, f"No space for the {pretty(name).lower()} here.")
+        say(g, player, lang.text("aoe2mc.build.space", pretty(name).lower()))
         return None
     if not level(g, name, rect):
-        say(g, player, f"The {pretty(name).lower()} must stand on flat ground.")
+        say(g, player, lang.text("aoe2mc.build.flat", pretty(name).lower()))
         return None
     cost = price(g, name)
     if any(g.stock[r] < v for r, v in cost.items()):
-        say(g, player, f"Not enough resources: a {pretty(name).lower()} costs "
-                       + ", ".join(f"{v} {r}" for r, v in cost.items()) + ".")
+        say(g, player, lang.text("aoe2mc.build.cost", pretty(name).lower(), ", ".join(f"{v} {r}" for r, v in cost.items())))
         return None
     site = found(g, name, rect)
     rows = vars(g).setdefault("rows", {})                              # player -> (building, row) of the sneak clicks (#1805)
@@ -388,19 +403,18 @@ def wall(g, player, name, cell):
     start = vars(g).setdefault("wall_start", {}).pop(player, None)
     if start is None or start[0] != name:
         g.wall_start[player] = (name, cell)
-        g.command(f"tellraw {player} " + json.dumps({"text": f"{pretty(name)}: right click the end of the wall.",
-                                                       "color": "gray"}))
+        g.command(f"tellraw {player} " + json.dumps(lang.text("aoe2mc.build.wall_end", pretty(name), color="gray")))
         return None
     T = g.map.T
     rects = [r for x, z in wall_tiles(start[1][0] // T, start[1][1] // T, cell[0] // T, cell[1] // T)
              if free(g, r := (x * T, (x + 1) * T, z * T, (z + 1) * T))]
     if not rects:
-        say(g, player, f"No space for the {pretty(name).lower()} here.")
+        say(g, player, lang.text("aoe2mc.build.space", pretty(name).lower()))
         return None
     cost = {r: v * len(rects) for r, v in price(g, name).items()}
     if any(g.stock[r] < v for r, v in cost.items()):
-        say(g, player, f"Not enough resources: {len(rects)} tiles of {pretty(name).lower()} cost "
-                       + ", ".join(f"{v} {r}" for r, v in cost.items()) + ".")
+        say(g, player, lang.text("aoe2mc.build.tiles_cost", len(rects), pretty(name).lower(),
+                                 ", ".join(f"{v} {r}" for r, v in cost.items())))
         return None
     sites = [found(g, name, r) for r in rects]
     for site in sites:
@@ -464,14 +478,12 @@ def gate(g, player, name, cell):
     Returns the site, or None (no wall line of 4 straight or 3 diagonal tiles there, not enough resources)."""
     spot = gate_spot(g, cell)
     if spot is None:
-        say(g, player, f"A {pretty(name).lower()} must go on 4 tiles of an own wall in a straight line, or on 3 "
-                       "diagonal tiles.")
+        say(g, player, lang.text("aoe2mc.build.gate_spot", pretty(name).lower()))
         return None
     rect, way, tiles = spot
     cost = price(g, name)
     if any(g.stock[r] < v for r, v in cost.items()):
-        say(g, player, f"Not enough resources: a {pretty(name).lower()} costs "
-                       + ", ".join(f"{v} {r}" for r, v in cost.items()) + ".")
+        say(g, player, lang.text("aoe2mc.build.cost", pretty(name).lower(), ", ".join(f"{v} {r}" for r, v in cost.items())))
         return None
     import combat  # combat -> gather -> build: import it late
     old = [s for t, s in wall_tiles_of(g).items() if s and t in tiles]

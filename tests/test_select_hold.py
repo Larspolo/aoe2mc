@@ -1,10 +1,12 @@
 """game/gather.py: on Paper a held right click of the command stick draws the selection box, a short one clicks as
 before (#1786, owner feedback in a demo). The first use of a hold waits HOLD seconds: a hold never gives an order."""
+import json
 import math
 
+from test_lang_orders import plain_log
 from test_select_type import setup
 
-from game import gather, hints
+from game import gather, hints, lang
 
 
 def paper():
@@ -46,7 +48,7 @@ def test_a_held_click_draws_the_box_from_the_first_cell():
     server, g, now = paper()
     g.select("v-1")
     look(server, (2.5, 2.5), (2.5, 8.5))
-    assert use(server, g) == [] and any(c.startswith("aoe box Steve 2 8 ") for c in server.log)   # at once (#3268)
+    assert use(server, g) == [] and any(c.startswith("aoe box Steve 2 8 ") for c in plain_log(server.log))   # at once (#3268)
     look(server, (2.5, 2.5), (10.5, 18.5))
     now[0] = 0.2                                                       # the next use of the held button
     assert use(server, g) == [] and g.holds == {"Steve": 0.2} and g.corners["Steve"] == (2, 8)
@@ -55,7 +57,7 @@ def test_a_held_click_draws_the_box_from_the_first_cell():
         now[0] = t
         assert use(server, g) == [] and g.holds == {"Steve": t}
     assert g.selected == {"v-1"}                                       # no click and no order during the hold
-    assert not any(c.startswith(("aoe moveto", "aoe attack")) for c in server.log)
+    assert not any(c.startswith(("aoe moveto", "aoe attack")) for c in plain_log(server.log))
     now[0] = 1.2
     assert g.clicks() == [] and not g.holds and not g.corners
     assert g.selected == {"m-1", "m-2", "m-3", "a-1"}                  # military units win, as Gather.box
@@ -87,7 +89,7 @@ def test_a_release_on_the_start_cell_cancels_the_box():
     now[0] = 1.0
     server.log.clear()
     assert g.clicks() == [] and not g.holds and not g.corners and g.selected == {"v-1"}
-    assert 'title Steve actionbar {"text": "Selection box: cancelled"}' in server.log
+    assert 'title Steve actionbar ' + json.dumps(lang.text("aoe2mc.gather.box_cancelled")) in server.log
 
 
 def test_an_empty_box_clears_the_selection():
@@ -107,18 +109,18 @@ def test_paper_gives_no_wand_and_vanilla_keeps_it():
     server, g, _ = paper()
     look(server, (2.5, 2.5), (2.5, 8.5))
     use(server, g)
-    assert not any(gather.WAND in c and "give" in c for c in server.log)
+    assert not any(gather.WAND in c and "give" in c for c in plain_log(server.log))
     server, g = setup()
     server.scores["aoe_use"] = 1
     assert g.clicks() == ["Steve"]                                     # vanilla: a stick use clicks at once
-    assert any(f"give @s minecraft:{gather.WAND}" in c for c in server.log)
+    assert any(f"give @s minecraft:{gather.WAND}" in c for c in plain_log(server.log))
 
 
 def test_the_hint_names_the_hold_on_paper():
     _, g, _ = paper()
-    assert hints.state(g) == ("none", hints.TEXTS["none"])
+    assert hints.state(g) == ("none", hints.hint("none"))
     _, g = setup()
-    assert hints.state(g) == ("none", hints.TEXTS["none-wand"])
+    assert hints.state(g) == ("none", hints.hint("none-wand"))
 
 
 def test_a_chosen_building_places_at_once(monkeypatch):

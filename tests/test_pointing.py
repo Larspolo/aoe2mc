@@ -8,7 +8,7 @@ import shutil
 import pytest
 from test_gather import FakeServer, grid
 
-from game import gather, hints
+from game import gather, hints, lang
 
 FEET = {"s-1": (5.5, 64.0, 10.5), "foe": (5.5, 64.0, 50.5), "v-1": (20.5, 64.0, 20.5)}
 
@@ -48,9 +48,10 @@ def test_the_mark_and_the_click_pick_the_same_enemy_40_blocks_away():
     assert g.selected == {"s-1"}
     aim(server, (7.5, 10.5), (5.5, 65.0, 50.5))
     g.point()
-    assert g.pointing == {"Steve": "Enemy Knight · Right click: attack"}
+    assert {k: lang.plain(v) for k, v in g.pointing.items()} == {"Steve": "Enemy Knight · Right click: attack"}
     assert rings(server.log) == [(gather.POINT["enemy"], "2.0")] * gather.POINT_POINTS   # 40 blocks: larger dust
-    assert hints.state(g, "Steve") == ("pointing", "1 military unit · Enemy Knight · Right click: attack")
+    assert hints.state(g, "Steve")[0] == "pointing"
+    assert lang.plain(hints.state(g, "Steve")[1]) == "1 military unit · Enemy Knight · Right click: attack"
     server.log.clear()
     g.click("Steve")
     assert f"aoe attack @e[tag={gather.SELECT}] foe" in server.log
@@ -60,7 +61,7 @@ def test_without_an_army_the_enemy_is_no_target():
     server, g = setup()
     aim(server, (7.5, 10.5), (5.5, 63.9, 45.5))                        # nothing selected: the click picks the ground
     g.point()
-    assert g.pointing["Steve"] == "Ground"
+    assert lang.plain(g.pointing["Steve"]) == "Ground"
     assert {c for c, _ in rings(server.log)} == {gather.POINT["ground"]}
 
 
@@ -68,18 +69,18 @@ def test_each_target_kind_has_its_name_action_and_color():
     server, g = setup()
     aim(server, (20.5, 17.5), (20.5, 65.0, 20.5))
     g.point()
-    assert g.pointing["Steve"] == "Villager · Right click: select"
+    assert lang.plain(g.pointing["Steve"]) == "Villager · Right click: select"
     assert {c for c, _ in rings(server.log)} == {gather.POINT["own"]}
     g.click("Steve")
     g.point()
-    assert g.pointing["Steve"] == "Villager · Right click: build menu"
+    assert lang.plain(g.pointing["Steve"]) == "Villager · Right click: build menu"
     aim(server, (30.5, 30.5), (30.5, 66.0, 10.5))                      # the tree, 20 blocks away
     g.point()
-    assert g.pointing["Steve"] == "Tree · Right click: gather"
+    assert lang.plain(g.pointing["Steve"]) == "Tree · Right click: gather"
     assert {c for c, _ in rings(server.log)} == {gather.POINT["resource"]}
     aim(server, (42.0, 30.5), (42.0, 64.0, 41.0))                      # the own town center
     g.point()
-    assert g.pointing["Steve"] == "Town Center · Right click: train"
+    assert lang.plain(g.pointing["Steve"]) == "Town Center · Right click: train"
     assert {c for c, _ in rings(server.log)} == {gather.POINT["own"]}
 
 

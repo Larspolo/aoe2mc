@@ -9,48 +9,62 @@ action bar keeps one writer.
 """
 import json
 
+import lang
+
 ORDERS = ("attack_ground", "attack_move", "follow", "guard", "patrol")   # the menu items that wait for a click
 REPEAT = 1.5                                                       # seconds: before the action bar fades
-TEXTS = {                                                          # short: the action bar is one line
-    "attack_ground": "Attack Ground: right click the ground",
-    "attack_move": "Attack Move: right click the ground",
-    "building": "Place the {building}: right click the ground · Shift + right click: place more · Cancel: /trigger aoe_build set 0",
-    "corner": "Selection box: right click the other corner",
-    "drag": "Selection box: hold right click, look at the other corner, release · Release here: cancel",
-    "follow": "Follow: right click an own or allied unit",
-    "guard": "Guard: right click an own or allied unit or building",
-    "military": "{n} military unit{s} · Right click: attack an enemy, stance menu · Empty box: deselect",
-    "patrol": "Patrol: right click the ground",
-    "none": "Left click: select a unit · Hold right click: selection box",
-    "none-wand": "Right click: select a unit · Wand: selection box",
-    "villagers": "{n} villager{s} · Right click: gather, build, build menu · Empty box: deselect",
+TEXTS = {                                                          # the keys of texts.jsonl; one line each
+    "attack_ground": "aoe2mc.hints.attack_ground",
+    "attack_move": "aoe2mc.hints.attack_move",
+    "building": "aoe2mc.hints.building",
+    "corner": "aoe2mc.hints.corner",
+    "drag": "aoe2mc.hints.drag",
+    "follow": "aoe2mc.hints.follow",
+    "guard": "aoe2mc.hints.guard",
+    "military": "aoe2mc.hints.military",
+    "none": "aoe2mc.hints.none",
+    "none-wand": "aoe2mc.hints.none_wand",
+    "patrol": "aoe2mc.hints.patrol",
+    "villagers": "aoe2mc.hints.villagers",
 }
 
 
+def hint(name, *args):
+    """The text component of the hint name (TEXTS) with its arguments (lang.text)."""
+    return lang.text(TEXTS[name], *args)
+
+
+def count(kind, n):
+    """The count of the selection in words: "1 villager", "3 villagers" (the plural is a key of its own)."""
+    return lang.text(f"aoe2mc.hints.count_{kind}" + ("" if n == 1 else "_many"), n)
+
+
 def state(g, player=None):
-    """The hint state of player (None: a player with no own state) and its text."""
+    """The hint state of player (None: a player with no own state) and its text (a text component)."""
     from build import pretty
     if player in getattr(g, "holds", {}):                          # Paper: a held right click (#992)
-        return "drag", TEXTS["drag"]
+        return "drag", hint("drag")
     if player in g.corners:
-        return "corner", TEXTS["corner"]
+        return "corner", hint("corner")
     if (order := getattr(g, "ordering", {}).get(player)) in ORDERS:   # the pending menu item (#3355, #3357, #3358)
-        return order, TEXTS[order]
+        return order, hint(order)
     if building := getattr(g, "ghosts", {}).get(player, [None])[0]:
-        return "building", TEXTS["building"].format(building=pretty(building))
+        return "building", hint("building", pretty(building))
     if player is not None:                                         # the own selection of player (#3486)
         g.person = player
     army, aim = g.selected & g.soldiers.keys(), getattr(g, "pointing", {}).get(player)
+    box = lang.text("aoe2mc.hints.deselect_paper" if getattr(g, "paper", False) else "aoe2mc.hints.deselect")
+    sel = None                                                     # the count of the selection, for a target
     if army:
-        kind, text = "military", TEXTS["military"].format(n=len(army), s="s" * (len(army) != 1))
+        sel = count("military", len(army))
+        kind, text = "military", hint("military", sel, box)
     elif g.selected:
-        kind, text = "villagers", TEXTS["villagers"].format(n=len(g.selected), s="s" * (len(g.selected) != 1))
+        sel = count("villager", len(g.selected))
+        kind, text = "villagers", hint("villagers", sel, box)
     else:
-        kind, text = "none", TEXTS["none" if getattr(g, "paper", False) else "none-wand"]   # vanilla: the wand (#1786)
-    if getattr(g, "paper", False):                                 # Paper: a left click deselects (#1788)
-        text = text.replace("Empty box: deselect", "Left click: deselect")
+        kind, text = "none", hint("none" if getattr(g, "paper", False) else "none-wand")   # vanilla: the wand (#1786)
     if aim:                                                        # the count stays, the target replaces the help
-        return "pointing", (text.split(" · ")[0] + " · " if g.selected else "") + aim
+        return "pointing", lang.text("aoe2mc.hints.pointing", sel, aim) if sel else aim
     return kind, text
 
 
@@ -67,8 +81,9 @@ def tick(g):
     now, shown = g.clock(), g.hints
     for p in [p for p in shown if p not in targets]:
         del shown[p]
+    idle = (hint("none"), hint("none-wand"))
     for target, text in targets.items():
         last = shown.get(target, (None, 0))
-        if last[0] != text or now - last[1] >= REPEAT and text not in (TEXTS["none"], TEXTS["none-wand"]):   # the idle hint shows once
-            g.command(f"title {target} actionbar " + json.dumps({"text": text, "color": "gray"}))
+        if last[0] != text or now - last[1] >= REPEAT and text not in idle:   # the idle hint shows once
+            g.command(f"title {target} actionbar " + json.dumps(text | {"color": "gray"}))
             shown[target] = (text, now)

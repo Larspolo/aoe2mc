@@ -23,6 +23,7 @@ import json
 import math
 
 import civs
+import lang
 import replay
 from garrison import INSIDE, OUTSIDE
 
@@ -171,7 +172,7 @@ def out(g, ship):
             g.command(c)
         if (v := g.villagers.get(u)) is not None:
             v.pos, v.state = (x + 0.5, float(y), z + 0.5), "idle"
-    g.command(f"tellraw @a[team=p{g.player}] " + json.dumps({"text": f"{len(units)} units came out", "color": "gray"}))
+    g.command(f"tellraw @a[team=p{g.player}] " + json.dumps(lang.text("aoe2mc.transport.out", len(units), color="gray")))
     return units
 
 

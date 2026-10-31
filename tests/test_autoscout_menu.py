@@ -1,8 +1,10 @@
 """game/stance.py: the item "Auto Scout" of the stance menu is for a scout only. A click gives the selected
 scouts the order (autoscout.start) and shows "Auto Scout" in the action bar (#3703)."""
+import json
+
 from test_gather import FakeServer, grid
 
-from game import gather, stance
+from game import gather, lang, stance
 
 
 def setup():
@@ -28,5 +30,5 @@ def test_a_click_starts_the_order_for_the_selected_scouts_only_and_shows_it_in_t
     server.log.clear()
     g.menus["Steve"]("Steve", stance.AUTO_SCOUT, False)
     assert set(g.scouting) == {"s-1", "s-2"}                              # the militia gets no order
-    assert 'title Steve actionbar {"text": "Auto Scout"}' in server.log
+    assert 'title Steve actionbar ' + json.dumps(lang.text("aoe2mc.stance.auto_scout")) in server.log
     assert "aoe menu-close Steve" in server.log

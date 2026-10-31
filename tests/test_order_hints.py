@@ -1,6 +1,7 @@
 """game/hints.py and game/gather.py: the pending Attack Move, Follow and Guard orders show their hint in the action bar
 (as Patrol, #3355), and a Follow or Guard order shows the order marker on its target (#796, #3358)."""
 from test_follow_guard_order import setup
+from test_lang_orders import plain_log
 
 from game import gather, hints, stance
 
@@ -9,7 +10,7 @@ def test_each_pending_order_has_its_own_hint(monkeypatch):
     server, g, _ = setup(monkeypatch, stance.FOLLOW)
     for order in ("attack_move", "follow", "guard", "patrol"):
         g.ordering = {"Steve": order}
-        assert hints.state(g, "Steve") == (order, hints.TEXTS[order])
+        assert hints.state(g, "Steve") == (order, hints.hint(order))
 
 
 def test_a_follow_of_a_unit_sends_the_order_marker_on_the_target(monkeypatch):
@@ -26,5 +27,5 @@ def test_a_guard_of_a_building_sends_the_marker_around_its_rect(monkeypatch):
     g.click("Steve")
     assert g.follows == {"m-1": [(32, 40, 40, 48), "guard"]}
     assert server.log[-len(gather.marker(g.map, cells, "go", "Steve")):] == gather.marker(g.map, cells, "go", "Steve")
-    assert not any("glowing" in c for c in server.log)
+    assert not any("glowing" in c for c in plain_log(server.log))
 

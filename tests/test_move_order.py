@@ -6,8 +6,9 @@ import re
 
 import pytest
 from test_gather import FakeServer, grid
+from test_lang_orders import plain_log
 
-from game import ai, gather, replay, train
+from game import ai, gather, lang, replay, train
 
 STEVE = {"Pos": (8.5, 64.0, 12.5), "Rotation": (-90.0, 30.0)}  # looks east and down at the ground near x = 10
 
@@ -42,7 +43,7 @@ def test_a_click_on_the_ground_sends_each_soldier_to_its_own_free_cell_near_it()
     assert all(math.dist(p, (cell[0] + 0.5, cell[1] + 0.5)) <= 2 * replay.FORMATION for p in to.values())   # #3414
     speed = ai.speed_command("m0", "MILITIA", g.map.T, gather.NORMAL * train.speed(g, "MILITIA"))
     assert speed in server.log
-    assert any(c.startswith("particle ") for c in server.log)                     # the order marker
+    assert any(c.startswith("particle ") for c in plain_log(server.log))                     # the order marker
 
 
 def test_selected_villagers_stop_their_work_and_walk_there():
@@ -58,9 +59,9 @@ def test_selected_villagers_stop_their_work_and_walk_there():
 
 def test_the_action_bar_says_move_only_with_a_selection():
     server, g = setup()
-    assert g.says("ground", (10, 12)) == "Ground"
+    assert lang.plain(g.says("ground", (10, 12))) == "Ground"
     g.choose({"m0"}, "m0")
-    assert g.says("ground", (10, 12)) == "Ground · Right click: move"
+    assert lang.plain(g.says("ground", (10, 12))) == "Ground · Right click: move"
 
 
 def test_no_move_without_a_selection_or_onto_a_blocked_cell():

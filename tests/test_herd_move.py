@@ -4,8 +4,9 @@ import re
 
 import pytest
 from test_gather import FakeServer, grid
+from test_lang_orders import plain_log
 
-from game import gather
+from game import gather, lang
 
 LOOK = {"Pos": (8.5, 63.38, 6.5), "Rotation": (180.0, 0.0)}           # 4 blocks south of (8.5, 2.5), looks north
 
@@ -31,11 +32,11 @@ def moves(server):
 def test_a_click_on_an_own_sheep_selects_it():
     server, g = setup()
     kind, key, _ = g.target(*g.look("Steve"), g.positions(sorted(g.pickable())))
-    assert (kind, key) == ("unit", "s") and g.says(kind, key) == "Sheep · Right click: select"
+    assert (kind, key) == ("unit", "s") and lang.plain(g.says(kind, key)) == "Sheep · Right click: select"
     g.click("Steve")
     assert g.selected == {"s"}
     assert "data merge entity s {Glowing:1b}" in server.log and f"tag s add {gather.SELECT}" in server.log
-    assert any(c.startswith("bossbar set ") and '"Sheep"' in c for c in server.log)   # the boss bar names it
+    assert any(c.startswith("bossbar set ") and '"Sheep"' in c for c in plain_log(server.log))   # the boss bar names it
 
 
 def test_selected_herdables_walk_to_the_clicked_ground():
@@ -45,7 +46,7 @@ def test_selected_herdables_walk_to_the_clicked_ground():
     out = g.walk_to("Steve", (10, 12))
     assert set(out) == {"s", "g"} and len(set(out.values())) == 2
     assert set(moves(server)) == {"s", "g"}
-    assert any(c.startswith("attribute s minecraft:movement_speed") for c in server.log)
+    assert any(c.startswith("attribute s minecraft:movement_speed") for c in plain_log(server.log))
 
 
 def test_with_a_villager_selected_a_click_on_an_own_sheep_hunts_it():
