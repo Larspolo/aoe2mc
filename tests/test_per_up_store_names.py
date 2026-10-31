@@ -40,9 +40,9 @@ def test_up_store_tech_name_gives_the_script_name_of_the_technology():
     assert chats(server)[0].endswith("tech loom")
 
 
-def test_up_store_tech_name_gives_the_empty_text_for_an_aoe2_id():
+def test_up_store_tech_name_gives_the_script_name_of_an_aoe2_id():   # #5233
     s, _ = stored("(defrule (true) => (up-store-tech-name c: 22) (disable-self))")
-    assert s.text == ""
+    assert s.text == per.TECH_IDS.get(22, "")
 
 
 def test_up_store_type_name_gives_the_script_name_of_the_type():
@@ -51,6 +51,6 @@ def test_up_store_type_name_gives_the_script_name_of_the_type():
     assert chats(server)[0].endswith("type villager")
 
 
-def test_up_store_type_name_gives_the_empty_text_for_an_aoe2_id():
+def test_up_store_type_name_gives_the_script_name_of_an_aoe2_id():   # #5233
     s, _ = stored("(defrule (true) => (up-store-type-name c: 83) (disable-self))")
-    assert s.text == ""
+    assert s.text == per.OBJECT_IDS.get(83, "")
