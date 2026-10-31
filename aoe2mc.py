@@ -2889,7 +2889,7 @@ def write_region(path, chunks):
 
 
 def write_objects(path, size, T, H, players, objects, cols, ground, timeline=None, mood="DEFAULT", map_ground=None,
-                  victory=None, messages=None, lists=None, yaw=SPAWN_YAW, views=None, lobby=None):
+                  victory=None, messages=None, lists=None, yaw=SPAWN_YAW, views=None, lobby=None, terrain=None, elevation=None):
     """aoe2mc.json: the data that a game program needs (docs/research/gameplay.md). Tiles are in the turned grid
     (--orientation): block x = tile x × T, block z = tile y × T. Units have the UUID of their entity, buildings
     their footprint [x0, z0, x1, z1) in blocks. Objects of a recorded game have their object ID ("ref").
@@ -2945,6 +2945,10 @@ def write_objects(path, size, T, H, players, objects, cols, ground, timeline=Non
             "objects": objs, "yaw": float(yaw)}
     n, wet = cols.n, cols.wtop > cols.top
     data["ground"] = [" ".join("-" if wet[x, z] else str(ground[x, z]) for x in range(n)) for z in range(n)]
+    for key, grid in (("terrain", terrain), ("elevation", elevation)):
+        if grid is not None:
+            grid = np.rint(np.asarray(grid)).astype(int)
+            data[key] = [" ".join(map(str, grid[:, y].tolist())) for y in range(grid.shape[1])]
     if timeline is not None:
         data["timeline"] = timeline
     if victory is not None:
@@ -6226,7 +6230,8 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
     write_objects(os.path.join(out, "aoe2mc.json"), size, T, H, players, objects, cols, ground, timeline,
                   texts.get("mood", "DEFAULT"), map_colors(np.asarray(img))[0], texts.get("global_victory"), texts,
                   {k: f(texts.get("triggers", [])) for k, f in TRIGGER_LISTS.items()}, yaw,
-                  views and {"views": views, "recorder": record_state["recorder"]}, texts.get("lobby"))
+                  views and {"views": views, "recorder": record_state["recorder"]}, texts.get("lobby"),
+                  terrain, elevation)
     triggers, tstats = texts.get("triggers", []), Counter()
     haze = FOG.get(texts.get("mood")) if mood == "on" and (fog or ambience == "full") else None
     n, amb = write_datapack(out, objects, ground, cols.biome_names, ambience, players, triggers, T, tstats, haze,
