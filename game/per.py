@@ -188,6 +188,13 @@ def read(path, defined=()):
 NAMES = {}                                                         # script name -> its line of per_names.jsonl
 OPS = {"<": operator.lt, "<=": operator.le, ">": operator.gt, ">=": operator.ge, "==": operator.eq, "!=": operator.ne}
 MATH = ("=", "+", "-", "*", "/", "z/", "mod", "min", "max", "neg", "%*", "%/")   # airef "mathOp" (up-modify-*)
+VICTORY_TYPES = {                  # run.py --victory: the airef VictoryType; one per line, in alphabetical order
+    "conquest": 1,
+    "last-man-standing": 1,
+    "score": 3,
+    "standard": 0,
+    "time-limit": 2,
+}
 GET_FACT = ("up-get-fact", "up-get-fact-max", "up-get-fact-min", "up-get-fact-sum", "up-get-player-fact")
 COST_ACTIONS = ("up-setup-cost-data", "up-reset-cost-data", "up-add-cost-data", "up-add-object-cost",
                 "up-add-research-cost", "up-get-cost-delta")
@@ -568,6 +575,27 @@ class Script:
                 "population-cap": lambda: train.limit(g), "current-age": lambda: build.ages(g),
                 "current-age-time": lambda: self.age_time(g),
                 "escrow-amount": lambda: self.escrow.get(param, 0) if g is b.g else 0}.get(name, lambda: None)()
+
+    def victory_data(self, name, args):
+        """up-get-victory-data PLAYER TYPE TIME, up-get-victory-limit GOAL, up-get-treaty-data GOAL (#4873). A value
+        that the game program does not have gives 0."""
+        import time_limit  # it imports cheats -> gather: import it late
+        g = self.bot.g
+        mode = getattr(g, "victory", "standard")
+        if name == "up-get-victory-data":                          # the wonder or relic timer that ends first
+            left = [(t["left"], t["player"]) for t in vars(g).get("wonders", {}).values()]
+            if t := vars(g).get("relic_timer"):
+                left.append((t["left"], t["player"]))
+            time, player = min(left, default=(0, 0))
+            self.goals[args[0]], self.goals[args[1]] = player, VICTORY_TYPES.get(mode, 0)
+            self.goals[args[2]] = max(math.ceil(time), 0)
+        elif name == "up-get-victory-limit":                       # the years of a time limit, the points of a score
+            value = getattr(g, "victory_value", None)
+            self.goals[args[0]] = {"time-limit": value or time_limit.YEARS, "score": value or time_limit.POINTS}.get(mode, 0)
+        else:                                                      # the treaty seconds left; a treaty with no end: the max
+            game = getattr(g, "game", None)
+            left = max(getattr(game, "treaty", 0.0) - getattr(game, "treaty_time", 0.0), 0)
+            self.goals[args[0]] = 2 ** 31 - 1 if math.isinf(left) else math.ceil(left)
 
     def get_fact(self, name, args):
         """up-get-fact, up-get-player-fact and up-get-fact-min, -max, -sum: the value of a fact into a goal (#4868). An
@@ -986,6 +1014,8 @@ class Script:
             tid = self.typed(args[0], args[1])
             if tid is not None:
                 self.goals[args[2]] = round(self.timers.get(tid, 0) * 1000)
+        elif name in ("up-get-victory-data", "up-get-victory-limit", "up-get-treaty-data"):
+            self.victory_data(name, args)
         elif name == "set-stance":                                 # the path of the player menu; a locked team stays
             import diplomacy
             if g.data.get("unlock_teams") and args[1] in diplomacy.STANCES:
