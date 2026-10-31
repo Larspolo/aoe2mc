@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 """Compare the AoE2 values of the data files with the .dat of an installed AoE2 DE game (#5245).
 
-Usage: python3 tools/dat_compare.py [PATH/empires2_x2_p1.dat]
+Usage: python3 tools/dat_compare.py [PATH/empires2_x2_p1.dat] [--write DIR [--base BASE.dat]]
 
 Prints one line for each difference ("NAME key: data value, game value"). Exit 0: no difference, 1: differences,
-2: no .dat or no genieutils-py. The rules of the compare: tickets #5245 and #5297 (epic #5236). When the .dat and
+2: no .dat or no genieutils-py. With --write DIR, PATH is the .dat of a data mod: the tool writes the unit values of
+the mod that differ from the base game (BASE.dat, default the installed game) as data mod lines (DIR/units.jsonl ...,
+epic #5352, #5354) and prints their count. The rules of the compare: tickets #5245 and #5297 (epic #5236). When the .dat and
 the AoE2 wiki do not agree, the .dat wins (docs/research/gameplay.md).
 """
 import copy
@@ -268,6 +270,50 @@ def accepted(line):
     return len(head) == 2 and tuple(head) in ACCEPTED
 
 
+def unit_values(dat, uid):
+    """stats() of unit uid in each age (rule 2, the variants of compare_unit), or None."""
+    u = base_unit(dat, finished(dat, uid))
+    return None if u is None else [stats(v) for v in variants(dat, u)]
+
+
+def mod_values(name, data, base, mod, uid):
+    """The keys of one row of units.jsonl, buildings.jsonl or replay.jsonl whose value the mod .dat changes (#5354).
+    The value is that of the age at which the base .dat has the data value (rule 2: aoe2mc keeps the value of the
+    first age of a unit, the Donjon in the Feudal Age): the mod value of the same age, also when the mod changes
+    the age effects. A key that the base .dat does not explain (ACCEPTED, own values) keeps the data value."""
+    old, new = unit_values(base, uid), unit_values(mod, uid)
+    out = {}
+    for k in ("hp", "attack", "melee", "pierce", "range", "reload", "sight", "walk", "bonus"):
+        if not old or not new or k not in data or k not in old[0] or k not in new[0] or (name, k) in ACCEPTED:
+            continue
+        if k == "reload" and not (data[k] and old[0][k]):
+            continue                     # no attack cycle (compare_unit)
+        want = {c: a for c, a in data[k].items() if a > 0} if k == "bonus" else data[k]   # no negative bonus
+        age = next((i for i, f in enumerate(old) if same(want, f.get(k))), None)
+        if age is None or same(want, new[age].get(k)):
+            continue
+        out[k] = {**{c: a for c, a in data[k].items() if a <= 0}, **new[age][k]} if k == "bonus" else new[age][k]
+    return out
+
+
+def write(base, mod, units, tables, folder):
+    """Write the data mod lines of the mod .dat into folder (#5354): one file for each unit file of tables (also
+    with no line, so an older line goes), one line per changed name with only its changed keys. Returns the count."""
+    os.makedirs(folder, exist_ok=True)
+    count = 0
+    for f in ("units.jsonl", "buildings.jsonl", "replay.jsonl"):
+        lines = []
+        for r in tables.get(f, ()):
+            i = SAME_AS.get(r["name"], units.get(r["name"]))
+            d = {} if i is None else mod_values(r["name"], {"walk": r["walk"]} if "walk" in r else r, base, mod, i)
+            if d:
+                lines.append(json.dumps({"name": r["name"], **d}, ensure_ascii=False))
+        with open(os.path.join(folder, f), "w", encoding="utf-8") as out:
+            out.write("".join(s + "\n" for s in lines))
+        count += len(lines)
+    return count
+
+
 def names():
     """{name: unit ID} and {name: tech ID} from the AoE2ScenarioParser enums (as units.type_ids, aoe2mc.object_kinds)."""
     from AoE2ScenarioParser.datasets.buildings import BuildingInfo
@@ -290,11 +336,19 @@ def civ_ids():
 
 
 def main(argv=None):
-    argv = sys.argv[1:] if argv is None else argv
+    argv = list(sys.argv[1:] if argv is None else argv)
+    opt = {}
+    for key in ("--write", "--base"):
+        if key in argv[:-1]:
+            i = argv.index(key)
+            opt[key] = argv.pop(i + 1)
+            argv.pop(i)
     path = argv[0] if argv else DEFAULT
-    if not os.path.isfile(path):
-        print(f"no .dat at {path}: give the path of empires2_x2_p1.dat (AoE2 DE, resources/_common/dat/)")
-        return 2
+    base = opt.get("--base", DEFAULT)
+    for p in (path, base) if "--write" in opt else (path,):
+        if not os.path.isfile(p):
+            print(f"no .dat at {p}: give the path of empires2_x2_p1.dat (AoE2 DE, resources/_common/dat/)")
+            return 2
     try:
         from genieutils.datfile import DatFile
     except ImportError:
@@ -306,6 +360,10 @@ def main(argv=None):
     tables = {f: rows(f"game/data/{f}") for f in ("units.jsonl", "buildings.jsonl", "train.jsonl", "build.jsonl",
                                                    "replay.jsonl")}
     tables["AOE2_WORK"] = AOE2_WORK
+    if "--write" in opt:
+        n = write(DatFile.parse(base), DatFile.parse(path), units, tables, opt["--write"])
+        print(f"{n} data mod lines in {opt['--write']}")
+        return 0
     lines = compare(DatFile.parse(path), units, techs, tables, civ_ids())
     print("\n".join(lines) or "no differences")
     return 1 if lines else 0
