@@ -127,7 +127,8 @@ def faster(g):
 
 def others(g):
     """The other players of aoe2mc.json (not Gaia), in number order."""
-    return sorted(int(n) for n in g.players if int(n) not in (0, g.player))[:9]
+    return sorted(int(n) for n in g.players if int(n) not in (0, g.player)
+                  and g.players[n].get("active", True) is not False)[:9]   # no inactive slot (#5033)
 
 
 def name(g, n):

@@ -449,7 +449,8 @@ def read_scenario(path):
         if p.player_id:                         # the tab "Players" of the editor: for a scenario game (#2539)
             players[p.player_id] |= {"resources": {r: int(getattr(p, r) or 0) for r in ("food", "wood", "gold", "stone")},
                                      "pop_limit": int(p.population_cap or 200),
-                                     "computer": p.active and not p.human}     # no bot on a slot above the players (#3110)
+                                     "computer": p.active and not p.human,    # no bot on a slot above the players (#3110)
+                                     "active": bool(p.active)}                # an inactive slot: no Diplomacy column (#5033)
             name = (p.tribe_name or "").strip()     # the name of the "Players" tab; "Player N" is the default (#3295)
             if name and name != f"Player {p.player_id}":
                 players[p.player_id]["name"] = name
@@ -2941,7 +2942,7 @@ def write_objects(path, size, T, H, players, objects, cols, ground, timeline=Non
         objs.append(e)
     data = {"map_size": size, "tile_size": T, "level_height": H, "mood": mood,
             "players": {str(pid): {"civ": p["civ"], "color": p["color"], "arch": p["arch"]}
-                        | {k: p[k] for k in ("team", "neutral", "resources", "pop_limit", "computer", "ai", "age", "name", "profile", "lock_civ", "start", "disabled", "saved", "techs") if k in p} for pid, p in sorted(players.items())},
+                        | {k: p[k] for k in ("team", "neutral", "resources", "pop_limit", "computer", "active", "ai", "age", "name", "profile", "lock_civ", "start", "disabled", "saved", "techs") if k in p} for pid, p in sorted(players.items())},
             "objects": objs, "yaw": float(yaw)}
     n, wet = cols.n, cols.wtop > cols.top
     data["ground"] = [" ".join("-" if wet[x, z] else str(ground[x, z]) for x in range(n)) for z in range(n)]
