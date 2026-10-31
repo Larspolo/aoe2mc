@@ -230,6 +230,7 @@ SHARED = ("up-get-event", "up-get-shared-goal", "up-get-signal", "up-set-event",
 POINTS = ("up-add-point", "up-bound-point", "up-bound-precise-point", "up-copy-point", "up-cross-tiles",   # #4956
           "up-get-point", "up-get-point-distance", "up-lerp-percent", "up-lerp-tiles", "up-set-precise-target-point",
           "up-set-target-point")
+FLARES = ("up-find-flare", "up-find-player-flare", "up-send-flare")   # the flares of the team (#4971)
 UP_QUEUE = {"up-build": "build", "up-research": "research", "up-train": "train"}
 ORDERS = ("up-delete-distant-farms", "up-delete-idle-units", "up-reset-attack-now", "up-reset-building",
           "up-reset-unit", "up-retreat-now")
@@ -1037,6 +1038,22 @@ class Script:
             out = (p[0] - dy / d * v, p[1] + dx / d * v)
         self.store(args[0], tuple(round(c) for c in out))
 
+    def flares(self, name, args):
+        """The flare commands of UserPatch (airef, #4971): a flare is a block, a goal pair a tile (block = tile × T)."""
+        import flare
+        g, T = self.bot.g, self.bot.g.data["tile_size"]
+        if name == "up-send-flare":                                  # (up-send-flare GOAL): at the point of the pair
+            p = self.pair(args[0])
+            if p is not None:
+                x, z = p[0] * T, p[1] * T
+                flare.put(g, g.player, x, g.map.y(x, z), z)
+            return
+        gathers = [g] if name == "up-find-flare" else self.sides(args[0])[0]   # (up-find-player-flare PLAYER GOAL)
+        live = [f for x in gathers for f in getattr(x, "flares", []) if f[3] > x.clock()]
+        if live:                                                     # no live flare: the goal pair keeps its tiles
+            x, _, z, _ = max(live, key=lambda f: f[3])
+            self.store(args[-1], (x // T, z // T))
+
     def forward(self):
         """The cell two thirds of the way from the own town center to the town center of the nearest enemy, or None
         (build-forward, #4654)."""
@@ -1816,6 +1833,8 @@ class Script:
             self.scouts = []
         elif name in POINTS:
             self.points(name, args)
+        elif name in FLARES:
+            self.flares(name, args)
         elif name == "acknowledge-taunt":                            # (acknowledge-taunt PLAYER TAUNT)
             self.heard.discard((args[0], args[1]))
         elif name not in ("do-nothing", "chat-local-to-self", "enable-wall-placement", "up-chat-data-to-self",
