@@ -618,6 +618,29 @@ def stuck(tickets, tips, now, limit=STALE):
     return out
 
 
+AGENT_BRANCH = re.compile(r"^(agent/|claude/|ccr-)")   # the prefixes that Automerge merges (`automerge.yml`, #3383)
+
+
+def stuck_lines(found, pulls, checks):
+    """The `--stuck` lines of `stuck()` results. A PR that only waits for its quick CI or for Automerge
+    (`pacer.ci_wait`, the rule of `pacer.stuck`) gives no line; a green PR that Automerge never merges (no agent
+    branch, no label `automerge`) waits for the owner, not for a takeover (#5331). checks: sha -> its check runs."""
+    import pacer
+    out = []
+    for n, reason in found:
+        pr = next((p for p in pulls if closes(n).search(prose(p.get("body")))), None)
+        try:
+            wait = pr and pr["head"].get("sha") and pacer.ci_wait(pr, checks(pr["head"]["sha"]))
+        except Exception:                               # no check runs: a takeover line as before
+            wait = None
+        labels = {lb["name"] for lb in (pr or {}).get("labels") or []}
+        if wait == "green" and not AGENT_BRANCH.match(pr["head"]["ref"]) and "automerge" not in labels:
+            out.append(f"#{n} PR #{pr['number']} waits for the owner (no agent branch, no label automerge)")
+        elif not wait:
+            out.append(f"#{n} {'PR #' + str(pr['number']) if pr else 'no PR'}: {reason}")
+    return out
+
+
 def tips(remote="origin"):
     """{ticket: (subject, Unix time)} of the highest claim slot of each ticket, with one ls-remote and one fetch."""
     top = {}
@@ -730,11 +753,11 @@ def main(argv=None):
         tickets = {i["number"]: datetime.datetime.fromisoformat(i["updated_at"].replace("Z", "+00:00")).timestamp()
                    for i in issues if "pull_request" not in i}
         pulls = api("pulls?state=open&per_page=100")
-        found = stuck(tickets, tips(a.remote), time.time())
-        for n, reason in found:
-            pr = next((p["number"] for p in pulls if closes(n).search(prose(p["body"]))), None)
-            print(f"#{n} {f'PR #{pr}' if pr else 'no PR'}: {reason}")
-        return 0 if found else 1
+        import pacer
+        lines = stuck_lines(stuck(tickets, tips(a.remote), time.time()), pulls, pacer.head_checks)
+        if lines:
+            print("\n".join(lines))
+        return 0 if lines else 1
     if a.show or a.stale:
         found = refs(a.number, a.remote)
         for k in sorted(found):
