@@ -47,10 +47,17 @@ import conquest  # noqa: E402
 import garrison  # noqa: E402
 import gather  # noqa: E402
 import herd  # noqa: E402
+import lang  # noqa: E402
 import per  # noqa: E402
 import scout  # noqa: E402
 import table  # noqa: E402
 import train  # noqa: E402
+
+
+def ai_line(g, key, *args, who="@a"):
+    """The chat line of the bot (#5376): its player name, then the text of key as a translate component."""
+    return f"tellraw {who} " + json.dumps([{"text": f"<Player {g.player}> ", "color": "gray"}, lang.text(key, *args, color="gray")])
+
 
 SHARE = {"food": 0.4, "wood": 0.3, "gold": 0.2, "stone": 0.1}     # the villagers on each resource (a simple AoE2 bot)
 WOOD = 0.2                                                         # the wood share for farms and houses with an army
@@ -341,8 +348,7 @@ class Bot:
         g = self.g
         live = [f for f in getattr(x, "flares", []) if f[3] > x.clock()]
         if not live:
-            g.command(f"tellraw @a[team=p{x.player}] " + json.dumps({"text": f"<Player {g.player}> I see no flare.",
-                                                                      "color": "gray"}))
+            g.command(ai_line(g, "aoe2mc.bot.no_flare", who=f"@a[team=p{x.player}]"))
             return
         spot, mine = live[-1][:3], self.soldiers_at()
         if not mine:
@@ -363,17 +369,16 @@ class Bot:
         the age and the resources for, on the free tiles nearest to the last live flare of the ally x, and a builder.
         No flare, no such building or no free place: one answer line to the team of the ally."""
         g = self.g
-        say = lambda text: g.command(f"tellraw @a[team=p{x.player}] " + json.dumps(  # noqa: E731
-            {"text": f"<Player {g.player}> {text}", "color": "gray"}))
+        say = lambda key, *args: g.command(ai_line(g, key, *args, who=f"@a[team=p{x.player}]"))  # noqa: E731
         live = [f for f in getattr(x, "flares", []) if f[3] > x.clock()]
         if not live:
-            return say("I see no flare.")
+            return say("aoe2mc.bot.no_flare")
         cell = (live[-1][0], live[-1][2])
         for names in sites:
             n = next((n for n in names if not build.locked(g, n)
                       and all(g.stock[r] >= v for r, v in build.price(g, n).items())), None)
             if n is None or (rect := build.near(g, n, cell)) is None:
-                say(f"I cannot build a {build.pretty(names[-1] if n is None else n)} there now.")
+                say("aoe2mc.bot.cannot_build", build.pretty(names[-1] if n is None else n))
                 continue
             self.builder(build.found(g, n, rect))
 
@@ -458,8 +463,7 @@ class Bot:
                 elif n in (34, 75):
                     self.navy = self.shore() is not None
                     if not self.navy:
-                        g.command("tellraw @a " + json.dumps({"text": f"<Player {g.player}> I have no water near my "
-                                                                      "town: I cannot build a navy.", "color": "gray"}))
+                        g.command(ai_line(g, "aoe2mc.bot.no_water"))
                 elif n == 35:
                     self.navy = False
                 elif n == 71:
@@ -468,8 +472,7 @@ class Bot:
                     self.delete_at(x)
                 elif n == 103:                                           # no tree cutting in combat.py yet (#4891)
                     has = any(v.startswith("ONAGER") or v == "SIEGE_ONAGER" for v in g.soldiers.values())
-                    g.command(f"tellraw @a[team=p{x.player}] " + json.dumps({"text": f"<Player {g.player}> " + (
-                        "My onagers cannot cut trees." if has else "I have no onager."), "color": "gray"}))
+                    g.command(ai_line(g, "aoe2mc.bot.onager_no_trees" if has else "aoe2mc.bot.no_onager", who=f"@a[team=p{x.player}]"))
                 elif n in BUILD_AT:                                      # build at the flare of the ally (#4889)
                     self.build_at(x, BUILD_AT[n])
                 elif n in (56, 57):                                      # train counter units, stop (#4885)
@@ -485,14 +488,12 @@ class Bot:
                 elif n in UNITS:                                         # attack with the units of the taunt (#4887)
                     self.unit = UNITS[n]
                     if not any(set(self.unit) & set(train.trains(g, k)) for k in set(train.homes(g).values())):
-                        g.command(f"tellraw @a[team=p{x.player}] " + json.dumps({"text": f"<Player {g.player}> I cannot "
-                                  "train that unit: I have no building for it.", "color": "gray"}))
+                        g.command(ai_line(g, "aoe2mc.bot.cannot_train", who=f"@a[team=p{x.player}]"))
                 elif str(n) in FOCUS:                                          # the allies ask for one class (#4886)
                     self.focus = FOCUS[str(n)]
                 elif n in (38, 58, 60):
                     if not market.markets(g):
-                        g.command("tellraw @a " + json.dumps({"text": f"<Player {g.player}> I have no market: I cannot "
-                                                                      "send tribute.", "color": "gray"}))
+                        g.command(ai_line(g, "aoe2mc.bot.no_market"))
                         continue
                     self.giving[x.player] = "all" if n == 60 else "extra"
         for n, mode in sorted(self.giving.items()):
@@ -1002,10 +1003,9 @@ class Bot:
         g, T = self.g, self.g.map.T
         name = "PALISADE_WALL" if build.locked(g, "STONE_WALL") else "STONE_WALL"
         cost = build.price(g, name)
-        say = lambda text: g.command(f"tellraw @a[team=p{x.player}] " + json.dumps(   # noqa: E731
-            {"text": f"<Player {g.player}> {text}", "color": "gray"}))
+        say = lambda key, *args: g.command(ai_line(g, key, *args, who=f"@a[team=p{x.player}]"))  # noqa: E731
         if any(g.stock[r] < v for r, v in cost.items()) or not g.villagers:
-            return say("I have not enough resources for a wall.")
+            return say("aoe2mc.bot.no_wall_resources")
         if n == 55:
             s = self.script or per.Script([], self)
             for _ in range(8):                                            # the 8 sides of the ring
@@ -1016,7 +1016,7 @@ class Bot:
             return
         flares = [f for f in getattr(x, "flares", []) if f[3] > x.clock()][-2:]
         if len(flares) < 2:
-            return say("Flare two places for the wall.")
+            return say("aoe2mc.bot.flare_two")
         (x0, _, z0, _), (x1, _, z1, _) = flares
         rects = [r for a, b in build.wall_tiles(int(x0) // T, int(z0) // T, int(x1) // T, int(z1) // T)
                  if build.free(g, r := (a * T, (a + 1) * T, b * T, (b + 1) * T))]

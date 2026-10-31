@@ -40,7 +40,7 @@ def test_last_join_sets_the_teams(tmp_path, monkeypatch):
     for t in (1, 2):
         names = [x for x in table if split[x] == t]
         mean = sum(table[x] for x in names) / len(names)
-        assert f"Team {t} (mean rating {mean:.0f})" in chat
+        assert f'"with": ["{t}", "{mean:.0f}"' in chat
         assert all(x in chat for x in names)
 
 
@@ -48,4 +48,4 @@ def test_one_human_changes_no_team(tmp_path, monkeypatch):
     g, sent = make(1, {"A": 1200}, tmp_path, monkeypatch)
     lobby.choose(g, "A", 1)
     assert g.players["1"]["team"] is None
-    assert not any("Team 1" in c for c in sent)
+    assert not any('"with": ["1", ' in c for c in sent)

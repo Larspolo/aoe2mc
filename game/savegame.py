@@ -715,7 +715,8 @@ def save(g, player):
         path = write(folder(game.world), game.world, dump(getattr(game, "g", None) or g))
     finally:
         game.command("save-on")
-    g.command(f"tellraw {player} " + json.dumps({"text": f"Saved the game: {os.path.basename(path)}", "color": "green"}))
+    import lang
+    g.command(f"tellraw {player} " + json.dumps(lang.text("aoe2mc.savegame.saved", os.path.basename(path), color="green")))
     return path
 
 

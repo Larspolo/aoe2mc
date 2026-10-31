@@ -5,6 +5,10 @@ folder, for the next game. A game with bots only, or with one human team, change
 import itertools
 import json
 import os
+import sys
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import lang  # noqa: E402
 
 RATING_FILE = os.path.join(os.path.expanduser("~"), ".aoe2mc", "ratings.json")   # {Minecraft name: rating} (#5166)
 START, K = 1000, 32                                                               # the start rating and the Elo factor
@@ -92,7 +96,7 @@ def balance(table):
 def announce(g, changes):
     """The chat shows each change, for example "Steve 1000 → 1016"."""
     for name, old, new in changes:
-        g.command("tellraw @a " + json.dumps({"text": f"{name} {round(old)} → {round(new)}"}, ensure_ascii=False))
+        g.command("tellraw @a " + json.dumps(lang.text("aoe2mc.ratings.change", name, round(old), round(new)), ensure_ascii=False))
 
 
 def lore(name, table=None):
@@ -129,6 +133,5 @@ def join(g, table=None):
     for t in (1, 2):
         names = [name for name in order if split[name] == t]
         mean = sum(table.get(name, START) for name in names) / len(names)
-        g.command("tellraw @a " + json.dumps({"text": f"Team {t} (mean rating {mean:.0f}): {', '.join(names)}",
-                                              "color": "gold"}))
+        g.command("tellraw @a " + json.dumps(lang.text("aoe2mc.ratings.team", t, f"{mean:.0f}", ", ".join(names), color="gold")))
     return split
