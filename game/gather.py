@@ -703,6 +703,7 @@ class Gather:
         self.log, self.clock, self.t0 = log, clock, clock()
         self.cheats = cheats                                           # the AoE2 cheat codes in the chat (#816)
         self.pop_limit = pop_limit                                     # AoE2 "Population limit", else train.LIMIT (#2266)
+        self.resources = resources                                     # the setting, for the AI facts (per.py, #5129)
         resources = level(resources, data)
         if start is None:                                              # units, no building: a Nomad start (#1212)
             kinds = {o["kind"] for o in data["objects"] if o.get("player") == player}

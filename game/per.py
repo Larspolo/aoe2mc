@@ -223,8 +223,31 @@ COUNTS = ("attack-soldier-count", "attack-warboat-count", "building-count", "bui
           "defend-soldier-count", "defend-warboat-count", "fe-idle-pasture-count", "gate-count", "idle-farm-count",
           "soldier-count", "unit-count", "unit-count-total", "warboat-count")
 PLAYER_FACTS = ("player-computer", "player-human", "player-in-game", "player-number", "player-resigned", "player-valid")
-STATE_FACTS = ("cheats-enabled", "enemy-captured-relics", "hold-koh-ruin", "hold-relics", "town-under-attack",
-               "victory-condition")   # (#5045)
+STATE_FACTS = ("cheats-enabled", "enemy-captured-relics", "fe-sub-game-type", "hold-koh-ruin", "hold-relics",
+               "starting-resources", "town-under-attack", "victory-condition")   # (#5045, #5129)
+STARTING_RESOURCES = {             # run.py --resources: the airef StartingResources; "standard" is low (airef); one per line
+    "high": 3,
+    "infinite": 5,
+    "low": 1,
+    "medium": 2,
+    "random": 6,
+    "standard": 1,
+    "ultra": 4,
+}
+RESOURCE_NAMES = {                 # the airef names of StartingResources; one per line, in alphabetical order
+    "high-resources": 3,
+    "infinite-resources": 5,
+    "low-resources": 1,
+    "medium-resources": 2,
+    "random-resources": 6,
+    "ultra-high-resources": 4,
+}
+SUB_GAME_TYPES = {                 # the lobby modes on top of the game mode: the airef SubGameType (flags 1, 2, 4, 8)
+    "sub-game-type-empire-wars": 1,
+    "sub-game-type-king-of-the-hill": 8,
+    "sub-game-type-regicide": 4,
+    "sub-game-type-sudden-death": 2,
+}
 TOWN = 30                       # tiles around the own town center: "in town" (AoE2 sn-maximum-town-size, airef "Facts")
 AFFORD = {"can-afford-building": ("building",), "can-afford-research": ("tech", "age"), "can-afford-unit": ("unit",)}
 PERIMETERS = {1: (10, 20), 2: (18, 30)}   # tiles from the town center to each wall ring (airef "build-wall", #4740)
@@ -907,6 +930,12 @@ class Script:
             return self.in_town_count("up-enemy-units-in-town", (">", 0))
         if name == "hold-koh-ruin":
             return vars(conquest.main(g)).get("hill", {}).get("owner") == g.player   # hill.tick runs on player 1
+        if name == "fe-sub-game-type":                             # (fe-sub-game-type REL TYPE): true for a mode that is on
+            on = self.sub_games(g) or [0]                          # several modes can be on (airef "SubGameType")
+            return any(self.compare(args[0], v, SUB_GAME_TYPES.get(args[1], args[1])) for v in on)
+        if name == "starting-resources":                           # (starting-resources REL LEVEL)
+            v = STARTING_RESOURCES.get(getattr(g, "resources", "standard"), 1)
+            return self.compare(args[0], v, RESOURCE_NAMES.get(args[1], args[1]))
         if name == "victory-condition":                            # (victory-condition CONDITION)
             v = VICTORY_TYPES.get(getattr(g, "victory", "standard"), 0)
             return v == VICTORY_TYPES.get(args[0], args[0])
@@ -958,7 +987,9 @@ class Script:
                 "current-age-time": lambda: self.age_time(g),
                 **{k: (lambda k=k: self.unit_counts(k, g)) for k in COUNTS},
                 "current-score": lambda: self.score(g), "game-type": lambda: GAME_TYPES.get(getattr(g, "mode", ""), 0),
-                "fe-sub-game-type": lambda: 0, "random-number": lambda: self.random, "starting-resources": lambda: 0, "wall-invisible-percentage": lambda: 0,
+                "random-number": lambda: self.random,
+                "starting-resources": lambda: STARTING_RESOURCES.get(getattr(g, "resources", "standard"), 1),
+                "wall-invisible-percentage": lambda: 0,
                 "escrow-amount": lambda: self.escrow.get(param, 0) if g is b.g else 0}.get(name, lambda: None)()
 
     def unit_counts(self, name, g):
@@ -982,6 +1013,13 @@ class Script:
                 "gate-count": lambda: sum(n in build.GATES for n in built),
                 "idle-farm-count": lambda: sum(k > 0 and not g.tended(t) for t, k in g.map.farms.items()),
                 "fe-idle-pasture-count": lambda: 0}[name]()
+
+    def sub_games(self, g):
+        """The airef SubGameType of each lobby mode that is on for Gather g: the modes on top of the game mode (the game
+        mode is a GameType) and the victory King of the Hill (#5129)."""
+        modes = set(getattr(g, "modes", ())) - {getattr(g, "mode", None)}   # run.py puts the --mode in the set too
+        on = [v for k, v in SUB_GAME_TYPES.items() if k.removeprefix("sub-game-type-") in modes]
+        return on + [8] * (getattr(g, "victory", "") == "king-of-the-hill")
 
     def score(self, g):
         import score
