@@ -73,3 +73,21 @@ def announce(g, changes):
     """The chat shows each change, for example "Steve 1000 → 1016"."""
     for name, old, new in changes:
         g.command("tellraw @a " + json.dumps({"text": f"{name} {round(old)} → {round(new)}"}, ensure_ascii=False))
+    if changes:
+        tab(g)
+
+
+def lore(name, table=None):
+    """The lore line of the rating of a Minecraft player for the lobby item (#5167); "" with no rating (not START)."""
+    r = (load() if table is None else table).get(name)
+    return "" if r is None else f"Rating {round(r)}"
+
+
+def tab(g, table=None):
+    """The tab list shows the rating of each Minecraft player with a rating: the objective aoe_rating in the display slot
+    list (a Minecraft feature, #5167). A player with no rating gets no score, so the tab list shows nothing."""
+    table = load() if table is None else table
+    g.command('scoreboard objectives add aoe_rating dummy "Rating"')
+    g.command("scoreboard objectives setdisplay list aoe_rating")
+    for name, r in sorted(table.items()):
+        g.command(f"scoreboard players set {name} aoe_rating {round(r)}")
