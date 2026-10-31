@@ -69,5 +69,5 @@ def test_each_position_is_inside_the_map(capsys):
             + "".join(f"(up-get-point position-{k} {300 + 2 * i})" for i, k in enumerate(kinds)))
     for i, k in enumerate(kinds):
         assert all(0 <= v < 32 for v in at(s, 300 + 2 * i)), k
-    s = run("(set-goal gl-point-x 5)(up-get-point position-object gl-point-x)")
-    assert s.goals == {100: 5} and "position position-object" in capsys.readouterr().err
+    s = run("(set-goal gl-point-x 5)(up-get-point position-object gl-point-x)")       # no target object: (-1, -1) (#5231)
+    assert s.goals == {100: -1, 101: -1} and not capsys.readouterr().err
