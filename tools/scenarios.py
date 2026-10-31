@@ -606,12 +606,27 @@ def layers(path):
     return save(scn, path, "layers.aoe2scenario")
 
 
+def gaia(path):
+    """The Gaia units that join a player (#5107): men, women, a monk and a trade cart of Gaia near player 1, and a sheep."""
+    scn = new_scenario(24)
+    um = scn.unit_manager
+    um.add_unit(PlayerId.ONE, BuildingInfo.TOWN_CENTER.ID, x=12, y=12)
+    um.add_unit(PlayerId.ONE, UnitInfo.VILLAGER_MALE.ID, x=11.5, y=17.5)
+    um.add_unit(PlayerId.ONE, UnitInfo.SCOUT_CAVALRY.ID, x=10.5, y=16.5)
+    um.add_unit(PlayerId.GAIA, UnitInfo.MAN_AT_ARMS.ID, x=13.5, y=18.5)
+    um.add_unit(PlayerId.GAIA, UnitInfo.VILLAGER_FEMALE.ID, x=9.5, y=18.5)
+    um.add_unit(PlayerId.GAIA, UnitInfo.MONK.ID, x=20.5, y=4.5)
+    um.add_unit(PlayerId.GAIA, UnitInfo.TRADE_CART_EMPTY.ID, x=21.5, y=5.5)
+    um.add_unit(PlayerId.GAIA, UnitInfo.SHEEP.ID, x=7.5, y=19.5)
+    return save(scn, path, "gaia.aoe2scenario")
+
+
 MAKERS = {"tiny": tiny, "stress": stress, "buildings": buildings_map, "units": units_map, "village": village, "facing": facing,
           "walls": walls, "river": river, "river_town": river_town, "four_civs": four_civs, "battle": battle,
           "triggers": triggers, "large": large,
           "layers": layers,
           "moods": moods,
-          "owner_loop": owner_loop}
+          "owner_loop": owner_loop, "gaia": gaia}
 
 
 def main():
