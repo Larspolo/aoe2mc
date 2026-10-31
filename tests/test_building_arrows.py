@@ -13,8 +13,8 @@ def test_building_command_has_the_attack():
     box = (8, 64, 8, 23, 104, 23)
     s = combat.stats("TOWN_CENTER")
     tc, = [c for c in combat.building(uuid, "TOWN_CENTER", 1, box) if c.startswith("aoe building")]
-    assert tc.startswith(f"aoe building {uuid} {s.hp} {s.melee} {s.pierce} 8 64 8 23 104 23 {s.attack} {s.range * 4} "
-                         f"{round(s.reload / combat.NORMAL * 20)} 0 ")    # range: tiles × 4; reload: ticks; no minimum
+    assert (tc + " ").startswith(f"aoe building {uuid} {s.hp} {s.melee} {s.pierce} 8 64 8 23 104 23 {s.attack} {s.range * 4} "
+                                 f"{round(s.reload / combat.NORMAL * 20)} 0 ")    # range: tiles × 4; reload: ticks; no minimum
     c = combat.stats("CASTLE")
     castle, = [c for c in combat.building(uuid, "CASTLE", 1, box, T=2) if c.startswith("aoe building")]
     assert f" {c.attack} {c.range * 2} {round(c.reload / combat.NORMAL * 20)} {combat.FORT_MIN_RANGE['CASTLE'] * 2} " in castle   # (#1546)

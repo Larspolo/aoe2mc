@@ -33,6 +33,14 @@ def built(name, player=1):
     return g, site, server.log[n:]
 
 
+def bonus(shot, s):
+    """True when the `aoe building` command shot ends with the bonus of the values s (no bonus: the command ends with
+    a number, as combat.building writes no classes then)."""
+    if not s.bonus:
+        return shot.split()[-1].isdigit()
+    return shot.endswith(" " + ",".join(f"{c}:{n}" for c, n in sorted(s.bonus.items())))
+
+
 def test_a_complete_watch_tower_site_takes_hits_and_shoots():
     g, site, _ = built("HOUSE")
     log = g.game.log
@@ -42,7 +50,7 @@ def test_a_complete_watch_tower_site_takes_hits_and_shoots():
     x0, x1, z0, z1 = tower["footprint"]
     shot, = [c for c in log[n:] if c.startswith("aoe building")]
     s = build.values(g, "WATCH_TOWER")
-    assert shot.split()[2] == combat.target_uuid([x0, z0, x1, z1]) and f" ship:{s.bonus[combat.SHIP]}" in shot
+    assert shot.split()[2] == combat.target_uuid([x0, z0, x1, z1]) and bonus(shot, s)
     assert shot.split()[3:6] == [str(s.hp), str(s.melee), str(s.pierce)]   # hit points, melee and pierce armor
     assert f"aoe arrows {shot.split()[2]} {garrison.arrows('WATCH_TOWER', [])}" in log[n:]
 
@@ -51,7 +59,7 @@ def test_a_complete_town_center_site_takes_hits_and_shoots_once():
     g, site, log = built("TOWN_CENTER")
     shot, = [c for c in log if c.startswith("aoe building")]
     s = build.values(g, "TOWN_CENTER")
-    assert shot.split()[3] == str(s.hp) and f" ship:{s.bonus[combat.SHIP]}" in shot
+    assert shot.split()[3] == str(s.hp) and bonus(shot, s)
     assert any(c.startswith("summon slime") for c in log) and any(c.startswith("aoe label") for c in log)
     assert not g.forts.keys() & {shot.split()[2]}                     # an own building: no target of a click
 
