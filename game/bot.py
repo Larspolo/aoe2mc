@@ -74,6 +74,7 @@ ANSWERS = {r["name"]: r["answer"] for r in table.load("taunts.jsonl") if "answer
 FOCUS = {r["name"]: r["focus"] for r in table.load("taunts.jsonl") if "focus" in r}   # the taunts 72 to 74 (#4886)
 BUILD_AT = {int(r["name"]): r["build"] for r in table.load("taunts.jsonl") if "build" in r}   # taunts 49-53 (#4889)
 WAIT = {r["name"]: r["wait"] for r in table.load("taunts.jsonl") if "wait" in r}         # taunt 37 before its age (#4884)
+UNITS = {int(r["name"]): r["units"] for r in table.load("taunts.jsonl") if "units" in r}  # taunts 76-101: the attack unit (#4887)
 
 
 def level_of(setting, k):
@@ -135,6 +136,7 @@ class Bot:
         self.script = None if script is None else per.Script(script, self)
         self.said = {}                                                 # AoE2 player -> taunts it sent that the bot read (#4829)
         self.focus = None                                              # the building name the allies ask for by taunts 72 to 74 (#4886)
+        self.unit = None                                               # the units the allies name by taunts 76 to 101 (#4887)
 
     def setup(self):
         """Find the villagers of the player (the entities must be loaded) and make the objective of the resources."""
@@ -404,6 +406,11 @@ class Bot:
                     self.walls(n, x)
                 elif n == 59:
                     self.giving.pop(x.player, None)
+                elif n in UNITS:                                         # attack with the units of the taunt (#4887)
+                    self.unit = UNITS[n]
+                    if not any(set(self.unit) & set(train.trains(g, k)) for k in set(train.homes(g).values())):
+                        g.command(f"tellraw @a[team=p{g.player}] " + json.dumps({"text": f"<Player {g.player}> I cannot "
+                                  "train that unit: I have no building for it.", "color": "gray"}))
                 elif str(n) in FOCUS:                                          # the allies ask for one class (#4886)
                     self.focus = FOCUS[str(n)]
                 elif n in (38, 58, 60):
@@ -583,6 +590,8 @@ class Bot:
         g = self.g
         mine = g.positions(sorted(u for u, n in g.soldiers.items() if combat.stats(n).attack))   # a dead soldier
                                                                        # is not in it, a transport ship has no attack
+        if self.unit:                                                   # taunts 76-101: attack with the named units only (#4887)
+            mine = {u: p for u, p in mine.items() if g.soldiers.get(u) in self.unit}
         self.wave = getattr(self, "wave", set()) & mine.keys()           # the soldiers of the running wave
         group, most = self.group, 0
         if self.script:                                                # the attack group sizes of the script (#4530)
@@ -715,6 +724,8 @@ class Bot:
                 continue
             more = len(g.villagers) + sum(e["name"] == "VILLAGER_MALE" for q in g.queues.values() for e in q)
             units = ["VILLAGER_MALE"] if name == "TOWN_CENTER" else self.soldiers(name)
+            if self.unit and name != "TOWN_CENTER":                       # taunts 76-101: only the unit that the ally names (#4887)
+                units = [n for n in self.unit if n in units]
             if name == "DOCK" and self.navy is False:                      # taunt 35 stops the warships (#4883)
                 units = []
             if self.counter and name != "TOWN_CENTER":                 # taunt 56: the best bonus first (#4885)
