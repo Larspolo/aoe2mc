@@ -46,8 +46,8 @@
 {"name": "DLC_ROADGRAVEL", "terrain": 78}
 {"name": "DLC_ACACIAFOREST", "terrain": 50}
 {"name": "DLC_MANGROVEFOREST", "terrain": 55}
-{"name": "TREE_OAK_FOREST", "forest": [10, 20]}
-{"name": "TREE_PALM_FOREST", "forest": [13]}
+{"name": "TREE_OAK_FOREST", "forest": [10, 20, 89]}
+{"name": "TREE_PALM_FOREST", "forest": [13, 112]}
 {"name": "TREE_JUNGLE", "forest": [17]}
 {"name": "TREE_BAMBOO_FOREST", "forest": [18]}
 {"name": "TREE_PINE_FOREST", "forest": [19]}
@@ -58,6 +58,15 @@
 {"name": "TREE_MANGROVE", "forest": [55]}
 {"name": "TREE_RAINFOREST", "forest": [56]}
 {"name": "TREE_ITALIAN_PINE", "forest": [88]}
+{"name": "TREE_OAK_AUTUMN", "forest": [104]}
+{"name": "TREE_OAK_AUTUMN_SNOW", "forest": [105]}
+{"name": "TREE_DEAD", "forest": [106]}
+{"name": "TREE_BIRCH", "forest": [110]}
+{"name": "TREE_LUSH_BAMBOO_FOREST", "forest": [113]}
+{"name": "TREE_BRAZILWOOD", "forest": [128]}
+{"name": "TREE_SPRUCE", "forest": [131]}
+{"name": "TREE_SPRUCE_SNOW", "forest": [132]}
+{"name": "TREE_OAK_GREEN", "forest": [133]}
 {"name": "ATTILA_THE_HUN", "object": 777}
 {"name": "VILLAGER_MALE", "start": [2, 4, 1], "object": 83}
 {"name": "VILLAGER_FEMALE", "start": [1, 4, 1], "object": 293}
