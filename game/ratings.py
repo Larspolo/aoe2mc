@@ -108,3 +108,26 @@ def tab(g, table=None):
     g.command("scoreboard objectives setdisplay list aoe_rating")
     for name, r in sorted(table.items()):
         g.command(f"scoreboard players set {name} aoe_rating {round(r)}")
+
+
+def join(g, table=None):
+    """--balance (#5223): when the last person of --people chose a slot, set the teams of the human players by
+    ratings.balance, the same path as "Change Diplomacy" (an alliance is a team), and name the teams in the chat.
+    One human player, or not all joined: no change. Bots keep their scenario team. Returns the split or None."""
+    import gather  # gather imports the modules of the game
+    game = g.game
+    sides = {name: n for name, n in game.sides.items() if n}
+    if len(sides) < max(getattr(game, "people", 1), 2) or len(set(sides.values())) < 2:
+        return None
+    table = load() if table is None else table
+    order = sorted(sides, key=lambda name: (sides[name], name))
+    split = balance({name: table.get(name, START) for name in order})
+    for name in order:
+        g.players.setdefault(str(sides[name]), {})["team"] = split[name]
+    g.command(gather.allies_command(g.players))
+    for t in (1, 2):
+        names = [name for name in order if split[name] == t]
+        mean = sum(table.get(name, START) for name in names) / len(names)
+        g.command("tellraw @a " + json.dumps({"text": f"Team {t} (mean rating {mean:.0f}): {', '.join(names)}",
+                                              "color": "gold"}))
+    return split

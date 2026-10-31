@@ -793,6 +793,7 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
     data["full_tech_tree"] = settings["full_tech_tree"]          # (#2354)
     data["turbo"] = settings["turbo"]                            # (#2359)
     data["hidden_civs"] = settings["hidden_civs"]                # lobby.hidden (#4758)
+    data["balance"] = settings["balance"]                        # lobby.choose: ratings.join (#5223)
     data["unlock_teams"] = settings["unlock_teams"]              # diplomacy.items (#2934)
     data["shared_exploration"] = settings["shared_exploration"] == "on"   # fog.shares (#2602)
     data["resources"] = settings["resources"]                    # the Regicide start resources of the level (#2388)
@@ -1388,8 +1389,6 @@ def main(argv=None, scenario=None):
     a = ap.parse_args(argv)
     if a.balance and a.teams is not None:            # the ratings make the teams, or --teams does (#5168)
         sys.exit("--balance and --teams: give the teams or balance them, not both (#5168)")
-    if a.balance:                                    # the split is in ratings.balance; the join does not use it yet
-        print("--balance: the teams of the joined players are not set yet (#5168 follow-up).", file=sys.stderr)
     if a.challenge:                                  # the unlock order and the best medals (#3904)
         import challenge
         if a.challenge == "list":
