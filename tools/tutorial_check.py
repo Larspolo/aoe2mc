@@ -214,7 +214,7 @@ class Driver:
             g.command(f"tp {NAME} {cx:.1f} {y + 8} {cz + 14:.1f} facing {cx:.1f} {y + 2} {cz:.1f}")
             time.sleep(4)
             self.shot("3_house.png")
-        self.train("TOWN_CENTER", "VILLAGER")                          # 4 villager
+        self.train("TOWN_CENTER", "VILLAGER_MALE")                        # 4 villager
         self.wait(3, 60)
         T = g.map.T
         if trees:
