@@ -135,6 +135,7 @@ class Driver:
                 self.note(f"the click on the selected villager {builder} missed")
                 continue
             if not self.slot(name):
+                menu.close(g, NAME)
                 self.c.key("Escape")
                 continue
             self.note(f"chose {build.chosen(g, NAME)} in the build menu")
@@ -166,6 +167,7 @@ class Driver:
                     self.note(f"clicked {name} in the menu of the {building}")
                     break
             self.c.key("Escape")
+            menu.close(self.g, NAME)                                   # Escape sends no event: g.menus keeps it
             time.sleep(1.0)
 
     def nearest(self, tiles, cell):
