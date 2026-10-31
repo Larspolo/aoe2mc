@@ -831,12 +831,36 @@ class Bot:
         return all(math.dist(((t[0] + 0.5) * T, (t[1] + 0.5) * T), c) > FAR * T for t in full for c in drops)
 
     def builder(self, site):
-        """Send one villager to build site: an idle one, else the nearest."""
+        """Send villagers to build site up to the number of up-assign-builders of its type (default 1, #4875): idle ones
+        first, then the nearest ones. Each call sends at least one."""
         g = self.g
         x0, x1, z0, z1 = site["footprint"]
         x, z = (x0 + x1) / 2, (z0 + z1) / 2
-        v = min(g.villagers.values(), key=lambda v: (v.state != "idle", math.dist(v.cell, (x, z)), v.uuid))
-        g.build(site, {v.uuid})
+        on = {u for u, v in g.villagers.items() if v.site is site and v.state != "idle"}
+        want = self.script.builders.get(site["name"], 1) if self.script else 1
+        free = sorted((v for u, v in g.villagers.items() if u not in on),
+                      key=lambda v: (v.state != "idle", math.dist(v.cell, (x, z)), v.uuid))
+        if who := {v.uuid for v in free[:max(want - len(on), 0 if on else 1)]}:
+            g.build(site, who)
+
+    def retask(self, res, n):
+        """Move n working villagers of res (not builders) to the resource most below its share (up-retask-gatherers,
+        #4875)."""
+        g, share = self.g, self.shares()
+        work = {r: sum(v.state != "idle" and v.res == r for v in g.villagers.values()) for r in SHARE}
+        busy = sorted(u for u, v in g.villagers.items() if v.state != "idle" and v.res == res and v.site is None)
+        for u in busy[:max(n, 0)]:
+            low = min((r for r in SHARE if r != res), key=lambda r: (work[r] - share[r] * len(g.villagers), r))
+            if self.go(g.villagers[u], low):
+                work[res] -= 1
+                work[low] += 1
+
+    def drop(self, res, n):
+        """The gatherers of res that carry n or more go to a drop site (up-drop-resources, #4875); they then go back."""
+        g = self.g
+        for v in g.villagers.values():
+            if v.res == res and v.site is None and v.load and v.load >= n and v.state != "to_drop":
+                g.go(v, "to_drop", g.drop_goals(v))
 
     def center(self):
         """The middle block cell of the first own town center, or None."""
