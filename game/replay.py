@@ -742,13 +742,20 @@ class Replay:
         production text of the panel (#2811). Hit points: the max of combat.stats (the replay has no damage of a
         building)."""
         import combat
+        import gather  # gather -> build -> replay: import it late
         rects = [(s[0], s[1], s[2], s[3]) for s in self.starts] + \
                 [(next((i for i, r in self.ids.items() if r == rect), None), p, n, rect) for p, n, rect in self.placed]
+        teams = self.data.get("players", {})
+        seen = set().union(*(t for q, t in self.explored.items() if gather.allied(teams, self.pov, q))) \
+            if self.pov is not None else None                       # the view team's explored tiles (#5370)
         for k in range(1, reach * 4):
             x, y, z = (eye[j] + d[j] * k / 4 for j in range(3))
             for ref, p, n, (x0, x1, z0, z1) in rects:
                 g = self.map.y(math.floor(x), math.floor(z)) if self.map else None
                 if x0 <= x < x1 and z0 <= z < z1 and (g is None or y < g + 3 * self.T):
+                    if seen is not None and not gather.allied(teams, self.pov, p) and \
+                            (int(x // self.T), int(z // self.T)) not in seen:
+                        return None                                 # the black area of the view hides it (#5370)
                     who, color = self.player(p)
                     hp = combat.stats(n).hp
                     parts = [text(f"{pretty(n)} ("), text(who, color), text(f"): {hp}/{hp}")]
