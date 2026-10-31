@@ -12,7 +12,7 @@ SETS = (r"\bg\.(\w+)\s*(?:[-+*|&]?=)(?!=)",                           # g.x = ..
         r"setattr\(g,\s*\"(\w+)\"",
         r"vars\((?:[gx]|first)\)\.setdefault\(\"(\w+)\"",                     # x: a side of scenario.py (#3083), first: cheats.ruin
         r"vars\(g\)\[\"(\w+)\"\]\s*=(?!=)")
-ORDERS = {"farmers", "garrisons", "groups", "ships", "stances", "techs", "villagers"}   # savegame.orders, "techs"
+ORDERS = {"farmers", "garrisons", "gather_inside", "groups", "ships", "stances", "techs", "villagers"}   # savegame.orders, "techs"
 GAPS = {                                                               # game state that the save loses: its ticket
 }
 

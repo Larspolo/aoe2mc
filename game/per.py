@@ -246,6 +246,8 @@ EXPLORED_STATE = {"explored-active": 15,                           # airef "Expl
                   "explored-no": 0,
                   "explored-yes": 128}
 FLARES = ("up-find-flare", "up-find-player-flare", "up-send-flare")   # the flares of the team (#4971)
+UNIT_ORDERS = ("up-delete-objects", "up-garrison", "up-gather-inside", "up-get-guard-state", "up-guard-unit",
+               "up-retreat-to", "up-set-attack-stance", "up-ungarrison")   # the orders by type (#4967)
 UP_QUEUE = {"up-build": "build", "up-research": "research", "up-train": "train"}
 PRIORITY = ("up-reset-target-priorities", "up-set-defense-priority", "up-set-offense-priority", "up-update-targets")
 ORDERS = ("up-delete-distant-farms", "up-delete-idle-units", "up-reset-attack-now", "up-reset-building",
@@ -1685,6 +1687,91 @@ class Script:
                         min(math.dist(mid, c) for c in cells) / T > far:
                     demolish.fall(g, rect)
 
+    def of_type(self, type_op, ref, kind="unit"):
+        """The own units (kind "unit") or building footprints (kind "building") of an up-* type, sorted."""
+        import garrison
+        n = (sn := self.named(type_op, ref)) and self.game(sn, kind)
+        n = () if not n else n if isinstance(n, tuple) else (n,)
+        g = self.bot.g
+        if kind == "building":
+            return sorted(r for r, o in garrison.holders(g).items() if o["name"] in n)
+        return sorted([u for u, m in g.soldiers.items() if m in n] +
+                      [u for u in g.villagers if any(m.startswith("VILLAGER") for m in n)])
+
+    def key(self, type_op, ref):
+        """The key (UUID) of the object with the id of an operand, or None."""
+        kind = self.type_kind(type_op)
+        oid = self.operand(kind, ref) if kind else None
+        return next((k for k, i in self.ids.items() if i == oid), None)
+
+    def unit_order(self, name, args):
+        """The orders of all own units of a type (#4967, airef): garrison, ungarrison, gather inside, guard, retreat,
+        attack stance, delete; and the guard state of the town. Each one uses the path of the player (garrison.order,
+        garrison.out, stance.put, stance.delete_units, Bot.retreat, Bot.guard)."""
+        import ai
+        import garrison
+        import stance
+        b = self.bot
+        g = b.g
+        if name == "up-garrison":                                  # (up-garrison TYPE BUILDING TYPE UNIT)
+            units = [u for u in self.of_type(args[2], args[3]) if u not in garrison.inside(g)]
+            for rect in self.of_type(args[0], args[1], "building")[:1]:
+                if units:
+                    garrison.send(g, b.nobody, units, rect)
+        elif name == "up-ungarrison":                              # (up-ungarrison TYPE BUILDING)
+            for rect in self.of_type(args[0], args[1], "building"):
+                garrison.out(g, rect)
+        elif name == "up-gather-inside":                           # (up-gather-inside TYPE BUILDING STATE)
+            n = (sn := self.named(args[0], args[1])) and self.game(sn, "building")
+            for m in () if not n else n if isinstance(n, tuple) else (n,):
+                vars(g).setdefault("gather_inside", {})[m] = int(bool(args[2]))   # 1: on, 0: off
+        elif name == "up-guard-unit":                              # (up-guard-unit TYPE OBJECT TYPE UNIT)
+            key, units = self.key(args[0], args[1]), self.of_type(args[2], args[3])
+            pos = key and g.positions([key]).get(key)
+            soldiers = [u for u in units if u in g.soldiers]
+            if pos and soldiers:                                   # they walk to it and defend the place
+                for u in soldiers:
+                    ai.move(g, u, g.soldiers[u], g.map.T, *pos)
+                self.with_selection(soldiers, lambda: stance.put(g, "defensive"))
+        elif name == "up-retreat-to":                              # (up-retreat-to TYPE OBJECT TYPE UNIT)
+            key, units = self.key(args[0], args[1]), [u for u in self.of_type(args[2], args[3]) if u in g.soldiers]
+            pos = key and g.positions([key]).get(key)
+            b.wave = set(units)
+            if pos:                                                # the wave stops; it walks to the object
+                b.wave, b.targets, b.charged = set(), {}, False
+                if units:
+                    g.walk_to(None, (pos[0], pos[2]), units)
+            else:
+                b.retreat()
+        elif name == "up-set-attack-stance":                       # (up-set-attack-stance TYPE UNIT STANCE)
+            sid = args[2] if isinstance(args[2], int) else STANCE_IDS.get(args[2])
+            s = next((k for k, i in STANCE_IDS.items() if i == sid), None)
+            if s is None:
+                return self.warn("attack stance", args[2])
+            units = [u for u in self.of_type(args[0], args[1]) if u in g.soldiers]
+            self.with_selection(units, lambda: stance.put(g, s))
+        elif name == "up-delete-objects":                          # (up-delete-objects TYPE UNIT TYPE HITPOINTS)
+            low = self.operand(self.type_kind(args[2]), args[3]) if self.type_kind(args[2]) else None
+            if low is not None:
+                weak = [u for u in self.of_type(args[0], args[1]) if (hp := b.hp(u)) is not None and hp < low]
+                if weak:
+                    stance.delete_units(g, weak)
+        elif name == "up-get-guard-state":                         # (up-get-guard-state GOAL): 4 goals
+            guards = vars(b).get("guards", {})
+            self.goals[args[0]] = 1 if guards else 0              # airef flag 1: the town is under attack
+            self.goals[args[0] + 1] = len({t for t, _ in guards.values()})   # the enemies that the guards fight
+            self.goals[args[0] + 2] = len(guards)                 # the soldiers that guard
+            self.goals[args[0] + 3] = 0                            # no resource or gate attack in the game program
+
+    def with_selection(self, units, fn):
+        """Run fn with units as the selection of the bot Gather (stance.put acts on the selection)."""
+        g = self.bot.g
+        old, g.selected = g.selected, set(units)
+        try:
+            fn()
+        finally:
+            g.selected = old
+
     def objects(self, x, down=False):
         """The objects of the Gather x that stand, by id (#4957): [(id, key, game name, status)]; status 2 is ready, 0 a
         site under construction (airef "ObjectStatus"); down: also the fallen start buildings (status 4, ruins.fallen).
@@ -2462,6 +2549,8 @@ class Script:
             self.attacking = True
         elif name in ORDERS:
             self.order(name, args)
+        elif name in UNIT_ORDERS:
+            self.unit_order(name, args)
         elif name in SEARCH:
             self.search_command(name, args)
         elif name in AT_POINT:

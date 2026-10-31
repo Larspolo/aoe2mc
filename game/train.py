@@ -875,7 +875,10 @@ def rally(g, rect, cell, tile=None):
 
 
 def go(g, rect, uuid, name):
-    """Send the new unit uuid (AoE2 unit name) of the building rect to its rally point, if it has one."""
+    """Send the new unit uuid (AoE2 unit name) of the building rect to its rally point, if it has one; into the
+    building when an AI script set its gather point inside (garrison.gather_inside)."""
+    if vars(g).get("gather_inside") and garrison.gather_inside(g, None, rect, uuid):
+        return
     if rect not in g.rally:
         return
     (x, z), tile = g.rally[rect]

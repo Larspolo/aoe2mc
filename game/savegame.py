@@ -236,6 +236,7 @@ NOT_SAVED = (                                                          # the fie
     "ruins_seen",                                                      # ruins.py: the next answer of `aoe where` fills it again
     "scenario_at",                                                     # scenario.py: the next check time
     "score_at",                                                        # score.py: the next check time
+    "selected",                                                        # per.py, garrison.send: put back after each order
     "shapes",                                                          # build.py: the shown building to place
     "share",                                                           # bot.py: the techs of the human player
     "spectator_at",                                                    # spectator.py: the next check time
@@ -398,6 +399,7 @@ def orders(x):
                               "repair": pack(repairs.get(u))} for u, v in sorted(x.villagers.items())},
             "farmers": sorted([list(t), u] for t, u in x.farmers.items()),
             "stances": dict(sorted(x.stances.items())),
+            "gather_inside": dict(sorted(vars(x).get("gather_inside", {}).items())),   # an AI script (#4967)
             "groups": {name: {str(n): sorted(us) for n, us in sorted(gs.items())}   # each person (#3490)
                        for name, gs in sorted(vars(x).get("person_groups", {}).items())},
             "garrisons": sorted([list(r), list(us)] for r, us in x.garrisons.items()),
@@ -447,6 +449,8 @@ def give_orders(x, p):
     import repair
     x.farmers = {tuple(t): u for t, u in p["farmers"]}
     x.stances = dict(p["stances"])
+    if p.get("gather_inside"):
+        x.gather_inside = dict(p["gather_inside"])
     gs = p["groups"]
     if any(isinstance(v, list) for v in gs.values()):                  # a save of one group set for all (before #3490)
         gs = {"": gs}
