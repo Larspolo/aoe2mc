@@ -160,7 +160,13 @@ class Driver:
         return None
 
     def train(self, building, name, times=1):
-        rect = next((r for r, n in train.homes(self.g).items() if n == building), None)
+        t = time.time() + 600
+        while (rect := next((r for r, n in train.homes(self.g).items() if n == building), None)) is None \
+                and time.time() < min(t, self.end):
+            time.sleep(1)                                              # a building of the step before still rises
+        if rect is None:
+            self.note(f"no complete {building}")
+            return
         for _ in range(times):
             for _ in range(3):
                 if rect and self.building(rect) and self.slot(name):
