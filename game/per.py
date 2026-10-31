@@ -213,6 +213,9 @@ SN_IDS = {r["id"]: r["name"] for r in table.load("per_numbers.jsonl")}   # a scr
 
 
 SETUP = ("civ-selected", "death-match-game", "difficulty", "map-size", "map-type", "regicide-game", "starting-age")
+TIMER_STATE = {"timer-disabled": 0,                                # the states of up-timer-status (airef "TimerState")
+               "timer-running": 2,
+               "timer-triggered": 1}
 
 
 def map_size(data):
@@ -277,6 +280,20 @@ class Script:
                 return self.warn("strategic number", ref)
             return self.number(ref)
         return ref
+
+    def typed(self, prefix, ref):
+        """operand() for a type prefix of a timer command ("", c:, g: or s:); None, with one warning, for another one."""
+        kind = str(prefix).removesuffix(":")
+        if kind not in ("", "c", "g", "s"):
+            return self.warn("operator", prefix)
+        return self.operand(kind, ref)
+
+    def timer_state(self, tid):
+        """The TIMER_STATE of timer tid: disabled (no entry), triggered (the game time is due) or running."""
+        due = self.timers.get(tid)
+        if due is None:
+            return TIMER_STATE["timer-disabled"]
+        return TIMER_STATE["timer-triggered" if self.bot.time >= due else "timer-running"]
 
     def compare(self, op, value, ref):
         """value REL ref; a typed operator (airef "Typed operators") reads ref as a constant (c:), the value of a
@@ -407,6 +424,11 @@ class Script:
             return self.compare(args[1], self.sn.get(args[0], SN[args[0]]), args[2])
         if name == "timer-triggered":
             return args[0] in self.timers and self.bot.time >= self.timers[args[0]]
+        if name == "up-timer-status":                              # (up-timer-status TIMER REL STATE)
+            state = TIMER_STATE.get(args[2], args[2])
+            if not isinstance(state, int):
+                return self.warn("timer state", args[2]) or False
+            return self.compare(args[1], self.timer_state(args[0]), state)
         if name in ("true", "false"):
             return name == "true"
         if name == "stance-toward":                                # (stance-toward PLAYER STANCE)
@@ -896,6 +918,17 @@ class Script:
             self.timers[args[0]] = b.time + args[1]
         elif name == "disable-timer":
             self.timers.pop(args[0], None)
+        elif name == "up-set-timer":                               # (up-set-timer TYPE TIMER TYPE2 VALUE): -1 disables
+            tid, value = self.typed(args[0], args[1]), self.typed(args[2], args[3])
+            if tid is not None and value is not None:
+                if value == -1:
+                    self.timers.pop(tid, None)
+                elif value > 0:
+                    self.timers[tid] = b.time + value
+        elif name == "up-get-timer":                               # (up-get-timer TYPE TIMER GOAL): due in ms; 0 if disabled
+            tid = self.typed(args[0], args[1])
+            if tid is not None:
+                self.goals[args[2]] = round(self.timers.get(tid, 0) * 1000)
         elif name == "set-stance":                                 # the path of the player menu; a locked team stays
             import diplomacy
             if g.data.get("unlock_teams") and args[1] in diplomacy.STANCES:
