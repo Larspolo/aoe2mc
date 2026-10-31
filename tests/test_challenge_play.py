@@ -3,6 +3,7 @@ import types
 
 import build  # noqa: E402  (game/ is on sys.path after the import of game.challenge)
 import cheats  # noqa: E402
+import lang  # noqa: E402
 import pytest
 import recap  # noqa: E402
 
@@ -18,7 +19,7 @@ def fake(villagers=N["villagers"], seconds=0.0):
                               stock={r: N.get(r, 0) + 10 for r in ("food", "wood", "gold", "stone")},
                               villagers={f"v{i}": None for i in range(villagers)}, techs={build.AGE_TECHS[0]},
                               sites=[{"name": n, "done": True, "player": 1} for n in N.get("buildings", ())])
-    g.command = g.sent.append
+    g.command = lambda c: g.sent.append(lang.english(c))  # the English text (#5377)
     g.seconds = seconds
     return g
 

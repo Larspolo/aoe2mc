@@ -1,5 +1,7 @@
 """Texts as Minecraft `translate` components (#5344): a lang file of a resource pack can give a key in another
 language; with no pack the client shows the English `fallback` of game/data/texts.jsonl."""
+import json
+
 import table
 
 EN_US = {r["name"]: r["en_us"] for r in table.load("texts.jsonl")}
@@ -33,3 +35,15 @@ def plain(c):
     for a in c.get("with", []):
         out = out.replace("%s", plain(a), 1)
     return out
+
+
+def english(cmd):
+    """Command cmd with its text component (the JSON at its end) as the plain English text, for logs and tests."""
+    i = cmd.find("{")
+    if i < 0:
+        return cmd
+    try:
+        c = json.loads(cmd[i:])
+    except ValueError:
+        return cmd
+    return cmd[:i] + json.dumps(plain(c)) if "translate" in c else cmd
