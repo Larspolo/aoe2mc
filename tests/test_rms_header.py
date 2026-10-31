@@ -7,10 +7,10 @@ def run(text, **kw):
     return rmap.generate(text, 1, warn=notes.append, **kw), notes
 
 
-def test_a_command_before_the_first_section_gives_a_map_and_one_warning():
+def test_a_command_before_the_first_section_gives_a_map_and_no_warning():   # AoE2 DE reads it in each section (#5249)
     m, notes = run("ai_info_map_type ARABIA 0 0 0\n<LAND_GENERATION>\nbase_terrain GRASS")
     assert m["size"] == rmap.SIZES[2] and len(m["terrain"]) == m["size"]
-    assert notes == ["ai_info_map_type is not read yet"]
+    assert notes == []
 
 
 def test_override_map_size_sets_the_size():

@@ -715,8 +715,6 @@ def generate(text, seed, players=2, size=None, warn=None, teams=None, folder=Non
     for cmd, args, attrs in sections.get("LAND_GENERATION", ()):
         if cmd == "base_terrain":
             terrain[:] = value(args[0], consts)
-        elif cmd in ("enable_waves", "water_definition"):   # Minecraft water has no waves and no look of its own
-            pass
         elif cmd in ("create_player_lands", "create_land"):
             base = value(attrs["base_size"][0], consts) if "base_size" in attrs else 3
             clump = value(attrs["clumping_factor"][0], consts) if "clumping_factor" in attrs else 8
@@ -929,10 +927,13 @@ def circle(setup, players, teams, seed):
     return rng.permutation(order).tolist()
 
 
-ANY_SECTION = (                 # the commands that AoE2 DE reads in each section: generate() takes them out first (#5073)
+ANY_SECTION = (                 # the commands that AoE2 DE reads in each section: generate() takes them out first (#5073, #5249)
+    "ai_info_map_type",             # the AI map type: no effect on the land
     "color_correction",             # the color mood of the map (generate())
     "effect_amount",                # the player settings of the game: no effect on the land
     "effect_percent",               # the player settings of the game: no effect on the land
+    "enable_waves",                 # the waves of the water: Minecraft water has none (the biome sets its look)
+    "water_definition",             # the look of the water: Minecraft water takes its color from the biome
 )
 
 PLAYER_SETUP = (                # the commands of <PLAYER_SETUP> that generate() reads or that have no map effect: no warning (#4580)
