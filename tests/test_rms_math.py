@@ -29,7 +29,7 @@ def test_a_float_const_rounds_where_it_is_used():
 
 
 def test_a_bad_expression_names_its_text():
-    for text in ("#const N (3 +)", "#const N (2 * X)", "#const N (1 / 0)"):
+    for text in ("#const N (3 +)", "#const N (1 / 0)"):
         with pytest.raises(rmap.RmsError, match=r"bad math|unknown constant"):
             consts_of(text)
 

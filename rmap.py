@@ -4,7 +4,7 @@ of the own AoE2 install, the repository has no game script. generate() reads the
 a map description of #960 (aoe2mc.read_json): the terrain and the elevation of each tile, and only the trees of the
 forest tiles as objects (FOREST_TREES) yet.
 
-Read: `#const` (also `rnd(A,B)`, fractions and `(MATH)`, #4306), `#define`, `if`/`elseif`/`else`/`endif`, `start_random`/`percent_chance`/`end_random`,
+Read: `#const` (also `rnd(A,B)`, fractions and `(MATH)`, #4306; an undefined constant in math is 0, #5068), `#define`, `if`/`elseif`/`else`/`endif`, `start_random`/`percent_chance`/`end_random`,
 <PLAYER_SETUP> (`grouped_by_team` with --teams), <LAND_GENERATION> (`base_terrain`, `create_player_lands`, `create_land` with
 `terrain_type`, `base_layer` (a land layer on the terrain_type, #3967), `land_percent`, `number_of_tiles`, `base_size`, `clumping_factor`, `land_position`, `assign_to_player` and `assign_to_team` (direct_placement, #3947) and the borders
 `left_border`, `right_border`, `top_border`, `bottom_border`: percent of the map size at the low x, high x, low y and
@@ -293,6 +293,9 @@ def group(words, i):
     return text, i + 1
 
 
+UNDEFINED = "?undefined"   # the key in consts of the undefined constants that math read as 0 (#5068)
+
+
 def calc(text, consts, rng):
     """The number of a math word of AoE2 DE (#4306): a number (also 0.72), a constant, rnd(A,B) (a whole number from
     A to B), or (EXPRESSION) with + - * / and the usual order. A whole result stays an int."""
@@ -317,8 +320,9 @@ def calc(text, consts, rng):
         if re.fullmatch(r"\d+\.?\d*|\.\d+", p):
             return float(p) if "." in p else int(p)
         if re.fullmatch(r"[A-Za-z_]\w*", p):
-            if p not in consts:
-                raise RmsError(f"unknown constant {p!r}")
+            if p not in consts:                 # AoE2 DE reads it as 0: helpers.inc, scaling.inc (#5068)
+                consts.setdefault(UNDEFINED, {})[p] = None
+                return 0
             return consts[p]
         fail()
     def mul():
@@ -653,6 +657,8 @@ def generate(text, seed, players=2, size=None, warn=None, teams=None, folder=Non
                                   "MAPSCALE_AREA": n * n / 10000, "PLAYER_COUNT": players}   # area / 100x100 map (#4928)
     includes = []
     sections = commands(expand(tokens(text), rng, defined, consts, includes, folder))
+    for word in consts.pop(UNDEFINED, ()):
+        warn(f"constant {word} is not defined, read as 0 in math")
     mood = None                                      # color_correction CC_X: the color mood X (aoe2mc.MOODS, #4430)
     for s, cmds in sections.items():                 # AoE2 DE reads these in each section (#5073)
         for cmd, args, _ in cmds:
