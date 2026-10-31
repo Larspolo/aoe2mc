@@ -103,6 +103,8 @@ FAR = 8                     # tiles: a target unit this far from the tile of the
                             # target: in de-64.3 a spearman chased a villager 200 blocks from it across the map (#2635)
 FOLLOW_MS = 15000           # ms of game time: the camera of --follow changes its unit at most this often (#738)
 EFFECT_MS = 10000           # ms of game time that the research text stays
+EVENT_BAR = 2               # s that an event line keeps the action bar before inspect() writes again (#5286)
+INSPECT_AGAIN = 1.5         # s: inspect() sends the same unit line again before the action bar fades
 SCALE = 4                   # size of the research text: a spectator sees it from 40 blocks
 START = {"food": 200, "wood": 200, "gold": 100, "stone": 200}   # the AoE2 standard start resources (#932)
 DEATH_MATCH = {"food": 20000, "wood": 20000, "gold": 10000, "stone": 5000}   # AoE2 DE Death Match start (#4897)
@@ -689,6 +691,45 @@ class Replay:
         return name + (f" ({pretty(info['civ'])})" if info.get("civ") else ""), \
             TEXT_COLORS.get(info.get("color"), "white")
 
+    def inspect(self, t, clock=time.monotonic):
+        """The selection panel of the AoE2 replay (#5286): each spectator that looks at a unit sees its name, player
+        and hit points in the action bar. A line goes only when the unit or its text changes, and again after
+        INSPECT_AGAIN s (the action bar fades, as game/hints.py). An event line (research) keeps the bar for its
+        EVENT_BAR s; with --pov a hidden unit gives no line."""
+        import combat  # combat -> gather -> build -> replay
+        speed = getattr(self, "speed", 1.0) or 1.0
+        if (t - getattr(self, "event_bar", -math.inf)) / 1000 / speed < EVENT_BAR:
+            return []
+        self.grid()                                                     # self.gather and the start units
+        shown, out = vars(self).setdefault("inspected", {}), []
+        at = {i: v.pos for i, v in self.units.items() if v.pos is not None and v.uuid not in self.hidden}
+        now = clock()
+        for name in sorted(getattr(self.game, "joined", ())):         # run.Game.op_joined: no RCON command
+            seen = self.eye(name)
+            i = seen and self.gather.pick_unit(*seen, at)
+            if i is None:
+                shown.pop(name, None)
+                continue
+            v, (who, color) = self.units[i], self.player(self.units[i].player)
+            civ = self.data["players"].get(str(v.player), {}).get("civ")
+            who = who[:-len(f" ({pretty(civ)})")] + f", {pretty(civ)}" if civ else who
+            top = combat.stats(v.name).hp
+            m = re.findall(self.gather.NUMBER, (self.game.command(f"data get entity {v.uuid} Health") or "").rsplit(":", 1)[-1])
+            hp = min(top, math.ceil(float(m[0]))) if m else top
+            line = json.dumps([text(f"{pretty(v.name)} ("), text(who, color), text(f"): {hp}/{top}")])
+            if shown.get(name, (None, -math.inf))[0] == line and now - shown[name][1] < INSPECT_AGAIN:
+                continue
+            shown[name] = line, now
+            out.append(f"title {name} actionbar {line}")
+        return out
+
+    def eye(self, name):
+        """(eye, direction) of player name, or None (gather.Gather.look)."""
+        g = self.gather.Gather
+        me = types.SimpleNamespace(command=self.game.command)
+        me.pos = lambda n: g.pos(me, n)
+        return g.look(me, name)
+
     def team(self, p):
         """The team number of player p, or None when no team has two players (a game of one player per team, #1189)."""
         teams = [info.get("team") for q, info in self.data["players"].items() if q != "0"]
@@ -1068,6 +1109,7 @@ class Replay:
                     "title @a title " + json.dumps(text(pretty(e["age"])))] + self.fireworks(e.get("player"))
         if kind == "research" and e.get("technology"):
             self.learn(e)
+            self.event_bar = e["time"]                            # inspect() waits for this line (#5286)
             return ["title @a actionbar " + json.dumps([text(name, color), text(f" researches {e['technology']}")])] + \
                 self.research(e, color)
         if kind in ("buy", "sell") and e.get("resource"):       # the market trades change the estimate (#3939)
@@ -3663,6 +3705,7 @@ class Replay:
                 late = g0 if self.paused else g0 + (clock() - r0) * 1000 * self.speed    # game time now in one
                 nxt = events[k]["time"] if k < len(events) else math.inf     # send, before the next event (#2761)
                 self.send(self.steps(max(now, min(late, nxt - 1))))
+                self.send(self.inspect(now, clock))
                 continue
             cmds = self.commands(e) + self.spectate(e)
             if cmds:
