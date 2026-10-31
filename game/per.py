@@ -220,6 +220,7 @@ SN_IDS = {r["id"]: r["name"] for r in table.load("per_numbers.jsonl")}   # a scr
 # The airef ids of objects and technologies (two sets of numbers): the up-* commands with g: take an id (#4869).
 OBJECT_IDS = {r["id"]: r["name"] for r in table.load("per_names.jsonl") if "id" in r and r["kind"] in ("unit", "building")}
 TECH_IDS = {r["id"]: r["name"] for r in table.load("per_names.jsonl") if "id" in r and r["kind"] in ("tech", "age")}
+SHARED = ("up-get-event", "up-get-shared-goal", "up-get-signal", "up-set-event", "up-set-shared-goal", "up-set-signal")
 UP_QUEUE = {"up-build": "build", "up-research": "research", "up-train": "train"}
 
 
@@ -292,6 +293,30 @@ class Script:
                 return self.warn("strategic number", ref)
             return self.number(ref)
         return ref
+
+    def table(self, kind):
+        """The values of the shared goals, signals or events (#4878). Shared goals: one table per team on the main Gather
+        (conquest.main), so each allied script reads the same value (airef "up-set-shared-goal"). Signals and events:
+        the game program has no scenario trigger "AI signal" or effect "AI trigger" yet, so the script keeps them."""
+        if kind != "shared-goal":
+            return vars(self).setdefault(kind + "s", {})                   # signals, events
+        from conquest import main  # conquest imports gather, which imports this module
+        g = self.bot.g
+        team = (g.players.get(str(g.player)) or {}).get("team")
+        return vars(main(g)).setdefault("shared_goals", {}).setdefault(("p", g.player) if team is None else team, {})
+
+    def shared(self, name, args):
+        """up-get-X TYPE ID GOAL: the value of shared goal, signal or event ID into GOAL (0 when not set);
+        up-set-X TYPE ID TYPE2 VALUE: set it."""
+        values = self.table(name.split("-", 2)[2])
+        kind = self.type_kind(args[0])
+        ref = self.operand(kind, args[1]) if kind else None
+        if ref is None:
+            return
+        if name.startswith("up-get-"):
+            self.goals[args[2]] = values.get(ref, 0)
+        elif (kind2 := self.type_kind(args[2])) and (value := self.operand(kind2, args[3])) is not None:
+            values[ref] = value
 
     def named(self, type_op, ref, tech=False):
         """The script name of an object (or a technology) of an up-* command: c: a name or an id, g: a goal that holds
@@ -995,6 +1020,8 @@ class Script:
             ref = self.operand(kind, args[1]) if kind else None
             if ref is not None:
                 self.goals[args[2]] = self.goals.get(ref, -1)
+        elif name in SHARED:                                         # (up-get-shared-goal TYPE ID GOAL), (up-set-signal
+            self.shared(name, args)                                  # TYPE ID TYPE2 VALUE) ... (#4878)
         elif name == "up-set-indirect-goal":                         # (up-set-indirect-goal TYPE GOAL TYPE2 VALUE)
             kind, kind2 = self.type_kind(args[0]), self.type_kind(args[2])
             ref = self.operand(kind, args[1]) if kind else None
