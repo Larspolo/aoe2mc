@@ -53,6 +53,7 @@ import train  # noqa: E402
 SHARE = {"food": 0.4, "wood": 0.3, "gold": 0.2, "stone": 0.1}     # the villagers on each resource (a simple AoE2 bot)
 WOOD = 0.2                                                         # the wood share for farms and houses with an army
 SPARE = 200                                                        # stock above the needs: the resource gets no share
+EXTRA = 10                                                          # villagers more by taunt 33 (#4882)
 QUEUED = 2                                                         # units in the queue of each building of the bot
 # The build order after the houses (the key "bot" of data/build.jsonl), and the resource that a drop site goes next to
 FAR = 12                                                           # tiles from a drop site to its sources (remote)
@@ -115,7 +116,7 @@ class Bot:
         self.sent = {}                                                 # villager -> the tile that go() sent it to
         self.sides = (None, {})                                        # (own and foe places, {tile: at home}) (#1810)
         self.told, self.signal = {}, None                              # player -> taunts read; "now", "wait" (#4828)
-        self.giving, self.heard = {}, {}                               # ally -> "extra" or "all" (#4830); -> taunts read
+        self.giving, self.heard, self.staffed = {}, {}, {}  # ally -> "extra"/"all" (#4830); -> taunts read (give, staff #4882)
         self.g.home = self.home                                        # the next bush or mine of Gather.nearest too
         self.guarded = -LOOK                                           # AoE2 seconds of the last look for predators
         self.defense = {}                                              # villager -> (predator, last res, last tree)
@@ -274,12 +275,35 @@ class Bot:
         and the bot never has the food of a technology (#4285: 2 technologies in 30 minutes).
         A script: one pass of its rules in each step (AoE2 checks them about 4 times each second, #4529)."""
         self.give()
+        self.staff()
         if self.script:
             self.script.step()
             return
         self.age_up()
         self.research()
         self.recruit()
+
+    def staff(self):
+        """The villager count that the allies ask for with taunts (#4882, AoE2): 33 raises it by EXTRA, 32 stops at the
+        villagers present and queued, 70 deletes the villagers above it (stance.delete). Own counter (staffed): give() reads them too."""
+        import diplomacy
+        import stance
+        g = self.g
+        for x in build.sides(g):
+            log = getattr(x, "taunted", [])
+            new, self.staffed[x.player] = log[self.staffed.get(x.player, 0):], len(log)
+            if x.player == g.player or diplomacy.stance(g, x.player) != "ally":
+                continue
+            for n in map(int, new):
+                if n == 33:
+                    self.villagers += EXTRA
+                elif n == 32:
+                    self.villagers = len(g.villagers) + sum(e["name"] == "VILLAGER_MALE" for q in g.queues.values()
+                                                            for e in q)
+                elif n == 70 and len(g.villagers) > self.villagers:
+                    keep, g.selected = g.selected, set(sorted(g.villagers)[self.villagers:])
+                    stance.delete(g)
+                    g.selected = keep - set(g.selected)
 
     def give(self):
         """The tributes that the allies ask for with taunts (#4830, AoE2): 38 and 58 "extra" (the stock over reserve()),
