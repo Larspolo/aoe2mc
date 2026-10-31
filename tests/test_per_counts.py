@@ -5,7 +5,7 @@ from test_bot_gather import bot_map
 from game import per
 from game.bot import build, train  # noqa: F401  (the modules that per uses)
 
-FACTS = [(f, ">=", 0) for f in per.COUNTS] + [("unit-available", "villager"), ("building-available", "house")] + \
+FACTS = [(f, ">=", 0) for f in per.COUNTS if f != "gate-count"] + [("gate-count", 1, ">=", 0)] + [("unit-available", "villager"), ("building-available", "house")] + \
     [(f, "any-enemy", ">=", 0) for f in ("players-unit-count", "players-building-count", "players-civilian-population",
                                        "cc-players-unit-count", "cc-players-building-count")] + \
     [("cc-players-unit-type-count", "any-enemy", "villager", ">=", 0),

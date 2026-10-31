@@ -849,6 +849,10 @@ class Script:
             return self.state_fact(name, args)
         if name.startswith("players-"):                            # (players-FACT PLAYER ...): the other players
             return self.players(name.removeprefix("players-"), args[0], args[1:])
+        if name in ("gate-count", "wall-invisible-percentage"):    # (FACT PERIMETER REL VALUE), as wall-completed-percentage
+            if args[0] not in PERIMETERS:
+                return self.warn("perimeter", args[0]) or False
+            return self.compare(args[1], self.gates_in(args[0]) if name == "gate-count" else 0, args[2])
         value = self.value(name)
         if value is None:
             return self.warn("fact", name) or False
@@ -1599,6 +1603,19 @@ class Script:
                  and s["progress"] >= 1 for t in self.gate_tiles(s)}
         barrier = lambda t: g.map.trees.get(t, 0) > 0 or any(c in g.map.mine_at for c in g.map.cells(t))   # noqa: E731
         return 100 * sum(t in done or barrier(t) for t in tiles) // len(tiles)
+
+    def gates_in(self, p):
+        """The own complete gates inside perimeter p: a gate tile within the outer radius of PERIMETERS[p], measured
+        with the octagon of ring from the own town center (0 with no town center)."""
+        import build
+        g = self.bot.g
+        if (at := self.bot.center()) is None:
+            return 0
+        T, hi = g.map.T, PERIMETERS[p][1]
+        cx, cz = at[0] // T, at[1] // T
+        dist = lambda t: math.ceil(max(abs(t[0] - cx), abs(t[1] - cz), (abs(t[0] - cx) + abs(t[1] - cz)) / (1 + OCTAGON)))   # noqa: E731
+        return sum(any(dist(t) <= hi for t in self.gate_tiles(s)) for s in g.sites
+                   if s["name"] in build.GATES and s.get("player", g.player) == g.player and s["progress"] >= 1)
 
     def gate_tiles(self, site):
         T = self.bot.g.map.T
