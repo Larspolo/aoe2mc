@@ -110,5 +110,5 @@ def test_open_if():
 
 def test_unknown_form(capsys):
     """An unknown top-level form gives one warning line, and the other rules stay."""
-    rules = per.parse("(load-random 50 \"a\")\n(defrule (true) => (do-nothing))")
-    assert len(rules) == 1 and "unknown form load-random" in capsys.readouterr().err
+    rules = per.parse("(load-nothing 50 \"a\")\n(defrule (true) => (do-nothing))")
+    assert len(rules) == 1 and "unknown form load-nothing" in capsys.readouterr().err

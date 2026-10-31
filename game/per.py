@@ -140,12 +140,37 @@ def find(folder, name):
     return path
 
 
-def parse(text, defined=(), folder=None, file="<script>", consts=None, depth=0):
+def random_file(args, consts, rng, where):
+    """The file of (load-random PERCENT "FILE" ...): the percents add up along the list, so each one is the chance of
+    its file; a file with no percent is the default (airef "load-random"). A +NAME takes the percent from a constant."""
+    entries, pct = [], None
+    for a in args:
+        if isinstance(a, tuple) and isinstance(a[0], Text):
+            entries.append((pct, a[0]))
+            pct = None
+        elif isinstance(a, tuple) and pct is None and isinstance(v := value(a[0].lstrip("+"), consts), int):
+            pct = v
+        else:
+            raise ValueError(f"{where}: load-random must be (load-random PERCENT \"FILE\" ...)")
+    if pct is not None or not entries:
+        raise ValueError(f"{where}: load-random must be (load-random PERCENT \"FILE\" ...)")
+    default = next((f for p, f in entries if p is None), None)
+    roll, start = rng.random() * 100, 0
+    for p, f in entries:
+        start += p or 0
+        if p is not None and roll < start:
+            return f
+    return default
+
+
+def parse(text, defined=(), folder=None, file="<script>", consts=None, depth=0, rng=None):
     """The rules of the text, in the order of the file. defined: the symbols of the game for #load-if-defined (for
-    example the age, the map type, the civilization). folder: the AI folder of (load ...). A broken text gives a
-    ValueError with the file and the line; an unknown top-level form gives one warning line and is skipped."""
+    example the age, the map type, the civilization). folder: the AI folder of (load ...). rng: the seeded generator of
+    (load-random ...). A broken text gives a ValueError with the file and the line; an unknown top-level form gives one
+    warning line and is skipped."""
     defined = {s.lower() for s in defined}
     consts = {} if consts is None else consts           # one table for the file and the files that it loads
+    rng = np.random.default_rng(0) if rng is None else rng   # the same text gives the same file
     rules = []
     for form in forms(text, file, defined):
         if not isinstance(form, list):
@@ -168,15 +193,19 @@ def parse(text, defined=(), folder=None, file="<script>", consts=None, depth=0):
             if (key := args[0][0].lower()) in consts:
                 raise ValueError(f"{file}:{line}: defconst {key} again")   # the game does not allow it
             consts[key] = v
-        elif name == "load":
-            if len(args) != 1 or not isinstance(args[0], tuple) or not isinstance(args[0][0], Text):
-                raise ValueError(f'{file}:{line}: load must be (load "FILE")')
-            path = find(folder, args[0][0])
+        elif name in ("load", "load-random"):
+            if name == "load":
+                if len(args) != 1 or not isinstance(args[0], tuple) or not isinstance(args[0][0], Text):
+                    raise ValueError(f'{file}:{line}: load must be (load "FILE")')
+                chosen = args[0][0]
+            elif (chosen := random_file(args, consts, rng, f"{file}:{line}")) is None:
+                continue                                           # no chance hit and no default: no rules
+            path = find(folder, chosen)
             if folder is None or not os.path.isfile(path) or depth > 20:
                 raise ValueError(f"{file}:{line}: no file {path} for load" if depth <= 20 else
                                  f"{file}:{line}: load loops")
             with open(path, encoding="utf-8", errors="replace") as f:
-                rules += parse(f.read(), defined, folder, path, consts, depth + 1)
+                rules += parse(f.read(), defined, folder, path, consts, depth + 1, rng)
         else:
             print(f"AI script {file}:{line}: unknown form {name}: skipped", file=sys.stderr)
     return rules
