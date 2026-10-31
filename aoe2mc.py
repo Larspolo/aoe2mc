@@ -2902,7 +2902,8 @@ def write_objects(path, size, T, H, players, objects, cols, ground, timeline=Non
     views (recorded games with view locks only, #4767): {"views": the view locks of the recorder (read_timeline, tiles
     in the turned grid), "recorder": its player number}: the keys "views" and "recorder", out of "timeline" (APM).
     "lobby" (recorded games of the mgz model only, #4832): the lobby settings {"type", "dataset", "starting_age",
-    "population", "all_techs", "reveal"}."""
+    "population", "all_techs", "reveal"}; of a random map script (#4825): {"map_size": the lobby name (else the
+    tiles), "mode": --game-mode}."""
     kinds = {"U": "unit", "B": "building", "O": "other"}
     objs = []
     for o in objects:
@@ -6076,6 +6077,10 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
         clock[0] = now
 
     size, terrain, elevation, tnames, texts, objects, players = read_map(src, seed, nplayers, teams, map_size, game_mode)
+    if src.lower().endswith(".rms"):         # the lobby of a random map: game/run.py --mode default (#4825)
+        import rmap
+        texts["lobby"] = {"map_size": next((k for k, v in sorted(rmap.MAP_SIZES.items()) if v == size), str(size)),
+                          "mode": game_mode}
     record = src.lower().endswith(RECORDS)
     record_state = {}
     timeline = read_timeline(src, record_state) if record else None
