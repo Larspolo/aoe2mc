@@ -23,10 +23,10 @@ def test_the_scout_walks_to_the_point_and_stops(capsys):
     assert s.scouts == ["sc"]
     s.act(None, ("up-reset-scouts",))
     assert "aoe stop sc" in server.log and s.scouts == []
-    s.act(None, ("up-send-scout", "group-type-water-explore", "scout-center"))
+    s.act(None, ("up-send-scout", "group-type-water-trade", "scout-center"))
     s.act(None, ("up-send-scout", "group-type-land-explore", "scout-nowhere"))
     err = capsys.readouterr().err
-    assert "group type group-type-water-explore" in err and "scout method scout-nowhere" in err
+    assert "group type group-type-water-trade" in err and "scout method scout-nowhere" in err
 
 
 def test_no_explorers_send_no_scout():

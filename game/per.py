@@ -3,7 +3,7 @@
 
 The language (AoE2 AI Scripting Encyclopedia, https://airef.github.io, "Syntax"):
     ; a comment to the end of the line
-    (defconst NAME VALUE)                     a name for a number; a later rule gets the number
+    (defconst NAME VALUE)                     a name for a number, a name or a text; a later rule gets the value
     (defrule FACT ... => ACTION ...)          the actions run when all facts are true
     (load "FOLDER\\FILE")                     the rules of another file of the AI folder (".per" added)
     #load-if-defined SYMBOL ... #else ... #end-if   keep the text by the symbols of the game (also -not-defined)
@@ -140,12 +140,37 @@ def find(folder, name):
     return path
 
 
-def parse(text, defined=(), folder=None, file="<script>", consts=None, depth=0):
+def random_file(args, consts, rng, where):
+    """The file of (load-random PERCENT "FILE" ...): the percents add up along the list, so each one is the chance of
+    its file; a file with no percent is the default (airef "load-random"). A +NAME takes the percent from a constant."""
+    entries, pct = [], None
+    for a in args:
+        if isinstance(a, tuple) and isinstance(a[0], Text):
+            entries.append((pct, a[0]))
+            pct = None
+        elif isinstance(a, tuple) and pct is None and isinstance(v := value(a[0].lstrip("+"), consts), int):
+            pct = v
+        else:
+            raise ValueError(f"{where}: load-random must be (load-random PERCENT \"FILE\" ...)")
+    if pct is not None or not entries:
+        raise ValueError(f"{where}: load-random must be (load-random PERCENT \"FILE\" ...)")
+    default = next((f for p, f in entries if p is None), None)
+    roll, start = rng.random() * 100, 0
+    for p, f in entries:
+        start += p or 0
+        if p is not None and roll < start:
+            return f
+    return default
+
+
+def parse(text, defined=(), folder=None, file="<script>", consts=None, depth=0, rng=None):
     """The rules of the text, in the order of the file. defined: the symbols of the game for #load-if-defined (for
-    example the age, the map type, the civilization). folder: the AI folder of (load ...). A broken text gives a
-    ValueError with the file and the line; an unknown top-level form gives one warning line and is skipped."""
+    example the age, the map type, the civilization). folder: the AI folder of (load ...). rng: the seeded generator of
+    (load-random ...). A broken text gives a ValueError with the file and the line; an unknown top-level form gives one
+    warning line and is skipped."""
     defined = {s.lower() for s in defined}
     consts = {} if consts is None else consts           # one table for the file and the files that it loads
+    rng = np.random.default_rng(0) if rng is None else rng   # the same text gives the same file
     rules = []
     for form in forms(text, file, defined):
         if not isinstance(form, list):
@@ -162,20 +187,25 @@ def parse(text, defined=(), folder=None, file="<script>", consts=None, depth=0):
                               tuple(action(a, file, consts) for a in args[k + 1:]), file, line))
         elif name == "defconst":
             if len(args) != 2 or isinstance(args[0], list) or isinstance(args[1], list) or \
-                    not isinstance(v := value(args[1][0], consts), int):
-                raise ValueError(f"{file}:{line}: defconst must be (defconst NAME NUMBER)")
+                    isinstance(v := value(args[1][0], consts), int) and not -32768 <= v <= 32767:
+                raise ValueError(f"{file}:{line}: defconst must be (defconst NAME NUMBER|NAME|TEXT), "
+                                 "a number from -32768 to 32767")   # airef defconst; a name or a text (#5098)
             if (key := args[0][0].lower()) in consts:
                 raise ValueError(f"{file}:{line}: defconst {key} again")   # the game does not allow it
             consts[key] = v
-        elif name == "load":
-            if len(args) != 1 or not isinstance(args[0], tuple) or not isinstance(args[0][0], Text):
-                raise ValueError(f'{file}:{line}: load must be (load "FILE")')
-            path = find(folder, args[0][0])
+        elif name in ("load", "load-random"):
+            if name == "load":
+                if len(args) != 1 or not isinstance(args[0], tuple) or not isinstance(args[0][0], Text):
+                    raise ValueError(f'{file}:{line}: load must be (load "FILE")')
+                chosen = args[0][0]
+            elif (chosen := random_file(args, consts, rng, f"{file}:{line}")) is None:
+                continue                                           # no chance hit and no default: no rules
+            path = find(folder, chosen)
             if folder is None or not os.path.isfile(path) or depth > 20:
                 raise ValueError(f"{file}:{line}: no file {path} for load" if depth <= 20 else
                                  f"{file}:{line}: load loops")
             with open(path, encoding="utf-8", errors="replace") as f:
-                rules += parse(f.read(), defined, folder, path, consts, depth + 1)
+                rules += parse(f.read(), defined, folder, path, consts, depth + 1, rng)
         else:
             print(f"AI script {file}:{line}: unknown form {name}: skipped", file=sys.stderr)
     return rules
@@ -191,6 +221,12 @@ NAMES = {}                                                         # script name
 OPS = {"<": operator.lt, "<=": operator.le, ">": operator.gt, ">=": operator.ge, "==": operator.eq, "!=": operator.ne}
 MATH = ("=", "+", "-", "*", "/", "z/", "mod", "min", "max", "neg", "%*", "%/")   # airef "mathOp" (up-modify-*)
 IDLE_IDS = ("idle-type-villager", "idle-type-trade-cart", "idle-type-fishing-ship", "idle-type-trade-cog")  # airef pIdleType
+TYPE_UNITS = {                     # up-disband-group-type: the units of an airef GroupType that the bot has (#5133); one per line
+    "group-type-fishing-ship": lambda n: __import__("replay").fisher(n),
+    "group-type-land-trade": lambda n: n.startswith(__import__("trade").CART),
+    "group-type-monk": lambda n: n in __import__("monk").MONKS,
+    "group-type-water-attack": lambda n: __import__("replay").ship(n) and not __import__("replay").fisher(n),
+}
 RULE_CHECKS = 10000                     # the rule checks of one pass: a loop with no end stops there (airef RuleDelta)
 VICTORY_TYPES = {                  # run.py --victory: the airef VictoryType; one per line, in alphabetical order
     "conquest": 1,
@@ -904,7 +940,9 @@ class Script:
         kind = name                                                # (map-type TYPE), (map-size SIZE)
         if row is None or row["kind"] != kind:
             return self.warn(kind, args[0]) or False
-        return args[0] == (map_size(g.data) if kind == "map-size" else "scenario-map")
+        if kind == "map-size":                                     # two names of one size both match (#5101)
+            return row["tiles"] == names()[map_size(g.data)]["tiles"]
+        return args[0] == "scenario-map"
 
     def player_fact(self, name, who):
         """(player-human PLAYER) and the other facts of PLAYER_FACTS: true for one (any-, a number) or all (every-)."""
@@ -1358,19 +1396,32 @@ class Script:
         ScoutMethod: the PositionType of the same name (scout-opposite: position-opposite). The mob AI walks them."""
         import stance
         g = self.bot.g
-        if group != "group-type-land-explore":
+        if group not in ("group-type-land-explore", "group-type-water-explore"):
             return self.warn("group type", group)
         if method not in ("scout-border", "scout-center", "scout-corner", "scout-enemy", "scout-flank", "scout-mirror",
                           "scout-opposite"):                       # airef pScoutMethod
             return self.warn("scout method", method)
         if (p := self.position("position" + method[5:])) is None:
             return
+        T, p = g.data["tile_size"], self.bound(p)
+        if group == "group-type-water-explore":                    # one ship to the nearest water tile of the point (#5133)
+            import replay
+            n = self.tiles()
+            wet = [(abs(x - p[0]) + abs(y - p[1]), x, y) for y in range(n) for x in range(n) if self.wet_tile(x, y)]
+            units = [u for u in sorted(g.soldiers) if replay.ship(g.soldiers[u])][:1]
+            if not units or not wet:
+                return
+            _, tx, ty = min(wet)
+            x, z = tx * T + T // 2, ty * T + T // 2
+            g.new_order(units)
+            g.command(f"aoe moveto {units[0]} {x} {g.map.sea(x, z)} {z}")
+            self.sailors = sorted(set(getattr(self, "sailors", ())) | set(units))
+            return
         units = [u for u in sorted(g.soldiers) if g.soldiers[u] in stance.SCOUT_NAMES][:max(self.number("sn-total-number-explorers"), 0)]
         if not units:
             return
         g.new_order(units)
-        T = g.data["tile_size"]
-        x, z = (v * T + T // 2 for v in self.bound(p))
+        x, z = (v * T + T // 2 for v in p)
         for u in units:
             g.command(f"aoe moveto {u} {x} {g.map.y(x, z)} {z}")
         self.scouts = sorted(set(self.scouts) | set(units))
@@ -2199,10 +2250,14 @@ class Script:
         """Direct unit control (airef "DUC", #4960): the units of the local list get an order of the player paths.
         (up-target-objects OPTION ACTION FORMATION STANCE): against the remote list, or (OPTION 1) the target object.
         (up-target-point GOAL ACTION FORMATION STANCE): to the point of GOAL (0: up-set-target-point), adjusted by
-        sn-target-point-adjustment. An action with no path warns once."""
+        sn-target-point-adjustment. An action with no path warns once (action-train, -research, -lock, -work,
+        -transform: the AI has own actions to train and research, #5132). FORMATION (formation-line, -box, -stagger,
+        -flank, -1) is read and not used: Minecraft has no formation, the mob AI walks each unit (DESIGN.md, 0)."""
         import follow
         import garrison
+        import monk
         import stance
+        import trebuchet
         b = self.bot
         g, T = b.g, b.g.map.T
         keys = {v: k for k, v in self.ids.items()}
@@ -2224,7 +2279,8 @@ class Script:
         else:
             ids = [self.target] if args[0] == 1 else self.search[2]["found"]
             targets = [(keys[i], c) for i in dict.fromkeys(ids) if i in keys and (c := self.where(keys[i]))]
-        if action in ("action-delete", "action-stop", "action-unload", "action-ungarrison"):
+        if action in ("action-delete", "action-stop", "action-unload", "action-ungarrison", "action-none",
+                      "action-pack", "action-unpack", "action-drop-relic"):
             targets = targets[:1] or [(None, None)]                # an order with no target
         if not units and action not in ("action-unload", "action-ungarrison") or not targets:
             return False
@@ -2263,6 +2319,22 @@ class Script:
                     stance.delete_units(g, group)
                 elif action == "action-gather" and cell is not None:
                     g.send(cell, set(group))                       # the villagers work at the resource
+                elif action == "action-none":
+                    pass                                           # airef: no order
+                elif action == "action-pack":
+                    for u in group:
+                        if g.soldiers.get(u) == trebuchet.NAME:
+                            trebuchet.move(g, u, [])               # the pack of a move order, with no walk
+                elif action == "action-unpack":
+                    for u in group:
+                        if g.soldiers.get(u) == trebuchet.NAME and trebuchet.state(g, u) in ("packed", "walking"):
+                            g.command(f"aoe stop {u}")             # as trebuchet.unpack, with no attack after it
+                            g.command(f"aoe speed {u} 0")
+                            g.trebs[u] = ["unpacking", trebuchet.pack_time(g), []]
+                elif action == "action-drop-relic":
+                    for i, r in enumerate(monk.relics(g)):
+                        if r["monk"] in group and (q := g.pos(r["monk"])):
+                            monk.drop(g, i, (math.floor(q[0]), math.floor(q[2])))
                 elif action in ("action-unload", "action-ungarrison"):
                     homes = garrison.holders(g)
                     for rect in [r for r in homes if vars(g).get("garrisons", {}).get(r) and
@@ -2528,6 +2600,10 @@ class Script:
             units, b.wave, b.targets, b.charged = sorted(getattr(b, "wave", ())), set(), {}, False
         elif kind == "group-type-land-explore":
             units, self.scouts = self.scouts, []
+        elif kind == "group-type-water-explore":                   # the ships of up-send-scout (#5133)
+            units, self.sailors = getattr(self, "sailors", []), []
+        elif kind in TYPE_UNITS:                                   # the units of the type that the bot has (#5133)
+            units = sorted(u for u, n in g.soldiers.items() if TYPE_UNITS[kind](n))
         else:
             return self.warn("group type", kind) or False
         for u in units:

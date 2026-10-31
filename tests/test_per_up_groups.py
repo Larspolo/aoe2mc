@@ -54,5 +54,5 @@ def test_disband_group_types():
     assert b.wave == set() and b.targets == {} and {"aoe stop m1", "aoe stop m2"} <= set(sent)
     run(s, "(up-disband-group-type group-type-land-explore)")           # airef: stop the land explore groups
     assert s.scouts == [] and "aoe stop k1" in sent
-    run(s, "(up-disband-group-type group-type-monk) (up-disband-group-type group-type-monk)")
-    assert s.warned == {("group type", "group-type-monk")}              # one warning
+    run(s, "(up-disband-group-type group-type-forward-builder) (up-disband-group-type group-type-forward-builder)")
+    assert s.warned == {("group type", "group-type-forward-builder")}              # one warning

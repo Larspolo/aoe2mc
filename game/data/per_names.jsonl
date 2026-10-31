@@ -80,6 +80,7 @@
 {"name": "galley-line", "game": "GALLEY", "kind": "unit"}
 {"name": "gate", "game": "GATE", "kind": "building", "id": 487}
 {"name": "georgians", "game": "GEORGIANS", "kind": "civ"}
+{"name": "giant", "kind": "map-size", "tiles": 240}
 {"name": "giant-map", "kind": "map-size", "tiles": 240}
 {"name": "gothic", "game": "GOTHS", "kind": "civ"}
 {"name": "goths", "game": "GOTHS", "kind": "civ"}
@@ -94,6 +95,7 @@
 {"name": "heavy-scorpion", "game": "HEAVY_SCORPION", "kind": "unit", "id": 542}
 {"name": "hindustanis", "game": "HINDUSTANIS", "kind": "civ"}
 {"name": "house", "game": "HOUSE", "kind": "building", "id": 70}
+{"name": "huge-map", "kind": "map-size", "tiles": 252}
 {"name": "hun", "game": "HUNS", "kind": "civ"}
 {"name": "huns", "game": "HUNS", "kind": "civ"}
 {"name": "hussar", "game": "HUSSAR", "kind": "unit", "id": 441}
@@ -118,12 +120,16 @@
 {"name": "korean", "game": "KOREANS", "kind": "civ"}
 {"name": "koreans", "game": "KOREANS", "kind": "civ"}
 {"name": "krepost", "game": "KREPOST", "kind": "building", "id": 1251}
+{"name": "large", "kind": "map-size", "tiles": 220}
 {"name": "large-map", "kind": "map-size", "tiles": 220}
 {"name": "light-cavalry", "game": "LIGHT_CAVALRY", "kind": "unit", "id": 546}
 {"name": "lithuanians", "game": "LITHUANIANS", "kind": "civ"}
 {"name": "livestock-class", "set": ["COW", "GOAT", "GOOSE", "LLAMA", "PIG", "SHEEP", "TURKEY", "WATER_BUFFALO"], "kind": "unit"}
 {"name": "long-swordsman", "game": "LONG_SWORDSMAN", "kind": "unit", "id": 77}
 {"name": "longship", "game": "LONGSHIP", "kind": "unit"}
+{"name": "ludicrous", "kind": "map-size", "tiles": 480}
+{"name": "ludicrous-map", "kind": "map-size", "tiles": 480}
+{"name": "ludikris", "kind": "map-size", "tiles": 480}
 {"name": "ludikris-map", "kind": "map-size", "tiles": 480}
 {"name": "lumber-camp", "game": "LUMBER_CAMP", "kind": "building", "id": 562}
 {"name": "magyar", "game": "MAGYARS", "kind": "civ"}
@@ -137,11 +143,13 @@
 {"name": "market", "game": "MARKET", "kind": "building", "id": 84}
 {"name": "mayan", "game": "MAYANS", "kind": "civ"}
 {"name": "mayans", "game": "MAYANS", "kind": "civ"}
+{"name": "medium", "kind": "map-size", "tiles": 168}
 {"name": "medium-map", "kind": "map-size", "tiles": 168}
 {"name": "militia", "game": "MILITIA", "kind": "unit", "id": 74}
 {"name": "militiaman", "game": "MILITIA", "kind": "unit", "id": 74}
 {"name": "militiaman-line", "game": "MILITIA", "kind": "unit"}
 {"name": "mill", "game": "MILL", "kind": "building", "id": 68}
+{"name": "miniature-map", "kind": "map-size", "tiles": 80}
 {"name": "mining-camp", "game": "MINING_CAMP", "kind": "building", "id": 584}
 {"name": "missionary", "game": "MISSIONARY", "kind": "unit", "id": 775}
 {"name": "moderate", "game": "moderate", "kind": "difficulty"}
@@ -154,6 +162,7 @@
 {"name": "my-unique-unit", "civ": "unit", "kind": "unit"}
 {"name": "my-unique-unit-line", "civ": "unit", "kind": "unit"}
 {"name": "my-unique-unit-upgrade", "civ": "upgrade", "kind": "tech"}
+{"name": "normal", "kind": "map-size", "tiles": 200}
 {"name": "normal-map", "kind": "map-size", "tiles": 200}
 {"name": "onager", "game": "ONAGER", "kind": "unit", "id": 550}
 {"name": "paladin", "game": "PALADIN", "kind": "unit", "id": 569}
@@ -343,6 +352,7 @@
 {"name": "skirmisher-line", "game": "SKIRMISHER", "kind": "unit"}
 {"name": "slavic", "game": "SLAVS", "kind": "civ"}
 {"name": "slavs", "game": "SLAVS", "kind": "civ"}
+{"name": "small", "kind": "map-size", "tiles": 144}
 {"name": "small-map", "kind": "map-size", "tiles": 144}
 {"name": "spanish", "game": "SPANISH", "kind": "civ"}
 {"name": "spearman", "game": "SPEARMAN", "kind": "unit", "id": 93}
@@ -355,6 +365,7 @@
 {"name": "tatars", "game": "TATARS", "kind": "civ"}
 {"name": "teutonic", "game": "TEUTONS", "kind": "civ"}
 {"name": "teutons", "game": "TEUTONS", "kind": "civ"}
+{"name": "tiny", "kind": "map-size", "tiles": 120}
 {"name": "tiny-map", "kind": "map-size", "tiles": 120}
 {"name": "town-center", "game": "TOWN_CENTER", "kind": "building", "id": 109}
 {"name": "trade-cart", "game": "TRADE_CART", "kind": "unit", "id": 128}
