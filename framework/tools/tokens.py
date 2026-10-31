@@ -21,8 +21,9 @@ thinking and tool input. The rest of the eq (not in the sinks): owner messages, 
 Field `cost`: the API list price of the calls in $, by the model of each call (`PRICES`). The eq weighs a cache read
 0.1, but Opus 5.5 pays 0.05 and Haiku 5.5 pays 5 times more above 100k prompt tokens: compare lanes by the cost.
 Field `verify` (#1704): the wall minutes and the count of the check commands (`pytest`, `ruff`, `mc_check.py`, `mc_shot.py`,
-`render.py`, and `wait`: a loop that waits for the output of a background check), from the time of a tool call to the
-time of its result. A background command has its minutes in the wait loop or the notification, not in its own call.
+`render.py`, `check tool`: a server run of `tools/*_check.py` or `game/run.py`, and `wait`: a loop that waits for the
+output of a background check), from the time of a tool call to the time of its result. A background command has its
+minutes in the wait loop or the notification, not in its own call.
 Field `force` (#3461): the count of the force pushes that failed (`git push --force`, `-f`, `+ref`; #903 forbids them).
 Phases (`--phases`): each tool call gets a phase (`phase()`), and the wall time from the call to the next call of the
 session counts for it. A call `claim.py N` that wins starts ticket N; the time before the first claim counts for
@@ -108,7 +109,8 @@ def label(name, inp):
 
 CHECKS = (("pytest -m mc", r"pytest\b.*-m\s+['\"]?mc\b"), ("pytest -m slow", r"pytest\b.*-m\s+['\"]?slow\b"),
           ("pytest files", r"pytest\b.*\btests/\S+\.py"), ("pytest", r"\bpytest\b"), ("ruff", r"\bruff\b"),
-          ("mc_check.py", r"mc_check\.py"), ("mc_shot.py", r"mc_shot\.py"), ("render.py", r"render\.py"))
+          ("mc_check.py", r"mc_check\.py"), ("mc_shot.py", r"mc_shot\.py"), ("render.py", r"render\.py"),
+          ("check tool", r"(?<!framework/)tools/\w+_check\.py|\bgame/run\.py\b"))   # a server run (#5424)
 WAIT = r"\buntil\b|\bsleep\b"                 # a wait loop (LEARNINGS #413): its minutes are the minutes of a check
 OUTPUT = r"rc=|\.out\b|\.log\b"               # the output of a background check that a wait loop reads
 HEREDOC = re.compile(r"<<-?\s*['\"]?(\w+)['\"]?.*?^\s*\1\s*$", re.M | re.S)   # text (a PR body, a file), no command
@@ -193,6 +195,7 @@ PHASE_RULES = (("conflict", r"merge_main\.py|unconflict\.py|\bgit merge\b"),
                ("claim", r"claim\.py|cycle_start\.py|dashboard\.py|feedback\.py|usage\.py"),
                ("report", REPORT_FILE),
                ("code", r"\bsed -i\b|\bcat >|\bpython3 - <<|\btee\b"))
+BEAT = re.compile(r"\S*claim\.py\s+\d+\s+--beat\b[^;&|\n]*")   # a keep-alive: the rest of its command gives the phase
 ORDER = ("conflict", "verify", "ci", "code", "claim", "report", "read")   # a call with several tools: the first here
 # a claim: no option but --takeover, or --or with the next candidates (`claim.py N --or M K`)
 CLAIMED = re.compile(r"claim\.py (\d+)(?:\s+--or((?:\s+\d+)+)|\s+--takeover)?(?=\s*(?:$|[;&|)<>\n]|\d>))")
@@ -202,7 +205,7 @@ PHASES = ("read", "claim", "code", "verify", "ci", "conflict", "report")   # the
 def phase(name, inp):
     """The phase of one tool call: read, claim, code, verify, ci, conflict or report."""
     if name == "Bash":
-        cmd = HEREDOC.sub("", inp.get("command", ""))
+        cmd = BEAT.sub("", HEREDOC.sub("", inp.get("command", "")))
         if check(cmd):
             return "verify"
         return next((k for k, rx in PHASE_RULES if re.search(rx, cmd)), "read")
