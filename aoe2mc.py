@@ -632,8 +632,8 @@ def read_record(path, match=None):
             objects.append(dict(kind="U" if prefix == "H" else prefix, hero=prefix == "H", name=name, player=player,
                                 x=o.position.x, y=o.position.y, rotation=0.0, garrisoned=False,
                                 ref=o.instance_id, holder=None))
-    lobby = {"type": match.type, "dataset": match.dataset, "starting_age": match.starting_age,   # for the replay rules (#4832)
-             "population": match.population, "all_techs": match.all_technologies, "reveal": match.map_reveal}
+    lobby = {k: getattr(match, a, None) for k, a in (("type", "type"), ("dataset", "dataset"), ("starting_age", "starting_age"),
+             ("population", "population"), ("all_techs", "all_technologies"), ("reveal", "map_reveal"))}  # the replay rules (#4832)
     return size, terrain, elevation, terrain_names, {k: "" for k in CHAPTERS} | {"lobby": lobby}, objects, players
 
 

@@ -27,7 +27,7 @@ def test_read_record_matches_header(match):
     assert elevation.max() == max(t.elevation for t in match.map.tiles)
     assert players[1]["civ"] == "BYZANTINES" and players[1]["arch"] == "mediterranean" and players[1]["color"] == "red"
     assert players[2]["arch"] == "mesoamerican" and players[2]["color"] == "orange"
-    assert players[1]["view"] == (37.0, 98.0) and not any(texts.values())
+    assert players[1]["view"] == (37.0, 98.0) and not any(texts[k] for k in aoe2mc.CHAPTERS)
     for p in match.players:
         names = Counter(o["name"] for o in objects if o["player"] == p.number)
         assert names["TOWN_CENTER"] == sum(o.object_id == 109 for o in p.objects) == 1     # no annex parts
