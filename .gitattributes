@@ -38,6 +38,8 @@ game/data/build.jsonl merge=jsonl
 game/data/gather.jsonl merge=jsonl
 # One JSON object per Art of War challenge: its civilization, goal and medal limits (#3761).
 game/data/challenges.jsonl merge=jsonl
+# One JSON object per function of game/ that may send a plain text, and why (tools/lang_scan.py, #5379).
+game/data/lang_plain.jsonl merge=jsonl
 # One JSON object per cheat code with a unit, per monk rule name and per replay name (#2034); table.load() stops on a name in two lines.
 game/data/cheats.jsonl merge=jsonl
 game/data/monk.jsonl merge=jsonl
