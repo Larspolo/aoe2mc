@@ -33,6 +33,19 @@ def house(g, row):
     return "HOUSE" in train.owned(g)
 
 
+def known():
+    """The names of the controls that a step can name in "controls" (#5164): the command stick and the selection wand
+    (gather.py) and the items of the build menu (build.MENU)."""
+    import build  # gather imports this module
+    import gather
+    return {"carrot_on_a_stick", gather.WAND, *build.MENU}
+
+
+def unknown(row):
+    """The names of the key "controls" of step row that the game program does not have."""
+    return sorted(set(row["controls"]) - known())
+
+
 def done(g, row):
     """True when step row is done (its "check" function)."""
     module, _, function = row["check"].rpartition(".")
