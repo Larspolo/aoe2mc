@@ -27,6 +27,7 @@ Options:
     --no-barriers      Do not fill building footprints with invisible barrier blocks
     --verbose          Print the time of each phase (read, columns, objects, units, chunks, write)
     --scenario N       Campaign: convert only scenario N (1 = the first)
+    --scenario FILE    Recorded game: the triggers and texts of the scenario FILE
     --architecture X   Use one architecture set for all players (western, central, mediterranean,
                        middle_eastern, south_asian, african, east_asian, southeast_asian, mesoamerican)
 
@@ -6069,8 +6070,10 @@ class Progress:
 def convert(src, out, T=4, H=3, name=None, seed=1, preview=False, arch=None, player_arch=(), with_units=True,
             barriers=True, mc_version=VERSION_NAME, spawn=None, birds=True, orientation="ne", verbose=False,
             garrison="inside", border_design="diorama", ambience="basic", at=None, mood="on", fog=False,
-            resource_pack=False, nplayers=2, teams=None, map_size=None, game_mode="standard", labels=(), together=True):
-    """nplayers: the players of a random map script or --random-map (#3944), teams: their teams (#3946). map_size: the
+            resource_pack=False, nplayers=2, teams=None, map_size=None, game_mode="standard", labels=(), together=True,
+            scenario=None):
+    """scenario: a recorded game only, a scenario file of the same map size: its triggers and texts (--scenario FILE, #5156).
+    nplayers: the players of a random map script or --random-map (#3944), teams: their teams (#3946). map_size: the
     side in tiles of the map of a random map script (--map-size, #4823). game_mode: the
     game mode of a random map script (rmap.MODE_LABELS, #4824), labels: its other lobby labels (rmap.LOBBY_LABELS, #5017), together: the lobby box "Team Together" (#5050). at: recorded games only, the time in ms (--at): convert the state at that time (apply_timeline).
     mood: "on" sets the time of day of the map color mood (MOODS), "off" keeps noon (#1595).
@@ -6082,7 +6085,8 @@ def convert(src, out, T=4, H=3, name=None, seed=1, preview=False, arch=None, pla
     PALETTE_CACHE.clear()   # the cached entries can have the block names of another version
     try:
         _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units, barriers, spawn, birds, orientation,
-                 verbose, garrison, border_design, ambience, at, mood, fog, resource_pack, nplayers, teams, map_size, game_mode, labels, together=together)
+                 verbose, garrison, border_design, ambience, at, mood, fog, resource_pack, nplayers, teams, map_size, game_mode, labels, together=together,
+                 scenario=scenario)
     finally:
         MC = VERSIONS[VERSION_NAME]
         PALETTE_CACHE.clear()
@@ -6106,7 +6110,7 @@ def clear_old_output(out):
 
 def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units, barriers, spawn, birds, orientation,
              verbose, garrison, border_design, ambience, at=None, mood="on", fog=False, resource_pack=False,
-             nplayers=2, teams=None, map_size=None, game_mode="standard", labels=(), together=True):
+             nplayers=2, teams=None, map_size=None, game_mode="standard", labels=(), together=True, scenario=None):
     buildings.BARRIERS = barriers
     buildings.TURN, yaw = ORIENTATIONS[orientation]
     MOVED.clear()           # the counts of an earlier conversion in this process
@@ -6129,6 +6133,13 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
         texts["lobby"] = {"map_size": next((k for k, v in sorted(rmap.MAP_SIZES.items()) if v == size), str(size)),
                           "mode": game_mode, "script": os.path.splitext(os.path.basename(src))[0]}   # map-type (#5102)
     record = src.lower().endswith(RECORDS)
+    if scenario is not None:                 # the triggers and texts of a scenario game for its record (#5156)
+        if not record:
+            raise OptionError("--scenario FILE needs a recorded game (.aoe2record)")
+        ssize, *_, stexts, _, _ = read_scenario(scenario)
+        if ssize != size:
+            raise OptionError(f"--scenario {scenario}: map size {ssize}, the recorded game: {size}")
+        texts |= {k: stexts.get(k, "") for k in CHAPTERS} | {"triggers": stexts.get("triggers", [])}
     record_state = {}
     timeline = read_timeline(src, record_state) if record else None
     views = record_state.get("views")
@@ -6317,6 +6328,11 @@ def int_range(lo, hi):
             raise argparse.ArgumentTypeError(f"{n} is not in the range {lo}-{hi}")
         return n
     return parse
+
+
+def scenario_spec(v):
+    """--scenario: a number N (a campaign), else a scenario file (a recorded game, #5156)."""
+    return int_range(1, 999)(v) if v.strip().lstrip("-").isdigit() else v
 
 
 def player_arch_spec(v):
@@ -6520,8 +6536,9 @@ def main(argv=None):
                     help="make the map with an own generator of the seed, no input file (arabia, arena, black_forest, "
                     "gold_rush, highland: a river with fords, islands: one island for each player, mediterranean: a sea in the middle, nomad: no town "
                     "center); give only the output")
-    ap.add_argument("--scenario", dest="only", type=int_range(1, 999), metavar="N",
-                    help="campaign: convert only scenario N (1 = the first)")
+    ap.add_argument("--scenario", dest="only", type=scenario_spec, metavar="N|FILE",
+                    help="campaign: convert only scenario N (1 = the first); recorded game: the triggers and texts of "
+                    "the scenario FILE of the game (the same map size)")
     ap.add_argument("--tile-size", type=int_range(1, 16), default=4, help="blocks per tile (default 4)")
     ap.add_argument("--level-height", type=int_range(1, 16), default=3, help="blocks per elevation level (default 3)")
     ap.add_argument("--name", help="world name in the Minecraft menu")
@@ -6632,6 +6649,8 @@ def main(argv=None):
             ap.error("--at needs a recorded game (.aoe2record)")
         if a.scenario.lower().endswith((".aoe2campaign", ".cpx", ".cpn")):
             convert_campaign(a.scenario, a.output, a.only, a.name, **kw)
+        elif isinstance(a.only, str):
+            convert(a.scenario, a.output, name=a.name, at=a.at, scenario=a.only, **kw)
         elif a.only is not None:
             ap.error("--scenario needs a campaign file (.aoe2campaign, .cpx, .cpn)")
         else:

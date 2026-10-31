@@ -145,6 +145,7 @@ that has no path stays where it is.
 | `--ambience` | basic | `basic`: work sounds at buildings, animal sounds, and particles and sounds by terrain near the player (falling spores in forests, snowflakes, desert dust, frogs, water). `full`: also one biome per terrain group with its own sky, fog and water colors; Minecraft then shows an "Experimental Settings" warning each time the world opens. `off`: a silent world without a datapack |
 | `--verbose` | off | Print the time of each phase (read, columns, objects, units, chunks, write) |
 | `--scenario N` | all | Campaign: convert only scenario N (1 = the first) |
+| `--scenario FILE` | recorded game | The triggers and texts of the scenario FILE of the game (the same map size, #5156) |
 | `--orientation C` | `ne` | Minecraft corner (`ne`, `se`, `sw`, `nw`) of the top corner of the AoE2 screen. The map, the building fronts and the units turn with it. |
 | `--spawn X,Z` | start view or town center of player 1 | Player spawn in AoE2 tiles. Without it the spawn is the start view of player 1, else the front of its first town center, else the map center. |
 | `--garrison {inside,outside,skip}` | `inside` | Garrisoned units: a ship carries its units in stacks of up to 4 on each boat seat. `inside` puts each other unit inside its building. It does not move, it cannot die and its name does not show. `outside` puts each unit next to the building or unit that holds it. `skip` does not convert them. |
