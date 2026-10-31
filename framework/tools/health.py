@@ -13,6 +13,7 @@ REST only (cloud sessions give 403 for GraphQL and `search/...`). Token and `gh`
 import argparse
 import datetime
 import difflib
+import json
 import math
 import os
 import re
@@ -80,6 +81,25 @@ def loop_gaps(runs, since, until):
     if until > t:
         gaps.append((until - t).total_seconds() / 3600)
     return max(gaps, default=0.0), sum(gaps)
+
+
+def idle_queue(cycles, until):
+    """(longest, sum) in hours of the idle stretches of the pacer `cycles` (dicts of `pacer/YYYY-MM-DD.jsonl`): the
+    consecutive cycles with `target` > 0, no claim and no started run, from the first one to the next cycle that is not
+    idle (or `until`). The queue stood still for hours on 2026-10-31 while the pacer loop ran (#5199). A paused
+    project is not idle."""
+    stretches, start = [], None
+    for c in sorted(cycles, key=lambda c: c["at"]):
+        idle = (c.get("target", 0) > 0 and not c.get("claims") and not sum((c.get("started") or {}).values())
+                and "paused True" not in c.get("line", ""))
+        if idle and start is None:
+            start = ts(c["at"])
+        elif not idle and start is not None:
+            stretches.append((ts(c["at"]) - start).total_seconds() / 3600)
+            start = None
+    if start is not None:
+        stretches.append(max(0.0, (until - start).total_seconds() / 3600))
+    return max(stretches, default=0.0), sum(stretches)
 
 
 def held(r):
@@ -670,12 +690,14 @@ def takeover_lines(rows):
 
 
 def report(since, runs, jobs, status_comments, comments, prs, files, files_of=None, issues=(), issue_events=(),
-           unanswered=None, reviews=None, data_rows=None, owner=None, waits=None, loop=None):
+           unanswered=None, reviews=None, data_rows=None, owner=None, waits=None, loop=None, idle=None):
     out = [f"Health since {since:%Y-%m-%d %H:%M} UTC", "", "CI runs (count, median min, max min, failures):"]
     for name, (k, m, mx, fail) in ci_runs(runs, since).items():
         out.append(f"  {name}: {k}, {fmt(m)}, {fmt(mx)}, {fail}")
     if loop is not None:                        # a dead pacer loop starts no run (#4647): (longest, sum, hours)
         out.append(f"Pacer loop gaps (no live run, #4647): longest {loop[0]:.1f} h, sum {loop[1]:.1f} h of {loop[2]:.1f} h")
+    if idle is not None:                        # the loop runs, but it starts nothing (#5199): (longest, sum)
+        out.append(f"Idle queue (target > 0, no claim, no start): longest {idle[0]:.1f} h, sum {idle[1]:.1f} h")
     held, again = held_runs(runs)
     out.append("Runs held by GitHub (#4645): " + (", ".join(f"{k} {v}" for k, v in sorted(held.items())) or "0")
                + " · started again by hand: " + (", ".join(f"{k} {v}" for k, v in sorted(again.items())) or "0"))
@@ -843,7 +865,7 @@ def period(until, hours, past, only_takeovers=False):
     merged = sorted(t for p in prs if p.get("merged_at") and (t := ts(p["merged_at"])) >= since)
     text = report(since, runs, jobs, status_comments, comments, prs, git_files(), files_of, issues, events,
                   unanswered(), None if refs is None else review_delays(refs, merged, since), data_rows(),
-                  *owner_and_waits(since, until if past else None), loop=pacer_loop(since, until))
+                  *owner_and_waits(since, until if past else None), loop=pacer_loop(since, until), idle=pacer_idle(since, until))
     return text.replace(" UTC", f" UTC until {until:%Y-%m-%d %H:%M} UTC", 1) if past else text
 
 
@@ -857,6 +879,26 @@ def pacer_loop(since, until):
         print(f"health: no runs of pacer.yml ({e})", file=sys.stderr)
         return None
     return (*loop_gaps(runs, since, until), (until - since).total_seconds() / 3600)
+
+
+def pacer_idle(since, until):
+    """`idle_queue` of the pacer cycles between `since` and `until` (the branch `metrics`, `pacer/`); None when git
+    cannot read the branch."""
+    import metrics_log
+    if metrics_log.git("fetch", "-q", "--depth", "1", "origin", "+refs/heads/metrics:refs/remotes/origin/metrics").returncode:
+        return None
+    cycles, d = [], since.date()
+    while d <= until.date():
+        r = metrics_log.git("show", f"origin/metrics:pacer/{d:%Y-%m-%d}.jsonl")
+        for line in r.stdout.splitlines() if r.returncode == 0 else ():
+            try:
+                c = json.loads(line)
+            except ValueError:
+                continue
+            if since <= ts(c["at"]) <= until:
+                cycles.append(c)
+        d += datetime.timedelta(days=1)
+    return idle_queue(cycles, until)
 
 
 def merge_times(n, until):
