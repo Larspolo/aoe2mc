@@ -6,6 +6,7 @@ The first push of a ticket took 2 to 6 tool calls in each run on 2026-10-28, and
     python3 framework/tools/ship_pr.py N --message MSG.txt --title "Title" --body BODY.md   # the first push of ticket N
     python3 framework/tools/ship_pr.py N --message MSG.txt                                  # a later push to the open PR
     python3 framework/tools/ship_pr.py N --ci                                               # only wait for the quick CI again
+    python3 framework/tools/ship_pr.py N --ci --pr-branch B                                 # the same for the PR of branch B (a takeover)
 
 Steps: `git commit -F MSG.txt` of the staged files (without `--message`: the commits that are there), `ruff check .`,
 the tests (the test files of the branch and the test files that import its changed modules, never the full
@@ -146,16 +147,18 @@ def main(argv=None):
     ap.add_argument("--part", action="store_true", help="`Part of #N` in place of `Closes #N` in a new PR: the ticket "
                     "stays open (a check ticket that waits for its bug tickets, autopilot `owner.md`)")
     ap.add_argument("--ci", action="store_true", help="only wait for the quick CI of the open PR of the branch")
+    ap.add_argument("--pr-branch", help="with --ci: the branch of the PR (a takeover pushes to the PR of another run "
+                    "from its session branch, #5014)")
     ap.add_argument("--wait", type=float, default=WAIT, help=f"minutes after the start to wait for the quick CI "
                     f"(default {WAIT}; 0: do not wait)")
     a = ap.parse_args(argv)
     deadline = time.monotonic() + a.wait * 60
     branch = git("branch", "--show-current").stdout.strip()
     if a.ci:
-        owner = CONFIG["repo"].split("/")[0]
-        pr = next(iter(dashboard.api(f"pulls?head={owner}:{branch}&state=open")), None)
+        owner, head = CONFIG["repo"].split("/")[0], a.pr_branch or branch
+        pr = next(iter(dashboard.api(f"pulls?head={owner}:{head}&state=open")), None)
         if pr is None:
-            print(f"no open PR of {branch}")
+            print(f"no open PR of {head}" + ("" if a.pr_branch else ": a takeover gives --pr-branch B"))
             return 4
         return ci(a.number, pr["head"]["sha"], deadline)
     if a.message:
