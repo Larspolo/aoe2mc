@@ -53,13 +53,13 @@ def test_wimpywimpywimpy_destroys_the_own_player_and_ends_the_game():
     g.select("m-1")
     log = cheat(server, g, "wimpywimpywimpy")
     assert "kill @e[team=p1,type=!player]" in log and not g.villagers and not g.soldiers and not g.selected
-    assert 'title @a[team=p1] title {"text":"Defeat","color":"red"}' in log and g.ended == "Defeat"
+    assert 'title @a[team=p1] title {"translate":"aoe2mc.defeat","fallback":"Defeat","color":"red"}' in log and g.ended == "Defeat"
 
 
 def test_i_r_winner_shows_victory_and_stops_the_play_loop():
     server, g = game()
     log = cheat(server, g, "i r winner")
-    assert 'title @a[team=p1] title {"text":"Victory","color":"gold"}' in log and g.ended == "Victory"
+    assert 'title @a[team=p1] title {"translate":"aoe2mc.victory","fallback":"Victory","color":"gold"}' in log and g.ended == "Victory"
     t = time.time()
     g.run(seconds=5)
     assert time.time() - t < 1
@@ -67,7 +67,7 @@ def test_i_r_winner_shows_victory_and_stops_the_play_loop():
 
 def test_resign_shows_defeat():
     server, g = game()
-    assert 'title @a[team=p1] title {"text":"Defeat","color":"red"}' in cheat(server, g, "resign") and g.ended == "Defeat"
+    assert 'title @a[team=p1] title {"translate":"aoe2mc.defeat","fallback":"Defeat","color":"red"}' in cheat(server, g, "resign") and g.ended == "Defeat"
 
 
 def test_natural_wonders_gives_the_animals_and_takes_the_own_units():
