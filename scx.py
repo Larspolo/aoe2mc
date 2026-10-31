@@ -160,7 +160,7 @@ def body_start(data):
     return p
 
 
-def scenario_players(s, civs):
+def scenario_players(s, civs, tail=0):
     """The scenario player data: {player: {civ, color, view}} of the players with a civilization."""
     players = {0: {"civ": "GAIA", "color": None, "view": None}}
     for p in range(1, s.u32()):
@@ -177,6 +177,7 @@ def scenario_players(s, civs):
             s.i32()
             points = s.i32()
             s.skip((8 if cv >= 2.0 else 0) + points * (32 if cv >= 2.0 else 24))
+        s.skip(tail)                        # format 1.35: an i32 (-1) ends each player (special_map_*, #5209)
         civ = civs.get(p)
         if civ is not None:
             players[p] = {"civ": CIVS[civ] if 0 <= civ < len(CIVS) else f"CIV_{civ}", "color": color,
@@ -201,16 +202,17 @@ def read(path):
 
     n = s.u32()
     s.skip((n - 1) * (6 if fmt < b"1.20" else 7) * 4)   # world player data: resources, population from 1.20 (genie-scx)
-    # The colors and start views are in the scenario player data: after the objects before format 1.36, else before
-    if fmt >= b"1.36":
-        players = scenario_players(s, civs)
+    # The colors and start views are in the scenario player data: after the objects before format 1.35, else before
+    # (the special_map_* files of format 1.35 have it before, #5209)
+    if fmt >= b"1.35":
+        players = scenario_players(s, civs, 4 if fmt == b"1.35" else 0)
     objects = []
     for p in range(n):                      # objects: x, y, z, ID, type, state, angle, frame, garrisoned in
         for _ in range(s.u32()):
             x, y, _, ref, kind, _, angle, _, holder = s.unpack("fffiHBfhi")
             objects.append({"player": p, "id": ref, "type": kind, "x": x, "y": y, "angle": angle,
                             "garrisoned_in": holder if holder > 0 else None})     # 0 and -1: not garrisoned
-    if fmt < b"1.36":
+    if fmt < b"1.35":
         players = scenario_players(s, civs)
     return {"format": fmt.decode(), "width": terrain.shape[0], "height": terrain.shape[1], "terrain": terrain, "elevation": elevation,
             "players": players, "objects": objects}

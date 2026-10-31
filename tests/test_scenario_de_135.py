@@ -1,6 +1,6 @@
 """A DE scenario of format 1.33 or 1.35 (#5072): AoE2ScenarioParser has no layout before 1.36, so scx.py reads it.
 It differs from 1.36 (genie-scx, format.rs): no "collide and correct" byte (data version 1.36), the objects come
-before the scenario player data; 1.33 also has no trigger count (data version 1.35). The test builds the file byte by
+before the scenario player data in 1.33 (1.35: after it, with an i32 at the end of each player, #5209); 1.33 also has no trigger count (data version 1.35). The test builds the file byte by
 byte: no free sample file exists."""
 import struct
 import zlib
@@ -39,15 +39,17 @@ def build(path, fmt, terrain, elevation, civs, objects):
     tile = np.zeros((h, w, 7), np.uint8)
     tile[:, :, 0], tile[:, :, 1], tile[:, :, 5:] = terrain.T, elevation.T, 255
     d += tile.tobytes() + struct.pack("<I", 9) + struct.pack("<7f", 200, 200, 100, 200, 100, 0, 75) * 8
-    for p in range(9):                                                     # the objects before the players (< 1.36)
-        objs = [o for o in objects if o[0] == p]
-        d += struct.pack("<I", len(objs))
-        for k, (_, x, y, t) in enumerate(objs):
-            d += struct.pack("<fffiHBfhi", x, y, 0, k, t, 2, 0, 0, -1)
-    d += struct.pack("<I", 9)
+    objs = b""
+    for p in range(9):
+        o = [o for o in objects if o[0] == p]
+        objs += struct.pack("<I", len(o))
+        for k, (_, x, y, t) in enumerate(o):
+            objs += struct.pack("<fffiHBfhi", x, y, 0, k, t, 2, 0, 0, -1)
+    players = struct.pack("<I", 9)
     for p in range(1, 9):
-        d += s16(f"Player {p}") + struct.pack("<ffhhB", -1, -1, 0, 0, 0) + struct.pack("<h", 9) + bytes(9)
-        d += i(0) * 9 + i(p - 1) + struct.pack("<fiB", 2.0, 0, 0) + i(0, 0, 0, 0)
+        players += s16(f"Player {p}") + struct.pack("<ffhhB", -1, -1, 0, 0, 0) + struct.pack("<h", 9) + bytes(9)
+        players += i(0) * 9 + i(p - 1) + struct.pack("<fiB", 2.0, 0, 0) + i(0, 0, 0, 0) + (i(-1) if v >= 1.35 else b"")
+    d += players + objs if v >= 1.35 else objs + players                   # 1.35: the players first, #5209
     d += struct.pack("<d", 2.2)                                              # triggers: not read
     header = struct.pack("<II", 6, 0) + struct.pack("<I", 0) + i(0, 2) + i(0, 0) + s16("") + i(0)
     c = zlib.compressobj(9, zlib.DEFLATED, -15)
