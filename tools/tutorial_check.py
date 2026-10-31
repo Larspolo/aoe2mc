@@ -133,6 +133,7 @@ class Driver:
             if not self.unit(self.villager) or not self.slot(name):
                 self.c.key("Escape")
                 continue
+            self.note(f"chose {build.chosen(g, NAME)} in the build menu")
             if (rect := build.near(g, name, near)) is None:
                 self.note(f"no free place for {name}")
                 return None
@@ -142,6 +143,7 @@ class Driver:
             sites = len(g.sites)
             g.command(f"tp {NAME} {cell[0] + 0.5} {y + 14} {cell[1] + 6.5} facing {cell[0] + 0.5} {y - 0.5} {cell[1] + 0.5}")
             time.sleep(1.0)
+            self.shot(f"place_{name.lower()}_{len(self.shots)}.png")             # the ghost before the click
             self.c.click(self.c.size[0] // 2, self.c.size[1] // 2, button=1)   # the left click: AoePlugin.onLeftClick
             time.sleep(2.0)
             if len(g.sites) > sites:
