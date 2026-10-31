@@ -158,12 +158,18 @@ def candidates(issues, busy=frozenset(), now=None, lane=None, reserved=RESERVED,
     now = now or datetime.datetime.now(datetime.timezone.utc)
     open_numbers = {i["number"] for i in issues}
     issues = [i for i in issues if "pull_request" not in i]
+    by_number = {i["number"]: i for i in issues}
+
+    def parked(i):          # the parent epic waits for the release or the owner muted it (#5169)
+        url = i.get("parent_issue_url") or ""
+        parent = by_number.get(int(url.rsplit("/", 1)[1])) if url.rsplit("/", 1)[-1].isdigit() else None
+        return bool(parent and labels(parent) & {AFTER, MUTED})
 
     def rank(i):
         p = next((k for k, name in enumerate(PRIORITY) if name in labels(i)), len(PRIORITY))
         return lane is None and any(n.startswith(LANE) for n in labels(i)), p, len(overlap(i, busy)), i["number"]
     ready = [i for i in issues if not labels(i) & SKIP and not any(d in open_numbers for d in depends(i))
-             and not i.get("title", "").startswith("Decide:")
+             and not i.get("title", "").startswith("Decide:") and not parked(i)
              and (LANE + lane in labels(i) if lane else not {LANE + r for r in reserved} & labels(i))
              and not held(i, now, after)]                   # last: it reads GitHub
     return sorted(ready, key=rank)
