@@ -23,6 +23,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import cheats  # noqa: E402
+import ratings  # noqa: E402
 
 from units import MOUNT  # noqa: E402
 
@@ -88,6 +89,7 @@ def finish(g):
     one = min(rest)
     if any(not allied(g.players, one, n) for n in lost) and all(allied(g.players, a, b) for a in rest for b in rest):
         cheats.over(g, lambda p: allied(g.players, p, one))
+        ratings.announce(g, ratings.update(ratings.teams(g, one)))     # the Elo rating of the human players (#5166)
 
 
 def tick(g):
