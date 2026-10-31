@@ -34,7 +34,7 @@
 {"name": "34", "text": "Build a navy."}
 {"name": "35", "text": "Stop building a navy."}
 {"name": "36", "text": "Wait for my signal to attack.", "answer": "I will wait for your signal."}
-{"name": "37", "text": "Build a wonder."}
+{"name": "37", "text": "Build a wonder.", "wait": "We build a wonder when we reach the Imperial Age."}
 {"name": "38", "text": "Give me your extra resources."}
 {"name": "39", "text": "(Ally sound)"}
 {"name": "40", "text": "(Enemy sound)"}
