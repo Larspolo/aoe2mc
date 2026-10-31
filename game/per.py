@@ -198,7 +198,8 @@ VICTORY_TYPES = {                  # run.py --victory: the airef VictoryType; on
     "standard": 0,
     "time-limit": 2,
 }
-GET_FACT = ("up-get-fact", "up-get-fact-max", "up-get-fact-min", "up-get-fact-sum", "up-get-player-fact")
+GET_FACT = ("up-get-fact", "up-get-fact-max", "up-get-fact-min", "up-get-fact-sum", "up-get-player-fact",
+            "up-get-focus-fact", "up-get-target-fact")   # the last two: the focus and the target player (#4973)
 COST_ACTIONS = ("up-setup-cost-data", "up-reset-cost-data", "up-add-cost-data", "up-add-object-cost",
                 "up-add-research-cost", "up-get-cost-delta")
 COST_GOODS = ("food", "wood", "stone", "gold")   # a cost set is 4 goals in a row, in this order (airef "Cost data", #4879)
@@ -768,6 +769,9 @@ class Script:
     def get_fact(self, name, args):
         """up-get-fact, up-get-player-fact and up-get-fact-min, -max, -sum: the value of a fact into a goal (#4868). An
         unknown fact or player gives one warning and leaves the goal. As a fact it is true (airef "Fact/Action")."""
+        if name in ("up-get-focus-fact", "up-get-target-fact"):      # (up-get-focus-fact FACT PARAM GOAL)
+            who = "focus-player" if name == "up-get-focus-fact" else "target-player"
+            return self.get_fact("up-get-player-fact", (who, *args))
         if name == "up-get-fact":
             xs, (fact, param, goal) = [self.bot.g], args
         else:
@@ -893,8 +897,8 @@ class Script:
         g, b = self.bot.g, self.bot
         sides = {x.player: x for x in build.sides(g)}
         sides[g.player] = g
-        if isinstance(who, int) or who == "focus-player":
-            x = sides.get(b.foe if who == "focus-player" else who)
+        if isinstance(who, int) or who in ("focus-player", "target-player"):   # the bot's target is the foe's
+            x = sides.get(b.foe if isinstance(who, str) else who)
             return [x] if x else [], False
         mode, _, kind = who.partition("-")
         if mode not in ("any", "every") or kind not in ("enemy", "ally", "player", "computer", "human"):
@@ -1845,6 +1849,15 @@ class Script:
             if args[0] not in SN:
                 return self.warn("strategic number", args[0])
             self.sn[args[0]] = args[1]
+        elif name == "up-get-precise-time":                          # (up-get-precise-time START GOAL): ms since START
+            self.goals[args[1]] = int(b.time * 1000) - self.goals.get(args[0], 0)
+        elif name == "up-get-player-color":                          # (up-get-player-color PLAYER GOAL): the ID, the name as text
+            import aoe2mc
+            p = {"my-player-number": g.player, "focus-player": b.foe}.get(args[0], args[0])
+            if p is not None:
+                col = g.players.get(str(p), {}).get("color") or aoe2mc.player_color(p)
+                self.goals[args[1]] = aoe2mc.PLAYER_COLORS.index(col) if col in aoe2mc.PLAYER_COLORS else 0
+                self.text = col
         elif name in GET_FACT:
             self.get_fact(name, args)
         elif name in COST_ACTIONS:
