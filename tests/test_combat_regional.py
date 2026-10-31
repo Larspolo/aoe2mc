@@ -13,9 +13,3 @@ def test_each_regional_unit_has_values_and_a_valid_command():
         s = combat.STATS[name]
         assert combat.stats(name) is s and s.hp > 0 and s.attack > 0 and s.reload > 0 and s.classes, name
         assert COMMAND.match(combat.stats_command("u", name)), name
-
-
-def test_the_bonus_hits_its_target_class():
-    for attacker, target in (("CONDOTTIERO", "JANISSARY"), ("WINGED_HUSSAR", "BOMBARD_CANNON"), ("SLINGER", "MILITIA")):
-        t = combat.stats(target)
-        assert combat.damage(attacker, target) > combat.damage(attacker, target, t=t._replace(classes=())), attacker

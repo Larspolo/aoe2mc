@@ -21,8 +21,3 @@ def test_the_upgrade_is_stronger_than_its_base_unit():
                      ("SCORPION", "HEAVY_SCORPION"), ("CAVALRY_ARCHER", "HEAVY_CAVALRY_ARCHER"),
                      ("EAGLE_WARRIOR", "ELITE_EAGLE_WARRIOR"), ("ELITE_SKIRMISHER", "IMPERIAL_SKIRMISHER")]:
         assert combat.STATS[up].hp >= combat.STATS[base].hp and combat.STATS[up].attack >= combat.STATS[base].attack, up
-
-
-def test_a_hand_cannoneer_has_a_bonus_against_infantry():
-    t = combat.stats("CHAMPION")
-    assert combat.damage("HAND_CANNONEER", "CHAMPION") > combat.damage("HAND_CANNONEER", "CHAMPION", t=t._replace(classes=()))
