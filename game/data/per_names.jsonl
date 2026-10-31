@@ -779,3 +779,5 @@
 {"name": "attribute-max-dup-missiles", "kind": "attribute", "id": 107}
 {"name": "attribute-garrison-heal-rate", "kind": "attribute", "id": 108}
 {"name": "attribute-regenration-rate", "kind": "attribute", "id": 109}
+{"name": "with-escrow", "kind": "escrow", "id": 1}
+{"name": "without-escrow", "kind": "escrow", "id": 0}
