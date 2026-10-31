@@ -247,6 +247,7 @@ EXPLORED_STATE = {"explored-active": 15,                           # airef "Expl
                   "explored-yes": 128}
 FLARES = ("up-find-flare", "up-find-player-flare", "up-send-flare")   # the flares of the team (#4971)
 UP_QUEUE = {"up-build": "build", "up-research": "research", "up-train": "train"}
+PRIORITY = ("up-reset-target-priorities", "up-set-defense-priority", "up-set-offense-priority", "up-update-targets")
 ORDERS = ("up-delete-distant-farms", "up-delete-idle-units", "up-reset-attack-now", "up-reset-building",
           "up-reset-unit", "up-retreat-now")
 
@@ -342,6 +343,7 @@ class Script:
         self.target = None                                         # the id of the target object
         self.point = None                                          # (x, y) tiles of up-set-target-point (#4956)
         self.groups, self.flags = {}, {}                           # group id -> object ids; object id -> group flag
+        self.priority = {"offense": {}, "defense": {}}             # game name or class tuple -> priority (#4968)
         self.grids = {}                                            # the map grids of map_value (#4962)
 
     def number(self, name):
@@ -1782,6 +1784,39 @@ class Script:
         self.target = st["found"][ref]
         return True
 
+    def rank(self, kind, name):
+        """The target priority of an object of game name for kind "offense" or "defense" (airef up-set-*-priority):
+        the value of its name, else the highest value of a class with it, else 0. The offense table counts only with
+        sn-enable-offensive-priority 1."""
+        if kind == "offense" and self.number("sn-enable-offensive-priority") != 1:
+            return 0
+        table = self.priority[kind]
+        if name in table:
+            return table[name]
+        return max((v for k, v in table.items() if isinstance(k, tuple) and name in k), default=0)
+
+    def prioritize(self, name, args):
+        """up-set-offense-priority / up-set-defense-priority TYPE OBJECT TYPE2 VALUE (offense -1 to 11, defense -1 to
+        32767); up-reset-target-priorities TYPE OPTION: the default (none set); up-update-targets: the town defense of
+        the bot chooses its targets again at once (Bot.guard)."""
+        b = self.bot
+        if name == "up-update-targets":
+            b.guarded, b.retask = -math.inf, True                 # defend() and guard() look in the next step
+            return
+        if name == "up-reset-target-priorities":
+            kind = {"priority-offense": "offense", "priority-defense": "defense"}.get(args[0])
+            if kind is None:
+                return self.warn("priority type", args[0])
+            self.priority[kind].clear()
+            return
+        sn = self.named(args[0], args[1])
+        n = sn and self.game(sn, "unit", "building")
+        kind2 = self.type_kind(args[2])
+        value = self.operand(kind2, args[3]) if kind2 else None
+        if n and value is not None:
+            top = 11 if name == "up-set-offense-priority" else 32767
+            self.priority[name.split("-")[2]][n] = min(max(value, -1), top)
+
     def group(self, gid):
         """The ids of search group gid that stand: a dead object leaves its group (and its flag)."""
         live = {r[0] for r in self.objects(self.bot.g)}
@@ -2096,6 +2131,8 @@ class Script:
             self.at_point(name, args)
         elif name in GROUPS:
             self.group_command(name, args)
+        elif name in PRIORITY:
+            self.prioritize(name, args)
         elif name in OBJECT_DATA:
             self.object_command(name, args)
         elif name == "enable-timer":
