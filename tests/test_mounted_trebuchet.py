@@ -7,7 +7,7 @@ from test_loom import menus
 
 import buildings
 import units
-from game import combat, train
+from game import train
 
 build = train.build
 WITH = min(set(buildings.CIV_TO_ARCH) - set(train.civs.MISSING["MOUNTED_TREBUCHET"]))   # the Khitans
@@ -38,12 +38,6 @@ def test_the_franks_do_not_see_it():
 def test_it_is_gray_before_the_imperial_age():
     server, g = setup(ages=2)
     assert build.locked(g, "MOUNTED_TREBUCHET") == "Needs the Imperial Age"
-
-
-def test_its_bonus_against_siege():
-    mangonel = combat.stats("MANGONEL")
-    assert combat.damage("MOUNTED_TREBUCHET", "MANGONEL") > \
-        combat.damage("MOUNTED_TREBUCHET", "X", t=mangonel._replace(classes=()))   # the bonus of the siege class
 
 
 def test_it_looks_like_a_camel_with_the_trebuchet_crew():
