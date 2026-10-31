@@ -96,6 +96,7 @@
 {"name": "imperial-camel", "game": "IMPERIAL_CAMEL_RIDER", "kind": "unit", "id": 207}
 {"name": "imperial-skirmisher", "game": "IMPERIAL_SKIRMISHER", "kind": "unit", "id": 1155}
 {"name": "incas", "game": "INCAS", "kind": "civ"}
+{"name": "infantry-class", "set": ["BERSERK", "CHAKRAM_THROWER", "CHAMPION", "CHAMPI_RUNNER", "CHAMPI_SCOUT", "CHAMPI_WARRIOR", "CONDOTTIERO", "EAGLE_SCOUT", "EAGLE_WARRIOR", "ELITE_CHAKRAM_THROWER", "ELITE_CHAMPI_WARRIOR", "ELITE_EAGLE_WARRIOR", "ELITE_FIRE_LANCER", "ELITE_GBETO", "ELITE_GHULAM", "ELITE_HOPLITE", "ELITE_HUSKARL", "ELITE_IBIRAPEMA_WARRIOR", "ELITE_JAGUAR_WARRIOR", "ELITE_KAMAYUK", "ELITE_KARAMBIT_WARRIOR", "ELITE_OBUCH", "ELITE_SERJEANT", "ELITE_SHOTEL_WARRIOR", "ELITE_TEMPLE_GUARD", "ELITE_URUMI_SWORDSMAN", "ELITE_VARANGIAN_GUARD", "FIRE_LANCER", "FLEMISH_MILITIA", "GBETO", "GHULAM", "HALBERDIER", "HOPLITE", "HUSKARL", "IBIRAPEMA_WARRIOR", "JAGUAR_WARRIOR", "JIAN_SWORDSMAN", "KAMAYUK", "KARAMBIT_WARRIOR", "LEGIONARY", "LONG_SWORDSMAN", "MAN_AT_ARMS", "MILITIA", "OBUCH", "PIKEMAN", "SAMURAI", "SERJEANT", "SHOTEL_WARRIOR", "SPEARMAN", "TEMPLE_GUARD", "TEUTONIC_KNIGHT", "THROWING_AXEMAN", "TWO_HANDED_SWORDSMAN", "URUMI_SWORDSMAN", "VARANGIAN_GUARD", "WOAD_RAIDER"], "kind": "unit", "id": 906}
 {"name": "italians", "game": "ITALIANS", "kind": "civ"}
 {"name": "japanese", "game": "JAPANESE", "kind": "civ"}
 {"name": "keep", "game": "KEEP", "kind": "building", "id": 235}
@@ -259,6 +260,7 @@
 {"name": "vietnamese", "game": "VIETNAMESE", "kind": "civ"}
 {"name": "vikings", "game": "VIKINGS", "kind": "civ"}
 {"name": "villager", "game": "VILLAGER_MALE", "kind": "unit", "id": 83}
+{"name": "villager-class", "set": ["VILLAGER_MALE"], "kind": "unit", "id": 904}
 {"name": "war-galley", "game": "WAR_GALLEY", "kind": "unit", "id": 21}
 {"name": "watch-tower", "game": "WATCH_TOWER", "kind": "building", "id": 79}
 {"name": "wonder", "game": "WONDER", "kind": "building", "id": 276}
