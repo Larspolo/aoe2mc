@@ -649,6 +649,8 @@ class Replay:
         out = []
         for p in sorted(set(self.kings) - set(self.regicided)):
             self.flush()                                            # the kills of the queue first
+            for u in sorted(self.kings[p]):                         # @e sees no unloaded chunk (#5032): keep the
+                self.game.command(f"execute as {u} at @s run forceload add ~ ~")   # chunk of each King loaded
             if not regicide.has_king(self.game, p):
                 out += self.king_died(p, t)
         return out
