@@ -10,7 +10,7 @@ Usage:
 The tool copies the world, starts Paper and joins the real client (tools/mc_shot.py). A driver thread gives the input
 of a person through the client: it aims with a teleport (Client.pick, mc_shot.aims) and clicks with the mouse
 (xdotool): a right click with the command stick (select, gather, open a menu, attack), a click on a chest menu slot
-and a left click to place a building. The game loop of run.play reads these clicks as from a person.
+and a right click on the ground to place a building. The game loop of run.play reads these clicks as from a person.
 OUTDIR gets steps.json (the boss bar text, the chat line and the game time of each step), the screenshots and the
 server log. Exit 0: the tutorial is complete.
 """
@@ -122,7 +122,7 @@ class Driver:
         return True
 
     def build(self, name, near):
-        """Open the build menu with a right click on the selected villager, choose name, place it with a left click
+        """Open the build menu with a right click on the selected villager, choose name, place it with a right click
         near the block cell near. Returns the site, or None."""
         g = self.g
         for _ in range(4):
@@ -141,16 +141,16 @@ class Driver:
             cell = (x0 + x1) // 2, (z0 + z1) // 2
             y = g.map.y(*cell) or 64
             sites = len(g.sites)
-            g.command(f"tp {NAME} {cell[0] + 0.5} {y + 14} {cell[1] + 6.5} facing {cell[0] + 0.5} {y - 0.5} {cell[1] + 0.5}")
+            g.command(f"tp {NAME} {cell[0] + 0.5} {y + 24} {cell[1] + 10.5} facing {cell[0] + 0.5} {y - 0.5} {cell[1] + 0.5}")
             time.sleep(1.0)
             self.shot(f"place_{name.lower()}_{len(self.shots)}.png")             # the ghost before the click
-            self.c.click(self.c.size[0] // 2, self.c.size[1] // 2, button=1)   # the left click: AoePlugin.onLeftClick
+            self.c.click(self.c.size[0] // 2, self.c.size[1] // 2, button=3)   # a right click on the ground places it
             time.sleep(2.0)
             if len(g.sites) > sites:
                 site = g.sites[-1]
                 self.note(f"placed {name} at {site['footprint']}")
                 return site
-            self.note(f"the left click placed no {name}")
+            self.note(f"the right click placed no {name}")
             g.cancel(NAME)
         return None
 
