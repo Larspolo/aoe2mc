@@ -244,6 +244,7 @@
 {"name": "steppe-lancer", "game": "STEPPE_LANCER", "kind": "unit", "id": 1370}
 {"name": "steppe-lancer-line", "game": "STEPPE_LANCER", "kind": "unit"}
 {"name": "stone-wall", "game": "STONE_WALL", "kind": "building", "id": 117}
+{"name": "stone-wall-line", "game": "STONE_WALL", "kind": "building", "id": 117}
 {"name": "tatars", "game": "TATARS", "kind": "civ"}
 {"name": "teutons", "game": "TEUTONS", "kind": "civ"}
 {"name": "tiny-map", "kind": "map-size", "tiles": 120}

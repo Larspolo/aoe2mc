@@ -222,6 +222,7 @@ PLAYER_FACTS = ("player-computer", "player-human", "player-in-game", "player-num
 STATE_FACTS = ("cheats-enabled", "enemy-captured-relics", "hold-koh-ruin", "hold-relics", "town-under-attack",
                "victory-condition")   # (#5045)
 TOWN = 30                       # tiles around the own town center: "in town" (AoE2 sn-maximum-town-size, airef "Facts")
+AFFORD = {"can-afford-building": ("building",), "can-afford-research": ("tech", "age"), "can-afford-unit": ("unit",)}
 PERIMETERS = {1: (10, 20), 2: (18, 30)}   # tiles from the town center to each wall ring (airef "build-wall", #4740)
 OCTAGON = math.tan(math.pi / 8)           # half the straight side of a regular octagon per its radius
 
@@ -722,6 +723,19 @@ class Script:
             return diplomacy.stance(self.bot.g, args[0]) == args[1]
         if name in ("can-train", "can-build", "can-research", "research-available", "research-completed"):
             return self.can(name, args[0])
+        if name in AFFORD:                                         # (can-afford-unit UNIT): the cost only (#5044)
+            n = self.game(args[0], *AFFORD[name])
+            return bool(n) and self.paid(self.price(n))
+        if name == "can-afford-complete-wall":                     # (can-afford-complete-wall PERIMETER WALL-TYPE)
+            n = self.game(args[1], "building")
+            tiles = self.wall_free(args[0]) if n else None
+            return tiles is not None and self.paid({r: v * len(tiles) for r, v in self.price(n).items()})
+        if name in ("can-build-wall", "can-build-wall-with-escrow"):   # (can-build-wall PERIMETER WALL-TYPE)
+            return self.wall(args[0], args[1], name.endswith("escrow"), test=True)
+        if name in ("can-build-gate", "can-build-gate-with-escrow"):   # (can-build-gate PERIMETER)
+            return self.gate(args[0], name.endswith("escrow"), test=True)
+        if name in ("can-spy", "can-spy-with-escrow"):
+            return self.spy(name.endswith("escrow"), test=True)
         if name in ("can-train-with-escrow", "can-build-with-escrow", "can-research-with-escrow"):
             return self.can(name.removesuffix("-with-escrow"), args[0], True)
         if name in ("up-can-train", "up-can-build", "up-can-research"):     # (up-can-train ESCROW TYPE UNIT)
@@ -1581,16 +1595,50 @@ class Script:
         if sites:
             b.builder(sites[0])
 
-    def wall(self, p, kind):
+    def price(self, n):
+        import build
+        import train
+        return build.price(self.bot.g, n) if n in build.COSTS else train.price(self.bot.g, n)
+
+    def wall_free(self, p):
+        """The free tiles of the wall ring p, or None with no ring."""
+        import build
+        T = self.bot.g.map.T
+        if not (sides := self.ring(p)):
+            return None
+        return [t for side in sides for t in side
+                if build.free(self.bot.g, (t[0] * T, (t[0] + 1) * T, t[1] * T, (t[1] + 1) * T))]
+
+    def spy(self, escrow=False, test=False):
+        """(spy): research Spies at once for its cost (#5044). Not in Regicide: Treason replaces it (train.SWAPS).
+        test: only say whether it is possible (can-spy)."""
+        import train
+        g = self.bot.g
+        if "SPIES" not in train.COSTS or train.researched(g, "SPIES") or train.swapped(g, "SPIES"):
+            return False
+        cost = train.price(g, "SPIES")
+        if not self.paid(cost, escrow):
+            return False
+        if not test:
+            for r, v in cost.items():
+                g.stock[r] -= v
+            if escrow:
+                self.spend(cost)
+            train.research(g, {"name": "SPIES", "player": self.bot.nobody})
+        return True
+
+    def wall(self, p, kind, escrow=False, test=False):
         """(build-wall PERIMETER WALL-TYPE): sites on the free tiles of one side of the ring p, as many as the stock
         without the escrow pays; the side nearest to the enemy first. One villager builds them, as a wall line of a
-        player (the key "line": build.next_tile)."""
+        player (the key "line": build.next_tile). test: only say whether one tile is possible (can-build-wall)."""
         import build
         g, b = self.bot.g, self.bot
         if (n := self.game(kind, "building")) is None or not (sides := self.ring(p)) or build.locked(g, n):
-            return
+            return False
         if n not in build.WALLS:
-            return self.warn("wall", kind)
+            return self.warn("wall", kind) or False
+        if test:
+            return bool(g.villagers and self.wall_free(p) and self.paid(build.price(g, n), escrow))
         T, to = g.map.T, self.forward()
         if to:
             sides = sorted(sides, key=lambda s: min((math.dist((x * T, z * T), to) for x, z in s), default=math.inf))
@@ -1606,15 +1654,15 @@ class Script:
                     b.builder(sites[0])
                 return
 
-    def gate(self, p):
+    def gate(self, p, escrow=False, test=False):
         """(build-gate PERIMETER): a gate on own wall tiles near the middle of a side of the ring p with no gate yet
         (build.gate): first on the straight sides (4 tiles, airef: "replace four wall segments"), then on the diagonal
         ones (3 tiles). sn-gate-type-for-wall 1: a palisade gate (airef)."""
         import build
         g, b = self.bot.g, self.bot
         n = self.game("palisade-gate" if self.number("sn-gate-type-for-wall") == 1 else "gate", "building")
-        if not n or not (sides := self.ring(p)) or build.locked(g, n) or not self.paid(build.price(g, n)):
-            return
+        if not n or not (sides := self.ring(p)) or build.locked(g, n) or not self.paid(build.price(g, n), escrow):
+            return False
         T = g.map.T
         gated = {t for s in g.sites if s["name"] in build.GATES and s.get("player", g.player) == g.player
                  for t in self.gate_tiles(s)}
@@ -1624,6 +1672,8 @@ class Script:
             for i in sorted(range(len(side)), key=lambda i: (abs(2 * i - len(side) + 1), i)):   # the middle first
                 cell = side[i][0] * T, side[i][1] * T
                 if (spot := build.gate_spot(g, cell)) and set(map(tuple, spot[2])) <= set(side):
+                    if test:
+                        return True
                     site = build.gate(g, b.nobody, n, cell)
                     if site and not any(v.site is site for v in g.villagers.values()):
                         b.builder(site)
@@ -2533,6 +2583,8 @@ class Script:
             self.wall(args[0], args[1])
         elif name == "build-gate":                                     # (build-gate PERIMETER)
             self.gate(args[0])
+        elif name == "spy":                                            # Spies at once, no castle (airef)
+            self.spy()
         elif name == "disable-self":
             self.off.add(k)
         elif name == "set-goal":
