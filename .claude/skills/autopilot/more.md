@@ -4,7 +4,8 @@ Read this file after step 8 when the argument asks for more than 1 ticket (part 
 
 ## Next tickets of the brief
 
-A brief of the pacer with a `next: A B` line (#5076): after the report (step 8) of each ticket, do the quota check
+A brief of the pacer with a `next: A B` line (#5076; in the report give `--source next` or `--source cycle_start`
+for each ticket after the first, and `--next-failed N` for each `next:` ticket that another run had, #5308): after the report (step 8) of each ticket, do the quota check
 of `scheduled` step 3b first. Then `git fetch origin main && git checkout -B <session branch>-<k> origin/main` and
 `python3 framework/tools/claim.py A --or B` (one call: it tries B when another run has A; one number when the line has
 one). Exit 0: start at step 6 with the claimed ticket (the claim prints the ticket and its comments; then

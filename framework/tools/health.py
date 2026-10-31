@@ -605,6 +605,23 @@ def lanes(comments):
     return {k: tuple(v) for k, v in out.items()}
 
 
+def next_effect(comments):
+    """(runs that took a `next:` ticket, failed `next:` claims, M eq per first ticket, M eq per later ticket) of the run
+    reports (#5308). A later ticket has `· source NAME` on its `Metrics:` line; the `Tokens:` eq of a report splits
+    evenly over its tickets. The medians are None when no ticket of the kind has a `Tokens:` line."""
+    took = failed = 0
+    first, later = [], []
+    for c in comments:
+        body = c.get("body") or ""
+        lines = re.findall(r"^Metrics: ticket #.*$", body, re.M)
+        took += any(re.search(r"· source next\b", x) for x in lines)
+        failed += sum(len(m.split()) for m in re.findall(r"^Next failed: (.*)$", body, re.M))
+        if (tok := TOKENS.search(body)) and lines:
+            for x in lines:
+                (later if " · source " in x else first).append(float(tok[1]) / len(lines))
+    return took, failed, med(first), med(later)
+
+
 def pr_results(comments, prs):
     """The `pr #n` results of the `Metrics:` lines: (merged PRs, not merged PRs) by the present PR state (#902)."""
     merged = {p["number"] for p in prs if p.get("merged_at")}
@@ -743,6 +760,9 @@ def report(since, runs, jobs, status_comments, comments, prs, files, files_of=No
     for name, (n, pr, mins, eq) in sorted(lanes(status_comments).items()):
         out.append(f"Lane {name}: {n} runs, {pr} PRs, median {fmt(med(mins))} min, median {fmt(med(eq))}M eq"
                    + (f", median ${med(costs[name]):.2f} per run" if costs.get(name) else ""))
+    took, nfail, first, later = next_effect(status_comments)
+    out.append(f"Next tickets (#5308): {took} runs took a next: ticket, {nfail} failed next: claims, M eq per ticket:"
+               f" first {fmt(first)}, later {fmt(later)}")
     weights, source, errors, pairs = lane_fit(status_comments)
     out.append(f"Lane weights (a lane run in Opus runs, #1727; {pairs} pairs, ± standard error, #2852): " + ", ".join(
         f"{k} {w:.2f}{f' ± {errors[k]:.2f}' if k in errors else ''} ({source[k]})" for k, w in weights.items()))
