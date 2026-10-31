@@ -229,6 +229,16 @@ SHARED = ("up-get-event", "up-get-shared-goal", "up-get-signal", "up-set-event",
 POINTS = ("up-add-point", "up-bound-point", "up-bound-precise-point", "up-copy-point", "up-cross-tiles",   # #4956
           "up-get-point", "up-get-point-distance", "up-lerp-percent", "up-lerp-tiles", "up-set-precise-target-point",
           "up-set-target-point")
+MAP_FACTS = {"up-get-point-elevation": "elevation",              # the map at a point (#4962): command -> map_value kind
+             "up-get-point-terrain": "terrain",
+             "up-get-point-zone": "zone",
+             "up-point-elevation": "elevation",
+             "up-point-explored": "explored",
+             "up-point-terrain": "terrain",
+             "up-point-zone": "zone"}
+EXPLORED_STATE = {"explored-active": 15,                           # airef "ExploredState" (up-point-explored)
+                  "explored-no": 0,
+                  "explored-yes": 128}
 UP_QUEUE = {"up-build": "build", "up-research": "research", "up-train": "train"}
 ORDERS = ("up-delete-distant-farms", "up-delete-idle-units", "up-reset-attack-now", "up-reset-building",
           "up-reset-unit", "up-retreat-now")
@@ -289,6 +299,7 @@ class Script:
         self.cost_at = None                                        # the first goal of the current cost set (#4879)
         self.builders = {}                                         # building -> builders of up-assign-builders (#4875)
         self.point = None                                          # (x, y) tiles of up-set-target-point (#4956)
+        self.grids = {}                                            # the map grids of map_value (#4962)
 
     def number(self, name):
         return self.sn.get(name, SN[name])
@@ -503,6 +514,10 @@ class Script:
         if name in ("up-modify-goal", "up-modify-sn"):             # a command as a fact: it runs, and is true
             self.act(None, (name, *args))
             return True
+        if name in MAP_FACTS:                                      # (up-point-terrain POINT REL VALUE)
+            v = self.map_value(MAP_FACTS[name], self.pair(args[0]))
+            ref = EXPLORED_STATE.get(args[2], args[2]) if name == "up-point-explored" else args[2]
+            return v is not None and self.compare(args[1], v, ref)
         if name == "up-point-distance":                            # (up-point-distance P1 P2 REL VALUE)
             d = self.point_distance(args[0], args[1])
             return d is not None and self.compare(args[2], d, args[3])
@@ -937,6 +952,70 @@ class Script:
     def point_distance(self, a, b):
         p, q = self.pair(a), self.pair(b)
         return None if p is None or q is None else int(math.dist(p, q))
+
+    def grid(self, key):
+        """The tile grid key ("terrain" or "elevation") of aoe2mc.json as rows of numbers (#4962). An old world without
+        it: the terrain of Map.wet (1 water, 0 grass) and the elevation 0, with one warning."""
+        if key not in self.grids:
+            d = self.bot.g.data
+            if key in d:
+                self.grids[key] = [[int(v) for v in row.split()] for row in d[key]]
+            else:
+                self.warn("map data (an old world)", key)
+                n = self.tiles()
+                self.grids[key] = [[int(self.wet_tile(x, y)) * (key == "terrain") for x in range(n)] for y in range(n)]
+        return self.grids[key]
+
+    def wet_tile(self, x, y):
+        m = self.bot.g.map
+        return m.wet(x * m.T + m.T // 2, y * m.T + m.T // 2)
+
+    def zones(self):
+        """The zone of each tile (#4962): the connected land or water areas (4 sides), numbered 1, 2, ... in the order
+        of their first tile (row by row), as the map zones of AoE2."""
+        if "zone" not in self.grids:
+            n = self.tiles()
+            wet = [[self.wet_tile(x, y) for x in range(n)] for y in range(n)]
+            out = [[0] * n for _ in range(n)]
+            k = 0
+            for y0 in range(n):
+                for x0 in range(n):
+                    if out[y0][x0]:
+                        continue
+                    k += 1
+                    out[y0][x0], todo = k, [(x0, y0)]
+                    while todo:
+                        x, y = todo.pop()
+                        for a, b in ((x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)):
+                            if 0 <= a < n and 0 <= b < n and not out[b][a] and wet[b][a] == wet[y0][x0]:
+                                out[b][a] = k
+                                todo.append((a, b))
+            self.grids["zone"] = out
+        return self.grids["zone"]
+
+    def explored(self, p):
+        """airef "ExploredState" of tile p for the team of the bot: 15 in sight now (Gather.seen_tiles, fog.revealed),
+        128 seen before (the explored tiles of game/fog.py), else 0."""
+        import fog
+        g = self.bot.g
+        if getattr(g, "reveal", "normal") == "all":
+            return 15
+        state = vars(g).setdefault("fog", {"hidden": set(), "at": None})
+        known = state.setdefault("explored", set())
+        if p in g.seen_tiles() | fog.revealed(g):
+            known.add(p)
+            return 15
+        return 128 if p in known or getattr(g, "reveal", "normal") == "explored" else 0
+
+    def map_value(self, kind, p):
+        """The terrain ID, elevation, zone or explored state of tile p (a point), or None (no point or off the map)."""
+        n = self.tiles()
+        if p is None or not (0 <= p[0] < n and 0 <= p[1] < n):
+            return None
+        x, y = int(p[0]), int(p[1])
+        if kind == "explored":
+            return self.explored((x, y))
+        return (self.zones() if kind == "zone" else self.grid(kind))[y][x]
 
     def points(self, name, args):
         """The point commands of UserPatch (airef, #4956): a point is a goal pair (x, y) in tiles, a precise point
@@ -1538,6 +1617,9 @@ class Script:
                     break
         elif name in POINTS:
             self.points(name, args)
+        elif name in MAP_FACTS:                                      # (up-get-point-terrain POINT GOAL)
+            if (v := self.map_value(MAP_FACTS[name], self.pair(args[0]))) is not None:
+                self.goals[args[1]] = v
         elif name == "acknowledge-taunt":                            # (acknowledge-taunt PLAYER TAUNT)
             self.heard.discard((args[0], args[1]))
         elif name not in ("do-nothing", "chat-local-to-self", "enable-wall-placement", "up-chat-data-to-self",
