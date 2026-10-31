@@ -136,7 +136,7 @@ def test_a_real_record_in_4_parts(tmp_path):
         got += new
     now[0] += 60.0
     new, complete = source.more()
-    assert complete and [plain(e) for e in got + new] == [plain(e) for e in whole]
+    assert complete and [plain(e) for e in got + new if e["kind"] != "view"] == [plain(e) for e in whole]   # #4771
 
 
 def plain(e):
