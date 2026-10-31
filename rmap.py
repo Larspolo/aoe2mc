@@ -188,6 +188,8 @@ def expand(words, rng, defined, consts, includes, folder=None, depth=0):
         elif w == "#define":
             defined.add(arg())
             i += 2
+            if i < len(words) and words[i].startswith("("):  # a note in parentheses after the label (Highland, #4950)
+                i = group(words, i)[1]
         elif w == "#const":                             # a #const with no value defines nothing (#4309)
             v = words[i + 2] if i + 2 < len(words) else ""
             if v.startswith(("(", "rnd(", "-")) or re.fullmatch(r"\d+\.?\d*|\.\d+", v) or v in consts:
@@ -744,7 +746,11 @@ def generate(text, seed, players=2, size=None, warn=None, teams=None, folder=Non
             warn(f"{cmd} is not read yet")
             continue
         kind = value(args[0], consts)
-        on = value(attrs["base_terrain"][0], consts) if "base_terrain" in attrs else 0
+        on = attrs["base_terrain"][0] if "base_terrain" in attrs else "0"
+        if not re.fullmatch(r"-?[\d.]+", on) and on not in consts:  # AoE2 DE reads it as 0 (Aftermath SPAWN_BLEND, #4950)
+            warn(f"create_terrain {args[0]}: base_terrain {on} is not defined, read as 0")
+            on = "0"
+        on = value(on, consts)
         free = terrain == on
         if "height_limits" in attrs:               # only on the hill levels from MIN to MAX (AoE2 DE)
             lo, hi = (value(v, consts) for v in attrs["height_limits"][:2])

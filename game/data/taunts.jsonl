@@ -29,8 +29,8 @@
 {"name": "29", "text": "Roggan."}
 {"name": "30", "text": "Wololo.", "sound": "entity.evoker.prepare_wololo"}
 {"name": "31", "text": "Attack an enemy now.", "answer": "Attacking now."}
-{"name": "32", "text": "Cease creating extra villagers."}
-{"name": "33", "text": "Create extra villagers."}
+{"name": "32", "text": "Cease creating extra villagers.", "answer": "I stop the training of extra villagers."}
+{"name": "33", "text": "Create extra villagers.", "answer": "I train more villagers."}
 {"name": "34", "text": "Build a navy."}
 {"name": "35", "text": "Stop building a navy."}
 {"name": "36", "text": "Wait for my signal to attack.", "answer": "I will wait for your signal."}
@@ -67,7 +67,7 @@
 {"name": "67", "text": "Attack player 7! (Gray)", "answer": "Attacking player 7."}
 {"name": "68", "text": "Attack player 8! (Orange)", "answer": "Attacking player 8."}
 {"name": "69", "text": "Delete the object on the flared location."}
-{"name": "70", "text": "Delete your excess villagers."}
+{"name": "70", "text": "Delete your excess villagers.", "answer": "I delete my excess villagers."}
 {"name": "71", "text": "Delete excess warships."}
 {"name": "72", "text": "Focus on training infantry units.", "focus": "BARRACKS", "answer": "Training infantry units now."}
 {"name": "73", "text": "Focus on training cavalry units.", "focus": "STABLE", "answer": "Training cavalry units now."}
