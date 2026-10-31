@@ -960,7 +960,7 @@ class Replay:
                 self.villager(v.player, 1)
             if self.ai:                                             # the AoE2 values, as newcomer()
                 import combat  # combat -> gather -> build -> replay
-                out += [combat.stats_command(v.uuid, v.name)] + \
+                out += [combat.stats_command(v.uuid, v.name, T=self.T)] + \
                     [c for c in [combat.range_command(v.uuid, v.name, self.T)] if c] + [f"tag {v.uuid} add {COUNTED}"]
         for r in x.get("resources", ()):
             stock = self.resources(r["player"])
@@ -1636,7 +1636,7 @@ class Replay:
         out = [f"summon {kind} {pos[0]} {pos[1]} {pos[2]} {units.summon_snbt(nbt)}"]
         if self.ai:                                                 # the AoE2 values: plugin commands (#632)
             import combat  # combat -> gather -> build -> replay
-            out += [combat.stats_command(v.uuid, v.name)] + [c for c in [combat.range_command(v.uuid, v.name, self.T)] if c]
+            out += [combat.stats_command(v.uuid, v.name, T=self.T)] + [c for c in [combat.range_command(v.uuid, v.name, self.T)] if c]
             out.append(f"tag {v.uuid} add {COUNTED}")              # census() counts it
         return v, out
 
