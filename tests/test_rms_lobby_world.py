@@ -1,4 +1,4 @@
-"""A random map world keeps its lobby map size and game mode in aoe2mc.json (#4825)."""
+"""A random map world keeps its lobby map size and game mode and the script name (#5102) in aoe2mc.json (#4825)."""
 import json
 
 import pytest
@@ -19,7 +19,7 @@ def world(tmp_path_factory):
 
 def test_the_world_has_the_lobby(world):
     lobby = json.loads((world / "aoe2mc.json").read_text())["lobby"]
-    assert lobby == {"map_size": "tiny", "mode": "regicide"}
+    assert lobby == {"map_size": "tiny", "mode": "regicide", "script": "a"}
 
 
 def test_the_lobby_mode_is_the_default_and_an_option_wins(world, monkeypatch):

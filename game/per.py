@@ -441,6 +441,13 @@ def map_size(data):
     return next((k for t, k in sizes if t >= n), sizes[-1][1])
 
 
+def map_type(data):
+    """The airef map type of a world (aoe2mc.json): the name of its random map script in airef form (Arabia.rms ->
+    arabia, #5102), else scenario-map."""
+    script = (data.get("lobby") or {}).get("script")
+    return re.sub(r"[\s_]+", "-", script.strip().lower()) if script else "scenario-map"
+
+
 def symbols(data, player, difficulty, modes=(), age="dark"):
     """The system symbols of #load-if-defined (airef "Conditional loading") of the bot of player: the civilization
     (BRITONS-CIV), the difficulty (DIFFICULTY-HARD), the game types (DEATH-MATCH, REGICIDE), the start age
@@ -449,7 +456,7 @@ def symbols(data, player, difficulty, modes=(), age="dark"):
     civ = data.get("players", {}).get(str(player), {}).get("civ")
     out = {f"{k}-civ" for k, r in names().items() if r["kind"] == "civ" and r["game"] == civ}
     out |= {f"difficulty-{k}" for k, r in names().items() if r["kind"] == "difficulty" and r["game"] == difficulty}
-    return out | set(modes) | {f"{age}-age-start", "scenario-map", map_size(data)}
+    return out | set(modes) | {f"{age}-age-start", map_type(data), map_size(data)}
 
 
 def fresh():
@@ -946,7 +953,7 @@ class Script:
             return self.warn(kind, args[0]) or False
         if kind == "map-size":                                     # two names of one size both match (#5101)
             return row["tiles"] == names()[map_size(g.data)]["tiles"]
-        return args[0] == "scenario-map"
+        return args[0] == map_type(g.data)
 
     def player_fact(self, name, who):
         """(player-human PLAYER) and the other facts of PLAYER_FACTS: true for one (any-, a number) or all (every-)."""
