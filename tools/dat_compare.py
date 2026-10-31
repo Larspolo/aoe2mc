@@ -4,8 +4,8 @@
 Usage: python3 tools/dat_compare.py [PATH/empires2_x2_p1.dat]
 
 Prints one line for each difference ("NAME key: data value, game value"). Exit 0: no difference, 1: differences,
-2: no .dat or no genieutils-py. The rules of the compare: ticket #5245 (epic #5236). When the .dat and the AoE2 wiki
-do not agree, the .dat wins (docs/research/gameplay.md).
+2: no .dat or no genieutils-py. The rules of the compare: tickets #5245 and #5297 (epic #5236). When the .dat and
+the AoE2 wiki do not agree, the .dat wins (docs/research/gameplay.md).
 """
 import copy
 import json
@@ -23,14 +23,23 @@ HP, SIGHT, ARMOR, ATTACK, RELOAD, RANGE, TRAIN_TIME = 0, 1, 8, 9, 10, 12, 101
 # Rule 4: the armor classes; class 31 is on all units with 0.
 CLASSES = {1: "infantry", 3: "pierce", 4: "melee", 5: "elephant", 8: "cavalry", 11: "building", 13: "stone", 15: "archer",
            16: "ship", 17: "ram", 19: "unique", 20: "siege", 21: "standard", 22: "wall", 23: "gunpowder", 25: "monk",
-           26: "castle", 27: "spearman", 28: "cavalry archer", 29: "eagle", 30: "camel", 32: "condottiero", 35: "mameluke",
+           26: "castle", 27: "spearman", 28: "cavalry_archer", 29: "eagle", 30: "camel", 32: "condottiero", 35: "mameluke",
            37: "heavysiege", 38: "skirmisher", 41: "fireship", 60: "warship"}
 IGNORE_CLASS = 31
 VILLAGER = 118                                  # rule 5: the train location of a placed building
-GATES = {"GATE": 63, "PALISADE_GATE": 64}       # rule 5: the segment units, not the placement units 487, 488
 RESOURCES = {0: "food", 1: "wood", 2: "stone", 3: "gold"}
 # The villager unit of each gather kind of gather.AOE2_WORK (the oyster: no own unit).
 GATHERERS = {"farm": 214, "fish": 56, "food": 120, "gold": 579, "hunt": 122, "stone": 124, "wood": 123}
+# Lines that keep the values of another unit of the .dat on purpose (#5297), one entry per line.
+SAME_AS = {
+    "CAMEL": 329,           # replay.jsonl: the Camel Rider, not the camel animal 897
+    "POLEMARCH": 2164,      # the Civic Age values ("Polemarch 2")
+    "TREBUCHET": 331,       # the packed values; game/trebuchet.py sets the unpacked armor (#1409)
+}
+# Differences that aoe2mc keeps on purpose (#5297): (name, key): the reason, one entry per line.
+ACCEPTED = {
+    ("AOE2_WORK", "farm"): "an aoe2mc farmer stands still: 0.33 is the farm rate that an AoE2 player gets (#5244)",
+}
 
 
 def rows(path):
@@ -46,8 +55,9 @@ def most_common(values):
 
 def base_unit(dat, uid):
     """The unit of the most common civilization variant (rule 1): the unit of the first civilization (no Gaia) whose
-    hit points, attack and armor are the most common ones."""
+    hit points, attack and armor are the most common ones. A unit of Gaia only (the wild animals): the Gaia unit."""
     units = [c.units[uid] for c in dat.civs[1:] if uid < len(c.units) and c.units[uid] is not None]
+    units = units or [c.units[uid] for c in dat.civs[:1] if uid < len(c.units) and c.units[uid] is not None]
     if not units:
         return None
     key = Counter(json.dumps(stats(u), sort_keys=True) for u in units).most_common(1)[0][0]
@@ -62,11 +72,11 @@ def stats(u):
     """The values of unit u in the form of units.jsonl."""
     t = u.type_50
     atk, arm = pairs(t.attacks if t else ()), pairs(t.armours if t else ())
-    d = {"hp": u.hit_points, "sight": round(u.line_of_sight)}
-    if t:
+    d = {"hp": u.hit_points, "sight": round(u.line_of_sight, 2)}
+    if t:                           # the range in tiles: 2.5 for the fire ships (#5297); no negative bonus (epic #5236)
         d |= {"attack": max(atk.get(4, 0), atk.get(3, 0)), "melee": arm.get(4, 0), "pierce": arm.get(3, 0),
-              "range": round(t.max_range), "reload": round(t.reload_time, 3),
-              "bonus": {CLASSES[c]: a for c, a in sorted(atk.items()) if c in CLASSES and c not in (3, 4) and a}}
+              "range": round(t.max_range, 2), "reload": round(t.reload_time, 3),
+              "bonus": {CLASSES[c]: a for c, a in sorted(atk.items()) if c in CLASSES and c not in (3, 4) and a > 0}}
     if u.speed:
         d["walk"] = round(u.speed, 3)
     return d
@@ -97,8 +107,9 @@ def apply(u, effect):
                 loc.train_time = op(loc.train_time, c.d)
 
 
-def variants(dat, u):
-    """Unit u in each age (rule 2) and with each civilization technology (rule 7)."""
+def variants(dat, u, civs=()):
+    """Unit u in each age (rule 2) and with each technology of the civilizations civs (rule 7: the IDs of the
+    civilizations of the line; the technologies of the other civilizations explain no value, #5297)."""
     out, cur = [u], copy.deepcopy(u)
     for age in AGES:
         for e in age:
@@ -106,31 +117,48 @@ def variants(dat, u):
                 apply(cur, dat.effects[e])
         out.append(copy.deepcopy(cur))
     for t in dat.techs:
-        if getattr(t, "civ", 0) > 0 and 0 <= t.effect_id < len(dat.effects):
+        if getattr(t, "civ", 0) in civs and 0 <= t.effect_id < len(dat.effects):
             v = copy.deepcopy(u)
             apply(v, dat.effects[t.effect_id])
             out.append(v)
     return out
 
 
-def same(a, b):
+def same(a, b, tolerance=0.011):
+    """Two values agree: numbers within the tolerance (the float of 2.15 against 2.16 of the data, #5297)."""
     if isinstance(a, (int, float)) and isinstance(b, (int, float)):
-        return abs(a - b) < 0.01
+        return abs(a - b) <= tolerance
     return a == b
+
+
+def by_villager(u):
+    return bool(u.creatable) and any(loc.unit_id == VILLAGER for loc in u.creatable.train_locations)
+
+
+def finished(dat, uid):
+    """Rule 5: a building that villagers place has the values of its finished unit (`building.stack_unit_id`: the
+    gate segments 64, 63 and 789 of the placed gates 487, 488 and 792, #5297)."""
+    u = base_unit(dat, uid)
+    stack = getattr(getattr(u, "building", None), "stack_unit_id", -1)
+    return stack if u is not None and by_villager(u) and stack >= 0 and base_unit(dat, stack) else uid
 
 
 def compare_unit(name, data, dat, uid):
     """The difference lines of one row of units.jsonl or buildings.jsonl (keys of the row only)."""
-    u = base_unit(dat, uid)
+    u = base_unit(dat, finished(dat, uid))
     if u is None:
         return [f"{name}: no unit {uid} in the .dat"]
     found = [stats(v) for v in variants(dat, u)]
     out = []
     for k in ("hp", "attack", "melee", "pierce", "range", "reload", "sight", "walk"):
+        if k == "reload" and not (data.get(k) and found[0].get(k)):
+            continue                     # no attack cycle: monks, Petard, Saboteur, Flaming Camel (#5297)
         if k in data and k in found[0] and not any(same(data[k], f.get(k)) for f in found):
             out.append(f"{name} {k}: {data[k]}, {found[0][k]}")
-    if "bonus" in data and "bonus" in found[0] and not any(data["bonus"] == f.get("bonus") for f in found):
-        out.append(f"{name} bonus: {data['bonus']}, {found[0]['bonus']}")
+    if "bonus" in data and "bonus" in found[0]:
+        bonus = {c: a for c, a in data["bonus"].items() if a > 0}        # no negative bonus (epic #5236)
+        if not any(bonus == f.get("bonus") for f in found):
+            out.append(f"{name} bonus: {bonus}, {found[0]['bonus']}")
     return out
 
 
@@ -143,7 +171,8 @@ def compare_cost(name, data, game_cost, game_time, times=()):
     out = []
     if "cost" in data and data["cost"] != game_cost:
         out.append(f"{name} cost: {data['cost']}, {game_cost}")
-    if "time" in data and game_time is not None and not any(same(data["time"], t) for t in (game_time, *times)):
+    times = [t for t in (game_time, *times) if t is not None]      # whole seconds: 125 × 0.667 is 83 (#5297)
+    if "time" in data and game_time is not None and not any(same(data["time"], t, 0.5) for t in times):
         out.append(f"{name} time: {data['time']}, {game_time}")
     return out
 
@@ -153,12 +182,12 @@ def train_time(u):
     return locs[0].train_time if locs else None
 
 
-def compare_trained(name, data, dat, uid):
+def compare_trained(name, data, dat, uid, civs=()):
     u = base_unit(dat, uid)
     if u is None or not u.creatable:
         return [f"{name}: no unit {uid} in the .dat"]
     return compare_cost(name, data, cost(u.creatable.resource_costs), train_time(u),
-                        [train_time(v) for v in variants(dat, u)])
+                        [train_time(v) for v in variants(dat, u, civs)])
 
 
 def compare_tech(name, data, dat, tid):
@@ -170,28 +199,39 @@ def compare_tech(name, data, dat, tid):
 
 
 def placed(dat, uid):
-    """Rule 5: the building unit that villagers place (train location 118) of the same name, else uid."""
+    """Rule 5: the building unit that villagers place (train location 118): uid, else the head unit of the finished
+    building (`building.head_unit`: Town Center 109 → 621, Pasture 1897 → 1889, #5297), else the unit of the same
+    name."""
     u = base_unit(dat, uid)
-    if u is None or (u.creatable and any(loc.unit_id == VILLAGER for loc in u.creatable.train_locations)):
+    if u is None or by_villager(u):
         return uid
+    head = getattr(getattr(u, "building", None), "head_unit", -1)
+    v = base_unit(dat, head) if head >= 0 else None
+    if v is not None and by_villager(v):
+        return head
     for c in dat.civs[1:2]:
         for v in c.units:
-            if v is not None and v.name == u.name and v.creatable and any(
-                    loc.unit_id == VILLAGER for loc in v.creatable.train_locations):
+            if v is not None and v.name == u.name and by_villager(v):
                 return v.id
     return uid
 
 
 def work_rate(u):
-    rates = [t.work_value_1 for t in (u.bird.tasks if u.bird else ()) if t.action_type == 5]
-    return max(rates) if rates else (u.bird.work_rate if u.bird else None)
+    """The work rate of a villager unit (`bird.work_rate`; the work value of its gather task is 1.0, #5297)."""
+    return u.bird.work_rate if u.bird else None
 
 
-def compare(dat, units, techs, tables):
+def line_civs(row, civs):
+    """Rule 7: the .dat indexes of the civilizations of a line of train.jsonl or build.jsonl (`civ`, `civs`)."""
+    keys = [row["civ"]] if isinstance(row.get("civ"), str) else row.get("civs") or []
+    return tuple(civs[k] for k in keys if k in (civs or {}))
+
+
+def compare(dat, units, techs, tables, civs=None):
     """All difference lines. units: {name: unit ID}, techs: {name: tech ID}; tables: {file: rows}, with the gather
-    rates as the rows of "AOE2_WORK"."""
+    rates as the rows of "AOE2_WORK"; civs: {civilization key: .dat index} (rule 7)."""
     out = []
-    uid = lambda n: GATES.get(n, units.get(n))
+    uid = lambda n: SAME_AS.get(n, units.get(n))
     for f in ("units.jsonl", "buildings.jsonl", "replay.jsonl"):
         for r in tables.get(f, ()):
             i = uid(r["name"])
@@ -199,17 +239,21 @@ def compare(dat, units, techs, tables):
                 out += compare_unit(r["name"], {"walk": r["walk"]} if "walk" in r else r, dat, i)
     for f in ("train.jsonl", "build.jsonl"):
         for r in tables.get(f, ()):
-            n = r["name"]
+            n, own = r["name"], line_civs(r, civs)
             if f == "build.jsonl" and uid(n) is not None:
-                out += compare_trained(n, r, dat, placed(dat, uid(n)))
-            elif f == "train.jsonl" and n in units:
-                out += compare_trained(n, r, dat, units[n])
+                out += compare_trained(n, r, dat, placed(dat, uid(n)), own)
+            elif f == "train.jsonl" and ("effect" in r or r.get("item") == "book"):
+                if n in techs:                                  # a technology line, also with a unit name (#5297)
+                    out += compare_tech(n, r, dat, techs[n])
+            elif f == "train.jsonl":
+                if uid(n) is not None:                          # a unit line: never the technology of its name
+                    out += compare_trained(n, r, dat, uid(n), own)
             elif n in techs:
                 out += compare_tech(n, r, dat, techs[n])
     for kind, rate in tables.get("AOE2_WORK", {}).items():
         u = base_unit(dat, GATHERERS[kind]) if kind in GATHERERS else None
         got = work_rate(u) if u else None
-        if got is not None and not same(rate, got):
+        if got is not None and not same(rate, got) and ("AOE2_WORK", kind) not in ACCEPTED:
             out.append(f"AOE2_WORK {kind}: {rate}, {round(got, 3)}")
     return out
 
@@ -225,8 +269,14 @@ def names():
     for enum in (HeroInfo, UnitInfo, OtherInfo, BuildingInfo):     # later enums win, as in aoe2mc.object_kinds
         units |= {e.name: e.ID for e in enum}
     techs = {e.name: e.ID for e in TechInfo}
-    techs |= {r["tech"]: techs[r["name"]] for r in rows("data/tech_names.jsonl") if r["name"] in techs}
+    techs |= {r["name"]: techs[r["tech"]] for r in rows("data/tech_names.jsonl") if r["tech"] in techs}   # #5297
     return units, techs
+
+
+def civ_ids():
+    """Rule 7: {civilization key: .dat index}; the order of the AoE2ScenarioParser enum is the order of the .dat."""
+    from AoE2ScenarioParser.datasets.object_support import Civilization
+    return {c.name: i for i, c in enumerate(Civilization)}
 
 
 def main(argv=None):
@@ -246,7 +296,7 @@ def main(argv=None):
     tables = {f: rows(f"game/data/{f}") for f in ("units.jsonl", "buildings.jsonl", "train.jsonl", "build.jsonl",
                                                    "replay.jsonl")}
     tables["AOE2_WORK"] = AOE2_WORK
-    lines = compare(DatFile.parse(path), units, techs, tables)
+    lines = compare(DatFile.parse(path), units, techs, tables, civ_ids())
     print("\n".join(lines) or "no differences")
     return 1 if lines else 0
 
