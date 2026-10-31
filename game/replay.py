@@ -2633,6 +2633,8 @@ class Replay:
         trained villagers and the resources of the gather steps (estimated: the record has no resources); the military
         (#1066): trained military units, lost units (DELETE, and the fights of the plugin: census) and lost buildings."""
         out = ['tellraw @a {"text": "Summary (est.)", "bold": true}']
+        if lobby := self.lobby_text(True):                                  # the lobby settings of the record (#4833)
+            out.append("tellraw @a " + json.dumps(text(lobby, "gray")))
         for p in self.ranked(self.pop.keys() | self.villagers.keys() | self.gathered.keys() | self.army.keys()
                              | self.lost.keys() | self.razed.keys()):
             name, color = self.label(p)
@@ -2645,6 +2647,16 @@ class Replay:
                 f": military units trained {self.army.get(p, 0)}, units lost {self.lost.get(p, 0)}, "
                 f"buildings lost {self.razed.get(p, 0)}, APM {self.mean_apm(p, self.ended)}{self.army_text(p)}")]))
         return out + self.tech_commands() + self.society_commands()
+
+    def lobby_text(self, full=False):
+        """The game type of the record ("Random Map"; full: also the data set, the starting age and the population
+        limit) from the key "lobby" of aoe2mc.json (#4832, #4833). "" when the world has no lobby."""
+        lobby = self.data.get("lobby") or {}
+        if not full:
+            return str(lobby.get("type") or "")
+        parts = [lobby.get("type"), lobby.get("dataset"), lobby.get("starting_age") and f"start {lobby['starting_age']}",
+                 lobby.get("population") and f"population {lobby['population']}"]
+        return " · ".join(str(v) for v in parts if v)
 
     def idle_text(self, p):
         """The idle villager time of player p as M:SS (#3757)."""
@@ -2828,7 +2840,8 @@ class Replay:
         shows each team together, and a fixed number format shows the population (#1189)."""
         out, top = [], max((self.team(p) or 0 for p in self.pop), default=0)
         if self.shown is None:
-            self.shown, out = {}, [f'scoreboard objectives add {POP} dummy "Population"',
+            title = " · ".join(["Population"] + [v for v in [self.lobby_text()] if v])   # the game type (#4833)
+            self.shown, out = {}, [f"scoreboard objectives add {POP} dummy {json.dumps(title)}",
                                    f"scoreboard objectives setdisplay sidebar {POP}"]
         for p in sorted(self.pop):
             name, color = self.label(p)
