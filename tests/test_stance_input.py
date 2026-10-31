@@ -26,7 +26,7 @@ def test_the_stance_menu_sets_the_stance_of_the_selected_soldiers():
     assert stances == ["aoe stance a-1 defensive", "aoe stance m-1 defensive"]   # not the villager
     assert "aoe menu-close Steve" in log and "Steve" not in g.menus
     assert g.stances == {"a-1": "defensive", "m-1": "defensive"}
-    assert any(c.startswith("bossbar set") and json.dumps("Archer (3) · Defensive") in c for c in log)   # the last selected unit
+    assert any(c.startswith("bossbar set") and json.dumps([{"translate": "aoe2mc.unit.ARCHER", "fallback": "Archer"}, " (3) · Defensive"]) in c for c in log)   # the last selected unit
     log = click(server, g, (5.5, 13.5), (5.5, 10.5))
     assert any(":shield:Defensive:" in unquote(c) and "Now" in unquote(c).split(":shield:")[1].split(" 2:")[0]
                for c in log if c.startswith("aoe menu"))

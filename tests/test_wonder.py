@@ -61,7 +61,7 @@ def test_a_destroyed_wonder_stops_the_timer_and_the_bar_goes():
     alive.clear()                                                  # the plugin removed the target at 0 hit points
     tick(g, 100)
     assert "bossbar remove aoe2mc:wonder_p1" in server.log
-    assert 'tellraw @a {"text": "The wonder of player 1 is destroyed.", "color": "red"}' in server.log
+    assert 'tellraw @a {"translate": "aoe2mc.wonder.destroyed", "fallback": "The wonder of player %s is destroyed.", "with": ["1"], "color": "red"}' in server.log
     tick(g, 10000)
     assert not g.ended and not g.wonders
 

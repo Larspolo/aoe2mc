@@ -259,7 +259,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *                                              not named: 1.25:0.75:1. Blocks 0: no rule (the default)
  *   aoe label <selector> [name]                show the name line again (after a selection change); a name sets
  *                                              the name of a building target (#661); a minecart: its crew (#1352)
- *   aoe lore <material> <name> <text>          the last lore line of each menu item with this material and name: the
+ *   aoe lore <material> <name> <text> [<key>]  the last lore line of each menu item with this material and name: the
  *                                              AoE2 help text (#1160, train.HELP; URL-encoded). Sent once at the
  *                                              setup, so the menu commands stay below the RCON limit
  *   aoe minimap on|off|pixel <x> <z>           the live units as dots in their team color on map 0, once per
@@ -1186,6 +1186,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     }
 
     private static final Map<String, String> HELP = new HashMap<>();   // "material:name" -> help line (aoe lore)
+    private static final Map<String, String> KEYS = new HashMap<>();   // "material:name" -> translate key (aoe lore, #5346)
     // the sender of aoe batch: the rights of the console, and its feedback goes nowhere (the console logs each line)
     private CommandSender quiet;
 
@@ -1210,7 +1211,9 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         }
         ItemStack it = new ItemStack(m, count);
         it.editMeta(meta -> {
-            meta.displayName(Component.text(text(p[2])));
+            String key = KEYS.get(p[1] + ":" + text(p[2]));             // a translate key with the name as fallback (#5346)
+            meta.displayName(key == null ? Component.text(text(p[2]))
+                    : Component.translatable().key(key).fallback(text(p[2])).build());
             var lines = new ArrayList<Component>();
             if (p.length > 3 && !p[3].isEmpty()) {
                 text(p[3]).lines().forEach(l -> lines.add(Component.text(l)));
@@ -3929,8 +3932,11 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             sender.sendMessage("Label: " + n + " units");
             return true;
         }
-        if (args.length == 4 && args[0].equals("lore")) {
+        if ((args.length == 4 || args.length == 5) && args[0].equals("lore")) {
             HELP.put(args[1] + ":" + text(args[2]), text(args[3]));
+            if (args.length == 5) {
+                KEYS.put(args[1] + ":" + text(args[2]), args[4]);
+            }
             sender.sendMessage("Lore: " + HELP.size() + " items");
             return true;
         }

@@ -47,7 +47,7 @@ def test_own_messages_go_to_the_own_team(player):
 def test_messages_for_all_players_stay_for_all():
     server, g = setup(2)
     train.research(g, {"name": "FEUDAL_AGE", "player": "Steve"})
-    assert [c.split(" ", 1)[1].startswith("@a ") for c in sent(server, '"Feudal Age"]')] == [True]
+    assert [c.split(" ", 1)[1].startswith("@a ") for c in sent(server, '"fallback": "Feudal Age"}]')] == [True]
     for name in ("wonder.py", "relic_victory.py", "conquest.py"):              # wonder, relics, defeat: all see them
         text = (GAME / name).read_text()
         assert "tellraw @a " in text and "@a[team=" not in text

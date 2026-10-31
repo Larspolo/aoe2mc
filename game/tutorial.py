@@ -11,6 +11,7 @@ import os
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import lang  # noqa: E402
 import table  # noqa: E402
 
 STEPS = table.load("tutorial.jsonl")
@@ -116,6 +117,12 @@ def done(g, row):
     return getattr(importlib.import_module(module), function)(g, row)
 
 
+def step_text(row):
+    """The text of a step as a `translate` component (#5377): the key "aoe2mc.tutorial.<name>", the lang file of the
+    pack takes it from the same table (aoe2mc.lang_files)."""
+    return {"translate": f"aoe2mc.tutorial.{row['name']}", "fallback": row["text"]}
+
+
 def show(g, n):
     """The boss bar and the chat line of step n."""
     row = STEPS[n]
@@ -126,9 +133,9 @@ def show(g, n):
         for cmd in (f'bossbar add {BAR} ""', f"bossbar set {BAR} color green", f"bossbar set {BAR} max {len(STEPS)}",
                     f"bossbar set {BAR} players @a"):
             g.command(cmd)
-    g.command(f"bossbar set {BAR} name " + json.dumps(f"Step {n + 1}/{len(STEPS)}: {row['text']}"))
+    g.command(f"bossbar set {BAR} name " + json.dumps(lang.text("aoe2mc.tutorial.step_of", n + 1, len(STEPS), step_text(row))))
     g.command(f"bossbar set {BAR} value {n}")
-    g.command("tellraw @a " + json.dumps({"text": row["text"], "color": "green"}))
+    g.command("tellraw @a " + json.dumps(step_text(row) | {"color": "green"}))
 
 
 def tick(g):
@@ -140,7 +147,7 @@ def tick(g):
         show(g, n)
     if n >= len(STEPS) or not done(g, STEPS[n]):
         return
-    g.command("title @a subtitle " + json.dumps({"text": "Step done", "color": "green"}))
+    g.command("title @a subtitle " + json.dumps(lang.text("aoe2mc.tutorial.step_done", color="green")))
     g.command("title @a title " + json.dumps({"text": ""}))
     g.command("execute as @a at @s run playsound minecraft:entity.player.levelup master @s")
     g.tutorial_step = n = n + 1
@@ -148,6 +155,6 @@ def tick(g):
         return show(g, n)
     import cheats  # cheats imports gather, gather imports this module
     g.command(f"bossbar remove {BAR}")
-    g.command("tellraw @a " + json.dumps({"text": "The tutorial is complete.", "color": "green"}))
-    g.command(f"title @a[team=p{g.player}] subtitle " + json.dumps({"text": "Tutorial complete", "color": "yellow"}))
+    g.command("tellraw @a " + json.dumps(lang.text("aoe2mc.tutorial.complete", color="green")))
+    g.command(f"title @a[team=p{g.player}] subtitle " + json.dumps(lang.text("aoe2mc.tutorial.complete_title", color="yellow")))
     cheats.over(g, lambda p: p == g.player)                            # the end and the recap, as challenge.tick

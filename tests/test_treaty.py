@@ -24,7 +24,7 @@ def test_an_attack_order_during_the_treaty_does_nothing_and_shows_a_chat_line():
     treaty.start(me, 600.0)
     out = clicked(me, server)
     assert orders(server) == []
-    assert any(c.startswith("tellraw Steve ") and "cannot attack before 10:00" in c for c in out)
+    assert any(c.startswith("tellraw Steve ") and '"translate": "aoe2mc.treaty.refuse"' in c and '"with": ["10:00"]' in c for c in out)
 
 
 def test_after_the_treaty_the_order_attacks_and_a_chat_line_says_so():
