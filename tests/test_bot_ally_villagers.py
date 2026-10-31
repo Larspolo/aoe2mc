@@ -23,7 +23,7 @@ def test_taunt_33_of_an_ally_raises_the_count_and_answers(monkeypatch):
     b.staff()
     b.answer()
     assert b.villagers == n + EXTRA
-    assert sum(c.startswith("tellraw @a[team=p2]") for c in sent) == 1
+    assert sum(c.startswith("tellraw @a[team=p1]") for c in sent) == 1
 
 
 def test_taunt_33_of_an_enemy_changes_nothing(monkeypatch):
