@@ -302,7 +302,8 @@ def dump(g):
                                      **{f: pack(vars(x)[f]) for f in KEPT if f in vars(x)},
                                      "map": {f: pack(getattr(x.map, f)) for f in MAP},
                                      **({"explored": runs} if (runs := explored(x)) else {}),
-                                     **({"known": sorted(map(list, k))} if (k := vars(x).get("fog", {}).get("known")) else {})}
+                                     **({"known": sorted(map(list, k))} if (k := vars(x).get("fog", {}).get("known")) else {}),
+                                     **({"civs_seen": sorted(c)} if (c := vars(x).get("fog", {}).get("civs")) else {})}
                     for x in sides(g)}}
     for b in bots(g):
         d["players"][str(b.g.player)]["bot"] = {f: getattr(b, f) for f in BOT}
@@ -554,6 +555,8 @@ def known_again(x, p):
     """The seen buildings: fog.know after the load (#3079)."""
     if "known" in p:
         vars(x).setdefault("fog", {"hidden": set(), "at": None}).update(known={tuple(k) for k in p["known"]})
+    if "civs_seen" in p:                                               # "Hidden civilizations" (#4748)
+        vars(x).setdefault("fog", {"hidden": set(), "at": None}).update(civs=set(p["civs_seen"]))
 
 
 def orders_again(x, p):
