@@ -36,7 +36,7 @@ for age, names in [("Tool Age", ["BARRACKS", "GRANARY"]), ("Bronze Age", ["MARKE
     early = train.age(g)
     train.tick(g, 1)
     out["ages"].append([queued, early, train.age(g), dict(g.stock), cost,
-                        any(f'"with": ["1", "{age}"]' in c for c in server.log)])
+                        any(f'"fallback": "{age}"' in c for c in server.log if c.startswith("tellraw @a"))])
 print(json.dumps(out))
 '''
 

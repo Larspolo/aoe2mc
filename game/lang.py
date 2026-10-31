@@ -13,5 +13,23 @@ def text(key, *args, **style):
         raise ValueError(f"text {key}: {EN_US[key].count('%s')} arguments, not {len(args)}")
     out = {"translate": key, "fallback": EN_US[key]}
     if args:
-        out["with"] = [str(a) for a in args]
+        out["with"] = [a if isinstance(a, dict) else str(a) for a in args]   # a name component stays (#5346)
     return out | style
+
+
+def name(key, kind="unit", fallback=None):
+    """The text component of a unit, building or technology name (#5346): the key "aoe2mc.<kind>.<KEY>" (kind "unit":
+    the AoE2 name of units.jsonl, "tech": the key of data/train.jsonl) with the English name (units.pretty, or the label
+    of the menu) as fallback. The lang file of the pack makes these keys from the same tables."""
+    from units import pretty
+    return {"translate": f"aoe2mc.{kind}.{key}", "fallback": fallback or pretty(key)}
+
+
+def plain(c):
+    """The English text of a component of text() or name() (with no pack)."""
+    if not isinstance(c, dict):
+        return str(c)
+    out = c.get("fallback", c.get("text", ""))
+    for a in c.get("with", []):
+        out = out.replace("%s", plain(a), 1)
+    return out

@@ -29,7 +29,7 @@ def test_lore_sends_the_help_of_each_item_for_its_item_and_its_gray_item():
     train.lore(g)
     sent = [unquote(c) for c in g.log]
     assert len(sent) == 2 * len(train.HELP) and all(c.startswith("aoe lore ") for c in g.log)
-    line = {(name, m): f"aoe lore {m} {train.ITEMS[name][2]} {train.HELP[name]}"
+    line = {(name, m): f"aoe lore {m} {train.ITEMS[name][2]} {train.HELP[name]} {train.key(name)}"
             for name in train.HELP for m in (train.ITEMS[name][1], build.LOCKED)}
     assert set(line.values()) <= set(sent)
     for name in train.HELP:                                            # the gray item of an upgrade comes last
