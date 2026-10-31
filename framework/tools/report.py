@@ -181,6 +181,8 @@ def main(argv=None):
     for d in tickets:
         d["phases"] = phases(d["phases"])
         d["minutes"] = sum(d["phases"].values()) if d["minutes"] is None else d["minutes"]
+        if d["source"] is None:                                 # the record names only a later ticket's source
+            del d["source"]
     path = metrics_log.post(metrics_log.run_record(body, fields(a.text, usage, tickets, lane, nums)))
     status = next(i for i in pages(f"issues?state=open&labels={STATUS}") if "pull_request" not in i)
     if path:
