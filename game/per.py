@@ -221,10 +221,6 @@ SN_IDS = {r["id"]: r["name"] for r in table.load("per_numbers.jsonl")}   # a scr
 OBJECT_IDS = {r["id"]: r["name"] for r in table.load("per_names.jsonl") if "id" in r and r["kind"] in ("unit", "building")}
 TECH_IDS = {r["id"]: r["name"] for r in table.load("per_names.jsonl") if "id" in r and r["kind"] in ("tech", "age")}
 UP_QUEUE = {"up-build": "build", "up-research": "research", "up-train": "train"}
-IDLE = {"idle-type-fishing-ship": "FISHING_SHIP",                    # airef IdleType: the units of up-delete-idle-units
-        "idle-type-trade-cart": "TRADE_CART",
-        "idle-type-trade-cog": "TRADE_COG",
-        "idle-type-villager": "VILLAGER"}
 ORDERS = ("up-delete-distant-farms", "up-delete-idle-units", "up-reset-attack-now", "up-reset-building",
           "up-reset-unit", "up-retreat-now")
 
@@ -979,8 +975,9 @@ class Script:
                         is not None and train.cancel(g, b.nobody, rect, i):
                     pass                                           # option 1 keeps the research (airef)
         elif name == "up-delete-idle-units":                       # (up-delete-idle-units IDLE-TYPE)
-            if (kind := IDLE.get(args[0])) is None:
-                return self.warn("idle type", args[0])
+            if (kind := self.game(args[0], "idle")) is None:     # airef IdleType: per_names.jsonl
+                return
+            kind = "VILLAGER" if kind.startswith("VILLAGER") else kind
             ships = vars(g).get("ships", {})
             trade = vars(g).get("trade", {})
             idle = sorted([u for u, v in g.villagers.items() if v.state == "idle"] if kind == "VILLAGER" else

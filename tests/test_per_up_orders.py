@@ -82,5 +82,5 @@ def test_option_0_resets_the_research_too():
 def test_an_unknown_idle_type_warns(capsys):
     server, b, s, rect = army()
     s.act(None, ("up-delete-idle-units", "idle-type-ghost"))
-    assert "unknown idle type idle-type-ghost" in capsys.readouterr().err
+    assert "unknown idle idle-type-ghost" in capsys.readouterr().err
 
