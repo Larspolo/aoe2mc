@@ -117,6 +117,7 @@
 {"name": "fish-trap", "game": "FISH_TRAP", "kind": "building", "id": 199}
 {"name": "fishing-ship", "game": "FISHING_SHIP", "kind": "unit", "id": 13}
 {"name": "flaming-camel", "game": "FLAMING_CAMEL", "kind": "unit", "id": 1263}
+{"name": "flemish-pikeman-set", "set": ["FLEMISH_MILITIA"], "kind": "unit"}
 {"name": "folwark", "game": "FOLWARK", "kind": "building"}
 {"name": "fortified-clearing", "kind": "map-type"}
 {"name": "fortress", "kind": "map-type"}
@@ -164,6 +165,7 @@
 {"name": "huge-map", "kind": "map-size", "tiles": 252}
 {"name": "hun", "game": "HUNS", "kind": "civ"}
 {"name": "huns", "game": "HUNS", "kind": "civ"}
+{"name": "huskarl-set", "set": ["ELITE_HUSKARL", "HUSKARL"], "kind": "unit"}
 {"name": "hussar", "game": "HUSSAR", "kind": "unit", "id": 441}
 {"name": "idle-type-fishing-ship", "game": "FISHING_SHIP", "kind": "idle"}
 {"name": "idle-type-trade-cart", "game": "TRADE_CART", "kind": "idle"}
@@ -187,8 +189,10 @@
 {"name": "khmer", "game": "KHMER", "kind": "civ"}
 {"name": "kilimanjaro", "kind": "map-type"}
 {"name": "king-of-the-hill", "kind": "map-type"}
+{"name": "kipchak-set", "set": ["ELITE_KIPCHAK", "KIPCHAK"], "kind": "unit"}
 {"name": "knight", "game": "KNIGHT", "kind": "unit", "id": 38}
 {"name": "knight-line", "game": "KNIGHT", "kind": "unit"}
+{"name": "konnik-set", "set": ["ELITE_KONNIK", "KONNIK"], "kind": "unit"}
 {"name": "korean", "game": "KOREANS", "kind": "civ"}
 {"name": "koreans", "game": "KOREANS", "kind": "civ"}
 {"name": "krepost", "game": "KREPOST", "kind": "building", "id": 1251}
@@ -251,6 +255,7 @@
 {"name": "mountain-range", "kind": "map-type"}
 {"name": "mountain-ridge", "kind": "map-type"}
 {"name": "murkwood", "kind": "map-type"}
+{"name": "monk-set", "set": ["MONK"], "kind": "unit"}
 {"name": "my-elite-unique-unit", "civ": "elite", "kind": "unit"}
 {"name": "my-unique-research", "civ": "research", "kind": "tech"}
 {"name": "my-unique-unit", "civ": "unit", "kind": "unit"}
@@ -317,6 +322,8 @@
 {"name": "real-world-spain", "kind": "map-type"}
 {"name": "real-world-texas", "kind": "map-type"}
 {"name": "real-world-west-africa", "kind": "map-type"}
+{"name": "ratha-set", "set": ["ELITE_RATHA", "RATHA"], "kind": "unit"}
+{"name": "relic-class", "set": [], "kind": "unit"}
 {"name": "ri-arbalester", "game": "ARBALESTER_UPGRADE", "kind": "tech"}
 {"name": "ri-architecture", "game": "ARCHITECTURE", "kind": "tech", "id": 51}
 {"name": "ri-arrowslits", "game": "ARROWSLITS", "kind": "tech", "id": 608}
@@ -501,6 +508,8 @@
 {"name": "shipwreck", "kind": "map-type"}
 {"name": "shoals", "kind": "map-type"}
 {"name": "shrubland", "kind": "map-type"}
+{"name": "serjeant-set", "set": ["ELITE_SERJEANT", "SERJEANT"], "kind": "unit"}
+{"name": "shore-fish-class", "set": [], "kind": "unit"}
 {"name": "sicilians", "game": "SICILIANS", "kind": "civ"}
 {"name": "siege-onager", "game": "SIEGE_ONAGER", "kind": "unit", "id": 588}
 {"name": "siege-ram", "game": "SIEGE_RAM", "kind": "unit", "id": 548}
@@ -538,6 +547,7 @@
 {"name": "special-map-the-eye", "kind": "map-type"}
 {"name": "special-map-twin-forests", "kind": "map-type"}
 {"name": "special-map-yin-yang", "kind": "map-type"}
+{"name": "spearman-set", "set": ["HALBERDIER", "PIKEMAN", "SPEARMAN"], "kind": "unit"}
 {"name": "stable", "game": "STABLE", "kind": "building", "id": 101}
 {"name": "steppe", "kind": "map-type"}
 {"name": "steppe-lancer", "game": "STEPPE_LANCER", "kind": "unit", "id": 1370}
@@ -546,6 +556,7 @@
 {"name": "stone-wall-line", "game": "STONE_WALL", "kind": "building", "id": 117}
 {"name": "stonefront", "kind": "map-type"}
 {"name": "stranded", "kind": "map-type"}
+{"name": "tarkan-set", "set": ["ELITE_TARKAN", "TARKAN"], "kind": "unit"}
 {"name": "tatars", "game": "TATARS", "kind": "civ"}
 {"name": "team-glaciers", "kind": "map-type"}
 {"name": "team-islands", "kind": "map-type"}
@@ -571,10 +582,22 @@
 {"name": "viking", "game": "VIKINGS", "kind": "civ"}
 {"name": "vikings", "game": "VIKINGS", "kind": "civ"}
 {"name": "villager", "game": "VILLAGER_MALE", "kind": "unit", "id": 83}
+{"name": "villager-base", "set": ["VILLAGER_MALE"], "kind": "unit"}
+{"name": "villager-builder", "task": ["BUILDER"], "kind": "unit"}
 {"name": "villager-class", "set": ["VILLAGER_MALE"], "kind": "unit", "id": 904}
 {"name": "volcanic-island", "kind": "map-type"}
 {"name": "vulpine", "kind": "map-type"}
 {"name": "wade", "kind": "map-type"}
+{"name": "villager-farmer", "task": ["FARMER"], "kind": "unit"}
+{"name": "villager-fisherman", "task": ["FISHERMAN"], "kind": "unit"}
+{"name": "villager-food", "task": ["FARMER", "FISHERMAN", "FORAGER", "HUNTER", "SHEPHERD"], "kind": "unit"}
+{"name": "villager-forager", "task": ["FORAGER"], "kind": "unit"}
+{"name": "villager-gold", "task": ["GOLD_MINER"], "kind": "unit"}
+{"name": "villager-hunter", "task": ["HUNTER"], "kind": "unit"}
+{"name": "villager-repairer", "task": ["REPAIRER"], "kind": "unit"}
+{"name": "villager-shepherd", "task": ["SHEPHERD"], "kind": "unit"}
+{"name": "villager-stone", "task": ["STONE_MINER"], "kind": "unit"}
+{"name": "villager-wood", "task": ["LUMBERJACK"], "kind": "unit"}
 {"name": "war-galley", "game": "WAR_GALLEY", "kind": "unit", "id": 21}
 {"name": "watch-tower", "game": "WATCH_TOWER", "kind": "building", "id": 79}
 {"name": "water-nomad", "kind": "map-type"}

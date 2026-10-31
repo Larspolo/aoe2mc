@@ -669,8 +669,12 @@ class Script:
     def game(self, name, *kinds):
         """The name of the game program of a script name of one of kinds, or None (one warning)."""
         row = names().get(name)
+        if row is None and (name == "all-units-class" or any(r["name"] == name and r["kind"] == "class" for r in CLASSES)):
+            return ("CLASS:" + name,)                       # a class of the threat commands: count() matches it (#5104)
         if row is None or row["kind"] not in kinds:
             return self.warn(" or ".join(kinds), name)
+        if "task" in row:                                   # a villager set by work: count() reads the task (#5104)
+            return tuple("TASK:" + t for t in row["task"])
         if "set" in row:                                    # a set or class: count() sums its units (#4681)
             return tuple(row["set"])
         if "civ" in row:                                    # the unique unit or technology of the civilization (#4681)
@@ -1189,6 +1193,14 @@ class Script:
         if isinstance(n, tuple):
             return sum(self.count(m, g, total) for m in n)
         g = g or self.bot.g
+        if n.startswith("TASK:"):                           # the villagers at a work (gather.Villager.task)
+            return sum(v.task == n[5:] for v in g.villagers.values())
+        if n.startswith("CLASS:"):                          # the own objects of a class (per_classes.jsonl)
+            own = ["VILLAGER"] * len(g.villagers) + list(g.soldiers.values()) + train.owned(g)
+            if n == "CLASS:all-units-class":
+                return len(g.villagers) + len(g.soldiers)
+            row = next(r for r in CLASSES if r["name"] == n[6:])
+            return sum(matches(row, m) > 0 for m in own)
         alive = len(g.villagers) if n.startswith("VILLAGER") else \
             sum(u == n for u in g.soldiers.values()) + train.owned(g).count(n)
         if not total:
