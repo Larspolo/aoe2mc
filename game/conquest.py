@@ -23,6 +23,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import cheats  # noqa: E402
+import lang  # noqa: E402
 import ratings  # noqa: E402
 
 from units import MOUNT  # noqa: E402
@@ -74,7 +75,8 @@ def defeat(g, n, text=None):
     if not any(h.player in rest for h in gathers(g) if not getattr(h, "share", None)):
         return cheats.over(g, lambda p: bool(rest) and all(allied(g.players, p, k) for k in rest))
     cheats.destroy(g, n)
-    g.command("tellraw @a " + json.dumps({"text": text or f"Player {n} is defeated.", "color": "red"}))
+    msg = {"text": text, "color": "red"} if text else lang.text("aoe2mc.conquest.defeated", n, color="red")
+    g.command("tellraw @a " + json.dumps(msg))                  # text: the line of a caller (regicide, sudden death)
     cheats.title(g, n, "Defeat", "red")
     cheats.tune(g, n, "defeat")
     finish(g)
@@ -127,5 +129,4 @@ def last_man(g, left, lost, allied, allies_command):
         owners.update_enemies(g)                                       # the last allies are enemies (#2996)
         if g.paper:
             g.command(allies_command(g.players))
-        g.command("tellraw @a " + json.dumps({"text": "Only allies are left: the alliances end. The last player alive "
-                                                      "wins.", "color": "gold"}))
+        g.command("tellraw @a " + json.dumps(lang.text("aoe2mc.conquest.allies_end", color="gold")))

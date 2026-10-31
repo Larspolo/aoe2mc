@@ -3,6 +3,7 @@ import types
 
 import ai  # noqa: E402  (game/ is on sys.path after the import of game.challenge)
 import cheats  # noqa: E402
+import lang  # noqa: E402
 import pytest
 import recap  # noqa: E402
 import train  # noqa: E402
@@ -26,7 +27,7 @@ class Map:
 def game(monkeypatch):
     g = types.SimpleNamespace(player=1, ended=None, challenge="land-battle", sent=[], map=Map(), alive=set(),
                               summons=[], attacks=[], won=[])
-    g.command = g.sent.append
+    g.command = lambda c: g.sent.append(lang.english(c))  # the English text (#5377)
     g.positions = lambda uuids: {u: (0, 0, 0) for u in uuids if u in g.alive}
 
     def summon(g, name, pos, rotation=0, player=None):

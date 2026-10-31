@@ -21,6 +21,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import cheats  # noqa: E402
+import lang  # noqa: E402
 import wonder  # noqa: E402
 
 BAR = "aoe2mc:hill"
@@ -122,7 +123,7 @@ def tick(g, dt):
             if s["owner"] is not None and not allied(g.players, n, s["owner"]):
                 s["left"] = max(s["left"], RESET * wonder.YEAR)
             s["owner"] = n
-            g.command("tellraw @a " + json.dumps({"text": f"Player {n} holds the monument.", "color": "yellow"}))
+            g.command("tellraw @a " + json.dumps(lang.text("aoe2mc.hill.holds", n, color="yellow")))
     if (n := s["owner"]) is None:
         return
     if s["left"] <= 0:

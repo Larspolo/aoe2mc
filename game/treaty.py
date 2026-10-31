@@ -20,6 +20,7 @@ import os
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import lang  # noqa: E402
 import table  # noqa: E402
 
 ENDLESS = {r["name"] for r in table.load("setup.jsonl") if r.get("treaty") == "endless"}   # the modes with no attacks
@@ -31,9 +32,12 @@ def clock(seconds):
     return f"{int(seconds) // 60}:{int(seconds) % 60:02d}"
 
 
-def until(seconds):
-    """The end of a treaty of seconds in a chat line: "before MM:SS", or "in this game" for a treaty with no end."""
-    return "in this game" if math.isinf(seconds) else f"before {clock(seconds)}"
+def chat(key, seconds, **style):
+    """The chat line key ("start" or "refuse", #5343) of a treaty of seconds: "before MM:SS", or "in this game" for a
+    treaty with no end (the key "<key>_endless")."""
+    if math.isinf(seconds):
+        return lang.text(f"aoe2mc.treaty.{key}_endless", **style)
+    return lang.text(f"aoe2mc.treaty.{key}", clock(seconds), **style)
 
 
 def truce_command(players):
@@ -50,8 +54,7 @@ def start(g, seconds, done=0.0):
     if seconds > done and g.paper:
         g.command(truce_command({int(n) for n in g.data.get("players", {})} | {g.player}))
     if seconds > done:
-        g.command("tellraw @a " + json.dumps({"text": f"Treaty: no player can attack another player "
-                                                      f"{until(seconds)}.", "color": "yellow"}))
+        g.command("tellraw @a " + json.dumps(chat("start", seconds, color="yellow")))
     show(g)
 
 
@@ -90,8 +93,7 @@ def refuse(g, name):
     """True when the treaty stops an attack order of player name: then name sees a chat line."""
     if not holds(g):
         return False
-    g.command(f"tellraw {name} " + json.dumps({"text": f"Treaty: you cannot attack {until(g.game.treaty)}.",
-                                               "color": "red"}))
+    g.command(f"tellraw {name} " + json.dumps(chat("refuse", g.game.treaty, color="red")))
     return True
 
 
@@ -106,4 +108,4 @@ def tick(g, dt):
     import gather  # gather imports this module
     if g.paper:
         g.command(gather.neutral_command(g.data.get("players", {})))
-    g.command("tellraw @a " + json.dumps({"text": "The treaty ended: players can attack now.", "color": "yellow"}))
+    g.command("tellraw @a " + json.dumps(lang.text("aoe2mc.treaty.ended", color="yellow")))
