@@ -62,7 +62,7 @@ def ci_runs(runs, since):
     out = {}
     for name, rs in sorted(by.items()):
         m = [minutes(r["run_started_at"], r["updated_at"]) for r in rs]
-        out[name] = (len(rs), med(m), max(m), sum(r["conclusion"] == "failure" for r in rs))
+        out[name] = (len(rs), med(m), max(m), sum(r["conclusion"] == "failure" and not held(r) for r in rs))
     return out
 
 
@@ -82,14 +82,21 @@ def loop_gaps(runs, since, until):
     return max(gaps, default=0.0), sum(gaps)
 
 
+def held(r):
+    """GitHub held the run: it waits for an approval (#4645), or it is the pull_request run of a push of
+    github-actions[bot] (Unconflict), which GitHub ends with 0 jobs (29 of 29 runs, #4988): no red CI."""
+    return ("action_required" in (r.get("status"), r.get("conclusion")) or r.get("status") == "waiting"
+            or r.get("event") == "pull_request" and (r.get("actor") or {}).get("login") == "github-actions[bot]"
+            and r.get("conclusion") != "success")
+
+
 def held_runs(runs):
     """({workflow: runs that GitHub held}, {workflow: runs that a person started again}): a held run waits for an
     approval (#4645: GitHub held the pacer runs that read `toJSON(secrets)` as "may be malicious"); no tool starts a run
     again, so an attempt 2 or more is owner work (lever 9)."""
-    held = Counter(r["name"] for r in runs if "action_required" in (r.get("status"), r.get("conclusion"))
-                   or r.get("status") == "waiting")
+    held_ = Counter(r["name"] for r in runs if held(r))
     again = Counter(r["name"] for r in runs if r.get("run_attempt", 1) > 1)
-    return dict(held), dict(again)
+    return dict(held_), dict(again)
 
 
 def slow_steps(jobs, n=3):
@@ -638,7 +645,7 @@ def takeovers(comments, status_comments, prs=(), since=None, full=0.95, runs=())
         reports = sorted((c for c in status_comments if after(c) and mine.search(c.get("body") or "")),
                          key=lambda c: c["created_at"])
         last = reports[-1] if reports else None
-        ci = [r for r in runs if r.get("name") == "CI" and r.get("head_branch") in heads and after(r)]
+        ci = [r for r in runs if r.get("name") == "CI" and r.get("head_branch") in heads and after(r) and not held(r)]
         if any(s[1] >= full for s in raw_samples([c for c in status_comments if after(c)])):
             cause = "quota"
         elif "conflict" in t["body"] or any(num(c) in rel and after(c) and (c.get("body") or "").lstrip().startswith(
