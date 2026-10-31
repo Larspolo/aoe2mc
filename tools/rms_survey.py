@@ -61,10 +61,14 @@ def labels(text, folder, depth=0):
     return tested, defined
 
 
+def scripts(folder):      # .rms and .rms2 (#5363): the DE folder keeps the scripts with the second ending
+    return sorted(p for p in glob.glob(os.path.join(folder, "*")) if rmap.is_script(p))
+
+
 def undefined(folder):
     """The labels that the scripts of folder test and that no script defines, with the number of maps that test each."""
     maps = Counter()
-    for path in sorted(glob.glob(os.path.join(folder, "*.rms"))):
+    for path in scripts(folder):
         with open(path, encoding="utf-8", errors="replace") as f:
             tested, defined = labels(f.read(), folder)
         maps.update(tested - defined - rmap.lobby_labels())
@@ -77,9 +81,9 @@ def main():
     a = ap.parse_args()
     rows = []
     maps = Counter()
-    for path in sorted(glob.glob(os.path.join(a.dir, "*.rms"))):
+    for path in scripts(a.dir):
         warnings, state = survey(path)
-        rows.append((os.path.basename(path)[:-4], warnings, state))
+        rows.append((os.path.splitext(os.path.basename(path))[0], warnings, state))
         maps.update(warnings)
     print("| Map | Warnings | State |\n| --- | --- | --- |")
     for name, warnings, state in rows:
