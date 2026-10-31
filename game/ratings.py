@@ -2,6 +2,7 @@
 player by the Elo rule (K = 32). A team uses the mean rating of its players. The ratings stay in RATING_FILE in the user
 folder, for the next game. A game with bots only, or with one human team, changes nothing.
 """
+import itertools
 import json
 import os
 
@@ -67,6 +68,24 @@ def teams(g, one):
         else:
             grp.append((name, n))
     return [([name for name, _ in grp], allied(g.players, one, grp[0][1])) for grp in groups]
+
+
+def balance(table):
+    """{Minecraft name: rating} of the players in player order -> {name: 1 or 2}: the split into two teams with the
+    smallest difference of the mean ratings (#5168). Every split is tried; a tie takes the first one in the order of
+    the players, so the result is the same for each call."""
+    names = list(table)
+    if len(names) < 2:
+        return {name: 1 for name in names}
+    total, best = sum(table.values()), None
+    for k in range(1, len(names)):                                    # the first player is in team 1: no mirror split
+        for rest in itertools.combinations(range(1, len(names)), k - 1):
+            team = (0,) + rest
+            first = sum(table[names[i]] for i in team)
+            diff = abs(first / k - (total - first) / (len(names) - k))
+            if best is None or diff < best[0]:
+                best = (diff, team)
+    return {name: 1 if i in best[1] else 2 for i, name in enumerate(names)}
 
 
 def announce(g, changes):
