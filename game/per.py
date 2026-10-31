@@ -792,6 +792,8 @@ class Script:
             s = self.shot(args[0])
             return s is not None and self.compare(args[1], self.ms(s[0]) if name.endswith("detected") else klass(s[2]), args[2])
         if name == "up-compare-text":                              # (up-compare-text TEXT REL): the text buffer
+            if len(args) == 4:                                     # airef: (up-compare-text c: TEXT REL VALUE), the index or -1
+                return self.compare(args[2], str(self.text).find(str(args[1])), args[3])
             return self.compare(args[1], self.text, str(args[0]))
         if name == "up-compare-goal":                              # (up-compare-goal GOAL REL VALUE)
             return self.compare(args[1], self.goals.get(args[0], -1), args[2])
@@ -1311,9 +1313,9 @@ class Script:
             got = [self.compare(args[1], vars(self.bot.g).get("tribute_from", {}).get((x.player, args[0]), 0), args[2])
                    for x in xs]
         elif fact == "civ":                                        # (players-civ PLAYER CIV)
-            if (civ := self.game(args[0], "civ")) is None:
-                return False
             import civs
+            if (civ := civs.real(self.bot.g, self.bot.g.player) if args[0] == "my-civ" else self.game(args[0], "civ")) is None:
+                return False
             got = [civs.real(self.bot.g, x.player) == civ for x in xs]
         elif fact in (*COUNTS, "civilian-population"):
             got = [self.compare(args[0], self.fact_value(fact, 0, x), args[1]) for x in xs]   # players-unit-count (#5043)
