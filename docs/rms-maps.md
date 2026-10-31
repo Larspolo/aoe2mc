@@ -131,3 +131,23 @@ The random maps of the lobby group "Standard" of AoE2 DE and their state in the 
 
 The other groups of the lobby have no rows: the "Real World" maps (28 maps, for example Britain, Iberia, Texas) and
 the "Special" maps (for example Border Stones) are on the same page.
+
+## Research: the labels of the game modes (#4824)
+
+The AoE2 DE lobby defines one label for the game mode of a random map. `aoe2mc.py IN.rms OUT --game-mode MODE` defines
+it too (`rmap.MODE_LABELS`), so that the `if LABEL` blocks of the script work. The source: the AoE2 DE random map
+scripting guide and the labels that the real scripts test (`tools/rms_survey.py`, #4822). The objects of a mode (the
+king, the monument) wait for #3846.
+
+| Mode (`game/run.py`) | Label |
+|---|---|
+| battle-royale | `BATTLE_ROYALE` |
+| capture-the-relic | `CAPTURE_THE_RELIC` |
+| death-match | `DEATH_MATCH` |
+| defend-the-wonder | `DEFEND_THE_WONDER` |
+| empire-wars | `EMPIRE_WARS` |
+| king-of-the-hill (`--victory`) | `KING_OT_HILL` |
+| regicide | `REGICIDE` |
+| standard | none |
+| sudden-death | `SUDDEN_DEATH` |
+| wonder-race | `WONDER_RACE` |
