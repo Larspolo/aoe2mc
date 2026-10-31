@@ -1,0 +1,11 @@
+samples/aoe2mc-tech-a.aoe2spgame
+
+Source: the owner (Larspolo) made this saved game in AoE2 DE for macOS on 2026-10-31 (#4623).
+Game: single player, Arabia, Tiny, 2 players (the owner as Aztecs and 1 AI, Burmese), cheats allowed but not used.
+Save A (aoe2mc-tech-a): at 0:10 of game time, before any research (player 1: attribute 21, the technology count, is 0;
+150 gold). Save B (aoe2mc-tech-b): the same game at 0:42, after Loom only (the count is 1; 100 gold; the message
+"--Loom Research Complete--"). The owner did no other action between the two saves.
+Use: a pair for a diff, to find the technology block of a player in a saved game (#4623, epic #4561).
+
+License: CC0 1.0 Universal (public domain dedication), https://creativecommons.org/publicdomain/zero/1.0/.
+The owner chose CC0 for the save samples in the `/human` session of 2026-10-31.

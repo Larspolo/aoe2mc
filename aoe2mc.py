@@ -413,7 +413,6 @@ def apply_layers(terrain, layer, terrain_names):
 
 
 def read_scenario(path):
-    from AoE2ScenarioParser.datasets.techs import TechInfo
     from AoE2ScenarioParser.datasets.terrains import TerrainId
     from AoE2ScenarioParser.datasets.trigger_lists import ColorMood, SecondaryGameMode, VictoryCondition
     from AoE2ScenarioParser.exceptions.asp_exceptions import UnsupportedAttributeError
@@ -435,8 +434,7 @@ def read_scenario(path):
     terrain = apply_layers(terrain, layer, terrain_names)
 
     kinds = object_kinds()
-    other = {r["tech"]: r["name"] for r in units.rows("tech_names.jsonl")}   # the names of game/data/train.jsonl
-    techs = {t.ID: other.get(t.name, t.name) for t in TechInfo}
+    techs = tech_names()
 
     players = {}
     for p in scn.player_manager.players:
@@ -575,13 +573,14 @@ def saved_match(path):
         data = data[:end] + SAVE_LOG_VERSION.to_bytes(4, "little") + bytes(40)
     new_saves()
     import mgz.fast.header as header
-    parse_player, attributes = header.parse_player, {}
+    parse_player, attributes, researched = header.parse_player, {}, {}
 
     def player(f, number, players, save):          # mgz skips the attributes of a player: read them first (#4565)
         at = f.tell()
         *_, length = header.unpack(f"<bx{players}x{players if save >= 61.5 else 9}i5xh", f)
         _, n = header.unpack(f"<{length - 1}s2xIx", f)
         attributes[number] = struct.unpack(f"<{n}f", f.read(4 * n))   # 8 bytes each from save 63: the floats first
+        researched[number] = save_techs(f.read(SAVE_TECH_SPAN))
         f.seek(at)
         return parse_player(f, number, players, save)
     header.parse_player = player
@@ -591,8 +590,37 @@ def saved_match(path):
         raise SystemExit(f"{path}: not a saved game of AoE2 DE that mgz can read ({e})") from None
     finally:
         header.parse_player = parse_player
-    match.attributes = attributes
+    match.attributes, match.techs = attributes, researched
     return match
+
+
+SAVE_TECH_ANCHOR = re.compile(re.escape(bytes.fromhex("600a0000600a0000600a")))   # in each record of the tech table
+SAVE_TECH_SPAN = 400_000        # bytes after the attributes that hold the tech table (it starts near +5 000, #4623)
+
+
+def save_techs(data):
+    """The AoE2 IDs of the technologies that a player researched, from the tech table of a save (#4623,
+    docs/research/saved-games.md): one record per tech ID, of 76 to 102 bytes. Each record has the anchor; 15 bytes
+    before it are the research time (float) and the state (int16, 3 = done). A researched technology is done with a
+    time; a free technology of the civilization or the age (state 3, time 0) is not. A gap of 150 bytes or more is a
+    record with no anchor."""
+    pos = [m.start() for m in SAVE_TECH_ANCHOR.finditer(data)]
+    ids, i = [], 0
+    for k, q in enumerate(pos):
+        if k and q - pos[k - 1] >= 150:
+            i += 1
+        t, state = struct.unpack_from("<fh", data, q - 15)
+        if state == 3 and t >= 1:
+            ids.append(i)
+        i += 1
+    return ids
+
+
+def tech_names():
+    """{AoE2 tech ID: the name of game/data/train.jsonl} (AoE2ScenarioParser TechInfo, tech_names.jsonl)."""
+    from AoE2ScenarioParser.datasets.techs import TechInfo
+    other = {r["tech"]: r["name"] for r in units.rows("tech_names.jsonl")}   # the names of game/data/train.jsonl
+    return {t.ID: other.get(t.name, t.name) for t in TechInfo}
 
 
 SAVE_RESOURCES = {"food": 0, "wood": 1, "stone": 2, "gold": 3}   # the attributes of a player (resource IDs of AoE2)
@@ -602,8 +630,8 @@ SAVE_AGES = ("dark", "feudal", "castle", "imperial")              # game/data/se
 
 def read_saved(path):
     """The state of a saved game of DE (#4564) in the form of read_record. Each player gets the resources and the age
-    of the save (#4565) and "saved": the game program starts it with them (scenario.start_values). mgz reads no
-    technologies: the age gives them (docs/research/saved-games.md)."""
+    of the save (#4565), its researched technologies ("techs", #4623) and "saved": the game program starts it with
+    them (scenario.start_values)."""
     match = saved_match(path)
     return read_saved_state(match, read_record(path, match))
 
@@ -611,11 +639,13 @@ def read_saved(path):
 def read_saved_state(match, state):
     """Put the resources, the age and "saved" of each player of a match of saved_match on the players of state
     (read_record): for a save and a restored record (#4592), whose header is its save."""
+    names = tech_names()
     for number, a in match.attributes.items():
         if number in state[6] and number and len(a) > SAVE_AGE:
             p = state[6][number]
             p["resources"] = {r: int(a[i]) for r, i in SAVE_RESOURCES.items()}
             p["age"], p["saved"] = SAVE_AGES[min(max(int(a[SAVE_AGE]), 0), 3)], True
+            p["techs"] = [names.get(i, f"TECH_{i}") for i in getattr(match, "techs", {}).get(number, ())]
     return state
 
 

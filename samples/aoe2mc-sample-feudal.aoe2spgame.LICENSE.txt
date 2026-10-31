@@ -1,0 +1,14 @@
+samples/aoe2mc-sample-feudal.aoe2spgame
+
+Source: the owner (Larspolo) made this saved game in AoE2 DE for macOS on 2026-10-31 (#4623).
+Game: single player, Arabia, Tiny, 2 players (the owner as Aztecs and 1 AI, Koreans), cheats on, 4:32 of game time.
+The owner gave player 1 about 10 000 of each resource with cheats, built a Lumber Camp and a Mill, and researched
+Loom, the Feudal Age and Double-Bit Axe. The save names "--Loom Research Complete--", "--Feudal Age Research
+Complete--" and "--Double-Bit Axe Research Complete--"; for player 1 the attribute 6 (age) is 1 and the attribute 21
+(technology count) is 3.
+Form: one raw deflate stream (`zlib.decompress(data, wbits=-15)`, it starts with "VER 9.4"), as
+samples/aoe2mc-sample.aoe2spgame.
+Use: test data for the technologies of a saved game (#4623, epic #4561).
+
+License: CC0 1.0 Universal (public domain dedication), https://creativecommons.org/publicdomain/zero/1.0/.
+The owner chose CC0 in the `/human` session of 2026-10-31.
