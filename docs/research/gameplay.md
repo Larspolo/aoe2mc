@@ -350,6 +350,11 @@ Decision of the owner (#4754, A, 2026-10-30): with hidden civilizations, `lobby.
   order. Two people on one player share its stock, population, units and score (one Gather), each with an own
   selection (#3486). The lobby menu still refuses a taken player.
 
+## The source of AoE2 values (#5236)
+
+When the `.dat` of AoE2 DE and the AoE2 wiki do not agree, the `.dat` wins. Find the differences of a game patch with
+`python3 tools/dat_compare.py` (local, `docs/COMMANDS.md`, #5245).
+
 ## Pitfalls of the game program
 
 Moved from `docs/LEARNINGS.md` (improve run, 2026-10-26).
