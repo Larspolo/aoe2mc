@@ -274,6 +274,12 @@ class Script:
             return self.number(ref)
         return ref
 
+    def type_kind(self, type_op):
+        """The kind of a typeOp (airef "typeOp": c:, g: or s:, no relation). None, with one warning, for another one."""
+        if type_op in ("c:", "g:", "s:"):
+            return type_op[0]
+        return self.warn("operator", type_op)
+
     def compare(self, op, value, ref):
         """value REL ref; a typed operator (airef "Typed operators") reads ref as a constant (c:), the value of a
         strategic number (s:) or of a goal (g:). An unknown operator, number or goal gives one warning and is false."""
@@ -396,6 +402,15 @@ class Script:
             return self.compare(args[1], self.number(sn), args[2])
         if name == "up-compare-const":                             # (up-compare-const CONST REL VALUE)
             return self.compare(args[1], args[0], args[2])
+        if name == "up-compare-flag":                              # (up-compare-flag GOAL OP FLAG): == all bits, != not
+            kind, _, rel = args[1].rpartition(":")
+            if rel not in ("==", "!=") or kind not in ("", "c", "s", "g"):
+                return self.warn("operator", args[1]) or False
+            flag = self.operand(kind, args[2])
+            if flag is None:
+                return False
+            has = self.goals.get(args[0], 0) & flag
+            return has == flag if rel == "==" else has != flag
         if name == "strategic-number":                             # (strategic-number NAME REL VALUE)
             args = (SN_IDS.get(args[0], args[0]),) + tuple(args[1:])
             if args[0] not in SN:
@@ -823,6 +838,25 @@ class Script:
             new = self.math(args[1], self.goals.get(args[0], -1), args[2])
             if new is not None:
                 self.goals[args[0]] = new
+        elif name == "up-get-indirect-goal":                         # (up-get-indirect-goal TYPE GOAL OUT)
+            kind = self.type_kind(args[0])
+            ref = self.operand(kind, args[1]) if kind else None
+            if ref is not None:
+                self.goals[args[2]] = self.goals.get(ref, -1)
+        elif name == "up-set-indirect-goal":                         # (up-set-indirect-goal TYPE GOAL TYPE2 VALUE)
+            kind, kind2 = self.type_kind(args[0]), self.type_kind(args[2])
+            ref = self.operand(kind, args[1]) if kind else None
+            value = self.operand(kind2, args[3]) if kind2 else None
+            if ref is not None and value is not None:
+                self.goals[ref] = value
+        elif name == "up-modify-flag":                               # (up-modify-flag GOAL OP FLAG): the bits of a goal
+            kind, _, rel = args[1].rpartition(":")
+            if rel not in ("+", "-") or kind not in ("c", "g", "s"):
+                return self.warn("operator", args[1])
+            flag = self.operand(kind, args[2])
+            if flag is not None:                                   # no flag yet: the goal has no bit
+                value = self.goals.get(args[0], 0)
+                self.goals[args[0]] = value | flag if rel == "+" else value & ~flag
         elif name == "up-modify-sn":                                 # (up-modify-sn SN OP VALUE)
             sn = SN_IDS.get(args[0], args[0])
             if sn not in SN:
