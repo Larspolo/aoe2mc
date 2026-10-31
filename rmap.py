@@ -146,6 +146,7 @@ class RmsError(ValueError):
 def tokens(text):
     """The words of a script without its /* comments */; braces and section names are words. Comments nest, as in the
     game: the */ of an inner comment does not end the outer one (a commented-out block with a note in it, #4695)."""
+    text = re.sub(r"(?m)^[ \t]*#define[ \t\r]*$\n?(?=\s*\S)", "", text)   # a #define with no label defines nothing (Valley, #5422)
     keep, depth = [], 0
     for part in re.split(r"(/\*|\*/)", text):
         if part == "/*":
