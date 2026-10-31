@@ -244,6 +244,15 @@ RESEARCH_STATE = {"research-available": 1,                         # airef "Rese
                   "research-pending": 2,
                   "research-queued": 4,
                   "research-unavailable": 0}
+SEARCH = ("up-add-object-by-id", "up-can-search", "up-clean-search", "up-find-local", "up-find-remote",   # #4957
+          "up-full-reset-search", "up-get-search-state", "up-reset-filters", "up-reset-search", "up-set-target-by-id",
+          "up-set-target-object")
+SEARCH_MAX = {1: 240, 2: 40}                                       # the results of each list (airef "SearchSource")
+SEARCH_ORDER = {"search-order-asc": 1,                             # airef "SearchOrder" (up-clean-search)
+                "search-order-desc": 2,
+                "search-order-none": 0}
+SEARCH_SOURCE = {"search-local": 1,                                # airef "SearchSource": the own or the focus objects
+                 "search-remote": 2}
 TIMER_STATE = {"timer-disabled": 0,                                # the states of up-timer-status (airef "TimerState")
                "timer-running": 2,
                "timer-triggered": 1}
@@ -265,6 +274,12 @@ def symbols(data, player, difficulty, modes=(), age="dark"):
     out = {f"{k}-civ" for k, r in names().items() if r["kind"] == "civ" and r["game"] == civ}
     out |= {f"difficulty-{k}" for k, r in names().items() if r["kind"] == "difficulty" and r["game"] == difficulty}
     return out | set(modes) | {f"{age}-age-start", "scenario-map", map_size(data)}
+
+
+def fresh():
+    """An empty search of a list: the found ids, the id of the last scanned object, the object type (and focus player)
+    of the last find, the count of the last find."""
+    return {"found": [], "after": 0, "unit": None, "last": 0}
 
 
 class Script:
@@ -289,6 +304,10 @@ class Script:
         self.cost_at = None                                        # the first goal of the current cost set (#4879)
         self.builders = {}                                         # building -> builders of up-assign-builders (#4875)
         self.scouts = []                                           # the scouts of up-send-scout (#4969)
+        self.ids, self.next_id = {}, 1                             # object key -> its id; the id of the next new one
+        self.search = {1: fresh(), 2: fresh()}                     # the local and the remote search (#4957)
+        self.filters = {}                                          # filter -> value; none set: all -1 (up-reset-filters)
+        self.target = None                                         # the id of the target object
         self.point = None                                          # (x, y) tiles of up-set-target-point (#4956)
 
     def number(self, name):
@@ -608,6 +627,8 @@ class Script:
             return self.compare(args[0], len(self.bot.guards) + len(self.bot.defense), args[1])
         if name == "up-idle-unit-count":                           # (up-idle-unit-count IDLE-TYPE REL VALUE)
             return self.idle_count(args[0], args[1], args[2])
+        if name in SEARCH:                                         # a find or a target as a fact: true when it did
+            return bool(self.search_command(name, args))
         if name in SETUP:
             return self.setup(name, args)
         if name.startswith("players-"):                            # (players-FACT PLAYER ...): the other players
@@ -1360,6 +1381,140 @@ class Script:
                         min(math.dist(mid, c) for c in cells) / T > far:
                     demolish.fall(g, rect)
 
+    def objects(self, x):
+        """The objects of the Gather x that stand, by id (#4957): [(id, key, game name, status)]; status 2 is ready, 0 a
+        site under construction (airef "ObjectStatus"). The key is the UUID of a unit or of the building target
+        (combat.target_uuid). A new object gets the next id, and an id is never given again."""
+        import combat
+        import ruins
+        rows = [(combat.target_uuid(o["footprint"]), o["name"], 2) for o in x.data["objects"] if o["kind"] == "building"
+                and o["player"] == x.player and "footprint" in o and not ruins.fallen(x, o)]
+        rows += [(combat.target_uuid([s["footprint"][i] for i in (0, 2, 1, 3)]), s["name"], 2 if s.get("done") else 0)
+                 for s in x.sites if s.get("player", x.player) == x.player]
+        rows += [(u, "VILLAGER_MALE", 2) for u in x.villagers] + [(u, n, 2) for u, n in x.soldiers.items()]
+        for key, _, _ in rows:
+            if key not in self.ids:
+                self.ids[key], self.next_id = self.next_id, self.next_id + 1
+        return sorted((self.ids[k], k, n, st) for k, n, st in rows)
+
+    def focus(self):
+        """The Gather of sn-focus-player-number, or None (Gaia has no Gather)."""
+        xs, _ = self.sides(self.number("sn-focus-player-number"))
+        return xs[0] if xs else None
+
+    def visible(self, x):
+        """objects(x) that the bot can find (airef up-find-remote): all own and allied ones; of another player the
+        buildings (the game program has no explored tiles for a bot) and the units that its fog does not hide
+        (fog.update; fog.seen: "Set Player Visibility")."""
+        import diplomacy
+        import fog
+        g = self.bot.g
+        rows = self.objects(x)
+        if x is g or diplomacy.stance(g, x.player) == "ally":
+            return rows
+        hidden = set(vars(g).get("fog", {}).get("hidden", ())) - fog.seen(g)
+        return [r for r in rows if r[1] not in hidden]
+
+    def rows(self, src):
+        """The objects that search src scans: the own ones (1) or the visible ones of the focus player (2)."""
+        if src == 1:
+            return self.objects(self.bot.g)
+        x = self.focus()
+        return self.visible(x) if x is not None else []
+
+    def alive(self, oid):
+        """True when an object of a player with id oid stands."""
+        import build
+        g = self.bot.g
+        xs = {x.player: x for x in build.sides(g)} | {g.player: g}
+        return any(r[0] == oid for x in xs.values() for r in self.objects(x))
+
+    def search_command(self, name, args):
+        """The object search of direct unit control (airef "DUC", #4957). up-find-local/-remote TYPE UNIT TYPE2 COUNT:
+        add up to COUNT more ready objects of UNIT (a name, an id or a class) to the list; the scan goes on after the
+        last scanned object while UNIT (and the focus player) stays. The fact or the result: true when it found, added
+        or set an object."""
+        if name in ("up-find-local", "up-find-remote"):
+            src = 1 if name == "up-find-local" else 2
+            kind = self.type_kind(args[2])
+            n = (sn := self.named(args[0], args[1])) and self.game(sn, "unit", "building")
+            count = self.operand(kind, args[3]) if kind else None
+            if not n or count is None:
+                return False
+            st, names = self.search[src], n if isinstance(n, tuple) else (n,)
+            unit = [list(names), self.number("sn-focus-player-number") if src == 2 else None]
+            if st["unit"] != unit:                                 # another type or focus: the scan starts again
+                st["after"], st["unit"] = 0, unit
+            got = 0
+            for oid, _, m, status in self.rows(src):
+                if oid <= st["after"]:
+                    continue
+                if got >= count or len(st["found"]) >= SEARCH_MAX[src]:
+                    break
+                st["after"] = oid
+                if status == 2 and m in names:
+                    st["found"].append(oid)
+                    got += 1
+            st["last"] = got
+            return got > 0
+        if name == "up-reset-search":                              # (up-reset-search LOCAL-INDEX LOCAL-LIST R-INDEX R-LIST)
+            for src, (index, found) in ((1, args[:2]), (2, args[2:4])):
+                st = self.search[src]
+                if index:
+                    st["after"] = 0
+                if found:
+                    st["found"], st["last"] = [], 0
+            return True
+        if name in ("up-reset-filters", "up-full-reset-search"):
+            self.filters.clear()
+            for st in self.search.values():
+                st["after"] = 0
+                if name == "up-full-reset-search":                 # = (up-reset-search 1 1 1 1) (up-reset-filters)
+                    st["found"], st["last"] = [], 0
+            return True
+        if name == "up-get-search-state":                          # (up-get-search-state GOAL): 4 goals from GOAL
+            for i, v in enumerate((len(self.search[1]["found"]), self.search[1]["last"],
+                                   len(self.search[2]["found"]), self.search[2]["last"])):
+                self.goals[args[0] + i] = v
+            return True
+        if name == "up-set-target-by-id":                          # (up-set-target-by-id TYPE ID)
+            kind = self.type_kind(args[0])
+            oid = self.operand(kind, args[1]) if kind else None
+            if oid is None or not self.alive(oid):
+                return False                                       # an invalid id keeps the target
+            self.target = oid
+            return True
+        src = SEARCH_SOURCE.get(args[0], args[0])
+        if src not in SEARCH_MAX:
+            return self.warn("search source", args[0]) or False
+        st = self.search[src]
+        if name == "up-can-search":                                # the list is not full and the scan is not at the end
+            return len(st["found"]) < SEARCH_MAX[src] and any(r[0] > st["after"] for r in self.rows(src))
+        if name == "up-clean-search":                              # (up-clean-search SOURCE DATA ORDER)
+            order = SEARCH_ORDER.get(args[2], args[2])
+            if order not in SEARCH_ORDER.values():
+                return self.warn("search order", args[2]) or False
+            if args[1] not in (-1, 0, "object-data-id"):           # the other object data: a later ticket
+                return self.warn("object data", args[1]) or False
+            if args[1] == -1:                                      # -1: no duplicates
+                st["found"] = list(dict.fromkeys(st["found"]))
+            if order:
+                st["found"].sort(reverse=order == 2)              # the ids: oldest to newest (asc)
+            return True
+        kind = self.type_kind(args[1])
+        ref = self.operand(kind, args[2]) if kind else None
+        if ref is None:
+            return False
+        if name == "up-add-object-by-id":                          # (up-add-object-by-id SOURCE TYPE ID)
+            if len(st["found"]) >= SEARCH_MAX[src] or not self.alive(ref):
+                return False
+            st["found"].append(ref)
+            return True
+        if not 0 <= ref < len(st["found"]) or not self.alive(st["found"][ref]):   # up-set-target-object SOURCE TYPE INDEX
+            return False                                           # an invalid index keeps the target
+        self.target = st["found"][ref]
+        return True
+
     def act(self, k, a):
         import build
         import train
@@ -1501,6 +1656,8 @@ class Script:
             self.attacking = True
         elif name in ORDERS:
             self.order(name, args)
+        elif name in SEARCH:
+            self.search_command(name, args)
         elif name == "enable-timer":
             self.timers[args[0]] = b.time + args[1]
         elif name == "disable-timer":
