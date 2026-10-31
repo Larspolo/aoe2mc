@@ -207,7 +207,7 @@ An unknown terrain ID or object name gives an error.
 ## Random map scripts
 
 A random map script (`.rms`) of your own AoE2 install gives the land of one random map. The seed selects the map:
-the same seed gives the same map.
+the same seed gives the same map. A `ZR@NAME.rms` archive (a zip of the script and its files) works in the same way.
 
     aoe2mc Arabia.rms ArabiaWorld --seed 7 --preview
 
