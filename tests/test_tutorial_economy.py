@@ -14,7 +14,7 @@ def fake(**kw):
     g = types.SimpleNamespace(**{"stock": {"wood": 0, "food": 0, "gold": 0, "stone": 0}, "queues": {}, "techs": set(),
                                  "data": {"objects": [{"kind": "building", "name": "TOWN_CENTER", "player": 1,
                                                        "footprint": [0, 0, 15, 15]}]},
-                                 "sites": [], "player": 1, "sent": []} | kw)
+                                 "sites": [], "player": 1, "sent": [], "board": "aoe_res"} | kw)
     g.command = lambda c: g.sent.append(c) or ""
     return g
 
