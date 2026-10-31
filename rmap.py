@@ -432,12 +432,14 @@ def grow(owner, lands, free, rng):
 
 def inside(land, c, rng=None):
     """True when tile c is in the borders of the land (its "box"), or the land has no borders. A land with a "fuzz"
-    (border_fuzziness 0 to 100, #4422) takes a tile out of the box with the chance (100 - fuzz) %: 0 ignores the
-    borders, 100 keeps them. It draws only for such a tile, so that the maps of other scripts stay the same."""
+    (border_fuzziness 0 to 100, #4422) takes a tile d tiles out of the box with the chance (1 - fuzz / 100) ** d: 0
+    ignores the borders, 100 keeps them, a value between gives an irregular coast near the border (#5382). It draws
+    only for such a tile, so that the maps of other scripts stay the same."""
     x0, x1, y0, y1 = land.get("box", (0, 1 << 30, 0, 1 << 30))
     if x0 <= c[0] < x1 and y0 <= c[1] < y1:
         return True
-    return rng is not None and land.get("fuzz", 100) < 100 and rng.uniform(0, 100) >= land["fuzz"]
+    d = max(x0 - c[0], c[0] - x1 + 1, y0 - c[1], c[1] - y1 + 1)
+    return rng is not None and land.get("fuzz", 100) < 100 and rng.uniform() < (1 - land["fuzz"] / 100) ** d
 
 
 def near(c, n):
@@ -750,7 +752,7 @@ def generate(text, seed, players=2, size=None, warn=None, teams=None, folder=Non
             height = value(attrs["base_elevation"][0], consts) if "base_elevation" in attrs else 0
             edge = {a: value(attrs[a][0], consts) * n // 100 if a in attrs else 0 for a in BORDERS}
             box = (edge["left_border"], n - edge["right_border"], edge["top_border"], n - edge["bottom_border"])
-            fuzz = value(attrs["border_fuzziness"][0], consts) if "border_fuzziness" in attrs else 100   # strict (#4422)
+            fuzz = value(attrs["border_fuzziness"][0], consts) if "border_fuzziness" in attrs else 20   # AoE2 DE default (#5382)
             avoid = value(attrs["other_zone_avoidance_distance"][0], consts) if "other_zone_avoidance_distance" in attrs else 0
             if cmd == "create_player_lands":
                 total, turn = tiles(attrs, consts, n), rng.uniform(0, 2 * np.pi)
@@ -1410,9 +1412,9 @@ NOMAD = """
 <LAND_GENERATION>
 base_terrain WATER
 create_player_lands { terrain_type GRASS2 land_percent 30 base_size 12 clumping_factor 15
-  left_border 6 right_border 6 top_border 6 bottom_border 6 }
+  left_border 6 right_border 6 top_border 6 bottom_border 6 border_fuzziness 100 }
 create_land { terrain_type GRASS land_position 50 50 base_size 12 land_percent 42 clumping_factor 20
-  left_border 6 right_border 6 top_border 6 bottom_border 6 }
+  left_border 6 right_border 6 top_border 6 bottom_border 6 border_fuzziness 100 }
 <TERRAIN_GENERATION>
 create_terrain FOREST { base_terrain GRASS number_of_clumps 8 land_percent 6 set_avoid_player_start_areas 16
   spacing_to_other_terrain_types 2 clumping_factor 15 }
