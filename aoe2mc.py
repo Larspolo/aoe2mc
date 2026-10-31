@@ -4738,12 +4738,17 @@ def decision_lines(e, c):
             "tellraw @a " + json.dumps([texts[0], " ", click(1), " ", click(2)], ensure_ascii=False)]
 
 
+SUBTITLE_CHARS = 40   # a 1280x720 client shows about 43 characters of a subtitle (#5298)
+
+
 def instruction_lines(e, c):
-    """The commands of "Display Instructions": a subtitle for the display time of the effect (AoE2 default: 10 s)."""
+    """The commands of "Display Instructions": a subtitle for the display time of the effect (AoE2 default: 10 s).
+    The client cuts a long subtitle at the screen edges: a longer text also goes to the chat, which wraps (#5298)."""
     if not (text := message_text(e)):
         return []
     ticks = 20 * (e["time"] if e["time"] > 0 else 10)
-    return [f"title @a times 10 {ticks} 20", f"title @a subtitle {text}", 'title @a title ""']
+    chat = [f"tellraw @a {text}"] if len(json.loads(text)["text"]) > SUBTITLE_CHARS else []
+    return [f"title @a times 10 {ticks} 20", f"title @a subtitle {text}", 'title @a title ""'] + chat
 
 
 def visibility_lines(e, c):
