@@ -2766,6 +2766,10 @@ class Script:
         elif name in ("up-buy-commodity", "up-sell-commodity"):          # (up-buy-commodity RES TYPE VALUE): VALUE trades
             import market
             buy = name == "up-buy-commodity"
+            if args[0].endswith(":"):                                  # the airef form (up-buy-commodity c: RES c: VALUE)
+                if (res := self.operand(args[0][:-1], args[1])) is None:
+                    return
+                args = [res, *args[2:]]
             for _ in range(max(self.operand(args[1].rstrip(":"), args[2]) or 0, 0)):
                 if not self.trade_ok(buy, args[0]) or not market.trade(g, b.nobody, args[0], buy):
                     break                                              # the first trade that fails stops the rest
