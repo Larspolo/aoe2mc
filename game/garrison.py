@@ -157,6 +157,22 @@ def order(g, player, cell):
     return rect
 
 
+def send(g, player, units, rect):
+    """The units go into the own building rect by the path of a click (order()): an AI script (per.py, up-garrison)."""
+    old, g.selected = g.selected, set(units)
+    try:
+        return order(g, player, (rect[0], rect[2]))
+    finally:
+        g.selected = old
+
+
+def gather_inside(g, player, rect, uuid):
+    """A new unit of the building rect goes into it when an AI script set its gather point inside (up-gather-inside,
+    vars(g)["gather_inside"]: {building name: state}). Returns True when it goes in."""
+    on = vars(g).get("gather_inside", {}).get(holders(g).get(rect, {}).get("name"))
+    return bool(on) and send(g, player, [uuid], rect) is not None
+
+
 def bell(g, player, chosen=None):
     """Ring the town bell (#3419, AoE2 DE wiki "Town Bell"): each own villager and mule cart walks into the nearest own
     building of holders() with room left within the line of sight of a town center, the same walk as order(); one with no such building
