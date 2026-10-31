@@ -6798,7 +6798,7 @@ def main(argv=None):
     ap.add_argument("scenario", nargs="?", help=".aoe2scenario file, .aoe2record, .mgz, .mgx or .mgl (the start state of a recorded game), "
                     ".aoe2spgame or .aoe2mpgame (the state of a saved game of DE), .scx "
                     "(an old scenario, format 1.21), .json (a map description, README), .rms (the land of a random map "
-                    "script, with --seed), or "
+                    "script, with --seed), ZR@NAME.rms (a zip of a random map script and its files, #5404), or "
                     ".aoe2campaign, .cpx or .cpn (one world per scenario; old scenarios of other formats than .scn 1.18 to "
                     "1.20, .scx 1.21 and HD 1.22 to 1.26: the steps for the DE editor)")
     ap.add_argument("output", nargs="?", help="output world folder (put it in .minecraft/saves/); for a campaign the "
