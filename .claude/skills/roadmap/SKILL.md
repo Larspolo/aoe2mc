@@ -47,7 +47,8 @@ The trigger: the section "Release checks (no ticket, make them in the refill)" o
 ## Review the feature list (the roadmap review)
 
 When `python3 framework/tools/claim.py 0 --roadmap` exits 0 (one run after each 100 merged PRs, #898, #2039; after 30 while the refill has
-no source: R < N, each feature has an epic, no fallback, `claim.ROADMAP_EARLY`, #3741), after step 8 of the autopilot skill:
+no source: R < N, each feature has an epic, no fallback, `claim.ROADMAP_EARLY`, #3741; then also after 60 minutes with
+no merged PR, at the merged count, at least 1: `claim.ROADMAP_IDLE`), after step 8 of the autopilot skill:
 
 1. Mark a feature done (`[x]`, with the epic number) when its epic is closed.
    Add a line for each epic key ("Roadmap: `<key>`") that the list does not have: `tools/release.py` counts only
