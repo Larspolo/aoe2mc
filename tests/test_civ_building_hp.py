@@ -52,4 +52,4 @@ def test_the_attack_mark_shows_the_full_hit_points_of_a_persian_town_center():
     g.look, g.target = lambda name: ((0, 70, 0), (1, 0, 0)), lambda *a: ("fort", "t", None)   # the ray hits it
     g.game.log.clear()
     g.click("Steve")
-    assert any(f'"/{tc_hp("PERSIANS")})"' in c for c in g.game.log if "actionbar" in c)
+    assert any(f'"{tc_hp("PERSIANS")}"' in c for c in g.game.log if "actionbar" in c)   # the hit points of the translate text
