@@ -72,6 +72,7 @@ BURST = 500                 # ms of game time between two bursts of a flare colu
 TEAM_STEP = 10000           # sidebar score of a team game: team key × TEAM_STEP + population, the panel sorts by it (#1189)
 COUNTED = "aoe2mc.pop"      # entity tag of the units that the population counts (#787)
 SUDDEN_DEATH = "Sudden Death"  # the lobby type of a Sudden Death record (#4894)
+WONDER_MODES = {"Wonder Race": "wonder-race", "Defend the Wonder": "defend-the-wonder"}   # lobby type -> mode (#4896)
 REGICIDE = "Regicide"       # the lobby type of a Regicide record (mgz game_types, aoe2mc.json "lobby", #4835)
 EFFECT = "aoe2mc.effect"    # entity tag of the texts above a building (#843)
 TRADE_MS = 2000              # the trades of one market within this time join in one text (#3942)
@@ -455,6 +456,8 @@ class Replay:
         # player -> game time (ms) of the death of its last King
         self.towns, self.town_lost = self.start_towns(), {}      # Sudden Death (#4894): players with a town center;
         # player -> game time (ms) of the fall of its town center
+        self.wonders, self.wonder_shown = {}, {}  # Wonder modes (#4896): player -> game time (ms) of its timer start;
+        # player -> years on its boss bar
         self.rng = np.random.default_rng(1)
         self.kinds, self.seen = aoe2mc.object_kinds(), set()
         self.sent, self.busy = 0, 0.0           # commands sent, seconds spent sending them
@@ -493,6 +496,49 @@ class Replay:
             if o["kind"] == "unit" and o.get("player") and o["name"].startswith("VILLAGER"):
                 self.villager(o["player"], 1)
         self.restored()
+        if self.wonder_mode() == "defend-the-wonder":               # the start Wonder stands from the start (#4896)
+            for s in self.starts:
+                if s[2] == "WONDER" and s[1]:
+                    self.wonders.setdefault(s[1], 0)
+
+    def wonder_mode(self):
+        """The game program mode (wonder.RACE) of a Wonder Race or Defend the Wonder record (#4896), else None."""
+        return WONDER_MODES.get((self.data.get("lobby") or {}).get("type"))
+
+    def wonder_ms(self):
+        """The game time (ms) of the wonder timer of the mode: wonder.RACE, as the game program."""
+        import wonder  # wonder -> cheats -> replay: import it late
+        return wonder.RACE.get(self.wonder_mode(), wonder.years(self.data.get("map_size"))) * wonder.YEAR * 1000
+
+    def wonder_started(self, p, t):
+        """Wonder Race (#4896): the first complete wonder of player p at game time t (ms) starts its timer."""
+        if self.wonder_mode() != "wonder-race" or p in self.wonders:
+            return []
+        self.wonders[p] = t
+        name, color = self.player(p)
+        return ["tellraw @a " + json.dumps([text(name, color), text(f" built a wonder at {mmss(t)}.")])]
+
+    def wonder_left(self, p, t):
+        """The years left of the wonder timer of player p at game time t (ms; None: the start)."""
+        import wonder  # wonder -> cheats -> replay: import it late
+        left = self.wonder_ms() - (0 if t is None else max(0, t - self.wonders[p]))
+        return max(0, math.ceil(left / (wonder.YEAR * 1000)))
+
+    def wonder_bars(self, t):
+        """The boss bar of each wonder timer (wonder.bar, as the game program), a command only on a change."""
+        import wonder  # wonder -> cheats -> replay: import it late
+        out = []
+        for p in sorted(self.wonders):
+            if p not in self.wonder_shown:
+                out += [f'bossbar add {wonder.bar(p)} ""', f"bossbar set {wonder.bar(p)} color yellow",
+                        f"bossbar set {wonder.bar(p)} max {max(1, int(self.wonder_ms() / (wonder.YEAR * 1000)))}",
+                        f"bossbar set {wonder.bar(p)} players @a"]
+                self.wonder_shown[p] = None
+            if (y := self.wonder_left(p, t)) != self.wonder_shown[p]:
+                self.wonder_shown[p] = y
+                out += [f"bossbar set {wonder.bar(p)} name " + json.dumps(
+                    f"{self.player(p)[0]}: wonder, {y} year{'s' * (y != 1)} left"), f"bossbar set {wonder.bar(p)} value {y}"]
+        return out
 
     def start_kings(self):
         """Regicide (#4835): player -> the UUIDs of its start Kings (the units of the mode, regicide.MODES), when the
@@ -949,6 +995,8 @@ class Replay:
                     self.pay(e["player"], name, e["time"])
                 k = len(self.placed)
                 out += self.building(name, e["player"], x, y)
+                if len(self.placed) > k and name == "WONDER":
+                    out += self.wonder_started(e["player"], e["time"])
                 if len(self.placed) > k:
                     out += self.push_out(self.placed[-1][2])               # it finds the units (grid())
                     for i, n in zip(e.get("objects", ()), e.get("names") or [None] * len(e.get("objects", ()))):
@@ -2724,6 +2772,11 @@ class Replay:
             name, color = self.label(p)
             out.append("tellraw @a " + json.dumps([text(name, color), text(
                 f": town center lost {mmss(self.town_lost[p])} (Sudden Death)")]))
+        for p in self.ranked(self.wonders):                            # Wonder Race, Defend the Wonder (#4896)
+            name, color = self.label(p)
+            mode = next(k for k, v in WONDER_MODES.items() if v == self.wonder_mode())
+            out.append("tellraw @a " + json.dumps([text(name, color), text(
+                f": wonder timer from {mmss(self.wonders[p])}, ends {mmss(self.wonders[p] + self.wonder_ms())} ({mode})")]))
         if lobby := self.lobby_text(True):                                  # the lobby settings of the record (#4833)
             out.append("tellraw @a " + json.dumps(text(lobby, "gray")))
         for p in self.ranked(self.pop.keys() | self.villagers.keys() | self.gathered.keys() | self.army.keys()
@@ -2932,7 +2985,7 @@ class Replay:
         age of the player (#805), its estimated resources (#932), its relics in the monasteries (#4011) and its actions of the last minute and its idle town center time at game time t
         (#3764, #4053; no APM and TC part without t). In a team game the score is a team key plus the population, so the sidebar
         shows each team together, and a fixed number format shows the population (#1189)."""
-        out, top = [], max((self.team(p) or 0 for p in self.pop), default=0)
+        out, top, now = [], max((self.team(p) or 0 for p in self.pop), default=0), t   # the loop sets t
         if self.shown is None:
             title = " · ".join(["Population"] + [v for v in [self.lobby_text()] if v])   # the game type (#4833)
             self.shown, out = {}, [f"scoreboard objectives add {POP} dummy {json.dumps(title)}",
@@ -2944,6 +2997,8 @@ class Replay:
             relics = "" if not (n := self.relic_count(p)) else f" · Relics {n}"
             king = "" if p not in self.kings else " · King killed" if p in self.regicided else " · King"   # (#4835)
             king += " · Out" if p in self.town_lost else ""                # Sudden Death (#4894)
+            if p in self.wonders:                                          # the wonder timer (#4896)
+                king += f" · Wonder {self.wonder_left(p, now)} y"
             if self.named.get(p) != (line := f"{name}{king} · {self.ages.get(p, 'Dark')} · {res} (est.){relics}{apm}"):
                 out.append(f"scoreboard players display name P{p} {POP} {json.dumps(text(line, color))}")
                 self.named[p] = line
@@ -2954,7 +3009,7 @@ class Replay:
                     continue
                 out += [f"scoreboard players set P{p} {POP} {(top - t + 1) * TEAM_STEP + self.pop[p]}",
                         f"scoreboard players display numberformat P{p} {POP} fixed {json.dumps(text(str(self.pop[p])))}"]
-        return out
+        return out + self.wonder_bars(now)
 
     def census(self, t=math.inf):
         """With the fights of the plugin (ai) a unit dies without a timeline event (#787): count the live units of
