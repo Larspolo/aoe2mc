@@ -107,7 +107,8 @@ class Driver:
             self.c.click(self.c.size[0] // 2, self.c.size[1] // 2, button=1)   # a left click on the ground clears it (#1788)
             time.sleep(1.5)
             self.note(f"cleared the selection: {len(self.g.selected)} left")
-        return self.c.pick(self.g, tuple(rect), dists=(6, 9, 12)) is not None
+        cx, cz = (x0 + x1) / 2, (z0 + z1) / 2                         # the ray must reach the ground in the footprint
+        return self.aim((cx, y + 0.3, cz), tuple(rect), ground=y, dists=(8, 10, 13))   # (map.pick_ground): aim low
 
     def slot(self, name):
         """Click the item name (a building, a unit or a technology) in the open menu of the player."""
