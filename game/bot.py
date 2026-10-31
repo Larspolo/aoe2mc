@@ -71,6 +71,7 @@ LEVELS = {r["name"]: r for r in table.load("difficulty.jsonl")}    # "AI difficu
 FLARE_NEAR = 16                                                     # blocks: an enemy near a flare (#4888)
 ANSWERS = {r["name"]: r["answer"] for r in table.load("taunts.jsonl") if "answer" in r}   # the taunts 42 to 44 (#4829)
 FOCUS = {r["name"]: r["focus"] for r in table.load("taunts.jsonl") if "focus" in r}   # the taunts 72 to 74 (#4886)
+BUILD_AT = {int(r["name"]): r["build"] for r in table.load("taunts.jsonl") if "build" in r}   # taunts 49-53 (#4889)
 WAIT = {r["name"]: r["wait"] for r in table.load("taunts.jsonl") if "wait" in r}         # taunt 37 before its age (#4884)
 
 
@@ -309,6 +310,25 @@ class Bot:
         else:
             g.walk_to(None, (spot[0], spot[2]), us)
 
+    def build_at(self, x, sites):
+        """Taunts 49, 50, 52 and 53 (#4889, AoE2): for each entry of sites, a site of its first building that the bot has
+        the age and the resources for, on the free tiles nearest to the last live flare of the ally x, and a builder.
+        No flare, no such building or no free place: one answer line to the team of the ally."""
+        g = self.g
+        say = lambda text: g.command(f"tellraw @a[team=p{x.player}] " + json.dumps(  # noqa: E731
+            {"text": f"<Player {g.player}> {text}", "color": "gray"}))
+        live = [f for f in getattr(x, "flares", []) if f[3] > x.clock()]
+        if not live:
+            return say("I see no flare.")
+        cell = (live[-1][0], live[-1][2])
+        for names in sites:
+            n = next((n for n in names if not build.locked(g, n)
+                      and all(g.stock[r] >= v for r, v in build.price(g, n).items())), None)
+            if n is None or (rect := build.near(g, n, cell)) is None:
+                say(f"I cannot build a {build.pretty(names[-1] if n is None else n)} there now.")
+                continue
+            self.builder(build.found(g, n, rect))
+
     def retreat(self):
         """The soldiers of the wave stop and walk back to the town center (taunt 45)."""
         g, c = self.g, self.center()
@@ -354,6 +374,8 @@ class Bot:
                     self.navy = False
                 elif n == 71:
                     self.scuttle()
+                elif n in BUILD_AT:                                      # build at the flare of the ally (#4889)
+                    self.build_at(x, BUILD_AT[n])
                 elif n in (56, 57):                                      # train counter units, stop (#4885)
                     self.counter = n == 56
                 elif n == 59:

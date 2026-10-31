@@ -46,11 +46,11 @@
 {"name": "46", "text": "Flare the location of your army."}
 {"name": "47", "text": "Attack in direction of the flared location."}
 {"name": "48", "text": "I'm being attacked, please help!"}
-{"name": "49", "text": "Build a forward base at the flared location."}
-{"name": "50", "text": "Build a fortification at the flared location."}
+{"name": "49", "text": "Build a forward base at the flared location.", "build": [["BARRACKS"], ["WATCH_TOWER"]]}
+{"name": "50", "text": "Build a fortification at the flared location.", "build": [["CASTLE", "WATCH_TOWER"]]}
 {"name": "51", "text": "Keep your army close to mine and fight with me."}
-{"name": "52", "text": "Build a market at the flared location."}
-{"name": "53", "text": "Rebuild your base at the flared location."}
+{"name": "52", "text": "Build a market at the flared location.", "build": [["MARKET"]]}
+{"name": "53", "text": "Rebuild your base at the flared location.", "build": [["TOWN_CENTER"]]}
 {"name": "54", "text": "Build a wall between the two flared locations."}
 {"name": "55", "text": "Build a wall around your town."}
 {"name": "56", "text": "Train units which counter the enemy's army."}
