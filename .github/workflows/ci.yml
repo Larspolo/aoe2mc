@@ -163,6 +163,23 @@ jobs:
       - name: Package
         run: pip install . && cd /tmp && aoe2mc --help
 
+  # Tests that check the content of the unit data (owner rule #4177): data_shake.py runs the fast suite without and
+  # with changed unit data and prints each test that fails only with the changed data (#5400).
+  data:
+    if: github.event_name == 'schedule' || inputs.full == true
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements*.txt
+      - run: pip install -r requirements-dev.txt
+      - name: Tests of the data content
+        run: python3 tools/data_shake.py -n auto tests
+
   mc:
     if: github.event_name == 'schedule' || inputs.full == true
     runs-on: ubuntu-latest
@@ -200,7 +217,7 @@ jobs:
         run: pytest -m mc $(grep -l "mark\.mc\b" tests/test_*.py | sort | awk 'NR % 6 == ${{ matrix.shard }}')
 
   report:
-    needs: [quick, slow, mc]
+    needs: [quick, slow, data, mc]
     # A timeout gives `cancelled`, not `failure` (#1677). Only in the night run: a new push cancels a quick run.
     if: >-
       always() && github.ref == 'refs/heads/main' && (contains(needs.*.result, 'failure')
