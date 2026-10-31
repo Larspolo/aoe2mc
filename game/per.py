@@ -188,6 +188,13 @@ def read(path, defined=()):
 NAMES = {}                                                         # script name -> its line of per_names.jsonl
 OPS = {"<": operator.lt, "<=": operator.le, ">": operator.gt, ">=": operator.ge, "==": operator.eq, "!=": operator.ne}
 MATH = ("=", "+", "-", "*", "/", "z/", "mod", "min", "max", "neg", "%*", "%/")   # airef "mathOp" (up-modify-*)
+VICTORY_TYPES = {                  # run.py --victory: the airef VictoryType; one per line, in alphabetical order
+    "conquest": 1,
+    "last-man-standing": 1,
+    "score": 3,
+    "standard": 0,
+    "time-limit": 2,
+}
 GET_FACT = ("up-get-fact", "up-get-fact-max", "up-get-fact-min", "up-get-fact-sum", "up-get-player-fact")
 COST_ACTIONS = ("up-setup-cost-data", "up-reset-cost-data", "up-add-cost-data", "up-add-object-cost",
                 "up-add-research-cost", "up-get-cost-delta")
@@ -210,6 +217,10 @@ def names():
 # percentages and the attack group sizes change the bot (Script.number); the others keep their value for the script.
 SN = {r["name"]: r["default"] for r in table.load("per_numbers.jsonl")}
 SN_IDS = {r["id"]: r["name"] for r in table.load("per_numbers.jsonl")}   # a script can name a number by its id
+# The airef ids of objects and technologies (two sets of numbers): the up-* commands with g: take an id (#4869).
+OBJECT_IDS = {r["id"]: r["name"] for r in table.load("per_names.jsonl") if "id" in r and r["kind"] in ("unit", "building")}
+TECH_IDS = {r["id"]: r["name"] for r in table.load("per_names.jsonl") if "id" in r and r["kind"] in ("tech", "age")}
+UP_QUEUE = {"up-build": "build", "up-research": "research", "up-train": "train"}
 
 
 SETUP = ("civ-selected", "death-match-game", "difficulty", "map-size", "map-type", "regicide-game", "starting-age")
@@ -279,6 +290,15 @@ class Script:
             if ref not in SN:
                 return self.warn("strategic number", ref)
             return self.number(ref)
+        return ref
+
+    def named(self, type_op, ref, tech=False):
+        """The script name of an object (or a technology) of an up-* command: c: a name or an id, g: a goal that holds
+        an id. None, with one warning, for an unknown id."""
+        kind = self.type_kind(type_op)
+        ref = self.operand(kind, ref) if kind else None
+        if isinstance(ref, int):
+            return (TECH_IDS if tech else OBJECT_IDS).get(ref) or self.warn("id", ref)
         return ref
 
     def type_kind(self, type_op):
@@ -453,6 +473,13 @@ class Script:
             return self.can(name, args[0])
         if name in ("can-train-with-escrow", "can-build-with-escrow", "can-research-with-escrow"):
             return self.can(name.removesuffix("-with-escrow"), args[0], True)
+        if name in ("up-can-train", "up-can-build", "up-can-research"):     # (up-can-train ESCROW TYPE UNIT)
+            sn = self.named(args[1], args[2], name == "up-can-research")
+            return sn is not None and self.can(name.removeprefix("up-"), sn, self.goals.get(args[0], 0) >= 1)
+        if name in ("up-object-type-count", "up-object-type-count-total"):    # (up-object-type-count TYPE OBJECT REL VALUE)
+            if (sn := self.named(args[0], args[1])) is None or (n := self.game(sn, "unit", "building")) is None:
+                return False
+            return self.compare(args[2], self.count(n, total=name.endswith("-total")), args[3])
         if name in ("unit-type-count", "building-type-count", "unit-type-count-total", "building-type-count-total"):
             if (n := self.game(args[0], "unit" if name[0] == "u" else "building")) is None:
                 return False
@@ -568,6 +595,27 @@ class Script:
                 "population-cap": lambda: train.limit(g), "current-age": lambda: build.ages(g),
                 "current-age-time": lambda: self.age_time(g),
                 "escrow-amount": lambda: self.escrow.get(param, 0) if g is b.g else 0}.get(name, lambda: None)()
+
+    def victory_data(self, name, args):
+        """up-get-victory-data PLAYER TYPE TIME, up-get-victory-limit GOAL, up-get-treaty-data GOAL (#4873). A value
+        that the game program does not have gives 0."""
+        import time_limit  # it imports cheats -> gather: import it late
+        g = self.bot.g
+        mode = getattr(g, "victory", "standard")
+        if name == "up-get-victory-data":                          # the wonder or relic timer that ends first
+            left = [(t["left"], t["player"]) for t in vars(g).get("wonders", {}).values()]
+            if t := vars(g).get("relic_timer"):
+                left.append((t["left"], t["player"]))
+            time, player = min(left, default=(0, 0))
+            self.goals[args[0]], self.goals[args[1]] = player, VICTORY_TYPES.get(mode, 0)
+            self.goals[args[2]] = max(math.ceil(time), 0)
+        elif name == "up-get-victory-limit":                       # the years of a time limit, the points of a score
+            value = getattr(g, "victory_value", None)
+            self.goals[args[0]] = {"time-limit": value or time_limit.YEARS, "score": value or time_limit.POINTS}.get(mode, 0)
+        else:                                                      # the treaty seconds left; a treaty with no end: the max
+            game = getattr(g, "game", None)
+            left = max(getattr(game, "treaty", 0.0) - getattr(game, "treaty_time", 0.0), 0)
+            self.goals[args[0]] = 2 ** 31 - 1 if math.isinf(left) else math.ceil(left)
 
     def get_fact(self, name, args):
         """up-get-fact, up-get-player-fact and up-get-fact-min, -max, -sum: the value of a fact into a goal (#4868). An
@@ -843,6 +891,14 @@ class Script:
         """The stock pays cost; the escrow pays only with escrow (the -with-escrow facts)."""
         return all(self.bot.g.stock[r] - (0 if escrow else self.escrow.get(r, 0)) >= v for r, v in cost.items())
 
+    def spend(self, cost):
+        """A command with escrow paid cost: the escrow pays it first (airef "up-train")."""
+        for r, v in cost.items():
+            if (e := self.escrow.get(r, 0) - v) > 0:
+                self.escrow[r] = e
+            else:
+                self.escrow.pop(r, None)
+
     def homes(self, n):
         """The block cells of the own buildings that offer n now."""
         import build
@@ -884,15 +940,32 @@ class Script:
         import train
         name, args, b = a[0], a[1:], self.bot
         g = b.g
+        escrow = False
+        if name in UP_QUEUE:                       # (up-train ESCROW TYPE UNIT), (up-build PLACE ESCROW TYPE BUILDING)
+            if name == "up-build":
+                if args[0] not in ("place-normal", "place-forward"):
+                    self.warn("placement", args[0])
+                name, args = ("build-forward" if args[0] == "place-forward" else "build"), args[1:]
+            else:
+                name = UP_QUEUE[name]
+            escrow, sn = self.goals.get(args[0], 0) >= 1, self.named(args[1], args[2], name == "research")
+            if sn is None:
+                return
+            args = (sn,)
         if name in ("train", "research"):
             n = self.game(args[0], "unit") if name == "train" else self.game(args[0], "tech", "age")
-            if n and self.can("can-" + name, args[0]):
-                next((c for c in self.homes(n) if train.queue(g, b.nobody, c, n)), None)
+            if n and self.can("can-" + name, args[0], escrow):
+                cost = train.price(g, n)
+                if next((c for c in self.homes(n) if train.queue(g, b.nobody, c, n)), None) and escrow:
+                    self.spend(cost)
         elif name in ("build", "build-forward"):
             n = self.game(args[0], "building")
             center = b.center() if name == "build" else self.forward()
-            if n and self.can("can-build", args[0]) and center and (rect := build.near(g, n, center)) is not None:
+            if n and self.can("can-build", args[0], escrow) and center and (rect := build.near(g, n, center)) is not None:
+                cost = build.price(g, n)
                 b.builder(build.found(g, n, rect))
+                if escrow:
+                    self.spend(cost)
         elif name == "build-wall":                                     # (build-wall PERIMETER WALL-TYPE)
             self.wall(args[0], args[1])
         elif name == "build-gate":                                     # (build-gate PERIMETER)
@@ -986,6 +1059,8 @@ class Script:
             tid = self.typed(args[0], args[1])
             if tid is not None:
                 self.goals[args[2]] = round(self.timers.get(tid, 0) * 1000)
+        elif name in ("up-get-victory-data", "up-get-victory-limit", "up-get-treaty-data"):
+            self.victory_data(name, args)
         elif name == "set-stance":                                 # the path of the player menu; a locked team stays
             import diplomacy
             if g.data.get("unlock_teams") and args[1] in diplomacy.STANCES:
