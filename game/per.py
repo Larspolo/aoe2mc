@@ -266,9 +266,22 @@ RESEARCH_STATE = {"research-available": 1,                         # airef "Rese
                   "research-pending": 2,
                   "research-queued": 4,
                   "research-unavailable": 0}
-SEARCH = ("up-add-object-by-id", "up-can-search", "up-clean-search", "up-find-local", "up-find-remote",   # #4957
-          "up-full-reset-search", "up-get-search-state", "up-reset-filters", "up-reset-search", "up-set-target-by-id",
-          "up-set-target-object")
+SEARCH = ("up-add-object-by-id", "up-can-search", "up-clean-search", "up-filter-distance", "up-filter-exclude",  # #4957
+          "up-filter-garrison", "up-filter-include", "up-filter-range", "up-filter-status", "up-find-local",   # #4958
+          "up-find-remote", "up-find-resource", "up-find-status-local", "up-find-status-remote", "up-full-reset-search",
+          "up-get-search-state", "up-reset-filters", "up-reset-search", "up-set-target-by-id", "up-set-target-object")
+CMD_IDS = {"cmdid-military": 4,                                    # airef "CmdId" that the game program knows (#4958)
+           "cmdid-monk": 6,
+           "cmdid-villager": 3}
+OBJECT_STATUS = {"status-down": 4,                                 # airef "ObjectStatus" (up-filter-status)
+                 "status-gather": 5,
+                 "status-pending": 0,
+                 "status-ready": 2,
+                 "status-resource": 3}
+RESOURCE_IDS = {"food": 0,                                         # airef "Resource" (up-find-resource)
+                "gold": 3,
+                "stone": 2,
+                "wood": 1}
 OBJECT_DATA = ("up-get-object-data", "up-get-object-target-data", "up-get-object-type-data", "up-get-upgrade-id",   # #4959
                "up-object-data", "up-object-target-data", "up-remove-objects", "up-store-object-name")
 OBJECT_DATA_ROWS = {r["name"]: r for r in table.load("per_object_data.jsonl")}   # airef "ObjectData"
@@ -1667,14 +1680,15 @@ class Script:
                         min(math.dist(mid, c) for c in cells) / T > far:
                     demolish.fall(g, rect)
 
-    def objects(self, x):
+    def objects(self, x, down=False):
         """The objects of the Gather x that stand, by id (#4957): [(id, key, game name, status)]; status 2 is ready, 0 a
-        site under construction (airef "ObjectStatus"). The key is the UUID of a unit or of the building target
-        (combat.target_uuid). A new object gets the next id, and an id is never given again."""
+        site under construction (airef "ObjectStatus"); down: also the fallen start buildings (status 4, ruins.fallen).
+        The key is the UUID of a unit or of the building target (combat.target_uuid). A new object gets the next id, and
+        an id is never given again."""
         import combat
         import ruins
-        rows = [(combat.target_uuid(o["footprint"]), o["name"], 2) for o in x.data["objects"] if o["kind"] == "building"
-                and o["player"] == x.player and "footprint" in o and not ruins.fallen(x, o)]
+        rows = [(combat.target_uuid(o["footprint"]), o["name"], 4 if ruins.fallen(x, o) else 2) for o in x.data["objects"]
+                if o["kind"] == "building" and o["player"] == x.player and "footprint" in o and (down or not ruins.fallen(x, o))]
         rows += [(combat.target_uuid([s["footprint"][i] for i in (0, 2, 1, 3)]), s["name"], 2 if s.get("done") else 0)
                  for s in x.sites if s.get("player", x.player) == x.player]
         rows += [(u, "VILLAGER_MALE", 2) for u in x.villagers] + [(u, n, 2) for u, n in x.soldiers.items()]
@@ -1682,6 +1696,125 @@ class Script:
             if key not in self.ids:
                 self.ids[key], self.next_id = self.next_id, self.next_id + 1
         return sorted((self.ids[k], k, n, st) for k, n, st in rows)
+
+    def resources(self):
+        """The gaia resources on the tiles that the team of the bot sees now (as gaia()), by id (#4958): [(id, key,
+        resource, status)]; status 2 a standing tree, 5 a carcass (status-gather), 3 the others (status-resource)."""
+        import fog
+        g = self.bot.g
+        m, tiles = g.map, set().union(*(h.seen_tiles() for h in fog.gathers(g) if fog.shares(g, h)))
+        here = set(m.trees) | set(m.bushes) | set(m.fish) | set(m.carcasses) | {t for v in m.mines.values() for t in v}
+        cells = {tuple(int(c) for c in o["tile"][:2]) for o in g.data["objects"] if o.get("player", 0) == 0 and "tile" in o}
+        out = []
+        for t in sorted((cells | set(m.carcasses)) & here & tiles):
+            key = f"resource {t[0]} {t[1]}"
+            if key not in self.ids:
+                self.ids[key], self.next_id = self.next_id, self.next_id + 1
+            out.append((self.ids[key], key, m.resource(t), 5 if t in m.carcasses else 2 if t in m.trees else 3))
+        return sorted(out)
+
+    def status(self):
+        """The object status of up-filter-status (default 2, status-ready)."""
+        return self.filters.get("status", [2])[0]
+
+    def set_filter(self, name, args):
+        """up-filter-*: the filters of the finds (#4958); -1 ignores a value. up-filter-include and -exclude (CMDID
+        ACTION ORDER MAINLAND): the game program knows only the CMD_IDS; another value: one warning, ignored."""
+        if name in ("up-filter-include", "up-filter-exclude"):
+            vals = [CMD_IDS.get(args[0], args[0])] + list(args[1:4])
+            if vals[0] not in (-1, *CMD_IDS.values()):
+                self.warn("command id", args[0])
+                vals[0] = -1
+            for v in vals[1:]:
+                if v != -1:
+                    self.warn("action, order or mainland value", v)
+            self.filters[name[10:]] = [vals[0], -1, -1, -1]
+            return True
+        if name == "up-filter-range":                              # (up-filter-range GARRISON-MIN MAX DISTANCE-MIN MAX)
+            self.filters["garrison"], self.filters["distance"] = list(args[:2]), list(args[2:4])
+            return True
+        kinds = [self.type_kind(args[i]) for i in (0, 2)]
+        if None in kinds:
+            return False
+        vals = [self.operand(kinds[0], args[1]), self.operand(kinds[1], args[3])]
+        if name == "up-filter-status":                             # (up-filter-status TYPE STATUS TYPE LIST)
+            vals[0] = OBJECT_STATUS.get(vals[0], vals[0])
+            if vals[0] not in OBJECT_STATUS.values():
+                return self.warn("object status", vals[0]) or False
+            if vals[1] not in ("list-active", 0):
+                self.warn("object list", vals[1])
+        if None in vals:
+            return False
+        self.filters[name[10:]] = vals                             # distance, garrison, status
+        return True
+
+    def details(self, x):
+        """{key: (tile (x, y), garrisoned units)} of the objects of the Gather x (#4958): the center of a building, the
+        feet of a unit."""
+        import combat
+        T = x.data.get("tile_size", 1)
+        out = {}
+        for o in [o for o in x.data["objects"] if o["kind"] == "building" and "footprint" in o] + list(x.sites):
+            x0, z0, x1, z1 = o["footprint"] if o in x.data["objects"] else [o["footprint"][i] for i in (0, 2, 1, 3)]
+            out[combat.target_uuid([x0, z0, x1, z1])] = (((x0 + x1) / 2 / T, (z0 + z1) / 2 / T),
+                                                      len(vars(x).get("garrisons", {}).get((x0, x1, z0, z1), ())))
+        for u, p in x.positions(sorted(set(x.villagers) | set(x.soldiers))).items():
+            out[u] = ((p[0] / T, p[2] / T), 0)
+        return out
+
+    def passes(self, x, key, name):
+        """True when the object key (game name) of the Gather x passes the include, exclude, garrison and distance
+        filters (#4958). Distance: in tiles from the target point, else from the target object; none: no limit."""
+        import monk
+        f = self.filters
+        cmd = 3 if x is not None and key in x.villagers else (6 if name in monk.MONKS else 4) \
+            if x is not None and key in x.soldiers else None
+        if f.get("include", [-1])[0] not in (-1, cmd) or f.get("exclude", [-1])[0] not in (-1, None) and \
+                f["exclude"][0] == cmd:
+            return False
+        lo_g, hi_g = f.get("garrison", (-1, -1))
+        lo_d, hi_d = f.get("distance", (-1, -1))
+        if (lo_g, hi_g, lo_d, hi_d) == (-1, -1, -1, -1):
+            return True
+        at, held = (self.details(x) if x is not None else {}).get(key, (None, 0))
+        if key.startswith("resource "):
+            at = tuple(int(c) + 0.5 for c in key.split()[1:])
+        if held < lo_g or -1 < hi_g < held:
+            return False
+        ref = self.point or (self.target_at() if self.target is not None else None)
+        if ref is None or at is None or (lo_d, hi_d) == (-1, -1):
+            return True
+        d = math.dist(at, ref)
+        return d >= lo_d and (hi_d == -1 or d <= hi_d)
+
+    def target_at(self):
+        """The tile of the target object, or None."""
+        import build
+        g = self.bot.g
+        for x in [g, *build.sides(g)]:
+            for oid, key, _, _ in self.objects(x):
+                if oid == self.target:
+                    return self.details(x).get(key, (None,))[0]
+        return None
+
+    def scan(self, src, unit, match, count, status, rows, x):
+        """Add up to count more objects of rows (id, key, name, status) with match(name), the status and the filters to
+        the list src; the scan goes on after the last scanned object while unit stays (#4957)."""
+        st = self.search[src]
+        if st["unit"] != unit:                                     # another type or focus: the scan starts again
+            st["after"], st["unit"] = 0, unit
+        got = 0
+        for oid, key, m, s in rows:
+            if oid <= st["after"]:
+                continue
+            if got >= count or len(st["found"]) >= SEARCH_MAX[src]:
+                break
+            st["after"] = oid
+            if s == status and match(m) and self.passes(x, key, m):
+                st["found"].append(oid)
+                got += 1
+        st["last"] = got
+        return got > 0
 
     def focus(self):
         """The Gather of sn-focus-player-number, or None (Gaia has no Gather)."""
@@ -1713,7 +1846,7 @@ class Script:
         import build
         g = self.bot.g
         xs = {x.player: x for x in build.sides(g)} | {g.player: g}
-        return any(r[0] == oid for x in xs.values() for r in self.objects(x))
+        return any(r[0] == oid for x in xs.values() for r in self.objects(x)) or any(r[0] == oid for r in self.resources())
 
     def places(self):
         """[(id, game name, block rect [x0, z0, x1, z1))] of the standing objects of all players (objects()): the
@@ -1782,29 +1915,33 @@ class Script:
         add up to COUNT more ready objects of UNIT (a name, an id or a class) to the list; the scan goes on after the
         last scanned object while UNIT (and the focus player) stays. The fact or the result: true when it found, added
         or set an object."""
-        if name in ("up-find-local", "up-find-remote"):
-            src = 1 if name == "up-find-local" else 2
+        if name.startswith("up-filter-"):
+            return self.set_filter(name, args)
+        if name == "up-find-resource":                             # (up-find-resource TYPE RESOURCE TYPE2 COUNT)
+            kind, kind2 = self.type_kind(args[0]), self.type_kind(args[2])
+            res = self.operand(kind, args[1]) if kind else None
+            res = next((r for r, i in RESOURCE_IDS.items() if i == res), res)
+            count = self.operand(kind2, args[3]) if kind2 else None
+            if res not in RESOURCE_IDS:                            # a UnitId of a food resource: not in the game program
+                return self.warn("resource", res) or False
+            if count is None:
+                return False
+            rows = [r for r in self.resources() if r[2] == res]
+            return self.scan(2, [["resource", res], None], lambda m: True, count, self.status(), rows, self.bot.g)
+        if name in ("up-find-local", "up-find-remote", "up-find-status-local", "up-find-status-remote"):
+            src = 1 if name.endswith("-local") else 2
             kind = self.type_kind(args[2])
             n = (sn := self.named(args[0], args[1])) and self.game(sn, "unit", "building")
             count = self.operand(kind, args[3]) if kind else None
             if not n or count is None:
                 return False
-            st, names = self.search[src], n if isinstance(n, tuple) else (n,)
+            names = n if isinstance(n, tuple) else (n,)
             unit = [list(names), self.number("sn-focus-player-number") if src == 2 else None]
-            if st["unit"] != unit:                                 # another type or focus: the scan starts again
-                st["after"], st["unit"] = 0, unit
-            got = 0
-            for oid, _, m, status in self.rows(src):
-                if oid <= st["after"]:
-                    continue
-                if got >= count or len(st["found"]) >= SEARCH_MAX[src]:
-                    break
-                st["after"] = oid
-                if status == 2 and m in names:
-                    st["found"].append(oid)
-                    got += 1
-            st["last"] = got
-            return got > 0
+            status = self.status() if "-status-" in name else 2
+            x = self.bot.g if src == 1 else self.focus()
+            rows = [] if x is None else self.objects(x, down=status == 4) if src == 1 else \
+                self.visible(x) + [r for r in self.objects(x, down=True) if r[3] == 4] * (status == 4)
+            return self.scan(src, unit, lambda m: m in names, count, status, sorted(rows), x)
         if name == "up-reset-search":                              # (up-reset-search LOCAL-INDEX LOCAL-LIST R-INDEX R-LIST)
             for src, (index, found) in ((1, args[:2]), (2, args[2:4])):
                 st = self.search[src]
