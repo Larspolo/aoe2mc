@@ -269,7 +269,8 @@ RESEARCH_STATE = {"research-available": 1,                         # airef "Rese
 SEARCH = ("up-add-object-by-id", "up-can-search", "up-clean-search", "up-filter-distance", "up-filter-exclude",  # #4957
           "up-filter-garrison", "up-filter-include", "up-filter-range", "up-filter-status", "up-find-local",   # #4958
           "up-find-remote", "up-find-resource", "up-find-status-local", "up-find-status-remote", "up-full-reset-search",
-          "up-get-search-state", "up-reset-filters", "up-reset-search", "up-set-target-by-id", "up-set-target-object")
+          "up-get-search-state", "up-reset-filters", "up-reset-search", "up-set-target-by-id", "up-set-target-object",
+          "up-target-objects", "up-target-point")
 CMD_IDS = {"cmdid-military": 4,                                    # airef "CmdId" that the game program knows (#4958)
            "cmdid-monk": 6,
            "cmdid-villager": 3}
@@ -298,6 +299,10 @@ SEARCH_ORDER = {"search-order-asc": 1,                             # airef "Sear
                 "search-order-none": 0}
 SEARCH_SOURCE = {"search-local": 1,                                # airef "SearchSource": the own or the focus objects
                  "search-remote": 2}
+TASK_STANCE = {"stance-aggressive": "aggressive",                  # airef "AttackStance" -> combat.STANCES (#4960)
+               "stance-defensive": "defensive",
+               "stance-no-attack": "no_attack",
+               "stance-stand-ground": "stand_ground"}
 # The object classes and projectile types of the threat commands (airef "ClassId", "ProjectileType", #4966): a rule
 # matches the armor classes of combat (all of them), the names of units or buildings, any building, or any source.
 CLASSES = table.load("per_classes.jsonl")
@@ -1848,6 +1853,118 @@ class Script:
         xs = {x.player: x for x in build.sides(g)} | {g.player: g}
         return any(r[0] == oid for x in xs.values() for r in self.objects(x)) or any(r[0] == oid for r in self.resources())
 
+    def where(self, key):
+        """The block cell (x, z) of the object key of any player: the feet of a unit, the middle of a building; or None."""
+        import build
+        import combat
+        g = self.bot.g
+        for x in [g] + [x for x in build.sides(g) if x is not g]:
+            if key in x.villagers or key in x.soldiers:
+                return (math.floor(p[0]), math.floor(p[2])) if (p := x.pos(key)) else None
+            for o in x.data["objects"]:
+                if o["kind"] == "building" and "footprint" in o and combat.target_uuid(o["footprint"]) == key:
+                    f = o["footprint"]
+                    return (f[0] + f[2]) // 2, (f[1] + f[3]) // 2
+        return None
+
+    def task_groups(self, units, targets):
+        """The units for each target (airef sn-number-tasked-units): groups of N in turn, the last one smaller; 0
+        spreads the units evenly over all targets."""
+        n = self.number("sn-number-tasked-units")
+        if n > 0:
+            return [(targets[i % len(targets)], units[k:k + n]) for i, k in enumerate(range(0, len(units), n))]
+        return [(t, units[i::len(targets)]) for i, t in enumerate(targets) if units[i::len(targets)]]
+
+    def task(self, name, args):
+        """Direct unit control (airef "DUC", #4960): the units of the local list get an order of the player paths.
+        (up-target-objects OPTION ACTION FORMATION STANCE): against the remote list, or (OPTION 1) the target object.
+        (up-target-point GOAL ACTION FORMATION STANCE): to the point of GOAL (0: up-set-target-point), adjusted by
+        sn-target-point-adjustment. An action with no path warns once."""
+        import follow
+        import garrison
+        import stance
+        b = self.bot
+        g, T = b.g, b.g.map.T
+        keys = {v: k for k, v in self.ids.items()}
+        local = [keys[i] for i in self.search[1]["found"] if i in keys]
+        units = [u for u in dict.fromkeys(local) if u in g.villagers or u in g.soldiers]
+        action, mood = args[1], TASK_STANCE.get(args[3])
+        if name == "up-target-point":
+            p = self.point if args[0] == 0 else self.pair(args[0])
+            if p is None or min(p) < 0:
+                return False
+            adj = self.number("sn-target-point-adjustment")
+            if adj == 6:                                           # precise: tiles × 100
+                cell = (math.floor(p[0] * T / 100), math.floor(p[1] * T / 100))
+            else:
+                dx, dz = {1: (0, T // 2), 2: (T // 2, 0), 3: (T - 1, T // 2), 4: (T // 2, T - 1),
+                          5: (T // 2, T // 2)}.get(adj, (0, 0))
+                cell = (p[0] * T + dx, p[1] * T + dz)
+            targets = [(None, cell)]
+        else:
+            ids = [self.target] if args[0] == 1 else self.search[2]["found"]
+            targets = [(keys[i], c) for i in dict.fromkeys(ids) if i in keys and (c := self.where(keys[i]))]
+        if action in ("action-delete", "action-stop", "action-unload", "action-ungarrison"):
+            targets = targets[:1] or [(None, None)]                # an order with no target
+        if not units and action not in ("action-unload", "action-ungarrison") or not targets:
+            return False
+        point = name == "up-target-point"
+        if point and action in ("action-default", "action-guard", "action-follow", "action-garrison"):
+            action = "action-move"                                 # airef: the same as action-move for a point
+        old, who = set(g.selected), b.nobody         # the selection of the player stays
+        try:
+            for (key, cell), group in self.task_groups(units, targets) if units else [(targets[0], [])]:
+                g.selected.clear()
+                g.selected.update(group)
+                own = key is not None and self.where_own(key)
+                if mood:
+                    for u in group:
+                        if u in g.soldiers:
+                            g.command(f"aoe stance {u} {mood}")
+                if action == "action-default" and key is not None and not own:
+                    g.attack(key, group)                           # a right click on an enemy: attack (Gather.attack)
+                elif action in ("action-default", "action-move"):
+                    if own and garrison.order(g, who, cell) is not None:
+                        continue                                   # a right click on an own building with room
+                    g.walk_to(who, cell, units=group)
+                elif action == "action-patrol":
+                    stance.patrol(g, who, cell)
+                elif action == "action-attack-move":
+                    stance.attack_move(g, who, cell)
+                elif action in ("action-guard", "action-follow"):
+                    follow.start(g, who, action[7:], key)
+                elif action == "action-stop":
+                    stance.stop(g)
+                elif action == "action-ground":
+                    stance.attack_ground(g, who, cell)
+                elif action == "action-garrison":
+                    garrison.order(g, who, cell)
+                elif action == "action-delete":
+                    stance.delete_units(g, group)
+                elif action == "action-gather" and cell is not None:
+                    g.send(cell, set(group))                       # the villagers work at the resource
+                elif action in ("action-unload", "action-ungarrison"):
+                    homes = garrison.holders(g)
+                    for rect in [r for r in homes if vars(g).get("garrisons", {}).get(r) and
+                                 self.ids.get(self.rect_key(r)) in self.search[1]["found"]]:
+                        garrison.out(g, rect)
+                else:
+                    return self.warn("action", f"{name} {action}") or False
+        finally:
+            g.selected.clear()
+            g.selected.update(old)
+        return True
+
+    def where_own(self, key):
+        """True when the object key is the bot's own."""
+        g = self.bot.g
+        return any(k == key for _, k, _, _ in self.objects(g))
+
+    @staticmethod
+    def rect_key(rect):
+        import combat
+        return combat.target_uuid([rect[i] for i in (0, 2, 1, 3)])
+
     def places(self):
         """[(id, game name, block rect [x0, z0, x1, z1))] of the standing objects of all players (objects()): the
         footprint of a building or a site, the cell of a unit (its position on the server for a soldier)."""
@@ -1962,6 +2079,8 @@ class Script:
                                    len(self.search[2]["found"]), self.search[2]["last"])):
                 self.goals[args[0] + i] = v
             return True
+        if name in ("up-target-objects", "up-target-point"):
+            return self.task(name, args)
         if name == "up-set-target-by-id":                          # (up-set-target-by-id TYPE ID)
             kind = self.type_kind(args[0])
             oid = self.operand(kind, args[1]) if kind else None
