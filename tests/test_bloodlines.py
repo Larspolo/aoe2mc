@@ -4,6 +4,7 @@ points, as in AoE2 (#940)."""
 import shutil
 from urllib.parse import unquote
 
+import lang
 import pytest
 from menu_line import item
 from test_gather import FakeServer, grid
@@ -56,7 +57,7 @@ def test_bloodlines_gives_cavalry_hit_points():
     stats = [c for c in server.log if c.startswith("aoe stats")]
     assert stats == [combat.stats_command("s", "SCOUT_CAVALRY", train.stats(g, "SCOUT_CAVALRY"))]
     assert stats[0].startswith(f"aoe stats s {hp} ")
-    assert any("Bloodlines is researched." in c for c in server.log if c.startswith("tellraw"))
+    assert any("Bloodlines is researched." in c for c in map(lang.english, server.log) if c.startswith("tellraw"))
     assert train.queue(g, "Steve", rect, "BLOODLINES") is None             # only once
 
 

@@ -2,6 +2,7 @@
 walk faster, other units do not change (#1415)."""
 import re
 
+import lang
 import pytest
 from test_forging import menus, setup
 
@@ -35,7 +36,7 @@ def test_squires_makes_the_live_and_the_new_infantry_walk_faster():
     server.log.clear()
     train.tick(g, train.TRAIN_TIMES["SQUIRES"])
     label = train.slots("BARRACKS", "SQUIRES")[2]
-    assert "SQUIRES" in g.techs and f"{label} is researched." in " ".join(server.log)
+    assert "SQUIRES" in g.techs and f"{label} is researched." in " ".join(map(lang.english, server.log))
     f = train.speed(g, "MILITIA")
     assert f > 1 and train.speed(g, "SPEARMAN") == pytest.approx(f)
     assert train.speed(g, "SCOUT_CAVALRY") == train.speed(g, "ARCHER") == train.speed(g, "VILLAGER_MALE") == 1

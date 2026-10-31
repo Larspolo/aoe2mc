@@ -3294,9 +3294,9 @@ class Replay:
         for p in self.ranked(int(q) for q in self.data["players"] if q != "0"):
             name, color = self.player(p)
             info, team = self.data["players"][str(p)], self.team(p)
-            rating = f" · {info['rating']}{' now' if info.get('rating_now') else ''}" if "rating" in info else ""
-            extra.append({"text": f"\n{f'Team {team} · ' if team is not None else ''}{name}{rating}",
-                          "color": color if color != "white" else "black"})
+            rating = [f" · {info['rating']}"] + [say("now")] * bool(info.get("rating_now")) if "rating" in info else []
+            extra.append({"text": "", "color": color if color != "white" else "black",
+                          "extra": ["\n", *[say("team", team)] * (team is not None), name, *rating]})
         return {**say("players"), "bold": True, "extra": [dict(e, bold=False) for e in extra]}
 
     def book_command(self, title, lines):

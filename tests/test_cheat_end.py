@@ -1,6 +1,7 @@
 """game/cheats.py: the AoE2 cheats that end a game or destroy players (#819)."""
 import time
 
+import lang
 import pytest
 from test_gather import FakeServer, grid
 
@@ -75,7 +76,7 @@ def test_natural_wonders_gives_the_animals_and_takes_the_own_units():
     g.select("v-1")
     log = cheat(server, g, "natural wonders")
     assert g.soldiers == {"d-0": "DEER"} and not g.villagers and not g.selected
-    assert 'tellraw Steve {"text":"You control nature: 1 animals"}' in log
+    assert 'tellraw Steve "You control nature: 1 animals"' in map(lang.english, log)
     g.select("d-0")
     assert g.selected == {"d-0"}
 

@@ -142,7 +142,8 @@ def fight_news(f, i, players):
     """The chat line and the horn of a fight start (#2951): "Fight: A vs B, N units". A click sets the trigger
     PLACE + i: the viewer goes above the place, without a time jump."""
     line = {"text": "", "click_event": {"action": "run_command", "command": f"/trigger {OBJECTIVE} set {PLACE + i}"},
-            "extra": [{"text": "Fight: "}, *fight_players(f, players), {"text": f", {f['units']} units", "color": "gray"}]}
+            "extra": [lang.text("aoe2mc.replay_input.fight"), *fight_players(f, players),
+                      lang.text("aoe2mc.replay_input.fight_units", f["units"], color="gray")]}
     return ["tellraw @a " + json.dumps(line, ensure_ascii=False),
             "playsound minecraft:event.raid.horn master @a ~ ~ ~ 1 1 1"]
 

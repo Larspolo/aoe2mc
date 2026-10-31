@@ -2,6 +2,7 @@
 queues it once; after the research a villager chops wood faster (#723)."""
 from urllib.parse import unquote
 
+import lang
 from menu_line import item, labels, order
 from test_gather import FakeServer, grid
 
@@ -74,7 +75,7 @@ def test_after_the_research_wood_is_faster():
     assert g.work_time("wood") < before["wood"]
     assert {r: g.work_time(r) for r in ("food", "farm", "gold", "stone")} == {r: before[r] for r in ("food", "farm", "gold", "stone")}
     assert not [c for c in server.log if c.startswith("aoe stats")]   # no combat change
-    assert any("Double-Bit Axe is researched." in c for c in server.log if c.startswith("tellraw"))
+    assert any("Double-Bit Axe is researched." in c for c in map(lang.english, server.log) if c.startswith("tellraw"))
     train.open_menu(g, "Steve", (3, 3))
     assert "Double-Bit Axe" not in menus(server)[-1]
 

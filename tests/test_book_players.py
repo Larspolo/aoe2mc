@@ -4,6 +4,7 @@ import os
 import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "game"))
+import lang  # noqa: E402
 import replay  # noqa: E402
 from test_replay import Fake, data  # noqa: E402
 
@@ -24,7 +25,7 @@ def test_the_first_page_has_a_line_per_player_in_panel_order():
     lines = {1: ["a", "b"], 2: ["c"]}
     pages = r.book_pages(lines, players=True)
     extra = pages[0]["extra"]
-    assert [e["text"].lstrip("\n") for e in extra] == [
+    assert [lang.plain(e).lstrip("\n") for e in extra] == [
         f"Team {r.team(p)} · {r.player(p)[0]}" + (" · 1234 now" if p == 1 else "") for p in r.ranked([1, 2, 3, 4])]
     assert [e["color"] for e in extra] == [c if c != "white" else "black"
                                            for c in (r.player(p)[1] for p in r.ranked([1, 2, 3, 4]))]

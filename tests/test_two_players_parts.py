@@ -4,6 +4,7 @@ control groups, cheat codes, the boss bar, the hints, the team of the attack ale
 technology."""
 import re
 
+import lang
 from test_gather import grid
 from test_lang_orders import chat_of, plain_log
 from test_two_players import TEAMS, TwoServer, click, run_clicks
@@ -82,7 +83,7 @@ def test_a_cheat_of_the_person_of_player_2_changes_only_player_2():
     assert not any(re.search(r"\baoe_res\b", c) for c in plain_log(server.log))  # not the sidebar of player 1
     server.scores[("Steve", "aoe_cheat")] = cheats.NAMES.index("polo") + 1
     assert cheats.clicks(g2) == [] and cheats.clicks(g1) == [("Steve", "polo")]
-    assert server.log[-1] == 'tellraw Steve {"text":"Fog of war: off"}'
+    assert lang.english(server.log[-1]) == 'tellraw Steve "Fog of war: off"'
 
 
 def test_the_boss_bar_of_player_2_shows_its_selection_only_to_its_team():
@@ -138,14 +139,14 @@ def test_player_2_trains_ages_and_researches_without_a_change_for_player_1():
     assert g2.pop == 2 and g1.pop == 1 and "LOOM" in g2.techs and not g1.techs
     assert "scoreboard players set Population aoe_res2 2" in server.log
     assert not any(re.search(r"\baoe_res\b", c) for c in plain_log(server.log))
-    assert f'tellraw Alex {{"text": "{train.ITEMS["LOOM"][2]} is researched.", "color": "green"}}' in server.log
+    assert f'tellraw Alex "{train.ITEMS["LOOM"][2]} is researched."' in map(lang.english, server.log)
     g2.data["objects"] += [{"kind": "building", "name": n, "player": 2, "tile": [12.5, 2.5 + 3 * i],
                             "footprint": [11, 1 + 3 * i, 14, 4 + 3 * i]} for i, n in enumerate(("BARRACKS", "MILL"))]
     server.log.clear()
     assert train.queue(g2, "Alex", (19, 3), "FEUDAL_AGE") == (18, 21, 2, 5)
     train.tick(g2, train.seconds(g2, "FEUDAL_AGE"))
     assert train.age(g2) == "Feudal Age" and train.age(g1) == "Dark Age"
-    assert 'title @a[team=p2] title {"text": "Feudal Age", "color": "gold"}' in server.log
+    assert 'title @a[team=p2] title "Feudal Age"' in map(lang.english, server.log)
     assert 'scoreboard objectives modify aoe_res2 displayname "Resources (Feudal Age)"' in server.log
     assert not any(P1 in c or re.search(r"\baoe_res\b", c) for c in plain_log(server.log))
     assert any(c.startswith("tellraw @a") and '"with": ["2", {"translate": "aoe2mc.tech.FEUDAL_AGE", "fallback": "Feudal Age"}]' in c for c in plain_log(server.log))

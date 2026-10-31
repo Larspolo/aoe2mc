@@ -5,7 +5,7 @@ from menu_line import item
 from test_feudal_age import add
 from test_loom import menus, setup
 
-from game import train
+from game import lang, train
 
 NEED = " · needs a castle or 2 of "                                    # the text of the missing buildings
 SLOT = train.SLOTS["IMPERIAL_AGE"]
@@ -68,7 +68,7 @@ def test_after_the_research_time_the_player_is_in_the_imperial_age():
     train.tick(g, 1)
     assert train.age(g) == "Imperial Age" and "IMPERIAL_AGE" in g.techs and not g.queues.get(rect)
     assert server.log.count('scoreboard objectives modify aoe_res displayname "Resources (Imperial Age)"') == 1
-    assert 'title @a[team=p1] title {"text": "Imperial Age", "color": "gold"}' in server.log
+    assert 'title @a[team=p1] title "Imperial Age"' in map(lang.english, server.log)
     assert any(c.startswith("tellraw @a") and '"fallback": "Imperial Age"}]' in c for c in server.log)
     assert any(c.startswith("playsound minecraft:ui.toast.challenge_complete") for c in server.log)
     train.show(g, "Steve", rect)

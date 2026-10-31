@@ -4,6 +4,7 @@ import sys
 from types import SimpleNamespace
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "game"))
+import lang  # noqa: E402
 from test_cheat_end import cheat, game  # noqa: E402
 from test_gather import tiny  # noqa: E402
 
@@ -23,7 +24,7 @@ def setup(teams, on=True):
 def test_the_wood_of_the_player_goes_to_the_ally():
     server, g, ally, foe = setup({1: 1, 2: 1, 3: 2})
     log = cheat(server, g, "sharing is caring")
-    assert 'tellraw Steve {"text":"Sharing is caring: your income goes to your allies"}' in log
+    assert 'tellraw Steve "Sharing is caring: your income goes to your allies"' in map(lang.english, log)
     server.log.clear()
     g.earn("wood", 10)
     assert g.stock["wood"] == 0 and ally.stock["wood"] == 10 and foe.stock["wood"] == 0

@@ -2,33 +2,22 @@
 {"name": "bot.Bot.give", "note": "a chat line of an AI player: the AoE2 taunt text"}
 {"name": "bot.ai_line", "note": "the player name before lang.text"}
 {"name": "build.say", "note": "the English text of another module: lang.text gives a dict"}
-{"name": "cheats.aegis", "note": "a gap: #5411"}
-{"name": "cheats.apply", "note": "a gap: #5411"}
-{"name": "cheats.cpu", "note": "a gap: #5411"}
-{"name": "cheats.flag.effect", "note": "a gap: #5411"}
-{"name": "cheats.polo", "note": "a gap: #5411"}
 {"name": "cheats.taunts", "note": "a chat line of a player: the AoE2 taunt text"}
-{"name": "cheats.wonders", "note": "a gap: #5411"}
 {"name": "conquest.defeat", "note": "the text of the scenario"}
 {"name": "demo_watch.chat", "note": "an owner demo tool"}
-{"name": "gather.Gather.town_center", "note": "a gap: #5411"}
 {"name": "per.Script.act", "note": "a chat line of an AI script: the AoE2 taunt text"}
 {"name": "per.Script.chat", "note": "a chat line of an AI script: its own text"}
 {"name": "play_guide.Guide.run", "note": "an owner test tool (#1674)"}
 {"name": "play_guide.Guide.say", "note": "an owner test tool (#1674)"}
 {"name": "replay.Replay.book_pages", "note": "the page texts of the record and the player names"}
-{"name": "replay.Replay.players_page", "note": "a gap: #5411"}
 {"name": "replay.Replay.timeline_commands", "note": "the game time before the translate text of a line"}
 {"name": "replay.book_page", "note": "the line breaks between the lines of a page"}
 {"name": "replay.text", "note": "the text helper of the record chat"}
 {"name": "replay_input.Input.__call__", "note": "the player names of the record"}
 {"name": "replay_input.fight_lines", "note": "the clock and the player names"}
-{"name": "replay_input.fight_news", "note": "a gap: #5411"}
 {"name": "replay_input.fight_players", "note": "the player names of the record"}
 {"name": "replay_input.help_text", "note": "the names of the record players"}
 {"name": "run.properties", "note": "the resource pack prompt: the client shows it before it has the lang file"}
 {"name": "scenario.chat", "note": "the text of the scenario"}
-{"name": "train.order", "note": "a gap: #5411"}
-{"name": "train.research", "note": "a gap: #5411"}
 {"name": "watch.Guide.answer", "note": "an owner replay tool"}
 {"name": "watch.say", "note": "an owner replay tool"}

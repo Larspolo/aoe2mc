@@ -1,6 +1,7 @@
 """game/train.py: the blacksmith menu has "Padded Archer Armor" in the Feudal Age (a book, the cost and time of the
 data). After the research the archers of the player (also cavalry archers and skirmishers) have more melee and pierce
 armor, as in AoE2 (#937)."""
+import lang
 from menu_line import item
 from test_forging import menus, setup
 
@@ -43,4 +44,4 @@ def test_padded_archer_armor_gives_archers_melee_and_pierce_armor():
         assert train.stats(g, name) == combat.stats(name), name
     stats = [c for c in server.log if c.startswith("aoe stats")]
     assert stats == [combat.stats_command("a", "ARCHER", train.stats(g, "ARCHER"))]     # the live archer
-    assert any("Padded Archer Armor is researched." in c for c in server.log if c.startswith("tellraw"))
+    assert any("Padded Archer Armor is researched." in c for c in map(lang.english, server.log) if c.startswith("tellraw"))

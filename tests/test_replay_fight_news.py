@@ -9,6 +9,7 @@ from test_replay_fights import battle  # noqa: E402
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "game"))
 
+import lang  # noqa: E402
 import mcvalid  # noqa: E402
 import replay  # noqa: E402
 import replay_input as ri  # noqa: E402
@@ -24,7 +25,7 @@ def timeline(start):
 
 
 def chat(game):
-    return [json.loads(c[len("tellraw @a "):]) for c in game.sent if c.startswith("tellraw @a ") and '"Fight: "' in c]
+    return [json.loads(c[len("tellraw @a "):]) for c in game.sent if c.startswith("tellraw @a ") and 'aoe2mc.replay_input.fight"' in c]
 
 
 def test_a_fight_start_sends_the_chat_line_and_the_horn():
@@ -33,10 +34,10 @@ def test_a_fight_start_sends_the_chat_line_and_the_horn():
     lines = chat(game)
     assert len(lines) == 1
     line = lines[0]
-    assert line["extra"][0] == {"text": "Fight: "}
+    assert lang.plain(line["extra"][0]) == "Fight: "
     assert {"text": "Player 1 (Britons)", "color": "blue"} in line["extra"]
     assert {"text": "Player 2 (Aztecs)", "color": "gold"} in line["extra"]
-    assert line["extra"][-1] == {"text": ", 12 units", "color": "gray"}
+    assert lang.plain(line["extra"][-1]) == ", 12 units" and line["extra"][-1]["color"] == "gray"
     assert line["click_event"] == {"action": "run_command", "command": f"/trigger aoe_replay set {ri.PLACE}"}
     assert HORN in game.sent and not mcvalid.sound_error(HORN.split()[1])
 

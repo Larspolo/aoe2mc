@@ -3,6 +3,7 @@ live and the new archers have more attack and range (combat.range_command), and 
 (#724)."""
 from urllib.parse import unquote
 
+import lang
 from test_gather import FakeServer, grid
 
 from game import combat, gather, train
@@ -70,7 +71,7 @@ def test_fletching_gives_archers_more_attack_and_range():
     assert sorted(c for c in server.log if c.startswith(("aoe stats", "aoe range"))) == \
         sorted([combat.range_command("a", "ARCHER", 1, s=train.stats(g, "ARCHER")),
                 combat.stats_command("a", "ARCHER", train.stats(g, "ARCHER"))])   # tile size 1
-    assert any("Fletching is researched." in c for c in server.log if c.startswith("tellraw"))
+    assert any("Fletching is researched." in c for c in map(lang.english, server.log) if c.startswith("tellraw"))
     train.open_menu(g, "Steve", (11, 3))
     assert "Fletching" not in menus(server)[-1] and "Forging" in menus(server)[-1]
 

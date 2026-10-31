@@ -2,6 +2,7 @@
 have more hit points and armor, and the item leaves the menu (#655)."""
 from urllib.parse import unquote
 
+import lang
 from menu_line import item
 from test_gather import FakeServer, grid
 
@@ -59,7 +60,7 @@ def test_loom_needs_no_population_room_and_changes_the_villagers():
     assert s.hp > old.hp and s.melee > old.melee and s.pierce > old.pierce
     assert train.stats(g, "MILITIA") == combat.stats("MILITIA")
     assert [c for c in server.log if c.startswith("aoe stats")] == [combat.stats_command("v", "VILLAGER_MALE", s)]
-    assert any("Loom is researched." in c for c in server.log if c.startswith("tellraw"))
+    assert any("Loom is researched." in c for c in map(lang.english, server.log) if c.startswith("tellraw"))
     train.open_menu(g, "Steve", (3, 3))
     assert "Loom" not in menus(server)[-1]
     assert train.queue(g, "Steve", (3, 3), "LOOM") is None             # only once
