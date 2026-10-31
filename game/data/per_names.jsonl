@@ -15,6 +15,7 @@
 {"name": "blacksmith", "game": "BLACKSMITH", "kind": "building", "id": 103}
 {"name": "bohemians", "game": "BOHEMIANS", "kind": "civ"}
 {"name": "bombard-cannon", "game": "BOMBARD_CANNON", "kind": "unit", "id": 36}
+{"name": "bombard-cannon-line", "game": "BOMBARD_CANNON", "kind": "unit"}
 {"name": "bombard-tower", "game": "BOMBARD_TOWER", "kind": "building", "id": 236}
 {"name": "briton", "game": "BRITONS", "kind": "civ"}
 {"name": "britons", "game": "BRITONS", "kind": "civ"}
@@ -166,6 +167,7 @@
 {"name": "poles", "game": "POLES", "kind": "civ"}
 {"name": "portuguese", "game": "PORTUGUESE", "kind": "civ"}
 {"name": "post-imperial-age", "kind": "age", "age": 4}
+{"name": "ri-arbalester", "game": "ARBALESTER_UPGRADE", "kind": "tech"}
 {"name": "ri-architecture", "game": "ARCHITECTURE", "kind": "tech", "id": 51}
 {"name": "ri-arrowslits", "game": "ARROWSLITS", "kind": "tech", "id": 608}
 {"name": "ri-arson", "game": "ARSON", "kind": "tech", "id": 602}
@@ -178,17 +180,77 @@
 {"name": "ri-bodkin-arrow", "game": "BODKIN_ARROW", "kind": "tech", "id": 200}
 {"name": "ri-bow-saw", "game": "BOW_SAW", "kind": "tech", "id": 203}
 {"name": "ri-bracer", "game": "BRACER", "kind": "tech", "id": 201}
+{"name": "ri-capped-ram", "game": "CAPPED_RAM_UPGRADE", "kind": "tech"}
 {"name": "ri-caravan", "game": "CARAVAN", "kind": "tech", "id": 48}
 {"name": "ri-careening", "game": "CAREENING", "kind": "tech", "id": 374}
+{"name": "ri-castle-age", "game": "CASTLE_AGE", "kind": "tech"}
+{"name": "ri-cavalier", "game": "CAVALIER_UPGRADE", "kind": "tech"}
 {"name": "ri-chain-barding", "game": "CHAIN_BARDING_ARMOR", "kind": "tech", "id": 82}
 {"name": "ri-chain-mail", "game": "CHAIN_MAIL_ARMOR", "kind": "tech", "id": 76}
+{"name": "ri-champi-runner", "game": "CHAMPI_RUNNER_UPGRADE", "kind": "tech"}
+{"name": "ri-champi-warrior", "game": "CHAMPI_WARRIOR_UPGRADE", "kind": "tech"}
+{"name": "ri-champion", "game": "CHAMPION_UPGRADE", "kind": "tech"}
 {"name": "ri-chemistry", "game": "CHEMISTRY", "kind": "tech", "id": 47}
 {"name": "ri-coinage", "game": "COINAGE", "kind": "tech", "id": 23}
 {"name": "ri-conscription", "game": "CONSCRIPTION", "kind": "tech", "id": 315}
 {"name": "ri-crop-rotation", "game": "CROP_ROTATION", "kind": "tech", "id": 12}
+{"name": "ri-crossbowman", "game": "CROSSBOWMAN_UPGRADE", "kind": "tech"}
+{"name": "ri-demolition-ship", "game": "DEMOLITION_SHIP_UPGRADE", "kind": "tech"}
 {"name": "ri-devotion", "game": "DEVOTION", "kind": "tech", "id": 46}
 {"name": "ri-double-bit-axe", "game": "DOUBLE_BIT_AXE", "kind": "tech", "id": 202}
 {"name": "ri-dry-dock", "game": "DRY_DOCK", "kind": "tech", "id": 375}
+{"name": "ri-eagle-warrior", "game": "EAGLE_WARRIOR_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-arambai", "game": "ELITE_ARAMBAI_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-ballista-elephant", "game": "ELITE_BALLISTA_ELEPHANT_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-battle-elephant", "game": "ELITE_BATTLE_ELEPHANT_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-bolas-rider", "game": "ELITE_BOLAS_RIDER_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-boyar", "game": "ELITE_BOYAR_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-camel-archer", "game": "ELITE_CAMEL_ARCHER_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-cannon-galleon", "game": "ELITE_CANNON_GALLEON_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-caravel", "game": "ELITE_CARAVEL_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-centurion", "game": "ELITE_CENTURION_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-chakram-thrower", "game": "ELITE_CHAKRAM_THROWER_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-champi-warrior", "game": "ELITE_CHAMPI_WARRIOR_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-composite-bowman", "game": "ELITE_COMPOSITE_BOWMAN_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-conquistador", "game": "ELITE_CONQUISTADOR_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-coustillier", "game": "ELITE_COUSTILLIER_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-eagle-warrior", "game": "ELITE_EAGLE_WARRIOR_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-elephant-archer", "game": "ELITE_ELEPHANT_ARCHER_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-fire-lancer", "game": "ELITE_FIRE_LANCER_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-gbeto", "game": "ELITE_GBETO_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-genitour", "game": "ELITE_GENITOUR_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-genoese-crossbowman", "game": "ELITE_GENOESE_CROSSBOWMAN_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-ghulam", "game": "ELITE_GHULAM_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-hoplite", "game": "ELITE_HOPLITE_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-huskarl", "game": "ELITE_HUSKARL_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-hussite-wagon", "game": "ELITE_HUSSITE_WAGON_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-ibirapema-warrior", "game": "ELITE_IBIRAPEMA_WARRIOR_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-jaguar-warrior", "game": "ELITE_JAGUAR_WARRIOR_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-kamayuk", "game": "ELITE_KAMAYUK_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-karambit-warrior", "game": "ELITE_KARAMBIT_WARRIOR_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-keshik", "game": "ELITE_KESHIK_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-kipchak", "game": "ELITE_KIPCHAK_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-konnik", "game": "ELITE_KONNIK_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-leitis", "game": "ELITE_LEITIS_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-longship", "game": "ELITE_LONGSHIP_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-magyar-huszar", "game": "ELITE_MAGYAR_HUSZAR_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-monaspa", "game": "ELITE_MONASPA_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-obuch", "game": "ELITE_OBUCH_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-organ-gun", "game": "ELITE_ORGAN_GUN_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-plumed-archer", "game": "ELITE_PLUMED_ARCHER_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-ratha", "game": "ELITE_RATHA_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-rattan-archer", "game": "ELITE_RATTAN_ARCHER_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-serjeant", "game": "ELITE_SERJEANT_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-shotel-warrior", "game": "ELITE_SHOTEL_WARRIOR_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-shrivamsha-rider", "game": "ELITE_SHRIVAMSHA_RIDER_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-skirmisher", "game": "ELITE_SKIRMISHER_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-steppe-lancer", "game": "ELITE_STEPPE_LANCER_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-tarkan", "game": "ELITE_TARKAN_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-temple-guard", "game": "ELITE_TEMPLE_GUARD_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-turtle-ship", "game": "ELITE_TURTLE_SHIP_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-urumi-swordsman", "game": "ELITE_URUMI_SWORDSMAN_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-varangian-guard", "game": "ELITE_VARANGIAN_GUARD_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-war-wagon", "game": "ELITE_WAR_WAGON_UPGRADE", "kind": "tech"}
 {"name": "ri-faith", "game": "FAITH", "kind": "tech", "id": 45}
 {"name": "ri-fervor", "game": "FERVOR", "kind": "tech", "id": 252}
 {"name": "ri-fletching", "game": "FLETCHING", "kind": "tech", "id": 199}
@@ -200,33 +262,57 @@
 {"name": "ri-gold-shaft-mining", "game": "GOLD_SHAFT_MINING", "kind": "tech", "id": 182}
 {"name": "ri-guard-tower", "game": "GUARD_TOWER", "kind": "tech", "id": 140}
 {"name": "ri-guilds", "game": "GUILDS", "kind": "tech", "id": 15}
+{"name": "ri-halberdier", "game": "HALBERDIER_UPGRADE", "kind": "tech"}
 {"name": "ri-hand-cart", "game": "HAND_CART", "kind": "tech", "id": 249}
 {"name": "ri-heated-shot", "game": "HEATED_SHOT", "kind": "tech", "id": 380}
+{"name": "ri-heavy-camel-rider", "game": "HEAVY_CAMEL_RIDER_UPGRADE", "kind": "tech"}
+{"name": "ri-heavy-cavalry-archer", "game": "HEAVY_CAVALRY_ARCHER_UPGRADE", "kind": "tech"}
+{"name": "ri-heavy-demolition-ship", "game": "HEAVY_DEMOLITION_SHIP_UPGRADE", "kind": "tech"}
+{"name": "ri-heavy-hei-guang-cavalry", "game": "HEAVY_HEI_GUANG_CAVALRY_UPGRADE", "kind": "tech"}
+{"name": "ri-heavy-mounted-crossbowman", "game": "HEAVY_MOUNTED_CROSSBOWMAN_UPGRADE", "kind": "tech"}
 {"name": "ri-heavy-plow", "game": "HEAVY_PLOW", "kind": "tech", "id": 13}
+{"name": "ri-heavy-rocket-cart", "game": "HEAVY_ROCKET_CART_UPGRADE", "kind": "tech"}
+{"name": "ri-heavy-scorpion", "game": "HEAVY_SCORPION_UPGRADE", "kind": "tech"}
+{"name": "ri-heavy-warships", "game": "HEAVY_WARSHIPS", "kind": "tech"}
 {"name": "ri-heresy", "game": "HERESY", "kind": "tech", "id": 439}
 {"name": "ri-hoardings", "game": "HOARDINGS", "kind": "tech", "id": 379}
 {"name": "ri-horse-collar", "game": "HORSE_COLLAR", "kind": "tech", "id": 14}
+{"name": "ri-houfnice", "game": "HOUFNICE_UPGRADE", "kind": "tech"}
 {"name": "ri-husbandry", "game": "HUSBANDRY", "kind": "tech", "id": 39}
+{"name": "ri-hussar", "game": "HUSSAR_UPGRADE", "kind": "tech"}
 {"name": "ri-illumination", "game": "ILLUMINATION", "kind": "tech", "id": 233}
+{"name": "ri-imperial-camel-rider", "game": "IMPERIAL_CAMEL_RIDER_UPGRADE", "kind": "tech"}
+{"name": "ri-imperial-skirmisher", "game": "IMPERIAL_SKIRMISHER_UPGRADE", "kind": "tech"}
 {"name": "ri-iron-casting", "game": "IRON_CASTING", "kind": "tech", "id": 68}
 {"name": "ri-keep", "game": "KEEP", "kind": "tech", "id": 63}
 {"name": "ri-leather-archer-armor", "game": "LEATHER_ARCHER_ARMOR", "kind": "tech", "id": 212}
+{"name": "ri-legionary", "game": "LEGIONARY_UPGRADE", "kind": "tech"}
+{"name": "ri-light-cavalry", "game": "LIGHT_CAVALRY_UPGRADE", "kind": "tech"}
+{"name": "ri-long-swordsman", "game": "LONG_SWORDSMAN_UPGRADE", "kind": "tech"}
 {"name": "ri-loom", "game": "LOOM", "kind": "tech", "id": 22}
 {"name": "ri-man-at-arms", "game": "MAN_AT_ARMS_UPGRADE", "kind": "tech", "id": 222}
 {"name": "ri-masonry", "game": "MASONRY", "kind": "tech", "id": 50}
+{"name": "ri-medium-warships", "game": "MEDIUM_WARSHIPS", "kind": "tech"}
 {"name": "ri-murder-holes", "game": "MURDER_HOLES", "kind": "tech", "id": 322}
+{"name": "ri-onager", "game": "ONAGER_UPGRADE", "kind": "tech"}
 {"name": "ri-padded-archer-armor", "game": "PADDED_ARCHER_ARMOR", "kind": "tech", "id": 211}
+{"name": "ri-paladin", "game": "PALADIN_UPGRADE", "kind": "tech"}
 {"name": "ri-parthian-tactics", "game": "PARTHIAN_TACTICS", "kind": "tech", "id": 436}
+{"name": "ri-pikeman", "game": "PIKEMAN_UPGRADE", "kind": "tech"}
 {"name": "ri-plate-barding", "game": "PLATE_BARDING_ARMOR", "kind": "tech", "id": 80}
 {"name": "ri-plate-mail", "game": "PLATE_MAIL_ARMOR", "kind": "tech", "id": 77}
 {"name": "ri-redemption", "game": "REDEMPTION", "kind": "tech", "id": 316}
 {"name": "ri-ring-archer-armor", "game": "RING_ARCHER_ARMOR", "kind": "tech", "id": 219}
 {"name": "ri-sanctity", "game": "SANCTITY", "kind": "tech", "id": 231}
 {"name": "ri-sappers", "game": "SAPPERS", "kind": "tech", "id": 321}
+{"name": "ri-savar", "game": "SAVAR_UPGRADE", "kind": "tech"}
 {"name": "ri-scale-barding", "game": "SCALE_BARDING_ARMOR", "kind": "tech", "id": 81}
 {"name": "ri-scale-mail", "game": "SCALE_MAIL_ARMOR", "kind": "tech", "id": 74}
 {"name": "ri-shipwright", "game": "SHIPWRIGHT", "kind": "tech", "id": 373}
+{"name": "ri-siege-elephant", "game": "SIEGE_ELEPHANT_UPGRADE", "kind": "tech"}
 {"name": "ri-siege-engineers", "game": "SIEGE_ENGINEERS", "kind": "tech", "id": 377}
+{"name": "ri-siege-onager", "game": "SIEGE_ONAGER_UPGRADE", "kind": "tech"}
+{"name": "ri-siege-ram", "game": "SIEGE_RAM_UPGRADE", "kind": "tech"}
 {"name": "ri-squires", "game": "SQUIRES", "kind": "tech", "id": 215}
 {"name": "ri-stone-mining", "game": "STONE_MINING", "kind": "tech", "id": 278}
 {"name": "ri-stone-shaft-mining", "game": "STONE_SHAFT_MINING", "kind": "tech", "id": 279}
@@ -235,9 +321,11 @@
 {"name": "ri-town-patrol", "game": "TOWN_PATROL", "kind": "tech", "id": 280}
 {"name": "ri-town-watch", "game": "TOWN_WATCH", "kind": "tech", "id": 8}
 {"name": "ri-treadmill-crane", "game": "TREADMILL_CRANE", "kind": "tech", "id": 54}
+{"name": "ri-two-handed-swordsman", "game": "TWO_HANDED_SWORDSMAN_UPGRADE", "kind": "tech"}
 {"name": "ri-two-man-saw", "game": "TWO_MAN_SAW", "kind": "tech", "id": 221}
 {"name": "ri-wheel-barrow", "game": "WHEELBARROW", "kind": "tech", "id": 213}
 {"name": "ri-wheelbarrow", "game": "WHEELBARROW", "kind": "tech"}
+{"name": "ri-winged-hussar", "game": "WINGED_HUSSAR_UPGRADE", "kind": "tech"}
 {"name": "romans", "game": "ROMANS", "kind": "civ"}
 {"name": "saracen", "game": "SARACENS", "kind": "civ"}
 {"name": "saracens", "game": "SARACENS", "kind": "civ"}
