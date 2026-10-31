@@ -191,6 +191,12 @@ NAMES = {}                                                         # script name
 OPS = {"<": operator.lt, "<=": operator.le, ">": operator.gt, ">=": operator.ge, "==": operator.eq, "!=": operator.ne}
 MATH = ("=", "+", "-", "*", "/", "z/", "mod", "min", "max", "neg", "%*", "%/")   # airef "mathOp" (up-modify-*)
 IDLE_IDS = ("idle-type-villager", "idle-type-trade-cart", "idle-type-fishing-ship", "idle-type-trade-cog")  # airef pIdleType
+TYPE_UNITS = {                     # up-disband-group-type: the units of an airef GroupType that the bot has (#5133); one per line
+    "group-type-fishing-ship": lambda n: __import__("replay").fisher(n),
+    "group-type-land-trade": lambda n: n.startswith(__import__("trade").CART),
+    "group-type-monk": lambda n: n in __import__("monk").MONKS,
+    "group-type-water-attack": lambda n: __import__("replay").ship(n) and not __import__("replay").fisher(n),
+}
 RULE_CHECKS = 10000                     # the rule checks of one pass: a loop with no end stops there (airef RuleDelta)
 VICTORY_TYPES = {                  # run.py --victory: the airef VictoryType; one per line, in alphabetical order
     "conquest": 1,
@@ -1320,19 +1326,32 @@ class Script:
         ScoutMethod: the PositionType of the same name (scout-opposite: position-opposite). The mob AI walks them."""
         import stance
         g = self.bot.g
-        if group != "group-type-land-explore":
+        if group not in ("group-type-land-explore", "group-type-water-explore"):
             return self.warn("group type", group)
         if method not in ("scout-border", "scout-center", "scout-corner", "scout-enemy", "scout-flank", "scout-mirror",
                           "scout-opposite"):                       # airef pScoutMethod
             return self.warn("scout method", method)
         if (p := self.position("position" + method[5:])) is None:
             return
+        T, p = g.data["tile_size"], self.bound(p)
+        if group == "group-type-water-explore":                    # one ship to the nearest water tile of the point (#5133)
+            import replay
+            n = self.tiles()
+            wet = [(abs(x - p[0]) + abs(y - p[1]), x, y) for y in range(n) for x in range(n) if self.wet_tile(x, y)]
+            units = [u for u in sorted(g.soldiers) if replay.ship(g.soldiers[u])][:1]
+            if not units or not wet:
+                return
+            _, tx, ty = min(wet)
+            x, z = tx * T + T // 2, ty * T + T // 2
+            g.new_order(units)
+            g.command(f"aoe moveto {units[0]} {x} {g.map.sea(x, z)} {z}")
+            self.sailors = sorted(set(getattr(self, "sailors", ())) | set(units))
+            return
         units = [u for u in sorted(g.soldiers) if g.soldiers[u] in stance.SCOUT_NAMES][:max(self.number("sn-total-number-explorers"), 0)]
         if not units:
             return
         g.new_order(units)
-        T = g.data["tile_size"]
-        x, z = (v * T + T // 2 for v in self.bound(p))
+        x, z = (v * T + T // 2 for v in p)
         for u in units:
             g.command(f"aoe moveto {u} {x} {g.map.y(x, z)} {z}")
         self.scouts = sorted(set(self.scouts) | set(units))
@@ -2490,6 +2509,10 @@ class Script:
             units, b.wave, b.targets, b.charged = sorted(getattr(b, "wave", ())), set(), {}, False
         elif kind == "group-type-land-explore":
             units, self.scouts = self.scouts, []
+        elif kind == "group-type-water-explore":                   # the ships of up-send-scout (#5133)
+            units, self.sailors = getattr(self, "sailors", []), []
+        elif kind in TYPE_UNITS:                                   # the units of the type that the bot has (#5133)
+            units = sorted(u for u, n in g.soldiers.items() if TYPE_UNITS[kind](n))
         else:
             return self.warn("group type", kind) or False
         for u in units:
