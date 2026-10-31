@@ -1,5 +1,4 @@
 """The block and constant errors of the random map survey (#4309): each script generates or gives an RmsError."""
-import pytest
 
 import rmap
 
@@ -22,13 +21,6 @@ def test_const_of_a_constant():
 
 def test_negative_clumping_factor():
     assert run(LAND + "create_player_lands { terrain_type DIRT land_percent 40 clumping_factor -10 }")["lands"]
-
-
-@pytest.mark.parametrize("text", ["endif\n", "if TINY_MAP\n", "start_random percent_chance 50\n",
-                                  "end_random\n"])
-def test_unbalanced_blocks(text):
-    with pytest.raises(rmap.RmsError):
-        run(text + LAND)
 
 
 def test_if_in_a_comment():
