@@ -1410,7 +1410,7 @@ NOMAD = """
 <LAND_GENERATION>
 base_terrain WATER
 create_player_lands { terrain_type GRASS2 land_percent 30 base_size 12 clumping_factor 15
-  left_border 6 right_border 6 top_border 6 bottom_border 6 }
+  left_border 6 right_border 6 top_border 6 bottom_border 6 border_fuzziness 100 }
 create_land { terrain_type GRASS land_position 50 50 base_size 12 land_percent 42 clumping_factor 20
   left_border 6 right_border 6 top_border 6 bottom_border 6 }
 <TERRAIN_GENERATION>

@@ -34,7 +34,7 @@ def test_a_land_stays_in_its_borders():
     text = """<LAND_GENERATION>
 base_terrain WATER
 create_land { terrain_type GRASS land_position 50 50 land_percent 100 left_border 10 right_border 20 top_border 30
-  bottom_border 0 }
+  bottom_border 0 border_fuzziness 100 }
 """
     t = np.array(rmap.generate(text, 1, size=100, warn=pytest.fail)["terrain"])
     rows, cols = np.nonzero(t == T["GRASS"])
