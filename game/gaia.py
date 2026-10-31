@@ -4,7 +4,9 @@ whose unit comes near it (#5108, part of #5107). As in AoE2 (AoE2 wiki, "Gaia": 
 player whose unit comes close to them first"). The wiki gives no distance: 2 tiles, as herd.RANGE. With units of more
 players near it in the same look, herd.owner decides (the most units, then the lowest number). A unit with the key
 `unconvertible` (set_gaia_unconvertible of a random map, #5074) stays Gaia: the DE random map scripting guide makes
-the Gaia units "unconvertible", and a join is a conversion without a monk.
+the Gaia units "unconvertible", and a join is a conversion without a monk. A Gaia unit inside a building or a ship of
+the scenario (the key `holder`, #807) stays Gaia, as in AoE2: no unit can come near it (#5146). A ship is in
+`h.soldiers`, so an own ship finds a Gaia unit, and a Gaia ship joins with its crew (`on passengers`).
 
 Minecraft feature: teams (`team join`) and the tag aoe2mc.pN, as monk.take. The nearness rule is own logic: Minecraft
 has no "owner by nearness" rule.
@@ -22,10 +24,11 @@ RANGE = herd.RANGE
 
 
 def joinable(o):
-    """True for a Gaia unit of the map that joins a player: not an animal, not unconvertible."""
+    """True for a Gaia unit of the map that joins a player: not an animal, not unconvertible, not inside a holder."""
     import gather  # gather imports this module
     n = o["name"]
     return (o["kind"] == "unit" and o.get("player") == 0 and bool(o.get("uuid")) and not o.get("unconvertible")
+            and o.get("holder") is None
             and not herd.herdable(n) and not gather.hunt_food(n) and not gather.predator(n))
 
 
