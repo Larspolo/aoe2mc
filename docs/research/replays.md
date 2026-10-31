@@ -226,7 +226,8 @@ found by a comparison of the bytes with `samples/de-64.3.aoe2record`:
 | End of each player, after the 4 bytes of 64.3 | next player | one more DE string (`60 0a 00 00`: empty in the test record) |
 | After the DE string before the 8 bytes and the timestamp | 8 bytes, timestamp | two more DE strings (empty), then 8 bytes, timestamp |
 
-The other parts (metadata, map, players, scenario, lobby, the actions) read as for 66.6. `aoe2mc.new_saves()` adds the
+The metadata, map, players and actions read as for 66.6. The scenario and the lobby do not: mgz reads the lobby of a
+68.9 record from a wrong place with no error (all zeros); `lobby_at_end` fixes it (#5178, `docs/research/saved-games.md`). `aoe2mc.new_saves()` adds the
 three reads to the source of `parse_de` (for save > 66.6). With it `read_record` and `read_timeline` read the test
 record: map Arabia (120 tiles), 2 players with names and civilizations, 1325 timeline events.
 
@@ -292,3 +293,4 @@ Moved from `docs/LEARNINGS.md` (improve run, 2026-10-26).
 - `Replay.play` sends the end commands (the "Replay ended" title, the summary, the books) only with `bar=True`, as `run.replay` calls it: a test of the end of a replay with the default `bar=False` sees none of them (#4664).
 - No record of a game mode (Regicide, King of the Hill ...) is in `samples/`: #4834 found none (the record API lists no lobby games, and `mgz` 1.8.51 cannot parse current records). A test of a mode replay uses a fake replay with a `lobby` of test data (`tests/test_replay_regicide.py`, #4835); `mgz` gives the type names (`mgz.reference.get_consts()["game_types"]`).
 - The world of a record with `--scenario FILE` does not start its timer triggers (#5158): the replay clock runs them from aoe2mc.json "timers" (`aoe2mc.timer_list`, `Replay.trigger`). A test of a trigger in a replay puts that list into its `data()`; the triggers that "(De)Activate Trigger" names stay on the server schedule (`aoe2mc.replayed`).
+- A header part that mgz parses with no error can still come from a wrong place: mgz read the lobby of a save 68.9 record as all zeros (#5178). Check the values (population 200, the team lock), not only that the parse ends.

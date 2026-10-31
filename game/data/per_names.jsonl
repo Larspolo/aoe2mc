@@ -67,6 +67,7 @@
 {"name": "cliffbound", "kind": "map-type"}
 {"name": "coastal", "kind": "map-type"}
 {"name": "coastal-forest", "kind": "map-type"}
+{"name": "condottiero-placeholder", "game": "CONDOTTIERO", "kind": "unit"}
 {"name": "continental", "kind": "map-type"}
 {"name": "crater", "kind": "map-type"}
 {"name": "crater-lake", "kind": "map-type"}
@@ -95,6 +96,7 @@
 {"name": "easiest", "game": "easiest", "kind": "difficulty"}
 {"name": "easy", "game": "standard", "kind": "difficulty"}
 {"name": "el-dorado", "kind": "map-type"}
+{"name": "elephant-archer-line", "game": "ELEPHANT_ARCHER", "kind": "unit"}
 {"name": "elite-battle-elephant", "game": "ELITE_BATTLE_ELEPHANT", "kind": "unit", "id": 1134}
 {"name": "elite-cannon-galleon", "game": "ELITE_CANNON_GALLEON", "kind": "unit", "id": 691}
 {"name": "elite-eagle-warrior", "game": "ELITE_EAGLE_WARRIOR", "kind": "unit", "id": 752}
@@ -129,12 +131,15 @@
 {"name": "galley", "game": "GALLEY", "kind": "unit", "id": 539}
 {"name": "galley-line", "game": "GALLEY", "kind": "unit"}
 {"name": "gate", "game": "GATE", "kind": "building", "id": 487}
+{"name": "genitour-line", "game": "GENITOUR", "kind": "unit"}
 {"name": "georgians", "game": "GEORGIANS", "kind": "civ"}
 {"name": "ghost-lake", "kind": "map-type"}
 {"name": "giant", "kind": "map-size", "tiles": 240}
 {"name": "giant-map", "kind": "map-size", "tiles": 240}
 {"name": "glacis", "kind": "map-type"}
 {"name": "glade", "kind": "map-type"}
+{"name": "gold-miner-f", "task": ["GOLD_MINER"], "kind": "unit"}
+{"name": "gold-miner-m", "task": ["GOLD_MINER"], "kind": "unit"}
 {"name": "gold-rush", "kind": "map-type"}
 {"name": "golden-stream", "kind": "map-type"}
 {"name": "golden-swamp", "kind": "map-type"}
@@ -282,6 +287,7 @@
 {"name": "pilgrims", "kind": "map-type"}
 {"name": "poles", "game": "POLES", "kind": "civ"}
 {"name": "portuguese", "game": "PORTUGUESE", "kind": "civ"}
+{"name": "post-imperial", "kind": "age", "age": 4}
 {"name": "post-imperial-age", "kind": "age", "age": 4}
 {"name": "prairie", "kind": "map-type"}
 {"name": "qp-arabia", "kind": "map-type"}
@@ -567,6 +573,7 @@
 {"name": "tiny", "kind": "map-size", "tiles": 120}
 {"name": "tiny-map", "kind": "map-size", "tiles": 120}
 {"name": "town-center", "game": "TOWN_CENTER", "kind": "building", "id": 109}
+{"name": "town-center-foundation", "game": "TOWN_CENTER", "kind": "building"}
 {"name": "trade-cart", "game": "TRADE_CART", "kind": "unit", "id": 128}
 {"name": "trade-cog", "game": "TRADE_COG", "kind": "unit", "id": 17}
 {"name": "transport-ship", "game": "TRANSPORT_SHIP", "kind": "unit", "id": 545}
@@ -779,3 +786,5 @@
 {"name": "attribute-max-dup-missiles", "kind": "attribute", "id": 107}
 {"name": "attribute-garrison-heal-rate", "kind": "attribute", "id": 108}
 {"name": "attribute-regenration-rate", "kind": "attribute", "id": 109}
+{"name": "with-escrow", "kind": "escrow", "id": 1}
+{"name": "without-escrow", "kind": "escrow", "id": 0}

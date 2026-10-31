@@ -333,6 +333,7 @@ EXPLORED_STATE = {"explored-active": 15,                           # airef "Expl
 GUARD_FLAGS = {"guard-flag-inverse": 4,                            # airef "pGuardFlag" (up-compare-flag)
                "guard-flag-resource": 2,
                "guard-flag-victory": 1}
+DROP_CLASSES = {"farm-class": ("food", "FARMER")}                  # up-drop-resources CLASS: (resource, villager task), #5183
 FLARES = ("up-find-flare", "up-find-player-flare", "up-send-flare")   # the flares of the team (#4971)
 UNIT_ORDERS = ("up-delete-objects", "up-garrison", "up-gather-inside", "up-get-guard-state", "up-guard-unit",
                "up-retreat-to", "up-set-attack-stance", "up-ungarrison")   # the orders by type (#4967)
@@ -557,6 +558,17 @@ class Script:
             self.warned.add((what, name))
             print(f"AI script: unknown {what} {name}: skipped", file=sys.stderr)
 
+    def goal_number(self, v):
+        """The number that a goal stores for v (#5181): a goal holds only numbers in AoE2. A name is its airef id
+        (per_names.jsonl: with-escrow 1, a unit, a technology); another name gives one warning and 0."""
+        if not isinstance(v, str):
+            return v
+        row = names().get(v)
+        if row and "id" in row:
+            return row["id"]
+        self.warn("number", v)
+        return 0
+
     def operand(self, kind, ref):
         """The value of ref for a typed prefix: a constant ("" or c:), a goal (g:) or a strategic number (s:, by name or
         id). None, with one warning, for an unknown goal or number."""
@@ -645,6 +657,7 @@ class Script:
         ref = self.operand(kind, ref)
         if ref is None:
             return None
+        ref = self.goal_number(ref)
         sign = 1 if (value < 0) == (ref < 0) else -1                  # the sign of value / ref
         if rel == "=":
             return ref
@@ -1264,13 +1277,15 @@ class Script:
             x = sides.get(b.foe if isinstance(who, str) else who)
             return [x] if x else [], False
         mode, _, kind = who.partition("-")
-        if mode not in ("any", "every") or kind not in ("enemy", "ally", "player", "computer", "human"):
+        kinds = kind.split("-")                                    # any-human-ally: both terms (#5183)
+        if mode not in ("any", "every") or not kinds or len(kinds) > 2 or \
+                not set(kinds) <= {"enemy", "ally", "player", "computer", "human"}:
             return self.warn("player", who) or [], False
         test = {"enemy": lambda x: diplomacy.stance(g, x.player) == "enemy",
                 "ally": lambda x: diplomacy.stance(g, x.player) == "ally",
                 "player": lambda x: True, "computer": lambda x: getattr(x, "share", None) is not None,
-                "human": lambda x: getattr(x, "share", None) is None}[kind]
-        return [x for p, x in sorted(sides.items()) if p != g.player and test(x)], mode == "every"
+                "human": lambda x: getattr(x, "share", None) is None}
+        return [x for p, x in sorted(sides.items()) if p != g.player and all(test[k](x) for k in kinds)], mode == "every"
 
     def players(self, fact, who, args):
         """A fact of the other players: true for one of them (any-, a number) or for all of them (every-)."""
@@ -3002,7 +3017,7 @@ class Script:
         elif name == "acknowledge-event":                              # (acknowledge-event TYPE ID)
             self.table("event").pop(args[1], None)
         elif name == "set-shared-goal":                                # (set-shared-goal ID VALUE)
-            self.table("shared-goal")[args[0]] = args[1]
+            self.table("shared-goal")[args[0]] = self.goal_number(args[1])
         elif name in ("delete-unit", "delete-building"):               # (delete-unit TYPE): one own object
             import demolish
             import stance
@@ -3015,7 +3030,7 @@ class Script:
         elif name == "disable-self":
             self.off.add(k)
         elif name == "set-goal":
-            self.goals[args[0]] = args[1]
+            self.goals[args[0]] = self.goal_number(args[1])
         elif name == "set-strategic-number":
             args = (SN_IDS.get(args[0], args[0]),) + tuple(args[1:])
             if args[0] not in SN:
@@ -3058,7 +3073,7 @@ class Script:
             ref = self.operand(kind, args[1]) if kind else None
             value = self.operand(kind2, args[3]) if kind2 else None
             if ref is not None and value is not None:
-                self.goals[ref] = value
+                self.goals[ref] = self.goal_number(value)
         elif name == "up-modify-flag":                               # (up-modify-flag GOAL OP FLAG): the bits of a goal
             kind, _, rel = args[1].rpartition(":")
             if rel not in ("+", "-") or kind not in ("c", "g", "s"):
@@ -3076,10 +3091,14 @@ class Script:
             for site in [s for s in g.sites if s["name"] == n and not s.get("done")]:
                 b.builder(site)                                        # more builders: the rest go at once (airef)
         elif name in ("up-retask-gatherers", "up-drop-resources"):    # (up-retask-gatherers RES TYPE VALUE)
-            if args[0] not in STOCK:
+            task = DROP_CLASSES.get(args[0]) if name == "up-drop-resources" else None   # airef: also a class (#5183)
+            if args[0] not in STOCK and task is None:
                 return self.warn("resource", args[0])
             if (value := self.typed(args[1], args[2])) is not None:
-                (b.retask if name == "up-retask-gatherers" else b.drop)(args[0], value)
+                if task:
+                    b.drop(task[0], value, task[1])
+                else:
+                    (b.retask if name == "up-retask-gatherers" else b.drop)(args[0], value)
         elif name == "up-modify-sn":                                 # (up-modify-sn SN OP VALUE)
             sn = SN_IDS.get(args[0], args[0])
             if sn not in SN:

@@ -28,6 +28,7 @@ Options:
     --verbose          Print the time of each phase (read, columns, objects, units, chunks, write)
     --scenario N       Campaign: convert only scenario N (1 = the first)
     --scenario FILE    Recorded game: the triggers and texts of the scenario FILE
+    --scenario-dir DIR Recorded game: find the scenario file that the record names in DIR
     --architecture X   Use one architecture set for all players (western, central, mediterranean,
                        middle_eastern, south_asian, african, east_asian, southeast_asian, mesoamerican)
 
@@ -415,6 +416,7 @@ def read_scenario(path):
     from AoE2ScenarioParser.datasets.techs import TechInfo
     from AoE2ScenarioParser.datasets.terrains import TerrainId
     from AoE2ScenarioParser.datasets.trigger_lists import ColorMood, SecondaryGameMode, VictoryCondition
+    from AoE2ScenarioParser.exceptions.asp_exceptions import UnsupportedAttributeError
     from AoE2ScenarioParser.scenarios.aoe2_de_scenario import AoE2DEScenario
 
     with contextlib.redirect_stdout(io.StringIO()):   # the parser prints a lot of status text
@@ -470,8 +472,9 @@ def read_scenario(path):
                          {kinds.get(i, ("?", f"UNKNOWN_{i}"))[1] for i in [*(p.disabled_buildings or ()), *(p.disabled_units or ())]})
             if off:
                 players[p.player_id]["disabled"] = off
-            if p.starting_age.name != "DARK_AGE":   # the starting age: "castle" (setup.jsonl), none in the Dark Age (#3296)
-                players[p.player_id]["age"] = p.starting_age.name[:-4].lower().replace("_", "-")
+            age = getattr(p.starting_age, "name", "DARK_AGE")   # an int the parser does not know: no age (#5175)
+            if age != "DARK_AGE":   # the starting age: "castle" (setup.jsonl), none in the Dark Age (#3296)
+                players[p.player_id]["age"] = age[:-4].lower().replace("_", "-")
         neutral = [i for i, d in enumerate(p.diplomacy or [], 1) if d == 1 and i != p.player_id and i <= 8]
         if p.player_id and neutral:             # the stance neutral (1) of DiplomacyState: no automatic attack (#1645)
             players[p.player_id]["neutral"] = neutral
@@ -518,7 +521,10 @@ def read_scenario(path):
         if om.victory_condition in set(VictoryCondition) else "standard"
     texts["global_victory"] = {"condition": win, **({"score": int(om.victory_score)} if win == "score" else {}),
                               **({"years": int(om.victory_years)} if win == "time-limit" else {})}
-    flags = int(getattr(om, "secondary_game_modes", 0) or 0)          # Empire Wars, Sudden Death ... (#3297)
+    try:                                     # Empire Wars, Sudden Death ... (#3297); since format 1.42 (#5175)
+        flags = int(om.secondary_game_modes or 0)
+    except UnsupportedAttributeError:
+        flags = 0
     if modes := sorted(m.name.lower().replace("_", "-") for m in SecondaryGameMode if m and flags & m):
         texts["global_victory"]["modes"] = modes
 
@@ -562,7 +568,7 @@ def saved_match(path):
     end = int.from_bytes(data[:4], "little") if len(data) >= 8 else 0
     if not 8 < end <= len(data) and raw_deflate(data):  # a DE save: one raw deflate stream, no prefix (#4706)
         end = len(data) + 8                              # the record form: header_length, a zero chapter address
-        data = end.to_bytes(4, "little") + bytes(4) + data   # mgz 1.8.51 fails on save 68.9 at offset 447 (saved-games.md)
+        data = end.to_bytes(4, "little") + bytes(4) + data   # new_saves reads the header of save 68.9 (#5178)
     if not 8 < end <= len(data):
         raise SystemExit(f"{path}: not a saved game of AoE2 DE (no header block)")
     if len(data) < end + 4:
@@ -611,6 +617,34 @@ def read_saved_state(match, state):
             p["resources"] = {r: int(a[i]) for r, i in SAVE_RESOURCES.items()}
             p["age"], p["saved"] = SAVE_AGES[min(max(int(a[SAVE_AGE]), 0), 3)], True
     return state
+
+
+def record_scenario_name(path):
+    """The scenario file name in the header of a record (#5157), "" for a random map game: mgz.model.parse_match
+    reads it but does not keep it, so read the header again (mgz.fast.header)."""
+    try:
+        from mgz.fast.header import parse
+        with open(path, "rb") as f:
+            return _text(parse(f)["scenario"]["scenario_filename"])
+    except Exception:   # an older or a damaged header: no name
+        return ""
+
+
+def _text(v):
+    return (v.decode("latin-1") if isinstance(v, bytes) else str(v or "")).strip("\x00").strip()
+
+
+def find_scenario(directory, name):
+    """--scenario-dir (#5157): the scenario file of the record name in directory (also with .aoe2scenario), else None
+    with one warning line. No name (a random map game): None."""
+    if not name:
+        return None
+    base = os.path.basename(name.replace("\\", "/"))
+    for n in (base, base + ".aoe2scenario"):
+        if os.path.isfile(p := os.path.join(directory, n)):
+            return p
+    print(f"warning: --scenario-dir: no scenario {base!r} in {directory}: the world has no triggers")
+    return None
 
 
 def read_record(path, match=None):
@@ -667,6 +701,7 @@ def read_record(path, match=None):
     if lobby["type"] == "Random Map" and match.players and all(
             any(o["player"] == p.number and o["name"] == "KING" for o in objects) for p in match.players):
         lobby["type"] = "Regicide"
+    lobby["scenario"] = record_scenario_name(path)
     return size, terrain, elevation, terrain_names, {k: "" for k in CHAPTERS} | {"lobby": lobby}, objects, players
 
 
@@ -817,6 +852,39 @@ def new_saves():
         src = src.replace(old, new)
     exec(compile(src, header.__file__, "exec"), header.__dict__)
     header.parse_de.new_saves = True
+    lobby_at_end(header)
+
+
+SAVE_LOBBY_MAP = 60     # the offset of the map size in the lobby block of DE from save 66.3 (mgz parse_lobby)
+SAVE_LOBBY_TAIL = 24    # save 68.9: the bytes after the seed of the lobby, the end of the header (#5178)
+
+
+def lobby_at_end(header):
+    """Save 68.9 has the trigger version 5.0 (mgz finds the triggers only by 4.5 and earlier) and, after the
+    triggers, a block of the XS state with no length (395 813 bytes in both samples; a script changes it). So
+    parse_scenario stops at a wrong place, and parse_lobby reads other bytes: zeros in a record, the end of the data
+    in a save (#5178). The lobby is the last block of the header: find it by its map size, which parse_map of the same
+    header reads first, from the end back; a place counts only when the lobby then ends at the tail of the header."""
+    seen, parse_map, parse_lobby = {}, header.parse_map, header.parse_lobby
+
+    def map_(data, version, save):
+        seen["map"] = m = parse_map(data, version, save)
+        return m
+
+    def lobby(data, version, save):
+        at, buf = data.tell(), data.getvalue()
+        size, hit = struct.pack("<I", seen["map"]["dimension"]) if seen.get("map") else b"", len(buf)
+        while save > 66.6 and size and (hit := buf.rfind(size, at, hit)) >= at + SAVE_LOBBY_MAP:
+            data.seek(hit - SAVE_LOBBY_MAP)
+            try:
+                found = parse_lobby(data, version, save)
+                if data.tell() == len(buf) - SAVE_LOBBY_TAIL:
+                    return found
+            except (struct.error, AssertionError, ValueError):
+                pass
+        data.seek(at)
+        return parse_lobby(data, version, save)
+    header.parse_map, header.parse_lobby = map_, lobby
 
 
 TIMELINE_KEYS = {"building_id": "type", "unit_id": "type", "technology_id": "technology_id", "object_ids": "objects",
@@ -6140,8 +6208,9 @@ def convert(src, out, T=4, H=3, name=None, seed=1, preview=False, arch=None, pla
             barriers=True, mc_version=VERSION_NAME, spawn=None, birds=True, orientation="ne", verbose=False,
             garrison="inside", border_design="diorama", ambience="basic", at=None, mood="on", fog=False,
             resource_pack=False, nplayers=2, teams=None, map_size=None, game_mode="standard", labels=(), together=True,
-            scenario=None):
+            scenario=None, scenario_dir=None):
     """scenario: a recorded game only, a scenario file of the same map size: its triggers and texts (--scenario FILE, #5156).
+    scenario_dir: a recorded game only, the folder with the scenario file that the record names (--scenario-dir, #5157).
     nplayers: the players of a random map script or --random-map (#3944), teams: their teams (#3946). map_size: the
     side in tiles of the map of a random map script (--map-size, #4823). game_mode: the
     game mode of a random map script (rmap.MODE_LABELS, #4824), labels: its other lobby labels (rmap.LOBBY_LABELS, #5017), together: the lobby box "Team Together" (#5050). at: recorded games only, the time in ms (--at): convert the state at that time (apply_timeline).
@@ -6155,7 +6224,7 @@ def convert(src, out, T=4, H=3, name=None, seed=1, preview=False, arch=None, pla
     try:
         _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units, barriers, spawn, birds, orientation,
                  verbose, garrison, border_design, ambience, at, mood, fog, resource_pack, nplayers, teams, map_size, game_mode, labels, together=together,
-                 scenario=scenario)
+                 scenario=scenario, scenario_dir=scenario_dir)
     finally:
         MC = VERSIONS[VERSION_NAME]
         PALETTE_CACHE.clear()
@@ -6179,7 +6248,7 @@ def clear_old_output(out):
 
 def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units, barriers, spawn, birds, orientation,
              verbose, garrison, border_design, ambience, at=None, mood="on", fog=False, resource_pack=False,
-             nplayers=2, teams=None, map_size=None, game_mode="standard", labels=(), together=True, scenario=None):
+             nplayers=2, teams=None, map_size=None, game_mode="standard", labels=(), together=True, scenario=None, scenario_dir=None):
     buildings.BARRIERS = barriers
     buildings.TURN, yaw = ORIENTATIONS[orientation]
     MOVED.clear()           # the counts of an earlier conversion in this process
@@ -6202,6 +6271,8 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
         texts["lobby"] = {"map_size": next((k for k, v in sorted(rmap.MAP_SIZES.items()) if v == size), str(size)),
                           "mode": game_mode, "script": os.path.splitext(os.path.basename(src))[0]}   # map-type (#5102)
     record = src.lower().endswith(RECORDS)
+    if scenario is None and scenario_dir is not None and record:     # the scenario that the record names (#5157)
+        scenario = find_scenario(scenario_dir, texts.get("lobby", {}).get("scenario", ""))
     if scenario is not None:                 # the triggers and texts of a scenario game for its record (#5156)
         if not record:
             raise OptionError("--scenario FILE needs a recorded game (.aoe2record)")
@@ -6610,6 +6681,8 @@ def main(argv=None):
     ap.add_argument("--scenario", dest="only", type=scenario_spec, metavar="N|FILE",
                     help="campaign: convert only scenario N (1 = the first); recorded game: the triggers and texts of "
                     "the scenario FILE of the game (the same map size)")
+    ap.add_argument("--scenario-dir", metavar="DIR", help="recorded game: the folder with the scenario file that the "
+                    "record names; its triggers and texts as with --scenario FILE")
     ap.add_argument("--tile-size", type=int_range(1, 16), default=4, help="blocks per tile (default 4)")
     ap.add_argument("--level-height", type=int_range(1, 16), default=3, help="blocks per elevation level (default 3)")
     ap.add_argument("--name", help="world name in the Minecraft menu")
@@ -6725,7 +6798,7 @@ def main(argv=None):
         elif a.only is not None:
             ap.error("--scenario needs a campaign file (.aoe2campaign, .cpx, .cpn)")
         else:
-            convert(a.scenario, a.output, name=a.name, at=a.at, **kw)
+            convert(a.scenario, a.output, name=a.name, at=a.at, scenario_dir=a.scenario_dir, **kw)
     except (OptionError, CampaignError) as e:
         ap.error(str(e))
 
