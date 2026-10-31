@@ -13,5 +13,5 @@ def check(row):
     games = {"civ": NAMES["civs.jsonl"], "difficulty": NAMES["difficulty.jsonl"]}.get(row["kind"], NAMES["train.jsonl"] | NAMES["build.jsonl"])
     assert "game" not in row or row["game"] in games, row["name"]
     assert ("tiles" in row) == (row["kind"] == "map-size"), row["name"]
-    assert ("age" in row) == (row["kind"] == "age") and ("game" in row or row["kind"] in ("age", "attribute", "effect", "map-size", "map-type", "terrain")
+    assert ("age" in row) == (row["kind"] == "age") and ("game" in row or row["kind"] in ("age", "attribute", "effect", "escrow", "map-size", "map-type", "terrain")
                                                         or "civ" in row or "set" in row or "task" in row), row["name"]
