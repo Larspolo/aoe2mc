@@ -353,7 +353,7 @@ class Bot:
 
     def staff(self):
         """The villager count that the allies ask for with taunts (#4882, AoE2): 33 raises it by EXTRA, 32 stops at the
-        villagers present and queued, 70 deletes the villagers above it (stance.delete). Own counter (staffed): give() reads them too."""
+        villagers present and queued, 70 deletes the villagers above it (stance.delete_units). Own counter (staffed): give() reads them too."""
         import diplomacy
         import stance
         g = self.g
@@ -369,9 +369,7 @@ class Bot:
                     self.villagers = len(g.villagers) + sum(e["name"] == "VILLAGER_MALE" for q in g.queues.values()
                                                             for e in q)
                 elif n == 70 and len(g.villagers) > self.villagers:
-                    keep, g.selected = g.selected, set(sorted(g.villagers)[self.villagers:])
-                    stance.delete(g)
-                    g.selected = keep - set(g.selected)
+                    stance.delete_units(g, sorted(g.villagers)[self.villagers:])
 
     def give(self):
         """The tributes that the allies ask for with taunts (#4830, AoE2): 38 and 58 "extra" (the stock over reserve()),
@@ -729,7 +727,7 @@ class Bot:
         return sorted(u for u, n in self.g.soldiers.items() if n in dock)
 
     def scuttle(self):
-        """Taunt 71: kill the warships above FLEET with their boats, as the AoE2 Delete key (stance.delete)."""
+        """Taunt 71: kill the warships above FLEET with their boats, as the AoE2 Delete key (stance.delete_units)."""
         for u in self.warships()[FLEET:]:
             self.g.command(f"execute as {u} on vehicle run kill @s")
             self.g.command(f"kill {u}")
