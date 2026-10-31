@@ -802,10 +802,17 @@ class Replay:
         return "garrisoned" if any(i in ids for ids in [*self.garrisons.values(), *self.cargo.values()]) else "idle"
 
     def eye(self, name):
-        """(eye, direction) of player name, or None (gather.Gather.look)."""
+        """(eye, direction) of player name, or None (gather.Gather.look). --camera player (#5413): a spectator that
+        looks through the camera entity (/spectate) keeps its own Pos and Rotation, so read those of the entity; the
+        eye of a display entity is at its Pos (eye height 0)."""
         g = self.gather.Gather
         me = types.SimpleNamespace(command=self.game.command)
         me.pos = lambda n: g.pos(me, n)
+        if self.glide is not None and (self.game.command(
+                f"data get entity {name} playerGameType") or "").rsplit(":", 1)[-1].strip() == "3":   # spectator
+            cam = f"@e[type=item_display,tag={CAMERA_ENTITY},limit=1]"
+            seen = g.look(me, cam)
+            return seen and ((seen[0][0], seen[0][1] - 1.62, seen[0][2]), seen[1])
         return g.look(me, name)
 
     def team(self, p):
