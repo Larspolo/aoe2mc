@@ -173,7 +173,7 @@
 {"name": "portuguese", "game": "PORTUGUESE", "kind": "civ"}
 {"name": "post-imperial-age", "kind": "age", "age": 4}
 {"name": "ratha-set", "set": ["ELITE_RATHA", "RATHA"], "kind": "unit"}
-{"name": "relic-class", "set": ["RELIC"], "kind": "unit"}
+{"name": "relic-class", "set": [], "kind": "unit"}
 {"name": "ri-arbalester", "game": "ARBALESTER_UPGRADE", "kind": "tech"}
 {"name": "ri-architecture", "game": "ARCHITECTURE", "kind": "tech", "id": 51}
 {"name": "ri-arrowslits", "game": "ARROWSLITS", "kind": "tech", "id": 608}

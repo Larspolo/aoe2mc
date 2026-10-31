@@ -8,4 +8,4 @@ def check(row):
     n = row["name"]
     assert row["kind"] in ("class", "projectile") and n == n.lower() and row["id"] >= 0, n
     assert sum(k in row for k in ("armor", "units", "buildings", "building", "any")) == 1, n
-    assert set(row.get("buildings", ())) <= NAMES["buildings.jsonl"] and set(row.get("units", ())) <= NAMES["units.jsonl"], n
+    assert set(row.get("buildings", ())) <= NAMES["buildings.jsonl"] | NAMES["build.jsonl"] and set(row.get("units", ())) <= NAMES["units.jsonl"], n
