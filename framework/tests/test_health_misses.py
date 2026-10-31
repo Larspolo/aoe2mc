@@ -21,7 +21,7 @@ def test_an_owner_ticket_for_the_system_is_a_miss():
               issue(1806, "## Goal\nEach ticket number ...", ("tooling",)),               # agent, local session
               issue(1950, "Add a cheat code", ("feature",)),                                 # owner, not the system
               issue(1600, "Old", created="2026-10-26T10:00:00Z"),                          # before the period
-              issue(1951, "A comment", login="someone")]
+              issue(1951, "A comment", login=health.OWNER + "-other")]
     assert health.misses(issues, SINCE) == [1864, 1909]
     text = health.report(SINCE, [], [], [], [], [], [], issues=issues)
     assert "Misses (owner tickets for the system, improve step 0): 2 (#1864, #1909)" in text
