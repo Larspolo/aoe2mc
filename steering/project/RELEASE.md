@@ -52,6 +52,7 @@ Bug reserve: 0.3
 | `convert:rms-standard` | C | 6 | | |
 | `convert:saved-games` | C | 6 | | |
 | `convert:rms-lobby` | C | 4 | | |
+| `convert:export` | C | 6 | | |
 | `convert:resource-pack` | C | | | |
 | `convert:trigger-gaps` | C | | | |
 | `convert-check-maps` | B | 5 | A test set of 20 real maps (the ranked map pool, 3 campaigns, 2 old .scx scenarios) converts with no error, no unit in a block and no load error on a server | #2274 |
@@ -132,6 +133,7 @@ Bug reserve: 0.3
 | `play:xs-scripts` | C | 10 | | |
 | `play:tutorial` | C | 5 | | |
 | `play:ratings` | C | 4 | | |
+| `play:achievements` | C | 4 | | |
 | `play-check-game` | B | 5 | An agent plays a full game against the bot with a script, from the Dark Age to a win or a loss (about 30 minutes): no server error, no stuck unit | #3324 |
 | `play-check-speed` | B | 2 | With 200 units of each player, the server keeps 20 ticks per second | #3325 |
 | `play-check-kit` | B | 2 | A play-test kit: how to start and join, the controls, how to report a bug | #3326 |
