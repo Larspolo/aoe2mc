@@ -1588,10 +1588,11 @@ class Script:
         point = name == "up-target-point"
         if point and action in ("action-default", "action-guard", "action-follow", "action-garrison"):
             action = "action-move"                                 # airef: the same as action-move for a point
-        old, who = g.selected, b.nobody
+        old, who = set(g.selected), b.nobody         # the selection of the player stays
         try:
             for (key, cell), group in self.groups(units, targets) if units else [(targets[0], [])]:
-                g.selected = set(group)
+                g.selected.clear()
+                g.selected.update(group)
                 own = key is not None and self.where_own(key)
                 if mood:
                     for u in group:
@@ -1627,7 +1628,8 @@ class Script:
                 else:
                     return self.warn("action", f"{name} {action}") or False
         finally:
-            g.selected = old
+            g.selected.clear()
+            g.selected.update(old)
         return True
 
     def where_own(self, key):
