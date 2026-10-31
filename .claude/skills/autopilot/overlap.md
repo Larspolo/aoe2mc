@@ -37,6 +37,10 @@ decides: bots keep the PR of a stopped run busy (#2160 and #2161 stayed red for 
 Take over the first ticket (`python3 framework/tools/claim.py N --takeover`, then comment "Taken over by `<your branch>`: stuck.").
 Exit 1 there: another run was first, take the next line. With a PR: fix it at step 6.8. With no PR: do the ticket
 from step 6 (start from its branch when it has one). That is the work of this cycle.
+A ticket whose PR only waits for its quick CI or for Automerge gets no line (`pacer.ci_wait`). A line
+`PR #M waits for the owner (no agent branch, no label automerge)`: a green PR that Automerge never merges. Do not take it
+over: add `needs-human` and a comment that asks the owner to add the label `automerge` to PR #M or to merge it, then
+`python3 framework/tools/claim.py N --release` (#5331).
 
 ## The flow brake
 
