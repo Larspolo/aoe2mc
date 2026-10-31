@@ -332,6 +332,27 @@ class Bot:
                 continue
             self.builder(build.found(g, n, rect))
 
+    def delete_at(self, x, reach=2):
+        """Taunt 69 (#4891, AoE2): delete the own building, site or unit nearest to the last live flare of the ally x,
+        within reach tiles (demolish.delete, stance.delete_units). Nothing there: nothing happens."""
+        import demolish
+        import ruins
+        import stance
+        g = self.g
+        live = [f for f in getattr(x, "flares", []) if f[3] > x.clock()]
+        if not live:
+            return
+        fx, fz, T = live[-1][0], live[-1][2], g.map.T
+        rects = [*ruins.own(g).values(), *(tuple(s["footprint"]) for s in g.sites if s.get("player", g.player) == g.player
+                                           and s.get("progress", 1) < 1 and not s.get("done"))]
+        near = [(math.dist((fx, fz), (min(max(fx, r[0]), r[1]), min(max(fz, r[2]), r[3]))), 0, r) for r in rects]
+        units = sorted({*g.villagers, *g.soldiers})
+        near += [(math.dist((fx, fz), (p[0], p[2])), 1, u) for u, p in g.positions(units).items()] if units else []
+        near = sorted((d, k, str(o), o) for d, k, o in near if d <= reach * T)
+        if near:
+            _, k, _, o = near[0]
+            demolish.delete(g, f"@a[team=p{g.player}]", o) if k == 0 else stance.delete_units(g, [o])
+
     def retreat(self):
         """The soldiers of the wave stop and walk back to the town center (taunt 45)."""
         g, c = self.g, self.center()
@@ -398,6 +419,12 @@ class Bot:
                     self.navy = False
                 elif n == 71:
                     self.scuttle()
+                elif n == 69:                                            # delete at the flare of the ally (#4891)
+                    self.delete_at(x)
+                elif n == 103:                                           # no tree cutting in combat.py yet (#4891)
+                    has = any(v.startswith("ONAGER") or v == "SIEGE_ONAGER" for v in g.soldiers.values())
+                    g.command(f"tellraw @a[team=p{x.player}] " + json.dumps({"text": f"<Player {g.player}> " + (
+                        "My onagers cannot cut trees." if has else "I have no onager."), "color": "gray"}))
                 elif n in BUILD_AT:                                      # build at the flare of the ally (#4889)
                     self.build_at(x, BUILD_AT[n])
                 elif n in (56, 57):                                      # train counter units, stop (#4885)
