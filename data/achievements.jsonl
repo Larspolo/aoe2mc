@@ -1,0 +1,63 @@
+{"name": "FAMILY_FEUDAL", "title": "Family Feudal", "description": "Advance to the Feudal Age.", "icon": "minecraft:iron_sword", "parent": "root", "event": "age FEUDAL_AGE"}
+{"name": "AGE_OF_EMPIRES", "title": "Age of Empires", "description": "Win a game with every civilization.", "icon": "minecraft:nether_star", "parent": "root", "event": "win all"}
+{"name": "AZTEC_VICTORY", "title": "Aztec Victory", "description": "Win a game playing as the Aztecs.", "icon": "minecraft:white_banner", "parent": "AGE_OF_EMPIRES", "event": "win AZTECS"}
+{"name": "BERBERS_VICTORY", "title": "Berber Victory", "description": "Win a game playing as the Berbers.", "icon": "minecraft:white_banner", "parent": "AGE_OF_EMPIRES", "event": "win BERBERS"}
+{"name": "BRITONS_VICTORY", "title": "Briton Victory", "description": "Win a game playing as the Britons.", "icon": "minecraft:white_banner", "parent": "AGE_OF_EMPIRES", "event": "win BRITONS"}
+{"name": "BULGARIANS_VICTORY", "title": "Bulgarian Victory", "description": "Win a game playing as the Bulgarians.", "icon": "minecraft:white_banner", "parent": "AGE_OF_EMPIRES", "event": "win BULGARIANS"}
+{"name": "BURMESE_VICTORY", "title": "Burmese Victory", "description": "Win a game playing as the Burmese.", "icon": "minecraft:white_banner", "parent": "AGE_OF_EMPIRES", "event": "win BURMESE"}
+{"name": "BYZANTINES_VICTORY", "title": "Byzantine Victory", "description": "Win a game playing as the Byzantines.", "icon": "minecraft:white_banner", "parent": "AGE_OF_EMPIRES", "event": "win BYZANTINES"}
+{"name": "CELTS_VICTORY", "title": "Celtic Victory", "description": "Win a game playing as the Celts.", "icon": "minecraft:white_banner", "parent": "AGE_OF_EMPIRES", "event": "win CELTS"}
+{"name": "CHINESE_VICTORY", "title": "Chinese Victory", "description": "Win a game playing as the Chinese.", "icon": "minecraft:white_banner", "parent": "AGE_OF_EMPIRES", "event": "win CHINESE"}
+{"name": "CUMANS_VICTORY", "title": "Cuman Victory", "description": "Win a game playing as the Cumans.", "icon": "minecraft:white_banner", "parent": "AGE_OF_EMPIRES", "event": "win CUMANS"}
+{"name": "ETHIOPIANS_VICTORY", "title": "Ethiopian Victory", "description": "Win a game playing as the Ethiopians.", "icon": "minecraft:white_banner", "parent": "AGE_OF_EMPIRES", "event": "win ETHIOPIANS"}
+{"name": "FRANKS_VICTORY", "title": "Frankish Victory", "description": "Win a game playing as the Franks.", "icon": "minecraft:white_banner", "parent": "AGE_OF_EMPIRES", "event": "win FRANKS"}
+{"name": "GOTHS_VICTORY", "title": "Gothic Victory", "description": "Win a game playing as the Goths.", "icon": "minecraft:white_banner", "parent": "AGE_OF_EMPIRES", "event": "win GOTHS"}
+{"name": "HUNS_VICTORY", "title": "Hunnic Victory", "description": "Win a game playing as the Huns.", "icon": "minecraft:white_banner", "parent": "AGE_OF_EMPIRES", "event": "win HUNS"}
+{"name": "INCAS_VICTORY", "title": "Inca Victory", "description": "Win a game playing as the Incas.", "icon": "minecraft:white_banner", "parent": "AGE_OF_EMPIRES", "event": "win INCAS"}
+{"name": "ITALIANS_VICTORY", "title": "Italian Victory", "description": "Win a game playing as the Italians.", "icon": "minecraft:white_banner", "parent": "AGE_OF_EMPIRES", "event": "win ITALIANS"}
+{"name": "JAPANESE_VICTORY", "title": "Japanese Victory", "description": "Win a game playing as the Japanese.", "icon": "minecraft:white_banner", "parent": "AGE_OF_EMPIRES", "event": "win JAPANESE"}
+{"name": "KHMER_VICTORY", "title": "Khmer Victory", "description": "Win a game playing as the Khmer.", "icon": "minecraft:white_banner", "parent": "AGE_OF_EMPIRES", "event": "win KHMER"}
+{"name": "KOREANS_VICTORY", "title": "Korean Victory", "description": "Win a game playing as the Koreans.", "icon": "minecraft:white_banner", "parent": "AGE_OF_EMPIRES", "event": "win KOREANS"}
+{"name": "MAGYARS_VICTORY", "title": "Magyar Victory", "description": "Win a game playing as the Magyars.", "icon": "minecraft:white_banner", "parent": "AGE_OF_EMPIRES", "event": "win MAGYARS"}
+{"name": "MALAY_VICTORY", "title": "Malay Victory", "description": "Win a game playing as the Malay.", "icon": "minecraft:white_banner", "parent": "AGE_OF_EMPIRES", "event": "win MALAY"}
+{"name": "MALIANS_VICTORY", "title": "Malian Victory", "description": "Win a game playing as the Malians.", "icon": "minecraft:white_banner", "parent": "AGE_OF_EMPIRES", "event": "win MALIANS"}
+{"name": "MAYANS_VICTORY", "title": "Mayan Victory", "description": "Win a game playing as the Mayans.", "icon": "minecraft:white_banner", "parent": "AGE_OF_EMPIRES", "event": "win MAYANS"}
+{"name": "MONGOLS_VICTORY", "title": "Mongol Victory", "description": "Win a game playing as the Mongols.", "icon": "minecraft:white_banner", "parent": "AGE_OF_EMPIRES", "event": "win MONGOLS"}
+{"name": "PERSIANS_VICTORY", "title": "Persian Victory", "description": "Win a game playing as the Persians.", "icon": "minecraft:white_banner", "parent": "AGE_OF_EMPIRES", "event": "win PERSIANS"}
+{"name": "PORTUGUESE_VICTORY", "title": "Portuguese Victory", "description": "Win a game playing as the Portuguese.", "icon": "minecraft:white_banner", "parent": "AGE_OF_EMPIRES", "event": "win PORTUGUESE"}
+{"name": "SARACENS_VICTORY", "title": "Saracen Victory", "description": "Win a game playing as the Saracens.", "icon": "minecraft:white_banner", "parent": "AGE_OF_EMPIRES", "event": "win SARACENS"}
+{"name": "SLAVS_VICTORY", "title": "Slavic Victory", "description": "Win a game playing as the Slavs.", "icon": "minecraft:white_banner", "parent": "AGE_OF_EMPIRES", "event": "win SLAVS"}
+{"name": "SPANISH_VICTORY", "title": "Spanish Victory", "description": "Win a game playing as the Spanish.", "icon": "minecraft:white_banner", "parent": "AGE_OF_EMPIRES", "event": "win SPANISH"}
+{"name": "TATARS_VICTORY", "title": "Tatar Victory", "description": "Win a game playing as the Tatars.", "icon": "minecraft:white_banner", "parent": "AGE_OF_EMPIRES", "event": "win TATARS"}
+{"name": "TEUTONS_VICTORY", "title": "Teutonic Victory", "description": "Win a game playing as the Teutons.", "icon": "minecraft:white_banner", "parent": "AGE_OF_EMPIRES", "event": "win TEUTONS"}
+{"name": "TURKS_VICTORY", "title": "Turkish Victory", "description": "Win a game playing as the Turks.", "icon": "minecraft:white_banner", "parent": "AGE_OF_EMPIRES", "event": "win TURKS"}
+{"name": "VIETNAMESE_VICTORY", "title": "Vietnamese Victory", "description": "Win a game playing as the Vietnamese.", "icon": "minecraft:white_banner", "parent": "AGE_OF_EMPIRES", "event": "win VIETNAMESE"}
+{"name": "VIKINGS_VICTORY", "title": "Viking Victory", "description": "Win a game playing as the Vikings.", "icon": "minecraft:white_banner", "parent": "AGE_OF_EMPIRES", "event": "win VIKINGS"}
+{"name": "LITHUANIANS_VICTORY", "title": "Lithuanian Victory", "description": "Win a game playing as the Lithuanians.", "icon": "minecraft:white_banner", "parent": "AGE_OF_EMPIRES", "event": "win LITHUANIANS"}
+{"name": "BURGUNDIANS_VICTORY", "title": "Burgundian Victory", "description": "Win a game playing as the Burgundians.", "icon": "minecraft:white_banner", "parent": "AGE_OF_EMPIRES", "event": "win BURGUNDIANS"}
+{"name": "SICILIANS_VICTORY", "title": "Sicilian Victory", "description": "Win a game playing as the Sicilians.", "icon": "minecraft:white_banner", "parent": "AGE_OF_EMPIRES", "event": "win SICILIANS"}
+{"name": "BOHEMIANS_VICTORY", "title": "Bohemian Victory", "description": "Win a game playing as the Bohemians.", "icon": "minecraft:white_banner", "parent": "AGE_OF_EMPIRES", "event": "win BOHEMIANS"}
+{"name": "POLES_VICTORY", "title": "Polish Victory", "description": "Win a game playing as the Poles.", "icon": "minecraft:white_banner", "parent": "AGE_OF_EMPIRES", "event": "win POLES"}
+{"name": "BENGALIS_VICTORY", "title": "Bengali Victory", "description": "Win a game playing as the Bengalis.", "icon": "minecraft:white_banner", "parent": "AGE_OF_EMPIRES", "event": "win BENGALIS"}
+{"name": "DRAVIDIANS_VICTORY", "title": "Dravidian Victory", "description": "Win a game playing as the Dravidians.", "icon": "minecraft:white_banner", "parent": "AGE_OF_EMPIRES", "event": "win DRAVIDIANS"}
+{"name": "GURJARAS_VICTORY", "title": "Gurjara Victory", "description": "Win a game playing as the Gurjaras.", "icon": "minecraft:white_banner", "parent": "AGE_OF_EMPIRES", "event": "win GURJARAS"}
+{"name": "ROMAN_VICTORY", "title": "Roman Victory", "description": "Win a game as the Romans.", "icon": "minecraft:white_banner", "parent": "AGE_OF_EMPIRES", "event": "win ROMANS"}
+{"name": "ARMENIANS_VICTORY", "title": "Armenian Victory", "description": "Win a game playing as the Armenians.", "icon": "minecraft:white_banner", "parent": "AGE_OF_EMPIRES", "event": "win ARMENIANS"}
+{"name": "GEORGIANS_VICTORY", "title": "Georgian Victory", "description": "Win a game playing as the Georgians.", "icon": "minecraft:white_banner", "parent": "AGE_OF_EMPIRES", "event": "win GEORGIANS"}
+{"name": "ACHAEMENIDS_VICTORY", "title": "Achaemenid Victory", "description": "Win a game playing as the Achaemenid in Chronicles: Battle for Greece.", "icon": "minecraft:white_banner", "parent": "AGE_OF_EMPIRES", "event": "win ACHAEMENIDS"}
+{"name": "ATHENIANS_VICTORY", "title": "Athenian Victory", "description": "Win a game playing as the Athenians in Chronicles: Battle for Greece.", "icon": "minecraft:white_banner", "parent": "AGE_OF_EMPIRES", "event": "win ATHENIANS"}
+{"name": "SPARTANS_VICTORY", "title": "Spartan Victory", "description": "Win a game playing as the Spartans in Chronicles: Battle for Greece.", "icon": "minecraft:white_banner", "parent": "AGE_OF_EMPIRES", "event": "win SPARTANS"}
+{"name": "WEI_VICTORY", "title": "Wei Victory", "description": "Win a game playing as the Wei.", "icon": "minecraft:white_banner", "parent": "AGE_OF_EMPIRES", "event": "win WEI"}
+{"name": "SHU_VICTORY", "title": "Shu Victory", "description": "Win a game playing as the Shu.", "icon": "minecraft:white_banner", "parent": "AGE_OF_EMPIRES", "event": "win SHU"}
+{"name": "WU_VICTORY", "title": "Wu Victory", "description": "Win a game playing as the Wu.", "icon": "minecraft:white_banner", "parent": "AGE_OF_EMPIRES", "event": "win WU"}
+{"name": "JURCHENS_VICTORY", "title": "Jurchens Victory", "description": "Win a game playing as the Jurchens.", "icon": "minecraft:white_banner", "parent": "AGE_OF_EMPIRES", "event": "win JURCHENS"}
+{"name": "KHITANS_VICTORY", "title": "Khitans Victory", "description": "Win a game playing as the Khitans.", "icon": "minecraft:white_banner", "parent": "AGE_OF_EMPIRES", "event": "win KHITANS"}
+{"name": "MACEDONIAN_VICTORY", "title": "Macedonian Victory (Chronicles)", "description": "Win a game playing as the Macedonians in Chronicles: Alexander the Great.", "icon": "minecraft:white_banner", "parent": "AGE_OF_EMPIRES", "event": "win MACEDONIANS"}
+{"name": "THRACIAN_VICTORY", "title": "Thracian Victory", "description": "Win a game playing as the Thracians.", "icon": "minecraft:white_banner", "parent": "AGE_OF_EMPIRES", "event": "win THRACIANS"}
+{"name": "PURU_VICTORY", "title": "Puru Victory", "description": "Win a game playing as the Puru.", "icon": "minecraft:white_banner", "parent": "AGE_OF_EMPIRES", "event": "win PURU"}
+{"name": "MAPUCHE_VICTORY", "title": "Mapuche Victory", "description": "Win a game playing as the Mapuche.", "icon": "minecraft:white_banner", "parent": "AGE_OF_EMPIRES", "event": "win MAPUCHE"}
+{"name": "MUISCA_VICTORY", "title": "Muisca Victory", "description": "Win a game playing as the Muisca.", "icon": "minecraft:white_banner", "parent": "AGE_OF_EMPIRES", "event": "win MUISCA"}
+{"name": "TUPI_VICTORY", "title": "Tupi Victory", "description": "Win a game playing as the Tupi.", "icon": "minecraft:white_banner", "parent": "AGE_OF_EMPIRES", "event": "win TUPI"}
+{"name": "SAXONS_VICTORY", "title": "Saxons Victory", "description": "Win a game playing as the Saxons.", "icon": "minecraft:white_banner", "parent": "AGE_OF_EMPIRES", "event": "win SAXONS"}
+{"name": "VARANGIANS_VICTORY", "title": "Varangians Victory", "description": "Win a game playing as the Varangians.", "icon": "minecraft:white_banner", "parent": "AGE_OF_EMPIRES", "event": "win VARANGIANS"}
+{"name": "DANES_VICTORY", "title": "Danes Victory", "description": "Win a game playing as the Danes.", "icon": "minecraft:white_banner", "parent": "AGE_OF_EMPIRES", "event": "win DANES"}
