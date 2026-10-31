@@ -51,6 +51,8 @@ def test_tick_steps(monkeypatch):
     monkeypatch.setattr(tutorial, "STEPS", steps)
     ready = set()
     monkeypatch.setattr(tutorial, "done", lambda g, row: row["name"] in ready)
+    import cheats
+    monkeypatch.setattr(cheats, "over", lambda g, won: None)
     g = fake()
     tutorial.tick(g)
     assert g.tutorial_step == 0 and any('"A"' in c for c in g.sent)
