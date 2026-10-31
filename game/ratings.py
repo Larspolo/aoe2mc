@@ -73,8 +73,6 @@ def announce(g, changes):
     """The chat shows each change, for example "Steve 1000 → 1016"."""
     for name, old, new in changes:
         g.command("tellraw @a " + json.dumps({"text": f"{name} {round(old)} → {round(new)}"}, ensure_ascii=False))
-    if changes:
-        tab(g)
 
 
 def lore(name, table=None):
