@@ -558,6 +558,17 @@ class Script:
             self.warned.add((what, name))
             print(f"AI script: unknown {what} {name}: skipped", file=sys.stderr)
 
+    def goal_number(self, v):
+        """The number that a goal stores for v (#5181): a goal holds only numbers in AoE2. A name is its airef id
+        (per_names.jsonl: with-escrow 1, a unit, a technology); another name gives one warning and 0."""
+        if not isinstance(v, str):
+            return v
+        row = names().get(v)
+        if row and "id" in row:
+            return row["id"]
+        self.warn("number", v)
+        return 0
+
     def operand(self, kind, ref):
         """The value of ref for a typed prefix: a constant ("" or c:), a goal (g:) or a strategic number (s:, by name or
         id). None, with one warning, for an unknown goal or number."""
@@ -646,6 +657,7 @@ class Script:
         ref = self.operand(kind, ref)
         if ref is None:
             return None
+        ref = self.goal_number(ref)
         sign = 1 if (value < 0) == (ref < 0) else -1                  # the sign of value / ref
         if rel == "=":
             return ref
@@ -3005,7 +3017,7 @@ class Script:
         elif name == "acknowledge-event":                              # (acknowledge-event TYPE ID)
             self.table("event").pop(args[1], None)
         elif name == "set-shared-goal":                                # (set-shared-goal ID VALUE)
-            self.table("shared-goal")[args[0]] = args[1]
+            self.table("shared-goal")[args[0]] = self.goal_number(args[1])
         elif name in ("delete-unit", "delete-building"):               # (delete-unit TYPE): one own object
             import demolish
             import stance
@@ -3018,7 +3030,7 @@ class Script:
         elif name == "disable-self":
             self.off.add(k)
         elif name == "set-goal":
-            self.goals[args[0]] = args[1]
+            self.goals[args[0]] = self.goal_number(args[1])
         elif name == "set-strategic-number":
             args = (SN_IDS.get(args[0], args[0]),) + tuple(args[1:])
             if args[0] not in SN:
@@ -3061,7 +3073,7 @@ class Script:
             ref = self.operand(kind, args[1]) if kind else None
             value = self.operand(kind2, args[3]) if kind2 else None
             if ref is not None and value is not None:
-                self.goals[ref] = value
+                self.goals[ref] = self.goal_number(value)
         elif name == "up-modify-flag":                               # (up-modify-flag GOAL OP FLAG): the bits of a goal
             kind, _, rel = args[1].rpartition(":")
             if rel not in ("+", "-") or kind not in ("c", "g", "s"):
