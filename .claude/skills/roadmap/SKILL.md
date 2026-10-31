@@ -55,6 +55,8 @@ no merged PR, at the merged count, at least 1: `claim.ROADMAP_IDLE`), after step
    the keys of the list (#4268: `play:unique-techs` of #4096 with 34 sub-issues was not counted).
 2. Compare each goal with AoE2 DE and with the code: what does a player see or do in AoE2 that the converter, the
    game program or the replay cannot do yet? Add at most 5 missing features, each with a new key and one line.
+   Before you add one, grep the open issues for its topic (all tickets, also `after-release` and `muted`, not only
+   epics): a ticket that covers it goes into the line as `(#N)` (#5290: #4198 of the owner held the export).
 3. Keep the order: the features that the next features need come first.
 4. Give each new feature a row in `steering/project/RELEASE.md` (milestone C, unless the owner says otherwise), and correct the
    estimates there. Do not remove an estimate: `release.py` takes the larger of the estimate and the sub-issues of
