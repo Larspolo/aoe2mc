@@ -569,7 +569,7 @@ def elevate(section, terrain, layer, owner, starts, consts, rng, warn):
         under = (layer == value(attrs["base_layer"][0], consts)) if "base_layer" in attrs else terrain == on
         free = under & ~is_wet(terrain) & (elevation == 0)
         if (s := value(attrs["spacing_to_other_terrain_types"][0], consts)
-                if "spacing_to_other_terrain_types" in attrs else 0):     # N tiles from a tile of another kind
+                if attrs.get("spacing_to_other_terrain_types") else 0):     # no number: 0, the DE default (Moats, #5174); N tiles from a tile of another kind
             free &= ~dilate(~under, s)
         clump = value(attrs["clumping_factor"][0], consts) if "clumping_factor" in attrs else 8
         clumps, total = scaled(attrs, consts, n, value(attrs["number_of_clumps"][0], consts)
@@ -842,7 +842,7 @@ def generate(text, seed, players=2, size=None, warn=None, teams=None, folder=Non
                     flat &= p[dy:dy + n, dx:dx + n] == elevation
             free &= flat
         if (s := value(attrs["spacing_to_other_terrain_types"][0], consts)
-                if "spacing_to_other_terrain_types" in attrs else 0):
+                if attrs.get("spacing_to_other_terrain_types") else 0):
             free &= ~dilate(terrain != on, s)
         if "spacing_to_specific_terrain" in attrs:          # N tiles from terrain T
             t, s = (value(v, consts) for v in attrs["spacing_to_specific_terrain"][:2])

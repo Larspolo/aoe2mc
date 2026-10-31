@@ -84,7 +84,7 @@ A lever with no number is a measurement gap: lever 10.
 | 9 | Owner chores | `needs-human` tickets about the environment; owner PRs that paste, test hosts, set secrets; `Runs held by GitHub` and `started again by hand` | any step that the owner did twice | One file to paste; a check that names exactly what is missing; a workflow or an API that does the step | #1964, #3614, #4181 |
 | 10 | Measurement gaps | A lever of this table with no number | any | Add the number to `framework/tools/health.py`, `framework/tools/tokens.py` or the pacer log first | #3819, #3970, #4171 |
 | 11 | Quality | Rework, reopened tickets, bugs of check tickets, red night runs | rework above 5 % of the merged PRs | A check in the `verify` skill or CI; a rule from owner feedback; a fix of the flaky test | - |
-| 12 | Waste of runs | Runs that merge nothing, idle starts, lost claims, takeovers; `Pacer loop gaps` (no runs start) | above 5 % of the runs, or a pacer gap above 1 h | Rules of the pacer (`framework/tools/usage.py`) and of the claims (`framework/tools/claim.py`) | #3147, #4173 |
+| 12 | Waste of runs | Runs that merge nothing, idle starts, lost claims, takeovers; `Pacer loop gaps` (no runs start); `Idle queue` (target > 0, no claim, no start, #5199) | above 5 % of the runs, a pacer gap above 1 h, or an idle stretch above 1 h | Rules of the pacer (`framework/tools/usage.py`) and of the claims (`framework/tools/claim.py`) | #3147, #4173 |
 
 The threshold also counts a loss that comes back with its full cost: its quota, the takeovers that it causes, and
 the rule lines that it added to `CLAUDE.md` and `docs/LEARNINGS.md` (each run loads them in each turn).
