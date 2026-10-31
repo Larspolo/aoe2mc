@@ -113,6 +113,7 @@
 {"name": "fast-fire-ship", "game": "FAST_FIRE_SHIP", "kind": "unit", "id": 532}
 {"name": "feitoria", "game": "FEITORIA", "kind": "building", "id": 1021}
 {"name": "feudal-age", "game": "FEUDAL_AGE", "kind": "age", "age": 1, "id": 101}
+{"name": "feudal-battering-ram", "game": "BATTERING_RAM", "kind": "unit", "id": 1258}
 {"name": "fire-galley", "game": "FIRE_GALLEY", "kind": "unit", "id": 1103}
 {"name": "fire-ship", "game": "FIRE_SHIP", "kind": "unit", "id": 529}
 {"name": "fire-ship-line", "game": "FIRE_GALLEY", "kind": "unit"}
@@ -170,6 +171,7 @@
 {"name": "huge-map", "kind": "map-size", "tiles": 252}
 {"name": "hun", "game": "HUNS", "kind": "civ"}
 {"name": "huns", "game": "HUNS", "kind": "civ"}
+{"name": "huskarl", "game": "HUSKARL", "kind": "unit", "id": 759}
 {"name": "huskarl-set", "set": ["ELITE_HUSKARL", "HUSKARL"], "kind": "unit"}
 {"name": "hussar", "game": "HUSSAR", "kind": "unit", "id": 441}
 {"name": "idle-type-fishing-ship", "game": "FISHING_SHIP", "kind": "idle"}
@@ -579,6 +581,7 @@
 {"name": "transport-ship", "game": "TRANSPORT_SHIP", "kind": "unit", "id": 545}
 {"name": "trebuchet", "game": "TREBUCHET", "kind": "unit", "id": 331}
 {"name": "trebuchet-set", "set": ["TREBUCHET"], "kind": "unit"}
+{"name": "trebuchet-unpacked", "game": "TREBUCHET", "kind": "unit", "id": 42}
 {"name": "turkish", "game": "TURKS", "kind": "civ"}
 {"name": "turks", "game": "TURKS", "kind": "civ"}
 {"name": "turtle-ship", "game": "TURTLE_SHIP", "kind": "unit", "id": 831}
