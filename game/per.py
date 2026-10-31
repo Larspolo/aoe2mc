@@ -386,6 +386,7 @@ class Script:
         self.aged = {}                                             # player -> (ages, AoE2 second of the last age up)
         self.warned = set()
         self.sn = {}                                               # strategic number name -> value (#4530)
+        self.difficulty = {}                                       # difficulty parameter name -> value (#5049)
         self.attacking = False                                     # attack-now ran: the bot may attack
         self.escrow, self.pct = {}, {}                             # resource -> escrow; -> escrow percentage (#4682)
         self.last = None                                           # the stock after the last step: new income
@@ -2651,6 +2652,8 @@ class Script:
                 self.goals[args[1]] = v
         elif name in FLARES:
             self.flares(name, args)
+        elif name == "set-difficulty-parameter":                     # (set-difficulty-parameter NAME VALUE): kept only; no unit dodges or keeps distance yet (#5049)
+            self.difficulty[args[0]] = args[1]
         elif name == "acknowledge-taunt":                            # (acknowledge-taunt PLAYER TAUNT)
             self.heard.discard((args[0], args[1]))
         elif name == "resign":                                       # (resign): the bot is out, as the cheat (#3105)
