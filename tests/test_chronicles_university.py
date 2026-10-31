@@ -36,7 +36,8 @@ def test_the_university_menu_has_them_in_their_age():
 def test_each_one_makes_the_live_and_the_new_ships_faster():
     server, g = imperial()
     g.soldiers["boat"] = "GALLEY"                                      # a live ship
-    g.stock.update(food=300, wood=200)
+    # enough for both techs, from the data (the costs change with the game data)
+    g.stock.update({k: sum(train.COSTS[n].get(k, 0) for n in ("CLINKER_CONSTRUCTION", "CARVEL_HULL")) for k in ("food", "wood", "gold")})
     before = {n: fleet.speed(n, g.map.T, g) for n in ("GALLEY", "TRANSPORT_SHIP", "TRADE_COG", "FISHING_SHIP")}
     rect = train.open_menu(g, "Steve", (8, 18))
     slot = train.layout(g, rect)["CLINKER_CONSTRUCTION"][0]
