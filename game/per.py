@@ -911,7 +911,9 @@ class Script:
         kind = name                                                # (map-type TYPE), (map-size SIZE)
         if row is None or row["kind"] != kind:
             return self.warn(kind, args[0]) or False
-        return args[0] == (map_size(g.data) if kind == "map-size" else "scenario-map")
+        if kind == "map-size":                                     # two names of one size both match (#5101)
+            return row["tiles"] == names()[map_size(g.data)]["tiles"]
+        return args[0] == "scenario-map"
 
     def player_fact(self, name, who):
         """(player-human PLAYER) and the other facts of PLAYER_FACTS: true for one (any-, a number) or all (every-)."""
