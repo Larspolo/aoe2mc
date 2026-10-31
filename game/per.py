@@ -188,6 +188,7 @@ def read(path, defined=()):
 NAMES = {}                                                         # script name -> its line of per_names.jsonl
 OPS = {"<": operator.lt, "<=": operator.le, ">": operator.gt, ">=": operator.ge, "==": operator.eq, "!=": operator.ne}
 MATH = ("=", "+", "-", "*", "/", "z/", "mod", "min", "max", "neg", "%*", "%/")   # airef "mathOp" (up-modify-*)
+RULE_CHECKS = 10000                     # the rule checks of one pass: a loop with no end stops there (airef RuleDelta)
 VICTORY_TYPES = {                  # run.py --victory: the airef VictoryType; one per line, in alphabetical order
     "conquest": 1,
     "last-man-standing": 1,
@@ -270,6 +271,7 @@ class Script:
         self.unplaced = set()                                      # the buildings of build with no free site (#4870)
         self.text, self.name = "", None                            # the text buffer of up-store-*; up-change-name (#4877)
         self.heard, self.read = set(), {}                          # (player, taunt) not acknowledged; player -> read
+        self.jump = None                                           # the rule after the actions of this rule (up-jump-*)
         self.cost_at = None                                        # the first goal of the current cost set (#4879)
 
     def number(self, name):
@@ -399,6 +401,14 @@ class Script:
             return (1 if value >= 0 else -1) * (abs(value) % abs(ref))
         return sign * (abs(value * 100) // abs(ref))                   # %/
 
+    def jump_to(self, kind, ref):
+        """The rule number of a jump (up-jump-direct, up-jump-dynamic): operand(kind, ref), or None with one warning for
+        an unknown kind."""
+        kind = kind.rstrip(":")
+        if kind not in ("", "c", "g", "s"):
+            return self.warn("operator", kind)
+        return self.operand(kind, ref)
+
     def game(self, name, *kinds):
         """The name of the game program of a script name of one of kinds, or None (one warning)."""
         row = names().get(name)
@@ -423,13 +433,24 @@ class Script:
         return n if n in names else None
 
     def step(self):
-        """Check the facts of each rule that is not disabled and run the actions of each rule whose facts are true."""
+        """Check the facts of each rule that is not disabled and run the actions of each rule whose facts are true. A jump
+        (up-jump-*) goes to another rule of the pass; a pass of more than RULE_CHECKS checks stops (a loop with no end)."""
         self.income()
         self.hear()
-        for k, rule in enumerate(self.rules):
+        k, checks = 0, 0
+        while 0 <= k < len(self.rules):
+            checks += 1
+            if checks > RULE_CHECKS:
+                if ("rule loop", "") not in self.warned:
+                    self.warned.add(("rule loop", ""))
+                    print(f"AI script: a loop of rules has no end: the pass stops after {RULE_CHECKS} checks", file=sys.stderr)
+                break
+            rule = self.rules[k]
+            self.jump = k + 1
             if k not in self.off and all(self.check(f) for f in rule.facts):
                 for a in rule.actions:
                     self.act(k, a)
+            k = self.jump
         self.last = dict(self.bot.g.stock)
 
     def income(self):
@@ -1075,6 +1096,18 @@ class Script:
             new = self.math(args[1], self.number(sn), args[2])
             if new is not None:
                 self.sn[sn] = new
+        elif name == "up-jump-rule":                                 # (up-jump-rule DELTA): the rule k + 1 + DELTA
+            self.jump = k + 1 + args[0]
+        elif name == "up-jump-direct":                               # (up-jump-direct TYPE ID): the rule ID (from 0)
+            n = self.jump_to(args[0], args[1])
+            if n is not None:
+                self.jump = n
+        elif name == "up-jump-dynamic":                              # (up-jump-dynamic TYPE DELTA): k + 1 + DELTA
+            n = self.jump_to(args[0], args[1])
+            if n is not None:
+                self.jump = k + 1 + n
+        elif name == "up-get-rule-id":                               # (up-get-rule-id GOAL): the rule k of the goal
+            self.goals[args[0]] = k
         elif name == "set-escrow-percentage":                    # (set-escrow-percentage RESOURCE PCT)
             if args[0] not in STOCK:
                 return self.warn("resource", args[0])
