@@ -160,6 +160,23 @@ def body_start(data):
     return p
 
 
+def inflate(data, start):
+    """The body: raw deflate from start. Some DE base scenarios of random maps (#5211) have a header with fields that
+    body_start does not know: then take the first offset after start where the rest is one full deflate stream."""
+    try:
+        return zlib.decompress(data[start:], -15)
+    except zlib.error as first:
+        for p in range(start + 1, min(len(data), start + 4096)):
+            d = zlib.decompressobj(-15)
+            try:
+                out = d.decompress(data[p:])
+            except zlib.error:
+                continue
+            if d.eof and not d.unused_data and len(out) > 64:
+                return out
+        raise first
+
+
 def scenario_players(s, civs):
     """The scenario player data: {player: {civ, color, view}} of the players with a civilization."""
     players = {0: {"civ": "GAIA", "color": None, "view": None}}
@@ -192,7 +209,7 @@ def read(path):
         raise ScxError(f"{path}: scenario format {fmt.decode('latin-1')!r} is not supported "
                        f"(this reader knows {', '.join(sorted(f.decode() for f in FORMATS))})")
     try:
-        s = Stream(zlib.decompress(data[body_start(data):], -15))
+        s = Stream(inflate(data, body_start(data)))
     except zlib.error as e:
         raise ScxError(f"{path}: the compressed part does not decompress ({e})") from None
     s.i32()                                 # next object ID
