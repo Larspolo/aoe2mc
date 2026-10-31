@@ -164,6 +164,7 @@ SETTINGS = (                                                           # run.py 
     "teams",
     "treaty",
     "turbo",
+    "tutorial",
     "unlock_speed",
     "unlock_teams",
     "victory",
@@ -248,6 +249,8 @@ NOT_SAVED = (                                                          # the fie
     "tech_state_at",                                                   # scenario.py: the next check time
     "tech_state_sent",                                                 # scenario.tech_states: a load sends them again
     "trade_sent",                                                      # scenario.trading: a load sends them again
+    "tutorial",                                                        # run.py: from the saved settings
+    "tutorial_step",                                                   # tutorial.py: a load starts the tutorial again (#5161)
     "unit_aura_time",                                                  # regen.py: a tick timer of the monk aura (#4366)
     "unlock_speed",                                                    # run.py: from the saved settings
     "unselectable",                                                    # scenario.selection: the world keeps the tags, the next check reads them
