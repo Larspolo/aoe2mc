@@ -31,7 +31,7 @@ def joinable(o):
 
 def tick(g):
     """Look each EVERY seconds which player has units near each Gaia unit, and give it to that player."""
-    if not g.paper:
+    if not getattr(g, "paper", False):                             # a test Gather of the run loop
         return
     state = vars(g).setdefault("gaia", {"at": None})
     now = g.clock()
