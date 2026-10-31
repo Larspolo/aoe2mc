@@ -34,7 +34,7 @@ def test_taunt_31_of_an_ally_attacks_now_and_36_waits(monkeypatch):
     assert not fights
     taunt(me, 31)
     step(b)
-    assert len(fights) == 1 and sum(f"<Player {b.g.player}>" in c for c in said) == 1
+    assert len(fights) == 1 and len(said) == 1          # one answer line (answer(), #4829)
     taunt(me, 36)
     b.attack = 0                                           # its own attack time is over: it still waits
     step(b)
@@ -48,7 +48,7 @@ def test_taunt_31_of_an_enemy_does_nothing(monkeypatch):
     me, b, fights, said = setup(monkeypatch, ally=False)
     taunt(me, 31)
     step(b)
-    assert not fights and not any("<Player" in c for c in said)
+    assert not fights and not said
 
 
 def test_taunt_63_sets_the_foe_to_an_enemy_only(monkeypatch):
