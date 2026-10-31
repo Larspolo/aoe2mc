@@ -442,6 +442,13 @@ def inside(land, c, rng=None):
     return rng is not None and land.get("fuzz", 100) < 100 and rng.uniform() < (1 - land["fuzz"] / 100) ** d
 
 
+def spot(box, n, rng):
+    """A random tile inside the box; a full box draws as before, so that the maps of other scripts stay the same."""
+    if box == (0, n, 0, n):
+        return tuple(int(v) for v in rng.integers(0, n, 2))
+    return int(rng.integers(box[0], max(box[0] + 1, box[1]))), int(rng.integers(box[2], max(box[2] + 1, box[3])))
+
+
 def near(c, n):
     return [(c[0] + dx, c[1] + dy) for dx, dy in STEPS if 0 <= c[0] + dx < n and 0 <= c[1] + dy < n]
 
@@ -788,12 +795,12 @@ def generate(text, seed, players=2, size=None, warn=None, teams=None, folder=Non
                 if "land_position" in attrs:
                     c = tuple(min(n - 1, value(v, consts) * n // 100) for v in attrs["land_position"][:2])
                 else:
-                    c = tuple(int(v) for v in rng.integers(0, n, 2))
+                    c = spot(box, n, rng)               # the origin inside the borders (#5423)
                     far = value(attrs["min_placement_distance"][0], consts) if "min_placement_distance" in attrs else 0
                     for _ in range(100):                # draw again until the origins before it are far enough (#4421)
                         if all(np.hypot(c[0] - o[0][0], c[1] - o[0][1]) >= far for o in links):
                             break
-                        c = tuple(int(v) for v in rng.integers(0, n, 2))
+                        c = spot(box, n, rng)
                 p = owner_of(attrs, consts, starts, players, teams)
                 if p:                                       # direct_placement: the land of player p (#3947)
                     starts.append({"player": p, "x": c[0], "y": c[1], "base_size": base, "land": len(lands)})
