@@ -198,7 +198,8 @@ VICTORY_TYPES = {                  # run.py --victory: the airef VictoryType; on
     "standard": 0,
     "time-limit": 2,
 }
-GET_FACT = ("up-get-fact", "up-get-fact-max", "up-get-fact-min", "up-get-fact-sum", "up-get-player-fact")
+GET_FACT = ("up-get-fact", "up-get-fact-max", "up-get-fact-min", "up-get-fact-sum", "up-get-player-fact",
+            "up-get-focus-fact", "up-get-target-fact")   # the last two: the focus and the target player (#4973)
 COST_ACTIONS = ("up-setup-cost-data", "up-reset-cost-data", "up-add-cost-data", "up-add-object-cost",
                 "up-add-research-cost", "up-get-cost-delta")
 COST_GOODS = ("food", "wood", "stone", "gold")   # a cost set is 4 goals in a row, in this order (airef "Cost data", #4879)
@@ -230,6 +231,16 @@ SHARED = ("up-get-event", "up-get-shared-goal", "up-get-signal", "up-set-event",
 POINTS = ("up-add-point", "up-bound-point", "up-bound-precise-point", "up-copy-point", "up-cross-tiles",   # #4956
           "up-get-point", "up-get-point-distance", "up-lerp-percent", "up-lerp-tiles", "up-set-precise-target-point",
           "up-set-target-point")
+MAP_FACTS = {"up-get-point-elevation": "elevation",              # the map at a point (#4962): command -> map_value kind
+             "up-get-point-terrain": "terrain",
+             "up-get-point-zone": "zone",
+             "up-point-elevation": "elevation",
+             "up-point-explored": "explored",
+             "up-point-terrain": "terrain",
+             "up-point-zone": "zone"}
+EXPLORED_STATE = {"explored-active": 15,                           # airef "ExploredState" (up-point-explored)
+                  "explored-no": 0,
+                  "explored-yes": 128}
 FLARES = ("up-find-flare", "up-find-player-flare", "up-send-flare")   # the flares of the team (#4971)
 UP_QUEUE = {"up-build": "build", "up-research": "research", "up-train": "train"}
 ORDERS = ("up-delete-distant-farms", "up-delete-idle-units", "up-reset-attack-now", "up-reset-building",
@@ -241,6 +252,10 @@ FIND_METHODS = {"find-attacker": 0,                                # airef "Find
                 "find-closest": 2,
                 "find-ordered": 3,
                 "find-random": 1}
+GROUPS = ("up-create-group", "up-disband-group-type", "up-get-group-size", "up-group-size", "up-modify-group-flag",
+          "up-reset-group", "up-set-group")                       # the search groups (#4961)
+GROUP_IDS = range(20)                                              # airef "GroupId": 0 to 19
+GROUP_MAX = 40                                                     # airef up-create-group: at most 40 objects
 RESEARCH_STATE = {"research-available": 1,                         # airef "ResearchState" (up-research-status)
                   "research-complete": 3,
                   "research-pending": 2,
@@ -262,6 +277,16 @@ RESOURCE_IDS = {"food": 0,                                         # airef "Reso
                 "gold": 3,
                 "stone": 2,
                 "wood": 1}
+OBJECT_DATA = ("up-get-object-data", "up-get-object-target-data", "up-get-object-type-data", "up-get-upgrade-id",   # #4959
+               "up-object-data", "up-object-target-data", "up-remove-objects", "up-store-object-name")
+OBJECT_DATA_ROWS = {r["name"]: r for r in table.load("per_object_data.jsonl")}   # airef "ObjectData"
+OBJECT_VALUES = ("attack-stance", "base-attack", "garrisoned", "hitpoints", "id", "index", "maxhp", "pierce-armor",
+                 "player", "point-x", "point-y", "range", "status", "strike-armor", "type", "upgrade-type")
+STANCE_IDS = {"aggressive": 0, "defensive": 1, "stand_ground": 2, "no_attack": 3}   # airef "AttackStance"
+TYPE_IDS = {}                                                      # game name -> the AoE2 id (the first line wins)
+for _r in table.load("per_names.jsonl"):
+    if "id" in _r and "game" in _r and _r["kind"] in ("unit", "building"):
+        TYPE_IDS.setdefault(_r["game"], _r["id"])
 SEARCH_MAX = {1: 240, 2: 40}                                       # the results of each list (airef "SearchSource")
 SEARCH_ORDER = {"search-order-asc": 1,                             # airef "SearchOrder" (up-clean-search)
                 "search-order-desc": 2,
@@ -325,6 +350,8 @@ class Script:
         self.filters = {}                                          # filter -> value; none set: all -1 (up-reset-filters)
         self.target = None                                         # the id of the target object
         self.point = None                                          # (x, y) tiles of up-set-target-point (#4956)
+        self.groups, self.flags = {}, {}                           # group id -> object ids; object id -> group flag
+        self.grids = {}                                            # the map grids of map_value (#4962)
 
     def number(self, name):
         return self.sn.get(name, SN[name])
@@ -539,6 +566,10 @@ class Script:
         if name in ("up-modify-goal", "up-modify-sn"):             # a command as a fact: it runs, and is true
             self.act(None, (name, *args))
             return True
+        if name in MAP_FACTS:                                      # (up-point-terrain POINT REL VALUE)
+            v = self.map_value(MAP_FACTS[name], self.pair(args[0]))
+            ref = EXPLORED_STATE.get(args[2], args[2]) if name == "up-point-explored" else args[2]
+            return v is not None and self.compare(args[1], v, ref)
         if name == "up-point-distance":                            # (up-point-distance P1 P2 REL VALUE)
             d = self.point_distance(args[0], args[1])
             return d is not None and self.compare(args[2], d, args[3])
@@ -649,8 +680,12 @@ class Script:
             return self.compare(args[0], len(self.bot.guards) + len(self.bot.defense), args[1])
         if name == "up-idle-unit-count":                           # (up-idle-unit-count IDLE-TYPE REL VALUE)
             return self.idle_count(args[0], args[1], args[2])
+        if name in GROUPS:
+            return bool(self.group_command(name, args))
         if name in SEARCH:                                         # a find or a target as a fact: true when it did
             return bool(self.search_command(name, args))
+        if name in OBJECT_DATA:
+            return bool(self.object_command(name, args))
         if name in SETUP:
             return self.setup(name, args)
         if name.startswith("players-"):                            # (players-FACT PLAYER ...): the other players
@@ -754,6 +789,9 @@ class Script:
     def get_fact(self, name, args):
         """up-get-fact, up-get-player-fact and up-get-fact-min, -max, -sum: the value of a fact into a goal (#4868). An
         unknown fact or player gives one warning and leaves the goal. As a fact it is true (airef "Fact/Action")."""
+        if name in ("up-get-focus-fact", "up-get-target-fact"):      # (up-get-focus-fact FACT PARAM GOAL)
+            who = "focus-player" if name == "up-get-focus-fact" else "target-player"
+            return self.get_fact("up-get-player-fact", (who, *args))
         if name == "up-get-fact":
             xs, (fact, param, goal) = [self.bot.g], args
         else:
@@ -879,8 +917,8 @@ class Script:
         g, b = self.bot.g, self.bot
         sides = {x.player: x for x in build.sides(g)}
         sides[g.player] = g
-        if isinstance(who, int) or who == "focus-player":
-            x = sides.get(b.foe if who == "focus-player" else who)
+        if isinstance(who, int) or who in ("focus-player", "target-player"):   # the bot's target is the foe's
+            x = sides.get(b.foe if isinstance(who, str) else who)
             return [x] if x else [], False
         mode, _, kind = who.partition("-")
         if mode not in ("any", "every") or kind not in ("enemy", "ally", "player", "computer", "human"):
@@ -981,6 +1019,70 @@ class Script:
     def point_distance(self, a, b):
         p, q = self.pair(a), self.pair(b)
         return None if p is None or q is None else int(math.dist(p, q))
+
+    def grid(self, key):
+        """The tile grid key ("terrain" or "elevation") of aoe2mc.json as rows of numbers (#4962). An old world without
+        it: the terrain of Map.wet (1 water, 0 grass) and the elevation 0, with one warning."""
+        if key not in self.grids:
+            d = self.bot.g.data
+            if key in d:
+                self.grids[key] = [[int(v) for v in row.split()] for row in d[key]]
+            else:
+                self.warn("map data (an old world)", key)
+                n = self.tiles()
+                self.grids[key] = [[int(self.wet_tile(x, y)) * (key == "terrain") for x in range(n)] for y in range(n)]
+        return self.grids[key]
+
+    def wet_tile(self, x, y):
+        m = self.bot.g.map
+        return m.wet(x * m.T + m.T // 2, y * m.T + m.T // 2)
+
+    def zones(self):
+        """The zone of each tile (#4962): the connected land or water areas (4 sides), numbered 1, 2, ... in the order
+        of their first tile (row by row), as the map zones of AoE2."""
+        if "zone" not in self.grids:
+            n = self.tiles()
+            wet = [[self.wet_tile(x, y) for x in range(n)] for y in range(n)]
+            out = [[0] * n for _ in range(n)]
+            k = 0
+            for y0 in range(n):
+                for x0 in range(n):
+                    if out[y0][x0]:
+                        continue
+                    k += 1
+                    out[y0][x0], todo = k, [(x0, y0)]
+                    while todo:
+                        x, y = todo.pop()
+                        for a, b in ((x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)):
+                            if 0 <= a < n and 0 <= b < n and not out[b][a] and wet[b][a] == wet[y0][x0]:
+                                out[b][a] = k
+                                todo.append((a, b))
+            self.grids["zone"] = out
+        return self.grids["zone"]
+
+    def explored(self, p):
+        """airef "ExploredState" of tile p for the team of the bot: 15 in sight now (Gather.seen_tiles, fog.revealed),
+        128 seen before (the explored tiles of game/fog.py), else 0."""
+        import fog
+        g = self.bot.g
+        if getattr(g, "reveal", "normal") == "all":
+            return 15
+        state = vars(g).setdefault("fog", {"hidden": set(), "at": None})
+        known = state.setdefault("explored", set())
+        if p in g.seen_tiles() | fog.revealed(g):
+            known.add(p)
+            return 15
+        return 128 if p in known or getattr(g, "reveal", "normal") == "explored" else 0
+
+    def map_value(self, kind, p):
+        """The terrain ID, elevation, zone or explored state of tile p (a point), or None (no point or off the map)."""
+        n = self.tiles()
+        if p is None or not (0 <= p[0] < n and 0 <= p[1] < n):
+            return None
+        x, y = int(p[0]), int(p[1])
+        if kind == "explored":
+            return self.explored((x, y))
+        return (self.zones() if kind == "zone" else self.grid(kind))[y][x]
 
     def send_scout(self, group, method):
         """Walk the land scouts (stance.SCOUT_NAMES, at most sn-total-number-explorers) to the tile of an airef
@@ -1749,6 +1851,153 @@ class Script:
         self.target = st["found"][ref]
         return True
 
+    def group(self, gid):
+        """The ids of search group gid that stand: a dead object leaves its group (and its flag)."""
+        live = {r[0] for r in self.objects(self.bot.g)}
+        self.flags = {o: f for o, f in self.flags.items() if o in live}
+        ids = self.groups[gid] = [o for o in self.groups.get(gid, []) if o in live]
+        return ids
+
+    def group_command(self, name, args):
+        """The search groups of direct unit control (airef, #4961). up-create-group INDEX-GOAL COUNT-GOAL TYPE GROUP:
+        up to COUNT (0: GROUP_MAX) local results from INDEX; up-set-group SOURCE TYPE GROUP: the group into the results
+        of SOURCE; up-modify-group-flag OPTION TYPE GROUP: object-data-group-flag of its objects (1 sets, 0 removes);
+        up-disband-group-type GROUP-TYPE: the internal groups of the bot. The fact up-group-size: the size REL VALUE."""
+        if name == "up-disband-group-type":
+            return self.disband(args[0])
+        lead = 2 if name == "up-create-group" else 1 if name in ("up-set-group", "up-modify-group-flag") else 0
+        kind = self.type_kind(args[lead])
+        gid = self.operand(kind, args[lead + 1]) if kind else None
+        if gid is None:
+            return False
+        if gid not in GROUP_IDS:
+            return self.warn("group", gid) or False
+        if name == "up-group-size":                                # (up-group-size TYPE GROUP REL VALUE)
+            return self.compare(args[2], len(self.group(gid)), args[3])
+        if name == "up-get-group-size":                            # (up-get-group-size TYPE GROUP GOAL)
+            self.goals[args[2]] = len(self.group(gid))
+        elif name == "up-reset-group":
+            self.groups.pop(gid, None)
+        elif name == "up-create-group":                            # the group is reset first
+            start, count = self.goals.get(args[0], 0) if args[0] else 0, self.goals.get(args[1], 0) if args[1] else 0
+            live = {r[0] for r in self.objects(self.bot.g)}
+            found = [o for o in self.search[1]["found"][max(start, 0):] if o in live]
+            self.groups[gid] = found[:min(count, GROUP_MAX) if count > 0 else GROUP_MAX]
+        elif name == "up-set-group":
+            src = SEARCH_SOURCE.get(args[0], args[0])
+            if src not in SEARCH_MAX:
+                return self.warn("search source", args[0]) or False
+            st = self.search[src]
+            st["found"], st["last"] = self.group(gid)[:SEARCH_MAX[src]], 0
+        elif name == "up-modify-group-flag":
+            for o in self.group(gid):
+                if args[0]:
+                    self.flags[o] = gid
+                elif self.flags.get(o) == gid:
+                    del self.flags[o]
+        return True
+
+    def disband(self, kind):
+        """up-disband-group-type: the units of the internal groups of a type stop and leave them. The bot has the land
+        attack group (its wave, Bot.fight) and the land explore group (the scouts of up-send-scout); another type: one
+        warning."""
+        b = self.bot
+        g = b.g
+        if kind == "group-type-land-attack":
+            units, b.wave, b.targets, b.charged = sorted(getattr(b, "wave", ())), set(), {}, False
+        elif kind == "group-type-land-explore":
+            units, self.scouts = self.scouts, []
+        else:
+            return self.warn("group type", kind) or False
+        for u in units:
+            g.command(f"aoe stop {u}")
+        g.new_order(units)
+        return True
+
+    def object_command(self, name, args):
+        """The data of the target object (airef "DUC", #4959): up-get-object-data DATA GOAL, up-object-data DATA REL
+        VALUE, the same of the target of the target (-target-), up-remove-objects SOURCE DATA REL VALUE,
+        up-get-object-type-data TYPE ID DATA GOAL, up-get-upgrade-id PLAYER OPTION GOAL OUTPUT, up-store-object-name.
+        A data name with no value in the game program gives -1 and one warning. The result: true (a fact)."""
+        if name == "up-store-object-name":
+            row = self.find_object(self.target)
+            self.text = next((n for n, r in names().items() if row and r.get("game") == row[2]), "")
+            return True
+        if name == "up-get-upgrade-id":                            # the type that the upgrades of the player make
+            own = args[0] in (self.bot.g.player, "my-player-number")
+            x = [self.bot.g] if own else self.sides(args[0])[0][:1]
+            unit = self.game(OBJECT_IDS.get(self.goals.get(args[2], -1), ""), "unit")
+            self.goals[args[3]] = TYPE_IDS.get(self.upgraded(x[0], unit), -1) if x and isinstance(unit, str) else -1
+            return True
+        if name == "up-get-object-type-data":
+            sn = self.named(args[0], args[1])
+            unit = sn and self.game(sn, "unit", "building")
+            self.goals[args[3]] = self.type_value(unit, args[2]) if isinstance(unit, str) else -1
+            return True
+        if name == "up-remove-objects":
+            src = SEARCH_SOURCE.get(args[0], args[0])
+            if src not in SEARCH_MAX:
+                return self.warn("search source", args[0]) or False
+            st = self.search[src]
+            st["found"] = [oid for i, oid in enumerate(st["found"])
+                           if not self.compare(args[2], i if self.data_name(args[1]) == "index" else
+                                               self.object_value(oid, args[1]), args[3])]
+            return True
+        oid = self.target if "-target-" not in name else self.warn("object target", "the target of an object")
+        if name.startswith("up-get-"):
+            self.goals[args[1]] = self.object_value(oid, args[0])
+            return True
+        return self.compare(args[1], self.object_value(oid, args[0]), args[2])
+
+    def data_name(self, data):
+        """The OBJECT_VALUES name of an ObjectData (a name or its id), or None with one warning."""
+        row = OBJECT_DATA_ROWS.get(data) or next((r for r in OBJECT_DATA_ROWS.values() if r["id"] == data), None)
+        return row["value"] if row and "value" in row else self.warn("object data", data)
+
+    def find_object(self, oid):
+        """(Gather, key, game name, status) of the standing object with id oid, or None."""
+        import build
+        g = self.bot.g
+        for x in [g, *(x for x in build.sides(g) if x is not g)]:
+            for i, key, n, st in self.objects(x):
+                if i == oid:
+                    return x, key, n, st
+        return None
+
+    def type_value(self, unit, data):
+        """A value of the type of an object (combat.stats), -1 when the game program has none."""
+        import combat
+        s, v = combat.stats(unit), self.data_name(data)
+        return {"type": TYPE_IDS.get(unit, -1), "maxhp": s.hp, "range": s.range, "base-attack": s.attack,
+                "strike-armor": s.melee, "pierce-armor": s.pierce}.get(v, -1)
+
+    def object_value(self, oid, data):
+        """A value of the object with id oid (airef "ObjectData"); -1 for no object or no value."""
+        import garrison
+        import stance
+        v, row = self.data_name(data), self.find_object(oid)
+        if v is None or row is None:
+            return -1
+        x, key, unit, st = row
+        if v in ("point-x", "point-y", "hitpoints"):
+            if v == "hitpoints":
+                hp = self.bot.hp(key)
+                return -1 if hp is None else math.ceil(hp)
+            p = x.positions([key]).get(key)
+            return -1 if p is None else int(p[0 if v == "point-x" else 2] // x.map.T)
+        if v == "upgrade-type":
+            return TYPE_IDS.get(self.upgraded(x, unit), -1)
+        return {"id": oid, "player": x.player, "status": st, "garrisoned": int(key in garrison.inside(x)),
+                "attack-stance": STANCE_IDS.get(stance.stance(x, key), 0)}.get(v, self.type_value(unit, data))
+
+    def upgraded(self, x, unit):
+        """The unit that the upgrades of the Gather x make of unit (train.lines of the researched UPGRADES)."""
+        import train
+        new = {old: n for t in train.UPGRADES if t in x.techs for old, n in train.lines(t, x)}
+        for _ in train.UPGRADES:
+            unit = new.get(unit, unit)
+        return unit
+
     def act(self, k, a):
         import build
         import train
@@ -1807,6 +2056,15 @@ class Script:
             if args[0] not in SN:
                 return self.warn("strategic number", args[0])
             self.sn[args[0]] = args[1]
+        elif name == "up-get-precise-time":                          # (up-get-precise-time START GOAL): ms since START
+            self.goals[args[1]] = int(b.time * 1000) - self.goals.get(args[0], 0)
+        elif name == "up-get-player-color":                          # (up-get-player-color PLAYER GOAL): the ID, the name as text
+            import aoe2mc
+            p = {"my-player-number": g.player, "focus-player": b.foe}.get(args[0], args[0])
+            if p is not None:
+                col = g.players.get(str(p), {}).get("color") or aoe2mc.player_color(p)
+                self.goals[args[1]] = aoe2mc.PLAYER_COLORS.index(col) if col in aoe2mc.PLAYER_COLORS else 0
+                self.text = col
         elif name in GET_FACT:
             self.get_fact(name, args)
         elif name in COST_ACTIONS:
@@ -1903,6 +2161,10 @@ class Script:
             self.order(name, args)
         elif name in SEARCH:
             self.search_command(name, args)
+        elif name in GROUPS:
+            self.group_command(name, args)
+        elif name in OBJECT_DATA:
+            self.object_command(name, args)
         elif name == "enable-timer":
             self.timers[args[0]] = b.time + args[1]
         elif name == "disable-timer":
@@ -1970,6 +2232,9 @@ class Script:
             self.scouts = []
         elif name in POINTS:
             self.points(name, args)
+        elif name in MAP_FACTS:                                      # (up-get-point-terrain POINT GOAL)
+            if (v := self.map_value(MAP_FACTS[name], self.pair(args[0]))) is not None:
+                self.goals[args[1]] = v
         elif name in FLARES:
             self.flares(name, args)
         elif name == "acknowledge-taunt":                            # (acknowledge-taunt PLAYER TAUNT)
