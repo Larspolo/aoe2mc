@@ -34,7 +34,7 @@
 {"name": "34", "text": "Build a navy."}
 {"name": "35", "text": "Stop building a navy."}
 {"name": "36", "text": "Wait for my signal to attack.", "answer": "I will wait for your signal."}
-{"name": "37", "text": "Build a wonder."}
+{"name": "37", "text": "Build a wonder.", "wait": "We build a wonder when we reach the Imperial Age."}
 {"name": "38", "text": "Give me your extra resources."}
 {"name": "39", "text": "(Ally sound)"}
 {"name": "40", "text": "(Enemy sound)"}
@@ -69,9 +69,9 @@
 {"name": "69", "text": "Delete the object on the flared location."}
 {"name": "70", "text": "Delete your excess villagers."}
 {"name": "71", "text": "Delete excess warships."}
-{"name": "72", "text": "Focus on training infantry units."}
-{"name": "73", "text": "Focus on training cavalry units."}
-{"name": "74", "text": "Focus on training ranged units."}
+{"name": "72", "text": "Focus on training infantry units.", "focus": "BARRACKS", "answer": "Training infantry units now."}
+{"name": "73", "text": "Focus on training cavalry units.", "focus": "STABLE", "answer": "Training cavalry units now."}
+{"name": "74", "text": "Focus on training ranged units.", "focus": "ARCHERY_RANGE", "answer": "Training ranged units now."}
 {"name": "75", "text": "Focus on training warships."}
 {"name": "76", "text": "Attack the enemy with Militia."}
 {"name": "77", "text": "Attack the enemy with Archers."}
