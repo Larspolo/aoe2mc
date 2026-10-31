@@ -36,7 +36,7 @@
 {"name": "amount-razings", "id": 43}
 {"name": "amount-kill-ratio", "id": 44}
 {"name": "amount-player-killed", "id": 45}
-{"name": "amount-tribute-inefficiency", "id": 46}
+{"name": "amount-tribute-inefficiency", "id": 46, "source": "tribute-inefficiency"}
 {"name": "amount-gold-bonus", "id": 47}
 {"name": "amount-town-center-unavailable", "id": 48}
 {"name": "amount-gold-counter", "id": 49}
