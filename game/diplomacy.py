@@ -217,6 +217,8 @@ def send(g, player, n, res):
     market.add(g, res, -cost(g, LOT))
     if (r := receiver(g, n)) is not None:
         market.add(r, res, LOT)
+        memory = vars(r).setdefault("tribute_from", {})            # an AI script reads it: per.py players-tribute
+        memory[(g.player, res)] = memory.get((g.player, res), 0) + LOT
     else:
         tributes = vars(g).setdefault("tributes", {})
         tributes.setdefault(n, dict.fromkeys(RESOURCES, 0))[res] += LOT
