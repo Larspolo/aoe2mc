@@ -549,6 +549,12 @@ class Script:
             if (sn := self.named(args[0], args[1])) is None or (n := self.game(sn, "unit", "building")) is None:
                 return False
             return self.compare(args[2], self.count(n, total=name.endswith("-total")), args[3])
+        if name in ("up-gaia-type-count", "up-gaia-type-count-total"):  # (up-gaia-type-count TYPE OBJECT REL VALUE)
+            if (sn := self.named(args[0], args[1])) is None:
+                return False
+            return self.compare(args[2], self.gaia(sn, total=name.endswith("-total")), args[3])
+        if name == "up-remaining-boar-amount":                     # (up-remaining-boar-amount REL VALUE)
+            return self.compare(args[0], self.boar(), args[1])
         if name in ("unit-type-count", "building-type-count", "unit-type-count-total", "building-type-count-total"):
             if (n := self.game(args[0], "unit" if name[0] == "u" else "building")) is None:
                 return False
@@ -756,6 +762,31 @@ class Script:
             return
         for i, r in enumerate(COST_GOODS):
             self.goals[first + i] = self.goals.get(first + i, 0) + value * cost.get(r, 0)
+
+    def gaia(self, sn, total=False):
+        """The gaia objects (player 0 of aoe2mc.json) of script name sn (gold-mine: GOLD_MINE; tree: each TREE_*) on the
+        tiles that the team of the bot sees now (Gather.seen_tiles with fog.shares); total: also the ones that it saw
+        once (airef up-gaia-type-count-total)."""
+        import fog
+        g, n = self.bot.g, str(sn).upper().replace("-", "_")
+        tiles = set().union(*(h.seen_tiles() for h in fog.gathers(g) if fog.shares(g, h)))
+        mine = {i for i, o in enumerate(g.data["objects"]) if o.get("player", 0) == 0 and "tile" in o
+                and (o["name"] == n or o["name"].startswith(n + "_"))}
+        now = {i for i in mine if tuple(int(c) for c in g.data["objects"][i]["tile"][:2]) in tiles}
+        self.saw = vars(self).get("saw", set()) | now
+        return len(self.saw & mine if total else now)
+
+    def boar(self):
+        """The food of the boar that a villager of the bot hunts now (Gather.hunt): the carcass food after the kill, else
+        the full HUNT_FOOD; 0 when no villager hunts a boar."""
+        import gather
+        g = self.bot.g
+        out = 0
+        for v in g.villagers.values():
+            name = g.prey.get(v.prey or "", "")
+            if "BOAR" in name or "JAVELINA" in name:
+                out = max(out, g.map.carcasses.get(g.dead[v.prey], 0) if v.prey in g.dead else gather.hunt_food(name))
+        return out
 
     def count(self, n, g=None, total=False):
         """The live units or complete buildings of game name n of Gather g (default: the own one); total: also the
