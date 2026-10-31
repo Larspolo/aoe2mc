@@ -648,6 +648,17 @@ def generate(text, seed, players=2, size=None, warn=None, teams=None, folder=Non
                                   "MAPSCALE_AREA": n * n / 10000, "PLAYER_COUNT": players}   # area / 100x100 map (#4928)
     includes = []
     sections = commands(expand(tokens(text), rng, defined, consts, includes, folder))
+    mood = None                                      # color_correction CC_X: the color mood X (aoe2mc.MOODS, #4430)
+    for s, cmds in sections.items():                 # AoE2 DE reads these in each section (#5073)
+        for cmd, args, _ in cmds:
+            if cmd == "color_correction":
+                from aoe2mc import MOODS
+                cc = args[0].upper().removeprefix("CC_") if args else ""
+                if cc in MOODS:
+                    mood = cc
+                else:
+                    warn(f"color_correction {' '.join(args)}: no such color mood")
+        sections[s] = [c for c in cmds if c[0] not in ANY_SECTION]
     for cmd, a, _ in sections.pop("HEADER", []):
         if cmd == "override_map_size" and a and not size:   # AoE2 DE: the script sets the map size
             n = int(value(a[0], consts))
@@ -673,17 +684,9 @@ def generate(text, seed, players=2, size=None, warn=None, teams=None, folder=Non
     lands, starts, kinds, links, layers = [], [], {}, [], {}
     heights = {}                                     # the base_elevation of each land index (#4418)
     ids = {}                                         # the land_id -> the land indices of its lands (#4133, #4722)
-    mood = None                                      # color_correction CC_X: the color mood X (aoe2mc.MOODS, #4430)
     for cmd, args, attrs in sections.get("LAND_GENERATION", ()):
         if cmd == "base_terrain":
             terrain[:] = value(args[0], consts)
-        elif cmd == "color_correction":
-            from aoe2mc import MOODS
-            name = args[0].upper().removeprefix("CC_") if args else ""
-            if name in MOODS:
-                mood = name
-            else:
-                warn(f"color_correction {' '.join(args)}: no such color mood")
         elif cmd in ("enable_waves", "water_definition"):   # Minecraft water has no waves and no look of its own
             pass
         elif cmd in ("create_player_lands", "create_land"):
@@ -898,12 +901,16 @@ def circle(setup, players, teams, seed):
     return rng.permutation(order).tolist()
 
 
+ANY_SECTION = (                 # the commands that AoE2 DE reads in each section: generate() takes them out first (#5073)
+    "color_correction",             # the color mood of the map (generate())
+    "effect_amount",                # the player settings of the game: no effect on the land
+    "effect_percent",               # the player settings of the game: no effect on the land
+)
+
 PLAYER_SETUP = (                # the commands of <PLAYER_SETUP> that generate() reads or that have no map effect: no warning (#4580)
     "ai_info_map_type",             # the AI map type: no effect on the land
     "behavior_version",             # the script version: no effect on the land
     "direct_placement",             # the start of the players: the game's own choice
-    "effect_amount",                # the player settings of the game: no effect on the land
-    "effect_percent",               # the player settings of the game: no effect on the land
     "force_nomad_treaty",           # the game rule: no effect on the land
     "grouped_by_team",              # the order of the players on the circle (circle())
     "guard_state",                  # the start units: no effect on the land
