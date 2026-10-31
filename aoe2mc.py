@@ -536,6 +536,17 @@ def read_scenario(path):
 ANNEXES = {618, 619, 620}       # the three annex parts of a town center: the TC design draws them
 
 
+def raw_deflate(data):
+    """True when data is exactly one raw deflate stream (the form of a DE save, #4706)."""
+    import zlib
+    z = zlib.decompressobj(-15)
+    try:
+        z.decompress(data)
+    except zlib.error:
+        return False
+    return z.eof and not z.unused_data
+
+
 def saved_match(path):
     """The mgz match of a saved game of DE (SAVES, #4564; docs/research/saved-games.md): a save is the header of a
     record. A file that ends after the header gets the log_version and an empty meta block (40 zero bytes) in memory,
@@ -548,6 +559,9 @@ def saved_match(path):
     with open(path, "rb") as f:
         data = f.read()
     end = int.from_bytes(data[:4], "little") if len(data) >= 8 else 0
+    if not 8 < end <= len(data) and raw_deflate(data):  # a DE save: one raw deflate stream, no prefix (#4706)
+        end = len(data) + 8                              # the record form: header_length, a zero chapter address
+        data = end.to_bytes(4, "little") + bytes(4) + data   # mgz 1.8.51 fails on save 68.9 at offset 447 (saved-games.md)
     if not 8 < end <= len(data):
         raise SystemExit(f"{path}: not a saved game of AoE2 DE (no header block)")
     if len(data) < end + 4:
