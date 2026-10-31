@@ -28,11 +28,12 @@ def hulk(g):
 
 def test_the_hulk_hits_with_melee_damage_more_vs_fire_ships_and_less_vs_buildings():
     assert combat.stats_command("u", "HULK").split()[7] == "2"                # ranged with melee damage
-    attack = combat.stats("HULK").attack
-    assert combat.damage("HULK", "GALLEY") == attack - combat.stats("GALLEY").melee   # the melee armor of the galley
+    a = combat.stats("HULK")._replace(attack=10, bonus={"fireship": 4, "standard": -3})   # test values (#5398)
+    t = {n: combat.stats(n)._replace(melee=2, pierce=5) for n in ("GALLEY", "FIRE_GALLEY", "FIRE_SHIP", "DOCK")}
+    assert combat.damage("HULK", "GALLEY", a=a, t=t["GALLEY"]) == 10 - 2   # the melee armor, not the pierce armor
     for ship in ("FIRE_GALLEY", "FIRE_SHIP"):
-        assert combat.damage("HULK", ship) > attack - combat.stats(ship).melee, ship   # a bonus
-    assert combat.damage("HULK", "DOCK") < max(2, attack - combat.stats("DOCK").melee)
+        assert combat.damage("HULK", ship, a=a, t=t[ship]) == 10 - 2 + 4, ship   # a bonus
+    assert combat.damage("HULK", "DOCK", a=a, t=t["DOCK"]) < 10 - 2
 
 
 def test_the_dock_menu_has_the_hulk_in_the_third_row_from_the_feudal_age():

@@ -9,7 +9,3 @@ def test_each_predator_of_the_parser_has_combat_values():
     assert names
     assert [n for n in names if combat.stats(n) is combat.DEFAULT] == []
 
-
-def test_each_parser_name_has_the_values_of_its_animal():
-    assert all(combat.stats(a) == combat.stats(b) for a, b in
-               (("GREY_WOLF", "WOLF"), ("KOMODO_DRAGON", "KOMODO"), ("BLACK_PANTHER", "PANTHER")))

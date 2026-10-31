@@ -12,5 +12,6 @@ def test_each_building_of_the_build_menu_has_a_row():
 
 
 def test_a_trebuchet_gets_its_building_bonus_against_a_blacksmith():
-    a, t = combat.stats("TREBUCHET"), combat.stats("BLACKSMITH")
-    assert combat.damage("TREBUCHET", "BLACKSMITH") > max(1, a.attack - t.pierce)   # the bonus vs. buildings
+    a = combat.stats("TREBUCHET")._replace(attack=200, bonus={"building": 250})   # test values (#5398)
+    t = combat.stats("BLACKSMITH")._replace(pierce=7)
+    assert combat.damage("TREBUCHET", "BLACKSMITH", a=a, t=t) == 200 - 7 + 250   # the bonus vs. buildings

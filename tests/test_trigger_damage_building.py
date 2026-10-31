@@ -38,7 +38,9 @@ def play(q, hp=300, area="8 10 12 14", full=550, monkeypatch=None):
         if m := re.fullmatch(rf"scoreboard players set {uuid} aoe_hp (-?\d+)", cmd):
             score["hp"] = int(m[1])
         return ""
-    monkeypatch.setattr(repair, "full", lambda g, name, player, rect=None: full)
+    import repair as plain  # scenario imports repair by its plain name: a second module (#4447, #5398)
+    for m in (repair, plain):
+        monkeypatch.setattr(m, "full", lambda g, name, player, rect=None: full)
     g = types.SimpleNamespace(command=command, map=types.SimpleNamespace(T=4), data=dict(objects=[HOUSE]), sites=[],
                               peers=[], bots=(), player=1)
     m = re.findall(scenario.ORDER_KINDS["damages"], command(f"data get storage {scenario.ORDERS} list"))

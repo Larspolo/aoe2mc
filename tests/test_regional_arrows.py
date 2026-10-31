@@ -17,8 +17,9 @@ def line(name):
     return next(c for c in cmds if c.startswith("aoe building ")).split()
 
 
-def test_both_get_an_attack_with_range_reload_and_min_range():
+def test_both_get_an_attack_with_range_reload_and_min_range(monkeypatch):
     for name in ("HARBOR", "FORTIFIED_CHURCH"):
+        monkeypatch.setitem(combat.BUILDINGS, name, combat.BUILDINGS[name]._replace(bonus={"ship": 3, "spearman": 1}))   # test values (#5398)
         s, cmd = combat.BUILDINGS[name], line(name)
         assert cmd[12:16] == [str(s.attack), str(s.range * 4), str(round(s.reload / combat.NORMAL * 20)),
                               str(combat.FORT_MIN_RANGE[name] * 4)]

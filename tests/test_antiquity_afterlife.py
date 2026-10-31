@@ -7,6 +7,8 @@ from test_antiquity_setting import child
 CODE = r'''
 import json, sys
 sys.path[:0] = ["game", "tests"]
+import combat   # test values: the line of sight of a monk is its range + 2 tiles (combat.sight, #5398)
+combat.STATS["MONK"] = combat.STATS["MONK"]._replace(range=9)
 from test_fog_seen import T, bare, circle
 from test_monk_convert import setup
 from game import monk, train

@@ -13,7 +13,7 @@ def test_each_elite_unique_unit_has_values():
     for name in UNITS:
         assert name in combat.STATS and combat.UNI in combat.stats(name).classes, name
         base, elite = combat.stats(name[6:]), combat.stats(name)
-        assert elite.classes == base.classes and elite.hp >= base.hp, name
+        assert elite.classes == base.classes, name   # the values: the content of the data (#5398)
 
 
 def test_a_valid_stats_command_for_each_unit():

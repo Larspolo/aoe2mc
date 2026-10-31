@@ -52,8 +52,11 @@ def without(target, cls):
 
 
 def test_the_samurai_gets_its_bonus_against_unique_units():
-    assert combat.damage("SAMURAI", "CATAPHRACT") > combat.damage("SAMURAI", "CATAPHRACT", t=without("CATAPHRACT", "unique"))
-    assert combat.damage("CATAPHRACT", "HUSKARL") > combat.damage("CATAPHRACT", "HUSKARL", t=without("HUSKARL", "infantry"))
+    samurai = combat.stats("SAMURAI")._replace(attack=10, bonus={"unique": 10})   # test values (#5398)
+    cataphract = combat.stats("CATAPHRACT")._replace(attack=10, bonus={"infantry": 9})
+    hit = lambda a, t, s, c: combat.damage(a, t, a=s, t=without(t, c)) if c else combat.damage(a, t, a=s)  # noqa: E731
+    assert hit("SAMURAI", "CATAPHRACT", samurai, None) == hit("SAMURAI", "CATAPHRACT", samurai, "unique") + 10
+    assert hit("CATAPHRACT", "HUSKARL", cataphract, None) == hit("CATAPHRACT", "HUSKARL", cataphract, "infantry") + 9
     melee = "MAMELUKE" in combat.MELEE_RANGED or not combat.stats("MAMELUKE").range
     other = {"pierce" if melee else "melee": 99}                     # the armor that the mameluke does not hit
     assert combat.damage("MAMELUKE", "KNIGHT", t=combat.stats("KNIGHT")._replace(**other)) == \
