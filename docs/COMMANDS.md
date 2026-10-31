@@ -12,6 +12,7 @@ these rows are here (2026-10-29).
 | Game program options | `python3 game/run.py OUTWorld`: `--server vanilla` (Mojang's server), `--bench N` (commands per second), `--play` (gather resources), `--cheats` (the AoE2 cheat codes in the chat), `--replay [--speed N]` (replay a recorded game) |
 | In-game screenshot options | `tools/mc_shot.py`: `--at X Y Z --look YAW PITCH`, `--more X,Y,Z,YAW,PITCH`, `--player` (adventure mode; a spectator sees invisible mobs); `mc_shot.Client`: a player on the Paper server that clicks menus |
 | Unread random map commands | `python3 tools/rms_survey.py DIR` (Markdown: each `*.rms` of a folder with its warnings, and the warnings with their map counts) |
+| AI script examples | `python3 tools/airef_probe.py [FILE]` (each example of the AoE2 AI Scripting Encyclopedia on a bot: the crashes and the grouped "unknown" warnings; no FILE: `commands.js` is downloaded to `out/airef/`, #5192) |
 | Gather timing | `python3 tools/measure_gather.py` (server, no client: walk, chop and trip times next to AoE2; `--read F.jsonl` reads a `game/run.py --play --log` file) |
 | Replay drift | `python3 tools/replay_drift.py samples/de-64.3.aoe2record --speed 4 --until 10:00 --log F.jsonl` (Paper, no client: distance of each unit to its replay position, stuck, stray and dead units per kind; `--read F.jsonl`, #813) |
 | Convert a match | `python3 aoe2mc.py --match GAME:PROFILE OUTWorld` (downloads the record into `out/records/` once; `python3 tools/record_api.py download GAME PROFILE DIR` writes only the `.aoe2record`, #4484) |
