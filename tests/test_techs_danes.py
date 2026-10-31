@@ -10,7 +10,7 @@ UNITS = ("ONAGER", "CATAPULT_GALLEON", "TREBUCHET", "KNIGHT")
 
 
 def changed():
-    before = {n: combat.stats(n) for n in UNITS}
+    before = {n: combat.stats(n)._replace(range=5, bonus={"building": 33}) for n in UNITS}   # test values (#5398)
     change = train.effect(EFFECT)
     return before, {n: change(n, s) for n, s in before.items()}
 

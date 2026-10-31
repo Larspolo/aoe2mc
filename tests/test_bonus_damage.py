@@ -12,6 +12,16 @@ from game import civs, combat, run, train
 
 AGES = {"DARK": (), "FEUDAL": ("FEUDAL_AGE",), "CASTLE": ("FEUDAL_AGE", "CASTLE_AGE"),
         "IMPERIAL": ("FEUDAL_AGE", "CASTLE_AGE", "IMPERIAL_AGE")}
+# Test values of the units (owner, #4177, #5398): the tests check the rule of the civilization bonus, not the data.
+OWN = {"CAMEL_RIDER": {"cavalry": 9, "camel": 5}, "KNIGHT": {}, "MAN_AT_ARMS": {"building": 2}, "PIKEMAN": {"cavalry": 20, "camel": 18}}
+
+
+@pytest.fixture(autouse=True)
+def own_values(monkeypatch):
+    import combat as plain  # train imports combat by its plain name: a second module (#4447)
+    for (name, bonus), m in ((i, m) for i in OWN.items() for m in (combat, plain)):
+        monkeypatch.setitem(m.STATS, name, m.STATS[name]._replace(hp=100, attack=6, melee=1, pierce=1, range=0,
+                                                                        reload=2.0, bonus=bonus))
 
 
 def player(civ, age="DARK"):
@@ -27,20 +37,20 @@ def hit(attacker, a_civ, target, t_civ, age="DARK"):
 
 
 def test_a_bohemian_pikeman_deals_more_bonus_damage():
-    more, base = train.stats(player("BOHEMIANS"), "PIKEMAN").bonus["cavalry"], combat.stats("PIKEMAN").bonus["cavalry"]
+    more, base = (train.stats(player(c), "PIKEMAN").bonus["cavalry"] for c in ("BOHEMIANS", "BRITONS"))
     assert more > base
     assert hit("PIKEMAN", "BOHEMIANS", "KNIGHT", "FRANKS") - hit("PIKEMAN", "BRITONS", "KNIGHT", "FRANKS") == more - base
-    assert train.stats(player("BOHEMIANS"), "MAN_AT_ARMS").bonus == combat.stats("MAN_AT_ARMS").bonus
+    assert train.stats(player("BOHEMIANS"), "MAN_AT_ARMS").bonus == train.stats(player("BRITONS"), "MAN_AT_ARMS").bonus
 
 
 def test_gurjara_mounted_units_deal_more_bonus_damage_in_each_age():
-    base = combat.stats("CAMEL_RIDER").bonus["cavalry"]
+    base = train.stats(player("PERSIANS"), "CAMEL_RIDER").bonus["cavalry"]
     bonus = [train.stats(player("GURJARAS", age), "CAMEL_RIDER").bonus["cavalry"] for age in AGES]
     assert all(base <= a <= b for a, b in zip(bonus, bonus[1:])) and bonus[-1] > base
     castle = bonus[list(AGES).index("CASTLE")]
     assert hit("CAMEL_RIDER", "GURJARAS", "KNIGHT", "FRANKS", "CASTLE") - \
         hit("CAMEL_RIDER", "PERSIANS", "KNIGHT", "FRANKS", "CASTLE") == castle - base
-    assert train.stats(player("GURJARAS", "CASTLE"), "PIKEMAN").bonus == combat.stats("PIKEMAN").bonus   # infantry: no bonus
+    assert train.stats(player("GURJARAS", "CASTLE"), "PIKEMAN").bonus == train.stats(player("PERSIANS", "CASTLE"), "PIKEMAN").bonus   # infantry: no bonus
 
 
 def test_a_sicilian_knight_takes_less_bonus_damage():
@@ -57,7 +67,7 @@ def test_a_sicilian_ram_villager_and_ship_take_the_full_bonus_damage():
 def test_a_bengali_elephant_takes_less_bonus_damage():
     taken = civs.taken(player("BENGALIS"), "BATTLE_ELEPHANT")
     assert taken < 1 and civs.taken(player("BENGALIS"), "KNIGHT") == 1
-    bonus = sum(combat.stats("PIKEMAN").bonus.get(c, 0) for c in combat.stats("BATTLE_ELEPHANT").classes)   # also "cavalry" (#5240)
+    bonus = sum(train.stats(player("BRITONS"), "PIKEMAN").bonus.get(c, 0) for c in combat.stats("BATTLE_ELEPHANT").classes)   # also "cavalry" (#5240)
     assert hit("PIKEMAN", "BRITONS", "BATTLE_ELEPHANT", "BENGALIS") \
         == hit("PIKEMAN", "BRITONS", "BATTLE_ELEPHANT", "BRITONS") - bonus + int(bonus * taken + 0.5)
 
