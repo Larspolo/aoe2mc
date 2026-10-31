@@ -2056,29 +2056,35 @@ class Script:
         import stance
         b = self.bot
         g = b.g
-        if name == "up-garrison":                                  # (up-garrison TYPE BUILDING TYPE UNIT)
-            units = [u for u in self.of_type(args[2], args[3]) if u not in garrison.inside(g)]
-            for rect in self.of_type(args[0], args[1], "building")[:1]:
-                if units:
-                    garrison.send(g, b.nobody, units, rect)
-        elif name == "up-ungarrison":                              # (up-ungarrison TYPE BUILDING)
-            for rect in self.of_type(args[0], args[1], "building"):
-                garrison.out(g, rect)
+        if name == "up-garrison":                                  # (up-garrison HOLDER TYPE UNIT), airef ObjectId typeOp UnitId
+            units = [u for u in self.of_type(args[1], args[2]) if u not in garrison.inside(g)]
+            holder = next(iter(self.of_type("c:", args[0], self.object_kind(args[0]))), None)
+            if units and isinstance(holder, tuple):
+                garrison.send(g, b.nobody, units, holder)
+            elif units and holder is not None:                     # a unit holder: a ram (#5179)
+                garrison.board(g, units, holder)
+        elif name == "up-ungarrison":                              # (up-ungarrison TYPE HOLDER): buildings and rams
+            import transport
+            sn = self.named(args[0], args[1])
+            for h in self.of_type(args[0], args[1], self.object_kind(sn)) if sn is not None else ():
+                if isinstance(h, tuple):
+                    garrison.out(g, h)
+                elif h in vars(g).get("cargo", {}):
+                    transport.out(g, h)
         elif name == "up-gather-inside":                           # (up-gather-inside TYPE BUILDING STATE)
             n = (sn := self.named(args[0], args[1])) and self.game(sn, "building")
             for m in () if not n else n if isinstance(n, tuple) else (n,):
                 vars(g).setdefault("gather_inside", {})[m] = int(bool(args[2]))   # 1: on, 0: off
-        elif name == "up-guard-unit":                              # (up-guard-unit TYPE OBJECT TYPE UNIT)
-            key, units = self.key(args[0], args[1]), self.of_type(args[2], args[3])
-            pos = key and g.positions([key]).get(key)
-            soldiers = [u for u in units if u in g.soldiers]
-            if pos and soldiers:                                   # they walk to it and defend the place
-                for u in soldiers:
+        elif name == "up-guard-unit":                              # (up-guard-unit TARGET TYPE UNIT)
+            units = [u for u in self.of_type(args[1], args[2]) if u in g.soldiers]
+            pos = self.instance(args[0], set(units))
+            if pos and units:                                      # they walk to it and defend the place
+                for u in units:
                     ai.move(g, u, g.soldiers[u], g.map.T, *pos)
-                self.with_selection(soldiers, lambda: stance.put(g, "defensive"))
-        elif name == "up-retreat-to":                              # (up-retreat-to TYPE OBJECT TYPE UNIT)
-            key, units = self.key(args[0], args[1]), [u for u in self.of_type(args[2], args[3]) if u in g.soldiers]
-            pos = key and g.positions([key]).get(key)
+                self.with_selection(units, lambda: stance.put(g, "defensive"))
+        elif name == "up-retreat-to":                              # (up-retreat-to TARGET TYPE UNIT)
+            units = [u for u in self.of_type(args[1], args[2]) if u in g.soldiers]
+            pos = self.instance(args[0], set(units))
             b.wave = set(units)
             if pos:                                                # the wave stops; it walks to the object
                 b.wave, b.targets, b.charged = set(), {}, False
@@ -2086,12 +2092,14 @@ class Script:
                     g.walk_to(None, (pos[0], pos[2]), units)
             else:
                 b.retreat()
-        elif name == "up-set-attack-stance":                       # (up-set-attack-stance TYPE UNIT STANCE)
-            sid = args[2] if isinstance(args[2], int) else STANCE_IDS.get(TASK_STANCE.get(args[2], args[2]))   # airef names too
+        elif name == "up-set-attack-stance":                       # (up-set-attack-stance UNIT TYPE STANCE)
+            kind = self.type_kind(args[1])
+            v = self.operand(kind, args[2]) if kind else None
+            sid = v if isinstance(v, int) else STANCE_IDS.get(TASK_STANCE.get(v, v))   # airef names too
             s = next((k for k, i in STANCE_IDS.items() if i == sid), None)
             if s is None:
                 return self.warn("attack stance", args[2])
-            units = [u for u in self.of_type(args[0], args[1]) if u in g.soldiers]
+            units = [u for u in self.of_type("c:", args[0]) if u in g.soldiers]
             self.with_selection(units, lambda: stance.put(g, s))
         elif name == "up-delete-objects":                          # (up-delete-objects TYPE UNIT TYPE HITPOINTS)
             low = self.operand(self.type_kind(args[2]), args[3]) if self.type_kind(args[2]) else None
@@ -2105,6 +2113,24 @@ class Script:
             self.goals[args[0] + 1] = len({t for t, _ in guards.values()})   # the enemies that the guards fight
             self.goals[args[0] + 2] = len(guards)                 # the soldiers that guard
             self.goals[args[0] + 3] = 0                            # no resource or gate attack in the game program
+
+    def object_kind(self, ref):
+        """ "building" for the script name (or airef id) of a building, else "unit"."""
+        row = names().get(OBJECT_IDS.get(ref, ref) if isinstance(ref, int) else ref)
+        return "building" if row and row["kind"] == "building" else "unit"
+
+    def instance(self, kind, skip=()):
+        """The feet position of a random own object of the type kind (airef "a random instance of another" type, #5179):
+        a unit (not one of skip) or the middle of a building, picked with the seeded generator; None when there is none."""
+        g = self.bot.g
+        if self.object_kind(kind) == "building":
+            found = [((r[0] + r[1]) / 2, float(g.map.y((r[0] + r[1]) // 2, (r[2] + r[3]) // 2) or 0), (r[2] + r[3]) / 2)
+                     for r in self.of_type("c:", kind, "building")]
+        else:
+            units = [u for u in self.of_type("c:", kind) if u not in skip]
+            pos = g.positions(units) if units else {}
+            found = [pos[u] for u in sorted(pos)]
+        return found[int(self.rng.integers(len(found)))] if found else None
 
     def with_selection(self, units, fn):
         """Run fn with units as the selection of the bot Gather (stance.put acts on the selection)."""
