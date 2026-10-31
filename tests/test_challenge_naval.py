@@ -1,7 +1,8 @@
 """run.py --play --challenge naval-battle: both fleets on water, the medal by the ships lost (#3909, epic #3759)."""
 import types
 
-import cheats  # noqa: E402  (game/ is on sys.path after the import of game.challenge)
+import cheats  # noqa: E402
+import lang  # noqa: E402  (game/ is on sys.path after the import of game.challenge)
 import pytest
 import recap  # noqa: E402
 import train  # noqa: E402
@@ -25,7 +26,7 @@ class Map:
 def fake(lost=ROW["gold"], alive=()):
     g = types.SimpleNamespace(player=1, ended=None, challenge="naval-battle", sent=[], map=Map(), seconds=900.0,
                               losses={f"u{i}": "FIRE_SHIP" for i in range(lost)}, challenge_enemy=["e1", "e2"])
-    g.command = g.sent.append
+    g.command = lambda c: g.sent.append(lang.english(c))  # the English text (#5377)
     g.positions = lambda uuids: {u: (0, 0, 0) for u in uuids if u in alive}
     return g
 

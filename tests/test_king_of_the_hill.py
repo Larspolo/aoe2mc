@@ -59,7 +59,7 @@ def test_an_enemy_unit_takes_the_monument_only_when_no_own_unit_is_there():
     server.entities["a"]["Pos"] = (2.5, 64.0, 2.5)                   # the own unit goes away: player 2 takes it
     run(g, 4)
     assert g.hill["owner"] == 2 and g.hill["left"] == pytest.approx(hill.RESET * YEAR, abs=4)   # back to 100 years
-    assert any("Player 2 holds the monument." in c for c in server.log)
+    assert any('"translate": "aoe2mc.hill.holds"' in c and '"with": ["2"]' in c for c in server.log)
     run(g, hill.RESET * YEAR)
     assert g.ended == "Defeat"
 

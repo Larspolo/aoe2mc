@@ -18,6 +18,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import cheats  # noqa: E402
+import lang  # noqa: E402
 import monk  # noqa: E402
 import wonder  # noqa: E402
 
@@ -46,7 +47,7 @@ def tick(g, dt):
     t, n = vars(g).get("relic_timer"), holder(g)
     if t and t["player"] != n:                                       # a relic left the monasteries of the holder
         close(g)
-        g.command("tellraw @a " + json.dumps({"text": f"Player {t['player']} lost a relic.", "color": "red"}))
+        g.command("tellraw @a " + json.dumps(lang.text("aoe2mc.relic_victory.lost", t["player"], color="red")))
         t = None
     if n is None:
         return
@@ -56,7 +57,7 @@ def tick(g, dt):
         for c in (f'bossbar add {BAR} ""', f"bossbar set {BAR} color purple", f"bossbar set {BAR} max {int(total / wonder.YEAR)}",
                   f"bossbar set {BAR} players @a"):
             g.command(c)
-        g.command("tellraw @a " + json.dumps({"text": f"Player {n} holds all relics.", "color": "yellow"}))
+        g.command("tellraw @a " + json.dumps(lang.text("aoe2mc.relic_victory.all", n, color="yellow")))
     if (more := wonder.later(g, t)) is not None:                    # an enemy researched Atheism (#4336)
         g.command(f"bossbar set {BAR} max {int((wonder.years(g.data.get('map_size')) * wonder.YEAR + more) / wonder.YEAR)}")
     t["left"] -= dt

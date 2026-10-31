@@ -15,7 +15,7 @@ def test_en_us_lang_file_has_each_text(tmp_path):
     a, b = _pack(tmp_path / "a"), _pack(tmp_path / "b")
     with zipfile.ZipFile(a) as z:
         lang = json.loads(z.read("assets/aoe2mc/lang/en_us.json"))
-    assert lang == {r["name"]: r["en_us"] for r in rows}
+    assert {r["name"]: r["en_us"] for r in rows}.items() <= lang.items()   # and the data texts (#5377)
     assert a.read_bytes() == b.read_bytes()
 
 

@@ -4,6 +4,7 @@ import types
 
 import build  # noqa: E402  (game/ is on sys.path after the import of game.challenge)
 import cheats  # noqa: E402
+import lang  # noqa: E402
 import pytest
 import recap  # noqa: E402
 import train  # noqa: E402
@@ -18,7 +19,7 @@ def fake(dead=C["kills"], seconds=C["gold"] - 10.0):
     enemy = types.SimpleNamespace(player=2, losses={**{f"v{i}": "VILLAGER" for i in range(dead)}, "s": "MILITIA"})
     g = types.SimpleNamespace(player=1, ended=None, challenge="rushing-the-enemy", sent=[], data={"objects": []},
                               bots=[types.SimpleNamespace(g=enemy)], seconds=seconds)
-    g.command = g.sent.append
+    g.command = lambda c: g.sent.append(lang.english(c))  # the English text (#5377)
     return g
 
 

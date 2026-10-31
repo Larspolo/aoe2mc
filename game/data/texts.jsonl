@@ -1,5 +1,41 @@
 {"name": "aoe2mc.age_up", "en_us": "Player %s advances to the %s."}
+{"name": "aoe2mc.battle_royale.start", "en_us": "Battle Royale: the Corruption takes the map from its border to its center in %s. It destroys all units and buildings in it."}
+{"name": "aoe2mc.conquest.allies_end", "en_us": "Only allies are left: the alliances end. The last player alive wins."}
+{"name": "aoe2mc.conquest.defeated", "en_us": "Player %s is defeated."}
+{"name": "aoe2mc.challenge.lost_bronze", "en_us": "%s units lost, bronze medal up to %s"}
+{"name": "aoe2mc.challenge.lost_gold", "en_us": "%s units lost, gold medal up to %s"}
+{"name": "aoe2mc.challenge.lost_none", "en_us": "%s units lost, no medal"}
+{"name": "aoe2mc.challenge.lost_silver", "en_us": "%s units lost, silver medal up to %s"}
+{"name": "aoe2mc.challenge.medal_bronze", "en_us": "Bronze medal"}
+{"name": "aoe2mc.challenge.medal_gold", "en_us": "Gold medal"}
+{"name": "aoe2mc.challenge.medal_silver", "en_us": "Silver medal"}
+{"name": "aoe2mc.challenge.no_medal", "en_us": "No medal"}
+{"name": "aoe2mc.challenge.time_bronze", "en_us": "Bronze medal in %s"}
+{"name": "aoe2mc.challenge.time_gold", "en_us": "Gold medal in %s"}
+{"name": "aoe2mc.challenge.time_silver", "en_us": "Silver medal in %s"}
 {"name": "aoe2mc.defeat", "en_us": "Defeat"}
+{"name": "aoe2mc.diplomacy.ally", "en_us": "Ally"}
+{"name": "aoe2mc.diplomacy.changed", "en_us": "Player %s changed its stance to you: %s."}
+{"name": "aoe2mc.diplomacy.enemy", "en_us": "Enemy"}
+{"name": "aoe2mc.diplomacy.neutral", "en_us": "Neutral"}
+{"name": "aoe2mc.diplomacy.speed", "en_us": "Player %s set the game speed to %s."}
+{"name": "aoe2mc.diplomacy.tribute", "en_us": "Player %s sent %s %s to player %s."}
+{"name": "aoe2mc.hill.holds", "en_us": "Player %s holds the monument."}
+{"name": "aoe2mc.relic_victory.all", "en_us": "Player %s holds all relics."}
+{"name": "aoe2mc.relic_victory.lost", "en_us": "Player %s lost a relic."}
+{"name": "aoe2mc.resource.food", "en_us": "food"}
+{"name": "aoe2mc.resource.gold", "en_us": "gold"}
+{"name": "aoe2mc.resource.stone", "en_us": "stone"}
+{"name": "aoe2mc.resource.wood", "en_us": "wood"}
+{"name": "aoe2mc.treaty.ended", "en_us": "The treaty ended: players can attack now."}
+{"name": "aoe2mc.treaty.refuse", "en_us": "Treaty: you cannot attack before %s."}
+{"name": "aoe2mc.treaty.refuse_endless", "en_us": "Treaty: you cannot attack in this game."}
+{"name": "aoe2mc.treaty.start", "en_us": "Treaty: no player can attack another player before %s."}
+{"name": "aoe2mc.treaty.start_endless", "en_us": "Treaty: no player can attack another player in this game."}
+{"name": "aoe2mc.tutorial.complete", "en_us": "The tutorial is complete."}
+{"name": "aoe2mc.tutorial.complete_title", "en_us": "Tutorial complete"}
+{"name": "aoe2mc.tutorial.step_done", "en_us": "Step done"}
+{"name": "aoe2mc.tutorial.step_of", "en_us": "Step %s/%s: %s"}
 {"name": "aoe2mc.victory", "en_us": "Victory"}
 {"name": "aoe2mc.run.chat_hint", "en_us": "Chat: a normal line goes to all, /tm TEXT to your allies, /msg NAME TEXT to one person."}
 {"name": "aoe2mc.run.campaign_complete", "en_us": "Campaign complete"}
@@ -17,3 +53,5 @@
 {"name": "aoe2mc.bot.no_onager", "en_us": "I have no onager."}
 {"name": "aoe2mc.bot.cannot_train", "en_us": "I cannot train that unit: I have no building for it."}
 {"name": "aoe2mc.bot.no_market", "en_us": "I have no market: I cannot send tribute."}
+{"name": "aoe2mc.wonder.built", "en_us": "Player %s built a wonder."}
+{"name": "aoe2mc.wonder.destroyed", "en_us": "The wonder of player %s is destroyed."}

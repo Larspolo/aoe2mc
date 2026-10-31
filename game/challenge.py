@@ -21,6 +21,7 @@ import os
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import lang  # noqa: E402
 import table  # noqa: E402
 
 CHALLENGES = {r["name"]: r for r in table.load("challenges.jsonl")}
@@ -256,17 +257,25 @@ def close(g):
         g.command(f"bossbar remove {BAR}")
 
 
+def goal_text(c):
+    """The goal of challenge line c as a `translate` component (#5377): the key "aoe2mc.challenge.<name>", the lang
+    file of the pack takes it from the same table (aoe2mc.lang_files)."""
+    return {"translate": f"aoe2mc.challenge.{c['name']}", "fallback": c["goal"]}
+
+
 def show(g, c, now):
     """The boss bar: the goal and the next medal limit ("Gold medal in 6:12"; a "lost" challenge, #3906: "2 units lost,
     silver medal up to 5", now is the units lost); commands only when the text changes."""
     left = next(((m, c[m] - now) for m in MEDALS if now <= c[m]), None)
     if c["medal"] == "lost":
-        name = f"{int(now)} units lost, " + (f"{left[0]} medal up to {c[left[0]]}" if left else "no medal")
+        name = lang.text(f"aoe2mc.challenge.lost_{left[0]}", int(now), c[left[0]]) if left else lang.text(
+            "aoe2mc.challenge.lost_none", int(now))
     else:
-        name = f"{left[0].title()} medal in %d:%02d" % divmod(int(left[1]), 60) if left else "No medal"
+        name = lang.text(f"aoe2mc.challenge.time_{left[0]}", "%d:%02d" % divmod(int(left[1]), 60)) if left else lang.text(
+            "aoe2mc.challenge.no_medal")
     if vars(g).get("challenge_shown") is None:
         for cmd in (f'bossbar add {BAR} ""', f"bossbar set {BAR} color yellow", f"bossbar set {BAR} max {c['bronze']}",
-                    f"bossbar set {BAR} players @a", "tellraw @a " + json.dumps({"text": c["goal"], "color": "yellow"})):
+                    f"bossbar set {BAR} players @a", "tellraw @a " + json.dumps(goal_text(c) | {"color": "yellow"})):
             g.command(cmd)                                      # the goal once in the chat: in the bar it hid the medal (#4092)
     elif g.challenge_shown == name:
         return
@@ -290,7 +299,7 @@ def tick(g):
     if complete or (c["medal"] == "time" and m is None) or ("attacks" in c and town(g) is None):
         close(g)
         g.command(f'title @a[team=p{g.player}] subtitle ' + json.dumps(
-            {"text": f"{m.title()} medal" if complete and m else "No medal", "color": "yellow"}))
+            lang.text(f"aoe2mc.challenge.medal_{m}" if complete and m else "aoe2mc.challenge.no_medal", color="yellow")))
         g.medal = m if complete else None
         keep(g.challenge, g.medal)
         return cheats.over(g, lambda p: p == g.player and complete and m is not None)
