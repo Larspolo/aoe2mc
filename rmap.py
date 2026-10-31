@@ -671,6 +671,22 @@ def generate(text, seed, players=2, size=None, warn=None, teams=None, folder=Non
                 else:
                     warn(f"color_correction {' '.join(args)}: no such color mood")
         sections[s] = [c for c in cmds if c[0] not in ANY_SECTION]
+    unknown = set()
+
+    def known(words):           # AoE2 DE: "If you specify an identifier that is not defined, the parser ignores it" (#5172)
+        bad = [w for w in words if re.fullmatch(r"[A-Z_][A-Z0-9_]*", w) and not any(w in d for d in (consts, BLANK, LIKE, ASSIGN))]
+        for w in set(bad) - unknown:
+            unknown.add(w)
+            warn(f"constant {w} is not defined: the command or attribute is skipped")
+        return not bad
+    for s, cmds in sections.items():                 # skip a command, or an attribute, with an undefined constant
+        valued = lambda cmd: cmd.startswith("create_") or cmd in ("base_terrain", "override_map_size")  # not a name
+        sections[s] = [c for c in cmds if not valued(c[0]) or known(c[1])]
+        for cmd, _, attrs in sections[s]:
+            keep = ("base_terrain",) if cmd == "create_terrain" else ()   # read as 0 there (#4950)
+            for name in [a for a in attrs if valued(cmd) and a not in keep and not known(attrs[a])]:
+                del attrs[name]
+                attrs.many.pop(name, None)
     for cmd, a, _ in sections.pop("HEADER", []):
         if cmd == "override_map_size" and a and not size:   # AoE2 DE: the script sets the map size
             n = int(value(a[0], consts))
