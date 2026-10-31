@@ -42,7 +42,7 @@ def test_the_foot_soldiers_ride_the_ram_after_the_walk(ai):
     assert not any(c.startswith(("ride k1", "ride v1", "tag k1", "tag v1")) for c in sent)   # no horse, no villager
     assert ("aoe hide @a m1" in sent) == ai
     assert any(c.startswith(("tp m1", "aoe moveto m1")) for c in sent[:sent.index(first)])   # it walked there first
-    assert r.task(7) == "garrisoned"
+    assert lang.plain(r.task(7)) == "garrisoned"
 
 
 @pytest.mark.parametrize("ai", [False, True])

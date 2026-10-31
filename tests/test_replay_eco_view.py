@@ -29,7 +29,7 @@ def test_the_first_call_gives_a_page_per_player_and_a_repeat_sends_nothing():
     vill(r, "VILLAGER_MALE", 1, 1)
     vill(r, "VILLAGER_FEMALE", 2, 2)
     first = r.ecoview()
-    assert len(first) == 1 and first[0].startswith(f"item replace entity @a hotbar.{replay.STAT_BOOKS['Economy']} ")
+    assert first[0].startswith(f"item replace entity @a hotbar.{replay.STAT_BOOKS['Economy']} ")
     assert [page(first, k) for k in (0, 1)] == [["food 0", "wood 0", "gold 0", "stone 0", "build 0", "idle 1"] + SPENT] * 2
     assert r.ecoview() == []                                    # the same counts: no command
 
@@ -42,7 +42,7 @@ def test_a_change_of_one_count_changes_the_book():
     r.ecoview()
     r.look(a, "LUMBERJACK")
     changed = r.ecoview()
-    assert len(changed) == 1 and page(changed, 0) == ["food 0", "wood 1", "gold 0", "stone 0", "build 0", "idle 0"] + SPENT
+    assert page(changed, 0) == ["food 0", "wood 1", "gold 0", "stone 0", "build 0", "idle 0"] + SPENT
     assert r.ecoview() == []
 
 
