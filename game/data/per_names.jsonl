@@ -72,6 +72,7 @@
 {"name": "fish-trap", "game": "FISH_TRAP", "kind": "building", "id": 199}
 {"name": "fishing-ship", "game": "FISHING_SHIP", "kind": "unit", "id": 13}
 {"name": "flaming-camel", "game": "FLAMING_CAMEL", "kind": "unit", "id": 1263}
+{"name": "flemish-pikeman-set", "set": ["FLEMISH_MILITIA"], "kind": "unit"}
 {"name": "folwark", "game": "FOLWARK", "kind": "building"}
 {"name": "frankish", "game": "FRANKS", "kind": "civ"}
 {"name": "franks", "game": "FRANKS", "kind": "civ"}
@@ -98,6 +99,7 @@
 {"name": "huge-map", "kind": "map-size", "tiles": 252}
 {"name": "hun", "game": "HUNS", "kind": "civ"}
 {"name": "huns", "game": "HUNS", "kind": "civ"}
+{"name": "huskarl-set", "set": ["ELITE_HUSKARL", "HUSKARL"], "kind": "unit"}
 {"name": "hussar", "game": "HUSSAR", "kind": "unit", "id": 441}
 {"name": "idle-type-fishing-ship", "game": "FISHING_SHIP", "kind": "idle"}
 {"name": "idle-type-trade-cart", "game": "TRADE_CART", "kind": "idle"}
@@ -115,8 +117,10 @@
 {"name": "japanese", "game": "JAPANESE", "kind": "civ"}
 {"name": "keep", "game": "KEEP", "kind": "building", "id": 235}
 {"name": "khmer", "game": "KHMER", "kind": "civ"}
+{"name": "kipchak-set", "set": ["ELITE_KIPCHAK", "KIPCHAK"], "kind": "unit"}
 {"name": "knight", "game": "KNIGHT", "kind": "unit", "id": 38}
 {"name": "knight-line", "game": "KNIGHT", "kind": "unit"}
+{"name": "konnik-set", "set": ["ELITE_KONNIK", "KONNIK"], "kind": "unit"}
 {"name": "korean", "game": "KOREANS", "kind": "civ"}
 {"name": "koreans", "game": "KOREANS", "kind": "civ"}
 {"name": "krepost", "game": "KREPOST", "kind": "building", "id": 1251}
@@ -157,6 +161,7 @@
 {"name": "mongol", "game": "MONGOLS", "kind": "civ"}
 {"name": "mongols", "game": "MONGOLS", "kind": "civ"}
 {"name": "monk", "game": "MONK", "kind": "unit", "id": 125}
+{"name": "monk-set", "set": ["MONK"], "kind": "unit"}
 {"name": "my-elite-unique-unit", "civ": "elite", "kind": "unit"}
 {"name": "my-unique-research", "civ": "research", "kind": "tech"}
 {"name": "my-unique-unit", "civ": "unit", "kind": "unit"}
@@ -176,6 +181,8 @@
 {"name": "poles", "game": "POLES", "kind": "civ"}
 {"name": "portuguese", "game": "PORTUGUESE", "kind": "civ"}
 {"name": "post-imperial-age", "kind": "age", "age": 4}
+{"name": "ratha-set", "set": ["ELITE_RATHA", "RATHA"], "kind": "unit"}
+{"name": "relic-class", "set": [], "kind": "unit"}
 {"name": "ri-arbalester", "game": "ARBALESTER_UPGRADE", "kind": "tech"}
 {"name": "ri-architecture", "game": "ARCHITECTURE", "kind": "tech", "id": 51}
 {"name": "ri-arrowslits", "game": "ARROWSLITS", "kind": "tech", "id": 608}
@@ -343,6 +350,8 @@
 {"name": "scorpion-line", "game": "SCORPION", "kind": "unit"}
 {"name": "scout-cavalry", "game": "SCOUT_CAVALRY", "kind": "unit", "id": 448}
 {"name": "scout-cavalry-line", "game": "SCOUT_CAVALRY", "kind": "unit"}
+{"name": "serjeant-set", "set": ["ELITE_SERJEANT", "SERJEANT"], "kind": "unit"}
+{"name": "shore-fish-class", "set": [], "kind": "unit"}
 {"name": "sicilians", "game": "SICILIANS", "kind": "civ"}
 {"name": "siege-onager", "game": "SIEGE_ONAGER", "kind": "unit", "id": 588}
 {"name": "siege-ram", "game": "SIEGE_RAM", "kind": "unit", "id": 548}
@@ -357,11 +366,13 @@
 {"name": "spanish", "game": "SPANISH", "kind": "civ"}
 {"name": "spearman", "game": "SPEARMAN", "kind": "unit", "id": 93}
 {"name": "spearman-line", "game": "SPEARMAN", "kind": "unit"}
+{"name": "spearman-set", "set": ["HALBERDIER", "PIKEMAN", "SPEARMAN"], "kind": "unit"}
 {"name": "stable", "game": "STABLE", "kind": "building", "id": 101}
 {"name": "steppe-lancer", "game": "STEPPE_LANCER", "kind": "unit", "id": 1370}
 {"name": "steppe-lancer-line", "game": "STEPPE_LANCER", "kind": "unit"}
 {"name": "stone-wall", "game": "STONE_WALL", "kind": "building", "id": 117}
 {"name": "stone-wall-line", "game": "STONE_WALL", "kind": "building", "id": 117}
+{"name": "tarkan-set", "set": ["ELITE_TARKAN", "TARKAN"], "kind": "unit"}
 {"name": "tatars", "game": "TATARS", "kind": "civ"}
 {"name": "teutonic", "game": "TEUTONS", "kind": "civ"}
 {"name": "teutons", "game": "TEUTONS", "kind": "civ"}
@@ -382,7 +393,19 @@
 {"name": "viking", "game": "VIKINGS", "kind": "civ"}
 {"name": "vikings", "game": "VIKINGS", "kind": "civ"}
 {"name": "villager", "game": "VILLAGER_MALE", "kind": "unit", "id": 83}
+{"name": "villager-base", "set": ["VILLAGER_MALE"], "kind": "unit"}
+{"name": "villager-builder", "task": ["BUILDER"], "kind": "unit"}
 {"name": "villager-class", "set": ["VILLAGER_MALE"], "kind": "unit", "id": 904}
+{"name": "villager-farmer", "task": ["FARMER"], "kind": "unit"}
+{"name": "villager-fisherman", "task": ["FISHERMAN"], "kind": "unit"}
+{"name": "villager-food", "task": ["FARMER", "FISHERMAN", "FORAGER", "HUNTER", "SHEPHERD"], "kind": "unit"}
+{"name": "villager-forager", "task": ["FORAGER"], "kind": "unit"}
+{"name": "villager-gold", "task": ["GOLD_MINER"], "kind": "unit"}
+{"name": "villager-hunter", "task": ["HUNTER"], "kind": "unit"}
+{"name": "villager-repairer", "task": ["REPAIRER"], "kind": "unit"}
+{"name": "villager-shepherd", "task": ["SHEPHERD"], "kind": "unit"}
+{"name": "villager-stone", "task": ["STONE_MINER"], "kind": "unit"}
+{"name": "villager-wood", "task": ["LUMBERJACK"], "kind": "unit"}
 {"name": "war-galley", "game": "WAR_GALLEY", "kind": "unit", "id": 21}
 {"name": "watch-tower", "game": "WATCH_TOWER", "kind": "building", "id": 79}
 {"name": "wonder", "game": "WONDER", "kind": "building", "id": 276}
