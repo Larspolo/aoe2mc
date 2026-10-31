@@ -20,6 +20,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import cheats  # noqa: E402
+import lang  # noqa: E402
 import table  # noqa: E402
 
 YEAR = 5.0           # game seconds of one AoE2 year
@@ -90,7 +91,7 @@ def tick(g, dt):
         for uuid in [u for u in timers if "passed" not in g.command(f"execute if entity {u}")]:
             n = timers.pop(uuid)["player"]
             gone.add(uuid)
-            g.command("tellraw @a " + json.dumps({"text": f"The wonder of player {n} is destroyed.", "color": "red"}))
+            g.command("tellraw @a " + json.dumps(lang.text("aoe2mc.wonder.destroyed", n, color="red")))
             if not any(t["player"] == n for t in timers.values()):
                 g.command(f"bossbar remove {bar(n)}")
                 shown.pop(n, None)
@@ -111,7 +112,7 @@ def tick(g, dt):
                           f"bossbar set {bar(n)} max {int(total / YEAR)}", f"bossbar set {bar(n)} players @a"):
                     g.command(c)
                 shown[n] = None
-            g.command("tellraw @a " + json.dumps({"text": f"Player {n} built a wonder.", "color": "yellow"}))
+            g.command("tellraw @a " + json.dumps(lang.text("aoe2mc.wonder.built", n, color="yellow")))
     for t in timers.values():
         if (more := later(g, t)) is not None:
             g.command(f"bossbar set {bar(t['player'])} max {int((RACE.get(g.mode, years(g.data.get('map_size'))) * YEAR + more) / YEAR)}")

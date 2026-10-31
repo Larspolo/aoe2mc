@@ -25,6 +25,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import build  # noqa: E402
 import civs  # noqa: E402
 import flare  # noqa: E402
+import lang  # noqa: E402
 import lobby  # noqa: E402
 import market  # noqa: E402
 import menu  # noqa: E402
@@ -120,8 +121,7 @@ def faster(g):
         h.speed = new
         h.t0 = now - (now - h.t0) * old / new
     g.command(f"tick rate {run.TICKS * new:g}")
-    g.command("tellraw @a " + json.dumps({"text": f"Player {g.player} set the game speed to {new:g}.",
-                                          "color": "gold"}))
+    g.command("tellraw @a " + json.dumps(lang.text("aoe2mc.diplomacy.speed", g.player, f"{new:g}", color="gold")))
     return new
 
 
@@ -179,8 +179,8 @@ def change(g, player, n):
     g.command(gather.allies_command(g.players))
     if not treaty.holds(g):
         g.command(gather.neutral_command(g.players))
-    g.command(f"tellraw @a[team=p{n}] " + json.dumps({"text": f"Player {g.player} changed its stance to you: "
-                                                              f"{kind.capitalize()}.", "color": "gold"}))
+    g.command(f"tellraw @a[team=p{n}] " + json.dumps(lang.text("aoe2mc.diplomacy.changed", g.player,
+                                                              lang.text(f"aoe2mc.diplomacy.{kind}"), color="gold")))
     if player:                                                         # an AI script has no menu (#4574)
         show(g, player)
     return kind
@@ -222,8 +222,8 @@ def send(g, player, n, res):
     else:
         tributes = vars(g).setdefault("tributes", {})
         tributes.setdefault(n, dict.fromkeys(RESOURCES, 0))[res] += LOT
-    g.command("tellraw @a " + json.dumps({"text": f"Player {g.player} sent {LOT} {res} to player {n}.",
-                                          "color": "gold"}))
+    g.command("tellraw @a " + json.dumps(lang.text("aoe2mc.diplomacy.tribute", g.player, LOT,
+                                                  lang.text(f"aoe2mc.resource.{res}"), n, color="gold")))
     return True
 
 

@@ -38,7 +38,7 @@ def test_the_human_player_wins_when_player_2_has_nothing_left():
     server.log.clear()
     check(g)
     assert "aoe destroy @e[tag=aoe2mc.building,team=p2]" in server.log            # cheats.destroy: the rest goes
-    assert 'tellraw @a {"text": "Player 2 is defeated.", "color": "red"}' in server.log
+    assert 'tellraw @a {"translate": "aoe2mc.conquest.defeated", "fallback": "Player %s is defeated.", "with": ["2"], "color": "red"}' in server.log
     assert 'title @a[team=p1] title {"translate":"aoe2mc.victory","fallback":"Victory","color":"gold"}' in server.log and g.ended == "Victory"
 
 

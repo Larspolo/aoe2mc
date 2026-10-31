@@ -25,7 +25,7 @@ def test_a_click_on_game_speed_makes_the_game_faster_for_all():
     assert f"{diplomacy.SPEED_SLOT}:clock:Game%20speed:" in server.log[-1]
     click(server, g, diplomacy.SPEED_SLOT)
     assert g.speed == 1.5 and "tick rate 30" in server.log
-    assert any(c.startswith("tellraw @a") and "game speed to 1.5" in c for c in server.log)
+    assert any(c.startswith("tellraw @a") and '"translate": "aoe2mc.diplomacy.speed"' in c and '"1.5"]' in c for c in server.log)
     assert "aoe menu-close Steve" in server.log
     click(server, g, diplomacy.SPEED_SLOT)
     click(server, g, diplomacy.SPEED_SLOT)                             # after the fastest speed: Normal again
