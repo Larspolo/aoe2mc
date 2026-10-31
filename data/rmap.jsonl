@@ -58,31 +58,6 @@
 {"name": "TREE_MANGROVE", "forest": [55]}
 {"name": "TREE_RAINFOREST", "forest": [56]}
 {"name": "TREE_ITALIAN_PINE", "forest": [88]}
-{"name": "VILLAGER_MALE", "start": [2, 4, 1]}
-{"name": "VILLAGER_FEMALE", "start": [1, 4, 1]}
-{"name": "SCOUT_CAVALRY", "start": [1, 6, 1]}
-{"name": "SHEEP", "start": [4, 7, 1]}
-{"name": "FORAGE_BUSH", "start": [6, 9, 0]}
-{"name": "GOLD_MINE", "start": [7, 11, 0]}
-{"name": "STONE_MINE", "start": [5, 13, 0]}
-{"name": "WILD_BOAR", "start": [1, 15, 0]}
-{"name": "WILD_BOAR", "start": [1, 16, 0]}
-{"name": "DEER", "start": [3, 18, 0]}
-{"name": "GOLD_MINE", "start": [4, 19, 0]}
-{"name": "STONE_MINE", "start": [4, 20, 0]}
-{"name": "SHEEP", "scatter": [2, 2]}
-{"name": "FORAGE_BUSH", "scatter": [6, 1]}
-{"name": "GOLD_MINE", "scatter": [6, 2]}
-{"name": "STONE_MINE", "scatter": [6, 2]}
-{"name": "WILD_BOAR", "scatter": [1, 2]}
-{"name": "DEER", "scatter": [3, 1]}
-{"name": "SHORE_FISH", "shore_fish": true}
-{"name": "GREY_WOLF", "wolves": ["gold_rush", 2, 1]}
-{"name": "GREY_WOLF", "wolves": ["highland", 0, 1]}
-{"name": "FISH_SALMON", "fish": ["highland", 0, 4]}
-{"name": "FISH_DORADO", "fish": ["islands", 3, 6]}
-{"name": "FISH_TUNA", "fish": ["mediterranean", 2, 4]}
-{"name": "FISH_TUNA", "fish": ["nomad", 2, 4]}
 {"name": "ATTILA_THE_HUN", "object": 777}
 {"name": "VILLAGER_MALE", "start": [2, 4, 1], "object": 83}
 {"name": "VILLAGER_FEMALE", "start": [1, 4, 1], "object": 293}
