@@ -71,6 +71,7 @@ POP = "aoe_pop"             # the sidebar objective with the population of each 
 BURST = 500                 # ms of game time between two bursts of a flare column: a burst lives about 1 s (#2506)
 TEAM_STEP = 10000           # sidebar score of a team game: team key × TEAM_STEP + population, the panel sorts by it (#1189)
 COUNTED = "aoe2mc.pop"      # entity tag of the units that the population counts (#787)
+REGICIDE = "Regicide"       # the lobby type of a Regicide record (mgz game_types, aoe2mc.json "lobby", #4835)
 EFFECT = "aoe2mc.effect"    # entity tag of the texts above a building (#843)
 TRADE_MS = 2000              # the trades of one market within this time join in one text (#3942)
 PANEL = "aoe2mc.panel"      # entity tag of the production texts above a building (#2811, decision #2808: C)
@@ -449,6 +450,8 @@ class Replay:
         self.homing = {}                        # object ID of a monk with a relic -> (monastery rect, player) (#4010)
         self.queued = {}                        # object ID of a monk in `fetching` -> its monastery ORDER (#4517)
         self.relic_at, self.relic_gold = 0, {}  # game time (ms) of the last relic gold, player -> gold not yet whole (#4011)
+        self.kings, self.regicided = self.start_kings(), {}   # Regicide (#4835): player -> UUIDs of its live Kings;
+        # player -> game time (ms) of the death of its last King
         self.rng = np.random.default_rng(1)
         self.kinds, self.seen = aoe2mc.object_kinds(), set()
         self.sent, self.busy = 0, 0.0           # commands sent, seconds spent sending them
@@ -487,6 +490,45 @@ class Replay:
             if o["kind"] == "unit" and o.get("player") and o["name"].startswith("VILLAGER"):
                 self.villager(o["player"], 1)
         self.restored()
+
+    def start_kings(self):
+        """Regicide (#4835): player -> the UUIDs of its start Kings (the units of the mode, regicide.MODES), when the
+        lobby of the record (#4832) is Regicide; else none. A player with no King entity is not in the mode, as in the
+        game program (regicide.setup)."""
+        import regicide  # regicide -> conquest -> cheats -> replay: import it late
+        if (self.data.get("lobby") or {}).get("type") != REGICIDE:
+            return {}
+        kings = {}
+        for o in self.data["objects"]:
+            if o["kind"] == "unit" and o.get("player") and o["name"] in regicide.MODES["regicide"]["units"] and "uuid" in o:
+                kings.setdefault(o["player"], set()).add(o["uuid"])
+        return kings
+
+    def king_tags(self):
+        """The tag regicide.KING on each start King, so that regicide.has_king finds the live ones (#4835)."""
+        import regicide  # regicide -> conquest -> cheats -> replay: import it late
+        return [f"tag {u} add {regicide.KING}" for p in sorted(self.kings) for u in sorted(self.kings[p])]
+
+    def king_check(self, t):
+        """Regicide (#4835): end each player whose Kings all died in a fight of the plugin at game time t (ms):
+        regicide.has_king, one RCON round trip per player of the mode. A DELETE of the record ends it in delete()."""
+        import regicide  # regicide -> conquest -> cheats -> replay: import it late
+        out = []
+        for p in sorted(set(self.kings) - set(self.regicided)):
+            self.flush()                                            # the kills of the queue first
+            if not regicide.has_king(self.game, p):
+                out += self.king_died(p, t)
+        return out
+
+    def king_died(self, p, t):
+        """The last King of player p died at game time t (ms): the player is out, as in AoE2 DE Regicide (#4835). Its
+        units and buildings stay as in the record; the panel, the Timeline book and the summary say "King killed"."""
+        self.regicided[p] = t
+        name, color = self.player(p)
+        return ["title @a subtitle " + json.dumps(text(f"King killed at {mmss(t)}")),
+                "title @a title " + json.dumps(text(f"{name} is out", color)),
+                "tellraw @a " + json.dumps([text(name, color), text(f": the King died at {mmss(t)}. Regicide: the "
+                                                                    "player is out.")])]
 
     def restored(self):
         """A restored record starts with the state of its save (#4592): the age, the technologies and the resources of
@@ -1218,6 +1260,10 @@ class Replay:
                 self.lost[v.player] = self.lost.get(v.player, 0) + (not e.get("free"))   # a scout swap (#3028)
                 out.append(f"kill {v.uuid}")
                 out += self.carried(i, v, e["time"])
+                if v.uuid in self.kings.get(v.player, ()):         # Regicide: its last King ends the player (#4835)
+                    self.kings[v.player].discard(v.uuid)
+                    if not self.kings[v.player] and v.player not in self.regicided:
+                        out += self.king_died(v.player, e["time"])
         return out + self.unhold(e["time"])
 
     def fall(self, rect):
@@ -2633,6 +2679,12 @@ class Replay:
         trained villagers and the resources of the gather steps (estimated: the record has no resources); the military
         (#1066): trained military units, lost units (DELETE, and the fights of the plugin: census) and lost buildings."""
         out = ['tellraw @a {"text": "Summary (est.)", "bold": true}']
+        for p in self.ranked(self.regicided):                       # Regicide: the players who are out (#4835)
+            name, color = self.label(p)
+            out.append("tellraw @a " + json.dumps([text(name, color), text(
+                f": King killed {mmss(self.regicided[p])} (Regicide)")]))
+        if lobby := self.lobby_text(True):                                  # the lobby settings of the record (#4833)
+            out.append("tellraw @a " + json.dumps(text(lobby, "gray")))
         for p in self.ranked(self.pop.keys() | self.villagers.keys() | self.gathered.keys() | self.army.keys()
                              | self.lost.keys() | self.razed.keys()):
             name, color = self.label(p)
@@ -2645,6 +2697,16 @@ class Replay:
                 f": military units trained {self.army.get(p, 0)}, units lost {self.lost.get(p, 0)}, "
                 f"buildings lost {self.razed.get(p, 0)}, APM {self.mean_apm(p, self.ended)}{self.army_text(p)}")]))
         return out + self.tech_commands() + self.society_commands()
+
+    def lobby_text(self, full=False):
+        """The game type of the record ("Random Map"; full: also the data set, the starting age and the population
+        limit) from the key "lobby" of aoe2mc.json (#4832, #4833). "" when the world has no lobby."""
+        lobby = self.data.get("lobby") or {}
+        if not full:
+            return str(lobby.get("type") or "")
+        parts = [lobby.get("type"), lobby.get("dataset"), lobby.get("starting_age") and f"start {lobby['starting_age']}",
+                 lobby.get("population") and f"population {lobby['population']}"]
+        return " · ".join(str(v) for v in parts if v)
 
     def idle_text(self, p):
         """The idle villager time of player p as M:SS (#3757)."""
@@ -2728,6 +2790,7 @@ class Replay:
         lines, army, castle = {}, set(), set()
         arrivals = [{"time": r["home_t"], "player": r["player"], "kind": "relic"} for r in self.relics.values()
                     if r["home"] is not None]                       # a relic in a monastery (#4010)
+        arrivals += [{"time": t, "player": p, "kind": "king"} for p, t in self.regicided.items()]   # (#4835)
         for e in sorted(self.data.get("timeline", []) + self.spawns() + arrivals, key=lambda e: e["time"]):
             p, line = e.get("player"), None
             if e["time"] > end or p is None:
@@ -2744,6 +2807,8 @@ class Replay:
                 line = "Resigns"
             elif e["kind"] == "relic":
                 line = "Relic"
+            elif e["kind"] == "king":
+                line = "King killed"
             if line:
                 lines.setdefault(p, []).append(f"{mmss(e['time'])} {line}")
         return self.book_command("Timeline", lines)
@@ -2828,14 +2893,16 @@ class Replay:
         shows each team together, and a fixed number format shows the population (#1189)."""
         out, top = [], max((self.team(p) or 0 for p in self.pop), default=0)
         if self.shown is None:
-            self.shown, out = {}, [f'scoreboard objectives add {POP} dummy "Population"',
+            title = " · ".join(["Population"] + [v for v in [self.lobby_text()] if v])   # the game type (#4833)
+            self.shown, out = {}, [f"scoreboard objectives add {POP} dummy {json.dumps(title)}",
                                    f"scoreboard objectives setdisplay sidebar {POP}"]
         for p in sorted(self.pop):
             name, color = self.label(p)
             res = " ".join(f"{r[0].upper()} {max(0, v)}" for r, v in self.resources(p).items())
             apm = "" if t is None else f" · APM {self.apm(p, t)} · TC idle {self.tc_text(p, t)}"
             relics = "" if not (n := self.relic_count(p)) else f" · Relics {n}"
-            if self.named.get(p) != (line := f"{name} · {self.ages.get(p, 'Dark')} · {res} (est.){relics}{apm}"):
+            king = "" if p not in self.kings else " · King killed" if p in self.regicided else " · King"   # (#4835)
+            if self.named.get(p) != (line := f"{name}{king} · {self.ages.get(p, 'Dark')} · {res} (est.){relics}{apm}"):
                 out.append(f"scoreboard players display name P{p} {POP} {json.dumps(text(line, color))}")
                 self.named[p] = line
             if self.shown.get(p) != self.pop[p]:
@@ -3245,6 +3312,7 @@ class Replay:
         send([f'bossbar add {BAR} ""', f"bossbar set {BAR} color white",
                    f"bossbar set {BAR} max {max(1, int(end) // 1000)}"] +
              ([f"tag {u} add {COUNTED}" for u in self.counted] + ["aoe deathmarks on", "aoe minimap on", f"aoe minimap frame {FRAME * self.T}"]) * self.ai +
+             self.king_tags() +                                     # Regicide (#4835)
              # the death marks (#846) and the live units on the map item (#1237); the plugin paints the bare ground
              # over the start objects of the base image, so the start buildings get their squares (#1940)
              self.minimap_buildings(set(), set()) * (self.pov is None) +
@@ -3252,6 +3320,7 @@ class Replay:
         if to is None:                                              # not again after a jump back (#2949)
             send(replay_input.fight_lines(self.control["fights"], self.control["players"]))
         census = self.census if bar and self.ai else lambda t=0: None
+        kings = self.king_check if bar and self.ai else lambda t: []    # Regicide: the Kings that died in a fight (#4835)
         watching = self.control["camera"]                           # the camera state of the last poll (#3369)
         look = self.look_around if bar and self.ai else lambda: None          # as census: a server of run.py --replay
         while k < len(events) or self.moving or self.builds or self.charging or self.idle or not complete:
@@ -3353,6 +3422,7 @@ class Replay:
                 shown = int(now) // 1000
                 if clock() - counted >= CENSUS:
                     census(now)
+                    self.send(kings(now))
                     look()
                     counted = clock()
                 send(self.clock_commands(now, end, self.speed) + self.score_commands(now) + self.overview(join=True))
@@ -3379,6 +3449,7 @@ class Replay:
                     log(f"{m:02d}:{s:02d} {e['kind']} {e.get('name') or e.get('age') or ''} "
                         f"player {e.get('player')}: {len(cmds)} commands")
         census(end)
+        self.send(kings(end))
         self.send(self.expire(math.inf) + self.panel(math.inf) + self.camera_off())
         send(self.clock_commands(end, end, speed, done=True) + self.score_commands() + self.end_commands(end) +
              self.summary_commands() + self.timeline_commands(end) +

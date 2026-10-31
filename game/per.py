@@ -187,6 +187,8 @@ def read(path, defined=()):
 
 NAMES = {}                                                         # script name -> its line of per_names.jsonl
 OPS = {"<": operator.lt, "<=": operator.le, ">": operator.gt, ">=": operator.ge, "==": operator.eq, "!=": operator.ne}
+MATH = ("=", "+", "-", "*", "/", "z/", "mod", "min", "max", "neg", "%*", "%/")   # airef "mathOp" (up-modify-*)
+GET_FACT = ("up-get-fact", "up-get-fact-max", "up-get-fact-min", "up-get-fact-sum", "up-get-player-fact")
 STOCK = ("food", "wood", "gold", "stone")
 TOWN = 30                       # tiles around the own town center: "in town" (AoE2 sn-maximum-town-size, airef "Facts")
 PERIMETERS = {1: (10, 20), 2: (18, 30)}   # tiles from the town center to each wall ring (airef "build-wall", #4740)
@@ -258,21 +260,65 @@ class Script:
             self.warned.add((what, name))
             print(f"AI script: unknown {what} {name}: skipped", file=sys.stderr)
 
+    def operand(self, kind, ref):
+        """The value of ref for a typed prefix: a constant ("" or c:), a goal (g:) or a strategic number (s:, by name or
+        id). None, with one warning, for an unknown goal or number."""
+        if kind == "g":
+            if ref not in self.goals:
+                return self.warn("goal", ref)
+            return self.goals[ref]
+        if kind == "s":
+            ref = SN_IDS.get(ref, ref)
+            if ref not in SN:
+                return self.warn("strategic number", ref)
+            return self.number(ref)
+        return ref
+
     def compare(self, op, value, ref):
         """value REL ref; a typed operator (airef "Typed operators") reads ref as a constant (c:), the value of a
         strategic number (s:) or of a goal (g:). An unknown operator, number or goal gives one warning and is false."""
         kind, _, rel = op.rpartition(":")
         if rel not in OPS or kind not in ("", "c", "s", "g"):
             return self.warn("operator", op) or False
-        if kind == "s":
-            if ref not in SN:
-                return self.warn("strategic number", ref) or False
-            ref = self.number(ref)
-        elif kind == "g":
-            if ref not in self.goals:
-                return self.warn("goal", ref) or False
-            ref = self.goals[ref]
-        return OPS[rel](value, ref)
+        ref = self.operand(kind, ref)
+        return False if ref is None else OPS[rel](value, ref)
+
+    def math(self, op, value, ref):
+        """The new value of value OP ref (airef "mathOp", up-modify-*). None, with one warning, for an unknown operator
+        or number: the command does nothing. / and mod by 0 keep the value; /, z/, mod, %* and %/ are whole numbers,
+        a half away from 0 for / and truncated toward 0 for the others (7 / 2 = 4, 7 z/ 2 = 3)."""
+        kind, _, rel = op.rpartition(":")
+        if rel not in MATH or kind not in ("", "c", "s", "g"):
+            return self.warn("operator", op)
+        ref = self.operand(kind, ref)
+        if ref is None:
+            return None
+        sign = 1 if (value < 0) == (ref < 0) else -1                  # the sign of value / ref
+        if rel == "=":
+            return ref
+        if rel == "+":
+            return value + ref
+        if rel == "-":
+            return value - ref
+        if rel == "*":
+            return value * ref
+        if rel == "min":
+            return min(value, ref)
+        if rel == "max":
+            return max(value, ref)
+        if rel == "neg":
+            return -ref
+        if rel == "%*":
+            return sign * (abs(value * ref) // 100)
+        if not ref:
+            return value
+        if rel == "/":
+            return sign * ((2 * abs(value) + abs(ref)) // (2 * abs(ref)))
+        if rel == "z/":
+            return sign * (abs(value) // abs(ref))
+        if rel == "mod":                                               # the sign of value, as in C
+            return (1 if value >= 0 else -1) * (abs(value) % abs(ref))
+        return sign * (abs(value * 100) // abs(ref))                   # %/
 
     def game(self, name, *kinds):
         """The name of the game program of a script name of one of kinds, or None (one warning)."""
@@ -335,6 +381,21 @@ class Script:
         if name == "goal":                                         # (goal ID VALUE) or (goal ID REL VALUE)
             op, v = ("==", args[1]) if len(args) == 2 else args[1:3]
             return self.compare(op, self.goals.get(args[0], -1), v)
+        if name in GET_FACT:                                       # a command as a fact: it runs, and is true
+            self.get_fact(name, args)
+            return True
+        if name in ("up-modify-goal", "up-modify-sn"):             # a command as a fact: it runs, and is true
+            self.act(None, (name, *args))
+            return True
+        if name == "up-compare-goal":                              # (up-compare-goal GOAL REL VALUE)
+            return self.compare(args[1], self.goals.get(args[0], -1), args[2])
+        if name == "up-compare-sn":                                # (up-compare-sn SN REL VALUE)
+            sn = SN_IDS.get(args[0], args[0])
+            if sn not in SN:
+                return self.warn("strategic number", sn) or False
+            return self.compare(args[1], self.number(sn), args[2])
+        if name == "up-compare-const":                             # (up-compare-const CONST REL VALUE)
+            return self.compare(args[1], args[0], args[2])
         if name == "strategic-number":                             # (strategic-number NAME REL VALUE)
             args = (SN_IDS.get(args[0], args[0]),) + tuple(args[1:])
             if args[0] not in SN:
@@ -446,14 +507,41 @@ class Script:
 
     def value(self, name):
         """The number of a fact (REL VALUE), or None for an unknown fact."""
+        return self.fact_value(name, 0)
+
+    def fact_value(self, name, param, g=None):
+        """The number of the fact name (airef "FactId") for Gather g (default: the own one), or None for an unknown
+        fact. param: the resource of escrow-amount, the unit or building of the counts, else unused (#4868)."""
+        import build
         import train
-        g, b = self.bot.g, self.bot
+        b, g = self.bot, g or self.bot.g
         if name.endswith("-amount") and (res := name.removesuffix("-amount")) in STOCK:
             return g.stock[res]
+        if name in ("unit-type-count", "building-type-count", "unit-type-count-total", "building-type-count-total"):
+            n = self.game(param, "unit" if name[0] == "u" else "building")
+            return None if n is None else self.count(n, g, total=name.endswith("-total"))
         return {"game-time": lambda: b.time, "population": lambda: g.pop,
                 "civilian-population": lambda: len(g.villagers), "military-population": lambda: len(g.soldiers),
                 "housing-headroom": lambda: max(train.limit(g) - g.pop, 0),
-                "population-headroom": lambda: max(train.max_pop(g) - g.pop, 0)}.get(name, lambda: None)()
+                "population-headroom": lambda: max(train.max_pop(g) - g.pop, 0),
+                "population-cap": lambda: train.limit(g), "current-age": lambda: build.ages(g),
+                "current-age-time": lambda: self.age_time(g),
+                "escrow-amount": lambda: self.escrow.get(param, 0) if g is b.g else 0}.get(name, lambda: None)()
+
+    def get_fact(self, name, args):
+        """up-get-fact, up-get-player-fact and up-get-fact-min, -max, -sum: the value of a fact into a goal (#4868). An
+        unknown fact or player gives one warning and leaves the goal. As a fact it is true (airef "Fact/Action")."""
+        if name == "up-get-fact":
+            xs, (fact, param, goal) = [self.bot.g], args
+        else:
+            (who, fact, param, goal), xs = args, None
+            xs = self.sides(who)[0] if who != self.bot.g.player else [self.bot.g]
+        got = [v for x in xs if (v := self.fact_value(fact, param, x)) is not None]
+        if xs and not got:
+            return self.warn("fact", fact)
+        if got:
+            op = {"up-get-fact-min": min, "up-get-fact-max": max, "up-get-fact-sum": sum}.get(name, lambda v: v[0])
+            self.goals[goal] = op(got)
 
     def count(self, n, g=None, total=False):
         """The live units or complete buildings of game name n of Gather g (default: the own one); total: also the
@@ -729,6 +817,19 @@ class Script:
             if args[0] not in SN:
                 return self.warn("strategic number", args[0])
             self.sn[args[0]] = args[1]
+        elif name in GET_FACT:
+            self.get_fact(name, args)
+        elif name == "up-modify-goal":                               # (up-modify-goal GOAL OP VALUE)
+            new = self.math(args[1], self.goals.get(args[0], -1), args[2])
+            if new is not None:
+                self.goals[args[0]] = new
+        elif name == "up-modify-sn":                                 # (up-modify-sn SN OP VALUE)
+            sn = SN_IDS.get(args[0], args[0])
+            if sn not in SN:
+                return self.warn("strategic number", sn)
+            new = self.math(args[1], self.number(sn), args[2])
+            if new is not None:
+                self.sn[sn] = new
         elif name == "set-escrow-percentage":                    # (set-escrow-percentage RESOURCE PCT)
             if args[0] not in STOCK:
                 return self.warn("resource", args[0])

@@ -65,7 +65,9 @@ RETRY = 60.0                                                       # AoE2 second
 STALL = 30.0                                                       # AoE2 seconds with no step nearer and no damage
 DEFENDERS = 3                                                      # villagers that attack one predator
 LEVELS = {r["name"]: r for r in table.load("difficulty.jsonl")}    # "AI difficulty", in the order of the AoE2 lobby
+FLARE_NEAR = 16                                                     # blocks: an enemy near a flare (#4888)
 ANSWERS = {r["name"]: r["answer"] for r in table.load("taunts.jsonl") if "answer" in r}   # the taunts 42 to 44 (#4829)
+WAIT = {r["name"]: r["wait"] for r in table.load("taunts.jsonl") if "wait" in r}         # taunt 37 before its age (#4884)
 
 
 def level_of(setting, k):
@@ -114,6 +116,8 @@ class Bot:
         self.failed = {}                                               # sources that a villager could not reach -> time
         self.sent = {}                                                 # villager -> the tile that go() sent it to
         self.sides = (None, {})                                        # (own and foe places, {tile: at home}) (#1810)
+        self.told, self.signal = {}, None                              # player -> taunts read; "now", "wait" (#4828)
+        self.giving, self.heard = {}, {}                               # ally -> "extra" or "all" (#4830); -> taunts read
         self.g.home = self.home                                        # the next bush or mine of Gather.nearest too
         self.guarded = -LOOK                                           # AoE2 seconds of the last look for predators
         self.defense = {}                                              # villager -> (predator, last res, last tree)
@@ -233,22 +237,121 @@ class Bot:
         self.move(share, work)
         self.spend()
         self.time += g.tick * gather.NORMAL
+        self.obey()
         due = self.script.attacking if self.script else self.time >= self.attack   # a script: attack-now (#4530)
+        due = self.signal == "now" or due and self.signal != "wait"       # the taunts of an ally (#4828)
         if due and self.time >= self.looked + LOOK:   # each look costs RCON commands
             self.looked = self.time
             self.fight()
+
+    def obey(self):
+        """The AI command taunts of the allies (#4828, AoE2): 31 attack now, 36 wait for the signal (31), 45 retreat (the
+        soldiers walk home and wait), 46 flare the army, 47 attack at the flare (#4888), 61-68 attack player 1-8 when it is an enemy. answer() says the answer of
+        taunts.jsonl. An enemy's taunt changes nothing."""
+        import diplomacy
+        g = self.g
+        for x in build.sides(g):
+            log = getattr(x, "taunted", [])
+            new, self.told[x.player] = log[self.told.get(x.player, 0):], len(log)
+            if x.player == g.player or diplomacy.stance(g, x.player) != "ally":
+                continue
+            for n in map(int, new):
+                if n == 31 or 61 <= n <= 68 and diplomacy.stance(g, n - 60) == "enemy":
+                    self.signal, self.foe = "now", self.foe if n == 31 else n - 60
+                elif n in (36, 45):
+                    self.signal = "wait"
+                    if n == 45:
+                        self.retreat()
+                elif n == 46:
+                    self.flare_army()
+                elif n == 47:
+                    self.to_flare(x)
+
+    def soldiers_at(self):
+        """{soldier: position} of the soldiers with an attack (a transport ship has none)."""
+        g = self.g
+        return g.positions(sorted(u for u, n in g.soldiers.items() if combat.stats(n).attack))
+
+    def flare_army(self):
+        """Taunt 46 (#4888): a flare at the center of the soldiers, as the AoE2 AI flares its army."""
+        import flare
+        if mine := self.soldiers_at():
+            x, y, z = (math.floor(sum(p[i] for p in mine.values()) / len(mine)) for i in range(3))
+            flare.put(self.g, f"Player {self.g.player}", x, y, z)
+
+    def to_flare(self, x):
+        """Taunt 47 (#4888): the soldiers attack the enemy unit nearest to the last live flare of the ally x (within
+        FLARE_NEAR blocks), else walk to the flare. No live flare: one answer line."""
+        g = self.g
+        live = [f for f in getattr(x, "flares", []) if f[3] > x.clock()]
+        if not live:
+            g.command(f"tellraw @a[team=p{x.player}] " + json.dumps({"text": f"<Player {g.player}> I see no flare.",
+                                                                      "color": "gray"}))
+            return
+        spot, mine = live[-1][:3], self.soldiers_at()
+        if not mine:
+            return
+        near = {k: p for k, p in g.positions(sorted(g.enemies)).items() if math.dist(p, spot) <= FLARE_NEAR}
+        us = sorted(mine)
+        self.wave, self.charged, self.signal = set(us), True, "now"
+        if near:
+            t = min(near, key=lambda k: (math.dist(near[k], spot), k))
+            self.targets.update({u: t for u in us})
+            ai.attack(g.game, us, [g.soldiers[u] for u in us], g.map.T, t,
+                      [gather.NORMAL * train.speed(g, g.soldiers[u], u) for u in us])
+        else:
+            g.walk_to(None, (spot[0], spot[2]), us)
+
+    def retreat(self):
+        """The soldiers of the wave stop and walk back to the town center (taunt 45)."""
+        g, c = self.g, self.center()
+        units, self.wave, self.targets, self.charged = sorted(self.wave), set(), {}, False
+        if units and c:
+            g.walk_to(None, (c[0] * g.map.T, c[1] * g.map.T), units)
 
     def spend(self):
         """Spend the resources above keep(): the next age, then the technologies, then the units. The AoE2 AI
         researches its economy technologies before more soldiers: else each soldier takes the food above the reserve,
         and the bot never has the food of a technology (#4285: 2 technologies in 30 minutes).
         A script: one pass of its rules in each step (AoE2 checks them about 4 times each second, #4529)."""
+        self.give()
         if self.script:
             self.script.step()
             return
         self.age_up()
         self.research()
         self.recruit()
+
+    def give(self):
+        """The tributes that the allies ask for with taunts (#4830, AoE2): 38 and 58 "extra" (the stock over reserve()),
+        60 "all" (all stock), 59 stops. In lots, as the button of the diplomacy menu; no market: one chat line per ask."""
+        import diplomacy
+        import market
+        g = self.g
+        for x in build.sides(g):
+            log = getattr(x, "taunted", [])
+            new, self.heard[x.player] = log[self.heard.get(x.player, 0):], len(log)
+            if x.player == g.player or diplomacy.stance(g, x.player) != "ally":
+                continue
+            for n in map(int, new):
+                if n == 37:                                                # AoE2: the wonder goes first (#4884)
+                    self.order = ("WONDER", *(o for o in self.order if o != "WONDER"))
+                    if build.locked(g, "WONDER"):
+                        g.command(f"tellraw @a[team=p{g.player}] " + json.dumps({"text": WAIT["37"], "color": "gray"}))
+                elif n == 59:
+                    self.giving.pop(x.player, None)
+                elif n in (38, 58, 60):
+                    if not market.markets(g):
+                        g.command("tellraw @a " + json.dumps({"text": f"<Player {g.player}> I have no market: I cannot "
+                                                                      "send tribute.", "color": "gray"}))
+                        continue
+                    self.giving[x.player] = "all" if n == 60 else "extra"
+        for n, mode in sorted(self.giving.items()):
+            keep = {} if mode == "all" else self.reserve()
+            for r in diplomacy.RESOURCES:
+                while g.stock[r] - keep.get(r, 0) >= diplomacy.cost(g, diplomacy.LOT) and market.markets(g) \
+                        and diplomacy.send(g, self.nobody, n, r):
+                    pass
 
     def defend(self):
         """Send the DEFENDERS nearest villagers to a predator in the sight of a bot villager (#3399). A defender whose
