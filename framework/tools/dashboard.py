@@ -108,10 +108,21 @@ def prs_after(number):
     return None if not t else sum(n != number for _, n in merges(since=ts(t)))
 
 
-def waits(issue, after=prs_after):
-    """True while the "Start after: N PRs after #M" line of the issue holds it. after(M): the merged PRs after #M."""
+def last_merge():
+    """The time of the last PR merged into the default branch, or None."""
+    return next((t for t, _ in merges(n=1)), None)
+
+
+def waits(issue, after=prs_after, now=None, last=last_merge):
+    """True while the "Start after: N PRs after #M" line of the issue holds it. after(M): the merged PRs after #M.
+    The wait ends also after claim.ROADMAP_IDLE minutes with no merged PR (#5201): with no other ready ticket no run
+    merges, so the count never comes. last(): the time of the last merge."""
     s = start_after_prs(issue)
-    return bool(s) and (after(s[1]) or 0) < s[0]
+    if not s or (after(s[1]) or 0) >= s[0]:
+        return False
+    from claim import ROADMAP_IDLE  # here: claim.py imports this module
+    t, now = last(), now or datetime.datetime.now(datetime.timezone.utc)
+    return bool(t) and now - t < datetime.timedelta(minutes=ROADMAP_IDLE)
 
 
 def names(text):
@@ -180,7 +191,7 @@ def held(issue, now, after=prs_after):
     date, a #M that is no PR: GitHub answers 404) holds only its own ticket, with one warning on stderr (#3055): an
     error here stopped the pick of all tickets, usage.py --fire and the dashboard."""
     try:
-        return (start_after(issue) or now) > now or waits(issue, after)
+        return (start_after(issue) or now) > now or waits(issue, after, now)
     except Exception as e:                          # ValueError, CalledProcessError, HTTPError: the line is wrong
         line = re.search(r"^Start after:.*", issue.get("body") or "", re.M)
         print(f"warning: #{issue['number']} is not ready: bad line {line[0].strip() if line else ''!r} ({e})",
