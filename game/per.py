@@ -207,6 +207,27 @@ SN = {r["name"]: r["default"] for r in table.load("per_numbers.jsonl")}
 SN_IDS = {r["id"]: r["name"] for r in table.load("per_numbers.jsonl")}   # a script can name a number by its id
 
 
+SETUP = ("civ-selected", "death-match-game", "difficulty", "map-size", "map-type", "regicide-game", "starting-age")
+
+
+def map_size(data):
+    """The airef map size of a map (aoe2mc.json): the smallest size with at least its tiles, else the largest."""
+    n = len(data.get("ground", ())) // data.get("tile_size", 1)
+    sizes = sorted((r["tiles"], k) for k, r in names().items() if r["kind"] == "map-size")
+    return next((k for t, k in sizes if t >= n), sizes[-1][1])
+
+
+def symbols(data, player, difficulty, modes=(), age="dark"):
+    """The system symbols of #load-if-defined (airef "Conditional loading") of the bot of player: the civilization
+    (BRITONS-CIV), the difficulty (DIFFICULTY-HARD), the game types (DEATH-MATCH, REGICIDE), the start age
+    (CASTLE-AGE-START), the map type (SCENARIO-MAP) and the map size (TINY-MAP). A map that the game program knows by
+    no airef name is SCENARIO-MAP."""
+    civ = data.get("players", {}).get(str(player), {}).get("civ")
+    out = {f"{k}-civ" for k, r in names().items() if r["kind"] == "civ" and r["game"] == civ}
+    out |= {f"difficulty-{k}" for k, r in names().items() if r["kind"] == "difficulty" and r["game"] == difficulty}
+    return out | set(modes) | {f"{age}-age-start", "scenario-map", map_size(data)}
+
+
 class Script:
     """The rules of an AI script on a bot.Bot: goals and timers keep their values between steps."""
 
@@ -353,12 +374,43 @@ class Script:
             return self.ring(args[0]) is not None and self.compare(args[1], self.walled(args[0]), args[2])
         if name == "enemy-buildings-in-town":
             return self.in_town()
+        if name in SETUP:
+            return self.setup(name, args)
         if name.startswith("players-"):                            # (players-FACT PLAYER ...): the other players
             return self.players(name.removeprefix("players-"), args[0], args[1:])
         value = self.value(name)
         if value is None:
             return self.warn("fact", name) or False
         return self.compare(args[0], value, args[1])
+
+    def setup(self, name, args):
+        """A fact of the game setup (airef "Facts"): the civilization, the difficulty, the game type, the start age
+        and the map."""
+        import bot as bots
+        import civs
+        import gather
+        g = self.bot.g
+        if name == "civ-selected":
+            return (civ := self.game(args[0], "civ")) is not None and civs.real(g) == civ
+        if name in ("death-match-game", "regicide-game"):
+            return gather.has_mode(g, name.removesuffix("-game"))
+        if name == "difficulty":                                   # (difficulty REL LEVEL): AoE2 numbers, 0 is hardest
+            if (level := self.game(args[1], "difficulty")) is None:
+                return False
+            return self.compare(args[0], bots.LEVELS[self.bot.difficulty]["aoe2"], bots.LEVELS[level]["aoe2"])
+        if name == "starting-age":                                 # (starting-age REL AGE)
+            import train
+            return self.age_of(args[1]) is not None and \
+                self.compare(args[0], train.STARTS[getattr(g, "start_age", "dark")]["ages"], self.age_of(args[1]))
+        row = names().get(args[0])
+        kind = name                                                # (map-type TYPE), (map-size SIZE)
+        if row is None or row["kind"] != kind:
+            return self.warn(kind, args[0]) or False
+        return args[0] == (map_size(g.data) if kind == "map-size" else "scenario-map")
+
+    def age_of(self, arg):
+        row = names().get(arg)
+        return row["age"] if row and row["kind"] == "age" else self.warn("age", arg)
 
     def drop_distance(self, res):
         """The distance in tiles from the nearest drop site of res to its nearest source; 255 when none (airef: -1 or a
@@ -457,6 +509,11 @@ class Script:
             got = [diplomacy.stance(self.bot.g, x.player) == args[0] for x in xs]
         elif fact == "current-age-time":
             got = [self.compare(args[0], self.age_time(x), args[1]) for x in xs]
+        elif fact == "civ":                                        # (players-civ PLAYER CIV)
+            if (civ := self.game(args[0], "civ")) is None:
+                return False
+            import civs
+            got = [civs.real(self.bot.g, x.player) == civ for x in xs]
         else:
             return self.warn("fact", "players-" + fact) or False
         return bool(got) and (all(got) if every else any(got))

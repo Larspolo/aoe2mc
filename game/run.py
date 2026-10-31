@@ -484,13 +484,13 @@ def bot_foe(players, player):
     return next((p for p in [*range(1, player), *others] if p != player and not gather.allied(players, player, p)), None)
 
 
-def bot_script(players, player, files, k):
+def bot_script(players, player, files, k, defined=()):
     """The AI rules of the bot k of player: the embedded script of its scenario row (aoe2mc.json "ai", #4531), else
     the file k of --ai (#4529), else None: a bot after the list plays by its own logic."""
     import per
     if text := players.get(str(player), {}).get("ai"):
-        return per.parse(text, file=f"<script of player {player}>")
-    return per.read(files[k]) if k < len(files or ()) else None
+        return per.parse(text, defined, file=f"<script of player {player}>")
+    return per.read(files[k], defined) if k < len(files or ()) else None
 
 
 def bot_seats(players, people, n):
@@ -814,6 +814,10 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
         first = [*getattr(game, "seats", ()), 1, 2][:2] if getattr(game, "seats", ()) else [1, 2]
         print(f"{people} people: the first Minecraft player who joins plays player {first[0]}, the second player "
               f"{first[1]}.", file=sys.stderr)
+    modes = {settings["mode"], *(m for m in ON_TOP if settings[m.replace("-", "_")])} - {"standard"}   # (#2490)
+    if settings["age"] == "dark" and (ages := [MODES[m]["age"] for m in modes if "age" in MODES[m]]):   # (#2408)
+        import train  # the latest start age of the modes (#2441)
+        settings["age"] = max(ages, key=lambda a: train.STARTS[a]["ages"])
     if settings["mode"] == "scenario":               # the computer players of the scenario, not --bot (#2543)
         import scenario
         seats = scenario.bot_seats(data["players"], players)
@@ -822,7 +826,9 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
     for k, (player, foe) in enumerate(seats):        # after the people, next to their Sides (#1794)
         import bot as bots
         level = bots.level_of(settings["ai_difficulty"], k)   # one level for each bot in seat order (#4020)
-        script = bot_script(data["players"], player, settings["ai"], k)
+        import per
+        script = bot_script(data["players"], player, settings["ai"], k,     # the symbols of #load-if-defined (#4683)
+                            per.symbols(data, player, level, modes, settings["age"]))
         import replay
         import treaty as treaties
         attack = max(bot_attack, settings["treaty"], key=replay.aoe2mc.game_time)   # the bot waits for the treaty too
@@ -840,12 +846,9 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
               f"{'never' if at == math.inf else 'at %d:%02d' % divmod(round(at), 60)}.", file=sys.stderr)
     import combat
     combat.setup(game, data)                         # AoE2 hit points and damage (#514)
-    modes = {settings["mode"], *(m for m in ON_TOP if settings[m.replace("-", "_")])} - {"standard"}   # (#2490)
-    if settings["age"] == "dark" and (ages := [MODES[m]["age"] for m in modes if "age" in MODES[m]]):   # (#2408)
-        import train  # the latest start age of the modes (#2441)
-        settings["age"] = max(ages, key=lambda a: train.STARTS[a]["ages"])
     for x in [g, *(s.g for s in g.bots)]:                        # before the age: train.research sets the scores (#3089)
         x.modes = frozenset(modes)                               # gather.has_mode: build.locked, Gather.run (#2490)
+        x.start_age = settings["age"]                            # the fact starting-age of an AI script (#4683)
         if MODES[settings["mode"]].get("bots") or x is g:
             x.mode = settings["mode"]                            # build.locked of each player (#2407)
     if not state and settings["age"] != "dark":                  # after the base values: the technologies change them
