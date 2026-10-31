@@ -1364,8 +1364,9 @@ class Script:
             return n - 1, n - 1
         if kind in ("position-target", "position-point"):
             return self.point
-        if kind == "position-object":
-            return self.warn("position", kind)                      # the target object: the object search ticket
+        if kind == "position-object":                              # the tile of the target object (#5231)
+            p = self.target_at()
+            return None if p is None else tuple(int(v) for v in p)
         if kind in ("position-enemy", "position-focus", "position-flank"):
             return foe or (kind == "position-enemy" and self.position("position-opposite")) or None
         if me is None:
@@ -1491,8 +1492,7 @@ class Script:
         tiles × 100."""
         if name == "up-get-point":                                 # (up-get-point POSITION GOAL)
             p = self.position(args[0])
-            if p is not None or args[0] != "position-object":
-                self.store(args[1], p if p is not None else (-1, -1))
+            self.store(args[1], p if p is not None else (-1, -1))
             return
         if name in ("up-set-target-point", "up-set-precise-target-point"):     # (up-set-target-point GOAL)
             p = self.pair(args[0])
