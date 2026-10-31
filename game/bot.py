@@ -356,6 +356,8 @@ class Bot:
                     self.scuttle()
                 elif n in (56, 57):                                      # train counter units, stop (#4885)
                     self.counter = n == 56
+                elif n in (54, 55):                                      # build walls (#4890)
+                    self.walls(n, x)
                 elif n == 59:
                     self.giving.pop(x.player, None)
                 elif str(n) in FOCUS:                                          # the allies ask for one class (#4886)
@@ -829,6 +831,38 @@ class Bot:
             return False
         T, drops = g.map.T, [c for d in g.map.drops.get(res, ()) for c in d]
         return all(math.dist(((t[0] + 0.5) * T, (t[1] + 0.5) * T), c) > FAR * T for t in full for c in drops)
+
+    def walls(self, n, x):
+        """Taunt 54 of the ally x: wall sites on the tiles between its two last live flares; 55: the wall ring around the
+        own town (per.Script.wall, perimeter 1), side by side as long as the stock pays (#4890). A stone wall, a palisade
+        before its age. No stone or wood, or fewer than two flares: an answer line."""
+        g, T = self.g, self.g.map.T
+        name = "PALISADE_WALL" if build.locked(g, "STONE_WALL") else "STONE_WALL"
+        cost = build.price(g, name)
+        say = lambda text: g.command(f"tellraw @a[team=p{g.player}] " + json.dumps(   # noqa: E731
+            {"text": f"<Player {g.player}> {text}", "color": "gray"}))
+        if any(g.stock[r] < v for r, v in cost.items()) or not g.villagers:
+            return say("I have not enough resources for a wall.")
+        if n == 55:
+            s = self.script or per.Script([], self)
+            for _ in range(8):                                            # the 8 sides of the ring
+                before = len(g.sites)
+                s.wall(1, name.lower().replace("_", "-"))
+                if len(g.sites) == before:
+                    break
+            return
+        flares = [f for f in getattr(x, "flares", []) if f[3] > x.clock()][-2:]
+        if len(flares) < 2:
+            return say("Flare two places for the wall.")
+        (x0, _, z0, _), (x1, _, z1, _) = flares
+        rects = [r for a, b in build.wall_tiles(int(x0) // T, int(z0) // T, int(x1) // T, int(z1) // T)
+                 if build.free(g, r := (a * T, (a + 1) * T, b * T, (b + 1) * T))]
+        k = min([len(rects)] + [g.stock[r] // v for r, v in cost.items() if v])
+        sites = [build.found(g, name, r) for r in rects[:k]]
+        for site in sites:
+            site["line"] = rects[0]
+        if sites:
+            self.builder(sites[0])
 
     def builder(self, site):
         """Send villagers to build site up to the number of up-assign-builders of its type (default 1, #4875): idle ones
