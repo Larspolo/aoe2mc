@@ -269,7 +269,8 @@ def read_map(path, seed=1, players=2, teams=None, size=None, mode="standard", la
     if p.startswith(RANDOM_MAP):
         import rmap
         return map_description(rmap.random_map(p[len(RANDOM_MAP):], seed, players, teams), path)
-    if p.endswith(".rms"):
+    import rmap
+    if rmap.is_script(p):
         return read_rms(path, seed, players, teams, size, mode, labels, together)
     return (read_record if p.endswith(RECORDS) else read_saved if p.endswith(SAVES) else read_scx if p.endswith((".scx", ".scn")) or old_format(path) else
             read_json if p.endswith(".json") else read_scenario)(path)
@@ -5759,7 +5760,20 @@ def weapon_texture(kind):
     return im
 
 
-def write_resourcepack(out):
+TEXTS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "game", "data", "texts.jsonl")
+
+
+def lang_files(path=TEXTS):
+    """{path in the pack: bytes}: one lang file per Minecraft language code (a column of `path` other than "name",
+    #5345) with values, so the `translate` keys of game/lang.py show the string of the client language."""
+    with open(path, encoding="utf-8") as f:
+        rows = [json.loads(s) for s in f if s.strip()]
+    codes = sorted({c for r in rows for c in r if c != "name"})
+    return {f"assets/aoe2mc/lang/{c}.json": json.dumps({r["name"]: r[c] for r in rows if c in r}, indent=1,
+                                                       sort_keys=True).encode() for c in codes}
+
+
+def write_resourcepack(out, texts=TEXTS):
     """--resource-pack (#2738): resourcepacks/resources.zip in the world folder, which single player loads with the
     world (26.x: LevelResource.MAP_RESOURCE_FILE; a world of an older version had resources.zip at its top, and the
     client moves it there, ResourcePackLocationFileFix). The zombie, skeleton and drowned units get a human face, the
@@ -5796,6 +5810,7 @@ def write_resourcepack(out):
              "textures": {"layer0": f"aoe2mc:item/{w}"}}).encode()
         files[f"assets/aoe2mc/items/{w}.json"] = json.dumps(
             {"model": {"type": "minecraft:model", "model": f"aoe2mc:item/{w}"}}).encode()
+    files |= lang_files(texts)                                       # the game program texts (#5345)
     os.makedirs(os.path.join(out, "resourcepacks"), exist_ok=True)
     with zipfile.ZipFile(os.path.join(out, "resourcepacks", "resources.zip"), "w", zipfile.ZIP_STORED) as z:
         for name in sorted(files):
@@ -6349,8 +6364,8 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
         clock[0] = now
 
     size, terrain, elevation, tnames, texts, objects, players = read_map(src, seed, nplayers, teams, map_size, game_mode, labels, together)
-    if src.lower().endswith(".rms"):         # the lobby of a random map: game/run.py --mode default (#4825)
-        import rmap
+    import rmap
+    if rmap.is_script(src):                 # the lobby of a random map: game/run.py --mode default (#4825)
         texts["lobby"] = {"map_size": next((k for k, v in sorted(rmap.MAP_SIZES.items()) if v == size), str(size)),
                           "mode": game_mode, "script": os.path.splitext(os.path.basename(src))[0]}   # map-type (#5102)
     record = src.lower().endswith(RECORDS)
@@ -6848,13 +6863,13 @@ def main(argv=None):
         a.name = a.name or f"{a.random_map.title()} {a.seed}"
     if a.output is None:
         ap.error("give the input file and the output world folder")
-    if a.players is not None and not (a.scenario.lower().endswith(".rms") or a.scenario.lower().startswith(RANDOM_MAP)):
+    if a.players is not None and not (rmap.is_script(a.scenario) or a.scenario.lower().startswith(RANDOM_MAP)):
         ap.error("--players needs a random map script or --random-map")
     if a.game_mode not in rmap.MODE_LABELS:
         ap.error(f"--game-mode {a.game_mode}: no such mode; the modes: {', '.join(sorted(rmap.MODE_LABELS))}")
-    if a.game_mode != "standard" and not a.scenario.lower().endswith(".rms"):
+    if a.game_mode != "standard" and not rmap.is_script(a.scenario):
         ap.error("--game-mode needs a random map script (.rms)")
-    if a.map_size is not None and not a.scenario.lower().endswith(".rms"):
+    if a.map_size is not None and not rmap.is_script(a.scenario):
         ap.error("--map-size needs a random map script (.rms)")
     teams = None
     if a.teams is not None:

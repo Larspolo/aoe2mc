@@ -46,6 +46,10 @@ ASSIGN = {r["name"]: r["assign"] for r in RMAP if "assign" in r}       # the tar
 CLIFF_TYPES = {r["name"]: r["cliff_type"] for r in RMAP if "cliff_type" in r}   # cliff_type word: object name prefix
 
 
+def is_script(path):      # .rms, and .rms2 of the DE folder of the scripts (#5363), any case
+    return path.lower().endswith((".rms", ".rms2"))
+
+
 def named(word, consts):      # a #const that names a color mood or a cliff type (#5248): its name, else the word
     v = consts.get(word)
     return v if isinstance(v, str) else word

@@ -81,21 +81,34 @@ def title(g, n, text, color):
     g.command(f"title @a[team=p{n}] title " + json.dumps(lang.text(f"aoe2mc.{text.lower()}", color=color), separators=(",", ":")))
 
 
+TUNES = {r["name"]: r for r in table.load("tunes.jsonl")}   # event -> its short tune (#5339)
+
+
+def tune(g, n, event):
+    """Play the tune of event (age_up, victory, defeat) to the people of player n, in the category music: the Music
+    slider of the client sets its volume. Minimum volume 1: each person hears it, far from the command source too."""
+    m = TUNES[event]
+    g.command(f"playsound minecraft:{m['sound']} music @a[team=p{n}] ~ ~ ~ 1 {m['pitch']} 1")
+
+
 def over(g, won):
     """End the game: the team of each person gets its own title (#1936), "Victory" when won(its player), else "Defeat",
     and each Gather of the game stops (g.ended). A bot (h.share) has no Minecraft player and gets no title. Each person
     gets the recap book, and its order items go (recap.give, #2660)."""
     import fog  # they import cheats: import them late
     import hill
+    import music  # no music over the end tune (#5341): stop it before the tunes
     import relic_victory
     import scenario
     import time_limit
     import treaty
     import wonder
+    music.stop(g)
     for h in fog.gathers(g):
         text, color = ("Victory", "gold") if won(h.player) else ("Defeat", "red")
         if not getattr(h, "share", None):
             title(g, h.player, text, color)
+            tune(g, h.player, "victory" if won(h.player) else "defeat")
             for cmd in scenario.ending(f"@a[team=p{h.player}]", g.data.get("messages", {}), won(h.player)):
                 g.command(cmd)                                         # the scenario text of the end (#3298)
         h.ended = text
@@ -104,8 +117,6 @@ def over(g, won):
         hill.close(h)
         time_limit.close(h)
         treaty.close(h)
-    import music  # no music over the end tune (#5341)
-    music.stop(g)
     import recap  # the recap book and the end hotbar (#2660)
     recap.give(g, won)
     import achievements  # the AoE2 achievements of a win (#5279)

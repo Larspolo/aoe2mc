@@ -49,4 +49,4 @@ def test_the_end_of_the_game_stops_the_music():
     cheats.over(g, lambda n: n == 1)
     assert "stopsound @a music" in server.log[start:]
     music.tick(g)                                                      # no new track after the end
-    assert not any(c.startswith("playsound") and "music" in c for c in server.log[start:])
+    assert not any(t["name"] in c for t in music.TRACKS for c in server.log[start:])   # the end tune only (#5339)

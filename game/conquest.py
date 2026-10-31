@@ -76,6 +76,7 @@ def defeat(g, n, text=None):
     cheats.destroy(g, n)
     g.command("tellraw @a " + json.dumps({"text": text or f"Player {n} is defeated.", "color": "red"}))
     cheats.title(g, n, "Defeat", "red")
+    cheats.tune(g, n, "defeat")
     finish(g)
 
 
