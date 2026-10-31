@@ -2025,6 +2025,10 @@ class Script:
             return False
         lo_g, hi_g = f.get("garrison", (-1, -1))
         lo_d, hi_d = f.get("distance", (-1, -1))
+        if "garrisoned" in f:                                       # fe-filter-garrisoned (#5048)
+            import garrison
+            if int(x is not None and key in garrison.inside(x)) != bool(f["garrisoned"][0]):
+                return False
         if (lo_g, hi_g, lo_d, hi_d) == (-1, -1, -1, -1):
             return True
         at, held = (self.details(x) if x is not None else {}).get(key, (None, 0))
@@ -2511,6 +2515,28 @@ class Script:
                     return x, key, n, st
         return None
 
+    def cc_effect(self, effect, unit, attribute, value, div):
+        """A cheat effect on attribute (an AoE2 id: aoe2mc.STAT_ATTRIBUTES, 8 and 9 CLASS_ATTRIBUTES with class * 256 +
+        amount) of unit type (a name or an id) of the bot: effect 0 sets, 4 adds, 5 multiplies by value / div, as
+        "Modify Attribute" (trigger_attributes, scenario.attributes; #5048)."""
+        import combat
+        import train
+
+        import aoe2mc
+        x = self.bot.g
+        op = {0: 1, 4: 2, 5: 4}.get(effect)
+        n = self.game(OBJECT_IDS.get(unit, unit) if isinstance(unit, int) else unit, "unit", "building")
+        cls, q = (value // 256, value % 256) if attribute in (8, 9) else (None, value)
+        field = aoe2mc.STAT_ATTRIBUTES.get(attribute) or aoe2mc.CLASS_ATTRIBUTES.get((attribute, cls))
+        if op is None or not isinstance(n, str) or field is None:
+            return self.warn("cheat effect", (effect, unit, attribute))
+        vars(x).setdefault("trigger_attributes", []).append([n, field, op, q / div if op == 4 else q])
+        for uuid, m in [(u["uuid"], u["name"]) for u in x.units if "uuid" in u] + list(x.soldiers.items()):
+            if m == n:                                                 # the units of the type at once
+                x.command(train.stats_line(x, uuid, m, s := train.stats(x, m, uuid)))
+                if field == "range" and (cmd := combat.range_command(uuid, m, x.map.T, s=s)):
+                    x.command(cmd)
+
     def type_value(self, unit, data):
         """A value of the type of an object (combat.stats), -1 when the game program has none."""
         import combat
@@ -2878,7 +2904,22 @@ class Script:
         elif name == "resign":                                       # (resign): the bot is out, as the cheat (#3105)
             import conquest  # conquest imports gather, which imports this module
             conquest.defeat(g, g.player)
-        elif name not in ("do-nothing", "chat-local-to-self", "chat-local", "chat-trace", "log", "log-trace", "trace-fact",
+        elif name in ("fe-cc-effect-amount", "fe-cc-effect-percent"):   # (fe-cc-effect-amount EFFECT TYPE ATTRIBUTE VALUE)
+            if not any(getattr(x, "cheats", False) for x in [*build.sides(g), g]):   # a cheat, as up-cc-add-resource (#5048)
+                return self.warn("cheat (cheats off)", name)
+            self.cc_effect(*args[:4], 100 if name.endswith("percent") else 1)
+        elif name == "fe-exclude-from-attack-group":                 # (fe-exclude-from-attack-group [TYPE ID]): the attack
+            oid = self.operand(self.type_kind(args[0]), args[1]) if len(args) > 1 else self.target   # skips it (#5048)
+            if (row := self.find_object(oid)) is not None:
+                b.excluded = vars(b).get("excluded", set()) | {row[1]}
+        elif name == "fe-reset-attack-group-exclusion-list":
+            b.excluded = set()
+        elif name == "fe-filter-garrisoned":                         # (fe-filter-garrisoned TYPE VALUE): 1 only garrisoned
+            kind = self.type_kind(args[0]) if len(args) > 1 else "c"
+            self.filters["garrisoned"] = [self.operand(kind, args[-1]) if kind else 1]
+        elif name == "fe-set-signal":                                # as up-set-signal (#5048)
+            self.shared("up-set-signal", args)
+        elif name not in ("do-nothing", "chat-local-to-self", "fe-break-point", "chat-local", "chat-trace", "log", "log-trace", "trace-fact",
                           "set-author-name", "set-author-email", "set-author-version", "enable-wall-placement", "up-chat-data-to-self",
                           "up-log-data", "up-request-hunters"):
             # no one sees a self chat; the bots have no hunt (#4739); each wall ring is always enabled (ring())
