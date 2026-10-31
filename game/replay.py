@@ -708,7 +708,14 @@ class Replay:
             seen = self.eye(name)
             i = seen and self.gather.pick_unit(*seen, at)
             if i is None:
-                shown.pop(name, None)
+                line = seen and self.building_line(*seen)                # no unit on the view line (#5288)
+                if not line:
+                    shown.pop(name, None)
+                    continue
+                if shown.get(name, (None, -math.inf))[0] == line and now - shown[name][1] < INSPECT_AGAIN:
+                    continue
+                shown[name] = line, now
+                out.append(f"title {name} actionbar {line}")
                 continue
             v, (who, color) = self.units[i], self.player(self.units[i].player)
             civ = self.data["players"].get(str(v.player), {}).get("civ")
@@ -724,6 +731,29 @@ class Replay:
             shown[name] = line, now
             out.append(f"title {name} actionbar {line}")
         return out
+
+    def building_line(self, eye, d, reach=64):
+        """The action bar JSON of the building that the ray from eye in direction d hits first (up to 3 tiles above
+        its ground, as gather.Gather.pick_fort), or None (#5288): name, player, hit points, garrison count and the
+        production text of the panel (#2811). Hit points: the max of combat.stats (the replay has no damage of a
+        building)."""
+        import combat
+        rects = [(s[0], s[1], s[2], s[3]) for s in self.starts] + \
+                [(next((i for i, r in self.ids.items() if r == rect), None), p, n, rect) for p, n, rect in self.placed]
+        for k in range(1, reach * 4):
+            x, y, z = (eye[j] + d[j] * k / 4 for j in range(3))
+            for ref, p, n, (x0, x1, z0, z1) in rects:
+                g = self.map.y(math.floor(x), math.floor(z)) if self.map else None
+                if x0 <= x < x1 and z0 <= z < z1 and (g is None or y < g + 3 * self.T):
+                    who, color = self.player(p)
+                    hp = combat.stats(n).hp
+                    parts = [text(f"{pretty(n)} ("), text(who, color), text(f"): {hp}/{hp}")]
+                    if inside := len(self.garrisons.get((x0, x1, z0, z1), ())):
+                        parts.append(text(f" · garrison {inside}"))
+                    if ref is not None and ref in self.panels:
+                        parts.append(text(f" · {self.panels[ref]}"))
+                    return json.dumps(parts)
+        return None
 
     def task(self, i):
         """The AoE2 task word of unit i from the replay state, for the selection panel (#5287)."""
