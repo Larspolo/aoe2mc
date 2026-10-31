@@ -15,6 +15,8 @@ A villager gets the look of its AoE2 task (#868, gather.Gather.task): an ORDER o
 a MOVE, an ORDER on something else, or the end of its work without a next resource gives it the idle look (units.IDLE_JOB).
 Garrisons (#809): a GARRISON command, or an ORDER on an own start building with garrison room (game/garrison.py SIZES),
 puts the units inside it when they arrive (the state of the converter, #807), and UNGARRISON lets them out next to it.
+A GARRISON on an own ram, siege tower or transport ship (#5369) puts the units that fit on it when they arrive: they
+ride it (Minecraft riders, transport.mount), and UNGARRISON lets them out on the land next to it.
 A villager with resources and an ORDER on a drop site drops them and does not go in.
 Gather points (#1227): a trained unit walks to the last GATHER POINT of its building, and a villager there gathers, as
 after an ORDER. The record names the unit only in its first command, so until then it has a temporary negative ID
@@ -434,6 +436,8 @@ class Replay:
         self.entering = {}                      # object ID -> [footprint, building entry, arrival (ms) or None] (#809)
         self.builds = {}                        # object ID of a builder -> (game time (ms) of the build end, order then) (#1282)
         self.garrisons = {}                     # building footprint -> object IDs of the units inside it
+        self.cargo = {}                         # object ID of a ram, siege tower or ship -> object IDs inside it (#5369)
+        self.boarding = {}                      # object ID -> [ID of its ram, tower or ship, arrival (ms) or None]
         self.work = {}                          # object ID -> the resource tile that it left for a garrison (#1179)
         self.ids = {}                           # new object ID of a building -> footprint of its replay building (#876)
         self.hunted = {}                        # object ID of a hunted animal -> the tile of its carcass (#1229)
@@ -703,8 +707,9 @@ class Replay:
             return []
         self.grid()                                                     # self.gather and the start units
         shown, out = vars(self).setdefault("inspected", {}), []
+        aboard = {u for us in self.cargo.values() for u in us}            # they ride their holder, hidden (#5369)
         at = {i: self.at(v, t, False) for i, v in self.units.items()        # a walking unit: its place on the leg
-              if v.pos is not None and v.uuid not in self.hidden}             # (#5312), not the end of the leg
+              if v.pos is not None and v.uuid not in self.hidden and i not in aboard}   # (#5312), not the end of the leg
         now = clock()
         for name in sorted(getattr(self.game, "joined", ())):         # run.Game.op_joined: no RCON command
             seen = self.eye(name)
@@ -729,6 +734,7 @@ class Replay:
             carry = self.carry_left(i, t)
             more = f" | {self.task(i)}" + (f" | carries {carry} {v.res}" if carry else "") \
                 + f" | {s.attack} atk {s.melee}/{s.pierce} arm" + (f" r{s.range:g}" if s.range else "")
+            more += f" · garrison {len(self.cargo[i])}" if self.cargo.get(i) else ""
             line = json.dumps([text(f"{pretty(v.name)} ("), text(who, color), text(f"): {hp}/{top}{more}")])
             if shown.get(name, (None, -math.inf))[0] == line and now - shown[name][1] < INSPECT_AGAIN:
                 continue
@@ -782,7 +788,7 @@ class Replay:
             return "patrolling"
         if i in self.moving:
             return "walking"
-        return "garrisoned" if any(i in ids for ids in self.garrisons.values()) else "idle"
+        return "garrisoned" if any(i in ids for ids in [*self.garrisons.values(), *self.cargo.values()]) else "idle"
 
     def eye(self, name):
         """(eye, direction) of player name, or None (gather.Gather.look)."""
@@ -1538,6 +1544,8 @@ class Replay:
                 out += self.fall(rect)
                 out += self.unshelter(rect)
             elif (v := self.unit(i, name, e["player"])) is not None:
+                out += self.unload(i, e["time"])                    # the units of a ram come out (#5369); those of
+                out += [f"kill {self.units.pop(u).uuid}" for u in self.cargo.pop(i, [])]   # a ship at sea die
                 del self.units[i]
                 self.refs.pop(i, None)
                 self.moving.pop(i, None)
@@ -1545,8 +1553,13 @@ class Replay:
                 self.arriving.pop(i, None)
                 self.entering.pop(i, None)
                 self.builds.pop(i, None)
+                self.boarding.pop(i, None)
                 for us in self.garrisons.values():
                     us[:] = [u for u in us if u != i]
+                for h in [h for h, us in self.cargo.items() if i in us]:
+                    self.cargo[h].remove(i)
+                    if not self.cargo[h]:
+                        del self.cargo[h]
                 self.pop[e["player"]] = max(0, self.pop.get(e["player"], 0) - 1)
                 self.lost[v.player] = self.lost.get(v.player, 0) + (not e.get("free"))   # a scout swap (#3028)
                 out.append(f"kill {v.uuid}")
@@ -2011,6 +2024,9 @@ class Replay:
         goals = self.goals(e)
         inside = {u: r for r, us in self.garrisons.items() for u in us}   # AoE2 selects no unit inside: an order
         out0 = [c for i in e["objects"] if i in inside for c in self.leave(i, inside[i])]   # says it is out (#1229)
+        out0 += [c for i in e["objects"] for h, us in list(self.cargo.items()) if i in us
+                 for c in self.unload(h, e["time"], i)]
+        carrier = self.carrier(e)
         group = [(i, v) for i, name in zip(e["objects"], e.get("names") or [None] * len(e["objects"]))
                  if (v := self.unit(i, name, e["player"])) is not None and self.queued.get(i) is not e]
         if e["kind"] == "order" and (relic := e.get("target")) in self.relics:   # only a monk carries a relic (#4009)
@@ -2032,6 +2048,9 @@ class Replay:
             self.builds.pop(i, None)
             self.arriving.pop(i, None)
             self.entering.pop(i, None)
+            self.boarding.pop(i, None)
+            if carrier is not None and i != carrier and self.fits(self.units[carrier].name, v.name):
+                self.boarding[i] = [carrier, None]
             if e.get("garrison") and (v.tree is not None or i not in self.work):   # BACK TO WORK sends it there
                 self.work[i] = v.tree                               # again; a second bell keeps the work (#4063)
             fish = fisher(v.name) and tile in self.map.fish         # a fishing ship only fishes (#1283)
@@ -2522,7 +2541,85 @@ class Replay:
             v.pos, v.path = (x + 0.5, float(y), z + 0.5), []
             self.moving.pop(i, None)                                # inside: no walk (#1177)
             out += [f"aoe stop {v.uuid}"] * self.ai + garrison.enter(v.uuid, x, y, z)
-        return out + [c for r in sorted(full) for c in self.arrows(r)]
+        return out + [c for r in sorted(full) for c in self.arrows(r)] + self.board(t)
+
+    @staticmethod
+    def fits(holder, name):
+        """True when a unit `name` goes into the unit holder `holder`, as in the game program: a ram takes foot soldiers
+        only (garrison.board), a transport ship each land unit (transport.fits), a siege tower villagers, infantry and
+        foot archers (siege_tower.fits)."""
+        import civs
+        import combat
+        import siege_tower
+        import transport
+        if holder == siege_tower.NAME:
+            s = combat.stats(name)
+            return name.startswith("VILLAGER") or combat.INF in s.classes or combat.ARC in s.classes and not civs.mounted(s)
+        if holder == transport.NAME:
+            return not ship(name)
+        return not (name.startswith("VILLAGER") or ship(name) or transport.mounted(name) or name in aoe2mc.CARRIERS)
+
+    def carrier(self, e):
+        """The object ID of the own ram, siege tower or transport ship that a GARRISON or ORDER e targets, else None."""
+        import siege_tower
+        t = e.get("target") if e["kind"] == "order" else None
+        v = self.units.get(t)
+        return t if v is not None and v.player == e["player"] and (v.name in aoe2mc.CARRIERS or v.name == siege_tower.NAME) \
+            else None
+
+    def room(self, h):
+        """The units that the ram, siege tower or ship h takes: CARRIERS (a transport ship: more for the Saracens, as
+        transport.size), siege_tower.SIZE."""
+        import civs
+        import siege_tower
+        import transport
+        v = self.units[h]
+        if v.name == transport.NAME:
+            civ = self.data["players"].get(str(v.player), {}).get("civ")
+            return transport.SIZE + civs.value("transport", civ, 0)
+        return aoe2mc.CARRIERS.get(v.name, siege_tower.SIZE)
+
+    def board(self, t):
+        """The units that arrived at their ram, siege tower or ship until game time t (ms) ride it (transport.mount),
+        each on the one before, as the game program. A full one: they stay next to it, as in AoE2."""
+        import transport
+        out = []
+        for i, (h, at) in list(self.boarding.items()):
+            if at is None or at > t:
+                continue
+            del self.boarding[i]
+            if h not in self.units or i not in self.units or len(units := self.cargo.get(h, [])) >= self.room(h):
+                continue
+            v, last = self.units[i], self.units[units[-1]] if units else None
+            cmds = transport.mount(v.uuid, self.units[h].uuid, last and last.uuid, bool(last) and transport.mounted(last.name))
+            out += [c for c in [f"aoe stop {v.uuid}", *cmds] if self.ai or not c.startswith("aoe ")]
+            self.cargo[h] = units + [i]
+            v.path = []
+            self.moving.pop(i, None)
+        return out
+
+    def unload(self, h, t, only=None):
+        """The units inside the ram, siege tower or ship h (only: that one) come out on the free land cells nearest to
+        it at game time t (transport.land), the top of the stack first, as transport.out. Without land within
+        transport.SHORE tiles (a ship on the sea) they stay inside. Returns the commands."""
+        import transport
+        units, v = self.cargo.get(h, []), self.units.get(h)
+        x, _, z = self.at(v, t, False) if v is not None else (0, 0, 0)
+        ring = transport.land(types.SimpleNamespace(map=self.map), (math.floor(x), math.floor(z)), len(units)) \
+            if units and v is not None else []
+        if not ring:
+            return []
+        out, gone = [], [i for i in reversed(units) if only in (None, i)]
+        for k, i in enumerate(gone):
+            (x, z), w = ring[k % len(ring)], self.units[i]
+            y = self.map.y(x, z) or 0
+            w.pos = (x + 0.5, float(y), z + 0.5)
+            out += [c for c in transport.dismount(w.uuid, x, y, z) if self.ai or not c.startswith("aoe ")]
+        if not (rest := [i for i in units if i not in gone]):
+            del self.cargo[h]
+        else:
+            self.cargo[h] = rest
+        return out
 
     def arrows(self, rect):
         """`aoe arrows` of the plugin for the start building rect with the units inside it (#1203), as the game program
@@ -2589,9 +2686,9 @@ class Replay:
     def ungarrison(self, e):
         """UNGARRISON: the units come out of each building, and walk to its last GATHER POINT and work there, as in
         AoE2 (#3826: a boar lure in the town center left the villagers idle). Returns the commands."""
-        out = []
+        out = [c for b in e["objects"] if b in self.cargo for c in self.unload(b, e["time"])]   # a ram or ship (#5369)
         for b, name in zip(e["objects"], e.get("names") or [None] * len(e["objects"])):
-            for r in self.holders(dict(e, objects=[b], names=[name])):
+            for r in self.holders(dict(e, objects=[b], names=[name])) if b not in self.units else ():
                 ids, p = list(self.garrisons.get(r, [])), self.points.get(b)
                 out += self.release(r)
                 if ids and p is not None:
@@ -2674,6 +2771,9 @@ class Replay:
                 return
         if i in self.homing:
             self.send(self.deliver(i, t))
+        if i in self.boarding:                                      # at its ram, tower or ship: enter() (#5369)
+            self.boarding[i][1] = t
+            return
         if i in self.entering:
             x0, x1, z0, z1 = self.entering[i][0]
             if v.cell in self.map.around({(x, z) for x in range(x0, x1) for z in range(z0, z1)}):
@@ -3447,6 +3547,8 @@ class Replay:
                          if (v := self.units.get(i)) is not None and v.tree is not None)
             for i in set(e["objects"]) & self.entering.keys():      # it is at its building at once
                 self.entering[i][2] = e["time"]
+            for i in set(e["objects"]) & self.boarding.keys():      # at its ram or ship at once (#5369)
+                self.boarding[i][1] = e["time"]
 
         def built(t):                                               # the builders of a farm farm it, of a camp
             for i, then in self.built(t):                           # gather next to it after the build (#1282)
@@ -3658,6 +3760,7 @@ class Replay:
                         *(due for due, _ in self.builds.values()),                                # a build ends
                         *(due for due, _ in self.idle.values()),                                  # settle() (#2633)
                         *(at for _, _, at in self.entering.values() if at is not None),            # go in
+                        *(at for _, at in self.boarding.values() if at is not None),               # ride (#5369)
                         *[c for i in self.moving if self.ai and (c := getattr(self.units[i], "check", None))]],
                        default=math.inf)                            # the recheck of a long leg (#1293)
             if k == len(events) and step > end and not finish:        # the record ends at its last event: do not wait for walks (#978)

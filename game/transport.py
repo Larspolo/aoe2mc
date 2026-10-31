@@ -108,16 +108,6 @@ def mounted(name):
     return "Passengers" in (unit_types.classify(name) or {})
 
 
-def ride(g, u, units):
-    """The command that puts unit u on top of the units inside a ship (the UUIDs units, the crew under the first)."""
-    if not units:
-        return None
-    last = units[-1]
-    if mounted("VILLAGER" if last in g.villagers else g.soldiers.get(last, "")):
-        return f"execute as {last} on passengers run ride {u} mount @s"
-    return f"ride {u} mount {last}"
-
-
 def size(g):
     """The units that a transport ship of the player of g takes: SIZE, more for the Saracens (the key "transport", #2344)."""
     return SIZE + civs.value("transport", civs.civ(g), 0)
@@ -153,9 +143,8 @@ def go_in(g, u, ship):
         if (v := g.villagers.get(u)) is not None:
             v.state = "idle"
         return
-    first = f"execute as {ship} on passengers run ride {u} mount @s"
-    for c in (ride(g, u, units) or first, f"data merge entity {u} {INSIDE}", f"tag {u} add {GARRISONED}",
-              f"aoe hide @a {u}"):
+    last = units[-1] if units else None
+    for c in mount(u, ship, last, bool(last) and mounted("VILLAGER" if last in g.villagers else g.soldiers.get(last, ""))):
         g.command(c)
     units.append(u)
     if (v := g.villagers.get(u)) is not None:
@@ -178,13 +167,26 @@ def out(g, ship):
     for k, u in enumerate(reversed(units)):                        # the top of the stack first
         x, z = ring[k % len(ring)]
         y = g.map.y(x, z)
-        for c in (f"ride {u} dismount", f"tp {u} {x + 0.5} {y} {z + 0.5}", f"data merge entity {u} {OUTSIDE}",
-                  f"tag {u} remove {GARRISONED}", f"aoe show @a {u}", f"aoe label {u}"):
+        for c in dismount(u, x, y, z):
             g.command(c)
         if (v := g.villagers.get(u)) is not None:
             v.pos, v.state = (x + 0.5, float(y), z + 0.5), "idle"
     g.command(f"tellraw @a[team=p{g.player}] " + json.dumps({"text": f"{len(units)} units came out", "color": "gray"}))
     return units
+
+
+def mount(u, holder, last=None, rider=False):
+    """The commands that put unit u into the ship or ram holder: it rides the top unit inside (last; the rider of last
+    when rider: a horse takes one passenger), else the crew of holder. go_in and the live replay (#5369) send them."""
+    ride = (f"execute as {last} on passengers run ride {u} mount @s" if rider else f"ride {u} mount {last}") if last \
+        else f"execute as {holder} on passengers run ride {u} mount @s"
+    return [ride, f"data merge entity {u} {INSIDE}", f"tag {u} add {GARRISONED}", f"aoe hide @a {u}"]
+
+
+def dismount(u, x, y, z):
+    """The commands that put unit u out of its ship or ram, at the block cell (x, z) and height y (out, the replay)."""
+    return [f"ride {u} dismount", f"tp {u} {x + 0.5} {y} {z + 0.5}", f"data merge entity {u} {OUTSIDE}",
+            f"tag {u} remove {GARRISONED}", f"aoe show @a {u}", f"aoe label {u}"]
 
 
 def aim(g, ships, cell):
