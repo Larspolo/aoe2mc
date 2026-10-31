@@ -65,6 +65,7 @@ RETRY = 60.0                                                       # AoE2 second
 STALL = 30.0                                                       # AoE2 seconds with no step nearer and no damage
 DEFENDERS = 3                                                      # villagers that attack one predator
 LEVELS = {r["name"]: r for r in table.load("difficulty.jsonl")}    # "AI difficulty", in the order of the AoE2 lobby
+FLARE_NEAR = 16                                                     # blocks: an enemy near a flare (#4888)
 ANSWERS = {r["name"]: r["answer"] for r in table.load("taunts.jsonl") if "answer" in r}   # the taunts 42 to 44 (#4829)
 
 
@@ -244,7 +245,7 @@ class Bot:
 
     def obey(self):
         """The AI command taunts of the allies (#4828, AoE2): 31 attack now, 36 wait for the signal (31), 45 retreat (the
-        soldiers walk home and wait), 61-68 attack player 1-8 when it is an enemy. answer() says the answer of
+        soldiers walk home and wait), 46 flare the army, 47 attack at the flare (#4888), 61-68 attack player 1-8 when it is an enemy. answer() says the answer of
         taunts.jsonl. An enemy's taunt changes nothing."""
         import diplomacy
         g = self.g
@@ -260,6 +261,45 @@ class Bot:
                     self.signal = "wait"
                     if n == 45:
                         self.retreat()
+                elif n == 46:
+                    self.flare_army()
+                elif n == 47:
+                    self.to_flare(x)
+
+    def soldiers_at(self):
+        """{soldier: position} of the soldiers with an attack (a transport ship has none)."""
+        g = self.g
+        return g.positions(sorted(u for u, n in g.soldiers.items() if combat.stats(n).attack))
+
+    def flare_army(self):
+        """Taunt 46 (#4888): a flare at the center of the soldiers, as the AoE2 AI flares its army."""
+        import flare
+        if mine := self.soldiers_at():
+            x, y, z = (math.floor(sum(p[i] for p in mine.values()) / len(mine)) for i in range(3))
+            flare.put(self.g, f"Player {self.g.player}", x, y, z)
+
+    def to_flare(self, x):
+        """Taunt 47 (#4888): the soldiers attack the enemy unit nearest to the last live flare of the ally x (within
+        FLARE_NEAR blocks), else walk to the flare. No live flare: one answer line."""
+        g = self.g
+        live = [f for f in getattr(x, "flares", []) if f[3] > x.clock()]
+        if not live:
+            g.command(f"tellraw @a[team=p{x.player}] " + json.dumps({"text": f"<Player {g.player}> I see no flare.",
+                                                                      "color": "gray"}))
+            return
+        spot, mine = live[-1][:3], self.soldiers_at()
+        if not mine:
+            return
+        near = {k: p for k, p in g.positions(sorted(g.enemies)).items() if math.dist(p, spot) <= FLARE_NEAR}
+        us = sorted(mine)
+        self.wave, self.charged, self.signal = set(us), True, "now"
+        if near:
+            t = min(near, key=lambda k: (math.dist(near[k], spot), k))
+            self.targets.update({u: t for u in us})
+            ai.attack(g.game, us, [g.soldiers[u] for u in us], g.map.T, t,
+                      [gather.NORMAL * train.speed(g, g.soldiers[u], u) for u in us])
+        else:
+            g.walk_to(None, (spot[0], spot[2]), us)
 
     def retreat(self):
         """The soldiers of the wave stop and walk back to the town center (taunt 45)."""
