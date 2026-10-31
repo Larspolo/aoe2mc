@@ -6,6 +6,7 @@ import shutil
 import time
 
 import pytest
+from pin_stats import pin
 from test_castle_upgrades import entry
 from test_dock_train import DOCK, dock_map
 from test_train_archery import menus
@@ -59,7 +60,8 @@ def test_a_civilization_without_it_does_not_see_it(civ):
     assert "Cannon Galleon" not in menus(server)[-1] and "Fishing Ship" in menus(server)[-1]
 
 
-def test_a_cannon_galleon_sails_into_its_range_of_a_building_on_the_shore():
+def test_a_cannon_galleon_sails_into_its_range_of_a_building_on_the_shore(monkeypatch):
+    pin(monkeypatch, "CANNON_GALLEON", range=13)                         # test data: the house is out of range
     server, g = dock_map(wood=400)
     g.techs, g.stock["gold"] = set(build.AGE_TECHS[:3]) | {"CHEMISTRY"}, 300
     train.open_menu(g, "Steve", (15, 12))

@@ -7,7 +7,7 @@ import pytest
 import test_gather_attack
 from test_gather_attack import click
 
-from game import gather
+from game import combat, gather
 
 
 def test_siege_mark_glows_and_shows_name_and_hit_points():
@@ -24,7 +24,7 @@ def test_an_attack_order_on_a_building_marks_it():
     click(server, g, (5.5, 13.5), (5.5, 10.5))                         # select the militia
     g.forts["fort"], g.fort_names["fort"] = (14, 64, 2, 17, 70, 5), "BARRACKS"
     log = click(server, g, (15.5, 9.5), (15.5, 4.0))
-    glow, bar = gather.siege_mark("fort", "BARRACKS", 1200, "Steve")
+    glow, bar = gather.siege_mark("fort", "BARRACKS", combat.stats("BARRACKS").hp, "Steve")
     assert glow in log and bar in log
     assert log.index("aoe attack @e[tag=aoe2mc.selected] fort") < log.index(glow)
 
