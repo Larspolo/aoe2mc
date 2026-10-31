@@ -24,7 +24,7 @@ on (`claim.py N --stale` and `--takeover` use 10 minutes then, #1773). Take it o
 from the current local branch), push with `git push origin HEAD:<branch of the PR>`, and run the guard with
 `--pr-branch <branch of the PR>` (#361). A merge of main: `git checkout -B <session branch> origin/<branch of the PR>` first (the tool merges into the
 current branch: on a session branch at `main` it merges nothing and the push fails, #4175), then
-`python3 framework/tools/merge_main.py --push N --pr-branch <branch of the PR>` does both (#3678).
+`python3 framework/tools/merge_main.py --push N --pr-branch <branch of the PR>` does both (#3678). Then wait for its quick CI: `python3 framework/tools/ship_pr.py N --ci --pr-branch <branch of the PR>` (#5014).
 A PR whose ticket has no `in-progress` label is free: any run can fix it (hand-off).
 If your usage limit stops you, the next run continues your work through this rule.
 

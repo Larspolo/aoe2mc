@@ -64,6 +64,7 @@ ORDER = tuple(r["name"] for r in sorted((r for r in build.ROWS if "bot" in r), k
 NEAR = {r["name"]: r["near"] for r in build.ROWS if "near" in r}
 HOUSE_GAP = 2                                                      # a new house at this many units below the limit
 ATTACK = 600.0                                                     # AoE2 seconds: the first attack at 10:00
+HELP_NEAR = 10                                                      # tiles: the enemies near the ally that the help attacks (#4892)
 LOOK = 2.0                                                         # AoE2 seconds between two looks for targets
 RETRY = 60.0                                                       # AoE2 seconds: try a source with no path again
 STALL = 30.0                                                       # AoE2 seconds with no step nearer and no damage
@@ -137,6 +138,7 @@ class Bot:
         self.said = {}                                                 # AoE2 player -> taunts it sent that the bot read (#4829)
         self.focus = None                                              # the building name the allies ask for by taunts 72 to 74 (#4886)
         self.unit = None                                               # the units the allies name by taunts 76 to 101 (#4887)
+        self.helping, self.helped = None, -LOOK                        # ("town"/"army", ally) of taunts 48 and 51 (#4892)
 
     def setup(self):
         """Find the villagers of the player (the entities must be loaded) and make the objective of the resources."""
@@ -220,6 +222,7 @@ class Bot:
             autoscout.start(g, [u for u, n in g.soldiers.items() if n in scouts])
         self.defend()
         self.guard()
+        self.assist()
         self.build()
         share = self.shares()
         work = {r: 0 for r in SHARE}
@@ -277,6 +280,48 @@ class Bot:
                     self.flare_army()
                 elif n == 47:
                     self.to_flare(x)
+
+    def assist(self):
+        """Taunts 48 and 51 of an ally (#4892, AoE2): each LOOK the soldiers go to the town center of the ally (48) or
+        to the center of the soldiers of the ally (51) and attack the enemy units in HELP_NEAR blocks of it. After 48
+        they walk home when no enemy is near the town center any more."""
+        g, T = self.g, self.g.map.T
+        if self.helping is None or self.time < self.helped + LOOK:
+            return
+        self.helped = self.time
+        kind, ally = self.helping
+        if kind == "town":
+            tc = next((o["footprint"] for o in g.data["objects"] if o["kind"] == "building" and o["player"] == ally
+                       and o["name"] == "TOWN_CENTER"), None)
+            spot = tc and ((tc[0] + tc[2] + 1) / 2, 64.0, (tc[1] + tc[3] + 1) / 2)
+        else:
+            x = next((x for x in build.sides(g) if x.player == ally), None)
+            at = g.positions(sorted(x.soldiers)) if x else {}
+            spot = at and tuple(sum(p[i] for p in at.values()) / len(at) for i in range(3))
+        mine = self.soldiers_at()
+        if not spot or not mine:
+            self.helping = None if not spot else self.helping
+            return
+        units = sorted(u for u, n in g.enemies.items() if not herd.herdable(n))
+        near = {k: p for k, p in g.positions(units).items()
+                if math.dist((p[0], p[2]), (spot[0], spot[2])) <= HELP_NEAR * T} if units else {}
+        if not near and kind == "town" and all(math.dist((p[0], p[2]), (spot[0], spot[2])) <= HELP_NEAR * T
+                                               for p in mine.values()):
+            self.helping = None                                        # the town is safe: home
+            if home := self.center():
+                for u in sorted(mine):
+                    ai.move(g.game, u, g.soldiers[u], T, home[0], 64, home[1])
+            return
+        if not near:
+            for u in sorted(mine):
+                ai.move(g.game, u, g.soldiers[u], T, math.floor(spot[0]), math.floor(spot[1]), math.floor(spot[2]))
+            return
+        orders = {}
+        for u in sorted(mine):
+            orders.setdefault(min(near, key=lambda k: (math.dist(near[k], mine[u]), k)), []).append(u)
+        for t, us in sorted(orders.items()):
+            ai.attack(g.game, us, [g.soldiers[u] for u in us], T, t,
+                      [gather.NORMAL * train.speed(g, g.soldiers[u], u) for u in us])
 
     def soldiers_at(self):
         """{soldier: position} of the soldiers with an attack (a transport ship has none)."""
@@ -433,6 +478,10 @@ class Bot:
                     self.walls(n, x)
                 elif n == 59:
                     self.giving.pop(x.player, None)
+                elif n in (48, 51):                                      # help the ally: its town, its army (#4892)
+                    self.helping = ("town" if n == 48 else "army", x.player)
+                elif n in (31, 45) or 61 <= n <= 68:                     # a new army order ends the help
+                    self.helping = None
                 elif n in UNITS:                                         # attack with the units of the taunt (#4887)
                     self.unit = UNITS[n]
                     if not any(set(self.unit) & set(train.trains(g, k)) for k in set(train.homes(g).values())):
@@ -509,6 +558,8 @@ class Bot:
         near = {}
         for look in (eyes, friends):                                   # the own town first, then the allies
             near = near or {k: p for k, p in seen.items() if any(math.dist((x, z), (p[0], p[2])) <= r for x, z, r in look)}
+            if self.script and near and look is eyes:
+                self.hits(near)
         if not near and not self.guards:                               # each position costs one RCON command
             return
         mine = g.positions(sorted(u for u, n in g.soldiers.items() if combat.stats(n).attack))
@@ -520,13 +571,27 @@ class Bot:
         if not near:
             return
         orders = {}
-        for u in sorted(mine.keys() - self.guards.keys()):
-            t = min(near, key=lambda k: (math.dist(near[k], mine[u]), k))
-            self.guards[u] = (t, mine[u])
+        retask, self.retask = getattr(self, "retask", False), False    # up-update-targets: all choose again
+        for u in sorted(mine.keys() if retask else mine.keys() - self.guards.keys()):
+            t = min(near, key=lambda k: (-self.rank("defense", k), math.dist(near[k], mine[u]), k))
+            self.guards[u] = (t, self.guards[u][1] if u in self.guards else mine[u])
             orders.setdefault(t, []).append(u)
         for t, us in sorted(orders.items()):
             ai.attack(g.game, us, [g.soldiers[u] for u in us], T, t,
                       [gather.NORMAL * train.speed(g, g.soldiers[u], u) for u in us])
+
+    def hits(self, near):
+        """Give the script the hits on the town (up-get-threat-data, #4966): each enemy unit of near that is in its
+        AoE2 range (at least one tile) of a bot villager hits the nearest one. The plugin applies the damage and sends
+        no event, so the bot reads the hit from the positions, as AoE2 reads town-under-attack."""
+        g, T = self.g, self.g.map.T
+        players = {o["uuid"]: o["player"] for o in g.data["objects"] if o.get("uuid")}
+        for x in build.sides(g):
+            players.update((u, x.player) for u in (*x.soldiers, *x.villagers))
+        for k, p in sorted(near.items()):
+            gap = {u: math.dist((v.pos[0], v.pos[2]), (p[0], p[2])) for u, v in g.villagers.items() if v.pos}
+            if gap and min(gap.values()) <= (max(combat.stats(g.enemies[k]).range, 1) + 1) * T and k in players:
+                self.script.hit(players[k], g.enemies[k], "VILLAGER_MALE")
 
     def go(self, v, res):
         """Send villager v to the nearest source of res that has some left and a free cell next to it. False when there
@@ -630,13 +695,19 @@ class Bot:
         seen, T = g.seen_tiles(), g.map.T                              # the AoE2 AI sees only its sight (#2050)
         near = {k: p for k, p in g.positions(sorted(units)).items() if k not in inside
                 and (int(p[0] // T), int(p[2] // T)) in seen}
+        ranked = bool(self.script and self.script.priority["offense"]
+                      and self.script.number("sn-enable-offensive-priority") == 1)
         self.targets = {u: t for u, t in self.targets.items()          # a unit that comes in sight goes before a
-                        if t not in g.forts or not any(self.reach(u, mine[u], p) and not self.gave_up(u, k, p)
+                        if ranked or t not in g.forts or not any(self.reach(u, mine[u], p) and not self.gave_up(u, k, p)
                                                        for k, p in near.items())}   # building
         free = sorted(mine.keys() - self.targets.keys())
         forts, orders = None, {}
         for u in free:
             ok = {k: p for k, p in near.items() if self.reach(u, mine[u], p) and not self.gave_up(u, k, p)}
+            if ranked:                                                 # the offense priorities of a script (#4968)
+                if forts is None:
+                    forts = {t: ((b[0] + b[3] + 1) / 2, b[1], (b[2] + b[5] + 1) / 2) for t, b in self.forts().items()}
+                ok |= {k: p for k, p in forts.items() if self.reach(u, mine[u], p) and not self.gave_up(u, k, p)}
             if not ok:                                                 # no unit in reach, for example only a ship on
                 if forts is None:                                      # the water: the buildings, as in AoE2 (#1770)
                     forts = {t: ((b[0] + b[3] + 1) / 2, b[1], (b[2] + b[5] + 1) / 2) for t, b in self.forts().items()}
@@ -645,7 +716,7 @@ class Bot:
                 ok = {k: p for k, p in {**near, **forts}.items() if self.reach(u, mine[u], p)}
             if not ok:
                 continue
-            t = min(ok, key=lambda k: (math.dist(ok[k], mine[u]), k))
+            t = min(ok, key=lambda k: (-self.rank("offense", k), math.dist(ok[k], mine[u]), k))
             self.targets[u] = t
             orders.setdefault(t, []).append(u)
         for t, us in sorted(orders.items()):
@@ -715,6 +786,15 @@ class Bot:
         if not wet or self.g.map.y(math.floor(at[0]), math.floor(at[2])) is None:
             return True
         return math.dist(at[::2], to[::2]) <= combat.stats(self.g.soldiers[u]).range * self.g.map.T
+
+    def rank(self, kind, t):
+        """The target priority of target t (a unit or building UUID) by the script of the bot (#4968); 0 without one."""
+        if not self.script or t is None:
+            return 0
+        g = self.g
+        name = g.fort_names.get(t) or g.enemies.get(t) or next(
+            (o["name"] for o in g.data["objects"] if o.get("uuid") == t), "")
+        return self.script.rank(kind, name)
 
     def forts(self):
         """{target UUID: box} of the buildings of the foe whose target entity lives: those of the map and those that

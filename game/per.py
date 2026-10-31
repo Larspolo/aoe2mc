@@ -231,6 +231,10 @@ SHARED = ("up-get-event", "up-get-shared-goal", "up-get-signal", "up-set-event",
 POINTS = ("up-add-point", "up-bound-point", "up-bound-precise-point", "up-copy-point", "up-cross-tiles",   # #4956
           "up-get-point", "up-get-point-distance", "up-lerp-percent", "up-lerp-tiles", "up-set-precise-target-point",
           "up-set-target-point")
+AT_POINT = ("up-get-path-distance", "up-get-point-contains", "up-path-distance", "up-point-contains")   # #4963
+NO_PATH = 65535                                                    # airef up-get-path-distance: the point is unreachable
+NEAR = 2                                                           # tiles around the point with option 0 ("a few tiles")
+PATH_CELLS = 20000                                                 # the path search limit (cells), as replay.PATH_CELLS
 MAP_FACTS = {"up-get-point-elevation": "elevation",              # the map at a point (#4962): command -> map_value kind
              "up-get-point-terrain": "terrain",
              "up-get-point-zone": "zone",
@@ -243,6 +247,7 @@ EXPLORED_STATE = {"explored-active": 15,                           # airef "Expl
                   "explored-yes": 128}
 FLARES = ("up-find-flare", "up-find-player-flare", "up-send-flare")   # the flares of the team (#4971)
 UP_QUEUE = {"up-build": "build", "up-research": "research", "up-train": "train"}
+PRIORITY = ("up-reset-target-priorities", "up-set-defense-priority", "up-set-offense-priority", "up-update-targets")
 ORDERS = ("up-delete-distant-farms", "up-delete-idle-units", "up-reset-attack-now", "up-reset-building",
           "up-reset-unit", "up-retreat-now")
 
@@ -261,9 +266,22 @@ RESEARCH_STATE = {"research-available": 1,                         # airef "Rese
                   "research-pending": 2,
                   "research-queued": 4,
                   "research-unavailable": 0}
-SEARCH = ("up-add-object-by-id", "up-can-search", "up-clean-search", "up-find-local", "up-find-remote",   # #4957
-          "up-full-reset-search", "up-get-search-state", "up-reset-filters", "up-reset-search", "up-set-target-by-id",
-          "up-set-target-object")
+SEARCH = ("up-add-object-by-id", "up-can-search", "up-clean-search", "up-filter-distance", "up-filter-exclude",  # #4957
+          "up-filter-garrison", "up-filter-include", "up-filter-range", "up-filter-status", "up-find-local",   # #4958
+          "up-find-remote", "up-find-resource", "up-find-status-local", "up-find-status-remote", "up-full-reset-search",
+          "up-get-search-state", "up-reset-filters", "up-reset-search", "up-set-target-by-id", "up-set-target-object")
+CMD_IDS = {"cmdid-military": 4,                                    # airef "CmdId" that the game program knows (#4958)
+           "cmdid-monk": 6,
+           "cmdid-villager": 3}
+OBJECT_STATUS = {"status-down": 4,                                 # airef "ObjectStatus" (up-filter-status)
+                 "status-gather": 5,
+                 "status-pending": 0,
+                 "status-ready": 2,
+                 "status-resource": 3}
+RESOURCE_IDS = {"food": 0,                                         # airef "Resource" (up-find-resource)
+                "gold": 3,
+                "stone": 2,
+                "wood": 1}
 OBJECT_DATA = ("up-get-object-data", "up-get-object-target-data", "up-get-object-type-data", "up-get-upgrade-id",   # #4959
                "up-object-data", "up-object-target-data", "up-remove-objects", "up-store-object-name")
 OBJECT_DATA_ROWS = {r["name"]: r for r in table.load("per_object_data.jsonl")}   # airef "ObjectData"
@@ -280,6 +298,48 @@ SEARCH_ORDER = {"search-order-asc": 1,                             # airef "Sear
                 "search-order-none": 0}
 SEARCH_SOURCE = {"search-local": 1,                                # airef "SearchSource": the own or the focus objects
                  "search-remote": 2}
+# The object classes and projectile types of the threat commands (airef "ClassId", "ProjectileType", #4966): a rule
+# matches the armor classes of combat (all of them), the names of units or buildings, any building, or any source.
+CLASSES = table.load("per_classes.jsonl")
+PROJECTILES = {r["name"]: r["id"] for r in CLASSES if r["kind"] == "projectile"}
+ANY = next(r["id"] for r in CLASSES if r.get("any"))
+
+
+def matches(row, name):
+    """How well the rule row matches the game name: 0 no, more is more exact (a named object, then more armor classes)."""
+    import combat
+    name = "VILLAGER" if name.startswith("VILLAGER") else name
+    building = name in combat.BUILDINGS or name.endswith(("_WALL", "_GATE", "_TOWER"))
+    if name in row.get("units", ()) or name in row.get("buildings", ()):
+        return 9
+    if "armor" in row:
+        return len(row["armor"]) * (not building and set(row["armor"]) <= set(combat.stats(name).classes))
+    return int(bool(row.get("building") and building))
+
+
+def best(kind, name):
+    """The id of the most exact rule of kind for the game name, or None."""
+    score, rid = max(((matches(r, name), r["id"]) for r in CLASSES if r["kind"] == kind), default=(0, None))
+    return rid if score else None
+
+
+def klass(name):
+    """The AoE2 class id of a game name (airef "ClassId"), -1 for no known class."""
+    c = best("class", name)
+    return -1 if c is None else c
+
+
+def projectile(name):
+    """The projectile type of a source (airef "ProjectileType"): ANY for another ranged source (an archer), None for a
+    melee one."""
+    import combat
+    s = combat.stats(name)
+    if not s.range or not s.attack:
+        return None
+    p = best("projectile", name)
+    return ANY if p is None else p
+
+
 TIMER_STATE = {"timer-disabled": 0,                                # the states of up-timer-status (airef "TimerState")
                "timer-running": 2,
                "timer-triggered": 1}
@@ -337,8 +397,41 @@ class Script:
         self.filters = {}                                          # filter -> value; none set: all -1 (up-reset-filters)
         self.target = None                                         # the id of the target object
         self.point = None                                          # (x, y) tiles of up-set-target-point (#4956)
+        self.threat = None                                         # (AoE2 second, player, source, target) of the last hit
+        self.shots = {}                                            # projectile type -> (AoE2 second, player, target)
         self.groups, self.flags = {}, {}                           # group id -> object ids; object id -> group flag
+        self.priority = {"offense": {}, "defense": {}}             # game name or class tuple -> priority (#4968)
         self.grids = {}                                            # the map grids of map_value (#4962)
+
+    def hit(self, player, source, target):
+        """An object of player (the game name source) hit the bot object target (the game name): the last threat of
+        up-get-threat-data, and the projectile of the source (PROJECTILES, and projectile-any) of up-projectile-*."""
+        t = self.bot.time
+        self.threat = (t, player, source, target)
+        if (p := projectile(source)) is not None:
+            self.shots[p] = self.shots[ANY] = (t, player, target)
+
+    def shot(self, ref):
+        """The (AoE2 second, player, target) of the last projectile of type ref (a name or an id of per_classes.jsonl),
+        or None. An unknown type: one warning."""
+        if (p := PROJECTILES.get(ref, ref)) not in PROJECTILES.values():
+            return self.warn("projectile type", ref)
+        return self.shots.get(p)
+
+    def threats(self, name, args):
+        """The actions up-get-attacker-class, up-get-threat-data and up-get-projectile-player (#4966): -1 without a hit."""
+        t = self.threat
+        if name == "up-get-attacker-class":                            # (up-get-attacker-class GOAL)
+            self.goals[args[0]] = klass(t[2]) if t else -1
+        elif name == "up-get-threat-data":                             # (up-get-threat-data TIME PLAYER SOURCE TARGET)
+            values = (self.ms(t[0]), t[1], klass(t[2]), klass(t[3])) if t else (-1,) * 4
+            self.goals.update(zip(args[:4], values))
+        elif (s := self.shot(args[0])) is not None or args[0] in PROJECTILES or args[0] in PROJECTILES.values():
+            self.goals[args[1]] = s[1] if s else -1                    # (up-get-projectile-player TYPE GOAL)
+
+    def ms(self, t):
+        """The milliseconds of game time since the AoE2 second t (airef "ThreatTime")."""
+        return int(round((self.bot.time - t) * 1000))
 
     def number(self, name):
         return self.sn.get(name, SN[name])
@@ -560,6 +653,11 @@ class Script:
         if name == "up-point-distance":                            # (up-point-distance P1 P2 REL VALUE)
             d = self.point_distance(args[0], args[1])
             return d is not None and self.compare(args[2], d, args[3])
+        if name == "up-attacker-class":                            # (up-attacker-class REL CLASS)
+            return self.threat is not None and self.compare(args[0], klass(self.threat[2]), args[1])
+        if name in ("up-projectile-detected", "up-projectile-target"):     # (up-projectile-detected TYPE REL VALUE)
+            s = self.shot(args[0])
+            return s is not None and self.compare(args[1], self.ms(s[0]) if name.endswith("detected") else klass(s[2]), args[2])
         if name == "up-compare-text":                              # (up-compare-text TEXT REL): the text buffer
             return self.compare(args[1], self.text, str(args[0]))
         if name == "up-compare-goal":                              # (up-compare-goal GOAL REL VALUE)
@@ -667,6 +765,8 @@ class Script:
             return self.compare(args[0], len(self.bot.guards) + len(self.bot.defense), args[1])
         if name == "up-idle-unit-count":                           # (up-idle-unit-count IDLE-TYPE REL VALUE)
             return self.idle_count(args[0], args[1], args[2])
+        if name in AT_POINT:
+            return self.at_point(name, args)
         if name in GROUPS:
             return bool(self.group_command(name, args))
         if name in SEARCH:                                         # a find or a target as a fact: true when it did
@@ -1580,14 +1680,15 @@ class Script:
                         min(math.dist(mid, c) for c in cells) / T > far:
                     demolish.fall(g, rect)
 
-    def objects(self, x):
+    def objects(self, x, down=False):
         """The objects of the Gather x that stand, by id (#4957): [(id, key, game name, status)]; status 2 is ready, 0 a
-        site under construction (airef "ObjectStatus"). The key is the UUID of a unit or of the building target
-        (combat.target_uuid). A new object gets the next id, and an id is never given again."""
+        site under construction (airef "ObjectStatus"); down: also the fallen start buildings (status 4, ruins.fallen).
+        The key is the UUID of a unit or of the building target (combat.target_uuid). A new object gets the next id, and
+        an id is never given again."""
         import combat
         import ruins
-        rows = [(combat.target_uuid(o["footprint"]), o["name"], 2) for o in x.data["objects"] if o["kind"] == "building"
-                and o["player"] == x.player and "footprint" in o and not ruins.fallen(x, o)]
+        rows = [(combat.target_uuid(o["footprint"]), o["name"], 4 if ruins.fallen(x, o) else 2) for o in x.data["objects"]
+                if o["kind"] == "building" and o["player"] == x.player and "footprint" in o and (down or not ruins.fallen(x, o))]
         rows += [(combat.target_uuid([s["footprint"][i] for i in (0, 2, 1, 3)]), s["name"], 2 if s.get("done") else 0)
                  for s in x.sites if s.get("player", x.player) == x.player]
         rows += [(u, "VILLAGER_MALE", 2) for u in x.villagers] + [(u, n, 2) for u, n in x.soldiers.items()]
@@ -1595,6 +1696,125 @@ class Script:
             if key not in self.ids:
                 self.ids[key], self.next_id = self.next_id, self.next_id + 1
         return sorted((self.ids[k], k, n, st) for k, n, st in rows)
+
+    def resources(self):
+        """The gaia resources on the tiles that the team of the bot sees now (as gaia()), by id (#4958): [(id, key,
+        resource, status)]; status 2 a standing tree, 5 a carcass (status-gather), 3 the others (status-resource)."""
+        import fog
+        g = self.bot.g
+        m, tiles = g.map, set().union(*(h.seen_tiles() for h in fog.gathers(g) if fog.shares(g, h)))
+        here = set(m.trees) | set(m.bushes) | set(m.fish) | set(m.carcasses) | {t for v in m.mines.values() for t in v}
+        cells = {tuple(int(c) for c in o["tile"][:2]) for o in g.data["objects"] if o.get("player", 0) == 0 and "tile" in o}
+        out = []
+        for t in sorted((cells | set(m.carcasses)) & here & tiles):
+            key = f"resource {t[0]} {t[1]}"
+            if key not in self.ids:
+                self.ids[key], self.next_id = self.next_id, self.next_id + 1
+            out.append((self.ids[key], key, m.resource(t), 5 if t in m.carcasses else 2 if t in m.trees else 3))
+        return sorted(out)
+
+    def status(self):
+        """The object status of up-filter-status (default 2, status-ready)."""
+        return self.filters.get("status", [2])[0]
+
+    def set_filter(self, name, args):
+        """up-filter-*: the filters of the finds (#4958); -1 ignores a value. up-filter-include and -exclude (CMDID
+        ACTION ORDER MAINLAND): the game program knows only the CMD_IDS; another value: one warning, ignored."""
+        if name in ("up-filter-include", "up-filter-exclude"):
+            vals = [CMD_IDS.get(args[0], args[0])] + list(args[1:4])
+            if vals[0] not in (-1, *CMD_IDS.values()):
+                self.warn("command id", args[0])
+                vals[0] = -1
+            for v in vals[1:]:
+                if v != -1:
+                    self.warn("action, order or mainland value", v)
+            self.filters[name[10:]] = [vals[0], -1, -1, -1]
+            return True
+        if name == "up-filter-range":                              # (up-filter-range GARRISON-MIN MAX DISTANCE-MIN MAX)
+            self.filters["garrison"], self.filters["distance"] = list(args[:2]), list(args[2:4])
+            return True
+        kinds = [self.type_kind(args[i]) for i in (0, 2)]
+        if None in kinds:
+            return False
+        vals = [self.operand(kinds[0], args[1]), self.operand(kinds[1], args[3])]
+        if name == "up-filter-status":                             # (up-filter-status TYPE STATUS TYPE LIST)
+            vals[0] = OBJECT_STATUS.get(vals[0], vals[0])
+            if vals[0] not in OBJECT_STATUS.values():
+                return self.warn("object status", vals[0]) or False
+            if vals[1] not in ("list-active", 0):
+                self.warn("object list", vals[1])
+        if None in vals:
+            return False
+        self.filters[name[10:]] = vals                             # distance, garrison, status
+        return True
+
+    def details(self, x):
+        """{key: (tile (x, y), garrisoned units)} of the objects of the Gather x (#4958): the center of a building, the
+        feet of a unit."""
+        import combat
+        T = x.data.get("tile_size", 1)
+        out = {}
+        for o in [o for o in x.data["objects"] if o["kind"] == "building" and "footprint" in o] + list(x.sites):
+            x0, z0, x1, z1 = o["footprint"] if o in x.data["objects"] else [o["footprint"][i] for i in (0, 2, 1, 3)]
+            out[combat.target_uuid([x0, z0, x1, z1])] = (((x0 + x1) / 2 / T, (z0 + z1) / 2 / T),
+                                                      len(vars(x).get("garrisons", {}).get((x0, x1, z0, z1), ())))
+        for u, p in x.positions(sorted(set(x.villagers) | set(x.soldiers))).items():
+            out[u] = ((p[0] / T, p[2] / T), 0)
+        return out
+
+    def passes(self, x, key, name):
+        """True when the object key (game name) of the Gather x passes the include, exclude, garrison and distance
+        filters (#4958). Distance: in tiles from the target point, else from the target object; none: no limit."""
+        import monk
+        f = self.filters
+        cmd = 3 if x is not None and key in x.villagers else (6 if name in monk.MONKS else 4) \
+            if x is not None and key in x.soldiers else None
+        if f.get("include", [-1])[0] not in (-1, cmd) or f.get("exclude", [-1])[0] not in (-1, None) and \
+                f["exclude"][0] == cmd:
+            return False
+        lo_g, hi_g = f.get("garrison", (-1, -1))
+        lo_d, hi_d = f.get("distance", (-1, -1))
+        if (lo_g, hi_g, lo_d, hi_d) == (-1, -1, -1, -1):
+            return True
+        at, held = (self.details(x) if x is not None else {}).get(key, (None, 0))
+        if key.startswith("resource "):
+            at = tuple(int(c) + 0.5 for c in key.split()[1:])
+        if held < lo_g or -1 < hi_g < held:
+            return False
+        ref = self.point or (self.target_at() if self.target is not None else None)
+        if ref is None or at is None or (lo_d, hi_d) == (-1, -1):
+            return True
+        d = math.dist(at, ref)
+        return d >= lo_d and (hi_d == -1 or d <= hi_d)
+
+    def target_at(self):
+        """The tile of the target object, or None."""
+        import build
+        g = self.bot.g
+        for x in [g, *build.sides(g)]:
+            for oid, key, _, _ in self.objects(x):
+                if oid == self.target:
+                    return self.details(x).get(key, (None,))[0]
+        return None
+
+    def scan(self, src, unit, match, count, status, rows, x):
+        """Add up to count more objects of rows (id, key, name, status) with match(name), the status and the filters to
+        the list src; the scan goes on after the last scanned object while unit stays (#4957)."""
+        st = self.search[src]
+        if st["unit"] != unit:                                     # another type or focus: the scan starts again
+            st["after"], st["unit"] = 0, unit
+        got = 0
+        for oid, key, m, s in rows:
+            if oid <= st["after"]:
+                continue
+            if got >= count or len(st["found"]) >= SEARCH_MAX[src]:
+                break
+            st["after"] = oid
+            if s == status and match(m) and self.passes(x, key, m):
+                st["found"].append(oid)
+                got += 1
+        st["last"] = got
+        return got > 0
 
     def focus(self):
         """The Gather of sn-focus-player-number, or None (Gaia has no Gather)."""
@@ -1626,36 +1846,102 @@ class Script:
         import build
         g = self.bot.g
         xs = {x.player: x for x in build.sides(g)} | {g.player: g}
-        return any(r[0] == oid for x in xs.values() for r in self.objects(x))
+        return any(r[0] == oid for x in xs.values() for r in self.objects(x)) or any(r[0] == oid for r in self.resources())
+
+    def places(self):
+        """[(id, game name, block rect [x0, z0, x1, z1))] of the standing objects of all players (objects()): the
+        footprint of a building or a site, the cell of a unit (its position on the server for a soldier)."""
+        import build
+        import combat
+        g = self.bot.g
+        out = []
+        for x in [g] + [x for x in build.sides(g) if x is not g]:
+            rect = {combat.target_uuid(o["footprint"]): o["footprint"] for o in x.data["objects"]
+                    if o["kind"] == "building" and o["player"] == x.player and "footprint" in o}
+            rect |= {combat.target_uuid(f := [s["footprint"][i] for i in (0, 2, 1, 3)]): f for s in x.sites}
+            cells = {u: v.cell for u, v in x.villagers.items()}
+            cells |= {u: (math.floor(p[0]), math.floor(p[2])) for u, p in x.positions(sorted(x.soldiers)).items()}
+            rect |= {u: [c[0], c[1], c[0] + 1, c[1] + 1] for u, c in cells.items()}
+            out += [(oid, name, rect[key]) for oid, key, name, _ in self.objects(x) if key in rect]
+        return sorted(out)
+
+    def at_point(self, name, args):
+        """The objects at a point and the walk path to it (airef "Points", #4963). up-get-point-contains POINT GOAL TYPE
+        OBJECT: the id of the first object of OBJECT (a name, an id or a class; -1: any) on the tile into GOAL, else
+        -1; up-point-contains POINT TYPE OBJECT. up-get-path-distance POINT OPTION GOAL: the length in tiles of the walk
+        path (Map.path) from the target object to the tile (OPTION 1) or to a tile within NEAR tiles (0), NO_PATH when
+        there is none, -2 with no target object; up-path-distance POINT OPTION REL VALUE. The fact: true when found."""
+        p = self.pair(args[0])
+        if name.endswith("contains"):
+            get = name == "up-get-point-contains"
+            kind = self.type_kind(args[2 if get else 1])
+            ref = self.operand(kind, args[3 if get else 2]) if kind else None
+            every = ref in (-1, "all-units-class")
+            want = None if ref is None or every else (sn := self.named("c:", ref)) and self.game(sn, "unit", "building")
+            want = (want,) if isinstance(want, str) else want or ()
+            T = self.bot.g.data["tile_size"]
+            hits = [] if p is None or not (every or want) else [
+                oid for oid, n, r in self.places() if (every or n in want)
+                and r[0] < (p[0] + 1) * T and p[0] * T < r[2] and r[1] < (p[1] + 1) * T and p[1] * T < r[3]]
+            if get:
+                self.goals[args[1]] = hits[0] if hits else -1
+            return bool(hits)
+        d = self.path_distance(p, args[1])
+        if name == "up-get-path-distance":
+            self.goals[args[2]] = d
+            return d != -2
+        return d != -2 and self.compare(args[2], d, args[3])
+
+    def path_distance(self, p, option):
+        """The walk path length in tiles from the target object to point p (at_point), NO_PATH or -2."""
+        rect = next((r for oid, _, r in self.places() if oid == self.target), None) if self.target else None
+        if rect is None:
+            return -2
+        m = self.bot.g.map
+        T, k = m.T, 0 if option == 1 else NEAR
+        own = {(x, z) for x in range(rect[0], rect[2]) for z in range(rect[1], rect[3])}
+        start = next(iter(own)) if len(own) == 1 else min(m.around(own), default=None)   # a building: a cell next to it
+        goals = set() if p is None else {c for dx in range(-k, k + 1) for dz in range(-k, k + 1)
+                                         for c in m.cells((p[0] + dx, p[1] + dz)) if m.free(*c)}
+        if start is None or not goals:
+            return NO_PATH
+        path = m.path(start, goals, PATH_CELLS) if start not in goals else []
+        if path is None:
+            return NO_PATH
+        return round(sum(math.dist(a, b) for a, b in zip([start] + path, path)) / T)
 
     def search_command(self, name, args):
         """The object search of direct unit control (airef "DUC", #4957). up-find-local/-remote TYPE UNIT TYPE2 COUNT:
         add up to COUNT more ready objects of UNIT (a name, an id or a class) to the list; the scan goes on after the
         last scanned object while UNIT (and the focus player) stays. The fact or the result: true when it found, added
         or set an object."""
-        if name in ("up-find-local", "up-find-remote"):
-            src = 1 if name == "up-find-local" else 2
+        if name.startswith("up-filter-"):
+            return self.set_filter(name, args)
+        if name == "up-find-resource":                             # (up-find-resource TYPE RESOURCE TYPE2 COUNT)
+            kind, kind2 = self.type_kind(args[0]), self.type_kind(args[2])
+            res = self.operand(kind, args[1]) if kind else None
+            res = next((r for r, i in RESOURCE_IDS.items() if i == res), res)
+            count = self.operand(kind2, args[3]) if kind2 else None
+            if res not in RESOURCE_IDS:                            # a UnitId of a food resource: not in the game program
+                return self.warn("resource", res) or False
+            if count is None:
+                return False
+            rows = [r for r in self.resources() if r[2] == res]
+            return self.scan(2, [["resource", res], None], lambda m: True, count, self.status(), rows, self.bot.g)
+        if name in ("up-find-local", "up-find-remote", "up-find-status-local", "up-find-status-remote"):
+            src = 1 if name.endswith("-local") else 2
             kind = self.type_kind(args[2])
             n = (sn := self.named(args[0], args[1])) and self.game(sn, "unit", "building")
             count = self.operand(kind, args[3]) if kind else None
             if not n or count is None:
                 return False
-            st, names = self.search[src], n if isinstance(n, tuple) else (n,)
+            names = n if isinstance(n, tuple) else (n,)
             unit = [list(names), self.number("sn-focus-player-number") if src == 2 else None]
-            if st["unit"] != unit:                                 # another type or focus: the scan starts again
-                st["after"], st["unit"] = 0, unit
-            got = 0
-            for oid, _, m, status in self.rows(src):
-                if oid <= st["after"]:
-                    continue
-                if got >= count or len(st["found"]) >= SEARCH_MAX[src]:
-                    break
-                st["after"] = oid
-                if status == 2 and m in names:
-                    st["found"].append(oid)
-                    got += 1
-            st["last"] = got
-            return got > 0
+            status = self.status() if "-status-" in name else 2
+            x = self.bot.g if src == 1 else self.focus()
+            rows = [] if x is None else self.objects(x, down=status == 4) if src == 1 else \
+                self.visible(x) + [r for r in self.objects(x, down=True) if r[3] == 4] * (status == 4)
+            return self.scan(src, unit, lambda m: m in names, count, status, sorted(rows), x)
         if name == "up-reset-search":                              # (up-reset-search LOCAL-INDEX LOCAL-LIST R-INDEX R-LIST)
             for src, (index, found) in ((1, args[:2]), (2, args[2:4])):
                 st = self.search[src]
@@ -1713,6 +1999,39 @@ class Script:
             return False                                           # an invalid index keeps the target
         self.target = st["found"][ref]
         return True
+
+    def rank(self, kind, name):
+        """The target priority of an object of game name for kind "offense" or "defense" (airef up-set-*-priority):
+        the value of its name, else the highest value of a class with it, else 0. The offense table counts only with
+        sn-enable-offensive-priority 1."""
+        if kind == "offense" and self.number("sn-enable-offensive-priority") != 1:
+            return 0
+        table = self.priority[kind]
+        if name in table:
+            return table[name]
+        return max((v for k, v in table.items() if isinstance(k, tuple) and name in k), default=0)
+
+    def prioritize(self, name, args):
+        """up-set-offense-priority / up-set-defense-priority TYPE OBJECT TYPE2 VALUE (offense -1 to 11, defense -1 to
+        32767); up-reset-target-priorities TYPE OPTION: the default (none set); up-update-targets: the town defense of
+        the bot chooses its targets again at once (Bot.guard)."""
+        b = self.bot
+        if name == "up-update-targets":
+            b.guarded, b.retask = -math.inf, True                 # defend() and guard() look in the next step
+            return
+        if name == "up-reset-target-priorities":
+            kind = {"priority-offense": "offense", "priority-defense": "defense"}.get(args[0])
+            if kind is None:
+                return self.warn("priority type", args[0])
+            self.priority[kind].clear()
+            return
+        sn = self.named(args[0], args[1])
+        n = sn and self.game(sn, "unit", "building")
+        kind2 = self.type_kind(args[2])
+        value = self.operand(kind2, args[3]) if kind2 else None
+        if n and value is not None:
+            top = 11 if name == "up-set-offense-priority" else 32767
+            self.priority[name.split("-")[2]][n] = min(max(value, -1), top)
 
     def group(self, gid):
         """The ids of search group gid that stand: a dead object leaves its group (and its flag)."""
@@ -1930,6 +2249,8 @@ class Script:
                 self.text = col
         elif name in GET_FACT:
             self.get_fact(name, args)
+        elif name in ("up-get-attacker-class", "up-get-threat-data", "up-get-projectile-player"):
+            self.threats(name, args)                                     # (#4966)
         elif name in COST_ACTIONS:
             self.cost_action(name, args)
         elif name == "up-modify-goal":                               # (up-modify-goal GOAL OP VALUE)
@@ -2024,8 +2345,12 @@ class Script:
             self.order(name, args)
         elif name in SEARCH:
             self.search_command(name, args)
+        elif name in AT_POINT:
+            self.at_point(name, args)
         elif name in GROUPS:
             self.group_command(name, args)
+        elif name in PRIORITY:
+            self.prioritize(name, args)
         elif name in OBJECT_DATA:
             self.object_command(name, args)
         elif name == "enable-timer":
