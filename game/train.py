@@ -1382,7 +1382,8 @@ def research(g, entry, start=False, rect=None):
             g.pop += 1
         g.command(f"title @a[team=p{g.player}] title " + json.dumps({"text": age(g), "color": "gold"}))  # the own team only
         g.command("tellraw @a " + json.dumps({"text": f"Player {g.player} advances to the {age(g)}.", "color": "gold"}))
-        g.command("playsound minecraft:ui.toast.challenge_complete master @a ~ ~ ~ 1 1 1")
+        import cheats  # it imports train: import it late
+        cheats.tune(g, g.player, "age_up")                                 # the own team, as the title (#5339)
         return
     if start:
         return

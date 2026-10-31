@@ -1,0 +1,3 @@
+{"name": "age_up", "sound": "ui.toast.challenge_complete", "pitch": 1.0}
+{"name": "defeat", "sound": "block.beacon.deactivate", "pitch": 0.8}
+{"name": "victory", "sound": "entity.player.levelup", "pitch": 1.0}
