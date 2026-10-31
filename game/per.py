@@ -366,6 +366,7 @@ class Script:
         self.point = None                                          # (x, y) tiles of up-set-target-point (#4956)
         self.threat = None                                         # (AoE2 second, player, source, target) of the last hit
         self.shots = {}                                            # projectile type -> (AoE2 second, player, target)
+        self.grids = {}                                            # the map grids of map_value (#4962)
 
     def hit(self, player, source, target):
         """An object of player (the game name source) hit the bot object target (the game name): the last threat of
@@ -396,7 +397,6 @@ class Script:
     def ms(self, t):
         """The milliseconds of game time since the AoE2 second t (airef "ThreatTime")."""
         return int(round((self.bot.time - t) * 1000))
-        self.grids = {}                                            # the map grids of map_value (#4962)
 
     def number(self, name):
         return self.sn.get(name, SN[name])
