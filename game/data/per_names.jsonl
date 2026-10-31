@@ -88,6 +88,10 @@
 {"name": "house", "game": "HOUSE", "kind": "building", "id": 70}
 {"name": "huns", "game": "HUNS", "kind": "civ"}
 {"name": "hussar", "game": "HUSSAR", "kind": "unit", "id": 441}
+{"name": "idle-type-fishing-ship", "game": "FISHING_SHIP", "kind": "idle"}
+{"name": "idle-type-trade-cart", "game": "TRADE_CART", "kind": "idle"}
+{"name": "idle-type-trade-cog", "game": "TRADE_COG", "kind": "idle"}
+{"name": "idle-type-villager", "game": "VILLAGER_MALE", "kind": "idle"}
 {"name": "imperial-age", "game": "IMPERIAL_AGE", "kind": "age", "age": 3, "id": 103}
 {"name": "imperial-camel", "game": "IMPERIAL_CAMEL_RIDER", "kind": "unit", "id": 207}
 {"name": "imperial-skirmisher", "game": "IMPERIAL_SKIRMISHER", "kind": "unit", "id": 1155}

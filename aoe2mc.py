@@ -309,6 +309,14 @@ def read_scx(path):
     from AoE2ScenarioParser.datasets.terrains import TerrainId
 
     import scx
+    with open(path, "rb") as f:
+        fmt = f.read(4)
+    if fmt not in scx.FORMATS and fmt[:2] == b"1." and fmt >= b"1.27":   # a base scenario of DE (.scx 1.33 to 1.54, #4933)
+        try:
+            return read_scenario(path)
+        except Exception as e:  # the parser knows no layout of this format
+            raise ScxFormatError(f"{path}: scenario format {fmt.decode('latin-1')!r} is not supported "
+                                 f"({type(e).__name__}: {str(e).splitlines()[0] if str(e) else ''})") from None
     try:
         s = scx.read(path)
     except scx.ScxError as e:

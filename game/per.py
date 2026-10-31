@@ -26,6 +26,8 @@ import os
 import re
 import sys
 
+import numpy as np
+
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import table  # noqa: E402
 
@@ -188,6 +190,7 @@ def read(path, defined=()):
 NAMES = {}                                                         # script name -> its line of per_names.jsonl
 OPS = {"<": operator.lt, "<=": operator.le, ">": operator.gt, ">=": operator.ge, "==": operator.eq, "!=": operator.ne}
 MATH = ("=", "+", "-", "*", "/", "z/", "mod", "min", "max", "neg", "%*", "%/")   # airef "mathOp" (up-modify-*)
+RULE_CHECKS = 10000                     # the rule checks of one pass: a loop with no end stops there (airef RuleDelta)
 VICTORY_TYPES = {                  # run.py --victory: the airef VictoryType; one per line, in alphabetical order
     "conquest": 1,
     "last-man-standing": 1,
@@ -200,6 +203,8 @@ COST_ACTIONS = ("up-setup-cost-data", "up-reset-cost-data", "up-add-cost-data", 
                 "up-add-research-cost", "up-get-cost-delta")
 COST_GOODS = ("food", "wood", "stone", "gold")   # a cost set is 4 goals in a row, in this order (airef "Cost data", #4879)
 STOCK = ("food", "wood", "gold", "stone")
+IN_TOWN = ("up-building-type-in-town", "up-enemy-buildings-in-town", "up-enemy-units-in-town",   # #4874
+           "up-enemy-villagers-in-town", "up-unit-type-in-town", "up-villager-type-in-town")
 TOWN = 30                       # tiles around the own town center: "in town" (AoE2 sn-maximum-town-size, airef "Facts")
 PERIMETERS = {1: (10, 20), 2: (18, 30)}   # tiles from the town center to each wall ring (airef "build-wall", #4740)
 OCTAGON = math.tan(math.pi / 8)           # half the straight side of a regular octagon per its radius
@@ -220,10 +225,22 @@ SN_IDS = {r["id"]: r["name"] for r in table.load("per_numbers.jsonl")}   # a scr
 # The airef ids of objects and technologies (two sets of numbers): the up-* commands with g: take an id (#4869).
 OBJECT_IDS = {r["id"]: r["name"] for r in table.load("per_names.jsonl") if "id" in r and r["kind"] in ("unit", "building")}
 TECH_IDS = {r["id"]: r["name"] for r in table.load("per_names.jsonl") if "id" in r and r["kind"] in ("tech", "age")}
+SHARED = ("up-get-event", "up-get-shared-goal", "up-get-signal", "up-set-event", "up-set-shared-goal", "up-set-signal")
 UP_QUEUE = {"up-build": "build", "up-research": "research", "up-train": "train"}
+ORDERS = ("up-delete-distant-farms", "up-delete-idle-units", "up-reset-attack-now", "up-reset-building",
+          "up-reset-unit", "up-retreat-now")
 
 
 SETUP = ("civ-selected", "death-match-game", "difficulty", "map-size", "map-type", "regicide-game", "starting-age")
+FIND_METHODS = {"find-attacker": 0,                                # airef "FindPlayerMethod" (up-find-player)
+                "find-closest": 2,
+                "find-ordered": 3,
+                "find-random": 1}
+RESEARCH_STATE = {"research-available": 1,                         # airef "ResearchState" (up-research-status)
+                  "research-complete": 3,
+                  "research-pending": 2,
+                  "research-queued": 4,
+                  "research-unavailable": 0}
 TIMER_STATE = {"timer-disabled": 0,                                # the states of up-timer-status (airef "TimerState")
                "timer-running": 2,
                "timer-triggered": 1}
@@ -261,9 +278,13 @@ class Script:
         self.escrow, self.pct = {}, {}                             # resource -> escrow; -> escrow percentage (#4682)
         self.last = None                                           # the stock after the last step: new income
         self.rings = {}                                            # perimeter -> the sides of its wall ring (ring())
+        self.rng = np.random.default_rng(bot.g.player)               # find-random of up-find-player (#4872)
+        self.unplaced = set()                                      # the buildings of build with no free site (#4870)
         self.text, self.name = "", None                            # the text buffer of up-store-*; up-change-name (#4877)
         self.heard, self.read = set(), {}                          # (player, taunt) not acknowledged; player -> read
+        self.jump = None                                           # the rule after the actions of this rule (up-jump-*)
         self.cost_at = None                                        # the first goal of the current cost set (#4879)
+        self.builders = {}                                         # building -> builders of up-assign-builders (#4875)
 
     def number(self, name):
         return self.sn.get(name, SN[name])
@@ -292,6 +313,30 @@ class Script:
                 return self.warn("strategic number", ref)
             return self.number(ref)
         return ref
+
+    def table(self, kind):
+        """The values of the shared goals, signals or events (#4878). Shared goals: one table per team on the main Gather
+        (conquest.main), so each allied script reads the same value (airef "up-set-shared-goal"). Signals and events:
+        the game program has no scenario trigger "AI signal" or effect "AI trigger" yet, so the script keeps them."""
+        if kind != "shared-goal":
+            return vars(self).setdefault(kind + "s", {})                   # signals, events
+        from conquest import main  # conquest imports gather, which imports this module
+        g = self.bot.g
+        team = (g.players.get(str(g.player)) or {}).get("team")
+        return vars(main(g)).setdefault("shared_goals", {}).setdefault(("p", g.player) if team is None else team, {})
+
+    def shared(self, name, args):
+        """up-get-X TYPE ID GOAL: the value of shared goal, signal or event ID into GOAL (0 when not set);
+        up-set-X TYPE ID TYPE2 VALUE: set it."""
+        values = self.table(name.split("-", 2)[2])
+        kind = self.type_kind(args[0])
+        ref = self.operand(kind, args[1]) if kind else None
+        if ref is None:
+            return
+        if name.startswith("up-get-"):
+            self.goals[args[2]] = values.get(ref, 0)
+        elif (kind2 := self.type_kind(args[2])) and (value := self.operand(kind2, args[3])) is not None:
+            values[ref] = value
 
     def named(self, type_op, ref, tech=False):
         """The script name of an object (or a technology) of an up-* command: c: a name or an id, g: a goal that holds
@@ -368,6 +413,14 @@ class Script:
             return (1 if value >= 0 else -1) * (abs(value) % abs(ref))
         return sign * (abs(value * 100) // abs(ref))                   # %/
 
+    def jump_to(self, kind, ref):
+        """The rule number of a jump (up-jump-direct, up-jump-dynamic): operand(kind, ref), or None with one warning for
+        an unknown kind."""
+        kind = kind.rstrip(":")
+        if kind not in ("", "c", "g", "s"):
+            return self.warn("operator", kind)
+        return self.operand(kind, ref)
+
     def game(self, name, *kinds):
         """The name of the game program of a script name of one of kinds, or None (one warning)."""
         row = names().get(name)
@@ -392,13 +445,24 @@ class Script:
         return n if n in names else None
 
     def step(self):
-        """Check the facts of each rule that is not disabled and run the actions of each rule whose facts are true."""
+        """Check the facts of each rule that is not disabled and run the actions of each rule whose facts are true. A jump
+        (up-jump-*) goes to another rule of the pass; a pass of more than RULE_CHECKS checks stops (a loop with no end)."""
         self.income()
         self.hear()
-        for k, rule in enumerate(self.rules):
+        k, checks = 0, 0
+        while 0 <= k < len(self.rules):
+            checks += 1
+            if checks > RULE_CHECKS:
+                if ("rule loop", "") not in self.warned:
+                    self.warned.add(("rule loop", ""))
+                    print(f"AI script: a loop of rules has no end: the pass stops after {RULE_CHECKS} checks", file=sys.stderr)
+                break
+            rule = self.rules[k]
+            self.jump = k + 1
             if k not in self.off and all(self.check(f) for f in rule.facts):
                 for a in rule.actions:
                     self.act(k, a)
+            k = self.jump
         self.last = dict(self.bot.g.stock)
 
     def income(self):
@@ -479,6 +543,8 @@ class Script:
         if name in ("up-can-train", "up-can-build", "up-can-research"):     # (up-can-train ESCROW TYPE UNIT)
             sn = self.named(args[1], args[2], name == "up-can-research")
             return sn is not None and self.can(name.removeprefix("up-"), sn, self.goals.get(args[0], 0) >= 1)
+        if name in ("up-pending-objects", "up-pending-placement", "up-research-status", "up-train-site-ready"):
+            return self.pending(name, args)
         if name in ("up-object-type-count", "up-object-type-count-total"):    # (up-object-type-count TYPE OBJECT REL VALUE)
             if (sn := self.named(args[0], args[1])) is None or (n := self.game(sn, "unit", "building")) is None:
                 return False
@@ -518,8 +584,16 @@ class Script:
             return bool(got) and (all(got) if every else any(got))
         if name == "wall-completed-percentage":                    # (wall-completed-percentage PERIMETER REL VALUE)
             return self.ring(args[0]) is not None and self.compare(args[1], self.walled(args[0]), args[2])
+        if name in ("up-players-in-game", "up-player-distance", "up-allied-goal", "up-allied-sn"):
+            return self.others(name, args)
         if name == "enemy-buildings-in-town":
             return self.in_town()
+        if name in IN_TOWN:
+            return self.in_town_count(name, args)
+        if name == "up-defender-count":                            # (up-defender-count REL VALUE): guards and defenders
+            return self.compare(args[0], len(self.bot.guards) + len(self.bot.defense), args[1])
+        if name == "up-idle-unit-count":                           # (up-idle-unit-count IDLE-TYPE REL VALUE)
+            return self.idle_count(args[0], args[1], args[2])
         if name in SETUP:
             return self.setup(name, args)
         if name.startswith("players-"):                            # (players-FACT PLAYER ...): the other players
@@ -776,23 +850,122 @@ class Script:
         far = min(tcs, key=lambda c: (c[0] - at[0]) ** 2 + (c[1] - at[1]) ** 2)
         return ((at[0] + 2 * far[0]) // 3, (at[1] + 2 * far[1]) // 3)     # 2/3 of the way: the midpoint ties with home
 
+    def stanced(self, stance):
+        """The other players (Gathers by player number) of a playerStance: any, ally, neutral or enemy (#4872)."""
+        import build
+        import diplomacy
+        g = self.bot.g
+        xs = {x.player: x for x in build.sides(g) if x.player != g.player}
+        return {p: x for p, x in sorted(xs.items()) if stance == "any" or diplomacy.stance(g, p) == stance}
+
+    def distance(self, x):
+        """Tiles from the own town center to the nearest building or site of the Gather x; None with none."""
+        import ruins
+        g, at = self.bot.g, self.bot.center()
+        rects = [o["footprint"] for o in g.data["objects"] if o["kind"] == "building" and o.get("player") == x.player
+                 and "footprint" in o and not ruins.fallen(x, o)]
+        rects += [(x0, z0, x1, z1) for s in x.sites if s.get("player", x.player) == x.player
+                  for x0, x1, z0, z1 in [s["footprint"]]]
+        if at is None or not rects:
+            return None
+        return min(math.hypot((r[0] + r[2]) / 2 - at[0], (r[1] + r[3]) / 2 - at[1]) for r in rects) / g.data["tile_size"]
+
+    def others(self, name, args):
+        """up-players-in-game STANCE REL VALUE, up-player-distance PLAYER REL VALUE, up-allied-goal PLAYER GOAL REL
+        VALUE, up-allied-sn PLAYER SN REL VALUE (#4872): the goal or number of the script of an allied bot."""
+        import build
+        import diplomacy
+        g = self.bot.g
+        if name == "up-players-in-game":
+            return self.compare(args[1], len(self.stanced(args[0])), args[2])
+        x = self.stanced("any").get(args[0])
+        if name == "up-player-distance":
+            d = None if x is None else self.distance(x)
+            return d is not None and self.compare(args[1], round(d), args[2])
+        first = (build.sides(g) or [g])[0]
+        other = next((b.script for b in getattr(first, "bots", ()) if b.g.player == args[0]), None)
+        if other is None or diplomacy.stance(g, args[0]) != "ally":
+            return False
+        if name == "up-allied-goal":
+            return self.compare(args[2], other.goals.get(args[1], -1), args[3])
+        sn = SN_IDS.get(args[1], args[1])
+        return sn in SN and self.compare(args[2], other.number(sn), args[3])
+
+    def find_player(self, name, args):
+        """(up-find-player STANCE METHOD GOAL), up-find-next-player: a player of airef "FindPlayerMethod" into the goal,
+        0 for none. find-attacker: the game program keeps no attacker, so 0. Next: after the player in the goal."""
+        xs = self.stanced(args[0])
+        if name == "up-find-next-player":
+            after = self.goals.get(args[2], 0)
+            xs = {p: x for p, x in xs.items() if p != after}
+        method = FIND_METHODS.get(args[1], args[1])
+        if not xs or method == 0:
+            pick = 0
+        elif method == 1:
+            pick = int(self.rng.choice(sorted(xs)))
+        elif method == 2:
+            near = {p: d for p, x in xs.items() if (d := self.distance(x)) is not None}
+            pick = min(near, key=lambda p: (near[p], p), default=0)
+        else:
+            pick = max(xs)
+        if name == "up-find-next-player" and method == 3:          # ordered: the next lower player, then from the top
+            after = self.goals.get(args[2], 0)
+            pick = max((p for p in xs if p < after), default=max(xs, default=0))
+        self.goals[args[2]] = pick
+
     def in_town(self):
         """True when a building of an enemy stands within TOWN tiles of the own town center."""
+        return bool(self.town()["building"])
+
+    def town(self):
+        """The game names of the enemy objects within TOWN tiles of the own town center: {"building": [...], "villager":
+        [...], "soldier": [...]}. A building: also a site under construction (#4874)."""
         import build
         import diplomacy
         import ruins
         g, at = self.bot.g, self.bot.center()
+        out = {"building": [], "villager": [], "soldier": []}
         if at is None:
-            return False
+            return out
         r = TOWN * g.data["tile_size"]
         near = lambda x, z: (x - at[0]) ** 2 + (z - at[1]) ** 2 <= r * r   # noqa: E731
         foes = {x.player: x for x in build.sides(g) if diplomacy.stance(g, x.player) == "enemy"}
-        return any(o["kind"] == "building" and o["player"] in foes and "footprint" in o
-                   and not ruins.fallen(foes[o["player"]], o)
-                   and near((o["footprint"][0] + o["footprint"][2]) / 2, (o["footprint"][1] + o["footprint"][3]) / 2)
-                   for o in g.data["objects"]) or \
-            any(near((x0 + x1) / 2, (z0 + z1) / 2) for x in foes.values() for s in x.sites
-                if s.get("player", x.player) == x.player for x0, x1, z0, z1 in [s["footprint"]])
+        out["building"] = [o["name"] for o in g.data["objects"] if o["kind"] == "building" and o["player"] in foes
+                           and "footprint" in o and not ruins.fallen(foes[o["player"]], o)
+                           and near((o["footprint"][0] + o["footprint"][2]) / 2, (o["footprint"][1] + o["footprint"][3]) / 2)]
+        out["building"] += [s["name"] for x in foes.values() for s in x.sites if s.get("player", x.player) == x.player
+                            for x0, x1, z0, z1 in [s["footprint"]] if near((x0 + x1) / 2, (z0 + z1) / 2)]
+        out["villager"] = ["VILLAGER_MALE" for x in foes.values()
+                           for v in x.villagers.values() if v.pos and near(v.pos[0], v.pos[2])]
+        out["soldier"] = [x.soldiers[u] for x in foes.values() for u, p in x.positions(sorted(x.soldiers)).items()
+                          if near(p[0], p[2])]
+        return out
+
+    def in_town_count(self, name, args):
+        """The facts up-*-in-town (#4874): (up-enemy-units-in-town REL VALUE), (up-building-type-in-town TYPE BUILDING
+        REL VALUE) and the other ones. A unit: a villager or a soldier; a -type- fact counts only its object."""
+        objs = self.town()
+        part = name.removeprefix("up-").removesuffix("-in-town").removeprefix("enemy-")
+        part = part.removesuffix("-type").removesuffix("s")
+        found = objs["villager"] + objs["soldier"] if part == "unit" else objs[part]
+        if "-type-" in name:
+            if (sn := self.named(args[0], args[1])) is None or not (n := self.game(sn, "unit", "building")):
+                return False
+            want = set(n) if isinstance(n, tuple) else {n}
+            same = lambda k: k in want or k.startswith("VILLAGER") and any(w.startswith("VILLAGER") for w in want)   # noqa: E731
+            found, args = [k for k in found if same(k)], args[2:]
+        return self.compare(args[0], len(found), args[1])
+
+    def idle_count(self, kind, op, value):
+        """up-idle-unit-count: idle-villagers (Gather.idle) or idle-military (no target of a wave or of the town defense)."""
+        b = self.bot
+        if kind == "idle-villagers":
+            n = sum(v.state == "idle" for v in b.g.villagers.values())
+        elif kind == "idle-military":
+            n = len(b.g.soldiers.keys() - b.targets.keys() - b.guards.keys())
+        else:
+            return self.warn("idle type", kind) or False
+        return self.compare(op, n, value)
 
     def ring(self, p):
         """The sides of the wall ring of perimeter p (lists of tiles), or None: a regular octagon around the own town
@@ -902,6 +1075,27 @@ class Script:
             else:
                 self.escrow.pop(r, None)
 
+    def pending(self, name, args):
+        """up-pending-objects TYPE OBJECT REL VALUE (queued units and unfinished sites), up-pending-placement TYPE
+        BUILDING, up-research-status TYPE TECH REL STATE (RESEARCH_STATE), up-train-site-ready TYPE UNIT (#4870)."""
+        import build
+        import scenario  # it imports gather: import it late
+        import train
+        g = self.bot.g
+        tech = name == "up-research-status"
+        if (sn := self.named(args[0], args[1], tech)) is None:
+            return False
+        if (n := self.game(sn, "tech", "age") if tech else self.game(sn, "unit", "building")) is None:
+            return False
+        if name == "up-pending-objects":
+            return self.compare(args[2], self.count(n, total=True) - self.count(n), args[3])
+        if name == "up-pending-placement":
+            return n in self.unplaced
+        if tech:                                                   # the AoE2 state; -1 (disabled) is unavailable
+            return self.compare(args[2], max(scenario.tech_state(g, n), 0), RESEARCH_STATE.get(args[3], args[3]))
+        return any(n in train.trains(g, home) and len(g.queues.get(rect, ())) < train.QUEUE
+                   for rect, home in train.homes(g).items()) and not build.locked(g, n)
+
     def homes(self, n):
         """The block cells of the own buildings that offer n now."""
         import build
@@ -938,6 +1132,60 @@ class Script:
         return bool(market.markets(g)) and (g.stock["gold"] >= market.price(g, res, True) if buy
                                             else g.stock[res] >= market.LOT)
 
+    def order(self, name, args):
+        """The orders of the army and the buildings (#4876, airef): stop the attack, call the army home, stop units or
+        queues, delete idle units or far farms. Each one uses the path of the player (stop, delete, cancel)."""
+        import demolish
+        import ruins
+        import stance
+        import train
+        b = self.bot
+        g, T = b.g, b.g.map.T
+        if name == "up-reset-attack-now":                          # the flag of attack-now; the bot attacks no more
+            self.attacking = False
+        elif name == "up-retreat-now":                             # all soldiers, also the ones not in a wave
+            b.wave = set(g.soldiers)
+            b.retreat()
+        elif name == "up-reset-unit":                              # (up-reset-unit TYPE UNIT): the Stop button
+            n = (sn := self.named(args[0], args[1])) and self.game(sn, "unit")
+            if n:
+                n = n if isinstance(n, tuple) else (n,)
+                units = sorted(u for u, m in g.soldiers.items() if m in n)
+                for u in units:
+                    g.command(f"aoe stop {u}")
+                    vars(b).get("targets", {}).pop(u, None)
+                    vars(b).get("wave", set()).discard(u)
+                g.new_order(units)
+                for v in [v for u, v in sorted(g.villagers.items()) if any(m.startswith("VILLAGER") for m in n)]:
+                    g.new_order([v.uuid])
+                    g.set(v, "idle")
+        elif name == "up-reset-building":                          # (up-reset-building OPTION TYPE BUILDING)
+            n = (sn := self.named(args[1], args[2])) and self.game(sn, "building")
+            for rect in [r for r, m in sorted(train.homes(g).items()) if n and m in (n if isinstance(n, tuple) else (n,))]:
+                gs = lambda: list(enumerate(train.groups(g.queues.get(rect, []))))   # noqa: E731
+                while (i := next((i for i, e in reversed(gs()) if args[0] != 1 or e[0] not in train.TECHS), None)) \
+                        is not None and train.cancel(g, b.nobody, rect, i):
+                    pass                                           # option 1 keeps the research (airef)
+        elif name == "up-delete-idle-units":                       # (up-delete-idle-units IDLE-TYPE)
+            if (kind := self.game(args[0], "idle")) is None:     # airef IdleType: per_names.jsonl
+                return
+            kind = "VILLAGER" if kind.startswith("VILLAGER") else kind
+            ships = vars(g).get("ships", {})
+            trade = vars(g).get("trade", {})
+            idle = sorted([u for u, v in g.villagers.items() if v.state == "idle"] if kind == "VILLAGER" else
+                          [u for u, v in ships.items() if v.state == "idle" and getattr(v, "name", kind) == kind] +
+                          [u for u, m in g.soldiers.items() if m.startswith(kind) and u not in trade])
+            if idle:
+                stance.delete_units(g, idle)
+        elif name == "up-delete-distant-farms":                    # (up-delete-distant-farms TYPE VALUE): in tiles
+            far = self.operand(args[0].rstrip(":"), args[1])
+            cells = [c for d in g.map.drops["food"] for c in d]   # the mills and the town centers
+            for rect in sorted(ruins.own(g).values()):
+                mid = ((rect[0] + rect[1]) / 2, (rect[2] + rect[3]) / 2)
+                if far is not None and "FARM" in demolish.name(g, rect) and cells and \
+                        min(math.dist(mid, c) for c in cells) / T > far:
+                    demolish.fall(g, rect)
+
     def act(self, k, a):
         import build
         import train
@@ -967,8 +1215,11 @@ class Script:
             if n and self.can("can-build", args[0], escrow) and center and (rect := build.near(g, n, center)) is not None:
                 cost = build.price(g, n)
                 b.builder(build.found(g, n, rect))
+                self.unplaced.discard(n)
                 if escrow:
                     self.spend(cost)
+            elif n and self.can("can-build", args[0], escrow):     # no free site yet: up-pending-placement
+                self.unplaced.add(n)
         elif name == "build-wall":                                     # (build-wall PERIMETER WALL-TYPE)
             self.wall(args[0], args[1])
         elif name == "build-gate":                                     # (build-gate PERIMETER)
@@ -995,6 +1246,8 @@ class Script:
             ref = self.operand(kind, args[1]) if kind else None
             if ref is not None:
                 self.goals[args[2]] = self.goals.get(ref, -1)
+        elif name in SHARED:                                         # (up-get-shared-goal TYPE ID GOAL), (up-set-signal
+            self.shared(name, args)                                  # TYPE ID TYPE2 VALUE) ... (#4878)
         elif name == "up-set-indirect-goal":                         # (up-set-indirect-goal TYPE GOAL TYPE2 VALUE)
             kind, kind2 = self.type_kind(args[0]), self.type_kind(args[2])
             ref = self.operand(kind, args[1]) if kind else None
@@ -1009,6 +1262,19 @@ class Script:
             if flag is not None:                                   # no flag yet: the goal has no bit
                 value = self.goals.get(args[0], 0)
                 self.goals[args[0]] = value | flag if rel == "+" else value & ~flag
+        elif name == "up-assign-builders":                        # (up-assign-builders TYPE BUILDING TYPE2 VALUE)
+            kind = self.type_kind(args[2])
+            sn, value = self.named(args[0], args[1]), self.operand(kind, args[3]) if kind else None
+            if sn is None or value is None or not (n := self.game(sn, "building")):
+                return
+            self.builders[n] = max(value, 1) if value != -1 else 1     # -1: the default of the game
+            for site in [s for s in g.sites if s["name"] == n and not s.get("done")]:
+                b.builder(site)                                        # more builders: the rest go at once (airef)
+        elif name in ("up-retask-gatherers", "up-drop-resources"):    # (up-retask-gatherers RES TYPE VALUE)
+            if args[0] not in STOCK:
+                return self.warn("resource", args[0])
+            if (value := self.typed(args[1], args[2])) is not None:
+                (b.retask if name == "up-retask-gatherers" else b.drop)(args[0], value)
         elif name == "up-modify-sn":                                 # (up-modify-sn SN OP VALUE)
             sn = SN_IDS.get(args[0], args[0])
             if sn not in SN:
@@ -1016,6 +1282,18 @@ class Script:
             new = self.math(args[1], self.number(sn), args[2])
             if new is not None:
                 self.sn[sn] = new
+        elif name == "up-jump-rule":                                 # (up-jump-rule DELTA): the rule k + 1 + DELTA
+            self.jump = k + 1 + args[0]
+        elif name == "up-jump-direct":                               # (up-jump-direct TYPE ID): the rule ID (from 0)
+            n = self.jump_to(args[0], args[1])
+            if n is not None:
+                self.jump = n
+        elif name == "up-jump-dynamic":                              # (up-jump-dynamic TYPE DELTA): k + 1 + DELTA
+            n = self.jump_to(args[0], args[1])
+            if n is not None:
+                self.jump = k + 1 + n
+        elif name == "up-get-rule-id":                               # (up-get-rule-id GOAL): the rule k of the goal
+            self.goals[args[0]] = k
         elif name == "set-escrow-percentage":                    # (set-escrow-percentage RESOURCE PCT)
             if args[0] not in STOCK:
                 return self.warn("resource", args[0])
@@ -1047,6 +1325,8 @@ class Script:
             self.escrow.clear()
         elif name == "attack-now":
             self.attacking = True
+        elif name in ORDERS:
+            self.order(name, args)
         elif name == "enable-timer":
             self.timers[args[0]] = b.time + args[1]
         elif name == "disable-timer":
@@ -1081,6 +1361,8 @@ class Script:
                 text = text.replace("%d", str(value)).replace("%s", self.text)
             who = self.name or f"Player {g.player}"
             g.command(f"tellraw {to} " + json.dumps({"text": f"<{who}> {text}"}))
+        elif name in ("up-find-player", "up-find-next-player"):
+            self.find_player(name, args)
         elif name == "up-change-name":
             self.name = str(args[0])
         elif name == "up-store-text":
@@ -1106,6 +1388,6 @@ class Script:
         elif name == "acknowledge-taunt":                            # (acknowledge-taunt PLAYER TAUNT)
             self.heard.discard((args[0], args[1]))
         elif name not in ("do-nothing", "chat-local-to-self", "enable-wall-placement", "up-chat-data-to-self",
-                          "up-log-data"):
-            # no one sees a self chat; each wall ring is always enabled (ring())
+                          "up-log-data", "up-request-hunters"):
+            # no one sees a self chat; the bots have no hunt (#4739); each wall ring is always enabled (ring())
             self.warn("action", name)
