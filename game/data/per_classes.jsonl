@@ -2,6 +2,7 @@
 {"name": "building-class", "kind": "class", "id": 903, "building": true}
 {"name": "cavalry-archer-class", "kind": "class", "id": 936, "armor": ["archer", "cavalry"]}
 {"name": "cavalry-class", "kind": "class", "id": 912, "armor": ["cavalry"]}
+{"name": "farm-class", "kind": "class", "id": 949, "buildings": ["FARM"]}
 {"name": "gate-class", "kind": "class", "id": 939, "buildings": ["GATE"]}
 {"name": "infantry-class", "kind": "class", "id": 906, "armor": ["infantry"]}
 {"name": "monastery-class", "kind": "class", "id": 918, "units": ["MONK"]}
