@@ -28,7 +28,7 @@ def payload(command):
 def check(c, key):
     """The component is a translate of key whose fallback is the English line of the table."""
     assert c["translate"] == key
-    assert c["fallback"] == TEXTS[key] == lang.EN_US[key]
+    assert c["fallback"] == TEXTS[key] == lang.en_us()[key]
     return c
 
 

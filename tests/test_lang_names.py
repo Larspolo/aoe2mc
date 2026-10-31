@@ -20,7 +20,7 @@ def test_name_gives_the_key_and_the_pretty_fallback():
     assert lang.name("VILLAGER_MALE") == {"translate": "aoe2mc.unit.VILLAGER_MALE", "fallback": units.pretty("VILLAGER_MALE")}
     assert lang.name("LOOM", "tech", "Loom") == {"translate": "aoe2mc.tech.LOOM", "fallback": "Loom"}
     assert lang.plain(lang.text("aoe2mc.age_up", 1, lang.name("FEUDAL_AGE", "tech", "Feudal Age"))) == \
-        lang.EN_US["aoe2mc.age_up"].replace("%s", "1", 1).replace("%s", "Feudal Age")
+        lang.en_us()["aoe2mc.age_up"].replace("%s", "1", 1).replace("%s", "Feudal Age")
 
 
 def test_the_boss_bar_of_a_villager_carries_a_unit_key():
