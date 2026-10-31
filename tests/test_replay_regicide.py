@@ -57,7 +57,7 @@ def test_the_delete_of_a_king_puts_its_player_out():
     assert "Player 2 (Aztecs) is out" in texts(cmds)
     assert r.regicided == {2: 65000}
     assert summary(r) == ["Player 2 (Aztecs): King killed 01:05 (Regicide)"]
-    assert "01:05 King killed" in r.timeline_commands(10 ** 6)[0]       # the Timeline book
+    assert "01:05 King killed" in "".join(map(lang.plain, json.loads(r.timeline_commands(10 ** 6)[0].split("=", 1)[1][:-1])["pages"]))       # the Timeline book
 
 
 def test_a_king_that_died_in_a_fight_puts_its_player_out():

@@ -38,7 +38,7 @@ def two_relics():
 
 
 def page_text(page):
-    return lang.plain(page) + "".join(page_text(e) for e in page.get("extra", []))
+    return lang.plain(page)                                          # with the extra parts (#5390)
 
 
 def timeline_rows(sent):

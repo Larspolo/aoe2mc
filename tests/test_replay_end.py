@@ -27,7 +27,7 @@ def test_the_end_shows_a_title_the_end_time_and_one_sound():
     titles = [c for c in sent if c.startswith("title @a")]
     assert titles[-3:] == ["title @a times 10 100 20", "title @a subtitle " + json.dumps(replay.say("game_time", "44:22")),
                            "title @a title " + json.dumps(replay.say("replay_ended"))]
-    assert sent.index("title @a title " + json.dumps(replay.say("replay_ended"))) > max(i for i, c in enumerate(sent) if "resigns" in c)
+    assert sent.index("title @a title " + json.dumps(replay.say("replay_ended"))) > max(i for i, c in enumerate(sent) if "aoe2mc.replay.resigns" in c)
     assert [c for c in sent if c.startswith("playsound")] == [
         "playsound minecraft:ui.toast.challenge_complete master @a ~ ~ ~ 1 1 1"]
     names = [c.split(" name ")[1] for c in sent if c.startswith("bossbar") and " name " in c]
