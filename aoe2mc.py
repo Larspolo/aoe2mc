@@ -1089,13 +1089,16 @@ def water_tiles(terrain, tnames):
 def record_timeline(src, turn=0, state=None):
     """The timeline of a recorded game as convert() writes it to aoe2mc.json: read, named, turned by `turn` quarter
     turns and through JSON. The live replay reads a record that AoE2 DE still writes again with it (#4663);
-    state: as read_timeline (#4664)."""
+    state: as read_timeline (#4664); its "views" turn as the timeline (#4771)."""
     size, terrain, _, tnames, _, objects, _ = read_map(src)
     timeline = read_timeline(src, state)
     if timeline is None:
         return []
     name_timeline(objects, timeline, water=water_tiles(terrain, tnames))
     turn_timeline(timeline, size, turn)
+    if state is not None and state.get("views"):
+        turn_timeline(state["views"], size, turn)
+        state["views"] = json.loads(json.dumps(state["views"]))
     return json.loads(json.dumps(timeline))
 
 

@@ -1014,6 +1014,8 @@ def replay(game, world, speed=1.0, start="0:00", follow=None, guide=None, view=N
         except OSError as e:
             sys.exit(str(e))
         data["timeline"] = source.first()
+        if source.views:                             # the views of the record so far (--camera player, #4771)
+            data["views"] = [{"time": v["time"], "tile": v["tile"]} for v in source.fresh_views()]
         kw["more"] = source.more
     import replay_input
     control = replay_input.Input(game)              # hotbar items, menu and /trigger aoe_replay (#688)

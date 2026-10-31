@@ -3182,7 +3182,7 @@ class Replay:
         shots = [{"time": c["time"], "kind": "shot", "tile": c["tile"]}      # the camera can switch on later (#3369)
                  for c in camera_plan(self.data.get("timeline", []), owner)]
         views = self.views = [{"time": v["time"], "kind": "view", "tile": v["tile"]} for v in self.data.get("views", [])]
-        if self.camera == "player" and not views:                   # the free camera (#4768)
+        if self.camera == "player" and not views and more is None:  # the free camera (#4768); live: views can come
             self.camera = None
             self.send(["tellraw @a " + json.dumps(text("This record has no camera of its player.", "yellow"))])
         events = sorted((e for e in self.data.get("timeline", []) + self.spawns() + news + shots + views if start <= e["time"] <= last),
@@ -3191,7 +3191,7 @@ class Replay:
         self.speed, self.paused = speed, paused
         self.control = {"speed": speed, "paused": paused, "view": self.pov,     # the view: replay_input VIEW (#1303)
                         "camera": self.camera,                               # replay_input CAMERA (#3369)
-                        "views": bool(views),                                # CAMERA has "player" only with views (#4769)
+                        "views": bool(views) or more is not None,                             # CAMERA has "player" only with views (#4769)
                         "players": {p: self.player(p) for p in sorted(int(q) for q in self.data["players"]) if p}} | \
             ({"jump": to} if to is not None else {})
         self.control["fights"] = found
