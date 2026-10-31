@@ -1,0 +1,8 @@
+samples/de-regicide.aoe2record
+
+Source: the owner (Larspolo) recorded this game on 2026-10-31 for this project (#4900).
+Game: AoE2 DE on macOS (save version 68.9, build 188329), Regicide, 1 vs 1 against the AI, Vietnamese vs Gurjaras,
+map Coastal, size Tiny, 10 minutes. Player 1 deletes the own King at 10:02.9; the game ends at 10:04.
+Use: test data for the Regicide replay (#4835, #4900).
+
+License: GNU General Public License version 3, as the repository (the file LICENSE).
