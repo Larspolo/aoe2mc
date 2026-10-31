@@ -312,7 +312,8 @@ def read_scx(path):
     import scx
     with open(path, "rb") as f:
         fmt = f.read(4)
-    if fmt not in scx.FORMATS and fmt[:2] == b"1." and fmt >= b"1.27":   # a base scenario of DE (.scx 1.33 to 1.54, #4933)
+    if fmt not in scx.FORMATS and fmt[:2] == b"1." and fmt >= b"1.27":   # a base scenario of DE (.scx 1.36 and later, #4933;
+                                                                          # scx.py reads the older DE formats, #5072)
         try:
             return read_scenario(path)
         except Exception as e:  # the parser knows no layout of this format

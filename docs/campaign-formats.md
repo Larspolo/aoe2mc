@@ -114,6 +114,20 @@ result to the pipeline in the form of `read_scenario`, so `aoe2mc.py IN.scx OUT`
 genie-rs test file `Age of Heroes b1-3-5.scx` (format `1.21`, 200 × 200, not in this repository) read all 8 players,
 and the bytes after the player data are the trigger version 1.6.
 
+`scx.py` also reads the first DE formats `1.32` to `1.35` (#5072): AoE2ScenarioParser has no layout before `1.36`, and
+6 base scenarios of DE random maps have format `1.33` or `1.35`. In DE the data version is the format. The DE fields of
+`TribeScen` (genie-scx `RGEScen` and `TribeScen`): data version ≥ 1.28: 16 `u32` civilization locks before the file
+name, and the disabled techs, units and buildings are 16 counts and then lists of that length (not fixed lists); at
+the end, ≥ 1.35: `u32` number of triggers, ≥ 1.30: `u16` signature and the water definition, ≥ 1.32: `u16` signature and
+the color mood, ≥ 1.36: `u8` "collide and correct", ≥ 1.37: `u8` "villager force drop". The DE map is map version 2
+(marker `0xDEADF00D`, version, `u8` "no waves", size, tiles of 7 bytes; AoE2ScenarioParser names the marker and version
+`player_1_camera_y` and `player_1_camera_x`). A file of `1.35` differs from `1.36` only by the "collide and correct"
+byte and by the order of step 5 (objects first); `1.33` also has no trigger count. A check with the genie-rs test files
+`Hotkey Trainer Buildings.aoe2scenario` (`1.36`) and `layertest.aoe2scenario` (`1.37`, not in this repository; the
+check allowed these formats for a moment) gave the same terrain, elevation and objects as AoE2ScenarioParser. A test
+builds `1.33` and `1.35` files byte by byte (`tests/test_scenario_de_135.py`). The civilization IDs of DE above 18 are
+not in `scx_civs.jsonl` (`CIV_36`): a base scenario of a random map needs only the map.
+
 The civilization of a player is in `TribeScen`, so a reader must read all of `TribeScen` to get to the map. The unit
 type IDs of the old games are the same IDs as in DE for the units that both have.
 
