@@ -415,6 +415,7 @@ def read_scenario(path):
     from AoE2ScenarioParser.datasets.techs import TechInfo
     from AoE2ScenarioParser.datasets.terrains import TerrainId
     from AoE2ScenarioParser.datasets.trigger_lists import ColorMood, SecondaryGameMode, VictoryCondition
+    from AoE2ScenarioParser.exceptions.asp_exceptions import UnsupportedAttributeError
     from AoE2ScenarioParser.scenarios.aoe2_de_scenario import AoE2DEScenario
 
     with contextlib.redirect_stdout(io.StringIO()):   # the parser prints a lot of status text
@@ -470,8 +471,9 @@ def read_scenario(path):
                          {kinds.get(i, ("?", f"UNKNOWN_{i}"))[1] for i in [*(p.disabled_buildings or ()), *(p.disabled_units or ())]})
             if off:
                 players[p.player_id]["disabled"] = off
-            if p.starting_age.name != "DARK_AGE":   # the starting age: "castle" (setup.jsonl), none in the Dark Age (#3296)
-                players[p.player_id]["age"] = p.starting_age.name[:-4].lower().replace("_", "-")
+            age = getattr(p.starting_age, "name", "DARK_AGE")   # an int the parser does not know: no age (#5175)
+            if age != "DARK_AGE":   # the starting age: "castle" (setup.jsonl), none in the Dark Age (#3296)
+                players[p.player_id]["age"] = age[:-4].lower().replace("_", "-")
         neutral = [i for i, d in enumerate(p.diplomacy or [], 1) if d == 1 and i != p.player_id and i <= 8]
         if p.player_id and neutral:             # the stance neutral (1) of DiplomacyState: no automatic attack (#1645)
             players[p.player_id]["neutral"] = neutral
@@ -518,7 +520,10 @@ def read_scenario(path):
         if om.victory_condition in set(VictoryCondition) else "standard"
     texts["global_victory"] = {"condition": win, **({"score": int(om.victory_score)} if win == "score" else {}),
                               **({"years": int(om.victory_years)} if win == "time-limit" else {})}
-    flags = int(getattr(om, "secondary_game_modes", 0) or 0)          # Empire Wars, Sudden Death ... (#3297)
+    try:                                     # Empire Wars, Sudden Death ... (#3297); since format 1.42 (#5175)
+        flags = int(om.secondary_game_modes or 0)
+    except UnsupportedAttributeError:
+        flags = 0
     if modes := sorted(m.name.lower().replace("_", "-") for m in SecondaryGameMode if m and flags & m):
         texts["global_victory"]["modes"] = modes
 
