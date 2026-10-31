@@ -66,4 +66,5 @@ def test_teams_group_the_people_by_their_allies():
 def test_announce_shows_each_change_in_the_chat():
     g = Fake()
     ratings.announce(g, [("Steve", 1000, 1016.0)])
-    assert g.sent == ['tellraw @a {"text": "Steve 1000 → 1016"}']
+    assert g.sent == ['tellraw @a {"translate": "aoe2mc.ratings.change", "fallback": "%s %s → %s", '
+                      '"with": ["Steve", "1000", "1016"]}']

@@ -4,16 +4,23 @@ import json
 
 import table
 
-EN_US = {r["name"]: r["en_us"] for r in table.load("texts.jsonl")}
+
+def en_us():
+    """The English texts of the table, read at the first use: run.py imports this module before the options (#3665)."""
+    global EN_US
+    if "EN_US" not in globals():
+        EN_US = {r["name"]: r["en_us"] for r in table.load("texts.jsonl")}
+    return EN_US
 
 
 def text(key, *args, **style):
     """The text component of key ("aoe2mc.<key>") with the arguments args (one per %s) and the style (color, ...)."""
-    if key not in EN_US:
+    texts = en_us()
+    if key not in texts:
         raise KeyError(f"no text {key} in game/data/texts.jsonl")
-    if EN_US[key].count("%s") != len(args):
-        raise ValueError(f"text {key}: {EN_US[key].count('%s')} arguments, not {len(args)}")
-    out = {"translate": key, "fallback": EN_US[key]}
+    if texts[key].count("%s") != len(args):
+        raise ValueError(f"text {key}: {texts[key].count('%s')} arguments, not {len(args)}")
+    out = {"translate": key, "fallback": texts[key]}
     if args:
         out["with"] = [a if isinstance(a, dict) else str(a) for a in args]   # a name component stays (#5346)
     return out | style

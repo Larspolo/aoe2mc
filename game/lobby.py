@@ -13,6 +13,7 @@ from aoe2mc import player_color  # noqa: E402
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import build  # noqa: E402
+import lang  # noqa: E402
 import menu  # noqa: E402
 import ratings  # noqa: E402
 
@@ -75,7 +76,7 @@ def choose(g, player, n):
         build.say(g, player, f"{name(g, n, g.game.sides.get(player))} is taken.")
         return False
     menu.close(g, player)
-    g.command(f"tellraw {player} " + json.dumps({"text": f"You play {name(g, n)}.", "color": "gold"}))
+    g.command(f"tellraw {player} " + json.dumps(lang.text("aoe2mc.lobby.you_play", name(g, n), color="gold")))
     if getattr(g, "data", {}).get("balance"):                      # the teams by the ratings after the last join (#5223)
         ratings.join(g)
     return True

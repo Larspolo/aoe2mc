@@ -45,4 +45,4 @@ def test_no_market_sends_nothing_and_says_so_once(monkeypatch):
     b.give()
     b.give()
     assert b.g.stock["wood"] == 900
-    assert sum("no market" in c for c in sent) == 1
+    assert sum("aoe2mc.bot.no_market" in c for c in sent) == 1

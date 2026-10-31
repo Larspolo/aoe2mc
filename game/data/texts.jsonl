@@ -37,5 +37,21 @@
 {"name": "aoe2mc.tutorial.step_done", "en_us": "Step done"}
 {"name": "aoe2mc.tutorial.step_of", "en_us": "Step %s/%s: %s"}
 {"name": "aoe2mc.victory", "en_us": "Victory"}
+{"name": "aoe2mc.run.chat_hint", "en_us": "Chat: a normal line goes to all, /tm TEXT to your allies, /msg NAME TEXT to one person."}
+{"name": "aoe2mc.run.campaign_complete", "en_us": "Campaign complete"}
+{"name": "aoe2mc.run.scenario_starts", "en_us": "Scenario %s starts. Join again."}
+{"name": "aoe2mc.lobby.you_play", "en_us": "You play %s."}
+{"name": "aoe2mc.savegame.saved", "en_us": "Saved the game: %s"}
+{"name": "aoe2mc.ratings.change", "en_us": "%s %s → %s"}
+{"name": "aoe2mc.ratings.team", "en_us": "Team %s (mean rating %s): %s"}
+{"name": "aoe2mc.bot.no_flare", "en_us": "I see no flare."}
+{"name": "aoe2mc.bot.cannot_build", "en_us": "I cannot build a %s there now."}
+{"name": "aoe2mc.bot.no_wall_resources", "en_us": "I have not enough resources for a wall."}
+{"name": "aoe2mc.bot.flare_two", "en_us": "Flare two places for the wall."}
+{"name": "aoe2mc.bot.no_water", "en_us": "I have no water near my town: I cannot build a navy."}
+{"name": "aoe2mc.bot.onager_no_trees", "en_us": "My onagers cannot cut trees."}
+{"name": "aoe2mc.bot.no_onager", "en_us": "I have no onager."}
+{"name": "aoe2mc.bot.cannot_train", "en_us": "I cannot train that unit: I have no building for it."}
+{"name": "aoe2mc.bot.no_market", "en_us": "I have no market: I cannot send tribute."}
 {"name": "aoe2mc.wonder.built", "en_us": "Player %s built a wonder."}
 {"name": "aoe2mc.wonder.destroyed", "en_us": "The wonder of player %s is destroyed."}

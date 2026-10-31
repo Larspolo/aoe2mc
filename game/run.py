@@ -72,6 +72,7 @@ import urllib.request
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path[:0] = [HERE, os.path.join(os.path.dirname(HERE), "tools")]
+import lang  # noqa: E402
 import mc_check  # noqa: E402
 import rcon  # noqa: E402
 import table  # noqa: E402
@@ -276,6 +277,7 @@ def batches(cmds, limit=rcon.MAX):
 
 SPECTATORS = ('team add spec "Spectators"', "team modify spec color gray")   # the team of the spectators (#2898)
 CHAT_HINT = "Chat: a normal line goes to all, /tm TEXT to your allies, /msg NAME TEXT to one person."   # #3555
+CHAT_HINT_KEY = "aoe2mc.run.chat_hint"                             # its translate key (#5376)
 
 
 class Game:
@@ -379,7 +381,7 @@ class Game:
                 self.command(cmd)            # the hides of the own team only: the plugin hid all on the join (#3070)
             if name not in getattr(self, "placed", ()):   # a join again keeps the place (#3347)
                 self.start_view(name, n)
-            self.command(f"tellraw {name} " + json.dumps({"text": CHAT_HINT, "color": "gray"}))   # the chat targets (#3555)
+            self.command(f"tellraw {name} " + json.dumps(lang.text(CHAT_HINT_KEY, color="gray")))   # the chat targets (#3555, #5376)
         elif self.people > 1:
             for cmd in [*SPECTATORS * (not self.spectators), f"team join spec {name}", f"gamemode spectator {name}",
                         *[f"aoe show {name} all"] * (getattr(self, "kind", "paper") == "paper")]:
@@ -1474,8 +1476,8 @@ def main(argv=None, scenario=None):
                 if keys := campaign_keys(folder) | world_keys(a.world):   # the keys go into the next scenario (#3508)
                     write_progress(folder, keys=keys)
                 after = advance(folder, number, g.ended == "Victory")
-                game.command("title @a title " + json.dumps("Campaign complete") if after is None else
-                             "say " + json.dumps(f"Scenario {after} starts. Join again.")[1:-1])
+                game.command("title @a title " + json.dumps(lang.text("aoe2mc.run.campaign_complete")) if after is None
+                             else "tellraw @a " + json.dumps(lang.text("aoe2mc.run.scenario_starts", after)))
                 time.sleep(PAUSE)
                 game.g = None                        # no save of an ended scenario
             else:
