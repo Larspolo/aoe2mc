@@ -116,6 +116,7 @@ class Bot:
         self.sides = (None, {})                                        # (own and foe places, {tile: at home}) (#1810)
         self.told, self.signal = {}, None                              # player -> taunts read; "now", "wait" (#4828)
         self.giving, self.heard = {}, {}                               # ally -> "extra" or "all" (#4830); -> taunts read
+        self.counter = False                                           # taunt 56 of an ally: train counter units (#4885)
         self.g.home = self.home                                        # the next bush or mine of Gather.nearest too
         self.guarded = -LOOK                                           # AoE2 seconds of the last look for predators
         self.defense = {}                                              # villager -> (predator, last res, last tree)
@@ -283,7 +284,7 @@ class Bot:
 
     def give(self):
         """The tributes that the allies ask for with taunts (#4830, AoE2): 38 and 58 "extra" (the stock over reserve()),
-        60 "all" (all stock), 59 stops. In lots, as the button of the diplomacy menu; no market: one chat line per ask."""
+        60 "all" (all stock), 59 stops; 56 and 57 start and stop the counter units (#4885). In lots, as the button of the diplomacy menu; no market: one chat line per ask."""
         import diplomacy
         import market
         g = self.g
@@ -293,7 +294,9 @@ class Bot:
             if x.player == g.player or diplomacy.stance(g, x.player) != "ally":
                 continue
             for n in map(int, new):
-                if n == 59:
+                if n in (56, 57):                                      # train counter units, stop (#4885)
+                    self.counter = n == 56
+                elif n == 59:
                     self.giving.pop(x.player, None)
                 elif n in (38, 58, 60):
                     if not market.markets(g):
@@ -578,13 +581,17 @@ class Bot:
 
     def recruit(self):
         """Keep QUEUED units in the queue of each training building: villagers at the town centers up to
-        self.villagers, and the first military unit of the age at the other buildings, when the resources are there.
+        self.villagers, and the first military unit of the age at the other buildings (in the counter mode the unit
+        with the largest bonus against the army of the foe, #4885), when the resources are there.
         A town center comes first: the villagers get the resources first. Soldiers keep reserve(): else each soldier
         takes the gold above keep(), and the bot never has the cost of its next technology (#4495)."""
         g, keep, army = self.g, self.keep(), self.reserve()
+        self.army_seen = self.foe_army() if self.counter else []
         for rect, name in sorted(train.homes(g).items(), key=lambda kv: (kv[1] != "TOWN_CENTER", kv[0])):
             more = len(g.villagers) + sum(e["name"] == "VILLAGER_MALE" for q in g.queues.values() for e in q)
             units = ["VILLAGER_MALE"] if name == "TOWN_CENTER" else self.soldiers(name)
+            if self.counter and name != "TOWN_CENTER":                 # taunt 56: the best bonus first (#4885)
+                units = sorted(units, key=self.against, reverse=True)
             hold = keep if name == "TOWN_CENTER" else army
             for n in units[:1]:
                 while len(g.queues.get(rect, [])) < QUEUED and (n != "VILLAGER_MALE" or more < self.villagers) \
@@ -601,6 +608,24 @@ class Bot:
         for r, v in (train.price(g, n) if n else {}).items():
             need[r] = need.get(r, 0) + v
         return need
+
+    def foe_army(self):
+        """The armor classes of the soldiers of self.foe in the sight of the bot (one entry per soldier)."""
+        import combat
+        g = self.g
+        army = {u: n for x in build.sides(g) if x.player == self.foe for u, n in x.soldiers.items()}
+        if not army:
+            return []
+        seen, T = g.seen_tiles(), g.map.T
+        near = g.positions(sorted(army))
+        return [c for u, p in near.items() if (int(p[0] // T), int(p[2] // T)) in seen
+                for c in combat.stats(army[u]).classes]
+
+    def against(self, name):
+        """The sum of the attack bonuses of unit name against the foe army that the bot sees (counter mode, #4885)."""
+        import combat
+        bonus = combat.stats(name).bonus
+        return sum(bonus.get(c, 0) for c in self.army_seen)
 
     def soldiers(self, name):
         """The military units that building name trains now (recruit trains the first one)."""
