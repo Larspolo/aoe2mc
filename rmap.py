@@ -962,6 +962,7 @@ CREATE_OBJECT = (               # the attributes of create_object that objects()
     "actor_area",                   # mark the tiles around each object for a later avoid_actor_area (#3858)
     "actor_area_radius",            # the radius of actor_area, default 1 (#3858)
     "actor_area_to_place_in",       # only in this actor area (#4134)
+    "avoid_actor",                  # out of this actor area: the same as avoid_actor_area (DE scripting guide, #5074)
     "avoid_actor_area",             # out of this actor area (#3858)
     "avoid_all_actor_areas",        # out of each actor area (#4134)
     "avoid_cliff_zone",             # tiles from a cliff, default 1; never on the cliff tiles (#4131, `ridges`: the cliffs)
@@ -976,6 +977,7 @@ CREATE_OBJECT = (               # the attributes of create_object that objects()
     "group_variance",               # ± objects in each group (#3856)
     "ignore_terrain_restrictions",  # also a land object on water, a fish on land (#4137)
     "layer_to_place_on",            # only the tiles of this land layer (#4132, `layer`: the land layer of each tile)
+    "make_indestructible",          # no damage: the key "indestructible" of the object, Invulnerable (#5074)
     "max_distance_to_other_zones",  # tiles from the lands of the other players (#3857)
     "max_distance_to_players",      # tiles from the origin of the player land (#3855)
     "min_distance_group_placement", # tiles from the other objects (#3857)
@@ -989,7 +991,9 @@ CREATE_OBJECT = (               # the attributes of create_object that objects()
     "resource_delta",               # more or less resources in the object: a key of the object for gather (#4429)
     "second_object",                # one more object on each tile (#3858)
     "set_circular_placement",       # a circle band of min and max_distance_to_players, default a square (#4136)
+    "set_facet",                    # the frame (look) of the object: no effect, the designs have no variants by frame (#5074)
     "set_gaia_object_only",         # Gaia owns the objects of set_place_for_every_player (#3855)
+    "set_gaia_unconvertible",       # no monk converts it: the key "unconvertible" of the object for game/monk.py (#5074)
     "set_loose_grouping",           # the default grouping (#3856)
     "set_place_for_every_player",   # number_of_objects for each player (#3855)
     "set_scaling_to_map_size",      # scale the groups, else the objects: a 100 × 100 map is the base (#3857)
@@ -1062,6 +1066,8 @@ def objects(cmds, consts, terrain, starts, rng, warn, owner=None, ridges=(), lay
         groups = value(attrs["number_of_groups"][0], consts) if "number_of_groups" in attrs else None
         vary = value(attrs["group_variance"][0], consts) if "group_variance" in attrs else 0
         delta = {"resource_delta": value(attrs["resource_delta"][0], consts)} if "resource_delta" in attrs else {}
+        delta |= {k: True for a, k in (("make_indestructible", "indestructible"), ("set_gaia_unconvertible", "unconvertible"))
+                  if a in attrs}                       # flags of the object for the converter and game/ (#5074)
         radius = value(attrs["group_placement_radius"][0], consts) if "group_placement_radius" in attrs else 3
         tight = "set_tight_grouping" in attrs
         grouped = groups is not None or any(a in attrs for a in ("group_placement_radius", "set_loose_grouping", "set_tight_grouping"))
@@ -1083,8 +1089,9 @@ def objects(cmds, consts, terrain, starts, rng, warn, owner=None, ridges=(), lay
         # the filters of the ground: one each, in alphabetical order (#4224)
         if "actor_area_to_place_in" in attrs:
             ground = ground & areas.get(value(attrs["actor_area_to_place_in"][0], consts), np.zeros((n, n), bool))
-        if attrs.get("avoid_actor_area"):            # one with no number avoids nothing, as in AoE2 DE (#4931)
-            ground = ground & ~areas.get(value(attrs["avoid_actor_area"][0], consts), np.zeros((n, n), bool))
+        for a in ("avoid_actor", "avoid_actor_area"):
+            if attrs.get(a):                           # one with no number avoids nothing, as in AoE2 DE (#4931)
+                ground = ground & ~areas.get(value(attrs[a][0], consts), np.zeros((n, n), bool))
         if "avoid_all_actor_areas" in attrs:
             for area in areas.values():
                 ground = ground & ~area
