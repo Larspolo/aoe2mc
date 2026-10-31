@@ -643,6 +643,11 @@ def read_record(path, match=None):
                                 ref=o.instance_id, holder=None))
     lobby = {k: getattr(match, a, None) for k, a in (("type", "type"), ("dataset", "dataset"), ("starting_age", "starting_age"),
              ("population", "population"), ("all_techs", "all_technologies"), ("reveal", "map_reveal"))}  # the replay rules (#4832)
+    # A random map game has a King at the start only in Regicide. The header of save 68.9 names no mode (#4900),
+    # so a Random Map record with a King for each player is a Regicide record (#4970).
+    if lobby["type"] == "Random Map" and match.players and all(
+            any(o["player"] == p.number and o["name"] == "KING" for o in objects) for p in match.players):
+        lobby["type"] = "Regicide"
     return size, terrain, elevation, terrain_names, {k: "" for k in CHAPTERS} | {"lobby": lobby}, objects, players
 
 

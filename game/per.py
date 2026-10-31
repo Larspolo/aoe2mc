@@ -226,6 +226,9 @@ SN_IDS = {r["id"]: r["name"] for r in table.load("per_numbers.jsonl")}   # a scr
 OBJECT_IDS = {r["id"]: r["name"] for r in table.load("per_names.jsonl") if "id" in r and r["kind"] in ("unit", "building")}
 TECH_IDS = {r["id"]: r["name"] for r in table.load("per_names.jsonl") if "id" in r and r["kind"] in ("tech", "age")}
 SHARED = ("up-get-event", "up-get-shared-goal", "up-get-signal", "up-set-event", "up-set-shared-goal", "up-set-signal")
+POINTS = ("up-add-point", "up-bound-point", "up-bound-precise-point", "up-copy-point", "up-cross-tiles",   # #4956
+          "up-get-point", "up-get-point-distance", "up-lerp-percent", "up-lerp-tiles", "up-set-precise-target-point",
+          "up-set-target-point")
 UP_QUEUE = {"up-build": "build", "up-research": "research", "up-train": "train"}
 ORDERS = ("up-delete-distant-farms", "up-delete-idle-units", "up-reset-attack-now", "up-reset-building",
           "up-reset-unit", "up-retreat-now")
@@ -285,6 +288,7 @@ class Script:
         self.jump = None                                           # the rule after the actions of this rule (up-jump-*)
         self.cost_at = None                                        # the first goal of the current cost set (#4879)
         self.builders = {}                                         # building -> builders of up-assign-builders (#4875)
+        self.point = None                                          # (x, y) tiles of up-set-target-point (#4956)
 
     def number(self, name):
         return self.sn.get(name, SN[name])
@@ -499,6 +503,9 @@ class Script:
         if name in ("up-modify-goal", "up-modify-sn"):             # a command as a fact: it runs, and is true
             self.act(None, (name, *args))
             return True
+        if name == "up-point-distance":                            # (up-point-distance P1 P2 REL VALUE)
+            d = self.point_distance(args[0], args[1])
+            return d is not None and self.compare(args[2], d, args[3])
         if name == "up-compare-text":                              # (up-compare-text TEXT REL): the text buffer
             return self.compare(args[1], self.text, str(args[0]))
         if name == "up-compare-goal":                              # (up-compare-goal GOAL REL VALUE)
@@ -833,6 +840,119 @@ class Script:
         else:
             return self.warn("fact", "players-" + fact) or False
         return bool(got) and (all(got) if every else any(got))
+
+    def tiles(self):
+        """The width of the map in tiles."""
+        d = self.bot.g.data
+        return len(d.get("ground", ())) // d.get("tile_size", 1)
+
+    def pair(self, goal):
+        """The point (x, y) of the goal pair goal, goal + 1; goal 0: the target point (airef "Point"). None: no point."""
+        if goal == 0:
+            return self.point
+        if goal not in self.goals or goal + 1 not in self.goals:
+            return self.warn("goal", goal)
+        return self.goals[goal], self.goals[goal + 1]
+
+    def store(self, goal, p):
+        self.goals[goal], self.goals[goal + 1] = int(p[0]), int(p[1])
+
+    def bound(self, p, border=0, n=None):
+        n = self.tiles() if n is None else n
+        return tuple(min(max(int(v), border), n - 1 - border) for v in p)
+
+    def town_tile(self, player):
+        """The tile (x, y) of the first town center of player, or None."""
+        g = self.bot.g
+        tc = next((o["footprint"] for o in g.data["objects"] if o["kind"] == "building" and o.get("player") == player
+                   and o["name"] == "TOWN_CENTER" and "footprint" in o), None)
+        T = g.data["tile_size"]
+        return tc and ((tc[0] + tc[2]) // 2 // T, (tc[1] + tc[3]) // 2 // T)
+
+    def position(self, kind):
+        """The tile (x, y) of an airef PositionType, or None (the script gets (-1, -1)). The game program has no map
+        facts of the teams: mirror reflects across the long axis to the town, flank is the enemy town."""
+        n, b = self.tiles(), self.bot
+        me = self.town_tile(b.g.player)
+        c = (n // 2, n // 2)
+        foe = self.town_tile(b.foe) if b.foe is not None else None
+        if kind == "position-center":
+            return c
+        if kind == "position-zero":
+            return 0, 0
+        if kind == "position-map-size":
+            return n - 1, n - 1
+        if kind in ("position-target", "position-point"):
+            return self.point
+        if kind == "position-object":
+            return self.warn("position", kind)                      # the target object: the object search ticket
+        if kind in ("position-enemy", "position-focus", "position-flank"):
+            return foe or (kind == "position-enemy" and self.position("position-opposite")) or None
+        if me is None:
+            return None
+        if kind == "position-self":
+            return me
+        if kind == "position-opposite":
+            return n - 1 - me[0], n - 1 - me[1]
+        if kind == "position-mirror":                              # across the axis of the map that is nearer
+            return (n - 1 - me[0], me[1]) if abs(me[0] - c[0]) >= abs(me[1] - c[1]) else (me[0], n - 1 - me[1])
+        if kind == "position-corner":
+            return tuple(0 if v < n / 2 else n - 1 for v in me)
+        if kind == "position-border":
+            x, y = me
+            return min([(0, y), (n - 1, y), (x, 0), (x, n - 1)], key=lambda p: math.dist(p, me))
+        return self.warn("position", kind)
+
+    def point_distance(self, a, b):
+        p, q = self.pair(a), self.pair(b)
+        return None if p is None or q is None else int(math.dist(p, q))
+
+    def points(self, name, args):
+        """The point commands of UserPatch (airef, #4956): a point is a goal pair (x, y) in tiles, a precise point
+        tiles × 100."""
+        if name == "up-get-point":                                 # (up-get-point POSITION GOAL)
+            p = self.position(args[0])
+            if p is not None or args[0] != "position-object":
+                self.store(args[1], p if p is not None else (-1, -1))
+            return
+        if name in ("up-set-target-point", "up-set-precise-target-point"):     # (up-set-target-point GOAL)
+            p = self.pair(args[0])
+            if p is not None:
+                self.point = self.bound(p) if name == "up-set-target-point" else tuple(p)
+            return
+        if name == "up-bound-precise-point":                       # (up-bound-precise-point GOAL OPTION TYPE VALUE)
+            p, kind = self.pair(args[0]), self.type_kind(args[2])
+            v = self.operand(kind, args[3]) if kind else None
+            if p is not None and v is not None:
+                self.store(args[0], self.bound(p, v, self.tiles() * (100 if args[1] == 1 else 1)))
+            return
+        if name == "up-get-point-distance":                        # (up-get-point-distance P1 P2 GOAL)
+            d = self.point_distance(args[0], args[1])
+            if d is not None:
+                self.goals[args[2]] = d
+            return
+        q = self.pair(args[1])
+        if q is None:
+            return
+        if name == "up-copy-point":                                # (up-copy-point P1 P2)
+            return self.store(args[0], q)
+        if name == "up-bound-point":                               # (up-bound-point P1 P2)
+            return self.store(args[0], self.bound(q))
+        p, kind = self.pair(args[0]), self.type_kind(args[2])
+        v = self.operand(kind, args[3]) if kind else None
+        if p is None or v is None:
+            return
+        dx, dy = q[0] - p[0], q[1] - p[1]
+        d = math.hypot(dx, dy) or 1
+        if name == "up-add-point":                                 # (up-add-point P1 P2 TYPE VALUE): P1 + VALUE × P2
+            out = (p[0] + v * q[0], p[1] + v * q[1])
+        elif name == "up-lerp-percent":                            # VALUE percent of the way from P1 to P2
+            out = (p[0] + dx * v / 100, p[1] + dy * v / 100)
+        elif name == "up-lerp-tiles":                              # VALUE tiles from P1 toward P2
+            out = (p[0] + dx / d * v, p[1] + dy / d * v)
+        else:                                                      # up-cross-tiles: VALUE tiles to the right of P1 -> P2
+            out = (p[0] - dy / d * v, p[1] + dx / d * v)
+        self.store(args[0], tuple(round(c) for c in out))
 
     def forward(self):
         """The cell two thirds of the way from the own town center to the town center of the nearest enemy, or None
@@ -1403,6 +1523,8 @@ class Script:
             # reads only the taunts of the chat (Gather.taunted, #4827)
             log = next((getattr(x, "taunted", []) for x in [*build.sides(g), g] if x.player == args[0]), [])
             self.text = str(log[-1]) if log else ""
+        elif name in POINTS:
+            self.points(name, args)
         elif name == "acknowledge-taunt":                            # (acknowledge-taunt PLAYER TAUNT)
             self.heard.discard((args[0], args[1]))
         elif name not in ("do-nothing", "chat-local-to-self", "enable-wall-placement", "up-chat-data-to-self",
