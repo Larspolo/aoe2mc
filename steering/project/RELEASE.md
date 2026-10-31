@@ -52,6 +52,7 @@ Bug reserve: 0.3
 | `convert:rms-standard` | C | 6 | | |
 | `convert:saved-games` | C | 6 | | |
 | `convert:rms-lobby` | C | 4 | | |
+| `convert:rms-zr` | C | 4 | | |
 | `convert:export` | C | 6 | | |
 | `convert:resource-pack` | C | | | |
 | `convert:trigger-gaps` | C | | | |

@@ -30,6 +30,7 @@ Read it before a claim, a push, a PR, a merge conflict, red main or a check tick
 - `framework/tools/claim.py N` succeeds for each N it gets: a loop over several numbers claims all of them (#4132 run took 4 by mistake). Call it once per ticket, and read exit 0 before you work on it.
 - The epic check: list the sub-issues of an epic with `gh api repos/OWNER/NAME/issues/E/sub_issues --jq '.[] | "\(.number) \(.state) \(.title)"'`, not with the MCP `issue_read` `get_sub_issues`: it returns the whole body of each child (126k characters for 11 children of #4831, 2026-10-31).
 - Add or remove one label with `gh issue edit N --add-label X` (`--remove-label X`) or REST POST `issues/N/labels`, never with a GitHub MCP issue update that sends a `labels` list: it replaces all labels. A run that set `needs-human` that way also removed `feature`, `size:M`, `P3` and `in-progress` of #4623, so `dashboard.py --next` sorted it last (#5253).
+- A "Depends on: #N" line counts only in the issue body (`dashboard.depends`, the orphan check and the pick): a comment with that line changes nothing. Edit the body (#5362).
 
 ## Shell and waits
 
@@ -86,3 +87,4 @@ Read it before a change of `game/` or its tests.
 - A field set with `vars(g).setdefault(NAME, ...)` on a Gather hides a method of the same name: `ruins.fall` set `g.fell` (a list) and the next felled tree stopped the game (#4147). `grep -n "def NAME" game/gather.py` before you add a field.
 - A test of `train.research` needs a technology name of `game/data/train.jsonl` (a made-up name: `KeyError` in `build.py`): patch only the values of the key (`train.BY_KEY`), and patch `train.FIRE` to `{}` when the real line also has "detonate" or "charge" (#4369).
 - A data-only ticket that makes an old test fail (the test names the old values, `stats_command("cb", "ELITE_COMPOSITE_BOWMAN")`): the quick CI stops a test change in that PR (#4242). Fix the test in its own ticket and PR first (expected value from the data, `train.hits`), then merge main into the data PR (#4637, PR #4634).
+- `lang.EN_US` exists only after the first `lang.text()` call (lazy read, #3665): a test reads `lang.en_us()`, else it passes in the full suite and fails alone (#5375).
