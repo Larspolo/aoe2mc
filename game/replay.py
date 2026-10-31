@@ -72,6 +72,7 @@ BURST = 500                 # ms of game time between two bursts of a flare colu
 TEAM_STEP = 10000           # sidebar score of a team game: team key × TEAM_STEP + population, the panel sorts by it (#1189)
 COUNTED = "aoe2mc.pop"      # entity tag of the units that the population counts (#787)
 SUDDEN_DEATH = "Sudden Death"  # the lobby type of a Sudden Death record (#4894)
+KING_OF_THE_HILL = "King of the Hill"  # the lobby type of a King of the Hill record (#4893)
 REGICIDE = "Regicide"       # the lobby type of a Regicide record (mgz game_types, aoe2mc.json "lobby", #4835)
 EFFECT = "aoe2mc.effect"    # entity tag of the texts above a building (#843)
 TRADE_MS = 2000              # the trades of one market within this time join in one text (#3942)
@@ -455,6 +456,7 @@ class Replay:
         # player -> game time (ms) of the death of its last King
         self.towns, self.town_lost = self.start_towns(), {}      # Sudden Death (#4894): players with a town center;
         # player -> game time (ms) of the fall of its town center
+        self.hill = self.start_hill()           # King of the Hill (#4893): the monument state, or None
         self.rng = np.random.default_rng(1)
         self.kinds, self.seen = aoe2mc.object_kinds(), set()
         self.sent, self.busy = 0, 0.0           # commands sent, seconds spent sending them
@@ -513,6 +515,58 @@ class Replay:
         if (self.data.get("lobby") or {}).get("type") != SUDDEN_DEATH:
             return set()
         return {s[1] for s in self.starts if s[2] == "TOWN_CENTER" and s[1]}
+
+    def start_hill(self):
+        """King of the Hill (#4893): the state of the monument (as hill.tick), when the lobby of the record is King of
+        the Hill; else None. The monument is the MONUMENT of the record, else the center of the map (hill.center)."""
+        if (self.data.get("lobby") or {}).get("type") != KING_OF_THE_HILL:
+            return None
+        import hill  # hill -> cheats -> replay: import it late
+        import wonder
+        m = next((o["tile"] for o in self.data["objects"] if o["name"] == "MONUMENT" and "tile" in o), None)
+        return {"center": tuple(m) if m else (self.n / 2, self.n / 2), "owner": None, "at": None, "winner": None,
+                "left": hill.YEARS * wonder.YEAR, "shown": None}
+
+    def hill_check(self, t):
+        """King of the Hill (#4893): the rules of hill.owner and hill.tick on the simulated units at game time t (ms):
+        the owner keeps the monument while one of its units is within hill.REACH tiles, else the nearest unit there
+        takes it; the timer counts down for the owner, and a capture by an enemy sets it back to hill.RESET years.
+        The boss bar hill.BAR shows the owner and its years, as in the game program."""
+        s = self.hill
+        if s is None or s["winner"] is not None:
+            return []
+        import gather  # gather -> build -> replay: import it late
+        import hill
+        import wonder
+        if s["owner"] is not None and s["at"] is not None:
+            s["left"] -= (t - s["at"]) / 1000
+        s["at"] = t
+        near = sorted((d, v.player) for v in {id(v): v for v in self.units.values()}.values()
+                      if getattr(v, "player", 0) and v.pos is not None
+                      and (d := math.dist((v.pos[0] / self.T, v.pos[2] / self.T), s["center"])) <= hill.REACH)
+        out = []
+        if near and not any(p == s["owner"] for _, p in near):
+            n = near[0][1]
+            if s["owner"] is not None and not gather.allied(self.data.get("players", {}), n, s["owner"]):
+                s["left"] = max(s["left"], hill.RESET * wonder.YEAR)
+            s["owner"] = n
+            name, color = self.player(n)
+            out.append("tellraw @a " + json.dumps([text(name, color), text(f" holds the monument at {mmss(t)}.")]))
+        if (n := s["owner"]) is None:
+            return out
+        if s["shown"] is None:
+            out += [f'bossbar add {hill.BAR} ""', f"bossbar set {hill.BAR} color yellow",
+                    f"bossbar set {hill.BAR} max {hill.YEARS}", f"bossbar set {hill.BAR} players @a"]
+        y = max(0, math.ceil(s["left"] / wonder.YEAR))
+        if (y, n) != s["shown"]:
+            s["shown"] = (y, n)
+            out += [f"bossbar set {hill.BAR} name " + json.dumps(f"{self.player(n)[0]}: monument, {y} year{'s' * (y != 1)} left"),
+                    f"bossbar set {hill.BAR} value {y}"]
+        if s["left"] <= 0:
+            s["winner"] = (n, t)
+            out += [f"bossbar remove {hill.BAR}",
+                    "tellraw @a " + json.dumps(text(f"{self.player(n)[0]} held the monument: King of the Hill victory at {mmss(t)}."))]
+        return out
 
     def town_check(self, t):
         """Sudden Death (#4894): end each player whose town center fell in a fight of the plugin at game time t (ms):
@@ -2724,6 +2778,10 @@ class Replay:
             name, color = self.label(p)
             out.append("tellraw @a " + json.dumps([text(name, color), text(
                 f": town center lost {mmss(self.town_lost[p])} (Sudden Death)")]))
+        if self.hill and (who := self.hill["winner"] or (self.hill["owner"], None))[0] is not None:   # (#4893)
+            name, color = self.label(who[0])
+            out.append("tellraw @a " + json.dumps([text(name, color), text(
+                f": monument won {mmss(who[1])} (King of the Hill)" if who[1] is not None else ": holds the monument (King of the Hill)")]))
         if lobby := self.lobby_text(True):                                  # the lobby settings of the record (#4833)
             out.append("tellraw @a " + json.dumps(text(lobby, "gray")))
         for p in self.ranked(self.pop.keys() | self.villagers.keys() | self.gathered.keys() | self.army.keys()
@@ -3363,6 +3421,7 @@ class Replay:
             send(replay_input.fight_lines(self.control["fights"], self.control["players"]))
         census = self.census if bar and self.ai else lambda t=0: None
         kings = (lambda t: self.king_check(t) + self.town_check(t)) if bar and self.ai else lambda t: []
+        hills = self.hill_check if bar else lambda t: []           # King of the Hill: the simulated units (#4893)
         #                                    Regicide, Sudden Death: the Kings and town centers lost in a fight (#4835, #4894)
         watching = self.control["camera"]                           # the camera state of the last poll (#3369)
         look = self.look_around if bar and self.ai else lambda: None          # as census: a server of run.py --replay
@@ -3466,6 +3525,7 @@ class Replay:
                 if clock() - counted >= CENSUS:
                     census(now)
                     self.send(kings(now))
+                    self.send(hills(now))
                     look()
                     counted = clock()
                 send(self.clock_commands(now, end, self.speed) + self.score_commands(now) + self.overview(join=True))
@@ -3493,6 +3553,7 @@ class Replay:
                         f"player {e.get('player')}: {len(cmds)} commands")
         census(end)
         self.send(kings(end))
+        self.send(hills(end))
         self.send(self.expire(math.inf) + self.panel(math.inf) + self.camera_off())
         send(self.clock_commands(end, end, speed, done=True) + self.score_commands() + self.end_commands(end) +
              self.summary_commands() + self.timeline_commands(end) +
