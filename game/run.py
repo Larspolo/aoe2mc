@@ -597,7 +597,7 @@ def apply_civs(data, civs, pool=None):
             print(f"player {player}: --civ RANDOM gives {name}", file=sys.stderr)
         p["civ"] = name
     for player, p in (data.get("players") or {}).items():        # the scenario says Random (#4746)
-        if p.get("civ") == "RANDOM" and int(player) > 0:
+        if p.get("civ") == "RANDOM" and int(player) > 0 and p.get("active", True) is not False:   # #5033
             import random
 
             import civs
