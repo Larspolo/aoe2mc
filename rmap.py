@@ -596,7 +596,8 @@ def generate(text, seed, players=2, size=None, warn=None, teams=None, folder=Non
     rng = np.random.default_rng(seed)
     n = size or SIZES.get(players, 200)
     defined = {next((label for s, label in LABELS if n <= s), "LUDIKRIS_MAP")} | ({MODE_LABELS[mode]} if MODE_LABELS.get(mode) else set())
-    consts = TERRAINS | OBJECTS | {"MAPSIZE_SIDE": n}   # DE: the side of the map in tiles (#4693)
+    consts = TERRAINS | OBJECTS | {"MAPSIZE_SIDE": n,   # DE: the side of the map in tiles (#4693)
+                                  "MAPSCALE_AREA": n * n / 10000, "PLAYER_COUNT": players}   # area / 100x100 map (#4928)
     includes = []
     sections = commands(expand(tokens(text), rng, defined, consts, includes, folder))
     for cmd, a, _ in sections.pop("HEADER", []):
