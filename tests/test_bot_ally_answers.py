@@ -27,7 +27,7 @@ ENEMY = {"1": {}, "2": {"team": 1}}
 def test_an_ally_taunt_42_gives_one_line_with_the_age_of_the_bot():
     b, sent = make(ALLY, ["42"], techs=(build.AGE_TECHS[0],))
     b.answer()
-    assert len(sent) == 1 and sent[0].startswith("tellraw @a[team=p2] ")
+    assert len(sent) == 1 and sent[0].startswith("tellraw @a[team=p1] ")
     assert text_of(sent[0]) == bot.ANSWERS["42"].format(age=build.AGE_NAMES[1])
 
 

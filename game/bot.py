@@ -202,7 +202,7 @@ class Bot:
             for n in log[self.said.get(x.player, 0):]:
                 if n in ANSWERS and x.player != g.player and gather.allied(g.players, g.player, x.player):
                     text = ANSWERS[n].format(**self.facts())
-                    g.command(f"tellraw @a[team=p{g.player}] " + json.dumps({"text": text, "color": "gray"}))
+                    g.command(f"tellraw @a[team=p{x.player}] " + json.dumps({"text": text, "color": "gray"}))
             self.said[x.player] = len(log)
 
     def facts(self):
@@ -454,7 +454,7 @@ class Bot:
                 if n == 37:                                                # AoE2: the wonder goes first (#4884)
                     self.order = ("WONDER", *(o for o in self.order if o != "WONDER"))
                     if build.locked(g, "WONDER"):
-                        g.command(f"tellraw @a[team=p{g.player}] " + json.dumps({"text": WAIT["37"], "color": "gray"}))
+                        g.command(f"tellraw @a[team=p{x.player}] " + json.dumps({"text": WAIT["37"], "color": "gray"}))
                 elif n in (34, 75):
                     self.navy = self.shore() is not None
                     if not self.navy:
@@ -485,7 +485,7 @@ class Bot:
                 elif n in UNITS:                                         # attack with the units of the taunt (#4887)
                     self.unit = UNITS[n]
                     if not any(set(self.unit) & set(train.trains(g, k)) for k in set(train.homes(g).values())):
-                        g.command(f"tellraw @a[team=p{g.player}] " + json.dumps({"text": f"<Player {g.player}> I cannot "
+                        g.command(f"tellraw @a[team=p{x.player}] " + json.dumps({"text": f"<Player {g.player}> I cannot "
                                   "train that unit: I have no building for it.", "color": "gray"}))
                 elif str(n) in FOCUS:                                          # the allies ask for one class (#4886)
                     self.focus = FOCUS[str(n)]
@@ -1001,7 +1001,7 @@ class Bot:
         g, T = self.g, self.g.map.T
         name = "PALISADE_WALL" if build.locked(g, "STONE_WALL") else "STONE_WALL"
         cost = build.price(g, name)
-        say = lambda text: g.command(f"tellraw @a[team=p{g.player}] " + json.dumps(   # noqa: E731
+        say = lambda text: g.command(f"tellraw @a[team=p{x.player}] " + json.dumps(   # noqa: E731
             {"text": f"<Player {g.player}> {text}", "color": "gray"}))
         if any(g.stock[r] < v for r, v in cost.items()) or not g.villagers:
             return say("I have not enough resources for a wall.")
