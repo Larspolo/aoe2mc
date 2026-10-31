@@ -73,6 +73,7 @@ Read it before a change of `aoe2mc.py`, `buildings.py`, the scenarios or a world
 - A new `convert()` keyword must not be named `players`: `convert` unpacks its own `players` (the player dict), and ruff reports F821 at the call (#3945: `nplayers`).
 - A test of a building with `footprint` in aoe2mc.json uses `[x0, z0, x1, z1]`, but `homes()` and the test constants of `(x0, x1, z0, z1)`: a castle at `(8, 12, 8, 12)` put into the data gave no menu (#4337). Write the data order by hand.
 - The RMS control words of the game: the parser of goto-bus-stop (gist `cb59e5f0ae03ec12c3800f120c16eef3`, `parser.js`) is a good model: separate `if` and random stacks, `/*` `*/` are counted words (nested comments), a dead `if` branch skips `percent_chance` (#4692).
+- A scenario layout from a hex dump of the owner: decode one full record field by field and check its length against the stride of the dump before you add a field; a test builder that writes the same guess passes and hides the error (#5209 added an i32 that is the end of the victory data, #5316).
 
 ## Game program code
 

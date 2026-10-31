@@ -177,7 +177,7 @@ def inflate(data, start):
         raise first
 
 
-def scenario_players(s, civs, tail=0):
+def scenario_players(s, civs):
     """The scenario player data: {player: {civ, color, view}} of the players with a civilization."""
     players = {0: {"civ": "GAIA", "color": None, "view": None}}
     for p in range(1, s.u32()):
@@ -193,8 +193,7 @@ def scenario_players(s, civs, tail=0):
         if cv >= 1.0:
             s.i32()
             points = s.i32()
-            s.skip((8 if cv >= 2.0 else 0) + points * (32 if cv >= 2.0 else 24))
-        s.skip(tail)                        # format 1.35: an i32 (-1) ends each player (special_map_*, #5209)
+            s.skip((8 if cv >= 2.0 else 0) + points * (32 if cv >= 2.0 else 24))   # 2.0: the 8 bytes end in -1 (#5316)
         civ = civs.get(p)
         if civ is not None:
             players[p] = {"civ": CIVS[civ] if 0 <= civ < len(CIVS) else f"CIV_{civ}", "color": color,
@@ -222,7 +221,7 @@ def read(path):
     # The colors and start views are in the scenario player data: after the objects before format 1.35, else before
     # (the special_map_* files of format 1.35 have it before, #5209)
     if fmt >= b"1.35":
-        players = scenario_players(s, civs, 4 if fmt == b"1.35" else 0)
+        players = scenario_players(s, civs)
     objects = []
     for p in range(n):                      # objects: x, y, z, ID, type, state, angle, frame, garrisoned in
         for _ in range(s.u32()):

@@ -122,7 +122,9 @@ the end, ≥ 1.35: `u32` number of triggers, ≥ 1.30: `u16` signature and the w
 the color mood, ≥ 1.36: `u8` "collide and correct", ≥ 1.37: `u8` "villager force drop". The DE map is map version 2
 (marker `0xDEADF00D`, version, `u8` "no waves", size, tiles of 7 bytes; AoE2ScenarioParser names the marker and version
 `player_1_camera_y` and `player_1_camera_x`). A file of `1.35` differs from `1.36` only by the "collide and correct"
-byte and by the order of step 5 (objects first); `1.33` also has no trigger count. A check with the genie-rs test files
+byte and by the order of step 5 (objects first); `1.33` also has no trigger count. In the `special_map_*` files of
+`1.35`, the scenario player data comes before the objects (#5209). Each player has 115 bytes: the victory data of
+version 2.0 ends with 8 bytes (`0`, then `-1`), and no other field follows (the owner's dump, #5316). A check with the genie-rs test files
 `Hotkey Trainer Buildings.aoe2scenario` (`1.36`) and `layertest.aoe2scenario` (`1.37`, not in this repository; the
 check allowed these formats for a moment) gave the same terrain, elevation and objects as AoE2ScenarioParser. A test
 builds `1.33` and `1.35` files byte by byte (`tests/test_scenario_de_135.py`). The civilization IDs of DE above 18 are

@@ -1,5 +1,5 @@
-"""A special_map_* base scenario of format 1.35 (#5209): the scenario player data comes before the objects, and each
-player ends with an i32 (-1). The file is a small own file of that form, with trigger data after the objects."""
+"""A special_map_* base scenario of format 1.35 (#5209): the scenario player data comes before the objects (115 bytes
+for each player, #5316). The file is a small own file of that form, with trigger data after the objects."""
 import numpy as np
 
 import scx

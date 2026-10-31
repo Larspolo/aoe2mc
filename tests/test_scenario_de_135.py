@@ -1,6 +1,6 @@
 """A DE scenario of format 1.33 or 1.35 (#5072): AoE2ScenarioParser has no layout before 1.36, so scx.py reads it.
 It differs from 1.36 (genie-scx, format.rs): no "collide and correct" byte (data version 1.36), the objects come
-before the scenario player data in 1.33 (1.35: after it, with an i32 at the end of each player, #5209); 1.33 also has no trigger count (data version 1.35). The test builds the file byte by
+before the scenario player data in 1.33 (1.35: after it, #5209; 115 bytes for each player, #5316); 1.33 also has no trigger count (data version 1.35). The test builds the file byte by
 byte: no free sample file exists."""
 import struct
 import zlib
@@ -48,7 +48,7 @@ def build(path, fmt, terrain, elevation, civs, objects):
     players = struct.pack("<I", 9)
     for p in range(1, 9):
         players += s16(f"Player {p}") + struct.pack("<ffhhB", -1, -1, 0, 0, 0) + struct.pack("<h", 9) + bytes(9)
-        players += i(0) * 9 + i(p - 1) + struct.pack("<fiB", 2.0, 0, 0) + i(0, 0, 0, 0) + (i(-1) if v >= 1.35 else b"")
+        players += i(0) * 9 + i(p - 1) + struct.pack("<fiB", 2.0, 0, 0) + i(0, 0, 0, -1 if v >= 1.35 else 0)
     d += players + objs if v >= 1.35 else objs + players                   # 1.35: the players first, #5209
     d += struct.pack("<d", 2.2)                                              # triggers: not read
     header = struct.pack("<II", 6, 0) + struct.pack("<I", 0) + i(0, 2) + i(0, 0) + s16("") + i(0)
