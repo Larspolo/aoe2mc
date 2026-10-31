@@ -141,7 +141,7 @@ class Driver:
             cell = (x0 + x1) // 2, (z0 + z1) // 2
             y = g.map.y(*cell) or 64
             sites = len(g.sites)
-            g.command(f"tp {NAME} {cell[0] + 0.5} {y + 24} {cell[1] + 10.5} facing {cell[0] + 0.5} {y - 0.5} {cell[1] + 0.5}")
+            g.command(f"tp {NAME} {cell[0] + 0.5} {y + 24} {cell[1] + 0.6} facing {cell[0] + 0.5} {y - 0.5} {cell[1] + 0.5}")
             time.sleep(1.0)
             self.shot(f"place_{name.lower()}_{len(self.shots)}.png")             # the ghost before the click
             self.c.click(self.c.size[0] // 2, self.c.size[1] // 2, button=3)   # a right click on the ground places it
