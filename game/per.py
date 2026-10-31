@@ -1993,7 +1993,8 @@ class Script:
             b.wave = set(g.soldiers)
             b.retreat()
         elif name == "up-reset-unit":                              # (up-reset-unit TYPE UNIT): the Stop button
-            n = (sn := self.named(args[0], args[1])) and self.game(sn, "unit")
+            every = (kind := self.type_kind(args[0])) and self.operand(kind, args[1]) in (-1, "all-units-class")
+            n = tuple(sorted(set(g.soldiers.values()))) if every else (sn := self.named(args[0], args[1])) and self.game(sn, "unit")
             if n:
                 n = n if isinstance(n, tuple) else (n,)
                 units = sorted(u for u, m in g.soldiers.items() if m in n)
@@ -3244,7 +3245,9 @@ class Script:
             self.text = str(g.data.get("map") or "")
         elif name in ("up-store-tech-name", "up-store-type-name"):  # (up-store-type-name TYPE ID): a script name
             value = self.typed(args[0], args[1])
-            self.text = value if isinstance(value, str) else ""     # the game program has no table of the AoE2 ids
+            if isinstance(value, int):                              # an airef id: its script name (#5233)
+                value = (TECH_IDS if name == "up-store-tech-name" else OBJECT_IDS).get(value)
+            self.text = value if isinstance(value, str) else ""
         elif name in ("buy-commodity", "sell-commodity"):           # the path of the market menu (#4573)
             import market
             if self.trade_ok(name == "buy-commodity", args[0]):
