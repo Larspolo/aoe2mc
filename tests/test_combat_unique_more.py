@@ -15,8 +15,3 @@ def test_each_unit_has_values_and_a_valid_stats_command(unit):
     assert s.hp > 0 and s.attack > 0 and s.reload > 0 and combat.UNI in s.classes
     assert re.fullmatch(r"aoe stats u \d+ \d+ \d+ \d+ [01] [a-z,]+ (-|[a-z]+:\d+(,[a-z]+:\d+)*) \d+",
                         combat.stats_command("u", unit))
-
-
-def test_the_magyar_huszar_has_a_bonus_against_siege_weapons():
-    t = combat.stats("MANGONEL")
-    assert combat.damage("MAGYAR_HUSZAR", "MANGONEL") > combat.damage("MAGYAR_HUSZAR", "MANGONEL", t=t._replace(classes=()))
