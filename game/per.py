@@ -220,10 +220,16 @@ SN_IDS = {r["id"]: r["name"] for r in table.load("per_numbers.jsonl")}   # a scr
 # The airef ids of objects and technologies (two sets of numbers): the up-* commands with g: take an id (#4869).
 OBJECT_IDS = {r["id"]: r["name"] for r in table.load("per_names.jsonl") if "id" in r and r["kind"] in ("unit", "building")}
 TECH_IDS = {r["id"]: r["name"] for r in table.load("per_names.jsonl") if "id" in r and r["kind"] in ("tech", "age")}
+SHARED = ("up-get-event", "up-get-shared-goal", "up-get-signal", "up-set-event", "up-set-shared-goal", "up-set-signal")
 UP_QUEUE = {"up-build": "build", "up-research": "research", "up-train": "train"}
 
 
 SETUP = ("civ-selected", "death-match-game", "difficulty", "map-size", "map-type", "regicide-game", "starting-age")
+RESEARCH_STATE = {"research-available": 1,                         # airef "ResearchState" (up-research-status)
+                  "research-complete": 3,
+                  "research-pending": 2,
+                  "research-queued": 4,
+                  "research-unavailable": 0}
 TIMER_STATE = {"timer-disabled": 0,                                # the states of up-timer-status (airef "TimerState")
                "timer-running": 2,
                "timer-triggered": 1}
@@ -261,6 +267,7 @@ class Script:
         self.escrow, self.pct = {}, {}                             # resource -> escrow; -> escrow percentage (#4682)
         self.last = None                                           # the stock after the last step: new income
         self.rings = {}                                            # perimeter -> the sides of its wall ring (ring())
+        self.unplaced = set()                                      # the buildings of build with no free site (#4870)
         self.text, self.name = "", None                            # the text buffer of up-store-*; up-change-name (#4877)
         self.heard, self.read = set(), {}                          # (player, taunt) not acknowledged; player -> read
         self.cost_at = None                                        # the first goal of the current cost set (#4879)
@@ -292,6 +299,30 @@ class Script:
                 return self.warn("strategic number", ref)
             return self.number(ref)
         return ref
+
+    def table(self, kind):
+        """The values of the shared goals, signals or events (#4878). Shared goals: one table per team on the main Gather
+        (conquest.main), so each allied script reads the same value (airef "up-set-shared-goal"). Signals and events:
+        the game program has no scenario trigger "AI signal" or effect "AI trigger" yet, so the script keeps them."""
+        if kind != "shared-goal":
+            return vars(self).setdefault(kind + "s", {})                   # signals, events
+        from conquest import main  # conquest imports gather, which imports this module
+        g = self.bot.g
+        team = (g.players.get(str(g.player)) or {}).get("team")
+        return vars(main(g)).setdefault("shared_goals", {}).setdefault(("p", g.player) if team is None else team, {})
+
+    def shared(self, name, args):
+        """up-get-X TYPE ID GOAL: the value of shared goal, signal or event ID into GOAL (0 when not set);
+        up-set-X TYPE ID TYPE2 VALUE: set it."""
+        values = self.table(name.split("-", 2)[2])
+        kind = self.type_kind(args[0])
+        ref = self.operand(kind, args[1]) if kind else None
+        if ref is None:
+            return
+        if name.startswith("up-get-"):
+            self.goals[args[2]] = values.get(ref, 0)
+        elif (kind2 := self.type_kind(args[2])) and (value := self.operand(kind2, args[3])) is not None:
+            values[ref] = value
 
     def named(self, type_op, ref, tech=False):
         """The script name of an object (or a technology) of an up-* command: c: a name or an id, g: a goal that holds
@@ -479,6 +510,8 @@ class Script:
         if name in ("up-can-train", "up-can-build", "up-can-research"):     # (up-can-train ESCROW TYPE UNIT)
             sn = self.named(args[1], args[2], name == "up-can-research")
             return sn is not None and self.can(name.removeprefix("up-"), sn, self.goals.get(args[0], 0) >= 1)
+        if name in ("up-pending-objects", "up-pending-placement", "up-research-status", "up-train-site-ready"):
+            return self.pending(name, args)
         if name in ("up-object-type-count", "up-object-type-count-total"):    # (up-object-type-count TYPE OBJECT REL VALUE)
             if (sn := self.named(args[0], args[1])) is None or (n := self.game(sn, "unit", "building")) is None:
                 return False
@@ -902,6 +935,27 @@ class Script:
             else:
                 self.escrow.pop(r, None)
 
+    def pending(self, name, args):
+        """up-pending-objects TYPE OBJECT REL VALUE (queued units and unfinished sites), up-pending-placement TYPE
+        BUILDING, up-research-status TYPE TECH REL STATE (RESEARCH_STATE), up-train-site-ready TYPE UNIT (#4870)."""
+        import build
+        import scenario  # it imports gather: import it late
+        import train
+        g = self.bot.g
+        tech = name == "up-research-status"
+        if (sn := self.named(args[0], args[1], tech)) is None:
+            return False
+        if (n := self.game(sn, "tech", "age") if tech else self.game(sn, "unit", "building")) is None:
+            return False
+        if name == "up-pending-objects":
+            return self.compare(args[2], self.count(n, total=True) - self.count(n), args[3])
+        if name == "up-pending-placement":
+            return n in self.unplaced
+        if tech:                                                   # the AoE2 state; -1 (disabled) is unavailable
+            return self.compare(args[2], max(scenario.tech_state(g, n), 0), RESEARCH_STATE.get(args[3], args[3]))
+        return any(n in train.trains(g, home) and len(g.queues.get(rect, ())) < train.QUEUE
+                   for rect, home in train.homes(g).items()) and not build.locked(g, n)
+
     def homes(self, n):
         """The block cells of the own buildings that offer n now."""
         import build
@@ -967,8 +1021,11 @@ class Script:
             if n and self.can("can-build", args[0], escrow) and center and (rect := build.near(g, n, center)) is not None:
                 cost = build.price(g, n)
                 b.builder(build.found(g, n, rect))
+                self.unplaced.discard(n)
                 if escrow:
                     self.spend(cost)
+            elif n and self.can("can-build", args[0], escrow):     # no free site yet: up-pending-placement
+                self.unplaced.add(n)
         elif name == "build-wall":                                     # (build-wall PERIMETER WALL-TYPE)
             self.wall(args[0], args[1])
         elif name == "build-gate":                                     # (build-gate PERIMETER)
@@ -995,6 +1052,8 @@ class Script:
             ref = self.operand(kind, args[1]) if kind else None
             if ref is not None:
                 self.goals[args[2]] = self.goals.get(ref, -1)
+        elif name in SHARED:                                         # (up-get-shared-goal TYPE ID GOAL), (up-set-signal
+            self.shared(name, args)                                  # TYPE ID TYPE2 VALUE) ... (#4878)
         elif name == "up-set-indirect-goal":                         # (up-set-indirect-goal TYPE GOAL TYPE2 VALUE)
             kind, kind2 = self.type_kind(args[0]), self.type_kind(args[2])
             ref = self.operand(kind, args[1]) if kind else None
