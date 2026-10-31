@@ -40,10 +40,12 @@ def test_it_is_gray_before_the_imperial_age():
     assert build.locked(g, "MOUNTED_TREBUCHET") == "Needs the Imperial Age"
 
 
-def test_its_bonus_against_siege():
-    mangonel = combat.stats("MANGONEL")
-    assert combat.damage("MOUNTED_TREBUCHET", "MANGONEL") > \
-        combat.damage("MOUNTED_TREBUCHET", "X", t=mangonel._replace(classes=()))   # the bonus of the siege class
+def test_its_bonus_hits_the_class_of_its_bonus():
+    bonus = combat.STATS["MOUNTED_TREBUCHET"].bonus
+    cls = max(bonus, key=bonus.get)   # a class of its own bonus keys, not a unit name (#4242)
+    t = combat.stats("MANGONEL")._replace(classes=(cls,))
+    assert combat.damage("MOUNTED_TREBUCHET", "X", t=t) > \
+        combat.damage("MOUNTED_TREBUCHET", "X", t=t._replace(classes=()))
 
 
 def test_it_looks_like_a_camel_with_the_trebuchet_crew():
