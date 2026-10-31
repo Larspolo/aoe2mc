@@ -169,10 +169,9 @@ def expand(words, rng, defined, consts, includes, folder=None, depth=0):
                 f["done"] |= f["on"]
                 f["acc"] += n
             i += 2
-        elif w in ("endif", "end_random"):
-            if not stack:
-                raise RmsError(f"{w} without its start (after: {' '.join(words[max(0, i - 8):i])})")
-            stack.pop()
+        elif w in ("endif", "end_random"):          # AoE2 DE skips a stray one (Gold_Rush, Karsts, #4931)
+            if stack:
+                stack.pop()
             i += 1
         elif not on():
             i += 1
@@ -203,9 +202,7 @@ def expand(words, rng, defined, consts, includes, folder=None, depth=0):
         else:
             out.append(w)
             i += 1
-    if stack:
-        raise RmsError("an if or start_random has no end")
-    return out
+    return out                                      # an open if at the end is no error in AoE2 DE (Continental, #4931)
 
 
 class Args(list):
@@ -596,7 +593,8 @@ def generate(text, seed, players=2, size=None, warn=None, teams=None, folder=Non
     rng = np.random.default_rng(seed)
     n = size or SIZES.get(players, 200)
     defined = {next((label for s, label in LABELS if n <= s), "LUDIKRIS_MAP")} | ({MODE_LABELS[mode]} if MODE_LABELS.get(mode) else set())
-    consts = TERRAINS | OBJECTS | {"MAPSIZE_SIDE": n}   # DE: the side of the map in tiles (#4693)
+    consts = TERRAINS | OBJECTS | {"MAPSIZE_SIDE": n,   # DE: the side of the map in tiles (#4693)
+                                  "MAPSCALE_AREA": n * n / 10000, "PLAYER_COUNT": players}   # area / 100x100 map (#4928)
     includes = []
     sections = commands(expand(tokens(text), rng, defined, consts, includes, folder))
     for cmd, a, _ in sections.pop("HEADER", []):
@@ -666,7 +664,10 @@ def generate(text, seed, players=2, size=None, warn=None, teams=None, folder=Non
                     starts.append({"player": p, "x": c[0], "y": c[1], "base_size": base, "land": len(lands)})
                     t = teams[p - 1] if teams and "set_zone_by_team" in attrs else None
                     z = zone if zone is not None else -1 - len(lands)
-                    links.append((c, p, ("team", t) if t is not None else z))   # one zone per team (#4696)
+                    z = ("team", t) if t is not None else z             # one zone per team (#4696)
+                    if "set_zone_randomly" in attrs:    # a random zone of 0..players-1: lands can share one (#4934)
+                        z = ("random", int(rng.integers(players)))
+                    links.append((c, p, z))
                     lands.append({"id": len(lands), "cells": square(c, base, n, circular="set_circular_base" in attrs),
                                   "clump": clump, "box": box, "fuzz": fuzz, "zone": links[-1][2], "avoid": avoid,
                                   "target": max(total // players, (2 * base + 1) ** 2)})
@@ -881,6 +882,7 @@ CREATE_LAND = (                 # the attributes of create_land and create_playe
     "right_border",
     "set_circular_base",
     "set_zone_by_team",             # the lands of a team share one zone (#4696)
+    "set_zone_randomly",            # each player land draws one of the player count zones (#4934)
     "terrain_type",
     "top_border",
     "zone",
@@ -1026,7 +1028,7 @@ def objects(cmds, consts, terrain, starts, rng, warn, owner=None, ridges=(), lay
         # the filters of the ground: one each, in alphabetical order (#4224)
         if "actor_area_to_place_in" in attrs:
             ground = ground & areas.get(value(attrs["actor_area_to_place_in"][0], consts), np.zeros((n, n), bool))
-        if "avoid_actor_area" in attrs:
+        if attrs.get("avoid_actor_area"):            # one with no number avoids nothing, as in AoE2 DE (#4931)
             ground = ground & ~areas.get(value(attrs["avoid_actor_area"][0], consts), np.zeros((n, n), bool))
         if "avoid_all_actor_areas" in attrs:
             for area in areas.values():
@@ -1074,6 +1076,8 @@ def objects(cmds, consts, terrain, starts, rng, warn, owner=None, ridges=(), lay
                 max(1, count + int(rng.integers(-vary, vary + 1))) for _ in range(groups or 1)]
             for i, size in enumerate(sizes):
                 free = ~used & place & ~dilate(placed, gap) & ~(dilate(mine, temp) if temp else mine)
+                if blank:                       # a placeholder has no body: it can be on an object, as at the town center (#4935)
+                    free = place & ~(dilate(mine, temp) if temp else mine)
                 spots = np.argwhere((dist >= lo) & (dist <= hi) & free)
                 if not len(spots) and "force_placement" in attrs:   # objects on the same tile (#4137)
                     free = place.copy()
@@ -1101,8 +1105,9 @@ def objects(cmds, consts, terrain, starts, rng, warn, owner=None, ridges=(), lay
                     mine[tx, ty] = True
                     name = base
                     r = 3 if kind == "B" else 1                      # a building: its tile is the corner of its middle
-                    used[max(0, tx - r):tx + r, max(0, ty - r):ty + r] = True
-                    placed[max(0, tx - r):tx + r, max(0, ty - r):ty + r] = True
+                    if not blank:
+                        used[max(0, tx - r):tx + r, max(0, ty - r):ty + r] = True
+                        placed[max(0, tx - r):tx + r, max(0, ty - r):ty + r] = True
                     if name == "VILLAGER_MALE" and rng.integers(2):    # AoE2 DE: a male or a female villager
                         name = "VILLAGER_FEMALE"
                     if not blank:

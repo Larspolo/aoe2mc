@@ -72,6 +72,7 @@ LEVELS = {r["name"]: r for r in table.load("difficulty.jsonl")}    # "AI difficu
 FLARE_NEAR = 16                                                     # blocks: an enemy near a flare (#4888)
 ANSWERS = {r["name"]: r["answer"] for r in table.load("taunts.jsonl") if "answer" in r}   # the taunts 42 to 44 (#4829)
 FOCUS = {r["name"]: r["focus"] for r in table.load("taunts.jsonl") if "focus" in r}   # the taunts 72 to 74 (#4886)
+BUILD_AT = {int(r["name"]): r["build"] for r in table.load("taunts.jsonl") if "build" in r}   # taunts 49-53 (#4889)
 WAIT = {r["name"]: r["wait"] for r in table.load("taunts.jsonl") if "wait" in r}         # taunt 37 before its age (#4884)
 
 
@@ -310,6 +311,25 @@ class Bot:
         else:
             g.walk_to(None, (spot[0], spot[2]), us)
 
+    def build_at(self, x, sites):
+        """Taunts 49, 50, 52 and 53 (#4889, AoE2): for each entry of sites, a site of its first building that the bot has
+        the age and the resources for, on the free tiles nearest to the last live flare of the ally x, and a builder.
+        No flare, no such building or no free place: one answer line to the team of the ally."""
+        g = self.g
+        say = lambda text: g.command(f"tellraw @a[team=p{x.player}] " + json.dumps(  # noqa: E731
+            {"text": f"<Player {g.player}> {text}", "color": "gray"}))
+        live = [f for f in getattr(x, "flares", []) if f[3] > x.clock()]
+        if not live:
+            return say("I see no flare.")
+        cell = (live[-1][0], live[-1][2])
+        for names in sites:
+            n = next((n for n in names if not build.locked(g, n)
+                      and all(g.stock[r] >= v for r, v in build.price(g, n).items())), None)
+            if n is None or (rect := build.near(g, n, cell)) is None:
+                say(f"I cannot build a {build.pretty(names[-1] if n is None else n)} there now.")
+                continue
+            self.builder(build.found(g, n, rect))
+
     def retreat(self):
         """The soldiers of the wave stop and walk back to the town center (taunt 45)."""
         g, c = self.g, self.center()
@@ -378,8 +398,12 @@ class Bot:
                     self.navy = False
                 elif n == 71:
                     self.scuttle()
+                elif n in BUILD_AT:                                      # build at the flare of the ally (#4889)
+                    self.build_at(x, BUILD_AT[n])
                 elif n in (56, 57):                                      # train counter units, stop (#4885)
                     self.counter = n == 56
+                elif n in (54, 55):                                      # build walls (#4890)
+                    self.walls(n, x)
                 elif n == 59:
                     self.giving.pop(x.player, None)
                 elif str(n) in FOCUS:                                          # the allies ask for one class (#4886)
@@ -854,13 +878,69 @@ class Bot:
         T, drops = g.map.T, [c for d in g.map.drops.get(res, ()) for c in d]
         return all(math.dist(((t[0] + 0.5) * T, (t[1] + 0.5) * T), c) > FAR * T for t in full for c in drops)
 
+    def walls(self, n, x):
+        """Taunt 54 of the ally x: wall sites on the tiles between its two last live flares; 55: the wall ring around the
+        own town (per.Script.wall, perimeter 1), side by side as long as the stock pays (#4890). A stone wall, a palisade
+        before its age. No stone or wood, or fewer than two flares: an answer line."""
+        g, T = self.g, self.g.map.T
+        name = "PALISADE_WALL" if build.locked(g, "STONE_WALL") else "STONE_WALL"
+        cost = build.price(g, name)
+        say = lambda text: g.command(f"tellraw @a[team=p{g.player}] " + json.dumps(   # noqa: E731
+            {"text": f"<Player {g.player}> {text}", "color": "gray"}))
+        if any(g.stock[r] < v for r, v in cost.items()) or not g.villagers:
+            return say("I have not enough resources for a wall.")
+        if n == 55:
+            s = self.script or per.Script([], self)
+            for _ in range(8):                                            # the 8 sides of the ring
+                before = len(g.sites)
+                s.wall(1, name.lower().replace("_", "-"))
+                if len(g.sites) == before:
+                    break
+            return
+        flares = [f for f in getattr(x, "flares", []) if f[3] > x.clock()][-2:]
+        if len(flares) < 2:
+            return say("Flare two places for the wall.")
+        (x0, _, z0, _), (x1, _, z1, _) = flares
+        rects = [r for a, b in build.wall_tiles(int(x0) // T, int(z0) // T, int(x1) // T, int(z1) // T)
+                 if build.free(g, r := (a * T, (a + 1) * T, b * T, (b + 1) * T))]
+        k = min([len(rects)] + [g.stock[r] // v for r, v in cost.items() if v])
+        sites = [build.found(g, name, r) for r in rects[:k]]
+        for site in sites:
+            site["line"] = rects[0]
+        if sites:
+            self.builder(sites[0])
+
     def builder(self, site):
-        """Send one villager to build site: an idle one, else the nearest."""
+        """Send villagers to build site up to the number of up-assign-builders of its type (default 1, #4875): idle ones
+        first, then the nearest ones. Each call sends at least one."""
         g = self.g
         x0, x1, z0, z1 = site["footprint"]
         x, z = (x0 + x1) / 2, (z0 + z1) / 2
-        v = min(g.villagers.values(), key=lambda v: (v.state != "idle", math.dist(v.cell, (x, z)), v.uuid))
-        g.build(site, {v.uuid})
+        on = {u for u, v in g.villagers.items() if v.site is site and v.state != "idle"}
+        want = self.script.builders.get(site["name"], 1) if self.script else 1
+        free = sorted((v for u, v in g.villagers.items() if u not in on),
+                      key=lambda v: (v.state != "idle", math.dist(v.cell, (x, z)), v.uuid))
+        if who := {v.uuid for v in free[:max(want - len(on), 0 if on else 1)]}:
+            g.build(site, who)
+
+    def retask(self, res, n):
+        """Move n working villagers of res (not builders) to the resource most below its share (up-retask-gatherers,
+        #4875)."""
+        g, share = self.g, self.shares()
+        work = {r: sum(v.state != "idle" and v.res == r for v in g.villagers.values()) for r in SHARE}
+        busy = sorted(u for u, v in g.villagers.items() if v.state != "idle" and v.res == res and v.site is None)
+        for u in busy[:max(n, 0)]:
+            low = min((r for r in SHARE if r != res), key=lambda r: (work[r] - share[r] * len(g.villagers), r))
+            if self.go(g.villagers[u], low):
+                work[res] -= 1
+                work[low] += 1
+
+    def drop(self, res, n):
+        """The gatherers of res that carry n or more go to a drop site (up-drop-resources, #4875); they then go back."""
+        g = self.g
+        for v in g.villagers.values():
+            if v.res == res and v.site is None and v.load and v.load >= n and v.state != "to_drop":
+                g.go(v, "to_drop", g.drop_goals(v))
 
     def center(self):
         """The middle block cell of the first own town center, or None."""
