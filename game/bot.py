@@ -114,6 +114,7 @@ class Bot:
         self.failed = {}                                               # sources that a villager could not reach -> time
         self.sent = {}                                                 # villager -> the tile that go() sent it to
         self.sides = (None, {})                                        # (own and foe places, {tile: at home}) (#1810)
+        self.told, self.signal = {}, None                              # player -> taunts read; "now", "wait" (#4828)
         self.giving, self.heard = {}, {}                               # ally -> "extra" or "all" (#4830); -> taunts read
         self.g.home = self.home                                        # the next bush or mine of Gather.nearest too
         self.guarded = -LOOK                                           # AoE2 seconds of the last look for predators
@@ -234,10 +235,38 @@ class Bot:
         self.move(share, work)
         self.spend()
         self.time += g.tick * gather.NORMAL
+        self.obey()
         due = self.script.attacking if self.script else self.time >= self.attack   # a script: attack-now (#4530)
+        due = self.signal == "now" or due and self.signal != "wait"       # the taunts of an ally (#4828)
         if due and self.time >= self.looked + LOOK:   # each look costs RCON commands
             self.looked = self.time
             self.fight()
+
+    def obey(self):
+        """The AI command taunts of the allies (#4828, AoE2): 31 attack now, 36 wait for the signal (31), 45 retreat (the
+        soldiers walk home and wait), 61-68 attack player 1-8 when it is an enemy. answer() says the answer of
+        taunts.jsonl. An enemy's taunt changes nothing."""
+        import diplomacy
+        g = self.g
+        for x in build.sides(g):
+            log = getattr(x, "taunted", [])
+            new, self.told[x.player] = log[self.told.get(x.player, 0):], len(log)
+            if x.player == g.player or diplomacy.stance(g, x.player) != "ally":
+                continue
+            for n in map(int, new):
+                if n == 31 or 61 <= n <= 68 and diplomacy.stance(g, n - 60) == "enemy":
+                    self.signal, self.foe = "now", self.foe if n == 31 else n - 60
+                elif n in (36, 45):
+                    self.signal = "wait"
+                    if n == 45:
+                        self.retreat()
+
+    def retreat(self):
+        """The soldiers of the wave stop and walk back to the town center (taunt 45)."""
+        g, c = self.g, self.center()
+        units, self.wave, self.targets, self.charged = sorted(self.wave), set(), {}, False
+        if units and c:
+            g.walk_to(None, (c[0] * g.map.T, c[1] * g.map.T), units)
 
     def spend(self):
         """Spend the resources above keep(): the next age, then the technologies, then the units. The AoE2 AI
