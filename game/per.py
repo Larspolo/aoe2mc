@@ -206,6 +206,21 @@ COST_GOODS = ("food", "wood", "stone", "gold")   # a cost set is 4 goals in a ro
 STOCK = ("food", "wood", "gold", "stone")
 IN_TOWN = ("up-building-type-in-town", "up-enemy-buildings-in-town", "up-enemy-units-in-town",   # #4874
            "up-enemy-villagers-in-town", "up-unit-type-in-town", "up-villager-type-in-town")
+GAME_TYPES = {                     # the mode of run.py: the airef GameType (0: a random map); one per line, alphabetical
+    "battle-royale": 11,
+    "capture-the-relic": 9,
+    "death-match": 2,
+    "defend-the-wonder": 7,
+    "empire-wars": 12,
+    "regicide": 1,
+    "scenario": 3,
+    "sudden-death": 10,
+    "turbo": 8,
+    "wonder-race": 6,
+}
+PLAYER_FACTS = ("player-computer", "player-human", "player-in-game", "player-number", "player-resigned", "player-valid")
+STATE_FACTS = ("cheats-enabled", "enemy-captured-relics", "hold-koh-ruin", "hold-relics", "town-under-attack",
+               "victory-condition")   # (#5045)
 TOWN = 30                       # tiles around the own town center: "in town" (AoE2 sn-maximum-town-size, airef "Facts")
 PERIMETERS = {1: (10, 20), 2: (18, 30)}   # tiles from the town center to each wall ring (airef "build-wall", #4740)
 OCTAGON = math.tan(math.pi / 8)           # half the straight side of a regular octagon per its radius
@@ -782,6 +797,10 @@ class Script:
             return bool(self.object_command(name, args))
         if name in SETUP:
             return self.setup(name, args)
+        if name in PLAYER_FACTS:                                   # (player-human PLAYER)
+            return self.player_fact(name, args[0])
+        if name in STATE_FACTS:
+            return self.state_fact(name, args)
         if name.startswith("players-"):                            # (players-FACT PLAYER ...): the other players
             return self.players(name.removeprefix("players-"), args[0], args[1:])
         value = self.value(name)
@@ -813,6 +832,36 @@ class Script:
         if row is None or row["kind"] != kind:
             return self.warn(kind, args[0]) or False
         return args[0] == (map_size(g.data) if kind == "map-size" else "scenario-map")
+
+    def player_fact(self, name, who):
+        """(player-human PLAYER) and the other facts of PLAYER_FACTS: true for one (any-, a number) or all (every-)."""
+        import conquest
+        xs, every = self.sides(who)
+        out = vars(conquest.main(self.bot.g)).get("defeated", set())
+        test = {"player-computer": lambda x: getattr(x, "share", None) is not None,
+                "player-human": lambda x: getattr(x, "share", None) is None,
+                "player-in-game": lambda x: x.player not in out, "player-resigned": lambda x: x.player in out}
+        got = [test.get(name, lambda x: True)(x) for x in xs]
+        return bool(got) and (all(got) if every else any(got))
+
+    def state_fact(self, name, args):
+        """The facts of STATE_FACTS: the cheats, the relics, the monument, an attack on the town, the victory."""
+        import build
+        import conquest
+        import diplomacy
+        import relic_victory
+        g = self.bot.g
+        if name == "cheats-enabled":
+            return any(getattr(x, "cheats", False) for x in [*build.sides(g), g])
+        if name == "town-under-attack":                            # as (up-enemy-units-in-town > 0)
+            return self.in_town_count("up-enemy-units-in-town", (">", 0))
+        if name == "hold-koh-ruin":
+            return vars(conquest.main(g)).get("hill", {}).get("owner") == g.player   # hill.tick runs on player 1
+        if name == "victory-condition":                            # (victory-condition CONDITION)
+            v = VICTORY_TYPES.get(getattr(g, "victory", "standard"), 0)
+            return v == VICTORY_TYPES.get(args[0], args[0])
+        n = relic_victory.holder(conquest.main(g))                 # it reads the Gather of player 1 and its bots
+        return n == g.player if name == "hold-relics" else n is not None and diplomacy.stance(g, n) == "enemy"
 
     def age_of(self, arg):
         row = names().get(arg)
@@ -857,7 +906,13 @@ class Script:
                 "population-headroom": lambda: max(train.max_pop(g) - g.pop, 0),
                 "population-cap": lambda: train.limit(g), "current-age": lambda: build.ages(g),
                 "current-age-time": lambda: self.age_time(g),
+                "current-score": lambda: self.score(g), "game-type": lambda: GAME_TYPES.get(getattr(g, "mode", ""), 0),
+                "fe-sub-game-type": lambda: 0, "starting-resources": lambda: 0, "wall-invisible-percentage": lambda: 0,
                 "escrow-amount": lambda: self.escrow.get(param, 0) if g is b.g else 0}.get(name, lambda: None)()
+
+    def score(self, g):
+        import score
+        return score.total(score.points(g).get(g.player, {}))
 
     def victory_data(self, name, args):
         """up-get-victory-data PLAYER TYPE TIME, up-get-victory-limit GOAL, up-get-treaty-data GOAL (#4873). A value
@@ -1039,6 +1094,13 @@ class Script:
             got = [diplomacy.stance(self.bot.g, x.player) == args[0] for x in xs]
         elif fact == "current-age-time":
             got = [self.compare(args[0], self.age_time(x), args[1]) for x in xs]
+        elif fact == "score":                                      # (players-score PLAYER REL VALUE)
+            import score
+            pts = score.points(self.bot.g)
+            got = [self.compare(args[0], score.total(pts.get(x.player, {})), args[1]) for x in xs]
+        elif fact == "tribute":                                    # (players-tribute PLAYER RES REL VALUE): to the bot
+            got = [self.compare(args[1], vars(self.bot.g).get("tribute_from", {}).get((x.player, args[0]), 0), args[2])
+                   for x in xs]
         elif fact == "civ":                                        # (players-civ PLAYER CIV)
             if (civ := self.game(args[0], "civ")) is None:
                 return False
@@ -2653,6 +2715,8 @@ class Script:
             self.flares(name, args)
         elif name == "acknowledge-taunt":                            # (acknowledge-taunt PLAYER TAUNT)
             self.heard.discard((args[0], args[1]))
+        elif name == "clear-tribute-memory":                         # players-tribute counts from 0 again
+            vars(g).pop("tribute_from", None)
         elif name == "resign":                                       # (resign): the bot is out, as the cheat (#3105)
             import conquest  # conquest imports gather, which imports this module
             conquest.defeat(g, g.player)
