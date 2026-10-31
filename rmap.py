@@ -210,6 +210,7 @@ def expand(words, rng, defined, consts, includes, folder=None, depth=0):
             if w == "#include_drs" and path and os.path.isfile(path):
                 if depth >= 8:
                     raise RmsError(f"#include_drs {words[i + 1]}: more than 8 levels (a loop?)")
+                includes.append(("read", arg()))       # a read file can define its names behind an if (#5361)
                 with open(path, encoding="utf-8", errors="replace") as f:
                     out += expand(tokens(f.read()), rng, defined, consts, includes, folder, depth + 1)
             else:
@@ -668,7 +669,7 @@ def generate(text, seed, players=2, size=None, warn=None, teams=None, folder=Non
     sections = commands(expand(tokens(text), rng, defined, consts, includes, folder))
     for word in consts.pop(UNDEFINED, ()):
         warn(f"constant {word} is not defined, read as 0 in math")
-    missing = any(d == "#include_drs" and f != "random_map.def" for d, f in includes)   # AoE2 DE: no error (#5317)
+    missing = any(d in ("#include_drs", "read") and f != "random_map.def" for d, f in includes)   # AoE2 DE: no error (#5317)
     if missing:                                      # its undefined constants: the command is ignored, no warning
         cliff = sections.get("CLIFF_GENERATION", [])
         cliff[:] = [c for c in cliff if not (c[0] == "cliff_type" and c[1] and c[1][0] not in consts and c[1][0] not in CLIFF_TYPES)]
@@ -720,7 +721,7 @@ def generate(text, seed, players=2, size=None, warn=None, teams=None, folder=Non
         if s not in SECTIONS:
             warn(f"<{s}> is not read yet")
     for directive, file in includes:               # random_map.def gives the constants; XS scripts are not run
-        if directive != "#include_drs":            # a missing #include_drs file: no error in AoE2 DE (#5317)
+        if directive not in ("#include_drs", "read"):  # a missing #include_drs file: no error in AoE2 DE (#5317)
             warn(f"{directive} {file} is not read")
     scn = base_scenario(folder, name, warn) if name and "LAND_GENERATION" not in sections else None
     if scn:                                          # a real world map: the land, levels and starts of the scenario
