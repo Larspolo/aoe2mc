@@ -162,12 +162,12 @@ lobby setting of each label against the guide ("Definitive Random Map Scripting 
 
 | Label (maps) | Lobby setting | Option | Changes the land | Source |
 |---|---|---|---|---|
-| `ANTIQUITY_MODE` (80) | Antiquity Mode (Return of Rome rules) | `run.py --antiquity`; `aoe2mc.py` none | yes (start objects) | survey, `run.py` |
+| `ANTIQUITY_MODE` (80) | Antiquity Mode (Return of Rome rules) | `run.py --antiquity`; `aoe2mc.py --antiquity` (#5017) | yes (start objects) | survey, `run.py` |
 | `DARK_AGE_START` (83) | Starting age: Dark Age | `run.py --age`; `aoe2mc.py` none | yes (start objects) | survey, `run.py` |
 | `ENABLE_TREATY` (16) | Treaty length above 0 | `run.py --treaty` | no (game rule) | survey, `run.py` |
 | `FIXED_POSITIONS` (3) | Lock positions in the lobby order | none | yes (player places) | survey; the player and team ticket |
 | `INFINITE_RESOURCES` (171) | Starting resources: Infinite | `run.py --resources`; `aoe2mc.py` none | yes (mine and food amounts) | survey, `run.py` |
 | `LOW_RESOURCES` (10) | Starting resources: Low | `run.py --resources`; `aoe2mc.py` none | yes (mine and food amounts) | survey, `run.py` |
-| `NOMAD_MAP` (77) | Nomad start (no town center) | none | yes (start objects) | survey |
+| `NOMAD_MAP` (77) | Nomad start (no town center) | `aoe2mc.py --nomad` (#5017) | yes (start objects) | survey |
 | `TEAM_GAME`, `TEAMS_CONNECTED` (62, 23) | Teams in the lobby, "Team together" | `--teams` | yes (player places) | survey; the player and team ticket |
 | `AZUREMASKING`, `EXTREME_ELEVATION`, `LEGACY_CODE`, `LEGACY_RELICS`, `NOMAD_CASTLE`, `NOMAD_HERDABLE`, `NOMAD_SCATTERED`, `NOMAD_TREATY`, `NOMAD_UNIT`, `REGICIDE_*` variants, `SEASONS_ALLOWMUDDYSHALLOWS`, `EMPIRE_WARS_*` variants, `*_ALLOW_FEEDING`, `DEBUG_MODE`, `TERRAIN_DEBUGGING`, `GNR_*`, `*_CAA_*` | none: switches of the script authors | none | no (the lobby never defines them) | survey |

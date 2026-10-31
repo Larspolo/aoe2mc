@@ -21,6 +21,7 @@ def test_each_lobby_label_turns_on_its_if_block():
     settings = [{"players": len(t), "teams": t} for t in teams]
     settings += [{"players": p} for p in range(1, 9)]
     settings += [{"mode": m} for m in rmap.MODE_LABELS] + [{"size": s} for s in rmap.MAP_SIZES.values()]
+    settings += [{"labels": [label]} for label in rmap.LOBBY_LABELS.values()]
     settings += [{"players": 8, "teams": [i % 4 + 1 if i < 4 else None for i in range(8)]}]
     for kw in settings:
         warnings = []
