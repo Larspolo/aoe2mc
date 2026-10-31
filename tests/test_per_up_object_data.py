@@ -20,7 +20,7 @@ def test_the_data_of_the_target_object_its_type_and_its_upgrade(monkeypatch, cap
     s.rules = per.parse(f"""
 (defrule (true) => (up-get-object-data object-data-hitpoints 1) (up-get-object-data object-data-point-x 2)
                    (up-get-object-data object-data-point-y 3) (up-get-object-data 20 4) (up-get-object-data object-data-id 5)
-                   (up-get-object-data object-data-heresy 6) (up-get-object-target-data object-data-id 7)
+                   (up-get-object-data object-data-locked 6) (up-get-object-target-data object-data-id 7)
                    (up-get-object-type-data c: militia object-data-maxhp 8) (set-goal 9 74)
                    (up-get-upgrade-id my-player-number 0 9 10) (up-store-object-name) (disable-self))
 (defrule (up-object-data object-data-player == {b.g.player}) (up-object-data object-data-hitpoints == 34)
@@ -31,7 +31,7 @@ def test_the_data_of_the_target_object_its_type_and_its_upgrade(monkeypatch, cap
     assert s.goals[6] == -1 and s.goals[7] == -1 and s.goals[11] == 1                  # no value: -1
     assert s.goals[8] == combat.stats("MILITIA").hp and s.goals[10] == 74 and s.text == "militia"
     err = capsys.readouterr().err
-    assert err.count("unknown object data object-data-heresy") == 1 and err.count("unknown object target") == 1
+    assert err.count("unknown object data object-data-locked") == 1 and "unknown object target" not in err   # #5184
 
 
 def test_remove_objects_by_data_and_by_index(monkeypatch):

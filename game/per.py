@@ -375,8 +375,14 @@ RESOURCE_IDS = {"food": 0,                                         # airef "Reso
 OBJECT_DATA = ("up-get-object-data", "up-get-object-target-data", "up-get-object-type-data", "up-get-upgrade-id",   # #4959
                "up-object-data", "up-object-target-data", "up-remove-objects", "up-store-object-name")
 OBJECT_DATA_ROWS = {r["name"]: r for r in table.load("per_object_data.jsonl")}   # airef "ObjectData"
-OBJECT_VALUES = ("attack-stance", "base-attack", "garrisoned", "hitpoints", "id", "index", "maxhp", "pierce-armor",
-                 "player", "point-x", "point-y", "range", "status", "strike-armor", "type", "upgrade-type")
+OBJECT_VALUES = ("action", "attack-stance", "base-attack", "blast-radius", "carry", "category", "class", "cmdid",
+                 "distance", "full-distance", "garrison-count", "garrisoned", "group-flag", "hitpoints", "id", "idling",
+                 "index", "map-zone-id", "maxhp", "min-range", "on-mainland", "order", "pierce-armor", "player", "point-x",
+                 "point-y", "point-z", "precise-distance", "precise-x", "precise-y", "precise-z", "progress-type",
+                 "progress-value", "range", "reload-time", "researching", "resource", "speed", "status", "strike-armor",
+                 "target", "target-id", "tech", "to-precise", "train-count", "train-site", "train-time", "type",
+                 "upgrade-type")
+OBJECT_TECH = ("all", "monks", "ranged", "units")                  # the objects of a "tech" line of per_object_data
 STANCE_IDS = {"aggressive": 0, "defensive": 1, "stand_ground": 2, "no_attack": 3}   # airef "AttackStance"
 TYPE_IDS = {}                                                      # game name -> the AoE2 id (the first line wins)
 for _r in table.load("per_names.jsonl"):
@@ -2540,12 +2546,13 @@ class Script:
             order = SEARCH_ORDER.get(args[2], args[2])
             if order not in SEARCH_ORDER.values():
                 return self.warn("search order", args[2]) or False
-            if args[1] not in (-1, 0, "object-data-id"):           # the other object data: a later ticket
-                return self.warn("object data", args[1]) or False
             if args[1] == -1:                                      # -1: no duplicates
                 st["found"] = list(dict.fromkeys(st["found"]))
-            if order:
-                st["found"].sort(reverse=order == 2)              # the ids: oldest to newest (asc)
+            elif self.data_name(args[1]) is None:
+                return False
+            if order:                                              # by the data (the ids: oldest to newest), then the id
+                by = (lambda i: i) if args[1] in (-1, 0, "object-data-id") else (lambda i: (self.object_value(i, args[1]), i))
+                st["found"].sort(key=by, reverse=order == 2)
             return True
         kind = self.type_kind(args[1])
         ref = self.operand(kind, args[2]) if kind else None
@@ -2690,7 +2697,7 @@ class Script:
                            if not self.compare(args[2], i if self.data_name(args[1]) == "index" else
                                                self.object_value(oid, args[1]), args[3])]
             return True
-        oid = self.target if "-target-" not in name else self.warn("object target", "the target of an object")
+        oid = self.target if "-target-" not in name else self.target_of(self.target)
         if name.startswith("up-get-"):
             self.goals[args[1]] = self.object_value(oid, args[0])
             return True
@@ -2698,7 +2705,7 @@ class Script:
 
     def data_name(self, data):
         """The OBJECT_VALUES name of an ObjectData (a name or its id), or None with one warning."""
-        row = OBJECT_DATA_ROWS.get(data) or next((r for r in OBJECT_DATA_ROWS.values() if r["id"] == data), None)
+        row = self.data_row(data)
         return row["value"] if row and "value" in row else self.warn("object data", data)
 
     def find_object(self, oid):
@@ -2735,30 +2742,147 @@ class Script:
                     x.command(cmd)
 
     def type_value(self, unit, data):
-        """A value of the type of an object (combat.stats), -1 when the game program has none."""
+        """A value of the type of an object (combat.stats, the train data), -1 when the game program has none."""
+        import civs
         import combat
-        s, v = combat.stats(unit), self.data_name(data)
+        import replay
+        import train
+        s, v, g = combat.stats(unit), self.data_name(data), self.bot.g
+        building = unit in combat.BUILDINGS or unit.endswith(("_WALL", "_GATE", "_TOWER"))
+        if v == "speed":                                           # tiles per AoE2 second x 100 (ai.walk_speed)
+            walk = next((w for k, w in replay.SPEEDS.items() if unit.startswith(k)), 1.0)
+            return 0 if building else round(walk * civs.speed(g, unit) * 100)
+        if v == "train-site":                                      # the type of the first building that trains it
+            return next((TYPE_IDS.get(b, -1) for b, items in train.TRAINS.items() if unit in items), -1)
+        if v == "train-time":
+            return round(train.seconds(g, unit)) if unit in train.ITEMS else -1
         return {"type": TYPE_IDS.get(unit, -1), "maxhp": s.hp, "range": s.range, "base-attack": s.attack,
-                "strike-armor": s.melee, "pierce-armor": s.pierce}.get(v, -1)
+                "strike-armor": s.melee, "pierce-armor": s.pierce, "class": klass(unit), "category": 80 if building else 70,
+                "reload-time": round(s.reload * 1000), "blast-radius": round(s.blast * 100),
+                "min-range": combat.MIN_RANGE.get(unit, combat.FORT_MIN_RANGE.get(unit, 0))}.get(v, -1)
 
     def object_value(self, oid, data):
-        """A value of the object with id oid (airef "ObjectData"); -1 for no object or no value."""
+        """A value of the object with id oid (airef "ObjectData", #5184); -1 for no object or no value. -2 as in AoE2: a
+        train or research value of a building that trains nothing."""
         import garrison
+        import monk
         import stance
+        import train
         v, row = self.data_name(data), self.find_object(oid)
         if v is None or row is None:
             return -1
         x, key, unit, st = row
-        if v in ("point-x", "point-y", "hitpoints"):
-            if v == "hitpoints":
-                hp = self.bot.hp(key)
-                return -1 if hp is None else math.ceil(hp)
-            p = x.positions([key]).get(key)
-            return -1 if p is None else int(p[0 if v == "point-x" else 2] // x.map.T)
+        T = x.map.T
+        if v == "hitpoints":
+            hp = self.bot.hp(key)
+            return -1 if hp is None else math.ceil(hp)
+        if v in ("point-x", "point-y", "precise-x", "precise-y", "distance", "precise-distance", "full-distance",
+                 "to-precise", "map-zone-id", "on-mainland"):
+            if (p := x.positions([key]).get(key)) is None:
+                return -1
+            t = (p[0] / T, p[2] / T)                               # tiles
+            if v in ("point-x", "point-y"):
+                return int(t[v == "point-y"])
+            if v in ("precise-x", "precise-y"):
+                return int(t[v == "precise-y"] * 100)
+            if v in ("map-zone-id", "on-mainland"):
+                zone = self.map_value("zone", t)
+                home = self.position("position-self")
+                return zone if v == "map-zone-id" else int(zone is not None and zone == self.map_value("zone", home))
+            if self.point is None:
+                return -1
+            d = math.dist(t, [c / 100 for c in self.point] if v == "to-precise" else self.point)
+            return int(d) if v == "distance" else int(d * d) if v == "full-distance" else int(d * 100)
         if v == "upgrade-type":
             return TYPE_IDS.get(self.upgraded(x, unit), -1)
+        if v == "tech":                                            # benefits from a technology of the line (data file)
+            r = self.data_row(data)
+            who = {"all": True, "units": key in x.villagers or key in x.soldiers, "monks": unit in monk.MONKS,
+                   "ranged": bool(self.type_value(unit, "object-data-range"))}[r["who"]]
+            return int(who and r["tech"] in x.techs)
+        if v in ("target", "target-id"):
+            t = self.target_of(oid)
+            if v == "target-id" or t is None:
+                return -1 if t is None else t
+            hit = self.find_object(t)
+            return klass(hit[2]) if hit else -1
+        if v in ("carry", "resource"):                             # the load of a villager
+            vil = x.villagers.get(key)
+            if v == "carry":
+                return int(vil.load) if vil else 0
+            return RESOURCE_IDS.get(vil.res, -1) if vil and vil.load else -1
+        if v in ("cmdid", "action", "order"):                      # the lines of per_filter_ids.jsonl (#5131)
+            kind = "cmd" if v == "cmdid" else v
+            return next((r["id"] for r in FILTER_IDS.values() if r["kind"] == kind and
+                         ("class" in r or "units" in r or "states" in r) and self.is_like(x, key, unit, r)), -1)
+        if v == "idling":
+            vil = x.villagers.get(key)
+            return int(vil.state == "idle") if vil else int(key in x.soldiers and key not in self.attack_targets())
+        if v == "group-flag":
+            return self.flags.get(oid, 0)
+        if v in ("garrison-count", "train-count", "researching", "progress-type", "progress-value"):
+            rect = self.rect_of(x, key)
+            if v == "garrison-count":
+                held = vars(x).get("garrisons", {}).get(rect) if rect else \
+                    vars(x).get("towers", {}).get(key) or vars(x).get("cargo", {}).get(key)
+                return len(held or ())
+            if rect not in train.homes(x):
+                return -2
+            q = x.queues.get(rect, [])
+            tech = bool(q) and q[0]["name"] in train.TECHS
+            if v == "train-count":
+                return sum(e["name"] not in train.TECHS for e in q)
+            if v == "researching":
+                return int(tech)
+            if v == "progress-type":                               # airef "ProgressType"
+                return 0 if not q else 103 if tech else 102
+            return int(q[0]["progress"] * 100) if q else 0
+        if v in ("point-z", "precise-z"):                          # the units walk on the ground
+            return 0
         return {"id": oid, "player": x.player, "status": st, "garrisoned": int(key in garrison.inside(x)),
                 "attack-stance": STANCE_IDS.get(stance.stance(x, key), 0)}.get(v, self.type_value(unit, data))
+
+    def data_row(self, data):
+        """The line of per_object_data.jsonl of an ObjectData (a name or its id), or None."""
+        return OBJECT_DATA_ROWS.get(data) or next((r for r in OBJECT_DATA_ROWS.values() if r["id"] == data), None)
+
+    def rect_of(self, x, key):
+        """The block footprint (x0, x1, z0, z1) of the building or site with the key of the Gather x, or None."""
+        import combat
+        for o in [o for o in x.data["objects"] if o["kind"] == "building" and "footprint" in o]:
+            x0, z0, x1, z1 = o["footprint"]
+            if combat.target_uuid([x0, z0, x1, z1]) == key:
+                return x0, x1, z0, z1
+        for site in x.sites:
+            x0, x1, z0, z1 = site["footprint"]
+            if combat.target_uuid([x0, z0, x1, z1]) == key:
+                return tuple(site["footprint"])
+        return None
+
+    def attack_targets(self):
+        """{unit: target key} of the soldiers of the bot (Bot.targets)."""
+        return vars(self.bot).get("targets", {})
+
+    def target_of(self, oid):
+        """The id of the object that the object oid targets: the attack target of a soldier of the bot, the prey, the
+        construction site or the resource of a villager; None for no target (#5184)."""
+        row = self.find_object(oid) if oid is not None else None
+        if row is None:
+            return None
+        x, key, _, _ = row
+        t = self.attack_targets().get(key) if x is self.bot.g else None
+        if (vil := x.villagers.get(key)) is not None:
+            site = vil.site and vil.site.get("footprint")
+            t = vil.prey or (site and self.key_of_site(site)) or (vil.tree and f"resource {vil.tree[0]} {vil.tree[1]}")
+        if t is not None and t not in self.ids:                     # an id for an object that no search saw yet
+            self.objects(x)
+            self.resources()
+        return self.ids.get(t)
+
+    def key_of_site(self, footprint):
+        import combat
+        x0, x1, z0, z1 = footprint
+        return combat.target_uuid([x0, z0, x1, z1])
 
     def upgraded(self, x, unit):
         """The unit that the upgrades of the Gather x make of unit (train.lines of the researched UPGRADES)."""
