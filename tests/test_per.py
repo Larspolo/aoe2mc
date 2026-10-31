@@ -90,7 +90,7 @@ def test_load(tmp_path):
     ("(defrule (not (true) (false)) => (do-nothing))", 1),     # not takes one fact
     ("(defrule (and (true)) => (do-nothing))", 1),             # and takes two or more
     ("(defconst a 1)\n(defconst A 2)", 2),                     # a constant again
-    ("(defconst a b)", 1),                                     # no number
+    ("(defconst a 40000)", 1),                                 # a number out of range
     ('\n(load "missing")', 2),                                 # no file
     ('(defrule (true) => (chat-to-all "no end))', 1),          # a text with no end quote
     ("#load-if-defined\n(defrule (true) => (do-nothing))", 1),  # no symbol
