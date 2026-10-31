@@ -1918,7 +1918,7 @@ class Script:
             else:
                 b.retreat()
         elif name == "up-set-attack-stance":                       # (up-set-attack-stance TYPE UNIT STANCE)
-            sid = args[2] if isinstance(args[2], int) else STANCE_IDS.get(args[2])
+            sid = args[2] if isinstance(args[2], int) else STANCE_IDS.get(TASK_STANCE.get(args[2], args[2]))   # airef names too
             s = next((k for k, i in STANCE_IDS.items() if i == sid), None)
             if s is None:
                 return self.warn("attack stance", args[2])
