@@ -94,7 +94,12 @@ class Driver:
         return self.aim((x, y + 1.0, z), tile, ground=y)
 
     def building(self, rect):
-        """Right click the own building rect (its menu opens)."""
+        """Right click the own building rect (its menu opens). Client.pick aims at the eye height of the player: it
+        stands on the ground in front of the building first."""
+        x0, x1, z0, z1 = rect
+        x, z = (x0 + x1) // 2, z1 + 3
+        self.g.command(f"tp {NAME} {x + 0.5} {self.g.map.y(x, z) or 64} {z + 0.5}")
+        time.sleep(1.0)
         return self.c.pick(self.g, tuple(rect), dists=(6, 9, 12)) is not None
 
     def slot(self, name):
@@ -172,6 +177,7 @@ class Driver:
                 if rect and self.building(rect) and self.slot(name):
                     self.note(f"clicked {name} in the menu of the {building}")
                     break
+                self.note(f"the click on the {building} opened no menu")
             self.c.key("Escape")
             menu.close(self.g, NAME)                                   # Escape sends no event: g.menus keeps it
             time.sleep(1.0)
