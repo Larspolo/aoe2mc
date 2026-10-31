@@ -84,7 +84,8 @@ def test_the_repair_stops_with_a_chat_line_when_the_stock_is_empty():
 
 
 def test_a_click_on_an_undamaged_building_still_garrisons_the_selection():
-    server, g = setup(tc=2400)
+    server, g = setup()
+    server.hp[repair.uuid(TC)] = repair.full(g, "TOWN_CENTER", 1)       # undamaged
     assert repair.order(g, "Steve", (13, 13)) is None
     g.paper = True
     assert garrison.order(g, "Steve", (13, 13)) == TC and g.entering == {"v0": TC}

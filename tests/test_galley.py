@@ -6,12 +6,19 @@ import shutil
 import time
 
 import pytest
+from pin_stats import pin
 from test_dock_train import DOCK, dock_map
 from test_train_archery import menus
 
 from game import combat, fleet, gather, run, train
 
 SLOT = train.ITEMS["GALLEY"][0]
+
+
+@pytest.fixture(autouse=True)
+def galley_range(monkeypatch):
+    """Test data: the galley shoots 5 tiles far, the distances of the tests fit it."""
+    pin(monkeypatch, "GALLEY", range=5)
 
 
 def entry(g, name, state, icon=None):

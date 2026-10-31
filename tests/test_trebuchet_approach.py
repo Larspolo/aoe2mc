@@ -7,9 +7,16 @@ import math
 import time
 
 import pytest
+from pin_stats import pin
 from test_train_castle import setup
 
 from game import ai, combat, gather, run, train, trebuchet
+
+
+@pytest.fixture(autouse=True)
+def trebuchet_range(monkeypatch):
+    """Test data: the trebuchet shoots 16 tiles far, the distances of the tests fit it."""
+    pin(monkeypatch, "TREBUCHET", range=16)
 
 
 def treb(at=(2.5, 64.0, 20.5), enemy=(22.5, 64.0, 20.5)):
