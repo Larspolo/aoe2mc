@@ -1,6 +1,6 @@
 """The ticket of a PR for Automerge (#4773): the first closing word of the body, else of the commits (#4122), else
 the claim ref that names the PR branch, else a title that ends with "(#N)". A body with "Part of #N"
-(`ship_pr.py --part`) keeps its ticket open: no ticket then.
+(`ship_pr.py --part`) keeps ticket N open: no ticket then. "Part of" an epic does not (#5144).
 
     python3 framework/tools/pr_ticket.py PR.json COMMITS.txt   # prints "N" (body closes it) or "N add" (append "Closes #N")
 
@@ -18,11 +18,14 @@ def ticket(body, commits, title, claims):
     body = body or ""
     if m := CLOSE.search(body):
         return int(m.group(1)), False
-    if re.search(r"\bPart of #\d+", body, re.I):
-        return None, False
-    if m := CLOSE.search(commits or ""):
-        return int(m.group(1)), True
-    return found(claims) or title_ticket(title)
+    m = CLOSE.search(commits or "")
+    n, add = (int(m.group(1)), True) if m else found(claims) or title_ticket(title)
+    return (None, False) if n in parts(body) else (n, add)
+
+
+def parts(body):
+    """The tickets that the body keeps open with "Part of #N"."""
+    return {int(n) for n in re.findall(r"\bPart of #(\d+)", body, re.I)}
 
 
 def found(claims):
@@ -67,7 +70,7 @@ def main(argv=None):
         commits = f.read()
     body, title = pr.get("body") or "", pr.get("title") or ""
     claims = {}
-    if not CLOSE.search(body + "\n" + commits) and not re.search(r"\bPart of #\d+", body, re.I):
+    if not CLOSE.search(body + "\n" + commits):
         claims = branch_claims(remote_tips(), pr["head"]["ref"])
     n, add = ticket(body, commits, title, claims)
     if n:
