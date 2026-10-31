@@ -169,10 +169,9 @@ def expand(words, rng, defined, consts, includes, folder=None, depth=0):
                 f["done"] |= f["on"]
                 f["acc"] += n
             i += 2
-        elif w in ("endif", "end_random"):
-            if not stack:
-                raise RmsError(f"{w} without its start (after: {' '.join(words[max(0, i - 8):i])})")
-            stack.pop()
+        elif w in ("endif", "end_random"):          # AoE2 DE skips a stray one (Gold_Rush, Karsts, #4931)
+            if stack:
+                stack.pop()
             i += 1
         elif not on():
             i += 1
@@ -203,9 +202,7 @@ def expand(words, rng, defined, consts, includes, folder=None, depth=0):
         else:
             out.append(w)
             i += 1
-    if stack:
-        raise RmsError("an if or start_random has no end")
-    return out
+    return out                                      # an open if at the end is no error in AoE2 DE (Continental, #4931)
 
 
 class Args(list):
@@ -1031,7 +1028,7 @@ def objects(cmds, consts, terrain, starts, rng, warn, owner=None, ridges=(), lay
         # the filters of the ground: one each, in alphabetical order (#4224)
         if "actor_area_to_place_in" in attrs:
             ground = ground & areas.get(value(attrs["actor_area_to_place_in"][0], consts), np.zeros((n, n), bool))
-        if "avoid_actor_area" in attrs:
+        if attrs.get("avoid_actor_area"):            # one with no number avoids nothing, as in AoE2 DE (#4931)
             ground = ground & ~areas.get(value(attrs["avoid_actor_area"][0], consts), np.zeros((n, n), bool))
         if "avoid_all_actor_areas" in attrs:
             for area in areas.values():
