@@ -83,7 +83,10 @@ jobs:
             gh api "repos/$R/issues/$n/comments" -F body=@body.md >/dev/null
             # GitHub can start the pull_request run of this push itself: then a dispatch runs the fast suite twice on
             # one commit and fills the CI queue (#4809). The pull_request run of github-actions[bot] starts the sweep.
+            # Only a run that is queued, runs or is green counts: GitHub holds the bot run with 0 jobs (`action_required`,
+            # then `failure`: 29 of 29 runs), and a PR with no real run waited for a takeover (#4981).
             new=$(git rev-parse HEAD); sleep 20
-            got=$(gh api "repos/$R/actions/workflows/ci.yml/runs?event=pull_request&head_sha=$new&per_page=1" --jq .total_count || echo 0)
+            got=$(gh api "repos/$R/actions/workflows/ci.yml/runs?event=pull_request&head_sha=$new" \
+              --jq '[.workflow_runs[] | select(.conclusion == null or .conclusion == "success")] | length' || echo 0)
             [ "$got" != 0 ] && echo "#$n: GitHub started the pull_request run" || gh workflow run ci.yml --repo "$R" --ref "$branch"
           done 3< picks.txt

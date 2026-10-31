@@ -198,7 +198,8 @@ VICTORY_TYPES = {                  # run.py --victory: the airef VictoryType; on
     "standard": 0,
     "time-limit": 2,
 }
-GET_FACT = ("up-get-fact", "up-get-fact-max", "up-get-fact-min", "up-get-fact-sum", "up-get-player-fact")
+GET_FACT = ("up-get-fact", "up-get-fact-max", "up-get-fact-min", "up-get-fact-sum", "up-get-player-fact",
+            "up-get-focus-fact", "up-get-target-fact")   # the last two: the focus and the target player (#4973)
 COST_ACTIONS = ("up-setup-cost-data", "up-reset-cost-data", "up-add-cost-data", "up-add-object-cost",
                 "up-add-research-cost", "up-get-cost-delta")
 COST_GOODS = ("food", "wood", "stone", "gold")   # a cost set is 4 goals in a row, in this order (airef "Cost data", #4879)
@@ -221,6 +222,7 @@ def names():
 # The strategic numbers of AoE2 DE with their defaults and ids (airef "Strategic numbers", #4685): only the gatherer
 # percentages and the attack group sizes change the bot (Script.number); the others keep their value for the script.
 SN = {r["name"]: r["default"] for r in table.load("per_numbers.jsonl")}
+RESOURCES = {r["name"]: r for r in table.load("per_resources.jsonl")}   # airef ResourceType (up-resource-amount)
 SN_IDS = {r["id"]: r["name"] for r in table.load("per_numbers.jsonl")}   # a script can name a number by its id
 # The airef ids of objects and technologies (two sets of numbers): the up-* commands with g: take an id (#4869).
 OBJECT_IDS = {r["id"]: r["name"] for r in table.load("per_names.jsonl") if "id" in r and r["kind"] in ("unit", "building")}
@@ -229,6 +231,17 @@ SHARED = ("up-get-event", "up-get-shared-goal", "up-get-signal", "up-set-event",
 POINTS = ("up-add-point", "up-bound-point", "up-bound-precise-point", "up-copy-point", "up-cross-tiles",   # #4956
           "up-get-point", "up-get-point-distance", "up-lerp-percent", "up-lerp-tiles", "up-set-precise-target-point",
           "up-set-target-point")
+MAP_FACTS = {"up-get-point-elevation": "elevation",              # the map at a point (#4962): command -> map_value kind
+             "up-get-point-terrain": "terrain",
+             "up-get-point-zone": "zone",
+             "up-point-elevation": "elevation",
+             "up-point-explored": "explored",
+             "up-point-terrain": "terrain",
+             "up-point-zone": "zone"}
+EXPLORED_STATE = {"explored-active": 15,                           # airef "ExploredState" (up-point-explored)
+                  "explored-no": 0,
+                  "explored-yes": 128}
+FLARES = ("up-find-flare", "up-find-player-flare", "up-send-flare")   # the flares of the team (#4971)
 UP_QUEUE = {"up-build": "build", "up-research": "research", "up-train": "train"}
 ORDERS = ("up-delete-distant-farms", "up-delete-idle-units", "up-reset-attack-now", "up-reset-building",
           "up-reset-unit", "up-retreat-now")
@@ -247,6 +260,16 @@ RESEARCH_STATE = {"research-available": 1,                         # airef "Rese
 SEARCH = ("up-add-object-by-id", "up-can-search", "up-clean-search", "up-find-local", "up-find-remote",   # #4957
           "up-full-reset-search", "up-get-search-state", "up-reset-filters", "up-reset-search", "up-set-target-by-id",
           "up-set-target-object")
+OBJECT_DATA = ("up-get-object-data", "up-get-object-target-data", "up-get-object-type-data", "up-get-upgrade-id",   # #4959
+               "up-object-data", "up-object-target-data", "up-remove-objects", "up-store-object-name")
+OBJECT_DATA_ROWS = {r["name"]: r for r in table.load("per_object_data.jsonl")}   # airef "ObjectData"
+OBJECT_VALUES = ("attack-stance", "base-attack", "garrisoned", "hitpoints", "id", "index", "maxhp", "pierce-armor",
+                 "player", "point-x", "point-y", "range", "status", "strike-armor", "type", "upgrade-type")
+STANCE_IDS = {"aggressive": 0, "defensive": 1, "stand_ground": 2, "no_attack": 3}   # airef "AttackStance"
+TYPE_IDS = {}                                                      # game name -> the AoE2 id (the first line wins)
+for _r in table.load("per_names.jsonl"):
+    if "id" in _r and "game" in _r and _r["kind"] in ("unit", "building"):
+        TYPE_IDS.setdefault(_r["game"], _r["id"])
 SEARCH_MAX = {1: 240, 2: 40}                                       # the results of each list (airef "SearchSource")
 SEARCH_ORDER = {"search-order-asc": 1,                             # airef "SearchOrder" (up-clean-search)
                 "search-order-desc": 2,
@@ -302,6 +325,7 @@ class Script:
         self.heard, self.read = set(), {}                          # (player, taunt) not acknowledged; player -> read
         self.jump = None                                           # the rule after the actions of this rule (up-jump-*)
         self.cost_at = None                                        # the first goal of the current cost set (#4879)
+        self.placement = None                                      # (player, object, tiles) of up-set-placement-data
         self.builders = {}                                         # building -> builders of up-assign-builders (#4875)
         self.scouts = []                                           # the scouts of up-send-scout (#4969)
         self.ids, self.next_id = {}, 1                             # object key -> its id; the id of the next new one
@@ -309,6 +333,7 @@ class Script:
         self.filters = {}                                          # filter -> value; none set: all -1 (up-reset-filters)
         self.target = None                                         # the id of the target object
         self.point = None                                          # (x, y) tiles of up-set-target-point (#4956)
+        self.grids = {}                                            # the map grids of map_value (#4962)
 
     def number(self, name):
         return self.sn.get(name, SN[name])
@@ -523,6 +548,10 @@ class Script:
         if name in ("up-modify-goal", "up-modify-sn"):             # a command as a fact: it runs, and is true
             self.act(None, (name, *args))
             return True
+        if name in MAP_FACTS:                                      # (up-point-terrain POINT REL VALUE)
+            v = self.map_value(MAP_FACTS[name], self.pair(args[0]))
+            ref = EXPLORED_STATE.get(args[2], args[2]) if name == "up-point-explored" else args[2]
+            return v is not None and self.compare(args[1], v, ref)
         if name == "up-point-distance":                            # (up-point-distance P1 P2 REL VALUE)
             d = self.point_distance(args[0], args[1])
             return d is not None and self.compare(args[2], d, args[3])
@@ -570,6 +599,10 @@ class Script:
         if name in ("up-can-train", "up-can-build", "up-can-research"):     # (up-can-train ESCROW TYPE UNIT)
             sn = self.named(args[1], args[2], name == "up-can-research")
             return sn is not None and self.can(name.removeprefix("up-"), sn, self.goals.get(args[0], 0) >= 1)
+        if name == "up-can-build-line":                             # (up-can-build-line ESCROW POINT TYPE BUILDING)
+            sn = self.named(args[2], args[3])
+            return bool(sn is not None and self.can("can-build", sn, self.goals.get(args[0], 0) >= 1)
+                        and self.line_sites(self.pair(args[1]), self.pair(args[1]), self.game(sn, "building"))[:1])
         if name in ("up-pending-objects", "up-pending-placement", "up-research-status", "up-train-site-ready"):
             return self.pending(name, args)
         if name in ("up-object-type-count", "up-object-type-count-total"):    # (up-object-type-count TYPE OBJECT REL VALUE)
@@ -617,6 +650,8 @@ class Script:
             return bool(got) and (all(got) if every else any(got))
         if name == "wall-completed-percentage":                    # (wall-completed-percentage PERIMETER REL VALUE)
             return self.ring(args[0]) is not None and self.compare(args[1], self.walled(args[0]), args[2])
+        if name in ("up-resource-amount", "up-resource-percent", "up-allied-resource-amount", "up-allied-resource-percent"):
+            return self.resource(name, args)
         if name in ("up-players-in-game", "up-player-distance", "up-allied-goal", "up-allied-sn"):
             return self.others(name, args)
         if name == "enemy-buildings-in-town":
@@ -629,6 +664,8 @@ class Script:
             return self.idle_count(args[0], args[1], args[2])
         if name in SEARCH:                                         # a find or a target as a fact: true when it did
             return bool(self.search_command(name, args))
+        if name in OBJECT_DATA:
+            return bool(self.object_command(name, args))
         if name in SETUP:
             return self.setup(name, args)
         if name.startswith("players-"):                            # (players-FACT PLAYER ...): the other players
@@ -732,6 +769,9 @@ class Script:
     def get_fact(self, name, args):
         """up-get-fact, up-get-player-fact and up-get-fact-min, -max, -sum: the value of a fact into a goal (#4868). An
         unknown fact or player gives one warning and leaves the goal. As a fact it is true (airef "Fact/Action")."""
+        if name in ("up-get-focus-fact", "up-get-target-fact"):      # (up-get-focus-fact FACT PARAM GOAL)
+            who = "focus-player" if name == "up-get-focus-fact" else "target-player"
+            return self.get_fact("up-get-player-fact", (who, *args))
         if name == "up-get-fact":
             xs, (fact, param, goal) = [self.bot.g], args
         else:
@@ -857,8 +897,8 @@ class Script:
         g, b = self.bot.g, self.bot
         sides = {x.player: x for x in build.sides(g)}
         sides[g.player] = g
-        if isinstance(who, int) or who == "focus-player":
-            x = sides.get(b.foe if who == "focus-player" else who)
+        if isinstance(who, int) or who in ("focus-player", "target-player"):   # the bot's target is the foe's
+            x = sides.get(b.foe if isinstance(who, str) else who)
             return [x] if x else [], False
         mode, _, kind = who.partition("-")
         if mode not in ("any", "every") or kind not in ("enemy", "ally", "player", "computer", "human"):
@@ -960,6 +1000,70 @@ class Script:
         p, q = self.pair(a), self.pair(b)
         return None if p is None or q is None else int(math.dist(p, q))
 
+    def grid(self, key):
+        """The tile grid key ("terrain" or "elevation") of aoe2mc.json as rows of numbers (#4962). An old world without
+        it: the terrain of Map.wet (1 water, 0 grass) and the elevation 0, with one warning."""
+        if key not in self.grids:
+            d = self.bot.g.data
+            if key in d:
+                self.grids[key] = [[int(v) for v in row.split()] for row in d[key]]
+            else:
+                self.warn("map data (an old world)", key)
+                n = self.tiles()
+                self.grids[key] = [[int(self.wet_tile(x, y)) * (key == "terrain") for x in range(n)] for y in range(n)]
+        return self.grids[key]
+
+    def wet_tile(self, x, y):
+        m = self.bot.g.map
+        return m.wet(x * m.T + m.T // 2, y * m.T + m.T // 2)
+
+    def zones(self):
+        """The zone of each tile (#4962): the connected land or water areas (4 sides), numbered 1, 2, ... in the order
+        of their first tile (row by row), as the map zones of AoE2."""
+        if "zone" not in self.grids:
+            n = self.tiles()
+            wet = [[self.wet_tile(x, y) for x in range(n)] for y in range(n)]
+            out = [[0] * n for _ in range(n)]
+            k = 0
+            for y0 in range(n):
+                for x0 in range(n):
+                    if out[y0][x0]:
+                        continue
+                    k += 1
+                    out[y0][x0], todo = k, [(x0, y0)]
+                    while todo:
+                        x, y = todo.pop()
+                        for a, b in ((x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)):
+                            if 0 <= a < n and 0 <= b < n and not out[b][a] and wet[b][a] == wet[y0][x0]:
+                                out[b][a] = k
+                                todo.append((a, b))
+            self.grids["zone"] = out
+        return self.grids["zone"]
+
+    def explored(self, p):
+        """airef "ExploredState" of tile p for the team of the bot: 15 in sight now (Gather.seen_tiles, fog.revealed),
+        128 seen before (the explored tiles of game/fog.py), else 0."""
+        import fog
+        g = self.bot.g
+        if getattr(g, "reveal", "normal") == "all":
+            return 15
+        state = vars(g).setdefault("fog", {"hidden": set(), "at": None})
+        known = state.setdefault("explored", set())
+        if p in g.seen_tiles() | fog.revealed(g):
+            known.add(p)
+            return 15
+        return 128 if p in known or getattr(g, "reveal", "normal") == "explored" else 0
+
+    def map_value(self, kind, p):
+        """The terrain ID, elevation, zone or explored state of tile p (a point), or None (no point or off the map)."""
+        n = self.tiles()
+        if p is None or not (0 <= p[0] < n and 0 <= p[1] < n):
+            return None
+        x, y = int(p[0]), int(p[1])
+        if kind == "explored":
+            return self.explored((x, y))
+        return (self.zones() if kind == "zone" else self.grid(kind))[y][x]
+
     def send_scout(self, group, method):
         """Walk the land scouts (stance.SCOUT_NAMES, at most sn-total-number-explorers) to the tile of an airef
         ScoutMethod: the PositionType of the same name (scout-opposite: position-opposite). The mob AI walks them."""
@@ -1029,6 +1133,22 @@ class Script:
             out = (p[0] - dy / d * v, p[1] + dx / d * v)
         self.store(args[0], tuple(round(c) for c in out))
 
+    def flares(self, name, args):
+        """The flare commands of UserPatch (airef, #4971): a flare is a block, a goal pair a tile (block = tile × T)."""
+        import flare
+        g, T = self.bot.g, self.bot.g.data["tile_size"]
+        if name == "up-send-flare":                                  # (up-send-flare GOAL): at the point of the pair
+            p = self.pair(args[0])
+            if p is not None:
+                x, z = p[0] * T, p[1] * T
+                flare.put(g, g.player, x, g.map.y(x, z), z)
+            return
+        gathers = [g] if name == "up-find-flare" else self.sides(args[0])[0]   # (up-find-player-flare PLAYER GOAL)
+        live = [f for x in gathers for f in getattr(x, "flares", []) if f[3] > x.clock()]
+        if live:                                                     # no live flare: the goal pair keeps its tiles
+            x, _, z, _ = max(live, key=lambda f: f[3])
+            self.store(args[-1], (x // T, z // T))
+
     def forward(self):
         """The cell two thirds of the way from the own town center to the town center of the nearest enemy, or None
         (build-forward, #4654)."""
@@ -1085,6 +1205,30 @@ class Script:
             return self.compare(args[2], other.goals.get(args[1], -1), args[3])
         sn = SN_IDS.get(args[1], args[1])
         return sn in SN and self.compare(args[2], other.number(sn), args[3])
+
+    def resource(self, name, args):
+        """(up-resource-amount TYPE REL VALUE), (up-allied-resource-amount PLAYER TYPE REL VALUE) and the -percent
+        facts (the value x 100, #4964): an internal resource of the own player or of an ally (airef "ResourceType"). A
+        type with no source in the game program: one warning, false."""
+        import diplomacy
+        g = self.bot.g
+        gs, every = [g], False
+        if name.startswith("up-allied-"):                         # self or allies only (airef)
+            who, args = args[0], args[1:]
+            gs, every = ([g], False) if who == g.player else self.sides(who)
+            gs = [x for x in gs if x is g or diplomacy.stance(g, x.player) == "ally"]
+        row = RESOURCES.get(args[0]) or next((r for r in RESOURCES.values() if r["id"] == args[0]), None)
+        if row is None or "source" not in row:
+            return self.warn("resource type", args[0]) or False
+        got = [self.compare(args[1], self.resource_value(row["source"], x) * (100 if name.endswith("-percent") else 1),
+                            args[2]) for x in gs]
+        return bool(got) and (all(got) if every else any(got))
+
+    def resource_value(self, src, g):
+        import monk
+        if src == "relics":                                        # the relics in the own monasteries
+            return sum(monk.own(g, r) and r["monk"] is None and r["home"] is not None for r in monk.relics(g))
+        return self.fact_value(src, 0, g)
 
     def find_player(self, name, args):
         """(up-find-player STANCE METHOD GOAL), up-find-next-player: a player of airef "FindPlayerMethod" into the goal,
@@ -1209,6 +1353,54 @@ class Script:
         x0, x1, z0, z1 = site["footprint"]
         return {tuple(t) for t in site.get("tiles") or
                 [(x, z) for x in range(x0 // T, x1 // T) for z in range(z0 // T, z1 // T)]}
+
+    def placed(self, place):
+        """The block cell of a site of up-build place-point (the target point) or place-control (up-set-placement-data:
+        VALUE tiles in front of the object, toward the map center; a negative VALUE behind it), or None."""
+        g = self.bot.g
+        T = g.data["tile_size"]
+        if place == "place-point":
+            return self.point and (self.point[0] * T, self.point[1] * T)
+        if self.placement is None:
+            return self.warn("placement data", place)
+        player, obj, value = self.placement
+        if obj == -1:                                              # -1: the home town center (airef)
+            at = self.town_tile(player)
+        else:                                                      # the latest object of that type of player
+            n = self.game(OBJECT_IDS.get(obj, obj), "unit", "building")
+            o = next((o for o in reversed(g.data["objects"]) if o.get("player") == player and o["name"] == n
+                      and "footprint" in o), None)
+            at = o and ((o["footprint"][0] + o["footprint"][2]) // 2 // T, (o["footprint"][1] + o["footprint"][3]) // 2 // T)
+        if at is None:
+            return None
+        c = self.tiles() / 2
+        d = math.hypot(c - at[0], c - at[1]) or 1
+        x, y = self.bound((at[0] + (c - at[0]) / d * value, at[1] + (c - at[1]) / d * value))
+        return x * T, y * T
+
+    def line_sites(self, p, q, n):
+        """The free footprints of building n on the line from tile p to tile q, one footprint apart (up-build-line)."""
+        import build
+        g = self.bot.g
+        if p is None or q is None or not n:
+            return []
+        T, size = g.map.T, build.footprint(n)
+        k = max(abs(q[0] - p[0]), abs(q[1] - p[1])) // size
+        rects = [build.area(g, n, (round(p[0] + (q[0] - p[0]) * i / max(k, 1)) * T + T // 2,
+                                   round(p[1] + (q[1] - p[1]) * i / max(k, 1)) * T + T // 2)) for i in range(k + 1)]
+        return [r for r in dict.fromkeys(rects) if r[0] >= 0 and r[2] >= 0 and build.free(g, r)]
+
+    def line(self, p, q, sn):
+        """(up-build-line): sites along the line, as many as the stock without the escrow pays; one villager builds."""
+        import build
+        g, b = self.bot.g, self.bot
+        if sn is None or not (n := self.game(sn, "building")) or not self.can("can-build", sn):
+            return
+        cost, rects = build.price(g, n), self.line_sites(self.pair(p), self.pair(q), n)
+        k = min([len(rects)] + [(g.stock[r] - self.escrow.get(r, 0)) // v for r, v in cost.items() if v])
+        sites = [build.found(g, n, r) for r in rects[:max(k, 0)]]
+        if sites:
+            b.builder(sites[0])
 
     def wall(self, p, kind):
         """(build-wall PERIMETER WALL-TYPE): sites on the free tiles of one side of the ring p, as many as the stock
@@ -1515,16 +1707,101 @@ class Script:
         self.target = st["found"][ref]
         return True
 
+    def object_command(self, name, args):
+        """The data of the target object (airef "DUC", #4959): up-get-object-data DATA GOAL, up-object-data DATA REL
+        VALUE, the same of the target of the target (-target-), up-remove-objects SOURCE DATA REL VALUE,
+        up-get-object-type-data TYPE ID DATA GOAL, up-get-upgrade-id PLAYER OPTION GOAL OUTPUT, up-store-object-name.
+        A data name with no value in the game program gives -1 and one warning. The result: true (a fact)."""
+        if name == "up-store-object-name":
+            row = self.find_object(self.target)
+            self.text = next((n for n, r in names().items() if row and r.get("game") == row[2]), "")
+            return True
+        if name == "up-get-upgrade-id":                            # the type that the upgrades of the player make
+            own = args[0] in (self.bot.g.player, "my-player-number")
+            x = [self.bot.g] if own else self.sides(args[0])[0][:1]
+            unit = self.game(OBJECT_IDS.get(self.goals.get(args[2], -1), ""), "unit")
+            self.goals[args[3]] = TYPE_IDS.get(self.upgraded(x[0], unit), -1) if x and isinstance(unit, str) else -1
+            return True
+        if name == "up-get-object-type-data":
+            sn = self.named(args[0], args[1])
+            unit = sn and self.game(sn, "unit", "building")
+            self.goals[args[3]] = self.type_value(unit, args[2]) if isinstance(unit, str) else -1
+            return True
+        if name == "up-remove-objects":
+            src = SEARCH_SOURCE.get(args[0], args[0])
+            if src not in SEARCH_MAX:
+                return self.warn("search source", args[0]) or False
+            st = self.search[src]
+            st["found"] = [oid for i, oid in enumerate(st["found"])
+                           if not self.compare(args[2], i if self.data_name(args[1]) == "index" else
+                                               self.object_value(oid, args[1]), args[3])]
+            return True
+        oid = self.target if "-target-" not in name else self.warn("object target", "the target of an object")
+        if name.startswith("up-get-"):
+            self.goals[args[1]] = self.object_value(oid, args[0])
+            return True
+        return self.compare(args[1], self.object_value(oid, args[0]), args[2])
+
+    def data_name(self, data):
+        """The OBJECT_VALUES name of an ObjectData (a name or its id), or None with one warning."""
+        row = OBJECT_DATA_ROWS.get(data) or next((r for r in OBJECT_DATA_ROWS.values() if r["id"] == data), None)
+        return row["value"] if row and "value" in row else self.warn("object data", data)
+
+    def find_object(self, oid):
+        """(Gather, key, game name, status) of the standing object with id oid, or None."""
+        import build
+        g = self.bot.g
+        for x in [g, *(x for x in build.sides(g) if x is not g)]:
+            for i, key, n, st in self.objects(x):
+                if i == oid:
+                    return x, key, n, st
+        return None
+
+    def type_value(self, unit, data):
+        """A value of the type of an object (combat.stats), -1 when the game program has none."""
+        import combat
+        s, v = combat.stats(unit), self.data_name(data)
+        return {"type": TYPE_IDS.get(unit, -1), "maxhp": s.hp, "range": s.range, "base-attack": s.attack,
+                "strike-armor": s.melee, "pierce-armor": s.pierce}.get(v, -1)
+
+    def object_value(self, oid, data):
+        """A value of the object with id oid (airef "ObjectData"); -1 for no object or no value."""
+        import garrison
+        import stance
+        v, row = self.data_name(data), self.find_object(oid)
+        if v is None or row is None:
+            return -1
+        x, key, unit, st = row
+        if v in ("point-x", "point-y", "hitpoints"):
+            if v == "hitpoints":
+                hp = self.bot.hp(key)
+                return -1 if hp is None else math.ceil(hp)
+            p = x.positions([key]).get(key)
+            return -1 if p is None else int(p[0 if v == "point-x" else 2] // x.map.T)
+        if v == "upgrade-type":
+            return TYPE_IDS.get(self.upgraded(x, unit), -1)
+        return {"id": oid, "player": x.player, "status": st, "garrisoned": int(key in garrison.inside(x)),
+                "attack-stance": STANCE_IDS.get(stance.stance(x, key), 0)}.get(v, self.type_value(unit, data))
+
+    def upgraded(self, x, unit):
+        """The unit that the upgrades of the Gather x make of unit (train.lines of the researched UPGRADES)."""
+        import train
+        new = {old: n for t in train.UPGRADES if t in x.techs for old, n in train.lines(t, x)}
+        for _ in train.UPGRADES:
+            unit = new.get(unit, unit)
+        return unit
+
     def act(self, k, a):
         import build
         import train
         name, args, b = a[0], a[1:], self.bot
         g = b.g
-        escrow = False
+        escrow, place = False, None
         if name in UP_QUEUE:                       # (up-train ESCROW TYPE UNIT), (up-build PLACE ESCROW TYPE BUILDING)
             if name == "up-build":
-                if args[0] not in ("place-normal", "place-forward"):
+                if args[0] not in ("place-normal", "place-forward", "place-control", "place-point"):
                     self.warn("placement", args[0])
+                place = args[0]
                 name, args = ("build-forward" if args[0] == "place-forward" else "build"), args[1:]
             else:
                 name = UP_QUEUE[name]
@@ -1540,7 +1817,8 @@ class Script:
                     self.spend(cost)
         elif name in ("build", "build-forward"):
             n = self.game(args[0], "building")
-            center = b.center() if name == "build" else self.forward()
+            center = self.forward() if name == "build-forward" else self.placed(place) if place in (
+                "place-control", "place-point") else b.center()
             if n and self.can("can-build", args[0], escrow) and center and (rect := build.near(g, n, center)) is not None:
                 cost = build.price(g, n)
                 b.builder(build.found(g, n, rect))
@@ -1549,6 +1827,15 @@ class Script:
                     self.spend(cost)
             elif n and self.can("can-build", args[0], escrow):     # no free site yet: up-pending-placement
                 self.unplaced.add(n)
+        elif name == "up-build-line":                                  # (up-build-line POINT1 POINT2 TYPE BUILDING)
+            self.line(args[0], args[1], self.named(args[2], args[3]))
+        elif name == "up-set-placement-data":                          # (up-set-placement-data PLAYER OBJECT TYPE VALUE)
+            kind = self.type_kind(args[2])
+            if kind and (value := self.operand(kind, args[3])) is not None:
+                self.placement = (g.player if args[0] == "my-player-number" else args[0], args[1], value)
+        elif name == "up-reset-placement":                             # (up-reset-placement TYPE BUILDING)
+            if (sn := self.named(args[0], args[1])) is not None and (n := self.game(sn, "building")):
+                self.unplaced.discard(n)
         elif name == "build-wall":                                     # (build-wall PERIMETER WALL-TYPE)
             self.wall(args[0], args[1])
         elif name == "build-gate":                                     # (build-gate PERIMETER)
@@ -1562,6 +1849,15 @@ class Script:
             if args[0] not in SN:
                 return self.warn("strategic number", args[0])
             self.sn[args[0]] = args[1]
+        elif name == "up-get-precise-time":                          # (up-get-precise-time START GOAL): ms since START
+            self.goals[args[1]] = int(b.time * 1000) - self.goals.get(args[0], 0)
+        elif name == "up-get-player-color":                          # (up-get-player-color PLAYER GOAL): the ID, the name as text
+            import aoe2mc
+            p = {"my-player-number": g.player, "focus-player": b.foe}.get(args[0], args[0])
+            if p is not None:
+                col = g.players.get(str(p), {}).get("color") or aoe2mc.player_color(p)
+                self.goals[args[1]] = aoe2mc.PLAYER_COLORS.index(col) if col in aoe2mc.PLAYER_COLORS else 0
+                self.text = col
         elif name in GET_FACT:
             self.get_fact(name, args)
         elif name in COST_ACTIONS:
@@ -1658,6 +1954,8 @@ class Script:
             self.order(name, args)
         elif name in SEARCH:
             self.search_command(name, args)
+        elif name in OBJECT_DATA:
+            self.object_command(name, args)
         elif name == "enable-timer":
             self.timers[args[0]] = b.time + args[1]
         elif name == "disable-timer":
@@ -1743,6 +2041,11 @@ class Script:
             self.scouts = []
         elif name in POINTS:
             self.points(name, args)
+        elif name in MAP_FACTS:                                      # (up-get-point-terrain POINT GOAL)
+            if (v := self.map_value(MAP_FACTS[name], self.pair(args[0]))) is not None:
+                self.goals[args[1]] = v
+        elif name in FLARES:
+            self.flares(name, args)
         elif name == "acknowledge-taunt":                            # (acknowledge-taunt PLAYER TAUNT)
             self.heard.discard((args[0], args[1]))
         elif name not in ("do-nothing", "chat-local-to-self", "enable-wall-placement", "up-chat-data-to-self",
