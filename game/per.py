@@ -2161,10 +2161,14 @@ class Script:
         """Direct unit control (airef "DUC", #4960): the units of the local list get an order of the player paths.
         (up-target-objects OPTION ACTION FORMATION STANCE): against the remote list, or (OPTION 1) the target object.
         (up-target-point GOAL ACTION FORMATION STANCE): to the point of GOAL (0: up-set-target-point), adjusted by
-        sn-target-point-adjustment. An action with no path warns once."""
+        sn-target-point-adjustment. An action with no path warns once (action-train, -research, -lock, -work,
+        -transform: the AI has own actions to train and research, #5132). FORMATION (formation-line, -box, -stagger,
+        -flank, -1) is read and not used: Minecraft has no formation, the mob AI walks each unit (DESIGN.md, 0)."""
         import follow
         import garrison
+        import monk
         import stance
+        import trebuchet
         b = self.bot
         g, T = b.g, b.g.map.T
         keys = {v: k for k, v in self.ids.items()}
@@ -2186,7 +2190,8 @@ class Script:
         else:
             ids = [self.target] if args[0] == 1 else self.search[2]["found"]
             targets = [(keys[i], c) for i in dict.fromkeys(ids) if i in keys and (c := self.where(keys[i]))]
-        if action in ("action-delete", "action-stop", "action-unload", "action-ungarrison"):
+        if action in ("action-delete", "action-stop", "action-unload", "action-ungarrison", "action-none",
+                      "action-pack", "action-unpack", "action-drop-relic"):
             targets = targets[:1] or [(None, None)]                # an order with no target
         if not units and action not in ("action-unload", "action-ungarrison") or not targets:
             return False
@@ -2225,6 +2230,22 @@ class Script:
                     stance.delete_units(g, group)
                 elif action == "action-gather" and cell is not None:
                     g.send(cell, set(group))                       # the villagers work at the resource
+                elif action == "action-none":
+                    pass                                           # airef: no order
+                elif action == "action-pack":
+                    for u in group:
+                        if g.soldiers.get(u) == trebuchet.NAME:
+                            trebuchet.move(g, u, [])               # the pack of a move order, with no walk
+                elif action == "action-unpack":
+                    for u in group:
+                        if g.soldiers.get(u) == trebuchet.NAME and trebuchet.state(g, u) in ("packed", "walking"):
+                            g.command(f"aoe stop {u}")             # as trebuchet.unpack, with no attack after it
+                            g.command(f"aoe speed {u} 0")
+                            g.trebs[u] = ["unpacking", trebuchet.pack_time(g), []]
+                elif action == "action-drop-relic":
+                    for i, r in enumerate(monk.relics(g)):
+                        if r["monk"] in group and (q := g.pos(r["monk"])):
+                            monk.drop(g, i, (math.floor(q[0]), math.floor(q[2])))
                 elif action in ("action-unload", "action-ungarrison"):
                     homes = garrison.holders(g)
                     for rect in [r for r in homes if vars(g).get("garrisons", {}).get(r) and
