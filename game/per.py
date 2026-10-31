@@ -264,6 +264,7 @@ class Script:
         self.text, self.name = "", None                            # the text buffer of up-store-*; up-change-name (#4877)
         self.heard, self.read = set(), {}                          # (player, taunt) not acknowledged; player -> read
         self.cost_at = None                                        # the first goal of the current cost set (#4879)
+        self.builders = {}                                         # building -> builders of up-assign-builders (#4875)
 
     def number(self, name):
         return self.sn.get(name, SN[name])
@@ -1009,6 +1010,19 @@ class Script:
             if flag is not None:                                   # no flag yet: the goal has no bit
                 value = self.goals.get(args[0], 0)
                 self.goals[args[0]] = value | flag if rel == "+" else value & ~flag
+        elif name == "up-assign-builders":                        # (up-assign-builders TYPE BUILDING TYPE2 VALUE)
+            kind = self.type_kind(args[2])
+            sn, value = self.named(args[0], args[1]), self.operand(kind, args[3]) if kind else None
+            if sn is None or value is None or not (n := self.game(sn, "building")):
+                return
+            self.builders[n] = max(value, 1) if value != -1 else 1     # -1: the default of the game
+            for site in [s for s in g.sites if s["name"] == n and not s.get("done")]:
+                b.builder(site)                                        # more builders: the rest go at once (airef)
+        elif name in ("up-retask-gatherers", "up-drop-resources"):    # (up-retask-gatherers RES TYPE VALUE)
+            if args[0] not in STOCK:
+                return self.warn("resource", args[0])
+            if (value := self.typed(args[1], args[2])) is not None:
+                (b.retask if name == "up-retask-gatherers" else b.drop)(args[0], value)
         elif name == "up-modify-sn":                                 # (up-modify-sn SN OP VALUE)
             sn = SN_IDS.get(args[0], args[0])
             if sn not in SN:
@@ -1106,6 +1120,6 @@ class Script:
         elif name == "acknowledge-taunt":                            # (acknowledge-taunt PLAYER TAUNT)
             self.heard.discard((args[0], args[1]))
         elif name not in ("do-nothing", "chat-local-to-self", "enable-wall-placement", "up-chat-data-to-self",
-                          "up-log-data"):
-            # no one sees a self chat; each wall ring is always enabled (ring())
+                          "up-log-data", "up-request-hunters"):
+            # no one sees a self chat; the bots have no hunt (#4739); each wall ring is always enabled (ring())
             self.warn("action", name)
