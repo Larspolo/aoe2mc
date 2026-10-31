@@ -312,12 +312,18 @@ def zip_script(path, folder):
     import zipfile
 
     import rmap
-    with zipfile.ZipFile(path) as z:
+    try:
+        z = zipfile.ZipFile(path)
+    except zipfile.BadZipFile:
+        raise OptionError(f"{path}: not a valid zip archive") from None
+    with z:
         members = [m for m in z.namelist() if not m.endswith("/") and rmap.is_script(m)]
         want = os.path.basename(path)[3:]
         named = [m for m in members if os.path.basename(m) == want]
+        if not members:
+            raise OptionError(f"{path}: no .rms script in the archive")
         if len(named) != 1 and len(members) != 1:
-            raise OptionError(f"{path}: the archive needs one script {want}, not {members or 'none'}")
+            raise OptionError(f"{path}: more than one script and none is {want}: {', '.join(members)}")
         z.extractall(folder)   # zipfile drops absolute paths and ".." of the names
     return os.path.join(folder, named[0] if len(named) == 1 else members[0])
 
