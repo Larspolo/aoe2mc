@@ -712,6 +712,7 @@ SETTINGS = {
     "teams": None,                    # {player: team or None} in place of the scenario's (team_choices, #2296)
     "treaty": "0:00",                 # "Treaty length" (MM:SS): before it no player can attack another (treaty.py, #2297)
     "turbo": False,                   # "Turbo Mode" (civs.turbo, #2359)
+    "tutorial": False,                # the tutorial steps (tutorial.py, #5161)
     "unlock_speed": False,            # "Lock Speed" off: the button "Game speed" of the Game menu (diplomacy.faster, #2933)
     "unlock_teams": False,            # "Lock Teams" off: the stance row of the Diplomacy page (diplomacy.STANCES, #2934)
     "victory": "standard",            # "Victory" (VICTORIES)
@@ -803,6 +804,7 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
     g.victory = settings["victory"]                              # Gather.run: the wonder and relic wins only in "standard"
     g.victory_value = settings["victory_value"]                  # time_limit.tick (#2356)
     g.challenge = settings["challenge"]                          # challenge.tick (#3900)
+    g.tutorial = settings["tutorial"]                            # tutorial.tick (#5161)
     g.unlock_speed = settings["unlock_speed"]                    # the Game menu of player 1 (diplomacy.faster, #2933)
     if people > 1:                                   # one Gather for each person, in the join order (#1308, #1310)
         g.bots = [Side(make(n)) for n in range(2, players + 1)]
@@ -1337,6 +1339,8 @@ def main(argv=None, scenario=None):
                     "the menus show \"?\" for the civilization of an enemy until the end of the game; allies see it")
     ap.add_argument("--turbo", action="store_true", help="--play: the AoE2 setting \"Turbo Mode\": buildings, "
                     "gatherers and builders work 2.5 times faster (not villagers, trade units, castles, towers, wonders)")
+    ap.add_argument("--tutorial", action="store_true", help="--play: the tutorial: the boss bar and the chat say "
+                    "each step (select a villager, gather wood, build a house), the next one comes when it is done")
     ap.add_argument("--unlock-speed", action="store_true", help="--play: the AoE2 setting \"Lock Speed\" off: the "
                     "button \"Game speed\" of the Game menu changes the speed of the game (1, 1.5, 2, as --speed)")
     ap.add_argument("--unlock-teams", action="store_true", help="--play: the AoE2 setting \"Lock Teams\" off: each "

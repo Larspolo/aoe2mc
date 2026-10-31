@@ -101,6 +101,7 @@ import train  # noqa: E402
 import transport  # noqa: E402
 import treaty  # noqa: E402
 import trebuchet  # noqa: E402
+import tutorial  # noqa: E402
 import wonder  # noqa: E402
 
 RESOURCES = ("Wood", "Food", "Gold", "Stone")
@@ -685,6 +686,7 @@ class Gather:
     later = {}                                                         # the bonus of the first town center (civs.TOWN_CENTER)
     nomad = False                                                      # a Nomad start: no town center yet (#2466)
     challenge = None                                                   # an Art of War challenge (challenge.py, #3900)
+    tutorial = False                                                   # the tutorial steps (tutorial.py, #5161)
     victory = "standard"                                               # AoE2 "Victory"; "conquest": no wonder, no relics (#2316)
                                                                        # "king-of-the-hill": hill.py (#2360)
                                                                        # "time-limit", "score": time_limit.py (#2356)
@@ -2385,6 +2387,8 @@ class Gather:
                 time_limit.tick(self, self.tick * NORMAL)
             if self.challenge:                                         # an Art of War challenge: its goal (#3900)
                 challenge.tick(self)
+            if self.tutorial:                                          # the tutorial: its steps (#5161)
+                tutorial.tick(self)
             treaty.tick(self, self.tick * NORMAL)
             record.tick(self, self.tick * NORMAL)                      # the game time of Record Game (#2649)
             time.sleep(max(0.0, self.tick / self.speed - (time.monotonic() - t)))   # a step stays tick game seconds
