@@ -57,7 +57,8 @@ RULES = {
     "spearmen, skirmishers": lambda n, s: "spearman" in s.classes or tagged(n, "skirmishers"),
     "units": lambda n, s: True,
     "villagers": lambda n, s: n.startswith("VILLAGER"),
-    "warships": lambda n, s: "ship" in s.classes and not tagged(n, "fishing ships"),   # not the transport and trade ships
+    "warships": lambda n, s: "ship" in s.classes and not tagged(n, "fishing ships")
+        and s.attack > 0,   # not the transport and trade ships (no attack; their armor class "ship", #5240)
 }
 TAGS = {r["name"]: tuple(r["groups"]) for r in table.load("units.jsonl") if "groups" in r}
 GROUPS = {g: (lambda f, g: lambda n, s: g in TAGS.get(n, ()) or f(n, s))(RULES.get(g, lambda n, s: False), g)
@@ -252,7 +253,8 @@ def civilian(n):
 
 
 def mounted(s):
-    return bool({"cavalry", "camel", "elephant"} & set(s.classes))
+    """A mounted unit; not the Missionary: its cavalry armor class does not make it a cavalry unit (#5240)."""
+    return bool({"cavalry", "camel", "elephant"} & set(s.classes)) and "monk" not in s.classes
 
 
 def foot_archer(s):

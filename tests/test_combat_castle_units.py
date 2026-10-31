@@ -17,5 +17,5 @@ def test_each_unit_has_values_and_is_a_unique_unit():
 def test_a_valid_stats_command_for_each_unit():
     for name in UNITS:
         cmd = combat.stats_command("u", name)
-        assert re.fullmatch(r"aoe stats u \d+ \d+ -?\d+ -?\d+ [012] [a-z,]+ (-|([a-z]+:\d+,?)+) \d+( [a-z]+=\S+)*", cmd), cmd
+        assert re.fullmatch(r"aoe stats u \d+ \d+ -?\d+ -?\d+ [012] [a-z_,]+ (-|([a-z_]+:\d+,?)+) \d+( [a-z]+=\S+)*", cmd), cmd
         assert (cmd.split()[7] == "2") == (name in combat.MELEE_RANGED), name   # a thrown melee attack (#800)
