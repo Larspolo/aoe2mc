@@ -36,7 +36,7 @@ can see which features have an epic: `gh api "repos/Larspolo/aoe2mc/issues?label
 - [ ] `convert:rms-standard` The standard random maps of AoE2 DE convert from their real script files (Acropolis, Baltic, Fortress, Hideout, Valley and the other maps of the DE map list): each script reads with no error, and its land, water, hills, cliffs, objects and player starts come from the script, not from own tables; a list names the state of each map
 - [ ] `convert:saved-games` A saved game of AoE2 DE (`.aoe2spgame`, `.aoe2mpgame`) converts as a scenario does: the map, the units and buildings of each player at the time of the save, their resources, ages and technologies, so that the game program continues the game
 - [ ] `convert:rms-lobby` The lobby settings of a random map, as the AoE2 DE lobby: the map size (Tiny to Ludikris, also another size than the default of the player count, `--map-size`) and the game mode (Regicide, King of the Hill, Empire Wars ...) define the labels of the script (`LUDIKRIS_MAP`, `REGICIDE`, `KING_OT_HILL` ...), so that the script places the land, the kings, the monument and the start buildings of that mode
-- [ ] `convert:export` Save a map back as an AoE2 scenario, as the AoE2 DE scenario editor does: a converted world that a player changed in Minecraft (terrain, hills, water, the AoE2 units and buildings of each player) gives an `.aoe2scenario` file that AoE2 DE opens
+- [ ] `convert:export` Save a map back as an AoE2 scenario, as the AoE2 DE scenario editor does: a converted world that a player changed in Minecraft (terrain, hills, water, the AoE2 units and buildings of each player) gives an `.aoe2scenario` file that AoE2 DE opens (#4198, after the release, #4175)
 
 ## 2. Play AoE2 in Minecraft (`game/`)
 
