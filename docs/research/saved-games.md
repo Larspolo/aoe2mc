@@ -18,6 +18,12 @@ A recorded game (`.aoe2record`) has this layout (`mgz.fast.header.decompress`, `
 The header is a save of the game state at the start of the record. A saved game probably has the same header form
 with no body (open question 1).
 
+**A real DE save has no `header_length` prefix** (#4706, `samples/aoe2mc-sample.aoe2spgame`, DE for Mac 1.3, build
+493785): the whole file is one raw deflate stream (7 156 774 bytes, `VER 9.4`, save version 68.9). `saved_match`
+adds the prefix (`header_length`, a zero `next_chapter`) in memory. mgz 1.8.51 then fails in `parse_de`: the first
+error is `de_string` (`assert data.read(2) == b'\x60\x0a'`) at offset 447 of the decompressed header. mgz does not
+know the DE header of save 68.9 yet.
+
 ## Read path
 
 - `mgz.fast.header.parse(f)` reads the header. It needs the 4 bytes of `log_version` after the header block
