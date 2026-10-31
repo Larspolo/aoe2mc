@@ -203,6 +203,8 @@ COST_ACTIONS = ("up-setup-cost-data", "up-reset-cost-data", "up-add-cost-data", 
                 "up-add-research-cost", "up-get-cost-delta")
 COST_GOODS = ("food", "wood", "stone", "gold")   # a cost set is 4 goals in a row, in this order (airef "Cost data", #4879)
 STOCK = ("food", "wood", "gold", "stone")
+IN_TOWN = ("up-building-type-in-town", "up-enemy-buildings-in-town", "up-enemy-units-in-town",   # #4874
+           "up-enemy-villagers-in-town", "up-unit-type-in-town", "up-villager-type-in-town")
 TOWN = 30                       # tiles around the own town center: "in town" (AoE2 sn-maximum-town-size, airef "Facts")
 PERIMETERS = {1: (10, 20), 2: (18, 30)}   # tiles from the town center to each wall ring (airef "build-wall", #4740)
 OCTAGON = math.tan(math.pi / 8)           # half the straight side of a regular octagon per its radius
@@ -586,6 +588,12 @@ class Script:
             return self.others(name, args)
         if name == "enemy-buildings-in-town":
             return self.in_town()
+        if name in IN_TOWN:
+            return self.in_town_count(name, args)
+        if name == "up-defender-count":                            # (up-defender-count REL VALUE): guards and defenders
+            return self.compare(args[0], len(self.bot.guards) + len(self.bot.defense), args[1])
+        if name == "up-idle-unit-count":                           # (up-idle-unit-count IDLE-TYPE REL VALUE)
+            return self.idle_count(args[0], args[1], args[2])
         if name in SETUP:
             return self.setup(name, args)
         if name.startswith("players-"):                            # (players-FACT PLAYER ...): the other players
@@ -907,21 +915,57 @@ class Script:
 
     def in_town(self):
         """True when a building of an enemy stands within TOWN tiles of the own town center."""
+        return bool(self.town()["building"])
+
+    def town(self):
+        """The game names of the enemy objects within TOWN tiles of the own town center: {"building": [...], "villager":
+        [...], "soldier": [...]}. A building: also a site under construction (#4874)."""
         import build
         import diplomacy
         import ruins
         g, at = self.bot.g, self.bot.center()
+        out = {"building": [], "villager": [], "soldier": []}
         if at is None:
-            return False
+            return out
         r = TOWN * g.data["tile_size"]
         near = lambda x, z: (x - at[0]) ** 2 + (z - at[1]) ** 2 <= r * r   # noqa: E731
         foes = {x.player: x for x in build.sides(g) if diplomacy.stance(g, x.player) == "enemy"}
-        return any(o["kind"] == "building" and o["player"] in foes and "footprint" in o
-                   and not ruins.fallen(foes[o["player"]], o)
-                   and near((o["footprint"][0] + o["footprint"][2]) / 2, (o["footprint"][1] + o["footprint"][3]) / 2)
-                   for o in g.data["objects"]) or \
-            any(near((x0 + x1) / 2, (z0 + z1) / 2) for x in foes.values() for s in x.sites
-                if s.get("player", x.player) == x.player for x0, x1, z0, z1 in [s["footprint"]])
+        out["building"] = [o["name"] for o in g.data["objects"] if o["kind"] == "building" and o["player"] in foes
+                           and "footprint" in o and not ruins.fallen(foes[o["player"]], o)
+                           and near((o["footprint"][0] + o["footprint"][2]) / 2, (o["footprint"][1] + o["footprint"][3]) / 2)]
+        out["building"] += [s["name"] for x in foes.values() for s in x.sites if s.get("player", x.player) == x.player
+                            for x0, x1, z0, z1 in [s["footprint"]] if near((x0 + x1) / 2, (z0 + z1) / 2)]
+        out["villager"] = ["VILLAGER_MALE" for x in foes.values()
+                           for v in x.villagers.values() if v.pos and near(v.pos[0], v.pos[2])]
+        out["soldier"] = [x.soldiers[u] for x in foes.values() for u, p in x.positions(sorted(x.soldiers)).items()
+                          if near(p[0], p[2])]
+        return out
+
+    def in_town_count(self, name, args):
+        """The facts up-*-in-town (#4874): (up-enemy-units-in-town REL VALUE), (up-building-type-in-town TYPE BUILDING
+        REL VALUE) and the other ones. A unit: a villager or a soldier; a -type- fact counts only its object."""
+        objs = self.town()
+        part = name.removeprefix("up-").removesuffix("-in-town").removeprefix("enemy-")
+        part = part.removesuffix("-type").removesuffix("s")
+        found = objs["villager"] + objs["soldier"] if part == "unit" else objs[part]
+        if "-type-" in name:
+            if (sn := self.named(args[0], args[1])) is None or not (n := self.game(sn, "unit", "building")):
+                return False
+            want = set(n) if isinstance(n, tuple) else {n}
+            same = lambda k: k in want or k.startswith("VILLAGER") and any(w.startswith("VILLAGER") for w in want)   # noqa: E731
+            found, args = [k for k in found if same(k)], args[2:]
+        return self.compare(args[0], len(found), args[1])
+
+    def idle_count(self, kind, op, value):
+        """up-idle-unit-count: idle-villagers (Gather.idle) or idle-military (no target of a wave or of the town defense)."""
+        b = self.bot
+        if kind == "idle-villagers":
+            n = sum(v.state == "idle" for v in b.g.villagers.values())
+        elif kind == "idle-military":
+            n = len(b.g.soldiers.keys() - b.targets.keys() - b.guards.keys())
+        else:
+            return self.warn("idle type", kind) or False
+        return self.compare(op, n, value)
 
     def ring(self, p):
         """The sides of the wall ring of perimeter p (lists of tiles), or None: a regular octagon around the own town
