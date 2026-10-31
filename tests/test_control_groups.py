@@ -1,10 +1,12 @@
 """game/gather.py: control groups on hotbar items 1-5 (#779, owner choice #745)."""
+import json
 import shutil
 
 import pytest
+from test_lang_orders import plain_log
 from test_select_type import setup
 
-from game import gather
+from game import gather, lang
 
 
 class GroupServer:
@@ -43,17 +45,17 @@ def test_each_player_gets_the_group_items_in_the_hotbar():
     give = [c for c in server.log if "item replace" in c and "aoe_group" in c]   # not the Game menu item (#1588)
     assert [c.split()[7] for c in give] == ["hotbar.4", "hotbar.5", "hotbar.6", "hotbar.7", "hotbar.8"]
     assert 'item_name="Group 3 (empty)"' in give[2] and "custom_data={aoe_group:3}" in give[2]
-    assert any("carrot_on_a_stick[!custom_data]" in c for c in server.log)   # a group item is not the click item
+    assert any("carrot_on_a_stick[!custom_data]" in c for c in plain_log(server.log))   # a group item is not the click item
     server.log.clear()
     g.clicks()
-    assert not any("item replace" in c for c in server.log)            # not each tick
+    assert not any("item replace" in c for c in plain_log(server.log))            # not each tick
 
 
 def test_shift_click_saves_and_click_selects_a_group():
     server, g = setup()
     g.choose({"m-1", "a-1"})
     log = use(server, g, 2, sneak=True)
-    assert g.groups == {2: {"m-1", "a-1"}} and 'title Steve actionbar {"text": "Group 2: 2 units saved"}' in log
+    assert g.groups == {2: {"m-1", "a-1"}} and 'title Steve actionbar ' + json.dumps(lang.text("aoe2mc.gather.group_saved", 2, 2)) in log
     g.choose({"v-1"})
     log = use(server, g, 2)
     assert g.selected == {"m-1", "a-1"} and g.bar == "a-1"
@@ -75,7 +77,7 @@ def test_an_empty_group_clears_the_selection():
     server, g = setup()
     g.choose({"m-1"})
     log = use(server, g, 4)
-    assert g.selected == set() and g.bar is None and 'title Steve actionbar {"text": "Group 4: 0 units"}' in log
+    assert g.selected == set() and g.bar is None and 'title Steve actionbar ' + json.dumps(lang.text("aoe2mc.gather.group", 4, 0)) in log
 
 
 def test_a_click_without_a_group_item_casts_the_ray():

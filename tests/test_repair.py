@@ -4,6 +4,7 @@ import re
 
 import pytest
 from test_gather import FakeServer, grid
+from test_lang_orders import plain_log
 
 from game import build, combat, garrison, gather, repair
 
@@ -79,7 +80,7 @@ def test_the_repair_stops_with_a_chat_line_when_the_stock_is_empty():
     g.villagers["v0"].state = "repair"
     repair.tick(g, 1.0)
     assert server.hp[repair.uuid(TC)] == 1200 and g.villagers["v0"].state == "idle"
-    assert any(c.startswith("tellraw") and "Not enough resources to repair the town center" in c for c in server.log)
+    assert any("Not enough resources to repair the town center" in c for c in plain_log(server.log))
 
 
 def test_a_click_on_an_undamaged_building_still_garrisons_the_selection():

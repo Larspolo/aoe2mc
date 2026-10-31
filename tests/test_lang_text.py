@@ -36,4 +36,4 @@ def test_the_end_title_and_the_age_up_message_carry_a_key_of_the_data():
              if c.startswith("title @a[team=p") and " title {" in c and "translate" in c or c.startswith("tellraw @a {\"translate")]
     keys = {c["translate"] for c in shown}
     assert {"aoe2mc.victory", "aoe2mc.defeat", "aoe2mc.age_up"} <= keys
-    assert all(c["fallback"] == lang.EN_US[c["translate"]] for c in shown)
+    assert all(c["fallback"] == lang.en_us()[c["translate"]] for c in shown)

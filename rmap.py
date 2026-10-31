@@ -169,10 +169,12 @@ def expand(words, rng, defined, consts, includes, folder=None, depth=0):
         if i + 1 >= len(words):
             raise RmsError(f"{w} has no argument")
         return words[i + 1]
+    def last(rand):                                 # the open if, or random block: each closes its own kind (#5380)
+        return next((k for k in range(len(stack) - 1, -1, -1) if ("acc" in stack[k]) == rand), None)
     def top():
-        if not stack:
+        if (k := last(False)) is None:
             raise RmsError(f"{w} without its start")
-        return stack[-1]
+        return stack[k]
     while i < len(words):
         w = words[i]
         if w == "if":                               # AoE2 DE reads an if apart from the random blocks (#4692)
@@ -194,7 +196,7 @@ def expand(words, rng, defined, consts, includes, folder=None, depth=0):
         elif w == "percent_chance":                 # of the last start_random, also inside an if (#4692)
             text, j = group(words, i + 1) if arg().startswith(("(", "rnd(")) else (arg(), i + 2)
             n = int(calc(text, consts, rng))            # a math expression or a #const (MAINLAND_LOCK_CHANCE, #5171)
-            k = next((k for k in range(len(stack) - 1, -1, -1) if "acc" in stack[k]), None)
+            k = last(True)
             if k is None:
                 raise RmsError("percent_chance outside start_random")
             if on(stack[k + 1:]):                   # a percent_chance in an inactive if branch does not count
@@ -204,8 +206,8 @@ def expand(words, rng, defined, consts, includes, folder=None, depth=0):
                 f["acc"] += n
             i = j
         elif w in ("endif", "end_random"):          # AoE2 DE skips a stray one (Gold_Rush, Karsts, #4931)
-            if stack:
-                stack.pop()
+            if (k := last(w == "end_random")) is not None:
+                del stack[k]
             i += 1
         elif not on():
             i += 1

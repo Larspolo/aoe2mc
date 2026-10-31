@@ -1,6 +1,7 @@
 """Redemption (#1264): the monastery researches it (Castle Age, AoE2 wiki "Redemption"), and then a
 monk converts siege units and the enemy buildings that are not LASTING (AoE2 wiki "Conversion"): next to a building,
 from the 15th to the 25th interval."""
+from test_lang_orders import plain_log
 from test_monk_convert import setup, until_converted
 from test_monk_techs import learn
 from test_monk_train import monastery
@@ -41,7 +42,7 @@ def test_with_redemption_a_monk_converts_a_ram_next_to_it():
     g.techs.add("REDEMPTION")
     assert monk.convert_order(g, {"monk"}, "ram")
     monk.convert(g, 0.25)
-    assert any(c.startswith("aoe moveto monk") for c in server.log), "3 blocks away: it walks next to the ram"
+    assert any(c.startswith("aoe moveto monk") for c in plain_log(server.log)), "3 blocks away: it walks next to the ram"
     server.entities["monk"]["Pos"] = (6.5, 64.0, 5.5)
     assert until_converted(g, "ram") <= 9 * monk.INTERVAL and "ram" in g.soldiers
     g.faith.clear()
@@ -65,7 +66,7 @@ def test_with_redemption_a_monk_converts_a_building_in_15_to_25_intervals():
             t += 0.25
         times.append(t)
         assert f"team join p1 {uuid}" in server.log and g.data["objects"][-1]["player"] == 1
-        assert "A monk converts the Barracks." in " ".join(server.log)
+        assert "A monk converts the Barracks." in " ".join(plain_log(server.log))
     assert min(times) >= 15 * monk.INTERVAL and max(times) <= 25.25 * monk.INTERVAL and len(set(times)) > 2
 
 

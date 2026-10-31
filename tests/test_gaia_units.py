@@ -9,6 +9,7 @@ import gaia  # noqa: E402
 import gather  # noqa: E402
 import owners  # noqa: E402
 import savegame  # noqa: E402
+from test_lang_orders import plain_log
 
 T = 4
 GAIA, SHEEP, DEER = "00000000-0000-0000-0000-0000000000a1", "00000000-0000-0000-0000-0000000000a2", \
@@ -48,7 +49,7 @@ def test_a_gaia_militia_next_to_a_villager_goes_to_player_1():
     assert objects[0]["player"] == 1 and owners.player(g, GAIA) == 1
     assert g.soldiers[GAIA] == "MILITIA" and GAIA not in g.enemies and b.enemies[GAIA] == "MILITIA"
     assert f"tag {GAIA} add aoe2mc.p1" in g.sent and f"team join p1 {GAIA}" in g.sent
-    assert f"aoe stop {GAIA}" in g.sent and any("A Militia joins you." in c for c in g.sent)
+    assert f"aoe stop {GAIA}" in g.sent and any("A Militia joins you." in c for c in plain_log(g.sent))
     assert savegame.owner_record(g)["units"][GAIA] == 1
 
 

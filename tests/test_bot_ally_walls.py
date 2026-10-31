@@ -40,7 +40,7 @@ def test_one_flare_gives_an_answer_line():
     me, b, sent = setup()
     taunt(me, 54, (10.5, 28.5))
     b.give()
-    assert not walls(b) and any("Flare two places" in c for c in sent)
+    assert not walls(b) and any("aoe2mc.bot.flare_two" in c for c in sent)
 
 
 def test_taunt_55_walls_the_town():

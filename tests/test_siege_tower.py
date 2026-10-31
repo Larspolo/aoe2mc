@@ -7,6 +7,7 @@ import time
 
 import pytest
 from test_gather import FakeServer, grid
+from test_lang_orders import chat_of, plain_log
 
 from game import combat, garrison, gather, run, siege_tower
 
@@ -31,7 +32,7 @@ def test_infantry_foot_archers_and_villagers_walk_into_the_tower_and_ride_it():
     server, g = setup()
     assert siege_tower.order(g, "Steve", "tower")
     assert g.boarding == {"m": "tower", "a": "tower", "v": "tower"}     # not the scout cavalry
-    assert "aoe moveto m 12.5 64.0 12.5" in server.log and not any(c.startswith("aoe moveto s ") for c in server.log)
+    assert "aoe moveto m 12.5 64.0 12.5" in server.log and not any(c.startswith("aoe moveto s ") for c in plain_log(server.log))
     for u in ("m", "a"):
         server.entities[u]["Pos"] = (13.5, 64.0, 13.5)
     server.log.clear()
@@ -54,7 +55,7 @@ def test_a_full_tower_takes_no_more_and_a_click_on_it_lets_them_out():
     assert len(siege_tower.out(g, "tower")) == siege_tower.SIZE and "tower" not in g.towers
     assert server.log[1] == "ride a dismount" and "aoe show @a a" in server.log      # after the read of its place
     assert f"data merge entity a {garrison.OUTSIDE}" in server.log
-    assert any(c.startswith("tellraw") and f"{siege_tower.SIZE} units came out" in c for c in server.log)
+    assert f"{siege_tower.SIZE} units came out" in chat_of(server.log, "tellraw")
 
 
 def test_the_units_of_a_dead_tower_come_out_where_they_are():

@@ -35,6 +35,7 @@ import json
 import math
 
 import civs
+import lang
 import ruins
 import table
 
@@ -226,11 +227,13 @@ def bell(g, player, chosen=None):
         ai.move(g, u, name, g.map.T, x + 0.5, g.map.y(x, z), z + 0.5, ai.NORMAL * train.speed(g, name, u))
         g.entering[u] = rect
     if chosen is not None:
-        text = f"{len(sent)} villagers seek shelter" if units else "No villager is selected."
+        text = lang.text("aoe2mc.garrison.seek_shelter", len(sent), color="gray") if units else \
+            lang.text("aoe2mc.garrison.no_villager", color="gray")
     else:
-        text = f"The town bell rings: {len(sent)} villagers seek shelter" if units else "You have no villagers."
+        text = lang.text("aoe2mc.garrison.bell_seek", len(sent), color="gray") if units else \
+            lang.text("aoe2mc.garrison.no_villagers", color="gray")
         g.command(f"playsound minecraft:block.bell.use master {player}")
-    g.command(f"tellraw {player} " + json.dumps({"text": text, "color": "gray"}))
+    g.command(f"tellraw {player} " + json.dumps(text))
     return sent
 
 
@@ -247,7 +250,7 @@ def all_back(g, player):
         out(g, rect)
     back(g, [u for u in work if u in vars(g).get("entering", {})])
     work.clear()
-    g.command(f"tellraw {player} " + json.dumps({"text": "All back to work", "color": "gray"}))
+    g.command(f"tellraw {player} " + json.dumps(lang.text("aoe2mc.garrison.all_back", color="gray")))
 
 
 def back(g, units):
@@ -419,7 +422,7 @@ def out(g, rect):
         if (v := g.villagers.get(u) or boat) is not None:
             v.pos, v.state = (x + 0.5, float(y), z + 0.5), "idle"
     if units:
-        g.command(f"tellraw @a[team=p{g.player}] " + json.dumps({"text": f"{len(units)} units came out", "color": "gray"}))
+        g.command(f"tellraw @a[team=p{g.player}] " + json.dumps(lang.text("aoe2mc.garrison.out", len(units), color="gray")))
     back(g, units)                                                 # the villagers of the bell go back to work (#3420)
     return units
 

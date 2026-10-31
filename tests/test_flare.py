@@ -6,8 +6,9 @@ import re
 
 import pytest
 from test_gather import FakeServer, grid
+from test_lang_orders import chat_of, plain_log
 
-from game import diplomacy, flare, gather, menu
+from game import diplomacy, flare, gather, lang, menu
 
 
 class Server(FakeServer):
@@ -38,7 +39,7 @@ def test_the_commands_reach_only_the_team_of_the_player():
     assert sound == "playsound minecraft:block.note_block.bell master @a[team=p2] 12 64 30 1 1 1"
     assert burst.startswith("particle minecraft:end_rod 12.5 68 30.5 ") and burst.endswith(" force @a[team=p2]")
     assert chat.startswith("tellraw @a[team=p2] ")
-    assert json.loads(chat.split(" ", 2)[2])["text"] == "Steve: Flare at 12 30"
+    assert lang.plain(json.loads(chat.split(" ", 2)[2])) == "Steve: Flare at 12 30"
 
 
 def test_the_trigger_puts_a_flare_at_the_player_and_the_column_lasts_10_seconds():
@@ -46,12 +47,12 @@ def test_the_trigger_puts_a_flare_at_the_player_and_the_column_lasts_10_seconds(
     assert f"scoreboard objectives add {flare.OBJECTIVE} trigger" in server.log
     g.clicks()
     assert f"scoreboard players enable @a {flare.OBJECTIVE}" in server.log
-    assert not any(c.startswith("playsound") for c in server.log)
+    assert not any(c.startswith("playsound") for c in plain_log(server.log))
     server.scores[flare.OBJECTIVE] = 1                                 # /trigger aoe_flare
     g.clicks()
     assert server.scores[flare.OBJECTIVE] == 0                         # used once
     assert "playsound minecraft:block.note_block.bell master @a[team=p1] 5 65 9 1 1 1" in server.log
-    assert any(c.startswith("tellraw @a[team=p1] ") and "Steve: Flare at 5 9" in c for c in server.log)
+    assert "Steve: Flare at 5 9" in chat_of(server.log, "tellraw @a[team=p1] ")
     n = len(server.log)
     server.t = 9.0
     g.clicks()
@@ -60,7 +61,7 @@ def test_the_trigger_puts_a_flare_at_the_player_and_the_column_lasts_10_seconds(
     server.t = 10.5
     g.clicks()
     assert not any(c.startswith("particle") for c in server.log[n:])
-    assert sum(c.startswith("playsound") for c in server.log) == 1
+    assert sum(c.startswith("playsound") for c in plain_log(server.log)) == 1
 
 
 def test_the_game_menu_button_puts_a_flare_at_the_look_and_closes_the_menu():
@@ -80,7 +81,7 @@ def test_a_second_person_puts_a_flare_for_its_own_team_only():
     server, g = setup(player=2, who="@a[team=p2]")
     server.scores[flare.OBJECTIVE] = 1
     flare.tick(g)
-    assert any(c.startswith("playsound") and "@a[team=p2]" in c for c in server.log)
+    assert any(c.startswith("playsound") and "@a[team=p2]" in c for c in plain_log(server.log))
     assert not any("@a[team=p1]" in c for c in server.log if c.startswith(("playsound", "particle", "tellraw")))
 
 

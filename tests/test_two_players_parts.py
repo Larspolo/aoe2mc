@@ -2,10 +2,10 @@
 player 1. Each part sends its commands for player 2 only to @a[team=p2], and changes only the state of player 2:
 control groups, cheat codes, the boss bar, the hints, the team of the attack alerts, the population, an age and a
 technology."""
-import json
 import re
 
 from test_gather import grid
+from test_lang_orders import chat_of, plain_log
 from test_two_players import TEAMS, TwoServer, click, run_clicks
 
 from game import bossbar, cheats, gather, train
@@ -56,7 +56,7 @@ def test_a_control_group_of_player_2_goes_only_to_its_team_and_its_gather():
     run_clicks(g1, g2)                                                 # Alex: shift + click on the item of group 2
     assert g2.groups == {2: {"b"}} and not g1.groups
     assert f"item replace entity Alex hotbar.5 with {gather.group_item(2, 1)}" in server.log   # its person (#3490)
-    assert any(c.startswith("title Alex actionbar") and "Group 2: 1 units saved" in c for c in server.log)
+    assert "Group 2: 1 units saved" in chat_of(server.log, "title Alex actionbar")
     assert not any(P1 in c or "Steve" in c for c in server.log if "aoe_group" in c or "actionbar" in c)
     g2.choose(set())
     server.sneak = set()
@@ -78,8 +78,8 @@ def test_a_cheat_of_the_person_of_player_2_changes_only_player_2():
     assert cheats.clicks(g1) == [] and ("Alex", "aoe_cheat") in server.scores   # player 1 does not read or reset it
     assert cheats.clicks(g2) == [("Alex", "lumberjack")] and not server.scores
     assert g2.stock["wood"] == wood + cheats.CODES["lumberjack"]["wood"] and g1.stock["wood"] == wood
-    assert any(c.startswith("scoreboard players") and "Wood aoe_res2" in c for c in server.log)
-    assert not any(re.search(r"\baoe_res\b", c) for c in server.log)  # not the sidebar of player 1
+    assert any(c.startswith("scoreboard players") and "Wood aoe_res2" in c for c in plain_log(server.log))
+    assert not any(re.search(r"\baoe_res\b", c) for c in plain_log(server.log))  # not the sidebar of player 1
     server.scores[("Steve", "aoe_cheat")] = cheats.NAMES.index("polo") + 1
     assert cheats.clicks(g2) == [] and cheats.clicks(g1) == [("Steve", "polo")]
     assert server.log[-1] == 'tellraw Steve {"text":"Fog of war: off"}'
@@ -109,19 +109,19 @@ def test_the_hints_of_player_2_go_only_to_its_team():
     g2.clicks()
     hints = [c for c in server.log if " actionbar " in c]
     text = "1 villager · Right click: gather, build, build menu · Empty box: deselect"
-    assert hints == [f"title {P2} actionbar " + json.dumps({"text": text, "color": "gray"})]   # p1: the idle hint once
+    assert all(c.startswith(f"title {P2} actionbar ") for c in hints) and chat_of(hints, f"title {P2} actionbar ") == [text]   # p1: the idle hint once
 
 
 def test_each_person_joins_only_the_team_of_its_player_for_the_attack_alerts():
     server, g1, g2 = setup()
-    assert not any(c.startswith("team join") for c in server.log)     # not "team join p2 @a" (#1241)
+    assert not any(c.startswith("team join") for c in plain_log(server.log))     # not "team join p2 @a" (#1241)
     for g in (g1, g2):
         g.point()
     joins = [c for c in server.log if c.startswith("team join")]
     assert joins == ["team join p1 Steve", "team join p2 Alex"] and TEAMS == {"Steve": 1, "Alex": 2}
     server.log.clear()
     g2.point()
-    assert not any(c.startswith("team join") for c in server.log)     # once per person
+    assert not any(c.startswith("team join") for c in plain_log(server.log))     # once per person
 
 
 def test_player_2_trains_ages_and_researches_without_a_change_for_player_1():
@@ -137,7 +137,7 @@ def test_player_2_trains_ages_and_researches_without_a_change_for_player_1():
             server.entities[v.uuid] = {"Pos": v.pos}
     assert g2.pop == 2 and g1.pop == 1 and "LOOM" in g2.techs and not g1.techs
     assert "scoreboard players set Population aoe_res2 2" in server.log
-    assert not any(re.search(r"\baoe_res\b", c) for c in server.log)
+    assert not any(re.search(r"\baoe_res\b", c) for c in plain_log(server.log))
     assert f'tellraw Alex {{"text": "{train.ITEMS["LOOM"][2]} is researched.", "color": "green"}}' in server.log
     g2.data["objects"] += [{"kind": "building", "name": n, "player": 2, "tile": [12.5, 2.5 + 3 * i],
                             "footprint": [11, 1 + 3 * i, 14, 4 + 3 * i]} for i, n in enumerate(("BARRACKS", "MILL"))]
@@ -147,5 +147,5 @@ def test_player_2_trains_ages_and_researches_without_a_change_for_player_1():
     assert train.age(g2) == "Feudal Age" and train.age(g1) == "Dark Age"
     assert 'title @a[team=p2] title {"text": "Feudal Age", "color": "gold"}' in server.log
     assert 'scoreboard objectives modify aoe_res2 displayname "Resources (Feudal Age)"' in server.log
-    assert not any(P1 in c or re.search(r"\baoe_res\b", c) for c in server.log)
-    assert any(c.startswith("tellraw @a") and '"with": ["2", {"translate": "aoe2mc.tech.FEUDAL_AGE", "fallback": "Feudal Age"}]' in c for c in server.log)
+    assert not any(P1 in c or re.search(r"\baoe_res\b", c) for c in plain_log(server.log))
+    assert any(c.startswith("tellraw @a") and '"with": ["2", {"translate": "aoe2mc.tech.FEUDAL_AGE", "fallback": "Feudal Age"}]' in c for c in plain_log(server.log))

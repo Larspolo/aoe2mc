@@ -54,6 +54,8 @@ import os
 import re
 import sys
 
+import lang
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import owners  # noqa: E402
 import table  # noqa: E402
@@ -352,7 +354,7 @@ def take(g, uuid):
     g.command(f'data modify entity {uuid} CustomName.color set value "{color}"')
     g.command(f"aoe stop {uuid}")
     owners.give(g, uuid, new)                                      # the lists of all sides (#2993)
-    g.command(f"tellraw @a[team=p{g.player}] " + json.dumps({"text": f"A monk converts the {units.pretty(name)}.", "color": "gold"}))
+    g.command(f"tellraw @a[team=p{g.player}] " + json.dumps(lang.text("aoe2mc.monk.converts", units.pretty(name), color="gold")))
     import train  # train imports this module (#3502)
     g.command(f"execute at {uuid} run playsound {train.EVENT_SOUNDS['convert']} master @a ~ ~ ~ 1 1")
 
@@ -370,8 +372,7 @@ def die(g, uuid):
     owners.killed(g, {uuid})                                           # update_enemies keeps it out (#2996)
     for run in (f"execute as {uuid} on vehicle run ", f"execute as {uuid} on passengers run ", ""):
         g.command(run + ("kill @s" if run else f"kill {uuid}"))
-    g.command(f"tellraw @a[team=p{g.player}] " + json.dumps({"text": f"The {units.pretty(name)} dies (Heresy).",
-                                                               "color": "gold"}))
+    g.command(f"tellraw @a[team=p{g.player}] " + json.dumps(lang.text("aoe2mc.monk.dies", units.pretty(name), color="gold")))
 
 
 def win(g, uuid):
@@ -385,8 +386,7 @@ def win(g, uuid):
         if o["kind"] == "building" and "footprint" in o and combat.target_uuid(o["footprint"]) == uuid:
             o["player"] = g.player
     g.command(f"team join p{g.player} {uuid}")
-    g.command(f"tellraw @a[team=p{g.player}] " + json.dumps({"text": f"A monk converts the {build.pretty(g.fort_names.get(uuid, 'BUILDING'))}.",
-                                          "color": "gold"}))
+    g.command(f"tellraw @a[team=p{g.player}] " + json.dumps(lang.text("aoe2mc.monk.converts", build.pretty(g.fort_names.get(uuid, 'BUILDING')), color="gold")))
 
 
 def resist(g, uuid):

@@ -8,6 +8,7 @@ import time
 
 import pytest
 from test_gather import FakeServer, grid
+from test_lang_orders import plain_log
 
 from game import combat, gather, run, train
 
@@ -40,7 +41,7 @@ def test_a_click_on_the_town_center_queues_a_villager_and_takes_its_food():
     server.scores["aoe_menu"] = 1                                      # 10 food: no second villager
     g.clicks()
     assert g.stock["food"] == 10 and len(g.queues[2, 5, 2, 5]) == 1
-    assert any(c.startswith("tellraw Steve") and f"{FOOD} food" in c for c in server.log)
+    assert any(c.startswith("tellraw Steve") and f"{FOOD} food" in c for c in plain_log(server.log))
 
 
 def test_no_queue_at_the_town_center_of_another_player_or_on_the_ground():
@@ -69,7 +70,7 @@ def test_the_villager_appears_after_its_train_time_in_front_of_the_town_center()
     assert m and (float(m[1]), float(m[2]), float(m[3])) == (3.5, 64.0, 5.5)   # south of the middle
     assert len(g.villagers) == 2 and len(g.units) == 2 and len(g.queues[2, 5, 2, 5]) == 1
     new = next(v for u, v in g.villagers.items() if u != "v")
-    assert "UUID:[I;" in summon and any(c.startswith(f"aoe stats {new.uuid} ") for c in server.log)
+    assert "UUID:[I;" in summon and any(c.startswith(f"aoe stats {new.uuid} ") for c in plain_log(server.log))
     server.entities[new.uuid] = {"Pos": new.pos}                       # alive: the census keeps it (#1039)
     for _ in range(steps):                                             # the second one takes the next cell
         g.step()

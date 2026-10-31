@@ -1,6 +1,7 @@
 """game/build.py: a player builds a dock on water next to the shore (#1382). Fake server, no Minecraft."""
 from test_build_site import Server
 from test_gather import grid
+from test_lang_orders import plain_log
 
 from game import build, fleet, gather
 
@@ -42,6 +43,6 @@ def test_the_look_at_the_water_places_the_dock_and_villagers_build_it_from_the_s
 def test_a_dock_on_land_or_on_the_open_water_is_refused():
     server, g = shore_map()
     assert build.place(g, "Steve", "DOCK", (8.5, 65.62, 12.5), gather.direction(-90, 40)) is None   # land
-    assert any("A dock must stand on water next to the shore." in c for c in server.log)
+    assert any("A dock must stand on water next to the shore." in c for c in plain_log(server.log))
     assert build.place(g, "Steve", "DOCK", (14.5, 70.0, 12.5), gather.direction(-90, 50)) is None   # far out
     assert not g.sites and g.stock["wood"] == 200

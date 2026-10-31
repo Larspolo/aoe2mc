@@ -46,6 +46,8 @@ import sys
 import time
 import types
 
+import lang
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from aoe2mc import PASSABLE_OBJECTS, WOODS, object_footprint, object_mob, player_color, tree_kind  # noqa: E402
 from units import IDLE_JOB, TEAM_COLOR, VILLAGER_JOBS, animal, pretty  # noqa: E402
@@ -646,8 +648,8 @@ def siege_mark(uuid, name, hp, who):
     """The mark of an attack order on building `name` (#991), as the flash of AoE2: its target (an invisible slime that
     fills the footprint) glows SIEGE_GLOW seconds (an invisible mob shows its outline in the team color), and the action
     bar of player who shows the name and the hit points (the score aoe_hp of the plugin) of the full hp."""
-    text = [{"text": f"Attack: {build.pretty(name)} (", "color": "red"}, {"score": {"name": uuid, "objective": "aoe_hp"}},
-            {"text": f"/{hp})"}]
+    text = lang.text("aoe2mc.gather.attack_siege", build.pretty(name), {"score": {"name": uuid, "objective": "aoe_hp"}},
+                     hp, color="red")
     return [glow(uuid, SIEGE_GLOW), f"title {who} actionbar " + json.dumps(text)]
 
 
@@ -1025,9 +1027,8 @@ class Gather:
             self.corners[name], (x, z) = cell, cell
             self.command(f"particle minecraft:happy_villager {x + 0.5} {(self.map.y(x, z) or 0) + 0.5} {z + 0.5} "
                          f"0.3 0.3 0.3 0 12 force {name}")
-            text = "Selection box: look at the other corner and release" if self.paper else \
-                "Selection box: click the other corner"
-            self.command(f"title {name} actionbar " + json.dumps({"text": text}))
+            text = lang.text("aoe2mc.gather.corner_paper" if self.paper else "aoe2mc.gather.corner")
+            self.command(f"title {name} actionbar " + json.dumps(text))
             if self.paper:                                             # the border follows the look (#795)
                 color = self.players.get(str(self.player), {}).get("color") or player_color(self.player)
                 self.command(f"aoe box {name} {x} {z} {color}")
@@ -1039,7 +1040,7 @@ class Gather:
         inside = {u for u, p in pos.items() if x0 <= p[0] < x1 + 1 and z0 <= p[2] < z1 + 1} - self.unpickable()
         pick = inside & self.soldiers.keys() or inside - self.flock or inside   # herdables come last (#1791)
         self.choose(pick, min(pick, default=None))
-        self.command(f"title {name} actionbar " + json.dumps({"text": f"Selected: {len(pick)} units"}))
+        self.command(f"title {name} actionbar " + json.dumps(lang.text("aoe2mc.gather.selected", len(pick))))
 
     def drag(self, name, cell):
         """A wand use on Paper: a held right click sends a use each 4 ticks, so the first use sets corner 1 and the next
@@ -1061,7 +1062,7 @@ class Gather:
                 continue
             self.corners.pop(name, None)
             self.command(f"aoe box-clear {name}")
-            self.command(f"title {name} actionbar " + json.dumps({"text": "Selection box: cancelled"}))
+            self.command(f"title {name} actionbar " + json.dumps(lang.text("aoe2mc.gather.box_cancelled")))
 
     def look(self, name):
         """(eye, direction) of player name, or None."""
@@ -1521,13 +1522,13 @@ class Gather:
         of group n (a dead unit leaves its group). The boss bar shows the first unit of the group."""
         if save:
             self.groups[n] = set(self.selected)
-            text = f"Group {n}: {len(self.selected)} units saved"
+            text = lang.text("aoe2mc.gather.group_saved", n, len(self.selected))
         else:
             self.groups[n] = set(self.positions(sorted(self.groups.get(n, ()))))
             out = self.groups[n] - garrison.inside(self)                # units inside a building stay there (#808)
             self.choose(out, min(out, default=None))
-            text = f"Group {n}: {len(out)} units"
-        self.command(f"title {name} actionbar " + json.dumps({"text": text}))
+            text = lang.text("aoe2mc.gather.group", n, len(out))
+        self.command(f"title {name} actionbar " + json.dumps(text))
         # the item names the units of the group now (#1812), only in the hotbar of this person (#3490)
         self.command(f"item replace entity {name} hotbar.{GROUPS[n][0]} with {group_item(n, len(self.groups[n]))}")
 
@@ -1535,7 +1536,7 @@ class Gather:
         self.person = name                                             # its own selection (#3486)
         if getattr(diplomacy.main(self), "paused", False):             # no orders and menus while paused (#3376)
             self.looks.pop(name, None), self.grouping.pop(name, None), self.wands.discard(name)
-            self.command(f'title {name} actionbar "The game is paused."')
+            self.command(f"title {name} actionbar " + json.dumps(lang.text("aoe2mc.gather.paused")))
             return
         if (n := self.grouping.pop(name, None)) is not None:          # a group item (#779): no ray
             self.group(name, *n)
@@ -1810,17 +1811,20 @@ class Gather:
         return cell and ("ground", cell, {cell})
 
     def says(self, kind, key):
-        """The action bar text of a pointed target (#989): its name and what a right click on it does now."""
+        """The action bar text of a pointed target (#989), a text component: its name and what a right click on it does
+        now."""
         workers = self.selected & self.villagers.keys()
         if kind == "prey":
             name, act = pretty(self.prey[key]), ("attack" if predator(self.prey[key]) else "hunt") if workers else None
         elif kind in ("enemy", "unit"):
-            name = ("Enemy " if kind == "enemy" else "") + pretty(self.enemies.get(key) or self.soldiers.get(key)
-                                                                  or self.prey.get(key) or "VILLAGER")
-            act = "attack" if kind == "enemy" else "build menu" if key in workers else \
-                "select all of the type" if key in self.selected and key in self.soldiers else "select"
+            unit = pretty(self.enemies.get(key) or self.soldiers.get(key) or self.prey.get(key) or "VILLAGER")
+            name = lang.text("aoe2mc.gather.enemy", unit) if kind == "enemy" else unit
+            act = "attack" if kind == "enemy" else "build_menu" if key in workers else \
+                "select_type" if key in self.selected and key in self.soldiers else "select"
         elif kind == "fort":
-            name, act = "Enemy " + (pretty(self.fort_names[key]) if key in self.fort_names else "building"), "attack"
+            name = lang.text("aoe2mc.gather.enemy", pretty(self.fort_names[key])) if key in self.fort_names \
+                else lang.text("aoe2mc.gather.enemy_building")
+            act = "attack"
         elif kind == "building":
             homes, holders = train.homes(self), garrison.holders(self)
             name = pretty(homes.get(key) or holders[key]["name"])
@@ -1828,12 +1832,15 @@ class Gather:
             act = "trade" if carts and homes.get(key) == "MARKET" and len(trade.markets(self)) > 1 and self.paper else \
                 "garrison" if key in holders and self.selected and self.paper else "train" if key in homes else None
         elif kind == "ground":
-            name, act = "Ground", "move" if self.selected else None    # the move order (#1368)
+            name, act = lang.text("aoe2mc.gather.ground"), "move" if self.selected else None    # the move order (#1368)
         else:
             res = self.map.resource(key)
-            name = {"tree": "Tree", "bush": "Berry bush", "farm": "Farm"}.get(kind, f"{res.capitalize()} mine")
+            name = lang.text(f"aoe2mc.gather.{kind}") if kind in ("tree", "bush", "farm") else \
+                lang.text("aoe2mc.gather.mine", res.capitalize())
             act = "gather" if workers else None
-        return name + f" · Right click: {act}" * bool(act)
+        if act is None:
+            return lang.text("aoe2mc.gather.point_name", name)
+        return lang.text("aoe2mc.gather.point", name, lang.text(f"aoe2mc.gather.act_{act}"))
 
     def places(self):
         """{UUID: feet} of pickable() for the pointing mark. On Paper one `aoe where` answer has WHERE_PAGE units
@@ -2504,4 +2511,4 @@ def reseed(g, entry):
     """FARM_RESEED (the mill, #3283): one more queued reseed. An empty own farm takes it in Gather.run, as in AoE2."""
     g.reseeds = getattr(g, "reseeds", 0) + 1
     for player in g.people():
-        g.command(f"tellraw {player} " + json.dumps({"text": f"Reseeds queued: {g.reseeds}", "color": "gray"}))
+        g.command(f"tellraw {player} " + json.dumps(lang.text("aoe2mc.gather.reseeds", g.reseeds, color="gray")))

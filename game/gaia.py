@@ -17,6 +17,7 @@ import json
 import math
 
 import herd
+import lang
 import owners
 
 EVERY = herd.EVERY
@@ -77,4 +78,4 @@ def join(g, o, new):
     g.command(f"aoe stop {u}")
     owners.give(g, u, new)
     o["player"] = new
-    g.command(f"tellraw @a[team=p{new}] " + json.dumps({"text": f"A {units.pretty(o['name'])} joins you.", "color": "gold"}))
+    g.command(f"tellraw @a[team=p{new}] " + json.dumps(lang.text("aoe2mc.gaia.joins", units.pretty(o['name']), color="gold")))

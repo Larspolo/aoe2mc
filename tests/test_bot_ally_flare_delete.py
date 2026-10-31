@@ -47,7 +47,7 @@ def test_taunt_103_with_no_onager_gives_one_line(monkeypatch):
     me, b, sent = setup(monkeypatch)
     taunt(me, 103)
     b.give()
-    assert sum("no onager" in c for c in sent) == 1
+    assert sum("aoe2mc.bot.no_onager" in c for c in sent) == 1
 
 
 def test_an_enemy_taunt_changes_nothing(monkeypatch):

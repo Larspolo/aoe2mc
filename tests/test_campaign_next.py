@@ -37,7 +37,8 @@ def test_a_victory_starts_the_next_scenario(folder):
     run.main([str(tmp_path), "--play"])
     assert seen["worlds"] == ["1 S1", "2 S2"]
     assert json.loads((tmp_path / "progress.json").read_text()) == {"won": [1], "difficulty": "standard"}
-    assert "say Scenario 2 starts. Join again." in seen["commands"]
+    assert any(c.startswith("tellraw @a ") and '"with": ["2"]' in c and "aoe2mc.run.scenario_starts" in c
+               for c in seen["commands"])
 
 
 def test_a_loss_starts_the_same_scenario_on_the_converted_world(folder):
@@ -55,7 +56,7 @@ def test_the_last_victory_completes_the_campaign(folder):
     run.main([str(tmp_path), "--play"])
     assert seen["worlds"] == ["1 S1", "2 S2"]
     assert json.loads((tmp_path / "progress.json").read_text()) == {"won": [1, 2], "difficulty": "standard"}
-    assert 'title @a title "Campaign complete"' in seen["commands"]
+    assert any(c.startswith("title @a title ") and "aoe2mc.run.campaign_complete" in c for c in seen["commands"])
 
 
 def test_a_second_start_plays_the_first_open_scenario(folder):

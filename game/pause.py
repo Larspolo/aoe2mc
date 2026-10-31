@@ -2,6 +2,7 @@
 import json
 
 import diplomacy
+import lang
 
 
 def toggle(g, player):
@@ -14,10 +15,10 @@ def toggle(g, player):
             h.t0 += now - g.paused_at
         g.paused = False
         g.command("tick unfreeze")
-        text = f"Player {player} continued the game."
+        text = lang.text("aoe2mc.pause.continued", player, color="gold")
     else:
         g.paused, g.paused_at = True, now
         g.command("tick freeze")
-        text = f"Player {player} paused the game."
-    g.command("tellraw @a " + json.dumps({"text": text, "color": "gold"}))
+        text = lang.text("aoe2mc.pause.paused", player, color="gold")
+    g.command("tellraw @a " + json.dumps(text))
     return g.paused

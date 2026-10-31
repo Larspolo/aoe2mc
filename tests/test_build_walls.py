@@ -2,6 +2,7 @@
 import math
 
 from test_build_site import site_map
+from test_lang_orders import plain_log
 
 from aoe2mc import wall_tiles
 from game import build, combat
@@ -23,7 +24,7 @@ def test_the_menu_has_the_walls_and_the_age_lock():
 def test_two_clicks_make_a_line_of_sites_and_take_the_cost_of_each_tile():
     server, g = site_map(wood=200, chosen=build.MENU.index("PALISADE_WALL") + 1)
     assert build.wall(g, "Steve", "PALISADE_WALL", (8, 10)) is None and not g.sites     # the first click: the start
-    assert any("right click the end of the wall" in c for c in server.log) and server.chosen
+    assert any("right click the end of the wall" in c for c in plain_log(server.log)) and server.chosen
     first = build.wall(g, "Steve", "PALISADE_WALL", (12, 14))
     tiles = wall_tiles(8, 10, 12, 14)
     assert first is g.sites[0] and [s["footprint"][::2] for s in g.sites] == tiles and len(tiles) == 5
@@ -56,11 +57,11 @@ def test_no_line_without_the_resources_or_the_age():
     build.wall(g, "Steve", "PALISADE_WALL", (8, 10))
     build.wall(g, "Steve", "PALISADE_WALL", (8, 14))                  # 5 tiles
     assert not g.sites and g.stock["wood"] == cost - 1
-    assert any(f"5 tiles of palisade wall cost {cost} wood" in c for c in server.log)
+    assert any(f"5 tiles of palisade wall cost {cost} wood" in c for c in plain_log(server.log))
     server, g = site_map()
     eye, d = (8.5, 65.62, 12.5), (1.0, -0.5, 0.0)
     assert build.place(g, "Steve", "STONE_WALL", eye, d) is None and not vars(g).get("wall_start")
-    assert any("Stone Wall: Needs the Feudal Age" in c for c in server.log)
+    assert any("Stone Wall: Needs the Feudal Age" in c for c in plain_log(server.log))
 
 
 def test_the_builders_go_on_to_the_next_tile_and_a_done_tile_has_the_aoe2_hit_points():

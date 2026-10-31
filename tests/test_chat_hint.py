@@ -1,5 +1,7 @@
 """A person who joins a side of a game of two or more people gets the chat targets in the chat (#3555).
 A spectator and a single player do not get it: they have no team to chat to."""
+import json
+
 from game import run
 
 
@@ -13,7 +15,7 @@ def make_game(people):
 def test_a_person_on_a_side_gets_the_chat_hint_in_a_game_of_two():
     g, sent = make_game(2)
     g.side("Alex")
-    assert sent == ["team join p1 Alex", 'tellraw Alex {"text": "%s", "color": "gray"}' % run.CHAT_HINT]
+    assert sent == ["team join p1 Alex", 'tellraw Alex ' + json.dumps(run.lang.text(run.CHAT_HINT_KEY, color="gray"))]
 
 
 def test_a_single_player_gets_no_chat_hint():

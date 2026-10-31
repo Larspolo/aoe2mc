@@ -11,6 +11,8 @@ blinking cross on the minimap of the map item for the same teams (`aoe minimap f
 import json
 import re
 
+import lang
+
 OBJECTIVE = "aoe_flare"
 SECONDS = 10                                                       # the time of the particle column
 SOUND = "minecraft:block.note_block.bell"
@@ -50,7 +52,7 @@ def commands(player, x, y, z, team):
     the bell (minimum volume 1: heard at any distance), the first burst of particles and the chat line."""
     return [f"playsound {SOUND} master {team} {x} {y} {z} 1 1 1",
             particles(x, y, z, team),
-            f"tellraw {team} " + json.dumps({"text": f"{player}: Flare at {x} {z}", "color": "gold"})]
+            f"tellraw {team} " + json.dumps(lang.text("aoe2mc.flare.placed", player, x, z, color="gold"))]
 
 
 def setup(g):
