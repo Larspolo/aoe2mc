@@ -15,7 +15,7 @@ from test_replay_timeline_book import PREFIX, TIMELINE  # noqa: E402
 
 def pages(r, end=1_500_000):
     cmd, = r.timeline_commands(end)
-    return json.loads(cmd[len(PREFIX):-1])["pages"]
+    return json.loads(cmd[len(PREFIX):-1])["pages"][1:]                # after the players page (#4670)
 
 
 def test_the_heading_of_each_player_has_the_sidebar_color_and_the_lines_are_black():
