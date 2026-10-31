@@ -87,6 +87,7 @@ AGENT = {"User-Agent": "aoe2mc (https://github.com/Larspolo/aoe2mc)"}   # the Pa
 PLUGIN = os.path.join(HERE, "plugin")                               # the Paper plugin: aoe moveto, aoe attack (#435)
 BUNDLED = os.path.join(PLUGIN, "aoe2mc-plugin.jar")                # the jar in an app bundle (#1778): no JDK needed
 STOP_LINE = "\x03"                                                  # the Stop of the window on Windows (gui.STOP_LINE, #3003)
+ROME = "Return of Rome"                                             # the data set of a Return of Rome record (mgz, #4898)
 
 
 def plugin_jar(version):
@@ -1091,6 +1092,17 @@ def interrupt():
         signal.raise_signal(signal.SIGINT)
 
 
+def record_rules(world):
+    """The rule set of the recorded game of world (#4898): "antiquity" when its lobby has the Return of Rome data set
+    (aoe2mc.read_record "dataset", #4832), as AoE2 DE plays it; else "aoe2". Read before the first rule module loads."""
+    try:
+        with open(os.path.join(world, "aoe2mc.json")) as f:
+            lobby = json.load(f).get("lobby") or {}
+    except (OSError, ValueError):
+        return "aoe2"
+    return "antiquity" if lobby.get("dataset") == ROME else "aoe2"
+
+
 def lobby_mode(world, default):
     """The game mode of the lobby of a random map world (aoe2mc.json "lobby" "mode", #4825), else default."""
     try:
@@ -1385,8 +1397,8 @@ def main(argv=None, scenario=None):
     if a.live and (err := live_error(a.world, a.live)):   # before the server starts (#4663)
         sys.exit(err)
     if a.antiquity and (a.replay or a.mode != "standard"):
-        sys.exit("--antiquity plays only --mode standard, and not --replay (the records are AoE2 games)")
-    table.use("antiquity" if a.antiquity else "aoe2")   # before the first rule module loads (civ_choices, #3666)
+        sys.exit("--antiquity plays only --mode standard, and not --replay (a Return of Rome record selects it, #4898)")
+    table.use("antiquity" if a.antiquity or (a.replay and record_rules(a.world) == "antiquity") else "aoe2")   # before the first rule module loads (civ_choices, #3666)
     civ = civ_choices(a.civ)
     handicap = handicap_choices(a.handicap)
     import train
