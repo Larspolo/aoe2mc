@@ -115,6 +115,7 @@ class Bot:
         self.sent = {}                                                 # villager -> the tile that go() sent it to
         self.sides = (None, {})                                        # (own and foe places, {tile: at home}) (#1810)
         self.told, self.signal = {}, None                              # player -> taunts read; "now", "wait" (#4828)
+        self.giving, self.heard = {}, {}                               # ally -> "extra" or "all" (#4830); -> taunts read
         self.g.home = self.home                                        # the next bush or mine of Gather.nearest too
         self.guarded = -LOOK                                           # AoE2 seconds of the last look for predators
         self.defense = {}                                              # villager -> (predator, last res, last tree)
@@ -272,12 +273,40 @@ class Bot:
         researches its economy technologies before more soldiers: else each soldier takes the food above the reserve,
         and the bot never has the food of a technology (#4285: 2 technologies in 30 minutes).
         A script: one pass of its rules in each step (AoE2 checks them about 4 times each second, #4529)."""
+        self.give()
         if self.script:
             self.script.step()
             return
         self.age_up()
         self.research()
         self.recruit()
+
+    def give(self):
+        """The tributes that the allies ask for with taunts (#4830, AoE2): 38 and 58 "extra" (the stock over reserve()),
+        60 "all" (all stock), 59 stops. In lots, as the button of the diplomacy menu; no market: one chat line per ask."""
+        import diplomacy
+        import market
+        g = self.g
+        for x in build.sides(g):
+            log = getattr(x, "taunted", [])
+            new, self.heard[x.player] = log[self.heard.get(x.player, 0):], len(log)
+            if x.player == g.player or diplomacy.stance(g, x.player) != "ally":
+                continue
+            for n in map(int, new):
+                if n == 59:
+                    self.giving.pop(x.player, None)
+                elif n in (38, 58, 60):
+                    if not market.markets(g):
+                        g.command("tellraw @a " + json.dumps({"text": f"<Player {g.player}> I have no market: I cannot "
+                                                                      "send tribute.", "color": "gray"}))
+                        continue
+                    self.giving[x.player] = "all" if n == 60 else "extra"
+        for n, mode in sorted(self.giving.items()):
+            keep = {} if mode == "all" else self.reserve()
+            for r in diplomacy.RESOURCES:
+                while g.stock[r] - keep.get(r, 0) >= diplomacy.cost(g, diplomacy.LOT) and market.markets(g) \
+                        and diplomacy.send(g, self.nobody, n, r):
+                    pass
 
     def defend(self):
         """Send the DEFENDERS nearest villagers to a predator in the sight of a bot villager (#3399). A defender whose

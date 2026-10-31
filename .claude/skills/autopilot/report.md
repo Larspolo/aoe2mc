@@ -33,7 +33,7 @@ End it with one metrics line for each ticket of the run (the `improve` skill rea
 Example: `Metrics: ticket #876 · size:S · merged · 45 min · setup 0 min · checks 2 · checks 6 min · time sinks: none ·
 phases read 8 · claim 1 · code 18 · verify 9 · ci 0 · conflict 5 · report 4` (one line).
 
-Result: `pr #n` when you pushed PR #n and Automerge merges it later (the usual case: you report before the merge);
+Result (`report.py` stops any other form): `pr #n` when you pushed PR #n and Automerge merges it later (the usual case: you report before the merge);
 `closed` when you finished the ticket with no PR (a check ticket with the label `close`, 2026-10-29: 80 of 345 tickets
 said `none`, most of them such checks); `none` only when the run stopped without a PR and the ticket stays open. `framework/tools/health.py` counts the `pr #n` lines by the present PR state (#902).
 `framework/tools/report.py` puts the output of `python3 tools/release.py` (the release bar of each goal, #879) above the

@@ -43,6 +43,17 @@ def num(x):
     return f"{x:g}"
 
 
+RESULTS = "merged, pr #N, closed, blocked, needs-human, none"
+
+
+def result(text):
+    """The result of a `Metrics:` line in one of the forms of `RESULTS`, or None. `health.py` counts only these: the
+    main lane wrote "PR #N", "pr" and "merged-pending", and 35 of its 43 runs counted as no PR (2026-10-31)."""
+    t = " ".join(text.strip().lower().split())
+    m = re.fullmatch(r"pr ?#(\d+)", t)
+    return f"pr #{m[1]}" if m else t if t in ("merged", "closed", "blocked", "needs-human", "none") else None
+
+
 def metrics(ticket, size, result, minutes=None, setup=0, checks=0, checks_min=0, sinks="none", phase="", lane=None):
     """One `Metrics:` line in the format of autopilot step 8."""
     p = phases(phase)
@@ -130,6 +141,10 @@ def main(argv=None):
     for name in ("size", "result"):
         if len(getattr(a, name)) != n:
             ap.error(f"give --{name} once for each --ticket")
+    bad = [r for r in a.result if result(r) is None]
+    if bad:
+        ap.error(f"--result {bad[0]!r}: give one of {RESULTS} (the PR number of an open PR)")
+    a.result = [result(r) for r in a.result]
 
     def at(values, i, default):
         return values[i] if i < len(values) else default
