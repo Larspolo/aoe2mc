@@ -39,7 +39,7 @@ def test_the_human_player_wins_when_player_2_has_nothing_left():
     check(g)
     assert "aoe destroy @e[tag=aoe2mc.building,team=p2]" in server.log            # cheats.destroy: the rest goes
     assert 'tellraw @a {"text": "Player 2 is defeated.", "color": "red"}' in server.log
-    assert 'title @a[team=p1] title {"text":"Victory","color":"gold"}' in server.log and g.ended == "Victory"
+    assert 'title @a[team=p1] title {"translate":"aoe2mc.victory","fallback":"Victory","color":"gold"}' in server.log and g.ended == "Victory"
 
 
 def test_the_human_player_sees_defeat_with_nothing_left():
@@ -47,7 +47,7 @@ def test_the_human_player_sees_defeat_with_nothing_left():
     live(server, {2})
     server.log.clear()
     check(g)
-    assert 'title @a[team=p1] title {"text":"Defeat","color":"red"}' in server.log and g.ended == "Defeat"
+    assert 'title @a[team=p1] title {"translate":"aoe2mc.defeat","fallback":"Defeat","color":"red"}' in server.log and g.ended == "Defeat"
     assert not any(c.startswith("aoe destroy") for c in server.log)
 
 

@@ -79,6 +79,7 @@ import build  # noqa: E402
 import civs  # noqa: E402
 import demolish  # noqa: E402
 import garrison  # noqa: E402
+import lang  # noqa: E402
 import menu  # noqa: E402
 import monk  # noqa: E402
 import near  # noqa: E402
@@ -1388,7 +1389,7 @@ def research(g, entry, start=False, rect=None):
         if unit and rects and spawn(g, rects[0], unit):
             g.pop += 1
         g.command(f"title @a[team=p{g.player}] title " + json.dumps({"text": age(g), "color": "gold"}))  # the own team only
-        g.command("tellraw @a " + json.dumps({"text": f"Player {g.player} advances to the {age(g)}.", "color": "gold"}))
+        g.command("tellraw @a " + json.dumps(lang.text("aoe2mc.age_up", g.player, age(g), color="gold")))   # translate (#5344)
         import cheats  # it imports train: import it late
         cheats.tune(g, g.player, "age_up")                                 # the own team, as the title (#5339)
         return

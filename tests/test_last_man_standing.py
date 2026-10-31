@@ -35,7 +35,7 @@ def test_the_last_player_alive_wins():
     live(server, {1})
     check(g)
     assert g.defeated == {2, 3} and g.ended == "Victory"
-    assert 'title @a[team=p1] title {"text":"Victory","color":"gold"}' in server.log
+    assert 'title @a[team=p1] title {"translate":"aoe2mc.victory","fallback":"Victory","color":"gold"}' in server.log
 
 
 def test_the_former_ally_wins_and_the_player_loses():

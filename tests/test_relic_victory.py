@@ -26,7 +26,7 @@ def test_all_relics_in_an_own_monastery_win_after_the_timer():
     assert not g.ended
     assert f'bossbar set {relic_victory.BAR} name "Player 1: relics, 1 year left"' in server.log
     relic_victory.tick(g, 3)
-    assert g.ended == "Victory" and 'title @a[team=p1] title {"text":"Victory","color":"gold"}' in server.log
+    assert g.ended == "Victory" and 'title @a[team=p1] title {"translate":"aoe2mc.victory","fallback":"Victory","color":"gold"}' in server.log
     assert f"bossbar remove {relic_victory.BAR}" in server.log
 
 
@@ -76,4 +76,4 @@ def test_the_relics_of_a_rival_end_the_game_with_defeat():
         relic_victory.tick(g, total(g))
     finally:
         monk.monasteries = monasteries
-    assert g.ended == "Defeat" and 'title @a[team=p1] title {"text":"Defeat","color":"red"}' in server.log
+    assert g.ended == "Defeat" and 'title @a[team=p1] title {"translate":"aoe2mc.defeat","fallback":"Defeat","color":"red"}' in server.log

@@ -148,4 +148,4 @@ def test_player_2_trains_ages_and_researches_without_a_change_for_player_1():
     assert 'title @a[team=p2] title {"text": "Feudal Age", "color": "gold"}' in server.log
     assert 'scoreboard objectives modify aoe_res2 displayname "Resources (Feudal Age)"' in server.log
     assert not any(P1 in c or re.search(r"\baoe_res\b", c) for c in server.log)
-    assert any(c.startswith("tellraw @a") and "Player 2 advances to the Feudal Age." in c for c in server.log)
+    assert any(c.startswith("tellraw @a") and '"with": ["2", "Feudal Age"]' in c for c in server.log)

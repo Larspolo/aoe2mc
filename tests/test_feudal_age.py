@@ -58,7 +58,7 @@ def test_after_its_time_the_player_is_in_the_feudal_age():
     assert train.age(g) == "Feudal Age" and "FEUDAL_AGE" in g.techs and not g.queues.get(rect)
     assert server.log.count('scoreboard objectives modify aoe_res displayname "Resources (Feudal Age)"') == 1
     assert 'title @a[team=p1] title {"text": "Feudal Age", "color": "gold"}' in server.log
-    assert any(c.startswith("tellraw @a") and "Player 1 advances to the Feudal Age." in c for c in server.log)
+    assert any(c.startswith("tellraw @a") and '"with": ["1", "Feudal Age"]' in c for c in server.log)
     assert any(c.startswith("playsound minecraft:ui.toast.challenge_complete") for c in server.log)
     train.show(g, "Steve", rect)
     assert "Feudal Age" not in menus(server)[-1].split("Town Center", 1)[1]

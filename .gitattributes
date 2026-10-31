@@ -55,6 +55,7 @@ game/data/setup.jsonl merge=jsonl
 game/data/difficulty.jsonl merge=jsonl
 # One JSON object per taunt, named by its number (#2234).
 game/data/taunts.jsonl merge=jsonl
+game/data/texts.jsonl merge=jsonl
 # One JSON object per bonus of the wiki list, named "CIV: bonus" (#2100): two tickets that close two bonuses do not conflict.
 tests/data/civ_bonuses.jsonl merge=jsonl
 # The converter tables (#1917): one JSON object per line; the order of animals.jsonl and footprint.jsonl matters (the first match wins).
