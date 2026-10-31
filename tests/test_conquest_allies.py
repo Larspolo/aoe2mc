@@ -17,7 +17,7 @@ def test_the_allies_win_when_the_other_team_is_defeated():
     live(server, {1, 2})
     check(g)
     assert g.defeated == {3} and g.ended == "Victory"
-    assert 'title @a[team=p1] title {"text":"Victory","color":"gold"}' in server.log
+    assert 'title @a[team=p1] title {"translate":"aoe2mc.victory","fallback":"Victory","color":"gold"}' in server.log
 
 
 def test_a_defeated_ally_does_not_end_the_game():

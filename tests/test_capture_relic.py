@@ -43,7 +43,7 @@ def test_the_center_relic_in_an_own_monastery_wins_at_once():
     assert not g.ended
     g.relics[-1].update(at=None, home=HOME)
     capture_relic.tick(g)
-    assert g.ended == "Victory" and 'title @a[team=p1] title {"text":"Victory","color":"gold"}' in server.log
+    assert g.ended == "Victory" and 'title @a[team=p1] title {"translate":"aoe2mc.victory","fallback":"Victory","color":"gold"}' in server.log
 
 
 def test_another_relic_in_a_monastery_does_not_win():
@@ -62,7 +62,7 @@ def test_the_center_relic_of_a_rival_is_a_defeat(monkeypatch):
     monkeypatch.setattr(monk, "monasteries", lambda h: {HOME} if h is rival.g else monasteries(h))
     capture_relic.tick(g)
     assert g.ended == "Defeat" and rival.g.ended == "Victory"
-    assert 'title @a[team=p1] title {"text":"Defeat","color":"red"}' in server.log
+    assert 'title @a[team=p1] title {"translate":"aoe2mc.defeat","fallback":"Defeat","color":"red"}' in server.log
 
 
 def test_the_run_loop_checks_the_relic_only_in_capture_the_relic(monkeypatch):

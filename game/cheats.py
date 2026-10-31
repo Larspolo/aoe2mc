@@ -41,6 +41,7 @@ from urllib.parse import quote
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import bossbar  # noqa: E402
+import lang  # noqa: E402
 import table  # noqa: E402
 
 from units import is_bird  # noqa: E402
@@ -77,7 +78,7 @@ def defeat(g, n):
 
 def title(g, n, text, color):
     """Show the title text to the people of player n (the team p<n>, #1936)."""
-    g.command(f'title @a[team=p{n}] title {{"text":"{text}","color":"{color}"}}')
+    g.command(f"title @a[team=p{n}] title " + json.dumps(lang.text(f"aoe2mc.{text.lower()}", color=color), separators=(",", ":")))
 
 
 def over(g, won):

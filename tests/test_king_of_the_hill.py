@@ -39,7 +39,7 @@ def test_the_units_of_a_player_near_the_monument_start_its_timer_and_win():
     assert g.hill["owner"] == 1 and g.hill["left"] == pytest.approx((hill.YEARS - 2) * YEAR, abs=YEAR)
     assert 'bossbar add aoe2mc:hill ""' in server.log and not g.ended
     run(g, hill.YEARS * YEAR)
-    assert g.ended == "Victory" and 'title @a[team=p1] title {"text":"Victory","color":"gold"}' in server.log
+    assert g.ended == "Victory" and 'title @a[team=p1] title {"translate":"aoe2mc.victory","fallback":"Victory","color":"gold"}' in server.log
     assert "bossbar remove aoe2mc:hill" in server.log
 
 
@@ -76,7 +76,7 @@ def test_an_ally_wins_with_the_owner_and_the_map_center_without_a_monument():
     server, g = setup(("a", 2, 16.5, 16.5), monument=False, teams={1: 1, 2: 1})
     assert hill.center(g) == (16.0, 16.0)
     run(g, hill.YEARS * YEAR + 4)
-    assert g.ended == "Victory" and 'title @a[team=p1] title {"text":"Victory","color":"gold"}' in server.log
+    assert g.ended == "Victory" and 'title @a[team=p1] title {"translate":"aoe2mc.victory","fallback":"Victory","color":"gold"}' in server.log
 
 
 def test_the_setting_runs_the_hill_and_not_the_wonder_or_relic_timer(monkeypatch):

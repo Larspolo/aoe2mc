@@ -39,7 +39,7 @@ def test_own_messages_go_to_the_own_team(player):
     monk.win(g, house)
     train.research(g, {"name": "FEUDAL_AGE", "player": "Steve"})
     cheats.end("Defeat", "red")(g, "Steve")
-    own = sent(server, "units came out", "A monk converts", '"Feudal Age"', '"Defeat"')
+    own = sent(server, "units came out", "A monk converts", '"Feudal Age",', '"Defeat"')
     assert len(own) == 5 and all(c.split(" ", 1)[1].startswith(team) for c in own), own
     assert sum(" title " in c for c in own) == 2
 
@@ -47,7 +47,7 @@ def test_own_messages_go_to_the_own_team(player):
 def test_messages_for_all_players_stay_for_all():
     server, g = setup(2)
     train.research(g, {"name": "FEUDAL_AGE", "player": "Steve"})
-    assert [c.split(" ", 1)[1].startswith("@a ") for c in sent(server, "advances to the Feudal Age")] == [True]
+    assert [c.split(" ", 1)[1].startswith("@a ") for c in sent(server, '"Feudal Age"]')] == [True]
     for name in ("wonder.py", "relic_victory.py", "conquest.py"):              # wonder, relics, defeat: all see them
         text = (GAME / name).read_text()
         assert "tellraw @a " in text and "@a[team=" not in text

@@ -8,7 +8,7 @@ from game import gather, relic_victory, run, wonder
 
 
 def title(n, text):
-    return f'title @a[team=p{n}] title {{"text":"{text}","color":"{"gold" if text == "Victory" else "red"}"}}'
+    return f'title @a[team=p{n}] title {{"translate":"aoe2mc.{text.lower()}","fallback":"{text}","color":"{"gold" if text == "Victory" else "red"}"}}'
 
 
 def two():

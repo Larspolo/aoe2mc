@@ -36,13 +36,13 @@ def race(site):
 
 def test_the_first_complete_wonder_wins_at_once():
     server, g = race(SITE)
-    assert g.ended == "Victory" and 'title @a[team=p1] title {"text":"Victory","color":"gold"}' in server.log
+    assert g.ended == "Victory" and 'title @a[team=p1] title {"translate":"aoe2mc.victory","fallback":"Victory","color":"gold"}' in server.log
     assert "bossbar remove aoe2mc:wonder_p1" in server.log
 
 
 def test_the_wonder_of_a_rival_ends_the_game_with_defeat_at_once():
     server, g = race({**SITE, "player": 2})
-    assert g.ended == "Defeat" and 'title @a[team=p1] title {"text":"Defeat","color":"red"}' in server.log
+    assert g.ended == "Defeat" and 'title @a[team=p1] title {"translate":"aoe2mc.defeat","fallback":"Defeat","color":"red"}' in server.log
 
 
 def test_an_unfinished_wonder_does_not_win():
