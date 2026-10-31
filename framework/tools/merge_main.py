@@ -14,7 +14,8 @@ lines, also in a file that has a real conflict. When no conflict is left, the to
 `ruff check .` and the test files of the merge (`test_files`: the test files of the branch and the test files that
 import a conflicted module; the quick CI runs the full suite), and with `--push N` pushes after the guard.
 Exit 0: merged (and checked, pushed). Exit 1: a real conflict stays: the tool prints each hunk; solve it, `git add`
-the file, `git commit --no-edit`, and run the tool again (it then checks and pushes). Exit 2: ruff or a test fails.
+the file, and run the tool again (it then commits, checks and pushes; a merge that the agent committed by hand is
+checked too, #5040). Exit 2: ruff or a test fails.
 Exit 3: the guard or the push fails (do not push by hand).
 """
 import argparse
@@ -143,6 +144,24 @@ def push(number, pr_branch=None):
     return False
 
 
+def both_changed(base, left, right):
+    """The files that both sides of a merge changed from their base."""
+    return sorted(set(git("diff", "--name-only", base, left).stdout.split())
+                  & set(git("diff", "--name-only", base, right).stdout.split()))
+
+
+def hand_merge(pr_branch=None):
+    """The files that both sides changed when HEAD is a merge commit that is not on the push branch yet (the agent
+    committed the merge by hand after exit 1), else None (#5040: such a merge got no ruff and no tests)."""
+    if len(git("log", "-1", "--format=%P").stdout.split()) != 2:
+        return None
+    target = pr_branch or git("rev-parse", "--abbrev-ref", "HEAD").stdout.strip()
+    if git("merge-base", "--is-ancestor", "HEAD", f"origin/{target}").returncode == 0:
+        return None                                             # pushed already
+    base = git("merge-base", "HEAD^1", "HEAD^2").stdout.strip()
+    return both_changed(base, "HEAD^1", "HEAD^2")
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--push", type=int, metavar="N", help="after the merge and the checks: guard ticket N and push")
@@ -166,21 +185,23 @@ def main(argv=None):
         left = solve(conflicted)
         if left:
             print(left)
-            print("A real conflict stays: solve the hunks above, `git add` the files, `git commit --no-edit`, "
-                  "and run this tool again.")
+            print("A real conflict stays: solve the hunks above, `git add` the files, and run this tool again "
+                  "(it commits the merge).")
             return 1
         if conflicted:
             git("commit", "-q", "--no-edit", check=True)
         merged = git("rev-parse", "HEAD").stdout.strip() != before
         print(f"merged origin/main ({len(conflicted)} conflicted files solved)" if merged else "already up to date")
+        if not merged and (conflicted := hand_merge(a.pr_branch)) is not None:   # committed by hand: check it (#5040)
+            merged = True
+            print("merge committed by hand: check it")
     else:                                                       # the agent solved the rest: finish the merge
         conflicted = git("diff", "--name-only", "--diff-filter=U").stdout.split()
         if conflicted:
             print("still conflicted: " + " ".join(conflicted))
             return 1
         base = git("merge-base", "HEAD", "MERGE_HEAD").stdout.strip()   # the files that both sides changed
-        conflicted = sorted(set(git("diff", "--name-only", base, "HEAD").stdout.split())
-                            & set(git("diff", "--name-only", base, "MERGE_HEAD").stdout.split()))
+        conflicted = both_changed(base, "HEAD", "MERGE_HEAD")
         git("commit", "-q", "--no-edit", check=True)
         merged = True
         print("merge committed")
