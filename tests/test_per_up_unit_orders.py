@@ -31,7 +31,7 @@ def army(monkeypatch):
 
 def test_garrison_ungarrison_and_gather_inside(monkeypatch):
     server, b, s, log, tc = army(monkeypatch)
-    s.act(None, ("up-garrison", "c:", "town-center", "c:", "militiaman"))
+    s.act(None, ("up-garrison", "town-center", "c:", "militiaman"))
     assert log.pop() == ("garrison", ["m0", "m1"], (tc[0], tc[2]))
     assert not b.g.selected
     s.act(None, ("up-ungarrison", "c:", "town-center"))
@@ -46,14 +46,13 @@ def test_garrison_ungarrison_and_gather_inside(monkeypatch):
 
 def test_guard_retreat_stance_and_delete(monkeypatch):
     server, b, s, log, tc = army(monkeypatch)
-    v = sorted(b.g.villagers)[0]
     b.g.positions = lambda us: {u: (9.5, 64.0, 9.5) for u in us}
-    s.act(None, ("up-guard-unit", "c:", s.ids[v], "c:", "spearman"))
+    s.act(None, ("up-guard-unit", "militiaman", "c:", "spearman"))    # airef: a random instance of the type
     assert log.pop() == ("stance", ["s0"], "defensive")
     b.wave = {"m0"}
-    s.act(None, ("up-retreat-to", "c:", s.ids[v], "c:", "militiaman"))
-    assert log.pop() == ("walk", (9.5, 9.5), ["m0", "m1"]) and not b.wave
-    s.act(None, ("up-set-attack-stance", "c:", "militiaman", 2))      # airef: 2 is stand ground
+    s.act(None, ("up-retreat-to", "town-center", "c:", "militiaman"))
+    assert log.pop() == ("walk", ((tc[0] + tc[1]) / 2, (tc[2] + tc[3]) / 2), ["m0", "m1"]) and not b.wave
+    s.act(None, ("up-set-attack-stance", "militiaman", "c:", 2))      # airef: 2 is stand ground
     assert log.pop() == ("stance", ["m0", "m1"], "stand_ground")
     b.hp = lambda u: {"m0": 5.0, "m1": 40.0}.get(u)
     s.act(None, ("up-delete-objects", "c:", "militiaman", "c:", 10))
@@ -65,5 +64,5 @@ def test_guard_state_and_an_unknown_stance(monkeypatch, capsys):
     b.guards = {"m0": ("e1", (0, 0, 0)), "m1": ("e1", (0, 0, 0))}
     s.act(None, ("up-get-guard-state", 100))
     assert [s.goals[100 + i] for i in range(4)] == [1, 1, 2, 0]
-    s.act(None, ("up-set-attack-stance", "c:", "militiaman", 7))
+    s.act(None, ("up-set-attack-stance", "militiaman", "c:", 7))
     assert "attack stance 7" in capsys.readouterr().err and not log

@@ -38,7 +38,7 @@ import civs
 import ruins
 import table
 
-from aoe2mc import GARRISONED, MADE_INSIDE
+from aoe2mc import CARRIERS, GARRISONED, MADE_INSIDE
 
 ROWS = table.load("buildings.jsonl")                            # the keys "garrison" and "arrows" (#2034)
 
@@ -164,6 +164,25 @@ def send(g, player, units, rect):
         return order(g, player, (rect[0], rect[2]))
     finally:
         g.selected = old
+
+
+def board(g, units, holder):
+    """The units walk to the own unit holder (a ram, aoe2mc.CARRIERS, #5179: up-garrison of an AI script) and go into
+    it at DOOR blocks (tick, transport.go_in), as in AoE2: a ram takes foot soldiers only (no horse, siege or ship).
+    Returns the units sent."""
+    import ai  # ai and train import gather, gather imports this module
+    import replay  # replay imports this module
+    import train
+    import transport
+    pos = g.pos(holder) if g.paper and g.soldiers.get(holder) in CARRIERS else None
+    who = [u for u in sorted(units) if u != holder and u in g.soldiers and not replay.ship(g.soldiers[u])
+           and not transport.mounted(g.soldiers[u]) and g.soldiers[u] not in CARRIERS] if pos else []
+    if who:
+        g.new_order(who)
+    for u in who:
+        ai.move(g, u, g.soldiers[u], g.map.T, *pos, ai.NORMAL * train.speed(g, g.soldiers[u], u))
+        vars(g).setdefault("boarding", {})[u] = holder
+    return who
 
 
 def gather_inside(g, player, rect, uuid):
@@ -314,6 +333,7 @@ def tick(g):
     fallen building come out (only the plugin takes the hit points of a building)."""
     if g.paper:
         adopt(g)
+    board_tick(g)
     held = [r for r, us in g.garrisons.items() if us]
     if not g.entering and not (held and g.paper):
         return
@@ -342,6 +362,20 @@ def tick(g):
         if o is None or o.get("kind") == "building" and o["name"] in combat.BUILDINGS and "passed" not in g.command(
                 f"execute if entity {combat.target_uuid([rect[0], rect[2], rect[1], rect[3]])}"):
             out(g, rect)
+
+
+def board_tick(g):
+    """The units of board() at their holder go in; a dead unit or holder ends its order."""
+    if not (boarding := vars(g).get("boarding")):
+        return
+    import transport  # transport imports this module
+    pos = g.positions(sorted(set(boarding) | set(boarding.values())))
+    for u, holder in sorted(boarding.items()):
+        if u not in pos or holder not in pos or holder not in g.soldiers:
+            del boarding[u]
+        elif math.dist((pos[u][0], pos[u][2]), (pos[holder][0], pos[holder][2])) <= DOOR:
+            del boarding[u]
+            transport.go_in(g, u, holder)
 
 
 def go_in(g, u, rect, o):
