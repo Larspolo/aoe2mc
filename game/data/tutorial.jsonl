@@ -1,3 +1,3 @@
-{"name": "select", "text": "Select a villager: right click on one of your villagers with the command stick.", "check": "tutorial.selected"}
-{"name": "wood", "text": "Gather 50 wood: select a villager and right click on a tree.", "need": 50, "check": "tutorial.wood"}
-{"name": "house", "text": "Build a house: right click on a selected villager, choose the house and place it.", "check": "tutorial.house"}
+{"name": "select", "text": "Select a villager: right click on one of your villagers with the command stick.", "check": "tutorial.selected", "controls": ["carrot_on_a_stick"]}
+{"name": "wood", "text": "Gather 50 wood: select a villager and right click on a tree.", "need": 50, "check": "tutorial.wood", "controls": ["carrot_on_a_stick"]}
+{"name": "house", "text": "Build a house: right click on a selected villager, choose the house and place it.", "check": "tutorial.house", "controls": ["carrot_on_a_stick", "HOUSE"]}
