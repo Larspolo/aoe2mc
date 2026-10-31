@@ -1,3 +1,4 @@
-{"name": "age_up", "sound": "ui.toast.challenge_complete", "pitch": 1.0}
-{"name": "defeat", "sound": "block.beacon.deactivate", "pitch": 0.8}
-{"name": "victory", "sound": "entity.player.levelup", "pitch": 1.0}
+{"name": "minecraft:music_disc.far", "use": "peace", "seconds": 174}
+{"name": "minecraft:music_disc.mall", "use": "peace", "seconds": 197}
+{"name": "minecraft:music_disc.strad", "use": "peace", "seconds": 188}
+{"name": "minecraft:music_disc.wait", "use": "peace", "seconds": 238}

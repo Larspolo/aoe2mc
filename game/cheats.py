@@ -80,13 +80,13 @@ def title(g, n, text, color):
     g.command(f'title @a[team=p{n}] title {{"text":"{text}","color":"{color}"}}')
 
 
-MUSIC = {r["name"]: r for r in table.load("music.jsonl")}   # event -> its short tune (#5339)
+TUNES = {r["name"]: r for r in table.load("tunes.jsonl")}   # event -> its short tune (#5339)
 
 
 def tune(g, n, event):
     """Play the tune of event (age_up, victory, defeat) to the people of player n, in the category music: the Music
     slider of the client sets its volume. Minimum volume 1: each person hears it, far from the command source too."""
-    m = MUSIC[event]
+    m = TUNES[event]
     g.command(f"playsound minecraft:{m['sound']} music @a[team=p{n}] ~ ~ ~ 1 {m['pitch']} 1")
 
 
@@ -96,11 +96,13 @@ def over(g, won):
     gets the recap book, and its order items go (recap.give, #2660)."""
     import fog  # they import cheats: import them late
     import hill
+    import music  # no music over the end tune (#5341): stop it before the tunes
     import relic_victory
     import scenario
     import time_limit
     import treaty
     import wonder
+    music.stop(g)
     for h in fog.gathers(g):
         text, color = ("Victory", "gold") if won(h.player) else ("Defeat", "red")
         if not getattr(h, "share", None):

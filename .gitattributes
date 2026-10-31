@@ -41,6 +41,7 @@ game/data/challenges.jsonl merge=jsonl
 # One JSON object per cheat code with a unit, per monk rule name and per replay name (#2034); table.load() stops on a name in two lines.
 game/data/cheats.jsonl merge=jsonl
 game/data/monk.jsonl merge=jsonl
+game/data/music.jsonl merge=jsonl
 game/data/per_names.jsonl merge=jsonl
 game/data/per_classes.jsonl merge=jsonl
 game/data/per_object_data.jsonl merge=jsonl
@@ -68,4 +69,4 @@ framework/files.txt merge=union
 # One class name per unit ability of the plugin (#4589): each ability PR adds one line, ServiceLoader reads them.
 game/plugin/src/main/resources/META-INF/services/aoe2mc.Ability merge=union
 game/data/tutorial.jsonl merge=jsonl
-game/data/music.jsonl merge=jsonl
+game/data/tunes.jsonl merge=jsonl

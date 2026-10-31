@@ -57,7 +57,7 @@ def test_a_sicilian_ram_villager_and_ship_take_the_full_bonus_damage():
 def test_a_bengali_elephant_takes_less_bonus_damage():
     taken = civs.taken(player("BENGALIS"), "BATTLE_ELEPHANT")
     assert taken < 1 and civs.taken(player("BENGALIS"), "KNIGHT") == 1
-    bonus = combat.stats("PIKEMAN").bonus["elephant"]
+    bonus = sum(combat.stats("PIKEMAN").bonus.get(c, 0) for c in combat.stats("BATTLE_ELEPHANT").classes)   # also "cavalry" (#5240)
     assert hit("PIKEMAN", "BRITONS", "BATTLE_ELEPHANT", "BENGALIS") \
         == hit("PIKEMAN", "BRITONS", "BATTLE_ELEPHANT", "BRITONS") - bonus + int(bonus * taken + 0.5)
 

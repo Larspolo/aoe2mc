@@ -294,7 +294,9 @@ def test(t, name, s):
     """True when test t of an effect of data/train.jsonl holds for unit name with combat values s: {"class": C} (C in
     s.classes; a list: all of them), {"names": [...]}, {"prefix": P} (the name starts with P), {"forms": [first, ...]} (forms()) or
     {"test": F} (the function F(name, s) of this module, for a test with real logic)."""
-    if "class" in t:
+    if "class" in t:   # AoE2 selects by unit class: the armor class "cavalry" of the Missionary is no monk tech (#5240)
+        if "monk" in s.classes and t["class"] != "monk":
+            return False
         return set([t["class"]] if isinstance(t["class"], str) else t["class"]) <= set(s.classes)
     if "names" in t:
         return name in t["names"]
@@ -470,14 +472,14 @@ ORDERS = {r["name"] for r in UNIT_ROWS if r.get("orders")}         # not militar
 def melee(name, s):
     """True for the combat values s of an infantry or cavalry unit (also camels and elephants): the units of the melee
     attack upgrades of the AoE2 blacksmith. Cavalry archers get the archer upgrades."""
-    return bool({"infantry", "cavalry", "camel", "elephant"} & set(s.classes)) and "archer" not in s.classes
+    return bool({"infantry", "cavalry", "camel", "elephant"} & set(s.classes)) and not {"archer", "monk"} & set(s.classes)
 
 
 def barding(name, s):
     """True for the combat values s of a cavalry unit (also camels and elephants): the units of the barding armor
     upgrades of the AoE2 blacksmith. Cavalry archers get the archer armor upgrades. A mounted unit keeps its values
     on the horse (its UUID in aoe2mc.json), so the horse gets the armor (#850)."""
-    return bool({"cavalry", "camel", "elephant"} & set(s.classes)) and "archer" not in s.classes
+    return bool({"cavalry", "camel", "elephant"} & set(s.classes)) and not {"archer", "monk"} & set(s.classes)
 
 
 def smith(name, s):
@@ -500,6 +502,11 @@ def ship(name, s):
 def foot_archers(name, s):
     """True for the foot archers (civs.foot_archer): Yeomen."""
     return civs.foot_archer(s)
+
+
+def cavalry_but_elephants(name, s):
+    """True for the cavalry except the elephants (their armor class "cavalry", #5240): Manipur Cavalry (Burmese)."""
+    return "cavalry" in s.classes and "elephant" not in s.classes and "monk" not in s.classes
 
 
 def infantry_but_spears(name, s):

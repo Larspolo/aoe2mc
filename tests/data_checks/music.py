@@ -1,9 +1,9 @@
-"""game/data/music.jsonl: the tune of a game event (age_up, victory, defeat), category music (#5339)."""
-import mcvalid
+"""game/data/music.jsonl: a music track of the game program, its use and its length in real seconds (#5341)."""
+from tools import mcvalid
 
 from . import form
 
 
 def check(row):
-    form(row, {"name": str, "sound": str, "pitch": float})
-    assert mcvalid.sound_error(row["sound"]) is None, row
+    form(row, {"name": str, "use": str, "seconds": int})
+    assert mcvalid.sound_error(row["name"]) is None and row["use"] in ("peace", "battle") and row["seconds"] > 0, row["name"]
