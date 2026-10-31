@@ -33,7 +33,8 @@ def why():
         if v != "TMPDIR" and not os.environ.get(v) and v not in assigned:
             return (f"${v} is empty here, so the redirect writes to /... (#2032, #865). Write the full path, "
                     "or set the variable on its own line (not in an & list).")
-    parts = re.split(r"(?<![&>|<])&(?![&>])", cmd)                       # the lists that a single & puts in the background
+    bare = re.sub(r"\x27[^\x27]*\x27|\x22(?:\\.|[^\x22\\])*\x22", lambda m: m.group(0).replace("&", " "), cmd)   # a quoted & is text (#5226)
+    parts = re.split(r"(?<![&>|<])&(?![&>])", bare)                      # the lists that a single & puts in the background
     for i, part in enumerate(parts[:-1]):
         bg = re.split(r"[;\n]", part)[-1]                                     # & takes only the list after the last ;
         for v in set(re.findall(r"(?:^|[\s(])(?:export\s+)?(\w+)=", bg)):
