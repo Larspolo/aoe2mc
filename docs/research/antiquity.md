@@ -186,7 +186,7 @@ The Granary researches the walls and towers of each age (page "Granary (Age of E
 Tower (Tool Age), Medium Wall and Sentry Tower (Bronze Age), Fortified Wall, Guard Tower and Ballista Tower (Iron
 Age, the Ballista Tower after Ballistics). Their costs are on the page of each wall and tower.
 
-### 1.6 The civilization bonuses that are not done yet (#3667, #3827)
+### 1.6 The civilization bonuses that need code (#3667, #3827)
 
 `game/data/antiquity/civs.jsonl` has the 17 civilizations with the bonus texts of the wiki. #3827 added the bonuses of
 the units and buildings: costs, hit points, armor, range, fire rate, walk speed, free technologies, the Babylonian
@@ -195,12 +195,11 @@ the Antiquity units have no AoE2 groups (`civs.changes`). The missing units and 
 "Characteristics") are the key `"not_civs"` of the items in `game/data/antiquity/train.jsonl` and `build.jsonl`
 (`civs.MISSING`). The Phoenician dock has +25 % hit points: +150 of the 600 of the Return of Rome dock.
 
-These bonuses do not work yet. Each needs a feature that the game program does not have:
-
-- Team bonuses (the key `"team"`, #4452: it counts for the player and each ally, `civs.Team`): 13 of 17 work. Only
-  their text: Macedonian houses +50 hit points (the key `"hp"` holds a factor, not added hit points), Phoenician archers
-  +2 line of sight (no key for the sight of a unit), Roman priests heal 50 % faster (no key for the heal speed), Shang
-  town centers +4 population room (`"housing"` replaces the population of a building, it does not add to it).
+All 17 team bonuses work now (the key `"team"`, #4452: it counts for the player and each ally, `civs.Team`). The
+four that were missing are done too: Macedonian houses +50 hit points (#4790, key `"hp"`, a factor), Phoenician
+archers +2 line of sight (#4791, key `"sight_units"`), Roman priests heal 50 % faster (#4789, key `"heal_rate"`) and
+Shang town centers +4 population room (#4792, key `"housing"`, added with `civs.ADD`). The Palmyran tribute with no
+fee works too (#4445, key `"tribute_fee"`). No bonus of this section is open.
 
 ## 2. The data structure of a second rule set
 
