@@ -73,32 +73,32 @@
 {"name": "73", "text": "Focus on training cavalry units.", "focus": "STABLE", "answer": "Training cavalry units now."}
 {"name": "74", "text": "Focus on training ranged units.", "focus": "ARCHERY_RANGE", "answer": "Training ranged units now."}
 {"name": "75", "text": "Focus on training warships."}
-{"name": "76", "text": "Attack the enemy with Militia."}
-{"name": "77", "text": "Attack the enemy with Archers."}
-{"name": "78", "text": "Attack the enemy with Skirmishers."}
-{"name": "79", "text": "Attack the enemy with a mix of Archers and Skirmishers."}
-{"name": "80", "text": "Attack the enemy with Scout Cavalry."}
-{"name": "81", "text": "Attack the enemy with Men-at-Arms."}
-{"name": "82", "text": "Attack the enemy with Eagle Scouts."}
+{"name": "76", "text": "Attack the enemy with Militia.", "units": ["MILITIA"]}
+{"name": "77", "text": "Attack the enemy with Archers.", "units": ["ARCHER"]}
+{"name": "78", "text": "Attack the enemy with Skirmishers.", "units": ["SKIRMISHER"]}
+{"name": "79", "text": "Attack the enemy with a mix of Archers and Skirmishers.", "units": ["ARCHER", "SKIRMISHER"]}
+{"name": "80", "text": "Attack the enemy with Scout Cavalry.", "units": ["SCOUT_CAVALRY"]}
+{"name": "81", "text": "Attack the enemy with Men-at-Arms.", "units": ["MAN_AT_ARMS"]}
+{"name": "82", "text": "Attack the enemy with Eagle Scouts.", "units": ["EAGLE_SCOUT"]}
 {"name": "83", "text": "Attack the enemy with Towers."}
-{"name": "84", "text": "Attack the enemy with Crossbowmen."}
-{"name": "85", "text": "Attack the enemy with Cavalry Archers."}
+{"name": "84", "text": "Attack the enemy with Crossbowmen.", "units": ["CROSSBOWMAN"]}
+{"name": "85", "text": "Attack the enemy with Cavalry Archers.", "units": ["CAVALRY_ARCHER"]}
 {"name": "86", "text": "Attack the enemy with Unique Units."}
-{"name": "87", "text": "Attack the enemy with Knights."}
-{"name": "88", "text": "Attack the enemy with Battle Elephants."}
-{"name": "89", "text": "Attack the enemy with Scorpions."}
-{"name": "90", "text": "Attack the enemy with Monks."}
-{"name": "91", "text": "Attack the enemy with Monks and Mangonels."}
-{"name": "92", "text": "Attack the enemy with Eagle Warriors."}
-{"name": "93", "text": "Attack the enemy with Halberdiers and Rams."}
-{"name": "94", "text": "Attack the enemy with Elite Eagle Warriors."}
-{"name": "95", "text": "Attack the enemy with Arbalests."}
-{"name": "96", "text": "Attack the enemy with Champions."}
-{"name": "97", "text": "Attack the enemy with Galleys."}
-{"name": "98", "text": "Attack the enemy with Fire Galleys."}
-{"name": "99", "text": "Attack the enemy with Demolition Rafts."}
-{"name": "100", "text": "Attack the enemy with War Galleys."}
-{"name": "101", "text": "Attack the enemy with Fire Ships."}
+{"name": "87", "text": "Attack the enemy with Knights.", "units": ["KNIGHT"]}
+{"name": "88", "text": "Attack the enemy with Battle Elephants.", "units": ["BATTLE_ELEPHANT"]}
+{"name": "89", "text": "Attack the enemy with Scorpions.", "units": ["SCORPION"]}
+{"name": "90", "text": "Attack the enemy with Monks.", "units": ["MONK"]}
+{"name": "91", "text": "Attack the enemy with Monks and Mangonels.", "units": ["MONK", "MANGONEL"]}
+{"name": "92", "text": "Attack the enemy with Eagle Warriors.", "units": ["EAGLE_WARRIOR"]}
+{"name": "93", "text": "Attack the enemy with Halberdiers and Rams.", "units": ["HALBERDIER", "BATTERING_RAM"]}
+{"name": "94", "text": "Attack the enemy with Elite Eagle Warriors.", "units": ["ELITE_EAGLE_WARRIOR"]}
+{"name": "95", "text": "Attack the enemy with Arbalests.", "units": ["ARBALESTER"]}
+{"name": "96", "text": "Attack the enemy with Champions.", "units": ["CHAMPION"]}
+{"name": "97", "text": "Attack the enemy with Galleys.", "units": ["GALLEY"]}
+{"name": "98", "text": "Attack the enemy with Fire Galleys.", "units": ["FIRE_GALLEY"]}
+{"name": "99", "text": "Attack the enemy with Demolition Rafts.", "units": ["DEMOLITION_RAFT"]}
+{"name": "100", "text": "Attack the enemy with War Galleys.", "units": ["WAR_GALLEY"]}
+{"name": "101", "text": "Attack the enemy with Fire Ships.", "units": ["FIRE_SHIP"]}
 {"name": "102", "text": "Attack the enemy with Unique Warships."}
 {"name": "103", "text": "Use an Onager to cut down trees at the flared location."}
 {"name": "104", "text": "Don't resign!"}

@@ -26,9 +26,13 @@ def shown(g):
 
 def hidden(g, me, n):
     """True when "Hidden civilizations" (run.py --hidden-civs, #4758) hides the civilization of player n from player me:
-    an enemy shows "?" (decision #4754: A), an ally its civilization. recap.py shows all at the end."""
+    an enemy shows "?" (decision #4754: A) until a unit or building of player me saw a unit or building of it (the fog
+    state "civs" of the Gather of me, fog.meet, #4748), an ally its civilization. recap.py shows all at the end."""
     import gather
-    return bool(getattr(g, "data", {}).get("hidden_civs")) and me is not None and not gather.allied(g.players, me, n)
+    if not getattr(g, "data", {}).get("hidden_civs") or me is None or gather.allied(g.players, me, n):
+        return False
+    sides = [g, *(b.g for b in getattr(g, "bots", ())), *getattr(g, "peers", ())]
+    return not any(h.player == me and n in vars(h).get("fog", {}).get("civs", ()) for h in sides if hasattr(h, "player"))
 
 
 def name(g, n, me=None):
