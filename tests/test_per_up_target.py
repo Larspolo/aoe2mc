@@ -44,9 +44,9 @@ def test_target_point_moves_patrols_and_stops():
 def test_number_tasked_units_makes_groups():
     s, b, me = script()
     s.sn["sn-number-tasked-units"] = 1
-    assert s.groups(["a", "b", "c"], ["x", "y"]) == [("x", ["a"]), ("y", ["b"]), ("x", ["c"])]
+    assert s.task_groups(["a", "b", "c"], ["x", "y"]) == [("x", ["a"]), ("y", ["b"]), ("x", ["c"])]
     s.sn["sn-number-tasked-units"] = 0
-    assert s.groups(["a", "b", "c"], ["x", "y"]) == [("x", ["a", "c"]), ("y", ["b"])]
+    assert s.task_groups(["a", "b", "c"], ["x", "y"]) == [("x", ["a", "c"]), ("y", ["b"])]
 
 
 def test_action_with_no_path_warns_once_and_the_script_goes_on(capsys):
