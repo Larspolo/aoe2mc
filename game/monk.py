@@ -317,6 +317,8 @@ def convertible(g, uuid):
     Monotheism: also them), king, hero or siege (with Redemption: siege, and an enemy building that is not LASTING;
     Monotheism: the building too)."""
     redeemed = "REDEMPTION" in g.techs
+    if any(o.get("unconvertible") for o in g.data["objects"] if o.get("uuid") == uuid):
+        return False                                   # set_gaia_unconvertible of a random map (#5074)
     if uuid in g.forts:
         return (redeemed or converts(g, "buildings")) and not any(n in g.fort_names.get(uuid, "") for n in LASTING)
     name = g.enemies.get(uuid)

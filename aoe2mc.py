@@ -384,7 +384,8 @@ def map_description(d, path):
         objects.append(dict(kind="U" if prefix == "H" else prefix, hero=prefix == "H", name=o["name"], id=t,
                             player=int(o.get("player", 0)), x=float(o["x"]), y=float(o["y"]),
                             rotation=float(o.get("rotation", 0)), garrisoned=False, ref=ref, holder=None)
-                       | ({"resource_delta": int(o["resource_delta"])} if "resource_delta" in o else {}))
+                       | ({"resource_delta": int(o["resource_delta"])} if "resource_delta" in o else {})
+                       | {k: True for k in ("indestructible", "unconvertible") if o.get(k)})
     players = {0: {"color": "light_gray", "arch": "western", "civ": "GAIA", "view": None}}
     for pid, p in d.get("players", {}).items():
         pid, civ, color = int(pid), p.get("civ", "?").upper(), p.get("color", int(pid) - 1)
@@ -2402,6 +2403,8 @@ def plan_units(objects, players, cols, rng, stats, birds=True, garrison="inside"
             if desc is None:
                 continue
             nbt = units.make_entity(o, players, (0, 0, 0), rng, desc)
+            if o.get("indestructible"):                 # make_indestructible of a random map: no damage (#5074)
+                nbt["Invulnerable"] = Byte(1)
             if silent:
                 nbt["Silent"] = Byte(1)
             boat = units.is_boat(desc)
@@ -2931,7 +2934,7 @@ def write_objects(path, size, T, H, players, objects, cols, ground, timeline=Non
              "tile": [round(float(o["x"]), 3), round(float(o["y"]), 3)], "rotation": round(o.get("rotation", 0.0), 4)}
         if o.get("hero"):
             e["hero"] = True
-        for k in ("uuid", "footprint", "open", "resource_delta"):
+        for k in ("uuid", "footprint", "open", "resource_delta", "indestructible", "unconvertible"):
             if k in o:
                 e[k] = o[k]
         if o.get("ref") is not None:                    # the object ID of a recorded game (#407, #408)
