@@ -36,6 +36,7 @@ can see which features have an epic: `gh api "repos/Larspolo/aoe2mc/issues?label
 - [ ] `convert:rms-standard` The standard random maps of AoE2 DE convert from their real script files (Acropolis, Baltic, Fortress, Hideout, Valley and the other maps of the DE map list): each script reads with no error, and its land, water, hills, cliffs, objects and player starts come from the script, not from own tables; a list names the state of each map
 - [ ] `convert:saved-games` A saved game of AoE2 DE (`.aoe2spgame`, `.aoe2mpgame`) converts as a scenario does: the map, the units and buildings of each player at the time of the save, their resources, ages and technologies, so that the game program continues the game
 - [ ] `convert:rms-lobby` The lobby settings of a random map, as the AoE2 DE lobby: the map size (Tiny to Ludikris, also another size than the default of the player count, `--map-size`) and the game mode (Regicide, King of the Hill, Empire Wars ...) define the labels of the script (`LUDIKRIS_MAP`, `REGICIDE`, `KING_OT_HILL` ...), so that the script places the land, the kings, the monument and the start buildings of that mode
+- [ ] `convert:export` Save a map back as an AoE2 scenario, as the AoE2 DE scenario editor does: a converted world that a player changed in Minecraft (terrain, hills, water, the AoE2 units and buildings of each player) gives an `.aoe2scenario` file that AoE2 DE opens
 
 ## 2. Play AoE2 in Minecraft (`game/`)
 
@@ -109,6 +110,7 @@ can see which features have an epic: `gh api "repos/Larspolo/aoe2mc/issues?label
 - [ ] `play:xs-scripts` The XS scripts of AoE2 DE (a C-like script language): the script of a scenario (the trigger effect "Script Call" and the rules of its XS file) and the `#includeXS` file of a random map script run in the game program, so that the custom scenarios and maps that need them work
 - [ ] `play:tutorial` A tutorial for a new player, as "Learn to Play" of AoE2 DE: a guided first game in the game program that says each step (select a villager, gather, build a house, train a unit, age up, fight), checks that the player did it and then gives the next step
 - [ ] `play:ratings` Ratings of the players, as the ranked ladder of AoE2 DE: each finished game of the game program changes the rating (Elo) of each Minecraft player, the lobby shows the ratings and can balance the teams by rating
+- [ ] `play:achievements` The achievements of AoE2 DE as Minecraft advancements: an own advancement tab, and the game program grants each achievement (win a game, reach an age by a time, train or kill a number of units ...) with a toast, as AoE2 DE shows them
 
 ## 3. Replay a recorded game in Minecraft (`game/replay.py`, `aoe2mc.read_timeline`)
 
