@@ -42,6 +42,8 @@ def mmss(seconds):
 def aged(g, name):
     """Keep the game time of age technology name of g (the timeline of AoE2)."""
     vars(g).setdefault("age_times", {})[name] = game_time(g)
+    import achievements  # the AoE2 achievements of an age (#5279)
+    achievements.aged(g, name, g.age_times[name])
 
 
 def parts(g, won):

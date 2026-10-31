@@ -172,6 +172,7 @@ SETTINGS = (                                                           # run.py 
 )
 NOT_SAVED = (                                                          # the fields that game/*.py sets on a Gather and the save
     # does not keep, one per line with its reason, in alphabetical order (tests/test_savegame_fields.py, #2535)
+    "achieved",                                                        # achievements.py: Minecraft keeps the advancements
     "action_at",                                                       # scenario.py: the next check time
     "action_sent",                                                     # scenario.actions: a load sends them again
     "age_times",                                                       # recap.py: game times of this session (Gather.t0)

@@ -105,6 +105,10 @@ def over(g, won):
         treaty.close(h)
     import recap  # the recap book and the end hotbar (#2660)
     recap.give(g, won)
+    import achievements  # the AoE2 achievements of a win (#5279)
+    for h in fog.gathers(g):
+        if won(h.player):
+            achievements.won(g, h)
 
 
 def destroy(g, n):
