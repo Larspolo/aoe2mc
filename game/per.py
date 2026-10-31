@@ -264,6 +264,9 @@ MAP_FACTS = {"up-get-point-elevation": "elevation",              # the map at a 
 EXPLORED_STATE = {"explored-active": 15,                           # airef "ExploredState" (up-point-explored)
                   "explored-no": 0,
                   "explored-yes": 128}
+GUARD_FLAGS = {"guard-flag-inverse": 4,                            # airef "pGuardFlag" (up-compare-flag)
+               "guard-flag-resource": 2,
+               "guard-flag-victory": 1}
 FLARES = ("up-find-flare", "up-find-player-flare", "up-send-flare")   # the flares of the team (#4971)
 UNIT_ORDERS = ("up-delete-objects", "up-garrison", "up-gather-inside", "up-get-guard-state", "up-guard-unit",
                "up-retreat-to", "up-set-attack-stance", "up-ungarrison")   # the orders by type (#4967)
@@ -703,9 +706,14 @@ class Script:
             kind, _, rel = args[1].rpartition(":")
             if rel not in ("==", "!=") or kind not in ("", "c", "s", "g"):
                 return self.warn("operator", args[1]) or False
-            flag = self.operand(kind, args[2])
-            if flag is None:
-                return False
+            if kind == "":                                         # a flag name, or a number
+                flag = GUARD_FLAGS.get(args[2], args[2])
+                if isinstance(flag, str):
+                    return self.warn("guard flag", flag) or False
+            else:
+                flag = self.operand(kind, args[2])
+                if flag is None:
+                    return False
             has = self.goals.get(args[0], 0) & flag
             return has == flag if rel == "==" else has != flag
         if name == "strategic-number":                             # (strategic-number NAME REL VALUE)
