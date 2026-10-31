@@ -173,3 +173,11 @@ in the Source column names a label of that list, "not in the guide" a label that
 | `NOMAD_MAP` (77) | Nomad start (no town center) | `aoe2mc.py --nomad` (#5017) | yes (start objects) | survey; not in the guide (the guide has the map type `NOMAD`) |
 | `TEAM_GAME`, `TEAMS_CONNECTED` (62, 23) | none: switches of the script authors, never defined: their `if` blocks stay off (#5050) | none | no (the lobby never defines them) | not in the guide; decision #5052 |
 | `AZUREMASKING`, `EXTREME_ELEVATION`, `LEGACY_CODE`, `LEGACY_RELICS`, `NOMAD_CASTLE`, `NOMAD_HERDABLE`, `NOMAD_SCATTERED`, `NOMAD_TREATY`, `NOMAD_UNIT`, `REGICIDE_*` variants, `SEASONS_ALLOWMUDDYSHALLOWS`, `EMPIRE_WARS_*` variants, `*_ALLOW_FEEDING`, `DEBUG_MODE`, `TERRAIN_DEBUGGING`, `GNR_*`, `*_CAA_*` | none: switches of the script authors | none | no (the lobby never defines them) | survey |
+
+### Undefined constants in math (#5068)
+
+`PLAYERn_ALLY_COUNT` and `MAPSCALE_SIDE` are not predefined. The DE scripts define them: `includes/helpers.inc`
+defines `PLAYERn_ALLY_COUNT` (0 with `PLAYERn_TEAM0`, else team size − 1) only for the players in the game, and
+`includes/scaling.inc` defines `MAPSCALE_SIDE` = `MAPSIZE_SIDE / 100`. Source: the owner's search of the game files and
+of the Zetnus guide (the guide has neither word, #5068). AoE2 DE reads an undefined constant in math (`#const`, `rnd`,
+`(...)`) as 0 with no error. `rmap.calc` does the same and `generate` warns once per word.
