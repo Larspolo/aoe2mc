@@ -1001,7 +1001,7 @@ def near(mask, r):
     return np.any([pad[r + dx:r + dx + w, r + dy:r + dy + h] for dx in range(-r, r + 1) for dy in range(-r, r + 1)], 0)
 
 
-def name_timeline(objects, timeline, window=1024, water=None):
+def name_timeline(objects, timeline, window=1024, water=None, created=()):
     """The object IDs of a recorded game (#407). Start objects keep the ID of the record (`ref`, also GAIA animals
     that a player takes). The game gives each new object the next free ID, in the order that it makes them:
     a foundation at its BUILD or WALL command (one per wall tile), a unit when its training ends (the queue of its
@@ -1014,6 +1014,7 @@ def name_timeline(objects, timeline, window=1024, water=None):
     than SHORE tiles from the water (#2629): a ship cannot go there, a click on the shore can. Such an ID gets the
     last land unit that its player trained before its first use (a military unit when it does not build or gather).
     Another unit ID with no match that builds or gathers gets the last villager of its player (#4063).
+    created: the units that the timer triggers of a scenario make, (game time ms, name, player) (created_units, #5158).
     Adds "names" (a name or None per ID of "objects") and the "target_name" of a new target ID to the events and
     returns {id: name}."""
     names = {o["ref"]: o["name"] for o in objects if o.get("ref") is not None}
@@ -1050,6 +1051,7 @@ def name_timeline(objects, timeline, window=1024, water=None):
                     seen.add((e["name"], *tile))
                     made.append((t, t, "B", e["name"], e.get("player")))
     made += [(end, e["time"], "U", e.get("name", ""), e.get("player")) for end, e, _ in training(timeline)]
+    made += [(t, t, "U", name, player) for t, name, player in created]   # the game gives them IDs too (#5158)
     firsts = sorted((u[0], i) for i, u in used.items())
     k, below, mine = 0, top, {}                          # mine: player -> the IDs that it uses first (#4063)
     for i in sorted(used):                               # an ID with no player of its first use: each player
@@ -3371,6 +3373,8 @@ def object_lines(e, c):
             part = parts.pop()
             part.pop("UUID", None)
             parts += list(part.get("Passengers", []))
+        if c.fixed:                                                    # the replay knows the unit (#5158)
+            nbt["UUID"] = IntArray(created_uuid(t["id"], next(k for k, x in enumerate(t["effects"]) if x is e)))
         return [f"summon {kind} {x + 0.5} {int(ground[x, z])} {z + 0.5} {nbt.snbt()}"]
     if e["type"] == KILL_OBJECT or e["type"] == REMOVE_OBJECT and has_units(e):
         word = "kill" if e["type"] == KILL_OBJECT else "remove"
@@ -3814,19 +3818,25 @@ def resource_lines(e, c):
     """The commands of "Tribute" and "Modify Resource" (#2576): a converted world has no stock, so they only change
     the scores #p<N>.<resource> of aoe_res (the change) and aoe_set (a "set"). scenario.resources of the game program
     reads them into the stock of player N and resets them. A tribute of a trigger has no tax (AoE2)."""
-    if not 0 <= e.get("resource", -1) < len(STORES) or e["player"] <= 0:
+    if not (changes := resource_changes(e)):
         return []
     c.setup["scoreboard objectives add aoe_res dummy"] = c.setup["scoreboard objectives add aoe_set dummy"] = None
-    res, q = STORES[e["resource"]], int(e["quantity"])
+    return [line for n, res, op, q in changes for line in               # a set drops the earlier changes
+            ([f"scoreboard players set #p{n}.{res} aoe_set {q}", f"scoreboard players reset #p{n}.{res} aoe_res"]
+             if op == "set" else [f"scoreboard players {'add' if q >= 0 else 'remove'} #p{n}.{res} aoe_res {abs(q)}"])]
 
-    def change(n, q):
-        return [f"scoreboard players {'add' if q >= 0 else 'remove'} #p{n}.{res} aoe_res {abs(q)}"] * (n > 0)
+
+def resource_changes(e):
+    """[(player, resource, "add" or "set", amount)] of a "Tribute" or "Modify Resource" effect: resource_lines, and the
+    estimate of the live replay (aoe2mc.json "timers", #5158)."""
+    if not 0 <= e.get("resource", -1) < len(STORES) or e["player"] <= 0:
+        return []
+    res, q = STORES[e["resource"]], int(e["quantity"])
     if e["type"] == TRIBUTE:
-        return change(e["target"], q) + change(e["player"], -q)
-    if (op := OPERATIONS.get(e["operation"])) == "set":               # a set drops the earlier changes
-        return [f"scoreboard players set #p{e['player']}.{res} aoe_set {q}",
-                f"scoreboard players reset #p{e['player']}.{res} aoe_res"]
-    return change(e["player"], q if op == "add" else -q) if op else []
+        return [(n, res, "add", d) for n, d in ((e["target"], q), (e["player"], -q)) if n > 0]
+    if (op := OPERATIONS.get(e["operation"])) == "set":
+        return [(e["player"], res, "set", q)]
+    return [(e["player"], res, "add", q if op == "add" else -q)] if op else []
 
 
 def resource_by_variable_lines(e, c):
@@ -4808,8 +4818,8 @@ EFFECTS = {
 }
 # The context of the effects of trigger t: a handler can add function files (files) and load lines (setup, the keys);
 # triggers: all triggers of the scenario (attack_lines)
-Effect = namedtuple("Effect", "t T ground players stats mood files setup switch timed clocks triggers",
-                    defaults=((), {}, {}, ()))
+Effect = namedtuple("Effect", "t T ground players stats mood files setup switch timed clocks triggers fixed",
+                    defaults=((), {}, {}, (), False))   # fixed: the units get created_uuid (#5158)
 
 
 # The test of each condition on a score (execute if <test>), one line per condition in alphabetical order (#2613):
@@ -4871,7 +4881,37 @@ def or_groups(conds):
     return [g for g in groups if g]
 
 
-def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=True, live=None):
+def timer_ticks(t):
+    """The ticks after the start at which trigger t fires when it has only timer conditions (or none): the largest
+    timer of the first "OR" group that passes, 1 tick at least (a schedule needs one). None: other conditions."""
+    gs = or_groups(t["conditions"])
+    if gs and not all(c["type"] == TIMER for g in gs for c in g):
+        return None
+    return max(20 * min((max(c["timer"] for c in g) for g in gs), default=0), 1)
+
+
+def replayed(triggers):
+    """{ID: game time (ms)} of the triggers that the live replay of a record runs at the times of its clock (#5158):
+    on, with only timer conditions (or none), and no "(De)Activate Trigger" names them (those stay on the server)."""
+    named = {e.get("trigger") for t in triggers for e in t["effects"] if e["type"] in (ACTIVATE_TRIGGER, DEACTIVATE_TRIGGER)}
+    return {t["id"]: 50 * x for t in triggers if t["enabled"] and t["id"] not in named and (x := timer_ticks(t)) is not None}
+
+
+def created_units(triggers):
+    """[(game time ms, name, player, trigger, effect index)] of the "Create Object" effects of a unit in the triggers
+    that the replay runs once (replayed, not looping): name_timeline gives them their object IDs (#5158)."""
+    at = replayed(triggers)
+    return [(at[t["id"]], e["object"][1], max(e["player"], 0), t["id"], k) for t in triggers
+            if t["id"] in at and not t["looping"] for k, e in enumerate(t["effects"])
+            if e["type"] == CREATE_OBJECT and (e.get("object") or ("",))[0] in ("U", "H") and min(e.get("tile", [-1])) >= 0]
+
+
+def created_uuid(trigger, k):
+    """The fixed UUID (4 × int32) of the unit of effect k of a trigger that the replay runs once (#5158)."""
+    return [int(v) for v in np.random.default_rng([trigger, k]).integers(-2 ** 31, 2 ** 31 - 1, 4)]
+
+
+def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=True, live=None, replay=False):
     """(load lines, files) for the triggers that only have timer conditions (#648) or only "Objects in Area",
     "Own Objects" and "Own Fewer Objects" conditions (#649, #2573): one function per trigger. "Own Objects" counts the
     units of the player on the whole map (Q or more), "Own Fewer Objects" Q or fewer; buildings are blocks with no
@@ -4890,7 +4930,8 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
     The commands of each effect come from its handler in EFFECTS.
     A disabled trigger runs only after an "Activate Trigger" (#2575): the score #N of aoe_on is 1 while a trigger that
     such an effect names is on (switch_lines). live: the triggers that get a function; None: all that give commands
-    (an effect may name only a function that exists). A "Chance" trigger cannot be activated yet."""
+    (an effect may name only a function that exists). A "Chance" trigger cannot be activated yet.
+    replay: a world of a record (#5158): a unit of a trigger that the live replay runs once has a fixed UUID (created_uuid)."""
     if live is None:
         live = {t["id"] for t in triggers}
         while any(e["type"] in (ACTIVATE_TRIGGER, DEACTIVATE_TRIGGER) for t in triggers for e in t["effects"]) and \
@@ -4909,8 +4950,8 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
                if e["type"] in (ACTIVATE_TRIGGER, DEACTIVATE_TRIGGER)} | {c.get("trigger") for c in active}) & live - chancy
     off = {c.get("trigger") for c in active if c["inverted"]} & switch   # an inverted test needs the score at 0
     load += [f"scoreboard players set #{t['id']} aoe_on 0" for t in triggers if t["id"] in off and not t["enabled"]]
-    timed = {t["id"]: max(20 * min((max(c["timer"] for c in g) for g in gs), default=0), 1) for t in triggers   # 1 tick at least;
-             if not (gs := or_groups(t["conditions"])) or all(c["type"] == TIMER for g in gs for c in g)}   # OR: the first
+    timed = {t["id"]: x for t in triggers if (x := timer_ticks(t)) is not None}
+    once = replayed(triggers) if replay else {}                        # the replay runs them (#5158)
     clocks = {t["id"]: ts for t in triggers if t["id"] not in timed and (gs := or_groups(t["conditions"]))
               and (ts := [(k, max(20 * max(x), 1)) for k, g in enumerate(gs)
                           if (x := [c["timer"] for c in g if c["type"] == TIMER])])}   # the OR timers (#2815)
@@ -4959,7 +5000,8 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
                     for c in conds):                                   # unit classes: not yet
             stats["trigger conditions (not supported yet)"] += bool(t["enabled"] or t["id"] in on)   # (#3891)
             continue
-        ctx = Effect(t, T, ground, players, stats, mood, files, setup, switch, timed, clocks, triggers)
+        ctx = Effect(t, T, ground, players, stats, mood, files, setup, switch, timed, clocks, triggers,
+                     t["id"] in once and not t["looping"])
         lines = [line for e in t["effects"] if e["type"] in EFFECTS for line in selection_tags(e, EFFECTS[e["type"]](e, ctx), T)]
         if not lines:
             continue
@@ -5169,6 +5211,29 @@ def research_list(triggers):
                     for t in triggers)
     return [dict(score=f"#r{t['id']}.{i}", player=e["player"], technology=e["technology"])
             for t in triggers for i, e in enumerate(t["effects"]) if f"#r{t['id']}.{i} aoe_tech 1" in found]
+
+
+def timer_list(triggers, T=4, ground=None, players=None):
+    """The triggers that the live replay of a record runs at the times of its clock (replayed, #5158), for aoe2mc.json
+    "timers": the ID, the game time (ms), "every" (ms) of a looping one, the units of its "Create Object" effects
+    (UUID, name, player, tile: game/replay.py waits for their object IDs) and its resource changes (the estimate).
+    Only the triggers with a function. The world of a record does not schedule them at its start (write_datapack)."""
+    files, at = trigger_files(triggers, T, ground, players, replay=True)[1], replayed(triggers)
+    made = {(t, k) for *_, t, k in created_units(triggers)}
+    out = []
+    for t in triggers:
+        if t["id"] not in at or (fn := files.get(f"data/aoe2mc/function/trigger/{t['id']}.mcfunction")) is None:
+            continue
+        x = dict(id=t["id"], time=at[t["id"]])
+        if t["looping"]:                                               # no conditions: AoE2 checks once per second
+            x["every"] = at[t["id"]] if or_groups(t["conditions"]) else 1000
+        x["units"] = [dict(uuid=units.uuid_str(u), name=e["object"][1], player=max(e["player"], 0), tile=e["tile"])
+                      for k, e in enumerate(t["effects"]) if (t["id"], k) in made
+                      and IntArray(u := created_uuid(t["id"], k)).snbt() in fn]   # a summon: inside the map
+        x["resources"] = [dict(player=n, resource=res, **{op: q}) for e in t["effects"]
+                          if e["type"] in (TRIBUTE, MODIFY_RESOURCE) for n, res, op, q in resource_changes(e)]
+        out.append({k: v for k, v in x.items() if v != []})
+    return out
 
 
 def fallen_building(c):
@@ -5620,7 +5685,7 @@ def once(line):
 
 
 def write_datapack(out, objects, ground, biome_names=(), ambience="basic", players=None, triggers=(), T=4,
-                   trigger_stats=None, fog=None, mood=True):
+                   trigger_stats=None, fog=None, mood=True, replay=False):
     """datapacks/aoe2mc: a function every 2 s plays a work sound at each building with a player near it
     (docs/datapack.md). Fixed positions, no marker entities: the check costs nothing that /tick query shows.
     Ambience (#219): particles and sounds near the players by biome; "full" also writes the custom biomes, "off"
@@ -5660,7 +5725,11 @@ def write_datapack(out, objects, ground, biome_names=(), ambience="basic", playe
     team_pulse = team_pulse + MAP_PULSE
     CARRIER_REFS.clear()
     CARRIER_REFS.update({o["ref"]: o["name"] for o in objects if o.get("name") in CARRIERS and o.get("ref") is not None})
-    trigger_load, trigger_fns = trigger_files(triggers, T, ground, players, trigger_stats, mood)
+    trigger_load, trigger_fns = trigger_files(triggers, T, ground, players, trigger_stats, mood, replay=replay)
+    if replay:                                      # a record: the replay clock runs its timer triggers (#5158)
+        clock = {f"schedule function aoe2mc:trigger/{x['id']} {x['time'] // 50}t replace"
+                 for x in timer_list(triggers, T, ground, players)}
+        trigger_load = [x for x in trigger_load if x not in clock]
     files = {
         "pack.mcmeta": {"pack": {"description": "aoe2mc: work sounds and ambience", "pack_format": MC["pack_format"],
                                  "min_format": MC["pack_format"], "max_format": MC["pack_format"]}},
@@ -6145,7 +6214,8 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
     views = record_state.get("views")
     turn_timeline(views or (), size, buildings.TURN)    # points, as the tiles of the events
     if timeline is not None:
-        name_timeline(objects, timeline, water=water_tiles(terrain, tnames))
+        name_timeline(objects, timeline, water=water_tiles(terrain, tnames),
+                      created=[c[:3] for c in created_units(texts.get("triggers", []))])   # (#5158)
     at_stats = Counter()
     if at is not None:
         if timeline is None:
@@ -6270,13 +6340,14 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
     img = Image.fromarray(np.clip(img * shade[..., None], 0, 255).astype(np.uint8))
     write_objects(os.path.join(out, "aoe2mc.json"), size, T, H, players, objects, cols, ground, timeline,
                   texts.get("mood", "DEFAULT"), map_colors(np.asarray(img))[0], texts.get("global_victory"), texts,
-                  {k: f(texts.get("triggers", [])) for k, f in TRIGGER_LISTS.items()}, yaw,
+                  {k: f(texts.get("triggers", [])) for k, f in TRIGGER_LISTS.items()} |
+                  ({"timers": timer_list(texts.get("triggers", []), T, ground, players)} if record else {}), yaw,
                   views and {"views": views, "recorder": record_state["recorder"]}, texts.get("lobby"),
                   terrain, elevation)
     triggers, tstats = texts.get("triggers", []), Counter()
     haze = FOG.get(texts.get("mood")) if mood == "on" and (fog or ambience == "full") else None
     n, amb = write_datapack(out, objects, ground, cols.biome_names, ambience, players, triggers, T, tstats, haze,
-                            mood == "on")
+                            mood == "on", replay=record)
     if resource_pack:
         print(f"  resource pack (resourcepacks/resources.zip): {len(write_resourcepack(out)) - 1} textures")
     k = sum(bool(re.search(r"/trigger/\d+\.mcfunction$", f))     # not the roll and timer functions (#2791)
