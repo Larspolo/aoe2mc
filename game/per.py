@@ -288,6 +288,7 @@ class Script:
         self.jump = None                                           # the rule after the actions of this rule (up-jump-*)
         self.cost_at = None                                        # the first goal of the current cost set (#4879)
         self.builders = {}                                         # building -> builders of up-assign-builders (#4875)
+        self.scouts = []                                           # the scouts of up-send-scout (#4969)
         self.point = None                                          # (x, y) tiles of up-set-target-point (#4956)
 
     def number(self, name):
@@ -938,6 +939,28 @@ class Script:
         p, q = self.pair(a), self.pair(b)
         return None if p is None or q is None else int(math.dist(p, q))
 
+    def send_scout(self, group, method):
+        """Walk the land scouts (stance.SCOUT_NAMES, at most sn-total-number-explorers) to the tile of an airef
+        ScoutMethod: the PositionType of the same name (scout-opposite: position-opposite). The mob AI walks them."""
+        import stance
+        g = self.bot.g
+        if group != "group-type-land-explore":
+            return self.warn("group type", group)
+        if method not in ("scout-border", "scout-center", "scout-corner", "scout-enemy", "scout-flank", "scout-mirror",
+                          "scout-opposite"):                       # airef pScoutMethod
+            return self.warn("scout method", method)
+        if (p := self.position("position" + method[5:])) is None:
+            return
+        units = [u for u in sorted(g.soldiers) if g.soldiers[u] in stance.SCOUT_NAMES][:max(self.number("sn-total-number-explorers"), 0)]
+        if not units:
+            return
+        g.new_order(units)
+        T = g.data["tile_size"]
+        x, z = (v * T + T // 2 for v in self.bound(p))
+        for u in units:
+            g.command(f"aoe moveto {u} {x} {g.map.y(x, z)} {z}")
+        self.scouts = sorted(set(self.scouts) | set(units))
+
     def points(self, name, args):
         """The point commands of UserPatch (airef, #4956): a point is a goal pair (x, y) in tiles, a precise point
         tiles × 100."""
@@ -1536,6 +1559,13 @@ class Script:
             for _ in range(max(args[2], 0) // diplomacy.LOT):        # one tribute of the menu per 100
                 if not diplomacy.send(g, b.nobody, args[0], args[1]):
                     break
+        elif name == "up-send-scout":                              # (up-send-scout GROUP-TYPE SCOUT-METHOD)
+            self.send_scout(args[0], args[1])
+        elif name == "up-reset-scouts":                            # the scouts stop (AoE2 Stop: aoe stop, new_order)
+            for u in self.scouts:
+                g.command(f"aoe stop {u}")
+            g.new_order(self.scouts)
+            self.scouts = []
         elif name in POINTS:
             self.points(name, args)
         elif name == "acknowledge-taunt":                            # (acknowledge-taunt PLAYER TAUNT)
