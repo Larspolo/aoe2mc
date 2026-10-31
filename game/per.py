@@ -187,6 +187,18 @@ def read(path, defined=()):
 
 NAMES = {}                                                         # script name -> its line of per_names.jsonl
 OPS = {"<": operator.lt, "<=": operator.le, ">": operator.gt, ">=": operator.ge, "==": operator.eq, "!=": operator.ne}
+MATH = ("=", "+", "-", "*", "/", "z/", "mod", "min", "max", "neg", "%*", "%/")   # airef "mathOp" (up-modify-*)
+VICTORY_TYPES = {                  # run.py --victory: the airef VictoryType; one per line, in alphabetical order
+    "conquest": 1,
+    "last-man-standing": 1,
+    "score": 3,
+    "standard": 0,
+    "time-limit": 2,
+}
+GET_FACT = ("up-get-fact", "up-get-fact-max", "up-get-fact-min", "up-get-fact-sum", "up-get-player-fact")
+COST_ACTIONS = ("up-setup-cost-data", "up-reset-cost-data", "up-add-cost-data", "up-add-object-cost",
+                "up-add-research-cost", "up-get-cost-delta")
+COST_GOODS = ("food", "wood", "stone", "gold")   # a cost set is 4 goals in a row, in this order (airef "Cost data", #4879)
 STOCK = ("food", "wood", "gold", "stone")
 TOWN = 30                       # tiles around the own town center: "in town" (AoE2 sn-maximum-town-size, airef "Facts")
 PERIMETERS = {1: (10, 20), 2: (18, 30)}   # tiles from the town center to each wall ring (airef "build-wall", #4740)
@@ -205,6 +217,34 @@ def names():
 # percentages and the attack group sizes change the bot (Script.number); the others keep their value for the script.
 SN = {r["name"]: r["default"] for r in table.load("per_numbers.jsonl")}
 SN_IDS = {r["id"]: r["name"] for r in table.load("per_numbers.jsonl")}   # a script can name a number by its id
+# The airef ids of objects and technologies (two sets of numbers): the up-* commands with g: take an id (#4869).
+OBJECT_IDS = {r["id"]: r["name"] for r in table.load("per_names.jsonl") if "id" in r and r["kind"] in ("unit", "building")}
+TECH_IDS = {r["id"]: r["name"] for r in table.load("per_names.jsonl") if "id" in r and r["kind"] in ("tech", "age")}
+UP_QUEUE = {"up-build": "build", "up-research": "research", "up-train": "train"}
+
+
+SETUP = ("civ-selected", "death-match-game", "difficulty", "map-size", "map-type", "regicide-game", "starting-age")
+TIMER_STATE = {"timer-disabled": 0,                                # the states of up-timer-status (airef "TimerState")
+               "timer-running": 2,
+               "timer-triggered": 1}
+
+
+def map_size(data):
+    """The airef map size of a map (aoe2mc.json): the smallest size with at least its tiles, else the largest."""
+    n = len(data.get("ground", ())) // data.get("tile_size", 1)
+    sizes = sorted((r["tiles"], k) for k, r in names().items() if r["kind"] == "map-size")
+    return next((k for t, k in sizes if t >= n), sizes[-1][1])
+
+
+def symbols(data, player, difficulty, modes=(), age="dark"):
+    """The system symbols of #load-if-defined (airef "Conditional loading") of the bot of player: the civilization
+    (BRITONS-CIV), the difficulty (DIFFICULTY-HARD), the game types (DEATH-MATCH, REGICIDE), the start age
+    (CASTLE-AGE-START), the map type (SCENARIO-MAP) and the map size (TINY-MAP). A map that the game program knows by
+    no airef name is SCENARIO-MAP."""
+    civ = data.get("players", {}).get(str(player), {}).get("civ")
+    out = {f"{k}-civ" for k, r in names().items() if r["kind"] == "civ" and r["game"] == civ}
+    out |= {f"difficulty-{k}" for k, r in names().items() if r["kind"] == "difficulty" and r["game"] == difficulty}
+    return out | set(modes) | {f"{age}-age-start", "scenario-map", map_size(data)}
 
 
 class Script:
@@ -221,6 +261,8 @@ class Script:
         self.escrow, self.pct = {}, {}                             # resource -> escrow; -> escrow percentage (#4682)
         self.last = None                                           # the stock after the last step: new income
         self.rings = {}                                            # perimeter -> the sides of its wall ring (ring())
+        self.heard, self.read = set(), {}                          # (player, taunt) not acknowledged; player -> read
+        self.cost_at = None                                        # the first goal of the current cost set (#4879)
 
     def number(self, name):
         return self.sn.get(name, SN[name])
@@ -236,21 +278,94 @@ class Script:
             self.warned.add((what, name))
             print(f"AI script: unknown {what} {name}: skipped", file=sys.stderr)
 
+    def operand(self, kind, ref):
+        """The value of ref for a typed prefix: a constant ("" or c:), a goal (g:) or a strategic number (s:, by name or
+        id). None, with one warning, for an unknown goal or number."""
+        if kind == "g":
+            if ref not in self.goals:
+                return self.warn("goal", ref)
+            return self.goals[ref]
+        if kind == "s":
+            ref = SN_IDS.get(ref, ref)
+            if ref not in SN:
+                return self.warn("strategic number", ref)
+            return self.number(ref)
+        return ref
+
+    def named(self, type_op, ref, tech=False):
+        """The script name of an object (or a technology) of an up-* command: c: a name or an id, g: a goal that holds
+        an id. None, with one warning, for an unknown id."""
+        kind = self.type_kind(type_op)
+        ref = self.operand(kind, ref) if kind else None
+        if isinstance(ref, int):
+            return (TECH_IDS if tech else OBJECT_IDS).get(ref) or self.warn("id", ref)
+        return ref
+
+    def type_kind(self, type_op):
+        """The kind of a typeOp (airef "typeOp": c:, g: or s:, no relation). None, with one warning, for another one."""
+        if type_op in ("c:", "g:", "s:"):
+            return type_op[0]
+        return self.warn("operator", type_op)
+
+    def typed(self, prefix, ref):
+        """operand() for a type prefix of a timer command ("", c:, g: or s:); None, with one warning, for another one."""
+        kind = str(prefix).removesuffix(":")
+        if kind not in ("", "c", "g", "s"):
+            return self.warn("operator", prefix)
+        return self.operand(kind, ref)
+
+    def timer_state(self, tid):
+        """The TIMER_STATE of timer tid: disabled (no entry), triggered (the game time is due) or running."""
+        due = self.timers.get(tid)
+        if due is None:
+            return TIMER_STATE["timer-disabled"]
+        return TIMER_STATE["timer-triggered" if self.bot.time >= due else "timer-running"]
+
     def compare(self, op, value, ref):
         """value REL ref; a typed operator (airef "Typed operators") reads ref as a constant (c:), the value of a
         strategic number (s:) or of a goal (g:). An unknown operator, number or goal gives one warning and is false."""
         kind, _, rel = op.rpartition(":")
         if rel not in OPS or kind not in ("", "c", "s", "g"):
             return self.warn("operator", op) or False
-        if kind == "s":
-            if ref not in SN:
-                return self.warn("strategic number", ref) or False
-            ref = self.number(ref)
-        elif kind == "g":
-            if ref not in self.goals:
-                return self.warn("goal", ref) or False
-            ref = self.goals[ref]
-        return OPS[rel](value, ref)
+        ref = self.operand(kind, ref)
+        return False if ref is None else OPS[rel](value, ref)
+
+    def math(self, op, value, ref):
+        """The new value of value OP ref (airef "mathOp", up-modify-*). None, with one warning, for an unknown operator
+        or number: the command does nothing. / and mod by 0 keep the value; /, z/, mod, %* and %/ are whole numbers,
+        a half away from 0 for / and truncated toward 0 for the others (7 / 2 = 4, 7 z/ 2 = 3)."""
+        kind, _, rel = op.rpartition(":")
+        if rel not in MATH or kind not in ("", "c", "s", "g"):
+            return self.warn("operator", op)
+        ref = self.operand(kind, ref)
+        if ref is None:
+            return None
+        sign = 1 if (value < 0) == (ref < 0) else -1                  # the sign of value / ref
+        if rel == "=":
+            return ref
+        if rel == "+":
+            return value + ref
+        if rel == "-":
+            return value - ref
+        if rel == "*":
+            return value * ref
+        if rel == "min":
+            return min(value, ref)
+        if rel == "max":
+            return max(value, ref)
+        if rel == "neg":
+            return -ref
+        if rel == "%*":
+            return sign * (abs(value * ref) // 100)
+        if not ref:
+            return value
+        if rel == "/":
+            return sign * ((2 * abs(value) + abs(ref)) // (2 * abs(ref)))
+        if rel == "z/":
+            return sign * (abs(value) // abs(ref))
+        if rel == "mod":                                               # the sign of value, as in C
+            return (1 if value >= 0 else -1) * (abs(value) % abs(ref))
+        return sign * (abs(value * 100) // abs(ref))                   # %/
 
     def game(self, name, *kinds):
         """The name of the game program of a script name of one of kinds, or None (one warning)."""
@@ -278,6 +393,7 @@ class Script:
     def step(self):
         """Check the facts of each rule that is not disabled and run the actions of each rule whose facts are true."""
         self.income()
+        self.hear()
         for k, rule in enumerate(self.rules):
             if k not in self.off and all(self.check(f) for f in rule.facts):
                 for a in rule.actions:
@@ -296,6 +412,14 @@ class Script:
             else:
                 self.escrow.pop(r, None)
 
+    def hear(self):
+        """Keep the new taunts of each player (gather.Gather.taunted, #4827) until acknowledge-taunt, as AoE2 does."""
+        import build
+        for x in {id(x): x for x in [*build.sides(self.bot.g), self.bot.g]}.values():
+            log = getattr(x, "taunted", [])
+            self.heard.update((x.player, int(n)) for n in log[self.read.get(x.player, 0):])
+            self.read[x.player] = len(log)
+
     def check(self, f):
         name, args = f[0], f[1:]
         if name in LOGIC:
@@ -304,6 +428,30 @@ class Script:
         if name == "goal":                                         # (goal ID VALUE) or (goal ID REL VALUE)
             op, v = ("==", args[1]) if len(args) == 2 else args[1:3]
             return self.compare(op, self.goals.get(args[0], -1), v)
+        if name in GET_FACT:                                       # a command as a fact: it runs, and is true
+            self.get_fact(name, args)
+            return True
+        if name in ("up-modify-goal", "up-modify-sn"):             # a command as a fact: it runs, and is true
+            self.act(None, (name, *args))
+            return True
+        if name == "up-compare-goal":                              # (up-compare-goal GOAL REL VALUE)
+            return self.compare(args[1], self.goals.get(args[0], -1), args[2])
+        if name == "up-compare-sn":                                # (up-compare-sn SN REL VALUE)
+            sn = SN_IDS.get(args[0], args[0])
+            if sn not in SN:
+                return self.warn("strategic number", sn) or False
+            return self.compare(args[1], self.number(sn), args[2])
+        if name == "up-compare-const":                             # (up-compare-const CONST REL VALUE)
+            return self.compare(args[1], args[0], args[2])
+        if name == "up-compare-flag":                              # (up-compare-flag GOAL OP FLAG): == all bits, != not
+            kind, _, rel = args[1].rpartition(":")
+            if rel not in ("==", "!=") or kind not in ("", "c", "s", "g"):
+                return self.warn("operator", args[1]) or False
+            flag = self.operand(kind, args[2])
+            if flag is None:
+                return False
+            has = self.goals.get(args[0], 0) & flag
+            return has == flag if rel == "==" else has != flag
         if name == "strategic-number":                             # (strategic-number NAME REL VALUE)
             args = (SN_IDS.get(args[0], args[0]),) + tuple(args[1:])
             if args[0] not in SN:
@@ -311,6 +459,11 @@ class Script:
             return self.compare(args[1], self.sn.get(args[0], SN[args[0]]), args[2])
         if name == "timer-triggered":
             return args[0] in self.timers and self.bot.time >= self.timers[args[0]]
+        if name == "up-timer-status":                              # (up-timer-status TIMER REL STATE)
+            state = TIMER_STATE.get(args[2], args[2])
+            if not isinstance(state, int):
+                return self.warn("timer state", args[2]) or False
+            return self.compare(args[1], self.timer_state(args[0]), state)
         if name in ("true", "false"):
             return name == "true"
         if name == "stance-toward":                                # (stance-toward PLAYER STANCE)
@@ -320,6 +473,13 @@ class Script:
             return self.can(name, args[0])
         if name in ("can-train-with-escrow", "can-build-with-escrow", "can-research-with-escrow"):
             return self.can(name.removesuffix("-with-escrow"), args[0], True)
+        if name in ("up-can-train", "up-can-build", "up-can-research"):     # (up-can-train ESCROW TYPE UNIT)
+            sn = self.named(args[1], args[2], name == "up-can-research")
+            return sn is not None and self.can(name.removeprefix("up-"), sn, self.goals.get(args[0], 0) >= 1)
+        if name in ("up-object-type-count", "up-object-type-count-total"):    # (up-object-type-count TYPE OBJECT REL VALUE)
+            if (sn := self.named(args[0], args[1])) is None or (n := self.game(sn, "unit", "building")) is None:
+                return False
+            return self.compare(args[2], self.count(n, total=name.endswith("-total")), args[3])
         if name in ("unit-type-count", "building-type-count", "unit-type-count-total", "building-type-count-total"):
             if (n := self.game(args[0], "unit" if name[0] == "u" else "building")) is None:
                 return False
@@ -347,18 +507,53 @@ class Script:
             return self.age(self.bot.g, *args)
         if name == "current-age-time":
             return self.compare(args[0], self.age_time(self.bot.g), args[1])
-        if name in ("taunt-detected", "players-taunt-detected"):  # the game program has no taunts yet: never true
-            return False
+        if name == "taunt-detected":                               # (taunt-detected PLAYER TAUNT)
+            return (args[0], args[1]) in self.heard
+        if name == "players-taunt-detected":                       # (players-taunt-detected PLAYER-TYPE TAUNT)
+            xs, every = self.sides(args[0])
+            got = [(x.player, args[1]) in self.heard for x in xs]
+            return bool(got) and (all(got) if every else any(got))
         if name == "wall-completed-percentage":                    # (wall-completed-percentage PERIMETER REL VALUE)
             return self.ring(args[0]) is not None and self.compare(args[1], self.walled(args[0]), args[2])
         if name == "enemy-buildings-in-town":
             return self.in_town()
+        if name in SETUP:
+            return self.setup(name, args)
         if name.startswith("players-"):                            # (players-FACT PLAYER ...): the other players
             return self.players(name.removeprefix("players-"), args[0], args[1:])
         value = self.value(name)
         if value is None:
             return self.warn("fact", name) or False
         return self.compare(args[0], value, args[1])
+
+    def setup(self, name, args):
+        """A fact of the game setup (airef "Facts"): the civilization, the difficulty, the game type, the start age
+        and the map."""
+        import bot as bots
+        import civs
+        import gather
+        g = self.bot.g
+        if name == "civ-selected":
+            return (civ := self.game(args[0], "civ")) is not None and civs.real(g) == civ
+        if name in ("death-match-game", "regicide-game"):
+            return gather.has_mode(g, name.removesuffix("-game"))
+        if name == "difficulty":                                   # (difficulty REL LEVEL): AoE2 numbers, 0 is hardest
+            if (level := self.game(args[1], "difficulty")) is None:
+                return False
+            return self.compare(args[0], bots.LEVELS[self.bot.difficulty]["aoe2"], bots.LEVELS[level]["aoe2"])
+        if name == "starting-age":                                 # (starting-age REL AGE)
+            import train
+            return self.age_of(args[1]) is not None and \
+                self.compare(args[0], train.STARTS[getattr(g, "start_age", "dark")]["ages"], self.age_of(args[1]))
+        row = names().get(args[0])
+        kind = name                                                # (map-type TYPE), (map-size SIZE)
+        if row is None or row["kind"] != kind:
+            return self.warn(kind, args[0]) or False
+        return args[0] == (map_size(g.data) if kind == "map-size" else "scenario-map")
+
+    def age_of(self, arg):
+        row = names().get(arg)
+        return row["age"] if row and row["kind"] == "age" else self.warn("age", arg)
 
     def drop_distance(self, res):
         """The distance in tiles from the nearest drop site of res to its nearest source; 255 when none (airef: -1 or a
@@ -380,14 +575,110 @@ class Script:
 
     def value(self, name):
         """The number of a fact (REL VALUE), or None for an unknown fact."""
+        return self.fact_value(name, 0)
+
+    def fact_value(self, name, param, g=None):
+        """The number of the fact name (airef "FactId") for Gather g (default: the own one), or None for an unknown
+        fact. param: the resource of escrow-amount, the unit or building of the counts, else unused (#4868)."""
+        import build
         import train
-        g, b = self.bot.g, self.bot
+        b, g = self.bot, g or self.bot.g
         if name.endswith("-amount") and (res := name.removesuffix("-amount")) in STOCK:
             return g.stock[res]
+        if name in ("unit-type-count", "building-type-count", "unit-type-count-total", "building-type-count-total"):
+            n = self.game(param, "unit" if name[0] == "u" else "building")
+            return None if n is None else self.count(n, g, total=name.endswith("-total"))
         return {"game-time": lambda: b.time, "population": lambda: g.pop,
                 "civilian-population": lambda: len(g.villagers), "military-population": lambda: len(g.soldiers),
                 "housing-headroom": lambda: max(train.limit(g) - g.pop, 0),
-                "population-headroom": lambda: max(train.max_pop(g) - g.pop, 0)}.get(name, lambda: None)()
+                "population-headroom": lambda: max(train.max_pop(g) - g.pop, 0),
+                "population-cap": lambda: train.limit(g), "current-age": lambda: build.ages(g),
+                "current-age-time": lambda: self.age_time(g),
+                "escrow-amount": lambda: self.escrow.get(param, 0) if g is b.g else 0}.get(name, lambda: None)()
+
+    def victory_data(self, name, args):
+        """up-get-victory-data PLAYER TYPE TIME, up-get-victory-limit GOAL, up-get-treaty-data GOAL (#4873). A value
+        that the game program does not have gives 0."""
+        import time_limit  # it imports cheats -> gather: import it late
+        g = self.bot.g
+        mode = getattr(g, "victory", "standard")
+        if name == "up-get-victory-data":                          # the wonder or relic timer that ends first
+            left = [(t["left"], t["player"]) for t in vars(g).get("wonders", {}).values()]
+            if t := vars(g).get("relic_timer"):
+                left.append((t["left"], t["player"]))
+            time, player = min(left, default=(0, 0))
+            self.goals[args[0]], self.goals[args[1]] = player, VICTORY_TYPES.get(mode, 0)
+            self.goals[args[2]] = max(math.ceil(time), 0)
+        elif name == "up-get-victory-limit":                       # the years of a time limit, the points of a score
+            value = getattr(g, "victory_value", None)
+            self.goals[args[0]] = {"time-limit": value or time_limit.YEARS, "score": value or time_limit.POINTS}.get(mode, 0)
+        else:                                                      # the treaty seconds left; a treaty with no end: the max
+            game = getattr(g, "game", None)
+            left = max(getattr(game, "treaty", 0.0) - getattr(game, "treaty_time", 0.0), 0)
+            self.goals[args[0]] = 2 ** 31 - 1 if math.isinf(left) else math.ceil(left)
+
+    def get_fact(self, name, args):
+        """up-get-fact, up-get-player-fact and up-get-fact-min, -max, -sum: the value of a fact into a goal (#4868). An
+        unknown fact or player gives one warning and leaves the goal. As a fact it is true (airef "Fact/Action")."""
+        if name == "up-get-fact":
+            xs, (fact, param, goal) = [self.bot.g], args
+        else:
+            (who, fact, param, goal), xs = args, None
+            xs = self.sides(who)[0] if who != self.bot.g.player else [self.bot.g]
+        got = [v for x in xs if (v := self.fact_value(fact, param, x)) is not None]
+        if xs and not got:
+            return self.warn("fact", fact)
+        if got:
+            op = {"up-get-fact-min": min, "up-get-fact-max": max, "up-get-fact-sum": sum}.get(name, lambda v: v[0])
+            self.goals[goal] = op(got)
+
+    def cost_action(self, name, args):
+        """The up-*-cost-data actions (#4879). A cost set is 4 goals in a row (COST_GOODS). A value is an operand of
+        kind TYPE (airef "Typed operators"): a constant, a goal or a strategic number. An action that adds to the current
+        set needs up-setup-cost-data first."""
+        if name == "up-setup-cost-data":                              # (up-setup-cost-data RESET GOAL)
+            self.cost_at = args[1]
+            if args[0] == 1:
+                self.cost_zero(args[1])
+            return
+        if name == "up-reset-cost-data":                              # (up-reset-cost-data GOAL)
+            return self.cost_zero(args[0])
+        if self.cost_at is None:
+            return self.warn("cost data", name)
+        if name == "up-get-cost-delta":                               # (up-get-cost-delta GOAL): stock - current set
+            for i, r in enumerate(COST_GOODS):
+                self.goals[args[0] + i] = self.bot.g.stock[r] - self.goals.get(self.cost_at + i, 0)
+        elif name == "up-add-cost-data":                              # (up-add-cost-data GOAL TYPE VALUE)
+            src = {r: self.goals.get(args[0] + i, 0) for i, r in enumerate(COST_GOODS)}
+            self.cost_add(self.cost_at, src, args[1], args[2])
+        elif name == "up-add-object-cost":                            # (up-add-object-cost TYPE OBJECT TYPE2 VALUE)
+            import build
+            import train
+            ns = self.game(args[1], args[0])                          # a set adds the costs of its members
+            price = build.price if args[0] == "building" else train.price
+            cost = {}
+            for n in (ns if isinstance(ns, tuple) else (ns,) if ns else ()):
+                for r, v in price(self.bot.g, n).items():
+                    cost[r] = cost.get(r, 0) + v
+            self.cost_add(self.cost_at, cost, args[2], args[3])
+        elif name == "up-add-research-cost":                          # (up-add-research-cost TECH TYPE VALUE)
+            import train
+            n = self.game(args[0], "tech", "age")
+            if n:
+                self.cost_add(self.cost_at, train.price(self.bot.g, n), args[1], args[2])
+
+    def cost_zero(self, first):
+        """The 4 goals of the cost set that starts at first are 0."""
+        for i in range(len(COST_GOODS)):
+            self.goals[first + i] = 0
+
+    def cost_add(self, first, cost, kind, ref):
+        """Add the operand (kind, ref) times cost, a dict of the stock resources, to the cost set that starts at first."""
+        value = self.operand(kind, ref)
+        if value is None:
+            return
+        for i, r in enumerate(COST_GOODS):
+            self.goals[first + i] = self.goals.get(first + i, 0) + value * cost.get(r, 0)
 
     def count(self, n, g=None, total=False):
         """The live units or complete buildings of game name n of Gather g (default: the own one); total: also the
@@ -457,6 +748,11 @@ class Script:
             got = [diplomacy.stance(self.bot.g, x.player) == args[0] for x in xs]
         elif fact == "current-age-time":
             got = [self.compare(args[0], self.age_time(x), args[1]) for x in xs]
+        elif fact == "civ":                                        # (players-civ PLAYER CIV)
+            if (civ := self.game(args[0], "civ")) is None:
+                return False
+            import civs
+            got = [civs.real(self.bot.g, x.player) == civ for x in xs]
         else:
             return self.warn("fact", "players-" + fact) or False
         return bool(got) and (all(got) if every else any(got))
@@ -595,6 +891,14 @@ class Script:
         """The stock pays cost; the escrow pays only with escrow (the -with-escrow facts)."""
         return all(self.bot.g.stock[r] - (0 if escrow else self.escrow.get(r, 0)) >= v for r, v in cost.items())
 
+    def spend(self, cost):
+        """A command with escrow paid cost: the escrow pays it first (airef "up-train")."""
+        for r, v in cost.items():
+            if (e := self.escrow.get(r, 0) - v) > 0:
+                self.escrow[r] = e
+            else:
+                self.escrow.pop(r, None)
+
     def homes(self, n):
         """The block cells of the own buildings that offer n now."""
         import build
@@ -636,15 +940,32 @@ class Script:
         import train
         name, args, b = a[0], a[1:], self.bot
         g = b.g
+        escrow = False
+        if name in UP_QUEUE:                       # (up-train ESCROW TYPE UNIT), (up-build PLACE ESCROW TYPE BUILDING)
+            if name == "up-build":
+                if args[0] not in ("place-normal", "place-forward"):
+                    self.warn("placement", args[0])
+                name, args = ("build-forward" if args[0] == "place-forward" else "build"), args[1:]
+            else:
+                name = UP_QUEUE[name]
+            escrow, sn = self.goals.get(args[0], 0) >= 1, self.named(args[1], args[2], name == "research")
+            if sn is None:
+                return
+            args = (sn,)
         if name in ("train", "research"):
             n = self.game(args[0], "unit") if name == "train" else self.game(args[0], "tech", "age")
-            if n and self.can("can-" + name, args[0]):
-                next((c for c in self.homes(n) if train.queue(g, b.nobody, c, n)), None)
+            if n and self.can("can-" + name, args[0], escrow):
+                cost = train.price(g, n)
+                if next((c for c in self.homes(n) if train.queue(g, b.nobody, c, n)), None) and escrow:
+                    self.spend(cost)
         elif name in ("build", "build-forward"):
             n = self.game(args[0], "building")
             center = b.center() if name == "build" else self.forward()
-            if n and self.can("can-build", args[0]) and center and (rect := build.near(g, n, center)) is not None:
+            if n and self.can("can-build", args[0], escrow) and center and (rect := build.near(g, n, center)) is not None:
+                cost = build.price(g, n)
                 b.builder(build.found(g, n, rect))
+                if escrow:
+                    self.spend(cost)
         elif name == "build-wall":                                     # (build-wall PERIMETER WALL-TYPE)
             self.wall(args[0], args[1])
         elif name == "build-gate":                                     # (build-gate PERIMETER)
@@ -658,18 +979,88 @@ class Script:
             if args[0] not in SN:
                 return self.warn("strategic number", args[0])
             self.sn[args[0]] = args[1]
+        elif name in GET_FACT:
+            self.get_fact(name, args)
+        elif name in COST_ACTIONS:
+            self.cost_action(name, args)
+        elif name == "up-modify-goal":                               # (up-modify-goal GOAL OP VALUE)
+            new = self.math(args[1], self.goals.get(args[0], -1), args[2])
+            if new is not None:
+                self.goals[args[0]] = new
+        elif name == "up-get-indirect-goal":                         # (up-get-indirect-goal TYPE GOAL OUT)
+            kind = self.type_kind(args[0])
+            ref = self.operand(kind, args[1]) if kind else None
+            if ref is not None:
+                self.goals[args[2]] = self.goals.get(ref, -1)
+        elif name == "up-set-indirect-goal":                         # (up-set-indirect-goal TYPE GOAL TYPE2 VALUE)
+            kind, kind2 = self.type_kind(args[0]), self.type_kind(args[2])
+            ref = self.operand(kind, args[1]) if kind else None
+            value = self.operand(kind2, args[3]) if kind2 else None
+            if ref is not None and value is not None:
+                self.goals[ref] = value
+        elif name == "up-modify-flag":                               # (up-modify-flag GOAL OP FLAG): the bits of a goal
+            kind, _, rel = args[1].rpartition(":")
+            if rel not in ("+", "-") or kind not in ("c", "g", "s"):
+                return self.warn("operator", args[1])
+            flag = self.operand(kind, args[2])
+            if flag is not None:                                   # no flag yet: the goal has no bit
+                value = self.goals.get(args[0], 0)
+                self.goals[args[0]] = value | flag if rel == "+" else value & ~flag
+        elif name == "up-modify-sn":                                 # (up-modify-sn SN OP VALUE)
+            sn = SN_IDS.get(args[0], args[0])
+            if sn not in SN:
+                return self.warn("strategic number", sn)
+            new = self.math(args[1], self.number(sn), args[2])
+            if new is not None:
+                self.sn[sn] = new
         elif name == "set-escrow-percentage":                    # (set-escrow-percentage RESOURCE PCT)
             if args[0] not in STOCK:
                 return self.warn("resource", args[0])
             self.pct[args[0]] = min(max(args[1], 0), 100)
         elif name == "release-escrow":
             self.escrow.pop(args[0], None)
+        elif name in ("up-buy-commodity", "up-sell-commodity"):          # (up-buy-commodity RES TYPE VALUE): VALUE trades
+            import market
+            buy = name == "up-buy-commodity"
+            for _ in range(max(self.operand(args[1].rstrip(":"), args[2]) or 0, 0)):
+                if not self.trade_ok(buy, args[0]) or not market.trade(g, b.nobody, args[0], buy):
+                    break                                              # the first trade that fails stops the rest
+        elif name == "up-tribute-to-player":                           # (up-tribute-to-player PLAYER RES TYPE VALUE)
+            import diplomacy
+            if args[1] not in STOCK:
+                return self.warn("resource", args[1])
+            for _ in range(max(self.operand(args[2].rstrip(":"), args[3]) or 0, 0) // diplomacy.LOT):
+                if not diplomacy.send(g, b.nobody, args[0], args[1]):
+                    break
+        elif name == "up-modify-escrow":                               # (up-modify-escrow RES OP VALUE), as income()
+            if args[0] not in STOCK:
+                return self.warn("resource", args[0])
+            if (new := self.math(args[1], self.escrow.get(args[0], 0), args[2])) is not None:
+                if new := min(max(new, 0), g.stock[args[0]]):
+                    self.escrow[args[0]] = new
+                else:
+                    self.escrow.pop(args[0], None)
+        elif name == "up-release-escrow":
+            self.escrow.clear()
         elif name == "attack-now":
             self.attacking = True
         elif name == "enable-timer":
             self.timers[args[0]] = b.time + args[1]
         elif name == "disable-timer":
             self.timers.pop(args[0], None)
+        elif name == "up-set-timer":                               # (up-set-timer TYPE TIMER TYPE2 VALUE): -1 disables
+            tid, value = self.typed(args[0], args[1]), self.typed(args[2], args[3])
+            if tid is not None and value is not None:
+                if value == -1:
+                    self.timers.pop(tid, None)
+                elif value > 0:
+                    self.timers[tid] = b.time + value
+        elif name == "up-get-timer":                               # (up-get-timer TYPE TIMER GOAL): due in ms; 0 if disabled
+            tid = self.typed(args[0], args[1])
+            if tid is not None:
+                self.goals[args[2]] = round(self.timers.get(tid, 0) * 1000)
+        elif name in ("up-get-victory-data", "up-get-victory-limit", "up-get-treaty-data"):
+            self.victory_data(name, args)
         elif name == "set-stance":                                 # the path of the player menu; a locked team stays
             import diplomacy
             if g.data.get("unlock_teams") and args[1] in diplomacy.STANCES:
@@ -692,6 +1083,8 @@ class Script:
             for _ in range(max(args[2], 0) // diplomacy.LOT):        # one tribute of the menu per 100
                 if not diplomacy.send(g, b.nobody, args[0], args[1]):
                     break
-        elif name not in ("do-nothing", "acknowledge-taunt", "chat-local-to-self", "enable-wall-placement"):
-            # no taunts; no one sees a self chat; each wall ring is always enabled (ring())
+        elif name == "acknowledge-taunt":                            # (acknowledge-taunt PLAYER TAUNT)
+            self.heard.discard((args[0], args[1]))
+        elif name not in ("do-nothing", "chat-local-to-self", "enable-wall-placement"):
+            # no one sees a self chat; each wall ring is always enabled (ring())
             self.warn("action", name)

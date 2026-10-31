@@ -87,6 +87,7 @@ AGENT = {"User-Agent": "aoe2mc (https://github.com/Larspolo/aoe2mc)"}   # the Pa
 PLUGIN = os.path.join(HERE, "plugin")                               # the Paper plugin: aoe moveto, aoe attack (#435)
 BUNDLED = os.path.join(PLUGIN, "aoe2mc-plugin.jar")                # the jar in an app bundle (#1778): no JDK needed
 STOP_LINE = "\x03"                                                  # the Stop of the window on Windows (gui.STOP_LINE, #3003)
+ROME = "Return of Rome"                                             # the data set of a Return of Rome record (mgz, #4898)
 
 
 def plugin_jar(version):
@@ -484,13 +485,13 @@ def bot_foe(players, player):
     return next((p for p in [*range(1, player), *others] if p != player and not gather.allied(players, player, p)), None)
 
 
-def bot_script(players, player, files, k):
+def bot_script(players, player, files, k, defined=()):
     """The AI rules of the bot k of player: the embedded script of its scenario row (aoe2mc.json "ai", #4531), else
     the file k of --ai (#4529), else None: a bot after the list plays by its own logic."""
     import per
     if text := players.get(str(player), {}).get("ai"):
-        return per.parse(text, file=f"<script of player {player}>")
-    return per.read(files[k]) if k < len(files or ()) else None
+        return per.parse(text, defined, file=f"<script of player {player}>")
+    return per.read(files[k], defined) if k < len(files or ()) else None
 
 
 def bot_seats(players, people, n):
@@ -699,7 +700,8 @@ SETTINGS = {
     "empire_wars": False,             # "Empire Wars Mode" on top of the mode (ON_TOP, #2490)
     "end_age": "imperial",            # "Ending age" (build.locked, #2346)
     "full_tech_tree": False,          # "Full Tech Tree": the full tech tree and no civilization bonuses (civs.civ, #2354)
-    "handicap": None,                 # {player: percent} "Handicap" (civs.handicap, handicap_choices, #2474)
+    "handicap": None,
+    "hidden_civs": False,             # "Hidden civilizations": an enemy shows "?" in the menus (lobby.hidden, #4758)                 # {player: percent} "Handicap" (civs.handicap, handicap_choices, #2474)
     "mode": "standard",               # the game mode (MODES: its line in game/data/setup.jsonl and its module, #2521)
     "pop_limit": None,                # "Population limit" (train.LIMITS, #2266)
     "record": None,                   # "Record Game": the file of the timeline of the game (record.py, #2649)
@@ -788,6 +790,7 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
     data["end_age"] = train.STARTS[settings["end_age"]]["ages"]  # the last age (build.locked, #2346)
     data["full_tech_tree"] = settings["full_tech_tree"]          # (#2354)
     data["turbo"] = settings["turbo"]                            # (#2359)
+    data["hidden_civs"] = settings["hidden_civs"]                # lobby.hidden (#4758)
     data["unlock_teams"] = settings["unlock_teams"]              # diplomacy.items (#2934)
     data["shared_exploration"] = settings["shared_exploration"] == "on"   # fog.shares (#2602)
     data["resources"] = settings["resources"]                    # the Regicide start resources of the level (#2388)
@@ -814,6 +817,10 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
         first = [*getattr(game, "seats", ()), 1, 2][:2] if getattr(game, "seats", ()) else [1, 2]
         print(f"{people} people: the first Minecraft player who joins plays player {first[0]}, the second player "
               f"{first[1]}.", file=sys.stderr)
+    modes = {settings["mode"], *(m for m in ON_TOP if settings[m.replace("-", "_")])} - {"standard"}   # (#2490)
+    if settings["age"] == "dark" and (ages := [MODES[m]["age"] for m in modes if "age" in MODES[m]]):   # (#2408)
+        import train  # the latest start age of the modes (#2441)
+        settings["age"] = max(ages, key=lambda a: train.STARTS[a]["ages"])
     if settings["mode"] == "scenario":               # the computer players of the scenario, not --bot (#2543)
         import scenario
         seats = scenario.bot_seats(data["players"], players)
@@ -822,7 +829,9 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
     for k, (player, foe) in enumerate(seats):        # after the people, next to their Sides (#1794)
         import bot as bots
         level = bots.level_of(settings["ai_difficulty"], k)   # one level for each bot in seat order (#4020)
-        script = bot_script(data["players"], player, settings["ai"], k)
+        import per
+        script = bot_script(data["players"], player, settings["ai"], k,     # the symbols of #load-if-defined (#4683)
+                            per.symbols(data, player, level, modes, settings["age"]))
         import replay
         import treaty as treaties
         attack = max(bot_attack, settings["treaty"], key=replay.aoe2mc.game_time)   # the bot waits for the treaty too
@@ -840,12 +849,9 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
               f"{'never' if at == math.inf else 'at %d:%02d' % divmod(round(at), 60)}.", file=sys.stderr)
     import combat
     combat.setup(game, data)                         # AoE2 hit points and damage (#514)
-    modes = {settings["mode"], *(m for m in ON_TOP if settings[m.replace("-", "_")])} - {"standard"}   # (#2490)
-    if settings["age"] == "dark" and (ages := [MODES[m]["age"] for m in modes if "age" in MODES[m]]):   # (#2408)
-        import train  # the latest start age of the modes (#2441)
-        settings["age"] = max(ages, key=lambda a: train.STARTS[a]["ages"])
     for x in [g, *(s.g for s in g.bots)]:                        # before the age: train.research sets the scores (#3089)
         x.modes = frozenset(modes)                               # gather.has_mode: build.locked, Gather.run (#2490)
+        x.start_age = settings["age"]                            # the fact starting-age of an AI script (#4683)
         if MODES[settings["mode"]].get("bots") or x is g:
             x.mode = settings["mode"]                            # build.locked of each player (#2407)
     if not state and settings["age"] != "dark":                  # after the base values: the technologies change them
@@ -1014,6 +1020,8 @@ def replay(game, world, speed=1.0, start="0:00", follow=None, guide=None, view=N
         except OSError as e:
             sys.exit(str(e))
         data["timeline"] = source.first()
+        if source.views:                             # the views of the record so far (--camera player, #4771)
+            data["views"] = [{"time": v["time"], "tile": v["tile"]} for v in source.fresh_views()]
         kw["more"] = source.more
     import replay_input
     control = replay_input.Input(game)              # hotbar items, menu and /trigger aoe_replay (#688)
@@ -1082,6 +1090,27 @@ def interrupt():
         signal.pthread_kill(threading.main_thread().ident, signal.SIGINT)
     else:                                            # Windows: the C handler of SIGINT also wakes a sleep of the main thread
         signal.raise_signal(signal.SIGINT)
+
+
+def record_rules(world):
+    """The rule set of the recorded game of world (#4898): "antiquity" when its lobby has the Return of Rome data set
+    (aoe2mc.read_record "dataset", #4832), as AoE2 DE plays it; else "aoe2". Read before the first rule module loads."""
+    try:
+        with open(os.path.join(world, "aoe2mc.json")) as f:
+            lobby = json.load(f).get("lobby") or {}
+    except (OSError, ValueError):
+        return "aoe2"
+    return "antiquity" if lobby.get("dataset") == ROME else "aoe2"
+
+
+def lobby_mode(world, default):
+    """The game mode of the lobby of a random map world (aoe2mc.json "lobby" "mode", #4825), else default."""
+    try:
+        with open(os.path.join(world, "aoe2mc.json")) as f:
+            mode = (json.load(f).get("lobby") or {}).get("mode")
+    except (OSError, ValueError):
+        return default
+    return mode if mode in MODES else default
 
 
 def given(ap, argv):
@@ -1304,6 +1333,8 @@ def main(argv=None, scenario=None):
     ap.add_argument("--shared-exploration", choices=["on", "off"], default="on", help="--play: the AoE2 setting "
                     "\"Shared Exploration\" (default on: allies share their line of sight; off: each player sees only "
                     "through the own units and buildings)")
+    ap.add_argument("--hidden-civs", action="store_true", help="--play: the AoE2 setting \"Hidden civilizations\": "
+                    "the menus show \"?\" for the civilization of an enemy until the end of the game; allies see it")
     ap.add_argument("--turbo", action="store_true", help="--play: the AoE2 setting \"Turbo Mode\": buildings, "
                     "gatherers and builders work 2.5 times faster (not villagers, trade units, castles, towers, wonders)")
     ap.add_argument("--unlock-speed", action="store_true", help="--play: the AoE2 setting \"Lock Speed\" off: the "
@@ -1357,6 +1388,8 @@ def main(argv=None, scenario=None):
             ap.error(f"--challenge {a.challenge} is closed: win a medal in {challenge.CHALLENGES[a.challenge]['after']} first")
     if a.camera and a.follow is not None:
         ap.error("--camera and --follow N both move the spectators: give only one of them")
+    if "mode" not in given(ap, argv):              # the --game-mode of a random map conversion (#4825)
+        a.mode = lobby_mode(a.world, a.mode)
     import savegame
     state = savegame.read(a.load) if a.load else None
     if state:                                        # the settings of the save, but the options given here win (#2325)
@@ -1364,8 +1397,8 @@ def main(argv=None, scenario=None):
     if a.live and (err := live_error(a.world, a.live)):   # before the server starts (#4663)
         sys.exit(err)
     if a.antiquity and (a.replay or a.mode != "standard"):
-        sys.exit("--antiquity plays only --mode standard, and not --replay (the records are AoE2 games)")
-    table.use("antiquity" if a.antiquity else "aoe2")   # before the first rule module loads (civ_choices, #3666)
+        sys.exit("--antiquity plays only --mode standard, and not --replay (a Return of Rome record selects it, #4898)")
+    table.use("antiquity" if a.antiquity or (a.replay and record_rules(a.world) == "antiquity") else "aoe2")   # before the first rule module loads (civ_choices, #3666)
     civ = civ_choices(a.civ)
     handicap = handicap_choices(a.handicap)
     import train

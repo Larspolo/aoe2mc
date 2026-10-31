@@ -81,5 +81,9 @@ jobs:
             gh api "repos/$R/issues/$n/labels/conflict" -X DELETE >/dev/null 2>&1 || true
             printf 'Merged `main` into the branch: %s. CI runs again (#280).\n' "$how" > body.md
             gh api "repos/$R/issues/$n/comments" -F body=@body.md >/dev/null
-            gh workflow run ci.yml --repo "$R" --ref "$branch"
+            # GitHub can start the pull_request run of this push itself: then a dispatch runs the fast suite twice on
+            # one commit and fills the CI queue (#4809). The pull_request run of github-actions[bot] starts the sweep.
+            new=$(git rev-parse HEAD); sleep 20
+            got=$(gh api "repos/$R/actions/workflows/ci.yml/runs?event=pull_request&head_sha=$new&per_page=1" --jq .total_count || echo 0)
+            [ "$got" != 0 ] && echo "#$n: GitHub started the pull_request run" || gh workflow run ci.yml --repo "$R" --ref "$branch"
           done 3< picks.txt

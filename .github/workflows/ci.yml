@@ -112,10 +112,11 @@ jobs:
 
   # A CI run that GITHUB_TOKEN started (Unconflict) gives no workflow_run event, and GitHub drops the cron sweep of
   # Automerge: start the sweep after a green quick job, so that the PR merges (#734). A dispatch of GITHUB_TOKEN starts
-  # a workflow. A job after `quick`: the sweep needs its check run completed.
+  # a workflow. A job after `quick`: the sweep needs its check run completed. Also the pull_request run of an
+  # Unconflict push: Unconflict then starts no dispatch (#4809).
   sweep:
     needs: quick
-    if: github.event_name == 'workflow_dispatch' && (startsWith(github.ref_name, 'agent/') || startsWith(github.ref_name, 'claude/') || startsWith(github.ref_name, 'ccr-'))
+    if: (github.event_name == 'workflow_dispatch' || github.actor == 'github-actions[bot]') && (startsWith((github.head_ref || github.ref_name), 'agent/') || startsWith((github.head_ref || github.ref_name), 'claude/') || startsWith((github.head_ref || github.ref_name), 'ccr-'))
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:

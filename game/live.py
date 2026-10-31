@@ -21,7 +21,8 @@ IDLE = 60.0                 # seconds of real time with no growth of the file: t
 
 class Source:
     """The events of the record at `path`, `delay` seconds of game time behind its newest event. `read(path)` gives
-    the whole named timeline of the file (record_timeline) and may set `ended`; `turn`: the quarter turns of the world
+    the whole named timeline of the file (record_timeline) and may set `ended` and `views` (the view locks of the
+    recorder, #4771); `turn`: the quarter turns of the world
     (aoe2mc.json)."""
 
     def __init__(self, path, delay=DELAY, turn=0, read=None, clock=time.monotonic, check=CHECK, idle=IDLE, log=None):
@@ -32,6 +33,7 @@ class Source:
         self.turn, self.read = turn, read or self.record
         self.ended, self.said = False, False             # the record has the end of the game; the end line is logged
         self.events, self.given, self.size = [], 0, None   # all events read, the number given, the file size read
+        self.views, self.viewed, self.limit = [], -float("inf"), -float("inf")   # views read, the last given, take()
         self.asked, self.grew = -float("inf"), clock()     # the real time of the last check and of the last growth
 
     def record(self, path):
@@ -39,6 +41,8 @@ class Source:
         state = {}
         events = aoe2mc.record_timeline(path, self.turn, state)
         self.ended = state.get("complete", False)
+        views = state.get("views", [])                    # turned by record_timeline (#4771)
+        self.views = views if len(views) >= len(self.views) else self.views
         return events
 
     def poll(self):
@@ -57,7 +61,15 @@ class Source:
         k = self.given
         while k < len(self.events) and self.events[k]["time"] <= limit:
             k += 1
-        out, self.given = self.events[self.given:k], k
+        out, self.given, self.limit = self.events[self.given:k], k, limit
+        return out
+
+    def fresh_views(self):
+        """The views of the recorder up to the time of the last take() that it did not give yet, as "view" events of
+        the replay (--camera player, #4771)."""
+        out = [{"time": v["time"], "kind": "view", "tile": v["tile"]} for v in self.views
+               if self.viewed < v["time"] <= self.limit]
+        self.viewed = max([self.viewed] + [v["time"] for v in out])
         return out
 
     def first(self):
@@ -78,4 +90,4 @@ class Source:
             self.said = True
             self.log("live: the game ended: the record is complete" if self.ended else
                      f"live: the record did not grow for {self.idle:g} s: the game ended")
-        return self.take(complete), complete
+        return self.take(complete) + self.fresh_views(), complete

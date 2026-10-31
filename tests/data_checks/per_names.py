@@ -3,9 +3,12 @@ from . import NAMES, form
 
 
 def check(row):
-    form(row, {"name": str, "kind": str}, {"game": str, "age": int, "civ": str, "set": list})
+    form(row, {"name": str, "kind": str}, {"game": str, "age": int, "civ": str, "set": list, "tiles": int, "id": int})
     assert row.get("civ") in (None, "unit", "elite", "upgrade", "research"), row["name"]
     assert all(n in NAMES["train.jsonl"] | NAMES["gather.jsonl"] for n in row.get("set", ())), row["name"]
-    assert row["kind"] in ("age", "building", "tech", "unit") and row["name"] == row["name"].lower(), row["name"]
-    assert "game" not in row or row["game"] in NAMES["train.jsonl"] | NAMES["build.jsonl"], row["name"]
-    assert ("age" in row) == (row["kind"] == "age") and ("game" in row or row["kind"] == "age" or "civ" in row or "set" in row), row["name"]
+    assert row["kind"] in ("age", "building", "civ", "difficulty", "map-size", "map-type", "tech", "unit") and row["name"] == row["name"].lower(), row["name"]
+    games = {"civ": NAMES["civs.jsonl"], "difficulty": NAMES["difficulty.jsonl"]}.get(row["kind"], NAMES["train.jsonl"] | NAMES["build.jsonl"])
+    assert "game" not in row or row["game"] in games, row["name"]
+    assert ("tiles" in row) == (row["kind"] == "map-size"), row["name"]
+    assert ("age" in row) == (row["kind"] == "age") and ("game" in row or row["kind"] in ("age", "map-size", "map-type")
+                                                        or "civ" in row or "set" in row), row["name"]

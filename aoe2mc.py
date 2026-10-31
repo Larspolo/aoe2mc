@@ -260,7 +260,7 @@ SAVE_LOG_VERSION = 5                                    # log_version of the DE 
 RANDOM_MAP = "random-map:"          # the source name of --random-map KIND (#993): read_map makes the map of the seed
 
 
-def read_map(path, seed=1, players=2, teams=None):
+def read_map(path, seed=1, players=2, teams=None, size=None, mode="standard"):
     """read_record for recorded games (RECORDS), read_scx for old .scx scenarios, read_json for a map in JSON,
     read_rms for a random map script (the land of seed), rmap.random_map for RANDOM_MAP + kind, else read_scenario."""
     p = path.lower()
@@ -268,7 +268,7 @@ def read_map(path, seed=1, players=2, teams=None):
         import rmap
         return map_description(rmap.random_map(p[len(RANDOM_MAP):], seed, players, teams), path)
     if p.endswith(".rms"):
-        return read_rms(path, seed, players, teams)
+        return read_rms(path, seed, players, teams, size, mode)
     return (read_record if p.endswith(RECORDS) else read_saved if p.endswith(SAVES) else read_scx if p.endswith((".scx", ".scn")) or old_format(path) else
             read_json if p.endswith(".json") else read_scenario)(path)
 
@@ -282,14 +282,15 @@ def old_format(path):
         return f.read(4) in scx.FORMATS
 
 
-def read_rms(path, seed, players=2, teams=None):
-    """The land of a random map script (#963): rmap.generate makes a map description of the seed (read_json)."""
+def read_rms(path, seed, players=2, teams=None, size=None, mode="standard"):
+    """The land of a random map script (#963) in the game mode (rmap.MODE_LABELS, #4824): rmap.generate makes a map description of the seed (read_json).
+    size: the map side in tiles (--map-size, #4823; None: the script or the player count)."""
     import rmap
     with open(path, encoding="utf-8", errors="replace") as f:
         text = f.read()
     try:
-        return map_description(rmap.generate(text, seed, players, teams=teams, folder=os.path.dirname(path),
-                                                     name=os.path.basename(path)), path)
+        return map_description(rmap.generate(text, seed, players, size, teams=teams, folder=os.path.dirname(path),
+                                                     name=os.path.basename(path), mode=mode), path)
     except rmap.RmsError as e:
         raise OptionError(f"{path}: {e}") from None
 
@@ -632,7 +633,9 @@ def read_record(path, match=None):
             objects.append(dict(kind="U" if prefix == "H" else prefix, hero=prefix == "H", name=name, player=player,
                                 x=o.position.x, y=o.position.y, rotation=0.0, garrisoned=False,
                                 ref=o.instance_id, holder=None))
-    return size, terrain, elevation, terrain_names, {k: "" for k in CHAPTERS}, objects, players
+    lobby = {k: getattr(match, a, None) for k, a in (("type", "type"), ("dataset", "dataset"), ("starting_age", "starting_age"),
+             ("population", "population"), ("all_techs", "all_technologies"), ("reveal", "map_reveal"))}  # the replay rules (#4832)
+    return size, terrain, elevation, terrain_names, {k: "" for k in CHAPTERS} | {"lobby": lobby}, objects, players
 
 
 def scenario_teams(players):
@@ -1089,13 +1092,16 @@ def water_tiles(terrain, tnames):
 def record_timeline(src, turn=0, state=None):
     """The timeline of a recorded game as convert() writes it to aoe2mc.json: read, named, turned by `turn` quarter
     turns and through JSON. The live replay reads a record that AoE2 DE still writes again with it (#4663);
-    state: as read_timeline (#4664)."""
+    state: as read_timeline (#4664); its "views" turn as the timeline (#4771)."""
     size, terrain, _, tnames, _, objects, _ = read_map(src)
     timeline = read_timeline(src, state)
     if timeline is None:
         return []
     name_timeline(objects, timeline, water=water_tiles(terrain, tnames))
     turn_timeline(timeline, size, turn)
+    if state is not None and state.get("views"):
+        turn_timeline(state["views"], size, turn)
+        state["views"] = json.loads(json.dumps(state["views"]))
     return json.loads(json.dumps(timeline))
 
 
@@ -2870,7 +2876,7 @@ def write_region(path, chunks):
 
 
 def write_objects(path, size, T, H, players, objects, cols, ground, timeline=None, mood="DEFAULT", map_ground=None,
-                  victory=None, messages=None, lists=None, yaw=SPAWN_YAW, views=None):
+                  victory=None, messages=None, lists=None, yaw=SPAWN_YAW, views=None, lobby=None):
     """aoe2mc.json: the data that a game program needs (docs/research/gameplay.md). Tiles are in the turned grid
     (--orientation): block x = tile x × T, block z = tile y × T. Units have the UUID of their entity, buildings
     their footprint [x0, z0, x1, z1) in blocks. Objects of a recorded game have their object ID ("ref").
@@ -2894,7 +2900,10 @@ def write_objects(path, size, T, H, players, objects, cols, ground, timeline=Non
     "turn": the clockwise quarter turns of --orientation, if not 0 (#3035).
     "start" of a player: the block (x, y, z) where its person starts (its start view, #3344); "yaw": the spawn yaw.
     views (recorded games with view locks only, #4767): {"views": the view locks of the recorder (read_timeline, tiles
-    in the turned grid), "recorder": its player number}: the keys "views" and "recorder", out of "timeline" (APM)."""
+    in the turned grid), "recorder": its player number}: the keys "views" and "recorder", out of "timeline" (APM).
+    "lobby" (recorded games of the mgz model only, #4832): the lobby settings {"type", "dataset", "starting_age",
+    "population", "all_techs", "reveal"}; of a random map script (#4825): {"map_size": the lobby name (else the
+    tiles), "mode": --game-mode}."""
     kinds = {"U": "unit", "B": "building", "O": "other"}
     objs = []
     for o in objects:
@@ -2929,6 +2938,8 @@ def write_objects(path, size, T, H, players, objects, cols, ground, timeline=Non
         data["victory"] = victory
     if views:
         data.update(views)
+    if lobby:
+        data["lobby"] = lobby
     if messages and (texts := {k: v for k, v in messages.items() if k in CHAPTERS and (v or "").strip()}):
         data["messages"] = texts
     for key, items in (lists or {}).items():
@@ -6011,8 +6022,10 @@ class Progress:
 def convert(src, out, T=4, H=3, name=None, seed=1, preview=False, arch=None, player_arch=(), with_units=True,
             barriers=True, mc_version=VERSION_NAME, spawn=None, birds=True, orientation="ne", verbose=False,
             garrison="inside", border_design="diorama", ambience="basic", at=None, mood="on", fog=False,
-            resource_pack=False, nplayers=2, teams=None):
-    """nplayers: the players of a random map script or --random-map (#3944), teams: their teams (#3946). at: recorded games only, the time in ms (--at): convert the state at that time (apply_timeline).
+            resource_pack=False, nplayers=2, teams=None, map_size=None, game_mode="standard"):
+    """nplayers: the players of a random map script or --random-map (#3944), teams: their teams (#3946). map_size: the
+    side in tiles of the map of a random map script (--map-size, #4823). game_mode: the
+    game mode of a random map script (rmap.MODE_LABELS, #4824). at: recorded games only, the time in ms (--at): convert the state at that time (apply_timeline).
     mood: "on" sets the time of day of the map color mood (MOODS), "off" keeps noon (#1595).
     fog: the fog of a fog mood (FOG, #1626); ambience "full" gives it too.
     resource_pack: resources.zip with human faces for the zombie units (#2738) and own armor (units.ASSETS, #2742)."""
@@ -6022,7 +6035,7 @@ def convert(src, out, T=4, H=3, name=None, seed=1, preview=False, arch=None, pla
     PALETTE_CACHE.clear()   # the cached entries can have the block names of another version
     try:
         _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units, barriers, spawn, birds, orientation,
-                 verbose, garrison, border_design, ambience, at, mood, fog, resource_pack, nplayers, teams)
+                 verbose, garrison, border_design, ambience, at, mood, fog, resource_pack, nplayers, teams, map_size, game_mode)
     finally:
         MC = VERSIONS[VERSION_NAME]
         PALETTE_CACHE.clear()
@@ -6046,7 +6059,7 @@ def clear_old_output(out):
 
 def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units, barriers, spawn, birds, orientation,
              verbose, garrison, border_design, ambience, at=None, mood="on", fog=False, resource_pack=False,
-             nplayers=2, teams=None):
+             nplayers=2, teams=None, map_size=None, game_mode="standard"):
     buildings.BARRIERS = barriers
     buildings.TURN, yaw = ORIENTATIONS[orientation]
     MOVED.clear()           # the counts of an earlier conversion in this process
@@ -6063,7 +6076,11 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
         times[phase] = times.get(phase, 0.0) + now - clock[0]
         clock[0] = now
 
-    size, terrain, elevation, tnames, texts, objects, players = read_map(src, seed, nplayers, teams)
+    size, terrain, elevation, tnames, texts, objects, players = read_map(src, seed, nplayers, teams, map_size, game_mode)
+    if src.lower().endswith(".rms"):         # the lobby of a random map: game/run.py --mode default (#4825)
+        import rmap
+        texts["lobby"] = {"map_size": next((k for k, v in sorted(rmap.MAP_SIZES.items()) if v == size), str(size)),
+                          "mode": game_mode}
     record = src.lower().endswith(RECORDS)
     record_state = {}
     timeline = read_timeline(src, record_state) if record else None
@@ -6196,7 +6213,7 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
     write_objects(os.path.join(out, "aoe2mc.json"), size, T, H, players, objects, cols, ground, timeline,
                   texts.get("mood", "DEFAULT"), map_colors(np.asarray(img))[0], texts.get("global_victory"), texts,
                   {k: f(texts.get("triggers", [])) for k, f in TRIGGER_LISTS.items()}, yaw,
-                  views and {"views": views, "recorder": record_state["recorder"]})
+                  views and {"views": views, "recorder": record_state["recorder"]}, texts.get("lobby"))
     triggers, tstats = texts.get("triggers", []), Counter()
     haze = FOG.get(texts.get("mood")) if mood == "on" and (fog or ambience == "full") else None
     n, amb = write_datapack(out, objects, ground, cols.biome_names, ambience, players, triggers, T, tstats, haze,
@@ -6424,6 +6441,21 @@ def match_record(game, profile):
     return record_api.download(game, profile, folder)
 
 
+def rmap_sizes():
+    import rmap
+    return rmap.MAP_SIZES
+
+
+def map_size(text):
+    """--map-size: a lobby name of rmap.MAP_SIZES or a number of tiles (#4823)."""
+    sizes = rmap_sizes()
+    if text.lower() in sizes:
+        return sizes[text.lower()]
+    if text.isdigit() and 40 <= int(text) <= 1000:
+        return int(text)
+    raise argparse.ArgumentTypeError(f"{text!r}: use one of {', '.join(sorted(sizes))} or a number of tiles (40 to 1000)")
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description="Convert an AoE2 DE scenario to a Minecraft Java world.")
     ap.add_argument("scenario", nargs="?", help=".aoe2scenario file, .aoe2record, .mgz, .mgx or .mgl (the start state of a recorded game), "
@@ -6448,9 +6480,16 @@ def main(argv=None):
     ap.add_argument("--seed", type=int_range(0, 2**63 - 1), default=1, help="seed for random details and random maps (default 1)")
     ap.add_argument("--players", type=int_range(1, 8), metavar="N",
                     help="players of a random map script (.rms) or of --random-map, 1 to 8 (default 2)")
+    ap.add_argument("--map-size", type=map_size, metavar="NAME",
+                    help="map size of a random map script (.rms), as in the AoE2 DE lobby: " + ", ".join(
+                        f"{k} ({v})" for k, v in sorted(rmap_sizes().items(), key=lambda kv: kv[1]))
+                    + ", or a number of tiles (default: the script, else the player count)")
     ap.add_argument("--teams", metavar="T,T,...",
                     help="with --players: the team of each player, 1 to 4 or - (no team), for example 1,2,1,2; a "
                          "script with grouped_by_team puts the lands of a team next to each other")
+    ap.add_argument("--game-mode", default="standard", metavar="MODE",
+                    help="the game mode of a random map script (.rms), as the AoE2 DE lobby: it defines the label of "
+                    "the mode (REGICIDE ...); the modes of game/run.py (default standard)")
     ap.add_argument("--preview", action="store_true", help="also write preview.png")
     ap.add_argument("--architecture", choices=sorted(buildings.ARCH),
                     help="use one architecture set for all players (default: from each player's civilization)")
@@ -6510,6 +6549,13 @@ def main(argv=None):
         ap.error("give the input file and the output world folder")
     if a.players is not None and not (a.scenario.lower().endswith(".rms") or a.scenario.lower().startswith(RANDOM_MAP)):
         ap.error("--players needs a random map script or --random-map")
+    import rmap
+    if a.game_mode not in rmap.MODE_LABELS:
+        ap.error(f"--game-mode {a.game_mode}: no such mode; the modes: {', '.join(sorted(rmap.MODE_LABELS))}")
+    if a.game_mode != "standard" and not a.scenario.lower().endswith(".rms"):
+        ap.error("--game-mode needs a random map script (.rms)")
+    if a.map_size is not None and not a.scenario.lower().endswith(".rms"):
+        ap.error("--map-size needs a random map script (.rms)")
     teams = None
     if a.teams is not None:
         teams = a.teams.split(",")
@@ -6517,10 +6563,11 @@ def main(argv=None):
             ap.error("--teams needs --players N and N teams, each 1 to 4 or - (no team), for example --players 4 --teams 1,2,1,2")
         teams = [None if t == "-" else int(t) for t in teams]
     kw = dict(T=a.tile_size, H=a.level_height, seed=a.seed, preview=a.preview, arch=a.architecture, nplayers=a.players or 2, teams=teams,
+              map_size=a.map_size,
               player_arch=a.player_architecture, with_units=not a.no_units, barriers=not a.no_barriers,
               mc_version=a.mc_version, spawn=a.spawn, birds=not a.no_birds, orientation=a.orientation,
               verbose=a.verbose, garrison=a.garrison, border_design=a.border, ambience=a.ambience,
-              mood=a.mood, fog=a.fog, resource_pack=a.resource_pack)
+              mood=a.mood, fog=a.fog, resource_pack=a.resource_pack, game_mode=a.game_mode)
     try:
         if a.at is not None and not a.scenario.lower().endswith(RECORDS):
             ap.error("--at needs a recorded game (.aoe2record)")

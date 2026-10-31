@@ -45,6 +45,7 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git config merge.conflictStyle diff3     # framework/tools/unconflict.py needs the base of each hunk
           cp framework/tools/unconflict.py framework/tools/merge_jsonl.py framework/tools/pr_ticket.py "$RUNNER_TEMP/"   # main's copy: the job checks out PR branches
+          cp framework/tools/push_workflows.py "$RUNNER_TEMP/" && cp -r .github/workflows "$RUNNER_TEMP/workflows"   # main's push workflows (#4839)
           mkdir -p "$RUNNER_TEMP/gate" && cp framework/tools/owner_gate.py framework/tools/agent_config.py agent.toml "$RUNNER_TEMP/gate/"   # main's owners (#4241)
           git config merge.jsonl.driver "python3 $RUNNER_TEMP/merge_jsonl.py %O %A %B"   # game/data/*.jsonl (#2004)
           python3 -m pip install -q "$(grep '^ruff' requirements-dev.txt)"
@@ -56,7 +57,7 @@ jobs:
           BRANCH: ${{ github.event.workflow_run.head_branch }}
           SHA: ${{ github.event.workflow_run.head_sha }}
         run: |
-          merged=0 conflict=0 labels=0
+          merged=0 conflict=0
           # An agent branch, or any branch with the label automerge (the owner's opt-in, #3383).
           AGENT='(.head.ref | test("^(agent/|claude/|ccr-)")) or ([.labels[].name] | index("automerge") != null)'
           # GitHub computes "mergeable" without merge=jsonl and merge=union. A PR that only our drivers can merge
@@ -144,9 +145,8 @@ jobs:
               fi
             fi
             echo "merged #$n"; merged=1
-            if gh api "repos/$R/pulls/$n/files?per_page=100" --jq '.[].filename' | grep -Fqx .github/labels.txt; then
-              labels=1
-            fi
+            gh api "repos/$R/pulls/$n/files?per_page=100" --jq '.[].filename' > files.txt || true
+            cat files.txt >> "$RUNNER_TEMP/merged_files.txt"    # for the push workflows after the merges (#4839)
             gh api "repos/$R/git/refs/heads/$branch" -X DELETE || true
             if [ -n "$ticket" ]; then
               gh api "repos/$R/issues/$ticket/labels/in-progress" -X DELETE >/dev/null 2>&1 || true
@@ -178,11 +178,12 @@ jobs:
             gh workflow run ci.yml --repo "$R" --ref main
             gh workflow run coverage.yml --repo "$R" --ref main || true     # report and MAX on main (#233)
           fi
-          # A push of GITHUB_TOKEN starts no `push` workflow, so labels.yml does not see the merge (#980). Start it only
-          # when the merged PR changed labels.txt: it calls the API once per label, and a start after each of about
-          # 50 merges per hour uses much of the token limit (1,000 calls per hour per repository).
-          if [ "$labels" = 1 ]; then
-            gh workflow run labels.yml --repo "$R" --ref main || true
+          # A push of GITHUB_TOKEN starts no `push` workflow: start each one of main whose paths filter matches the
+          # merged files, once (#4839; for example the site image of a new project). labels.yml starts only when a PR
+          # changed labels.txt (#980): it calls the API once per label.
+          if [ "$merged" = 1 ] && [ -s "$RUNNER_TEMP/merged_files.txt" ]; then
+            sort -u "$RUNNER_TEMP/merged_files.txt" | xargs -d '\n' python3 "$RUNNER_TEMP/push_workflows.py" \
+              --dir "$RUNNER_TEMP/workflows" | while read -r w; do gh workflow run "$w" --repo "$R" --ref main || true; done
           fi
           if [ "$merged" = 1 ] || [ "$conflict" = 1 ]; then              # GitHub ignores merge=union: do not wait 20 min
             gh workflow run unconflict.yml --repo "$R" || true             # main moved: merge it into conflicted PRs (#280)
