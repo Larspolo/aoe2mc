@@ -324,7 +324,9 @@ def script_state(s):
     """The state of a per.Script: JSON keys are strings, so the goals and timers are [id, value] pairs."""
     return {"goals": sorted(map(list, s.goals.items())), "timers": sorted(map(list, s.timers.items())),
             "off": sorted(s.off), "sn": dict(sorted(s.sn.items())), "attacking": s.attacking,
-            "escrow": dict(sorted(s.escrow.items())), "pct": dict(sorted(s.pct.items())), "last": s.last}
+            "escrow": dict(sorted(s.escrow.items())), "pct": dict(sorted(s.pct.items())), "last": s.last,
+            "ids": sorted(map(list, s.ids.items())), "next_id": s.next_id, "target": s.target,   # the search (#4957)
+            "search": [json.loads(json.dumps(s.search[k])) for k in (1, 2)], "filters": dict(sorted(s.filters.items()))}
 
 
 def owner_record(g):
@@ -592,6 +594,10 @@ def bots_again(g, d):
                     sc.goals, sc.timers = dict(map(tuple, v["goals"])), dict(map(tuple, v["timers"]))
                     sc.off, sc.sn, sc.attacking = set(v["off"]), dict(v["sn"]), v["attacking"]
                     sc.escrow, sc.pct, sc.last = dict(v.get("escrow", {})), dict(v.get("pct", {})), v.get("last")
+                    if "ids" in v:                                     # an older save has no search (#4957)
+                        sc.ids, sc.next_id, sc.target = dict(map(tuple, v["ids"])), v["next_id"], v["target"]
+                        sc.search = {k: json.loads(json.dumps(st)) for k, st in zip((1, 2), v["search"])}
+                        sc.filters = dict(v["filters"])
                 continue
             if f == "difficulty" and v != b.difficulty:                # the work rate of the saved level (bot.Bot)
                 r = ai.LEVELS[b.difficulty]["gather"] / ai.LEVELS[v]["gather"]
