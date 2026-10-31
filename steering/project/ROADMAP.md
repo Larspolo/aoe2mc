@@ -105,8 +105,10 @@ can see which features have an epic: `gh api "repos/Larspolo/aoe2mc/issues?label
 - [x] `play:unit-abilities` The special abilities of the units as in AoE2 DE: the trample damage of the elephants, the charge attack of the Coustillier and the Urumi Swordsman, the Leitis that ignores armor, the Shrivamsha Rider that dodges arrows, the Ratha that switches between melee and ranged (epic #4387)
 - [x] `play:civ-choice` The civilization choices of the AoE2 DE lobby: Random (a random civilization for a player), Mirror (all players get the same civilization) and hidden civilizations (a player sees the civilization of an enemy only when an own unit sees one of its units or buildings) (epic #4745)
 - [x] `play:ally-commands` Commands to an allied bot, as the AI commands of the AoE2 DE chat: a player tells an allied bot to attack an enemy now, to stop its attack, or to send food, wood, gold or stone; the bot does it and answers in the chat, and an AI script sees the command as a taunt (`taunt-detected`) (epic #4826)
-- [ ] `play:gaia-units` The Gaia units of a scenario that are not animals (villagers, soldiers, monks, trade carts, ships), as in AoE2: a Gaia unit joins the first player whose unit comes near it, and it does not attack; the Gaia buildings stay Gaia
+- [x] `play:gaia-units` The Gaia units of a scenario that are not animals (villagers, soldiers, monks, trade carts, ships), as in AoE2: a Gaia unit joins the first player whose unit comes near it, and it does not attack; the Gaia buildings stay Gaia (epic #5107)
 - [ ] `play:xs-scripts` The XS scripts of AoE2 DE (a C-like script language): the script of a scenario (the trigger effect "Script Call" and the rules of its XS file) and the `#includeXS` file of a random map script run in the game program, so that the custom scenarios and maps that need them work
+- [ ] `play:tutorial` A tutorial for a new player, as "Learn to Play" of AoE2 DE: a guided first game in the game program that says each step (select a villager, gather, build a house, train a unit, age up, fight), checks that the player did it and then gives the next step
+- [ ] `play:ratings` Ratings of the players, as the ranked ladder of AoE2 DE: each finished game of the game program changes the rating (Elo) of each Minecraft player, the lobby shows the ratings and can balance the teams by rating
 
 ## 3. Replay a recorded game in Minecraft (`game/replay.py`, `aoe2mc.read_timeline`)
 
@@ -147,6 +149,7 @@ can see which features have an epic: `gh api "repos/Larspolo/aoe2mc/issues?label
 - [x] `replay:players` The players of the record as the AoE2 DE loading screen and the match page of AoE2 Insights show them: name, civilization, color, team and rating (from the AoE2 record API, `tools/record_api.py`) in the score panel and on the first page of the summary book (epic #4666)
 - [x] `replay:pov-camera` The view of the player who recorded the game, as the AoE2 DE replay: the spectator view follows the camera of that player (the view locks of the record, mgz `Operation.VIEWLOCK`) (epic #4765)
 - [x] `replay:game-modes` A record of an AoE2 DE game mode (Regicide, Empire Wars, King of the Hill, Sudden Death, Capture the Relic, Antiquity Mode of Return of Rome ...) replays with the rules of that mode from the game program: the kings, the start economy, the monument and the victory of the mode; the score panel and the summary name the mode (epic #4831)
+- [ ] `replay:scenario-triggers` A record of a game on a custom scenario (a multiplayer scenario, a scenario of a campaign) replays with the triggers of its scenario: the messages, objectives and the units and effects of the triggers come at their times, from the `.aoe2scenario` file that the record names
 
 ## 4. The agent system (`.claude/skills/`, `tools/`, `.github/workflows/`)
 
