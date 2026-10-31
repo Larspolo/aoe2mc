@@ -3,7 +3,7 @@ from . import NAMES, form
 
 
 def check(row):
-    form(row, {"name": str, "kind": str}, {"game": str, "age": int, "civ": str, "set": list, "tiles": int})
+    form(row, {"name": str, "kind": str}, {"game": str, "age": int, "civ": str, "set": list, "tiles": int, "id": int})
     assert row.get("civ") in (None, "unit", "elite", "upgrade", "research"), row["name"]
     assert all(n in NAMES["train.jsonl"] | NAMES["gather.jsonl"] for n in row.get("set", ())), row["name"]
     assert row["kind"] in ("age", "building", "civ", "difficulty", "map-size", "map-type", "tech", "unit") and row["name"] == row["name"].lower(), row["name"]
