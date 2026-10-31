@@ -49,7 +49,7 @@ def test_the_upgrade_changes_the_live_and_the_new_units():
     server, g = barracks("SPARTANS", CASTLE)
     research(g, BARRACKS, "ELITE_HOPLITE_UPGRADE")
     assert g.soldiers["h"] == "ELITE_HOPLITE"
-    assert combat.stats_command("h", "ELITE_HOPLITE") in server.log
+    assert combat.stats_command("h", "ELITE_HOPLITE", T=g.map.T) in server.log
     train.open_menu(g, "Steve", BARRACKS)
     m = menus(server)[-1]
     assert item(m, "Elite Hoplite").endswith(" · queue 0/15") and item(m, "Hoplite") is None
