@@ -26,6 +26,8 @@ import os
 import re
 import sys
 
+import numpy as np
+
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import table  # noqa: E402
 
@@ -226,6 +228,10 @@ UP_QUEUE = {"up-build": "build", "up-research": "research", "up-train": "train"}
 
 
 SETUP = ("civ-selected", "death-match-game", "difficulty", "map-size", "map-type", "regicide-game", "starting-age")
+FIND_METHODS = {"find-attacker": 0,                                # airef "FindPlayerMethod" (up-find-player)
+                "find-closest": 2,
+                "find-ordered": 3,
+                "find-random": 1}
 RESEARCH_STATE = {"research-available": 1,                         # airef "ResearchState" (up-research-status)
                   "research-complete": 3,
                   "research-pending": 2,
@@ -268,6 +274,7 @@ class Script:
         self.escrow, self.pct = {}, {}                             # resource -> escrow; -> escrow percentage (#4682)
         self.last = None                                           # the stock after the last step: new income
         self.rings = {}                                            # perimeter -> the sides of its wall ring (ring())
+        self.rng = np.random.default_rng(bot.g.player)               # find-random of up-find-player (#4872)
         self.unplaced = set()                                      # the buildings of build with no free site (#4870)
         self.text, self.name = "", None                            # the text buffer of up-store-*; up-change-name (#4877)
         self.heard, self.read = set(), {}                          # (player, taunt) not acknowledged; player -> read
@@ -573,6 +580,8 @@ class Script:
             return bool(got) and (all(got) if every else any(got))
         if name == "wall-completed-percentage":                    # (wall-completed-percentage PERIMETER REL VALUE)
             return self.ring(args[0]) is not None and self.compare(args[1], self.walled(args[0]), args[2])
+        if name in ("up-players-in-game", "up-player-distance", "up-allied-goal", "up-allied-sn"):
+            return self.others(name, args)
         if name == "enemy-buildings-in-town":
             return self.in_town()
         if name in SETUP:
@@ -830,6 +839,69 @@ class Script:
             return None
         far = min(tcs, key=lambda c: (c[0] - at[0]) ** 2 + (c[1] - at[1]) ** 2)
         return ((at[0] + 2 * far[0]) // 3, (at[1] + 2 * far[1]) // 3)     # 2/3 of the way: the midpoint ties with home
+
+    def stanced(self, stance):
+        """The other players (Gathers by player number) of a playerStance: any, ally, neutral or enemy (#4872)."""
+        import build
+        import diplomacy
+        g = self.bot.g
+        xs = {x.player: x for x in build.sides(g) if x.player != g.player}
+        return {p: x for p, x in sorted(xs.items()) if stance == "any" or diplomacy.stance(g, p) == stance}
+
+    def distance(self, x):
+        """Tiles from the own town center to the nearest building or site of the Gather x; None with none."""
+        import ruins
+        g, at = self.bot.g, self.bot.center()
+        rects = [o["footprint"] for o in g.data["objects"] if o["kind"] == "building" and o.get("player") == x.player
+                 and "footprint" in o and not ruins.fallen(x, o)]
+        rects += [(x0, z0, x1, z1) for s in x.sites if s.get("player", x.player) == x.player
+                  for x0, x1, z0, z1 in [s["footprint"]]]
+        if at is None or not rects:
+            return None
+        return min(math.hypot((r[0] + r[2]) / 2 - at[0], (r[1] + r[3]) / 2 - at[1]) for r in rects) / g.data["tile_size"]
+
+    def others(self, name, args):
+        """up-players-in-game STANCE REL VALUE, up-player-distance PLAYER REL VALUE, up-allied-goal PLAYER GOAL REL
+        VALUE, up-allied-sn PLAYER SN REL VALUE (#4872): the goal or number of the script of an allied bot."""
+        import build
+        import diplomacy
+        g = self.bot.g
+        if name == "up-players-in-game":
+            return self.compare(args[1], len(self.stanced(args[0])), args[2])
+        x = self.stanced("any").get(args[0])
+        if name == "up-player-distance":
+            d = None if x is None else self.distance(x)
+            return d is not None and self.compare(args[1], round(d), args[2])
+        first = (build.sides(g) or [g])[0]
+        other = next((b.script for b in getattr(first, "bots", ()) if b.g.player == args[0]), None)
+        if other is None or diplomacy.stance(g, args[0]) != "ally":
+            return False
+        if name == "up-allied-goal":
+            return self.compare(args[2], other.goals.get(args[1], -1), args[3])
+        sn = SN_IDS.get(args[1], args[1])
+        return sn in SN and self.compare(args[2], other.number(sn), args[3])
+
+    def find_player(self, name, args):
+        """(up-find-player STANCE METHOD GOAL), up-find-next-player: a player of airef "FindPlayerMethod" into the goal,
+        0 for none. find-attacker: the game program keeps no attacker, so 0. Next: after the player in the goal."""
+        xs = self.stanced(args[0])
+        if name == "up-find-next-player":
+            after = self.goals.get(args[2], 0)
+            xs = {p: x for p, x in xs.items() if p != after}
+        method = FIND_METHODS.get(args[1], args[1])
+        if not xs or method == 0:
+            pick = 0
+        elif method == 1:
+            pick = int(self.rng.choice(sorted(xs)))
+        elif method == 2:
+            near = {p: d for p, x in xs.items() if (d := self.distance(x)) is not None}
+            pick = min(near, key=lambda p: (near[p], p), default=0)
+        else:
+            pick = max(xs)
+        if name == "up-find-next-player" and method == 3:          # ordered: the next lower player, then from the top
+            after = self.goals.get(args[2], 0)
+            pick = max((p for p in xs if p < after), default=max(xs, default=0))
+        self.goals[args[2]] = pick
 
     def in_town(self):
         """True when a building of an enemy stands within TOWN tiles of the own town center."""
@@ -1187,6 +1259,8 @@ class Script:
                 text = text.replace("%d", str(value)).replace("%s", self.text)
             who = self.name or f"Player {g.player}"
             g.command(f"tellraw {to} " + json.dumps({"text": f"<{who}> {text}"}))
+        elif name in ("up-find-player", "up-find-next-player"):
+            self.find_player(name, args)
         elif name == "up-change-name":
             self.name = str(args[0])
         elif name == "up-store-text":
