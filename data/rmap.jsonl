@@ -38,6 +38,12 @@
 {"name": "SNOW_LIGHT", "terrain": 73}
 {"name": "DLC_DRYGRASS", "terrain": 100}
 {"name": "DLC_DESERTGRAVEL", "terrain": 102}
+{"name": "DLC_MANGROVESHALLOW", "terrain": 54}
+{"name": "ICY_SHORE", "terrain": 37}
+{"name": "DLC_CRACKED", "terrain": 45}
+{"name": "MEDITERRANEAN_FOREST", "terrain": 88}
+{"name": "DLC_NEWSHALLOW", "terrain": 59}
+{"name": "DLC_ROADGRAVEL", "terrain": 78}
 {"name": "TREE_OAK_FOREST", "forest": [10, 20]}
 {"name": "TREE_PALM_FOREST", "forest": [13]}
 {"name": "TREE_JUNGLE", "forest": [17]}
@@ -49,6 +55,7 @@
 {"name": "TREE_ACACIA", "forest": [50]}
 {"name": "TREE_MANGROVE", "forest": [55]}
 {"name": "TREE_RAINFOREST", "forest": [56]}
+{"name": "TREE_ITALIAN_PINE", "forest": [88]}
 {"name": "VILLAGER_MALE", "start": [2, 4, 1]}
 {"name": "VILLAGER_FEMALE", "start": [1, 4, 1]}
 {"name": "SCOUT_CAVALRY", "start": [1, 6, 1]}
