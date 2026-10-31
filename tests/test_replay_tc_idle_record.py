@@ -1,9 +1,11 @@
 """The idle town center time of the two players of a recorded game (#4054, check of #4051): Replay.tc_idle equals a
 count by hand of the villager trainings of the town centers in samples/de-64.3.aoe2record."""
+import json
 import os
 import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "game"))
+import lang  # noqa: E402
 import replay  # noqa: E402
 from test_replay import Fake, data  # noqa: E402
 
@@ -29,7 +31,8 @@ def test_the_idle_town_center_time_of_two_players_equals_the_count_by_hand():
 def test_the_summary_names_the_idle_town_center_time_of_each_player_at_the_end():
     r = replay.Replay(Fake(), data(aoe2mc.read_timeline(REC), n=480))
     r.pop, r.ended = {1: 1, 2: 1}, max(e["time"] for e in r.data["timeline"])     # play() sets both
-    lines = [c for c in r.summary_commands() if "idle TC time" in c]
+    lines = ["".join(lang.plain(t) for t in json.loads(c.split(" ", 2)[2])) for c in r.summary_commands()
+             if "idle TC time" in c]
     assert [r.tc_text(p) for p in (1, 2)] == ["20:06", "14:22"]               # 3 and 2 town centers up to the end
     for p in (1, 2):
         assert sum(f"idle TC time {r.tc_text(p)}" in c and f"Player {p} " in c for c in lines) == 1

@@ -2,12 +2,13 @@
 import json
 
 import gather
+import lang
 from test_replay_inspect import facing, setup
 
 
 def line(r):
     (c,) = [c for c in r.inspect(10000, clock=lambda: 0.0) if " actionbar " in c]
-    return "".join(p["text"] for p in json.loads(c.split(" actionbar ", 1)[1]))
+    return "".join(lang.plain(p) for p in json.loads(c.split(" actionbar ", 1)[1]))
 
 
 def gatherer(r, res, load, tech=None):

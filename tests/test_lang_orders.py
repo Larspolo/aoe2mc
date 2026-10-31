@@ -66,8 +66,8 @@ def first_key(obj):
 def assert_translated(obj):
     """The text is a translate component: its key is a line of texts.jsonl, its fallback the English text of that line."""
     lead = obj[0] if isinstance(obj, list) else obj
-    assert lead["translate"] in lang.EN_US
-    assert lead["fallback"] == lang.EN_US[lead["translate"]]
+    assert lead["translate"] in lang.en_us()
+    assert lead["fallback"] == lang.en_us()[lead["translate"]]
 
 
 def test_pause_says_the_pause_as_a_translate_line():

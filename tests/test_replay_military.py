@@ -5,6 +5,7 @@ import os
 import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "game"))
+import lang  # noqa: E402
 import replay  # noqa: E402
 from test_replay import Fake, data  # noqa: E402
 from test_replay_delete import delete  # noqa: E402
@@ -15,7 +16,7 @@ from test_replay_summary import HEAD, play  # noqa: E402
 def military(sent):
     """The military lines after the summary header."""
     rest = sent[sent.index(HEAD) + 1:]
-    return ["".join(t["text"] for t in json.loads(c.split(" ", 2)[2])) for c in rest
+    return ["".join(lang.plain(t) for t in json.loads(c.split(" ", 2)[2])) for c in rest
             if c.startswith("tellraw @a [") and "military" in c]
 
 

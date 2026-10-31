@@ -4,6 +4,7 @@ import os
 import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "game"))
+import lang  # noqa: E402
 import replay  # noqa: E402
 from test_replay import Fake, data  # noqa: E402
 
@@ -26,7 +27,7 @@ def play(**kw):
 
 
 def lines(sent):
-    return ["".join(t["text"] for t in json.loads(c.split(" ", 2)[2])) for c in sent
+    return ["".join(lang.plain(t) for t in json.loads(c.split(" ", 2)[2])) for c in sent
             if c.startswith("tellraw @a [") and "technologies" in c]
 
 

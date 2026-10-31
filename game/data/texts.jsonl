@@ -11,8 +11,6 @@
 {"name": "aoe2mc.build.wall_end", "en_us": "%s: right click the end of the wall."}
 {"name": "aoe2mc.build.water", "en_us": "A %s must stand on the water."}
 {"name": "aoe2mc.battle_royale.start", "en_us": "Battle Royale: the Corruption takes the map from its border to its center in %s. It destroys all units and buildings in it."}
-{"name": "aoe2mc.conquest.allies_end", "en_us": "Only allies are left: the alliances end. The last player alive wins."}
-{"name": "aoe2mc.conquest.defeated", "en_us": "Player %s is defeated."}
 {"name": "aoe2mc.challenge.lost_bronze", "en_us": "%s units lost, bronze medal up to %s"}
 {"name": "aoe2mc.challenge.lost_gold", "en_us": "%s units lost, gold medal up to %s"}
 {"name": "aoe2mc.challenge.lost_none", "en_us": "%s units lost, no medal"}
@@ -24,6 +22,8 @@
 {"name": "aoe2mc.challenge.time_bronze", "en_us": "Bronze medal in %s"}
 {"name": "aoe2mc.challenge.time_gold", "en_us": "Gold medal in %s"}
 {"name": "aoe2mc.challenge.time_silver", "en_us": "Silver medal in %s"}
+{"name": "aoe2mc.conquest.allies_end", "en_us": "Only allies are left: the alliances end. The last player alive wins."}
+{"name": "aoe2mc.conquest.defeated", "en_us": "Player %s is defeated."}
 {"name": "aoe2mc.defeat", "en_us": "Defeat"}
 {"name": "aoe2mc.flare.placed", "en_us": "%s: Flare at %s %s"}
 {"name": "aoe2mc.follow.refuse_follow", "en_us": "Follow: click an own unit"}
@@ -102,6 +102,46 @@
 {"name": "aoe2mc.hill.holds", "en_us": "Player %s holds the monument."}
 {"name": "aoe2mc.relic_victory.all", "en_us": "Player %s holds all relics."}
 {"name": "aoe2mc.relic_victory.lost", "en_us": "Player %s lost a relic."}
+{"name": "aoe2mc.replay.carries", "en_us": " | carries %s %s"}
+{"name": "aoe2mc.replay.flare", "en_us": "Flare"}
+{"name": "aoe2mc.replay.game_ends", "en_us": "The game ends"}
+{"name": "aoe2mc.replay.game_time", "en_us": "Game time %s"}
+{"name": "aoe2mc.replay.garrison", "en_us": " · garrison %s"}
+{"name": "aoe2mc.replay.hill_won", "en_us": "%s held the monument: King of the Hill victory at %s."}
+{"name": "aoe2mc.replay.inspect", "en_us": "%s (%s): %s/%s | %s%s | %s atk %s/%s arm%s"}
+{"name": "aoe2mc.replay.join_help", "en_us": "Double-tap Shift: spectator view (fly through blocks). Right click the hotbar items: replay control."}
+{"name": "aoe2mc.replay.king_died", "en_us": ": the King died at %s. Regicide: the player is out."}
+{"name": "aoe2mc.replay.king_killed", "en_us": "King killed at %s"}
+{"name": "aoe2mc.replay.live_jump", "en_us": "Live replay: the jump stops at the delay behind the game."}
+{"name": "aoe2mc.replay.monument_holds", "en_us": " holds the monument at %s."}
+{"name": "aoe2mc.replay.monument_year", "en_us": "%s: monument, %s year left"}
+{"name": "aoe2mc.replay.monument_years", "en_us": "%s: monument, %s years left"}
+{"name": "aoe2mc.replay.no_camera", "en_us": "This record has no camera of its player."}
+{"name": "aoe2mc.replay.out", "en_us": "%s is out"}
+{"name": "aoe2mc.replay.range", "en_us": " r%s"}
+{"name": "aoe2mc.replay.relic_won", "en_us": " takes the relic to a monastery and wins."}
+{"name": "aoe2mc.replay.replay_ended", "en_us": "Replay ended"}
+{"name": "aoe2mc.replay.research", "en_us": " researches %s"}
+{"name": "aoe2mc.replay.resigns", "en_us": "%s resigns"}
+{"name": "aoe2mc.replay.restart_jump", "en_us": "The server restarts for the jump back: join it again."}
+{"name": "aoe2mc.replay.sum_economy", "en_us": ": villagers trained %s, gathered %s, idle villager time %s, idle TC time %s"}
+{"name": "aoe2mc.replay.sum_hill_holds", "en_us": ": holds the monument (King of the Hill)"}
+{"name": "aoe2mc.replay.sum_hill_won", "en_us": ": monument won %s (King of the Hill)"}
+{"name": "aoe2mc.replay.sum_military", "en_us": ": military units trained %s, units lost %s, buildings lost %s, APM %s%s"}
+{"name": "aoe2mc.replay.sum_regicide", "en_us": ": King killed %s (Regicide)"}
+{"name": "aoe2mc.replay.sum_relic", "en_us": ": wins, relic in a monastery %s (Capture the Relic)"}
+{"name": "aoe2mc.replay.sum_society", "en_us": ": %stribute sent %s, received %s, villager high %s (est.)"}
+{"name": "aoe2mc.replay.sum_sudden_death", "en_us": ": town center lost %s (Sudden Death)"}
+{"name": "aoe2mc.replay.sum_techs", "en_us": ": %s, technologies %s"}
+{"name": "aoe2mc.replay.sum_wonder", "en_us": ": wonder timer from %s, ends %s (%s)"}
+{"name": "aoe2mc.replay.summary", "en_us": "Summary (est.)"}
+{"name": "aoe2mc.replay.town_fell", "en_us": ": the town center fell at %s. Sudden Death: the player is out."}
+{"name": "aoe2mc.replay.town_lost", "en_us": "Town center lost at %s"}
+{"name": "aoe2mc.replay.wonder_built", "en_us": " built a wonder at %s."}
+{"name": "aoe2mc.replay_input.fights", "en_us": "Large fights:"}
+{"name": "aoe2mc.replay_input.help", "en_us": "Replay: right click the items in your hotbar, or click: "}
+{"name": "aoe2mc.replay_input.units", "en_us": " (%s units)"}
+{"name": "aoe2mc.replay_input.vs", "en_us": " vs "}
 {"name": "aoe2mc.resource.food", "en_us": "food"}
 {"name": "aoe2mc.resource.gold", "en_us": "gold"}
 {"name": "aoe2mc.resource.stone", "en_us": "stone"}

@@ -5,6 +5,7 @@ import os
 import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "game"))
+import lang  # noqa: E402
 import replay  # noqa: E402
 from test_replay import Fake, data  # noqa: E402
 from test_replay_relic_monastery import CHURCH, OTHER, home  # noqa: E402
@@ -37,7 +38,7 @@ def two_relics():
 
 
 def page_text(page):
-    return page["text"] + "".join(page_text(e) for e in page.get("extra", []))
+    return lang.plain(page) + "".join(page_text(e) for e in page.get("extra", []))
 
 
 def timeline_rows(sent):

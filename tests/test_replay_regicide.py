@@ -5,6 +5,7 @@ import os
 import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "game"))
+import lang  # noqa: E402
 import regicide  # noqa: E402
 import replay  # noqa: E402
 from test_replay import Fake, data  # noqa: E402
@@ -39,7 +40,7 @@ def texts(cmds):
     for c in cmds:
         if c.startswith(("tellraw", "title @a title", "scoreboard players display name")):
             j = json.loads(c[min(i for i in (c.find("{"), c.find("[")) if i >= 0):])
-            out.append("".join(t["text"] for t in (j if isinstance(j, list) else [j])))
+            out.append("".join(lang.plain(t) for t in (j if isinstance(j, list) else [j])))
     return out
 
 

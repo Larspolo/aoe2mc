@@ -2,6 +2,7 @@
 UNGARRISON lets them out, and the info line of the ram shows the count (#5369). Fake RCON."""
 import json
 
+import lang
 import pytest
 import replay
 from test_replay import Fake, data
@@ -85,5 +86,5 @@ def test_the_info_line_of_the_ram_shows_the_count():
     r.cargo = {60: [7, 8]}
     facing(r, 40.0)
     (c,) = [c for c in r.inspect(10000, clock=lambda: 0.0) if " actionbar " in c]
-    text = "".join(p["text"] for p in json.loads(c.split(" actionbar ", 1)[1]))
+    text = "".join(lang.plain(p) for p in json.loads(c.split(" actionbar ", 1)[1]))
     assert text.startswith(replay.pretty("BATTERING_RAM")) and text.endswith(" · garrison 2")

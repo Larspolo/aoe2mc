@@ -18,7 +18,7 @@ def test_a_flare_shows_at_the_block_of_its_tile_with_the_bell_and_a_chat_line():
     assert out[0] == f"playsound {flare.SOUND} master @a 34 70 13 1 1 1"
     assert out[1] == flare.particles(34, 70, 13, "@a", replay.FIREWORK_COLORS["orange"])
     assert json.loads(out[2][len("tellraw @a "):]) == [{"text": "<Player 2 (Aztecs)> ", "color": "gold"},
-                                                       {"text": "Flare", "color": "gold"}]
+                                                       replay.say("flare", color="gold")]
 
 
 def test_the_column_comes_again_until_the_flare_time_ends():
