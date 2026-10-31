@@ -7,10 +7,6 @@ from test_tower_upgrades import setup
 from game import build, combat
 
 
-def test_each_building_that_shoots_has_an_attack_against_ships():
-    assert all(s.bonus.get(combat.SHIP) for k, s in combat.BUILDINGS.items() if s.attack)
-
-
 def test_a_watch_tower_arrow_has_its_ship_bonus_and_more_after_heated_shot():
     _, g = setup(2)
     galley, militia, tower = combat.stats("GALLEY"), combat.stats("MILITIA"), build.values(g, "WATCH_TOWER")

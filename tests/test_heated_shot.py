@@ -51,7 +51,8 @@ def test_the_research_gives_the_own_towers_the_bonus():
     server.hp[uuid(MAP)] = 1000                                        # the tower lost 20 hit points
     research(g, "HEATED_SHOT")
     cmd, = [c for c in server.log if c.startswith(f"aoe building {uuid(MAP)} ")]
-    assert cmd.endswith(f" ship:{build.values(g, 'WATCH_TOWER').bonus['ship']}")   # the bonus is the last argument
+    s = build.values(g, "WATCH_TOWER")
+    assert cmd.endswith(" " + ",".join(f"{c}:{n}" for c, n in sorted(s.bonus.items())))   # the bonus is the last argument
     assert server.hp[uuid(MAP)] == 1000
 
 

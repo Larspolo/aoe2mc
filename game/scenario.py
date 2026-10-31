@@ -46,6 +46,7 @@ import re
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import build  # noqa: E402
 import fog  # noqa: E402
 import garrison  # noqa: E402
 import gather  # noqa: E402
@@ -717,10 +718,14 @@ def setup(g, mode="scenario", start=True):
 def start_values(x, p):
     """Put the start values of a player of aoe2mc.json (p) on its Gather x: the age, the technologies, the disabled
     objects, the resources and the population limit. Also for a converted saved game (run.py, #4565)."""
-    if "age" in p:                                                 # the starting age of the editor (#3296)
+    if "techs" in p and "age" in p:                                # a save has its own technologies (#4623):
+        for t in build.AGE_TECHS[:train.STARTS[p["age"]]["ages"]]:  # only the ages, not all of the earlier ages
+            if t not in x.techs:
+                train.research(x, {"name": t}, start=True)
+    elif "age" in p:                                               # the starting age of the editor (#3296)
         train.start(x, p["age"])                                   # before the stock: no age cost (train.start)
     for t in p.get("techs", ()):                                   # the researched technologies of a save (#4565)
-        if t not in x.techs:
+        if t not in x.techs and t in train.TECHS:                  # an unknown ID name (TECH_N) is no technology
             train.research(x, {"name": t}, start=True)
     for name in p.get("disabled", ()):                             # the tab "Options" of the editor (#3299)
         vars(x).setdefault("trigger_menus", {})[name] = False      # an "Enable Object" trigger turns it on again

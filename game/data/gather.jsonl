@@ -29,7 +29,7 @@
 {"name": "GOOSE", "hunt": 100, "herd": true, "decay": 0.25}
 {"name": "GRAND_TRUNK_ROAD", "work": {"gold": 1.1}}
 {"name": "GREAT_FISH_MARLIN", "fish": 350}
-{"name": "HAND_CART", "carry": 7, "pace": 1.1}
+{"name": "HAND_CART", "carry_rate": 1.5, "pace": 1.1}
 {"name": "HEAVY_PLOW", "farm": 125}
 {"name": "HORSE_COLLAR", "farm": 75}
 {"name": "IBEX", "hunt": 140, "decay": 0.25}
@@ -54,5 +54,5 @@
 {"name": "TWO_MAN_SAW", "work": {"wood": 1.1}}
 {"name": "VILLAGER", "civilian": true}
 {"name": "WATER_BUFFALO", "hunt": 150, "herd": true, "decay": 0.25}
-{"name": "WHEELBARROW", "carry": 3, "pace": 1.1}
+{"name": "WHEELBARROW", "carry_rate": 1.27, "pace": 1.1}
 {"name": "WILD_BOAR", "hunt": 340, "decay": 0.4}

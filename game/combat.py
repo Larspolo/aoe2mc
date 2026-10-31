@@ -41,7 +41,7 @@ SHIP, WAR = "ship", "warship"                         # the ships; "warship": th
 FIRE = "fireship"                                     # the AoE2 class "Fire Ships" (the hulk bonus, #1489)
 # The values of each unit: one line per unit in data/units.jsonl (#1912). "note" is the source of a value.
 UNIT_ROWS = table.load("units.jsonl")
-STATS = {r["name"]: Stats(**{f: r[f] for f in Stats._fields[:7]}, classes=tuple(r["classes"]), blast=r.get("blast", 0),
+STATS = {r["name"]: Stats(**{f: r[f] for f in Stats._fields[:7]} | ({"range": 0} if r.get("melee_reach") else {}), classes=tuple(r["classes"]), blast=r.get("blast", 0),
                           passes=r.get("pass", 0), pass_part=r.get("pass_part", 0.5 * ("pass" in r)))
          for r in UNIT_ROWS}             # blast, passes, pass_part: values that technologies change (#4283, Malon #4335)
 REPAIRS = {r["name"]: r["repairs"] for r in UNIT_ROWS if "repairs" in r}   # a soldier that repairs a building (#2128)
@@ -77,6 +77,9 @@ SIGHT = {r["name"]: r["sight"] for r in UNIT_ROWS + BUILDING_ROWS if "sight" in 
 # Units that attack from a range with melee damage (AoE2): their hit takes the melee armor of the target (#800).
 # The key "melee_ranged" of a line of data/units.jsonl.
 MELEE_RANGED = {r["name"] for r in UNIT_ROWS if r.get("melee_ranged")}
+# Melee units with an AoE2 reach in tiles (the key "melee_reach": the Kamayuk, #5242): their range is the reach of the
+# melee hit, not a shot. STATS gives them range 0, so each other rule takes them as melee units.
+MELEE_REACH = {r["name"]: r["range"] for r in UNIT_ROWS if r.get("melee_reach")}
 # Blast radius in tiles of the units whose shot hits all units near the target, also own units (AoE2 DE, wiki "AOE";
 # AoE2 tapers the damage at the edge, here each unit in the radius takes the full damage() hit, #1050). A ship has no
 # vanilla shot: the fire ship (0: it hits only the target) and the demolition ship (#1440) shoot as a siege unit, and
@@ -162,7 +165,7 @@ def elevation_command(data):
                                                                    for full in [{} if data.get("full_tech_tree") else p]])
 
 
-def stats_command(uuid, name, s=None, taken=1.0, friendly=1.0, less=None, ignore=False, rage=0, reflect=0.0, dot=None):
+def stats_command(uuid, name, s=None, taken=1.0, friendly=1.0, less=None, ignore=False, rage=0, reflect=0.0, dot=None, T=4):
     """The plugin command that gives entity `uuid` the values of AoE2 unit `name` (or the values s, for example with
     technologies, #655): max_health = hit points (at most 1024, the limit of the attribute), the lost hit points stay lost
     (a new unit has full health, #940), and the values of `damage` (the same rule in AoePlugin.java). The range kind:
@@ -172,7 +175,8 @@ def stats_command(uuid, name, s=None, taken=1.0, friendly=1.0, less=None, ignore
     classes (less, Royal Heirs) and 1 when its hits ignore the armor (ignore, Wootz Steel): train.hits (#4331), the attack
     more for each 10 % of lost hit points (rage, Hamask) and the part of a melee hit that the attacker takes back
     (reflect, Lamellar Armor, #4332). Last, dot: the damage over time of each hit, (damage, AoE2 seconds, the target
-    classes or ()) of train.dot (#4339), its seconds as ticks at Normal speed."""
+    classes or ()) of train.dot (#4339), its seconds as ticks at Normal speed. reach: the melee reach in blocks past the
+    vanilla reach of a MELEE_REACH unit (#5242, T blocks per tile)."""
     s = s or stats(name)
     bonus = ",".join(f"{c}:{n}" for c, n in sorted(s.bonus.items())) or "-"
     kind = 0 if s.range <= 0 else 2 if name in MELEE_RANGED else 1
@@ -180,7 +184,8 @@ def stats_command(uuid, name, s=None, taken=1.0, friendly=1.0, less=None, ignore
             "less": (",".join(f"{c}:{n}" for c, n in sorted((less or {}).items())), bool(less)), "ignore": ("1", ignore),
             "rage": (f"{rage:g}", rage != 0), "reflect": (f"{reflect:g}", reflect != 0),
             "dot": (dot and f"{dot[0]:g}:{max(1, round(dot[1] / NORMAL * 20))}:{','.join(sorted(dot[2])) or '-'}",
-                    bool(dot))}                                         # Curare, Red Cliffs Tactics (Dot.java)
+                    bool(dot)),                                         # Curare, Red Cliffs Tactics (Dot.java)
+            "reach": (f"{MELEE_REACH.get(name, 0) * T:g}", name in MELEE_REACH)}   # a lance or a spear (#5242)
     return (f"aoe stats {uuid} {min(s.hp, 1024)} {s.attack} {s.melee} {s.pierce} {kind} "
             f"{','.join(s.classes) or '-'} {bonus} {round(s.reload / NORMAL * 20) or 20}"
             + "".join(f" {k}={v}" for k, (v, on) in tail.items() if on))

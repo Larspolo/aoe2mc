@@ -182,6 +182,13 @@ Normal speed (`gather.WORK_SECONDS` = 1 / (`AOE2_WORK` × 1.7) seconds per unit;
 - AoE2 work rates (`gather.AOE2_WORK`): lumberjack 0.39 from #267 (`empires2_x2_p1.dat`); forager 0.31, farmer 0.33,
   gold miner 0.38 and stone miner 0.36 are the published AoE2 DE gather rates, not read from the `.dat` file here
   (the file is not in the cloud environment).
+- Farmer (#5244): the `.dat` (`VER 8.9`, 2026-10-29) gives the farmer the work rate 0.53 (units 259 and 214) and the
+  shepherd 0.33 (units 592 and 590). A farmer of AoE2 walks on the farm between the work steps, so a player gets
+  about 0.33 food/s from a farm: the AoE2 DE wiki ("Farm", "Villager") and the community gather tables (for example
+  the build order calculators) give 0.33 for a farmer. aoe2mc keeps 0.33: its farmer stands still on the farm.
+- Carry (#5244): the `.dat` multiplies the carry: Wheelbarrow ×1.27 and Hand Cart ×1.5 (`gather.CARRY_RATE`). A
+  villager (carry 10) carries 13 and then 19, a carry of 35 gives 44 and then 67 (rounded). The additions of other
+  technologies and the civilization bonuses (`civs.carry`) stay additions.
 - The `mc` tests `test_measured_gather_timing_is_near_the_configured_timing` (wood) and
   `test_measured_rates_per_resource` (`tests/test_measure_gather.py`) fail above 10 %.
 - The work rates are now within 2 % of AoE2 at Normal speed. The villager walks 26 % slower than in AoE2, so the
@@ -342,6 +349,11 @@ Decision of the owner (#4754, A, 2026-10-30): with hidden civilizations, `lobby.
 - Co-op (#3488, option B, #3489): `game/run.py --play --seats 1,1,2` gives the AoE2 player of each person in join
   order. Two people on one player share its stock, population, units and score (one Gather), each with an own
   selection (#3486). The lobby menu still refuses a taken player.
+
+## The source of AoE2 values (#5236)
+
+When the `.dat` of AoE2 DE and the AoE2 wiki do not agree, the `.dat` wins. Find the differences of a game patch with
+`python3 tools/dat_compare.py` (local, `docs/COMMANDS.md`, #5245).
 
 ## Pitfalls of the game program
 

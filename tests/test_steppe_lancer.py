@@ -21,5 +21,5 @@ def test_the_upgrade_changes_the_live_and_the_new_units():
     train.open_menu(g, "Steve", STABLE)
     research(g, STABLE, "ELITE_STEPPE_LANCER_UPGRADE")
     assert g.soldiers["sl"] == "ELITE_STEPPE_LANCER"
-    assert combat.stats_command("sl", "ELITE_STEPPE_LANCER") in server.log
+    assert combat.stats_command("sl", "ELITE_STEPPE_LANCER", T=g.map.T) in server.log
     assert train.queue(g, "Steve", STABLE, "ELITE_STEPPE_LANCER") and train.queue(g, "Steve", STABLE, "STEPPE_LANCER") is None

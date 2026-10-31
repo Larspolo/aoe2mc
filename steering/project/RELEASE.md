@@ -52,6 +52,7 @@ Bug reserve: 0.3
 | `convert:rms-standard` | C | 6 | | |
 | `convert:saved-games` | C | 6 | | |
 | `convert:rms-lobby` | C | 4 | | |
+| `convert:export` | C | 6 | | |
 | `convert:resource-pack` | C | | | |
 | `convert:trigger-gaps` | C | | | |
 | `convert-check-maps` | B | 5 | A test set of 20 real maps (the ranked map pool, 3 campaigns, 2 old .scx scenarios) converts with no error, no unit in a block and no load error on a server | #2274 |
@@ -132,6 +133,7 @@ Bug reserve: 0.3
 | `play:xs-scripts` | C | 10 | | |
 | `play:tutorial` | C | 5 | | |
 | `play:ratings` | C | 4 | | |
+| `play:achievements` | C | 4 | | |
 | `play-check-game` | B | 5 | An agent plays a full game against the bot with a script, from the Dark Age to a win or a loss (about 30 minutes): no server error, no stuck unit | #3324 |
 | `play-check-speed` | B | 2 | With 200 units of each player, the server keeps 20 ticks per second | #3325 |
 | `play-check-kit` | B | 2 | A play-test kit: how to start and join, the controls, how to report a bug | #3326 |
@@ -179,6 +181,7 @@ Bug reserve: 0.3
 | `replay:pov-camera` | C | 3 | | |
 | `replay:game-modes` | C | 4 | | |
 | `replay:scenario-triggers` | C | 5 | | |
+| `replay:inspect` | C | 4 | | |
 | `replay-check-full` | B | 5 | A complex record (a team game of about 40 minutes with castles and large fights) replays from start to end with no error | #2277 |
 | `replay-check-follow` | B | 3 | The position tool (#813) shows no stray unit and less than 5 % stuck units on that record | #2278 |
 | `replay-check-speed` | B | 2 | The server keeps at least 18 ticks per second at speed 1 through the whole record | #2279 |

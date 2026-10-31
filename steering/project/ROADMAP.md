@@ -36,6 +36,7 @@ can see which features have an epic: `gh api "repos/Larspolo/aoe2mc/issues?label
 - [ ] `convert:rms-standard` The standard random maps of AoE2 DE convert from their real script files (Acropolis, Baltic, Fortress, Hideout, Valley and the other maps of the DE map list): each script reads with no error, and its land, water, hills, cliffs, objects and player starts come from the script, not from own tables; a list names the state of each map
 - [ ] `convert:saved-games` A saved game of AoE2 DE (`.aoe2spgame`, `.aoe2mpgame`) converts as a scenario does: the map, the units and buildings of each player at the time of the save, their resources, ages and technologies, so that the game program continues the game
 - [ ] `convert:rms-lobby` The lobby settings of a random map, as the AoE2 DE lobby: the map size (Tiny to Ludikris, also another size than the default of the player count, `--map-size`) and the game mode (Regicide, King of the Hill, Empire Wars ...) define the labels of the script (`LUDIKRIS_MAP`, `REGICIDE`, `KING_OT_HILL` ...), so that the script places the land, the kings, the monument and the start buildings of that mode
+- [ ] `convert:export` Save a map back as an AoE2 scenario, as the AoE2 DE scenario editor does: a converted world that a player changed in Minecraft (terrain, hills, water, the AoE2 units and buildings of each player) gives an `.aoe2scenario` file that AoE2 DE opens (#4198, after the release, #4175)
 
 ## 2. Play AoE2 in Minecraft (`game/`)
 
@@ -109,6 +110,7 @@ can see which features have an epic: `gh api "repos/Larspolo/aoe2mc/issues?label
 - [ ] `play:xs-scripts` The XS scripts of AoE2 DE (a C-like script language): the script of a scenario (the trigger effect "Script Call" and the rules of its XS file) and the `#includeXS` file of a random map script run in the game program, so that the custom scenarios and maps that need them work
 - [ ] `play:tutorial` A tutorial for a new player, as "Learn to Play" of AoE2 DE: a guided first game in the game program that says each step (select a villager, gather, build a house, train a unit, age up, fight), checks that the player did it and then gives the next step
 - [ ] `play:ratings` Ratings of the players, as the ranked ladder of AoE2 DE: each finished game of the game program changes the rating (Elo) of each Minecraft player, the lobby shows the ratings and can balance the teams by rating
+- [ ] `play:achievements` The achievements of AoE2 DE as Minecraft advancements: an own advancement tab, and the game program grants each achievement (win a game, reach an age by a time, train or kill a number of units ...) with a toast, as AoE2 DE shows them
 
 ## 3. Replay a recorded game in Minecraft (`game/replay.py`, `aoe2mc.read_timeline`)
 
@@ -150,6 +152,7 @@ can see which features have an epic: `gh api "repos/Larspolo/aoe2mc/issues?label
 - [x] `replay:pov-camera` The view of the player who recorded the game, as the AoE2 DE replay: the spectator view follows the camera of that player (the view locks of the record, mgz `Operation.VIEWLOCK`) (epic #4765)
 - [x] `replay:game-modes` A record of an AoE2 DE game mode (Regicide, Empire Wars, King of the Hill, Sudden Death, Capture the Relic, Antiquity Mode of Return of Rome ...) replays with the rules of that mode from the game program: the kings, the start economy, the monument and the victory of the mode; the score panel and the summary name the mode (epic #4831)
 - [ ] `replay:scenario-triggers` A record of a game on a custom scenario (a multiplayer scenario, a scenario of a campaign) replays with the triggers of its scenario: the messages, objectives and the units and effects of the triggers come at their times, from the `.aoe2scenario` file that the record names
+- [ ] `replay:inspect` The selection panel of the AoE2 DE replay: a spectator looks at a unit or a building of the live replay and sees its name, player, hit points, attack, armor and its current task (walk, gather, fight, build), and the queue and research of a building
 
 ## 4. The agent system (`.claude/skills/`, `tools/`, `.github/workflows/`)
 

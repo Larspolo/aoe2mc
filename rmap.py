@@ -44,6 +44,11 @@ LIKE = {r["name"]: r["like"] for r in RMAP if "like" in r}   # a DE object that 
 FOREST_TREES = dict(sorted((t, r["name"]) for r in RMAP for t in r.get("forest", ())))
 ASSIGN = {r["name"]: r["assign"] for r in RMAP if "assign" in r}       # the targets of assign_to: player, color, team
 CLIFF_TYPES = {r["name"]: r["cliff_type"] for r in RMAP if "cliff_type" in r}   # cliff_type word: object name prefix
+
+
+def named(word, consts):      # a #const that names a color mood or a cliff type (#5248): its name, else the word
+    v = consts.get(word)
+    return v if isinstance(v, str) else word
 BLANK = {r["name"] for r in RMAP if r.get("blank")}     # placeholders: a tile and an actor_area, no object (#4698)
 SHORE_FISH = next(r["name"] for r in RMAP if r.get("shore_fish"))
 
@@ -221,8 +226,11 @@ def expand(words, rng, defined, consts, includes, folder=None, depth=0):
                 text, j = group(words, i + 2)
                 consts[words[i + 1]] = calc(text, consts, rng)
                 i = j
+            elif v.startswith("CC_") or v in CLIFF_TYPES:   # a color mood or a cliff type name: the constant is the name (#5248)
+                consts[words[i + 1]] = v
+                i += 3
             else:
-                i += 2
+                i += 3 if v else 2                  # an unknown value word is no command (#5248)
         elif w.startswith(("(", "rnd(")):
             text, i = group(words, i)
             out.append(str(calc(text, consts, rng)))     # one rnd() draw where it is written (#4306)
@@ -665,16 +673,17 @@ def generate(text, seed, players=2, size=None, warn=None, teams=None, folder=Non
         for cmd, args, _ in cmds:
             if cmd == "color_correction":
                 from aoe2mc import MOODS
-                cc = args[0].upper().removeprefix("CC_") if args else ""
+                cc = named(args[0], consts).upper().removeprefix("CC_") if args else ""
                 if cc in MOODS:
                     mood = cc
                 else:
                     warn(f"color_correction {' '.join(args)}: no such color mood")
         sections[s] = [c for c in cmds if c[0] not in ANY_SECTION]
     unknown = set()
+    pools = {a[0] for c, a, _ in sections.get("OBJECTS_GENERATION", ()) if c == "create_object_group" and a}   # (#5251)
 
     def known(words):           # AoE2 DE: "If you specify an identifier that is not defined, the parser ignores it" (#5172)
-        bad = [w for w in words if re.fullmatch(r"[A-Z_][A-Z0-9_]*", w) and not any(w in d for d in (consts, BLANK, LIKE, ASSIGN))]
+        bad = [w for w in words if re.fullmatch(r"[A-Z_][A-Z0-9_]*", w) and not any(w in d for d in (consts, BLANK, LIKE, ASSIGN, pools))]
         for w in set(bad) - unknown:
             unknown.add(w)
             warn(f"constant {w} is not defined: the command or attribute is skipped")
@@ -683,6 +692,10 @@ def generate(text, seed, players=2, size=None, warn=None, teams=None, folder=Non
         valued = lambda cmd: cmd.startswith("create_") or cmd in ("base_terrain", "override_map_size")  # not a name
         sections[s] = [c for c in cmds if not valued(c[0]) or known(c[1])]
         for cmd, _, attrs in sections[s]:
+            if cmd == "create_object_group" and "add_object" in attrs:   # skip each add_object with an undefined object
+                attrs.many["add_object"] = [a for a in attrs.many["add_object"] if known(a)]
+                if attrs.many["add_object"]:
+                    attrs["add_object"] = attrs.many["add_object"][-1]
             keep = ("base_terrain",) if cmd == "create_terrain" else ()   # read as 0 there (#4950)
             for name in [a for a in attrs if valued(cmd) and a not in keep and not known(attrs[a])]:
                 del attrs[name]
@@ -715,8 +728,6 @@ def generate(text, seed, players=2, size=None, warn=None, teams=None, folder=Non
     for cmd, args, attrs in sections.get("LAND_GENERATION", ()):
         if cmd == "base_terrain":
             terrain[:] = value(args[0], consts)
-        elif cmd in ("enable_waves", "water_definition"):   # Minecraft water has no waves and no look of its own
-            pass
         elif cmd in ("create_player_lands", "create_land"):
             base = value(attrs["base_size"][0], consts) if "base_size" in attrs else 3
             clump = value(attrs["clumping_factor"][0], consts) if "clumping_factor" in attrs else 8
@@ -929,10 +940,13 @@ def circle(setup, players, teams, seed):
     return rng.permutation(order).tolist()
 
 
-ANY_SECTION = (                 # the commands that AoE2 DE reads in each section: generate() takes them out first (#5073)
+ANY_SECTION = (                 # the commands that AoE2 DE reads in each section: generate() takes them out first (#5073, #5249)
+    "ai_info_map_type",             # the AI map type: no effect on the land
     "color_correction",             # the color mood of the map (generate())
     "effect_amount",                # the player settings of the game: no effect on the land
     "effect_percent",               # the player settings of the game: no effect on the land
+    "enable_waves",                 # the waves of the water: Minecraft water has none (the biome sets its look)
+    "water_definition",             # the look of the water: Minecraft water takes its color from the biome
 )
 
 PLAYER_SETUP = (                # the commands of <PLAYER_SETUP> that generate() reads or that have no map effect: no warning (#4580)
@@ -1003,6 +1017,7 @@ CREATE_OBJECT = (               # the attributes of create_object that objects()
     "avoid_cliff_zone",             # tiles from a cliff, default 1; never on the cliff tiles (#4131, `ridges`: the cliffs)
     "avoid_forest_zone",            # tiles from a forest, default 1 (#3858)
     "avoid_other_land_zones",       # tiles from each other land: other than the player land or the specific land (#4133)
+    "enable_tile_shuffling",        # no public source: by its name the tiles in random order, as objects() takes them (#5251)
     "find_closest",                 # the free tile nearest to the origin of the land, first in scan order (#4135)
     "find_closest_to_map_center",   # the free tile nearest to the map middle (#4135)
     "find_closest_to_map_edge",     # the free tile nearest to a map edge (#4135)
@@ -1078,14 +1093,25 @@ def objects(cmds, consts, terrain, starts, rng, warn, owner=None, ridges=(), lay
     placed = np.zeros((n, n), bool)                    # the tiles of the objects (min_distance_group_placement)
     x, y = np.mgrid[0:n, 0:n]
     areas = {}                                         # actor_area ID -> the tiles of its objects (#3858)
+    pools = {}                                         # create_object_group NAME -> the (kind, name) of its objects (#5251)
     for cmd, args, attrs in cmds:
+        if cmd == "create_object_group" and args:      # a pool of objects that a later create_object NAME places
+            pools[args[0]] = [m for a in attrs.many.get("add_object", ()) if a for m in [kinds.get(value(
+                str(ids[LIKE[a[0]]]) if a[0] in LIKE else a[0], consts), (None, None))] if m[1]]
+            for a in sorted(set(attrs) - {"add_object"}):
+                warn(f"create_object_group: {a} is not read yet")
+            continue
         if args and args[0] in LIKE:                   # by its word: random_map.def gives it an ID that kinds has not
             args = [str(ids[LIKE[args[0]]]), *args[1:]]
         if cmd != "create_object":
             warn(f"{cmd} is not read yet")
             continue
         blank = args[0] in BLANK                       # by its word: random_map.def gives it an ID that kinds has not
-        kind, base = ("O", args[0]) if blank else kinds.get(value(args[0], consts), (None, None))
+        pool = pools.get(args[0], [])
+        if args[0] in pools and not pool:
+            warn(f"create_object {args[0]}: the group has no known object")
+            continue
+        kind, base = ("O", args[0]) if blank else pool[0] if pool else kinds.get(value(args[0], consts), (None, None))
         if base is None:
             warn(f"create_object: unknown object {args[0]}")
             continue
@@ -1200,15 +1226,16 @@ def objects(cmds, consts, terrain, starts, rng, warn, owner=None, ridges=(), lay
                     cells = [mid] + [near[i] for i in rng.permutation(len(near))[:size - 1]]
                 for tx, ty in cells:
                     mine[tx, ty] = True
-                    name = base
-                    r = 3 if kind == "B" else 1                      # a building: its tile is the corner of its middle
+                    # a group: each object of the pool with the same chance; AoE2 DE ignores the percent of add_object
+                    kc, name = pool[int(rng.integers(len(pool)))] if len(pool) > 1 else (kind, base)
+                    r = 3 if kc == "B" else 1                        # a building: its tile is the corner of its middle
                     if not blank:
                         used[max(0, tx - r):tx + r, max(0, ty - r):ty + r] = True
                         placed[max(0, tx - r):tx + r, max(0, ty - r):ty + r] = True
                     if name == "VILLAGER_MALE" and rng.integers(2):    # AoE2 DE: a male or a female villager
                         name = "VILLAGER_FEMALE"
                     if not blank:
-                        out.append({"name": name, "player": player, "x": tx + 0.5 * (kind != "B"), "y": ty + 0.5 * (kind != "B")}
+                        out.append({"name": name, "player": player, "x": tx + 0.5 * (kc != "B"), "y": ty + 0.5 * (kc != "B")}
                                    | delta)                            # more or less food, wood, gold or stone (#4429)
                     if second:
                         out.append({"name": second, "player": player, "x": tx + 0.5, "y": ty + 0.5})
@@ -1229,10 +1256,11 @@ def cliffs(cmds, terrain, starts, consts, rng, warn):
     o, kind = dict(CLIFF_DEFAULTS), "CLIFF_DEFAULT"
     for cmd, args, _ in cmds:
         if cmd == "cliff_type" and args:
-            if args[0] in CLIFF_TYPES:
-                kind = CLIFF_TYPES[args[0]]
+            word = named(args[0], consts)
+            if word in CLIFF_TYPES:
+                kind = CLIFF_TYPES[word]
             else:
-                warn(f"cliff_type {args[0]} has no cliff object: default cliffs")
+                warn(f"cliff_type {word} has no cliff object: default cliffs")
         elif cmd in o and args:
             o[cmd] = value(args[0], consts)
         else:

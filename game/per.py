@@ -1366,8 +1366,9 @@ class Script:
             return n - 1, n - 1
         if kind in ("position-target", "position-point"):
             return self.point
-        if kind == "position-object":
-            return self.warn("position", kind)                      # the target object: the object search ticket
+        if kind == "position-object":                              # the tile of the target object (#5231)
+            p = self.target_at()
+            return None if p is None else tuple(int(v) for v in p)
         if kind in ("position-enemy", "position-focus", "position-flank"):
             return foe or (kind == "position-enemy" and self.position("position-opposite")) or None
         if me is None:
@@ -1493,8 +1494,7 @@ class Script:
         tiles × 100."""
         if name == "up-get-point":                                 # (up-get-point POSITION GOAL)
             p = self.position(args[0])
-            if p is not None or args[0] != "position-object":
-                self.store(args[1], p if p is not None else (-1, -1))
+            self.store(args[1], p if p is not None else (-1, -1))
             return
         if name in ("up-set-target-point", "up-set-precise-target-point"):     # (up-set-target-point GOAL)
             p = self.pair(args[0])
@@ -1993,7 +1993,8 @@ class Script:
             b.wave = set(g.soldiers)
             b.retreat()
         elif name == "up-reset-unit":                              # (up-reset-unit TYPE UNIT): the Stop button
-            n = (sn := self.named(args[0], args[1])) and self.game(sn, "unit")
+            every = (kind := self.type_kind(args[0])) and self.operand(kind, args[1]) in (-1, "all-units-class")
+            n = tuple(sorted(set(g.soldiers.values()))) if every else (sn := self.named(args[0], args[1])) and self.game(sn, "unit")
             if n:
                 n = n if isinstance(n, tuple) else (n,)
                 units = sorted(u for u, m in g.soldiers.items() if m in n)
@@ -3244,7 +3245,9 @@ class Script:
             self.text = str(g.data.get("map") or "")
         elif name in ("up-store-tech-name", "up-store-type-name"):  # (up-store-type-name TYPE ID): a script name
             value = self.typed(args[0], args[1])
-            self.text = value if isinstance(value, str) else ""     # the game program has no table of the AoE2 ids
+            if isinstance(value, int):                              # an airef id: its script name (#5233)
+                value = (TECH_IDS if name == "up-store-tech-name" else OBJECT_IDS).get(value)
+            self.text = value if isinstance(value, str) else ""
         elif name in ("buy-commodity", "sell-commodity"):           # the path of the market menu (#4573)
             import market
             if self.trade_ok(name == "buy-commodity", args[0]):

@@ -55,11 +55,12 @@ def keep(table, path=None):
 
 
 def teams(g, one):
-    """The human teams of game g as [(names, won)]: the Minecraft names of g.sides, grouped by the allies of the AoE2
+    """The human teams of game g as [(names, won)]: the Minecraft names of g.game.sides, grouped by the allies of the AoE2
     players (gather.allied). `one` is the player of the winner team (conquest.finish). A spectator has no player: no team."""
     from gather import allied  # gather imports the modules of the game
     groups = []
-    for name, n in sorted(getattr(g, "sides", {}).items(), key=lambda kv: kv[1]):
+    sides = getattr(getattr(g, "game", g), "sides", {})              # a Gather has them on its Game (#5224)
+    for name, n in sorted(sides.items(), key=lambda kv: kv[1]):
         if not n:
             continue
         grp = next((x for x in groups if allied(g.players, x[0][1], n)), None)
