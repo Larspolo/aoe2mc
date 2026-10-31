@@ -128,6 +128,8 @@ Bug reserve: 0.3
 | `play:ai-scripts` | C | 8 | | |
 | `play:civ-choice` | C | 4 | | |
 | `play:ally-commands` | C | 4 | | |
+| `play:gaia-units` | C | 3 | | |
+| `play:xs-scripts` | C | 10 | | |
 | `play-check-game` | B | 5 | An agent plays a full game against the bot with a script, from the Dark Age to a win or a loss (about 30 minutes): no server error, no stuck unit | #3324 |
 | `play-check-speed` | B | 2 | With 200 units of each player, the server keeps 20 ticks per second | #3325 |
 | `play-check-kit` | B | 2 | A play-test kit: how to start and join, the controls, how to report a bug | #3326 |
