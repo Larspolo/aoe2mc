@@ -27,10 +27,10 @@ def test_an_include_file_gives_its_constants_and_labels(tmp_path):
     assert (terrain == rmap.TERRAINS["DIRT"]).any() and (terrain == rmap.TERRAINS["WATER"]).any()
 
 
-def test_a_missing_file_gives_the_warning(tmp_path):
+def test_a_missing_file_gives_no_warning(tmp_path):    # AoE2 DE has no error for it (#5317)
     script = "#include_drs F_Missing.inc\n<LAND_GENERATION> base_terrain DIRT"
     for folder in (True, False):
-        assert make(tmp_path, script, folder)[1] == ["#include_drs F_Missing.inc is not read"]
+        assert make(tmp_path, script, folder)[1] == []
 
 
 def test_an_include_loop_stops_with_an_error(tmp_path):
