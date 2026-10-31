@@ -183,7 +183,8 @@ def expand(words, rng, defined, consts, includes, folder=None, depth=0):
             stack.append({"on": False, "done": False, "roll": int(rng.integers(100)) if on() else 100, "acc": 0})
             i += 1
         elif w == "percent_chance":                 # of the last start_random, also inside an if (#4692)
-            n = int(arg())
+            text, j = group(words, i + 1) if arg().startswith(("(", "rnd(")) else (arg(), i + 2)
+            n = int(calc(text, consts, rng))            # a math expression or a #const (MAINLAND_LOCK_CHANCE, #5171)
             k = next((k for k in range(len(stack) - 1, -1, -1) if "acc" in stack[k]), None)
             if k is None:
                 raise RmsError("percent_chance outside start_random")
@@ -192,7 +193,7 @@ def expand(words, rng, defined, consts, includes, folder=None, depth=0):
                 f["on"] = not f["done"] and f["acc"] <= f["roll"] < f["acc"] + n
                 f["done"] |= f["on"]
                 f["acc"] += n
-            i += 2
+            i = j
         elif w in ("endif", "end_random"):          # AoE2 DE skips a stray one (Gold_Rush, Karsts, #4931)
             if stack:
                 stack.pop()
