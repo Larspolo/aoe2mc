@@ -2386,6 +2386,39 @@ class Script:
             unit = new.get(unit, unit)
         return unit
 
+    def chat(self, name, args):
+        """The team chats and taunts of AoE2 (#5046): -allies and -enemies by the stances of diplomacy. -using-id: the
+        game program has no string table of DE, so the text is the ID, "<ID>"; -using-range: a random ID of the range,
+        from the seeded generator. A taunt is the text and sound of the taunt menu (replay.TAUNTS)."""
+        import build
+        import diplomacy
+        import replay
+        g = self.bot.g
+        if name.endswith("-using-range"):                          # (... [PLAYER] ID RANGE)
+            *rest, first, span = args
+            args = (*rest, first + int(self.rng.integers(max(int(span), 1))))
+        if name.startswith("taunt"):
+            n = str(args[-1])
+            if n in replay.TAUNTS:
+                g.command("tellraw @a " + json.dumps({"text": f"<{self.name or f'Player {g.player}'}> {replay.taunt(n)}",
+                                                      "color": "gray"}))
+                for c in replay.taunt_sound(n):
+                    g.command(c)
+            return
+        text = f"<{args[-1]}>" if name.endswith(("-using-id", "-using-range")) else str(args[-1])
+        if name.startswith("chat-local"):                          # a local chat: no one but the bot sees it
+            return
+        if "-to-player" in name:
+            to = [f"@a[team=p{args[0]}]"]
+        elif "-to-all-" in name:                                   # not chat-to-allies
+            to = ["@a"]
+        else:
+            stance = "ally" if "-allies" in name else "enemy"
+            to = [f"@a[team=p{x.player}]" for x in build.sides(g) if x is not g and diplomacy.stance(g, x.player) == stance]
+        who = self.name or f"Player {g.player}"
+        for t in to:
+            g.command(f"tellraw {t} " + json.dumps({"text": f"<{who}> {text}"}))
+
     def act(self, k, a):
         import build
         import train
@@ -2595,6 +2628,9 @@ class Script:
                 text = text.replace("%d", str(value)).replace("%s", self.text)
             who = self.name or f"Player {g.player}"
             g.command(f"tellraw {to} " + json.dumps({"text": f"<{who}> {text}"}))
+        elif name.startswith(("chat-to-", "chat-local-using-", "taunt")) and name != "chat-to-all" and (
+                name.endswith(("-using-id", "-using-range", "-allies", "-enemies")) or name.startswith("taunt")):
+            self.chat(name, args)
         elif name in ("up-find-player", "up-find-next-player"):
             self.find_player(name, args)
         elif name == "up-change-name":
@@ -2656,7 +2692,8 @@ class Script:
         elif name == "resign":                                       # (resign): the bot is out, as the cheat (#3105)
             import conquest  # conquest imports gather, which imports this module
             conquest.defeat(g, g.player)
-        elif name not in ("do-nothing", "chat-local-to-self", "enable-wall-placement", "up-chat-data-to-self",
+        elif name not in ("do-nothing", "chat-local-to-self", "chat-local", "chat-trace", "log", "log-trace", "trace-fact",
+                          "set-author-name", "set-author-email", "set-author-version", "enable-wall-placement", "up-chat-data-to-self",
                           "up-log-data", "up-request-hunters"):
             # no one sees a self chat; the bots have no hunt (#4739); each wall ring is always enabled (ring())
             self.warn("action", name)
