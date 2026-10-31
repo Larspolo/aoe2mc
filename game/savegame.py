@@ -152,6 +152,7 @@ SETTINGS = (                                                           # run.py 
     "end_age",
     "full_tech_tree",
     "handicap",
+    "hidden_civs",
     "mode",
     "people",
     "pop_limit",
