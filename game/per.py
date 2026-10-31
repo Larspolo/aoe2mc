@@ -1292,7 +1292,7 @@ class Script:
             import score
             pts = score.points(self.bot.g)
             got = [self.compare(args[0], score.total(pts.get(x.player, {})), args[1]) for x in xs]
-        elif fact == "tribute":                                    # (players-tribute PLAYER RES REL VALUE): to the bot
+        elif fact in ("tribute", "tribute-memory"):                # (players-tribute-memory PLAYER RES REL VALUE): to the bot
             got = [self.compare(args[1], vars(self.bot.g).get("tribute_from", {}).get((x.player, args[0]), 0), args[2])
                    for x in xs]
         elif fact == "civ":                                        # (players-civ PLAYER CIV)
@@ -1613,6 +1613,9 @@ class Script:
         import monk
         if src == "relics":                                        # the relics in the own monasteries
             return sum(monk.own(g, r) and r["monk"] is None and r["home"] is not None for r in monk.relics(g))
+        if src == "tribute-inefficiency":                          # the tribute fee of the player in percent (30, Coinage 20)
+            import diplomacy
+            return diplomacy.fee(g)
         return self.fact_value(src, 0, g)
 
     def find_player(self, name, args):
@@ -3242,8 +3245,11 @@ class Script:
             self.difficulty[args[0]] = args[1]
         elif name == "acknowledge-taunt":                            # (acknowledge-taunt PLAYER TAUNT)
             self.heard.discard((args[0], args[1]))
-        elif name == "clear-tribute-memory":                         # players-tribute counts from 0 again
-            vars(g).pop("tribute_from", None)
+        elif name == "clear-tribute-memory":                         # (clear-tribute-memory PLAYER RES): counts from 0 again
+            if len(args) < 2:                                        # no arguments: all players and resources
+                vars(g).pop("tribute_from", None)
+            else:
+                vars(g).get("tribute_from", {}).pop((args[0], args[1]), None)
         elif name == "resign":                                       # (resign): the bot is out, as the cheat (#3105)
             import conquest  # conquest imports gather, which imports this module
             conquest.defeat(g, g.player)
