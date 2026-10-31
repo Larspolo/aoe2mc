@@ -28,7 +28,7 @@ def hidden(g, me, n):
     """True when "Hidden civilizations" (run.py --hidden-civs, #4758) hides the civilization of player n from player me:
     an enemy shows "?" (decision #4754: A), an ally its civilization. recap.py shows all at the end."""
     import gather
-    return bool(g.data.get("hidden_civs")) and me is not None and not gather.allied(g.players, me, n)
+    return bool(getattr(g, "data", {}).get("hidden_civs")) and me is not None and not gather.allied(g.players, me, n)
 
 
 def name(g, n, me=None):

@@ -132,7 +132,7 @@ def others(g):
 
 def name(g, n):
     civ = getattr(g, "trigger_civs", {}).get(str(n)) or build.pretty(g.players[str(n)].get("civ") or "")
-    civ = "?" if civ and lobby.hidden(g, g.player, n) else civ       # "Hidden civilizations" (#4758)
+    civ = "?" if civ and lobby.hidden(g, getattr(g, "player", None), n) else civ       # "Hidden civilizations" (#4758)
     who = g.players[str(n)].get("name") or f"Player {n}"            # the name of the scenario player (#3295)
     return who + (f" ({civ})" if civ else "")                        # a scenario trigger renames it (#2905)
 
