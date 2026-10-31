@@ -62,7 +62,17 @@ def wet_ids():
 
 
 SIZES = {1: 120, 2: 120, 3: 144, 4: 144, 5: 168, 6: 168, 7: 200, 8: 200}    # AoE2 map size of a player count
-LABELS = ((120, "TINY_MAP"), (144, "SMALL_MAP"), (168, "MEDIUM_MAP"), (200, "LARGE_MAP"), (220, "HUGE_MAP"))
+LABELS = ((120, "TINY_MAP"), (144, "SMALL_MAP"), (168, "MEDIUM_MAP"), (200, "LARGE_MAP"), (220, "HUGE_MAP"),
+          (240, "GIGANTIC_MAP"))                                 # larger: LUDIKRIS_MAP
+MAP_SIZES = {                                                    # the lobby names of AoE2 DE -> tiles (--map-size, #4823)
+    "giant": 240,
+    "large": 220,
+    "ludikris": 480,
+    "medium": 168,
+    "normal": 200,
+    "small": 144,
+    "tiny": 120,
+}
 BORDERS = ("left_border", "right_border", "top_border", "bottom_border")   # of create_land (low x, high x, low y, high y)
 RING = 0.35                     # the circle of the player lands: radius in map sizes
 AVOID = 13                      # set_avoid_player_start_areas: default tiles from a player origin
@@ -572,7 +582,7 @@ def generate(text, seed, players=2, size=None, warn=None, teams=None, folder=Non
     warn = warn or (lambda m: print(f"rms: {m}", file=sys.stderr))
     rng = np.random.default_rng(seed)
     n = size or SIZES.get(players, 200)
-    defined = {next((label for s, label in LABELS if n <= s), "GIGANTIC_MAP")}
+    defined = {next((label for s, label in LABELS if n <= s), "LUDIKRIS_MAP")}
     consts = TERRAINS | OBJECTS | {"MAPSIZE_SIDE": n}   # DE: the side of the map in tiles (#4693)
     includes = []
     sections = commands(expand(tokens(text), rng, defined, consts, includes, folder))

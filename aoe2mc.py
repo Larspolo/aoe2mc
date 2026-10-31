@@ -260,7 +260,7 @@ SAVE_LOG_VERSION = 5                                    # log_version of the DE 
 RANDOM_MAP = "random-map:"          # the source name of --random-map KIND (#993): read_map makes the map of the seed
 
 
-def read_map(path, seed=1, players=2, teams=None):
+def read_map(path, seed=1, players=2, teams=None, size=None):
     """read_record for recorded games (RECORDS), read_scx for old .scx scenarios, read_json for a map in JSON,
     read_rms for a random map script (the land of seed), rmap.random_map for RANDOM_MAP + kind, else read_scenario."""
     p = path.lower()
@@ -268,7 +268,7 @@ def read_map(path, seed=1, players=2, teams=None):
         import rmap
         return map_description(rmap.random_map(p[len(RANDOM_MAP):], seed, players, teams), path)
     if p.endswith(".rms"):
-        return read_rms(path, seed, players, teams)
+        return read_rms(path, seed, players, teams, size)
     return (read_record if p.endswith(RECORDS) else read_saved if p.endswith(SAVES) else read_scx if p.endswith((".scx", ".scn")) or old_format(path) else
             read_json if p.endswith(".json") else read_scenario)(path)
 
@@ -282,13 +282,14 @@ def old_format(path):
         return f.read(4) in scx.FORMATS
 
 
-def read_rms(path, seed, players=2, teams=None):
-    """The land of a random map script (#963): rmap.generate makes a map description of the seed (read_json)."""
+def read_rms(path, seed, players=2, teams=None, size=None):
+    """The land of a random map script (#963): rmap.generate makes a map description of the seed (read_json).
+    size: the map side in tiles (--map-size, #4823; None: the script or the player count)."""
     import rmap
     with open(path, encoding="utf-8", errors="replace") as f:
         text = f.read()
     try:
-        return map_description(rmap.generate(text, seed, players, teams=teams, folder=os.path.dirname(path),
+        return map_description(rmap.generate(text, seed, players, size, teams=teams, folder=os.path.dirname(path),
                                                      name=os.path.basename(path)), path)
     except rmap.RmsError as e:
         raise OptionError(f"{path}: {e}") from None
@@ -6014,8 +6015,9 @@ class Progress:
 def convert(src, out, T=4, H=3, name=None, seed=1, preview=False, arch=None, player_arch=(), with_units=True,
             barriers=True, mc_version=VERSION_NAME, spawn=None, birds=True, orientation="ne", verbose=False,
             garrison="inside", border_design="diorama", ambience="basic", at=None, mood="on", fog=False,
-            resource_pack=False, nplayers=2, teams=None):
-    """nplayers: the players of a random map script or --random-map (#3944), teams: their teams (#3946). at: recorded games only, the time in ms (--at): convert the state at that time (apply_timeline).
+            resource_pack=False, nplayers=2, teams=None, map_size=None):
+    """nplayers: the players of a random map script or --random-map (#3944), teams: their teams (#3946). map_size: the
+    side in tiles of the map of a random map script (--map-size, #4823). at: recorded games only, the time in ms (--at): convert the state at that time (apply_timeline).
     mood: "on" sets the time of day of the map color mood (MOODS), "off" keeps noon (#1595).
     fog: the fog of a fog mood (FOG, #1626); ambience "full" gives it too.
     resource_pack: resources.zip with human faces for the zombie units (#2738) and own armor (units.ASSETS, #2742)."""
@@ -6025,7 +6027,7 @@ def convert(src, out, T=4, H=3, name=None, seed=1, preview=False, arch=None, pla
     PALETTE_CACHE.clear()   # the cached entries can have the block names of another version
     try:
         _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units, barriers, spawn, birds, orientation,
-                 verbose, garrison, border_design, ambience, at, mood, fog, resource_pack, nplayers, teams)
+                 verbose, garrison, border_design, ambience, at, mood, fog, resource_pack, nplayers, teams, map_size)
     finally:
         MC = VERSIONS[VERSION_NAME]
         PALETTE_CACHE.clear()
@@ -6049,7 +6051,7 @@ def clear_old_output(out):
 
 def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units, barriers, spawn, birds, orientation,
              verbose, garrison, border_design, ambience, at=None, mood="on", fog=False, resource_pack=False,
-             nplayers=2, teams=None):
+             nplayers=2, teams=None, map_size=None):
     buildings.BARRIERS = barriers
     buildings.TURN, yaw = ORIENTATIONS[orientation]
     MOVED.clear()           # the counts of an earlier conversion in this process
@@ -6066,7 +6068,7 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
         times[phase] = times.get(phase, 0.0) + now - clock[0]
         clock[0] = now
 
-    size, terrain, elevation, tnames, texts, objects, players = read_map(src, seed, nplayers, teams)
+    size, terrain, elevation, tnames, texts, objects, players = read_map(src, seed, nplayers, teams, map_size)
     record = src.lower().endswith(RECORDS)
     record_state = {}
     timeline = read_timeline(src, record_state) if record else None
@@ -6427,6 +6429,21 @@ def match_record(game, profile):
     return record_api.download(game, profile, folder)
 
 
+def rmap_sizes():
+    import rmap
+    return rmap.MAP_SIZES
+
+
+def map_size(text):
+    """--map-size: a lobby name of rmap.MAP_SIZES or a number of tiles (#4823)."""
+    sizes = rmap_sizes()
+    if text.lower() in sizes:
+        return sizes[text.lower()]
+    if text.isdigit() and 40 <= int(text) <= 1000:
+        return int(text)
+    raise argparse.ArgumentTypeError(f"{text!r}: use one of {', '.join(sorted(sizes))} or a number of tiles (40 to 1000)")
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description="Convert an AoE2 DE scenario to a Minecraft Java world.")
     ap.add_argument("scenario", nargs="?", help=".aoe2scenario file, .aoe2record, .mgz, .mgx or .mgl (the start state of a recorded game), "
@@ -6451,6 +6468,10 @@ def main(argv=None):
     ap.add_argument("--seed", type=int_range(0, 2**63 - 1), default=1, help="seed for random details and random maps (default 1)")
     ap.add_argument("--players", type=int_range(1, 8), metavar="N",
                     help="players of a random map script (.rms) or of --random-map, 1 to 8 (default 2)")
+    ap.add_argument("--map-size", type=map_size, metavar="NAME",
+                    help="map size of a random map script (.rms), as in the AoE2 DE lobby: " + ", ".join(
+                        f"{k} ({v})" for k, v in sorted(rmap_sizes().items(), key=lambda kv: kv[1]))
+                    + ", or a number of tiles (default: the script, else the player count)")
     ap.add_argument("--teams", metavar="T,T,...",
                     help="with --players: the team of each player, 1 to 4 or - (no team), for example 1,2,1,2; a "
                          "script with grouped_by_team puts the lands of a team next to each other")
@@ -6513,6 +6534,8 @@ def main(argv=None):
         ap.error("give the input file and the output world folder")
     if a.players is not None and not (a.scenario.lower().endswith(".rms") or a.scenario.lower().startswith(RANDOM_MAP)):
         ap.error("--players needs a random map script or --random-map")
+    if a.map_size is not None and not a.scenario.lower().endswith(".rms"):
+        ap.error("--map-size needs a random map script (.rms)")
     teams = None
     if a.teams is not None:
         teams = a.teams.split(",")
@@ -6520,6 +6543,7 @@ def main(argv=None):
             ap.error("--teams needs --players N and N teams, each 1 to 4 or - (no team), for example --players 4 --teams 1,2,1,2")
         teams = [None if t == "-" else int(t) for t in teams]
     kw = dict(T=a.tile_size, H=a.level_height, seed=a.seed, preview=a.preview, arch=a.architecture, nplayers=a.players or 2, teams=teams,
+              map_size=a.map_size,
               player_arch=a.player_architecture, with_units=not a.no_units, barriers=not a.no_barriers,
               mc_version=a.mc_version, spawn=a.spawn, birds=not a.no_birds, orientation=a.orientation,
               verbose=a.verbose, garrison=a.garrison, border_design=a.border, ambience=a.ambience,
