@@ -10,7 +10,7 @@ FACTS = [("player-computer", 2), ("player-human", 1), ("player-in-game", 1), ("p
          ("players-tribute", 1, "gold", ">=", 0), ("cheats-enabled",), ("game-type", "==", 0),
          ("fe-sub-game-type", "==", 0), ("starting-resources", ">=", 0), ("victory-condition", "standard"),
          ("town-under-attack",), ("hold-relics",), ("hold-koh-ruin",), ("enemy-captured-relics",),
-         ("wall-invisible-percentage", "==", 0)]
+         ("wall-invisible-percentage", 1, "==", 0)]
 
 
 def script(text=""):
