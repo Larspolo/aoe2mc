@@ -596,7 +596,8 @@ def generate(text, seed, players=2, size=None, warn=None, teams=None, folder=Non
     rng = np.random.default_rng(seed)
     n = size or SIZES.get(players, 200)
     defined = {next((label for s, label in LABELS if n <= s), "LUDIKRIS_MAP")} | ({MODE_LABELS[mode]} if MODE_LABELS.get(mode) else set())
-    consts = TERRAINS | OBJECTS | {"MAPSIZE_SIDE": n}   # DE: the side of the map in tiles (#4693)
+    consts = TERRAINS | OBJECTS | {"MAPSIZE_SIDE": n,   # DE: the side of the map in tiles (#4693)
+                                  "MAPSCALE_AREA": n * n / 10000, "PLAYER_COUNT": players}   # area / 100x100 map (#4928)
     includes = []
     sections = commands(expand(tokens(text), rng, defined, consts, includes, folder))
     for cmd, a, _ in sections.pop("HEADER", []):
@@ -666,7 +667,10 @@ def generate(text, seed, players=2, size=None, warn=None, teams=None, folder=Non
                     starts.append({"player": p, "x": c[0], "y": c[1], "base_size": base, "land": len(lands)})
                     t = teams[p - 1] if teams and "set_zone_by_team" in attrs else None
                     z = zone if zone is not None else -1 - len(lands)
-                    links.append((c, p, ("team", t) if t is not None else z))   # one zone per team (#4696)
+                    z = ("team", t) if t is not None else z             # one zone per team (#4696)
+                    if "set_zone_randomly" in attrs:    # a random zone of 0..players-1: lands can share one (#4934)
+                        z = ("random", int(rng.integers(players)))
+                    links.append((c, p, z))
                     lands.append({"id": len(lands), "cells": square(c, base, n, circular="set_circular_base" in attrs),
                                   "clump": clump, "box": box, "fuzz": fuzz, "zone": links[-1][2], "avoid": avoid,
                                   "target": max(total // players, (2 * base + 1) ** 2)})
@@ -881,6 +885,7 @@ CREATE_LAND = (                 # the attributes of create_land and create_playe
     "right_border",
     "set_circular_base",
     "set_zone_by_team",             # the lands of a team share one zone (#4696)
+    "set_zone_randomly",            # each player land draws one of the player count zones (#4934)
     "terrain_type",
     "top_border",
     "zone",

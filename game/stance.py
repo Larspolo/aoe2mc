@@ -175,8 +175,13 @@ def stop(g):
 def delete(g):
     """Kill each selected own unit at once, with its horse, camel or boat, as the AoE2 Delete key (#3451): no resources
     come back. The census then finds them dead as after a fight (score, population, selection: train.census)."""
+    delete_units(g, [u for u in sorted(g.selected) if u in g.villagers or u in g.soldiers])
+
+
+def delete_units(g, units):
+    """Kill the own units at once (delete()), also for an AI script (per.py, up-delete-idle-units)."""
     import train  # train imports gather, gather imports this module
-    for u in [u for u in sorted(g.selected) if u in g.villagers or u in g.soldiers]:   # not KEEP: "Disable Object Deletion" (#3777)
+    for u in units:                                                    # not KEEP: "Disable Object Deletion" (#3777)
         g.command(f"execute as {u} if entity @s[tag=!aoe2mc.keep] on vehicle run kill @s")
         g.command(f"execute as {u} if entity @s[tag=!aoe2mc.keep] run kill @s")
     train.census(g)
