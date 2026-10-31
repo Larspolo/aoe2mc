@@ -5759,7 +5759,20 @@ def weapon_texture(kind):
     return im
 
 
-def write_resourcepack(out):
+TEXTS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "game", "data", "texts.jsonl")
+
+
+def lang_files(path=TEXTS):
+    """{path in the pack: bytes}: one lang file per Minecraft language code (a column of `path` other than "name",
+    #5345) with values, so the `translate` keys of game/lang.py show the string of the client language."""
+    with open(path, encoding="utf-8") as f:
+        rows = [json.loads(s) for s in f if s.strip()]
+    codes = sorted({c for r in rows for c in r if c != "name"})
+    return {f"assets/aoe2mc/lang/{c}.json": json.dumps({r["name"]: r[c] for r in rows if c in r}, indent=1,
+                                                       sort_keys=True).encode() for c in codes}
+
+
+def write_resourcepack(out, texts=TEXTS):
     """--resource-pack (#2738): resourcepacks/resources.zip in the world folder, which single player loads with the
     world (26.x: LevelResource.MAP_RESOURCE_FILE; a world of an older version had resources.zip at its top, and the
     client moves it there, ResourcePackLocationFileFix). The zombie, skeleton and drowned units get a human face, the
@@ -5796,6 +5809,7 @@ def write_resourcepack(out):
              "textures": {"layer0": f"aoe2mc:item/{w}"}}).encode()
         files[f"assets/aoe2mc/items/{w}.json"] = json.dumps(
             {"model": {"type": "minecraft:model", "model": f"aoe2mc:item/{w}"}}).encode()
+    files |= lang_files(texts)                                       # the game program texts (#5345)
     os.makedirs(os.path.join(out, "resourcepacks"), exist_ok=True)
     with zipfile.ZipFile(os.path.join(out, "resourcepacks", "resources.zip"), "w", zipfile.ZIP_STORED) as z:
         for name in sorted(files):
