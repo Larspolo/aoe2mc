@@ -12,6 +12,7 @@ Usage:
     python3 game/run.py WORLD --play --bot --bot-attack 5:00   # its soldiers attack player 1 from 5:00 (default 10:00)
     python3 game/run.py WORLD --play --bot --ai-difficulty hard   # the AoE2 setting "AI difficulty" (#2661)
     python3 game/run.py WORLD --play --bot --ai my.per   # the bot plays by an AoE2 AI script (game/per.py, #4529)
+    python3 game/run.py WORLD --play --data-mod DIR  # the lines of DIR/<file>.jsonl change game/data (#5353)
     python3 game/run.py WORLD --play --log F.jsonl  # also write a timed event log (tools/measure_gather.py reads it)
     python3 game/run.py WORLD --play --record F.jsonl  # Record Game: --replay --replay-file F.jsonl plays it (#2649)
     python3 game/run.py WORLD --play --bot --treaty 20:00   # the AoE2 setting "Treaty length": no attack before 20:00 (#2297)
@@ -1365,6 +1366,8 @@ def main(argv=None, scenario=None):
                     "while the game runs (the world comes from the start of this record, game/live.py)")
     ap.add_argument("--delay", type=float, metavar="S", help="--replay --live: stay S seconds of game time behind "
                     "the newest event of the record (default 30)")
+    ap.add_argument("--data-mod", metavar="DIR", help="a folder of data lines: each line of DIR/<file>.jsonl changes "
+                    "the line of the same name in game/data/<file>.jsonl (its keys replace the keys; #5353)")
     ap.add_argument("--log", metavar="FILE", help="--play: write one JSON line per villager event (time, state, load)")
     ap.add_argument("--load", metavar="SAVE", help="--play: go on with a saved game (a folder of saves/: the end of "
                     "--play with Ctrl-C saves the world and the resources, technologies and ages there)")
@@ -1387,6 +1390,8 @@ def main(argv=None, scenario=None):
                     "(no team), for example 1,1,2,2: allies do not fight and share their team bonuses (default: the "
                     "teams of the scenario)")
     a = ap.parse_args(argv)
+    if a.data_mod and not os.path.isdir(a.data_mod):
+        sys.exit(f"--data-mod {a.data_mod}: not a folder")
     if a.balance and a.teams is not None:            # the ratings make the teams, or --teams does (#5168)
         sys.exit("--balance and --teams: give the teams or balance them, not both (#5168)")
     if a.challenge:                                  # the unlock order and the best medals (#3904)
@@ -1408,6 +1413,8 @@ def main(argv=None, scenario=None):
         sys.exit(err)
     if a.antiquity and (a.replay or a.mode != "standard"):
         sys.exit("--antiquity plays only --mode standard, and not --replay (a Return of Rome record selects it, #4898)")
+    if a.data_mod:                                   # the data mod, also in a child process (#5353)
+        table.MOD = os.environ["AOE2MC_DATA_MOD"] = a.data_mod
     table.use("antiquity" if a.antiquity or (a.replay and record_rules(a.world) == "antiquity") else "aoe2")   # before the first rule module loads (civ_choices, #3666)
     civ = civ_choices(a.civ)
     handicap = handicap_choices(a.handicap)

@@ -29,6 +29,9 @@ ADD = {
     "units.jsonl",
 }
 LOADED = []                                                        # the names of the files that load() read
+# A data mod (#5353): a folder whose lines change the lines of the same name (run.py --data-mod). A child process
+# (the bots) reads it from the environment.
+MOD = os.environ.get("AOE2MC_DATA_MOD")
 
 
 def use(rules):
@@ -64,5 +67,8 @@ def load(path, rules=None):
         rows = [r for r in read(os.path.join(DIR, path)) if r["name"] not in names] + extra
     else:
         rows = read(own)
+    if MOD and os.path.exists(os.path.join(MOD, path)):          # a mod line of an unknown name matches no row
+        changes = {r["name"]: r for r in read(os.path.join(MOD, path))}
+        rows = [row | changes[row["name"]] if row["name"] in changes else row for row in rows]
     LOADED.append(path)
     return rows
