@@ -14,7 +14,8 @@ high y side that the land does not take; `other_zone_avoidance_distance`, `min_p
 (`create_connect_all_players_land` with `replace_terrain`, `terrain_cost`, `terrain_size`: paths between the player
 lands, #3868; `create_connect_all_lands`, `create_connect_to_nonplayer_land`, `create_connect_same_land_zones`,
 `create_connect_land_zones` and the `zone` of a land, #3869) and <ELEVATION_GENERATION>
-(`create_elevation HEIGHT` with `base_terrain`, `base_layer`, `number_of_clumps`, `number_of_tiles`, `spacing`: hills level by level,
+(`create_elevation HEIGHT` with `base_terrain`, `base_layer`, `number_of_clumps`, `number_of_tiles`, `spacing`, `clumping_factor`,
+`spacing_to_other_terrain_types`: hills level by level,
 never on water or shallows, #3822), <CLIFF_GENERATION> (cliff lines of CLIFF_DEFAULT objects, cliffs(), #3850) and
 <OBJECTS_GENERATION> (`create_object`: objects(), #3855). The sections run in the AoE2 DE order: lands, elevation,
 terrains, connections (#3966); then all water goes to level 0. Other sections and attributes: a warning.
@@ -562,6 +563,10 @@ def elevate(section, terrain, layer, owner, starts, consts, rng, warn):
         on = value(attrs["base_terrain"][0], consts) if "base_terrain" in attrs else 0
         under = (layer == value(attrs["base_layer"][0], consts)) if "base_layer" in attrs else terrain == on
         free = under & ~is_wet(terrain) & (elevation == 0)
+        if (s := value(attrs["spacing_to_other_terrain_types"][0], consts)
+                if "spacing_to_other_terrain_types" in attrs else 0):     # N tiles from a tile of another kind
+            free &= ~dilate(~under, s)
+        clump = value(attrs["clumping_factor"][0], consts) if "clumping_factor" in attrs else 8
         clumps, total = scaled(attrs, consts, n, value(attrs["number_of_clumps"][0], consts)
                                if "number_of_clumps" in attrs else 1, tiles(attrs, consts, n, 1))
         spacing = value(attrs["spacing"][0], consts) if "spacing" in attrs else 1
@@ -574,13 +579,13 @@ def elevate(section, terrain, layer, owner, starts, consts, rng, warn):
             if len(spots) and top > 0:
                 mark = np.full((n, n), -1, np.int32)
                 grow(mark, [{"id": j, "cells": [tuple(int(v) for v in spots[rng.integers(len(spots))])],
-                             "target": total // len(areas) // k, "clump": 8} for j in range(k)], area, rng)
+                             "target": total // len(areas) // k, "clump": clump} for j in range(k)], area, rng)
                 hill |= mark >= 0
         for k in range(top):                     # level k + 1 inside level k, spacing tiles from its edge
             elevation[hill] = k + 1
             hill &= ~dilate(~hill, max(spacing, 1))
         for a in set(attrs) - {"base_terrain", "base_layer", "number_of_clumps", "number_of_tiles", "spacing", "set_scale_by_groups",
-                               "set_scale_by_size", "enable_balanced_elevation"}:
+                               "set_scale_by_size", "clumping_factor", "spacing_to_other_terrain_types", "enable_balanced_elevation"}:
             warn(f"create_elevation: {a} is not read yet")
     return elevation
 

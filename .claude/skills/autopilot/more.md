@@ -2,6 +2,18 @@
 
 Read this file after step 8 when the argument asks for more than 1 ticket (part of the `autopilot` skill, #1700).
 
+## Next tickets of the brief
+
+A brief of the pacer with a `next: A B` line (#5076): after the report (step 8) of each ticket, do the quota check
+of `scheduled` step 3b first. Then `git fetch origin main && git checkout -B <session branch>-<k> origin/main` and
+`python3 framework/tools/claim.py A --or B` (one call: it tries B when another run has A; one number when the line has
+one). Exit 0: start at step 6 with the claimed ticket (the claim prints the ticket and its comments; then
+`python3 framework/tools/ticket_context.py N` once). Exit 1, or no `next:` ticket left: do steps 1 to 5 of `start.md`
+as below. Continue until the `context:` limit of the brief, a usage limit, or no ready ticket: do not stop after 1
+ticket to let the pacer pick (90 of 110 runs did 1 ticket; 1 ticket per run costs 0.37M eq per PR, 3 cost 0.19M).
+
+## Later tickets with no brief
+
 If the argument asks for more than 1 ticket, go back to step 2 after step 8 (finish stalled PRs of other runs, then new owner
 feedback, step 3: run `python3 framework/tools/cycle_start.py --last N` again, N = your last ticket: within a priority it puts
 the tickets of the same epic or files first, and the code that you read already makes them cheaper). The PRs of this run (on `<session branch>` or `<session branch>-<k>`)

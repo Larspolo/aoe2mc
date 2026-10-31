@@ -1,5 +1,6 @@
 """Reader of old AoE2 scenarios (.scn of The Age of Kings: formats 1.18 to 1.20, #3860; .scx: format 1.21 of The
-Conquerors; .scx and .aoe2scenario of the HD Edition: formats 1.22 to 1.26, #3862), without the DE editor (#311).
+Conquerors; .scx and .aoe2scenario of the HD Edition: formats 1.22 to 1.26, #3862; the first DE formats 1.32 to 1.35, #5072),
+without the DE editor (#311).
 
 A port of the reader of genie-scx (genie-rs, GPL-3.0; crates/genie-scx/src/format.rs, map.rs, player.rs) for the
 fields that aoe2mc needs. Layout: docs/campaign-formats.md, "The old scenario format".
@@ -16,8 +17,9 @@ import numpy as np
 import units
 
 FORMATS = {b"1.18", b"1.19", b"1.20", b"1.21",        # format versions that this reader knows (the object frame from 1.15,
-           b"1.22", b"1.23", b"1.24", b"1.25", b"1.26"}  # "garrisoned in" from 1.13: one object layout); 1.22 to 1.26:
-                                                        # the HD Edition (.aoe2scenario too, #3862)
+           b"1.22", b"1.23", b"1.24", b"1.25", b"1.26",  # "garrisoned in" from 1.13: one object layout); 1.22 to 1.26:
+           b"1.32", b"1.33", b"1.34", b"1.35"}           # the HD Edition (.aoe2scenario too, #3862); 1.32 to 1.35: the
+                                                        # first DE files, older than the layouts of AoE2ScenarioParser (#5072)
 CIVS = [r["name"] for r in units.rows("scx_civs.jsonl")]   # the index is the civilization ID, the DE IDs too
 
 
@@ -58,14 +60,14 @@ class Stream:
 
 def tribe_scen(s):
     """Read TribeScen (genie-scx RGEScen and TribeScen) up to the map. Returns {player: civilization ID}."""
-    v = round(s.f32(), 4)                   # the data version: 1.22 in AoC scenarios of format 1.21
-    if not 1.14 <= v < 1.28:
-        raise ScxError(f"unknown scenario data version {v} (this reader knows 1.14 to 1.27)")
+    v = round(s.f32(), 4)                   # the data version: 1.22 in AoC scenarios of format 1.21; DE: the format
+    if not 1.14 <= v < 1.38:
+        raise ScxError(f"unknown scenario data version {v} (this reader knows 1.14 to 1.37)")
     s.skip(16 * 256)                        # player names
     if v > 1.16:
         s.skip(16 * 4)                      # string table IDs of the names
     props = [s.i32(4) for _ in range(16)]   # active, human, civilization, posture
-    s.skip(1 + 2 + 2 + 4)                   # conquest victory, timeline count and flag, old time
+    s.skip(1 + 2 + 2 + 4 + (16 * 4 if v >= 1.28 else 0))   # conquest victory, timeline count and flag, old time; DE: civ locks
     s.str16()                               # file name
     s.skip(5 * 4 + (4 if v >= 1.22 else 0))  # string table IDs of the texts
     for _ in range(5 + (v >= 1.22) + 3 + 1):  # description, hints, win, loss, history, scout, 3 cinematics, bitmap name
@@ -87,7 +89,10 @@ def tribe_scen(s):
     s.i32()
     s.skip(16 * 4)                          # allied victory
     s.skip(4 if v >= 1.24 else 4 if abs(v - 1.23) < 1e-3 else 0)   # team settings
-    if v >= 1.18:                           # disabled techs, units, buildings (counts, then fixed lists)
+    if v >= 1.28:                           # DE: disabled techs, units, buildings (counts, then lists of that length)
+        for _ in range(3):
+            s.skip(4 * sum(s.i32(16)))
+    elif v >= 1.18:                         # disabled techs, units, buildings (counts, then fixed lists)
         s.skip(16 * 4 + 16 * 30 * 4 + 16 * 4 + 16 * 30 * 4 + 16 * 4 + 16 * (30 if v >= 1.25 else 20) * 4)
     else:
         s.skip(16 * 20 * 4)
@@ -99,6 +104,13 @@ def tribe_scen(s):
         s.skip(4)                           # map type
     if v >= 1.24:
         s.skip(16)                          # base priorities
+    if v >= 1.35:
+        s.skip(4)                           # the number of triggers
+    for since in (1.30, 1.32):              # water definition, color mood: a u16 signature, then the text
+        if v >= since:
+            s.skip(2)
+            s.str16()
+    s.skip((v >= 1.36) + (v >= 1.37))       # collide and correct, villager force drop
     return {p: props[p - 1][2] for p in range(1, 17) if props[p - 1][0]}
 
 
@@ -148,30 +160,8 @@ def body_start(data):
     return p
 
 
-def read(path):
-    with open(path, "rb") as f:
-        data = f.read()
-    fmt = data[:4]
-    if fmt not in FORMATS:
-        raise ScxError(f"{path}: scenario format {fmt.decode('latin-1')!r} is not supported "
-                       f"(this reader knows {', '.join(sorted(f.decode() for f in FORMATS))})")
-    try:
-        s = Stream(zlib.decompress(data[body_start(data):], -15))
-    except zlib.error as e:
-        raise ScxError(f"{path}: the compressed part does not decompress ({e})") from None
-    s.i32()                                 # next object ID
-    civs = tribe_scen(s)
-    terrain, elevation = read_map(s, path)
-
-    # The colors and start views are in the scenario player data after the objects (format < 1.36)
-    n = s.u32()
-    s.skip((n - 1) * (6 if fmt < b"1.20" else 7) * 4)   # world player data: resources, population from 1.20 (genie-scx)
-    objects = []
-    for p in range(n):                      # objects: x, y, z, ID, type, state, angle, frame, garrisoned in
-        for _ in range(s.u32()):
-            x, y, _, ref, kind, _, angle, _, holder = s.unpack("fffiHBfhi")
-            objects.append({"player": p, "id": ref, "type": kind, "x": x, "y": y, "angle": angle,
-                            "garrisoned_in": holder if holder > 0 else None})     # 0 and -1: not garrisoned
+def scenario_players(s, civs):
+    """The scenario player data: {player: {civ, color, view}} of the players with a civilization."""
     players = {0: {"civ": "GAIA", "color": None, "view": None}}
     for p in range(1, s.u32()):
         s.str16()
@@ -191,5 +181,36 @@ def read(path):
         if civ is not None:
             players[p] = {"civ": CIVS[civ] if 0 <= civ < len(CIVS) else f"CIV_{civ}", "color": color,
                           "view": view if min(view) >= 0 else None}
+    return players
+
+
+def read(path):
+    with open(path, "rb") as f:
+        data = f.read()
+    fmt = data[:4]
+    if fmt not in FORMATS:
+        raise ScxError(f"{path}: scenario format {fmt.decode('latin-1')!r} is not supported "
+                       f"(this reader knows {', '.join(sorted(f.decode() for f in FORMATS))})")
+    try:
+        s = Stream(zlib.decompress(data[body_start(data):], -15))
+    except zlib.error as e:
+        raise ScxError(f"{path}: the compressed part does not decompress ({e})") from None
+    s.i32()                                 # next object ID
+    civs = tribe_scen(s)
+    terrain, elevation = read_map(s, path)
+
+    n = s.u32()
+    s.skip((n - 1) * (6 if fmt < b"1.20" else 7) * 4)   # world player data: resources, population from 1.20 (genie-scx)
+    # The colors and start views are in the scenario player data: after the objects before format 1.36, else before
+    if fmt >= b"1.36":
+        players = scenario_players(s, civs)
+    objects = []
+    for p in range(n):                      # objects: x, y, z, ID, type, state, angle, frame, garrisoned in
+        for _ in range(s.u32()):
+            x, y, _, ref, kind, _, angle, _, holder = s.unpack("fffiHBfhi")
+            objects.append({"player": p, "id": ref, "type": kind, "x": x, "y": y, "angle": angle,
+                            "garrisoned_in": holder if holder > 0 else None})     # 0 and -1: not garrisoned
+    if fmt < b"1.36":
+        players = scenario_players(s, civs)
     return {"format": fmt.decode(), "width": terrain.shape[0], "height": terrain.shape[1], "terrain": terrain, "elevation": elevation,
             "players": players, "objects": objects}
