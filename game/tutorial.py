@@ -33,6 +33,37 @@ def house(g, row):
     return "HOUSE" in train.owned(g)
 
 
+def villager(g, row):
+    """Step "villager": a villager is in the queue of a town center of the player (play:train)."""
+    import train  # train imports gather, gather imports this module
+    homes = train.homes(g)
+    return any(homes.get(rect) == "TOWN_CENTER" and any(u["name"].startswith("VILLAGER") for u in q)
+               for rect, q in g.queues.items())
+
+
+def camps(g, row):
+    """Step "camps": the player has each complete building of the key "buildings"."""
+    import train
+    return set(row["buildings"]) <= set(train.owned(g))
+
+
+def food(g, row):
+    """Step "food": the stock has the food of the key "need"."""
+    return g.stock["food"] >= row["need"]
+
+
+def feudal(g, row):
+    """Step "feudal": the player is in the Feudal Age or later (play:ages)."""
+    import build
+    return build.ages(g) >= 1
+
+
+def give(g, row):
+    """Setup of a step: the resources of the key "give" go to the stock, so the step does not wait for a slow player."""
+    for k, n in row["give"].items():
+        g.stock[k] += n
+
+
 def done(g, row):
     """True when step row is done (its "check" function)."""
     module, _, function = row["check"].rpartition(".")
@@ -42,6 +73,9 @@ def done(g, row):
 def show(g, n):
     """The boss bar and the chat line of step n."""
     row = STEPS[n]
+    if "setup" in row:                                                 # as the key "setup" of challenges.jsonl
+        module, _, function = row["setup"].rpartition(".")
+        getattr(importlib.import_module(module), function)(g, row)
     if n == 0:
         for cmd in (f'bossbar add {BAR} ""', f"bossbar set {BAR} color green", f"bossbar set {BAR} max {len(STEPS)}",
                     f"bossbar set {BAR} players @a"):
