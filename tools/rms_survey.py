@@ -6,7 +6,8 @@ Usage:
     python3 tools/rms_survey.py DIR > survey.md
 
 For each `*.rms` file of DIR, the land of the script is made with seed 1 (`rmap.generate`). The output is Markdown:
-a table of the maps with their warnings, and a table of the warnings with the number of maps that have each one.
+a table of the maps with their warnings, a table of the warnings with the number of maps that have each one, and a
+table of the labels that the scripts test and no script defines (the `if` labels, with the number of maps).
 The output holds no script text: paste it on a public ticket.
 """
 import argparse
@@ -40,6 +41,36 @@ def survey(path):
     return list(dict.fromkeys(warnings)), state
 
 
+def labels(text, folder, depth=0):
+    """The labels that a script tests (after if or elseif) and the labels it defines (#define), with those of its
+    #include_drs files (the same folder, as in rmap.expand). Only the names: no script text is kept."""
+    words = rmap.tokens(text)
+    tested, defined = set(), set()
+    for i, w in enumerate(words[:-1]):
+        if w in ("if", "elseif"):
+            tested.add(words[i + 1])
+        elif w == "#define":
+            defined.add(words[i + 1])
+        elif w == "#include_drs" and depth < 8:
+            path = os.path.join(folder, *words[i + 1].replace("\\", "/").split("/"))
+            if os.path.isfile(path):
+                with open(path, encoding="utf-8", errors="replace") as f:
+                    t, d = labels(f.read(), folder, depth + 1)
+                tested |= t
+                defined |= d
+    return tested, defined
+
+
+def undefined(folder):
+    """The labels that the scripts of folder test and that no script defines, with the number of maps that test each."""
+    maps = Counter()
+    for path in sorted(glob.glob(os.path.join(folder, "*.rms"))):
+        with open(path, encoding="utf-8", errors="replace") as f:
+            tested, defined = labels(f.read(), folder)
+        maps.update(tested - defined - {label for _, label in rmap.LABELS})
+    return maps
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("dir")
@@ -57,6 +88,9 @@ def main():
     print("\n| Warning | Maps |\n| --- | --- |")
     for text, count in sorted(maps.items(), key=lambda kv: (-kv[1], kv[0])):
         print(f"| {text} | {count} |")
+    print("\n| Label | Maps |\n| --- | --- |")
+    for label, count in sorted(undefined(a.dir).items(), key=lambda kv: (-kv[1], kv[0])):
+        print(f"| {label} | {count} |")
 
 
 if __name__ == "__main__":
