@@ -28,6 +28,7 @@ Read it before a claim, a push, a PR, a merge conflict, red main or a check tick
 - A fix of red main that open PRs port (CI rule "port the fix") merges once per PR: two versions of it can stay side by side with no conflict (#2131: `TWO_TYPES` twice and `MIXED` in `tests/test_data_files.py`). Before you push a "Fix main" PR, `git fetch origin main` and read the file again: main can have the fix already.
 - Two ready tickets can ask for the same feature with other words (#2357 `--victory regicide`, #2347 `--mode regicide`): before the code, `git log origin/main --oneline -10` and the open tickets of the same epic; fetch main again before the push (#2387 merged #2347 while #2357 was coded).
 - `framework/tools/claim.py N` succeeds for each N it gets: a loop over several numbers claims all of them (#4132 run took 4 by mistake). Call it once per ticket, and read exit 0 before you work on it.
+- The epic check: list the sub-issues of an epic with `gh api repos/OWNER/NAME/issues/E/sub_issues --jq '.[] | "\(.number) \(.state) \(.title)"'`, not with the MCP `issue_read` `get_sub_issues`: it returns the whole body of each child (126k characters for 11 children of #4831, 2026-10-31).
 
 ## Shell and waits
 

@@ -64,6 +64,7 @@ ORDER = tuple(r["name"] for r in sorted((r for r in build.ROWS if "bot" in r), k
 NEAR = {r["name"]: r["near"] for r in build.ROWS if "near" in r}
 HOUSE_GAP = 2                                                      # a new house at this many units below the limit
 ATTACK = 600.0                                                     # AoE2 seconds: the first attack at 10:00
+HELP_NEAR = 10                                                      # tiles: the enemies near the ally that the help attacks (#4892)
 LOOK = 2.0                                                         # AoE2 seconds between two looks for targets
 RETRY = 60.0                                                       # AoE2 seconds: try a source with no path again
 STALL = 30.0                                                       # AoE2 seconds with no step nearer and no damage
@@ -137,6 +138,7 @@ class Bot:
         self.said = {}                                                 # AoE2 player -> taunts it sent that the bot read (#4829)
         self.focus = None                                              # the building name the allies ask for by taunts 72 to 74 (#4886)
         self.unit = None                                               # the units the allies name by taunts 76 to 101 (#4887)
+        self.helping, self.helped = None, -LOOK                        # ("town"/"army", ally) of taunts 48 and 51 (#4892)
 
     def setup(self):
         """Find the villagers of the player (the entities must be loaded) and make the objective of the resources."""
@@ -220,6 +222,7 @@ class Bot:
             autoscout.start(g, [u for u, n in g.soldiers.items() if n in scouts])
         self.defend()
         self.guard()
+        self.assist()
         self.build()
         share = self.shares()
         work = {r: 0 for r in SHARE}
@@ -278,6 +281,48 @@ class Bot:
                 elif n == 47:
                     self.to_flare(x)
 
+    def assist(self):
+        """Taunts 48 and 51 of an ally (#4892, AoE2): each LOOK the soldiers go to the town center of the ally (48) or
+        to the center of the soldiers of the ally (51) and attack the enemy units in HELP_NEAR blocks of it. After 48
+        they walk home when no enemy is near the town center any more."""
+        g, T = self.g, self.g.map.T
+        if self.helping is None or self.time < self.helped + LOOK:
+            return
+        self.helped = self.time
+        kind, ally = self.helping
+        if kind == "town":
+            tc = next((o["footprint"] for o in g.data["objects"] if o["kind"] == "building" and o["player"] == ally
+                       and o["name"] == "TOWN_CENTER"), None)
+            spot = tc and ((tc[0] + tc[2] + 1) / 2, 64.0, (tc[1] + tc[3] + 1) / 2)
+        else:
+            x = next((x for x in build.sides(g) if x.player == ally), None)
+            at = g.positions(sorted(x.soldiers)) if x else {}
+            spot = at and tuple(sum(p[i] for p in at.values()) / len(at) for i in range(3))
+        mine = self.soldiers_at()
+        if not spot or not mine:
+            self.helping = None if not spot else self.helping
+            return
+        units = sorted(u for u, n in g.enemies.items() if not herd.herdable(n))
+        near = {k: p for k, p in g.positions(units).items()
+                if math.dist((p[0], p[2]), (spot[0], spot[2])) <= HELP_NEAR * T} if units else {}
+        if not near and kind == "town" and all(math.dist((p[0], p[2]), (spot[0], spot[2])) <= HELP_NEAR * T
+                                               for p in mine.values()):
+            self.helping = None                                        # the town is safe: home
+            if home := self.center():
+                for u in sorted(mine):
+                    ai.move(g.game, u, g.soldiers[u], T, home[0], 64, home[1])
+            return
+        if not near:
+            for u in sorted(mine):
+                ai.move(g.game, u, g.soldiers[u], T, math.floor(spot[0]), math.floor(spot[1]), math.floor(spot[2]))
+            return
+        orders = {}
+        for u in sorted(mine):
+            orders.setdefault(min(near, key=lambda k: (math.dist(near[k], mine[u]), k)), []).append(u)
+        for t, us in sorted(orders.items()):
+            ai.attack(g.game, us, [g.soldiers[u] for u in us], T, t,
+                      [gather.NORMAL * train.speed(g, g.soldiers[u], u) for u in us])
+
     def soldiers_at(self):
         """{soldier: position} of the soldiers with an attack (a transport ship has none)."""
         g = self.g
@@ -331,6 +376,27 @@ class Bot:
                 say(f"I cannot build a {build.pretty(names[-1] if n is None else n)} there now.")
                 continue
             self.builder(build.found(g, n, rect))
+
+    def delete_at(self, x, reach=2):
+        """Taunt 69 (#4891, AoE2): delete the own building, site or unit nearest to the last live flare of the ally x,
+        within reach tiles (demolish.delete, stance.delete_units). Nothing there: nothing happens."""
+        import demolish
+        import ruins
+        import stance
+        g = self.g
+        live = [f for f in getattr(x, "flares", []) if f[3] > x.clock()]
+        if not live:
+            return
+        fx, fz, T = live[-1][0], live[-1][2], g.map.T
+        rects = [*ruins.own(g).values(), *(tuple(s["footprint"]) for s in g.sites if s.get("player", g.player) == g.player
+                                           and s.get("progress", 1) < 1 and not s.get("done"))]
+        near = [(math.dist((fx, fz), (min(max(fx, r[0]), r[1]), min(max(fz, r[2]), r[3]))), 0, r) for r in rects]
+        units = sorted({*g.villagers, *g.soldiers})
+        near += [(math.dist((fx, fz), (p[0], p[2])), 1, u) for u, p in g.positions(units).items()] if units else []
+        near = sorted((d, k, str(o), o) for d, k, o in near if d <= reach * T)
+        if near:
+            _, k, _, o = near[0]
+            demolish.delete(g, f"@a[team=p{g.player}]", o) if k == 0 else stance.delete_units(g, [o])
 
     def retreat(self):
         """The soldiers of the wave stop and walk back to the town center (taunt 45)."""
@@ -398,6 +464,12 @@ class Bot:
                     self.navy = False
                 elif n == 71:
                     self.scuttle()
+                elif n == 69:                                            # delete at the flare of the ally (#4891)
+                    self.delete_at(x)
+                elif n == 103:                                           # no tree cutting in combat.py yet (#4891)
+                    has = any(v.startswith("ONAGER") or v == "SIEGE_ONAGER" for v in g.soldiers.values())
+                    g.command(f"tellraw @a[team=p{x.player}] " + json.dumps({"text": f"<Player {g.player}> " + (
+                        "My onagers cannot cut trees." if has else "I have no onager."), "color": "gray"}))
                 elif n in BUILD_AT:                                      # build at the flare of the ally (#4889)
                     self.build_at(x, BUILD_AT[n])
                 elif n in (56, 57):                                      # train counter units, stop (#4885)
@@ -406,6 +478,10 @@ class Bot:
                     self.walls(n, x)
                 elif n == 59:
                     self.giving.pop(x.player, None)
+                elif n in (48, 51):                                      # help the ally: its town, its army (#4892)
+                    self.helping = ("town" if n == 48 else "army", x.player)
+                elif n in (31, 45) or 61 <= n <= 68:                     # a new army order ends the help
+                    self.helping = None
                 elif n in UNITS:                                         # attack with the units of the taunt (#4887)
                     self.unit = UNITS[n]
                     if not any(set(self.unit) & set(train.trains(g, k)) for k in set(train.homes(g).values())):
