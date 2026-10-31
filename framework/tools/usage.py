@@ -229,6 +229,14 @@ def due_reviews(remote="origin", starved=None):
     return out
 
 
+def held(numbers):
+    """True when an open issue of `numbers` (of a roadmap line) is `after-release` or `muted`: the owner holds the
+    feature, and the refill leaves it out (#5301: `convert:export` named the held owner ticket #4198, no epic)."""
+    import dashboard
+    return any((i := dashboard.api(f"issues/{n}"))["state"] == "open"
+               and {dashboard.AFTER, dashboard.MUTED} & dashboard.labels(i) for n in sorted(numbers))
+
+
 def free_sources(root=None):
     """The refill sources of R < N besides the checks and reviews (#3560): the `[ ]` features of the goals 1 to 3 with
     no epic (the `roadmap` skill) and the fallbacks of docs/coverage.md. A read error counts as a source."""
@@ -237,7 +245,7 @@ def free_sources(root=None):
         features, _, _, epics = release.load()
         keys, numbers = {release.epic_key(e.get("body")) for e in epics}, {e["number"] for e in epics}
         free = [k for k, (goal, done, named) in features.items() if goal < 4 and not done and k not in keys
-                and not named & numbers]
+                and not named & numbers and not held(named)]
         with open(os.path.join(root or release.ROOT, "docs", "coverage.md")) as f:   # the totals: | Group | types | own | infantry | fallback |
             fallbacks = sum(int(m[1]) for m in re.finditer(r"^\| [A-Z][a-z ]+ \| \d+ \| \d+ \| \d+ \| (\d+) \|$", f.read(), re.M))
     except Exception as e:                                  # a GitHub or file error
