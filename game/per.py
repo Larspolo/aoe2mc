@@ -2564,6 +2564,9 @@ class Script:
             self.flares(name, args)
         elif name == "acknowledge-taunt":                            # (acknowledge-taunt PLAYER TAUNT)
             self.heard.discard((args[0], args[1]))
+        elif name == "resign":                                       # (resign): the bot is out, as the cheat (#3105)
+            import conquest  # conquest imports gather, which imports this module
+            conquest.defeat(g, g.player)
         elif name not in ("do-nothing", "chat-local-to-self", "enable-wall-placement", "up-chat-data-to-self",
                           "up-log-data", "up-request-hunters"):
             # no one sees a self chat; the bots have no hunt (#4739); each wall ring is always enabled (ring())
