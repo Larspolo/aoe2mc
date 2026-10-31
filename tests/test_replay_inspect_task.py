@@ -1,13 +1,14 @@
 """Live replay: the info line of a unit shows its task, attack, armor and range (inspect(), #5287). Fake RCON."""
 import json
 
+import lang
 import pytest
 from test_replay_inspect import combat, facing, setup
 
 
 def line(r):
     (c,) = [c for c in r.inspect(10000, clock=lambda: 0.0) if " actionbar " in c]
-    return "".join(p["text"] for p in json.loads(c.split(" actionbar ", 1)[1]))
+    return "".join(lang.plain(p) for p in json.loads(c.split(" actionbar ", 1)[1]))
 
 
 @pytest.mark.parametrize("state, word", [

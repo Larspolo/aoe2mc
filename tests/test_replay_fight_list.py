@@ -5,6 +5,7 @@ import sys
 from urllib.parse import unquote
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import lang  # noqa: E402
 import replay  # noqa: E402
 import replay_input as ri  # noqa: E402
 from test_replay import Fake, data  # noqa: E402
@@ -24,7 +25,7 @@ def test_the_chat_lines_name_time_players_units_and_the_trigger():
         assert line["extra"][0]["text"] == f"[{time}] "
         assert {"text": "Player 1 (Britons)", "color": "blue"} in line["extra"]
         assert {"text": "Player 2 (Aztecs)", "color": "gold"} in line["extra"]
-        assert line["extra"][-1]["text"] == f" ({units} units)"
+        assert lang.plain(line["extra"][-1]) == f" ({units} units)"
     assert ri.FIGHT > ri.FIGHTS > ri.VIEW
 
 

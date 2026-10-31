@@ -39,6 +39,7 @@ import numpy as np
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
+import lang  # noqa: E402
 import monk  # noqa: E402
 import replay_input  # noqa: E402
 import table  # noqa: E402
@@ -182,6 +183,11 @@ def start_job(name):
 
 def text(s, color=None):
     return {"text": s, "color": color} if color else {"text": s}
+
+
+def say(key, *args, color=None, **style):
+    """The translate component of the text "aoe2mc.replay.<key>" of game/data/texts.jsonl (#5375)."""
+    return lang.text(f"aoe2mc.replay.{key}", *args, **({"color": color} if color else {}), **style)
 
 
 def counts_text(counts):
@@ -524,7 +530,7 @@ class Replay:
             return []
         self.wonders[p] = t
         name, color = self.player(p)
-        return ["tellraw @a " + json.dumps([text(name, color), text(f" built a wonder at {mmss(t)}.")])]
+        return ["tellraw @a " + json.dumps([text(name, color), say("wonder_built", mmss(t))])]
 
     def wonder_left(self, p, t):
         """The years left of the wonder timer of player p at game time t (ms; None: the start)."""
@@ -603,7 +609,7 @@ class Replay:
                 s["left"] = max(s["left"], hill.RESET * wonder.YEAR)
             s["owner"] = n
             name, color = self.player(n)
-            out.append("tellraw @a " + json.dumps([text(name, color), text(f" holds the monument at {mmss(t)}.")]))
+            out.append("tellraw @a " + json.dumps([text(name, color), say("monument_holds", mmss(t))]))
         if (n := s["owner"]) is None:
             return out
         if s["shown"] is None:
@@ -612,12 +618,12 @@ class Replay:
         y = max(0, math.ceil(s["left"] / wonder.YEAR))
         if (y, n) != s["shown"]:
             s["shown"] = (y, n)
-            out += [f"bossbar set {hill.BAR} name " + json.dumps(f"{self.player(n)[0]}: monument, {y} year{'s' * (y != 1)} left"),
+            out += [f"bossbar set {hill.BAR} name " + json.dumps(say("monument_years" if y != 1 else "monument_year", self.player(n)[0], y)),
                     f"bossbar set {hill.BAR} value {y}"]
         if s["left"] <= 0:
             s["winner"] = (n, t)
             out += [f"bossbar remove {hill.BAR}",
-                    "tellraw @a " + json.dumps(text(f"{self.player(n)[0]} held the monument: King of the Hill victory at {mmss(t)}."))]
+                    "tellraw @a " + json.dumps(say("hill_won", self.player(n)[0], mmss(t)))]
         return out
 
     def town_check(self, t):
@@ -635,10 +641,9 @@ class Replay:
         """The town center of player p fell at game time t (ms): the player is out, as in AoE2 DE Sudden Death (#4894)."""
         self.town_lost[p] = t
         name, color = self.player(p)
-        return ["title @a subtitle " + json.dumps(text(f"Town center lost at {mmss(t)}")),
-                "title @a title " + json.dumps(text(f"{name} is out", color)),
-                "tellraw @a " + json.dumps([text(name, color), text(f": the town center fell at {mmss(t)}. Sudden "
-                                                                    "Death: the player is out.")])]
+        return ["title @a subtitle " + json.dumps(say("town_lost", mmss(t))),
+                "title @a title " + json.dumps(say("out", name, color=color)),
+                "tellraw @a " + json.dumps([text(name, color), say("town_fell", mmss(t))])]
 
     def king_tags(self):
         """The tag regicide.KING on each start King, so that regicide.has_king finds the live ones (#4835)."""
@@ -663,10 +668,9 @@ class Replay:
         units and buildings stay as in the record; the panel, the Timeline book and the summary say "King killed"."""
         self.regicided[p] = t
         name, color = self.player(p)
-        return ["title @a subtitle " + json.dumps(text(f"King killed at {mmss(t)}")),
-                "title @a title " + json.dumps(text(f"{name} is out", color)),
-                "tellraw @a " + json.dumps([text(name, color), text(f": the King died at {mmss(t)}. Regicide: the "
-                                                                    "player is out.")])]
+        return ["title @a subtitle " + json.dumps(say("king_killed", mmss(t))),
+                "title @a title " + json.dumps(say("out", name, color=color)),
+                "tellraw @a " + json.dumps([text(name, color), say("king_died", mmss(t))])]
 
     def restored(self):
         """A restored record starts with the state of its save (#4592): the age, the technologies and the resources of
@@ -726,8 +730,8 @@ class Replay:
             m = re.findall(self.gather.NUMBER, (self.game.command(f"data get entity {v.uuid} Health") or "").rsplit(":", 1)[-1])
             hp = min(top, math.ceil(float(m[0]))) if m else top
             s = combat.stats(v.name)                                    # base values: the replay has no game.g (#5287)
-            more = f" | {self.task(i)} | {s.attack} atk {s.melee}/{s.pierce} arm" + (f" r{s.range:g}" if s.range else "")
-            line = json.dumps([text(f"{pretty(v.name)} ("), text(who, color), text(f"): {hp}/{top}{more}")])
+            line = json.dumps([say("inspect", lang.name(v.name), text(who, color), hp, top, self.task(i), s.attack,
+                                  s.melee, s.pierce, say("range", f"{s.range:g}") if s.range else "")])
             if shown.get(name, (None, -math.inf))[0] == line and now - shown[name][1] < INSPECT_AGAIN:
                 continue
             shown[name] = line, now
@@ -1158,7 +1162,7 @@ class Replay:
         if kind == "research" and e.get("technology"):
             self.learn(e)
             self.event_bar = e["time"]                            # inspect() waits for this line (#5286)
-            return ["title @a actionbar " + json.dumps([text(name, color), text(f" researches {e['technology']}")])] + \
+            return ["title @a actionbar " + json.dumps([text(name, color), say("research", e['technology'])])] + \
                 self.research(e, color)
         if kind in ("buy", "sell") and e.get("resource"):       # the market trades change the estimate (#3939)
             return self.trade_text(e, *self.trade(e), color)
@@ -1168,8 +1172,8 @@ class Replay:
         if kind == "trigger":                                   # a timer trigger of the scenario (#5158)
             return self.trigger(e)
         if kind == "resign":
-            return ["title @a subtitle " + json.dumps(text("The game ends")),
-                    "title @a title " + json.dumps(text(f"{name} resigns", color))]
+            return ["title @a subtitle " + json.dumps(say("game_ends")),
+                    "title @a title " + json.dumps(say("resigns", name, color=color))]
         return []
 
     def build(self, e):
@@ -1343,7 +1347,7 @@ class Replay:
         self.burst = min(self.burst, e["time"] + BURST) if len(self.flares) > 1 else e["time"] + BURST
         ticks = max(1, round(flare.SECONDS * 20 / self.speed))          # the game time of the flare at the replay speed
         return [f"playsound {flare.SOUND} master @a {x} {y} {z} 1 1 1", flare.particles(x, y, z, "@a", rgb),
-                "tellraw @a " + json.dumps([text(f"<{name}> ", color), text("Flare", "gold")])] + \
+                "tellraw @a " + json.dumps([text(f"<{name}> ", color), say("flare", color="gold")])] + \
             [f"aoe minimap flare {x} {z} p{e.get('player')} {ticks}"] * self.ai   # a blinking cross on the minimap (#2405)
 
     def height(self, name, player):
@@ -2717,7 +2721,7 @@ class Replay:
         if self.relic_won is None and self.lobby_text() == CAPTURE_RELIC:   # the first relic home wins, as capture_relic.tick
             self.relic_won = (p, t)
             name, color = self.label(p)
-            out.append("tellraw @a " + json.dumps([text(name, color), text(" takes the relic to a monastery and wins.")]))
+            out.append("tellraw @a " + json.dumps([text(name, color), say("relic_won")]))
         return out
 
     def drop(self, ref, cell):
@@ -2941,11 +2945,11 @@ class Replay:
             d = (y - mid) / math.tan(pitch)                            # the center is this far in front
             yaw = math.radians(aoe2mc.SPAWN_YAW)
             self.view = f"{c + d * math.sin(yaw):.1f} {y} {c - d * math.cos(yaw):.1f} facing {c:.1f} {mid} {c:.1f}"
-        say = text("Double-tap Shift: spectator view (fly through blocks). Right click the hotbar items: replay control.")
+        msg = say("join_help")
         sel, run = (f"@a[tag=!{VIEWER}]", f"execute as @a[tag=!{VIEWER}] run ") if join else ("@a", "")
         me = "@s" if join else "@a"
         return [f"{run}gamemode adventure {me}", f"{run}effect give {me} minecraft:slow_falling {VIEW_FALL} 0 true",
-                f"{run}tellraw {me} {json.dumps(say)}",
+                f"{run}tellraw {me} {json.dumps(msg)}",
                 f"{run}tp {me} {self.view}", f"tag {sel} add {VIEWER}"]
 
     @staticmethod
@@ -2953,36 +2957,33 @@ class Replay:
         """A title, the end time as subtitle and one sound when the replay is over (#872): the boss bar alone was not
         seen. The title stays 5 s (a resign title just before it shows only 3.5 s)."""
         m, s = divmod(int(end) // 1000, 60)
-        return ["title @a times 10 100 20", "title @a subtitle " + json.dumps(text(f"Game time {m:02d}:{s:02d}")),
-                "title @a title " + json.dumps(text("Replay ended")),
+        return ["title @a times 10 100 20", "title @a subtitle " + json.dumps(say("game_time", f"{m:02d}:{s:02d}")),
+                "title @a title " + json.dumps(say("replay_ended")),
                 "playsound minecraft:ui.toast.challenge_complete master @a ~ ~ ~ 1 1 1"]
 
     def summary_commands(self):
         """Two chat lines per player at the end of the replay, as the AoE2 achievements screen: the economy (#1065):
         trained villagers and the resources of the gather steps (estimated: the record has no resources); the military
         (#1066): trained military units, lost units (DELETE, and the fights of the plugin: census) and lost buildings."""
-        out = ['tellraw @a {"text": "Summary (est.)", "bold": true}']
+        out = ["tellraw @a " + json.dumps(say("summary", bold=True))]
         for p in self.ranked(self.regicided):                       # Regicide: the players who are out (#4835)
             name, color = self.label(p)
-            out.append("tellraw @a " + json.dumps([text(name, color), text(
-                f": King killed {mmss(self.regicided[p])} (Regicide)")]))
+            out.append("tellraw @a " + json.dumps([text(name, color), say("sum_regicide", mmss(self.regicided[p]))]))
         for p in self.ranked(self.town_lost):                          # Sudden Death (#4894)
             name, color = self.label(p)
-            out.append("tellraw @a " + json.dumps([text(name, color), text(
-                f": town center lost {mmss(self.town_lost[p])} (Sudden Death)")]))
+            out.append("tellraw @a " + json.dumps([text(name, color), say("sum_sudden_death", mmss(self.town_lost[p]))]))
         for p in self.ranked(self.wonders):                            # Wonder Race, Defend the Wonder (#4896)
             name, color = self.label(p)
             mode = next(k for k, v in WONDER_MODES.items() if v == self.wonder_mode())
-            out.append("tellraw @a " + json.dumps([text(name, color), text(
-                f": wonder timer from {mmss(self.wonders[p])}, ends {mmss(self.wonders[p] + self.wonder_ms())} ({mode})")]))
+            out.append("tellraw @a " + json.dumps([text(name, color), say("sum_wonder", mmss(self.wonders[p]),
+                                                         mmss(self.wonders[p] + self.wonder_ms()), mode)]))
         if self.hill and (who := self.hill["winner"] or (self.hill["owner"], None))[0] is not None:   # (#4893)
             name, color = self.label(who[0])
-            out.append("tellraw @a " + json.dumps([text(name, color), text(
-                f": monument won {mmss(who[1])} (King of the Hill)" if who[1] is not None else ": holds the monument (King of the Hill)")]))
+            out.append("tellraw @a " + json.dumps([text(name, color), say("sum_hill_won", mmss(who[1]))] if who[1] is not None
+                                                else [text(name, color), say("sum_hill_holds")]))
         if self.relic_won:                                             # Capture the Relic (#4895)
             name, color = self.label(self.relic_won[0])
-            out.append("tellraw @a " + json.dumps([text(name, color), text(
-                f": wins, relic in a monastery {mmss(self.relic_won[1])} (Capture the Relic)")]))
+            out.append("tellraw @a " + json.dumps([text(name, color), say("sum_relic", mmss(self.relic_won[1]))]))
         if lobby := self.lobby_text(True):                                  # the lobby settings of the record (#4833)
             out.append("tellraw @a " + json.dumps(text(lobby, "gray")))
         for p in self.ranked(self.pop.keys() | self.villagers.keys() | self.gathered.keys() | self.army.keys()
@@ -2990,12 +2991,11 @@ class Replay:
             name, color = self.label(p)
             g = self.gathered.get(p, dict.fromkeys(START, 0))
             res = ", ".join(f"{r} {v}" for r, v in g.items())
-            out.append("tellraw @a " + json.dumps([text(name, color), text(
-                f": villagers trained {self.villagers.get(p, 0)}, gathered {res}, idle villager time "
-                f"{self.idle_text(p)}, idle TC time {self.tc_text(p)}")]))
-            out.append("tellraw @a " + json.dumps([text(name, color), text(              # military (#1066)
-                f": military units trained {self.army.get(p, 0)}, units lost {self.lost.get(p, 0)}, "
-                f"buildings lost {self.razed.get(p, 0)}, APM {self.mean_apm(p, self.ended)}{self.army_text(p)}")]))
+            out.append("tellraw @a " + json.dumps([text(name, color), say("sum_economy", self.villagers.get(p, 0), res,
+                                                         self.idle_text(p), self.tc_text(p))]))
+            out.append("tellraw @a " + json.dumps([text(name, color), say("sum_military", self.army.get(p, 0),   # military (#1066)
+                                                         self.lost.get(p, 0), self.razed.get(p, 0),
+                                                         self.mean_apm(p, self.ended), self.army_text(p))]))
         return out + self.tech_commands() + self.society_commands()
 
     def lobby_text(self, full=False):
@@ -3032,8 +3032,7 @@ class Replay:
             times = self.reached.get(p, {})
             ages = ", ".join(f"{pretty(a).removesuffix(' Age')} {mmss(times[a]) if a in times else '-'}"
                              for a in AGES)
-            out.append("tellraw @a " + json.dumps([text(name, color), text(
-                f": {ages}, technologies {self.researched.get(p, 0)}")]))
+            out.append("tellraw @a " + json.dumps([text(name, color), say("sum_techs", ages, self.researched.get(p, 0))]))
             if upgrades := self.upgrade_line(p):                          # the upgrades, one line more (#3789)
                 out.append("tellraw @a " + json.dumps([text(name, color), text(f": {upgrades}")]))
         return out
@@ -3077,9 +3076,8 @@ class Replay:
             counts = "".join(f"{n.lower()}s {built.get((p, n), 0)}, " for n in SOCIETY)   # castles N, wonders N
             counts += f"relics {self.relic_count(p)}, "                                    # the relics in monasteries (#4010)
             market = f"bought {traded.get((p, 'buy'), 0)}, sold {traded.get((p, 'sell'), 0)}, "
-            out.append("tellraw @a " + json.dumps([text(name, color), text(
-                f": {counts}{market}tribute sent {sent.get(p, 0)}, received {got.get(p, 0)}, villager high "
-                f"{self.vhigh.get(p, 0)} (est.)")]))
+            out.append("tellraw @a " + json.dumps([text(name, color), say("sum_society", counts + market, sent.get(p, 0), got.get(p, 0),
+                                                         self.vhigh.get(p, 0))]))
         return out
 
     def timeline_commands(self, end):
@@ -3571,7 +3569,7 @@ class Replay:
         views = self.views = [{"time": v["time"], "kind": "view", "tile": v["tile"]} for v in self.data.get("views", [])]
         if self.camera == "player" and not views and more is None:  # the free camera (#4768); live: views can come
             self.camera = None
-            self.send(["tellraw @a " + json.dumps(text("This record has no camera of its player.", "yellow"))])
+            self.send(["tellraw @a " + json.dumps(say("no_camera", color="yellow"))])
         before = [dict(v, time=start) for v in views if v["time"] < start][-1:]   # a fresh replay after a jump back (#979):
         timers = self.timers(max((e["time"] for e in self.data.get("timeline", [])), default=start))   # (#5158)
         events = sorted((e for e in self.data.get("timeline", []) + self.spawns() + news + shots + views + before   # the view
@@ -3697,11 +3695,11 @@ class Replay:
                 k -= e is not None                                  # the event waits for the jump
                 if not complete and to > end:                       # a live record: no time after its last given
                     to = end                                        # event, "newest − delay" (#4733)
-                    say = text("Live replay: the jump stops at the delay behind the game.", "yellow")
-                    send([f"tellraw @a {json.dumps(say)}"])
+                    msg = say("live_jump", color="yellow")
+                    send([f"tellraw @a {json.dumps(msg)}"])
                 if rewind and to < (g0 if self.paused else g0 + (clock() - r0) * 1000 * self.speed):
-                    say = text("The server restarts for the jump back: join it again.", "yellow")
-                    send(self.clock_commands(to, end, self.speed, jump=True) + [f"tellraw @a {json.dumps(say)}"])
+                    msg = say("restart_jump", color="yellow")
+                    send(self.clock_commands(to, end, self.speed, jump=True) + [f"tellraw @a {json.dumps(msg)}"])
                     self.send(self.camera_off())
                     return {"rewind": to, "speed": self.speed, "paused": self.paused, "view": self.pov,
                             "camera": self.camera, "events": n,

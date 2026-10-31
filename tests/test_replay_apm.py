@@ -4,6 +4,7 @@ import os
 import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "game"))
+import lang  # noqa: E402
 import replay  # noqa: E402
 from test_replay import Fake, data  # noqa: E402
 
@@ -30,4 +31,4 @@ def test_the_summary_line_ends_with_the_average_apm():
     r = game(act(10_000), act(50_000), act(70_000))
     r.ended, r.army = 60000, {1: 0}                 # the summary lists the players of the military counts
     lines = [json.loads(c.split(" ", 2)[2]) for c in r.summary_commands() if "military units trained" in c]
-    assert ["".join(t["text"] for t in line) for line in lines][0].endswith("buildings lost 0, APM 2")
+    assert ["".join(lang.plain(t) for t in line) for line in lines][0].endswith("buildings lost 0, APM 2")

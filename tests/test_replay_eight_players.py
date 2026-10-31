@@ -6,6 +6,7 @@ import re
 import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "game"))
+import lang  # noqa: E402
 import replay  # noqa: E402
 from test_replay import Fake, data  # noqa: E402
 from test_replay_walk import VIL  # noqa: E402
@@ -70,18 +71,18 @@ def test_the_sidebar_has_8_lines_in_8_colors():
     names = [json.loads(c.split(" ", 6)[6]) for c in sent if c.startswith("scoreboard players display name ")]
     first = {}                                   # the APM (#3764) renames a player again: the first name of each
     for n in names:
-        first.setdefault(n["text"].split(" · ")[0], n)
+        first.setdefault(lang.plain(n).split(" · ")[0], n)
     names = list(first.values())
-    assert [n["text"].split(" · ")[0] for n in names] == [f"Player {p} ({c.title()})" for p, c in zip(PLAYERS, CIVS)]
+    assert [lang.plain(n).split(" · ")[0] for n in names] == [f"Player {p} ({c.title()})" for p, c in zip(PLAYERS, CIVS)]
     assert len({n["color"] for n in names}) == 8
 
 
 def test_the_summary_has_the_lines_of_each_player():
     _, sent = play([dict(time=1000, player=p, kind="age", age="FEUDAL_AGE") for p in PLAYERS])
-    lines = [t for t in tellraws(sent) if isinstance(t, list) and t[0]["text"].startswith("Player ")
-             and t[1]["text"].startswith((": villagers", ": military", ": Feudal", ": castles"))]
+    lines = [t for t in tellraws(sent) if isinstance(t, list) and lang.plain(t[0]).startswith("Player ")
+             and lang.plain(t[1]).startswith((": villagers", ": military", ": Feudal", ": castles"))]
     for p in PLAYERS:
-        mine = [t for t in lines if t[0]["text"].startswith(f"Player {p} ")]
+        mine = [t for t in lines if lang.plain(t[0]).startswith(f"Player {p} ")]
         assert len(mine) == 4                                 # economy, military, ages, society
         assert {t[0]["color"] for t in mine} == {replay.TEXT_COLORS[buildings.COLOR_NAMES[p - 1]]}
 

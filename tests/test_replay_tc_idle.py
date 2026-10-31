@@ -4,6 +4,7 @@ import os
 import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "game"))
+import lang  # noqa: E402
 import replay  # noqa: E402
 from test_replay_army_view import make  # noqa: E402
 
@@ -44,7 +45,7 @@ def test_the_summary_line_names_the_idle_town_center_time():
     r = make([queue(0), queue(60000)])
     r.villagers = {1: 2}                                        # the summary lists the players with villagers
     r.ended = 100000
-    texts = ["".join(t["text"] for t in json.loads(c.split(" ", 2)[2])) for c in r.summary_commands()
+    texts = ["".join(lang.plain(t) for t in json.loads(c.split(" ", 2)[2])) for c in r.summary_commands()
              if "villagers trained" in c]
     m, s = divmod(round(100 - 2 * V), 60)
     assert [t for t in texts if t.startswith("Player 1")][0].endswith(f"idle TC time {m}:{s:02d}")

@@ -4,6 +4,7 @@ import os
 import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "game"))
+import lang  # noqa: E402
 import replay  # noqa: E402
 from test_replay import Fake, data  # noqa: E402
 
@@ -11,7 +12,7 @@ from test_replay import Fake, data  # noqa: E402
 def military_lines(r):
     """The text of each military line of the summary, player 1 first."""
     lines = [c for c in r.summary_commands() if "military units" in c]
-    return ["".join(t["text"] for t in json.loads(c.split(" ", 2)[2])) for c in lines]
+    return ["".join(lang.plain(t) for t in json.loads(c.split(" ", 2)[2])) for c in lines]
 
 
 def test_the_army_and_the_losses_name_each_type_most_first():

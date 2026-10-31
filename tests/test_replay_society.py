@@ -12,6 +12,7 @@ import mgz.model
 import aoe2mc
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "game"))
+import lang  # noqa: E402
 import replay  # noqa: E402
 from test_replay import Fake, data  # noqa: E402
 
@@ -26,7 +27,7 @@ WANT = ["Player 1 (Britons): castles 2, wonders 0, relics 0, bought 0, sold 0, t
 
 
 def lines(sent):
-    return ["".join(t["text"] for t in json.loads(c.split(" ", 2)[2])) for c in sent
+    return ["".join(lang.plain(t) for t in json.loads(c.split(" ", 2)[2])) for c in sent
             if c.startswith("tellraw @a [") and "castles" in c]
 
 

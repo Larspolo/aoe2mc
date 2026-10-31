@@ -1,4 +1,5 @@
 """Live replay: the replay ends at the time of its last event, also when units still walk (#978). Fake RCON."""
+import json
 import os
 import re
 import sys
@@ -32,7 +33,7 @@ def test_the_end_comes_at_the_last_event_while_a_unit_walks():
     r, sent, real = play(tl)
     names = [c.split(" name ")[1] for c in sent if c.startswith("bossbar") and " name " in c]
     assert max(map(seconds, names)) == 10 and names[-1] == '{"text": "End 00:10"}'
-    assert 'title @a title {"text": "Replay ended"}' in sent
+    assert "title @a title " + json.dumps(replay.say("replay_ended")) in sent
     assert real < 10 / 4 + 0.1                                     # it does not wait for the walk
     assert len([c for c in sent if c.startswith("aoe moveto")]) == 1    # the second leg never starts
 

@@ -15,6 +15,7 @@ import json
 import re
 import time
 
+import lang
 import menu
 
 OBJECTIVE = "aoe_replay"             # the trigger: /trigger aoe_replay set N
@@ -55,9 +56,12 @@ def help_text():
     most 1446 bytes (the server closes the connection): the clicks get their color from the root."""
     extra = [{"text": f"[{name}] ", "click_event": {"action": "run_command", "command": f"/trigger {OBJECTIVE} set {n}"}}
              for n, name in actions().items()]
-    return json.dumps({"text": "", "color": "aqua", "extra": [
-        {"text": "Replay: right click the items in your hotbar, or click: ", "color": "gray"}] + extra},
-        ensure_ascii=False, separators=(",", ":"))
+    return json.dumps({"text": "", "color": "aqua", "extra": extra}, ensure_ascii=False, separators=(",", ":"))
+
+
+def help_head():
+    """The first chat line of the input (#5375): a line of its own, as the translate text makes help_text too long."""
+    return json.dumps(lang.text("aoe2mc.replay_input.help", color="gray"), separators=(",", ":"))
 
 
 def apply(n, control):
@@ -117,7 +121,7 @@ def clock_text(ms):
 
 def fight_players(f, players):
     """The names of the players of a fight in their colors, "A vs B" (fight_lines, fight_news)."""
-    return [x for k, p in enumerate(f["players"]) for x in ([{"text": " vs "}] if k else []) +
+    return [x for k, p in enumerate(f["players"]) for x in ([lang.text("aoe2mc.replay_input.vs")] if k else []) +
             [{"text": players.get(p, (f"Player {p}", "white"))[0], "color": players.get(p, ("", "white"))[1]}]]
 
 
@@ -125,12 +129,12 @@ def fight_lines(fights, players):
     """The tellraw commands of the fight list at the start (#2949): one line per fight (at most MAX_FIGHTS), with the
     time, the players in their colors and the number of units; a click sets the trigger FIGHT + i. fights:
     replay.fights(); players: player -> (name, color). No fights: no lines."""
-    out = [f"tellraw @a {json.dumps({'text': 'Large fights:', 'bold': True})}"] if fights else []
+    out = [f"tellraw @a {json.dumps(lang.text('aoe2mc.replay_input.fights', bold=True))}"] if fights else []
     for i, f in enumerate(fights[:MAX_FIGHTS]):
         out.append("tellraw @a " + json.dumps(
             {"text": "", "click_event": {"action": "run_command", "command": f"/trigger {OBJECTIVE} set {FIGHT + i}"},
              "extra": [{"text": f"[{clock_text(f['start'])}] ", "color": "gold"}, *fight_players(f, players),
-                       {"text": f" ({f['units']} units)", "color": "gray"}]}, ensure_ascii=False))
+                       lang.text("aoe2mc.replay_input.units", f['units'], color="gray")]}, ensure_ascii=False))
     return out
 
 
@@ -174,7 +178,8 @@ class Input:
                 continue                                           # they need the plugin
             g.command(f"execute as @a unless items entity @s hotbar.{slot} *[custom_data={{{OBJECTIVE}:{n}}}] "
                       f"run item replace entity @s hotbar.{slot} with {item(n)}")
-        g.command(f"execute as @a unless score @s {USE} matches 0.. run tellraw @s {help_text()}")
+        for line in (help_head(), help_text()):
+            g.command(f"execute as @a unless score @s {USE} matches 0.. run tellraw @s {line}")
         g.command(f"scoreboard players add @a {USE} 0")
         g.command(f"scoreboard players enable @a {OBJECTIVE}")
 

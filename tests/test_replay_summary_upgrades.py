@@ -5,6 +5,7 @@ import os
 import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "game"))
+import lang  # noqa: E402
 import replay  # noqa: E402
 from test_replay import Fake, data  # noqa: E402
 from test_replay_learned import research  # noqa: E402
@@ -13,7 +14,7 @@ from test_replay_learned import research  # noqa: E402
 def lines(r):
     """The text of the upgrade lines of the summary, one per player."""
     out = [json.loads(c.split(" ", 2)[2]) for c in r.tech_commands()]
-    return ["".join(t["text"] for t in parts) for parts in out if "economy" in parts[-1]["text"]]
+    return ["".join(lang.plain(t) for t in parts) for parts in out if "economy" in lang.plain(parts[-1])]
 
 
 def test_the_blacksmith_researches_and_the_economy_count_are_one_line():

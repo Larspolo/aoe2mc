@@ -4,6 +4,7 @@ import os
 import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "game"))
+import lang  # noqa: E402
 import replay  # noqa: E402
 
 
@@ -37,9 +38,11 @@ def test_chat_age_research_resign():
     age = r.commands({"time": 1, "player": 1, "kind": "age", "age": "FEUDAL_AGE"})
     assert age[-1] == 'title @a title {"text": "Feudal Age"}' and '"color": "blue"' in age[0]
     tech = r.commands({"time": 2, "player": 1, "kind": "research", "technology": "Loom"})
-    assert tech[0].startswith("title @a actionbar ") and "researches Loom" in tech[0]
+    assert tech[0].startswith("title @a actionbar ")
+    assert "".join(lang.plain(t) for t in json.loads(tech[0].split(" ", 3)[3])).endswith("researches Loom")
     end = r.commands({"time": 3, "player": 1, "kind": "resign"})
-    assert end[-1].startswith("title @a title ") and "Player 1 (Britons) resigns" in end[-1]
+    assert end[-1].startswith("title @a title ")
+    assert lang.plain(json.loads(end[-1].split(" ", 3)[3])) == "Player 1 (Britons) resigns"
     assert r.commands({"time": 4, "player": 1, "kind": "move", "tile": [3.0, 4.0]}) == []
 
 

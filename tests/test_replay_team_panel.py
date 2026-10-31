@@ -4,6 +4,7 @@ import os
 import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "game"))
+import lang  # noqa: E402
 import replay  # noqa: E402
 from test_replay import Fake, data  # noqa: E402
 
@@ -20,7 +21,7 @@ def game(teams):
 
 def lines(cmds):
     """The player name of each tellraw line, in order."""
-    return ["".join(t["text"] for t in json.loads(c.split(" ", 2)[2])).split(":")[0]
+    return ["".join(lang.plain(t) for t in json.loads(c.split(" ", 2)[2])).split(":")[0]
             for c in cmds if c.startswith("tellraw @a [")]
 
 

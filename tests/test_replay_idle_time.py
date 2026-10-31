@@ -4,6 +4,7 @@ import os
 import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "game"))
+import lang  # noqa: E402
 from test_replay_eco import replay_of_map, vill  # noqa: E402
 
 
@@ -35,6 +36,6 @@ def test_the_summary_line_ends_with_the_idle_time():
     r.idle_time(0)
     r.idle_time(30_000)
     r.villagers = {1: 2}                                        # the summary lists the players with villagers
-    texts = ["".join(t["text"] for t in json.loads(c.split(" ", 2)[2])) for c in r.summary_commands()
+    texts = ["".join(lang.plain(t) for t in json.loads(c.split(" ", 2)[2])) for c in r.summary_commands()
              if "villagers trained" in c]
     assert [t for t in texts if t.startswith("Player 1")][0].endswith("idle villager time 1:00, idle TC time 0:00")

@@ -8,13 +8,14 @@ import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "game"))
 import gather  # noqa: E402
+import lang  # noqa: E402
 import replay  # noqa: E402
 from test_replay import Fake, data  # noqa: E402
 from test_replay_gather import TREE, VIL, order  # noqa: E402
 from test_replay_score import KNIGHT, TC  # noqa: E402
 from test_replay_spawn import queue  # noqa: E402
 
-HEAD = 'tellraw @a {"text": "Summary (est.)", "bold": true}'
+HEAD = "tellraw @a " + json.dumps(replay.say("summary", bold=True))
 
 
 def play(timeline, **kw):
@@ -32,7 +33,7 @@ def play(timeline, **kw):
 def summary(sent):
     """The player lines after the summary header."""
     rest = sent[sent.index(HEAD) + 1:]
-    return ["".join(t["text"] for t in json.loads(c.split(" ", 2)[2])) for c in rest if c.startswith("tellraw @a [") and "villagers" in c]
+    return ["".join(lang.plain(t) for t in json.loads(c.split(" ", 2)[2])) for c in rest if c.startswith("tellraw @a [") and "villagers" in c]
 
 
 def test_the_end_shows_the_villagers_and_the_gathered_resources():
@@ -42,7 +43,7 @@ def test_the_end_shows_the_villagers_and_the_gathered_resources():
     assert wood > 10 and r.villagers == {1: 1}
     assert summary(sent) == [f"Player 1 (Britons): villagers trained 1, gathered food 0, wood {wood}, gold 0, stone 0, idle villager time 0:02, idle TC time 0:00",
                              "Player 2 (Aztecs): villagers trained 0, gathered food 0, wood 0, gold 0, stone 0, idle villager time 0:00, idle TC time 0:00"]
-    assert sent.index(HEAD) > sent.index('title @a title {"text": "Replay ended"}')
+    assert sent.index(HEAD) > sent.index("title @a title " + json.dumps(replay.say("replay_ended")))
 
 
 def test_a_jump_to_the_end_counts_the_same_villagers():

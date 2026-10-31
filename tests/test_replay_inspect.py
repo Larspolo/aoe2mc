@@ -5,6 +5,7 @@ import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "game"))
 import combat  # noqa: E402
+import lang  # noqa: E402
 import replay  # noqa: E402
 from test_replay import Fake, data  # noqa: E402
 
@@ -44,7 +45,7 @@ def test_a_look_at_a_unit_shows_name_player_and_hit_points():
     facing(r, 40.0)
     (c,) = bars(r.inspect(10000, clock=lambda: 0.0))
     assert c.startswith("title Steve actionbar ")
-    line = "".join(p["text"] for p in json.loads(c.split(" actionbar ", 1)[1]))
+    line = "".join(lang.plain(p) for p in json.loads(c.split(" actionbar ", 1)[1]))
     hp = combat.stats("ARCHER").hp
     assert line.startswith(f"{replay.pretty('ARCHER')} (Player 2, {replay.pretty('AZTECS')}): {min(21, hp)}/{hp} | ")
 
