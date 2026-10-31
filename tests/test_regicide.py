@@ -95,7 +95,7 @@ def test_the_death_of_the_own_king_is_a_defeat(monkeypatch):
     server.kings = {"k-2"}
     server.log.clear()
     check(g)
-    assert g.ended == "Defeat" and 'title @a[team=p1] title {"text":"Defeat","color":"red"}' in server.log
+    assert g.ended == "Defeat" and 'title @a[team=p1] title {"translate":"aoe2mc.defeat","fallback":"Defeat","color":"red"}' in server.log
 
 
 def test_the_run_loop_checks_the_kings_only_in_regicide(monkeypatch):

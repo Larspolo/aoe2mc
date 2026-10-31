@@ -67,7 +67,7 @@ def test_the_score_1_of_player_1_gives_victory_and_ends_the_game():
     server, g, bot = game({1: 1})
     scenario.victory(g)
     assert g.ended == "Victory" and bot.ended == "Defeat"
-    assert 'title @a[team=p1] title {"text":"Victory","color":"gold"}' in titles(server)
+    assert 'title @a[team=p1] title {"translate":"aoe2mc.victory","fallback":"Victory","color":"gold"}' in titles(server)
 
 
 def test_a_victory_of_player_2_is_a_defeat_of_player_1():
