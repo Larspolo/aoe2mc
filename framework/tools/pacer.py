@@ -328,6 +328,7 @@ class Briefs:
 
     def __init__(self, todo, out, now, found, dry=False, hour=None, reads=None):
         self.todo, self.given, self.dry, self.hour = None, [], dry, hour or {}
+        self.next = {}                                  # {ticket: its `next:` tickets} for `record` (#5308)
         self.stuck, self.takeovers, self.nexts = [], set(), set()
         self.plan = [t for t, *_ in todo or ()]         # the tasks of the runs of this cycle that have no ticket yet
         if "open" not in out or out.get("flow") is not None or not todo or red_main():
@@ -434,6 +435,8 @@ class Briefs:
             claim.start(got[0], by=got[1], note=(" Stuck: its run stopped." if over else "")
                         + (f" Session: {link}" if link else ""), **({"word": "Taken over by"} if over else {}))
             self.given.append(got[0])
+            if got[3]:
+                self.next[got[0]] = list(got[3])
 
 
 NUMBERS = {"target": r"target (\d+) runs", "claims": r"claims (\d+) ", "claims_opus": r"\(([\d.]+) Opus runs\)",
@@ -612,7 +615,7 @@ def main(argv=None, env=os.environ):
                              "missing": round(missing[n], 2) if n in missing else None}
                          for n, u in reads.items()} if many else None          # the quota of each account (#4239)
                 f.write(json.dumps({**record(at, found, burn, burn7, k, runs, started, line, problems, gh, quota),
-                                    "briefs": briefs.given}
+                                    "briefs": briefs.given, "next": {str(n): t for n, t in briefs.next.items()}}
                                    | ({"accounts": {x: sum(c for (y, _), c in count.items() if y == x) for x in envs}}
                                       if many else {})) + "\n")
         except OSError as e:

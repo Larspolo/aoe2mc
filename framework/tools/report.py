@@ -54,14 +54,24 @@ def result(text):
     return f"pr #{m[1]}" if m else t if t in ("merged", "closed", "blocked", "needs-human", "none") else None
 
 
-def metrics(ticket, size, result, minutes=None, setup=0, checks=0, checks_min=0, sinks="none", phase="", lane=None):
+def metrics(ticket, size, result, minutes=None, setup=0, checks=0, checks_min=0, sinks="none", phase="", lane=None,
+            source=None):
     """One `Metrics:` line in the format of autopilot step 8."""
     p = phases(phase)
     minutes = sum(p.values()) if minutes is None else minutes
     size = size if size.startswith("size:") else f"size:{size}"
     return (f"Metrics: ticket #{ticket} · {size} · {result} · {num(minutes)} min · setup {num(setup)} min · "
             f"checks {checks} · checks {num(checks_min)} min · time sinks: {sinks or 'none'} · phases "
-            + " · ".join(f"{k} {num(v)}" for k, v in p.items()) + (f" · lane {lane}" if lane else ""))
+            + " · ".join(f"{k} {num(v)}" for k, v in p.items()) + (f" · lane {lane}" if lane else "")
+            + (f" · source {source}" if source else ""))
+
+
+SOURCES = ("next", "cycle_start")   # where a run got a ticket after its first (#5308)
+
+
+def next_failed(numbers):
+    """The line of the failed claims of `next:` tickets (`health.next_effect` parses it), or None."""
+    return f"Next failed: {' '.join(f'#{n}' for n in numbers)}" if numbers else None
 
 
 def git_lane():
@@ -133,7 +143,8 @@ def main(argv=None):
     ap.add_argument("--text", required=True, help="what the run did and what is next")
     ap.add_argument("--usage", help="the Usage: line of the run start (usage.py --sample); default: a new sample")
     for name, kind in (("ticket", int), ("size", str), ("result", str), ("minutes", float), ("setup", float),
-                       ("checks", int), ("checks-min", float), ("sinks", str), ("phases", str), ("lane", str)):
+                       ("checks", int), ("checks-min", float), ("sinks", str), ("phases", str), ("lane", str),
+                       ("source", str), ("next-failed", int)):
         ap.add_argument(f"--{name}", type=kind, action="append", default=[])
     ap.add_argument("--post", action="store_true", help="comment the report on the status issue")
     a = ap.parse_args(argv)
@@ -145,6 +156,8 @@ def main(argv=None):
     if bad:
         ap.error(f"--result {bad[0]!r}: give one of {RESULTS} (the PR number of an open PR)")
     a.result = [result(r) for r in a.result]
+    if len(a.source) > n or any(x not in SOURCES for x in a.source):
+        ap.error(f"give --source for each ticket after the first of the run, in order: one of {SOURCES}")
 
     def at(values, i, default):
         return values[i] if i < len(values) else default
@@ -155,10 +168,12 @@ def main(argv=None):
     own = lambda t: got.get(str(t)) or (got.get("None", "") if n == 1 else "")    # measured, not guessed (2026-10-28)
     tickets = [dict(ticket=t, size=a.size[i], result=a.result[i], minutes=at(a.minutes, i, None), setup=at(a.setup, i, setup if i == 0 else 0),
                     checks=at(a.checks, i, 0), checks_min=at(a.checks_min, i, 0), sinks=at(a.sinks, i, "none"),
-                    phases=at(a.phases, i, own(t)), lane=at(a.lane, i, lane)) for i, t in enumerate(a.ticket)]
+                    phases=at(a.phases, i, own(t)), lane=at(a.lane, i, lane),
+                    source=at(a.source, i, None)) for i, t in enumerate(a.ticket)]
     lines = [metrics(d["ticket"], d["size"], d["result"], d["minutes"], d["setup"], d["checks"], d["checks_min"],
-                     d["sinks"], d["phases"], d["lane"]) for d in tickets]
+                     d["sinks"], d["phases"], d["lane"], d["source"]) for d in tickets]
     usage = a.usage or (tool("usage.py", "--sample").splitlines() or [""])[-1]
+    lines += [x for x in [next_failed(a.next_failed)] if x]
     body = report(a.text, usage, lines)
     if not a.post:
         print(body)

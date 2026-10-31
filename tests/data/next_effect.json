@@ -1,0 +1,4 @@
+[{"body": "Metrics: ticket #1 · size:S · pr #11 · 30 min\nTokens: 0.20M eq · x · sinks none"},
+ {"body": "Metrics: ticket #2 · size:S · pr #12 · 30 min\nTokens: 0.40M eq · x · sinks none"},
+ {"body": "Metrics: ticket #3 · size:S · pr #13 · 30 min\nMetrics: ticket #4 · size:S · pr #14 · 20 min · source next\nNext failed: #5 #6\nTokens: 0.80M eq · x · sinks none"},
+ {"body": "Metrics: ticket #7 · size:S · pr #15 · 30 min\nMetrics: ticket #8 · size:S · pr #16 · 20 min · source cycle_start\nMetrics: ticket #9 · size:S · pr #17 · 20 min · source cycle_start\nTokens: 0.90M eq · x · sinks none"}]
