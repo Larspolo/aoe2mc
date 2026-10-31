@@ -37,6 +37,8 @@ call fails, the pacer releases the claim of its run.
 A stuck ticket (`claim.py 0 --stuck`: its run stopped) comes before the candidates (autopilot step 2): the pacer takes
 it over for one run (`claim.py N --takeover` with the run name) and adds a `takeover:` line with the branch of its PR.
 Runs with no brief raced for the same stuck PRs, and each lost race cost a cycle start (#4356).
+A stuck ticket whose PR only waits for its quick CI or for Automerge gets no takeover (`ci_wait`, #4932); a green
+one starts the Automerge sweep: 10 of 14 takeovers "after the report" closed by the merge 0 to 18 minutes later.
 """
 import argparse
 import datetime
@@ -187,10 +189,47 @@ def queues(open_all, refs, now, tasks):
                 if i["number"] not in held] for t in sorted(set(tasks))}
 
 
-def stuck(open_all, refs, now, pulls):
+FAILED = ("action_required", "cancelled", "failure", "startup_failure", "timed_out")   # a check with this result is red
+
+
+def ci_wait(pr, checks):
+    """"run" when the quick CI of the open PR still runs, "green" when it passed and no check failed, else None (red,
+    the label `conflict`, no quick check: take the ticket over). checks: the check runs of its head. 10 of 14
+    takeovers "after the report" closed by Automerge 0 to 18 minutes later (#4932); a green PR that Automerge cannot
+    merge gets `conflict` (#4926), so this rule does not hide it."""
+    import ship_pr
+    if "conflict" in {lb["name"] for lb in pr.get("labels") or []}:
+        return None
+    quick = [c for c in checks if c.get("name") == ship_pr.QUICK]
+    if not quick or any(c.get("conclusion") in FAILED for c in checks):
+        return None
+    if any(c.get("status") != "completed" for c in quick):
+        return "run"
+    return "green" if all(c.get("conclusion") == "success" for c in quick) else None
+
+
+def head_checks(sha):
+    import dashboard
+    return dashboard.api(f"commits/{sha}/check-runs?per_page=100").get("check_runs", [])
+
+
+def sweep():
+    """Start the Automerge sweep (`workflow_dispatch`): it merges a green PR whose CI event it missed (#734)."""
+    import dashboard
+    try:
+        dashboard.api("actions/workflows/automerge.yml/dispatches", "POST", {"ref": "main"})
+    except json.JSONDecodeError:                        # the answer 204 has no body
+        pass
+    except Exception as e:                              # the cron of Automerge sweeps too: keep the takeovers
+        print(f"no sweep: {e}", file=sys.stderr)
+
+
+def stuck(open_all, refs, now, pulls, checks=None, start_sweep=sweep):
     """[(issue, takeover)] of the `in-progress` tickets whose run stopped (`claim.stuck`, as `claim.py 0 --stuck`).
     takeover: "PR #M BRANCH" of the open PR that closes the ticket, else "no PR". refs: the lines of
-    `health.claim_refs`; None (git failed): no stuck ticket, else each ticket would look stuck."""
+    `health.claim_refs`; None (git failed): no stuck ticket, else each ticket would look stuck. A PR that only waits
+    for its quick CI or for Automerge (`ci_wait`) gives no takeover; a green one starts the sweep, once per call.
+    checks: sha -> the check runs of the head (`head_checks`); start_sweep: None, no sweep (`--dry-run`)."""
     import claim
     if refs is None:
         return []
@@ -204,10 +243,22 @@ def stuck(open_all, refs, now, pulls):
     issues = {i["number"]: i for i in open_all if "pull_request" not in i and "in-progress" in dashboard.labels(i)}
     changed = {n: datetime.datetime.fromisoformat(i["updated_at"].replace("Z", "+00:00")).timestamp()
                for n, i in issues.items()}
-    out = []
+    out, green = [], False
     for n, _ in claim.stuck(changed, {n: (s, t) for n, (_, s, t) in top.items()}, now):
         pr = next((p for p in pulls if claim.closes(n).search(claim.prose(p.get("body")))), None)
+        try:
+            wait = pr and pr["head"].get("sha") and ci_wait(pr, (checks or head_checks)(pr["head"]["sha"]))
+        except Exception as e:                          # no check runs: take it over as before
+            print(f"#{n}: no checks of PR #{pr['number']}: {e}", file=sys.stderr)
+            wait = None
+        if wait:
+            print(f"#{n}: PR #{pr['number']} waits for {'its quick CI' if wait == 'run' else 'Automerge'}, no takeover",
+                  file=sys.stderr)
+            green = green or wait == "green"
+            continue
         out.append((issues[n], f"PR #{pr['number']} {pr['head']['ref']}" if pr else "no PR"))
+    if green and start_sweep:
+        start_sweep()
     return out
 
 
@@ -284,7 +335,8 @@ class Briefs:
                         for a, u in (reads or {}).items()}   # the `Usage:` line of each account (#4237)
         try:
             import dashboard
-            self.stuck = stuck(out["open"], out.get("refs"), now, dashboard.pages("pulls?state=open"))
+            self.stuck = stuck(out["open"], out.get("refs"), now, dashboard.pages("pulls?state=open"),
+                               start_sweep=None if dry else sweep)
         except Exception as e:                          # the runs find the stuck tickets themselves (`cycle_start.py`)
             print(f"no takeovers: {e}", file=sys.stderr)
 
