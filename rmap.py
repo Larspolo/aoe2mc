@@ -66,6 +66,24 @@ LOBBY_LABELS = {
     "antiquity": "ANTIQUITY_MODE",
     "nomad": "NOMAD_MAP",
 }
+# The lobby settings "Starting resources" and "Starting age" (the values of game/run.py) -> their label (#5016);
+# standard resources and random: no label.
+RESOURCE_LABELS = {
+    "high": "HIGH_RESOURCES",
+    "infinite": "INFINITE_RESOURCES",
+    "low": "LOW_RESOURCES",
+    "medium": "MEDIUM_RESOURCES",
+    "random": None,
+    "standard": None,
+    "ultra": "ULTRA_RESOURCES",
+}
+AGE_LABELS = {
+    "castle": "CASTLE_AGE_START",
+    "dark": "DARK_AGE_START",
+    "feudal": "FEUDAL_AGE_START",
+    "imperial": "IMPERIAL_AGE_START",
+    "post-imperial": "POST_IMPERIAL_AGE_START",
+}
 SIZES = {1: 120, 2: 120, 3: 144, 4: 144, 5: 168, 6: 168, 7: 200, 8: 200}    # AoE2 map size of a player count
 # The label that the AoE2 DE lobby defines for each game mode of game/run.py (docs/rms-maps.md, #4824); standard: none.
 MODE_LABELS = {
@@ -605,7 +623,7 @@ def lobby_labels():
     """All labels that generate() can define (#5009): the size labels with LUDIKRIS_MAP, the game mode labels, LOBBY_LABELS and the
     player and team labels of team_labels() for 1 to 8 players and teams 0 to 4."""
     labels = {label for _, label in LABELS} | {"LUDIKRIS_MAP"} | {v for v in MODE_LABELS.values() if v}
-    labels |= set(LOBBY_LABELS.values())
+    labels |= set(LOBBY_LABELS.values()) | {v for v in RESOURCE_LABELS.values() if v} | set(AGE_LABELS.values())
     labels |= {f"{n}_PLAYER_GAME" for n in range(1, 9)} | {f"{t}_TEAM_GAME" for t in range(5)}
     labels |= {f"TEAM{t}_SIZE{m}" for t in range(1, 5) for m in range(1, 9)}
     return labels | {f"PLAYER{p}_TEAM{t}" for p in range(1, 9) for t in range(5)}

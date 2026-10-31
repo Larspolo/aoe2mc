@@ -6512,6 +6512,10 @@ def main(argv=None):
     import rmap
     for k, label in sorted(rmap.LOBBY_LABELS.items()):
         ap.add_argument(f"--{k}", action="store_true", help=f"a random map script (.rms): define the lobby label {label} (#5017)")
+    ap.add_argument("--resources", choices=sorted(rmap.RESOURCE_LABELS), default="standard",
+                    help="a random map script (.rms): the lobby setting \"Starting resources\" (LOW_RESOURCES ...; default standard: no label)")
+    ap.add_argument("--age", choices=sorted(rmap.AGE_LABELS), default="dark",
+                    help="a random map script (.rms): the lobby setting \"Starting age\" (DARK_AGE_START ...; default dark)")
     ap.add_argument("--preview", action="store_true", help="also write preview.png")
     ap.add_argument("--architecture", choices=sorted(buildings.ARCH),
                     help="use one architecture set for all players (default: from each player's civilization)")
@@ -6589,7 +6593,8 @@ def main(argv=None):
               mc_version=a.mc_version, spawn=a.spawn, birds=not a.no_birds, orientation=a.orientation,
               verbose=a.verbose, garrison=a.garrison, border_design=a.border, ambience=a.ambience,
               mood=a.mood, fog=a.fog, resource_pack=a.resource_pack, game_mode=a.game_mode,
-              labels=tuple(label for k, label in sorted(rmap.LOBBY_LABELS.items()) if getattr(a, k)))
+              labels=tuple(label for k, label in sorted(rmap.LOBBY_LABELS.items()) if getattr(a, k))
+              + tuple(v for v in (rmap.RESOURCE_LABELS[a.resources], rmap.AGE_LABELS[a.age]) if v))
     try:
         if a.at is not None and not a.scenario.lower().endswith(RECORDS):
             ap.error("--at needs a recorded game (.aoe2record)")
