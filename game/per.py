@@ -2223,6 +2223,24 @@ class Script:
             for _ in range(max(args[2], 0) // diplomacy.LOT):        # one tribute of the menu per 100
                 if not diplomacy.send(g, b.nobody, args[0], args[1]):
                     break
+        elif name in ("up-cc-add-resource", "up-cc-send-cheat"):   # only when the game allows cheats (airef, #4974)
+            import cheats
+            if not any(getattr(x, "cheats", False) for x in [*build.sides(g), g]):
+                return self.warn("cheat (cheats off)", name)
+            if name == "up-cc-send-cheat":                           # (up-cc-send-cheat "CODE")
+                code = str(args[0]).lower()
+                if code not in cheats.CODES:
+                    return self.warn("cheat code", code)
+                cheats.apply(g, b.nobody, code)
+            elif args[0] not in STOCK:                               # (up-cc-add-resource RESOURCE VALUE): as a code
+                return self.warn("resource", args[0])
+            else:
+                g.stock[args[0]] += args[1]
+                g.command(f"scoreboard players add {args[0].capitalize()} {g.board} {args[1]}")
+        elif name == "up-store-player-chat":                       # (up-store-player-chat PLAYER): the last chat line: the program
+            # reads only the taunts of the chat (Gather.taunted, #4827)
+            log = next((getattr(x, "taunted", []) for x in [*build.sides(g), g] if x.player == args[0]), [])
+            self.text = str(log[-1]) if log else ""
         elif name == "up-send-scout":                              # (up-send-scout GROUP-TYPE SCOUT-METHOD)
             self.send_scout(args[0], args[1])
         elif name == "up-reset-scouts":                            # the scouts stop (AoE2 Stop: aoe stop, new_order)
