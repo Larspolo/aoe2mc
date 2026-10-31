@@ -816,7 +816,6 @@
 {"name": "huskarl-line", "game": "HUSKARL", "kind": "unit", "id": -278}
 {"name": "hussite-wagon-line", "game": "HUSSITE_WAGON", "kind": "unit", "id": -236}
 {"name": "ibirapema-warrior-line", "game": "IBIRAPEMA_WARRIOR", "kind": "unit", "id": -304}
-{"name": "iron-pagoda-line", "game": "IRON_PAGODA", "kind": "unit", "id": -205}
 {"name": "janissary-line", "game": "JANISSARY", "kind": "unit", "id": -277}
 {"name": "kamayuk-line", "game": "KAMAYUK", "kind": "unit", "id": -258}
 {"name": "karambit-warrior-line", "game": "KARAMBIT_WARRIOR", "kind": "unit", "id": -248}
@@ -850,5 +849,4 @@
 {"name": "war-chariot-line", "game": "WAR_CHARIOT", "kind": "unit", "id": -218}
 {"name": "war-elephant-line", "game": "WAR_ELEPHANT", "kind": "unit", "id": -270}
 {"name": "war-wagon-line", "game": "WAR_WAGON", "kind": "unit", "id": -269}
-{"name": "white-feather-guard-line", "game": "WHITE_FEATHER_GUARD", "kind": "unit", "id": -209}
 {"name": "woad-raider-line", "game": "WOAD_RAIDER", "kind": "unit", "id": -268}
