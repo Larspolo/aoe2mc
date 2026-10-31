@@ -482,7 +482,7 @@ def read_scenario(path):
     texts["objectives"] = "\n".join(f"- {g}" for _, _, g in goals if g)
     entities = {u.reference_id for us in scn.unit_manager.units for u in us   # the objects that are entities with the
                 if kinds.get(u.unit_const, ("?",))[0] in ("U", "H")}         # tag aoe2mc.r<ref> (#2617), not blocks
-    shown = scn.option_manager.legacy_execution_order is False   # AoE2 DE runs in the display order (#3087)
+    shown = display_order(scn.option_manager)   # AoE2 DE runs in the display order (#3087)
     triggers = in_order(scn.trigger_manager.triggers, scn.trigger_manager.trigger_display_order) if shown \
         else scn.trigger_manager.triggers
     texts["triggers"] = [dict(id=t.trigger_id, name=t.name, enabled=bool(t.enabled), looping=bool(t.looping),
@@ -4821,6 +4821,16 @@ SCORE_TESTS = {
     # the years left on a timer of the player (VictoryTimerType: 0 wonder, 1 relic, 2 king of the hill, #2906)
     VICTORY_TIMER: lambda c: f"score #p{c['player']}.{c['timer_type']} aoe_vic matches {variable_range(c)}",
 }
+
+
+def display_order(option_manager):
+    """Whether the triggers run in their display order. A base scenario before format 1.55 has no
+    legacy_execution_order (AoE2ScenarioParser: since 1.55): its game ran the stored order (#5071)."""
+    from AoE2ScenarioParser.exceptions.asp_exceptions import UnsupportedAttributeError
+    try:
+        return option_manager.legacy_execution_order is False
+    except UnsupportedAttributeError:
+        return False
 
 
 def in_order(items, order):
