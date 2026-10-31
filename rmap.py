@@ -668,6 +668,10 @@ def generate(text, seed, players=2, size=None, warn=None, teams=None, folder=Non
     sections = commands(expand(tokens(text), rng, defined, consts, includes, folder))
     for word in consts.pop(UNDEFINED, ()):
         warn(f"constant {word} is not defined, read as 0 in math")
+    missing = any(d == "#include_drs" and f != "random_map.def" for d, f in includes)   # AoE2 DE: no error (#5317)
+    if missing:                                      # its undefined constants: the command is ignored, no warning
+        cliff = sections.get("CLIFF_GENERATION", [])
+        cliff[:] = [c for c in cliff if not (c[0] == "cliff_type" and c[1] and c[1][0] not in consts and c[1][0] not in CLIFF_TYPES)]
     mood = None                                      # color_correction CC_X: the color mood X (aoe2mc.MOODS, #4430)
     for s, cmds in sections.items():                 # AoE2 DE reads these in each section (#5073)
         for cmd, args, _ in cmds:
@@ -676,6 +680,8 @@ def generate(text, seed, players=2, size=None, warn=None, teams=None, folder=Non
                 cc = named(args[0], consts).upper().removeprefix("CC_") if args else ""
                 if cc in MOODS:
                     mood = cc
+                elif missing and args and args[0] not in consts:
+                    pass                             # an undefined constant of a missing #include_drs: ignored (#5317)
                 else:
                     warn(f"color_correction {' '.join(args)}: no such color mood")
         sections[s] = [c for c in cmds if c[0] not in ANY_SECTION]
@@ -714,7 +720,7 @@ def generate(text, seed, players=2, size=None, warn=None, teams=None, folder=Non
         if s not in SECTIONS:
             warn(f"<{s}> is not read yet")
     for directive, file in includes:               # random_map.def gives the constants; XS scripts are not run
-        if file != "random_map.def":
+        if directive != "#include_drs":            # a missing #include_drs file: no error in AoE2 DE (#5317)
             warn(f"{directive} {file} is not read")
     scn = base_scenario(folder, name, warn) if name and "LAND_GENERATION" not in sections else None
     if scn:                                          # a real world map: the land, levels and starts of the scenario
