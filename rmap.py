@@ -44,6 +44,11 @@ LIKE = {r["name"]: r["like"] for r in RMAP if "like" in r}   # a DE object that 
 FOREST_TREES = dict(sorted((t, r["name"]) for r in RMAP for t in r.get("forest", ())))
 ASSIGN = {r["name"]: r["assign"] for r in RMAP if "assign" in r}       # the targets of assign_to: player, color, team
 CLIFF_TYPES = {r["name"]: r["cliff_type"] for r in RMAP if "cliff_type" in r}   # cliff_type word: object name prefix
+
+
+def named(word, consts):      # a #const that names a color mood or a cliff type (#5248): its name, else the word
+    v = consts.get(word)
+    return v if isinstance(v, str) else word
 BLANK = {r["name"] for r in RMAP if r.get("blank")}     # placeholders: a tile and an actor_area, no object (#4698)
 SHORE_FISH = next(r["name"] for r in RMAP if r.get("shore_fish"))
 
@@ -221,8 +226,11 @@ def expand(words, rng, defined, consts, includes, folder=None, depth=0):
                 text, j = group(words, i + 2)
                 consts[words[i + 1]] = calc(text, consts, rng)
                 i = j
+            elif v.startswith("CC_") or v in CLIFF_TYPES:   # a color mood or a cliff type name: the constant is the name (#5248)
+                consts[words[i + 1]] = v
+                i += 3
             else:
-                i += 2
+                i += 3 if v else 2                  # an unknown value word is no command (#5248)
         elif w.startswith(("(", "rnd(")):
             text, i = group(words, i)
             out.append(str(calc(text, consts, rng)))     # one rnd() draw where it is written (#4306)
@@ -665,7 +673,7 @@ def generate(text, seed, players=2, size=None, warn=None, teams=None, folder=Non
         for cmd, args, _ in cmds:
             if cmd == "color_correction":
                 from aoe2mc import MOODS
-                cc = args[0].upper().removeprefix("CC_") if args else ""
+                cc = named(args[0], consts).upper().removeprefix("CC_") if args else ""
                 if cc in MOODS:
                     mood = cc
                 else:
@@ -1248,10 +1256,11 @@ def cliffs(cmds, terrain, starts, consts, rng, warn):
     o, kind = dict(CLIFF_DEFAULTS), "CLIFF_DEFAULT"
     for cmd, args, _ in cmds:
         if cmd == "cliff_type" and args:
-            if args[0] in CLIFF_TYPES:
-                kind = CLIFF_TYPES[args[0]]
+            word = named(args[0], consts)
+            if word in CLIFF_TYPES:
+                kind = CLIFF_TYPES[word]
             else:
-                warn(f"cliff_type {args[0]} has no cliff object: default cliffs")
+                warn(f"cliff_type {word} has no cliff object: default cliffs")
         elif cmd in o and args:
             o[cmd] = value(args[0], consts)
         else:
