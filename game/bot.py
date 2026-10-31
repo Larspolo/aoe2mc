@@ -1052,11 +1052,13 @@ class Bot:
                 work[res] -= 1
                 work[low] += 1
 
-    def drop(self, res, n):
-        """The gatherers of res that carry n or more go to a drop site (up-drop-resources, #4875); they then go back."""
+    def drop(self, res, n, task=None):
+        """The gatherers of res that carry n or more go to a drop site (up-drop-resources, #4875); they then go back.
+        task: only the villagers of that task (a class of up-drop-resources: farm-class, the farmers, #5183)."""
         g = self.g
         for v in g.villagers.values():
-            if v.res == res and v.site is None and v.load and v.load >= n and v.state != "to_drop":
+            if v.res == res and v.site is None and v.load and v.load >= n and v.state != "to_drop" \
+                    and (task is None or v.task == task):
                 g.go(v, "to_drop", g.drop_goals(v))
 
     def center(self):
