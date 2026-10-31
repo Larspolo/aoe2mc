@@ -2721,11 +2721,17 @@ class Script:
             self.goals[args[1]] = int(b.time * 1000) - self.goals.get(args[0], 0)
         elif name == "up-get-player-color":                          # (up-get-player-color PLAYER GOAL): the ID, the name as text
             import aoe2mc
-            p = {"my-player-number": g.player, "focus-player": b.foe}.get(args[0], args[0])
+            who = args[0][5:] if str(args[0]).startswith("this-") else args[0]   # the rule variable of a player
+            p = {"my-player-number": g.player}.get(who, who)
+            if isinstance(p, str):                                  # a player term: its first player (sides)
+                xs = self.sides(p)[0]
+                p = xs[0].player if xs else None
             if p is not None:
                 col = g.players.get(str(p), {}).get("color") or aoe2mc.player_color(p)
-                self.goals[args[1]] = aoe2mc.PLAYER_COLORS.index(col) if col in aoe2mc.PLAYER_COLORS else 0
-                self.text = col
+                ident = aoe2mc.PLAYER_COLORS.index(col) if col in aoe2mc.PLAYER_COLORS else 0
+                if 1 <= ident <= 8:                                 # ColorId 1 to 8; light_gray (0) is gaia: no change
+                    self.goals[args[1]] = ident
+                    self.text = col
         elif name in GET_FACT:
             self.get_fact(name, args)
         elif name in ("up-get-attacker-class", "up-get-threat-data", "up-get-projectile-player"):
