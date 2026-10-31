@@ -1390,7 +1390,7 @@ class Script:
         g, T = self.bot.g, self.bot.g.data["tile_size"]
         if name == "up-send-flare":                                  # (up-send-flare GOAL): at the point of the pair
             p = self.pair(args[0])
-            if p is not None:
+            if p is not None and min(p) >= 0:                        # -1: no point (airef), no flare
                 x, z = p[0] * T, p[1] * T
                 flare.put(g, g.player, x, g.map.y(x, z), z)
             return
