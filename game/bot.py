@@ -669,6 +669,7 @@ class Bot:
                                                                        # is not in it, a transport ship has no attack
         if self.unit:                                                   # taunts 76-101: attack with the named units only (#4887)
             mine = {u: p for u, p in mine.items() if g.soldiers.get(u) in self.unit}
+        mine = {u: p for u, p in mine.items() if u not in vars(self).get("excluded", ())}   # fe-exclude-from-attack-group (#5048)
         self.wave = getattr(self, "wave", set()) & mine.keys()           # the soldiers of the running wave
         group, most = self.group, 0
         if self.script:                                                # the attack group sizes of the script (#4530)
