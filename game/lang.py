@@ -41,7 +41,7 @@ def plain(c):
     out = c.get("fallback", c.get("text", ""))
     for a in c.get("with", []):
         out = out.replace("%s", plain(a), 1)
-    return out
+    return out + "".join(plain(e) for e in c.get("extra", []))       # the parts of a composed line (#5390)
 
 
 def english(cmd):

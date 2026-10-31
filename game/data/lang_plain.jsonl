@@ -18,6 +18,8 @@
 {"name": "play_guide.Guide.say", "note": "an owner test tool (#1674)"}
 {"name": "replay.Replay.book_pages", "note": "the page texts of the record and the player names"}
 {"name": "replay.Replay.players_page", "note": "a gap: #5411"}
+{"name": "replay.Replay.timeline_commands", "note": "the game time before the translate text of a line"}
+{"name": "replay.book_page", "note": "the line breaks between the lines of a page"}
 {"name": "replay.text", "note": "the text helper of the record chat"}
 {"name": "replay_input.Input.__call__", "note": "the player names of the record"}
 {"name": "replay_input.fight_lines", "note": "the clock and the player names"}

@@ -87,6 +87,8 @@ GRAPH_BARS = "░▒▓█"         # one bar per game minute, its shade relativ
 UNI_SHOWN = 8                        # the University labels of a player at most, then "+N" (#3790)
 GRAPH_MINUTES = 8           # the last minutes of each graph line: "Pop ████████ 120" fits in BOOK_COLS
 STAT_BOOKS = {"Graphs": 3, "Army": 4, "Upgrades": 5, "Economy": 6}   # book -> hotbar slot (#3924; replay_input.ITEMS has the rest)
+PAGE_BYTES = 1200           # JSON bytes of the lines of a book page: one page and the command words stay below RCON_MAX
+END_BOOKS = {"Build order": 1, "Spending": 2, "Timeline": 0}   # book -> inventory slot of a book longer than one command (#5390)
 FOLLOWED = "aoe2mc.followed"  # the tag of the entity that the spectators of --follow look through (#1095)
 CAMERA_ENTITY = "aoe2mc.camera"   # the tag of the display entity of --camera player (#4770)
 GLIDE = 20                  # ticks: the longest glide of the camera of --camera player (#4770; Minecraft: up to 59)
@@ -185,6 +187,43 @@ def start_job(name):
 
 def text(s, color=None):
     return {"text": s, "color": color} if color else {"text": s}
+
+
+def slot_book(slot, title, pages):
+    """The commands that put the written book `title` with the pages into the slot (`hotbar.3`) of each viewer:
+    `item replace` puts the first pages; when the book is longer than one RCON command (RCON_MAX), `item modify`
+    appends the rest (#3924, #5390)."""
+    pages = [json.dumps(pg, ensure_ascii=False, separators=(",", ":")) for pg in pages]
+    head = f"item replace entity @a {slot} with minecraft:written_book[minecraft:written_book_content=" + \
+        json.dumps({"title": title, "author": "aoe2mc"}, separators=(",", ":"))[:-1] + ',"pages":['
+    more = f'item modify entity @a {slot} {{function:"set_written_book_pages",mode:"append",pages:['
+    out, cmd, n = [], head, 0
+    for pg in pages:
+        ends = "]}]" if not out else "]}"
+        if n and len((cmd + "," + pg + ends).encode()) > RCON_MAX:
+            out.append(cmd + ends)
+            cmd, n = more, 0
+        cmd, n = cmd + ("," if n else "") + pg, n + 1
+    return out + [cmd + ("]}]" if not out else "]}")]
+
+
+def book_page(head, lines):
+    """A page of a written book: the heading component (or None) and the lines (texts or components) under it. Texts
+    next to each other join into one text, as before the components (#5390)."""
+    items = []
+    for i, line in enumerate(lines):
+        for y in (["\n\n" if head and not i else "\n"] if i or head else []) + [line]:
+            if isinstance(y, str) and items and isinstance(items[-1], str):
+                items[-1] += y
+            elif isinstance(y, dict) and items and isinstance(items[-1], str) and isinstance(y.get("text"), str) \
+                    and set(y) <= {"text", "extra"}:
+                items.append({**y, "text": items.pop() + y["text"]})   # "\n" joins the text of the line: fewer bytes
+            else:
+                items.append(y)
+    items = [{"text": y} if isinstance(y, str) else y for y in items]
+    if head:
+        return {"text": "", "extra": [head, *items]}
+    return items[0] if len(items) == 1 and set(items[0]) == {"text"} else {"text": "", "extra": items}
 
 
 def say(key, *args, color=None, **style):
@@ -971,24 +1010,11 @@ class Replay:
 
     def stat_book(self, title, lines):
         """The commands that put the written book `title` (lines: player -> text lines, a page per player) into the
-        hotbar slot STAT_BOOKS[title] of each viewer, only when its lines changed (#3924). `item replace` puts the first
-        pages; when the book is longer than one RCON command (RCON_MAX), `item modify` appends the rest."""
+        hotbar slot STAT_BOOKS[title] of each viewer, only when its lines changed (#3924), with slot_book."""
         if not lines or self.books.get(title) == lines:
             return []
         self.books[title] = {p: list(v) for p, v in lines.items()}
-        slot, pages = STAT_BOOKS[title], [json.dumps(pg, ensure_ascii=False, separators=(",", ":"))
-                                         for pg in self.book_pages(lines)]
-        head = f"item replace entity @a hotbar.{slot} with minecraft:written_book[minecraft:written_book_content=" + \
-            json.dumps({"title": title, "author": "aoe2mc"}, separators=(",", ":"))[:-1] + ',"pages":['
-        more = f'item modify entity @a hotbar.{slot} {{function:"set_written_book_pages",mode:"append",pages:['
-        out, cmd, n = [], head, 0
-        for pg in pages:
-            ends = "]}]" if not out else "]}"
-            if n and len((cmd + "," + pg + ends).encode()) > RCON_MAX:
-                out.append(cmd + ends)
-                cmd, n = more, 0
-            cmd, n = cmd + ("," if n else "") + pg, n + 1
-        return out + [cmd + ("]}]" if not out else "]}")]
+        return slot_book(f"hotbar.{STAT_BOOKS[title]}", title, self.book_pages(lines))
 
     def resources(self, p):
         """The stock of player p; a Death Match record starts with the Death Match stock (#4897); a restored record
@@ -3141,7 +3167,8 @@ class Replay:
     def army_text(self, p):
         """The army at the end and the losses by type of player p, most first, at most 6 types and "+N" (#3697)."""
         army, lost = counts_text(self.troops.get(p, {})), counts_text(self.fallen.get(p, {}))
-        return "".join(f", {k} {v}" for k, v in (("army at the end:", army), ("lost:", lost)) if v)
+        parts = [say(k, v) for k, v in (("army_end", army), ("army_lost", lost)) if v]   # translate texts (#5390)
+        return {"text": "", "extra": parts} if parts else ""
 
     def tech_commands(self):
         """One chat line per player with the game time of each age-up (MM:SS, "-": not reached) and the number of
@@ -3214,21 +3241,21 @@ class Replay:
             if e["time"] > end or p is None:
                 continue
             if e["kind"] == "age" and e.get("age"):
-                line = pretty(e["age"])
+                line = lang.name(e["age"], "tech", pretty(e["age"]))       # translate texts (#5390)
             elif e["kind"] == "spawn" and p not in army and gather.military(e["name"]):
                 army.add(p)
-                line = f"1st military: {units.pretty(e['name'])}"
+                line = say("tl_military", lang.name(e["name"]))
             elif e["kind"] == "build" and p not in castle and self.kinds.get(e.get("type"), ("?", ""))[1] == "CASTLE":
                 castle.add(p)
-                line = "Castle"
+                line = say("tl_castle")
             elif e["kind"] == "resign":
-                line = "Resigns"
+                line = say("tl_resigns")
             elif e["kind"] == "relic":
-                line = "Relic"
+                line = say("tl_relic")
             elif e["kind"] == "king":
-                line = "King killed"
+                line = say("tl_king")
             if line:
-                lines.setdefault(p, []).append(f"{mmss(e['time'])} {line}")
+                lines.setdefault(p, []).append({"text": f"{mmss(e['time'])} ", "extra": [line]})
         return self.book_command("Timeline", lines)
 
     def book_pages(self, lines, players=False):
@@ -3240,17 +3267,17 @@ class Replay:
             name, color = self.player(p)                            # the heading and an empty line
             team = self.team(p)
             name = f"■ {f'Team {team} · ' if team is not None else ''}{name}"
-            rows, page = BOOK_ROWS - 1 - len(textwrap.wrap(name, BOOK_COLS)), ""
+            rows, page = BOOK_ROWS - 1 - len(textwrap.wrap(name, BOOK_COLS)), []
             head = {"text": name, "color": color if color != "white" else "black"}   # the sidebar color (#1643)
-            for line in lines[p]:
-                n = max(1, len(textwrap.wrap(line, BOOK_COLS)))       # an empty line is a row too (#4552)
-                if n > rows:
-                    pages.append({"text": "", "extra": [head, {"text": "\n" + page.rstrip("\n")}]} if head
-                                 else {"text": page.strip("\n")})
-                    rows, page, head = BOOK_ROWS, "", None
-                rows, page = rows - n, page + "\n" + line
-            pages.append({"text": "", "extra": [head, {"text": "\n" + page.rstrip("\n")}]} if head
-                         else {"text": page.strip("\n")})       # only the heading has a color, the lines are black
+            size = 0
+            for line in lines[p]:                                   # a line: a text or a component (#5390)
+                n = max(1, len(textwrap.wrap(lang.plain(line), BOOK_COLS)))   # an empty line is a row too (#4552)
+                b = len(json.dumps(line, ensure_ascii=False).encode()) + 8
+                if n > rows or page and size + b > PAGE_BYTES:      # a page fits into one RCON command (slot_book)
+                    pages.append(book_page(head, page))
+                    rows, page, head, size = BOOK_ROWS, [], None, 0
+                rows, page, size = rows - n, page + [line], size + b
+            pages.append(book_page(head, page))                     # only the heading has a color, the lines are black
         return pages
 
     def players_page(self):
@@ -3263,23 +3290,20 @@ class Replay:
             rating = f" · {info['rating']}{' now' if info.get('rating_now') else ''}" if "rating" in info else ""
             extra.append({"text": f"\n{f'Team {team} · ' if team is not None else ''}{name}{rating}",
                           "color": color if color != "white" else "black"})
-        return {"text": "Players", "bold": True, "extra": [dict(e, bold=False) for e in extra]}
+        return {**say("players"), "bold": True, "extra": [dict(e, bold=False) for e in extra]}
 
     def book_command(self, title, lines):
         """A written book `title` with a page per player (lines: player -> text lines, #1068). Each player starts a page
         with a heading in its player color and its team (#1643); a long list goes on to the next page. One RCON
-        command holds at most RCON_MAX bytes: the last lines go first (#4048)."""
+        command holds at most RCON_MAX bytes: a longer book goes into the inventory slot END_BOOKS[title] in more
+        commands (slot_book, #5390)."""
         if not lines:
             return []
-        while True:
-            pages = self.book_pages(lines, players=True)
-            book = {"title": title, "author": "aoe2mc", "pages": pages}
-            cmd = "give @a minecraft:written_book[minecraft:written_book_content=" + \
-                json.dumps(book, ensure_ascii=False, separators=(",", ":")) + "]"
-            if len(cmd.encode()) <= RCON_MAX:
-                return [cmd]
-            longest = max(lines, key=lambda p: len(lines[p]))
-            lines[longest].pop()
+        pages = self.book_pages(lines, players=True)
+        book = {"title": title, "author": "aoe2mc", "pages": pages}
+        cmd = "give @a minecraft:written_book[minecraft:written_book_content=" + \
+            json.dumps(book, ensure_ascii=False, separators=(",", ":")) + "]"
+        return [cmd] if len(cmd.encode()) <= RCON_MAX else slot_book(f"inventory.{END_BOOKS[title]}", title, pages)
 
     def build_order_commands(self, end):
         """A written book "Build order" for each viewer at the end of the replay (#4048, item 2 of #4046): the build

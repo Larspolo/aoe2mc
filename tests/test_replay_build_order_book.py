@@ -17,8 +17,8 @@ def test_the_build_order_book_has_one_page_per_player_in_time_order():
         "■ Player 2 (Aztecs)\n\n01:40 Militia"]}
 
 
-def test_a_long_build_order_stays_within_one_rcon_command():
+def test_a_long_build_order_goes_into_more_rcon_commands():
     steps = [{"time": 1000 * i, "player": 1 + i % 2, "kind": "research", "technology": f"Tech {i}"} for i in range(160)]
     cmds = replay.Replay(Fake(), data(steps)).build_order_commands(10**9)
-    assert len(cmds) == 1 and len(cmds[0].encode()) <= replay.RCON_MAX
-    assert book(cmds)["pages"][0].startswith("■ Player 1") and "Tech 0" in book(cmds)["pages"][0]
+    assert len(cmds) > 1 and all(len(c.encode()) <= replay.RCON_MAX for c in cmds)       # all lines stay (#5390)
+    assert cmds[0].startswith("item replace entity @a inventory.1 ") and "Tech 0" in cmds[0] and "Tech 159" in cmds[-1]

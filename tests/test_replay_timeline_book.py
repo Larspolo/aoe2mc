@@ -8,6 +8,7 @@ import sys
 import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "game"))
+import lang  # noqa: E402
 import replay  # noqa: E402
 from test_replay import Fake, data  # noqa: E402
 
@@ -30,12 +31,20 @@ PAGES = [f"■ Player 1 (Britons)\n\n10:20 Feudal Age\n{SCOUT} 1st military: Sco
 
 def text(page):
     """The plain text of a page component (the heading has a color, #1643)."""
-    return page["text"] + "".join(text(e) for e in page.get("extra", []))
+    return lang.plain(page)                                          # the lines are translate texts (#5390)
+
+
+def raw_book(cmds):
+    """The book of the commands: one `give`, or an `item replace` and `item modify` appends (#5390)."""
+    assert cmds[0].endswith("]") and (len(cmds) == 1) == cmds[0].startswith(PREFIX)
+    b = json.loads(cmds[0].split("written_book_content=", 1)[1][:-1])
+    for c in cmds[1:]:
+        b["pages"] += json.loads("[" + c.split("pages:[", 1)[1][:-2] + "]")
+    return b
 
 
 def book(cmds):
-    assert len(cmds) == 1 and cmds[0].startswith(PREFIX) and cmds[0].endswith("]")
-    b = json.loads(cmds[0][len(PREFIX):-1])
+    b = raw_book(cmds)
     return {**b, "pages": [text(p) for p in b["pages"][1:]]}          # after the players page (#4670)
 
 
@@ -54,7 +63,7 @@ def test_the_end_of_the_replay_gives_the_book_also_after_a_jump():
     timeline = PREFIX + '{"title":"Timeline"'                    # the book "Build order" comes too (#4048)
     assert book([c for c in game.sent if c.startswith(timeline)])["pages"] == PAGES
     assert game.sent.index(next(c for c in game.sent if c.startswith(timeline))) > \
-        game.sent.index(next(c for c in game.sent if "Replay ended" in c))
+        game.sent.index(next(c for c in game.sent if "aoe2mc.replay.replay_ended" in c))
 
 
 def test_a_long_list_goes_on_to_the_next_page_and_the_command_stays_short():
@@ -63,7 +72,7 @@ def test_a_long_list_goes_on_to_the_next_page_and_the_command_stays_short():
     assert pages[0].count("Feudal Age") == 11 and pages[1].count("Feudal Age") == 3 and len(pages) == 2   # 2 heading lines
     many = [{"time": 1000 * i, "player": 1 + i % 8, "kind": "age", "age": "IMPERIAL_AGE"} for i in range(400)]
     cmds = replay.Replay(Fake(), data(many)).timeline_commands(10**9)
-    assert len(cmds[0].encode()) <= replay.RCON_MAX and len(book(cmds)["pages"]) >= 2
+    assert all(len(c.encode()) <= replay.RCON_MAX for c in cmds) and len(cmds) >= 2   # more commands (#5390)
 
 
 def test_no_events_no_book():

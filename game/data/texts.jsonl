@@ -102,6 +102,8 @@
 {"name": "aoe2mc.hill.holds", "en_us": "Player %s holds the monument."}
 {"name": "aoe2mc.relic_victory.all", "en_us": "Player %s holds all relics."}
 {"name": "aoe2mc.relic_victory.lost", "en_us": "Player %s lost a relic."}
+{"name": "aoe2mc.replay.army_end", "en_us": ", army at the end: %s"}
+{"name": "aoe2mc.replay.army_lost", "en_us": ", lost: %s"}
 {"name": "aoe2mc.replay.carries", "en_us": " | carries %s %s"}
 {"name": "aoe2mc.replay.flare", "en_us": "Flare"}
 {"name": "aoe2mc.replay.game_ends", "en_us": "The game ends"}
@@ -118,6 +120,7 @@
 {"name": "aoe2mc.replay.monument_years", "en_us": "%s: monument, %s years left"}
 {"name": "aoe2mc.replay.no_camera", "en_us": "This record has no camera of its player."}
 {"name": "aoe2mc.replay.out", "en_us": "%s is out"}
+{"name": "aoe2mc.replay.players", "en_us": "Players"}
 {"name": "aoe2mc.replay.range", "en_us": " r%s"}
 {"name": "aoe2mc.replay.relic_won", "en_us": " takes the relic to a monastery and wins."}
 {"name": "aoe2mc.replay.replay_ended", "en_us": "Replay ended"}
@@ -135,6 +138,11 @@
 {"name": "aoe2mc.replay.sum_techs", "en_us": ": %s, technologies %s"}
 {"name": "aoe2mc.replay.sum_wonder", "en_us": ": wonder timer from %s, ends %s (%s)"}
 {"name": "aoe2mc.replay.summary", "en_us": "Summary (est.)"}
+{"name": "aoe2mc.replay.tl_castle", "en_us": "Castle"}
+{"name": "aoe2mc.replay.tl_king", "en_us": "King killed"}
+{"name": "aoe2mc.replay.tl_military", "en_us": "1st military: %s"}
+{"name": "aoe2mc.replay.tl_relic", "en_us": "Relic"}
+{"name": "aoe2mc.replay.tl_resigns", "en_us": "Resigns"}
 {"name": "aoe2mc.replay.town_fell", "en_us": ": the town center fell at %s. Sudden Death: the player is out."}
 {"name": "aoe2mc.replay.town_lost", "en_us": "Town center lost at %s"}
 {"name": "aoe2mc.replay.wonder_built", "en_us": " built a wonder at %s."}

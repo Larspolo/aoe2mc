@@ -8,14 +8,14 @@ import sys
 import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "game"))
+import lang  # noqa: E402
 import replay  # noqa: E402
 from test_replay import Fake, data  # noqa: E402
-from test_replay_timeline_book import PREFIX, TIMELINE  # noqa: E402
+from test_replay_timeline_book import TIMELINE, raw_book  # noqa: E402
 
 
 def pages(r, end=1_500_000):
-    cmd, = r.timeline_commands(end)
-    return json.loads(cmd[len(PREFIX):-1])["pages"][1:]                # after the players page (#4670)
+    return raw_book(r.timeline_commands(end))["pages"][1:]                # after the players page (#4670)
 
 
 def test_the_heading_of_each_player_has_the_sidebar_color_and_the_lines_are_black():
@@ -39,7 +39,8 @@ def test_a_team_game_names_the_team_in_the_heading():
 def test_a_next_page_of_a_player_has_no_heading():
     ages = [{"time": 60_000 * i, "player": 1, "kind": "age", "age": "FEUDAL_AGE"} for i in range(1, 15)]
     first, second = pages(replay.Replay(Fake(), data(ages)), 10**9)
-    assert first["extra"][0]["color"] == "blue" and second == {"text": "12:00 Feudal Age\n13:00 Feudal Age\n14:00 Feudal Age"}
+    assert first["extra"][0]["color"] == "blue" and "color" not in json.dumps(second)
+    assert lang.plain(second) == "12:00 Feudal Age\n13:00 Feudal Age\n14:00 Feudal Age"
 
 
 def test_a_player_without_a_color_gets_a_black_heading():
