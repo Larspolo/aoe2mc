@@ -493,9 +493,10 @@ class Bot:
         if not near:
             return
         orders = {}
-        for u in sorted(mine.keys() - self.guards.keys()):
-            t = min(near, key=lambda k: (math.dist(near[k], mine[u]), k))
-            self.guards[u] = (t, mine[u])
+        retask, self.retask = getattr(self, "retask", False), False    # up-update-targets: all choose again
+        for u in sorted(mine.keys() if retask else mine.keys() - self.guards.keys()):
+            t = min(near, key=lambda k: (-self.rank("defense", k), math.dist(near[k], mine[u]), k))
+            self.guards[u] = (t, self.guards[u][1] if u in self.guards else mine[u])
             orders.setdefault(t, []).append(u)
         for t, us in sorted(orders.items()):
             ai.attack(g.game, us, [g.soldiers[u] for u in us], T, t,
@@ -603,13 +604,19 @@ class Bot:
         seen, T = g.seen_tiles(), g.map.T                              # the AoE2 AI sees only its sight (#2050)
         near = {k: p for k, p in g.positions(sorted(units)).items() if k not in inside
                 and (int(p[0] // T), int(p[2] // T)) in seen}
+        ranked = bool(self.script and self.script.priority["offense"]
+                      and self.script.number("sn-enable-offensive-priority") == 1)
         self.targets = {u: t for u, t in self.targets.items()          # a unit that comes in sight goes before a
-                        if t not in g.forts or not any(self.reach(u, mine[u], p) and not self.gave_up(u, k, p)
+                        if ranked or t not in g.forts or not any(self.reach(u, mine[u], p) and not self.gave_up(u, k, p)
                                                        for k, p in near.items())}   # building
         free = sorted(mine.keys() - self.targets.keys())
         forts, orders = None, {}
         for u in free:
             ok = {k: p for k, p in near.items() if self.reach(u, mine[u], p) and not self.gave_up(u, k, p)}
+            if ranked:                                                 # the offense priorities of a script (#4968)
+                if forts is None:
+                    forts = {t: ((b[0] + b[3] + 1) / 2, b[1], (b[2] + b[5] + 1) / 2) for t, b in self.forts().items()}
+                ok |= {k: p for k, p in forts.items() if self.reach(u, mine[u], p) and not self.gave_up(u, k, p)}
             if not ok:                                                 # no unit in reach, for example only a ship on
                 if forts is None:                                      # the water: the buildings, as in AoE2 (#1770)
                     forts = {t: ((b[0] + b[3] + 1) / 2, b[1], (b[2] + b[5] + 1) / 2) for t, b in self.forts().items()}
@@ -618,7 +625,7 @@ class Bot:
                 ok = {k: p for k, p in {**near, **forts}.items() if self.reach(u, mine[u], p)}
             if not ok:
                 continue
-            t = min(ok, key=lambda k: (math.dist(ok[k], mine[u]), k))
+            t = min(ok, key=lambda k: (-self.rank("offense", k), math.dist(ok[k], mine[u]), k))
             self.targets[u] = t
             orders.setdefault(t, []).append(u)
         for t, us in sorted(orders.items()):
@@ -688,6 +695,15 @@ class Bot:
         if not wet or self.g.map.y(math.floor(at[0]), math.floor(at[2])) is None:
             return True
         return math.dist(at[::2], to[::2]) <= combat.stats(self.g.soldiers[u]).range * self.g.map.T
+
+    def rank(self, kind, t):
+        """The target priority of target t (a unit or building UUID) by the script of the bot (#4968); 0 without one."""
+        if not self.script or t is None:
+            return 0
+        g = self.g
+        name = g.fort_names.get(t) or g.enemies.get(t) or next(
+            (o["name"] for o in g.data["objects"] if o.get("uuid") == t), "")
+        return self.script.rank(kind, name)
 
     def forts(self):
         """{target UUID: box} of the buildings of the foe whose target entity lives: those of the map and those that
