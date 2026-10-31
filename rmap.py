@@ -596,6 +596,15 @@ def team_labels(players, teams):
     return labels
 
 
+def lobby_labels():
+    """All labels that generate() can define (#5009): the size labels with LUDIKRIS_MAP, the game mode labels and the
+    player and team labels of team_labels() for 1 to 8 players and teams 0 to 4."""
+    labels = {label for _, label in LABELS} | {"LUDIKRIS_MAP"} | {v for v in MODE_LABELS.values() if v}
+    labels |= {f"{n}_PLAYER_GAME" for n in range(1, 9)} | {f"{t}_TEAM_GAME" for t in range(5)}
+    labels |= {f"TEAM{t}_SIZE{m}" for t in range(1, 5) for m in range(1, 9)}
+    return labels | {f"PLAYER{p}_TEAM{t}" for p in range(1, 9) for t in range(5)}
+
+
 def generate(text, seed, players=2, size=None, warn=None, teams=None, folder=None, name=None, mode="standard"):
     """The map description (aoe2mc.read_json) of the land part of script text, for players on a map of size tiles
     (default: the AoE2 size of the player count). folder: the folder of the script, for its #include_drs files. teams: one team (or None) per player (#3946), see circle(). "lands": [{"player", "x", "y", "base_size"}] of the player lands.
