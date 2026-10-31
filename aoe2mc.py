@@ -289,14 +289,37 @@ def read_rms(path, seed, players=2, teams=None, size=None, mode="standard", labe
     """The land of a random map script (#963) in the game mode (rmap.MODE_LABELS, #4824): rmap.generate makes a map description of the seed (read_json).
     size: the map side in tiles (--map-size, #4823; None: the script or the player count). together: the lobby box
     "Team Together" (FIXED_POSITIONS, #5050)."""
+    import tempfile
+
     import rmap
-    with open(path, encoding="utf-8", errors="replace") as f:
-        text = f.read()
-    try:
-        return map_description(rmap.generate(text, seed, players, size, teams=teams, folder=os.path.dirname(path),
-                                                     name=os.path.basename(path), mode=mode, labels=labels, together=together), path)
-    except rmap.RmsError as e:
-        raise OptionError(f"{path}: {e}") from None
+    with tempfile.TemporaryDirectory() as tmp:
+        script = path
+        with open(path, "rb") as f:
+            if f.read(4) == b"PK\x03\x04":   # a ZR@ random map: a zip of the script and its files (#5404)
+                script = zip_script(path, tmp)
+        with open(script, encoding="utf-8", errors="replace") as f:
+            text = f.read()
+        try:
+            return map_description(rmap.generate(text, seed, players, size, teams=teams, folder=os.path.dirname(script),
+                                                 name=os.path.basename(script), mode=mode, labels=labels, together=together), path)
+        except rmap.RmsError as e:
+            raise OptionError(f"{path}: {e}") from None
+
+
+def zip_script(path, folder):
+    """The script of a ZR@ random map archive (#5404), extracted into folder: the member with the base name of the file
+    without the ZR@ prefix, else the only member that rmap.is_script accepts."""
+    import zipfile
+
+    import rmap
+    with zipfile.ZipFile(path) as z:
+        members = [m for m in z.namelist() if not m.endswith("/") and rmap.is_script(m)]
+        want = os.path.basename(path)[3:]
+        named = [m for m in members if os.path.basename(m) == want]
+        if len(named) != 1 and len(members) != 1:
+            raise OptionError(f"{path}: the archive needs one script {want}, not {members or 'none'}")
+        z.extractall(folder)   # zipfile drops absolute paths and ".." of the names
+    return os.path.join(folder, named[0] if len(named) == 1 else members[0])
 
 
 # Object IDs of old scenarios that DE keeps only in its data file (the DE editor hides them, #576) -> the DE object of
