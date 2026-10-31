@@ -1074,6 +1074,8 @@ def objects(cmds, consts, terrain, starts, rng, warn, owner=None, ridges=(), lay
                 max(1, count + int(rng.integers(-vary, vary + 1))) for _ in range(groups or 1)]
             for i, size in enumerate(sizes):
                 free = ~used & place & ~dilate(placed, gap) & ~(dilate(mine, temp) if temp else mine)
+                if blank:                       # a placeholder has no body: it can be on an object, as at the town center (#4935)
+                    free = place & ~(dilate(mine, temp) if temp else mine)
                 spots = np.argwhere((dist >= lo) & (dist <= hi) & free)
                 if not len(spots) and "force_placement" in attrs:   # objects on the same tile (#4137)
                     free = place.copy()
@@ -1101,8 +1103,9 @@ def objects(cmds, consts, terrain, starts, rng, warn, owner=None, ridges=(), lay
                     mine[tx, ty] = True
                     name = base
                     r = 3 if kind == "B" else 1                      # a building: its tile is the corner of its middle
-                    used[max(0, tx - r):tx + r, max(0, ty - r):ty + r] = True
-                    placed[max(0, tx - r):tx + r, max(0, ty - r):ty + r] = True
+                    if not blank:
+                        used[max(0, tx - r):tx + r, max(0, ty - r):ty + r] = True
+                        placed[max(0, tx - r):tx + r, max(0, ty - r):ty + r] = True
                     if name == "VILLAGER_MALE" and rng.integers(2):    # AoE2 DE: a male or a female villager
                         name = "VILLAGER_FEMALE"
                     if not blank:
