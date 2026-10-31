@@ -444,6 +444,14 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     private final Map<UUID, Integer> lastHit = new HashMap<>();      // tick of the last melee hit of a unit
     private final Set<UUID> fought = new HashSet<>();                 // a target or a hit since the last aoe where (#1169)
     private static final double REACH = Math.sqrt(2.04) - 0.6;       // vanilla melee reach past the hit box
+    // The AoE2 melee reach in blocks of a lance or a spear (the Kamayuk, aoe stats reach=, #5242). The plugin makes the
+    // melee hits of the AoE2 units (siege()), so the reach is here: the vanilla attack_range of an item only changes
+    // the hits of the vanilla goal, which onHit drops.
+    private final Map<UUID, Double> reaches = new HashMap<>();
+
+    private double reach(Entity unit) {
+        return REACH + reaches.getOrDefault(unit.getUniqueId(), 0.0);
+    }
     private static final double WALK = 43.4;      // blocks per second of movement_speed 1 on flat ground (game/ai.py)
     private static final double GROUND = 0.6 * 0.91;  // ground drag per tick (the friction of most blocks)
     private static final double LOOK = 3, OFF = 0.75;   // steer(): blocks ahead, blocks off the line (#1022)
@@ -724,7 +732,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         public void tick() {
             LivingEntity t = target(mob);
             if (held.contains(mob.getUniqueId())                    // stand ground: no walk (#1104)
-                    || mob.getBoundingBox().expand(REACH, 0, REACH).overlaps(t.getBoundingBox())) {
+                    || mob.getBoundingBox().expand(reach(mob), 0, reach(mob)).overlaps(t.getBoundingBox())) {
                 mob.getPathfinder().stopPathfinding();
             } else if (!mob.getPathfinder().hasPath() || ++ticks % 10 == 0) {     // the target can move
                 reach(mob, t.getLocation());
@@ -2408,11 +2416,12 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         int now = Bukkit.getCurrentTick();
         lastHit.values().removeIf(t -> now - t > 400);
         BRAIN_TARGETS.keySet().removeIf(id -> Bukkit.getEntity(id) == null);
+        reaches.keySet().removeIf(id -> Bukkit.getEntity(id) == null);
         for (UUID id : List.copyOf(stats.keySet())) {
             if (Bukkit.getEntity(id) instanceof Mob mob && !stats.get(id).ranged && target(mob) instanceof LivingEntity t
                     && t.isValid() && (buildings.containsKey(t.getUniqueId()) || stats.containsKey(t.getUniqueId()))
                     && !chase(mob, t, now)
-                    && ready(mob, stats.get(id)) && mob.getBoundingBox().expand(REACH, 0, REACH).overlaps(t.getBoundingBox())) {
+                    && ready(mob, stats.get(id)) && mob.getBoundingBox().expand(reach(mob), 0, reach(mob)).overlaps(t.getBoundingBox())) {
                 if (mob.getAttribute(Attribute.ATTACK_DAMAGE) == null) {
                     // Mob#attack throws on a kind without it (a chicken, a camel), and the throw stopped this loop for
                     // the units after it (#1968). onHit takes the AoE2 damage, so the value does not matter.
@@ -2448,7 +2457,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     // A hoglin does not walk to that target with its brain either: out of reach, it walks there with the Minecraft
     // path finding, a new path each 10 ticks. True while it walks.
     private boolean chase(Mob mob, LivingEntity t, int now) {
-        if (!(mob instanceof Hoglin) || mob.getBoundingBox().expand(REACH, 0, REACH).overlaps(t.getBoundingBox())) {
+        if (!(mob instanceof Hoglin) || mob.getBoundingBox().expand(reach(mob), 0, reach(mob)).overlaps(t.getBoundingBox())) {
             return false;
         }
         if (now % 10 == 0 || !mob.getPathfinder().hasPath()) {
@@ -3446,6 +3455,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             double hp;
             Stats st;
             Dot.Rule dot = null;
+            double far = 0.0;                              // the melee reach in blocks (#5242)
             try {
                 hp = Double.parseDouble(args[2]);
                 double taken = 1.0, friendly = 1.0, reflect = 0.0;
@@ -3462,6 +3472,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                         case "ignore" -> ignore = v.equals("1");                // Wootz Steel (#4331)
                         case "rage" -> rage = Integer.parseInt(v);              // Hamask (#4332)
                         case "reflect" -> reflect = Double.parseDouble(v);      // Lamellar Armor (#4332)
+                        case "reach" -> far = Double.parseDouble(v);            // the melee reach in blocks (#5242)
                         case "dot" -> {                                         // damage:ticks:classes (#4339)
                             String[] d = v.split(":", 3);
                             dot = new Dot.Rule(Double.parseDouble(d[0]), Math.max(1, Integer.parseInt(d[1])),
@@ -3490,11 +3501,13 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                     }
                     stats.put(le.getUniqueId(), st);
                     dots.set(le.getUniqueId(), dot);
+                    if (far > 0) reaches.put(le.getUniqueId(), far); else reaches.remove(le.getUniqueId());
                     nameLine(le);
                     Mob r = rider(le);
                     if (r != null) {
                         stats.put(r.getUniqueId(), st);          // its hits take the AoE2 attack (#710)
                         dots.set(r.getUniqueId(), dot);
+                        if (far > 0) reaches.put(r.getUniqueId(), far); else reaches.remove(r.getUniqueId());
                     }
                     n++;
                 }

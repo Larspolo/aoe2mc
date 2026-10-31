@@ -157,7 +157,7 @@ def stats_line(g, uuid, name, s=None):
     import combat  # combat imports gather, gather imports this module
     s = s or stats(g, name, uuid)
     return combat.stats_command(uuid, name, s, civs.taken(g, name), civs.friendly(g, name), **hits(g, name),
-                                 dot=dot(g, name, s))
+                                 dot=dot(g, name, s), T=g.map.T)
 
 
 def weight(g, name):
