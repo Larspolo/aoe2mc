@@ -218,6 +218,9 @@ GAME_TYPES = {                     # the mode of run.py: the airef GameType (0: 
     "turbo": 8,
     "wonder-race": 6,
 }
+COUNTS = ("attack-soldier-count", "attack-warboat-count", "building-count", "building-count-total",   # (#5043)
+          "defend-soldier-count", "defend-warboat-count", "fe-idle-pasture-count", "gate-count", "idle-farm-count",
+          "soldier-count", "unit-count", "unit-count-total", "warboat-count")
 PLAYER_FACTS = ("player-computer", "player-human", "player-in-game", "player-number", "player-resigned", "player-valid")
 STATE_FACTS = ("cheats-enabled", "enemy-captured-relics", "hold-koh-ruin", "hold-relics", "town-under-attack",
                "victory-condition")   # (#5045)
@@ -800,6 +803,13 @@ class Script:
             return bool(self.object_command(name, args))
         if name in SETUP:
             return self.setup(name, args)
+        if name in ("unit-available", "building-available"):        # (unit-available UNIT): the tech tree, no cost
+            import build
+            if name[0] == "u":
+                return (n := self.game(args[0], "unit")) is not None and bool(self.homes(n))
+            return (n := self.game(args[0], "building")) is not None and not build.locked(self.bot.g, n)
+        if name.startswith("cc-players-"):                         # the cc- forms see through the fog: the same here
+            return self.players(name.removeprefix("cc-players-"), args[0], args[1:])
         if name in PLAYER_FACTS:                                   # (player-human PLAYER)
             return self.player_fact(name, args[0])
         if name in STATE_FACTS:
@@ -909,9 +919,32 @@ class Script:
                 "population-headroom": lambda: max(train.max_pop(g) - g.pop, 0),
                 "population-cap": lambda: train.limit(g), "current-age": lambda: build.ages(g),
                 "current-age-time": lambda: self.age_time(g),
+                **{k: (lambda k=k: self.unit_counts(k, g)) for k in COUNTS},
                 "current-score": lambda: self.score(g), "game-type": lambda: GAME_TYPES.get(getattr(g, "mode", ""), 0),
                 "fe-sub-game-type": lambda: 0, "starting-resources": lambda: 0, "wall-invisible-percentage": lambda: 0,
                 "escrow-amount": lambda: self.escrow.get(param, 0) if g is b.g else 0}.get(name, lambda: None)()
+
+    def unit_counts(self, name, g):
+        """The count facts of COUNTS for Gather g (#5043): the units, buildings, soldiers, warboats, gates, idle farms."""
+        import build
+        import train
+        b = self.bot
+        built = train.owned(g)
+        if name in ("unit-count", "unit-count-total"):
+            n = len(g.villagers) + len(g.soldiers) + len(vars(g).get("ships", {}))
+            return n + (sum(len(q) for q in g.queues.values()) if name.endswith("-total") else 0)
+        if name in ("building-count", "building-count-total"):
+            return len(built) + (sum(not s.get("done") for s in g.sites if s.get("player", g.player) == g.player)
+                                 if name.endswith("-total") else 0)
+        wave = b.wave & g.soldiers.keys() if g is b.g else set()        # the soldiers of the attack group
+        boats = [u for u, v in vars(g).get("ships", {}).items()
+                 if not any(w in str(getattr(v, "name", "")) for w in ("FISHING", "TRADE", "TRANSPORT"))]
+        return {"soldier-count": lambda: len(g.soldiers), "attack-soldier-count": lambda: len(wave),
+                "defend-soldier-count": lambda: len(g.soldiers) - len(wave), "warboat-count": lambda: len(boats),
+                "attack-warboat-count": lambda: 0, "defend-warboat-count": lambda: len(boats),
+                "gate-count": lambda: sum(n in build.GATES for n in built),
+                "idle-farm-count": lambda: sum(k > 0 and not g.tended(t) for t, k in g.map.farms.items()),
+                "fe-idle-pasture-count": lambda: 0}[name]()
 
     def score(self, g):
         import score
@@ -1109,6 +1142,8 @@ class Script:
                 return False
             import civs
             got = [civs.real(self.bot.g, x.player) == civ for x in xs]
+        elif fact in (*COUNTS, "civilian-population"):
+            got = [self.compare(args[0], self.fact_value(fact, 0, x), args[1]) for x in xs]   # players-unit-count (#5043)
         else:
             return self.warn("fact", "players-" + fact) or False
         return bool(got) and (all(got) if every else any(got))
