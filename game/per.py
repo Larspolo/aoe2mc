@@ -247,6 +247,7 @@ EXPLORED_STATE = {"explored-active": 15,                           # airef "Expl
                   "explored-yes": 128}
 FLARES = ("up-find-flare", "up-find-player-flare", "up-send-flare")   # the flares of the team (#4971)
 UP_QUEUE = {"up-build": "build", "up-research": "research", "up-train": "train"}
+PRIORITY = ("up-reset-target-priorities", "up-set-defense-priority", "up-set-offense-priority", "up-update-targets")
 ORDERS = ("up-delete-distant-farms", "up-delete-idle-units", "up-reset-attack-now", "up-reset-building",
           "up-reset-unit", "up-retreat-now")
 
@@ -288,6 +289,48 @@ TASK_STANCE = {"stance-aggressive": "aggressive",                  # airef "Atta
                "stance-defensive": "defensive",
                "stance-no-attack": "no_attack",
                "stance-stand-ground": "stand_ground"}
+# The object classes and projectile types of the threat commands (airef "ClassId", "ProjectileType", #4966): a rule
+# matches the armor classes of combat (all of them), the names of units or buildings, any building, or any source.
+CLASSES = table.load("per_classes.jsonl")
+PROJECTILES = {r["name"]: r["id"] for r in CLASSES if r["kind"] == "projectile"}
+ANY = next(r["id"] for r in CLASSES if r.get("any"))
+
+
+def matches(row, name):
+    """How well the rule row matches the game name: 0 no, more is more exact (a named object, then more armor classes)."""
+    import combat
+    name = "VILLAGER" if name.startswith("VILLAGER") else name
+    building = name in combat.BUILDINGS or name.endswith(("_WALL", "_GATE", "_TOWER"))
+    if name in row.get("units", ()) or name in row.get("buildings", ()):
+        return 9
+    if "armor" in row:
+        return len(row["armor"]) * (not building and set(row["armor"]) <= set(combat.stats(name).classes))
+    return int(bool(row.get("building") and building))
+
+
+def best(kind, name):
+    """The id of the most exact rule of kind for the game name, or None."""
+    score, rid = max(((matches(r, name), r["id"]) for r in CLASSES if r["kind"] == kind), default=(0, None))
+    return rid if score else None
+
+
+def klass(name):
+    """The AoE2 class id of a game name (airef "ClassId"), -1 for no known class."""
+    c = best("class", name)
+    return -1 if c is None else c
+
+
+def projectile(name):
+    """The projectile type of a source (airef "ProjectileType"): ANY for another ranged source (an archer), None for a
+    melee one."""
+    import combat
+    s = combat.stats(name)
+    if not s.range or not s.attack:
+        return None
+    p = best("projectile", name)
+    return ANY if p is None else p
+
+
 TIMER_STATE = {"timer-disabled": 0,                                # the states of up-timer-status (airef "TimerState")
                "timer-running": 2,
                "timer-triggered": 1}
@@ -345,8 +388,41 @@ class Script:
         self.filters = {}                                          # filter -> value; none set: all -1 (up-reset-filters)
         self.target = None                                         # the id of the target object
         self.point = None                                          # (x, y) tiles of up-set-target-point (#4956)
+        self.threat = None                                         # (AoE2 second, player, source, target) of the last hit
+        self.shots = {}                                            # projectile type -> (AoE2 second, player, target)
         self.groups, self.flags = {}, {}                           # group id -> object ids; object id -> group flag
+        self.priority = {"offense": {}, "defense": {}}             # game name or class tuple -> priority (#4968)
         self.grids = {}                                            # the map grids of map_value (#4962)
+
+    def hit(self, player, source, target):
+        """An object of player (the game name source) hit the bot object target (the game name): the last threat of
+        up-get-threat-data, and the projectile of the source (PROJECTILES, and projectile-any) of up-projectile-*."""
+        t = self.bot.time
+        self.threat = (t, player, source, target)
+        if (p := projectile(source)) is not None:
+            self.shots[p] = self.shots[ANY] = (t, player, target)
+
+    def shot(self, ref):
+        """The (AoE2 second, player, target) of the last projectile of type ref (a name or an id of per_classes.jsonl),
+        or None. An unknown type: one warning."""
+        if (p := PROJECTILES.get(ref, ref)) not in PROJECTILES.values():
+            return self.warn("projectile type", ref)
+        return self.shots.get(p)
+
+    def threats(self, name, args):
+        """The actions up-get-attacker-class, up-get-threat-data and up-get-projectile-player (#4966): -1 without a hit."""
+        t = self.threat
+        if name == "up-get-attacker-class":                            # (up-get-attacker-class GOAL)
+            self.goals[args[0]] = klass(t[2]) if t else -1
+        elif name == "up-get-threat-data":                             # (up-get-threat-data TIME PLAYER SOURCE TARGET)
+            values = (self.ms(t[0]), t[1], klass(t[2]), klass(t[3])) if t else (-1,) * 4
+            self.goals.update(zip(args[:4], values))
+        elif (s := self.shot(args[0])) is not None or args[0] in PROJECTILES or args[0] in PROJECTILES.values():
+            self.goals[args[1]] = s[1] if s else -1                    # (up-get-projectile-player TYPE GOAL)
+
+    def ms(self, t):
+        """The milliseconds of game time since the AoE2 second t (airef "ThreatTime")."""
+        return int(round((self.bot.time - t) * 1000))
 
     def number(self, name):
         return self.sn.get(name, SN[name])
@@ -568,6 +644,11 @@ class Script:
         if name == "up-point-distance":                            # (up-point-distance P1 P2 REL VALUE)
             d = self.point_distance(args[0], args[1])
             return d is not None and self.compare(args[2], d, args[3])
+        if name == "up-attacker-class":                            # (up-attacker-class REL CLASS)
+            return self.threat is not None and self.compare(args[0], klass(self.threat[2]), args[1])
+        if name in ("up-projectile-detected", "up-projectile-target"):     # (up-projectile-detected TYPE REL VALUE)
+            s = self.shot(args[0])
+            return s is not None and self.compare(args[1], self.ms(s[0]) if name.endswith("detected") else klass(s[2]), args[2])
         if name == "up-compare-text":                              # (up-compare-text TEXT REL): the text buffer
             return self.compare(args[1], self.text, str(args[0]))
         if name == "up-compare-goal":                              # (up-compare-goal GOAL REL VALUE)
@@ -1900,6 +1981,39 @@ class Script:
         self.target = st["found"][ref]
         return True
 
+    def rank(self, kind, name):
+        """The target priority of an object of game name for kind "offense" or "defense" (airef up-set-*-priority):
+        the value of its name, else the highest value of a class with it, else 0. The offense table counts only with
+        sn-enable-offensive-priority 1."""
+        if kind == "offense" and self.number("sn-enable-offensive-priority") != 1:
+            return 0
+        table = self.priority[kind]
+        if name in table:
+            return table[name]
+        return max((v for k, v in table.items() if isinstance(k, tuple) and name in k), default=0)
+
+    def prioritize(self, name, args):
+        """up-set-offense-priority / up-set-defense-priority TYPE OBJECT TYPE2 VALUE (offense -1 to 11, defense -1 to
+        32767); up-reset-target-priorities TYPE OPTION: the default (none set); up-update-targets: the town defense of
+        the bot chooses its targets again at once (Bot.guard)."""
+        b = self.bot
+        if name == "up-update-targets":
+            b.guarded, b.retask = -math.inf, True                 # defend() and guard() look in the next step
+            return
+        if name == "up-reset-target-priorities":
+            kind = {"priority-offense": "offense", "priority-defense": "defense"}.get(args[0])
+            if kind is None:
+                return self.warn("priority type", args[0])
+            self.priority[kind].clear()
+            return
+        sn = self.named(args[0], args[1])
+        n = sn and self.game(sn, "unit", "building")
+        kind2 = self.type_kind(args[2])
+        value = self.operand(kind2, args[3]) if kind2 else None
+        if n and value is not None:
+            top = 11 if name == "up-set-offense-priority" else 32767
+            self.priority[name.split("-")[2]][n] = min(max(value, -1), top)
+
     def group(self, gid):
         """The ids of search group gid that stand: a dead object leaves its group (and its flag)."""
         live = {r[0] for r in self.objects(self.bot.g)}
@@ -2116,6 +2230,8 @@ class Script:
                 self.text = col
         elif name in GET_FACT:
             self.get_fact(name, args)
+        elif name in ("up-get-attacker-class", "up-get-threat-data", "up-get-projectile-player"):
+            self.threats(name, args)                                     # (#4966)
         elif name in COST_ACTIONS:
             self.cost_action(name, args)
         elif name == "up-modify-goal":                               # (up-modify-goal GOAL OP VALUE)
@@ -2214,6 +2330,8 @@ class Script:
             self.at_point(name, args)
         elif name in GROUPS:
             self.group_command(name, args)
+        elif name in PRIORITY:
+            self.prioritize(name, args)
         elif name in OBJECT_DATA:
             self.object_command(name, args)
         elif name == "enable-timer":
