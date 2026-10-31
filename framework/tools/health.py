@@ -602,7 +602,7 @@ def conflict_files(files_of, n=5, prefix=""):
     return Counter(f for fs in files_of.values() for f in set(fs) if f.startswith(prefix)).most_common(n)
 
 
-RUN = re.compile(r"^(?:Started|Taken over) by `([^`]+)`")
+RUN = re.compile(r"^(?:Started|Taken over) by [^`\n]*`([^`]+)`")   # also "by the pacer run (claim `B`)"
 CAUSES = ("quota", "merge conflict", "long mc test", "red CI", "no report", "after the report")
 
 
@@ -624,8 +624,10 @@ def takeovers(comments, status_comments, prs=(), since=None, full=0.95, runs=())
         when, item = t["created_at"], num(t)
         if since is not None and ts(when) < since:
             continue
+        if not (m := RUN.match(t["body"].lstrip())):
+            continue                                        # free text with no branch name: no run to count
+        new = m[1]
         rel = {item} | closes(by_pr.get(item, {})) | {n for n, p in by_pr.items() if item in closes(p)}
-        new = RUN.match(t["body"].lstrip())[1]
         prior = [(c["created_at"], m[1]) for c in comments if num(c) in rel and c["created_at"] < when
                  for m in [RUN.match((c.get("body") or "").lstrip())] if m and m[1] != new]
         start, old = max(prior) if prior else (None, by_pr.get(item, {}).get("head", {}).get("ref", "?"))
