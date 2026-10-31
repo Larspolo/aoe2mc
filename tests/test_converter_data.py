@@ -9,6 +9,7 @@ import buildings
 import units
 
 KEYS = {"animals.jsonl": ({"keys", "behavior", "mob"}, {"tags", "note"}),
+        "achievements.jsonl": ({"name", "title", "description", "icon", "parent", "event"}, set()),
         "carriers.jsonl": ({"name", "garrison"}, set()),
         "tech_names.jsonl": ({"tech", "name"}, set()),
         "trigger_conditions.jsonl": ({"name", "text"}, set()),
