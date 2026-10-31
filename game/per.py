@@ -221,6 +221,12 @@ SN_IDS = {r["id"]: r["name"] for r in table.load("per_numbers.jsonl")}   # a scr
 OBJECT_IDS = {r["id"]: r["name"] for r in table.load("per_names.jsonl") if "id" in r and r["kind"] in ("unit", "building")}
 TECH_IDS = {r["id"]: r["name"] for r in table.load("per_names.jsonl") if "id" in r and r["kind"] in ("tech", "age")}
 UP_QUEUE = {"up-build": "build", "up-research": "research", "up-train": "train"}
+IDLE = {"idle-type-fishing-ship": "FISHING_SHIP",                    # airef IdleType: the units of up-delete-idle-units
+        "idle-type-trade-cart": "TRADE_CART",
+        "idle-type-trade-cog": "TRADE_COG",
+        "idle-type-villager": "VILLAGER"}
+ORDERS = ("up-delete-distant-farms", "up-delete-idle-units", "up-reset-attack-now", "up-reset-building",
+          "up-reset-unit", "up-retreat-now")
 
 
 SETUP = ("civ-selected", "death-match-game", "difficulty", "map-size", "map-type", "regicide-game", "starting-age")
@@ -938,6 +944,59 @@ class Script:
         return bool(market.markets(g)) and (g.stock["gold"] >= market.price(g, res, True) if buy
                                             else g.stock[res] >= market.LOT)
 
+    def order(self, name, args):
+        """The orders of the army and the buildings (#4876, airef): stop the attack, call the army home, stop units or
+        queues, delete idle units or far farms. Each one uses the path of the player (stop, delete, cancel)."""
+        import demolish
+        import ruins
+        import stance
+        import train
+        b = self.bot
+        g, T = b.g, b.g.map.T
+        if name == "up-reset-attack-now":                          # the flag of attack-now; the bot attacks no more
+            self.attacking = False
+        elif name == "up-retreat-now":                             # all soldiers, also the ones not in a wave
+            b.wave = set(g.soldiers)
+            b.retreat()
+        elif name == "up-reset-unit":                              # (up-reset-unit TYPE UNIT): the Stop button
+            n = (sn := self.named(args[0], args[1])) and self.game(sn, "unit")
+            if n:
+                n = n if isinstance(n, tuple) else (n,)
+                units = sorted(u for u, m in g.soldiers.items() if m in n)
+                for u in units:
+                    g.command(f"aoe stop {u}")
+                    vars(b).get("targets", {}).pop(u, None)
+                    vars(b).get("wave", set()).discard(u)
+                g.new_order(units)
+                for v in [v for u, v in sorted(g.villagers.items()) if any(m.startswith("VILLAGER") for m in n)]:
+                    g.new_order([v.uuid])
+                    g.set(v, "idle")
+        elif name == "up-reset-building":                          # (up-reset-building OPTION TYPE BUILDING)
+            n = (sn := self.named(args[1], args[2])) and self.game(sn, "building")
+            for rect in [r for r, m in sorted(train.homes(g).items()) if n and m in (n if isinstance(n, tuple) else (n,))]:
+                gs = lambda: list(enumerate(train.groups(g.queues.get(rect, []))))   # noqa: E731
+                while (i := next((i for i, e in reversed(gs()) if args[0] != 1 or e[0] not in train.TECHS), None)) \
+                        is not None and train.cancel(g, b.nobody, rect, i):
+                    pass                                           # option 1 keeps the research (airef)
+        elif name == "up-delete-idle-units":                       # (up-delete-idle-units IDLE-TYPE)
+            if (kind := IDLE.get(args[0])) is None:
+                return self.warn("idle type", args[0])
+            ships = vars(g).get("ships", {})
+            trade = vars(g).get("trade", {})
+            idle = sorted([u for u, v in g.villagers.items() if v.state == "idle"] if kind == "VILLAGER" else
+                          [u for u, v in ships.items() if v.state == "idle" and getattr(v, "name", kind) == kind] +
+                          [u for u, m in g.soldiers.items() if m.startswith(kind) and u not in trade])
+            if idle:
+                stance.delete_units(g, idle)
+        elif name == "up-delete-distant-farms":                    # (up-delete-distant-farms TYPE VALUE): in tiles
+            far = self.operand(args[0].rstrip(":"), args[1])
+            cells = [c for d in g.map.drops["food"] for c in d]   # the mills and the town centers
+            for rect in sorted(ruins.own(g).values()):
+                mid = ((rect[0] + rect[1]) / 2, (rect[2] + rect[3]) / 2)
+                if far is not None and "FARM" in demolish.name(g, rect) and cells and \
+                        min(math.dist(mid, c) for c in cells) / T > far:
+                    demolish.fall(g, rect)
+
     def act(self, k, a):
         import build
         import train
@@ -1047,6 +1106,8 @@ class Script:
             self.escrow.clear()
         elif name == "attack-now":
             self.attacking = True
+        elif name in ORDERS:
+            self.order(name, args)
         elif name == "enable-timer":
             self.timers[args[0]] = b.time + args[1]
         elif name == "disable-timer":
