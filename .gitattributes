@@ -44,6 +44,7 @@ game/data/monk.jsonl merge=jsonl
 game/data/per_names.jsonl merge=jsonl
 game/data/per_classes.jsonl merge=jsonl
 game/data/per_object_data.jsonl merge=jsonl
+game/data/per_filter_ids.jsonl merge=jsonl
 game/data/per_numbers.jsonl merge=jsonl
 game/data/per_resources.jsonl merge=jsonl
 game/data/replay.jsonl merge=jsonl
