@@ -36,7 +36,7 @@ def text(page):
 def book(cmds):
     assert len(cmds) == 1 and cmds[0].startswith(PREFIX) and cmds[0].endswith("]")
     b = json.loads(cmds[0][len(PREFIX):-1])
-    return {**b, "pages": [text(p) for p in b["pages"]]}
+    return {**b, "pages": [text(p) for p in b["pages"][1:]]}          # after the players page (#4670)
 
 
 def test_the_book_has_one_page_per_player_with_its_events_in_time_order():
