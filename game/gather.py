@@ -130,6 +130,7 @@ WATCH_ROWS = {t['name']: t['watch'] for t in ROWS if t.get('watch')}   # true: c
 CARRY = {t['name']: t['carry'] for t in ROWS if 'carry' in t}
 CARRY_RATE = {t['name']: t['carry_rate'] for t in ROWS if 'carry_rate' in t}   # a factor, as the .dat (#5244)
 FOOD_CARRY = {"HEAVY_PLOW": 1}                                     # more food only per trip, as in AoE2 (#1424)
+BASE_CARRY = 10                                                    # a villager carries 10 before any technology (#5368)
 PACE = {t['name']: t['pace'] for t in ROWS if 'pace' in t}
 WORK_TECHS = {t['name']: t['work'] for t in ROWS if 'work' in t}   # work rate factors (#1577)
 # Food of a hunted animal, as in AoE2 DE (a "COW_..." name is a cow, #1058).
@@ -696,7 +697,7 @@ class Gather:
                                                                        # "wonder-race" (#2406)
     modes = frozenset()                                                # the modes on top of it (has_mode, #2490)
 
-    def __init__(self, game, data, player=1, tick=0.25, carry=10, chop=None, log=None, clock=time.monotonic,
+    def __init__(self, game, data, player=1, tick=0.25, carry=BASE_CARRY, chop=None, log=None, clock=time.monotonic,
                  cheats=False, start=None, resources="standard", pop_limit=None):
         self.game, self.data, self.map, self.player = game, data, Map(data, player), player
         if player != 1:

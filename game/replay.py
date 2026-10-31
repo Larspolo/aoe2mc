@@ -730,8 +730,10 @@ class Replay:
             m = re.findall(self.gather.NUMBER, (self.game.command(f"data get entity {v.uuid} Health") or "").rsplit(":", 1)[-1])
             hp = min(top, math.ceil(float(m[0]))) if m else top
             s = combat.stats(v.name)                                    # base values: the replay has no game.g (#5287)
-            line = json.dumps([say("inspect", lang.name(v.name), text(who, color), hp, top, self.task(i), s.attack,
-                                  s.melee, s.pierce, say("range", f"{s.range:g}") if s.range else "")])
+            carry = self.carry_left(i, t)
+            line = json.dumps([say("inspect", lang.name(v.name), text(who, color), hp, top, self.task(i),
+                                   say("carries", carry, v.res) if carry else "", s.attack, s.melee, s.pierce,
+                                   say("range", f"{s.range:g}") if s.range else "")])
             if shown.get(name, (None, -math.inf))[0] == line and now - shown[name][1] < INSPECT_AGAIN:
                 continue
             shown[name] = line, now
@@ -760,6 +762,17 @@ class Replay:
                         parts.append(text(f" · {self.panels[ref]}"))
                     return json.dumps(parts)
         return None
+
+    def carry_left(self, i, t):
+        """The load that gathering unit i carries at game time t (ms), or None (#5368). The replay has no drop-off: a
+        villager drops its load at its capacity, so the load is the gather count mod the capacity of its player
+        (BASE_CARRY, gather.CARRY, and gather.FOOD_CARRY for food, as gather.Gather.limit)."""
+        v = self.units.get(i)
+        if i not in self.working or v is None or not v.load or not v.res:
+            return None
+        more = self.gather.CARRY | self.gather.FOOD_CARRY if v.res == "food" else self.gather.CARRY
+        cap = self.gather.BASE_CARRY + sum(more.get(n, 0) for n in self.upgrades(v.player, t))
+        return v.load % cap or None
 
     def task(self, i):
         """The AoE2 task word of unit i from the replay state, for the selection panel (#5287)."""

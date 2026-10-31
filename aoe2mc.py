@@ -5768,6 +5768,10 @@ def lang_files(path=TEXTS):
     #5345) with values, so the `translate` keys of game/lang.py show the string of the client language."""
     with open(path, encoding="utf-8") as f:
         rows = [json.loads(s) for s in f if s.strip()]
+    if path == TEXTS:                                  # the step texts and goals of the game data (#5377)
+        rows += [{"name": f"aoe2mc.{m}.{r['name']}", "en_us": r[k]} for m, k, t in (
+            ("tutorial", "text", "tutorial.jsonl"), ("challenge", "goal", "challenges.jsonl"))
+            for r in map(json.loads, open(os.path.join(os.path.dirname(path), t), encoding="utf-8")) if r.get(k)]
     codes = sorted({c for r in rows for c in r if c != "name"})
     return {f"assets/aoe2mc/lang/{c}.json": json.dumps({r["name"]: r[c] for r in rows if c in r}, indent=1,
                                                        sort_keys=True).encode() for c in codes}

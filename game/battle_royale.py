@@ -23,6 +23,7 @@ import os
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import lang  # noqa: E402
 import table  # noqa: E402
 
 MINUTES = 30            # game minutes until the Corruption reaches the center (AoE2 wiki, the recommended "Time")
@@ -58,9 +59,7 @@ def setup(g, mode="battle-royale"):
     g.corruption_time, g.corruption_at = 0.0, 0.0
     for c in (f"worldborder center {s / 2:.1f} {s / 2:.1f}", "worldborder damage buffer 0", f"worldborder set {s:.1f}"):
         g.command(c)
-    g.command("tellraw @a " + json.dumps({"text": f"Battle Royale: the Corruption takes the map from its border to its "
-                                                  f"center in {MINUTES}:00. It destroys all units and buildings in it.",
-                                          "color": "dark_red"}))
+    g.command("tellraw @a " + json.dumps(lang.text("aoe2mc.battle_royale.start", f"{MINUTES}:00", color="dark_red")))
     return g
 
 
