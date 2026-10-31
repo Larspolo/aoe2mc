@@ -590,6 +590,27 @@ def base_scenario(folder, name, warn):
     return None
 
 
+def team_labels(players, teams):
+    """The lobby labels of the players and teams (#5008): N_PLAYER_GAME, N_TEAM_GAME, TEAMn_SIZEm and PLAYERn_TEAMm.
+    A player with no team (None) is in team 0. TEAM_GAME is left out: its meaning is not sure (#4821)."""
+    team = [(teams[p - 1] if teams and p <= len(teams) and teams[p - 1] is not None else 0) for p in range(1, players + 1)]
+    numbers = {t for t in team if t}
+    labels = {f"{players}_PLAYER_GAME", f"{len(numbers)}_TEAM_GAME"}
+    labels |= {f"TEAM{t}_SIZE{team.count(t)}" for t in numbers if t <= 4}
+    labels |= {f"PLAYER{p}_TEAM{t}" for p, t in enumerate(team, 1) if p <= 8}
+    return labels
+
+
+def lobby_labels():
+    """All labels that generate() can define (#5009): the size labels with LUDIKRIS_MAP, the game mode labels, LOBBY_LABELS and the
+    player and team labels of team_labels() for 1 to 8 players and teams 0 to 4."""
+    labels = {label for _, label in LABELS} | {"LUDIKRIS_MAP"} | {v for v in MODE_LABELS.values() if v}
+    labels |= set(LOBBY_LABELS.values())
+    labels |= {f"{n}_PLAYER_GAME" for n in range(1, 9)} | {f"{t}_TEAM_GAME" for t in range(5)}
+    labels |= {f"TEAM{t}_SIZE{m}" for t in range(1, 5) for m in range(1, 9)}
+    return labels | {f"PLAYER{p}_TEAM{t}" for p in range(1, 9) for t in range(5)}
+
+
 def generate(text, seed, players=2, size=None, warn=None, teams=None, folder=None, name=None, mode="standard", labels=()):
     """The map description (aoe2mc.read_json) of the land part of script text, for players on a map of size tiles
     (default: the AoE2 size of the player count). folder: the folder of the script, for its #include_drs files. teams: one team (or None) per player (#3946), see circle(). "lands": [{"player", "x", "y", "base_size"}] of the player lands.
@@ -600,6 +621,7 @@ def generate(text, seed, players=2, size=None, warn=None, teams=None, folder=Non
     rng = np.random.default_rng(seed)
     n = size or SIZES.get(players, 200)
     defined = {next((label for s, label in LABELS if n <= s), "LUDIKRIS_MAP")} | ({MODE_LABELS[mode]} if MODE_LABELS.get(mode) else set()) | set(labels)
+    defined |= team_labels(players, teams)
     consts = TERRAINS | OBJECTS | {"MAPSIZE_SIDE": n,   # DE: the side of the map in tiles (#4693)
                                   "MAPSCALE_AREA": n * n / 10000, "PLAYER_COUNT": players}   # area / 100x100 map (#4928)
     includes = []

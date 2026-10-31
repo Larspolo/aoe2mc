@@ -3437,7 +3437,9 @@ class Replay:
         if self.camera == "player" and not views and more is None:  # the free camera (#4768); live: views can come
             self.camera = None
             self.send(["tellraw @a " + json.dumps(text("This record has no camera of its player.", "yellow"))])
-        events = sorted((e for e in self.data.get("timeline", []) + self.spawns() + news + shots + views if start <= e["time"] <= last),
+        before = [dict(v, time=start) for v in views if v["time"] < start][-1:]   # a fresh replay after a jump back (#979):
+        events = sorted((e for e in self.data.get("timeline", []) + self.spawns() + news + shots + views + before   # the view
+                         if start <= e["time"] <= last),                                          # of its start (#5011)
                         key=lambda e: e["time"])                     # the record ends at `last`: no spawn after it
         g0, r0, lag, n, k = start, clock(), 0.0, 0, 0                 # game time g0 (ms) at real time r0
         self.speed, self.paused = speed, paused

@@ -7,7 +7,7 @@ Usage:
 
 For each `*.rms` file of DIR, the land of the script is made with seed 1 (`rmap.generate`). The output is Markdown:
 a table of the maps with their warnings, a table of the warnings with the number of maps that have each one, and a
-table of the labels that the scripts test and no script defines (the `if` labels, with the number of maps).
+table of the labels that the scripts test and neither a script nor the converter (rmap.lobby_labels) defines (the `if` labels, with the number of maps).
 The output holds no script text: paste it on a public ticket.
 """
 import argparse
@@ -67,7 +67,7 @@ def undefined(folder):
     for path in sorted(glob.glob(os.path.join(folder, "*.rms"))):
         with open(path, encoding="utf-8", errors="replace") as f:
             tested, defined = labels(f.read(), folder)
-        maps.update(tested - defined - {label for _, label in rmap.LABELS})
+        maps.update(tested - defined - rmap.lobby_labels())
     return maps
 
 
