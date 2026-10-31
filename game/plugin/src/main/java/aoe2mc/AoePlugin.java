@@ -164,6 +164,8 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *                                              joins a team or changes it, #3070)
  *   aoe hide <players> view <uuid> ...         the same for these players only (the view of a spectator, #2901):
  *                                              the minimap and a player that joins later do not change
+ *   aoe hits                                   "Hits: <team> ...": the teams with an enemy hit on a unit or a
+ *                                              building since the last call (the battle music, #5342, Alerts)
  *   aoe stance <selector> <aggressive|defensive|stand_ground|no_attack>
  *                                              the AoE2 stance of a unit (#1104): no_attack never attacks without an
  *                                              order, stand_ground attacks only an enemy in its range and does not walk,
@@ -3740,6 +3742,10 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                 n++;
             }
             sender.sendMessage((hide ? "Hidden: " : "Shown: ") + n + " entities, " + who.size() + " players");
+            return true;
+        }
+        if (args.length == 1 && args[0].equals("hits")) {            // the battle music (#5342, game/music.py)
+            sender.sendMessage(alerts.hits());
             return true;
         }
         if (args.length == 3 && args[0].equals("speed")) {          // the attribute command fails on a minecart (#836)
