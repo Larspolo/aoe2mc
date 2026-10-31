@@ -150,6 +150,8 @@ jobs:
             gh api "repos/$R/git/refs/heads/$branch" -X DELETE || true
             if [ -n "$ticket" ]; then
               gh api "repos/$R/issues/$ticket/labels/in-progress" -X DELETE >/dev/null 2>&1 || true
+              # GitHub closes the ticket by the closing word later, and that can fail (#4847): close it here as well
+              [ "$(gh api "repos/$R/issues/$ticket" --jq .state)" = open ] && gh api "repos/$R/issues/$ticket" -X PATCH -f state=closed -f state_reason=completed >/dev/null || true
             fi
           }
           if [ "$EVENT" = workflow_run ]; then
