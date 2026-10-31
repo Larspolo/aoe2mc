@@ -103,6 +103,8 @@ def over(g, won):
         hill.close(h)
         time_limit.close(h)
         treaty.close(h)
+    import music  # no music over the end tune (#5341)
+    music.stop(g)
     import recap  # the recap book and the end hotbar (#2660)
     recap.give(g, won)
     import achievements  # the AoE2 achievements of a win (#5279)

@@ -79,6 +79,7 @@ import map_table  # noqa: E402
 import market  # noqa: E402
 import menu  # noqa: E402
 import monk  # noqa: E402
+import music  # noqa: E402
 import near  # noqa: E402
 import record  # noqa: E402
 import regen  # noqa: E402
@@ -2354,6 +2355,7 @@ class Gather:
             for b in self.bots:
                 b.step()
             conquest.tick(self)                                        # not in step(): the bot steps its own Gather
+            music.tick(self)                                           # calm tracks in peace (#5341)
             if has_mode(self, "regicide"):                             # a player without its King loses (#2347)
                 regicide.tick(self)
             if has_mode(self, "sudden-death"):                         # a player without its town center loses (#2407)
