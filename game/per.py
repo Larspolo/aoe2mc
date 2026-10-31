@@ -190,6 +190,9 @@ OPS = {"<": operator.lt, "<=": operator.le, ">": operator.gt, ">=": operator.ge,
 MATH = ("=", "+", "-", "*", "/", "z/", "mod", "min", "max", "neg", "%*", "%/")   # airef "mathOp" (up-modify-*)
 RULE_CHECKS = 10000                     # the rule checks of one pass: a loop with no end stops there (airef RuleDelta)
 GET_FACT = ("up-get-fact", "up-get-fact-max", "up-get-fact-min", "up-get-fact-sum", "up-get-player-fact")
+COST_ACTIONS = ("up-setup-cost-data", "up-reset-cost-data", "up-add-cost-data", "up-add-object-cost",
+                "up-add-research-cost", "up-get-cost-delta")
+COST_GOODS = ("food", "wood", "stone", "gold")   # a cost set is 4 goals in a row, in this order (airef "Cost data", #4879)
 STOCK = ("food", "wood", "gold", "stone")
 TOWN = 30                       # tiles around the own town center: "in town" (AoE2 sn-maximum-town-size, airef "Facts")
 PERIMETERS = {1: (10, 20), 2: (18, 30)}   # tiles from the town center to each wall ring (airef "build-wall", #4740)
@@ -247,6 +250,7 @@ class Script:
         self.rings = {}                                            # perimeter -> the sides of its wall ring (ring())
         self.heard, self.read = set(), {}                          # (player, taunt) not acknowledged; player -> read
         self.jump = None                                           # the rule after the actions of this rule (up-jump-*)
+        self.cost_at = None                                        # the first goal of the current cost set (#4879)
 
     def number(self, name):
         return self.sn.get(name, SN[name])
@@ -564,6 +568,54 @@ class Script:
             op = {"up-get-fact-min": min, "up-get-fact-max": max, "up-get-fact-sum": sum}.get(name, lambda v: v[0])
             self.goals[goal] = op(got)
 
+    def cost_action(self, name, args):
+        """The up-*-cost-data actions (#4879). A cost set is 4 goals in a row (COST_GOODS). A value is an operand of
+        kind TYPE (airef "Typed operators"): a constant, a goal or a strategic number. An action that adds to the current
+        set needs up-setup-cost-data first."""
+        if name == "up-setup-cost-data":                              # (up-setup-cost-data RESET GOAL)
+            self.cost_at = args[1]
+            if args[0] == 1:
+                self.cost_zero(args[1])
+            return
+        if name == "up-reset-cost-data":                              # (up-reset-cost-data GOAL)
+            return self.cost_zero(args[0])
+        if self.cost_at is None:
+            return self.warn("cost data", name)
+        if name == "up-get-cost-delta":                               # (up-get-cost-delta GOAL): stock - current set
+            for i, r in enumerate(COST_GOODS):
+                self.goals[args[0] + i] = self.bot.g.stock[r] - self.goals.get(self.cost_at + i, 0)
+        elif name == "up-add-cost-data":                              # (up-add-cost-data GOAL TYPE VALUE)
+            src = {r: self.goals.get(args[0] + i, 0) for i, r in enumerate(COST_GOODS)}
+            self.cost_add(self.cost_at, src, args[1], args[2])
+        elif name == "up-add-object-cost":                            # (up-add-object-cost TYPE OBJECT TYPE2 VALUE)
+            import build
+            import train
+            ns = self.game(args[1], args[0])                          # a set adds the costs of its members
+            price = build.price if args[0] == "building" else train.price
+            cost = {}
+            for n in (ns if isinstance(ns, tuple) else (ns,) if ns else ()):
+                for r, v in price(self.bot.g, n).items():
+                    cost[r] = cost.get(r, 0) + v
+            self.cost_add(self.cost_at, cost, args[2], args[3])
+        elif name == "up-add-research-cost":                          # (up-add-research-cost TECH TYPE VALUE)
+            import train
+            n = self.game(args[0], "tech", "age")
+            if n:
+                self.cost_add(self.cost_at, train.price(self.bot.g, n), args[1], args[2])
+
+    def cost_zero(self, first):
+        """The 4 goals of the cost set that starts at first are 0."""
+        for i in range(len(COST_GOODS)):
+            self.goals[first + i] = 0
+
+    def cost_add(self, first, cost, kind, ref):
+        """Add the operand (kind, ref) times cost, a dict of the stock resources, to the cost set that starts at first."""
+        value = self.operand(kind, ref)
+        if value is None:
+            return
+        for i, r in enumerate(COST_GOODS):
+            self.goals[first + i] = self.goals.get(first + i, 0) + value * cost.get(r, 0)
+
     def count(self, n, g=None, total=False):
         """The live units or complete buildings of game name n of Gather g (default: the own one); total: also the
         queued units and the buildings under construction (the -total facts)."""
@@ -840,6 +892,8 @@ class Script:
             self.sn[args[0]] = args[1]
         elif name in GET_FACT:
             self.get_fact(name, args)
+        elif name in COST_ACTIONS:
+            self.cost_action(name, args)
         elif name == "up-modify-goal":                               # (up-modify-goal GOAL OP VALUE)
             new = self.math(args[1], self.goals.get(args[0], -1), args[2])
             if new is not None:
