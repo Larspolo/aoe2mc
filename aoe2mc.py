@@ -633,7 +633,9 @@ def read_record(path, match=None):
             objects.append(dict(kind="U" if prefix == "H" else prefix, hero=prefix == "H", name=name, player=player,
                                 x=o.position.x, y=o.position.y, rotation=0.0, garrisoned=False,
                                 ref=o.instance_id, holder=None))
-    return size, terrain, elevation, terrain_names, {k: "" for k in CHAPTERS}, objects, players
+    lobby = {k: getattr(match, a, None) for k, a in (("type", "type"), ("dataset", "dataset"), ("starting_age", "starting_age"),
+             ("population", "population"), ("all_techs", "all_technologies"), ("reveal", "map_reveal"))}  # the replay rules (#4832)
+    return size, terrain, elevation, terrain_names, {k: "" for k in CHAPTERS} | {"lobby": lobby}, objects, players
 
 
 def scenario_teams(players):
@@ -2874,7 +2876,7 @@ def write_region(path, chunks):
 
 
 def write_objects(path, size, T, H, players, objects, cols, ground, timeline=None, mood="DEFAULT", map_ground=None,
-                  victory=None, messages=None, lists=None, yaw=SPAWN_YAW, views=None):
+                  victory=None, messages=None, lists=None, yaw=SPAWN_YAW, views=None, lobby=None):
     """aoe2mc.json: the data that a game program needs (docs/research/gameplay.md). Tiles are in the turned grid
     (--orientation): block x = tile x × T, block z = tile y × T. Units have the UUID of their entity, buildings
     their footprint [x0, z0, x1, z1) in blocks. Objects of a recorded game have their object ID ("ref").
@@ -2898,7 +2900,9 @@ def write_objects(path, size, T, H, players, objects, cols, ground, timeline=Non
     "turn": the clockwise quarter turns of --orientation, if not 0 (#3035).
     "start" of a player: the block (x, y, z) where its person starts (its start view, #3344); "yaw": the spawn yaw.
     views (recorded games with view locks only, #4767): {"views": the view locks of the recorder (read_timeline, tiles
-    in the turned grid), "recorder": its player number}: the keys "views" and "recorder", out of "timeline" (APM)."""
+    in the turned grid), "recorder": its player number}: the keys "views" and "recorder", out of "timeline" (APM).
+    "lobby" (recorded games of the mgz model only, #4832): the lobby settings {"type", "dataset", "starting_age",
+    "population", "all_techs", "reveal"}."""
     kinds = {"U": "unit", "B": "building", "O": "other"}
     objs = []
     for o in objects:
@@ -2933,6 +2937,8 @@ def write_objects(path, size, T, H, players, objects, cols, ground, timeline=Non
         data["victory"] = victory
     if views:
         data.update(views)
+    if lobby:
+        data["lobby"] = lobby
     if messages and (texts := {k: v for k, v in messages.items() if k in CHAPTERS and (v or "").strip()}):
         data["messages"] = texts
     for key, items in (lists or {}).items():
@@ -6201,7 +6207,7 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
     write_objects(os.path.join(out, "aoe2mc.json"), size, T, H, players, objects, cols, ground, timeline,
                   texts.get("mood", "DEFAULT"), map_colors(np.asarray(img))[0], texts.get("global_victory"), texts,
                   {k: f(texts.get("triggers", [])) for k, f in TRIGGER_LISTS.items()}, yaw,
-                  views and {"views": views, "recorder": record_state["recorder"]})
+                  views and {"views": views, "recorder": record_state["recorder"]}, texts.get("lobby"))
     triggers, tstats = texts.get("triggers", []), Counter()
     haze = FOG.get(texts.get("mood")) if mood == "on" and (fog or ambience == "full") else None
     n, amb = write_datapack(out, objects, ground, cols.biome_names, ambience, players, triggers, T, tstats, haze,
