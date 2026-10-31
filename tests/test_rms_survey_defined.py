@@ -8,9 +8,9 @@ import rms_survey  # noqa: E402
 
 
 def test_labels_of_the_converter_are_not_undefined(tmp_path):
-    text = "if REGICIDE\nelseif LUDIKRIS_MAP\nelseif 2_PLAYER_GAME\nelseif DARK_AGE_START\nendif\n"
+    text = "if REGICIDE\nelseif LUDIKRIS_MAP\nelseif 2_PLAYER_GAME\nelseif ENABLE_TREATY\nendif\n"
     (tmp_path / "own.rms").write_text(text, encoding="utf-8")
-    assert set(rms_survey.undefined(str(tmp_path))) == {"DARK_AGE_START"}
+    assert set(rms_survey.undefined(str(tmp_path))) == {"ENABLE_TREATY"}
 
 
 def test_each_lobby_label_turns_on_its_if_block():
@@ -21,7 +21,8 @@ def test_each_lobby_label_turns_on_its_if_block():
     settings = [{"players": len(t), "teams": t} for t in teams]
     settings += [{"players": p} for p in range(1, 9)]
     settings += [{"mode": m} for m in rmap.MODE_LABELS] + [{"size": s} for s in rmap.MAP_SIZES.values()]
-    settings += [{"labels": [label]} for label in rmap.LOBBY_LABELS.values()]
+    settings += [{"labels": [label]} for t in (rmap.LOBBY_LABELS, rmap.RESOURCE_LABELS, rmap.AGE_LABELS)
+                 for label in t.values() if label]
     settings += [{"players": 8, "teams": [i % 4 + 1 if i < 4 else None for i in range(8)]}]
     for kw in settings:
         warnings = []
