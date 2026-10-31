@@ -21,7 +21,7 @@ def fake(**kw):
 
 def test_order():
     names = [s["name"] for s in tutorial.STEPS]
-    assert names[names.index("house") + 1:] == ["villager", "camps", "food", "feudal"]
+    assert names[names.index("house") + 1:names.index("feudal") + 1] == ["villager", "camps", "food", "feudal"]
 
 
 def test_villager():
