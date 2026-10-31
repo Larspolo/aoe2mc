@@ -198,7 +198,8 @@ VICTORY_TYPES = {                  # run.py --victory: the airef VictoryType; on
     "standard": 0,
     "time-limit": 2,
 }
-GET_FACT = ("up-get-fact", "up-get-fact-max", "up-get-fact-min", "up-get-fact-sum", "up-get-player-fact")
+GET_FACT = ("up-get-fact", "up-get-fact-max", "up-get-fact-min", "up-get-fact-sum", "up-get-player-fact",
+            "up-get-focus-fact", "up-get-target-fact")   # the last two: the focus and the target player (#4973)
 COST_ACTIONS = ("up-setup-cost-data", "up-reset-cost-data", "up-add-cost-data", "up-add-object-cost",
                 "up-add-research-cost", "up-get-cost-delta")
 COST_GOODS = ("food", "wood", "stone", "gold")   # a cost set is 4 goals in a row, in this order (airef "Cost data", #4879)
@@ -255,6 +256,10 @@ FIND_METHODS = {"find-attacker": 0,                                # airef "Find
                 "find-closest": 2,
                 "find-ordered": 3,
                 "find-random": 1}
+GROUPS = ("up-create-group", "up-disband-group-type", "up-get-group-size", "up-group-size", "up-modify-group-flag",
+          "up-reset-group", "up-set-group")                       # the search groups (#4961)
+GROUP_IDS = range(20)                                              # airef "GroupId": 0 to 19
+GROUP_MAX = 40                                                     # airef up-create-group: at most 40 objects
 RESEARCH_STATE = {"research-available": 1,                         # airef "ResearchState" (up-research-status)
                   "research-complete": 3,
                   "research-pending": 2,
@@ -336,6 +341,7 @@ class Script:
         self.filters = {}                                          # filter -> value; none set: all -1 (up-reset-filters)
         self.target = None                                         # the id of the target object
         self.point = None                                          # (x, y) tiles of up-set-target-point (#4956)
+        self.groups, self.flags = {}, {}                           # group id -> object ids; object id -> group flag
         self.grids = {}                                            # the map grids of map_value (#4962)
 
     def number(self, name):
@@ -667,6 +673,8 @@ class Script:
             return self.idle_count(args[0], args[1], args[2])
         if name in AT_POINT:
             return self.at_point(name, args)
+        if name in GROUPS:
+            return bool(self.group_command(name, args))
         if name in SEARCH:                                         # a find or a target as a fact: true when it did
             return bool(self.search_command(name, args))
         if name in OBJECT_DATA:
@@ -774,6 +782,9 @@ class Script:
     def get_fact(self, name, args):
         """up-get-fact, up-get-player-fact and up-get-fact-min, -max, -sum: the value of a fact into a goal (#4868). An
         unknown fact or player gives one warning and leaves the goal. As a fact it is true (airef "Fact/Action")."""
+        if name in ("up-get-focus-fact", "up-get-target-fact"):      # (up-get-focus-fact FACT PARAM GOAL)
+            who = "focus-player" if name == "up-get-focus-fact" else "target-player"
+            return self.get_fact("up-get-player-fact", (who, *args))
         if name == "up-get-fact":
             xs, (fact, param, goal) = [self.bot.g], args
         else:
@@ -899,8 +910,8 @@ class Script:
         g, b = self.bot.g, self.bot
         sides = {x.player: x for x in build.sides(g)}
         sides[g.player] = g
-        if isinstance(who, int) or who == "focus-player":
-            x = sides.get(b.foe if who == "focus-player" else who)
+        if isinstance(who, int) or who in ("focus-player", "target-player"):   # the bot's target is the foe's
+            x = sides.get(b.foe if isinstance(who, str) else who)
             return [x] if x else [], False
         mode, _, kind = who.partition("-")
         if mode not in ("any", "every") or kind not in ("enemy", "ally", "player", "computer", "human"):
@@ -1771,6 +1782,69 @@ class Script:
         self.target = st["found"][ref]
         return True
 
+    def group(self, gid):
+        """The ids of search group gid that stand: a dead object leaves its group (and its flag)."""
+        live = {r[0] for r in self.objects(self.bot.g)}
+        self.flags = {o: f for o, f in self.flags.items() if o in live}
+        ids = self.groups[gid] = [o for o in self.groups.get(gid, []) if o in live]
+        return ids
+
+    def group_command(self, name, args):
+        """The search groups of direct unit control (airef, #4961). up-create-group INDEX-GOAL COUNT-GOAL TYPE GROUP:
+        up to COUNT (0: GROUP_MAX) local results from INDEX; up-set-group SOURCE TYPE GROUP: the group into the results
+        of SOURCE; up-modify-group-flag OPTION TYPE GROUP: object-data-group-flag of its objects (1 sets, 0 removes);
+        up-disband-group-type GROUP-TYPE: the internal groups of the bot. The fact up-group-size: the size REL VALUE."""
+        if name == "up-disband-group-type":
+            return self.disband(args[0])
+        lead = 2 if name == "up-create-group" else 1 if name in ("up-set-group", "up-modify-group-flag") else 0
+        kind = self.type_kind(args[lead])
+        gid = self.operand(kind, args[lead + 1]) if kind else None
+        if gid is None:
+            return False
+        if gid not in GROUP_IDS:
+            return self.warn("group", gid) or False
+        if name == "up-group-size":                                # (up-group-size TYPE GROUP REL VALUE)
+            return self.compare(args[2], len(self.group(gid)), args[3])
+        if name == "up-get-group-size":                            # (up-get-group-size TYPE GROUP GOAL)
+            self.goals[args[2]] = len(self.group(gid))
+        elif name == "up-reset-group":
+            self.groups.pop(gid, None)
+        elif name == "up-create-group":                            # the group is reset first
+            start, count = self.goals.get(args[0], 0) if args[0] else 0, self.goals.get(args[1], 0) if args[1] else 0
+            live = {r[0] for r in self.objects(self.bot.g)}
+            found = [o for o in self.search[1]["found"][max(start, 0):] if o in live]
+            self.groups[gid] = found[:min(count, GROUP_MAX) if count > 0 else GROUP_MAX]
+        elif name == "up-set-group":
+            src = SEARCH_SOURCE.get(args[0], args[0])
+            if src not in SEARCH_MAX:
+                return self.warn("search source", args[0]) or False
+            st = self.search[src]
+            st["found"], st["last"] = self.group(gid)[:SEARCH_MAX[src]], 0
+        elif name == "up-modify-group-flag":
+            for o in self.group(gid):
+                if args[0]:
+                    self.flags[o] = gid
+                elif self.flags.get(o) == gid:
+                    del self.flags[o]
+        return True
+
+    def disband(self, kind):
+        """up-disband-group-type: the units of the internal groups of a type stop and leave them. The bot has the land
+        attack group (its wave, Bot.fight) and the land explore group (the scouts of up-send-scout); another type: one
+        warning."""
+        b = self.bot
+        g = b.g
+        if kind == "group-type-land-attack":
+            units, b.wave, b.targets, b.charged = sorted(getattr(b, "wave", ())), set(), {}, False
+        elif kind == "group-type-land-explore":
+            units, self.scouts = self.scouts, []
+        else:
+            return self.warn("group type", kind) or False
+        for u in units:
+            g.command(f"aoe stop {u}")
+        g.new_order(units)
+        return True
+
     def object_command(self, name, args):
         """The data of the target object (airef "DUC", #4959): up-get-object-data DATA GOAL, up-object-data DATA REL
         VALUE, the same of the target of the target (-target-), up-remove-objects SOURCE DATA REL VALUE,
@@ -1913,6 +1987,15 @@ class Script:
             if args[0] not in SN:
                 return self.warn("strategic number", args[0])
             self.sn[args[0]] = args[1]
+        elif name == "up-get-precise-time":                          # (up-get-precise-time START GOAL): ms since START
+            self.goals[args[1]] = int(b.time * 1000) - self.goals.get(args[0], 0)
+        elif name == "up-get-player-color":                          # (up-get-player-color PLAYER GOAL): the ID, the name as text
+            import aoe2mc
+            p = {"my-player-number": g.player, "focus-player": b.foe}.get(args[0], args[0])
+            if p is not None:
+                col = g.players.get(str(p), {}).get("color") or aoe2mc.player_color(p)
+                self.goals[args[1]] = aoe2mc.PLAYER_COLORS.index(col) if col in aoe2mc.PLAYER_COLORS else 0
+                self.text = col
         elif name in GET_FACT:
             self.get_fact(name, args)
         elif name in COST_ACTIONS:
@@ -2011,6 +2094,8 @@ class Script:
             self.search_command(name, args)
         elif name in AT_POINT:
             self.at_point(name, args)
+        elif name in GROUPS:
+            self.group_command(name, args)
         elif name in OBJECT_DATA:
             self.object_command(name, args)
         elif name == "enable-timer":
