@@ -221,6 +221,7 @@ def names():
 # The strategic numbers of AoE2 DE with their defaults and ids (airef "Strategic numbers", #4685): only the gatherer
 # percentages and the attack group sizes change the bot (Script.number); the others keep their value for the script.
 SN = {r["name"]: r["default"] for r in table.load("per_numbers.jsonl")}
+RESOURCES = {r["name"]: r for r in table.load("per_resources.jsonl")}   # airef ResourceType (up-resource-amount)
 SN_IDS = {r["id"]: r["name"] for r in table.load("per_numbers.jsonl")}   # a script can name a number by its id
 # The airef ids of objects and technologies (two sets of numbers): the up-* commands with g: take an id (#4869).
 OBJECT_IDS = {r["id"]: r["name"] for r in table.load("per_names.jsonl") if "id" in r and r["kind"] in ("unit", "building")}
@@ -617,6 +618,8 @@ class Script:
             return bool(got) and (all(got) if every else any(got))
         if name == "wall-completed-percentage":                    # (wall-completed-percentage PERIMETER REL VALUE)
             return self.ring(args[0]) is not None and self.compare(args[1], self.walled(args[0]), args[2])
+        if name in ("up-resource-amount", "up-resource-percent", "up-allied-resource-amount", "up-allied-resource-percent"):
+            return self.resource(name, args)
         if name in ("up-players-in-game", "up-player-distance", "up-allied-goal", "up-allied-sn"):
             return self.others(name, args)
         if name == "enemy-buildings-in-town":
@@ -1085,6 +1088,30 @@ class Script:
             return self.compare(args[2], other.goals.get(args[1], -1), args[3])
         sn = SN_IDS.get(args[1], args[1])
         return sn in SN and self.compare(args[2], other.number(sn), args[3])
+
+    def resource(self, name, args):
+        """(up-resource-amount TYPE REL VALUE), (up-allied-resource-amount PLAYER TYPE REL VALUE) and the -percent
+        facts (the value x 100, #4964): an internal resource of the own player or of an ally (airef "ResourceType"). A
+        type with no source in the game program: one warning, false."""
+        import diplomacy
+        g = self.bot.g
+        gs, every = [g], False
+        if name.startswith("up-allied-"):                         # self or allies only (airef)
+            who, args = args[0], args[1:]
+            gs, every = ([g], False) if who == g.player else self.sides(who)
+            gs = [x for x in gs if x is g or diplomacy.stance(g, x.player) == "ally"]
+        row = RESOURCES.get(args[0]) or next((r for r in RESOURCES.values() if r["id"] == args[0]), None)
+        if row is None or "source" not in row:
+            return self.warn("resource type", args[0]) or False
+        got = [self.compare(args[1], self.resource_value(row["source"], x) * (100 if name.endswith("-percent") else 1),
+                            args[2]) for x in gs]
+        return bool(got) and (all(got) if every else any(got))
+
+    def resource_value(self, src, g):
+        import monk
+        if src == "relics":                                        # the relics in the own monasteries
+            return sum(monk.own(g, r) and r["monk"] is None and r["home"] is not None for r in monk.relics(g))
+        return self.fact_value(src, 0, g)
 
     def find_player(self, name, args):
         """(up-find-player STANCE METHOD GOAL), up-find-next-player: a player of airef "FindPlayerMethod" into the goal,
