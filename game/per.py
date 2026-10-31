@@ -302,6 +302,7 @@ class Script:
         self.heard, self.read = set(), {}                          # (player, taunt) not acknowledged; player -> read
         self.jump = None                                           # the rule after the actions of this rule (up-jump-*)
         self.cost_at = None                                        # the first goal of the current cost set (#4879)
+        self.placement = None                                      # (player, object, tiles) of up-set-placement-data
         self.builders = {}                                         # building -> builders of up-assign-builders (#4875)
         self.ids, self.next_id = {}, 1                             # object key -> its id; the id of the next new one
         self.search = {1: fresh(), 2: fresh()}                     # the local and the remote search (#4957)
@@ -569,6 +570,10 @@ class Script:
         if name in ("up-can-train", "up-can-build", "up-can-research"):     # (up-can-train ESCROW TYPE UNIT)
             sn = self.named(args[1], args[2], name == "up-can-research")
             return sn is not None and self.can(name.removeprefix("up-"), sn, self.goals.get(args[0], 0) >= 1)
+        if name == "up-can-build-line":                             # (up-can-build-line ESCROW POINT TYPE BUILDING)
+            sn = self.named(args[2], args[3])
+            return bool(sn is not None and self.can("can-build", sn, self.goals.get(args[0], 0) >= 1)
+                        and self.line_sites(self.pair(args[1]), self.pair(args[1]), self.game(sn, "building"))[:1])
         if name in ("up-pending-objects", "up-pending-placement", "up-research-status", "up-train-site-ready"):
             return self.pending(name, args)
         if name in ("up-object-type-count", "up-object-type-count-total"):    # (up-object-type-count TYPE OBJECT REL VALUE)
@@ -1187,6 +1192,54 @@ class Script:
         return {tuple(t) for t in site.get("tiles") or
                 [(x, z) for x in range(x0 // T, x1 // T) for z in range(z0 // T, z1 // T)]}
 
+    def placed(self, place):
+        """The block cell of a site of up-build place-point (the target point) or place-control (up-set-placement-data:
+        VALUE tiles in front of the object, toward the map center; a negative VALUE behind it), or None."""
+        g = self.bot.g
+        T = g.data["tile_size"]
+        if place == "place-point":
+            return self.point and (self.point[0] * T, self.point[1] * T)
+        if self.placement is None:
+            return self.warn("placement data", place)
+        player, obj, value = self.placement
+        if obj == -1:                                              # -1: the home town center (airef)
+            at = self.town_tile(player)
+        else:                                                      # the latest object of that type of player
+            n = self.game(OBJECT_IDS.get(obj, obj), "unit", "building")
+            o = next((o for o in reversed(g.data["objects"]) if o.get("player") == player and o["name"] == n
+                      and "footprint" in o), None)
+            at = o and ((o["footprint"][0] + o["footprint"][2]) // 2 // T, (o["footprint"][1] + o["footprint"][3]) // 2 // T)
+        if at is None:
+            return None
+        c = self.tiles() / 2
+        d = math.hypot(c - at[0], c - at[1]) or 1
+        x, y = self.bound((at[0] + (c - at[0]) / d * value, at[1] + (c - at[1]) / d * value))
+        return x * T, y * T
+
+    def line_sites(self, p, q, n):
+        """The free footprints of building n on the line from tile p to tile q, one footprint apart (up-build-line)."""
+        import build
+        g = self.bot.g
+        if p is None or q is None or not n:
+            return []
+        T, size = g.map.T, build.footprint(n)
+        k = max(abs(q[0] - p[0]), abs(q[1] - p[1])) // size
+        rects = [build.area(g, n, (round(p[0] + (q[0] - p[0]) * i / max(k, 1)) * T + T // 2,
+                                   round(p[1] + (q[1] - p[1]) * i / max(k, 1)) * T + T // 2)) for i in range(k + 1)]
+        return [r for r in dict.fromkeys(rects) if r[0] >= 0 and r[2] >= 0 and build.free(g, r)]
+
+    def line(self, p, q, sn):
+        """(up-build-line): sites along the line, as many as the stock without the escrow pays; one villager builds."""
+        import build
+        g, b = self.bot.g, self.bot
+        if sn is None or not (n := self.game(sn, "building")) or not self.can("can-build", sn):
+            return
+        cost, rects = build.price(g, n), self.line_sites(self.pair(p), self.pair(q), n)
+        k = min([len(rects)] + [(g.stock[r] - self.escrow.get(r, 0)) // v for r, v in cost.items() if v])
+        sites = [build.found(g, n, r) for r in rects[:max(k, 0)]]
+        if sites:
+            b.builder(sites[0])
+
     def wall(self, p, kind):
         """(build-wall PERIMETER WALL-TYPE): sites on the free tiles of one side of the ring p, as many as the stock
         without the escrow pays; the side nearest to the enemy first. One villager builds them, as a wall line of a
@@ -1497,11 +1550,12 @@ class Script:
         import train
         name, args, b = a[0], a[1:], self.bot
         g = b.g
-        escrow = False
+        escrow, place = False, None
         if name in UP_QUEUE:                       # (up-train ESCROW TYPE UNIT), (up-build PLACE ESCROW TYPE BUILDING)
             if name == "up-build":
-                if args[0] not in ("place-normal", "place-forward"):
+                if args[0] not in ("place-normal", "place-forward", "place-control", "place-point"):
                     self.warn("placement", args[0])
+                place = args[0]
                 name, args = ("build-forward" if args[0] == "place-forward" else "build"), args[1:]
             else:
                 name = UP_QUEUE[name]
@@ -1517,7 +1571,8 @@ class Script:
                     self.spend(cost)
         elif name in ("build", "build-forward"):
             n = self.game(args[0], "building")
-            center = b.center() if name == "build" else self.forward()
+            center = self.forward() if name == "build-forward" else self.placed(place) if place in (
+                "place-control", "place-point") else b.center()
             if n and self.can("can-build", args[0], escrow) and center and (rect := build.near(g, n, center)) is not None:
                 cost = build.price(g, n)
                 b.builder(build.found(g, n, rect))
@@ -1526,6 +1581,15 @@ class Script:
                     self.spend(cost)
             elif n and self.can("can-build", args[0], escrow):     # no free site yet: up-pending-placement
                 self.unplaced.add(n)
+        elif name == "up-build-line":                                  # (up-build-line POINT1 POINT2 TYPE BUILDING)
+            self.line(args[0], args[1], self.named(args[2], args[3]))
+        elif name == "up-set-placement-data":                          # (up-set-placement-data PLAYER OBJECT TYPE VALUE)
+            kind = self.type_kind(args[2])
+            if kind and (value := self.operand(kind, args[3])) is not None:
+                self.placement = (g.player if args[0] == "my-player-number" else args[0], args[1], value)
+        elif name == "up-reset-placement":                             # (up-reset-placement TYPE BUILDING)
+            if (sn := self.named(args[0], args[1])) is not None and (n := self.game(sn, "building")):
+                self.unplaced.discard(n)
         elif name == "build-wall":                                     # (build-wall PERIMETER WALL-TYPE)
             self.wall(args[0], args[1])
         elif name == "build-gate":                                     # (build-gate PERIMETER)
