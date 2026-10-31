@@ -39,9 +39,9 @@
 {"name": "39", "text": "(Ally sound)"}
 {"name": "40", "text": "(Enemy sound)"}
 {"name": "41", "text": "(Neutral sound)"}
-{"name": "42", "text": "What age are you in?"}
-{"name": "43", "text": "What is your strategy?"}
-{"name": "44", "text": "How many resources do you have?"}
+{"name": "42", "text": "What age are you in?", "answer": "We are in the {age}."}
+{"name": "43", "text": "What is your strategy?", "answer": "Our plan: attack at {attack}."}
+{"name": "44", "text": "How many resources do you have?", "answer": "We have {food} food, {wood} wood, {gold} gold and {stone} stone."}
 {"name": "45", "text": "Retreat now!"}
 {"name": "46", "text": "Flare the location of your army."}
 {"name": "47", "text": "Attack in direction of the flared location."}

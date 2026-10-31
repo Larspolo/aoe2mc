@@ -30,6 +30,7 @@ the AoE2 AI does. After the kill they go back to their last resource and source.
 Town defense (#3954): an enemy unit in the sight of a bot building or villager gets the attack order of the bot soldiers
 that are not in a wave, also before the attack time, as the AoE2 AI does. When it dies or leaves, they walk back.
 """
+import json
 import math
 import os
 import re
@@ -64,6 +65,7 @@ RETRY = 60.0                                                       # AoE2 second
 STALL = 30.0                                                       # AoE2 seconds with no step nearer and no damage
 DEFENDERS = 3                                                      # villagers that attack one predator
 LEVELS = {r["name"]: r for r in table.load("difficulty.jsonl")}    # "AI difficulty", in the order of the AoE2 lobby
+ANSWERS = {r["name"]: r["answer"] for r in table.load("taunts.jsonl") if "answer" in r}   # the taunts 42 to 44 (#4829)
 
 
 def level_of(setting, k):
@@ -119,6 +121,7 @@ class Bot:
         self.g.work_on = False                                         # the bot gives the tasks after a build or a tree (#3271)
         self.scouted = False                                           # the start scouts get Auto Scout once (#3704)
         self.script = None if script is None else per.Script(script, self)
+        self.said = {}                                                 # AoE2 player -> taunts it sent that the bot read (#4829)
 
     def setup(self):
         """Find the villagers of the player (the entities must be loaded) and make the objective of the resources."""
@@ -173,9 +176,29 @@ class Bot:
         self.g.step()
         self.orders()
 
+    def answer(self):
+        """Answer the taunts 42 to 44 of an allied person with one line to the team of the bot, as the AoE2 AI does
+        (#4829). The taunts of each Gather since the last call (Gather.taunted) are read once."""
+        g = self.g
+        for x in {id(x): x for x in [*build.sides(g), g]}.values():
+            log = getattr(x, "taunted", [])
+            for n in log[self.said.get(x.player, 0):]:
+                if n in ANSWERS and x.player != g.player and gather.allied(g.players, g.player, x.player):
+                    text = ANSWERS[n].format(**self.facts())
+                    g.command(f"tellraw @a[team=p{g.player}] " + json.dumps({"text": text, "color": "gray"}))
+            self.said[x.player] = len(log)
+
+    def facts(self):
+        """The values of the answers: the age name, the attack time (AoE2 mm:ss) and the stock of the bot."""
+        g = self.g
+        m, s = divmod(int(self.attack), 60)
+        return {"age": build.AGE_NAMES[build.ages(g)], "attack": f"{m}:{s:02d}",
+                **{r: g.stock[r] for r in ("food", "wood", "gold", "stone")}}
+
     def orders(self):
         """Orders for the idle villagers, the sites, the queues and the soldiers."""
         g = self.g
+        self.answer()
         if not self.scouted:                                           # the AoE2 AI scouts the map at the start (#3704)
             self.scouted = True
             scouts = {scout.CAVALRY, *scout.SCOUTS.values()}
