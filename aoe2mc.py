@@ -567,7 +567,7 @@ def saved_match(path):
     end = int.from_bytes(data[:4], "little") if len(data) >= 8 else 0
     if not 8 < end <= len(data) and raw_deflate(data):  # a DE save: one raw deflate stream, no prefix (#4706)
         end = len(data) + 8                              # the record form: header_length, a zero chapter address
-        data = end.to_bytes(4, "little") + bytes(4) + data   # mgz 1.8.51 fails on save 68.9 at offset 447 (saved-games.md)
+        data = end.to_bytes(4, "little") + bytes(4) + data   # new_saves reads the header of save 68.9 (#5178)
     if not 8 < end <= len(data):
         raise SystemExit(f"{path}: not a saved game of AoE2 DE (no header block)")
     if len(data) < end + 4:
@@ -822,6 +822,39 @@ def new_saves():
         src = src.replace(old, new)
     exec(compile(src, header.__file__, "exec"), header.__dict__)
     header.parse_de.new_saves = True
+    lobby_at_end(header)
+
+
+SAVE_LOBBY_MAP = 60     # the offset of the map size in the lobby block of DE from save 66.3 (mgz parse_lobby)
+SAVE_LOBBY_TAIL = 24    # save 68.9: the bytes after the seed of the lobby, the end of the header (#5178)
+
+
+def lobby_at_end(header):
+    """Save 68.9 has the trigger version 5.0 (mgz finds the triggers only by 4.5 and earlier) and, after the
+    triggers, a block of the XS state with no length (395 813 bytes in both samples; a script changes it). So
+    parse_scenario stops at a wrong place, and parse_lobby reads other bytes: zeros in a record, the end of the data
+    in a save (#5178). The lobby is the last block of the header: find it by its map size, which parse_map of the same
+    header reads first, from the end back; a place counts only when the lobby then ends at the tail of the header."""
+    seen, parse_map, parse_lobby = {}, header.parse_map, header.parse_lobby
+
+    def map_(data, version, save):
+        seen["map"] = m = parse_map(data, version, save)
+        return m
+
+    def lobby(data, version, save):
+        at, buf = data.tell(), data.getvalue()
+        size, hit = struct.pack("<I", seen["map"]["dimension"]) if seen.get("map") else b"", len(buf)
+        while save > 66.6 and size and (hit := buf.rfind(size, at, hit)) >= at + SAVE_LOBBY_MAP:
+            data.seek(hit - SAVE_LOBBY_MAP)
+            try:
+                found = parse_lobby(data, version, save)
+                if data.tell() == len(buf) - SAVE_LOBBY_TAIL:
+                    return found
+            except (struct.error, AssertionError, ValueError):
+                pass
+        data.seek(at)
+        return parse_lobby(data, version, save)
+    header.parse_map, header.parse_lobby = map_, lobby
 
 
 TIMELINE_KEYS = {"building_id": "type", "unit_id": "type", "technology_id": "technology_id", "object_ids": "objects",
