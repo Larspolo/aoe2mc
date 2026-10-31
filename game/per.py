@@ -1148,26 +1148,36 @@ class Script:
         elif name == "up-add-cost-data":                              # (up-add-cost-data GOAL TYPE VALUE)
             src = {r: self.goals.get(args[0] + i, 0) for i, r in enumerate(COST_GOODS)}
             self.cost_add(self.cost_at, src, args[1], args[2])
-        elif name == "up-add-object-cost":                            # (up-add-object-cost TYPE OBJECT TYPE2 VALUE)
-            import build
+        elif name == "up-add-object-cost":                            # (up-add-object-cost c: OBJECT c: VALUE), airef
+            n, kind = self.named(args[0], args[1]), self.type_kind(args[2])
+            if n and kind:
+                self.cost_add(self.cost_at, self.object_cost(n), kind, args[3])
+        elif name == "up-add-research-cost":                          # (up-add-research-cost c: TECH c: VALUE), airef
             import train
-            ns = self.game(args[1], args[0])                          # a set adds the costs of its members
-            price = build.price if args[0] == "building" else train.price
-            cost = {}
-            for n in (ns if isinstance(ns, tuple) else (ns,) if ns else ()):
-                for r, v in price(self.bot.g, n).items():
-                    cost[r] = cost.get(r, 0) + v
-            self.cost_add(self.cost_at, cost, args[2], args[3])
-        elif name == "up-add-research-cost":                          # (up-add-research-cost TECH TYPE VALUE)
-            import train
-            n = self.game(args[0], "tech", "age")
-            if n:
-                self.cost_add(self.cost_at, train.price(self.bot.g, n), args[1], args[2])
+            n, kind = self.named(args[0], args[1], tech=True), self.type_kind(args[2])
+            n = self.game(n, "tech", "age") if n else None
+            if n and kind:
+                self.cost_add(self.cost_at, train.price(self.bot.g, n), kind, args[3])
 
     def cost_zero(self, first):
         """The 4 goals of the cost set that starts at first are 0."""
         for i in range(len(COST_GOODS)):
             self.goals[first + i] = 0
+
+    def object_cost(self, n):
+        """The cost (dict) of script name n for up-add-object-cost: the members of a set, or the unit of a line (-line)
+        that the player can train now (the last unlocked form, train.forms). An unknown name gives {}."""
+        import build
+        import train
+        ns = self.game(n, "unit", "building")
+        if isinstance(ns, str) and n.endswith("-line"):
+            ns = next((u for u in reversed(train.forms(ns)) if train.unlocked(self.bot.g, u)), ns)
+        price = build.price if names().get(n, {}).get("kind") == "building" else train.price
+        cost = {}
+        for m in (ns if isinstance(ns, tuple) else (ns,) if ns else ()):
+            for r, v in price(self.bot.g, m).items():
+                cost[r] = cost.get(r, 0) + v
+        return cost
 
     def cost_add(self, first, cost, kind, ref):
         """Add the operand (kind, ref) times cost, a dict of the stock resources, to the cost set that starts at first."""

@@ -40,13 +40,13 @@ def test_up_reset_cost_data_sets_its_four_goals_to_zero():
 
 def test_up_add_object_cost_adds_the_cost_of_a_unit_times_the_value():
     b = run("""(defrule (true) => (up-setup-cost-data 1 10))
-(defrule (true) => (up-add-object-cost unit archer c 2))""")
+(defrule (true) => (up-add-object-cost c: archer c: 2))""")
     assert goals_of(b, 10) == [2 * v for v in price(b, "archer")]
 
 
 def test_up_add_research_cost_subtracts_the_cost_of_a_technology_for_a_negative_value():
     b = run("""(defrule (true) => (up-setup-cost-data 1 10))
-(defrule (true) => (up-add-research-cost ri-architecture c -1))""")
+(defrule (true) => (up-add-research-cost c: ri-architecture c: -1))""")
     assert goals_of(b, 10) == [-v for v in price(b, "ri-architecture")]
 
 
@@ -67,7 +67,7 @@ def test_up_get_cost_delta_puts_the_stock_minus_the_set_into_four_goals():
 
 def test_the_cost_actions_that_add_need_a_set_first(capsys):
     b = run("""(defrule (true) => (set-goal 40 9))
-(defrule (true) => (up-add-object-cost unit archer c 2))
+(defrule (true) => (up-add-object-cost c: archer c: 2))
 (defrule (true) => (up-get-cost-delta 40))""")
     assert goals_of(b, 40) == [9, None, None, None]
     assert "cost data" in capsys.readouterr().err
