@@ -43,3 +43,4 @@ the owner chose another option, `-`: no recommendation) · principle (`P<n>`, or
 - 2026-10-29 · #3583 · Antiquity Mode (Return of Rome): epic #2263 excludes it now; a later roadmap feature `play:antiquity` adds the Return of Rome civilizations, ages, units and technologies (B) · taken · P4, P6, P1
 - 2026-10-29 · #3760 · Art of War challenges: own challenge maps of `tools/scenarios.py` with the start units, civilization, bot, goal and medal limits from `game/data/challenges.jsonl` (A), not the original DE scenario files · taken · P5, P4
 - 2026-10-30 · #4754 · Hidden civilizations: the lobby and diplomacy menus show "Player 2 (?)" for an enemy player (A), as AoE2 DE · taken · P1
+- 2026-10-31 · #5052 · Random map labels: `FIXED_POSITIONS` is true when the lobby box "Team Together" is on (the DE scripting guide, A); `TEAM_GAME` and `TEAMS_CONNECTED` are not in the guide: switches of the script authors, never defined (B) · taken · P1

@@ -156,18 +156,20 @@ king, the monument) wait for #3846.
 
 The labels of the owner's survey (#4855) that the scripts test and no script defines, except the size, mode, player
 and team labels (#4823, #4824, the player and team ticket). Source: the label counts of the survey (maps) and the use
-of each label in the scripts. Gap: the cloud blocks the hosts of the DE scripting guide (`docs.google.com`,
-`docs.racket-lang.org`, `plt.cs.northwestern.edu`, `twharris.dev`, 2026-10-31). A run with access must check the
-lobby setting of each label against the guide ("Definitive Random Map Scripting Guide", Zetnus).
+of each label in the scripts. The cloud blocked the hosts of the DE scripting guide (`docs.google.com`,
+`docs.racket-lang.org`, `plt.cs.northwestern.edu`, `twharris.dev`, 2026-10-31). The `/human` session of #5052 read the
+guide ("Definitive Random Map Scripting Guide", Zetnus, section "Conditionals" → "Lobby Settings", 2026-10-31): "guide"
+in the Source column names a label of that list, "not in the guide" a label that the list does not have. The list has
+`0_TEAM_GAME` to `4_TEAM_GAME` and `TEAM_POSITIONS` (DE), but no `TEAM_GAME` and no `TEAMS_CONNECTED`.
 
 | Label (maps) | Lobby setting | Option | Changes the land | Source |
 |---|---|---|---|---|
-| `ANTIQUITY_MODE` (80) | Antiquity Mode (Return of Rome rules) | `run.py --antiquity`; `aoe2mc.py --antiquity` (#5017) | yes (start objects) | survey, `run.py` |
-| `DARK_AGE_START` (83) | Starting age: Dark Age | `run.py --age`; `aoe2mc.py --age` (#5016) | yes (start objects) | survey, `run.py` |
-| `ENABLE_TREATY` (16) | Treaty length above 0 | `run.py --treaty` | no (game rule) | survey, `run.py` |
-| `FIXED_POSITIONS` (3) | Lock positions in the lobby order | none | yes (player places) | survey; the player and team ticket |
-| `INFINITE_RESOURCES` (171) | Starting resources: Infinite | `run.py --resources`; `aoe2mc.py --resources` (#5016) | yes (mine and food amounts) | survey, `run.py` |
-| `LOW_RESOURCES` (10) | Starting resources: Low | `run.py --resources`; `aoe2mc.py --resources` (#5016) | yes (mine and food amounts) | survey, `run.py` |
-| `NOMAD_MAP` (77) | Nomad start (no town center) | `aoe2mc.py --nomad` (#5017) | yes (start objects) | survey |
-| `TEAM_GAME`, `TEAMS_CONNECTED` (62, 23) | Teams in the lobby, "Team together" | `--teams` | yes (player places) | survey; the player and team ticket |
+| `ANTIQUITY_MODE` (80) | Antiquity Mode (Return of Rome rules) | `run.py --antiquity`; `aoe2mc.py --antiquity` (#5017) | yes (start objects) | survey, `run.py`, guide |
+| `DARK_AGE_START` (83) | Starting age: Dark Age | `run.py --age`; `aoe2mc.py --age` (#5016) | yes (start objects) | survey, `run.py`, guide |
+| `ENABLE_TREATY` (16) | Treaty length above 0 | `run.py --treaty` | no (game rule) | survey, `run.py`; not in the guide |
+| `FIXED_POSITIONS` (3) | The lobby box "Team Together" is on | none yet (#5050) | yes (player places) | guide; decision #5052 |
+| `INFINITE_RESOURCES` (171) | Starting resources: Infinite | `run.py --resources`; `aoe2mc.py --resources` (#5016) | yes (mine and food amounts) | survey, `run.py`, guide |
+| `LOW_RESOURCES` (10) | Starting resources: Low | `run.py --resources`; `aoe2mc.py --resources` (#5016) | yes (mine and food amounts) | survey, `run.py`, guide |
+| `NOMAD_MAP` (77) | Nomad start (no town center) | `aoe2mc.py --nomad` (#5017) | yes (start objects) | survey; not in the guide (the guide has the map type `NOMAD`) |
+| `TEAM_GAME`, `TEAMS_CONNECTED` (62, 23) | none: switches of the script authors, never defined | none | no (the lobby never defines them) | not in the guide; decision #5052 |
 | `AZUREMASKING`, `EXTREME_ELEVATION`, `LEGACY_CODE`, `LEGACY_RELICS`, `NOMAD_CASTLE`, `NOMAD_HERDABLE`, `NOMAD_SCATTERED`, `NOMAD_TREATY`, `NOMAD_UNIT`, `REGICIDE_*` variants, `SEASONS_ALLOWMUDDYSHALLOWS`, `EMPIRE_WARS_*` variants, `*_ALLOW_FEEDING`, `DEBUG_MODE`, `TERRAIN_DEBUGGING`, `GNR_*`, `*_CAA_*` | none: switches of the script authors | none | no (the lobby never defines them) | survey |
