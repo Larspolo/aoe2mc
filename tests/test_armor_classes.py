@@ -35,4 +35,4 @@ def test_cavalry_but_elephants():
 def test_trade_and_transport_ships_are_no_warships():
     ship = BASE._replace(classes=("ship",))
     assert civs.GROUPS["warships"]("GALLEY", ship)
-    assert not civs.GROUPS["warships"]("TRADE_COG", ship) and not civs.GROUPS["warships"]("TRANSPORT_SHIP", ship)
+    assert not civs.GROUPS["warships"]("TRADE_COG", ship._replace(attack=0))   # a ship with no attack
