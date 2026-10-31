@@ -242,6 +242,7 @@ class Script:
         self.escrow, self.pct = {}, {}                             # resource -> escrow; -> escrow percentage (#4682)
         self.last = None                                           # the stock after the last step: new income
         self.rings = {}                                            # perimeter -> the sides of its wall ring (ring())
+        self.heard, self.read = set(), {}                          # (player, taunt) not acknowledged; player -> read
 
     def number(self, name):
         return self.sn.get(name, SN[name])
@@ -299,6 +300,7 @@ class Script:
     def step(self):
         """Check the facts of each rule that is not disabled and run the actions of each rule whose facts are true."""
         self.income()
+        self.hear()
         for k, rule in enumerate(self.rules):
             if k not in self.off and all(self.check(f) for f in rule.facts):
                 for a in rule.actions:
@@ -316,6 +318,14 @@ class Script:
                 self.escrow[r] = e
             else:
                 self.escrow.pop(r, None)
+
+    def hear(self):
+        """Keep the new taunts of each player (gather.Gather.taunted, #4827) until acknowledge-taunt, as AoE2 does."""
+        import build
+        for x in {id(x): x for x in [*build.sides(self.bot.g), self.bot.g]}.values():
+            log = getattr(x, "taunted", [])
+            self.heard.update((x.player, int(n)) for n in log[self.read.get(x.player, 0):])
+            self.read[x.player] = len(log)
 
     def check(self, f):
         name, args = f[0], f[1:]
@@ -368,8 +378,12 @@ class Script:
             return self.age(self.bot.g, *args)
         if name == "current-age-time":
             return self.compare(args[0], self.age_time(self.bot.g), args[1])
-        if name in ("taunt-detected", "players-taunt-detected"):  # the game program has no taunts yet: never true
-            return False
+        if name == "taunt-detected":                               # (taunt-detected PLAYER TAUNT)
+            return (args[0], args[1]) in self.heard
+        if name == "players-taunt-detected":                       # (players-taunt-detected PLAYER-TYPE TAUNT)
+            xs, every = self.sides(args[0])
+            got = [(x.player, args[1]) in self.heard for x in xs]
+            return bool(got) and (all(got) if every else any(got))
         if name == "wall-completed-percentage":                    # (wall-completed-percentage PERIMETER REL VALUE)
             return self.ring(args[0]) is not None and self.compare(args[1], self.walled(args[0]), args[2])
         if name == "enemy-buildings-in-town":
@@ -749,6 +763,8 @@ class Script:
             for _ in range(max(args[2], 0) // diplomacy.LOT):        # one tribute of the menu per 100
                 if not diplomacy.send(g, b.nobody, args[0], args[1]):
                     break
-        elif name not in ("do-nothing", "acknowledge-taunt", "chat-local-to-self", "enable-wall-placement"):
-            # no taunts; no one sees a self chat; each wall ring is always enabled (ring())
+        elif name == "acknowledge-taunt":                            # (acknowledge-taunt PLAYER TAUNT)
+            self.heard.discard((args[0], args[1]))
+        elif name not in ("do-nothing", "chat-local-to-self", "enable-wall-placement"):
+            # no one sees a self chat; each wall ring is always enabled (ring())
             self.warn("action", name)
