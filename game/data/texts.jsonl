@@ -1,3 +1,18 @@
 {"name": "aoe2mc.age_up", "en_us": "Player %s advances to the %s."}
+{"name": "aoe2mc.challenge.lost_bronze", "en_us": "%s units lost, bronze medal up to %s"}
+{"name": "aoe2mc.challenge.lost_gold", "en_us": "%s units lost, gold medal up to %s"}
+{"name": "aoe2mc.challenge.lost_none", "en_us": "%s units lost, no medal"}
+{"name": "aoe2mc.challenge.lost_silver", "en_us": "%s units lost, silver medal up to %s"}
+{"name": "aoe2mc.challenge.medal_bronze", "en_us": "Bronze medal"}
+{"name": "aoe2mc.challenge.medal_gold", "en_us": "Gold medal"}
+{"name": "aoe2mc.challenge.medal_silver", "en_us": "Silver medal"}
+{"name": "aoe2mc.challenge.no_medal", "en_us": "No medal"}
+{"name": "aoe2mc.challenge.time_bronze", "en_us": "Bronze medal in %s"}
+{"name": "aoe2mc.challenge.time_gold", "en_us": "Gold medal in %s"}
+{"name": "aoe2mc.challenge.time_silver", "en_us": "Silver medal in %s"}
 {"name": "aoe2mc.defeat", "en_us": "Defeat"}
+{"name": "aoe2mc.tutorial.complete", "en_us": "The tutorial is complete."}
+{"name": "aoe2mc.tutorial.complete_title", "en_us": "Tutorial complete"}
+{"name": "aoe2mc.tutorial.step_done", "en_us": "Step done"}
+{"name": "aoe2mc.tutorial.step_of", "en_us": "Step %s/%s: %s"}
 {"name": "aoe2mc.victory", "en_us": "Victory"}
