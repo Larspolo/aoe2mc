@@ -22,3 +22,5 @@ aoe2.heavengames.com
 files.heavengames.com
 steamcommunity.com
 airef.github.io
+docs.google.com
+*.googleusercontent.com
