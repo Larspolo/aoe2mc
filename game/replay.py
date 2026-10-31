@@ -928,6 +928,45 @@ class Replay:
             self.resources(p)[r] -= diplomacy.cost(g, n)
             self.resources(to)[r] += n
 
+    def timers(self, last):
+        """A "trigger" event at each time up to `last` (ms) of each timer trigger of the scenario of the record
+        (aoe2mc.json "timers", aoe2mc.timer_list, #5158): the replay clock runs them, so a pause, the speed and a jump
+        count for them as for the record."""
+        out = []
+        for x in self.data.get("timers", ()):
+            t = x["time"]
+            while t <= last:
+                out.append({"time": t, "kind": "trigger", "trigger": x})
+                if not x.get("every") or t == math.inf:
+                    break
+                t += x["every"]
+        return out
+
+    def trigger(self, e):
+        """The commands of a timer trigger at its time (#5158): its datapack function (texts, objects and all other
+        effects, as in the scenario mode); a looping one does not schedule itself again (timers()). The record has no
+        trigger results but the IDs, so a unit of "Create Object" waits for its object ID as a trained unit (unit()):
+        the later commands of the record move it, and the replay does not make it twice. The resources change the
+        estimate, as a tribute of the record."""
+        x, m = e["trigger"], self.grid()
+        out = [f"function aoe2mc:trigger/{x['id']}"] + [f"schedule clear aoe2mc:trigger/{x['id']}"] * bool(x.get("every"))
+        for u in x.get("units", ()):
+            bx, bz = (int((c + 0.5) * self.T) for c in u["tile"])
+            v = self.gather.Villager(u["uuid"], (bx + 0.5, float(m.y(bx, bz) or 0), bz + 0.5))
+            v.name, v.player, v.job = u["name"], u["player"], start_job(u["name"])
+            self.pop[v.player] = self.pop.get(v.player, 0) + 1
+            self.new.append((v.player, v))
+            if v.name.startswith("VILLAGER"):
+                self.villager(v.player, 1)
+            if self.ai:                                             # the AoE2 values, as newcomer()
+                import combat  # combat -> gather -> build -> replay
+                out += [combat.stats_command(v.uuid, v.name)] + \
+                    [c for c in [combat.range_command(v.uuid, v.name, self.T)] if c] + [f"tag {v.uuid} add {COUNTED}"]
+        for r in x.get("resources", ()):
+            stock = self.resources(r["player"])
+            stock[r["resource"]] = r["set"] if "set" in r else stock[r["resource"]] + r["add"]
+        return out
+
     def trade_text(self, e, r, amount, gold, color):
         """The trade as a text above its market for EFFECT_MS, and particles (#3942). The trades of one market within
         TRADE_MS join in one text with the sums. No known market: no commands."""
@@ -1036,6 +1075,8 @@ class Replay:
         if kind == "tribute" and e.get("to"):                   # the tributes change the estimate (#3940)
             self.tribute(e)
             return []
+        if kind == "trigger":                                   # a timer trigger of the scenario (#5158)
+            return self.trigger(e)
         if kind == "resign":
             return ["title @a subtitle " + json.dumps(text("The game ends")),
                     "title @a title " + json.dumps(text(f"{name} resigns", color))]
@@ -3346,6 +3387,8 @@ class Replay:
                 self.trade(e)
             elif e["kind"] == "tribute" and e.get("to"):
                 self.tribute(e)
+            elif e["kind"] == "trigger":                            # its state at `to`: units, resources (#5158)
+                out += self.commands(e)
         built(to)
         self.guessing = {}                                          # since `to`: the jump added the time before
         out += self.enter(to) + self.expire(to)
@@ -3440,8 +3483,9 @@ class Replay:
             self.camera = None
             self.send(["tellraw @a " + json.dumps(text("This record has no camera of its player.", "yellow"))])
         before = [dict(v, time=start) for v in views if v["time"] < start][-1:]   # a fresh replay after a jump back (#979):
+        timers = self.timers(max((e["time"] for e in self.data.get("timeline", [])), default=start))   # (#5158)
         events = sorted((e for e in self.data.get("timeline", []) + self.spawns() + news + shots + views + before   # the view
-                         if start <= e["time"] <= last),                                          # of its start (#5011)
+                         + timers if start <= e["time"] <= last),                                 # of its start (#5011)
                         key=lambda e: e["time"])                     # the record ends at `last`: no spawn after it
         g0, r0, lag, n, k = start, clock(), 0.0, 0, 0                 # game time g0 (ms) at real time r0
         self.speed, self.paused = speed, paused
@@ -3480,7 +3524,8 @@ class Replay:
                      if old < c["time"] <= last]
             shots.extend(later)
             add = [e for e in new if start <= e["time"] <= last] + [s for s in self.spawns() if old < s["time"] <= last] + \
-                [{"time": f["start"], "kind": "news", "fight": len(found) - len(fresh) + i} for i, f in enumerate(fresh)] + later
+                [{"time": f["start"], "kind": "news", "fight": len(found) - len(fresh) + i} for i, f in enumerate(fresh)] + later + \
+                [x for x in self.timers(last) if old < x["time"] <= last]          # the triggers of the new part (#5158)
             events[k:] = sorted(events[k:] + add, key=lambda e: e["time"])
             end = self.ended = max(end, events[-1]["time"]) if events else end
             send([f"bossbar set {BAR} max {max(1, int(end) // 1000)}"])
