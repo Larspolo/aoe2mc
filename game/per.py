@@ -229,6 +229,10 @@ SHARED = ("up-get-event", "up-get-shared-goal", "up-get-signal", "up-set-event",
 POINTS = ("up-add-point", "up-bound-point", "up-bound-precise-point", "up-copy-point", "up-cross-tiles",   # #4956
           "up-get-point", "up-get-point-distance", "up-lerp-percent", "up-lerp-tiles", "up-set-precise-target-point",
           "up-set-target-point")
+AT_POINT = ("up-get-path-distance", "up-get-point-contains", "up-path-distance", "up-point-contains")   # #4963
+NO_PATH = 65535                                                    # airef up-get-path-distance: the point is unreachable
+NEAR = 2                                                           # tiles around the point with option 0 ("a few tiles")
+PATH_CELLS = 20000                                                 # the path search limit (cells), as replay.PATH_CELLS
 UP_QUEUE = {"up-build": "build", "up-research": "research", "up-train": "train"}
 ORDERS = ("up-delete-distant-farms", "up-delete-idle-units", "up-reset-attack-now", "up-reset-building",
           "up-reset-unit", "up-retreat-now")
@@ -626,6 +630,8 @@ class Script:
             return self.compare(args[0], len(self.bot.guards) + len(self.bot.defense), args[1])
         if name == "up-idle-unit-count":                           # (up-idle-unit-count IDLE-TYPE REL VALUE)
             return self.idle_count(args[0], args[1], args[2])
+        if name in AT_POINT:
+            return self.at_point(name, args)
         if name in SEARCH:                                         # a find or a target as a fact: true when it did
             return bool(self.search_command(name, args))
         if name in SETUP:
@@ -1406,6 +1412,68 @@ class Script:
         xs = {x.player: x for x in build.sides(g)} | {g.player: g}
         return any(r[0] == oid for x in xs.values() for r in self.objects(x))
 
+    def places(self):
+        """[(id, game name, block rect [x0, z0, x1, z1))] of the standing objects of all players (objects()): the
+        footprint of a building or a site, the cell of a unit (its position on the server for a soldier)."""
+        import build
+        import combat
+        g = self.bot.g
+        out = []
+        for x in [g] + [x for x in build.sides(g) if x is not g]:
+            rect = {combat.target_uuid(o["footprint"]): o["footprint"] for o in x.data["objects"]
+                    if o["kind"] == "building" and o["player"] == x.player and "footprint" in o}
+            rect |= {combat.target_uuid(f := [s["footprint"][i] for i in (0, 2, 1, 3)]): f for s in x.sites}
+            cells = {u: v.cell for u, v in x.villagers.items()}
+            cells |= {u: (math.floor(p[0]), math.floor(p[2])) for u, p in x.positions(sorted(x.soldiers)).items()}
+            rect |= {u: [c[0], c[1], c[0] + 1, c[1] + 1] for u, c in cells.items()}
+            out += [(oid, name, rect[key]) for oid, key, name, _ in self.objects(x) if key in rect]
+        return sorted(out)
+
+    def at_point(self, name, args):
+        """The objects at a point and the walk path to it (airef "Points", #4963). up-get-point-contains POINT GOAL TYPE
+        OBJECT: the id of the first object of OBJECT (a name, an id or a class; -1: any) on the tile into GOAL, else
+        -1; up-point-contains POINT TYPE OBJECT. up-get-path-distance POINT OPTION GOAL: the length in tiles of the walk
+        path (Map.path) from the target object to the tile (OPTION 1) or to a tile within NEAR tiles (0), NO_PATH when
+        there is none, -2 with no target object; up-path-distance POINT OPTION REL VALUE. The fact: true when found."""
+        p = self.pair(args[0])
+        if name.endswith("contains"):
+            get = name == "up-get-point-contains"
+            kind = self.type_kind(args[2 if get else 1])
+            ref = self.operand(kind, args[3 if get else 2]) if kind else None
+            every = ref in (-1, "all-units-class")
+            want = None if ref is None or every else (sn := self.named("c:", ref)) and self.game(sn, "unit", "building")
+            want = (want,) if isinstance(want, str) else want or ()
+            T = self.bot.g.data["tile_size"]
+            hits = [] if p is None or not (every or want) else [
+                oid for oid, n, r in self.places() if (every or n in want)
+                and r[0] < (p[0] + 1) * T and p[0] * T < r[2] and r[1] < (p[1] + 1) * T and p[1] * T < r[3]]
+            if get:
+                self.goals[args[1]] = hits[0] if hits else -1
+            return bool(hits)
+        d = self.path_distance(p, args[1])
+        if name == "up-get-path-distance":
+            self.goals[args[2]] = d
+            return d != -2
+        return d != -2 and self.compare(args[2], d, args[3])
+
+    def path_distance(self, p, option):
+        """The walk path length in tiles from the target object to point p (at_point), NO_PATH or -2."""
+        rect = next((r for oid, _, r in self.places() if oid == self.target), None) if self.target else None
+        if rect is None:
+            return -2
+        m = self.bot.g.map
+        T, k = m.T, 0 if option == 1 else NEAR
+        own = {(x, z) for x in range(rect[0], rect[2]) for z in range(rect[1], rect[3])}
+        start = next(iter(own)) if len(own) == 1 else min(m.around(own), default=None)   # a building: a cell next to it
+        goals = set() if p is None else {c for dx in range(-k, k + 1) for dz in range(-k, k + 1)
+                                         for c in m.cells((p[0] + dx, p[1] + dz)) if m.free(*c)}
+        if start is None or not goals:
+            return NO_PATH
+        path = m.path(start, goals, PATH_CELLS) if start not in goals else []
+        if path is None:
+            return NO_PATH
+        return round(sum(math.dist(a, b) for a, b in zip([start] + path, path)) / T)
+
     def search_command(self, name, args):
         """The object search of direct unit control (airef "DUC", #4957). up-find-local/-remote TYPE UNIT TYPE2 COUNT:
         add up to COUNT more ready objects of UNIT (a name, an id or a class) to the list; the scan goes on after the
@@ -1635,6 +1703,8 @@ class Script:
             self.order(name, args)
         elif name in SEARCH:
             self.search_command(name, args)
+        elif name in AT_POINT:
+            self.at_point(name, args)
         elif name == "enable-timer":
             self.timers[args[0]] = b.time + args[1]
         elif name == "disable-timer":
