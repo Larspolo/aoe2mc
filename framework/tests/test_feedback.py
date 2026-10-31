@@ -13,7 +13,7 @@ def test_only_owner_comments_without_a_lock_ref():
     comments = [comment(1, "Are all cheats implemented?", when="2026-10-26T14:09:00Z"),
                 comment(2, "Taken over." + FOOTER),                         # agent: footer
                 comment(3, "Started by `x`.", app={"slug": "claude"}),      # agent: through the GitHub App
-                comment(4, "Looks good", login="someone"),                  # another user: data only
+                comment(4, "Looks good", login=feedback.OWNER + "-other"),   # another user (not an owner): data only
                 comment(5, "A", when="2026-10-26T11:00:00Z"),
                 comment(6, "Do this first")]                                # locked: another run handles it
     refs = [{"ref": "refs/heads/claim/comment-6"}, {"ref": "refs/heads/claim/938-2"},

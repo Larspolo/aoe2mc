@@ -1377,7 +1377,7 @@ class Gather:
         map_table.tick(self)
         menu.clicks(self)
         cheats.clicks(self)
-        cheats.taunts(self)
+        self.taunted = getattr(self, "taunted", []) + [n for _, n in cheats.taunts(self)]   # for AI scripts (#4827)
         self.command(f"execute as {self.who} unless items entity @s container.* minecraft:carrot_on_a_stick[!custom_data] "
                      "run give @s minecraft:carrot_on_a_stick")       # not a group item
         if self.calls % GROUP_GIVE == 0:

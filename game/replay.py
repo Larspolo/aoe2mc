@@ -2748,10 +2748,11 @@ class Replay:
                 lines.setdefault(p, []).append(f"{mmss(e['time'])} {line}")
         return self.book_command("Timeline", lines)
 
-    def book_pages(self, lines):
+    def book_pages(self, lines, players=False):
         """The pages of a written book with a page per player (lines: player -> text lines, #1068): each player starts a
-        page with a heading in its player color and its team (#1643); a long list goes on to the next page."""
-        pages = []
+        page with a heading in its player color and its team (#1643); a long list goes on to the next page. players=True:
+        the players page first (#4670)."""
+        pages = [self.players_page()] if players else []
         for p in sorted(lines):
             name, color = self.player(p)                            # the heading and an empty line
             team = self.team(p)
@@ -2769,6 +2770,18 @@ class Replay:
                          else {"text": page.strip("\n")})       # only the heading has a color, the lines are black
         return pages
 
+    def players_page(self):
+        """The first page of each book, as the AoE2 DE loading screen (#4670): a line per player in panel order, in its
+        player color (black for white), with its team in a team game and its rating (#4669; "now": the current one)."""
+        extra = []
+        for p in self.ranked(int(q) for q in self.data["players"] if q != "0"):
+            name, color = self.player(p)
+            info, team = self.data["players"][str(p)], self.team(p)
+            rating = f" · {info['rating']}{' now' if info.get('rating_now') else ''}" if "rating" in info else ""
+            extra.append({"text": f"\n{f'Team {team} · ' if team is not None else ''}{name}{rating}",
+                          "color": color if color != "white" else "black"})
+        return {"text": "Players", "bold": True, "extra": [dict(e, bold=False) for e in extra]}
+
     def book_command(self, title, lines):
         """A written book `title` with a page per player (lines: player -> text lines, #1068). Each player starts a page
         with a heading in its player color and its team (#1643); a long list goes on to the next page. One RCON
@@ -2776,7 +2789,7 @@ class Replay:
         if not lines:
             return []
         while True:
-            pages = self.book_pages(lines)
+            pages = self.book_pages(lines, players=True)
             book = {"title": title, "author": "aoe2mc", "pages": pages}
             cmd = "give @a minecraft:written_book[minecraft:written_book_content=" + \
                 json.dumps(book, ensure_ascii=False, separators=(",", ":")) + "]"
