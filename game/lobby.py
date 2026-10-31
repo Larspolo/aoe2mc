@@ -76,4 +76,6 @@ def choose(g, player, n):
         return False
     menu.close(g, player)
     g.command(f"tellraw {player} " + json.dumps({"text": f"You play {name(g, n)}.", "color": "gold"}))
+    if getattr(g, "data", {}).get("balance"):                      # the teams by the ratings after the last join (#5223)
+        ratings.join(g)
     return True
