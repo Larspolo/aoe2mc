@@ -731,8 +731,9 @@ class Script:
             return self.compare(args[0], self.random, args[1])
         if name == "doctrine":                                     # (doctrine VALUE)
             return self.doctrine == args[0]
-        if name == "shared-goal":                                  # (shared-goal ID REL VALUE)
-            return self.compare(args[1], self.table("shared-goal").get(args[0], 0), args[2])
+        if name == "shared-goal":                                  # (shared-goal ID REL VALUE) or (shared-goal ID VALUE): ==
+            op, v = ("==", args[1]) if len(args) == 2 else args[1:3]
+            return self.compare(op, self.table("shared-goal").get(args[0], 0), v)
         if name == "event-detected":                               # (event-detected TYPE ID): trigger events only
             return args[0] == "trigger" and bool(self.table("event").get(args[1], 0))
         if name in AFFORD:                                         # (can-afford-unit UNIT): the cost only (#5044)
