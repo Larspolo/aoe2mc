@@ -182,3 +182,13 @@ defines `PLAYERn_ALLY_COUNT` (0 with `PLAYERn_TEAM0`, else team size − 1) only
 `includes/scaling.inc` defines `MAPSCALE_SIDE` = `MAPSIZE_SIDE / 100`. Source: the owner's search of the game files and
 of the Zetnus guide (the guide has neither word, #5068). AoE2 DE reads an undefined constant in math (`#const`, `rnd`,
 `(...)`) as 0 with no error. `rmap.calc` does the same and `generate` warns once per word.
+
+## Research: object groups and tile shuffling (#5251)
+
+| Word | Meaning | `rmap` | Source |
+|---|---|---|---|
+| `create_object_group NAME { add_object TYPE PERCENT ... }` | A pool of object types in `<OBJECTS_GENERATION>`. A later `create_object NAME` places objects of the pool (for example all cow variants as `HERDABLE_A`). AoE2 DE ignores the percent: each type of the pool has the same chance | `objects()`: each placed object draws a type of the pool; an `add_object` with an undefined object is skipped | aoe2-rms docs (docs.racket-lang.org/aoe2-rms, "create-object-group", "add-object") |
+| `enable_tile_shuffling` (a `create_object` flag) | No public source found (web search, 2026-10-31). By its name: the candidate tiles in random order | read with no effect: `objects()` takes random free tiles already | none |
+
+The survey of #5087 also has `create_object: grouping` and `set_loose` (2 maps): no DE attribute has these names (the
+attribute is `set_loose_grouping`). The warnings stay.
