@@ -376,6 +376,7 @@ TYPE_IDS = {}                                                      # game name -
 for _r in table.load("per_names.jsonl"):
     if "id" in _r and "game" in _r and _r["kind"] in ("unit", "building"):
         TYPE_IDS.setdefault(_r["game"], _r["id"])
+TERRAIN_IDS = {r["name"]: r["id"] for r in table.load("per_names.jsonl") if r["kind"] == "terrain"}   # airef "pTerrain"
 SEARCH_MAX = {1: 240, 2: 40}                                       # the results of each list (airef "SearchSource")
 SEARCH_ORDER = {"search-order-asc": 1,                             # airef "SearchOrder" (up-clean-search)
                 "search-order-desc": 2,
@@ -617,6 +618,8 @@ class Script:
         kind, _, rel = op.rpartition(":")
         if rel not in OPS or kind not in ("", "c", "s", "g"):
             return self.warn("operator", op) or False
+        if isinstance(ref, str) and ref.startswith("terrain-"):    # a terrain name is its AoE2 ID (airef pTerrain)
+            ref = TERRAIN_IDS.get(ref) if ref in TERRAIN_IDS else self.warn("terrain", ref)
         ref = self.operand(kind, ref)
         return False if ref is None else OPS[rel](value, ref)
 
