@@ -132,12 +132,15 @@ jobs:
               else
                 # "Base branch was modified" and "Merge already in progress" come when two merges land in the same
                 # second: no label, the next sweep merges the PR or finds it merged (#3063).
-                if ! grep -qi "merge conflicts" <<<"$why" \
+                # A workflow file that main changed after the branch started: the squash makes a new workflow file,
+                # and GITHUB_TOKEN may not write one (also not the push of land()). Each sweep failed for 77 min
+                # (#4848): give the PR to a run, whose session push may (#4926).
+                if ! grep -qi "merge conflicts\|workflows. permission" <<<"$why" \
                    && [ "$(gh api "repos/$R/pulls/$n" --jq .mergeable_state)" != dirty ]; then
                   echo "#$n: the merge failed ($why) with no conflict: the next sweep tries again"; return
                 fi
                 gh api "repos/$R/issues/$n/labels" -f "labels[]=conflict" >/dev/null
-                printf 'CI is green, but the merge failed (%s). Merge `origin/main` into the branch and push (autopilot step 2).\n' \
+                printf 'CI is green, but the merge failed (%s). Merge `origin/main` into the branch from a session and push (autopilot step 2).\n' \
                   "$why" > body.md
                 gh api "repos/$R/issues/$n/comments" -F body=@body.md >/dev/null
                 conflict=1
