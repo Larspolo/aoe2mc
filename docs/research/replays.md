@@ -249,6 +249,15 @@ Patch for upstream mgz (`mgz/fast/header.py`, `parse_de`; a ticket of the owner,
          data.read(8)
 ```
 
+### A scenario game of save 68.9 (#5203)
+
+`samples/de-trigger-test.aoe2record` (the scenario `trigger_test`) stops in `mgz.fast.header.parse_scenario`, not
+in the DE header. The scenario file name (`aoc_string`) is not at the place of 66.6: it is 128 bytes later, after the
+64 bytes of DE. In a random map game both places hold an empty string, so the old read worked by chance. For save
+> 66.6, `new_saves()` reads 62 bytes after the 64, then the file name, then 4 bytes (not 68), then the 20 bytes as
+before. Two more steps of `mgz.model` fail for a scenario game: the instructions name no map (`could not detect
+encoding`; DE is UTF-8) and the map id 4294967293 is no builtin map. `new_saves()` makes both a custom map.
+
 ## Pitfalls
 
 Moved from `docs/LEARNINGS.md` (improve run, 2026-10-26).

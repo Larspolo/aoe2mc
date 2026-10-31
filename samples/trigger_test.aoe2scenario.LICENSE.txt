@@ -1,0 +1,10 @@
+samples/trigger_test.aoe2scenario
+
+Source: made for this project on 2026-10-31 (#5159) with AoE2ScenarioParser and the helpers of tools/scenarios.py
+(new_scenario, save), in the /human session of the owner (Larspolo). Format 1.59.
+Map: Tiny (120 x 120), grass, players 1 and 2 with a town center, 3 villagers and a scout each. Triggers:
+"Instructions at 10 s" (Display Instructions), "Militia at 30 s" (Create Object: a Militia of player 1 at 34, 34),
+"Food at 60 s" (Modify Resource: +100 food of player 1).
+Use: the scenario of samples/de-trigger-test.aoe2record (#5155).
+
+License: GNU General Public License version 3, as the repository (the file LICENSE).

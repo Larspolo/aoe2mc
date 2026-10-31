@@ -852,6 +852,30 @@ def new_saves():
         src = src.replace(old, new)
     exec(compile(src, header.__file__, "exec"), header.__dict__)
     header.parse_de.new_saves = True
+    # A scenario game of save 68.9 (#5203): the scenario file name comes 128 bytes after the place of save 66.6
+    # (an empty string in a random map game), and the 24 bytes after it end at the same instructions.
+    src = textwrap.dedent(inspect.getsource(header.parse_scenario))
+    old = "    if save >= 66.6:\n        data.read(68)\n"
+    if src.count(old) == 1:
+        exec(compile(src.replace(old, "    if save > 66.6:\n        data.read(62)\n        scenario_filename = aoc_string(data)\n"
+                                      "        data.read(4)\n    elif save >= 66.6:\n        data.read(68)\n"),
+                     header.__file__, "exec"), header.__dict__)
+    # Its instructions name no map (no encoding marker; DE is UTF-8) and its map id is not a builtin map: a custom map.
+    from mgz.common import map as mgz_map
+    extract, lookup = mgz_map.extract_from_instructions, mgz_map.lookup_name
+
+    def extract_from_instructions(instructions):
+        try:
+            return extract(instructions)
+        except ValueError:
+            return "utf-8", "unknown", "Unknown"
+
+    def lookup_name(map_id, name, version, reference):
+        try:
+            return lookup(map_id, name, version, reference)
+        except ValueError:
+            return name, True
+    mgz_map.extract_from_instructions, mgz_map.lookup_name = extract_from_instructions, lookup_name
     lobby_at_end(header)
 
 
