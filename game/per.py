@@ -190,6 +190,7 @@ def read(path, defined=()):
 NAMES = {}                                                         # script name -> its line of per_names.jsonl
 OPS = {"<": operator.lt, "<=": operator.le, ">": operator.gt, ">=": operator.ge, "==": operator.eq, "!=": operator.ne}
 MATH = ("=", "+", "-", "*", "/", "z/", "mod", "min", "max", "neg", "%*", "%/")   # airef "mathOp" (up-modify-*)
+IDLE_IDS = ("idle-type-villager", "idle-type-trade-cart", "idle-type-fishing-ship", "idle-type-trade-cog")  # airef pIdleType
 RULE_CHECKS = 10000                     # the rule checks of one pass: a loop with no end stops there (airef RuleDelta)
 VICTORY_TYPES = {                  # run.py --victory: the airef VictoryType; one per line, in alphabetical order
     "conquest": 1,
@@ -1535,10 +1536,15 @@ class Script:
     def idle_count(self, kind, op, value):
         """up-idle-unit-count: idle-villagers (Gather.idle) or idle-military (no target of a wave or of the town defense)."""
         b = self.bot
-        if kind == "idle-villagers":
+        if isinstance(kind, int) and 0 <= kind < len(IDLE_IDS):     # airef pIdleType: the ids 0 to 3
+            kind = IDLE_IDS[kind]
+        row = names().get(kind) or {}
+        if kind in ("idle-villagers", "idle-type-villager"):
             n = sum(v.state == "idle" for v in b.g.villagers.values())
         elif kind == "idle-military":
             n = len(b.g.soldiers.keys() - b.targets.keys() - b.guards.keys())
+        elif row.get("kind") == "idle":                             # other types: the idle units of the game name
+            n = sum(s == row.get("game") for u, s in b.g.soldiers.items() if u not in b.targets and u not in b.guards)
         else:
             return self.warn("idle type", kind) or False
         return self.compare(op, n, value)
