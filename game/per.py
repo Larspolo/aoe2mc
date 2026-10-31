@@ -261,6 +261,7 @@ class Script:
         self.escrow, self.pct = {}, {}                             # resource -> escrow; -> escrow percentage (#4682)
         self.last = None                                           # the stock after the last step: new income
         self.rings = {}                                            # perimeter -> the sides of its wall ring (ring())
+        self.text, self.name = "", None                            # the text buffer of up-store-*; up-change-name (#4877)
         self.heard, self.read = set(), {}                          # (player, taunt) not acknowledged; player -> read
         self.cost_at = None                                        # the first goal of the current cost set (#4879)
 
@@ -434,6 +435,8 @@ class Script:
         if name in ("up-modify-goal", "up-modify-sn"):             # a command as a fact: it runs, and is true
             self.act(None, (name, *args))
             return True
+        if name == "up-compare-text":                              # (up-compare-text TEXT REL): the text buffer
+            return self.compare(args[1], self.text, str(args[0]))
         if name == "up-compare-goal":                              # (up-compare-goal GOAL REL VALUE)
             return self.compare(args[1], self.goals.get(args[0], -1), args[2])
         if name == "up-compare-sn":                                # (up-compare-sn SN REL VALUE)
@@ -1068,10 +1071,27 @@ class Script:
                     if diplomacy.stance(g, args[0]) == args[1]:
                         break
                     diplomacy.change(g, None, args[0])
-        elif name == "chat-to-all":
-            g.command("tellraw @a " + json.dumps({"text": f"<Player {g.player}> {args[0]}"}))
-        elif name == "chat-to-player":                              # only the people of that seat (team pN)
-            g.command(f"tellraw @a[team=p{args[0]}] " + json.dumps({"text": f"<Player {g.player}> {args[1]}"}))
+        elif name in ("chat-to-all", "chat-to-player", "up-chat-data-to-all", "up-chat-data-to-player"):
+            to, args = ("@a", args) if name.endswith("all") else (f"@a[team=p{args[0]}]", args[1:])   # a seat: team pN
+            text = args[0]
+            if name.startswith("up-"):                              # (up-chat-data-to-all TEXT TYPE VALUE)
+                kind = self.type_kind(args[1])
+                if kind is None or (value := self.operand(kind, args[2])) is None:
+                    return
+                text = text.replace("%d", str(value)).replace("%s", self.text)
+            who = self.name or f"Player {g.player}"
+            g.command(f"tellraw {to} " + json.dumps({"text": f"<{who}> {text}"}))
+        elif name == "up-change-name":
+            self.name = str(args[0])
+        elif name == "up-store-text":
+            self.text = str(args[0])
+        elif name == "up-store-player-name":                       # (up-store-player-name PLAYER)
+            self.text = g.players.get(str(args[0]), {}).get("name") or f"Player {args[0]}"
+        elif name == "up-store-map-name":                          # (up-store-map-name EXTENSION): no name gives ""
+            self.text = str(g.data.get("map") or "")
+        elif name in ("up-store-tech-name", "up-store-type-name"):  # (up-store-type-name TYPE ID): a script name
+            value = self.typed(args[0], args[1])
+            self.text = value if isinstance(value, str) else ""     # the game program has no table of the AoE2 ids
         elif name in ("buy-commodity", "sell-commodity"):           # the path of the market menu (#4573)
             import market
             if self.trade_ok(name == "buy-commodity", args[0]):
@@ -1085,6 +1105,7 @@ class Script:
                     break
         elif name == "acknowledge-taunt":                            # (acknowledge-taunt PLAYER TAUNT)
             self.heard.discard((args[0], args[1]))
-        elif name not in ("do-nothing", "chat-local-to-self", "enable-wall-placement"):
+        elif name not in ("do-nothing", "chat-local-to-self", "enable-wall-placement", "up-chat-data-to-self",
+                          "up-log-data"):
             # no one sees a self chat; each wall ring is always enabled (ring())
             self.warn("action", name)
