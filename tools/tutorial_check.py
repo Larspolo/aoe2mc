@@ -98,8 +98,15 @@ class Driver:
         stands on the ground in front of the building first."""
         x0, x1, z0, z1 = rect
         x, z = (x0 + x1) // 2, z1 + 3
-        self.g.command(f"tp {NAME} {x + 0.5} {self.g.map.y(x, z) or 64} {z + 0.5}")
+        y = self.g.map.y(x, z) or 64
+        self.g.command(f"tp {NAME} {x + 0.5} {y} {z + 0.5}")
         time.sleep(1.0)
+        if self.g.selected:                                            # a selection makes the right click an order
+            self.g.command(f"tp {NAME} {x + 0.5} {y} {z + 0.5} facing {x + 0.5} {y - 1} {z + 3.5}")   # (garrison, repair)
+            time.sleep(0.5)
+            self.c.click(self.c.size[0] // 2, self.c.size[1] // 2, button=1)   # a left click on the ground clears it (#1788)
+            time.sleep(1.5)
+            self.note(f"cleared the selection: {len(self.g.selected)} left")
         return self.c.pick(self.g, tuple(rect), dists=(6, 9, 12)) is not None
 
     def slot(self, name):
