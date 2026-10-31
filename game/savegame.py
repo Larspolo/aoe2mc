@@ -217,6 +217,7 @@ NOT_SAVED = (                                                          # the fie
     "limit_shown",                                                     # time_limit.py: the shown text
     "medal",                                                           # challenge.py: the medal at the end of the game
     "menu_opened",                                                     # train.open_menu: the time of the last open (spam clicks, #3267)
+    "music",                                                           # music.py: a loaded game starts the tracks again
     "near",                                                            # near.tick: a load sends the base values, the next pass the steps (#4333)
     "noui",                                                            # the cheat "noui": only the hints
     "ordering",                                                        # stance.py: a pending Patrol click, made again in the menu (#3355)
