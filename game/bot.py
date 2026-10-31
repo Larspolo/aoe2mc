@@ -66,6 +66,7 @@ STALL = 30.0                                                       # AoE2 second
 DEFENDERS = 3                                                      # villagers that attack one predator
 LEVELS = {r["name"]: r for r in table.load("difficulty.jsonl")}    # "AI difficulty", in the order of the AoE2 lobby
 ANSWERS = {r["name"]: r["answer"] for r in table.load("taunts.jsonl") if "answer" in r}   # the taunts 42 to 44 (#4829)
+WAIT = {r["name"]: r["wait"] for r in table.load("taunts.jsonl") if "wait" in r}         # taunt 37 before its age (#4884)
 
 
 def level_of(setting, k):
@@ -293,7 +294,11 @@ class Bot:
             if x.player == g.player or diplomacy.stance(g, x.player) != "ally":
                 continue
             for n in map(int, new):
-                if n == 59:
+                if n == 37:                                                # AoE2: the wonder goes first (#4884)
+                    self.order = ("WONDER", *(o for o in self.order if o != "WONDER"))
+                    if build.locked(g, "WONDER"):
+                        g.command(f"tellraw @a[team=p{g.player}] " + json.dumps({"text": WAIT["37"], "color": "gray"}))
+                elif n == 59:
                     self.giving.pop(x.player, None)
                 elif n in (38, 58, 60):
                     if not market.markets(g):
