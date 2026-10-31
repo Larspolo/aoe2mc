@@ -298,6 +298,12 @@ def names():
     return NAMES
 
 
+def airef_id(value, kind):
+    """The airef id of a name of kind ("effect" or "attribute", per_names.jsonl); a number or another name stays (#5130)."""
+    row = names().get(value) if isinstance(value, str) else None
+    return row["id"] if row and row["kind"] == kind else value
+
+
 # The strategic numbers of AoE2 DE with their defaults and ids (airef "Strategic numbers", #4685): only the gatherer
 # percentages and the attack group sizes change the bot (Script.number); the others keep their value for the script.
 SN = {r["name"]: r["default"] for r in table.load("per_numbers.jsonl")}
@@ -2714,6 +2720,7 @@ class Script:
 
         import aoe2mc
         x = self.bot.g
+        effect, attribute = airef_id(effect, "effect"), airef_id(attribute, "attribute")   # the names of airef (#5130)
         op = {0: 1, 4: 2, 5: 4}.get(effect)
         n = self.game(OBJECT_IDS.get(unit, unit) if isinstance(unit, int) else unit, "unit", "building")
         cls, q = (value // 256, value % 256) if attribute in (8, 9) else (None, value)
