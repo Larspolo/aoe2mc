@@ -14,6 +14,7 @@ from aoe2mc import player_color  # noqa: E402
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import build  # noqa: E402
 import menu  # noqa: E402
+import ratings  # noqa: E402
 
 SLOT = 2                                                           # the slot of the button in the Game menu
 BUTTON = ("player_head", "Choose your player", "Play another AoE2 player.")
@@ -47,18 +48,22 @@ def count(g):
     return max(getattr(game, "seats", ()), default=game.people)
 
 
-def items(g, player):
-    """Slot n - 1: the wool of the color of player n, its name and who has it."""
+def items(g, player, table=None):
+    """Slot n - 1: the wool of the color of player n, its name, who has it and the rating of that player (#5167)."""
+    table = ratings.load() if table is None else table
     out = []
     for n in range(1, count(g) + 1):
         color = g.players.get(str(n), {}).get("color") or player_color(n)
         who = sorted(p for p, k in g.game.sides.items() if k == n)
         lore = "You" if player in who else f"Taken by {who[0]}" if who else "Free"
+        rating = ratings.lore(who[0], table) if who else ""
+        lore += f" · {rating}" if rating else ""
         out.append((n - 1, f"{color}_wool", name(g, n, g.game.sides.get(player)), lore))
     return out
 
 
 def show(g, player):
+    ratings.tab(g)
     menu.show(g, player, "Choose your player", items(g, player), lambda p, slot, shift: choose(g, p, slot + 1))
 
 
