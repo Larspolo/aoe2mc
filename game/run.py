@@ -1091,6 +1091,16 @@ def interrupt():
         signal.raise_signal(signal.SIGINT)
 
 
+def lobby_mode(world, default):
+    """The game mode of the lobby of a random map world (aoe2mc.json "lobby" "mode", #4825), else default."""
+    try:
+        with open(os.path.join(world, "aoe2mc.json")) as f:
+            mode = (json.load(f).get("lobby") or {}).get("mode")
+    except (OSError, ValueError):
+        return default
+    return mode if mode in MODES else default
+
+
 def given(ap, argv):
     """The names (dest) of the options of ap that the command line argv gives: parse it with no defaults."""
     defaults = [(x, x.default) for x in ap._actions]
@@ -1366,6 +1376,8 @@ def main(argv=None, scenario=None):
             ap.error(f"--challenge {a.challenge} is closed: win a medal in {challenge.CHALLENGES[a.challenge]['after']} first")
     if a.camera and a.follow is not None:
         ap.error("--camera and --follow N both move the spectators: give only one of them")
+    if "mode" not in given(ap, argv):              # the --game-mode of a random map conversion (#4825)
+        a.mode = lobby_mode(a.world, a.mode)
     import savegame
     state = savegame.read(a.load) if a.load else None
     if state:                                        # the settings of the save, but the options given here win (#2325)
