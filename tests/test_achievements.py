@@ -7,13 +7,15 @@ import os
 import aoe2mc
 
 FORM = {"name": str, "title": str, "description": str, "icon": str, "parent": str, "event": str}
+OPTIONAL = {"civ": str, "mode": str}   # limit a line to a civilization and a game mode (#5281)
 
 
 def test_each_line_has_the_form_and_a_known_parent():
     names = [r["name"] for r in aoe2mc.ACHIEVEMENTS]
     assert len(names) == len(set(names))
     for r in aoe2mc.ACHIEVEMENTS:
-        assert set(r) == set(FORM) and all(isinstance(r[k], t) for k, t in FORM.items()), r
+        assert set(FORM) <= set(r) <= set(FORM) | set(OPTIONAL), r
+        assert all(isinstance(r[k], t) for k, t in {**FORM, **OPTIONAL}.items() if k in r), r
         assert r["icon"].startswith("minecraft:") and (r["parent"] == "root" or r["parent"] in names), r
 
 

@@ -133,7 +133,7 @@ In scope: the lines of `data/achievements.jsonl` (the advancement tab "Age of Em
 | ACHIEVEMENT_THE_WONDER | The Wonder, the Wonder, Noooooo... | Build a Wonder. | out |
 | ACHIEVEMENT_PLEASANT_PEASANT | Pleasant Peasant | Build 1,000 Farms in total. | out |
 | ACHIEVEMENT_SUPREMELY_UNEXPECTED | Supremely Unexpected | Win a match as the Spanish while only creating Villagers. | out |
-| ACHIEVEMENT_LONG_LIVE_THE_KING | The King Is Dead, Long Live the King! | Win a Regicide game. | out |
+| ACHIEVEMENT_LONG_LIVE_THE_KING | The King Is Dead, Long Live the King! | Win a Regicide game. | in |
 | ACHIEVEMENT_MARCO_POLO | Marco Polo | Explore 99% of a ludicrously sized map. | out |
 | ACHIEVEMENT_RELIC_HUNTER | Relic Hunter | Collect 100 Relics. | out |
 | ACHIEVEMENT_BIRD_SHOOTING | Bird Shooting | Kill an enemy Scout Cavalry with your Town Center. | out |
