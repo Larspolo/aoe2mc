@@ -946,6 +946,29 @@ class Script:
             self.pct[args[0]] = min(max(args[1], 0), 100)
         elif name == "release-escrow":
             self.escrow.pop(args[0], None)
+        elif name in ("up-buy-commodity", "up-sell-commodity"):          # (up-buy-commodity RES TYPE VALUE): VALUE trades
+            import market
+            buy = name == "up-buy-commodity"
+            for _ in range(max(self.operand(args[1].rstrip(":"), args[2]) or 0, 0)):
+                if not self.trade_ok(buy, args[0]) or not market.trade(g, b.nobody, args[0], buy):
+                    break                                              # the first trade that fails stops the rest
+        elif name == "up-tribute-to-player":                           # (up-tribute-to-player PLAYER RES TYPE VALUE)
+            import diplomacy
+            if args[1] not in STOCK:
+                return self.warn("resource", args[1])
+            for _ in range(max(self.operand(args[2].rstrip(":"), args[3]) or 0, 0) // diplomacy.LOT):
+                if not diplomacy.send(g, b.nobody, args[0], args[1]):
+                    break
+        elif name == "up-modify-escrow":                               # (up-modify-escrow RES OP VALUE), as income()
+            if args[0] not in STOCK:
+                return self.warn("resource", args[0])
+            if (new := self.math(args[1], self.escrow.get(args[0], 0), args[2])) is not None:
+                if new := min(max(new, 0), g.stock[args[0]]):
+                    self.escrow[args[0]] = new
+                else:
+                    self.escrow.pop(args[0], None)
+        elif name == "up-release-escrow":
+            self.escrow.clear()
         elif name == "attack-now":
             self.attacking = True
         elif name == "enable-timer":
