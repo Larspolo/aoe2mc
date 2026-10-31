@@ -61,3 +61,4 @@
 {"name": "SAXONS_VICTORY", "title": "Saxons Victory", "description": "Win a game playing as the Saxons.", "icon": "minecraft:white_banner", "parent": "AGE_OF_EMPIRES", "event": "win SAXONS"}
 {"name": "VARANGIANS_VICTORY", "title": "Varangians Victory", "description": "Win a game playing as the Varangians.", "icon": "minecraft:white_banner", "parent": "AGE_OF_EMPIRES", "event": "win VARANGIANS"}
 {"name": "DANES_VICTORY", "title": "Danes Victory", "description": "Win a game playing as the Danes.", "icon": "minecraft:white_banner", "parent": "AGE_OF_EMPIRES", "event": "win DANES"}
+{"name": "LONG_LIVE_THE_KING", "title": "The King Is Dead, Long Live the King!", "description": "Win a Regicide game.", "icon": "minecraft:golden_helmet", "parent": "root", "event": "win", "mode": "regicide"}

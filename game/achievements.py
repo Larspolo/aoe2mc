@@ -2,7 +2,8 @@
 aoe2mc:<key> of data/achievements.jsonl (written by aoe2mc.advancement_files, #5278) to the Minecraft players of
 player n. Minecraft shows the toast and the chat line (/advancement grant). A bot (share set) has no Minecraft player.
 Events (the key "event" of a line): "win" or "win <CIV>" (cheats.over, each player with won(n)); "age <TECH>" with an
-optional "before" in game seconds (recap.aged, train.research). "win all" needs the wins of earlier games: not here."""
+optional "before" in game seconds (recap.aged, train.research). An optional "civ" (a key of game/data/civs.jsonl) and
+"mode" (a game mode of game/data/setup.jsonl, gather.has_mode) limit a line to that civilization and mode (#5281). "win all" needs the wins of earlier games: not here."""
 import json
 import os
 import sys
@@ -23,12 +24,20 @@ def grant(g, n, key):
     g.command(f"advancement grant @a[team=p{n}] only aoe2mc:{key}")
 
 
+def matches(g, h, r):
+    """True when the civilization of the player of h and the game mode of g match the "civ" and "mode" keys of line r."""
+    if "civ" in r and not (hasattr(h, "data") and civs.real(h, h.player) == r["civ"]):
+        return False
+    return "mode" not in r or getattr(g, "mode", None) == r["mode"] or r["mode"] in getattr(g, "modes", ())
+
+
 def event(g, h, name, seconds=None):
-    """Grant each line whose event is `name` to the player of Gather h (not a bot)."""
+    """Grant each line whose event is `name` (and whose civ and mode match) to the player of Gather h (not a bot)."""
     if getattr(h, "share", None) or not hasattr(g, "command"):    # a bot, or a test double with no server
         return
     for r in ROWS:
-        if r.get("event") == name and (seconds is None or seconds < r.get("before", float("inf"))):
+        if (r.get("event") == name and (seconds is None or seconds < r.get("before", float("inf")))
+                and matches(g, h, r)):
             grant(g, h.player, r["name"].lower())
 
 
