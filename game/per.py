@@ -400,6 +400,7 @@ class Script:
 
     def __init__(self, rules, bot):
         self.rules, self.bot = list(rules), bot
+        self.random, self.doctrine = 0, 0                          # generate-random-number, set-doctrine (#5047)
         self.off = set()                                           # the rules after disable-self
         self.goals, self.timers = {}, {}                           # goal id -> value; timer id -> AoE2 second due
         self.aged = {}                                             # player -> (ages, AoE2 second of the last age up)
@@ -726,6 +727,14 @@ class Script:
             return diplomacy.stance(self.bot.g, args[0]) == args[1]
         if name in ("can-train", "can-build", "can-research", "research-available", "research-completed"):
             return self.can(name, args[0])
+        if name == "random-number":                                # (random-number REL VALUE) (#5047)
+            return self.compare(args[0], self.random, args[1])
+        if name == "doctrine":                                     # (doctrine VALUE)
+            return self.doctrine == args[0]
+        if name == "shared-goal":                                  # (shared-goal ID REL VALUE)
+            return self.compare(args[1], self.table("shared-goal").get(args[0], 0), args[2])
+        if name == "event-detected":                               # (event-detected TYPE ID): trigger events only
+            return args[0] == "trigger" and bool(self.table("event").get(args[1], 0))
         if name in AFFORD:                                         # (can-afford-unit UNIT): the cost only (#5044)
             n = self.game(args[0], *AFFORD[name])
             return bool(n) and self.paid(self.price(n))
@@ -935,7 +944,7 @@ class Script:
                 "current-age-time": lambda: self.age_time(g),
                 **{k: (lambda k=k: self.unit_counts(k, g)) for k in COUNTS},
                 "current-score": lambda: self.score(g), "game-type": lambda: GAME_TYPES.get(getattr(g, "mode", ""), 0),
-                "fe-sub-game-type": lambda: 0, "starting-resources": lambda: 0, "wall-invisible-percentage": lambda: 0,
+                "fe-sub-game-type": lambda: 0, "random-number": lambda: self.random, "starting-resources": lambda: 0, "wall-invisible-percentage": lambda: 0,
                 "escrow-amount": lambda: self.escrow.get(param, 0) if g is b.g else 0}.get(name, lambda: None)()
 
     def unit_counts(self, name, g):
@@ -2620,6 +2629,27 @@ class Script:
             self.gate(args[0])
         elif name == "spy":                                            # Spies at once, no castle (airef)
             self.spy()
+        elif name in ("enable-rule", "disable-rule"):                  # (disable-rule ID): the rule ID, from 0 (#5047)
+            (self.off.discard if name == "enable-rule" else self.off.add)(args[0])
+        elif name == "generate-random-number":                         # (generate-random-number N): 1 to N (airef)
+            self.random = 1 + int(self.rng.integers(max(args[0], 1)))
+        elif name == "set-doctrine":
+            self.doctrine = args[0]
+        elif name == "set-signal":                                     # (set-signal ID)
+            self.table("signal")[args[0]] = 1
+        elif name == "acknowledge-event":                              # (acknowledge-event TYPE ID)
+            self.table("event").pop(args[1], None)
+        elif name == "set-shared-goal":                                # (set-shared-goal ID VALUE)
+            self.table("shared-goal")[args[0]] = args[1]
+        elif name in ("delete-unit", "delete-building"):               # (delete-unit TYPE): one own object
+            import demolish
+            import stance
+            if name == "delete-unit" and (units := self.of_type("c:", args[0])):
+                stance.delete_units(g, units[:1])
+            elif name == "delete-building" and (rects := self.of_type("c:", args[0], "building")):
+                demolish.delete(g, b.nobody, rects[0])
+        elif name == "cc-add-resource":                                # (cc-add-resource RES N): as up-cc-add-resource
+            self.act(k, ("up-cc-add-resource", *args))
         elif name == "disable-self":
             self.off.add(k)
         elif name == "set-goal":
