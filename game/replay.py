@@ -73,6 +73,7 @@ TEAM_STEP = 10000           # sidebar score of a team game: team key × TEAM_STE
 COUNTED = "aoe2mc.pop"      # entity tag of the units that the population counts (#787)
 SUDDEN_DEATH = "Sudden Death"  # the lobby type of a Sudden Death record (#4894)
 WONDER_MODES = {"Wonder Race": "wonder-race", "Defend the Wonder": "defend-the-wonder"}   # lobby type -> mode (#4896)
+CAPTURE_RELIC = "Capture the Relic"  # the lobby type of a Capture the Relic record (#4895)
 REGICIDE = "Regicide"       # the lobby type of a Regicide record (mgz game_types, aoe2mc.json "lobby", #4835)
 EFFECT = "aoe2mc.effect"    # entity tag of the texts above a building (#843)
 TRADE_MS = 2000              # the trades of one market within this time join in one text (#3942)
@@ -454,6 +455,7 @@ class Replay:
         self.relic_at, self.relic_gold = 0, {}  # game time (ms) of the last relic gold, player -> gold not yet whole (#4011)
         self.kings, self.regicided = self.start_kings(), {}   # Regicide (#4835): player -> UUIDs of its live Kings;
         # player -> game time (ms) of the death of its last King
+        self.relic_won = None                   # Capture the Relic (#4895): (player, game time (ms)) of the first relic home
         self.towns, self.town_lost = self.start_towns(), {}      # Sudden Death (#4894): players with a town center;
         # player -> game time (ms) of the fall of its town center
         self.wonders, self.wonder_shown = {}, {}  # Wonder modes (#4896): player -> game time (ms) of its timer start;
@@ -2520,7 +2522,12 @@ class Replay:
         if ref is None:
             return []
         self.relics[ref].update(monk=None, home=rect, player=p, home_t=t)
-        return [f"kill @e[type=item_display,tag=aoe_relic_{ref}]"]
+        out = [f"kill @e[type=item_display,tag=aoe_relic_{ref}]"]
+        if self.relic_won is None and self.lobby_text() == CAPTURE_RELIC:   # the first relic home wins, as capture_relic.tick
+            self.relic_won = (p, t)
+            name, color = self.label(p)
+            out.append("tellraw @a " + json.dumps([text(name, color), text(" takes the relic to a monastery and wins.")]))
+        return out
 
     def drop(self, ref, cell):
         """The commands of relic ref that drops on the block cell (monk.lay: a pot block, #4013)."""
@@ -2777,6 +2784,10 @@ class Replay:
             mode = next(k for k, v in WONDER_MODES.items() if v == self.wonder_mode())
             out.append("tellraw @a " + json.dumps([text(name, color), text(
                 f": wonder timer from {mmss(self.wonders[p])}, ends {mmss(self.wonders[p] + self.wonder_ms())} ({mode})")]))
+        if self.relic_won:                                             # Capture the Relic (#4895)
+            name, color = self.label(self.relic_won[0])
+            out.append("tellraw @a " + json.dumps([text(name, color), text(
+                f": wins, relic in a monastery {mmss(self.relic_won[1])} (Capture the Relic)")]))
         if lobby := self.lobby_text(True):                                  # the lobby settings of the record (#4833)
             out.append("tellraw @a " + json.dumps(text(lobby, "gray")))
         for p in self.ranked(self.pop.keys() | self.villagers.keys() | self.gathered.keys() | self.army.keys()
@@ -2999,6 +3010,8 @@ class Replay:
             king += " · Out" if p in self.town_lost else ""                # Sudden Death (#4894)
             if p in self.wonders:                                          # the wonder timer (#4896)
                 king += f" · Wonder {self.wonder_left(p, now)} y"
+            king += " · Relic" if self.lobby_text() == CAPTURE_RELIC and any(   # the carrier of the relic (#4895)
+                (v := self.units.get(r["monk"])) is not None and v.player == p for r in self.relics.values()) else ""
             if self.named.get(p) != (line := f"{name}{king} · {self.ages.get(p, 'Dark')} · {res} (est.){relics}{apm}"):
                 out.append(f"scoreboard players display name P{p} {POP} {json.dumps(text(line, color))}")
                 self.named[p] = line
