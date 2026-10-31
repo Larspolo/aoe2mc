@@ -67,6 +67,7 @@ DEFENDERS = 3                                                      # villagers t
 LEVELS = {r["name"]: r for r in table.load("difficulty.jsonl")}    # "AI difficulty", in the order of the AoE2 lobby
 FLARE_NEAR = 16                                                     # blocks: an enemy near a flare (#4888)
 ANSWERS = {r["name"]: r["answer"] for r in table.load("taunts.jsonl") if "answer" in r}   # the taunts 42 to 44 (#4829)
+FOCUS = {r["name"]: r["focus"] for r in table.load("taunts.jsonl") if "focus" in r}   # the taunts 72 to 74 (#4886)
 WAIT = {r["name"]: r["wait"] for r in table.load("taunts.jsonl") if "wait" in r}         # taunt 37 before its age (#4884)
 
 
@@ -126,6 +127,7 @@ class Bot:
         self.scouted = False                                           # the start scouts get Auto Scout once (#3704)
         self.script = None if script is None else per.Script(script, self)
         self.said = {}                                                 # AoE2 player -> taunts it sent that the bot read (#4829)
+        self.focus = None                                              # the building name the allies ask for by taunts 72 to 74 (#4886)
 
     def setup(self):
         """Find the villagers of the player (the entities must be loaded) and make the objective of the resources."""
@@ -340,6 +342,8 @@ class Bot:
                         g.command(f"tellraw @a[team=p{g.player}] " + json.dumps({"text": WAIT["37"], "color": "gray"}))
                 elif n == 59:
                     self.giving.pop(x.player, None)
+                elif str(n) in FOCUS:                                          # the allies ask for one class (#4886)
+                    self.focus = FOCUS[str(n)]
                 elif n in (38, 58, 60):
                     if not market.markets(g):
                         g.command("tellraw @a " + json.dumps({"text": f"<Player {g.player}> I have no market: I cannot "
@@ -628,6 +632,8 @@ class Bot:
         takes the gold above keep(), and the bot never has the cost of its next technology (#4495)."""
         g, keep, army = self.g, self.keep(), self.reserve()
         for rect, name in sorted(train.homes(g).items(), key=lambda kv: (kv[1] != "TOWN_CENTER", kv[0])):
+            if self.focus and name not in ("TOWN_CENTER", self.focus):         # an ally asked for one class (#4886)
+                continue
             more = len(g.villagers) + sum(e["name"] == "VILLAGER_MALE" for q in g.queues.values() for e in q)
             units = ["VILLAGER_MALE"] if name == "TOWN_CENTER" else self.soldiers(name)
             hold = keep if name == "TOWN_CENTER" else army
