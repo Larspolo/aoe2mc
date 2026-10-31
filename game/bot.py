@@ -27,6 +27,8 @@ first attack, "soldiers" in the first wave. AoE2 does not publish what each leve
 
 Defense (#3399): a predator in the sight of a bot villager gets the hunt order of the DEFENDERS nearest villagers, as
 the AoE2 AI does. After the kill they go back to their last resource and source.
+Navy (#4883): taunts 34 and 75 of an ally give a dock on the shore near the town and warships, 35 stops them, 71
+deletes the warships above FLEET.
 Town defense (#3954): an enemy unit in the sight of a bot building or villager gets the attack order of the bot soldiers
 that are not in a wave, also before the attack time, as the AoE2 AI does. When it dies or leaves, they walk back.
 """
@@ -53,6 +55,7 @@ import train  # noqa: E402
 SHARE = {"food": 0.4, "wood": 0.3, "gold": 0.2, "stone": 0.1}     # the villagers on each resource (a simple AoE2 bot)
 WOOD = 0.2                                                         # the wood share for farms and houses with an army
 SPARE = 200                                                        # stock above the needs: the resource gets no share
+FLEET = 10                                                         # warships that taunt 71 keeps (#4883)
 QUEUED = 2                                                         # units in the queue of each building of the bot
 # The build order after the houses (the key "bot" of data/build.jsonl), and the resource that a drop site goes next to
 FAR = 12                                                           # tiles from a drop site to its sources (remote)
@@ -116,6 +119,7 @@ class Bot:
         self.sides = (None, {})                                        # (own and foe places, {tile: at home}) (#1810)
         self.told, self.signal = {}, None                              # player -> taunts read; "now", "wait" (#4828)
         self.giving, self.heard = {}, {}                               # ally -> "extra" or "all" (#4830); -> taunts read
+        self.navy = None                                               # True: taunt 34 or 75 of an ally, False: 35 (#4883)
         self.g.home = self.home                                        # the next bush or mine of Gather.nearest too
         self.guarded = -LOOK                                           # AoE2 seconds of the last look for predators
         self.defense = {}                                              # villager -> (predator, last res, last tree)
@@ -293,7 +297,16 @@ class Bot:
             if x.player == g.player or diplomacy.stance(g, x.player) != "ally":
                 continue
             for n in map(int, new):
-                if n == 59:
+                if n in (34, 75):
+                    self.navy = self.shore() is not None
+                    if not self.navy:
+                        g.command("tellraw @a " + json.dumps({"text": f"<Player {g.player}> I have no water near my "
+                                                                      "town: I cannot build a navy.", "color": "gray"}))
+                elif n == 35:
+                    self.navy = False
+                elif n == 71:
+                    self.scuttle()
+                elif n == 59:
                     self.giving.pop(x.player, None)
                 elif n in (38, 58, 60):
                     if not market.markets(g):
@@ -585,6 +598,8 @@ class Bot:
         for rect, name in sorted(train.homes(g).items(), key=lambda kv: (kv[1] != "TOWN_CENTER", kv[0])):
             more = len(g.villagers) + sum(e["name"] == "VILLAGER_MALE" for q in g.queues.values() for e in q)
             units = ["VILLAGER_MALE"] if name == "TOWN_CENTER" else self.soldiers(name)
+            if name == "DOCK" and self.navy is False:                      # taunt 35 stops the warships (#4883)
+                units = []
             hold = keep if name == "TOWN_CENTER" else army
             for n in units[:1]:
                 while len(g.queues.get(rect, [])) < QUEUED and (n != "VILLAGER_MALE" or more < self.villagers) \
@@ -601,6 +616,31 @@ class Bot:
         for r, v in (train.price(g, n) if n else {}).items():
             need[r] = need.get(r, 0) + v
         return need
+
+    def warships(self):
+        """The own military units that a dock trains (#4883)."""
+        dock = set(self.soldiers("DOCK"))
+        return sorted(u for u, n in self.g.soldiers.items() if n in dock)
+
+    def scuttle(self):
+        """Taunt 71: kill the warships above FLEET with their boats, as the AoE2 Delete key (stance.delete)."""
+        for u in self.warships()[FLEET:]:
+            self.g.command(f"execute as {u} on vehicle run kill @s")
+            self.g.command(f"kill {u}")
+        train.census(self.g)
+
+    def shore(self, reach=12):
+        """A dock footprint on the shore (build.shore) near the town center, nearest first, or None."""
+        g, center = self.g, self.center()
+        if center is None:
+            return None
+        T, (cx, cz) = g.map.T, (center[0] // g.map.T, center[1] // g.map.T)
+        for tx, tz in sorted(((x, z) for x in range(cx - reach, cx + reach + 1) for z in range(cz - reach, cz + reach + 1)),
+                             key=lambda t: (math.dist(t, (cx, cz)), t)):
+            rect = build.area(g, "DOCK", (tx * T, tz * T))
+            if rect[0] >= 0 and rect[2] >= 0 and build.shore(g, rect):
+                return rect
+        return None
 
     def soldiers(self, name):
         """The military units that building name trains now (recruit trains the first one)."""
@@ -685,6 +725,10 @@ class Bot:
                     self.builder(site)
             return
         if self.script:                                                # the script builds (per.Script.act, #4529)
+            return
+        if self.navy and "DOCK" not in train.homes(g).values() and not build.locked(g, "DOCK") \
+                and all(g.stock[r] >= v for r, v in build.price(g, "DOCK").items()) and (rect := self.shore()) and g.villagers:
+            self.builder(build.found(g, "DOCK", rect))                     # the navy of an ally's taunt (#4883)
             return
         cap, have = train.limit(g), train.owned(g)
         farms = sum(k > 0 for t, k in g.map.farms.items() if t in g.map.own_farms)
