@@ -702,7 +702,8 @@ class Replay:
             return []
         self.grid()                                                     # self.gather and the start units
         shown, out = vars(self).setdefault("inspected", {}), []
-        at = {i: v.pos for i, v in self.units.items() if v.pos is not None and v.uuid not in self.hidden}
+        at = {i: self.at(v, t, False) for i, v in self.units.items()        # a walking unit: its place on the leg
+              if v.pos is not None and v.uuid not in self.hidden}             # (#5312), not the end of the leg
         now = clock()
         for name in sorted(getattr(self.game, "joined", ())):         # run.Game.op_joined: no RCON command
             seen = self.eye(name)
