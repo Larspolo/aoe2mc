@@ -39,6 +39,10 @@ SAME_AS = {
 # Differences that aoe2mc keeps on purpose (#5297): (name, key): the reason, one entry per line.
 ACCEPTED = {
     ("AOE2_WORK", "farm"): "an aoe2mc farmer stands still: 0.33 is the farm rate that an AoE2 player gets (#5244)",
+    ("ECONOMIC_POLICY", "cost"): "the Athenian policies are switches: aoe2mc takes the cost from civs.jsonl (policies)",
+    ("ECONOMIC_POLICY", "time"): "the Athenian policies are switches: the game gives time 0, aoe2mc keeps its own switch time (#5305)",
+    ("MILITARY_POLICY", "cost"): "the Athenian policies are switches: aoe2mc takes the cost from civs.jsonl (policies)",
+    ("NAVAL_POLICY", "cost"): "the Athenian policies are switches: aoe2mc takes the cost from civs.jsonl (policies)",
 }
 
 
@@ -253,9 +257,15 @@ def compare(dat, units, techs, tables, civs=None):
     for kind, rate in tables.get("AOE2_WORK", {}).items():
         u = base_unit(dat, GATHERERS[kind]) if kind in GATHERERS else None
         got = work_rate(u) if u else None
-        if got is not None and not same(rate, got) and ("AOE2_WORK", kind) not in ACCEPTED:
+        if got is not None and not same(rate, got):
             out.append(f"AOE2_WORK {kind}: {rate}, {round(got, 3)}")
-    return out
+    return [x for x in out if not accepted(x)]
+
+
+def accepted(line):
+    """True when the name and the key of a line ("NAME key: ...") are in ACCEPTED (#5305)."""
+    head = line.split(":")[0].split()
+    return len(head) == 2 and tuple(head) in ACCEPTED
 
 
 def names():
