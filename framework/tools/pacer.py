@@ -224,12 +224,12 @@ def sweep():
         print(f"no sweep: {e}", file=sys.stderr)
 
 
-def stuck(open_all, refs, now, pulls, checks=head_checks, start_sweep=sweep):
+def stuck(open_all, refs, now, pulls, checks=None, start_sweep=sweep):
     """[(issue, takeover)] of the `in-progress` tickets whose run stopped (`claim.stuck`, as `claim.py 0 --stuck`).
     takeover: "PR #M BRANCH" of the open PR that closes the ticket, else "no PR". refs: the lines of
     `health.claim_refs`; None (git failed): no stuck ticket, else each ticket would look stuck. A PR that only waits
     for its quick CI or for Automerge (`ci_wait`) gives no takeover; a green one starts the sweep, once per call.
-    checks: sha -> the check runs of the head; start_sweep: None, no sweep (`--dry-run`)."""
+    checks: sha -> the check runs of the head (`head_checks`); start_sweep: None, no sweep (`--dry-run`)."""
     import claim
     if refs is None:
         return []
@@ -246,7 +246,11 @@ def stuck(open_all, refs, now, pulls, checks=head_checks, start_sweep=sweep):
     out, green = [], False
     for n, _ in claim.stuck(changed, {n: (s, t) for n, (_, s, t) in top.items()}, now):
         pr = next((p for p in pulls if claim.closes(n).search(claim.prose(p.get("body")))), None)
-        wait = pr and ci_wait(pr, checks(pr["head"]["sha"]))
+        try:
+            wait = pr and pr["head"].get("sha") and ci_wait(pr, (checks or head_checks)(pr["head"]["sha"]))
+        except Exception as e:                          # no check runs: take it over as before
+            print(f"#{n}: no checks of PR #{pr['number']}: {e}", file=sys.stderr)
+            wait = None
         if wait:
             print(f"#{n}: PR #{pr['number']} waits for {'its quick CI' if wait == 'run' else 'Automerge'}, no takeover",
                   file=sys.stderr)
