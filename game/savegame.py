@@ -199,6 +199,7 @@ NOT_SAVED = (                                                          # the fie
     "fallen_sent",                                                     # scenario.fallen: a load sets the same score again
     "flares",                                                          # flare.py: the flares of a replay
     "fog",                                                             # fog.py: the next tick hides the units again; explored()
+    "gaia",                                                            # gaia.py: a tick timer
     "garrison_sent",                                                   # scenario.garrisons: a load sends them again
     "gate_refs",                                                       # scenario.py: a load forgets the plugin gates, so put them again (#2762)
     "ghosts",                                                          # build.py: the shown building to place

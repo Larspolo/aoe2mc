@@ -69,6 +69,7 @@ import flare  # noqa: E402
 import fleet  # noqa: E402
 import fog  # noqa: E402
 import follow  # noqa: E402
+import gaia  # noqa: E402
 import garrison  # noqa: E402
 import goto  # noqa: E402
 import herd  # noqa: E402
@@ -2369,6 +2370,7 @@ class Gather:
             autoscout.tick(self)                                       # the Auto Scout order (#3702)
             fog.tick(self)                                             # after the bots: their units too (#1389)
             herd.tick(self)                                            # all players: the bots capture too (#1792)
+            gaia.tick(self)                                            # a Gaia unit joins the first player near it (#5108)
             if self.victory == "standard" or self.mode in wonder.RACE:  # a wonder or all relics win too (#2316)
                 wonder.tick(self, self.tick * NORMAL)                  # game seconds, as train.tick
             if self.victory == "standard" and self.mode not in wonder.RACE:   # Defend the Wonder (#2441),
