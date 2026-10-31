@@ -124,7 +124,7 @@ def test_the_selected_villagers_build_a_wall_line_and_a_gate_on_a_server(tmp_pat
         def click(name, tx, tz=12):
             x, z = tx * 4 + 2, tz * 4 + 2
             server.at, server.chosen = (x + 0.5, g.map.y(x, z) + 10, z + 0.5), build.MENU.index(name) + 1
-            g.click("Steve")
+            (g.left if g.paper else g.click)("Steve")                  # Paper: the left click places (#4703)
 
         click("PALISADE_WALL", 9)
         click("PALISADE_WALL", 12)                                     # 4 tiles: (9, 12) to (12, 12)
