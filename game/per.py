@@ -248,6 +248,16 @@ RESEARCH_STATE = {"research-available": 1,                         # airef "Rese
 SEARCH = ("up-add-object-by-id", "up-can-search", "up-clean-search", "up-find-local", "up-find-remote",   # #4957
           "up-full-reset-search", "up-get-search-state", "up-reset-filters", "up-reset-search", "up-set-target-by-id",
           "up-set-target-object")
+OBJECT_DATA = ("up-get-object-data", "up-get-object-target-data", "up-get-object-type-data", "up-get-upgrade-id",   # #4959
+               "up-object-data", "up-object-target-data", "up-remove-objects", "up-store-object-name")
+OBJECT_DATA_ROWS = {r["name"]: r for r in table.load("per_object_data.jsonl")}   # airef "ObjectData"
+OBJECT_VALUES = ("attack-stance", "base-attack", "garrisoned", "hitpoints", "id", "index", "maxhp", "pierce-armor",
+                 "player", "point-x", "point-y", "range", "status", "strike-armor", "type", "upgrade-type")
+STANCE_IDS = {"aggressive": 0, "defensive": 1, "stand_ground": 2, "no_attack": 3}   # airef "AttackStance"
+TYPE_IDS = {}                                                      # game name -> the AoE2 id (the first line wins)
+for _r in table.load("per_names.jsonl"):
+    if "id" in _r and "game" in _r and _r["kind"] in ("unit", "building"):
+        TYPE_IDS.setdefault(_r["game"], _r["id"])
 SEARCH_MAX = {1: 240, 2: 40}                                       # the results of each list (airef "SearchSource")
 SEARCH_ORDER = {"search-order-asc": 1,                             # airef "SearchOrder" (up-clean-search)
                 "search-order-desc": 2,
@@ -632,6 +642,8 @@ class Script:
             return self.idle_count(args[0], args[1], args[2])
         if name in SEARCH:                                         # a find or a target as a fact: true when it did
             return bool(self.search_command(name, args))
+        if name in OBJECT_DATA:
+            return bool(self.object_command(name, args))
         if name in SETUP:
             return self.setup(name, args)
         if name.startswith("players-"):                            # (players-FACT PLAYER ...): the other players
@@ -1542,6 +1554,90 @@ class Script:
         self.target = st["found"][ref]
         return True
 
+    def object_command(self, name, args):
+        """The data of the target object (airef "DUC", #4959): up-get-object-data DATA GOAL, up-object-data DATA REL
+        VALUE, the same of the target of the target (-target-), up-remove-objects SOURCE DATA REL VALUE,
+        up-get-object-type-data TYPE ID DATA GOAL, up-get-upgrade-id PLAYER OPTION GOAL OUTPUT, up-store-object-name.
+        A data name with no value in the game program gives -1 and one warning. The result: true (a fact)."""
+        if name == "up-store-object-name":
+            row = self.find_object(self.target)
+            self.text = next((n for n, r in names().items() if row and r.get("game") == row[2]), "")
+            return True
+        if name == "up-get-upgrade-id":                            # the type that the upgrades of the player make
+            own = args[0] in (self.bot.g.player, "my-player-number")
+            x = [self.bot.g] if own else self.sides(args[0])[0][:1]
+            unit = self.game(OBJECT_IDS.get(self.goals.get(args[2], -1), ""), "unit")
+            self.goals[args[3]] = TYPE_IDS.get(self.upgraded(x[0], unit), -1) if x and isinstance(unit, str) else -1
+            return True
+        if name == "up-get-object-type-data":
+            sn = self.named(args[0], args[1])
+            unit = sn and self.game(sn, "unit", "building")
+            self.goals[args[3]] = self.type_value(unit, args[2]) if isinstance(unit, str) else -1
+            return True
+        if name == "up-remove-objects":
+            src = SEARCH_SOURCE.get(args[0], args[0])
+            if src not in SEARCH_MAX:
+                return self.warn("search source", args[0]) or False
+            st = self.search[src]
+            st["found"] = [oid for i, oid in enumerate(st["found"])
+                           if not self.compare(args[2], i if self.data_name(args[1]) == "index" else
+                                               self.object_value(oid, args[1]), args[3])]
+            return True
+        oid = self.target if "-target-" not in name else self.warn("object target", "the target of an object")
+        if name.startswith("up-get-"):
+            self.goals[args[1]] = self.object_value(oid, args[0])
+            return True
+        return self.compare(args[1], self.object_value(oid, args[0]), args[2])
+
+    def data_name(self, data):
+        """The OBJECT_VALUES name of an ObjectData (a name or its id), or None with one warning."""
+        row = OBJECT_DATA_ROWS.get(data) or next((r for r in OBJECT_DATA_ROWS.values() if r["id"] == data), None)
+        return row["value"] if row and "value" in row else self.warn("object data", data)
+
+    def find_object(self, oid):
+        """(Gather, key, game name, status) of the standing object with id oid, or None."""
+        import build
+        g = self.bot.g
+        for x in [g, *(x for x in build.sides(g) if x is not g)]:
+            for i, key, n, st in self.objects(x):
+                if i == oid:
+                    return x, key, n, st
+        return None
+
+    def type_value(self, unit, data):
+        """A value of the type of an object (combat.stats), -1 when the game program has none."""
+        import combat
+        s, v = combat.stats(unit), self.data_name(data)
+        return {"type": TYPE_IDS.get(unit, -1), "maxhp": s.hp, "range": s.range, "base-attack": s.attack,
+                "strike-armor": s.melee, "pierce-armor": s.pierce}.get(v, -1)
+
+    def object_value(self, oid, data):
+        """A value of the object with id oid (airef "ObjectData"); -1 for no object or no value."""
+        import garrison
+        import stance
+        v, row = self.data_name(data), self.find_object(oid)
+        if v is None or row is None:
+            return -1
+        x, key, unit, st = row
+        if v in ("point-x", "point-y", "hitpoints"):
+            if v == "hitpoints":
+                hp = self.bot.hp(key)
+                return -1 if hp is None else math.ceil(hp)
+            p = x.positions([key]).get(key)
+            return -1 if p is None else int(p[0 if v == "point-x" else 2] // x.map.T)
+        if v == "upgrade-type":
+            return TYPE_IDS.get(self.upgraded(x, unit), -1)
+        return {"id": oid, "player": x.player, "status": st, "garrisoned": int(key in garrison.inside(x)),
+                "attack-stance": STANCE_IDS.get(stance.stance(x, key), 0)}.get(v, self.type_value(unit, data))
+
+    def upgraded(self, x, unit):
+        """The unit that the upgrades of the Gather x make of unit (train.lines of the researched UPGRADES)."""
+        import train
+        new = {old: n for t in train.UPGRADES if t in x.techs for old, n in train.lines(t, x)}
+        for _ in train.UPGRADES:
+            unit = new.get(unit, unit)
+        return unit
+
     def act(self, k, a):
         import build
         import train
@@ -1685,6 +1781,8 @@ class Script:
             self.order(name, args)
         elif name in SEARCH:
             self.search_command(name, args)
+        elif name in OBJECT_DATA:
+            self.object_command(name, args)
         elif name == "enable-timer":
             self.timers[args[0]] = b.time + args[1]
         elif name == "disable-timer":
