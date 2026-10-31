@@ -5,6 +5,7 @@ from . import NUMBER, RES, form
 def check(row):
     form(row, {"name": str}, {"drop": list, "work": dict, "fish": int, "shore": bool, "hunt": int, "herd": bool,
                               "farm": int, "dark": bool, "ship": list, "civilian": bool, "mine": list, "carry": int,
+                              "carry_rate": float,
                               "pace": float, "decay": float, "res": str})
     n = row["name"]
     assert len(row) > 1 and set(row.get("drop", ())) <= RES | {"meat"} and set(row.get("work", {})) <= RES, n

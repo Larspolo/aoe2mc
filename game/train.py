@@ -33,7 +33,7 @@ Fishing Lines at the dock in the Feudal Age and Gillnets (after it) in the Castl
 faster and carry 5 more food (gather.SHIP_TECHS, fleet.rate, fleet.carry).
 Horse Collar at the mill (#726): the live and the new farms of the player have 75 more food (gather.FARM_TECHS).
 Crop Rotation at the mill in the Imperial Age, after Heavy Plow (#1578): the farms have 175 more food (FARM_TECHS).
-Wheelbarrow at the town center in the Feudal Age (#728, the key "age"): villagers carry 3 more resources and walk 10 % faster (gather.CARRY, gather.PACE).
+Wheelbarrow at the town center in the Feudal Age (#728, the key "age"): villagers carry 27 % more resources and walk 10 % faster (gather.CARRY, gather.PACE).
 Scale Barding Armor at the blacksmith in the Feudal Age (#938): cavalry (also camels and elephants, not cavalry archers)
 gets +1 melee and +1 pierce armor (barding()).
 Bloodlines at the stable in the Feudal Age (#940): cavalry gets 20 more hit points, also a live unit (it keeps its lost

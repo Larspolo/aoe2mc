@@ -121,12 +121,13 @@ PLANTS = ("#minecraft:buttons", "#minecraft:flowers", "#minecraft:saplings", "#m
           "minecraft:brown_mushroom", "minecraft:moss_carpet", "minecraft:pale_moss_carpet", "minecraft:red_mushroom")
 BUSH_FOOD = 125                                                    # food in one fruit bush, as in AoE2 DE
 # AoE2 DE work rates per game second (#393): lumberjack 0.39 (empires2_x2_p1.dat, #267), the others the published
-# DE gather rates. Normal game speed is 1.7 game seconds per real second (#413).
+# DE gather rates; farm 0.33: the measured rate of a farmer, with the walk on the farm (the .dat 0.53, #5244). Normal game speed is 1.7 game seconds per real second (#413).
 AOE2_WORK, NORMAL = {"wood": 0.39, "food": 0.31, "farm": 0.33, "gold": 0.38, "stone": 0.36, "hunt": 0.41,
                      "fish": 0.43, "oyster": 0.38}, 1.7            # fish: a fisherman at a shore fish (#1283)
 WORK_SECONDS = {r: 1 / (w * NORMAL) for r, w in AOE2_WORK.items()}    # real seconds per unit, as at Normal speed
 WATCH_ROWS = {t['name']: t['watch'] for t in ROWS if t.get('watch')}   # true: combat.WATCH tiles, a number: that many
 CARRY = {t['name']: t['carry'] for t in ROWS if 'carry' in t}
+CARRY_RATE = {t['name']: t['carry_rate'] for t in ROWS if 'carry_rate' in t}   # a factor, as the .dat (#5244)
 FOOD_CARRY = {"HEAVY_PLOW": 1}                                     # more food only per trip, as in AoE2 (#1424)
 PACE = {t['name']: t['pace'] for t in ROWS if 'pace' in t}
 WORK_TECHS = {t['name']: t['work'] for t in ROWS if 'work' in t}   # work rate factors (#1577)
@@ -2115,9 +2116,11 @@ class Gather:
 
     def limit(self, res=None, kind=None):
         """The resources res that a villager carries, with the technologies of the player (CARRY, and FOOD_CARRY for
-        food) and the bonus of its civilization for gather kind (civs.carry, #2270)."""
+        food), the factors of Wheelbarrow and Hand Cart (CARRY_RATE, as empires2_x2_p1.dat, #5244) and the bonus of its
+        civilization for gather kind (civs.carry, #2270)."""
         more = CARRY | FOOD_CARRY if res == "food" else CARRY
-        n = self.carry + sum(more.get(t, 0) * train.count(self, t) for t in self.techs) + civs.carry(self, kind or res)
+        n = self.carry + sum(more.get(t, 0) * train.count(self, t) for t in self.techs)
+        n = round(n * math.prod(CARRY_RATE.get(t, 1) for t in self.techs)) + civs.carry(self, kind or res)
         return n if civs.turbo(self) == 1 else round(n * civs.turbo(self))   # Turbo Mode carries more (#2359)
 
     def follow(self, v):
