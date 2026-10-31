@@ -6,7 +6,9 @@ the new events to the replay (`Replay.play(more=...)`, #4662). It keeps the even
 game time back: the replay plays "newest event time − delay" or earlier, as the AoE2 DE spectator mode does.
 The game ended when the record has its end (mgz match.completed: a player resigned, #4664) or when the file did not
 grow for IDLE seconds (a crash, a draw, the players left): the source gives the rest, says the record is complete and
-logs one line that says why.
+logs one line that says why. AoE2 DE writes nothing while the game is paused (no pause action in the record, #4951):
+after PAUSE seconds with no growth the source logs one line that says the replay waits, and keeps the record open
+until the game ends (the record end, or IDLE seconds: 10 minutes).
 """
 import os
 import sys
@@ -16,7 +18,8 @@ import aoe2mc
 
 CHECK = 2.0                 # seconds of real time between two checks of the file size (a read takes about 2 s)
 DELAY = 30.0                # seconds of game time that the live replay stays behind the game (--delay)
-IDLE = 60.0                 # seconds of real time with no growth of the file: the game ended
+PAUSE = 60.0                # seconds of real time with no growth of the file: the game may be paused (log once)
+IDLE = 600.0                # seconds of real time with no growth of the file: the game ended
 
 
 class Source:
@@ -25,10 +28,12 @@ class Source:
     recorder, #4771); `turn`: the quarter turns of the world
     (aoe2mc.json)."""
 
-    def __init__(self, path, delay=DELAY, turn=0, read=None, clock=time.monotonic, check=CHECK, idle=IDLE, log=None):
+    def __init__(self, path, delay=DELAY, turn=0, read=None, clock=time.monotonic, check=CHECK, idle=IDLE, log=None,
+                 pause=PAUSE):
         if not os.path.isfile(path):
             raise OSError(f"--live: the record {path} does not exist")
         self.path, self.delay, self.clock, self.check, self.idle = path, delay * 1000, clock, check, idle
+        self.pause, self.waited = pause, None           # the growth time of the last pause line (one line a pause)
         self.log = log or (lambda m: print(m, file=sys.stderr))
         self.turn, self.read = turn, read or self.record
         self.ended, self.said = False, False             # the record has the end of the game; the end line is logged
@@ -84,7 +89,11 @@ class Source:
             return [], False
         self.asked = self.clock()
         self.poll()
-        idle = self.clock() - self.grew >= self.idle
+        quiet = self.clock() - self.grew
+        if quiet >= self.pause and self.waited != self.grew:
+            self.waited = self.grew
+            self.log(f"live: the record did not grow for {self.pause:g} s: the replay waits (the game is paused?)")
+        idle = quiet >= self.idle
         complete = self.ended or idle
         if complete and not self.said:
             self.said = True
