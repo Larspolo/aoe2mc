@@ -1174,7 +1174,9 @@ def objects(cmds, consts, terrain, starts, rng, warn, owner=None, ridges=(), lay
                 warn(f"create_object {args[0]}: unknown land_id {attrs['place_on_specific_land_id'][0]}")
                 continue
             ground = ground & np.isin(owner, land)
-        other = value(attrs["avoid_other_land_zones"][0], consts) if "avoid_other_land_zones" in attrs else 0
+        other = 0                                      # no argument: 1 tile, as AoE2 DE accepts it (Glacis, #5315)
+        if "avoid_other_land_zones" in attrs:
+            other = value(attrs["avoid_other_land_zones"][0], consts) if len(attrs["avoid_other_land_zones"]) else 1
         actor = value(attrs["actor_area"][0], consts) if "actor_area" in attrs else None
         reach = value(attrs["actor_area_radius"][0], consts) if "actor_area_radius" in attrs else 1
         second = kinds.get(value(attrs["second_object"][0], consts), (None, None))[1] if "second_object" in attrs else None
