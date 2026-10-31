@@ -355,9 +355,8 @@ SEARCH = ("up-add-object-by-id", "up-can-search", "up-clean-search", "up-filter-
           "up-find-remote", "up-find-resource", "up-find-status-local", "up-find-status-remote", "up-full-reset-search",
           "up-get-search-state", "up-reset-filters", "up-reset-search", "up-set-target-by-id", "up-set-target-object",
           "up-target-objects", "up-target-point")
-CMD_IDS = {"cmdid-military": 4,                                    # airef "CmdId" that the game program knows (#4958)
-           "cmdid-monk": 6,
-           "cmdid-villager": 3}
+FILTER_IDS = {r["name"]: r for r in table.load("per_filter_ids.jsonl")}   # airef CmdId, ActionId, OrderId (#5131)
+FILTER_BY_ID = {r["id"]: r for r in FILTER_IDS.values()}
 OBJECT_STATUS = {"status-down": 4,                                 # airef "ObjectStatus" (up-filter-status)
                  "status-gather": 5,
                  "status-pending": 0,
@@ -2110,16 +2109,23 @@ class Script:
 
     def set_filter(self, name, args):
         """up-filter-*: the filters of the finds (#4958); -1 ignores a value. up-filter-include and -exclude (CMDID
-        ACTION ORDER MAINLAND): the game program knows only the CMD_IDS; another value: one warning, ignored."""
+        ACTION ORDER MAINLAND): the ids of per_filter_ids.jsonl (FILTER_IDS); a value with no state in the game program:
+        one warning, ignored (#5131)."""
         if name in ("up-filter-include", "up-filter-exclude"):
-            vals = [CMD_IDS.get(args[0], args[0])] + list(args[1:4])
-            if vals[0] not in (-1, *CMD_IDS.values()):
-                self.warn("command id", args[0])
-                vals[0] = -1
-            for v in vals[1:]:
-                if v != -1:
-                    self.warn("action, order or mainland value", v)
-            self.filters[name[10:]] = [vals[0], -1, -1, -1]
+            vals = [-1, -1, -1, -1]
+            for i, (kind, v) in enumerate(zip(("cmd", "action", "order"), args[:3])):
+                row = FILTER_IDS.get(v) or FILTER_BY_ID.get(v)
+                if v == -1:
+                    continue
+                if row is None or row["kind"] != kind:
+                    self.warn(f"{kind} id", v)
+                elif not ("class" in row or "units" in row or "states" in row):
+                    self.warn(f"{kind} id", row["name"])                 # no state in the game program
+                else:
+                    vals[i] = row["id"]
+            if len(args) > 3 and args[3] != -1:
+                self.warn("mainland value", args[3])
+            self.filters[name[10:]] = vals
             return True
         if name == "up-filter-range":                              # (up-filter-range GARRISON-MIN MAX DISTANCE-MIN MAX)
             self.filters["garrison"], self.filters["distance"] = list(args[:2]), list(args[2:4])
@@ -2153,16 +2159,32 @@ class Script:
             out[u] = ((p[0] / T, p[2] / T), 0)
         return out
 
+    def is_like(self, x, key, name, row):
+        """True when the object key (game name) of the Gather x has the command, action or order of the line row of
+        per_filter_ids.jsonl (#5131). The state of a villager is its state in gather.Gather; a soldier with a target of
+        the bot attacks, another one is idle."""
+        import monk
+        if x is None:
+            return row.get("class") == "resource" and key.startswith("resource ")
+        if row["kind"] == "cmd":
+            cls = "villager" if key in x.villagers else ("monk" if name in monk.MONKS else "military") \
+                if key in x.soldiers else "resource" if key.startswith("resource ") else "building"
+            if "units" in row:
+                return name in row["units"]
+            return cls == row["class"] and not (cls == "building" and name in FILTER_IDS["cmdid-military-building"]["units"]) \
+                and not (cls == "military" and any(name in r.get("units", ()) for r in FILTER_IDS.values()))
+        st = x.villagers[key].state if key in x.villagers else \
+            ("attack" if key in vars(self.bot).get("targets", {}) else "idle") if key in x.soldiers else None
+        return st in row["states"]
+
     def passes(self, x, key, name):
         """True when the object key (game name) of the Gather x passes the include, exclude, garrison and distance
         filters (#4958). Distance: in tiles from the target point, else from the target object; none: no limit."""
-        import monk
         f = self.filters
-        cmd = 3 if x is not None and key in x.villagers else (6 if name in monk.MONKS else 4) \
-            if x is not None and key in x.soldiers else None
-        if f.get("include", [-1])[0] not in (-1, cmd) or f.get("exclude", [-1])[0] not in (-1, None) and \
-                f["exclude"][0] == cmd:
-            return False
+        for mode in ("include", "exclude"):
+            want = [FILTER_BY_ID[v] for v in f.get(mode, ()) if v != -1]
+            if want and all(self.is_like(x, key, name, r) for r in want) != (mode == "include"):
+                return False
         lo_g, hi_g = f.get("garrison", (-1, -1))
         lo_d, hi_d = f.get("distance", (-1, -1))
         if "garrisoned" in f:                                       # fe-filter-garrisoned (#5048)

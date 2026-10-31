@@ -19,8 +19,8 @@ def test_include_and_exclude_select_by_the_command_id():
     assert found(s, "(up-filter-exclude 3 -1 -1 -1) (up-find-local c: villager-class c: 20)") == (0, 0)
     assert found(s, "(up-find-local c: infantry-class c: 20)") == (2, 0)
     assert not s.warned
-    run(s, "(up-reset-filters) (up-filter-exclude 5 -1 -1 -1)")         # airef: trade units, not in the game program
-    assert s.warned == {("command id", 5)} and found(s, "(up-find-local c: villager-class c: 20)") == (5, 0)
+    run(s, "(up-reset-filters) (up-filter-exclude 0 -1 -1 -1)")         # airef: flags, not in the game program
+    assert s.warned == {("cmd id", "cmdid-flag")} and found(s, "(up-find-local c: villager-class c: 20)") == (5, 0)
 
 
 def test_distance_and_range_count_tiles_from_the_target_point():

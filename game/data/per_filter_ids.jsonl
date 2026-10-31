@@ -1,0 +1,57 @@
+{"name": "cmdid-civilian-building", "id": 2, "kind": "cmd", "class": "building"}
+{"name": "cmdid-fishing-ship", "id": 9, "kind": "cmd", "units": ["FISHING_SHIP"]}
+{"name": "cmdid-flag", "id": 0, "kind": "cmd"}
+{"name": "cmdid-livestock-gaia", "id": 1, "kind": "cmd", "class": "resource"}
+{"name": "cmdid-military", "id": 4, "kind": "cmd", "class": "military"}
+{"name": "cmdid-military-building", "id": 10, "kind": "cmd", "units": ["ARCHERY_RANGE", "BARRACKS", "CASTLE", "SIEGE_WORKSHOP", "STABLE"]}
+{"name": "cmdid-monk", "id": 6, "kind": "cmd", "class": "monk"}
+{"name": "cmdid-relic", "id": 8, "kind": "cmd"}
+{"name": "cmdid-trade", "id": 5, "kind": "cmd", "units": ["TRADE_CART", "TRADE_COG"]}
+{"name": "cmdid-transport", "id": 7, "kind": "cmd", "units": ["TRANSPORT_SHIP"]}
+{"name": "cmdid-villager", "id": 3, "kind": "cmd", "class": "villager"}
+{"name": "actionid-attack", "id": 600, "kind": "action", "states": ["attack"]}
+{"name": "actionid-build", "id": 602, "kind": "action", "states": ["build"]}
+{"name": "actionid-convert", "id": 604, "kind": "action"}
+{"name": "actionid-defend", "id": 601, "kind": "action"}
+{"name": "actionid-enter", "id": 617, "kind": "action"}
+{"name": "actionid-evade", "id": 616, "kind": "action"}
+{"name": "actionid-explore", "id": 605, "kind": "action"}
+{"name": "actionid-follow", "id": 612, "kind": "action"}
+{"name": "actionid-gather", "id": 609, "kind": "action", "states": ["chop"]}
+{"name": "actionid-heal", "id": 603, "kind": "action"}
+{"name": "actionid-hunt", "id": 613, "kind": "action", "states": ["hunt"]}
+{"name": "actionid-move", "id": 610, "kind": "action", "states": ["to_drop", "to_prey", "to_rally", "to_repair", "to_site", "to_tree"]}
+{"name": "actionid-patrol", "id": 611, "kind": "action"}
+{"name": "actionid-relic", "id": 631, "kind": "action"}
+{"name": "actionid-repair", "id": 618, "kind": "action", "states": ["repair"]}
+{"name": "actionid-research", "id": 620, "kind": "action"}
+{"name": "actionid-retreat", "id": 608, "kind": "action"}
+{"name": "actionid-runaway", "id": 607, "kind": "action"}
+{"name": "actionid-stop", "id": 606, "kind": "action"}
+{"name": "actionid-trade", "id": 615, "kind": "action"}
+{"name": "actionid-train", "id": 619, "kind": "action"}
+{"name": "actionid-transport", "id": 614, "kind": "action"}
+{"name": "actionid-unload", "id": 621, "kind": "action"}
+{"name": "orderid-attack", "id": 700, "kind": "order", "states": ["attack"]}
+{"name": "orderid-build", "id": 702, "kind": "order", "states": ["build", "to_site"]}
+{"name": "orderid-convert", "id": 704, "kind": "order"}
+{"name": "orderid-defend", "id": 701, "kind": "order"}
+{"name": "orderid-enter", "id": 717, "kind": "order"}
+{"name": "orderid-evade", "id": 716, "kind": "order"}
+{"name": "orderid-explore", "id": 705, "kind": "order"}
+{"name": "orderid-follow", "id": 712, "kind": "order"}
+{"name": "orderid-gather", "id": 709, "kind": "order", "states": ["chop", "to_drop", "to_tree"]}
+{"name": "orderid-heal", "id": 703, "kind": "order"}
+{"name": "orderid-hunt", "id": 713, "kind": "order", "states": ["hunt", "to_prey"]}
+{"name": "orderid-move", "id": 710, "kind": "order", "states": ["to_rally"]}
+{"name": "orderid-patrol", "id": 711, "kind": "order"}
+{"name": "orderid-relic", "id": 731, "kind": "order"}
+{"name": "orderid-repair", "id": 718, "kind": "order", "states": ["repair", "to_repair"]}
+{"name": "orderid-research", "id": 720, "kind": "order"}
+{"name": "orderid-retreat", "id": 708, "kind": "order"}
+{"name": "orderid-runaway", "id": 707, "kind": "order"}
+{"name": "orderid-stop", "id": 706, "kind": "order"}
+{"name": "orderid-trade", "id": 715, "kind": "order"}
+{"name": "orderid-train", "id": 719, "kind": "order"}
+{"name": "orderid-transport", "id": 714, "kind": "order"}
+{"name": "orderid-unload", "id": 721, "kind": "order"}
