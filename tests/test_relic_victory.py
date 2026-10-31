@@ -50,7 +50,7 @@ def test_a_relic_that_leaves_stops_the_timer():
     g.relics[0].update(at=(16, 7), home=None)                          # the monastery fell: the relic lies at its door
     relic_victory.tick(g, 5)
     assert f"bossbar remove {relic_victory.BAR}" in server.log
-    assert 'tellraw @a {"text": "Player 1 lost a relic.", "color": "red"}' in server.log
+    assert 'tellraw @a {"translate": "aoe2mc.relic_victory.lost", "fallback": "Player %s lost a relic.", "with": ["1"], "color": "red"}' in server.log
     g.relics[0].update(at=None, home=HOME)
     relic_victory.tick(g, 10)                                          # a new start: the full time again
     assert not g.ended
