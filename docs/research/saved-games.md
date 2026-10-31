@@ -71,7 +71,7 @@ not the Feudal Age. So the file has Loom only, not the Feudal Age and Double-Bit
 | Hit points | none | `parse_object` skips it |
 | Resources | none | `aoe2mc.saved_match` reads them before `parse_player` skips them (#4565): from save 63 each attribute has 8 bytes, the first half of the block is the floats (0 food, 1 wood, 2 stone, 3 gold) |
 | Age | none | attribute 6, "current age" (0 = Dark Age), read with the resources (#4565) |
-| Researched technologies | none | not parsed (the tech block of the player is skipped); attribute 21 is the count |
+| Researched technologies | none | `aoe2mc.save_techs` (#4623): the tech table of the player, about 5 000 bytes after the attributes; see below |
 | Game time | `match.duration` (0 for a header) | the game time of the save is in the header, not parsed |
 | Map, terrain | `match.map.tiles`, `.dimension`, `.name` | read |
 | Civilization, color, team | `Player.civilization`, `.color_id`, `.team_id` | read |
@@ -79,7 +79,19 @@ not the Feudal Age. So the file has Loom only, not the Feudal Age and Double-Bit
 For hit points, resources, age and technologies the converter needs own code on the decompressed header
 (`mgz.fast.header.decompress`), or a change of `mgz`.
 
-## Open questions (only a real saved game answers them)
+## The tech table of a player (#4623)
+
+Found by a diff of two saves of one game (`samples/aoe2mc-tech-a`, `-tech-b`: Loom only between them) and checked
+with `samples/aoe2mc-sample-feudal.aoe2spgame` (Loom, the Feudal Age, Double-Bit Axe).
+
+- A count (int32, 1510 in save 68.9), then one record per AoE2 tech ID, in ID order. A record has 76 to 102 bytes
+  and the anchor `60 0a 00 00 60 0a 00 00 60 0a`. One record (after ID 1150) has no anchor: the gap is 162 bytes.
+- 15 bytes before the anchor: the research time (float, seconds: Loom 25.0, the Feudal Age 130.0) and the state
+  (int16: -1 not available, 0 not yet, 1 available, 3 done).
+- A free technology of the civilization or the age has state 3 and time 0: it is not in "techs".
+- Loom of save B also changes the unit tables of the player (villager hit points 25 → 40, armor): no tech data.
+
+ (only a real saved game answers them)
 
 1. Does a DE saved game start with `header_length` and a raw deflate block, as a record does?
 2. Does it have bytes after the header (`log_version`, a meta block), or does the file end?
