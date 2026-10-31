@@ -59,7 +59,8 @@ parallel tickets do not change the same lines. Most rules have a check: `tools/d
   table, a fixture) or the expected value from the data. When a key or a combination of keys has no test of its code,
   that is a code ticket: one test of the code with test data, not one test per data line (the old
   `tests/test_techs_*.py` broke this rule and are deleted; `tests/test_tech_effect_code.py`). `framework/tools/ship_pr.py` stops
-  such a change (exit 2).
+  such a change (exit 2). `tools/data_shake.py TEST_FILE...` finds such a test: it fails with changed unit and building
+  data (#5388).
 - A new unit ability of the Paper plugin (an `aoe NAME` command and its hooks in the fights, epic #4387) is one new
   class that implements `Ability` (`game/plugin/src/main/java/aoe2mc/Ability.java`; its comment names the command and
   the ticket) and its line in `src/main/resources/META-INF/services/aoe2mc.Ability` (`merge=union`): no change of
