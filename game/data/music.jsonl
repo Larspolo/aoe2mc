@@ -2,3 +2,6 @@
 {"name": "minecraft:music_disc.mall", "use": "peace", "seconds": 197}
 {"name": "minecraft:music_disc.strad", "use": "peace", "seconds": 188}
 {"name": "minecraft:music_disc.wait", "use": "peace", "seconds": 238}
+{"name": "minecraft:music_disc.pigstep", "use": "battle", "seconds": 149, "calm": 20}
+{"name": "minecraft:music_disc.otherside", "use": "battle", "seconds": 195, "calm": 20}
+{"name": "minecraft:music_disc.precipice", "use": "battle", "seconds": 299, "calm": 20}

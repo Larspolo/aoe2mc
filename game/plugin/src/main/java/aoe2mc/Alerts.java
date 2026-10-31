@@ -6,6 +6,8 @@ import java.util.Deque;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.function.Function;
 
 import org.bukkit.Bukkit;
@@ -43,6 +45,7 @@ final class Alerts {
     static final int FALL = 200;                                           // ticks of slow falling without flight
     private final Map<String, Deque<Location>> places = new HashMap<>();    // team -> its last alert places
     private final AlertRule rule = new AlertRule();
+    private final Set<String> hits = new TreeSet<>();                    // teams with an enemy hit since "aoe hits"
     private final JavaPlugin plugin;
     private final Function<Entity, String> side;                           // the team of an entity (AoePlugin.side)
 
@@ -58,6 +61,7 @@ final class Alerts {
         if (team == null || from == null || AoePlugin.allied(team, side.apply(from))) {
             return;                                    // Gaia and animals have no team: no alert
         }
+        hits.add(team);                                // each hit, not only an alert: the battle music (#5342)
         Location at = victim.getLocation();
         long tick = Bukkit.getCurrentTick();
         String where = " under attack at " + at.getBlockX() + " " + at.getBlockZ();
@@ -71,6 +75,14 @@ final class Alerts {
         for (String t : rule.allies(team, teams, AoePlugin::allied, at.getX(), at.getZ(), tick)) {
             alert(t, "Your ally is" + where, at, ALLY);
         }
+    }
+
+    /** "aoe hits": the teams with an enemy hit on a unit or a building since the last call (game/music.py, the battle
+     * music, #5342): one answer per second for all teams. */
+    String hits() {
+        String out = "Hits:" + (hits.isEmpty() ? "" : " " + String.join(" ", hits));
+        hits.clear();
+        return out;
     }
 
     /** Send the alert text with the sound to the online players of the team, and keep the place for "aoego". */
