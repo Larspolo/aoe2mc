@@ -25,3 +25,4 @@ these rows are here (2026-10-29).
 | Minecraft data | `python3 tools/mc_check.py --reports VERSION` (exact, from Mojang) or `tools/fetch_mcdata.py VERSION` writes `tools/mcdata/VERSION.json` |
 | Block colors | `python3 tools/fetch_colors.py VERSION` writes `tools/mcdata/colors-VERSION.json` (for `render.py`) |
 | Compare with the game data | `python3 tools/dat_compare.py [PATH/empires2_x2_p1.dat]` (local, AoE2 DE installed, `pip install genieutils-py`; default: the Steam path on macOS; one line for each value of `game/data` that differs from the `.dat`, exit 1; no `.dat`: exit 2, #5245) |
+| Write a data mod | `python3 tools/dat_compare.py MOD.dat --write DIR [--base BASE.dat]` (the unit values of a mod `.dat` that differ from the base game, default the installed game, as data mod lines `DIR/units.jsonl`, `buildings.jsonl`, `replay.jsonl`, epic #5352, #5354) |

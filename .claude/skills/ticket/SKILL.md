@@ -29,7 +29,7 @@ Body:
 ## Verify
 <The verify level (1-4) and the commands or checks.>
 
-Depends on: #<n>, #<m>        (only when another ticket must close first)
+Depends on: #<n>, #<m>        (only when another ticket must close first; at the start of its own line, not in a list item: `dashboard.depends` reads only such lines, #5354)
 Start after: <N> PRs after #<M>       (only when the ticket must wait for work, for example to measure a change: N merged PRs after PR #M)
 Start after: <YYYY-MM-DD HH:MM> UTC   (only for a real date outside the project, for example a quota reset; never to measure a change, #2039)
 ```
