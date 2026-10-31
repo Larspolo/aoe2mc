@@ -682,6 +682,8 @@ class Script:
 
     def game(self, name, *kinds):
         """The name of the game program of a script name of one of kinds, or None (one warning)."""
+        if isinstance(name, int):                           # an airef id: its name of these kinds (#5182)
+            name = (TECH_IDS if {"tech", "age"} & set(kinds) else OBJECT_IDS).get(name, name)
         row = names().get(name)
         if row is None and (name == "all-units-class" or any(r["name"] == name and r["kind"] == "class" for r in CLASSES)):
             return ("CLASS:" + name,)                       # a class of the threat commands: count() matches it (#5104)
