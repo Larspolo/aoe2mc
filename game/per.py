@@ -32,7 +32,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import table  # noqa: E402
 
 Rule = collections.namedtuple("Rule", "facts actions file line")   # facts: (name, *args) or (logic, *facts)
-LOGIC = {"and", "nand", "nor", "not", "or"}
+LOGIC = {"and", "nand", "nor", "not", "or", "xnor", "xor"}
 REL = {"<": "<", "<=": "<=", ">": ">", ">=": ">=", "==": "==", "!=": "!=", "less-than": "<", "less-or-equal": "<=",
        "greater-than": ">", "greater-or-equal": ">=", "equal": "==", "not-equal": "!="}
 TOKEN = re.compile(r'(;[^\n]*)|"([^"\n]*)"|([()])|(#[\w-]+)|([^\s()";]+)|(\n)|(\S)')
@@ -108,12 +108,12 @@ def name_of(form, file):
 
 
 def fact(form, file, consts):
-    """(name, *args) of a fact; (logic, *facts) of and, or, nand, nor, not."""
+    """(name, *args) of a fact; (logic, *facts) of and, or, nand, nor, not, xor, xnor."""
     if not isinstance(form, list):
         raise ValueError(f"{file}:{form[1]}: {form[0]} is not a fact in ( )")
     name, args = name_of(form, file), form[2:]
     if name in LOGIC:
-        if len(args) != 1 if name == "not" else len(args) < 2:
+        if len(args) != 1 if name == "not" else len(args) != 2 if name in ("xor", "xnor") else len(args) < 2:
             raise ValueError(f"{file}:{form[0]}: {name} with {len(args)} facts")
         return (name, *(fact(a, file, consts) for a in args))
     if any(isinstance(a, list) for a in args):
@@ -644,6 +644,8 @@ class Script:
         name, args = f[0], f[1:]
         if name in LOGIC:
             got = [self.check(a) for a in args]
+            if name in ("xor", "xnor"):                                # exactly two facts (fact)
+                return (got[0] != got[1]) if name == "xor" else (got[0] == got[1])
             return {"and": all(got), "or": any(got), "nand": not all(got), "nor": not any(got), "not": not got[0]}[name]
         if name == "goal":                                         # (goal ID VALUE) or (goal ID REL VALUE)
             op, v = ("==", args[1]) if len(args) == 2 else args[1:3]
