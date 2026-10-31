@@ -126,11 +126,15 @@ class Driver:
         near the block cell near. Returns the site, or None."""
         g = self.g
         for _ in range(4):
-            if self.villager not in g.villagers:
-                self.villager = min(g.villagers)
-            if self.villager not in g.selected and not self.unit(self.villager):
+            idle = sorted(u for u, v in g.villagers.items() if v.state == "idle")
+            builder = self.villager if self.villager in g.selected else (idle or sorted(g.villagers))[0]
+            if builder not in g.selected and not self.unit(builder):
+                self.note(f"the click did not select the villager {builder}")
                 continue
-            if not self.unit(self.villager) or not self.slot(name):
+            if not self.unit(builder):
+                self.note(f"the click on the selected villager {builder} missed")
+                continue
+            if not self.slot(name):
                 self.c.key("Escape")
                 continue
             self.note(f"chose {build.chosen(g, NAME)} in the build menu")
