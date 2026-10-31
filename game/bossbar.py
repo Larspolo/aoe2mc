@@ -10,6 +10,8 @@ import re
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import lang  # noqa: E402
+
 from units import pretty  # noqa: E402
 
 
@@ -33,7 +35,8 @@ def show(g, uuid):
         return hide(g)
     g.bar, n = uuid, len(g.selected)
     stance = getattr(g, "stances", {}).get(uuid)                       # not aggressive (#1107)
-    text = pretty(name(g, uuid)) + (f" ({n})" if n > 1 else "") + (f" · {pretty(stance)}" if stance else "")
+    rest = (f" ({n})" if n > 1 else "") + (f" · {pretty(stance)}" if stance else "")
+    text = [lang.name(name(g, uuid))] + ([rest] if rest else [])      # a translate key (#5346)
     for c in (f"bossbar set {bar(g)} name {json.dumps(text)}", f"bossbar set {bar(g)} players" + f" {getattr(g, 'who', '@a')}" * (not g.noui),
               f"execute store result bossbar {bar(g)} max run attribute {uuid} minecraft:max_health get"):
         g.command(c)

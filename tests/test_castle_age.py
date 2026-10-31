@@ -58,7 +58,7 @@ def test_after_its_research_time_the_player_is_in_the_castle_age():
     assert train.age(g) == "Castle Age" and "CASTLE_AGE" in g.techs and not g.queues.get(rect)
     assert server.log.count('scoreboard objectives modify aoe_res displayname "Resources (Castle Age)"') == 1
     assert 'title @a[team=p1] title {"text": "Castle Age", "color": "gold"}' in server.log
-    assert any(c.startswith("tellraw @a") and '"with": ["1", "Castle Age"]' in c for c in server.log)
+    assert any(c.startswith("tellraw @a") and '"fallback": "Castle Age"}]' in c for c in server.log)
     assert any(c.startswith("playsound minecraft:ui.toast.challenge_complete") for c in server.log)
     train.show(g, "Steve", rect)
     assert "Castle Age" not in menus(server)[-1].split("Town Center", 1)[1]

@@ -59,10 +59,11 @@ def commands(player, title, items, limit=MAX):
     return out
 
 
-def lore(g, material, name, text):
+def lore(g, material, name, text, key=None):
     """The last lore line of each later menu item with this material and name (#1160): the plugin keeps it, so the
-    menu commands stay short (one RCON command holds a whole menu)."""
-    return g.command(f"aoe lore {material} {quote(name, safe='')} {quote(text, safe='')}")
+    menu commands stay short (one RCON command holds a whole menu). key: the translate key of the name (#5346): the
+    plugin shows the name as that key with the name as fallback."""
+    return g.command(f"aoe lore {material} {quote(name, safe='')} {quote(text, safe='')}" + (f" {key}" if key else ""))
 
 
 def show(g, player, title, items, handler):

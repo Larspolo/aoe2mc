@@ -680,7 +680,12 @@ def lore(g):
     gray "Man-at-Arms" is the upgrade (the unit is never gray), so the help of the upgrade comes last."""
     for name in sorted(HELP):
         for material in (ITEMS[name][1], build.LOCKED):
-            menu.lore(g, material, ITEMS[name][2], HELP[name])
+            menu.lore(g, material, ITEMS[name][2], HELP[name], key(name))
+
+
+def key(name):
+    """The translate key of the menu item of name (#5346): the plugin shows it with the label as fallback."""
+    return lang.name(name, "tech" if name in TECHS else "unit")["translate"]
 
 
 def open_menu(g, player, cell, click=False):
@@ -1073,6 +1078,12 @@ def age(g):
     return AGES[build.ages(g)]
 
 
+def age_name(g):
+    """The name of the age of the player as a translate component (#5346): the key of its age technology."""
+    i = build.ages(g)
+    return lang.name(build.AGE_TECHS[i - 1] if i else "DARK_AGE", "tech", AGES[i])
+
+
 OPERATIONS = {1: lambda v, q: q, 2: lambda v, q: v + q, 3: lambda v, q: v - q,   # the AoE2 Operation of a trigger:
               4: lambda v, q: v * q, 5: lambda v, q: v / q if q else v}   # set, add, subtract, multiply, divide
 # The AoE2 unit classes (ObjectClass) of "Modify Attribute for Class" (#2859) -> a test of the combat classes of a unit:
@@ -1389,7 +1400,7 @@ def research(g, entry, start=False, rect=None):
         if unit and rects and spawn(g, rects[0], unit):
             g.pop += 1
         g.command(f"title @a[team=p{g.player}] title " + json.dumps({"text": age(g), "color": "gold"}))  # the own team only
-        g.command("tellraw @a " + json.dumps(lang.text("aoe2mc.age_up", g.player, age(g), color="gold")))   # translate (#5344)
+        g.command("tellraw @a " + json.dumps(lang.text("aoe2mc.age_up", g.player, age_name(g), color="gold")))   # translate (#5344)
         g.command("playsound minecraft:ui.toast.challenge_complete master @a ~ ~ ~ 1 1 1")
         return
     if start:

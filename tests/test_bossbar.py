@@ -35,7 +35,7 @@ def test_a_selected_unit_shows_its_name_and_hit_points():
     server, g = setup()
     del server.log[:]
     g.select("v")
-    assert server.log[-5:] == ['bossbar set aoe2mc:sel_p1 name "Villager"', "bossbar set aoe2mc:sel_p1 players @a",
+    assert server.log[-5:] == ['bossbar set aoe2mc:sel_p1 name [{"translate": "aoe2mc.unit.VILLAGER_MALE", "fallback": "Villager"}]', "bossbar set aoe2mc:sel_p1 players @a",
                                "execute store result bossbar aoe2mc:sel_p1 max run attribute v minecraft:max_health get",
                                "execute store result bossbar aoe2mc:sel_p1 value run data get entity v Health",
                                "bossbar set aoe2mc:sel_p1 visible true"]
@@ -45,7 +45,7 @@ def test_more_military_units_show_the_last_one_and_the_number():
     server, g = setup()
     g.select("m")
     g.select("a")
-    assert g.bar == "a" and 'bossbar set aoe2mc:sel_p1 name "Archer (2)"' in server.log
+    assert g.bar == "a" and 'bossbar set aoe2mc:sel_p1 name [{"translate": "aoe2mc.unit.ARCHER", "fallback": "Archer"}, " (2)"]' in server.log
 
 
 @pytest.mark.parametrize("steps", [1, 4])
