@@ -46,7 +46,7 @@ def test_a_look_at_a_unit_shows_name_player_and_hit_points():
     assert c.startswith("title Steve actionbar ")
     line = "".join(p["text"] for p in json.loads(c.split(" actionbar ", 1)[1]))
     hp = combat.stats("ARCHER").hp
-    assert line == f"{replay.pretty('ARCHER')} (Player 2, {replay.pretty('AZTECS')}): {min(21, hp)}/{hp}"
+    assert line.startswith(f"{replay.pretty('ARCHER')} (Player 2, {replay.pretty('AZTECS')}): {min(21, hp)}/{hp} | ")
 
 
 def test_the_same_line_waits_then_comes_again():

@@ -716,12 +716,28 @@ class Replay:
             top = combat.stats(v.name).hp
             m = re.findall(self.gather.NUMBER, (self.game.command(f"data get entity {v.uuid} Health") or "").rsplit(":", 1)[-1])
             hp = min(top, math.ceil(float(m[0]))) if m else top
-            line = json.dumps([text(f"{pretty(v.name)} ("), text(who, color), text(f"): {hp}/{top}")])
+            s = combat.stats(v.name)                                    # base values: the replay has no game.g (#5287)
+            more = f" | {self.task(i)} | {s.attack} atk {s.melee}/{s.pierce} arm" + (f" r{s.range:g}" if s.range else "")
+            line = json.dumps([text(f"{pretty(v.name)} ("), text(who, color), text(f"): {hp}/{top}{more}")])
             if shown.get(name, (None, -math.inf))[0] == line and now - shown[name][1] < INSPECT_AGAIN:
                 continue
             shown[name] = line, now
             out.append(f"title {name} actionbar {line}")
         return out
+
+    def task(self, i):
+        """The AoE2 task word of unit i from the replay state, for the selection panel (#5287)."""
+        if i in self.builds:
+            return "building"
+        if i in self.working:
+            return f"gathering {getattr(self.units[i], 'res', None) or 'resources'}"
+        if i in self.follows:
+            return "guarding" if self.follows[i][1] == "guard" else "following"
+        if i in self.patrols:
+            return "patrolling"
+        if i in self.moving:
+            return "walking"
+        return "garrisoned" if any(i in ids for ids in self.garrisons.values()) else "idle"
 
     def eye(self, name):
         """(eye, direction) of player name, or None (gather.Gather.look)."""
