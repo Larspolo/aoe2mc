@@ -172,6 +172,7 @@ in the Source column names a label of that list, "not in the guide" a label that
 | `LOW_RESOURCES` (10) | Starting resources: Low | `run.py --resources`; `aoe2mc.py --resources` (#5016) | yes (mine and food amounts) | survey, `run.py`, guide |
 | `NOMAD_MAP` (77) | Nomad start (no town center) | `aoe2mc.py --nomad` (#5017) | yes (start objects) | survey; not in the guide (the guide has the map type `NOMAD`) |
 | `TEAM_GAME`, `TEAMS_CONNECTED` (62, 23) | none: switches of the script authors, never defined: their `if` blocks stay off (#5050) | none | no (the lobby never defines them) | not in the guide; decision #5052 |
+| `TEAM0_SIZE0`, `LESS_THAN_THREE_PLAYERS`, `LESS_THAN_FIVE_PLAYERS`, `LESS_THAN_SEVEN_PLAYERS`, `RANKED_MATCH`, `TOURNAMENT_VERSION`, `ESCALATION_MODE`, `MODE_TOGGLE`, `DYNAMIC_SIZE` (2 to 10) | none: the lobby defines `TEAMn_SIZEm` only for teams 1 to 4; the others are switches of the script authors | none | no (the lobby never defines them) | survey #5087; not in the guide |
 | `AZUREMASKING`, `EXTREME_ELEVATION`, `LEGACY_CODE`, `LEGACY_RELICS`, `NOMAD_CASTLE`, `NOMAD_HERDABLE`, `NOMAD_SCATTERED`, `NOMAD_TREATY`, `NOMAD_UNIT`, `REGICIDE_*` variants, `SEASONS_ALLOWMUDDYSHALLOWS`, `EMPIRE_WARS_*` variants, `*_ALLOW_FEEDING`, `DEBUG_MODE`, `TERRAIN_DEBUGGING`, `GNR_*`, `*_CAA_*` | none: switches of the script authors | none | no (the lobby never defines them) | survey |
 
 ### Undefined constants in math (#5068)
