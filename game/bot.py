@@ -482,6 +482,8 @@ class Bot:
         near = {}
         for look in (eyes, friends):                                   # the own town first, then the allies
             near = near or {k: p for k, p in seen.items() if any(math.dist((x, z), (p[0], p[2])) <= r for x, z, r in look)}
+            if self.script and near and look is eyes:
+                self.hits(near)
         if not near and not self.guards:                               # each position costs one RCON command
             return
         mine = g.positions(sorted(u for u, n in g.soldiers.items() if combat.stats(n).attack))
@@ -501,6 +503,19 @@ class Bot:
         for t, us in sorted(orders.items()):
             ai.attack(g.game, us, [g.soldiers[u] for u in us], T, t,
                       [gather.NORMAL * train.speed(g, g.soldiers[u], u) for u in us])
+
+    def hits(self, near):
+        """Give the script the hits on the town (up-get-threat-data, #4966): each enemy unit of near that is in its
+        AoE2 range (at least one tile) of a bot villager hits the nearest one. The plugin applies the damage and sends
+        no event, so the bot reads the hit from the positions, as AoE2 reads town-under-attack."""
+        g, T = self.g, self.g.map.T
+        players = {o["uuid"]: o["player"] for o in g.data["objects"] if o.get("uuid")}
+        for x in build.sides(g):
+            players.update((u, x.player) for u in (*x.soldiers, *x.villagers))
+        for k, p in sorted(near.items()):
+            gap = {u: math.dist((v.pos[0], v.pos[2]), (p[0], p[2])) for u, v in g.villagers.items() if v.pos}
+            if gap and min(gap.values()) <= (max(combat.stats(g.enemies[k]).range, 1) + 1) * T and k in players:
+                self.script.hit(players[k], g.enemies[k], "VILLAGER_MALE")
 
     def go(self, v, res):
         """Send villager v to the nearest source of res that has some left and a free cell next to it. False when there
