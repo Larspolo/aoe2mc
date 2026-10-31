@@ -37,6 +37,8 @@ def test_next_prints_overlap(monkeypatch, capsys):
                                   issue(9, pull_request={})],
             "pulls/9/files": [{"filename": "units.py"}, {"filename": "framework/tools/claim.py"}]}
     monkeypatch.setattr(dashboard, "pages", lambda path, limit=10: data[path])
+    import health
+    monkeypatch.setattr(health, "claim_refs", lambda: [])        # a live claim on origin must not change the test
     assert dashboard.main(["--next"]) == 0
     out = capsys.readouterr().out.splitlines()
     assert out == ["#2 Ticket 2 (P2, None, overlap 1: buildings.py)", "#3 Ticket 3 (P2, None, overlap 1: units.py)"]
