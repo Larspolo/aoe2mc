@@ -90,9 +90,11 @@ def destroyed(g, row):
 
 
 def give(g, row):
-    """Setup of a step: the resources of the key "give" go to the stock, so the step does not wait for a slow player."""
+    """Setup of a step: the resources of the key "give" go to the stock, so the step does not wait for a slow player.
+    The board (the sidebar) gets them too: each payment removes from both (#3111), else the sidebar goes below 0 (#5332)."""
     for k, n in row["give"].items():
         g.stock[k] += n
+        g.command(f"scoreboard players add {k.capitalize()} {g.board} {n}")
 
 
 def known():
