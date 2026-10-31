@@ -3,6 +3,7 @@ server, no Minecraft (but the server test of the blocks)."""
 import shutil
 
 import pytest
+from test_lang_orders import plain_log
 from test_ship_gather import fish_map, play
 
 from game import build, fleet, gather, run
@@ -48,7 +49,7 @@ def test_the_look_at_the_water_places_the_trap_and_the_selected_ship_builds_it()
     assert site and site["footprint"] == TRAP and g.stock["wood"] == WOOD and site["commands"]
     assert all(int(c.split()[2]) <= 64 for c in site["commands"] if c.startswith("fill"))   # on the water, no tower
     assert build.place(g, "Steve", "FISH_TRAP", (8.5, 65.62, 6.5), gather.direction(-90, 40)) is None   # land
-    assert any("A fish trap must stand on the water." in c for c in server.log)
+    assert any("A fish trap must stand on the water." in c for c in plain_log(server.log))
     v = g.ships[uuid]
     d2 = next(gather.direction(-90, p / 2) for p in range(2, 80) if fleet.pick(g, eye, gather.direction(-90, p / 2)) == (19, 6))
     assert fleet.build_order(g, "Steve", eye, d2)                      # a click at the site: back to work

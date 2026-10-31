@@ -6,8 +6,12 @@ import types
 import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "game"))
+import json
+
 import diplomacy  # noqa: E402
 import gather  # noqa: E402
+
+from game import lang
 
 
 def fake():
@@ -28,7 +32,7 @@ class Reached(Exception):
     """The click reached the order code (target)."""
 
 
-PAUSED = 'title P1 actionbar "The game is paused."'
+PAUSED = "title P1 actionbar " + json.dumps(lang.text("aoe2mc.gather.paused"))
 
 
 def test_a_paused_click_gives_the_message_and_no_order():

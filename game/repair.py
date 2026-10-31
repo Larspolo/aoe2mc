@@ -54,6 +54,8 @@ import math
 import re
 import types
 
+import lang
+
 RATE = 750 / 60             # hit points per AoE2 second of the first repairer
 MORE = 375 / 60             # hit points per AoE2 second of each other repairer
 SHARE = 0.5                 # of the build cost for the full hit points
@@ -322,7 +324,7 @@ def charge(g, key, vs, full, share, name):
     due = {r: owed.get(r, 0.0) + v * share for r, v in full.items()}
     pay = {r: math.floor(v + 1e-9) for r, v in due.items()}           # no unit lost to a float sum
     if any(g.stock[r] < v for r, v in pay.items()):
-        stop(g, key, vs, f"Not enough resources to repair the {combat.pretty(name).lower()}.")
+        stop(g, key, vs, lang.text("aoe2mc.repair.no_resources", combat.pretty(name).lower(), color="red"))
         return False
     for r, v in pay.items():
         if v:
@@ -365,4 +367,4 @@ def stop(g, rect, vs, text=None):
             vars(g).get("mending", {}).pop(v.uuid, None)
     vars(g).get("repair_hp", {}).pop(rect, None)
     if text:
-        g.command(f"tellraw @a[team=p{g.player}] " + json.dumps({"text": text, "color": "red"}))
+        g.command(f"tellraw @a[team=p{g.player}] " + json.dumps(text))

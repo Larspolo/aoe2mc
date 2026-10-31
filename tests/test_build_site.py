@@ -2,6 +2,7 @@
 import re
 
 from test_gather import FakeServer, grid
+from test_lang_orders import plain_log
 
 from game import build, gather
 
@@ -42,8 +43,9 @@ def test_new_players_get_the_menu_and_the_trigger():
     server, g = site_map()
     assert "scoreboard objectives add aoe_build trigger" in server.log
     g.clicks()
-    menu = next(c for c in server.log if c.startswith("execute as @a unless score @s aoe_build matches 0.. run tellraw @s "))
-    assert "/trigger aoe_build set 1: House (" in menu and "Town Center (" in menu
+    menu = [c for c in server.log if c.startswith("execute as @a unless score @s aoe_build matches 0.. run tellraw @s ")]
+    assert any("/trigger aoe_build set 1: House (" in c for c in plain_log(menu))
+    assert any("Town Center (" in c for c in plain_log(menu))
     assert "scoreboard players enable @a aoe_build" in server.log
 
 
@@ -68,7 +70,7 @@ def test_a_click_places_a_foundation_and_takes_the_cost():
 def test_no_foundation_without_space_or_resources():
     server, g = site_map(wood=20)
     g.click("Steve")
-    assert not g.sites and g.stock["wood"] == 20 and any("Not enough resources" in c for c in server.log)
+    assert not g.sites and g.stock["wood"] == 20 and any("Not enough resources" in c for c in plain_log(server.log))
     server, g = site_map()
     assert not build.free(g, build.area(g, "HOUSE", (12, 12)))      # the tree
     assert not build.free(g, build.area(g, "HOUSE", (3, 3)))        # the town center
@@ -78,10 +80,10 @@ def test_no_foundation_without_space_or_resources():
     server.entities["Steve"]["Rotation"] = (90.0, 30.0)              # look west, at the town center area
     server.entities["Steve"]["Pos"] = (7.5, 64.0, 3.5)
     g.click("Steve")
-    assert not g.sites and any("No space" in c for c in server.log)
+    assert not g.sites and any("No space" in c for c in plain_log(server.log))
 
 
 def test_without_a_choice_a_click_does_what_it_did():
     server, g = site_map(chosen=0)
     g.click("Steve")
-    assert not g.sites and not any(c.startswith("setblock ") for c in server.log)
+    assert not g.sites and not any(c.startswith("setblock ") for c in plain_log(server.log))

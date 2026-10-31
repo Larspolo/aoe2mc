@@ -1,11 +1,13 @@
 """game/gather.py: the selection wand selects the own units in a box of two corners (#778, owner choice #745)."""
+import json
 import shutil
 
 import pytest
 from test_gather_attack import click
+from test_lang_orders import plain_log
 from test_select_type import setup
 
-from game import gather
+from game import gather, lang
 
 
 def box(g, a, b):
@@ -17,11 +19,11 @@ def test_two_corners_select_the_military_units_in_the_box():
     server, g = setup()
     g.box("Steve", (2, 8))
     assert g.corners == {"Steve": (2, 8)} and not g.selected
-    assert any(c.startswith("particle minecraft:happy_villager 2.5 ") and c.endswith("force Steve") for c in server.log)
+    assert any(c.startswith("particle minecraft:happy_villager 2.5 ") and c.endswith("force Steve") for c in plain_log(server.log))
     g.box("Steve", (10, 18))
     assert g.selected == {"m-1", "m-2", "m-3", "a-1"}                  # not the far militia, not the villager v-1
     assert not g.corners and all(f"tag {u} add {gather.SELECT}" in server.log for u in g.selected)
-    assert 'title Steve actionbar {"text": "Selected: 4 units"}' in server.log
+    assert 'title Steve actionbar ' + json.dumps(lang.text("aoe2mc.gather.selected", 4)) in server.log
 
 
 def test_the_corners_can_be_in_any_order():
@@ -57,7 +59,7 @@ def test_a_wand_click_sets_a_corner_on_the_ground():
     server, g = setup()
     server.scores["aoe_box"] = 1
     assert g.clicks() == ["Steve"] and g.wands == {"Steve"}
-    assert any("give @s minecraft:warped_fungus_on_a_stick" in c for c in server.log)
+    assert any("give @s minecraft:warped_fungus_on_a_stick" in c for c in plain_log(server.log))
     click(server, g, (5.5, 20.5), (5.5, 14.5))                         # no unit is picked: the wand wins
     assert not g.wands and g.corners["Steve"][0] == 5 and not g.selected
 

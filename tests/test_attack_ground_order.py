@@ -1,6 +1,7 @@
 """game/stance.py: the stance menu has an "Attack Ground" item. A click on it and then on a ground cell lets
 the selected siege units shoot at that point (`aoe attackground`, #4078); the other units ignore it (#4079)."""
 from test_gather import FakeServer, grid
+from test_lang_orders import plain_log
 
 from game import gather, hints, stance
 
@@ -23,18 +24,18 @@ def test_the_mangonel_shoots_at_the_point_and_the_militia_gets_nothing(monkeypat
     server, g = setup(monkeypatch, {"o-1": "MANGONEL", "m-1": "MILITIA"})
     assert [name for slot, _, name, _ in stance.items(g, "o-1") if slot == stance.ATTACK_GROUND] == ["Attack Ground"]
     assert g.ordering == {"Steve": "attack_ground"}
-    assert hints.state(g, "Steve") == ("attack_ground", hints.TEXTS["attack_ground"])
+    assert hints.state(g, "Steve") == ("attack_ground", hints.hint("attack_ground"))
     server.log.clear()
     g.click("Steve")
     assert f"aoe attackground o-1 20 {g.map.y(20, 10)} 10" in server.log
-    assert not any("m-1" in c for c in server.log)
+    assert not any("m-1" in c for c in plain_log(server.log))
     assert g.ordering == {}
 
 
 def test_a_selection_with_no_siege_unit_gives_the_hint_and_no_command(monkeypatch):
     server, g = setup(monkeypatch, {"m-1": "MILITIA"})
-    assert any("No unit can attack the ground" in c for c in server.log)
+    assert any("No unit can attack the ground" in c for c in plain_log(server.log))
     assert not vars(g).get("ordering")
     server.log.clear()
     g.click("Steve")
-    assert not any("attackground" in c for c in server.log)
+    assert not any("attackground" in c for c in plain_log(server.log))

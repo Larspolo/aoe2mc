@@ -4,9 +4,10 @@ import json
 
 from menu_line import item
 from test_garrison_game import TC, TOWER, arrive, setup
+from test_lang_orders import plain_log
 from test_train_menu import menus
 
-from game import garrison, train
+from game import garrison, lang, train
 
 
 def ring(server, g):
@@ -34,7 +35,7 @@ def test_the_bell_sends_the_villagers_to_the_nearest_building_and_a_far_one_keep
         assert rect == min(d, key=d.get), u
     assert TC in g.entering.values() and TOWER in g.entering.values()
     assert "playsound minecraft:block.bell.use master Steve" in server.log
-    assert any("The town bell rings: 7 villagers seek shelter" in c for c in server.log)
+    assert any("The town bell rings: 7 villagers seek shelter" in c for c in plain_log(server.log))
     for rect in (TC, TOWER):
         arrive(server, g, rect)
     assert sorted(u for us in g.garrisons.values() for u in us) == [f"v{k}" for k in range(7)]
@@ -53,4 +54,4 @@ def test_with_no_villager_the_bell_only_says_so():
     server, g = setup(villagers=0)
     ring(server, g)
     assert not g.entering
-    assert "tellraw Steve " + json.dumps({"text": "You have no villagers.", "color": "gray"}) in server.log
+    assert "tellraw Steve " + json.dumps(lang.text("aoe2mc.garrison.no_villagers", color="gray")) in server.log

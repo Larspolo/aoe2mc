@@ -16,6 +16,7 @@ the players (`aoe hide`). "Unload units over walls" is a later ticket.
 import json
 import math
 
+import lang
 from garrison import INSIDE, OUTSIDE
 
 from aoe2mc import GARRISONED
@@ -90,7 +91,7 @@ def out(g, tower, pos=None):
             g.command(c)
         if (v := g.villagers.get(u)) is not None:
             v.pos, v.state = (x + 0.5, float(y), z + 0.5), "idle"
-    g.command(f"tellraw @a[team=p{g.player}] " + json.dumps({"text": f"{len(units)} units came out", "color": "gray"}))
+    g.command(f"tellraw @a[team=p{g.player}] " + json.dumps(lang.text("aoe2mc.siege_tower.out", len(units), color="gray")))
     return units
 
 

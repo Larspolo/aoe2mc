@@ -1,8 +1,9 @@
 """game/build.py: a sneak right click (Shift) places a foundation and keeps the chosen building, so a player places
 a row of foundations, and the selected villagers build them in the order of the clicks (#1805). Fake server."""
 from test_build_at_once import line_map
+from test_lang_orders import plain_log
 
-from game import build, hints
+from game import build, hints, lang
 
 
 def click(server, g, x, sneak, name="HOUSE"):
@@ -53,7 +54,7 @@ def test_a_sneak_click_with_too_few_resources_says_so_and_keeps_the_choice():
     click(server, g, 9, True)
     click(server, g, 21, True)
     assert len(g.sites) == 1 and g.stock["wood"] == 5 and server.chosen
-    assert any("Not enough resources" in c for c in server.log)
+    assert any("Not enough resources" in c for c in plain_log(server.log))
 
 
 def test_a_new_row_does_not_wait_for_the_sites_of_an_old_row():
@@ -65,4 +66,4 @@ def test_a_new_row_does_not_wait_for_the_sites_of_an_old_row():
 
 
 def test_the_hint_of_a_chosen_building_names_the_shift_click():
-    assert "Shift + right click: place more" in hints.TEXTS["building"]
+    assert "Shift + right click: place more" in lang.plain(hints.hint("building", "House"))

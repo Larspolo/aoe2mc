@@ -9,6 +9,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "game"))
 import gather  # noqa: E402
 import pause  # noqa: E402
 import recap  # noqa: E402
+from test_lang_orders import component, plain_json
 
 
 def fake(now):
@@ -26,7 +27,7 @@ def test_toggle_freezes_and_unfreezes():
     assert pause.toggle(g, 2) is True
     assert pause.toggle(g, 2) is False
     assert [c for c in g.commands if c.startswith("tick")] == ["tick freeze", "tick unfreeze"]
-    assert "Player 2 paused the game." in g.commands[1] and "Player 2 continued the game." in g.commands[3]
+    assert "Player 2 paused the game." in plain_json(component(g.commands[1])) and "Player 2 continued the game." in plain_json(component(g.commands[3]))
 
 
 def test_a_paused_gather_does_not_step_and_keeps_its_game_time(monkeypatch):

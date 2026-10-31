@@ -3,9 +3,10 @@
 import shutil
 
 import pytest
+from test_lang_orders import plain_log
 from test_select_type import setup
 
-from game import gather, hints
+from game import gather, hints, lang
 
 
 def paper():
@@ -36,15 +37,15 @@ def test_vanilla_reads_no_left_click():
     g.select("m-1")
     server.scores[gather.LEFT] = 1
     g.clicks()
-    assert g.selected == {"m-1"} and not any(gather.LEFT in c for c in server.log)
+    assert g.selected == {"m-1"} and not any(gather.LEFT in c for c in plain_log(server.log))
 
 
 def test_the_hint_names_the_left_click_on_paper():
     _, g = paper()
     g.select("m-1")
-    assert "Left click: deselect" in hints.state(g)[1] and "Empty box" not in hints.state(g)[1]
+    assert "Left click: deselect" in lang.plain(hints.state(g)[1]) and "Empty box" not in lang.plain(hints.state(g)[1])
     g.paper = False
-    assert "Empty box: deselect" in hints.state(g)[1]
+    assert "Empty box: deselect" in lang.plain(hints.state(g)[1])
 
 
 @pytest.mark.mc

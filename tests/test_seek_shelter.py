@@ -4,9 +4,10 @@ import json
 
 from menu_line import item
 from test_garrison_game import TC, TOWER, setup
+from test_lang_orders import plain_log
 from test_train_menu import menus
 
-from game import build, combat
+from game import build, combat, lang
 
 
 def seek(g, player="Steve"):
@@ -23,7 +24,7 @@ def test_only_the_selected_villagers_seek_shelter_and_a_soldier_stays():
     assert set(g.entering) == {"v0", "v1", "v2"} and set(g.entering.values()) <= {TC, TOWER}
     assert all(g.villagers[f"v{k}"].state != "garrison" for k in (3, 4, 5))
     assert "playsound minecraft:block.bell.use master Steve" not in server.log
-    assert "tellraw Steve " + json.dumps({"text": "3 villagers seek shelter", "color": "gray"}) in server.log
+    assert "tellraw Steve " + json.dumps(lang.text("aoe2mc.garrison.seek_shelter", 3, color="gray")) in server.log
 
 
 def test_a_selected_villager_far_from_all_buildings_keeps_working():
@@ -33,7 +34,7 @@ def test_a_selected_villager_far_from_all_buildings_keeps_working():
     g.choose({"v0", "v1", "v2"}, "v0")
     seek(g)
     assert set(g.entering) == {"v0", "v1"} and g.villagers["v2"].state != "garrison"
-    assert any("2 villagers seek shelter" in c for c in server.log)
+    assert any("2 villagers seek shelter" in c for c in plain_log(server.log))
 
 
 def test_the_menu_keeps_each_building_in_its_slot():

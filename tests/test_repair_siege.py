@@ -4,6 +4,7 @@ import re
 
 import pytest
 from test_gather import FakeServer, grid
+from test_lang_orders import plain_log
 
 from game import combat, gather, repair, train
 
@@ -86,7 +87,7 @@ def test_no_repair_of_a_full_ram_or_without_villagers_and_a_click_on_it():
     g.villagers["v0"].state = "repair"
     repair.tick(g, 60.0)
     assert server.health["ram"] == 50 and g.villagers["v0"].state == "idle"
-    assert any("Not enough resources to repair the battering ram" in c for c in server.log)
+    assert any("Not enough resources to repair the battering ram" in c for c in plain_log(server.log))
 
 
 @pytest.mark.mc

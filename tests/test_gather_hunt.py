@@ -3,8 +3,9 @@ import re
 
 import pytest
 from test_gather import FakeServer, grid
+from test_lang_orders import plain_log
 
-from game import gather
+from game import gather, lang
 
 HP = {"DEER": 20.0, "WILD_BOAR": 20.0, "SHEEP": 8.0}                    # vanilla health of the horse, panda and sheep
 
@@ -49,14 +50,14 @@ def test_a_villager_kills_the_animal_and_carries_its_food_to_the_town_center(ani
     hits = steps = 0
     for steps in range(1, 4001):
         g.step()
-        hits = sum(c.startswith("damage a 3 minecraft:mob_attack by v") for c in server.log)
+        hits = sum(c.startswith("damage a 3 minecraft:mob_attack by v") for c in plain_log(server.log))
         if food(server) >= 20:
             break
     assert "a" not in server.entities and hits == -(-HP[animal] // 3)   # the vanilla health in hits of 3
     lost = gather.HUNT_FOOD[animal] - food(server) - v.load - g.map.carcasses[(8, 2)]   # the decay (#2310)
     assert food(server) >= 20 and list(g.map.carcasses) == [(8, 2)]
     assert 0 < lost <= gather.DECAY[animal] * steps * g.tick * gather.NORMAL
-    assert any(c == "scoreboard players add Food aoe_res 10" for c in server.log)
+    assert any(c == "scoreboard players add Food aoe_res 10" for c in plain_log(server.log))
     drops = set().union(*g.map.drops["food"])                          # it carried the food to the town center
     assert any(max(abs(v.cell[0] - a), abs(v.cell[1] - b)) <= 1 for a, b in drops) or v.state != "idle"
 
@@ -87,7 +88,7 @@ def test_a_click_on_the_animal_sends_the_villager_to_hunt():
     server, g = game()
     eye = (8.5, 65.0, 6.5)                                             # 4 blocks south of the deer, at its body height
     kind, key, _ = g.target(eye, gather.direction(180, 0), g.positions(sorted(g.pickable())))
-    assert (kind, key) == ("prey", "a") and g.says(kind, key) == "Deer · Right click: hunt"
+    assert (kind, key) == ("prey", "a") and lang.plain(g.says(kind, key)) == "Deer · Right click: hunt"
     server.entities["Steve"] = {"Pos": (8.5, 63.38, 6.5), "Rotation": (180.0, 0.0)}
     g.click("Steve")
     assert g.villagers["v"].state == "to_prey" and g.villagers["v"].prey == "a"
