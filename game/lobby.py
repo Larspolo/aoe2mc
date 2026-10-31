@@ -24,8 +24,16 @@ def shown(g):
     return getattr(getattr(g, "game", None), "people", 1) > 1
 
 
-def name(g, n):
+def hidden(g, me, n):
+    """True when "Hidden civilizations" (run.py --hidden-civs, #4758) hides the civilization of player n from player me:
+    an enemy shows "?" (decision #4754: A), an ally its civilization. recap.py shows all at the end."""
+    import gather
+    return bool(getattr(g, "data", {}).get("hidden_civs")) and me is not None and not gather.allied(g.players, me, n)
+
+
+def name(g, n, me=None):
     civ = getattr(g, "trigger_civs", {}).get(str(n)) or build.pretty(g.players.get(str(n), {}).get("civ") or "")
+    civ = "?" if civ and hidden(g, me, n) else civ
     return f"Player {n}" + (f" ({civ})" if civ else "")              # a scenario trigger renames it (#2905)
 
 
@@ -42,7 +50,7 @@ def items(g, player):
         color = g.players.get(str(n), {}).get("color") or player_color(n)
         who = sorted(p for p, k in g.game.sides.items() if k == n)
         lore = "You" if player in who else f"Taken by {who[0]}" if who else "Free"
-        out.append((n - 1, f"{color}_wool", name(g, n), lore))
+        out.append((n - 1, f"{color}_wool", name(g, n, g.game.sides.get(player)), lore))
     return out
 
 
@@ -55,7 +63,7 @@ def choose(g, player, n):
     if not 1 <= n <= count(g) or g.game.sides.get(player) == n:
         return False
     if not g.game.choose(player, n):
-        build.say(g, player, f"{name(g, n)} is taken.")
+        build.say(g, player, f"{name(g, n, g.game.sides.get(player))} is taken.")
         return False
     menu.close(g, player)
     g.command(f"tellraw {player} " + json.dumps({"text": f"You play {name(g, n)}.", "color": "gold"}))

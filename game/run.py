@@ -87,6 +87,7 @@ AGENT = {"User-Agent": "aoe2mc (https://github.com/Larspolo/aoe2mc)"}   # the Pa
 PLUGIN = os.path.join(HERE, "plugin")                               # the Paper plugin: aoe moveto, aoe attack (#435)
 BUNDLED = os.path.join(PLUGIN, "aoe2mc-plugin.jar")                # the jar in an app bundle (#1778): no JDK needed
 STOP_LINE = "\x03"                                                  # the Stop of the window on Windows (gui.STOP_LINE, #3003)
+ROME = "Return of Rome"                                             # the data set of a Return of Rome record (mgz, #4898)
 
 
 def plugin_jar(version):
@@ -699,7 +700,8 @@ SETTINGS = {
     "empire_wars": False,             # "Empire Wars Mode" on top of the mode (ON_TOP, #2490)
     "end_age": "imperial",            # "Ending age" (build.locked, #2346)
     "full_tech_tree": False,          # "Full Tech Tree": the full tech tree and no civilization bonuses (civs.civ, #2354)
-    "handicap": None,                 # {player: percent} "Handicap" (civs.handicap, handicap_choices, #2474)
+    "handicap": None,
+    "hidden_civs": False,             # "Hidden civilizations": an enemy shows "?" in the menus (lobby.hidden, #4758)                 # {player: percent} "Handicap" (civs.handicap, handicap_choices, #2474)
     "mode": "standard",               # the game mode (MODES: its line in game/data/setup.jsonl and its module, #2521)
     "pop_limit": None,                # "Population limit" (train.LIMITS, #2266)
     "record": None,                   # "Record Game": the file of the timeline of the game (record.py, #2649)
@@ -788,6 +790,7 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
     data["end_age"] = train.STARTS[settings["end_age"]]["ages"]  # the last age (build.locked, #2346)
     data["full_tech_tree"] = settings["full_tech_tree"]          # (#2354)
     data["turbo"] = settings["turbo"]                            # (#2359)
+    data["hidden_civs"] = settings["hidden_civs"]                # lobby.hidden (#4758)
     data["unlock_teams"] = settings["unlock_teams"]              # diplomacy.items (#2934)
     data["shared_exploration"] = settings["shared_exploration"] == "on"   # fog.shares (#2602)
     data["resources"] = settings["resources"]                    # the Regicide start resources of the level (#2388)
@@ -1089,6 +1092,27 @@ def interrupt():
         signal.raise_signal(signal.SIGINT)
 
 
+def record_rules(world):
+    """The rule set of the recorded game of world (#4898): "antiquity" when its lobby has the Return of Rome data set
+    (aoe2mc.read_record "dataset", #4832), as AoE2 DE plays it; else "aoe2". Read before the first rule module loads."""
+    try:
+        with open(os.path.join(world, "aoe2mc.json")) as f:
+            lobby = json.load(f).get("lobby") or {}
+    except (OSError, ValueError):
+        return "aoe2"
+    return "antiquity" if lobby.get("dataset") == ROME else "aoe2"
+
+
+def lobby_mode(world, default):
+    """The game mode of the lobby of a random map world (aoe2mc.json "lobby" "mode", #4825), else default."""
+    try:
+        with open(os.path.join(world, "aoe2mc.json")) as f:
+            mode = (json.load(f).get("lobby") or {}).get("mode")
+    except (OSError, ValueError):
+        return default
+    return mode if mode in MODES else default
+
+
 def given(ap, argv):
     """The names (dest) of the options of ap that the command line argv gives: parse it with no defaults."""
     defaults = [(x, x.default) for x in ap._actions]
@@ -1309,6 +1333,8 @@ def main(argv=None, scenario=None):
     ap.add_argument("--shared-exploration", choices=["on", "off"], default="on", help="--play: the AoE2 setting "
                     "\"Shared Exploration\" (default on: allies share their line of sight; off: each player sees only "
                     "through the own units and buildings)")
+    ap.add_argument("--hidden-civs", action="store_true", help="--play: the AoE2 setting \"Hidden civilizations\": "
+                    "the menus show \"?\" for the civilization of an enemy until the end of the game; allies see it")
     ap.add_argument("--turbo", action="store_true", help="--play: the AoE2 setting \"Turbo Mode\": buildings, "
                     "gatherers and builders work 2.5 times faster (not villagers, trade units, castles, towers, wonders)")
     ap.add_argument("--unlock-speed", action="store_true", help="--play: the AoE2 setting \"Lock Speed\" off: the "
@@ -1362,6 +1388,8 @@ def main(argv=None, scenario=None):
             ap.error(f"--challenge {a.challenge} is closed: win a medal in {challenge.CHALLENGES[a.challenge]['after']} first")
     if a.camera and a.follow is not None:
         ap.error("--camera and --follow N both move the spectators: give only one of them")
+    if "mode" not in given(ap, argv):              # the --game-mode of a random map conversion (#4825)
+        a.mode = lobby_mode(a.world, a.mode)
     import savegame
     state = savegame.read(a.load) if a.load else None
     if state:                                        # the settings of the save, but the options given here win (#2325)
@@ -1369,8 +1397,8 @@ def main(argv=None, scenario=None):
     if a.live and (err := live_error(a.world, a.live)):   # before the server starts (#4663)
         sys.exit(err)
     if a.antiquity and (a.replay or a.mode != "standard"):
-        sys.exit("--antiquity plays only --mode standard, and not --replay (the records are AoE2 games)")
-    table.use("antiquity" if a.antiquity else "aoe2")   # before the first rule module loads (civ_choices, #3666)
+        sys.exit("--antiquity plays only --mode standard, and not --replay (a Return of Rome record selects it, #4898)")
+    table.use("antiquity" if a.antiquity or (a.replay and record_rules(a.world) == "antiquity") else "aoe2")   # before the first rule module loads (civ_choices, #3666)
     civ = civ_choices(a.civ)
     handicap = handicap_choices(a.handicap)
     import train
