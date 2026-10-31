@@ -70,6 +70,6 @@ def test_up_train_spends_the_escrow_only_with_escrow(escrow):
 
 def test_up_build_warns_of_another_placement(capsys):
     s, b = script()
-    s.act(None, ("up-build", "place-control", 1, "c:", "house"))
-    assert "unknown placement place-control" in capsys.readouterr().err
+    s.act(None, ("up-build", "place-sideways", 1, "c:", "house"))
+    assert "unknown placement place-sideways" in capsys.readouterr().err
     assert any(x["name"] == "HOUSE" for x in b.g.sites)
