@@ -3,7 +3,7 @@
 
 The language (AoE2 AI Scripting Encyclopedia, https://airef.github.io, "Syntax"):
     ; a comment to the end of the line
-    (defconst NAME VALUE)                     a name for a number; a later rule gets the number
+    (defconst NAME VALUE)                     a name for a number, a name or a text; a later rule gets the value
     (defrule FACT ... => ACTION ...)          the actions run when all facts are true
     (load "FOLDER\\FILE")                     the rules of another file of the AI folder (".per" added)
     #load-if-defined SYMBOL ... #else ... #end-if   keep the text by the symbols of the game (also -not-defined)
@@ -162,8 +162,9 @@ def parse(text, defined=(), folder=None, file="<script>", consts=None, depth=0):
                               tuple(action(a, file, consts) for a in args[k + 1:]), file, line))
         elif name == "defconst":
             if len(args) != 2 or isinstance(args[0], list) or isinstance(args[1], list) or \
-                    not isinstance(v := value(args[1][0], consts), int):
-                raise ValueError(f"{file}:{line}: defconst must be (defconst NAME NUMBER)")
+                    isinstance(v := value(args[1][0], consts), int) and not -32768 <= v <= 32767:
+                raise ValueError(f"{file}:{line}: defconst must be (defconst NAME NUMBER|NAME|TEXT), "
+                                 "a number from -32768 to 32767")   # airef defconst; a name or a text (#5098)
             if (key := args[0][0].lower()) in consts:
                 raise ValueError(f"{file}:{line}: defconst {key} again")   # the game does not allow it
             consts[key] = v
