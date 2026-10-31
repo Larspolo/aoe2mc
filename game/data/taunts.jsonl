@@ -28,12 +28,12 @@
 {"name": "28", "text": "Yeah, well, you should see the other guy."}
 {"name": "29", "text": "Roggan."}
 {"name": "30", "text": "Wololo.", "sound": "entity.evoker.prepare_wololo"}
-{"name": "31", "text": "Attack an enemy now."}
+{"name": "31", "text": "Attack an enemy now.", "answer": "Attacking now."}
 {"name": "32", "text": "Cease creating extra villagers."}
 {"name": "33", "text": "Create extra villagers."}
 {"name": "34", "text": "Build a navy."}
 {"name": "35", "text": "Stop building a navy."}
-{"name": "36", "text": "Wait for my signal to attack."}
+{"name": "36", "text": "Wait for my signal to attack.", "answer": "I will wait for your signal."}
 {"name": "37", "text": "Build a wonder."}
 {"name": "38", "text": "Give me your extra resources."}
 {"name": "39", "text": "(Ally sound)"}
@@ -42,7 +42,7 @@
 {"name": "42", "text": "What age are you in?"}
 {"name": "43", "text": "What is your strategy?"}
 {"name": "44", "text": "How many resources do you have?"}
-{"name": "45", "text": "Retreat now!"}
+{"name": "45", "text": "Retreat now!", "answer": "Retreating."}
 {"name": "46", "text": "Flare the location of your army."}
 {"name": "47", "text": "Attack in direction of the flared location."}
 {"name": "48", "text": "I'm being attacked, please help!"}
@@ -58,14 +58,14 @@
 {"name": "58", "text": "Prepare to send me all your resources so I can vanquish our foes!"}
 {"name": "59", "text": "Stop sending me extra resources."}
 {"name": "60", "text": "Prepare to train a large army, I will send you as many resources as I can"}
-{"name": "61", "text": "Attack player 1! (Blue)"}
-{"name": "62", "text": "Attack player 2! (Red)"}
-{"name": "63", "text": "Attack player 3! (Green)"}
-{"name": "64", "text": "Attack player 4! (Yellow)"}
-{"name": "65", "text": "Attack player 5! (Cyan)"}
-{"name": "66", "text": "Attack player 6! (Purple)"}
-{"name": "67", "text": "Attack player 7! (Gray)"}
-{"name": "68", "text": "Attack player 8! (Orange)"}
+{"name": "61", "text": "Attack player 1! (Blue)", "answer": "Attacking player 1."}
+{"name": "62", "text": "Attack player 2! (Red)", "answer": "Attacking player 2."}
+{"name": "63", "text": "Attack player 3! (Green)", "answer": "Attacking player 3."}
+{"name": "64", "text": "Attack player 4! (Yellow)", "answer": "Attacking player 4."}
+{"name": "65", "text": "Attack player 5! (Cyan)", "answer": "Attacking player 5."}
+{"name": "66", "text": "Attack player 6! (Purple)", "answer": "Attacking player 6."}
+{"name": "67", "text": "Attack player 7! (Gray)", "answer": "Attacking player 7."}
+{"name": "68", "text": "Attack player 8! (Orange)", "answer": "Attacking player 8."}
 {"name": "69", "text": "Delete the object on the flared location."}
 {"name": "70", "text": "Delete your excess villagers."}
 {"name": "71", "text": "Delete excess warships."}
