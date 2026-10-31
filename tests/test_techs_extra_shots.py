@@ -5,9 +5,9 @@ import shutil
 import time
 
 import pytest
+import train as plain_train  # build and gather import train by its plain name (not game.train)
 from test_dock_train import dock_map
 
-import train as plain_train          # build and gather import train by its plain name (not game.train)
 from game import ai, combat, run, train
 
 TECH = {"SCORPION": {"shots": 1, "part": 0.5}, "ARCHER": {"shots": 2}, "SKIRMISHER": {"shots": 1, "attack": 1}}

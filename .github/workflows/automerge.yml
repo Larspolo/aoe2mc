@@ -44,7 +44,8 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git config merge.conflictStyle diff3     # framework/tools/unconflict.py needs the base of each hunk
-          cp framework/tools/unconflict.py framework/tools/merge_jsonl.py "$RUNNER_TEMP/"   # main's copy: the job checks out PR branches
+          cp framework/tools/unconflict.py framework/tools/merge_jsonl.py framework/tools/pr_ticket.py "$RUNNER_TEMP/"   # main's copy: the job checks out PR branches
+          cp framework/tools/push_workflows.py "$RUNNER_TEMP/" && cp -r .github/workflows "$RUNNER_TEMP/workflows"   # main's push workflows (#4839)
           mkdir -p "$RUNNER_TEMP/gate" && cp framework/tools/owner_gate.py framework/tools/agent_config.py agent.toml "$RUNNER_TEMP/gate/"   # main's owners (#4241)
           git config merge.jsonl.driver "python3 $RUNNER_TEMP/merge_jsonl.py %O %A %B"   # game/data/*.jsonl (#2004)
           python3 -m pip install -q "$(grep '^ruff' requirements-dev.txt)"
@@ -56,7 +57,7 @@ jobs:
           BRANCH: ${{ github.event.workflow_run.head_branch }}
           SHA: ${{ github.event.workflow_run.head_sha }}
         run: |
-          merged=0 conflict=0 labels=0
+          merged=0 conflict=0
           # An agent branch, or any branch with the label automerge (the owner's opt-in, #3383).
           AGENT='(.head.ref | test("^(agent/|claude/|ccr-)")) or ([.labels[].name] | index("automerge") != null)'
           # GitHub computes "mergeable" without merge=jsonl and merge=union. A PR that only our drivers can merge
@@ -88,7 +89,7 @@ jobs:
             cat merge.json err.txt; return 1
           }
           merge() {   # merge PR_JSON SHA: SHA is the head that CI tested
-            local pr=$1 sha=$2 n branch ticket t
+            local pr=$1 sha=$2 n branch ticket add t
             n=$(jq -r .number <<<"$pr"); branch=$(jq -r .head.ref <<<"$pr")
             if [ "$(jq -r .head.sha <<<"$pr")" != "$sha" ]; then
               echo "#$n: the head moved after the CI run started: the CI of the new head decides"; return
@@ -102,12 +103,12 @@ jobs:
             if ! R="$R" AGENT_CONFIG="$RUNNER_TEMP/gate/agent.toml" python3 "$RUNNER_TEMP/gate/owner_gate.py" "$n" "$sha"; then
               return    # a change of owners or [accounts] waits for an owner approval (#4241)
             fi
-            ticket=$(jq -r .body <<<"$pr" | grep -oiE '(close[sd]?|fix(e[sd])?|resolve[sd]?) #[0-9]+' | head -1 | grep -oE '[0-9]+$' || true)
-            if [ -z "$ticket" ]; then   # an edited body lost its closing line: take it from the commits (#4122)
-              ticket=$(gh api "repos/$R/pulls/$n/commits" --jq '.[].commit.message' | grep -oiE '(close[sd]?|fix(e[sd])?|resolve[sd]?) #[0-9]+' | head -1 | grep -oE '[0-9]+$' || true)
-              if [ -n "$ticket" ]; then
-                jq -n --arg b "$(jq -r '.body // ""' <<<"$pr")"$'\n\n'"Closes #$ticket" '{body: $b}' | gh api "repos/$R/pulls/$n" -X PATCH --input - >/dev/null
-              fi
+            # the body, else the commits (#4122), else the claim of the branch or a title "(#N)" (#4773)
+            jq . <<<"$pr" > pr.json
+            gh api "repos/$R/pulls/$n/commits" --jq '.[].commit.message' > commits.txt
+            read -r ticket add < <(python3 "$RUNNER_TEMP/pr_ticket.py" pr.json commits.txt; echo) || true
+            if [ "$add" = add ]; then
+              jq -n --arg b "$(jq -r '.body // ""' <<<"$pr")"$'\n\n'"Closes #$ticket" '{body: $b}' | gh api "repos/$R/pulls/$n" -X PATCH --input - >/dev/null
             fi
             if [ -n "$ticket" ]; then
               t=$(gh api "repos/$R/issues/$ticket")
@@ -131,12 +132,15 @@ jobs:
               else
                 # "Base branch was modified" and "Merge already in progress" come when two merges land in the same
                 # second: no label, the next sweep merges the PR or finds it merged (#3063).
-                if ! grep -qi "merge conflicts" <<<"$why" \
+                # A workflow file that main changed after the branch started: the squash makes a new workflow file,
+                # and GITHUB_TOKEN may not write one (also not the push of land()). Each sweep failed for 77 min
+                # (#4848): give the PR to a run, whose session push may (#4926).
+                if ! grep -qi "merge conflicts\|workflows. permission" <<<"$why" \
                    && [ "$(gh api "repos/$R/pulls/$n" --jq .mergeable_state)" != dirty ]; then
                   echo "#$n: the merge failed ($why) with no conflict: the next sweep tries again"; return
                 fi
                 gh api "repos/$R/issues/$n/labels" -f "labels[]=conflict" >/dev/null
-                printf 'CI is green, but the merge failed (%s). Merge `origin/main` into the branch and push (autopilot step 2).\n' \
+                printf 'CI is green, but the merge failed (%s). Merge `origin/main` into the branch from a session and push (autopilot step 2).\n' \
                   "$why" > body.md
                 gh api "repos/$R/issues/$n/comments" -F body=@body.md >/dev/null
                 conflict=1
@@ -144,12 +148,13 @@ jobs:
               fi
             fi
             echo "merged #$n"; merged=1
-            if gh api "repos/$R/pulls/$n/files?per_page=100" --jq '.[].filename' | grep -Fqx .github/labels.txt; then
-              labels=1
-            fi
+            gh api "repos/$R/pulls/$n/files?per_page=100" --jq '.[].filename' > files.txt || true
+            cat files.txt >> "$RUNNER_TEMP/merged_files.txt"    # for the push workflows after the merges (#4839)
             gh api "repos/$R/git/refs/heads/$branch" -X DELETE || true
             if [ -n "$ticket" ]; then
               gh api "repos/$R/issues/$ticket/labels/in-progress" -X DELETE >/dev/null 2>&1 || true
+              # GitHub closes the ticket by the closing word later, and that can fail (#4847): close it here as well
+              [ "$(gh api "repos/$R/issues/$ticket" --jq .state)" = open ] && gh api "repos/$R/issues/$ticket" -X PATCH -f state=closed -f state_reason=completed >/dev/null || true
             fi
           }
           if [ "$EVENT" = workflow_run ]; then
@@ -176,11 +181,12 @@ jobs:
             gh workflow run ci.yml --repo "$R" --ref main
             gh workflow run coverage.yml --repo "$R" --ref main || true     # report and MAX on main (#233)
           fi
-          # A push of GITHUB_TOKEN starts no `push` workflow, so labels.yml does not see the merge (#980). Start it only
-          # when the merged PR changed labels.txt: it calls the API once per label, and a start after each of about
-          # 50 merges per hour uses much of the token limit (1,000 calls per hour per repository).
-          if [ "$labels" = 1 ]; then
-            gh workflow run labels.yml --repo "$R" --ref main || true
+          # A push of GITHUB_TOKEN starts no `push` workflow: start each one of main whose paths filter matches the
+          # merged files, once (#4839; for example the site image of a new project). labels.yml starts only when a PR
+          # changed labels.txt (#980): it calls the API once per label.
+          if [ "$merged" = 1 ] && [ -s "$RUNNER_TEMP/merged_files.txt" ]; then
+            sort -u "$RUNNER_TEMP/merged_files.txt" | xargs -d '\n' python3 "$RUNNER_TEMP/push_workflows.py" \
+              --dir "$RUNNER_TEMP/workflows" | while read -r w; do gh workflow run "$w" --repo "$R" --ref main || true; done
           fi
           if [ "$merged" = 1 ] || [ "$conflict" = 1 ]; then              # GitHub ignores merge=union: do not wait 20 min
             gh workflow run unconflict.yml --repo "$R" || true             # main moved: merge it into conflicted PRs (#280)

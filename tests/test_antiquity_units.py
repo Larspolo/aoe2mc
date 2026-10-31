@@ -15,6 +15,7 @@ import combat, train
 out = {"open": {}, "trains": {}}
 server, g = setup(food=1000, age=0)
 g.stock.update(food=1000, wood=1000, gold=1000, stone=1000)
+g.sites.append({"name": "HOUSE", "player": 1, "footprint": [6, 9, 2, 5], "done": True})   # room from a house too (train.HOUSING)
 for i, age in enumerate(["", "TOOL_AGE", "BRONZE_AGE", "IRON_AGE"]):
     g.techs.add(age) if age else None
     out["open"][i] = sorted(n for b in ("ACADEMY", "ARCHERY_RANGE", "BARRACKS", "STABLE") for n in train.TRAINS[b]

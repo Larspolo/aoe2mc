@@ -102,7 +102,7 @@ def open_menu(g, player, uuid):
 
 def mode_items(g, uuid):
     """The mode item of the menu, only for a unit with a melee mode (combat.MELEE_MODE, the Ratha, #4504)."""
-    import combat                                                  # combat imports gather, gather imports this module
+    import combat  # combat imports gather, gather imports this module
     if getattr(g, "soldiers", {}).get(uuid) not in combat.MELEE_MODE:
         return []
     melee = vars(g).get("unit_modes", {}).get(uuid) == "melee"
@@ -113,7 +113,7 @@ def mode_items(g, uuid):
 def switch_mode(g, mode):
     """Put each selected unit with a melee mode into mode ("melee" or "ranged", the start): g.unit_modes, its values, its
     weapon (a skeleton with a sword takes the vanilla melee goal, one with a bow shoots) and its range goal."""
-    import combat                                                  # combat imports gather, gather imports this module
+    import combat  # combat imports gather, gather imports this module
     modes = vars(g).setdefault("unit_modes", {})
     for u in sorted(g.selected):
         name = g.soldiers.get(u)
@@ -144,7 +144,7 @@ def mode_commands(g, u, name, mode):
 
 def put(g, s):
     """Give each selected military unit the stance s."""
-    import combat                                                  # combat imports gather, gather imports this module
+    import combat  # combat imports gather, gather imports this module
     for u in sorted(g.selected):
         if u in g.soldiers:
             g.command(combat.stance_command(u, s))
@@ -175,8 +175,13 @@ def stop(g):
 def delete(g):
     """Kill each selected own unit at once, with its horse, camel or boat, as the AoE2 Delete key (#3451): no resources
     come back. The census then finds them dead as after a fight (score, population, selection: train.census)."""
-    import train                                                   # train imports gather, gather imports this module
-    for u in [u for u in sorted(g.selected) if u in g.villagers or u in g.soldiers]:   # not KEEP: "Disable Object Deletion" (#3777)
+    delete_units(g, [u for u in sorted(g.selected) if u in g.villagers or u in g.soldiers])
+
+
+def delete_units(g, units):
+    """Kill the own units at once (delete()), also for an AI script (per.py, up-delete-idle-units)."""
+    import train  # train imports gather, gather imports this module
+    for u in units:                                                    # not KEEP: "Disable Object Deletion" (#3777)
         g.command(f"execute as {u} if entity @s[tag=!aoe2mc.keep] on vehicle run kill @s")
         g.command(f"execute as {u} if entity @s[tag=!aoe2mc.keep] run kill @s")
     train.census(g)
@@ -193,7 +198,7 @@ def patrol(g, player, cell):
     """Send the selected military units on a patrol between the middle of the selection and the block cell (x, z), as
     the AoE2 Patrol (#3355): a new tag aoe_patrol.<n>, one entry of g.patrols (scenario.patrol walks the legs) and the
     stance aggressive for the walk, so that the mob AI attacks the enemies on the way. A new order ends it."""
-    import gather                                                  # gather imports this module
+    import gather  # gather imports this module
     units = [u for u in sorted(g.selected) if u in g.soldiers]
     pos = g.positions(units)
     if not pos:
@@ -217,7 +222,7 @@ def attack_move(g, player, cell):
     """Send the selected military units to the clicked ground cell (x, z), as the AoE2 Attack Move (#3357): they walk
     with the stance aggressive, so that the mob AI attacks each enemy on the way. arrive() gives the old stance back at
     the point; a new order ends it (end_attack_moves)."""
-    import gather                                                  # gather imports this module
+    import gather  # gather imports this module
     units = [u for u in sorted(g.selected) if u in g.soldiers]
     if not units:
         return
@@ -232,13 +237,13 @@ def attack_move(g, player, cell):
 
 def siege(g):
     """The selected units that can attack the ground (combat.GROUND, the AoE2 list of #4078)."""
-    import combat                                                  # combat imports gather, gather imports this module
+    import combat  # combat imports gather, gather imports this module
     return [u for u in sorted(g.selected) if g.soldiers.get(u) in combat.GROUND and not packed(g, u)]
 
 
 def packed(g, u):
     """True for a Trebuchet that is not unpacked: AoE2 lets only an unpacked Trebuchet attack the ground (#4207)."""
-    import trebuchet                                               # trebuchet imports gather
+    import trebuchet  # trebuchet imports gather
     return g.soldiers.get(u) == trebuchet.NAME and trebuchet.state(g, u) != "unpacked"
 
 
@@ -250,7 +255,7 @@ def packed_hint(g):
 def attack_ground(g, player, cell):
     """The selected siege units shoot at the clicked ground cell (x, z) until a new order, as the AoE2 Attack Ground
     (#4079): `aoe attackground` of the plugin (#4078). The other selected units ignore the order."""
-    import gather                                                  # gather imports this module
+    import gather  # gather imports this module
     if hint := packed_hint(g):
         g.command(f"title {player} actionbar " + json.dumps({"text": hint}))
     if not (units := siege(g)):

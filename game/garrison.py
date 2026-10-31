@@ -37,6 +37,7 @@ import math
 import civs
 import ruins
 import table
+
 from aoe2mc import GARRISONED, MADE_INSIDE
 
 ROWS = table.load("buildings.jsonl")                            # the keys "garrison" and "arrows" (#2034)
@@ -92,7 +93,8 @@ def arrows(building, names, factor=1, more=0):
     bombard tower shoots one cannon ball (#1375). A dock: 1 for each fishing ship, at most SIZES (AoE2 DE: up to 5 arrows, #1949). A fortified church:
     1 for each villager, no soldier (AoE2 DE: villagers and relics, #1948). more: the arrows of the technologies (#4258).
     A building with no attack: none."""
-    import civs, combat                                            # combat imports gather
+    import civs  # combat imports gather
+    import combat
     if building == "BOMBARD_TOWER":
         return 1
     if building == "DOCK":
@@ -107,9 +109,10 @@ def arrows(building, names, factor=1, more=0):
 
 def arrows_command(g, rect):
     """The plugin command that gives the building rect the arrows of its garrison (#1113)."""
-    import civs, combat
+    import civs
+    import combat
     names = ["VILLAGER" if u in g.villagers else g.soldiers.get(u, "") for u in g.garrisons.get(rect, [])]
-    import train                                                   # train imports this module
+    import train  # train imports this module
     building = holders(g).get(rect, {}).get("name")
     more = train.value("arrows", vars(g).get("upgraded", {}).get(rect), 0)   # the Defensive Town Center (#2497)
     return f"aoe arrows {combat.target_uuid([rect[0], rect[2], rect[1], rect[3]])} {arrows(building, names, civs.arrows(g, building), train.more_arrows(g, building)) + more}{train.pass_arrows(g, building)}"
@@ -117,7 +120,7 @@ def arrows_command(g, rect):
 
 def ungarrison(building):
     """The menu item UNGARRISON of the building, in its slot: SPARE when a menu item of the building is in its slot."""
-    import train                                                   # train imports garrison
+    import train  # train imports garrison
     used = {train.ITEMS[n][0] for n in train.TRAINS.get(building, ())}
     return (SPARE if UNGARRISON[0] in used else UNGARRISON[0], *UNGARRISON[1:])
 
@@ -136,7 +139,8 @@ def order(g, player, cell):
         return dock_order(g, player, rect)
     if rect is None or not g.selected or not g.paper or (to := door(g, rect)) is None:
         return None
-    import ai, train                                               # ai and train import gather, gather imports this module
+    import ai  # ai and train import gather, gather imports this module
+    import train
     x, z = to
     by, flock = BY.get(homes[rect]["name"]), vars(g).get("flock", set())
     units = [u for u in sorted(g.selected) if (unit_name(g, u).startswith(by) if by else u not in flock)]
@@ -153,12 +157,30 @@ def order(g, player, cell):
     return rect
 
 
+def send(g, player, units, rect):
+    """The units go into the own building rect by the path of a click (order()): an AI script (per.py, up-garrison)."""
+    old, g.selected = g.selected, set(units)
+    try:
+        return order(g, player, (rect[0], rect[2]))
+    finally:
+        g.selected = old
+
+
+def gather_inside(g, player, rect, uuid):
+    """A new unit of the building rect goes into it when an AI script set its gather point inside (up-gather-inside,
+    vars(g)["gather_inside"]: {building name: state}). Returns True when it goes in."""
+    on = vars(g).get("gather_inside", {}).get(holders(g).get(rect, {}).get("name"))
+    return bool(on) and send(g, player, [uuid], rect) is not None
+
+
 def bell(g, player, chosen=None):
     """Ring the town bell (#3419, AoE2 DE wiki "Town Bell"): each own villager and mule cart walks into the nearest own
     building of holders() with room left within the line of sight of a town center, the same walk as order(); one with no such building
     keeps working. Not a dock or a building of BY: they take only ships or animals. Returns the sent units.
     chosen: only these units go, with no bell sound (Seek Shelter of the selection, #3440)."""
-    import ai, combat, train                                       # ai and train import gather, gather imports this module
+    import ai  # ai and train import gather, gather imports this module
+    import combat
+    import train
     homes = {r: o for r, o in holders(g).items() if o["name"] != "DOCK" and o["name"] not in BY and door(g, r) is not None}
     room = {r: size(g, o["name"]) - len(g.garrisons.get(r, [])) - sum(e == r for e in g.entering.values()) for r, o in homes.items()}
     units = sorted(set(g.villagers) | {u for u, n in g.soldiers.items() if n == "MULE_CART"})
@@ -229,7 +251,10 @@ def back(g, units):
 def open_menu(g, player, cell):
     """Open the menu of an own building with no training menu (a tower, a keep, a house of the Khmer), at the block cell
     (x, z), when units are inside: its item UNGARRISON lets them out (#2970). Returns its footprint, or None."""
-    import build, demolish, menu, train                            # train imports this module
+    import build  # train imports this module
+    import demolish
+    import menu
+    import train
     rect = next((r for r in holders(g) if cell and r[0] <= cell[0] < r[1] and r[2] <= cell[1] < r[3]), None)
     if rect is None or not getattr(g, "garrisons", {}).get(rect) or train.home(g, cell) is not None:
         return None
@@ -253,7 +278,7 @@ def unit_name(g, u):
 def dock_order(g, player, rect):
     """The selected fishing ships sail to the water next to the dock rect and go in (#1949). A boat has no Minecraft
     path finding: it sails with the /tp steps of fleet.py. Returns rect, or None when no fishing ship is selected."""
-    import fleet                                                   # fleet imports gather, gather imports this module
+    import fleet  # fleet imports gather, gather imports this module
     boats = [v for u in sorted(g.selected) if g.soldiers.get(u, "").startswith(FISHER) and (v := fleet.ship(g, u))]
     pier = fleet.pier(g, rect)
     if not boats or not pier or not g.paper:
@@ -280,7 +305,7 @@ def adopt(g):
         else:
             rest.append(u)
     if rest:
-        import transport                                           # transport imports this module
+        import transport  # transport imports this module
         transport.adopt(g, rest)
 
 
@@ -311,7 +336,7 @@ def tick(g):
             elif to is None or math.dist((pos[u][0], pos[u][2]), (to[0] + 0.5, to[1] + 0.5)) <= DOOR:
                 del g.entering[u]
                 go_in(g, u, rect, homes[rect])
-    import combat                                                  # combat imports gather
+    import combat  # combat imports gather
     for rect in held if g.paper else []:                           # a start building has a target entity (combat.setup)
         o = homes.get(rect)
         if o is None or o.get("kind") == "building" and o["name"] in combat.BUILDINGS and "passed" not in g.command(
@@ -367,7 +392,7 @@ def out(g, rect):
 
 def fleet_pier(g, rect):
     """The water cells next to the dock rect (fleet.pier)."""
-    import fleet                                                   # fleet imports gather, gather imports this module
+    import fleet  # fleet imports gather, gather imports this module
     return fleet.pier(g, rect)
 
 
@@ -405,7 +430,7 @@ def inside(g):
 def pasture(g, dt):
     """The herdable animals in the own mills make food for dt AoE2 seconds (civs.HERD_FOOD: Gurjaras, #2342): a × ln(F / b
     + 1) per AoE2 minute for F food of all of them (AoE2 DE wiki "Gurjaras"), with no end. The fractions add up."""
-    import gather                                                  # gather imports this module
+    import gather  # gather imports this module
     pens = civs.HERD_FOOD.get(civs.civ(g), {})
     if not pens or not g.garrisons:
         return
@@ -423,7 +448,7 @@ def pasture(g, dt):
 
 def heal(g, dt):
     """Give the injured units in the garrisons of g their hit points back for dt AoE2 seconds (HEAL)."""
-    import monk                                                    # monk imports gather, gather imports this module
+    import monk  # monk imports gather, gather imports this module
     inside = set().union(*g.garrisons.values())
     g.whole = vars(g).get("whole", set()) & inside                 # a unit that left can come back injured
     g.garrison_heal = vars(g).get("garrison_heal", 0.0) + dt if inside else 0.0   # no heal time for an empty one

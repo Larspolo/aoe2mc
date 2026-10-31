@@ -1,41 +1,790 @@
-{"name": "archer", "game": "ARCHER", "kind": "unit"}
+{"name": "acclivity", "kind": "map-type"}
+{"name": "acropolis", "kind": "map-type"}
+{"name": "african-clearing", "kind": "map-type"}
+{"name": "aftermath", "kind": "map-type"}
+{"name": "alpine-lakes", "kind": "map-type"}
+{"name": "amazon-tunnel", "kind": "map-type"}
+{"name": "aquarena", "kind": "map-type"}
+{"name": "arabia", "kind": "map-type"}
+{"name": "arabian-desert", "kind": "map-type"}
+{"name": "arbalest", "game": "ARBALESTER", "kind": "unit", "id": 492}
+{"name": "archer", "game": "ARCHER", "kind": "unit", "id": 4}
 {"name": "archer-line", "game": "ARCHER", "kind": "unit"}
-{"name": "archery-range", "game": "ARCHERY_RANGE", "kind": "building"}
-{"name": "barracks", "game": "BARRACKS", "kind": "building"}
-{"name": "blacksmith", "game": "BLACKSMITH", "kind": "building"}
+{"name": "archery-range", "game": "ARCHERY_RANGE", "kind": "building", "id": 87}
+{"name": "archipelago", "kind": "map-type"}
+{"name": "arena", "kind": "map-type"}
+{"name": "armenians", "game": "ARMENIANS", "kind": "civ"}
+{"name": "atacama", "kind": "map-type"}
+{"name": "aztec", "game": "AZTECS", "kind": "civ"}
+{"name": "aztecs", "game": "AZTECS", "kind": "civ"}
+{"name": "baltic", "kind": "map-type"}
+{"name": "barracks", "game": "BARRACKS", "kind": "building", "id": 12}
+{"name": "battering-ram", "game": "BATTERING_RAM", "kind": "unit", "id": 35}
+{"name": "battering-ram-line", "game": "BATTERING_RAM", "kind": "unit"}
+{"name": "battle-elephant", "game": "BATTLE_ELEPHANT", "kind": "unit", "id": 1132}
+{"name": "battle-elephant-line", "game": "BATTLE_ELEPHANT", "kind": "unit"}
+{"name": "battle-on-the-ice", "kind": "map-type"}
+{"name": "bengalis", "game": "BENGALIS", "kind": "civ"}
+{"name": "berbers", "game": "BERBERS", "kind": "civ"}
+{"name": "black-forest", "kind": "map-type"}
+{"name": "blacksmith", "game": "BLACKSMITH", "kind": "building", "id": 103}
+{"name": "bog-islands", "kind": "map-type"}
+{"name": "bogland", "kind": "map-type"}
+{"name": "bohemians", "game": "BOHEMIANS", "kind": "civ"}
+{"name": "bombard-cannon", "game": "BOMBARD_CANNON", "kind": "unit", "id": 36}
+{"name": "bombard-cannon-line", "game": "BOMBARD_CANNON", "kind": "unit"}
+{"name": "bombard-tower", "game": "BOMBARD_TOWER", "kind": "building", "id": 236}
+{"name": "border-dispute", "kind": "map-type"}
+{"name": "briton", "game": "BRITONS", "kind": "civ"}
+{"name": "britons", "game": "BRITONS", "kind": "civ"}
+{"name": "budapest", "kind": "map-type"}
+{"name": "bulgarians", "game": "BULGARIANS", "kind": "civ"}
+{"name": "burgundians", "game": "BURGUNDIANS", "kind": "civ"}
+{"name": "burmese", "game": "BURMESE", "kind": "civ"}
+{"name": "byzantine", "game": "BYZANTINES", "kind": "civ"}
+{"name": "byzantines", "game": "BYZANTINES", "kind": "civ"}
+{"name": "camel", "game": "CAMEL_RIDER", "kind": "unit", "id": 329}
 {"name": "camel-line", "game": "CAMEL_RIDER", "kind": "unit"}
-{"name": "castle", "game": "CASTLE", "kind": "building"}
-{"name": "castle-age", "game": "CASTLE_AGE", "kind": "age", "age": 2}
-{"name": "crossbowman", "game": "CROSSBOWMAN", "kind": "unit"}
+{"name": "canals", "kind": "map-type"}
+{"name": "cannon-galleon", "game": "CANNON_GALLEON", "kind": "unit", "id": 420}
+{"name": "cannon-galleon-line", "game": "CANNON_GALLEON", "kind": "unit"}
+{"name": "capped-ram", "game": "CAPPED_RAM", "kind": "unit", "id": 422}
+{"name": "capricious", "kind": "map-type"}
+{"name": "caravanserai", "game": "CARAVANSERAI", "kind": "building", "id": 1754}
+{"name": "caravel", "game": "CARAVEL", "kind": "unit", "id": 1004}
+{"name": "castle", "game": "CASTLE", "kind": "building", "id": 82}
+{"name": "castle-age", "game": "CASTLE_AGE", "kind": "age", "age": 2, "id": 102}
+{"name": "cavalier", "game": "CAVALIER", "kind": "unit", "id": 283}
+{"name": "cavalry-archer", "game": "CAVALRY_ARCHER", "kind": "unit", "id": 39}
+{"name": "cavalry-archer-line", "game": "CAVALRY_ARCHER", "kind": "unit"}
+{"name": "celtic", "game": "CELTS", "kind": "civ"}
+{"name": "celts", "game": "CELTS", "kind": "civ"}
+{"name": "cenotes", "kind": "map-type"}
+{"name": "champion", "game": "CHAMPION", "kind": "unit", "id": 567}
+{"name": "chaos-pit", "kind": "map-type"}
+{"name": "chinese", "game": "CHINESE", "kind": "civ"}
+{"name": "cityoflakes", "kind": "map-type"}
+{"name": "cliffbound", "kind": "map-type"}
+{"name": "coastal", "kind": "map-type"}
+{"name": "coastal-forest", "kind": "map-type"}
+{"name": "condottiero-placeholder", "game": "CONDOTTIERO", "kind": "unit"}
+{"name": "continental", "kind": "map-type"}
+{"name": "crater", "kind": "map-type"}
+{"name": "crater-lake", "kind": "map-type"}
+{"name": "crossbowman", "game": "CROSSBOWMAN", "kind": "unit", "id": 24}
+{"name": "crossroads", "kind": "map-type"}
+{"name": "crownwood", "kind": "map-type"}
+{"name": "ctr-monsoon", "kind": "map-type"}
+{"name": "ctr-pyramid-descent", "kind": "map-type"}
+{"name": "ctr-random", "kind": "map-type"}
+{"name": "ctr-spiral", "kind": "map-type"}
+{"name": "cumans", "game": "CUMANS", "kind": "civ"}
+{"name": "custom_map", "kind": "map-type"}
 {"name": "dark-age", "kind": "age", "age": 0}
-{"name": "dock", "game": "DOCK", "kind": "building"}
-{"name": "farm", "game": "FARM", "kind": "building"}
-{"name": "feudal-age", "game": "FEUDAL_AGE", "kind": "age", "age": 1}
-{"name": "house", "game": "HOUSE", "kind": "building"}
-{"name": "imperial-age", "game": "IMPERIAL_AGE", "kind": "age", "age": 3}
-{"name": "knight", "game": "KNIGHT", "kind": "unit"}
-{"name": "lumber-camp", "game": "LUMBER_CAMP", "kind": "building"}
-{"name": "man-at-arms", "game": "MAN_AT_ARMS", "kind": "unit"}
-{"name": "market", "game": "MARKET", "kind": "building"}
-{"name": "militia", "game": "MILITIA", "kind": "unit"}
+{"name": "demolition-raft", "game": "DEMOLITION_RAFT", "kind": "unit"}
+{"name": "demolition-ship", "game": "DEMOLITION_SHIP", "kind": "unit", "id": 527}
+{"name": "demolition-ship-line", "game": "DEMOLITION_RAFT", "kind": "unit"}
+{"name": "dingos", "kind": "map-type"}
+{"name": "dock", "game": "DOCK", "kind": "building", "id": 45}
+{"name": "donjon", "game": "DONJON", "kind": "building", "id": 1665}
+{"name": "dorothea-quarry", "kind": "map-type"}
+{"name": "dravidians", "game": "DRAVIDIANS", "kind": "civ"}
+{"name": "dune-springs", "kind": "map-type"}
+{"name": "eagle-scout", "game": "EAGLE_SCOUT", "kind": "unit"}
+{"name": "eagle-warrior", "game": "EAGLE_WARRIOR", "kind": "unit", "id": 751}
+{"name": "eagle-warrior-line", "game": "EAGLE_SCOUT", "kind": "unit"}
+{"name": "easiest", "game": "easiest", "kind": "difficulty"}
+{"name": "easy", "game": "standard", "kind": "difficulty"}
+{"name": "el-dorado", "kind": "map-type"}
+{"name": "elephant-archer-line", "game": "ELEPHANT_ARCHER", "kind": "unit"}
+{"name": "elite-battle-elephant", "game": "ELITE_BATTLE_ELEPHANT", "kind": "unit", "id": 1134}
+{"name": "elite-cannon-galleon", "game": "ELITE_CANNON_GALLEON", "kind": "unit", "id": 691}
+{"name": "elite-eagle-warrior", "game": "ELITE_EAGLE_WARRIOR", "kind": "unit", "id": 752}
+{"name": "elite-skirmisher", "game": "ELITE_SKIRMISHER", "kind": "unit", "id": 6}
+{"name": "elite-steppe-lancer", "game": "ELITE_STEPPE_LANCER", "kind": "unit", "id": 1372}
+{"name": "enclosed", "kind": "map-type"}
+{"name": "eruption", "kind": "map-type"}
+{"name": "ethiopian", "game": "ETHIOPIANS", "kind": "civ"}
+{"name": "ethiopians", "game": "ETHIOPIANS", "kind": "civ"}
+{"name": "extreme", "game": "extreme", "kind": "difficulty"}
+{"name": "fall-of-axum", "kind": "map-type"}
+{"name": "fall-of-rome", "kind": "map-type"}
+{"name": "farm", "game": "FARM", "kind": "building", "id": 50}
+{"name": "fast-fire-ship", "game": "FAST_FIRE_SHIP", "kind": "unit", "id": 532}
+{"name": "feitoria", "game": "FEITORIA", "kind": "building", "id": 1021}
+{"name": "feudal-age", "game": "FEUDAL_AGE", "kind": "age", "age": 1, "id": 101}
+{"name": "fire-galley", "game": "FIRE_GALLEY", "kind": "unit", "id": 1103}
+{"name": "fire-ship", "game": "FIRE_SHIP", "kind": "unit", "id": 529}
+{"name": "fire-ship-line", "game": "FIRE_GALLEY", "kind": "unit"}
+{"name": "fish-trap", "game": "FISH_TRAP", "kind": "building", "id": 199}
+{"name": "fishing-ship", "game": "FISHING_SHIP", "kind": "unit", "id": 13}
+{"name": "flaming-camel", "game": "FLAMING_CAMEL", "kind": "unit", "id": 1263}
+{"name": "flemish-pikeman-set", "set": ["FLEMISH_MILITIA"], "kind": "unit"}
+{"name": "folwark", "game": "FOLWARK", "kind": "building"}
+{"name": "fortified-clearing", "kind": "map-type"}
+{"name": "fortress", "kind": "map-type"}
+{"name": "four-lakes", "kind": "map-type"}
+{"name": "frankish", "game": "FRANKS", "kind": "civ"}
+{"name": "franks", "game": "FRANKS", "kind": "civ"}
+{"name": "frigid-lake", "kind": "map-type"}
+{"name": "galleon", "game": "GALLEON", "kind": "unit", "id": 442}
+{"name": "galley", "game": "GALLEY", "kind": "unit", "id": 539}
+{"name": "galley-line", "game": "GALLEY", "kind": "unit"}
+{"name": "gate", "game": "GATE", "kind": "building", "id": 487}
+{"name": "genitour-line", "game": "GENITOUR", "kind": "unit"}
+{"name": "georgians", "game": "GEORGIANS", "kind": "civ"}
+{"name": "ghost-lake", "kind": "map-type"}
+{"name": "giant", "kind": "map-size", "tiles": 240}
+{"name": "giant-map", "kind": "map-size", "tiles": 240}
+{"name": "glacis", "kind": "map-type"}
+{"name": "glade", "kind": "map-type"}
+{"name": "gold-miner-f", "task": ["GOLD_MINER"], "kind": "unit"}
+{"name": "gold-miner-m", "task": ["GOLD_MINER"], "kind": "unit"}
+{"name": "gold-rush", "kind": "map-type"}
+{"name": "golden-stream", "kind": "map-type"}
+{"name": "golden-swamp", "kind": "map-type"}
+{"name": "goldenpit", "kind": "map-type"}
+{"name": "gothic", "game": "GOTHS", "kind": "civ"}
+{"name": "goths", "game": "GOTHS", "kind": "civ"}
+{"name": "graupel", "kind": "map-type"}
+{"name": "graveyards", "kind": "map-type"}
+{"name": "greenland", "kind": "map-type"}
+{"name": "gurjaras", "game": "GURJARAS", "kind": "civ"}
+{"name": "haboob", "kind": "map-type"}
+{"name": "halberdier", "game": "HALBERDIER", "kind": "unit", "id": 359}
+{"name": "hamburger", "kind": "map-type"}
+{"name": "hand-cannoneer", "game": "HAND_CANNONEER", "kind": "unit", "id": 5}
+{"name": "hard", "game": "hard", "kind": "difficulty"}
+{"name": "hardest", "game": "hardest", "kind": "difficulty"}
+{"name": "heavy-camel", "game": "HEAVY_CAMEL_RIDER", "kind": "unit", "id": 330}
+{"name": "heavy-cavalry-archer", "game": "HEAVY_CAVALRY_ARCHER", "kind": "unit", "id": 474}
+{"name": "heavy-demolition-ship", "game": "HEAVY_DEMOLITION_SHIP", "kind": "unit", "id": 528}
+{"name": "heavy-scorpion", "game": "HEAVY_SCORPION", "kind": "unit", "id": 542}
+{"name": "hengehold", "kind": "map-type"}
+{"name": "hideout", "kind": "map-type"}
+{"name": "highland", "kind": "map-type"}
+{"name": "hillfort", "kind": "map-type"}
+{"name": "hindustanis", "game": "HINDUSTANIS", "kind": "civ"}
+{"name": "hollow-woodlands", "kind": "map-type"}
+{"name": "house", "game": "HOUSE", "kind": "building", "id": 70}
+{"name": "huge-map", "kind": "map-size", "tiles": 252}
+{"name": "hun", "game": "HUNS", "kind": "civ"}
+{"name": "huns", "game": "HUNS", "kind": "civ"}
+{"name": "huskarl-set", "set": ["ELITE_HUSKARL", "HUSKARL"], "kind": "unit"}
+{"name": "hussar", "game": "HUSSAR", "kind": "unit", "id": 441}
+{"name": "idle-type-fishing-ship", "game": "FISHING_SHIP", "kind": "idle"}
+{"name": "idle-type-trade-cart", "game": "TRADE_CART", "kind": "idle"}
+{"name": "idle-type-trade-cog", "game": "TRADE_COG", "kind": "idle"}
+{"name": "idle-type-villager", "game": "VILLAGER_MALE", "kind": "idle"}
+{"name": "imperial-age", "game": "IMPERIAL_AGE", "kind": "age", "age": 3, "id": 103}
+{"name": "imperial-camel", "game": "IMPERIAL_CAMEL_RIDER", "kind": "unit", "id": 207}
+{"name": "imperial-skirmisher", "game": "IMPERIAL_SKIRMISHER", "kind": "unit", "id": 1155}
+{"name": "incan", "game": "INCAS", "kind": "civ"}
+{"name": "incas", "game": "INCAS", "kind": "civ"}
+{"name": "indian", "game": "HINDUSTANIS", "kind": "civ"}
+{"name": "infantry-class", "set": ["BERSERK", "CHAKRAM_THROWER", "CHAMPION", "CHAMPI_RUNNER", "CHAMPI_SCOUT", "CHAMPI_WARRIOR", "CONDOTTIERO", "EAGLE_SCOUT", "EAGLE_WARRIOR", "ELITE_CHAKRAM_THROWER", "ELITE_CHAMPI_WARRIOR", "ELITE_EAGLE_WARRIOR", "ELITE_FIRE_LANCER", "ELITE_GBETO", "ELITE_GHULAM", "ELITE_HOPLITE", "ELITE_HUSKARL", "ELITE_IBIRAPEMA_WARRIOR", "ELITE_JAGUAR_WARRIOR", "ELITE_KAMAYUK", "ELITE_KARAMBIT_WARRIOR", "ELITE_OBUCH", "ELITE_SERJEANT", "ELITE_SHOTEL_WARRIOR", "ELITE_TEMPLE_GUARD", "ELITE_URUMI_SWORDSMAN", "ELITE_VARANGIAN_GUARD", "FIRE_LANCER", "FLEMISH_MILITIA", "GBETO", "GHULAM", "HALBERDIER", "HOPLITE", "HUSKARL", "IBIRAPEMA_WARRIOR", "JAGUAR_WARRIOR", "JIAN_SWORDSMAN", "KAMAYUK", "KARAMBIT_WARRIOR", "LEGIONARY", "LONG_SWORDSMAN", "MAN_AT_ARMS", "MILITIA", "OBUCH", "PIKEMAN", "SAMURAI", "SERJEANT", "SHOTEL_WARRIOR", "SPEARMAN", "TEMPLE_GUARD", "TEUTONIC_KNIGHT", "THROWING_AXEMAN", "TWO_HANDED_SWORDSMAN", "URUMI_SWORDSMAN", "VARANGIAN_GUARD", "WOAD_RAIDER"], "kind": "unit", "id": 906}
+{"name": "islands", "kind": "map-type"}
+{"name": "isthmus", "kind": "map-type"}
+{"name": "italian", "game": "ITALIANS", "kind": "civ"}
+{"name": "italians", "game": "ITALIANS", "kind": "civ"}
+{"name": "japanese", "game": "JAPANESE", "kind": "civ"}
+{"name": "karsts", "kind": "map-type"}
+{"name": "kawasan", "kind": "map-type"}
+{"name": "keep", "game": "KEEP", "kind": "building", "id": 235}
+{"name": "khmer", "game": "KHMER", "kind": "civ"}
+{"name": "kilimanjaro", "kind": "map-type"}
+{"name": "king-of-the-hill", "kind": "map-type"}
+{"name": "kipchak-set", "set": ["ELITE_KIPCHAK", "KIPCHAK"], "kind": "unit"}
+{"name": "knight", "game": "KNIGHT", "kind": "unit", "id": 38}
+{"name": "knight-line", "game": "KNIGHT", "kind": "unit"}
+{"name": "konnik-set", "set": ["ELITE_KONNIK", "KONNIK"], "kind": "unit"}
+{"name": "korean", "game": "KOREANS", "kind": "civ"}
+{"name": "koreans", "game": "KOREANS", "kind": "civ"}
+{"name": "krepost", "game": "KREPOST", "kind": "building", "id": 1251}
+{"name": "land-madness", "kind": "map-type"}
+{"name": "land-nomad", "kind": "map-type"}
+{"name": "large", "kind": "map-size", "tiles": 220}
+{"name": "large-map", "kind": "map-size", "tiles": 220}
+{"name": "light-cavalry", "game": "LIGHT_CAVALRY", "kind": "unit", "id": 546}
+{"name": "lithuanians", "game": "LITHUANIANS", "kind": "civ"}
+{"name": "livestock-class", "set": ["COW", "GOAT", "GOOSE", "LLAMA", "PIG", "SHEEP", "TURKEY", "WATER_BUFFALO"], "kind": "unit"}
+{"name": "loch-ness", "kind": "map-type"}
+{"name": "lombardia", "kind": "map-type"}
+{"name": "long-swordsman", "game": "LONG_SWORDSMAN", "kind": "unit", "id": 77}
+{"name": "longship", "game": "LONGSHIP", "kind": "unit"}
+{"name": "lowland", "kind": "map-type"}
+{"name": "ludicrous", "kind": "map-size", "tiles": 480}
+{"name": "ludicrous-map", "kind": "map-size", "tiles": 480}
+{"name": "ludikris", "kind": "map-size", "tiles": 480}
+{"name": "ludikris-map", "kind": "map-size", "tiles": 480}
+{"name": "lumber-camp", "game": "LUMBER_CAMP", "kind": "building", "id": 562}
+{"name": "magyar", "game": "MAGYARS", "kind": "civ"}
+{"name": "magyars", "game": "MAGYARS", "kind": "civ"}
+{"name": "malay", "game": "MALAY", "kind": "civ"}
+{"name": "malian", "game": "MALIANS", "kind": "civ"}
+{"name": "malians", "game": "MALIANS", "kind": "civ"}
+{"name": "man-at-arms", "game": "MAN_AT_ARMS", "kind": "unit", "id": 75}
+{"name": "mangonel", "game": "MANGONEL", "kind": "unit", "id": 280}
+{"name": "mangonel-line", "game": "MANGONEL", "kind": "unit"}
+{"name": "mangrove-jungle", "kind": "map-type"}
+{"name": "market", "game": "MARKET", "kind": "building", "id": 84}
+{"name": "marketplace", "kind": "map-type"}
+{"name": "mayan", "game": "MAYANS", "kind": "civ"}
+{"name": "mayans", "game": "MAYANS", "kind": "civ"}
+{"name": "meadow", "kind": "map-type"}
+{"name": "mediterranean", "kind": "map-type"}
+{"name": "medium", "kind": "map-size", "tiles": 168}
+{"name": "medium-map", "kind": "map-size", "tiles": 168}
+{"name": "megarandom", "kind": "map-type"}
+{"name": "metropolis", "kind": "map-type"}
+{"name": "michi", "kind": "map-type"}
+{"name": "migration", "kind": "map-type"}
+{"name": "militia", "game": "MILITIA", "kind": "unit", "id": 74}
+{"name": "militiaman", "game": "MILITIA", "kind": "unit", "id": 74}
 {"name": "militiaman-line", "game": "MILITIA", "kind": "unit"}
-{"name": "mill", "game": "MILL", "kind": "building"}
-{"name": "mining-camp", "game": "MINING_CAMP", "kind": "building"}
-{"name": "monastery", "game": "MONASTERY", "kind": "building"}
-{"name": "ri-bow-saw", "game": "BOW_SAW", "kind": "tech"}
-{"name": "ri-double-bit-axe", "game": "DOUBLE_BIT_AXE", "kind": "tech"}
-{"name": "ri-gold-mining", "game": "GOLD_MINING", "kind": "tech"}
-{"name": "ri-horse-collar", "game": "HORSE_COLLAR", "kind": "tech"}
-{"name": "ri-loom", "game": "LOOM", "kind": "tech"}
-{"name": "ri-man-at-arms", "game": "MAN_AT_ARMS_UPGRADE", "kind": "tech"}
-{"name": "ri-stone-mining", "game": "STONE_MINING", "kind": "tech"}
+{"name": "mill", "game": "MILL", "kind": "building", "id": 68}
+{"name": "miniature-map", "kind": "map-size", "tiles": 80}
+{"name": "mining-camp", "game": "MINING_CAMP", "kind": "building", "id": 584}
+{"name": "mired", "kind": "map-type"}
+{"name": "missionary", "game": "MISSIONARY", "kind": "unit", "id": 775}
+{"name": "moats", "kind": "map-type"}
+{"name": "moderate", "game": "moderate", "kind": "difficulty"}
+{"name": "monastery", "game": "MONASTERY", "kind": "building", "id": 104}
+{"name": "mongol", "game": "MONGOLS", "kind": "civ"}
+{"name": "mongolia", "kind": "map-type"}
+{"name": "mongols", "game": "MONGOLS", "kind": "civ"}
+{"name": "monk", "game": "MONK", "kind": "unit", "id": 125}
+{"name": "morass", "kind": "map-type"}
+{"name": "mountain-dunes", "kind": "map-type"}
+{"name": "mountain-pass", "kind": "map-type"}
+{"name": "mountain-range", "kind": "map-type"}
+{"name": "mountain-ridge", "kind": "map-type"}
+{"name": "murkwood", "kind": "map-type"}
+{"name": "monk-set", "set": ["MONK"], "kind": "unit"}
+{"name": "my-elite-unique-unit", "civ": "elite", "kind": "unit"}
+{"name": "my-unique-research", "civ": "research", "kind": "tech"}
+{"name": "my-unique-unit", "civ": "unit", "kind": "unit"}
+{"name": "my-unique-unit-line", "civ": "unit", "kind": "unit"}
+{"name": "my-unique-unit-upgrade", "civ": "upgrade", "kind": "tech"}
+{"name": "nile-delta", "kind": "map-type"}
+{"name": "nomad", "kind": "map-type"}
+{"name": "normal", "kind": "map-size", "tiles": 200}
+{"name": "normal-map", "kind": "map-size", "tiles": 200}
+{"name": "northern-isles", "kind": "map-type"}
+{"name": "oasis", "kind": "map-type"}
+{"name": "onager", "game": "ONAGER", "kind": "unit", "id": 550}
+{"name": "pacific-islands", "kind": "map-type"}
+{"name": "paladin", "game": "PALADIN", "kind": "unit", "id": 569}
+{"name": "palisade-gate", "game": "PALISADE_GATE", "kind": "building"}
+{"name": "palisade-wall", "game": "PALISADE_WALL", "kind": "building", "id": 72}
+{"name": "paradise-island", "kind": "map-type"}
+{"name": "passage", "kind": "map-type"}
+{"name": "pasture", "game": "PASTURE", "kind": "building"}
+{"name": "persian", "game": "PERSIANS", "kind": "civ"}
+{"name": "persians", "game": "PERSIANS", "kind": "civ"}
+{"name": "petard", "game": "PETARD", "kind": "unit", "id": 440}
+{"name": "pikeman", "game": "PIKEMAN", "kind": "unit", "id": 358}
+{"name": "pilgrims", "kind": "map-type"}
+{"name": "poles", "game": "POLES", "kind": "civ"}
+{"name": "portuguese", "game": "PORTUGUESE", "kind": "civ"}
+{"name": "post-imperial", "kind": "age", "age": 4}
+{"name": "post-imperial-age", "kind": "age", "age": 4}
+{"name": "prairie", "kind": "map-type"}
+{"name": "qp-arabia", "kind": "map-type"}
+{"name": "qp-arena", "kind": "map-type"}
+{"name": "qp-black-forest", "kind": "map-type"}
+{"name": "qp-fortified-clearing", "kind": "map-type"}
+{"name": "qp-glade", "kind": "map-type"}
+{"name": "qp-nomad", "kind": "map-type"}
+{"name": "qp-runestones", "kind": "map-type"}
+{"name": "rampart", "kind": "map-type"}
+{"name": "ravines", "kind": "map-type"}
+{"name": "real-world-amazon", "kind": "map-type"}
+{"name": "real-world-antarctica", "kind": "map-type"}
+{"name": "real-world-aral-sea", "kind": "map-type"}
+{"name": "real-world-australia", "kind": "map-type"}
+{"name": "real-world-black-sea", "kind": "map-type"}
+{"name": "real-world-bohemia", "kind": "map-type"}
+{"name": "real-world-byzantium", "kind": "map-type"}
+{"name": "real-world-caribbean", "kind": "map-type"}
+{"name": "real-world-caucasus", "kind": "map-type"}
+{"name": "real-world-china", "kind": "map-type"}
+{"name": "real-world-earth", "kind": "map-type"}
+{"name": "real-world-england", "kind": "map-type"}
+{"name": "real-world-france", "kind": "map-type"}
+{"name": "real-world-horn-of-africa", "kind": "map-type"}
+{"name": "real-world-india", "kind": "map-type"}
+{"name": "real-world-indochina", "kind": "map-type"}
+{"name": "real-world-indonesia", "kind": "map-type"}
+{"name": "real-world-italy", "kind": "map-type"}
+{"name": "real-world-jutland", "kind": "map-type"}
+{"name": "real-world-madagascar", "kind": "map-type"}
+{"name": "real-world-malacca", "kind": "map-type"}
+{"name": "real-world-manchuria", "kind": "map-type"}
+{"name": "real-world-mideast", "kind": "map-type"}
+{"name": "real-world-nippon", "kind": "map-type"}
+{"name": "real-world-philippines", "kind": "map-type"}
+{"name": "real-world-siberia", "kind": "map-type"}
+{"name": "real-world-spain", "kind": "map-type"}
+{"name": "real-world-texas", "kind": "map-type"}
+{"name": "real-world-west-africa", "kind": "map-type"}
+{"name": "ratha-set", "set": ["ELITE_RATHA", "RATHA"], "kind": "unit"}
+{"name": "relic-class", "set": [], "kind": "unit"}
+{"name": "ri-arbalester", "game": "ARBALESTER_UPGRADE", "kind": "tech"}
+{"name": "ri-architecture", "game": "ARCHITECTURE", "kind": "tech", "id": 51}
+{"name": "ri-arrowslits", "game": "ARROWSLITS", "kind": "tech", "id": 608}
+{"name": "ri-arson", "game": "ARSON", "kind": "tech", "id": 602}
+{"name": "ri-atonement", "game": "ATONEMENT", "kind": "tech", "id": 319}
+{"name": "ri-ballistics", "game": "BALLISTICS", "kind": "tech", "id": 93}
+{"name": "ri-banking", "game": "BANKING", "kind": "tech", "id": 17}
+{"name": "ri-blast-furnace", "game": "BLAST_FURNACE", "kind": "tech", "id": 75}
+{"name": "ri-block-printing", "game": "BLOCK_PRINTING", "kind": "tech", "id": 230}
+{"name": "ri-bloodlines", "game": "BLOODLINES", "kind": "tech", "id": 435}
+{"name": "ri-bodkin-arrow", "game": "BODKIN_ARROW", "kind": "tech", "id": 200}
+{"name": "ri-bow-saw", "game": "BOW_SAW", "kind": "tech", "id": 203}
+{"name": "ri-bracer", "game": "BRACER", "kind": "tech", "id": 201}
+{"name": "ri-capped-ram", "game": "CAPPED_RAM_UPGRADE", "kind": "tech"}
+{"name": "ri-caravan", "game": "CARAVAN", "kind": "tech", "id": 48}
+{"name": "ri-careening", "game": "CAREENING", "kind": "tech", "id": 374}
+{"name": "ri-castle-age", "game": "CASTLE_AGE", "kind": "tech"}
+{"name": "ri-cavalier", "game": "CAVALIER_UPGRADE", "kind": "tech"}
+{"name": "ri-chain-barding", "game": "CHAIN_BARDING_ARMOR", "kind": "tech", "id": 82}
+{"name": "ri-chain-mail", "game": "CHAIN_MAIL_ARMOR", "kind": "tech", "id": 76}
+{"name": "ri-champi-runner", "game": "CHAMPI_RUNNER_UPGRADE", "kind": "tech"}
+{"name": "ri-champi-warrior", "game": "CHAMPI_WARRIOR_UPGRADE", "kind": "tech"}
+{"name": "ri-champion", "game": "CHAMPION_UPGRADE", "kind": "tech"}
+{"name": "ri-chemistry", "game": "CHEMISTRY", "kind": "tech", "id": 47}
+{"name": "ri-coinage", "game": "COINAGE", "kind": "tech", "id": 23}
+{"name": "ri-conscription", "game": "CONSCRIPTION", "kind": "tech", "id": 315}
+{"name": "ri-crop-rotation", "game": "CROP_ROTATION", "kind": "tech", "id": 12}
+{"name": "ri-crossbowman", "game": "CROSSBOWMAN_UPGRADE", "kind": "tech"}
+{"name": "ri-demolition-ship", "game": "DEMOLITION_SHIP_UPGRADE", "kind": "tech"}
+{"name": "ri-devotion", "game": "DEVOTION", "kind": "tech", "id": 46}
+{"name": "ri-double-bit-axe", "game": "DOUBLE_BIT_AXE", "kind": "tech", "id": 202}
+{"name": "ri-dry-dock", "game": "DRY_DOCK", "kind": "tech", "id": 375}
+{"name": "ri-eagle-warrior", "game": "EAGLE_WARRIOR_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-arambai", "game": "ELITE_ARAMBAI_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-ballista-elephant", "game": "ELITE_BALLISTA_ELEPHANT_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-battle-elephant", "game": "ELITE_BATTLE_ELEPHANT_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-bolas-rider", "game": "ELITE_BOLAS_RIDER_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-boyar", "game": "ELITE_BOYAR_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-camel-archer", "game": "ELITE_CAMEL_ARCHER_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-cannon-galleon", "game": "ELITE_CANNON_GALLEON_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-caravel", "game": "ELITE_CARAVEL_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-centurion", "game": "ELITE_CENTURION_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-chakram-thrower", "game": "ELITE_CHAKRAM_THROWER_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-champi-warrior", "game": "ELITE_CHAMPI_WARRIOR_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-composite-bowman", "game": "ELITE_COMPOSITE_BOWMAN_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-conquistador", "game": "ELITE_CONQUISTADOR_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-coustillier", "game": "ELITE_COUSTILLIER_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-eagle-warrior", "game": "ELITE_EAGLE_WARRIOR_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-elephant-archer", "game": "ELITE_ELEPHANT_ARCHER_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-fire-lancer", "game": "ELITE_FIRE_LANCER_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-gbeto", "game": "ELITE_GBETO_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-genitour", "game": "ELITE_GENITOUR_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-genoese-crossbowman", "game": "ELITE_GENOESE_CROSSBOWMAN_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-ghulam", "game": "ELITE_GHULAM_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-hoplite", "game": "ELITE_HOPLITE_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-huskarl", "game": "ELITE_HUSKARL_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-hussite-wagon", "game": "ELITE_HUSSITE_WAGON_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-ibirapema-warrior", "game": "ELITE_IBIRAPEMA_WARRIOR_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-jaguar-warrior", "game": "ELITE_JAGUAR_WARRIOR_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-kamayuk", "game": "ELITE_KAMAYUK_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-karambit-warrior", "game": "ELITE_KARAMBIT_WARRIOR_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-keshik", "game": "ELITE_KESHIK_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-kipchak", "game": "ELITE_KIPCHAK_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-konnik", "game": "ELITE_KONNIK_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-leitis", "game": "ELITE_LEITIS_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-longship", "game": "ELITE_LONGSHIP_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-magyar-huszar", "game": "ELITE_MAGYAR_HUSZAR_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-monaspa", "game": "ELITE_MONASPA_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-obuch", "game": "ELITE_OBUCH_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-organ-gun", "game": "ELITE_ORGAN_GUN_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-plumed-archer", "game": "ELITE_PLUMED_ARCHER_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-ratha", "game": "ELITE_RATHA_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-rattan-archer", "game": "ELITE_RATTAN_ARCHER_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-serjeant", "game": "ELITE_SERJEANT_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-shotel-warrior", "game": "ELITE_SHOTEL_WARRIOR_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-shrivamsha-rider", "game": "ELITE_SHRIVAMSHA_RIDER_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-skirmisher", "game": "ELITE_SKIRMISHER_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-steppe-lancer", "game": "ELITE_STEPPE_LANCER_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-tarkan", "game": "ELITE_TARKAN_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-temple-guard", "game": "ELITE_TEMPLE_GUARD_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-turtle-ship", "game": "ELITE_TURTLE_SHIP_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-urumi-swordsman", "game": "ELITE_URUMI_SWORDSMAN_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-varangian-guard", "game": "ELITE_VARANGIAN_GUARD_UPGRADE", "kind": "tech"}
+{"name": "ri-elite-war-wagon", "game": "ELITE_WAR_WAGON_UPGRADE", "kind": "tech"}
+{"name": "ri-faith", "game": "FAITH", "kind": "tech", "id": 45}
+{"name": "ri-fervor", "game": "FERVOR", "kind": "tech", "id": 252}
+{"name": "ri-fletching", "game": "FLETCHING", "kind": "tech", "id": 199}
+{"name": "ri-forging", "game": "FORGING", "kind": "tech", "id": 67}
+{"name": "ri-fortified-wall", "game": "FORTIFIED_WALL", "kind": "tech", "id": 194}
+{"name": "ri-gambesons", "game": "GAMBESONS", "kind": "tech", "id": 875}
+{"name": "ri-gillnets", "game": "GILLNETS", "kind": "tech", "id": 65}
+{"name": "ri-gold-mining", "game": "GOLD_MINING", "kind": "tech", "id": 55}
+{"name": "ri-gold-shaft-mining", "game": "GOLD_SHAFT_MINING", "kind": "tech", "id": 182}
+{"name": "ri-guard-tower", "game": "GUARD_TOWER", "kind": "tech", "id": 140}
+{"name": "ri-guilds", "game": "GUILDS", "kind": "tech", "id": 15}
+{"name": "ri-halberdier", "game": "HALBERDIER_UPGRADE", "kind": "tech"}
+{"name": "ri-hand-cart", "game": "HAND_CART", "kind": "tech", "id": 249}
+{"name": "ri-heated-shot", "game": "HEATED_SHOT", "kind": "tech", "id": 380}
+{"name": "ri-heavy-camel-rider", "game": "HEAVY_CAMEL_RIDER_UPGRADE", "kind": "tech"}
+{"name": "ri-heavy-cavalry-archer", "game": "HEAVY_CAVALRY_ARCHER_UPGRADE", "kind": "tech"}
+{"name": "ri-heavy-demolition-ship", "game": "HEAVY_DEMOLITION_SHIP_UPGRADE", "kind": "tech"}
+{"name": "ri-heavy-hei-guang-cavalry", "game": "HEAVY_HEI_GUANG_CAVALRY_UPGRADE", "kind": "tech"}
+{"name": "ri-heavy-mounted-crossbowman", "game": "HEAVY_MOUNTED_CROSSBOWMAN_UPGRADE", "kind": "tech"}
+{"name": "ri-heavy-plow", "game": "HEAVY_PLOW", "kind": "tech", "id": 13}
+{"name": "ri-heavy-rocket-cart", "game": "HEAVY_ROCKET_CART_UPGRADE", "kind": "tech"}
+{"name": "ri-heavy-scorpion", "game": "HEAVY_SCORPION_UPGRADE", "kind": "tech"}
+{"name": "ri-heavy-warships", "game": "HEAVY_WARSHIPS", "kind": "tech"}
+{"name": "ri-heresy", "game": "HERESY", "kind": "tech", "id": 439}
+{"name": "ri-hoardings", "game": "HOARDINGS", "kind": "tech", "id": 379}
+{"name": "ri-horse-collar", "game": "HORSE_COLLAR", "kind": "tech", "id": 14}
+{"name": "ri-houfnice", "game": "HOUFNICE_UPGRADE", "kind": "tech"}
+{"name": "ri-husbandry", "game": "HUSBANDRY", "kind": "tech", "id": 39}
+{"name": "ri-hussar", "game": "HUSSAR_UPGRADE", "kind": "tech"}
+{"name": "ri-illumination", "game": "ILLUMINATION", "kind": "tech", "id": 233}
+{"name": "ri-imperial-camel-rider", "game": "IMPERIAL_CAMEL_RIDER_UPGRADE", "kind": "tech"}
+{"name": "ri-imperial-skirmisher", "game": "IMPERIAL_SKIRMISHER_UPGRADE", "kind": "tech"}
+{"name": "ri-iron-casting", "game": "IRON_CASTING", "kind": "tech", "id": 68}
+{"name": "ri-keep", "game": "KEEP", "kind": "tech", "id": 63}
+{"name": "ri-leather-archer-armor", "game": "LEATHER_ARCHER_ARMOR", "kind": "tech", "id": 212}
+{"name": "ri-legionary", "game": "LEGIONARY_UPGRADE", "kind": "tech"}
+{"name": "ri-light-cavalry", "game": "LIGHT_CAVALRY_UPGRADE", "kind": "tech"}
+{"name": "ri-long-swordsman", "game": "LONG_SWORDSMAN_UPGRADE", "kind": "tech"}
+{"name": "ri-loom", "game": "LOOM", "kind": "tech", "id": 22}
+{"name": "ri-man-at-arms", "game": "MAN_AT_ARMS_UPGRADE", "kind": "tech", "id": 222}
+{"name": "ri-masonry", "game": "MASONRY", "kind": "tech", "id": 50}
+{"name": "ri-medium-warships", "game": "MEDIUM_WARSHIPS", "kind": "tech"}
+{"name": "ri-murder-holes", "game": "MURDER_HOLES", "kind": "tech", "id": 322}
+{"name": "ri-onager", "game": "ONAGER_UPGRADE", "kind": "tech"}
+{"name": "ri-padded-archer-armor", "game": "PADDED_ARCHER_ARMOR", "kind": "tech", "id": 211}
+{"name": "ri-paladin", "game": "PALADIN_UPGRADE", "kind": "tech"}
+{"name": "ri-parthian-tactics", "game": "PARTHIAN_TACTICS", "kind": "tech", "id": 436}
+{"name": "ri-pikeman", "game": "PIKEMAN_UPGRADE", "kind": "tech"}
+{"name": "ri-plate-barding", "game": "PLATE_BARDING_ARMOR", "kind": "tech", "id": 80}
+{"name": "ri-plate-mail", "game": "PLATE_MAIL_ARMOR", "kind": "tech", "id": 77}
+{"name": "ri-redemption", "game": "REDEMPTION", "kind": "tech", "id": 316}
+{"name": "ri-ring-archer-armor", "game": "RING_ARCHER_ARMOR", "kind": "tech", "id": 219}
+{"name": "ri-sanctity", "game": "SANCTITY", "kind": "tech", "id": 231}
+{"name": "ri-sappers", "game": "SAPPERS", "kind": "tech", "id": 321}
+{"name": "ri-savar", "game": "SAVAR_UPGRADE", "kind": "tech"}
+{"name": "ri-scale-barding", "game": "SCALE_BARDING_ARMOR", "kind": "tech", "id": 81}
+{"name": "ri-scale-mail", "game": "SCALE_MAIL_ARMOR", "kind": "tech", "id": 74}
+{"name": "ri-shipwright", "game": "SHIPWRIGHT", "kind": "tech", "id": 373}
+{"name": "ri-siege-elephant", "game": "SIEGE_ELEPHANT_UPGRADE", "kind": "tech"}
+{"name": "ri-siege-engineers", "game": "SIEGE_ENGINEERS", "kind": "tech", "id": 377}
+{"name": "ri-siege-onager", "game": "SIEGE_ONAGER_UPGRADE", "kind": "tech"}
+{"name": "ri-siege-ram", "game": "SIEGE_RAM_UPGRADE", "kind": "tech"}
+{"name": "ri-squires", "game": "SQUIRES", "kind": "tech", "id": 215}
+{"name": "ri-stone-mining", "game": "STONE_MINING", "kind": "tech", "id": 278}
+{"name": "ri-stone-shaft-mining", "game": "STONE_SHAFT_MINING", "kind": "tech", "id": 279}
+{"name": "ri-theocracy", "game": "THEOCRACY", "kind": "tech", "id": 438}
+{"name": "ri-thumb-ring", "game": "THUMB_RING", "kind": "tech", "id": 437}
+{"name": "ri-town-patrol", "game": "TOWN_PATROL", "kind": "tech", "id": 280}
+{"name": "ri-town-watch", "game": "TOWN_WATCH", "kind": "tech", "id": 8}
+{"name": "ri-treadmill-crane", "game": "TREADMILL_CRANE", "kind": "tech", "id": 54}
+{"name": "ri-two-handed-swordsman", "game": "TWO_HANDED_SWORDSMAN_UPGRADE", "kind": "tech"}
+{"name": "ri-two-man-saw", "game": "TWO_MAN_SAW", "kind": "tech", "id": 221}
+{"name": "ri-wheel-barrow", "game": "WHEELBARROW", "kind": "tech", "id": 213}
 {"name": "ri-wheelbarrow", "game": "WHEELBARROW", "kind": "tech"}
-{"name": "scout-cavalry", "game": "SCOUT_CAVALRY", "kind": "unit"}
+{"name": "ri-winged-hussar", "game": "WINGED_HUSSAR_UPGRADE", "kind": "tech"}
+{"name": "ring-fortress", "kind": "map-type"}
+{"name": "river-divide", "kind": "map-type"}
+{"name": "rivers", "kind": "map-type"}
+{"name": "romans", "game": "ROMANS", "kind": "civ"}
+{"name": "runestones", "kind": "map-type"}
+{"name": "sacred-springs", "kind": "map-type"}
+{"name": "salt-marsh", "kind": "map-type"}
+{"name": "sandbank", "kind": "map-type"}
+{"name": "sandrift", "kind": "map-type"}
+{"name": "saracen", "game": "SARACENS", "kind": "civ"}
+{"name": "saracens", "game": "SARACENS", "kind": "civ"}
+{"name": "sardis", "kind": "map-type"}
+{"name": "scandanavia", "kind": "map-type"}
+{"name": "scenario-map", "kind": "map-type"}
+{"name": "scorpion", "game": "SCORPION", "kind": "unit", "id": 279}
+{"name": "scorpion-line", "game": "SCORPION", "kind": "unit"}
+{"name": "scout-cavalry", "game": "SCOUT_CAVALRY", "kind": "unit", "id": 448}
 {"name": "scout-cavalry-line", "game": "SCOUT_CAVALRY", "kind": "unit"}
-{"name": "skirmisher", "game": "SKIRMISHER", "kind": "unit"}
+{"name": "seasons", "kind": "map-type"}
+{"name": "seize-the-mountain", "kind": "map-type"}
+{"name": "serengeti", "kind": "map-type"}
+{"name": "sherwood-forest", "kind": "map-type"}
+{"name": "shipwreck", "kind": "map-type"}
+{"name": "shoals", "kind": "map-type"}
+{"name": "shrubland", "kind": "map-type"}
+{"name": "serjeant-set", "set": ["ELITE_SERJEANT", "SERJEANT"], "kind": "unit"}
+{"name": "shore-fish-class", "set": [], "kind": "unit"}
+{"name": "sicilians", "game": "SICILIANS", "kind": "civ"}
+{"name": "siege-onager", "game": "SIEGE_ONAGER", "kind": "unit", "id": 588}
+{"name": "siege-ram", "game": "SIEGE_RAM", "kind": "unit", "id": 548}
+{"name": "siege-tower", "game": "SIEGE_TOWER", "kind": "unit"}
+{"name": "siege-workshop", "game": "SIEGE_WORKSHOP", "kind": "building", "id": 49}
+{"name": "skirmisher", "game": "SKIRMISHER", "kind": "unit", "id": 7}
 {"name": "skirmisher-line", "game": "SKIRMISHER", "kind": "unit"}
-{"name": "spearman", "game": "SPEARMAN", "kind": "unit"}
+{"name": "slavic", "game": "SLAVS", "kind": "civ"}
+{"name": "slavs", "game": "SLAVS", "kind": "civ"}
+{"name": "small", "kind": "map-size", "tiles": 144}
+{"name": "small-map", "kind": "map-size", "tiles": 144}
+{"name": "socotra", "kind": "map-type"}
+{"name": "spanish", "game": "SPANISH", "kind": "civ"}
+{"name": "spearman", "game": "SPEARMAN", "kind": "unit", "id": 93}
 {"name": "spearman-line", "game": "SPEARMAN", "kind": "unit"}
-{"name": "stable", "game": "STABLE", "kind": "building"}
-{"name": "town-center", "game": "TOWN_CENTER", "kind": "building"}
-{"name": "villager", "game": "VILLAGER_MALE", "kind": "unit"}
+{"name": "special-map-archipelago", "kind": "map-type"}
+{"name": "special-map-border-stones", "kind": "map-type"}
+{"name": "special-map-canyons", "kind": "map-type"}
+{"name": "special-map-enemy-islands", "kind": "map-type"}
+{"name": "special-map-far-out", "kind": "map-type"}
+{"name": "special-map-forest-breach", "kind": "map-type"}
+{"name": "special-map-front-line", "kind": "map-type"}
+{"name": "special-map-holy-line", "kind": "map-type"}
+{"name": "special-map-inner-circle", "kind": "map-type"}
+{"name": "special-map-journey-south", "kind": "map-type"}
+{"name": "special-map-jungle-islands", "kind": "map-type"}
+{"name": "special-map-jungle-lanes", "kind": "map-type"}
+{"name": "special-map-motherland", "kind": "map-type"}
+{"name": "special-map-open-plains", "kind": "map-type"}
+{"name": "special-map-ring-of-water", "kind": "map-type"}
+{"name": "special-map-snake-forest", "kind": "map-type"}
+{"name": "special-map-snake-pit", "kind": "map-type"}
+{"name": "special-map-sprawling-streams", "kind": "map-type"}
+{"name": "special-map-swirling-river", "kind": "map-type"}
+{"name": "special-map-the-eye", "kind": "map-type"}
+{"name": "special-map-twin-forests", "kind": "map-type"}
+{"name": "special-map-yin-yang", "kind": "map-type"}
+{"name": "spearman-set", "set": ["HALBERDIER", "PIKEMAN", "SPEARMAN"], "kind": "unit"}
+{"name": "stable", "game": "STABLE", "kind": "building", "id": 101}
+{"name": "steppe", "kind": "map-type"}
+{"name": "steppe-lancer", "game": "STEPPE_LANCER", "kind": "unit", "id": 1370}
+{"name": "steppe-lancer-line", "game": "STEPPE_LANCER", "kind": "unit"}
+{"name": "stone-wall", "game": "STONE_WALL", "kind": "building", "id": 117}
+{"name": "stone-wall-line", "game": "STONE_WALL", "kind": "building", "id": 117}
+{"name": "stonefront", "kind": "map-type"}
+{"name": "stranded", "kind": "map-type"}
+{"name": "tarkan-set", "set": ["ELITE_TARKAN", "TARKAN"], "kind": "unit"}
+{"name": "tatars", "game": "TATARS", "kind": "civ"}
+{"name": "team-glaciers", "kind": "map-type"}
+{"name": "team-islands", "kind": "map-type"}
+{"name": "teutonic", "game": "TEUTONS", "kind": "civ"}
+{"name": "teutons", "game": "TEUTONS", "kind": "civ"}
+{"name": "thames", "kind": "map-type"}
+{"name": "the-majapahit-empire", "kind": "map-type"}
+{"name": "tiny", "kind": "map-size", "tiles": 120}
+{"name": "tiny-map", "kind": "map-size", "tiles": 120}
+{"name": "town-center", "game": "TOWN_CENTER", "kind": "building", "id": 109}
+{"name": "town-center-foundation", "game": "TOWN_CENTER", "kind": "building"}
+{"name": "trade-cart", "game": "TRADE_CART", "kind": "unit", "id": 128}
+{"name": "trade-cog", "game": "TRADE_COG", "kind": "unit", "id": 17}
+{"name": "transport-ship", "game": "TRANSPORT_SHIP", "kind": "unit", "id": 545}
+{"name": "trebuchet", "game": "TREBUCHET", "kind": "unit", "id": 331}
+{"name": "trebuchet-set", "set": ["TREBUCHET"], "kind": "unit"}
+{"name": "turkish", "game": "TURKS", "kind": "civ"}
+{"name": "turks", "game": "TURKS", "kind": "civ"}
+{"name": "turtle-ship", "game": "TURTLE_SHIP", "kind": "unit", "id": 831}
+{"name": "two-handed-swordsman", "game": "TWO_HANDED_SWORDSMAN", "kind": "unit", "id": 473}
+{"name": "university", "game": "UNIVERSITY", "kind": "building", "id": 209}
+{"name": "valley", "kind": "map-type"}
+{"name": "vietnamese", "game": "VIETNAMESE", "kind": "civ"}
+{"name": "viking", "game": "VIKINGS", "kind": "civ"}
+{"name": "vikings", "game": "VIKINGS", "kind": "civ"}
+{"name": "villager", "game": "VILLAGER_MALE", "kind": "unit", "id": 83}
+{"name": "villager-base", "set": ["VILLAGER_MALE"], "kind": "unit"}
+{"name": "villager-builder", "task": ["BUILDER"], "kind": "unit"}
+{"name": "villager-class", "set": ["VILLAGER_MALE"], "kind": "unit", "id": 904}
+{"name": "volcanic-island", "kind": "map-type"}
+{"name": "vulpine", "kind": "map-type"}
+{"name": "wade", "kind": "map-type"}
+{"name": "villager-farmer", "task": ["FARMER"], "kind": "unit"}
+{"name": "villager-fisherman", "task": ["FISHERMAN"], "kind": "unit"}
+{"name": "villager-food", "task": ["FARMER", "FISHERMAN", "FORAGER", "HUNTER", "SHEPHERD"], "kind": "unit"}
+{"name": "villager-forager", "task": ["FORAGER"], "kind": "unit"}
+{"name": "villager-gold", "task": ["GOLD_MINER"], "kind": "unit"}
+{"name": "villager-hunter", "task": ["HUNTER"], "kind": "unit"}
+{"name": "villager-repairer", "task": ["REPAIRER"], "kind": "unit"}
+{"name": "villager-shepherd", "task": ["SHEPHERD"], "kind": "unit"}
+{"name": "villager-stone", "task": ["STONE_MINER"], "kind": "unit"}
+{"name": "villager-wood", "task": ["LUMBERJACK"], "kind": "unit"}
+{"name": "war-galley", "game": "WAR_GALLEY", "kind": "unit", "id": 21}
+{"name": "watch-tower", "game": "WATCH_TOWER", "kind": "building", "id": 79}
+{"name": "water-nomad", "kind": "map-type"}
+{"name": "wolf-hill", "kind": "map-type"}
+{"name": "wonder", "game": "WONDER", "kind": "building", "id": 276}
+{"name": "yucatan", "kind": "map-type"}
+{"name": "terrain-grass", "kind": "terrain", "id": 0}
+{"name": "terrain-water", "kind": "terrain", "id": 1}
+{"name": "terrain-water-beach", "kind": "terrain", "id": 2}
+{"name": "terrain-dirt3", "kind": "terrain", "id": 3}
+{"name": "terrain-shallows", "kind": "terrain", "id": 4}
+{"name": "terrain-leaves", "kind": "terrain", "id": 5}
+{"name": "terrain-dirt", "kind": "terrain", "id": 6}
+{"name": "terrain-farm", "kind": "terrain", "id": 7}
+{"name": "terrain-farm-dead", "kind": "terrain", "id": 8}
+{"name": "terrain-grass3", "kind": "terrain", "id": 9}
+{"name": "terrain-forest", "kind": "terrain", "id": 10}
+{"name": "terrain-dirt2", "kind": "terrain", "id": 11}
+{"name": "terrain-grass2", "kind": "terrain", "id": 12}
+{"name": "terrain-forest-palm", "kind": "terrain", "id": 13}
+{"name": "terrain-desert", "kind": "terrain", "id": 14}
+{"name": "terrain-water-old", "kind": "terrain", "id": 15}
+{"name": "terrain-grass-old", "kind": "terrain", "id": 16}
+{"name": "terrain-forest-jungle", "kind": "terrain", "id": 17}
+{"name": "terrain-forest-bamboo", "kind": "terrain", "id": 18}
+{"name": "terrain-forest-pine", "kind": "terrain", "id": 19}
+{"name": "terrain-forest-oak", "kind": "terrain", "id": 20}
+{"name": "terrain-forest-snow", "kind": "terrain", "id": 21}
+{"name": "terrain-water-deep", "kind": "terrain", "id": 22}
+{"name": "terrain-water-medium", "kind": "terrain", "id": 23}
+{"name": "terrain-road", "kind": "terrain", "id": 24}
+{"name": "terrain-road-broken", "kind": "terrain", "id": 25}
+{"name": "terrain-ice", "kind": "terrain", "id": 26}
+{"name": "terrain-foundation", "kind": "terrain", "id": 27}
+{"name": "terrain-water-bridge", "kind": "terrain", "id": 28}
+{"name": "terrain-farm1", "kind": "terrain", "id": 29}
+{"name": "terrain-farm2", "kind": "terrain", "id": 30}
+{"name": "terrain-farm3", "kind": "terrain", "id": 31}
+{"name": "terrain-snow", "kind": "terrain", "id": 32}
+{"name": "terrain-dirt-snow", "kind": "terrain", "id": 33}
+{"name": "terrain-grass-snow", "kind": "terrain", "id": 34}
+{"name": "terrain-ice2", "kind": "terrain", "id": 35}
+{"name": "terrain-foundation-snow", "kind": "terrain", "id": 36}
+{"name": "terrain-ice-beach", "kind": "terrain", "id": 37}
+{"name": "terrain-road-snow", "kind": "terrain", "id": 38}
+{"name": "terrain-road-fungus", "kind": "terrain", "id": 39}
+{"name": "terrain-koh", "kind": "terrain", "id": 40}
+{"name": "terrain-savannah-dirt", "kind": "terrain", "id": 41}
+{"name": "terrain-dirt4", "kind": "terrain", "id": 42}
+{"name": "terrain-desert-cracked", "kind": "terrain", "id": 45}
+{"name": "terrain-desert-quicksand", "kind": "terrain", "id": 46}
+{"name": "terrain-black", "kind": "terrain", "id": 47}
+{"name": "terrain-forest-dragon-tree", "kind": "terrain", "id": 48}
+{"name": "terrain-forest-baobab", "kind": "terrain", "id": 49}
+{"name": "terrain-forest-acacia", "kind": "terrain", "id": 50}
+{"name": "terrain-beach-vegetation-white", "kind": "terrain", "id": 51}
+{"name": "terrain-beach-vegetation", "kind": "terrain", "id": 52}
+{"name": "terrain-beach-white", "kind": "terrain", "id": 53}
+{"name": "terrain-shallows-mangrove", "kind": "terrain", "id": 54}
+{"name": "terrain-forest-mangrove", "kind": "terrain", "id": 55}
+{"name": "terrain-forest-rainforest", "kind": "terrain", "id": 56}
+{"name": "terrain-water-deep-ocean", "kind": "terrain", "id": 57}
+{"name": "terrain-water-azure", "kind": "terrain", "id": 58}
+{"name": "terrain-shallows-azure", "kind": "terrain", "id": 59}
+{"name": "terrain-grass-jungle", "kind": "terrain", "id": 60}
+{"name": "terrain-farm-rice", "kind": "terrain", "id": 63}
+{"name": "terrain-farm-rice-dead", "kind": "terrain", "id": 64}
+{"name": "terrain-farm-rice1", "kind": "terrain", "id": 65}
+{"name": "terrain-farm-rice2", "kind": "terrain", "id": 66}
+{"name": "terrain-farm-rice3", "kind": "terrain", "id": 67}
+{"name": "terrain-corruption", "kind": "terrain", "id": 69}
+{"name": "terrain-gravel", "kind": "terrain", "id": 70}
+{"name": "terrain-underbrush-leaves", "kind": "terrain", "id": 71}
+{"name": "terrain-underbrush-snow", "kind": "terrain", "id": 72}
+{"name": "terrain-snow-light", "kind": "terrain", "id": 73}
+{"name": "terrain-snow-strong", "kind": "terrain", "id": 74}
+{"name": "terrain-road-fungus-de", "kind": "terrain", "id": 75}
+{"name": "terrain-dirt-mud", "kind": "terrain", "id": 76}
+{"name": "terrain-underbrush-jungle", "kind": "terrain", "id": 77}
+{"name": "terrain-road-gravel", "kind": "terrain", "id": 78}
+{"name": "terrain-beach-not-navigable", "kind": "terrain", "id": 79}
+{"name": "terrain-beach-wet-sand-not-navigable", "kind": "terrain", "id": 80}
+{"name": "terrain-beach-wet-gravel-not-navigable", "kind": "terrain", "id": 81}
+{"name": "terrain-beach-wet-rock-not-navigable", "kind": "terrain", "id": 82}
+{"name": "terrain-grass-rainforest", "kind": "terrain", "id": 83}
+{"name": "terrain-forest-mediterranean", "kind": "terrain", "id": 88}
+{"name": "terrain-forest-bush", "kind": "terrain", "id": 89}
+{"name": "terrain-forest-reeds-shallows", "kind": "terrain", "id": 90}
+{"name": "terrain-forest-reeds-beach", "kind": "terrain", "id": 91}
+{"name": "terrain-forest-reeds", "kind": "terrain", "id": 92}
+{"name": "terrain-water-green", "kind": "terrain", "id": 95}
+{"name": "terrain-water-brown", "kind": "terrain", "id": 96}
+{"name": "terrain-grass-dry", "kind": "terrain", "id": 100}
+{"name": "terrain-swamp-bogland", "kind": "terrain", "id": 101}
+{"name": "terrain-gravel-desert", "kind": "terrain", "id": 102}
+{"name": "terrain-forest-autumn", "kind": "terrain", "id": 104}
+{"name": "terrain-forest-autumn-snow", "kind": "terrain", "id": 105}
+{"name": "terrain-forest-dead", "kind": "terrain", "id": 106}
+{"name": "terrain-beach-wet", "kind": "terrain", "id": 107}
+{"name": "terrain-beach-wet-gravel", "kind": "terrain", "id": 108}
+{"name": "terrain-beach-wet-rock", "kind": "terrain", "id": 109}
+{"name": "terrain-forest-birch", "kind": "terrain", "id": 110}
+{"name": "terrain-swamp-shallows", "kind": "terrain", "id": 111}
+{"name": "terrain-forest-palm-grass", "kind": "terrain", "id": 112}
+{"name": "terrain-forest-lush-bamboo", "kind": "terrain", "id": 113}
+{"name": "terrain-water-yellow", "kind": "terrain", "id": 114}
+{"name": "terrain-shallows-yellow", "kind": "terrain", "id": 115}
+{"name": "terrain-water-yellow-deep", "kind": "terrain", "id": 116}
+{"name": "terrain-pasture", "kind": "terrain", "id": 117}
+{"name": "terrain-pasture-dead", "kind": "terrain", "id": 118}
+{"name": "terrain-pasture1", "kind": "terrain", "id": 119}
+{"name": "terrain-pasture2", "kind": "terrain", "id": 120}
+{"name": "terrain-pasture3", "kind": "terrain", "id": 121}
+{"name": "terrain-grass-flowers1", "kind": "terrain", "id": 122}
+{"name": "terrain-grass-flowers2", "kind": "terrain", "id": 123}
+{"name": "terrain-snow-soft", "kind": "terrain", "id": 124}
+{"name": "terrain-snow-soft-light", "kind": "terrain", "id": 125}
+{"name": "terrain-snow-soft-strong", "kind": "terrain", "id": 126}
+{"name": "terrain-ice-soft", "kind": "terrain", "id": 127}
+{"name": "terrain-forest-dry-south-american", "kind": "terrain", "id": 128}
+{"name": "terrain-black-walkable", "kind": "terrain", "id": 129}
+{"name": "terrain-water-weeds", "kind": "terrain", "id": 130}
+{"name": "terrain-forest-spruce", "kind": "terrain", "id": 131}
+{"name": "terrain-forest-spruce-snow", "kind": "terrain", "id": 132}
+{"name": "terrain-forest-oak-green", "kind": "terrain", "id": 133}
+{"name": "effect-set-attribute", "kind": "effect", "id": 0}
+{"name": "effect-mod-resource", "kind": "effect", "id": 1}
+{"name": "effect-enable-object", "kind": "effect", "id": 2}
+{"name": "effect-upgrade-unit", "kind": "effect", "id": 3}
+{"name": "effect-add-attribute", "kind": "effect", "id": 4}
+{"name": "effect-mul-attribute", "kind": "effect", "id": 5}
+{"name": "effect-mul-resource", "kind": "effect", "id": 6}
+{"name": "effect-enable-tech", "kind": "effect", "id": 7}
+{"name": "effect-modify-tech", "kind": "effect", "id": 8}
+{"name": "effect-set-player-data", "kind": "effect", "id": 9}
+{"name": "attribute-hp", "kind": "attribute", "id": 0}
+{"name": "attribute-los", "kind": "attribute", "id": 1}
+{"name": "attribute-obj-max", "kind": "attribute", "id": 2}
+{"name": "attribute-radius-x", "kind": "attribute", "id": 3}
+{"name": "attribute-radius-y", "kind": "attribute", "id": 4}
+{"name": "attribute-speed", "kind": "attribute", "id": 5}
+{"name": "attribute-turn-speed", "kind": "attribute", "id": 6}
+{"name": "attribute-armor", "kind": "attribute", "id": 8}
+{"name": "attribute-weapon", "kind": "attribute", "id": 9}
+{"name": "attribute-speed-of-attack", "kind": "attribute", "id": 10}
+{"name": "attribute-hit-chance", "kind": "attribute", "id": 11}
+{"name": "attribute-weapon-range", "kind": "attribute", "id": 12}
+{"name": "attribute-work-rate", "kind": "attribute", "id": 13}
+{"name": "attribute-carry-capacity", "kind": "attribute", "id": 14}
+{"name": "attribute-base-armor", "kind": "attribute", "id": 15}
+{"name": "attribute-missile-id", "kind": "attribute", "id": 16}
+{"name": "attribute-building-facet", "kind": "attribute", "id": 17}
+{"name": "attribute-defensive-terrain", "kind": "attribute", "id": 18}
+{"name": "attribute-targetting-type", "kind": "attribute", "id": 19}
+{"name": "attribute-minimum-weapon-range", "kind": "attribute", "id": 20}
+{"name": "attribute-attribute-amount-held", "kind": "attribute", "id": 21}
+{"name": "attribute-area-effect", "kind": "attribute", "id": 22}
+{"name": "attribute-search-radius", "kind": "attribute", "id": 23}
+{"name": "attribute-hidden-damage-resist", "kind": "attribute", "id": 24}
+{"name": "attribute-icon-id", "kind": "attribute", "id": 25}
+{"name": "attribute-fire-missile-at-frame", "kind": "attribute", "id": 41}
+{"name": "attribute-area-effect-level", "kind": "attribute", "id": 44}
+{"name": "attribute-blast-defense-level", "kind": "attribute", "id": 45}
+{"name": "attribute-shown-attack", "kind": "attribute", "id": 46}
+{"name": "attribute-shown-range", "kind": "attribute", "id": 47}
+{"name": "attribute-shown-melee-armor", "kind": "attribute", "id": 48}
+{"name": "attribute-name-id", "kind": "attribute", "id": 50}
+{"name": "attribute-description-id", "kind": "attribute", "id": 51}
+{"name": "attribute-terrain-restriction", "kind": "attribute", "id": 53}
+{"name": "attribute-death-spawn-obj", "kind": "attribute", "id": 57}
+{"name": "attribute-hotkey-id", "kind": "attribute", "id": 58}
+{"name": "attribute-resource-cost", "kind": "attribute", "id": 100}
+{"name": "attribute-creation-time", "kind": "attribute", "id": 101}
+{"name": "attribute-garrison-arrows", "kind": "attribute", "id": 102}
+{"name": "attribute-food-cost", "kind": "attribute", "id": 103}
+{"name": "attribute-wood-cost", "kind": "attribute", "id": 104}
+{"name": "attribute-gold-cost", "kind": "attribute", "id": 105}
+{"name": "attribute-stone-cost", "kind": "attribute", "id": 106}
+{"name": "attribute-max-dup-missiles", "kind": "attribute", "id": 107}
+{"name": "attribute-garrison-heal-rate", "kind": "attribute", "id": 108}
+{"name": "attribute-regenration-rate", "kind": "attribute", "id": 109}
+{"name": "with-escrow", "kind": "escrow", "id": 1}
+{"name": "without-escrow", "kind": "escrow", "id": 0}

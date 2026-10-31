@@ -5,9 +5,9 @@ import os
 import sys
 
 sys.path[:0] = [os.path.join(os.path.dirname(__file__), "..", "game")]
+import combat  # noqa: E402  (train imports combat by its plain name: patch that module)
 from test_dock_train import dock_map  # noqa: E402
 
-import combat  # noqa: E402  (train imports combat by its plain name: patch that module)
 from game import train  # noqa: E402
 
 

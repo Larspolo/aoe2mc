@@ -2,8 +2,9 @@
 import contextlib
 import io
 
-import aoe2mc
 from test_campaign import cpx, scx_bytes
+
+import aoe2mc
 
 
 def test_cpx_prints_the_scenario_file_name(tmp_path):

@@ -7,9 +7,9 @@ import shutil
 import time
 
 import pytest
+from test_unit_ai import data
 
 from game import ai, run
-from test_unit_ai import data
 
 STEPS, SIDE = 32, 12                       # down 1 block per block toward -z, and SIDE blocks to the side (-x)
 

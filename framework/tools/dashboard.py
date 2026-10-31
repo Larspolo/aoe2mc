@@ -51,6 +51,10 @@ def start_after(issue):
     m = re.search(r"^Start after:\s*(\d{4}-\d{2}-\d{2})(?:[ T](\d{2}:\d{2}))?", issue.get("body") or "", re.M)
     if not m:
         return None
+    # fromisoformat() accepts "24:00" on Python 3.14 but not 3.12: reject it here so every version agrees
+    hour, minute = map(int, (m.group(2) or "00:00").split(":"))
+    if hour > 23 or minute > 59:
+        raise ValueError(f"bad time {m.group(2)}")
     return datetime.datetime.fromisoformat(f"{m.group(1)}T{m.group(2) or '00:00'}+00:00")
 
 
@@ -104,10 +108,21 @@ def prs_after(number):
     return None if not t else sum(n != number for _, n in merges(since=ts(t)))
 
 
-def waits(issue, after=prs_after):
-    """True while the "Start after: N PRs after #M" line of the issue holds it. after(M): the merged PRs after #M."""
+def last_merge():
+    """The time of the last PR merged into the default branch, or None."""
+    return next((t for t, _ in merges(n=1)), None)
+
+
+def waits(issue, after=prs_after, now=None, last=last_merge):
+    """True while the "Start after: N PRs after #M" line of the issue holds it. after(M): the merged PRs after #M.
+    The wait ends also after claim.ROADMAP_IDLE minutes with no merged PR (#5201): with no other ready ticket no run
+    merges, so the count never comes. last(): the time of the last merge."""
     s = start_after_prs(issue)
-    return bool(s) and (after(s[1]) or 0) < s[0]
+    if not s or (after(s[1]) or 0) >= s[0]:
+        return False
+    from claim import ROADMAP_IDLE  # here: claim.py imports this module
+    t, now = last(), now or datetime.datetime.now(datetime.timezone.utc)
+    return bool(t) and now - t < datetime.timedelta(minutes=ROADMAP_IDLE)
 
 
 def names(text):
@@ -154,12 +169,18 @@ def candidates(issues, busy=frozenset(), now=None, lane=None, reserved=RESERVED,
     now = now or datetime.datetime.now(datetime.timezone.utc)
     open_numbers = {i["number"] for i in issues}
     issues = [i for i in issues if "pull_request" not in i]
+    by_number = {i["number"]: i for i in issues}
+
+    def parked(i):          # the parent epic waits for the release or the owner muted it (#5169)
+        url = i.get("parent_issue_url") or ""
+        parent = by_number.get(int(url.rsplit("/", 1)[1])) if url.rsplit("/", 1)[-1].isdigit() else None
+        return bool(parent and labels(parent) & {AFTER, MUTED})
 
     def rank(i):
         p = next((k for k, name in enumerate(PRIORITY) if name in labels(i)), len(PRIORITY))
         return lane is None and any(n.startswith(LANE) for n in labels(i)), p, len(overlap(i, busy)), i["number"]
     ready = [i for i in issues if not labels(i) & SKIP and not any(d in open_numbers for d in depends(i))
-             and not i.get("title", "").startswith("Decide:")
+             and not i.get("title", "").startswith("Decide:") and not parked(i)
              and (LANE + lane in labels(i) if lane else not {LANE + r for r in reserved} & labels(i))
              and not held(i, now, after)]                   # last: it reads GitHub
     return sorted(ready, key=rank)
@@ -170,7 +191,7 @@ def held(issue, now, after=prs_after):
     date, a #M that is no PR: GitHub answers 404) holds only its own ticket, with one warning on stderr (#3055): an
     error here stopped the pick of all tickets, usage.py --fire and the dashboard."""
     try:
-        return (start_after(issue) or now) > now or waits(issue, after)
+        return (start_after(issue) or now) > now or waits(issue, after, now)
     except Exception as e:                          # ValueError, CalledProcessError, HTTPError: the line is wrong
         line = re.search(r"^Start after:.*", issue.get("body") or "", re.M)
         print(f"warning: #{issue['number']} is not ready: bad line {line[0].strip() if line else ''!r} ({e})",
@@ -202,11 +223,19 @@ def orphans(issues, after=prs_after):
                 seen.add(d)
                 todo += [x for x in depends(tickets[d]) if x in tickets]
         return False
+    closers = {}                                    # ticket -> the open PRs that close it
+    for i in issues:
+        if "pull_request" in i:
+            for c in closes(i):
+                closers.setdefault(c, []).append(i["number"])
     out = []
     for n, i in sorted(tickets.items()):
         if labels(i) & WATCHED:
             continue
-        if i.get("title", "").startswith("Decide:"):
+        if i.get("title", "").startswith("Decide:") and n in closers:   # the owner answered in a `human/*` PR (#4754)
+            out.append((n, f"a decision that PR #{closers[n][0]} closes: Automerge takes no `human/*` branch without "
+                           "the label `automerge` (#3383): ask the owner on the ticket to add it or to merge"))
+        elif i.get("title", "").startswith("Decide:"):
             out.append((n, "a decision with no `needs-human`: act on the owner's answer, or add `needs-human`"))
         elif "blocked" in labels(i) and not any(d in open_numbers for d in depends(i)):
             out.append((n, "`blocked` with no open \"Depends on\" ticket: remove `blocked`, or add `needs-human` "
@@ -344,6 +373,14 @@ def render(old_body, issues, comments, open_prs, closed_issues, closed_prs, now,
                 for k, r in sorted(insights["sizes"].items())]
         if insights.get("sinks"):
             out += ["", "Top costs (M eq): " + ", ".join(f"{k} {v:.1f}" for k, v in insights["sinks"])]
+    if insights and insights.get("days"):              # what the runs do per day (#4725)
+        out += ["", "### Activity (7 days)", "| Day | Runs | Merged PRs | Runs per PR | Runs: ticket, review, idle | Minutes |",
+                "|---|---|---|---|---|---|"]
+        for r in insights["days"]:
+            k, work = r["kinds"], sorted(r["work"].items(), key=lambda x: -x[1])
+            out.append(f"| {r['day']} | {r['runs']} | {r['merged']} | " + (f"{r['runs'] / r['merged']:.1f}" if r["merged"] else "–") +
+                       f" | {k.get('ticket', 0)}, {k.get('review', 0)}, {k.get('idle', 0)} | " +
+                       (", ".join(f"{n} {m:g}" for n, m in work if m) or "–") + " |")
     out += ["", "### Recently done"]
     merged = [p for p in closed_prs if p.get("merged_at")]
     done = [i for i in closed_issues if "pull_request" not in i and i.get("state_reason") == "completed"]
@@ -355,7 +392,7 @@ def render(old_body, issues, comments, open_prs, closed_issues, closed_prs, now,
         out.append("- nothing")
     out += ["", f"Process changes (24 h): {process_changes(closed_prs, now)} merged PRs with the label `process`"]
     if unanswered is not None:
-        from feedback import HOURS, issue_number           # feedback imports this module: import at the call
+        from feedback import HOURS, issue_number  # feedback imports this module: import at the call
         out.append(f"Owner comments without an answer ({HOURS:g} h): {len(unanswered)}" + "".join(
             f" #{n}" for n in dict.fromkeys(issue_number(c) for c in unanswered)) +
             " (`framework/tools/feedback.py`: the next run answers them)" * bool(unanswered))
@@ -409,7 +446,7 @@ def main(argv=None):
     if a.next:
         prs = [i["number"] for i in open_all if "pull_request" in i]
         busy = work(open_all, {n: [f["filename"] for f in pages(f"pulls/{n}/files", 3)] for n in prs})
-        import health                                       # health imports this module
+        import health  # health imports this module
         held = claimed(health.claim_refs() or [], datetime.datetime.now(datetime.timezone.utc))
         for i in (i for i in candidates(open_all, busy, lane=a.lane) if i["number"] not in held):
             ov = overlap(i, busy)
@@ -424,11 +461,11 @@ def main(argv=None):
                 for i in issues if labels(i) & {"needs-human", "in-progress"}}
     closed = api("issues?state=closed&sort=updated&direction=desc&per_page=50")
     closed_prs = pages("pulls?state=closed&sort=updated&direction=desc", 5)    # about 24 h of merges (#901)
-    from feedback import fetch as unanswered               # owner comments without a lock (#971)
+    from feedback import fetch as unanswered  # owner comments without a lock (#971)
     open_prs, owner, now = api("pulls?state=open&per_page=100"), unanswered(), datetime.datetime.now(datetime.timezone.utc)
     nxt = candidates(open_all, now=now)[:5]
     try:                                                    # the accounts section (#4239): one row per Claude account
-        import dashboard_data                               # a project tool: a copy of the generic tools has none (#3560)
+        import dashboard_data  # a project tool: a copy of the generic tools has none (#3560)
         accounts = dashboard_data.accounts()
     except (ImportError, OSError, subprocess.CalledProcessError) as e:   # a failed read: no section, the rest updates
         print(f"accounts: {e}", file=sys.stderr)

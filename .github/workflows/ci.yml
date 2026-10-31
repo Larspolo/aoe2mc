@@ -68,8 +68,14 @@ jobs:
         run: |
           python3 -c "import sys, subprocess; sys.path.insert(0, 'framework/tools'); import ship_pr; c = subprocess.run(['git', 'diff', '--name-only', 'HEAD^1...HEAD'], capture_output=True, text=True).stdout.split(); bad = ship_pr.data_only_tests(c); sys.exit('a change of data files only must not add or change tests: ' + ' '.join(bad) + ' (docs/extend.md)') if bad else None"
       - name: Fast tests
+        id: fast
         if: ${{ !steps.tested.outputs.skip }}
-        run: pytest -n auto ${{ steps.select.outputs.tests }}   # all cores (#2415)
+        shell: bash          # with pipefail: the step keeps the exit code of pytest, not of tee
+        run: pytest -n auto ${{ steps.select.outputs.tests }} | tee pytest.log   # all cores (#2415)
+      # The cloud blocks the host of the job logs: the failed tests as annotations, for `ship_pr.py` (#4784).
+      - name: Failed tests
+        if: failure() && steps.fast.outcome == 'failure'
+        run: grep -E '^(FAILED|ERROR) ' pytest.log | head -10 | sed 's/^/::error title=Fast tests::/'
       # Only a run of the whole fast suite marks its tree green (not the doc tests of ci_select).
       - name: Tree name
         id: tree
@@ -106,10 +112,11 @@ jobs:
 
   # A CI run that GITHUB_TOKEN started (Unconflict) gives no workflow_run event, and GitHub drops the cron sweep of
   # Automerge: start the sweep after a green quick job, so that the PR merges (#734). A dispatch of GITHUB_TOKEN starts
-  # a workflow. A job after `quick`: the sweep needs its check run completed.
+  # a workflow. A job after `quick`: the sweep needs its check run completed. Also the pull_request run of an
+  # Unconflict push: Unconflict then starts no dispatch (#4809).
   sweep:
     needs: quick
-    if: github.event_name == 'workflow_dispatch' && (startsWith(github.ref_name, 'agent/') || startsWith(github.ref_name, 'claude/') || startsWith(github.ref_name, 'ccr-'))
+    if: (github.event_name == 'workflow_dispatch' || github.actor == 'github-actions[bot]') && (startsWith((github.head_ref || github.ref_name), 'agent/') || startsWith((github.head_ref || github.ref_name), 'claude/') || startsWith((github.head_ref || github.ref_name), 'ccr-'))
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:

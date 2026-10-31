@@ -1,14 +1,15 @@
 """#2940 (epic #2538): a trigger with the condition "Capture Object" on a building fires in the scenario mode when the
 player of the condition owns the building. The converter tests the score #o<ref> of aoe_owner; the game program sets
 it to the owner of the building in aoe2mc.json (game/scenario.py owners). A unit keeps the tag test (#2619)."""
-import sys
 import os
+import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "game"))
-import aoe2mc  # noqa: E402
 import gather  # noqa: E402
 import scenario  # noqa: E402
 from test_gather import FakeServer, grid  # noqa: E402
+
+import aoe2mc  # noqa: E402
 
 BUILDING = {"kind": "building", "name": "CASTLE", "player": 1, "ref": 7, "footprint": [4, 4, 8, 8]}
 

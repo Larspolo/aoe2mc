@@ -1,9 +1,9 @@
 """game/conquest.py: the AoE2 victory "Last Man Standing" (#2358, AoE2 wiki "Victory"): the allies do not win together;
 when only allies are left, the alliances end, and the last player alive wins."""
+from test_cheat_end import game
 from test_conquest import check, live
 
 from game import gather
-from test_cheat_end import game
 
 
 def setup(victory="last-man-standing"):

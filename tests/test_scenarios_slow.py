@@ -5,13 +5,13 @@ Run with:  pytest -m slow
 import contextlib
 import io
 
-import pytest
-
-import aoe2mc
 import mcvalid
+import pytest
 import scenarios
 import world_reader
 from entities import entity_ids
+
+import aoe2mc
 
 
 @pytest.mark.slow

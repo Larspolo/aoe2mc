@@ -1,8 +1,8 @@
 """A full forage bush or fruit bush fills its tile and is 2 blocks high (#590)."""
+import mcvalid
 import numpy as np
 
 import aoe2mc
-import mcvalid
 
 
 def test_full_bush_fills_its_tile_two_blocks_high():

@@ -22,7 +22,7 @@ def used(data):
 
 def place(g):
     """Put the start buildings of the civilization of g next to its town center. Returns the sites."""
-    import train                                                       # train imports gather, gather imports build
+    import train  # train imports gather, gather imports build
     tc = next((r for r, n in sorted(train.homes(g).items()) if n == "TOWN_CENTER"), None)
     out = []
     for name, count in sorted(civs.value("start_buildings", civs.civ(g), {}).items()) if tc else ():

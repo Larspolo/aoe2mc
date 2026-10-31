@@ -1,13 +1,12 @@
 """run.py --play --challenge: an Art of War challenge ends with its medal (#3900)."""
 import types
 
-import pytest
-
-from game import challenge, run
-
 import build  # noqa: E402  (game/ is on sys.path after the import of game.challenge)
 import cheats  # noqa: E402
+import pytest
 import recap  # noqa: E402
+
+from game import challenge, run
 
 C = challenge.CHALLENGES["early-economy"]
 N = C["need"]

@@ -22,16 +22,17 @@ import os
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from units import MOUNT  # noqa: E402
-
 import cheats  # noqa: E402
+import ratings  # noqa: E402
+
+from units import MOUNT  # noqa: E402
 
 EVERY = 3.0          # seconds between two checks
 
 
 def alive(g, n):
     """Player n has a unit, a building or a construction site that counts in the AoE2 conquest."""
-    import combat                                                   # combat imports gather, which imports this module
+    import combat  # combat imports gather, which imports this module
     return any(s["player"] == n and not (s.get("done") and (s["name"] in combat.BUILDINGS or s["name"] in combat.WALLS)
                                          and not s.get("lasting")) for s in g.sites) or any(
         "passed" in g.command(f"execute if entity {sel}")
@@ -40,7 +41,7 @@ def alive(g, n):
 
 def scored(g, n):
     """The scenario mode: the score #p<n> of aoe_lost, for the trigger condition "Player Defeated" (#2710)."""
-    from gather import has_mode                                     # gather imports this module
+    from gather import has_mode  # gather imports this module
     if has_mode(g, "scenario"):
         g.command(f"scoreboard players set #p{n} aoe_lost 1")
 
@@ -54,7 +55,7 @@ def main(g):
 def left(g):
     """The players that are still in the game: the ones that had units or buildings once, and the players of the people
     and the bots, less the defeated ones."""
-    from fog import gathers                                         # fog imports gather, which imports this module
+    from fog import gathers  # fog imports gather, which imports this module
     lost = vars(g).setdefault("defeated", set())
     return (vars(g).get("conquest_seen", set()) | {h.player for h in gathers(g)}) - lost - {0}
 
@@ -64,7 +65,7 @@ def defeat(g, n, text=None):
     and its people see "Defeat"; the others play on until finish() ends the game. When no person is left (only bots),
     the game ends at once, with no destroy (a one-person game ends as before, #1936)."""
     from fog import gathers
-    from gather import allied                                       # gather imports this module
+    from gather import allied  # gather imports this module
     g = main(g)
     vars(g).setdefault("defeated", set()).add(n)
     vars(g).setdefault("conquest_seen", set()).add(n)
@@ -81,13 +82,14 @@ def defeat(g, n, text=None):
 def finish(g):
     """End the game when a rival lost and only allies are left: the team wins together, also a player of it that lost
     before (#1313, decision #3103). Last Man Standing: last_man() ends it."""
-    from gather import allied                                       # gather imports this module
+    from gather import allied  # gather imports this module
     rest, lost = left(g), vars(g).get("defeated", set())
     if g.ended or not rest or g.victory == "last-man-standing":
         return
     one = min(rest)
     if any(not allied(g.players, one, n) for n in lost) and all(allied(g.players, a, b) for a in rest for b in rest):
         cheats.over(g, lambda p: allied(g.players, p, one))
+        ratings.announce(g, ratings.update(ratings.teams(g, one)))     # the Elo rating of the human players (#5166)
 
 
 def tick(g):
@@ -103,7 +105,7 @@ def tick(g):
             defeat(g, n)
             if g.ended:
                 return
-    from gather import allied, allies_command                       # gather imports this module
+    from gather import allied, allies_command  # gather imports this module
     if g.victory == "last-man-standing":
         return last_man(g, seen - lost, lost, allied, allies_command)
     finish(g)
@@ -120,7 +122,7 @@ def last_man(g, left, lost, allied, allies_command):
     if len(left) > 1 and all(allied(g.players, a, b) for a in left for b in left):
         for n in left:
             g.players[str(n)].pop("team", None)
-        import owners                                                  # owners -> build -> gather -> cheats
+        import owners  # owners -> build -> gather -> cheats
         owners.update_enemies(g)                                       # the last allies are enemies (#2996)
         if g.paper:
             g.command(allies_command(g.players))

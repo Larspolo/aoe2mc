@@ -1,7 +1,6 @@
 """The Art of War challenges open one after the other, and the medal file keeps the best medal of each (#3904)."""
-import pytest
-
 import challenge
+import pytest
 import run
 
 

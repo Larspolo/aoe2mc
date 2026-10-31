@@ -12,7 +12,6 @@ import fetch_mcdata  # noqa: E402
 import mc_check  # noqa: E402
 import mcvalid  # noqa: E402
 
-
 REGISTRIES = {
     "minecraft:entity_type": {"entries": {"minecraft:villager": {}, "minecraft:zombie": {}}},
     "minecraft:sound_event": {"entries": {"minecraft:entity.villager.yes": {}, "minecraft:block.stone.break": {}}},

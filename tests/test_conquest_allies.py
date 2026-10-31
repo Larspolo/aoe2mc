@@ -1,7 +1,6 @@
 """game/conquest.py: allied players win together, as the AoE2 conquest (#1313)."""
-from test_conquest import check, live
-
 from test_cheat_end import game
+from test_conquest import check, live
 
 
 def setup():

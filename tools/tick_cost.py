@@ -76,8 +76,9 @@ def measure(world, seconds=60, version=None):
 
 def convert(kind, folder, ambience="basic"):
     """Make the test scenario kind (tools/scenarios.py) and convert it. Returns the world folder."""
-    import aoe2mc
     import scenarios
+
+    import aoe2mc
     src, world = os.path.join(folder, f"{kind}.aoe2scenario"), os.path.join(folder, f"{kind}World")
     with contextlib.redirect_stdout(io.StringIO()):
         scenarios.MAKERS[kind](src)

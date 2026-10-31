@@ -9,8 +9,8 @@ One RCON command holds at most rcon.MAX bytes: a longer menu goes out as `aoe me
 gives the size of the inventory) and `aoe menu-add` commands with the other items (#1647).
 gather.Gather.clicks calls clicks(): it reads and resets the score and calls the handler of the open menu.
 """
-import os
 import inspect
+import os
 import re
 import sys
 from urllib.parse import quote

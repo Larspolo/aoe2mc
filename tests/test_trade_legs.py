@@ -3,7 +3,6 @@ reach of one Minecraft path search (#1305: with one order the cart turned back a
 import math
 
 import pytest
-
 from test_gather import FakeServer, grid
 from test_trade_cart import moves
 
@@ -73,10 +72,10 @@ def test_a_trade_cart_trades_between_markets_170_blocks_apart_on_a_server(tmp_pa
     import json
     import time
 
-    import aoe2mc
     import scenarios
     from AoE2ScenarioParser.datasets.buildings import BuildingInfo
 
+    import aoe2mc
     from game import combat, run, train
     scn = scenarios.new_scenario(48)
     for x, y in ((8, 8), (38, 38)):

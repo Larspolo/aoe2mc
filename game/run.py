@@ -39,6 +39,7 @@ Usage:
     python3 game/run.py WORLD --play --mode capture-the-relic --regicide   # a King on top of the mode (also
                                                      # --sudden-death, --empire-wars: AoE2 "Advanced Settings", #2490)
     python3 game/run.py WORLD --play --civ 1=BRITONS --civ 2=FRANKS   # the civilization of each player (#2267)
+    python3 game/run.py WORLD --play --civ-mode mirror   # all play the civilization of player 1 (also team-random, #4757)
     python3 game/run.py WORLD --play --teams 1,1,2,2   # the team of each player, - is no team (#2296)
     python3 game/run.py WORLD --play --load SAVE   # go on with a saved game: Ctrl-C of --play saves into saves/ (#2255)
     python3 game/run.py WORLD --replay [--speed 4] [--follow N] [--view N]  # replay the recorded game of the world (game/replay.py), then wait for Ctrl-C
@@ -86,6 +87,7 @@ AGENT = {"User-Agent": "aoe2mc (https://github.com/Larspolo/aoe2mc)"}   # the Pa
 PLUGIN = os.path.join(HERE, "plugin")                               # the Paper plugin: aoe moveto, aoe attack (#435)
 BUNDLED = os.path.join(PLUGIN, "aoe2mc-plugin.jar")                # the jar in an app bundle (#1778): no JDK needed
 STOP_LINE = "\x03"                                                  # the Stop of the window on Windows (gui.STOP_LINE, #3003)
+ROME = "Return of Rome"                                             # the data set of a Return of Rome record (mgz, #4898)
 
 
 def plugin_jar(version):
@@ -293,7 +295,7 @@ class Game:
         self.server = self.rcon = None
         self.lock, self.seen = threading.Lock(), 0     # the op thread and the game send commands
         self.sides = {}
-        import units                                 # a world with the resource pack: own armor and weapons (#2742, #2744)
+        import units  # a world with the resource pack: own armor and weapons (#2742, #2744)
         units.ASSETS = pack_file(self.world) is not None
 
     def start(self):
@@ -483,13 +485,13 @@ def bot_foe(players, player):
     return next((p for p in [*range(1, player), *others] if p != player and not gather.allied(players, player, p)), None)
 
 
-def bot_script(players, player, files, k):
+def bot_script(players, player, files, k, defined=()):
     """The AI rules of the bot k of player: the embedded script of its scenario row (aoe2mc.json "ai", #4531), else
     the file k of --ai (#4529), else None: a bot after the list plays by its own logic."""
     import per
     if text := players.get(str(player), {}).get("ai"):
-        return per.parse(text, file=f"<script of player {player}>")
-    return per.read(files[k]) if k < len(files or ()) else None
+        return per.parse(text, defined, file=f"<script of player {player}>")
+    return per.read(files[k], defined) if k < len(files or ()) else None
 
 
 def bot_seats(players, people, n):
@@ -553,26 +555,83 @@ def challenge_names():
 
 
 def civ_choices(values):
-    """{player: civilization} of the --civ values ("1=BRITONS", #2267). An unknown name stops with the list of names."""
+    """{player: civilization} of the --civ values ("1=BRITONS", #2267). "RANDOM" (the lobby choice "Random", #4755)
+    stays: apply_civs picks it. An unknown name stops with the list of names."""
     import civs
     names, out = sorted(r["name"] for r in civs.ROWS), {}
     for v in values or ():
         player, _, name = v.partition("=")
-        if not player.isdigit() or name.upper() not in names:
+        if not player.isdigit() or name.upper() not in names + ["RANDOM"]:
             sys.exit(f"--civ {v}: write PLAYER=CIVILIZATION, one of: {', '.join(names)}")
         out[int(player)] = name.upper()
     return out
 
 
-def apply_civs(data, civs):
+def civ_pool_choice(text):
+    """The sorted civilizations of the --civ-pool value ("BRITONS,FRANKS", #4756): the civilizations that the host
+    enables, Random picks only from them. An unknown name stops with the list of names."""
+    import civs
+    names = sorted(r["name"] for r in civs.ROWS)
+    pool = sorted({n.strip().upper() for n in text.split(",") if n.strip()})
+    if not pool or set(pool) - set(names):
+        sys.exit(f"--civ-pool {text}: write CIVILIZATION,CIVILIZATION,..., each one of: {', '.join(names)}")
+    return pool
+
+
+def apply_civs(data, civs, pool=None):
     """Write the --civ choices {player: civilization} into the players of aoe2mc.json. A player whose scenario locks
-    its civilization ("Lock Civilizations", #3295) keeps the scenario civilization: a line on stderr says why."""
+    its civilization ("Lock Civilizations", #3295) keeps the scenario civilization: a line on stderr says why. RANDOM
+    picks from the pool (civ_pool_choice, #4756), else from all civilizations; also for a scenario player whose
+    civilization is RANDOM (#4746)."""
     for player, name in (civs or {}).items():
         p = data.setdefault("players", {}).setdefault(str(player), {})
         if p.get("lock_civ"):
             print(f"player {player}: the scenario locks its civilization, --civ {name} is not used", file=sys.stderr)
             continue
+        if name == "RANDOM":                                     # one of all civilizations, seeded by the scenario (#4755)
+            import random
+
+            import civs
+            seed = f"{data.get('map_size')}-{len(data.get('objects', ()))}-{player}"
+            name = random.Random(seed).choice(sorted(pool or (r["name"] for r in civs.ROWS)))
+            print(f"player {player}: --civ RANDOM gives {name}", file=sys.stderr)
         p["civ"] = name
+    for player, p in (data.get("players") or {}).items():        # the scenario says Random (#4746)
+        if p.get("civ") == "RANDOM" and int(player) > 0 and p.get("active", True) is not False:   # #5033
+            import random
+
+            import civs
+            seed = f"{data.get('map_size')}-{len(data.get('objects', ()))}-{player}"
+            p["civ"] = random.Random(seed).choice(sorted(pool or (r["name"] for r in civs.ROWS)))
+            print(f"player {player}: the scenario civilization RANDOM gives {p['civ']}", file=sys.stderr)
+
+
+def apply_civ_mode(data, mode):
+    """The lobby options "Mirror" (all players get the civilization of player 1, one random one when it is RANDOM)
+    and "Team Random" (each team gets one random civilization) on the players of aoe2mc.json, after apply_civs and the
+    teams (#4757). A player with no team is a team of its own. A locked civilization (#3295) stays."""
+    if mode == "normal":
+        return
+    import civs
+    players = {k: p for k, p in data.get("players", {}).items() if int(k) > 0}
+    if mode == "mirror":
+        groups = {"all": sorted(players, key=int)}
+    else:
+        groups = {}
+        for k in sorted(players, key=int):
+            groups.setdefault(players[k].get("team") or f"-{k}", []).append(k)
+    for group, members in groups.items():
+        first = players[members[0]].get("civ") if mode == "mirror" else "RANDOM"
+        if first in (None, "RANDOM"):
+            import random
+            seed = f"{data.get('map_size')}-{len(data.get('objects', ()))}-{mode}-{group}"
+            first = random.Random(seed).choice(sorted(r["name"] for r in civs.ROWS))
+        for k in members:
+            if players[k].get("lock_civ"):
+                print(f"player {k}: the scenario locks its civilization, --civ-mode {mode} is not used", file=sys.stderr)
+                continue
+            players[k]["civ"] = first
+        print(f"--civ-mode {mode}: players {','.join(members)} play {first}", file=sys.stderr)
 
 
 def handicap_choices(values):
@@ -636,10 +695,13 @@ SETTINGS = {
     "antiquity": False,               # Antiquity Mode: the Return of Rome rule set (table.use, game/data/antiquity, #3666)
     "challenge": None,                # an Art of War challenge (challenge.CHALLENGES, #3900)
     "civ": None,                      # {player: civilization} in place of the scenario's (civ_choices, #2267)
+    "civ_mode": "normal",             # "mirror" or "team-random": the same civilization for all or per team (#4757)
+    "civ_pool": None,                 # the enabled civilizations of Random (civ_pool_choice, #4756)
     "empire_wars": False,             # "Empire Wars Mode" on top of the mode (ON_TOP, #2490)
     "end_age": "imperial",            # "Ending age" (build.locked, #2346)
     "full_tech_tree": False,          # "Full Tech Tree": the full tech tree and no civilization bonuses (civs.civ, #2354)
-    "handicap": None,                 # {player: percent} "Handicap" (civs.handicap, handicap_choices, #2474)
+    "handicap": None,
+    "hidden_civs": False,             # "Hidden civilizations": an enemy shows "?" in the menus (lobby.hidden, #4758)                 # {player: percent} "Handicap" (civs.handicap, handicap_choices, #2474)
     "mode": "standard",               # the game mode (MODES: its line in game/data/setup.jsonl and its module, #2521)
     "pop_limit": None,                # "Population limit" (train.LIMITS, #2266)
     "record": None,                   # "Record Game": the file of the timeline of the game (record.py, #2649)
@@ -650,6 +712,7 @@ SETTINGS = {
     "teams": None,                    # {player: team or None} in place of the scenario's (team_choices, #2296)
     "treaty": "0:00",                 # "Treaty length" (MM:SS): before it no player can attack another (treaty.py, #2297)
     "turbo": False,                   # "Turbo Mode" (civs.turbo, #2359)
+    "tutorial": False,                # the tutorial steps (tutorial.py, #5161)
     "unlock_speed": False,            # "Lock Speed" off: the button "Game speed" of the Game menu (diplomacy.faster, #2933)
     "unlock_teams": False,            # "Lock Teams" off: the stance row of the Diplomacy page (diplomacy.STANCES, #2934)
     "victory": "standard",            # "Victory" (VICTORIES)
@@ -688,7 +751,8 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
     settings: the AoE2 lobby settings (SETTINGS); a missing one has its default."""
     if wait:                                         # the trigger timers start at the join, not at the load
         freeze(game)
-    import gather, train
+    import gather
+    import train
     if unknown := sorted(set(settings) - set(SETTINGS)):
         raise TypeError(f"play() has no setting {', '.join(unknown)} (SETTINGS)")
     settings = mode_defaults({**SETTINGS, **settings})
@@ -717,15 +781,17 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
             settings["age"] = challenge.CHALLENGES[settings["challenge"]].get("age", "dark")
         if enemy := challenge.CHALLENGES[settings["challenge"]].get("enemy"):   # a bot town that does not attack (#3905)
             settings["civ"][2], bot = enemy["civ"], bot or 1
-    apply_civs(data, settings["civ"])                             # before the Gathers: all bonuses (civs.civ) follow it
+    apply_civs(data, settings["civ"], settings["civ_pool"])                             # before the Gathers: all bonuses (civs.civ) follow it
     for player, pct in (settings["handicap"] or {}).items():     # before the Gathers: the start resources (#2474)
         data.setdefault("players", {}).setdefault(str(player), {})["handicap"] = pct
     for player, team in (settings["teams"] or {}).items():       # gather.allied and the scoreboard teams follow it
         data["players"][str(player)]["team"] = team
+    apply_civ_mode(data, settings["civ_mode"])                   # after the teams: Team Random follows them (#4757)
     data["all_techs"] = settings["all_techs"]                    # one data for all Gathers: the people and the bot (#2298)
     data["end_age"] = train.STARTS[settings["end_age"]]["ages"]  # the last age (build.locked, #2346)
     data["full_tech_tree"] = settings["full_tech_tree"]          # (#2354)
     data["turbo"] = settings["turbo"]                            # (#2359)
+    data["hidden_civs"] = settings["hidden_civs"]                # lobby.hidden (#4758)
     data["unlock_teams"] = settings["unlock_teams"]              # diplomacy.items (#2934)
     data["shared_exploration"] = settings["shared_exploration"] == "on"   # fog.shares (#2602)
     data["resources"] = settings["resources"]                    # the Regicide start resources of the level (#2388)
@@ -738,6 +804,7 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
     g.victory = settings["victory"]                              # Gather.run: the wonder and relic wins only in "standard"
     g.victory_value = settings["victory_value"]                  # time_limit.tick (#2356)
     g.challenge = settings["challenge"]                          # challenge.tick (#3900)
+    g.tutorial = settings["tutorial"]                            # tutorial.tick (#5161)
     g.unlock_speed = settings["unlock_speed"]                    # the Game menu of player 1 (diplomacy.faster, #2933)
     if people > 1:                                   # one Gather for each person, in the join order (#1308, #1310)
         g.bots = [Side(make(n)) for n in range(2, players + 1)]
@@ -752,6 +819,10 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
         first = [*getattr(game, "seats", ()), 1, 2][:2] if getattr(game, "seats", ()) else [1, 2]
         print(f"{people} people: the first Minecraft player who joins plays player {first[0]}, the second player "
               f"{first[1]}.", file=sys.stderr)
+    modes = {settings["mode"], *(m for m in ON_TOP if settings[m.replace("-", "_")])} - {"standard"}   # (#2490)
+    if settings["age"] == "dark" and (ages := [MODES[m]["age"] for m in modes if "age" in MODES[m]]):   # (#2408)
+        import train  # the latest start age of the modes (#2441)
+        settings["age"] = max(ages, key=lambda a: train.STARTS[a]["ages"])
     if settings["mode"] == "scenario":               # the computer players of the scenario, not --bot (#2543)
         import scenario
         seats = scenario.bot_seats(data["players"], players)
@@ -760,7 +831,9 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
     for k, (player, foe) in enumerate(seats):        # after the people, next to their Sides (#1794)
         import bot as bots
         level = bots.level_of(settings["ai_difficulty"], k)   # one level for each bot in seat order (#4020)
-        script = bot_script(data["players"], player, settings["ai"], k)
+        import per
+        script = bot_script(data["players"], player, settings["ai"], k,     # the symbols of #load-if-defined (#4683)
+                            per.symbols(data, player, level, modes, settings["age"]))
         import replay
         import treaty as treaties
         attack = max(bot_attack, settings["treaty"], key=replay.aoe2mc.game_time)   # the bot waits for the treaty too
@@ -778,12 +851,9 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
               f"{'never' if at == math.inf else 'at %d:%02d' % divmod(round(at), 60)}.", file=sys.stderr)
     import combat
     combat.setup(game, data)                         # AoE2 hit points and damage (#514)
-    modes = {settings["mode"], *(m for m in ON_TOP if settings[m.replace("-", "_")])} - {"standard"}   # (#2490)
-    if settings["age"] == "dark" and (ages := [MODES[m]["age"] for m in modes if "age" in MODES[m]]):   # (#2408)
-        import train                                             # the latest start age of the modes (#2441)
-        settings["age"] = max(ages, key=lambda a: train.STARTS[a]["ages"])
     for x in [g, *(s.g for s in g.bots)]:                        # before the age: train.research sets the scores (#3089)
         x.modes = frozenset(modes)                               # gather.has_mode: build.locked, Gather.run (#2490)
+        x.start_age = settings["age"]                            # the fact starting-age of an AI script (#4683)
         if MODES[settings["mode"]].get("bots") or x is g:
             x.mode = settings["mode"]                            # build.locked of each player (#2407)
     if not state and settings["age"] != "dark":                  # after the base values: the technologies change them
@@ -792,12 +862,12 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
             train.start(x, settings["age"])
     saved = {k: p for k, p in dict(data.get("players") or {}).items() if p.get("saved")}
     if not state and saved and settings["mode"] != "scenario":  # a converted saved game: its resources, ages and
-        import scenario                                          # technologies (aoe2mc.json "saved", #4565)
+        import scenario  # technologies (aoe2mc.json "saved", #4565)
         for x in [g, *(s.g for s in g.bots)]:
             if p := saved.get(str(x.player)):
                 scenario.start_values(x, p)
     if settings["record"]:                                       # the orders of the people and the bots (#2649), and
-        import record                                            # the objects of the setups below at 0:00 (#3028)
+        import record  # the objects of the setups below at 0:00 (#3028)
         record.start([g, *(b.g for b in g.bots)], settings["record"])
     import scout
     if not state and scout.used(data):               # the scout of each civilization (#2391), not twice after a load
@@ -808,7 +878,7 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
         for x in [g, *(s.g for s in g.bots)]:
             start_buildings.place(x)
     if state:                                                    # before the modes and the minimap: they see the save
-        import savegame                                          # (the Wonder, the defeated, the sites, #2981)
+        import savegame  # (the Wonder, the defeated, the sites, #2981)
         savegame.load(g, state)
     for mode in sorted(modes):                                   # after the age: the town of Empire Wars, the Wonder;
         line = MODES[mode]                                       # the Kings go to the Gathers of the bots (#2347)
@@ -929,7 +999,7 @@ def live_error(world, record):
     return f"--live needs a world of a recorded game: convert the record first (python3 aoe2mc.py {record} {world})"
 
 
-def replay(game, world, speed=1.0, start="0:00", follow=None, guide=None, view=None, replay_file=None, camera=False,
+def replay(game, world, speed=1.0, start="0:00", follow=None, guide=None, view=None, replay_file=None, camera=None,
            live=None, delay=None):
     """guide: a poll(control) next to the hotbar input that gets `input` and the replay `r` (game/watch.py, #1123).
     view: the replay starts with the view of player N (#1303: the units out of its sight are hidden).
@@ -952,6 +1022,8 @@ def replay(game, world, speed=1.0, start="0:00", follow=None, guide=None, view=N
         except OSError as e:
             sys.exit(str(e))
         data["timeline"] = source.first()
+        if source.views:                             # the views of the record so far (--camera player, #4771)
+            data["views"] = [{"time": v["time"], "tile": v["tile"]} for v in source.fresh_views()]
         kw["more"] = source.more
     import replay_input
     control = replay_input.Input(game)              # hotbar items, menu and /trigger aoe_replay (#688)
@@ -1020,6 +1092,27 @@ def interrupt():
         signal.pthread_kill(threading.main_thread().ident, signal.SIGINT)
     else:                                            # Windows: the C handler of SIGINT also wakes a sleep of the main thread
         signal.raise_signal(signal.SIGINT)
+
+
+def record_rules(world):
+    """The rule set of the recorded game of world (#4898): "antiquity" when its lobby has the Return of Rome data set
+    (aoe2mc.read_record "dataset", #4832), as AoE2 DE plays it; else "aoe2". Read before the first rule module loads."""
+    try:
+        with open(os.path.join(world, "aoe2mc.json")) as f:
+            lobby = json.load(f).get("lobby") or {}
+    except (OSError, ValueError):
+        return "aoe2"
+    return "antiquity" if lobby.get("dataset") == ROME else "aoe2"
+
+
+def lobby_mode(world, default):
+    """The game mode of the lobby of a random map world (aoe2mc.json "lobby" "mode", #4825), else default."""
+    try:
+        with open(os.path.join(world, "aoe2mc.json")) as f:
+            mode = (json.load(f).get("lobby") or {}).get("mode")
+    except (OSError, ValueError):
+        return default
+    return mode if mode in MODES else default
 
 
 def given(ap, argv):
@@ -1184,7 +1277,8 @@ def main(argv=None, scenario=None):
     ap.add_argument("--speed", type=float, default=1.0, help="--replay, --play: times the game speed "
                     "(default 1; --play: the server ticks faster too)")
     ap.add_argument("--from", dest="start", default="0:00", metavar="MM:SS", help="--replay: start at this game time")
-    ap.add_argument("--camera", choices=["auto"], help="--replay: the spectators move to each fight and group of new buildings (#3367)")
+    ap.add_argument("--camera", choices=["auto", "player"], help="--replay: auto: the spectators move to each fight and group of new "
+                    "buildings (#3367); player: to the views of the recording player (#4768)")
     ap.add_argument("--follow", type=int, metavar="N", help="--replay: the spectators follow the units of player N")
     ap.add_argument("--view", type=int, default=0, metavar="N", help="--replay: start with the view of player N: the "
                     "units out of its sight are hidden (default 0: all players)")
@@ -1241,8 +1335,12 @@ def main(argv=None, scenario=None):
     ap.add_argument("--shared-exploration", choices=["on", "off"], default="on", help="--play: the AoE2 setting "
                     "\"Shared Exploration\" (default on: allies share their line of sight; off: each player sees only "
                     "through the own units and buildings)")
+    ap.add_argument("--hidden-civs", action="store_true", help="--play: the AoE2 setting \"Hidden civilizations\": "
+                    "the menus show \"?\" for the civilization of an enemy until the end of the game; allies see it")
     ap.add_argument("--turbo", action="store_true", help="--play: the AoE2 setting \"Turbo Mode\": buildings, "
                     "gatherers and builders work 2.5 times faster (not villagers, trade units, castles, towers, wonders)")
+    ap.add_argument("--tutorial", action="store_true", help="--play: the tutorial: the boss bar and the chat say "
+                    "each step (select a villager, gather wood, build a house), the next one comes when it is done")
     ap.add_argument("--unlock-speed", action="store_true", help="--play: the AoE2 setting \"Lock Speed\" off: the "
                     "button \"Game speed\" of the Game menu changes the speed of the game (1, 1.5, 2, as --speed)")
     ap.add_argument("--unlock-teams", action="store_true", help="--play: the AoE2 setting \"Lock Teams\" off: each "
@@ -1267,8 +1365,13 @@ def main(argv=None, scenario=None):
     ap.add_argument("--load", metavar="SAVE", help="--play: go on with a saved game (a folder of saves/: the end of "
                     "--play with Ctrl-C saves the world and the resources, technologies and ages there)")
     ap.add_argument("--civ", action="append", metavar="N=CIV", help="--play: player N plays civilization CIV (for "
-                    "example 1=BRITONS, repeat it for more players): the game rules change, the buildings of the "
+                    "example 1=BRITONS, or 1=RANDOM; repeat it for more players): the game rules change, the buildings of the "
                     "world keep the architecture of the scenario")
+    ap.add_argument("--civ-pool", type=civ_pool_choice, metavar="CIV,CIV", help="--play: the civilizations that the "
+                    "host enables: --civ N=RANDOM picks only from them (for example BRITONS,FRANKS,MONGOLS)")
+    ap.add_argument("--civ-mode", choices=["normal", "mirror", "team-random"], default="normal", help="--play: the "
+                    "AoE2 lobby options \"Mirror\" (all players play the civilization of player 1, one random one for "
+                    "all when it is RANDOM) and \"Team Random\" (the players of each team play one random civilization)")
     ap.add_argument("--handicap", action="append", metavar="N=PCT", help="--play: the AoE2 setting \"Handicap\" of "
                     "player N, 100 to 200 percent in steps of 5 (for example 1=150, repeat it for more players): more "
                     "start resources, villager work rate and hit points, building hit points and military building "
@@ -1288,7 +1391,9 @@ def main(argv=None, scenario=None):
         if not challenge.opened(a.challenge):
             ap.error(f"--challenge {a.challenge} is closed: win a medal in {challenge.CHALLENGES[a.challenge]['after']} first")
     if a.camera and a.follow is not None:
-        ap.error("--camera auto and --follow N both move the spectators: give only one of them")
+        ap.error("--camera and --follow N both move the spectators: give only one of them")
+    if "mode" not in given(ap, argv):              # the --game-mode of a random map conversion (#4825)
+        a.mode = lobby_mode(a.world, a.mode)
     import savegame
     state = savegame.read(a.load) if a.load else None
     if state:                                        # the settings of the save, but the options given here win (#2325)
@@ -1296,8 +1401,8 @@ def main(argv=None, scenario=None):
     if a.live and (err := live_error(a.world, a.live)):   # before the server starts (#4663)
         sys.exit(err)
     if a.antiquity and (a.replay or a.mode != "standard"):
-        sys.exit("--antiquity plays only --mode standard, and not --replay (the records are AoE2 games)")
-    table.use("antiquity" if a.antiquity else "aoe2")   # before the first rule module loads (civ_choices, #3666)
+        sys.exit("--antiquity plays only --mode standard, and not --replay (a Return of Rome record selects it, #4898)")
+    table.use("antiquity" if a.antiquity or (a.replay and record_rules(a.world) == "antiquity") else "aoe2")   # before the first rule module loads (civ_choices, #3666)
     civ = civ_choices(a.civ)
     handicap = handicap_choices(a.handicap)
     import train
@@ -1342,7 +1447,7 @@ def main(argv=None, scenario=None):
             show_titles(game)
         if a.replay:                                 # after the end the player can look around (#978)
             replay(game, a.world, a.speed, a.start, a.follow, view=a.view or None, replay_file=a.replay_file,
-                   camera=a.camera == "auto", live=a.live, delay=a.delay)
+                   camera=a.camera, live=a.live, delay=a.delay)
             print("The replay ended. The server stays up: type commands, Ctrl-C stops it.", file=sys.stderr)
         if a.play:
             with open(a.log, "w") if a.log else contextlib.nullcontext() as log:

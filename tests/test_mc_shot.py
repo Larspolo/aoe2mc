@@ -2,10 +2,9 @@
 import json
 import shutil
 
+import mc_shot
 import numpy as np
 import pytest
-
-import mc_shot
 from test_mc_check import mojang_reachable
 
 

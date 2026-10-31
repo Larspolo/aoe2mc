@@ -8,12 +8,12 @@ import sys
 import types
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "game"))
-import aoe2mc  # noqa: E402
 import garrison  # noqa: E402
 import gather  # noqa: E402
 import scenario  # noqa: E402
 from test_gather import FakeServer, grid  # noqa: E402
 
+import aoe2mc  # noqa: E402
 from tools import scenarios  # noqa: E402
 
 TC = {"kind": "building", "name": "TOWN_CENTER", "player": 1, "ref": 12, "footprint": [4, 4, 8, 8]}

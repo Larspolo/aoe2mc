@@ -131,3 +131,54 @@ The random maps of the lobby group "Standard" of AoE2 DE and their state in the 
 
 The other groups of the lobby have no rows: the "Real World" maps (28 maps, for example Britain, Iberia, Texas) and
 the "Special" maps (for example Border Stones) are on the same page.
+
+## Research: the labels of the game modes (#4824)
+
+The AoE2 DE lobby defines one label for the game mode of a random map. `aoe2mc.py IN.rms OUT --game-mode MODE` defines
+it too (`rmap.MODE_LABELS`), so that the `if LABEL` blocks of the script work. The source: the AoE2 DE random map
+scripting guide and the labels that the real scripts test (`tools/rms_survey.py`, #4822). The objects of a mode (the
+king, the monument) wait for #3846.
+
+| Mode (`game/run.py`) | Label |
+|---|---|
+| battle-royale | `BATTLE_ROYALE` |
+| capture-the-relic | `CAPTURE_THE_RELIC` |
+| death-match | `DEATH_MATCH` |
+| defend-the-wonder | `DEFEND_THE_WONDER` |
+| empire-wars | `EMPIRE_WARS` |
+| king-of-the-hill (`--victory`) | `KING_OT_HILL` |
+| regicide | `REGICIDE` |
+| standard | none |
+| sudden-death | `SUDDEN_DEATH` |
+| wonder-race | `WONDER_RACE` |
+
+## Research: the other lobby labels (#5010)
+
+The labels of the owner's survey (#4855) that the scripts test and no script defines, except the size, mode, player
+and team labels (#4823, #4824, the player and team ticket). Source: the label counts of the survey (maps) and the use
+of each label in the scripts. The cloud blocked the hosts of the DE scripting guide (`docs.google.com`,
+`docs.racket-lang.org`, `plt.cs.northwestern.edu`, `twharris.dev`, 2026-10-31). The `/human` session of #5052 read the
+guide ("Definitive Random Map Scripting Guide", Zetnus, section "Conditionals" → "Lobby Settings", 2026-10-31): "guide"
+in the Source column names a label of that list, "not in the guide" a label that the list does not have. The list has
+`0_TEAM_GAME` to `4_TEAM_GAME` and `TEAM_POSITIONS` (DE), but no `TEAM_GAME` and no `TEAMS_CONNECTED`.
+
+| Label (maps) | Lobby setting | Option | Changes the land | Source |
+|---|---|---|---|---|
+| `ANTIQUITY_MODE` (80) | Antiquity Mode (Return of Rome rules) | `run.py --antiquity`; `aoe2mc.py --antiquity` (#5017) | yes (start objects) | survey, `run.py`, guide |
+| `DARK_AGE_START` (83) | Starting age: Dark Age | `run.py --age`; `aoe2mc.py --age` (#5016) | yes (start objects) | survey, `run.py`, guide |
+| `ENABLE_TREATY` (16) | Treaty length above 0 | `run.py --treaty` | no (game rule) | survey, `run.py`; not in the guide |
+| `FIXED_POSITIONS` (3) | The lobby box "Team Together" is on (on in the DE lobby) | defined by default; `aoe2mc.py --no-team-together` (#5050) | yes (player places) | guide ("Additional lobby settings"); decision #5052 |
+| `INFINITE_RESOURCES` (171) | Starting resources: Infinite | `run.py --resources`; `aoe2mc.py --resources` (#5016) | yes (mine and food amounts) | survey, `run.py`, guide |
+| `LOW_RESOURCES` (10) | Starting resources: Low | `run.py --resources`; `aoe2mc.py --resources` (#5016) | yes (mine and food amounts) | survey, `run.py`, guide |
+| `NOMAD_MAP` (77) | Nomad start (no town center) | `aoe2mc.py --nomad` (#5017) | yes (start objects) | survey; not in the guide (the guide has the map type `NOMAD`) |
+| `TEAM_GAME`, `TEAMS_CONNECTED` (62, 23) | none: switches of the script authors, never defined: their `if` blocks stay off (#5050) | none | no (the lobby never defines them) | not in the guide; decision #5052 |
+| `TEAM0_SIZE0`, `LESS_THAN_THREE_PLAYERS`, `LESS_THAN_FIVE_PLAYERS`, `LESS_THAN_SEVEN_PLAYERS`, `RANKED_MATCH`, `TOURNAMENT_VERSION`, `ESCALATION_MODE`, `MODE_TOGGLE`, `DYNAMIC_SIZE` (2 to 10) | none: the lobby defines `TEAMn_SIZEm` only for teams 1 to 4; the others are switches of the script authors | none | no (the lobby never defines them) | survey #5087; not in the guide |
+| `AZUREMASKING`, `EXTREME_ELEVATION`, `LEGACY_CODE`, `LEGACY_RELICS`, `NOMAD_CASTLE`, `NOMAD_HERDABLE`, `NOMAD_SCATTERED`, `NOMAD_TREATY`, `NOMAD_UNIT`, `REGICIDE_*` variants, `SEASONS_ALLOWMUDDYSHALLOWS`, `EMPIRE_WARS_*` variants, `*_ALLOW_FEEDING`, `DEBUG_MODE`, `TERRAIN_DEBUGGING`, `GNR_*`, `*_CAA_*` | none: switches of the script authors | none | no (the lobby never defines them) | survey |
+
+### Undefined constants in math (#5068)
+
+`PLAYERn_ALLY_COUNT` and `MAPSCALE_SIDE` are not predefined. The DE scripts define them: `includes/helpers.inc`
+defines `PLAYERn_ALLY_COUNT` (0 with `PLAYERn_TEAM0`, else team size − 1) only for the players in the game, and
+`includes/scaling.inc` defines `MAPSCALE_SIDE` = `MAPSIZE_SIDE / 100`. Source: the owner's search of the game files and
+of the Zetnus guide (the guide has neither word, #5068). AoE2 DE reads an undefined constant in math (`#const`, `rnd`,
+`(...)`) as 0 with no error. `rmap.calc` does the same and `generate` warns once per word.

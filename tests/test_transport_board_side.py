@@ -44,10 +44,10 @@ def test_three_militia_board_a_ship_in_the_middle_of_the_sea_on_paper(tmp_path):
     import json
     import time
 
-    import aoe2mc
     import scenarios
     from AoE2ScenarioParser.datasets.units import UnitInfo
 
+    import aoe2mc
     from game import combat, run
     scn = scenarios.new_scenario(48)
     for t in scn.map_manager.terrain:

@@ -16,6 +16,7 @@ def test_the_far_corner_of_the_border_is_the_ground_behind_plants(tiny_world, tm
     import time
 
     import mc_shot
+
     from game import run
     world = shutil.copytree(tiny_world[0], tmp_path / "W")
     with run.Game(world) as game, mc_shot.Client(game.game_port, game.version) as client:

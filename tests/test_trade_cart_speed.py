@@ -17,9 +17,9 @@ def test_a_trade_cart_walks_a_diagonal_at_its_aoe2_speed_both_ways(tmp_path):
     import json
     import time
 
-    import aoe2mc
     import scenarios
 
+    import aoe2mc
     from game import ai, run, train
     src = str(tmp_path / "t.aoe2scenario")
     scenarios.save(scenarios.new_scenario(48), src)

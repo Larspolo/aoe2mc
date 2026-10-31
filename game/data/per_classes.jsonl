@@ -1,0 +1,21 @@
+{"name": "archery-class", "kind": "class", "id": 900, "armor": ["archer"]}
+{"name": "building-class", "kind": "class", "id": 903, "building": true}
+{"name": "cavalry-archer-class", "kind": "class", "id": 936, "armor": ["archer", "cavalry"]}
+{"name": "cavalry-class", "kind": "class", "id": 912, "armor": ["cavalry"]}
+{"name": "farm-class", "kind": "class", "id": 949, "buildings": ["FARM"]}
+{"name": "gate-class", "kind": "class", "id": 939, "buildings": ["GATE"]}
+{"name": "infantry-class", "kind": "class", "id": 906, "armor": ["infantry"]}
+{"name": "monastery-class", "kind": "class", "id": 918, "units": ["MONK"]}
+{"name": "projectile-any", "kind": "projectile", "id": 7, "any": true}
+{"name": "projectile-bombard-tower", "kind": "projectile", "id": 3, "buildings": ["BOMBARD_TOWER"]}
+{"name": "projectile-castle", "kind": "projectile", "id": 1, "buildings": ["CASTLE"]}
+{"name": "projectile-fortification", "kind": "projectile", "id": 6, "buildings": ["DONJON", "FORTIFIED_CHURCH", "FORTRESS", "KREPOST"]}
+{"name": "projectile-ship", "kind": "projectile", "id": 4, "armor": ["ship"]}
+{"name": "projectile-siege", "kind": "projectile", "id": 5, "armor": ["siege"]}
+{"name": "projectile-town-center", "kind": "projectile", "id": 0, "buildings": ["TOWN_CENTER"]}
+{"name": "projectile-watch-tower", "kind": "projectile", "id": 2, "buildings": ["FIRE_TOWER", "FORTIFIED_TOWER", "GUARD_TOWER", "KEEP", "SEA_TOWER", "WATCH_TOWER"]}
+{"name": "siege-weapon-class", "kind": "class", "id": 913, "armor": ["siege"]}
+{"name": "tower-class", "kind": "class", "id": 952, "buildings": ["BOMBARD_TOWER", "FIRE_TOWER", "FORTIFIED_TOWER", "GUARD_TOWER", "KEEP", "SEA_TOWER", "WATCH_TOWER"]}
+{"name": "villager-class", "kind": "class", "id": 904, "units": ["VILLAGER"]}
+{"name": "wall-class", "kind": "class", "id": 927, "buildings": ["PALISADE_WALL", "STONE_WALL"]}
+{"name": "warship-class", "kind": "class", "id": 922, "armor": ["warship"]}

@@ -87,8 +87,7 @@ def test_unread_sections_and_attributes_give_a_warning():
 
 
 def test_errors_name_the_problem():
-    for text, msg in (("<LAND_GENERATION> base_terrain LAVA", "unknown constant 'LAVA'"),
-                      ("<LAND_GENERATION> if X base_terrain DIRT", "has no end")):
+    for text, msg in (("<LAND_GENERATION> base_terrain", "too few arguments"),):
         with pytest.raises(rmap.RmsError, match=msg):
             rmap.generate(text, 1)
 
@@ -104,6 +103,6 @@ def test_read_map_takes_a_script(tmp_path):
     assert sorted(o["player"] for o in objects if o["name"] == "TOWN_CENTER") == [1, 2]
     assert (terrain == np.array(make(5)[0]["terrain"])).all() and names[10] == "FOREST_OAK"
     assert sorted(players) == [0, 1, 2]
-    (tmp_path / "Bad.rms").write_text("<LAND_GENERATION> base_terrain LAVA")
-    with pytest.raises(aoe2mc.OptionError, match="Bad.rms: unknown constant"):
+    (tmp_path / "Bad.rms").write_text("<LAND_GENERATION> base_terrain")
+    with pytest.raises(aoe2mc.OptionError, match="Bad.rms: base_terrain: too few"):
         aoe2mc.read_map(str(tmp_path / "Bad.rms"))

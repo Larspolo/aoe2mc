@@ -7,10 +7,9 @@ import time
 import pytest
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from test_replay_input import Scores, poll  # noqa: E402
-
 import replay  # noqa: E402
 import replay_input as ri  # noqa: E402
+from test_replay_input import Scores, poll  # noqa: E402
 
 
 def test_the_spectator_item_is_on_paper_only():

@@ -1,0 +1,84 @@
+{"name": "object-data-index", "id": -1, "value": "index"}
+{"name": "object-data-id", "id": 0, "value": "id"}
+{"name": "object-data-type", "id": 1, "value": "type"}
+{"name": "object-data-class", "id": 2, "value": "class"}
+{"name": "object-data-category", "id": 3, "value": "category"}
+{"name": "object-data-cmdid", "id": 4, "value": "cmdid"}
+{"name": "object-data-action", "id": 5, "value": "action"}
+{"name": "object-data-order", "id": 6, "value": "order"}
+{"name": "object-data-target", "id": 7, "value": "target"}
+{"name": "object-data-point-x", "id": 8, "value": "point-x"}
+{"name": "object-data-point-y", "id": 9, "value": "point-y"}
+{"name": "object-data-hitpoints", "id": 10, "value": "hitpoints"}
+{"name": "object-data-maxhp", "id": 11, "value": "maxhp"}
+{"name": "object-data-range", "id": 12, "value": "range"}
+{"name": "object-data-speed", "id": 13, "value": "speed"}
+{"name": "object-data-dropsite", "id": 14}
+{"name": "object-data-resource", "id": 15, "value": "resource"}
+{"name": "object-data-carry", "id": 16, "value": "carry"}
+{"name": "object-data-garrisoned", "id": 17, "value": "garrisoned"}
+{"name": "object-data-garrison-count", "id": 18, "value": "garrison-count"}
+{"name": "object-data-status", "id": 19, "value": "status"}
+{"name": "object-data-player", "id": 20, "value": "player"}
+{"name": "object-data-attack-stance", "id": 21, "value": "attack-stance"}
+{"name": "object-data-action-time", "id": 22}
+{"name": "object-data-target-id", "id": 23, "value": "target-id"}
+{"name": "object-data-formation-id", "id": 24}
+{"name": "object-data-patrolling", "id": 25}
+{"name": "object-data-strike-armor", "id": 26, "value": "strike-armor"}
+{"name": "object-data-pierce-armor", "id": 27, "value": "pierce-armor"}
+{"name": "object-data-base-attack", "id": 28, "value": "base-attack"}
+{"name": "object-data-locked", "id": 29}
+{"name": "object-data-garrison-id", "id": 30}
+{"name": "object-data-train-count", "id": 31, "value": "train-count"}
+{"name": "object-data-tasks-count", "id": 32}
+{"name": "object-data-attacker-count", "id": 33}
+{"name": "object-data-attacker-id", "id": 34}
+{"name": "object-data-under-attack", "id": 35}
+{"name": "object-data-attack-timer", "id": 36}
+{"name": "object-data-point-z", "id": 37, "value": "point-z"}
+{"name": "object-data-precise-x", "id": 38, "value": "precise-x"}
+{"name": "object-data-precise-y", "id": 39, "value": "precise-y"}
+{"name": "object-data-precise-z", "id": 40, "value": "precise-z"}
+{"name": "object-data-researching", "id": 41, "value": "researching"}
+{"name": "object-data-tile-position", "id": 42}
+{"name": "object-data-tile-inverse", "id": 43}
+{"name": "object-data-distance", "id": 44, "value": "distance"}
+{"name": "object-data-precise-distance", "id": 45, "value": "precise-distance"}
+{"name": "object-data-full-distance", "id": 46, "value": "full-distance"}
+{"name": "object-data-map-zone-id", "id": 47, "value": "map-zone-id"}
+{"name": "object-data-on-mainland", "id": 48, "value": "on-mainland"}
+{"name": "object-data-idling", "id": 49, "value": "idling"}
+{"name": "object-data-move-x", "id": 50}
+{"name": "object-data-move-y", "id": 51}
+{"name": "object-data-precise-move-x", "id": 52}
+{"name": "object-data-precise-move-y", "id": 53}
+{"name": "object-data-reload-time", "id": 54, "value": "reload-time"}
+{"name": "object-data-next-attack", "id": 55}
+{"name": "object-data-train-site", "id": 56, "value": "train-site"}
+{"name": "object-data-train-time", "id": 57, "value": "train-time"}
+{"name": "object-data-blast-radius", "id": 58, "value": "blast-radius"}
+{"name": "object-data-blast-level", "id": 59}
+{"name": "object-data-progress-type", "id": 60, "value": "progress-type"}
+{"name": "object-data-progress-value", "id": 61, "value": "progress-value"}
+{"name": "object-data-min-range", "id": 62, "value": "min-range"}
+{"name": "object-data-target-time", "id": 63}
+{"name": "object-data-heresy", "id": 64, "value": "tech", "tech": "HERESY", "who": "units"}
+{"name": "object-data-faith", "id": 65, "value": "tech", "tech": "FAITH", "who": "units"}
+{"name": "object-data-redemption", "id": 66, "value": "tech", "tech": "REDEMPTION", "who": "monks"}
+{"name": "object-data-atonement", "id": 67, "value": "tech", "tech": "ATONEMENT", "who": "monks"}
+{"name": "object-data-theocracy", "id": 68, "value": "tech", "tech": "THEOCRACY", "who": "monks"}
+{"name": "object-data-spies", "id": 69, "value": "tech", "tech": "SPIES", "who": "all"}
+{"name": "object-data-ballistics", "id": 70, "value": "tech", "tech": "BALLISTICS", "who": "ranged"}
+{"name": "object-data-gather-type", "id": 71}
+{"name": "object-data-language-id", "id": 72}
+{"name": "object-data-group-flag", "id": 73, "value": "group-flag"}
+{"name": "object-data-hero-flags", "id": 74}
+{"name": "object-data-hero", "id": 75}
+{"name": "object-data-auto-heal", "id": 76}
+{"name": "object-data-no-convert", "id": 77}
+{"name": "object-data-frame-delay", "id": 78}
+{"name": "object-data-attack-count", "id": 79}
+{"name": "object-data-to-precise", "id": 80, "value": "to-precise"}
+{"name": "object-data-base-type", "id": 81}
+{"name": "object-data-upgrade-type", "id": 82, "value": "upgrade-type"}

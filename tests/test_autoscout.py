@@ -1,8 +1,8 @@
 """game/autoscout.py: a scout on Auto Scout walks to the nearest tile that its side did not explore, then to the next
 one when it stands there; a new order ends it, and a side that explored all tiles ends it too (#3702)."""
-from game import autoscout, gather, savegame
-
 from test_gather import FakeServer, grid
+
+from game import autoscout, gather, savegame
 
 
 def setup(monkeypatch):

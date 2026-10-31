@@ -42,7 +42,8 @@ def gathers(g):
 def shares(g, h):
     """True when Gather h sees for the player of g: the same player, or an ally with "Shared Exploration" on (#2602).
     A rule set with a technology of the key "shares" (Antiquity Mode: Writing, #3920) shares only after h researched it."""
-    import gather, train                                           # gather imports fog
+    import gather  # gather imports fog
+    import train
     need = train.BY_KEY["shares"]
     return h.player == g.player or (g.data.get("shared_exploration", True) and gather.allied(g.players, g.player, h.player)
                                     and (not need or bool(need.keys() & getattr(h, "techs", set()))))
@@ -51,7 +52,7 @@ def shares(g, h):
 def units(g):
     """({uuid: name} of the units that see for the player: its own and those of its allied bots (shares), {uuid: name}
     of the enemy units: of aoe2mc.json and of the enemy bots). An ally that does not share is in neither."""
-    import gather                                                  # gather imports fog
+    import gather  # gather imports fog
     own, foe = {}, dict(g.enemies)
     for h in gathers(g):
         mine = dict.fromkeys(h.villagers, "VILLAGER") | h.soldiers
@@ -96,17 +97,27 @@ def update(g, pos):
     shown = seen(g)
     out = {u for u, p in pos.items() if u in foe and u not in towers and u not in shown
            and (int(p[0] // g.map.T), int(p[2] // g.map.T)) not in tiles}
+    meet(g, state, {u for u, p in pos.items() if u in foe and (int(p[0] // g.map.T), int(p[2] // g.map.T)) in tiles})
     hidden = state["hidden"]
     hide, show = sorted(out - hidden), sorted((hidden & pos.keys()) - out - towers)
     state["hidden"] = out | (hidden & towers)
     return commands(g, "hide", hide) + commands(g, "show", show)
 
 
+def meet(g, state, uuids):
+    """Add the players of the enemy units uuids in sight to state["civs"]: "Hidden civilizations" shows their
+    civilization from now on (lobby.hidden, #4748). remember adds the players of the seen buildings."""
+    owner = {o["uuid"]: o["player"] for h in gathers(g) for o in h.data["objects"] if o.get("uuid")}
+    owner |= {u: h.player for h in gathers(g) for u in [*h.villagers, *h.soldiers]}
+    state.setdefault("civs", set()).update(owner[u] for u in uuids if u in owner)
+
+
 def revealed(g, start=False):
     """The tiles of the enemy buildings that the civilization of the player sees at any distance (civs.REVEAL, #2311):
     the Mapuche see the enemy castles, the Vietnamese the enemy town centers of aoe2mc.json at the start (start: the
     first update) of the game. The game program has no explored tiles, so a revealed building gives sight on its tiles."""
-    import civs, gather
+    import civs
+    import gather
     kinds = civs.REVEAL.get(civs.civ(g), ())
     if not kinds:
         return set()
@@ -215,6 +226,8 @@ def remember(g, state):
     keys = state["known"] = state.get("known", set()) & {(r[0], r[1]) for r in rects}
     keys |= {(x0, z0) for x0, z0, x1, z1 in rects if (x0, z0) not in keys
              and any((x, z) in inside for x in range(x0 // T, (x1 - 1) // T + 1) for z in range(z0 // T, (z1 - 1) // T + 1))}
+    state.setdefault("civs", set()).update(o["player"] for h in gathers(g) for o in h.data["objects"] if o["kind"] == "building"
+                                           and len(o.get("footprint", ())) == 4 and tuple(o["footprint"][:2]) in keys)
 
 
 def know(team, keys):

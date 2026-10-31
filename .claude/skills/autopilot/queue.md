@@ -40,7 +40,8 @@ first: handle it as in step 3 (lock, answer). Do not post a request that the epi
 the same thing, and no run answered the owner's question between them). An epic without a criterion that checks that the
 whole goal is covered (owner rule, #820: never only "All sub-issues are closed") gets one first (`ticket` skill, "Split
 an L ticket"). Check that criterion against the full scope (for "all X": the full list, for example a wiki of the original) and
-name each missing item. Close the epic with a comment only when all criteria are met
+name each missing item. When `steering/project/PRINCIPLES.md` has the section "Try a feature", do what it says first
+(for example a `needs-human` test ticket, or a build); the epic waits for it. Close the epic with a comment only when all criteria are met
 (name the evidence for each, then the label `close`: `owner.md`, "Close an issue", #1740). Else lock the epic first: `python3 framework/tools/claim.py E --refill`
 (E = the epic; exit 1: another run makes its sub-issue, skip the epic, #505). Then make one sub-issue (same priority)
 for the criteria that an agent can do. A criterion that needs the owner stays on the epic. Then pick again (#176, #155 waited while P3 tickets ran).
@@ -73,7 +74,7 @@ new sub-issues, no `needs-human`. Still answer an owner comment on it (step 3).
 3. Make up to 20 new tickets (within the cap) for the remaining goals of the open epics, and for the fallbacks in
    `docs/coverage.md`. When the open epics have no goal left that an agent can do, make the next epic from the
    feature list of `steering/project/ROADMAP.md` with the `roadmap` skill (the goals take turns). Each feature has an epic: run
-   `python3 framework/tools/claim.py 0 --roadmap` (due after 30 merged PRs then, #3741); exit 0: do the roadmap review now. Priority: that of the epic, else `P3`. Never `P0` or `P1`, except for
+   `python3 framework/tools/claim.py 0 --roadmap` (due after 30 merged PRs then, #3741, or after 60 minutes with no merged PR); exit 0: do the roadmap review now. Priority: that of the epic, else `P3`. Never `P0` or `P1`, except for
    a `tooling` ticket that blocks other tickets. Look for duplicates first, and list the open issues again just
    before you make the tickets: parallel runs make the same follow-ups at the same time (#300, #301).
    Run that list in its own tool call and read it before the create calls: a list and the creates in one call made 7 copies (#2778).

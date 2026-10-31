@@ -98,10 +98,10 @@ def test_a_trade_cart_makes_one_trip_on_a_server(tmp_path):
     import json
     import time
 
-    import aoe2mc
     import scenarios
     from AoE2ScenarioParser.datasets.buildings import BuildingInfo
 
+    import aoe2mc
     from game import run
     scn = scenarios.new_scenario(32)
     for x, y in ((7, 7), (21, 21)):

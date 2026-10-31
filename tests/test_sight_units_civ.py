@@ -11,7 +11,7 @@ from game import civs as game_civs
 @pytest.fixture
 def test_civ(monkeypatch):
     for m in {civs, game_civs}:                     # game/monk.py imports civs by its plain name (#4447)
-        monkeypatch.setitem(m.BY_KEY.setdefault("sight_units", {}), "TESTCIV", ["non-ranged units", 2])
+        monkeypatch.setitem(m.BY_KEY.setdefault("sight_units", {}), "TESTCIV", (("non-ranged units", 2),))
     return lambda c: SimpleNamespace(data={"players": {"1": {"civ": c}}}, player=1)
 
 

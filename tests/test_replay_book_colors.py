@@ -15,7 +15,7 @@ from test_replay_timeline_book import PREFIX, TIMELINE  # noqa: E402
 
 def pages(r, end=1_500_000):
     cmd, = r.timeline_commands(end)
-    return json.loads(cmd[len(PREFIX):-1])["pages"]
+    return json.loads(cmd[len(PREFIX):-1])["pages"][1:]                # after the players page (#4670)
 
 
 def test_the_heading_of_each_player_has_the_sidebar_color_and_the_lines_are_black():
@@ -61,8 +61,8 @@ def test_the_server_keeps_the_color_of_the_heading(tiny_world, tmp_path):
         game.command("setblock 1 250 1 chest")
         out = game.command(f"item replace block 1 250 1 container.0 with {item}")
         path = 'Items[0].components."minecraft:written_book_content".pages[{}].raw.extra[{}]'
-        heads = [game.command(f"data get block 1 250 1 {path.format(i, 0)}") for i in (0, 1)]
-        line = game.command(f"data get block 1 250 1 {path.format(0, 1)}")
+        heads = [game.command(f"data get block 1 250 1 {path.format(i, 0)}") for i in (1, 2)]   # page 0: "Players" (#4670)
+        line = game.command(f"data get block 1 250 1 {path.format(1, 1)}")
     assert "Incorrect" not in out and "<--[HERE]" not in out, out
     assert 'color: "blue"' in heads[0] and "■ Player 1 (Britons)" in heads[0], heads   # the reply of RCON is short
     assert 'color: "gold"' in heads[1] and "■ Player 2 (Aztecs)" in heads[1], heads

@@ -5,13 +5,13 @@ import os
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import replay  # noqa: E402
+import replay_input as ri  # noqa: E402
 from test_replay import Fake, data  # noqa: E402
 from test_replay_fog_units import ENEMY  # noqa: E402
 from test_replay_input import Scores, poll  # noqa: E402
 from test_replay_walk import VIL  # noqa: E402
 
-import replay  # noqa: E402
-import replay_input as ri  # noqa: E402
 from game import run  # noqa: E402
 
 CHAT = [dict(time=5000, player=1, kind="chat", text="hi")]

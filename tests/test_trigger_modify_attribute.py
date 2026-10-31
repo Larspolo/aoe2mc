@@ -6,13 +6,14 @@ import sys
 
 import numpy as np
 import pytest
-
-import aoe2mc
 from test_civ_costs import setup
 from test_scenario_patrol import trigger
 
+import aoe2mc
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "game"))
 import scenario  # noqa: E402
+
 from game import train  # noqa: E402
 
 HIT_POINTS, ARMOR, ATTACK, MAXIMUM_RANGE, LINE_OF_SIGHT = 0, 8, 9, 12, 1

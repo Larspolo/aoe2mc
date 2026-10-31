@@ -3,8 +3,8 @@ player 2 cannot pick up the relic that a monk of player 1 carries, and a relic i
 player 1 (gold, the fallen monastery, the Lithuanian relic attack). Fake server."""
 import json
 
-from test_monk_heal import HealServer
 from test_gather import grid
+from test_monk_heal import HealServer
 
 from game import bot, combat, gather, monk, run, savegame, train
 

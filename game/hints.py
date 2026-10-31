@@ -21,7 +21,7 @@ TEXTS = {                                                          # short: the 
     "guard": "Guard: right click an own or allied unit or building",
     "military": "{n} military unit{s} · Right click: attack an enemy, stance menu · Empty box: deselect",
     "patrol": "Patrol: right click the ground",
-    "none": "Right click: select a unit · Hold right click: selection box",
+    "none": "Left click: select a unit · Hold right click: selection box",
     "none-wand": "Right click: select a unit · Wand: selection box",
     "villagers": "{n} villager{s} · Right click: gather, build, build menu · Empty box: deselect",
 }
@@ -61,7 +61,7 @@ def tick(g):
         return
     own = sorted(set(g.corners) | set(getattr(g, "ghosts", {})) | set(getattr(g, "pointing", {})))
     targets = {p: state(g, p)[1] for p in own}
-    import gather                                                      # gather imports this module
+    import gather  # gather imports this module
     who = getattr(g, "who", "@a")                                      # two people: only the own team (#1310)
     targets[gather.only(who, *(f"name=!{p}" for p in own)) if own else who] = state(g)[1]
     now, shown = g.clock(), g.hints

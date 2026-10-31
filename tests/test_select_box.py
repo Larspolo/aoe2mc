@@ -2,11 +2,10 @@
 import shutil
 
 import pytest
-
-from game import gather
-
 from test_gather_attack import click
 from test_select_type import setup
+
+from game import gather
 
 
 def box(g, a, b):

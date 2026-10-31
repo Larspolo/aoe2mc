@@ -1,7 +1,8 @@
 """A terrain layer of a DE scenario gives the look of a land tile; water keeps its base (#3688)."""
-import aoe2mc
 import scenarios
 from AoE2ScenarioParser.datasets.terrains import TerrainId
+
+import aoe2mc
 
 
 def test_land_layer_changes_the_terrain_only_on_land(tmp_path):

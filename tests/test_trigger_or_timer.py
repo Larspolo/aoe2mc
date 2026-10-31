@@ -1,7 +1,8 @@
 """#2791 (epic #2538): a trigger whose "OR" groups have a "Timer" fires in the converted world, as in AoE2 DE ("Timer 60,
 OR, Objects in Area"): a schedule sets the score #N.t<group> of aoe_trig, and the tick line of the group tests it."""
-import aoe2mc
 from test_trigger_or import AREA, CHAT, OR, RUN, VALUE
+
+import aoe2mc
 
 TIMER = dict(type=aoe2mc.TIMER, timer=60, inverted=False)
 FN = "data/aoe2mc/function/trigger/3"

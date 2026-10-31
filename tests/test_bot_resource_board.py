@@ -1,7 +1,7 @@
 """#3090: the resources of a bot go to the objective that the triggers read for its player (aoe_res<N>)."""
-import aoe2mc
 from test_gather import FakeServer, grid
 
+import aoe2mc
 from game import bot, gather
 
 

@@ -9,13 +9,13 @@ import sys
 import pytest
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import live  # noqa: E402
+import replay  # noqa: E402
+import run  # noqa: E402
 from test_replay import data  # noqa: E402
 from test_replay_control import Clock, chats  # noqa: E402
 
 import aoe2mc  # noqa: E402
-import live  # noqa: E402
-import replay  # noqa: E402
-import run  # noqa: E402
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 REC = os.path.join(ROOT, "samples", "de-64.3.aoe2record")
@@ -131,11 +131,12 @@ def test_a_real_record_in_4_parts(tmp_path):
             f.write(body[len(body) * (i - 1) // 4:len(body) * i // 4])
         now[0] += 2.0
         new, complete = source.more()
-        assert not complete and all(e["time"] <= source.events[-1]["time"] - DELAY * 1000 for e in new)
+        assert complete == (i == 4)                     # the full record has its resign: complete (#4664)
+        assert complete or all(e["time"] <= source.events[-1]["time"] - DELAY * 1000 for e in new)
         got += new
     now[0] += 60.0
     new, complete = source.more()
-    assert complete and [plain(e) for e in got + new] == [plain(e) for e in whole]
+    assert complete and [plain(e) for e in got + new if e["kind"] != "view"] == [plain(e) for e in whole]   # #4771
 
 
 def plain(e):

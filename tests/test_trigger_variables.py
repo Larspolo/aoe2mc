@@ -92,6 +92,7 @@ def test_read_scenario_keeps_the_variable_fields(tmp_path):
 @pytest.mark.mc
 def test_the_first_trigger_fires_the_second_on_a_server(tmp_path):
     from test_paper import paper_reachable
+
     from game import run
     if not paper_reachable():
         pytest.skip("Paper is not reachable")

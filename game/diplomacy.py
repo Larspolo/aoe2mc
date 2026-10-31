@@ -23,6 +23,7 @@ from aoe2mc import player_color  # noqa: E402
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import build  # noqa: E402
+import civs  # noqa: E402
 import flare  # noqa: E402
 import lobby  # noqa: E402
 import market  # noqa: E402
@@ -126,11 +127,13 @@ def faster(g):
 
 def others(g):
     """The other players of aoe2mc.json (not Gaia), in number order."""
-    return sorted(int(n) for n in g.players if int(n) not in (0, g.player))[:9]
+    return sorted(int(n) for n in g.players if int(n) not in (0, g.player)
+                  and g.players[n].get("active", True) is not False)[:9]   # no inactive slot (#5033)
 
 
 def name(g, n):
     civ = getattr(g, "trigger_civs", {}).get(str(n)) or build.pretty(g.players[str(n)].get("civ") or "")
+    civ = "?" if civ and lobby.hidden(g, getattr(g, "player", None), n) else civ       # "Hidden civilizations" (#4758)
     who = g.players[str(n)].get("name") or f"Player {n}"            # the name of the scenario player (#3295)
     return who + (f" ({civ})" if civ else "")                        # a scenario trigger renames it (#2905)
 
@@ -188,8 +191,8 @@ def show(g, player):
 
 
 def fee(g):
-    """The tribute fee of the player g in percent: the lowest of FEE and its technologies."""
-    return min([FEE] + [f for t, f in FEES.items() if t in getattr(g, "techs", ())])
+    """The tribute fee of the player g in percent: the lowest of FEE, its civilization (Palmyrans: 0, #4445) and its technologies."""
+    return min([FEE, civs.value("tribute_fee", civs.civ(g), FEE)] + [f for t, f in FEES.items() if t in getattr(g, "techs", ())])
 
 
 def cost(g, n):
@@ -199,7 +202,7 @@ def cost(g, n):
 
 def receiver(g, n):
     """The Gather of player n (g itself, a bot or another person: build.sides, #3106), or None."""
-    import build                                                   # build imports gather, which imports this module
+    import build  # build imports gather, which imports this module
     return next((x for x in [g, *build.sides(g)] if x.player == n), None)
 
 
@@ -214,6 +217,8 @@ def send(g, player, n, res):
     market.add(g, res, -cost(g, LOT))
     if (r := receiver(g, n)) is not None:
         market.add(r, res, LOT)
+        memory = vars(r).setdefault("tribute_from", {})            # an AI script reads it: per.py players-tribute
+        memory[(g.player, res)] = memory.get((g.player, res), 0) + LOT
     else:
         tributes = vars(g).setdefault("tributes", {})
         tributes.setdefault(n, dict.fromkeys(RESOURCES, 0))[res] += LOT

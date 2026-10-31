@@ -37,6 +37,8 @@ def fake_github(monkeypatch, open_prs=()):
             return list(open_prs)
         if method == "POST":
             return {"number": 9, "html_url": "https://x/9"}
+        if path.startswith("commits/"):                  # the quick CI (#4784)
+            return {"check_runs": [{"id": 1, "status": "completed", "conclusion": "success"}]}
         return {"mergeable_state": "clean"}
     monkeypatch.setattr(dashboard, "api", api)
     return calls

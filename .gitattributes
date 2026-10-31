@@ -42,7 +42,11 @@ game/data/challenges.jsonl merge=jsonl
 game/data/cheats.jsonl merge=jsonl
 game/data/monk.jsonl merge=jsonl
 game/data/per_names.jsonl merge=jsonl
+game/data/per_classes.jsonl merge=jsonl
+game/data/per_object_data.jsonl merge=jsonl
+game/data/per_filter_ids.jsonl merge=jsonl
 game/data/per_numbers.jsonl merge=jsonl
+game/data/per_resources.jsonl merge=jsonl
 game/data/replay.jsonl merge=jsonl
 # One JSON object per option value of the game setup (#2264); table.load() stops on a name in two lines.
 game/data/setup.jsonl merge=jsonl
@@ -63,3 +67,4 @@ tests/data/game_names_in_code.txt merge=union
 framework/files.txt merge=union
 # One class name per unit ability of the plugin (#4589): each ability PR adds one line, ServiceLoader reads them.
 game/plugin/src/main/resources/META-INF/services/aoe2mc.Ability merge=union
+game/data/tutorial.jsonl merge=jsonl

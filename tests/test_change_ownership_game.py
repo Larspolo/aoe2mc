@@ -2,10 +2,10 @@
 the game program too. The order "owner <tag> <old> <new>" (aoe2mc.owner_lines) reaches scenario.orders, which gives
 each tagged unit to the new owner with owners.give (#2993), and removes the tag."""
 import numpy as np
+from test_scenario_mode import game
+from test_scenario_patrol import scenario, trigger
 
 import aoe2mc
-from test_scenario_patrol import scenario, trigger
-from test_scenario_mode import game
 
 
 def run(order, tagged, players=None):

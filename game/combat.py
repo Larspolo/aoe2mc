@@ -19,12 +19,12 @@ import uuid as uuids
 from collections import namedtuple
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from gather import NORMAL, predator  # noqa: E402
 import abilities  # noqa: E402
-from abilities import vs_units  # noqa: E402
 import civs  # noqa: E402
 import garrison  # noqa: E402
 import table  # noqa: E402
+from abilities import vs_units  # noqa: E402
+from gather import NORMAL, predator  # noqa: E402
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import units  # noqa: E402
@@ -289,7 +289,7 @@ def setup(game, data):
     for o in data["objects"]:
         if o["kind"] == "building" and o["player"] and "footprint" in o and o["name"] in BUILDINGS:
             uuid, civ = target_uuid(o["footprint"]), data.get("players", {}).get(str(o["player"]), {}).get("civ")
-            civ = None if data.get("full_tech_tree") else civ          # no civilization bonus (#2354)
+            civ = None if data.get("full_tech_tree") else civs.with_team(civ, data.get("players", {}), o["player"])   # no civilization bonus (#2354); allies (#4790)
             for c in building(uuid, o["name"], o["player"], building_box(o, ground), data.get("tile_size", 4),
                               held.get(o.get("ref"), ()), civs.hp(civ, o["name"], stats(o["name"]), 0,
                                                                   civs.handicap(data, o["player"]))) \
@@ -304,7 +304,7 @@ def setup(game, data):
         if cmd := range_command(o["uuid"], o["name"], data.get("tile_size", 4)):
             game.command(cmd)
     n = sum(game.command(stats_command(o["uuid"], o["name"], villager(data, o))).strip() == "Stats: 1 units" for o in units)
-    import spoils                                    # spoils imports this module
+    import spoils  # spoils imports this module
     for o in units:                                  # the hits of a Varangian Guard make gold (#2376)
         if cmd := spoils.tag_command(o["uuid"], o["name"]):
             game.command(cmd)
@@ -319,7 +319,7 @@ def setup(game, data):
     for o in units:                                  # after the stats: the plugin needs them for the sight
         if cmd := sight_command(o["uuid"], o["name"], data.get("tile_size", 4)):
             game.command(cmd)
-    import ai                                        # ai -> gather -> build -> replay -> combat: import it late
+    import ai  # ai -> gather -> build -> replay -> combat: import it late
     for o in units:                                  # the AoE2 walk speed also without an order (#849)
         game.command(ai.speed_command(o["uuid"], o["name"], data.get("tile_size", 4)))
     return n

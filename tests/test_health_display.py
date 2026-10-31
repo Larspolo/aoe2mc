@@ -46,10 +46,10 @@ def test_the_name_line_shows_hearts_when_hurt_or_selected(tmp_path):
     import io
     import json
 
-    import aoe2mc
     import scenarios
     from AoE2ScenarioParser.datasets.units import UnitInfo
 
+    import aoe2mc
     from game import gather, run
     scn = scenarios.new_scenario(16)
     for x in (6.5, 9.5):

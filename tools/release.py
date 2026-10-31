@@ -12,7 +12,7 @@ import statistics
 import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.insert(0, os.path.join(ROOT, "tools"))     # dashboard (api, pages)
+sys.path.insert(0, os.path.join(ROOT, "framework", "tools"))     # dashboard (api, pages), moved there by #4195
 MILESTONES = "CAB"                                  # C = 100 %; A and B are indications
 INCLUDES = {"B": "B", "A": "BA", "C": "BAC"}         # the feature milestones that a milestone counts
 

@@ -81,10 +81,11 @@ def test_an_unpacked_trebuchet_hurts_a_building_at_12_tiles_and_does_not_move(tm
     from test_mc_check import mojang_reachable
     if not mojang_reachable():
         pytest.skip("Mojang is not reachable")
-    import aoe2mc
     import scenarios
     from AoE2ScenarioParser.datasets.buildings import BuildingInfo
     from AoE2ScenarioParser.datasets.units import UnitInfo
+
+    import aoe2mc
     scn = scenarios.new_scenario(32)
     um = scn.unit_manager
     um.add_unit(scenarios.PlayerId.ONE, UnitInfo.TREBUCHET.ID, x=6.5, y=16.5)

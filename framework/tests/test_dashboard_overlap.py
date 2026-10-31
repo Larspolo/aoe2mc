@@ -7,7 +7,7 @@ def issue(n, *names, body="", **kw):
 
 
 def test_names():
-    text = ("In `buildings.py`: `hut()` and `aoe2mc.convert()`; run `tools/render.py building HUT OUT.png`. "
+    text = ("In `buildings.py`: `hut()` and `app.convert()`; run `tools/render.py building HUT OUT.png`. "
             "Edit `docs/DESIGN.md` and `game/gather.py`. Not names: `--next`, `HUT_A`, `x = 3`, `LEARNINGS.md`.")
     assert dashboard.names(text) == {"buildings.py", "hut()", "convert()", "DESIGN.md", "gather.py"}
     assert dashboard.names(None) == set()
@@ -37,6 +37,8 @@ def test_next_prints_overlap(monkeypatch, capsys):
                                   issue(9, pull_request={})],
             "pulls/9/files": [{"filename": "units.py"}, {"filename": "framework/tools/claim.py"}]}
     monkeypatch.setattr(dashboard, "pages", lambda path, limit=10: data[path])
+    import health
+    monkeypatch.setattr(health, "claim_refs", lambda: [])        # a live claim on origin must not change the test
     assert dashboard.main(["--next"]) == 0
     out = capsys.readouterr().out.splitlines()
     assert out == ["#2 Ticket 2 (P2, None, overlap 1: buildings.py)", "#3 Ticket 3 (P2, None, overlap 1: units.py)"]

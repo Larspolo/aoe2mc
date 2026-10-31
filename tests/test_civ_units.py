@@ -1,12 +1,10 @@
 """game/civs.py: the military units of a player get the hit point, attack, armor, range, reload and walk speed bonuses
 of the own civilization (AoE2 DE, #1090)."""
 import pytest
+from test_civ_work import setup
 
 import buildings
-
 from game import ai, civs, combat, train
-
-from test_civ_work import setup
 
 
 def trained(civ, name, techs=()):

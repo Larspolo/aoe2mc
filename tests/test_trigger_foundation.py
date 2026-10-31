@@ -2,10 +2,10 @@
 <x> <y>" into the data storage aoe2mc:orders; the scenario mode of the game program puts the construction site of the
 building there for free when the place is free (game/scenario.py foundation, build.found)."""
 import numpy as np
+from test_scenario_mode import game
 
 import aoe2mc
 from game import scenario
-from test_scenario_mode import game
 
 STORED = 'Storage aoe2mc:orders has the following contents: {list: ["found 1 HOUSE 10 12"]}'
 

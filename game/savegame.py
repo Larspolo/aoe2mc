@@ -146,10 +146,13 @@ SETTINGS = (                                                           # run.py 
     "challenge",
     "cheats",
     "civ",
+    "civ_pool",
+    "civ_mode",
     "empire_wars",
     "end_age",
     "full_tech_tree",
     "handicap",
+    "hidden_civs",
     "mode",
     "people",
     "pop_limit",
@@ -161,6 +164,7 @@ SETTINGS = (                                                           # run.py 
     "teams",
     "treaty",
     "turbo",
+    "tutorial",
     "unlock_speed",
     "unlock_teams",
     "victory",
@@ -196,6 +200,7 @@ NOT_SAVED = (                                                          # the fie
     "fallen_sent",                                                     # scenario.fallen: a load sets the same score again
     "flares",                                                          # flare.py: the flares of a replay
     "fog",                                                             # fog.py: the next tick hides the units again; explored()
+    "gaia",                                                            # gaia.py: a tick timer
     "garrison_sent",                                                   # scenario.garrisons: a load sends them again
     "gate_refs",                                                       # scenario.py: a load forgets the plugin gates, so put them again (#2762)
     "ghosts",                                                          # build.py: the shown building to place
@@ -233,6 +238,7 @@ NOT_SAVED = (                                                          # the fie
     "ruins_seen",                                                      # ruins.py: the next answer of `aoe where` fills it again
     "scenario_at",                                                     # scenario.py: the next check time
     "score_at",                                                        # score.py: the next check time
+    "selected",                                                        # per.py, garrison.send: put back after each order
     "shapes",                                                          # build.py: the shown building to place
     "share",                                                           # bot.py: the techs of the human player
     "spectator_at",                                                    # spectator.py: the next check time
@@ -243,6 +249,8 @@ NOT_SAVED = (                                                          # the fie
     "tech_state_at",                                                   # scenario.py: the next check time
     "tech_state_sent",                                                 # scenario.tech_states: a load sends them again
     "trade_sent",                                                      # scenario.trading: a load sends them again
+    "tutorial",                                                        # run.py: from the saved settings
+    "tutorial_step",                                                   # tutorial.py: a load starts the tutorial again (#5161)
     "unit_aura_time",                                                  # regen.py: a tick timer of the monk aura (#4366)
     "unlock_speed",                                                    # run.py: from the saved settings
     "unselectable",                                                    # scenario.selection: the world keeps the tags, the next check reads them
@@ -299,7 +307,8 @@ def dump(g):
                                      **{f: pack(vars(x)[f]) for f in KEPT if f in vars(x)},
                                      "map": {f: pack(getattr(x.map, f)) for f in MAP},
                                      **({"explored": runs} if (runs := explored(x)) else {}),
-                                     **({"known": sorted(map(list, k))} if (k := vars(x).get("fog", {}).get("known")) else {})}
+                                     **({"known": sorted(map(list, k))} if (k := vars(x).get("fog", {}).get("known")) else {}),
+                                     **({"civs_seen": sorted(c)} if (c := vars(x).get("fog", {}).get("civs")) else {})}
                     for x in sides(g)}}
     for b in bots(g):
         d["players"][str(b.g.player)]["bot"] = {f: getattr(b, f) for f in BOT}
@@ -312,7 +321,7 @@ def dump(g):
     d["stances"] = {n: {k: p[k] for k in ("team", "neutral", "sees") if k in p}   # the Diplomacy page (#2934), the
                     for n, p in sorted(g.players.items())}                       # triggers' stances and sight (#2989)
     d["owners"] = owner_record(g)
-    import recap                                                       # recap imports train, which imports savegame
+    import recap  # recap imports train, which imports savegame
     d["game_time"] = round(recap.game_time(g), 3)                      # the game seconds: a pause keeps them (#3377)
     return d
 
@@ -321,7 +330,9 @@ def script_state(s):
     """The state of a per.Script: JSON keys are strings, so the goals and timers are [id, value] pairs."""
     return {"goals": sorted(map(list, s.goals.items())), "timers": sorted(map(list, s.timers.items())),
             "off": sorted(s.off), "sn": dict(sorted(s.sn.items())), "attacking": s.attacking,
-            "escrow": dict(sorted(s.escrow.items())), "pct": dict(sorted(s.pct.items())), "last": s.last}
+            "escrow": dict(sorted(s.escrow.items())), "pct": dict(sorted(s.pct.items())), "last": s.last,
+            "ids": sorted(map(list, s.ids.items())), "next_id": s.next_id, "target": s.target,   # the search (#4957)
+            "search": [json.loads(json.dumps(s.search[k])) for k in (1, 2)], "filters": dict(sorted(s.filters.items()))}
 
 
 def owner_record(g):
@@ -392,6 +403,7 @@ def orders(x):
                               "repair": pack(repairs.get(u))} for u, v in sorted(x.villagers.items())},
             "farmers": sorted([list(t), u] for t, u in x.farmers.items()),
             "stances": dict(sorted(x.stances.items())),
+            "gather_inside": dict(sorted(vars(x).get("gather_inside", {}).items())),   # an AI script (#4967)
             "groups": {name: {str(n): sorted(us) for n, us in sorted(gs.items())}   # each person (#3490)
                        for name, gs in sorted(vars(x).get("person_groups", {}).items())},
             "garrisons": sorted([list(r), list(us)] for r, us in x.garrisons.items()),
@@ -441,6 +453,8 @@ def give_orders(x, p):
     import repair
     x.farmers = {tuple(t): u for t, u in p["farmers"]}
     x.stances = dict(p["stances"])
+    if p.get("gather_inside"):
+        x.gather_inside = dict(p["gather_inside"])
     gs = p["groups"]
     if any(isinstance(v, list) for v in gs.values()):                  # a save of one group set for all (before #3490)
         gs = {"": gs}
@@ -549,6 +563,8 @@ def known_again(x, p):
     """The seen buildings: fog.know after the load (#3079)."""
     if "known" in p:
         vars(x).setdefault("fog", {"hidden": set(), "at": None}).update(known={tuple(k) for k in p["known"]})
+    if "civs_seen" in p:                                               # "Hidden civilizations" (#4748)
+        vars(x).setdefault("fog", {"hidden": set(), "at": None}).update(civs=set(p["civs_seen"]))
 
 
 def orders_again(x, p):
@@ -589,6 +605,10 @@ def bots_again(g, d):
                     sc.goals, sc.timers = dict(map(tuple, v["goals"])), dict(map(tuple, v["timers"]))
                     sc.off, sc.sn, sc.attacking = set(v["off"]), dict(v["sn"]), v["attacking"]
                     sc.escrow, sc.pct, sc.last = dict(v.get("escrow", {})), dict(v.get("pct", {})), v.get("last")
+                    if "ids" in v:                                     # an older save has no search (#4957)
+                        sc.ids, sc.next_id, sc.target = dict(map(tuple, v["ids"])), v["next_id"], v["target"]
+                        sc.search = {k: json.loads(json.dumps(st)) for k, st in zip((1, 2), v["search"])}
+                        sc.filters = dict(v["filters"])
                 continue
             if f == "difficulty" and v != b.difficulty:                # the work rate of the saved level (bot.Bot)
                 r = ai.LEVELS[b.difficulty]["gather"] / ai.LEVELS[v]["gather"]

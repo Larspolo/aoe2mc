@@ -1,8 +1,8 @@
 """game/monk.py, game/bot.py: each walk order sets the AoE2 walk speed with the civilization bonus and the walk
 technologies (train.speed), as a move order does: a relic order, a conversion order and the attack of a bot (#3120)."""
 from test_bot_attack import armed, orders
-from test_relics import setup as relic_setup
 from test_monk_convert import setup as convert_setup
+from test_relics import setup as relic_setup
 
 from game import ai, monk, train
 

@@ -42,6 +42,7 @@ from urllib.parse import quote
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import bossbar  # noqa: E402
 import table  # noqa: E402
+
 from units import is_bird  # noqa: E402
 
 Unit = namedtuple("Unit", "name")             # the effect of a unit cheat
@@ -63,14 +64,14 @@ def aegis(g, player):
 def end(text, color):
     """The cheat or rule that ends the game with text ("Victory" or "Defeat") for player g.player and its allies."""
     def effect(g, player):
-        import gather                                                  # gather imports cheats: import it late
+        import gather  # gather imports cheats: import it late
         over(g, lambda n: gather.allied(g.players, g.player, n) == (text == "Victory"))
     return effect
 
 
 def defeat(g, n):
     """The own player n resigns: it is out, the others play on (conquest.defeat, decision #3103)."""
-    import conquest                                                    # conquest imports cheats: import it late
+    import conquest  # conquest imports cheats: import it late
     conquest.defeat(g, n)
 
 
@@ -83,7 +84,13 @@ def over(g, won):
     """End the game: the team of each person gets its own title (#1936), "Victory" when won(its player), else "Defeat",
     and each Gather of the game stops (g.ended). A bot (h.share) has no Minecraft player and gets no title. Each person
     gets the recap book, and its order items go (recap.give, #2660)."""
-    import fog, hill, relic_victory, scenario, time_limit, treaty, wonder   # they import cheats: import them late
+    import fog  # they import cheats: import them late
+    import hill
+    import relic_victory
+    import scenario
+    import time_limit
+    import treaty
+    import wonder
     for h in fog.gathers(g):
         text, color = ("Victory", "gold") if won(h.player) else ("Defeat", "red")
         if not getattr(h, "share", None):
@@ -96,7 +103,7 @@ def over(g, won):
         hill.close(h)
         time_limit.close(h)
         treaty.close(h)
-    import recap                                                       # the recap book and the end hotbar (#2660)
+    import recap  # the recap book and the end hotbar (#2660)
     recap.give(g, won)
 
 
@@ -117,7 +124,7 @@ def destroy(g, n):
     else:
         dead = {o.get("uuid") for o in g.data["objects"] if o["player"] == n}
         g.enemies = {u: k for u, k in g.enemies.items() if u not in dead}
-    import owners                                                      # owners -> build -> gather -> this module
+    import owners  # owners -> build -> gather -> this module
     owners.killed(g, {o["uuid"] for o in g.data["objects"] if o["player"] == n and o.get("uuid")}
                   | {u for u, p in g.data.get(owners.KEY, {}).items() if p == n})   # update_enemies keeps them out (#2996)
 
@@ -126,7 +133,9 @@ def ruin(g, n):
     """Remove the construction sites (complete or not) and the queues of player n, also of a bot (#1657): a site has no
     target entity until it is complete, so `aoe destroy` leaves its blocks, and the queue of a bot spawns new units.
     The blocks of each site become air (above the water: a fish trap or a dock keeps it), and the bot of player n stops."""
-    import build, combat, fleet                                    # they import gather, which imports this module
+    import build  # they import gather, which imports this module
+    import combat
+    import fleet
     gathers = build.sides(g)                                       # also from a second person (#3106)
     for h in gathers:
         for s in [s for s in h.sites if s["player"] == n]:
@@ -157,7 +166,7 @@ def flag(attr, text):
 
 def polo(g, player):
     """Remove the fog of war, or put it back (#1390)."""
-    import fog                                                  # fog -> gather -> cheats: import it late
+    import fog  # fog -> gather -> cheats: import it late
     g.command(f'tellraw {player} {{"text":"{FOG[fog.toggle(g)]}"}}')
 
 
@@ -176,7 +185,7 @@ def noui(g, player):
 
 def woof(g, player):
     """Each bird becomes a Stormy Dog of Gaia on the ground under it."""
-    import train                                                # train -> gather -> cheats: import it late
+    import train  # train -> gather -> cheats: import it late
     for o in [o for o in g.data["objects"] if o["kind"] == "unit" and o.get("uuid") and is_bird(o["name"])]:
         if not (pos := g.pos(o["uuid"])):
             continue
@@ -185,7 +194,7 @@ def woof(g, player):
             g.command(f"tp {o['uuid']} {pos[0]} -200 {pos[2]}")      # gone without a death and its drops
             o["name"], o["uuid"] = "STORMY_DOG", uuid
 def infantry(name):
-    import combat                                                  # combat imports gather, gather imports this module
+    import combat  # combat imports gather, gather imports this module
     return combat.INF in combat.stats(name).classes
 
 
@@ -202,7 +211,8 @@ def share(g, uuid):
 
 def transform(g, t):
     """Turn each own unit of g whose name passes t.units into unit t.to at the same place (train.summon)."""
-    import record, train                                           # train -> gather -> cheats: import it late
+    import record  # train -> gather -> cheats: import it late
+    import train
     names = {o["uuid"]: o["name"] for o in g.units if o.get("uuid") in g.villagers} | g.soldiers
     gone = set()
     for uuid, name in sorted(names.items()):
@@ -221,7 +231,8 @@ def transform(g, t):
             g.command(f"data modify entity {new} Health set value {max(1.0, round(hp * part, 1))}f")
     g.units = [o for o in g.units if o.get("uuid") not in gone]
     g.farmers = {k: u for k, u in g.farmers.items() if u not in gone}
-    g.choose(g.selected - gone)
+    if gone & vars(g).get("selections", {}).get(g.person, set()):   # no read of g.selected: it adds a selection
+        g.choose(g.selected - gone)                                     # entry, which a loaded game lacks (#4746)
 
 
 def flemish(g, entry):
@@ -298,7 +309,7 @@ def apply(g, player, code):
     if isinstance(effect, Transform):
         return transform(g, effect)
     if isinstance(effect, Unit):
-        import train                                                # train -> gather -> cheats: import it late
+        import train  # train -> gather -> cheats: import it late
         tc = sorted(r for r, n in train.homes(g).items() if n == "TOWN_CENTER")
         if tc:
             train.spawn(g, tc[0], effect.name)
@@ -313,7 +324,7 @@ def apply(g, player, code):
 
 def clicks(g):
     """Do the cheat of each player who typed a code since the last call. Returns the (player, code) pairs."""
-    import gather                                                      # gather imports this module
+    import gather  # gather imports this module
     if not g.cheats or "passed" not in g.command(f"execute if entity {gather.only(g.who, f'scores={{{OBJECTIVE}=1..}}')}"):
         return []
     out = []
@@ -329,7 +340,7 @@ def clicks(g):
 def taunts(g):
     """Show the text and play the sound of each taunt of a player since the last call (#3318). Returns the
     (player, number) pairs. The players with the tag MUTE hear no taunt."""
-    import gather                                                      # gather imports this module
+    import gather  # gather imports this module
     import replay
     if "passed" not in g.command(f"execute if entity {gather.only(g.who, f'scores={{{TAUNT}=1..}}')}"):
         return []

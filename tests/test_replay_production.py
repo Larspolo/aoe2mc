@@ -3,9 +3,10 @@ import os
 import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "game"))
-import aoe2mc  # noqa: E402
 import replay  # noqa: E402
 from test_replay import Fake, data  # noqa: E402
+
+import aoe2mc  # noqa: E402
 
 V, M, L = aoe2mc.train_ms("VILLAGER_MALE"), aoe2mc.train_ms("MILITIA"), replay.RESEARCH_S["Loom"] * 1000   # ms of the data
 # Town center 5 of player 1: 1 villager, Loom, 2 villagers; barracks 9 of player 2: 1 militia.

@@ -226,7 +226,8 @@ found by a comparison of the bytes with `samples/de-64.3.aoe2record`:
 | End of each player, after the 4 bytes of 64.3 | next player | one more DE string (`60 0a 00 00`: empty in the test record) |
 | After the DE string before the 8 bytes and the timestamp | 8 bytes, timestamp | two more DE strings (empty), then 8 bytes, timestamp |
 
-The other parts (metadata, map, players, scenario, lobby, the actions) read as for 66.6. `aoe2mc.new_saves()` adds the
+The metadata, map, players and actions read as for 66.6. The scenario and the lobby do not: mgz reads the lobby of a
+68.9 record from a wrong place with no error (all zeros); `lobby_at_end` fixes it (#5178, `docs/research/saved-games.md`). `aoe2mc.new_saves()` adds the
 three reads to the source of `parse_de` (for save > 66.6). With it `read_record` and `read_timeline` read the test
 record: map Arabia (120 tiles), 2 players with names and civilizations, 1325 timeline events.
 
@@ -289,3 +290,6 @@ Moved from `docs/LEARNINGS.md` (improve run, 2026-10-26).
 - The offline replay (`Replay(Fake(), ...)`) has no fights: a villager that dies in the game stays in `units` and counts as idle to the end. In `de-64.3` 60 to 70 % of the offline idle time goes to villagers with no later record command, and player 1 has 221 units at 44:00 (cap 200). Measure the idle time of the live summary on Paper (`tools/replay_drift.py`, the census buries the dead, #3885, #4063).
 - `aoe2mc.name_timeline` writes the names into the events of the timeline: a measure script that calls it before `Replay(...)` changes the replay (#4063: P1 idle time 204 → 152 min). Since #4063 the summary counts the idle time of a villager only up to its next record command (`Replay.told`).
 - The `data()` fixture of `tests/test_replay.py` gives player 2 the architecture `meso`, which `buildings.ARCH` does not have: a BUILD event of player 2 in a replay test raises `KeyError: 'meso'`. Build for player 1 (#4662).
+- `Replay.play` sends the end commands (the "Replay ended" title, the summary, the books) only with `bar=True`, as `run.replay` calls it: a test of the end of a replay with the default `bar=False` sees none of them (#4664).
+- No record of a game mode (Regicide, King of the Hill ...) is in `samples/`: #4834 found none (the record API lists no lobby games, and `mgz` 1.8.51 cannot parse current records). A test of a mode replay uses a fake replay with a `lobby` of test data (`tests/test_replay_regicide.py`, #4835); `mgz` gives the type names (`mgz.reference.get_consts()["game_types"]`).
+- A header part that mgz parses with no error can still come from a wrong place: mgz read the lobby of a save 68.9 record as all zeros (#5178). Check the values (population 200, the team lock), not only that the parse ends.

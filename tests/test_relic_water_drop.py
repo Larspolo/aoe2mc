@@ -1,7 +1,7 @@
 """game/monk.py: a relic that drops on a water cell lies on the nearest free land cell, so a monk can take it (#3119).
 Fake server."""
-from test_monk_heal import HealServer
 from test_gather import grid
+from test_monk_heal import HealServer
 
 from game import gather, monk
 

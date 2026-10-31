@@ -66,6 +66,7 @@ def variable(game, n):
 @pytest.mark.mc
 def test_own_fewer_objects_waits_for_far_units_on_a_server(tmp_path):
     from test_paper import paper_reachable
+
     from game import run
     if not paper_reachable():
         pytest.skip("Paper is not reachable")

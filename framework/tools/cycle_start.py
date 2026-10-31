@@ -27,6 +27,7 @@ import re
 import subprocess
 import sys
 import zlib
+
 sys.path.append(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "tools"))   # the project tools: release.py (#4195)
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -196,8 +197,8 @@ def ci_line(ci, issues):
 def due_checks():
     """The release checks that can start and have no ticket (`release.due()`, #3342), or [] when the read fails: a
     planning gap must not stop the run start."""
-    import release
     try:
+        import release
         features, _, rows, epics = release.load()
         return release.due_lines(release.due(features, rows, epics))
     except Exception as e:                                  # a GitHub or file error: the other sections still print
@@ -250,7 +251,7 @@ def main(argv=None):
     section("Stuck (`overlap.md`, \"Stuck tickets\")", text.splitlines() if code == 0 else [])
     code, text = tool("usage.py", "--flow")
     section("Flow brake", [f"ON: repair one PR or go to step 8, no new ticket ({text})"] if code == 1 else [])
-    import health                                                    # health imports dashboard
+    import health  # health imports dashboard
     held = beats(health.claim_refs() or [], now)
     prs = [p for p in dashboard.pages("pulls?state=open") if p["head"]["ref"].startswith(AGENT)]
     work = []

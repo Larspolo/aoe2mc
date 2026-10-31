@@ -1,8 +1,8 @@
 """The Trowulan split gate is of orange fired brick: the resin bricks of 26.3 (#555)."""
+import mcvalid
 import render
 
 import aoe2mc
-import mcvalid
 
 
 def names(name, arch="southeast_asian"):

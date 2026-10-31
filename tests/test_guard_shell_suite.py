@@ -1,6 +1,5 @@
 """guard-shell.sh blocks a run of the full fast suite: the quick CI runs it (owner, #4187)."""
 import pytest
-
 from test_guard_shell import run
 
 

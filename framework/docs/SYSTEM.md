@@ -20,7 +20,7 @@ session task tools `mcp__ccd_session` ...) from each session of the repository: 
 | GitHub | The issues are the tickets. Issue #1 (label `agent-status`) is the status issue: the dashboard and the state comment in its body. The run reports are files on the branch `metrics` (`runs/`, 2026-10-29; before: comments on the status issue). The labels are in `.github/labels.txt`. |
 | Workflows (`.github/workflows/`) | CI, Automerge, Unconflict, Claims, Close, Dashboard, Coverage, Labels, Bundles (see below). |
 | Cloud environment | The setup script `scripts/cloud-setup.sh` (Java, packages, server jars), the network access, the SessionStart hook. |
-| Hooks (`.claude/hooks/`) | `session-start.sh` installs the Python packages (a pip pillow and setuptools if the Debian ones are there), registers the merge driver `merge=jsonl` (#2004), sets an empty `TMPDIR` to `/tmp` and compares `SETUP_VERSION`. `guard-main.sh` blocks a force push, a history rewrite or a delete of `main`. `guard-shell.sh` blocks the shell pitfalls of `docs/LEARNINGS.md`: `cat > FILE <<` over a tracked file, a redirect into `$VAR/` with an empty variable, a variable set in a list that `&` puts in the background, an unquoted heredoc tag with `` ` `` in the body, `pkill -f` with no bracket in the pattern, and `git stash` or `git checkout --ours` in a merge. |
+| Hooks (`.claude/hooks/`) | `session-start.sh` runs `scripts/session-setup.sh` if it exists and the `install` command of `agent.toml`, registers the merge driver `merge=jsonl` (#2004), sets an empty `TMPDIR` to `/tmp` and compares `SETUP_VERSION`. `guard-main.sh` blocks a force push, a history rewrite or a delete of `main`. `guard-shell.sh` blocks the shell pitfalls of `docs/LEARNINGS.md`: `cat > FILE <<` over a tracked file, a redirect into `$VAR/` with an empty variable, a variable set in a list that `&` puts in the background, an unquoted heredoc tag with `` ` `` in the body, `pkill -f` with no bracket in the pattern, and `git stash` or `git checkout --ours` in a merge. |
 
 ### Workflows
 
@@ -63,7 +63,8 @@ session task tools `mcp__ccd_session` ...) from each session of the repository: 
    epics and the roadmap.
 6. It does the ticket on its session branch (a later ticket of the run: on `<session branch>-<k>`, `more.md`): a failing test first for a bug, the change, the checks of the skill
    `verify`, and the process improvements (autopilot step 9) in the same PR.
-7. It runs `framework/tools/claim.py N --guard`, pushes and opens a PR with `Closes #N`. It does not wait for CI.
+7. It runs `framework/tools/claim.py N --guard`, pushes and opens a PR with `Closes #N` (`ship_pr.py`). It waits for the quick CI
+   and fixes a red one with its warm context (#4784).
 8. CI runs the quick checks. Automerge merges the PR when they are green. The merge closes the ticket. Claims
    deletes the claim ref. Dashboard updates the status issue.
 9. The run adds its report to the branch `metrics` (`report.py --post`: a `Usage:` line and a `Metrics:` line per ticket) and takes
@@ -231,6 +232,7 @@ second project starts).
 | `.claude/skills/human/SKILL.md` | specific | The preparation of a play test (worlds, `game/run.py`, Minecraft 26.3). |
 | `.claude/skills/demo/SKILL.md` | specific | The demo game (`--random-map arabia`, `game/run.py`, `game/demo_watch.py`, the Minecraft client folders of macOS). |
 | `scripts/cloud-setup.sh` | specific | Java, the Minecraft server jars, the Vulkan and X tools of the client. |
+| `scripts/session-setup.sh` | specific | The project steps of the SessionStart hook: JDK 25, the pip pillow and setuptools. |
 | `scripts/allowed-domains.txt` | specific | The "Allowed domains" of the cloud environment: the hosts of the tests and the research tools. |
 | `tools/dashboard_site.py` | specific | The owner's dashboard page and its runtime (GitHub Pages). |
 | `tests/test_dashboard_site.py` | specific | None (a test of `tools/dashboard_site.py`). |

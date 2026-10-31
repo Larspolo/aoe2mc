@@ -2,8 +2,9 @@
 import os
 import sys
 
-import aoe2mc
 import scenarios
+
+import aoe2mc
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path[:0] = [os.path.join(ROOT, "game")]

@@ -2,9 +2,9 @@
 import os
 
 import pytest
+from test_trigger_area import area, score, wait_score
 
 import aoe2mc
-from test_trigger_area import area, score, wait_score
 from tools import scenarios
 
 
@@ -31,6 +31,7 @@ def test_class_or_group_filter_skips_the_trigger():
 @pytest.mark.mc
 def test_knight_fires_the_trigger_and_the_villager_not(tmp_path):
     from test_paper import paper_reachable
+
     from game import run
     if not paper_reachable():
         pytest.skip("Paper is not reachable")

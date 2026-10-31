@@ -5,11 +5,10 @@ import shutil
 import time
 
 import pytest
-
-from game import combat, gather, run, train
-
 from test_damage import health
 from test_train_castle import setup
+
+from game import combat, gather, run, train
 
 TECH = "COMITATENSES"                                   # a real name: train.research reads its line
 CHARGE = {"if": [{"forms": ["MILITIA"]}, {"names": ["KNIGHT"]}], "attack": 3, "time": 10}

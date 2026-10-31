@@ -2,7 +2,6 @@
 click on it gives an attack order, a monk converts it, and Faith and Heresy of its owner count. Fake server of
 test_gather."""
 import numpy as np
-
 from test_gather import FakeServer, grid
 
 from game import bot, gather, herd, monk, run, train

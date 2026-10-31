@@ -5,9 +5,9 @@ import shutil
 import time
 
 import pytest
+from test_ranged import data
 
 from game import combat, run
-from test_ranged import data
 
 KNIGHT = ('summon horse {x} {y} {z} {{NoAI:1b,Tame:1b,Tags:["k"],equipment:{{saddle:{{id:"minecraft:saddle",count:1}}}},'
           'Passengers:[{{id:"minecraft:zombie",NoAI:1b,Tags:["kr"],'

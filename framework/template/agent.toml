@@ -15,6 +15,7 @@ lint = "ruff check ."
 fast = "python3 -m pytest"
 slow = "python3 -m pytest -m slow"
 server = ""
+dev = ""                        # starts the development server on the owner's computer (the `try` skill); "" = none
 
 [docs]
 system = "framework/docs/SYSTEM.md"

@@ -30,5 +30,5 @@ def test_survey_goes_on_after_an_error(tmp_path, capsys, monkeypatch):
     monkeypatch.setattr(sys, "argv", ["rms_survey.py", str(tmp_path)])
     rms_survey.main()
     out = capsys.readouterr().out
-    assert "| a_broken | 0 | error: ValueError: boom |" in out
+    assert "| a_broken | 0 | error: ValueError: boom (at " in out
     assert "| b_plain | 0 | ok |" in out

@@ -39,11 +39,12 @@ import numpy as np
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
+import monk  # noqa: E402
+import replay_input  # noqa: E402
+import table  # noqa: E402
+
 import aoe2mc  # noqa: E402
 import buildings  # noqa: E402
-import monk  # noqa: E402
-import table  # noqa: E402
-import replay_input  # noqa: E402
 import units  # noqa: E402
 
 # Dye color of a player (aoe2mc.PLAYER_COLORS) -> text color of /tellraw and /title
@@ -70,6 +71,11 @@ POP = "aoe_pop"             # the sidebar objective with the population of each 
 BURST = 500                 # ms of game time between two bursts of a flare column: a burst lives about 1 s (#2506)
 TEAM_STEP = 10000           # sidebar score of a team game: team key × TEAM_STEP + population, the panel sorts by it (#1189)
 COUNTED = "aoe2mc.pop"      # entity tag of the units that the population counts (#787)
+SUDDEN_DEATH = "Sudden Death"  # the lobby type of a Sudden Death record (#4894)
+WONDER_MODES = {"Wonder Race": "wonder-race", "Defend the Wonder": "defend-the-wonder"}   # lobby type -> mode (#4896)
+KING_OF_THE_HILL = "King of the Hill"  # the lobby type of a King of the Hill record (#4893)
+CAPTURE_RELIC = "Capture the Relic"  # the lobby type of a Capture the Relic record (#4895)
+REGICIDE = "Regicide"       # the lobby type of a Regicide record (mgz game_types, aoe2mc.json "lobby", #4835)
 EFFECT = "aoe2mc.effect"    # entity tag of the texts above a building (#843)
 TRADE_MS = 2000              # the trades of one market within this time join in one text (#3942)
 PANEL = "aoe2mc.panel"      # entity tag of the production texts above a building (#2811, decision #2808: C)
@@ -79,6 +85,10 @@ UNI_SHOWN = 8                        # the University labels of a player at most
 GRAPH_MINUTES = 8           # the last minutes of each graph line: "Pop ████████ 120" fits in BOOK_COLS
 STAT_BOOKS = {"Graphs": 3, "Army": 4, "Upgrades": 5, "Economy": 6}   # book -> hotbar slot (#3924; replay_input.ITEMS has the rest)
 FOLLOWED = "aoe2mc.followed"  # the tag of the entity that the spectators of --follow look through (#1095)
+CAMERA_ENTITY = "aoe2mc.camera"   # the tag of the display entity of --camera player (#4770)
+GLIDE = 20                  # ticks: the longest glide of the camera of --camera player (#4770; Minecraft: up to 59)
+JUMP = 64                   # blocks: a view of --camera player this far from the last one jumps (#4770): well in the
+                            # chunks that a client has around it (render distance 8: 128 blocks)
 TRAIL = 3                   # tiles: a follower farther than this from its target walks to it again (#2551)
 TRAIL_MS = 1000             # ms of game time between two checks of the followers (#2551)
 FIGHT_MS = 60000            # ms of game time: an attack order this near in time to one of a fight joins it (#2948)
@@ -95,6 +105,7 @@ FOLLOW_MS = 15000           # ms of game time: the camera of --follow changes it
 EFFECT_MS = 10000           # ms of game time that the research text stays
 SCALE = 4                   # size of the research text: a spectator sees it from 40 blocks
 START = {"food": 200, "wood": 200, "gold": 100, "stone": 200}   # the AoE2 standard start resources (#932)
+DEATH_MATCH = {"food": 20000, "wood": 20000, "gold": 10000, "stone": 5000}   # AoE2 DE Death Match start (#4897)
 FRAME = 27                  # tiles of a side of the view square on map 0 (#1762): AoE2 DE at 1920 × 1080 shows about
                             # 1920 × 850 pixels of land (no HUD), a tile is 96 × 48 pixels (2304 px²): 708 tiles = 27²
 VIEWER = "aoe_viewer"        # player tag: the player got the overview of the map (#737)
@@ -218,7 +229,7 @@ def seen(mobs, placed, player, T, sight=None):
     tiles around each one, from the tile center. mobs: units with name, player and pos (blocks, Replay.units), placed:
     (player, name, (x0, x1, z0, z1) in blocks) as Replay.placed. sight: name -> tiles with the technologies of the
     player (the game program, #1475), default combat.sight."""
-    import combat                                                   # combat -> gather -> build -> replay
+    import combat  # combat -> gather -> build -> replay
     objs = [(v.pos[0] / T, v.pos[2] / T, v.name) for v in mobs if v.player == player and v.pos is not None]
     objs += [((x0 + x1) / 2 / T, (z0 + z1) / 2 / T, name) for p, name, (x0, x1, z0, z1) in placed if p == player]
     out = set()
@@ -391,10 +402,13 @@ def trade_line(sums):
 class Replay:
     """The timeline of aoe2mc.json `data` on a server (game.command sends one command)."""
 
-    def __init__(self, game, data, version=aoe2mc.VERSION_NAME, ai=False, follow=None, pov=None, camera=False):
-        self.camera = camera                    # --camera auto: the spectators move to each shot of camera_plan (#3367)
+    def __init__(self, game, data, version=aoe2mc.VERSION_NAME, ai=False, follow=None, pov=None, camera=None):
+        self.camera = "auto" if camera is True else camera or None   # --camera auto: the spectators move to each shot
+        # of camera_plan (#3367); --camera player: to each view of the recorder (#4768)
         self.game, self.data, self.ai, self.speed, self.paused = game, data, ai, 1.0, False  # ai: plugin walks
         self.follow, self.followed = follow, (None, -math.inf)  # the spectators follow player N: (UUID, game time)
+        self.views, self.glide = [], None       # --camera player: the views; (teleport_duration, place, time of
+        # the last /spectate) of its entity (#4770)
         self.pov, self.hidden = pov, set()      # the view of player N (#1302): UUIDs of the enemy units hidden from @a
         self.explored, self.fogged = {}, None   # player -> tiles it saw once; (view, seen, explored) on the minimap (#1567)
         self.drawn, self.known = {}, {}         # footprint -> player on the minimap; view -> the enemy ones it saw (#1678)
@@ -441,6 +455,14 @@ class Replay:
         self.homing = {}                        # object ID of a monk with a relic -> (monastery rect, player) (#4010)
         self.queued = {}                        # object ID of a monk in `fetching` -> its monastery ORDER (#4517)
         self.relic_at, self.relic_gold = 0, {}  # game time (ms) of the last relic gold, player -> gold not yet whole (#4011)
+        self.kings, self.regicided = self.start_kings(), {}   # Regicide (#4835): player -> UUIDs of its live Kings;
+        # player -> game time (ms) of the death of its last King
+        self.relic_won = None                   # Capture the Relic (#4895): (player, game time (ms)) of the first relic home
+        self.towns, self.town_lost = self.start_towns(), {}      # Sudden Death (#4894): players with a town center;
+        # player -> game time (ms) of the fall of its town center
+        self.wonders, self.wonder_shown = {}, {}  # Wonder modes (#4896): player -> game time (ms) of its timer start;
+        # player -> years on its boss bar
+        self.hill = self.start_hill()           # King of the Hill (#4893): the monument state, or None
         self.rng = np.random.default_rng(1)
         self.kinds, self.seen = aoe2mc.object_kinds(), set()
         self.sent, self.busy = 0, 0.0           # commands sent, seconds spent sending them
@@ -449,7 +471,7 @@ class Replay:
         self.ages, self.named = {}, {}          # player -> age ("Feudal"); the age in its sidebar name (#805)
         self.counted = []                       # UUIDs of the start units that the population counts
         self.stock = {}                         # player -> estimated resources: START + gather steps - costs (#932)
-        import market                           # market -> build -> replay: import it late
+        import market  # market -> build -> replay: import it late
         self.rates = dict(market.RATES)         # the exchange rates of the market, global for all players (#3939)
         self.gathered, self.villagers = {}, {}  # player -> resources of the gather steps, trained villagers (#1065)
         self.army, self.lost, self.razed = {}, {}, {}   # player -> military units trained, units lost, buildings lost (#1066)
@@ -469,7 +491,7 @@ class Replay:
         self.orders = None                      # player -> [(time, label)] of its build order (#4047)
         self.eyes = None                        # (x, y, z) of each player; None: not known, each gather step shows (#2761)
         self.queue = None                       # in run() on Paper: the commands that wait for flush() (#2761)
-        import gather                                               # gather -> build -> replay: import it late
+        import gather  # gather -> build -> replay: import it late
         for o in data["objects"]:
             if o["kind"] == "unit" and o.get("player") and not units.animal(o["name"]):
                 self.pop[o["player"]] = self.pop.get(o["player"], 0) + 1
@@ -479,6 +501,169 @@ class Replay:
             if o["kind"] == "unit" and o.get("player") and o["name"].startswith("VILLAGER"):
                 self.villager(o["player"], 1)
         self.restored()
+        if self.wonder_mode() == "defend-the-wonder":               # the start Wonder stands from the start (#4896)
+            for s in self.starts:
+                if s[2] == "WONDER" and s[1]:
+                    self.wonders.setdefault(s[1], 0)
+
+    def wonder_mode(self):
+        """The game program mode (wonder.RACE) of a Wonder Race or Defend the Wonder record (#4896), else None."""
+        return WONDER_MODES.get((self.data.get("lobby") or {}).get("type"))
+
+    def wonder_ms(self):
+        """The game time (ms) of the wonder timer of the mode: wonder.RACE, as the game program."""
+        import wonder  # wonder -> cheats -> replay: import it late
+        return wonder.RACE.get(self.wonder_mode(), wonder.years(self.data.get("map_size"))) * wonder.YEAR * 1000
+
+    def wonder_started(self, p, t):
+        """Wonder Race (#4896): the first complete wonder of player p at game time t (ms) starts its timer."""
+        if self.wonder_mode() != "wonder-race" or p in self.wonders:
+            return []
+        self.wonders[p] = t
+        name, color = self.player(p)
+        return ["tellraw @a " + json.dumps([text(name, color), text(f" built a wonder at {mmss(t)}.")])]
+
+    def wonder_left(self, p, t):
+        """The years left of the wonder timer of player p at game time t (ms; None: the start)."""
+        import wonder  # wonder -> cheats -> replay: import it late
+        left = self.wonder_ms() - (0 if t is None else max(0, t - self.wonders[p]))
+        return max(0, math.ceil(left / (wonder.YEAR * 1000)))
+
+    def wonder_bars(self, t):
+        """The boss bar of each wonder timer (wonder.bar, as the game program), a command only on a change."""
+        import wonder  # wonder -> cheats -> replay: import it late
+        out = []
+        for p in sorted(self.wonders):
+            if p not in self.wonder_shown:
+                out += [f'bossbar add {wonder.bar(p)} ""', f"bossbar set {wonder.bar(p)} color yellow",
+                        f"bossbar set {wonder.bar(p)} max {max(1, int(self.wonder_ms() / (wonder.YEAR * 1000)))}",
+                        f"bossbar set {wonder.bar(p)} players @a"]
+                self.wonder_shown[p] = None
+            if (y := self.wonder_left(p, t)) != self.wonder_shown[p]:
+                self.wonder_shown[p] = y
+                out += [f"bossbar set {wonder.bar(p)} name " + json.dumps(
+                    f"{self.player(p)[0]}: wonder, {y} year{'s' * (y != 1)} left"), f"bossbar set {wonder.bar(p)} value {y}"]
+        return out
+
+    def start_kings(self):
+        """Regicide (#4835): player -> the UUIDs of its start Kings (the units of the mode, regicide.MODES), when the
+        lobby of the record (#4832) is Regicide; else none. A player with no King entity is not in the mode, as in the
+        game program (regicide.setup)."""
+        import regicide  # regicide -> conquest -> cheats -> replay: import it late
+        if (self.data.get("lobby") or {}).get("type") != REGICIDE:
+            return {}
+        kings = {}
+        for o in self.data["objects"]:
+            if o["kind"] == "unit" and o.get("player") and o["name"] in regicide.MODES["regicide"]["units"] and "uuid" in o:
+                kings.setdefault(o["player"], set()).add(o["uuid"])
+        return kings
+
+    def start_towns(self):
+        """Sudden Death (#4894): the players with a start town center, when the lobby of the record is Sudden Death;
+        else none. A player with no town center is not in the mode until it has one, as in sudden_death.tick."""
+        if (self.data.get("lobby") or {}).get("type") != SUDDEN_DEATH:
+            return set()
+        return {s[1] for s in self.starts if s[2] == "TOWN_CENTER" and s[1]}
+
+    def start_hill(self):
+        """King of the Hill (#4893): the state of the monument (as hill.tick), when the lobby of the record is King of
+        the Hill; else None. The monument is the MONUMENT of the record, else the center of the map (hill.center)."""
+        if (self.data.get("lobby") or {}).get("type") != KING_OF_THE_HILL:
+            return None
+        import hill  # hill -> cheats -> replay: import it late
+        import wonder
+        m = next((o["tile"] for o in self.data["objects"] if o["name"] == "MONUMENT" and "tile" in o), None)
+        return {"center": tuple(m) if m else (self.n / 2, self.n / 2), "owner": None, "at": None, "winner": None,
+                "left": hill.YEARS * wonder.YEAR, "shown": None}
+
+    def hill_check(self, t):
+        """King of the Hill (#4893): the rules of hill.owner and hill.tick on the simulated units at game time t (ms):
+        the owner keeps the monument while one of its units is within hill.REACH tiles, else the nearest unit there
+        takes it; the timer counts down for the owner, and a capture by an enemy sets it back to hill.RESET years.
+        The boss bar hill.BAR shows the owner and its years, as in the game program."""
+        s = self.hill
+        if s is None or s["winner"] is not None:
+            return []
+        import gather  # gather -> build -> replay: import it late
+        import hill
+        import wonder
+        if s["owner"] is not None and s["at"] is not None:
+            s["left"] -= (t - s["at"]) / 1000
+        s["at"] = t
+        near = sorted((d, v.player) for v in {id(v): v for v in self.units.values()}.values()
+                      if getattr(v, "player", 0) and v.pos is not None
+                      and (d := math.dist((v.pos[0] / self.T, v.pos[2] / self.T), s["center"])) <= hill.REACH)
+        out = []
+        if near and not any(p == s["owner"] for _, p in near):
+            n = near[0][1]
+            if s["owner"] is not None and not gather.allied(self.data.get("players", {}), n, s["owner"]):
+                s["left"] = max(s["left"], hill.RESET * wonder.YEAR)
+            s["owner"] = n
+            name, color = self.player(n)
+            out.append("tellraw @a " + json.dumps([text(name, color), text(f" holds the monument at {mmss(t)}.")]))
+        if (n := s["owner"]) is None:
+            return out
+        if s["shown"] is None:
+            out += [f'bossbar add {hill.BAR} ""', f"bossbar set {hill.BAR} color yellow",
+                    f"bossbar set {hill.BAR} max {hill.YEARS}", f"bossbar set {hill.BAR} players @a"]
+        y = max(0, math.ceil(s["left"] / wonder.YEAR))
+        if (y, n) != s["shown"]:
+            s["shown"] = (y, n)
+            out += [f"bossbar set {hill.BAR} name " + json.dumps(f"{self.player(n)[0]}: monument, {y} year{'s' * (y != 1)} left"),
+                    f"bossbar set {hill.BAR} value {y}"]
+        if s["left"] <= 0:
+            s["winner"] = (n, t)
+            out += [f"bossbar remove {hill.BAR}",
+                    "tellraw @a " + json.dumps(text(f"{self.player(n)[0]} held the monument: King of the Hill victory at {mmss(t)}."))]
+        return out
+
+    def town_check(self, t):
+        """Sudden Death (#4894): end each player whose town center fell in a fight of the plugin at game time t (ms):
+        sudden_death.has_town_center, one RCON round trip per player of the mode. A DELETE ends it in delete()."""
+        import sudden_death  # sudden_death -> conquest -> cheats -> replay: import it late
+        out = []
+        for p in sorted(self.towns - set(self.town_lost)):
+            self.flush()
+            if not sudden_death.has_town_center(self.game, p):
+                out += self.town_fell(p, t)
+        return out
+
+    def town_fell(self, p, t):
+        """The town center of player p fell at game time t (ms): the player is out, as in AoE2 DE Sudden Death (#4894)."""
+        self.town_lost[p] = t
+        name, color = self.player(p)
+        return ["title @a subtitle " + json.dumps(text(f"Town center lost at {mmss(t)}")),
+                "title @a title " + json.dumps(text(f"{name} is out", color)),
+                "tellraw @a " + json.dumps([text(name, color), text(f": the town center fell at {mmss(t)}. Sudden "
+                                                                    "Death: the player is out.")])]
+
+    def king_tags(self):
+        """The tag regicide.KING on each start King, so that regicide.has_king finds the live ones (#4835)."""
+        import regicide  # regicide -> conquest -> cheats -> replay: import it late
+        return [f"tag {u} add {regicide.KING}" for p in sorted(self.kings) for u in sorted(self.kings[p])]
+
+    def king_check(self, t):
+        """Regicide (#4835): end each player whose Kings all died in a fight of the plugin at game time t (ms):
+        regicide.has_king, one RCON round trip per player of the mode. A DELETE of the record ends it in delete()."""
+        import regicide  # regicide -> conquest -> cheats -> replay: import it late
+        out = []
+        for p in sorted(set(self.kings) - set(self.regicided)):
+            self.flush()                                            # the kills of the queue first
+            for u in sorted(self.kings[p]):                         # @e sees no unloaded chunk (#5032): keep the
+                self.game.command(f"execute as {u} at @s run forceload add ~ ~")   # chunk of each King loaded
+            if not regicide.has_king(self.game, p):
+                out += self.king_died(p, t)
+        return out
+
+    def king_died(self, p, t):
+        """The last King of player p died at game time t (ms): the player is out, as in AoE2 DE Regicide (#4835). Its
+        units and buildings stay as in the record; the panel, the Timeline book and the summary say "King killed"."""
+        self.regicided[p] = t
+        name, color = self.player(p)
+        return ["title @a subtitle " + json.dumps(text(f"King killed at {mmss(t)}")),
+                "title @a title " + json.dumps(text(f"{name} is out", color)),
+                "tellraw @a " + json.dumps([text(name, color), text(f": the King died at {mmss(t)}. Regicide: the "
+                                                                    "player is out.")])]
 
     def restored(self):
         """A restored record starts with the state of its save (#4592): the age, the technologies and the resources of
@@ -623,7 +808,7 @@ class Replay:
         type, the units in training, the units lost and the last 4 steps of its build order. Commands only when a page
         changed."""
         training = collections.defaultdict(collections.Counter)
-        import gather                                               # gather -> build -> replay: import it late
+        import gather  # gather -> build -> replay: import it late
         for end, e, _ in self.trainings:                            # military only, as the troops (#3818)
             if e["kind"] == "queue" and e["time"] <= t < end and gather.military(e["name"]):
                 training[e["player"]][e["name"]] += 1
@@ -687,12 +872,16 @@ class Replay:
         return out + [cmd + ("]}]" if not out else "]}")]
 
     def resources(self, p):
-        return self.stock.setdefault(p, dict(START))
+        """The stock of player p; a Death Match record starts with the Death Match stock (#4897); a restored record
+        sets the stock of its save first (restored())."""
+        death = (self.data.get("lobby") or {}).get("type") == "Death Match"
+        return self.stock.setdefault(p, dict(DEATH_MATCH if death else START))
 
     def pay(self, p, name, t=0):
         """The record has no resources: subtract the AoE2 cost of a unit, building, technology or age (train and build COSTS).
         The payment keeps its game time t (ms) and its group, for spent (#4390)."""
-        import build, gather                                        # gather -> build -> replay: import them late
+        import build  # gather -> build -> replay: import them late
+        import gather
         import train
         cost = train.COSTS.get(name) or build.COSTS.get(name) or {}
         for r, v in cost.items():
@@ -716,7 +905,7 @@ class Replay:
     def trade(self, e):
         """A buy or sell of the record at the own market: the gold and the resource change as in market.trade, and the
         rate moves by STEP (#3939). The estimate may go below 0: the record is the truth, the estimate is a guess."""
-        import market                                               # market -> build -> replay: import it late
+        import market  # market -> build -> replay: import it late
         p, r, buy = e.get("player"), e["resource"].lower(), e["kind"] == "buy"
         g = types.SimpleNamespace(rates=self.rates, techs=set(self.upgrades(p, e["time"])), data=self.data, player=p)
         n, total = max(1, e.get("amount", market.LOT) // market.LOT), 0
@@ -731,9 +920,9 @@ class Replay:
     def tribute(self, e):
         """A tribute of the record: the sender pays the amount and the fee (diplomacy.cost), the receiver gets the amount
         (#3940). An old record has one resource and one amount."""
-        import diplomacy                                            # diplomacy -> build -> replay: import it late
+        import diplomacy  # diplomacy -> build -> replay: import it late
         p, to = e.get("player"), e["to"]
-        g = types.SimpleNamespace(techs=set(self.upgrades(p, e["time"])))
+        g = types.SimpleNamespace(techs=set(self.upgrades(p, e["time"])), data=self.data, player=p)
         sums = {r: e.get(r, 0) for r in START} if any(e.get(r, 0) for r in START) else {e["resource"].lower(): e.get("amount", 0)}
         for r, n in sums.items():
             self.resources(p)[r] -= diplomacy.cost(g, n)
@@ -767,6 +956,8 @@ class Replay:
         kind = e["kind"]
         if kind == "shot":                                      # --camera auto (#3367), the menu switch (#3369)
             return self.shot_view(e["tile"]) if self.control.get("camera") == "auto" else []
+        if kind == "view":                                      # --camera player: the view of the recorder (#4768)
+            return self.view_glide(e["tile"], e["time"]) if self.control.get("camera") == "player" else []
         if kind == "news":                                      # a fight starts: the chat line and the horn (#2951)
             return replay_input.fight_news(self.control["fights"][e["fight"]], e["fight"], self.control["players"])
         if kind in ("attack_move", "move", "order", "stop", "delete", "garrison", "follow", "guard", "autoscout"):
@@ -866,6 +1057,8 @@ class Replay:
                     self.pay(e["player"], name, e["time"])
                 k = len(self.placed)
                 out += self.building(name, e["player"], x, y)
+                if len(self.placed) > k and name == "WONDER":
+                    out += self.wonder_started(e["player"], e["time"])
                 if len(self.placed) > k:
                     out += self.push_out(self.placed[-1][2])               # it finds the units (grid())
                     for i, n in zip(e.get("objects", ()), e.get("names") or [None] * len(e.get("objects", ()))):
@@ -887,7 +1080,7 @@ class Replay:
         with n builders, t × 3 / (n + 2) (t: build.BUILD_TIMES, one builder; 0 for a building that it does not
         list). Then the ORDER `then` starts (built()), else they stand idle: before, the builders of a house gathered
         while they built (#1282). Returns the commands."""
-        import build                                                # gather -> build -> replay: import it late
+        import build  # gather -> build -> replay: import it late
         group = [(i, v) for i, n in zip(e.get("objects", ()), e.get("names") or [None] * len(e.get("objects", ())))
                  if (v := self.unit(i, n, e["player"])) is not None and v.name.startswith("VILLAGER")]
         x0, x1, z0, z1 = rect
@@ -1000,7 +1193,7 @@ class Replay:
         done = [tag for tag, end in self.effects.items() if end <= t]
         for tag in done:
             del self.effects[tag]
-        import flare                                                # game/: on the path of the replay
+        import flare  # game/: on the path of the replay
         self.flares = [f for f in self.flares if f[3] > t]
         self.burst = t + BURST                                      # a step of run() while a flare lives (#2506)
         return [f"kill @e[type=text_display,tag={tag}]" for tag in done] + \
@@ -1139,6 +1332,8 @@ class Replay:
         top = max(k[1] for k in blocks)
         x0, x1, z0, z1 = fx0 + dx, fx1 + dx - 1, fz0 + dz, fz1 + dz - 1
         self.placed.append((player, name, (x0, x1 + 1, z0, z1 + 1)))
+        if name == "TOWN_CENTER" and (self.data.get("lobby") or {}).get("type") == SUDDEN_DEATH:
+            self.towns.add(player)                              # a first town center of a Nomad map (#4894)
         self.tops[self.placed[-1][2]] = top
         self.open[self.placed[-1][2]] = {(x + dx, z + dz) for x, z in o.get("open", ())}
         out = [f"aoe minimap building {x0} {z0} {x1 + 1} {z1 + 1} p{player}"] * (self.ai and self.pov is None)   # on the
@@ -1190,6 +1385,11 @@ class Replay:
                 else:
                     del self.placed[new]
                     self.added -= 1
+                p = e["player"]                                     # Sudden Death: its last town center (#4894)
+                if p in self.towns and p not in self.town_lost and not any(
+                        b[1] == p and b[2] == "TOWN_CENTER" for b in self.starts) and not any(
+                        b[:2] == (p, "TOWN_CENTER") for b in self.placed):
+                    out += self.town_fell(p, e["time"])
                 out += [f"aoe minimap unbuild {rect[0]} {rect[2]}"] * (self.pov is None and self.drawn.pop(rect, 0) != 0)
                 out += self.fall(rect)
                 out += self.unshelter(rect)
@@ -1207,6 +1407,10 @@ class Replay:
                 self.lost[v.player] = self.lost.get(v.player, 0) + (not e.get("free"))   # a scout swap (#3028)
                 out.append(f"kill {v.uuid}")
                 out += self.carried(i, v, e["time"])
+                if v.uuid in self.kings.get(v.player, ()):         # Regicide: its last King ends the player (#4835)
+                    self.kings[v.player].discard(v.uuid)
+                    if not self.kings[v.player] and v.player not in self.regicided:
+                        out += self.king_died(v.player, e["time"])
         return out + self.unhold(e["time"])
 
     def fall(self, rect):
@@ -1347,7 +1551,7 @@ class Replay:
         if e["name"].startswith("VILLAGER"):
             self.villagers[e["player"]] = self.villagers.get(e["player"], 0) + 1
             self.villager(e["player"], 1)
-        import gather                                               # gather -> build -> replay: import it late
+        import gather  # gather -> build -> replay: import it late
         if gather.military(e["name"]):
             self.army[e["player"]] = self.army.get(e["player"], 0) + 1
             self.troop(e["player"], e["name"])
@@ -1390,7 +1594,7 @@ class Replay:
         self.pop[e["player"]] = self.pop.get(e["player"], 0) + 1
         out = [f"summon {kind} {pos[0]} {pos[1]} {pos[2]} {units.summon_snbt(nbt)}"]
         if self.ai:                                                 # the AoE2 values: plugin commands (#632)
-            import combat                                           # combat -> gather -> build -> replay
+            import combat  # combat -> gather -> build -> replay
             out += [combat.stats_command(v.uuid, v.name)] + [c for c in [combat.range_command(v.uuid, v.name, self.T)] if c]
             out.append(f"tag {v.uuid} add {COUNTED}")              # census() counts it
         return v, out
@@ -1440,7 +1644,7 @@ class Replay:
         start state (the entities of aoe2mc.json with an object ID)."""
         T = self.T                                                  # also for the buildings of later calls (#788)
         if self.map is None:
-            import gather                                           # gather -> build -> replay: import it late
+            import gather  # gather -> build -> replay: import it late
             self.gather, self.map = gather, gather.Map(self.data)
             self.crew = gather.Gather.__new__(gather.Gather)       # adapter: the resource looks of gather.Gather
             self.crew.map, self.crew.trunks, self.crew.bushes, self.crew.crops = self.map, {}, {}, {}
@@ -1598,7 +1802,7 @@ class Replay:
     def stance(self, e):
         """STANCE: the military units of the selection get the AoE2 stance of the record on Paper (#2548): the stance
         goals of the plugin (combat.stance_command, #1104). An unknown stance changes nothing."""
-        import combat                                                   # combat -> gather -> build -> replay
+        import combat  # combat -> gather -> build -> replay
         stance = str(e.get("stance", "")).lower().replace(" ", "_")
         if not self.ai or stance not in combat.STANCES:
             return []
@@ -1614,7 +1818,7 @@ class Replay:
         """ATTACK MOVE (#2552): the group walks to the tile as with MOVE, and on Paper its military units take the
         aggressive stance for the walk, so the mob AI attacks each enemy in sight on the way (the stance goals of the
         plugin, #1104). A unit that the record set to another stance gets it back at the end of the walk (calm())."""
-        import combat                                                   # combat -> gather -> build -> replay
+        import combat  # combat -> gather -> build -> replay
         out = self.calm(e["objects"]) + self.move(dict(e, kind="move"))
         if not self.ai:
             return out
@@ -1823,7 +2027,7 @@ class Replay:
         The replay takes the unit at the end of its leg (only the first gather step reads the entity, #766). Returns the commands
         and the game time (ms) at the end of the leg (the next leg starts then, if v.path has one). behind: the next
         leg of a long walk. It and a walk less than RECENT ms after the last leg read the entity to catch up (catch_up)."""
-        import ai                                                   # ai -> replay: import it late
+        import ai  # ai -> replay: import it late
         x, z = legs[0]
         chain, v.stand = behind, getattr(v, "stand", None) if behind else None   # a new walk: no old place
         behind = behind or (getattr(v, "leg", None) or (0, 0, -RECENT))[2] > t - RECENT
@@ -1847,7 +2051,7 @@ class Replay:
         speed again. A turn on a leg (an order back) costs the mob 1 to 3 s of game time that order() cannot see: a
         villager of de-64.3 stayed 5 to 11 blocks behind for 30 s (#1293). One command per long leg, and the /tp of a
         unit that stands still (unstick)."""
-        import ai                                                   # ai -> replay: import it late
+        import ai  # ai -> replay: import it late
         v.check = None
         speed = next((s for k, s in SPEEDS.items() if v.name.startswith(k)), 1.0) * self.T    # blocks per second
         at = self.entity(v)
@@ -1922,7 +2126,7 @@ class Replay:
     def formation(self, group, tile):
         """The end cell of each unit of a group that walks to a tile (#410), in the formation of the record (#2553):
         formation_cells. The ranged and civilian units are the weak ones inside a Box."""
-        import combat                                                   # combat -> gather -> build -> replay
+        import combat  # combat -> gather -> build -> replay
         ids = {v: i for i, v in self.units.items()}
         kind = collections.Counter(self.formations.get(ids.get(v), "Line") for v in group).most_common(1)[0][0]
         weak = (lambda v: combat.stats(v.name).range > 0 or not self.gather.military(v.name)) if kind == "Box" \
@@ -2179,7 +2383,8 @@ class Replay:
     def arrows(self, rect):
         """`aoe arrows` of the plugin for the start building rect with the units inside it (#1203), as the game program
         (#1113): only with the plugin, and only for a building with a target entity that shoots (combat.setup)."""
-        import combat, garrison
+        import combat
+        import garrison
         name = next((s[2] for s in self.starts if s[3] == rect), None)
         s = combat.stats(name) if self.ai and name in combat.BUILDINGS else None
         if not (s and s.attack and s.range):
@@ -2377,7 +2582,12 @@ class Replay:
         if ref is None:
             return []
         self.relics[ref].update(monk=None, home=rect, player=p, home_t=t)
-        return [f"kill @e[type=item_display,tag=aoe_relic_{ref}]"]
+        out = [f"kill @e[type=item_display,tag=aoe_relic_{ref}]"]
+        if self.relic_won is None and self.lobby_text() == CAPTURE_RELIC:   # the first relic home wins, as capture_relic.tick
+            self.relic_won = (p, t)
+            name, color = self.label(p)
+            out.append("tellraw @a " + json.dumps([text(name, color), text(" takes the relic to a monastery and wins.")]))
+        return out
 
     def drop(self, ref, cell):
         """The commands of relic ref that drops on the block cell (monk.lay: a pot block, #4013)."""
@@ -2460,7 +2670,7 @@ class Replay:
         mobs, sight = self.explore()                                # also without a view player (#1801)
         if self.pov is None and not self.hidden and not self.fogged:
             return []
-        import gather                                               # gather -> build -> replay: import it late
+        import gather  # gather -> build -> replay: import it late
         teams = self.data.get("players", {})
         own = {p for p in sight if gather.allied(teams, self.pov, p)}
         tiles = set().union(*(sight[p] for p in own))               # allies share the sight (#1567)
@@ -2482,7 +2692,7 @@ class Replay:
                 if v.uuid and hasattr(v, "player")}.values()
         placed = [s[1:] for s in self.starts] + self.placed
         sight = {p: seen([*mobs, *trail], placed, p, self.T) for p in ({v.player for v in mobs} | {p for p, _, _ in placed}) - {0, None}}
-        import gather                                               # gather -> build -> replay: import it late
+        import gather  # gather -> build -> replay: import it late
         teams = self.data.get("players", {})
         for p in sight:                                             # allies share the sight (#1567)
             self.explored.setdefault(p, set()).update(*(t for q, t in sight.items() if gather.allied(teams, p, q)))
@@ -2535,15 +2745,50 @@ class Replay:
             (g for row in self.ground for g in row if g is not None), 64)
         return replay_input.place_commands(tile, self.T, y)
 
-    def shot_view(self, tile):
-        """The spectators above a shot of the camera plan (#3367): CAMERA_UP blocks above the ground of the tile and
+    def shot_place(self, tile):
+        """"x y z yaw pitch" of the camera of a shot (#3367): CAMERA_UP blocks above the ground of the tile and
         CAMERA_BACK blocks south of it, looking north (yaw 180) and down at the tile."""
         x, z = (min(self.n - 1, max(0, int(c * self.T))) for c in tile)
         y = self.ground[z][x] if self.ground[z][x] is not None else next(
             (g for row in self.ground for g in row if g is not None), 64)
         bx, bz = (round(c * self.T + self.T / 2, 1) for c in tile)
         pitch = round(math.degrees(math.atan2(CAMERA_UP, CAMERA_BACK)), 1)
-        return [f"execute as @a[gamemode=spectator] run tp @s {bx} {min(319, y + CAMERA_UP)} {bz + CAMERA_BACK} 180 {pitch}"]
+        return f"{bx} {min(319, y + CAMERA_UP)} {bz + CAMERA_BACK} 180 {pitch}"
+
+    def shot_view(self, tile):
+        """The spectators above a shot of the camera plan (#3367), at shot_place."""
+        return [f"execute as @a[gamemode=spectator] run tp @s {self.shot_place(tile)}"]
+
+    def view_glide(self, tile, time):
+        """--camera player (#4770): the spectators look through the display entity CAMERA_ENTITY (/spectate), and one
+        `tp` of it per view: the client interpolates the teleport of a display entity over its teleport_duration, so
+        the view glides, as the camera of AoE2 DE, and does not jump. The duration is the real time to the next view
+        at the replay speed, at most GLIDE ticks. A view more than JUMP blocks away jumps, as a click on the minimap of
+        AoE2: in the server check the client lost the entity after a tp of 340 blocks, out of its loaded chunks, and
+        showed the old place. So the first view and a far view put the spectators there, summon a new entity at them
+        and /spectate it. /spectate again each CAMERA_MS: a new spectator gets on it, Shift leaves it."""
+        place, cam = self.shot_place(tile), f"@e[type=item_display,tag={CAMERA_ENTITY},limit=1]"
+        nxt = next((v["time"] for v in self.views if v["time"] > time), None)
+        ticks = GLIDE if nxt is None else max(1, min(GLIDE, round((nxt - time) / 50 / self.speed)))
+        at = [float(c) for c in place.split()[:3]]
+        spectate = f"execute as @a[gamemode=spectator] run spectate {cam} @s"
+        if self.glide is None or math.dist(at, self.glide[1]) > JUMP:
+            self.glide = (ticks, at, time)
+            return [f"kill @e[type=item_display,tag={CAMERA_ENTITY}]", f"execute as @a[gamemode=spectator] run tp @s {place}",
+                    f"summon item_display {' '.join(place.split()[:3])} {{Tags:[\"{CAMERA_ENTITY}\"],"
+                    f"teleport_duration:{ticks}}}", f"tp {cam} {place}", spectate]
+        out = [f"data merge entity {cam} {{teleport_duration:{ticks}}}"] * (ticks != self.glide[0]) + [f"tp {cam} {place}"]
+        again = time - self.glide[2] >= CAMERA_MS
+        self.glide = (ticks, at, time if again else self.glide[2])
+        return out + [spectate] * again
+
+    def camera_off(self):
+        """The end of --camera player (#4770): kill the entity CAMERA_ENTITY; a spectator of a dead entity gets its
+        own view again (Minecraft)."""
+        if self.glide is None:
+            return []
+        self.glide = None
+        return [f"kill @e[type=item_display,tag={CAMERA_ENTITY}]"]
 
     def overview(self, join=False):
         """The view of a player at the start of the replay (#737, owner decision #782): adventure mode, a text about
@@ -2586,6 +2831,29 @@ class Replay:
         trained villagers and the resources of the gather steps (estimated: the record has no resources); the military
         (#1066): trained military units, lost units (DELETE, and the fights of the plugin: census) and lost buildings."""
         out = ['tellraw @a {"text": "Summary (est.)", "bold": true}']
+        for p in self.ranked(self.regicided):                       # Regicide: the players who are out (#4835)
+            name, color = self.label(p)
+            out.append("tellraw @a " + json.dumps([text(name, color), text(
+                f": King killed {mmss(self.regicided[p])} (Regicide)")]))
+        for p in self.ranked(self.town_lost):                          # Sudden Death (#4894)
+            name, color = self.label(p)
+            out.append("tellraw @a " + json.dumps([text(name, color), text(
+                f": town center lost {mmss(self.town_lost[p])} (Sudden Death)")]))
+        for p in self.ranked(self.wonders):                            # Wonder Race, Defend the Wonder (#4896)
+            name, color = self.label(p)
+            mode = next(k for k, v in WONDER_MODES.items() if v == self.wonder_mode())
+            out.append("tellraw @a " + json.dumps([text(name, color), text(
+                f": wonder timer from {mmss(self.wonders[p])}, ends {mmss(self.wonders[p] + self.wonder_ms())} ({mode})")]))
+        if self.hill and (who := self.hill["winner"] or (self.hill["owner"], None))[0] is not None:   # (#4893)
+            name, color = self.label(who[0])
+            out.append("tellraw @a " + json.dumps([text(name, color), text(
+                f": monument won {mmss(who[1])} (King of the Hill)" if who[1] is not None else ": holds the monument (King of the Hill)")]))
+        if self.relic_won:                                             # Capture the Relic (#4895)
+            name, color = self.label(self.relic_won[0])
+            out.append("tellraw @a " + json.dumps([text(name, color), text(
+                f": wins, relic in a monastery {mmss(self.relic_won[1])} (Capture the Relic)")]))
+        if lobby := self.lobby_text(True):                                  # the lobby settings of the record (#4833)
+            out.append("tellraw @a " + json.dumps(text(lobby, "gray")))
         for p in self.ranked(self.pop.keys() | self.villagers.keys() | self.gathered.keys() | self.army.keys()
                              | self.lost.keys() | self.razed.keys()):
             name, color = self.label(p)
@@ -2598,6 +2866,16 @@ class Replay:
                 f": military units trained {self.army.get(p, 0)}, units lost {self.lost.get(p, 0)}, "
                 f"buildings lost {self.razed.get(p, 0)}, APM {self.mean_apm(p, self.ended)}{self.army_text(p)}")]))
         return out + self.tech_commands() + self.society_commands()
+
+    def lobby_text(self, full=False):
+        """The game type of the record ("Random Map"; full: also the data set, the starting age and the population
+        limit) from the key "lobby" of aoe2mc.json (#4832, #4833). "" when the world has no lobby."""
+        lobby = self.data.get("lobby") or {}
+        if not full:
+            return str(lobby.get("type") or "")
+        parts = [lobby.get("type"), lobby.get("dataset"), lobby.get("starting_age") and f"start {lobby['starting_age']}",
+                 lobby.get("population") and f"population {lobby['population']}"]
+        return " · ".join(str(v) for v in parts if v)
 
     def idle_text(self, p):
         """The idle villager time of player p as M:SS (#3757)."""
@@ -2677,10 +2955,11 @@ class Replay:
         """A written book "Timeline" for each viewer at the end of the replay (#1068): per player its age-ups, its
         first military unit, its first castle, its resign and the arrival of each relic in a monastery, in time order,
         from the whole timeline (also the time of a jump) up to `end` (ms), see `book_command`."""
-        import gather                                               # gather -> build -> replay: import it late
+        import gather  # gather -> build -> replay: import it late
         lines, army, castle = {}, set(), set()
         arrivals = [{"time": r["home_t"], "player": r["player"], "kind": "relic"} for r in self.relics.values()
                     if r["home"] is not None]                       # a relic in a monastery (#4010)
+        arrivals += [{"time": t, "player": p, "kind": "king"} for p, t in self.regicided.items()]   # (#4835)
         for e in sorted(self.data.get("timeline", []) + self.spawns() + arrivals, key=lambda e: e["time"]):
             p, line = e.get("player"), None
             if e["time"] > end or p is None:
@@ -2697,14 +2976,17 @@ class Replay:
                 line = "Resigns"
             elif e["kind"] == "relic":
                 line = "Relic"
+            elif e["kind"] == "king":
+                line = "King killed"
             if line:
                 lines.setdefault(p, []).append(f"{mmss(e['time'])} {line}")
         return self.book_command("Timeline", lines)
 
-    def book_pages(self, lines):
+    def book_pages(self, lines, players=False):
         """The pages of a written book with a page per player (lines: player -> text lines, #1068): each player starts a
-        page with a heading in its player color and its team (#1643); a long list goes on to the next page."""
-        pages = []
+        page with a heading in its player color and its team (#1643); a long list goes on to the next page. players=True:
+        the players page first (#4670)."""
+        pages = [self.players_page()] if players else []
         for p in sorted(lines):
             name, color = self.player(p)                            # the heading and an empty line
             team = self.team(p)
@@ -2722,6 +3004,18 @@ class Replay:
                          else {"text": page.strip("\n")})       # only the heading has a color, the lines are black
         return pages
 
+    def players_page(self):
+        """The first page of each book, as the AoE2 DE loading screen (#4670): a line per player in panel order, in its
+        player color (black for white), with its team in a team game and its rating (#4669; "now": the current one)."""
+        extra = []
+        for p in self.ranked(int(q) for q in self.data["players"] if q != "0"):
+            name, color = self.player(p)
+            info, team = self.data["players"][str(p)], self.team(p)
+            rating = f" · {info['rating']}{' now' if info.get('rating_now') else ''}" if "rating" in info else ""
+            extra.append({"text": f"\n{f'Team {team} · ' if team is not None else ''}{name}{rating}",
+                          "color": color if color != "white" else "black"})
+        return {"text": "Players", "bold": True, "extra": [dict(e, bold=False) for e in extra]}
+
     def book_command(self, title, lines):
         """A written book `title` with a page per player (lines: player -> text lines, #1068). Each player starts a page
         with a heading in its player color and its team (#1643); a long list goes on to the next page. One RCON
@@ -2729,7 +3023,7 @@ class Replay:
         if not lines:
             return []
         while True:
-            pages = self.book_pages(lines)
+            pages = self.book_pages(lines, players=True)
             book = {"title": title, "author": "aoe2mc", "pages": pages}
             cmd = "give @a minecraft:written_book[minecraft:written_book_content=" + \
                 json.dumps(book, ensure_ascii=False, separators=(",", ":")) + "]"
@@ -2766,16 +3060,23 @@ class Replay:
         age of the player (#805), its estimated resources (#932), its relics in the monasteries (#4011) and its actions of the last minute and its idle town center time at game time t
         (#3764, #4053; no APM and TC part without t). In a team game the score is a team key plus the population, so the sidebar
         shows each team together, and a fixed number format shows the population (#1189)."""
-        out, top = [], max((self.team(p) or 0 for p in self.pop), default=0)
+        out, top, now = [], max((self.team(p) or 0 for p in self.pop), default=0), t   # the loop sets t
         if self.shown is None:
-            self.shown, out = {}, [f'scoreboard objectives add {POP} dummy "Population"',
+            title = " · ".join(["Population"] + [v for v in [self.lobby_text()] if v])   # the game type (#4833)
+            self.shown, out = {}, [f"scoreboard objectives add {POP} dummy {json.dumps(title)}",
                                    f"scoreboard objectives setdisplay sidebar {POP}"]
         for p in sorted(self.pop):
             name, color = self.label(p)
             res = " ".join(f"{r[0].upper()} {max(0, v)}" for r, v in self.resources(p).items())
             apm = "" if t is None else f" · APM {self.apm(p, t)} · TC idle {self.tc_text(p, t)}"
             relics = "" if not (n := self.relic_count(p)) else f" · Relics {n}"
-            if self.named.get(p) != (line := f"{name} · {self.ages.get(p, 'Dark')} · {res} (est.){relics}{apm}"):
+            king = "" if p not in self.kings else " · King killed" if p in self.regicided else " · King"   # (#4835)
+            king += " · Out" if p in self.town_lost else ""                # Sudden Death (#4894)
+            if p in self.wonders:                                          # the wonder timer (#4896)
+                king += f" · Wonder {self.wonder_left(p, now)} y"
+            king += " · Relic" if self.lobby_text() == CAPTURE_RELIC and any(   # the carrier of the relic (#4895)
+                (v := self.units.get(r["monk"])) is not None and v.player == p for r in self.relics.values()) else ""
+            if self.named.get(p) != (line := f"{name}{king} · {self.ages.get(p, 'Dark')} · {res} (est.){relics}{apm}"):
                 out.append(f"scoreboard players display name P{p} {POP} {json.dumps(text(line, color))}")
                 self.named[p] = line
             if self.shown.get(p) != self.pop[p]:
@@ -2785,7 +3086,7 @@ class Replay:
                     continue
                 out += [f"scoreboard players set P{p} {POP} {(top - t + 1) * TEAM_STEP + self.pop[p]}",
                         f"scoreboard players display numberformat P{p} {POP} fixed {json.dumps(text(str(self.pop[p])))}"]
-        return out
+        return out + self.wonder_bars(now)
 
     def census(self, t=math.inf):
         """With the fights of the plugin (ai) a unit dies without a timeline event (#787): count the live units of
@@ -2966,7 +3267,7 @@ class Replay:
         g = g0 if self.paused else g0 + (r - r0) * 1000 * self.speed
         self.speed, self.paused = speed, paused
         if self.ai:
-            import ai                                               # ai -> replay: import it late
+            import ai  # ai -> replay: import it late
             # a unit on its last or only leg is not in self.moving, but the plugin still walks it (#3024)
             walking = set(self.moving) | {i for i, v in self.units.items() if (getattr(v, "leg", None) or (0, 0, 0))[2] > g}
             self.send([ai.speed_command(v.uuid, v.name, self.T, 0 if paused else speed * PATH)
@@ -3126,7 +3427,7 @@ class Replay:
         at the game time of its save, its "restore" event (#4568). `more`: the source of a record that still grows (#4662,
         epic #4660): more() gives (the new timeline events, already named; True when the record is complete). The replay
         calls it at most each POLL seconds of real time while it waits (`grow`), and waits at its last event until more()
-        gives events or says that the record is complete."""
+        gives events or says that the record is complete. A jump forward in it stops at its last event (#4733)."""
         start = max([start] + [e["time"] for e in self.data.get("timeline", []) if e["kind"] == "restore"])
         last = math.inf if finish else max((e["time"] for e in self.data.get("timeline", [])), default=start)
         found = fights(self.data.get("timeline", []), owners(self.data.get("objects", []), self.data.get("timeline", [])))
@@ -3134,12 +3435,19 @@ class Replay:
         owner = owners(self.data.get("objects", []), self.data.get("timeline", []))
         shots = [{"time": c["time"], "kind": "shot", "tile": c["tile"]}      # the camera can switch on later (#3369)
                  for c in camera_plan(self.data.get("timeline", []), owner)]
-        events = sorted((e for e in self.data.get("timeline", []) + self.spawns() + news + shots if start <= e["time"] <= last),
+        views = self.views = [{"time": v["time"], "kind": "view", "tile": v["tile"]} for v in self.data.get("views", [])]
+        if self.camera == "player" and not views and more is None:  # the free camera (#4768); live: views can come
+            self.camera = None
+            self.send(["tellraw @a " + json.dumps(text("This record has no camera of its player.", "yellow"))])
+        before = [dict(v, time=start) for v in views if v["time"] < start][-1:]   # a fresh replay after a jump back (#979):
+        events = sorted((e for e in self.data.get("timeline", []) + self.spawns() + news + shots + views + before   # the view
+                         if start <= e["time"] <= last),                                          # of its start (#5011)
                         key=lambda e: e["time"])                     # the record ends at `last`: no spawn after it
         g0, r0, lag, n, k = start, clock(), 0.0, 0, 0                 # game time g0 (ms) at real time r0
         self.speed, self.paused = speed, paused
         self.control = {"speed": speed, "paused": paused, "view": self.pov,     # the view: replay_input VIEW (#1303)
-                        "camera": "auto" if self.camera else None,           # replay_input CAMERA (#3369)
+                        "camera": self.camera,                               # replay_input CAMERA (#3369)
+                        "views": bool(views) or more is not None,                             # CAMERA has "player" only with views (#4769)
                         "players": {p: self.player(p) for p in sorted(int(q) for q in self.data["players"]) if p}} | \
             ({"jump": to} if to is not None else {})
         self.control["fights"] = found
@@ -3163,6 +3471,7 @@ class Replay:
             timeline += new
             for name in ("trainings", "told", "town_centers", "unknown_research"):   # the cached views of the timeline
                 self.__dict__.pop(name, None)
+            self.apms = None                                         # the APM counts the new actions too (#4775)
             last = max([last] + [e["time"] for e in new])
             own = owners(self.data.get("objects", []), timeline)
             fresh = [f for f in fights(timeline, own) if old < f["start"] <= last]   # new indices: the news stay right
@@ -3179,6 +3488,7 @@ class Replay:
         send([f'bossbar add {BAR} ""', f"bossbar set {BAR} color white",
                    f"bossbar set {BAR} max {max(1, int(end) // 1000)}"] +
              ([f"tag {u} add {COUNTED}" for u in self.counted] + ["aoe deathmarks on", "aoe minimap on", f"aoe minimap frame {FRAME * self.T}"]) * self.ai +
+             self.king_tags() +                                     # Regicide (#4835)
              # the death marks (#846) and the live units on the map item (#1237); the plugin paints the bare ground
              # over the start objects of the base image, so the start buildings get their squares (#1940)
              self.minimap_buildings(set(), set()) * (self.pov is None) +
@@ -3186,6 +3496,9 @@ class Replay:
         if to is None:                                              # not again after a jump back (#2949)
             send(replay_input.fight_lines(self.control["fights"], self.control["players"]))
         census = self.census if bar and self.ai else lambda t=0: None
+        kings = (lambda t: self.king_check(t) + self.town_check(t)) if bar and self.ai else lambda t: []
+        hills = self.hill_check if bar else lambda t: []           # King of the Hill: the simulated units (#4893)
+        #                                    Regicide, Sudden Death: the Kings and town centers lost in a fight (#4835, #4894)
         watching = self.control["camera"]                           # the camera state of the last poll (#3369)
         look = self.look_around if bar and self.ai else lambda: None          # as census: a server of run.py --replay
         while k < len(events) or self.moving or self.builds or self.charging or self.idle or not complete:
@@ -3228,9 +3541,12 @@ class Replay:
                         self.follow = None                          # the follow view ends
                         self.send(self.place_view(place))
                     if self.control.get("camera") != watching:      # the camera menu (#3369): the shot of now at once
+                        self.send(self.camera_off())                # the player camera ends (#4770)
                         watching = self.control.get("camera")
                         if watching == "auto" and (now_shots := [s for s in shots if s["time"] <= self.control["time"]]):
                             self.send(self.shot_view(now_shots[-1]["tile"]))
+                        if watching == "player" and (seen := [v for v in views if v["time"] <= self.control["time"]]):
+                            self.send(self.shot_view(seen[-1]["tile"]))     # the view of now at once (#4769)
                 if more is not None:                                # the next part of a live record (#4662)
                     grow()
                 if (to := self.control.pop("jump", None)) is not None:
@@ -3243,9 +3559,14 @@ class Replay:
                     break
             if to is not None:
                 k -= e is not None                                  # the event waits for the jump
+                if not complete and to > end:                       # a live record: no time after its last given
+                    to = end                                        # event, "newest − delay" (#4733)
+                    say = text("Live replay: the jump stops at the delay behind the game.", "yellow")
+                    send([f"tellraw @a {json.dumps(say)}"])
                 if rewind and to < (g0 if self.paused else g0 + (clock() - r0) * 1000 * self.speed):
                     say = text("The server restarts for the jump back: join it again.", "yellow")
                     send(self.clock_commands(to, end, self.speed, jump=True) + [f"tellraw @a {json.dumps(say)}"])
+                    self.send(self.camera_off())
                     return {"rewind": to, "speed": self.speed, "paused": self.paused, "view": self.pov,
                             "camera": self.camera, "events": n,
                             "commands": self.sent, "busy": round(self.busy, 2), "lag": round(lag, 2)}
@@ -3256,6 +3577,8 @@ class Replay:
                     self.send(self.jump(skip, to, at))
                     if shots and (held := [s for s in shots if s["time"] <= to]):    # the camera goes at once to the
                         self.send(self.shot_view(held[-1]["tile"]))                    # shot of the new time (#3368)
+                    if self.control.get("camera") == "player" and (seen := [v for v in views if v["time"] <= to]):
+                        self.send(self.view_glide(seen[-1]["tile"], to))               # and the view (#4768)
                     if self.moving or self.working:                 # the gather steps of the skipped time at once,
                         self.send(self.steps(to))                   # and no step before `to`: an older time on the
                         self.moving = {i: max(t, to) for i, t in self.moving.items()}     # bar and fast catch-up
@@ -3277,6 +3600,8 @@ class Replay:
                 shown = int(now) // 1000
                 if clock() - counted >= CENSUS:
                     census(now)
+                    self.send(kings(now))
+                    self.send(hills(now))
                     look()
                     counted = clock()
                 send(self.clock_commands(now, end, self.speed) + self.score_commands(now) + self.overview(join=True))
@@ -3303,7 +3628,9 @@ class Replay:
                     log(f"{m:02d}:{s:02d} {e['kind']} {e.get('name') or e.get('age') or ''} "
                         f"player {e.get('player')}: {len(cmds)} commands")
         census(end)
-        self.send(self.expire(math.inf) + self.panel(math.inf))
+        self.send(kings(end))
+        self.send(hills(end))
+        self.send(self.expire(math.inf) + self.panel(math.inf) + self.camera_off())
         send(self.clock_commands(end, end, speed, done=True) + self.score_commands() + self.end_commands(end) +
              self.summary_commands() + self.timeline_commands(end) +
              self.build_order_commands(end) + self.spending_commands(end))

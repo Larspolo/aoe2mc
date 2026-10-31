@@ -1,9 +1,9 @@
 """A Tatar town center that is complete in the Castle Age gives own sheep next to it (#2313, AoE2 DE wiki, "Tatars"):
 BUILT_UNITS in game/data/civs.jsonl gives the count in each age. Fake server."""
 import pytest
+from test_treadmill_crane import castle
 
 from game import build, civs
-from test_treadmill_crane import castle
 
 
 def sheep(civ, age=2, name="TOWN_CENTER"):

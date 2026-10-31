@@ -2,9 +2,9 @@
 before (#1786, owner feedback in a demo). The first use of a hold waits HOLD seconds: a hold never gives an order."""
 import math
 
-from game import gather, hints
-
 from test_select_type import setup
+
+from game import gather, hints
 
 
 def paper():
