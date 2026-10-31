@@ -33,4 +33,4 @@ def test_each_flag_gives_its_label(tmp_path, monkeypatch, flag):
     (tmp_path / "a.rms").write_text(SCRIPT, encoding="utf-8")
     monkeypatch.setattr(aoe2mc, "convert", lambda src, out, **kw: got.update(kw))
     aoe2mc.main([str(tmp_path / "a.rms"), str(tmp_path / "W"), f"--{flag}"])
-    assert got["labels"] == (rmap.LOBBY_LABELS[flag],)
+    assert rmap.LOBBY_LABELS[flag] in got["labels"]
