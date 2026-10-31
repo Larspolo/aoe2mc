@@ -105,6 +105,7 @@ FOLLOW_MS = 15000           # ms of game time: the camera of --follow changes it
 EFFECT_MS = 10000           # ms of game time that the research text stays
 EVENT_BAR = 2               # s that an event line keeps the action bar before inspect() writes again (#5286)
 INSPECT_AGAIN = 1.5         # s: inspect() sends the same unit line again before the action bar fades
+INSPECT_EVERY = 0.5         # s of wall time between two inspect() calls of run(), in all loop branches (#5313)
 SCALE = 4                   # size of the research text: a spectator sees it from 40 blocks
 START = {"food": 200, "wood": 200, "gold": 100, "stone": 200}   # the AoE2 standard start resources (#932)
 DEATH_MATCH = {"food": 20000, "wood": 20000, "gold": 10000, "stone": 5000}   # AoE2 DE Death Match start (#4897)
@@ -3584,6 +3585,7 @@ class Replay:
             ({"jump": to} if to is not None else {})
         self.control["fights"] = found
         end, shown, counted = events[-1]["time"] if events else start, None, -math.inf
+        inspected = -math.inf
         self.ended = end                                            # the average APM of the summary (#3763)
         send = self.send if bar else lambda cmds: None
         asked, complete = -math.inf, more is None                   # the real time of the last more(); no more parts
@@ -3747,11 +3749,13 @@ class Replay:
                 self.send(self.upgrade_view(now))
                 self.send(self.ecoview(now))
                 self.send(self.fog())
+            if clock() - inspected >= INSPECT_EVERY:                # also in a busy record: the event branch (#5313)
+                self.send(self.inspect(now, clock))
+                inspected = clock()
             if e is None:                                           # behind its clock: all the steps up to the
                 late = g0 if self.paused else g0 + (clock() - r0) * 1000 * self.speed    # game time now in one
                 nxt = events[k]["time"] if k < len(events) else math.inf     # send, before the next event (#2761)
                 self.send(self.steps(max(now, min(late, nxt - 1))))
-                self.send(self.inspect(now, clock))
                 continue
             cmds = self.commands(e) + self.spectate(e)
             if cmds:
