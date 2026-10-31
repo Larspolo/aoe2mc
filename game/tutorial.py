@@ -58,6 +58,37 @@ def feudal(g, row):
     return build.ages(g) >= 1
 
 
+def militia(g, row):
+    """Step "militia": the player has the Militia of the key "count" (g.soldiers: the living military units)."""
+    return sum(n == "MILITIA" for n in g.soldiers.values()) >= row["count"]
+
+
+def camp(g, row):
+    """Setup of step "camp": the complete buildings of the key "camp" ({AoE2 name: count}) of player 2 near the middle
+    of the map, as challenge.besiege. Buildings do not attack. g.tutorial_camp: their target entities."""
+    import build  # build imports gather, gather imports this module
+    import combat
+    middle, own = (g.map.n // 2, g.map.n // 2), g.player
+    g.tutorial_camp = []
+    for name, count in sorted(row["camp"].items()):
+        for _ in range(count):
+            if (rect := build.near(g, name, middle, reach=24)) is None:
+                continue
+            g.player = 2                                            # the site, its color and design of player 2
+            try:
+                site = build.found(g, name, rect, free=True)
+            finally:
+                g.player = own
+            build.rise(g, site, float("inf"))
+            x0, x1, z0, z1 = rect
+            g.tutorial_camp.append(combat.target_uuid([x0, z0, x1, z1]))
+
+
+def destroyed(g, row):
+    """Step "camp": no building of the camp stands (Gather.free removes a fallen one from g.forts)."""
+    return not set(vars(g).get("tutorial_camp", ())) & g.forts.keys()
+
+
 def give(g, row):
     """Setup of a step: the resources of the key "give" go to the stock, so the step does not wait for a slow player."""
     for k, n in row["give"].items():
@@ -100,7 +131,7 @@ def show(g, n):
 
 def tick(g):
     """Show the first step; when the step is done, show a title and the next step. After the last step the chat says
-    that the tutorial is complete. g.tutorial_step: the index of the step, None before the start."""
+    that the tutorial is complete, a title shows it and the game ends with the recap (cheats.over). g.tutorial_step: the index of the step, None before the start."""
     n = vars(g).get("tutorial_step")
     if n is None:
         g.tutorial_step = n = 0
@@ -113,5 +144,8 @@ def tick(g):
     g.tutorial_step = n = n + 1
     if n < len(STEPS):
         return show(g, n)
+    import cheats  # cheats imports gather, gather imports this module
     g.command(f"bossbar remove {BAR}")
     g.command("tellraw @a " + json.dumps({"text": "The tutorial is complete.", "color": "green"}))
+    g.command(f"title @a[team=p{g.player}] subtitle " + json.dumps({"text": "Tutorial complete", "color": "yellow"}))
+    cheats.over(g, lambda p: p == g.player)                            # the end and the recap, as challenge.tick

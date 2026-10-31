@@ -693,6 +693,7 @@ SETTINGS = {
     "ai_difficulty": "standard",      # "AI difficulty" of the bots (bot.LEVELS, game/data/difficulty.jsonl, #2661)
     "all_techs": False,               # "All Techs" (civs.missing, #2298)
     "antiquity": False,               # Antiquity Mode: the Return of Rome rule set (table.use, game/data/antiquity, #3666)
+    "balance": False,                 # the teams of the human players by their ratings (ratings.balance, #5168)
     "challenge": None,                # an Art of War challenge (challenge.CHALLENGES, #3900)
     "civ": None,                      # {player: civilization} in place of the scenario's (civ_choices, #2267)
     "civ_mode": "normal",             # "mirror" or "team-random": the same civilization for all or per team (#4757)
@@ -1308,6 +1309,8 @@ def main(argv=None, scenario=None):
     ap.add_argument("--age", choices=["dark", "feudal", "castle", "imperial", "post-imperial"], default="dark",
                     help="--play: the AoE2 setting \"Starting age\" of each player, with the technologies of the "
                     "earlier ages (default dark; post-imperial: all technologies)")
+    ap.add_argument("--balance", action="store_true", help="--play: the teams of the human players by their Elo "
+                    "ratings (ratings.balance, #5168): the mean ratings of the two teams are near each other; not with --teams")
     ap.add_argument("--antiquity", action="store_true", help="--play: Antiquity Mode, the rules of Return of Rome: "
                     "the Stone, Tool, Bronze and Iron Age (game/data/antiquity; only with --mode standard)")
     ap.add_argument("--end-age", choices=["dark", "feudal", "castle", "imperial"], default="imperial",
@@ -1383,6 +1386,10 @@ def main(argv=None, scenario=None):
                     "(no team), for example 1,1,2,2: allies do not fight and share their team bonuses (default: the "
                     "teams of the scenario)")
     a = ap.parse_args(argv)
+    if a.balance and a.teams is not None:            # the ratings make the teams, or --teams does (#5168)
+        sys.exit("--balance and --teams: give the teams or balance them, not both (#5168)")
+    if a.balance:                                    # the split is in ratings.balance; the join does not use it yet
+        print("--balance: the teams of the joined players are not set yet (#5168 follow-up).", file=sys.stderr)
     if a.challenge:                                  # the unlock order and the best medals (#3904)
         import challenge
         if a.challenge == "list":
