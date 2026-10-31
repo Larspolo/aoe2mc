@@ -252,6 +252,10 @@ FIND_METHODS = {"find-attacker": 0,                                # airef "Find
                 "find-closest": 2,
                 "find-ordered": 3,
                 "find-random": 1}
+GROUPS = ("up-create-group", "up-disband-group-type", "up-get-group-size", "up-group-size", "up-modify-group-flag",
+          "up-reset-group", "up-set-group")                       # the search groups (#4961)
+GROUP_IDS = range(20)                                              # airef "GroupId": 0 to 19
+GROUP_MAX = 40                                                     # airef up-create-group: at most 40 objects
 RESEARCH_STATE = {"research-available": 1,                         # airef "ResearchState" (up-research-status)
                   "research-complete": 3,
                   "research-pending": 2,
@@ -333,6 +337,7 @@ class Script:
         self.filters = {}                                          # filter -> value; none set: all -1 (up-reset-filters)
         self.target = None                                         # the id of the target object
         self.point = None                                          # (x, y) tiles of up-set-target-point (#4956)
+        self.groups, self.flags = {}, {}                           # group id -> object ids; object id -> group flag
         self.grids = {}                                            # the map grids of map_value (#4962)
 
     def number(self, name):
@@ -662,6 +667,8 @@ class Script:
             return self.compare(args[0], len(self.bot.guards) + len(self.bot.defense), args[1])
         if name == "up-idle-unit-count":                           # (up-idle-unit-count IDLE-TYPE REL VALUE)
             return self.idle_count(args[0], args[1], args[2])
+        if name in GROUPS:
+            return bool(self.group_command(name, args))
         if name in SEARCH:                                         # a find or a target as a fact: true when it did
             return bool(self.search_command(name, args))
         if name in OBJECT_DATA:
@@ -1707,6 +1714,69 @@ class Script:
         self.target = st["found"][ref]
         return True
 
+    def group(self, gid):
+        """The ids of search group gid that stand: a dead object leaves its group (and its flag)."""
+        live = {r[0] for r in self.objects(self.bot.g)}
+        self.flags = {o: f for o, f in self.flags.items() if o in live}
+        ids = self.groups[gid] = [o for o in self.groups.get(gid, []) if o in live]
+        return ids
+
+    def group_command(self, name, args):
+        """The search groups of direct unit control (airef, #4961). up-create-group INDEX-GOAL COUNT-GOAL TYPE GROUP:
+        up to COUNT (0: GROUP_MAX) local results from INDEX; up-set-group SOURCE TYPE GROUP: the group into the results
+        of SOURCE; up-modify-group-flag OPTION TYPE GROUP: object-data-group-flag of its objects (1 sets, 0 removes);
+        up-disband-group-type GROUP-TYPE: the internal groups of the bot. The fact up-group-size: the size REL VALUE."""
+        if name == "up-disband-group-type":
+            return self.disband(args[0])
+        lead = 2 if name == "up-create-group" else 1 if name in ("up-set-group", "up-modify-group-flag") else 0
+        kind = self.type_kind(args[lead])
+        gid = self.operand(kind, args[lead + 1]) if kind else None
+        if gid is None:
+            return False
+        if gid not in GROUP_IDS:
+            return self.warn("group", gid) or False
+        if name == "up-group-size":                                # (up-group-size TYPE GROUP REL VALUE)
+            return self.compare(args[2], len(self.group(gid)), args[3])
+        if name == "up-get-group-size":                            # (up-get-group-size TYPE GROUP GOAL)
+            self.goals[args[2]] = len(self.group(gid))
+        elif name == "up-reset-group":
+            self.groups.pop(gid, None)
+        elif name == "up-create-group":                            # the group is reset first
+            start, count = self.goals.get(args[0], 0) if args[0] else 0, self.goals.get(args[1], 0) if args[1] else 0
+            live = {r[0] for r in self.objects(self.bot.g)}
+            found = [o for o in self.search[1]["found"][max(start, 0):] if o in live]
+            self.groups[gid] = found[:min(count, GROUP_MAX) if count > 0 else GROUP_MAX]
+        elif name == "up-set-group":
+            src = SEARCH_SOURCE.get(args[0], args[0])
+            if src not in SEARCH_MAX:
+                return self.warn("search source", args[0]) or False
+            st = self.search[src]
+            st["found"], st["last"] = self.group(gid)[:SEARCH_MAX[src]], 0
+        elif name == "up-modify-group-flag":
+            for o in self.group(gid):
+                if args[0]:
+                    self.flags[o] = gid
+                elif self.flags.get(o) == gid:
+                    del self.flags[o]
+        return True
+
+    def disband(self, kind):
+        """up-disband-group-type: the units of the internal groups of a type stop and leave them. The bot has the land
+        attack group (its wave, Bot.fight) and the land explore group (the scouts of up-send-scout); another type: one
+        warning."""
+        b = self.bot
+        g = b.g
+        if kind == "group-type-land-attack":
+            units, b.wave, b.targets, b.charged = sorted(getattr(b, "wave", ())), set(), {}, False
+        elif kind == "group-type-land-explore":
+            units, self.scouts = self.scouts, []
+        else:
+            return self.warn("group type", kind) or False
+        for u in units:
+            g.command(f"aoe stop {u}")
+        g.new_order(units)
+        return True
+
     def object_command(self, name, args):
         """The data of the target object (airef "DUC", #4959): up-get-object-data DATA GOAL, up-object-data DATA REL
         VALUE, the same of the target of the target (-target-), up-remove-objects SOURCE DATA REL VALUE,
@@ -1954,6 +2024,8 @@ class Script:
             self.order(name, args)
         elif name in SEARCH:
             self.search_command(name, args)
+        elif name in GROUPS:
+            self.group_command(name, args)
         elif name in OBJECT_DATA:
             self.object_command(name, args)
         elif name == "enable-timer":
