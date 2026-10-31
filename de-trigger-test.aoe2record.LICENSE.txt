@@ -1,0 +1,8 @@
+samples/de-trigger-test.aoe2record
+
+Source: the owner (Larspolo) recorded this game on 2026-10-31 for this project (#5159).
+Game: AoE2 DE on macOS (the Feral port), single player, the scenario samples/trigger_test.aoe2scenario, the owner and
+player 2, 2:41 of game time. The owner saw the 3 triggers: the instructions at 0:10, a Militia at 0:30, +100 food at 1:00.
+Use: test data for the replay of a scenario game with its triggers (#5155).
+
+License: GNU General Public License version 3, as the repository (the file LICENSE).
