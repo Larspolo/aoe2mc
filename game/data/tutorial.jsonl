@@ -1,3 +1,7 @@
 {"name": "select", "text": "Select a villager: right click on one of your villagers with the command stick.", "check": "tutorial.selected", "controls": ["carrot_on_a_stick"]}
 {"name": "wood", "text": "Gather 50 wood: select a villager and right click on a tree.", "need": 50, "check": "tutorial.wood", "controls": ["carrot_on_a_stick"]}
 {"name": "house", "text": "Build a house: right click on a selected villager, choose the house and place it.", "check": "tutorial.house", "controls": ["carrot_on_a_stick", "HOUSE"]}
+{"name": "villager", "text": "Train a villager: right click on your town center and choose the villager.", "give": {"food": 50}, "setup": "tutorial.give", "check": "tutorial.villager"}
+{"name": "camps", "text": "Build a lumber camp near the trees and a mill near the berries.", "give": {"wood": 200}, "setup": "tutorial.give", "check": "tutorial.camps", "buildings": ["LUMBER_CAMP", "MILL"]}
+{"name": "food", "text": "Gather 100 food: send a villager to the berries.", "need": 100, "check": "tutorial.food"}
+{"name": "feudal", "text": "Advance to the Feudal Age: right click on your town center and choose the Feudal Age.", "give": {"food": 500}, "setup": "tutorial.give", "check": "tutorial.feudal"}
