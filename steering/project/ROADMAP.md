@@ -152,6 +152,7 @@ can see which features have an epic: `gh api "repos/Larspolo/aoe2mc/issues?label
 - [x] `replay:pov-camera` The view of the player who recorded the game, as the AoE2 DE replay: the spectator view follows the camera of that player (the view locks of the record, mgz `Operation.VIEWLOCK`) (epic #4765)
 - [x] `replay:game-modes` A record of an AoE2 DE game mode (Regicide, Empire Wars, King of the Hill, Sudden Death, Capture the Relic, Antiquity Mode of Return of Rome ...) replays with the rules of that mode from the game program: the kings, the start economy, the monument and the victory of the mode; the score panel and the summary name the mode (epic #4831)
 - [ ] `replay:scenario-triggers` A record of a game on a custom scenario (a multiplayer scenario, a scenario of a campaign) replays with the triggers of its scenario: the messages, objectives and the units and effects of the triggers come at their times, from the `.aoe2scenario` file that the record names
+- [ ] `replay:inspect` The selection panel of the AoE2 DE replay: a spectator looks at a unit or a building of the live replay and sees its name, player, hit points, attack, armor and its current task (walk, gather, fight, build), and the queue and research of a building
 
 ## 4. The agent system (`.claude/skills/`, `tools/`, `.github/workflows/`)
 
