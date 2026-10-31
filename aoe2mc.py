@@ -260,7 +260,7 @@ SAVE_LOG_VERSION = 5                                    # log_version of the DE 
 RANDOM_MAP = "random-map:"          # the source name of --random-map KIND (#993): read_map makes the map of the seed
 
 
-def read_map(path, seed=1, players=2, teams=None, size=None, mode="standard"):
+def read_map(path, seed=1, players=2, teams=None, size=None, mode="standard", labels=()):
     """read_record for recorded games (RECORDS), read_scx for old .scx scenarios, read_json for a map in JSON,
     read_rms for a random map script (the land of seed), rmap.random_map for RANDOM_MAP + kind, else read_scenario."""
     p = path.lower()
@@ -268,7 +268,7 @@ def read_map(path, seed=1, players=2, teams=None, size=None, mode="standard"):
         import rmap
         return map_description(rmap.random_map(p[len(RANDOM_MAP):], seed, players, teams), path)
     if p.endswith(".rms"):
-        return read_rms(path, seed, players, teams, size, mode)
+        return read_rms(path, seed, players, teams, size, mode, labels)
     return (read_record if p.endswith(RECORDS) else read_saved if p.endswith(SAVES) else read_scx if p.endswith((".scx", ".scn")) or old_format(path) else
             read_json if p.endswith(".json") else read_scenario)(path)
 
@@ -282,7 +282,7 @@ def old_format(path):
         return f.read(4) in scx.FORMATS
 
 
-def read_rms(path, seed, players=2, teams=None, size=None, mode="standard"):
+def read_rms(path, seed, players=2, teams=None, size=None, mode="standard", labels=()):
     """The land of a random map script (#963) in the game mode (rmap.MODE_LABELS, #4824): rmap.generate makes a map description of the seed (read_json).
     size: the map side in tiles (--map-size, #4823; None: the script or the player count)."""
     import rmap
@@ -290,7 +290,7 @@ def read_rms(path, seed, players=2, teams=None, size=None, mode="standard"):
         text = f.read()
     try:
         return map_description(rmap.generate(text, seed, players, size, teams=teams, folder=os.path.dirname(path),
-                                                     name=os.path.basename(path), mode=mode), path)
+                                                     name=os.path.basename(path), mode=mode, labels=labels), path)
     except rmap.RmsError as e:
         raise OptionError(f"{path}: {e}") from None
 
@@ -6039,10 +6039,10 @@ class Progress:
 def convert(src, out, T=4, H=3, name=None, seed=1, preview=False, arch=None, player_arch=(), with_units=True,
             barriers=True, mc_version=VERSION_NAME, spawn=None, birds=True, orientation="ne", verbose=False,
             garrison="inside", border_design="diorama", ambience="basic", at=None, mood="on", fog=False,
-            resource_pack=False, nplayers=2, teams=None, map_size=None, game_mode="standard"):
+            resource_pack=False, nplayers=2, teams=None, map_size=None, game_mode="standard", labels=()):
     """nplayers: the players of a random map script or --random-map (#3944), teams: their teams (#3946). map_size: the
     side in tiles of the map of a random map script (--map-size, #4823). game_mode: the
-    game mode of a random map script (rmap.MODE_LABELS, #4824). at: recorded games only, the time in ms (--at): convert the state at that time (apply_timeline).
+    game mode of a random map script (rmap.MODE_LABELS, #4824), labels: its other lobby labels (rmap.LOBBY_LABELS, #5017). at: recorded games only, the time in ms (--at): convert the state at that time (apply_timeline).
     mood: "on" sets the time of day of the map color mood (MOODS), "off" keeps noon (#1595).
     fog: the fog of a fog mood (FOG, #1626); ambience "full" gives it too.
     resource_pack: resources.zip with human faces for the zombie units (#2738) and own armor (units.ASSETS, #2742)."""
@@ -6052,7 +6052,7 @@ def convert(src, out, T=4, H=3, name=None, seed=1, preview=False, arch=None, pla
     PALETTE_CACHE.clear()   # the cached entries can have the block names of another version
     try:
         _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units, barriers, spawn, birds, orientation,
-                 verbose, garrison, border_design, ambience, at, mood, fog, resource_pack, nplayers, teams, map_size, game_mode)
+                 verbose, garrison, border_design, ambience, at, mood, fog, resource_pack, nplayers, teams, map_size, game_mode, labels)
     finally:
         MC = VERSIONS[VERSION_NAME]
         PALETTE_CACHE.clear()
@@ -6076,7 +6076,7 @@ def clear_old_output(out):
 
 def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units, barriers, spawn, birds, orientation,
              verbose, garrison, border_design, ambience, at=None, mood="on", fog=False, resource_pack=False,
-             nplayers=2, teams=None, map_size=None, game_mode="standard"):
+             nplayers=2, teams=None, map_size=None, game_mode="standard", labels=()):
     buildings.BARRIERS = barriers
     buildings.TURN, yaw = ORIENTATIONS[orientation]
     MOVED.clear()           # the counts of an earlier conversion in this process
@@ -6093,7 +6093,7 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
         times[phase] = times.get(phase, 0.0) + now - clock[0]
         clock[0] = now
 
-    size, terrain, elevation, tnames, texts, objects, players = read_map(src, seed, nplayers, teams, map_size, game_mode)
+    size, terrain, elevation, tnames, texts, objects, players = read_map(src, seed, nplayers, teams, map_size, game_mode, labels)
     if src.lower().endswith(".rms"):         # the lobby of a random map: game/run.py --mode default (#4825)
         import rmap
         texts["lobby"] = {"map_size": next((k for k, v in sorted(rmap.MAP_SIZES.items()) if v == size), str(size)),
@@ -6508,6 +6508,9 @@ def main(argv=None):
     ap.add_argument("--game-mode", default="standard", metavar="MODE",
                     help="the game mode of a random map script (.rms), as the AoE2 DE lobby: it defines the label of "
                     "the mode (REGICIDE ...); the modes of game/run.py (default standard)")
+    import rmap
+    for k, label in sorted(rmap.LOBBY_LABELS.items()):
+        ap.add_argument(f"--{k}", action="store_true", help=f"a random map script (.rms): define the lobby label {label} (#5017)")
     ap.add_argument("--preview", action="store_true", help="also write preview.png")
     ap.add_argument("--architecture", choices=sorted(buildings.ARCH),
                     help="use one architecture set for all players (default: from each player's civilization)")
@@ -6567,7 +6570,6 @@ def main(argv=None):
         ap.error("give the input file and the output world folder")
     if a.players is not None and not (a.scenario.lower().endswith(".rms") or a.scenario.lower().startswith(RANDOM_MAP)):
         ap.error("--players needs a random map script or --random-map")
-    import rmap
     if a.game_mode not in rmap.MODE_LABELS:
         ap.error(f"--game-mode {a.game_mode}: no such mode; the modes: {', '.join(sorted(rmap.MODE_LABELS))}")
     if a.game_mode != "standard" and not a.scenario.lower().endswith(".rms"):
@@ -6585,7 +6587,8 @@ def main(argv=None):
               player_arch=a.player_architecture, with_units=not a.no_units, barriers=not a.no_barriers,
               mc_version=a.mc_version, spawn=a.spawn, birds=not a.no_birds, orientation=a.orientation,
               verbose=a.verbose, garrison=a.garrison, border_design=a.border, ambience=a.ambience,
-              mood=a.mood, fog=a.fog, resource_pack=a.resource_pack, game_mode=a.game_mode)
+              mood=a.mood, fog=a.fog, resource_pack=a.resource_pack, game_mode=a.game_mode,
+              labels=tuple(label for k, label in sorted(rmap.LOBBY_LABELS.items()) if getattr(a, k)))
     try:
         if a.at is not None and not a.scenario.lower().endswith(RECORDS):
             ap.error("--at needs a recorded game (.aoe2record)")

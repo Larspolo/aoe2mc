@@ -61,6 +61,11 @@ def wet_ids():
     return [t.value for t in TerrainId if aoe2mc.terrain_style(t.name)["depth"] > 0]
 
 
+# The lobby settings of the AoE2 DE lobby beside the game mode -> their label (docs/rms-maps.md, #5017).
+LOBBY_LABELS = {
+    "antiquity": "ANTIQUITY_MODE",
+    "nomad": "NOMAD_MAP",
+}
 SIZES = {1: 120, 2: 120, 3: 144, 4: 144, 5: 168, 6: 168, 7: 200, 8: 200}    # AoE2 map size of a player count
 # The label that the AoE2 DE lobby defines for each game mode of game/run.py (docs/rms-maps.md, #4824); standard: none.
 MODE_LABELS = {
@@ -585,16 +590,16 @@ def base_scenario(folder, name, warn):
     return None
 
 
-def generate(text, seed, players=2, size=None, warn=None, teams=None, folder=None, name=None, mode="standard"):
+def generate(text, seed, players=2, size=None, warn=None, teams=None, folder=None, name=None, mode="standard", labels=()):
     """The map description (aoe2mc.read_json) of the land part of script text, for players on a map of size tiles
     (default: the AoE2 size of the player count). folder: the folder of the script, for its #include_drs files. teams: one team (or None) per player (#3946), see circle(). "lands": [{"player", "x", "y", "base_size"}] of the player lands.
     name: the file name of the script; with no <LAND_GENERATION>, the land comes from its base scenario (base_scenario).
     "mood": the color mood of color_correction (aoe2mc.MOODS). enable_waves and water_definition have no effect: Minecraft
-    water takes its color from the biome."""
+    water takes its color from the biome. labels: more lobby labels (LOBBY_LABELS: NOMAD_MAP, ANTIQUITY_MODE, #5017)."""
     warn = warn or (lambda m: print(f"rms: {m}", file=sys.stderr))
     rng = np.random.default_rng(seed)
     n = size or SIZES.get(players, 200)
-    defined = {next((label for s, label in LABELS if n <= s), "LUDIKRIS_MAP")} | ({MODE_LABELS[mode]} if MODE_LABELS.get(mode) else set())
+    defined = {next((label for s, label in LABELS if n <= s), "LUDIKRIS_MAP")} | ({MODE_LABELS[mode]} if MODE_LABELS.get(mode) else set()) | set(labels)
     consts = TERRAINS | OBJECTS | {"MAPSIZE_SIDE": n,   # DE: the side of the map in tiles (#4693)
                                   "MAPSCALE_AREA": n * n / 10000, "PLAYER_COUNT": players}   # area / 100x100 map (#4928)
     includes = []
