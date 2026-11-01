@@ -33,6 +33,9 @@ row), and these kinds of work (the owner moved them first, #4175):
 - extra replay modes (take over a player), extra commands, a nicer UI of the installer program;
 - new systems for the agents (more accounts) and work for later Minecraft versions.
 
+The ranking after v0.1.0 (#5582) put the held features of the other kinds into v0.2.0 (their rows are level `A`). A new
+feature of these kinds that is not a sub-issue of a ranked epic still waits by the rules below.
+
 Work that started goes on: a ticket with `in-progress` or an open PR gets no `after-release`. Let it finish and merge,
 so that its usage is not lost. Hold only the rest: its epic gets the label and no new sub-issue.
 
@@ -118,14 +121,14 @@ decision follows it. The roadmap review checks that each held ticket fits a kind
 | `convert:rms-elevation` | C | 3 | | |
 | `convert:rms-cliffs` | C | 3 | | |
 | `convert:rms-connections` | C | 3 | | |
-| `convert:rms-objects` | C | 5 | | |
+| `convert:rms-objects` | A | 5 | | |
 | `convert:old-formats` | C | 4 | | |
 | `convert:rms-players` | C | 4 | | |
-| `convert:rms-standard` | C | 6 | | |
+| `convert:rms-standard` | A | 6 | | |
 | `convert:saved-games` | C | 6 | | |
-| `convert:rms-lobby` | C | 4 | | |
-| `convert:rms-zr` | C | 4 | | |
-| `convert:export` | C | 6 | | |
+| `convert:rms-lobby` | A | 4 | | |
+| `convert:rms-zr` | A | 4 | | |
+| `convert:export` | A | 6 | | |
 | `convert:resource-pack` | C | | | |
 | `convert:trigger-gaps` | C | | | |
 | `convert-check-maps` | B | 5 | A test set of 20 real maps (the ranked map pool, 3 campaigns, 2 old .scx scenarios) converts with no error, no unit in a block and no load error on a server | #2274 |
@@ -203,13 +206,13 @@ decision follows it. The roadmap review checks that each held ticket fits a kind
 | `play:civ-choice` | C | 4 | | |
 | `play:ally-commands` | C | 4 | | |
 | `play:gaia-units` | C | 3 | | |
-| `play:xs-scripts` | C | 10 | | |
+| `play:xs-scripts` | A | 10 | | |
 | `play:tutorial` | C | 5 | | |
 | `play:ratings` | C | 4 | | |
-| `play:achievements` | C | 4 | | |
+| `play:achievements` | A | 4 | | |
 | `play:music` | C | 3 | | |
-| `play:languages` | C | 5 | | |
-| `play:data-mods` | C | 5 | | |
+| `play:languages` | A | 5 | | |
+| `play:data-mods` | A | 5 | | |
 | `play-check-game` | B | 5 | An agent plays a full game against the bot with a script, from the Dark Age to a win or a loss (about 30 minutes): no server error, no stuck unit | #3324 |
 | `play-check-speed` | B | 2 | With 200 units of each player, the server keeps 20 ticks per second | #3325 |
 | `play-check-kit` | B | 2 | A play-test kit: how to start and join, the controls, how to report a bug | #3326 |
@@ -258,8 +261,8 @@ decision follows it. The roadmap review checks that each held ticket fits a kind
 | `replay:game-modes` | C | 4 | | |
 | `replay:scenario-triggers` | C | 5 | | |
 | `replay:inspect` | C | 4 | | |
-| `replay:takeover` | C | 6 | | |
-| `replay:heatmap` | C | 3 | | |
+| `replay:takeover` | A | 6 | | |
+| `replay:heatmap` | A | 3 | | |
 | `replay-check-full` | B | 5 | A complex record (a team game of about 40 minutes with castles and large fights) replays from start to end with no error | #2277 |
 | `replay-check-follow` | B | 3 | The position tool (#813) shows no stray unit and less than 5 % stuck units on that record | #2278 |
 | `replay-check-speed` | B | 2 | The server keeps at least 18 ticks per second at speed 1 through the whole record | #2279 |

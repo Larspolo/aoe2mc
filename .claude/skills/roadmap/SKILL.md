@@ -47,9 +47,12 @@ Do this first in the refill when open issues have the label `rank` (the pacer st
    ranked list in a comment on the release epic, one line per ticket with a short reason.
 3. Give the first third `P1`, the next third `P2`, the rest `P3` (replace the old priority label; not of a ticket whose
    priority the owner set after its creation: keep it). A ticket that must not come back now gets `muted` and a
-   one-line reason (owner, 2026-11-01): the owner brings it back.
+   one-line reason (owner, 2026-11-01): the owner brings it back. Mute a ticket that would hold the release open with
+   no work for an agent: it waits for an outside event with no date, or for a thing the owner does not have yet (a
+   second Claude account; #5582 muted #303, #4232, #4599).
 4. Give each ranked ticket that is not muted the milestone of the new release ("vX.Y.Z": `issue_write` with
-   `milestone`, or `gh api repos/OWNER/NAME/issues/N -X PATCH -F milestone=M`; also epics and their open sub-issues).
+   `milestone`, or `gh api repos/OWNER/NAME/issues/N -X PATCH -F milestone=M`; also epics and their open sub-issues;
+   not the release epic: the milestone must have no open issue before it closes).
    Write the acceptance criteria into the body of the release epic: the milestone has no open issue, no open bug
    `P0` or `P1`, and a play-test check (`tools/play_check.py`: a full game against the bot, no server error, no stuck unit).
 5. Look at the waiting roadmap features (`python3 tools/release.py`): a feature that the ranking puts into the next
