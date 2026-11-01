@@ -5,6 +5,7 @@ import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "game"))
 import combat  # noqa: E402
+import lang  # noqa: E402
 import replay  # noqa: E402
 from test_replay import Fake, data  # noqa: E402
 
@@ -38,7 +39,7 @@ def test_a_look_at_a_building_shows_name_player_garrison_and_production():
     r.eye = lambda name: ((26.0, y + 1.62, 40.0), (0.0, 0.0, -1.0))    # north, at the wall of the building
     (c,) = bars(r.inspect(10000, clock=lambda: 0.0))
     assert c.startswith("title Steve actionbar ")
-    line = "".join(p["text"] for p in json.loads(c.split(" actionbar ", 1)[1]))
+    line = "".join(lang.plain(p) for p in json.loads(c.split(" actionbar ", 1)[1]))   # translate texts (#5432)
     hp = combat.stats("BARRACKS").hp
     who = r.player(1)[0]
     assert line == f"{replay.pretty('BARRACKS')} ({who}): {hp}/{hp} · garrison 2 · Militia [||...]"

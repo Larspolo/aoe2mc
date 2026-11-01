@@ -6,6 +6,7 @@ import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "game"))
 import build  # noqa: E402
+import lang  # noqa: E402
 import replay  # noqa: E402
 import train  # noqa: E402
 from test_replay import Fake, data  # noqa: E402
@@ -15,7 +16,7 @@ PREFIX = "give @a minecraft:written_book[minecraft:written_book_content="
 
 def text(page):
     """The plain text of a page component (the heading has a color, #1643)."""
-    return page["text"] + "".join(text(e) for e in page.get("extra", []))
+    return lang.plain(page)                                             # translate lines (#5432)
 
 
 def book(cmds):

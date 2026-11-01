@@ -174,6 +174,33 @@
 {"name": "aoe2mc.replay.task_walking", "en_us": "walking"}
 {"name": "aoe2mc.replay.task_wood", "en_us": "gathering wood"}
 {"name": "aoe2mc.replay.up_counts", "en_us": "economy %s · University %s"}
+{"name": "aoe2mc.replay.army", "en_us": "Army: %s"}
+{"name": "aoe2mc.replay.build_order", "en_us": "Build order:"}
+{"name": "aoe2mc.replay.building_garrison", "en_us": " · garrison %s"}
+{"name": "aoe2mc.replay.building_hp", "en_us": "%s (%s): %s/%s"}
+{"name": "aoe2mc.replay.graph_mil", "en_us": "Mil %s %s"}
+{"name": "aoe2mc.replay.graph_pop", "en_us": "Pop %s %s"}
+{"name": "aoe2mc.replay.graph_res", "en_us": "Res %s %s"}
+{"name": "aoe2mc.replay.graph_vil", "en_us": "Vil %s %s"}
+{"name": "aoe2mc.replay.tier_archer", "en_us": "Archer %s/%s"}
+{"name": "aoe2mc.replay.tier_archer_armor", "en_us": "Archer armor %s/%s"}
+{"name": "aoe2mc.replay.tier_carry", "en_us": "Carry %s/%s"}
+{"name": "aoe2mc.replay.tier_cavalry_armor", "en_us": "Cavalry armor %s/%s"}
+{"name": "aoe2mc.replay.tier_farm", "en_us": "Farm %s/%s"}
+{"name": "aoe2mc.replay.tier_gold", "en_us": "Gold %s/%s"}
+{"name": "aoe2mc.replay.tier_infantry_armor", "en_us": "Infantry armor %s/%s"}
+{"name": "aoe2mc.replay.tier_loom", "en_us": "Loom %s/%s"}
+{"name": "aoe2mc.replay.tier_melee", "en_us": "Melee %s/%s"}
+{"name": "aoe2mc.replay.tier_stone", "en_us": "Stone %s/%s"}
+{"name": "aoe2mc.replay.tier_wood", "en_us": "Wood %s/%s"}
+{"name": "aoe2mc.replay.lost", "en_us": "Lost: %s"}
+{"name": "aoe2mc.replay.share_buildings", "en_us": "Buildings %s (%s)"}
+{"name": "aoe2mc.replay.share_economy", "en_us": "Economy %s (%s)"}
+{"name": "aoe2mc.replay.share_military", "en_us": "Military %s (%s)"}
+{"name": "aoe2mc.replay.share_technologies", "en_us": "Technologies %s (%s)"}
+{"name": "aoe2mc.replay.share_total", "en_us": "Total %s"}
+{"name": "aoe2mc.replay.training", "en_us": "Training: %s"}
+{"name": "aoe2mc.replay.university", "en_us": "University:"}
 {"name": "aoe2mc.replay_input.fights", "en_us": "Large fights:"}
 {"name": "aoe2mc.replay_input.help", "en_us": "Replay: right click the items in your hotbar, or click: "}
 {"name": "aoe2mc.replay_input.units", "en_us": " (%s units)"}
