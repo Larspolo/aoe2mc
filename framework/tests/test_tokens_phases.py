@@ -42,8 +42,12 @@ def test_the_time_goes_to_the_ticket_of_the_last_won_claim():
             call(1140, "i", "Bash", command="python3 framework/tools/report.py --post")]
     got = tokens.phases(recs)
     assert list(got) == [7, 9]
-    assert got[7] == {"read": 0, "claim": 3, "code": 3, "verify": 5, "ci": 5, "conflict": 0, "report": 0}
-    assert got[9] == {"read": 2, "claim": 1, "code": 0, "verify": 0, "ci": 0, "conflict": 0, "report": 0}
+    # the time from a result to the next call counts for the next call (#5528): 61 s to 120 s is code, 901 s to 960 s
+    # is the claim of ticket 9, 961 s to 1020 s is read
+    sec = {k: {p: round(m * 60) for p, m in v.items()} for k, v in got.items()}
+    assert sec[7] == {"read": 0, "claim": 60 + 1 + 1, "code": 59 + 180, "verify": 300, "ci": 300, "conflict": 0,
+                      "report": 0}
+    assert sec[9] == {"read": 59 + 120, "claim": 59 + 1, "code": 0, "verify": 0, "ci": 0, "conflict": 0, "report": 0}
 
 
 def test_the_report_uses_the_measured_phases(monkeypatch):

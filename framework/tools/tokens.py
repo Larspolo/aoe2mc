@@ -25,9 +25,10 @@ Field `verify` (#1704): the wall minutes and the count of the check commands (`p
 output of a background check), from the time of a tool call to the time of its result. A background command has its
 minutes in the wait loop or the notification, not in its own call.
 Field `force` (#3461): the count of the force pushes that failed (`git push --force`, `-f`, `+ref`; #903 forbids them).
-Phases (`--phases`): each tool call gets a phase (`phase()`), and the wall time from the call to the next call of the
-session counts for it. A call `claim.py N` that wins starts ticket N; the time before the first claim counts for
-the first ticket. The phases that runs gave by hand were guesses: 37 minutes for a 6.5-minute run (2026-10-28).
+Phases (`--phases`): each tool call gets a phase (`phase()`), and the wall time from the call to its result counts for
+it; the time from the result to the next call of the session (the model thinks and writes it) counts for the next
+call (#5528). A call `claim.py N` that wins starts ticket N; the time before the first claim counts for the first
+ticket. The phases that runs gave by hand were guesses: 37 minutes for a 6.5-minute run (2026-10-28).
 Run line (`--run-line`, 2026-10-29): the session ID and the branch (they join the reports of one run, its claims and
 the starts of the pacer), the start and wall minutes, the model, the effort, the thinking tokens (a part of `out`),
 the eq of each phase (the eq of a call goes to the phase of its tool calls) and the eq of each claimed ticket.
@@ -245,9 +246,11 @@ def calls_line(records, k=5):
 
 def phases(records):
     """{ticket: {phase: minutes}} of one chain of records, in the order of the tickets; the time before the first
-    claim counts for the first ticket (key None when no claim won)."""
-    calls = []                                        # (time, phase, claimed ticket or None)
-    claims, done = {}, set()
+    claim counts for the first ticket (key None when no claim won). The gap from a call to the next call splits at
+    the time of its last tool result: the run of the tool counts for its phase, the thinking and writing after the
+    result for the phase of the next call (#5528). With no result time, the whole gap counts for the call."""
+    calls = []                                        # (time, phase, claimed ticket or None, time of the last result)
+    claims, done, ids = {}, set(), {}
     for r in records:
         msg = r.get("message") or {}
         content = msg.get("content")
@@ -255,26 +258,35 @@ def phases(records):
             tools = [b for b in content if b.get("type") == "tool_use"]
             if tools and when(r) is not None:
                 ps = [phase(b.get("name", ""), b.get("input") or {}) for b in tools]
-                calls.append([when(r), min(ps, key=ORDER.index), None])
+                calls.append([when(r), min(ps, key=ORDER.index), None, None])
                 for b in tools:
+                    ids[b.get("id")] = len(calls) - 1
                     ns = claim_numbers((b.get("input") or {}).get("command", "")) if b.get("name") == "Bash" else []
                     if ns:
                         claims[b["id"]] = (len(calls) - 1, ns)
         elif r.get("type") == "user" and isinstance(content, list):
             for b in content:
+                if b.get("type") == "tool_result" and b.get("tool_use_id") in ids and when(r) is not None:
+                    c = calls[ids[b["tool_use_id"]]]
+                    c[3] = max(c[3] or when(r), when(r))
                 if b.get("type") == "tool_result" and b.get("tool_use_id") in claims:
                     i, ns = claims.pop(b["tool_use_id"])
                     n = won(b, ns)
                     if n is not None and n not in done:
                         done.add(n)
                         calls[i][2] = n
-    out, ticket = {}, None
+    out, keys, ticket = {}, [], None
     first = next((c[2] for c in calls if c[2] is not None), None)
-    for (t, ph, claimed), nxt in zip(calls, calls[1:] + [None]):
-        ticket = claimed if claimed is not None else ticket
-        key = ticket if ticket is not None else first
-        m = out.setdefault(key, dict.fromkeys(PHASES, 0.0))
-        m[ph] += ((nxt[0] if nxt else t) - t) / 60
+    for c in calls:
+        ticket = c[2] if c[2] is not None else ticket
+        keys.append(ticket if ticket is not None else first)
+        out.setdefault(keys[-1], dict.fromkeys(PHASES, 0.0))
+    for i, (t, ph, _, res) in enumerate(calls):
+        end = calls[i + 1][0] if i + 1 < len(calls) else t
+        cut = min(max(res, t), end) if res is not None else end
+        out[keys[i]][ph] += (cut - t) / 60
+        if cut < end:                                 # the model thinks and writes the next call
+            out[keys[i + 1]][calls[i + 1][1]] += (end - cut) / 60
     return out
 
 
