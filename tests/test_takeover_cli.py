@@ -36,12 +36,13 @@ def test_takeover_plays_the_replay_state(tmp_path, monkeypatch):
         got["replay"] = (start, stop)
         return r
 
-    def fake_write(game, replay, saves, t=None):
-        assert replay is r
+    def fake_write(game, replay, saves, t=None, taken=None, difficulty=None):
+        assert replay is r and taken == 1 and difficulty == "standard"
         return "SAVE"
 
-    def fake_play(game, world, *args, state=None, people=None, wait=None, **kw):
+    def fake_play(game, world, log=None, cheats=False, bot=0, *args, state=None, people=None, wait=None, **kw):
         got["play"] = (state, people, wait)
+        got["bot"] = bot
         return None
 
     for name, value in [("Game", FakeGame), ("replay", fake_replay), ("play", fake_play), ("ctrl_c", lambda: None),
@@ -52,6 +53,7 @@ def test_takeover_plays_the_replay_state(tmp_path, monkeypatch):
     run.main([str(tmp_path), "--replay", "--from", "0:30", "--takeover", "1"])
     assert got["replay"] == ("0:30", True)
     assert got["play"] == ({"players": {"1": {"pop": 4}}, "from": "SAVE"}, 1, False)
+    assert got["bot"] == "all"                                         # a bot for each other player (#5452)
 
 
 def test_replay_stops_at_its_start(tmp_path, monkeypatch):
