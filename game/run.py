@@ -1335,6 +1335,25 @@ def fresh(folder, world):
 PAUSE = 5                                            # seconds to read the end title before the server stops
 
 
+def data_mod_folder(world, dat):
+    """The data mod folder of the mod .dat file dat (#5356): WORLD/aoe2mc_data_mod/, written again by
+    tools/dat_compare.py --write when the .dat is newer than the folder. The world keeps it for the next start."""
+    folder = os.path.join(world, "aoe2mc_data_mod")
+    if os.path.isdir(folder) and os.path.getmtime(folder) >= os.path.getmtime(dat):
+        return folder
+    try:
+        import dat_compare
+    except ImportError:                              # the app bundle has no tools/ folder (packaging/aoe2mc.spec)
+        sys.exit(f"--data-mod {dat}: this program takes only a folder of data lines here. Write one with "
+                 "python3 tools/dat_compare.py MOD.dat --write DIR from the source code.")
+    os.makedirs(folder, exist_ok=True)
+    if dat_compare.main([dat, "--write", folder]) != 0:   # it printed the cause ("no genieutils-py: ...")
+        sys.exit(f"--data-mod {dat}: no data mod lines. Run python3 tools/dat_compare.py {dat} --write DIR, "
+                 "then give --data-mod DIR.")
+    os.utime(folder)                                 # newer than the .dat: the next start uses the folder
+    return folder
+
+
 def main(argv=None, scenario=None):
     """scenario: the next scenario of a campaign, after the end of one (#3507)."""
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0].strip(),
@@ -1439,7 +1458,8 @@ def main(argv=None, scenario=None):
     ap.add_argument("--delay", type=float, metavar="S", help="--replay --live: stay S seconds of game time behind "
                     "the newest event of the record (default 30)")
     ap.add_argument("--data-mod", metavar="DIR", help="a folder of data lines: each line of DIR/<file>.jsonl changes "
-                    "the line of the same name in game/data/<file>.jsonl (its keys replace the keys; #5353)")
+                    "the line of the same name in game/data/<file>.jsonl (its keys replace the keys; #5353), or the "
+                    ".dat of a mod: its values go into WORLD/aoe2mc_data_mod/ (tools/dat_compare.py --write, #5356)")
     ap.add_argument("--log", metavar="FILE", help="--play: write one JSON line per villager event (time, state, load)")
     ap.add_argument("--load", metavar="SAVE", help="--play: go on with a saved game (a folder of saves/: the end of "
                     "--play with Ctrl-C saves the world and the resources, technologies and ages there)")
@@ -1462,6 +1482,8 @@ def main(argv=None, scenario=None):
                     "(no team), for example 1,1,2,2: allies do not fight and share their team bonuses (default: the "
                     "teams of the scenario)")
     a = ap.parse_args(argv)
+    if a.data_mod and os.path.isfile(a.data_mod):    # a mod .dat: its data mod folder in the world (#5356)
+        a.data_mod = data_mod_folder(a.world, a.data_mod)
     if a.data_mod and not os.path.isdir(a.data_mod):
         sys.exit(f"--data-mod {a.data_mod}: not a folder")
     if a.balance and a.teams is not None:            # the ratings make the teams, or --teams does (#5168)
