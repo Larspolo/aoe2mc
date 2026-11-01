@@ -3,8 +3,6 @@ import os
 import pathlib
 import subprocess
 
-import yaml
-
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 CLOSED = "2026-11-01T14:36:00Z"
 
@@ -24,8 +22,10 @@ esac
 
 
 def step():
-    jobs = yaml.safe_load((ROOT / ".github/workflows/release.yml").read_text())["jobs"]
-    return next(s["run"] for s in jobs["release"]["steps"] if s["name"] == "Tag the closed release epics")
+    # no yaml module in CI: the run block of the step is the indented text after its "run: |" line
+    text = (ROOT / ".github/workflows/release.yml").read_text().split("name: Tag the closed release epics")[1]
+    lines = text.split("run: |\n", 1)[1].splitlines()
+    return "\n".join(x[10:] for x in lines if x.startswith(" " * 10) or not x.strip())
 
 
 def run(tmp_path, green, head):
