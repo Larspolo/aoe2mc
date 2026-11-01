@@ -829,16 +829,18 @@ class Replay:
     def task(self, i):
         """The AoE2 task word of unit i from the replay state, for the selection panel (#5287)."""
         if i in self.builds:
-            return "building"
+            return say("task_building")
         if i in self.working:
-            return f"gathering {getattr(self.units[i], 'res', None) or 'resources'}"
+            res = getattr(self.units[i], "res", None)
+            return say(f"task_{res if res in START else 'resources'}")   # translate texts (#5421)
         if i in self.follows:
-            return "guarding" if self.follows[i][1] == "guard" else "following"
+            return say("task_guarding" if self.follows[i][1] == "guard" else "task_following")
         if i in self.patrols:
-            return "patrolling"
+            return say("task_patrolling")
         if i in self.moving:
-            return "walking"
-        return "garrisoned" if any(i in ids for ids in [*self.garrisons.values(), *self.cargo.values()]) else "idle"
+            return say("task_walking")
+        return say("task_garrisoned" if any(i in ids for ids in [*self.garrisons.values(), *self.cargo.values()])
+                   else "task_idle")
 
     def eye(self, name):
         """(eye, direction) of player name, or None (gather.Gather.look). --camera player (#5413): a spectator that
@@ -1010,9 +1012,8 @@ class Replay:
         lines = {}
         for p in list(eco) + [p for p in self.spends if p not in eco]:
             s = self.spent(p, t)
-            lines[p] = [f"{k} {n}" for k, n in eco.get(p, {}).items()] + ["Spent:"] + \
-                [f"{name} {s[g]}" for g, name in (("economy", "Eco"), ("military", "Mil"), ("technologies", "Tech"),
-                                                  ("buildings", "Build"))]
+            lines[p] = [say(f"eco_{k}", n) for k, n in eco.get(p, {}).items()] + [say("spent")] + \
+                [say(f"spent_{g}", s[g]) for g in ("economy", "military", "technologies", "buildings")]   # (#5421)
         return self.stat_book("Economy", lines)
 
     def stat_book(self, title, lines):
@@ -3188,7 +3189,7 @@ class Replay:
                              for a in AGES)
             out.append("tellraw @a " + json.dumps([text(name, color), say("sum_techs", ages, self.researched.get(p, 0))]))
             if upgrades := self.upgrade_line(p):                          # the upgrades, one line more (#3789)
-                out.append("tellraw @a " + json.dumps([text(name, color), text(f": {upgrades}")]))
+                out.append("tellraw @a " + json.dumps([text(name, color), text(": "), upgrades]))
         return out
 
     def upgrade_line(self, p):
@@ -3205,7 +3206,7 @@ class Replay:
         if not (forge or eco or uni):
             return None
         names = ", ".join(forge[:12] + ([f"+{len(forge) - 12}"] if len(forge) > 12 else []))
-        return " · ".join(([names] if forge else []) + [f"economy {eco}", f"University {uni}"])
+        return {"text": f"{names} · " if forge else "", "extra": [say("up_counts", eco, uni)]}   # (#5421)
 
     def society_commands(self):
         """One chat line per player with the values of the AoE2 Society tab (#1086): castles and wonders built (each
@@ -3227,10 +3228,10 @@ class Replay:
         for p in self.ranked(self.pop.keys() | self.vhigh.keys() | sent.keys() | got.keys() | {q for q, _ in built}
                              | {q for q, _ in traded} - {None}):
             name, color = self.label(p)
-            counts = "".join(f"{n.lower()}s {built.get((p, n), 0)}, " for n in SOCIETY)   # castles N, wonders N
-            counts += f"relics {self.relic_count(p)}, "                                    # the relics in monasteries (#4010)
-            market = f"bought {traded.get((p, 'buy'), 0)}, sold {traded.get((p, 'sell'), 0)}, "
-            out.append("tellraw @a " + json.dumps([text(name, color), say("sum_society", counts + market, sent.get(p, 0), got.get(p, 0),
+            counts = [say(f"soc_{n.lower()}", built.get((p, n), 0)) for n in SOCIETY]   # castles N, wonders N (#5421)
+            counts.append(say("soc_relics", self.relic_count(p)))                       # the relics in monasteries (#4010)
+            counts.append(say("soc_market", traded.get((p, "buy"), 0), traded.get((p, "sell"), 0)))
+            out.append("tellraw @a " + json.dumps([text(name, color), say("sum_society", {"text": "", "extra": counts}, sent.get(p, 0), got.get(p, 0),
                                                          self.vhigh.get(p, 0))]))
         return out
 

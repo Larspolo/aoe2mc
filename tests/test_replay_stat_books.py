@@ -5,6 +5,7 @@ import os
 import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "game"))
+import lang  # noqa: E402
 import replay  # noqa: E402
 from test_replay import Fake, data  # noqa: E402
 
@@ -14,7 +15,7 @@ def pages(cmds):
     out = []
     for c in cmds:
         inner = c.split('"pages":[', 1)[1][:-3] if c.startswith("item replace") else c.split("pages:[", 1)[1][:-2]
-        out += ["".join(x.get("text", "") for x in [pg] + pg.get("extra", [])) for pg in json.loads(f"[{inner}]")]
+        out += [lang.plain(pg) for pg in json.loads(f"[{inner}]")]          # also translate lines (#5421)
     return out
 
 

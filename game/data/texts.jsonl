@@ -146,6 +146,34 @@
 {"name": "aoe2mc.replay.town_fell", "en_us": ": the town center fell at %s. Sudden Death: the player is out."}
 {"name": "aoe2mc.replay.town_lost", "en_us": "Town center lost at %s"}
 {"name": "aoe2mc.replay.wonder_built", "en_us": " built a wonder at %s."}
+{"name": "aoe2mc.replay.eco_build", "en_us": "build %s"}
+{"name": "aoe2mc.replay.eco_food", "en_us": "food %s"}
+{"name": "aoe2mc.replay.eco_gold", "en_us": "gold %s"}
+{"name": "aoe2mc.replay.eco_idle", "en_us": "idle %s"}
+{"name": "aoe2mc.replay.eco_stone", "en_us": "stone %s"}
+{"name": "aoe2mc.replay.eco_wood", "en_us": "wood %s"}
+{"name": "aoe2mc.replay.soc_castle", "en_us": "castles %s, "}
+{"name": "aoe2mc.replay.soc_market", "en_us": "bought %s, sold %s, "}
+{"name": "aoe2mc.replay.soc_relics", "en_us": "relics %s, "}
+{"name": "aoe2mc.replay.soc_wonder", "en_us": "wonders %s, "}
+{"name": "aoe2mc.replay.spent", "en_us": "Spent:"}
+{"name": "aoe2mc.replay.spent_buildings", "en_us": "Build %s"}
+{"name": "aoe2mc.replay.spent_economy", "en_us": "Eco %s"}
+{"name": "aoe2mc.replay.spent_military", "en_us": "Mil %s"}
+{"name": "aoe2mc.replay.spent_technologies", "en_us": "Tech %s"}
+{"name": "aoe2mc.replay.task_building", "en_us": "building"}
+{"name": "aoe2mc.replay.task_following", "en_us": "following"}
+{"name": "aoe2mc.replay.task_food", "en_us": "gathering food"}
+{"name": "aoe2mc.replay.task_garrisoned", "en_us": "garrisoned"}
+{"name": "aoe2mc.replay.task_gold", "en_us": "gathering gold"}
+{"name": "aoe2mc.replay.task_guarding", "en_us": "guarding"}
+{"name": "aoe2mc.replay.task_idle", "en_us": "idle"}
+{"name": "aoe2mc.replay.task_patrolling", "en_us": "patrolling"}
+{"name": "aoe2mc.replay.task_resources", "en_us": "gathering resources"}
+{"name": "aoe2mc.replay.task_stone", "en_us": "gathering stone"}
+{"name": "aoe2mc.replay.task_walking", "en_us": "walking"}
+{"name": "aoe2mc.replay.task_wood", "en_us": "gathering wood"}
+{"name": "aoe2mc.replay.up_counts", "en_us": "economy %s · University %s"}
 {"name": "aoe2mc.replay_input.fights", "en_us": "Large fights:"}
 {"name": "aoe2mc.replay_input.help", "en_us": "Replay: right click the items in your hotbar, or click: "}
 {"name": "aoe2mc.replay_input.units", "en_us": " (%s units)"}
