@@ -155,7 +155,7 @@ def state(r, t=None, taken=1, difficulty="standard"):
     return json.loads(json.dumps(d, sort_keys=True))                   # the JSON form: sorted keys, no tuples
 
 
-def write(game, r, saves, t=None, difficulty="standard"):
+def write(game, r, saves, t=None, taken=1, difficulty="standard"):
     """Save the replay of game at its time: a copy of the world after `save-all flush` (run.save) and state(r) next to
     it (savegame.write). Returns the save folder."""
     import run  # run imports replay: import it late
@@ -163,6 +163,6 @@ def write(game, r, saves, t=None, difficulty="standard"):
     world = os.path.join(tempfile.mkdtemp(dir=os.path.dirname(copy)), os.path.basename(os.path.normpath(game.world)))
     os.rename(copy, world)                                             # the save takes the name of the world
     try:
-        return savegame.write(saves, world, state(r, t, difficulty=difficulty))
+        return savegame.write(saves, world, state(r, t, taken, difficulty))
     finally:
         shutil.rmtree(os.path.dirname(world), ignore_errors=True)

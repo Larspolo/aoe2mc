@@ -242,6 +242,15 @@ RUN_LINE = re.compile(r"^Run: .*$", re.M)
 WEEK_USED = re.compile(r" · week (\d+(?:\.\d+)?)%")
 
 
+def releases():
+    """The rows of the "Releases" section of the status issue: `release.releases` of the progress on GitHub and the
+    release focus of steering/project/RELEASE.md, and the count of the features that wait for the release."""
+    import release
+    data = release.load()
+    ms = release.focus()
+    return dict(rows=release.releases(release.current(data), ms), waiting=len(release.waiting(data[0], data[2], ms)))
+
+
 def accounts(hours=168, comments=None):
     """One row per Claude account (#4239): its last 5-hour usage, 7-day usage and runs (the last `Usage:` line of the
     account), its merged PRs and tokens per merged PR. A `Run:` line names the account of its report (`health.line_account`:

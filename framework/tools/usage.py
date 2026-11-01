@@ -239,13 +239,15 @@ def held(numbers):
 
 def free_sources(root=None):
     """The refill sources of R < N besides the checks and reviews (#3560): the `[ ]` features of the goals 1 to 3 with
-    no epic (the `roadmap` skill) and the fallbacks of docs/coverage.md. A read error counts as a source."""
+    no epic (the `roadmap` skill) inside the release focus (`release.focus`) and the fallbacks of docs/coverage.md. A
+    read error counts as a source."""
     try:
         import release
-        features, _, _, epics = release.load()
+        features, _, rows, epics = release.load()
         keys, numbers = {release.epic_key(e.get("body")) for e in epics}, {e["number"] for e in epics}
+        wait = set(release.waiting(features, rows, release.focus(root)))     # outside the release focus
         free = [k for k, (goal, done, named) in features.items() if goal < 4 and not done and k not in keys
-                and not named & numbers and not held(named)]
+                and k not in wait and not named & numbers and not held(named)]
         with open(os.path.join(root or release.ROOT, "docs", "coverage.md")) as f:   # the totals: | Group | types | own | infantry | fallback |
             fallbacks = sum(int(m[1]) for m in re.finditer(r"^\| [A-Z][a-z ]+ \| \d+ \| \d+ \| \d+ \| (\d+) \|$", f.read(), re.M))
     except Exception as e:                                  # a GitHub or file error

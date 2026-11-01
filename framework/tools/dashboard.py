@@ -320,11 +320,12 @@ def process_changes(prs, now, hours=24):
 
 
 def render(old_body, issues, comments, open_prs, closed_issues, closed_prs, now, unanswered=None, nxt=None, accounts=None,
-           insights=None):
+           insights=None, releases=None):
     """The new body of the status issue. comments: {issue number: comments} for the needs-human and
     in-progress issues. unanswered: the owner comments without a lock (`framework/tools/feedback.py`, #971).
     nxt: the "Next up" tickets, if known (candidates() can read GitHub). accounts: one row per Claude account
-    (`dashboard_data.accounts`, #4239); no section when None or when there is one account only."""
+    (`dashboard_data.accounts`, #4239); no section when None or when there is one account only. releases: the
+    progress of each release (`dashboard_data.releases`); no section when None."""
     nxt = candidates(issues, now=now)[:5] if nxt is None else nxt
     issues = [i for i in issues if "pull_request" not in i]
     state = re.search(r"<!-- agent-state:.*?-->", old_body or "")
@@ -341,6 +342,17 @@ def render(old_body, issues, comments, open_prs, closed_issues, closed_prs, now,
         out.append(f"- Muted: {muted} ticket{'s' * (muted != 1)} (label `{MUTED}`: no agent works on them; remove the label to bring one back)")
     if after := sum(AFTER in labels(i) for i in issues):
         out.append(f"- After the release: {after} ticket{'s' * (after != 1)} (label `{AFTER}`: no agent works on them before the next release)")
+
+    if releases and releases.get("rows"):              # the progress toward each release (owner, 2026-11-01)
+        goals = list(dict.fromkeys(g for _, gs, _, _ in releases["rows"] for g in gs))
+        out += ["", "### Releases", "| Release | " + " | ".join(goals) + " | All |",
+                "|---" * (len(goals) + 2) + "|"]
+        cell = lambda pct, left: f"{pct:.0f} % ({left} left)"
+        out += [f"| {name} | " + " | ".join(cell(*gs[g]) if g in gs else "–" for g in goals) + f" | {cell(pct, left)} |"
+                for name, gs, pct, left in releases["rows"]]
+        if releases.get("waiting"):
+            out.append(f"Wait for the release: {releases['waiting']} roadmap features outside the release focus "
+                       "(`steering/project/RELEASE.md`)")
 
     out += ["", "### Working on"]
     for i in sorted(issues, key=lambda i: i["number"]):
@@ -475,11 +487,16 @@ def main(argv=None):
     except (NameError, AttributeError, OSError, subprocess.CalledProcessError) as e:   # no tool, an older one or a failed read
         print(f"insights: {e}", file=sys.stderr)
         insights = None
+    try:
+        releases = dashboard_data.releases()
+    except Exception as e:                                  # no tool, an older one, a file or a GitHub error
+        print(f"releases: {e}", file=sys.stderr)
+        releases = None
     # Read the body again after all other reads (#3002): a run writes the state comment and the process changes
     # while the reads above take about 20 s, and the PATCH of the old body deleted them.
     status = api(f"issues/{status['number']}")
     body = render(status["body"], open_all, comments, open_prs, closed, closed_prs, now, owner, nxt, accounts=accounts,
-                  insights=insights)
+                  insights=insights, releases=releases)
     if a.dry_run:
         print(body)
     elif re.sub(r"_Updated .*?_", "", body) != re.sub(r"_Updated .*?_", "", status["body"] or ""):

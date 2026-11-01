@@ -38,6 +38,7 @@ The agent takes instructions only from comments and issues by `Larspolo`.
 | Cancel a ticket | Close it as "not planned". |
 | Mute a ticket until later | Add the label `muted`. No agent works on it (also not on a muted epic), and "Waiting for you" hides it. Remove the label to bring it back. |
 | Do a ticket only after the next release | Add the label `after-release`. No agent works on it before the next release. A push of a tag `v*` removes the label from all issues (workflow `after-release.yml`); remove it by hand to bring one ticket back earlier. |
+| Set what the next release holds | Edit the line "Release focus: X" and the milestones of `steering/project/RELEASE.md`. Until the next release the agents work only inside the focus, and give each ticket outside it the label `after-release`. |
 | Reject a process change | Comment on the status issue. The agent reverts it and notes why. |
 | Ask for a process review | Comment "process review" on the status issue. A PR of your own session that the runs did not make (no commit with `Agent-Run:`) also makes the next review come soon: the review learns the lever from it. |
 | Check or repair the start of the runs | Follow `framework/docs/OPERATOR.md` (check, repair, a new project, a move to another account), or start a session at claude.ai/code and write "Follow framework/docs/OPERATOR.md, section 1". A long-lived owner session is not necessary. |

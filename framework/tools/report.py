@@ -9,7 +9,8 @@ Repeat the ticket options for each ticket of the run, in the same order. `--minu
 phases. Without `--phases` a ticket gets the phases that `tokens.py --phases` measures in the transcript. `--post` adds the report to the
 branch `metrics` (`runs/`, `metrics_log.post`, 2026-10-29: no comment on the status issue; a comment only when no push
 goes through) and sets `last_run` and `runs` of the state comment of the status issue (label `agent-status`), else it
-prints the report.
+prints the report. Then it gives back the own claim of each reported ticket that no open PR closes (`handoffs`, #5462):
+the next run takes the ticket at once, not with a takeover 30 minutes later.
 """
 import argparse
 import json
@@ -20,6 +21,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import agent_config  # noqa: E402
+import claim  # noqa: E402
 import metrics_log  # noqa: E402
 from claim import agent_state, utc, with_state  # noqa: E402
 from dashboard import FOOTER, STATUS, api, pages  # noqa: E402
@@ -138,6 +140,30 @@ def counted(body, now=None):
     return with_state(body, {**state, "last_run": utc(now), "runs": state.get("runs", 0) + 1})
 
 
+def handoffs(tickets, claims, pulls, me):
+    """The tickets of the report that run `me` still claims ({N: subject of its top claim slot}) while no open PR in
+    `pulls` closes them: the run reported and leaves them, so `--post` gives the claims back (a hand-off, #5462). A
+    held claim waited 30 minutes for `claim.py 0 --stuck` and a takeover: #5228 and #5413 on 2026-10-31 (a `Part of`
+    PR merged, the ticket stayed open). A ticket whose open PR closes it waits for Automerge, which ends its claim."""
+    return [n for n in dict.fromkeys(tickets) if (line := claims.get(n)) and not line.startswith("Release")
+            and line.split(" ")[3:4] == [me] and not any(claim.closes(n).search(claim.prose(p.get("body"))) for p in pulls)]
+
+
+def hand_off(tickets):
+    """Release the claims of `handoffs` and remove `in-progress`. A failure only prints: the report is posted."""
+    try:
+        claims = {}
+        for n in dict.fromkeys(tickets):
+            if found := claim.refs(n):
+                claims[n] = claim.subject(claim.slot(n, max(found)))
+        for n in handoffs(tickets, claims, pages("pulls?state=open"), claim.who()):
+            if claim.release(n):
+                claim.stop(n)
+                print(f"released #{n}: the run reported it and no open PR closes it (a hand-off, #5462)")
+    except (Exception, SystemExit) as e:                # claim.release exits when another run took the ticket over
+        print(f"no hand-off: {e}", file=sys.stderr)
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--text", required=True, help="what the run did and what is next")
@@ -191,6 +217,7 @@ def main(argv=None):
         print(api(f"issues/{status['number']}/comments", "POST", {"body": body})["html_url"])
     fresh = api(f"issues/{status['number']}")["body"]          # other runs change the body too: read it just before
     api(f"issues/{status['number']}", "PATCH", {"body": counted(fresh)})
+    hand_off(a.ticket)
     return 0
 
 
