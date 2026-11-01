@@ -195,6 +195,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *                                              unit or building of these classes ("-": each) deals this damage over
  *                                              time (Dot.java, #4339)
  *   aoe stop <selector>                        stop the walk and turn the AI off: the unit stands still (#437)
+ *   aoe teamcolors <player> <pN=color ...|off>  the team colors of one client only (#5510, RelationColors.java)
  *   aoe throw <selector> <ticks> <gap> <blocks> <shots>
  *                                              Gothikon (#4368): a melee unit also throws an axe (an arrow with the
  *                                              values of the unit) at its target within blocks; it holds at most shots
@@ -425,6 +426,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     private final Cheats cheats = new Cheats(this);
     private final ChatName chatName = new ChatName();               // the player color of a chat name (#3681)
     private final SpecChat specChat = new SpecChat();               // the chat of the spectators (#3554)
+    private final RelationColors relationColors = new RelationColors();   // the team colors of one client (#5510)
     private final TeamChat teamChat = new TeamChat();               // the team chat to the allies (#3553)
     private final Deaths deaths = new Deaths(this);
     private final Alerts alerts = new Alerts(this, AoePlugin::side);   // "under attack" for the team of the target (#1231)
@@ -1446,6 +1448,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         Bukkit.getScheduler().runTaskTimer(this, this::steer, 1L, 1L);
         Bukkit.getScheduler().runTaskTimer(this, ghost::tick, 1L, 1L);
         Bukkit.getScheduler().runTaskTimer(this, border::tick, 4L, 4L);
+        Bukkit.getScheduler().runTaskTimer(this, relationColors::tick, 20L, 20L);
         Bukkit.getScheduler().runTaskTimer(this, this::siege, 1L, 1L);
         Bukkit.getScheduler().runTaskTimer(this, this::carts, 1L, 1L);
         Bukkit.getScheduler().runTaskTimer(this, this::throwAxes, 2L, 2L);
@@ -3839,6 +3842,9 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             }
             sender.sendMessage("Stopped " + n + " units");
             return true;
+        }
+        if (args.length >= 3 && args[0].equals("teamcolors")) {        // the Friend or Foe colors (#5510)
+            return relationColors.command(sender, args);
         }
         if (args.length == 6 && args[0].equals("throw")) {             // Gothikon (#4368)
             Throw w;

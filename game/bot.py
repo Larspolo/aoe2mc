@@ -113,6 +113,7 @@ class Bot:
         of age_up(), research(), recruit() and the build order."""
         level = LEVELS[difficulty]
         self.g = own or gather.Gather(game, data, player=player, **kw)
+        self.own = own is not None                                     # step(): Gather.run steps the own Gather
         self.g.chop = {k: s / level["gather"] for k, s in self.g.chop.items()}   # seconds per unit: work_time
         self.villagers, self.attack, self.foe, self.share = villagers, attack * level["attack"], foe, share
         self.group = level["soldiers"] if group is None else group
@@ -197,7 +198,8 @@ class Bot:
 
     def step(self):
         """One tick of the gather game of the player, then the orders."""
-        self.g.step()
+        if not self.own:
+            self.g.step()
         self.orders()
 
     def answer(self):

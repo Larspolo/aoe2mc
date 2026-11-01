@@ -286,6 +286,7 @@ class Game:
     people = 1
     spectators = frozenset()                         # the Minecraft players without a side (#2898)
     joined = frozenset()                             # the Minecraft players who joined (start_on_join, #3314)
+    ready = frozenset()                              # the people who clicked "Ready" (lobby.ready, #5508)
     starts, yaw = {}, 0.0                            # AoE2 player -> its start block, the spawn yaw (aoe2mc.json, #3347)
     placed = frozenset()                             # the Minecraft players who went to the start of their side
     seats = ()                                       # --seats: the AoE2 player of each person in the join order (#3489)
@@ -830,7 +831,7 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
     g.tutorial = settings["tutorial"]                            # tutorial.tick (#5161)
     g.unlock_speed = settings["unlock_speed"]                    # the Game menu of player 1 (diplomacy.faster, #2933)
     if people > 1 or getattr(game, "seats", ()):     # one Gather for each person, in the join order (#1308, #1310, #5451)
-        g.bots = [Side(make(n)) for n in range(2, players + 1)]
+        g.bots = [Side(make(n)) for n in range(2, players + 1) if n in getattr(game, "seats", ()) or not getattr(game, "seats", ())]
         for s in g.bots:                             # the same trees, bushes and mines, as with a bot
             s.g.map.trees, s.g.map.bushes, s.g.map.mines = g.map.trees, g.map.bushes, g.map.mines
             s.g.relics = g.relics                    # one list: each relic exists once (#3116)
@@ -851,6 +852,9 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
         seats = scenario.bot_seats(data["players"], players)
     else:
         seats = bot_seats(data["players"], players, bot) if bot else []
+        if bot == "all" and 1 not in getattr(game, "seats", (1,)):   # --takeover P > 1: also the players below P (#5476)
+            seats = [(p, bot_foe(data["players"], p)) for p in sorted(int(p) for p in data["players"] if int(p) > 0)
+                     if p not in game.seats]
     for k, (player, foe) in enumerate(seats):        # after the people, next to their Sides (#1794)
         import bot as bots
         level = bots.level_of(settings["ai_difficulty"], k)   # one level for each bot in seat order (#4020)
@@ -866,7 +870,7 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
         g.bots = [*g.bots, bots.Bot(game, data, player=player, share=g, log=log, foe=foe,
                                     attack=math.inf if attack == "never" else replay.aoe2mc.game_time(attack) / 1000,
                                     resources=settings["resources"], pop_limit=settings["pop_limit"],
-                                    difficulty=level, script=script).setup()]
+                                    difficulty=level, script=script, own=g if player == 1 else None).setup()]
         at = math.inf if attack == "never" else \
             replay.aoe2mc.game_time(attack) / 1000 * bots.LEVELS[level]["attack"]
         print(f"A bot ({level}) plays player {player}: {len(g.bots[-1].g.villagers)} villagers "
@@ -939,7 +943,7 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
             h.speed = speed
     if wait:
         import savegame
-        start_on_join(game, savegame.sides(g), people)
+        start_on_join(game, savegame.sides(g), people, g=g)
     g.run(seconds)
     if g.ended:
         unveil(g)
@@ -963,13 +967,30 @@ def welcome(game):
                  click_event={"action": "run_command", "command": "/controls"})))
 
 
-def start_on_join(game, sides, people, sleep=time.sleep):
+def start_on_join(game, sides, people, sleep=time.sleep, g=None):
     """As in AoE2 DE, the game starts when all people are there (#3314): play froze the ticks (the `schedule` timers
     of the scenario triggers, the mobs) at the start of play(). Unfreeze them after the join of the people, and start
-    the game clock of each side (Gather.t0) then, so that the triggers, the treaty and the bots agree."""
-    print(f"The game starts when {people} {'person' if people == 1 else 'people'} joined.", file=sys.stderr)
-    while len(game.joined) < people:
+    the game clock of each side (Gather.t0) then, so that the triggers, the treaty and the bots agree.
+    More people: the game starts when all clicked "Ready" in the lobby page (lobby.ready, #5508). The wait opens that
+    page for each person at the join and reads the menu clicks of the Gather g (no Gather.run yet)."""
+    lobby_page = people > 1 and g is not None        # no Gather: nobody can click "Ready"
+    print(f"The game starts when {people} {'person' if people == 1 else 'people'} joined"
+          + (" and are ready." if lobby_page else "."), file=sys.stderr)
+    game.wait, game.ready, shown = True, set(), set()
+    while len(game.joined) < people or lobby_page and not set(game.joined) <= game.ready:
+        if lobby_page:
+            import lobby
+            import menu
+            for name in sorted(set(game.joined) - shown):
+                shown.add(name)
+                game.command(f"title {name} actionbar {json.dumps(lang.text('aoe2mc.run.wait_ready'))}")
+                lobby.show(g, name)
+            menu.clicks(g)
         sleep(0.5)
+    if shown:
+        import menu
+        for name in sorted(shown):
+            menu.close(g, name)
     for n in range(5, 0, -1):                        # the client loads the map after the join: count down (#5506)
         game.command(f"title @a subtitle {json.dumps(lang.text('aoe2mc.run.starts_in', n))}")
         game.command(f"title @a title {json.dumps(str(n))}")
@@ -1314,6 +1335,25 @@ def fresh(folder, world):
 PAUSE = 5                                            # seconds to read the end title before the server stops
 
 
+def data_mod_folder(world, dat):
+    """The data mod folder of the mod .dat file dat (#5356): WORLD/aoe2mc_data_mod/, written again by
+    tools/dat_compare.py --write when the .dat is newer than the folder. The world keeps it for the next start."""
+    folder = os.path.join(world, "aoe2mc_data_mod")
+    if os.path.isdir(folder) and os.path.getmtime(folder) >= os.path.getmtime(dat):
+        return folder
+    try:
+        import dat_compare
+    except ImportError:                              # the app bundle has no tools/ folder (packaging/aoe2mc.spec)
+        sys.exit(f"--data-mod {dat}: this program takes only a folder of data lines here. Write one with "
+                 "python3 tools/dat_compare.py MOD.dat --write DIR from the source code.")
+    os.makedirs(folder, exist_ok=True)
+    if dat_compare.main([dat, "--write", folder]) != 0:   # it printed the cause ("no genieutils-py: ...")
+        sys.exit(f"--data-mod {dat}: no data mod lines. Run python3 tools/dat_compare.py {dat} --write DIR, "
+                 "then give --data-mod DIR.")
+    os.utime(folder)                                 # newer than the .dat: the next start uses the folder
+    return folder
+
+
 def main(argv=None, scenario=None):
     """scenario: the next scenario of a campaign, after the end of one (#3507)."""
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0].strip(),
@@ -1418,7 +1458,8 @@ def main(argv=None, scenario=None):
     ap.add_argument("--delay", type=float, metavar="S", help="--replay --live: stay S seconds of game time behind "
                     "the newest event of the record (default 30)")
     ap.add_argument("--data-mod", metavar="DIR", help="a folder of data lines: each line of DIR/<file>.jsonl changes "
-                    "the line of the same name in game/data/<file>.jsonl (its keys replace the keys; #5353)")
+                    "the line of the same name in game/data/<file>.jsonl (its keys replace the keys; #5353), or the "
+                    ".dat of a mod: its values go into WORLD/aoe2mc_data_mod/ (tools/dat_compare.py --write, #5356)")
     ap.add_argument("--log", metavar="FILE", help="--play: write one JSON line per villager event (time, state, load)")
     ap.add_argument("--load", metavar="SAVE", help="--play: go on with a saved game (a folder of saves/: the end of "
                     "--play with Ctrl-C saves the world and the resources, technologies and ages there)")
@@ -1441,6 +1482,8 @@ def main(argv=None, scenario=None):
                     "(no team), for example 1,1,2,2: allies do not fight and share their team bonuses (default: the "
                     "teams of the scenario)")
     a = ap.parse_args(argv)
+    if a.data_mod and os.path.isfile(a.data_mod):    # a mod .dat: its data mod folder in the world (#5356)
+        a.data_mod = data_mod_folder(a.world, a.data_mod)
     if a.data_mod and not os.path.isdir(a.data_mod):
         sys.exit(f"--data-mod {a.data_mod}: not a folder")
     if a.balance and a.teams is not None:            # the ratings make the teams, or --teams does (#5168)
