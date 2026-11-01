@@ -17,6 +17,7 @@ TEXTS = {                                                          # the keys of
     "attack_ground": "aoe2mc.hints.attack_ground",
     "attack_move": "aoe2mc.hints.attack_move",
     "building": "aoe2mc.hints.building",
+    "building-paper": "aoe2mc.hints.building_paper",
     "corner": "aoe2mc.hints.corner",
     "drag": "aoe2mc.hints.drag",
     "follow": "aoe2mc.hints.follow",
@@ -49,7 +50,7 @@ def state(g, player=None):
     if (order := getattr(g, "ordering", {}).get(player)) in ORDERS:   # the pending menu item (#3355, #3357, #3358)
         return order, hint(order)
     if building := getattr(g, "ghosts", {}).get(player, [None])[0]:
-        return "building", hint("building", pretty(building))
+        return "building", hint("building-paper" if getattr(g, "paper", False) else "building", pretty(building))   # #4703, #5483
     if player is not None:                                         # the own selection of player (#3486)
         g.person = player
     army, aim = g.selected & g.soldiers.keys(), getattr(g, "pointing", {}).get(player)
