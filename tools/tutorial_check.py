@@ -281,6 +281,10 @@ class Driver:
         import camera
         mid, c = self.mid, self.c
         for _ in range(3):
+            self.c.key("Escape")                                       # a menu of the step before takes the click
+            menu.close(self.g, NAME)
+            self.g.choose(set())
+            self.overview()
             c.key(str(camera.SLOT + 1))
             time.sleep(1.0)
             c.click(c.size[0] // 2, c.size[1] // 2, button=3)
