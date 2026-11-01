@@ -153,6 +153,8 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *   aoe gate lock|unlock <x> <z>               the trigger effects "Lock Gate", "Unlock Gate" (#2762): the gates
  *                                              with the block column x z keep their bars down for all units
  *   aoe goals <selector>                       the goals of the first unit (#436), for checks
+ *   aoe heatmap <tile> <n> <x,y,color,shade> ... [end]   the heat map of the record as a map item for the
+ *                                              spectators at the replay end (#5457, Heatmap.java)
  *   aoe hide <players> <uuid> ...              Player#hideEntity: the players do not see these entities, also a
  *                                              player that joins later (#1302: the enemy units out of sight in the
  *                                              view of one replay player). With team=T in the selector: only a
@@ -246,6 +248,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *                                              the melee (Fire Lancer, #4547); ignore 1: the shots ignore the armor
  *   aoe cheats <code>,<code>,...|-             the AoE2 cheat codes in the chat (#816, Cheats.java; URL-encoded)
  *   aoe deathmarks on|off                      a short mark where a replay unit dies (#846, Deaths.java)
+ *   aoe deathmarks heat [T]                    the deaths per tile of T blocks and team (#5458)
  *   aoe destroy <selector>                     the buildings fall as at 0 hit points: "Destroy: <n> buildings" (#819)
  *   aoe detonate <selector> <attack> <blast> <class:bonus,...|-> [foes]
  *                                              Incendiaries (#2165): the ship explodes when it sinks; each unit within
@@ -3336,7 +3339,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         if (args.length == 2 && args[0].equals("cheats")) {
             return cheats.command(sender, args);
         }
-        if (args.length == 2 && args[0].equals("deathmarks")) {        // the marks of the live replay (#846)
+        if ((args.length == 2 || args.length == 3 && args[1].equals("heat")) && args[0].equals("deathmarks")) {        // the marks of the live replay (#846)
             return deaths.command(sender, args);
         }
         if (args.length == 2 && args[0].equals("destroy")) {           // the cheats torpedo, black death (#819)
@@ -3686,6 +3689,9 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             }
             sender.sendMessage("Goals: " + String.join(" ", keys));
             return true;
+        }
+        if (args.length >= 3 && args[0].equals("heatmap")) {         // #5457
+            return Heatmap.command(sender, args);
         }
         if (args.length >= 3 && (args[0].equals("hide") || args[0].equals("show"))) {   // one command per second (#1302)
             boolean hide = args[0].equals("hide");

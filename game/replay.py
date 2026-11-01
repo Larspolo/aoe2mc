@@ -41,6 +41,7 @@ import numpy as np
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
+import heatmap  # noqa: E402
 import lang  # noqa: E402
 import monk  # noqa: E402
 import replay_input  # noqa: E402
@@ -3131,6 +3132,18 @@ class Replay:
                 "title @a title " + json.dumps(say("replay_ended")),
                 "playsound minecraft:ui.toast.challenge_complete master @a ~ ~ ~ 1 1 1"]
 
+    def heat_commands(self):
+        """The walk heat map of the record as a map item for the spectators (#5457, heatmap.item_commands): only on
+        Paper (the plugin paints the map)."""
+        if getattr(self.game, "kind", "paper") != "paper":
+            return []
+        timeline = self.data.get("timeline", [])
+        n = -(-self.n // self.T)                                    # self.n is in blocks
+        grids = heatmap.grid(timeline, owners(self.data.get("objects", []), timeline), n)
+        dyes = {p: aoe2mc.MAP_DYES.get(heatmap.dye(info, p), 8) for p, info in
+                ((int(k), v) for k, v in self.data.get("players", {}).items())}
+        return heatmap.item_commands(grids, dyes, self.T, n, RCON_MAX)
+
     def summary_commands(self):
         """Two chat lines per player at the end of the replay, as the AoE2 achievements screen: the economy (#1065):
         trained villagers and the resources of the gather steps (estimated: the record has no resources); the military
@@ -3940,7 +3953,8 @@ class Replay:
         self.send(self.expire(math.inf) + self.panel(math.inf) + self.camera_off())
         send(self.clock_commands(end, end, speed, done=True) + self.score_commands() + self.end_commands(end) +
              self.summary_commands() + self.timeline_commands(end) +
-             self.build_order_commands(end) + self.spending_commands(end))
+             self.build_order_commands(end) + self.spending_commands(end) +
+             self.heat_commands())                                      # after the books of fixed slots (#5457)
         span = (events[-1]["time"] - start) / 1000 / speed if events else 0                 # at the start speed
         return {"events": n, "commands": self.sent, "busy": round(self.busy, 2), "lag": round(lag, 2),
                 "rate": round(self.sent / self.busy) if self.busy else 0, "need": round(self.sent / span) if span else 0}
