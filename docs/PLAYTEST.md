@@ -74,6 +74,8 @@ tutorial (section 3) teaches the same controls. Type /controls in the game to se
   Shift + left click: place more. Right click: cancel.
 - Train: right click your own building (town center, barracks ...) and click a unit in its menu.
 - Attack: select military units, then right click an enemy.
+- Research and age up: right click your own building and click a technology or the next age in its menu.
+- Garrison: select units, then right click your own building. Its menu lets them out. Town center menu: Ring Town Bell.
 - Camera: right click with the spyglass "Camera" (hotbar key 2). You walk fast on an invisible floor high above the
   map, and you can give orders from there. Shift right click: the next speed (5, 10 or 20 times the walk speed). Right
   click again: you fly down near the ground. Two client options help with the fast camera, both in Options >

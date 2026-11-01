@@ -31,6 +31,9 @@
 {"name": "aoe2mc.controls.build", "en_us": "Build: select villagers, right click them for the build menu, select a building, then left click the ground. Shift + left click: place more. Right click: cancel."}
 {"name": "aoe2mc.controls.train", "en_us": "Train: right click your own building (town center, barracks ...) and click a unit in its menu."}
 {"name": "aoe2mc.controls.attack", "en_us": "Attack: select military units, then right click an enemy."}
+{"name": "aoe2mc.controls.research", "en_us": "Research and age up: right click your own building and click a technology or the next age in its menu."}
+{"name": "aoe2mc.controls.garrison", "en_us": "Garrison: select units, then right click your own building. Its menu lets them out. Town center menu: Ring Town Bell."}
+{"name": "aoe2mc.controls.camera", "en_us": "Camera: right click with the spyglass Camera (hotbar key 2): you walk fast high above the map. Shift right click: the next speed. Right click again: you fly down."}
 {"name": "aoe2mc.defeat", "en_us": "Defeat"}
 {"name": "aoe2mc.flare.placed", "en_us": "%s: Flare at %s %s"}
 {"name": "aoe2mc.follow.refuse_follow", "en_us": "Follow: click an own unit"}
