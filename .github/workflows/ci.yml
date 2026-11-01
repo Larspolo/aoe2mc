@@ -71,7 +71,11 @@ jobs:
         id: fast
         if: ${{ !steps.tested.outputs.skip }}
         shell: bash          # with pipefail: the step keeps the exit code of pytest, not of tee
-        run: pytest -n auto ${{ steps.select.outputs.tests }} | tee pytest.log   # all cores (#2415)
+        run: pytest -n auto --durations=10 ${{ steps.select.outputs.tests }} | tee pytest.log   # all cores (#2415)
+      # The 10 slowest tests as notices: a review reads them from the check run (the cloud blocks the job logs, #5478).
+      - name: Slowest tests
+        if: always() && steps.fast.outcome != 'skipped'
+        run: grep -E '^[0-9.]+s (call|setup|teardown) ' pytest.log | head -10 | sed 's/^/::notice title=Slowest test::/' || true
       # The cloud blocks the host of the job logs: the failed tests as annotations, for `ship_pr.py` (#4784).
       - name: Failed tests
         if: failure() && steps.fast.outcome == 'failure'
