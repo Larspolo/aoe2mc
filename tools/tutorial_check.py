@@ -272,10 +272,13 @@ class Driver:
         for _ in range(3):
             self.c.key(str(camera.SLOT + 1))
             time.sleep(1.0)
-            self.note(f"key {camera.SLOT + 1}: the Camera item in hand: {camera.in_hand(self.g, NAME)}")
+            self.g.command(f"tp {NAME} ~ ~ ~ 0 -60")                   # look at the sky: a click on a block is no item use
+            time.sleep(1.0)
             self.c.click(self.c.size[0] // 2, self.c.size[1] // 2, button=3)
             time.sleep(3.0)
             self.note("right click with the Camera item")
+            self.g.command(f"tp {NAME} ~ ~ ~ 0 -60")                   # the floor of the mode is under the player
+            time.sleep(1.0)
             self.c.click(self.c.size[0] // 2, self.c.size[1] // 2, button=3)
             time.sleep(2.0)
             self.note("right click with the Camera item again")
