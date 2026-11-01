@@ -140,7 +140,7 @@ does not say?
 
 | Lane | Label | When | Cost |
 |---|---|---|---|
-| Haiku | `lane:haiku` | Nothing to decide: the body names the place (file, function, data line) and the result, the code has a pattern to copy, and no render, screenshot or real game is needed. `size:S` or a small `size:M`. | About 1/8 of an Opus ticket, 2.4 times the time (#1717; 22 of 24 merged, 2026-10-28) |
+| Haiku | `lane:haiku` | Nothing to decide. All 3 are true: the body names the place (file, function, data line); the body says the exact result or the check that shows it; the code has a similar change and the body names it (a function, a data line or the PR of an earlier ticket of the series). No render, screenshot or real game is needed. Examples: one ticket of a series (a unique technology, a civilization bonus, a random map script command), a new key of a data file, a fix whose cause the body names, a change of text or docs. `size:S` or a small `size:M`. | About 1/8 of an Opus ticket, 2.4 times the time (#1717; 22 of 24 merged, 2026-10-28) |
 | Main (Opus, low effort) | none | Choices with a clear right answer: a bug with a known cause, a design or a look to judge, a check on the real server or client. | |
 | Deep (Opus, high effort) | `lane:deep` | A choice where a wrong answer can pass the tests and cost later: a bug with an unknown cause, a race or shared state, a new structure, a change to how the runs decide or plan, a ticket that failed before (red CI after 3 tries, a takeover, reopened), a `size:L` ticket to split. | 4.5 times or more the tokens of a main run |
 
@@ -149,7 +149,7 @@ does not say?
   label (`autopilot` skill, `queue.md`). Not sure between main and deep: main.
 - Write tickets for Haiku (owner, 2026-10-29: 40 % of the closed tickets had `lane:haiku`, but 2 of 25 ready ones).
   When you make a ticket, decide the place and the result while that code is in your context: write the file, the
-  function or data line, the exact result and (for a change of code only) the test to copy into the body, then give `lane:haiku` (a render, a
+  function or data line, the exact result, the earlier ticket or PR of a series as the pattern, and (for a change of code only) the test to copy into the body, then give `lane:haiku` (a render, a
   screenshot or a real game still needs main). Spend at most one `grep` per ticket on it; when it does not find the
   place, give no Haiku label. In the queue refill, also give `lane:haiku` to the ready tickets with no lane whose
   body already meets the Haiku row (read the bodies only, not the code).
