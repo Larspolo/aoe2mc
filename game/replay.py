@@ -487,6 +487,7 @@ class Replay:
         self.arriving = {}                      # object ID -> game time (ms) of its work start, until it is there (#766)
         self.entering = {}                      # object ID -> [footprint, building entry, arrival (ms) or None] (#809)
         self.builds = {}                        # object ID of a builder -> (game time (ms) of the build end, order then) (#1282)
+        self.raising = {}                       # object ID of a builder -> (footprint, start ms) of its build (#5453)
         self.garrisons = {}                     # building footprint -> object IDs of the units inside it
         self.cargo = {}                         # object ID of a ram, siege tower or ship -> object IDs inside it (#5369)
         self.boarding = {}                      # object ID -> [ID of its ram, tower or ship, arrival (ms) or None]
@@ -1305,6 +1306,7 @@ class Replay:
             due = self.walk_end(v, e["time"]) + work
             out += self.go(i, v, None, v.path, e["time"])
             self.builds[i] = due, then and dict(then, time=due, objects=[i], names=[None])
+            self.raising[i] = rect, e["time"]                       # a takeover gives the builder its site (#5453)
         return out
 
     def built(self, t):
