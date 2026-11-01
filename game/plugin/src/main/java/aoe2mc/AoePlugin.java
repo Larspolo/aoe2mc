@@ -65,6 +65,7 @@ import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.entity.SlimeSplitEvent;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
@@ -1291,6 +1292,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                 inv.setItem(it.getKey(), it.getValue());
             }
             if (inv != (open != null ? open.inventory : null)) {
+                closedScore().getScore(p.getName()).resetScore();          // a new menu: an old close is no news
                 p.openInventory(inv);
             }
             n++;
@@ -1404,6 +1406,21 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             menuScore().getScore(ev.getWhoClicked().getName()).setScore(ev.isShiftClick() ? -(slot + 1)
                     : ev.getClick() == ClickType.RIGHT ? slot + 1 + MENU_RIGHT : slot + 1);
         }
+    }
+
+    /** The player closed a menu (Escape, #5484): score aoe_menu_closed 1, so game/menu.py forgets its handler and a
+     *  refresh of the training queue does not open it again. A new menu (OPEN_NEW) and menu-close (PLUGIN) set none. */
+    @EventHandler
+    public void onMenuClose(InventoryCloseEvent ev) {
+        if (ev.getInventory().getHolder(false) instanceof Menu && ev.getReason() == InventoryCloseEvent.Reason.PLAYER) {
+            closedScore().getScore(ev.getPlayer().getName()).setScore(1);
+        }
+    }
+
+    private static Objective closedScore() {
+        var sb = Bukkit.getScoreboardManager().getMainScoreboard();
+        Objective o = sb.getObjective("aoe_menu_closed");
+        return o != null ? o : sb.registerNewObjective("aoe_menu_closed", Criteria.DUMMY, Component.text("Menu closed"));
     }
 
     @EventHandler
