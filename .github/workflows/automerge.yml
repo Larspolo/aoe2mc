@@ -60,6 +60,12 @@ jobs:
           merged=0 conflict=0
           # An agent branch, or any branch with the label automerge (the owner's opt-in, #3383).
           AGENT='(.head.ref | test("^(agent/|claude/|ccr-)")) or ([.labels[].name] | index("automerge") != null)'
+          # The check runs of the PR's own CI decide, not a `full` dispatch on the head (its job `slow` ran): the slow
+          # and Minecraft tests do not gate a PR, and the red jobs of a dispatch on a `hold` PR kept #5410 out of each
+          # sweep for 5 hours (#5462, as `pacer.pr_checks`).
+          GREEN='[.[] | select(.name == "slow" and .conclusion != "skipped") | .check_suite.id] as $full
+            | [.[] | select(.check_suite.id as $s | $full | index($s) | not)]
+            | any(.[]; .name == "quick" and .conclusion == "success") and all(.[]; .conclusion != "failure")'
           # GitHub computes "mergeable" without merge=jsonl and merge=union. A PR that only our drivers can merge
           # waited for Unconflict and a new CI run, and main moved again in that time: 396 failed merges in 24 hours,
           # 383 of them solved by the drivers (#3199). land() merges main with the drivers, pushes the merge commit
@@ -162,14 +168,13 @@ jobs:
             if [ -n "$pr" ]; then merge "$pr" "$SHA"; else echo "no open PR for $BRANCH"; fi
           else
             # The sweep: each open agent PR without `conflict` (the runs and Unconflict solve those) whose head has a
-            # green `quick` check and no failed check.
+            # green `quick` check and no failed check of its own CI (GREEN).
             gh api "repos/$R/pulls?state=open&per_page=100" --jq ".[] | select(.head.repo.full_name == \"$R\")
               | select($AGENT) | select([.labels[].name] | index(\"conflict\") | not)
               | @json" > prs.txt
             while read -r pr; do
               sha=$(jq -r .head.sha <<<"$pr")
-              if gh api "repos/$R/commits/$sha/check-runs?per_page=100" --jq '.check_runs' | jq -e \
-                   'any(.[]; .name == "quick" and .conclusion == "success") and all(.[]; .conclusion != "failure")' >/dev/null; then
+              if gh api "repos/$R/commits/$sha/check-runs?per_page=100" --jq '.check_runs' | jq -e "$GREEN" >/dev/null; then
                 merge "$pr" "$sha"
               else
                 echo "#$(jq -r .number <<<"$pr"): no green quick check on $sha"

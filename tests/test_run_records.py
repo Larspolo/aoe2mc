@@ -87,6 +87,7 @@ def test_report_post_writes_a_record_and_no_comment(monkeypatch, capsys):
                         if a == ("tokens.py", "--json") else "")
     monkeypatch.setattr(report, "git_lane", lambda: "haiku")
     monkeypatch.setattr(report, "measured", lambda: {"7": "read=2,code=10"})
+    monkeypatch.setattr(report, "hand_off", lambda tickets: calls.append(("hand_off", tickets)))     # no git (#5462)
     report.main(["--text", "Did #7.", "--usage", "Usage: x", "--ticket", "7", "--size", "S", "--result", "pr #9", "--post"])
     rec = posted[0]
     assert rec["session"] == "s-1" and rec["lane"] == "haiku" and rec["usage"] == "Usage: x" and rec["tokens"]["eq"] == 1.0

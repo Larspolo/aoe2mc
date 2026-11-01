@@ -41,6 +41,7 @@ it over for one run (`claim.py N --takeover` with the run name) and adds a `take
 Runs with no brief raced for the same stuck PRs, and each lost race cost a cycle start (#4356).
 A stuck ticket whose PR only waits for its quick CI or for Automerge gets no takeover (`ci_wait`, #4932); a green
 one starts the Automerge sweep: 10 of 14 takeovers "after the report" closed by the merge 0 to 18 minutes later.
+The jobs of a `full` CI dispatch on the head do not count (`pr_checks`, as the sweep of `automerge.yml`, #5462).
 """
 import argparse
 import datetime
@@ -195,6 +196,14 @@ def queues(open_all, refs, now, tasks):
 FAILED = ("action_required", "cancelled", "failure", "startup_failure", "timed_out")   # a check with this result is red
 
 
+def pr_checks(checks):
+    """The check runs of the PR's own CI: without the runs of a `full` CI dispatch (its job `slow` ran, #5462). The
+    slow and Minecraft tests do not gate a PR (they run each night on main), but the red jobs of a dispatch on the head
+    of a `hold` PR kept #5410 out of each Automerge sweep for 5 hours and gave its ticket 2 takeovers."""
+    full = {c.get("check_suite", {}).get("id") for c in checks if c.get("name") == "slow" and c.get("conclusion") != "skipped"}
+    return [c for c in checks if c.get("check_suite", {}).get("id") not in full]
+
+
 def ci_wait(pr, checks):
     """"run" when the quick CI of the open PR still runs, "green" when it passed and no check failed, else None (red,
     the label `conflict`, no quick check: take the ticket over). checks: the check runs of its head. 10 of 14
@@ -203,6 +212,7 @@ def ci_wait(pr, checks):
     import ship_pr
     if "conflict" in {lb["name"] for lb in pr.get("labels") or []}:
         return None
+    checks = pr_checks(checks)
     quick = [c for c in checks if c.get("name") == ship_pr.QUICK]
     if not quick or any(c.get("conclusion") in FAILED for c in checks):
         return None
