@@ -153,6 +153,8 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *   aoe gate lock|unlock <x> <z>               the trigger effects "Lock Gate", "Unlock Gate" (#2762): the gates
  *                                              with the block column x z keep their bars down for all units
  *   aoe goals <selector>                       the goals of the first unit (#436), for checks
+ *   aoe heatmap <tile> <n> <x,y,color,shade> ... [end]   the heat map of the record as a map item for the
+ *                                              spectators at the replay end (#5457, Heatmap.java)
  *   aoe hide <players> <uuid> ...              Player#hideEntity: the players do not see these entities, also a
  *                                              player that joins later (#1302: the enemy units out of sight in the
  *                                              view of one replay player). With team=T in the selector: only a
@@ -3687,6 +3689,9 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             }
             sender.sendMessage("Goals: " + String.join(" ", keys));
             return true;
+        }
+        if (args.length >= 3 && args[0].equals("heatmap")) {         // #5457
+            return Heatmap.command(sender, args);
         }
         if (args.length >= 3 && (args[0].equals("hide") || args[0].equals("show"))) {   // one command per second (#1302)
             boolean hide = args[0].equals("hide");
