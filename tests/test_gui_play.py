@@ -119,4 +119,4 @@ def test_the_window_has_the_play_tab():
             pytest.skip("no display and no xvfb-run")
         cmd = ["xvfb-run", "-a"] + cmd
     r = subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True, timeout=60)
-    assert r.returncode == 0 and r.stdout.strip() == "['TFrame', 'TFrame']", r.stderr
+    assert r.returncode == 0 and r.stdout.strip() == "['TFrame', 'TFrame', 'TFrame']", r.stderr

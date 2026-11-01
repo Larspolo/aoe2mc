@@ -325,10 +325,10 @@ def window():
     root = tk.Tk()
     root.title("aoe2mc: AoE2 to Minecraft")
     style(root, ttk)
+    top = ttk.Frame(root, padding=8)                       # the first child of root: the tests find the tabs in it
+    top.grid(row=1, column=0, sticky="nsew")
     ttk.Label(root, text="Age of Empires II  \u2192  Minecraft", style="Title.TLabel", anchor="center").grid(
         row=0, column=0, sticky="ew")
-    top = ttk.Frame(root, padding=8)
-    top.grid(row=1, column=0, sticky="nsew")
     root.columnconfigure(0, weight=1)
     root.rowconfigure(1, weight=1)
     top.columnconfigure(0, weight=1)
