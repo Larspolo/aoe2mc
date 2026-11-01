@@ -24,7 +24,8 @@ def test_the_stop_line_stops_a_game_that_does_not_read_stdin(tmp_path):
         try:
             run.console(Game())                    # the main thread does not read stdin, as with --play
             print("ready")
-            time.sleep(60)
+            for _ in range(600):                   # short sleeps, as the --play loop: a SIGINT just before the
+                time.sleep(0.1)                    # nanosleep of one long sleep waits for its end (#5567)
         except KeyboardInterrupt:
             print("Stopping the server ...")
             sys.exit(3)
