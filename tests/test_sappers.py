@@ -1,6 +1,7 @@
 """Sappers (#1580): the castle researches it in the Imperial Age (AoE2 wiki "Sappers"), and then the villagers of the
 player get more attack against buildings and stone defenses (the class "building" of combat: also the walls) and
 against rams. Other units do not change."""
+import lang
 from test_arson import hit
 from test_hoardings import setup
 
@@ -23,7 +24,7 @@ def test_the_research_gives_villagers_attack_against_buildings_walls_and_rams():
     train.tick(g, t - 1)
     assert "SAPPERS" not in g.techs
     train.tick(g, 1)
-    assert "SAPPERS" in g.techs and "Sappers is researched." in " ".join(server.log)
+    assert "SAPPERS" in g.techs and "Sappers is researched." in " ".join(map(lang.english, server.log))
     for name in ("VILLAGER_MALE", "VILLAGER_FEMALE_FARMER"):
         old, new = combat.stats(name), train.stats(g, name)
         assert hit(new, combat.stats("HOUSE")) > hit(old, combat.stats("HOUSE"))

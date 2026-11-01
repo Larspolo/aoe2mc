@@ -2,6 +2,7 @@
 Castle Age, as on the AoE2 wiki infoboxes (#1261). The costs, times and values come from the data."""
 import re
 
+import lang
 from test_monk_train import MONASTERY, monastery
 
 from game import ai, combat, gather, train
@@ -42,7 +43,7 @@ def test_sanctity_gives_the_live_and_the_new_monks_more_hit_points():
     assert combat.stats_command(old, "MONK", train.stats(g, "MONK")) in server.log
     assert train.stats(g, "MONK").hp > combat.stats("MONK").hp
     assert train.stats(g, "MILITIA") == combat.stats("MILITIA")       # only monks
-    assert "Sanctity is researched" in " ".join(server.log)
+    assert "Sanctity is researched" in " ".join(map(lang.english, server.log))
 
 
 def test_fervor_makes_the_live_monks_walk_faster():

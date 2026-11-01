@@ -5,6 +5,7 @@ import contextlib
 import io
 import json
 
+import lang
 import pytest
 from menu_line import item
 from test_forging import menus, setup
@@ -50,7 +51,7 @@ def test_the_live_militia_becomes_a_man_at_arms():
     assert g.soldiers["s"] == "SCOUT_CAVALRY" and g.soldiers["a"] == "ARCHER"           # other units stay
     assert combat.stats_command("m", "MAN_AT_ARMS", train.stats(g, "MAN_AT_ARMS")) in server.log
     assert "aoe label m Man At Arms" in server.log
-    assert any("Man-at-Arms is researched." in c for c in server.log if c.startswith("tellraw"))
+    assert any("Man-at-Arms is researched." in c for c in map(lang.english, server.log) if c.startswith("tellraw"))
 
 
 def test_the_barracks_trains_men_at_arms_after_the_upgrade():

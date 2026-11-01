@@ -2,6 +2,7 @@
 game/data/train.jsonl. After the research the villagers carry more resources and walk faster, as in AoE2 (#728)."""
 from urllib.parse import unquote
 
+import lang
 from menu_line import item
 from test_gather import FakeServer, grid, tiny
 from test_urumi_swordsman import item as text
@@ -61,7 +62,7 @@ def test_wheelbarrow_gives_more_carry_after_its_time():
     assert g.techs == {"FEUDAL_AGE"} and g.limit() == carry
     train.tick(g, 1)
     assert g.techs == {"FEUDAL_AGE", "WHEELBARROW"} and g.limit() > carry and not any(g.queues.values())
-    assert any(f"{NAME} is researched." in c for c in server.log if c.startswith("tellraw"))
+    assert any(f"{NAME} is researched." in c for c in map(lang.english, server.log) if c.startswith("tellraw"))
     assert not [c for c in server.log if c.startswith("aoe stats")]   # no combat change
     train.open_menu(g, "Steve", (3, 3))
     assert NAME not in menus(server)[-1]

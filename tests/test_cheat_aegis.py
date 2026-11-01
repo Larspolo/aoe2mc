@@ -1,5 +1,6 @@
 """game/cheats.py: the cheat "aegis" makes building, training, research and gathering instant; a second "aegis" ends
 it (#817). Fake server, no Minecraft."""
+import lang
 from test_build_done import DOWN
 from test_build_site import Server
 from test_gather import grid
@@ -19,9 +20,9 @@ def test_aegis_toggles_and_answers_in_the_chat():
     server, g = setup()
     g.cheats = True
     assert type_code(server, g) == [("Steve", "aegis")] and g.aegis
-    assert server.log[-1] == 'tellraw Steve {"text":"Aegis on"}'
+    assert lang.english(server.log[-1]) == 'tellraw Steve "Aegis on"'
     type_code(server, g)
-    assert not g.aegis and server.log[-1] == 'tellraw Steve {"text":"Aegis off"}'
+    assert not g.aegis and lang.english(server.log[-1]) == 'tellraw Steve "Aegis off"'
 
 
 def test_no_aegis_with_cheats_off():

@@ -210,3 +210,20 @@
 {"name": "aoe2mc.bot.no_market", "en_us": "I have no market: I cannot send tribute."}
 {"name": "aoe2mc.wonder.built", "en_us": "Player %s built a wonder."}
 {"name": "aoe2mc.wonder.destroyed", "en_us": "The wonder of player %s is destroyed."}
+{"name": "aoe2mc.cheat.aegis_off", "en_us": "Aegis off"}
+{"name": "aoe2mc.cheat.aegis_on", "en_us": "Aegis on"}
+{"name": "aoe2mc.cheat.beyond", "en_us": "Technologies: up to 256 researches"}
+{"name": "aoe2mc.cheat.cpu", "en_us": "Population limit: %s"}
+{"name": "aoe2mc.cheat.fog_off", "en_us": "Fog of war: off"}
+{"name": "aoe2mc.cheat.fog_on", "en_us": "Fog of war: on"}
+{"name": "aoe2mc.cheat.free_techs", "en_us": "Technologies are free"}
+{"name": "aoe2mc.cheat.marco", "en_us": "polo"}
+{"name": "aoe2mc.cheat.sharing", "en_us": "Sharing is caring: your income goes to your allies"}
+{"name": "aoe2mc.cheat.wonders", "en_us": "You control nature: %s animals"}
+{"name": "aoe2mc.replay.now", "en_us": " now"}
+{"name": "aoe2mc.replay.team", "en_us": "Team %s · "}
+{"name": "aoe2mc.replay_input.fight", "en_us": "Fight: "}
+{"name": "aoe2mc.train.active", "en_us": "%s is active."}
+{"name": "aoe2mc.train.rally", "en_us": "Right click the ground for the rally point."}
+{"name": "aoe2mc.train.researched", "en_us": "%s is researched."}
+{"name": "aoe2mc.replay_input.fight_units", "en_us": ", %s units"}

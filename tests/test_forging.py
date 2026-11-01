@@ -2,6 +2,7 @@
 infantry and cavalry of the player have more attack, also the new ones, and the item leaves the menu (#675)."""
 from urllib.parse import unquote
 
+import lang
 from test_gather import FakeServer, grid
 
 from game import combat, gather, train
@@ -76,7 +77,7 @@ def test_forging_gives_infantry_and_cavalry_more_attack():
         assert train.stats(g, name) == combat.stats(name), name
     stats = sorted(c for c in server.log if c.startswith("aoe stats"))
     assert stats == sorted(combat.stats_command(u, n, train.stats(g, n)) for u, n in (("m", "MILITIA"), ("s", "SCOUT_CAVALRY")))
-    assert any("Forging is researched." in c for c in server.log if c.startswith("tellraw"))
+    assert any("Forging is researched." in c for c in map(lang.english, server.log) if c.startswith("tellraw"))
     train.open_menu(g, "Steve", (11, 3))
     assert "Forging" not in menus(server)[-1]
     assert train.queue(g, "Steve", (11, 3), "FORGING") is None        # only once

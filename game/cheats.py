@@ -53,13 +53,13 @@ OBJECTIVE = "aoe_cheat"
 TAUNT = "aoe_taunt"                           # the number of the last taunt of a player (#3318)
 MUTE = "aoe2mc.mute"                          # the tag of a player who hears no taunts
 ALL = {"food": 100000, "wood": 100000, "gold": 100000, "stone": 100000}
-FOG = {"all": "Fog of war: off", "normal": "Fog of war: on"}       # the chat answer of "polo" for each g.reveal
+FOG = {"all": "aoe2mc.cheat.fog_off", "normal": "aoe2mc.cheat.fog_on"}       # the chat answer of "polo" for each g.reveal
 NUMBER = r"-?\d+(?:\.\d+)?"
 
 
 def aegis(g, player):
     g.aegis = not g.aegis
-    g.command(f'tellraw {player} {{"text":"Aegis {"on" if g.aegis else "off"}"}}')
+    g.command(f"tellraw {player} " + json.dumps(lang.text(f"aoe2mc.cheat.aegis_{'on' if g.aegis else 'off'}")))
 
 
 def end(text, color):
@@ -174,23 +174,23 @@ def ruin(g, n):
     first.bots = [b for b in first.bots if b.g.player != n or not getattr(b.g, "share", None)]   # a person keeps its Side: over() titles it (#1936)
 
 
-def flag(attr, text):
-    """A cheat that turns the attribute attr of g on (for ever, as in AoE2) and answers text."""
+def flag(attr, key):
+    """A cheat that turns the attribute attr of g on (for ever, as in AoE2) and answers the text of key."""
     def effect(g, player):
         setattr(g, attr, True)
-        g.command(f'tellraw {player} {{"text":"{text}"}}')
+        g.command(f"tellraw {player} " + json.dumps(lang.text(key)))
     return effect
 
 
 def polo(g, player):
     """Remove the fog of war, or put it back (#1390)."""
     import fog  # fog -> gather -> cheats: import it late
-    g.command(f'tellraw {player} {{"text":"{FOG[fog.toggle(g)]}"}}')
+    g.command(f"tellraw {player} " + json.dumps(lang.text(FOG[fog.toggle(g)])))
 
 
 def cpu(g, player):
     g.pop_cap = 1000
-    g.command(f'tellraw {player} {{"text":"Population limit: 1000"}}')
+    g.command(f"tellraw {player} " + json.dumps(lang.text("aoe2mc.cheat.cpu", g.pop_cap)))
 
 
 def noui(g, player):
@@ -268,7 +268,7 @@ def wonders(g, player):
     g.villagers = {}
     g.soldiers = {o["uuid"]: o["name"] for o in g.data["objects"] if o["kind"] == "unit" and o["player"] == 0
                   and o.get("uuid")}
-    g.command(f'tellraw {player} {{"text":"You control nature: {len(g.soldiers)} animals"}}')
+    g.command(f"tellraw {player} " + json.dumps(lang.text("aoe2mc.cheat.wonders", len(g.soldiers))))
 
 
 CODES = {                                     # code -> the resources, the chat answer or a function
@@ -277,10 +277,10 @@ CODES = {                                     # code -> the resources, the chat 
     "aegis": aegis,
     "black death": lambda g, player: [destroy(g, n) for n in others(g)],
     "cheese steak jimmy's": {"food": 10000},
-    "going above and beyond": flag("beyond", "Technologies: up to 256 researches"),
+    "going above and beyond": flag("beyond", "aoe2mc.cheat.beyond"),
     "i r winner": end("Victory", "gold"),
     "lumberjack": {"wood": 10000},
-    "marco": "polo",                          # an easter egg (#1057)
+    "marco": "aoe2mc.cheat.marco",            # an easter egg (#1057): the key of the answer "polo"
     "my cpu can handle it": cpu,
     "natural wonders": wonders,
     "ninjaconnor": ALL,
@@ -291,8 +291,8 @@ CODES = {                                     # code -> the resources, the chat 
     "robin hood": {"gold": 10000},
     "rock on": {"stone": 10000},
     "rowshep": ALL,
-    "sharing is caring": flag("sharing", "Sharing is caring: your income goes to your allies"),
-    "tech tech one two free": flag("free_techs", "Technologies are free"),
+    "sharing is caring": flag("sharing", "aoe2mc.cheat.sharing"),
+    "tech tech one two free": flag("free_techs", "aoe2mc.cheat.free_techs"),
     "torpedo1": lambda g, player: destroy(g, 1),
     "torpedo2": lambda g, player: destroy(g, 2),
     "torpedo3": lambda g, player: destroy(g, 3),
@@ -333,7 +333,7 @@ def apply(g, player, code):
             train.spawn(g, tc[0], effect.name)
         return
     if isinstance(effect, str):
-        g.command(f'tellraw {player} {{"text":"{effect}"}}')
+        g.command(f"tellraw {player} " + json.dumps(lang.text(effect)))
         return
     for r, v in effect.items():
         g.stock[r] += v

@@ -888,7 +888,7 @@ class Gather:
         self.later = {}
         if self.nomad and rect and (unit := civs.value("nomad_unit", civs.civ(self))) and (cells := self.map.front(rect)):
             x, z = cells[0]
-            name = json.dumps({"text": pretty(unit), "color": self.color()})
+            name = json.dumps(lang.name(unit) | {"color": self.color()})
             self.command(f"summon minecraft:horse {x + 0.5} {self.map.y(x, z)} {z + 0.5} {{Tame:1b,PersistenceRequired:1b,"
                          f"Tags:[\"aoe2mc.p{self.player}\"],CustomName:{name}}}")
         self.nomad = False

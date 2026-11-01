@@ -848,8 +848,7 @@ def order(g, player, rect, slot, shift=False):
     if slot == RALLY[0] and units_of(g, homes(g)[rect]):
         g.rallying[player] = rect
         menu.close(g, player)
-        g.command(f"tellraw {player} " + json.dumps({"text": "Right click the ground for the rally point.",
-                                                      "color": "gray"}))
+        g.command(f"tellraw {player} " + json.dumps(lang.text("aoe2mc.train.rally", color="gray")))
         return 0
     if slot == garrison.ungarrison(homes(g)[rect])[0] and getattr(g, "garrisons", {}).get(rect):   # all units come out (#808)
         garrison.out(g, rect)
@@ -1276,8 +1275,8 @@ def research(g, entry, start=False, rect=None):
     import gather
     if entry["name"] in civs.policies(g).get("effects", ()):       # Athenians: the new policy, not a technology (#2485)
         g.policy, g.switches = entry["name"], vars(g).get("switches", 0) + 1
-        g.command(f"tellraw {entry['player']} " + json.dumps({"text": f"{ITEMS[entry['name']][2]} is active.",
-                                                              "color": "green"}))
+        g.command(f"tellraw {entry['player']} " + json.dumps(lang.text(
+            "aoe2mc.train.active", lang.name(entry["name"], "tech", ITEMS[entry["name"]][2]), color="green")))
         return
     if entry["name"] in ONE_BUILDING:
         vars(g).setdefault("upgraded", {})[rect] = entry["name"]
@@ -1399,7 +1398,7 @@ def research(g, entry, start=False, rect=None):
         unit = civs.value("age_units", civs.civ(g), {}).get(entry["name"])   # Spartans: a free Polemarch (#2480)
         if unit and rects and spawn(g, rects[0], unit):
             g.pop += 1
-        g.command(f"title @a[team=p{g.player}] title " + json.dumps({"text": age(g), "color": "gold"}))  # the own team only
+        g.command(f"title @a[team=p{g.player}] title " + json.dumps(age_name(g) | {"color": "gold"}))  # the own team only
         g.command("tellraw @a " + json.dumps(lang.text("aoe2mc.age_up", g.player, age_name(g), color="gold")))   # translate (#5344)
         import cheats  # it imports train: import it late
         cheats.tune(g, g.player, "age_up")                                 # the own team, as the title (#5339)
@@ -1414,8 +1413,8 @@ def research(g, entry, start=False, rect=None):
         for _ in range(civs.value("economy_villagers", civs.civ(g), 0) * bool(rects)):
             if spawn(g, rects[0], "VILLAGER_MALE"):
                 g.pop += 1
-    g.command(f"tellraw {entry['player']} " + json.dumps({"text": f"{ITEMS[entry['name']][2]} is researched.",
-                                                          "color": "green"}))
+    g.command(f"tellraw {entry['player']} " + json.dumps(lang.text(
+        "aoe2mc.train.researched", lang.name(entry["name"], "tech", ITEMS[entry["name"]][2]), color="green")))
 
 
 def limit(g):

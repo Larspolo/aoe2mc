@@ -2,6 +2,7 @@
 the research a villager mines gold faster, and stone does not change (#727)."""
 from urllib.parse import unquote
 
+import lang
 from menu_line import item
 from test_gather import FakeServer, grid
 
@@ -51,7 +52,7 @@ def test_after_the_research_gold_is_faster():
     assert g.work_time("gold") < before["gold"]
     assert {r: g.work_time(r) for r in gather.WORK_SECONDS if r != "gold"} == {r: t for r, t in before.items() if r != "gold"}
     assert not [c for c in server.log if c.startswith("aoe stats")]   # no combat change
-    assert any("Gold Mining is researched." in c for c in server.log if c.startswith("tellraw"))
+    assert any("Gold Mining is researched." in c for c in map(lang.english, server.log) if c.startswith("tellraw"))
     train.open_menu(g, "Steve", (3, 3))
     assert "Gold Mining" not in menus(server)[-1]
 

@@ -4,6 +4,7 @@ and other units do not change (#1419)."""
 import shutil
 import time
 
+import lang
 import pytest
 from menu_line import item
 from test_forging import menus, setup
@@ -54,7 +55,7 @@ def test_arson_gives_infantry_more_attack_against_standard_buildings():
     assert train.order(g, "Steve", rect, slot) == 1 and not any(g.stock[r] for r in cost)
     server.log.clear()
     train.tick(g, train.TRAIN_TIMES["ARSON"])
-    assert "ARSON" in g.techs and "Arson is researched." in " ".join(server.log)
+    assert "ARSON" in g.techs and "Arson is researched." in " ".join(map(lang.english, server.log))
     militia = train.stats(g, "MILITIA")
     house, wall = combat.stats("HOUSE"), combat.wall("STONE_WALL", 1)
     assert hit(militia, house) > hit(combat.stats("MILITIA"), house)

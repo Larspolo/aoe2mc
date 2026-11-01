@@ -3,6 +3,7 @@ import os
 import shutil
 import time
 
+import lang
 import pytest
 from test_gather import FakeServer
 from test_mc_check import mojang_reachable
@@ -37,7 +38,7 @@ def test_ninjalui_gives_each_resource_and_polo_answers(tiny_world):
     assert g.stock == cheats.CODES["ninjalui"]
     server.scores["aoe_cheat"] = cheats.NAMES.index("polo") + 1
     cheats.clicks(g)
-    assert server.log[-1] == 'tellraw Steve {"text":"Fog of war: off"}'          # (#1390)
+    assert lang.english(server.log[-1]) == 'tellraw Steve "Fog of war: off"'          # (#1390)
 
 
 def test_no_cheat_with_cheats_off(tiny_world):

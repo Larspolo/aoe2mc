@@ -2,6 +2,7 @@
 research the live and the new farms of the player have more food (#726)."""
 from urllib.parse import unquote
 
+import lang
 from menu_line import item, labels, order
 from test_gather import FakeServer, grid
 
@@ -65,7 +66,7 @@ def test_live_farms_of_the_player_get_more_food():
     more = gather.FARM_TECHS["HORSE_COLLAR"]
     assert g.map.farms == {(9, 9): 100 + more, (17, 17): gather.FARM_FOOD}   # not the farm of player 2
     assert not [c for c in server.log if c.startswith("aoe stats")]   # no combat change
-    assert any("Horse Collar is researched." in c for c in server.log if c.startswith("tellraw"))
+    assert any("Horse Collar is researched." in c for c in map(lang.english, server.log) if c.startswith("tellraw"))
     train.open_menu(g, "Steve", (3, 3))
     assert "Horse Collar" not in menus(server)[-1]
 
