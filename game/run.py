@@ -374,7 +374,8 @@ class Game:
         free = (seats[len(self.sides):] or [0])[0] if seats else \
             next((k for k in range(1, self.people + 1) if k not in self.sides.values()), 0)
         n = self.sides.get(name) or free
-        if self.people > 1 and n:
+        teams = self.people > 1 or bool(seats)          # --takeover P: one person on team pP (#5451)
+        if teams and n:
             self.sides[name] = n
             self.command(f"team join p{n} {name}")
             for cmd in [f"aoe hide {name} team"] * (getattr(self, "kind", "paper") == "paper"):
@@ -382,7 +383,7 @@ class Game:
             if name not in getattr(self, "placed", ()):   # a join again keeps the place (#3347)
                 self.start_view(name, n)
             self.command(f"tellraw {name} " + json.dumps(lang.text(CHAT_HINT_KEY, color="gray")))   # the chat targets (#3555, #5376)
-        elif self.people > 1:
+        elif teams:
             for cmd in [*SPECTATORS * (not self.spectators), f"team join spec {name}", f"gamemode spectator {name}",
                         *[f"aoe show {name} all"] * (getattr(self, "kind", "paper") == "paper")]:
                 self.command(cmd)                    # a join again: force-gamemode made it creative; the plugin hid
@@ -495,6 +496,12 @@ def bot_script(players, player, files, k, defined=()):
     if text := players.get(str(player), {}).get("ai"):
         return per.parse(text, defined, file=f"<script of player {player}>")
     return per.read(files[k], defined) if k < len(files or ()) else None
+
+
+def click_who(game, people, player):
+    """The Minecraft players whose clicks the Gather of player reads (Gather.who): all with one person and no seat,
+    else the team of player (--seats, --takeover P, #5451)."""
+    return "@a" if people == 1 and not getattr(game, "seats", ()) else f"@a[team=p{player}]"
 
 
 def bot_seats(players, people, n):
@@ -764,7 +771,7 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
     players = max(getattr(game, "seats", ()), default=people)   # --seats: fewer players than people (#3489)
 
     def make(player):
-        who = "@a" if people == 1 else f"@a[team=p{player}]"
+        who = click_who(game, people, player)
         saved = ((state or {}).get("players", {}).get(str(player)) or {}).get("villagers")   # the living at the save (#3109)
         for _ in range(60):                          # entities load in other threads
             g = gather.Gather(game, data, player=player, log=log, cheats=cheats, resources=settings["resources"],
@@ -811,7 +818,7 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
     g.challenge = settings["challenge"]                          # challenge.tick (#3900)
     g.tutorial = settings["tutorial"]                            # tutorial.tick (#5161)
     g.unlock_speed = settings["unlock_speed"]                    # the Game menu of player 1 (diplomacy.faster, #2933)
-    if people > 1:                                   # one Gather for each person, in the join order (#1308, #1310)
+    if people > 1 or getattr(game, "seats", ()):     # one Gather for each person, in the join order (#1308, #1310, #5451)
         g.bots = [Side(make(n)) for n in range(2, players + 1)]
         for s in g.bots:                             # the same trees, bushes and mines, as with a bot
             s.g.map.trees, s.g.map.bushes, s.g.map.mines = g.map.trees, g.map.bushes, g.map.mines
@@ -1422,8 +1429,6 @@ def main(argv=None, scenario=None):
             ap.error(f"--challenge {a.challenge} is closed: win a medal in {challenge.CHALLENGES[a.challenge]['after']} first")
     if a.takeover is not None and (not a.replay or a.play or a.live):
         sys.exit("--takeover needs --replay, and not --play or --live (#5450)")
-    if a.takeover not in (None, 1):
-        sys.exit("--takeover: only player 1 now (#5451)")
     if a.camera and a.follow is not None:
         ap.error("--camera and --follow N both move the spectators: give only one of them")
     if "mode" not in given(ap, argv):              # the --game-mode of a random map conversion (#4825)
@@ -1457,6 +1462,11 @@ def main(argv=None, scenario=None):
             put_keys(a.world, campaign_keys(folder))     # the keys of the scenarios before it (#3508)
     if not os.path.isfile(os.path.join(a.world, "level.dat")):
         sys.exit(f"no level.dat in {a.world}")
+    if a.takeover not in (None, 1):                  # the record must have player P (#5451)
+        with open(os.path.join(a.world, "aoe2mc.json")) as f:
+            others = sorted(int(p) for p in json.load(f).get("players", {}) if int(p) > 0)
+        if a.takeover not in others:
+            sys.exit(f"--takeover {a.takeover}: the record has {len(others)} players, {others}")
     teams = None
     if a.teams is not None:
         with open(os.path.join(a.world, "aoe2mc.json")) as f:
@@ -1469,6 +1479,8 @@ def main(argv=None, scenario=None):
     if a.seats:                                      # co-op (#3489): one person for each seat
         game.seats = seat_list(a.seats)
         a.people = len(game.seats)
+    if a.takeover not in (None, 1):                  # the first person plays player P, the path of --seats P (#5451)
+        game.seats = (a.takeover,)
     game.people = a.people                           # the join order counts from the first player (#1310)
     game.settings = {k: getattr(a, k) for k in savegame.SETTINGS}   # savegame.dump keeps them (#2325)
     try:
@@ -1488,7 +1500,7 @@ def main(argv=None, scenario=None):
                 import takeover
                 state = savegame.read(takeover.write(game, r, savegame.folder(a.world)))
                 a.play, a.people = True, 1
-                print("The replay reached its --from time: you play player 1 now.", file=sys.stderr)
+                print(f"The replay reached its --from time: you play player {a.takeover} now.", file=sys.stderr)
             else:
                 print("The replay ended. The server stays up: type commands, Ctrl-C stops it.", file=sys.stderr)
         if a.play:
