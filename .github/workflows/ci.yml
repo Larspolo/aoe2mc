@@ -233,11 +233,18 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          NEEDS: ${{ toJSON(needs) }}
+          EVENT: ${{ github.event_name }}
         run: |
           title="Fix main: CI is red"
           n=$(gh api "repos/$GITHUB_REPOSITORY/issues?state=open&labels=P0&per_page=50" --jq ".[] | select(.title == \"$title\") | .number" | head -1)
           printf 'CI on main failed: %s\nRead the failed step (`mcp__github__get_job_logs`), run it locally, fix it.\n' "$URL" > body.md
+          failed=$(jq -r 'to_entries | map(select(.value.result == "failure" or .value.result == "cancelled") | "\(.key) (\(.value.result))") | join(", ")' <<< "$NEEDS")
+          printf 'Event: %s. Failed jobs: %s\n' "$EVENT" "$failed" >> body.md
           if [ -n "$n" ]; then gh api "repos/$GITHUB_REPOSITORY/issues/$n/comments" -F body=@body.md >/dev/null
+          elif [ "$EVENT" = schedule ]; then
+            # The night run has the slow and server tests: a green quick push run does not hide it (#5556).
+            gh api "repos/$GITHUB_REPOSITORY/issues" -f title="$title" -F body=@body.md -f "labels[]=P0" -f "labels[]=bug" -f "labels[]=size:S" >/dev/null
           else
             # A late red run of an older commit opens no ticket when a newer commit on main is green (#4284).
             # A failed read gives no "ahead": the ticket opens as before.
