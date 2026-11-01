@@ -3276,7 +3276,11 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             }
             int n = 0;
             for (int i = 1; i < args.length; i++) {
-                n += Bukkit.dispatchCommand(quiet, text(args[i])) ? 1 : 0;
+                try {                                                    // one bad command must not drop the rest (#5443)
+                    n += Bukkit.dispatchCommand(quiet, text(args[i])) ? 1 : 0;
+                } catch (RuntimeException e) {
+                    getLogger().warning("Batch command " + i + " failed: " + e);
+                }
             }
             sender.sendMessage("Batch: " + n + "/" + (args.length - 1));
             return true;

@@ -197,7 +197,7 @@ def slot_book(slot, title, pages):
     pages = [json.dumps(pg, ensure_ascii=False, separators=(",", ":")) for pg in pages]
     head = f"item replace entity @a {slot} with minecraft:written_book[minecraft:written_book_content=" + \
         json.dumps({"title": title, "author": "aoe2mc"}, separators=(",", ":"))[:-1] + ',"pages":['
-    more = f'item modify entity @a {slot} {{function:"set_written_book_pages",mode:"append",pages:['
+    more = f'item modify entity @a {slot} {{type:"minecraft:set_written_book_pages",mode:"append",pages:['
     out, cmd, n = [], head, 0
     for pg in pages:
         ends = "]}]" if not out else "]}"
