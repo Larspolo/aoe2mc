@@ -183,7 +183,7 @@ def pending(started, lines, now, minutes=PENDING, refill_lane="deep"):
 
 def refill_need(ready, target, issues, due=lambda: [], reviews=lambda: [], free=lambda: []):
     """The reason of the refill runs, or "" when they have no work (#3547): an open epic with no open sub-issue and no
-    open "Part of #E" ticket (the epic check; a release epic with an open scope ticket has work), the tickets with
+    open "Part of #E" ticket (the epic check; a release epic with an open ticket in its milestone has work), the tickets with
     `rank` after a release (release.yml gives it to the next release epic too: the `roadmap` skill, "Release cycle"),
     a release check with no ticket, a due process or roadmap review (deep
     locks: with no deep run they never run, #3560), and only while R < N (`queue.md`) the other refill sources. 5 deep
@@ -193,7 +193,7 @@ def refill_need(ready, target, issues, due=lambda: [], reviews=lambda: [], free=
     import dashboard
     work = {int(n) for i in issues if "pull_request" not in i for n in re.findall(r"Part of #(\d+)", i.get("body") or "")}
     work |= {i["number"] for i in issues if dashboard.RELEASE in dashboard.labels(i)
-             and dashboard.release_scope(i, issues)[1]}             # a release epic with open scope tickets has work
+             and dashboard.release_scope(i, issues)[2]}             # a release epic with open milestone tickets has work
     subs = lambda i: (s := i.get("sub_issues_summary") or {}).get("total", 0) - s.get("completed", 0)   # open sub-issues
     epics = [i["number"] for i in issues if "epic" in dashboard.labels(i) and i["number"] not in work and not subs(i)
              and not {dashboard.MUTED, dashboard.AFTER, dashboard.RANK, dashboard.CLOSE, "needs-human"} & dashboard.labels(i)]

@@ -71,7 +71,8 @@ Release focus (owner, 2026-11-01, `steering/project/RELEASE.md`): before you mak
 feature is inside the focus (its section "Release focus" tells how to find the features that wait). An epic outside it gets the
 label `after-release` and a one-line comment ("Waits for the release: release focus of `steering/project/RELEASE.md`"),
 and no new sub-issue. Do not hold a ticket with `in-progress` or an open PR: let it finish and merge. Also each new follow-up ticket of a held epic or of milestone C work gets `after-release`.
-Release epic (label `release`): it is done when its criteria are met (`steering/project/RELEASE.md`, "Release cycle");
+Release epic (label `release`): its scope is the GitHub milestone of its version; a new sub-issue of it gets that
+milestone too. It is done when its criteria are met (`steering/project/RELEASE.md`, "Release cycle");
 close it with the label `close`, and `release.yml` makes the release. Tickets with `rank` (after a release) come first in
 the refill: do the "Release cycle" of the `roadmap` skill, then the other steps.
 When no source is left inside the focus, make tickets from the play test (`docs/PLAYTEST.md`, the comments of the

@@ -321,12 +321,24 @@ def process_changes(prs, now, hours=24):
                and datetime.datetime.fromisoformat(p["merged_at"].replace("Z", "+00:00")) >= since)
 
 
-def release_scope(epic, issues):
-    """(listed, open) numbers of the scope of a release epic: its checklist lines "- [ ] #N" or "- [x] #N", and those
-    of them that are still open in `issues` (the open issues)."""
-    listed = [int(n) for n in re.findall(r"^\s*- \[[ xX]\] #(\d+)", epic.get("body") or "", re.M)]
-    opened = {i["number"] for i in issues}
-    return listed, [n for n in listed if n in opened]
+def release_version(epic):
+    """The version "vX.Y.Z" in the title of a release epic, or None. The GitHub milestone of that title is its scope."""
+    m = re.search(r"\bv\d+\.\d+\.\d+\b", epic.get("title") or "")
+    return m and m[0]
+
+
+def release_scope(epic, issues, milestones=()):
+    """(closed, total, [open numbers]) of the scope of a release epic: the issues of the GitHub milestone with its
+    version as the title. issues: the open issues; milestones: [{title, open_issues, closed_issues}] when known (else
+    the milestone object of an open issue gives the counts; with neither, (0, 0, []))."""
+    if not (v := release_version(epic)):
+        return 0, 0, []
+    left =[i["number"] for i in issues if (i.get("milestone") or {}).get("title") == v and i["number"] != epic["number"]]
+    m = next((m for m in milestones if m.get("title") == v), None) or next(
+        (i["milestone"] for i in issues if (i.get("milestone") or {}).get("title") == v), None)
+    if not m:
+        return 0, len(left), left
+    return m.get("closed_issues", 0), m.get("closed_issues", 0) + m.get("open_issues", 0), left
 
 
 def render(old_body, issues, comments, open_prs, closed_issues, closed_prs, now, unanswered=None, nxt=None, accounts=None,
@@ -361,9 +373,9 @@ def render(old_body, issues, comments, open_prs, closed_issues, closed_prs, now,
         out += [f"| {name} | " + " | ".join(cell(*gs[g]) if g in gs else "–" for g in goals) + f" | {cell(pct, left)} |"
                 for name, gs, pct, left in releases["rows"]]
         for e in sorted((i for i in issues if RELEASE in labels(i)), key=lambda i: i["number"]):
-            listed, left = release_scope(e, issues)
-            out.append(f"{e['title']} (#{e['number']}): {len(listed) - len(left)} of {len(listed)} scope tickets closed"
-                       + (", open: " + " ".join(f"#{n}" for n in left[:10]) if left else ""))
+            done, total, left = release_scope(e, issues, releases.get("milestones") or ())
+            out.append(f"{e['title']} (#{e['number']}): {done} of {total} tickets of the milestone "
+                       f"`{release_version(e)}` closed" + (", open: " + " ".join(f"#{n}" for n in left[:10]) if left else ""))
         if releases.get("waiting"):
             out.append(f"Wait for the release: {releases['waiting']} roadmap features outside the release focus "
                        "(`steering/project/RELEASE.md`)")
