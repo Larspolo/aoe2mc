@@ -1574,7 +1574,8 @@ class Gather:
             (self.drag if self.paper else self.box)(name, fleet.pick(self, eye, d))   # the water too (#2060)
             return
         if (rect := self.rallying.pop(name, None)) and (cell := self.map.pick_ground(eye, d)):   # the menu item (#707)
-            train.rally(self, rect, cell, self.map.pick_tree(eye, d))
+            sheep = pick_unit(eye, d, self.positions(sorted(self.herd())))   # an own sheep (#5545)
+            train.rally(self, rect, cell, sheep or self.map.pick_tree(eye, d))
             return
         order = vars(self).get("ordering", {}).pop(name, None)
         if order == "patrol" and (cell := self.map.pick_ground(eye, d)):
