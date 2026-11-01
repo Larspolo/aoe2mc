@@ -4,7 +4,6 @@ import shutil
 import subprocess
 
 import pytest
-import yaml
 
 WORKFLOW = os.path.join(os.path.dirname(__file__), "..", ".github", "workflows", "close.yml")
 
@@ -20,8 +19,12 @@ esac
 
 
 def script():
-    steps = yaml.safe_load(open(WORKFLOW))["jobs"]["close"]["steps"]
-    return next(s["run"] for s in steps if s["name"] == "Close the issues with the label close")
+    """The `run: |` block of the step, without its indent (no PyYAML in CI)."""
+    lines = open(WORKFLOW).read().split("- name: Close the issues with the label close", 1)[1].splitlines()
+    start = next(i for i, x in enumerate(lines) if x.strip() == "run: |") + 1
+    indent = len(lines[start]) - len(lines[start].lstrip())
+    end = next((i for i, x in enumerate(lines[start:]) if x.strip() and len(x) - len(x.lstrip()) < indent), None)
+    return "\n".join(x[indent:] for x in lines[start:start + end if end is not None else None])
 
 
 def run(tmp_path, event, listed, issues):
