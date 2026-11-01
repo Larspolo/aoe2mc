@@ -65,7 +65,8 @@ decision follows it. The roadmap review checks that each held ticket fits a kind
    (section "Releases").
 2. The epic check (`queue.md`) closes the epic when its criteria are met (label `close`).
 3. `.github/workflows/release.yml` then tags `vX.Y.Z` when the milestone has no open issue: the newest commit of
-   main with a green CI run, from after the close (the head of main often has no finished CI run). It makes the
+   main with a green CI run, from after the close or the head of main (the head of main often has no finished CI run;
+   an epic that closes after the last merge gets no new commit, #5576). It makes the
    GitHub release with notes (the closed issues of the milestone), closes the milestone, and starts the workflows of
    the tag: the installers (`installers.yml`), the example worlds (`worlds.yml`) and the release of the held tickets
    (`after-release.yml`).
