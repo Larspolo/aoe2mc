@@ -517,7 +517,7 @@ class Map:
         return None
 
     def pick_tree(self, eye, d, reach=REACH):
-        """The tree, fruit bush, mine or farm tile that the ray from eye in direction d hits first, or None."""
+        """The tree, fruit bush, carcass, mine or farm tile that the ray from eye in direction d hits first, or None."""
         for k in range(1, reach * 4):
             x, y, z = (eye[i] + d[i] * k / 4 for i in range(3))
             bx, bz = math.floor(x), math.floor(z)
@@ -525,7 +525,8 @@ class Map:
                 return None
             tile = bx // self.T, bz // self.T
             g = self.y(bx, bz)
-            if tile in self.trees and (g is None or y < g + 12) or tile in self.bushes and (g is None or y < g + 2):
+            if tile in self.trees and (g is None or y < g + 12) or (tile in self.bushes or self.carcasses.get(tile, 0) > 0) \
+                    and (g is None or y < g + 2):                      # a carcass as a bush (#5536)
                 return tile
             if (bx, bz) in self.mine_at and (g is None or y < g + 1):    # "ground" over a mine is its top
                 return self.mine_at[bx, bz]
@@ -1810,7 +1811,7 @@ class Gather:
     def target(self, eye, d, places):
         """What a right click from eye in the view direction d picks, in the order of click(): (kind, key, block cells
         of the mark) or None. kind: "enemy" or "unit" (key: UUID), "fort" (target UUID), "building" (an own footprint
-        that takes a garrison or trains units), "tree", "mine", "bush", "farm" (tile) or "ground" (block cell).
+        that takes a garrison or trains units), "tree", "mine", "bush", "carcass", "farm" (tile) or "ground" (block cell).
         places: {UUID: feet} of pickable(). The click and the pointing mark use it, so both pick the same (#989)."""
         held = self.unpickable()
         at = {k: v.pos for k, v in self.villagers.items() if k not in held} | \
@@ -1830,7 +1831,8 @@ class Gather:
             return "building", rect, {(rect[0], rect[2]), (rect[1] - 1, rect[3] - 1)}
         if tile := self.map.pick_tree(eye, d):
             m = self.map
-            kind = "farm" if tile in m.farms else "bush" if tile in m.bushes else "tree" if tile in m.trees else "mine"
+            kind = "farm" if tile in m.farms else "carcass" if tile in m.carcasses else "bush" if tile in m.bushes else \
+                "tree" if tile in m.trees else "mine"
             return kind, tile, m.spot(tile)
         return cell and ("ground", cell, {cell})
 
@@ -1859,7 +1861,7 @@ class Gather:
             name, act = lang.text("aoe2mc.gather.ground"), "move" if self.selected else None    # the move order (#1368)
         else:
             res = self.map.resource(key)
-            name = lang.text(f"aoe2mc.gather.{kind}") if kind in ("tree", "bush", "farm") else \
+            name = lang.text(f"aoe2mc.gather.{kind}") if kind in ("tree", "bush", "farm", "carcass") else \
                 lang.text("aoe2mc.gather.mine", res.capitalize())
             act = "gather" if workers else None
         if act is None:

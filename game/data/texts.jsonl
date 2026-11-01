@@ -55,6 +55,7 @@
 {"name": "aoe2mc.gather.attack_siege", "en_us": "Attack: %s (%s/%s)"}
 {"name": "aoe2mc.gather.box_cancelled", "en_us": "Selection box: cancelled"}
 {"name": "aoe2mc.gather.bush", "en_us": "Berry bush"}
+{"name": "aoe2mc.gather.carcass", "en_us": "Carcass"}
 {"name": "aoe2mc.gather.corner", "en_us": "Selection box: click the other corner"}
 {"name": "aoe2mc.gather.corner_paper", "en_us": "Selection box: look at the other corner and release"}
 {"name": "aoe2mc.gather.enemy", "en_us": "Enemy %s"}
