@@ -54,5 +54,5 @@ Make an issue in [Larspolo/aoe2mc](https://github.com/Larspolo/aoe2mc/issues/new
 - the steps that cause the bug, and what you expected,
 - the game time (the minutes since the start of the game),
 - a screenshot (F2 in Minecraft),
-- the server log: copy `.cache/<newest folder>/logs/latest.log` before you stop the game (the game program deletes
-  the server folder when it stops), and the text of the console.
+- the server log: attach the file `last-game.log` that the game program writes when it stops (its path is printed
+  as "Server log: ..."; the game program keeps it also after a crash or Ctrl-C), and the text of the console.

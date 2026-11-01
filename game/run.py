@@ -446,6 +446,11 @@ class Game:
             self.pack.stop()
             self.pack = None
         if getattr(self, "folder", None):
+            log = os.path.join(self.folder, "logs", "latest.log")   # keep the log for a bug report (#5489)
+            if os.path.exists(log):
+                kept = os.path.join(mc_check.workdir(), "last-game.log")
+                shutil.copyfile(log, kept)
+                print(f"Server log: {kept}")
             shutil.rmtree(self.folder, ignore_errors=True)
         if getattr(self, "usercache", None) and os.path.exists(self.usercache):
             os.remove(self.usercache)
