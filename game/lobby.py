@@ -3,6 +3,7 @@ The page "Choose your player" of the Game menu in a game of more people (#1563, 
 the AoE2 lobby: each Minecraft player chooses its AoE2 player. The join order of run.Game.side stays the default. One
 wool for each AoE2 player 1 ... people; a side that another Minecraft player has is taken. A choice moves the Minecraft
 player to the team p<n> (run.Game.choose), so its clicks go to the Gather of player n (Gather.who, #1310).
+The item "Ready" (#5508, as the AoE2 lobby check box): run.start_on_join starts the game when all people are ready.
 """
 import json
 import os
@@ -19,6 +20,8 @@ import ratings  # noqa: E402
 
 SLOT = 2                                                           # the slot of the button in the Game menu
 BUTTON = ("player_head", "Choose your player", "Play another AoE2 player.")
+READY = 8                                                          # the slot of "Ready": after the 8 wools of AoE2
+SCORE = "aoe_ready"                                                # 1 for each ready person (the sidebar shows it)
 
 
 def shown(g):
@@ -60,12 +63,31 @@ def items(g, player, table=None):
         rating = ratings.lore(who[0], table) if who else ""
         lore += f" · {rating}" if rating else ""
         out.append((n - 1, f"{color}_wool", name(g, n, g.game.sides.get(player)), lore))
+    if getattr(g.game, "wait", False):                             # before the start only (start_on_join)
+        on = player in getattr(g.game, "ready", ())
+        out.append((READY, "lime_dye" if on else "gray_dye", "Ready" if on else "Not ready",
+                    f"{len(g.game.ready)} / {g.game.people} ready. Click to change."))
     return out
 
 
 def show(g, player):
     ratings.tab(g)
-    menu.show(g, player, "Choose your player", items(g, player), lambda p, slot, shift: choose(g, p, slot + 1))
+    menu.show(g, player, "Choose your player", items(g, player), lambda p, slot, shift: ready(g, p) if slot == READY else choose(g, p, slot + 1))
+
+
+def ready(g, player):
+    """Turn "Ready" of player on or off before the start, show the menu again and tell all how many are ready."""
+    game = g.game
+    if not getattr(game, "wait", False):
+        return False
+    on = player not in game.ready
+    game.ready = {*game.ready, player} if on else set(game.ready) - {player}
+    if len(game.ready) == 1 and on:
+        g.command(f"scoreboard objectives add {SCORE} dummy")      # an error when it is there: no harm
+    g.command(f"scoreboard players set {player} {SCORE} {int(on)}")
+    g.command("tellraw @a " + json.dumps(lang.text("aoe2mc.lobby.ready", str(len(game.ready)), str(game.people))))
+    show(g, player)
+    return True
 
 
 def choose(g, player, n):
