@@ -623,10 +623,11 @@ class Bot:
         unit = len(self.g.villagers) >= self.villagers and self.army()
         if not unit:
             return SHARE
-        cost = train.price(self.g, unit)
-        total = sum(cost.values())
-        share = {r: (WOOD if r == "wood" else 0) + (1 - WOOD) * cost.get(r, 0) / total for r in SHARE}
-        need = self.needs(unit)
+        cost, need = train.price(self.g, unit), self.needs(unit)
+        weight = {r: cost[r] / sum(cost.values()) if r in cost else SHARE[r] if r != "wood"
+                  and self.g.stock[r] < need.get(r, 0) else 0 for r in SHARE}   # an archer costs no food, but the
+        total = sum(weight.values())                                   # Castle Age does: else no farmer (#5559)
+        share = {r: (WOOD if r == "wood" else 0) + (1 - WOOD) * weight[r] / total for r in SHARE}
         rich = {r for r, v in share.items() if v and self.g.stock[r] >= need.get(r, 0) + SPARE}
         total = sum(v for r, v in share.items() if r not in rich)
         return {r: 0 if r in rich else v / total for r, v in share.items()} if rich and total else share
