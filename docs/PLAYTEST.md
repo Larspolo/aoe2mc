@@ -46,12 +46,14 @@ house). After the last step, stop the game with Ctrl-C and start the bot game.
 With the installer:
 
     aoe2mc-game OUTWorld --play --tutorial
-    aoe2mc-game OUTWorld --play --bot
+    aoe2mc-game OUTWorld --play --bot --ai-difficulty easiest
 
 With Python:
 
     python3 game/run.py OUTWorld --play --tutorial
-    python3 game/run.py OUTWorld --play --bot
+    python3 game/run.py OUTWorld --play --bot --ai-difficulty easiest
+
+For a stronger bot, use `--ai-difficulty standard`, `moderate`, `hard`, `hardest` or `extreme`.
 
 The first start downloads the Minecraft server (about 1 minute). When the console shows
 "Join the server localhost:PORT", start Minecraft 26.3, click "Multiplayer", "Direct Connection" and type that
