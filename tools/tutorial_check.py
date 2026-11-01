@@ -235,7 +235,8 @@ class Driver:
         self.overview()
         self.shot("1_select.png")                                      # the boss bar of the first step
         self.villager = min(g.villagers)
-        self.trees = self.bush = self.site = None
+        self.trees = self.nearest(g.map.trees, self.mid) if g.map.trees else None   # also when a step passes alone
+        self.bush = self.site = None
         inputs = self.inputs()
         for i, row in enumerate(tutorial.STEPS):
             if (do := inputs.get(row["name"])) is None:
@@ -301,7 +302,7 @@ class Driver:
         self.overview()
 
     def do_wood(self, i):
-        self.trees = self.gather_at(self.g.map.trees)
+        self.trees = self.gather_at(self.g.map.trees) or self.trees
         self.wait(i, 600)
 
     def do_house(self, i):
