@@ -952,6 +952,17 @@ def freeze(game):
     game.command("scoreboard players set #wait aoe_trig 1")   # the tick triggers too (aoe2mc.WAIT, #3892)
 
 
+def welcome(game):
+    """The start lines to all players (#5514): the goal, the first step and the controls (/controls, #5501). A tutorial
+    gives its steps (tutorial.py): it gets only the controls."""
+    settings = getattr(game, "settings", {})
+    if not settings.get("tutorial"):
+        game.command("tellraw @a " + json.dumps(lang.text("aoe2mc.run.welcome_goal", settings.get("victory", "standard"), color="gray")))
+        game.command("tellraw @a " + json.dumps(lang.text("aoe2mc.run.welcome_first", color="gray")))
+    game.command("tellraw @a " + json.dumps(lang.text("aoe2mc.run.welcome_controls", color="gray",
+                 click_event={"action": "run_command", "command": "/controls"})))
+
+
 def start_on_join(game, sides, people, sleep=time.sleep):
     """As in AoE2 DE, the game starts when all people are there (#3314): play froze the ticks (the `schedule` timers
     of the scenario triggers, the mobs) at the start of play(). Unfreeze them after the join of the people, and start
@@ -964,6 +975,7 @@ def start_on_join(game, sides, people, sleep=time.sleep):
         game.command(f"title @a title {json.dumps(str(n))}")
         sleep(1)
     import gather
+    welcome(game)                                    # the goal, the first step, the controls (#5514)
     game.command("scoreboard players reset #wait aoe_trig")
     game.command("tick unfreeze")
     game.wait = False                                # a restart (#979) does not freeze again
