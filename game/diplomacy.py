@@ -25,6 +25,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import build  # noqa: E402
 import civs  # noqa: E402
 import flare  # noqa: E402
+import hunt_highlight  # noqa: E402
 import lang  # noqa: E402
 import lobby  # noqa: E402
 import market  # noqa: E402
@@ -44,6 +45,7 @@ BUTTONS = {0: ("writable_book", "Diplomacy", "Send tribute to other players."), 
            6: ("oak_sapling", "Tech tree", "The units and technologies of your civilization.")}   # techtree.py (#3532)
 PAUSE_SLOT = 5
 TECH_TREE_SLOT = 6
+HUNT_SLOT = 7                                                      # the switch "Highlight huntable animals" (#5509)
 SPEED_SLOT = 4                                                     # the button "Game speed" with --unlock-speed (#2933)
 SPEEDS = (1.0, 1.5, 2.0)                                           # times the Normal speed, as run.py --speed
 RESOURCES = {"food": "wheat", "wood": "oak_log", "gold": "gold_ingot", "stone": "cobblestone"}   # rows 1-4
@@ -71,6 +73,7 @@ def open_menu(g, player):
     buttons = BUTTONS | ({lobby.SLOT: lobby.BUTTON} if lobby.shown(g) else {}) | \
         ({SPEED_SLOT: ("clock", "Game speed", f"Now {main(g).speed:g}. Click: {after(main(g).speed):g}.")}
          if getattr(g, "unlock_speed", False) else {})   # AoE2 "Lock Speed" off (#2933)
+    buttons[HUNT_SLOT] = hunt_highlight.button(g, player)
     if getattr(main(g), "paused", False):
         buttons[PAUSE_SLOT] = ("clock", "Pause", "Continue")
     menu.show(g, player, "Game menu", [(s, m, n, lore) for s, (m, n, lore) in buttons.items()],
@@ -98,6 +101,9 @@ def button(g, player, slot):
         return pause.toggle(g, player)
     if slot == TECH_TREE_SLOT:
         return techtree.open_menu(g, player)
+    if slot == HUNT_SLOT:
+        hunt_highlight.toggle(g, player)
+        return open_menu(g, player)                                    # the lore shows the new state
 
 
 def main(g):
